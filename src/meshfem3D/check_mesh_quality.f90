@@ -35,15 +35,13 @@
 !! DK DK this routine could be improved by computing the mean in addition to min and max of ratios
 !! DK DK
 
-  subroutine check_mesh_quality(myrank,VP_MAX,NGLOB,NSPEC,x,y,z,ibool, &
+  subroutine check_mesh_quality(VP_MAX,NGLOB,NSPEC,x,y,z,ibool, &
                                 CREATE_VTK_FILES,prname)
 
   use constants
   use shared_parameters, only: NGNOD
 
   implicit none
-
-  integer :: myrank
 
   double precision :: VP_MAX           ! maximum vp in volume block id 3
 

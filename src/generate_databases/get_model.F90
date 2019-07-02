@@ -79,11 +79,11 @@
   ! prepares external model values if needed
   select case (IMODEL)
   case (IMODEL_USER_EXTERNAL)
-    call model_external_broadcast(myrank)
+    call model_external_broadcast()
   case (IMODEL_SALTON_TROUGH)
-    call model_salton_trough_broadcast(myrank)
+    call model_salton_trough_broadcast()
   case (IMODEL_COUPLED)
-    call model_coupled_broadcast(myrank)
+    call model_coupled_broadcast()
   end select
 
 ! DP: not sure if this here should check if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) ..

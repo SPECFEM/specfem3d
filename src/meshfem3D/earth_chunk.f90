@@ -55,7 +55,6 @@
 !--- Parameters
 !
 
-  integer, parameter :: myrank = 0
   integer, parameter :: nlayer = 12 !! (number of layer in the model iasp91, or ak135, or prem (one more layer than the model)
 
   double precision, parameter :: GAUSSALPHA = 0.d0, GAUSSBETA = 0.d0
@@ -267,7 +266,7 @@
 !
 !--- get the 3-D shape functions
 !
-  call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
+  call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
 
 !
 !--- rotation matrix to switch to the geographical coordinates
@@ -780,7 +779,6 @@
 !--- Parameters
 !
 
-  integer, parameter :: myrank = 0
   integer, parameter :: nlayer = 12 !! (number of layer in the model iasp91, or ak135, or prem (one more layer than the model)
 
   double precision, parameter :: GAUSSALPHA = 0.d0, GAUSSBETA = 0.d0
@@ -1071,7 +1069,7 @@
 !
 !--- get the 3-D shape functions
 !
-  call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
+  call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
 
 !
 !--- rotation matrix to switch to the geographical coordinates

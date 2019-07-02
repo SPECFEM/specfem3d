@@ -41,7 +41,7 @@
   subroutine save_adjoint_kernels()
 
   use constants, only: CUSTOM_REAL, NGLLX, NGLLY, NGLLZ
-  use specfem_par, only: LOCAL_PATH, myrank, sigma_kl, NSPEC_AB, ADIOS_FOR_KERNELS, NOISE_TOMOGRAPHY, NSPEC_ADJOINT, &
+  use specfem_par, only: LOCAL_PATH, sigma_kl, NSPEC_AB, ADIOS_FOR_KERNELS, NOISE_TOMOGRAPHY, NSPEC_ADJOINT, &
                          APPROXIMATE_HESS_KL, ANISOTROPIC_KL, SAVE_TRANSVERSE_KL
 
   use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
@@ -157,7 +157,7 @@
 
   ! for noise simulations --- noise strength kernel
   if (NOISE_TOMOGRAPHY == 3) then
-    call save_kernels_strength_noise(myrank,LOCAL_PATH,sigma_kl,NSPEC_AB)
+    call save_kernels_strength_noise(LOCAL_PATH,sigma_kl,NSPEC_AB)
   endif
 
   ! for preconditioner

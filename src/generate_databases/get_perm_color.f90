@@ -41,8 +41,7 @@
                                   nspec,nglob, &
                                   nb_colors_outer_elements,nb_colors_inner_elements, &
                                   nspec_outer,nspec_inner,nspec_domain, &
-                                  first_elem_number_in_this_color, &
-                                  myrank)
+                                  first_elem_number_in_this_color)
 
   use constants
 
@@ -60,14 +59,13 @@
   integer, intent(out) :: nb_colors_outer_elements,nb_colors_inner_elements
 
   integer, intent(out) :: nspec_outer,nspec_inner,nspec_domain
-  integer, intent(in) :: myrank
 
   ! local variables
   integer :: nb_colors
 
   ! coloring algorithm w/ Droux
   call get_color_faster(ibool, is_on_a_slice_edge, ispec_is_d, &
-                        myrank, nspec, nglob, &
+                        nspec, nglob, &
                         color, nb_colors_outer_elements, nb_colors_inner_elements, &
                         nspec_outer,nspec_inner,nspec_domain)
 
@@ -100,20 +98,20 @@
 !
 
   subroutine get_color_faster(ibool, is_on_a_slice_edge, ispec_is_d, &
-                             myrank, nspec, nglob, &
-                             color, nb_colors_outer_elements, nb_colors_inner_elements, &
-                             nspec_outer,nspec_inner,nspec_domain)
+                              nspec, nglob, &
+                              color, nb_colors_outer_elements, nb_colors_inner_elements, &
+                              nspec_outer,nspec_inner,nspec_domain)
 
   use constants
 
   implicit none
 
-  integer nspec,nglob
+  integer :: nspec,nglob
   logical, dimension(nspec) :: is_on_a_slice_edge,ispec_is_d
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   integer, dimension(nspec) :: color
-  integer :: nb_colors_outer_elements,nb_colors_inner_elements,myrank
+  integer :: nb_colors_outer_elements,nb_colors_inner_elements
 
   integer :: nspec_outer,nspec_inner,nspec_domain
 
@@ -188,8 +186,8 @@
   if (DISPLAY_MIN_POSSIBLE_COLORS .or. try_Droux_coloring) then
     ! gets maximum values of valence for inner and outer element points
     call count_mesh_valence(ibool,is_on_a_slice_edge,ispec_is_d, &
-                           myrank, nspec, nglob, &
-                           maxval_count_ibool_outer,maxval_count_ibool_inner)
+                            nspec, nglob, &
+                            maxval_count_ibool_outer,maxval_count_ibool_inner)
   endif
 
   ! allocates mask
@@ -349,7 +347,7 @@
 
     ! tries to find a balanced coloring
     call balance_colors_Droux(ibool,is_on_a_slice_edge,ispec_is_d, &
-                              myrank, nspec, nglob, &
+                              nspec, nglob, &
                               color,nb_colors_outer_elements,nb_colors_inner_elements, &
                               nspec_outer,nspec_inner,maxval_count_ibool_inner, &
                               mask_ibool,fail_safe)
@@ -365,9 +363,9 @@
   ! balances colors using a simple algorithm (if Droux was not used)
   if (BALANCE_COLORS_SIMPLE_ALGO) then
     call balance_colors_simple(ibool,is_on_a_slice_edge,ispec_is_d, &
-                              myrank, nspec, nglob, &
-                              color,nb_colors_outer_elements,nb_colors_inner_elements, &
-                              nspec_outer,nspec_inner,mask_ibool)
+                               nspec, nglob, &
+                               color,nb_colors_outer_elements,nb_colors_inner_elements, &
+                               nspec_outer,nspec_inner,mask_ibool)
   endif
 
   ! checks that all the color sets are independent
@@ -425,7 +423,7 @@
 !
 
   subroutine count_mesh_valence(ibool,is_on_a_slice_edge,ispec_is_d, &
-                                myrank, nspec, nglob, &
+                                nspec, nglob, &
                                 maxval_count_ibool_outer,maxval_count_ibool_inner)
 
   use constants
@@ -433,12 +431,9 @@
   implicit none
 
   integer :: nspec,nglob
-
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
 
   logical, dimension(nspec) :: is_on_a_slice_edge,ispec_is_d
-
-  integer :: myrank
   integer :: maxval_count_ibool_outer,maxval_count_ibool_inner
 
   ! local parameters
@@ -531,7 +526,7 @@
 !
 
   subroutine balance_colors_Droux(ibool,is_on_a_slice_edge,ispec_is_d, &
-                                  myrank, nspec, nglob, &
+                                  nspec, nglob, &
                                   color, nb_colors_outer_elements, nb_colors_inner_elements, &
                                   nspec_outer,nspec_inner,maxval_count_ibool_inner, &
                                   mask_ibool,fail_safe)
@@ -541,15 +536,12 @@
   implicit none
 
   integer :: nspec,nglob
-
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
 
   logical, dimension(nspec) :: is_on_a_slice_edge,ispec_is_d
   logical, dimension(nglob) :: mask_ibool
 
   integer, dimension(nspec) :: color
-
-  integer :: myrank
   integer :: nb_colors_outer_elements,nb_colors_inner_elements
 
   integer :: nspec_outer,nspec_inner
@@ -721,24 +713,21 @@
 !
 
   subroutine balance_colors_simple(ibool,is_on_a_slice_edge,ispec_is_d, &
-                                  myrank, nspec, nglob, &
-                                  color, nb_colors_outer_elements, nb_colors_inner_elements, &
-                                  nspec_outer,nspec_inner,mask_ibool)
+                                   nspec, nglob, &
+                                   color, nb_colors_outer_elements, nb_colors_inner_elements, &
+                                   nspec_outer,nspec_inner,mask_ibool)
 
   use constants
 
   implicit none
 
   integer :: nspec,nglob
-
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
 
   logical, dimension(nspec) :: is_on_a_slice_edge,ispec_is_d
   logical, dimension(nglob) :: mask_ibool
 
   integer, dimension(nspec) :: color
-
-  integer :: myrank
   integer :: nb_colors_outer_elements,nb_colors_inner_elements
 
   integer :: nspec_outer,nspec_inner
@@ -1042,7 +1031,6 @@
   integer, intent(inout) :: first_elem_number_in_this_color(nb_colors)
 
   logical,dimension(nspec),intent(in) :: ispec_is_d
-
   integer,intent(in) :: nb_colors_outer_elements,nspec_domain
 
   ! local parameters

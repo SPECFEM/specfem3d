@@ -117,7 +117,7 @@ program clip_sem
 
   ! read simulation parameters
   BROADCAST_AFTER_READ = .true.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   ! checks number of MPI processes
   if (sizeprocs /= NPROC) then

@@ -29,15 +29,15 @@
 
   subroutine exit_MPI(myrank,error_msg)
 
-  use constants
+  use constants, only: MAX_STRING_LEN,IMAIN,ISTANDARD_OUTPUT,OUTPUT_FILES
 
   implicit none
 
 ! identifier for error message file
   integer, parameter :: IERROR = 30
 
-  integer myrank
-  character(len=*) :: error_msg
+  integer, intent(in) :: myrank
+  character(len=*),intent(in) :: error_msg
 
   character(len=MAX_STRING_LEN) :: outputname
 

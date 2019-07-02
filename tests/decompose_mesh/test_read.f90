@@ -22,7 +22,7 @@ program test_read
   ! reads ../DATA/Par_file
   myrank = 0
   BROADCAST_AFTER_READ = .false.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   ! punctual check of values for given default Par_file in SPECFEM3D/DATA/ directory
   print *,'NPROC = ',NPROC

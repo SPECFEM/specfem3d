@@ -90,12 +90,12 @@ module fault_generate_databases
 contains
 
 !=================================================================================================================
-  subroutine fault_read_input(prname,myrank)
+  subroutine fault_read_input(prname)
 
-  use constants, only: MAX_STRING_LEN, IN_DATA_FILES
+  use constants, only: MAX_STRING_LEN, IN_DATA_FILES,myrank
 
+  implicit none
   character(len=MAX_STRING_LEN), intent(in) :: prname
-  integer, intent(in) :: myrank
 
   integer :: nb,i,iflt,ier,nspec,dummy_node
   integer, parameter :: IIN_PAR = 100
@@ -188,12 +188,13 @@ contains
 !==================================================================================================================
 
   subroutine fault_setup(ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
-                       xstore,ystore,zstore,nspec,nglob,myrank)
+                         xstore,ystore,zstore,nspec,nglob)
+
+  implicit none
 
   integer, intent(in) :: nspec
   double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec), intent(inout) :: xstore,ystore,zstore
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec), intent(in) :: ibool
-  integer, intent(in) :: myrank
   integer, intent(in) :: nglob
   integer, intent(in) :: nnodes_ext_mesh
   double precision, dimension(NDIM,nnodes_ext_mesh),intent(in) :: nodes_coords_ext_mesh
@@ -226,7 +227,7 @@ contains
 
     call save_fault_xyzcoord_ibulk(fault_db(iflt))
 
-    call setup_normal_jacobian(fault_db(iflt),ibool,nspec,nglob,myrank)
+    call setup_normal_jacobian(fault_db(iflt),ibool,nspec,nglob)
 
   enddo
 
@@ -497,7 +498,7 @@ contains
 
 !=================================================================================
 
-  subroutine setup_normal_jacobian(fdb,ibool,nspec,nglob,myrank)
+  subroutine setup_normal_jacobian(fdb,ibool,nspec,nglob)
 
   use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy, &
                                          dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
@@ -508,8 +509,6 @@ contains
   implicit none
   type(fault_db_type), intent(inout) :: fdb
   integer, intent(in) :: nspec,nglob, ibool(NGLLX,NGLLY,NGLLZ,nspec)
-
-  integer, intent(in) :: myrank
 
   ! (assumes NGLLX=NGLLY=NGLLZ)
   real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord,ycoord,zcoord
@@ -545,11 +544,11 @@ contains
     enddo
 
     ! gets face GLL 2Djacobian, weighted from element face
-    call get_jacobian_boundary_face(myrank,nspec, &
-           xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
-           dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-           wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-           ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
+    call get_jacobian_boundary_face(nspec, &
+                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
+                                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
     ! normal convention: points away from domain1, reference element.
     do j=1,NGLLY

@@ -214,16 +214,16 @@
 !
 
   subroutine detect_surface_cross_section(NPROC,nglob,nspec,ibool, &
-                            ispec_is_surface_cross_section, &
-                            iglob_is_surface_cross_section, &
-                            nfaces_surface, &
-                            num_interfaces_ext_mesh, &
-                            max_nibool_interfaces_ext_mesh, &
-                            nibool_interfaces_ext_mesh, &
-                            my_neighbors_ext_mesh, &
-                            ibool_interfaces_ext_mesh, &
-                            x_section,y_section,z_section, &
-                            xstore,ystore,zstore,myrank)
+                                          ispec_is_surface_cross_section, &
+                                          iglob_is_surface_cross_section, &
+                                          nfaces_surface, &
+                                          num_interfaces_ext_mesh, &
+                                          max_nibool_interfaces_ext_mesh, &
+                                          nibool_interfaces_ext_mesh, &
+                                          my_neighbors_ext_mesh, &
+                                          ibool_interfaces_ext_mesh, &
+                                          x_section,y_section,z_section, &
+                                          xstore,ystore,zstore)
 
 ! instead of surface of model, this returns cross-section surfaces through model
 ! at specified x,y,z - coordinates
@@ -238,7 +238,7 @@
   implicit none
 
 ! global indexing
-  integer :: NPROC,nglob,nspec,myrank
+  integer :: NPROC,nglob,nspec
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec):: ibool
 
 ! surface

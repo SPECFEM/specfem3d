@@ -28,12 +28,12 @@
 
   subroutine cmm_determine_cavity(nglob)
 
-  use constants, only: MF_IN_DATA_FILES,MAX_STRING_LEN,IMAIN,HUGEVAL,TINYVAL,NDIM
+  use constants, only: MF_IN_DATA_FILES,MAX_STRING_LEN,IMAIN,HUGEVAL,TINYVAL,NDIM,myrank
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   use create_meshfem_par, only: nodes_coords,ispec_material_id,iboun,iMPIcut_xi,iMPIcut_eta
 
-  use meshfem3D_par, only: ibool,xstore,ystore,zstore,nspec,NPROC_XI,NPROC_ETA,myrank,CAVITY_FILE
+  use meshfem3D_par, only: ibool,xstore,ystore,zstore,nspec,NPROC_XI,NPROC_ETA,CAVITY_FILE
 
   implicit none
 

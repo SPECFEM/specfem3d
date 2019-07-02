@@ -159,11 +159,11 @@
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
 
     ! weighted jacobian and normal
-    call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
+    call get_jacobian_boundary_face(nspec, &
+                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -233,11 +233,11 @@
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
 
     ! weighted jacobian and normal
-    call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
+    call get_jacobian_boundary_face(nspec, &
+                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -301,11 +301,11 @@
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
 
     ! weighted jacobian and normal
-    call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
+    call get_jacobian_boundary_face(nspec, &
+                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -369,11 +369,11 @@
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
 
     ! weighted jacobian and normal
-    call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
+    call get_jacobian_boundary_face(nspec, &
+                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -437,11 +437,11 @@
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
 
     ! weighted jacobian and normal
-    call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
+    call get_jacobian_boundary_face(nspec, &
+                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -524,11 +524,11 @@
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
 
     ! weighted jacobian and normal
-    call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
+    call get_jacobian_boundary_face(nspec, &
+                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
     ! normal convention: points away from element
     ! switch normal direction if necessary

@@ -117,87 +117,94 @@
 ! *********************************************************************************
 
   !! CD modif. : begin (implemented by VM) !! For coupling with DSM
-
   integer :: kaxisem, ip
+  integer,dimension(NGLLSQUARE,num_abs_boundary_faces) :: ipt_table
 
+  ! only add these contributions in first pass
+  if (iphase /= 1) return
 
+  ! injecting boundary
   if (COUPLE_WITH_INJECTION_TECHNIQUE) then
-     ipt = 0
+    ! note: only applies boundary condition in first phase
     if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then
-
       if (old_DSM_coupling_from_Vadim) then
-        if (iphase == 1) then
-          if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
-            call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
-          endif
+        if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
+          call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
         endif
       else
         !! MODIFS DE NOBU 2D
       endif
 
-   else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then
+    else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then
+      call read_axisem_file(Veloc_axisem,Tract_axisem,num_abs_boundary_faces*NGLLSQUARE)
 
-      if (iphase == 1) then
-        call read_axisem_file(Veloc_axisem,Tract_axisem,num_abs_boundary_faces*NGLLSQUARE)
+      !! CD CD add this
+      if (RECIPROCITY_AND_KH_INTEGRAL) Tract_axisem_time(:,:,it) = Tract_axisem(:,:)
 
-        !! CD CD add this
-        if (RECIPROCITY_AND_KH_INTEGRAL) Tract_axisem_time(:,:,it) = Tract_axisem(:,:)
-     endif
+    else if ( INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK) then
+      !! find indices
+      ! example: np_resamp = 2 and it = 1,2,3,4,5,6, ..
+      !          --> ii = 1,1,2,2,3,3,..
+      ii = floor( real(it + NP_RESAMP - 1) / real( NP_RESAMP))
+      ! example: --> kk = 1,2,1,2,1,2,,..
+      kk = it - (ii-1) * NP_RESAMP
 
-  else if ( INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK) then
-     if (iphase == 1) then
+      w = dble(kk-1) / dble(NP_RESAMP)
 
-        !! find indices
-        ! example: np_resamp = 2 and it = 1,2,3,4,5,6, ..
-        !          --> ii = 1,1,2,2,3,3,..
-        ii = floor( real(it + NP_RESAMP - 1) / real( NP_RESAMP))
-        ! example: --> kk = 1,2,1,2,1,2,,..
-        kk = it - (ii-1) * NP_RESAMP
+      ! Cubic spline values
+      cs(4) = w*w*w/6.d0
+      cs(1) = 1.d0/6.d0+w*(w-1.d0)/2.d0-cs(4)
+      cs(3) = w+cs(1)-2.d0*cs(4)
+      cs(2) = 1.d0-cs(1)-cs(3)-cs(4)
 
-        w = dble(kk-1) / dble(NP_RESAMP)
+      cs_single(:) = sngl(cs(:))
 
-        ! Cubic spline values
-        cs(4) = w*w*w/6.d0
-        cs(1) = 1.d0/6.d0+w*(w-1.d0)/2.d0-cs(4)
-        cs(3) = w+cs(1)-2.d0*cs(4)
-        cs(2) = 1.d0-cs(1)-cs(3)-cs(4)
+      iim1 = ii-1
+      iip1 = ii+1
+      iip2 = ii+2
 
-        cs_single(:) = sngl(cs(:))
+      do ip=1, npt
+         vx_FK(ip) = cs_single(1)* VX_t(ip,iim1) + cs_single(2)* VX_t(ip,ii) + cs_single(3)* VX_t(ip,iip1) + &
+              cs_single(4)* VX_t(ip,iip2)
+         vy_FK(ip) = cs_single(1)* VY_t(ip,iim1) + cs_single(2)* VY_t(ip,ii) + cs_single(3)* VY_t(ip,iip1) + &
+              cs_single(4)* VY_t(ip,iip2)
+         vz_FK(ip) = cs_single(1)* VZ_t(ip,iim1) + cs_single(2)* VZ_t(ip,ii) + cs_single(3)* VZ_t(ip,iip1) + &
+              cs_single(4)* VZ_t(ip,iip2)
+         tx_FK(ip) = cs_single(1)* TX_t(ip,iim1) + cs_single(2)* TX_t(ip,ii) + cs_single(3)* TX_t(ip,iip1) + &
+              cs_single(4)* TX_t(ip,iip2)
+         ty_FK(ip) = cs_single(1)* TY_t(ip,iim1) + cs_single(2)* TY_t(ip,ii) + cs_single(3)* TY_t(ip,iip1) + &
+              cs_single(4)* TY_t(ip,iip2)
+         tz_FK(ip) = cs_single(1)* TZ_t(ip,iim1) + cs_single(2)* TZ_t(ip,ii) + cs_single(3)* TZ_t(ip,iip1) + &
+              cs_single(4)* TZ_t(ip,iip2)
+      enddo
+      it_fk=it_fk+1
 
-        iim1 = ii-1
-        iip1 = ii+1
-        iip2 = ii+2
-
-        do ip=1, npt
-
-           vx_FK(ip) = cs_single(1)* VX_t(ip,iim1) + cs_single(2)* VX_t(ip,ii) + cs_single(3)* VX_t(ip,iip1) + &
-                cs_single(4)* VX_t(ip,iip2)
-           vy_FK(ip) = cs_single(1)* VY_t(ip,iim1) + cs_single(2)* VY_t(ip,ii) + cs_single(3)* VY_t(ip,iip1) + &
-                cs_single(4)* VY_t(ip,iip2)
-           vz_FK(ip) = cs_single(1)* VZ_t(ip,iim1) + cs_single(2)* VZ_t(ip,ii) + cs_single(3)* VZ_t(ip,iip1) + &
-                cs_single(4)* VZ_t(ip,iip2)
-           tx_FK(ip) = cs_single(1)* TX_t(ip,iim1) + cs_single(2)* TX_t(ip,ii) + cs_single(3)* TX_t(ip,iip1) + &
-                cs_single(4)* TX_t(ip,iip2)
-           ty_FK(ip) = cs_single(1)* TY_t(ip,iim1) + cs_single(2)* TY_t(ip,ii) + cs_single(3)* TY_t(ip,iip1) + &
-                cs_single(4)* TY_t(ip,iip2)
-           tz_FK(ip) = cs_single(1)* TZ_t(ip,iim1) + cs_single(2)* TZ_t(ip,ii) + cs_single(3)* TZ_t(ip,iip1) + &
-                cs_single(4)* TZ_t(ip,iip2)
-
-        enddo
-        it_fk=it_fk+1
-
-     endif
-  endif
-
-endif
-
-  ! only add these contributions in first pass
-  if (iphase /= 1) return
+      ! prepares ipt table
+      ! (needed also for openmp threads accessing correct ipt index)
+      ipt = 0
+      do iface = 1,num_abs_boundary_faces
+        ispec = abs_boundary_ispec(iface)
+        if (ispec_is_elastic(ispec)) then
+          do igll = 1,NGLLSQUARE
+            ! counter
+            ipt = ipt + 1
+            ipt_table(igll,iface) = ipt
+          enddo
+        endif
+      enddo
+    endif
+  endif ! COUPLE_WITH_INJECTION_TECHNIQUE
 
   ! checks if anything to do
   if (num_abs_boundary_faces == 0) return
 
   ! absorbs absorbing-boundary surface using Stacey condition (Clayton and Enquist)
+! openmp solver
+!$OMP PARALLEL if (num_abs_boundary_faces > 100) &
+!$OMP DEFAULT(SHARED) &
+!$OMP PRIVATE(iface,ispec,igll,i,j,k,iglob,vx,vy,vz,vn,nx,ny,nz,tx,ty,tz,jacobianw, &
+!$OMP kaxisem,ixglob,ipt)
+!$OMP DO
   do iface = 1,num_abs_boundary_faces
 
     ispec = abs_boundary_ispec(iface)
@@ -218,29 +225,24 @@ endif
         vy = veloc(2,iglob)
         vz = veloc(3,iglob)
 
-          !! CD CD !! For coupling with EXTERNAL CODE
-          if (COUPLE_WITH_INJECTION_TECHNIQUE) then
+        !! CD CD !! For coupling with EXTERNAL CODE
+        if (COUPLE_WITH_INJECTION_TECHNIQUE) then
+          if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then  !! To verify for NOBU version
+            vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
+            vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
+            vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
 
-            if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then  !! To verify for NOBU version
-              vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
-              vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
-              vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
-
-            else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then !! VM VM add AxiSEM
-                kaxisem = igll + NGLLSQUARE*(iface - 1)
-                vx = vx - Veloc_axisem(1,kaxisem)
-                vy = vy - Veloc_axisem(2,kaxisem)
-                vz = vz - Veloc_axisem(3,kaxisem)
-            endif
-
-          endif
-
-! *********************************************************************************
-! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
-          if (COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK) then
-            ipt = ipt + 1
-
-!! DEBUGVM pour eviter de stocker pour profiler la vitesse de FK
+          else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then !! VM VM add AxiSEM
+            kaxisem = igll + NGLLSQUARE*(iface - 1)
+            vx = vx - Veloc_axisem(1,kaxisem)
+            vy = vy - Veloc_axisem(2,kaxisem)
+            vz = vz - Veloc_axisem(3,kaxisem)
+          else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK) then
+            ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
+            ! point index using table lookup
+            !ipt = ipt + 1
+            ipt = ipt_table(igll,iface)
+            !! DEBUGVM pour eviter de stocker pour profiler la vitesse de FK
             !vx_FK = vxbd(it_fk,ipt)
             !vy_FK = vybd(it_fk,ipt)
             !vz_FK = vzbd(it_fk,ipt)
@@ -254,7 +256,7 @@ endif
             vy = vy - vy_FK(ipt)
             vz = vz - vz_FK(ipt)
           endif
-! *********************************************************************************
+        endif
 
         ! gets associated normal
         nx = abs_boundary_normal(1,igll,iface)
@@ -269,37 +271,33 @@ endif
         ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
         tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
-          !! CD CD !! For coupling with DSM
-          if (COUPLE_WITH_INJECTION_TECHNIQUE) then
-
-            if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then    !! To verify for NOBU version
-              tx = tx - Tract_dsm_boundary(1,it_dsm,igll,iface)
-              ty = ty - Tract_dsm_boundary(2,it_dsm,igll,iface)
-              tz = tz - Tract_dsm_boundary(3,it_dsm,igll,iface)
-
-            else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then
-                tx = tx - Tract_axisem(1,kaxisem)
-                ty = ty - Tract_axisem(2,kaxisem)
-                tz = tz - Tract_axisem(3,kaxisem)
-            endif
-
-          endif
-
-! *********************************************************************************
-! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
-          if (COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK) then
+        !! CD CD !! For coupling with DSM
+        if (COUPLE_WITH_INJECTION_TECHNIQUE) then
+          if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then    !! To verify for NOBU version
+            tx = tx - Tract_dsm_boundary(1,it_dsm,igll,iface)
+            ty = ty - Tract_dsm_boundary(2,it_dsm,igll,iface)
+            tz = tz - Tract_dsm_boundary(3,it_dsm,igll,iface)
+          else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then
+            tx = tx - Tract_axisem(1,kaxisem)
+            ty = ty - Tract_axisem(2,kaxisem)
+            tz = tz - Tract_axisem(3,kaxisem)
+          else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK) then
+            ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
             tx = tx - tx_FK(ipt)
             ty = ty - ty_FK(ipt)
             tz = tz - tz_FK(ipt)
           endif
-! *********************************************************************************
+        endif
 
         ! gets associated, weighted jacobian
         jacobianw = abs_boundary_jacobian2Dw(igll,iface)
 
         ! adds stacey term (weak form)
+!$OMP ATOMIC
         accel(1,iglob) = accel(1,iglob) - tx*jacobianw
+!$OMP ATOMIC
         accel(2,iglob) = accel(2,iglob) - ty*jacobianw
+!$OMP ATOMIC
         accel(3,iglob) = accel(3,iglob) - tz*jacobianw
 
         ! adjoint simulations
@@ -309,15 +307,30 @@ endif
           b_absorb_field(3,igll,iface) = tz*jacobianw
         endif !adjoint
 
-          !! CD CD added this
-          if (SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
-              write(237) b_absorb_field(1,igll,iface), b_absorb_field(2,igll,iface), b_absorb_field(3,igll,iface)
-              write(238) displ(1,iglob), displ(2,iglob), displ(3,iglob)
-          endif
-
       enddo
     endif ! ispec_is_elastic
   enddo
+!$OMP ENDDO
+!$OMP END PARALLEL
+
+  !! CD CD added this
+  if (SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
+    do iface = 1,num_abs_boundary_faces
+      ispec = abs_boundary_ispec(iface)
+      if (ispec_is_elastic(ispec)) then
+        ! reference GLL points on boundary face
+        do igll = 1,NGLLSQUARE
+          ! gets local indices for GLL point
+          i = abs_boundary_ijk(1,igll,iface)
+          j = abs_boundary_ijk(2,igll,iface)
+          k = abs_boundary_ijk(3,igll,iface)
+          iglob = ibool(i,j,k,ispec)
+          write(237) b_absorb_field(1,igll,iface), b_absorb_field(2,igll,iface), b_absorb_field(3,igll,iface)
+          write(238) displ(1,iglob), displ(2,iglob), displ(3,iglob)
+        enddo
+      endif
+    enddo
+  endif
 
   ! adjoint simulations: stores absorbed wavefield part
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then

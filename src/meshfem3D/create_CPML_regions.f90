@@ -27,7 +27,7 @@
 
   subroutine create_CPML_regions(nspec,nglob,nodes_coords)
 
-  use meshfem3D_par, only: myrank,ibool,prname, &
+  use meshfem3D_par, only: ibool,prname, &
     nspec_CPML,is_CPML,CPML_to_spec,CPML_regions, &
     THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML, &
     SUPPRESS_UTM_PROJECTION,CREATE_VTK_FILES
@@ -35,7 +35,7 @@
   ! create the different regions of the mesh
   use constants, only: IMAIN,CUSTOM_REAL,SMALL_PERCENTAGE_TOLERANCE, &
     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ, &
-    PI,IOVTK,MAX_STRING_LEN,NDIM
+    PI,IOVTK,MAX_STRING_LEN,NDIM,myrank
 
   ! CPML
   use shared_parameters, only: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE

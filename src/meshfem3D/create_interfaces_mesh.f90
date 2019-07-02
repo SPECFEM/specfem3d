@@ -456,11 +456,11 @@
 
   subroutine get_interfaces_mesh_count()
 
-  use meshfem3D_par, only: myrank,INTERFACES_FILE, &
+  use meshfem3D_par, only: INTERFACES_FILE, &
     number_of_interfaces,max_npx_interface,max_npy_interface, &
     number_of_layers,ner_layer
 
-  use constants, only: IMAIN,IIN,MF_IN_DATA_FILES,DONT_IGNORE_JUNK,MAX_STRING_LEN
+  use constants, only: IMAIN,IIN,MF_IN_DATA_FILES,DONT_IGNORE_JUNK,MAX_STRING_LEN,myrank
 
   implicit none
 

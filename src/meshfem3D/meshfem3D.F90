@@ -284,7 +284,7 @@
 
   ! read the parameter file (DATA/Par_file)
   BROADCAST_AFTER_READ = .true.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   ! make sure everybody is synchronized
   call synchronize_all()

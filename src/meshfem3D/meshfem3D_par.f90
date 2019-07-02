@@ -63,7 +63,7 @@ module meshfem3D_par
   double precision, dimension(:,:,:,:), allocatable :: xstore,ystore,zstore
 
 ! proc numbers for MPI
-  integer :: myrank,sizeprocs
+  integer :: sizeprocs
 
 ! mesh point steps for interfaces
   integer :: npx_element_steps,npy_element_steps

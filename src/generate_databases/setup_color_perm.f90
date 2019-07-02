@@ -201,8 +201,7 @@
                             nspec,nglob, &
                             nb_colors_outer_elements,nb_colors_inner_elements, &
                             nspec_outer,nspec_inner,nspec_domain, &
-                            first_elem_number_in_this_color, &
-                            myrank)
+                            first_elem_number_in_this_color)
 
   ! for the last color, the next color is fictitious and its first (fictitious) element number is nspec + 1
   first_elem_number_in_this_color(nb_colors_outer_elements + nb_colors_inner_elements + 1) &

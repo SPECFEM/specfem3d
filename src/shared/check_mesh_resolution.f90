@@ -25,10 +25,10 @@
 !
 !=====================================================================
 
-  subroutine check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                                    kappastore,mustore,rho_vp,rho_vs, &
-                                    DT, model_speed_max,min_resolved_period, &
-                                    LOCAL_PATH,SAVE_MESH_FILES)
+  subroutine check_mesh_resolution(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                                   kappastore,mustore,rho_vp,rho_vs, &
+                                   DT, model_speed_max,min_resolved_period, &
+                                   LOCAL_PATH,SAVE_MESH_FILES)
 
 ! check the mesh, stability and resolved period for acoustic / elastic domains
 !
@@ -62,7 +62,6 @@
 
   logical:: DT_PRESENT
 
-  integer :: myrank
   integer :: NSPEC_AB_global_min,NSPEC_AB_global_max,NSPEC_AB_global_sum
   integer :: NGLOB_AB_global_min,NGLOB_AB_global_max,NGLOB_AB_global_sum
   integer :: ispec
@@ -466,11 +465,11 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                                    DT, model_speed_max,min_resolved_period, &
-                                    phistore,tortstore,rhoarraystore, &
-                                    rho_vpI,rho_vpII,rho_vsI, &
-                                    LOCAL_PATH,SAVE_MESH_FILES)
+  subroutine check_mesh_resolution_poro(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                                        DT, model_speed_max,min_resolved_period, &
+                                        phistore,tortstore,rhoarraystore, &
+                                        rho_vpI,rho_vpII,rho_vsI, &
+                                        LOCAL_PATH,SAVE_MESH_FILES)
 
 ! check the mesh, stability and resolved period for poroelastic domains
 !
@@ -502,7 +501,6 @@
 
   logical:: DT_PRESENT
 
-  integer :: myrank
   integer :: NSPEC_AB_global_min,NSPEC_AB_global_max,NSPEC_AB_global_sum
   integer :: NGLOB_AB_global_min,NGLOB_AB_global_max,NGLOB_AB_global_sum
   integer :: ispec

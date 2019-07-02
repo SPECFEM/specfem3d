@@ -200,39 +200,59 @@
 
     ! updates elastic displacement and velocity
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-        do ispec_cpml=1,NSPEC_CPML
-           ispec = CPML_to_spec(ispec_cpml)
-           do k = 1, NGLLZ
-              do j = 1, NGLLY
-                 do i = 1, NGLLX
-                    iglob = ibool(i,j,k,ispec)
-                    PML_displ_old(:,i,j,k,ispec_cpml)=displ(:,iglob) &
-                        + deltatover2 * (1._CUSTOM_REAL - 2._CUSTOM_REAL*theta) * veloc(:,iglob) &
-                        + deltatsqover2 * (1._CUSTOM_REAL - theta) * accel(:,iglob)
+      do ispec_cpml=1,NSPEC_CPML
+        ispec = CPML_to_spec(ispec_cpml)
+        do k = 1, NGLLZ
+          do j = 1, NGLLY
+            do i = 1, NGLLX
+              iglob = ibool(i,j,k,ispec)
+              PML_displ_old(:,i,j,k,ispec_cpml) = displ(:,iglob) &
+                  + deltatover2 * (1._CUSTOM_REAL - 2._CUSTOM_REAL*theta) * veloc(:,iglob) &
+                  + deltatsqover2 * (1._CUSTOM_REAL - theta) * accel(:,iglob)
 
-                 enddo
-              enddo
-           enddo
+            enddo
+          enddo
         enddo
+      enddo
     endif
-    displ(:,:) = displ(:,:) + deltat * veloc(:,:) + deltatsqover2 * accel(:,:)
-    veloc(:,:) = veloc(:,:) + deltatover2 * accel(:,:)
-    if (SIMULATION_TYPE /= 1) accel_adj_coupling(:,:) = accel(:,:)
-    accel(:,:) = 0._CUSTOM_REAL
-    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-        do ispec_cpml=1,NSPEC_CPML
-           ispec = CPML_to_spec(ispec_cpml)
-           do k = 1, NGLLZ
-              do j = 1, NGLLY
-                 do i = 1, NGLLX
-                    iglob = ibool(i,j,k,ispec)
-                    PML_displ_new(:,i,j,k,ispec_cpml) = displ(:,iglob)&
-                        + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * veloc(:,iglob)
 
-                 enddo
-              enddo
-           enddo
+    if (SIMULATION_TYPE /= 1) accel_adj_coupling(:,:) = accel(:,:)
+
+    if (FORCE_VECTORIZATION_VAL) then
+! openmp solver
+!$OMP PARALLEL DEFAULT(NONE) &
+!$OMP SHARED( NGLOB_AB, displ, veloc, accel, &
+!$OMP deltat, deltatsqover2, deltatover2 ) &
+!$OMP PRIVATE(i)
+!$OMP DO
+      do i = 1,NDIM * NGLOB_AB
+        displ(i,1) = displ(i,1) + deltat * veloc(i,1) + deltatsqover2 * accel(i,1)
+        veloc(i,1) = veloc(i,1) + deltatover2 * accel(i,1)
+        accel(i,1) = 0._CUSTOM_REAL
+      enddo
+!$OMP ENDDO
+!$OMP END PARALLEL
+    else
+      do i = 1,NGLOB_AB
+        displ(:,i) = displ(:,i) + deltat * veloc(:,i) + deltatsqover2 * accel(:,i)
+        veloc(:,i) = veloc(:,i) + deltatover2 * accel(:,i)
+        accel(:,i) = 0._CUSTOM_REAL
+      enddo
+    endif
+
+    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
+      do ispec_cpml=1,NSPEC_CPML
+        ispec = CPML_to_spec(ispec_cpml)
+        do k = 1, NGLLZ
+          do j = 1, NGLLY
+            do i = 1, NGLLX
+              iglob = ibool(i,j,k,ispec)
+              PML_displ_new(:,i,j,k,ispec_cpml) = displ(:,iglob) &
+                  + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * veloc(:,iglob)
+            enddo
+          enddo
         enddo
+      enddo
     endif
 
     ! adjoint simulations

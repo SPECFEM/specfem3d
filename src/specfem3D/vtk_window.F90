@@ -183,7 +183,7 @@ end module vtk_window_par
       xil = xi_source(isource)
       etal = eta_source(isource)
       gammal = gamma_source(isource)
-      call eval_shape3D_single(myrank,shape3D,xil,etal,gammal,NGNOD)
+      call eval_shape3D_single(shape3D,xil,etal,gammal,NGNOD)
 
       ! interpolates source locations
       xmesh = 0.0
@@ -281,7 +281,7 @@ end module vtk_window_par
       xil = xi_receiver(irec)
       etal = eta_receiver(irec)
       gammal = gamma_receiver(irec)
-      call eval_shape3D_single(myrank,shape3D,xil,etal,gammal,NGNOD)
+      call eval_shape3D_single(shape3D,xil,etal,gammal,NGNOD)
 
       ! interpolates receiver locations
       xmesh = 0.0

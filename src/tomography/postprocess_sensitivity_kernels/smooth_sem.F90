@@ -230,7 +230,7 @@ program smooth_sem
 
   ! reads the parameter file
   BROADCAST_AFTER_READ = .true.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED not supported yet for smoothing, please rerun program...'
 
@@ -353,7 +353,7 @@ program smooth_sem
   endif
 
   if (ELASTIC_SIMULATION) then
-    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+    call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
                                ibool,xstore,ystore,zstore, &
                                kappastore,mustore,rho_vp,rho_vs, &
                                DT,model_speed_max,min_resolved_period, &
@@ -366,7 +366,7 @@ program smooth_sem
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1010')
     rho_vp = 0.0_CUSTOM_REAL
     rho_vs = 0.0_CUSTOM_REAL
-    call check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+    call check_mesh_resolution_poro(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                                     DT,model_speed_max,min_resolved_period, &
                                     phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
                                     LOCAL_PATH,SAVE_MESH_FILES)
@@ -380,7 +380,7 @@ program smooth_sem
     if (ier /= 0) stop 'Error allocating array rho_vs'
     rho_vp = sqrt( kappastore / rhostore ) * rhostore
     rho_vs = 0.0_CUSTOM_REAL
-    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+    call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
                                ibool,xstore,ystore,zstore, &
                                kappastore,mustore,rho_vp,rho_vs, &
                                DT,model_speed_max,min_resolved_period, &

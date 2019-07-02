@@ -62,7 +62,7 @@ end module create_meshfem_par
 
 ! create the different regions of the mesh
 
-  use constants, only: IMAIN
+  use constants, only: IMAIN,myrank
 
   use meshfem3D_par, only: &
     ibool, &
@@ -71,7 +71,7 @@ end module create_meshfem_par
     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
     NPROC_XI,NPROC_ETA, &
     NMATERIALS,material_properties, &
-    myrank, sizeprocs, prname, &
+    sizeprocs, prname, &
     LOCAL_PATH, &
     CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
     ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
@@ -131,22 +131,22 @@ end module create_meshfem_par
                            prname,nodes_coords,ibool,ispec_material_id)
 
   ! stores boundary informations
-  call store_boundaries(myrank,iboun,nspec, &
-                       ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-                       nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-                       NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
+  call store_boundaries(iboun,nspec, &
+                        ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+                        nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                        NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                        NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
 
   ! checks mesh resolution
   VP_MAX = maxval(material_properties(:,2))
-  call check_mesh_quality(myrank,VP_MAX,nglob,nspec, &
-                        nodes_coords(:,1),nodes_coords(:,2),nodes_coords(:,3),ibool, &
-                        CREATE_VTK_FILES,prname)
+  call check_mesh_quality(VP_MAX,nglob,nspec, &
+                          nodes_coords(:,1),nodes_coords(:,2),nodes_coords(:,3),ibool, &
+                          CREATE_VTK_FILES,prname)
 
 
   ! saves mesh as databases file
   if (ADIOS_FOR_DATABASES) then
-    call save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
+    call save_databases_adios(LOCAL_PATH,sizeprocs, &
                               nspec,nglob,iproc_xi_current,iproc_eta_current, &
                               NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta, &
                               ibool,nodes_coords,ispec_material_id, &
@@ -189,11 +189,11 @@ end module create_meshfem_par
 
   subroutine cmm_allocate_arrays()
 
-  use constants, only: IMAIN
+  use constants, only: IMAIN,myrank
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NGLLCUBE_M
 
   use meshfem3D_par, only: NSPEC_AB,nspec,ibool, &
-    xstore,ystore,zstore,npointot,myrank, &
+    xstore,ystore,zstore,npointot, &
     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP
 
   use create_meshfem_par
@@ -273,13 +273,13 @@ end module create_meshfem_par
 
   subroutine cmm_create_mesh_elements()
 
-  use constants, only: CUSTOM_REAL,IMAIN,NGNOD_EIGHT_CORNERS,HUGEVAL
+  use constants, only: CUSTOM_REAL,IMAIN,NGNOD_EIGHT_CORNERS,HUGEVAL,myrank
 
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M, &
     NGLOB_DOUBLING_SUPERBRICK,NSPEC_DOUBLING_SUPERBRICK, &
     IFLAG_BASEMENT_TOPO,IFLAG_ONE_LAYER_TOPOGRAPHY
 
-  use meshfem3D_par, only: myrank,xstore,ystore,zstore, &
+  use meshfem3D_par, only: xstore,ystore,zstore, &
     xgrid,ygrid,zgrid, &
     UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
     NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -408,7 +408,7 @@ end module create_meshfem_par
     endif
 
     ! define shape of elements
-    call define_mesh_regions(myrank,USE_REGULAR_MESH,isubregion,NER,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+    call define_mesh_regions(USE_REGULAR_MESH,isubregion,NER,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
                              iproc_xi_current,iproc_eta_current, &
                              NDOUBLINGS,ner_doublings, &
                              iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar)
@@ -651,10 +651,10 @@ end module create_meshfem_par
 
   subroutine cmm_create_addressing(nglob)
 
-  use constants, only: NDIM,IOVTK,IMAIN
+  use constants, only: NDIM,IOVTK,IMAIN,myrank
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NGLLCUBE_M
 
-  use meshfem3D_par, only: myrank,prname,ibool,xstore,ystore,zstore, &
+  use meshfem3D_par, only: prname,ibool,xstore,ystore,zstore, &
     UTM_X_MIN,UTM_X_MAX,NGLOB_AB,nspec,npointot
 
   use create_meshfem_par

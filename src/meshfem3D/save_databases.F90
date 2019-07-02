@@ -609,7 +609,6 @@
   double precision  :: z_bottom
 
   ! for axisem coupling case  ( only serial case for mesher use scotch after)
-  integer, parameter :: myrank = 0
   integer, parameter :: nlayer = 12 !! (number of layer in the model iasp91, or ak135, or prem (one more layer than the model)
   double precision, parameter :: GAUSSALPHA = 0.d0, GAUSSBETA = 0.d0
   double precision   :: rotation_matrix(3,3)
@@ -684,7 +683,7 @@
     !
     allocate(shape3D(NGNOD,NGLLX,NGLLY,NGLLZ),dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1351')
-    call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
+    call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
     !
 
     !! reading parameters for coupling

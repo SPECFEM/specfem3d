@@ -46,16 +46,16 @@
   if (MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
     if (MOVIE_TYPE == 2 .and. PLOT_CROSS_SECTIONS) then
       call detect_surface_cross_section(NPROC,NGLOB_AB,NSPEC_AB,ibool, &
-                              ispec_is_surface_external_mesh, &
-                              iglob_is_surface_external_mesh, &
-                              nfaces_surface, &
-                              num_interfaces_ext_mesh, &
-                              max_nibool_interfaces_ext_mesh, &
-                              nibool_interfaces_ext_mesh, &
-                              my_neighbors_ext_mesh, &
-                              ibool_interfaces_ext_mesh, &
-                              CROSS_SECTION_X,CROSS_SECTION_Y,CROSS_SECTION_Z, &
-                              xstore,ystore,zstore,myrank)
+                                        ispec_is_surface_external_mesh, &
+                                        iglob_is_surface_external_mesh, &
+                                        nfaces_surface, &
+                                        num_interfaces_ext_mesh, &
+                                        max_nibool_interfaces_ext_mesh, &
+                                        nibool_interfaces_ext_mesh, &
+                                        my_neighbors_ext_mesh, &
+                                        ibool_interfaces_ext_mesh, &
+                                        CROSS_SECTION_X,CROSS_SECTION_Y,CROSS_SECTION_Z, &
+                                        xstore,ystore,zstore)
     endif
   endif
 

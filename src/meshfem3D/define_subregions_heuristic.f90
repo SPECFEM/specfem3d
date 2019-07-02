@@ -28,7 +28,7 @@
 ! note:
 ! this routine is not used anymore, but kept for reference...
 
-  subroutine define_subregions_heuristic(myrank,isubregion,iaddx,iaddy,iaddz, &
+  subroutine define_subregions_heuristic(isubregion,iaddx,iaddy,iaddz, &
                                          ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
                                          itype_element,npx,npy, &
                                          NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM)
@@ -41,18 +41,17 @@
 
   implicit none
 
-  integer myrank
-  integer ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir
-  integer iax,iay,iar
-  integer isubregion,itype_element
-  integer npx,npy
+  integer :: ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir
+  integer :: iax,iay,iar
+  integer :: isubregion,itype_element
+  integer :: npx,npy
 
-  integer NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM
+  integer :: NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM
 
 ! topology of the elements
-  integer iaddx(NGNOD_EIGHT_CORNERS)
-  integer iaddy(NGNOD_EIGHT_CORNERS)
-  integer iaddz(NGNOD_EIGHT_CORNERS)
+  integer :: iaddx(NGNOD_EIGHT_CORNERS)
+  integer :: iaddy(NGNOD_EIGHT_CORNERS)
+  integer :: iaddz(NGNOD_EIGHT_CORNERS)
 
 ! **************
 

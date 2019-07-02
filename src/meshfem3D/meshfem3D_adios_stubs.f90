@@ -34,15 +34,16 @@
 !! \author MPBL
 !==============================================================================
 
-subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
-                                nspec,nglob,iproc_xi,iproc_eta, &
-                                NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta, &
-                                ibool,nodes_coords,ispec_material_id, &
-                                nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-                                NSPEC2D_BOTTOM,NSPEC2D_TOP, NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-                                ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-                                NMATERIALS,material_properties, &
-                                nspec_CPML,CPML_to_spec,CPML_regions,is_CPML)
+
+  subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
+                                  nspec,nglob,iproc_xi,iproc_eta, &
+                                  NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta, &
+                                  ibool,nodes_coords,ispec_material_id, &
+                                  nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                                  NSPEC2D_BOTTOM,NSPEC2D_TOP, NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
+                                  ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+                                  NMATERIALS,material_properties, &
+                                  nspec_CPML,CPML_to_spec,CPML_regions,is_CPML)
 
   use constants
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NUMBER_OF_MATERIAL_PROPERTIES
@@ -52,7 +53,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   implicit none
 
   character(len=MAX_STRING_LEN) :: LOCAL_PATH
-  integer :: myrank, sizeprocs
+  integer :: sizeprocs
   integer :: nspec
   integer :: nglob
   integer :: iproc_xi,iproc_eta
@@ -81,7 +82,6 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   double precision :: unused_dp
 
   unused_i4 = len_trim(LOCAL_PATH)
-  unused_i4 = myrank
   unused_i4 = sizeprocs
   unused_i4 = iproc_xi
   unused_i4 = iproc_eta

@@ -37,7 +37,7 @@
 
 ! reads Par_file
   BROADCAST_AFTER_READ = .true.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
 ! check that the code is running with the requested nb of processes
   if (sizeprocs /= NPROC) then

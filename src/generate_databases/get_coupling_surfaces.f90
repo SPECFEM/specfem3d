@@ -299,11 +299,11 @@
               (elastic_flag(iglob_midpoint) >= 1)) then
 
             ! gets face GLL 2Djacobian, weighted from element face
-            call get_jacobian_boundary_face(myrank,nspec, &
-                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                    ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
+            call get_jacobian_boundary_face(nspec, &
+                                            xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                            dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                            wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                            ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
             ! normal convention: points away from acoustic, reference element
             !                                switch normal direction if necessary
@@ -487,11 +487,11 @@
           call get_element_face_gll_indices(iface_ref,ijk_face,NGLLX,NGLLY)
 
           ! gets face GLL 2Djacobian, weighted from element face
-          call get_jacobian_boundary_face(myrank,nspec, &
-                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                    ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
+          call get_jacobian_boundary_face(nspec, &
+                                          xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                          dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                          ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
           ! normal convention: points away from acoustic, reference element
           !                                switch normal direction if necessary
@@ -692,11 +692,11 @@
                   call get_element_face_gll_indices(iface_ref_el,ijk_face_el,NGLLX,NGLLY)
 
                   ! gets face GLL 2Djacobian, weighted from element face
-                  call get_jacobian_boundary_face(myrank,nspec, &
-                          xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-                          dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-                          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                          ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
+                  call get_jacobian_boundary_face(nspec, &
+                                                  xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                                  dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                                  wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                                  ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
                   ! normal convention: points away from poroelastic, reference element
                   do j=1,NGLLY

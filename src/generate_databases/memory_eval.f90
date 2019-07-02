@@ -224,18 +224,18 @@
 
 ! compute the approximate amount of memory needed to run the mesher
 
- subroutine memory_eval_mesher(myrank,nspec,npointot,nnodes_ext_mesh, &
-                              nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
-                              max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
-                              nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top, &
-                              memory_size_request)
+ subroutine memory_eval_mesher(nspec,npointot,nnodes_ext_mesh, &
+                               nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
+                               max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
+                               nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top, &
+                               memory_size_request)
 
   use constants
   use generate_databases_par, only: NGNOD,NGNOD2D
 
   implicit none
 
-  integer,intent(in) :: myrank,nspec,npointot,nnodes_ext_mesh,nelmnts_ext_mesh, &
+  integer,intent(in) :: nspec,npointot,nnodes_ext_mesh,nelmnts_ext_mesh, &
            nmat_ext_mesh,num_interfaces_ext_mesh, &
            max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
            nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top

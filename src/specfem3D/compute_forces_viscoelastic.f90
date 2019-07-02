@@ -188,9 +188,7 @@
     !ZN ZN Do we need a stop statement somewhere in case of
     !ZN ZN SIMULATION_TYPE == 3 and allocated(Kelvin_Voigt_eta) = .true. ??
     if (allocated(Kelvin_Voigt_eta)) then
-
       eta = Kelvin_Voigt_eta(ispec)
-
       if (is_CPML(ispec) .and. eta /= 0._CUSTOM_REAL) stop 'you cannot put a fault inside a PML layer'
 
       do k=1,NGLLZ
@@ -203,7 +201,9 @@
           enddo
         enddo
       enddo
+
     else
+
       do k=1,NGLLZ
         do j=1,NGLLY
           do i=1,NGLLX
@@ -214,6 +214,7 @@
           enddo
         enddo
       enddo
+
     endif
 
     if (is_CPML(ispec)) then

@@ -40,8 +40,8 @@
 
   include 'version.fh'
 
-  integer ier
-  logical BROADCAST_AFTER_READ
+  integer :: ier
+  logical :: BROADCAST_AFTER_READ
 
   ! myrank is the rank of each process, between 0 and NPROC-1.
   ! as usual in MPI, process 0 is in charge of coordinating everything
@@ -54,7 +54,7 @@
 
   ! read the parameter file
   BROADCAST_AFTER_READ = .true.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   ! checks flags
   call initialize_simulation_check()
@@ -89,12 +89,13 @@
     else
       write(IMAIN,*) 'using double precision for the calculations'
     endif
+    if (FORCE_VECTORIZATION_VAL) write(IMAIN,*) 'using force vectorization'
     write(IMAIN,*)
     write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ', &
                    tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
     write(IMAIN,*)
-    write(IMAIN,'(a)',advance='no') ' velocity model: '
 
+    write(IMAIN,'(a)',advance='no') ' velocity model: '
     select case (IMODEL)
     case (IMODEL_DEFAULT)
     write(IMAIN,'(a)',advance='yes') '  default '
@@ -256,6 +257,12 @@
 
   ! initializes GPU cards
   if (GPU_MODE) call initialize_GPU()
+
+  ! output info for possible OpenMP
+  call init_openmp()
+
+  ! synchronizes processes
+  call synchronize_all()
 
   end subroutine initialize_simulation
 

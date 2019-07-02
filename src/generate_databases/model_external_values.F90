@@ -59,7 +59,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine model_external_broadcast(myrank)
+  subroutine model_external_broadcast()
 
 ! standard routine to setup model
 
@@ -70,8 +70,6 @@
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
 
   implicit none
-
-  integer :: myrank
 
   ! local parameters
   integer :: idummy

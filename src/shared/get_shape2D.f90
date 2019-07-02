@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-  subroutine get_shape2D(myrank,shape2D,dershape2D,xigll,yigll,NGLLA,NGLLB,NGNOD,NGNOD2D)
+  subroutine get_shape2D(shape2D,dershape2D,xigll,yigll,NGLLA,NGLLB,NGNOD,NGNOD2D)
 
   use constants
 
@@ -33,23 +33,23 @@
 
 ! generic routine that accepts any polynomial degree in each direction
 
-  integer NGLLA,NGLLB,NGNOD,NGNOD2D,myrank
+  integer :: NGLLA,NGLLB,NGNOD,NGNOD2D
 
-  double precision xigll(NGLLA)
-  double precision yigll(NGLLB)
+  double precision :: xigll(NGLLA)
+  double precision :: yigll(NGLLB)
 
 ! 2D shape functions and their derivatives
-  double precision shape2D(NGNOD2D,NGLLA,NGLLB)
-  double precision dershape2D(NDIM2D,NGNOD2D,NGLLA,NGLLB)
+  double precision :: shape2D(NGNOD2D,NGLLA,NGLLB)
+  double precision :: dershape2D(NDIM2D,NGNOD2D,NGLLA,NGLLB)
 
-  integer i,j,ia
+  integer :: i,j,ia
 
 ! location of the nodes of the 2D quadrilateral elements
-  double precision xi,eta
-  double precision xi_map,eta_map
+  double precision :: xi,eta
+  double precision :: xi_map,eta_map
 
 ! for checking the 2D shape functions
-  double precision sumshape,sumdershapexi,sumdershapeeta
+  double precision :: sumshape,sumdershapexi,sumdershapeeta
 
 ! check that the parameter file is correct
   if (NGNOD /= 8 .and. NGNOD /= 27) &

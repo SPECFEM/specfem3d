@@ -747,7 +747,7 @@ contains
     !! info on mesh and parameters ---------------
     if (SIMULATION_TYPE == 1) then
        if (ELASTIC_SIMULATION) then
-          call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+          call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
                ibool,xstore,ystore,zstore, &
                kappastore,mustore,rho_vp,rho_vs, &
                DT_dble,model_speed_max,min_resolved_period, &
@@ -761,7 +761,7 @@ contains
           if (ier /= 0) stop 'error allocating array rho_vs'
           rho_vp = sqrt( kappastore / rhostore ) * rhostore
           rho_vs = 0.0_CUSTOM_REAL
-          call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+          call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
                ibool,xstore,ystore,zstore, &
                kappastore,mustore,rho_vp,rho_vs, &
                DT_dble,model_speed_max,min_resolved_period, &

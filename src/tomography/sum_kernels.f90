@@ -101,7 +101,7 @@ program sum_kernels
 
   ! needs local_path for mesh files
   BROADCAST_AFTER_READ = .true.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then

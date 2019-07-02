@@ -105,7 +105,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
 
 ! time scheme
-  real(kind=CUSTOM_REAL) deltat,deltatover2,deltatsqover2
+  real(kind=CUSTOM_REAL) :: deltat,deltatover2,deltatsqover2
 
 ! LDDRK time scheme
   integer :: NSTAGE_TIME_SCHEME,istage
@@ -186,7 +186,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
 
 ! proc numbers for MPI
-  integer :: myrank, sizeprocs
+  integer :: sizeprocs
 
 ! timer MPI
   double precision :: time_start
@@ -301,6 +301,13 @@ module specfem_par
   ! for gravity integrals
   double precision, dimension(NTOTAL_OBSERVATION) :: x_observation,y_observation,z_observation, &
                                                 g_x,g_y,g_z,G_xx,G_yy,G_zz,G_xy,G_xz,G_yz,temporary_array_for_sum
+
+  ! force vectorization
+#ifdef FORCE_VECTORIZATION
+  logical, parameter :: FORCE_VECTORIZATION_VAL = .true.
+#else
+  logical, parameter :: FORCE_VECTORIZATION_VAL = .false.
+#endif
 
 #ifdef VTK_VIS
   ! VTK window mode, default is off

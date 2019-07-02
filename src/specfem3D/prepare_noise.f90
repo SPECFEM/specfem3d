@@ -86,7 +86,7 @@
     noise_surface_movie(:,:,:) = 0._CUSTOM_REAL
 
     ! sets up noise source for master receiver station
-    call read_parameters_noise(myrank,nrec,NSTEP,NGLLSQUARE*num_free_surface_faces, &
+    call read_parameters_noise(nrec,NSTEP,NGLLSQUARE*num_free_surface_faces, &
                                islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu, &
                                noise_sourcearray,xigll,yigll,zigll, &
                                ibool, &
@@ -97,9 +97,8 @@
                                ispec_is_acoustic)
 
     ! checks flags for noise simulation
-    call check_parameters_noise(myrank,NOISE_TOMOGRAPHY,SIMULATION_TYPE,SAVE_FORWARD, &
-                                LOCAL_PATH, &
-                                num_free_surface_faces,NSTEP)
+    call check_parameters_noise(NOISE_TOMOGRAPHY,SIMULATION_TYPE,SAVE_FORWARD, &
+                                LOCAL_PATH,num_free_surface_faces,NSTEP)
   endif
 
   ! synchonizes

@@ -582,7 +582,7 @@ subroutine initialize()
 
   ! reads the parameter file
   BROADCAST_AFTER_READ = .true.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED set to .true. not supported yet for xmodel_update, please rerun program...'
 
@@ -755,7 +755,7 @@ subroutine get_external_mesh()
     open(unit=IMAIN,file=trim(OUTPUT_MODEL_DIR)//'/output_mesh_resolution_initial.txt',status='unknown')
 
   if (ELASTIC_SIMULATION) then
-    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+    call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
                                ibool,xstore,ystore,zstore, &
                                kappastore,mustore,rho_vp,rho_vs, &
                                DT,model_speed_max,min_resolved_period, &
@@ -768,7 +768,7 @@ subroutine get_external_mesh()
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 948')
     rho_vp = 0.0_CUSTOM_REAL
     rho_vs = 0.0_CUSTOM_REAL
-    call check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+    call check_mesh_resolution_poro(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                                     DT,model_speed_max,min_resolved_period, &
                                     phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
                                     LOCAL_PATH,SAVE_MESH_FILES)
@@ -782,7 +782,7 @@ subroutine get_external_mesh()
     if (ier /= 0) stop 'Error allocating array rho_vs'
     rho_vp = sqrt( kappastore / rhostore ) * rhostore
     rho_vs = 0.0_CUSTOM_REAL
-    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+    call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
                                ibool,xstore,ystore,zstore, &
                                kappastore,mustore,rho_vp,rho_vs, &
                                DT,model_speed_max,min_resolved_period, &
@@ -953,7 +953,7 @@ subroutine save_new_databases()
 
   ! calculate min_resolved_period (needed for attenuation model)
   if (ELASTIC_SIMULATION) then
-    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+    call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
                                ibool,xstore,ystore,zstore, &
                                kappastore_new,mustore_new,rho_vp_new,rho_vs_new, &
                                -1.0d0,model_speed_max,min_resolved_period, &
@@ -1070,7 +1070,7 @@ subroutine save_new_databases()
     call synchronize_all()
 
     ! calculates and stores attenuation arrays
-    call get_attenuation_model(myrank,NSPEC_AB,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
+    call get_attenuation_model(NSPEC_AB,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
                                mustore_new,rho_vs_new,kappastore_new,rho_vp_new, &
                                qkappa_attenuation_store,qmu_attenuation_store, &
                                ispec_is_elastic,min_resolved_period,prname_new,ATTENUATION_f0_REFERENCE)

@@ -54,6 +54,7 @@ shared_OBJECTS = \
 	$O/gll_library.shared.o \
 	$O/hex_nodes.shared.o \
 	$O/heap_sort.shared.o \
+	$O/init_openmp.shared.o \
 	$O/lagrange_poly.shared.o \
 	$O/merge_sort.shared.o \
 	$O/netlib_specfun_erf.shared.o \

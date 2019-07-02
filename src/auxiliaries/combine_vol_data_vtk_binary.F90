@@ -89,7 +89,7 @@
   ! needs local_path for mesh files
   myrank = 0
   BROADCAST_AFTER_READ = .false.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   ! reads in arguments
   do i = 1, command_argument_count()

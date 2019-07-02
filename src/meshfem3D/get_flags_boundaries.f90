@@ -25,6 +25,7 @@
 !
 !=====================================================================
 
+
   subroutine get_flags_boundaries(nspec,iproc_xi,iproc_eta,ispec,idoubling, &
                                   xstore,ystore,zstore,iboun,iMPIcut_xi,iMPIcut_eta, &
                                   NPROC_XI,NPROC_ETA, &

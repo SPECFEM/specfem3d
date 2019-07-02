@@ -25,14 +25,16 @@
 !
 !=====================================================================
 
-  subroutine read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  subroutine read_parameter_file(BROADCAST_AFTER_READ)
 
-  use constants
+  use constants, only: &
+    myrank, &
+    INJECTION_TECHNIQUE_IS_AXISEM,INJECTION_TECHNIQUE_IS_DSM,INJECTION_TECHNIQUE_IS_FK
+    
   use shared_parameters
 
   implicit none
 
-  integer, intent(in) :: myrank
   logical, intent(in) :: BROADCAST_AFTER_READ
 
   ! local variables

@@ -105,7 +105,7 @@
   ! order of points representing the 2D square element
   integer,dimension(NGNOD2D_FOUR_CORNERS_AVS_DX),parameter :: iorder = (/1,3,2,4/)
 
-  integer :: NSPEC_SURFACE_EXT_MESH,myrank
+  integer :: NSPEC_SURFACE_EXT_MESH
   logical :: BROADCAST_AFTER_READ
 
 ! ************** PROGRAM STARTS HERE **************
@@ -123,7 +123,7 @@
   BROADCAST_AFTER_READ = .false.
 
   ! read the parameter file
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   ! only one global array for movie data, but stored for all surfaces defined
   ! in file 'surface_from_mesher.h'

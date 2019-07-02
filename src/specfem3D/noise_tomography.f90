@@ -234,7 +234,7 @@ end module user_noise_distribution
 ! =============================================================================================================
 
 ! read parameters
-  subroutine read_parameters_noise(myrank,nrec,NSTEP,nmovie_points, &
+  subroutine read_parameters_noise(nrec,NSTEP,nmovie_points, &
                                    islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu, &
                                    noise_sourcearray,xigll,yigll,zigll, &
                                    ibool, &
@@ -250,7 +250,7 @@ end module user_noise_distribution
   implicit none
 
   ! input parameters
-  integer :: myrank, nrec, NSTEP, nmovie_points
+  integer :: nrec, NSTEP, nmovie_points
   integer :: NSPEC_AB_VAL,NGLOB_AB_VAL
 
   integer, dimension(nrec) :: islice_selected_rec
@@ -305,9 +305,11 @@ end module user_noise_distribution
 
   ! compute source arrays for "ensemble forward source", which is source of "ensemble forward wavefield"
   if (myrank == islice_selected_rec(irec_master_noise) .or. myrank == 0) then ! myrank == 0 is used for output only
-    call compute_arrays_source_noise(myrank, &
-              xi_receiver(irec_master_noise),eta_receiver(irec_master_noise),gamma_receiver(irec_master_noise), &
-              nu(:,:,irec_master_noise),noise_sourcearray, xigll,yigll,zigll,NSTEP)
+    call compute_arrays_source_noise(xi_receiver(irec_master_noise), &
+                                     eta_receiver(irec_master_noise), &
+                                     gamma_receiver(irec_master_noise), &
+                                     nu(:,:,irec_master_noise),noise_sourcearray, &
+                                     xigll,yigll,zigll,NSTEP)
   endif
 
   ! noise distribution and noise direction
@@ -354,15 +356,15 @@ end module user_noise_distribution
 ! =============================================================================================================
 
 ! check for consistency of the parameters
-  subroutine check_parameters_noise(myrank,NOISE_TOMOGRAPHY,SIMULATION_TYPE,SAVE_FORWARD, &
+  subroutine check_parameters_noise(NOISE_TOMOGRAPHY,SIMULATION_TYPE,SAVE_FORWARD, &
                                     LOCAL_PATH,NSPEC_TOP,NSTEP)
 
-  use constants, only: CUSTOM_REAL,NDIM,NGLLSQUARE,MAX_STRING_LEN,IOUT_NOISE,OUTPUT_FILES
+  use constants, only: CUSTOM_REAL,NDIM,NGLLSQUARE,MAX_STRING_LEN,IOUT_NOISE,OUTPUT_FILES,myrank
 
   implicit none
 
   ! input parameters
-  integer :: myrank,NOISE_TOMOGRAPHY,SIMULATION_TYPE,NSPEC_TOP,NSTEP
+  integer :: NOISE_TOMOGRAPHY,SIMULATION_TYPE,NSPEC_TOP,NSTEP
   character(len=MAX_STRING_LEN) :: LOCAL_PATH
   logical :: SAVE_FORWARD
   ! local parameters
@@ -456,16 +458,17 @@ end module user_noise_distribution
 
 ! read and construct the "source" (source time function based upon noise spectrum)
 ! for "ensemble forward source"
-  subroutine compute_arrays_source_noise(myrank, &
-                                         xi_noise,eta_noise,gamma_noise,nu_single,noise_sourcearray, &
+  subroutine compute_arrays_source_noise(xi_noise,eta_noise,gamma_noise, &
+                                         nu_single,noise_sourcearray, &
                                          xigll,yigll,zigll,NSTEP)
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,MAX_STRING_LEN,IIN_NOISE,IOUT_NOISE,OUTPUT_FILES
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,MAX_STRING_LEN, &
+    IIN_NOISE,IOUT_NOISE,OUTPUT_FILES,myrank
 
   implicit none
 
   ! input parameters
-  integer :: myrank, NSTEP
+  integer :: NSTEP
   double precision, dimension(NGLLX) :: xigll
   double precision, dimension(NGLLY) :: yigll
   double precision, dimension(NGLLZ) :: zigll
@@ -557,11 +560,10 @@ end module user_noise_distribution
 
 ! step 1: calculate the "ensemble forward source"
 ! add noise spectrum to the location of master receiver
-  subroutine add_source_master_rec_noise(myrank,nrec, &
-                                NSTEP,accel,noise_sourcearray, &
-                                ibool,islice_selected_rec,ispec_selected_rec, &
-                                it,irec_master_noise, &
-                                NSPEC_AB_VAL,NGLOB_AB_VAL)
+  subroutine add_source_master_rec_noise(nrec,NSTEP,accel,noise_sourcearray, &
+                                         ibool,islice_selected_rec,ispec_selected_rec, &
+                                         it,irec_master_noise, &
+                                         NSPEC_AB_VAL,NGLOB_AB_VAL)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
 
@@ -609,12 +611,11 @@ end module user_noise_distribution
 ! step 1: calculate the "ensemble forward source"
 ! save surface movie (displacement) at every time steps, for step 2 & 3.
 
-  subroutine noise_save_surface_movie(displ, &
-                    ibool, &
-                    noise_surface_movie,it, &
-                    NSPEC_AB_VAL,NGLOB_AB_VAL, &
-                    num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                    Mesh_pointer,GPU_MODE)
+  subroutine noise_save_surface_movie(displ,ibool, &
+                                      noise_surface_movie,it, &
+                                      NSPEC_AB_VAL,NGLOB_AB_VAL, &
+                                      num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+                                      Mesh_pointer,GPU_MODE)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE
 
@@ -678,10 +679,10 @@ end module user_noise_distribution
 ! in step 2, call noise_read_add_surface_movie(..., NSTEP-it+1 ,...)
 ! in step 3, call noise_read_add_surface_movie(..., it ,...)
   subroutine noise_read_add_surface_movie(nmovie_points,accel, &
-                  normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
-                  ibool,noise_surface_movie,it,NSPEC_AB_VAL,NGLOB_AB_VAL, &
-                  num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                  free_surface_jacobian2Dw)
+                                          normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
+                                          ibool,noise_surface_movie,it,NSPEC_AB_VAL,NGLOB_AB_VAL, &
+                                          num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+                                          free_surface_jacobian2Dw)
 
   use constants
 
@@ -788,12 +789,12 @@ end module user_noise_distribution
 ! step 3: constructing noise source strength kernel
 
   subroutine compute_kernels_strength_noise(nmovie_points,ibool, &
-                          sigma_kl,displ,deltat,it, &
-                          normal_x_noise,normal_y_noise,normal_z_noise, &
-                          noise_surface_movie, &
-                          NSPEC_AB_VAL,NGLOB_AB_VAL, &
-                          num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                          GPU_MODE,Mesh_pointer)
+                                            sigma_kl,displ,deltat,it, &
+                                            normal_x_noise,normal_y_noise,normal_z_noise, &
+                                            noise_surface_movie, &
+                                            NSPEC_AB_VAL,NGLOB_AB_VAL, &
+                                            num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+                                            GPU_MODE,Mesh_pointer)
 
   use constants
 
@@ -877,14 +878,13 @@ end module user_noise_distribution
 ! =============================================================================================================
 
 ! step 3: save noise source strength kernel
-  subroutine save_kernels_strength_noise(myrank,LOCAL_PATH,sigma_kl,NSPEC_AB_VAL)
+  subroutine save_kernels_strength_noise(LOCAL_PATH,sigma_kl,NSPEC_AB_VAL)
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,MAX_STRING_LEN,IOUT_NOISE
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,MAX_STRING_LEN,IOUT_NOISE,myrank
 
   implicit none
 
   ! input parameters
-  integer myrank
   integer :: NSPEC_AB_VAL
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: sigma_kl
   character(len=MAX_STRING_LEN) :: LOCAL_PATH

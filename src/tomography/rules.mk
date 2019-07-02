@@ -173,6 +173,7 @@ xmodel_update_SHARED_OBJECTS = \
 	$O/exit_mpi.shared.o \
 	$O/get_attenuation_model.shared.o \
 	$O/gll_library.shared.o \
+	$O/init_openmp.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \

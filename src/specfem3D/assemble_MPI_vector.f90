@@ -133,9 +133,10 @@
 !-------------------------------------------------------------------------------------------------
 !
   subroutine synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,array_val, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh,myrank)
+                                                 num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                                 nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                                 my_neighbors_ext_mesh)
+
 ! kbai added this subroutine to synchronize a vector field
 ! to ensure that its values at nodes on MPI interfaces stay equal on all processors that share the node.
 ! Synchronize by setting the value to that of the processor with highest rank
@@ -153,7 +154,7 @@
 ! array to assemble
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
 
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh,myrank
+  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbors_ext_mesh
   integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
   ! local parameters
@@ -165,9 +166,7 @@
   integer, dimension(:), allocatable :: request_send_vector
   integer, dimension(:), allocatable :: request_recv_vector
 
-  integer ipoin,iinterface,ier,iglob
-
-
+  integer :: ipoin,iinterface,ier,iglob
 
 ! setting the value to that of the processor with highest rank
 
@@ -310,11 +309,11 @@
 !
 
   subroutine assemble_MPI_vector_async_w_ord(NPROC,NGLOB_AB,array_val, &
-                                            buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
-                                            max_nibool_interfaces_ext_mesh, &
-                                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                            request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
-                                            my_neighbors_ext_mesh,myrank)
+                                             buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                             max_nibool_interfaces_ext_mesh, &
+                                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                             request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
+                                             my_neighbors_ext_mesh)
 
 ! waits for data to receive and assembles
 
@@ -338,7 +337,7 @@
 ! array to assemble
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
 
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh,myrank
+  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
 
   real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
        buffer_recv_vector_ext_mesh

@@ -697,14 +697,14 @@
   valence(:) = 0
 
   ! loops over elements
-  do ispec=1,NSPEC_AB
+  do ispec = 1,NSPEC_AB
     if (.not. ispec_is(ispec)) cycle
     ispec_irreg = irregular_element_number(ispec)
 
     ! calculates divergence and curl of velocity field
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
           tempx1l = 0._CUSTOM_REAL
           tempx2l = 0._CUSTOM_REAL
           tempx3l = 0._CUSTOM_REAL
@@ -741,7 +741,7 @@
 !! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
 !! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
 
-          do l=1,NGLLX
+          do l = 1,NGLLX
             hp1 = hprime_xx(i,l)
             iglob = ibool(l,j,k,ispec)
             tempx1l = tempx1l + veloc(1,iglob)*hp1
@@ -830,7 +830,7 @@
     enddo
   enddo !NSPEC_AB
 
-  do i=1,NGLOB_AB
+  do i = 1,NGLOB_AB
     ! checks if point has a contribution
     ! note: might not be the case for points in acoustic elements
     if (valence(i) /= 0) then

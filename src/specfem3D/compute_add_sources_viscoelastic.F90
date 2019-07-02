@@ -66,6 +66,11 @@
   ! forward simulations
   if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
 
+! openmp solver
+!$OMP PARALLEL if (NSOURCES > 100) &
+!$OMP DEFAULT(SHARED) &
+!$OMP PRIVATE(isource,time_source_dble,iglob,stf_used,stf,ispec,i,j,k)
+!$OMP DO
     do isource = 1,NSOURCES
 
       ! add the source (only if this proc carries the source)
@@ -97,7 +102,12 @@
             do j=1,NGLLY
               do i=1,NGLLX
                 iglob = ibool(i,j,k,ispec)
-                accel(:,iglob) = accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
+!$OMP ATOMIC
+                accel(1,iglob) = accel(1,iglob) + sourcearrays(isource,1,i,j,k)*stf_used
+!$OMP ATOMIC
+                accel(2,iglob) = accel(2,iglob) + sourcearrays(isource,2,i,j,k)*stf_used
+!$OMP ATOMIC
+                accel(3,iglob) = accel(3,iglob) + sourcearrays(isource,3,i,j,k)*stf_used
               enddo
             enddo
           enddo
@@ -105,6 +115,9 @@
         endif ! ispec_is_elastic
       endif ! myrank
     enddo ! NSOURCES
+!$OMP ENDDO
+!$OMP END PARALLEL
+
   endif ! forward
 
 ! NOTE: adjoint sources and backward wavefield timing:
@@ -216,11 +229,10 @@
       ! hence, instead of a moment tensor 'sourcearrays', a 'noise_sourcearray' for a point force is needed.
       ! furthermore, the CMTSOLUTION needs to be zero, i.e., no earthquakes.
       ! now this must be manually set in DATA/CMTSOLUTION, by USERS.
-      call add_source_master_rec_noise(myrank,nrec, &
-              NSTEP,accel,noise_sourcearray, &
-              ibool,islice_selected_rec,ispec_selected_rec, &
-              it,irec_master_noise, &
-              NSPEC_AB,NGLOB_AB)
+      call add_source_master_rec_noise(nrec,NSTEP,accel,noise_sourcearray, &
+                                       ibool,islice_selected_rec,ispec_selected_rec, &
+                                       it,irec_master_noise, &
+                                       NSPEC_AB,NGLOB_AB)
     else if (NOISE_TOMOGRAPHY == 2) then
       ! second step of noise tomography, i.e., read the surface movie saved at every timestep
       ! use the movie to drive the ensemble forward wavefield

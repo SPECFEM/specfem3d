@@ -47,13 +47,13 @@ subroutine compute_forces_viscoelastic_calling()
   ! Do this only for dynamic rupture simulations
   if (SIMULATION_TYPE_DYN) then
     call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,displ, &
-                                     num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                     nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                     my_neighbors_ext_mesh,myrank)
+                                             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                             my_neighbors_ext_mesh)
     call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,veloc, &
-                                     num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                     nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                     my_neighbors_ext_mesh,myrank)
+                                             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                             my_neighbors_ext_mesh)
   endif
 
 ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
@@ -147,25 +147,27 @@ subroutine compute_forces_viscoelastic_calling()
     else
       ! waits for send/receive requests to be completed and assembles values
       call assemble_MPI_vector_async_w_ord(NPROC,NGLOB_AB,accel, &
-                            buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
-                            max_nibool_interfaces_ext_mesh, &
-                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                            request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
-                            my_neighbors_ext_mesh,myrank)
+                                           buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                           max_nibool_interfaces_ext_mesh, &
+                                           nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                           request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
+                                           my_neighbors_ext_mesh)
     endif
   enddo
 
-! Percy, Fault boundary term B*tau is added to the assembled forces
-!        which at this point are stored in the array 'accel'
+  ! Percy, Fault boundary term B*tau is added to the assembled forces
+  !        which at this point are stored in the array 'accel'
   if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
   if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
 
- ! multiplies with inverse of mass matrix (note: rmass has been inverted already)
-  accel(1,:) = accel(1,:)*rmassx(:)
-  accel(2,:) = accel(2,:)*rmassy(:)
-  accel(3,:) = accel(3,:)*rmassz(:)
+  ! multiplies with inverse of mass matrix (note: rmass has been inverted already)
+  do iglob = 1,NGLOB_AB
+    accel(1,iglob) = accel(1,iglob)*rmassx(iglob)
+    accel(2,iglob) = accel(2,iglob)*rmassy(iglob)
+    accel(3,iglob) = accel(3,iglob)*rmassz(iglob)
+  enddo
 
-! updates acceleration with ocean load term
+  ! updates acceleration with ocean load term
   if (APPROXIMATE_OCEAN_LOAD) then
     call compute_coupling_ocean(NSPEC_AB,NGLOB_AB, &
                                 ibool,rmassx,rmassy,rmassz, &
@@ -174,7 +176,7 @@ subroutine compute_forces_viscoelastic_calling()
                                 num_free_surface_faces)
   endif
 
-! impose Dirichlet conditions on the outer edges of the C-PML layers
+  ! impose Dirichlet conditions on the outer edges of the C-PML layers
   if (PML_CONDITIONS) then
     do iface = 1,num_abs_boundary_faces
       ispec = abs_boundary_ispec(iface)
@@ -188,7 +190,7 @@ subroutine compute_forces_viscoelastic_calling()
           j = abs_boundary_ijk(2,igll,iface)
           k = abs_boundary_ijk(3,igll,iface)
 
-          iglob=ibool(i,j,k,ispec)
+          iglob = ibool(i,j,k,ispec)
 
           accel(:,iglob) = 0._CUSTOM_REAL
           veloc(:,iglob) = 0._CUSTOM_REAL
@@ -331,11 +333,11 @@ subroutine compute_forces_viscoelastic_backward_calling()
       ! waits for send/receive requests to be completed and assembles values
       ! adjoint simulations
       call assemble_MPI_vector_async_w_ord(NPROC,NGLOB_ADJOINT,b_accel, &
-                             b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
-                             max_nibool_interfaces_ext_mesh, &
-                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                             b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh, &
-                             my_neighbors_ext_mesh,myrank)
+                                           b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                           max_nibool_interfaces_ext_mesh, &
+                                           nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                           b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh, &
+                                           my_neighbors_ext_mesh)
     endif
   enddo
 

@@ -27,31 +27,31 @@
 
 ! 3D shape functions for 8-node or 27-node element
 
-  subroutine get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
+  subroutine get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
 
   use constants
 
   implicit none
 
-  integer NGNOD,myrank
+  integer :: NGNOD
 
 ! Gauss-Lobatto-Legendre points of integration
-  double precision xigll(NGLLX)
-  double precision yigll(NGLLY)
-  double precision zigll(NGLLZ)
+  double precision :: xigll(NGLLX)
+  double precision :: yigll(NGLLY)
+  double precision :: zigll(NGLLZ)
 
 ! 3D shape functions and their derivatives
-  double precision shape3D(NGNOD,NGLLX,NGLLY,NGLLZ)
-  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision :: shape3D(NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision :: dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
 
-  integer i,j,k,ia
+  integer :: i,j,k,ia
 
 ! location of the nodes of the 3D hexahedra elements
-  double precision xi,eta,gamma
-  double precision ra1,ra2,rb1,rb2,rc1,rc2
+  double precision :: xi,eta,gamma
+  double precision :: ra1,ra2,rb1,rb2,rc1,rc2
 
 ! for checking the 3D shape functions
-  double precision sumshape,sumdershapexi,sumdershapeeta,sumdershapegamma
+  double precision :: sumshape,sumdershapexi,sumdershapeeta,sumdershapegamma
 
   double precision, parameter :: ONE_EIGHTH = 0.125d0
 
@@ -168,13 +168,13 @@
 
 ! 3D shape functions for given, single xi/eta/gamma location
 
-  subroutine eval_shape3D_single(myrank,shape3D,xi,eta,gamma,NGNOD)
+  subroutine eval_shape3D_single(shape3D,xi,eta,gamma,NGNOD)
 
   use constants
 
   implicit none
 
-  integer :: myrank,NGNOD
+  integer :: NGNOD
 
   ! 3D shape functions
   double precision :: shape3D(NGNOD)

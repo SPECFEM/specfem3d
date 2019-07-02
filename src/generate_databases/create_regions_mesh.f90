@@ -76,7 +76,7 @@
                                nodes_coords_ext_mesh,nnodes_ext_mesh,elmnts_ext_mesh,nelmnts_ext_mesh,ANY_FAULT_IN_THIS_PROC)
 
  ! if faults exist this reads nodes_coords_open
-  call fault_read_input(prname,myrank)
+  call fault_read_input(prname)
 
 ! fills location and weights for Gauss-Lobatto-Legendre points, shape and derivations,
 ! returns jacobianstore,xixstore,...gammazstore
@@ -129,8 +129,8 @@
     endif
     ! at this point (xyz)store_dummy are still open
     if (.not. PARALLEL_FAULT) then
-      call fault_setup (ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
-                        xstore,ystore,zstore,nspec,nglob,myrank)
+      call fault_setup(ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
+                       xstore,ystore,zstore,nspec,nglob)
     endif
     ! this closes (xyz)store_dummy
   endif
@@ -155,8 +155,8 @@
   if (PARALLEL_FAULT .and. ANY_FAULT) then
     call synchronize_all()
     !at this point (xyz)store_dummy are still open
-    call fault_setup (ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
-                      xstore,ystore,zstore,nspec,nglob,myrank)
+    call fault_setup(ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
+                     xstore,ystore,zstore,nspec,nglob)
    ! this closes (xyz)store_dummy
   endif
 
@@ -330,13 +330,13 @@
 
   if (POROELASTIC_SIMULATION) then
     !chris: check for poro: At the moment cpI & cpII are for eta=0
-    call check_mesh_resolution_poro(myrank,nspec,nglob_dummy,ibool, &
+    call check_mesh_resolution_poro(nspec,nglob_dummy,ibool, &
                                     xstore_dummy,ystore_dummy,zstore_dummy, &
                                     -1.0d0, model_speed_max,min_resolved_period, &
                                     phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
                                     LOCAL_PATH,SAVE_MESH_FILES )
   else
-    call check_mesh_resolution(myrank,nspec,nglob_dummy, &
+    call check_mesh_resolution(nspec,nglob_dummy, &
                                ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
                                kappastore,mustore,rho_vp,rho_vs, &
                                -1.0d0,model_speed_max,min_resolved_period, &
@@ -351,7 +351,7 @@
       write(IMAIN,*) '  ...saving attenuation databases'
       call flush_IMAIN()
     endif
-    call get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
+    call get_attenuation_model(nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
                                mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
                                ispec_is_elastic,min_resolved_period,prname,ATTENUATION_f0_REFERENCE)
   endif
@@ -821,13 +821,13 @@ subroutine crm_ext_setup_jacobian(myrank, &
   call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
 
 ! get the 3-D shape functions
-  call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
+  call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
 
 ! get the 2-D shape functions
-  call get_shape2D(myrank,shape2D_x,dershape2D_x,yigll,zigll,NGLLY,NGLLZ,NGNOD,NGNOD2D)
-  call get_shape2D(myrank,shape2D_y,dershape2D_y,xigll,zigll,NGLLX,NGLLZ,NGNOD,NGNOD2D)
-  call get_shape2D(myrank,shape2D_bottom,dershape2D_bottom,xigll,yigll,NGLLX,NGLLY,NGNOD,NGNOD2D)
-  call get_shape2D(myrank,shape2D_top,dershape2D_top,xigll,yigll,NGLLX,NGLLY,NGNOD,NGNOD2D)
+  call get_shape2D(shape2D_x,dershape2D_x,yigll,zigll,NGLLY,NGLLZ,NGNOD,NGNOD2D)
+  call get_shape2D(shape2D_y,dershape2D_y,xigll,zigll,NGLLX,NGLLZ,NGNOD,NGNOD2D)
+  call get_shape2D(shape2D_bottom,dershape2D_bottom,xigll,yigll,NGLLX,NGLLY,NGNOD,NGNOD2D)
+  call get_shape2D(shape2D_top,dershape2D_top,xigll,yigll,NGLLX,NGLLY,NGNOD,NGNOD2D)
 
 ! 2D weights
   do j=1,NGLLY
@@ -1111,11 +1111,11 @@ subroutine crm_ext_setup_indexing(ibool, &
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
 
     ! weighted jacobian and normal
-    call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
+    call get_jacobian_boundary_face(nspec, &
+                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -1204,11 +1204,11 @@ subroutine crm_ext_setup_indexing(ibool, &
 
         ! re-computes face infos
         ! weighted jacobian and normal
-        call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
+        call get_jacobian_boundary_face(nspec, &
+                                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                        dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                        ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
 
         ! normal convention: points away from element
         ! switch normal direction if necessary

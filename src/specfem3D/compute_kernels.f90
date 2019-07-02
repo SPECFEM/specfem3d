@@ -361,6 +361,7 @@
   endif
 
   end subroutine compute_kernels_po
+
 !
 !-------------------------------------------------------------------------------------------------
 !
@@ -472,14 +473,15 @@
 
   end subroutine compute_kernels_Hessian
 
+!
 !-------------------------------------------------------------------------------------------------
 !
+
 ! subroutine to compute the kernels for the 21 elastic coefficients
 ! Last modified 19/04/2007
 
-!-------------------------------------------------------------------
   subroutine compute_strain_product(prod,eps_trace_over_3,epsdev, &
-                          b_eps_trace_over_3,b_epsdev)
+                                    b_eps_trace_over_3,b_epsdev)
 
   ! Purpose : compute the 21 strain products at a grid point
   ! (ispec,i,j,k fixed) and at a time t to compute then the kernels cij_kl (Voigt notation)
@@ -532,85 +534,91 @@
 
   end subroutine compute_strain_product
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine compute_anisotropic_kernels_for_velocity_data(vsem_fwd,asem_fwd,dsem_adj,vsem_adj)
 
-    use specfem_par, only: ngllx, nglly, ngllz, ibool, hprime_xx, hprime_yy, hprime_zz, nspec_ab, &
-         xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, CUSTOM_REAL, &
-         nglob_ab, ndim, deltat, irregular_element_number, xix_regular
-    use specfem_par_elastic, only: ispec_is_elastic, rho_kl, cijkl_kl
+  use specfem_par, only: ngllx, nglly, ngllz, ibool, hprime_xx, hprime_yy, hprime_zz, nspec_ab, &
+       xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, CUSTOM_REAL, &
+       nglob_ab, ndim, deltat, irregular_element_number, xix_regular
+  use specfem_par_elastic, only: ispec_is_elastic, rho_kl, cijkl_kl
 
+  implicit none
 
-    real(kind=CUSTOM_REAL), dimension(ndim,nglob_ab), intent(in) :: vsem_fwd, asem_fwd
-    real(kind=CUSTOM_REAL), dimension(ndim,nglob_ab), intent(in) :: dsem_adj, vsem_adj
+  real(kind=CUSTOM_REAL), dimension(ndim,nglob_ab), intent(in) :: vsem_fwd, asem_fwd
+  real(kind=CUSTOM_REAL), dimension(ndim,nglob_ab), intent(in) :: dsem_adj, vsem_adj
 
-    integer                :: i, j, k, ielem, iglob, ielem_irreg   ! ,l
+  ! local parameters
+  integer                :: i, j, k, ielem, iglob, ielem_irreg   ! ,l
 
-    real(kind=CUSTOM_REAL) :: dxil_dxl, dxil_dyl, dxil_dzl
-    real(kind=CUSTOM_REAL) :: detal_dxl, detal_dyl, detal_dzl
-    real(kind=CUSTOM_REAL) :: dgaml_dxl, dgaml_dyl, dgaml_dzl
+  real(kind=CUSTOM_REAL) :: dxil_dxl, dxil_dyl, dxil_dzl
+  real(kind=CUSTOM_REAL) :: detal_dxl, detal_dyl, detal_dzl
+  real(kind=CUSTOM_REAL) :: dgaml_dxl, dgaml_dyl, dgaml_dzl
 
-    real(kind=CUSTOM_REAL) :: dux_dxil, dux_detal, dux_dgaml
-    real(kind=CUSTOM_REAL) :: duy_dxil, duy_detal, duy_dgaml
-    real(kind=CUSTOM_REAL) :: duz_dxil, duz_detal, duz_dgaml
+  real(kind=CUSTOM_REAL) :: dux_dxil, dux_detal, dux_dgaml
+  real(kind=CUSTOM_REAL) :: duy_dxil, duy_detal, duy_dgaml
+  real(kind=CUSTOM_REAL) :: duz_dxil, duz_detal, duz_dgaml
 
-    real(kind=CUSTOM_REAL) :: dvx_dxil, dvx_detal, dvx_dgaml
-    real(kind=CUSTOM_REAL) :: dvy_dxil, dvy_detal, dvy_dgaml
-    real(kind=CUSTOM_REAL) :: dvz_dxil, dvz_detal, dvz_dgaml
+  real(kind=CUSTOM_REAL) :: dvx_dxil, dvx_detal, dvx_dgaml
+  real(kind=CUSTOM_REAL) :: dvy_dxil, dvy_detal, dvy_dgaml
+  real(kind=CUSTOM_REAL) :: dvz_dxil, dvz_detal, dvz_dgaml
 
-    real(kind=CUSTOM_REAL) :: dux_dxl, dux_dyl, dux_dzl
-    real(kind=CUSTOM_REAL) :: duy_dxl, duy_dyl, duy_dzl
-    real(kind=CUSTOM_REAL) :: duz_dxl, duz_dyl, duz_dzl
-    real(kind=CUSTOM_REAL) :: dux_dyl_plus_duy_dxl
-    real(kind=CUSTOM_REAL) :: duz_dxl_plus_dux_dzl, duz_dyl_plus_duy_dzl
+  real(kind=CUSTOM_REAL) :: dux_dxl, dux_dyl, dux_dzl
+  real(kind=CUSTOM_REAL) :: duy_dxl, duy_dyl, duy_dzl
+  real(kind=CUSTOM_REAL) :: duz_dxl, duz_dyl, duz_dzl
+  real(kind=CUSTOM_REAL) :: dux_dyl_plus_duy_dxl
+  real(kind=CUSTOM_REAL) :: duz_dxl_plus_dux_dzl, duz_dyl_plus_duy_dzl
 
-    real(kind=CUSTOM_REAL) :: dvx_dxl, dvx_dyl, dvx_dzl
-    real(kind=CUSTOM_REAL) :: dvy_dxl, dvy_dyl, dvy_dzl
-    real(kind=CUSTOM_REAL) :: dvz_dxl, dvz_dyl, dvz_dzl
-    real(kind=CUSTOM_REAL) :: dvx_dyl_plus_dvy_dxl
-    real(kind=CUSTOM_REAL) :: dvz_dxl_plus_dvx_dzl, dvz_dyl_plus_dvy_dzl
+  real(kind=CUSTOM_REAL) :: dvx_dxl, dvx_dyl, dvx_dzl
+  real(kind=CUSTOM_REAL) :: dvy_dxl, dvy_dyl, dvy_dzl
+  real(kind=CUSTOM_REAL) :: dvz_dxl, dvz_dyl, dvz_dzl
+  real(kind=CUSTOM_REAL) :: dvx_dyl_plus_dvy_dxl
+  real(kind=CUSTOM_REAL) :: dvz_dxl_plus_dvx_dzl, dvz_dyl_plus_dvy_dzl
 
-    real(kind=CUSTOM_REAL) :: fac
+  real(kind=CUSTOM_REAL) :: fac
 
-    real(kind=CUSTOM_REAL), dimension(3,ngllx,nglly,ngllz) :: vadj_gll, afwd_gll
-    real(kind=CUSTOM_REAL), dimension(3,ngllx,nglly,ngllz) :: vsem_fwd_gll, dsem_adj_gll
+  real(kind=CUSTOM_REAL), dimension(3,ngllx,nglly,ngllz) :: vadj_gll, afwd_gll
+  real(kind=CUSTOM_REAL), dimension(3,ngllx,nglly,ngllz) :: vsem_fwd_gll, dsem_adj_gll
 
-    !*** Loop over GLL points
-    do ielem=1,nspec_ab
+  !*** Loop over GLL points
+  do ielem = 1,nspec_ab
 
-       if (ispec_is_elastic(ielem)) then
+     if (ispec_is_elastic(ielem)) then
 
-          !*** Real first loop for optim
-          do k=1,ngllz
-             do j=1,nglly
-                do i=1,ngllx
+        !*** Real first loop for optim
+        do k = 1,ngllz
+           do j = 1,nglly
+              do i = 1,ngllx
 
-                   iglob  = ibool(i,j,k,ielem)    ! find global index
+                 iglob  = ibool(i,j,k,ielem)    ! find global index
 
-                   vadj_gll(1,i,j,k) = vsem_adj(1,iglob)
-                   vadj_gll(2,i,j,k) = vsem_adj(2,iglob)
-                   vadj_gll(3,i,j,k) = vsem_adj(3,iglob)
+                 vadj_gll(1,i,j,k) = vsem_adj(1,iglob)
+                 vadj_gll(2,i,j,k) = vsem_adj(2,iglob)
+                 vadj_gll(3,i,j,k) = vsem_adj(3,iglob)
 
-                   afwd_gll(1,i,j,k) = asem_fwd(1,iglob)
-                   afwd_gll(2,i,j,k) = asem_fwd(2,iglob)
-                   afwd_gll(3,i,j,k) = asem_fwd(3,iglob)
+                 afwd_gll(1,i,j,k) = asem_fwd(1,iglob)
+                 afwd_gll(2,i,j,k) = asem_fwd(2,iglob)
+                 afwd_gll(3,i,j,k) = asem_fwd(3,iglob)
 
-                   dsem_adj_gll(1,i,j,k) = dsem_adj(1,iglob)
-                   dsem_adj_gll(2,i,j,k) = dsem_adj(2,iglob)
-                   dsem_adj_gll(3,i,j,k) = dsem_adj(3,iglob)
+                 dsem_adj_gll(1,i,j,k) = dsem_adj(1,iglob)
+                 dsem_adj_gll(2,i,j,k) = dsem_adj(2,iglob)
+                 dsem_adj_gll(3,i,j,k) = dsem_adj(3,iglob)
 
-                   vsem_fwd_gll(1,i,j,k) = vsem_fwd(1,iglob)
-                   vsem_fwd_gll(2,i,j,k) = vsem_fwd(2,iglob)
-                   vsem_fwd_gll(3,i,j,k) = vsem_fwd(3,iglob)
+                 vsem_fwd_gll(1,i,j,k) = vsem_fwd(1,iglob)
+                 vsem_fwd_gll(2,i,j,k) = vsem_fwd(2,iglob)
+                 vsem_fwd_gll(3,i,j,k) = vsem_fwd(3,iglob)
 
-                enddo
-             enddo
-          enddo
+              enddo
+           enddo
+        enddo
 
-          ielem_irreg = irregular_element_number(ielem)
+        ielem_irreg = irregular_element_number(ielem)
 
-          do k=1,ngllz
-             do j=1,nglly
-                do i=1,ngllx
+        do k = 1,ngllz
+           do j = 1,nglly
+              do i = 1,ngllx
 
 !! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
 !! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
@@ -623,325 +631,325 @@
 !! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
 !! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
 
-                   !================================================================
-                   ! Compute strain related terms (adjoit strain and time der of normal strain)
-                   !*** Init derivatives to 0
-                   !* Normal
-                   dvx_dxil  = 0._CUSTOM_REAL
-                   dvx_detal = 0._CUSTOM_REAL
-                   dvx_dgaml = 0._CUSTOM_REAL
-                   dvy_dxil  = 0._CUSTOM_REAL
-                   dvy_detal = 0._CUSTOM_REAL
-                   dvy_dgaml = 0._CUSTOM_REAL
-                   dvz_dxil  = 0._CUSTOM_REAL
-                   dvz_detal = 0._CUSTOM_REAL
-                   dvz_dgaml = 0._CUSTOM_REAL
+                 !================================================================
+                 ! Compute strain related terms (adjoit strain and time der of normal strain)
+                 !*** Init derivatives to 0
+                 !* Normal
+                 dvx_dxil  = 0._CUSTOM_REAL
+                 dvx_detal = 0._CUSTOM_REAL
+                 dvx_dgaml = 0._CUSTOM_REAL
+                 dvy_dxil  = 0._CUSTOM_REAL
+                 dvy_detal = 0._CUSTOM_REAL
+                 dvy_dgaml = 0._CUSTOM_REAL
+                 dvz_dxil  = 0._CUSTOM_REAL
+                 dvz_detal = 0._CUSTOM_REAL
+                 dvz_dgaml = 0._CUSTOM_REAL
 
-                   !* Adjoint
-                   dux_dxil  = 0._CUSTOM_REAL
-                   dux_detal = 0._CUSTOM_REAL
-                   dux_dgaml = 0._CUSTOM_REAL
-                   duy_dxil  = 0._CUSTOM_REAL
-                   duy_detal = 0._CUSTOM_REAL
-                   duy_dgaml = 0._CUSTOM_REAL
-                   duz_dxil  = 0._CUSTOM_REAL
-                   duz_detal = 0._CUSTOM_REAL
-                   duz_dgaml = 0._CUSTOM_REAL
+                 !* Adjoint
+                 dux_dxil  = 0._CUSTOM_REAL
+                 dux_detal = 0._CUSTOM_REAL
+                 dux_dgaml = 0._CUSTOM_REAL
+                 duy_dxil  = 0._CUSTOM_REAL
+                 duy_detal = 0._CUSTOM_REAL
+                 duy_dgaml = 0._CUSTOM_REAL
+                 duz_dxil  = 0._CUSTOM_REAL
+                 duz_detal = 0._CUSTOM_REAL
+                 duz_dgaml = 0._CUSTOM_REAL
 
-                   !*** Field derivatives wrt xi
-                   fac = hprime_xx(1,i)          ! derivative of local lagrange polynomials
-                   dvx_dxil = dvx_dxil + vsem_fwd_gll(1,1,j,k) * fac
-                   dvy_dxil = dvy_dxil + vsem_fwd_gll(2,1,j,k) * fac
-                   dvz_dxil = dvz_dxil + vsem_fwd_gll(3,1,j,k) * fac
-                   dux_dxil = dux_dxil + dsem_adj_gll(1,1,j,k) * fac
-                   duy_dxil = duy_dxil + dsem_adj_gll(2,1,j,k) * fac
-                   duz_dxil = duz_dxil + dsem_adj_gll(3,1,j,k) * fac
+                 !*** Field derivatives wrt xi
+                 fac = hprime_xx(1,i)          ! derivative of local lagrange polynomials
+                 dvx_dxil = dvx_dxil + vsem_fwd_gll(1,1,j,k) * fac
+                 dvy_dxil = dvy_dxil + vsem_fwd_gll(2,1,j,k) * fac
+                 dvz_dxil = dvz_dxil + vsem_fwd_gll(3,1,j,k) * fac
+                 dux_dxil = dux_dxil + dsem_adj_gll(1,1,j,k) * fac
+                 duy_dxil = duy_dxil + dsem_adj_gll(2,1,j,k) * fac
+                 duz_dxil = duz_dxil + dsem_adj_gll(3,1,j,k) * fac
 
-                   fac = hprime_xx(2,i)          ! derivative of local lagrange polynomials
-                   dvx_dxil = dvx_dxil + vsem_fwd_gll(1,2,j,k) * fac
-                   dvy_dxil = dvy_dxil + vsem_fwd_gll(2,2,j,k) * fac
-                   dvz_dxil = dvz_dxil + vsem_fwd_gll(3,2,j,k) * fac
-                   dux_dxil = dux_dxil + dsem_adj_gll(1,2,j,k) * fac
-                   duy_dxil = duy_dxil + dsem_adj_gll(2,2,j,k) * fac
-                   duz_dxil = duz_dxil + dsem_adj_gll(3,2,j,k) * fac
+                 fac = hprime_xx(2,i)          ! derivative of local lagrange polynomials
+                 dvx_dxil = dvx_dxil + vsem_fwd_gll(1,2,j,k) * fac
+                 dvy_dxil = dvy_dxil + vsem_fwd_gll(2,2,j,k) * fac
+                 dvz_dxil = dvz_dxil + vsem_fwd_gll(3,2,j,k) * fac
+                 dux_dxil = dux_dxil + dsem_adj_gll(1,2,j,k) * fac
+                 duy_dxil = duy_dxil + dsem_adj_gll(2,2,j,k) * fac
+                 duz_dxil = duz_dxil + dsem_adj_gll(3,2,j,k) * fac
 
-                   fac = hprime_xx(3,i)          ! derivative of local lagrange polynomials
-                   dvx_dxil = dvx_dxil + vsem_fwd_gll(1,3,j,k) * fac
-                   dvy_dxil = dvy_dxil + vsem_fwd_gll(2,3,j,k) * fac
-                   dvz_dxil = dvz_dxil + vsem_fwd_gll(3,3,j,k) * fac
-                   dux_dxil = dux_dxil + dsem_adj_gll(1,3,j,k) * fac
-                   duy_dxil = duy_dxil + dsem_adj_gll(2,3,j,k) * fac
-                   duz_dxil = duz_dxil + dsem_adj_gll(3,3,j,k) * fac
+                 fac = hprime_xx(3,i)          ! derivative of local lagrange polynomials
+                 dvx_dxil = dvx_dxil + vsem_fwd_gll(1,3,j,k) * fac
+                 dvy_dxil = dvy_dxil + vsem_fwd_gll(2,3,j,k) * fac
+                 dvz_dxil = dvz_dxil + vsem_fwd_gll(3,3,j,k) * fac
+                 dux_dxil = dux_dxil + dsem_adj_gll(1,3,j,k) * fac
+                 duy_dxil = duy_dxil + dsem_adj_gll(2,3,j,k) * fac
+                 duz_dxil = duz_dxil + dsem_adj_gll(3,3,j,k) * fac
 
-                   fac = hprime_xx(4,i)          ! derivative of local lagrange polynomials
-                   dvx_dxil = dvx_dxil + vsem_fwd_gll(1,4,j,k) * fac
-                   dvy_dxil = dvy_dxil + vsem_fwd_gll(2,4,j,k) * fac
-                   dvz_dxil = dvz_dxil + vsem_fwd_gll(3,4,j,k) * fac
-                   dux_dxil = dux_dxil + dsem_adj_gll(1,4,j,k) * fac
-                   duy_dxil = duy_dxil + dsem_adj_gll(2,4,j,k) * fac
-                   duz_dxil = duz_dxil + dsem_adj_gll(3,4,j,k) * fac
+                 fac = hprime_xx(4,i)          ! derivative of local lagrange polynomials
+                 dvx_dxil = dvx_dxil + vsem_fwd_gll(1,4,j,k) * fac
+                 dvy_dxil = dvy_dxil + vsem_fwd_gll(2,4,j,k) * fac
+                 dvz_dxil = dvz_dxil + vsem_fwd_gll(3,4,j,k) * fac
+                 dux_dxil = dux_dxil + dsem_adj_gll(1,4,j,k) * fac
+                 duy_dxil = duy_dxil + dsem_adj_gll(2,4,j,k) * fac
+                 duz_dxil = duz_dxil + dsem_adj_gll(3,4,j,k) * fac
 
-                   fac = hprime_xx(5,i)          ! derivative of local lagrange polynomials
-                   dvx_dxil = dvx_dxil + vsem_fwd_gll(1,5,j,k) * fac
-                   dvy_dxil = dvy_dxil + vsem_fwd_gll(2,5,j,k) * fac
-                   dvz_dxil = dvz_dxil + vsem_fwd_gll(3,5,j,k) * fac
-                   dux_dxil = dux_dxil + dsem_adj_gll(1,5,j,k) * fac
-                   duy_dxil = duy_dxil + dsem_adj_gll(2,5,j,k) * fac
-                   duz_dxil = duz_dxil + dsem_adj_gll(3,5,j,k) * fac
+                 fac = hprime_xx(5,i)          ! derivative of local lagrange polynomials
+                 dvx_dxil = dvx_dxil + vsem_fwd_gll(1,5,j,k) * fac
+                 dvy_dxil = dvy_dxil + vsem_fwd_gll(2,5,j,k) * fac
+                 dvz_dxil = dvz_dxil + vsem_fwd_gll(3,5,j,k) * fac
+                 dux_dxil = dux_dxil + dsem_adj_gll(1,5,j,k) * fac
+                 duy_dxil = duy_dxil + dsem_adj_gll(2,5,j,k) * fac
+                 duz_dxil = duz_dxil + dsem_adj_gll(3,5,j,k) * fac
 
-                   !*** Field derivatives wrt eta
-                   fac = hprime_yy(1,j)         ! derivative of local lageange polynomials
-                   dvx_detal = dvx_detal + vsem_fwd_gll(1,i,1,k) * fac
-                   dvy_detal = dvy_detal + vsem_fwd_gll(2,i,1,k) * fac
-                   dvz_detal = dvz_detal + vsem_fwd_gll(3,i,1,k) * fac
-                   dux_detal = dux_detal + dsem_adj_gll(1,i,1,k) * fac
-                   duy_detal = duy_detal + dsem_adj_gll(2,i,1,k) * fac
-                   duz_detal = duz_detal + dsem_adj_gll(3,i,1,k) * fac
+                 !*** Field derivatives wrt eta
+                 fac = hprime_yy(1,j)         ! derivative of local lageange polynomials
+                 dvx_detal = dvx_detal + vsem_fwd_gll(1,i,1,k) * fac
+                 dvy_detal = dvy_detal + vsem_fwd_gll(2,i,1,k) * fac
+                 dvz_detal = dvz_detal + vsem_fwd_gll(3,i,1,k) * fac
+                 dux_detal = dux_detal + dsem_adj_gll(1,i,1,k) * fac
+                 duy_detal = duy_detal + dsem_adj_gll(2,i,1,k) * fac
+                 duz_detal = duz_detal + dsem_adj_gll(3,i,1,k) * fac
 
-                   fac = hprime_yy(2,j)         ! derivative of local lageange polynomials
-                   dvx_detal = dvx_detal + vsem_fwd_gll(1,i,2,k) * fac
-                   dvy_detal = dvy_detal + vsem_fwd_gll(2,i,2,k) * fac
-                   dvz_detal = dvz_detal + vsem_fwd_gll(3,i,2,k) * fac
-                   dux_detal = dux_detal + dsem_adj_gll(1,i,2,k) * fac
-                   duy_detal = duy_detal + dsem_adj_gll(2,i,2,k) * fac
-                   duz_detal = duz_detal + dsem_adj_gll(3,i,2,k) * fac
+                 fac = hprime_yy(2,j)         ! derivative of local lageange polynomials
+                 dvx_detal = dvx_detal + vsem_fwd_gll(1,i,2,k) * fac
+                 dvy_detal = dvy_detal + vsem_fwd_gll(2,i,2,k) * fac
+                 dvz_detal = dvz_detal + vsem_fwd_gll(3,i,2,k) * fac
+                 dux_detal = dux_detal + dsem_adj_gll(1,i,2,k) * fac
+                 duy_detal = duy_detal + dsem_adj_gll(2,i,2,k) * fac
+                 duz_detal = duz_detal + dsem_adj_gll(3,i,2,k) * fac
 
-                   fac = hprime_yy(3,j)         ! derivative of local lageange polynomials
-                   dvx_detal = dvx_detal + vsem_fwd_gll(1,i,3,k) * fac
-                   dvy_detal = dvy_detal + vsem_fwd_gll(2,i,3,k) * fac
-                   dvz_detal = dvz_detal + vsem_fwd_gll(3,i,3,k) * fac
-                   dux_detal = dux_detal + dsem_adj_gll(1,i,3,k) * fac
-                   duy_detal = duy_detal + dsem_adj_gll(2,i,3,k) * fac
-                   duz_detal = duz_detal + dsem_adj_gll(3,i,3,k) * fac
+                 fac = hprime_yy(3,j)         ! derivative of local lageange polynomials
+                 dvx_detal = dvx_detal + vsem_fwd_gll(1,i,3,k) * fac
+                 dvy_detal = dvy_detal + vsem_fwd_gll(2,i,3,k) * fac
+                 dvz_detal = dvz_detal + vsem_fwd_gll(3,i,3,k) * fac
+                 dux_detal = dux_detal + dsem_adj_gll(1,i,3,k) * fac
+                 duy_detal = duy_detal + dsem_adj_gll(2,i,3,k) * fac
+                 duz_detal = duz_detal + dsem_adj_gll(3,i,3,k) * fac
 
-                   fac = hprime_yy(4,j)         ! derivative of local lageange polynomials
-                   dvx_detal = dvx_detal + vsem_fwd_gll(1,i,4,k) * fac
-                   dvy_detal = dvy_detal + vsem_fwd_gll(2,i,4,k) * fac
-                   dvz_detal = dvz_detal + vsem_fwd_gll(3,i,4,k) * fac
-                   dux_detal = dux_detal + dsem_adj_gll(1,i,4,k) * fac
-                   duy_detal = duy_detal + dsem_adj_gll(2,i,4,k) * fac
-                   duz_detal = duz_detal + dsem_adj_gll(3,i,4,k) * fac
+                 fac = hprime_yy(4,j)         ! derivative of local lageange polynomials
+                 dvx_detal = dvx_detal + vsem_fwd_gll(1,i,4,k) * fac
+                 dvy_detal = dvy_detal + vsem_fwd_gll(2,i,4,k) * fac
+                 dvz_detal = dvz_detal + vsem_fwd_gll(3,i,4,k) * fac
+                 dux_detal = dux_detal + dsem_adj_gll(1,i,4,k) * fac
+                 duy_detal = duy_detal + dsem_adj_gll(2,i,4,k) * fac
+                 duz_detal = duz_detal + dsem_adj_gll(3,i,4,k) * fac
 
-                   fac = hprime_yy(5,j)         ! derivative of local lageange polynomials
-                   dvx_detal = dvx_detal + vsem_fwd_gll(1,i,5,k) * fac
-                   dvy_detal = dvy_detal + vsem_fwd_gll(2,i,5,k) * fac
-                   dvz_detal = dvz_detal + vsem_fwd_gll(3,i,5,k) * fac
-                   dux_detal = dux_detal + dsem_adj_gll(1,i,5,k) * fac
-                   duy_detal = duy_detal + dsem_adj_gll(2,i,5,k) * fac
-                   duz_detal = duz_detal + dsem_adj_gll(3,i,5,k) * fac
+                 fac = hprime_yy(5,j)         ! derivative of local lageange polynomials
+                 dvx_detal = dvx_detal + vsem_fwd_gll(1,i,5,k) * fac
+                 dvy_detal = dvy_detal + vsem_fwd_gll(2,i,5,k) * fac
+                 dvz_detal = dvz_detal + vsem_fwd_gll(3,i,5,k) * fac
+                 dux_detal = dux_detal + dsem_adj_gll(1,i,5,k) * fac
+                 duy_detal = duy_detal + dsem_adj_gll(2,i,5,k) * fac
+                 duz_detal = duz_detal + dsem_adj_gll(3,i,5,k) * fac
 
-                   !*** Field derivatives wrt gamma
-                   fac = hprime_zz(1,k)         ! derivative of local lagange polynomials
-                   dvx_dgaml = dvx_dgaml + vsem_fwd_gll(1,i,j,1) * fac
-                   dvy_dgaml = dvy_dgaml + vsem_fwd_gll(2,i,j,1) * fac
-                   dvz_dgaml = dvz_dgaml + vsem_fwd_gll(3,i,j,1) * fac
-                   dux_dgaml = dux_dgaml + dsem_adj_gll(1,i,j,1) * fac
-                   duy_dgaml = duy_dgaml + dsem_adj_gll(2,i,j,1) * fac
-                   duz_dgaml = duz_dgaml + dsem_adj_gll(3,i,j,1) * fac
+                 !*** Field derivatives wrt gamma
+                 fac = hprime_zz(1,k)         ! derivative of local lagange polynomials
+                 dvx_dgaml = dvx_dgaml + vsem_fwd_gll(1,i,j,1) * fac
+                 dvy_dgaml = dvy_dgaml + vsem_fwd_gll(2,i,j,1) * fac
+                 dvz_dgaml = dvz_dgaml + vsem_fwd_gll(3,i,j,1) * fac
+                 dux_dgaml = dux_dgaml + dsem_adj_gll(1,i,j,1) * fac
+                 duy_dgaml = duy_dgaml + dsem_adj_gll(2,i,j,1) * fac
+                 duz_dgaml = duz_dgaml + dsem_adj_gll(3,i,j,1) * fac
 
-                   fac = hprime_zz(2,k)         ! derivative of local lagange polynomials
-                   dvx_dgaml = dvx_dgaml + vsem_fwd_gll(1,i,j,2) * fac
-                   dvy_dgaml = dvy_dgaml + vsem_fwd_gll(2,i,j,2) * fac
-                   dvz_dgaml = dvz_dgaml + vsem_fwd_gll(3,i,j,2) * fac
-                   dux_dgaml = dux_dgaml + dsem_adj_gll(1,i,j,2) * fac
-                   duy_dgaml = duy_dgaml + dsem_adj_gll(2,i,j,2) * fac
-                   duz_dgaml = duz_dgaml + dsem_adj_gll(3,i,j,2) * fac
+                 fac = hprime_zz(2,k)         ! derivative of local lagange polynomials
+                 dvx_dgaml = dvx_dgaml + vsem_fwd_gll(1,i,j,2) * fac
+                 dvy_dgaml = dvy_dgaml + vsem_fwd_gll(2,i,j,2) * fac
+                 dvz_dgaml = dvz_dgaml + vsem_fwd_gll(3,i,j,2) * fac
+                 dux_dgaml = dux_dgaml + dsem_adj_gll(1,i,j,2) * fac
+                 duy_dgaml = duy_dgaml + dsem_adj_gll(2,i,j,2) * fac
+                 duz_dgaml = duz_dgaml + dsem_adj_gll(3,i,j,2) * fac
 
-                   fac = hprime_zz(3,k)         ! derivative of local lagange polynomials
-                   dvx_dgaml = dvx_dgaml + vsem_fwd_gll(1,i,j,3) * fac
-                   dvy_dgaml = dvy_dgaml + vsem_fwd_gll(2,i,j,3) * fac
-                   dvz_dgaml = dvz_dgaml + vsem_fwd_gll(3,i,j,3) * fac
-                   dux_dgaml = dux_dgaml + dsem_adj_gll(1,i,j,3) * fac
-                   duy_dgaml = duy_dgaml + dsem_adj_gll(2,i,j,3) * fac
-                   duz_dgaml = duz_dgaml + dsem_adj_gll(3,i,j,3) * fac
+                 fac = hprime_zz(3,k)         ! derivative of local lagange polynomials
+                 dvx_dgaml = dvx_dgaml + vsem_fwd_gll(1,i,j,3) * fac
+                 dvy_dgaml = dvy_dgaml + vsem_fwd_gll(2,i,j,3) * fac
+                 dvz_dgaml = dvz_dgaml + vsem_fwd_gll(3,i,j,3) * fac
+                 dux_dgaml = dux_dgaml + dsem_adj_gll(1,i,j,3) * fac
+                 duy_dgaml = duy_dgaml + dsem_adj_gll(2,i,j,3) * fac
+                 duz_dgaml = duz_dgaml + dsem_adj_gll(3,i,j,3) * fac
 
-                   fac = hprime_zz(4,k)         ! derivative of local lagange polynomials
-                   dvx_dgaml = dvx_dgaml + vsem_fwd_gll(1,i,j,4) * fac
-                   dvy_dgaml = dvy_dgaml + vsem_fwd_gll(2,i,j,4) * fac
-                   dvz_dgaml = dvz_dgaml + vsem_fwd_gll(3,i,j,4) * fac
-                   dux_dgaml = dux_dgaml + dsem_adj_gll(1,i,j,4) * fac
-                   duy_dgaml = duy_dgaml + dsem_adj_gll(2,i,j,4) * fac
-                   duz_dgaml = duz_dgaml + dsem_adj_gll(3,i,j,4) * fac
+                 fac = hprime_zz(4,k)         ! derivative of local lagange polynomials
+                 dvx_dgaml = dvx_dgaml + vsem_fwd_gll(1,i,j,4) * fac
+                 dvy_dgaml = dvy_dgaml + vsem_fwd_gll(2,i,j,4) * fac
+                 dvz_dgaml = dvz_dgaml + vsem_fwd_gll(3,i,j,4) * fac
+                 dux_dgaml = dux_dgaml + dsem_adj_gll(1,i,j,4) * fac
+                 duy_dgaml = duy_dgaml + dsem_adj_gll(2,i,j,4) * fac
+                 duz_dgaml = duz_dgaml + dsem_adj_gll(3,i,j,4) * fac
 
-                   fac = hprime_zz(5,k)         ! derivative of local lagange polynomials
-                   dvx_dgaml = dvx_dgaml + vsem_fwd_gll(1,i,j,5) * fac
-                   dvy_dgaml = dvy_dgaml + vsem_fwd_gll(2,i,j,5) * fac
-                   dvz_dgaml = dvz_dgaml + vsem_fwd_gll(3,i,j,5) * fac
-                   dux_dgaml = dux_dgaml + dsem_adj_gll(1,i,j,5) * fac
-                   duy_dgaml = duy_dgaml + dsem_adj_gll(2,i,j,5) * fac
-                   duz_dgaml = duz_dgaml + dsem_adj_gll(3,i,j,5) * fac
+                 fac = hprime_zz(5,k)         ! derivative of local lagange polynomials
+                 dvx_dgaml = dvx_dgaml + vsem_fwd_gll(1,i,j,5) * fac
+                 dvy_dgaml = dvy_dgaml + vsem_fwd_gll(2,i,j,5) * fac
+                 dvz_dgaml = dvz_dgaml + vsem_fwd_gll(3,i,j,5) * fac
+                 dux_dgaml = dux_dgaml + dsem_adj_gll(1,i,j,5) * fac
+                 duy_dgaml = duy_dgaml + dsem_adj_gll(2,i,j,5) * fac
+                 duz_dgaml = duz_dgaml + dsem_adj_gll(3,i,j,5) * fac
 
-                   if (ielem_irreg /= 0) then ! irregular element
+                 if (ielem_irreg /= 0) then ! irregular element
 
-                     !*** Get local derivatives of ref square coord wrt Cartesian ones (jacobian)
-                     dxil_dxl  = xix(i,j,k,ielem_irreg)
-                     dxil_dyl  = xiy(i,j,k,ielem_irreg)
-                     dxil_dzl  = xiz(i,j,k,ielem_irreg)
-                     detal_dxl = etax(i,j,k,ielem_irreg)
-                     detal_dyl = etay(i,j,k,ielem_irreg)
-                     detal_dzl = etaz(i,j,k,ielem_irreg)
-                     dgaml_dxl = gammax(i,j,k,ielem_irreg)
-                     dgaml_dyl = gammay(i,j,k,ielem_irreg)
-                     dgaml_dzl = gammaz(i,j,k,ielem_irreg)
+                   !*** Get local derivatives of ref square coord wrt Cartesian ones (jacobian)
+                   dxil_dxl  = xix(i,j,k,ielem_irreg)
+                   dxil_dyl  = xiy(i,j,k,ielem_irreg)
+                   dxil_dzl  = xiz(i,j,k,ielem_irreg)
+                   detal_dxl = etax(i,j,k,ielem_irreg)
+                   detal_dyl = etay(i,j,k,ielem_irreg)
+                   detal_dzl = etaz(i,j,k,ielem_irreg)
+                   dgaml_dxl = gammax(i,j,k,ielem_irreg)
+                   dgaml_dyl = gammay(i,j,k,ielem_irreg)
+                   dgaml_dzl = gammaz(i,j,k,ielem_irreg)
 
-                     !*** Strain
-                     !* Normal state normal strain
-                     dvx_dxl = dvx_dxil * dxil_dxl + dvx_detal * detal_dxl + dvx_dgaml * dgaml_dxl
-                     dvx_dyl = dvx_dxil * dxil_dyl + dvx_detal * detal_dyl + dvx_dgaml * dgaml_dyl
-                     dvx_dzl = dvx_dxil * dxil_dzl + dvx_detal * detal_dzl + dvx_dgaml * dgaml_dzl
-                     dvy_dxl = dvy_dxil * dxil_dxl + dvy_detal * detal_dxl + dvy_dgaml * dgaml_dxl
-                     dvy_dyl = dvy_dxil * dxil_dyl + dvy_detal * detal_dyl + dvy_dgaml * dgaml_dyl
-                     dvy_dzl = dvy_dxil * dxil_dzl + dvy_detal * detal_dzl + dvy_dgaml * dgaml_dzl
-                     dvz_dxl = dvz_dxil * dxil_dxl + dvz_detal * detal_dxl + dvz_dgaml * dgaml_dxl
-                     dvz_dyl = dvz_dxil * dxil_dyl + dvz_detal * detal_dyl + dvz_dgaml * dgaml_dyl
-                     dvz_dzl = dvz_dxil * dxil_dzl + dvz_detal * detal_dzl + dvz_dgaml * dgaml_dzl
+                   !*** Strain
+                   !* Normal state normal strain
+                   dvx_dxl = dvx_dxil * dxil_dxl + dvx_detal * detal_dxl + dvx_dgaml * dgaml_dxl
+                   dvx_dyl = dvx_dxil * dxil_dyl + dvx_detal * detal_dyl + dvx_dgaml * dgaml_dyl
+                   dvx_dzl = dvx_dxil * dxil_dzl + dvx_detal * detal_dzl + dvx_dgaml * dgaml_dzl
+                   dvy_dxl = dvy_dxil * dxil_dxl + dvy_detal * detal_dxl + dvy_dgaml * dgaml_dxl
+                   dvy_dyl = dvy_dxil * dxil_dyl + dvy_detal * detal_dyl + dvy_dgaml * dgaml_dyl
+                   dvy_dzl = dvy_dxil * dxil_dzl + dvy_detal * detal_dzl + dvy_dgaml * dgaml_dzl
+                   dvz_dxl = dvz_dxil * dxil_dxl + dvz_detal * detal_dxl + dvz_dgaml * dgaml_dxl
+                   dvz_dyl = dvz_dxil * dxil_dyl + dvz_detal * detal_dyl + dvz_dgaml * dgaml_dyl
+                   dvz_dzl = dvz_dxil * dxil_dzl + dvz_detal * detal_dzl + dvz_dgaml * dgaml_dzl
 
-                     !* Adjoint state normal strain
-                     dux_dxl = dux_dxil * dxil_dxl + dux_detal * detal_dxl + dux_dgaml * dgaml_dxl
-                     dux_dyl = dux_dxil * dxil_dyl + dux_detal * detal_dyl + dux_dgaml * dgaml_dyl
-                     dux_dzl = dux_dxil * dxil_dzl + dux_detal * detal_dzl + dux_dgaml * dgaml_dzl
-                     duy_dxl = duy_dxil * dxil_dxl + duy_detal * detal_dxl + duy_dgaml * dgaml_dxl
-                     duy_dyl = duy_dxil * dxil_dyl + duy_detal * detal_dyl + duy_dgaml * dgaml_dyl
-                     duy_dzl = duy_dxil * dxil_dzl + duy_detal * detal_dzl + duy_dgaml * dgaml_dzl
-                     duz_dxl = duz_dxil * dxil_dxl + duz_detal * detal_dxl + duz_dgaml * dgaml_dxl
-                     duz_dyl = duz_dxil * dxil_dyl + duz_detal * detal_dyl + duz_dgaml * dgaml_dyl
-                     duz_dzl = duz_dxil * dxil_dzl + duz_detal * detal_dzl + duz_dgaml * dgaml_dzl
+                   !* Adjoint state normal strain
+                   dux_dxl = dux_dxil * dxil_dxl + dux_detal * detal_dxl + dux_dgaml * dgaml_dxl
+                   dux_dyl = dux_dxil * dxil_dyl + dux_detal * detal_dyl + dux_dgaml * dgaml_dyl
+                   dux_dzl = dux_dxil * dxil_dzl + dux_detal * detal_dzl + dux_dgaml * dgaml_dzl
+                   duy_dxl = duy_dxil * dxil_dxl + duy_detal * detal_dxl + duy_dgaml * dgaml_dxl
+                   duy_dyl = duy_dxil * dxil_dyl + duy_detal * detal_dyl + duy_dgaml * dgaml_dyl
+                   duy_dzl = duy_dxil * dxil_dzl + duy_detal * detal_dzl + duy_dgaml * dgaml_dzl
+                   duz_dxl = duz_dxil * dxil_dxl + duz_detal * detal_dxl + duz_dgaml * dgaml_dxl
+                   duz_dyl = duz_dxil * dxil_dyl + duz_detal * detal_dyl + duz_dgaml * dgaml_dyl
+                   duz_dzl = duz_dxil * dxil_dzl + duz_detal * detal_dzl + duz_dgaml * dgaml_dzl
 
-                   else ! regular element
+                 else ! regular element
 
-                     !*** Strain
-                     !* Normal state normal strain
-                     dvx_dxl = dvx_dxil * xix_regular
-                     dvx_dyl = dvx_detal * xix_regular
-                     dvx_dzl = dvx_dgaml * xix_regular
-                     dvy_dxl = dvy_dxil *  xix_regular
-                     dvy_dyl = dvy_detal *  xix_regular
-                     dvy_dzl = dvy_dgaml * xix_regular
-                     dvz_dxl = dvz_dxil *  xix_regular
-                     dvz_dyl = dvz_detal * xix_regular
-                     dvz_dzl = dvz_dgaml * xix_regular
+                   !*** Strain
+                   !* Normal state normal strain
+                   dvx_dxl = dvx_dxil * xix_regular
+                   dvx_dyl = dvx_detal * xix_regular
+                   dvx_dzl = dvx_dgaml * xix_regular
+                   dvy_dxl = dvy_dxil *  xix_regular
+                   dvy_dyl = dvy_detal *  xix_regular
+                   dvy_dzl = dvy_dgaml * xix_regular
+                   dvz_dxl = dvz_dxil *  xix_regular
+                   dvz_dyl = dvz_detal * xix_regular
+                   dvz_dzl = dvz_dgaml * xix_regular
 
-                     !* Adjoint state normal strain
-                     dux_dxl = dux_dxil * xix_regular
-                     dux_dyl = dux_detal * xix_regular
-                     dux_dzl = dux_dgaml * xix_regular
-                     duy_dxl = duy_dxil * xix_regular
-                     duy_dyl = duy_detal * xix_regular
-                     duy_dzl = duy_dgaml * xix_regular
-                     duz_dxl = duz_dxil * xix_regular
-                     duz_dyl = duz_detal * xix_regular
-                     duz_dzl = duz_dgaml * xix_regular
+                   !* Adjoint state normal strain
+                   dux_dxl = dux_dxil * xix_regular
+                   dux_dyl = dux_detal * xix_regular
+                   dux_dzl = dux_dgaml * xix_regular
+                   duy_dxl = duy_dxil * xix_regular
+                   duy_dyl = duy_detal * xix_regular
+                   duy_dzl = duy_dgaml * xix_regular
+                   duz_dxl = duz_dxil * xix_regular
+                   duz_dyl = duz_detal * xix_regular
+                   duz_dzl = duz_dgaml * xix_regular
 
-                   endif ! element regularity
+                 endif ! element regularity
 
-                   !* Normal state non normal strain
-                   dvx_dyl_plus_dvy_dxl = dvx_dyl + dvy_dxl
-                   dvz_dxl_plus_dvx_dzl = dvz_dxl + dvx_dzl
-                   dvz_dyl_plus_dvy_dzl = dvz_dyl + dvy_dzl
+                 !* Normal state non normal strain
+                 dvx_dyl_plus_dvy_dxl = dvx_dyl + dvy_dxl
+                 dvz_dxl_plus_dvx_dzl = dvz_dxl + dvx_dzl
+                 dvz_dyl_plus_dvy_dzl = dvz_dyl + dvy_dzl
 
-                   !* Adjoint state non normal strain
-                   dux_dyl_plus_duy_dxl = dux_dyl + duy_dxl
-                   duz_dxl_plus_dux_dzl = duz_dxl + dux_dzl
-                   duz_dyl_plus_duy_dzl = duz_dyl + duy_dzl
+                 !* Adjoint state non normal strain
+                 dux_dyl_plus_duy_dxl = dux_dyl + duy_dxl
+                 duz_dxl_plus_dux_dzl = duz_dxl + dux_dzl
+                 duz_dyl_plus_duy_dzl = duz_dyl + duy_dzl
 
 
-                   !===========================================================================
-                   ! Gradient
-                   rho_kl(i,j,k,ielem) = rho_kl(i,j,k,ielem) &
-                        + (afwd_gll(1,i,j,k) * vadj_gll(1,i,j,k) &
-                        +  afwd_gll(2,i,j,k) * vadj_gll(2,i,j,k) &
-                        +  afwd_gll(3,i,j,k) * vadj_gll(3,i,j,k))*deltat
+                 !===========================================================================
+                 ! Gradient
+                 rho_kl(i,j,k,ielem) = rho_kl(i,j,k,ielem) &
+                      + (afwd_gll(1,i,j,k) * vadj_gll(1,i,j,k) &
+                      +  afwd_gll(2,i,j,k) * vadj_gll(2,i,j,k) &
+                      +  afwd_gll(3,i,j,k) * vadj_gll(3,i,j,k))*deltat
 
-                   !*** Gradient wrt c_ij
-                   !* c11
-                   cijkl_kl(1,i,j,k,ielem) = cijkl_kl(1,i,j,k,ielem) + dvx_dxl*dux_dxl*deltat
+                 !*** Gradient wrt c_ij
+                 !* c11
+                 cijkl_kl(1,i,j,k,ielem) = cijkl_kl(1,i,j,k,ielem) + dvx_dxl*dux_dxl*deltat
 
-                   !* c12
-                   cijkl_kl(2,i,j,k,ielem) = cijkl_kl(2,i,j,k,ielem) &
-                        +(dvx_dxl * duy_dyl + dvy_dyl * dux_dxl)*deltat
+                 !* c12
+                 cijkl_kl(2,i,j,k,ielem) = cijkl_kl(2,i,j,k,ielem) &
+                      +(dvx_dxl * duy_dyl + dvy_dyl * dux_dxl)*deltat
 
-                   !* c13
-                   cijkl_kl(3,i,j,k,ielem) = cijkl_kl(3,i,j,k,ielem) &
-                        +(dvx_dxl * duz_dzl + dvz_dzl * dux_dxl)*deltat
+                 !* c13
+                 cijkl_kl(3,i,j,k,ielem) = cijkl_kl(3,i,j,k,ielem) &
+                      +(dvx_dxl * duz_dzl + dvz_dzl * dux_dxl)*deltat
 
-                   !* c14
-                   cijkl_kl(4,i,j,k,ielem) = cijkl_kl(4,i,j,k,ielem) &
-                        +(dvx_dxl * duz_dyl_plus_duy_dzl + dvz_dyl_plus_dvy_dzl * dux_dxl)*deltat
+                 !* c14
+                 cijkl_kl(4,i,j,k,ielem) = cijkl_kl(4,i,j,k,ielem) &
+                      +(dvx_dxl * duz_dyl_plus_duy_dzl + dvz_dyl_plus_dvy_dzl * dux_dxl)*deltat
 
-                   !* c15
-                   cijkl_kl(5,i,j,k,ielem) = cijkl_kl(5,i,j,k,ielem) &
-                        +(dvx_dxl * duz_dxl_plus_dux_dzl + dvz_dxl_plus_dvx_dzl * dux_dxl)*deltat
+                 !* c15
+                 cijkl_kl(5,i,j,k,ielem) = cijkl_kl(5,i,j,k,ielem) &
+                      +(dvx_dxl * duz_dxl_plus_dux_dzl + dvz_dxl_plus_dvx_dzl * dux_dxl)*deltat
 
-                   !* c16
-                   cijkl_kl(6,i,j,k,ielem) = cijkl_kl(6,i,j,k,ielem) &
-                        +(dvx_dxl * dux_dyl_plus_duy_dxl + dvx_dyl_plus_dvy_dxl * dux_dxl)*deltat
+                 !* c16
+                 cijkl_kl(6,i,j,k,ielem) = cijkl_kl(6,i,j,k,ielem) &
+                      +(dvx_dxl * dux_dyl_plus_duy_dxl + dvx_dyl_plus_dvy_dxl * dux_dxl)*deltat
 
-                   !* c22
-                   cijkl_kl(7,i,j,k,ielem) = cijkl_kl(7,i,j,k,ielem) + dvy_dyl*duy_dyl*deltat
+                 !* c22
+                 cijkl_kl(7,i,j,k,ielem) = cijkl_kl(7,i,j,k,ielem) + dvy_dyl*duy_dyl*deltat
 
-                   !* c23
-                   cijkl_kl(8,i,j,k,ielem) = cijkl_kl(8,i,j,k,ielem) &
-                        +(dvy_dyl * duz_dzl + dvz_dzl * duy_dyl)*deltat
+                 !* c23
+                 cijkl_kl(8,i,j,k,ielem) = cijkl_kl(8,i,j,k,ielem) &
+                      +(dvy_dyl * duz_dzl + dvz_dzl * duy_dyl)*deltat
 
-                   !* c24
-                   cijkl_kl(9,i,j,k,ielem) = cijkl_kl(9,i,j,k,ielem) &
-                        +(dvy_dyl * duz_dyl_plus_duy_dzl + dvz_dyl_plus_dvy_dzl * duy_dyl)*deltat
+                 !* c24
+                 cijkl_kl(9,i,j,k,ielem) = cijkl_kl(9,i,j,k,ielem) &
+                      +(dvy_dyl * duz_dyl_plus_duy_dzl + dvz_dyl_plus_dvy_dzl * duy_dyl)*deltat
 
-                   !* c25
-                   cijkl_kl(10,i,j,k,ielem) = cijkl_kl(10,i,j,k,ielem) &
-                        +(dvy_dyl * duz_dxl_plus_dux_dzl + dvz_dxl_plus_dvx_dzl * duy_dyl)*deltat
+                 !* c25
+                 cijkl_kl(10,i,j,k,ielem) = cijkl_kl(10,i,j,k,ielem) &
+                      +(dvy_dyl * duz_dxl_plus_dux_dzl + dvz_dxl_plus_dvx_dzl * duy_dyl)*deltat
 
-                   !* c26
-                   cijkl_kl(11,i,j,k,ielem) = cijkl_kl(11,i,j,k,ielem) &
-                        +(dvy_dyl * dux_dyl_plus_duy_dxl + dvx_dyl_plus_dvy_dxl * duy_dyl)*deltat
+                 !* c26
+                 cijkl_kl(11,i,j,k,ielem) = cijkl_kl(11,i,j,k,ielem) &
+                      +(dvy_dyl * dux_dyl_plus_duy_dxl + dvx_dyl_plus_dvy_dxl * duy_dyl)*deltat
 
-                   !* c33
-                   cijkl_kl(12,i,j,k,ielem) = cijkl_kl(12,i,j,k,ielem) + dvz_dzl*duz_dzl*deltat
+                 !* c33
+                 cijkl_kl(12,i,j,k,ielem) = cijkl_kl(12,i,j,k,ielem) + dvz_dzl*duz_dzl*deltat
 
-                   !* c34
-                   cijkl_kl(13,i,j,k,ielem) = cijkl_kl(13,i,j,k,ielem) &
-                        +(dvz_dzl * duz_dyl_plus_duy_dzl + dvz_dyl_plus_dvy_dzl * duz_dzl)*deltat
+                 !* c34
+                 cijkl_kl(13,i,j,k,ielem) = cijkl_kl(13,i,j,k,ielem) &
+                      +(dvz_dzl * duz_dyl_plus_duy_dzl + dvz_dyl_plus_dvy_dzl * duz_dzl)*deltat
 
-                   !* c35
-                   cijkl_kl(14,i,j,k,ielem) = cijkl_kl(14,i,j,k,ielem) &
-                        +(dvz_dzl * duz_dxl_plus_dux_dzl + dvz_dxl_plus_dvx_dzl * duz_dzl)*deltat
+                 !* c35
+                 cijkl_kl(14,i,j,k,ielem) = cijkl_kl(14,i,j,k,ielem) &
+                      +(dvz_dzl * duz_dxl_plus_dux_dzl + dvz_dxl_plus_dvx_dzl * duz_dzl)*deltat
 
-                   !* c36
-                   cijkl_kl(15,i,j,k,ielem) = cijkl_kl(15,i,j,k,ielem) &
-                        +(dvz_dzl * dux_dyl_plus_duy_dxl + dvx_dyl_plus_dvy_dxl * duz_dzl)*deltat
+                 !* c36
+                 cijkl_kl(15,i,j,k,ielem) = cijkl_kl(15,i,j,k,ielem) &
+                      +(dvz_dzl * dux_dyl_plus_duy_dxl + dvx_dyl_plus_dvy_dxl * duz_dzl)*deltat
 
-                   !* c44
-                   cijkl_kl(16,i,j,k,ielem) = cijkl_kl(16,i,j,k,ielem) &
-                        + dvz_dyl_plus_dvy_dzl * duz_dyl_plus_duy_dzl*deltat
+                 !* c44
+                 cijkl_kl(16,i,j,k,ielem) = cijkl_kl(16,i,j,k,ielem) &
+                      + dvz_dyl_plus_dvy_dzl * duz_dyl_plus_duy_dzl*deltat
 
-                   !* c45
-                   cijkl_kl(17,i,j,k,ielem) = cijkl_kl(17,i,j,k,ielem) &
-                        +(dvz_dyl_plus_dvy_dzl * duz_dxl_plus_dux_dzl &
-                        + dvz_dxl_plus_dvx_dzl * duz_dyl_plus_duy_dzl)*deltat
+                 !* c45
+                 cijkl_kl(17,i,j,k,ielem) = cijkl_kl(17,i,j,k,ielem) &
+                      +(dvz_dyl_plus_dvy_dzl * duz_dxl_plus_dux_dzl &
+                      + dvz_dxl_plus_dvx_dzl * duz_dyl_plus_duy_dzl)*deltat
 
-                   !* c46
-                   cijkl_kl(18,i,j,k,ielem) = cijkl_kl(18,i,j,k,ielem) &
-                        +(dvz_dyl_plus_dvy_dzl * dux_dyl_plus_duy_dxl &
-                        + dvx_dyl_plus_dvy_dxl * duz_dyl_plus_duy_dzl)*deltat
+                 !* c46
+                 cijkl_kl(18,i,j,k,ielem) = cijkl_kl(18,i,j,k,ielem) &
+                      +(dvz_dyl_plus_dvy_dzl * dux_dyl_plus_duy_dxl &
+                      + dvx_dyl_plus_dvy_dxl * duz_dyl_plus_duy_dzl)*deltat
 
-                   !* c55
-                   cijkl_kl(19,i,j,k,ielem) = cijkl_kl(19,i,j,k,ielem) &
-                        + dvz_dxl_plus_dvx_dzl * duz_dxl_plus_dux_dzl*deltat
+                 !* c55
+                 cijkl_kl(19,i,j,k,ielem) = cijkl_kl(19,i,j,k,ielem) &
+                      + dvz_dxl_plus_dvx_dzl * duz_dxl_plus_dux_dzl*deltat
 
-                   !* c56
-                   cijkl_kl(20,i,j,k,ielem) = cijkl_kl(20,i,j,k,ielem) &
-                        +(dvz_dxl_plus_dvx_dzl * dux_dyl_plus_duy_dxl &
-                        + dvx_dyl_plus_dvy_dxl * duz_dxl_plus_dux_dzl)*deltat
+                 !* c56
+                 cijkl_kl(20,i,j,k,ielem) = cijkl_kl(20,i,j,k,ielem) &
+                      +(dvz_dxl_plus_dvx_dzl * dux_dyl_plus_duy_dxl &
+                      + dvx_dyl_plus_dvy_dxl * duz_dxl_plus_dux_dzl)*deltat
 
-                   !* c66
-                   cijkl_kl(21,i,j,k,ielem) = cijkl_kl(21,i,j,k,ielem) &
-                        + dvx_dyl_plus_dvy_dxl * dux_dyl_plus_duy_dxl*deltat
-                enddo
-             enddo
-          enddo
+                 !* c66
+                 cijkl_kl(21,i,j,k,ielem) = cijkl_kl(21,i,j,k,ielem) &
+                      + dvx_dyl_plus_dvy_dxl * dux_dyl_plus_duy_dxl*deltat
+              enddo
+           enddo
+        enddo
 
-       endif ! ispec_is_elastic
+     endif ! ispec_is_elastic
 
-    enddo
+  enddo
 
   end subroutine compute_anisotropic_kernels_for_velocity_data

@@ -58,7 +58,7 @@ program xdecompose_mesh_mpi
   call world_rank(myrank)
 
   ! 1/ read Par_file
-  call read_parameter_file(myrank, BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   ! safety check, won't work yet with local-time stepping
   if (LTS_MODE) stop 'LTS_MODE not supported yet with parallel mesh decomposer!'
