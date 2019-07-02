@@ -34,7 +34,7 @@
 ! https://www.cc.gatech.edu/~umit/PaToH/manual.pdf
 
 ! reference:
-! Cevdet Aykanata, B. Barla Cambazoglu, Bora Uçar, 2008:
+! Cevdet Aykanata, B. Barla Cambazoglu, Bora Ucar, 2008:
 ! Multi-level direct K-way hypergraph partitioning with multiple constraints and fixed vertices,
 ! Journal of Parallel and Distributed Computing, Volume 68, Issue 5, May 2008, Pages 609-625.
 ! https://www.sciencedirect.com/science/article/pii/S0743731507001724
