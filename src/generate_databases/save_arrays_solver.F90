@@ -32,7 +32,7 @@
                     max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                     SAVE_MESH_FILES,ANISOTROPY)
 
-  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT, &
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IOUT, &
     nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
     SIMULATION_TYPE,SAVE_FORWARD,mask_ibool_interior_domain, &
@@ -726,7 +726,7 @@
 
   subroutine save_arrays_solver_injection_boundary(nspec,ibool)
 
-  use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
+  use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT
 
   use create_regions_mesh_ext_par
 

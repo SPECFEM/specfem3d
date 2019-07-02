@@ -33,8 +33,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
   use generate_databases_par, only: ibool,NGLOB_AB,d_store_x,d_store_y,d_store_z, &
                                     K_store_x,K_store_y,K_store_z,alpha_store_x,alpha_store_y,alpha_store_z,CPML_to_spec, &
-                                    CPML_width_x,CPML_width_y,CPML_width_z,min_distance_between_CPML_parameter,NPOWER, &
-                                    CUSTOM_REAL,SIZE_REAL,NGLLX,NGLLY,NGLLZ,nspec_cpml,PML_INSTEAD_OF_FREE_SURFACE, &
+                                    CPML_width_x,CPML_width_y,CPML_width_z,min_distance_between_CPML_parameter, &
+                                    CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,nspec_cpml,PML_INSTEAD_OF_FREE_SURFACE, &
                                     IMAIN,CPML_REGIONS,f0_FOR_PML,PI, &
                                     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ, &
                                     SIMULATION_TYPE,SAVE_FORWARD,nspec => NSPEC_AB,is_CPML, &

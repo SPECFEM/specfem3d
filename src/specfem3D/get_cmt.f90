@@ -28,7 +28,7 @@
   subroutine get_cmt(CMTSOLUTION,tshift_cmt,hdur,lat,long,depth,moment_tensor, &
                      DT,NSOURCES,min_tshift_cmt_original,user_source_time_function)
 
-  use constants, only: IIN,IN_DATA_FILES,MAX_STRING_LEN,CUSTOM_REAL
+  use constants, only: IIN,MAX_STRING_LEN,CUSTOM_REAL
   use shared_parameters, only: USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF
 
   implicit none

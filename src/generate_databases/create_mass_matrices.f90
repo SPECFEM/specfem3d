@@ -29,7 +29,7 @@
 
 ! returns precomputed mass matrix in rmass array
 
-  use constants, only: NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,SIZE_REAL
+  use constants, only: NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
 
   use create_regions_mesh_ext_par
 
@@ -185,7 +185,7 @@
   use generate_databases_par, only: &
     APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY, &
     NX_TOPO,NY_TOPO,itopo_bathy,myrank, &
-    NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,SIZE_REAL,NGLLSQUARE,IMAIN, &
+    NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,NGLLSQUARE,IMAIN, &
     MINIMUM_THICKNESS_3D_OCEANS,RHO_APPROXIMATE_OCEAN_LOAD
 
   use create_regions_mesh_ext_par
@@ -303,7 +303,7 @@
 ! on Stacey edges for the crust_mantle and outer_core regions but not for the inner_core region
 ! thus the mass matrix must be replaced by three mass matrices including the "C" damping matrix
 
-  use generate_databases_par, only: DT,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,SIZE_REAL,NGLLSQUARE
+  use generate_databases_par, only: DT,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,NGLLSQUARE
   use create_regions_mesh_ext_par
 
   implicit none
@@ -421,7 +421,7 @@
 
   use generate_databases_par, only: DT,is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
     K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec, &
-    NGLLX,NGLLY,NGLLZ,SIZE_REAL,CUSTOM_REAL, &
+    NGLLX,NGLLY,NGLLZ,CUSTOM_REAL, &
     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
     CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
@@ -640,7 +640,7 @@
 
   use generate_databases_par, only: DT,is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
     K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec, &
-    NGLLX,NGLLY,NGLLZ,SIZE_REAL,CUSTOM_REAL, &
+    NGLLX,NGLLY,NGLLZ,CUSTOM_REAL, &
     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
     CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 

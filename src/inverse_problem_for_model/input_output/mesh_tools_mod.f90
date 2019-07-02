@@ -495,10 +495,11 @@ contains
 ! compute mass matrix
 !---------------------------------------------------------------
   subroutine create_mass_matrices_Stacey_duplication_routine()
+
     use constants, only: NGLLSQUARE
     use shared_parameters, only: NPROC, DT, STACEY_ABSORBING_CONDITIONS, PML_CONDITIONS
     use specfem_par, only: kappastore, rhostore, ibool, wxgll, wygll, wzgll, jacobian, &
-         NGLLX, NGLLY, NGLLZ, NSPEC_AB, NGLOB_AB, FOUR_THIRDS, num_abs_boundary_faces, abs_boundary_ispec, abs_boundary_ijk, &
+         NGLLX, NGLLY, NGLLZ, NSPEC_AB, NGLOB_AB, num_abs_boundary_faces, abs_boundary_ispec, abs_boundary_ijk, &
          abs_boundary_normal, abs_boundary_jacobian2Dw, num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, my_neighbors_ext_mesh
     use specfem_par_elastic, only: rmass, rmassx, rmassy, rmassz, rho_vp, rho_vs, ispec_is_elastic, ELASTIC_SIMULATION

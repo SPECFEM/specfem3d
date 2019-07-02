@@ -105,9 +105,17 @@ contains
   open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',action='read',iostat=ier)
   if (ier == 0) then
     read(IIN_PAR,*) nb
-    if (myrank == 0) write(IMAIN,*) '  ... reading ', nb,' faults from file DATA/Par_file_faults'
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) '  ... reading ', nb,' faults from file DATA/Par_file_faults'
+      write(IMAIN,*)
+    endif
   else
-    if (myrank == 0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assuming that there are no faults'
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'File DATA/Par_file_faults not found: assuming that there are no faults'
+      write(IMAIN,*)
+    endif
     close(IIN_PAR)
   endif
 

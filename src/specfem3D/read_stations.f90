@@ -132,7 +132,7 @@
                                                 xi_receiver,eta_receiver,gamma_receiver, &
                                                 nu,is_done_stations)
 
-  use constants, only: NDIM,IIN,IOUT_SU, &
+  use constants, only: NDIM,IOUT_SU, &
     MAX_LENGTH_STATION_NAME,MAX_LENGTH_NETWORK_NAME,IMAIN,OUTPUT_FILES,MAX_STRING_LEN
 
   use specfem_par, only: myrank

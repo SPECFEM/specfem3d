@@ -34,10 +34,9 @@
                                 USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
   use constants
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
   ! parameters read from parameter file
   integer,intent(in) :: NER

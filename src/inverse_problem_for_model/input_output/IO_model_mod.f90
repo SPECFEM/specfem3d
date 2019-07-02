@@ -611,7 +611,7 @@ contains
   subroutine import_FD_model_ACOUSTIC(fd_grid)
 
     use specfem_par, only: myrank, xstore, ystore, zstore,  kappastore, rhostore, ibool, &
-         NGLLX, NGLLY, NGLLZ, NSPEC_AB, FOUR_THIRDS, MAX_STRING_LEN
+         NGLLX, NGLLY, NGLLZ, NSPEC_AB, MAX_STRING_LEN
 
     implicit none
 
@@ -875,7 +875,7 @@ contains
 
     use constants, only: MAX_STRING_LEN
     use specfem_par, only: myrank, xstore, ystore, zstore, rhostore, ibool, &
-         NGLLX, NGLLY, NGLLZ, NSPEC_AB, FOUR_THIRDS, MAX_STRING_LEN
+         NGLLX, NGLLY, NGLLZ, NSPEC_AB, MAX_STRING_LEN
     !use specfem_par_elastic, only: rho_vp, rho_vs  here i commented because they are already called in head of module
     use interpolation_mod, only: trilin_interp
 

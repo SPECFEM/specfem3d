@@ -35,8 +35,6 @@
 
   implicit none
 
-  include "constants_meshfem3D.h"
-
   integer nspec,myrank
   integer NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
 
@@ -139,10 +137,9 @@
                             NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
 
   use constants
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
   integer nspec,myrank
   integer NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
@@ -373,8 +370,6 @@
 
   implicit none
 
-  include "constants_meshfem3D.h"
-
 ! generic routine that accepts any polynomial degree in each direction
 
   integer ispecb,NGLLA,NGLLB,NSPEC2DMAX_AB,myrank
@@ -411,7 +406,7 @@
       uny = zxi*xeta-zeta*xxi
       unz = xxi*yeta-xeta*yxi
       jacobian = dsqrt(unx**2+uny**2+unz**2)
-      if (jacobian == ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
+      if (jacobian <= ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
 
       !   normalize normal vector and store surface jacobian
       ! distinguish if single or double precision for reals

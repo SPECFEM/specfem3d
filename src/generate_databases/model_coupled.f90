@@ -232,7 +232,7 @@
   double precision :: r1,radius
   double precision :: rho,vp,vs
 
-  double precision, parameter :: Xtol = 1d-2
+  !double precision, parameter :: Xtol = 1d-2
 
   radius = dsqrt(x_eval**2 + y_eval**2 + (z_eval+ZREF)**2)
   radius = radius / 1000.d0

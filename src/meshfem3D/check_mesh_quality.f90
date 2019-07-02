@@ -405,10 +405,9 @@
                                         stability,distmin,distmax)
 
   use constants
+  use constants_meshfem3D, only: NGLLX_M
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
   integer :: NSPEC,NGLOB
 

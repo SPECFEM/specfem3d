@@ -46,6 +46,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
 
   use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ADIOS_TRANSPORT_METHOD, &
     NGLLX,NGLLY,NGLLZ,NDIM
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NUMBER_OF_MATERIAL_PROPERTIES
 
   use adios_helpers_mod, only: define_adios_global_array1d,define_adios_scalar, &
     write_adios_global_1d_array,write_adios_global_string_1d_array, &
@@ -54,8 +55,6 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   use safe_alloc_mod, only: safe_alloc,safe_dealloc
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
   ! MPI variables
   integer :: myrank, sizeprocs

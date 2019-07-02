@@ -132,7 +132,7 @@
 
 ! sets up mesh coloring
 
-  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN,USE_MESH_COLORING_GPU,MAX_NUMBER_OF_COLORS
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN,MAX_NUMBER_OF_COLORS
   use create_regions_mesh_ext_par
 
   implicit none

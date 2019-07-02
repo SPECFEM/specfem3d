@@ -42,6 +42,8 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
   ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
+
   use specfem_par, only: deltat,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
                          kappastore,mustore,irregular_element_number, &
                          jacobian_regular,xix_regular
@@ -57,8 +59,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                      PML_duy_dxl_new, PML_duy_dyl_new, PML_duy_dzl_new, &
                      PML_duz_dxl_new, PML_duz_dyl_new, PML_duz_dzl_new
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS, &
-                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 
@@ -387,6 +387,8 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
+
   use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
                          deltat,rhostore,irregular_element_number, &
                          jacobian_regular,xix_regular
@@ -394,9 +396,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z, &
                      d_store_x,d_store_y,d_store_z, &
                      alpha_store_x,alpha_store_y,alpha_store_z
-
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS, &
-                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 
@@ -559,11 +558,12 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
   ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
+
   use specfem_par, only: NGLOB_AB,deltat
+
   use pml_par, only: CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z, &
                      alpha_store_x,alpha_store_y,alpha_store_z,PML_displ_old,PML_displ_new
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ, &
-                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 
@@ -655,12 +655,13 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
   ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
+
   use specfem_par, only: NGLOB_AB,deltat
+
   use pml_par, only: CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z, &
                      alpha_store_x,alpha_store_y,alpha_store_z, &
                      PML_potential_acoustic_old,PML_potential_acoustic_new
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ, &
-                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 
@@ -771,7 +772,7 @@ subroutine lijk_parameter_computation(deltat,kappa_x,d_x,alpha_x,kappa_y,d_y,alp
   integer :: CPML_X_ONLY_TEMP,CPML_Y_ONLY_TEMP,CPML_Z_ONLY_TEMP, &
              CPML_XY_ONLY_TEMP,CPML_XZ_ONLY_TEMP,CPML_YZ_ONLY_TEMP,CPML_XYZ_TEMP
 
-  logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
+  !logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
 
   if (index_ijk == 123) then
     CPML_X_ONLY_TEMP = CPML_X_ONLY
@@ -1195,7 +1196,7 @@ subroutine lxy_interface_parameter_computation(deltat,kappa_x,d_x,alpha_x,kappa_
   integer :: CPML_X_ONLY_TEMP,CPML_Y_ONLY_TEMP,CPML_Z_ONLY_TEMP, &
              CPML_XY_ONLY_TEMP,CPML_XZ_ONLY_TEMP,CPML_YZ_ONLY_TEMP,CPML_XYZ_TEMP
 
-  logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
+  !logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
 
   if (index_ijk == 12) then
     CPML_X_ONLY_TEMP = CPML_X_ONLY

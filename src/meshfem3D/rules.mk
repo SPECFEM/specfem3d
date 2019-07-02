@@ -58,7 +58,7 @@ meshfem3D_OBJECTS = \
 	$O/get_MPI_cutplanes_eta.mesh.o \
 	$O/get_MPI_cutplanes_xi.mesh.o \
 	$O/meshfem3D.mesh.o \
-	$O/meshfem3D_par.mesh.o \
+	$O/meshfem3D_par.mesh_module.o \
 	$O/read_mesh_parameter_file.mesh.o \
 	$O/read_value_mesh_parameters.mesh.o \
 	$O/save_databases.mesh.o \
@@ -150,12 +150,7 @@ $E/xmeshfem3D: $(XMESHFEM_OBJECTS)
 ### Module dependencies
 ###
 
-
-$O/meshfem3D.mesh.o: $O/meshfem3D_par.mesh.o $O/chunk_earth_mesh_mod.mesh.o
-$O/create_meshfem_mesh.mesh.o: $O/meshfem3D_par.mesh.o
-$O/create_CPML_regions.mesh.o: $O/meshfem3D_par.mesh.o
-$O/create_interfaces_mesh.mesh.o: $O/meshfem3D_par.mesh.o
-$O/read_mesh_parameter_file.mesh.o: $O/meshfem3D_par.mesh.o
+$O/meshfem3D.mesh.o: $O/chunk_earth_mesh_mod.mesh.o
 $O/determine_cavity.mesh.o: $O/create_meshfem_mesh.mesh.o
 
 ## adios
@@ -173,10 +168,13 @@ $O/adios_helpers.shared_adios.o: \
 #### rule to build each .o file below
 ####
 
-$O/%.mesh.o: $S/%.f90 $O/shared_par.shared_module.o
+$O/%.mesh_module.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.mesh.o: $S/%.F90 $O/shared_par.shared_module.o
+$O/%.mesh.o: $S/%.f90 $O/shared_par.shared_module.o $O/meshfem3D_par.mesh_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.mesh.o: $S/%.F90 $O/shared_par.shared_module.o $O/meshfem3D_par.mesh_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
@@ -184,10 +182,10 @@ $O/%.mesh.o: $S/%.F90 $O/shared_par.shared_module.o
 ### ADIOS compilation
 ###
 
-$O/%.mesh_adios.o: $S/%.F90 $O/shared_par.shared_module.o
+$O/%.mesh_adios.o: $S/%.F90 $O/shared_par.shared_module.o $O/meshfem3D_par.mesh_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.mesh_adios.o: $S/%.f90 $O/shared_par.shared_module.o
+$O/%.mesh_adios.o: $S/%.f90 $O/shared_par.shared_module.o $O/meshfem3D_par.mesh_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90}  -c -o $@ $<
 
 $O/%.mesh_noadios.o: $S/%.F90

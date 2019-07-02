@@ -31,7 +31,7 @@
                           gammax_elem,gammay_elem,gammaz_elem,jacobian_elem, &
                           xelm,yelm,zelm,dershape3D)
 
-  use generate_databases_par, only: NGNOD,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,SIZE_REAL,ZERO
+  use generate_databases_par, only: NGNOD,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO
 
   implicit none
 
@@ -168,7 +168,7 @@
   subroutine check_element_regularity(xelm,yelm,zelm,any_regular_elem,cube_edge_size_squared, &
                                       nspec_irregular,ispec,nspec,irregular_element_number,ANY_FAULT_IN_THIS_PROC)
 
-  use generate_databases_par, only: NGNOD,CUSTOM_REAL,USE_MESH_COLORING_GPU
+  use generate_databases_par, only: NGNOD,USE_MESH_COLORING_GPU
 
   real, dimension(NGNOD) :: xelm,yelm,zelm
   logical :: any_regular_elem,ANY_FAULT_IN_THIS_PROC
@@ -178,12 +178,18 @@
 
   !local
   real :: dist1_sq,dist2_sq,dist3_sq
+  double precision :: threshold
+  double precision,parameter :: threshold_percentage = 1.e-5
 
   !checks if the potential cube has the same size as the previous ones
   dist1_sq = (xelm(2)-xelm(1))**2 + (yelm(2)-yelm(1))**2 +(zelm(2)-zelm(1))**2
 
-  if (NGNOD == 27 .or. ANY_FAULT_IN_THIS_PROC .or. USE_MESH_COLORING_GPU .or. &
-     (any_regular_elem .and. ( abs(dist1_sq - cube_edge_size_squared) > (1e-5)*cube_edge_size_squared ))) then
+  ! sets irregular element (default for NGNOD 27 and others)
+  threshold = threshold_percentage*cube_edge_size_squared
+  if (NGNOD == 27 &
+      .or. ANY_FAULT_IN_THIS_PROC &
+      .or. USE_MESH_COLORING_GPU &
+      .or. (any_regular_elem .and. ( abs(dist1_sq - cube_edge_size_squared) > threshold ))) then
     irregular_element_number(ispec) = ispec - (nspec - nspec_irregular)
     return
   endif
@@ -199,8 +205,9 @@
     dist2_sq = (xelm(5)-xelm(1))**2 + (yelm(5)-yelm(1))**2 +(zelm(5)-zelm(1))**2
     dist3_sq = (xelm(4)-xelm(1))**2 + (yelm(4)-yelm(1))**2 +(zelm(4)-zelm(1))**2
 
-    if (abs(dist2_sq - dist1_sq) < 1e-5*dist1_sq .and. abs(dist3_sq - dist1_sq) < 1e-5*dist1_sq) then
+    threshold = threshold_percentage*dist1_sq
 
+    if (abs(dist2_sq - dist1_sq) < threshold .and. abs(dist3_sq - dist1_sq) < threshold) then
       ! test if first cube found in mesh
       if (.not. any_regular_elem ) then
         cube_edge_size_squared = dist1_sq

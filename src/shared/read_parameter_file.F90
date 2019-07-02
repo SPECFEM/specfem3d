@@ -1062,7 +1062,7 @@
 ! determines number of sources depending on number of lines in source file
 ! (only executed by master process)
 
-  use constants, only: IIN,IMAIN,IN_DATA_FILES,HUGEVAL,TINYVAL, &
+  use constants, only: IIN,IN_DATA_FILES,HUGEVAL,TINYVAL, &
     NLINES_PER_CMTSOLUTION_SOURCE,NLINES_PER_FORCESOLUTION_SOURCE
 
   use shared_parameters

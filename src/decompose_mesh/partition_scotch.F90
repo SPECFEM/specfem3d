@@ -55,6 +55,25 @@
 !  To select SCOTCH partioning, in Par_file choose:
 !    PARTITIONING_TYPE = 1
 
+module scotch_par
+
+  implicit none
+
+#if defined(USE_SCOTCH)
+  include 'scotchf.h'
+
+  ! SCOTCH
+  double precision, dimension(SCOTCH_GRAPHDIM)  :: scotchgraph
+  double precision, dimension(SCOTCH_STRATDIM)  :: scotchstrat
+!!!!!! character(len=*), parameter :: scotch_strategy='b{job=t,map=t,poli=S,sep=h{pass=30}}'
+
+#endif
+
+end module scotch_par
+
+!
+!----------------------------------------------------------------------------------------------
+!
 
   subroutine partition_scotch()
 
@@ -65,24 +84,12 @@
   use decompose_mesh_par, only: NSPEC, nparts, part, nb_edges, elmnts_load, xadj, adjncy, &
     LTS_MODE
 
-  implicit none
+  use scotch_par
 
-  include 'scotchf.h'
+  implicit none
 
   ! local parameters
   integer :: ier
-
-  ! scotch p-level partitioning
-  integer,dimension(:),allocatable :: part_tmp,elmnts_load_tmp
-  integer,dimension(:),allocatable :: ispec_global,ispec_local
-  integer,dimension(:),allocatable :: xadj_tmp,adjncy_tmp
-  integer :: nb_edges_tmp
-  integer :: i,j,k,ispec,iproc
-
-  ! SCOTCH
-  double precision, dimension(SCOTCH_GRAPHDIM)  :: scotchgraph
-  double precision, dimension(SCOTCH_STRATDIM)  :: scotchstrat
-!!!!!! character(len=*), parameter :: scotch_strategy='b{job=t,map=t,poli=S,sep=h{pass=30}}'
 
   ! checks if partitioning needed
   if (nparts == 1) return
@@ -149,6 +156,7 @@
   if (LTS_MODE .and. BALANCE_P_LEVELS) then
     ! LTS mode partitioning for each p-level
     call lts_partition_scotch()
+
   else
     ! over-all scotch partitioning
     call scotchfgraphbuild (scotchgraph (1), 0, nspec, &
@@ -182,208 +190,226 @@
     stop 'Scotch ERROR : MAIN : Cannot destroy strategy'
   endif
 
-  contains
-
-    subroutine lts_partition_scotch()
-
-    ! note: SCOTCH is unable to handle constrained partitioning as Patoh.
-    !       the goal would be to have about the same number of p-elements in each partition (due to MPI scheme).
-    !       as an ugly work-around, we partition for each p-level again, using newly assigned element weights
-
-    use constants, only: BALANCE_P_LEVELS_PARTIAL,P_LEVEL_PARTIAL_SUBSET_MINIMUM
-
-    use decompose_mesh_par, only: p_level, num_p_level, ispec_p_refine, num_ispec_level
-
-    implicit none
-
-    integer :: ilevel,nspec_p
-    integer :: nparts_partial
-    integer :: p,inum
-
-    ! allocates temporary arrays
-    allocate(part_tmp(1:nspec), &
-             ispec_global(1:nspec), &
-             ispec_local(1:nspec), &
-             elmnts_load_tmp(1:nspec), &
-             xadj_tmp(1:nspec+1), &
-             adjncy_tmp(1:nb_edges+1), &
-             stat=ier)
-    if (ier /= 0) stop 'Error allocating array part_tmp,...'
-
-    ! partitions each p-level separately
-    do ilevel = 1,num_p_level
-      p = p_level(ilevel)
-      nspec_p = num_ispec_level(ilevel)
-
-      ! element lookup tables
-      ispec_global(:) = 0
-      ispec_local(:) = 0
-      inum = 0
-      do ispec = 1,nspec
-        if (ispec_p_refine(ispec) == p) then
-          inum = inum + 1
-          if (inum > nspec_p) stop 'Error index out of bounds of nspec_p'
-          ispec_global(inum) = ispec
-          ispec_local(ispec) = inum
-        endif
-      enddo
-      if (inum /= nspec_p) stop 'Error number of p-vertices not equals to number of p-elements'
-
-      ! builds up local arrays only for p-elements
-      xadj_tmp(:) = 0
-      adjncy_tmp(:) = -1
-      elmnts_load_tmp(:) = 0
-      nb_edges_tmp = 1
-      do inum = 1,nspec_p
-        ispec = ispec_global(inum)
-
-        ! element load
-        elmnts_load_tmp(inum) = elmnts_load(ispec)
-
-        ! number of neighbors
-        ! note: xadj() values start from 0; adjncy() values start from 0 to nspec-1
-        !       we shift these by +1 since arrays in this subroutine are defined between 1 to ..
-        !
-        !       xadj(i)  -> adjncy( . ) : values in xadj point to the first index in adjncy() for vertex i
-        !                   adjncy() holds all indices of neighbor vertices(=elements)
-        ! note: for xadj_tmp and adjncy_tmp we start indexing at 1
-        xadj_tmp(inum) = nb_edges_tmp
-        do j = xadj(ispec),xadj(ispec+1)-1
-          ! gets neighbor index
-          k = adjncy(j+1) + 1
-          ! checks bounds
-          if (k < 1 .or. k > nspec) stop 'Error adjncy index'
-          ! adds vertex if it belongs to p-elements
-          if (ispec_p_refine(k) == p) then
-            ! we store the local index between 1 and nspec_p
-            i = ispec_local( k )
-            adjncy_tmp(nb_edges_tmp) = i
-            nb_edges_tmp = nb_edges_tmp + 1
-          endif
-        enddo
-      enddo
-      ! last entry for xadj for a contiguous range of indices ("compact edge array")
-      xadj_tmp(nspec_p+1) = nb_edges_tmp
-      nb_edges_tmp = nb_edges_tmp - 1
-
-      ! debug
-      !print *,'xadj:',xadj(ispec_global(1):ispec_global(1)+1),xadj(nspec-1:nspec+1)
-      !print *,'xadj:',xadj(nspec+1)
-      !print *,'adjncy:'
-      !do j = xadj(ispec_global(1)),xadj(ispec_global(1)+1)
-      !  print *,j-xadj(ispec_global(1))+1,j,adjncy(j+1)+1,ispec_local(adjncy(j+1)+1)
-      !enddo
-      !print *
-      !print *,'temporary:',ispec_global(1)
-      !print *,'xadj:',xadj_tmp(1:2),xadj_tmp(nspec_p-1:nspec_p+2)
-      !print *,'xadj:',xadj_tmp(nspec_p+1)
-      !print *,'adjncy:'
-      !do j = xadj_tmp(1),xadj_tmp(2)
-      !  print *,j-xadj_tmp(1)+1,j,adjncy_tmp(j),ispec_global(adjncy_tmp(j))
-      !enddo
-
-      ! checks ranges
-      if (minval(adjncy_tmp(1:nb_edges_tmp)) < 1 .or. maxval(adjncy_tmp(1:nb_edges_tmp)) > nspec_p) then
-        print *,'Error adjncy bounds invalid', minval(adjncy_tmp(1:nb_edges_tmp)),maxval(adjncy_tmp(1:nb_edges_tmp))
-        stop 'Error adjncy bounds invalid'
-      endif
-
-      ! sets up p-element partitioning
-      part_tmp(:) = -1
-
-      ! user output
-      print *,'  p-level partitioning: p-level =',ilevel,'p =',p,'elements =',nspec_p !,'edges =',nb_edges_tmp
-
-      ! scotch partitioning
-      ! arguments: #(1) graph_structure       #(2)baseval (either 0/1)    #(3)vertnbr (number_of_vertices)
-      !            #(4)verttab (adjacency_index_array)            #(5)vendtab (adjacency_end_index_array (optional))
-      !            #(6)velotab (vertex_load_array (optional))     #(7)vlbltab (vertex_label_array)
-      !            #(7)edgenbr (number_of_arcs)                   #(8)edgetab (adjacency_array)
-      !            #(9)edlotab (arc_load_array (optional))        #(10)ierror
-      !
-      ! Since, in Fortran, there is no null reference, passing the scotchfgraphbuild routine
-      ! a reference equal to verttab in the velotab or vlbltab fields makes them be considered as missing arrays.
-      ! The same holds for edlotab when it is passed a reference equal to edgetab.
-      ! Setting vendtab to refer to one cell after verttab yields the same result,
-      ! as it is the exact semantics of a compact vertex array.
-
-      call scotchfgraphbuild (scotchgraph(1), 1, nspec_p, &
-                              xadj_tmp(1), xadj_tmp(1), &
-                              elmnts_load_tmp(1), xadj_tmp(1), &
-                              nb_edges_tmp, adjncy_tmp(1), &
-                              adjncy_tmp(1), ier)
-      if (ier /= 0) stop 'ERROR : MAIN : Cannot build graph'
-
-      ! checks scotch graph
-      call scotchfgraphcheck (scotchgraph(1), ier)
-      if (ier /= 0) stop 'Scotch ERROR : MAIN : Invalid check'
-
-      ! computes partition based on scotch graph
-      if (BALANCE_P_LEVELS_PARTIAL) then
-        ! partitions level using only a subset of nparts processes
-        nparts_partial = int( nspec_p / P_LEVEL_PARTIAL_SUBSET_MINIMUM )
-        if (nparts_partial > nparts) nparts_partial = nparts
-        if (nparts_partial < 1) nparts_partial = 1
-
-        ! user output
-        print *,'    partial partitioning: nparts_partial =',nparts_partial, &
-          'using subset maximum',P_LEVEL_PARTIAL_SUBSET_MINIMUM
-
-        ! partitions among subset nparts_partial processes
-        call scotchfgraphpart (scotchgraph(1), nparts_partial, scotchstrat(1),part_tmp(1),ier)
-        if (ier /= 0) stop 'Scotch ERROR : MAIN : Cannot part graph'
-
-      else
-
-        ! partitions among all nparts processes
-        call scotchfgraphpart (scotchgraph(1), nparts, scotchstrat(1),part_tmp(1),ier)
-        if (ier /= 0) stop 'Scotch ERROR : MAIN : Cannot part graph'
-
-      endif
-
-      ! frees scotch graph for subsequent calls of scotch again
-      call scotchfgraphfree (scotchgraph(1),ier)
-      if (ier /= 0) stop 'Scotch ERROR : MAIN : Cannot free graph'
-
-      ! stitch partitioning together
-      do inum = 1,nspec_p
-        ispec = ispec_global(inum)
-        part(ispec) = part_tmp(inum)
-      enddo
-
-      ! user output: counts number of p-elements in each partition
-      do iproc = 0,nparts-1
-        inum = 0
-        do ispec = 1,nspec
-          if (ispec_p_refine(ispec) == p) then
-            if (part(ispec) == iproc) inum = inum + 1
-          endif
-        enddo
-        ! user output
-        print *,'    partition ',iproc, '       has ',inum,' p-elements'
-      enddo
-
-    enddo ! num_p_level
-    print *
-
-    ! reassemble partitions trying to optimize for communication costs
-    call remap_partitions(part)
-
-    ! frees memory
-    deallocate(part_tmp,ispec_global,ispec_local,elmnts_load_tmp,xadj_tmp,adjncy_tmp)
-
-    end subroutine lts_partition_scotch
-
 #else
 
-    ! compiled without support
-    print *,'Scotch Error: Please re-compile with -DUSE_SCOTCH to use SCOTCH partitioning.'
-    stop 'No SCOTCH support'
+  ! compiled without support
+  print *,'Scotch Error: Please re-compile with -DUSE_SCOTCH to use SCOTCH partitioning.'
+  stop 'No SCOTCH support'
 
 #endif
 
   end subroutine partition_scotch
 
+!
+!----------------------------------------------------------------------------------------------
+!
+
+#if defined(USE_SCOTCH)
+
+  subroutine lts_partition_scotch()
+
+  ! note: SCOTCH is unable to handle constrained partitioning as Patoh.
+  !       the goal would be to have about the same number of p-elements in each partition (due to MPI scheme).
+  !       as an ugly work-around, we partition for each p-level again, using newly assigned element weights
+
+  use decompose_mesh_par, only: NSPEC, nparts, part, nb_edges, elmnts_load, xadj, adjncy
+  ! p-levels
+  use constants, only: BALANCE_P_LEVELS_PARTIAL,P_LEVEL_PARTIAL_SUBSET_MINIMUM
+  use decompose_mesh_par, only: p_level, num_p_level, ispec_p_refine, num_ispec_level
+
+  use scotch_par
+
+  implicit none
+
+  ! local parameters
+  integer :: ier
+
+  ! scotch p-level partitioning
+  integer,dimension(:),allocatable :: part_tmp,elmnts_load_tmp
+  integer,dimension(:),allocatable :: ispec_global,ispec_local
+  integer,dimension(:),allocatable :: xadj_tmp,adjncy_tmp
+  integer :: nb_edges_tmp
+  integer :: i,j,k,ispec,iproc
+
+  integer :: ilevel,nspec_p
+  integer :: nparts_partial
+  integer :: p,inum
+
+  ! allocates temporary arrays
+  allocate(part_tmp(1:nspec), &
+           ispec_global(1:nspec), &
+           ispec_local(1:nspec), &
+           elmnts_load_tmp(1:nspec), &
+           xadj_tmp(1:nspec+1), &
+           adjncy_tmp(1:nb_edges+1), &
+           stat=ier)
+  if (ier /= 0) stop 'Error allocating array part_tmp,...'
+
+  ! partitions each p-level separately
+  do ilevel = 1,num_p_level
+    p = p_level(ilevel)
+    nspec_p = num_ispec_level(ilevel)
+
+    ! element lookup tables
+    ispec_global(:) = 0
+    ispec_local(:) = 0
+    inum = 0
+    do ispec = 1,nspec
+      if (ispec_p_refine(ispec) == p) then
+        inum = inum + 1
+        if (inum > nspec_p) stop 'Error index out of bounds of nspec_p'
+        ispec_global(inum) = ispec
+        ispec_local(ispec) = inum
+      endif
+    enddo
+    if (inum /= nspec_p) stop 'Error number of p-vertices not equals to number of p-elements'
+
+    ! builds up local arrays only for p-elements
+    xadj_tmp(:) = 0
+    adjncy_tmp(:) = -1
+    elmnts_load_tmp(:) = 0
+    nb_edges_tmp = 1
+    do inum = 1,nspec_p
+      ispec = ispec_global(inum)
+
+      ! element load
+      elmnts_load_tmp(inum) = elmnts_load(ispec)
+
+      ! number of neighbors
+      ! note: xadj() values start from 0; adjncy() values start from 0 to nspec-1
+      !       we shift these by +1 since arrays in this subroutine are defined between 1 to ..
+      !
+      !       xadj(i)  -> adjncy( . ) : values in xadj point to the first index in adjncy() for vertex i
+      !                   adjncy() holds all indices of neighbor vertices(=elements)
+      ! note: for xadj_tmp and adjncy_tmp we start indexing at 1
+      xadj_tmp(inum) = nb_edges_tmp
+      do j = xadj(ispec),xadj(ispec+1)-1
+        ! gets neighbor index
+        k = adjncy(j+1) + 1
+        ! checks bounds
+        if (k < 1 .or. k > nspec) stop 'Error adjncy index'
+        ! adds vertex if it belongs to p-elements
+        if (ispec_p_refine(k) == p) then
+          ! we store the local index between 1 and nspec_p
+          i = ispec_local( k )
+          adjncy_tmp(nb_edges_tmp) = i
+          nb_edges_tmp = nb_edges_tmp + 1
+        endif
+      enddo
+    enddo
+    ! last entry for xadj for a contiguous range of indices ("compact edge array")
+    xadj_tmp(nspec_p+1) = nb_edges_tmp
+    nb_edges_tmp = nb_edges_tmp - 1
+
+    ! debug
+    !print *,'xadj:',xadj(ispec_global(1):ispec_global(1)+1),xadj(nspec-1:nspec+1)
+    !print *,'xadj:',xadj(nspec+1)
+    !print *,'adjncy:'
+    !do j = xadj(ispec_global(1)),xadj(ispec_global(1)+1)
+    !  print *,j-xadj(ispec_global(1))+1,j,adjncy(j+1)+1,ispec_local(adjncy(j+1)+1)
+    !enddo
+    !print *
+    !print *,'temporary:',ispec_global(1)
+    !print *,'xadj:',xadj_tmp(1:2),xadj_tmp(nspec_p-1:nspec_p+2)
+    !print *,'xadj:',xadj_tmp(nspec_p+1)
+    !print *,'adjncy:'
+    !do j = xadj_tmp(1),xadj_tmp(2)
+    !  print *,j-xadj_tmp(1)+1,j,adjncy_tmp(j),ispec_global(adjncy_tmp(j))
+    !enddo
+
+    ! checks ranges
+    if (minval(adjncy_tmp(1:nb_edges_tmp)) < 1 .or. maxval(adjncy_tmp(1:nb_edges_tmp)) > nspec_p) then
+      print *,'Error adjncy bounds invalid', minval(adjncy_tmp(1:nb_edges_tmp)),maxval(adjncy_tmp(1:nb_edges_tmp))
+      stop 'Error adjncy bounds invalid'
+    endif
+
+    ! sets up p-element partitioning
+    part_tmp(:) = -1
+
+    ! user output
+    print *,'  p-level partitioning: p-level =',ilevel,'p =',p,'elements =',nspec_p !,'edges =',nb_edges_tmp
+
+    ! scotch partitioning
+    ! arguments: #(1) graph_structure       #(2)baseval (either 0/1)    #(3)vertnbr (number_of_vertices)
+    !            #(4)verttab (adjacency_index_array)            #(5)vendtab (adjacency_end_index_array (optional))
+    !            #(6)velotab (vertex_load_array (optional))     #(7)vlbltab (vertex_label_array)
+    !            #(7)edgenbr (number_of_arcs)                   #(8)edgetab (adjacency_array)
+    !            #(9)edlotab (arc_load_array (optional))        #(10)ierror
+    !
+    ! Since, in Fortran, there is no null reference, passing the scotchfgraphbuild routine
+    ! a reference equal to verttab in the velotab or vlbltab fields makes them be considered as missing arrays.
+    ! The same holds for edlotab when it is passed a reference equal to edgetab.
+    ! Setting vendtab to refer to one cell after verttab yields the same result,
+    ! as it is the exact semantics of a compact vertex array.
+
+    call scotchfgraphbuild (scotchgraph(1), 1, nspec_p, &
+                            xadj_tmp(1), xadj_tmp(1), &
+                            elmnts_load_tmp(1), xadj_tmp(1), &
+                            nb_edges_tmp, adjncy_tmp(1), &
+                            adjncy_tmp(1), ier)
+    if (ier /= 0) stop 'ERROR : MAIN : Cannot build graph'
+
+    ! checks scotch graph
+    call scotchfgraphcheck (scotchgraph(1), ier)
+    if (ier /= 0) stop 'Scotch ERROR : MAIN : Invalid check'
+
+    ! computes partition based on scotch graph
+    if (BALANCE_P_LEVELS_PARTIAL) then
+      ! partitions level using only a subset of nparts processes
+      nparts_partial = int( nspec_p / P_LEVEL_PARTIAL_SUBSET_MINIMUM )
+      if (nparts_partial > nparts) nparts_partial = nparts
+      if (nparts_partial < 1) nparts_partial = 1
+
+      ! user output
+      print *,'    partial partitioning: nparts_partial =',nparts_partial, &
+        'using subset maximum',P_LEVEL_PARTIAL_SUBSET_MINIMUM
+
+      ! partitions among subset nparts_partial processes
+      call scotchfgraphpart (scotchgraph(1), nparts_partial, scotchstrat(1),part_tmp(1),ier)
+      if (ier /= 0) stop 'Scotch ERROR : MAIN : Cannot part graph'
+
+    else
+
+      ! partitions among all nparts processes
+      call scotchfgraphpart (scotchgraph(1), nparts, scotchstrat(1),part_tmp(1),ier)
+      if (ier /= 0) stop 'Scotch ERROR : MAIN : Cannot part graph'
+
+    endif
+
+    ! frees scotch graph for subsequent calls of scotch again
+    call scotchfgraphfree (scotchgraph(1),ier)
+    if (ier /= 0) stop 'Scotch ERROR : MAIN : Cannot free graph'
+
+    ! stitch partitioning together
+    do inum = 1,nspec_p
+      ispec = ispec_global(inum)
+      part(ispec) = part_tmp(inum)
+    enddo
+
+    ! user output: counts number of p-elements in each partition
+    do iproc = 0,nparts-1
+      inum = 0
+      do ispec = 1,nspec
+        if (ispec_p_refine(ispec) == p) then
+          if (part(ispec) == iproc) inum = inum + 1
+        endif
+      enddo
+      ! user output
+      print *,'    partition ',iproc, '       has ',inum,' p-elements'
+    enddo
+
+  enddo ! num_p_level
+  print *
+
+  ! reassemble partitions trying to optimize for communication costs
+  call remap_partitions(part)
+
+  ! frees memory
+  deallocate(part_tmp,ispec_global,ispec_local,elmnts_load_tmp,xadj_tmp,adjncy_tmp)
+
+  end subroutine lts_partition_scotch
+
+#endif
 
 !
 !----------------------------------------------------------------------------------------------

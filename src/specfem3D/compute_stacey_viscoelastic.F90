@@ -46,7 +46,7 @@
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,INJECTION_TECHNIQUE_TYPE,RECIPROCITY_AND_KH_INTEGRAL
 
 ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
-  use specfem_par_coupling, only: npt,nbdglb, NTIME_BETWEEN_FFT, &
+  use specfem_par_coupling, only: npt,nbdglb, &
      VX_t, VY_t, VZ_t, TX_t, TY_t, TZ_t, NP_RESAMP, &
      vx_FK,vy_FK,vz_FK,tx_FK,ty_FK,tz_FK
 

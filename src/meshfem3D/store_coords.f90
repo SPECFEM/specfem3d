@@ -28,10 +28,9 @@
   subroutine store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec)
 
   use constants
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
   integer,intent(in) :: ispec,nspec
 

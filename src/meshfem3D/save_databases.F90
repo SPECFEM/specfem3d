@@ -36,11 +36,11 @@
                             xstore, ystore, zstore)
 
   use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,SAVE_MESH_AS_CUBIT,NDIM
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NUMBER_OF_MATERIAL_PROPERTIES
+
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
   ! number of spectral elements in each block
   integer nspec
@@ -426,11 +426,10 @@
                                      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NMATERIALS,material_properties, &
                                      ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
 
-  use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC, NGLLX, NGLLY, NGLLZ, NDIM, ZERO
+  use constants, only: NDIM
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NUMBER_OF_MATERIAL_PROPERTIES
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
   integer, parameter :: IIN_database = 15
   ! number of spectral elements in each block
@@ -441,7 +440,7 @@
 
   ! MPI Cartesian topology
   ! E for East (= XI_MIN), W for West (= XI_MAX), S for South (= ETA_MIN), N for North (= ETA_MAX)
-  integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
+  !integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
 
   ! arrays with the mesh
   integer :: ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
@@ -579,21 +578,20 @@
                                               ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                                               xgrid,ygrid,zgrid)
 
-  use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC, NGLLX, NGLLY, NGLLZ, NDIM, ZERO, &
+  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, ZERO, &
     INJECTION_TECHNIQUE_IS_AXISEM
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   use shared_parameters, only: NGNOD,COUPLE_WITH_INJECTION_TECHNIQUE,INJECTION_TECHNIQUE_TYPE
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
   ! number of spectral elements in each block
   integer :: nspec
 
   ! MPI Cartesian topology
   ! E for East (= XI_MIN), W for West (= XI_MAX), S for South (= ETA_MIN), N for North (= ETA_MAX)
-  integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
+  !integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
 
   !! VM VM add all GLL points for Axisem coupling
   double precision, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: xgrid, ygrid, zgrid

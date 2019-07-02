@@ -30,10 +30,9 @@
                                  nspec,nglob,prname,nodes_coords,ibool,ispec_material_id)
 
   use constants
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
 ! Mesh files for visualization
   logical :: CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES

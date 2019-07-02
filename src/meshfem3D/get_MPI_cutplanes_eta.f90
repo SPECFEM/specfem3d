@@ -38,10 +38,9 @@
 ! in the solver except if we want to have periodic conditions
 
   use constants
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
   integer nspec,myrank
   integer NSPEC2D_A_XI,NSPEC2D_B_XI

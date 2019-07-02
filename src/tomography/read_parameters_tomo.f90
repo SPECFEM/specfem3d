@@ -42,13 +42,13 @@ subroutine read_parameters_tomo()
   call get_command_argument(1,s_step_fac)
 
   if (trim(s_step_fac) == '') then
-    call usage()
+    call tomo_usage()
   endif
 
   ! read in parameter information
   read(s_step_fac,*,iostat=ier) step_fac
   if (ier /= 0) then
-    call usage()
+    call tomo_usage()
   endif
 
   ! safety check
@@ -96,9 +96,15 @@ subroutine read_parameters_tomo()
     close(IOUT)
   endif
 
-contains
+  end subroutine read_parameters_tomo
 
-  subroutine usage()
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine tomo_usage()
+
+  use tomography_par
 
   implicit none
 
@@ -116,7 +122,6 @@ contains
   call synchronize_all()
   call exit_MPI(myrank,'Error usage: add_model step_factor')
 
-  end subroutine usage
+  end subroutine tomo_usage
 
-end subroutine read_parameters_tomo
 

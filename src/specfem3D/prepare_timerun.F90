@@ -556,7 +556,7 @@
 
   subroutine prepare_timerun_pml()
 
-  use constants, only: IMAIN,NGNOD_EIGHT_CORNERS
+  use constants, only: IMAIN
   use specfem_par, only: myrank,SIMULATION_TYPE,GPU_MODE,UNDO_ATTENUATION_AND_OR_PML,PML_CONDITIONS
   use pml_par
 

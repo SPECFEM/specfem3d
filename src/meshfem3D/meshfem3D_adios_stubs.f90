@@ -45,11 +45,11 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
                                 nspec_CPML,CPML_to_spec,CPML_regions,is_CPML)
 
   use constants
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NUMBER_OF_MATERIAL_PROPERTIES
+
   use adios_manager_mod
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
   character(len=MAX_STRING_LEN) :: LOCAL_PATH
   integer :: myrank, sizeprocs

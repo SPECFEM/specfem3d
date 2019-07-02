@@ -100,7 +100,7 @@
 
   subroutine lts_save_p_level_partitions()
 
-  use constants, only: IOVTK,MAX_STRING_LEN
+  use constants, only: MAX_STRING_LEN
 
   use decompose_mesh_par, only: part, ispec_p_refine, nspec, nnodes, nodes_coords, elmnts, NGNOD, LOCAL_PATH
 

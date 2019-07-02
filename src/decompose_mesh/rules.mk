@@ -53,6 +53,7 @@ decompose_mesh_MODULES = \
 	$(FC_MODDIR)/module_database.$(FC_MODEXT) \
 	$(FC_MODDIR)/module_mesh.$(FC_MODEXT) \
 	$(FC_MODDIR)/module_partition.$(FC_MODEXT) \
+	$(FC_MODDIR)/scotch_par.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 decompose_mesh_SHARED_OBJECTS = \

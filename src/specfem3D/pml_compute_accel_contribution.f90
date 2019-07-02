@@ -36,12 +36,13 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
   ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
+
   use specfem_par, only: NGLOB_AB,deltat,wgll_cube,jacobian,ibool,rhostore,irregular_element_number,jacobian_regular
+
   use pml_par, only: CPML_regions,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z, &
                      alpha_store_x, alpha_store_y, alpha_store_z, &
                      NSPEC_CPML,accel_elastic_CPML,PML_displ_old,PML_displ_new
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
-                       CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 
@@ -156,20 +157,20 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
   ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
+
   use specfem_par, only: NGLOB_AB,deltat,wgll_cube,jacobian,ibool,kappastore,irregular_element_number,jacobian_regular
+
   use pml_par, only: CPML_regions,NSPEC_CPML,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z, &
                      alpha_store_x, alpha_store_y, alpha_store_z, &
                      NSPEC_CPML,potential_dot_dot_acoustic_CPML, &
                      PML_potential_acoustic_old,PML_potential_acoustic_new
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
-                       CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 
   integer, intent(in) :: ispec,ispec_CPML
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic,potential_dot_acoustic
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3) :: rmemory_potential_acoustic
-
 
   ! local parameters
   integer :: i,j,k,iglob,CPML_region_local,ispec_irreg
@@ -782,15 +783,15 @@ subroutine compute_convolution_coef(bb,deltat,coef0,coef1,coef2)
 
   ! permanent factors (avoids divisions which are computationally expensive)
   real(kind=CUSTOM_REAL),parameter :: ONE_OVER_8 = 0.125_CUSTOM_REAL
-  real(kind=CUSTOM_REAL),parameter :: ONE_OVER_12 = 1._CUSTOM_REAL / 12._CUSTOM_REAL
-  real(kind=CUSTOM_REAL),parameter :: ONE_OVER_24 = 1._CUSTOM_REAL / 24._CUSTOM_REAL
+  !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_12 = 1._CUSTOM_REAL / 12._CUSTOM_REAL
+  !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_24 = 1._CUSTOM_REAL / 24._CUSTOM_REAL
   real(kind=CUSTOM_REAL),parameter :: ONE_OVER_48 = 1._CUSTOM_REAL / 48._CUSTOM_REAL
   real(kind=CUSTOM_REAL),parameter :: ONE_OVER_128 = 0.0078125_CUSTOM_REAL
   real(kind=CUSTOM_REAL),parameter :: ONE_OVER_384 = 1._CUSTOM_REAL / 384._CUSTOM_REAL
-  real(kind=CUSTOM_REAL),parameter :: ONE_OVER_960 = 1._CUSTOM_REAL / 960._CUSTOM_REAL
-  real(kind=CUSTOM_REAL),parameter :: ONE_OVER_1920 = 1._CUSTOM_REAL / 1920._CUSTOM_REAL
-  real(kind=CUSTOM_REAL),parameter :: SEVEN_OVER_3840 = 7._CUSTOM_REAL / 3840._CUSTOM_REAL
-  real(kind=CUSTOM_REAL),parameter :: FIVE_OVER_11520 = 5._CUSTOM_REAL/11520._CUSTOM_REAL
+  !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_960 = 1._CUSTOM_REAL / 960._CUSTOM_REAL
+  !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_1920 = 1._CUSTOM_REAL / 1920._CUSTOM_REAL
+  !real(kind=CUSTOM_REAL),parameter :: SEVEN_OVER_3840 = 7._CUSTOM_REAL / 3840._CUSTOM_REAL
+  !real(kind=CUSTOM_REAL),parameter :: FIVE_OVER_11520 = 5._CUSTOM_REAL/11520._CUSTOM_REAL
 
   ! helper variables
   bbpow2 = bb**2

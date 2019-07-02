@@ -37,10 +37,9 @@
 ! to 120 degrees in doubling regions
 
   use constants
+  use constants_meshfem3D, only: ITYPE_UNUSUAL_1,ITYPE_UNUSUAL_1p,ITYPE_UNUSUAL_4,ITYPE_UNUSUAL_4p
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
   integer myrank
   integer ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir

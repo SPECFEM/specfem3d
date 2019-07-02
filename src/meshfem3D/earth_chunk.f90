@@ -31,7 +31,7 @@
 
   subroutine earth_chunk_HEX8_Mesher(NGNOD)
 
-  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, PI, ZERO, TINYVAL, &
+  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, ZERO, &
     old_DSM_coupling_from_Vadim, INJECTION_TECHNIQUE_IS_AXISEM, INJECTION_TECHNIQUE_IS_DSM
 
   use shared_parameters, only: INJECTION_TECHNIQUE_TYPE
@@ -757,7 +757,7 @@
 
   subroutine earth_chunk_HEX27_Mesher(NGNOD)
 
-  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, PI, ZERO, TINYVAL, &
+  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, ZERO, &
     old_DSM_coupling_from_Vadim, INJECTION_TECHNIQUE_IS_AXISEM, INJECTION_TECHNIQUE_IS_DSM
 
   use shared_parameters, only: INJECTION_TECHNIQUE_TYPE

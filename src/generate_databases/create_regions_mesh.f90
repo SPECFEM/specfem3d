@@ -1021,7 +1021,7 @@ subroutine crm_ext_setup_indexing(ibool, &
                         nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
 
-  use generate_databases_par, only: NGNOD2D,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,SIZE_REAL,IMAIN, &
+  use generate_databases_par, only: NGNOD2D,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,IMAIN, &
     NDIM,NGLLSQUARE,NGNOD2D_FOUR_CORNERS
   use create_regions_mesh_ext_par
 

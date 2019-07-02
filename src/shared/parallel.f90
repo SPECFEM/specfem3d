@@ -1432,8 +1432,6 @@ end module my_mpi
 
   implicit none
 
-  include "precision.h"
-
   integer :: sendcnt,recvcounttot,NPROC
   integer, dimension(NPROC) :: recvcount,recvoffset
   integer, dimension(sendcnt) :: sendbuf

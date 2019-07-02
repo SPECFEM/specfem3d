@@ -31,7 +31,7 @@
                        comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
                        user_source_time_function)
 
-  use constants, only: IIN,IN_DATA_FILES,MAX_STRING_LEN,TINYVAL,CUSTOM_REAL
+  use constants, only: IIN,MAX_STRING_LEN,TINYVAL,CUSTOM_REAL
   use shared_parameters, only: USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF
 
   implicit none

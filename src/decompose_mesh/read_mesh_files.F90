@@ -277,7 +277,7 @@
       if (len_trim(line) == 0) cycle
       if (line(1:1) == '#' .or. line(1:1) == '!') cycle
 
-      read(line,*,iostat=ier) idomain_id,num_mat
+      read(line,*) idomain_id,num_mat
     enddo
     if (ier /= 0) stop 'Error reading in defined materials in nummaterial_velocity_file'
 
@@ -322,7 +322,7 @@
 
       ! reads poroelastic file line
       do while (ier == 0)
-        read(98,'(A)',iostat=ier) line
+        read(97,'(A)',iostat=ier) line
         if (ier /= 0) exit
 
         ! skip empty/comment lines
@@ -333,9 +333,10 @@
         read(line,*,iostat=ier) rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
         if (ier /= 0) then
           stop 'Error reading nummaterial_poroelastic_file, please check if it has the required format...'
-        else
-          exit
         endif
+
+        ! only read 1 valid line at a time
+        if (ier == 0) exit
       enddo
       if (ier /= 0) stop 'Error reading in materials in nummaterial_poroelastic_file'
 

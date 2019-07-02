@@ -89,9 +89,12 @@
 
   ! user output
   if (LTS_MODE) then
+    print *
     print *,'local time stepping: turned ON'
   else
+    print *
     print *,'local time stepping: turned OFF'
+    print *
     ! nothing to do
     return
   endif

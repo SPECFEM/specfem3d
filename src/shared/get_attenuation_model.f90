@@ -948,7 +948,7 @@
   integer, parameter :: nf = 100
   double precision, dimension(nf) :: f
 
-  double precision, parameter :: PI = 3.14159265358979d0
+  !double precision, parameter :: PI = 3.14159265358979d0
   double precision, external :: attenuation_eval
 
   ! Values to be passed into the simplex minimization routine

@@ -40,11 +40,13 @@ contains
 
   subroutine model_sep()
 
-  use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, &
-                                    SEP_MODEL_DIRECTORY, FOUR_THIRDS, myrank, IMAIN
-  use create_regions_mesh_ext_par, only: rhostore, rho_vp, rho_vs, &
-                                         kappastore, mustore, &
-                                         rho_vpI, rho_vsI, rhoarraystore
+  use generate_databases_par, only: &
+    SEP_MODEL_DIRECTORY, FOUR_THIRDS, myrank, IMAIN
+
+  use create_regions_mesh_ext_par, only: &
+    rhostore, rho_vp, rho_vs, &
+    kappastore, mustore, &
+    rho_vpI, rho_vsI, rhoarraystore
 
   implicit none
   real(kind=4), allocatable, dimension(:,:,:) :: vp_sep, vs_sep, rho_sep

@@ -54,7 +54,7 @@
   call synchronize_all()
 
   ! evaluates memory required
-  call memory_eval_gpu()
+  call prepare_memory_eval_gpu()
 
   ! prepares general fields on GPU
   ! add GPU support for the C-PML routines
@@ -255,174 +255,182 @@
   endif
   call synchronize_all()
 
-  contains
+  end subroutine prepare_GPU
 
-    subroutine memory_eval_gpu()
 
-    implicit none
+!
+!----------------------------------------------------------------------------------------------
+!
 
-    ! local parameters
-    double precision :: memory_size,memory_size_glob
-    integer,parameter :: NGLL2 = 25
-    integer,parameter :: NGLL3 = 125
-    integer,parameter :: NGLL3_PADDED = 128
+  subroutine prepare_memory_eval_gpu()
 
-    memory_size = 0.d0
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
 
-    ! add size of each set of arrays multiplied by the number of such arrays
-    ! d_hprime_xx,d_hprimewgll_xx
-    memory_size = memory_size + 2.d0 * NGLL2 * dble(CUSTOM_REAL)
-    ! padded xix,..gammaz
-    memory_size = memory_size + 9.d0 * NGLL3_PADDED * NSPEC_IRREGULAR * dble(CUSTOM_REAL)
-    ! ibool + irregular_element_number
-    memory_size = memory_size + (NGLL3+1) * NSPEC_AB * dble(SIZE_INTEGER)
-    ! d_ibool_interfaces_ext_mesh
-    memory_size = memory_size + num_interfaces_ext_mesh * max_nibool_interfaces_ext_mesh * dble(SIZE_INTEGER)
-    ! ispec_is_inner
+  implicit none
+
+  ! local parameters
+  double precision :: memory_size,memory_size_glob
+  integer,parameter :: NGLL2 = 25
+  integer,parameter :: NGLL3 = 125
+  integer,parameter :: NGLL3_PADDED = 128
+
+  memory_size = 0.d0
+
+  ! add size of each set of arrays multiplied by the number of such arrays
+  ! d_hprime_xx,d_hprimewgll_xx
+  memory_size = memory_size + 2.d0 * NGLL2 * dble(CUSTOM_REAL)
+  ! padded xix,..gammaz
+  memory_size = memory_size + 9.d0 * NGLL3_PADDED * NSPEC_IRREGULAR * dble(CUSTOM_REAL)
+  ! ibool + irregular_element_number
+  memory_size = memory_size + (NGLL3+1) * NSPEC_AB * dble(SIZE_INTEGER)
+  ! d_ibool_interfaces_ext_mesh
+  memory_size = memory_size + num_interfaces_ext_mesh * max_nibool_interfaces_ext_mesh * dble(SIZE_INTEGER)
+  ! ispec_is_inner
+  memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
+
+  if (STACEY_ABSORBING_CONDITIONS) then
+    ! d_abs_boundary_ispec
+    memory_size = memory_size + num_abs_boundary_faces * dble(SIZE_INTEGER)
+    ! d_abs_boundary_ijk
+    memory_size = memory_size + num_abs_boundary_faces * 3.d0 * NGLL2 * dble(SIZE_INTEGER)
+    ! d_abs_boundary_normal
+    memory_size = memory_size + num_abs_boundary_faces * NDIM * NGLL2 * dble(CUSTOM_REAL)
+    ! d_abs_boundary_jacobian2Dw
+    memory_size = memory_size + num_abs_boundary_faces * NGLL2 * dble(CUSTOM_REAL)
+  endif
+
+  ! sources
+  ! d_sourcearrays
+  memory_size = memory_size + NGLL3 * NSOURCES * NDIM * dble(CUSTOM_REAL)
+  ! d_islice_selected_source,d_ispec_selected_source
+  memory_size = memory_size + 2.0 * NSOURCES * dble(SIZE_INTEGER)
+
+  ! receivers
+  ! d_ispec_selected_rec_loc
+  memory_size = memory_size + nrec_local * dble(SIZE_INTEGER)
+  ! d_ispec_selected_rec
+  memory_size = memory_size + nrec * dble(SIZE_INTEGER)
+
+  ! d_hxir, d_hetar, d_hgammar
+  memory_size = memory_size + 3.d0 * NGLLX * nrec_local * dble(CUSTOM_REAL)
+  ! d_nu
+  memory_size = memory_size + NDIM * NDIM * nrec_local * dble(CUSTOM_REAL)
+  ! d_ispec_selected_rec_loc
+  memory_size = memory_size + nrec_local * dble(SIZE_INTEGER)
+  ! d_seismograms_d,d_seismograms_v,d_seismograms_a,d_seismograms_p
+  if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
+    memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
+  if (SAVE_SEISMOGRAMS_VELOCITY) &
+    memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
+  if (SAVE_SEISMOGRAMS_ACCELERATION) &
+    memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
+  if (SAVE_SEISMOGRAMS_PRESSURE) &
+    memory_size = memory_size + NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL) * NB_RUNS_ACOUSTIC_GPU
+
+  ! acoustic simulations
+  if (ACOUSTIC_SIMULATION) then
+    ! d_potential_acoustic,d_potential_dot_acoustic,d_potential_dot_dot_acoustic
+    memory_size = memory_size + 3.d0 * NGLOB_AB * dble(CUSTOM_REAL) * NB_RUNS_ACOUSTIC_GPU
+    ! d_rmass_acoustic
+    memory_size = memory_size + NGLOB_AB * dble(CUSTOM_REAL)
+    ! padded d_rhostore
+    memory_size = memory_size + NGLL3_PADDED * NSPEC_AB * dble(CUSTOM_REAL)
+    ! d_kappastore
+    memory_size = memory_size + NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
+    ! d_phase_ispec_inner_acoustic
+    memory_size = memory_size + 2.d0 * num_phase_ispec_acoustic * dble(SIZE_INTEGER)
+    ! d_ispec_is_acoustic
     memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
 
-    if (STACEY_ABSORBING_CONDITIONS) then
-      ! d_abs_boundary_ispec
-      memory_size = memory_size + num_abs_boundary_faces * dble(SIZE_INTEGER)
-      ! d_abs_boundary_ijk
-      memory_size = memory_size + num_abs_boundary_faces * 3.d0 * NGLL2 * dble(SIZE_INTEGER)
-      ! d_abs_boundary_normal
-      memory_size = memory_size + num_abs_boundary_faces * NDIM * NGLL2 * dble(CUSTOM_REAL)
-      ! d_abs_boundary_jacobian2Dw
-      memory_size = memory_size + num_abs_boundary_faces * NGLL2 * dble(CUSTOM_REAL)
+  endif
+
+  ! elastic simulations
+  if (ELASTIC_SIMULATION) then
+    ! d_displ,..
+    memory_size = memory_size + 3.d0 * NDIM * NGLOB_AB * dble(CUSTOM_REAL)
+    ! d_send_accel_buffer
+    memory_size = memory_size + 3.d0 * num_interfaces_ext_mesh * max_nibool_interfaces_ext_mesh * dble(CUSTOM_REAL)
+    ! d_rmassx,..
+    memory_size = memory_size + 3.d0 * NGLOB_AB * dble(CUSTOM_REAL)
+    ! d_ispec_is_elastic
+    memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
+    ! d_phase_ispec_inner_elastic
+    memory_size = memory_size + 2.d0 * num_phase_ispec_elastic * dble(SIZE_INTEGER)
+
+    if (STACEY_ABSORBING_CONDITIONS .or. PML_CONDITIONS) then
+      ! d_rho_vp,..
+      memory_size = memory_size + 2.d0 * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
     endif
 
-    ! sources
-    ! d_sourcearrays
-    memory_size = memory_size + NGLL3 * NSOURCES * NDIM * dble(CUSTOM_REAL)
-    ! d_islice_selected_source,d_ispec_selected_source
-    memory_size = memory_size + 2.0 * NSOURCES * dble(SIZE_INTEGER)
+    ! padded kappav,muv
+    memory_size = memory_size + 2.d0 * NGLL3_PADDED * NSPEC_AB * dble(CUSTOM_REAL)
 
-    ! receivers
-    ! d_ispec_selected_rec_loc
-    memory_size = memory_size + nrec_local * dble(SIZE_INTEGER)
-    ! d_ispec_selected_rec
-    memory_size = memory_size + nrec * dble(SIZE_INTEGER)
-
-    ! d_hxir, d_hetar, d_hgammar
-    memory_size = memory_size + 3.d0 * NGLLX * nrec_local * dble(CUSTOM_REAL)
-    ! d_nu
-    memory_size = memory_size + NDIM * NDIM * nrec_local * dble(CUSTOM_REAL)
-    ! d_ispec_selected_rec_loc
-    memory_size = memory_size + nrec_local * dble(SIZE_INTEGER)
-    ! d_seismograms_d,d_seismograms_v,d_seismograms_a,d_seismograms_p
-    if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-      memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
-    if (SAVE_SEISMOGRAMS_VELOCITY) &
-      memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
-    if (SAVE_SEISMOGRAMS_ACCELERATION) &
-      memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
-    if (SAVE_SEISMOGRAMS_PRESSURE) &
-      memory_size = memory_size + NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL) * NB_RUNS_ACOUSTIC_GPU
-
-    ! acoustic simulations
-    if (ACOUSTIC_SIMULATION) then
-      ! d_potential_acoustic,d_potential_dot_acoustic,d_potential_dot_dot_acoustic
-      memory_size = memory_size + 3.d0 * NGLOB_AB * dble(CUSTOM_REAL) * NB_RUNS_ACOUSTIC_GPU
-      ! d_rmass_acoustic
+    if (COMPUTE_AND_STORE_STRAIN) then
+      ! d_epsilondev_xx,..
+      memory_size = memory_size + 5.d0 * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
+    endif
+    if (ATTENUATION) then
+      ! d_R_xx,..
+      memory_size = memory_size + 5.d0 * size(R_xx) * dble(CUSTOM_REAL)
+      ! d_factor_common
+      memory_size = memory_size + N_SLS * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
+      ! alphaval,..
+      memory_size = memory_size + 3.d0 * N_SLS * dble(CUSTOM_REAL)
+    endif
+    if (ANISOTROPY) then
+      ! padded d_c11store,..
+      memory_size = memory_size + 21.d0 * NGLL3_PADDED * NSPEC_AB * dble(CUSTOM_REAL)
+    endif
+    if (APPROXIMATE_OCEAN_LOAD) then
+      ! d_rmass_ocean_load
       memory_size = memory_size + NGLOB_AB * dble(CUSTOM_REAL)
-      ! padded d_rhostore
-      memory_size = memory_size + NGLL3_PADDED * NSPEC_AB * dble(CUSTOM_REAL)
-      ! d_kappastore
-      memory_size = memory_size + NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
-      ! d_phase_ispec_inner_acoustic
-      memory_size = memory_size + 2.d0 * num_phase_ispec_acoustic * dble(SIZE_INTEGER)
-      ! d_ispec_is_acoustic
-      memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
-
-    endif
-
-    ! elastic simulations
-    if (ELASTIC_SIMULATION) then
-      ! d_displ,..
-      memory_size = memory_size + 3.d0 * NDIM * NGLOB_AB * dble(CUSTOM_REAL)
-      ! d_send_accel_buffer
-      memory_size = memory_size + 3.d0 * num_interfaces_ext_mesh * max_nibool_interfaces_ext_mesh * dble(CUSTOM_REAL)
-      ! d_rmassx,..
-      memory_size = memory_size + 3.d0 * NGLOB_AB * dble(CUSTOM_REAL)
-      ! d_ispec_is_elastic
-      memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
-      ! d_phase_ispec_inner_elastic
-      memory_size = memory_size + 2.d0 * num_phase_ispec_elastic * dble(SIZE_INTEGER)
-
-      if (STACEY_ABSORBING_CONDITIONS .or. PML_CONDITIONS) then
-        ! d_rho_vp,..
-        memory_size = memory_size + 2.d0 * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
-      endif
-
-      ! padded kappav,muv
-      memory_size = memory_size + 2.d0 * NGLL3_PADDED * NSPEC_AB * dble(CUSTOM_REAL)
-
-      if (COMPUTE_AND_STORE_STRAIN) then
-        ! d_epsilondev_xx,..
-        memory_size = memory_size + 5.d0 * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
-      endif
-      if (ATTENUATION) then
-        ! d_R_xx,..
-        memory_size = memory_size + 5.d0 * size(R_xx) * dble(CUSTOM_REAL)
-        ! d_factor_common
-        memory_size = memory_size + N_SLS * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
-        ! alphaval,..
-        memory_size = memory_size + 3.d0 * N_SLS * dble(CUSTOM_REAL)
-      endif
-      if (ANISOTROPY) then
-        ! padded d_c11store,..
-        memory_size = memory_size + 21.d0 * NGLL3_PADDED * NSPEC_AB * dble(CUSTOM_REAL)
-      endif
-      if (APPROXIMATE_OCEAN_LOAD) then
-        ! d_rmass_ocean_load
-        memory_size = memory_size + NGLOB_AB * dble(CUSTOM_REAL)
-        ! d_free_surface_normal
-        memory_size = memory_size + 3.d0 * NGLL2 * num_free_surface_faces * dble(CUSTOM_REAL)
-      endif
-    endif
-
-    ! noise simulations
-    if (NOISE_TOMOGRAPHY > 0) then
-      ! d_free_surface_ispec
-      memory_size = memory_size + num_free_surface_faces * dble(SIZE_INTEGER)
-      ! d_free_surface_ijk
-      memory_size = memory_size + 3.d0 * NGLL2 * num_free_surface_faces * dble(SIZE_INTEGER)
-      ! d_noise_surface_movie
+      ! d_free_surface_normal
       memory_size = memory_size + 3.d0 * NGLL2 * num_free_surface_faces * dble(CUSTOM_REAL)
-      if (NOISE_TOMOGRAPHY == 1) then
-        ! d_noise_sourcearray
-        memory_size = memory_size + 3.d0 * NGLL3 * NSTEP * dble(CUSTOM_REAL)
-      endif
-      if (NOISE_TOMOGRAPHY > 1) then
-        ! d_normal_x_noise,..
-        memory_size = memory_size + 5.d0 * NGLL2 * num_free_surface_faces * dble(CUSTOM_REAL)
-      endif
-      if (NOISE_TOMOGRAPHY == 3) then
-        ! d_sigma_kl
-        memory_size = memory_size + NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
-      endif
     endif
+  endif
 
-    if (GRAVITY) then
-      ! d_minus_deriv_gravity,d_minus_g
-      memory_size = memory_size + 2.d0 * NGLOB_AB * dble(CUSTOM_REAL)
+  ! noise simulations
+  if (NOISE_TOMOGRAPHY > 0) then
+    ! d_free_surface_ispec
+    memory_size = memory_size + num_free_surface_faces * dble(SIZE_INTEGER)
+    ! d_free_surface_ijk
+    memory_size = memory_size + 3.d0 * NGLL2 * num_free_surface_faces * dble(SIZE_INTEGER)
+    ! d_noise_surface_movie
+    memory_size = memory_size + 3.d0 * NGLL2 * num_free_surface_faces * dble(CUSTOM_REAL)
+    if (NOISE_TOMOGRAPHY == 1) then
+      ! d_noise_sourcearray
+      memory_size = memory_size + 3.d0 * NGLL3 * NSTEP * dble(CUSTOM_REAL)
     endif
-
-    ! poor estimate for kernel simulations...
-    if (SIMULATION_TYPE == 3) memory_size = 2.d0 * memory_size
-
-    ! maximum of all processes (may vary e.g. due to different nrec_local, num_abs_boundary_faces, ..)
-    call max_all_dp(memory_size,memory_size_glob)
-
-    ! user output
-    if (myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) '  minimum memory requested     : ',memory_size_glob / 1024. / 1024.,'MB per process'
-      write(IMAIN,*)
-      call flush_IMAIN()
+    if (NOISE_TOMOGRAPHY > 1) then
+      ! d_normal_x_noise,..
+      memory_size = memory_size + 5.d0 * NGLL2 * num_free_surface_faces * dble(CUSTOM_REAL)
     endif
+    if (NOISE_TOMOGRAPHY == 3) then
+      ! d_sigma_kl
+      memory_size = memory_size + NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
+    endif
+  endif
 
-    end subroutine memory_eval_gpu
+  if (GRAVITY) then
+    ! d_minus_deriv_gravity,d_minus_g
+    memory_size = memory_size + 2.d0 * NGLOB_AB * dble(CUSTOM_REAL)
+  endif
 
-  end subroutine prepare_GPU
+  ! poor estimate for kernel simulations...
+  if (SIMULATION_TYPE == 3) memory_size = 2.d0 * memory_size
+
+  ! maximum of all processes (may vary e.g. due to different nrec_local, num_abs_boundary_faces, ..)
+  call max_all_dp(memory_size,memory_size_glob)
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) '  minimum memory requested     : ',memory_size_glob / 1024. / 1024.,'MB per process'
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
+  end subroutine prepare_memory_eval_gpu
