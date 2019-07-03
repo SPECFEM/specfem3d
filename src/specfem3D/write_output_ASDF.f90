@@ -282,7 +282,7 @@
   if (OUTPUT_PROVENANCE) then
     ! Generate specfem provenance string
     call ASDF_generate_sf_provenance_f(trim(start_time_string)//C_NULL_CHAR, &
-                                   trim(end_time_string)//C_NULL_CHAR, cptr, len_prov)
+                                       trim(end_time_string)//C_NULL_CHAR, cptr, len_prov)
     call c_f_pointer(cptr, fptr, [len_prov])
     allocate(provenance(len_prov+1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2018')
@@ -706,116 +706,141 @@
   write(Mrp_str, "(g12.5)") 0.0!Mrp*1e-7
   write(Mtp_str, "(g12.5)") 0.0!Mtp*1e-7
 
-  quakemlstring = '<q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2"'//&
-                  ' xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">'//&
-                  '<eventParameters publicID="smi:local/'//trim(event_name)//'#eventPrm">'//&
-                  '<event publicID="smi:local/'//trim(event_name)//'#eventID">'//&
-                  '<preferredOriginID>smi:local/'//trim(event_name)//'/origin#cmtorigin</preferredOriginID>'//&
-                  '<preferredMagnitudeID>smi:local/'//trim(event_name)//'/magnitude#moment_mag</preferredMagnitudeID>'//&
-                  '<preferredFocalMechanismID>smi:local/'//trim(event_name)//'/focal_mechanism</preferredFocalMechanismID>'//&
-                  '<type>earthquake</type>'//&
-                  '<typeCertainty>known</typeCertainty>'//&
-                  '<description>'//&
-                  '<text>'//trim(event_name)//'</text>'//&
-                  '<type>earthquake name</type>'//&
-                  '</description>'//&
-                  '<origin publicID="smi:local/'//trim(event_name)//'/origin#reforigin">'//&
-                  '<time>'//&
-                  '<value>'//trim(pde_start_time_string)//'</value>'//&
-                  '</time>'//&
-                  '<time>'//&
-                  '<value>'//trim(cmt_start_time_string)//'</value>'//&
-                  '</time>'//&
-                  '<latitude>'//&
-                  '<value>'//trim(cmt_lat_str)//'</value>'//&
-                  '</latitude>'//&
-                  '<longitude>'//&
-                  '<value></value>'//&
-                  '</longitude>'//&
-                  '<depth>'//&
-                  '<value></value>'//&
-                  '</depth>'//&
-                  '<type>hypocenter</type>'//&
-                  '<comment id="smi:local/comment#ref_origin">'//&
-                  '<text>Hypocenter catalog: PDE</text>'//&
-                  '</comment>'//&
-                  '</origin>'//&
-                  '<origin publicID="smi:local/origin#cmtorigin">'//&
-                  '<time>'//&
-                  '<value><value>'//&
-                  '</time>'//&
-                  '<latitude>'//&
-                  '<value></value>'//&
-                  '</latitude>'//&
-                  '<longitude>'//&
-                  '<value></value>'//&
-                  '</longitude>'//&
-                  '<depth>'//&
-                  '<value></value>'//&
-                  '</depth>'//&
-                  '</origin>'//&
-                  '<focalMechanism publicID="smi:local/focal_mechanism">'//&
-                  '<momentTensor publicID="smi:local//momenttensor">'//&
-                  '<derivedOriginID>smi:local/origin#cmtorigin'//&
-                  '</derivedOriginID>'//&
-                  '<momentMagnitudeID>smi:local//magnitude#moment_mag'//&
-                  '</momentMagnitudeID>'//&
-                  '<scalarMoment>'//&
-                  '<value></value>'//&
-                  '</scalarMoment>'//&
-                  '<tensor>'//&
-                  '<Mrr>'//&
-                  '<value></value>'//&
-                  '<uncertainty>0</uncertainty>'//&
-                  '</Mrr>'//&
-                  '<Mtt>'//&
-                  '<value></value>'//&
-                  '<uncertainty>0</uncertainty>'//&
-                  '</Mtt>'//&
-                  '<Mpp>'//&
-                  '<value></value>'//&
-                  '<uncertainty>0</uncertainty>'//&
-                  '</Mpp>'//&
-                  '<Mrt>'//&
-                  '<value></value>'//&
-                  '<uncertainty>0</uncertainty>'//&
-                  '</Mrt>'//&
-                  '<Mrp>'//&
-                  '<value></value>'//&
-                  '<uncertainty>0</uncertainty>'//&
-                  '</Mrp>'//&
-                  '<Mtp>'//&
-                  '<value></value>'//&
-                  '<uncertainty>0</uncertainty>'//&
-                  '</Mtp>'//&
-                  '</tensor>'//&
-                  '<sourceTimeFunction>'//&
-                  '<type>triangle</type>'//&
-                  '<duration></duration>'//&
-                  '</sourceTimeFunction>'//&
-                  '</momentTensor>'//&
-                  '</focalMechanism>'//&
-                  '<magnitude publicID="smi:local/magnitude#moment_mag">'//&
-                  '<mag>'//&
-                  '<value></value>'//&
-                  '</mag>'//&
-                  '<type>Mwc</type>'//&
-                  '</magnitude>'//&
-                  '<magnitude publicID="smi:local/magnitude#mb">'//&
-                  '<mag>'//&
-                  '<value></value>'//&
-                  '</mag>'//&
-                  '<type>mb</type>'//&
-                  '</magnitude>'//&
-                  '<magnitude publicID="smi:local/magnitude#MS">'//&
-                  '<mag>'//&
-                  '<value></value>'//&
-                  '</mag>'//&
-                  '<type>MS</type>'//&
-                  '</magnitude>'//&
-                  '</event>'//&
-                  '</eventParameters>'//&
-                  '</q:quakeml>'
+  ! header version
+  quakemlstring = &
+    '<q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">'
+
+  ! event
+  quakemlstring = quakemlstring // &
+    '<eventParameters publicID="smi:local/'//trim(event_name)//'#eventPrm">'// &
+    '<event publicID="smi:local/'//trim(event_name)//'#eventID">'
+
+  ! info preferences
+  quakemlstring = quakemlstring // &
+    '<preferredOriginID>smi:local/'//trim(event_name)//'/origin#cmtorigin</preferredOriginID>'// &
+    '<preferredMagnitudeID>smi:local/'//trim(event_name)//'/magnitude#moment_mag</preferredMagnitudeID>'// &
+    '<preferredFocalMechanismID>smi:local/'//trim(event_name)//'/focal_mechanism</preferredFocalMechanismID>'
+
+  ! event name
+  quakemlstring = quakemlstring // &
+    '<type>earthquake</type>'// &
+    '<typeCertainty>known</typeCertainty>'// &
+    '<description>'// &
+    '  <text>'//trim(event_name)//'</text>'// &
+    '  <type>earthquake name</type>'// &
+    '</description>'
+
+  ! event origin
+  quakemlstring = quakemlstring // &
+    '<origin publicID="smi:local/'//trim(event_name)//'/origin#reforigin">'//&
+    '  <time>'//&
+    '    <value>'//trim(pde_start_time_string)//'</value>'//&
+    '  </time>'//&
+    '  <time>'//&
+    '    <value>'//trim(cmt_start_time_string)//'</value>'//&
+    '  </time>'// &
+    '  <latitude>'//&
+    '    <value>'//trim(cmt_lat_str)//'</value>'//&
+    '  </latitude>'//&
+    '  <longitude>'//&
+    '    <value></value>'//&
+    '  </longitude>'//&
+    '  <depth>'//&
+    '    <value></value>'//&
+    '  </depth>'//&
+    '  <type>hypocenter</type>'//&
+    '  <comment id="smi:local/comment#ref_origin">'//&
+    '    <text>Hypocenter catalog: PDE</text>'//&
+    '  </comment>'//&
+    '</origin>'
+
+  ! event cmtorigin
+  quakemlstring = quakemlstring // &
+    '<origin publicID="smi:local/origin#cmtorigin">'//&
+    '  <time>'//&
+    '    <value><value>'//&
+    '  </time>'//&
+    '  <latitude>'//&
+    '    <value></value>'//&
+    '  </latitude>'//&
+    '  <longitude>'//&
+    '    <value></value>'//&
+    '  </longitude>'//&
+    '  <depth>'//&
+    '    <value></value>'//&
+    '  </depth>'//&
+    '</origin>'
+
+  ! event focal mechanism (empty for now...)
+  quakemlstring = quakemlstring // &
+    '<focalMechanism publicID="smi:local/focal_mechanism">'//&
+    '<momentTensor publicID="smi:local//momenttensor">'//&
+    '  <derivedOriginID>smi:local/origin#cmtorigin'//&
+    '  </derivedOriginID>'//&
+    '  <momentMagnitudeID>smi:local//magnitude#moment_mag'//&
+    '  </momentMagnitudeID>'//&
+    '  <scalarMoment>'//&
+    '    <value></value>'//&
+    '  </scalarMoment>'//&
+    '  <tensor>'//&
+    '  <Mrr>'//&
+    '    <value></value>'//&
+    '    <uncertainty>0</uncertainty>'//&
+    '  </Mrr>'//&
+    '  <Mtt>'//&
+    '    <value></value>'//&
+    '    <uncertainty>0</uncertainty>'//&
+    '  </Mtt>'//&
+    '  <Mpp>'//&
+    '    <value></value>'//&
+    '    <uncertainty>0</uncertainty>'//&
+    '  </Mpp>'//&
+    '  <Mrt>'//&
+    '    <value></value>'//&
+    '    <uncertainty>0</uncertainty>'//&
+    '  </Mrt>'//&
+    '  <Mrp>'//&
+    '    <value></value>'//&
+    '    <uncertainty>0</uncertainty>'//&
+    '  </Mrp>'//&
+    '  <Mtp>'//&
+    '    <value></value>'//&
+    '    <uncertainty>0</uncertainty>'//&
+    '  </Mtp>'//&
+    '  </tensor>'//&
+    '  <sourceTimeFunction>'//&
+    '    <type>triangle</type>'//&
+    '    <duration></duration>'//&
+    '  </sourceTimeFunction>'//&
+    '</momentTensor>'//&
+    '</focalMechanism>'
+
+  ! event magnitudes
+  quakemlstring = quakemlstring // &
+    '<magnitude publicID="smi:local/magnitude#moment_mag">'//&
+    '  <mag>'//&
+    '  <value></value>'//&
+    '  </mag>'//&
+    '  <type>Mwc</type>'//&
+    '</magnitude>'//&
+    '<magnitude publicID="smi:local/magnitude#mb">'//&
+    '  <mag>'//&
+    '  <value></value>'//&
+    '  </mag>'//&
+    '  <type>mb</type>'//&
+    '</magnitude>'//&
+    '<magnitude publicID="smi:local/magnitude#MS">'//&
+    '  <mag>'//&
+    '  <value></value>'//&
+    '  </mag>'//&
+    '  <type>MS</type>'//&
+    '</magnitude>'
+
+  ! event finish
+  quakemlstring = quakemlstring // &
+    '</event>'//&
+    '</eventParameters>'//&
+    '</q:quakeml>'
 
   end subroutine cmt_to_quakeml
 
