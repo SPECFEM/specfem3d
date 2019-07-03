@@ -79,8 +79,12 @@ program smooth_sem
   integer :: NSPEC_N, NGLOB_N, NSPEC_IRREGULAR_N
 
   integer :: i,j,k,iglob,ier,ispec2,ispec,ispec_irreg,inum
+#ifdef FORCE_VECTORIZATION
+  integer :: ijk
+#endif
   integer :: icounter,num_slices
   integer :: iproc,ncuda_devices
+
   integer(kind=8) :: Container
 
   integer,parameter :: MAX_NODE_LIST = 300
@@ -930,7 +934,7 @@ program smooth_sem
 ! -----------------------------------------------------------------------------
 !
   subroutine smoothing_weights_vec(x0,y0,z0,sigma_h2_inv,sigma_v2_inv,exp_val, &
-                              xx_elem,yy_elem,zz_elem)
+                                   xx_elem,yy_elem,zz_elem)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
@@ -944,8 +948,11 @@ program smooth_sem
   real(kind=CUSTOM_REAL) :: dist_h_sq,dist_v_sq
   real(kind=CUSTOM_REAL) :: val
   real(kind=CUSTOM_REAL) :: x1,y1,z1
-
+#ifdef FORCE_VECTORIZATION
+  integer :: ijk
+#else
   integer :: i,j,k
+#endif
 
   DO_LOOP_IJK
 

@@ -202,7 +202,7 @@
   use constants
   use specfem_par, only: NGLOB_AB,xix,xiy,xiz,etax,etay,etaz, &
                          gammax,gammay,gammaz,xix_regular,irregular_element_number, &
-                         ibool,rhostore,hprime_xx,hprime_xxT,field_local,temp1,temp2,temp3 ! ,GRAVITY
+                         ibool,rhostore,hprime_xx,hprime_xxT ! ,GRAVITY
 
   implicit none
 
@@ -210,9 +210,17 @@
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB),intent(in) :: scalar_field
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(out) :: vector_field_element
 
-! local parameters
-  real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
-  real(kind=CUSTOM_REAL) rho_invl
+  ! local parameters
+  ! note: declaring arrays in this subroutine here will allocate them generally on the stack
+  !       (intel by default; not for gfortran though, it always uses heap memory).
+  !       stack memory access is faster, thus please let these declarations here for local element arrays...
+  !
+  ! arrays for elemental computations inside a given spectral element
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: field_local
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1,temp2,temp3
+
+  real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
+  real(kind=CUSTOM_REAL) :: rho_invl
   integer :: i,j,k,ispec_irreg
 
 ! double loop over GLL points to compute and store gradients

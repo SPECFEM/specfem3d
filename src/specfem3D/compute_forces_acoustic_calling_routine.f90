@@ -70,9 +70,9 @@ subroutine compute_forces_acoustic_calling()
   !         iphase = 2 is for computing inner elements
   integer :: iphase
 
-  ! timing
-  double precision, external :: wtime
-  double precision :: t_start,tCPU
+  ! debug timing
+  !double precision, external :: wtime
+  !double precision :: t_start,tCPU
 
   ! enforces free surface (zeroes potentials at free surface)
   call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE, &
@@ -90,15 +90,14 @@ subroutine compute_forces_acoustic_calling()
   ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
   do iphase = 1,2
 
-!daniel debug
-    ! timing
-    if (myrank == 0 .and. iphase == 2) then
-      t_start = wtime()
-    endif
+    !debug timing
+    !if (myrank == 0 .and. iphase == 2) then
+    !  t_start = wtime()
+    !endif
 
     ! acoustic pressure term
     ! no need to test the two others because NGLLX == NGLLY = NGLLZ in unstructured meshes
-    if (NGLLX == 5 .or. NGLLX == 6 .or. NGLLX == 7) then
+    if (NGLLX == 5 .or. NGLLX == 6 .or. NGLLX == 7 .or. NGLLX == 8) then
       call compute_forces_acoustic_fast_Deville(iphase, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         .false.)
@@ -108,12 +107,11 @@ subroutine compute_forces_acoustic_calling()
                         .false.)
     endif
 
-!daniel debug
-    ! timing
-    if (myrank == 0 .and. iphase == 2) then
-      tCPU = wtime() - t_start
-      print *,'timing: compute_forces_acoustic elapsed time ',tCPU,'s'
-    endif
+    ! debug timing
+    !if (myrank == 0 .and. iphase == 2) then
+    !  tCPU = wtime() - t_start
+    !  print *,'timing: compute_forces_acoustic elapsed time ',tCPU,'s'
+    !endif
 
     ! computes additional contributions
     if (iphase == 1) then

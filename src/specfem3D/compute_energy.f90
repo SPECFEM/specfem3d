@@ -58,6 +58,16 @@
 ! local variables
   integer :: i,j,k,l,ispec,iglob,ispec_irreg
 
+  ! note: declaring arrays in this subroutine here will allocate them generally on the stack
+  !       (intel by default; not for gfortran though, it always uses heap memory).
+  !       stack memory access is faster, thus please let these declarations here for local element arrays...
+  !
+  ! arrays for elemental computations inside a given spectral element
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempx1,tempx2,tempx3
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempy1,tempy2,tempy3
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempz1,tempz2,tempz3
+
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) :: duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
 
@@ -469,6 +479,16 @@
 
 ! local variables
   integer :: i,j,k,ispec,iglob,ispec_irreg
+
+  ! note: declaring arrays in this subroutine here will allocate them generally on the stack
+  !       (intel by default; not for gfortran though, it always uses heap memory).
+  !       stack memory access is faster, thus please let these declarations here for local element arrays...
+  !
+  ! arrays for elemental computations inside a given spectral element
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempx1,tempx2,tempx3
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempy1,tempy2,tempy3
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempz1,tempz2,tempz3
 
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) :: duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl

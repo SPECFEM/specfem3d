@@ -27,38 +27,39 @@
 
 
   subroutine compute_forces_viscoelastic(iphase, &
-                        displ,veloc,accel, &
-                        alphaval,betaval,gammaval, &
-                        R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                        R_trace_lddrk, &
-                        R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
-                        epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-                        epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
-                        backward_simulation)
+                                         displ,veloc,accel, &
+                                         alphaval,betaval,gammaval, &
+                                         R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                                         R_trace_lddrk, &
+                                         R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
+                                         epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+                                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
+                                         backward_simulation)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,ONE_THIRD,FOUR_THIRDS
 
   use fault_solver_dynamic, only: Kelvin_Voigt_eta
 
-  use specfem_par, only: SAVE_MOHO_MESH,USE_LDDRK,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        NSPEC_AB,NGLOB_AB,hprime_xxT,hprime_yyT,hprime_zzT, &
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                        kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,deltat, &
-                        NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_LDDRK, &
-                        ANISOTROPY,SIMULATION_TYPE, &
-                        NSPEC_ADJOINT,is_moho_top,is_moho_bot, &
-                        irregular_element_number,xix_regular,jacobian_regular
+  use specfem_par, only: SAVE_MOHO_MESH,USE_LDDRK, &
+                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                         NSPEC_AB,NGLOB_AB,hprime_xxT,hprime_yyT,hprime_zzT, &
+                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                         kappastore,mustore,jacobian,ibool, &
+                         ATTENUATION,deltat, &
+                         NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_LDDRK, &
+                         ANISOTROPY,SIMULATION_TYPE, &
+                         NSPEC_ADJOINT,is_moho_top,is_moho_bot, &
+                         irregular_element_number,xix_regular,jacobian_regular
 
   use specfem_par_elastic, only: c11store,c12store,c13store,c14store,c15store,c16store, &
-                        c22store,c23store,c24store,c25store,c26store,c33store, &
-                        c34store,c35store,c36store,c44store,c45store,c46store, &
-                        c55store,c56store,c66store,factor_common, &
-                        factor_common_kappa,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
-                        dsdx_top,dsdx_bot, &
-                        ispec2D_moho_top,ispec2D_moho_bot, &
-                        nspec_inner_elastic,nspec_outer_elastic,phase_ispec_inner_elastic
+                                 c22store,c23store,c24store,c25store,c26store,c33store, &
+                                 c34store,c35store,c36store,c44store,c45store,c46store, &
+                                 c55store,c56store,c66store,factor_common, &
+                                 factor_common_kappa,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
+                                 dsdx_top,dsdx_bot, &
+                                 ispec2D_moho_top,ispec2D_moho_bot, &
+                                 nspec_inner_elastic,nspec_outer_elastic,phase_ispec_inner_elastic
 
   use pml_par, only: is_CPML,spec_to_CPML,accel_elastic_CPML, &
                      PML_dux_dxl,PML_dux_dyl,PML_dux_dzl,PML_duy_dxl,PML_duy_dyl,PML_duy_dzl, &
@@ -130,15 +131,22 @@
   real(kind=CUSTOM_REAL) :: R_trace_kappa_sum,R_xx_sum,R_yy_sum
   real(kind=CUSTOM_REAL) :: templ
 
-! local parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc, &
-            newtempx1,newtempx2,newtempx3,newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
-            tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
+  ! note: declaring arrays in this subroutine here will allocate them generally on the stack
+  !       (intel by default; not for gfortran though, it always uses heap memory).
+  !       stack memory access is faster, thus please let these declarations here for local element arrays...
+  !
+  ! arrays for elemental computations inside a given spectral element
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempx1,tempx2,tempx3
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempy1,tempy2,tempy3
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempz1,tempz2,tempz3
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: newtempx1,newtempx2,newtempx3
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: newtempy1,newtempy2,newtempy3
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: newtempz1,newtempz2,newtempz3
 
-  real(kind=CUSTOM_REAL) duxdxl_att,duxdyl_att,duxdzl_att,duydxl_att
-  real(kind=CUSTOM_REAL) duydyl_att,duydzl_att,duzdxl_att,duzdyl_att,duzdzl_att
-  real(kind=CUSTOM_REAL) duxdyl_plus_duydxl_att,duzdxl_plus_duxdzl_att,duzdyl_plus_duydzl_att
+  real(kind=CUSTOM_REAL) :: duxdxl_att,duxdyl_att,duxdzl_att,duydxl_att
+  real(kind=CUSTOM_REAL) :: duydyl_att,duydzl_att,duzdxl_att,duzdyl_att,duzdzl_att
+  real(kind=CUSTOM_REAL) :: duxdyl_plus_duydxl_att,duzdxl_plus_duxdzl_att,duzdyl_plus_duydzl_att
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
             tempx1_att,tempx2_att,tempx3_att, &

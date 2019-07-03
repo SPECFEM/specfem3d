@@ -36,16 +36,16 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ONE_THIRD
 
   use specfem_par, only: NGLOB_AB, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
-                          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll, &
-                          SIMULATION_TYPE,NSPEC_ADJOINT,jacobian,ibool,mustore, &
-                          irregular_element_number,xix_regular,jacobian_regular
+                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                         hprime_xx,hprime_yy,hprime_zz, &
+                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll, &
+                         SIMULATION_TYPE,NSPEC_ADJOINT,jacobian,ibool,mustore, &
+                         irregular_element_number,xix_regular,jacobian_regular
 
   use specfem_par_poroelastic, only: kappaarraystore,rhoarraystore,etastore,permstore, &
-                                      phistore,tortstore,nspec_inner_poroelastic, &
-                                      nspec_outer_poroelastic,phase_ispec_inner_poroelastic
+                                     phistore,tortstore,nspec_inner_poroelastic, &
+                                     nspec_outer_poroelastic,phase_ispec_inner_poroelastic
   implicit none
 
   integer :: iphase

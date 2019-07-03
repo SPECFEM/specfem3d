@@ -494,8 +494,11 @@
   character(len=3) :: channel
   character(len=1) :: compx,compy,compz
   character(len=MAX_STRING_LEN) :: outputname
-
+#ifdef FORCE_VECTORIZATION
+  integer :: ijk
+#else
   integer :: i,j,k
+#endif
 
   ! gets component characters: X/Y/Z or E/N/Z
   call write_channel_name(1,channel)

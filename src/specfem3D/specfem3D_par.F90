@@ -183,10 +183,12 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
 
+  ! arrays for Deville and force_vectorization
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
 
 ! proc numbers for MPI
   integer :: sizeprocs
+  character(len=MAX_STRING_LEN) :: prname
 
 ! timer MPI
   double precision :: time_start
@@ -199,31 +201,6 @@ module specfem_par
 
 ! array for NB_RUN_ACOUSTIC_GPU > 1
   integer, dimension(:), allocatable :: run_number_of_the_source
-
-! arrays for elemental computations inside a given spectral element
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem,chi_elem_old,chi_elem_new
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: field_local
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1,temp2,temp3,temp4
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: newtemp1,newtemp2,newtemp3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1_old,temp2_old,temp3_old
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1_new,temp2_new,temp3_new
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempx1,tempx2,tempx3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempy1,tempy2,tempy3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempz1,tempz2,tempz3
-
-! arrays for elemental computations in compute_forces() for PML elements
-  ! derivatives of potential with respect to x, y and z
-  ! in computation potential_acoustic at "n" time step is used
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl
-  ! in computation of PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
-  ! we replace potential_acoustic with potential_acoustic_old
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
-  ! we replace potential_acoustic at "n" time step with
-  ! we replace potential_acoustic with potential_acoustic_old with potential_acoustic_new
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
-
-  character(len=MAX_STRING_LEN) :: prname
 
 ! for assembling in case of external mesh
   integer :: num_interfaces_ext_mesh
