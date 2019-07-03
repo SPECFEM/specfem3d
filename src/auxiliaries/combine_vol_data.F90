@@ -128,13 +128,13 @@
 #ifdef USE_VTK_INSTEAD_OF_MESH
   ! VTK
   mesh_file = trim(outdir) // '/' // trim(filename)//'.vtk'
-  open(IOVTK,file=mesh_file(1:len_trim(mesh_file)),status='unknown',iostat=ier)
+  open(IOUT_VTK,file=mesh_file(1:len_trim(mesh_file)),status='unknown',iostat=ier)
   if (ier /= 0) stop 'error opening vtk output file'
 
-  write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
-  write(IOVTK,'(a)') 'material model VTK file'
-  write(IOVTK,'(a)') 'ASCII'
-  write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
+  write(IOUT_VTK,'(a)') '# vtk DataFile Version 3.1'
+  write(IOUT_VTK,'(a)') 'material model VTK file'
+  write(IOUT_VTK,'(a)') 'ASCII'
+  write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
 #else
     ! open paraview output mesh file
     mesh_file = trim(outdir) // '/' // trim(filename)//'.mesh'
@@ -259,7 +259,7 @@
 
 #ifdef USE_VTK_INSTEAD_OF_MESH
   ! VTK
-  write(IOVTK,*) ''
+  write(IOUT_VTK,*) ''
 #endif
 
   if (np /= npp) stop 'Error: Number of total points are not consistent'
@@ -325,7 +325,7 @@
 
 #ifdef USE_VTK_INSTEAD_OF_MESH
   ! VTK
-  write(IOVTK,*) ''
+  write(IOUT_VTK,*) ''
 #endif
 
   ! checks with total number of elements
@@ -338,9 +338,9 @@
 #ifdef USE_VTK_INSTEAD_OF_MESH
   ! VTK
   ! type: hexahedrons
-  write(IOVTK,'(a,i12)') "CELL_TYPES ",nee
-  write(IOVTK,'(6i12)') (12,it=1,nee)
-  write(IOVTK,*) ''
+  write(IOUT_VTK,'(a,i12)') "CELL_TYPES ",nee
+  write(IOUT_VTK,'(6i12)') (12,it=1,nee)
+  write(IOUT_VTK,*) ''
 
   ! point data values
   ! data array name
@@ -362,14 +362,14 @@
     data_array_name = trim(filename(1:8)) ! "pressure"
   endif
 
-  write(IOVTK,'(a,i12)') "POINT_DATA ",npp
-  write(IOVTK,'(a)') "SCALARS "//trim(data_array_name)//" float"
-  write(IOVTK,'(a)') "LOOKUP_TABLE default"
+  write(IOUT_VTK,'(a,i12)') "POINT_DATA ",npp
+  write(IOUT_VTK,'(a)') "SCALARS "//trim(data_array_name)//" float"
+  write(IOUT_VTK,'(a)') "LOOKUP_TABLE default"
   do it = 1,npp
-      write(IOVTK,*) total_dat(it)
+      write(IOUT_VTK,*) total_dat(it)
   enddo
-  write(IOVTK,*) ''
-  close(IOVTK)
+  write(IOUT_VTK,*) ''
+  close(IOUT_VTK)
 #else
   ! close mesh file
   call close_file()
@@ -545,7 +545,7 @@
   if (it == 1) then
 #ifdef USE_VTK_INSTEAD_OF_MESH
     ! VTK
-    write(IOVTK, '(a,i12,a)') 'POINTS ', npp, ' float'
+    write(IOUT_VTK, '(a,i12,a)') 'POINTS ', npp, ' float'
     ! creates array to hold point data
     allocate(total_dat(npp),stat=ier)
     if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1148')
@@ -581,7 +581,7 @@
       z = zstore(iglob1)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(1,1,1,ispec)
 #else
       call write_real(x)
@@ -598,7 +598,7 @@
       z = zstore(iglob2)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(NGLLX,1,1,ispec)
 #else
       call write_real(x)
@@ -615,7 +615,7 @@
       z = zstore(iglob3)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(NGLLX,NGLLY,1,ispec)
 #else
       call write_real(x)
@@ -632,7 +632,7 @@
       z = zstore(iglob4)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(1,NGLLY,1,ispec)
 #else
       call write_real(x)
@@ -649,7 +649,7 @@
       z = zstore(iglob5)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(1,1,NGLLZ,ispec)
 #else
       call write_real(x)
@@ -666,7 +666,7 @@
       z = zstore(iglob6)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(NGLLX,1,NGLLZ,ispec)
 #else
       call write_real(x)
@@ -683,7 +683,7 @@
       z = zstore(iglob7)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(NGLLX,NGLLY,NGLLZ,ispec)
 #else
       call write_real(x)
@@ -700,7 +700,7 @@
       z = zstore(iglob8)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(1,NGLLY,NGLLZ,ispec)
 #else
       call write_real(x)
@@ -739,7 +739,7 @@
   if (it == 1) then
 #ifdef USE_VTK_INSTEAD_OF_MESH
     ! VTK
-    write(IOVTK, '(a,i12,a)') 'POINTS ', npp, ' float'
+    write(IOUT_VTK, '(a,i12,a)') 'POINTS ', npp, ' float'
     ! creates array to hold point data
     allocate(total_dat(npp),stat=ier)
     if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1150')
@@ -771,7 +771,7 @@
             z = zstore(iglob)
 #ifdef USE_VTK_INSTEAD_OF_MESH
             ! VTK
-            write(IOVTK,'(3e18.6)') x,y,z
+            write(IOUT_VTK,'(3e18.6)') x,y,z
             total_dat(np+numpoin) = dat(i,j,k,ispec)
 #else
             call write_real(x)
@@ -815,7 +815,7 @@
 #ifdef USE_VTK_INSTEAD_OF_MESH
     ! VTK
     ! note: indices for vtk start at 0
-    write(IOVTK,'(a,i12,i12)') "CELLS ",nee,nee*9
+    write(IOUT_VTK,'(a,i12,i12)') "CELLS ",nee,nee*9
 #else
     call write_integer(nee)
 #endif
@@ -896,7 +896,7 @@
 
 #ifdef USE_VTK_INSTEAD_OF_MESH
     ! VTK
-    write(IOVTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
+    write(IOUT_VTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
 #else
     call write_integer(n1)
     call write_integer(n2)
@@ -946,7 +946,7 @@
 #ifdef USE_VTK_INSTEAD_OF_MESH
     ! VTK
     ! note: indices for vtk start at 0
-    write(IOVTK,'(a,i12,i12)') "CELLS ",nee,nee*9
+    write(IOUT_VTK,'(a,i12,i12)') "CELLS ",nee,nee*9
 #else
     !nee = nelement * num_node
     call write_integer(nee)
@@ -1002,7 +1002,7 @@
 
 #ifdef USE_VTK_INSTEAD_OF_MESH
           ! VTK
-          write(IOVTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
+          write(IOUT_VTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
 #else
           call write_integer(n1)
           call write_integer(n2)

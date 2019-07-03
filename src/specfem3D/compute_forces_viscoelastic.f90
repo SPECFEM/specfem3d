@@ -158,6 +158,7 @@
             tempz1_att_new,tempz2_att_new,tempz3_att_new
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: zero_array
 
+
   ! choses inner/outer elements
   if (iphase == 1) then
     num_elements = nspec_outer_elastic
@@ -174,13 +175,15 @@
     ispec = phase_ispec_inner_elastic(ispec_p,iphase)
 
     ! adjoint simulations: moho kernel
-    if (SIMULATION_TYPE == 3 .and. SAVE_MOHO_MESH) then
-      if (is_moho_top(ispec)) then
-        ispec2D_moho_top = ispec2D_moho_top + 1
-      else if (is_moho_bot(ispec)) then
-        ispec2D_moho_bot = ispec2D_moho_bot + 1
-      endif
-    endif ! adjoint
+    if (SAVE_MOHO_MESH) then
+      if (SIMULATION_TYPE == 3) then
+        if (is_moho_top(ispec)) then
+          ispec2D_moho_top = ispec2D_moho_top + 1
+        else if (is_moho_bot(ispec)) then
+          ispec2D_moho_bot = ispec2D_moho_bot + 1
+        endif
+      endif ! adjoint
+    endif
 
     ! Kelvin Voigt damping: artificial viscosity around dynamic faults
 
@@ -243,7 +246,7 @@
     if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN .and. .not. is_CPML(ispec)) then
           ! Keeping in mind, currently we implement a PML derived based on elastic wave equation
           ! for visco-elastic wave simulation. Thus it is not a PML anymore,
-          ! because the solution of PML equation derived based on elastic wave equation is not perfectly mathced
+          ! because the solution of PML equation derived based on elastic wave equation is not perfectly matched
           ! with solution of visco-elastic wave equation along the PML interface.
           ! you can seen PML in this case as a sponge layer.
           ! Based on limited numerical experiments, that PML implementation will work more or less OK anyway if Q > 70.
@@ -304,8 +307,9 @@
       do j=1,NGLLY
         do i=1,NGLLX
 
-          if (ispec_irreg /= 0) then !irregular element
-
+          ! grad(u)
+          if (ispec_irreg /= 0) then
+            !irregular element
             xixl = xix(i,j,k,ispec_irreg)
             xiyl = xiy(i,j,k,ispec_irreg)
             xizl = xiz(i,j,k,ispec_irreg)
@@ -329,8 +333,8 @@
             duzdyl = xiyl*tempz1(i,j,k) + etayl*tempz2(i,j,k) + gammayl*tempz3(i,j,k)
             duzdzl = xizl*tempz1(i,j,k) + etazl*tempz2(i,j,k) + gammazl*tempz3(i,j,k)
 
-          else !regular element
-
+          else
+            !regular element
             duxdxl = xix_regular*tempx1(i,j,k)
             duxdyl = xix_regular*tempx2(i,j,k)
             duxdzl = xix_regular*tempx3(i,j,k)
@@ -448,27 +452,29 @@
           endif
 
           ! save strain on the Moho boundary
-          if (SIMULATION_TYPE == 3 .and. SAVE_MOHO_MESH) then
-            if (is_moho_top(ispec)) then
-              dsdx_top(1,1,i,j,k,ispec2D_moho_top) = duxdxl
-              dsdx_top(1,2,i,j,k,ispec2D_moho_top) = duxdyl
-              dsdx_top(1,3,i,j,k,ispec2D_moho_top) = duxdzl
-              dsdx_top(2,1,i,j,k,ispec2D_moho_top) = duydxl
-              dsdx_top(2,2,i,j,k,ispec2D_moho_top) = duydyl
-              dsdx_top(2,3,i,j,k,ispec2D_moho_top) = duydzl
-              dsdx_top(3,1,i,j,k,ispec2D_moho_top) = duzdxl
-              dsdx_top(3,2,i,j,k,ispec2D_moho_top) = duzdyl
-              dsdx_top(3,3,i,j,k,ispec2D_moho_top) = duzdzl
-            else if (is_moho_bot(ispec)) then
-              dsdx_bot(1,1,i,j,k,ispec2D_moho_bot) = duxdxl
-              dsdx_bot(1,2,i,j,k,ispec2D_moho_bot) = duxdyl
-              dsdx_bot(1,3,i,j,k,ispec2D_moho_bot) = duxdzl
-              dsdx_bot(2,1,i,j,k,ispec2D_moho_bot) = duydxl
-              dsdx_bot(2,2,i,j,k,ispec2D_moho_bot) = duydyl
-              dsdx_bot(2,3,i,j,k,ispec2D_moho_bot) = duydzl
-              dsdx_bot(3,1,i,j,k,ispec2D_moho_bot) = duzdxl
-              dsdx_bot(3,2,i,j,k,ispec2D_moho_bot) = duzdyl
-              dsdx_bot(3,3,i,j,k,ispec2D_moho_bot) = duzdzl
+          if (SAVE_MOHO_MESH) then
+            if (SIMULATION_TYPE == 3) then
+              if (is_moho_top(ispec)) then
+                dsdx_top(1,1,i,j,k,ispec2D_moho_top) = duxdxl
+                dsdx_top(1,2,i,j,k,ispec2D_moho_top) = duxdyl
+                dsdx_top(1,3,i,j,k,ispec2D_moho_top) = duxdzl
+                dsdx_top(2,1,i,j,k,ispec2D_moho_top) = duydxl
+                dsdx_top(2,2,i,j,k,ispec2D_moho_top) = duydyl
+                dsdx_top(2,3,i,j,k,ispec2D_moho_top) = duydzl
+                dsdx_top(3,1,i,j,k,ispec2D_moho_top) = duzdxl
+                dsdx_top(3,2,i,j,k,ispec2D_moho_top) = duzdyl
+                dsdx_top(3,3,i,j,k,ispec2D_moho_top) = duzdzl
+              else if (is_moho_bot(ispec)) then
+                dsdx_bot(1,1,i,j,k,ispec2D_moho_bot) = duxdxl
+                dsdx_bot(1,2,i,j,k,ispec2D_moho_bot) = duxdyl
+                dsdx_bot(1,3,i,j,k,ispec2D_moho_bot) = duxdzl
+                dsdx_bot(2,1,i,j,k,ispec2D_moho_bot) = duydxl
+                dsdx_bot(2,2,i,j,k,ispec2D_moho_bot) = duydyl
+                dsdx_bot(2,3,i,j,k,ispec2D_moho_bot) = duydzl
+                dsdx_bot(3,1,i,j,k,ispec2D_moho_bot) = duzdxl
+                dsdx_bot(3,2,i,j,k,ispec2D_moho_bot) = duzdyl
+                dsdx_bot(3,3,i,j,k,ispec2D_moho_bot) = duzdzl
+              endif
             endif
           endif
 
@@ -775,6 +781,7 @@
     endif
 
   enddo  ! spectral element loop
+
 
 contains
 

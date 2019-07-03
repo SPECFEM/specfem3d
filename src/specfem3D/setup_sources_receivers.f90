@@ -1458,14 +1458,14 @@
 
   if (myrank == 0) then
     ! vtk file
-    open(IOVTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown',iostat=ier)
+    open(IOUT_VTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown',iostat=ier)
     if (ier /= 0) stop 'error opening sr.vtk file'
     ! vtk header
-    write(IOVTK,'(a)') '# vtk DataFile Version 2.0'
-    write(IOVTK,'(a)') 'Source and Receiver VTK file'
-    write(IOVTK,'(a)') 'ASCII'
-    write(IOVTK,'(a)') 'DATASET POLYDATA'
-    write(IOVTK, '(a,i6,a)') 'POINTS ', totalpoints, ' float'
+    write(IOUT_VTK,'(a)') '# vtk DataFile Version 2.0'
+    write(IOUT_VTK,'(a)') 'Source and Receiver VTK file'
+    write(IOUT_VTK,'(a)') 'ASCII'
+    write(IOUT_VTK,'(a)') 'DATASET POLYDATA'
+    write(IOUT_VTK, '(a,i6,a)') 'POINTS ', totalpoints, ' float'
   endif
 
   ! sources
@@ -1512,7 +1512,7 @@
         enddo
 
         ! writes out to VTK file
-        write(IOVTK,'(3e18.6)') xmesh,ymesh,zmesh
+        write(IOUT_VTK,'(3e18.6)') xmesh,ymesh,zmesh
       endif
     enddo ! NSOURCES
   endif
@@ -1557,14 +1557,14 @@
       enddo
 
       ! writes out to VTK file
-      write(IOVTK,'(3e18.6)') xmesh,ymesh,zmesh
+      write(IOUT_VTK,'(3e18.6)') xmesh,ymesh,zmesh
     endif
   enddo
 
   ! closes vtk file
   if (myrank == 0) then
-    write(IOVTK,*)
-    close(IOVTK)
+    write(IOUT_VTK,*)
+    close(IOUT_VTK)
 
     ! creates additional receiver and source files
     if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then

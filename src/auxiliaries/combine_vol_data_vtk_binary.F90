@@ -638,7 +638,7 @@
   if (it == 1) then
     ! VTK
     ! note: indices for vtk start at 0
-    write(IOVTK,'(a,i12,i12)') "CELLS ",nee,nee*9
+    write(IOUT_VTK,'(a,i12,i12)') "CELLS ",nee,nee*9
 
   endif
 
@@ -752,7 +752,7 @@
 
   ! outputs total number of elements for all slices
   if (it == 1) then
-    write(IOVTK,'(a,i12,i12)') "CELLS ",nee,nee*9
+    write(IOUT_VTK,'(a,i12,i12)') "CELLS ",nee,nee*9
   endif
 
   ! sets numbering num_ibool respecting mask

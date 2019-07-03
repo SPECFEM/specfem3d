@@ -395,7 +395,7 @@
   call synchronize_all()
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '  done'
+    write(IMAIN,*) 'mesh regions done'
     call flush_IMAIN()
   endif
 

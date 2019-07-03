@@ -35,7 +35,7 @@
   ! create the different regions of the mesh
   use constants, only: IMAIN,CUSTOM_REAL,SMALL_PERCENTAGE_TOLERANCE, &
     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ, &
-    PI,IOVTK,MAX_STRING_LEN,NDIM,myrank
+    PI,MAX_STRING_LEN,NDIM,myrank
 
   ! CPML
   use shared_parameters, only: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
@@ -54,7 +54,7 @@
   integer :: nspec_CPML_total
   integer :: i1,i2,i3,i4,i5,i6,i7,i8
   integer :: ispec,ispec_CPML
-  integer :: ier,ipoin
+  integer :: ier
   character(len=MAX_STRING_LEN) :: filename
 
   ! CPML allocation
@@ -294,54 +294,12 @@
 
   ! file output
   if (CREATE_VTK_FILES) then
-
     ! vtk file output
     filename = prname(1:len_trim(prname))//'is_CPML.vtk'
-
     if (myrank == 0) then
       write(IMAIN,*) '  saving VTK file: ',trim(filename)
     endif
-
-    open(IOVTK,file=trim(filename),status='unknown')
-
-    write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
-    write(IOVTK,'(a)') 'material model VTK file'
-    write(IOVTK,'(a)') 'ASCII'
-    write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
-    write(IOVTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
-    do ipoin = 1,nglob
-      write(IOVTK,*) sngl(nodes_coords(ipoin,1)),sngl(nodes_coords(ipoin,2)),sngl(nodes_coords(ipoin,3))
-    enddo
-    write(IOVTK,*) ''
-
-    ! note: indices for vtk start at 0
-    write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
-    do ispec = 1,nspec
-      write(IOVTK,'(9i12)') 8, &
-            ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(2,2,1,ispec)-1,ibool(1,2,1,ispec)-1, &
-            ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(2,2,2,ispec)-1,ibool(1,2,2,ispec)-1
-    enddo
-    write(IOVTK,*) ''
-
-    ! type: hexahedrons
-    write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
-    write(IOVTK,'(6i12)') (12,ispec=1,nspec)
-    write(IOVTK,*) ''
-
-    write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
-    write(IOVTK,'(a)') "SCALARS elem_flag integer"
-    write(IOVTK,'(a)') "LOOKUP_TABLE default"
-    ispec_CPML = 0
-    do ispec = 1,nspec
-      if (is_CPML(ispec) .eqv. .true.) then
-        ispec_CPML = ispec_CPML + 1
-        write(IOVTK,*) CPML_regions(ispec_CPML)
-      else
-        write(IOVTK,*) 0
-      endif
-    enddo
-    write(IOVTK,*) ''
-    close(IOVTK)
+    call write_VTK_data_elem_i_meshfemCPML(nglob,nspec,nodes_coords,ibool,CPML_regions,is_CPML,filename)
   endif
 
   end subroutine create_CPML_regions

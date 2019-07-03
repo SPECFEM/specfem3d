@@ -80,35 +80,68 @@
 !!-----------------------------------------------------------
 
 ! input, output and main MPI I/O files
+! note: careful with these unit numbers, we mostly use units in the 40-50 range.
+!       cray Fortran e.g. reserves 0,5,6 (standard error,input,output units) and 100-102
   integer, parameter :: ISTANDARD_OUTPUT = 6
   integer, parameter :: IIN = 40,IOUT = 41
+
 ! uncomment this to write messages to a text file
   integer, parameter :: IMAIN = 42
 ! uncomment this to write messages to the screen
 ! integer, parameter :: IMAIN = ISTANDARD_OUTPUT
-! I/O unit for source and receiver vtk file
-  integer, parameter :: IOVTK = 98
-! I/O number for absorbing boundary snapshots (opened in C for speed)
-! Not a Fortran I/O unit! See write_c_binary.c for more information.
-  integer, parameter :: IOABS = 0
-  integer, parameter :: IOABS_AC = 1
-! I/O unit for plotting source time function
-  integer, Parameter :: IOSTF = 71
+
 ! I/O unit for noise simulations
   integer, parameter :: IIN_NOISE = 44, IOUT_NOISE = 45
 ! I/O unit for SU formatted seismograms
   integer, parameter :: IOUT_SU = 46
 ! I/O unit for SU formatted adjoint sources
   integer, parameter :: IIN_SU1 = 47, IIN_SU2 = 48, IIN_SU3 = 49
+! I/O unit for source and receiver vtk file
+  integer, parameter :: IOUT_VTK = 50
+! I/O unit for plotting source time function (I/O read & write)
+  integer, Parameter :: IO_STF = 51
+! I/O for total energy calculation
+  integer, parameter :: IOUT_ENERGY = 52
+
+! I/O number for absorbing boundary snapshots (opened in C for speed)
+! Not a Fortran I/O unit! See write_c_binary.c for more information.
+  integer, parameter :: IOABS = 0
+  integer, parameter :: IOABS_AC = 1
 
 ! ignore variable name field (junk) at the beginning of each input line
   logical, parameter :: IGNORE_JUNK = .true.,DONT_IGNORE_JUNK = .false.
 
+!!-----------------------------------------------------------
+!!
+!! ADIOS Related values
+!!
+!!-----------------------------------------------------------
   ! size of the ADIOS buffer to use
   integer, parameter :: ADIOS_BUFFER_SIZE_IN_MB = 200
-  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = 'MPI'
 
-  ! ASDF parameter
+! ADIOS transport methods (see ADIOS manual for details)
+!! MPI (default)
+  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = 'MPI'
+  character(len=*), parameter :: ADIOS_METHOD_PARAMS =  ''
+! or
+!! POSIX
+!  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = "POSIX"
+!  character(len=*), parameter :: ADIOS_METHOD_PARAMS =  ''
+! or
+!! MPI_AGGREGATE
+!  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = "MPI_AGGREGATE"
+!  character(len=*), parameter :: ADIOS_METHOD_PARAMS =  "num_aggregators=64,num_ost=672"
+! or
+!! MPI_LUSTRE
+!  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = "MPI_LUSTRE"
+!  character(len=*), parameter :: ADIOS_METHOD_PARAMS =  "stripe_count=16,stripe_size=4194304,block_size=4194304"
+
+!!-----------------------------------------------------------
+!!
+!! ASDF parameters
+!!
+!!-----------------------------------------------------------
+  ! stores specfem provenance string in ASDF file
   logical, parameter :: OUTPUT_PROVENANCE = .false.
 
 !!-----------------------------------------------------------
@@ -537,9 +570,6 @@
 
 ! flag for projection from latitude/longitude to UTM, and back
   integer, parameter :: ILONGLAT2UTM = 0, IUTM2LONGLAT = 1
-
-! for total energy calculation
-  integer, parameter :: IOUT_ENERGY = 937  ! file number for the energy file
 
 !!-----------------------------------------------------------
 !!

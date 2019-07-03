@@ -651,7 +651,7 @@ end module create_meshfem_par
 
   subroutine cmm_create_addressing(nglob)
 
-  use constants, only: NDIM,IOVTK,IMAIN,myrank
+  use constants, only: NDIM,IMAIN,MAX_STRING_LEN,myrank
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NGLLCUBE_M
 
   use meshfem3D_par, only: prname,ibool,xstore,ystore,zstore, &
@@ -671,6 +671,7 @@ end module create_meshfem_par
   integer, dimension(:), allocatable :: iglob,locval
   logical, dimension(:), allocatable :: ifseg
   double precision, dimension(:), allocatable :: xp,yp,zp
+  character(len=MAX_STRING_LEN) :: filename
 
   ! user output
   if (myrank == 0) then
@@ -729,13 +730,7 @@ end module create_meshfem_par
     endif
 
     ! debug file output
-    ! vtk file format output
-    open(IOVTK,file=prname(1:len_trim(prname))//'mesh_debug.vtk',status='unknown')
-    write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
-    write(IOVTK,'(a)') 'material model VTK file'
-    write(IOVTK,'(a)') 'ASCII'
-    write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
-    write(IOVTK, '(a,i12,a)') 'POINTS ', nspec*NGLLX_M*NGLLY_M*NGLLZ_M, ' float'
+    ! temporary fills ibool with simple numbering for xstore/ystore/zstore addressing
     ilocnum = 0
     ibool(:,:,:,:) = 0
     do ispec = 1,nspec
@@ -744,35 +739,15 @@ end module create_meshfem_par
           do i = 1,NGLLX_M
             ilocnum = ilocnum + 1
             ibool(i,j,k,ispec) = ilocnum
-            write(IOVTK,*) xstore(i,j,k,ispec),ystore(i,j,k,ispec),zstore(i,j,k,ispec)
           enddo
         enddo
       enddo
     enddo
-    write(IOVTK,*)
-    ! note: indices for vtk start at 0
-    write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
-    do ispec = 1,nspec
-      write(IOVTK,'(9i12)') 8, &
-            ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(2,2,1,ispec)-1,ibool(1,2,1,ispec)-1, &
-            ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(2,2,2,ispec)-1,ibool(1,2,2,ispec)-1
-    enddo
-    ibool(:,:,:,:) = 0
-    write(IOVTK,*)
-    ! type: hexahedrons
-    write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
-    write(IOVTK,'(6i12)') (12,ispec=1,nspec)
-    write(IOVTK,*)
-    write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
-    write(IOVTK,'(a)') "SCALARS elem_val float"
-    write(IOVTK,'(a)') "LOOKUP_TABLE default"
-    do ispec = 1,nspec
-      write(IOVTK,*) ispec_material_id(ispec)
-    enddo
-    write(IOVTK,*) ''
-    close(IOVTK)
+    ! vtk file format output
+    filename = prname(1:len_trim(prname))//'mesh_debug.vtk'
+    call write_VTK_data_elem_i_meshfem(nspec,xstore,ystore,zstore,ibool,ispec_material_id,filename)
 
-    ! stop mesher
+    ! invalid nglob, stops mesher
     call exit_MPI(myrank,'incorrect global number, please check mesh input parameters')
   endif
 
@@ -781,6 +756,7 @@ end module create_meshfem_par
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1280')
   if (ier /= 0) stop 'Error allocating array nodes_coords'
 
+  ! fills ibool and nodes_coords (to avoid duplicate points from xstore/ystore/zstore arrays)
   nodes_coords(:,:) = 0.0d0
   ibool(:,:,:,:) = 0
 

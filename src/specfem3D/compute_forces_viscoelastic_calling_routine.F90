@@ -42,6 +42,10 @@ subroutine compute_forces_viscoelastic_calling()
   integer:: iphase
   integer:: iface,ispec,igll,i,j,k,iglob,ispec_CPML
 
+  ! timing
+  double precision, external :: wtime
+  double precision :: t_start,tCPU
+
   ! kbai added the following two synchronizations to ensure that the displacement and velocity values
   ! at nodes on MPI interfaces stay equal on all processors that share the node.
   ! Do this only for dynamic rupture simulations
@@ -59,16 +63,29 @@ subroutine compute_forces_viscoelastic_calling()
 ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
   do iphase = 1,2
 
-! elastic term
+!daniel debug
+    ! timing
+    if (myrank == 0 .and. iphase == 2) then
+      t_start = wtime()
+    endif
+
+    ! elastic term
     call compute_forces_viscoelastic(iphase, &
-                        displ,veloc,accel, &
-                        alphaval,betaval,gammaval, &
-                        R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                        R_trace_lddrk, &
-                        R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
-                        epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-                        epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
-                        .false.)
+                                     displ,veloc,accel, &
+                                     alphaval,betaval,gammaval, &
+                                     R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                                     R_trace_lddrk, &
+                                     R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
+                                     epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+                                     epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
+                                     .false.)
+
+!daniel debug
+    ! timing
+    if (myrank == 0 .and. iphase == 2) then
+      tCPU = wtime() - t_start
+      print *,'timing: compute_forces_viscoelastic elapsed time ',tCPU,'s'
+    endif
 
     ! computes additional contributions
     if (iphase == 1) then
@@ -267,14 +284,14 @@ subroutine compute_forces_viscoelastic_backward_calling()
 ! elastic term
     ! adjoint simulations: backward/reconstructed wavefield
     call compute_forces_viscoelastic(iphase, &
-                        b_displ,b_veloc,b_accel, &
-                        b_alphaval,b_betaval,b_gammaval, &
-                        b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                        b_R_trace_lddrk, &
-                        b_R_xx_lddrk,b_R_yy_lddrk,b_R_xy_lddrk,b_R_xz_lddrk,b_R_yz_lddrk, &
-                        b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
-                        b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
-                        .true.)
+                                     b_displ,b_veloc,b_accel, &
+                                     b_alphaval,b_betaval,b_gammaval, &
+                                     b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                                     b_R_trace_lddrk, &
+                                     b_R_xx_lddrk,b_R_yy_lddrk,b_R_xy_lddrk,b_R_xz_lddrk,b_R_yz_lddrk, &
+                                     b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                                     b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
+                                     .true.)
 
     ! computes additional contributions
     if (iphase == 1) then

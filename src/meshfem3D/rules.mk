@@ -88,6 +88,7 @@ meshfem3D_SHARED_OBJECTS = \
 	$O/safe_alloc_mod.shared.o \
 	$O/sort_array_coordinates.shared.o \
 	$O/utm_geo.shared.o \
+	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
 
 

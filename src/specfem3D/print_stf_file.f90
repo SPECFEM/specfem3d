@@ -132,7 +132,7 @@
       else
         write(plot_file,"('/plot_source_time_functionA',i7.7,'.txt')") isource
       endif
-      open(unit=IOSTF,file=trim(OUTPUT_FILES)//trim(plot_file),status='unknown',iostat=ier)
+      open(unit=IO_STF,file=trim(OUTPUT_FILES)//trim(plot_file),status='unknown',iostat=ier)
       if (ier /= 0) call exit_mpi(myrank,'Error opening plot_source_time_function file')
 
       do it = 1,NSTEP
@@ -153,10 +153,10 @@
         endif
 
         ! file output
-        write(IOSTF,*) time_source,source_time_function(it)
+        write(IO_STF,*) time_source,source_time_function(it)
       enddo
 
-      close(IOSTF)
+      close(IO_STF)
 
     endif ! of if (myrank == 0) then
 

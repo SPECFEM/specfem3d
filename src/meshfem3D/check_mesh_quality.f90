@@ -87,9 +87,9 @@
   ! debug: for vtk output
   character(len=MAX_STRING_LEN) :: filename
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: tmp1
-  integer:: ier,ipoin
+  integer:: ier
 
-
+  ! user output
   if (myrank == 0) then
      write(IMAIN,*) '**************************'
      write(IMAIN,*) 'Checking mesh quality'
@@ -353,39 +353,7 @@
     endif
 
     ! vtk file output
-    open(IOVTK,file=trim(filename),status='unknown')
-    write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
-    write(IOVTK,'(a)') 'material model VTK file'
-    write(IOVTK,'(a)') 'ASCII'
-    write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
-    write(IOVTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
-    do ipoin = 1,nglob
-      write(IOVTK,*) sngl(x(ipoin)),sngl(y(ipoin)),sngl(z(ipoin))
-    enddo
-    write(IOVTK,*) ''
-
-    ! note: indices for vtk start at 0
-    write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
-    do ispec=1,nspec
-      write(IOVTK,'(9i12)') 8, &
-            ibool(1,ispec)-1,ibool(2,ispec)-1,ibool(4,ispec)-1,ibool(3,ispec)-1, &
-            ibool(5,ispec)-1,ibool(6,ispec)-1,ibool(8,ispec)-1,ibool(7,ispec)-1
-    enddo
-    write(IOVTK,*) ''
-
-    ! type: hexahedra
-    write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
-    write(IOVTK,'(6i12)') (12,ispec=1,nspec)
-    write(IOVTK,*) ''
-
-    write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
-    write(IOVTK,'(a)') "SCALARS skewness float"
-    write(IOVTK,'(a)') "LOOKUP_TABLE default"
-    do ispec = 1,nspec
-      write(IOVTK,*) tmp1(ispec)
-    enddo
-    write(IOVTK,*) ''
-    close(IOVTK)
+    call write_VTK_data_elem_cr_meshfem(nspec,nglob,x,y,z,ibool,tmp1,filename)
 
     deallocate(tmp1)
   endif

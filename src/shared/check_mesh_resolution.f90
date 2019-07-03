@@ -446,15 +446,15 @@
     ! Courant number
     if (DT_PRESENT) then
       filename = trim(prname)//'res_Courant_number'
-      call write_VTK_data_elem_cr(NSPEC_AB,NGLOB_AB, &
-                          xstore,ystore,zstore,ibool, &
-                          tmp1,filename)
+      call write_VTU_data_elem_cr_binary(NSPEC_AB,NGLOB_AB, &
+                                         xstore,ystore,zstore,ibool, &
+                                         tmp1,filename)
     endif
     ! minimum period estimate
     filename = trim(prname)//'res_minimum_period'
-    call write_VTK_data_elem_cr(NSPEC_AB,NGLOB_AB, &
-                          xstore,ystore,zstore,ibool, &
-                          tmp2,filename)
+    call write_VTU_data_elem_cr_binary(NSPEC_AB,NGLOB_AB, &
+                                       xstore,ystore,zstore,ibool, &
+                                       tmp2,filename)
 
     deallocate(tmp1,tmp2)
   endif
@@ -821,15 +821,15 @@
     ! Courant number
     if (DT_PRESENT) then
       filename = trim(prname)//'res_Courant_number'
-      call write_VTK_data_elem_cr(NSPEC_AB,NGLOB_AB, &
-                          xstore,ystore,zstore,ibool, &
-                          tmp1,filename)
+      call write_VTU_data_elem_cr_binary(NSPEC_AB,NGLOB_AB, &
+                                  xstore,ystore,zstore,ibool, &
+                                  tmp1,filename)
     endif
     ! minimum period estimate
     filename = trim(prname)//'res_minimum_period'
-    call write_VTK_data_elem_cr(NSPEC_AB,NGLOB_AB, &
-                          xstore,ystore,zstore,ibool, &
-                          tmp2,filename)
+    call write_VTU_data_elem_cr_binary(NSPEC_AB,NGLOB_AB, &
+                                xstore,ystore,zstore,ibool, &
+                                tmp2,filename)
     deallocate(tmp1,tmp2)
   endif
 
