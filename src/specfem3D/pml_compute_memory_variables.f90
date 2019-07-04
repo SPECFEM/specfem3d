@@ -406,7 +406,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
   integer, intent(in) :: ispec,ispec_CPML
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: temp1,temp2,temp3
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),intent(inout) :: &
+  real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),intent(inout) :: &
     rmemory_dpotential_dxl, rmemory_dpotential_dyl, rmemory_dpotential_dzl
 
   ! derivatives of potential with respect to x, y and z
@@ -462,13 +462,13 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
                                         coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2, &
                                         coef0_3,coef1_3,coef2_3)
 
-        rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + &
+        rmemory_dpotential_dxl(1,i,j,k,ispec_CPML) = coef0_1 * rmemory_dpotential_dxl(1,i,j,k,ispec_CPML) + &
                 coef1_1 * PML_dpotential_dxl_new(i,j,k) + coef2_1 * PML_dpotential_dxl_old(i,j,k)
 
-        rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) + &
+        rmemory_dpotential_dxl(2,i,j,k,ispec_CPML) = coef0_2 * rmemory_dpotential_dxl(2,i,j,k,ispec_CPML) + &
                 coef1_2 * PML_dpotential_dxl_new(i,j,k) + coef2_2 * PML_dpotential_dxl_old(i,j,k)
 
-        rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) + &
+        rmemory_dpotential_dxl(3,i,j,k,ispec_CPML) = coef0_3 * rmemory_dpotential_dxl(3,i,j,k,ispec_CPML) + &
                 coef1_3 * PML_dpotential_dxl_new(i,j,k) + coef2_3 * PML_dpotential_dxl_old(i,j,k)
 
         !---------------------- A10,A11,A12,A13 --------------------------
@@ -478,13 +478,13 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
                                         coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2, &
                                         coef0_3,coef1_3,coef2_3)
 
-        rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + &
+        rmemory_dpotential_dyl(1,i,j,k,ispec_CPML) = coef0_1 * rmemory_dpotential_dyl(1,i,j,k,ispec_CPML) + &
                 coef1_1 * PML_dpotential_dyl_new(i,j,k) + coef2_1 * PML_dpotential_dyl_old(i,j,k)
 
-        rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) + &
+        rmemory_dpotential_dyl(2,i,j,k,ispec_CPML) = coef0_2 * rmemory_dpotential_dyl(2,i,j,k,ispec_CPML) + &
                 coef1_2 * PML_dpotential_dyl_new(i,j,k) + coef2_2 * PML_dpotential_dyl_old(i,j,k)
 
-        rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) + &
+        rmemory_dpotential_dyl(3,i,j,k,ispec_CPML) = coef0_3 * rmemory_dpotential_dyl(3,i,j,k,ispec_CPML) + &
                 coef1_3 * PML_dpotential_dyl_new(i,j,k) + coef2_3 * PML_dpotential_dyl_old(i,j,k)
 
         !---------------------- A14,A15,A16,A17 --------------------------
@@ -494,28 +494,28 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
                                         coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2, &
                                         coef0_3,coef1_3,coef2_3)
 
-        rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + &
+        rmemory_dpotential_dzl(1,i,j,k,ispec_CPML) = coef0_1 * rmemory_dpotential_dzl(1,i,j,k,ispec_CPML) + &
                 coef1_1 * PML_dpotential_dzl_new(i,j,k) + coef2_1 * PML_dpotential_dzl_old(i,j,k)
 
-        rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) + &
+        rmemory_dpotential_dzl(2,i,j,k,ispec_CPML) = coef0_2 * rmemory_dpotential_dzl(2,i,j,k,ispec_CPML) + &
                 coef1_2 * PML_dpotential_dzl_new(i,j,k) + coef2_2 * PML_dpotential_dzl_old(i,j,k)
 
-        rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) + &
+        rmemory_dpotential_dzl(3,i,j,k,ispec_CPML) = coef0_3 * rmemory_dpotential_dzl(3,i,j,k,ispec_CPML) + &
                 coef1_3 * PML_dpotential_dzl_new(i,j,k) + coef2_3 * PML_dpotential_dzl_old(i,j,k)
 
         ! derivatives
         dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k)  + &
-                        A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + &
-                        A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) + &
-                        A9 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,3)
+                        A7 * rmemory_dpotential_dxl(1,i,j,k,ispec_CPML) + &
+                        A8 * rmemory_dpotential_dxl(2,i,j,k,ispec_CPML) + &
+                        A9 * rmemory_dpotential_dxl(3,i,j,k,ispec_CPML)
         dpotentialdyl = A10 * PML_dpotential_dyl(i,j,k) + &
-                        A11 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + &
-                        A12 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) + &
-                        A13 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,3)
+                        A11 * rmemory_dpotential_dyl(1,i,j,k,ispec_CPML) + &
+                        A12 * rmemory_dpotential_dyl(2,i,j,k,ispec_CPML) + &
+                        A13 * rmemory_dpotential_dyl(3,i,j,k,ispec_CPML)
         dpotentialdzl = A14 * PML_dpotential_dzl(i,j,k) + &
-                        A15 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + &
-                        A16 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) + &
-                        A17 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3)
+                        A15 * rmemory_dpotential_dzl(1,i,j,k,ispec_CPML) + &
+                        A16 * rmemory_dpotential_dzl(2,i,j,k,ispec_CPML) + &
+                        A17 * rmemory_dpotential_dzl(3,i,j,k,ispec_CPML)
 
         if (ispec_irreg /= 0) then
           !irregular element

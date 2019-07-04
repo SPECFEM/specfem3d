@@ -581,14 +581,13 @@
 
   ! user output
   if (myrank == 0) then
+    write(IMAIN,*) '  incorporating C-PML  '
     write(IMAIN,*)
-    write(IMAIN,*) 'incorporating C-PML  '
+    write(IMAIN,*) '  number of C-PML spectral elements in the global mesh: ', NSPEC_CPML_GLOBAL
     write(IMAIN,*)
-    write(IMAIN,*) 'number of C-PML spectral elements in the global mesh: ', NSPEC_CPML_GLOBAL
-    write(IMAIN,*)
-    write(IMAIN,*) 'thickness of C-PML layer in X direction: ', CPML_width_x
-    write(IMAIN,*) 'thickness of C-PML layer in Y direction: ', CPML_width_y
-    write(IMAIN,*) 'thickness of C-PML layer in Z direction: ', CPML_width_z
+    write(IMAIN,*) '  thickness of C-PML layer in X direction: ', CPML_width_x
+    write(IMAIN,*) '  thickness of C-PML layer in Y direction: ', CPML_width_y
+    write(IMAIN,*) '  thickness of C-PML layer in Z direction: ', CPML_width_z
     write(IMAIN,*)
     call flush_IMAIN()
   endif

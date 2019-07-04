@@ -249,18 +249,18 @@
 !    if (ier /= 0) stop 'error allocating potential_dot_dot_acoustic_old array'
 
     ! stores C-PML memory variables
-    allocate(rmemory_dpotential_dxl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
+    allocate(rmemory_dpotential_dxl(3,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2310')
     if (ier /= 0) stop 'error allocating rmemory_dpotential_dxl array'
-    allocate(rmemory_dpotential_dyl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
+    allocate(rmemory_dpotential_dyl(3,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2311')
     if (ier /= 0) stop 'error allocating rmemory_dpotential_dyl array'
-    allocate(rmemory_dpotential_dzl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
+    allocate(rmemory_dpotential_dzl(3,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2312')
     if (ier /= 0) stop 'error allocating rmemory_dpotential_dzl array'
 
     ! stores C-PML memory variables needed for potential
-    allocate(rmemory_potential_acoustic(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
+    allocate(rmemory_potential_acoustic(3,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2313')
     if (ier /= 0) stop 'error allocating rmemory_potential_acoustic array'
   endif
@@ -495,11 +495,11 @@
 
   if (ELASTIC_SIMULATION) then
     if (.not. allocated(PML_displ_old)) then
-      allocate(PML_displ_old(3,1,1,1,1),stat=ier)
+      allocate(PML_displ_old(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2324')
     endif
     if (.not. allocated(PML_displ_new)) then
-      allocate(PML_displ_new(3,1,1,1,1),stat=ier)
+      allocate(PML_displ_new(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2325')
     endif
 
@@ -612,11 +612,11 @@
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2352')
     endif
     if (.not. allocated(rmemory_dux_dxl_x)) then
-      allocate(rmemory_dux_dxl_x(1,1,1,1,3),stat=ier)
+      allocate(rmemory_dux_dxl_x(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2353')
     endif
     if (.not. allocated(rmemory_dux_dyl_x)) then
-      allocate(rmemory_dux_dyl_x(1,1,1,1,3),stat=ier)
+      allocate(rmemory_dux_dyl_x(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2354')
     endif
     if (.not. allocated(rmemory_dux_dzl_x)) then
@@ -648,15 +648,15 @@
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2361')
     endif
     if (.not. allocated(rmemory_duy_dxl_y)) then
-      allocate(rmemory_duy_dxl_y(1,1,1,1,3),stat=ier)
+      allocate(rmemory_duy_dxl_y(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2362')
     endif
     if (.not. allocated(rmemory_duy_dyl_y)) then
-      allocate(rmemory_duy_dyl_y(1,1,1,1,3),stat=ier)
+      allocate(rmemory_duy_dyl_y(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2363')
     endif
     if (.not. allocated(rmemory_duy_dzl_y)) then
-      allocate(rmemory_duy_dzl_y(1,1,1,1,3),stat=ier)
+      allocate(rmemory_duy_dzl_y(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2364')
     endif
     if (.not. allocated(rmemory_duz_dyl_y)) then
@@ -684,19 +684,19 @@
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2370')
     endif
     if (.not. allocated(rmemory_duz_dxl_z)) then
-      allocate(rmemory_duz_dxl_z(1,1,1,1,3),stat=ier)
+      allocate(rmemory_duz_dxl_z(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2371')
     endif
     if (.not. allocated(rmemory_duz_dyl_z)) then
-      allocate(rmemory_duz_dyl_z(1,1,1,1,3),stat=ier)
+      allocate(rmemory_duz_dyl_z(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2372')
     endif
     if (.not. allocated(rmemory_duz_dzl_z)) then
-      allocate(rmemory_duz_dzl_z(1,1,1,1,3),stat=ier)
+      allocate(rmemory_duz_dzl_z(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2373')
     endif
     if (.not. allocated(rmemory_displ_elastic)) then
-      allocate(rmemory_displ_elastic(1,1,1,1,1,3),stat=ier)
+      allocate(rmemory_displ_elastic(1,1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2374')
     endif
     if (.not. allocated(accel_elastic_CPML)) then
@@ -706,7 +706,7 @@
 
     ! allocates wavefield
     if (.not. allocated(b_PML_field)) then
-      allocate(b_PML_field(9,1),stat=ier)
+      allocate(b_PML_field(1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2376')
     endif
   endif
@@ -722,41 +722,41 @@
     endif
 
     if (.not. allocated(rmemory_dpotential_dxl)) then
-      allocate(rmemory_dpotential_dxl(1,1,1,1,3),stat=ier)
+      allocate(rmemory_dpotential_dxl(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2379')
     endif
     if (.not. allocated(rmemory_dpotential_dyl)) then
-      allocate(rmemory_dpotential_dyl(1,1,1,1,3),stat=ier)
+      allocate(rmemory_dpotential_dyl(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2380')
     endif
     if (.not. allocated(rmemory_dpotential_dzl)) then
-      allocate(rmemory_dpotential_dzl(1,1,1,1,3),stat=ier)
+      allocate(rmemory_dpotential_dzl(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2381')
     endif
     if (.not. allocated(rmemory_potential_acoustic)) then
-      allocate(rmemory_potential_acoustic(1,1,1,1,3),stat=ier)
+      allocate(rmemory_potential_acoustic(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2382')
     endif
 
     ! allocates wavefield
     if (.not. allocated(b_PML_potential)) then
-      allocate(b_PML_potential(3,1),stat=ier)
+      allocate(b_PML_potential(1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2384')
     endif
   endif
 
   if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
     if (.not. allocated(rmemory_coupling_ac_el_displ)) then
-      allocate(rmemory_coupling_ac_el_displ(3,1,1,1,1,2),stat=ier)
+      allocate(rmemory_coupling_ac_el_displ(1,1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2385')
     endif
     if (.not. allocated(rmemory_coupling_el_ac_potential_dot_dot)) then
-      allocate(rmemory_coupling_el_ac_potential_dot_dot(3,1,1,1,1,2),stat=ier)
+      allocate(rmemory_coupling_el_ac_potential_dot_dot(1,1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2386')
     endif
     if (SIMULATION_TYPE == 3) then
       if (.not. allocated(rmemory_coupling_el_ac_potential)) then
-        allocate(rmemory_coupling_el_ac_potential(3,1,1,1,1,2),stat=ier)
+        allocate(rmemory_coupling_el_ac_potential(1,1,1,1,1,1),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 2387')
       endif
     endif

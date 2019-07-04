@@ -172,7 +172,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML, &
   integer, intent(in) :: ispec,ispec_CPML
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic,potential_dot_acoustic
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),intent(inout) :: rmemory_potential_acoustic
+  real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),intent(inout) :: rmemory_potential_acoustic
   ! stores C-PML contribution to update the second derivative of the potential to the global mesh
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: potential_dot_dot_acoustic_CPML
 
@@ -223,25 +223,24 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML, &
                coef0_z, coef1_z, coef2_z)
 
         ! updates memory variables
-        rmemory_potential_acoustic(i,j,k,ispec_CPML,1) = coef0_x * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
+        rmemory_potential_acoustic(1,i,j,k,ispec_CPML) = coef0_x * rmemory_potential_acoustic(1,i,j,k,ispec_CPML) &
                 + coef1_x * PML_potential_acoustic_new(i,j,k,ispec_CPML) &
                 + coef2_x * PML_potential_acoustic_old(i,j,k,ispec_CPML)
 
-        rmemory_potential_acoustic(i,j,k,ispec_CPML,2) = coef0_y * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
+        rmemory_potential_acoustic(2,i,j,k,ispec_CPML) = coef0_y * rmemory_potential_acoustic(2,i,j,k,ispec_CPML) &
                 + coef1_y * PML_potential_acoustic_new(i,j,k,ispec_CPML) &
                 + coef2_y * PML_potential_acoustic_old(i,j,k,ispec_CPML)
 
-        rmemory_potential_acoustic(i,j,k,ispec_CPML,3) = coef0_z * rmemory_potential_acoustic(i,j,k,ispec_CPML,3) &
+        rmemory_potential_acoustic(3,i,j,k,ispec_CPML) = coef0_z * rmemory_potential_acoustic(3,i,j,k,ispec_CPML) &
                 + coef1_z * PML_potential_acoustic_new(i,j,k,ispec_CPML) &
                 + coef2_z * PML_potential_acoustic_old(i,j,k,ispec_CPML)
 
         ! updates PML potential
         potential_dot_dot_acoustic_CPML(i,j,k) =  wgllcube * kappal_inv * jacobianl * &
                   ( A_1 * potential_dot_acoustic(iglob) + A_2 * potential_acoustic(iglob) &
-                  + A_3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                  + A_4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
-                  + A_5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3) &
-                  )
+                  + A_3 * rmemory_potential_acoustic(1,i,j,k,ispec_CPML) &
+                  + A_4 * rmemory_potential_acoustic(2,i,j,k,ispec_CPML) &
+                  + A_5 * rmemory_potential_acoustic(3,i,j,k,ispec_CPML) )
       enddo
     enddo
   enddo
