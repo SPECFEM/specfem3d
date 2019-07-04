@@ -61,6 +61,14 @@
 ! forward simulations
   if (SIMULATION_TYPE == 1) then
 
+! openmp solver
+!$OMP PARALLEL if (NSOURCES > 100) &
+!$OMP DEFAULT(SHARED) &
+!$OMP PRIVATE(isource,time_source_dble,stf_used,stf,iglob,ispec,i,j,k, &
+!$OMP phil,tortl,rhol_s,rhol_f,rhol_bar,fac_s,fac_w)
+
+    ! adds poroelastic sources
+!$OMP DO
     do isource = 1,NSOURCES
 
       !   add the source (only if this proc carries the source)
@@ -114,19 +122,37 @@
                 endif
 
                 ! solid phase
-                accels_poroelastic(:,iglob) = accels_poroelastic(:,iglob) &
-                             + fac_s * sourcearrays(isource,:,i,j,k)*stf_used
+!$OMP ATOMIC
+                accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) &
+                             + fac_s * sourcearrays(isource,1,i,j,k)*stf_used
+!$OMP ATOMIC
+                accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) &
+                             + fac_s * sourcearrays(isource,2,i,j,k)*stf_used
+!$OMP ATOMIC
+                accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) &
+                             + fac_s * sourcearrays(isource,3,i,j,k)*stf_used
+
                 ! fluid phase
-                accelw_poroelastic(:,iglob) = accelw_poroelastic(:,iglob) &
-                             + fac_w * sourcearrays(isource,:,i,j,k)*stf_used
+!$OMP ATOMIC
+                accelw_poroelastic(1,iglob) = accelw_poroelastic(1,iglob) &
+                             + fac_w * sourcearrays(isource,1,i,j,k)*stf_used
+!$OMP ATOMIC
+                accelw_poroelastic(2,iglob) = accelw_poroelastic(2,iglob) &
+                             + fac_w * sourcearrays(isource,2,i,j,k)*stf_used
+!$OMP ATOMIC
+                accelw_poroelastic(3,iglob) = accelw_poroelastic(3,iglob) &
+                             + fac_w * sourcearrays(isource,3,i,j,k)*stf_used
+
               enddo
             enddo
           enddo
 
         endif ! ispec_is_poroelastic
       endif ! myrank
-
     enddo ! NSOURCES
+!$OMP ENDDO
+!$OMP END PARALLEL
+
   endif ! forward
 
 ! NOTE: adjoint sources and backward wavefield timing:

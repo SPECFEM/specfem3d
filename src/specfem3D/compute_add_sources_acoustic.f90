@@ -58,7 +58,13 @@
 ! forward simulations
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
 
+! openmp solver
+!$OMP PARALLEL if (NSOURCES > 100) &
+!$OMP DEFAULT(SHARED) &
+!$OMP PRIVATE(isource,time_source_dble,stf_used,stf,iglob,ispec,i,j,k)
+
     ! adds acoustic sources
+!$OMP DO
     do isource = 1,NSOURCES
 
       !   add the source (only if this proc carries the source)
@@ -96,6 +102,7 @@
                 ! adds source contribution
                 ! note: acoustic source for pressure gets divided by kappa
                 iglob = ibool(i,j,k,ispec)
+!$OMP ATOMIC
                 potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
                         - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
               enddo
@@ -105,6 +112,9 @@
         endif ! ispec_is_acoustic
       endif ! myrank
     enddo ! NSOURCES
+!$OMP ENDDO
+!$OMP END PARALLEL
+
   endif
 
 ! NOTE: adjoint sources and backward wavefield timing:

@@ -69,7 +69,9 @@
 ! openmp solver
 !$OMP PARALLEL if (NSOURCES > 100) &
 !$OMP DEFAULT(SHARED) &
-!$OMP PRIVATE(isource,time_source_dble,iglob,stf_used,stf,ispec,i,j,k)
+!$OMP PRIVATE(isource,time_source_dble,stf_used,stf,iglob,ispec,i,j,k)
+
+    ! adds elastic sources
 !$OMP DO
     do isource = 1,NSOURCES
 

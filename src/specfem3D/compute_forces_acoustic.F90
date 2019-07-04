@@ -137,7 +137,48 @@
     num_elements = nspec_inner_acoustic
   endif
 
+! openmp solver
+!$OMP PARALLEL if (num_elements > 100) &
+!$OMP DEFAULT(NONE) &
+!$OMP SHARED( &
+!$OMP num_elements,ibool, &
+!$OMP iphase,phase_ispec_inner_acoustic, &
+!$OMP irregular_element_number,jacobian_regular,xix_regular, &
+!$OMP potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+!$OMP PML_potential_acoustic_old,PML_potential_acoustic_new, &
+!$OMP rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl,rmemory_potential_acoustic, &
+!$OMP spec_to_CPML,is_CPML,backward_simulation, &
+!$OMP xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian,rhostore &
+!$OMP ) &
+!$OMP PRIVATE( &
+!$OMP ispec_p,ispec,ispec_irreg,ispec_CPML,i,j,k,iglob, &
+#ifdef FORCE_VECTORIZATION
+!$OMP ijk, &
+#endif
+!$OMP xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl,rho_invl, &
+!$OMP dpotentialdxl,dpotentialdyl,dpotentialdzl, &
+!$OMP hp1,hp2,hp3, &
+!$OMP temp1l,temp2l,temp3l, &
+!$OMP temp1l_old,temp2l_old,temp3l_old, &
+!$OMP temp1l_new,temp2l_new,temp3l_new, &
+!$OMP chi_elem,chi_elem_old,chi_elem_new, &
+!$OMP temp1,temp2,temp3, &
+!$OMP temp1_old,temp2_old,temp3_old, &
+!$OMP temp1_new,temp2_new,temp3_new, &
+!$OMP newtemp1,newtemp2,newtemp3, &
+!$OMP potential_dot_dot_acoustic_CPML, &
+!$OMP PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl, &
+!$OMP PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old, &
+!$OMP PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new &
+!$OMP ) &
+!$OMP FIRSTPRIVATE( &
+!$OMP hprime_xx,hprime_xxT, hprimewgll_xxT, hprimewgll_xx, &
+!$OMP hprime_yy,hprime_zz,hprimewgll_yy,hprimewgll_zz, &
+!$OMP wgllwgll_yz_3D,wgllwgll_xz_3D,wgllwgll_xy_3D &
+!$OMP )
+
   ! loop over spectral elements
+!$OMP DO
   do ispec_p = 1,num_elements
 
     ispec = phase_ispec_inner_acoustic(ispec_p,iphase)
@@ -402,6 +443,7 @@
         do j = 1,NGLLY
           do i = 1,NGLLX
             iglob = ibool(i,j,k,ispec)
+!$OMP ATOMIC
             potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - potential_dot_dot_acoustic_CPML(i,j,k)
           enddo
         enddo
@@ -533,6 +575,7 @@
           !       + wgllwgll_xz(i,k)*newtemp2(i,j,k) &
           !       + wgllwgll_xy(i,j)*newtemp3(i,j,k))
           ! using (i,j,k) 3D weight arrays
+!$OMP ATOMIC
           potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
                - ( wgllwgll_yz_3D(i,j,k)*newtemp1(i,j,k) &
                  + wgllwgll_xz_3D(i,j,k)*newtemp2(i,j,k) &
@@ -542,6 +585,8 @@
     enddo
 
   enddo ! end of loop over all spectral elements
+!$OMP ENDDO
+!$OMP END PARALLEL
 
   contains
 
