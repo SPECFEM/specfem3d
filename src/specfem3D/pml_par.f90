@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
 module pml_par
 
@@ -131,9 +130,6 @@ module pml_par
 
   ! C-PML contribution to update acceleration to the global mesh
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: accel_elastic_CPML
-
-  ! C-PML contribution to update the second derivative of the potential to the global mesh
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: potential_dot_dot_acoustic_CPML
 
   ! C-PML contribution to update displacement on elastic/acoustic interface
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: rmemory_coupling_ac_el_displ

@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
 subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,rmemory_displ_elastic)
 
@@ -147,8 +146,10 @@ end subroutine pml_compute_accel_contribution_elastic
 !
 !=====================================================================
 !
-subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_acoustic, &
-                                                   potential_dot_acoustic,rmemory_potential_acoustic)
+subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML, &
+                                                   potential_acoustic,potential_dot_acoustic, &
+                                                   rmemory_potential_acoustic, &
+                                                   potential_dot_dot_acoustic_CPML)
 
   ! calculates contribution from each C-PML element to update acceleration to the global mesh
 
@@ -163,14 +164,17 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
 
   use pml_par, only: CPML_regions,NSPEC_CPML,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z, &
                      alpha_store_x, alpha_store_y, alpha_store_z, &
-                     NSPEC_CPML,potential_dot_dot_acoustic_CPML, &
+                     NSPEC_CPML, &
                      PML_potential_acoustic_old,PML_potential_acoustic_new
 
   implicit none
 
   integer, intent(in) :: ispec,ispec_CPML
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic,potential_dot_acoustic
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3) :: rmemory_potential_acoustic
+
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),intent(inout) :: rmemory_potential_acoustic
+  ! stores C-PML contribution to update the second derivative of the potential to the global mesh
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: potential_dot_dot_acoustic_CPML
 
   ! local parameters
   integer :: i,j,k,iglob,CPML_region_local,ispec_irreg
@@ -180,6 +184,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
   real(kind=CUSTOM_REAL) :: coef0_x,coef1_x,coef2_x,coef0_y,coef1_y,coef2_y,coef0_z,coef1_z,coef2_z
   real(kind=CUSTOM_REAL) :: A_0,A_1,A_2,A_3,A_4,A_5
 
+  ! irregular element index
   ispec_irreg = irregular_element_number(ispec)
   if (ispec_irreg == 0) jacobianl = jacobian_regular
 

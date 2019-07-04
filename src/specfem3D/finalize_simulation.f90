@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
   subroutine finalize_simulation()
 
@@ -127,6 +126,15 @@
     endif
   endif
 
+  ! C-PML absorbing boundary conditions
+  if (PML_CONDITIONS) then
+    ! outputs informations about C-PML elements in VTK-file format
+    if (NSPEC_CPML > 0) call pml_output_VTKs()
+    ! deallocates C_PML arrays
+    call pml_cleanup()
+  endif
+
+  ! free arrays
   ! mass matrices
   if (ELASTIC_SIMULATION) then
     deallocate(rmassx)
@@ -136,15 +144,6 @@
   if (ACOUSTIC_SIMULATION) then
     deallocate(rmass_acoustic)
   endif
-
-  ! C-PML absorbing boundary conditions
-  if (PML_CONDITIONS) then
-    ! outputs informations about C-PML elements in VTK-file format
-    if (NSPEC_CPML > 0) call pml_output_VTKs()
-    ! deallocates C_PML arrays
-    call pml_cleanup()
-  endif
-
   ! boundary surfaces
   deallocate(ibelm_xmin)
   deallocate(ibelm_xmax)
@@ -152,8 +151,6 @@
   deallocate(ibelm_ymax)
   deallocate(ibelm_bottom)
   deallocate(ibelm_top)
-
-  ! free arrays
   ! sources
   deallocate(islice_selected_source,ispec_selected_source)
   deallocate(Mxx,Myy,Mzz,Mxy,Mxz,Myz)
@@ -189,7 +186,14 @@
   if (SIMULATION_TYPE == 2) deallocate(seismograms_eps)
   ! moment tensor derivatives
   if (nrec_local > 0 .and. SIMULATION_TYPE == 2) deallocate(Mxx_der,Myy_der,Mzz_der,Mxy_der,Mxz_der,Myz_der,sloc_der)
-
+  ! mesh
+  deallocate(ibool)
+  deallocate(irregular_element_number)
+  deallocate(xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian)
+  deallocate(deriv_mapping)
+  deallocate(xstore,ystore,zstore)
+  deallocate(kappastore,mustore)
+  deallocate(ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
 
   ! ADIOS file i/o
   if (ADIOS_ENABLED) then

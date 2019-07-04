@@ -582,12 +582,12 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
     nspec_irregular = nspec
 
     do ispec = 1, nspec
+      ! gets element corner positions
       do ia = 1,NGNOD
         xelm_real(ia) = real(nodes_coords_ext_mesh(1,elmnts_ext_mesh(ia,ispec)))
         yelm_real(ia) = real(nodes_coords_ext_mesh(2,elmnts_ext_mesh(ia,ispec)))
         zelm_real(ia) = real(nodes_coords_ext_mesh(3,elmnts_ext_mesh(ia,ispec)))
       enddo
-
       ! checks if element is regular (is a cube)
       call check_element_regularity(xelm_real,yelm_real,zelm_real,any_regular_elem,cube_edge_size_squared, &
                                     nspec_irregular,ispec,nspec,irregular_element_number,ANY_FAULT_IN_THIS_PROC)
@@ -878,24 +878,25 @@ subroutine crm_ext_setup_jacobian(myrank, &
   enddo
   ! get xix derivative and jacobian on a regular element
   if (any_regular_elem) then
-
-    !find a regular element
+    ! find a regular element
     ispec = 1
     do while (irregular_element_number(ispec) /= 0)
       ispec = ispec + 1
     enddo
+    ! gets corner positions of regular element
     do ia = 1,NGNOD
       xelm(ia) = nodes_coords_ext_mesh(1,elmnts_ext_mesh(ia,ispec))
       yelm(ia) = nodes_coords_ext_mesh(2,elmnts_ext_mesh(ia,ispec))
       zelm(ia) = nodes_coords_ext_mesh(3,elmnts_ext_mesh(ia,ispec))
     enddo
+    ! jacobian and derivatives of mapping
     call calc_jacobian(myrank,xix_reg,xiy_reg,xiz_reg, &
                        etax_reg,etay_reg,etaz_reg, &
                        gammax_reg,gammay_reg,gammaz_reg, &
                        jacobian_reg,xelm,yelm,zelm,dershape3D)
+    ! saves regular values
     xix_regular = xix_reg(1,1,1)
     jacobian_regular  = jacobian_reg(1,1,1)
-
   endif
 
 end subroutine crm_ext_setup_jacobian

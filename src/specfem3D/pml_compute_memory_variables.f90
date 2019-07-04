@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
 subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
                                     tempx3,tempy3,tempz3, &
@@ -35,12 +34,13 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                                     rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
                                     rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
                                     rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z)
-  ! calculates C-PML elastic memory variables and computes stress sigma
 
-  ! second-order accurate convolution term calculation from equation (21) of
-  ! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
-  ! Anisotropic-medium PML for vector FETD with modified basis functions,
-  ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
+! calculates C-PML elastic memory variables and computes stress sigma
+
+! second-order accurate convolution term calculation from equation (21) of
+! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
+! Anisotropic-medium PML for vector FETD with modified basis functions,
+! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
 
@@ -336,7 +336,8 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
         sigma_yz = mul*duzdyl_z + mul*duydzl_z
         sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
 
-        if (ispec_irreg /= 0) then ! irregular element
+        if (ispec_irreg /= 0) then
+          ! irregular element
 
           ! form dot product with test vector, non-symmetric form (which
           ! is useful in the case of PML)
@@ -351,20 +352,20 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
           tempx3(i,j,k) = jacobianl * (sigma_xx * gammaxl + sigma_yx * gammayl + sigma_zx * gammazl) ! this goes to accel_x
           tempy3(i,j,k) = jacobianl * (sigma_xy * gammaxl + sigma_yy * gammayl + sigma_zy * gammazl) ! this goes to accel_y
           tempz3(i,j,k) = jacobianl * (sigma_xz * gammaxl + sigma_yz * gammayl + sigma_zz * gammazl) ! this goes to accel_z
-        else !regular element
-           tempx1(i,j,k) = jacobianl * sigma_xx * xix_regular ! this goes to accel_x
-           tempy1(i,j,k) = jacobianl * sigma_xy * xix_regular ! this goes to accel_y
-           tempz1(i,j,k) = jacobianl * sigma_xz * xix_regular ! this goes to accel_z
+        else
+          !regular element
+          tempx1(i,j,k) = jacobianl * sigma_xx * xix_regular ! this goes to accel_x
+          tempy1(i,j,k) = jacobianl * sigma_xy * xix_regular ! this goes to accel_y
+          tempz1(i,j,k) = jacobianl * sigma_xz * xix_regular ! this goes to accel_z
 
-           tempx2(i,j,k) = jacobianl * sigma_yx * xix_regular ! this goes to accel_x
-           tempy2(i,j,k) = jacobianl * sigma_yy * xix_regular ! this goes to accel_y
-           tempz2(i,j,k) = jacobianl * sigma_yz * xix_regular ! this goes to accel_z
+          tempx2(i,j,k) = jacobianl * sigma_yx * xix_regular ! this goes to accel_x
+          tempy2(i,j,k) = jacobianl * sigma_yy * xix_regular ! this goes to accel_y
+          tempz2(i,j,k) = jacobianl * sigma_yz * xix_regular ! this goes to accel_z
 
-           tempx3(i,j,k) = jacobianl * sigma_zx * xix_regular ! this goes to accel_x
-           tempy3(i,j,k) = jacobianl * sigma_zy * xix_regular ! this goes to accel_y
-           tempz3(i,j,k) = jacobianl * sigma_zz * xix_regular ! this goes to accel_z
-
-         endif
+          tempx3(i,j,k) = jacobianl * sigma_zx * xix_regular ! this goes to accel_x
+          tempy3(i,j,k) = jacobianl * sigma_zy * xix_regular ! this goes to accel_y
+          tempz3(i,j,k) = jacobianl * sigma_zz * xix_regular ! this goes to accel_z
+        endif
 
       enddo
     enddo
@@ -375,17 +376,20 @@ end subroutine pml_compute_memory_variables_elastic
 !
 !=====================================================================
 !
-subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,temp3, &
+
+subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
+                                                 temp1,temp2,temp3, &
                                                  rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl, &
                                                  PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl, &
                                                  PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old, &
                                                  PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new)
-  ! calculates C-PML elastic memory variables and computes stress sigma
 
-  ! second-order accurate convolution term calculation from equation (21) of
-  ! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
-  ! Anisotropic-medium PML for vector FETD with modified basis functions,
-  ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
+! calculates C-PML elastic memory variables and computes stress sigma
+
+! second-order accurate convolution term calculation from equation (21) of
+! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
+! Anisotropic-medium PML for vector FETD with modified basis functions,
+! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
@@ -513,8 +517,8 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                         A16 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) + &
                         A17 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3)
 
-        if (ispec_irreg /= 0) then !irregular element
-
+        if (ispec_irreg /= 0) then
+          !irregular element
           xixl = xix(i,j,k,ispec_irreg)
           xiyl = xiy(i,j,k,ispec_irreg)
           xizl = xiz(i,j,k,ispec_irreg)
@@ -525,19 +529,17 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
           gammayl = gammay(i,j,k,ispec_irreg)
           gammazl = gammaz(i,j,k,ispec_irreg)
           jacobianl = jacobian(i,j,k,ispec_irreg)
-          rho_invl_jacob = jacobianl / rhostore(i,j,k,ispec)
 
+          rho_invl_jacob = jacobianl / rhostore(i,j,k,ispec)
           temp1(i,j,k) = rho_invl_jacob * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
           temp2(i,j,k) = rho_invl_jacob * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
           temp3(i,j,k) = rho_invl_jacob * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
-
-        else !regular element
-
+        else
+          !regular element
           rho_invl_jacob = jacobian_regular / rhostore(i,j,k,ispec)
           temp1(i,j,k) = rho_invl_jacob * xix_regular * dpotentialdxl
           temp2(i,j,k) = rho_invl_jacob * xix_regular * dpotentialdyl
           temp3(i,j,k) = rho_invl_jacob * xix_regular * dpotentialdzl
-
         endif
 
       enddo
@@ -545,9 +547,11 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   enddo
 
 end subroutine pml_compute_memory_variables_acoustic
+
 !
 !=====================================================================
 !
+
 subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k, &
                                                          displ_x,displ_y,displ_z,displ, &
                                                          num_coupling_ac_el_faces,rmemory_coupling_ac_el_displ)
@@ -640,9 +644,11 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
                                     A_14 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2)
 
 end subroutine pml_compute_memory_variables_acoustic_elastic
+
 !
 !=====================================================================
 !
+
 subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k, &
                                                          pressure_x,pressure_y,pressure_z, &
                                                          potential_acoustic,potential_dot_acoustic, &
@@ -740,9 +746,11 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
 
 
 end subroutine pml_compute_memory_variables_elastic_acoustic
+
 !
 !=====================================================================
 !
+
 subroutine lijk_parameter_computation(deltat,kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z, &
                                       CPML_region_local,index_ijk,A_0,A_1,A_2,A_3, &
                                       coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2, &
@@ -951,10 +959,11 @@ subroutine lijk_parameter_computation(deltat,kappa_x,d_x,alpha_x,kappa_y,d_y,alp
   A_3 = bar_A_3
 
 end subroutine lijk_parameter_computation
+
 !
 !=====================================================================
 !
-!
+
 subroutine lx_parameter_computation(deltat,kappa_x,d_x,alpha_x, &
                                     CPML_region_local,A_0,A_1, &
                                     coef0_1,coef1_1,coef2_1)
@@ -1023,9 +1032,11 @@ subroutine lx_parameter_computation(deltat,kappa_x,d_x,alpha_x, &
   call compute_convolution_coef(alpha_x, deltat, coef0_1, coef1_1, coef2_1)
 
 end subroutine lx_parameter_computation
+
 !
 !=====================================================================
 !
+
 subroutine ly_parameter_computation(deltat,kappa_y,d_y,alpha_y, &
                                     CPML_region_local,A_0,A_1, &
                                     coef0_1,coef1_1,coef2_1)
@@ -1094,13 +1105,11 @@ subroutine ly_parameter_computation(deltat,kappa_y,d_y,alpha_y, &
   call compute_convolution_coef(alpha_y, deltat, coef0_1, coef1_1, coef2_1)
 
 end subroutine ly_parameter_computation
+
 !
 !=====================================================================
 !
-!
-!=====================================================================
-!
-!
+
 subroutine lz_parameter_computation(deltat,kappa_z,d_z,alpha_z, &
                                     CPML_region_local,A_0,A_1, &
                                     coef0_1,coef1_1,coef2_1)
@@ -1169,9 +1178,11 @@ subroutine lz_parameter_computation(deltat,kappa_z,d_z,alpha_z, &
   call compute_convolution_coef(alpha_z, deltat, coef0_1, coef1_1, coef2_1)
 
 end subroutine lz_parameter_computation
+
 !
 !=====================================================================
 !
+
 subroutine lxy_interface_parameter_computation(deltat,kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y, &
                                       CPML_region_local,index_ijk,A_0,A_1,A_2, &
                                       coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2)

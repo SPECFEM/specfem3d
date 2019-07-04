@@ -32,374 +32,14 @@
 
 ! for acoustic solver
 
-  subroutine compute_forces_acoustic_generic_slow(iphase, &
-                        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                        backward_simulation)
+  subroutine compute_forces_acoustic(iphase, &
+                                     potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+                                     backward_simulation)
 
 ! computes forces for acoustic elements
 !
 ! note that pressure is defined as:
 !     p = - Chi_dot_dot
-
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
-
-  use specfem_par, only: NGLOB_AB, &
-                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                         hprime_xx,hprime_yy,hprime_zz, &
-                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
-                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                         rhostore,jacobian,ibool, &
-                         irregular_element_number,xix_regular,jacobian_regular
-
-  use specfem_par_acoustic, only: nspec_inner_acoustic,nspec_outer_acoustic, &
-                                   phase_ispec_inner_acoustic
-
-
-  use pml_par, only: is_CPML, spec_to_CPML, potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl, &
-                     rmemory_dpotential_dzl,rmemory_potential_acoustic, &
-                     PML_potential_acoustic_old,PML_potential_acoustic_new
-
-  implicit none
-
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: &
-        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
-
-  integer,intent(in) :: iphase
-  logical,intent(in) :: backward_simulation
-
-  ! local variables
-  ! note: declaring arrays in this subroutine here will allocate them generally on the stack
-  !       (intel by default; not for gfortran though, it always uses heap memory).
-  !       stack memory access is faster, thus please let these declarations here for local element arrays...
-  !
-  ! arrays for elemental computations inside a given spectral element
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1,temp2,temp3,temp4
-
-  ! arrays for elemental computations in compute_forces() for PML elements
-  ! derivatives of potential with respect to x, y and z
-  ! in computation potential_acoustic at "n" time step is used
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl
-  ! in computation of PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
-  ! we replace potential_acoustic with potential_acoustic_old
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
-  ! we replace potential_acoustic at "n" time step with
-  ! we replace potential_acoustic with potential_acoustic_old with potential_acoustic_new
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
-
-  real(kind=CUSTOM_REAL) :: temp1l,temp2l,temp3l
-  real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
-
-  integer :: ispec,ispec_irreg,iglob,i,j,k,l,ispec_p,num_elements
-
-  ! CPML
-  integer :: ispec_CPML
-  real(kind=CUSTOM_REAL) :: temp1l_old,temp2l_old,temp3l_old
-  real(kind=CUSTOM_REAL) :: temp1l_new,temp2l_new,temp3l_new
-
-  real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
-  real(kind=CUSTOM_REAL) :: dpotentialdxl,dpotentialdyl,dpotentialdzl
-  real(kind=CUSTOM_REAL) :: rho_invl
-
-  if (iphase == 1) then
-    num_elements = nspec_outer_acoustic
-  else
-    num_elements = nspec_inner_acoustic
-  endif
-
-  ! loop over spectral elements
-  do ispec_p = 1,num_elements
-
-    ispec = phase_ispec_inner_acoustic(ispec_p,iphase)
-
-! all the loops below contain critical operations in which the solver spends 90% or so of its time;
-! on modern machines, to get good performance it is thus crucial to make sure that most of these loops are fully vectorized
-! by the compiler; we thus have several dedicated versions and also manually-unrolled loops, as well as small temporary arrays,
-! whose goal is to ensure that compilers can vectorized them and make optimized use of the processor cache as well.
-
-    ! gets value of the field inside the element and make it local
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
-          chi_elem(i,j,k) = potential_acoustic(ibool(i,j,k,ispec))
-        enddo
-      enddo
-    enddo
-
-!
-!-----------------
-!
-
-  if (is_CPML(ispec) .and. .not. backward_simulation) then
-
-    ispec_CPML = spec_to_CPML(ispec)
-    ispec_irreg = irregular_element_number(ispec)
-    if (ispec_irreg == 0) jacobianl = jacobian_regular
-
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
-
-          ! derivative along x, y, z
-          ! first double loop over GLL points to compute and store gradients
-          temp1l = 0._CUSTOM_REAL
-          temp2l = 0._CUSTOM_REAL
-          temp3l = 0._CUSTOM_REAL
-
-          ! we can merge the loops because NGLLX == NGLLY == NGLLZ
-          do l = 1,NGLLX
-            temp1l = temp1l + chi_elem(l,j,k)*hprime_xx(i,l)
-            temp2l = temp2l + chi_elem(i,l,k)*hprime_yy(j,l)
-            temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
-          enddo
-
-              temp1l_old = 0._CUSTOM_REAL
-              temp2l_old = 0._CUSTOM_REAL
-              temp3l_old = 0._CUSTOM_REAL
-
-              temp1l_new = 0._CUSTOM_REAL
-              temp2l_new = 0._CUSTOM_REAL
-              temp3l_new = 0._CUSTOM_REAL
-
-              ! we can merge these loops because NGLLX = NGLLY = NGLLZ
-              do l=1,NGLLX
-                hp1 = hprime_xx(i,l)
-                iglob = ibool(l,j,k,ispec)
-                temp1l_old = temp1l_old + PML_potential_acoustic_old(l,j,k,ispec_CPML)*hp1
-                temp1l_new = temp1l_new + PML_potential_acoustic_new(l,j,k,ispec_CPML)*hp1
-
-                hp2 = hprime_yy(j,l)
-                iglob = ibool(i,l,k,ispec)
-                temp2l_old = temp2l_old + PML_potential_acoustic_old(i,l,k,ispec_CPML)*hp2
-                temp2l_new = temp2l_new + PML_potential_acoustic_new(i,l,k,ispec_CPML)*hp2
-
-                hp3 = hprime_zz(k,l)
-                iglob = ibool(i,j,l,ispec)
-                temp3l_old = temp3l_old + PML_potential_acoustic_old(i,j,l,ispec_CPML)*hp3
-                temp3l_new = temp3l_new + PML_potential_acoustic_new(i,j,l,ispec_CPML)*hp3
-              enddo
-
-              rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
-
-              if (ispec_irreg /= 0 ) then ! irregular element
-
-                ! get derivatives of ux, uy and uz with respect to x, y and z
-                xixl = xix(i,j,k,ispec_irreg)
-                xiyl = xiy(i,j,k,ispec_irreg)
-                xizl = xiz(i,j,k,ispec_irreg)
-                etaxl = etax(i,j,k,ispec_irreg)
-                etayl = etay(i,j,k,ispec_irreg)
-                etazl = etaz(i,j,k,ispec_irreg)
-                gammaxl = gammax(i,j,k,ispec_irreg)
-                gammayl = gammay(i,j,k,ispec_irreg)
-                gammazl = gammaz(i,j,k,ispec_irreg)
-                jacobianl = jacobian(i,j,k,ispec_irreg)
-
-                ! derivatives of potential
-                dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l
-                dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l
-                dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l
-
-                PML_dpotential_dxl_old(i,j,k) = xixl*temp1l_old + etaxl*temp2l_old + gammaxl*temp3l_old
-                PML_dpotential_dyl_old(i,j,k) = xiyl*temp1l_old + etayl*temp2l_old + gammayl*temp3l_old
-                PML_dpotential_dzl_old(i,j,k) = xizl*temp1l_old + etazl*temp2l_old + gammazl*temp3l_old
-
-                PML_dpotential_dxl_new(i,j,k) = xixl*temp1l_new + etaxl*temp2l_new + gammaxl*temp3l_new
-                PML_dpotential_dyl_new(i,j,k) = xiyl*temp1l_new + etayl*temp2l_new + gammayl*temp3l_new
-                PML_dpotential_dzl_new(i,j,k) = xizl*temp1l_new + etazl*temp2l_new + gammazl*temp3l_new
-
-                ! for acoustic medium
-                temp1(i,j,k) = rho_invl * jacobianl * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
-                temp2(i,j,k) = rho_invl * jacobianl * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
-                temp3(i,j,k) = rho_invl * jacobianl * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
-
-             else ! regular element
-
-                dpotentialdxl = xix_regular*temp1l
-                dpotentialdyl = xix_regular*temp2l
-                dpotentialdzl = xix_regular*temp3l
-
-                PML_dpotential_dxl_old(i,j,k) = xix_regular*temp1l_old
-                PML_dpotential_dyl_old(i,j,k) = xix_regular*temp2l_old
-                PML_dpotential_dzl_old(i,j,k) = xix_regular*temp3l_old
-
-                PML_dpotential_dxl_new(i,j,k) = xix_regular*temp1l_new
-                PML_dpotential_dyl_new(i,j,k) = xix_regular*temp2l_new
-                PML_dpotential_dzl_new(i,j,k) = xix_regular*temp3l_new
-
-                ! for acoustic medium
-                temp1(i,j,k) = rho_invl * jacobianl * xix_regular * dpotentialdxl
-                temp2(i,j,k) = rho_invl * jacobianl * xix_regular * dpotentialdyl
-                temp3(i,j,k) = rho_invl * jacobianl * xix_regular * dpotentialdzl
-
-              endif
-
-              ! stores derivatives of ux, uy and uz with respect to x, y and z
-              PML_dpotential_dxl(i,j,k) = dpotentialdxl
-              PML_dpotential_dyl(i,j,k) = dpotentialdyl
-              PML_dpotential_dzl(i,j,k) = dpotentialdzl
-        enddo
-      enddo
-    enddo
-
-! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-  else ! no PML in this element
-
-    ispec_irreg = irregular_element_number(ispec)
-    if (ispec_irreg == 0) jacobianl = jacobian_regular
-
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
-
-          ! derivative along x, y, z
-          ! first double loop over GLL points to compute and store gradients
-          temp1l = 0._CUSTOM_REAL
-          temp2l = 0._CUSTOM_REAL
-          temp3l = 0._CUSTOM_REAL
-
-          ! we can merge the loops because NGLLX == NGLLY == NGLLZ
-          do l = 1,NGLLX
-            temp1l = temp1l + chi_elem(l,j,k)*hprime_xx(i,l)
-            temp2l = temp2l + chi_elem(i,l,k)*hprime_yy(j,l)
-            temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
-          enddo
-
-          ! density (reciproc)
-          rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
-
-          if (ispec_irreg /= 0 ) then ! irregular element
-
-            ! get derivatives of ux, uy and uz with respect to x, y and z
-            xixl = xix(i,j,k,ispec_irreg)
-            xiyl = xiy(i,j,k,ispec_irreg)
-            xizl = xiz(i,j,k,ispec_irreg)
-            etaxl = etax(i,j,k,ispec_irreg)
-            etayl = etay(i,j,k,ispec_irreg)
-            etazl = etaz(i,j,k,ispec_irreg)
-            gammaxl = gammax(i,j,k,ispec_irreg)
-            gammayl = gammay(i,j,k,ispec_irreg)
-            gammazl = gammaz(i,j,k,ispec_irreg)
-            jacobianl = jacobian(i,j,k,ispec_irreg)
-
-            ! derivatives of potential
-            dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l
-            dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l
-            dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l
-
-            temp1(i,j,k) = rho_invl * jacobianl * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
-            temp2(i,j,k) = rho_invl * jacobianl * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
-            temp3(i,j,k) = rho_invl * jacobianl * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
-
-          else ! regular element
-            ! for acoustic medium
-            temp1(i,j,k) = rho_invl * jacobianl * xix_regular * xix_regular * temp1l
-            temp2(i,j,k) = rho_invl * jacobianl * xix_regular * xix_regular * temp2l
-            temp3(i,j,k) = rho_invl * jacobianl * xix_regular * xix_regular * temp3l
-
-          endif
-
-        enddo
-      enddo
-    enddo
-
-! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-  endif ! of if PML in this element
-
-!
-!-----------------
-!
-
-    if (is_CPML(ispec) .and. .not. backward_simulation) then
-        ispec_CPML = spec_to_CPML(ispec)
-
-        ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
-        call pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,temp3, &
-                                                   rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl, &
-                                                   PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl, &
-                                                   PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old, &
-                                                   PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new)
-
-        ! calculates contribution from each C-PML element to update acceleration
-        call pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_acoustic, &
-                                                     potential_dot_acoustic,rmemory_potential_acoustic)
-    endif
-
-!
-!-----------------
-!
-
-    ! second double-loop over GLL to compute all the terms along the x,y,z directions and assemble the contributions
-    do k = 1,NGLLZ
-      do j = 1,NGLLY
-        do i = 1,NGLLX
-          temp1l = 0._CUSTOM_REAL
-          temp2l = 0._CUSTOM_REAL
-          temp3l = 0._CUSTOM_REAL
-
-          ! we can merge these loops because NGLLX = NGLLY = NGLLZ
-          do l=1,NGLLX
-            temp1l = temp1l + temp1(l,j,k) * hprimewgll_xx(l,i)
-            temp2l = temp2l + temp2(i,l,k) * hprimewgll_yy(l,j)
-            temp3l = temp3l + temp3(i,j,l) * hprimewgll_zz(l,k)
-          enddo
-
-          ! also add GLL integration weights
-          temp4(i,j,k) = - ( wgllwgll_yz(j,k)*temp1l + wgllwgll_xz(i,k)*temp2l + wgllwgll_xy(i,j)*temp3l )
-
-        enddo
-      enddo
-    enddo
-
-!
-!-----------------
-!
-
-    ! sum contributions from each element to the global values
-    ! this loop will not fully vectorize because it contains a dependency (through indirect addressing with array ibool())
-    do k = 1,NGLLZ
-      do j = 1,NGLLY
-        do i = 1,NGLLX
-          iglob = ibool(i,j,k,ispec)
-          potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) + temp4(i,j,k)
-        enddo
-      enddo
-    enddo
-
-!
-!-----------------
-!
-
-    ! sum contributions from each element to the global values
-    ! this loop will not fully vectorize because it contains a dependency (through indirect addressing with array ibool())
-    if (is_CPML(ispec) .and. .not. backward_simulation) then
-        do k = 1,NGLLZ
-          do j = 1,NGLLY
-            do i = 1,NGLLX
-              iglob = ibool(i,j,k,ispec)
-              potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - potential_dot_dot_acoustic_CPML(i,j,k)
-           enddo
-         enddo
-       enddo
-   endif
-
-  enddo ! end of loop over all spectral elements
-
-  end subroutine compute_forces_acoustic_generic_slow
-
-!
-!=====================================================================
-!
-
-! for acoustic solver
-
-  subroutine compute_forces_acoustic_fast_Deville(iphase, &
-                        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                        backward_simulation)
-
-! computes forces for acoustic elements
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,m1,m2
 
@@ -407,11 +47,15 @@
                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                          hprime_xx,hprime_xxT, &
                          hprimewgll_xx,hprimewgll_xxT, &
+                         hprime_yy,hprime_zz, &
+                         hprimewgll_yy,hprimewgll_zz, &
                          rhostore,jacobian,ibool, &
                          irregular_element_number,xix_regular,jacobian_regular
 
- !use specfem_par,only: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
- use specfem_par,only: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
+  use specfem_par,only: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
+  !or: use specfem_par,only: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
+
+  ! USE_DERIV_MAPPING_FUSION not used yet: use specfem_par, only: deriv_mapping
 
 #ifdef FORCE_VECTORIZATION
   use constants, only: NGLLCUBE
@@ -420,17 +64,19 @@
   use specfem_par_acoustic, only: nspec_inner_acoustic,nspec_outer_acoustic, &
                                    phase_ispec_inner_acoustic
 
-  use pml_par, only: is_CPML, spec_to_CPML, potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl, &
-                     rmemory_dpotential_dzl,rmemory_potential_acoustic, &
+  use pml_par, only: is_CPML, spec_to_CPML, &
+                     rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl, &
+                     rmemory_potential_acoustic, &
                      PML_potential_acoustic_old,PML_potential_acoustic_new
 
 
   implicit none
 
   integer, intent(in) :: iphase
+
   ! acoustic potentials
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: &
-        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: potential_acoustic,potential_dot_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: potential_dot_dot_acoustic
 
   ! CPML adjoint
   logical,intent(in) :: backward_simulation
@@ -444,7 +90,7 @@
   ! arrays for elemental computations inside a given spectral element
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem_old,chi_elem_new
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1,temp2,temp3,temp4
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1,temp2,temp3
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: newtemp1,newtemp2,newtemp3
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1_old,temp2_old,temp3_old
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1_new,temp2_new,temp3_new
@@ -460,18 +106,31 @@
   ! we replace potential_acoustic with potential_acoustic_old with potential_acoustic_new
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
 
-  integer :: i,j,k,ispec,ispec_irreg,iglob,ispec_p,num_elements
+  integer :: i,j,k,l,ispec,ispec_irreg,iglob,ispec_p,num_elements
 #ifdef FORCE_VECTORIZATION
   integer :: ijk
 #endif
 
   ! CPML
   integer :: ispec_CPML
+  ! stores C-PML contribution to update the second derivative of the potential to the global mesh
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: potential_dot_dot_acoustic_CPML
+
+  real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
+  real(kind=CUSTOM_REAL) :: temp1l,temp2l,temp3l
+  real(kind=CUSTOM_REAL) :: temp1l_old,temp2l_old,temp3l_old
+  real(kind=CUSTOM_REAL) :: temp1l_new,temp2l_new,temp3l_new
 
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) :: dpotentialdxl,dpotentialdyl,dpotentialdzl
   real(kind=CUSTOM_REAL) :: rho_invl
 
+! note: we combine here previous generic_slow and fast_Deville versions of compute_forces_acoustic into a single routine.
+!       Deville optimized matrix-matrix multiplications are used for NGLLX == 5, 6, 7, 8.
+!       Generic loops are used for all other NGLL options.
+!       Having a single routine to compute this stiffness term for acoustic elements should help maintaining the code.
+
+  ! number of elements to loop
   if (iphase == 1) then
     num_elements = nspec_outer_acoustic
   else
@@ -482,6 +141,7 @@
   do ispec_p = 1,num_elements
 
     ispec = phase_ispec_inner_acoustic(ispec_p,iphase)
+    ispec_irreg = irregular_element_number(ispec)
 
 ! all the loops below contain critical operations in which the solver spends 90% or so of its time; on modern machines,
 ! to get good performance it is thus crucial to make sure that most of these loops are fully vectorized by the compiler.
@@ -528,16 +188,36 @@
       call mxm8_single(hprime_xx,m1,chi_elem,temp1,m2)
       call mxm8_3dmat_single(chi_elem,m1,hprime_xxT,m1,temp2,NGLLX)
       call mxm8_single(chi_elem,m2,hprime_xxT,temp3,m1)
+    case default
+      do k=1,NGLLZ
+        do j=1,NGLLY
+          do i=1,NGLLX
+            ! derivative along x, y, z
+            ! first double loop over GLL points to compute and store gradients
+            temp1l = 0._CUSTOM_REAL
+            temp2l = 0._CUSTOM_REAL
+            temp3l = 0._CUSTOM_REAL
+
+            ! we can merge the loops because NGLLX == NGLLY == NGLLZ
+            do l = 1,NGLLX
+              temp1l = temp1l + chi_elem(l,j,k)*hprime_xx(i,l)
+              temp2l = temp2l + chi_elem(i,l,k)*hprime_yy(j,l)
+              temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
+            enddo
+            temp1(i,j,k) = temp1l
+            temp2(i,j,k) = temp2l
+            temp3(i,j,k) = temp3l
+          enddo
+        enddo
+      enddo
     end select
 
 !
 !-----------------
 !
-
     if (is_CPML(ispec) .and. .not. backward_simulation) then
-
+      ! PML element
       ispec_CPML = spec_to_CPML(ispec)
-      ispec_irreg = irregular_element_number(ispec)
 
       ! gets value of the field inside the element and make it local
       DO_LOOP_IJK
@@ -555,29 +235,66 @@
       select case (NGLLX)
       case (5)
         call mxm5_single_two_arrays_at_a_time(hprime_xx,m1,chi_elem_old,temp1_old,m2,chi_elem_new,temp1_new)
-        call mxm5_3dmat_single_two_arrays_at_a_time(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX,chi_elem_new,temp1_new)
-        call mxm5_single_two_arrays_at_a_time(chi_elem_old,m2,hprime_xxT,temp3_old,m1,chi_elem_new,temp1_new)
+        call mxm5_3dmat_single_two_arrays_at_a_time(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX,chi_elem_new,temp2_new)
+        call mxm5_single_two_arrays_at_a_time(chi_elem_old,m2,hprime_xxT,temp3_old,m1,chi_elem_new,temp3_new)
       case (6)
         call mxm6_single_two_arrays_at_a_time(hprime_xx,m1,chi_elem_old,temp1_old,m2,chi_elem_new,temp1_new)
-        call mxm6_3dmat_single_two_arrays_at_a_time(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX,chi_elem_new,temp1_new)
-        call mxm6_single_two_arrays_at_a_time(chi_elem_old,m2,hprime_xxT,temp3_old,m1,chi_elem_new,temp1_new)
+        call mxm6_3dmat_single_two_arrays_at_a_time(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX,chi_elem_new,temp2_new)
+        call mxm6_single_two_arrays_at_a_time(chi_elem_old,m2,hprime_xxT,temp3_old,m1,chi_elem_new,temp3_new)
       case (7)
         call mxm7_single_two_arrays_at_a_time(hprime_xx,m1,chi_elem_old,temp1_old,m2,chi_elem_new,temp1_new)
-        call mxm7_3dmat_single_two_arrays_at_a_time(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX,chi_elem_new,temp1_new)
-        call mxm7_single_two_arrays_at_a_time(chi_elem_old,m2,hprime_xxT,temp3_old,m1,chi_elem_new,temp1_new)
+        call mxm7_3dmat_single_two_arrays_at_a_time(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX,chi_elem_new,temp2_new)
+        call mxm7_single_two_arrays_at_a_time(chi_elem_old,m2,hprime_xxT,temp3_old,m1,chi_elem_new,temp3_new)
       case (8)
         call mxm8_single_two_arrays_at_a_time(hprime_xx,m1,chi_elem_old,temp1_old,m2,chi_elem_new,temp1_new)
-        call mxm8_3dmat_single_two_arrays_at_a_time(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX,chi_elem_new,temp1_new)
-        call mxm8_single_two_arrays_at_a_time(chi_elem_old,m2,hprime_xxT,temp3_old,m1,chi_elem_new,temp1_new)
+        call mxm8_3dmat_single_two_arrays_at_a_time(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX,chi_elem_new,temp2_new)
+        call mxm8_single_two_arrays_at_a_time(chi_elem_old,m2,hprime_xxT,temp3_old,m1,chi_elem_new,temp3_new)
+      case default
+        do k=1,NGLLZ
+          do j=1,NGLLY
+            do i=1,NGLLX
+              temp1l_old = 0._CUSTOM_REAL
+              temp2l_old = 0._CUSTOM_REAL
+              temp3l_old = 0._CUSTOM_REAL
+
+              temp1l_new = 0._CUSTOM_REAL
+              temp2l_new = 0._CUSTOM_REAL
+              temp3l_new = 0._CUSTOM_REAL
+
+              ! we can merge these loops because NGLLX = NGLLY = NGLLZ
+              do l=1,NGLLX
+                hp1 = hprime_xx(i,l)
+                iglob = ibool(l,j,k,ispec)
+                temp1l_old = temp1l_old + chi_elem_old(l,j,k)*hp1
+                temp1l_new = temp1l_new + chi_elem_new(l,j,k)*hp1
+
+                hp2 = hprime_yy(j,l)
+                iglob = ibool(i,l,k,ispec)
+                temp2l_old = temp2l_old + chi_elem_old(i,l,k)*hp2
+                temp2l_new = temp2l_new + chi_elem_new(i,l,k)*hp2
+
+                hp3 = hprime_zz(k,l)
+                iglob = ibool(i,j,l,ispec)
+                temp3l_old = temp3l_old + chi_elem_old(i,j,l)*hp3
+                temp3l_new = temp3l_new + chi_elem_new(i,j,l)*hp3
+              enddo
+              temp1_old(i,j,k) = temp1l_old
+              temp2_old(i,j,k) = temp1l_old
+              temp3_old(i,j,k) = temp1l_old
+
+              temp1_new(i,j,k) = temp1l_new
+              temp2_new(i,j,k) = temp1l_new
+              temp3_new(i,j,k) = temp1l_new
+            enddo
+          enddo
+        enddo
       end select
 
       if (ispec_irreg /= 0) then
         ! irregular element
         DO_LOOP_IJK
-          ! reciprocal of density
-          rho_invl = 1.0_CUSTOM_REAL / rhostore(INDEX_IJK,ispec)
-
           ! get derivatives of ux, uy and uz with respect to x, y and z
+          ! single arrays make it difficult for hardware pre-fetching...
           xixl = xix(INDEX_IJK,ispec_irreg)
           xiyl = xiy(INDEX_IJK,ispec_irreg)
           xizl = xiz(INDEX_IJK,ispec_irreg)
@@ -587,12 +304,37 @@
           gammaxl = gammax(INDEX_IJK,ispec_irreg)
           gammayl = gammay(INDEX_IJK,ispec_irreg)
           gammazl = gammaz(INDEX_IJK,ispec_irreg)
-          jacobianl = jacobian(INDEX_IJK,ispec_irreg)
+          ! using fused array
+          !xixl = deriv_mapping(1,INDEX_IJK,ispec_irreg)
+          !xiyl = deriv_mapping(2,INDEX_IJK,ispec_irreg)
+          !xizl = deriv_mapping(3,INDEX_IJK,ispec_irreg)
+          !etaxl = deriv_mapping(4,INDEX_IJK,ispec_irreg)
+          !etayl = deriv_mapping(5,INDEX_IJK,ispec_irreg)
+          !etazl = deriv_mapping(6,INDEX_IJK,ispec_irreg)
+          !gammaxl = deriv_mapping(7,INDEX_IJK,ispec_irreg)
+          !gammayl = deriv_mapping(8,INDEX_IJK,ispec_irreg)
+          !gammazl = deriv_mapping(9,INDEX_IJK,ispec_irreg)
 
-          ! derivatives of potential
-          dpotentialdxl = xixl*temp1(INDEX_IJK) + etaxl*temp2(INDEX_IJK) + gammaxl*temp3(INDEX_IJK)
-          dpotentialdyl = xiyl*temp1(INDEX_IJK) + etayl*temp2(INDEX_IJK) + gammayl*temp3(INDEX_IJK)
-          dpotentialdzl = xizl*temp1(INDEX_IJK) + etazl*temp2(INDEX_IJK) + gammazl*temp3(INDEX_IJK)
+          ! following is not needed, will be computed later in pml_compute_memory_variables_acoustic() routine...
+          !jacobianl = jacobian(INDEX_IJK,ispec_irreg)
+          !! reciprocal of density
+          !rho_invl = 1.0_CUSTOM_REAL / rhostore(INDEX_IJK,ispec)
+          !! derivatives of potential
+          !dpotentialdxl = xixl*temp1(INDEX_IJK) + etaxl*temp2(INDEX_IJK) + gammaxl*temp3(INDEX_IJK)
+          !dpotentialdyl = xiyl*temp1(INDEX_IJK) + etayl*temp2(INDEX_IJK) + gammayl*temp3(INDEX_IJK)
+          !dpotentialdzl = xizl*temp1(INDEX_IJK) + etazl*temp2(INDEX_IJK) + gammazl*temp3(INDEX_IJK)
+          !! for acoustic medium
+          !temp1(INDEX_IJK) = rho_invl * jacobianl * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+          !temp2(INDEX_IJK) = rho_invl * jacobianl * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+          !temp3(INDEX_IJK) = rho_invl * jacobianl * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+
+          ! stores derivatives of ux, uy and uz with respect to x, y and z
+          PML_dpotential_dxl(INDEX_IJK) = &
+            xixl*temp1(INDEX_IJK) + etaxl*temp2(INDEX_IJK) + gammaxl*temp3(INDEX_IJK)
+          PML_dpotential_dyl(INDEX_IJK) = &
+            xiyl*temp1(INDEX_IJK) + etayl*temp2(INDEX_IJK) + gammayl*temp3(INDEX_IJK)
+          PML_dpotential_dzl(INDEX_IJK) = &
+            xizl*temp1(INDEX_IJK) + etazl*temp2(INDEX_IJK) + gammazl*temp3(INDEX_IJK)
 
           PML_dpotential_dxl_old(INDEX_IJK) = &
             xixl*temp1_old(INDEX_IJK) + etaxl*temp2_old(INDEX_IJK) + gammaxl*temp3_old(INDEX_IJK)
@@ -607,28 +349,27 @@
             xiyl*temp1_new(INDEX_IJK) + etayl*temp2_new(INDEX_IJK) + gammayl*temp3_new(INDEX_IJK)
           PML_dpotential_dzl_new(INDEX_IJK) = &
             xizl*temp1_new(INDEX_IJK) + etazl*temp2_new(INDEX_IJK) + gammazl*temp3_new(INDEX_IJK)
-
-          ! for acoustic medium
-          temp1(INDEX_IJK) = rho_invl * jacobianl * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
-          temp2(INDEX_IJK) = rho_invl * jacobianl * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
-          temp3(INDEX_IJK) = rho_invl * jacobianl * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
-
-          ! stores derivatives of ux, uy and uz with respect to x, y and z
-          PML_dpotential_dxl(INDEX_IJK) = dpotentialdxl
-          PML_dpotential_dyl(INDEX_IJK) = dpotentialdyl
-          PML_dpotential_dzl(INDEX_IJK) = dpotentialdzl
         ENDDO_LOOP_IJK
 
       else
         ! regular element
         jacobianl = jacobian_regular
         DO_LOOP_IJK
-          ! reciprocal of density
-          rho_invl = 1.0_CUSTOM_REAL / rhostore(INDEX_IJK,ispec)
+          ! following is not needed, will be computed later in pml_compute_memory_variables_acoustic() routine...
+          !! reciprocal of density
+          !rho_invl = 1.0_CUSTOM_REAL / rhostore(INDEX_IJK,ispec)
+          !dpotentialdxl = xix_regular*temp1(INDEX_IJK)
+          !dpotentialdyl = xix_regular*temp2(INDEX_IJK)
+          !dpotentialdzl = xix_regular*temp3(INDEX_IJK)
+          !! for acoustic medium
+          !temp1(INDEX_IJK) = rho_invl * jacobianl * xix_regular * dpotentialdxl
+          !temp2(INDEX_IJK) = rho_invl * jacobianl * xix_regular * dpotentialdyl
+          !temp3(INDEX_IJK) = rho_invl * jacobianl * xix_regular * dpotentialdzl
 
-          dpotentialdxl = xix_regular*temp1(INDEX_IJK)
-          dpotentialdyl = xix_regular*temp2(INDEX_IJK)
-          dpotentialdzl = xix_regular*temp3(INDEX_IJK)
+          ! stores derivatives of ux, uy and uz with respect to x, y and z
+          PML_dpotential_dxl(INDEX_IJK) = xix_regular*temp1(INDEX_IJK)
+          PML_dpotential_dyl(INDEX_IJK) = xix_regular*temp2(INDEX_IJK)
+          PML_dpotential_dzl(INDEX_IJK) = xix_regular*temp3(INDEX_IJK)
 
           PML_dpotential_dxl_old(INDEX_IJK) = xix_regular*temp1_old(INDEX_IJK)
           PML_dpotential_dyl_old(INDEX_IJK) = xix_regular*temp2_old(INDEX_IJK)
@@ -638,32 +379,45 @@
           PML_dpotential_dyl_new(INDEX_IJK) = xix_regular*temp2_new(INDEX_IJK)
           PML_dpotential_dzl_new(INDEX_IJK) = xix_regular*temp3_new(INDEX_IJK)
 
-          ! for acoustic medium
-          temp1(INDEX_IJK) = rho_invl * jacobianl * xix_regular * dpotentialdxl
-          temp2(INDEX_IJK) = rho_invl * jacobianl * xix_regular * dpotentialdyl
-          temp3(INDEX_IJK) = rho_invl * jacobianl * xix_regular * dpotentialdzl
-
-          ! stores derivatives of ux, uy and uz with respect to x, y and z
-          PML_dpotential_dxl(INDEX_IJK) = dpotentialdxl
-          PML_dpotential_dyl(INDEX_IJK) = dpotentialdyl
-          PML_dpotential_dzl(INDEX_IJK) = dpotentialdzl
         ENDDO_LOOP_IJK
-
       endif
 
-    ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
+      call pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
+                                                 temp1,temp2,temp3, &
+                                                 rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl, &
+                                                 PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl, &
+                                                 PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old, &
+                                                 PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new)
 
-    else ! no PML in this element
+      ! calculates contribution from each C-PML element to update potential
+      call pml_compute_accel_contribution_acoustic(ispec,ispec_CPML, &
+                                                   potential_acoustic,potential_dot_acoustic, &
+                                                   rmemory_potential_acoustic, &
+                                                   potential_dot_dot_acoustic_CPML)
 
-      ispec_irreg = irregular_element_number(ispec)
+      ! add contributions from each element to the global values
+      ! this loop will not fully vectorize because it contains a dependency (through indirect addressing with array ibool())
+      do k = 1,NGLLZ
+        do j = 1,NGLLY
+          do i = 1,NGLLX
+            iglob = ibool(i,j,k,ispec)
+            potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - potential_dot_dot_acoustic_CPML(i,j,k)
+          enddo
+        enddo
+      enddo
 
-      if (ispec_irreg /= 0 ) then
+    else
+      ! no PML in this element
+
+      if (ispec_irreg /= 0) then
         ! irregular element
         DO_LOOP_IJK
           ! reciprocal of density
           rho_invl = 1.0_CUSTOM_REAL / rhostore(INDEX_IJK,ispec)
 
           ! get derivatives of ux, uy and uz with respect to x, y and z
+          ! single arrays make it difficult for hardware pre-fetching...
           xixl = xix(INDEX_IJK,ispec_irreg)
           xiyl = xiy(INDEX_IJK,ispec_irreg)
           xizl = xiz(INDEX_IJK,ispec_irreg)
@@ -674,6 +428,17 @@
           gammayl = gammay(INDEX_IJK,ispec_irreg)
           gammazl = gammaz(INDEX_IJK,ispec_irreg)
           jacobianl = jacobian(INDEX_IJK,ispec_irreg)
+          ! using fused array instead
+          !xixl = deriv_mapping(1,INDEX_IJK,ispec_irreg)
+          !xiyl = deriv_mapping(2,INDEX_IJK,ispec_irreg)
+          !xizl = deriv_mapping(3,INDEX_IJK,ispec_irreg)
+          !etaxl = deriv_mapping(4,INDEX_IJK,ispec_irreg)
+          !etayl = deriv_mapping(5,INDEX_IJK,ispec_irreg)
+          !etazl = deriv_mapping(6,INDEX_IJK,ispec_irreg)
+          !gammaxl = deriv_mapping(7,INDEX_IJK,ispec_irreg)
+          !gammayl = deriv_mapping(8,INDEX_IJK,ispec_irreg)
+          !gammazl = deriv_mapping(9,INDEX_IJK,ispec_irreg)
+          !jacobianl = deriv_mapping(10,INDEX_IJK,ispec_irreg)
 
           ! derivatives of potential
           dpotentialdxl = xixl*temp1(INDEX_IJK) + etaxl*temp2(INDEX_IJK) + gammaxl*temp3(INDEX_IJK)
@@ -691,37 +456,14 @@
         DO_LOOP_IJK
           ! reciprocal of density
           rho_invl = 1.0_CUSTOM_REAL / rhostore(INDEX_IJK,ispec)
-
           ! for acoustic medium
           temp1(INDEX_IJK) = rho_invl * jacobianl * xix_regular * xix_regular * temp1(INDEX_IJK)
           temp2(INDEX_IJK) = rho_invl * jacobianl * xix_regular * xix_regular * temp2(INDEX_IJK)
           temp3(INDEX_IJK) = rho_invl * jacobianl * xix_regular * xix_regular * temp3(INDEX_IJK)
         ENDDO_LOOP_IJK
-
       endif
 
-    ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
     endif ! of if PML in this element
-
-!
-!-----------------
-!
-
-    if (is_CPML(ispec) .and. .not. backward_simulation) then
-      ispec_CPML = spec_to_CPML(ispec)
-
-      ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
-      call pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,temp3, &
-                                                 rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl, &
-                                                 PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl, &
-                                                 PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old, &
-                                                 PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new)
-
-      ! calculates contribution from each C-PML element to update acceleration
-      call pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_acoustic, &
-                                                   potential_dot_acoustic,rmemory_potential_acoustic)
-    endif
 
 !
 !-----------------
@@ -753,6 +495,28 @@
       call mxm8_single(hprimewgll_xxT,m1,temp1,newtemp1,m2)
       call mxm8_3dmat_single(temp2,m1,hprimewgll_xx,m1,newtemp2,NGLLX)
       call mxm8_single(temp3,m2,hprimewgll_xx,newtemp3,m1)
+    case default
+      do k = 1,NGLLZ
+        do j = 1,NGLLY
+          do i = 1,NGLLX
+            temp1l = 0._CUSTOM_REAL
+            temp2l = 0._CUSTOM_REAL
+            temp3l = 0._CUSTOM_REAL
+            ! we can merge these loops because NGLLX = NGLLY = NGLLZ
+            do l=1,NGLLX
+              temp1l = temp1l + temp1(l,j,k) * hprimewgll_xx(l,i)
+              temp2l = temp2l + temp2(i,l,k) * hprimewgll_yy(l,j)
+              temp3l = temp3l + temp3(i,j,l) * hprimewgll_zz(l,k)
+            enddo
+            ! to be compatible with matrix versions from above
+            newtemp1(i,j,k) = temp1l
+            newtemp2(i,j,k) = temp2l
+            newtemp3(i,j,k) = temp3l
+            ! or instead, also add GLL integration weights
+            !temp4(i,j,k) = - ( wgllwgll_yz(j,k)*temp1l + wgllwgll_xz(i,k)*temp2l + wgllwgll_xy(i,j)*temp3l )
+          enddo
+        enddo
+      enddo
     end select
 
     ! sum contributions from each element to the global values
@@ -776,22 +540,6 @@
         enddo
       enddo
     enddo
-!
-!-----------------
-!
-
-    ! sum contributions from each element to the global values
-    ! this loop will not fully vectorize because it contains a dependency (through indirect addressing with array ibool())
-    if (is_CPML(ispec) .and. .not. backward_simulation) then
-      do k = 1,NGLLZ
-        do j = 1,NGLLY
-          do i = 1,NGLLX
-            iglob = ibool(i,j,k,ispec)
-            potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - potential_dot_dot_acoustic_CPML(i,j,k)
-          enddo
-        enddo
-      enddo
-    endif
 
   enddo ! end of loop over all spectral elements
 
@@ -1408,5 +1156,5 @@
 
   end subroutine mxm8_3dmat_single_two_arrays_at_a_time
 
-  end subroutine compute_forces_acoustic_fast_Deville
+  end subroutine compute_forces_acoustic
 

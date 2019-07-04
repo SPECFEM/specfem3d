@@ -3088,7 +3088,8 @@ contains
                    tempx3l = tempx3l + dummyloc(i,j,l)*hp3
 
                 enddo
-                if (ispec_irreg /= 0 ) then !irregular element
+                if (ispec_irreg /= 0 ) then
+                  !irregular element
                   xixl = xix(i,j,k,ispec_irreg)
                   xiyl = xiy(i,j,k,ispec_irreg)
                   xizl = xiz(i,j,k,ispec_irreg)
@@ -3103,7 +3104,8 @@ contains
                   Df(2,i,j,k,ispec) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
                   Df(3,i,j,k,ispec) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
 
-                else !regular element
+                else
+                  !regular element
 
                   Df(1,i,j,k,ispec) = xix_regular * tempx1l
                   Df(2,i,j,k,ispec) = xix_regular * tempx2l
@@ -3603,7 +3605,7 @@ contains
   end subroutine compute_laplac_lagrange
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------------------------
-! for each GLL in element compute gradietn norm and laplacian using lagrange interpolation and derivatives
+! for each GLL in element compute gradient norm and laplacian using lagrange interpolation and derivatives
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
   subroutine compute_grad_laplac_lagrange(nGrad, Lapf, field_to_derivate)
@@ -3624,6 +3626,7 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 198')
     allocate(field_to_derivate_wks(NDIM,NGLOB_AB), Fwks(NDIM,NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 199')
+
     call compute_first_derivatives_lagrange(Derivatives_of_field, field_to_derivate)
 
     call compute_mean_values_on_edge(Derivatives_of_field)

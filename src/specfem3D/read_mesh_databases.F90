@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
   subroutine read_mesh_databases()
 
@@ -101,13 +100,14 @@
   call bcast_all_i_for_database(NGLOB_AB, 1)
   call bcast_all_i_for_database(NSPEC_IRREGULAR, 1)
   call bcast_all_i_for_database(ibool(1,1,1,1), size(ibool))
-  call bcast_all_i_for_database(ibool(1,1,1,1), size(irregular_element_number))
+  call bcast_all_i_for_database(irregular_element_number(1), size(irregular_element_number))
   call bcast_all_cr_for_database(xix_regular, 1)
   call bcast_all_cr_for_database(jacobian_regular, 1)
 
   if (size(xstore) > 0) call bcast_all_cr_for_database(xstore(1), size(xstore))
   if (size(ystore) > 0) call bcast_all_cr_for_database(ystore(1), size(ystore))
   if (size(zstore) > 0) call bcast_all_cr_for_database(zstore(1), size(zstore))
+
   call bcast_all_cr_for_database(xix(1,1,1,1), size(xix))
   call bcast_all_cr_for_database(xiy(1,1,1,1), size(xiy))
   call bcast_all_cr_for_database(xiz(1,1,1,1), size(xiz))
@@ -118,8 +118,10 @@
   call bcast_all_cr_for_database(gammay(1,1,1,1), size(gammay))
   call bcast_all_cr_for_database(gammaz(1,1,1,1), size(gammaz))
   call bcast_all_cr_for_database(jacobian(1,1,1,1), size(jacobian))
+
   call bcast_all_cr_for_database(kappastore(1,1,1,1), size(kappastore))
   call bcast_all_cr_for_database(mustore(1,1,1,1), size(mustore))
+
   if (size(ispec_is_acoustic) > 0) &
     call bcast_all_l_for_database(ispec_is_acoustic(1), size(ispec_is_acoustic))
   if (size(ispec_is_elastic) > 0) &

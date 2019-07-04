@@ -24,8 +24,6 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
 
 
   subroutine prepare_gravity()
@@ -220,13 +218,13 @@
     endif
 
     ispec_irreg = irregular_element_number(ispec)
+
     do k = 1,NGLLZ
       do j = 1,NGLLY
         do i = 1,NGLLX
-
-          weight = wxgll(i)*wygll(j)*wzgll(k)
-          if (ispec_irreg /= 0) then ! irregular element
-            ! compute the Jacobian
+          ! computes the Jacobian
+          if (ispec_irreg /= 0) then
+            ! irregular element
             xixl = xix(i,j,k,ispec_irreg)
             xiyl = xiy(i,j,k,ispec_irreg)
             xizl = xiz(i,j,k,ispec_irreg)
@@ -236,62 +234,67 @@
             gammaxl = gammax(i,j,k,ispec_irreg)
             gammayl = gammay(i,j,k,ispec_irreg)
             gammazl = gammaz(i,j,k,ispec_irreg)
-
             ! do this in double precision for accuracy
             jacobianl = 1.d0 / dble(xixl*(etayl*gammazl-etazl*gammayl) &
                           - xiyl*(etaxl*gammazl-etazl*gammaxl) &
                           + xizl*(etaxl*gammayl-etayl*gammaxl))
-          else !regular element
-           jacobianl = 1.d0 / dble(xix_regular*xix_regular*xix_regular)
+          else
+            !regular element
+            jacobianl = 1.d0 / dble(xix_regular*xix_regular*xix_regular)
           endif
 
-          if (CHECK_FOR_NEGATIVE_JACOBIANS .and. jacobianl <= ZERO) stop 'error: negative Jacobian found in integral calculation'
+          if (CHECK_FOR_NEGATIVE_JACOBIANS .and. jacobianl <= ZERO) &
+            stop 'error: negative Jacobian found in integral calculation'
 
           iglob = ibool(i,j,k,ispec)
           x_meshpoint = xstore(iglob)
           y_meshpoint = ystore(iglob)
           z_meshpoint = zstore(iglob)
 
+          weight = wxgll(i)*wygll(j)*wzgll(k)
           common_multiplying_factor = jacobianl * weight * rhostore(i,j,k,ispec) * GRAV
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!! beginning of loop on all the data to create
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-! loop on all the points in the observation surface
-  do iobservation = 1,NTOTAL_OBSERVATION
+          ! loop on all the points in the observation surface
+          do iobservation = 1,NTOTAL_OBSERVATION
 
-    xval = x_meshpoint - x_observation(iobservation)
-    yval = y_meshpoint - y_observation(iobservation)
-    zval = z_meshpoint - z_observation(iobservation)
+            xval = x_meshpoint - x_observation(iobservation)
+            yval = y_meshpoint - y_observation(iobservation)
+            zval = z_meshpoint - z_observation(iobservation)
 
-    xval_squared = xval**2
-    yval_squared = yval**2
-    zval_squared = zval**2
+            xval_squared = xval**2
+            yval_squared = yval**2
+            zval_squared = zval**2
 
-    distance_squared = xval_squared + yval_squared + zval_squared
-    distance_cubed = distance_squared * sqrt(distance_squared)
+            distance_squared = xval_squared + yval_squared + zval_squared
+            distance_cubed = distance_squared * sqrt(distance_squared)
 
-    three_over_distance_squared = 3.d0 / distance_squared
-    one_over_distance_cubed = 1.d0 / distance_cubed
-    three_over_distance_fifth_power = three_over_distance_squared * one_over_distance_cubed
+            three_over_distance_squared = 3.d0 / distance_squared
+            one_over_distance_cubed = 1.d0 / distance_cubed
+            three_over_distance_fifth_power = three_over_distance_squared * one_over_distance_cubed
 
-    common_mult_times_one_over = common_multiplying_factor * one_over_distance_cubed
-    common_mult_times_three_over = common_multiplying_factor * three_over_distance_fifth_power
+            common_mult_times_one_over = common_multiplying_factor * one_over_distance_cubed
+            common_mult_times_three_over = common_multiplying_factor * three_over_distance_fifth_power
 
-    g_x(iobservation) = g_x(iobservation) + common_mult_times_one_over * xval
-    g_y(iobservation) = g_y(iobservation) + common_mult_times_one_over * yval
-    g_z(iobservation) = g_z(iobservation) + common_mult_times_one_over * zval
+            g_x(iobservation) = g_x(iobservation) + common_mult_times_one_over * xval
+            g_y(iobservation) = g_y(iobservation) + common_mult_times_one_over * yval
+            g_z(iobservation) = g_z(iobservation) + common_mult_times_one_over * zval
 
-    G_xx(iobservation) = G_xx(iobservation) + common_mult_times_one_over * (xval_squared * three_over_distance_squared - 1.d0)
-    G_yy(iobservation) = G_yy(iobservation) + common_mult_times_one_over * (yval_squared * three_over_distance_squared - 1.d0)
-    G_zz(iobservation) = G_zz(iobservation) + common_mult_times_one_over * (zval_squared * three_over_distance_squared - 1.d0)
+            G_xx(iobservation) = G_xx(iobservation) &
+              + common_mult_times_one_over * (xval_squared * three_over_distance_squared - 1.d0)
+            G_yy(iobservation) = G_yy(iobservation) &
+              + common_mult_times_one_over * (yval_squared * three_over_distance_squared - 1.d0)
+            G_zz(iobservation) = G_zz(iobservation) &
+              + common_mult_times_one_over * (zval_squared * three_over_distance_squared - 1.d0)
 
-    G_xy(iobservation) = G_xy(iobservation) + common_mult_times_three_over * xval*yval
-    G_xz(iobservation) = G_xz(iobservation) + common_mult_times_three_over * xval*zval
-    G_yz(iobservation) = G_yz(iobservation) + common_mult_times_three_over * yval*zval
+            G_xy(iobservation) = G_xy(iobservation) + common_mult_times_three_over * xval*yval
+            G_xz(iobservation) = G_xz(iobservation) + common_mult_times_three_over * xval*zval
+            G_yz(iobservation) = G_yz(iobservation) + common_mult_times_three_over * yval*zval
 
-  enddo
+          enddo
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!! end of loop on all the data to create

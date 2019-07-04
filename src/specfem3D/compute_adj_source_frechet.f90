@@ -106,7 +106,8 @@
         enddo
 
 ! dudx
-        if (ispec_irreg /= 0) then !irregular element
+        if (ispec_irreg /= 0) then
+          !irregular element
 
           xixl = xix(i,j,k,ispec_irreg)
           xiyl = xiy(i,j,k,ispec_irreg)
@@ -130,7 +131,8 @@
           duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
           duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
 
-        else !regular element
+        else
+          !regular element
 
           duxdxl = xix_regular*tempx1l
           duxdyl = xix_regular*tempx2l

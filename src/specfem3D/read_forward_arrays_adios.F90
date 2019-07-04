@@ -24,10 +24,8 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
 
-!==============================================================================
+
 subroutine read_forward_arrays_adios()
 
   use adios_read_mod

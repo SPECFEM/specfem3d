@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
 module specfem_par
 
@@ -44,12 +43,16 @@ module specfem_par
   integer, dimension(:,:,:,:), allocatable :: ibool
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore,ystore,zstore
 
+! regular/irregular element shapes
   integer :: NSPEC_IRREGULAR
   integer, dimension(:), allocatable :: irregular_element_number
   real(kind=CUSTOM_REAL) :: xix_regular,jacobian_regular
 
+! derivatives (of mapping to reference element)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
+    xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
+    deriv_mapping
 
 ! material properties
   ! isotropic

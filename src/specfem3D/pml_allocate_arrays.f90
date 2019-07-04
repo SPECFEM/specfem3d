@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
   subroutine pml_allocate_arrays()
 
@@ -264,11 +263,6 @@
     allocate(rmemory_potential_acoustic(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2313')
     if (ier /= 0) stop 'error allocating rmemory_potential_acoustic array'
-
-    ! stores C-PML contribution to update the second derivative of the potential to the global mesh
-    allocate(potential_dot_dot_acoustic_CPML(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2314')
-    if (ier /= 0) stop 'error allocating potential_dot_dot_acoustic_CPML array'
   endif
 
   ! stores C-PML contribution on elastic/acoustic interface
@@ -363,7 +357,6 @@
     rmemory_dpotential_dzl(:,:,:,:,:) = 0._CUSTOM_REAL
 
     rmemory_potential_acoustic(:,:,:,:,:) = 0._CUSTOM_REAL
-    potential_dot_dot_acoustic_CPML(:,:,:) = 0._CUSTOM_REAL
   endif
 
   if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
@@ -744,10 +737,6 @@
       allocate(rmemory_potential_acoustic(1,1,1,1,3),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2382')
     endif
-    if (.not. allocated(potential_dot_dot_acoustic_CPML)) then
-      allocate(potential_dot_dot_acoustic_CPML(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2383')
-    endif
 
     ! allocates wavefield
     if (.not. allocated(b_PML_potential)) then
@@ -873,7 +862,6 @@
     deallocate(rmemory_dpotential_dyl)
     deallocate(rmemory_dpotential_dzl)
     deallocate(rmemory_potential_acoustic)
-    deallocate(potential_dot_dot_acoustic_CPML)
   endif
 
   if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then

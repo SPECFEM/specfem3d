@@ -71,8 +71,9 @@ subroutine compute_forces_acoustic_calling()
   integer :: iphase
 
   ! debug timing
-  !double precision, external :: wtime
-  !double precision :: t_start,tCPU
+  double precision, external :: wtime
+  double precision :: t_start,tCPU
+  logical, parameter :: DO_TIMING = .false.
 
   ! enforces free surface (zeroes potentials at free surface)
   call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE, &
@@ -91,27 +92,18 @@ subroutine compute_forces_acoustic_calling()
   do iphase = 1,2
 
     !debug timing
-    !if (myrank == 0 .and. iphase == 2) then
-    !  t_start = wtime()
-    !endif
-
-    ! acoustic pressure term
-    ! no need to test the two others because NGLLX == NGLLY = NGLLZ in unstructured meshes
-    if (NGLLX == 5 .or. NGLLX == 6 .or. NGLLX == 7 .or. NGLLX == 8) then
-      call compute_forces_acoustic_fast_Deville(iphase, &
-                        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                        .false.)
-    else
-      call compute_forces_acoustic_generic_slow(iphase, &
-                        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                        .false.)
+    if (DO_TIMING .and. myrank == 0 .and. iphase == 2) then
+      t_start = wtime()
     endif
 
+    ! acoustic pressure term
+    call compute_forces_acoustic(iphase,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,.false.)
+
     ! debug timing
-    !if (myrank == 0 .and. iphase == 2) then
-    !  tCPU = wtime() - t_start
-    !  print *,'timing: compute_forces_acoustic elapsed time ',tCPU,'s'
-    !endif
+    if (DO_TIMING .and. myrank == 0 .and. iphase == 2) then
+      tCPU = wtime() - t_start
+      print *,'timing: compute_forces_acoustic elapsed time ',tCPU,'s'
+    endif
 
     ! computes additional contributions
     if (iphase == 1) then
@@ -351,17 +343,7 @@ subroutine compute_forces_acoustic_backward_calling()
   do iphase = 1,2
 
     ! adjoint simulations
-
-    ! no need to test the two others because NGLLX == NGLLY = NGLLZ in unstructured meshes
-    if (NGLLX == 5 .or. NGLLX == 6 .or. NGLLX == 7) then
-      call compute_forces_acoustic_fast_Deville(iphase, &
-                      b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
-                      .true.)
-    else
-      call compute_forces_acoustic_generic_slow(iphase, &
-                      b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
-                      .true.)
-    endif
+    call compute_forces_acoustic(iphase,b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic,.true.)
 
     ! computes additional contributions
     if (iphase == 1) then

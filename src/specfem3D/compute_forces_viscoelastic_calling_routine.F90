@@ -27,7 +27,7 @@
 
 ! elastic solver
 
-subroutine compute_forces_viscoelastic_calling()
+  subroutine compute_forces_viscoelastic_calling()
 
   use specfem_par
   use specfem_par_acoustic
@@ -42,9 +42,10 @@ subroutine compute_forces_viscoelastic_calling()
   integer:: iphase
   integer:: iface,ispec,igll,i,j,k,iglob,ispec_CPML
 
-  ! timing
+  ! debug timing
   double precision, external :: wtime
   double precision :: t_start,tCPU
+  logical, parameter :: DO_TIMING = .false.
 
   ! kbai added the following two synchronizations to ensure that the displacement and velocity values
   ! at nodes on MPI interfaces stay equal on all processors that share the node.
@@ -63,9 +64,8 @@ subroutine compute_forces_viscoelastic_calling()
 ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
   do iphase = 1,2
 
-!daniel debug
-    ! timing
-    if (myrank == 0 .and. iphase == 2) then
+    ! debug timing
+    if (DO_TIMING .and. myrank == 0 .and. iphase == 2) then
       t_start = wtime()
     endif
 
@@ -80,9 +80,8 @@ subroutine compute_forces_viscoelastic_calling()
                                      epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                                      .false.)
 
-!daniel debug
-    ! timing
-    if (myrank == 0 .and. iphase == 2) then
+    ! debug timing
+    if (DO_TIMING .and. myrank == 0 .and. iphase == 2) then
       tCPU = wtime() - t_start
       print *,'timing: compute_forces_viscoelastic elapsed time ',tCPU,'s'
     endif
@@ -395,7 +394,7 @@ subroutine compute_forces_viscoelastic_backward_calling()
   ! adjoint simulations
   b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
 
-end subroutine compute_forces_viscoelastic_backward_calling
+  end subroutine compute_forces_viscoelastic_backward_calling
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -403,7 +402,7 @@ end subroutine compute_forces_viscoelastic_backward_calling
 
 ! elastic solver
 
-subroutine compute_forces_viscoelastic_GPU_calling()
+  subroutine compute_forces_viscoelastic_GPU_calling()
 
   use specfem_par
   use specfem_par_acoustic
@@ -604,5 +603,5 @@ subroutine compute_forces_viscoelastic_GPU_calling()
     call kernel_3_b_cuda(Mesh_pointer,deltatover2,b_deltatover2)
   endif
 
-end subroutine compute_forces_viscoelastic_GPU_calling
+  end subroutine compute_forces_viscoelastic_GPU_calling
 

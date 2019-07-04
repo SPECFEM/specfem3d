@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
   subroutine prepare_timerun()
 
@@ -55,6 +54,9 @@
   ! sets up mass matrices
   call prepare_timerun_mass_matrices()
 
+  ! sets up time increments
+  call prepare_timerun_constants()
+
   ! initializes arrays
   call prepare_wavefields()
 
@@ -62,9 +64,6 @@
   call BC_DYNFLT_init(prname,DT,myrank)
 
   call BC_KINFLT_init(prname,DT,myrank)
-
-  ! sets up time increments
-  call prepare_timerun_constants()
 
   ! prepares attenuation arrays
   call prepare_attenuation()
@@ -86,6 +85,9 @@
   ! prepares noise simulations
   call prepare_noise()
 
+  ! prepares coupling with injection boundary
+  call couple_with_injection_prepare_boundary()
+
   ! prepares GPU arrays
   if (GPU_MODE) call prepare_GPU()
 
@@ -94,8 +96,8 @@
   call prepare_timerun_OpenMP()
 #endif
 
-  ! prepars coupling with injection boundary
-  call couple_with_injection_prepare_boundary()
+  ! optimizes array memory layout for better performance
+  call prepare_optimized_arrays()
 
   ! synchronize all the processes
   call synchronize_all()
