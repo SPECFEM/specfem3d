@@ -144,7 +144,7 @@ void FC_FUNC_(wrap_patoh, WRAP_PATOH)(int* __c, int* __n,
 
 // in case METIS and PATOH libraries conflict
 //#ifndef USE_METIS
-    
+
 #ifdef SETRANDSEED
   static int patohseed = -1;
   if (patohseed == -1) {
@@ -173,7 +173,7 @@ void FC_FUNC_(wrap_patoh, WRAP_PATOH)(int* __c, int* __n,
   options:
 
     cuttype - must be either PATOH_CUTPART (== 2) for cutnet metric
-              or PATOH_CONPART (== 1) for “Connectivity-1” metric
+              or PATOH_CONPART (== 1) for "Connectivity-1" metric
 
     PATOH_SUGPARAM_QUALITY: if you could afford a little bit more extra time for a little better quality
                             (such as VLSI partitioning), use this value.

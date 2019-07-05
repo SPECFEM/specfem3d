@@ -45,7 +45,7 @@ def PetersonNoiseModel(Period,s=''):
             break
         else:
             l = l + 1
-    
+
     # Period is larger than P(N) and less than 1e5 (maximum period defined in the model)
     if Period >= P[N-1] and Period < 100000.0:
         accel = A[N-1] + B[N-1] * log10(Period)

@@ -15,19 +15,19 @@ from PetersonNoiseModel import PetersonNoiseModel
 def NOISE_TOMOGRAPHY(NSTEP=None,dt=None,Tmin=None,Tmax=None,NOISE_MODEL=None,show_figures=True):
     """
     This is a short program used to sample the spectrum of the
-    Peterson's noise model, and convert it to time-domain 
+    Peterson's noise model, and convert it to time-domain
     --- the source time function we will use in NOISE TOMOGRAPHY simulations.
-    
+
     #***********************************************************************
     #*******Please read the manual of SPECFEM3D package for guidance********
     #***********************************************************************
-    
+
     # Usage:
     NOISE_TOMOGRAPHY(NSTEP,dt,Tmin,Tmax,NOISE_MODEL)
-    
+
     # Example:
     NOISE_TOMOGRAPHY(2999,0.05,10.,20.,'NLNM')
-    
+
     # /////////////////////////////////////////////////////////////////////////
     # Parameters:
     # NSTEP       --- number of time steps (always odd for NOISE TOMOGRAPHY)
@@ -39,7 +39,7 @@ def NOISE_TOMOGRAPHY(NSTEP=None,dt=None,Tmin=None,Tmax=None,NOISE_MODEL=None,sho
     #                 'NHNM': New High Noise Model
     #                 or 'FLAT': for a flat noise spectrum (uniform noise within period range)
     # /////////////////////////////////////////////////////////////////////////
-    
+
     ATTENTION:
     ***NEVER*** try to calculate "NSTEP" and "dt" by yourself!
     They can be found when you compile the SPECFEM3D package,
@@ -49,7 +49,7 @@ def NOISE_TOMOGRAPHY(NSTEP=None,dt=None,Tmin=None,Tmax=None,NOISE_MODEL=None,sho
 
     It is highly recommended that you compile the package with the correct
     DATA/Par_file you will be using
-    
+
 
     # Output from the example above:
     # a figure + following message
@@ -68,7 +68,7 @@ def NOISE_TOMOGRAPHY(NSTEP=None,dt=None,Tmin=None,Tmax=None,NOISE_MODEL=None,sho
     taper_length_percentage = 0.1
     taper_length_min = 40
     ############################################################
-    
+
     ##
     if show_figures:
         fontsize=10
@@ -86,7 +86,7 @@ def NOISE_TOMOGRAPHY(NSTEP=None,dt=None,Tmin=None,Tmax=None,NOISE_MODEL=None,sho
     if T < Tmax:
         print('The simulation length T('+str(T)+') is smaller than the required maximum period Tmax('+str(Tmax)+')')
         return
-    
+
     ## checks noise model string
     use_flat_noise_spectrum = False
     if NOISE_MODEL == 'NLNM':
@@ -100,7 +100,7 @@ def NOISE_TOMOGRAPHY(NSTEP=None,dt=None,Tmin=None,Tmax=None,NOISE_MODEL=None,sho
     else:
         print('Error: noise model %s not recognized, use NLNM, NHNM or FLAT for low, high or flat noise model' %NOISE_MODEL)
         sys.exit(1)
-    
+
     ## user output
     print('NOISE_TOMOGRAPHY input:')
     print('  number of time steps = %i' % NSTEP)
@@ -118,7 +118,7 @@ def NOISE_TOMOGRAPHY(NSTEP=None,dt=None,Tmin=None,Tmax=None,NOISE_MODEL=None,sho
     filter_array = zeros(len(f))
 
     # defined by Tmin & Tmax
-    
+
     ## calculate the power spectrum of noise from Peterson's model (1993)
     print('  calculating noise power spectrum: number of positive frequencies = %i' % N_mid)
     # only calculate for positive frequencies
@@ -209,7 +209,7 @@ def NOISE_TOMOGRAPHY(NSTEP=None,dt=None,Tmin=None,Tmax=None,NOISE_MODEL=None,sho
                     'displacement, scaled by '+str(max(abs(displ)))+' m^2/Hz'])
         plt.xlim(0.8 / Tmax, 1.2 / Tmin)
         plt.ylim(-0.1,1.5)
-    
+
     # using only displacement from here on
     accel = None
     veloc = None
@@ -320,7 +320,7 @@ def NOISE_TOMOGRAPHY(NSTEP=None,dt=None,Tmin=None,Tmax=None,NOISE_MODEL=None,sho
     # Wn=[1/Tmax 1/Tmin]/fmax;
     # [B,A] = butter(4,Wn);
     # S_squared[:,1] = filter(B,A,S_squared[:,1]);
-    
+
     # plots figure
     if show_figures:
         print('  plotting figure: Source time function S_squared')

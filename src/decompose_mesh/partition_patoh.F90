@@ -97,7 +97,7 @@
   useFixCells = 0 ! for moving higher p-elements into single partition
 
   ! cut type, either:
-  ! 1 == “Connectivity-1” metric
+  ! 1 == "Connectivity-1" metric
   ! 2 == for cutnet metric
   bcuttype = 1
   print *,'patoh: cut type: ',bcuttype
