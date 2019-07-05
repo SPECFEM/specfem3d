@@ -187,11 +187,6 @@ specfem3D_MODULES = \
 specfem3D_SHARED_OBJECTS += $(COND_MPI_OBJECTS)
 
 ###
-### OPENMP
-###
-specfem3D_SHARED_OBJECTS += $(COND_OMP_OBJECTS)
-
-###
 ### CUDA
 ###
 cuda_specfem3D_OBJECTS = \

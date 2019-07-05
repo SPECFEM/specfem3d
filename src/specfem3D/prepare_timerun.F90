@@ -786,7 +786,7 @@
     !  f = 1.0
     !  do i = n-1,1,-1
     !      f = 1.0 + x * f / i
-    !  end do
+    !  enddo
     !  end function
 
     ! determines coefficients

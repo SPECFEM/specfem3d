@@ -133,7 +133,7 @@ $E/xdecompose_mesh: ${SCOTCH_DIR}/include/scotchf.h $(decompose_mesh_SHARED_OBJE
 	@echo ""
 	@echo "building xdecompose_mesh"
 	@echo ""
-	${FCLINK} -o  $E/xdecompose_mesh $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_OBJECTS) $(PART_LIBS) $(COND_MPI_OBJECTS)
+	${FCLINK} -o  $E/xdecompose_mesh $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_OBJECTS) $(PART_LIBS) $(COND_MPI_OBJECTS) $(LDFLAGS)
 	@echo ""
 
 
@@ -165,7 +165,7 @@ $E/xdecompose_mesh_mpi: $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_mpi_O
 	@echo ""
 	@echo "building xdecompose_mesh_mpi"
 	@echo ""
-	${FCLINK} -o  $E/xdecompose_mesh_mpi $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_mpi_OBJECTS) $(COND_MPI_OBJECTS)
+	${FCLINK} -o  $E/xdecompose_mesh_mpi $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_mpi_OBJECTS) $(COND_MPI_OBJECTS) $(LDFLAGS)
 	@echo ""
 
 

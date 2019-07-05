@@ -189,7 +189,7 @@ else
   fi
   # SEP example
   if [ "$TESTID" == "26" ]; then
-    sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 600:" DATA/Par_file
   fi
   # coupled with FK
   if [ "$TESTID" == "27" ]; then

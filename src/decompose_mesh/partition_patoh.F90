@@ -120,11 +120,15 @@
     nwghts(:) = 1
   endif
 
-  print *,'patoh: calling patoh with nconst = ', newlvlids, ' constraints'
-
+#ifndef USE_PATOH
+  print *, 'PATOH Error: called without PATOH Support. To enable PATOH support, please re-compile with flag -DUSE_PATOH'
+  stop 'PATOH not enabled'
+#else
+  print *, 'patoh: calling patoh with nconst = ', newlvlids, ' constraints'
   !print *, 'patoh: part(1)=', part(1), 'part(2)=',part(2)
-
+  ! patoh partitioning
   call wrap_patoh(nspec, nnodes, nwghts, xpins, pins, belmts_mc_loads, nparts, newlvlids, part, useFixCells, bcuttype, cut)
+#endif
 
   print *,'patoh: Reports cut of ', cut
   print *,'patoh: done'

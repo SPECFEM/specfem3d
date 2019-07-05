@@ -30,7 +30,7 @@
   use constants, only: &
     myrank, &
     INJECTION_TECHNIQUE_IS_AXISEM,INJECTION_TECHNIQUE_IS_DSM,INJECTION_TECHNIQUE_IS_FK
-    
+
   use shared_parameters
 
   implicit none

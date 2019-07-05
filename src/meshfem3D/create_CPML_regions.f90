@@ -299,7 +299,8 @@
     if (myrank == 0) then
       write(IMAIN,*) '  saving VTK file: ',trim(filename)
     endif
-    call write_VTK_data_elem_i_meshfemCPML(nglob,nspec,nodes_coords,ibool,CPML_regions,is_CPML,filename)
+    call write_VTK_data_elem_i_meshfemCPML(nglob,nspec,nodes_coords,ibool, &
+                                           nspec_CPML,CPML_regions,is_CPML,filename)
   endif
 
   end subroutine create_CPML_regions

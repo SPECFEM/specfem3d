@@ -52,8 +52,8 @@
                          rhostore,jacobian,ibool, &
                          irregular_element_number,xix_regular,jacobian_regular
 
-  use specfem_par,only: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
-  !or: use specfem_par,only: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
+  use specfem_par, only: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
+  !or: use specfem_par, only: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
 
   ! USE_DERIV_MAPPING_FUSION not used yet: use specfem_par, only: deriv_mapping
 
@@ -192,7 +192,8 @@
 
     ! gets value of the field inside the element and make it local
     ! note: this loop will not fully vectorize because it contains a dependency (through indirect addressing with array ibool())
-    !       thus, instead of DO_LOOP_IJK we use do k=..;do j=..;do i=.., which helps the compiler to unroll the innermost loop
+    !       thus, instead of DO_LOOP_IJK we use do k=..;do j=..;do i=..,
+    !       which helps the compiler to unroll the innermost loop
     do k = 1,NGLLZ
       do j = 1,NGLLY
         do i = 1,NGLLX
@@ -386,7 +387,7 @@
       ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
       !
       ! note: this routine also updates temp1,temp2,temp3 arrays to calculate the "default" contribution
-      !       in the second double-loop, done after this if(is_CPML ..) case
+      !       in the second double-loop, done after this if (is_CPML ..) case
       call pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
                                                  temp1,temp2,temp3, &
                                                  rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl, &
@@ -573,7 +574,8 @@
 
     ! sum contributions from each element to the global values
     ! note: this loop will not fully vectorize because it contains a dependency (through indirect addressing with array ibool())
-    !       thus, instead of DO_LOOP_IJK we use do k=..;do j=..;do i=.., which helps the compiler to unroll the innermost loop
+    !       thus, instead of DO_LOOP_IJK we use do k=..;do j=..;do i=..,
+    !       which helps the compiler to unroll the innermost loop
     do k = 1,NGLLZ
       do j = 1,NGLLY
         do i = 1,NGLLX

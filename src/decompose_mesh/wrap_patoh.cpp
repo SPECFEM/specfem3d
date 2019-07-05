@@ -41,11 +41,13 @@
 /* ---------------------------------------------------------------------- */
 
 #include "config.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 #ifndef USE_PATOH
-
+/*
+// note: this can lead to compilation and linking issues with intel compilers, complaining about
+//       .. undefined reference to `__gxx_personality_v0' ..
+//       when linking with a c-compiler instead of a c++-compiler or if -lstdc++ is missing as linker argument
+//
 // stub routine (used for compilation without patoh libraries)
 extern "C"
 void
@@ -61,13 +63,16 @@ FC_FUNC_(wrap_patoh, WRAP_PATOH)(int* __c, int* __n,
   exit(1);
 }
 
+*/
+
 #else
 
+/* ---------------------------------------------------------------------- */
 #pragma message ("\nCompiling with: USE_PATOH enabled\n")
 
-/* ---------------------------------------------------------------------- */
-
 // PaToH function
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <math.h>
 #include <time.h>

@@ -53,7 +53,8 @@ CFLAGS = @CFLAGS@ $(CPPFLAGS)
 CPPFLAGS = -I${SETUP} @CPPFLAGS@ $(COND_MPI_CPPFLAGS)
 
 # all linker flags
-MPILIBS += @LDFLAGS@ @LIBS@
+LDFLAGS = @LDFLAGS@
+MPILIBS += $(LDFLAGS) @LIBS@
 
 #######################################
 ####
@@ -229,11 +230,6 @@ GENCODE_70 = -gencode=arch=compute_70,code=\"sm_70,compute_70\"
 
 @COND_OMP_TRUE@OMP_LIBS = $(OMP_LIB)
 @COND_OMP_FALSE@OMP_LIBS =
-
-# objects toggled between openmp and non-openmp version
-#@COND_OMP_TRUE@COND_OMP_OBJECTS = $O/older_not_maintained_compute_forces_viscoelastic_Dev_openmp.openmp.o
-@COND_OMP_TRUE@COND_OMP_OBJECTS =
-@COND_OMP_FALSE@COND_OMP_OBJECTS =
 
 #######################################
 ####
