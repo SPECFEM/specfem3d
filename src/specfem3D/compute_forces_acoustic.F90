@@ -95,7 +95,11 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1_old,temp2_old,temp3_old
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1_new,temp2_new,temp3_new
 
+  ! CPML
+  integer :: ispec_CPML
   ! arrays for elemental computations in compute_forces() for PML elements
+  ! stores C-PML contribution to update the second derivative of the potential to the global mesh
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: potential_dot_dot_acoustic_CPML
   ! derivatives of potential with respect to x, y and z
   ! in computation potential_acoustic at "n" time step is used
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl
@@ -106,16 +110,6 @@
   ! we replace potential_acoustic with potential_acoustic_old with potential_acoustic_new
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
 
-  integer :: i,j,k,l,ispec,ispec_irreg,iglob,ispec_p,num_elements
-#ifdef FORCE_VECTORIZATION
-  integer :: ijk
-#endif
-
-  ! CPML
-  integer :: ispec_CPML
-  ! stores C-PML contribution to update the second derivative of the potential to the global mesh
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: potential_dot_dot_acoustic_CPML
-
   real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
   real(kind=CUSTOM_REAL) :: temp1l,temp2l,temp3l
   real(kind=CUSTOM_REAL) :: temp1l_old,temp2l_old,temp3l_old
@@ -124,6 +118,12 @@
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) :: dpotentialdxl,dpotentialdyl,dpotentialdzl
   real(kind=CUSTOM_REAL) :: rho_invl
+
+  integer :: i,j,k,l,ispec,ispec_irreg,iglob,ispec_p,num_elements
+#ifdef FORCE_VECTORIZATION
+  integer :: ijk
+#endif
+
 
 ! note: we combine here previous generic_slow and fast_Deville versions of compute_forces_acoustic into a single routine.
 !       Deville optimized matrix-matrix multiplications are used for NGLLX == 5, 6, 7, 8.
@@ -202,69 +202,20 @@
       enddo
     enddo
 
-    ! derivative along x, y, z
-    ! first double loop over GLL points to compute and store gradients
-
-    ! subroutines adapted from Deville, Fischer and Mund, High-order methods
-    ! for incompressible fluid flow, Cambridge University Press (2002),
-    ! pages 386 and 389 and Figure 8.3.1
-
-    ! computes 1. matrix multiplication for temp1
-    ! computes 2. matrix multiplication for temp2
-    ! computes 3. matrix multiplication for temp3
-    select case (NGLLX)
-    case (5)
-      call mxm5_single(hprime_xx,m1,chi_elem,temp1,m2)
-      call mxm5_3dmat_single(chi_elem,m1,hprime_xxT,m1,temp2,NGLLX)
-      call mxm5_single(chi_elem,m2,hprime_xxT,temp3,m1)
-    case (6)
-      call mxm6_single(hprime_xx,m1,chi_elem,temp1,m2)
-      call mxm6_3dmat_single(chi_elem,m1,hprime_xxT,m1,temp2,NGLLX)
-      call mxm6_single(chi_elem,m2,hprime_xxT,temp3,m1)
-    case (7)
-      call mxm7_single(hprime_xx,m1,chi_elem,temp1,m2)
-      call mxm7_3dmat_single(chi_elem,m1,hprime_xxT,m1,temp2,NGLLX)
-      call mxm7_single(chi_elem,m2,hprime_xxT,temp3,m1)
-    case (8)
-      call mxm8_single(hprime_xx,m1,chi_elem,temp1,m2)
-      call mxm8_3dmat_single(chi_elem,m1,hprime_xxT,m1,temp2,NGLLX)
-      call mxm8_single(chi_elem,m2,hprime_xxT,temp3,m1)
-    case default
-      do k=1,NGLLZ
-        do j=1,NGLLY
-          do i=1,NGLLX
-            ! derivative along x, y, z
-            ! first double loop over GLL points to compute and store gradients
-            temp1l = 0._CUSTOM_REAL
-            temp2l = 0._CUSTOM_REAL
-            temp3l = 0._CUSTOM_REAL
-
-            ! we can merge the loops because NGLLX == NGLLY == NGLLZ
-            do l = 1,NGLLX
-              temp1l = temp1l + chi_elem(l,j,k)*hprime_xx(i,l)
-              temp2l = temp2l + chi_elem(i,l,k)*hprime_yy(j,l)
-              temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
-            enddo
-            temp1(i,j,k) = temp1l
-            temp2(i,j,k) = temp2l
-            temp3(i,j,k) = temp3l
-          enddo
-        enddo
-      enddo
-    end select
-
-!
-!-----------------
-!
+    ! selects element contribution
     if (is_CPML(ispec) .and. .not. backward_simulation) then
       ! PML element
       ispec_CPML = spec_to_CPML(ispec)
 
+      ! additional old and new arrays
       ! gets value of the field inside the element and make it local
       DO_LOOP_IJK
         chi_elem_old(INDEX_IJK) = PML_potential_acoustic_old(INDEX_IJK,ispec_CPML)
         chi_elem_new(INDEX_IJK) = PML_potential_acoustic_new(INDEX_IJK,ispec_CPML)
       ENDDO_LOOP_IJK
+
+      ! derivative along x, y, z
+      ! first double loop over GLL points to compute and store gradients
 
       ! subroutines adapted from Deville, Fischer and Mund, High-order methods
       ! for incompressible fluid flow, Cambridge University Press (2002),
@@ -275,25 +226,30 @@
       ! computes 3. matrix multiplication for temp3
       select case (NGLLX)
       case (5)
-        call mxm5_single_two_arrays_at_a_time(hprime_xx,m1,chi_elem_old,temp1_old,m2,chi_elem_new,temp1_new)
-        call mxm5_3dmat_single_two_arrays_at_a_time(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX,chi_elem_new,temp2_new)
-        call mxm5_single_two_arrays_at_a_time(chi_elem_old,m2,hprime_xxT,temp3_old,m1,chi_elem_new,temp3_new)
+        call mxm5_single_3arrays_A(hprime_xx,m1,chi_elem,temp1,m2,chi_elem_old,temp1_old,chi_elem_new,temp1_new)
+        call mxm5_3dmat_single_3arrays(chi_elem,m1,hprime_xxT,m1,temp2,NGLLX,chi_elem_old,temp2_old,chi_elem_new,temp2_new)
+        call mxm5_single_3arrays_B(chi_elem,m2,hprime_xxT,temp3,m1,chi_elem_old,temp3_old,chi_elem_new,temp3_new)
       case (6)
-        call mxm6_single_two_arrays_at_a_time(hprime_xx,m1,chi_elem_old,temp1_old,m2,chi_elem_new,temp1_new)
-        call mxm6_3dmat_single_two_arrays_at_a_time(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX,chi_elem_new,temp2_new)
-        call mxm6_single_two_arrays_at_a_time(chi_elem_old,m2,hprime_xxT,temp3_old,m1,chi_elem_new,temp3_new)
+        call mxm6_single_3arrays_A(hprime_xx,m1,chi_elem,temp1,m2,chi_elem_old,temp1_old,chi_elem_new,temp1_new)
+        call mxm6_3dmat_single_3arrays(chi_elem,m1,hprime_xxT,m1,temp2,NGLLX,chi_elem_old,temp2_old,chi_elem_new,temp2_new)
+        call mxm6_single_3arrays_B(chi_elem,m2,hprime_xxT,temp3,m1,chi_elem_old,temp3_old,chi_elem_new,temp3_new)
       case (7)
-        call mxm7_single_two_arrays_at_a_time(hprime_xx,m1,chi_elem_old,temp1_old,m2,chi_elem_new,temp1_new)
-        call mxm7_3dmat_single_two_arrays_at_a_time(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX,chi_elem_new,temp2_new)
-        call mxm7_single_two_arrays_at_a_time(chi_elem_old,m2,hprime_xxT,temp3_old,m1,chi_elem_new,temp3_new)
+        call mxm7_single_3arrays_A(hprime_xx,m1,chi_elem,temp1,m2,chi_elem_old,temp1_old,chi_elem_new,temp1_new)
+        call mxm7_3dmat_single_3arrays(chi_elem,m1,hprime_xxT,m1,temp2,NGLLX,chi_elem_old,temp2_old,chi_elem_new,temp2_new)
+        call mxm7_single_3arrays_B(chi_elem,m2,hprime_xxT,temp3,m1,chi_elem_old,temp3_old,chi_elem_new,temp3_new)
       case (8)
-        call mxm8_single_two_arrays_at_a_time(hprime_xx,m1,chi_elem_old,temp1_old,m2,chi_elem_new,temp1_new)
-        call mxm8_3dmat_single_two_arrays_at_a_time(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX,chi_elem_new,temp2_new)
-        call mxm8_single_two_arrays_at_a_time(chi_elem_old,m2,hprime_xxT,temp3_old,m1,chi_elem_new,temp3_new)
+        call mxm8_single_3arrays_A(hprime_xx,m1,chi_elem,temp1,m2,chi_elem_old,temp1_old,chi_elem_new,temp1_new)
+        call mxm8_3dmat_single_3arrays(chi_elem,m1,hprime_xxT,m1,temp2,NGLLX,chi_elem_old,temp2_old,chi_elem_new,temp2_new)
+        call mxm8_single_3arrays_B(chi_elem,m2,hprime_xxT,temp3,m1,chi_elem_old,temp3_old,chi_elem_new,temp3_new)
       case default
         do k=1,NGLLZ
           do j=1,NGLLY
             do i=1,NGLLX
+              ! derivative along x, y, z
+              temp1l = 0._CUSTOM_REAL
+              temp2l = 0._CUSTOM_REAL
+              temp3l = 0._CUSTOM_REAL
+
               temp1l_old = 0._CUSTOM_REAL
               temp2l_old = 0._CUSTOM_REAL
               temp3l_old = 0._CUSTOM_REAL
@@ -305,27 +261,31 @@
               ! we can merge these loops because NGLLX = NGLLY = NGLLZ
               do l=1,NGLLX
                 hp1 = hprime_xx(i,l)
-                iglob = ibool(l,j,k,ispec)
+                temp1l     = temp1l     + chi_elem(l,j,k)*hp1
                 temp1l_old = temp1l_old + chi_elem_old(l,j,k)*hp1
                 temp1l_new = temp1l_new + chi_elem_new(l,j,k)*hp1
 
                 hp2 = hprime_yy(j,l)
-                iglob = ibool(i,l,k,ispec)
+                temp2l     = temp2l     + chi_elem(i,l,k)*hp2
                 temp2l_old = temp2l_old + chi_elem_old(i,l,k)*hp2
                 temp2l_new = temp2l_new + chi_elem_new(i,l,k)*hp2
 
                 hp3 = hprime_zz(k,l)
-                iglob = ibool(i,j,l,ispec)
+                temp3l     = temp3l     + chi_elem(i,j,l)*hp3
                 temp3l_old = temp3l_old + chi_elem_old(i,j,l)*hp3
                 temp3l_new = temp3l_new + chi_elem_new(i,j,l)*hp3
               enddo
+              temp1(i,j,k) = temp1l
+              temp2(i,j,k) = temp2l
+              temp3(i,j,k) = temp3l
+
               temp1_old(i,j,k) = temp1l_old
-              temp2_old(i,j,k) = temp1l_old
-              temp3_old(i,j,k) = temp1l_old
+              temp2_old(i,j,k) = temp2l_old
+              temp3_old(i,j,k) = temp3l_old
 
               temp1_new(i,j,k) = temp1l_new
-              temp2_new(i,j,k) = temp1l_new
-              temp3_new(i,j,k) = temp1l_new
+              temp2_new(i,j,k) = temp2l_new
+              temp3_new(i,j,k) = temp3l_new
             enddo
           enddo
         enddo
@@ -394,10 +354,10 @@
 
       else
         ! regular element
-        jacobianl = jacobian_regular
         DO_LOOP_IJK
           ! following is not needed, will be computed later in pml_compute_memory_variables_acoustic() routine...
           !! reciprocal of density
+          !jacobianl = jacobian_regular
           !rho_invl = 1.0_CUSTOM_REAL / rhostore(INDEX_IJK,ispec)
           !dpotentialdxl = xix_regular*temp1(INDEX_IJK)
           !dpotentialdyl = xix_regular*temp2(INDEX_IJK)
@@ -424,6 +384,9 @@
       endif
 
       ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
+      !
+      ! note: this routine also updates temp1,temp2,temp3 arrays to calculate the "default" contribution
+      !       in the second double-loop, done after this if(is_CPML ..) case
       call pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
                                                  temp1,temp2,temp3, &
                                                  rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl, &
@@ -451,6 +414,57 @@
 
     else
       ! no PML in this element
+
+      ! derivative along x, y, z
+      ! first double loop over GLL points to compute and store gradients
+
+      ! subroutines adapted from Deville, Fischer and Mund, High-order methods
+      ! for incompressible fluid flow, Cambridge University Press (2002),
+      ! pages 386 and 389 and Figure 8.3.1
+
+      ! computes 1. matrix multiplication for temp1
+      ! computes 2. matrix multiplication for temp2
+      ! computes 3. matrix multiplication for temp3
+      select case (NGLLX)
+      case (5)
+        call mxm5_single(hprime_xx,m1,chi_elem,temp1,m2)
+        call mxm5_3dmat_single(chi_elem,m1,hprime_xxT,m1,temp2,NGLLX)
+        call mxm5_single(chi_elem,m2,hprime_xxT,temp3,m1)
+      case (6)
+        call mxm6_single(hprime_xx,m1,chi_elem,temp1,m2)
+        call mxm6_3dmat_single(chi_elem,m1,hprime_xxT,m1,temp2,NGLLX)
+        call mxm6_single(chi_elem,m2,hprime_xxT,temp3,m1)
+      case (7)
+        call mxm7_single(hprime_xx,m1,chi_elem,temp1,m2)
+        call mxm7_3dmat_single(chi_elem,m1,hprime_xxT,m1,temp2,NGLLX)
+        call mxm7_single(chi_elem,m2,hprime_xxT,temp3,m1)
+      case (8)
+        call mxm8_single(hprime_xx,m1,chi_elem,temp1,m2)
+        call mxm8_3dmat_single(chi_elem,m1,hprime_xxT,m1,temp2,NGLLX)
+        call mxm8_single(chi_elem,m2,hprime_xxT,temp3,m1)
+      case default
+        do k=1,NGLLZ
+          do j=1,NGLLY
+            do i=1,NGLLX
+              ! derivative along x, y, z
+              ! first double loop over GLL points to compute and store gradients
+              temp1l = 0._CUSTOM_REAL
+              temp2l = 0._CUSTOM_REAL
+              temp3l = 0._CUSTOM_REAL
+
+              ! we can merge the loops because NGLLX == NGLLY == NGLLZ
+              do l = 1,NGLLX
+                temp1l = temp1l + chi_elem(l,j,k)*hprime_xx(i,l)
+                temp2l = temp2l + chi_elem(i,l,k)*hprime_yy(j,l)
+                temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
+              enddo
+              temp1(i,j,k) = temp1l
+              temp2(i,j,k) = temp2l
+              temp3(i,j,k) = temp3l
+            enddo
+          enddo
+        enddo
+      end select
 
       if (ispec_irreg /= 0) then
         ! irregular element
@@ -506,10 +520,6 @@
       endif
 
     endif ! of if PML in this element
-
-!
-!-----------------
-!
 
     ! second double-loop over GLL to compute all the terms along the x,y,z directions and assemble the contributions
 
@@ -733,7 +743,6 @@
 
   end subroutine mxm8_single
 
-
 !--------------------------------------------------------------------------------------------
 
   subroutine mxm5_3dmat_single(A,n1,B,n2,C,n3)
@@ -872,9 +881,9 @@
 
   end subroutine mxm8_3dmat_single
 
-  !-------------
+!--------------------------------------------------------------------------------------------
 
-  subroutine mxm5_single_two_arrays_at_a_time(A,n1,B,C,n3,B2,C2)
+  subroutine mxm5_single_3arrays_A(A,n1,B,C,n3,B2,C2,B3,C3)
 
 ! two-dimensional arrays (25,5)/(5,25)
 
@@ -884,8 +893,8 @@
 
   integer,intent(in) :: n1,n3
   real(kind=CUSTOM_REAL),dimension(n1,5),intent(in) :: A
-  real(kind=CUSTOM_REAL),dimension(5,n3),intent(in) :: B,B2
-  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C,C2
+  real(kind=CUSTOM_REAL),dimension(5,n3),intent(in) :: B,B2,B3
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C,C2,C3
 
   ! local parameters
   integer :: i,j
@@ -904,14 +913,20 @@
                + A(i,3) * B2(3,j) &
                + A(i,4) * B2(4,j) &
                + A(i,5) * B2(5,j)
+
+      C3(i,j) =  A(i,1) * B3(1,j) &
+               + A(i,2) * B3(2,j) &
+               + A(i,3) * B3(3,j) &
+               + A(i,4) * B3(4,j) &
+               + A(i,5) * B3(5,j)
     enddo
   enddo
 
-  end subroutine mxm5_single_two_arrays_at_a_time
+  end subroutine mxm5_single_3arrays_A
 
   !-------------
 
-  subroutine mxm6_single_two_arrays_at_a_time(A,n1,B,C,n3,B2,C2)
+  subroutine mxm6_single_3arrays_A(A,n1,B,C,n3,B2,C2,B3,C3)
 
 ! two-dimensional arrays (36,6)/(6,36)
 
@@ -921,8 +936,8 @@
 
   integer,intent(in) :: n1,n3
   real(kind=CUSTOM_REAL),dimension(n1,6),intent(in) :: A
-  real(kind=CUSTOM_REAL),dimension(6,n3),intent(in) :: B,B2
-  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C,C2
+  real(kind=CUSTOM_REAL),dimension(6,n3),intent(in) :: B,B2,B3
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C,C2,C3
 
   ! local parameters
   integer :: i,j
@@ -943,14 +958,21 @@
                + A(i,4) * B2(4,j) &
                + A(i,5) * B2(5,j) &
                + A(i,6) * B2(6,j)
+
+      C3(i,j) =  A(i,1) * B3(1,j) &
+               + A(i,2) * B3(2,j) &
+               + A(i,3) * B3(3,j) &
+               + A(i,4) * B3(4,j) &
+               + A(i,5) * B3(5,j) &
+               + A(i,6) * B3(6,j)
     enddo
   enddo
 
-  end subroutine mxm6_single_two_arrays_at_a_time
+  end subroutine mxm6_single_3arrays_A
 
   !-------------
 
-  subroutine mxm7_single_two_arrays_at_a_time(A,n1,B,C,n3,B2,C2)
+  subroutine mxm7_single_3arrays_A(A,n1,B,C,n3,B2,C2,B3,C3)
 
 ! two-dimensional arrays (49,7)/(7,49)
 
@@ -960,8 +982,8 @@
 
   integer,intent(in) :: n1,n3
   real(kind=CUSTOM_REAL),dimension(n1,7),intent(in) :: A
-  real(kind=CUSTOM_REAL),dimension(7,n3),intent(in) :: B,B2
-  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C,C2
+  real(kind=CUSTOM_REAL),dimension(7,n3),intent(in) :: B,B2,B3
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C,C2,C3
 
   ! local parameters
   integer :: i,j
@@ -984,14 +1006,22 @@
                + A(i,5) * B2(5,j) &
                + A(i,6) * B2(6,j) &
                + A(i,7) * B2(7,j)
+
+      C3(i,j) =  A(i,1) * B3(1,j) &
+               + A(i,2) * B3(2,j) &
+               + A(i,3) * B3(3,j) &
+               + A(i,4) * B3(4,j) &
+               + A(i,5) * B3(5,j) &
+               + A(i,6) * B3(6,j) &
+               + A(i,7) * B3(7,j)
     enddo
   enddo
 
-  end subroutine mxm7_single_two_arrays_at_a_time
+  end subroutine mxm7_single_3arrays_A
 
   !-------------
 
-  subroutine mxm8_single_two_arrays_at_a_time(A,n1,B,C,n3,B2,C2)
+  subroutine mxm8_single_3arrays_A(A,n1,B,C,n3,B2,C2,B3,C3)
 
 ! two-dimensional arrays (64,8)/(8,64)
 
@@ -1001,8 +1031,8 @@
 
   integer,intent(in) :: n1,n3
   real(kind=CUSTOM_REAL),dimension(n1,8),intent(in) :: A
-  real(kind=CUSTOM_REAL),dimension(8,n3),intent(in) :: B,B2
-  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C,C2
+  real(kind=CUSTOM_REAL),dimension(8,n3),intent(in) :: B,B2,B3
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C,C2,C3
 
   ! local parameters
   integer :: i,j
@@ -1027,15 +1057,213 @@
                + A(i,6) * B2(6,j) &
                + A(i,7) * B2(7,j) &
                + A(i,8) * B2(8,j)
+
+      C3(i,j) =  A(i,1) * B3(1,j) &
+               + A(i,2) * B3(2,j) &
+               + A(i,3) * B3(3,j) &
+               + A(i,4) * B3(4,j) &
+               + A(i,5) * B3(5,j) &
+               + A(i,6) * B3(6,j) &
+               + A(i,7) * B3(7,j) &
+               + A(i,8) * B3(8,j)
     enddo
   enddo
 
-  end subroutine mxm8_single_two_arrays_at_a_time
-
+  end subroutine mxm8_single_3arrays_A
 
 !--------------------------------------------------------------------------------------------
 
-  subroutine mxm5_3dmat_single_two_arrays_at_a_time(A,n1,B,n2,C,n3,A2,C2)
+  subroutine mxm5_single_3arrays_B(A,n1,B,C,n3,A2,C2,A3,C3)
+
+! two-dimensional arrays (25,5)/(5,25)
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5),intent(in) :: A,A2,A3
+  real(kind=CUSTOM_REAL),dimension(5,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C(i,j) =  A(i,1) * B(1,j) &
+              + A(i,2) * B(2,j) &
+              + A(i,3) * B(3,j) &
+              + A(i,4) * B(4,j) &
+              + A(i,5) * B(5,j)
+
+      C2(i,j) =  A2(i,1) * B(1,j) &
+               + A2(i,2) * B(2,j) &
+               + A2(i,3) * B(3,j) &
+               + A2(i,4) * B(4,j) &
+               + A2(i,5) * B(5,j)
+
+      C3(i,j) =  A3(i,1) * B(1,j) &
+               + A3(i,2) * B(2,j) &
+               + A3(i,3) * B(3,j) &
+               + A3(i,4) * B(4,j) &
+               + A3(i,5) * B(5,j)
+    enddo
+  enddo
+
+  end subroutine mxm5_single_3arrays_B
+
+  !-------------
+
+  subroutine mxm6_single_3arrays_B(A,n1,B,C,n3,A2,C2,A3,C3)
+
+! two-dimensional arrays (36,6)/(6,36)
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,6),intent(in) :: A,A2,A3
+  real(kind=CUSTOM_REAL),dimension(6,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C(i,j) =  A(i,1) * B(1,j) &
+              + A(i,2) * B(2,j) &
+              + A(i,3) * B(3,j) &
+              + A(i,4) * B(4,j) &
+              + A(i,5) * B(5,j) &
+              + A(i,6) * B(6,j)
+
+      C2(i,j) =  A2(i,1) * B(1,j) &
+               + A2(i,2) * B(2,j) &
+               + A2(i,3) * B(3,j) &
+               + A2(i,4) * B(4,j) &
+               + A2(i,5) * B(5,j) &
+               + A2(i,6) * B(6,j)
+
+      C3(i,j) =  A3(i,1) * B(1,j) &
+               + A3(i,2) * B(2,j) &
+               + A3(i,3) * B(3,j) &
+               + A3(i,4) * B(4,j) &
+               + A3(i,5) * B(5,j) &
+               + A3(i,6) * B(6,j)
+    enddo
+  enddo
+
+  end subroutine mxm6_single_3arrays_B
+
+  !-------------
+
+  subroutine mxm7_single_3arrays_B(A,n1,B,C,n3,A2,C2,A3,C3)
+
+! two-dimensional arrays (49,7)/(7,49)
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,7),intent(in) :: A,A2,A3
+  real(kind=CUSTOM_REAL),dimension(7,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C(i,j) =  A(i,1) * B(1,j) &
+              + A(i,2) * B(2,j) &
+              + A(i,3) * B(3,j) &
+              + A(i,4) * B(4,j) &
+              + A(i,5) * B(5,j) &
+              + A(i,6) * B(6,j) &
+              + A(i,7) * B(7,j)
+
+      C2(i,j) =  A2(i,1) * B(1,j) &
+               + A2(i,2) * B(2,j) &
+               + A2(i,3) * B(3,j) &
+               + A2(i,4) * B(4,j) &
+               + A2(i,5) * B(5,j) &
+               + A2(i,6) * B(6,j) &
+               + A2(i,7) * B(7,j)
+
+      C3(i,j) =  A3(i,1) * B(1,j) &
+               + A3(i,2) * B(2,j) &
+               + A3(i,3) * B(3,j) &
+               + A3(i,4) * B(4,j) &
+               + A3(i,5) * B(5,j) &
+               + A3(i,6) * B(6,j) &
+               + A3(i,7) * B(7,j)
+    enddo
+  enddo
+
+  end subroutine mxm7_single_3arrays_B
+
+  !-------------
+
+  subroutine mxm8_single_3arrays_B(A,n1,B,C,n3,A2,C2,A3,C3)
+
+! two-dimensional arrays (64,8)/(8,64)
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,8),intent(in) :: A,A2,A3
+  real(kind=CUSTOM_REAL),dimension(8,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C(i,j) =  A(i,1) * B(1,j) &
+              + A(i,2) * B(2,j) &
+              + A(i,3) * B(3,j) &
+              + A(i,4) * B(4,j) &
+              + A(i,5) * B(5,j) &
+              + A(i,6) * B(6,j) &
+              + A(i,7) * B(7,j) &
+              + A(i,8) * B(8,j)
+
+      C2(i,j) =  A2(i,1) * B(1,j) &
+               + A2(i,2) * B(2,j) &
+               + A2(i,3) * B(3,j) &
+               + A2(i,4) * B(4,j) &
+               + A2(i,5) * B(5,j) &
+               + A2(i,6) * B(6,j) &
+               + A2(i,7) * B(7,j) &
+               + A2(i,8) * B(8,j)
+
+      C3(i,j) =  A3(i,1) * B(1,j) &
+               + A3(i,2) * B(2,j) &
+               + A3(i,3) * B(3,j) &
+               + A3(i,4) * B(4,j) &
+               + A3(i,5) * B(5,j) &
+               + A3(i,6) * B(6,j) &
+               + A3(i,7) * B(7,j) &
+               + A3(i,8) * B(8,j)
+    enddo
+  enddo
+
+  end subroutine mxm8_single_3arrays_B
+
+!--------------------------------------------------------------------------------------------
+
+  subroutine mxm5_3dmat_single_3arrays(A,n1,B,n2,C,n3,A2,C2,A3,C3)
 
 ! three-dimensional arrays (5,5,5) for A and C
 
@@ -1044,9 +1272,9 @@
   implicit none
 
   integer,intent(in) :: n1,n2,n3
-  real(kind=CUSTOM_REAL),dimension(n1,5,n3),intent(in) :: A,A2
+  real(kind=CUSTOM_REAL),dimension(n1,5,n3),intent(in) :: A,A2,A3
   real(kind=CUSTOM_REAL),dimension(5,n2),intent(in) :: B
-  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C,C2
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C,C2,C3
 
   ! local parameters
   integer :: i,j,k
@@ -1066,15 +1294,21 @@
                    + A2(i,3,k) * B(3,j) &
                    + A2(i,4,k) * B(4,j) &
                    + A2(i,5,k) * B(5,j)
+
+        C3(i,j,k) =  A3(i,1,k) * B(1,j) &
+                   + A3(i,2,k) * B(2,j) &
+                   + A3(i,3,k) * B(3,j) &
+                   + A3(i,4,k) * B(4,j) &
+                   + A3(i,5,k) * B(5,j)
       enddo
     enddo
   enddo
 
-  end subroutine mxm5_3dmat_single_two_arrays_at_a_time
+  end subroutine mxm5_3dmat_single_3arrays
 
   !-------------
 
-  subroutine mxm6_3dmat_single_two_arrays_at_a_time(A,n1,B,n2,C,n3,A2,C2)
+  subroutine mxm6_3dmat_single_3arrays(A,n1,B,n2,C,n3,A2,C2,A3,C3)
 
 ! three-dimensional arrays (6,6,6) for A and C
 
@@ -1083,9 +1317,9 @@
   implicit none
 
   integer,intent(in) :: n1,n2,n3
-  real(kind=CUSTOM_REAL),dimension(n1,6,n3),intent(in) :: A,A2
+  real(kind=CUSTOM_REAL),dimension(n1,6,n3),intent(in) :: A,A2,A3
   real(kind=CUSTOM_REAL),dimension(6,n2),intent(in) :: B
-  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C,C2
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C,C2,C3
 
   ! local parameters
   integer :: i,j,k
@@ -1107,15 +1341,22 @@
                    + A2(i,4,k) * B(4,j) &
                    + A2(i,5,k) * B(5,j) &
                    + A2(i,6,k) * B(6,j)
+
+        C3(i,j,k) =  A3(i,1,k) * B(1,j) &
+                   + A3(i,2,k) * B(2,j) &
+                   + A3(i,3,k) * B(3,j) &
+                   + A3(i,4,k) * B(4,j) &
+                   + A3(i,5,k) * B(5,j) &
+                   + A3(i,6,k) * B(6,j)
       enddo
     enddo
   enddo
 
-  end subroutine mxm6_3dmat_single_two_arrays_at_a_time
+  end subroutine mxm6_3dmat_single_3arrays
 
   !-------------
 
-  subroutine mxm7_3dmat_single_two_arrays_at_a_time(A,n1,B,n2,C,n3,A2,C2)
+  subroutine mxm7_3dmat_single_3arrays(A,n1,B,n2,C,n3,A2,C2,A3,C3)
 
 ! three-dimensional arrays (7,7,7) for A and C
 
@@ -1124,9 +1365,9 @@
   implicit none
 
   integer,intent(in) :: n1,n2,n3
-  real(kind=CUSTOM_REAL),dimension(n1,7,n3),intent(in) :: A,A2
+  real(kind=CUSTOM_REAL),dimension(n1,7,n3),intent(in) :: A,A2,A3
   real(kind=CUSTOM_REAL),dimension(7,n2),intent(in) :: B
-  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C,C2
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C,C2,C3
 
   ! local parameters
   integer :: i,j,k
@@ -1150,15 +1391,23 @@
                    + A2(i,5,k) * B(5,j) &
                    + A2(i,6,k) * B(6,j) &
                    + A2(i,7,k) * B(7,j)
+
+        C3(i,j,k) =  A3(i,1,k) * B(1,j) &
+                   + A3(i,2,k) * B(2,j) &
+                   + A3(i,3,k) * B(3,j) &
+                   + A3(i,4,k) * B(4,j) &
+                   + A3(i,5,k) * B(5,j) &
+                   + A3(i,6,k) * B(6,j) &
+                   + A3(i,7,k) * B(7,j)
       enddo
     enddo
   enddo
 
-  end subroutine mxm7_3dmat_single_two_arrays_at_a_time
+  end subroutine mxm7_3dmat_single_3arrays
 
   !-------------
 
-  subroutine mxm8_3dmat_single_two_arrays_at_a_time(A,n1,B,n2,C,n3,A2,C2)
+  subroutine mxm8_3dmat_single_3arrays(A,n1,B,n2,C,n3,A2,C2,A3,C3)
 
 ! three-dimensional arrays (8,8,8) for A and C
 
@@ -1167,9 +1416,9 @@
   implicit none
 
   integer,intent(in) :: n1,n2,n3
-  real(kind=CUSTOM_REAL),dimension(n1,8,n3),intent(in) :: A,A2
+  real(kind=CUSTOM_REAL),dimension(n1,8,n3),intent(in) :: A,A2,A3
   real(kind=CUSTOM_REAL),dimension(8,n2),intent(in) :: B
-  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C,C2
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C,C2,C3
 
   ! local parameters
   integer :: i,j,k
@@ -1195,11 +1444,22 @@
                    + A2(i,6,k) * B(6,j) &
                    + A2(i,7,k) * B(7,j) &
                    + A2(i,8,k) * B(8,j)
+
+        C3(i,j,k) =  A3(i,1,k) * B(1,j) &
+                   + A3(i,2,k) * B(2,j) &
+                   + A3(i,3,k) * B(3,j) &
+                   + A3(i,4,k) * B(4,j) &
+                   + A3(i,5,k) * B(5,j) &
+                   + A3(i,6,k) * B(6,j) &
+                   + A3(i,7,k) * B(7,j) &
+                   + A3(i,8,k) * B(8,j)
       enddo
     enddo
   enddo
 
-  end subroutine mxm8_3dmat_single_two_arrays_at_a_time
+  end subroutine mxm8_3dmat_single_3arrays
+
+!--------------------------------------------------------------------------------------------
 
   end subroutine compute_forces_acoustic
 
