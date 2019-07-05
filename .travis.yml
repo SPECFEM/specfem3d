@@ -136,8 +136,9 @@ before_install:
   #- test -n $CC && unset CC
 
   # updates repository
-  - sudo apt-get update
-
+  - |
+    sudo apt-get -qq update
+    sleep 5
 
 install:
   - bash .travis/run_install.sh
