@@ -553,14 +553,26 @@
 
   subroutine prepare_timerun_pml()
 
-  use constants, only: IMAIN
-  use specfem_par, only: myrank,SIMULATION_TYPE,GPU_MODE,UNDO_ATTENUATION_AND_OR_PML,PML_CONDITIONS
+  use constants, only: IMAIN,NGLLX,NGLLY,NGLLZ
+
+  use specfem_par, only: myrank,deltat,SIMULATION_TYPE,GPU_MODE, &
+    UNDO_ATTENUATION_AND_OR_PML,PML_CONDITIONS
+
   use pml_par
 
   implicit none
 
   ! local parameters
   integer :: ispec,ispec_CPML,NSPEC_CPML_GLOBAL
+  integer :: i,j,k,ier
+  real(kind=CUSTOM_REAL) :: deltatpow2,deltatpow3,deltatpow4,deltat_half
+  real(kind=CUSTOM_REAL) :: coef0_1,coef1_1,coef2_1, &
+                            coef0_2,coef1_2,coef2_2, &
+                            coef0_3,coef1_3,coef2_3
+  real(kind=CUSTOM_REAL) :: kappa_x,d_x,alpha_x, &
+                            kappa_y,d_y,alpha_y, &
+                            kappa_z,d_z,alpha_z
+  real(kind=CUSTOM_REAL) :: beta_x,beta_y,beta_z
 
   ! checks if anything to do
   if (.not. PML_CONDITIONS) return
@@ -608,7 +620,7 @@
   enddo
 
   ! defines C-PML element type array: 1 = face, 2 = edge, 3 = corner
-  do ispec_CPML=1,NSPEC_CPML
+  do ispec_CPML = 1,NSPEC_CPML
 
     ! X_surface C-PML
     if (CPML_regions(ispec_CPML) == 1) then
@@ -641,8 +653,173 @@
 
   enddo
 
+  ! useful constants
+  deltatpow2 = deltat**2
+  deltatpow3 = deltat**3
+  deltatpow4 = deltat**4
+  deltat_half = deltat * 0.5_CUSTOM_REAL
+
+  ! arrays for coefficients
+  allocate(convolution_coef_acoustic_alpha(9,NGLLX,NGLLY,NGLLZ,NSPEC_CPML), &
+           convolution_coef_acoustic_beta(9,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+  if (ier /= 0) call exit_MPI(myrank,'Error allocating coef_acoustic array')
+
+  ! initializes
+  convolution_coef_acoustic_alpha(:,:,:,:,:) = 0._CUSTOM_REAL
+  convolution_coef_acoustic_beta(:,:,:,:,:) = 0._CUSTOM_REAL
+
+  ! pre-computes convolution coefficients
+  do ispec_CPML = 1,NSPEC_CPML
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
+          kappa_x = k_store_x(i,j,k,ispec_CPML)
+          kappa_y = k_store_y(i,j,k,ispec_CPML)
+          kappa_z = k_store_z(i,j,k,ispec_CPML)
+          d_x = d_store_x(i,j,k,ispec_CPML)
+          d_y = d_store_y(i,j,k,ispec_CPML)
+          d_z = d_store_z(i,j,k,ispec_CPML)
+          alpha_x = alpha_store_x(i,j,k,ispec_CPML)
+          alpha_y = alpha_store_y(i,j,k,ispec_CPML)
+          alpha_z = alpha_store_z(i,j,k,ispec_CPML)
+
+          ! alpha coefficients
+          call compute_convolution_coef(alpha_x, coef0_1, coef1_1, coef2_1)
+          call compute_convolution_coef(alpha_y, coef0_2, coef1_2, coef2_2)
+          call compute_convolution_coef(alpha_z, coef0_3, coef1_3, coef2_3)
+
+          convolution_coef_acoustic_alpha(1,i,j,k,ispec_CPML) = coef0_1
+          convolution_coef_acoustic_alpha(2,i,j,k,ispec_CPML) = coef1_1
+          convolution_coef_acoustic_alpha(3,i,j,k,ispec_CPML) = coef2_1
+
+          convolution_coef_acoustic_alpha(4,i,j,k,ispec_CPML) = coef0_2
+          convolution_coef_acoustic_alpha(5,i,j,k,ispec_CPML) = coef1_2
+          convolution_coef_acoustic_alpha(6,i,j,k,ispec_CPML) = coef2_2
+
+          convolution_coef_acoustic_alpha(7,i,j,k,ispec_CPML) = coef0_3
+          convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML) = coef1_3
+          convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML) = coef2_3
+
+          ! beta coefficients
+          beta_x = alpha_x + d_x / kappa_x
+          beta_y = alpha_y + d_y / kappa_y
+          beta_z = alpha_z + d_z / kappa_z
+
+          call compute_convolution_coef(beta_x, coef0_1, coef1_1, coef2_1)
+          call compute_convolution_coef(beta_y, coef0_2, coef1_2, coef2_2)
+          call compute_convolution_coef(beta_z, coef0_3, coef1_3, coef2_3)
+
+          convolution_coef_acoustic_beta(1,i,j,k,ispec_CPML) = coef0_1
+          convolution_coef_acoustic_beta(2,i,j,k,ispec_CPML) = coef1_1
+          convolution_coef_acoustic_beta(3,i,j,k,ispec_CPML) = coef2_1
+
+          convolution_coef_acoustic_beta(4,i,j,k,ispec_CPML) = coef0_2
+          convolution_coef_acoustic_beta(5,i,j,k,ispec_CPML) = coef1_2
+          convolution_coef_acoustic_beta(6,i,j,k,ispec_CPML) = coef2_2
+
+          convolution_coef_acoustic_beta(7,i,j,k,ispec_CPML) = coef0_3
+          convolution_coef_acoustic_beta(8,i,j,k,ispec_CPML) = coef1_3
+          convolution_coef_acoustic_beta(9,i,j,k,ispec_CPML) = coef2_3
+        enddo
+      enddo
+    enddo
+  enddo
+
   ! synchonizes
   call synchronize_all()
+
+  contains
+
+    subroutine compute_convolution_coef(bb,coef0,coef1,coef2)
+
+    use constants, only: CUSTOM_REAL
+    use specfem_par, only: deltat
+    use pml_par, only: min_distance_between_CPML_parameter
+
+    implicit none
+
+    real(kind=CUSTOM_REAL),intent(in) :: bb
+    real(kind=CUSTOM_REAL),intent(out) :: coef0, coef1, coef2
+
+    ! local parameters
+    logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
+
+    real(kind=CUSTOM_REAL) :: bbpow2,bbpow3,c0,c1
+    real(kind=CUSTOM_REAL) :: prod1,prod1_half
+
+    ! permanent factors (avoids divisions which are computationally expensive)
+    ! note: compilers precompute these constant factors (thus division in these statemenets are still fine)
+    real(kind=CUSTOM_REAL),parameter :: ONE_OVER_8 = 0.125_CUSTOM_REAL
+    real(kind=CUSTOM_REAL),parameter :: ONE_OVER_48 = 1._CUSTOM_REAL / 48._CUSTOM_REAL
+    real(kind=CUSTOM_REAL),parameter :: ONE_OVER_128 = 0.0078125_CUSTOM_REAL
+    real(kind=CUSTOM_REAL),parameter :: ONE_OVER_384 = 1._CUSTOM_REAL / 384._CUSTOM_REAL
+    real(kind=CUSTOM_REAL),parameter :: FACTOR_A = 3._CUSTOM_REAL / 8._CUSTOM_REAL
+    real(kind=CUSTOM_REAL),parameter :: FACTOR_B = 7._CUSTOM_REAL / 48._CUSTOM_REAL
+    real(kind=CUSTOM_REAL),parameter :: FACTOR_C = 5._CUSTOM_REAL / 128._CUSTOM_REAL
+    ! unused
+    !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_12 = 1._CUSTOM_REAL / 12._CUSTOM_REAL
+    !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_24 = 1._CUSTOM_REAL / 24._CUSTOM_REAL
+    !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_960 = 1._CUSTOM_REAL / 960._CUSTOM_REAL
+    !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_1920 = 1._CUSTOM_REAL / 1920._CUSTOM_REAL
+    !real(kind=CUSTOM_REAL),parameter :: SEVEN_OVER_3840 = 7._CUSTOM_REAL / 3840._CUSTOM_REAL
+    !real(kind=CUSTOM_REAL),parameter :: FIVE_OVER_11520 = 5._CUSTOM_REAL/11520._CUSTOM_REAL
+
+    ! helper variables
+    ! (writing out powers can help for speed, that is bb * bb is usually faster than bb**2)
+    bbpow2 = bb * bb
+    bbpow3 = bbpow2 * bb
+
+    prod1 = bb * deltat
+    prod1_half = prod1 * 0.5_CUSTOM_REAL
+
+    ! calculates coefficients
+    !
+    ! note: exponentials are expensive functions
+    c0 = exp(-prod1)
+    !
+    ! cheap exponential (up to 5 terms exp(x) = 1 + x *( 1 + x/2 * (1 + x/3 * (1 + x/4 * (1 + x/5 * ..))))
+    !x0 = -prod1
+    !c0 = 1.0 + x0 * (1.0 + 0.5 * x0 * (1.0  + 0.333333333333_CUSTOM_REAL * x0 * (1.0 + 0.25 * x0 * (1.0 + 0.2 * x0))))
+
+    !  real function my_exp(n, x) result(f)
+    !  integer, intent(in) :: n, x
+    !  f = 1.0
+    !  do i = n-1,1,-1
+    !      f = 1.0 + x * f / i
+    !  end do
+    !  end function
+
+    ! determines coefficients
+    coef0 = c0
+
+    if (abs(bb) >= min_distance_between_CPML_parameter) then
+      if (FIRST_ORDER_CONVOLUTION) then
+        coef1 = (1._CUSTOM_REAL - c0 ) / bb
+        coef2 = 0._CUSTOM_REAL
+      else
+        ! calculates coefficients
+        c1 = exp(-prod1_half)
+        !
+        ! cheap exponential (up to 5 terms exp(x) = 1 + x *( 1 + x/2 * (1 + x/3 * (1 + x/4 * (1 + x/5 * ..))))
+        !x1 = -prod1_half
+        !c1 = 1.0 + x1 * (1.0 + 0.5 * x1 * (1.0  + 0.333333333333_CUSTOM_REAL * x1 * (1.0 + 0.25 * x1 * (1.0 + 0.2 * x1))))
+
+        coef1 = (1._CUSTOM_REAL - c1 ) / bb
+        coef2 = (1._CUSTOM_REAL - c1 ) * c1 / bb
+      endif
+    else
+      if (FIRST_ORDER_CONVOLUTION) then
+        coef1 = deltat
+        coef2 = 0._CUSTOM_REAL
+      else
+        coef1 = deltat_half + &
+                (- ONE_OVER_8 * deltatpow2 * bb + ONE_OVER_48 * deltatpow3 * bbpow2 - ONE_OVER_384 * deltatpow4 * bbpow3)
+        coef2 = deltat_half + &
+                (- FACTOR_A * deltatpow2 * bb + FACTOR_B * deltatpow3 * bbpow2 - FACTOR_C * deltatpow4 * bbpow3)
+      endif
+    endif
+
+    end subroutine compute_convolution_coef
 
   end subroutine prepare_timerun_pml
 

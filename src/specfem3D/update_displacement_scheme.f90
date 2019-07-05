@@ -107,7 +107,7 @@
     ! wavefields on CPU
     ! updates (forward) acoustic potentials
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-       do ispec_cpml=1,NSPEC_CPML
+       do ispec_cpml = 1,NSPEC_CPML
           ispec = CPML_to_spec(ispec_cpml)
           do i = 1, NGLLX
              do j = 1, NGLLY
@@ -121,6 +121,7 @@
           enddo
        enddo
     endif
+
     potential_acoustic(:) = potential_acoustic(:) + &
                             deltat * potential_dot_acoustic(:) + &
                             deltatsqover2 * potential_dot_dot_acoustic(:)
@@ -152,6 +153,7 @@
                                                nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
         endif
       endif
+
       b_potential_acoustic(:) = b_potential_acoustic(:) + &
                                 b_deltat * b_potential_dot_acoustic(:) + &
                                 b_deltatsqover2 * b_potential_dot_dot_acoustic(:)
@@ -241,7 +243,7 @@
     endif
 
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      do ispec_cpml=1,NSPEC_CPML
+      do ispec_cpml = 1,NSPEC_CPML
         ispec = CPML_to_spec(ispec_cpml)
         do k = 1, NGLLZ
           do j = 1, NGLLY
@@ -264,6 +266,7 @@
                                            b_PML_field,b_reclen_PML_field)
         endif
       endif
+
       b_displ(:,:) = b_displ(:,:) + b_deltat * b_veloc(:,:) + b_deltatsqover2 * b_accel(:,:)
       b_veloc(:,:) = b_veloc(:,:) + b_deltatover2 * b_accel(:,:)
       b_accel(:,:) = 0._CUSTOM_REAL

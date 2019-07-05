@@ -29,7 +29,7 @@
   subroutine pml_allocate_arrays()
 
   use pml_par
-  use specfem_par, only: NSPEC_AB,PML_CONDITIONS,SIMULATION_TYPE,SAVE_FORWARD,NSTEP,myrank,prname !
+  use specfem_par, only: NSPEC_AB,PML_CONDITIONS,SIMULATION_TYPE,SAVE_FORWARD,NSTEP,myrank,prname
   use constants, only: NDIM,NGLLX,NGLLY,NGLLZ
   use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,num_coupling_ac_el_faces
   use specfem_par_elastic, only: ELASTIC_SIMULATION
