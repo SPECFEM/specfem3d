@@ -485,7 +485,9 @@
   use specfem_par_movie
   implicit none
 
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: veloc_element,pressure_loc
+  ! local parameters
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: pressure_loc
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: veloc_element
   ! divergence and curl only in the global nodes
   real(kind=CUSTOM_REAL),dimension(:),allocatable:: div_glob
   integer,dimension(:),allocatable :: valence
@@ -513,96 +515,75 @@
   velocity_z(:,:,:,:) = 0._CUSTOM_REAL
 
   if (ACOUSTIC_SIMULATION) then
-
-    ! allocate array for single elements
-    allocate(veloc_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2002')
-    if (ier /= 0) stop 'error allocating arrays for movie elements'
-
-    ! uses div as temporary array to store velocity on all GLL points
-    do ispec=1,NSPEC_AB
+    ! uses velocity_x,.. as temporary arrays to store velocity on all GLL points
+    do ispec = 1,NSPEC_AB
+      ! only acoustic elements
       if (.not. ispec_is_acoustic(ispec)) cycle
       ! calculates velocity
       call compute_gradient_in_acoustic(ispec,potential_dot_acoustic,veloc_element)
       velocity_x(:,:,:,ispec) = veloc_element(1,:,:,:)
       velocity_y(:,:,:,ispec) = veloc_element(2,:,:,:)
       velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)
-   enddo
+    enddo
 
-   if (.not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then
-     allocate(pressure_loc(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2003')
+    ! outputs pressure field for purely acoustic simulations
+    if (.not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then
+      allocate(pressure_loc(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2003')
+      pressure_loc(:,:,:,:) = 0._CUSTOM_REAL
+      do ispec = 1,NSPEC_AB
+        DO_LOOP_IJK
+          iglob = ibool(INDEX_IJK,ispec)
+          pressure_loc(INDEX_IJK,ispec) = - potential_dot_dot_acoustic(iglob)
+        ENDDO_LOOP_IJK
+      enddo
 
-     do ispec=1,NSPEC_AB
-
-       DO_LOOP_IJK
-        iglob = ibool(INDEX_IJK,ispec)
-        pressure_loc(INDEX_IJK,ispec) = - potential_dot_dot_acoustic(iglob)
-       ENDDO_LOOP_IJK
-
-     enddo
-
-     write(outputname,"('/proc',i6.6,'_pressure_it',i6.6,'.bin')")myrank,it
-     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-     if (ier /= 0) stop 'error opening file movie output pressure'
-     write(27) pressure_loc
-     close(27)
-     deallocate(pressure_loc)
-   endif
-
-   deallocate(veloc_element)
-
+      write(outputname,"('/proc',i6.6,'_pressure_it',i6.6,'.bin')")myrank,it
+      open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file movie output pressure'
+      write(27) pressure_loc
+      close(27)
+      deallocate(pressure_loc)
+    endif
   endif ! acoustic
 
-  ! saves full snapshot data to local disk
-  if (ELASTIC_SIMULATION) then
-
-    ! allocate array for single elements
+  if (ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
+    ! allocate array for global points
     allocate(div_glob(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2004')
     allocate(valence(NGLOB_AB), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2005')
     if (ier /= 0) stop 'error allocating arrays for movie div and curl'
 
-    ! calculates divergence and curl of velocity field
-    call wmo_movie_div_curl(veloc, &
-                            div_glob,valence, &
-                            div,curl_x,curl_y,curl_z, &
-                            velocity_x,velocity_y,velocity_z, &
-                            ispec_is_elastic)
+    ! saves full snapshot data to local disk
+    if (ELASTIC_SIMULATION) then
+      ! calculates divergence and curl of velocity field
+      call wmo_movie_div_curl(veloc, &
+                              div_glob,valence, &
+                              div,curl_x,curl_y,curl_z, &
+                              velocity_x,velocity_y,velocity_z, &
+                              ispec_is_elastic)
 
-    ! writes out div and curl on global points
-    write(outputname,"('/proc',i6.6,'_div_glob_it',i6.6,'.bin')") myrank,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file div_glob'
-    write(27) div_glob
-    close(27)
+      ! writes out div and curl on global points
+      write(outputname,"('/proc',i6.6,'_div_glob_it',i6.6,'.bin')") myrank,it
+      open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file div_glob'
+      write(27) div_glob
+      close(27)
+    endif ! elastic
 
+    ! saves full snapshot data to local disk
+    if (POROELASTIC_SIMULATION) then
+      ! calculates divergence and curl of velocity field
+      call wmo_movie_div_curl(velocs_poroelastic, &
+                              div_glob,valence, &
+                              div,curl_x,curl_y,curl_z, &
+                              velocity_x,velocity_y,velocity_z, &
+                              ispec_is_poroelastic)
+    endif ! poroelastic
     deallocate(div_glob,valence)
 
-  endif ! elastic
-
-  ! saves full snapshot data to local disk
-  if (POROELASTIC_SIMULATION) then
-    ! allocate array for single elements
-    allocate(div_glob(NGLOB_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2006')
-    allocate(valence(NGLOB_AB), stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2007')
-    if (ier /= 0) stop 'error allocating arrays for movie div and curl'
-
-    ! calculates divergence and curl of velocity field
-    call wmo_movie_div_curl(velocs_poroelastic, &
-                            div_glob,valence, &
-                            div,curl_x,curl_y,curl_z, &
-                            velocity_x,velocity_y,velocity_z, &
-                            ispec_is_poroelastic)
-
-    deallocate(div_glob,valence)
-  endif ! poroelastic
-
-  if (ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
-
+    ! div and curl on elemental level
     ! writes our divergence
     write(outputname,"('/proc',i6.6,'_div_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
@@ -628,9 +609,9 @@
     if (ier /= 0) stop 'error opening file curl_z_it'
     write(27) curl_z
     close(27)
-
   endif
 
+  ! velocity
   if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
     write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
@@ -649,7 +630,6 @@
     if (ier /= 0) stop 'error opening file movie output velocity z'
     write(27) velocity_z
     close(27)
-
   endif
 
   end subroutine wmo_movie_volume_output
@@ -677,14 +657,15 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_AB),intent(in) :: veloc
 
   ! divergence and curl only in the global nodes
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: div_glob
-  integer,dimension(NGLOB_AB) :: valence
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB),intent(out) :: div_glob
+  integer,dimension(NGLOB_AB),intent(out) :: valence
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: div, curl_x, curl_y, curl_z
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: velocity_x,velocity_y,velocity_z
-  logical,dimension(NSPEC_AB) :: ispec_is
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(out) :: div, curl_x, curl_y, curl_z
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(inout) :: velocity_x,velocity_y,velocity_z
+  logical,dimension(NSPEC_AB),intent(in) :: ispec_is
 
   ! local parameters
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: veloc_element
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl, &
                                 dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
@@ -700,8 +681,22 @@
 
   ! loops over elements
   do ispec = 1,NSPEC_AB
+    ! only selected elements
     if (.not. ispec_is(ispec)) cycle
+
     ispec_irreg = irregular_element_number(ispec)
+
+    ! loads veloc to local element
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
+          iglob = ibool(i,j,k,ispec)
+          veloc_element(1,i,j,k) = veloc(1,iglob)
+          veloc_element(2,i,j,k) = veloc(2,iglob)
+          veloc_element(3,i,j,k) = veloc(3,iglob)
+        enddo
+      enddo
+    enddo
 
     ! calculates divergence and curl of velocity field
     do k = 1,NGLLZ
@@ -710,9 +705,11 @@
           tempx1l = 0._CUSTOM_REAL
           tempx2l = 0._CUSTOM_REAL
           tempx3l = 0._CUSTOM_REAL
+
           tempy1l = 0._CUSTOM_REAL
           tempy2l = 0._CUSTOM_REAL
           tempy3l = 0._CUSTOM_REAL
+
           tempz1l = 0._CUSTOM_REAL
           tempz2l = 0._CUSTOM_REAL
           tempz3l = 0._CUSTOM_REAL
@@ -745,20 +742,19 @@
 
           do l = 1,NGLLX
             hp1 = hprime_xx(i,l)
-            iglob = ibool(l,j,k,ispec)
-            tempx1l = tempx1l + veloc(1,iglob)*hp1
-            tempy1l = tempy1l + veloc(2,iglob)*hp1
-            tempz1l = tempz1l + veloc(3,iglob)*hp1
+            tempx1l = tempx1l + veloc_element(1,l,j,k)*hp1
+            tempy1l = tempy1l + veloc_element(2,l,j,k)*hp1
+            tempz1l = tempz1l + veloc_element(3,l,j,k)*hp1
+
             hp2 = hprime_yy(j,l)
-            iglob = ibool(i,l,k,ispec)
-            tempx2l = tempx2l + veloc(1,iglob)*hp2
-            tempy2l = tempy2l + veloc(2,iglob)*hp2
-            tempz2l = tempz2l + veloc(3,iglob)*hp2
+            tempx2l = tempx2l + veloc_element(1,i,l,k)*hp2
+            tempy2l = tempy2l + veloc_element(2,i,l,k)*hp2
+            tempz2l = tempz2l + veloc_element(3,i,l,k)*hp2
+
             hp3 = hprime_zz(k,l)
-            iglob = ibool(i,j,l,ispec)
-            tempx3l = tempx3l + veloc(1,iglob)*hp3
-            tempy3l = tempy3l + veloc(2,iglob)*hp3
-            tempz3l = tempz3l + veloc(3,iglob)*hp3
+            tempx3l = tempx3l + veloc_element(1,i,j,l)*hp3
+            tempy3l = tempy3l + veloc_element(2,i,j,l)*hp3
+            tempz3l = tempz3l + veloc_element(3,i,j,l)*hp3
           enddo
 
           if (ispec_irreg /= 0) then ! irregular element
@@ -819,14 +815,12 @@
 
           ! velocity field
           iglob = ibool(i,j,k,ispec)
-          velocity_x(i,j,k,ispec) = veloc(1,iglob)
-          velocity_y(i,j,k,ispec) = veloc(2,iglob)
-          velocity_z(i,j,k,ispec) = veloc(3,iglob)
+          velocity_x(i,j,k,ispec) = veloc_element(1,i,j,k)
+          velocity_y(i,j,k,ispec) = veloc_element(2,i,j,k)
+          velocity_z(i,j,k,ispec) = veloc_element(3,i,j,k)
 
-          valence(iglob)=valence(iglob)+1
-
+          valence(iglob) = valence(iglob)+1
           div_glob(iglob) = div_glob(iglob) + div(i,j,k,ispec)
-
         enddo
       enddo
     enddo
@@ -839,7 +833,6 @@
       ! averages by number of contributions
       div_glob(i) = div_glob(i)/valence(i)
     endif
-
   enddo
 
   end subroutine wmo_movie_div_curl
