@@ -739,9 +739,24 @@
   integer :: nx
   double precision, dimension(nx) :: sendbuf, recvbuf
 
-  recvbuf = sendbuf
+  recvbuf(:) = sendbuf(:)
 
   end subroutine sum_all_1Darray_dp
+
+!
+!----
+!
+
+  subroutine any_all_1Darray_l(sendbuf, recvbuf, nx)
+
+  implicit none
+
+  integer :: nx
+  logical, dimension(nx) :: sendbuf, recvbuf
+
+  recvbuf(:) = sendbuf(:)
+
+  end subroutine any_all_1Darray_l
 
 !
 !----

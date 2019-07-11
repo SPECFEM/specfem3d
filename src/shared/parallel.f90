@@ -951,6 +951,25 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+
+  subroutine any_all_1Darray_l(sendbuf, recvbuf, nx)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: nx
+  logical, dimension(nx) :: sendbuf, recvbuf
+  integer :: ier
+
+  call MPI_REDUCE(sendbuf,recvbuf,nx,MPI_LOGICAL,MPI_LOR,0,my_local_mpi_comm_world,ier)
+
+  end subroutine any_all_1Darray_l
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 !  subroutine sum_all_3Darray_dp(sendbuf, recvbuf, nx,ny,nz)
 !  end subroutine sum_all_3Darray_dp
 
