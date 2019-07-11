@@ -38,10 +38,13 @@
 
   use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
       UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,USE_SOURCES_RECEIVERS_Z, &
-      NSTEP_STF,NSOURCES_STF,USE_EXTERNAL_SOURCE_FILE,USE_TRICK_FOR_BETTER_PRESSURE,COUPLE_WITH_INJECTION_TECHNIQUE, &
+      NSTEP_STF,NSOURCES_STF,USE_EXTERNAL_SOURCE_FILE, &
+      USE_TRICK_FOR_BETTER_PRESSURE,COUPLE_WITH_INJECTION_TECHNIQUE, &
       myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,DT, &
       NSOURCES
 
+  ! PML
+  use pml_par, only: is_CPML
 
   implicit none
 
@@ -69,14 +72,14 @@
   integer :: isource
   double precision :: f0,t0_ricker
   ! CMTs
-  double precision, dimension(NSOURCES) :: lat,long,depth
-  double precision, dimension(6,NSOURCES) ::  moment_tensor
+  double precision, dimension(:), allocatable :: lat,long,depth
+  double precision, dimension(:,:), allocatable ::  moment_tensor
   ! positioning
-  double precision, dimension(NSOURCES) :: x_found,y_found,z_found
-  double precision, dimension(NSOURCES) :: elevation
-  double precision, dimension(NSOURCES) :: final_distance
-  double precision, dimension(NSOURCES) :: x_target,y_target,z_target
-  integer, dimension(NSOURCES) :: idomain
+  double precision, dimension(:), allocatable :: x_found,y_found,z_found
+  double precision, dimension(:), allocatable :: elevation
+  double precision, dimension(:), allocatable :: final_distance
+  double precision, dimension(:), allocatable :: x_target,y_target,z_target
+  integer, dimension(:), allocatable :: idomain
 
   double precision, external :: get_cmt_scalar_moment
   double precision, external :: get_cmt_moment_magnitude
@@ -101,6 +104,11 @@
   double precision, dimension(NSOURCES_SUBSET_MAX) :: final_distance_subset
   double precision, dimension(NDIM,NDIM,NSOURCES_SUBSET_MAX) :: nu_subset
 
+  logical,dimension(:),allocatable :: is_CPML_source,is_CPML_source_all
+
+  integer :: ispec,ier
+  logical :: is_done_sources
+
   ! timer MPI
   double precision :: tstart,tCPU
   double precision, external :: wtime
@@ -118,6 +126,22 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
+
+  ! allocates temporary arrays
+  allocate(moment_tensor(6,NSOURCES), &
+           lat(NSOURCES), &
+           long(NSOURCES), &
+           depth(NSOURCES), &
+           x_found(NSOURCES), &
+           y_found(NSOURCES), &
+           z_found(NSOURCES), &
+           elevation(NSOURCES), &
+           final_distance(NSOURCES), &
+           x_target(NSOURCES), &
+           y_target(NSOURCES), &
+           z_target(NSOURCES), &
+           idomain(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI(myrank,'Error allocating source arrays')
 
   ! clear the arrays
   Mxx(:) = 0.d0
@@ -294,6 +318,31 @@
   call bcast_all_dp(nu_source,NDIM*NDIM*NSOURCES)
   call bcast_all_dp(final_distance,NSOURCES)
 
+  ! warning if source in C-PML region
+  allocate(is_CPML_source(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI(myrank,'Error allocating is_CPML_source array')
+  if (myrank == 0) then
+    ! only master collects
+    allocate(is_CPML_source_all(NSOURCES),stat=ier)
+  else
+    ! dummy
+    allocate(is_CPML_source_all(1),stat=ier)
+  endif
+  ! sets flag if source element in PML
+  is_CPML_source(:) = .false.
+  do isource = 1,NSOURCES
+    if (islice_selected_source(isource) == myrank) then
+      ispec = ispec_selected_source(isource)
+      if (is_CPML(ispec)) then
+        is_CPML_source(isource) = .true.
+        ! debug
+        !print *,'Warning: rank ',myrank,' has source ', isource,' in C-PML region'
+      endif
+    endif
+  enddo
+  call any_all_1Darray_l(is_CPML_source,is_CPML_source_all,NSOURCES)
+
+
   ! sets new utm coordinates for best locations
   utm_x_source(:) = x_found(:)
   utm_y_source(:) = y_found(:)
@@ -307,6 +356,8 @@
     close(IOUT_SU)
   endif
 
+  is_done_sources = .false.
+
   ! user output
   if (myrank == 0) then
 
@@ -318,9 +369,13 @@
       write(IMAIN,*) '  because the source is precisely the wavefield coming from the injection boundary'
       write(IMAIN,*)
       ! nothing to display anymore
-      return
+      is_done_sources = .true.
     endif
+  endif
 
+  ! user output with source details
+  if (myrank == 0 .and. (.not. is_done_sources)) then
+    ! loops over all sources
     do isource = 1,NSOURCES
 
       if (SHOW_DETAILS_LOCATE_SOURCE .or. NSOURCES < 10) then
@@ -498,7 +553,13 @@
           write(IMAIN,*) '*****************************************************'
           write(IMAIN,*) '*****************************************************'
         endif
-
+        ! add warning if located in PML
+        if (is_CPML_source_all(isource)) then
+          write(IMAIN,*) '*******************************************************'
+          write(IMAIN,*) '***** WARNING: source located in C-PML region *********'
+          write(IMAIN,*) '*******************************************************'
+          write(IMAIN,*)
+        endif
         write(IMAIN,*)
       endif  ! end of detailed output to locate source
 
@@ -554,6 +615,12 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
+
+  ! frees temporary arrays
+  deallocate(moment_tensor,lat,long,depth)
+  deallocate(x_found,y_found,z_found,elevation,final_distance)
+  deallocate(x_target,y_target,z_target,idomain)
+  deallocate(is_CPML_source,is_CPML_source_all)
 
   end subroutine locate_source
 

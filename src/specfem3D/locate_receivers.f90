@@ -99,6 +99,8 @@
 
   logical :: is_done_stations
 
+  logical,dimension(:),allocatable :: is_CPML_rec,is_CPML_rec_all
+
   ! get MPI starting time
   tstart = wtime()
 
@@ -285,6 +287,31 @@
   call bcast_all_dp(nu,NDIM*NDIM*nrec)
   call bcast_all_dp(final_distance,nrec)
 
+  ! warning if receiver in C-PML region
+  allocate(is_CPML_rec(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI(myrank,'Error allocating is_CPML_rec array')
+  if (myrank == 0) then
+    ! only master collects
+    allocate(is_CPML_rec_all(nrec),stat=ier)
+  else
+    ! dummy
+    allocate(is_CPML_rec_all(1),stat=ier)
+  endif
+  ! sets flag if receiver element in PML
+  is_CPML_rec(:) = .false.
+  do irec = 1,nrec
+    if (islice_selected_rec(irec) == myrank) then
+      ispec = ispec_selected_rec(irec)
+      if (is_CPML(ispec)) then
+        is_CPML_rec(irec) = .true.
+        ! debug
+        !print *,'Warning: rank ',myrank,' has receiver ', &
+        !         irec,trim(network_name(irec))//'.'//trim(station_name(irec)),' in C-PML region'
+      endif
+    endif
+  enddo
+  call any_all_1Darray_l(is_CPML_rec,is_CPML_rec_all,nrec)
+
   ! this is executed by main process only
   if (myrank == 0) then
 
@@ -372,9 +399,15 @@
           write(IMAIN,*) '***** WARNING: receiver location estimate is poor *****'
           write(IMAIN,*) '*******************************************************'
         endif
+        ! add warning if located in PML
+        if (is_CPML_rec_all(irec)) then
+          write(IMAIN,*) '*******************************************************'
+          write(IMAIN,*) '***** WARNING: receiver located in C-PML region *******'
+          write(IMAIN,*) '*******************************************************'
+          write(IMAIN,*)
+        endif
         write(IMAIN,*)
       endif
-
     enddo
 
     ! compute maximal distance for all the receivers
@@ -421,17 +454,6 @@
     call flush_IMAIN()
   endif    ! end of section executed by main process only
 
-  ! warning if receiver in C-PML region
-  do irec = 1,nrec
-    if (islice_selected_rec(irec) == myrank) then
-        ispec = ispec_selected_rec(irec)
-        if (is_CPML(ispec)) then
-          print *,'Warning: rank ',myrank,' has receiver ', &
-                  irec,trim(network_name(irec))//'.'//trim(station_name(irec)),' in C-PML region'
-        endif
-    endif
-  enddo
-
   ! deallocate arrays
   deallocate(stlat)
   deallocate(stlon)
@@ -448,6 +470,7 @@
   deallocate(z_found)
   deallocate(final_distance)
   deallocate(idomain)
+  deallocate(is_CPML_rec,is_CPML_rec_all)
 
   ! synchronize all the processes to make sure everybody has finished
   call synchronize_all()
