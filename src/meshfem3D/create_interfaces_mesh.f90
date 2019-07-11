@@ -195,9 +195,9 @@
       endif
       write(IMAIN,*)
       write(IMAIN,*) '  dimension x-direction ',trim(str_unit),' = ',sngl(orig_x_interface_top),'/', &
-                            sngl(orig_x_interface_top + npx_interface_top*spacing_x_interface_top)
+                            sngl(orig_x_interface_top + (npx_interface_top-1)*spacing_x_interface_top)
       write(IMAIN,*) '  dimension y-direction ',trim(str_unit),' = ',sngl(orig_y_interface_top),'/', &
-                            sngl(orig_y_interface_top + npy_interface_top*spacing_y_interface_top)
+                            sngl(orig_y_interface_top + (npy_interface_top-1)*spacing_y_interface_top)
       write(IMAIN,*)
       call flush_IMAIN()
     endif

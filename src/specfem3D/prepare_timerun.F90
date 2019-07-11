@@ -556,7 +556,7 @@
   use constants, only: IMAIN,NGLLX,NGLLY,NGLLZ
 
   use specfem_par, only: myrank,deltat,SIMULATION_TYPE,GPU_MODE, &
-    UNDO_ATTENUATION_AND_OR_PML,PML_CONDITIONS
+    UNDO_ATTENUATION_AND_OR_PML,PML_CONDITIONS,SAVE_MESH_FILES
 
   use pml_par
 
@@ -584,9 +584,9 @@
 
   ! safety stops
   if (SIMULATION_TYPE /= 1 .and. .not. UNDO_ATTENUATION_AND_OR_PML) &
-          stop 'Error: PMLs for adjoint runs require the flag UNDO_ATTENUATION_AND_OR_PML to be set'
-
-  if (GPU_MODE) stop 'Error: PMLs only supported in CPU mode for now'
+    stop 'Error: PMLs for adjoint runs require the flag UNDO_ATTENUATION_AND_OR_PML to be set'
+  if (GPU_MODE) &
+    stop 'Error: PMLs only supported in CPU mode for now'
 
   ! total number of PML elements
   call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
@@ -621,7 +621,6 @@
 
   ! defines C-PML element type array: 1 = face, 2 = edge, 3 = corner
   do ispec_CPML = 1,NSPEC_CPML
-
     ! X_surface C-PML
     if (CPML_regions(ispec_CPML) == 1) then
       CPML_type(ispec_CPML) = 1
@@ -650,7 +649,6 @@
     else if (CPML_regions(ispec_CPML) == 7) then
       CPML_type(ispec_CPML) = 3
     endif
-
   enddo
 
   ! useful constants
@@ -724,6 +722,9 @@
       enddo
     enddo
   enddo
+
+  ! outputs informations about C-PML elements in VTK-file format
+  if (SAVE_MESH_FILES) call pml_output_VTKs()
 
   ! synchonizes
   call synchronize_all()
@@ -841,6 +842,7 @@
   ! local parameters
   integer :: ier
   integer(kind=8) :: filesize
+  integer :: ispec,ispec2D
 
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
     if (myrank == 0) then
@@ -944,7 +946,6 @@
       b_potential_dot_acoustic = 0._CUSTOM_REAL
       b_potential_dot_dot_acoustic = 0._CUSTOM_REAL
       if (FIX_UNDERFLOW_PROBLEM) b_potential_acoustic = VERYSMALLVAL
-
     endif
 
     ! poroelastic domain
@@ -970,14 +971,32 @@
       b_accelw_poroelastic = 0._CUSTOM_REAL
       if (FIX_UNDERFLOW_PROBLEM) b_displs_poroelastic = VERYSMALLVAL
       if (FIX_UNDERFLOW_PROBLEM) b_displw_poroelastic = VERYSMALLVAL
-
     endif
   endif
 
 ! initialize Moho boundary index
   if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-    ispec2D_moho_top = 0
-    ispec2D_moho_bot = 0
+    ! note: boundary arrays are setup in mesher, here we only need to assign the boundary element index (ispec2D)
+    !       to each corresponding element (ispec) for storing strain values at the right array place
+    allocate(ispec2D_moho_top(NSPEC_AB),ispec2D_moho_bot(NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating ispec2D_moho arrays')
+    ispec2D_moho_top(:) = 0
+    ispec2D_moho_bot(:) = 0
+
+    ! sets indexing from ispec to ispec2D
+    do ispec2D = 1,NSPEC2D_MOHO
+      ! bottom element
+      ispec = ibelm_moho_bot(ispec2D)
+      if (ispec < 1 .or. ispec > NSPEC_AB) stop 'Invalid index in ibelm_moho_bot'
+      ! indexing from ispec to ispec2D
+      ispec2D_moho_bot(ispec) = ispec2D
+
+      ! top element
+      ispec = ibelm_moho_top(ispec2D)
+      if (ispec < 1 .or. ispec > NSPEC_AB) stop 'Invalid index in ibelm_moho_bot'
+      ! indexing from ispec to ispec2D
+      ispec2D_moho_top(ispec) = ispec2D
+    enddo
   endif
 
 ! stacey absorbing fields will be reconstructed for adjoint simulations

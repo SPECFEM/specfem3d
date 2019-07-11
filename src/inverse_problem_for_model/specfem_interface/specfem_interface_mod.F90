@@ -1180,13 +1180,6 @@ contains
        b_accelw_poroelastic = 0._CUSTOM_REAL
        if (FIX_UNDERFLOW_PROBLEM) b_displs_poroelastic = VERYSMALLVAL
        if (FIX_UNDERFLOW_PROBLEM) b_displw_poroelastic = VERYSMALLVAL
-
-    endif
-
-    ! initialize Moho boundary index
-    if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-       ispec2D_moho_top = 0
-       ispec2D_moho_bot = 0
     endif
 
     ! close absorb files : close here because we will open at each new specfem run

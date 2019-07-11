@@ -76,12 +76,6 @@
   ! poroelastic domain
   if (POROELASTIC_SIMULATION) call update_displacement_poroelastic()
 
-  ! adjoint simulations: moho kernel
-  if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-    ispec2D_moho_top = 0
-    ispec2D_moho_bot = 0
-  endif
-
   end subroutine update_displacement_scheme
 
 !
