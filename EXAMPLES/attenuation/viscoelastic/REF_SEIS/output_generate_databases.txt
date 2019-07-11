@@ -1,0 +1,258 @@
+
+ *****************************************
+ *** Specfem3D MPI database generation ***
+ *****************************************
+
+ Running Git package version of the code: 3.0.0
+ which is Git undefined in the case of old tar ball builds
+ dating undefined in the case of old tar ball builds
+
+ This is process            0
+ There are           16  MPI processes
+ Processes are numbered from 0 to           15
+
+ There is a total of           16  slices
+
+ NGLLX =            5
+ NGLLY =            5
+ NGLLZ =            5
+
+ Shape functions defined by NGNOD =            8  control nodes
+ Surface shape functions defined by NGNOD2D =            4  control nodes
+ Beware! Curvature (i.e. HEX27 elements) is not handled by our internal mesher
+
+ velocity model:   default
+
+
+ suppressing UTM projection
+
+ incorporating attenuation using            3  standard linear solids
+   not using attenuation from Olsen et al.
+
+ no anisotropy
+
+ no oceans
+
+ no absorbing condition
+
+ using a FORCESOLUTION source instead of a CMTSOLUTION source
+   with a Ricker source time function
+
+
+ ************************************
+ reading partition files in the model
+ ************************************
+
+ external mesh points :       571536
+ defined materials    :            1
+ undefined materials  :            0
+ total number of spectral elements:       512000
+ absorbing boundaries:
+   xmin,xmax :         6400        6400
+   ymin,ymax :         6400        6400
+   bottom,top:         6400        6400
+
+   total number of C-PML elements in the global mesh:            0
+
+ number of MPI partition interfaces:           84
+
+   minimum memory used so far     :    109.4938     MB per process
+   minimum total memory requested :    511.7861     MB per process
+
+ create regions:
+
+   ...allocating arrays
+     NGLLX   =            5
+     NGLLY   =            5
+     NGLLZ   =            5
+     NGNOD   =            8
+     NGNOD2D =            4
+
+     master process setup:
+     nspec           =        32000
+
+     separating regular/irregular element shapes
+     nspec regular   =        32000
+     nspec irregular =            0
+
+     absorbing boundary faces:
+       num_abs_boundary_faces =         3600
+
+     free surface faces:
+       num_free_surface_faces =          400
+
+
+ File DATA/Par_file_faults not found: assuming that there are no faults
+
+
+   ...setting up jacobian
+
+   ...indexing global points
+
+   ...preparing MPI interfaces
+      total MPI interface points:      1259604
+      total assembled MPI interface points:     1236492
+
+   ...setting up absorbing boundaries
+      boundary xmin        1600
+      boundary xmax           0
+      boundary ymin        1600
+      boundary ymax           0
+      boundary bottom         400
+      boundary top         400
+      absorbing boundary:
+      total number of free faces =         6400
+      total number of faces =        32000
+
+   ...setting up mesh surface
+
+   ...determining velocity model
+               10  % time remaining:  2.499755728920024E-008 s
+               20  % time remaining:  2.226058875902697E-008 s
+               30  % time remaining:  1.948996751315682E-008 s
+               40  % time remaining:  1.670260234338070E-008 s
+               50  % time remaining:  1.391535044011763E-008 s
+               60  % time remaining:  1.113139951734128E-008 s
+               70  % time remaining:  8.350096795564323E-009 s
+               80  % time remaining:  5.566274190087974E-009 s
+               90  % time remaining:  2.782498642583087E-009 s
+              100  % time remaining:  0.000000000000000E+000 s
+
+   ...detecting acoustic-elastic-poroelastic surfaces
+      total acoustic elements   :           0
+      total elastic elements    :      512000
+      total poroelastic elements:           0
+
+
+   ...element inner/outer separation
+      for overlapping of communications with calculations:
+      percentage of   edge elements    9.750000     %
+      percentage of volume elements    90.25000     %
+
+   ...element mesh coloring
+      use coloring =  F
+
+   ...external binary models
+      no external binary model used
+
+   ...creating mass matrix
+
+   ...saving databases
+
+   ...checking mesh resolution
+ Mesh resolution:
+
+ ********
+ minimum and maximum number of elements
+ and points in the CUBIT + SCOTCH mesh:
+
+ NSPEC_global_min =        32000
+ NSPEC_global_max =        32000
+ NSPEC_global_max / NSPEC_global_min imbalance =    1.000000      =
+  0.0000000E+00  %
+ NSPEC_global_sum =       512000
+
+ NGLOB_global_min =      2106081
+ NGLOB_global_max =      2106081
+ NGLOB_global_max / NGLOB_global_min imbalance =    1.000000      =
+  0.0000000E+00  %
+ NGLOB_global_sum =     33697296
+
+ If you have elements of a single type (all acoustic, all elastic, all poroelast
+ ic, and without CPML)
+ in the whole mesh, then there should be no significant imbalance in the above n
+ umbers.
+ Otherwise, it is normal to have imbalance in elements and points because the do
+ main decomposer
+ compensates for the different cost of different elements by partitioning them u
+ nevenly among processes.
+ ********
+
+
+ ********
+ Model: P velocity min,max =    3297.849       3297.849
+ Model: S velocity min,max =    2222.536       2222.536
+
+ Model: Poisson's ratio min,max =   8.3933033E-02  8.3933033E-02
+ ********
+
+ *********************************************
+ *** Verification of simulation parameters ***
+ *********************************************
+
+ *** Xmin and Xmax of the model =   -1500.000       1500.000
+ *** Ymin and Ymax of the model =   -1500.000       1500.000
+ *** Zmin and Zmax of the model =   -1500.000       1500.000
+
+ *** Max GLL point distance =    12.27478
+ *** Min GLL point distance =    6.475220
+ *** Max/min ratio =    1.895655
+
+ *** Max element size =    37.50000
+ *** Min element size =    37.50000
+ *** Max/min ratio =    1.000000
+
+ *** Minimum period resolved =   2.1090772E-02
+ *** Maximum suggested time step =   9.8173379E-04
+
+ Elapsed time for checking mesh resolution in seconds =   3.285453468561172E-002
+
+   ...saving attenuation databases
+
+ Attenuation:
+   The code uses a constant Q quality factor, but approximated
+   based on a series of Zener standard linear solids (SLS).
+
+   Approximation is performed in the following frequency band:
+   Reference frequency requested by the user (Hz):   18.00000      period (s):
+  5.5555556E-02
+
+   The following values are computed automatically by the code
+   based on the estimated maximum frequency resolution of your mesh
+   and can thus vary from what you have requested.
+
+   Frequency band        min/max (Hz):  0.8516719       47.89303
+   Period band           min/max (s) :  2.0879865E-02   1.174161
+   Logarithmic central frequency (Hz):   6.386638      period (s):
+  0.1565769
+
+   Using full attenuation with both Q_kappa and Q_mu.
+
+   Q_mu min/max           :    20.00000       20.00000
+   Q_kappa min/max        :    10.00000       10.00000
+
+
+ mesh regions done
+
+ min and max of elevation (i.e. height of the upper surface of the mesh) include
+ d in mesh in m is    1500.00000000000          1500.00000000000
+
+
+ Repartition of elements:
+ -----------------------
+
+ total number of elements in mesh slice 0:        32000
+ total number of   regular elements in mesh slice 0:        32000
+ total number of irregular elements in mesh slice 0:            0
+ total number of points in mesh slice 0:      2106081
+
+ total number of elements in entire mesh:       512000
+ approximate total number of points in entire mesh (with duplicates on MPI edges
+ ):    33697296.0000000
+ approximate total number of DOFs in entire mesh (with duplicates on MPI edges):
+     101091888.000000
+
+ total number of time steps in the solver will be:         1300
+
+ using single precision for the calculations
+
+ smallest and largest possible floating-point numbers are:   1.1754944E-38
+  3.4028235E+38
+
+
+ Elapsed time for mesh generation and buffer creation in seconds =
+   4.58847891353071
+ End of mesh generation
+
+ done
+

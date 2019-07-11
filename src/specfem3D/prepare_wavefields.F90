@@ -37,7 +37,7 @@
   implicit none
   ! local parameters
   integer :: ispec
-  
+
   if (myrank == 0) then
     write(IMAIN,*) "preparing wavefields"
     call flush_IMAIN()

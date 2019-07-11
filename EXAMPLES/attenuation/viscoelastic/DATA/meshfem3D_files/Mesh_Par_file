@@ -19,7 +19,7 @@ NEX_ETA                         = 80
 
 # number of MPI processors along xi and eta (can be different)
 NPROC_XI                        = 4
-NPROC_ETA                       = 2
+NPROC_ETA                       = 4
 
 # Regular/irregular mesh
 USE_REGULAR_MESH                = .true.
