@@ -350,8 +350,10 @@ module specfem_par_elastic
   integer :: num_colors_outer_elastic,num_colors_inner_elastic
   integer, dimension(:), allocatable :: num_elem_colors_elastic
   integer :: nspec_elastic
+  integer :: iglob_check_elastic
 
   logical :: ELASTIC_SIMULATION
+
 
 ! ADJOINT elastic
 
@@ -380,7 +382,7 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:),allocatable :: &
     dsdx_top, dsdx_bot, b_dsdx_top, b_dsdx_bot
   real(kind=CUSTOM_REAL), dimension(:,:),allocatable :: moho_kl
-  integer :: ispec2D_moho_top,ispec2D_moho_bot
+  integer, dimension(:), allocatable :: ispec2D_moho_top,ispec2D_moho_bot
 
   ! absorbing stacey wavefield parts
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_absorb_field
@@ -445,6 +447,7 @@ module specfem_par_acoustic
   integer :: num_colors_outer_acoustic,num_colors_inner_acoustic
   integer, dimension(:), allocatable :: num_elem_colors_acoustic
   integer :: nspec_acoustic
+  integer :: iglob_check_acoustic
 
   logical :: ACOUSTIC_SIMULATION
 
@@ -517,6 +520,7 @@ module specfem_par_poroelastic
   logical, dimension(:), allocatable :: ispec_is_poroelastic
   integer, dimension(:,:), allocatable :: phase_ispec_inner_poroelastic
   integer :: num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic
+  integer :: iglob_check_poroelastic
 
   logical :: POROELASTIC_SIMULATION
 

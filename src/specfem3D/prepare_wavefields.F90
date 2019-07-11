@@ -35,7 +35,9 @@
   use specfem_par_poroelastic
 
   implicit none
-
+  ! local parameters
+  integer :: ispec
+  
   if (myrank == 0) then
     write(IMAIN,*) "preparing wavefields"
     call flush_IMAIN()
@@ -48,6 +50,17 @@
     potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
     ! put negligible initial value to avoid very slow underflow trapping
     if (FIX_UNDERFLOW_PROBLEM) potential_acoustic(:) = VERYSMALLVAL
+
+    ! gets first iglob in acoustic domain for checking stability
+    iglob_check_acoustic = 1
+    do ispec = 1,NSPEC_AB
+      if (ispec_is_acoustic(ispec)) then
+        iglob_check_acoustic = ibool(MIDX,MIDY,MIDZ,ispec)
+        exit
+      endif
+    enddo
+    if (iglob_check_acoustic < 1 .or. iglob_check_acoustic > NGLOB_AB) &
+      call exit_mpi(myrank,'Error invalid iglob_check_acoustic index')
   endif
 
   ! initialize elastic arrays to zero/verysmallvall
@@ -57,6 +70,17 @@
     accel(:,:) = 0._CUSTOM_REAL
     ! put negligible initial value to avoid very slow underflow trapping
     if (FIX_UNDERFLOW_PROBLEM) displ(:,:) = VERYSMALLVAL
+
+    ! gets first iglob in elastic domain for checking stability
+    iglob_check_elastic = 1
+    do ispec = 1,NSPEC_AB
+      if (ispec_is_elastic(ispec)) then
+        iglob_check_elastic = ibool(MIDX,MIDY,MIDZ,ispec)
+        exit
+      endif
+    enddo
+    if (iglob_check_elastic < 1 .or. iglob_check_elastic > NGLOB_AB) &
+      call exit_mpi(myrank,'Error invalid iglob_check_elastic index')
   endif
 
   ! initialize poroelastic arrays to zero/verysmallvall
@@ -70,6 +94,17 @@
     ! put negligible initial value to avoid very slow underflow trapping
     if (FIX_UNDERFLOW_PROBLEM) displs_poroelastic(:,:) = VERYSMALLVAL
     if (FIX_UNDERFLOW_PROBLEM) displw_poroelastic(:,:) = VERYSMALLVAL
+
+    ! gets first iglob in poroelastic domain for checking stability
+    iglob_check_poroelastic = 1
+    do ispec = 1,NSPEC_AB
+      if (ispec_is_poroelastic(ispec)) then
+        iglob_check_poroelastic = ibool(MIDX,MIDY,MIDZ,ispec)
+        exit
+      endif
+    enddo
+    if (iglob_check_poroelastic < 1 .or. iglob_check_poroelastic > NGLOB_AB) &
+      call exit_mpi(myrank,'Error invalid iglob_check_poroelastic index')
   endif
 
   ! synchonizes

@@ -235,7 +235,10 @@
       deallocate(data_dp)
     endif
 
-    print *, trim(local_data_file)
+    ! output info
+    print *,'  file: ',trim(local_data_file)
+    print *,'  min/max value: ',minval(data_sp(:,:,:,:)),maxval(data_sp(:,:,:,:))
+    print *
 
     ! writes point coordinates and scalar value to mesh file
     if (.not. HIGH_RESOLUTION_MESH) then

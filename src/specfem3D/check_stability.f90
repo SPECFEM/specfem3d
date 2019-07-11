@@ -98,7 +98,7 @@
 
     ! checks first entry for Not-a-Number (NaN) value
 ! this trick checks for NaN (Not a Number), which is not even equal to itself
-    if (displ(1,1) /= displ(1,1)) then
+    if (displ(1,iglob_check_elastic) /= displ(1,iglob_check_elastic)) then
       call exit_MPI(myrank,'forward simulation became unstable in elastic domain and blew up')
     endif
 
@@ -119,7 +119,7 @@
     ! note for gfortran compiler: only potential_dot_dot(.) entry returns NaN, maxval(..) and maxval(abs(..)) return 0.0
 
     ! checks first entry for Not-a-Number (NaN) value
-    if (potential_dot_dot_acoustic(1) /= potential_dot_dot_acoustic(1)) then
+    if (potential_dot_dot_acoustic(iglob_check_acoustic) /= potential_dot_dot_acoustic(iglob_check_acoustic)) then
       call exit_MPI(myrank,'forward simulation became unstable in acoustic domain and blew up')
     endif
 
@@ -134,7 +134,7 @@
                              displw_poroelastic(3,:)**2))
 
     ! checks first entry for Not-a-Number (NaN) value
-    if (displs_poroelastic(1,1) /= displs_poroelastic(1,1)) then
+    if (displs_poroelastic(1,iglob_check_poroelastic) /= displs_poroelastic(1,iglob_check_poroelastic)) then
       call exit_MPI(myrank,'forward simulation became unstable in poroelastic domain and blew up')
     endif
 
