@@ -382,6 +382,9 @@
 ! number of points per minimum wavelength for minimum period estimate
   real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
 
+! separates regular/irregular shaped elements
+  logical, parameter :: DO_IRREGULAR_ELEMENT_SEPARATION = .true.
+
 ! mesh partitioning algorithms, choices for PARTITIONING_TYPE
   ! SCOTCH is original to program
   integer, parameter :: SCOTCH = 1

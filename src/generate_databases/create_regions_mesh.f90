@@ -411,9 +411,11 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh, &
                         elmnts_ext_mesh,nelmnts_ext_mesh,ANY_FAULT_IN_THIS_PROC)
 
-  use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,PML_INSTEAD_OF_FREE_SURFACE, &
-    NGNOD,NGNOD2D,NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN, &
-    BOTTOM_FREE_SURFACE,nspec_irregular
+  use constants, only: NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN, &
+    DO_IRREGULAR_ELEMENT_SEPARATION
+
+  use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,PML_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
+    NGNOD,NGNOD2D,nspec_irregular
 
   use create_regions_mesh_ext_par
 
@@ -431,10 +433,6 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   integer :: nnodes_ext_mesh,nelmnts_ext_mesh
   double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
   integer, dimension(NGNOD,nelmnts_ext_mesh) :: elmnts_ext_mesh
-
-! separates regular/irregular shaped elements
-  logical, parameter :: DO_IRREGULAR_ELEMENT_SEPARATION = .true.
-
 
 ! local parameters
   integer :: ier,ispec,ia
@@ -1083,11 +1081,11 @@ subroutine crm_ext_setup_indexing(ibool, &
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 817')
   if (ier /= 0) stop 'error allocating array iglob_is_surface'
 
-  iglob_is_surface = 0
-  iglob_normals = 0._CUSTOM_REAL
+  iglob_is_surface(:) = 0
+  iglob_normals(:,:) = 0._CUSTOM_REAL
 
   ! loops over given moho surface elements
-  do ispec2D=1, nspec2D_moho_ext
+  do ispec2D = 1,nspec2D_moho_ext
 
     ! gets element id
     ispec = ibelm_moho(ispec2D)
@@ -1096,7 +1094,7 @@ subroutine crm_ext_setup_indexing(ibool, &
     ! determines element face by given CUBIT corners
     ! (note: uses point locations rather than point indices to find the element face,
     !            because the indices refer no more to the newly indexed ibool array )
-    do icorner=1,NGNOD2D_FOUR_CORNERS
+    do icorner = 1,NGNOD2D_FOUR_CORNERS
       xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_moho(icorner,ispec2D))
       ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_moho(icorner,ispec2D))
       zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_moho(icorner,ispec2D))
@@ -1174,8 +1172,7 @@ subroutine crm_ext_setup_indexing(ibool, &
   ! finds spectral elements with moho surface
   imoho_top = 0
   imoho_bot = 0
-  do ispec=1,nspec
-
+  do ispec = 1,nspec
     ! loops over each face
     do iface = 1,6
       ! checks if corners of face on surface

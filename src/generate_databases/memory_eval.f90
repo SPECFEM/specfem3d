@@ -94,17 +94,8 @@
      ! spec_to_CPML
      memory_size = memory_size + NSPEC_AB*dble(SIZE_INTEGER)
 
-
      ! d_store_x,d_store_y,d_store_z,d_store_x,d_store_y,d_store_z,alpha_store_x,alpha_store_y,alpha_store_z
      memory_size = memory_size + 9.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
-
-     ! PML_dux_dxl,PML_dux_dyl,PML_dux_dzl,
-     ! PML_duy_dxl,PML_duy_dyl,PML_duy_dzl,
-     ! PML_duz_dxl,PML_duz_dyl,PML_duz_dzl,
-     ! PML_dux_dxl_old,PML_dux_dyl_old,PML_dux_dzl_old,
-     ! PML_duy_dxl_old,PML_duy_dyl_old,PML_duy_dzl_old,
-     ! PML_duz_dxl_old,PML_duz_dyl_old,PML_duz_dzl_old
-     memory_size = memory_size + 18.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
 
      ! rmemory_dux_dxl_x,rmemory_dux_dyl_x,rmemory_dux_dzl_x,rmemory_duy_dxl_x,
      ! rmemory_duy_dyl_x,rmemory_duz_dxl_x,rmemory_duz_dzl_x,
@@ -122,9 +113,6 @@
 
      ! rmemory_potential_acoustic
      memory_size = memory_size + 3.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
-
-     ! accel_elastic_CPML
-     memory_size = memory_size + dble(NDIM)*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
 
      ! second derivative of the potential
      memory_size = memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
