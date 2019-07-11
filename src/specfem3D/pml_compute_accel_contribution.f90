@@ -26,7 +26,8 @@
 !=====================================================================
 
 
-subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,rmemory_displ_elastic)
+subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc, &
+                                                  accel_elastic_CPML,rmemory_displ_elastic)
 
   ! calculates contribution from each C-PML element to update acceleration to the global mesh
 
@@ -42,13 +43,16 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
   use pml_par, only: CPML_regions,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z, &
                      alpha_store_x, alpha_store_y, alpha_store_z, &
                      convolution_coef_acoustic_alpha, &
-                     NSPEC_CPML,accel_elastic_CPML,PML_displ_old,PML_displ_new
+                     NSPEC_CPML,PML_displ_old,PML_displ_new
 
   implicit none
 
   integer, intent(in) :: ispec,ispec_CPML
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB), intent(in) :: displ,veloc
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3) :: rmemory_displ_elastic
+  ! stores C-PML contribution to update acceleration to the global mesh
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ), intent(out) :: accel_elastic_CPML
+
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),intent(inout) :: rmemory_displ_elastic
 
   ! local parameters
   integer :: i,j,k,iglob,CPML_region_local,ispec_irreg

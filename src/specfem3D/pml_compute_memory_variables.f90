@@ -26,14 +26,25 @@
 !=====================================================================
 
 
-subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
-                                    tempx3,tempy3,tempz3, &
-                                    rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
-                                    rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
-                                    rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duy_dyl_y, &
-                                    rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
-                                    rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
-                                    rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z)
+subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
+                                                tempx1,tempy1,tempz1, &
+                                                tempx2,tempy2,tempz2, &
+                                                tempx3,tempy3,tempz3, &
+                                                PML_dux_dxl, PML_dux_dyl, PML_dux_dzl, &
+                                                PML_duy_dxl, PML_duy_dyl, PML_duy_dzl, &
+                                                PML_duz_dxl, PML_duz_dyl, PML_duz_dzl, &
+                                                PML_dux_dxl_old, PML_dux_dyl_old, PML_dux_dzl_old, &
+                                                PML_duy_dxl_old, PML_duy_dyl_old, PML_duy_dzl_old, &
+                                                PML_duz_dxl_old, PML_duz_dyl_old, PML_duz_dzl_old, &
+                                                PML_dux_dxl_new, PML_dux_dyl_new, PML_dux_dzl_new, &
+                                                PML_duy_dxl_new, PML_duy_dyl_new, PML_duy_dzl_new, &
+                                                PML_duz_dxl_new, PML_duz_dyl_new, PML_duz_dzl_new, &
+                                                rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
+                                                rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
+                                                rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duy_dyl_y, &
+                                                rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
+                                                rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
+                                                rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z)
 
 ! calculates C-PML elastic memory variables and computes stress sigma
 
@@ -50,16 +61,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
 
   use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z, &
                      d_store_x,d_store_y,d_store_z,alpha_store_x,alpha_store_y,alpha_store_z, &
-                     convolution_coef_acoustic_alpha,convolution_coef_acoustic_beta, &
-                     PML_dux_dxl, PML_dux_dyl, PML_dux_dzl, PML_duy_dxl, PML_duy_dyl, PML_duy_dzl, &
-                     PML_duz_dxl, PML_duz_dyl, PML_duz_dzl, &
-                     PML_dux_dxl_old, PML_dux_dyl_old, PML_dux_dzl_old, &
-                     PML_duy_dxl_old, PML_duy_dyl_old, PML_duy_dzl_old, &
-                     PML_duz_dxl_old, PML_duz_dyl_old, PML_duz_dzl_old, &
-                     PML_dux_dxl_new, PML_dux_dyl_new, PML_dux_dzl_new, &
-                     PML_duy_dxl_new, PML_duy_dyl_new, PML_duy_dzl_new, &
-                     PML_duz_dxl_new, PML_duz_dyl_new, PML_duz_dzl_new
-
+                     convolution_coef_acoustic_alpha,convolution_coef_acoustic_beta
 
   implicit none
 
@@ -67,12 +69,25 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: tempx1,tempx2,tempx3
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: tempy1,tempy2,tempy3
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: tempz1,tempz2,tempz3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3) ::  &
+
+  ! derivatives of ux, uy and uz with respect to x, y and z
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: PML_dux_dxl,PML_dux_dyl,PML_dux_dzl
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: PML_duy_dxl,PML_duy_dyl,PML_duy_dzl
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: PML_duz_dxl,PML_duz_dyl,PML_duz_dzl
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: PML_dux_dxl_old,PML_dux_dyl_old,PML_dux_dzl_old
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: PML_duy_dxl_old,PML_duy_dyl_old,PML_duy_dzl_old
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: PML_duz_dxl_old,PML_duz_dyl_old,PML_duz_dzl_old
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: PML_dux_dxl_new,PML_dux_dyl_new,PML_dux_dzl_new
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: PML_duy_dxl_new,PML_duy_dyl_new,PML_duy_dzl_new
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: PML_duz_dxl_new,PML_duz_dyl_new,PML_duz_dzl_new
+
+  ! memory variable
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),intent(inout) ::  &
                           rmemory_dux_dxl_x, rmemory_dux_dyl_x, rmemory_dux_dzl_x, &
                           rmemory_duy_dxl_y, rmemory_duy_dyl_y, rmemory_duy_dzl_y, &
                           rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duz_dzl_z
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML) ::  &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),intent(inout) ::  &
                           rmemory_duy_dyl_x, rmemory_duz_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
                           rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
                           rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z
@@ -349,7 +364,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
         lambdalplus2mul = kappal + FOUR_THIRDS * mul
         lambdal = lambdalplus2mul - 2.0_CUSTOM_REAL*mul
 
-        ! compute stress sigma
+        ! compute stress sigma (non-symmetric)
         sigma_xx = lambdalplus2mul*duxdxl_x + lambdal*duydyl_x + lambdal*duzdzl_x
         sigma_yx = mul*duxdyl_x + mul*duydxl_x
         sigma_zx = mul*duzdxl_x + mul*duxdzl_x

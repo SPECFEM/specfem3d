@@ -71,90 +71,6 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2257')
     if (ier /= 0) stop 'error allocating PML_displ_new array'
     if (ier /= 0) stop 'error allocating displ_new array'
-    ! stores derivatives of ux, uy and uz with respect to x, y and z
-    allocate(PML_dux_dxl(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2258')
-    if (ier /= 0) stop 'error allocating PML_dux_dxl array'
-    allocate(PML_dux_dyl(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2259')
-    if (ier /= 0) stop 'error allocating PML_dux_dyl array'
-    allocate(PML_dux_dzl(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2260')
-    if (ier /= 0) stop 'error allocating PML_dux_dzl array'
-    allocate(PML_duy_dxl(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2261')
-    if (ier /= 0) stop 'error allocating PML_duy_dxl array'
-    allocate(PML_duy_dyl(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2262')
-    if (ier /= 0) stop 'error allocating PML_duy_dyl array'
-    allocate(PML_duy_dzl(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2263')
-    if (ier /= 0) stop 'error allocating PML_duy_dzl array'
-    allocate(PML_duz_dxl(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2264')
-    if (ier /= 0) stop 'error allocating PML_duz_dxl array'
-    allocate(PML_duz_dyl(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2265')
-    if (ier /= 0) stop 'error allocating PML_duz_dyl array'
-    allocate(PML_duz_dzl(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2266')
-    if (ier /= 0) stop 'error allocating PML_duz_dzl array'
-
-    allocate(PML_dux_dxl_old(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2267')
-    if (ier /= 0) stop 'error allocating PML_dux_dxl_old array'
-    allocate(PML_dux_dyl_old(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2268')
-    if (ier /= 0) stop 'error allocating PML_dux_dyl_old array'
-    allocate(PML_dux_dzl_old(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2269')
-    if (ier /= 0) stop 'error allocating PML_dux_dzl_old array'
-    allocate(PML_duy_dxl_old(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2270')
-    if (ier /= 0) stop 'error allocating PML_duy_dxl_old array'
-    allocate(PML_duy_dyl_old(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2271')
-    if (ier /= 0) stop 'error allocating PML_duy_dyl_old array'
-    allocate(PML_duy_dzl_old(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2272')
-    if (ier /= 0) stop 'error allocating PML_duy_dzl_old array'
-    allocate(PML_duz_dxl_old(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2273')
-    if (ier /= 0) stop 'error allocating PML_duz_dxl_old array'
-    allocate(PML_duz_dyl_old(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2274')
-    if (ier /= 0) stop 'error allocating PML_duz_dyl_old array'
-    allocate(PML_duz_dzl_old(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2275')
-    if (ier /= 0) stop 'error allocating PML_duz_dzl_old array'
-
-    allocate(PML_dux_dxl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2276')
-    if (ier /= 0) stop 'error allocating PML_dux_dxl_new array'
-    allocate(PML_dux_dyl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2277')
-    if (ier /= 0) stop 'error allocating PML_dux_dyl_new array'
-    allocate(PML_dux_dzl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2278')
-    if (ier /= 0) stop 'error allocating PML_dux_dzl_new array'
-    allocate(PML_duy_dxl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2279')
-    if (ier /= 0) stop 'error allocating PML_duy_dxl_new array'
-    allocate(PML_duy_dyl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2280')
-    if (ier /= 0) stop 'error allocating PML_duy_dyl_new array'
-    allocate(PML_duy_dzl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2281')
-    if (ier /= 0) stop 'error allocating PML_duy_dzl_new array'
-    allocate(PML_duz_dxl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2282')
-    if (ier /= 0) stop 'error allocating PML_duz_dxl_new array'
-    allocate(PML_duz_dyl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2283')
-    if (ier /= 0) stop 'error allocating PML_duz_dyl_new array'
-    allocate(PML_duz_dzl_new(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2284')
-    if (ier /= 0) stop 'error allocating PML_duz_dzl_new array'
 
     ! stores C-PML memory variables
     allocate(rmemory_dux_dxl_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
@@ -227,11 +143,6 @@
     allocate(rmemory_displ_elastic(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2306')
     if (ier /= 0) stop 'error allocating rmemory_displ_elastic array'
-
-    ! stores C-PML contribution to update acceleration to the global mesh
-    allocate(accel_elastic_CPML(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2307')
-    if (ier /= 0) stop 'error allocating accel_elastic_CPML array'
   endif
 
   if (ACOUSTIC_SIMULATION) then
@@ -288,36 +199,6 @@
     PML_displ_old(:,:,:,:,:) = 0._CUSTOM_REAL
     PML_displ_new(:,:,:,:,:) = 0._CUSTOM_REAL
 
-    PML_dux_dxl(:,:,:) = 0._CUSTOM_REAL
-    PML_dux_dyl(:,:,:) = 0._CUSTOM_REAL
-    PML_dux_dzl(:,:,:) = 0._CUSTOM_REAL
-    PML_duy_dxl(:,:,:) = 0._CUSTOM_REAL
-    PML_duy_dyl(:,:,:) = 0._CUSTOM_REAL
-    PML_duy_dzl(:,:,:) = 0._CUSTOM_REAL
-    PML_duz_dxl(:,:,:) = 0._CUSTOM_REAL
-    PML_duz_dyl(:,:,:) = 0._CUSTOM_REAL
-    PML_duz_dzl(:,:,:) = 0._CUSTOM_REAL
-
-    PML_dux_dxl_old(:,:,:) = 0._CUSTOM_REAL
-    PML_dux_dyl_old(:,:,:) = 0._CUSTOM_REAL
-    PML_dux_dzl_old(:,:,:) = 0._CUSTOM_REAL
-    PML_duy_dxl_old(:,:,:) = 0._CUSTOM_REAL
-    PML_duy_dyl_old(:,:,:) = 0._CUSTOM_REAL
-    PML_duy_dzl_old(:,:,:) = 0._CUSTOM_REAL
-    PML_duz_dxl_old(:,:,:) = 0._CUSTOM_REAL
-    PML_duz_dyl_old(:,:,:) = 0._CUSTOM_REAL
-    PML_duz_dzl_old(:,:,:) = 0._CUSTOM_REAL
-
-    PML_dux_dxl_new(:,:,:) = 0._CUSTOM_REAL
-    PML_dux_dyl_new(:,:,:) = 0._CUSTOM_REAL
-    PML_dux_dzl_new(:,:,:) = 0._CUSTOM_REAL
-    PML_duy_dxl_new(:,:,:) = 0._CUSTOM_REAL
-    PML_duy_dyl_new(:,:,:) = 0._CUSTOM_REAL
-    PML_duy_dzl_new(:,:,:) = 0._CUSTOM_REAL
-    PML_duz_dxl_new(:,:,:) = 0._CUSTOM_REAL
-    PML_duz_dyl_new(:,:,:) = 0._CUSTOM_REAL
-    PML_duz_dzl_new(:,:,:) = 0._CUSTOM_REAL
-
     rmemory_dux_dxl_x(:,:,:,:,:) = 0._CUSTOM_REAL
     rmemory_dux_dyl_x(:,:,:,:,:) = 0._CUSTOM_REAL
     rmemory_dux_dzl_x(:,:,:,:,:) = 0._CUSTOM_REAL
@@ -343,7 +224,6 @@
     rmemory_duz_dzl_z(:,:,:,:,:) = 0._CUSTOM_REAL
 
     rmemory_displ_elastic(:,:,:,:,:,:) = 0._CUSTOM_REAL
-    accel_elastic_CPML(:,:,:,:) = 0._CUSTOM_REAL
   endif
 
   if (ACOUSTIC_SIMULATION) then
@@ -503,114 +383,6 @@
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2325')
     endif
 
-    if (.not. allocated(PML_dux_dxl)) then
-      allocate(PML_dux_dxl(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2326')
-    endif
-    if (.not. allocated(PML_dux_dyl)) then
-      allocate(PML_dux_dyl(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2327')
-    endif
-    if (.not. allocated(PML_dux_dzl)) then
-      allocate(PML_dux_dzl(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2328')
-    endif
-    if (.not. allocated(PML_duy_dxl)) then
-      allocate(PML_duy_dxl(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2329')
-    endif
-    if (.not. allocated(PML_duy_dyl)) then
-      allocate(PML_duy_dyl(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2330')
-    endif
-    if (.not. allocated(PML_duy_dzl)) then
-      allocate(PML_duy_dzl(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2331')
-    endif
-    if (.not. allocated(PML_duz_dxl)) then
-      allocate(PML_duz_dxl(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2332')
-    endif
-    if (.not. allocated(PML_duz_dyl)) then
-      allocate(PML_duz_dyl(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2333')
-    endif
-    if (.not. allocated(PML_duz_dzl)) then
-      allocate(PML_duz_dzl(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2334')
-    endif
-    if (.not. allocated(PML_dux_dxl_old)) then
-      allocate(PML_dux_dxl_old(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2335')
-    endif
-    if (.not. allocated(PML_dux_dyl_old)) then
-      allocate(PML_dux_dyl_old(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2336')
-    endif
-    if (.not. allocated(PML_dux_dzl_old)) then
-      allocate(PML_dux_dzl_old(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2337')
-    endif
-    if (.not. allocated(PML_duy_dxl_old)) then
-      allocate(PML_duy_dxl_old(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2338')
-    endif
-    if (.not. allocated(PML_duy_dyl_old)) then
-      allocate(PML_duy_dyl_old(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2339')
-    endif
-    if (.not. allocated(PML_duy_dzl_old)) then
-      allocate(PML_duy_dzl_old(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2340')
-    endif
-    if (.not. allocated(PML_duz_dxl_old)) then
-      allocate(PML_duz_dxl_old(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2341')
-    endif
-    if (.not. allocated(PML_duz_dyl_old)) then
-      allocate(PML_duz_dyl_old(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2342')
-    endif
-    if (.not. allocated(PML_duz_dzl_old)) then
-      allocate(PML_duz_dzl_old(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2343')
-    endif
-    if (.not. allocated(PML_dux_dxl_new)) then
-      allocate(PML_dux_dxl_new(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2344')
-    endif
-    if (.not. allocated(PML_dux_dyl_new)) then
-      allocate(PML_dux_dyl_new(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2345')
-    endif
-    if (.not. allocated(PML_dux_dzl_new)) then
-      allocate(PML_dux_dzl_new(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2346')
-    endif
-    if (.not. allocated(PML_duy_dxl_new)) then
-      allocate(PML_duy_dxl_new(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2347')
-    endif
-    if (.not. allocated(PML_duy_dyl_new)) then
-      allocate(PML_duy_dyl_new(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2348')
-    endif
-    if (.not. allocated(PML_duy_dzl_new)) then
-      allocate(PML_duy_dzl_new(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2349')
-    endif
-    if (.not. allocated(PML_duz_dxl_new)) then
-      allocate(PML_duz_dxl_new(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2350')
-    endif
-    if (.not. allocated(PML_duz_dyl_new)) then
-      allocate(PML_duz_dyl_new(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2351')
-    endif
-    if (.not. allocated(PML_duz_dzl_new)) then
-      allocate(PML_duz_dzl_new(1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2352')
-    endif
     if (.not. allocated(rmemory_dux_dxl_x)) then
       allocate(rmemory_dux_dxl_x(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2353')
@@ -698,10 +470,6 @@
     if (.not. allocated(rmemory_displ_elastic)) then
       allocate(rmemory_displ_elastic(1,1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2374')
-    endif
-    if (.not. allocated(accel_elastic_CPML)) then
-      allocate(accel_elastic_CPML(1,1,1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2375')
     endif
 
     ! allocates wavefield
@@ -802,33 +570,6 @@
     deallocate(PML_displ_old)
     deallocate(PML_displ_new)
 
-    deallocate(PML_dux_dxl)
-    deallocate(PML_dux_dyl)
-    deallocate(PML_dux_dzl)
-    deallocate(PML_duy_dxl)
-    deallocate(PML_duy_dyl)
-    deallocate(PML_duy_dzl)
-    deallocate(PML_duz_dxl)
-    deallocate(PML_duz_dyl)
-    deallocate(PML_duz_dzl)
-    deallocate(PML_dux_dxl_old)
-    deallocate(PML_dux_dyl_old)
-    deallocate(PML_dux_dzl_old)
-    deallocate(PML_duy_dxl_old)
-    deallocate(PML_duy_dyl_old)
-    deallocate(PML_duy_dzl_old)
-    deallocate(PML_duz_dxl_old)
-    deallocate(PML_duz_dyl_old)
-    deallocate(PML_duz_dzl_old)
-    deallocate(PML_dux_dxl_new)
-    deallocate(PML_dux_dyl_new)
-    deallocate(PML_dux_dzl_new)
-    deallocate(PML_duy_dxl_new)
-    deallocate(PML_duy_dyl_new)
-    deallocate(PML_duy_dzl_new)
-    deallocate(PML_duz_dxl_new)
-    deallocate(PML_duz_dyl_new)
-    deallocate(PML_duz_dzl_new)
     deallocate(rmemory_dux_dxl_x)
     deallocate(rmemory_dux_dyl_x)
     deallocate(rmemory_dux_dzl_x)
@@ -851,7 +592,6 @@
     deallocate(rmemory_duz_dyl_z)
     deallocate(rmemory_duz_dzl_z)
     deallocate(rmemory_displ_elastic)
-    deallocate(accel_elastic_CPML)
   endif
 
   if (ACOUSTIC_SIMULATION) then

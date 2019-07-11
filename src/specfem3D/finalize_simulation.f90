@@ -128,8 +128,6 @@
 
   ! C-PML absorbing boundary conditions
   if (PML_CONDITIONS) then
-    ! outputs informations about C-PML elements in VTK-file format
-    if (NSPEC_CPML > 0) call pml_output_VTKs()
     ! deallocates C_PML arrays
     call pml_cleanup()
   endif

@@ -50,19 +50,19 @@
     ! elements on both sides available
     if (ispec_top > 0 .and. ispec_bot > 0) then
       ! loops over surface
-      do igll=1,NGLLSQUARE
+      do igll = 1,NGLLSQUARE
         i = ijk_moho_top(1,igll,ispec2D)
         j = ijk_moho_top(2,igll,ispec2D)
         k = ijk_moho_top(3,igll,ispec2D)
         iglob_top = ibool(i,j,k,ispec_top)
 
         ! computes contribution from top element
-        call compute_boundary_kernel_elem( kernel_moho_top, &
-                    mustore(i,j,k,ispec_top), &
-                    kappastore(i,j,k,ispec_top),rho_vs(i,j,k,ispec_top), &
-                    accel(:,iglob_top),b_displ(:,iglob_top), &
-                    dsdx_top(:,:,i,j,k,ispec2D),b_dsdx_top(:,:,i,j,k,ispec2D), &
-                    normal_moho_top(:,igll,ispec2D) )
+        call compute_boundary_kernel_elem(kernel_moho_top, &
+                                          mustore(i,j,k,ispec_top), &
+                                          kappastore(i,j,k,ispec_top),rho_vs(i,j,k,ispec_top), &
+                                          accel(:,iglob_top),b_displ(:,iglob_top), &
+                                          dsdx_top(:,:,i,j,k,ispec2D),b_dsdx_top(:,:,i,j,k,ispec2D), &
+                                          normal_moho_top(:,igll,ispec2D) )
 
         ! finds corresponding global node in bottom element
         is_done = .false.

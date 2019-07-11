@@ -26,7 +26,7 @@
 !=====================================================================
 
 
-subroutine pml_output_VTKs()
+  subroutine pml_output_VTKs()
 
   ! outputs informations about C-PML elements in VTK-file format
 
@@ -44,8 +44,7 @@ subroutine pml_output_VTKs()
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'Writing informations about C-PML elements in VTK-file format'
+    write(IMAIN,*) '  writing informations about C-PML elements in VTK-file format:'
     call flush_IMAIN()
   endif
 
@@ -55,14 +54,14 @@ subroutine pml_output_VTKs()
   if (ier /= 0) stop 'error allocating array temp_CPML_regions'
   temp_CPML_regions(:) = 0
 
-  do ispec_CPML = 1,nspec_cpml
+  do ispec_CPML = 1,NSPEC_CPML
     ispec = CPML_to_spec(ispec_CPML)
     temp_CPML_regions(ispec) = CPML_regions(ispec_CPML)
   enddo
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) 'Generating CPML_regions VTK file'
+    write(IMAIN,*) '  generating CPML_regions VTK file'
     call flush_IMAIN()
   endif
 
@@ -85,7 +84,7 @@ subroutine pml_output_VTKs()
   temp_d_store_y(:,:,:,:) = 0._CUSTOM_REAL
   temp_d_store_z(:,:,:,:) = 0._CUSTOM_REAL
 
-  do ispec_CPML=1,nspec_cpml
+  do ispec_CPML = 1,NSPEC_CPML
     ispec = CPML_to_spec(ispec_CPML)
     temp_d_store_x(:,:,:,ispec) = d_store_x(:,:,:,ispec_CPML)
     temp_d_store_y(:,:,:,ispec) = d_store_y(:,:,:,ispec_CPML)
@@ -94,7 +93,8 @@ subroutine pml_output_VTKs()
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) 'Generating CPML_damping_dx, CPML_damping_dy and CPML_damping_dz VTK files'
+    write(IMAIN,*) '  generating CPML_damping_dx, CPML_damping_dy and CPML_damping_dz VTK files'
+    write(IMAIN,*)
     call flush_IMAIN()
   endif
 
@@ -111,4 +111,4 @@ subroutine pml_output_VTKs()
   deallocate(temp_d_store_y)
   deallocate(temp_d_store_z)
 
-end subroutine pml_output_VTKs
+  end subroutine pml_output_VTKs
