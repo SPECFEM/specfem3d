@@ -120,6 +120,9 @@ env:
     # example with openmp
     - TESTID=31 TESTCOV=0 TESTDIR=24 TESTFLAGS="--enable-vectorization --enable-openmp" CUDA=false
 
+    # regular element mesh
+    - TESTID=32 TESTCOV=0 TESTDIR=25 TESTFLAGS="--enable-vectorization" CUDA=false
+
 before_install:
   # informations on git
   - |

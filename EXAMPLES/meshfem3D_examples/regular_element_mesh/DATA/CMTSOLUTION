@@ -1,0 +1,13 @@
+PDE  1999 01 01 00 00 00.00  750 500 -700 1.0 1.0 test 
+event name:       test
+time shift:       0.0000
+half duration:    0.08
+latorUTM:         750.0
+longorUTM:        500.0
+depth:            1.5
+Mrr:    -7.400000e+19
+Mtt:    -1.130000e+21
+Mpp:    1.210000e+21
+Mrt:    3.810000e+20
+Mrp:    -8.000000e+18
+Mtp:    1.170000e+21

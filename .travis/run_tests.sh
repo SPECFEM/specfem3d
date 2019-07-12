@@ -33,6 +33,7 @@ case "$TESTDIR" in
   22) dir=EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/ ;;
   23) dir=EXAMPLES/Gmsh_simple_lddrk/ ;;
   24) dir=EXAMPLES/decompose_mesh_MPI/ ;;
+  25) dir=EXAMPLES/meshfem3D_examples/regular_element_mesh/ ;;
   *) dir=EXAMPLES/homogeneous_halfspace/ ;;
 esac
 
@@ -202,6 +203,10 @@ else
   # Gmsh example w/ LDDRK
   if [ "$TESTID" == "30" ]; then
     sed -i "s:^NSTEP .*:NSTEP    = 2000:" DATA/Par_file
+  fi
+  # regular elements example
+  if [ "$TESTID" == "32" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
   fi
 
   # coverage run
@@ -530,6 +535,18 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.decompose_mpi\\r'
+
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.regular_elements\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
+  ##
+  ## testing regular elements example
+  ##
+  cd EXAMPLES/meshfem3D_examples/regular_element_mesh/
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  ./run_this_example.sh
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.regular_elements\\r'
 
 
 ##
