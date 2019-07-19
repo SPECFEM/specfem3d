@@ -377,3 +377,6 @@ ADIOS_FOR_MESH                  = .false.
 ADIOS_FOR_FORWARD_ARRAYS        = .false.
 ADIOS_FOR_KERNELS               = .false.
 
+# HDF5 Database I/O flag which is useful for a massively parallelized calculation.
+HDF5_ENABLED                    = .false.
+

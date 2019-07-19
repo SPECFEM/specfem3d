@@ -164,6 +164,9 @@ end module constants
   logical :: ADIOS_ENABLED
   logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
 
+  ! hdf5 file output
+  logical :: HDF5_ENABLED
+
   ! external code coupling (DSM, AxiSEM)
   logical :: COUPLE_WITH_INJECTION_TECHNIQUE
   integer :: INJECTION_TECHNIQUE_TYPE

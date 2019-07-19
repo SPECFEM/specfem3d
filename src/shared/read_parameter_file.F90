@@ -750,6 +750,15 @@
       write(*,*)
     endif
 
+    !-------------------------------------------------------
+    ! read hdf5 database io flag
+    call read_value_logical(HDF5_ENABLED, 'HDF5_ENABLED', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'HDF5_ENABLED                   = .false.'
+      write(*,*)
+    endif
+
     ! closes parameter file
     call close_parameter_file()
 
@@ -1289,7 +1298,8 @@
   call bcast_all_singlel(ADIOS_FOR_FORWARD_ARRAYS)
   call bcast_all_singlel(ADIOS_FOR_KERNELS)
   call bcast_all_singlel(USE_EXTERNAL_SOURCE_FILE)
-
+  call bcast_all_singlel(HDF5_ENABLED)
+ 
   ! broadcast all parameters computed from others
   call bcast_all_singlei(IMODEL)
   call bcast_all_singlei(NGNOD2D)
