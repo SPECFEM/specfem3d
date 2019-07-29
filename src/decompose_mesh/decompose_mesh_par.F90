@@ -37,6 +37,11 @@ module decompose_mesh_par
     acoustic_elastic_poro_load,mesh2dual_ncommonnodes, &
     build_glob2loc_elmnts,build_glob2loc_nodes,build_interfaces,poro_elastic_repartitioning,moho_surface_repartitioning
 
+  use part_decompose_mesh_hdf5!, only: &
+  !  write_s_database_h5,write_moho_surface_database_h5,write_glob2loc_nodes_database_h5, &
+  !  write_material_props_database_h5,write_boundaries_database_h5, &
+  !  write_partition_database_h5,write_cpml_database_h5
+
   use fault_scotch, only: ANY_FAULT,nodes_coords_open,read_fault_files,save_nodes_coords,close_faults, &
     fault_repartition,write_fault_database
 
@@ -119,6 +124,8 @@ module decompose_mesh_par
   double precision :: rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
 
   integer, parameter :: IIN_database = 15
+
+  character(len=MAX_STRING_LEN) :: IIN_database_hdf5
 
   ! LTS simulations
   ! element p-refinement values (like 1 2 4 8 ..; p == 1 being coarsest, p == 8 finer local time step dt/p )

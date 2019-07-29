@@ -29,7 +29,7 @@ program xdecompose_mesh
 
   use constants, only: MAX_STRING_LEN
 
-  use decompose_mesh_par, only: nparts,localpath_name,outputpath_name,ADIOS_FOR_DATABASES
+  use decompose_mesh_par, only: nparts,localpath_name,outputpath_name,ADIOS_FOR_DATABASES,HDF5_ENABLED
 
   implicit none
 
@@ -88,7 +88,11 @@ program xdecompose_mesh
   call decompose_mesh()
 
 ! writes out database files
-  call write_mesh_databases()
+  if (HDF5_ENABLED) then
+    call write_mesh_databases_hdf5()
+  else
+    call write_mesh_databases()
+  endif
 
 ! user output
   print *
