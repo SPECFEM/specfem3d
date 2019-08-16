@@ -64,9 +64,9 @@ __global__ void compute_add_sources_kernel(realw* accel,
         stf = stf_pre_compute[isource];
         iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
-        atomicAdd(&accel[iglob*3],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 0,i,j,k)]*stf);
-        atomicAdd(&accel[iglob*3+1],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 1,i,j,k)]*stf);
-        atomicAdd(&accel[iglob*3+2],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 2,i,j,k)]*stf);
+        atomicAdd(&accel[iglob*3+0],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource,0,i,j,k)]*stf);
+        atomicAdd(&accel[iglob*3+1],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource,1,i,j,k)]*stf);
+        atomicAdd(&accel[iglob*3+2],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource,2,i,j,k)]*stf);
       }
     }
   }
@@ -190,9 +190,9 @@ __global__ void add_source_master_rec_noise_cuda_kernel(int* d_ibool,
   // accel[1+3*iglob] += noise_sourcearray[1+3*tx + 3*125*it];
   // accel[2+3*iglob] += noise_sourcearray[2+3*tx + 3*125*it];
 
-  atomicAdd(&accel[iglob*3],noise_sourcearray[3*tx + 3*NGLL3*it]);
-  atomicAdd(&accel[iglob*3+1],noise_sourcearray[1+3*tx + 3*NGLL3*it]);
-  atomicAdd(&accel[iglob*3+2],noise_sourcearray[2+3*tx + 3*NGLL3*it]);
+  atomicAdd(&accel[iglob*3],  noise_sourcearray[0 + 3*tx + 3*NGLL3*it]);
+  atomicAdd(&accel[iglob*3+1],noise_sourcearray[1 + 3*tx + 3*NGLL3*it]);
+  atomicAdd(&accel[iglob*3+2],noise_sourcearray[2 + 3*tx + 3*NGLL3*it]);
 
 }
 
@@ -259,14 +259,15 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
       int j = threadIdx.y;
       int k = threadIdx.z;
       int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
-      realw xir    = xir_store[INDEX2(nadj_rec_local,irec_local,i)];
-      realw etar   = etar_store[INDEX2(nadj_rec_local,irec_local,j)];
-      realw gammar = gammar_store[INDEX2(nadj_rec_local,irec_local,k)];
 
-      realw lagrange =   xir * etar * gammar ;
+      realw hxir    = xir_store[INDEX2(NGLLX,i,irec_local)];
+      realw hetar   = etar_store[INDEX2(NGLLX,j,irec_local)];
+      realw hgammar = gammar_store[INDEX2(NGLLX,k,irec_local)];
+
+      realw lagrange =   hxir * hetar * hgammar ;
 
       // atomic operations are absolutely necessary for correctness!
-      atomicAdd(&accel[3*iglob],source_adjoint[INDEX3(NDIM,nadj_rec_local,0,irec_local,it)]*lagrange);
+      atomicAdd(&accel[0+3*iglob],source_adjoint[INDEX3(NDIM,nadj_rec_local,0,irec_local,it)]*lagrange);
       atomicAdd(&accel[1+3*iglob],source_adjoint[INDEX3(NDIM,nadj_rec_local,1,irec_local,it)]*lagrange);
       atomicAdd(&accel[2+3*iglob],source_adjoint[INDEX3(NDIM,nadj_rec_local,2,irec_local,it)]*lagrange);
     } // ispec_is_elastic

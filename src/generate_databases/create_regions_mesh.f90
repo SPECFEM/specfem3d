@@ -437,7 +437,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
 ! local parameters
   integer :: ier,ispec,ia
   logical :: any_regular_elem
-  real    :: cube_edge_size_squared
+  double precision :: cube_edge_size_squared
   real, dimension(NGNOD) :: xelm_real,yelm_real,zelm_real
 
   ! user output
@@ -578,6 +578,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
     ! checks each element shape
     irregular_element_number(:) = 0
     nspec_irregular = nspec
+    cube_edge_size_squared = 1.e9
 
     do ispec = 1, nspec
       ! gets element corner positions

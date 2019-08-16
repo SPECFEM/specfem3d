@@ -35,6 +35,7 @@
 #include "config.h"
 
 typedef float realw;
+typedef realw field;
 
 
 
@@ -44,14 +45,14 @@ typedef float realw;
 
 void FC_FUNC_(transfer_boun_pot_from_device,
               TRANSFER_BOUN_POT_FROM_DEVICE)(long* Mesh_pointer,
-                                             realw* potential_dot_dot_acoustic,
-                                             realw* send_potential_dot_dot_buffer,
+                                             field* potential_dot_dot_acoustic,
+                                             field* send_potential_dot_dot_buffer,
                                              const int* FORWARD_OR_ADJOINT){}
 
 void FC_FUNC_(transfer_asmbl_pot_to_device,
               TRANSFER_ASMBL_POT_TO_DEVICE)(long* Mesh_pointer,
-                                            realw* potential_dot_dot_acoustic,
-                                            realw* buffer_recv_scalar_ext_mesh,
+                                            field* potential_dot_dot_acoustic,
+                                            field* buffer_recv_scalar_ext_mesh,
                                             const int* FORWARD_OR_ADJOINT) {}
 
 
@@ -166,12 +167,12 @@ void FC_FUNC_(check_error_vectors,
 void FC_FUNC_(compute_add_sources_ac_cuda,
               COMPUTE_ADD_SOURCES_AC_CUDA)(long* Mesh_pointer,
                                            int* NSOURCESf,
-                                           double* h_stf_pre_compute) {}
+                                           double* h_stf_pre_compute,int* run_number_of_the_source) {}
 
 void FC_FUNC_(compute_add_sources_ac_s3_cuda,
               COMPUTE_ADD_SOURCES_AC_s3_CUDA)(long* Mesh_pointer,
                                               int* NSOURCESf,
-                                              double* h_stf_pre_compute) {}
+                                              double* h_stf_pre_compute,int* run_number_of_the_source) {}
 
 void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
               ADD_SOURCES_AC_SIM_2_OR_3_CUDA)(long* Mesh_pointer,
@@ -415,6 +416,11 @@ void FC_FUNC_(fault_solver_gpu,
 
 
 //
+// src/cuda/helper_functions.cu
+//
+
+
+//
 // src/cuda/initialize_cuda.cu
 //
 
@@ -456,10 +462,11 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
 void FC_FUNC_(prepare_constants_device,
               PREPARE_CONSTANTS_DEVICE)(long* Mesh_pointer,
                                         int* h_NGLLX, int* NSPEC_AB, int* NGLOB_AB,
+                                        int* NSPEC_IRREGULAR,int* h_irregular_element_number,
                                         realw* h_xix, realw* h_xiy, realw* h_xiz,
                                         realw* h_etax, realw* h_etay, realw* h_etaz,
                                         realw* h_gammax, realw* h_gammay, realw* h_gammaz,
-                                        realw* h_kappav, realw* h_muv,
+                                        realw* xix_regular, realw* jacobian_regular,
                                         int* h_ibool,
                                         int* num_interfaces_ext_mesh, int* max_nibool_interfaces_ext_mesh,
                                         int* h_nibool_interfaces_ext_mesh, int* h_ibool_interfaces_ext_mesh,
@@ -515,6 +522,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
               PREPARE_FIELDS_ELASTIC_DEVICE)(long* Mesh_pointer,
                                              realw* rmassx, realw* rmassy, realw* rmassz,
                                              realw* rho_vp, realw* rho_vs,
+                                             realw* h_kappav, realw* h_muv,
                                              int* num_phase_ispec_elastic,
                                              int* phase_ispec_inner_elastic,
                                              int* ispec_is_elastic,
@@ -679,37 +687,37 @@ void FC_FUNC_(transfer_kernels_noise_to_host,
 
 void FC_FUNC_(transfer_fields_ac_to_device,
               TRANSFER_FIELDS_AC_TO_DEVICE)(int* size,
-                                            realw* potential_acoustic,
-                                            realw* potential_dot_acoustic,
-                                            realw* potential_dot_dot_acoustic,
+                                            field* potential_acoustic,
+                                            field* potential_dot_acoustic,
+                                            field* potential_dot_dot_acoustic,
                                             long* Mesh_pointer) {}
 
 void FC_FUNC_(transfer_b_fields_ac_to_device,
               TRANSFER_B_FIELDS_AC_TO_DEVICE)(int* size,
-                                              realw* b_potential_acoustic,
-                                              realw* b_potential_dot_acoustic,
-                                              realw* b_potential_dot_dot_acoustic,
+                                              field* b_potential_acoustic,
+                                              field* b_potential_dot_acoustic,
+                                              field* b_potential_dot_dot_acoustic,
                                               long* Mesh_pointer) {}
 
 void FC_FUNC_(transfer_fields_ac_from_device,
               TRANSFER_FIELDS_AC_FROM_DEVICE)(int* size,
-                                              realw* potential_acoustic,
-                                              realw* potential_dot_acoustic,
-                                              realw* potential_dot_dot_acoustic,
+                                              field* potential_acoustic,
+                                              field* potential_dot_acoustic,
+                                              field* potential_dot_dot_acoustic,
                                               long* Mesh_pointer) {}
 
 void FC_FUNC_(transfer_b_fields_ac_from_device,
               TRANSFER_B_FIELDS_AC_FROM_DEVICE)(int* size,
-                                                realw* b_potential_acoustic,
-                                                realw* b_potential_dot_acoustic,
-                                                realw* b_potential_dot_dot_acoustic,
+                                                field* b_potential_acoustic,
+                                                field* b_potential_dot_acoustic,
+                                                field* b_potential_dot_dot_acoustic,
                                                 long* Mesh_pointer) {}
 
 void FC_FUNC_(transfer_dot_dot_from_device,
-              TRNASFER_DOT_DOT_FROM_DEVICE)(int* size, realw* potential_dot_dot_acoustic,long* Mesh_pointer) {}
+              TRNASFER_DOT_DOT_FROM_DEVICE)(int* size, field* potential_dot_dot_acoustic,long* Mesh_pointer) {}
 
 void FC_FUNC_(transfer_b_dot_dot_from_device,
-              TRNASFER_B_DOT_DOT_FROM_DEVICE)(int* size, realw* b_potential_dot_dot_acoustic,long* Mesh_pointer) {}
+              TRNASFER_B_DOT_DOT_FROM_DEVICE)(int* size, field* b_potential_dot_dot_acoustic,long* Mesh_pointer) {}
 
 void FC_FUNC_(transfer_kernels_ac_to_host,
               TRANSFER_KERNELS_AC_TO_HOST)(long* Mesh_pointer,realw* h_rho_ac_kl,realw* h_kappa_ac_kl,int* NSPEC_AB) {}
@@ -806,5 +814,6 @@ void FC_FUNC_(compute_seismograms_cuda,
                                         int* NTSTEP_BETWEEN_OUTPUT_SEISMOSf,
                                         int* it, int* it_end,
                                         int* ACOUSTIC_SIMULATION,
+                                        int* ELASTIC_SIMULATION,
                                         int* USE_TRICK_FOR_BETTER_PRESSURE) {}
 

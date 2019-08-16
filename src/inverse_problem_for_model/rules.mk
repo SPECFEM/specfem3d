@@ -286,6 +286,7 @@ cuda_inverse_problem_for_model_OBJECTS = \
 	$O/compute_kernels_cuda.cuda.o \
 	$O/compute_stacey_acoustic_cuda.cuda.o \
 	$O/compute_stacey_viscoelastic_cuda.cuda.o \
+	$O/helper_functions.cuda.o \
 	$O/initialize_cuda.cuda.o \
 	$O/noise_tomography_cuda.cuda.o \
 	$O/prepare_mesh_constants_cuda.cuda.o \

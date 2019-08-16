@@ -29,7 +29,9 @@
 
 #include "smooth_cuda.h"
 #include "config.h"
+
 #include <stdio.h>
+
 // copies integer array from CPU host to GPU device
 void copy_todevice_int(void** d_array_addr_ptr,int* h_array,int size){
    cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int));

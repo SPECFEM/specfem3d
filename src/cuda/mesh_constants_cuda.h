@@ -335,10 +335,11 @@ typedef field* __restrict__ field_p;
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// utility functions: defined in check_fields_cuda.cu
+// utility functions
 
 /* ----------------------------------------------------------------------------------------------- */
 
+// defined in check_fields_cuda.cu
 double get_time();
 void get_free_memory(double* free_db, double* used_db, double* total_db);
 void print_CUDA_error_if_any(cudaError_t err, int num);
@@ -352,6 +353,10 @@ void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str
 void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str,realw* t);
 void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y);
 realw get_device_array_maximum_value(realw* array,int size);
+
+// defined in helper_functions.cu
+void copy_todevice_int(void** d_array_addr_ptr,int* h_array,int size);
+void copy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size);
 
 
 /* ----------------------------------------------------------------------------------------------- */

@@ -51,6 +51,7 @@ $header = <<END;
 #include "config.h"
 
 typedef float realw;
+typedef realw field;
 
 END
 

@@ -58,48 +58,6 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// helper functions
-
-/* ----------------------------------------------------------------------------------------------- */
-
-
-// copies integer array from CPU host to GPU device
-void copy_todevice_int(void** d_array_addr_ptr,int* h_array,int size){
-  TRACE("  copy_todevice_int");
-
-  // allocates memory on GPU
-  //
-  // note: cudaMalloc uses a double-pointer, such that it can return an error code in case it fails
-  //          we thus pass the address to the pointer above (as void double-pointer) to have it
-  //          pointing to the correct pointer of the array here
-  print_CUDA_error_if_any(cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int)),
-                          12001);
-
-  // copies values onto GPU
-  //
-  // note: cudaMemcpy uses the pointer to the array, we thus re-cast the value of
-  //          the double-pointer above to have the correct pointer to the array
-  print_CUDA_error_if_any(cudaMemcpy((int*) *d_array_addr_ptr,h_array,size*sizeof(int),cudaMemcpyHostToDevice),
-                          12002);
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-// copies integer array from CPU host to GPU device
-void copy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size){
-  TRACE("  copy_todevice_realw");
-
-  // allocates memory on GPU
-  print_CUDA_error_if_any(cudaMalloc((void**)d_array_addr_ptr,size*sizeof(realw)),
-                          22001);
-  // copies values onto GPU
-  print_CUDA_error_if_any(cudaMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(realw),cudaMemcpyHostToDevice),
-                          22002);
-}
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
 // GPU preparation
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -339,6 +297,7 @@ void FC_FUNC_(prepare_constants_device,
     copy_todevice_realw((void**)&mp->d_hetar,h_etar,NGLLY*mp->nrec_local);
     copy_todevice_realw((void**)&mp->d_hgammar,h_gammar,NGLLZ*mp->nrec_local);
 
+    // stores only local receiver rotations in d_nu
     realw* h_nu;
     h_nu = (realw*)malloc(NDIM * NDIM * mp->nrec_local * sizeof(realw));
     int irec_loc = 0;
@@ -355,11 +314,11 @@ void FC_FUNC_(prepare_constants_device,
     int size =  (*NTSTEP_BETWEEN_OUTPUT_SEISMOS) * (*nrec_local);
 
     if (mp->save_seismograms_d)
-      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_d,NDIM*size * sizeof(realw)),1801);
+      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_d,NDIM * size * sizeof(realw)),1801);
     if (mp->save_seismograms_v)
-      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_v,NDIM*size * sizeof(realw)),1802);
+      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_v,NDIM * size * sizeof(realw)),1802);
     if (mp->save_seismograms_a)
-      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_a,NDIM*size * sizeof(realw)),1803);
+      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_a,NDIM * size * sizeof(realw)),1803);
     if (mp->save_seismograms_p)
       print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_p,size * sizeof(field)),1804);
 

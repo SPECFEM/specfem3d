@@ -173,7 +173,7 @@
   real, dimension(NGNOD),intent(in) :: xelm,yelm,zelm
 
   logical, intent(inout) :: any_regular_elem
-  real, intent(inout) :: cube_edge_size_squared
+  double precision, intent(inout) :: cube_edge_size_squared
   integer, intent(inout) :: nspec_irregular
 
   integer, intent(in) :: ispec,nspec
@@ -181,7 +181,7 @@
   logical, intent(in) :: ANY_FAULT_IN_THIS_PROC
 
   ! local parameters
-  real :: dist1_sq,dist2_sq,dist3_sq
+  double precision :: dist1_sq,dist2_sq,dist3_sq
   double precision :: threshold
   double precision,parameter :: threshold_percentage = 1.e-5
 
@@ -191,7 +191,7 @@
   dist1_sq = (xelm(2)-xelm(1))**2 + (yelm(2)-yelm(1))**2 +(zelm(2)-zelm(1))**2
 
   ! sets irregular element (default for NGNOD 27 and others)
-  threshold = threshold_percentage*cube_edge_size_squared
+  threshold = threshold_percentage * cube_edge_size_squared
   if (NGNOD == 27 &
       .or. ANY_FAULT_IN_THIS_PROC &
       .or. USE_MESH_COLORING_GPU &
@@ -209,10 +209,10 @@
       zelm(1) == zelm(2) .and. zelm(1) == zelm(3) .and. zelm(1) == zelm(4) .and. &
       zelm(5) == zelm(6) .and. zelm(5) == zelm(7) .and. zelm(5) == zelm(8) ) then
 
-    dist2_sq = (xelm(5)-xelm(1))**2 + (yelm(5)-yelm(1))**2 +(zelm(5)-zelm(1))**2
-    dist3_sq = (xelm(4)-xelm(1))**2 + (yelm(4)-yelm(1))**2 +(zelm(4)-zelm(1))**2
+    dist2_sq = (xelm(5)-xelm(1))**2 + (yelm(5)-yelm(1))**2 + (zelm(5)-zelm(1))**2
+    dist3_sq = (xelm(4)-xelm(1))**2 + (yelm(4)-yelm(1))**2 + (zelm(4)-zelm(1))**2
 
-    threshold = threshold_percentage*dist1_sq
+    threshold = threshold_percentage * dist1_sq
 
     if (abs(dist2_sq - dist1_sq) < threshold .and. abs(dist3_sq - dist1_sq) < threshold) then
       ! regular shape
