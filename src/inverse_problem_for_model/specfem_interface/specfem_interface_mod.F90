@@ -490,11 +490,11 @@ contains
 
     endif
 
-    !! this is to skip writing seismogram on disk by specffem (both forward and ajoint)
+    !! this is to skip writing seismogram on disk by specfem (both forward and ajoint)
     !! do not change
-    NTSTEP_BETWEEN_OUTPUT_SEISMOS=NSTEP
-    INVERSE_FWI_FULL_PROBLEM= .true.
-    NTSTEP_BETWEEN_READ_ADJSRC=NSTEP
+    NTSTEP_BETWEEN_OUTPUT_SEISMOS = NSTEP
+    INVERSE_FWI_FULL_PROBLEM = .true.
+    NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
 
     ! initializes adjoint sources --------------------------------------------------------------------------------------------------
     if (allocated(source_adjoint)) deallocate(source_adjoint)

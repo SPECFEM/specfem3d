@@ -81,6 +81,7 @@ module specfem_par
   integer, dimension(:,:,:), allocatable :: abs_boundary_ijk
   integer, dimension(:), allocatable :: abs_boundary_ispec
   integer :: num_abs_boundary_faces
+
   integer :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP
   integer, dimension(:), allocatable :: ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top
 
