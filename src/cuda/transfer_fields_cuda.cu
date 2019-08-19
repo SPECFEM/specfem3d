@@ -216,6 +216,7 @@ void FC_FUNC_(transfer_b_fields_att_to_device,
                                                int* size_R,
                                                realw* b_epsilondev_xx,realw* b_epsilondev_yy,realw* b_epsilondev_xy,
                                                realw* b_epsilondev_xz,realw* b_epsilondev_yz,
+                                               realw* b_R_trace,realw* b_epsilondev_trace,
                                                int* size_epsilondev) {
 
   TRACE("transfer_b_fields_att_to_device");
@@ -228,12 +229,14 @@ void FC_FUNC_(transfer_b_fields_att_to_device,
   print_CUDA_error_if_any(cudaMemcpy(mp->d_b_R_xy,b_R_xy,*size_R*sizeof(realw),cudaMemcpyHostToDevice),43013);
   print_CUDA_error_if_any(cudaMemcpy(mp->d_b_R_xz,b_R_xz,*size_R*sizeof(realw),cudaMemcpyHostToDevice),43014);
   print_CUDA_error_if_any(cudaMemcpy(mp->d_b_R_yz,b_R_yz,*size_R*sizeof(realw),cudaMemcpyHostToDevice),43015);
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_R_trace,b_R_trace,*size_R*sizeof(realw),cudaMemcpyHostToDevice),43016);
 
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_epsilondev_xx,b_epsilondev_xx,*size_epsilondev*sizeof(realw),cudaMemcpyHostToDevice),43016);
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_epsilondev_yy,b_epsilondev_yy,*size_epsilondev*sizeof(realw),cudaMemcpyHostToDevice),43017);
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_epsilondev_xy,b_epsilondev_xy,*size_epsilondev*sizeof(realw),cudaMemcpyHostToDevice),43018);
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_epsilondev_xz,b_epsilondev_xz,*size_epsilondev*sizeof(realw),cudaMemcpyHostToDevice),43019);
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_epsilondev_yz,b_epsilondev_yz,*size_epsilondev*sizeof(realw),cudaMemcpyHostToDevice),43020);
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_epsilondev_xx,b_epsilondev_xx,*size_epsilondev*sizeof(realw),cudaMemcpyHostToDevice),43116);
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_epsilondev_yy,b_epsilondev_yy,*size_epsilondev*sizeof(realw),cudaMemcpyHostToDevice),43117);
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_epsilondev_xy,b_epsilondev_xy,*size_epsilondev*sizeof(realw),cudaMemcpyHostToDevice),43118);
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_epsilondev_xz,b_epsilondev_xz,*size_epsilondev*sizeof(realw),cudaMemcpyHostToDevice),43119);
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_epsilondev_yz,b_epsilondev_yz,*size_epsilondev*sizeof(realw),cudaMemcpyHostToDevice),43120);
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_epsilondev_trace,b_epsilondev_trace,*size_epsilondev*sizeof(realw),cudaMemcpyHostToDevice),43121);
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("after transfer_b_fields_att_to_device");
@@ -251,6 +254,7 @@ void FC_FUNC_(transfer_fields_att_from_device,
                                                int* size_R,
                                                realw* epsilondev_xx,realw* epsilondev_yy,realw* epsilondev_xy,
                                                realw* epsilondev_xz,realw* epsilondev_yz,
+                                               realw* R_trace,realw* epsilondev_trace,
                                                int* size_epsilondev) {
   TRACE("transfer_fields_att_from_device");
 
@@ -262,13 +266,14 @@ void FC_FUNC_(transfer_fields_att_from_device,
   print_CUDA_error_if_any(cudaMemcpy(R_xy,mp->d_R_xy,*size_R*sizeof(realw),cudaMemcpyDeviceToHost),43023);
   print_CUDA_error_if_any(cudaMemcpy(R_xz,mp->d_R_xz,*size_R*sizeof(realw),cudaMemcpyDeviceToHost),43024);
   print_CUDA_error_if_any(cudaMemcpy(R_yz,mp->d_R_yz,*size_R*sizeof(realw),cudaMemcpyDeviceToHost),43025);
+  print_CUDA_error_if_any(cudaMemcpy(R_trace,mp->d_R_trace,*size_R*sizeof(realw),cudaMemcpyDeviceToHost),43026);
 
-  print_CUDA_error_if_any(cudaMemcpy(epsilondev_xx,mp->d_epsilondev_xx,*size_epsilondev*sizeof(realw),cudaMemcpyDeviceToHost),43026);
-  print_CUDA_error_if_any(cudaMemcpy(epsilondev_yy,mp->d_epsilondev_yy,*size_epsilondev*sizeof(realw),cudaMemcpyDeviceToHost),43027);
-  print_CUDA_error_if_any(cudaMemcpy(epsilondev_xy,mp->d_epsilondev_xy,*size_epsilondev*sizeof(realw),cudaMemcpyDeviceToHost),43028);
-  print_CUDA_error_if_any(cudaMemcpy(epsilondev_xz,mp->d_epsilondev_xz,*size_epsilondev*sizeof(realw),cudaMemcpyDeviceToHost),43029);
-  print_CUDA_error_if_any(cudaMemcpy(epsilondev_yz,mp->d_epsilondev_yz,*size_epsilondev*sizeof(realw),cudaMemcpyDeviceToHost),43030);
-
+  print_CUDA_error_if_any(cudaMemcpy(epsilondev_xx,mp->d_epsilondev_xx,*size_epsilondev*sizeof(realw),cudaMemcpyDeviceToHost),43126);
+  print_CUDA_error_if_any(cudaMemcpy(epsilondev_yy,mp->d_epsilondev_yy,*size_epsilondev*sizeof(realw),cudaMemcpyDeviceToHost),43127);
+  print_CUDA_error_if_any(cudaMemcpy(epsilondev_xy,mp->d_epsilondev_xy,*size_epsilondev*sizeof(realw),cudaMemcpyDeviceToHost),43128);
+  print_CUDA_error_if_any(cudaMemcpy(epsilondev_xz,mp->d_epsilondev_xz,*size_epsilondev*sizeof(realw),cudaMemcpyDeviceToHost),43129);
+  print_CUDA_error_if_any(cudaMemcpy(epsilondev_yz,mp->d_epsilondev_yz,*size_epsilondev*sizeof(realw),cudaMemcpyDeviceToHost),43130);
+  print_CUDA_error_if_any(cudaMemcpy(epsilondev_trace,mp->d_epsilondev_trace,*size_epsilondev*sizeof(realw),cudaMemcpyDeviceToHost),43131);
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("after transfer_fields_att_from_device");

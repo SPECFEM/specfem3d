@@ -601,6 +601,8 @@ void FC_FUNC_(prepare_fields_elastic_device,
                                              int* R_size,
                                              realw* R_xx,realw* R_yy,realw* R_xy,realw* R_xz,realw* R_yz,
                                              realw* factor_common,
+                                             realw* R_trace,realw* epsilondev_trace,
+                                             realw* factor_common_kappa,
                                              realw* alphaval,realw* betaval,realw* gammaval,
                                              int* APPROXIMATE_OCEAN_LOAD,
                                              realw* rmass_ocean_load,
@@ -762,6 +764,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
     copy_todevice_realw((void**)&mp->d_epsilondev_xy,epsilondev_xy,size);
     copy_todevice_realw((void**)&mp->d_epsilondev_xz,epsilondev_xz,size);
     copy_todevice_realw((void**)&mp->d_epsilondev_yz,epsilondev_yz,size);
+    copy_todevice_realw((void**)&mp->d_epsilondev_trace,epsilondev_trace,size);
   }
 
   // attenuation memory variables
@@ -777,8 +780,12 @@ void FC_FUNC_(prepare_fields_elastic_device,
     copy_todevice_realw((void**)&mp->d_R_xy,R_xy,size);
     copy_todevice_realw((void**)&mp->d_R_xz,R_xz,size);
     copy_todevice_realw((void**)&mp->d_R_yz,R_yz,size);
+    copy_todevice_realw((void**)&mp->d_R_trace,R_trace,size);
+
     // attenuation factors
     copy_todevice_realw((void**)&mp->d_factor_common,factor_common,N_SLS*NGLL3*mp->NSPEC_AB);
+    copy_todevice_realw((void**)&mp->d_factor_common_kappa,factor_common_kappa,N_SLS*NGLL3*mp->NSPEC_AB);
+
     // alpha,beta,gamma factors
     copy_todevice_realw((void**)&mp->d_alphaval,alphaval,N_SLS);
     copy_todevice_realw((void**)&mp->d_betaval,betaval,N_SLS);
@@ -989,6 +996,7 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
                                              int* ATTENUATION,
                                              int* R_size,
                                              realw* b_R_xx,realw* b_R_yy,realw* b_R_xy,realw* b_R_xz,realw* b_R_yz,
+                                             realw* b_R_trace,realw* b_epsilondev_trace,
                                              realw* b_alphaval,realw* b_betaval,realw* b_gammaval,
                                              int* ANISOTROPIC_KL,
                                              int* APPROXIMATE_HESS_KL){
@@ -1091,6 +1099,7 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
     copy_todevice_realw((void**)&mp->d_b_epsilondev_xy,b_epsilondev_xy,size);
     copy_todevice_realw((void**)&mp->d_b_epsilondev_xz,b_epsilondev_xz,size);
     copy_todevice_realw((void**)&mp->d_b_epsilondev_yz,b_epsilondev_yz,size);
+    copy_todevice_realw((void**)&mp->d_b_epsilondev_trace,b_epsilondev_trace,size);
   }
 
   // attenuation memory variables
@@ -1106,6 +1115,7 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
     copy_todevice_realw((void**)&mp->d_b_R_xy,b_R_xy,size);
     copy_todevice_realw((void**)&mp->d_b_R_xz,b_R_xz,size);
     copy_todevice_realw((void**)&mp->d_b_R_yz,b_R_yz,size);
+    copy_todevice_realw((void**)&mp->d_b_R_trace,b_R_trace,size);
 
     // alpha,beta,gamma factors for backward fields
     copy_todevice_realw((void**)&mp->d_b_alphaval,b_alphaval,N_SLS);
@@ -1515,6 +1525,7 @@ TRACE("prepare_cleanup_device");
       cudaFree(mp->d_epsilondev_xy);
       cudaFree(mp->d_epsilondev_xz);
       cudaFree(mp->d_epsilondev_yz);
+      cudaFree(mp->d_epsilondev_trace);
       if (mp->simulation_type == 3){
         cudaFree(mp->d_epsilon_trace_over_3);
         cudaFree(mp->d_b_epsilon_trace_over_3);
@@ -1523,11 +1534,13 @@ TRACE("prepare_cleanup_device");
         cudaFree(mp->d_b_epsilondev_xy);
         cudaFree(mp->d_b_epsilondev_xz);
         cudaFree(mp->d_b_epsilondev_yz);
+        cudaFree(mp->d_b_epsilondev_trace);
       }
     }
 
     if (*ATTENUATION ){
       cudaFree(mp->d_factor_common);
+      cudaFree(mp->d_factor_common_kappa);
       cudaFree(mp->d_alphaval);
       cudaFree(mp->d_betaval);
       cudaFree(mp->d_gammaval);
@@ -1536,12 +1549,14 @@ TRACE("prepare_cleanup_device");
       cudaFree(mp->d_R_xy);
       cudaFree(mp->d_R_xz);
       cudaFree(mp->d_R_yz);
+      cudaFree(mp->d_R_trace);
       if (mp->simulation_type == 3){
         cudaFree(mp->d_b_R_xx);
         cudaFree(mp->d_b_R_yy);
         cudaFree(mp->d_b_R_xy);
         cudaFree(mp->d_b_R_xz);
         cudaFree(mp->d_b_R_yz);
+        cudaFree(mp->d_b_R_trace);
         cudaFree(mp->d_b_alphaval);
         cudaFree(mp->d_b_betaval);
         cudaFree(mp->d_b_gammaval);

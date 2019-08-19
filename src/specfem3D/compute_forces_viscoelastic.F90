@@ -604,6 +604,9 @@
         R_yy_sum = sum(R_yy(:,INDEX_IJK,ispec))
         R_trace_kappa_sum = sum(R_trace(:,INDEX_IJK,ispec))
 
+        ! in case no bulk attenuation is desired:
+        !R_trace_kappa_sum = 0.0
+
         sigma_xx = sigma_xx - R_xx_sum - R_trace_kappa_sum
         sigma_yy = sigma_yy - R_yy_sum - R_trace_kappa_sum
         sigma_zz = sigma_zz + R_xx_sum + R_yy_sum - R_trace_kappa_sum

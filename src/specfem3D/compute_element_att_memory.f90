@@ -26,7 +26,8 @@
 !=====================================================================
 
 subroutine compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval,NSPEC_AB,kappastore,mustore, &
-                          NSPEC_ATTENUATION_AB,factor_common_kappa, &
+                          NSPEC_ATTENUATION_AB, &
+                          factor_common_kappa, &
                           R_trace,epsilondev_trace,epsilondev_trace_loc, &
                           factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
                           NSPEC_STRAIN_ONLY,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
@@ -36,17 +37,20 @@ subroutine compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gam
 
   implicit none
 
-  integer :: ispec,NSPEC_AB,NSPEC_ATTENUATION_AB,NSPEC_STRAIN_ONLY
-  real(kind=CUSTOM_REAL), dimension(N_SLS) :: alphaval,betaval,gammaval
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore,mustore
-  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common,factor_common_kappa
-  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: R_trace,R_xx,R_yy,R_xy,R_xz,R_yz
+  integer,intent(in) :: ispec,NSPEC_AB,NSPEC_ATTENUATION_AB,NSPEC_STRAIN_ONLY
+  real(kind=CUSTOM_REAL), dimension(N_SLS),intent(in) :: alphaval,betaval,gammaval
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: kappastore,mustore
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),intent(in) :: factor_common_kappa
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),intent(in) :: factor_common
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY) :: &
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),intent(inout) :: &
+            R_trace,R_xx,R_yy,R_xy,R_xz,R_yz
+
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),intent(in) :: &
             epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY) :: epsilondev_trace
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),intent(in) :: epsilondev_trace
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_trace_loc, epsilondev_xx_loc, &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: epsilondev_trace_loc, epsilondev_xx_loc, &
             epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
 
 ! local parameters
@@ -58,6 +62,7 @@ subroutine compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gam
     do j = 1,NGLLY
       do i = 1,NGLLX
 
+        ! bulk attenuation
         ! term in trace
         factor_loc(:) = kappastore(i,j,k,ispec)* factor_common_kappa(:,i,j,k,ispec)
 
@@ -65,6 +70,7 @@ subroutine compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gam
         Snp1   = epsilondev_trace_loc(i,j,k)
         R_trace(:,i,j,k,ispec) = alphaval(:) * R_trace(:,i,j,k,ispec) + factor_loc(:) * (betaval(:) * Sn + gammaval(:) * Snp1)
 
+        ! shear attenuation
         ! term in xx yy zz xy xz yz
         factor_loc(:) = mustore(i,j,k,ispec) * factor_common(:,i,j,k,ispec)
 
@@ -106,7 +112,8 @@ end subroutine compute_element_att_memory_second_order_rk
 !
 
 subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mustore, &
-                          NSPEC_ATTENUATION_AB,factor_common_kappa, &
+                          NSPEC_ATTENUATION_AB, &
+                          factor_common_kappa, &
                           R_trace,epsilondev_trace_loc, &
                           NSPEC_ATTENUATION_AB_LDDRK,R_trace_lddrk, &
                           factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
@@ -120,18 +127,20 @@ subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mus
 
   implicit none
 
-  integer :: ispec,NSPEC_AB,NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_LDDRK
-  real(kind=CUSTOM_REAL) :: deltat
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore,mustore
-  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common_kappa
-  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common
-  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: R_trace
-  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK) :: R_trace_lddrk
+  integer,intent(in) :: ispec,NSPEC_AB,NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_LDDRK
+  real(kind=CUSTOM_REAL),intent(in) :: deltat
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: kappastore,mustore
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),intent(in) :: factor_common_kappa
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),intent(in) :: factor_common
 
-  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: R_xx,R_yy,R_xy,R_xz,R_yz
-  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK) :: &
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),intent(inout) :: R_trace
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK),intent(inout) :: R_trace_lddrk
+
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),intent(inout) :: R_xx,R_yy,R_xy,R_xz,R_yz
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK),intent(inout) :: &
             R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_trace_loc, epsilondev_xx_loc, &
+
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: epsilondev_trace_loc, epsilondev_xx_loc, &
             epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
 
 ! local parameters

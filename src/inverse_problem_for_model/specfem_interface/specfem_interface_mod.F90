@@ -1050,19 +1050,19 @@ contains
 
     ! from prepare_timerun_lddrk() -------------------------------------------------
     if (ELASTIC_SIMULATION) then
-       allocate(b_R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+       allocate(b_R_xx_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 527')
-       allocate(b_R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+       allocate(b_R_yy_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 528')
-       allocate(b_R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+       allocate(b_R_xy_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 529')
-       allocate(b_R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+       allocate(b_R_xz_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 530')
-       allocate(b_R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+       allocate(b_R_yz_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 531')
        if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
 
-       allocate(b_R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS),stat=ier)
+       allocate(b_R_trace_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 532')
        if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
 

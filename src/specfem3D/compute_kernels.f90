@@ -116,7 +116,7 @@
                        if (ANISOTROPIC_KL) then
 
                           call compute_strain_product(prod,epsilon_trace_over_3(i,j,k,ispec),epsilondev_loc, &
-                               b_epsilon_trace_over_3(i,j,k,ispec),b_epsilondev_loc)
+                                                      b_epsilon_trace_over_3(i,j,k,ispec),b_epsilondev_loc)
                           cijkl_kl(:,i,j,k,ispec) = cijkl_kl(:,i,j,k,ispec) + deltat * prod(:)
 
                        else
@@ -146,8 +146,7 @@
                           ! kernel for bulk modulus, see e.g. Tromp et al. (2005), equation (18)
                           ! note: multiplication with kappa(x) will be done after the time loop
                           kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) &
-                               + deltat * (9 * epsilon_trace_over_3(i,j,k,ispec) &
-                               * b_epsilon_trace_over_3(i,j,k,ispec))
+                               + deltat * (9 * epsilon_trace_over_3(i,j,k,ispec) * b_epsilon_trace_over_3(i,j,k,ispec))
                        endif
                     enddo
                  enddo
@@ -461,8 +460,7 @@
                  b_epsilondev_loc(5)*b_epsilondev_loc(5)) )
 
             hess_kappa_kl(i,j,k,ispec) = hess_kappa_kl(i,j,k,ispec) &
-                     + deltat * (9 * b_epsilon_trace_over_3(i,j,k,ispec) &
-                     * b_epsilon_trace_over_3(i,j,k,ispec))
+                     + deltat * (9 * b_epsilon_trace_over_3(i,j,k,ispec) * b_epsilon_trace_over_3(i,j,k,ispec))
 
           enddo
         enddo

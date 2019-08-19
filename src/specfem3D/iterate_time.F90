@@ -365,9 +365,10 @@
 
       if (ATTENUATION) &
         call transfer_fields_att_from_device(Mesh_pointer, &
-                    R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
-                    epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
-                    size(epsilondev_xx))
+                                             R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
+                                             epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+                                             R_trace,epsilondev_trace, &
+                                             size(epsilondev_xx))
 
     endif
 
@@ -523,6 +524,7 @@
                            size(b_R_xx), &
                            b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
                            b_epsilondev_xz,b_epsilondev_yz, &
+                           b_R_trace,b_epsilondev_trace, &
                            size(b_epsilondev_xx))
       endif
     endif

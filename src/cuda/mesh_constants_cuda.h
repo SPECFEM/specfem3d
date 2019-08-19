@@ -525,8 +525,10 @@ typedef struct mesh_ {
   realw* d_R_xy;
   realw* d_R_xz;
   realw* d_R_yz;
+  realw* d_R_trace;
 
   realw* d_factor_common;
+  realw* d_factor_common_kappa;
 
   realw* d_alphaval;
   realw* d_betaval;
@@ -538,6 +540,7 @@ typedef struct mesh_ {
   realw* d_epsilondev_xy;
   realw* d_epsilondev_xz;
   realw* d_epsilondev_yz;
+  realw* d_epsilondev_trace;
   realw* d_epsilon_trace_over_3;
 
   // anisotropy
@@ -578,12 +581,14 @@ typedef struct mesh_ {
   realw* d_b_R_xy;
   realw* d_b_R_xz;
   realw* d_b_R_yz;
+  realw* d_b_R_trace;
 
   realw* d_b_epsilondev_xx;
   realw* d_b_epsilondev_yy;
   realw* d_b_epsilondev_xy;
   realw* d_b_epsilondev_xz;
   realw* d_b_epsilondev_yz;
+  realw* d_b_epsilondev_trace;
   realw* d_b_epsilon_trace_over_3;
 
   realw* d_b_alphaval;

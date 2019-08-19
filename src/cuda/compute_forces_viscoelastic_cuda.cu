@@ -76,43 +76,50 @@ realw_texture d_hprime_xx_tex;
 
 // updates stress
 
-__device__ __forceinline__ void compute_element_att_stress(int tx,int working_element,const int NSPEC,
+__device__ __forceinline__ void compute_element_att_stress(int tx,int working_element,
                                            realw* R_xx,realw* R_yy,realw* R_xy,
-                                           realw* R_xz,realw* R_yz,realw* Rxx_loc,realw* Ryy_loc,realw* Rxy_loc,
-                                           realw* Rxz_loc,realw* Ryz_loc,
+                                           realw* R_xz,realw* R_yz,
+                                           realw* R_xx_loc,realw* R_yy_loc,realw* R_xy_loc,
+                                           realw* R_xz_loc,realw* R_yz_loc,
+                                           realw* R_trace, realw* R_trace_loc,
                                            realw* sigma_xx,realw* sigma_yy,realw* sigma_zz,
                                            realw* sigma_xy,realw* sigma_xz,realw* sigma_yz) {
 
-  int offset_sls;
-  realw rxx_sum,ryy_sum,rxy_sum,rxz_sum,ryz_sum;
-
-  rxx_sum = 0.f;
-  ryy_sum = 0.f;
-  rxy_sum = 0.f;
-  rxz_sum = 0.f;
-  ryz_sum = 0.f;
+  realw r_xx_sum = 0.f;
+  realw r_yy_sum = 0.f;
+  realw r_xy_sum = 0.f;
+  realw r_xz_sum = 0.f;
+  realw r_yz_sum = 0.f;
+  realw r_trace_kappa_sum = 0.f;
 
   for(int i_sls = 0; i_sls < N_SLS; i_sls++){
     // index
-    offset_sls = tx + NGLL3*(working_element + NSPEC*i_sls);
+    // offset_sls = tx + NGLL3*(working_element + NSPEC*i_sls); // (i,j,k,ispec,i_sls) equals INDEX3(NGLL3,NSPEC,tx,working_element,i_sls);
+    int offset_sls = INDEX3(N_SLS,NGLL3,i_sls,tx,working_element); // (i_sls,i,j,k,ispec)
+
     //loads R_** values in local registers, which will be used later in the code
-    Rxx_loc[i_sls] = get_global_cr( &R_xx[offset_sls] );
-    Ryy_loc[i_sls] = get_global_cr( &R_yy[offset_sls] );
-    Rxy_loc[i_sls] = get_global_cr( &R_xy[offset_sls] );
-    Rxz_loc[i_sls] = get_global_cr( &R_xz[offset_sls] );
-    Ryz_loc[i_sls] = get_global_cr( &R_yz[offset_sls] );
-    rxx_sum += Rxx_loc[i_sls];
-    ryy_sum += Ryy_loc[i_sls];
-    rxy_sum += Rxy_loc[i_sls];
-    rxz_sum += Rxz_loc[i_sls];
-    ryz_sum += Ryz_loc[i_sls];
-}
-    *sigma_xx = *sigma_xx - rxx_sum;//Rxx_loc[i_sls];
-    *sigma_yy = *sigma_yy - ryy_sum;//Ryy_loc[i_sls];
-    *sigma_zz = *sigma_zz + rxx_sum + ryy_sum;//Rxx_loc[i_sls] + Ryy_loc[i_sls];
-    *sigma_xy = *sigma_xy - rxy_sum;//Rxy_loc[i_sls];
-    *sigma_xz = *sigma_xz - rxz_sum;//Rxz_loc[i_sls];
-    *sigma_yz = *sigma_yz - ryz_sum;//Ryz_loc[i_sls];
+    R_trace_loc[i_sls] = get_global_cr( &R_trace[offset_sls] );
+    r_trace_kappa_sum += R_trace_loc[i_sls];
+
+    R_xx_loc[i_sls] = get_global_cr( &R_xx[offset_sls] );
+    R_yy_loc[i_sls] = get_global_cr( &R_yy[offset_sls] );
+    R_xy_loc[i_sls] = get_global_cr( &R_xy[offset_sls] );
+    R_xz_loc[i_sls] = get_global_cr( &R_xz[offset_sls] );
+    R_yz_loc[i_sls] = get_global_cr( &R_yz[offset_sls] );
+
+    r_xx_sum += R_xx_loc[i_sls];
+    r_yy_sum += R_yy_loc[i_sls];
+    r_xy_sum += R_xy_loc[i_sls];
+    r_xz_sum += R_xz_loc[i_sls];
+    r_yz_sum += R_yz_loc[i_sls];
+  }
+
+  *sigma_xx = *sigma_xx - r_xx_sum - r_trace_kappa_sum;//Rxx_loc[i_sls];
+  *sigma_yy = *sigma_yy - r_yy_sum - r_trace_kappa_sum;//Ryy_loc[i_sls];
+  *sigma_zz = *sigma_zz + r_xx_sum + r_yy_sum - r_trace_kappa_sum;//Rxx_loc[i_sls] + Ryy_loc[i_sls];
+  *sigma_xy = *sigma_xy - r_xy_sum;//Rxy_loc[i_sls];
+  *sigma_xz = *sigma_xz - r_xz_sum;//Rxz_loc[i_sls];
+  *sigma_yz = *sigma_yz - r_yz_sum;//Ryz_loc[i_sls];
 
   return;
 }
@@ -126,48 +133,61 @@ __device__  __forceinline__ void compute_element_att_memory(int tx,int working_e
                                           realw_const_p factor_common,
                                           realw_const_p alphaval,realw_const_p betaval,realw_const_p gammaval,
                                           realw_p R_xx,realw_p R_yy,realw_p R_xy,realw_p R_xz,realw_p R_yz,
-                                          realw* Rxx_loc,realw* Ryy_loc,realw* Rxy_loc,realw* Rxz_loc,realw* Ryz_loc,
+                                          realw* R_xx_loc,realw* R_yy_loc,realw* R_xy_loc,realw* R_xz_loc,realw* R_yz_loc,
                                           realw_p epsilondev_xx,realw_p epsilondev_yy,realw_p epsilondev_xy,
                                           realw_p epsilondev_xz,realw_p epsilondev_yz,
                                           realw epsilondev_xx_loc,realw epsilondev_yy_loc,realw epsilondev_xy_loc,
-                                          realw epsilondev_xz_loc,realw epsilondev_yz_loc
+                                          realw epsilondev_xz_loc,realw epsilondev_yz_loc,
+                                          realw kappal,
+                                          realw_const_p factor_common_kappa,
+                                          realw_p R_trace,realw* R_trace_loc,
+                                          realw_p epsilondev_trace,realw epsilondev_trace_loc
                                           ){
 
   int ijk_ispec;
-  int offset_sls,offset_common;
+  int offset;
   realw alphaval_loc,betaval_loc,gammaval_loc;
   realw factor_loc;
   realw Sn_xx,Sn_yy,Sn_xy,Sn_xz,Sn_yz;
+  realw Sn;
 
   // indices
   ijk_ispec = tx + NGLL3 * working_element;
 
-//  mul = get_global_cr( &d_muv[offset_align] );
-   Sn_xx   = get_global_cr( &epsilondev_xx[ijk_ispec] ); //(i,j,k,ispec)
-   Sn_yy   = get_global_cr( &epsilondev_yy[ijk_ispec] );
-   Sn_xy   = get_global_cr( &epsilondev_xy[ijk_ispec] );
-   Sn_xz   = get_global_cr( &epsilondev_xz[ijk_ispec] );
-   Sn_yz   = get_global_cr( &epsilondev_yz[ijk_ispec] );
+  //  mul = get_global_cr( &d_muv[offset_align] );
+  Sn_xx   = get_global_cr( &epsilondev_xx[ijk_ispec] ); //(i,j,k,ispec)
+  Sn_yy   = get_global_cr( &epsilondev_yy[ijk_ispec] );
+  Sn_xy   = get_global_cr( &epsilondev_xy[ijk_ispec] );
+  Sn_xz   = get_global_cr( &epsilondev_xz[ijk_ispec] );
+  Sn_yz   = get_global_cr( &epsilondev_yz[ijk_ispec] );
+
+  //  kappal = get_global_cr( &d_kappa[offset_align] );
+  Sn = get_global_cr( &epsilondev_trace[ijk_ispec] ); //Sn   = epsilondev_trace(i,j,k,ispec)
 
   // use Runge-Kutta scheme to march in time
   for(int i_sls = 0; i_sls < N_SLS; i_sls++){
-
     // indices
-    offset_common = i_sls + N_SLS*(tx + NGLL3*working_element); // (i_sls,i,j,k,ispec)
-    offset_sls = tx + NGLL3*(working_element + NSPEC*i_sls);   // (i,j,k,ispec,i_sls)
-
-    factor_loc = mul*get_global_cr( &factor_common[offset_common] ); //mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
+    // note: arrays R_xx,.. and factor_common had different array dimensions, thus required different offset indices:
+    //         offset_common = i_sls + N_SLS*(tx + NGLL3*working_element); // (i_sls,i,j,k,ispec)
+    //         offset_sls = tx + NGLL3*(working_element + NSPEC*i_sls);   // (i,j,k,ispec,i_sls)
+    //       now, all arrays have same indexing (N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB)
+    offset = INDEX3(N_SLS,NGLL3,i_sls,tx,working_element); // (i_sls,i,j,k,ispec)
 
     alphaval_loc = alphaval[i_sls]; // (i_sls)
-    betaval_loc = factor_loc*betaval[i_sls];
-    gammaval_loc = factor_loc*gammaval[i_sls];
+    betaval_loc = betaval[i_sls];
+    gammaval_loc = gammaval[i_sls];
 
-    R_xx[offset_sls] = alphaval_loc * Rxx_loc[i_sls] + betaval_loc * Sn_xx + gammaval_loc *  epsilondev_xx_loc;
-    R_yy[offset_sls] = alphaval_loc * Ryy_loc[i_sls] + betaval_loc * Sn_yy + gammaval_loc *  epsilondev_yy_loc;
-    R_xy[offset_sls] = alphaval_loc * Rxy_loc[i_sls] + betaval_loc * Sn_xy + gammaval_loc *  epsilondev_xy_loc;
-    R_xz[offset_sls] = alphaval_loc * Rxz_loc[i_sls] + betaval_loc * Sn_xz + gammaval_loc *  epsilondev_xz_loc;
-    R_yz[offset_sls] = alphaval_loc * Ryz_loc[i_sls] + betaval_loc * Sn_yz + gammaval_loc *  epsilondev_yz_loc;
+    // bulk attenuation
+    factor_loc = kappal*get_global_cr( &factor_common_kappa[offset] ); // kappastore(i,j,k,ispec)* factor_common_kappa(i_sls,i,j,k,ispec)
+    R_trace[offset] = alphaval_loc * R_trace_loc[i_sls] + factor_loc * (betaval_loc * Sn + gammaval_loc * epsilondev_trace_loc);
 
+    // shear attenuation
+    factor_loc = mul*get_global_cr( &factor_common[offset] ); //mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
+    R_xx[offset] = alphaval_loc * R_xx_loc[i_sls] + factor_loc * (betaval_loc * Sn_xx + gammaval_loc * epsilondev_xx_loc);
+    R_yy[offset] = alphaval_loc * R_yy_loc[i_sls] + factor_loc * (betaval_loc * Sn_yy + gammaval_loc * epsilondev_yy_loc);
+    R_xy[offset] = alphaval_loc * R_xy_loc[i_sls] + factor_loc * (betaval_loc * Sn_xy + gammaval_loc * epsilondev_xy_loc);
+    R_xz[offset] = alphaval_loc * R_xz_loc[i_sls] + factor_loc * (betaval_loc * Sn_xz + gammaval_loc * epsilondev_xz_loc);
+    R_yz[offset] = alphaval_loc * R_yz_loc[i_sls] + factor_loc * (betaval_loc * Sn_yz + gammaval_loc * epsilondev_yz_loc);
   }
   return;
 }
@@ -542,16 +562,28 @@ __device__  __forceinline__ void sum_hprimewgll_gamma(int I, int J, int K,
 
 
 __device__  __forceinline__ void
-  get_spatial_derivatives(realw* xixl,realw* xiyl,realw* xizl,realw* etaxl,realw* etayl,realw* etazl,
-                          realw* gammaxl,realw* gammayl,realw* gammazl,realw* jacobianl,int I,int J,int K,int tx,
-                          realw* tempx1l,realw* tempy1l,realw* tempz1l,realw* tempx2l,realw* tempy2l,realw* tempz2l,
-                          realw* tempx3l,realw* tempy3l,realw* tempz3l,realw* sh_tempx,realw* sh_tempy,realw* sh_tempz,realw* sh_hprime_xx,
-                          realw* duxdxl,realw* duxdyl,realw* duxdzl,realw* duydxl,realw* duydyl,realw* duydzl,realw* duzdxl,realw* duzdyl,realw* duzdzl,
-                          realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
-                          int ispec_irreg, realw xix_regular,int ipass){
+  get_spatial_derivatives(realw* xixl,realw* xiyl,realw* xizl,
+                          realw* etaxl,realw* etayl,realw* etazl,
+                          realw* gammaxl,realw* gammayl,realw* gammazl,
+                          realw* jacobianl,
+                          int I,int J,int K,int tx,
+                          realw* tempx1l,realw* tempy1l,realw* tempz1l,
+                          realw* tempx2l,realw* tempy2l,realw* tempz2l,
+                          realw* tempx3l,realw* tempy3l,realw* tempz3l,
+                          realw* sh_tempx,realw* sh_tempy,realw* sh_tempz,
+                          realw* sh_hprime_xx,
+                          realw* duxdxl,realw* duxdyl,realw* duxdzl,
+                          realw* duydxl,realw* duydyl,realw* duydzl,
+                          realw* duzdxl,realw* duzdyl,realw* duzdzl,
+                          realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
+                          realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
+                          realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
+                          int ispec_irreg, realw xix_regular,
+                          int ipass){
 
   // computes first matrix products
-  if (ispec_irreg >= 0 && ipass==0 ){ //irregular_element
+  if (ispec_irreg >= 0 && ipass==0 ){
+    // irregular_element
     // local padded index
     int offset = ispec_irreg*NGLL3_PADDED + tx;
 
@@ -578,14 +610,14 @@ __device__  __forceinline__ void
   sum_hprime_gamma(I,J,K,tempx3l,tempy3l,tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
 
 
-    // synchronize all the threads (one thread for each of the NGLL grid points of the
-    // current spectral element) because we need the whole element to be ready in order
-    // to be able to compute the matrix products along cut planes of the 3D element below
-    __syncthreads();
+  // synchronize all the threads (one thread for each of the NGLL grid points of the
+  // current spectral element) because we need the whole element to be ready in order
+  // to be able to compute the matrix products along cut planes of the 3D element below
+  __syncthreads();
 
-  if (ispec_irreg >= 0 ){ //irregular_element
-
-    // compute derivatives of ux, uy and uz with respect to x, y and z
+  // compute derivatives of ux, uy and uz with respect to x, y and z
+  if (ispec_irreg >= 0 ){
+    // irregular_element
     (*duxdxl) = (*xixl)*(*tempx1l) + (*etaxl)*(*tempx2l) + (*gammaxl)*(*tempx3l);
     (*duxdyl) = (*xiyl)*(*tempx1l) + (*etayl)*(*tempx2l) + (*gammayl)*(*tempx3l);
     (*duxdzl) = (*xizl)*(*tempx1l) + (*etazl)*(*tempx2l) + (*gammazl)*(*tempx3l);
@@ -599,7 +631,7 @@ __device__  __forceinline__ void
     (*duzdzl) = (*xizl)*(*tempz1l) + (*etazl)*(*tempz2l) + (*gammazl)*(*tempz3l);
   }
   else{
-    // compute derivatives of ux, uy and uz with respect to x, y and z
+    // regular element
     (*duxdxl) = xix_regular*(*tempx1l);
     (*duxdyl) = xix_regular*(*tempx2l);
     (*duxdzl) = xix_regular*(*tempx3l);
@@ -616,8 +648,6 @@ __device__  __forceinline__ void
   // + 9 * 5 FLOP = 45 FLOP
   //
   // + 0 BYTE
-
-
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -834,11 +864,16 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
 
   // computes the spatial derivatives duxdxl ... depending on the regularity of the element
   get_spatial_derivatives(&xixl,&xiyl,&xizl,&etaxl,&etayl,&etazl,
-                          &gammaxl,&gammayl,&gammazl,&jacobianl,I,J,K,tx,
-                          &tempx1l,&tempy1l,&tempz1l,&tempx2l,&tempy2l,&tempz2l,
-                          &tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx,
+                          &gammaxl,&gammayl,&gammazl,&jacobianl,
+                          I,J,K,tx,
+                          &tempx1l,&tempy1l,&tempz1l,
+                          &tempx2l,&tempy2l,&tempz2l,
+                          &tempx3l,&tempy3l,&tempz3l,
+                          sh_tempx,sh_tempy,sh_tempz,
+                          sh_hprime_xx,
                           &duxdxl,&duxdyl,&duxdzl,&duydxl,&duydyl,&duydzl,&duzdxl,&duzdyl,&duzdzl,
-                          d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,ispec_irreg,xix_regular,0);
+                          d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
+                          ispec_irreg,xix_regular,0);
 
   // precompute some sums to save CPU time
   duxdxl_plus_duydyl = duxdxl + duydyl;
@@ -1076,8 +1111,6 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
     load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
   }
 
-
-
   // synchronize all the threads (one thread for each of the NGLL grid points of the
   // current spectral element) because we need the whole element to be ready in order
   // to be able to compute the matrix products along cut planes of the 3D element below
@@ -1085,11 +1118,16 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
 
   // computes the spatial derivatives duxdxl ... depending on the regularity of the element
   get_spatial_derivatives(&xixl,&xiyl,&xizl,&etaxl,&etayl,&etazl,
-                          &gammaxl,&gammayl,&gammazl,&jacobianl,I,J,K,tx,
-                          &tempx1l,&tempy1l,&tempz1l,&tempx2l,&tempy2l,&tempz2l,
-                          &tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx,
+                          &gammaxl,&gammayl,&gammazl,&jacobianl,
+                          I,J,K,tx,
+                          &tempx1l,&tempy1l,&tempz1l,
+                          &tempx2l,&tempy2l,&tempz2l,
+                          &tempx3l,&tempy3l,&tempz3l,
+                          sh_tempx,sh_tempy,sh_tempz,
+                          sh_hprime_xx,
                           &duxdxl,&duxdyl,&duxdzl,&duydxl,&duydyl,&duydzl,&duzdxl,&duzdyl,&duzdzl,
-                          d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,ispec_irreg,xix_regular,0);
+                          d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
+                          ispec_irreg,xix_regular,0);
 
   // precompute some sums to save CPU time
   duxdxl_plus_duydyl = duxdxl + duydyl;
@@ -1112,9 +1150,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
       epsilondev_xz[tx + working_element*NGLL3] = 0.5f * duzdxl_plus_duxdzl; // epsilondev_xz_loc;
       epsilondev_yz[tx + working_element*NGLL3] = 0.5f * duzdyl_plus_duydzl; //epsilondev_yz_loc;
       // kernel simulations
-      if (SIMULATION_TYPE == 3){
-        epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
-      }
+      if (SIMULATION_TYPE == 3){ epsilon_trace_over_3[tx + working_element*NGLL3] = templ; }
     } // threadIdx.x
   }
 
@@ -1356,9 +1392,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
       epsilondev_xz[tx + working_element*NGLL3] = 0.5f * duzdxl_plus_duxdzl; // epsilondev_xz_loc;
       epsilondev_yz[tx + working_element*NGLL3] = 0.5f * duzdyl_plus_duydzl; //epsilondev_yz_loc;
       // kernel simulations
-      if (SIMULATION_TYPE == 3){
-        epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
-      }
+      if (SIMULATION_TYPE == 3){ epsilon_trace_over_3[tx + working_element*NGLL3] = templ; }
     } // threadIdx.x
   }
 
@@ -1607,11 +1641,16 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
 
   // computes the spatial derivatives duxdxl ... depending on the regularity of the element
   get_spatial_derivatives(&xixl,&xiyl,&xizl,&etaxl,&etayl,&etazl,
-                          &gammaxl,&gammayl,&gammazl,&jacobianl,I,J,K,tx,
-                          &tempx1l,&tempy1l,&tempz1l,&tempx2l,&tempy2l,&tempz2l,
-                          &tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx,
+                          &gammaxl,&gammayl,&gammazl,&jacobianl,
+                          I,J,K,tx,
+                          &tempx1l,&tempy1l,&tempz1l,
+                          &tempx2l,&tempy2l,&tempz2l,
+                          &tempx3l,&tempy3l,&tempz3l,
+                          sh_tempx,sh_tempy,sh_tempz,
+                          sh_hprime_xx,
                           &duxdxl,&duxdyl,&duxdzl,&duydxl,&duydyl,&duydzl,&duzdxl,&duzdyl,&duzdzl,
-                          d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,ispec_irreg,xix_regular,0);
+                          d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
+                          ispec_irreg,xix_regular,0);
 
   // precompute some sums to save CPU time
   duxdxl_plus_duydyl = duxdxl + duydyl;
@@ -1634,9 +1673,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
       epsilondev_xz[tx + working_element*NGLL3] = 0.5f * duzdxl_plus_duxdzl; // epsilondev_xz_loc;
       epsilondev_yz[tx + working_element*NGLL3] = 0.5f * duzdyl_plus_duydzl; //epsilondev_yz_loc;
       // kernel simulations
-      if (SIMULATION_TYPE == 3){
-        epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
-      }
+      if (SIMULATION_TYPE == 3){ epsilon_trace_over_3[tx + working_element*NGLL3] = templ; }
     } // threadIdx.x
   }
 
@@ -1897,11 +1934,16 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
 
   // computes the spatial derivatives duxdxl ... depending on the regularity of the element
   get_spatial_derivatives(&xixl,&xiyl,&xizl,&etaxl,&etayl,&etazl,
-                          &gammaxl,&gammayl,&gammazl,&jacobianl,I,J,K,tx,
-                          &tempx1l,&tempy1l,&tempz1l,&tempx2l,&tempy2l,&tempz2l,
-                          &tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx,
+                          &gammaxl,&gammayl,&gammazl,&jacobianl,
+                          I,J,K,tx,
+                          &tempx1l,&tempy1l,&tempz1l,
+                          &tempx2l,&tempy2l,&tempz2l,
+                          &tempx3l,&tempy3l,&tempz3l,
+                          sh_tempx,sh_tempy,sh_tempz,
+                          sh_hprime_xx,
                           &duxdxl,&duxdyl,&duxdzl,&duydxl,&duydyl,&duydzl,&duzdxl,&duzdyl,&duzdzl,
-                          d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,ispec_irreg,xix_regular,0);
+                          d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
+                          ispec_irreg,xix_regular,0);
 
   // precompute some sums to save CPU time
   duxdxl_plus_duydyl = duxdxl + duydyl;
@@ -1922,9 +1964,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
     epsilondev_yz_loc = 0.5f * duzdyl_plus_duydzl;
 
     if (SIMULATION_TYPE == 3){
-      if (threadIdx.x < NGLL3) {
-        epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
-      }
+      if (threadIdx.x < NGLL3) { epsilon_trace_over_3[tx + working_element*NGLL3] = templ; }
     }
   }
 
@@ -2128,6 +2168,8 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
                   const int NSPEC,
                   realw_const_p factor_common,
                   realw_p R_xx,realw_p R_yy,realw_p R_xy,realw_p R_xz,realw_p R_yz,
+                  realw_const_p factor_common_kappa,
+                  realw_p R_trace,realw_p epsilondev_trace,
                   realw_const_p alphaval,realw_const_p betaval,realw_const_p gammaval,
                   const int ANISOTROPY,
                   realw_const_p d_c11store,realw_const_p d_c12store,realw_const_p d_c13store,
@@ -2171,11 +2213,13 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 
   realw sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz;
   realw epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc;
+  realw epsilondev_trace_loc;
 
   realw c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66;
   realw sum_terms1,sum_terms2,sum_terms3;
-  realw Rxx_loc[N_SLS],Ryy_loc[N_SLS],Rxy_loc[N_SLS],Rxz_loc[N_SLS],Ryz_loc[N_SLS];
 
+  realw R_xx_loc[N_SLS],R_yy_loc[N_SLS],R_xy_loc[N_SLS],R_xz_loc[N_SLS],R_yz_loc[N_SLS];
+  realw R_trace_loc[N_SLS];
 
   // gravity variables
   realw sigma_yx,sigma_zx,sigma_zy;
@@ -2257,14 +2301,19 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
   __syncthreads();
 
   if (active ){
-   // attenuation
-  // computes the spatial derivatives duxdxl ... depending on the regularity of the element
+    // attenuation
+    // computes the spatial derivatives duxdxl ... depending on the regularity of the element
     get_spatial_derivatives(&xixl,&xiyl,&xizl,&etaxl,&etayl,&etazl,
-                            &gammaxl,&gammayl,&gammazl,&jacobianl,I,J,K,tx,
-                            &tempx1l,&tempy1l,&tempz1l,&tempx2l,&tempy2l,&tempz2l,
-                            &tempx3l,&tempy3l,&tempz3l,s_dummyx_loc_att,s_dummyy_loc_att,s_dummyz_loc_att,sh_hprime_xx,
+                            &gammaxl,&gammayl,&gammazl,&jacobianl,
+                            I,J,K,tx,
+                            &tempx1l,&tempy1l,&tempz1l,
+                            &tempx2l,&tempy2l,&tempz2l,
+                            &tempx3l,&tempy3l,&tempz3l,
+                            s_dummyx_loc_att,s_dummyy_loc_att,s_dummyz_loc_att,
+                            sh_hprime_xx,
                             &duxdxl,&duxdyl,&duxdzl,&duydxl,&duydyl,&duydzl,&duzdxl,&duzdyl,&duzdzl,
-                            d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,ispec_irreg,xix_regular,0);
+                            d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
+                            ispec_irreg,xix_regular,0);
 
     // attenuation
     // computes deviatoric strain attenuation and/or for kernel calculations
@@ -2275,16 +2324,22 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     epsilondev_xy_loc = 0.5f * (duxdyl + duydxl);
     epsilondev_xz_loc = 0.5f * (duzdxl + duxdzl);
     epsilondev_yz_loc = 0.5f * (duzdyl + duydzl);
+    epsilondev_trace_loc = duxdxl + duydyl + duzdzl;
 
-    if (SIMULATION_TYPE == 3) epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
+    if (SIMULATION_TYPE == 3){ epsilon_trace_over_3[tx + working_element*NGLL3] = templ; }
 
     // computes the spatial derivatives duxdxl ... depending on the regularity of the element
     get_spatial_derivatives(&xixl,&xiyl,&xizl,&etaxl,&etayl,&etazl,
-                            &gammaxl,&gammayl,&gammazl,&jacobianl,I,J,K,tx,
-                            &tempx1l,&tempy1l,&tempz1l,&tempx2l,&tempy2l,&tempz2l,
-                            &tempx3l,&tempy3l,&tempz3l,s_dummyx_loc,s_dummyy_loc,s_dummyz_loc,sh_hprime_xx,
+                            &gammaxl,&gammayl,&gammazl,&jacobianl,
+                            I,J,K,tx,
+                            &tempx1l,&tempy1l,&tempz1l,
+                            &tempx2l,&tempy2l,&tempz2l,
+                            &tempx3l,&tempy3l,&tempz3l,
+                            s_dummyx_loc,s_dummyy_loc,s_dummyz_loc,
+                            sh_hprime_xx,
                             &duxdxl,&duxdyl,&duxdzl,&duydxl,&duydyl,&duydzl,&duzdxl,&duzdyl,&duzdzl,
-                            d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,ispec_irreg,xix_regular,1);
+                            d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
+                            ispec_irreg,xix_regular,1);
 
     // precompute some sums to save CPU time
     duxdxl_plus_duydyl = duxdxl + duydyl;
@@ -2293,6 +2348,10 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     duxdyl_plus_duydxl = duxdyl + duydxl;
     duzdxl_plus_duxdzl = duzdxl + duxdzl;
     duzdyl_plus_duydzl = duzdyl + duydzl;
+
+    // isotropic rheology, kappal & mul coefficients also needed for attenuation case
+    kappal = get_global_cr( &d_kappav[offset] );
+    mul = get_global_cr( &d_muv[offset] );
 
     // full anisotropic case, stress calculations
     if (ANISOTROPY){
@@ -2331,14 +2390,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
       sigma_yz = c14*duxdxl + c46*duxdyl_plus_duydxl + c24*duydyl +
                  c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl;
     }else{
-
       // isotropic case
-
-      // compute elements with an elastic isotropic rheology
-      kappal = get_global_cr( &d_kappav[offset] );
-      mul = get_global_cr( &d_muv[offset] );
-
-      // attenuation
 
       lambdalplus2mul = kappal + 1.33333333333333333333f * mul;  // 4./3. = 1.3333333
       lambdal = lambdalplus2mul - 2.0f * mul;
@@ -2355,8 +2407,10 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 
     // attenuation
     // subtracts memory variables if attenuation
-    compute_element_att_stress(tx,working_element,NSPEC,
-                               R_xx,R_yy,R_xy,R_xz,R_yz,Rxx_loc,Ryy_loc,Rxy_loc,Rxz_loc,Ryz_loc,
+    compute_element_att_stress(tx,working_element,
+                               R_xx,R_yy,R_xy,R_xz,R_yz,
+                               R_xx_loc,R_yy_loc,R_xy_loc,R_xz_loc,R_yz_loc,
+                               R_trace,R_trace_loc,
                                &sigma_xx,&sigma_yy,&sigma_zz,&sigma_xy,&sigma_xz,&sigma_yz);
 
     // define symmetric components (needed for non-symmetric dot product and sigma for gravity)
@@ -2466,9 +2520,14 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     compute_element_att_memory(tx,working_element,NSPEC,
                                mul,
                                factor_common,alphaval,betaval,gammaval,
-                               R_xx,R_yy,R_xy,R_xz,R_yz,Rxx_loc,Ryy_loc,Rxy_loc,Rxz_loc,Ryz_loc,
+                               R_xx,R_yy,R_xy,R_xz,R_yz,
+                               R_xx_loc,R_yy_loc,R_xy_loc,R_xz_loc,R_yz_loc,
                                epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,
-                               epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc);
+                               epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc,
+                               kappal,
+                               factor_common_kappa,
+                               R_trace,R_trace_loc,
+                               epsilondev_trace,epsilondev_trace_loc);
 
     // save deviatoric strain for Runge-Kutta scheme
     // fortran: epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
@@ -2477,6 +2536,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     epsilondev_xy[tx + working_element*NGLL3] = epsilondev_xy_loc;
     epsilondev_xz[tx + working_element*NGLL3] = epsilondev_xz_loc;
     epsilondev_yz[tx + working_element*NGLL3] = epsilondev_yz_loc;
+    epsilondev_trace[tx + working_element*NGLL3] = epsilondev_trace_loc;
   } // if (active)
 
 // JC JC here we will need to add GPU support for the new C-PML routines
@@ -3359,11 +3419,16 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
 
   // computes the spatial derivatives duxdxl ... depending on the regularity of the element
   get_spatial_derivatives(&xixl,&xiyl,&xizl,&etaxl,&etayl,&etazl,
-                          &gammaxl,&gammayl,&gammazl,&jacobianl,I,J,K,tx,
-                          &tempx1l,&tempy1l,&tempz1l,&tempx2l,&tempy2l,&tempz2l,
-                          &tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx,
+                          &gammaxl,&gammayl,&gammazl,&jacobianl,
+                          I,J,K,tx,
+                          &tempx1l,&tempy1l,&tempz1l,
+                          &tempx2l,&tempy2l,&tempz2l,
+                          &tempx3l,&tempy3l,&tempz3l,
+                          sh_tempx,sh_tempy,sh_tempz,
+                          sh_hprime_xx,
                           &duxdxl,&duxdyl,&duxdzl,&duydxl,&duydyl,&duydzl,&duzdxl,&duzdyl,&duzdzl,
-                          d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,ispec_irreg,xix_regular,0);
+                          d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
+                          ispec_irreg,xix_regular,0);
 
 
   // precompute some sums to save CPU time
@@ -3471,11 +3536,14 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
               realw* d_factor_common,
               realw* d_R_xx,realw* d_R_yy,realw* d_R_xy,
               realw* d_R_xz,realw* d_R_yz,
+              realw* d_factor_common_kappa,
+              realw* d_R_trace,realw* d_epsilondev_trace,
               realw* d_b_epsilondev_xx,realw* d_b_epsilondev_yy,realw* d_b_epsilondev_xy,
               realw* d_b_epsilondev_xz,realw* d_b_epsilondev_yz,
               realw* d_b_epsilon_trace_over_3,
               realw* d_b_R_xx,realw* d_b_R_yy,realw* d_b_R_xy,
               realw* d_b_R_xz,realw* d_b_R_yz,
+              realw* d_b_R_trace,realw* d_b_epsilondev_trace,
               realw* d_c11store,realw* d_c12store,realw* d_c13store,
               realw* d_c14store,realw* d_c15store,realw* d_c16store,
               realw* d_c22store,realw* d_c23store,realw* d_c24store,
@@ -3537,6 +3605,8 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                 mp->NSPEC_AB,
                                                                 d_factor_common,
                                                                 d_R_xx,d_R_yy,d_R_xy,d_R_xz,d_R_yz,
+                                                                d_factor_common_kappa,
+                                                                d_R_trace,d_epsilondev_trace,
                                                                 mp->d_alphaval,mp->d_betaval,mp->d_gammaval,
                                                                 ANISOTROPY,
                                                                 d_c11store,d_c12store,d_c13store,
@@ -3578,6 +3648,8 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                    mp->NSPEC_AB,
                                                                    d_factor_common,
                                                                    d_b_R_xx,d_b_R_yy,d_b_R_xy,d_b_R_xz,d_b_R_yz,
+                                                                   d_factor_common_kappa,
+                                                                   d_b_R_trace,d_b_epsilondev_trace,
                                                                    mp->d_b_alphaval,mp->d_b_betaval,mp->d_b_gammaval,
                                                                    ANISOTROPY,
                                                                    d_c11store,d_c12store,d_c13store,
@@ -4017,11 +4089,16 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
                mp->d_factor_common + offset_nonpadded_att2,
                mp->d_R_xx + offset_nonpadded,mp->d_R_yy + offset_nonpadded,mp->d_R_xy + offset_nonpadded,
                mp->d_R_xz + offset_nonpadded,mp->d_R_yz + offset_nonpadded,
+               mp->d_factor_common_kappa + offset_nonpadded_att2,
+               mp->d_R_trace + offset_nonpadded,
+               mp->d_epsilondev_trace + offset_nonpadded,
                mp->d_b_epsilondev_xx + offset_nonpadded,mp->d_b_epsilondev_yy + offset_nonpadded,mp->d_b_epsilondev_xy + offset_nonpadded,
                mp->d_b_epsilondev_xz + offset_nonpadded,mp->d_b_epsilondev_yz + offset_nonpadded,
                mp->d_b_epsilon_trace_over_3 + offset_nonpadded,
                mp->d_b_R_xx + offset_nonpadded,mp->d_b_R_yy + offset_nonpadded,mp->d_b_R_xy + offset_nonpadded,
                mp->d_b_R_xz + offset_nonpadded,mp->d_b_R_yz + offset_nonpadded,
+               mp->d_b_R_trace + offset_nonpadded,
+               mp->d_b_epsilondev_trace + offset_nonpadded,
                mp->d_c11store + offset,mp->d_c12store + offset,mp->d_c13store + offset,
                mp->d_c14store + offset,mp->d_c15store + offset,mp->d_c16store + offset,
                mp->d_c22store + offset,mp->d_c23store + offset,mp->d_c24store + offset,
@@ -4060,11 +4137,14 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
              mp->d_factor_common,
              mp->d_R_xx,mp->d_R_yy,mp->d_R_xy,
              mp->d_R_xz,mp->d_R_yz,
+             mp->d_factor_common_kappa,
+             mp->d_R_trace,mp->d_epsilondev_trace,
              mp->d_b_epsilondev_xx,mp->d_b_epsilondev_yy,mp->d_b_epsilondev_xy,
              mp->d_b_epsilondev_xz,mp->d_b_epsilondev_yz,
              mp->d_b_epsilon_trace_over_3,
              mp->d_b_R_xx,mp->d_b_R_yy,mp->d_b_R_xy,
              mp->d_b_R_xz,mp->d_b_R_yz,
+             mp->d_b_R_trace,mp->d_b_epsilondev_trace,
              mp->d_c11store,mp->d_c12store,mp->d_c13store,
              mp->d_c14store,mp->d_c15store,mp->d_c16store,
              mp->d_c22store,mp->d_c23store,mp->d_c24store,
