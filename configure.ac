@@ -160,6 +160,18 @@ AC_ARG_WITH([asdf],
     [want_asdf=no])
 AM_CONDITIONAL([COND_ASDF], [test x$"$want_asdf" != xno])
 
+###
+### HDF5
+###
+
+AC_ARG_WITH([hdf5],
+    [AC_HELP_STRING([--with-hdf5],
+        [build HDF5 enabled version @<:@default=no@:>@])],
+    [want_hdf5="$withval"],
+    [want_hdf5=no])
+AM_CONDITIONAL([COND_HDF5], [test x$"$want_hdf5" != xno])
+
+
 ############################################################
 
 # Checks for programs.
@@ -464,9 +476,27 @@ AS_IF([test x"$want_vtk" != xno], [
     CIT_PATH_VTK
 ])
 
+###
+### HDF5
+###
+#AS_IF([test x"$want_hdf5" != xno], [
+#    AS_BOX([HDF5])
+#    CIT_HDF5_HEADER
+#    CIT_HDF5_LIB_PARALLEL
+#])
+#AX_LIB_HDF5([parallel])
+#if test "$with_hdf5" = "yes"; then
+#	CC="$HDF5_CC"
+#	FC="$HDF5_FC"
+#else
+#	AC_MSG_ERROR([Unable to find HDF5, we need parallel HDF5.])
+#fi
+
+
 ##
 ## Git version info
 ##
+
 AS_BOX([git version info])
 CIG_PKG_GIT(SPECFEM3D)
 AC_DEFINE_UNQUOTED([SPECFEM3D_VERSION], ["$PACKAGE_VERSION"], [Define SPECFEM3D version])
