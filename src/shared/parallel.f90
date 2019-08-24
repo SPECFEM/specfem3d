@@ -60,7 +60,7 @@ module my_mpi
 
   implicit none
 
-  integer :: my_local_mpi_comm_world, my_local_mpi_comm_for_bcast
+  integer :: my_local_mpi_comm_world, my_local_mpi_comm_for_bcast, my_local_mpi_info_null
 
 end module my_mpi
 
@@ -104,6 +104,8 @@ end module my_mpi
 
 ! create sub-communicators if needed, if running more than one earthquake from the same job
   call world_split()
+
+  my_local_mpi_info_null = MPI_INFO_NULL
 
   end subroutine init_mpi
 
@@ -1630,6 +1632,19 @@ end module my_mpi
   comm = my_local_mpi_comm_world
 
   end subroutine world_get_comm
+
+
+  subroutine get_info_null(info)
+
+  use my_mpi
+
+  implicit none
+
+  integer, intent(out) :: info
+
+  info = my_local_mpi_info_null
+
+  end subroutine get_info_null
 
 !
 !-------------------------------------------------------------------------------------------------
