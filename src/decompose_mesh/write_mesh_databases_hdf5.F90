@@ -30,16 +30,19 @@
 
 ! writes out new Databases files for each partition
 
-  use hdf5
+  use phdf5_utils
 
   use decompose_mesh_par
 
   implicit none
 
+  ! phdf5 io object
+  type(h5io) :: h5
+
   ! local parameters
   integer :: ier
-  integer(HID_T) :: file_id
-  
+  ! name for material data group
+  character(len=14), parameter :: gname_material   = "material_props" ! Group name for material properties
   ! processor dependent group names
   character(len=5)  :: gname_proc_head = "proc_"
   character(len=11) :: gname_proc
@@ -63,12 +66,18 @@
   prname = "Database.h5"
   IIN_database_hdf5 = outputpath_name(1:len_trim(outputpath_name))//prname
 
-  ! initialize hdf5 file
-  call h5open_f(ier)
-  call hdf5_initialize(IIN_database_hdf5, nparts)
+  ! initialize hdf5 io
+  h5 = h5io()
+  call h5_init(h5, IIN_database_hdf5)
+  ! create a hdf5 file
+  call h5_create_file(h5)
+
+  ! prepare groups in hdf5 file
+  ! material data group
+  call h5_create_group(h5, gname_material)
 
   ! continue opening hdf5 file till the end of write process
-  call h5fopen_f(IIN_database_hdf5, H5F_ACC_RDWR_F, file_id, ier) ! file open !!!! error
+  call h5_open_file(h5)
  
   ! writes out Database file for each partition
   do ipart = 0, nparts-1
@@ -76,34 +85,33 @@
      ! set hdf5 group name
      write(tempstr, "(i6.6)") ipart
      gname_proc = gname_proc_head // trim(tempstr)
- 
+     ! create a group for this part
+     call h5_create_group(h5, gname_proc)
+
      ! gets number of nodes
-     call write_glob2loc_nodes_database_h5(IIN_database_hdf5, gname_proc, file_id, ipart, nnodes_loc, nodes_coords, &
+     call write_glob2loc_nodes_database_h5(gname_proc, h5, ipart, nnodes_loc, nodes_coords, &
                                 glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                 glob2loc_nodes, nnodes, 1)
 
-     call write_partition_database_h5(IIN_database_hdf5, gname_proc, file_id, ipart, nspec_local, nspec, elmnts, &
+     call write_partition_database_h5(gname_proc, h5, ipart, nspec_local, nspec, elmnts, &
                                 glob2loc_elmnts, glob2loc_nodes_nparts, &
                                 glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 1)
 
-     !debug
-     !print *, ipart,": nspec_local=",nspec_local, " nnodes_local=", nnodes_loc
 
      ! writes out node coordinate locations
-     ! write(IIN_database) nnodes_loc !!!!!!!!!!!!! nnodes_loc will be containded as an attribute of glob2loc_nodes group
 
-     call write_glob2loc_nodes_database_h5(IIN_database_hdf5, gname_proc, file_id, ipart, nnodes_loc, nodes_coords, &
+     call write_glob2loc_nodes_database_h5(gname_proc, h5, ipart, nnodes_loc, nodes_coords, &
                                 glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                 glob2loc_nodes, nnodes, 2)
 
      ! writes out spectral element indices
      !write(IIN_database) nspec_local
-     call write_partition_database_h5(IIN_database_hdf5, gname_proc, file_id, ipart, nspec_local, nspec, elmnts, &
+     call write_partition_database_h5(gname_proc, h5, ipart, nspec_local, nspec, elmnts, &
                                 glob2loc_elmnts, glob2loc_nodes_nparts, &
                                 glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 2)
 
      ! writes out absorbing/free-surface boundaries
-     call write_boundaries_database_h5(IIN_database_hdf5, gname_proc, file_id, ipart, nspec, &
+     call write_boundaries_database_h5(gname_proc, h5, ipart, nspec, &
                                 nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &
                                 nspec2D_ymax, nspec2D_bottom, nspec2D_top, &
                                 ibelm_xmin, ibelm_xmax, ibelm_ymin, &
@@ -114,11 +122,11 @@
                                 glob2loc_nodes_parts, glob2loc_nodes, part, NGNOD2D)
 
      ! writes out C-PML elements indices, CPML-regions and thickness of C-PML layer
-     call write_cpml_database_h5(IIN_database_hdf5, gname_proc, file_id, ipart, nspec, nspec_cpml, CPML_to_spec, &
+     call write_cpml_database_h5(gname_proc, h5, ipart, nspec, nspec_cpml, CPML_to_spec, &
           CPML_regions, is_CPML, glob2loc_elmnts, part)
 
      ! gets number of MPI interfaces
-     call write_interfaces_database_h5(IIN_database_hdf5, gname_proc, file_id, &
+     call write_interfaces_database_h5(gname_proc, h5, &
                                 tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
                                 my_ninterface, my_interfaces, my_nb_interfaces, &
                                 glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
@@ -132,14 +140,14 @@
      ! write(IIN_database) my_ninterface, maxval(my_nb_interfaces)
      !endif
 
-     call write_interfaces_database_h5(IIN_database_hdf5, gname_proc, file_id, &
+     call write_interfaces_database_h5(gname_proc, h5, &
                                 tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
                                 my_ninterface, my_interfaces, my_nb_interfaces, &
                                 glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                 glob2loc_nodes, 2, nparts)
 
      ! writes out moho surface (optional)
-     call write_moho_surface_database_h5(IIN_database_hdf5, gname_proc, file_id, ipart, nspec, &
+     call write_moho_surface_database_h5(gname_proc, h5, ipart, nspec, &
                                 glob2loc_elmnts, glob2loc_nodes_nparts, &
                                 glob2loc_nodes_parts, glob2loc_nodes, part, &
                                 nspec2D_moho, ibelm_moho, nodes_ibelm_moho, NGNOD2D)
@@ -172,11 +180,11 @@
   enddo ! end iproc loop
 
   ! write material properties
-  call write_material_props_database_h5(IIN_database_hdf5,file_id,count_def_mat,count_undef_mat, &
+  call write_material_props_database_h5(gname_material, h5,count_def_mat,count_undef_mat, &
                                      mat_prop, undef_mat_prop)
 
-  call h5fclose_f(file_id, ier)
-  call h5close_f(ier)
+  call h5_close_file(h5)
+  call h5_destructor(h5)
 
   ! cleanup
   deallocate(CPML_to_spec,stat=ier); if (ier /= 0) stop 'Error deallocating array CPML_to_spec'

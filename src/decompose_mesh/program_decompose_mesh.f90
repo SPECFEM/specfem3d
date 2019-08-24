@@ -89,6 +89,7 @@ program xdecompose_mesh
 
 ! writes out database files
   if (HDF5_ENABLED) then
+    print *, 'HDF5 Database output'
     call write_mesh_databases_hdf5()
   else
     call write_mesh_databases()
