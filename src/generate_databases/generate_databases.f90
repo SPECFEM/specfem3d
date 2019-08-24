@@ -248,22 +248,24 @@
 ! reads Databases files
   if (ADIOS_FOR_DATABASES) then
     call read_partition_files_adios()
+  else if (HDF5_ENABLED) then
+    call read_partition_files_hdf5()
   else
     call read_partition_files()
   endif
 
 ! external mesh creation
   call setup_mesh()
-
+!
 ! finalize mesher
   call finalize_databases()
-
+!
   if (ADIOS_ENABLED) then
     call adios_cleanup()
   endif
 
 ! MPI finish
   call finalize_mpi()
-
+!
   end program xgenerate_databases
 

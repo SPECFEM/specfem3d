@@ -146,6 +146,32 @@ else
 shared_OBJECTS += $(asdf_shared_STUBS)
 endif
 
+###
+### HDF5
+###
+hdf5_shared_OBJECTS = \
+	$O/phdf5_utils.shared_hdf5.o \
+	$(EMPTY_MACRO)
+hdf5_shared_MODULES = \
+	$O/phdf5_utils.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
+hdf5_shared_STUBS_OBJECTS = \
+	$O/phdf5_utils_stubs.shared_hdf5.o \
+        $(EMPTY_MACRO)
+hdf5_shared_STUBS_MODULES = \
+	$O/phdf5_utils.$(FC_MODEXT) \
+        $(EMPTY_MACRO)
+
+
+ifeq ($(HDF5),yes)
+shared_OBJECTS += $(hdf5_shared_OBJECTS)
+shared_MODULES += $(hdf5_shared_MODULES)
+else
+shared_OBJECTS += $(hdf5_shared_STUBS_OBJECTS)
+shared_MODULES += $(hdf5_shared_STUBS_MODULES)
+endif
+
 #######################################
 
 ####
@@ -203,3 +229,13 @@ $O/%.shared_asdf.o: $S/%.f90
 $O/%.cc.o: $S/%.c ${SETUP}/config.h
 	${CC} -c $(CPPFLAGS) $(CFLAGS) -o $@ $<
 
+## hdf5
+$O/%.shared_hdf5.o: $S/%.f90
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+
+#$O/%.shared_hdf5_module.o: $S/%.f90
+	#${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+#$O/%.shared_hdf5.o: $S/%.f90 $O/phdf5_utils.shared_hdf5_module.o
+	#${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<

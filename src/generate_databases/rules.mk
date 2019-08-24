@@ -117,6 +117,7 @@ generate_databases_SHARED_OBJECTS = \
 	$O/sort_array_coordinates.shared.o \
 	$O/utm_geo.shared.o \
 	$O/write_VTK_data.shared.o \
+	$O/phdf5_utils.shared_hdf5.o \
 	$(EMPTY_MACRO)
 
 # MPI stuffs
@@ -157,6 +158,24 @@ adios_generate_databases_PREOBJECTS = $(adios_generate_databases_PRESTUBS)
 endif
 generate_databases_OBJECTS += $(adios_generate_databases_OBJECTS)
 generate_databases_SHARED_OBJECTS += $(adios_generate_databases_PREOBJECTS)
+
+# using PHDF5 file io
+hdf5_generate_databases_OBJECTS = \
+	$O/read_partition_files_hdf5.gen_hdf5.o \
+	$O/save_arrays_solver_hdf5.gen_hdf5.o \
+	$(EMPTY_MACRO)
+
+hdf5_generate_databases_STUBS = \
+	$O/read_partition_files_hdf5_stub.gen_hdf5.o \
+	$(EMPTY_MACRO)
+
+ifeq ($(HDF5),yes)
+generate_databases_OBJECTS += $(hdf5_generate_databases_OBJECTS)
+else
+generate_databases_OBJECTS += $(hdf5_generate_databases_STUBS)
+endif
+
+
 
 
 # objects for the pure Fortran version
@@ -268,4 +287,13 @@ $O/%.gen_noadios.o: $S/%.F90
 
 $O/%.gen_noadios.o: $S/%.f90
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+###
+### PHDF5 compilcation
+###
+$O/%.gen_hdf5.o: $S/%.f90 $O/shared_par.shared_module.o $O/phdf5_utils.shared_hdf5.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+$O/%.gen_hdf5.o: $S/%.F90 $O/shared_par.shared_module.o $O/phdf5_utils.shared_hdf5.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
 

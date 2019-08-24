@@ -48,7 +48,8 @@
       ANISOTROPY,NPROC,APPROXIMATE_OCEAN_LOAD,OLSEN_ATTENUATION_RATIO, &
       ATTENUATION,USE_OLSEN_ATTENUATION, &
       nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
-      ADIOS_FOR_MESH,IMAIN,SAVE_MOHO_MESH,ATTENUATION_f0_REFERENCE
+      ADIOS_FOR_MESH,IMAIN,SAVE_MOHO_MESH,ATTENUATION_f0_REFERENCE, &
+      HDF5_ENABLED
 
   use create_regions_mesh_ext_par
   use fault_generate_databases, only: fault_read_input,fault_setup, &
@@ -284,6 +285,11 @@
                                            nibool_interfaces_ext_mesh, &
                                            max_interface_size_ext_mesh, &
                                            ibool_interfaces_ext_mesh,SAVE_MESH_FILES,ANISOTROPY)
+  else if (HDF5_ENABLED) then
+    call save_arrays_solver_ext_mesh_h5(nspec,nglob_dummy,APPROXIMATE_OCEAN_LOAD,ibool, &
+                                     num_interfaces_ext_mesh,my_neighbors_ext_mesh,nibool_interfaces_ext_mesh, &
+                                     max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
+                                     SAVE_MESH_FILES,ANISOTROPY)
   else
     call save_arrays_solver_ext_mesh(nspec,nglob_dummy,APPROXIMATE_OCEAN_LOAD,ibool, &
                                      num_interfaces_ext_mesh,my_neighbors_ext_mesh,nibool_interfaces_ext_mesh, &
