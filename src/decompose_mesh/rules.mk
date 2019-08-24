@@ -65,6 +65,7 @@ decompose_mesh_SHARED_OBJECTS = \
 	$O/read_value_parameters.shared.o \
 	$O/sort_array_coordinates.shared.o \
 	$O/write_VTK_data.shared.o \
+	$O/phdf5_utils.shared_hdf5.o \
 	$(EMPTY_MACRO)
 
 
@@ -118,7 +119,6 @@ xdecompose_mesh_OBJECTS = \
 	$O/lts_helper.dec.o \
 	$O/lts_setup_elements.dec.o \
 	$O/part_decompose_mesh.dec_module.o \
-	$O/part_decompose_mesh_hdf5.dec_module.o \
 	$O/partition_scotch.dec.o \
 	$O/partition_metis.dec.o \
 	$O/partition_patoh.dec.o \
@@ -128,9 +128,24 @@ xdecompose_mesh_OBJECTS = \
 	$O/wrap_patoh.o \
 	$O/wrap_metis.o \
 	$O/write_mesh_databases.dec.o \
+	$(EMPTY_MACRO)
+
+
+# for hdf5 io
+hdf5_mesh_OBJECTS = \
+	$O/part_decompose_mesh_hdf5.dec_module.o \
 	$O/write_mesh_databases_hdf5.dec.o \
 	$(EMPTY_MACRO)
 
+hdf5_mesh_STUBS = \
+	$O/write_mesh_databases_hdf5_stub.dec.o \
+	$(EMPTY_MACRO)
+
+ifeq ($(HDF5),yes)
+xdecompose_mesh_OBJECTS += $(hdf5_mesh_OBJECTS)
+else
+xdecompose_mesh_OBJECTS += $(hdf5_mesh_STUBS)
+endif
 
 
 # rules for the pure Fortran version
@@ -164,6 +179,7 @@ decompose_mesh_OBJECTS += \
 	$(xdecompose_mesh_mpi_OBJECTS) \
 	$(EMPTY_MACRO)
 endif
+
 
 # parallel version of decompose_mesh
 $E/xdecompose_mesh_mpi: $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_mpi_OBJECTS) $(COND_MPI_OBJECTS)
@@ -206,10 +222,10 @@ $O/%.dec_module.o: $S/%.F90 $O/shared_par.shared_module.o
 $O/%.dec_module.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
 
-$O/%.dec.o: $S/%.f90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o $O/part_decompose_mesh_hdf5.dec_module.o $O/decompose_mesh_par.dec_module.o
+$O/%.dec.o: $S/%.f90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o $O/part_decompose_mesh_hdf5.dec_module.o $O/decompose_mesh_par.dec_module.o $O/phdf5_utils.shared_hdf5.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
 
-$O/%.dec.o: $S/%.F90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o $O/part_decompose_mesh_hdf5.dec_module.o $O/decompose_mesh_par.dec_module.o
+$O/%.dec.o: $S/%.F90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o $O/part_decompose_mesh_hdf5.dec_module.o $O/decompose_mesh_par.dec_module.o $O/phdf5_utils.shared_hdf5.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
 
 $O/%.mpidec.o: $S/%.f90 $O/shared_par.shared_module.o
