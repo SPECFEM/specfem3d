@@ -361,8 +361,6 @@ contains
 
         call h5_create_group_prop_list(this)
         call h5gcreate_f(file_id, trim(group_name), group_id, error, gcpl_id=plist_id)
-        !call h5gcreate_f(file_id, trim(group_name), group_id, error, &
-        !            OBJECT_NAMELEN_DEFAULT_F, H5P_DEFAULT_F, H5P_DEFAULT_F, H5P_DEFAULT_F)
         if (error /= 0) write(*,*) 'error while creating a group, ', group_name
         call h5gclose_f(group_id, error)
         if (error /= 0) write(*,*) 'error while closing a group, ' , group_name
@@ -375,7 +373,6 @@ contains
         character(len=*), intent(in) :: group_name
         call h5_open_group_prop_list(this)
         call h5gopen_f(file_id, trim(group_name), group_id, error, gapl_id=plist_id)
-        !call h5gopen_f(file_id, trim(group_name), group_id, error, H5P_DEFAULT_F)
         if (error /= 0) write(*,*) 'hdf5 open group failed for, ', group_name
         call h5_close_prop_list(this)
         store_group_name = group_name
@@ -389,8 +386,7 @@ contains
         integer(HSIZE_T), dimension(1)    :: dim
         dim = shape(data)
 
-        call h5dopen_f(group_id, dataset_name, dataset_id, error)!, plist_id)
-        !call h5dopen_f(file_id, "/"//trim(store_group_name)//"/"//trim(dataset_name), dataset_id, error, plist_id) ! full path access
+        call h5dopen_f(group_id, dataset_name, dataset_id, error)
 
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
@@ -408,8 +404,7 @@ contains
         integer(HSIZE_T), dimension(2)    :: dim
         dim = shape(data)
 
-        call h5dopen_f(group_id, dataset_name, dataset_id, error)!, plist_id)
-        !call h5dopen_f(file_id, "/"//trim(store_group_name)//"/"//trim(dataset_name), dataset_id, error)!, plist_id) ! full path access
+        call h5dopen_f(group_id, dataset_name, dataset_id, error)
 
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
@@ -426,8 +421,7 @@ contains
         integer(HSIZE_T), dimension(2)    :: dim
         dim = shape(data)
 
-        call h5dopen_f(group_id, dataset_name, dataset_id, error)!, plist_id)
-        !call h5dopen_f(file_id, "/"//trim(store_group_name)//"/"//trim(dataset_name), dataset_id, error)!, plist_id) ! full path access
+        call h5dopen_f(group_id, dataset_name, dataset_id, error)
 
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
@@ -444,8 +438,7 @@ contains
         integer(HSIZE_T), dimension(2)    :: dim
         dim = shape(data)
 
-        call h5dopen_f(group_id, dataset_name, dataset_id, error)!, plist_id)
-        !call h5dopen_f(file_id, "/"//trim(store_group_name)//"/"//trim(dataset_name), dataset_id, error)!, plist_id) ! full path access
+        call h5dopen_f(group_id, dataset_name, dataset_id, error)
 
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
@@ -464,13 +457,12 @@ contains
         integer(HSIZE_T), dimension(1)       :: dim
         dim = shape(data)
 
-        call h5dopen_f(group_id, dataset_name, dataset_id, error)!, plist_id)
-        !call h5dopen_f(file_id, "/"//trim(store_group_name)//"/"//trim(dataset_name), dataset_id, error)!, plist_id) ! full path access
+        call h5dopen_f(group_id, dataset_name, dataset_id, error)
 
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
 
-        call h5aopen_f(dataset_id, attribute_name, attr_id, error)!, H5P_DEFAULT)
+        call h5aopen_f(dataset_id, attribute_name, attr_id, error)
         call h5aread_f(attr_id, H5T_NATIVE_INTEGER, data, dim, error)
         call h5aclose_f(attr_id,error)
 
@@ -517,18 +509,11 @@ contains
         type(h5io), intent(in) :: this
         character(len=*), intent(in)      :: dataset_name
         integer, dimension(:), intent(in) :: data
-        !integer(HID_T)                    :: dspace_id ! dataspace id is local.
         integer                           :: rank = 1
         integer(HSIZE_T), dimension(1)    :: dim
         dim = size(data)
 
-        !call h5screate_simple_f(rank, dim, dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ,', dataset_name
-        !call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_INTEGER, dspace_id, dataset_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataset create failed for ,', dataset_name
-
         !! create datasets of all processes for independent write
-        !call h5_create_dataset_in_main_proc(this, dataset_name, (/dim/), rank, 1)
         call h5_open_dataset(this, dataset_name)
 
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
@@ -538,9 +523,6 @@ contains
         call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, xfer_prp = plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ,', dataset_name
 
-        !call h5sclose_f(dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
-        
         call h5_close_dataset(this)
     end subroutine h5_write_dataset_p_1d_i
 
@@ -554,18 +536,7 @@ contains
         integer(HSIZE_T), dimension(1)    :: dim
         dim = size(data)
 
-
-        !call h5screate_simple_f(rank, dim, dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ,', dataset_name
-        !if (CUSTOM_REAL == 4) then
-        !  call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_REAL, dspace_id, dataset_id, error)
-        !else! if (CUSTOM_REAL == 8) then
-        !  call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_DOUBLE, dspace_id, dataset_id, error)
-        !endif
-        !if (error /= 0) write(*,*) 'hdf5 dataset create failed for ,', dataset_name
-
         !! create datasets of all processes for independent write
-        !call h5_create_dataset_in_main_proc(this, dataset_name, (/dim/), rank, CUSTOM_REAL)
         call h5_open_dataset(this, dataset_name)
 
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
@@ -577,9 +548,6 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ,', dataset_name
 
-        !call h5sclose_f(dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
-        
         call h5_close_dataset(this)
     end subroutine h5_write_dataset_p_1d_r
 
@@ -593,13 +561,7 @@ contains
         integer(HSIZE_T), dimension(2)    :: dim
         dim = shape(data)
 
-        !call h5screate_simple_f(rank, dim, dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ,', dataset_name
-        !call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_INTEGER, dspace_id, dataset_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataset create failed for ,', dataset_name
-
         !! create datasets of all processes for independent write
-        !call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, 1)
         call h5_open_dataset(this, dataset_name)
 
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
@@ -608,9 +570,6 @@ contains
         call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, xfer_prp = plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ,', dataset_name
 
-        !call h5sclose_f(dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
-        
         call h5_close_dataset(this)
     end subroutine h5_write_dataset_p_2d_i
 
@@ -624,18 +583,7 @@ contains
         integer(HSIZE_T), dimension(2)                     :: dim
         dim = shape(data)
 
-
-        !call h5screate_simple_f(rank, dim, dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ,', dataset_name
-        !if (CUSTOM_REAL == 4) then
-        !  call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_REAL, dspace_id, dataset_id, error)
-        !else! if (CUSTOM_REAL == 8) then
-        !  call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_DOUBLE, dspace_id, dataset_id, error)
-        !endif
-        !if (error /= 0) write(*,*) 'hdf5 dataset create failed for ,', dataset_name
-
         ! create datasets of all processes for independent write
-        !call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, CUSTOM_REAL)
         call h5_open_dataset(this, dataset_name)
 
 
@@ -648,9 +596,6 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ,', dataset_name
 
-        !call h5sclose_f(dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
-        
         call h5_close_dataset(this)
     end subroutine h5_write_dataset_p_2d_r
 
@@ -664,13 +609,7 @@ contains
         integer(HSIZE_T), dimension(3)                       :: dim
         dim = shape(data)
 
-        !call h5screate_simple_f(rank, dim, dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ,', dataset_name
-        !call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_INTEGER, dspace_id, dataset_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataset create failed for ,', dataset_name
-
         ! create datasets of all processes for independent write
-        !call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, 1)
         call h5_open_dataset(this, dataset_name)
 
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
@@ -679,9 +618,6 @@ contains
         call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, xfer_prp = plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ,', dataset_name
 
-        !call h5sclose_f(dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
-        
         call h5_close_dataset(this)
     end subroutine h5_write_dataset_p_3d_i
 
@@ -695,17 +631,7 @@ contains
         integer(HSIZE_T), dimension(3)        :: dim
         dim = shape(data)
 
-        !call h5screate_simple_f(rank, dim, dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ,', dataset_name
-        !if (CUSTOM_REAL == 4) then
-        !  call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_REAL, dspace_id, dataset_id, error)
-        !else! if (CUSTOM_REAL == 8) then
-        !  call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_DOUBLE, dspace_id, dataset_id, error)
-        !endif
-        !if (error /= 0) write(*,*) 'hdf5 dataset create failed for ,', dataset_name
-
         ! create datasets of all processes for independent write
-        !call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, CUSTOM_REAL)
         call h5_open_dataset(this, dataset_name)
 
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
@@ -717,9 +643,6 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ,', dataset_name
 
-        !call h5sclose_f(dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
-        
         call h5_close_dataset(this)
  
     end subroutine h5_write_dataset_p_3d_r
@@ -734,13 +657,6 @@ contains
         integer(HSIZE_T), dimension(4)          :: dim
         dim = shape(data)
 
-        !call h5screate_simple_f(rank, dim, dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ,', dataset_name
-        !call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_INTEGER, dspace_id, dataset_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataset create failed for ,', dataset_name
-
-        ! create datasets of all processes for independent write
-        !call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, 1)
         call h5_open_dataset(this, dataset_name)
 
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
@@ -749,9 +665,6 @@ contains
         call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, xfer_prp = plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ,', dataset_name
 
-        !call h5sclose_f(dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
-        
         call h5_close_dataset(this)
     end subroutine h5_write_dataset_p_4d_i
 
@@ -766,17 +679,7 @@ contains
         dim = shape(data)
 
 
-        !call h5screate_simple_f(rank, dim, dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ,', dataset_name
-        !if (CUSTOM_REAL == 4) then
-        !  call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_REAL, dspace_id, dataset_id, error)
-        !else! if (CUSTOM_REAL == 8) then
-        !  call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_DOUBLE, dspace_id, dataset_id, error)
-        !endif
-        !if (error /= 0) write(*,*) 'hdf5 dataset create failed for ,', dataset_name
-
         ! create datasets of all processes for independent write
-        !call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, CUSTOM_REAL)
         call h5_open_dataset(this, dataset_name)
 
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
@@ -788,9 +691,6 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ,', dataset_name
 
-        !call h5sclose_f(dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
-        
         call h5_close_dataset(this)
     end subroutine h5_write_dataset_p_4d_r
 
@@ -805,17 +705,7 @@ contains
         dim = shape(data)
 
 
-        !call h5screate_simple_f(rank, dim, dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ,', dataset_name
-        !if (CUSTOM_REAL == 4) then
-        !  call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_REAL, dspace_id, dataset_id, error)
-        !else! if (CUSTOM_REAL == 8) then
-        !  call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_DOUBLE, dspace_id, dataset_id, error)
-        !endif
-        !if (error /= 0) write(*,*) 'hdf5 dataset create failed for ,', dataset_name
-
         ! create datasets of all processes for independent write
-        !call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, CUSTOM_REAL)
         call h5_open_dataset(this, dataset_name)
 
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
@@ -827,9 +717,6 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ,', dataset_name
 
-        !call h5sclose_f(dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
-        
         call h5_close_dataset(this)
     end subroutine h5_write_dataset_p_5d_r
 
@@ -850,13 +737,7 @@ contains
         allocate(write_data(size(data)), stat=error)
         call bool_array2integer(this, data, write_data)
 
-        !call h5screate_simple_f(rank, dim, dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ,', dataset_name
-        !call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_INTEGER, dspace_id, dataset_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataset create failed for ,', dataset_name
-
         ! create datasets of all processes for independent write
-        !call h5_create_dataset_in_main_proc(this, dataset_name, (/dim/), rank, 1)
         call h5_open_dataset(this, dataset_name)
 
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
@@ -865,9 +746,6 @@ contains
         call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, write_data, dim, error, xfer_prp = plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ,', dataset_name
 
-        !call h5sclose_f(dspace_id, error)
-        !if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
-        
         call h5_close_dataset(this)
 
         deallocate(write_data, stat=error)
@@ -925,15 +803,15 @@ contains
         dim = dimin ! convert integer 4 to integer 8
         call gather_all_i(dim, data_rank, all_dim, data_rank, total_proc)
         call synchronize_all()
-        if (this_rank == 0) then
-            print *, "dimin", dimin
-            print *, "dim", dim
-            print *, "shape dimin", shape(dimin)
-            print *,"data_rank", data_rank
-            print *,"all dim", all_dim
-            print *,"shape all dim", shape(all_dim)
-            print *,"total proc" , total_proc
-        endif
+        !if (this_rank == 0) then
+        !    print *, "dimin", dimin
+        !    print *, "dim", dim
+        !    print *, "shape dimin", shape(dimin)
+        !    print *,"data_rank", data_rank
+        !    print *,"all dim", all_dim
+        !    print *,"shape all dim", shape(all_dim)
+        !    print *,"total proc" , total_proc
+        !endif
     end subroutine
 
 
@@ -954,10 +832,7 @@ contains
         character(len=64) :: group_name
 
         ! gather dataset dimension of other processors
-        print *, "before gathering"
-        print *, "this mpi rank, ", this_rank
         call h5_gather_dsetsize(this, dim, data_rank, all_dim)
-        print *, "gatehr finished"
  
         ! create all datasets of all process by rank0
         if (this_rank == 0) then
@@ -988,7 +863,6 @@ contains
 
                 call h5dclose_f(dataset_id,error)
                 if (error /= 0) write(*,*) 'hdf5 dataset close failed for ,', dataset_name
-                !call h5pclose_f(plist_id, error)
                 call h5sclose_f(dspace_id, error)
                 if (error /= 0) write(*,*) 'hdf5 dataspace close failed for ,', dataset_name
              enddo
