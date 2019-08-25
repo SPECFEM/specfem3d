@@ -608,7 +608,7 @@ contains
   integer, intent(in)  :: num_phase
 
   ! local parameters
-  integer  :: i,j,k,count,ier
+  integer  :: i,j,k,count
   integer, dimension(0:NGNOD-1)  :: loc_nodes
 
   ! for attribute (storing nnodes npgeo)
