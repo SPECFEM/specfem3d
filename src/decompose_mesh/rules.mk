@@ -140,16 +140,19 @@ hdf5_mesh_STUBS = \
 	$O/write_mesh_databases_hdf5_stub.dec.o \
 	$(EMPTY_MACRO)
 
+
+ifeq ($(HDF5),yes)
 hdf5_mesh_SHARED_OBJECTS = \
 	$O/phdf5_utils.shared_hdf5.o \
 	$(EMPTY_MACRO)
-
-ifeq ($(HDF5),yes)
 xdecompose_mesh_OBJECTS += $(hdf5_mesh_OBJECTS)
 decompose_mesh_SHARED_OBJECTS += $(hdf5_mesh_SHARED_OBJECTS)
-
 else
+hdf5_mesh_SHARED_OBJECTS = \
+	$O/phdf5_utils_stub.shared_nohdf5.o \
+	$(EMPTY_MACRO)
 xdecompose_mesh_OBJECTS += $(hdf5_mesh_STUBS)
+decompose_mesh_SHARED_OBJECTS += $(hdf5_mesh_SHARED_OBJECTS)
 endif
 
 
@@ -227,10 +230,10 @@ $O/%.dec_module.o: $S/%.F90 $O/shared_par.shared_module.o
 $O/%.dec_module.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
 
-$O/%.dec.o: $S/%.f90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o $O/part_decompose_mesh_hdf5.dec_module.o $O/decompose_mesh_par.dec_module.o $O/phdf5_utils.shared_hdf5.o
+$O/%.dec.o: $S/%.f90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o $O/part_decompose_mesh_hdf5.dec_module.o $O/decompose_mesh_par.dec_module.o $(hdf5_mesh_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
 
-$O/%.dec.o: $S/%.F90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o $O/part_decompose_mesh_hdf5.dec_module.o $O/decompose_mesh_par.dec_module.o $O/phdf5_utils.shared_hdf5.o
+$O/%.dec.o: $S/%.F90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o $O/part_decompose_mesh_hdf5.dec_module.o $O/decompose_mesh_par.dec_module.o $(hdf5_mesh_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
 
 $O/%.mpidec.o: $S/%.f90 $O/shared_par.shared_module.o

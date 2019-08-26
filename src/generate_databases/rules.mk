@@ -169,15 +169,17 @@ hdf5_generate_databases_STUBS = \
 	$O/save_arrays_solver_hdf5_stub.gen_hdf5.o \
 	$(EMPTY_MACRO)
 
+
+ifeq ($(HDF5),yes)
 hdf5_generate_databases_SHARED_OBJECTS = \
 	$O/phdf5_utils.shared_hdf5.o \
 	$(EMPTY_MACRO)
-
-
-ifeq ($(HDF5),yes)
 generate_databases_OBJECTS += $(hdf5_generate_databases_OBJECTS)
 generate_databases_SHARED_OBJECTS += $(hdf5_generate_databases_SHARED_OBJECTS)
 else
+phdf5_generate_databases_SHARED_OBJECTS = \
+	$O/phdf5_utils_stub.shared_nohdf5.o \
+	$(EMPTY_MACRO)
 generate_databases_OBJECTS += $(hdf5_generate_databases_STUBS)
 endif
 
@@ -297,9 +299,9 @@ $O/%.gen_noadios.o: $S/%.f90
 ###
 ### PHDF5 compilcation
 ###
-$O/%.gen_hdf5.o: $S/%.f90 $O/shared_par.shared_module.o $O/phdf5_utils.shared_hdf5.o
+$O/%.gen_hdf5.o: $S/%.f90 $O/shared_par.shared_module.o $(phdf5_generate_databases_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
-$O/%.gen_hdf5.o: $S/%.F90 $O/shared_par.shared_module.o $O/phdf5_utils.shared_hdf5.o
+$O/%.gen_hdf5.o: $S/%.F90 $O/shared_par.shared_module.o $(phdf5_generate_databases_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
