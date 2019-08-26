@@ -157,7 +157,7 @@ hdf5_shared_MODULES = \
 	$(EMPTY_MACRO)
 
 hdf5_shared_STUBS_OBJECTS = \
-	$O/phdf5_utils_stubs.shared_hdf5.o \
+	$O/phdf5_utils_stubs.shared_nohdf5.o \
         $(EMPTY_MACRO)
 hdf5_shared_STUBS_MODULES = \
 	$O/phdf5_utils.$(FC_MODEXT) \
@@ -230,12 +230,10 @@ $O/%.cc.o: $S/%.c ${SETUP}/config.h
 	${CC} -c $(CPPFLAGS) $(CFLAGS) -o $@ $<
 
 ## hdf5
+ifeq ($(HDF5),yes)
 $O/%.shared_hdf5.o: $S/%.f90
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
-
-
-#$O/%.shared_hdf5_module.o: $S/%.f90
-	#${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
-
-#$O/%.shared_hdf5.o: $S/%.f90 $O/phdf5_utils.shared_hdf5_module.o
-	#${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+else
+$O/%.shared_nohdf5.o: $S/%.f90
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+endif
