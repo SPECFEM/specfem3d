@@ -97,6 +97,9 @@
   ! dump dataset size
   integer, dimension(NPROC,4) :: dsize_dump
 
+  ! dataset preparation/write flag
+  logical :: dwrite
+
 
   ! saves mesh file external_mesh.h5
   prname = "/external_mesh.h5"
@@ -107,6 +110,7 @@
   ! get mpi parameters
   call world_get_comm(comm)
   call get_info_null(info)
+
   ! initialize h5 object
   call h5_init(h5, filename)
   call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
@@ -127,293 +131,296 @@
   endif
   call synchronize_all()
 
+!
+! create dataset
+!
+  if (myrank == 0) print *, "start dataset preparation"
+  if (myrank == 0) call h5_open_file(h5)
+  ! set dwrite flag false to pre_define the dataset on file before write.
+  dwrite = .false.
 
-  ! create dataset
-  if (myrank == 0) then
-     call h5_open_file(h5)
-     write(tempstr, "(i6.6)") myrank
-     group_name = gname_proc_head // trim(tempstr)
-     call h5_open_group(h5, group_name)
-  endif
-
-  ! create datasets
   dset_name = "nspec"
-  call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec/), dwrite)
   dset_name = "nglob"
-  call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nglob/), dwrite)
+
   dset_name = "nspec_irregular"
-  call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_irregular/), dwrite)
+!
   dset_name = "ibool"
-  call h5_create_dataset_setter(h5, dset_name, shape(ibool), 4, 1)
+  call h5_write_dataset_p_4d_i(h5, dset_name, ibool, dwrite)
 
   dset_name = "xstore_dummy"
-  call h5_create_dataset_setter(h5, dset_name, shape(xstore_dummy), 1, CUSTOM_REAL)
+  call h5_write_dataset_p_1d_r(h5, dset_name, xstore_dummy, dwrite)
   dset_name = "ystore_dummy"
-  call h5_create_dataset_setter(h5, dset_name, shape(ystore_dummy), 1, CUSTOM_REAL)
+  call h5_write_dataset_p_1d_r(h5, dset_name, ystore_dummy, dwrite)
   dset_name = "zstore_dummy"
-  call h5_create_dataset_setter(h5, dset_name, shape(zstore_dummy), 1, CUSTOM_REAL)
+  call h5_write_dataset_p_1d_r(h5, dset_name, zstore_dummy, dwrite)
 
   dset_name = "irregular_element_number"
-  call h5_create_dataset_setter(h5, dset_name, shape(irregular_element_number), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, irregular_element_number, dwrite)
   dset_name = "xix_regular"
-  call h5_create_dataset_setter(h5, dset_name, (/1/), 1, CUSTOM_REAL)
+  call h5_write_dataset_p_1d_r(h5, dset_name, (/xix_regular/), dwrite)
   dset_name = "jacobian_regular"
-  call h5_create_dataset_setter(h5, dset_name, (/1/), 1, CUSTOM_REAL)
+  call h5_write_dataset_p_1d_r(h5, dset_name, (/jacobian_regular/), dwrite)
 
   dset_name = "xixstore"
-  call h5_create_dataset_setter(h5, dset_name, shape(xixstore), 4, CUSTOM_REAL)
+  call h5_write_dataset_p_4d_r(h5, dset_name, xixstore, dwrite)
   dset_name = "xiystore"
-  call h5_create_dataset_setter(h5, dset_name, shape(xiystore), 4, CUSTOM_REAL)
+  call h5_write_dataset_p_4d_r(h5, dset_name, xiystore, dwrite)
   dset_name = "xizstore"
-  call h5_create_dataset_setter(h5, dset_name, shape(xizstore), 4, CUSTOM_REAL)
+  call h5_write_dataset_p_4d_r(h5, dset_name, xizstore, dwrite)
   dset_name = "etaxstore"
-  call h5_create_dataset_setter(h5, dset_name, shape(etaxstore), 4, CUSTOM_REAL)
+  call h5_write_dataset_p_4d_r(h5, dset_name, etaxstore, dwrite)
   dset_name = "etaystore"
-  call h5_create_dataset_setter(h5, dset_name, shape(etaystore), 4, CUSTOM_REAL)
+  call h5_write_dataset_p_4d_r(h5, dset_name, etaystore, dwrite)
   dset_name = "etazstore"
-  call h5_create_dataset_setter(h5, dset_name, shape(etazstore), 4, CUSTOM_REAL)
+  call h5_write_dataset_p_4d_r(h5, dset_name, etazstore, dwrite)
   dset_name = "gammaxstore"
-  call h5_create_dataset_setter(h5, dset_name, shape(gammaxstore), 4, CUSTOM_REAL)
+  call h5_write_dataset_p_4d_r(h5, dset_name, gammaxstore, dwrite)
   dset_name = "gammaystore"
-  call h5_create_dataset_setter(h5, dset_name, shape(gammaystore), 4, CUSTOM_REAL)
+  call h5_write_dataset_p_4d_r(h5, dset_name, gammaystore, dwrite)
   dset_name = "gammazstore"
-  call h5_create_dataset_setter(h5, dset_name, shape(gammazstore), 4, CUSTOM_REAL)
+  call h5_write_dataset_p_4d_r(h5, dset_name, gammazstore, dwrite)
   dset_name = "jacobianstore"
-  call h5_create_dataset_setter(h5, dset_name, shape(jacobianstore), 4, CUSTOM_REAL)
+  call h5_write_dataset_p_4d_r(h5, dset_name, jacobianstore, dwrite)
 
   dset_name = "kappastore"
-  call h5_create_dataset_setter(h5, dset_name, shape(kappastore), 4, CUSTOM_REAL)
+  call h5_write_dataset_p_4d_r(h5, dset_name, kappastore, dwrite)
   dset_name = "mustore"
-  call h5_create_dataset_setter(h5, dset_name, shape(mustore), 4, CUSTOM_REAL)
+  call h5_write_dataset_p_4d_r(h5, dset_name, mustore, dwrite)
 
   dset_name = "ispec_is_acoustic"
-  call h5_create_dataset_setter(h5, dset_name, shape(ispec_is_acoustic), 1, 1)
+  call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_acoustic, dwrite)
   dset_name = "ispec_is_elastic"
-  call h5_create_dataset_setter(h5, dset_name, shape(ispec_is_elastic), 1, 1)
+  call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_elastic, dwrite)
   dset_name = "ispec_is_poroelastic"
-  call h5_create_dataset_setter(h5, dset_name, shape(ispec_is_poroelastic), 1, 1)
+  call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_poroelastic, dwrite)
   
   ! acoustic
   if (ACOUSTIC_SIMULATION) then
     dset_name = "rmass_acoustic"
-    call h5_create_dataset_setter(h5, dset_name, shape(rmass_acoustic), 1, CUSTOM_REAL)
+    call h5_write_dataset_p_1d_r(h5, dset_name, rmass_acoustic, dwrite)
   endif
   
   ! this array is needed for acoustic simulations but also for elastic simulations with CPML,
   ! thus we allocate it and read it in all cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
   dset_name = "rhostore"
-  call h5_create_dataset_setter(h5, dset_name, shape(rhostore), 4, CUSTOM_REAL)
+  call h5_write_dataset_p_4d_r(h5, dset_name, rhostore, dwrite)
   
   
   ! elastic
   if (ELASTIC_SIMULATION) then
     dset_name = "rmass"
-    call h5_create_dataset_setter(h5, dset_name, shape(rmass), 1, CUSTOM_REAL)
+    call h5_write_dataset_p_1d_r(h5, dset_name, rmass, dwrite)
     if (APPROXIMATE_OCEAN_LOAD) then
       dset_name = "rmass_ocean_load"
-      call h5_create_dataset_setter(h5, dset_name, shape(rmass_ocean_load), 1, CUSTOM_REAL)
+      call h5_write_dataset_p_1d_r(h5, dset_name, rmass_ocean_load, dwrite)
     endif
     !pll Stacey
     dset_name = "rho_vp"
-    call h5_create_dataset_setter(h5, dset_name, shape(rho_vp), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, rho_vp, dwrite)
     dset_name = "rho_vs"
-    call h5_create_dataset_setter(h5, dset_name, shape(rho_vs), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, rho_vs, dwrite)
   endif
   
   ! poroelastic
   if (POROELASTIC_SIMULATION) then
     dset_name = "rmass_solid_poroelastic"
-    call h5_create_dataset_setter(h5, dset_name, shape(rmass_solid_poroelastic), 1, CUSTOM_REAL)
+    call h5_write_dataset_p_1d_r(h5, dset_name, rmass_solid_poroelastic, dwrite)
     dset_name = "rmass_fluid_poroelastic"
-    call h5_create_dataset_setter(h5, dset_name, shape(rmass_fluid_poroelastic), 1, CUSTOM_REAL)
+    call h5_write_dataset_p_1d_r(h5, dset_name, rmass_fluid_poroelastic, dwrite)
     dset_name = "rhoarraystore"
-    call h5_create_dataset_setter(h5, dset_name, shape(rhoarraystore), 5, CUSTOM_REAL)
+    call h5_write_dataset_p_5d_r(h5, dset_name, rhoarraystore, dwrite)
     dset_name = "kappaarraystore"
-    call h5_create_dataset_setter(h5, dset_name, shape(kappaarraystore), 5, CUSTOM_REAL)
+    call h5_write_dataset_p_5d_r(h5, dset_name, kappaarraystore, dwrite)
     dset_name = "etastore"
-    call h5_create_dataset_setter(h5, dset_name, shape(etastore), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, etastore, dwrite)
     dset_name = "tortstore"
-    call h5_create_dataset_setter(h5, dset_name, shape(tortstore), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, tortstore, dwrite)
     dset_name = "permstore"
-    call h5_create_dataset_setter(h5, dset_name, shape(permstore), 5, CUSTOM_REAL)
+    call h5_write_dataset_p_5d_r(h5, dset_name, permstore, dwrite)
     dset_name = "phistore"
-    call h5_create_dataset_setter(h5, dset_name, shape(phistore), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, phistore, dwrite)
     dset_name = "rho_vpI"
-    call h5_create_dataset_setter(h5, dset_name, shape(rho_vpI), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, rho_vpI, dwrite)
     dset_name = "rho_vpII"
-    call h5_create_dataset_setter(h5, dset_name, shape(rho_vpII), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, rho_vpII, dwrite)
     dset_name = "rho_vsI"
-    call h5_create_dataset_setter(h5, dset_name, shape(rho_vsI), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, rho_vsI, dwrite)
   endif
 
   ! C-PML absorbing boundary conditions
   if (PML_CONDITIONS) then
     dset_name = "nspec_cpml"
-    call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_cpml/), dwrite)
     dset_name = "CPML_width_x"
-    call h5_create_dataset_setter(h5, dset_name, (/1/), 1, CUSTOM_REAL)
+    call h5_write_dataset_p_1d_r(h5, dset_name, (/CPML_width_x/), dwrite)
     dset_name = "CPML_width_y"
-    call h5_create_dataset_setter(h5, dset_name, (/1/), 1, CUSTOM_REAL)
+    call h5_write_dataset_p_1d_r(h5, dset_name, (/CPML_width_y/), dwrite)
     dset_name = "CPML_width_z"
-    call h5_create_dataset_setter(h5, dset_name, (/1/), 1, CUSTOM_REAL)
+    call h5_write_dataset_p_1d_r(h5, dset_name, (/CPML_width_z/), dwrite)
     dset_name = "min_distance_between_CPML_parameter"
-    call h5_create_dataset_setter(h5, dset_name, (/1/), 1, CUSTOM_REAL)
+    call h5_write_dataset_p_1d_r(h5, dset_name, (/min_distance_between_CPML_parameter/), dwrite)
     if (nspec_cpml > 0) then
       dset_name = "CPML_regions"
-      call h5_create_dataset_setter(h5, dset_name, shape(CPML_regions), 1, 1)
+      call h5_write_dataset_p_1d_i(h5, dset_name, CPML_regions, dwrite)
       dset_name = "CPML_to_spec"
-      call h5_create_dataset_setter(h5, dset_name, shape(CPML_to_spec), 1, 1)
+      call h5_write_dataset_p_1d_i(h5, dset_name, CPML_to_spec, dwrite)
       dset_name = "is_CPML"
-      call h5_create_dataset_setter(h5, dset_name, shape(is_CPML), 1, 1)
+      call h5_write_dataset_p_1d_l(h5, dset_name, is_CPML, dwrite)
       dset_name = "d_store_x"
-      call h5_create_dataset_setter(h5, dset_name, shape(d_store_x), 4, CUSTOM_REAL)
+      call h5_write_dataset_p_4d_r(h5, dset_name, d_store_x, dwrite)
       dset_name = "d_store_y"
-      call h5_create_dataset_setter(h5, dset_name, shape(d_store_y), 4, CUSTOM_REAL)
+      call h5_write_dataset_p_4d_r(h5, dset_name, d_store_y, dwrite)
       dset_name = "d_store_z"
-      call h5_create_dataset_setter(h5, dset_name, shape(d_store_z), 4, CUSTOM_REAL)
+      call h5_write_dataset_p_4d_r(h5, dset_name, d_store_z, dwrite)
       dset_name = "k_store_x"
-      call h5_create_dataset_setter(h5, dset_name, shape(k_store_x), 4, CUSTOM_REAL)
+      call h5_write_dataset_p_4d_r(h5, dset_name, k_store_x, dwrite)
       dset_name = "k_store_y"
-      call h5_create_dataset_setter(h5, dset_name, shape(k_store_y), 4, CUSTOM_REAL)
+      call h5_write_dataset_p_4d_r(h5, dset_name, k_store_y, dwrite)
       dset_name = "k_store_z"
-      call h5_create_dataset_setter(h5, dset_name, shape(k_store_z), 4, CUSTOM_REAL)
+      call h5_write_dataset_p_4d_r(h5, dset_name, k_store_z, dwrite)
       dset_name = "alpha_store_x"
-      call h5_create_dataset_setter(h5, dset_name, shape(alpha_store_x), 4, CUSTOM_REAL)
+      call h5_write_dataset_p_4d_r(h5, dset_name, alpha_store_x, dwrite)
       dset_name = "alpha_store_y"
-      call h5_create_dataset_setter(h5, dset_name, shape(alpha_store_y), 4, CUSTOM_REAL)
+      call h5_write_dataset_p_4d_r(h5, dset_name, alpha_store_y, dwrite)
       dset_name = "alpha_store_z"
-      call h5_create_dataset_setter(h5, dset_name, shape(alpha_store_z), 4, CUSTOM_REAL)
+      call h5_write_dataset_p_4d_r(h5, dset_name, alpha_store_z, dwrite)
       ! --------------------------------------------------------------------------------------------
       ! for adjoint tomography
       ! save the array stored the points on interface between PML and interior computational domain
       ! --------------------------------------------------------------------------------------------
       if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
         dset_name = "nglob_interface_PML_acoustic"
-        call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+        call h5_write_dataset_p_1d_i(h5, dset_name, (/nglob_interface_PML_acoustic/), dwrite)
         dset_name = "nglob_interface_PML_elastic"
-        call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+        call h5_write_dataset_p_1d_i(h5, dset_name, (/nglob_interface_PML_elastic/), dwrite)
         if (nglob_interface_PML_acoustic > 0) then
           dset_name = "points_interface_PML_acoustic"
-          call h5_create_dataset_setter(h5, dset_name, shape(points_interface_PML_acoustic), 1, 1)
+          call h5_write_dataset_p_1d_i(h5, dset_name, points_interface_PML_acoustic, dwrite)
         endif
         if (nglob_interface_PML_elastic > 0) then
           dset_name = "points_interface_PML_elastic"
-          call h5_create_dataset_setter(h5, dset_name, shape(points_interface_PML_elastic), 1, 1)
+          call h5_write_dataset_p_1d_i(h5, dset_name, points_interface_PML_elastic, dwrite)
         endif
       endif
     endif
   endif
 
   ! absorbing boundary surface
-  write(IOUT) num_abs_boundary_faces
+  dset_name = "num_abs_boundary_faces"
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/num_abs_boundary_faces/), dwrite)
   if (num_abs_boundary_faces > 0) then
     dset_name = "abs_boundary_ispec"
-    call h5_create_dataset_setter(h5, dset_name, shape(abs_boundary_ispec), 1, 1)
+    call h5_write_dataset_p_1d_i(h5, dset_name, abs_boundary_ispec, dwrite)
     dset_name = "abs_boundary_ijk"
-    call h5_create_dataset_setter(h5, dset_name, shape(abs_boundary_ijk), 3, 1)
+    call h5_write_dataset_p_3d_i(h5, dset_name, abs_boundary_ijk, dwrite)
     dset_name = "abs_boundary_jacobian2Dw"
-    call h5_create_dataset_setter(h5, dset_name, shape(abs_boundary_jacobian2Dw), 2, CUSTOM_REAL)
+    call h5_write_dataset_p_2d_r(h5, dset_name, abs_boundary_jacobian2Dw, dwrite)
     dset_name = "abs_boundary_normal"
-    call h5_create_dataset_setter(h5, dset_name, shape(abs_boundary_normal), 3, CUSTOM_REAL)
+    call h5_write_dataset_p_3d_r(h5, dset_name, abs_boundary_normal, dwrite)
 
     if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
       ! store mass matrix contributions
       if (ELASTIC_SIMULATION) then
         dset_name = "rmassx"
-        call h5_create_dataset_setter(h5, dset_name, shape(rmassx), 1, CUSTOM_REAL)
+        call h5_write_dataset_p_1d_r(h5, dset_name, rmassx, dwrite)
         dset_name = "rmassy"
-        call h5_create_dataset_setter(h5, dset_name, shape(rmassy), 1, CUSTOM_REAL)
+        call h5_write_dataset_p_1d_r(h5, dset_name, rmassy, dwrite)
         dset_name = "rmassz"
-        call h5_create_dataset_setter(h5, dset_name, shape(rmassz), 1, CUSTOM_REAL)
+        call h5_write_dataset_p_1d_r(h5, dset_name, rmassz, dwrite)
      endif
       if (ACOUSTIC_SIMULATION) then
         dset_name = "rmassz_acoustic"
-        call h5_create_dataset_setter(h5, dset_name, shape(rmassz_acoustic), 1, CUSTOM_REAL)
+        call h5_write_dataset_p_1d_r(h5, dset_name, rmassz_acoustic, dwrite)
      endif
     endif
   endif
 
   dset_name = "nspec2D_xmin"
-  call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec2D_xmin/), dwrite)
   dset_name = "nspec2D_xmax"
-  call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec2D_xmax/), dwrite)
   dset_name = "nspec2D_ymin"
-  call h5_create_dataset_setter(h5, dset_name, (/1/),1 , 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec2D_ymin/), dwrite)
   dset_name = "nspec2D_ymax"
-  call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec2D_ymax/), dwrite)
   dset_name = "NSPEC2D_BOTTOM"
-  call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/NSPEC2D_BOTTOM/), dwrite)
   dset_name = "NSPEC2D_TOP"
-  call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/NSPEC2D_TOP/), dwrite)
   dset_name = "ibelm_xmin"
-  call h5_create_dataset_setter(h5, dset_name, shape(ibelm_xmin), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_xmin, dwrite)
   dset_name = "ibelm_xmax"
-  call h5_create_dataset_setter(h5, dset_name, shape(ibelm_xmax), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_xmax, dwrite)
   dset_name = "ibelm_ymin"
-  call h5_create_dataset_setter(h5, dset_name, shape(ibelm_ymin), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_ymin, dwrite)
   dset_name = "ibelm_ymax"
-  call h5_create_dataset_setter(h5, dset_name, shape(ibelm_ymax), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_ymax, dwrite)
   dset_name = "ibelm_bottom"
-  call h5_create_dataset_setter(h5, dset_name, shape(ibelm_bottom), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_bottom, dwrite)
   dset_name = "ibelm_top"
-  call h5_create_dataset_setter(h5, dset_name, shape(ibelm_top), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_top, dwrite)
 
   ! free surface
-  write(IOUT) num_free_surface_faces
+  dset_name = "num_free_surface_faces"
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/num_free_surface_faces/), dwrite)
   if (num_free_surface_faces > 0) then
     dset_name = "free_surface_ispec"
-    call h5_create_dataset_setter(h5, dset_name, shape(free_surface_ispec), 1, 1)
+    call h5_write_dataset_p_1d_i(h5, dset_name, free_surface_ispec, dwrite)
     dset_name = "free_surface_ijk"
-    call h5_create_dataset_setter(h5, dset_name, shape(free_surface_ijk), 3, 1)
+    call h5_write_dataset_p_3d_i(h5, dset_name, free_surface_ijk, dwrite)
     dset_name = "free_surface_jacobian2Dw"
-    call h5_create_dataset_setter(h5, dset_name, shape(free_surface_jacobian2Dw), 2, CUSTOM_REAL)
+    call h5_write_dataset_p_2d_r(h5, dset_name, free_surface_jacobian2Dw, dwrite)
     dset_name = "free_surface_normal"
-    call h5_create_dataset_setter(h5, dset_name, shape(free_surface_normal), 3, CUSTOM_REAL)
+    call h5_write_dataset_p_3d_r(h5, dset_name, free_surface_normal, dwrite)
   endif
 
   ! acoustic-elastic coupling surface
-  write(IOUT) num_coupling_ac_el_faces
+  dset_name = "num_coupling_ac_el_faces"
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/num_coupling_ac_el_faces/), dwrite)
   if (num_coupling_ac_el_faces > 0) then
     dset_name = "coupling_ac_el_ispec"
-    call h5_create_dataset_setter(h5, dset_name, shape(coupling_ac_el_ispec), 1, 1)
+    call h5_write_dataset_p_1d_i(h5, dset_name, coupling_ac_el_ispec, dwrite)
     dset_name = "coupling_ac_el_ijk"
-    call h5_create_dataset_setter(h5, dset_name, shape(coupling_ac_el_ijk), 3, 1)
+    call h5_write_dataset_p_3d_i(h5, dset_name, coupling_ac_el_ijk, dwrite)
     dset_name = "coupling_ac_el_jacobian2Dw"
-    call h5_create_dataset_setter(h5, dset_name, shape(coupling_ac_el_jacobian2Dw), 2, CUSTOM_REAL)
+    call h5_write_dataset_p_2d_r(h5, dset_name, coupling_ac_el_jacobian2Dw, dwrite)
     dset_name = "coupling_ac_el_normal"
-    call h5_create_dataset_setter(h5, dset_name, shape(coupling_ac_el_normal), 3, CUSTOM_REAL)
+    call h5_write_dataset_p_3d_r(h5, dset_name, coupling_ac_el_normal, dwrite)
   endif
   
   ! acoustic-poroelastic coupling surface
   dset_name = "num_coupling_ac_po_faces"
-  call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/num_coupling_ac_po_faces/), dwrite)
   if (num_coupling_ac_po_faces > 0) then
     dset_name = "coupling_ac_po_ispec"
-    call h5_create_dataset_setter(h5, dset_name, shape(coupling_ac_po_ispec), 1, 1)
+    call h5_write_dataset_p_1d_i(h5, dset_name, coupling_ac_po_ispec, dwrite)
     dset_name = "coupling_ac_po_ijk"
-    call h5_create_dataset_setter(h5, dset_name, shape(coupling_ac_po_ijk), 3, 1)
+    call h5_write_dataset_p_3d_i(h5, dset_name, coupling_ac_po_ijk, dwrite)
     dset_name = "coupling_ac_po_jacobian2Dw"
-    call h5_create_dataset_setter(h5, dset_name, shape(coupling_ac_po_jacobian2Dw), 2, CUSTOM_REAL)
+    call h5_write_dataset_p_2d_r(h5, dset_name, coupling_ac_po_jacobian2Dw, dwrite)
     dset_name = "coupling_ac_po_normal"
-    call h5_create_dataset_setter(h5, dset_name, shape(coupling_ac_po_normal), 3, CUSTOM_REAL)
+    call h5_write_dataset_p_3d_r(h5, dset_name, coupling_ac_po_normal, dwrite)
   endif
 
   ! elastic-poroelastic coupling surface
   dset_name = "num_coupling_el_po_faces"
-  call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/num_coupling_el_po_faces/), dwrite)
   if (num_coupling_el_po_faces > 0) then
     dset_name = "coupling_el_po_ispec"
-    call h5_create_dataset_setter(h5, dset_name, shape(coupling_el_po_ispec), 1, 1)
+    call h5_write_dataset_p_1d_i(h5, dset_name, coupling_el_po_ispec, dwrite)
     dset_name = "coupling_po_el_ispec"
-    call h5_create_dataset_setter(h5, dset_name, shape(coupling_po_el_ispec), 1, 1)
+    call h5_write_dataset_p_1d_i(h5, dset_name, coupling_po_el_ispec, dwrite)
     dset_name = "coupling_el_po_ijk"
-    call h5_create_dataset_setter(h5, dset_name, shape(coupling_el_po_ijk), 3, 1)
+    call h5_write_dataset_p_3d_i(h5, dset_name, coupling_el_po_ijk, dwrite)
     dset_name = "coupling_po_el_ijk"
-    call h5_create_dataset_setter(h5, dset_name, shape(coupling_po_el_ijk), 3, 1)
+    call h5_write_dataset_p_3d_i(h5, dset_name, coupling_po_el_ijk, dwrite)
     dset_name = "coupling_el_po_jacobian2Dw"
-    call h5_create_dataset_setter(h5, dset_name, shape(coupling_el_po_jacobian2Dw), 2, CUSTOM_REAL)
+    call h5_write_dataset_p_2d_r(h5, dset_name, coupling_el_po_jacobian2Dw, dwrite)
     dset_name = "coupling_el_po_normal"
-    call h5_create_dataset_setter(h5, dset_name, shape(coupling_el_po_normal), 3, CUSTOM_REAL)
+    call h5_write_dataset_p_3d_r(h5, dset_name, coupling_el_po_normal, dwrite)
   endif
 
   !MPI interfaces
@@ -427,104 +434,103 @@
   enddo
 
   dset_name = "num_interfaces_ext_mesh"
-  call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/num_interfaces_ext_mesh/), dwrite)
   if (num_interfaces_ext_mesh > 0) then
     dset_name = "max_nibool_interfaces_ext_mesh"
-    call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/max_nibool_interfaces_ext_mesh/), dwrite)
     dset_name = "my_neighbors_ext_mesh"
-    call h5_create_dataset_setter(h5, dset_name, shape(my_neighbors_ext_mesh), 1, 1)
+    call h5_write_dataset_p_1d_i(h5, dset_name, my_neighbors_ext_mesh, dwrite)
     dset_name = "nibool_interfaces_ext_mesh"
-    call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/nibool_interfaces_ext_mesh/), dwrite)
     dset_name = "ibool_interfaces_ext_mesh_dummy"
-    call h5_create_dataset_setter(h5, dset_name, shape(ibool_interfaces_ext_mesh_dummy), 2, 1)
+    call h5_write_dataset_p_2d_i(h5, dset_name, ibool_interfaces_ext_mesh_dummy, dwrite) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   endif
   
   ! anisotropy
   if (ELASTIC_SIMULATION .and. ANISOTROPY) then
     dset_name = "c11store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c11store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c11store, dwrite)
     dset_name = "c12store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c12store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c12store, dwrite)
     dset_name = "c13store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c13store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c13store, dwrite)
     dset_name = "c14store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c14store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c14store, dwrite)
     dset_name = "c15store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c15store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c15store, dwrite)
     dset_name = "c16store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c16store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c16store, dwrite)
     dset_name = "c22store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c22store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c22store, dwrite)
     dset_name = "c23store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c23store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c23store, dwrite)
     dset_name = "c24store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c24store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c24store, dwrite)
     dset_name = "c25store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c25store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c25store, dwrite)
     dset_name = "c26store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c26store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c26store, dwrite)
     dset_name = "c33store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c33store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c33store, dwrite)
     dset_name = "c34store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c34store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c34store, dwrite)
     dset_name = "c35store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c35store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c35store, dwrite)
     dset_name = "c36store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c36store), 4, CUSTOM_REAL)
-
+    call h5_write_dataset_p_4d_r(h5, dset_name, c36store, dwrite)
     dset_name = "c44store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c44store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c44store, dwrite)
     dset_name = "c45store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c45store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c45store, dwrite)
     dset_name = "c46store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c46store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c46store, dwrite)
     dset_name = "c55store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c55store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c55store, dwrite)
     dset_name = "c56store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c56store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c56store, dwrite)
     dset_name = "c66store"
-    call h5_create_dataset_setter(h5, dset_name, shape(c66store), 4, CUSTOM_REAL)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c66store, dwrite)
   endif
 
   ! inner/outer elements
   dset_name = "ispec_is_inner"
-  call h5_create_dataset_setter(h5, dset_name, shape(ispec_is_inner), 1, 1)
+  call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_inner, dwrite)
 
   if (ACOUSTIC_SIMULATION) then
      dset_name = "nspec_inner_acoustic"
-     call h5_create_dataset_setter(h5, dset_name, (/1/), 1 ,1)
+     call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_inner_acoustic/), dwrite)
      dset_name = "nspec_outer_acoustic"
-     call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+     call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_outer_acoustic/), dwrite)
      dset_name = "num_phase_ispec_acoustic"
-     call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+     call h5_write_dataset_p_1d_i(h5, dset_name, (/num_phase_ispec_acoustic/), dwrite)
     if (num_phase_ispec_acoustic > 0) then
       dset_name = "phase_ispec_inner_acoustic"
-      call h5_create_dataset_setter(h5, dset_name, shape(phase_ispec_inner_acoustic), 2, 1)
+      call h5_write_dataset_p_2d_i(h5, dset_name, phase_ispec_inner_acoustic, dwrite)
     endif
   endif
 
   if (ELASTIC_SIMULATION) then
     dset_name = "nspec_inner_elastic"
-    call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_inner_elastic/), dwrite)
     dset_name = "nspec_outer_elastic"
-    call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_outer_elastic/), dwrite)
     dset_name = "num_phase_ispec_elastic"
-    call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/num_phase_ispec_elastic/), dwrite)
     if (num_phase_ispec_elastic > 0) then
       dset_name = "phase_ispec_inner_elastic"
-      call h5_create_dataset_setter(h5, dset_name, shape(phase_ispec_inner_elastic), 2, 1)
+      call h5_write_dataset_p_2d_i(h5, dset_name, phase_ispec_inner_elastic, dwrite)
     endif
   endif
 
   if (POROELASTIC_SIMULATION) then
     dset_name = "nspec_inner_poroelastic"
-    call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_inner_poroelastic/), dwrite)
     dset_name = "nspec_outer_poroelastic"
-    call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_outer_poroelastic/), dwrite)
     dset_name = "num_phase_ispec_poroelastic"
     if (num_phase_ispec_poroelastic > 0) then
       dset_name = "phase_ispec_inner_poroelastic"
-      call h5_create_dataset_setter(h5, dset_name, shape(phase_ispec_inner_poroelastic), 2, 1)
+      call h5_write_dataset_p_2d_i(h5, dset_name, phase_ispec_inner_poroelastic, dwrite)
     endif
   endif
 
@@ -532,437 +538,431 @@
   if (USE_MESH_COLORING_GPU) then
     if (ACOUSTIC_SIMULATION) then
       dset_name = "num_colors_outer_acoustic"
-      call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+      call h5_write_dataset_p_1d_i(h5, dset_name, (/num_colors_outer_acoustic/), dwrite)
       dset_name = "num_colors_inner_acoustic"
-      call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+      call h5_write_dataset_p_1d_i(h5, dset_name, (/num_colors_inner_acoustic/), dwrite)
       dset_name = "num_elem_colors_acoustic"
-      call h5_create_dataset_setter(h5, dset_name, shape(num_elem_colors_acoustic), 1, 1)
+      call h5_write_dataset_p_1d_i(h5, dset_name, num_elem_colors_acoustic, dwrite)
     endif
     if (ELASTIC_SIMULATION) then
       dset_name = "num_colors_outer_elastic"
-      call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+      call h5_write_dataset_p_1d_i(h5, dset_name, (/num_colors_outer_elastic/), dwrite)
       dset_name = "num_colors_inner_elastic"
-      call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+      call h5_write_dataset_p_1d_i(h5, dset_name, (/num_colors_inner_acoustic/), dwrite)
       dset_name = "num_elem_colors_elastic"
-      call h5_create_dataset_setter(h5, dset_name, shape(num_elem_colors_elastic), 1, 1)
+      call h5_write_dataset_p_1d_i(h5, dset_name, num_elem_colors_elastic, dwrite)
     endif
   endif
 
   ! surface points
   dset_name = "nfaces_surface"
-  call h5_create_dataset_setter(h5, dset_name, (/1/), 1, 1)
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nfaces_surface/), dwrite)
   dset_name = "ispec_is_surface_external_mesh"
-  call h5_create_dataset_setter(h5, dset_name, shape(ispec_is_surface_external_mesh), 1, 1)
+  call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_surface_external_mesh, dwrite)
   dset_name = "iglob_is_surface_external_mesh"
-  call h5_create_dataset_setter(h5, dset_name, shape(iglob_is_surface_external_mesh), 1, 1)
+  call h5_write_dataset_p_1d_l(h5, dset_name, iglob_is_surface_external_mesh, dwrite)
 
-  print *, "dataset pre-setting finished"
+
+  if (myrank == 0) call h5_close_file(h5)
 
   call synchronize_all()
- 
+
 
 !
 ! write dataset data
 !
 
-   !call synchronize_all()
-   if (myrank == 0) then
-    call h5_close_group(h5)
-    call h5_close_file(h5)
-   endif
-   call synchronize_all()
- 
-!
-!
-  print*, "start writing datasets"
   call h5_open_file_p(h5)
-  write(tempstr, "(i6.6)") myrank
-  group_name = gname_proc_head // trim(tempstr)
-  print *, "opening group: ", group_name
-  call h5_open_group(h5, group_name)
+
+
+  if (myrank == 0) print*, "start writing datasets"
 !
-!
+  ! set dwrite flag true to pre_define the dataset on file before write.
+  dwrite = .true.
+
   dset_name = "nspec"
-  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec/))
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec/), dwrite)
   dset_name = "nglob"
-  call h5_write_dataset_p_1d_i(h5, dset_name, (/nglob/))
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nglob/), dwrite)
 
   dset_name = "nspec_irregular"
-  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_irregular/))
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_irregular/), dwrite)
 !
   dset_name = "ibool"
-  call h5_write_dataset_p_4d_i(h5, dset_name, ibool)
+  call h5_write_dataset_p_4d_i(h5, dset_name, ibool, dwrite)
 
   dset_name = "xstore_dummy"
-  call h5_write_dataset_p_1d_r(h5, dset_name, xstore_dummy)
+  call h5_write_dataset_p_1d_r(h5, dset_name, xstore_dummy, dwrite)
   dset_name = "ystore_dummy"
-  call h5_write_dataset_p_1d_r(h5, dset_name, ystore_dummy)
+  call h5_write_dataset_p_1d_r(h5, dset_name, ystore_dummy, dwrite)
   dset_name = "zstore_dummy"
-  call h5_write_dataset_p_1d_r(h5, dset_name, zstore_dummy)
+  call h5_write_dataset_p_1d_r(h5, dset_name, zstore_dummy, dwrite)
 
   dset_name = "irregular_element_number"
-  call h5_write_dataset_p_1d_i(h5, dset_name, irregular_element_number)
+  call h5_write_dataset_p_1d_i(h5, dset_name, irregular_element_number, dwrite)
   dset_name = "xix_regular"
-  call h5_write_dataset_p_1d_r(h5, dset_name, (/xix_regular/))
+  call h5_write_dataset_p_1d_r(h5, dset_name, (/xix_regular/), dwrite)
   dset_name = "jacobian_regular"
-  call h5_write_dataset_p_1d_r(h5, dset_name, (/jacobian_regular/))
+  call h5_write_dataset_p_1d_r(h5, dset_name, (/jacobian_regular/), dwrite)
 
   dset_name = "xixstore"
-  call h5_write_dataset_p_4d_r(h5, dset_name, xixstore)
+  call h5_write_dataset_p_4d_r(h5, dset_name, xixstore, dwrite)
   dset_name = "xiystore"
-  call h5_write_dataset_p_4d_r(h5, dset_name, xiystore)
+  call h5_write_dataset_p_4d_r(h5, dset_name, xiystore, dwrite)
   dset_name = "xizstore"
-  call h5_write_dataset_p_4d_r(h5, dset_name, xizstore)
+  call h5_write_dataset_p_4d_r(h5, dset_name, xizstore, dwrite)
   dset_name = "etaxstore"
-  call h5_write_dataset_p_4d_r(h5, dset_name, etaxstore)
+  call h5_write_dataset_p_4d_r(h5, dset_name, etaxstore, dwrite)
   dset_name = "etaystore"
-  call h5_write_dataset_p_4d_r(h5, dset_name, etaystore)
+  call h5_write_dataset_p_4d_r(h5, dset_name, etaystore, dwrite)
   dset_name = "etazstore"
-  call h5_write_dataset_p_4d_r(h5, dset_name, etazstore)
+  call h5_write_dataset_p_4d_r(h5, dset_name, etazstore, dwrite)
   dset_name = "gammaxstore"
-  call h5_write_dataset_p_4d_r(h5, dset_name, gammaxstore)
+  call h5_write_dataset_p_4d_r(h5, dset_name, gammaxstore, dwrite)
   dset_name = "gammaystore"
-  call h5_write_dataset_p_4d_r(h5, dset_name, gammaystore)
+  call h5_write_dataset_p_4d_r(h5, dset_name, gammaystore, dwrite)
   dset_name = "gammazstore"
-  call h5_write_dataset_p_4d_r(h5, dset_name, gammazstore)
+  call h5_write_dataset_p_4d_r(h5, dset_name, gammazstore, dwrite)
   dset_name = "jacobianstore"
-  call h5_write_dataset_p_4d_r(h5, dset_name, jacobianstore)
+  call h5_write_dataset_p_4d_r(h5, dset_name, jacobianstore, dwrite)
 
   dset_name = "kappastore"
-  call h5_write_dataset_p_4d_r(h5, dset_name, kappastore)
+  call h5_write_dataset_p_4d_r(h5, dset_name, kappastore, dwrite)
   dset_name = "mustore"
-  call h5_write_dataset_p_4d_r(h5, dset_name, mustore)
+  call h5_write_dataset_p_4d_r(h5, dset_name, mustore, dwrite)
 
   dset_name = "ispec_is_acoustic"
-  call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_acoustic)
+  call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_acoustic, dwrite)
   dset_name = "ispec_is_elastic"
-  call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_elastic)
+  call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_elastic, dwrite)
   dset_name = "ispec_is_poroelastic"
-  call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_poroelastic)
+  call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_poroelastic, dwrite)
   
   ! acoustic
   if (ACOUSTIC_SIMULATION) then
     dset_name = "rmass_acoustic"
-    call h5_write_dataset_p_1d_r(h5, dset_name, rmass_acoustic)
+    call h5_write_dataset_p_1d_r(h5, dset_name, rmass_acoustic, dwrite)
   endif
   
   ! this array is needed for acoustic simulations but also for elastic simulations with CPML,
   ! thus we allocate it and read it in all cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
   dset_name = "rhostore"
-  call h5_write_dataset_p_4d_r(h5, dset_name, rhostore)
+  call h5_write_dataset_p_4d_r(h5, dset_name, rhostore, dwrite)
   
   
   ! elastic
   if (ELASTIC_SIMULATION) then
     dset_name = "rmass"
-    call h5_write_dataset_p_1d_r(h5, dset_name, rmass)
+    call h5_write_dataset_p_1d_r(h5, dset_name, rmass, dwrite)
     if (APPROXIMATE_OCEAN_LOAD) then
       dset_name = "rmass_ocean_load"
-      call h5_write_dataset_p_1d_r(h5, dset_name, rmass_ocean_load)
+      call h5_write_dataset_p_1d_r(h5, dset_name, rmass_ocean_load, dwrite)
     endif
     !pll Stacey
     dset_name = "rho_vp"
-    call h5_write_dataset_p_4d_r(h5, dset_name, rho_vp)
+    call h5_write_dataset_p_4d_r(h5, dset_name, rho_vp, dwrite)
     dset_name = "rho_vs"
-    call h5_write_dataset_p_4d_r(h5, dset_name, rho_vs)
+    call h5_write_dataset_p_4d_r(h5, dset_name, rho_vs, dwrite)
   endif
   
   ! poroelastic
   if (POROELASTIC_SIMULATION) then
     dset_name = "rmass_solid_poroelastic"
-    call h5_write_dataset_p_1d_r(h5, dset_name, rmass_solid_poroelastic)
+    call h5_write_dataset_p_1d_r(h5, dset_name, rmass_solid_poroelastic, dwrite)
     dset_name = "rmass_fluid_poroelastic"
-    call h5_write_dataset_p_1d_r(h5, dset_name, rmass_fluid_poroelastic)
+    call h5_write_dataset_p_1d_r(h5, dset_name, rmass_fluid_poroelastic, dwrite)
     dset_name = "rhoarraystore"
-    call h5_write_dataset_p_5d_r(h5, dset_name, rhoarraystore)
+    call h5_write_dataset_p_5d_r(h5, dset_name, rhoarraystore, dwrite)
     dset_name = "kappaarraystore"
-    call h5_write_dataset_p_5d_r(h5, dset_name, kappaarraystore)
+    call h5_write_dataset_p_5d_r(h5, dset_name, kappaarraystore, dwrite)
     dset_name = "etastore"
-    call h5_write_dataset_p_4d_r(h5, dset_name, etastore)
+    call h5_write_dataset_p_4d_r(h5, dset_name, etastore, dwrite)
     dset_name = "tortstore"
-    call h5_write_dataset_p_4d_r(h5, dset_name, tortstore)
+    call h5_write_dataset_p_4d_r(h5, dset_name, tortstore, dwrite)
     dset_name = "permstore"
-    call h5_write_dataset_p_5d_r(h5, dset_name, permstore)
+    call h5_write_dataset_p_5d_r(h5, dset_name, permstore, dwrite)
     dset_name = "phistore"
-    call h5_write_dataset_p_4d_r(h5, dset_name, phistore)
+    call h5_write_dataset_p_4d_r(h5, dset_name, phistore, dwrite)
     dset_name = "rho_vpI"
-    call h5_write_dataset_p_4d_r(h5, dset_name, rho_vpI)
+    call h5_write_dataset_p_4d_r(h5, dset_name, rho_vpI, dwrite)
     dset_name = "rho_vpII"
-    call h5_write_dataset_p_4d_r(h5, dset_name, rho_vpII)
+    call h5_write_dataset_p_4d_r(h5, dset_name, rho_vpII, dwrite)
     dset_name = "rho_vsI"
-    call h5_write_dataset_p_4d_r(h5, dset_name, rho_vsI)
+    call h5_write_dataset_p_4d_r(h5, dset_name, rho_vsI, dwrite)
   endif
 
   ! C-PML absorbing boundary conditions
   if (PML_CONDITIONS) then
     dset_name = "nspec_cpml"
-    call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_cpml/))
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_cpml/), dwrite)
     dset_name = "CPML_width_x"
-    call h5_write_dataset_p_1d_r(h5, dset_name, (/CPML_width_x/))
+    call h5_write_dataset_p_1d_r(h5, dset_name, (/CPML_width_x/), dwrite)
     dset_name = "CPML_width_y"
-    call h5_write_dataset_p_1d_r(h5, dset_name, (/CPML_width_y/))
+    call h5_write_dataset_p_1d_r(h5, dset_name, (/CPML_width_y/), dwrite)
     dset_name = "CPML_width_z"
-    call h5_write_dataset_p_1d_r(h5, dset_name, (/CPML_width_z/))
+    call h5_write_dataset_p_1d_r(h5, dset_name, (/CPML_width_z/), dwrite)
     dset_name = "min_distance_between_CPML_parameter"
-    call h5_write_dataset_p_1d_r(h5, dset_name, (/min_distance_between_CPML_parameter/))
+    call h5_write_dataset_p_1d_r(h5, dset_name, (/min_distance_between_CPML_parameter/), dwrite)
     if (nspec_cpml > 0) then
       dset_name = "CPML_regions"
-      call h5_write_dataset_p_1d_i(h5, dset_name, CPML_regions)
+      call h5_write_dataset_p_1d_i(h5, dset_name, CPML_regions, dwrite)
       dset_name = "CPML_to_spec"
-      call h5_write_dataset_p_1d_i(h5, dset_name, CPML_to_spec)
+      call h5_write_dataset_p_1d_i(h5, dset_name, CPML_to_spec, dwrite)
       dset_name = "is_CPML"
-      call h5_write_dataset_p_1d_l(h5, dset_name, is_CPML)
+      call h5_write_dataset_p_1d_l(h5, dset_name, is_CPML, dwrite)
       dset_name = "d_store_x"
-      call h5_write_dataset_p_4d_r(h5, dset_name, d_store_x)
+      call h5_write_dataset_p_4d_r(h5, dset_name, d_store_x, dwrite)
       dset_name = "d_store_y"
-      call h5_write_dataset_p_4d_r(h5, dset_name, d_store_y)
+      call h5_write_dataset_p_4d_r(h5, dset_name, d_store_y, dwrite)
       dset_name = "d_store_z"
-      call h5_write_dataset_p_4d_r(h5, dset_name, d_store_z)
+      call h5_write_dataset_p_4d_r(h5, dset_name, d_store_z, dwrite)
       dset_name = "k_store_x"
-      call h5_write_dataset_p_4d_r(h5, dset_name, k_store_x)
+      call h5_write_dataset_p_4d_r(h5, dset_name, k_store_x, dwrite)
       dset_name = "k_store_y"
-      call h5_write_dataset_p_4d_r(h5, dset_name, k_store_y)
+      call h5_write_dataset_p_4d_r(h5, dset_name, k_store_y, dwrite)
       dset_name = "k_store_z"
-      call h5_write_dataset_p_4d_r(h5, dset_name, k_store_z)
+      call h5_write_dataset_p_4d_r(h5, dset_name, k_store_z, dwrite)
       dset_name = "alpha_store_x"
-      call h5_write_dataset_p_4d_r(h5, dset_name, alpha_store_x)
+      call h5_write_dataset_p_4d_r(h5, dset_name, alpha_store_x, dwrite)
       dset_name = "alpha_store_y"
-      call h5_write_dataset_p_4d_r(h5, dset_name, alpha_store_y)
+      call h5_write_dataset_p_4d_r(h5, dset_name, alpha_store_y, dwrite)
       dset_name = "alpha_store_z"
-      call h5_write_dataset_p_4d_r(h5, dset_name, alpha_store_z)
+      call h5_write_dataset_p_4d_r(h5, dset_name, alpha_store_z, dwrite)
       ! --------------------------------------------------------------------------------------------
       ! for adjoint tomography
       ! save the array stored the points on interface between PML and interior computational domain
       ! --------------------------------------------------------------------------------------------
       if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
         dset_name = "nglob_interface_PML_acoustic"
-        call h5_write_dataset_p_1d_i(h5, dset_name, (/nglob_interface_PML_acoustic/))
+        call h5_write_dataset_p_1d_i(h5, dset_name, (/nglob_interface_PML_acoustic/), dwrite)
         dset_name = "nglob_interface_PML_elastic"
-        call h5_write_dataset_p_1d_i(h5, dset_name, (/nglob_interface_PML_elastic/))
+        call h5_write_dataset_p_1d_i(h5, dset_name, (/nglob_interface_PML_elastic/), dwrite)
         if (nglob_interface_PML_acoustic > 0) then
           dset_name = "points_interface_PML_acoustic"
-          call h5_write_dataset_p_1d_i(h5, dset_name, points_interface_PML_acoustic)
+          call h5_write_dataset_p_1d_i(h5, dset_name, points_interface_PML_acoustic, dwrite)
         endif
         if (nglob_interface_PML_elastic > 0) then
           dset_name = "points_interface_PML_elastic"
-          call h5_write_dataset_p_1d_i(h5, dset_name, points_interface_PML_elastic)
+          call h5_write_dataset_p_1d_i(h5, dset_name, points_interface_PML_elastic, dwrite)
         endif
       endif
     endif
   endif
 
   ! absorbing boundary surface
-  write(IOUT) num_abs_boundary_faces
+  dset_name = "num_abs_boundary_faces"
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/num_abs_boundary_faces/), dwrite)
   if (num_abs_boundary_faces > 0) then
     dset_name = "abs_boundary_ispec"
-    call h5_write_dataset_p_1d_i(h5, dset_name, abs_boundary_ispec)
+    call h5_write_dataset_p_1d_i(h5, dset_name, abs_boundary_ispec, dwrite)
     dset_name = "abs_boundary_ijk"
-    call h5_write_dataset_p_3d_i(h5, dset_name, abs_boundary_ijk)
+    call h5_write_dataset_p_3d_i(h5, dset_name, abs_boundary_ijk, dwrite)
     dset_name = "abs_boundary_jacobian2Dw"
-    call h5_write_dataset_p_2d_r(h5, dset_name, abs_boundary_jacobian2Dw)
+    call h5_write_dataset_p_2d_r(h5, dset_name, abs_boundary_jacobian2Dw, dwrite)
     dset_name = "abs_boundary_normal"
-    call h5_write_dataset_p_3d_r(h5, dset_name, abs_boundary_normal)
+    call h5_write_dataset_p_3d_r(h5, dset_name, abs_boundary_normal, dwrite)
 
     if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
       ! store mass matrix contributions
       if (ELASTIC_SIMULATION) then
         dset_name = "rmassx"
-        call h5_write_dataset_p_1d_r(h5, dset_name, rmassx)
+        call h5_write_dataset_p_1d_r(h5, dset_name, rmassx, dwrite)
         dset_name = "rmassy"
-        call h5_write_dataset_p_1d_r(h5, dset_name, rmassy)
+        call h5_write_dataset_p_1d_r(h5, dset_name, rmassy, dwrite)
         dset_name = "rmassz"
-        call h5_write_dataset_p_1d_r(h5, dset_name, rmassz)
+        call h5_write_dataset_p_1d_r(h5, dset_name, rmassz, dwrite)
      endif
       if (ACOUSTIC_SIMULATION) then
         dset_name = "rmassz_acoustic"
-        call h5_write_dataset_p_1d_r(h5, dset_name, rmassz_acoustic)
+        call h5_write_dataset_p_1d_r(h5, dset_name, rmassz_acoustic, dwrite)
      endif
     endif
   endif
 
   dset_name = "nspec2D_xmin"
-  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec2D_xmin/))
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec2D_xmin/), dwrite)
   dset_name = "nspec2D_xmax"
-  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec2D_xmax/))
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec2D_xmax/), dwrite)
   dset_name = "nspec2D_ymin"
-  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec2D_ymin/))
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec2D_ymin/), dwrite)
   dset_name = "nspec2D_ymax"
-  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec2D_ymax/))
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec2D_ymax/), dwrite)
   dset_name = "NSPEC2D_BOTTOM"
-  call h5_write_dataset_p_1d_i(h5, dset_name, (/NSPEC2D_BOTTOM/))
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/NSPEC2D_BOTTOM/), dwrite)
   dset_name = "NSPEC2D_TOP"
-  call h5_write_dataset_p_1d_i(h5, dset_name, (/NSPEC2D_TOP/))
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/NSPEC2D_TOP/), dwrite)
   dset_name = "ibelm_xmin"
-  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_xmin)
+  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_xmin, dwrite)
   dset_name = "ibelm_xmax"
-  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_xmax)
+  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_xmax, dwrite)
   dset_name = "ibelm_ymin"
-  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_ymin)
+  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_ymin, dwrite)
   dset_name = "ibelm_ymax"
-  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_ymax)
+  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_ymax, dwrite)
   dset_name = "ibelm_bottom"
-  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_bottom)
+  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_bottom, dwrite)
   dset_name = "ibelm_top"
-  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_top)
+  call h5_write_dataset_p_1d_i(h5, dset_name, ibelm_top, dwrite)
 
   ! free surface
-  write(IOUT) num_free_surface_faces
+  dset_name = "num_free_surface_faces"
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/num_free_surface_faces/), dwrite)
   if (num_free_surface_faces > 0) then
     dset_name = "free_surface_ispec"
-    call h5_write_dataset_p_1d_i(h5, dset_name, free_surface_ispec)
+    call h5_write_dataset_p_1d_i(h5, dset_name, free_surface_ispec, dwrite)
     dset_name = "free_surface_ijk"
-    call h5_write_dataset_p_3d_i(h5, dset_name, free_surface_ijk)
+    call h5_write_dataset_p_3d_i(h5, dset_name, free_surface_ijk, dwrite)
     dset_name = "free_surface_jacobian2Dw"
-    call h5_write_dataset_p_2d_r(h5, dset_name, free_surface_jacobian2Dw)
+    call h5_write_dataset_p_2d_r(h5, dset_name, free_surface_jacobian2Dw, dwrite)
     dset_name = "free_surface_normal"
-    call h5_write_dataset_p_3d_r(h5, dset_name, free_surface_normal)
+    call h5_write_dataset_p_3d_r(h5, dset_name, free_surface_normal, dwrite)
   endif
 
   ! acoustic-elastic coupling surface
-  write(IOUT) num_coupling_ac_el_faces
+  dset_name = "num_coupling_ac_el_faces"
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/num_coupling_ac_el_faces/), dwrite)
   if (num_coupling_ac_el_faces > 0) then
     dset_name = "coupling_ac_el_ispec"
-    call h5_write_dataset_p_1d_i(h5, dset_name, coupling_ac_el_ispec)
+    call h5_write_dataset_p_1d_i(h5, dset_name, coupling_ac_el_ispec, dwrite)
     dset_name = "coupling_ac_el_ijk"
-    call h5_write_dataset_p_3d_i(h5, dset_name, coupling_ac_el_ijk)
+    call h5_write_dataset_p_3d_i(h5, dset_name, coupling_ac_el_ijk, dwrite)
     dset_name = "coupling_ac_el_jacobian2Dw"
-    call h5_write_dataset_p_2d_r(h5, dset_name, coupling_ac_el_jacobian2Dw)
+    call h5_write_dataset_p_2d_r(h5, dset_name, coupling_ac_el_jacobian2Dw, dwrite)
     dset_name = "coupling_ac_el_normal"
-    call h5_write_dataset_p_3d_r(h5, dset_name, coupling_ac_el_normal)
+    call h5_write_dataset_p_3d_r(h5, dset_name, coupling_ac_el_normal, dwrite)
   endif
   
   ! acoustic-poroelastic coupling surface
   dset_name = "num_coupling_ac_po_faces"
-  call h5_write_dataset_p_1d_i(h5, dset_name, (/num_coupling_ac_po_faces/))
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/num_coupling_ac_po_faces/), dwrite)
   if (num_coupling_ac_po_faces > 0) then
     dset_name = "coupling_ac_po_ispec"
-    call h5_write_dataset_p_1d_i(h5, dset_name, coupling_ac_po_ispec)
+    call h5_write_dataset_p_1d_i(h5, dset_name, coupling_ac_po_ispec, dwrite)
     dset_name = "coupling_ac_po_ijk"
-    call h5_write_dataset_p_3d_i(h5, dset_name, coupling_ac_po_ijk)
+    call h5_write_dataset_p_3d_i(h5, dset_name, coupling_ac_po_ijk, dwrite)
     dset_name = "coupling_ac_po_jacobian2Dw"
-    call h5_write_dataset_p_2d_r(h5, dset_name, coupling_ac_po_jacobian2Dw)
+    call h5_write_dataset_p_2d_r(h5, dset_name, coupling_ac_po_jacobian2Dw, dwrite)
     dset_name = "coupling_ac_po_normal"
-    call h5_write_dataset_p_3d_r(h5, dset_name, coupling_ac_po_normal)
+    call h5_write_dataset_p_3d_r(h5, dset_name, coupling_ac_po_normal, dwrite)
   endif
 
   ! elastic-poroelastic coupling surface
   dset_name = "num_coupling_el_po_faces"
-  call h5_write_dataset_p_1d_i(h5, dset_name, (/num_coupling_el_po_faces/))
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/num_coupling_el_po_faces/), dwrite)
   if (num_coupling_el_po_faces > 0) then
     dset_name = "coupling_el_po_ispec"
-    call h5_write_dataset_p_1d_i(h5, dset_name, coupling_el_po_ispec)
+    call h5_write_dataset_p_1d_i(h5, dset_name, coupling_el_po_ispec, dwrite)
     dset_name = "coupling_po_el_ispec"
-    call h5_write_dataset_p_1d_i(h5, dset_name, coupling_po_el_ispec)
+    call h5_write_dataset_p_1d_i(h5, dset_name, coupling_po_el_ispec, dwrite)
     dset_name = "coupling_el_po_ijk"
-    call h5_write_dataset_p_3d_i(h5, dset_name, coupling_el_po_ijk)
+    call h5_write_dataset_p_3d_i(h5, dset_name, coupling_el_po_ijk, dwrite)
     dset_name = "coupling_po_el_ijk"
-    call h5_write_dataset_p_3d_i(h5, dset_name, coupling_po_el_ijk)
+    call h5_write_dataset_p_3d_i(h5, dset_name, coupling_po_el_ijk, dwrite)
     dset_name = "coupling_el_po_jacobian2Dw"
-    call h5_write_dataset_p_2d_r(h5, dset_name, coupling_el_po_jacobian2Dw)
+    call h5_write_dataset_p_2d_r(h5, dset_name, coupling_el_po_jacobian2Dw, dwrite)
     dset_name = "coupling_el_po_normal"
-    call h5_write_dataset_p_3d_r(h5, dset_name, coupling_el_po_normal)
+    call h5_write_dataset_p_3d_r(h5, dset_name, coupling_el_po_normal, dwrite)
   endif
 
   !MPI interfaces
-
   dset_name = "num_interfaces_ext_mesh"
-  call h5_write_dataset_p_1d_i(h5, dset_name, (/num_interfaces_ext_mesh/))
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/num_interfaces_ext_mesh/), dwrite)
   if (num_interfaces_ext_mesh > 0) then
     dset_name = "max_nibool_interfaces_ext_mesh"
-    call h5_write_dataset_p_1d_i(h5, dset_name, (/max_nibool_interfaces_ext_mesh/))
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/max_nibool_interfaces_ext_mesh/), dwrite)
     dset_name = "my_neighbors_ext_mesh"
-    call h5_write_dataset_p_1d_i(h5, dset_name, my_neighbors_ext_mesh)
+    call h5_write_dataset_p_1d_i(h5, dset_name, my_neighbors_ext_mesh, dwrite)
     dset_name = "nibool_interfaces_ext_mesh"
-    call h5_write_dataset_p_1d_i(h5, dset_name, (/nibool_interfaces_ext_mesh/))
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/nibool_interfaces_ext_mesh/), dwrite)
     dset_name = "ibool_interfaces_ext_mesh_dummy"
-    call h5_write_dataset_p_2d_i(h5, dset_name, ibool_interfaces_ext_mesh_dummy)
+    call h5_write_dataset_p_2d_i(h5, dset_name, ibool_interfaces_ext_mesh_dummy, dwrite)
   endif
   
   ! anisotropy
   if (ELASTIC_SIMULATION .and. ANISOTROPY) then
     dset_name = "c11store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c11store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c11store, dwrite)
     dset_name = "c12store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c12store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c12store, dwrite)
     dset_name = "c13store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c13store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c13store, dwrite)
     dset_name = "c14store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c14store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c14store, dwrite)
     dset_name = "c15store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c15store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c15store, dwrite)
     dset_name = "c16store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c16store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c16store, dwrite)
     dset_name = "c22store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c22store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c22store, dwrite)
     dset_name = "c23store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c23store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c23store, dwrite)
     dset_name = "c24store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c24store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c24store, dwrite)
     dset_name = "c25store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c25store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c25store, dwrite)
     dset_name = "c26store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c26store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c26store, dwrite)
     dset_name = "c33store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c33store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c33store, dwrite)
     dset_name = "c34store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c34store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c34store, dwrite)
     dset_name = "c35store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c35store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c35store, dwrite)
     dset_name = "c36store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c36store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c36store, dwrite)
     dset_name = "c44store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c44store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c44store, dwrite)
     dset_name = "c45store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c45store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c45store, dwrite)
     dset_name = "c46store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c46store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c46store, dwrite)
     dset_name = "c55store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c55store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c55store, dwrite)
     dset_name = "c56store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c56store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c56store, dwrite)
     dset_name = "c66store"
-    call h5_write_dataset_p_4d_r(h5, dset_name, c66store)
+    call h5_write_dataset_p_4d_r(h5, dset_name, c66store, dwrite)
   endif
 
   ! inner/outer elements
   dset_name = "ispec_is_inner"
-  call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_inner)
+  call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_inner, dwrite)
 
   if (ACOUSTIC_SIMULATION) then
      dset_name = "nspec_inner_acoustic"
-     call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_inner_acoustic/))
+     call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_inner_acoustic/), dwrite)
      dset_name = "nspec_outer_acoustic"
-     call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_outer_acoustic/))
+     call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_outer_acoustic/), dwrite)
      dset_name = "num_phase_ispec_acoustic"
-     call h5_write_dataset_p_1d_i(h5, dset_name, (/num_phase_ispec_acoustic/))
+     call h5_write_dataset_p_1d_i(h5, dset_name, (/num_phase_ispec_acoustic/), dwrite)
     if (num_phase_ispec_acoustic > 0) then
       dset_name = "phase_ispec_inner_acoustic"
-      call h5_write_dataset_p_2d_i(h5, dset_name, phase_ispec_inner_acoustic)
+      call h5_write_dataset_p_2d_i(h5, dset_name, phase_ispec_inner_acoustic, dwrite)
     endif
   endif
 
   if (ELASTIC_SIMULATION) then
     dset_name = "nspec_inner_elastic"
-    call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_inner_elastic/))
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_inner_elastic/), dwrite)
     dset_name = "nspec_outer_elastic"
-    call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_outer_elastic/))
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_outer_elastic/), dwrite)
     dset_name = "num_phase_ispec_elastic"
-    call h5_write_dataset_p_1d_i(h5, dset_name, (/num_phase_ispec_elastic/))
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/num_phase_ispec_elastic/), dwrite)
     if (num_phase_ispec_elastic > 0) then
       dset_name = "phase_ispec_inner_elastic"
-      call h5_write_dataset_p_2d_i(h5, dset_name, phase_ispec_inner_elastic)
+      call h5_write_dataset_p_2d_i(h5, dset_name, phase_ispec_inner_elastic, dwrite)
     endif
   endif
 
   if (POROELASTIC_SIMULATION) then
     dset_name = "nspec_inner_poroelastic"
-    call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_inner_poroelastic/))
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_inner_poroelastic/), dwrite)
     dset_name = "nspec_outer_poroelastic"
-    call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_outer_poroelastic/))
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec_outer_poroelastic/), dwrite)
     dset_name = "num_phase_ispec_poroelastic"
     if (num_phase_ispec_poroelastic > 0) then
       dset_name = "phase_ispec_inner_poroelastic"
-      call h5_write_dataset_p_2d_i(h5, dset_name, phase_ispec_inner_poroelastic)
+      call h5_write_dataset_p_2d_i(h5, dset_name, phase_ispec_inner_poroelastic, dwrite)
     endif
   endif
 
@@ -970,29 +970,29 @@
   if (USE_MESH_COLORING_GPU) then
     if (ACOUSTIC_SIMULATION) then
       dset_name = "num_colors_outer_acoustic"
-      call h5_write_dataset_p_1d_i(h5, dset_name, (/num_colors_outer_acoustic/))
+      call h5_write_dataset_p_1d_i(h5, dset_name, (/num_colors_outer_acoustic/), dwrite)
       dset_name = "num_colors_inner_acoustic"
-      call h5_write_dataset_p_1d_i(h5, dset_name, (/num_colors_inner_acoustic/))
+      call h5_write_dataset_p_1d_i(h5, dset_name, (/num_colors_inner_acoustic/), dwrite)
       dset_name = "num_elem_colors_acoustic"
-      call h5_write_dataset_p_1d_i(h5, dset_name, num_elem_colors_acoustic)
+      call h5_write_dataset_p_1d_i(h5, dset_name, num_elem_colors_acoustic, dwrite)
     endif
     if (ELASTIC_SIMULATION) then
       dset_name = "num_colors_outer_elastic"
-      call h5_write_dataset_p_1d_i(h5, dset_name, (/num_colors_outer_elastic/))
+      call h5_write_dataset_p_1d_i(h5, dset_name, (/num_colors_outer_elastic/), dwrite)
       dset_name = "num_colors_inner_elastic"
-      call h5_write_dataset_p_1d_i(h5, dset_name, (/num_colors_inner_acoustic/))
+      call h5_write_dataset_p_1d_i(h5, dset_name, (/num_colors_inner_acoustic/), dwrite)
       dset_name = "num_elem_colors_elastic"
-      call h5_write_dataset_p_1d_i(h5, dset_name, num_elem_colors_elastic)
+      call h5_write_dataset_p_1d_i(h5, dset_name, num_elem_colors_elastic, dwrite)
     endif
   endif
 
   ! surface points
   dset_name = "nfaces_surface"
-  call h5_write_dataset_p_1d_i(h5, dset_name, (/nfaces_surface/))
+  call h5_write_dataset_p_1d_i(h5, dset_name, (/nfaces_surface/), dwrite)
   dset_name = "ispec_is_surface_external_mesh"
-  call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_surface_external_mesh)
+  call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_surface_external_mesh, dwrite)
   dset_name = "iglob_is_surface_external_mesh"
-  call h5_write_dataset_p_1d_l(h5, dset_name, iglob_is_surface_external_mesh)
+  call h5_write_dataset_p_1d_l(h5, dset_name, iglob_is_surface_external_mesh, dwrite)
 
 
   ! stores arrays in binary files
@@ -1039,11 +1039,12 @@
        endif
      endif
   endif
-  print *, "write mesh dataset finished"
-  call h5_close_group(h5)
+
+  if (myrank == 0) print *, "write mesh dataset finished"
+
   call h5_close_file(h5)
   call h5_destructor(h5)
-  print *, "all h5 object closed"
+  if (myrank == 0) print *, "all h5 object closed"
   
   end subroutine save_arrays_solver_ext_mesh_h5
 

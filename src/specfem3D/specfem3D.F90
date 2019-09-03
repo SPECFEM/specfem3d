@@ -349,6 +349,8 @@
   ! reads in external mesh
   if (ADIOS_FOR_MESH) then
     call read_mesh_databases_adios()
+  elseif (HDF5_ENABLED) then
+    call read_mesh_databases_h5()
   else
     call read_mesh_databases()
   endif
@@ -356,6 +358,8 @@
   ! reads in moho mesh
   if (ADIOS_FOR_MESH) then
     call read_mesh_databases_moho_adios()
+!  elseif (HDF5_ENABLED) then ! not implemented yet
+!    call read_mesh_databases_moho_h5()
   else
     call read_mesh_databases_moho()
   endif
