@@ -134,12 +134,16 @@
     call asdf_setup(current_asdf_handle)
   endif
 
-  ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
-  call create_name_database(prname,myrank,LOCAL_PATH)
+  if (HDF5_ENABLED .eqv. .false.) then
+    ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
+    call create_name_database(prname,myrank,LOCAL_PATH)
+  endif
 
 ! read the value of NSPEC_AB and NGLOB_AB because we need it to define some array sizes below
   if (ADIOS_FOR_MESH) then
     call read_mesh_for_init_ADIOS(NSPEC_AB, NGLOB_AB)
+  elseif (HDF5_ENABLED) then
+    call read_mesh_for_init_h5()
   else
     call read_mesh_for_init()
   endif
