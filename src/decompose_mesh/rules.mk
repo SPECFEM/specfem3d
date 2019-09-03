@@ -134,11 +134,12 @@ ifeq ($(HDF5),yes)
 hdf5_mesh_SHARED_OBJECTS = \
 	$O/phdf5_utils.shared_hdf5.o \
 	$(EMPTY_MACRO)
-hdf5_mesh_OBJECTS = \
+hdf5_mesh_part = \
 	$O/part_decompose_mesh_hdf5.dec_module.o \
-	$O/write_mesh_databases_hdf5.dec.o \
 	$(EMPTY_MACRO)
-hdf5_mesh_part = $O/part_decompose_mesh_hdf5.dec_module.o \
+hdf5_mesh_OBJECTS = \
+	$(hdf5_mesh_part) \
+	$O/write_mesh_databases_hdf5.dec.o \
 	$(EMPTY_MACRO)
 xdecompose_mesh_OBJECTS += $(hdf5_mesh_OBJECTS)
 decompose_mesh_SHARED_OBJECTS += $(hdf5_mesh_SHARED_OBJECTS)
@@ -149,11 +150,12 @@ else
 hdf5_mesh_SHARED_OBJECTS = \
 	$O/phdf5_utils_stub.shared_nohdf5.o \
 	$(EMPTY_MACRO)
-hdf5_mesh_OBJECTS = \
+hdf5_mesh_part = \
 	$O/part_decompose_mesh_hdf5_stub.dec_module.o \
-	$O/write_mesh_databases_hdf5_stub.dec.o \
 	$(EMPTY_MACRO)
-hdf5_mesh_part = $O/part_decompose_mesh_hdf5_stub.dec_module.o \
+hdf5_mesh_OBJECTS = \
+	$(hdf5_mesh_part) \
+	$O/write_mesh_databases_hdf5_stub.dec.o \
 	$(EMPTY_MACRO)
 xdecompose_mesh_OBJECTS += $(hdf5_mesh_OBJECTS)
 decompose_mesh_SHARED_OBJECTS += $(hdf5_mesh_SHARED_OBJECTS)
