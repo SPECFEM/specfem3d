@@ -337,6 +337,33 @@ adios_inverse_problem_for_model_STUBS = \
 adios_inverse_problem_for_model_PRESTUBS = \
 	$O/adios_manager_stubs.shared_noadios.o
 
+###
+### HDF5
+###
+
+ifeq ($(HDF5),yes)
+hdf5_inverse_OBJECTS = \
+	$O/read_mesh_databases_hdf5.spec_hdf5.o \
+	$(EMPTY_MACRO)
+hdf5_inverse_SHARED_OBJECTS =	\
+	$O/phdf5_utils.shared_hdf5.o \
+	$(EMPTY_MACRO)
+inverse_problem_for_model_OBJECTS += $(hdf5_inverse_OBJECTS)
+inverse_problem_for_model_SHARED_OBJECTS += $(hdf5_inverse_SHARED_OBJECTS)
+else
+hdf5_inverse_OBJECTS= \
+	$O/read_mesh_databases_hdf5_stub.spec_hdf5.o \
+	$(EMPTY_MACRO)
+hdf5_inverse_SHARED_OBJECTS =	\
+	$O/phdf5_utils_stub.shared_nohdf5.o \
+	$(EMPTY_MACRO)
+inverse_problem_for_model_OBJECTS += $(hdf5_inverse_OBJECTS)
+inverse_problem_for_model_SHARED_OBJECTS += $(hdf5_inverse_SHARED_OBJECTS)
+endif
+
+
+
+
 # conditional adios linking
 ifeq ($(ADIOS),no)
 adios_inverse_problem_for_model_OBJECTS = $(adios_inverse_problem_for_model_STUBS)

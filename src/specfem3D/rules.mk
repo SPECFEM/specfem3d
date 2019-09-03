@@ -303,6 +303,31 @@ specfem3D_MODULES += \
 	$(EMPTY_MACRO)
 endif
 
+###
+### HDF5
+###
+
+ifeq ($(HDF5),yes)
+hdf5_specfem3D_OBJECTS = \
+	$O/read_mesh_databases_hdf5.spec_hdf5.o \
+	$(EMPTY_MACRO)
+hdf5_specfem3D_SHARED_OBJECTS =	\
+	$O/phdf5_utils.shared_hdf5.o \
+	$(EMPTY_MACRO)
+specfem3D_OBJECTS += $(hdf5_specfem3D_OBJECTS)
+specfem3D_SHARED_OBJECTS += $(hdf5_specfem3D_SHARED_OBJECTS)
+else
+hdf5_specfem3D_OBJECTS= \
+	$O/read_mesh_databases_hdf5_stub.spec_hdf5.o \
+	$(EMPTY_MACRO)
+hdf5_specfem3D_SHARED_OBJECTS =	\
+	$O/phdf5_utils_stub.shared_nohdf5.o \
+	$(EMPTY_MACRO)
+specfem3D_OBJECTS += $(hdf5_specfem3D_OBJECTS)
+specfem3D_SHARED_OBJECTS += $(hdf5_specfem3D_SHARED_OBJECTS)
+endif
+
+
 #######################################
 
 ####
@@ -375,6 +400,9 @@ $O/adios_helpers.shared_adios.o: \
 ## ASDF compilation
 $O/write_output_ASDF.spec.o: $O/asdf_data.spec_module.o
 
+## hdf5
+$O/initialize_simulation.spec.o: $(hdf5_specfem3D_OBJECTS)
+
 ## kdtree
 $O/locate_point.spec.o: $O/search_kdtree.shared.o
 $O/setup_sources_receivers.spec.o: $O/search_kdtree.shared.o
@@ -438,4 +466,14 @@ $O/%.visualcc.o: $S/%.cpp ${SETUP}/config.h
 
 $O/%.visualcc.o: $S/%.c ${SETUP}/config.h
 	${CC} -c $(CPPFLAGS) $(CFLAGS) $(MPI_INCLUDES) -o $@ $<
+
+###
+### HDF5
+###
+
+$O/%.spec_hdf5.o: $S/%.F90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o $(hdf5_specfem3D_SHARED_OBJECTS)
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.spec_hdf5.o: $S/%.f90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o $(hdf5_specfem3D_SHARED_OBJECTS) 
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
