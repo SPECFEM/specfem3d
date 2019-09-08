@@ -164,15 +164,17 @@
 // leads up to ~1% performance increase
 //#define MANUALLY_UNROLLED_LOOPS
 
-// compiler specifications
+// CUDA compiler specifications
 // (optional) use launch_bounds specification to increase compiler optimization
 // (depending on GPU type, register spilling might slow down the performance)
-// (uncomment if desired)
-//#define USE_LAUNCH_BOUNDS
-
 // elastic kernel
+#ifdef GPU_DEVICE_K20
+// specifics see: https://docs.nvidia.com/cuda/kepler-tuning-guide/index.html
+// maximum shared memory per thread block 48KB
+//
 // note: main kernel is Kernel_2_***_impl() which is limited by shared memory usage to 8 active blocks
 //       while register usage might use up to 9 blocks
+//
 //
 // performance statistics: kernel Kernel_2_noatt_impl():
 //       shared memory per block = 1700    for Kepler: total = 49152 -> limits active blocks to 16
@@ -183,7 +185,35 @@
 //       shared memory per block = 6100    for Kepler: total = 49152 -> limits active blocks to 8
 //       registers per thread    = 59
 //       registers per block     = 8192                total = 65536 -> limits active blocks to 8
+//
+// (uncomment if desired)
+//#define USE_LAUNCH_BOUNDS
 #define LAUNCH_MIN_BLOCKS 10
+//#pragma message ("\nCompiling with: USE_LAUNCH_BOUNDS enabled for K20\n")
+#endif
+
+// add more card specific values
+#ifdef GPU_DEVICE_Maxwell
+// specifics see: https://docs.nvidia.com/cuda/maxwell-tuning-guide/index.html
+// register file size 64k 32-bit registers per SM
+// shared memory 64KB for GM107 and 96KB for GM204
+#undef USE_LAUNCH_BOUNDS
+#endif
+
+#ifdef GPU_DEVICE_Pascal
+// specifics see: https://docs.nvidia.com/cuda/pascal-tuning-guide/index.html
+// register file size 64k 32-bit registers per SM
+// shared memory 64KB for GP100 and 96KB for GP104
+#undef USE_LAUNCH_BOUNDS
+#endif
+
+#ifdef GPU_DEVICE_Volta
+// specifics see: https://docs.nvidia.com/cuda/volta-tuning-guide/index.html
+// register file size 64k 32-bit registers per SM
+// shared memory size 96KB per SM (maximum shared memory per thread block)
+// maximum registers 255 per thread
+#undef USE_LAUNCH_BOUNDS
+#endif
 
 // acoustic kernel
 // performance statistics: kernel Kernel_2_acoustic_impl():
@@ -369,6 +399,8 @@ typedef struct mesh_ {
 
   // mesh resolution
   int NSPEC_AB;
+  int NSPEC_IRREGULAR;
+
   int NGLOB_AB;
 
   // mpi process

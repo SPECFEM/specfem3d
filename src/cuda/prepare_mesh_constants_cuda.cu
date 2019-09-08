@@ -110,12 +110,16 @@ void FC_FUNC_(prepare_constants_device,
 
   // sets global parameters
   mp->NSPEC_AB = *NSPEC_AB;
+  mp->NSPEC_IRREGULAR = *NSPEC_IRREGULAR;
   mp->NGLOB_AB = *NGLOB_AB;
 
   // constants
   mp->simulation_type = *SIMULATION_TYPE;
   mp->absorbing_conditions = *ABSORBING_CONDITIONS;
   mp->save_forward = *SAVE_FORWARD;
+
+// DK DK August 2018: adding this test, following a suggestion by Etienne Bachmann
+  if (*h_NGLLX != NGLLX) exit_on_error("make sure that the NGLL constants are equal in the two files setup/constants.h and src/cuda/mesh_constants_cuda.h and then please re-compile; also make sure that the value of NGLL3_PADDED is consistent with the value of NGLL\n");
 
   // sets constant arrays
   setConst_hprime_xx(h_hprime_xx,mp);
@@ -154,10 +158,7 @@ void FC_FUNC_(prepare_constants_device,
 
   // mesh
   // Assuming NGLLX=5. Padded is then 128 (5^3+3)
-  int size_padded = NGLL3_PADDED * (*NSPEC_IRREGULAR > 0 ? *NSPEC_IRREGULAR : 1);
-
-// DK DK August 2018: adding this test, following a suggestion by Etienne Bachmann
-  if (*h_NGLLX != NGLLX) exit_on_error("make sure that the NGLL constants are equal in the two files setup/constants.h and src/cuda/mesh_constants_cuda.h and then please re-compile; also make sure that the value of NGLL3_PADDED is consistent with the value of NGLL\n");
+  int size_padded = NGLL3_PADDED * (mp->NSPEC_IRREGULAR > 0 ? *NSPEC_IRREGULAR : 1);
 
   print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_xix, size_padded*sizeof(realw)),1001);
   print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_xiy, size_padded*sizeof(realw)),1002);
@@ -172,7 +173,7 @@ void FC_FUNC_(prepare_constants_device,
   // transfer constant element data with padding
   /*
   // way 1: slow...
-  for(int i=0;i < mp->NSPEC_AB;i++) {
+  for(int i=0;i < mp->NSPEC_IRREGULAR;i++) {
     print_CUDA_error_if_any(cudaMemcpy(mp->d_xix + i*NGLL3_PADDED, &h_xix[i*NGLL3],
                                        NGLL3*sizeof(realw),cudaMemcpyHostToDevice),1501);
     print_CUDA_error_if_any(cudaMemcpy(mp->d_xiy+i*NGLL3_PADDED,   &h_xiy[i*NGLL3],
@@ -201,34 +202,34 @@ void FC_FUNC_(prepare_constants_device,
   if (*NSPEC_IRREGULAR > 0 ){
     print_CUDA_error_if_any(cudaMemcpy2D(mp->d_xix, NGLL3_PADDED*sizeof(realw),
                                          h_xix, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
-                                         mp->NSPEC_AB, cudaMemcpyHostToDevice),1501);
+                                         mp->NSPEC_IRREGULAR, cudaMemcpyHostToDevice),1501);
     print_CUDA_error_if_any(cudaMemcpy2D(mp->d_xiy, NGLL3_PADDED*sizeof(realw),
                                          h_xiy, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
-                                         mp->NSPEC_AB, cudaMemcpyHostToDevice),1502);
+                                         mp->NSPEC_IRREGULAR, cudaMemcpyHostToDevice),1502);
     print_CUDA_error_if_any(cudaMemcpy2D(mp->d_xiz, NGLL3_PADDED*sizeof(realw),
                                          h_xiz, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
-                                         mp->NSPEC_AB, cudaMemcpyHostToDevice),1503);
+                                         mp->NSPEC_IRREGULAR, cudaMemcpyHostToDevice),1503);
     print_CUDA_error_if_any(cudaMemcpy2D(mp->d_etax, NGLL3_PADDED*sizeof(realw),
                                          h_etax, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
-                                         mp->NSPEC_AB, cudaMemcpyHostToDevice),1504);
+                                         mp->NSPEC_IRREGULAR, cudaMemcpyHostToDevice),1504);
     print_CUDA_error_if_any(cudaMemcpy2D(mp->d_etay, NGLL3_PADDED*sizeof(realw),
                                          h_etay, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
-                                         mp->NSPEC_AB, cudaMemcpyHostToDevice),1505);
+                                         mp->NSPEC_IRREGULAR, cudaMemcpyHostToDevice),1505);
     print_CUDA_error_if_any(cudaMemcpy2D(mp->d_etaz, NGLL3_PADDED*sizeof(realw),
                                          h_etaz, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
-                                         mp->NSPEC_AB, cudaMemcpyHostToDevice),1506);
+                                         mp->NSPEC_IRREGULAR, cudaMemcpyHostToDevice),1506);
     print_CUDA_error_if_any(cudaMemcpy2D(mp->d_gammax, NGLL3_PADDED*sizeof(realw),
                                          h_gammax, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
-                                         mp->NSPEC_AB, cudaMemcpyHostToDevice),1507);
+                                         mp->NSPEC_IRREGULAR, cudaMemcpyHostToDevice),1507);
     print_CUDA_error_if_any(cudaMemcpy2D(mp->d_gammay, NGLL3_PADDED*sizeof(realw),
                                          h_gammay, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
-                                         mp->NSPEC_AB, cudaMemcpyHostToDevice),1508);
+                                         mp->NSPEC_IRREGULAR, cudaMemcpyHostToDevice),1508);
     print_CUDA_error_if_any(cudaMemcpy2D(mp->d_gammaz, NGLL3_PADDED*sizeof(realw),
                                          h_gammaz, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
-                                         mp->NSPEC_AB, cudaMemcpyHostToDevice),1509);
+                                         mp->NSPEC_IRREGULAR, cudaMemcpyHostToDevice),1509);
   }
-  size_padded = NGLL3_PADDED * (mp->NSPEC_AB);
 
+  size_padded = NGLL3_PADDED * (mp->NSPEC_AB);
 
   // global indexing (padded)
   print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_ibool, size_padded*sizeof(int)),1600);
