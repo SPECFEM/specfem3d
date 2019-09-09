@@ -124,18 +124,22 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id )
+  subroutine model_external_values(xmesh,ymesh,zmesh,ispec,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id )
 
 ! given a GLL point, returns super-imposed velocity model values
 
-  use generate_databases_par, only: nspec => NSPEC_AB,ibool,HUGEVAL,TINYVAL,IDOMAIN_ELASTIC
+  !use constants, only: MIDX,MIDY,MIDZ
 
-  use create_regions_mesh_ext_par
+  use generate_databases_par, only: nspec => NSPEC_AB,ibool,HUGEVAL,TINYVAL,IDOMAIN_ELASTIC,CUSTOM_REAL
+
+  use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy, &
+    num_free_surface_faces,free_surface_ijk,free_surface_ispec,nglob_dummy
 
   implicit none
 
   ! GLL point
   double precision, intent(in) :: xmesh,ymesh,zmesh
+  integer, intent(in) :: ispec
 
   ! density, Vp and Vs
   real(kind=CUSTOM_REAL) :: vp,vs,rho
@@ -154,6 +158,9 @@
   real(kind=CUSTOM_REAL) :: xmin,xmax,ymin,ymax,zmin,zmax,x_target,y_target
   real(kind=CUSTOM_REAL) :: depth
   real(kind=CUSTOM_REAL) :: elevation,distmin
+  integer :: idummy
+  !integer :: iglob
+  !real(kind=CUSTOM_REAL) :: mid_x,mid_y,mid_z
 
 !---
 !
@@ -165,6 +172,14 @@
   x = xmesh
   y = ymesh
   z = zmesh
+
+
+  ! gets element midpoint location (if needed)
+  idummy = ispec
+  !iglob = ibool(MIDX,MIDY,MIDZ,ispec)
+  !mid_x = xstore_dummy(iglob)
+  !mid_y = ystore_dummy(iglob)
+  !mid_z = zstore_dummy(iglob)
 
   ! note: z coordinate will be negative below surface
   !          convention is z-axis points up

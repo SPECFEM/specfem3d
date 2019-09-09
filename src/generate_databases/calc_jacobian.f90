@@ -184,6 +184,10 @@
   double precision :: dist1_sq,dist2_sq,dist3_sq
   double precision :: threshold
   double precision,parameter :: threshold_percentage = 1.e-5
+  logical :: eqx1,eqx2,eqx3,eqx4,eqx5,eqx6
+  logical :: eqy1,eqy2,eqy3,eqy4,eqy5,eqy6
+  logical :: eqz1,eqz2,eqz3,eqz4,eqz5,eqz6
+  logical, external :: is_equal_number
 
   ! by default, we assume to have a perfect regular shape (cube)
 
@@ -201,13 +205,57 @@
     return
   endif
 
+  ! number convention:
+  !
+  !              8                 7
+  !              o ------------- o
+  !             /|              /|
+  !            / |             / |
+  !          5o---------------o6 |
+  !           |  |            |  |
+  !           | 4o----------- |--o3
+  !           | /             | /
+  !           |/              |/
+  !     z     o---------------o
+  !     | y   1                 2
+  !     |/
+  !     o---> x
+  !
+
+  ! checks x-plane (using epsilon() function to determine almost negligible differences)
+  eqx1 = is_equal_number(xelm(1),xelm(4))
+  eqx2 = is_equal_number(xelm(1),xelm(5))
+  eqx3 = is_equal_number(xelm(1),xelm(8))
+  eqx4 = is_equal_number(xelm(2),xelm(3))
+  eqx5 = is_equal_number(xelm(2),xelm(6))
+  eqx6 = is_equal_number(xelm(2),xelm(7))
+  ! checks y-plane
+  eqy1 = is_equal_number(yelm(1),yelm(2))
+  eqy2 = is_equal_number(yelm(1),yelm(5))
+  eqy3 = is_equal_number(yelm(1),yelm(6))
+  eqy4 = is_equal_number(yelm(3),yelm(4))
+  eqy5 = is_equal_number(yelm(3),yelm(7))
+  eqy6 = is_equal_number(yelm(3),yelm(8))
+  ! checks z-plane
+  eqz1 = is_equal_number(zelm(1),zelm(2))
+  eqz2 = is_equal_number(zelm(1),zelm(3))
+  eqz3 = is_equal_number(zelm(1),zelm(4))
+  eqz4 = is_equal_number(zelm(5),zelm(6))
+  eqz5 = is_equal_number(zelm(5),zelm(7))
+  eqz6 = is_equal_number(zelm(5),zelm(8))
+
   ! checks if the element is a cube (following numbering convention in a 8 nodes element)
-  if (xelm(1) == xelm(4) .and. xelm(1) == xelm(5) .and. xelm(1) == xelm(8) .and. &
-      xelm(2) == xelm(3) .and. xelm(2) == xelm(6) .and. xelm(2) == xelm(7) .and. &
-      yelm(1) == yelm(2) .and. yelm(1) == yelm(5) .and. yelm(1) == yelm(6) .and. &
-      yelm(3) == yelm(4) .and. yelm(3) == yelm(7) .and. yelm(3) == yelm(8) .and. &
-      zelm(1) == zelm(2) .and. zelm(1) == zelm(3) .and. zelm(1) == zelm(4) .and. &
-      zelm(5) == zelm(6) .and. zelm(5) == zelm(7) .and. zelm(5) == zelm(8) ) then
+  ! with numerically negligible differences (to avoid representation issues of float values)
+  if (eqx1 .and. eqx2 .and. eqx3 .and. eqx4 .and. eqx5 .and. eqx6 .and. &
+      eqy1 .and. eqy2 .and. eqy3 .and. eqy4 .and. eqy5 .and. eqy6 .and. &
+      eqz1 .and. eqz2 .and. eqz3 .and. eqz4 .and. eqz5 .and. eqz6 ) then
+  ! or direct float comparisons
+  !if (xelm(1) == xelm(4) .and. xelm(1) == xelm(5) .and. xelm(1) == xelm(8) .and. &
+  !    xelm(2) == xelm(3) .and. xelm(2) == xelm(6) .and. xelm(2) == xelm(7) .and. &
+  !    yelm(1) == yelm(2) .and. yelm(1) == yelm(5) .and. yelm(1) == yelm(6) .and. &
+  !    yelm(3) == yelm(4) .and. yelm(3) == yelm(7) .and. yelm(3) == yelm(8) .and. &
+  !    zelm(1) == zelm(2) .and. zelm(1) == zelm(3) .and. zelm(1) == zelm(4) .and. &
+  !    zelm(5) == zelm(6) .and. zelm(5) == zelm(7) .and. zelm(5) == zelm(8) ) then
 
     dist2_sq = (xelm(5)-xelm(1))**2 + (yelm(5)-yelm(1))**2 + (zelm(5)-zelm(1))**2
     dist3_sq = (xelm(4)-xelm(1))**2 + (yelm(4)-yelm(1))**2 + (zelm(4)-zelm(1))**2
@@ -235,3 +283,28 @@
   endif
 
   end subroutine check_element_regularity
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  function is_equal_number(a,b)
+
+! compares two real values and determines if they are equal (within numerical precision)
+! to avoid direct comparisons a == b which can fail for rounding issues
+
+  implicit none
+
+  real, intent(in) :: a,b
+  logical :: is_equal_number
+
+  ! note: epsilon() intrinsic function
+  !       returns a positive number that is almost negligible
+  !       example: If x is of type REAL(4), EPSILON (X) has the value 2**-23
+  if (abs(a - b) <= epsilon(a)) then
+    is_equal_number = .true.
+  else
+    is_equal_number = .false.
+  endif
+
+  end function is_equal_number

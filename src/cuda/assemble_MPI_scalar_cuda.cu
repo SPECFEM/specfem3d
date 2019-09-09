@@ -44,7 +44,7 @@ __global__ void prepare_boundary_potential_on_device(field* d_potential_dot_dot_
                                                      const int* d_nibool_interfaces_ext_mesh,
                                                      const int* d_ibool_interfaces_ext_mesh) {
 
-  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
+  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
   int ientry,iglob;
 
   for(int iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {
@@ -156,7 +156,7 @@ __global__ void assemble_boundary_potential_on_device(field* d_potential_dot_dot
                                                       const int* d_nibool_interfaces_ext_mesh,
                                                       const int* d_ibool_interfaces_ext_mesh) {
 
-  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
+  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
   int ientry,iglob;
 
   for( int iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {

@@ -170,13 +170,15 @@ contains
           case('material')
              read(line(ipos0:ipos1),*,iostat=ier) i, rho, vp, vs, Q_Kappa, Q_mu, Aniso, iflag
              if (ier /= 0) then
-               print *,'error while reading your input file in routine chunk_earth_mesh_mod.f90'
+               print *,'Error while reading your input file in routine chunk_earth_mesh_mod.f90'
+               print *
                print *,'We recently changed the input format from i, rho, vp, vs, Q_mu, Aniso, iflag'
                print *,'to i, rho, vp, vs, Q_Kappa, Q_mu, Aniso, iflag in order to add support for Q_Kappa.'
                print *,'It is likely that your input file still uses the old convention and needs to be updated.'
                print *,'If you do not know what value to add for Q_Kappa, add 9999., i.e negligible Q_Kappa attenuation'
                print *,'and then your results will be unchanged compared to older versions of the code.'
-               stop 'error in input file format in routine chunk_earth_mesh_mod.f90'
+               print *
+               stop 'Error in input file format in routine chunk_earth_mesh_mod.f90'
              endif
              if (i <= nb_mat) then
                 material_prop(i,1) = rho

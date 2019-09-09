@@ -223,7 +223,7 @@
           call get_model_values(mat_prop,nmat_ext_mesh, &
                                 undef_mat_prop,nundefMat_ext_mesh, &
                                 imaterial_id,imaterial_def, &
-                                xmesh,ymesh,zmesh, &
+                                xmesh,ymesh,zmesh,ispec, &
                                 rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
                                 rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                                 phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
@@ -401,7 +401,7 @@
   subroutine get_model_values(mat_prop,nmat_ext_mesh, &
                               undef_mat_prop,nundefMat_ext_mesh, &
                               imaterial_id,imaterial_def, &
-                              xmesh,ymesh,zmesh, &
+                              xmesh,ymesh,zmesh,ispec, &
                               rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
                               rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                               phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
@@ -431,6 +431,7 @@
   integer, intent(in) :: imaterial_id,imaterial_def
 
   double precision, intent(in) :: xmesh,ymesh,zmesh
+  integer, intent(in) :: ispec
 
   real(kind=CUSTOM_REAL) :: vp,vs,rho,qkappa_atten,qmu_atten
 
@@ -631,7 +632,7 @@
 
     ! user model from external routine
     ! adds/gets velocity model as specified in model_external_values.f90
-    call model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id)
+    call model_external_values(xmesh,ymesh,zmesh,ispec,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id)
 
   case (IMODEL_COUPLED)
     ! user model for coupling with injection method

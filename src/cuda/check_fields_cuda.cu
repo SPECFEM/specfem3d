@@ -634,7 +634,8 @@ __global__ void get_maximum_vector_kernel(realw* array, int size, realw* d_max){
   // load shared mem
   unsigned int tid = threadIdx.x;
   unsigned int bx = blockIdx.y*gridDim.x+blockIdx.x;
-  unsigned int i = tid + bx*blockDim.x;
+  //unsigned int i = tid + bx*blockDim.x;
+  unsigned int i = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
 
   // loads values into shared memory: assume array is a vector array
   sdata[tid] = (i < size) ? (array[i*3]*array[i*3] + array[i*3+1]*array[i*3+1] + array[i*3+2]*array[i*3+2]) : 0.0 ;
@@ -722,6 +723,10 @@ void FC_FUNC_(get_norm_elastic_from_device,
   // determines max for all blocks
   max = h_max[0];
   for(int i=1;i<num_blocks_x*num_blocks_y;i++) {
+    //debug: denormals can show up here in debugging checks like
+    //       -ffpe-trap=overflow,underflow,zero,invalid,denormal
+    //       when values are zero, avoid the denormal check
+    // printf("debug: %d h = %f %d\n",i,h_max[i],num_blocks_x * num_blocks_y);
     if (max < h_max[i]) max = h_max[i];
   }
   res = sqrt(max);

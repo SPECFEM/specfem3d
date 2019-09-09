@@ -25,14 +25,14 @@ mpirun -np 2 ./check_cuda_device
 
 #include <stdio.h>
 #include <cuda.h>
+#include <unistd.h>
 
 #ifdef WITH_MPI
-// #include <mpi.h>
+#include <mpi.h>
 #endif
 
 #include <sys/time.h>
 #include <sys/resource.h>
-
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -116,6 +116,12 @@ void initialize_cuda_device(int* myrank_f,int* ncuda_devices) {
   // Gets rank number of MPI process
   int myrank = *myrank_f;
 
+#ifdef WITH_MPI
+  int sizeprocs;
+  MPI_Comm_size(MPI_COMM_WORLD,&sizeprocs);
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
+
   /*
   // cuda initialization (needs -lcuda library)
   // note:   cuInit initializes the driver API.
@@ -151,6 +157,12 @@ void initialize_cuda_device(int* myrank_f,int* ncuda_devices) {
   // Gets number of GPU devices
   device_count = 0;
   cudaGetDeviceCount(&device_count);
+  // Do not check if command failed with `exit_on_cuda_error` since it calls cudaDevice()/ThreadSynchronize():
+  // If multiple MPI tasks access multiple GPUs per node, they will try to synchronize
+  // GPU 0 and depending on the order of the calls, an error will be raised
+  // when setting the device number. If MPS is enabled, some GPUs will silently not be used.
+  //
+  // being verbose and catches error from first call to CUDA runtime function, without synchronize call
   err = cudaGetLastError();
   if (err != cudaSuccess) {
     fprintf(stderr,"Error after cudaGetDeviceCount: %s\n", cudaGetErrorString(err));
@@ -162,18 +174,25 @@ please check if driver and runtime libraries work together\n\n");
   // returns device count to fortran
   if (device_count == 0) {
     exit_on_error("CUDA runtime error: there is no device supporting CUDA\n");
-  } else {
-#ifdef WITH_MPI
-   //printf("\nprocess %d found number of CUDA devices = %d\n",myrank,device_count);
-#else
-   printf("\nfound number of CUDA devices = %d\n",device_count);
-#endif
-   fflush(stdout);
   }
 
-  // synchronizes mpi processes
+  // output
 #ifdef WITH_MPI
+  // output infos for mpi ranks ordered
+  for(int iproc = 0;iproc < sizeprocs; iproc++){
+    if (iproc == myrank){
+      printf("process %d found number of CUDA devices = %d\n",myrank,device_count);
+      fflush(stdout);
+    }
+    // synchronizes mpi processes
+    MPI_Barrier(MPI_COMM_WORLD);
+  }
+  sleep(1);
+  if (myrank == 0){printf("\n\n");fflush(stdout);}
+  // synchronizes mpi processes
   MPI_Barrier(MPI_COMM_WORLD);
+#else
+  printf("\nfound number of CUDA devices = %d\n",device_count);fflush(stdout);
 #endif
 
   *ncuda_devices = device_count;
@@ -196,11 +215,40 @@ e.g., on titan enable environment CRAY_CUDA_MPS=1 to use a single GPU with multi
   cudaDeviceReset();
 #endif
 
-  //printf("rank %d: cuda device count = %d sets device = %d \n",myrank,device_count,myrank % device_count);
-  //MPI_Barrier(MPI_COMM_WORLD);
+#ifdef WITH_MPI
+  // check
+  if (cudaGetLastError() != cudaSuccess){
+    fprintf(stderr,"Error: %s\n", cudaGetErrorString(cudaGetLastError()));
+    exit_on_error("CUDA runtime error: cudaDeviceReset failed\n\n");
+  }
+  // synchronizes mpi processes
+  MPI_Barrier(MPI_COMM_WORLD);
+  // output infos for mpi ranks ordered
+  for(int iproc = 0;iproc < sizeprocs; iproc++){
+    if (iproc == myrank){
+      printf("process %d: cuda device count = %d (would select device = %d)\n",myrank,device_count,myrank % device_count);
+      fflush(stdout);
+    }
+    // synchronizes mpi processes
+    MPI_Barrier(MPI_COMM_WORLD);
+  }
+  sleep(1);
+  if (myrank == 0){printf("\n\n");fflush(stdout);}
+  // synchronizes mpi processes
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
 
   // loops over all devices for displaying info
   for(int i=0;i < device_count; i++){
+
+#ifdef WITH_MPI
+    // output info
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (myrank == 0){printf("cuda set device %d\n\n",i);fflush(stdout);}
+    for(int iproc = 0;iproc < sizeprocs; iproc++){
+      if (iproc == myrank){
+        printf("process %d: cudaSetDevice %d\n",myrank,i);fflush(stdout);
+#endif
 
     // sets active device
     //device = myrank % device_count;
@@ -212,17 +260,72 @@ e.g., on titan enable environment CRAY_CUDA_MPS=1 to use a single GPU with multi
       exit_on_error("CUDA runtime error: cudaSetDevice failed\n\n");
     }
 
+    // checks device execution
+    err = cudaDeviceSynchronize();
+    if (err != cudaSuccess) {
+      fprintf(stderr,"Error cudaDeviceSynchronize: %s\n", cudaGetErrorString(err));
+      exit_on_error("CUDA runtime error: cudaDeviceSynchronize failed\n\n");
+    }
+
+#ifdef WITH_MPI
+      } // if
+      MPI_Barrier(MPI_COMM_WORLD);
+    }//for
+    // double check if CUDA context gets created on multiple processes
+    MPI_Barrier(MPI_COMM_WORLD);
+    for(int iproc = 0;iproc < sizeprocs; iproc++){
+      if (iproc == myrank){
+        printf("process %d: create context\n",myrank);
+        fflush(stdout);
+        // creates context
+        err = cudaFree(0);
+        if (err != cudaSuccess) {
+          printf("Error cudaFree: %s\n", cudaGetErrorString(err));
+          exit_on_error("CUDA runtime error: cudaFree for context failed\n\n");
+        }
+      }
+      // synchronizes mpi processes
+      MPI_Barrier(MPI_COMM_WORLD);
+    }
+    sleep(1);
+    if (myrank == 0){printf("\n\n");fflush(stdout);}
+    MPI_Barrier(MPI_COMM_WORLD);
+#endif
+
+    // double check
+    exit_on_cuda_error("cudaSetDevice has invalid device");
+
+#ifdef WITH_MPI
+    // check
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (myrank == 0){printf("cuda get device %d\n\n",i);fflush(stdout);}
+#endif
+
     // double check that device was  properly selected
     cudaGetDevice(&device);
 
     err = cudaGetLastError();
-    // debug
-    //printf("device set/get: rank %d set %d get %d\n - return %s",myrank,myDevice,device,cudaGetErrorString(err));
     if (err != cudaSuccess) {
       printf("Error cudaGetDevice: %s\n", cudaGetErrorString(err));
       if (err == cudaErrorDevicesUnavailable){ printf("\n%s\n", err_info); }
       exit_on_error("CUDA runtime error: cudaGetDevice failed\n\n");
     }
+
+#ifdef WITH_MPI
+    // output infos for mpi ranks ordered
+    MPI_Barrier(MPI_COMM_WORLD);
+    for(int iproc = 0;iproc < sizeprocs; iproc++){
+      if (iproc == myrank){
+        printf("device set/get: rank %d set %d get %d\n - return %s\n",myrank,i,device,cudaGetErrorString(err));
+        fflush(stdout);
+      }
+      // synchronizes mpi processes
+      MPI_Barrier(MPI_COMM_WORLD);
+    }
+    sleep(1);
+    if (myrank == 0){printf("\n\n");fflush(stdout);}
+    MPI_Barrier(MPI_COMM_WORLD);
+#endif
 
     // checks device id
     //if( device != (myrank % device_count) ){
@@ -236,27 +339,29 @@ e.g., on titan enable environment CRAY_CUDA_MPS=1 to use a single GPU with multi
     struct cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp,device);
 
+    exit_on_cuda_error("cudaGetDeviceProperties failed");
+
     // exit if the machine has no CUDA-enabled device
     if (deviceProp.major == 9999 && deviceProp.minor == 9999){
       printf("No CUDA-enabled device found, exiting...\n\n");
       exit_on_error("CUDA runtime error: there is no CUDA-enabled device found\n");
     }
 
+    // memory infos via cudaMemGetInfo()
+    double free_db,used_db,total_db;
+    get_free_memory(&free_db,&used_db,&total_db);
+
     // ordering mpi output
 #ifdef WITH_MPI
     // synchronizes mpi processes
     MPI_Barrier(MPI_COMM_WORLD);
-
-    int sizeprocs;
-    MPI_Comm_size(MPI_COMM_WORLD,&sizeprocs);
-
     // output infos for mpi ranks ordered
     for(int iproc = 0;iproc < sizeprocs; iproc++){
       if (iproc == myrank){
+        //printf("\n\nGPU device for rank: %d - total procs: %d\n\n",myrank,sizeprocs);
 #endif
 
     // outputs device infos to file
-    //printf("\n\nGPU device for rank: %d\n\n",myrank);
     printf("\n\nGPU device id: %d\n\n",i);
 
     // display device properties
@@ -287,13 +392,12 @@ e.g., on titan enable environment CRAY_CUDA_MPS=1 to use a single GPU with multi
     }else{
       printf("  deviceOverlap: FALSE\n");
     }
+    printf("  Compute Mode: %d\n", deviceProp.computeMode);
     fflush(stdout);
 
 
     // outputs initial memory infos via cudaMemGetInfo()
-    double free_db,used_db,total_db;
-    get_free_memory(&free_db,&used_db,&total_db);
-    printf("\n%d: GPU memory usage (dividing by powers of 1024): used = %f MB, free = %f MB, total = %f MB\n\n",myrank,
+    printf("\n%d: GPU memory usage (dividing by powers of 1024): used = %f MB, free = %f MB, total = %f MB",myrank,
             used_db/1024.0/1024.0, free_db/1024.0/1024.0, total_db/1024.0/1024.0);
     printf("\n%d: GPU memory usage (dividing by powers of 1000): used = %f MB, free = %f MB, total = %f MB\n\n",myrank,
             used_db/1000.0/1000.0, free_db/1000.0/1000.0, total_db/1000.0/1000.0);
@@ -338,6 +442,9 @@ e.g., on titan enable environment CRAY_CUDA_MPS=1 to use a single GPU with multi
       exit_on_error("CUDA runtime error: cudaFree failed\n\n");
     }
 
+    // double check
+    exit_on_cuda_error("cuda Malloc/Free test failed");
+
     // synchronizes GPU
 #if CUDA_VERSION < 4000
     cudaThreadSynchronize();
@@ -347,6 +454,18 @@ e.g., on titan enable environment CRAY_CUDA_MPS=1 to use a single GPU with multi
 
     // synchronizes mpi processes
 #ifdef WITH_MPI
+    // output infos for mpi ranks ordered
+    MPI_Barrier(MPI_COMM_WORLD);
+    for(int iproc = 0;iproc < sizeprocs; iproc++){
+      if (iproc == myrank){
+        printf("rank %d on device %d okay\n",myrank,device);
+        fflush(stdout);
+      }
+      // synchronizes mpi processes
+      MPI_Barrier(MPI_COMM_WORLD);
+    }
+    sleep(1);
+    if (myrank == 0){printf("\n\n");fflush(stdout);}
     MPI_Barrier(MPI_COMM_WORLD);
 #endif
   } // loop device_count
@@ -369,7 +488,7 @@ int main(int argc, char **argv)
   }
   MPI_Comm_size(MPI_COMM_WORLD,&size);
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-  if( myrank == 0 ){ printf ("Number of MPI processes = %d \n",size);fflush(stdout); }
+  if( myrank == 0 ){ printf ("Number of MPI processes = %d\n\n",size);fflush(stdout); }
   MPI_Barrier(MPI_COMM_WORLD);
 #else
   myrank = 0;

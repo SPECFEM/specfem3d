@@ -45,7 +45,8 @@ __global__ void UpdateDispVeloc_kernel(realw* displ,
                                        realw deltatover2) {
 
   // two dimensional array of blocks on grid where each block has one dimensional array of threads
-  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
+  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
+
   realw acc = accel[id];
   // because of block and grid sizing problems, there is a small
   // amount of buffer at the end of the calculation
@@ -155,7 +156,7 @@ __global__ void UpdatePotential_kernel(field* potential_acoustic,
                                        realw deltatsqover2,
                                        realw deltatover2) {
 
-  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
+  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
 
   // because of block and grid sizing problems, there is a small
   // amount of buffer at the end of the calculation
@@ -282,7 +283,8 @@ __global__ void kernel_3_cuda_device(realw* veloc,
                                      realw* rmassy,
                                      realw* rmassz) {
 
-  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
+  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
+
   realw rx,ry,rz;
   realw ax,ay,az;
   // because of block and grid sizing problems, there is a small
@@ -331,7 +333,8 @@ __global__ void kernel_3_accel_cuda_device(realw* accel,
                                            realw* rmassx,
                                            realw* rmassy,
                                            realw* rmassz) {
-  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
+
+  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
 
   realw rx,ry,rz;
   realw ax,ay,az;
@@ -369,7 +372,7 @@ __global__ void kernel_3_veloc_cuda_device(realw* veloc,
                                            int size,
                                            realw deltatover2) {
 
-  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
+  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
 
   // because of block and grid sizing problems, there is a small
   // amount of buffer at the end of the calculation
@@ -493,7 +496,8 @@ __global__ void kernel_3_acoustic_cuda_device(field* potential_dot_acoustic,
                                                 realw b_deltatover2,
                                                 realw* rmass_acoustic) {
 
-  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
+  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
+
   realw rmass;
   field p_dot_dot;
   // because of block and grid sizing problems, there is a small
