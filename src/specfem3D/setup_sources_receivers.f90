@@ -1436,7 +1436,13 @@
 
   subroutine setup_sources_receivers_VTKfile()
 
-  use specfem_par
+  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,OUTPUT_FILES,IOUT_VTK,myrank
+
+  use specfem_par, only: SIMULATION_TYPE,NSOURCES,nrec,NGNOD,NSPEC_AB,NGLOB_AB, &
+    xstore,ystore,zstore,ibool, &
+    ispec_selected_source,islice_selected_source,xi_source,eta_source,gamma_source, &
+    ispec_selected_rec,islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver
+
   implicit none
 
   double precision :: shape3D(NGNOD)
@@ -1469,7 +1475,7 @@
 
   ! sources
   if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
-    do isource=1,NSOURCES
+    do isource = 1,NSOURCES
       ! spectral element id
       ispec = ispec_selected_source(isource)
 
@@ -1501,10 +1507,10 @@
         call eval_shape3D_single(shape3D,xil,etal,gammal,NGNOD)
 
         ! interpolates source locations
-        xmesh = 0.0
-        ymesh = 0.0
-        zmesh = 0.0
-        do ia=1,NGNOD
+        xmesh = 0.d0
+        ymesh = 0.d0
+        zmesh = 0.d0
+        do ia = 1,NGNOD
           xmesh = xmesh + shape3D(ia)*xelm(ia)
           ymesh = ymesh + shape3D(ia)*yelm(ia)
           zmesh = zmesh + shape3D(ia)*zelm(ia)
@@ -1517,7 +1523,7 @@
   endif
 
   ! receivers
-  do irec=1,nrec
+  do irec = 1,nrec
     ispec = ispec_selected_rec(irec)
 
     ! find the coordinates of the eight corner nodes of the element
@@ -1546,9 +1552,9 @@
       call eval_shape3D_single(shape3D,xil,etal,gammal,NGNOD)
 
       ! interpolates receiver locations
-      xmesh = 0.0
-      ymesh = 0.0
-      zmesh = 0.0
+      xmesh = 0.d0
+      ymesh = 0.d0
+      zmesh = 0.d0
       do ia=1,NGNOD
         xmesh = xmesh + shape3D(ia)*xelm(ia)
         ymesh = ymesh + shape3D(ia)*yelm(ia)

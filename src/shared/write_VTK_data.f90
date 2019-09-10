@@ -882,7 +882,7 @@
 
 ! special routine for meshfem3D with simpler earth_mesh arrays
 
-  use constants, only: MAX_STRING_LEN,NGLLX,NGLLY,NGLLZ,NGNOD_EIGHT_CORNERS,IOUT_VTK
+  use constants, only: MAX_STRING_LEN,IOUT_VTK
 
   implicit none
 
@@ -1024,7 +1024,7 @@
 
 ! special routine for meshfem3D with simpler earth_mesh arrays
 
-  use constants, only: MAX_STRING_LEN,NDIM,IOUT_VTK
+  use constants, only: MAX_STRING_LEN,IOUT_VTK
 
   implicit none
 

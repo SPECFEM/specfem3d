@@ -33,16 +33,16 @@
 
   implicit none
 
-  integer :: NGNOD
+  integer, intent(in) :: NGNOD
 
 ! Gauss-Lobatto-Legendre points of integration
-  double precision :: xigll(NGLLX)
-  double precision :: yigll(NGLLY)
-  double precision :: zigll(NGLLZ)
+  double precision, intent(in) :: xigll(NGLLX)
+  double precision, intent(in) :: yigll(NGLLY)
+  double precision, intent(in) :: zigll(NGLLZ)
 
 ! 3D shape functions and their derivatives
-  double precision :: shape3D(NGNOD,NGLLX,NGLLY,NGLLZ)
-  double precision :: dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision, intent(out) :: shape3D(NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision, intent(out) :: dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
 
   integer :: i,j,k,ia
 
@@ -174,13 +174,13 @@
 
   implicit none
 
-  integer :: NGNOD
+  integer,intent(in) :: NGNOD
 
   ! 3D shape functions
-  double precision :: shape3D(NGNOD)
+  double precision,intent(out) :: shape3D(NGNOD)
 
   ! location
-  double precision :: xi,eta,gamma
+  double precision,intent(in) :: xi,eta,gamma
 
   ! local parameters
   double precision, parameter :: ONE_EIGHTH = 0.125d0
@@ -284,20 +284,20 @@
 !
 
   subroutine eval_shape3D_element_corners(xelm,yelm,zelm,ispec, &
-       ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
+                                          ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
 
   use constants
 
   implicit none
 
-  integer :: ispec
-  integer :: NSPEC_AB,NGLOB_AB
+  integer, intent(in) :: ispec
+  integer, intent(in) :: NSPEC_AB,NGLOB_AB
 
   real(kind=CUSTOM_REAL),dimension(NGNOD_EIGHT_CORNERS),intent(out) :: xelm,yelm,zelm
 
   ! mesh coordinates
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: xstore,ystore,zstore
-  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB), intent(in) :: xstore,ystore,zstore
+  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB), intent(in) :: ibool
 
 ! 8 node corners
   xelm(1)=xstore(ibool(1,1,1,ispec))
@@ -346,14 +346,16 @@
 
   implicit none
 
-  integer :: NGNOD,i,j,k
+  integer, intent(in) :: NGNOD,i,j,k
 
 ! 3D shape functions and their derivatives
-  double precision shape3D(NGNOD,NGLLX,NGLLY,NGLLZ)
-  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision, intent(out) :: shape3D(NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision, intent(out) :: dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
 
 ! location of the nodes of the 3D hexahedra elements
-  double precision xi,eta,gamma
+  double precision, intent(in) :: xi,eta,gamma
+
+  ! local parameters
   double precision l1xi,l2xi,l3xi,l1eta,l2eta,l3eta,l1gamma,l2gamma,l3gamma
   double precision l1pxi,l2pxi,l3pxi,l1peta,l2peta,l3peta,l1pgamma,l2pgamma,l3pgamma
 
