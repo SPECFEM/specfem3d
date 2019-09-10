@@ -151,16 +151,17 @@
 
     ! suppress leading junk (up to the first equal sign, included)
     index_equal_sign = index(string_read,'=')
-    if (index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) &
+    if (index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) then
       stop 'incorrect syntax detected in Mesh_Par_file'
+    else
+      string_read = string_read((index_equal_sign + 1):len_trim(string_read))
 
-    string_read = string_read(index_equal_sign + 1:len_trim(string_read))
+      ! suppress leading and trailing white spaces again, if any, after having suppressed the leading junk
+      string_read = adjustl(string_read)
+      string_read = string_read(1:len_trim(string_read))
 
-    ! suppress leading and trailing white spaces again, if any, after having suppressed the leading junk
-    string_read = adjustl(string_read)
-    string_read = string_read(1:len_trim(string_read))
-
-    read(string_read,*,iostat=ier) value_to_read
+      read(string_read,*,iostat=ier) value_to_read
+    endif
   else
     ! returns an error
     ier = 1
@@ -349,8 +350,9 @@
     if (index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) then
       print *,'Error reading Mesh_Par_file line: ',trim(string_read)
       stop 'Error incorrect syntax detected in Mesh_Par_file'
+    else
+      string_read = string_read((index_equal_sign + 1):len_trim(string_read))
     endif
-    string_read = string_read(index_equal_sign + 1:len_trim(string_read))
   endif
 
 ! suppress leading and trailing white spaces again, if any, after having suppressed the leading junk
