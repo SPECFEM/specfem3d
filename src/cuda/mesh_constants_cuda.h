@@ -44,6 +44,9 @@
 #ifndef MESH_CONSTANTS_CUDA_H
 #define MESH_CONSTANTS_CUDA_H
 
+#include <cuda_runtime.h>
+#include <cuda.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -52,14 +55,11 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#include "config.h"
-
 #ifdef WITH_MPI
 #include <mpi.h>
 #endif
 
-#include <cuda.h>
-#include <cuda_runtime.h>
+#include "config.h"
 
 
 /* ----------------------------------------------------------------------------------------------- */
