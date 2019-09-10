@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v1
 
     - name: Install packages
-      run: sudo apt install -yq --no-install-recommends gfortran g++
+      run: sudo apt install -yq --no-install-recommends gfortran g++ openmpi-bin libopenmpi-dev
 
     - name: configure
       run: ./configure
@@ -34,7 +34,7 @@ jobs:
     - uses: actions/checkout@v1
 
     - name: Install dependencies
-      run: brew install gcc
+      run: brew install gcc openmpi
 
     - name: configure
       run: ./configure
