@@ -1,0 +1,47 @@
+name: CI
+
+on: [push]
+
+jobs:
+  linuxCheck:
+    name: Test on ${{ matrix.os }}    
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest,ubuntu-16.04]
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Install packages
+      run: sudo apt install -yq --no-install-recommends gfortran g++
+
+    - name: configure
+      run: ./configure
+      
+    - name: make
+      run: make -j2
+      
+    - name: make tests
+      run: make tests
+
+  macosCheck:
+    name: Test on Mac
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Install dependencies
+      run: brew install gcc
+
+    - name: configure
+      run: ./configure
+
+    - name: make
+      run: make -j2
+
+    - name: make tests
+      run: make tests
+
