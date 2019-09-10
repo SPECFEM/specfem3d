@@ -32,12 +32,13 @@ if [ "$CUDA" == "true" ]; then
   # remove old nvidia-cuda packages
   #sudo apt-get remove nvidia-cuda-* ;
   # gets packages
-  ## distribution trusty: from ubuntu 14.04
-  wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1404/x86_64/cuda-repo-ubuntu1404_${CUDA_VERSION}_amd64.deb
-  sudo dpkg -i cuda-repo-ubuntu1404_${CUDA_VERSION}_amd64.deb
   ## distribution precise: from ubuntu 12.04
-  #wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1204/x86_64/cuda-repo-ubuntu1204_${CUDA_VERSION}_amd64.deb;
-  #sudo dpkg -i cuda-repo-ubuntu1204_${CUDA_VERSION}_amd64.deb;
+  #UBUNTU_VERSION=ubuntu1204
+  ## distribution trusty: from ubuntu 14.04
+  UBUNTU_VERSION=ubuntu1404
+  INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA_VERSION}_amd64.deb
+  wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
+  sudo dpkg -i ${INSTALLER}
   # update
   echo "Updating libraries"
   sudo apt-get update -qq
