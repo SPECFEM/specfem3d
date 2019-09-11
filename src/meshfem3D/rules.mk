@@ -189,9 +189,9 @@ $O/%.mesh_adios.o: $S/%.F90 $O/shared_par.shared_module.o $O/meshfem3D_par.mesh_
 $O/%.mesh_adios.o: $S/%.f90 $O/shared_par.shared_module.o $O/meshfem3D_par.mesh_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90}  -c -o $@ $<
 
-$O/%.mesh_noadios.o: $S/%.F90
+$O/%.mesh_noadios.o: $S/%.F90 $O/meshfem3D_par.mesh_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.mesh_noadios.o: $S/%.f90
+$O/%.mesh_noadios.o: $S/%.f90 $O/meshfem3D_par.mesh_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
