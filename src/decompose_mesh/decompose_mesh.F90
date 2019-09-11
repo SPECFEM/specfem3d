@@ -396,7 +396,7 @@ contains
 
     load_min = nspec * maxval(elmnts_load(:))
     ! check integer size limit
-    if (nspec > 2147483646 / maxval(elmnts_load(:))) then
+    if (nspec > int(2147483646.0 / maxval(elmnts_load(:)))) then
       load_min = 2147483646
     endif
     load_max = 0

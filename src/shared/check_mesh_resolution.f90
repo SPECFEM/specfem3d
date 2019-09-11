@@ -878,9 +878,9 @@
   ! looping increments
   if (MIDPOINT_CHECK_ONLY) then
     ! only corners and midpoints
-    incrx = NGLLX/2
-    incry = NGLLY/2
-    incrz = NGLLZ/2
+    incrx = int(NGLLX/2.0)
+    incry = int(NGLLY/2.0)
+    incrz = int(NGLLZ/2.0)
   else
     ! all GLL points
     incrx = 1

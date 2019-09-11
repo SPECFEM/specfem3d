@@ -1042,9 +1042,12 @@
   case default
     print *
     print *,'********** model not recognized: ',trim(MODEL),' **************'
-    print *,'********** using model: default',' **************'
-    print *
-    IMODEL = IMODEL_DEFAULT
+    ! requires a valid name
+    stop 'Invalid MODEL name'
+    ! allows to continue with default
+    !print *,'********** using model: default',' **************'
+    !print *
+    !IMODEL = IMODEL_DEFAULT
   end select
 
   ! check

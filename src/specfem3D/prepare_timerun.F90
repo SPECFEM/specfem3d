@@ -1020,7 +1020,7 @@
         b_reclen_field = CUSTOM_REAL * NDIM * NGLLSQUARE * num_abs_boundary_faces
 
         ! check integer size limit: size of b_reclen_field must fit onto an 4-byte integer
-        if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE)) then
+        if (num_abs_boundary_faces > int(2147483646.0 / (CUSTOM_REAL * NDIM * NGLLSQUARE))) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field
           print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
           print *,'bit size Fortran: ',bit_size(b_reclen_field)
@@ -1056,7 +1056,7 @@
 
 
         ! check integer size limit: size of b_reclen_potential must fit onto an 4-byte integer
-        if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NGLLSQUARE)) then
+        if (num_abs_boundary_faces > int(2147483646.0 / (CUSTOM_REAL * NGLLSQUARE))) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_potential
           print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces
           print *,'bit size Fortran: ',bit_size(b_reclen_potential)
@@ -1102,7 +1102,7 @@
 
         ! check integer size limit: size of b_reclen_field must fit onto an
         ! 4-byte integer
-        if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE)) then
+        if (num_abs_boundary_faces > int(2147483646.0 / (CUSTOM_REAL * NDIM * NGLLSQUARE))) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field_poro
           print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
           print *,'bit size Fortran: ',bit_size(b_reclen_field_poro)

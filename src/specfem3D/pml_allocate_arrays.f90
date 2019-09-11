@@ -270,7 +270,7 @@
       b_reclen_PML_field = CUSTOM_REAL * 9 * nglob_interface_PML_elastic
 
       ! check integer size limit: size of b_reclen_PML_field must fit onto an 4-byte integer
-      if (nglob_interface_PML_elastic > 2147483646 / (CUSTOM_REAL * 9)) then
+      if (nglob_interface_PML_elastic > int(2147483646.0 / (CUSTOM_REAL * 9))) then
         print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_PML_field
         print *,'  ',CUSTOM_REAL, NDIM, 9, nglob_interface_PML_elastic
         print *,'bit size Fortran: ',bit_size(b_reclen_PML_field)
@@ -316,7 +316,7 @@
       b_reclen_PML_potential = CUSTOM_REAL * nglob_interface_PML_acoustic
 
       ! check integer size limit: size of b_reclen_PML_field must fit onto an 4-byte integer
-      if (nglob_interface_PML_acoustic > 2147483646 / (CUSTOM_REAL)) then
+      if (nglob_interface_PML_acoustic > int(2147483646.0 / (CUSTOM_REAL))) then
         print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_PML_potential
         print *,'  ',CUSTOM_REAL, nglob_interface_PML_acoustic
         print *,'bit size Fortran: ',bit_size(b_reclen_PML_potential)

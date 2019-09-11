@@ -141,7 +141,12 @@
   character(len=*) :: name
   ! local parameters
   character(len=MAX_STRING_LEN) :: string_read
+  character(len=MAX_STRING_LEN) :: value_read
+
   integer :: index_equal_sign
+
+  string_read = ''
+  value_read = ''
 
   call read_next_line(iunit,ignore_junk,string_read,ier)
   if (ier /= 0) return
@@ -154,10 +159,10 @@
     if (index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) then
       stop 'incorrect syntax detected in Mesh_Par_file'
     else
-      string_read = string_read((index_equal_sign + 1):len_trim(string_read))
+      value_read(1:(len_trim(string_read)-index_equal_sign)) = string_read((index_equal_sign + 1):len_trim(string_read))
 
       ! suppress leading and trailing white spaces again, if any, after having suppressed the leading junk
-      string_read = adjustl(string_read)
+      string_read = adjustl(value_read)
       string_read = string_read(1:len_trim(string_read))
 
       read(string_read,*,iostat=ier) value_to_read

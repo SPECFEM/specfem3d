@@ -214,9 +214,14 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
     memset(string_read, ' ', *string_read_len);
 
     value_len = strlen(value);
-    if (value_len > (size_t)*string_read_len)
-      value_len = *string_read_len;
+    // makes sure there is a character left for NUL termination
+    if (value_len > (size_t)*string_read_len - 1) value_len = *string_read_len - 1;
+
     strncpy(string_read, value, value_len);
+
+
+    //debug
+    //printf("param_reader: len = %d max = %d value = ***%s*** string = ***%s***\n",value_len,*string_read_len,value,string_read);
 
     free(value);
     free(namecopy);
