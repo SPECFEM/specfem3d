@@ -345,6 +345,7 @@ adios_inverse_problem_for_model_PRESTUBS = \
 ifeq ($(HDF5),yes)
 hdf5_inverse_OBJECTS = \
 	$O/read_mesh_databases_hdf5.spec_hdf5.o \
+	$O/write_seismograms_hdf5.spec_hdf5.o \
 	$(EMPTY_MACRO)
 hdf5_inverse_SHARED_OBJECTS =	\
 	$O/phdf5_utils.shared_hdf5.o \
@@ -354,6 +355,7 @@ inverse_problem_for_model_SHARED_OBJECTS += $(hdf5_inverse_SHARED_OBJECTS)
 else
 hdf5_inverse_OBJECTS= \
 	$O/read_mesh_databases_hdf5_stub.spec_hdf5.o \
+	$O/write_seismograms_hdf5_stub.spec_hdf5.o \
 	$(EMPTY_MACRO)
 hdf5_inverse_SHARED_OBJECTS =	\
 	$O/phdf5_utils_stub.shared_nohdf5.o \
