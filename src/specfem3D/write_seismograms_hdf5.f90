@@ -67,9 +67,6 @@
   h5 = h5io()
   fname_h5 = trim(OUTPUT_FILES)//fname_h5
 
-  if (myrank == 0) &
-    print *, "debug seis it/total ", it, " / ", NSTEP
-
   ! initialize hdf5 at the initial time iteration
   if (it == 1) then
     ! initialze hdf5
