@@ -404,6 +404,8 @@ def check_and_update_Par_file(my_parameters,file):
     # checks for old, deprecated parameters
     nold_parameters = 0
     #print("  searching deprecated parameters...")
+    my_parameters_new = my_parameters.copy()
+
     for name in my_parameters.keys():
         if not name in master_parameters.keys():
             if (not "MESH_PAR_FILE_DATA" in name) and (not "NZ_DOUBLING" in name):
@@ -416,21 +418,33 @@ def check_and_update_Par_file(my_parameters,file):
                 is_found = True
 
             # converts old to new parameter name
+            is_unique = False
             for old_name,new_name in DEPRECATED_RENAMED_PARAMETERS:
-                if name == old_name :
+                if name in old_name :
+                    # renames old (e.g. enreg_surf_same_vertical1 to record_at_surface_same_vertical1
+                    if name == old_name:
+                        name2 = new_name
+                        is_unique = True
+                    else:
+                        name2 = name[0:len(old_name)] + name[len(old_name)+1:len(name)]
                     print("    will be converted to ",new_name)
-                    (val_orig,comment_orig,appendix_orig) = my_parameters[old_name]
+                    (val_orig,comment_orig,appendix_orig) = my_parameters[name]
                     # stores as new section
-                    my_parameters[new_name] = (val_orig,comment_orig,appendix_orig)
+                    my_parameters_new[name2] = (val_orig,comment_orig,appendix_orig)
                     is_found = True
                     # removes old section
-                    del my_parameters[old_name]
+                    del my_parameters_new[old_name]
+                    # done replacing
+                    if is_unique: break
 
             # removes old parameter
             if not is_found:
                 # removes old section
-                del my_parameters[name]
+                del my_parameters_new[name]
 
+    # replace with new one
+    if my_parameters_new != my_parameters: my_parameters = my_parameters_new.copy()
+    #print(my_parameters.keys())
 
     # add missing master parameters and replaces comment lines to compare sections
     nmissing_parameters = 0
@@ -512,7 +526,7 @@ def check_and_update_Par_file(my_parameters,file):
 
                 else:
                     # first NMATERIALS
-                    previous = ordered_parameters.keys()[iorder_new-1]
+                    previous = list(ordered_parameters.keys())[iorder_new-1]
                     (val,comment,appendix) = ordered_parameters[previous]
                     # number of data lines for nmaterials
                     if "NMATERIALS" in previous:
@@ -573,7 +587,7 @@ def check_and_update_Par_file(my_parameters,file):
     # checks if order changed
     nold_order = 0
     for i in range(0,len(my_parameters.keys())):
-        if my_parameters.keys()[i] != ordered_parameters.keys()[i]: nold_order += 1
+        if list(my_parameters.keys())[i] != list(ordered_parameters.keys())[i]: nold_order += 1
 
     if nold_order > 0:
         print("  needs re-ordering...",nold_order)
