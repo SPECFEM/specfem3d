@@ -263,7 +263,11 @@
     if (GRAVITY_SIMULATION) call gravity_timeseries()
 
     ! write the seismograms with time shift (GPU_MODE transfer included)
-    call write_seismograms()
+    if (HDF5_ENABLED) then
+      call write_seismograms_h5()
+    else
+      call write_seismograms()
+    endif
 
     ! adjoint simulations: kernels
     if (SIMULATION_TYPE == 3) then
