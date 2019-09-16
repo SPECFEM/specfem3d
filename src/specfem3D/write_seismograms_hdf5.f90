@@ -177,15 +177,13 @@
 
   ! gets seismogram values
   if (GPU_MODE) then
-!    ! on GPU
-!    if (nrec_local > 0 .and. do_save_seismograms) then
-!      ! gets resulting array values onto CPU
-!      call compute_seismograms_cuda(Mesh_pointer,seismograms_d,seismograms_v,seismograms_a,seismograms_p, &
-!                                    seismo_current,NTSTEP_BETWEEN_OUTPUT_SEISMOS,it,it_end, &
-!                                    ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,USE_TRICK_FOR_BETTER_PRESSURE)
-!    endif
-    print *, "hdf5 IO does not support GPU mode yet."
-    stop
+    ! on GPU
+    if (nrec_local > 0 .and. do_save_seismograms) then
+      ! gets resulting array values onto CPU
+      call compute_seismograms_cuda(Mesh_pointer,seismograms_d,seismograms_v,seismograms_a,seismograms_p, &
+                                    seismo_current,NTSTEP_BETWEEN_OUTPUT_SEISMOS,it,it_end, &
+                                    ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,USE_TRICK_FOR_BETTER_PRESSURE)
+    endif
   else
     ! on CPU
     if (nrec_local > 0 .and. do_save_seismograms) then
