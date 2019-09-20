@@ -290,99 +290,97 @@
 !  2  -1 tomography elastic tomo.xyz 1
 
 ! read the file a first time to count the total number of materials (both defined and tomographic)
-    count_def_mat = 0
-    count_undef_mat = 0
-    open(unit=98, file='nummaterial_velocity_file', status='old', action='read',form='formatted',iostat=ier)
-    if (ier /= 0) stop 'Error opening nummaterial_velocity_file'
+  count_def_mat = 0
+  count_undef_mat = 0
+  open(unit=98, file='nummaterial_velocity_file', status='old', action='read',form='formatted',iostat=ier)
+  if (ier /= 0) stop 'Error opening nummaterial_velocity_file'
 
-    ! counts materials (defined/undefined)
-    ier = 0
-    do while (ier == 0)
-      ! note: format #material_domain_id #material_id #...
-      read(98,'(A)',iostat=ier) line
-      if (ier /= 0) exit
+  ! counts materials (defined/undefined)
+  ier = 0
+  do while (ier == 0)
+    ! note: format #material_domain_id #material_id #...
+    read(98,'(A)',iostat=ier) line
+    if (ier /= 0) exit
 
-      ! skip empty/comment lines
-      if (len_trim(line) == 0) cycle
-         if (line(1:1) == '#' .or. line(1:1) == '!') cycle
+    ! skip empty/comment lines
+    if (len_trim(line) == 0) cycle
+    if (line(1:1) == '#' .or. line(1:1) == '!') cycle
 
-      read(line,*,iostat=ier) idummy,num_mat
-      if (ier /= 0) exit
+    read(line,*,iostat=ier) idummy,num_mat
+    if (ier /= 0) exit
 
-      ! checks non-zero material id
-      if (num_mat == 0) stop 'Error in nummaterial_velocity_file: material id 0 found. Material ids must be non-zero.'
-      if (num_mat > 0) then
-        ! positive materials_id: velocity values will be defined
-        count_def_mat = count_def_mat + 1
-      else
-        ! negative materials_id: undefined material properties yet
-        count_undef_mat = count_undef_mat + 1
-      endif
-    enddo
-    close(98)
+    ! checks non-zero material id
+    if (num_mat == 0) stop 'Error in nummaterial_velocity_file: material id 0 found. Material ids must be non-zero.'
+    if (num_mat > 0) then
+      ! positive materials_id: velocity values will be defined
+      count_def_mat = count_def_mat + 1
+    else
+      ! negative materials_id: undefined material properties yet
+      count_undef_mat = count_undef_mat + 1
+    endif
+  enddo
+  close(98)
 
 ! read the file a second time to create the materials for the extruded PML layers (both defined and tomographic)
-    open(unit=98, file='nummaterial_velocity_file', status='old', action='read',form='formatted',iostat=ier)
-    if (ier /= 0) stop 'Error opening nummaterial_velocity_file'
-    open(unit=99, file='nummaterial_velocity_file_new', status='unknown', action='write',form='formatted',iostat=ier)
-    if (ier /= 0) stop 'Error opening nummaterial_velocity_file_new'
+  open(unit=98, file='nummaterial_velocity_file', status='old', action='read',form='formatted',iostat=ier)
+  if (ier /= 0) stop 'Error opening nummaterial_velocity_file'
+  open(unit=99, file='nummaterial_velocity_file_new', status='unknown', action='write',form='formatted',iostat=ier)
+  if (ier /= 0) stop 'Error opening nummaterial_velocity_file_new'
 
-    ! counts materials (defined/undefined)
-    ier = 0
-    do while (ier == 0)
-      ! note: format #material_domain_id #material_id #...
-      read(98,'(A)',iostat=ier) line
-      if (ier /= 0) exit
+  ! counts materials (defined/undefined)
+  ier = 0
+  do while (ier == 0)
+    ! note: format #material_domain_id #material_id #...
+    read(98,'(A)',iostat=ier) line
+    if (ier /= 0) exit
 
-      ! skip empty/comment lines
-      if (len_trim(line) == 0) cycle
-         if (line(1:1) == '#' .or. line(1:1) == '!') cycle
+    ! skip empty/comment lines
+    if (len_trim(line) == 0) cycle
+    if (line(1:1) == '#' .or. line(1:1) == '!') cycle
 
-      read(line,*,iostat=ier) idummy,num_mat
-      if (ier /= 0) exit
+    read(line,*,iostat=ier) idummy,num_mat
+    if (ier /= 0) exit
 
-      ! checks non-zero material id
-      if (num_mat > 0) then
-        ! positive materials_id: velocity values will be defined
-       ! reads in defined material properties
-       read(line,*) idomain_id,num_mat,rho,vp,vs,qkappa,qmu,aniso_flag
+    ! checks non-zero material id
+    if (num_mat > 0) then
+      ! positive materials_id: velocity values will be defined
+      ! reads in defined material properties
+      read(line,*) idomain_id,num_mat,rho,vp,vs,qkappa,qmu,aniso_flag
 
-       ! sanity check: Q factor cannot be equal to zero, thus convert to 9999 to indicate no attenuation
-       ! if users have used 0 to indicate that instead
-       if (qkappa <= 0.000001) qkappa = 9999.
-       if (qmu <= 0.000001) qmu = 9999.
+      ! sanity check: Q factor cannot be equal to zero, thus convert to 9999 to indicate no attenuation
+      ! if users have used 0 to indicate that instead
+      if (qkappa <= 0.000001) qkappa = 9999.
+      if (qmu <= 0.000001) qmu = 9999.
 
-       ! checks material_id bounds
-       if (num_mat < 1 .or. num_mat > count_def_mat) &
-         stop "Error in nummaterial_velocity_file: material id invalid for defined materials."
+      ! checks material_id bounds
+      if (num_mat < 1 .or. num_mat > count_def_mat) &
+        stop "Error in nummaterial_velocity_file: material id invalid for defined materials."
 
-       ! copy the original material to the new file
-       write(99,200) idomain_id,num_mat,rho,vp,vs,qkappa,qmu,aniso_flag
+      ! copy the original material to the new file
+      write(99,200) idomain_id,num_mat,rho,vp,vs,qkappa,qmu,aniso_flag
 
-       ! create new material for the PML, with attenuation off
-       write(99,200) idomain_id,num_mat + count_def_mat,rho,vp,vs,9999.,9999.,aniso_flag
+      ! create new material for the PML, with attenuation off
+      write(99,200) idomain_id,num_mat + count_def_mat,rho,vp,vs,9999.,9999.,aniso_flag
 
-       ! create new material for the transition layer that has PML off (if it exists)
-       ! in this transition layer we purposely put less attenuation in order to smooth out the transition with PML,
-       ! since currently PMLs have no attenuation
-       if (NUMBER_OF_TRANSITION_LAYERS_TO_ADD > 0) &
-            write(99,200) idomain_id,num_mat + 2*count_def_mat,rho,vp,vs,min(3.*qkappa,9999.),min(3.*qmu,9999.),aniso_flag
+      ! create new material for the transition layer that has PML off (if it exists)
+      ! in this transition layer we purposely put less attenuation in order to smooth out the transition with PML,
+      ! since currently PMLs have no attenuation
+      if (NUMBER_OF_TRANSITION_LAYERS_TO_ADD > 0) &
+        write(99,200) idomain_id,num_mat + 2*count_def_mat,rho,vp,vs,min(3.*qkappa,9999.),min(3.*qmu,9999.),aniso_flag
 
-      else
-        ! negative materials_id: undefined material properties yet
-        ! just copy the line read to the new file
-        write(99,*) line(1:len_trim(line))
-
-      endif
-
-    enddo
-    close(98)
-    close(99)
+    else
+      ! negative materials_id: undefined material properties yet
+      ! just copy the line read to the new file
+      write(99,*) line(1:len_trim(line))
+    endif
+  enddo
+  close(98)
+  close(99)
 
  200 format(i6,1x,i6,1x,f14.6,1x,f14.6,1x,f14.6,1x,f14.6,1x,f14.6,1x,i6)
 
 ! replace the old file with the new one
-  call system('mv nummaterial_velocity_file_new nummaterial_velocity_file')
+  call system('mv -v nummaterial_velocity_file_new nummaterial_velocity_file')
 
 ! perform two steps: first we create the transition layer (if any), then we create the PML layers
 ! we do this in two separate steps in order to be able to easily create a transition layer that uses
@@ -416,611 +414,613 @@
 ! ************* read mesh points *************
 
 ! open SPECFEM3D_Cartesian mesh file to read the points
-  if (iformat == 1) then
-    open(unit=23,file='nodes_coords_file',status='old',action='read')
-    read(23,*) npoin
-  else
-    open(unit=23,file='nodes_coords_file.bin',form='unformatted',status='old',action='read')
-    read(23) npoin
-  endif
-  allocate(x(npoin))
-  allocate(y(npoin))
-  allocate(z(npoin))
-  if (iformat == 1) then
-    do ipoin = 1,npoin
-      read(23,*) ipoin_read,x(ipoin_read),y(ipoin_read),z(ipoin_read)
-    enddo
-  else
-    read(23) x
-    read(23) y
-    read(23) z
-  endif
-  close(23)
+    if (iformat == 1) then
+      open(unit=23,file='nodes_coords_file',status='old',action='read')
+      read(23,*) npoin
+    else
+      open(unit=23,file='nodes_coords_file.bin',form='unformatted',status='old',action='read')
+      read(23) npoin
+    endif
+    allocate(x(npoin))
+    allocate(y(npoin))
+    allocate(z(npoin))
+    if (iformat == 1) then
+      do ipoin = 1,npoin
+        read(23,*) ipoin_read,x(ipoin_read),y(ipoin_read),z(ipoin_read)
+      enddo
+    else
+      read(23) x
+      read(23) y
+      read(23) z
+    endif
+    close(23)
 
 ! ************* read mesh elements *************
 
 ! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  if (iformat == 1) then
-    open(unit=23,file='mesh_file',status='old',action='read')
-    read(23,*) nspec
-  else
-    open(unit=23,file='mesh_file.bin',form='unformatted',status='old',action='read')
-    read(23) nspec
-  endif
+    if (iformat == 1) then
+      open(unit=23,file='mesh_file',status='old',action='read')
+      read(23,*) nspec
+    else
+      open(unit=23,file='mesh_file.bin',form='unformatted',status='old',action='read')
+      read(23) nspec
+    endif
 
-  allocate(ibool(NGNOD,nspec))
+    allocate(ibool(NGNOD,nspec))
 
 ! loop on the whole mesh
-  if (iformat == 1) then
-    do ispec_loop = 1,nspec
-      read(23,*) ispec,(ibool(ia,ispec), ia = 1,NGNOD)
-    enddo
-  else
-    read(23) ibool
-  endif
+    if (iformat == 1) then
+      do ispec_loop = 1,nspec
+        read(23,*) ispec,(ibool(ia,ispec), ia = 1,NGNOD)
+      enddo
+    else
+      read(23) ibool
+    endif
 
-  close(23)
+    close(23)
 
-  print *,'Total number of elements in the mesh read = ',nspec
+    print *,'Total number of elements in the mesh read = ',nspec
 
 ! read the materials file
-  allocate(imaterial(nspec))
-  if (iformat == 1) then
-    open(unit=23,file='materials_file',status='old',action='read')
-  else
-    open(unit=23,file='materials_file.bin',form='unformatted',status='old',action='read')
-  endif
+    allocate(imaterial(nspec))
+    if (iformat == 1) then
+      open(unit=23,file='materials_file',status='old',action='read')
+    else
+      open(unit=23,file='materials_file.bin',form='unformatted',status='old',action='read')
+    endif
 ! loop on the whole mesh
-  if (iformat == 1) then
-    do ispec_loop = 1,nspec
-      read(23,*) ispec,imaterial(ispec)
-    enddo
-  else
-    read(23) imaterial
-  endif
-  close(23)
+    if (iformat == 1) then
+      do ispec_loop = 1,nspec
+        read(23,*) ispec,imaterial(ispec)
+      enddo
+    else
+      read(23) imaterial
+    endif
+    close(23)
 
 ! check the mesh read to make sure it contains no negative Jacobians
-  if (icheck_for_negative_Jacobians == 2) then
-    do ispec = 1,nspec
+    if (icheck_for_negative_Jacobians == 2) then
+      do ispec = 1,nspec
 !   check the element for a negative Jacobian
-      do ia = 1,NGNOD
-        xelm(ia) = x(ibool(ia,ispec))
-        yelm(ia) = y(ibool(ia,ispec))
-        zelm(ia) = z(ibool(ia,ispec))
-      enddo
+        do ia = 1,NGNOD
+          xelm(ia) = x(ibool(ia,ispec))
+          yelm(ia) = y(ibool(ia,ispec))
+          zelm(ia) = z(ibool(ia,ispec))
+        enddo
 
-      call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian1,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
-      if (found_a_negative_jacobian1) then
-        print *,'detected an element with negative Jacobian in the input mesh: element ',ispec, &
+        call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian1,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
+        if (found_a_negative_jacobian1) then
+          print *,'detected an element with negative Jacobian in the input mesh: element ',ispec, &
                      ' in which the Jacobian is ',jacobian
-        stop 'error: the mesh read contains a negative Jacobian!'
-      endif
-    enddo
-    print *,'input mesh successfully checked for negative Jacobians, it contains none'
-    print *
-  endif
+          stop 'error: the mesh read contains a negative Jacobian!'
+        endif
+      enddo
+      print *,'input mesh successfully checked for negative Jacobians, it contains none'
+      print *
+    endif
 
 ! we need to extend/extrude the existing mesh by adding CPML elements
 ! along the X faces, then along the Y faces, then along the Z faces.
 
 ! loop on the three sets of faces to first add CPML elements along X, then along Y, then along Z
-  do iloop_on_X_Y_Z_faces = 1,NDIM
+    do iloop_on_X_Y_Z_faces = 1,NDIM
 
-    do iloop_on_min_face_then_max_face = 1,2  ! 1 is min face and 2 is max face (Xmin then Xmax, Ymin then Ymax, or Zmin then Zmax)
+! 1 is min face and 2 is max face (Xmin then Xmax, Ymin then Ymax, or Zmin then Zmax)
+      do iloop_on_min_face_then_max_face = 1,2
+
 
 ! do not add a CPML layer on a given surface if the user asked not to
-      if (iloop_on_X_Y_Z_faces == 1 .and. iloop_on_min_face_then_max_face == 1 .and. .not. ADD_ON_THE_XMIN_SURFACE) cycle
-      if (iloop_on_X_Y_Z_faces == 1 .and. iloop_on_min_face_then_max_face == 2 .and. .not. ADD_ON_THE_XMAX_SURFACE) cycle
-      if (iloop_on_X_Y_Z_faces == 2 .and. iloop_on_min_face_then_max_face == 1 .and. .not. ADD_ON_THE_YMIN_SURFACE) cycle
-      if (iloop_on_X_Y_Z_faces == 2 .and. iloop_on_min_face_then_max_face == 2 .and. .not. ADD_ON_THE_YMAX_SURFACE) cycle
-      if (iloop_on_X_Y_Z_faces == 3 .and. iloop_on_min_face_then_max_face == 1 .and. .not. ADD_ON_THE_ZMIN_SURFACE) cycle
-      if (iloop_on_X_Y_Z_faces == 3 .and. iloop_on_min_face_then_max_face == 2 .and. .not. ADD_ON_THE_ZMAX_SURFACE) cycle
+        if (iloop_on_X_Y_Z_faces == 1 .and. iloop_on_min_face_then_max_face == 1 .and. .not. ADD_ON_THE_XMIN_SURFACE) cycle
+        if (iloop_on_X_Y_Z_faces == 1 .and. iloop_on_min_face_then_max_face == 2 .and. .not. ADD_ON_THE_XMAX_SURFACE) cycle
+        if (iloop_on_X_Y_Z_faces == 2 .and. iloop_on_min_face_then_max_face == 1 .and. .not. ADD_ON_THE_YMIN_SURFACE) cycle
+        if (iloop_on_X_Y_Z_faces == 2 .and. iloop_on_min_face_then_max_face == 2 .and. .not. ADD_ON_THE_YMAX_SURFACE) cycle
+        if (iloop_on_X_Y_Z_faces == 3 .and. iloop_on_min_face_then_max_face == 1 .and. .not. ADD_ON_THE_ZMIN_SURFACE) cycle
+        if (iloop_on_X_Y_Z_faces == 3 .and. iloop_on_min_face_then_max_face == 2 .and. .not. ADD_ON_THE_ZMAX_SURFACE) cycle
 
-    print *
-    print *,'********************************************************************'
-    if (iloop_on_X_Y_Z_faces == 1) then
-      print *,'adding CPML elements along one of the two X faces of the existing mesh'
-    else if (iloop_on_X_Y_Z_faces == 2) then
-      print *,'adding CPML elements along one of the two Y faces of the existing mesh'
-    else if (iloop_on_X_Y_Z_faces == 3) then
-      print *,'adding CPML elements along one of the two Z faces of the existing mesh'
-    else
-      stop 'wrong index in loop on faces'
-    endif
-    print *,'********************************************************************'
-    print *
+        print *
+        print *,'********************************************************************'
+        if (iloop_on_X_Y_Z_faces == 1) then
+          print *,'adding CPML elements along one of the two X faces of the existing mesh'
+        else if (iloop_on_X_Y_Z_faces == 2) then
+          print *,'adding CPML elements along one of the two Y faces of the existing mesh'
+        else if (iloop_on_X_Y_Z_faces == 3) then
+          print *,'adding CPML elements along one of the two Z faces of the existing mesh'
+        else
+          stop 'wrong index in loop on faces'
+        endif
+        print *,'********************************************************************'
+        print *
 
 ! compute the min and max values of each coordinate
-  xmin = minval(x)
-  xmax = maxval(x)
+        xmin = minval(x)
+        xmax = maxval(x)
 
-  ymin = minval(y)
-  ymax = maxval(y)
+        ymin = minval(y)
+        ymax = maxval(y)
 
-  zmin = minval(z)
-  zmax = maxval(z)
+        zmin = minval(z)
+        zmax = maxval(z)
 
-  xsize = xmax - xmin
-  ysize = ymax - ymin
-  zsize = zmax - zmin
+        xsize = xmax - xmin
+        ysize = ymax - ymin
+        zsize = zmax - zmin
 
-  print *,'Xmin and Xmax of the mesh read = ',xmin,xmax
-  print *,'Ymin and Ymax of the mesh read = ',ymin,ymax
-  print *,'Zmin and Zmax of the mesh read = ',zmin,zmax
-  print *
+        print *,'Xmin and Xmax of the mesh read = ',xmin,xmax
+        print *,'Ymin and Ymax of the mesh read = ',ymin,ymax
+        print *,'Zmin and Zmax of the mesh read = ',zmin,zmax
+        print *
 
-  print *,'Size of the mesh read along X = ',xsize
-  print *,'Size of the mesh read along Y = ',ysize
-  print *,'Size of the mesh read along Z = ',zsize
-  print *
+        print *,'Size of the mesh read along X = ',xsize
+        print *,'Size of the mesh read along Y = ',ysize
+        print *,'Size of the mesh read along Z = ',zsize
+        print *
 
-  count_elem_faces_to_extend = 0
+        count_elem_faces_to_extend = 0
 
-    if (iloop_on_X_Y_Z_faces == 1) then ! Xmin or Xmax face
-      value_min = xmin
-      value_max = xmax
-      value_size = xsize
-      coord_to_use1 => x  ! make coordinate array to use point to array x()
-      coord_to_use2 => y
-      coord_to_use3 => z
-    else if (iloop_on_X_Y_Z_faces == 2) then ! Ymin or Ymax face
-      value_min = ymin
-      value_max = ymax
-      value_size = ysize
-      coord_to_use1 => y  ! make coordinate array to use point to array y()
-      coord_to_use2 => x
-      coord_to_use3 => z
-    else if (iloop_on_X_Y_Z_faces == 3) then ! Zmin or Zmax face
-      value_min = zmin
-      value_max = zmax
-      value_size = zsize
-      coord_to_use1 => z  ! make coordinate array to use point to array z()
-      coord_to_use2 => x
-      coord_to_use3 => y
-    else
-      stop 'wrong index in loop on faces'
-    endif
+        if (iloop_on_X_Y_Z_faces == 1) then ! Xmin or Xmax face
+          value_min = xmin
+          value_max = xmax
+          value_size = xsize
+          coord_to_use1 => x  ! make coordinate array to use point to array x()
+          coord_to_use2 => y
+          coord_to_use3 => z
+        else if (iloop_on_X_Y_Z_faces == 2) then ! Ymin or Ymax face
+          value_min = ymin
+          value_max = ymax
+          value_size = ysize
+          coord_to_use1 => y  ! make coordinate array to use point to array y()
+          coord_to_use2 => x
+          coord_to_use3 => z
+        else if (iloop_on_X_Y_Z_faces == 3) then ! Zmin or Zmax face
+          value_min = zmin
+          value_max = zmax
+          value_size = zsize
+          coord_to_use1 => z  ! make coordinate array to use point to array z()
+          coord_to_use2 => x
+          coord_to_use3 => y
+        else
+          stop 'wrong index in loop on faces'
+        endif
 
-  if (minval(ibool) /= 1) stop 'error in minval(ibool)'
+        if (minval(ibool) /= 1) stop 'error in minval(ibool)'
 
-  sum_of_distances = 0.d0
+        sum_of_distances = 0.d0
 
 ! loop on the whole mesh
-  do ispec = 1,nspec
+        do ispec = 1,nspec
 
 ! we can use the 8 corners of the element only for the test here, even if the element is HEX27
-    i1 = ibool(1,ispec)
-    i2 = ibool(2,ispec)
-    i3 = ibool(3,ispec)
-    i4 = ibool(4,ispec)
-    i5 = ibool(5,ispec)
-    i6 = ibool(6,ispec)
-    i7 = ibool(7,ispec)
-    i8 = ibool(8,ispec)
+          i1 = ibool(1,ispec)
+          i2 = ibool(2,ispec)
+          i3 = ibool(3,ispec)
+          i4 = ibool(4,ispec)
+          i5 = ibool(5,ispec)
+          i6 = ibool(6,ispec)
+          i7 = ibool(7,ispec)
+          i8 = ibool(8,ispec)
 
-      if (iloop_on_min_face_then_max_face == 1) then ! min face
+          if (iloop_on_min_face_then_max_face == 1) then ! min face
 
 ! detect elements belonging to the min face
-    limit = value_min + value_size * SMALL_RELATIVE_VALUE
+            limit = value_min + value_size * SMALL_RELATIVE_VALUE
 
 ! test face 1 (bottom)
-    if (coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
-       coord_to_use1(i3) < limit .and. coord_to_use1(i4) < limit) then
-      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
-      sum_of_distances = sum_of_distances + &
-          sqrt((coord_to_use3(i1) - coord_to_use3(i2))**2 + (coord_to_use2(i1) - coord_to_use2(i2))**2)
-    endif
+            if (coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
+                coord_to_use1(i3) < limit .and. coord_to_use1(i4) < limit) then
+              count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+              sum_of_distances = sum_of_distances + &
+                  sqrt((coord_to_use3(i1) - coord_to_use3(i2))**2 + (coord_to_use2(i1) - coord_to_use2(i2))**2)
+            endif
 
 ! test face 2 (top)
-    if (coord_to_use1(i5) < limit .and. coord_to_use1(i6) < limit .and. &
-       coord_to_use1(i7) < limit .and. coord_to_use1(i8) < limit) then
-      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
-      sum_of_distances = sum_of_distances + &
-          sqrt((coord_to_use3(i5) - coord_to_use3(i6))**2 + (coord_to_use2(i5) - coord_to_use2(i6))**2)
-    endif
+            if (coord_to_use1(i5) < limit .and. coord_to_use1(i6) < limit .and. &
+                coord_to_use1(i7) < limit .and. coord_to_use1(i8) < limit) then
+              count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+              sum_of_distances = sum_of_distances + &
+                  sqrt((coord_to_use3(i5) - coord_to_use3(i6))**2 + (coord_to_use2(i5) - coord_to_use2(i6))**2)
+            endif
 
 ! test face 3 (left)
-    if (coord_to_use1(i1) < limit .and. coord_to_use1(i4) < limit .and. &
-       coord_to_use1(i8) < limit .and. coord_to_use1(i5) < limit) then
-      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
-      sum_of_distances = sum_of_distances + &
-          sqrt((coord_to_use3(i1) - coord_to_use3(i4))**2 + (coord_to_use2(i1) - coord_to_use2(i4))**2)
-    endif
+            if (coord_to_use1(i1) < limit .and. coord_to_use1(i4) < limit .and. &
+                coord_to_use1(i8) < limit .and. coord_to_use1(i5) < limit) then
+              count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+              sum_of_distances = sum_of_distances + &
+                  sqrt((coord_to_use3(i1) - coord_to_use3(i4))**2 + (coord_to_use2(i1) - coord_to_use2(i4))**2)
+            endif
 
 ! test face 4 (right)
-    if (coord_to_use1(i2) < limit .and. coord_to_use1(i3) < limit .and. &
-       coord_to_use1(i7) < limit .and. coord_to_use1(i6) < limit) then
-      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
-      sum_of_distances = sum_of_distances + &
-          sqrt((coord_to_use3(i2) - coord_to_use3(i3))**2 + (coord_to_use2(i2) - coord_to_use2(i3))**2)
-    endif
+            if (coord_to_use1(i2) < limit .and. coord_to_use1(i3) < limit .and. &
+                coord_to_use1(i7) < limit .and. coord_to_use1(i6) < limit) then
+              count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+              sum_of_distances = sum_of_distances + &
+                  sqrt((coord_to_use3(i2) - coord_to_use3(i3))**2 + (coord_to_use2(i2) - coord_to_use2(i3))**2)
+            endif
 
 ! test face 5 (front)
-    if (coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
-       coord_to_use1(i6) < limit .and. coord_to_use1(i5) < limit) then
-      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
-      sum_of_distances = sum_of_distances + &
-          sqrt((coord_to_use3(i1) - coord_to_use3(i2))**2 + (coord_to_use2(i1) - coord_to_use2(i2))**2)
-    endif
+            if (coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
+                coord_to_use1(i6) < limit .and. coord_to_use1(i5) < limit) then
+              count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+              sum_of_distances = sum_of_distances + &
+                  sqrt((coord_to_use3(i1) - coord_to_use3(i2))**2 + (coord_to_use2(i1) - coord_to_use2(i2))**2)
+            endif
 
 ! test face 6 (back)
-    if (coord_to_use1(i4) < limit .and. coord_to_use1(i3) < limit .and. &
-       coord_to_use1(i7) < limit .and. coord_to_use1(i8) < limit) then
-      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
-      sum_of_distances = sum_of_distances + &
-          sqrt((coord_to_use3(i4) - coord_to_use3(i3))**2 + (coord_to_use2(i4) - coord_to_use2(i3))**2)
-    endif
+            if (coord_to_use1(i4) < limit .and. coord_to_use1(i3) < limit .and. &
+                coord_to_use1(i7) < limit .and. coord_to_use1(i8) < limit) then
+              count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+              sum_of_distances = sum_of_distances + &
+                  sqrt((coord_to_use3(i4) - coord_to_use3(i3))**2 + (coord_to_use2(i4) - coord_to_use2(i3))**2)
+            endif
 
-      else ! max face
+          else ! max face
 
 ! detect elements belonging to the max face
-    limit = value_max - value_size * SMALL_RELATIVE_VALUE
+            limit = value_max - value_size * SMALL_RELATIVE_VALUE
 
 ! test face 1 (bottom)
-    if (coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
-       coord_to_use1(i3) > limit .and. coord_to_use1(i4) > limit) then
-      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
-      sum_of_distances = sum_of_distances + &
-          sqrt((coord_to_use3(i1) - coord_to_use3(i2))**2 + (coord_to_use2(i1) - coord_to_use2(i2))**2)
-    endif
+            if (coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
+                coord_to_use1(i3) > limit .and. coord_to_use1(i4) > limit) then
+              count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+              sum_of_distances = sum_of_distances + &
+                sqrt((coord_to_use3(i1) - coord_to_use3(i2))**2 + (coord_to_use2(i1) - coord_to_use2(i2))**2)
+            endif
 
 ! test face 2 (top)
-    if (coord_to_use1(i5) > limit .and. coord_to_use1(i6) > limit .and. &
-       coord_to_use1(i7) > limit .and. coord_to_use1(i8) > limit) then
-      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
-      sum_of_distances = sum_of_distances + &
-          sqrt((coord_to_use3(i5) - coord_to_use3(i6))**2 + (coord_to_use2(i5) - coord_to_use2(i6))**2)
-    endif
+            if (coord_to_use1(i5) > limit .and. coord_to_use1(i6) > limit .and. &
+                coord_to_use1(i7) > limit .and. coord_to_use1(i8) > limit) then
+              count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+              sum_of_distances = sum_of_distances + &
+                  sqrt((coord_to_use3(i5) - coord_to_use3(i6))**2 + (coord_to_use2(i5) - coord_to_use2(i6))**2)
+            endif
 
 ! test face 3 (left)
-    if (coord_to_use1(i1) > limit .and. coord_to_use1(i4) > limit .and. &
-       coord_to_use1(i8) > limit .and. coord_to_use1(i5) > limit) then
-      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
-      sum_of_distances = sum_of_distances + &
-          sqrt((coord_to_use3(i1) - coord_to_use3(i4))**2 + (coord_to_use2(i1) - coord_to_use2(i4))**2)
-    endif
+            if (coord_to_use1(i1) > limit .and. coord_to_use1(i4) > limit .and. &
+                coord_to_use1(i8) > limit .and. coord_to_use1(i5) > limit) then
+              count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+              sum_of_distances = sum_of_distances + &
+                  sqrt((coord_to_use3(i1) - coord_to_use3(i4))**2 + (coord_to_use2(i1) - coord_to_use2(i4))**2)
+            endif
 
 ! test face 4 (right)
-    if (coord_to_use1(i2) > limit .and. coord_to_use1(i3) > limit .and. &
-       coord_to_use1(i7) > limit .and. coord_to_use1(i6) > limit) then
-      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
-      sum_of_distances = sum_of_distances + &
-          sqrt((coord_to_use3(i2) - coord_to_use3(i3))**2 + (coord_to_use2(i2) - coord_to_use2(i3))**2)
-    endif
+            if (coord_to_use1(i2) > limit .and. coord_to_use1(i3) > limit .and. &
+                coord_to_use1(i7) > limit .and. coord_to_use1(i6) > limit) then
+              count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+              sum_of_distances = sum_of_distances + &
+                  sqrt((coord_to_use3(i2) - coord_to_use3(i3))**2 + (coord_to_use2(i2) - coord_to_use2(i3))**2)
+            endif
 
 ! test face 5 (front)
-    if (coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
-       coord_to_use1(i6) > limit .and. coord_to_use1(i5) > limit) then
-      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
-      sum_of_distances = sum_of_distances + &
-          sqrt((coord_to_use3(i1) - coord_to_use3(i2))**2 + (coord_to_use2(i1) - coord_to_use2(i2))**2)
-    endif
+            if (coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
+                coord_to_use1(i6) > limit .and. coord_to_use1(i5) > limit) then
+              count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+              sum_of_distances = sum_of_distances + &
+                  sqrt((coord_to_use3(i1) - coord_to_use3(i2))**2 + (coord_to_use2(i1) - coord_to_use2(i2))**2)
+            endif
 
 ! test face 6 (back)
-    if (coord_to_use1(i4) > limit .and. coord_to_use1(i3) > limit .and. &
-       coord_to_use1(i7) > limit .and. coord_to_use1(i8) > limit) then
-      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
-      sum_of_distances = sum_of_distances + &
-          sqrt((coord_to_use3(i4) - coord_to_use3(i3))**2 + (coord_to_use2(i4) - coord_to_use2(i3))**2)
-    endif
+            if (coord_to_use1(i4) > limit .and. coord_to_use1(i3) > limit .and. &
+                coord_to_use1(i7) > limit .and. coord_to_use1(i8) > limit) then
+              count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+              sum_of_distances = sum_of_distances + &
+                  sqrt((coord_to_use3(i4) - coord_to_use3(i3))**2 + (coord_to_use2(i4) - coord_to_use2(i3))**2)
+            endif
 
-      endif
+          endif
 
-  enddo
+        enddo
 
-  print *,'Total number of elements in the mesh before extension = ',nspec
-  print *,'Number of element faces to extend  = ',count_elem_faces_to_extend
-  if (count_elem_faces_to_extend == 0) stop 'error: number of element faces to extend detected is zero!'
+        print *,'Total number of elements in the mesh before extension = ',nspec
+        print *,'Number of element faces to extend  = ',count_elem_faces_to_extend
+        if (count_elem_faces_to_extend == 0) stop 'error: number of element faces to extend detected is zero!'
 
 ! we will add NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP to each of the element faces detected that need to be extended
-  nspec_new = nspec + count_elem_faces_to_extend * NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP
-  print *,'Total number of elements in the mesh after extension = ',nspec_new
+        nspec_new = nspec + count_elem_faces_to_extend * NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP
+        print *,'Total number of elements in the mesh after extension = ',nspec_new
 
 ! and each of these elements will have NGNOD points
 ! (some of them shared with other elements, but we will remove the multiples below, thus here it is a maximum
-  npoin_new_max = npoin + count_elem_faces_to_extend * NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP * NGNOD
+        npoin_new_max = npoin + count_elem_faces_to_extend * NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP * NGNOD
 
-  mean_distance = sum_of_distances / dble(count_elem_faces_to_extend)
-  very_small_distance = mean_distance / 10000.d0
-  if (icompute_size == 1) print *,'Computed mean size of the elements to extend = ',mean_distance
-  print *
+        mean_distance = sum_of_distances / dble(count_elem_faces_to_extend)
+        very_small_distance = mean_distance / 10000.d0
+        if (icompute_size == 1) print *,'Computed mean size of the elements to extend = ',mean_distance
+        print *
 
 ! allocate a new set of elements, i.e. a new ibool()
 ! allocate arrays with the right size of the future extended mesh
-  allocate(imaterial_new(nspec_new))
-  allocate(ibool_new(NGNOD,nspec_new))
+        allocate(imaterial_new(nspec_new))
+        allocate(ibool_new(NGNOD,nspec_new))
 
 ! clear the arrays
-  imaterial_new(:) = 0
-  ibool_new(:,:) = 0
+        imaterial_new(:) = 0
+        ibool_new(:,:) = 0
 
 ! copy the original arrays into the first part i.e. the non-extended part of the new ones
-  ibool_new(:,1:nspec) = ibool(:,1:nspec)
-  imaterial_new(1:nspec) = imaterial(1:nspec)
+        ibool_new(:,1:nspec) = ibool(:,1:nspec)
+        imaterial_new(1:nspec) = imaterial(1:nspec)
 
-  if (minval(ibool) /= 1) stop 'error in minval(ibool)'
+        if (minval(ibool) /= 1) stop 'error in minval(ibool)'
 
 ! allocate a new set of points, with multiples
-  allocate(x_new(npoin_new_max))
-  allocate(y_new(npoin_new_max))
-  allocate(z_new(npoin_new_max))
+        allocate(x_new(npoin_new_max))
+        allocate(y_new(npoin_new_max))
+        allocate(z_new(npoin_new_max))
 
 ! copy the original points into the new set
-  x_new(1:npoin) = x(1:npoin)
-  y_new(1:npoin) = y(1:npoin)
-  z_new(1:npoin) = z(1:npoin)
+        x_new(1:npoin) = x(1:npoin)
+        y_new(1:npoin) = y(1:npoin)
+        z_new(1:npoin) = z(1:npoin)
 
 ! position after which to start to create the new elements
-  elem_counter = nspec
-  npoin_new_real = npoin
+        elem_counter = nspec
+        npoin_new_real = npoin
 
 ! loop on the whole original mesh
-  do ispec = 1,nspec
+        do ispec = 1,nspec
 
-    i1 = ibool(1,ispec)
-    i2 = ibool(2,ispec)
-    i3 = ibool(3,ispec)
-    i4 = ibool(4,ispec)
-    i5 = ibool(5,ispec)
-    i6 = ibool(6,ispec)
-    i7 = ibool(7,ispec)
-    i8 = ibool(8,ispec)
+          i1 = ibool(1,ispec)
+          i2 = ibool(2,ispec)
+          i3 = ibool(3,ispec)
+          i4 = ibool(4,ispec)
+          i5 = ibool(5,ispec)
+          i6 = ibool(6,ispec)
+          i7 = ibool(7,ispec)
+          i8 = ibool(8,ispec)
 
-    if (NGNOD == 27) then
-       i9 = ibool(9,ispec)
-      i10 = ibool(10,ispec)
-      i11 = ibool(11,ispec)
-      i12 = ibool(12,ispec)
-      i13 = ibool(13,ispec)
-      i14 = ibool(14,ispec)
-      i15 = ibool(15,ispec)
-      i16 = ibool(16,ispec)
-      i17 = ibool(17,ispec)
-      i18 = ibool(18,ispec)
-      i19 = ibool(19,ispec)
-      i20 = ibool(20,ispec)
-      i21 = ibool(21,ispec)
-      i22 = ibool(22,ispec)
-      i23 = ibool(23,ispec)
-      i24 = ibool(24,ispec)
-      i25 = ibool(25,ispec)
-      i26 = ibool(26,ispec)
-      i27 = ibool(27,ispec)
-    endif
+          if (NGNOD == 27) then
+             i9 = ibool(9,ispec)
+            i10 = ibool(10,ispec)
+            i11 = ibool(11,ispec)
+            i12 = ibool(12,ispec)
+            i13 = ibool(13,ispec)
+            i14 = ibool(14,ispec)
+            i15 = ibool(15,ispec)
+            i16 = ibool(16,ispec)
+            i17 = ibool(17,ispec)
+            i18 = ibool(18,ispec)
+            i19 = ibool(19,ispec)
+            i20 = ibool(20,ispec)
+            i21 = ibool(21,ispec)
+            i22 = ibool(22,ispec)
+            i23 = ibool(23,ispec)
+            i24 = ibool(24,ispec)
+            i25 = ibool(25,ispec)
+            i26 = ibool(26,ispec)
+            i27 = ibool(27,ispec)
+          endif
 
 ! reset flag
-    need_to_extend_this_element = .false.
+          need_to_extend_this_element = .false.
 
-      if (iloop_on_min_face_then_max_face == 1) then ! min face
+          if (iloop_on_min_face_then_max_face == 1) then ! min face
 
 ! detect elements belonging to the min face
-    limit = value_min + value_size * SMALL_RELATIVE_VALUE
+            limit = value_min + value_size * SMALL_RELATIVE_VALUE
 
 ! test face 1 (bottom)
-    if (coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
-       coord_to_use1(i3) < limit .and. coord_to_use1(i4) < limit) then
-      need_to_extend_this_element = .true.
-      p1 = i1
-      p2 = i2
-      p3 = i3
-      p4 = i4
+            if (coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
+               coord_to_use1(i3) < limit .and. coord_to_use1(i4) < limit) then
+              need_to_extend_this_element = .true.
+              p1 = i1
+              p2 = i2
+              p3 = i3
+              p4 = i4
 
-      if (NGNOD == 27) then
-        p5 = i9
-        p6 = i10
-        p7 = i11
-        p8 = i12
-        p9 = i21
-      endif
-    endif
+              if (NGNOD == 27) then
+                p5 = i9
+                p6 = i10
+                p7 = i11
+                p8 = i12
+                p9 = i21
+              endif
+            endif
 
 ! test face 2 (top)
-    if (coord_to_use1(i5) < limit .and. coord_to_use1(i6) < limit .and. &
-       coord_to_use1(i7) < limit .and. coord_to_use1(i8) < limit) then
-      need_to_extend_this_element = .true.
-      p1 = i5
-      p2 = i6
-      p3 = i7
-      p4 = i8
+            if (coord_to_use1(i5) < limit .and. coord_to_use1(i6) < limit .and. &
+               coord_to_use1(i7) < limit .and. coord_to_use1(i8) < limit) then
+              need_to_extend_this_element = .true.
+              p1 = i5
+              p2 = i6
+              p3 = i7
+              p4 = i8
 
-      if (NGNOD == 27) then
-        p5 = i17
-        p6 = i18
-        p7 = i19
-        p8 = i20
-        p9 = i26
-      endif
-    endif
+              if (NGNOD == 27) then
+                p5 = i17
+                p6 = i18
+                p7 = i19
+                p8 = i20
+                p9 = i26
+              endif
+            endif
 
 ! test face 3 (left)
-    if (coord_to_use1(i1) < limit .and. coord_to_use1(i4) < limit .and. &
-       coord_to_use1(i5) < limit .and. coord_to_use1(i8) < limit) then
-      need_to_extend_this_element = .true.
-      p1 = i1
-      p2 = i4
-      p3 = i8
-      p4 = i5
+            if (coord_to_use1(i1) < limit .and. coord_to_use1(i4) < limit .and. &
+               coord_to_use1(i5) < limit .and. coord_to_use1(i8) < limit) then
+              need_to_extend_this_element = .true.
+              p1 = i1
+              p2 = i4
+              p3 = i8
+              p4 = i5
 
-      if (NGNOD == 27) then
-        p5 = i12
-        p6 = i16
-        p7 = i20
-        p8 = i13
-        p9 = i25
-      endif
-    endif
+              if (NGNOD == 27) then
+                p5 = i12
+                p6 = i16
+                p7 = i20
+                p8 = i13
+                p9 = i25
+              endif
+            endif
 
 ! test face 4 (right)
-    if (coord_to_use1(i2) < limit .and. coord_to_use1(i3) < limit .and. &
-       coord_to_use1(i7) < limit .and. coord_to_use1(i6) < limit) then
-      need_to_extend_this_element = .true.
-      p1 = i2
-      p2 = i3
-      p3 = i7
-      p4 = i6
+            if (coord_to_use1(i2) < limit .and. coord_to_use1(i3) < limit .and. &
+               coord_to_use1(i7) < limit .and. coord_to_use1(i6) < limit) then
+              need_to_extend_this_element = .true.
+              p1 = i2
+              p2 = i3
+              p3 = i7
+              p4 = i6
 
-      if (NGNOD == 27) then
-        p5 = i10
-        p6 = i15
-        p7 = i18
-        p8 = i14
-        p9 = i23
-      endif
-    endif
+              if (NGNOD == 27) then
+                p5 = i10
+                p6 = i15
+                p7 = i18
+                p8 = i14
+                p9 = i23
+              endif
+            endif
 
 ! test face 5 (front)
-    if (coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
-       coord_to_use1(i6) < limit .and. coord_to_use1(i5) < limit) then
-      need_to_extend_this_element = .true.
-      p1 = i1
-      p2 = i2
-      p3 = i6
-      p4 = i5
+            if (coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
+               coord_to_use1(i6) < limit .and. coord_to_use1(i5) < limit) then
+              need_to_extend_this_element = .true.
+              p1 = i1
+              p2 = i2
+              p3 = i6
+              p4 = i5
 
-      if (NGNOD == 27) then
-        p5 = i9
-        p6 = i14
-        p7 = i17
-        p8 = i13
-        p9 = i22
-      endif
-    endif
+              if (NGNOD == 27) then
+                p5 = i9
+                p6 = i14
+                p7 = i17
+                p8 = i13
+                p9 = i22
+              endif
+            endif
 
 ! test face 6 (back)
-    if (coord_to_use1(i4) < limit .and. coord_to_use1(i3) < limit .and. &
-       coord_to_use1(i7) < limit .and. coord_to_use1(i8) < limit) then
-      need_to_extend_this_element = .true.
-      p1 = i4
-      p2 = i3
-      p3 = i7
-      p4 = i8
+            if (coord_to_use1(i4) < limit .and. coord_to_use1(i3) < limit .and. &
+               coord_to_use1(i7) < limit .and. coord_to_use1(i8) < limit) then
+              need_to_extend_this_element = .true.
+              p1 = i4
+              p2 = i3
+              p3 = i7
+              p4 = i8
 
-      if (NGNOD == 27) then
-        p5 = i11
-        p6 = i15
-        p7 = i19
-        p8 = i16
-        p9 = i24
-      endif
-    endif
+              if (NGNOD == 27) then
+                p5 = i11
+                p6 = i15
+                p7 = i19
+                p8 = i16
+                p9 = i24
+              endif
+            endif
 
-      else ! max face
+          else ! max face
 
 ! detect elements belonging to the max face
-    limit = value_max - value_size * SMALL_RELATIVE_VALUE
+            limit = value_max - value_size * SMALL_RELATIVE_VALUE
 
 ! test face 1 (bottom)
-    if (coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
-       coord_to_use1(i3) > limit .and. coord_to_use1(i4) > limit) then
-      need_to_extend_this_element = .true.
-      p1 = i1
-      p2 = i2
-      p3 = i3
-      p4 = i4
+            if (coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
+               coord_to_use1(i3) > limit .and. coord_to_use1(i4) > limit) then
+              need_to_extend_this_element = .true.
+              p1 = i1
+              p2 = i2
+              p3 = i3
+              p4 = i4
 
-      if (NGNOD == 27) then
-        p5 = i9
-        p6 = i10
-        p7 = i11
-        p8 = i12
-        p9 = i21
-      endif
-    endif
+              if (NGNOD == 27) then
+                p5 = i9
+                p6 = i10
+                p7 = i11
+                p8 = i12
+                p9 = i21
+              endif
+            endif
 
 ! test face 2 (top)
-    if (coord_to_use1(i5) > limit .and. coord_to_use1(i6) > limit .and. &
-       coord_to_use1(i7) > limit .and. coord_to_use1(i8) > limit) then
-      need_to_extend_this_element = .true.
-      p1 = i5
-      p2 = i6
-      p3 = i7
-      p4 = i8
+            if (coord_to_use1(i5) > limit .and. coord_to_use1(i6) > limit .and. &
+               coord_to_use1(i7) > limit .and. coord_to_use1(i8) > limit) then
+              need_to_extend_this_element = .true.
+              p1 = i5
+              p2 = i6
+              p3 = i7
+              p4 = i8
 
-      if (NGNOD == 27) then
-        p5 = i17
-        p6 = i18
-        p7 = i19
-        p8 = i20
-        p9 = i26
-      endif
-    endif
+              if (NGNOD == 27) then
+                p5 = i17
+                p6 = i18
+                p7 = i19
+                p8 = i20
+                p9 = i26
+              endif
+            endif
 
 ! test face 3 (left)
-    if (coord_to_use1(i1) > limit .and. coord_to_use1(i4) > limit .and. &
-       coord_to_use1(i5) > limit .and. coord_to_use1(i8) > limit) then
-      need_to_extend_this_element = .true.
-      p1 = i1
-      p2 = i4
-      p3 = i8
-      p4 = i5
+            if (coord_to_use1(i1) > limit .and. coord_to_use1(i4) > limit .and. &
+               coord_to_use1(i5) > limit .and. coord_to_use1(i8) > limit) then
+              need_to_extend_this_element = .true.
+              p1 = i1
+              p2 = i4
+              p3 = i8
+              p4 = i5
 
-      if (NGNOD == 27) then
-        p5 = i12
-        p6 = i16
-        p7 = i20
-        p8 = i13
-        p9 = i25
-      endif
-    endif
+              if (NGNOD == 27) then
+                p5 = i12
+                p6 = i16
+                p7 = i20
+                p8 = i13
+                p9 = i25
+              endif
+            endif
 
 ! test face 4 (right)
-    if (coord_to_use1(i2) > limit .and. coord_to_use1(i3) > limit .and. &
-       coord_to_use1(i7) > limit .and. coord_to_use1(i6) > limit) then
-      need_to_extend_this_element = .true.
-      p1 = i2
-      p2 = i3
-      p3 = i7
-      p4 = i6
+            if (coord_to_use1(i2) > limit .and. coord_to_use1(i3) > limit .and. &
+               coord_to_use1(i7) > limit .and. coord_to_use1(i6) > limit) then
+              need_to_extend_this_element = .true.
+              p1 = i2
+              p2 = i3
+              p3 = i7
+              p4 = i6
 
-      if (NGNOD == 27) then
-        p5 = i10
-        p6 = i15
-        p7 = i18
-        p8 = i14
-        p9 = i23
-      endif
-    endif
+              if (NGNOD == 27) then
+                p5 = i10
+                p6 = i15
+                p7 = i18
+                p8 = i14
+                p9 = i23
+              endif
+            endif
 
 ! test face 5 (front)
-    if (coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
-       coord_to_use1(i6) > limit .and. coord_to_use1(i5) > limit) then
-      need_to_extend_this_element = .true.
-      p1 = i1
-      p2 = i2
-      p3 = i6
-      p4 = i5
+            if (coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
+               coord_to_use1(i6) > limit .and. coord_to_use1(i5) > limit) then
+              need_to_extend_this_element = .true.
+              p1 = i1
+              p2 = i2
+              p3 = i6
+              p4 = i5
 
-      if (NGNOD == 27) then
-        p5 = i9
-        p6 = i14
-        p7 = i17
-        p8 = i13
-        p9 = i22
-      endif
-    endif
+              if (NGNOD == 27) then
+                p5 = i9
+                p6 = i14
+                p7 = i17
+                p8 = i13
+                p9 = i22
+              endif
+            endif
 
 ! test face 6 (back)
-    if (coord_to_use1(i4) > limit .and. coord_to_use1(i3) > limit .and. &
-       coord_to_use1(i7) > limit .and. coord_to_use1(i8) > limit) then
-      need_to_extend_this_element = .true.
-      p1 = i4
-      p2 = i3
-      p3 = i7
-      p4 = i8
+            if (coord_to_use1(i4) > limit .and. coord_to_use1(i3) > limit .and. &
+               coord_to_use1(i7) > limit .and. coord_to_use1(i8) > limit) then
+              need_to_extend_this_element = .true.
+              p1 = i4
+              p2 = i3
+              p3 = i7
+              p4 = i8
 
-      if (NGNOD == 27) then
-        p5 = i11
-        p6 = i15
-        p7 = i19
-        p8 = i16
-        p9 = i24
-      endif
-    endif
+              if (NGNOD == 27) then
+                p5 = i11
+                p6 = i15
+                p7 = i19
+                p8 = i16
+                p9 = i24
+              endif
+            endif
 
-      endif
+          endif
 
-    if (need_to_extend_this_element) then
+          if (need_to_extend_this_element) then
 
 ! create the NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP new elements
 
@@ -1028,523 +1028,514 @@
 ! that many of these points created are in fact shared between adjacent elements) because "xdecompose_mesh" will remove
 ! them automatically later on, thus no need to remove them here; this makes this PML mesh extrusion code much simpler to write.
 
-    factor_x = 0
-    factor_y = 0
-    factor_z = 0
+            factor_x = 0
+            factor_y = 0
+            factor_z = 0
 
-    SIZE_OF_X_ELEMENT_TO_ADD = 0.d0
-    SIZE_OF_Y_ELEMENT_TO_ADD = 0.d0
-    SIZE_OF_Z_ELEMENT_TO_ADD = 0.d0
+            SIZE_OF_X_ELEMENT_TO_ADD = 0.d0
+            SIZE_OF_Y_ELEMENT_TO_ADD = 0.d0
+            SIZE_OF_Z_ELEMENT_TO_ADD = 0.d0
 
-    if (iloop_on_X_Y_Z_faces == 1) then  ! Xmin or Xmax
-      if (iloop_on_min_face_then_max_face == 1) then ! min face
-        factor_x = -1
-        if (icompute_size == 1) SIZE_OF_XMIN_ELEMENT_TO_ADD = mean_distance
-        SIZE_OF_X_ELEMENT_TO_ADD = SIZE_OF_XMIN_ELEMENT_TO_ADD
-      else ! max face
-        factor_x = +1
-        if (icompute_size == 1) SIZE_OF_XMAX_ELEMENT_TO_ADD = mean_distance
-        SIZE_OF_X_ELEMENT_TO_ADD = SIZE_OF_XMAX_ELEMENT_TO_ADD
-      endif
-    else if (iloop_on_X_Y_Z_faces == 2) then
-      if (iloop_on_min_face_then_max_face == 1) then ! min face
-        factor_y = -1
-        if (icompute_size == 1) SIZE_OF_YMIN_ELEMENT_TO_ADD = mean_distance
-        SIZE_OF_Y_ELEMENT_TO_ADD = SIZE_OF_YMIN_ELEMENT_TO_ADD
-      else ! max face
-        factor_y = +1
-        if (icompute_size == 1) SIZE_OF_YMAX_ELEMENT_TO_ADD = mean_distance
-        SIZE_OF_Y_ELEMENT_TO_ADD = SIZE_OF_YMAX_ELEMENT_TO_ADD
-      endif
-    else if (iloop_on_X_Y_Z_faces == 3) then
-      if (iloop_on_min_face_then_max_face == 1) then ! min face
-        factor_z = -1
-        if (icompute_size == 1) SIZE_OF_ZMIN_ELEMENT_TO_ADD = mean_distance
-        SIZE_OF_Z_ELEMENT_TO_ADD = SIZE_OF_ZMIN_ELEMENT_TO_ADD
-      else ! max face
-        factor_z = +1
-        if (icompute_size == 1) SIZE_OF_ZMAX_ELEMENT_TO_ADD = mean_distance
-        SIZE_OF_Z_ELEMENT_TO_ADD = SIZE_OF_ZMAX_ELEMENT_TO_ADD
-      endif
-    else
-      stop 'wrong index in loop on faces'
-    endif
+            if (iloop_on_X_Y_Z_faces == 1) then  ! Xmin or Xmax
+              if (iloop_on_min_face_then_max_face == 1) then ! min face
+                factor_x = -1
+                if (icompute_size == 1) SIZE_OF_XMIN_ELEMENT_TO_ADD = mean_distance
+                SIZE_OF_X_ELEMENT_TO_ADD = SIZE_OF_XMIN_ELEMENT_TO_ADD
+              else ! max face
+                factor_x = +1
+                if (icompute_size == 1) SIZE_OF_XMAX_ELEMENT_TO_ADD = mean_distance
+                SIZE_OF_X_ELEMENT_TO_ADD = SIZE_OF_XMAX_ELEMENT_TO_ADD
+              endif
+            else if (iloop_on_X_Y_Z_faces == 2) then
+              if (iloop_on_min_face_then_max_face == 1) then ! min face
+                factor_y = -1
+                if (icompute_size == 1) SIZE_OF_YMIN_ELEMENT_TO_ADD = mean_distance
+                SIZE_OF_Y_ELEMENT_TO_ADD = SIZE_OF_YMIN_ELEMENT_TO_ADD
+              else ! max face
+                factor_y = +1
+                if (icompute_size == 1) SIZE_OF_YMAX_ELEMENT_TO_ADD = mean_distance
+                SIZE_OF_Y_ELEMENT_TO_ADD = SIZE_OF_YMAX_ELEMENT_TO_ADD
+              endif
+            else if (iloop_on_X_Y_Z_faces == 3) then
+              if (iloop_on_min_face_then_max_face == 1) then ! min face
+                factor_z = -1
+                if (icompute_size == 1) SIZE_OF_ZMIN_ELEMENT_TO_ADD = mean_distance
+                SIZE_OF_Z_ELEMENT_TO_ADD = SIZE_OF_ZMIN_ELEMENT_TO_ADD
+              else ! max face
+                factor_z = +1
+                if (icompute_size == 1) SIZE_OF_ZMAX_ELEMENT_TO_ADD = mean_distance
+                SIZE_OF_Z_ELEMENT_TO_ADD = SIZE_OF_ZMAX_ELEMENT_TO_ADD
+              endif
+            else
+              stop 'wrong index in loop on faces'
+            endif
 
-      do iextend = 1,NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP
+            do iextend = 1,NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP
 
-        ! create a new element
-        elem_counter = elem_counter + 1
+              ! create a new element
+              elem_counter = elem_counter + 1
 
-        ! create the material property for the extended elements
-        imaterial_values_to_start_from = imaterial(ispec)
+              ! create the material property for the extended elements
+              imaterial_values_to_start_from = imaterial(ispec)
 
-        ! if external tomographic model, do not change the value
-        if (imaterial_values_to_start_from < 0) then
-          imaterial_new(elem_counter) = imaterial_values_to_start_from
+              ! if external tomographic model, do not change the value
+              if (imaterial_values_to_start_from < 0) then
+                imaterial_new(elem_counter) = imaterial_values_to_start_from
 
-        ! else change the value to turn off attenuation in the PMLs
-        else
+              ! else change the value to turn off attenuation in the PMLs
+              else
 
-          ! map back this starting value to the interval [1:count_def_mat]
-          do while (imaterial_values_to_start_from > count_def_mat)
-            imaterial_values_to_start_from = imaterial_values_to_start_from - count_def_mat
-          enddo
+                ! map back this starting value to the interval [1:count_def_mat]
+                do while (imaterial_values_to_start_from > count_def_mat)
+                  imaterial_values_to_start_from = imaterial_values_to_start_from - count_def_mat
+                enddo
 
-          if (istep == 1) then
-            ! use new material for the transition layer that has PML off (if it exists)
-            imaterial_new(elem_counter) = imaterial_values_to_start_from + 2*count_def_mat
-          else
-            ! use new material for the PML, with attenuation off
-            imaterial_new(elem_counter) = imaterial_values_to_start_from + count_def_mat
-          endif
+                if (istep == 1) then
+                  ! use new material for the transition layer that has PML off (if it exists)
+                  imaterial_new(elem_counter) = imaterial_values_to_start_from + 2*count_def_mat
+                else
+                  ! use new material for the PML, with attenuation off
+                  imaterial_new(elem_counter) = imaterial_values_to_start_from + count_def_mat
+                endif
 
-        endif
+              endif
 
 ! first create the normal element
 
-! bottom face of HEX8
+              ! bottom face of HEX8
+              x_tmp1(1) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+              y_tmp1(1) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+              z_tmp1(1) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-        x_tmp1(1) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_tmp1(1) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_tmp1(1) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+              x_tmp1(2) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+              y_tmp1(2) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+              z_tmp1(2) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-        x_tmp1(2) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_tmp1(2) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_tmp1(2) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+              x_tmp1(3) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+              y_tmp1(3) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+              z_tmp1(3) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-        x_tmp1(3) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_tmp1(3) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_tmp1(3) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+              x_tmp1(4) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+              y_tmp1(4) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+              z_tmp1(4) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-        x_tmp1(4) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_tmp1(4) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_tmp1(4) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+              ! top face of HEX8
+              x_tmp1(5) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+              y_tmp1(5) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+              z_tmp1(5) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-! top face of HEX8
+              x_tmp1(6) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+              y_tmp1(6) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+              z_tmp1(6) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-        x_tmp1(5) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_tmp1(5) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_tmp1(5) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+              x_tmp1(7) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+              y_tmp1(7) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+              z_tmp1(7) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-        x_tmp1(6) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_tmp1(6) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_tmp1(6) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+              x_tmp1(8) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+              y_tmp1(8) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+              z_tmp1(8) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-        x_tmp1(7) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_tmp1(7) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_tmp1(7) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+              if (NGNOD == 27) then
 
-        x_tmp1(8) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_tmp1(8) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_tmp1(8) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+                ! remaining points of bottom face of HEX27
+                x_tmp1(9) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+                y_tmp1(9) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+                z_tmp1(9) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-        if (NGNOD == 27) then
+                x_tmp1(10) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+                y_tmp1(10) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+                z_tmp1(10) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-! remaining points of bottom face of HEX27
+                x_tmp1(11) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+                y_tmp1(11) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+                z_tmp1(11) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-          x_tmp1(9) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-          y_tmp1(9) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-          z_tmp1(9) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+                x_tmp1(12) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+                y_tmp1(12) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+                z_tmp1(12) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-          x_tmp1(10) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-          y_tmp1(10) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-          z_tmp1(10) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+                x_tmp1(21) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+                y_tmp1(21) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+                z_tmp1(21) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-          x_tmp1(11) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-          y_tmp1(11) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-          z_tmp1(11) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+                ! remaining points of top face of HEX27
+                x_tmp1(17) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+                y_tmp1(17) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+                z_tmp1(17) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-          x_tmp1(12) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-          y_tmp1(12) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-          z_tmp1(12) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+                x_tmp1(18) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+                y_tmp1(18) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+                z_tmp1(18) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-          x_tmp1(21) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-          y_tmp1(21) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-          z_tmp1(21) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+                x_tmp1(19) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+                y_tmp1(19) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+                z_tmp1(19) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-! remaining points of top face of HEX27
+                x_tmp1(20) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+                y_tmp1(20) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+                z_tmp1(20) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-          x_tmp1(17) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-          y_tmp1(17) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-          z_tmp1(17) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+                x_tmp1(26) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+                y_tmp1(26) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+                z_tmp1(26) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-          x_tmp1(18) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-          y_tmp1(18) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-          z_tmp1(18) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+                ! remaining points of middle cutplane (middle "face") of HEX27
+                x_tmp1(13) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp1(13) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp1(13) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp1(19) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-          y_tmp1(19) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-          z_tmp1(19) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+                x_tmp1(14) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp1(14) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp1(14) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp1(20) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-          y_tmp1(20) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-          z_tmp1(20) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+                x_tmp1(15) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp1(15) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp1(15) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp1(26) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-          y_tmp1(26) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-          z_tmp1(26) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+                x_tmp1(16) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp1(16) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp1(16) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-! remaining points of middle cutplane (middle "face") of HEX27
+                x_tmp1(22) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp1(22) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp1(22) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp1(13) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp1(13) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp1(13) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+                x_tmp1(23) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp1(23) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp1(23) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp1(14) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp1(14) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp1(14) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+                x_tmp1(24) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp1(24) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp1(24) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp1(15) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp1(15) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp1(15) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+                x_tmp1(25) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp1(25) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp1(25) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp1(16) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp1(16) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp1(16) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+                x_tmp1(27) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp1(27) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp1(27) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp1(22) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp1(22) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp1(22) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
-
-          x_tmp1(23) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp1(23) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp1(23) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
-
-          x_tmp1(24) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp1(24) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp1(24) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
-
-          x_tmp1(25) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp1(25) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp1(25) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
-
-          x_tmp1(27) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp1(27) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp1(27) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
-
-        endif
+              endif
 
 ! then create the mirrored element
 
-! bottom face of HEX8
+              ! bottom face of HEX8
+              x_tmp2(1) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+              y_tmp2(1) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+              z_tmp2(1) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-        x_tmp2(1) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_tmp2(1) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_tmp2(1) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+              x_tmp2(2) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+              y_tmp2(2) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+              z_tmp2(2) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-        x_tmp2(2) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_tmp2(2) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_tmp2(2) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+              x_tmp2(3) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+              y_tmp2(3) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+              z_tmp2(3) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-        x_tmp2(3) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_tmp2(3) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_tmp2(3) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+              x_tmp2(4) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+              y_tmp2(4) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+              z_tmp2(4) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-        x_tmp2(4) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_tmp2(4) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_tmp2(4) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+              ! top face of HEX8
+              x_tmp2(5) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+              y_tmp2(5) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+              z_tmp2(5) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-! top face of HEX8
+              x_tmp2(6) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+              y_tmp2(6) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+              z_tmp2(6) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-        x_tmp2(5) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_tmp2(5) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_tmp2(5) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+              x_tmp2(7) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+              y_tmp2(7) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+              z_tmp2(7) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-        x_tmp2(6) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_tmp2(6) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_tmp2(6) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+              x_tmp2(8) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+              y_tmp2(8) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+              z_tmp2(8) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-        x_tmp2(7) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_tmp2(7) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_tmp2(7) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+              if (NGNOD == 27) then
 
-        x_tmp2(8) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_tmp2(8) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_tmp2(8) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+                ! remaining points of bottom face of HEX27
+                x_tmp2(9) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+                y_tmp2(9) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+                z_tmp2(9) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-        if (NGNOD == 27) then
+                x_tmp2(10) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+                y_tmp2(10) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+                z_tmp2(10) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-! remaining points of bottom face of HEX27
+                x_tmp2(11) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+                y_tmp2(11) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+                z_tmp2(11) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-          x_tmp2(9) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-          y_tmp2(9) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-          z_tmp2(9) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+                x_tmp2(12) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+                y_tmp2(12) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+                z_tmp2(12) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-          x_tmp2(10) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-          y_tmp2(10) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-          z_tmp2(10) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+                x_tmp2(21) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+                y_tmp2(21) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+                z_tmp2(21) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-          x_tmp2(11) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-          y_tmp2(11) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-          z_tmp2(11) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+                ! remaining points of top face of HEX27
+                x_tmp2(17) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+                y_tmp2(17) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+                z_tmp2(17) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-          x_tmp2(12) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-          y_tmp2(12) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-          z_tmp2(12) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+                x_tmp2(18) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+                y_tmp2(18) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+                z_tmp2(18) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-          x_tmp2(21) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-          y_tmp2(21) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-          z_tmp2(21) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+                x_tmp2(19) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+                y_tmp2(19) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+                z_tmp2(19) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-! remaining points of top face of HEX27
+                x_tmp2(20) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+                y_tmp2(20) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+                z_tmp2(20) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-          x_tmp2(17) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-          y_tmp2(17) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-          z_tmp2(17) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+                x_tmp2(26) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+                y_tmp2(26) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+                z_tmp2(26) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-          x_tmp2(18) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-          y_tmp2(18) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-          z_tmp2(18) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+                ! remaining points of middle cutplane (middle "face") of HEX27
+                x_tmp2(13) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp2(13) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp2(13) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp2(19) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-          y_tmp2(19) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-          z_tmp2(19) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+                x_tmp2(14) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp2(14) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp2(14) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp2(20) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-          y_tmp2(20) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-          z_tmp2(20) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+                x_tmp2(15) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp2(15) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp2(15) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp2(26) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-          y_tmp2(26) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-          z_tmp2(26) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+                x_tmp2(16) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp2(16) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp2(16) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-! remaining points of middle cutplane (middle "face") of HEX27
+                x_tmp2(22) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp2(22) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp2(22) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp2(13) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp2(13) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp2(13) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+                x_tmp2(23) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp2(23) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp2(23) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp2(14) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp2(14) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp2(14) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+                x_tmp2(24) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp2(24) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp2(24) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp2(15) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp2(15) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp2(15) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+                x_tmp2(25) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp2(25) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp2(25) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp2(16) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp2(16) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp2(16) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+                x_tmp2(27) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+                y_tmp2(27) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+                z_tmp2(27) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          x_tmp2(22) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp2(22) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp2(22) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
-
-          x_tmp2(23) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp2(23) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp2(23) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
-
-          x_tmp2(24) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp2(24) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp2(24) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
-
-          x_tmp2(25) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp2(25) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp2(25) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
-
-          x_tmp2(27) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_tmp2(27) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_tmp2(27) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
-
-        endif
+              endif
 
 ! now we need to test if the element created is flipped i.e. it has a negative Jacobian,
 ! and if so we will use the mirrored version of that element, which will then have a positive Jacobian
 
 ! check the element for a negative Jacobian
-      do ia = 1,NGNOD
-        xelm(ia) = x_tmp1(ia)
-        yelm(ia) = y_tmp1(ia)
-        zelm(ia) = z_tmp1(ia)
-      enddo
-      call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian1,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
+              do ia = 1,NGNOD
+                xelm(ia) = x_tmp1(ia)
+                yelm(ia) = y_tmp1(ia)
+                zelm(ia) = z_tmp1(ia)
+              enddo
+              call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian1,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
 
 ! check the mirrored (i.e. flipped/swapped) element for a negative Jacobian
 ! either this one or the non-mirrored one above should be OK, and thus we will select it
-      do ia = 1,NGNOD
-        xelm(ia) = x_tmp2(ia)
-        yelm(ia) = y_tmp2(ia)
-        zelm(ia) = z_tmp2(ia)
-      enddo
-      call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian2,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
+              do ia = 1,NGNOD
+                xelm(ia) = x_tmp2(ia)
+                yelm(ia) = y_tmp2(ia)
+                zelm(ia) = z_tmp2(ia)
+              enddo
+              call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian2,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
 
-! this should never happen, it is just a safety test
-      if (found_a_negative_jacobian1 .and. found_a_negative_jacobian2) &
-        stop 'error: found a negative Jacobian that could not be fixed'
+              ! this should never happen, it is just a safety test
+              if (found_a_negative_jacobian1 .and. found_a_negative_jacobian2) &
+                stop 'error: found a negative Jacobian that could not be fixed'
 
-! this should also never happen, it is just a second safety test
-      if (.not. found_a_negative_jacobian1 .and. .not. found_a_negative_jacobian2) &
-        stop 'strange error: both the element created and its mirrored version have a positive Jacobian!'
+              ! this should also never happen, it is just a second safety test
+              if (.not. found_a_negative_jacobian1 .and. .not. found_a_negative_jacobian2) &
+                stop 'strange error: both the element created and its mirrored version have a positive Jacobian!'
 
 ! if we have found that the original element has a negative Jacobian and its mirrored element is fine,
 ! swap the points so that we use that mirrored element in the final mesh saved to disk instead of the original one
 ! i.e. implement a mirror symmetry here
-      if (found_a_negative_jacobian1) then
-        do ia = 1,NGNOD
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(ia,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x_tmp2(ia)
-          y_new(npoin_new_real) = y_tmp2(ia)
-          z_new(npoin_new_real) = z_tmp2(ia)
+              if (found_a_negative_jacobian1) then
+                do ia = 1,NGNOD
+                  npoin_new_real = npoin_new_real + 1
+                  ibool_new(ia,elem_counter) = npoin_new_real
+                  x_new(npoin_new_real) = x_tmp2(ia)
+                  y_new(npoin_new_real) = y_tmp2(ia)
+                  z_new(npoin_new_real) = z_tmp2(ia)
+                enddo
+              else
+                do ia = 1,NGNOD
+                  npoin_new_real = npoin_new_real + 1
+                  ibool_new(ia,elem_counter) = npoin_new_real
+                  x_new(npoin_new_real) = x_tmp1(ia)
+                  y_new(npoin_new_real) = y_tmp1(ia)
+                  z_new(npoin_new_real) = z_tmp1(ia)
+                enddo
+              endif
+
+            enddo
+          endif
+
         enddo
-      else
-        do ia = 1,NGNOD
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(ia,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x_tmp1(ia)
-          y_new(npoin_new_real) = y_tmp1(ia)
-          z_new(npoin_new_real) = z_tmp1(ia)
-        enddo
-      endif
 
-      enddo
-    endif
-
-  enddo
-
-  if (minval(ibool_new) /= 1) stop 'error in minval(ibool_new)'
-  if (maxval(ibool_new) > npoin_new_max) stop 'error in maxval(ibool_new)'
+        if (minval(ibool_new) /= 1) stop 'error in minval(ibool_new)'
+        if (maxval(ibool_new) > npoin_new_max) stop 'error in maxval(ibool_new)'
 
 ! deallocate the original arrays
-  deallocate(x,y,z)
-  deallocate(ibool)
-  deallocate(imaterial)
+        deallocate(x,y,z)
+        deallocate(ibool)
+        deallocate(imaterial)
 
 ! reallocate them with the new size
-  allocate(x(npoin_new_real))
-  allocate(y(npoin_new_real))
-  allocate(z(npoin_new_real))
-  allocate(imaterial(nspec_new))
-  allocate(ibool(NGNOD,nspec_new))
+        allocate(x(npoin_new_real))
+        allocate(y(npoin_new_real))
+        allocate(z(npoin_new_real))
+        allocate(imaterial(nspec_new))
+        allocate(ibool(NGNOD,nspec_new))
 
 ! make the new ones become the old ones, to prepare for the next iteration of the two nested loops we are in,
 ! i.e. to make sure the next loop will extend the mesh from the new arrays rather than from the old ones
-  x(:) = x_new(1:npoin_new_real)
-  y(:) = y_new(1:npoin_new_real)
-  z(:) = z_new(1:npoin_new_real)
-  imaterial(:) = imaterial_new(:)
-  ibool(:,:) = ibool_new(:,:)
+        x(:) = x_new(1:npoin_new_real)
+        y(:) = y_new(1:npoin_new_real)
+        z(:) = z_new(1:npoin_new_real)
+        imaterial(:) = imaterial_new(:)
+        ibool(:,:) = ibool_new(:,:)
 
 ! the new number of elements and points becomes the old one, for the same reason
-  nspec = nspec_new
-  npoin = npoin_new_real
+        nspec = nspec_new
+        npoin = npoin_new_real
 
 ! deallocate the new ones, to make sure they can be allocated again in the next iteration of the nested loops we are in
-  deallocate(x_new,y_new,z_new)
-  deallocate(ibool_new)
-  deallocate(imaterial_new)
+        deallocate(x_new,y_new,z_new)
+        deallocate(ibool_new)
+        deallocate(imaterial_new)
 
-  if (minval(ibool) /= 1) stop 'error in minval(ibool)'
-  if (maxval(ibool) > npoin) stop 'error in maxval(ibool)'
+        if (minval(ibool) /= 1) stop 'error in minval(ibool)'
+        if (maxval(ibool) > npoin) stop 'error in maxval(ibool)'
 
-    enddo ! of iloop_on_min_face_then_max_face loop on Xmin then Xmax, or Ymin then Ymax, or Zmin then Zmax
+      enddo ! of iloop_on_min_face_then_max_face loop on Xmin then Xmax, or Ymin then Ymax, or Zmin then Zmax
 
 ! end of loop on the three sets of faces to first add CPML elements along X, then along Y, then along Z
-  enddo
+    enddo
 
 ! we must remove all point multiples here using a fast sorting routine
 
-  print *,'beginning of multiple point removal based on sorting...'
+    print *,'beginning of multiple point removal based on sorting...'
 
-  npointot = nspec*NGNOD
+    npointot = nspec*NGNOD
 
-  allocate(locval(npointot))
-  allocate(ifseg(npointot))
+    allocate(locval(npointot))
+    allocate(ifseg(npointot))
 
-  allocate(xp(npointot))
-  allocate(yp(npointot))
-  allocate(zp(npointot))
+    allocate(xp(npointot))
+    allocate(yp(npointot))
+    allocate(zp(npointot))
 
-  allocate(x_copy(NGNOD,nspec))
-  allocate(y_copy(NGNOD,nspec))
-  allocate(z_copy(NGNOD,nspec))
+    allocate(x_copy(NGNOD,nspec))
+    allocate(y_copy(NGNOD,nspec))
+    allocate(z_copy(NGNOD,nspec))
 
-  do ispec=1,nspec
-    ieoff = NGNOD * (ispec-1)
-    ilocnum = 0
-    do ia = 1,NGNOD
-      ilocnum = ilocnum + 1
-      xp(ilocnum+ieoff) = x(ibool(ia,ispec))
-      yp(ilocnum+ieoff) = y(ibool(ia,ispec))
-      zp(ilocnum+ieoff) = z(ibool(ia,ispec))
+    do ispec=1,nspec
+      ieoff = NGNOD * (ispec-1)
+      ilocnum = 0
+      do ia = 1,NGNOD
+        ilocnum = ilocnum + 1
+        xp(ilocnum+ieoff) = x(ibool(ia,ispec))
+        yp(ilocnum+ieoff) = y(ibool(ia,ispec))
+        zp(ilocnum+ieoff) = z(ibool(ia,ispec))
 
 ! create a copy, since the sorting below will destroy the arrays
-      x_copy(ia,ispec) = x(ibool(ia,ispec))
-      y_copy(ia,ispec) = y(ibool(ia,ispec))
-      z_copy(ia,ispec) = z(ibool(ia,ispec))
-
+        x_copy(ia,ispec) = x(ibool(ia,ispec))
+        y_copy(ia,ispec) = y(ibool(ia,ispec))
+        z_copy(ia,ispec) = z(ibool(ia,ispec))
+      enddo
     enddo
-  enddo
 
 ! gets ibool indexing from local (NGNOD points) to global points
-  call get_global(NDIM,npointot,xp,yp,zp,ibool,locval,ifseg,npoin,very_small_distance)
+    call get_global(NDIM,npointot,xp,yp,zp,ibool,locval,ifseg,npoin,very_small_distance)
 
-  print *,'done with multiple point removal based on sorting'
-  print *,'found a total of ',npoin,' unique mesh points'
+    print *,'done with multiple point removal based on sorting'
+    print *,'found a total of ',npoin,' unique mesh points'
 
 ! unique global point locations
-  do ispec = 1, nspec
-    do ia = 1,NGNOD
-      iglobnum = ibool(ia,ispec)
-      x(iglobnum) = x_copy(ia,ispec)
-      y(iglobnum) = y_copy(ia,ispec)
-      z(iglobnum) = z_copy(ia,ispec)
+    do ispec = 1, nspec
+      do ia = 1,NGNOD
+        iglobnum = ibool(ia,ispec)
+        x(iglobnum) = x_copy(ia,ispec)
+        y(iglobnum) = y_copy(ia,ispec)
+        z(iglobnum) = z_copy(ia,ispec)
+      enddo
     enddo
-  enddo
 
-  if (iformat == 1) then ! write the output in ASCII format
+    if (iformat == 1) then ! write the output in ASCII format
 
 ! write the new points (overwrite the old file)
-  open(unit=23,file='nodes_coords_file',status='old',action='write')
-  write(23,*) npoin
-  do ipoin = 1,npoin
-    write(23,*) ipoin,sngl(x(ipoin)),sngl(y(ipoin)),sngl(z(ipoin))
-  enddo
-  close(23)
+      open(unit=23,file='nodes_coords_file',status='old',action='write')
+      write(23,*) npoin
+      do ipoin = 1,npoin
+        write(23,*) ipoin,sngl(x(ipoin)),sngl(y(ipoin)),sngl(z(ipoin))
+      enddo
+      close(23)
 
 ! write the new mesh elements (overwrite the old file)
-  open(unit=23,file='mesh_file',status='old',action='write')
-  write(23,*) nspec
+      open(unit=23,file='mesh_file',status='old',action='write')
+      write(23,*) nspec
 ! loop on the whole mesh
-  do ispec = 1,nspec
-    if (NGNOD == 8) then
-      write(23,"(9(i9,1x))") ispec,(ibool(ia,ispec), ia = 1,NGNOD)
-    else
-      write(23,"(28(i9,1x))") ispec,(ibool(ia,ispec), ia = 1,NGNOD)
-    endif
-  enddo
-  close(23)
+      if (NGNOD == 8) then
+        do ispec = 1,nspec
+          write(23,"(9(i9,1x))") ispec,(ibool(ia,ispec), ia = 1,NGNOD)
+        enddo
+      else
+        do ispec = 1,nspec
+          write(23,"(28(i9,1x))") ispec,(ibool(ia,ispec), ia = 1,NGNOD)
+        enddo
+      endif
+      close(23)
 
 ! write the new material properties (overwrite the old file)
-  open(unit=23,file='materials_file',status='old',action='write')
+      open(unit=23,file='materials_file',status='old',action='write')
 ! loop on the whole mesh
-  do ispec = 1,nspec
-    write(23,*) ispec,imaterial(ispec)
-  enddo
-  close(23)
+      do ispec = 1,nspec
+        write(23,*) ispec,imaterial(ispec)
+      enddo
+      close(23)
 
-  else ! write the output in binary format
+    else ! write the output in binary format
 
 ! write the new points in binary format
-  open(unit=23,file='nodes_coords_file.bin',form='unformatted',status='unknown',action='write')
-  write(23) npoin
-  write(23) x
-  write(23) y
-  write(23) z
-  close(23)
+      open(unit=23,file='nodes_coords_file.bin',form='unformatted',status='unknown',action='write')
+      write(23) npoin
+      write(23) x
+      write(23) y
+      write(23) z
+      close(23)
 
 ! write the new mesh elements in binary format
-  open(unit=23,file='mesh_file.bin',form='unformatted',status='unknown',action='write')
-  write(23) nspec
-  write(23) ibool
-  close(23)
+      open(unit=23,file='mesh_file.bin',form='unformatted',status='unknown',action='write')
+      write(23) nspec
+      write(23) ibool
+      close(23)
 
 ! write the new material properties in binary format
-  open(unit=23,file='materials_file.bin',form='unformatted',status='unknown',action='write')
-  write(23) imaterial
-  close(23)
+      open(unit=23,file='materials_file.bin',form='unformatted',status='unknown',action='write')
+      write(23) imaterial
+      close(23)
 
-  endif
+    endif
 
     deallocate(x)
     deallocate(y)
@@ -1579,7 +1570,8 @@
   print *
 
 ! save the thickness values to a text file
-  open(unit=23,file='values_to_use_for_convert_external_layers_of_a_given_mesh_to_CPML_layers.txt',status='unknown',action='write')
+  open(unit=23,file='values_to_use_for_convert_external_layers_of_a_given_mesh_to_CPML_layers.txt', &
+       status='unknown',action='write')
 
   if (ADD_ON_THE_XMIN_SURFACE) then
     write(23,*) SIZE_OF_XMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
