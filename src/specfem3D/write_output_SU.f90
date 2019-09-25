@@ -63,7 +63,7 @@
   open(unit=IIN_SU1,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='old',iostat=ier)
   if (ier /= 0) stop 'error opening output_list_stations.txt file'
 
-  do irec=1,nrec
+  do irec = 1,nrec
    read(IIN_SU1,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
   enddo
   close(IIN_SU1)
@@ -126,8 +126,31 @@
     dx = 0.0
   endif
 
+  ! checks: NB_RUNS_ACOUSTIC_GPU only works for pressure output, where we define the array
+  !         seismograms_p(NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NSTEP_**)
+  if (NB_RUNS_ACOUSTIC_GPU > 1 .and. istore /= 4) then
+    print *,'Error: NB_RUNS_ACOUSTIC_GPU > 1 has invalid seismogram output component '//comp(istore)//' choosen'
+    print *,'Please output pressure only, other components are not implemented yet...'
+    stop 'Invalid seismogram output for NB_RUNS_ACOUSTIC_GPU > 1'
+  endif
+
   do irec_local = 1,nrec_local*NB_RUNS_ACOUSTIC_GPU
-    irec = number_receiver_global(mod(irec_local,nrec_local))
+
+    ! if irec_local is a multiple of nrec_local then mod(irec_local,nrec_local) == 0 and
+    ! the array access at number_reciever_global would be invalid;
+    ! for those cases we want irec associated to irec_local == nrec_local
+    if (mod(irec_local,nrec_local) == 0) then
+      irec = number_receiver_global(nrec_local)
+    else
+      irec = number_receiver_global(mod(irec_local,nrec_local))
+    endif
+
+    ! safety check
+    if (irec <= 0 .or. irec > nrec) then
+      print *,'Error: invalid irec',irec,' out of a total of nrec ',nrec,'receivers'
+      print *,'       local irec_local',irec_local,'from nrec_local',nrec_local
+      stop 'Invalid irec in write_output_SU() routine found'
+    endif
 
     if (seismo_offset == 0) then
       ! determines header
