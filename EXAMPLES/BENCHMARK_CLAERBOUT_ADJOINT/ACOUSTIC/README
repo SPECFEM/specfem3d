@@ -1,17 +1,23 @@
-this test can be done on your workstation, as long as you have FOUR CPUs available.
+--------------------------------------------------
+README
+--------------------------------------------------
+
+Acoustic benchmark
+
+This test can be done on your workstation, as long as you have 4 CPU cores available.
 it should be done within 15 minutes. 
 
 
-to run this test, simply use (after ./configure FC=ifort MPIFC=mpif90):
+To run this test, simply use (after ./configure):
 
 ./run_inhomogeneous.bash
 
 
 you will be given information at the very end:
 
- DATASPACE=       ?
- MODELSPACE=      ?
- relative error=  ?
+ DATASPACE      =  ?
+ MODELSPACE     =  ?
+ relative error =  ?
 
-check "relative error", it must be small enough (~0.001 should be OK).
-If you fail the test, PURE ACOUSTIC kernel calculation is problematic.
+Check "relative error", it must be small enough (~0.001 should be OK).
+If the test fails, PURE ACOUSTIC kernel calculation is problematic.

@@ -38,7 +38,7 @@ NPROC_ETA                       = 2
 # Regular/irregular mesh
 USE_REGULAR_MESH                = .true.
 # Only for irregular meshes, number of doubling layers and their position
-NDOUBLINGS                      = 1
+NDOUBLINGS                      = 0
 # NZ_DOUBLING_1 is the parameter to set up if there is only one doubling layer
 # (more doubling entries can be added if needed to match NDOUBLINGS value)
 NZ_DOUBLING_1                   = 11
@@ -97,5 +97,5 @@ NMATERIALS                      = 3
 NREGIONS                        = 1
 # define the different regions of the model as :
 #NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
-1              32            1               32             1         8        2
+1              32           1               32            1         16       2
 

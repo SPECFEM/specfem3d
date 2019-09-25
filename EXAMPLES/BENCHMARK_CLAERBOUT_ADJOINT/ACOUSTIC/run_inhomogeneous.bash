@@ -1,170 +1,204 @@
 #!/bin/bash -eu
-echo
-date
-echo
+echo "running example: `date`"
+currentdir=`pwd`
 
+# gets Par_file parameters
 NSTEP=`grep ^NSTEP   ./DATA/Par_file | cut -d = -f 2 | sed 's/ //g'`
 DT=`grep       ^DT   ./DATA/Par_file | cut -d = -f 2 | sed 's/ //g'`
 NPROC=`grep ^NPROC   ./DATA/Par_file | cut -d = -f 2 `
 
-#daniel:
 echo "Par_file parameters:"
-echo "NSTEP=$NSTEP"
-echo "DT=$DT"
-echo "NPROC=$NPROC"
+echo "  NSTEP = $NSTEP"
+echo "  DT    = $DT"
+echo "  NPROC = $NPROC"
 echo
 
-#NSTEP=3000
-#DT=0.001
-#percent=0.0001
+# perturbation (should be small enough for approximating S(m - m0) ~ S(m) - S(m0)
+percent=-0.02
 
-percent=0.02
 echo "perturbation: $percent"
 echo
 
-#echo "NSTEP=$NSTEP"
-#echo "DT=$DT"
-#echo "NPROC=$NPROC"
+# SPECFEM3D root directory
+ROOT=../../../
 
-bin="$PWD/bin"
-DATA="$bin/../DATA"
-OUTPUT_FILES="$bin/../OUTPUT_FILES"
-models="$bin/../models"
-SPECFEM3D="$bin/../../../../"
+## compiler
+# intel
+#FC="ifort -assume byterecl "
+# gnu
+FC="gfortran "
 
-
+## MPI parallel run
 MPIRUN="mpirun -np $NPROC "
-MPIFC="mpif90 -assume byterecl "
+
+# create and compile all setup
+do_setup=1
 
 ##############################################
 
-#daniel
-do_setup=$1
-
-##############################################
-
-if [ "$do_setup" == "" ]; then
-
+if [ "$do_setup" == "1" ]; then
 echo
 echo "setting up example..."
 echo
 
-rm -rf $OUTPUT_FILES $models $bin
-mkdir -p $OUTPUT_FILES/DATABASES_MPI $OUTPUT_FILES $OUTPUT_FILES/SEM/dat $OUTPUT_FILES/SEM/syn
-mkdir -p $models/initial_model $models/target_model $bin
+# cleans output files
+mkdir -p OUTPUT_FILES
+rm -rf OUTPUT_FILES/*
+mkdir -p OUTPUT_FILES/DATABASES_MPI
 
-cd $SPECFEM3D
-cp ./src/shared/constants.h ./src/shared/constants.h_backup
-cp ./src/specfem3D/save_adjoint_kernels.f90 ./src/specfem3D/save_adjoint_kernels.f90_backup
-cp ./src/generate_databases/get_model.f90 ./src/generate_databases/get_model.f90_backup
-cp ./src/specfem3D/write_seismograms.f90  ./src/specfem3D/write_seismograms.f90_backup
+mkdir -p SEM
+rm -rf SEM/*
+mkdir -p SEM/dat SEM/syn
 
-#daniel
-#cp $bin/../constants.h ./src/shared/constants.h
-sed -i "s:SU_FORMAT.*:SU_FORMAT = .true.:g" ./src/shared/constants.h
-sed -i "s:FIX_UNDERFLOW_PROBLEM.*:FIX_UNDERFLOW_PROBLEM = .false.:g" ./src/shared/constants.h
+mkdir -p models
+rm -rf models/*
+mkdir -p models/initial_model models/target_model
 
-#daniel
-#cp $bin/../get_model_internal.f90 ./src/generate_databases/get_model.f90
-sed -i "s:USE_EXTERNAL_FILES.*=.*:USE_EXTERNAL_FILES = .false.:" ./src/generate_databases/get_model.f90
+cd $ROOT/
+cp -v ./setup/constants.h ./setup/constants.h_backup
+sed -i "s:SAVE_WEIGHTS.*=.*:SAVE_WEIGHTS = .true.:" ./setup/constants.h
 
-#daniel
-#cp $bin/../save_adjoint_kernels.f90 ./src/specfem3D/save_adjoint_kernels.f90
-sed -i "s:SAVE_WEIGHTS.*=.*:SAVE_WEIGHTS = .true.:" ./src/specfem3D/save_adjoint_kernels.f90
+# patch to write out acceleration, i.e. pressure, values in SU-format
+# (- potential_dot_dot will be pressure for acoustic simulations, axd/ayd/azd will be pressure in 3-d vector format)
+#cp ./src/specfem3D/write_seismograms.f90  ./src/specfem3D/write_seismograms.f90_backup
+#patch ./src/specfem3D/write_seismograms.f90 < $currentdir/write_seismograms.patch
 
-#daniel
-#cp $bin/../write_seismograms.f90 ./src/specfem3D/write_seismograms.f90
-patch ./src/specfem3D/write_seismograms.f90 < $bin/../write_seismograms.patch
+echo
+echo "compiling binaries..."
+echo
 
-make >& $bin/../make.log
+make -j4 >& $currentdir/make.log
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
 
-cp ./bin/xmeshfem3D            $bin/xmeshfem3D
-cp ./bin/xgenerate_databases   $bin/xgenerate_databases_internal
-cp ./bin/xspecfem3D            $bin/xspecfem3D
+cd $currentdir
 
-#daniel
-#cp $bin/../get_model_external.f90 ./src/generate_databases/get_model.f90
-sed -i "s:USE_EXTERNAL_FILES.*=.*:USE_EXTERNAL_FILES = .true.:" ./src/generate_databases/get_model.f90
+# links executables
+mkdir -p bin
+cd bin/
+rm -f ./*
+ln -s ../$ROOT/bin/xmeshfem3D
+ln -s ../$ROOT/bin/xgenerate_databases
+ln -s ../$ROOT/bin/xspecfem3D
+cd ../
 
-make >& $bin/../make.log
+fi # do_setup
 
-cp ./bin/xgenerate_databases   $bin/xgenerate_databases_external
+echo
+echo "compiling tools..."
+echo
 
-fi
-
-cd $bin
-$MPIFC $bin/../random_model_generation.f90 -o ./xrandom_model > $bin/../compile.log
-$MPIFC $bin/../adj_seismogram.f90 -o ./xadj > $bin/../compile.log
-$MPIFC $bin/../postprocessing.f90 -o ./xpostprocessing > $bin/../compile.log
+$FC ../random_model_generation.f90 -o ./bin/xrandom_model
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
+$FC ../adj_seismogram.f90 -o ./bin/xadj
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
+$FC ../postprocessing.f90 -o ./bin/xpostprocessing
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
 
 ########################### dat ########################################
-FILE="$DATA/Par_file"
-sed -e "s#^SIMULATION_TYPE.*#SIMULATION_TYPE = 1 #g"  < $FILE > ./tmp; mv ./tmp $FILE
-sed -e "s#^SAVE_FORWARD.*#SAVE_FORWARD = .true. #g"   < $FILE > ./tmp; mv ./tmp $FILE
-sed -e "s#^NSTEP.*#NSTEP = $NSTEP #g"                 < $FILE > ./tmp; mv ./tmp $FILE
-sed -e "s#^DT.*#DT = $DT #g"                          < $FILE > ./tmp; mv ./tmp $FILE
 
-cd $bin
+sed -i "s:^SIMULATION_TYPE .*:SIMULATION_TYPE = 1:" ./DATA/Par_file
+sed -i "s:^SAVE_FORWARD .*:SAVE_FORWARD = .false.:" ./DATA/Par_file
 
-echo "data simulation: $MPIRUN ./xmeshfem3D ..."
-$MPIRUN ./xmeshfem3D
-echo "data simulation: $MPIRUN ./xgenerate_databases ..."
-$MPIRUN ./xgenerate_databases_internal
-echo "data simulation: $MPIRUN ./xspecfem3D ..."
-$MPIRUN ./xspecfem3D
+sed -i "s:^MODEL .*=.*:MODEL = default:" ./DATA/Par_file
 
-#daniel
-cp -rp $OUTPUT_FILES $OUTPUT_FILES.dat.forward
+echo "data simulation: xmeshfem3D ..."
+$MPIRUN ./bin/xmeshfem3D
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
 
-mv $OUTPUT_FILES/*SU $OUTPUT_FILES/SEM/dat/
-cp $OUTPUT_FILES/DATABASES_MPI/*rho.bin $models/target_model/
-cp $OUTPUT_FILES/DATABASES_MPI/*vp.bin  $models/target_model/
-cp $OUTPUT_FILES/DATABASES_MPI/*vs.bin  $models/target_model/
+echo "data simulation: xgenerate_databases ..."
+$MPIRUN ./bin/xgenerate_databases
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
+
+echo "data simulation: xspecfem3D ..."
+$MPIRUN ./bin/xspecfem3D
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
+
+# backup copy
+rm -rf OUTPUT_FILES.dat.forward
+cp -rp OUTPUT_FILES OUTPUT_FILES.dat.forward
+
+mv -v OUTPUT_FILES/*SU SEM/dat/
+
+# target model
+cp -v OUTPUT_FILES/DATABASES_MPI/*rho.bin models/target_model/
+cp -v OUTPUT_FILES/DATABASES_MPI/*vp.bin  models/target_model/
+cp -v OUTPUT_FILES/DATABASES_MPI/*vs.bin  models/target_model/
+
 ########################### syn ########################################
+echo
+echo "setting up perturbed model..."
+echo "> ./bin/xrandom_model $percent $NPROC "
+echo
+./bin/xrandom_model $percent $NPROC
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
 
-$MPIRUN ./xrandom_model $percent
+sed -i "s:^SIMULATION_TYPE .*:SIMULATION_TYPE = 1:" ./DATA/Par_file
+sed -i "s:^SAVE_FORWARD .*:SAVE_FORWARD = .true.:" ./DATA/Par_file
 
-echo "syn simulation: $MPIRUN ./xgenerate_databases ..."
-$MPIRUN ./xgenerate_databases_external
-echo "syn simulation: $MPIRUN ./xspecfem3D ..."
-$MPIRUN ./xspecfem3D
+sed -i "s:^MODEL .*=.*:MODEL = gll:" ./DATA/Par_file
+
+echo "syn simulation: xgenerate_databases ..."
+$MPIRUN ./bin/xgenerate_databases
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
+
+echo "syn simulation: xspecfem3D ..."
+$MPIRUN ./bin/xspecfem3D
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
 
 #daniel
-cp -rp $OUTPUT_FILES $OUTPUT_FILES.syn.forward
+rm -rf OUTPUT_FILES.syn.forward
+cp -rp OUTPUT_FILES OUTPUT_FILES.syn.forward
 
-mv $OUTPUT_FILES/*SU $OUTPUT_FILES/SEM/syn/
-cp $OUTPUT_FILES/DATABASES_MPI/*rho.bin $models/initial_model/
-cp $OUTPUT_FILES/DATABASES_MPI/*vp.bin  $models/initial_model/
-cp $OUTPUT_FILES/DATABASES_MPI/*vs.bin  $models/initial_model/
+mv -v OUTPUT_FILES/*SU SEM/syn/
+cp -v OUTPUT_FILES/DATABASES_MPI/*rho.bin models/initial_model/
+cp -v OUTPUT_FILES/DATABASES_MPI/*vp.bin  models/initial_model/
+cp -v OUTPUT_FILES/DATABASES_MPI/*vs.bin  models/initial_model/
+
 ########################### adj sources ################################
-
-$MPIRUN ./xadj $NSTEP $DT
+echo
+echo "creating adjoint sources..."
+echo "> ./bin/xadj  $NSTEP $DT $NPROC acoustic"
+echo
+./bin/xadj $NSTEP $DT $NPROC acoustic
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
 
 ########################### adj ########################################
-FILE="$DATA/Par_file"
-sed -e "s#^SIMULATION_TYPE.*#SIMULATION_TYPE = 3 #g"  < $FILE > ./tmp; mv ./tmp $FILE
-sed -e "s#^SAVE_FORWARD.*#SAVE_FORWARD = .false. #g"  < $FILE > ./tmp; mv ./tmp $FILE
 
-echo "adj simulation: $MPIRUN ./xspecfem3D ..."
-$MPIRUN ./xspecfem3D
+sed -i "s:^SIMULATION_TYPE .*:SIMULATION_TYPE = 3:" ./DATA/Par_file
+sed -i "s:^SAVE_FORWARD .*:SAVE_FORWARD = .false.:" ./DATA/Par_file
 
-#daniel
-cp -rp $OUTPUT_FILES $OUTPUT_FILES.syn.adjoint
+echo "adj simulation: xspecfem3D ..."
+$MPIRUN ./bin/xspecfem3D
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
 
-./xpostprocessing $NSTEP $DT $NPROC
+# backup
+rm -rf OUTPUT_FILES.syn.adjoint
+cp -rp OUTPUT_FILES OUTPUT_FILES.syn.adjoint
 
-if [ "$do_setup" == "" ]; then
+echo
+echo "postprocessing..."
+echo "> ./bin/xpostprocessing $NSTEP $DT $NPROC acoustic"
+echo
+./bin/xpostprocessing $NSTEP $DT $NPROC acoustic
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
 
-cd $SPECFEM3D
-mv ./src/generate_databases/get_model.f90_backup ./src/generate_databases/get_model.f90
-mv ./src/specfem3D/save_adjoint_kernels.f90_backup ./src/specfem3D/save_adjoint_kernels.f90
-mv ./src/shared/constants.h_backup ./src/shared/constants.h
-mv ./src/specfem3D/write_seismograms.f90_backup ./src/specfem3D/write_seismograms.f90
-
-#cd $bin/../
-#rm -f compile.log make.log
-#rm -rf $OUTPUT_FILES $models $bin
-
+if [ "$do_setup" == "1" ]; then
+# restore original files
+cd $ROOT
+mv -v ./setup/constants.h_backup ./setup/constants.h
 fi
 
 echo
