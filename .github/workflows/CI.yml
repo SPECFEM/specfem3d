@@ -1,3 +1,6 @@
+# Github Actions workflow
+#
+# runs compilation tests on Linux Ubuntu and Mac platforms
 name: CI
 
 on: [push]

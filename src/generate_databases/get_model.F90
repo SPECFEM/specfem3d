@@ -702,7 +702,7 @@
   case (IMODEL_GLL)
     ! note:
     ! import the model from files in SPECFEM format
-    ! note that those those files should be saved in LOCAL_PATH
+    ! note that those files should be saved in LOCAL_PATH
     if (ADIOS_FOR_MESH) then
       call model_gll_adios(myrank,nspec,LOCAL_PATH)
     else

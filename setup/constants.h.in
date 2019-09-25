@@ -154,6 +154,10 @@
 ! see https://github.com/geodynamics/specfem3d/issues/621
   logical, parameter :: USE_QUADRATURE_RULE_FOR_SMOOTHING = .true.
 
+! kernel debugging
+! flag to save GLL weights for kernel benchmark examples
+  logical,parameter :: SAVE_WEIGHTS = .false.
+
 !!-----------------------------------------------------------
 !!
 !! gravity integral calculations

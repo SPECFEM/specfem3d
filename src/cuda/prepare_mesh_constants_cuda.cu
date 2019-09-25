@@ -119,7 +119,12 @@ void FC_FUNC_(prepare_constants_device,
   mp->save_forward = *SAVE_FORWARD;
 
 // DK DK August 2018: adding this test, following a suggestion by Etienne Bachmann
-  if (*h_NGLLX != NGLLX) exit_on_error("make sure that the NGLL constants are equal in the two files setup/constants.h and src/cuda/mesh_constants_cuda.h and then please re-compile; also make sure that the value of NGLL3_PADDED is consistent with the value of NGLL\n");
+  if (*h_NGLLX != NGLLX) {
+    exit_on_error("make sure that the NGLL constants are equal in the two files:\n" \
+                  "  setup/constants.h and src/cuda/mesh_constants_cuda.h\n" \
+                  "and then please re-compile; also make sure that the value of NGLL3_PADDED " \
+                  "is consistent with the value of NGLL\n");
+  }
 
   // sets constant arrays
   setConst_hprime_xx(h_hprime_xx,mp);

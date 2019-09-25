@@ -328,14 +328,14 @@
     if (ier /= 0) call exit_MPI(myrank,'file '//trim(filename)//' does not exist')
 
     do irec_local = 1,nrec_local
-
        read(IIN_SU1,pos=4*((irec_local-1)*(60+NSTEP) + 60 + it_start)+1 ) adj_temp
        source_adjoint(1,irec_local,:) = adj_temp(:)
+
        read(IIN_SU2,pos=4*((irec_local-1)*(60+NSTEP) + 60 + it_start)+1 ) adj_temp
        source_adjoint(2,irec_local,:) = adj_temp(:)
+
        read(IIN_SU3,pos=4*((irec_local-1)*(60+NSTEP) + 60 + it_start)+1 ) adj_temp
        source_adjoint(3,irec_local,:) = adj_temp(:)
-
     enddo
 
     close(IIN_SU1)
