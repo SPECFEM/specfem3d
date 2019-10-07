@@ -275,7 +275,11 @@
     endif
 
     ! outputs movie files
-    call write_movie_output()
+    if (HDF5_ENABLED) then
+      call write_movie_output_h5()
+    else
+      call write_movie_output()
+    endif
 
     ! first step of noise tomography, i.e., save a surface movie at every time step
     ! modified from the subroutine 'write_movie_surface'

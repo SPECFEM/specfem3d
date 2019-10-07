@@ -617,7 +617,9 @@ contains
   !integer, dimension(NGNOD, nspec_local) :: elm_conn
   integer, dimension(:, :), allocatable :: elm_conn
   character(len=40)              :: dsetname = "elm_conn"
-
+  ! for elem_conn_xdmf (mesh visualization)
+  integer, dimension(:, :), allocatable :: elm_conn_xdmf
+  character(len=40)              :: dxsetname = "elm_conn_xdmf"
   ! for mat_mesh
   integer, dimension(:,:), allocatable :: mat_mesh
   character(len=40)              :: mdsetname = "mat_mesh"
@@ -636,6 +638,7 @@ contains
 
   else
     allocate(elm_conn(NGNOD, nspec_local))
+    allocate(elm_conn_xdmf(1+NGNOD, nspec_local)) ! 1 additional col for cell type id
     allocate(mat_mesh(2, nspec_local))
     allocate(ispec_local(nspec_local))
   
@@ -654,18 +657,54 @@ contains
           enddo
         enddo
 
-         ! store all data to the temporal array
-         ! format:
-         ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id8
-         ! or
-         ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id27
-         !write(IIN_database) glob2loc_elmnts(i)+1,num_modele(1,i+1),num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
          ispec_local(count) = glob2loc_elmnts(i)+1
          mat_mesh(1,count) = num_modele(1,i+1)
          mat_mesh(2,count) = num_modele(2,i+1)
          do k = 0, NGNOD-1
            elm_conn(k+1,count) = loc_nodes(k)+1
          enddo
+         ! elm_conn_xdmf
+         if (NGNOD == 8) then
+            elm_conn_xdmf(1,count) = 9 ! cell type id xdmf
+            elm_conn_xdmf(2,count) = loc_nodes(0)!+1 elm id starts 0
+            elm_conn_xdmf(3,count) = loc_nodes(1)
+            elm_conn_xdmf(4,count) = loc_nodes(2)
+            elm_conn_xdmf(5,count) = loc_nodes(3)
+            elm_conn_xdmf(6,count) = loc_nodes(4)
+            elm_conn_xdmf(7,count) = loc_nodes(5)
+            elm_conn_xdmf(8,count) = loc_nodes(6)
+            elm_conn_xdmf(9,count) = loc_nodes(7)
+         else ! NGNOD = 27
+            elm_conn_xdmf(1,count)  = 50 ! cell type id xdmf
+            elm_conn_xdmf(2,count)  = loc_nodes(0)
+            elm_conn_xdmf(3,count)  = loc_nodes(1)
+            elm_conn_xdmf(4,count)  = loc_nodes(2)
+            elm_conn_xdmf(5,count)  = loc_nodes(3)
+            elm_conn_xdmf(6,count)  = loc_nodes(4)
+            elm_conn_xdmf(7,count)  = loc_nodes(5)
+            elm_conn_xdmf(8,count)  = loc_nodes(6)
+            elm_conn_xdmf(9,count)  = loc_nodes(7)
+            elm_conn_xdmf(10,count) = loc_nodes(8)
+            elm_conn_xdmf(11,count) = loc_nodes(9)
+            elm_conn_xdmf(12,count) = loc_nodes(10)
+            elm_conn_xdmf(13,count) = loc_nodes(11)
+            elm_conn_xdmf(14,count) = loc_nodes(12)
+            elm_conn_xdmf(15,count) = loc_nodes(13)
+            elm_conn_xdmf(16,count) = loc_nodes(14)
+            elm_conn_xdmf(17,count) = loc_nodes(15)
+            elm_conn_xdmf(18,count) = loc_nodes(16)
+            elm_conn_xdmf(19,count) = loc_nodes(17)
+            elm_conn_xdmf(20,count) = loc_nodes(18)
+            elm_conn_xdmf(21,count) = loc_nodes(19)
+            elm_conn_xdmf(22,count) = loc_nodes(26)
+            elm_conn_xdmf(23,count) = loc_nodes(20)
+            elm_conn_xdmf(24,count) = loc_nodes(25)
+            elm_conn_xdmf(25,count) = loc_nodes(24)
+            elm_conn_xdmf(26,count) = loc_nodes(22)
+            elm_conn_xdmf(27,count) = loc_nodes(21)
+            elm_conn_xdmf(28,count) = loc_nodes(23)
+         endif
+
          count = count + 1
          ! writes out to file Numglob2loc_elmn.txt
          if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) write(124,*) i+1,glob2loc_elmnts(i)+1,iproc
@@ -677,8 +716,13 @@ contains
  
     ! create a dataset for elm_conn
     call h5_write_dataset_2d_i(h5, dsetname, elm_conn)
+ 
     ! create an attribute for npgeo
     call h5_add_attribute_i(h5, aname, (/nspec_local/))
+    call h5_close_dataset(h5)
+
+    ! create a dataset for elm_conn_xdmf
+    call h5_write_dataset_2d_i(h5, dxsetname, elm_conn_xdmf)
     call h5_close_dataset(h5)
 
     ! write mat_mesh
@@ -692,7 +736,7 @@ contains
     ! close group
     call h5_close_group(h5)
 
-    deallocate(elm_conn,mat_mesh,ispec_local)
+    deallocate(elm_conn,elm_conn_xdmf,mat_mesh,ispec_local)
 
   endif
 

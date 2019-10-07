@@ -311,6 +311,7 @@ ifeq ($(HDF5),yes)
 hdf5_specfem3D_OBJECTS = \
 	$O/read_mesh_databases_hdf5.spec_hdf5.o \
 	$O/write_seismograms_hdf5.spec_hdf5.o \
+	$O/write_movie_output_hdf5.spec_hdf5.o \
 	$(EMPTY_MACRO)
 hdf5_specfem3D_SHARED_OBJECTS =	\
 	$O/phdf5_utils.shared_hdf5.o \
@@ -321,6 +322,7 @@ else
 hdf5_specfem3D_OBJECTS= \
 	$O/read_mesh_databases_hdf5_stub.spec_hdf5.o \
 	$O/write_seismograms_hdf5_stub.spec_hdf5.o \
+	$O/write_movie_output_hdf5_stub.spec_hdf5.o \
 	$(EMPTY_MACRO)
 hdf5_specfem3D_SHARED_OBJECTS =	\
 	$O/phdf5_utils_stub.shared_nohdf5.o \
