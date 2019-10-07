@@ -7,7 +7,7 @@ module phdf5_utils
          h5_create_file, h5_open_file, h5_close_file, &
          h5_create_group, h5_open_group, h5_close_group, &
          h5_open_dataset, h5_close_dataset, &
-         h5_write_dataset_1d_i, &
+         h5_write_dataset_1d_i, h5_write_dataset_1d_d, &
          h5_write_dataset_2d_d, h5_write_dataset_2d_i, h5_write_dataset_2d_c, &
          h5_add_attribute_i, &
          h5_set_mpi_info, h5_create_file_p, h5_open_file_p,  &
@@ -105,6 +105,17 @@ contains
         character(len=*), intent(in)      :: dataset_name
         integer, dimension(:), intent(in) :: data
     end subroutine h5_write_dataset_1d_i
+
+
+    ! dataset writer for 1d custom real array
+    subroutine h5_write_dataset_1d_d(this, dataset_name, data)
+        type(h5io), intent(in) :: this
+        character(len=*), intent(in)      :: dataset_name
+        real(kind=CUSTOM_REAL), dimension(:), intent(in) :: data
+        integer(HID_T)                    :: dspace_id ! dataspace id is local.
+        integer                           :: rank = 1
+        integer(HSIZE_T), dimension(1)    :: dim
+    end subroutine h5_write_dataset_1d_d
 
 
     ! dataset writer for 2d integer array

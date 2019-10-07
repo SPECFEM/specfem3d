@@ -13,7 +13,7 @@ module phdf5_utils ! class-like module
          h5_create_file, h5_open_file, h5_close_file, &
          h5_create_group, h5_open_group, h5_close_group, &
          h5_open_dataset, h5_open_dataset2, h5_close_dataset, &
-         h5_write_dataset_1d_i, &
+         h5_write_dataset_1d_i, h5_write_dataset_1d_d, &
          h5_write_dataset_2d_d, h5_write_dataset_2d_i, h5_write_dataset_2d_c, &
          h5_add_attribute_i, &
          h5_set_mpi_info, h5_create_file_p, h5_create_file_p_collect, h5_open_file_p, h5_open_file_p_collect, &
@@ -207,6 +207,34 @@ contains
         call h5sclose_f(dspace_id, error)
         if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
     end subroutine h5_write_dataset_1d_i
+
+
+    ! dataset writer for 1d custom real array
+    subroutine h5_write_dataset_1d_d(this, dataset_name, data)
+        type(h5io), intent(in) :: this
+        character(len=*), intent(in)      :: dataset_name
+        real(kind=CUSTOM_REAL), dimension(:), intent(in) :: data
+        integer(HID_T)                    :: dspace_id ! dataspace id is local.
+        integer                           :: rank = 1
+        integer(HSIZE_T), dimension(1)    :: dim
+        dim = size(data)
+
+        call h5screate_simple_f(rank, dim, dspace_id, error)
+        if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ,', dataset_name
+        if (CUSTOM_REAL == 4) then
+            call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_REAL, dspace_id, dataset_id, error)
+            if (error /= 0) write(*,*) 'hdf5 dataset create failed for ,', dataset_name
+            call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, data, dim, error)
+            if (error /= 0) write(*,*) 'hdf5 dataset write failed for ,', dataset_name
+        else
+            call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_DOUBLE, dspace_id, dataset_id, error)
+            if (error /= 0) write(*,*) 'hdf5 dataset create failed for ,', dataset_name
+            call h5dwrite_f(dataset_id, H5T_NATIVE_DOUBLE, data, dim, error)
+            if (error /= 0) write(*,*) 'hdf5 dataset write failed for ,', dataset_name
+        endif
+        call h5sclose_f(dspace_id, error)
+        if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
+    end subroutine h5_write_dataset_1d_d
 
 
     ! dataset writer for 2d integer array

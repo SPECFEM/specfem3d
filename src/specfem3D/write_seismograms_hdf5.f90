@@ -47,7 +47,8 @@
   logical :: do_save_seismograms
 
   ! hdf5 varianles
-  character(len=64) :: fname_h5 = "seismograms.h5"
+  character(len=64) :: fname_h5_base = "seismograms.h5"
+  character(len=64) :: fname_h5 = ""
   type(h5io) :: h5
 
   ! mpi variables
@@ -65,15 +66,16 @@
 
   ! hdf5 utility
   h5 = h5io()
-  fname_h5 = trim(OUTPUT_FILES)//fname_h5
+  fname_h5 = trim(OUTPUT_FILES)//fname_h5_base
+
+  ! initialze hdf5
+  call world_get_comm(comm)
+  call get_info_null(info)
+  call h5_init(h5, fname_h5)
+  call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
 
   ! initialize hdf5 at the initial time iteration
   if (it == 1) then
-    ! initialze hdf5
-    call world_get_comm(comm)
-    call get_info_null(info)
-    call h5_init(h5, fname_h5)
-    call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
 
     ! create file
     call h5_create_file_p_collect(h5)
@@ -92,7 +94,7 @@
 
     ! time array
     ! create dataset
-    call h5_create_dataset_collect(h5, "time"  , shape(time_array), 1, CUSTOM_REAL)
+    call h5_create_dataset_collect(h5, "time" , shape(time_array), 1, CUSTOM_REAL)
     ! write dataset
     call h5_write_dataset_1d_r_collect(h5, "time", time_array)
  
