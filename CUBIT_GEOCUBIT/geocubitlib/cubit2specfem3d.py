@@ -918,7 +918,6 @@ class mesh(object, mesh_tools):
                             txt = self.create_facenode_string(
                                 h, f, normal, cknormal=True)
                             freehex.write(txt)
-                freehex.close()
             elif block == self.free:
                 name = cubit.get_exodus_entity_name('block', block)
                 print 'free surface block name:', name, 'id:', block
@@ -934,7 +933,7 @@ class mesh(object, mesh_tools):
                             txt = self.create_facenode_string(
                                 h, f, normal, cknormal=False)
                             freehex.write(txt)
-                freehex.close()
+        freehex.close()
         print 'Ok'
         cubit.cmd('set info on')
         cubit.cmd('set echo on')
