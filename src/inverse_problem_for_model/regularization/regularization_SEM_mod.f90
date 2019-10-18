@@ -4741,7 +4741,7 @@ contains
   end subroutine compute_2nd_derivative_with_lagrange_polynomials
 
 !!
-!! variable damping regularisation for trying to kill suprious variations close to the point sources
+!! variable damping regularization for trying to kill suprious variations close to the point sources
 
   subroutine compute_spatial_damping_for_source_singularities(acqui_simu, inversion_param, spatial_damping)
 

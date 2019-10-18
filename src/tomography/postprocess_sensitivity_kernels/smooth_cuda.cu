@@ -34,20 +34,31 @@
 
 // copies integer array from CPU host to GPU device
 void copy_todevice_int(void** d_array_addr_ptr,int* h_array,int size){
-   cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int));
-   cudaMemcpy((int*) *d_array_addr_ptr,h_array,size*sizeof(int),cudaMemcpyHostToDevice);
+  cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int));
+  cudaMemcpy((int*) *d_array_addr_ptr,h_array,size*sizeof(int),cudaMemcpyHostToDevice);
 }
 
 void copy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size){
-   cudaMalloc((void**)d_array_addr_ptr,size*sizeof(realw));
-   cudaMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(realw),cudaMemcpyHostToDevice);
+  cudaMalloc((void**)d_array_addr_ptr,size*sizeof(realw));
+  cudaMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(realw),cudaMemcpyHostToDevice);
 }
 
-__global__ void process_smooth(realw_const_p xstore_me,realw_const_p ystore_me,realw_const_p zstore_me,realw_const_p xstore_other,realw_const_p ystore_other,realw_const_p zstore_other, realw_const_p data_other, const realw sigma_h2_inv, const realw sigma_v2_inv, const int iker, const int nspec_me, const int nspec_other, const realw v_criterion, const realw h_criterion, realw_const_p jacobian, const int * irregular_element_number,realw jacobian_regular,realw_p sum_data_smooth, realw_p normalisation,realw_const_p wgll_cube){
+__global__ void process_smooth(realw_const_p xstore_me,realw_const_p ystore_me,realw_const_p zstore_me,
+                               realw_const_p xstore_other,realw_const_p ystore_other,realw_const_p zstore_other,
+                               realw_const_p data_other,
+                               const realw sigma_h2_inv, const realw sigma_v2_inv,
+                               const int iker, const int nspec_me, const int nspec_other,
+                               const realw v_criterion, const realw h_criterion,
+                               realw_const_p jacobian,
+                               const int * irregular_element_number,realw jacobian_regular,
+                               realw_p sum_data_smooth,
+                               realw_p normalisation,
+                               realw_const_p wgll_cube){
 
   int ispec = blockIdx.x + gridDim.x*blockIdx.y;
-  int ispec_irreg;
   int igll = threadIdx.x;
+
+  int ispec_irreg;
   int gll_other;
   realw x_me,y_me, z_me, x_other,y_other, z_other, coef, normalisation_slice;
   realw dat;
@@ -60,40 +71,52 @@ __global__ void process_smooth(realw_const_p xstore_me,realw_const_p ystore_me,r
   __shared__ realw sh_data[NGLL3];
 
   int n_loop = nspec_other/NGLL3 + 1;
+
   x_me = xstore_me[NGLL3*ispec + igll ];
   y_me = ystore_me[NGLL3*ispec + igll ];
   z_me = zstore_me[NGLL3*ispec + igll ];
-  sh_wgll_cube[igll]=wgll_cube[igll];
+
+  sh_wgll_cube[igll] = wgll_cube[igll];
 
   __syncthreads();
 
-  dat=0.f;
-  normalisation_slice=0.f;
+  dat = 0.f;
+  normalisation_slice = 0.f;
+
   //We test 125 spectral elements at a time
   for (int i=0;i<n_loop;i++){
     __syncthreads();
+
     if (NGLL3*i + threadIdx.x < nspec_other){
       x_other = (xstore_other[i*NGLL3*NGLL3 + threadIdx.x*NGLL3 ] + xstore_other[i*NGLL3*NGLL3 + threadIdx.x*NGLL3 + NGLL3 - 1 ])/2;
       y_other = (ystore_other[i*NGLL3*NGLL3 + threadIdx.x*NGLL3 ] + ystore_other[i*NGLL3*NGLL3 + threadIdx.x*NGLL3 + NGLL3 - 1 ])/2;
       z_other = (zstore_other[i*NGLL3*NGLL3 + threadIdx.x*NGLL3 ] + zstore_other[i*NGLL3*NGLL3 + threadIdx.x*NGLL3 + NGLL3 - 1 ])/2;
     }
 
-    sh_test[threadIdx.x] = ( NGLL3*i + threadIdx.x >= nspec_other || ((x_me-x_other)*(x_me-x_other)+ (y_me-y_other)*(y_me-y_other)) > h_criterion || (z_me-z_other)*(z_me-z_other) > v_criterion ) ? 1 : 0 ;
+    sh_test[threadIdx.x] = ( NGLL3*i + threadIdx.x >= nspec_other
+                            || ((x_me-x_other)*(x_me-x_other) + (y_me-y_other)*(y_me-y_other)) > h_criterion
+                            || (z_me-z_other)*(z_me-z_other) > v_criterion ) ? 1 : 0 ;
     __syncthreads();
 
     //loop over each spectral element tested
     for (int k=0;k<NGLL3;k++){
       __syncthreads();
       if (sh_test[k]) continue ;
+
       //Load data from other slice to shared memory
       sh_x_other[igll] = xstore_other[i*NGLL3*NGLL3 + k*NGLL3 + igll ];
       sh_y_other[igll] = ystore_other[i*NGLL3*NGLL3 + k*NGLL3 + igll ];
       sh_z_other[igll] = zstore_other[i*NGLL3*NGLL3 + k*NGLL3 + igll ];
 
       sh_data[igll] = data_other[i*NGLL3*NGLL3 + k*NGLL3 + igll ];
+
       ispec_irreg = irregular_element_number[i*NGLL3 + k]-1;
-      if (ispec_irreg >= 0){sh_jacobian[igll] = jacobian[ispec_irreg*NGLL3 + igll ];}
-      else{sh_jacobian[igll] = jacobian_regular;}
+      if (ispec_irreg >= 0){
+        sh_jacobian[igll] = jacobian[ispec_irreg*NGLL3 + igll ];
+      }else{
+        sh_jacobian[igll] = jacobian_regular;
+      }
+
       __syncthreads();
 
       for (int j=0;j<NGLL3;j++){
@@ -102,7 +125,11 @@ __global__ void process_smooth(realw_const_p xstore_me,realw_const_p ystore_me,r
         x_other = sh_x_other[gll_other];
         y_other = sh_y_other[gll_other];
         z_other = sh_z_other[gll_other];
-        coef = expf(- sigma_h2_inv*((x_me-x_other)*(x_me-x_other) + (y_me-y_other)*(y_me-y_other))- sigma_v2_inv*(z_me-z_other)*(z_me-z_other))*sh_jacobian[gll_other]*sh_wgll_cube[gll_other];
+
+        coef = expf(- sigma_h2_inv*((x_me-x_other)*(x_me-x_other) + (y_me-y_other)*(y_me-y_other))
+                    - sigma_v2_inv*(z_me-z_other)*(z_me-z_other))
+               * sh_jacobian[gll_other] * sh_wgll_cube[gll_other];
+
         normalisation_slice = normalisation_slice + coef;
         dat += sh_data[gll_other]*coef;
       } //loop on each gll_other
@@ -115,6 +142,7 @@ __global__ void process_smooth(realw_const_p xstore_me,realw_const_p ystore_me,r
 
 __global__ void normalize_data(realw_p data_smooth, realw_const_p normalisation,int nker, int nspec_me){
   int ispec = blockIdx.x + gridDim.x*blockIdx.y;
+
   realw norm = normalisation[NGLL3*ispec + threadIdx.x];
   for (int j=0;j<nker;j++) data_smooth[NGLL3*nspec_me*j + NGLL3*ispec + threadIdx.x] /= norm/nker;
 }
@@ -179,8 +207,12 @@ void FC_FUNC_(compute_smooth,
   copy_todevice_realw((void**)&x_other,xstore_other,NGLL3*(*nspec_other));
   copy_todevice_realw((void**)&y_other,ystore_other,NGLL3*(*nspec_other));
   copy_todevice_realw((void**)&z_other,zstore_other,NGLL3*(*nspec_other));
-  if (*nspec_irregular_other > 0){copy_todevice_realw((void**)&d_jacobian,jacobian,NGLL3*(*nspec_irregular_other));}
-  else {copy_todevice_realw((void**)&d_jacobian,jacobian,1);}
+
+  if (*nspec_irregular_other > 0){
+    copy_todevice_realw((void**)&d_jacobian,jacobian,NGLL3*(*nspec_irregular_other));
+  } else {
+    copy_todevice_realw((void**)&d_jacobian,jacobian,1);
+  }
   copy_todevice_int((void**)&d_irregular_element_number,irregular_element_number,(*nspec_other));
 
   dim3 grid(sp->nspec_me,1);
@@ -224,6 +256,7 @@ void FC_FUNC_(get_smooth,
               GET_SMOOTH)(long * smooth_pointer,realw * data_smooth){
 
   Smooth_data * sp = (Smooth_data*)*smooth_pointer;
+
   dim3 grid(sp->nspec_me,1);
   dim3 threads(NGLL3,1,1);
 

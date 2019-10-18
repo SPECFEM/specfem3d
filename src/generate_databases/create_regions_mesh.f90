@@ -405,17 +405,17 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
-                        nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-                        nspec2D_bottom,nspec2D_top,ANISOTROPY, &
-                        nodes_coords_ext_mesh,nnodes_ext_mesh, &
-                        elmnts_ext_mesh,nelmnts_ext_mesh,ANY_FAULT_IN_THIS_PROC)
+  subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
+                                     nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                                     nspec2D_bottom,nspec2D_top,ANISOTROPY, &
+                                     nodes_coords_ext_mesh,nnodes_ext_mesh, &
+                                     elmnts_ext_mesh,nelmnts_ext_mesh,ANY_FAULT_IN_THIS_PROC)
 
   use constants, only: NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN, &
     DO_IRREGULAR_ELEMENT_SEPARATION
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,PML_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
-    NGNOD,NGNOD2D,nspec_irregular
+    NGNOD,NGNOD2D,NSPEC_IRREGULAR
 
   use create_regions_mesh_ext_par
 
@@ -577,7 +577,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
 
     ! checks each element shape
     irregular_element_number(:) = 0
-    nspec_irregular = nspec
+    NSPEC_IRREGULAR = nspec
     cube_edge_size_squared = 1.e9
 
     do ispec = 1, nspec
@@ -589,7 +589,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
       enddo
       ! checks if element is regular (is a cube)
       call check_element_regularity(xelm_real,yelm_real,zelm_real,any_regular_elem,cube_edge_size_squared, &
-                                    nspec_irregular,ispec,nspec,irregular_element_number,ANY_FAULT_IN_THIS_PROC)
+                                    NSPEC_IRREGULAR,ispec,nspec,irregular_element_number,ANY_FAULT_IN_THIS_PROC)
     enddo
   else
     ! default case of previous versions: don't separate and assume each element to be irregular in shape
@@ -599,20 +599,43 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
       call flush_IMAIN()
     endif
     ! assigns each element as being irregular (value /= 0)
-    nspec_irregular = nspec
+    NSPEC_IRREGULAR = nspec
     do ispec = 1,nspec
       irregular_element_number(ispec) = ispec
     enddo
   endif
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '    nspec regular   = ',nspec-nspec_irregular
-    write(IMAIN,*) '    nspec irregular = ',nspec_irregular
+    write(IMAIN,*) '    nspec regular   = ',nspec-NSPEC_IRREGULAR
+    write(IMAIN,*) '    nspec irregular = ',NSPEC_IRREGULAR
     write(IMAIN,*)
     call flush_IMAIN()
   endif
 
-  if (nspec_irregular == 0) then
+  if (NSPEC_IRREGULAR > 0) then
+    allocate(xixstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 766')
+    allocate(xiystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 767')
+    allocate(xizstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 768')
+    allocate(etaxstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 769')
+    allocate(etaystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 770')
+    allocate(etazstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 771')
+    allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 772')
+    allocate(gammaystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 773')
+    allocate(gammazstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 774')
+    allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 775')
+    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  else
+    ! dummy arrays
     allocate(xixstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 756')
     allocate(xiystore(1,1,1,1),stat=ier)
@@ -634,28 +657,6 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
     allocate(jacobianstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 765')
     if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-  else
-    allocate(xixstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 766')
-    allocate(xiystore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 767')
-    allocate(xizstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 768')
-    allocate(etaxstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 769')
-    allocate(etaystore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 770')
-    allocate(etazstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 771')
-    allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 772')
-    allocate(gammaystore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 773')
-    allocate(gammazstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 774')
-    allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 775')
-   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
   endif
 
 ! absorbing boundary
@@ -778,17 +779,17 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   ! initializes Moho surface
   NSPEC2D_MOHO = 0
 
-end subroutine crm_ext_allocate_arrays
+  end subroutine crm_ext_allocate_arrays
 
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine crm_ext_setup_jacobian(myrank, &
-                        xstore,ystore,zstore,nspec, &
-                        nodes_coords_ext_mesh,nnodes_ext_mesh, &
-                        elmnts_ext_mesh,nelmnts_ext_mesh)
+  subroutine crm_ext_setup_jacobian(myrank, &
+                                    xstore,ystore,zstore,nspec, &
+                                    nodes_coords_ext_mesh,nnodes_ext_mesh, &
+                                    elmnts_ext_mesh,nelmnts_ext_mesh)
 
   use generate_databases_par, only: NGNOD,NGNOD2D,NDIM,NGLLX,NGLLY,NGLLZ,GAUSSALPHA,GAUSSBETA,CUSTOM_REAL
   use create_regions_mesh_ext_par
@@ -863,7 +864,7 @@ subroutine crm_ext_setup_jacobian(myrank, &
     ! (otherwise mesh would be degenerated)
     ispec_irreg = irregular_element_number(ispec)
     !irregular_element_number is 0 only if the element is regular
-    if (ispec_irreg /= 0 ) then
+    if (ispec_irreg /= 0) then
       call calc_jacobian(myrank,xixstore(:,:,:,ispec_irreg),xiystore(:,:,:,ispec_irreg),xizstore(:,:,:,ispec_irreg), &
                          etaxstore(:,:,:,ispec_irreg),etaystore(:,:,:,ispec_irreg),etazstore(:,:,:,ispec_irreg), &
                          gammaxstore(:,:,:,ispec_irreg),gammaystore(:,:,:,ispec_irreg),gammazstore(:,:,:,ispec_irreg), &
@@ -898,16 +899,16 @@ subroutine crm_ext_setup_jacobian(myrank, &
     jacobian_regular  = jacobian_reg(1,1,1)
   endif
 
-end subroutine crm_ext_setup_jacobian
+  end subroutine crm_ext_setup_jacobian
 
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine crm_ext_setup_indexing(ibool, &
-                            xstore,ystore,zstore,nspec,nglob,npointot, &
-                            nnodes_ext_mesh,nodes_coords_ext_mesh,myrank)
+  subroutine crm_ext_setup_indexing(ibool, &
+                                    xstore,ystore,zstore,nspec,nglob,npointot, &
+                                    nnodes_ext_mesh,nodes_coords_ext_mesh,myrank)
 
 ! creates global indexing array ibool
 
@@ -1365,9 +1366,9 @@ subroutine crm_ext_setup_indexing(ibool, &
 !
 
   subroutine crm_setup_inner_outer_elemnts(myrank,nspec, &
-                                  num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-                                  nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                  ibool,SAVE_MESH_FILES)
+                                           num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
+                                           nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                           ibool,SAVE_MESH_FILES)
 
 ! locates inner and outer elements
 

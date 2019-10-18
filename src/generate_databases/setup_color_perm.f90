@@ -412,7 +412,8 @@
 
   subroutine setup_permutation(myrank,nspec,nglob,ibool,ANISOTROPY,perm,SAVE_MESH_FILES)
 
-  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN,PML_CONDITIONS,is_CPML,CPML_to_spec,NSPEC_CPML,ATTENUATION
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN,NSPEC_IRREGULAR, &
+    PML_CONDITIONS,is_CPML,CPML_to_spec,NSPEC_CPML,ATTENUATION
 
   use create_regions_mesh_ext_par
 
@@ -594,21 +595,31 @@
   deallocate(temp_array_logical_1D)
 
   ! mesh arrays
+  if (NSPEC_IRREGULAR > 0) then
+    ! safety check
+    if (NSPEC_IRREGULAR /= nspec) stop 'Please check coloring with nspec_irregular /= nspec'
+
+    allocate(temp_array_real(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 644')
+    if (ier /= 0) stop 'error allocating temporary temp_array_real'
+    call permute_elements_real(xixstore,temp_array_real,perm,NSPEC_IRREGULAR)
+    call permute_elements_real(xiystore,temp_array_real,perm,NSPEC_IRREGULAR)
+    call permute_elements_real(xizstore,temp_array_real,perm,NSPEC_IRREGULAR)
+    call permute_elements_real(etaxstore,temp_array_real,perm,NSPEC_IRREGULAR)
+    call permute_elements_real(etaystore,temp_array_real,perm,NSPEC_IRREGULAR)
+    call permute_elements_real(etazstore,temp_array_real,perm,NSPEC_IRREGULAR)
+    call permute_elements_real(gammaxstore,temp_array_real,perm,NSPEC_IRREGULAR)
+    call permute_elements_real(gammaystore,temp_array_real,perm,NSPEC_IRREGULAR)
+    call permute_elements_real(gammazstore,temp_array_real,perm,NSPEC_IRREGULAR)
+    call permute_elements_real(jacobianstore,temp_array_real,perm,NSPEC_IRREGULAR)
+    deallocate(temp_array_real)
+  endif
+
+  ! material parameters
   allocate(temp_array_real(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 644')
   if (ier /= 0) stop 'error allocating temporary temp_array_real'
-  call permute_elements_real(xixstore,temp_array_real,perm,nspec)
-  call permute_elements_real(xiystore,temp_array_real,perm,nspec)
-  call permute_elements_real(xizstore,temp_array_real,perm,nspec)
-  call permute_elements_real(etaxstore,temp_array_real,perm,nspec)
-  call permute_elements_real(etaystore,temp_array_real,perm,nspec)
-  call permute_elements_real(etazstore,temp_array_real,perm,nspec)
-  call permute_elements_real(gammaxstore,temp_array_real,perm,nspec)
-  call permute_elements_real(gammaystore,temp_array_real,perm,nspec)
-  call permute_elements_real(gammazstore,temp_array_real,perm,nspec)
-  call permute_elements_real(jacobianstore,temp_array_real,perm,nspec)
 
-  ! material parameters
   call permute_elements_real(kappastore,temp_array_real,perm,nspec)
   call permute_elements_real(mustore,temp_array_real,perm,nspec)
 

@@ -211,7 +211,7 @@
       endif
     else
       ! data file
-      write(prname,'(a,i6.6,a)') trim(indir)//'proc',iproc,'_'
+      write(prname,'(a,i6.6,a)') trim(indir)// '/proc',iproc,'_'
       local_data_file = trim(prname) // trim(filename) // '.bin'
       open(unit = 28,file = trim(local_data_file),status='old', &
             action='read',form ='unformatted',iostat=ier)

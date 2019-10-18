@@ -1674,7 +1674,8 @@
 
 ! reads in the value of NSPEC_AB and NGLOB_AB
 
-  use specfem_par
+  use constants, only: MAX_STRING_LEN,myrank,I_should_read_the_database,IIN
+  use specfem_par, only: prname,NSPEC_AB,NSPEC_IRREGULAR,NGLOB_AB,LOCAL_PATH
 
   implicit none
   ! Local variables

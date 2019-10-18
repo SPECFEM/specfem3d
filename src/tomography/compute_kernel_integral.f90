@@ -145,7 +145,7 @@
 
   do ispec = 1, NSPEC
     ispec_irreg = irregular_element_number(ispec)
-    if (ispec_irreg == 0 ) jacobianl = jacobian_regular
+    if (ispec_irreg == 0) jacobianl = jacobian_regular
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX
@@ -397,7 +397,7 @@
   rms_rho = 0._CUSTOM_REAL
   do ispec = 1, NSPEC
     ispec_irreg = irregular_element_number(ispec)
-    if (ispec_irreg == 0 ) jacobianl = jacobian_regular
+    if (ispec_irreg == 0) jacobianl = jacobian_regular
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX
@@ -670,7 +670,7 @@
 
   do ispec = 1, NSPEC
     ispec_irreg = irregular_element_number(ispec)
-    if (ispec_irreg == 0 ) jacobianl = jacobian_regular
+    if (ispec_irreg == 0) jacobianl = jacobian_regular
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX

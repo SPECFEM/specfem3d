@@ -220,9 +220,9 @@
             tempz3lw = tempz3lw + displw_poroelastic(3,iglob)*hp3
           enddo
 
-          if (ispec_irreg /= 0 ) then !irregular element
-
-            ! get derivatives of ux, uy and uz with respect to x, y and z
+          ! get derivatives of ux, uy and uz with respect to x, y and z
+          if (ispec_irreg /= 0) then
+            !irregular element
             xixl = xix(i,j,k,ispec_irreg)
             xiyl = xiy(i,j,k,ispec_irreg)
             xizl = xiz(i,j,k,ispec_irreg)
@@ -259,8 +259,8 @@
             dwzdyl = xiyl*tempz1lw + etayl*tempz2lw + gammayl*tempz3lw
             dwzdzl = xizl*tempz1lw + etazl*tempz2lw + gammazl*tempz3lw
 
-          else !regular element
-
+          else
+            !regular element
             ! derivatives of displacement
             duxdxl = xix_regular*tempx1ls
             duxdyl = xix_regular*tempx2ls
@@ -285,7 +285,6 @@
             dwzdxl = xix_regular*tempz1lw
             dwzdyl = xix_regular*tempz2lw
             dwzdzl = xix_regular*tempz3lw
-
           endif
 
           ! precompute some sums to save CPU time
@@ -340,8 +339,9 @@
           sigma_zx = sigma_xz
           sigma_zy = sigma_yz
 
+          ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
           if (ispec_irreg /= 0) then
-            ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
+            ! irregular element
             tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
             tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
             tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
@@ -365,10 +365,8 @@
             tempx3p(i,j,k) = jacobianl * sigmap*gammaxl
             tempy3p(i,j,k) = jacobianl * sigmap*gammayl
             tempz3p(i,j,k) = jacobianl * sigmap*gammazl
-          else ! regular element
-
-            ! form dot product with test vector, non-symmetric form (which is
-            ! useful in the case of PML)
+          else
+            ! regular element
             tempx1(i,j,k) = jacobianl * sigma_xx * xix_regular
             tempy1(i,j,k) = jacobianl * sigma_xy * xix_regular
             tempz1(i,j,k) = jacobianl * sigma_xz * xix_regular
@@ -563,7 +561,9 @@
                        + velocw_poroelastic(2,iglob)*bl_relaxed(5) &
                        + velocw_poroelastic(3,iglob)*bl_relaxed(6)
             !     endif
+
             if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
+
             accelw_poroelastic(1,iglob) = accelw_poroelastic(1,iglob) &
                                         - wxgll(i)*wygll(j)*wzgll(k)*jacobianl*viscodampx
             accelw_poroelastic(2,iglob) = accelw_poroelastic(2,iglob) &

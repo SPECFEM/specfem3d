@@ -28,7 +28,7 @@
 ! recompute 3D jacobian at a given point for a 8-node element
 
   subroutine recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
+                                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
 
   use constants
 
@@ -357,7 +357,6 @@
   dershape3D(1,27)=l2pxi*l2eta*l2gamma
   dershape3D(2,27)=l2xi*l2peta*l2gamma
   dershape3D(3,27)=l2xi*l2eta*l2pgamma
-
 
   end subroutine recompute_jacobian_27
 

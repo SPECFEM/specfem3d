@@ -100,7 +100,6 @@ program smooth_sem
   character(len=MAX_STRING_LEN) :: kernel_names(MAX_KERNEL_NAMES)
   character(len=MAX_STRING_LEN) :: kernel_names_comma_delimited
   integer :: nker
-  real t1,t2
 
   ! smoothing parameters
   character(len=MAX_STRING_LEN*2) :: ks_file
@@ -146,13 +145,19 @@ program smooth_sem
 
   logical :: BROADCAST_AFTER_READ, USE_GPU
 
+  ! timing
+  double precision, external :: wtime
+  real :: t1,t2
+
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
 
   if (myrank == 0) print *,"Running XSMOOTH_SEM"
   call synchronize_all()
-  call cpu_time(t1)
+
+  ! timing
+  t1 = wtime()
 
   ! parse command line arguments
   if (command_argument_count() /= NARGS) then
@@ -919,13 +924,15 @@ program smooth_sem
     close(IMAIN)
   endif
 
+  ! timing
+  t2 = wtime()
 
-  call cpu_time(t2)
-
-  if (USE_GPU) then
-    print *,'Computation time with GPU:',t2-t1
-  else
-    print *,'Computation time with CPU:',t2-t1
+  if (myrank == 0) then
+    if (USE_GPU) then
+      print *,'Computation time with GPU:',t2-t1
+    else
+      print *,'Computation time with CPU:',t2-t1
+    endif
   endif
 
   ! stop all the processes and exit

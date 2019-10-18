@@ -879,6 +879,9 @@ subroutine save_new_databases()
   rho_vs_new = model_rho_new * model_vs_new
 
   ! jacobian from read_mesh_databases
+  ! safety check
+  if (NSPEC_IRREGULAR /= NSPEC_AB) stop 'Please check if model_update in save_new_databases() with NSPEC_AB /= NSPEC_IRREGULAR'
+
   allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 956')
   jacobianstore = 0._CUSTOM_REAL

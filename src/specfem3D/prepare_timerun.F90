@@ -752,7 +752,7 @@
     ! note: compilers precompute these constant factors (thus division in these statemenets are still fine)
     real(kind=CUSTOM_REAL),parameter :: ONE_OVER_8 = 0.125_CUSTOM_REAL
     real(kind=CUSTOM_REAL),parameter :: ONE_OVER_48 = 1._CUSTOM_REAL / 48._CUSTOM_REAL
-    real(kind=CUSTOM_REAL),parameter :: ONE_OVER_128 = 0.0078125_CUSTOM_REAL
+    !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_128 = 0.0078125_CUSTOM_REAL
     real(kind=CUSTOM_REAL),parameter :: ONE_OVER_384 = 1._CUSTOM_REAL / 384._CUSTOM_REAL
     real(kind=CUSTOM_REAL),parameter :: FACTOR_A = 3._CUSTOM_REAL / 8._CUSTOM_REAL
     real(kind=CUSTOM_REAL),parameter :: FACTOR_B = 7._CUSTOM_REAL / 48._CUSTOM_REAL

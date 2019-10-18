@@ -70,71 +70,70 @@
 
   ispec_irreg = irregular_element_number(ispec_selected_source)
   if (ispec_irreg == 0) xix_reg_d = dble(xix_regular)
+
   do m = 1,NGLLZ
-     do l = 1,NGLLY
-        do k = 1,NGLLX
+    do l = 1,NGLLY
+      do k = 1,NGLLX
 
-           hlagrange = hxis(k) * hetas(l) * hgammas(m)
+        hlagrange = hxis(k) * hetas(l) * hgammas(m)
 
-           if (ispec_irreg /= 0) then !irregular element
+        if (ispec_irreg /= 0) then
+          !irregular element
+          xixd    = dble(xix(k,l,m,ispec_irreg))
+          xiyd    = dble(xiy(k,l,m,ispec_irreg))
+          xizd    = dble(xiz(k,l,m,ispec_irreg))
+          etaxd   = dble(etax(k,l,m,ispec_irreg))
+          etayd   = dble(etay(k,l,m,ispec_irreg))
+          etazd   = dble(etaz(k,l,m,ispec_irreg))
+          gammaxd = dble(gammax(k,l,m,ispec_irreg))
+          gammayd = dble(gammay(k,l,m,ispec_irreg))
+          gammazd = dble(gammaz(k,l,m,ispec_irreg))
 
-             xixd    = dble(xix(k,l,m,ispec_irreg))
-             xiyd    = dble(xiy(k,l,m,ispec_irreg))
-             xizd    = dble(xiz(k,l,m,ispec_irreg))
-             etaxd   = dble(etax(k,l,m,ispec_irreg))
-             etayd   = dble(etay(k,l,m,ispec_irreg))
-             etazd   = dble(etaz(k,l,m,ispec_irreg))
-             gammaxd = dble(gammax(k,l,m,ispec_irreg))
-             gammayd = dble(gammay(k,l,m,ispec_irreg))
-             gammazd = dble(gammaz(k,l,m,ispec_irreg))
+          dxis_dx = dxis_dx + hlagrange * xixd
+          dxis_dy = dxis_dy + hlagrange * xiyd
+          dxis_dz = dxis_dz + hlagrange * xizd
 
-             dxis_dx = dxis_dx + hlagrange * xixd
-             dxis_dy = dxis_dy + hlagrange * xiyd
-             dxis_dz = dxis_dz + hlagrange * xizd
+          detas_dx = detas_dx + hlagrange * etaxd
+          detas_dy = detas_dy + hlagrange * etayd
+          detas_dz = detas_dz + hlagrange * etazd
 
-             detas_dx = detas_dx + hlagrange * etaxd
-             detas_dy = detas_dy + hlagrange * etayd
-             detas_dz = detas_dz + hlagrange * etazd
-
-             dgammas_dx = dgammas_dx + hlagrange * gammaxd
-             dgammas_dy = dgammas_dy + hlagrange * gammayd
-             dgammas_dz = dgammas_dz + hlagrange * gammazd
-
-           else !regular element
-
-             dxis_dx = dxis_dx + hlagrange * xix_reg_d
-             detas_dy = detas_dy + hlagrange * xix_reg_d
-             dgammas_dz = dgammas_dz + hlagrange * xix_reg_d
-
-           endif
-       enddo
-     enddo
+          dgammas_dx = dgammas_dx + hlagrange * gammaxd
+          dgammas_dy = dgammas_dy + hlagrange * gammayd
+          dgammas_dz = dgammas_dz + hlagrange * gammazd
+        else
+          !regular element
+          dxis_dx = dxis_dx + hlagrange * xix_reg_d
+          detas_dy = detas_dy + hlagrange * xix_reg_d
+          dgammas_dz = dgammas_dz + hlagrange * xix_reg_d
+        endif
+      enddo
+    enddo
   enddo
 
 ! calculate source array
   sourcearrayd(:,:,:,:) = ZERO
   do m = 1,NGLLZ
-     do l = 1,NGLLY
-        do k = 1,NGLLX
+    do l = 1,NGLLY
+      do k = 1,NGLLX
 
-           dsrc_dx = (hpxis(k)*dxis_dx)*hetas(l)*hgammas(m) &
-                    + hxis(k)*(hpetas(l)*detas_dx)*hgammas(m) &
-                    + hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dx)
+        dsrc_dx = (hpxis(k)*dxis_dx)*hetas(l)*hgammas(m) &
+                + hxis(k)*(hpetas(l)*detas_dx)*hgammas(m) &
+                + hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dx)
 
-           dsrc_dy = (hpxis(k)*dxis_dy)*hetas(l)*hgammas(m) &
-                    + hxis(k)*(hpetas(l)*detas_dy)*hgammas(m) &
-                    + hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dy)
+        dsrc_dy = (hpxis(k)*dxis_dy)*hetas(l)*hgammas(m) &
+                + hxis(k)*(hpetas(l)*detas_dy)*hgammas(m) &
+                + hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dy)
 
-           dsrc_dz = (hpxis(k)*dxis_dz)*hetas(l)*hgammas(m) &
-                    + hxis(k)*(hpetas(l)*detas_dz)*hgammas(m) &
-                    + hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dz)
+        dsrc_dz = (hpxis(k)*dxis_dz)*hetas(l)*hgammas(m) &
+                + hxis(k)*(hpetas(l)*detas_dz)*hgammas(m) &
+                + hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dz)
 
-           sourcearrayd(1,k,l,m) = sourcearrayd(1,k,l,m) + (Mxx*dsrc_dx + Mxy*dsrc_dy + Mxz*dsrc_dz)
-           sourcearrayd(2,k,l,m) = sourcearrayd(2,k,l,m) + (Mxy*dsrc_dx + Myy*dsrc_dy + Myz*dsrc_dz)
-           sourcearrayd(3,k,l,m) = sourcearrayd(3,k,l,m) + (Mxz*dsrc_dx + Myz*dsrc_dy + Mzz*dsrc_dz)
+        sourcearrayd(1,k,l,m) = sourcearrayd(1,k,l,m) + (Mxx*dsrc_dx + Mxy*dsrc_dy + Mxz*dsrc_dz)
+        sourcearrayd(2,k,l,m) = sourcearrayd(2,k,l,m) + (Mxy*dsrc_dx + Myy*dsrc_dy + Myz*dsrc_dz)
+        sourcearrayd(3,k,l,m) = sourcearrayd(3,k,l,m) + (Mxz*dsrc_dx + Myz*dsrc_dy + Mzz*dsrc_dz)
 
-       enddo
-     enddo
+      enddo
+    enddo
   enddo
 
   ! distinguish between single and double precision for reals
@@ -405,45 +404,44 @@
   if (ispec_irreg == 0) xixd = dble(xix_regular)
 
   do m = 1,NGLLZ
-     do l = 1,NGLLY
-        do k = 1,NGLLX
+    do l = 1,NGLLY
+      do k = 1,NGLLX
 
-           hlagrange = hxis(k) * hetas(l) * hgammas(m)
+        hlagrange = hxis(k) * hetas(l) * hgammas(m)
 
-           if (ispec_irreg /= 0) then !irregular element
+        if (ispec_irreg /= 0) then
+          !irregular element
+          xixd    = dble(xix(k,l,m,ispec_irreg))
+          xiyd    = dble(xiy(k,l,m,ispec_irreg))
+          xizd    = dble(xiz(k,l,m,ispec_irreg))
+          etaxd   = dble(etax(k,l,m,ispec_irreg))
+          etayd   = dble(etay(k,l,m,ispec_irreg))
+          etazd   = dble(etaz(k,l,m,ispec_irreg))
+          gammaxd = dble(gammax(k,l,m,ispec_irreg))
+          gammayd = dble(gammay(k,l,m,ispec_irreg))
+          gammazd = dble(gammaz(k,l,m,ispec_irreg))
 
-             xixd    = dble(xix(k,l,m,ispec_irreg))
-             xiyd    = dble(xiy(k,l,m,ispec_irreg))
-             xizd    = dble(xiz(k,l,m,ispec_irreg))
-             etaxd   = dble(etax(k,l,m,ispec_irreg))
-             etayd   = dble(etay(k,l,m,ispec_irreg))
-             etazd   = dble(etaz(k,l,m,ispec_irreg))
-             gammaxd = dble(gammax(k,l,m,ispec_irreg))
-             gammayd = dble(gammay(k,l,m,ispec_irreg))
-             gammazd = dble(gammaz(k,l,m,ispec_irreg))
+          dxis_dx = dxis_dx + hlagrange * xixd
+          dxis_dy = dxis_dy + hlagrange * xiyd
+          dxis_dz = dxis_dz + hlagrange * xizd
 
-             dxis_dx = dxis_dx + hlagrange * xixd
-             dxis_dy = dxis_dy + hlagrange * xiyd
-             dxis_dz = dxis_dz + hlagrange * xizd
+          detas_dx = detas_dx + hlagrange * etaxd
+          detas_dy = detas_dy + hlagrange * etayd
+          detas_dz = detas_dz + hlagrange * etazd
 
-             detas_dx = detas_dx + hlagrange * etaxd
-             detas_dy = detas_dy + hlagrange * etayd
-             detas_dz = detas_dz + hlagrange * etazd
+          dgammas_dx = dgammas_dx + hlagrange * gammaxd
+          dgammas_dy = dgammas_dy + hlagrange * gammayd
+          dgammas_dz = dgammas_dz + hlagrange * gammazd
 
-             dgammas_dx = dgammas_dx + hlagrange * gammaxd
-             dgammas_dy = dgammas_dy + hlagrange * gammayd
-             dgammas_dz = dgammas_dz + hlagrange * gammazd
+        else
+          ! regular_element
+          dxis_dx = dxis_dx + hlagrange * xixd
+          detas_dy = detas_dy + hlagrange * xixd
+          dgammas_dz = dgammas_dz + hlagrange * xixd
+        endif
 
-           else ! regular_element
-
-             dxis_dx = dxis_dx + hlagrange * xixd
-             detas_dy = detas_dy + hlagrange * xixd
-             dgammas_dz = dgammas_dz + hlagrange * xixd
-
-           endif
-
-       enddo
-     enddo
+      enddo
+    enddo
   enddo
 
   FX = factor_source *(nu_source(1,1)*comp_x + nu_source(1,2)*comp_y +  nu_source(1,3)*comp_z)
@@ -453,32 +451,32 @@
 ! calculate source array
   sourcearrayd(:,:,:,:) = ZERO
   do m = 1,NGLLZ
-     do l = 1,NGLLY
-        do k = 1,NGLLX
+    do l = 1,NGLLY
+      do k = 1,NGLLX
 
-           dsrc_dx = (hpxis(k)*dxis_dx)*hetas(l)*hgammas(m) + hxis(k)*(hpetas(l)*detas_dx)*hgammas(m) + &
-                                                                hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dx)
-           dsrc_dy = (hpxis(k)*dxis_dy)*hetas(l)*hgammas(m) + hxis(k)*(hpetas(l)*detas_dy)*hgammas(m) + &
-                                                                hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dy)
-           dsrc_dz = (hpxis(k)*dxis_dz)*hetas(l)*hgammas(m) + hxis(k)*(hpetas(l)*detas_dz)*hgammas(m) + &
-                                                                hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dz)
-           !! for now fixed force direction and stf is defined after
-           sourcearrayd(:,k,l,m) = sourcearrayd(:,k,l,m) + (FX*dsrc_dx + FY*dsrc_dy + FZ*dsrc_dz)
+        dsrc_dx = (hpxis(k)*dxis_dx)*hetas(l)*hgammas(m) + hxis(k)*(hpetas(l)*detas_dx)*hgammas(m) + &
+                                                            hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dx)
+        dsrc_dy = (hpxis(k)*dxis_dy)*hetas(l)*hgammas(m) + hxis(k)*(hpetas(l)*detas_dy)*hgammas(m) + &
+                                                            hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dy)
+        dsrc_dz = (hpxis(k)*dxis_dz)*hetas(l)*hgammas(m) + hxis(k)*(hpetas(l)*detas_dz)*hgammas(m) + &
+                                                            hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dz)
+        !! for now fixed force direction and stf is defined after
+        sourcearrayd(:,k,l,m) = sourcearrayd(:,k,l,m) + (FX*dsrc_dx + FY*dsrc_dy + FZ*dsrc_dz)
 
-           !! to do :
-           !!  this is for time changing force direction
-           !! sourcearrayd(1,k,l,m) = sourcearrayd(1,k,l,m) +  dsrc_dx  * (stf_comp_x(t))
-           !! sourcearrayd(2,k,l,m) = sourcearrayd(2,k,l,m) +  dsrc_dy  * (stf_comp_y(t))
-           !! sourcearrayd(3,k,l,m) = sourcearrayd(3,k,l,m) +  dsrc_dz  * (stf_comp_z(t))
-           !!
-           !! after we need to add : sum(sourcearrayd(:,k,l,m)) to acoustic potential
-           !! or sourcearrayd(1,k,l,m) * stf_comp_x(t) +
-           !!    sourcearrayd(2,k,l,m) * stf_comp_y(t) +
-           !!    sourcearrayd(3,k,l,m) * stf_comp_z(t)
-           !!
+        !! to do :
+        !!  this is for time changing force direction
+        !! sourcearrayd(1,k,l,m) = sourcearrayd(1,k,l,m) +  dsrc_dx  * (stf_comp_x(t))
+        !! sourcearrayd(2,k,l,m) = sourcearrayd(2,k,l,m) +  dsrc_dy  * (stf_comp_y(t))
+        !! sourcearrayd(3,k,l,m) = sourcearrayd(3,k,l,m) +  dsrc_dz  * (stf_comp_z(t))
+        !!
+        !! after we need to add : sum(sourcearrayd(:,k,l,m)) to acoustic potential
+        !! or sourcearrayd(1,k,l,m) * stf_comp_x(t) +
+        !!    sourcearrayd(2,k,l,m) * stf_comp_y(t) +
+        !!    sourcearrayd(3,k,l,m) * stf_comp_z(t)
+        !!
 
-       enddo
-     enddo
+      enddo
+    enddo
   enddo
 
   ! distinguish between single and double precision for reals

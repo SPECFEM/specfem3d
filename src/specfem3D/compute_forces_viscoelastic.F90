@@ -910,8 +910,7 @@
                                              epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                                              backward_simulation)
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,ONE_THIRD,FOUR_THIRDS, &
-    m1,m2
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ONE_THIRD,m1,m2
 
   use fault_solver_dynamic, only: Kelvin_Voigt_eta
 
