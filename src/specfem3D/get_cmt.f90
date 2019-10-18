@@ -466,7 +466,7 @@
   ! we follow here the USGS magnitude policy:
   ! "Another source of confusion is the form of the formula for converting from scalar moment M0 to moment magnitude, M.
   !  The preferred practice is to use M = (log Mo)/1.5-10.7, where Mo is in dyne-cm (dyne-cm=10-7 N-m),
-  !  the definition given by Hanks and Kanamori in 1979. An alternate form in Hanks and Kanamori’s paper, M=(log M0-16.1)/1.5,
+  !  the definition given by Hanks and Kanamori in 1979. An alternate form in Hanks and Kanamori's paper, M=(log M0-16.1)/1.5,
   !  is sometimes used, with resulting confusion. These formulae look as if they should yield the same result, but the latter
   !  is equivalent to M = (log Mo)/1.5-10.7333. The resulting round-off error occasionally leads to differences of 0.1
   !  in the estimates of moment magnitude released by different groups.
