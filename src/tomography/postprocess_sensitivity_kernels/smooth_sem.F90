@@ -182,8 +182,7 @@ program smooth_sem
   if (nker > 1) then
     if (myrank == 0) then
       ! The machinery for reading multiple names from the command line is in place,
-      ! but the smoothing routines themselves have not yet been modified to work
-      !  on multiple arrays.
+      ! but the smoothing routines themselves have not yet been modified to work on multiple arrays.
       if (myrank == 0) then
         print *,'Smoothing only first name in list: ',trim(kernel_name)
         print *
@@ -356,7 +355,9 @@ program smooth_sem
     print *
   endif
 
+  ! mesh resolution
   if (ELASTIC_SIMULATION) then
+    ! elastic domain
     call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
                                ibool,xstore,ystore,zstore, &
                                kappastore,mustore,rho_vp,rho_vs, &
@@ -364,6 +365,7 @@ program smooth_sem
                                LOCAL_PATH,SAVE_MESH_FILES)
 
   else if (POROELASTIC_SIMULATION) then
+    ! poroelastic domain
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1009')
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
@@ -375,7 +377,9 @@ program smooth_sem
                                     phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
                                     LOCAL_PATH,SAVE_MESH_FILES)
     deallocate(rho_vp,rho_vs)
+
   else if (ACOUSTIC_SIMULATION) then
+    ! acoustic domain
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1011')
     if (ier /= 0) stop 'Error allocating array rho_vp'
@@ -413,12 +417,10 @@ program smooth_sem
   do ispec = 1, nspec_AB
 
     DO_LOOP_IJK
-
       iglob = ibool(INDEX_IJK,ispec)
       xl(INDEX_IJK,ispec) = xstore(iglob)
       yl(INDEX_IJK,ispec) = ystore(iglob)
       zl(INDEX_IJK,ispec) = zstore(iglob)
-
     ENDDO_LOOP_IJK
 
     cx0(ispec) = (xl(1,1,1,ispec) + xl(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
@@ -678,7 +680,7 @@ program smooth_sem
     read(IIN) zstore
 
     if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
-    ! reads in jacobian
+      ! reads in jacobian
       read(IIN) irregular_element_number
       read(IIN) xix_regular
       read(IIN) jacobian_regular
@@ -790,7 +792,7 @@ program smooth_sem
             do k=1,NGLLZ
               do j=1,NGLLY
                 do i=1,NGLLX
-                  if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec)
+                  if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
                   factor(i,j,k) = jacobianl * wgll_cube(i,j,k)
                 enddo
               enddo
