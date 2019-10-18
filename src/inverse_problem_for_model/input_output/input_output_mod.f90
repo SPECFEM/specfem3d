@@ -1,3 +1,30 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                              CNRS, France
+!                       and Princeton University, USA
+!                 (there are currently many more authors!)
+!                           (c) October 2017
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 3 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 !###################################################################################################################################
 !                                                                                                                                  !
 !                                                                                                                                  !
@@ -47,7 +74,7 @@ module input_output
   implicit none
 
   PUBLIC  :: init_input_output_mod, SetUpInversion, get_mode_running, dump_adjoint_sources, write_bin_sismo_on_disk, &
-             WirteOutputs
+             WriteOutputs
 
   PRIVATE :: read_acqui_file, read_inver_file, store_default_acqui_values, is_blank_line,& !bcast_all_acqui, &
              get_stations, read_data_gather, create_name_database_inversion, read_and_distribute_events_for_simultaneous_runs
@@ -402,7 +429,7 @@ contains
 !--------------------------------------------------------------------------------------------------------------------
 !  ! write final outputs model in disk
 !--------------------------------------------------------------------------------------------------------------------
-  subroutine WirteOutputs(inversion_param)
+  subroutine WriteOutputs(inversion_param)
 
     type(inver),                                                intent(in)    :: inversion_param
 
@@ -413,7 +440,7 @@ contains
     call WriteOuptutSEMmodel(inversion_param)
 
 
-  end subroutine WirteOutputs
+  end subroutine WriteOutputs
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
 !  ! get which option we want to run FWI or just direct problem
@@ -422,7 +449,7 @@ contains
 
     use my_mpi
     use specfem_par, only: myrank
-    include "precision.h"
+    !include "precision.h"
 
     type(inver),                                    intent(inout) :: inversion_param
     character(len=MAX_LEN_STRING),                  intent(inout) :: mode_running

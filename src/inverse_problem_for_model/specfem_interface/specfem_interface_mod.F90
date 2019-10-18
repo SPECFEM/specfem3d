@@ -1,5 +1,31 @@
-module specfem_interface
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                              CNRS, France
+!                       and Princeton University, USA
+!                 (there are currently many more authors!)
+!                           (c) October 2017
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 3 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
 
+module specfem_interface
 
   !! IMPORT SPECFEM ALL VARAIBLES
   use specfem_par
@@ -16,9 +42,7 @@ module specfem_interface
   use input_output
   use signal_processing
 
-
   implicit none
-
 
   !! Arrays for saving GPU kernels because at each GPU run the kernels are set to 0 and to perform
   !! summation over events we need to use those temporarry arrays
@@ -29,10 +53,11 @@ module specfem_interface
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: cijkl_kl_GPU
 
 contains
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 !----------------------------------------------------------------------------------------------------------------------------------
 !> call specfem solver for forward problem only
 !----------------------------------------------------------------------------------------------------------------------------------
+
   subroutine ComputeSismosPerEvent(ievent, acqui_simu, iter_inverse, inversion_param, myrank)
 
     integer,                                        intent(in)    ::  ievent, iter_inverse, myrank
@@ -89,10 +114,11 @@ contains
 
   end subroutine ComputeSismosPerEvent
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 !-----------------------------------------------------------------------------------------------------------------
 !> call specfem solver for computing gradient
 !----------------------------------------------------------------------------------------------------------------
+
   subroutine ComputeGradientPerEvent(ievent, iter_inverse, acqui_simu,  inversion_param)
 
     integer,                                        intent(in)    ::  ievent, iter_inverse
@@ -167,10 +193,10 @@ contains
   end subroutine ComputeGradientPerEvent
 
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------------------------------------------------------------------------
 !> initialize specfem before each call for the event ievent
 !----------------------------------------------------------------------------------------------------------------------------------
+
   subroutine InitSpecfemForOneRun(acqui_simu, ievent, inversion_param, iter_inverse)
 
     integer,                                        intent(in)    ::  ievent, iter_inverse
@@ -748,10 +774,11 @@ contains
     if (SIMULATION_TYPE == 1) then
        if (ELASTIC_SIMULATION) then
           call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
-               ibool,xstore,ystore,zstore, &
-               kappastore,mustore,rho_vp,rho_vs, &
-               DT_dble,model_speed_max,min_resolved_period, &
-               LOCAL_PATH,SAVE_MESH_FILES)
+                                     ibool,xstore,ystore,zstore, &
+                                     kappastore,mustore,rho_vp,rho_vs, &
+                                     DT_dble,model_speed_max,min_resolved_period, &
+                                     LOCAL_PATH,SAVE_MESH_FILES)
+
        else if (ACOUSTIC_SIMULATION) then
           allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
           if (ier /= 0) call exit_MPI_without_rank('error allocating array 525')
@@ -762,20 +789,21 @@ contains
           rho_vp = sqrt( kappastore / rhostore ) * rhostore
           rho_vs = 0.0_CUSTOM_REAL
           call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
-               ibool,xstore,ystore,zstore, &
-               kappastore,mustore,rho_vp,rho_vs, &
-               DT_dble,model_speed_max,min_resolved_period, &
-               LOCAL_PATH,SAVE_MESH_FILES)
+                                     ibool,xstore,ystore,zstore, &
+                                     kappastore,mustore,rho_vp,rho_vs, &
+                                     DT_dble,model_speed_max,min_resolved_period, &
+                                     LOCAL_PATH,SAVE_MESH_FILES)
           deallocate(rho_vp,rho_vs)
        endif
     endif
 
   end subroutine InitSpecfemForOneRun
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 !-----------------------------------------------------------------------------------------------------------------------------------
 !> finalize, specfem after running each event
 !-----------------------------------------------------------------------------------------------------------------------------------
+
   subroutine  FinalizeSpecfemForOneRun(acqui_simu, ievent)
 
     integer,                                        intent(in)    :: ievent
@@ -797,7 +825,6 @@ contains
        stop
 
     end select
-
 
     !! finalize specfem run --------------------------------------------------------------------------
     if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
@@ -885,12 +912,13 @@ contains
 
     endif
 
-
   end subroutine FinalizeSpecfemForOneRun
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 !-----------------------------------------------------------------------------------------------------------------------------------
 ! Initialize for one step FWI
 !-----------------------------------------------------------------------------------------------------------------------------------
+
   subroutine InitForOneStepFWI(inversion_param)
 
     type(inver),                                    intent(inout) :: inversion_param
@@ -965,10 +993,12 @@ contains
     endif
 
   end subroutine InitForOneStepFWI
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 !--------------------------------------------------------------------------------------------------------------------------
 !> General initialization for specfem in order to do FWI.  Directly some specfem subroutines are called to initialize modeling
 !----------------------------------------------------------------------------------------------------------------------------
+
   subroutine InitializeSpecfemForInversion()
 
     use specfem_par
@@ -993,27 +1023,33 @@ contains
     NSPEC_STRAIN_ONLY = NSPEC_AB
 
     !! enforce to allocate all arrays for both adjoint and direct simulation
-    SIMULATION_TYPE=3
-    APPROXIMATE_HESS_KL=.true. !! test preconditionner
-    PRINT_SOURCE_TIME_FUNCTION=.true.
+    SIMULATION_TYPE = 3
+    APPROXIMATE_HESS_KL = .true. !! test preconditionner
+    PRINT_SOURCE_TIME_FUNCTION = .true.
 
     call read_mesh_databases()
     call read_mesh_databases_moho()
     call read_mesh_databases_adjoint()
+
+    ! safety check
+    if (NSPEC_IRREGULAR /= NSPEC_AB) stop 'Please check inverse problem routine for NSPEC_AB /= NSPEC_IRREGULAR'
+
     call setup_GLL_points()
     call detect_mesh_surfaces()
+
     call setup_sources_receivers()  !! we have one dummy source and STATION_ADJOINT to set up without crashes
 
-    SIMULATION_TYPE=1               !! here we need to prepare the fisrt run
-    SAVE_FORWARD=.true.             !! which is mandatory direct and need to save forward wavefield
+    SIMULATION_TYPE = 1               !! here we need to prepare the fisrt run
+    SAVE_FORWARD = .true.             !! which is mandatory direct and need to save forward wavefield
 
     call prepare_timerun()          !! absord boundary are opened here
 
     !! we need to clean the GPU memory because we will change arrays
     if (GPU_MODE)  call prepare_cleanup_device(Mesh_pointer,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION, &
-            STACEY_ABSORBING_CONDITIONS,NOISE_TOMOGRAPHY,COMPUTE_AND_STORE_STRAIN, &
-            ATTENUATION,ANISOTROPY,APPROXIMATE_OCEAN_LOAD, &
-            APPROXIMATE_HESS_KL)
+                                               STACEY_ABSORBING_CONDITIONS,NOISE_TOMOGRAPHY,COMPUTE_AND_STORE_STRAIN, &
+                                               ATTENUATION,ANISOTROPY,APPROXIMATE_OCEAN_LOAD, &
+                                               APPROXIMATE_HESS_KL)
+
     !!---------------------------------------------------------------------------------------------------------------------
     !! this is specific prepare_timerun version for FWI (subroutine defined below)
     call PrepareTimerunInverseProblem()          !! absord boundary are closed here
@@ -1021,16 +1057,18 @@ contains
     !!if (USE_UNDO_ATT) call prepare_time_iteration() !! allocate arrays for store saving snapshots and displacement
     !-----------------------------------------------------------------------------------------------------------------------
 
-
   end subroutine InitializeSpecfemForInversion
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 !---------------------------------------------------------------------------------
 !> specfific prepare_timerun for FWI (it is actually missing initialization
 !! done in prepare_timerun when SIMULATION_TYPE=1. Here we add all
 !! actions performed for SIMULATION_TYPE=3. (We cannot call directly
 !! use prepare_timerun with  SIMULATION_TYPE=3 at first time.
 !---------------------------------------------------------------------------------
+
   subroutine PrepareTimerunInverseProblem()
+
     use specfem_par
     use shared_parameters
     use specfem_par_acoustic
@@ -1228,14 +1266,15 @@ contains
        endif
     endif
 
-
   end subroutine PrepareTimerunInverseProblem
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 !-----------------------------------------------------------------------------------------------------------------------------------
 !>  copy summed GPU kernel overs events in specfem CPU arrays
 !!
 !!
 !-----------------------------------------------------------------------------------------------------------------------------------
+
   subroutine TransfertKernelFromGPUArrays()
 
     if (ACOUSTIC_SIMULATION) then
@@ -1266,13 +1305,13 @@ contains
     endif
 
   end subroutine TransfertKernelFromGPUArrays
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 !-------------------------------------------------------------------------------------------------------------
 ! test if we can saftely perform a simulation in new model
 !-------------------------------------------------------------------------------------------------------------
+
   subroutine  CheckModelSuitabilityForModeling(ModelIsSuitable)
-
-
 
     logical, intent(in out) :: ModelIsSuitable
 
@@ -1339,11 +1378,11 @@ contains
 
     has_vs_zero = .false.
 
-    do ispec = 1,  NSPEC_AB
+    do ispec = 1,NSPEC_AB
 
        !! min max in element
        call  get_vpvs_minmax(vpmin, vpmax, vsmin, vsmax, poissonmin, poissonmax, &
-            ispec, has_vs_zero, &
+                             ispec, has_vs_zero, &
                              NSPEC_AB, kappastore, mustore, rho_vp, rho_vs)
 
        !! min/max for whole cpu partition
@@ -1358,7 +1397,7 @@ contains
 
        ! computes minimum and maximum size of this grid cell
        call get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
-            NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
+                                NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
 
        elemsize_min_glob = min(elemsize_min_glob, elemsize_min)
        elemsize_max_glob = max(elemsize_max_glob, elemsize_max)
@@ -1387,7 +1426,7 @@ contains
 
        ! computes minimum and maximum distance of neighbor GLL points in this grid cell
        call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
-            NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
+                                   NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
 
        distance_min_glob = min(distance_min_glob, distance_min)
        distance_max_glob = max(distance_max_glob, distance_max)
@@ -1491,19 +1530,19 @@ contains
     endif
 
   end subroutine CheckModelSuitabilityForModeling
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 !-----------------------------------------------------------------------------------------------------------------------------------
 !> create dummy file in order to initialize specfem before setting the right parameters
 !! need to imporve this by using because that files are not working for every cases.
 !! may be use the flag INVERSE_FWI_FULL_PROBLEM
 !-----------------------------------------------------------------------------------------------------------------------------------
+
   subroutine CreateInitDummyFiles()
 
     use specfem_par
 
-
     integer                                               :: i
-
 
     open(666,file=trim(prefix_to_path)//'SEM/XX.S0001.BXX.adj')
     open(667,file=trim(prefix_to_path)//'SEM/XX.S0001.BXY.adj')
@@ -1588,7 +1627,5 @@ contains
     close(667)
 
   end subroutine CreateInitDummyFiles
-
-
 
 end module specfem_interface

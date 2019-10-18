@@ -86,7 +86,7 @@ subroutine inverse_problem_main()
   call SetUpInversion(inversion_param, myrank)
 
   !! intialize inversion (initialize_simulation read_parameter_file read_mesh_* prepare_time_run )
-  call  InitializeSpecfemForInversion()
+  call InitializeSpecfemForInversion()
 
   !! initialize input output (read inversion parameters input files, acquisition, get external model)
   call init_input_output_mod(inversion_param, acqui_simu, myrank)
@@ -161,7 +161,7 @@ subroutine inverse_problem_main()
         enddo
 
         !! write model in disk
-        call WirteOutputs(inversion_param)
+        call WriteOutputs(inversion_param)
 
      enddo
 

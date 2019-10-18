@@ -1,3 +1,30 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                              CNRS, France
+!                       and Princeton University, USA
+!                 (there are currently many more authors!)
+!                           (c) October 2017
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 3 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 module regularization
 
   !! IMPORT SPECFEM VARIABLES ------------------------------------------------------------------------------------------------------
@@ -1945,7 +1972,7 @@ contains
     real(kind=CUSTOM_REAL),  dimension(:),   allocatable                :: field_to_derivate
     real(kind=CUSTOM_REAL),  dimension(:,:), allocatable                :: Laplac_boundary, LapF
 
-  integer :: ier
+    integer :: ier
 
     !! the order below is important do not change it.
     allocate(Laplac_boundary(NDIM, Nb_iglob_on_faces), field_to_derivate(NGLOB_AB), LapF(NDIM,NGLOB_AB),stat=ier)
@@ -2305,18 +2332,20 @@ contains
     deallocate(field, numerical_laplacian_of_field, valence, field_to_derivate)
 
   end subroutine compute_laplacian2_vp_vs_rho
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------------------------
 !  compute mean value at edge of element
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
+
   subroutine compute_mean_values_on_edge(field)
 
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),    allocatable, intent(inout)      :: field
     real(kind=CUSTOM_REAL), dimension(:,:),          allocatable                     :: field_wksp, valence
     integer                                                       :: ispec, iglob, i, j, k
 
-  integer :: ier
+    integer :: ier
 
     allocate(field_wksp(NDIM,NGLOB_AB), valence(NDIM,NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 197')
@@ -2393,6 +2422,7 @@ contains
 !  compute lagange and GLL for higher interpolation
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
+
   subroutine setup_interpolation_for_higher_degree()
 
     integer                              :: i1, i2
@@ -2421,11 +2451,13 @@ contains
     call get_shape3D_genric(NGLLd, gll_points, shape_function, dershape_function)
 
   end subroutine setup_interpolation_for_higher_degree
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------------------------
 !  compute lagrange interpolation in new GLL points
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
+
   subroutine interpolation_in_new_gll(field_in_element, field_in_higher_degree)
 
     double precision, dimension(NGLLX,NGLLX,NGLLX), intent(in)    :: field_in_element
@@ -2453,11 +2485,13 @@ contains
     enddo
 
   end subroutine interpolation_in_new_gll
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------------------------
 !  compute lagrange interpolation in new GLL points
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
+
   subroutine interpolation_in_old_gll(field_in_higher_degree, field_in_element)
 
     double precision, dimension(NGLLX,NGLLX,NGLLX), intent(inout) :: field_in_element
@@ -2483,11 +2517,13 @@ contains
     enddo
 
   end subroutine interpolation_in_old_gll
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------------------------
 !  compute shape function for a given 8 node element
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
+
   subroutine get_shape3D_genric(NGLL, gll_coord, shape_func, dershape_func)
 
     integer,                                          intent(in)    :: NGLL
@@ -2557,11 +2593,13 @@ contains
     enddo
 
   end subroutine get_shape3D_genric
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------------------------
 !  compute shape function for a given 8 node element
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
+
   subroutine compute_jacobian_one_element(xnode, ynode, znode, Jacobian_shape)
 
     double precision,  dimension(NGNOD),                        intent(in)     :: xnode, ynode, znode
@@ -2658,11 +2696,13 @@ contains
     enddo
 
   end subroutine compute_jacobian_one_element
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------------------------
 !  compute 2 and 4 derivatives in one element
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
+
   subroutine compute_derivatives_with_interpolation(field_to_derivate, laplacian_of_field, double_laplacian_of_field)
 
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable, intent(in)    ::  field_to_derivate
@@ -2732,11 +2772,13 @@ contains
     enddo
 
   end subroutine compute_derivatives_with_interpolation
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------------------------
 !  compute laplacian in 1 element
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
+
   subroutine compute_laplacian_lagrange_element(Laplacian_of_field_in_element, field_in_element)
 
     double precision, dimension(NGLLd,NGLLd,NGLLd), intent(in)    :: field_in_element
@@ -2840,11 +2882,13 @@ contains
     enddo
 
   end subroutine compute_laplacian_lagrange_element
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------------------------
 !  compute laplacian in 1 element
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
+
   subroutine compute_function_to_test_in_one_element(field_to_define)
 
     double precision, dimension(NGLLd,NGLLd,NGLLd), intent(inout)    :: field_to_define
@@ -3036,6 +3080,7 @@ contains
 ! for each GLL in element compute first derivatives using lagrange interpolation and derivatives
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
+
   subroutine compute_first_derivatives_lagrange(Df, field_to_derivate)
 
     use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx, irregular_element_number, &
@@ -3088,7 +3133,7 @@ contains
                    tempx3l = tempx3l + dummyloc(i,j,l)*hp3
 
                 enddo
-                if (ispec_irreg /= 0 ) then
+                if (ispec_irreg /= 0) then
                   !irregular element
                   xixl = xix(i,j,k,ispec_irreg)
                   xiyl = xiy(i,j,k,ispec_irreg)
@@ -3106,7 +3151,6 @@ contains
 
                 else
                   !regular element
-
                   Df(1,i,j,k,ispec) = xix_regular * tempx1l
                   Df(2,i,j,k,ispec) = xix_regular * tempx2l
                   Df(3,i,j,k,ispec) = xix_regular * tempx3l
@@ -3126,6 +3170,7 @@ contains
 ! for each GLL in element compute laplacian using lagrange interpolation and derivatives
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
+
   subroutine compute_laplac_lagrange(Lapf, field_to_derivate)
 
     use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx, irregular_element_number, &
@@ -3189,7 +3234,8 @@ contains
 
                 enddo
 
-                if (ispec_irreg /= 0 ) then !irregular element
+                if (ispec_irreg /= 0) then
+                  !irregular element
                   xixl = xix(i,j,k,ispec_irreg)
                   xiyl = xiy(i,j,k,ispec_irreg)
                   xizl = xiz(i,j,k,ispec_irreg)
@@ -3204,8 +3250,8 @@ contains
                   dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
                   dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
 
-                else !regular element
-
+                else
+                  !regular element
                   dF(1,i,j,k) = xix_regular * tempx1l
                   dF(2,i,j,k) = xix_regular * tempx2l
                   dF(3,i,j,k) = xix_regular * tempx3l
@@ -3251,8 +3297,8 @@ contains
                    tempx3l = tempx3l + F(i,j,l)*hp3
 
                 enddo
-                if (ispec_irreg /= 0 ) then !irregular element
-
+                if (ispec_irreg /= 0) then
+                  !irregular element
                   xixl = xix(i,j,k,ispec_irreg)
                   xiyl = xiy(i,j,k,ispec_irreg)
                   xizl = xiz(i,j,k,ispec_irreg)
@@ -3264,14 +3310,14 @@ contains
                   gammazl = gammaz(i,j,k,ispec_irreg)
 
                   dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
-           !       dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
-            !      dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+                  !dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+                  !dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
 
-                else !regular element
-
+                else
+                  !regular element
                   dF(1,i,j,k) = xix_regular * tempx1l
-             !     dF(2,i,j,k) = xix_regular * tempx2l
-              !    dF(3,i,j,k) = xix_regular * tempx3l
+                  !dF(2,i,j,k) = xix_regular * tempx2l
+                  !dF(3,i,j,k) = xix_regular * tempx3l
 
                 endif
 
@@ -3280,7 +3326,6 @@ contains
                 !dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
                 !if (DEBUG_MODE) write(IIDD,*) 'x', dF(1,i,j,k)
                 LapF(1,iglob) = dF(1,i,j,k) * coef_norm
-
 
              enddo
           enddo
@@ -3317,8 +3362,8 @@ contains
 
                 enddo
 
-                if (ispec_irreg /= 0 ) then !irregular element
-
+                if (ispec_irreg /= 0) then
+                  !irregular element
                   xixl = xix(i,j,k,ispec_irreg)
                   xiyl = xiy(i,j,k,ispec_irreg)
                   xizl = xiz(i,j,k,ispec_irreg)
@@ -3329,15 +3374,16 @@ contains
                   gammayl = gammay(i,j,k,ispec_irreg)
                   gammazl = gammaz(i,j,k,ispec_irreg)
 
-           !       dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+                  !dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
                   dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
-            !      dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+                  !dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
 
-                else !regular element
+                else
+                  !regular element
 
-             !     dF(1,i,j,k) = xix_regular * tempx1l
+                  !dF(1,i,j,k) = xix_regular * tempx1l
                   dF(2,i,j,k) = xix_regular * tempx2l
-              !    dF(3,i,j,k) = xix_regular * tempx3l
+                  !dF(3,i,j,k) = xix_regular * tempx3l
 
                 endif
 
@@ -3376,8 +3422,8 @@ contains
                    tempx3l = tempx3l + F(i,j,l)*hp3
 
                 enddo
-                if (ispec_irreg /= 0 ) then !irregular element
-
+                if (ispec_irreg /= 0) then
+                  !irregular element
                   xixl = xix(i,j,k,ispec_irreg)
                   xiyl = xiy(i,j,k,ispec_irreg)
                   xizl = xiz(i,j,k,ispec_irreg)
@@ -3388,14 +3434,15 @@ contains
                   gammayl = gammay(i,j,k,ispec_irreg)
                   gammazl = gammaz(i,j,k,ispec_irreg)
 
-            !      dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
-           !       dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+                  !dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+                  !dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
                   dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
 
-                else !regular element
+                else
+                  !regular element
 
-            !      dF(1,i,j,k) = xix_regular * tempx1l
-             !     dF(2,i,j,k) = xix_regular * tempx2l
+                  !dF(1,i,j,k) = xix_regular * tempx1l
+                  !dF(2,i,j,k) = xix_regular * tempx2l
                   dF(3,i,j,k) = xix_regular * tempx3l
 
                 endif
@@ -3407,8 +3454,6 @@ contains
              enddo
           enddo
        enddo
-
-
 
        !!!!!!!!!!!!!!!!! HERE BEGINS DEBUG
 !!$        do k=1,NGLLZ
@@ -3603,11 +3648,13 @@ contains
     enddo
 
   end subroutine compute_laplac_lagrange
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------------------------
 ! for each GLL in element compute gradient norm and laplacian using lagrange interpolation and derivatives
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
+
   subroutine compute_grad_laplac_lagrange(nGrad, Lapf, field_to_derivate)
 
     implicit none
@@ -3620,7 +3667,7 @@ contains
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),    allocatable        :: Derivatives_of_field
     real(kind=CUSTOM_REAL), dimension(:,:),          allocatable        :: field_to_derivate_wks, Fwks
 
-  integer :: ier
+    integer :: ier
 
     allocate(Derivatives_of_field(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 198')
@@ -3702,6 +3749,7 @@ contains
 
     deallocate(Derivatives_of_field)
     deallocate(field_to_derivate_wks,Fwks)
+
 !!$    do ispec =1, NSPEC_AB
 !!$
 !!$       !! ----------------------------------------------- 1st derivatives -----------------------
@@ -3980,6 +4028,7 @@ contains
 !  compute laplacian of field_input on elements faces using FD
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
+
   subroutine compute_laplacian_FD(Dfb, field_input, regularization_fd)
 
 
@@ -3994,7 +4043,7 @@ contains
     integer                                                             :: iglob, iglob_index, igll, idim, ip
     integer                                                             :: nline, ncolu
 
-  integer :: ier
+    integer :: ier
 
     nline=10
 
@@ -4065,6 +4114,7 @@ contains
 !  compute norm gradient and laplacian of field_input on elements faces using FD
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
+
   subroutine compute_gradient_laplacian_FD(nGrad, Laplac, field_input, regularization_fd)
 
     implicit none
@@ -4078,7 +4128,7 @@ contains
     integer                                                             :: iglob, iglob_index, igll, ip
     integer                                                             :: nline, ncolu
 
-  integer :: ier
+    integer :: ier
 
     nline=10
     allocate(valence(NDIM,NGLOB_AB),  field_to_derivate(NDIM,NGLOB_AB),stat=ier)
@@ -4254,6 +4304,7 @@ contains
 ! matrix vector mulitplication r = A*b
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
+
   subroutine matrix_times_vector(r, A, b, n, m)
 
     implicit none
@@ -4383,7 +4434,7 @@ contains
 !!!!!!!!!!!!!!!! DEBUG subroutine !!!!!!!!!!!!!!!!!!
   subroutine write_in_disk_this(f)
 
-  integer :: ier
+    integer :: ier
 
     real(kind=CUSTOM_REAL), dimension(:), allocatable :: f
     integer i,j,k,ispec, iglob
@@ -4419,7 +4470,7 @@ contains
 
 !!!========================== NEW WAY TO DERIVATE ===================
 
-subroutine compute_lapalacian_of_field(field, laplacian_of_field)
+  subroutine compute_lapalacian_of_field(field, laplacian_of_field)
 
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),      allocatable, intent(in)    :: field
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),      allocatable, intent(inout) :: laplacian_of_field
@@ -4454,122 +4505,125 @@ subroutine compute_lapalacian_of_field(field, laplacian_of_field)
 
   deallocate(field_wkstmp, derivative_of_field, second_derivative_of_field)
 
-end subroutine compute_lapalacian_of_field
+  end subroutine compute_lapalacian_of_field
 
 !===================
-subroutine compute_bi_laplacian_of_field(field, laplacian_of_field, bi_laplacian_of_field)
+
+  subroutine compute_bi_laplacian_of_field(field, laplacian_of_field, bi_laplacian_of_field)
+
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),      allocatable, intent(in)    :: field
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),      allocatable, intent(inout) :: laplacian_of_field, bi_laplacian_of_field
+
   call compute_lapalacian_of_field(field, laplacian_of_field)
   call compute_lapalacian_of_field(laplacian_of_field, bi_laplacian_of_field)
 
-end subroutine compute_bi_laplacian_of_field
+  end subroutine compute_bi_laplacian_of_field
 
 
 !!===============
 !!===============
 !!===============
-subroutine compute_derivative_with_lagrange_polynomials(derivative_of_field, field_to_derivate)
 
-   use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx, irregular_element_number, &
+  subroutine compute_derivative_with_lagrange_polynomials(derivative_of_field, field_to_derivate)
+
+  use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx, irregular_element_number, &
                           xix_regular
 
-   implicit none
-   !! size (NDIM,NGLLX, NGLLY, NGLLZ, NSPEC_AB)
-   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),     allocatable, intent(in)     :: field_to_derivate
-   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),     allocatable, intent(inout)  :: derivative_of_field
+  implicit none
+  !! size (NDIM,NGLLX, NGLLY, NGLLZ, NSPEC_AB)
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),     allocatable, intent(in)     :: field_to_derivate
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),     allocatable, intent(inout)  :: derivative_of_field
 
 
-   double precision, dimension(NGLLX, NGLLY, NGLLZ)              :: F
-   double precision, dimension(NDIM, NGLLX, NGLLY, NGLLZ)        :: DF
-   double precision                                              :: hp1, hp2, hp3
-   double precision                                              :: tempx1l, tempx2l, tempx3l
-   double precision                                              :: xixl,xiyl,xizl
-   double precision                                              :: etaxl,etayl,etazl
-   double precision                                              :: gammaxl,gammayl,gammazl
-   integer                                                       :: ispec, ispec_irreg, i, j, k, l
+  double precision, dimension(NGLLX, NGLLY, NGLLZ)              :: F
+  double precision, dimension(NDIM, NGLLX, NGLLY, NGLLZ)        :: DF
+  double precision                                              :: hp1, hp2, hp3
+  double precision                                              :: tempx1l, tempx2l, tempx3l
+  double precision                                              :: xixl,xiyl,xizl
+  double precision                                              :: etaxl,etayl,etazl
+  double precision                                              :: gammaxl,gammayl,gammazl
+  integer                                                       :: ispec, ispec_irreg, i, j, k, l
 
 
-   do ispec =1, NSPEC_AB
+  do ispec =1, NSPEC_AB
 
-      !! store field in local array
-      do k=1,NGLLZ
-         do j=1,NGLLY
-            do i=1,NGLLX
-               !iglob=ibool(i,j,k,ispec)
-               F(i,j,k)=field_to_derivate(1,i,j,k,ispec)
-            enddo
-         enddo
+!! store field in local array
+    do k=1,NGLLZ
+      do j=1,NGLLY
+        do i=1,NGLLX
+          !iglob=ibool(i,j,k,ispec)
+          F(i,j,k)=field_to_derivate(1,i,j,k,ispec)
+        enddo
       enddo
-      ispec_irreg = irregular_element_number(ispec)
-      !! derivative of field based on lagrange polynomials
-      do k=1,NGLLZ
-         do j=1,NGLLY
-            do i=1,NGLLX
+    enddo
+    ispec_irreg = irregular_element_number(ispec)
+    !! derivative of field based on lagrange polynomials
+    do k=1,NGLLZ
+      do j=1,NGLLY
+        do i=1,NGLLX
 
-               !iglob = ibool(i,j,k,ispec)
+          !iglob = ibool(i,j,k,ispec)
 
-               tempx1l = 0.
-               tempx2l = 0.
-               tempx3l = 0.
+          tempx1l = 0.
+          tempx2l = 0.
+          tempx3l = 0.
 
-               do l=1,NGLLX
+          do l=1,NGLLX
+            hp1 = hprime_xx(i,l)
+            tempx1l = tempx1l + F(l,j,k)*hp1
 
-                  hp1 = hprime_xx(i,l)
-                  tempx1l = tempx1l + F(l,j,k)*hp1
+            hp2 = hprime_xx(j,l)
+            tempx2l = tempx2l + F(i,l,k)*hp2
 
-                  hp2 = hprime_xx(j,l)
-                  tempx2l = tempx2l + F(i,l,k)*hp2
-
-                  hp3 = hprime_xx(k,l)
-                  tempx3l = tempx3l + F(i,j,l)*hp3
-
-               enddo
-               if (ispec_irreg /= 0 ) then !irregular element
-
-                 xixl = xix(i,j,k,ispec_irreg)
-                 xiyl = xiy(i,j,k,ispec_irreg)
-                 xizl = xiz(i,j,k,ispec_irreg)
-                 etaxl = etax(i,j,k,ispec_irreg)
-                 etayl = etay(i,j,k,ispec_irreg)
-                 etazl = etaz(i,j,k,ispec_irreg)
-                 gammaxl = gammax(i,j,k,ispec_irreg)
-                 gammayl = gammay(i,j,k,ispec_irreg)
-                 gammazl = gammaz(i,j,k,ispec_irreg)
-
-                 dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
-                 dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
-                 dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
-
-               else !regular element
-
-                 dF(1,i,j,k) = xix_regular * tempx1l
-                 dF(2,i,j,k) = xix_regular * tempx2l
-                 dF(3,i,j,k) = xix_regular * tempx3l
-
-               endif
-
+            hp3 = hprime_xx(k,l)
+            tempx3l = tempx3l + F(i,j,l)*hp3
           enddo
-       enddo
+
+          if (ispec_irreg /= 0) then
+            !irregular element
+            xixl = xix(i,j,k,ispec_irreg)
+            xiyl = xiy(i,j,k,ispec_irreg)
+            xizl = xiz(i,j,k,ispec_irreg)
+            etaxl = etax(i,j,k,ispec_irreg)
+            etayl = etay(i,j,k,ispec_irreg)
+            etazl = etaz(i,j,k,ispec_irreg)
+            gammaxl = gammax(i,j,k,ispec_irreg)
+            gammayl = gammay(i,j,k,ispec_irreg)
+            gammazl = gammaz(i,j,k,ispec_irreg)
+
+            dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+            dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+            dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+
+          else
+            !regular element
+            dF(1,i,j,k) = xix_regular * tempx1l
+            dF(2,i,j,k) = xix_regular * tempx2l
+            dF(3,i,j,k) = xix_regular * tempx3l
+          endif
+
+        enddo
+      enddo
     enddo
 
     !! get derivative of field from  local array
     do k=1,NGLLZ
-       do j=1,NGLLY
-          do i=1,NGLLX
-             derivative_of_field(1,i,j,k,ispec)= dF(1,i,j,k)
-             derivative_of_field(2,i,j,k,ispec)= dF(2,i,j,k)
-             derivative_of_field(3,i,j,k,ispec)= dF(3,i,j,k)
-          enddo
-       enddo
+      do j=1,NGLLY
+        do i=1,NGLLX
+          derivative_of_field(1,i,j,k,ispec)= dF(1,i,j,k)
+          derivative_of_field(2,i,j,k,ispec)= dF(2,i,j,k)
+          derivative_of_field(3,i,j,k,ispec)= dF(3,i,j,k)
+        enddo
+      enddo
     enddo
 
- enddo
+  enddo
 
+  end subroutine compute_derivative_with_lagrange_polynomials
 
-end subroutine compute_derivative_with_lagrange_polynomials
 !!============
-subroutine compute_2nd_derivative_with_lagrange_polynomials(derivative_of_field, field_to_derivate)
+
+  subroutine compute_2nd_derivative_with_lagrange_polynomials(derivative_of_field, field_to_derivate)
 
    use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx,irregular_element_number, &
                           xix_regular
@@ -4643,7 +4697,7 @@ subroutine compute_2nd_derivative_with_lagrange_polynomials(derivative_of_field,
 
 
                enddo
-               if (ispec_irreg /= 0 ) then !irregular element
+               if (ispec_irreg /= 0) then !irregular element
 
                  xixl = xix(i,j,k,ispec_irreg)
                  xiyl = xiy(i,j,k,ispec_irreg)
@@ -4684,68 +4738,69 @@ subroutine compute_2nd_derivative_with_lagrange_polynomials(derivative_of_field,
 
  enddo
 
-
-
-end subroutine compute_2nd_derivative_with_lagrange_polynomials
+  end subroutine compute_2nd_derivative_with_lagrange_polynomials
 
 !!
-!! variable damping regualrisation for trying to kill suprious variations close to the point sources
-subroutine compute_spatial_damping_for_source_singularities(acqui_simu, inversion_param, spatial_damping)
+!! variable damping regularisation for trying to kill suprious variations close to the point sources
 
-   type(inver),                                                    intent(inout) :: inversion_param
-   type(acqui),            dimension(:),       allocatable,        intent(inout) :: acqui_simu
-   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable,        intent(inout) :: spatial_damping
-   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                       :: spatial_damping_tmp
-   integer                                                                       :: isrc, ievent, iglob, ispec, i, j, k
-   real(kind=CUSTOM_REAL)                                                        :: xgll, ygll, zgll
-   real(kind=CUSTOM_REAL)                                                        :: distance_from_source, value_of_damping
+  subroutine compute_spatial_damping_for_source_singularities(acqui_simu, inversion_param, spatial_damping)
+
+  type(inver),                                                    intent(inout) :: inversion_param
+  type(acqui),            dimension(:),       allocatable,        intent(inout) :: acqui_simu
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable,        intent(inout) :: spatial_damping
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                       :: spatial_damping_tmp
+  integer                                                                       :: isrc, ievent, iglob, ispec, i, j, k
+  real(kind=CUSTOM_REAL)                                                        :: xgll, ygll, zgll
+  real(kind=CUSTOM_REAL)                                                        :: distance_from_source, value_of_damping
 
   integer :: ier
 
-   do ispec = 1, NSPEC_AB
+  do ispec = 1, NSPEC_AB
 
-      do k = 1, NGLLZ
-         do j = 1, NGLLY
-            do i = 1, NGLLX
-               iglob=ibool(i,j,k,ispec)
-               xgll=xstore(iglob)
-               ygll=ystore(iglob)
-               zgll=zstore(iglob)
-               !! compute distance form sources
-               do ievent = 1, acqui_simu(1)%nevent_tot
-                  if (trim(acqui_simu(ievent)%source_type) == 'moment' .or. trim(acqui_simu(ievent)%source_type) == 'force' .or. &
-                     trim(acqui_simu(ievent)%source_type) == 'shot' ) then
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          iglob=ibool(i,j,k,ispec)
+          xgll=xstore(iglob)
+          ygll=ystore(iglob)
+          zgll=zstore(iglob)
 
-                     do isrc = 1, acqui_simu(ievent)%nsources_local
-                        distance_from_source = sqrt(  (acqui_simu(ievent)%Xs(isrc) - xgll)**2 + &
-                                                      (acqui_simu(ievent)%Ys(isrc) - ygll)**2 + &
-                                                      (acqui_simu(ievent)%Zs(isrc) - zgll)**2)
+          !! compute distance form sources
+          do ievent = 1, acqui_simu(1)%nevent_tot
+            if (trim(acqui_simu(ievent)%source_type) == 'moment' .or. trim(acqui_simu(ievent)%source_type) == 'force' .or. &
+                trim(acqui_simu(ievent)%source_type) == 'shot' ) then
 
-                        value_of_damping = inversion_param%min_damp + &
-                                           (inversion_param%max_damp - inversion_param%min_damp )*&
-                              exp(-0.5 * (distance_from_source/(inversion_param%distance_from_source/3.))**2 )
+              do isrc = 1, acqui_simu(ievent)%nsources_local
+                distance_from_source = sqrt(  (acqui_simu(ievent)%Xs(isrc) - xgll)**2 + &
+                                              (acqui_simu(ievent)%Ys(isrc) - ygll)**2 + &
+                                              (acqui_simu(ievent)%Zs(isrc) - zgll)**2)
 
-                        spatial_damping(i,j,k,ispec) = max(spatial_damping(i,j,k,ispec), value_of_damping)
-                        !write(*,*) inversion_param%max_damp,  inversion_param%min_damp,
-                        !inversion_param%distance_from_source, value_of_damping
-                     enddo
-                  endif
-               enddo
+                value_of_damping = inversion_param%min_damp + &
+                                   (inversion_param%max_damp - inversion_param%min_damp )*&
+                      exp(-0.5 * (distance_from_source/(inversion_param%distance_from_source/3.))**2 )
 
-            enddo
-         enddo
+                spatial_damping(i,j,k,ispec) = max(spatial_damping(i,j,k,ispec), value_of_damping)
+                !write(*,*) inversion_param%max_damp,  inversion_param%min_damp,
+                !inversion_param%distance_from_source, value_of_damping
+              enddo
+            endif
+          enddo
+
+        enddo
       enddo
+    enddo
+  enddo
 
-   enddo
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
+    allocate(spatial_damping_tmp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 210')
+    spatial_damping_tmp(:,:,:,:)=spatial_damping(:,:,:,:)
 
-   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
-      allocate(spatial_damping_tmp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 210')
-      spatial_damping_tmp(:,:,:,:)=spatial_damping(:,:,:,:)
-      call max_all_all_cr_for_simulatenous_runs(spatial_damping_tmp(1,1,1,1), spatial_damping(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
-      deallocate(spatial_damping_tmp)
-   endif
+    call max_all_all_cr_for_simulatenous_runs(spatial_damping_tmp(1,1,1,1), spatial_damping(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
 
-end subroutine compute_spatial_damping_for_source_singularities
+    deallocate(spatial_damping_tmp)
+  endif
+
+  end subroutine compute_spatial_damping_for_source_singularities
 
 end module regularization
