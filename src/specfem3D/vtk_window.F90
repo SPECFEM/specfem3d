@@ -159,10 +159,10 @@ end module vtk_window_par
     ! spectral element id
     ispec = ispec_selected_source(isource)
 
-    ! gets element ancor nodes
+    ! gets element anchor nodes
     if (myrank == islice_selected_source(isource)) then
-      ! find the coordinates of the eight corner nodes of the element
-      call eval_shape3D_element_corners(xelm,yelm,zelm,ispec,ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
+      ! find the coordinates of the anchor (eight corner) nodes of the element
+      call eval_shape3D_element_anchors(xelm,yelm,zelm,ispec,ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
     endif
 
     ! master collects corner locations
@@ -257,10 +257,10 @@ end module vtk_window_par
     ! spectral element id
     ispec = ispec_selected_rec(irec)
 
-    ! gets element ancor nodes
+    ! gets element anchor nodes
     if (myrank == islice_selected_rec(irec)) then
-      ! find the coordinates of the eight corner nodes of the element
-      call eval_shape3D_element_corners(xelm,yelm,zelm,ispec,ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
+      ! find the coordinates of the anchor (eight corner) nodes of the element
+      call eval_shape3D_element_anchors(xelm,yelm,zelm,ispec,ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
     endif
 
     ! master collects corner locations

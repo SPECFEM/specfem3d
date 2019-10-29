@@ -1445,6 +1445,7 @@
 
   implicit none
 
+  ! local parameters
   double precision :: shape3D(NGNOD)
   double precision :: xil,etal,gammal
   double precision :: xmesh,ymesh,zmesh
@@ -1479,13 +1480,12 @@
       ! spectral element id
       ispec = ispec_selected_source(isource)
 
-      ! gets element ancor nodes
+      ! gets element anchor nodes
       if (myrank == islice_selected_source(isource)) then
-        ! find the coordinates of the eight corner nodes of the element
-        call eval_shape3D_element_corners(xelm,yelm,zelm,ispec, &
-                        ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
-
+        ! find the coordinates of the anchor nodes of the element
+        call eval_shape3D_element_anchors(xelm,yelm,zelm,ispec,ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
       endif
+
       ! master collects corner locations
       if (islice_selected_source(isource) /= 0) then
         if (myrank == 0) then
@@ -1526,11 +1526,11 @@
   do irec = 1,nrec
     ispec = ispec_selected_rec(irec)
 
-    ! find the coordinates of the eight corner nodes of the element
+    ! find the coordinates of the anchor (eight corners for NGNOD=8) nodes of the element
     if (myrank == islice_selected_rec(irec)) then
-      call eval_shape3D_element_corners(xelm,yelm,zelm,ispec, &
-                      ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
+      call eval_shape3D_element_anchors(xelm,yelm,zelm,ispec,ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
     endif
+
     ! master collects corner locations
     if (islice_selected_rec(irec) /= 0) then
       if (myrank == 0) then
