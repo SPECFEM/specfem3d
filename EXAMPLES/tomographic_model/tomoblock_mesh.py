@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-
-import cubit
-cubit.init([""])
-
+from __future__ import print_function
 
 import os
 import sys
+
+import cubit
+cubit.init([""])
 
 # Creating the volumes
 cubit.cmd('reset')
@@ -26,9 +26,9 @@ cubit.cmd('mesh volume 1')
 # adds path to geocubit (if not setup yet)
 sys.path.append('../../CUBIT_GEOCUBIT/')
 
-print "path: "
-print sys.path
-print ""
+print("path: ")
+print(sys.path)
+print("")
 
 try:
 	from geocubitlib import boundary_definition
@@ -44,12 +44,12 @@ boundary_definition.define_bc(boundary_definition.entities,parallel=True)
 # sets the id of the volume block
 # (volume block starts at id 4)
 id_block = 4
-print "cubit block:"
-print "  volume block id = " + str(id_block)
-print ""
+print("cubit block:")
+print("  volume block id = " + str(id_block))
+print("")
 
 # Define material properties
-print "#### DEFINE MATERIAL PROPERTIES #######################"
+print("#### DEFINE MATERIAL PROPERTIES #######################")
 
 # elastic model
 cubit.cmd('block '+str(id_block)+' name "elastic tomography_model.xyz 1" ')        # elastic material region

@@ -22,11 +22,9 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
-#
-#
-#
-# method to call the library
+from __future__ import print_function
 
+# method to call the library
 
 def start_mpi():
     """
@@ -103,7 +101,7 @@ def start_cubit(init=False):
             import utilities
             cubit.init([""])
         except:
-            print 'error importing cubit'
+            print('error importing cubit')
             sys.exit()
         try:
             if init:
@@ -146,14 +144,14 @@ def start_cubit(init=False):
                 cubit.cmd("set echo " + cfg.echo_info)
                 cubit.cmd("set info " + cfg.cubit_info)
                 if version_cubit > 13 and version_cubit < 15:
-                    print 'VERSION CUBIT ', version_cubit
-                    print 'VERSIONs of CUBIT > 13 have bugs with merge node'
-                    print 'the merge option is not operative with this version'
-                    print 'please download CUBIT 15+'
+                    print('VERSION CUBIT ', version_cubit)
+                    print('VERSIONs of CUBIT > 13 have bugs with merge node')
+                    print('the merge option is not operative with this version')
+                    print('please download CUBIT 15+')
                 else:
-                    print 'VERSION CUBIT ', version_cubit
+                    print('VERSION CUBIT ', version_cubit)
         except:
-            print 'error start cubit'
+            print('error start cubit')
             sys.exit()
     return cubit
 
@@ -193,7 +191,7 @@ def start_numpy():
     try:
         import numpy
     except:
-        print 'error importing numpy'
-        print 'please check if numpy is correctly installed'
-        sys.exit()
+        print('error importing numpy')
+        print('please check if numpy is correctly installed')
+        sys.exit(1)
     return numpy

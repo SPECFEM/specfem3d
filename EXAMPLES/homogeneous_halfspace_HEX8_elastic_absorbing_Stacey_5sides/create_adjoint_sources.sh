@@ -12,6 +12,9 @@ if [ ! -e SEM/xcreate_adjsrc_traveltime ]; then echo "please make xcreate_adjsrc
 cd SEM/
 
 ./xcreate_adjsrc_traveltime 10.0 25.0 3 X20.DB.BX*.semd
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
+
 if [ ! -e X20.DB.BXZ.semd.adj ]; then echo "error creating adjoint sources, please check..."; exit 1; fi
 
 rename .semd.adj .adj *semd.adj

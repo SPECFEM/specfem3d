@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 #from scipy.io import netcdf
 import numpy as np
 import sys
@@ -41,7 +43,7 @@ ContourS = 3
 ## Files check
 file_dir  = Work_dir + Model_name
 if not os.path.isdir(file_dir):
-    print "The directory that contains the data doesn't exist..."
+    print("The directory that contains the data doesn't exist...")
     exit()
 file_list = os.listdir(file_dir)
 snap_list = []
@@ -52,16 +54,16 @@ for name in file_list:
         time_list.append(int(name.split('Snapshot')[1].split('_')[0]))
 num_data   = len(time_list)
 time_list  = np.asarray(sorted(time_list))
-print
-print "The model name is:", Model_name
-print "The model has", num_data, "data files."
-print "The time list is:", time_list
-print
+print('')
+print("The model name is:", Model_name)
+print("The model has", num_data, "data files.")
+print("The time list is:", time_list)
+print('')
 if(display_horizontally):
-    print "Project the fault horizontally."
+    print("Project the fault horizontally.")
 else:
-    print "Project the fault onto a vertical plane (clockwisely rotated ", Rotate, " degree about X-Z plane)."
-print
+    print("Project the fault onto a vertical plane (clockwisely rotated ", Rotate, " degree about X-Z plane).")
+print('')
 
 #==================
 #   Functions   ===
@@ -110,8 +112,8 @@ Y    = Data[0].Y
 Z    = Data[0].Z
 # if it is a vertical fault (along X or Y axis)
 if((np.min(X) == np.max(X) or np.min(Y)==np.max(Y)) and display_horizontally):
-    print "Warning: it is a vertical fault along X or Y axis, the fault will be displayed vertically!!!"
-    print "Please change display_horizontally to be False and setup the strike of fault to be 0 or 90."
+    print("Warning: it is a vertical fault along X or Y axis, the fault will be displayed vertically!!!")
+    print("Please change display_horizontally to be False and setup the strike of fault to be 0 or 90.")
     exit()
 
 if(not display_horizontally):
@@ -244,7 +246,7 @@ plt.title('Dip Stress Drop')
 
 plt.savefig("ps/"+Model_name+"-results.pdf",format="pdf")
 
-print "pdf file is saved."
+print("pdf file is saved.")
 ###
 
 ### Save data
@@ -267,4 +269,4 @@ for x in range(fault_dims[0]):
         output.writelines("\n")
 output.close()
 
-print "dat file is saved."
+print("dat file is saved.")

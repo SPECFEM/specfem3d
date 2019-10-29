@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 import numpy
 
@@ -18,5 +20,5 @@ if(Xnum*Ynum != Total_num):
     Xnum = Xnum - 2
     Ynum = Total_num / Xnum
 
-print Xnum, Ynum
+print(Xnum, Ynum)
 

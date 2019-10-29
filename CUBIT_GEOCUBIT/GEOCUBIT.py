@@ -30,6 +30,24 @@ GEOCUBIT requires:
 - numpy 1.0+  - http://downloads.sourceforge.net/numpy
 
 """
+from __future__ import print_function
+
+import sys
+
+print("GEOCUBIT")
+
+# version info
+python_major_version = sys.version_info[0]
+python_minor_version = sys.version_info[1]
+print("Python version: ","{}.{}".format(python_major_version,python_minor_version))
+
+# in case importing menu fails due to import utilities errors to find,
+# this will add the geocubitlib/ folder to the sys.path:
+import geocubitlib
+sys.path.append(geocubitlib.__path__[0])
+#print(sys.path)
+print('')
+
 import geocubitlib.menu as menu
 import geocubitlib.start as start
 
@@ -41,7 +59,7 @@ else:
 
 if __name__ == '__main__':
 
-    print 'VERSION 4.1'
+    print('VERSION 4.1')
 
     # GEOMETRY
     if menu.build_surface:
@@ -81,8 +99,8 @@ if __name__ == '__main__':
 
     if menu.export2SPECFEM3D and not menu.collect:
         from geocubitlib.exportlib import e2SEM
-        print menu.cubfiles
-        print 'hex27 ', menu.hex27
+        print(menu.cubfiles)
+        print('hex27 ', menu.hex27)
         e2SEM(files=menu.cubfiles,
               listblock=menu.listblock,
               listflag=menu.listflag,

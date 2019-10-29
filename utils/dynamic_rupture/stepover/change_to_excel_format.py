@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 import os
 import numpy as np
@@ -18,9 +20,6 @@ def convert_to_excel():
 
         f.write('%f, , ,%f,%f,%s,%f\n'%(depth,stress,Vmax,PF,Dmax))
     f.close()
-
-
-
 
 convert_to_excel()
 

@@ -12,6 +12,9 @@ if [ ! -e OUTPUT_FILES/DATABASES_MPI/proc000000_alpha_kernel.bin ]; then echo "p
 # creates kernel as vtk-file
 cd bin.xcombine/
 ./xcombine_vol_data_vtk 0 3 alpha_kernel ../OUTPUT_FILES/DATABASES_MPI/ ../OUTPUT_FILES/ 1
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
+
 cd ../
 
 echo

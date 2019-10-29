@@ -22,6 +22,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
+from __future__ import print_function
+
 try:
     import start as start
     cubit = start.start_cubit()
@@ -29,7 +31,7 @@ except:
     try:
         import cubit
     except:
-        print 'error importing cubit, check if cubit is installed'
+        print('error importing cubit, check if cubit is installed')
         pass
 
 from utilities import list2str
@@ -112,15 +114,15 @@ def lateral_boundary_are_absorbing(iproc=0, cpuxmin=0, cpuxmax=1,
     #
     if iproc in iproc_xmin:
         abs_xmin = xmin
-        print 'proc ', iproc, ' has absorbing boundary xmin'
+        print('proc ', iproc, ' has absorbing boundary xmin')
     if iproc in iproc_ymin:
-        print 'proc ', iproc, ' has absorbing boundary ymin'
+        print('proc ', iproc, ' has absorbing boundary ymin')
         abs_ymin = ymin
     if iproc in iproc_xmax:
-        print 'proc ', iproc, ' has absorbing boundary xmax'
+        print('proc ', iproc, ' has absorbing boundary xmax')
         abs_xmax = xmax
     if iproc in iproc_ymax:
-        print 'proc ', iproc, ' has absorbing boundary ymax'
+        print('proc ', iproc, ' has absorbing boundary ymax')
         abs_ymax = ymax
     return abs_xmin, abs_xmax, abs_ymin, abs_ymax
 
@@ -279,9 +281,9 @@ def build_block(vol_list, name, id_0=1, top_surf=None, optionsea=False):
         seathres = False
 
     #
-    print 'build blocks'
+    print('build blocks')
     block_list = cubit.get_block_id_list()
-    print block_list, vol_list
+    print(block_list, vol_list)
     if len(block_list) > 0:
         id_block = max(max(block_list), 2) + id_0
     else:
@@ -318,11 +320,11 @@ def build_block(vol_list, name, id_0=1, top_surf=None, optionsea=False):
             if version_cubit >= 15:
                 command = 'block ' + str(id_block) + ' hex in vol ' + \
                           str(v)
-                print command
+                print(command)
             else:
                 command = 'block ' + str(id_block) + ' hex in vol ' + \
                           str(v) + ' except hex in vol ' + str(list(v_other))
-            print command
+            print(command)
             command = command.replace("[", " ").replace("]", " ")
             cubit.cmd(command)
             command = "block " + str(id_block) + " name '" + n + "'"
@@ -390,76 +392,76 @@ def define_bc(*args, **keys):
                         cpux=cpux, cpuy=cpuy)
         id_0 = cubit.get_next_block_id()
         v_list, name_list = define_block()
-        print 'define block', v_list, name_list
+        print('define block', v_list, name_list)
         build_block(v_list, name_list, id_0, top_surf, optionsea=optionsea)
         # entities
         entities = ['face']
         if type(args) == list:
             if len(args) > 0:
                 entities = args[0]
-        print entities
+        print(entities)
         for entity in entities:
-            print "##entity: " + str(entity)
+            print("##entity: " + str(entity))
             # block for free surface (w/ topography)
-            # print '## topo surface block: ' + str(topo)
+            # print('## topo surface block: ' + str(topo))
             if len(top_surf) == 0:
-                print ""
-                print "no topo surface found,\
-                      please create block face_topo manually..."
-                print ""
+                print("")
+                print("no topo surface found,\
+                      please create block face_topo manually...")
+                print("")
             else:
                 build_block_side(top_surf, entity + '_topo',
                                  obj=entity, id_0=1001)
             # model has parallel sides (e.g. a block model )
             # xmin - blocks
             if len(xmin) == 0:
-                print ""
-                print "0 abs_xmin surface found, please create block manually"
-                print ""
+                print("")
+                print("0 abs_xmin surface found, please create block manually")
+                print("")
             else:
                 build_block_side(xmin, entity + '_abs_xmin',
                                  obj=entity, id_0=1003)
             # xmax - blocks
             if len(xmax) == 0:
-                print ""
-                print "0 abs_xmax surface found, please create block manually"
-                print ""
+                print("")
+                print("0 abs_xmax surface found, please create block manually")
+                print("")
             else:
                 build_block_side(xmax, entity + '_abs_xmax',
                                  obj=entity, id_0=1005)
             # ymin - blocks
             if len(ymin) == 0:
-                print ""
-                print "0 abs_xmin surface found, please create block manually"
-                print ""
+                print("")
+                print("0 abs_xmin surface found, please create block manually")
+                print("")
             else:
                 build_block_side(ymin, entity + '_abs_ymin',
                                  obj=entity, id_0=1004)
             # ymax - blocks
             if len(ymax) == 0:
-                print ""
-                print "0 abs_ymax surface found, please create block manually"
-                print ""
+                print("")
+                print("0 abs_ymax surface found, please create block manually")
+                print("")
             else:
                 build_block_side(ymax, entity + '_abs_ymax',
                                  obj=entity, id_0=1006)
             # bottom - blocks
             if len(bottom_surf) == 0:
-                print ""
-                print "0 abs_bottom surf found, please create block manually"
-                print ""
+                print("")
+                print("0 abs_bottom surf found, please create block manually")
+                print("")
             else:
                 build_block_side(bottom_surf, entity +
                                  '_abs_bottom', obj=entity, id_0=1002)
     elif closed:
-        print "##closed region not ready"
+        print("##closed region not ready")
         # surf = define_absorbing_surf_sphere()
         # v_list, name_list = define_block()
         # build_block(v_list, name_list, id_0)
         # # entities
         # entities = args[0]
         # id_side = 1001
-        # print entities
+        # print(entities)
         # for entity in entities:
         #     build_block_side(surf, entity + '_closedvol',
         #                      obj=entity, id_0=id_side)
@@ -528,7 +530,7 @@ def get_ordered_node_surf(lsurface, icurve):
     if k != 0:
         cubit.cmd('del group sl')
     else:
-        print 'initializing group sl'
+        print('initializing group sl')
     cubit.cmd("group 'sl' add node in surf " + lsurf)
     group1 = cubit.get_id_from_name("sl")
     nodes_ls = list(cubit.get_group_nodes(group1))
@@ -540,7 +542,7 @@ def get_ordered_node_surf(lsurface, icurve):
     if k != 0:
         cubit.cmd('del group n1')
     else:
-        print 'initializing group n1'
+        print('initializing group n1')
     cubit.cmd("group 'n1' add node in curve " + icurvestr)
     x = cubit.get_bounding_box('curve', icurve)
     if x[2] > x[5]:
@@ -600,7 +602,7 @@ def get_ordered_node_surf(lsurface, icurve):
     if k != 0:
         cubit.cmd('del group curve_vertical')
     else:
-        print 'initializing group curve_vertical'
+        print('initializing group curve_vertical')
     cubit.cmd("group 'curve_vertical' add node in curve " + kcurve)
     group1 = cubit.get_id_from_name('curve_vertical')
     nodes_curve = list(cubit.get_group_nodes(group1))
@@ -632,14 +634,14 @@ def check_bc(iproc, xmin, xmax, ymin, ymax,
     curve_bottom_xmin, curve_bottom_ymin, curve_bottom_xmax, \
         curve_bottom_ymax = \
         extract_bottom_curves(surf_xmin, surf_ymin, surf_xmax, surf_ymax)
-    # print 'absorbing surfaces: ', absorbing_surf
-    print 'absorbing surfaces xmin   : ', abs_xmin
-    print 'absorbing surfaces xmax   : ', abs_xmax
-    print 'absorbing surfaces ymin   : ', abs_ymin
-    print 'absorbing surfaces ymax   : ', abs_ymax
-    print 'absorbing surfaces top    : ', top_surf
-    print 'absorbing surfaces bottom : ', bottom_surf
-    # print 'bottom curves: ', surf_xmin, surf_ymin, surf_xmax, surf_ymax
+    # print('absorbing surfaces: ', absorbing_surf)
+    print('absorbing surfaces xmin   : ', abs_xmin)
+    print('absorbing surfaces xmax   : ', abs_xmax)
+    print('absorbing surfaces ymin   : ', abs_ymin)
+    print('absorbing surfaces ymax   : ', abs_ymax)
+    print('absorbing surfaces top    : ', top_surf)
+    print('absorbing surfaces bottom : ', bottom_surf)
+    # print('bottom curves: ', surf_xmin, surf_ymin, surf_xmax, surf_ymax)
     #
     #
     #
@@ -717,10 +719,10 @@ def check_bc(iproc, xmin, xmax, ymin, ymax,
     boundary['node_curve_xmaxymin'] = c_xmaxymin
     boundary['node_curve_xmaxymax'] = c_xmaxymax
 
-    # print boundary['node_curve_xminymin']
-    # print     boundary['node_curve_xminymax']
-    # print     boundary['node_curve_xmaxymin']
-    # print     boundary['node_curve_xmaxymax']
+    # print(boundary['node_curve_xminymin'])
+    # print(boundary['node_curve_xminymax'])
+    # print(boundary['node_curve_xmaxymin'])
+    # print(boundary['node_curve_xmaxymax'])
     entities = ['face']
     #
     for entity in entities:

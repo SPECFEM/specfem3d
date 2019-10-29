@@ -1,17 +1,18 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
+import os
+import sys
 
 import cubit
 cubit.init([""])
+
 try:
 	from geocubitlib import boundary_definition
 	from geocubitlib import cubit2specfem3d
 except:
     import boundary_definition
 	import cubit2specfem3d
-
-
-import os
-import sys
 
 # two volumes separating 134000x134000x60000 block horizontally
 cubit.cmd('reset')

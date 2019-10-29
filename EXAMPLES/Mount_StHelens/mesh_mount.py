@@ -11,49 +11,43 @@
 #
 #
 #############################################################
-import cubit
-cubit.init([""])
-
-
-try:
-
-from geocubitlib import boundary_definition, exportlib
-from geocubitlib import cubit2specfem3d
-
-except:
-
-import boundary_definition
-import cubit2specfem3d
-
+from __future__ import print_function
 
 import os
 import sys
 import os.path
 import time
 
+import cubit
+cubit.init([""])
 
-
+try:
+  from geocubitlib import boundary_definition, exportlib
+  from geocubitlib import cubit2specfem3d
+except:
+  import boundary_definition
+  import cubit2specfem3d
 
 # time stamp
-print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+print("#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()))
 
 
 # working directory
 cwd = os.getcwd()
-print "#current working directory: " + str(cwd)
+print("#current working directory: " + str(cwd))
 if cwd[len(cwd)-14:len(cwd)] != "Mount_StHelens":
-  print ""
-  print "#please run this script from example directory: SPECFEM3D/example/Mount_StHelens/"
-  print ""
+  print("")
+  print("#please run this script from example directory: SPECFEM3D/example/Mount_StHelens/")
+  print("")
 
 cubit.cmd('version')
 cubit.cmd('reset')
 
-print "running meshing script..."
-print ""
-print "note: this script uses topography surface in ACIS format"
-print "         meshing will take around 15 min"
-print ""
+print("running meshing script...")
+print("")
+print("note: this script uses topography surface in ACIS format")
+print("         meshing will take around 15 min")
+print("")
 
 # uses developer commands
 cubit.cmd('set developer commands on')
@@ -64,18 +58,18 @@ cubit.cmd('set import mesh tolerance 1')
 # 0. step: loading topography surface
 #
 #############################################################
-print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
-print "#loading topo surface..."
+print("#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()))
+print("#loading topo surface...")
 
 # topography surface
 if os.path.exists("topo.cub"):
-  print "opening existing topography surface"
+  print("opening existing topography surface")
   # topography surface
   # previously run, just reopen the cubit file
   cubit.cmd('open "topo.cub"')
 else:
   # topo surface doesn't exist yet, this creates it:
-  print "reading in topography surface"
+  print("reading in topography surface")
   # reads in topography points and creates sheet surface
   execfile("./read_topo.py")
   # clear
@@ -92,8 +86,8 @@ cubit.cmd('regularize volume 1')
 # 1. step: creates temporary brick volume
 #
 #############################################################
-print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
-print "#creating brick..."
+print("#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()))
+print("#creating brick...")
 
 # creates temporary brick volume
 # new brick volume (depth will become 1/2 * 20,000 = 10,000 m)
@@ -110,11 +104,11 @@ cubit.cmd('save as "topo_1.cub" overwrite')
 # 2. step: creates volume with topography surface
 #
 #############################################################
-print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
-print "#creating volume with topography..."
+print("#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()))
+print("#creating volume with topography...")
 
-print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
-print "#imprinting volume, this will take around 1 min, please be patience..."
+print("#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()))
+print("#imprinting volume, this will take around 1 min, please be patience...")
 cubit.cmd('merge all')
 cubit.cmd('imprint all')
 
@@ -131,9 +125,9 @@ cubit.cmd('save as "topo_2.cub" overwrite')
 #############################################################
 # checks if new file available
 if not os.path.exists("topo_2.acis"):
-  print ""
-  print "error creating new volume, please check manually..."
-  print ""
+  print("")
+  print("error creating new volume, please check manually...")
+  print("")
   cubit.cmd('pause')
 # clears workspace
 cubit.cmd('reset')
@@ -141,8 +135,8 @@ cubit.cmd('reset')
 # imports surfaces and merges to single volume
 cubit.cmd('import acis "topo_2.acis" ascii merge_globally')
 
-print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
-print "#creating new volume, this will take another 2 min..."
+print("#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()))
+print("#creating new volume, this will take another 2 min...")
 cubit.cmd('create volume surface all heal')
 
 # backup
@@ -153,9 +147,9 @@ cubit.cmd('save as "topo_3.cub" overwrite')
 # 4. step: create mesh
 #
 #############################################################
-print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
-print "#initial meshing..."
-print "#(will take around 7 min)"
+print("#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()))
+print("#initial meshing...")
+print("#(will take around 7 min)")
 
 # optional: refining mesh at surface
 #
@@ -182,9 +176,9 @@ if DO_TOPO_REFINEMENT == False:
 else:
   # optional surface refinement
   # time stamp
-  print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
-  print "#refining surface mesh..."
-  print "#(will take around 3 hours)"
+  print("#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()))
+  print("#refining surface mesh...")
+  print("#(will take around 3 hours)")
   # starts with a crude mesh
   elementsize = 2000.0
   cubit.cmd('volume all size '+str(elementsize))
@@ -215,8 +209,8 @@ else:
 
 
 # time stamp
-print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
-print "#done meshing..."
+print("#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()))
+print("#done meshing...")
 
 # backup
 cubit.cmd('save as "topo_4.cub" overwrite')
@@ -250,6 +244,6 @@ cubit2specfem3d.export2SPECFEM3D('MESH')
 # all files needed by SCOTCH are now in directory MESH
 
 # time stamp
-print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+print("#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()))
 
 

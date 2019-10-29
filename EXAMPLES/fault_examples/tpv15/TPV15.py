@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # Percy. Script for TPV14-TPV15 SCEC benchmarks.
+from __future__ import print_function
 
 import cubit
 import cubit2specfem3d

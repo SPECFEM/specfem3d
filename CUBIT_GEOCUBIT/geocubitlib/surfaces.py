@@ -22,6 +22,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
+from __future__ import print_function
+
 try:
     import start as start
     cubit = start.start_cubit()
@@ -29,7 +31,7 @@ except:
     try:
         import cubit
     except:
-        print 'error importing cubit, check if cubit is installed'
+        print('error importing cubit, check if cubit is installed')
         pass
 
 
@@ -76,7 +78,7 @@ def surface_regular_grid(isurface=0, cfgname=None):
                 x, y = geo2utm(lon, lat, unit)
                 txt = ' Position ' + str(x) + ' ' + str(y) + ' ' + str(z)
                 command = command + txt
-                # print command
+                # print(command)
         cubit.silent_cmd(command)
         last_curve = cubit.get_last_id("curve")
         if last_curve != last_curve_store:
@@ -94,7 +96,7 @@ def surface_regular_grid(isurface=0, cfgname=None):
                 x, y = geo2utm(lon, lat, unit)
                 txt = ' Position ' + str(x) + ' ' + str(y) + ' ' + str(z)
                 command = command + txt
-                # print command
+                # print(command)
         cubit.silent_cmd(command)
         last_curve = cubit.get_last_id("curve")
         if last_curve != last_curve_store:
@@ -263,7 +265,7 @@ def surface_skin(isurface=0, cfgname=None):
         n = index
     umax = max(curveskin)
     umin = min(curveskin)
-    print 'create surface skin curve ' + str(umin) + ' to ' + str(umax)
+    print('create surface skin curve ' + str(umin) + ' to ' + str(umax))
     cubitcommand = 'create surface skin curve ' + \
         str(umin) + ' to ' + str(umax)
     cubit.cmd(cubitcommand)

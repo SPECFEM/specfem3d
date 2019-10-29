@@ -22,6 +22,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
+from __future__ import print_function
+
 try:
     import start as start
     cubit = start.start_cubit()
@@ -29,7 +31,7 @@ except:
     try:
         import cubit
     except:
-        print 'error importing cubit, check if cubit is installed'
+        print('error importing cubit, check if cubit is installed')
         pass
 
 numpy = start.start_numpy()
@@ -39,7 +41,7 @@ def check_orientation(grdfileNAME):
 
     try:
         grdfile = open(grdfileNAME, 'r')
-        print 'reading ', grdfileNAME
+        print('reading ', grdfileNAME)
     except:
         txt = 'check_orintation ->error reading: ' + str(grdfile)
         raise Exception(txt)
@@ -113,7 +115,7 @@ def process_surfacefiles(iproc, nx, ny, nstep, grdfile, unit, lat_orientation):
 
     try:
         grdfile = open(grdfile, 'r')
-        # print 'reading ',grdfile
+        # print('reading ',grdfile)
     except:
         txt = 'error reading: ' + str(grdfile)
         raise Exception(txt)
@@ -123,7 +125,7 @@ def process_surfacefiles(iproc, nx, ny, nstep, grdfile, unit, lat_orientation):
     else:
         rangey = range(ny - 1, -1, -1)
         lat_orientation = 'NORTH2SOUTH'
-    print lat_orientation
+    print(lat_orientation)
     for iy in rangey:
         for ix in range(0, nx):
             txt = grdfile.readline()
@@ -139,18 +141,18 @@ def process_surfacefiles(iproc, nx, ny, nstep, grdfile, unit, lat_orientation):
                         coordy[jx, jy] = y_current
                         elev[jx, jy] = z
             except:
-                print 'error reading point ', iy * nx + ix, txt, \
-                    grdfile.name, ' proc '
+                print('error reading point ', iy * nx + ix, txt, \
+                      grdfile.name, ' proc ')
                 raise NameError('error reading point')
 
     if (nx) * (ny) != icoord:
         if iproc == 0:
-            print 'error in the surface file ' + grdfile.name
+            print('error in the surface file ' + grdfile.name)
         if iproc == 0:
-            print 'x points ' + str(nx) + ' y points ' + str(ny) + \
-                ' tot points ' + str((nx) * (ny))
+            print('x points ' + str(nx) + ' y points ' + str(ny) + \
+                  ' tot points ' + str((nx) * (ny)))
         if iproc == 0:
-            print 'points read in ' + grdfile.name + ': ' + str(icoord)
+            print('points read in ' + grdfile.name + ': ' + str(icoord))
         raise NameError
 
     grdfile.close()
@@ -238,7 +240,7 @@ def read_grid(filename=None):
             elev[:, :, inz] = cfg.depth_top
         else:
             grdfile = cfg.filename[inz - bottomsurface]
-            print 'reading ', cfg.filename[inz - bottomsurface]
+            print('reading ', cfg.filename[inz - bottomsurface])
             if cfg.irregulargridded_surf:
                 coordx, coordy, elev_1 = process_irregular_surfacefiles(
                     iproc, nx, ny, cfg.xmin, cfg.xmax, cfg.ymin, cfg.ymax,
@@ -250,11 +252,11 @@ def read_grid(filename=None):
             elev[:, :, inz] = elev_1[:, :]
 
         if cfg.subduction:
-            print 'subduction'
+            print('subduction')
             top = elev[:, :, inz]
             slab = elev[:, :, inz - 1]
             subcrit = numpy.abs(top - slab) < cfg.subduction_thres
             top[subcrit] = slab[subcrit] + cfg.subduction_thres
-            print len(top[subcrit])
+            print(len(top[subcrit]))
             elev[:, :, inz] = top
     return coordx, coordy, elev, nx, ny

@@ -22,9 +22,11 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
+from __future__ import print_function
 
 import getopt
 import sys
+
 from utilities import get_cubit_version
 
 
@@ -90,10 +92,10 @@ meshing a volumes
               --SEMoutput = [YourOutputDir])
 
 """
-    print (txt)
+    print(txt)
 
 
-# print 'reading options....'
+# print('reading options....')
 try:
     if hasattr(sys, 'argv'):
         opts, args = getopt.getopt(sys.argv[1:], "sjmohbp1",
@@ -115,8 +117,8 @@ try:
                                     "build_volume", "merge1", "merge2",
                                     "merge", "collect", "meshfiles="])
 
-except Exception, e:
-    print e
+except Exception as e:
+    print(e)
     sys.exit()
 
 output = 'totalmesh_merged'
@@ -176,7 +178,7 @@ if opts:
     for o, value in opts:
         if o in ('--starting_tolerance'):
             starting_tolerance = float(value)
-        # print o, value
+        # print(o, value)
         if o in ('--save_cubfile'):
             save_cubfile = True
         if o in ('--step_tolerance'):
@@ -249,22 +251,22 @@ if opts:
             import start as start
             mpiflag, iproc, numproc, mpi = start.start_mpi()
             if mpiflag:
-                print '--------, MPI ON, parallel mesher ready'
+                print('--------, MPI ON, parallel mesher ready')
             else:
-                print '--------, MPI OFF, serial mesher ready'
+                print('--------, MPI OFF, serial mesher ready')
             numpy = start.start_numpy()
-            print '--------, Numpy ON'
+            print('--------, Numpy ON')
             cubit = start.start_cubit()
-            print '--------, CUBIT ON'
+            print('--------, CUBIT ON')
             sys.exit()
         if o in ("--cfg"):
             cfg_name = value
             try:
                 if open(cfg_name):
                     pass
-            except IOError, e:
-                print 'error opening ', cfg_name
-                print e
+            except IOError as e:
+                print('error opening ', cfg_name)
+                print(e)
                 import sys
                 sys.exit()
         if o == ('--surface'):
@@ -288,9 +290,9 @@ if opts:
             import glob
             nf = glob.glob(cubfiles)
             if len(nf) > 0:
-                print 'cubfiles ', nf
+                print('cubfiles ', nf)
             else:
-                print 'files not found: ', cubfiles
+                print('files not found: ', cubfiles)
                 import sys
                 sys.exit()
         if o in ("--exofiles"):
@@ -342,7 +344,7 @@ if opts:
                 pass
         if o in ("--addsea"):
             add_sea = True
-    print cpuxmax, cpuymax
+    print(cpuxmax, cpuymax)
     if cpuymax:
         pass
     elif cpuy > 1:
@@ -361,15 +363,15 @@ if opts:
             cpuxmax = cpux
     else:
         cpuxmax = 1
-    print cpuxmax, cpuymax
+    print(cpuxmax, cpuymax)
 
     if cpml:
         if not cpml_size:
-            print 'specify the size of the cpml boundaries'
+            print('specify the size of the cpml boundaries')
             import sys
             sys.exit()
         elif cpml_size <= 0:
-            print 'cpml size negative, please check the parameters'
+            print('cpml size negative, please check the parameters')
             import sys
             sys.exit()
 
@@ -384,7 +386,7 @@ if opts:
                 txt = str(k) + ' -----> ' + \
                     str(d[k])
                 txt = txt.replace("'", "").replace('"', '')
-                print txt
+                print(txt)
     else:
         try:
             import start as start
@@ -403,7 +405,7 @@ if opts:
         except:
             pass
 elif opts == []:
-    print __name__
+    print(__name__)
     usage()
     import sys
     sys.exit()

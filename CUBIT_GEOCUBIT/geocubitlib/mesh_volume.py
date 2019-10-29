@@ -22,6 +22,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
+from __future__ import print_function
 
 try:
     import start as start
@@ -30,7 +31,7 @@ except:
     try:
         import cubit
     except:
-        print "error importing cubit, check if cubit is installed"
+        print("error importing cubit, check if cubit is installed")
         pass
 
 
@@ -43,8 +44,8 @@ def mesh(filename=None):
     if cfg.map_meshing_type == 'regularmap':
         mesh_layercake_regularmap(filename=filename)
     else:
-        print 'error: map_meshing_type ', cfg.map_meshing_type, \
-              ' not implemented'
+        print('error: map_meshing_type ', cfg.map_meshing_type, \
+              ' not implemented')
 
 
 class cubitvolume:
@@ -88,8 +89,8 @@ def mesh_layercake_regularmap(filename=None):
 
     command = 'composite create curve all'
     cubit.cmd(command)
-    print '###"No valid composites can be created from the specified curves." \
-          is NOT a critical ERROR.'
+    print('###"No valid composites can be created from the specified curves." \
+          is NOT a critical ERROR.')
     #
     command = "compress all"
     cubit.cmd(command)
@@ -121,7 +122,7 @@ def mesh_layercake_regularmap(filename=None):
     # interval assignement
     surf_or, surf_vertical, list_curve_or, list_curve_vertical, \
         bottom, top = get_v_h_list(list_vol, chktop=cfg.chktop)
-    print 'vertical surfaces: ', surf_vertical
+    print('vertical surfaces: ', surf_vertical)
 
     for k in surf_vertical:
         command = "surface " + str(k) + " scheme submap"
@@ -146,7 +147,7 @@ def mesh_layercake_regularmap(filename=None):
         # cubit_error_stop(iproc,command,ner)
     if max(ucurve_interval.values()) != min(ucurve_interval.values()):
         schemepave = True
-        print 'mesh scheme is set to pave'
+        print('mesh scheme is set to pave')
         for sk in surf_or:
             command = "surface " + str(sk) + " scheme pave"
             cubit.cmd(command)
@@ -164,7 +165,7 @@ def mesh_layercake_regularmap(filename=None):
         # cubit_error_stop(iproc,command,ner)
 
     if max(vcurve_interval.values()) != min(vcurve_interval.values()):
-        print 'mesh scheme is set to pave'
+        print('mesh scheme is set to pave')
         schemepave = True
         for sk in surf_or:
             command = "surface " + str(sk) + " scheme pave"
@@ -247,14 +248,14 @@ def mesh_layercake_regularmap(filename=None):
 
     #
     # smoothing
-    print iproc, 'untangling...'
+    print(iproc, 'untangling...')
     cmd = "volume all smooth scheme untangle beta 0.02 cpu 10"
     cubit.cmd(cmd)
     cmd = "smooth volume all"
     cubit.cmd(cmd)
 
     if cfg.smoothing:
-        print 'smoothing .... ' + str(cfg.smoothing)
+        print('smoothing .... ' + str(cfg.smoothing))
         cubitcommand = 'surf all smooth scheme laplacian '
         cubit.cmd(cubitcommand)
         cubitcommand = 'smooth surf all'
@@ -283,7 +284,7 @@ def mesh_layercake_regularmap(filename=None):
     refinement(nvol, vol, filename=filename)
     #
     # top layer vertical coarsening
-    print 'coarsening top layer... ', cfg.coarsening_top_layer
+    print('coarsening top layer... ', cfg.coarsening_top_layer)
     if cfg.coarsening_top_layer:
         cubitcommand = 'del mesh vol ' + str(vol[-1].ID) + ' propagate'
         cubit.cmd(cubitcommand)
@@ -316,19 +317,19 @@ def mesh_layercake_regularmap(filename=None):
     #
     import boundary_definition
     entities = ['face']
-    print iproc, 'hex block definition...'
+    print(iproc, 'hex block definition...')
     boundary_definition.define_bc(entities, parallel=True,
                                   cpux=cfg.cpux, cpuy=cfg.cpuy,
                                   cpuxmin=0, cpuymin=0, optionsea=False)
     # save mesh
 
-    print iproc, 'untangling...'
+    print(iproc, 'untangling...')
     cmd = "volume all smooth scheme untangle beta 0.02 cpu 10"
     cubit.cmd(cmd)
     cmd = "smooth volume all"
     cubit.cmd(cmd)
 
-    print iproc, 'saving...'
+    print(iproc, 'saving...')
     savemesh(mpiflag, iproc=iproc, filename=filename)
     #
 
@@ -364,8 +365,8 @@ def refinement(nvol, vol, filename=None):
         else:
             for ir in cfg.tripl:
                 if ir == 1:
-                    print ('interface = 1 means that the refinement'
-                           'interface is at the bottom of the volume')
+                    print('interface = 1 means that the refinement'
+                          'interface is at the bottom of the volume')
                     txt = ' all '
                     idepth = 1
                     cubitcommand = 'refine hex in vol  ' + txt
@@ -512,7 +513,7 @@ def refine_inside_curve(curves, ntimes=1, depth=1, block=1, surface=False):
     group_id_1 = cubit.get_id_from_name("negativejac")
     n1 = cubit.get_group_nodes(group_id_1)
     if len(n1) != 0:
-        print 'error, negative jacobian after the refining'
+        print('error, negative jacobian after the refining')
 
 
 def get_uv_curve(list_curve_or):

@@ -388,7 +388,7 @@ contains
 
      ! recompute jacobian for the new point
        call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-            xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
+                               xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
 
        ! compute distance to target location
        dx = - (x - x_target)
@@ -418,7 +418,7 @@ contains
 
     ! compute final coordinates of point found
     call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-         xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
+                            xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
 
     ! store xi,eta,gamma and x,y,z of point found
     ! note: xi/eta/gamma will be in range [-1,1]
