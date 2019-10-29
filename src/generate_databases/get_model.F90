@@ -343,11 +343,11 @@
 
     ! user output
     if (myrank == 0) then
-      if (mod(ispec,nspec/10) == 0) then
+      if (mod(ispec,max(nspec/10,1)) == 0) then
         tCPU = wtime() - time_start
         ! remaining
         tCPU = (10.0-ispec/(nspec/10.0))/ispec/(nspec/10.0)*tCPU
-        write(IMAIN,*) "    ",ispec/(nspec/10) * 10," %", &
+        write(IMAIN,*) "    ",ispec/(max(nspec/10,1)) * 10," %", &
                       " time remaining:", tCPU,"s"
 
         ! flushes file buffer for main output file (IMAIN)
