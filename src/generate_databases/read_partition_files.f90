@@ -128,7 +128,8 @@
      ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id8
      ! or
      ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id27
-     read(IIN) dummy_elmnt,mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec),(elmnts_ext_mesh(j,ispec),j=1,NGNOD)
+     read(IIN) dummy_elmnt,mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec), &
+               (elmnts_ext_mesh(j,ispec),j=1,NGNOD)
 
      ! check debug
      if (dummy_elmnt /= ispec) stop 'Error ispec order in materials file'

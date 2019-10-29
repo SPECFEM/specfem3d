@@ -31,23 +31,26 @@
                            gammax_elem,gammay_elem,gammaz_elem,jacobian_elem, &
                            xelm,yelm,zelm,dershape3D)
 
-  use generate_databases_par, only: NGNOD,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO
+  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO,MAX_STRING_LEN
+  use generate_databases_par, only: NGNOD,OUTPUT_FILES
 
   implicit none
 
   integer myrank
 
-  double precision :: dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
-  double precision, dimension(NGNOD) :: xelm,yelm,zelm
+  double precision,intent(in) :: dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision, dimension(NGNOD),intent(in) :: xelm,yelm,zelm
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(inout) :: &
     xix_elem,xiy_elem,xiz_elem,etax_elem,etay_elem,etaz_elem, &
     gammax_elem,gammay_elem,gammaz_elem,jacobian_elem
 
+  ! local parameters
   integer :: i,j,k,ia
   double precision :: xxi,xeta,xgamma,yxi,yeta,ygamma,zxi,zeta,zgamma
   double precision :: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
   double precision :: jacobian
+  character(len=MAX_STRING_LEN) :: filename
 
   do k=1,NGLLZ
     do j=1,NGLLY
@@ -82,7 +85,20 @@
                    xgamma*(yxi*zeta-yeta*zxi)
 
 ! check that the Jacobian transform is invertible, i.e. that the Jacobian never becomes negative or null
-        if (jacobian <= ZERO) call exit_MPI(myrank,'Error negative or null 3D Jacobian found')
+        if (jacobian <= ZERO) then
+          print *,'Error: rank ',myrank,'found invalid element with negative Jacobian ',jacobian
+          print *,'  NGNOD = ',NGNOD
+          print *,'  point (i,j,k) = ',i,j,k
+          print *,'  element points x/y/z: '
+          do ia = 1,NGNOD
+            print *,'  ',xelm(ia),yelm(ia),zelm(ia)
+          enddo
+          write(filename,'(a,i6.6,a)') trim(OUTPUT_FILES)//'/error_proc',myrank,'_element_with_invalid_jacobian'
+          call write_VTK_data_points_elem(NGNOD,xelm,yelm,zelm,jacobian,filename)
+          print *,'  written out:',trim(filename)
+          print *,'Please check your mesh...'
+          call exit_MPI(myrank,'Error negative or null 3D Jacobian found')
+        endif
 
 !     invert the relation (Fletcher p. 50 vol. 2)
         xix = (yeta*zgamma-ygamma*zeta) / jacobian

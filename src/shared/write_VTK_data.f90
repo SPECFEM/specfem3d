@@ -27,6 +27,23 @@
 
 ! routine for saving vtk file holding integer flag on each spectral element
 
+! note: due to some compilers output, we usually put formatting specifiers here (e.g., (3e18.6)).
+!
+!       example: some compilers tend to output a line like:
+!                   -1500.  -1500.   1312.5
+!                with same numbers as:
+!                   2*-1500., 1312.5
+!
+!                this will corrupt the VTK files and become unreadable.
+!                thus, by putting
+!
+!                   write(IOUT_VTK,'(3e18.6)') ..
+!
+!                the lines becomes fine again. unfortunately, we need to assume a "good" number range
+!                for this. since we could have SPECFEM simulations for microscales on micrometer up to
+!                macroscales for kilometers, this range specifier might not always be optimal.
+!                maybe we find a better way in future...
+
   subroutine write_VTK_data_elem_i(nspec,nglob, &
                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                                    elem_flag,prname_file)
@@ -171,8 +188,8 @@
 ! external mesh routine for saving vtk files for CUSTOM_REAL values on all GLL points
 
   subroutine write_VTK_data_gll_cr(nspec,nglob, &
-            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-            gll_data,prname_file)
+                                   xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                                   gll_data,prname_file)
 
   use constants
 
@@ -266,8 +283,8 @@
 ! external mesh routine for saving vtk files for integer values on all GLL points
 
   subroutine write_VTK_data_gll_i(nspec,nglob, &
-            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-            gll_data,prname_file)
+                                  xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                                  gll_data,prname_file)
 
   use constants
 
@@ -359,9 +376,9 @@
 ! external mesh routine for saving vtk files for points locations
 
   subroutine write_VTK_data_points(nglob, &
-            xstore_dummy,ystore_dummy,zstore_dummy, &
-            points_globalindices,num_points_globalindices, &
-            prname_file)
+                                   xstore_dummy,ystore_dummy,zstore_dummy, &
+                                   points_globalindices,num_points_globalindices, &
+                                   prname_file)
 
   use constants
 
@@ -413,11 +430,127 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine write_VTK_data_points_elem(NGNOD,xelm,yelm,zelm,val,prname_file)
+
+! single element output as points
+
+  use constants, only: MAX_STRING_LEN,IOUT_VTK
+
+  implicit none
+
+  integer,intent(in) :: NGNOD
+
+  ! coordinates
+  double precision, dimension(NGNOD),intent(in) :: xelm,yelm,zelm
+  double precision, intent(in) :: val
+
+  ! file name
+  character(len=MAX_STRING_LEN),intent(in) :: prname_file
+
+  ! local parameters
+  integer :: i,itype
+
+  ! write source and receiver VTK files for Paraview
+  open(IOUT_VTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
+  write(IOUT_VTK,'(a)') '# vtk DataFile Version 3.1'
+  write(IOUT_VTK,'(a)') 'material model VTK file'
+  write(IOUT_VTK,'(a)') 'ASCII'
+  write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
+  write(IOUT_VTK, '(a,i12,a)') 'POINTS ', NGNOD, ' float'
+  do i = 1,NGNOD
+    ! note: the format specifiers is automatic to have a more readable file, but might have issues on some compiler outputs.
+    !       see the remark at the top of the file.
+    write(IOUT_VTK,*) xelm(i),yelm(i),zelm(i)
+  enddo
+  write(IOUT_VTK,*) ''
+
+  ! single element
+  !
+  ! cell type: hexahedrons
+  !
+  ! VTK type definition numbers:
+  !   https://vtk.org/doc/nightly/html/vtkCellType_8h_source.html
+  ! ordering images see e.g.:
+  !   https://lorensen.github.io/VTKExamples/site/VTKBook/05Chapter5/
+  if (NGNOD == 8) then
+    ! hex with 8 nodes
+    !
+    ! VTK_HEXAHEDRON == 12
+    !
+    ! The hexahedron is defined by an ordered list of eight points.
+    ! ordering: 0,1,2,3  -> bottom (left,front),(right,front),(right,back),(left,back)
+    !           4,5,6,7  -> top    (left,front),(right,front),(right,back),(left,back)
+    itype = 12
+  else if (NGNOD == 27) then
+    ! hex with 27 nodes
+    !
+    ! VTK_TRIQUADRATIC_HEXAHEDRON == 29
+    !
+    ! The tri-quadratic hexahedron is a primary three-dimensional cell. It is defined by twenty-seven points.
+    ! The first eight points are located at the vertices of the hexahedron;
+    ! the next twelve are located in the middle of each of the twelves edges;
+    ! the next six are located in the center of each faces; and the last one is located in the center of the hexahedron
+    ! ordering: 0,1,2,3  -> bottom (left,front),(right,front),(right,back),(left,back)
+    !           4,5,6,7  -> top    (left,front),(right,front),(right,back),(left,back)
+    !           8,9,10,11   -> bottom edges mid-points (bottom,front),(bottom,right),(bottom,back),(bottom,left)
+    !           12,13,14,15 -> top edges mid-points (top,front),(top,right),(top,back),(top,left)
+    !           16,17,18,19 -> bottom-to-top edges mid-points (front,left),(front,right),(back,right),(back,left)
+    !           20,21,22,23,24,25 -> face centers (left),(right),(front),(back),(bottom),(top)
+    !           27          -> center point of hexahedron
+    itype = 29
+  else
+    print *,'Invalid NGNOD ',NGNOD,'in routine write_VTK_data_points_elem() routine'
+    stop 'Invalid NGNOD in write_VTK_data_points_elem()'
+  endif
+
+  ! SPECFEM order:
+  ! uses ordering:
+  !   corners      bottom (left,front),(right,front),(right,back),(left,back)  -> vtk 0,1,2,3
+  !                top    (left,front),(right,front),(right,back),(left,back)  ->     4,5,6,7     same as vtk
+  !
+  !   edges    (bottom edges: front,right,back,left)
+  !            (bottom-to-top edges: front left,right, back right,left)
+  !            (top edges: front,right,back,left)
+  !            -> vtk needs bottom,top,mid edges   -> 8,9,10,11, 16,17,18,19, 12,13,14,15
+  !   faces    (bottom),(front),(right),(back),(left),(top)
+  !            -> vtk needs (left),(right),(front),(back),(bottom),(top) -> 24,22,21,23,20,25
+  !   center node -> 26
+  !
+  ! note: indices for vtk start at 0
+  write(IOUT_VTK,'(a,i12,i12)') "CELLS ",1,1*(NGNOD + 1)
+  if (NGNOD == 27) then
+    ! hex27 single element order
+    write(IOUT_VTK,'(28i4)') NGNOD,0,1,2,3, 4,5,6,7, 8,9,10,11, 16,17,18,19, 12,13,14,15, 24,22,21,23,20,25, 26
+  else
+    ! hex8 single element
+    write(IOUT_VTK,'(9i12)') NGNOD,(i-1,i=1,NGNOD)
+  endif
+  write(IOUT_VTK,*) ''
+
+  write(IOUT_VTK,'(a,i12)') "CELL_TYPES ",1
+  write(IOUT_VTK,'(i12)') itype
+  write(IOUT_VTK,*) ''
+
+  write(IOUT_VTK,'(a,i12)') "CELL_DATA ",1
+  write(IOUT_VTK,'(a)') "SCALARS elem_val float"
+  write(IOUT_VTK,'(a)') "LOOKUP_TABLE default"
+  write(IOUT_VTK,*) val
+  write(IOUT_VTK,*) ''
+
+  close(IOUT_VTK)
+
+  end subroutine write_VTK_data_points_elem
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
 ! external mesh routine for saving vtk files for points locations
 
   subroutine write_VTK_data_elem_vectors(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                        elem_vector,prname_file)
+                                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                                         elem_vector,prname_file)
 
   use constants
 
