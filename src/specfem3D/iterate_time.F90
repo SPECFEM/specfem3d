@@ -205,16 +205,12 @@
     if (compute_task .and. myrank == 0) then
       if (MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
         ! send nfaces_perproc_surface
-        !print *, "nfaces sent: ", nfaces_perproc_surface
         call send_i_inter(nfaces_perproc_surface,NPROC, 0, io_tag_surface_nfaces)
         ! send faces_surface_offset
-        !print *, "faces offset sent: ", faces_surface_offset
         call send_i_inter(faces_surface_offset,NPROC, 0, io_tag_surface_offset)
         ! send size of store_val
-        !print *, "size array surf sent: ", size(store_val_x_all)
         call send_i_inter(size(store_val_x_all), 1, 0, io_tag_surface_coord_len)
         ! send store_val_x/y/z_all
-        !print *, "size xyz all: ", size(store_val_x_all), ", ", size(store_val_y_all), ", ", size(store_val_z_all)
         call sendv_cr_inter(store_val_x_all,size(store_val_x_all), 0, io_tag_surface_x)
         call sendv_cr_inter(store_val_y_all,size(store_val_y_all), 0, io_tag_surface_y)
         call sendv_cr_inter(store_val_z_all,size(store_val_z_all), 0, io_tag_surface_z)
@@ -248,9 +244,6 @@
 if (compute_task) then
 
   do it = it_begin,it_end
-
-    ! exp
-    if(myrank == 0 .and. mod(it,10)==0) print *, "it = ", it
 
     ! simulation status output and stability check
     if (mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == it_begin + 4 .or. it == it_end) then

@@ -88,29 +88,23 @@ subroutine do_io_start_idle()
 
   ! get receiver info from compute nodes
   call get_receiver_info(islice_num_rec_local)
-  print *, "io node got number of recs in each node as: ", islice_num_rec_local
  
   ! initialize output file for seismo
   call do_io_seismogram_init()
-  print *, "seismo output h5 file initialization done"
 
   ! count the number of procs having receivers (n_procs_with_rec) 
   ! and the number of receivers on each procs (islice...)
   call count_nprocs_with_recs(islice_num_rec_local) 
-  print *, "the number of procs with receiver counted as ", n_procs_with_rec
 
   ! check the seismo types to be saved
   call count_seismo_type()
-  print *, "the number of seismo type is ", n_seismo_type
  
   ! allocate temporal arrays for seismo signals
   call allocate_seismo_arrays(islice_num_rec_local)
-  print *, "seismo temporal arrays memory allocated"
 
   ! initialize receive count
   ! count the number of messages being sent
   n_recv_msg_seismo = n_procs_with_rec*n_msg_seismo_each_proc*n_seismo_type
-  print *, "total number of msg for seismo is ", n_recv_msg_seismo
 
   max_seismo_out = int(NSTEP/NTSTEP_BETWEEN_OUTPUT_SEISMOS)
   if (mod(NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS) /= 0) max_seismo_out = max_seismo_out+1
@@ -123,9 +117,7 @@ subroutine do_io_start_idle()
     if (MOVIE_SURFACE) then
       n_recv_msg_surf = n_msg_surf_each_proc*NPROC
       print *, "surf move init done"
-
       call write_xdmf_surface_header()
-      print *, "xdmf header for surface movie written"
 
       max_surf_out = int(NSTEP/NTSTEP_BETWEEN_FRAMES)
     endif
@@ -145,7 +137,6 @@ subroutine do_io_start_idle()
   if (MOVIE_VOLUME) then
     call movie_volume_init(nelm_par_proc,nglob_par_proc)
     print *, "movie volume init done"
-    print *, "n_msg_vol_each_proc: ", n_msg_vol_each_proc
     n_recv_msg_vol = n_msg_vol_each_proc*NPROC
     max_vol_out    = int(NSTEP/NTSTEP_BETWEEN_FRAMES)
 
@@ -166,12 +157,12 @@ subroutine do_io_start_idle()
     ! waiting for a mpi message
     call idle_mpi_io(status)
 
-    print *,                 "msg: " , status(MPI_TAG) , " rank: ", status(MPI_SOURCE), &
-              "  counters, seismo: " , rec_count_seismo, "/"      , n_recv_msg_seismo,  &
-                          ", surf: " , rec_count_surf  , "/"      , n_recv_msg_surf,    &
-                          ", shake: ", rec_count_shake , "/"      , n_recv_msg_shake,   &
-                          ", vol: "  , rec_count_vol   , "/"      , n_recv_msg_vol
-    !print *, "msg arrived of tag: ", status(MPI_TAG), ", sender: ", status(MPI_SOURCE)
+    ! debug output
+    !print *,                 "msg: " , status(MPI_TAG) , " rank: ", status(MPI_SOURCE), &
+    !          "  counters, seismo: " , rec_count_seismo, "/"      , n_recv_msg_seismo,  &
+    !                      ", surf: " , rec_count_surf  , "/"      , n_recv_msg_surf,    &
+    !                      ", shake: ", rec_count_shake , "/"      , n_recv_msg_shake,   &
+    !                      ", vol: "  , rec_count_vol   , "/"      , n_recv_msg_vol
 
     !
     ! receive seismograms
@@ -181,7 +172,6 @@ subroutine do_io_start_idle()
     if (status(MPI_TAG) == io_tag_seismo_ids_rec) then
       call recv_id_rec(status)
       rec_count_seismo = rec_count_seismo+1
-      !print *, "nrec arrived"
     endif
  
     if (status(MPI_TAG) == io_tag_seismo_body_disp .or. & 
@@ -191,7 +181,6 @@ subroutine do_io_start_idle()
     ) then
       call recv_seismo_data(status,islice_num_rec_local,rec_count_seismo)
       rec_count_seismo = rec_count_seismo+1
-      !print *, "seismo body arrived"
     endif
   
     !
@@ -235,8 +224,6 @@ subroutine do_io_start_idle()
            status(MPI_TAG) == io_tag_vol_veloz        &
       ) then
         it_io = NTSTEP_BETWEEN_FRAMES*(vol_out_count+1)
-        !print *, "n_recv_msg_vol: ", n_recv_msg_vol
-        !print *, "receiving and writing vol data, tag: ", status(MPI_TAG), " at it:, ", it_io, ", counter: ", rec_count_vol
         call recv_write_vol_data(status,rec_count_vol,it_io,rec_count_vol_par_proc, val_type_mov)
         rec_count_vol = rec_count_vol+1
         ! finish gathering the whole data at each time step
@@ -262,8 +249,7 @@ subroutine do_io_start_idle()
 
     ! write seismo
     if (rec_count_seismo == n_recv_msg_seismo) then
-      !print *, "seismo writing..."
-      it_offset = seismo_out_count*NTSTEP_BETWEEN_OUTPUT_SEISMOS ! calculate the offset of timestep
+      it_offset        = seismo_out_count*NTSTEP_BETWEEN_OUTPUT_SEISMOS ! calculate the offset of timestep
       call write_seismograms_io(it_offset)
       rec_count_seismo = 0 ! reset the counter then wait for the messages of next iteration.
       seismo_out_count = seismo_out_count+1
@@ -271,8 +257,7 @@ subroutine do_io_start_idle()
  
     ! write surf movie
     if (MOVIE_SURFACE .and. rec_count_surf == n_recv_msg_surf) then
-      !print *, "surface writing..."
-      it_io = NTSTEP_BETWEEN_FRAMES*(surf_out_count+1)
+      it_io          = NTSTEP_BETWEEN_FRAMES*(surf_out_count+1)
       call write_surf_io(it_io)
       rec_count_surf = 0 ! reset counter
       surf_out_count = surf_out_count+1
@@ -283,7 +268,6 @@ subroutine do_io_start_idle()
 
     ! write shakemap
     if (CREATE_SHAKEMAP .and. rec_count_shake == n_recv_msg_shake) then
-      !print *, "shakemap writing..."
       call write_shake_io()
       rec_count_shake = 0
       shake_out_count = shake_out_count+1
@@ -292,8 +276,6 @@ subroutine do_io_start_idle()
     endif
 
     ! movie data will be written as soon as it is received
-
-
 
 !    ! trigger for terminating io server
 !    if (status(MPI_TAG) == io_tag_end) then
@@ -308,7 +290,6 @@ subroutine do_io_start_idle()
 
   ! deallocate arrays
   call deallocate_arrays()
-  !print *, "deallocate io server done"
 
 end subroutine do_io_start_idle
 
@@ -333,7 +314,7 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
   ! make output file
   character(len=64) :: group_name
   character(len=64) :: dset_name
-  type(h5io) :: h5
+  type(h5io)        :: h5
   h5 = h5io()
 
   fname_h5_data_vol = LOCAL_PATH(1:len_trim(LOCAL_PATH))//"/movie_volume.h5"
@@ -364,10 +345,10 @@ subroutine recv_write_vol_data(status, rec_count_vol,it_io,rec_count_vol_par_pro
   use my_mpi
   implicit none
   
-  integer, intent(in) :: status(MPI_STATUS_SIZE)
-  integer, intent(in) :: rec_count_vol,it_io
+  integer, intent(in)                  :: status(MPI_STATUS_SIZE)
+  integer, intent(in)                  :: rec_count_vol,it_io
   logical, dimension(5), intent(inout) :: val_type_mov
-  integer, dimension(0:NPROC-1) :: rec_count_vol_par_proc
+  integer, dimension(0:NPROC-1)        :: rec_count_vol_par_proc
   integer :: sender, ier, tag, arrsize, msgsize, ielm, nspecab_loc, nglobab_loc
 
   ! divergence and curl only in the global nodes
@@ -467,9 +448,9 @@ subroutine shakemap_init(nfaces_perproc, surface_offset)
   implicit none
 
   integer, dimension(0:NPROC-1), intent(in) :: nfaces_perproc, surface_offset
-  integer :: ier
-  character(len=64) :: dset_name
-  character(len=64) :: group_name
+  integer                                   :: ier
+  character(len=64)                         :: dset_name
+  character(len=64)                         :: group_name
  
   type(h5io) :: h5
   h5 = h5io()
@@ -551,7 +532,7 @@ subroutine write_shake_io()
 
   character(len=64) :: dset_name
   character(len=64) :: group_name
-  type(h5io) :: h5
+  type(h5io)        :: h5
   h5 = h5io()
 
   ! continue opening hdf5 file till the end of write process
@@ -590,9 +571,9 @@ subroutine surf_mov_init(nfaces_perproc, surface_offset)
   implicit none
 
   integer, dimension(0:NPROC-1), intent(in) :: nfaces_perproc, surface_offset
-  integer :: ier
-  character(len=64) :: dset_name
-  character(len=64) :: group_name
+  integer                                   :: ier
+  character(len=64)                         :: dset_name
+  character(len=64)                         :: group_name
  
   type(h5io) :: h5
   h5 = h5io()
@@ -607,10 +588,8 @@ subroutine surf_mov_init(nfaces_perproc, surface_offset)
   ! information for computer node
   ! get nfaces_perproc_surface
   call recv_i_inter(nfaces_perproc,NPROC,0,io_tag_surface_nfaces)
-  !print *, "nfaces received: ", nfaces_perproc
   ! get faces_surface_offset
   call recv_i_inter(surface_offset,NPROC,0,io_tag_surface_offset)
-  !print *, "surface received: ", surface_offset
 
   ! get xyz coordinates
   call recv_i_inter(size_surf_array, 1, 0, io_tag_surface_coord_len)
@@ -656,10 +635,10 @@ subroutine recv_surf_data(status, nfaces_perproc, surface_offset)
   use specfem_par  
   implicit none
 
-  integer, dimension(0:NPROC-1), intent(in) :: nfaces_perproc, surface_offset
-  integer                            :: ier, sender, tag, i
-  integer :: msgsize
-  integer, intent(in) :: status(MPI_STATUS_SIZE)
+  integer, dimension(0:NPROC-1), intent(in)         :: nfaces_perproc, surface_offset
+  integer                                           :: ier, sender, tag, i
+  integer                                           :: msgsize
+  integer, intent(in)                               :: status(MPI_STATUS_SIZE)
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: temp_array
   sender = status(MPI_SOURCE)
   tag    = status(MPI_TAG)
@@ -695,10 +674,10 @@ subroutine write_surf_io(it_io)
   implicit none
 
   integer, intent(in) :: it_io
-  character(len=64) :: dset_name
-  character(len=64) :: group_name
-  character(len=10) :: tempstr
-  type(h5io) :: h5
+  character(len=64)   :: dset_name
+  character(len=64)   :: group_name
+  character(len=10)   :: tempstr
+  type(h5io)          :: h5
   h5 = h5io()
 
   ! continue opening hdf5 file till the end of write process
@@ -736,8 +715,8 @@ subroutine get_receiver_info(islice_num_rec_local)
 
   implicit none
 
-  integer :: ier, iproc, nrec_local_temp
-  integer, dimension(1) :: nrec_temp
+  integer                      :: ier, iproc, nrec_local_temp
+  integer, dimension(1)        :: nrec_temp
   integer,dimension(0:NPROC-1) :: islice_num_rec_local
  
 
@@ -759,7 +738,7 @@ subroutine allocate_seismo_arrays(islice_num_rec_local)
   implicit none
 
   integer, dimension(0:NPROC-1), intent(in) :: islice_num_rec_local
-  integer :: ier, max_num_rec, nstep_temp
+  integer                                   :: ier, max_num_rec, nstep_temp
 
   if (NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP) then
     nstep_temp = NSTEP
@@ -813,27 +792,6 @@ subroutine deallocate_arrays()
   deallocate(surf_y,stat=ier)
   deallocate(surf_z,stat=ier)
 
-!  if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
-!    deallocate(seismo_disp,stat=ier)
-!    if (ier /= 0) call exit_MPI_without_rank('error deallocating array seimo_disp')
-!    if (ier /= 0) stop 'error deallocating array seismo_disp'
-!  endif
-!  if (SAVE_SEISMOGRAMS_VELOCITY) then
-!    deallocate(seismo_velo,stat=ier)
-!    if (ier /= 0) call exit_MPI_without_rank('error deallocating array seismo_velo')
-!    if (ier /= 0) stop 'error deallocating array seismo_velo'
-!  endif
-!  if (SAVE_SEISMOGRAMS_ACCELERATION) then
-!    deallocate(seismo_acce,stat=ier)
-!    if (ier /= 0) call exit_MPI_without_rank('error deallocating array seismo_acce')
-!    if (ier /= 0) stop 'error deallocating array seismo_acce'
-!  endif
-!  if (SAVE_SEISMOGRAMS_PRESSURE) then
-!    deallocate(seismo_pres,stat=ier)
-!    if (ier /= 0) call exit_MPI_without_rank('error deallocating array seismo_pres')
-!    if (ier /= 0) stop 'error deallocating array seismo_pres'
-!  endif
-
   ! surface movie
   deallocate(surf_ux,stat=ier)
   deallocate(surf_uy,stat=ier)
@@ -867,7 +825,7 @@ subroutine recv_id_rec(status)
   implicit none
 
   integer, intent(in) :: status(MPI_STATUS_SIZE)
-  integer :: sender
+  integer             :: sender
 
   sender = status(MPI_SOURCE)
   call recv_i_inter(id_rec_globs(:,sender), size(id_rec_globs(:,sender)), sender, io_tag_seismo_ids_rec)
@@ -882,11 +840,11 @@ subroutine recv_seismo_data(status, islice_num_rec_local, rec_count_seismo)
   implicit none
 
   integer, dimension(0:NPROC-1), intent(in) :: islice_num_rec_local
-  integer, intent(in) :: status(MPI_STATUS_SIZE), rec_count_seismo
+  integer, intent(in)                       :: status(MPI_STATUS_SIZE), rec_count_seismo
 
   integer :: count, rec_id_glob, sender, nrec_passed, irec_passed, tag, irec, id_rec_glob, ier
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: seismo_temp
-  integer :: msg_size
+  integer                                               :: msg_size
 
   sender       = status(MPI_SOURCE)
   tag          = status(MPI_TAG)
@@ -901,10 +859,6 @@ subroutine recv_seismo_data(status, islice_num_rec_local, rec_count_seismo)
     if (ier /= 0) stop 'error allocating array seismo_temp'
 
     count = msg_size 
-    !print *,"receiving seismo body"
-    !print *, "nrec_passed: ", nrec_passed
-    !print *, "count: ", count
-    !print *, "sender: ", sender
     call recvv_cr_inter(seismo_temp, count, sender, tag)
 
   ! get scalar value i.e. pres
@@ -916,12 +870,9 @@ subroutine recv_seismo_data(status, islice_num_rec_local, rec_count_seismo)
     call recvv_cr_inter(seismo_temp, count, sender, tag)
   endif
 
-  !print *, "seismo body received"
-
   ! set local array to the global array
   do irec_passed=1,nrec_passed
     id_rec_glob = id_rec_globs(irec_passed,sender)
-    !print *, "id_rec_glob: ", id_rec_glob
     ! disp
     if (tag == io_tag_seismo_body_disp) then
       seismo_disp(:,id_rec_glob,:) = seismo_temp(:,irec_passed,:)
@@ -954,7 +905,7 @@ subroutine count_nprocs_with_recs(islice_num_rec_local)
   implicit none
 
   integer, dimension(0:NPROC-1) :: islice_num_rec_local
-  integer                   :: irec, iproc
+  integer                       :: irec, iproc
   
   do iproc = 0, NPROC-1
     if (islice_num_rec_local(iproc) > 0) &
@@ -976,19 +927,19 @@ subroutine do_io_seismogram_init()
 
   ! hdf5 varianles
   character(len=64) :: fname_h5_base = "seismograms.h5"
-  type(h5io) :: h5
+  type(h5io)        :: h5
 
   ! mpi variables
   integer :: info, comm, error
 
   ! arrays
-  integer :: i, irec
+  integer                                                 :: i, irec
   real(kind=CUSTOM_REAL), dimension(NSTEP)                :: time_array
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable     :: val_array2d
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable   :: val_array3d
   character(len=MAX_LENGTH_STATION_NAME), dimension(nrec) :: stations
   character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec) :: networks
-  real(kind=CUSTOM_REAL), dimension(nrec,3) :: rec_coords
+  real(kind=CUSTOM_REAL), dimension(nrec,3)               :: rec_coords
 
   ! hdf5 utility
   h5 = h5io()
@@ -1030,7 +981,6 @@ subroutine do_io_seismogram_init()
   close(IOUT_SU)
   
   ! coordination
-  !print *, "check rec coords: ", rec_coords
   call h5_write_dataset_2d_r_no_group(h5, "coords", rec_coords)
   call h5_close_dataset(h5)
 
@@ -1172,10 +1122,10 @@ subroutine write_xdmf_surface_body(it_io)
   implicit none
 
   integer, intent(in) :: it_io
-  integer :: i
+  integer             :: i
 
   character(len=20)  :: it_str
-  character(len=20) :: temp_str
+  character(len=20)  :: temp_str
 
   ! create a group for each io step
  
@@ -1290,8 +1240,8 @@ subroutine write_xdmf_vol_header(nelm_par_proc,nglob_par_proc)
   implicit none
 
   integer, dimension(0:NPROC-1), intent(in) :: nelm_par_proc, nglob_par_proc
-  character(len=20) :: proc_str, it_str,nelm, nglo
-  integer :: iproc, iiout, nout
+  character(len=20)                         :: proc_str, it_str,nelm, nglo
+  integer                                   :: iproc, iiout, nout
 
   ! writeout xdmf file for volume movie
   fname_xdmf_vol = trim(OUTPUT_FILES)//"/movie_volume.xmf"
@@ -1365,15 +1315,14 @@ subroutine write_xdmf_vol_body(it_io,nelm_par_proc, nglob_par_proc, val_type_mov
   use io_server
   implicit none
 
-  integer, intent(in) :: it_io
+  integer, intent(in)                       :: it_io
   integer, dimension(0:NPROC-1), intent(in) :: nelm_par_proc, nglob_par_proc
-  logical, dimension(5), intent(in) :: val_type_mov
+  logical, dimension(5), intent(in)         :: val_type_mov
   character(len=20) :: it_str, proc_str, type_str, type_str1, type_str2, nglo
-  integer :: itype,iproc
+  integer           :: itype,iproc
 
   ! writeout xdmf file for volume movie
   write(it_str, "(i6.6)") it_io
-  !fname_xdmf_vol_step = trim(OUTPUT_FILES)//"it_"//trim(it_str)//".xmf"
 
   open(unit=xdmf_vol_step, file=fname_xdmf_vol_step, position="append", action="write")
 
@@ -1466,7 +1415,7 @@ subroutine write_xdmf_vol_body_header(it_io)
   use io_server
   implicit none
   integer, intent(in) :: it_io
-  character(len=20) :: it_str
+  character(len=20)   :: it_str
 
   write(it_str, "(i6.6)") it_io
   fname_xdmf_vol_step = trim(OUTPUT_FILES)//"it_"//trim(it_str)//".xmf"
