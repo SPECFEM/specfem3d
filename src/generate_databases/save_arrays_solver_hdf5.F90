@@ -100,6 +100,10 @@
   ! dataset preparation/write flag
   logical :: dwrite
 
+  ! element node connectivity for movie output
+  ! the node ids are stored after dividing one 4th order spectral element into 8 of 2nd order element
+  ! thus this is output may not work for NGLL* /= 5
+  integer, dimension(9,nspec*64) :: spec_elm_conn_xdmf
 
   ! saves mesh file external_mesh.h5
   prname = "/external_mesh.h5"
@@ -129,6 +133,9 @@
     enddo
     call h5_close_file(h5)
   endif
+  call synchronize_all()
+
+  call get_connectivity_for_movie(nspec, ibool, spec_elm_conn_xdmf)
   call synchronize_all()
 
 !
@@ -434,6 +441,7 @@
   enddo
 
   dset_name = "num_interfaces_ext_mesh"
+  print *, "debug num interface rank: ", myrank, " , vals: ", num_interfaces_ext_mesh, "kind: ", kind(num_interfaces_ext_mesh)
   call h5_write_dataset_p_1d_i(h5, dset_name, (/num_interfaces_ext_mesh/), dwrite)
   if (num_interfaces_ext_mesh > 0) then
     dset_name = "max_nibool_interfaces_ext_mesh"
@@ -443,7 +451,7 @@
     dset_name = "nibool_interfaces_ext_mesh"
     call h5_write_dataset_p_1d_i(h5, dset_name, (/nibool_interfaces_ext_mesh/), dwrite)
     dset_name = "ibool_interfaces_ext_mesh_dummy"
-    call h5_write_dataset_p_2d_i(h5, dset_name, ibool_interfaces_ext_mesh_dummy, dwrite) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    call h5_write_dataset_p_2d_i(h5, dset_name, ibool_interfaces_ext_mesh_dummy, dwrite)
   endif
   
   ! anisotropy
@@ -561,6 +569,10 @@
   call h5_write_dataset_p_1d_l(h5, dset_name, ispec_is_surface_external_mesh, dwrite)
   dset_name = "iglob_is_surface_external_mesh"
   call h5_write_dataset_p_1d_l(h5, dset_name, iglob_is_surface_external_mesh, dwrite)
+
+  ! arrays for visualization
+  dset_name = "spec_elm_conn_xdmf"
+  call h5_write_dataset_p_2d_i(h5, dset_name, spec_elm_conn_xdmf, dwrite)
 
 
   if (myrank == 0) call h5_close_file(h5)
@@ -994,6 +1006,9 @@
   dset_name = "iglob_is_surface_external_mesh"
   call h5_write_dataset_p_1d_l(h5, dset_name, iglob_is_surface_external_mesh, dwrite)
 
+  ! arrays for visualization
+  dset_name = "spec_elm_conn_xdmf"
+  call h5_write_dataset_p_2d_i(h5, dset_name, spec_elm_conn_xdmf, dwrite)
 
   ! stores arrays in binary files
   if (SAVE_MESH_FILES) call save_arrays_solver_files(nspec,nglob,ibool)
@@ -1049,417 +1064,45 @@
   end subroutine save_arrays_solver_ext_mesh_h5
 
 
-!! below all the functions of original save_arrays are kept for the further dev.
+  subroutine get_connectivity_for_movie(nspec,ibool,elm_conn)
+    use generate_databases_par, only: NGLLX,NGLLY,NGLLZ 
+    implicit none
+    integer,intent(in) :: nspec
+    integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
+    integer, dimension(9,nspec*64), intent(inout) :: elm_conn
 
-!!
-!!-------------------------------------------------------------------------------------------------
-!!
-!
-!  subroutine save_arrays_solver_files(nspec,nglob,ibool)
-!
-!! outputs binary files for single mesh parameters (for example vp, vs, rho, ..)
-!
-!  use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
-!
-!  ! MPI interfaces
-!  use generate_databases_par, only: nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,num_interfaces_ext_mesh
-!
-!  use create_regions_mesh_ext_par
-!
-!  use shared_parameters, only: NPROC
-!
-!  implicit none
-!
-!  integer,intent(in) :: nspec,nglob
-!  ! mesh coordinates
-!  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
-!
-!  ! local parameters
-!  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: v_tmp
-!  integer,dimension(:),allocatable :: v_tmp_i
-!  integer :: ier,i,j
-!  integer, dimension(:), allocatable :: iglob_tmp
-!  integer :: inum, num_points
-!  character(len=MAX_STRING_LEN) :: filename
-!
-!  !----------------------------------------------------------------------
-!  ! outputs mesh files in vtk-format for visualization
-!  ! (mostly for free-surface and acoustic/elastic coupling surfaces)
-!  logical,parameter :: SAVE_MESH_FILES_ADDITIONAL = .true.
-!
-!  !----------------------------------------------------------------------
-!
-!  if (myrank == 0) then
-!    write(IMAIN,*) '     saving mesh files for AVS, OpenDX, Paraview'
-!    call flush_IMAIN()
-!  endif
-!
-!  ! mesh arrays used for example in combine_vol_data.f90
-!  !--- x coordinate
-!  open(unit=IOUT,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted',iostat=ier)
-!  if (ier /= 0) stop 'error opening file x.bin'
-!  write(IOUT) xstore_dummy
-!  close(IOUT)
-!
-!  !--- y coordinate
-!  open(unit=IOUT,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted',iostat=ier)
-!  if (ier /= 0) stop 'error opening file y.bin'
-!  write(IOUT) ystore_dummy
-!  close(IOUT)
-!
-!  !--- z coordinate
-!  open(unit=IOUT,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted',iostat=ier)
-!  if (ier /= 0) stop 'error opening file z.bin'
-!  write(IOUT) zstore_dummy
-!  close(IOUT)
-!
-!  ! ibool
-!  open(unit=IOUT,file=prname(1:len_trim(prname))//'ibool.bin',status='unknown',form='unformatted',iostat=ier)
-!  if (ier /= 0) stop 'error opening file ibool.bin'
-!  write(IOUT) ibool
-!  close(IOUT)
-!
-!  allocate(v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier)
-!  if (ier /= 0) call exit_MPI_without_rank('error allocating array 651')
-!  if (ier /= 0) call exit_MPI_without_rank('error allocating array')
-!
-!  ! vp (for checking the mesh and model)
-!  !minimum = minval( abs(rho_vp) )
-!  !if (minimum(1) /= 0.0) then
-!  !  v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
-!  !else
-!  !  v_tmp = 0.0
-!  !endif
-!  v_tmp = 0.0
-!  where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
-!  open(unit=IOUT,file=prname(1:len_trim(prname))//'vp.bin',status='unknown',form='unformatted',iostat=ier)
-!  if (ier /= 0) stop 'error opening file vp.bin'
-!  write(IOUT) v_tmp
-!  close(IOUT)
-!
-!  ! vp values - VTK file output
-!  filename = prname(1:len_trim(prname))//'vp'
-!  call write_VTK_data_gll_cr(nspec,nglob, &
-!                      xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-!                      v_tmp,filename)
-!
-!
-!  ! vs (for checking the mesh and model)
-!  !minimum = minval( abs(rho_vs) )
-!  !if (minimum(1) /= 0.0) then
-!  !  v_tmp = mustore / rho_vs
-!  !else
-!  !  v_tmp = 0.0
-!  !endif
-!  v_tmp = 0.0
-!  where( rho_vs /= 0._CUSTOM_REAL )  v_tmp = mustore / rho_vs
-!  open(unit=IOUT,file=prname(1:len_trim(prname))//'vs.bin',status='unknown',form='unformatted',iostat=ier)
-!  if (ier /= 0) stop 'error opening file vs.bin'
-!  write(IOUT) v_tmp
-!  close(IOUT)
-!
-!  ! vs values - VTK file output
-!  filename = prname(1:len_trim(prname))//'vs'
-!  call write_VTK_data_gll_cr(nspec,nglob, &
-!                      xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-!                      v_tmp,filename)
-!
-!  ! outputs density model for check
-!  v_tmp = 0.0
-!  where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = rho_vp**2 / (FOUR_THIRDS * mustore + kappastore)
-!  open(unit=IOUT,file=prname(1:len_trim(prname))//'rho.bin',status='unknown',form='unformatted',iostat=ier)
-!  if (ier /= 0) stop 'error opening file rho.bin'
-!  write(IOUT) v_tmp
-!  close(IOUT)
-!
-!  ! attenuation
-!  ! shear attenuation Qmu
-!  open(unit=IOUT,file=prname(1:len_trim(prname))//'qmu.bin',status='unknown',form='unformatted',iostat=ier)
-!  if (ier /= 0) stop 'error opening file qmu.bin'
-!  write(IOUT) qmu_attenuation_store
-!  close(IOUT)
-!
-!  ! shear attenuation - VTK file output
-!  filename = prname(1:len_trim(prname))//'qmu'
-!  call write_VTK_data_gll_cr(nspec,nglob, &
-!                      xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-!                      qmu_attenuation_store,filename)
-!
-!  ! bulk attenuation Qkappa
-!  open(unit=IOUT,file=prname(1:len_trim(prname))//'qkappa.bin',status='unknown',form='unformatted',iostat=ier)
-!  if (ier /= 0) stop 'error opening file qkappa.bin'
-!  write(IOUT) qkappa_attenuation_store
-!  close(IOUT)
-!
-!  ! bulk attenuation - VTK file output
-!  filename = prname(1:len_trim(prname))//'qkappa'
-!  call write_VTK_data_gll_cr(nspec,nglob, &
-!                      xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-!                      qkappa_attenuation_store,filename)
-!
-!  ! frees temporary array
-!  deallocate(v_tmp)
-!
-!  ! additional VTK file output
-!  if (SAVE_MESH_FILES_ADDITIONAL) then
-!    ! user output
-!    call synchronize_all()
-!    if (myrank == 0) then
-!      write(IMAIN,*) '     saving additonal mesh files with surface/coupling points'
-!      call flush_IMAIN()
-!    endif
-!
-!    ! saves free surface points
-!    if (num_free_surface_faces > 0) then
-!      ! saves free surface interface points
-!      allocate( iglob_tmp(NGLLSQUARE*num_free_surface_faces),stat=ier)
-!      if (ier /= 0) call exit_MPI_without_rank('error allocating array 652')
-!      if (ier /= 0) stop 'error allocating array iglob_tmp'
-!      inum = 0
-!      iglob_tmp(:) = 0
-!      do i=1,num_free_surface_faces
-!        do j=1,NGLLSQUARE
-!          inum = inum+1
-!          iglob_tmp(inum) = ibool(free_surface_ijk(1,j,i), &
-!                                  free_surface_ijk(2,j,i), &
-!                                  free_surface_ijk(3,j,i), &
-!                                  free_surface_ispec(i) )
-!        enddo
-!      enddo
-!      filename = prname(1:len_trim(prname))//'free_surface'
-!      call write_VTK_data_points(nglob, &
-!                        xstore_dummy,ystore_dummy,zstore_dummy, &
-!                        iglob_tmp,NGLLSQUARE*num_free_surface_faces, &
-!                        filename)
-!
-!      deallocate(iglob_tmp)
-!    endif
-!
-!    ! acoustic-elastic domains
-!    if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
-!      ! saves points on acoustic-elastic coupling interface
-!      num_points = NGLLSQUARE*num_coupling_ac_el_faces
-!      allocate( iglob_tmp(num_points),stat=ier)
-!      if (ier /= 0) call exit_MPI_without_rank('error allocating array 653')
-!      if (ier /= 0) stop 'error allocating array iglob_tmp'
-!      inum = 0
-!      iglob_tmp(:) = 0
-!      do i = 1,num_coupling_ac_el_faces
-!        do j = 1,NGLLSQUARE
-!          inum = inum+1
-!          iglob_tmp(inum) = ibool(coupling_ac_el_ijk(1,j,i), &
-!                                  coupling_ac_el_ijk(2,j,i), &
-!                                  coupling_ac_el_ijk(3,j,i), &
-!                                  coupling_ac_el_ispec(i) )
-!        enddo
-!      enddo
-!      filename = prname(1:len_trim(prname))//'coupling_acoustic_elastic'
-!      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
-!                                 iglob_tmp,num_points,filename)
-!
-!      ! saves acoustic/elastic flag
-!      allocate(v_tmp_i(nspec),stat=ier)
-!      if (ier /= 0) call exit_MPI_without_rank('error allocating array 654')
-!      if (ier /= 0) stop 'error allocating array v_tmp_i'
-!      do i = 1,nspec
-!        if (ispec_is_acoustic(i)) then
-!          v_tmp_i(i) = 1
-!        else if (ispec_is_elastic(i)) then
-!          v_tmp_i(i) = 2
-!        else
-!          v_tmp_i(i) = 0
-!        endif
-!      enddo
-!      filename = prname(1:len_trim(prname))//'acoustic_elastic_flag'
-!      call write_VTK_data_elem_i(nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-!                                 v_tmp_i,filename)
-!
-!      deallocate(iglob_tmp,v_tmp_i)
-!    endif !if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION )
-!
-!    ! acoustic-poroelastic domains
-!    if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION) then
-!      ! saves points on acoustic-poroelastic coupling interface
-!      num_points = NGLLSQUARE*num_coupling_ac_po_faces
-!      allocate( iglob_tmp(num_points),stat=ier)
-!      if (ier /= 0) call exit_MPI_without_rank('error allocating array 655')
-!      if (ier /= 0) stop 'error allocating array iglob_tmp'
-!      inum = 0
-!      iglob_tmp(:) = 0
-!      do i = 1,num_coupling_ac_po_faces
-!        do j = 1,NGLLSQUARE
-!          inum = inum+1
-!          iglob_tmp(inum) = ibool(coupling_ac_po_ijk(1,j,i), &
-!                                  coupling_ac_po_ijk(2,j,i), &
-!                                  coupling_ac_po_ijk(3,j,i), &
-!                                  coupling_ac_po_ispec(i) )
-!        enddo
-!      enddo
-!      filename = prname(1:len_trim(prname))//'coupling_acoustic_poroelastic'
-!      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
-!                                 iglob_tmp,num_points,filename)
-!
-!      ! saves acoustic/poroelastic flag
-!      allocate(v_tmp_i(nspec),stat=ier)
-!      if (ier /= 0) call exit_MPI_without_rank('error allocating array 656')
-!      if (ier /= 0) stop 'error allocating array v_tmp_i'
-!      do i = 1,nspec
-!        if (ispec_is_acoustic(i)) then
-!          v_tmp_i(i) = 1
-!        else if (ispec_is_poroelastic(i)) then
-!          v_tmp_i(i) = 2
-!        else
-!          v_tmp_i(i) = 0
-!        endif
-!      enddo
-!      filename = prname(1:len_trim(prname))//'acoustic_poroelastic_flag'
-!      call write_VTK_data_elem_i(nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-!                                 v_tmp_i,filename)
-!
-!      deallocate(v_tmp_i,iglob_tmp)
-!    endif !if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION )
-!
-!    ! elastic-poroelastic domains
-!    if (ELASTIC_SIMULATION .and. POROELASTIC_SIMULATION) then
-!      ! saves points on elastic-poroelastic coupling interface
-!      num_points = NGLLSQUARE*num_coupling_el_po_faces
-!      allocate( iglob_tmp(num_points),stat=ier)
-!      if (ier /= 0) call exit_MPI_without_rank('error allocating array 657')
-!      if (ier /= 0) stop 'error allocating array iglob_tmp'
-!      inum = 0
-!      iglob_tmp(:) = 0
-!      do i = 1,num_coupling_el_po_faces
-!        do j = 1,NGLLSQUARE
-!          inum = inum+1
-!          iglob_tmp(inum) = ibool(coupling_el_po_ijk(1,j,i), &
-!                                  coupling_el_po_ijk(2,j,i), &
-!                                  coupling_el_po_ijk(3,j,i), &
-!                                  coupling_el_po_ispec(i) )
-!        enddo
-!      enddo
-!      filename = prname(1:len_trim(prname))//'coupling_elastic_poroelastic'
-!      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
-!                                 iglob_tmp,num_points,filename)
-!
-!      ! saves elastic/poroelastic flag
-!      allocate(v_tmp_i(nspec),stat=ier)
-!      if (ier /= 0) call exit_MPI_without_rank('error allocating array 658')
-!      if (ier /= 0) stop 'error allocating array v_tmp_i'
-!      do i=1,nspec
-!        if (ispec_is_elastic(i)) then
-!          v_tmp_i(i) = 1
-!        else if (ispec_is_poroelastic(i)) then
-!          v_tmp_i(i) = 2
-!        else
-!          v_tmp_i(i) = 0
-!        endif
-!      enddo
-!      filename = prname(1:len_trim(prname))//'elastic_poroelastic_flag'
-!      call write_VTK_data_elem_i(nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-!                                 v_tmp_i,filename)
-!
-!      deallocate(v_tmp_i,iglob_tmp)
-!    endif !if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION
-!
-!    ! MPI
-!    if (NPROC > 1) then
-!      ! saves MPI interface points
-!      num_points = sum(nibool_interfaces_ext_mesh(1:num_interfaces_ext_mesh))
-!      allocate( iglob_tmp(num_points),stat=ier)
-!      if (ier /= 0) call exit_MPI_without_rank('error allocating array 659')
-!      if (ier /= 0) stop 'error allocating array iglob_tmp'
-!      inum = 0
-!      iglob_tmp(:) = 0
-!      do i = 1,num_interfaces_ext_mesh
-!        do j = 1, nibool_interfaces_ext_mesh(i)
-!          inum = inum + 1
-!          iglob_tmp(inum) = ibool_interfaces_ext_mesh(j,i)
-!        enddo
-!      enddo
-!
-!      filename = prname(1:len_trim(prname))//'MPI_points'
-!      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
-!                                 iglob_tmp,num_points,filename)
-!      deallocate(iglob_tmp)
-!    endif ! NPROC > 1
-!  endif  !if (SAVE_MESH_FILES_ADDITIONAL)
-!
-!  end subroutine save_arrays_solver_files
-!
-!!
-!!-------------------------------------------------------------------------------------------------
-!!
-!
-!  subroutine save_arrays_solver_injection_boundary(nspec,ibool)
-!
-!  use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT
-!
-!  use create_regions_mesh_ext_par
-!
-!  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
-!
-!  implicit none
-!
-!  integer,intent(in) :: nspec
-!  ! mesh coordinates
-!  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
-!
-!  ! local parameters
-!  integer :: ier,i,j,k
-!  integer :: iface, ispec, iglob, igll
-!  real(kind=CUSTOM_REAL) :: nx,ny,nz
-!  character(len=MAX_STRING_LEN) :: filename
-!
-!  if (myrank == 0) then
-!    write(IMAIN,*) '     saving mesh files for coupled injection boundary'
-!    call flush_IMAIN()
-!  endif
-!
-!  ! checks if anything to do
-!  if (.not. (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH)) return
-!
-!  filename = prname(1:len_trim(prname))//'absorb_dsm'
-!  open(IOUT,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
-!  if (ier /= 0) stop 'error opening file absorb_dsm'
-!  write(IOUT) num_abs_boundary_faces
-!  write(IOUT) abs_boundary_ispec
-!  write(IOUT) abs_boundary_ijk
-!  write(IOUT) abs_boundary_jacobian2Dw
-!  write(IOUT) abs_boundary_normal
-!  close(IOUT)
-!
-!  filename = prname(1:len_trim(prname))//'inner'
-!  open(IOUT,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
-!  write(IOUT) ispec_is_inner
-!  write(IOUT) ispec_is_elastic
-!  close(IOUT)
-!
-!  !! VM VM write an ascii file for instaseis input
-!  filename = prname(1:len_trim(prname))//'normal.txt'
-!  open(IOUT,file=filename(1:len_trim(filename)),status='unknown',iostat=ier)
-!  write(IOUT, *) ' number of points :', num_abs_boundary_faces*NGLLSQUARE
-!
-!  do iface = 1,num_abs_boundary_faces
-!     ispec = abs_boundary_ispec(iface)
-!     if (ispec_is_elastic(ispec)) then
-!        do igll = 1,NGLLSQUARE
-!
-!           ! gets local indices for GLL point
-!           i = abs_boundary_ijk(1,igll,iface)
-!           j = abs_boundary_ijk(2,igll,iface)
-!           k = abs_boundary_ijk(3,igll,iface)
-!
-!           iglob = ibool(i,j,k,ispec)
-!
-!           nx = abs_boundary_normal(1,igll,iface)
-!           ny = abs_boundary_normal(2,igll,iface)
-!           nz = abs_boundary_normal(3,igll,iface)
-!
-!           write(IOUT,'(6f25.10)') xstore_dummy(iglob), ystore_dummy(iglob), zstore_dummy(iglob), nx, ny, nz
-!
-!        enddo
-!     endif
-!  enddo
-!  close(IOUT)
-!
-!  end subroutine save_arrays_solver_injection_boundary
+    integer :: ispec,ii,iglob,icub,jcub,kcub,cell_type=9, dp=2
+
+    do ispec=1, nspec
+      ! extract information from full GLL grid
+      ! node order follows vtk format
+
+      do icub=0,3
+        do jcub=0,3
+          do kcub=0,3
+            ii = 1+(ispec-1)*64 + (icub*16+jcub*4+kcub)
+            elm_conn(1, ii)  = cell_type
+!            elm_conn(2, ii)  = ibool(icub+1,jcub+2,kcub+1,ispec)-1 ! node id starts 0 in xdmf rule
+!            elm_conn(3, ii)  = ibool(icub+1,jcub+1,kcub+1,ispec)-1
+!            elm_conn(4, ii)  = ibool(icub+2,jcub+1,kcub+1,ispec)-1
+!            elm_conn(5, ii)  = ibool(icub+2,jcub+2,kcub+1,ispec)-1
+!            elm_conn(6, ii)  = ibool(icub+1,jcub+2,kcub+2,ispec)-1
+!            elm_conn(7, ii)  = ibool(icub+1,jcub+1,kcub+2,ispec)-1
+!            elm_conn(8, ii)  = ibool(icub+2,jcub+1,kcub+2,ispec)-1
+!            elm_conn(9, ii)  = ibool(icub+2,jcub+2,kcub+2,ispec)-1
+            elm_conn(2, ii)  = ibool(icub+1,jcub+1,kcub+1,ispec)-1 ! node id starts 0 in xdmf rule
+            elm_conn(3, ii)  = ibool(icub+2,jcub+1,kcub+1,ispec)-1
+            elm_conn(4, ii)  = ibool(icub+2,jcub+2,kcub+1,ispec)-1
+            elm_conn(5, ii)  = ibool(icub+1,jcub+2,kcub+1,ispec)-1
+            elm_conn(6, ii)  = ibool(icub+1,jcub+1,kcub+2,ispec)-1
+            elm_conn(7, ii)  = ibool(icub+2,jcub+1,kcub+2,ispec)-1
+            elm_conn(8, ii)  = ibool(icub+2,jcub+2,kcub+2,ispec)-1
+            elm_conn(9, ii)  = ibool(icub+1,jcub+2,kcub+2,ispec)-1
+ 
+          enddo
+        enddo
+      enddo
+    enddo
+
+  end subroutine get_connectivity_for_movie
+

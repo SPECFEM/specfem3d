@@ -44,6 +44,54 @@ module constants
   ! we put a default value here
   logical :: I_should_read_the_database = .true.
 
+  ! flag for io-dedicated/compute node.
+  logical :: io_task      = .false.
+  logical :: compute_task = .true.
+
+  ! mpi tags for io server implementation
+  integer :: io_tag_num_recv          = 50
+  integer :: io_tag_local_rec         = 51
+  integer :: io_tag_seismo_nrec       = 10
+  integer :: io_tag_seismo_ids_rec    = 11
+  integer :: io_tag_seismo_body_disp  = 12
+  integer :: io_tag_seismo_body_velo  = 13
+  integer :: io_tag_seismo_body_acce  = 14
+  integer :: io_tag_seismo_body_pres  = 15
+
+  integer :: io_tag_surface_nfaces    = 20
+  integer :: io_tag_surface_offset    = 21
+  integer :: io_tag_surface_x         = 22
+  integer :: io_tag_surface_y         = 23
+  integer :: io_tag_surface_z         = 24
+  integer :: io_tag_surface_ux        = 25
+  integer :: io_tag_surface_uy        = 26
+  integer :: io_tag_surface_uz        = 27
+  integer :: io_tag_surface_coord_len = 28
+
+  integer :: io_tag_shake_ux          = 30
+  integer :: io_tag_shake_uy          = 31
+  integer :: io_tag_shake_uz          = 32
+
+  integer :: io_tag_vol_pres          = 40
+  integer :: io_tag_vol_divglob       = 41
+  integer :: io_tag_vol_div           = 42
+  integer :: io_tag_vol_curlx         = 43
+  integer :: io_tag_vol_curly         = 44
+  integer :: io_tag_vol_curlz         = 45
+  integer :: io_tag_vol_velox         = 46
+  integer :: io_tag_vol_veloy         = 47
+  integer :: io_tag_vol_veloz         = 48
+  integer :: io_tag_vol_nmsg          = 49
+  integer :: io_tag_vol_nspec         = 50
+  integer :: io_tag_vol_nglob         = 51
+
+  integer :: io_tag_end               = 60
+
+  integer :: xdmf_surf                = 114
+  integer :: xdmf_vol                 = 514
+  integer :: xdmf_vol_step            = 515
+  integer :: xdmf_shake               = 191
+
 end module constants
 
 !

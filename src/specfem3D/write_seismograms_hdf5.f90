@@ -47,9 +47,6 @@
   logical :: do_save_seismograms
 
   ! hdf5 varianles
-  character(len=64) :: fname_h5_base = "seismograms.h5"
-  character(len=64) :: fname_h5 = ""
-  type(h5io) :: h5
 
   ! mpi variables
   integer :: info, comm, error
@@ -62,94 +59,6 @@
   character(len=MAX_LENGTH_STATION_NAME), dimension(nrec) :: stations
   character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec) :: networks
   real(kind=CUSTOM_REAL), dimension(nrec,3) :: rec_coords
-
-
-  ! hdf5 utility
-  h5 = h5io()
-  fname_h5 = trim(OUTPUT_FILES)//fname_h5_base
-
-  ! initialze hdf5
-  call world_get_comm(comm)
-  call get_info_null(info)
-  call h5_init(h5, fname_h5)
-  call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
-
-  ! initialize hdf5 at the initial time iteration
-  if (it == 1) then
-
-    ! create file
-    call h5_create_file_p_collect(h5)
-
-    ! create time dataset it = 1 ~ NSTEP
-    do i = 1, NSTEP
-      if (SIMULATION_TYPE == 1) then ! forward simulation ! distinguish between single and double precision for reals 
-        time_array(i) = real( dble(i-1)*DT - t0 ,kind=CUSTOM_REAL)
-      else if (SIMULATION_TYPE == 3) then
-        ! adjoint simulation: backward/reconstructed wavefields
-        ! distinguish between single and double precision for reals
-        ! note: compare time_t with time used for source term
-        time_array(i) = real( dble(NSTEP-i)*DT - t0 ,kind=CUSTOM_REAL)
-      endif
-    enddo
-
-    ! time array
-    ! create dataset
-    call h5_create_dataset_collect(h5, "time" , shape(time_array), 1, CUSTOM_REAL)
-    ! write dataset
-    call h5_write_dataset_1d_r_collect(h5, "time", time_array)
- 
-
-    ! read out_list_stations.txt generated at locate_receivers.f90:431 here to write in the h5 file.
-    open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_stations.txt', &
-         status='unknown',action='read',iostat=error)
-    if (error /= 0) &
-      call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
-    ! writes station infos
-    do irec=1,nrec
-      read(IOUT_SU,*) stations(irec),networks(irec), rec_coords(irec, 1), rec_coords(irec, 2), rec_coords(irec, 3)
-    enddo
-    ! closes output file
-    close(IOUT_SU)
-
-    ! coordination
-    call h5_create_dataset_collect(h5, "coords"  , shape(rec_coords), 2, 8)
-    ! write dataset
-    call h5_write_dataset_2d_r_collect(h5, "coords", rec_coords)
- 
-    ! station name
-    call h5_create_dataset_collect(h5, "station", shape(stations), 1, 2)
-    call h5_write_dataset_1d_c_collect(h5, "station", stations)
-
-    ! network name
-    call h5_create_dataset_collect(h5, "network", shape(networks), 1, 2)
-    call h5_write_dataset_1d_c_collect(h5, "network", networks)
-
-
-    ! prepare datasets for physical values
-    if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
-      allocate(val_array3d(NDIM,NSTEP,nrec),stat=error) 
-      call h5_create_dataset_collect(h5, "disp", shape(val_array3d), 3, CUSTOM_REAL)
-      deallocate(val_array3d)
-    endif
-    if (SAVE_SEISMOGRAMS_VELOCITY) then
-      allocate(val_array3d(NDIM,NSTEP,nrec),stat=error)
-      call h5_create_dataset_collect(h5, "velo", shape(val_array3d), 3, CUSTOM_REAL)
-      deallocate(val_array3d)
-    endif
-    if (SAVE_SEISMOGRAMS_ACCELERATION) then
-      allocate(val_array3d(NDIM,NSTEP,nrec),stat=error)
-      call h5_create_dataset_collect(h5, "acce", shape(val_array3d), 3, CUSTOM_REAL)
-      deallocate(val_array3d)
-    endif
-    if (SAVE_SEISMOGRAMS_PRESSURE) then
-      allocate(val_array2d(NSTEP,nrec),stat=error)
-      call h5_create_dataset_collect(h5, "pres", shape(val_array2d), 2, CUSTOM_REAL)
-      deallocate(val_array2d)
-    endif
-
-  else
-    call h5_open_file_p(h5)
-  endif ! end hdf5 file initialize
 
 
   ! update position in seismograms
@@ -211,25 +120,25 @@
           ! forward/backward wavefield
           ! forward & kernel simulations
           if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-            call write_seismograms_to_file_h5(h5, seismograms_d,1)
+            call write_seismograms_to_file_h5(seismograms_d,1)
           if (SAVE_SEISMOGRAMS_VELOCITY) &
-            call write_seismograms_to_file_h5(h5, seismograms_v,2)
+            call write_seismograms_to_file_h5(seismograms_v,2)
           if (SAVE_SEISMOGRAMS_ACCELERATION) &
-            call write_seismograms_to_file_h5(h5, seismograms_a,3)
+            call write_seismograms_to_file_h5(seismograms_a,3)
           if (SAVE_SEISMOGRAMS_PRESSURE) &
-            call write_seismograms_to_file_h5(h5, seismograms_p,4)
+            call write_seismograms_to_file_h5(seismograms_p,4)
         case (2)
           ! adjoint simulations
           ! adjoint wavefield
-            ! adjoint simulations
-            if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-              call write_adj_seismograms_to_file_h5(seismograms_d,1)
-            if (SAVE_SEISMOGRAMS_VELOCITY) &
-              call write_adj_seismograms_to_file_h5(seismograms_v,2)
-            if (SAVE_SEISMOGRAMS_ACCELERATION) &
-              call write_adj_seismograms_to_file_h5(seismograms_a,3)
-            if (SAVE_SEISMOGRAMS_PRESSURE) &
-              call write_adj_seismograms_to_file_h5(seismograms_p,4)
+          ! adjoint simulations
+          if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
+            call write_adj_seismograms_to_file_h5(seismograms_d,1)
+          if (SAVE_SEISMOGRAMS_VELOCITY) &
+            call write_adj_seismograms_to_file_h5(seismograms_v,2)
+          if (SAVE_SEISMOGRAMS_ACCELERATION) &
+            call write_adj_seismograms_to_file_h5(seismograms_a,3)
+          if (SAVE_SEISMOGRAMS_PRESSURE) &
+            call write_adj_seismograms_to_file_h5(seismograms_p,4)
           ! updates adjoint time counter
           it_adj_written = it
         end select
@@ -256,13 +165,12 @@
 
   endif
 
-  call h5_close_file(h5)
 
   end subroutine write_seismograms_h5
 
 
 
-  subroutine write_seismograms_to_file_h5(h5, seismograms,istore)
+  subroutine write_seismograms_to_file_h5(seismograms,istore)
 
   use constants
 
@@ -272,7 +180,6 @@
           NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS,ASDF_FORMAT, &
           WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS
 
-  use phdf5_utils
 
   implicit none
 
@@ -284,128 +191,49 @@
 
   character(len=4) component
 
-  integer :: nrec_local_received,total_seismos,receiver,sender
-  integer :: iproc,ier,i
-  integer,dimension(1) :: tmp_nrec_local_received,tmp_irec,tmp_nrec_local
+  integer :: nrec_local_received,total_seismos,receiver
+  integer :: iproc,ier,i,req
+  integer,dimension(1) :: tmp_nrec_local_received,tmp_nrec_local
   integer,dimension(0:NPROC-1) :: islice_num_rec_local
- 
-  ! parameters for master collects seismograms
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: one_seismogram
+  integer,dimension(nrec_local) :: tmp_irec
+  integer :: io_tag_seismo
 
-  ! hdf5 vals
-  type(h5io) :: h5
-
-
+  ! using io server, receiver is always 0
+  receiver = 0
 
   ! saves displacement, velocity, acceleration, or pressure
   if (istore == 1) then
     component = 'disp'
+    io_tag_seismo = io_tag_seismo_body_disp
   else if (istore == 2) then
     component = 'velo'
+    io_tag_seismo = io_tag_seismo_body_velo
   else if (istore == 3) then
     component = 'acce'
+    io_tag_seismo = io_tag_seismo_body_acce
   else if (istore == 4) then
     component = 'pres'
+    io_tag_seismo = io_tag_seismo_body_pres
   else
     call exit_MPI(myrank,'wrong component to save for seismograms')
   endif
 
-  allocate(one_seismogram(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2420')
-  if (ier /= 0) stop 'error while allocating one temporary seismogram'
-  ! write out seismograms: all processes write their local seismograms themselves
-  ! note: saving in a single file while using multiple outputs when NTSTEP_BETWEEN_OUTPUT_SEISMOS is less than NSTEP
-  !       will shuffle the entries and give unordered results. thus for now, we will only allow this when writing out
-  !       the full arrays.
-
-  ! receiver signals will be writen by only master process
-  ! because generally almost all processes have non receiver
-  if (myrank == 0) then
-    ! counts number of local receivers for each slice
-    islice_num_rec_local(:) = 0
-    do irec = 1,nrec
-      iproc = islice_selected_rec(irec)
-      islice_num_rec_local(iproc) = islice_num_rec_local(iproc) + 1
-    enddo
-
-    total_seismos = 0
-
-    ! loop on all the slices
-    do iproc = 0,NPROC-1
-
-      ! communicate only with processes which contain local receivers
-      if (islice_num_rec_local(iproc) == 0) cycle
-
-      ! receive except from proc 0, which is me and therefore I already have this value
-      sender = iproc
-      if (iproc /= 0) then
-        call recv_i(tmp_nrec_local_received,1,sender,itag)
-        nrec_local_received = tmp_nrec_local_received(1)
-        if (nrec_local_received < 0) call exit_MPI(myrank,'error while receiving local number of receivers')
-      else
-        nrec_local_received = nrec_local
-      endif
-
-      if (nrec_local_received > 0) then
-        do irec_local = 1,nrec_local_received
-          ! receive except from proc 0, which is myself and therefore I already have these values
-          if (iproc == 0) then
-            ! get global number of that receiver
-            irec = number_receiver_global(irec_local)
-            do i = 1,seismo_current
-              one_seismogram(:,i) = seismograms(:,irec_local,i)
-            enddo
-          else
-            call recv_i(tmp_irec,1,sender,itag)
-            irec = tmp_irec(1)
-            if (irec < 1 .or. irec > nrec) call exit_MPI(myrank,'error while receiving global receiver number')
-
-            call recvv_cr(one_seismogram,NDIM*seismo_current,sender,itag)
-          endif
-
-          total_seismos = total_seismos + 1
-
-          ! writes out this seismogram
-          !call write_one_seismogram(one_seismogram,irec_local,irec,component,istore)
-          if (istore == 4) then ! for pressure 
-            call h5_write_dataset_1d_r_collect_hyperslab(h5, component, one_seismogram(1,:), (/seismo_offset, irec-1/), .false.)
-          else 
-            call h5_write_dataset_2d_r_collect_hyperslab(h5, component, one_seismogram, (/0, seismo_offset, irec-1/), .false.)
-          endif
-
-
-        enddo ! nrec_local_received
-      endif ! if (nrec_local_received > 0)
-    enddo ! NPROC-1
-
-    write(IMAIN,*)
-    write(IMAIN,*) '  total number of receivers saved is ',total_seismos,' out of ',nrec
-    write(IMAIN,*)
-
-    if (total_seismos /= nrec) call exit_MPI(myrank,'incorrect total number of receivers saved')
-
-  else
-    ! on the nodes, send the seismograms to the master
-    receiver = 0
-    tmp_nrec_local(1) = nrec_local
-    call send_i(tmp_nrec_local,1,receiver,itag)
-    if (nrec_local > 0) then
+  if (nrec_local > 0) then
+      
+      ! send global ids of local receivers (integer array)
       do irec_local = 1,nrec_local
         ! get global number of that receiver
         irec = number_receiver_global(irec_local)
-        tmp_irec(1) = irec
-        call send_i(tmp_irec,1,receiver,itag)
-
-        ! sends seismogram of that receiver
-        do i = 1,seismo_current
-          one_seismogram(:,i) = seismograms(:,irec_local,i)
-        enddo
-        call sendv_cr(one_seismogram,NDIM*seismo_current,receiver,itag)
+        tmp_irec(irec_local) = irec
       enddo
-    endif
-  endif ! myrank
 
-  deallocate(one_seismogram)
+      call isend_i_inter(tmp_irec,nrec_local,receiver,io_tag_seismo_ids_rec,req)
+
+      ! send seismograms (instead of one seismo)
+      call isend_cr_inter(seismograms,NDIM*nrec_local*NTSTEP_BETWEEN_OUTPUT_SEISMOS,receiver,io_tag_seismo,req)
+  endif
+
+!  endif ! myrank
 
   end subroutine write_seismograms_to_file_h5
 
@@ -448,7 +276,6 @@
   endif
 
   do irec_local = 1,nrec_local
-
     ! get global number of that receiver
     irec = number_receiver_global(irec_local)
 

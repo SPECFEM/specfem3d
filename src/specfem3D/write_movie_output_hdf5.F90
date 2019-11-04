@@ -62,7 +62,7 @@
 
   ! computes SHAKING INTENSITY MAP
   if (CREATE_SHAKEMAP) then
-    call wmo_create_shakemap_h5() ! this function may be call from the original write movie output
+    call wmo_create_shakemap_h5()
   endif
 
   ! saves MOVIE on the SURFACE
@@ -104,18 +104,8 @@
   ! temporary array for single elements
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: val_element
   real(kind=CUSTOM_REAL),dimension(1):: dummy
-  integer :: ispec2D,ispec,ipoin,iglob,ier,ia
+  integer :: ispec2D,ispec,ipoin,iglob,ier,ia,req
   integer :: npoin_elem
-
-  ! h5 io variables
-  character(len=MAX_STRING_LEN) :: fname_h5_mesh
-  character(len=64) :: dset_name
-  character(len=64) :: group_name
-  character(len=10) :: tempstr
-  type(h5io) :: h5
-  h5 = h5io()
-
-  fname_h5_mesh = LOCAL_PATH(1:len_trim(LOCAL_PATH))//"/movie_surface.h5"
 
   ! surface points for single face
   if (USE_HIGHRES_FOR_MOVIES) then
@@ -168,85 +158,15 @@
     endif
   enddo
 
-  ! updates/gathers velocity field
-  if (myrank == 0) then
-    call gatherv_all_cr(store_val_ux,nfaces_surface_points, &
-         store_val_ux_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
-    call gatherv_all_cr(store_val_uy,nfaces_surface_points, &
-         store_val_uy_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
-    call gatherv_all_cr(store_val_uz,nfaces_surface_points, &
-         store_val_uz_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
-  else
-    !slaves
-    call gatherv_all_cr(store_val_ux,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
-    call gatherv_all_cr(store_val_uy,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
-    call gatherv_all_cr(store_val_uz,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
-  endif
+ ! send surface body to io node
+  call isend_cr_inter(store_val_ux,nfaces_surface_points,0,io_tag_surface_ux,req)
+  call isend_cr_inter(store_val_uy,nfaces_surface_points,0,io_tag_surface_uy,req)
+  call isend_cr_inter(store_val_uz,nfaces_surface_points,0,io_tag_surface_uz,req)
+
+end subroutine wmo_movie_surface_output_h5
 
 
-  ! file output
-  if (myrank == 0) then
-    ! initialization of h5 file
-    call h5_init(h5, fname_h5_mesh)
-
-    if (it == NTSTEP_BETWEEN_FRAMES) then
-      ! create a hdf5 file
-      call h5_create_file(h5)
-      ! write coordinate data
-      group_name = "surf_coord"
-      call h5_create_group(h5, group_name)
-      call h5_open_group(h5, group_name)
-    
-      dset_name = "x"
-      call h5_write_dataset_1d_d(h5, dset_name, store_val_x_all)
-      call h5_close_dataset(h5)
-      dset_name = "y"
-      call h5_write_dataset_1d_d(h5, dset_name, store_val_y_all)
-      call h5_close_dataset(h5)
-      dset_name = "z"
-      call h5_write_dataset_1d_d(h5, dset_name, store_val_z_all)
-      call h5_close_dataset(h5)
-    
-      call h5_close_group(h5)
-
-    else
-      ! continue opening hdf5 file till the end of write process
-      call h5_open_file(h5)
-    endif ! it == 0
-
-    ! create a group for each io step
-    write(tempstr, "(i6.6)") it
-    group_name = "it_"//tempstr
-    call h5_create_group(h5, group_name)
-    call h5_open_group(h5, group_name)
-
-    dset_name = "ux"
-    call h5_write_dataset_1d_d(h5, dset_name, store_val_ux_all)
-    call h5_close_dataset(h5)
-    dset_name = "uy"
-    call h5_write_dataset_1d_d(h5, dset_name, store_val_uy_all)
-    call h5_close_dataset(h5)
-    dset_name = "uz"
-    call h5_write_dataset_1d_d(h5, dset_name, store_val_uz_all)
-    call h5_close_dataset(h5)
-
-    call h5_close_group(h5)
-    call h5_close_file(h5)
-  endif ! myrank == 0
-
-  end subroutine wmo_movie_surface_output_h5
-
-
-  subroutine wmo_create_shakemap_h5()
+subroutine wmo_create_shakemap_h5()
 
 ! creation of shapemap file
 !
@@ -349,101 +269,24 @@
 
   use specfem_par
   use specfem_par_movie
-  use phdf5_utils
  
   implicit none
 
   ! local parameters
-  integer :: ier
+  integer :: ier, req
   real(kind=CUSTOM_REAL),dimension(1):: dummy
 
-  ! h5 io variables
-  character(len=MAX_STRING_LEN) :: fname_h5_shake
-  character(len=64) :: dset_name
-  character(len=64) :: group_name
-  type(h5io) :: h5
-  h5 = h5io()
+ ! send surface body to io node
+  call isend_cr_inter(shakemap_ux,nfaces_surface_points,0,io_tag_shake_ux,req)
+  call isend_cr_inter(shakemap_uy,nfaces_surface_points,0,io_tag_shake_uy,req)
+  call isend_cr_inter(shakemap_uz,nfaces_surface_points,0,io_tag_shake_uz,req)
 
-  fname_h5_shake = LOCAL_PATH(1:len_trim(LOCAL_PATH))//"/shakemap.h5"
-
-
-  ! master collects
-  if (myrank == 0) then
-    ! shakemaps
-    call gatherv_all_cr(shakemap_ux,nfaces_surface_points, &
-         shakemap_ux_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
-    call gatherv_all_cr(shakemap_uy,nfaces_surface_points, &
-         shakemap_uy_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
-    call gatherv_all_cr(shakemap_uz,nfaces_surface_points, &
-         shakemap_uz_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
-  else
-    ! shakemaps
-    call gatherv_all_cr(shakemap_ux,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
-    call gatherv_all_cr(shakemap_uy,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
-    call gatherv_all_cr(shakemap_uz,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
-  endif
-
-  ! creates shakemap file
-  if (myrank == 0) then
-
-  ! we can implement almost same method with surface_movie implementation here
-    ! initialization of h5 file
-    call h5_init(h5, fname_h5_shake)
-
-    ! create a hdf5 file
-    call h5_create_file(h5)
-    ! write coordinate data
-    group_name = "surf_coord"
-    call h5_create_group(h5, group_name)
-    call h5_open_group(h5, group_name)
-  
-    dset_name = "x"
-    call h5_write_dataset_1d_d(h5, dset_name, store_val_x_all)
-    call h5_close_dataset(h5)
-    dset_name = "y"
-    call h5_write_dataset_1d_d(h5, dset_name, store_val_y_all)
-    call h5_close_dataset(h5)
-    dset_name = "z"
-    call h5_write_dataset_1d_d(h5, dset_name, store_val_z_all)
-    call h5_close_dataset(h5)
-  
-    call h5_close_group(h5)
-
-    group_name = "shakemap"
-    call h5_create_group(h5, group_name)
-    call h5_open_group(h5, group_name)
-
-    ! create a group for each io step
-    dset_name = "shake_ux"
-    call h5_write_dataset_1d_d(h5, dset_name, shakemap_ux_all)
-    call h5_close_dataset(h5)
-    dset_name = "shake_uy"
-    call h5_write_dataset_1d_d(h5, dset_name, shakemap_uy_all)
-    call h5_close_dataset(h5)
-    dset_name = "shake_uz"
-    call h5_write_dataset_1d_d(h5, dset_name, shakemap_uz_all)
-    call h5_close_dataset(h5)
-
-    call h5_close_group(h5)
-    call h5_close_file(h5)
-
-  endif
-
-  end subroutine wmo_save_shakemap_h5
+end subroutine wmo_save_shakemap_h5
 
 
 !=====================================================================
 
-  subroutine wmo_movie_volume_output_h5()
+subroutine wmo_movie_volume_output_h5()
 
 ! outputs movie files for div, curl and velocity
 
@@ -456,20 +299,22 @@
   implicit none
 
   ! local parameters
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: pressure_loc
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB)               :: send_array
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: veloc_element
   ! divergence and curl only in the global nodes
-  real(kind=CUSTOM_REAL),dimension(:),allocatable:: div_glob
-  integer,dimension(:),allocatable :: valence
-  integer :: ispec,ier,iglob
-  character(len=3) :: channel
-  character(len=1) :: compx,compy,compz
-  character(len=MAX_STRING_LEN) :: outputname
+  real(kind=CUSTOM_REAL),dimension(:),allocatable          :: div_glob
+  integer,dimension(:),allocatable                         :: valence
+  integer                                                  :: ispec,ier,iglob,req,arrsize
+  character(len=3)                                         :: channel
+  character(len=1)                                         :: compx,compy,compz
+  character(len=MAX_STRING_LEN)                            :: outputname
 #ifdef FORCE_VECTORIZATION
   integer :: ijk
 #else
   integer :: i,j,k
 #endif
+
+  send_array(:) = 0._CUSTOM_REAL
 
   ! gets component characters: X/Y/Z or E/N/Z
   call write_channel_name(1,channel)
@@ -498,22 +343,17 @@
 
     ! outputs pressure field for purely acoustic simulations
     if (.not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then
-      allocate(pressure_loc(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2003')
-      pressure_loc(:,:,:,:) = 0._CUSTOM_REAL
       do ispec = 1,NSPEC_AB
         DO_LOOP_IJK
           iglob = ibool(INDEX_IJK,ispec)
-          pressure_loc(INDEX_IJK,ispec) = - potential_dot_dot_acoustic(iglob)
+          send_array(iglob) = - potential_dot_dot_acoustic(iglob)
         ENDDO_LOOP_IJK
       enddo
 
-      write(outputname,"('/proc',i6.6,'_pressure_it',i6.6,'.bin')")myrank,it
-      open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-      if (ier /= 0) stop 'error opening file movie output pressure'
-      write(27) pressure_loc
-      close(27)
-      deallocate(pressure_loc)
+      ! send pressure_loc
+      arrsize = NGLOB_AB
+      call isend_cr_inter(send_array,arrsize,0,io_tag_vol_pres,req)
+      call wait_req(req)
     endif
   endif ! acoustic
 
@@ -534,12 +374,10 @@
                               velocity_x,velocity_y,velocity_z, &
                               ispec_is_elastic)
 
-      ! writes out div and curl on global points
-      write(outputname,"('/proc',i6.6,'_div_glob_it',i6.6,'.bin')") myrank,it
-      open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-      if (ier /= 0) stop 'error opening file div_glob'
-      write(27) div_glob
-      close(27)
+      ! send div_glob
+      arrsize = NGLOB_AB
+      call isend_cr_inter(div_glob,arrsize,0,io_tag_vol_divglob,req)
+      call wait_req(req)
     endif ! elastic
 
     ! saves full snapshot data to local disk
@@ -551,55 +389,67 @@
                               velocity_x,velocity_y,velocity_z, &
                               ispec_is_poroelastic)
     endif ! poroelastic
+
     deallocate(div_glob,valence)
 
     ! div and curl on elemental level
     ! writes our divergence
-    write(outputname,"('/proc',i6.6,'_div_it',i6.6,'.bin')") myrank,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file div_it'
-    write(27) div
-    close(27)
+    arrsize = NGLOB_AB
+    call convert_elmbase_to_nodebase(div,send_array)
+    call isend_cr_inter(send_array,arrsize,0,io_tag_vol_div,req)
+    call wait_req(req)
+ 
 
     ! writes out curl
-    write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compx,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file curl_x_it '
-    write(27) curl_x
-    close(27)
+    call convert_elmbase_to_nodebase(curl_x,send_array)
+    call isend_cr_inter(send_array,arrsize,0,io_tag_vol_curlx,req)
+    call wait_req(req)
+    call convert_elmbase_to_nodebase(curl_y,send_array)
+    call isend_cr_inter(send_array,arrsize,0,io_tag_vol_curly,req)
+    call wait_req(req)
+    call convert_elmbase_to_nodebase(curl_z,send_array)
+    call isend_cr_inter(send_array,arrsize,0,io_tag_vol_curlz,req)
+    call wait_req(req)
+ 
 
-    write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compy,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file curl_y_it'
-    write(27) curl_y
-    close(27)
-
-    write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compz,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file curl_z_it'
-    write(27) curl_z
-    close(27)
   endif
 
   ! velocity
   if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
-    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file movie output velocity x'
-    write(27) velocity_x
-    close(27)
 
-    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compy,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file movie output velocity y'
-    write(27) velocity_y
-    close(27)
-
-    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compz,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file movie output velocity z'
-    write(27) velocity_z
-    close(27)
+    arrsize = NGLOB_AB
+    call convert_elmbase_to_nodebase(velocity_x,send_array)
+    call isend_cr_inter(send_array,arrsize,0,io_tag_vol_velox,req)
+    call wait_req(req)
+    call convert_elmbase_to_nodebase(velocity_y,send_array)
+    call isend_cr_inter(send_array,arrsize,0,io_tag_vol_veloy,req)
+    call wait_req(req)
+    call convert_elmbase_to_nodebase(velocity_z,send_array)
+    call isend_cr_inter(send_array,arrsize,0,io_tag_vol_veloz,req)
+    call wait_req(req)
+ 
   endif
 
-  end subroutine wmo_movie_volume_output_h5
+end subroutine wmo_movie_volume_output_h5
+
+! # TODO: check if the vectorization loop definition is fine
+subroutine convert_elmbase_to_nodebase(arr_in, arr_out)
+  use specfem_par
+
+  implicit none
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB), intent(in) :: arr_in
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(out)                  :: arr_out
+  integer                                                                   :: ispec,iglob
+#ifdef FORCE_VECTORIZATION
+  integer :: ijk
+#else
+  integer :: i,j,k
+#endif
+
+  do ispec=1, NSPEC_AB
+    DO_LOOP_IJK
+      iglob = ibool(INDEX_IJK,ispec)
+      arr_out(iglob) = arr_in(INDEX_IJK,ispec)
+    ENDDO_LOOP_IJK
+  enddo
+end subroutine convert_elmbase_to_nodebase

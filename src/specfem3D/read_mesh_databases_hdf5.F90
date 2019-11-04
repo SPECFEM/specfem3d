@@ -1938,7 +1938,6 @@
     call get_info_null(info)
   
     call h5_init(h5, database_hdf5)
-  
     call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
     call h5_open_file_p(h5)
     call h5_open_group(h5, gname_proc)
@@ -1959,6 +1958,6 @@
   call bcast_all_i_for_database(NSPEC_AB, 1)
   call bcast_all_i_for_database(NGLOB_AB, 1)
   call bcast_all_i_for_database(NSPEC_IRREGULAR, 1)
-
+ 
   end subroutine read_mesh_for_init_h5
 

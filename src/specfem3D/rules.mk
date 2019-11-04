@@ -313,9 +313,13 @@ hdf5_specfem3D_OBJECTS = \
 	$O/read_mesh_databases_hdf5.spec_hdf5.o \
 	$O/write_seismograms_hdf5.spec_hdf5.o \
 	$O/write_movie_output_hdf5.spec_hdf5.o \
+	$O/io_server.spec_hdf5.o \
 	$(EMPTY_MACRO)
 hdf5_specfem3D_SHARED_OBJECTS =	\
 	$O/phdf5_utils.shared_hdf5.o \
+	$(EMPTY_MACRO)
+specfem3D_MODULES += \
+	$(FC_MODDIR)/io_server.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 specfem3D_OBJECTS += $(hdf5_specfem3D_OBJECTS)
 specfem3D_SHARED_OBJECTS += $(hdf5_specfem3D_SHARED_OBJECTS)

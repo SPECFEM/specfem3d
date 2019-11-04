@@ -60,7 +60,7 @@ module my_mpi
 
   implicit none
 
-  integer :: my_local_mpi_comm_world, my_local_mpi_comm_for_bcast, my_local_mpi_info_null
+  integer :: my_local_mpi_comm_world, my_local_mpi_comm_for_bcast, my_local_mpi_info_null, my_local_mpi_comm_inter
 
 end module my_mpi
 
@@ -205,6 +205,25 @@ end module my_mpi
   if (ier /= 0 ) stop 'Error synchronize MPI processes'
 
   end subroutine synchronize_all
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine synchronize_inter()
+
+  use my_mpi
+
+  implicit none
+
+  integer :: ier
+
+  ! synchronizes MPI processes
+  call MPI_BARRIER(my_local_mpi_comm_inter,ier)
+  if (ier /= 0 ) stop 'Error synchronize MPI processes'
+
+  end subroutine synchronize_inter
+
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1006,6 +1025,29 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine isend_cr_inter(sendbuf, sendcount, dest, sendtag, req)
+
+  use my_mpi
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  include "precision.h"
+
+  integer :: sendcount, dest, sendtag, req
+  real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
+
+  integer :: ier
+
+  call MPI_ISEND(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag,my_local_mpi_comm_inter,req,ier)
+
+  end subroutine isend_cr_inter
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
   subroutine isend_i(sendbuf, sendcount, dest, sendtag, req)
 
   use my_mpi
@@ -1020,6 +1062,26 @@ end module my_mpi
   call MPI_ISEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,my_local_mpi_comm_world,req,ier)
 
   end subroutine isend_i
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine isend_i_inter(sendbuf, sendcount, dest, sendtag, req)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: sendcount, dest, sendtag, req
+  integer, dimension(sendcount) :: sendbuf
+
+  integer :: ier
+
+  call MPI_ISEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,my_local_mpi_comm_inter,req,ier)
+
+  end subroutine isend_i_inter
+
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1102,6 +1164,27 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine recv_i_inter(recvbuf, recvcount, dest, recvtag )
+
+  use my_mpi
+
+  implicit none
+
+  integer :: dest,recvtag
+  integer :: recvcount
+  integer,dimension(recvcount):: recvbuf
+
+  integer :: ier
+
+  call MPI_RECV(recvbuf,recvcount,MPI_INTEGER,dest,recvtag, &
+                my_local_mpi_comm_inter,MPI_STATUS_IGNORE,ier)
+
+  end subroutine recv_i_inter
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine recv_dp(recvbuf, recvcount, dest, recvtag)
 
   use my_mpi
@@ -1146,6 +1229,30 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine recvv_cr_inter(recvbuf, recvcount, dest, recvtag )
+
+  use my_mpi
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  include "precision.h"
+
+  integer :: recvcount,dest,recvtag
+  real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
+
+  integer :: ier
+
+  call MPI_RECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag, &
+                my_local_mpi_comm_inter,MPI_STATUS_IGNORE,ier)
+
+  end subroutine recvv_cr_inter
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
 !  subroutine recv_singlei(recvbuf, dest, recvtag)
 !  end subroutine recv_singlei
 
@@ -1182,6 +1289,27 @@ end module my_mpi
   call MPI_SEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,my_local_mpi_comm_world,ier)
 
   end subroutine send_i
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine send_i_inter(sendbuf, sendcount, dest, sendtag)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: dest,sendtag
+  integer :: sendcount
+  integer,dimension(sendcount):: sendbuf
+
+  integer :: ier
+
+  call MPI_SEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,my_local_mpi_comm_inter,ier)
+
+  end subroutine send_i_inter
+
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1261,6 +1389,28 @@ end module my_mpi
   call MPI_SEND(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag,my_local_mpi_comm_world,ier)
 
   end subroutine sendv_cr
+
+  !
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine sendv_cr_inter(sendbuf, sendcount, dest, sendtag)
+
+  use my_mpi
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  include "precision.h"
+
+  integer sendcount,dest,sendtag
+  real(kind=CUSTOM_REAL),dimension(sendcount) :: sendbuf
+  integer ier
+
+  call MPI_SEND(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag,my_local_mpi_comm_inter,ier)
+
+  end subroutine sendv_cr_inter
+
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1496,6 +1646,33 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine gatherv_all_cr_inter(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
+
+  use my_mpi
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  include "precision.h"
+
+  integer :: sendcnt,recvcounttot,NPROC
+  integer, dimension(NPROC) :: recvcount,recvoffset
+  real(kind=CUSTOM_REAL), dimension(sendcnt) :: sendbuf
+  real(kind=CUSTOM_REAL), dimension(recvcounttot) :: recvbuf
+
+  integer :: ier
+
+  call MPI_GATHERV(sendbuf,sendcnt,CUSTOM_MPI_TYPE, &
+                  recvbuf,recvcount,recvoffset,CUSTOM_MPI_TYPE, &
+                  0,my_local_mpi_comm_inter,ier)
+
+  end subroutine gatherv_all_cr_inter
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine all_gatherv_all_ch(sendbuf, sendcnt, recvbuf, recvcnt, recvoffset, dim1, dim2, NPROC)
 
   use constants
@@ -1650,6 +1827,23 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+subroutine get_size_msg(status,size)
+
+  use my_mpi
+  implicit none
+
+  integer, intent(out) :: size
+  integer, intent(in)  :: status(MPI_STATUS_SIZE)
+  integer              :: ier
+
+  call MPI_GET_COUNT(status, MPI_INT, size, ier);
+
+end subroutine
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 !  subroutine world_get_comm_self(comm)
 !  end subroutine world_get_comm_self
 
@@ -1772,3 +1966,99 @@ end module my_mpi
 
   end subroutine world_unsplit
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine world_unsplit_inter()
+  use my_mpi
+  implicit none
+  integer :: ier
+
+  call synchronize_inter()
+  call MPI_COMM_FREE(my_local_mpi_comm_inter,ier)
+  call MPI_COMM_FREE(my_local_mpi_comm_world,ier)
+
+end subroutine world_unsplit_inter
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+! split compute nodes and io node
+  subroutine separate_compute_and_io_nodes()
+    use my_mpi
+
+    use constants, only: mygroup,I_should_read_the_database,io_task,compute_task
+    use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL,HDF5_ENABLED
+
+    implicit none
+
+    integer :: sizeval,myrank,ier,key,my_group_for_bcast,my_local_rank_for_bcast,NPROC, &
+               split_comm,compute_comm,ioserve_comm,inter_comm,io_start,comp_start
+
+
+    ! split comm into computation nodes and io node
+    ! here we use rank=0 (intra comm) as the io node as the mpi wrapper functions in this file
+    ! specifies rank=0 as the destination of mpi communication
+    ! for using one additional node, xspecfem3D need to be run with +1 node e.g.
+    ! mpirun -n $((NPROC+1)) xspecfem3D ...
+
+    ! get the local mpi_size and rank
+    call world_size(sizeval)
+    call world_rank(myrank)
+
+    ! TODO: add check if NPROC+1 = sizeval
+
+
+
+    if (myrank == sizeval-1) then ! we use the last rank as the io node
+      io_task = .true. ! set io node flag
+      compute_task = .false.
+      key = 0
+    else
+      io_task = .false.
+      compute_task = .true.
+      key = 1
+    endif
+
+    ! split communicator into compute_comm and io_comm
+    call MPI_COMM_SPLIT(my_local_mpi_comm_world, key, myrank, split_comm, ier)
+!    if (io_task) then
+!      call MPI_COMM_DUP(split_comm, ioserve_comm, ier)
+!    else
+!      call MPI_COMM_DUP(split_comm, compute_comm, ier)
+!    endif
+
+    ! create inter commicator and set as my_local_mpi_comm
+    io_start   = sizeval-1
+    comp_start = 0
+    if (io_task) then
+!      call mpi_intercomm_create(ioserve_comm, 0, my_local_mpi_comm_world, comp_start, 0, inter_comm, ier)
+!      my_local_mpi_comm_world = ioserve_comm
+      call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, comp_start, 0, inter_comm, ier)
+    else
+!      call mpi_intercomm_create(compute_comm, 0, my_local_mpi_comm_world, io_start,   0, inter_comm, ier)
+!      my_local_mpi_comm_world = compute_comm
+      call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, io_start,   0, inter_comm, ier)
+    endif
+    my_local_mpi_comm_world = split_comm
+ 
+    ! use inter_comm as my_local_mpi_comm_world for all send/recv
+    my_local_mpi_comm_inter = inter_comm
+   
+    call world_size(sizeval)
+
+    ! exclude io node from the other computer nodes
+    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) NPROC = NPROC-1
+
+  end subroutine
+
+! wait for an arrival of any mpi message
+  subroutine idle_mpi_io(status)
+    use my_mpi
+    integer, intent(inout) :: status(MPI_STATUS_SIZE)
+
+    call mpi_probe( MPI_ANY_SOURCE, MPI_ANY_TAG, my_local_mpi_comm_inter, status, ierr)
+
+  end subroutine idle_mpi_io

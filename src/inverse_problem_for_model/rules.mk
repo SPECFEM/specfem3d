@@ -347,10 +347,15 @@ hdf5_inverse_OBJECTS = \
 	$O/read_mesh_databases_hdf5.spec_hdf5.o \
 	$O/write_seismograms_hdf5.spec_hdf5.o \
 	$O/write_movie_output_hdf5.spec_hdf5.o \
+	$O/io_server.spec_hdf5.o \
 	$(EMPTY_MACRO)
 hdf5_inverse_SHARED_OBJECTS =	\
 	$O/phdf5_utils.shared_hdf5.o \
 	$(EMPTY_MACRO)
+inverse_problem_for_model_MODULES += \
+	$(FC_MODDIR)/io_server.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
 inverse_problem_for_model_OBJECTS += $(hdf5_inverse_OBJECTS)
 inverse_problem_for_model_SHARED_OBJECTS += $(hdf5_inverse_SHARED_OBJECTS)
 else
