@@ -130,7 +130,7 @@
   subroutine read_stations_SU_from_previous_run(nrec,station_name,network_name, &
                                                 islice_selected_rec,ispec_selected_rec, &
                                                 xi_receiver,eta_receiver,gamma_receiver, &
-                                                nu,is_done_stations)
+                                                nu_rec,is_done_stations)
 
   use constants, only: NDIM,IOUT_SU, &
     MAX_LENGTH_STATION_NAME,MAX_LENGTH_NETWORK_NAME,IMAIN,OUTPUT_FILES,MAX_STRING_LEN
@@ -145,7 +145,7 @@
 
   integer, dimension(nrec),intent(out) :: islice_selected_rec,ispec_selected_rec
   double precision, dimension(nrec),intent(out) :: xi_receiver,eta_receiver,gamma_receiver
-  double precision, dimension(NDIM,NDIM,nrec),intent(out) :: nu
+  double precision, dimension(NDIM,NDIM,nrec),intent(out) :: nu_rec
 
   logical, intent(out) :: is_done_stations
 
@@ -183,7 +183,7 @@
       read(IOUT_SU) islice_selected_rec,ispec_selected_rec
       read(IOUT_SU) xi_receiver,eta_receiver,gamma_receiver
       read(IOUT_SU) x_found,y_found,z_found
-      read(IOUT_SU) nu
+      read(IOUT_SU) nu_rec
       close(IOUT_SU)
 
       ! write the locations of stations, so that we can load them and write them to SU headers later
@@ -206,7 +206,7 @@
     call bcast_all_dp(xi_receiver,nrec)
     call bcast_all_dp(eta_receiver,nrec)
     call bcast_all_dp(gamma_receiver,nrec)
-    call bcast_all_dp(nu,NDIM*NDIM*nrec)
+    call bcast_all_dp(nu_rec,NDIM*NDIM*nrec)
     call synchronize_all()
 
     ! everything done
@@ -221,7 +221,7 @@
 
   subroutine write_stations_SU_for_next_run(nrec,islice_selected_rec,ispec_selected_rec, &
                                             xi_receiver,eta_receiver,gamma_receiver, &
-                                            x_found,y_found,z_found,nu)
+                                            x_found,y_found,z_found,nu_rec)
 
 
   use constants, only: NDIM,IOUT_SU,OUTPUT_FILES,MAX_STRING_LEN
@@ -232,7 +232,7 @@
   integer, dimension(nrec),intent(in) :: islice_selected_rec,ispec_selected_rec
   double precision, dimension(nrec),intent(in) :: xi_receiver,eta_receiver,gamma_receiver
   double precision, dimension(nrec),intent(in) :: x_found,y_found,z_found
-  double precision, dimension(NDIM,NDIM,nrec),intent(in) :: nu
+  double precision, dimension(NDIM,NDIM,nrec),intent(in) :: nu_rec
 
   ! local parameters
   integer :: ier
@@ -245,7 +245,7 @@
     write(IOUT_SU) islice_selected_rec,ispec_selected_rec
     write(IOUT_SU) xi_receiver,eta_receiver,gamma_receiver
     write(IOUT_SU) x_found,y_found,z_found
-    write(IOUT_SU) nu
+    write(IOUT_SU) nu_rec
     close(IOUT_SU)
   endif
 

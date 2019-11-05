@@ -621,3 +621,79 @@
 
   end subroutine unusual_hex_nodes6p
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
+  subroutine hex_nodes_anchor_ijk(NGNOD,anchor_iax,anchor_iay,anchor_iaz)
+
+! gets control point indices
+!
+! to get coordinates of control points (corners,midpoints) for an element ispec, they can be use as:
+!do ia = 1,NGNOD
+!  iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+!  xelm(ia) = dble(xstore(iglob))
+!  yelm(ia) = dble(ystore(iglob))
+!  zelm(ia) = dble(zstore(iglob))
+!enddo
+
+  use constants, only: MIDX,MIDY,MIDZ,NGLLX,NGLLY,NGLLZ
+
+  implicit none
+
+  integer, intent(in) :: NGNOD
+  integer, dimension(NGNOD), intent(out) :: anchor_iax,anchor_iay,anchor_iaz
+
+  ! local parameters
+  integer :: ia
+  integer :: iax,iay,iaz
+
+  ! topology of the control/anchor points of the surface element
+  integer :: iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
+
+  ! define topology of the control element
+  call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
+
+  ! define (i,j,k) indices of the control/anchor points of the elements
+  do ia = 1,NGNOD
+    ! control point index
+    iax = 0
+    if (iaddx(ia) == 0) then
+      iax = 1
+    else if (iaddx(ia) == 1) then
+      iax = MIDX
+    else if (iaddx(ia) == 2) then
+      iax = NGLLX
+    else
+      stop 'incorrect value of iaddx'
+    endif
+    anchor_iax(ia) = iax
+
+    iay = 0
+    if (iaddy(ia) == 0) then
+      iay = 1
+    else if (iaddy(ia) == 1) then
+      iay = MIDY
+    else if (iaddy(ia) == 2) then
+      iay = NGLLY
+    else
+      stop 'incorrect value of iaddy'
+    endif
+    anchor_iay(ia) = iay
+
+    iaz = 0
+    if (iaddz(ia) == 0) then
+      iaz = 1
+    else if (iaddz(ia) == 1) then
+      iaz = MIDZ
+    else if (iaddz(ia) == 2) then
+      iaz = NGLLZ
+    else
+      stop 'incorrect value of iaddr'
+    endif
+    anchor_iaz(ia) = iaz
+  enddo
+
+  end subroutine hex_nodes_anchor_ijk
+

@@ -84,7 +84,7 @@
                    xeta*(yxi*zgamma-ygamma*zxi) + &
                    xgamma*(yxi*zeta-yeta*zxi)
 
-! check that the Jacobian transform is invertible, i.e. that the Jacobian never becomes negative or null
+        ! check that the Jacobian transform is invertible, i.e. that the Jacobian never becomes negative or null
         if (jacobian <= ZERO) then
           print *,'Error: rank ',myrank,'found invalid element with negative Jacobian ',jacobian
           print *,'  NGNOD = ',NGNOD
@@ -100,7 +100,7 @@
           call exit_MPI(myrank,'Error negative or null 3D Jacobian found')
         endif
 
-!     invert the relation (Fletcher p. 50 vol. 2)
+        ! invert the relation (Fletcher p. 50 vol. 2)
         xix = (yeta*zgamma-ygamma*zeta) / jacobian
         xiy = (xgamma*zeta-xeta*zgamma) / jacobian
         xiz = (xeta*ygamma-xgamma*yeta) / jacobian
@@ -111,13 +111,13 @@
         gammay = (xeta*zxi-xxi*zeta) / jacobian
         gammaz = (xxi*yeta-xeta*yxi) / jacobian
 
-!     compute and store the jacobian for the solver
+        ! compute and store the jacobian for the solver
         jacobian = 1. / (xix*(etay*gammaz-etaz*gammay) &
                         -xiy*(etax*gammaz-etaz*gammax) &
                         +xiz*(etax*gammay-etay*gammax))
 
-!     save the derivatives and the jacobian
-! distinguish between single and double precision for reals
+        ! save the derivatives and the jacobian
+        ! distinguish between single and double precision for reals
         xix_elem(i,j,k) = real(xix,kind=CUSTOM_REAL)
         xiy_elem(i,j,k) = real(xiy,kind=CUSTOM_REAL)
         xiz_elem(i,j,k) = real(xiz,kind=CUSTOM_REAL)

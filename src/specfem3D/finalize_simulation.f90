@@ -161,7 +161,7 @@
   deallocate(islice_selected_rec,ispec_selected_rec)
   deallocate(xi_receiver,eta_receiver,gamma_receiver)
   deallocate(station_name,network_name)
-  deallocate(nu)
+  deallocate(nu_rec)
   deallocate(pm1_source_encoding)
   deallocate(sourcearrays)
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) deallocate(source_adjoint)

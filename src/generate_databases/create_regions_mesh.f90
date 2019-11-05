@@ -793,6 +793,7 @@
 
   use generate_databases_par, only: NGNOD,NGNOD2D,NDIM,NGLLX,NGLLY,NGLLZ,GAUSSALPHA,GAUSSBETA,CUSTOM_REAL
   use create_regions_mesh_ext_par
+  use constants, only: OUTPUT_FILES
 
   implicit none
 
@@ -814,6 +815,10 @@
   logical :: any_regular_elem
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: xix_reg,xiy_reg,xiz_reg,etax_reg,etay_reg,etaz_reg, &
                                                           gammax_reg,gammay_reg,gammaz_reg,jacobian_reg
+
+  ! debug
+  logical, parameter :: DEBUG_ELEMENT = .false.
+  character(len=MAX_STRING_LEN) :: filename
 
 ! set up coordinates of the Gauss-Lobatto-Legendre points
   call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
@@ -874,6 +879,15 @@
     endif
     call calc_coords(xstore(:,:,:,ispec),ystore(:,:,:,ispec),zstore(:,:,:,ispec), &
                      xelm,yelm,zelm,shape3D)
+
+    !debug
+    if (DEBUG_ELEMENT) then
+      if (myrank == 0 .and. ispec == 1) then
+        write(filename,'(a,i6.6,a)') trim(OUTPUT_FILES)//'/proc',myrank,'_debug_element'
+        call write_VTK_data_points_elem(NGNOD,xelm,yelm,zelm,dble(jacobianstore(1,1,1,ispec_irreg)),filename)
+        print *,'  written out:',trim(filename)
+      endif
+    endif
 
   enddo
   ! get xix derivative and jacobian on a regular element

@@ -36,7 +36,7 @@ __global__ void compute_elastic_seismogram_kernel(int nrec_local,
                                                   int* d_ibool,
                                                   realw* hxir_store, realw* hetar_store, realw* hgammar_store,
                                                   realw* seismograms,
-                                                  realw* nu,
+                                                  realw* nu_rec,
                                                   int* ispec_selected_rec_loc,
                                                   int seismo_current){
 
@@ -89,19 +89,19 @@ __global__ void compute_elastic_seismogram_kernel(int nrec_local,
     int idx = INDEX3(NDIM,nrec_local,0,irec_local,it);
 
     if (tx == 0) {
-      seismograms[0+idx] = nu[0+NDIM*(0+NDIM*irec_local)]*sh_dxd[0]
-                         + nu[0+NDIM*(1+NDIM*irec_local)]*sh_dyd[0]
-                         + nu[0+NDIM*(2+NDIM*irec_local)]*sh_dzd[0];
+      seismograms[0+idx] = nu_rec[0+NDIM*(0+NDIM*irec_local)]*sh_dxd[0]
+                         + nu_rec[0+NDIM*(1+NDIM*irec_local)]*sh_dyd[0]
+                         + nu_rec[0+NDIM*(2+NDIM*irec_local)]*sh_dzd[0];
     }
     if (tx == 1) {
-      seismograms[1+idx] = nu[1+NDIM*(0+NDIM*irec_local)]*sh_dxd[0]
-                         + nu[1+NDIM*(1+NDIM*irec_local)]*sh_dyd[0]
-                         + nu[1+NDIM*(2+NDIM*irec_local)]*sh_dzd[0];
+      seismograms[1+idx] = nu_rec[1+NDIM*(0+NDIM*irec_local)]*sh_dxd[0]
+                         + nu_rec[1+NDIM*(1+NDIM*irec_local)]*sh_dyd[0]
+                         + nu_rec[1+NDIM*(2+NDIM*irec_local)]*sh_dzd[0];
     }
     if (tx == 2) {
-      seismograms[2+idx] = nu[2+NDIM*(0+NDIM*irec_local)]*sh_dxd[0]
-                         + nu[2+NDIM*(1+NDIM*irec_local)]*sh_dyd[0]
-                         + nu[2+NDIM*(2+NDIM*irec_local)]*sh_dzd[0];
+      seismograms[2+idx] = nu_rec[2+NDIM*(0+NDIM*irec_local)]*sh_dxd[0]
+                         + nu_rec[2+NDIM*(1+NDIM*irec_local)]*sh_dyd[0]
+                         + nu_rec[2+NDIM*(2+NDIM*irec_local)]*sh_dzd[0];
     }
   }
 }
@@ -172,7 +172,7 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
                                                              realw* d_gammax, realw* d_gammay, realw* d_gammaz,
                                                              realw xix_regular,
                                                              realw* d_hprime_xx,
-                                                             realw* nu,
+                                                             realw* nu_rec,
                                                              int* ispec_selected_rec_loc,
                                                              int seismo_current){
 
@@ -333,19 +333,19 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
   int idx = INDEX3(NDIM,nrec_local,0,irec_local,it);
 
   if (tx == 0) {
-    seismograms[0+idx] = nu[0+NDIM*(0+NDIM*irec_local)]*s_temp1[0]
-                       + nu[0+NDIM*(1+NDIM*irec_local)]*s_temp2[0]
-                       + nu[0+NDIM*(2+NDIM*irec_local)]*s_temp3[0];
+    seismograms[0+idx] = nu_rec[0+NDIM*(0+NDIM*irec_local)]*s_temp1[0]
+                       + nu_rec[0+NDIM*(1+NDIM*irec_local)]*s_temp2[0]
+                       + nu_rec[0+NDIM*(2+NDIM*irec_local)]*s_temp3[0];
   }
   if (tx == 1) {
-    seismograms[1+idx] = nu[1+NDIM*(0+NDIM*irec_local)]*s_temp1[0]
-                       + nu[1+NDIM*(1+NDIM*irec_local)]*s_temp2[0]
-                       + nu[1+NDIM*(2+NDIM*irec_local)]*s_temp3[0];
+    seismograms[1+idx] = nu_rec[1+NDIM*(0+NDIM*irec_local)]*s_temp1[0]
+                       + nu_rec[1+NDIM*(1+NDIM*irec_local)]*s_temp2[0]
+                       + nu_rec[1+NDIM*(2+NDIM*irec_local)]*s_temp3[0];
   }
   if (tx == 2) {
-    seismograms[2+idx] = nu[2+NDIM*(0+NDIM*irec_local)]*s_temp1[0]
-                       + nu[2+NDIM*(1+NDIM*irec_local)]*s_temp2[0]
-                       + nu[2+NDIM*(2+NDIM*irec_local)]*s_temp3[0];
+    seismograms[2+idx] = nu_rec[2+NDIM*(0+NDIM*irec_local)]*s_temp1[0]
+                       + nu_rec[2+NDIM*(1+NDIM*irec_local)]*s_temp2[0]
+                       + nu_rec[2+NDIM*(2+NDIM*irec_local)]*s_temp3[0];
   }
 }
 
@@ -416,7 +416,7 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                  mp->d_ibool,
                                                                                  mp->d_hxir,mp->d_hetar,mp->d_hgammar,
                                                                                  mp->d_seismograms_d,
-                                                                                 mp->d_nu,
+                                                                                 mp->d_nu_rec,
                                                                                  mp->d_ispec_selected_rec_loc,
                                                                                  seismo_current);
 
@@ -427,7 +427,7 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                  mp->d_ibool,
                                                                                  mp->d_hxir,mp->d_hetar,mp->d_hgammar,
                                                                                  mp->d_seismograms_v,
-                                                                                 mp->d_nu,
+                                                                                 mp->d_nu_rec,
                                                                                  mp->d_ispec_selected_rec_loc,
                                                                                  seismo_current);
 
@@ -437,7 +437,7 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                  mp->d_ibool,
                                                                                  mp->d_hxir,mp->d_hetar,mp->d_hgammar,
                                                                                  mp->d_seismograms_a,
-                                                                                 mp->d_nu,
+                                                                                 mp->d_nu_rec,
                                                                                  mp->d_ispec_selected_rec_loc,
                                                                                  seismo_current);
 
@@ -479,7 +479,7 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                           mp->d_gammax,mp->d_gammay,mp->d_gammaz,
                                                                                           mp->xix_regular,
                                                                                           mp->d_hprime_xx,
-                                                                                          mp->d_nu,
+                                                                                          mp->d_nu_rec,
                                                                                           mp->d_ispec_selected_rec_loc,
                                                                                           seismo_current);
 
@@ -498,7 +498,7 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                           mp->d_gammax,mp->d_gammay,mp->d_gammaz,
                                                                                           mp->xix_regular,
                                                                                           mp->d_hprime_xx,
-                                                                                          mp->d_nu,
+                                                                                          mp->d_nu_rec,
                                                                                           mp->d_ispec_selected_rec_loc,
                                                                                           seismo_current);
 
@@ -517,7 +517,7 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                           mp->d_gammax,mp->d_gammay,mp->d_gammaz,
                                                                                           mp->xix_regular,
                                                                                           mp->d_hprime_xx,
-                                                                                          mp->d_nu,
+                                                                                          mp->d_nu_rec,
                                                                                           mp->d_ispec_selected_rec_loc,
                                                                                           seismo_current);
   } // ACOUSTIC_SIMULATION

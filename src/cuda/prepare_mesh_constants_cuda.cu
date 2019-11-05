@@ -92,7 +92,7 @@ void FC_FUNC_(prepare_constants_device,
                                         int* nspec_acoustic,int* nspec_elastic,
                                         int* h_myrank,
                                         int* SAVE_FORWARD,
-                                        realw* h_xir,realw* h_etar, realw* h_gammar,double * nu,
+                                        realw* h_xir,realw* h_etar, realw* h_gammar,double * nu_rec,
                                         int* islice_selected_rec,
                                         int* NTSTEP_BETWEEN_OUTPUT_SEISMOS,
                                         int* SAVE_SEISMOGRAMS_DISPLACEMENT,int* SAVE_SEISMOGRAMS_VELOCITY,
@@ -303,18 +303,18 @@ void FC_FUNC_(prepare_constants_device,
     copy_todevice_realw((void**)&mp->d_hetar,h_etar,NGLLY*mp->nrec_local);
     copy_todevice_realw((void**)&mp->d_hgammar,h_gammar,NGLLZ*mp->nrec_local);
 
-    // stores only local receiver rotations in d_nu
-    realw* h_nu;
-    h_nu = (realw*)malloc(NDIM * NDIM * mp->nrec_local * sizeof(realw));
+    // stores only local receiver rotations in d_nu_rec
+    realw* h_nu_rec;
+    h_nu_rec = (realw*)malloc(NDIM * NDIM * mp->nrec_local * sizeof(realw));
     int irec_loc = 0;
     for (int i=0;i < (*nrec);i++){
       if (mp->myrank == islice_selected_rec[i]){
-         for (int j = 0; j < 9; j++) h_nu[j + NDIM * NDIM * irec_loc] = (realw)nu[j + NDIM * NDIM * i];
+         for (int j = 0; j < 9; j++) h_nu_rec[j + NDIM * NDIM * irec_loc] = (realw)nu_rec[j + NDIM * NDIM * i];
          irec_loc = irec_loc + 1;
       }
     }
-    copy_todevice_realw((void**)&mp->d_nu,h_nu,NDIM * NDIM * (*nrec_local));
-    free(h_nu);
+    copy_todevice_realw((void**)&mp->d_nu_rec,h_nu_rec,NDIM * NDIM * (*nrec_local));
+    free(h_nu_rec);
 
     // seismograms
     int size =  (*NTSTEP_BETWEEN_OUTPUT_SEISMOS) * (*nrec_local);
@@ -1311,12 +1311,12 @@ void FC_FUNC_(prepare_fields_gravity_device,
 /*
 extern "C"
 void FC_FUNC_(prepare_seismogram_fields,
-              PREPARE_SEISMOGRAM_FIELDS)(long* Mesh_pointer,int* nrec_local, double* nu, double* hxir, double* hetar, double* hgammar) {
+              PREPARE_SEISMOGRAM_FIELDS)(long* Mesh_pointer,int* nrec_local, double* nu_rec, double* hxir, double* hetar, double* hgammar) {
 
   TRACE("prepare_constants_device");
   Mesh* mp = (Mesh*)(*Mesh_pointer);
 
-  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_nu),3*3*(*nrec_local)*sizeof(double)),8100);
+  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_nu_rec),3*3*(*nrec_local)*sizeof(double)),8100);
   print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hxir),5*(*nrec_local)*sizeof(double)),8100);
   print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hetar),5*(*nrec_local)*sizeof(double)),8100);
   print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hgammar),5*(*nrec_local)*sizeof(double)),8100);
@@ -1325,7 +1325,7 @@ void FC_FUNC_(prepare_seismogram_fields,
   print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_v,3*(*nrec_local)*sizeof(realw)),8101);
   print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_a,3*(*nrec_local)*sizeof(realw)),8101);
 
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_nu,nu,3*3*(*nrec_local)*sizeof(double),cudaMemcpyHostToDevice),8101);
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_nu_rec,nu_rec,3*3*(*nrec_local)*sizeof(double),cudaMemcpyHostToDevice),8101);
   print_CUDA_error_if_any(cudaMemcpy(mp->d_hxir,hxir,5*(*nrec_local)*sizeof(double),cudaMemcpyHostToDevice),8101);
   print_CUDA_error_if_any(cudaMemcpy(mp->d_hetar,hetar,5*(*nrec_local)*sizeof(double),cudaMemcpyHostToDevice),8101);
   print_CUDA_error_if_any(cudaMemcpy(mp->d_hgammar,hgammar,5*(*nrec_local)*sizeof(double),cudaMemcpyHostToDevice),8101);
@@ -1440,7 +1440,7 @@ TRACE("prepare_cleanup_device");
     if (mp->save_seismograms_v) cudaFree(mp->d_seismograms_v);
     if (mp->save_seismograms_a) cudaFree(mp->d_seismograms_a);
     if (mp->save_seismograms_p) cudaFree(mp->d_seismograms_p);
-    cudaFree(mp->d_nu);
+    cudaFree(mp->d_nu_rec);
     cudaFree(mp->d_ispec_selected_rec_loc);
     }
     cudaFree(mp->d_ispec_selected_rec);

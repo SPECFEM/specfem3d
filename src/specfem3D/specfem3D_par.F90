@@ -147,7 +147,7 @@ module specfem_par
   integer, dimension(:), allocatable :: islice_selected_rec,ispec_selected_rec
   double precision, dimension(:), allocatable :: xi_receiver,eta_receiver,gamma_receiver
   double precision, dimension(:,:), allocatable :: hpxir_store,hpetar_store,hpgammar_store
-  double precision, dimension(:,:,:), allocatable :: nu
+  double precision, dimension(:,:,:), allocatable :: nu_rec
 
 ! Lagrange interpolators at receivers
   integer, dimension(:), allocatable, target :: number_receiver_global
@@ -294,6 +294,14 @@ module specfem_par
   ! VTK window mode, default is off
   logical :: VTK_MODE = .false.
 #endif
+
+  ! point search
+  ! (i,j,k) indices of the control/anchor points of the element
+  integer, dimension(:), allocatable :: anchor_iax,anchor_iay,anchor_iaz
+
+  ! coordinates of element midpoints
+  double precision, dimension(:,:), allocatable :: xyz_midpoints
+
 
 end module specfem_par
 

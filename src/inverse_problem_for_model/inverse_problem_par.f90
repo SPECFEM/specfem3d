@@ -300,7 +300,7 @@ module inverse_problem_par
      !! global numbering of stations located in my slice
      integer,                                 dimension(:),       allocatable  :: number_receiver_global
      !! rotation matrix for the seismograms
-     double precision,                        dimension(:,:,:),   allocatable  :: nu
+     double precision,                        dimension(:,:,:),   allocatable  :: nu_rec
      !! interpolation along x direction
      double precision,                        dimension(:,:),     allocatable  :: hxi, hpxi
      !! interpolation along y direction

@@ -32,8 +32,8 @@
 
   implicit none
 
-  ! builds search tree
-  if (.not. DO_BRUTE_FORCE_POINT_SEARCH) call setup_search_kdtree()
+  ! setup for point search
+  call setup_point_search_arrays()
 
   ! sets number of timestep parameters
   call setup_timesteps()
@@ -53,7 +53,9 @@
   ! write source and receiver VTK files for Paraview
   call setup_sources_receivers_VTKfile()
 
-  ! frees tree memory
+  ! frees memory
+  deallocate(xyz_midpoints)
+  deallocate(anchor_iax,anchor_iay,anchor_iaz)
   if (.not. DO_BRUTE_FORCE_POINT_SEARCH) call setup_free_kdtree()
 
   ! user output
@@ -74,6 +76,42 @@
   call synchronize_all()
 
   end subroutine setup_sources_receivers
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine setup_point_search_arrays()
+
+  use constants
+  use specfem_par
+
+  implicit none
+
+  ! local parameters
+  integer :: ispec,iglob,ier
+
+  ! prepares midpoints coordinates
+  allocate(xyz_midpoints(NDIM,NSPEC_AB),stat=ier)
+  if (ier /= 0 ) call exit_MPI(myrank,'Error allocating array xyz_midpoints')
+
+  ! store x/y/z coordinates of center point
+  do ispec = 1,NSPEC_AB
+    iglob = ibool(MIDX,MIDY,MIDZ,ispec)
+    xyz_midpoints(1,ispec) =  dble(xstore(iglob))
+    xyz_midpoints(2,ispec) =  dble(ystore(iglob))
+    xyz_midpoints(3,ispec) =  dble(zstore(iglob))
+  enddo
+
+  ! define (i,j,k) indices of the control/anchor points
+  allocate(anchor_iax(NGNOD),anchor_iay(NGNOD),anchor_iaz(NGNOD),stat=ier)
+  if (ier /= 0 ) call exit_MPI(myrank,'Error allocating array anchor_i**')
+  call hex_nodes_anchor_ijk(NGNOD,anchor_iax,anchor_iay,anchor_iaz)
+
+  ! builds search tree
+  if (.not. DO_BRUTE_FORCE_POINT_SEARCH) call setup_search_kdtree()
+
+  end subroutine setup_point_search_arrays
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -603,13 +641,13 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2065')
   allocate(network_name(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2066')
-  allocate(nu(NDIM,NDIM,nrec), stat=ier)
+  allocate(nu_rec(NDIM,NDIM,nrec), stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2067')
   if (ier /= 0) stop 'error allocating arrays for receivers'
 
   ! locate receivers in the mesh
   call locate_receivers(filtered_rec_filename,nrec,islice_selected_rec,ispec_selected_rec, &
-                        xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
+                        xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu_rec, &
                         utm_x_source(1),utm_y_source(1))
 
   ! count number of receivers located in this slice

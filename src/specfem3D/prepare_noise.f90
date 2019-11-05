@@ -87,7 +87,7 @@
 
     ! sets up noise source for master receiver station
     call read_parameters_noise(nrec,NSTEP,NGLLSQUARE*num_free_surface_faces, &
-                               islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu, &
+                               islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu_rec, &
                                noise_sourcearray,xigll,yigll,zigll, &
                                ibool, &
                                xstore,ystore,zstore, &

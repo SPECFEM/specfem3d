@@ -264,26 +264,26 @@
   !                               ( no matter in which MPI partition it is)
   ! note: we use acoustic elements as reference elements because we will need
   !          density from acoustic element when coupling pressure in case of gravity
-  do ispec=1,nspec
+  do ispec = 1,nspec
 
     if (ispec_is_acoustic(ispec)) then
 
       ! loops over each face
-      do iface_ref= 1, 6
+      do iface_ref = 1, 6
 
         ! takes indices of corners of reference face
         call get_element_corners(ispec,iface_ref,xcoord,ycoord,zcoord,iglob_corners_ref, &
-                                ibool,nspec,nglob_dummy,xstore_dummy,ystore_dummy,zstore_dummy, &
-                                iface_all_corner_ijk)
+                                 ibool,nspec,nglob_dummy,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                 iface_all_corner_ijk)
 
         ! checks if face is has an elastic side
         ! note: this check also returns true if layer is only 1 element thick and face points are in touch with elastic elements,
         !       but faces are actually between acoustic elements;
         !       we therefore check again the midpoints and reset them once counted
-        if (elastic_flag( iglob_corners_ref(1)) >= 1 .and. &
-            elastic_flag( iglob_corners_ref(2)) >= 1 .and. &
-            elastic_flag( iglob_corners_ref(3)) >= 1 .and. &
-            elastic_flag( iglob_corners_ref(4)) >= 1) then
+        if (elastic_flag(iglob_corners_ref(1)) >= 1 .and. &
+            elastic_flag(iglob_corners_ref(2)) >= 1 .and. &
+            elastic_flag(iglob_corners_ref(3)) >= 1 .and. &
+            elastic_flag(iglob_corners_ref(4)) >= 1) then
 
           ! reference midpoint on face (used to avoid redundant face counting)
           i = iface_all_midpointijk(1,iface_ref)

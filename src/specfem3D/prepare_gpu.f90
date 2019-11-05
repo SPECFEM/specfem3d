@@ -78,7 +78,7 @@
                                 USE_MESH_COLORING_GPU, &
                                 nspec_acoustic,nspec_elastic, &
                                 myrank,SAVE_FORWARD, &
-                                hxir_store,hetar_store,hgammar_store,nu, &
+                                hxir_store,hetar_store,hgammar_store,nu_rec, &
                                 islice_selected_rec,NSTEP, &
                                 SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY, &
                                 SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE)

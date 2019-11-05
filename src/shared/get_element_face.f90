@@ -386,9 +386,9 @@ end subroutine get_element_face_gll_indices
 !
 
   subroutine get_element_face_normal_idirect(ispec,iface,xcoord,ycoord,zcoord, &
-                                ibool,nspec,nglob, &
-                                xstore_dummy,ystore_dummy,zstore_dummy, &
-                                normal,idirect)
+                                             ibool,nspec,nglob, &
+                                             xstore_dummy,ystore_dummy,zstore_dummy, &
+                                             normal,idirect)
 
 ! returns direction of normal:
 !   idirect = 1 to point outwards of/away from element
@@ -497,8 +497,8 @@ end subroutine get_element_face_gll_indices
 !
 
   subroutine get_element_corners(ispec,iface_ref,xcoord,ycoord,zcoord,iglob_corners_ref, &
-                                ibool,nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
-                                iface_all_corner_ijk)
+                                 ibool,nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                 iface_all_corner_ijk)
 
   use constants
 

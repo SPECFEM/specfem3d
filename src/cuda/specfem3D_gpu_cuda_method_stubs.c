@@ -488,7 +488,7 @@ void FC_FUNC_(prepare_constants_device,
                                         int* nspec_acoustic,int* nspec_elastic,
                                         int* h_myrank,
                                         int* SAVE_FORWARD,
-                                        realw* h_xir,realw* h_etar, realw* h_gammar,double * nu,
+                                        realw* h_xir,realw* h_etar, realw* h_gammar,double * nu_rec,
                                         int* islice_selected_rec,
                                         int* NTSTEP_BETWEEN_OUTPUT_SEISMOS,
                                         int* SAVE_SEISMOGRAMS_DISPLACEMENT,int* SAVE_SEISMOGRAMS_VELOCITY,
@@ -599,7 +599,7 @@ void FC_FUNC_(prepare_fields_gravity_device,
                                              realw* rhostore) {}
 
 void FC_FUNC_(prepare_seismogram_fields,
-              PREPARE_SEISMOGRAM_FIELDS)(long* Mesh_pointer,int* nrec_local, double* nu, double* hxir, double* hetar, double* hgammar) {}
+              PREPARE_SEISMOGRAM_FIELDS)(long* Mesh_pointer,int* nrec_local, double* nu_rec, double* hxir, double* hetar, double* hgammar) {}
 
 void FC_FUNC_(prepare_fault_device,
               PREPARE_FAULT_DEVICE)(long* Mesh_pointer,

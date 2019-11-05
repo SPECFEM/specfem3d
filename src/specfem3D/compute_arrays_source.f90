@@ -49,7 +49,7 @@
   ! source arrays
   double precision, dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrayd
 
-  double precision :: hlagrange
+  double precision :: hlagrange,hlagrange_xi,hlagrange_eta,hlagrange_gamma
   double precision :: dsrc_dx, dsrc_dy, dsrc_dz
   double precision :: dxis_dx, detas_dx, dgammas_dx
   double precision :: dxis_dy, detas_dy, dgammas_dy
@@ -71,6 +71,7 @@
   ispec_irreg = irregular_element_number(ispec_selected_source)
   if (ispec_irreg == 0) xix_reg_d = dble(xix_regular)
 
+  ! derivatives dxi/dx, dxi/dy, etc. evaluated at source position
   do m = 1,NGLLZ
     do l = 1,NGLLY
       do k = 1,NGLLX
@@ -115,18 +116,22 @@
   do m = 1,NGLLZ
     do l = 1,NGLLY
       do k = 1,NGLLX
+        hlagrange_xi = hpxis(k)*hetas(l)*hgammas(m)
+        hlagrange_eta = hxis(k)*hpetas(l)*hgammas(m)
+        hlagrange_gamma = hxis(k)*hetas(l)*hpgammas(m)
 
-        dsrc_dx = (hpxis(k)*dxis_dx)*hetas(l)*hgammas(m) &
-                + hxis(k)*(hpetas(l)*detas_dx)*hgammas(m) &
-                + hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dx)
+        ! gradient at source position
+        dsrc_dx = hlagrange_xi * dxis_dx &
+                + hlagrange_eta * detas_dx &
+                + hlagrange_gamma * dgammas_dx
 
-        dsrc_dy = (hpxis(k)*dxis_dy)*hetas(l)*hgammas(m) &
-                + hxis(k)*(hpetas(l)*detas_dy)*hgammas(m) &
-                + hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dy)
+        dsrc_dy = hlagrange_xi * dxis_dy &
+                + hlagrange_eta * detas_dy &
+                + hlagrange_gamma * dgammas_dy
 
-        dsrc_dz = (hpxis(k)*dxis_dz)*hetas(l)*hgammas(m) &
-                + hxis(k)*(hpetas(l)*detas_dz)*hgammas(m) &
-                + hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dz)
+        dsrc_dz = hlagrange_xi * dxis_dz &
+                + hlagrange_eta * detas_dz &
+                + hlagrange_gamma * dgammas_dz
 
         sourcearrayd(1,k,l,m) = sourcearrayd(1,k,l,m) + (Mxx*dsrc_dx + Mxy*dsrc_dy + Mxz*dsrc_dz)
         sourcearrayd(2,k,l,m) = sourcearrayd(2,k,l,m) + (Mxy*dsrc_dx + Myy*dsrc_dy + Myz*dsrc_dz)
@@ -454,12 +459,18 @@
     do l = 1,NGLLY
       do k = 1,NGLLX
 
-        dsrc_dx = (hpxis(k)*dxis_dx)*hetas(l)*hgammas(m) + hxis(k)*(hpetas(l)*detas_dx)*hgammas(m) + &
-                                                            hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dx)
-        dsrc_dy = (hpxis(k)*dxis_dy)*hetas(l)*hgammas(m) + hxis(k)*(hpetas(l)*detas_dy)*hgammas(m) + &
-                                                            hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dy)
-        dsrc_dz = (hpxis(k)*dxis_dz)*hetas(l)*hgammas(m) + hxis(k)*(hpetas(l)*detas_dz)*hgammas(m) + &
-                                                            hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dz)
+        dsrc_dx = (hpxis(k)*dxis_dx)*hetas(l)*hgammas(m) &
+                + hxis(k)*(hpetas(l)*detas_dx)*hgammas(m) &
+                + hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dx)
+
+        dsrc_dy = (hpxis(k)*dxis_dy)*hetas(l)*hgammas(m) &
+                + hxis(k)*(hpetas(l)*detas_dy)*hgammas(m) &
+                + hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dy)
+
+        dsrc_dz = (hpxis(k)*dxis_dz)*hetas(l)*hgammas(m) &
+                + hxis(k)*(hpetas(l)*detas_dz)*hgammas(m) &
+                + hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dz)
+
         !! for now fixed force direction and stf is defined after
         sourcearrayd(:,k,l,m) = sourcearrayd(:,k,l,m) + (FX*dsrc_dx + FY*dsrc_dy + FZ*dsrc_dz)
 

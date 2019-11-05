@@ -1884,14 +1884,15 @@ contains
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 446')
        allocate(acqui_simu(ievent)%number_receiver_global(nsta),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 447')
-       allocate(acqui_simu(ievent)%nu(NDIM,NDIM,nsta),stat=ier)
+       allocate(acqui_simu(ievent)%nu_rec(NDIM,NDIM,nsta),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 448')
 
        ! reads STATIONS_FILTERED file, locates receivers in the mesh and compute Lagrange interpolators
        call locate_receivers(filtered_rec_filename,nsta,acqui_simu(ievent)%islice_selected_rec, &
                              acqui_simu(ievent)%ispec_selected_rec, &
                              acqui_simu(ievent)%xi_rec,acqui_simu(ievent)%eta_rec,acqui_simu(ievent)%gamma_rec, &
-                             acqui_simu(ievent)%station_name,acqui_simu(ievent)%network_name,acqui_simu(ievent)%nu,1.0d0,1.0d0)
+                             acqui_simu(ievent)%station_name,acqui_simu(ievent)%network_name,acqui_simu(ievent)%nu_rec, &
+                             1.0d0,1.0d0)
        nrec_loc = 0
        do irec = 1, nsta
          if (myrank == acqui_simu(ievent)%islice_selected_rec(irec)) then

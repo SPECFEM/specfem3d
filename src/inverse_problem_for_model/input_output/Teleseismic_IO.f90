@@ -510,11 +510,11 @@ contains
        acqui_simu(ievent)%islice_selected_rec(:)=-1
 
        !! SB SB si je comprends bien ce sont des matrices de rotations ?
-       allocate(acqui_simu(ievent)%nu(NDIM,NDIM,nsta),stat=ier)
+       allocate(acqui_simu(ievent)%nu_rec(NDIM,NDIM,nsta),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 362')
-       acqui_simu(ievent)%nu(:,:,:)=0.
+       acqui_simu(ievent)%nu_rec(:,:,:)=0.
        do idim = 1, NDIM
-          acqui_simu(ievent)%nu(idim,idim,:)=1.
+          acqui_simu(ievent)%nu_rec(idim,idim,:)=1.
        enddo
 
        nsta_slice=0

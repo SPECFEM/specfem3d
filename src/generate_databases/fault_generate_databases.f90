@@ -555,9 +555,9 @@ contains
       do i=1,NGLLX
         ! directs normals such that they point outwards of element
         call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
-          ibool,nspec,nglob, &
-          xstore_dummy,ystore_dummy,zstore_dummy, &
-          normal_face(:,i,j) )
+                                     ibool,nspec,nglob, &
+                                     xstore_dummy,ystore_dummy,zstore_dummy, &
+                                     normal_face(:,i,j) )
       enddo
     enddo
 

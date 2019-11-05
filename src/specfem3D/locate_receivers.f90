@@ -29,7 +29,7 @@
 !---- locate_receivers finds the correct position of the receivers
 !----
   subroutine locate_receivers(rec_filename,nrec,islice_selected_rec,ispec_selected_rec, &
-                              xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
+                              xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu_rec, &
                               utm_x_source,utm_y_source)
 
   use constants
@@ -51,7 +51,7 @@
   double precision, dimension(nrec),intent(out) :: xi_receiver,eta_receiver,gamma_receiver
   character(len=MAX_LENGTH_STATION_NAME), dimension(nrec),intent(out) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec),intent(out) :: network_name
-  double precision, dimension(NDIM,NDIM,nrec),intent(out) :: nu
+  double precision, dimension(NDIM,NDIM,nrec),intent(out) :: nu_rec
   double precision,intent(in) :: utm_x_source,utm_y_source
 
   ! local parameters
@@ -145,7 +145,7 @@
     call read_stations_SU_from_previous_run(nrec,station_name,network_name, &
                                             islice_selected_rec,ispec_selected_rec, &
                                             xi_receiver,eta_receiver,gamma_receiver, &
-                                            nu,is_done_stations)
+                                            nu_rec,is_done_stations)
     ! check if done
     if (is_done_stations) then
       ! free temporary arrays
@@ -264,7 +264,7 @@
                           nrec,ispec_selected_rec, islice_selected_rec, &
                           x_found,y_found,z_found, &
                           xi_receiver, eta_receiver, gamma_receiver, &
-                          idomain,nu,final_distance)
+                          idomain,nu_rec,final_distance)
 
   enddo ! loop over stations
 
@@ -284,7 +284,7 @@
   call bcast_all_dp(y_found,nrec)
   call bcast_all_dp(z_found,nrec)
 
-  call bcast_all_dp(nu,NDIM*NDIM*nrec)
+  call bcast_all_dp(nu_rec,NDIM*NDIM*nrec)
   call bcast_all_dp(final_distance,nrec)
 
   ! warning if receiver in C-PML region
@@ -370,11 +370,11 @@
         write(IMAIN,*) '     gamma = ',gamma_receiver(irec)
 
         write(IMAIN,*) '     rotation matrix: '
-        nu_tmp(:) = nu(1,:,irec)
+        nu_tmp(:) = nu_rec(1,:,irec)
         write(IMAIN,*) '     nu1 = ',sngl(nu_tmp)
-        nu_tmp(:) = nu(2,:,irec)
+        nu_tmp(:) = nu_rec(2,:,irec)
         write(IMAIN,*) '     nu2 = ',sngl(nu_tmp)
-        nu_tmp(:) = nu(3,:,irec)
+        nu_tmp(:) = nu_rec(3,:,irec)
         write(IMAIN,*) '     nu3 = ',sngl(nu_tmp)
 
         if (SUPPRESS_UTM_PROJECTION) then
@@ -442,7 +442,7 @@
     ! stores station infos for later runs
     if (SU_FORMAT) call write_stations_SU_for_next_run(nrec,islice_selected_rec,ispec_selected_rec, &
                                                        xi_receiver,eta_receiver,gamma_receiver, &
-                                                       x_found,y_found,z_found,nu)
+                                                       x_found,y_found,z_found,nu_rec)
 
     ! elapsed time since beginning of mesh generation
     tCPU = wtime() - tstart

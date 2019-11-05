@@ -235,7 +235,7 @@ end module user_noise_distribution
 
 ! read parameters
   subroutine read_parameters_noise(nrec,NSTEP,nmovie_points, &
-                                   islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu, &
+                                   islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu_rec, &
                                    noise_sourcearray,xigll,yigll,zigll, &
                                    ibool, &
                                    xstore,ystore,zstore, &
@@ -260,7 +260,7 @@ end module user_noise_distribution
   double precision, dimension(NGLLX) :: xigll
   double precision, dimension(NGLLY) :: yigll
   double precision, dimension(NGLLZ) :: zigll
-  double precision, dimension(NDIM,NDIM,nrec) :: nu
+  double precision, dimension(NDIM,NDIM,nrec) :: nu_rec
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB_VAL) :: xstore,ystore,zstore
 
   integer :: num_free_surface_faces
@@ -308,7 +308,7 @@ end module user_noise_distribution
     call compute_arrays_source_noise(xi_receiver(irec_master_noise), &
                                      eta_receiver(irec_master_noise), &
                                      gamma_receiver(irec_master_noise), &
-                                     nu(:,:,irec_master_noise),noise_sourcearray, &
+                                     nu_rec(:,:,irec_master_noise),noise_sourcearray, &
                                      xigll,yigll,zigll,NSTEP)
   endif
 

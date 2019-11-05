@@ -351,7 +351,7 @@ contains
     if (allocated(gamma_receiver)) deallocate(gamma_receiver)
     if (allocated(station_name)) deallocate(station_name)
     if (allocated(network_name)) deallocate(network_name)
-    if (allocated(nu)) deallocate(nu)
+    if (allocated(nu_rec)) deallocate(nu_rec)
 
     !! re-allocation
     allocate(islice_selected_rec(nrec),ispec_selected_rec(nrec),stat=ier)
@@ -360,7 +360,7 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 499')
     allocate(station_name(nrec),network_name(nrec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 500')
-    allocate(nu(NDIM,NDIM,nrec),stat=ier)
+    allocate(nu_rec(NDIM,NDIM,nrec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 501')
 
     !! store current arrays
@@ -371,7 +371,7 @@ contains
     gamma_receiver(:)=acqui_simu(ievent)%gamma_rec(:)
     station_name(:)=acqui_simu(ievent)%station_name
     network_name(:)=acqui_simu(ievent)%network_name
-    nu(:,:,:)=acqui_simu(ievent)%nu(:,:,:)
+    nu_rec(:,:,:)=acqui_simu(ievent)%nu_rec(:,:,:)
 
     if (nrec_local > 0) then
 

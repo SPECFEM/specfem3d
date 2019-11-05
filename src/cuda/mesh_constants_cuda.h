@@ -485,7 +485,8 @@ typedef struct mesh_ {
   int nrec_local;
 
   realw* d_hxir, *d_hetar, *d_hgammar;
-  realw* d_seismograms_d, *d_seismograms_v, *d_seismograms_a, * d_nu;
+  realw* d_nu_rec;
+  realw* d_seismograms_d, *d_seismograms_v, *d_seismograms_a;
   field* d_seismograms_p;
 
   int save_seismograms_d;
