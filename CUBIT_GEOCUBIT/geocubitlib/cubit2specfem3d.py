@@ -793,6 +793,22 @@ class mesh(object, mesh_tools):
         print('Ok')
 
     def create_hexnode_string(self, hexa, hexnode_string=True):
+        # Cubit node numbering:
+        # https://cubit.sandia.gov/public/13.2/help_manual/WebHelp/appendix/element_numbering.htm
+        #
+        # hex8: starts from bottom surface (front,left),(front,right),(back,right),(back,left)  corresponds to (1,2,3,4)
+        #                to top  surface (front,left),(front,right),(back,right),(back,left)                   (5,6,7,8)
+        #
+        # hex21: continues from hex8 numbering with
+        #        mid-point edges (bottom,front),(bottom,right),(bottom,back),(bottom,left)           -> (9,10,11,12)
+        #                        (mid-front,left),(mid-front,right),(mid-back,right),(mid-back,left)    (13,14,15,16)
+        #                        (top,front),(top,right),(top,back),(top,left)                          (17,18,19,20)
+        #        center          (21)
+        # hex27: ? not documented by Cubit
+        # (mentions that numbering is equal to EXODUS II, A Finite Element Data Model)
+        # (see sideset node ordering, table 4.2: https://gsjaardema.github.io/seacas/exodusII-new.pdf)
+        #         mid-face (front),(right),(back),(left),(bottom),(top)  -> (26,25,27,24,22,23)
+        #
         nodes = self.get_hex_connectivity(hexa)
         # nodes=self.jac_check(nodes) #is it valid for 3D? TODO
         if self.hex27:
@@ -808,7 +824,7 @@ class mesh(object, mesh_tools):
             txt = txt + '\n'
         else:
             #debug
-            #print('debug: hex8 connectivity original:',nodes)
+            #if hexa == 1: print('debug: hex8 connectivity original:',nodes)
             # connectivity used is: 4, 7, 8, 3, 1, 6, 5, 2
             txt = str(hexa) + ' ' + ' '.join(str(x) for x in nodes)
             txt = txt + '\n'
