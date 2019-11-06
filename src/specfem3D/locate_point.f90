@@ -491,7 +491,7 @@
 
     ! gets xi/eta/gamma and corresponding x/y/z coordinates
     call find_local_coordinates(x_target,y_target,z_target,xi,eta,gamma,x,y,z, &
-                                ispec_selected,ix_initial_guess,iy_initial_guess,iz_initial_guess)
+                                ispec,ix_initial_guess,iy_initial_guess,iz_initial_guess)
 
     ! compute final distance squared between asked and found
     final_distance_squared_this_element = (x_target-x)**2 + (y_target-y)**2 + (z_target-z)**2
@@ -537,7 +537,7 @@
 !
 
   subroutine find_local_coordinates(x_target,y_target,z_target,xi,eta,gamma,x,y,z, &
-                                    ispec_selected,ix_initial_guess,iy_initial_guess,iz_initial_guess)
+                                    ispec,ix_initial_guess,iy_initial_guess,iz_initial_guess)
 
   use constants, only: HUGEVAL,NUM_ITER,NDIM
   use specfem_par, only: xstore,ystore,zstore,ibool,NGNOD,anchor_iax,anchor_iay,anchor_iaz, &
@@ -549,7 +549,7 @@
   double precision,intent(out) :: xi,eta,gamma
   double precision,intent(out) :: x,y,z
 
-  integer,intent(in) :: ispec_selected,ix_initial_guess,iy_initial_guess,iz_initial_guess
+  integer,intent(in) :: ispec,ix_initial_guess,iy_initial_guess,iz_initial_guess
 
   ! local parameters
   integer :: ia,iter_loop
@@ -566,7 +566,7 @@
 
   ! define coordinates of the control points of the element
   do ia = 1,NGNOD
-    iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec_selected)
+    iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
     xelm(ia) = dble(xstore(iglob))
     yelm(ia) = dble(ystore(iglob))
     zelm(ia) = dble(zstore(iglob))

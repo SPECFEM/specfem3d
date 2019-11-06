@@ -175,7 +175,7 @@
   endif
 
   ! checks Courant number and minimum resolved period for each grid cell
-  do ispec=1,NSPEC_AB
+  do ispec = 1,NSPEC_AB
 
     ! determines minimum/maximum velocities within this element
     call get_vpvs_minmax(vpmin,vpmax,vsmin,vsmax,poissonmin,poissonmax, &
@@ -855,8 +855,7 @@
   logical :: has_vs_zero
 
   integer :: NSPEC_AB
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
-    kappastore,mustore,rho_vp,rho_vs
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore,mustore,rho_vp,rho_vs
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: vp,vs,poisson
