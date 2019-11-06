@@ -49,10 +49,12 @@
   integer :: nrec_all,ier
   double precision :: stlat,stlon,stele,stbur,stutm_x,stutm_y
   double precision :: minlat,minlon,maxlat,maxlon
+
   character(len=MAX_LENGTH_STATION_NAME) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME) :: network_name
 
   character(len=MAX_STRING_LEN) :: line
+  character(len=32) :: fmt_str
 
   real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
   double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
@@ -102,9 +104,22 @@
           nrec_filtered = nrec_filtered + 1
 
           ! with specific format
-          write(IOUT,'(a10,1x,a10,4e22.10)') &
-                            trim(station_name),trim(network_name), &
-                            sngl(stlat),sngl(stlon),sngl(stele),sngl(stbur)
+          ! fixing the format is needed for some compilers
+          ! (say, cray fortran would write same numbers as 2*1500.0 with write(..,*))
+          ! however, we might loose location resolution if the range is not appropriate for the specifier (e,f,..).
+          ! we thus try to estimate a good format string based on the maximum value of the numbers to output
+          if (max(abs(stlat),abs(stlon),abs(stele),abs(stbur)) >= 1.d9) then
+            ! uses exponential numbers format
+            fmt_str = '(a10,1x,a10,4e24.10)'
+          else if (max(abs(stlat),abs(stlon),abs(stele),abs(stbur)) >= 1.d-1) then
+            ! uses float numbers format
+            fmt_str = '(a10,1x,a10,4f24.12)'
+          else
+            ! uses exponential numbers format
+            fmt_str = '(a10,1x,a10,4e24.10)'
+          endif
+          write(IOUT,fmt_str) trim(station_name),trim(network_name),stlat,stlon,stele,stbur
+
         endif
       endif
     enddo

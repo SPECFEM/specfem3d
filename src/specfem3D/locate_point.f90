@@ -60,16 +60,16 @@
   double precision,                      intent(out)    :: final_distance_squared
 
   ! locals
-  integer                                               :: ispec, iglob, i, j, k
+  integer :: ispec, iglob, i, j, k
   ! location search
-  double precision                                      :: maximal_elem_size_squared, dist_squared
-  double precision                                      :: distmin_squared
-  double precision                                      :: x,y,z
-  double precision                                      :: xi,eta,gamma
-  integer                                               :: ix_initial_guess, iy_initial_guess, iz_initial_guess
-  integer                                               :: imin,imax,jmin,jmax,kmin,kmax
-
+  double precision :: maximal_elem_size_squared, dist_squared
+  double precision :: distmin_squared
   double precision :: final_distance_squared_this_element
+  double precision :: x,y,z
+  double precision :: xi,eta,gamma
+
+  integer :: ix_initial_guess, iy_initial_guess, iz_initial_guess
+  integer :: imin,imax,jmin,jmax,kmin,kmax
 
 !! DK DK dec 2017: also loop on all the elements in contact with the initial guess element to improve accuracy of estimate
   logical, dimension(:),allocatable :: flag_topological    ! making array allocatable, otherwise will crash for large meshes
@@ -91,6 +91,7 @@
   ! search elements
   integer :: ielem,num_elem_local,ier,ispec_nearest
   logical :: use_brute_force_search
+  logical :: is_better_location
 
   !debug
   !print *,'locate point in mesh: ',x_target, y_target, z_target
@@ -192,10 +193,14 @@
           ! skip inner GLL points in case station must lie on surface
           if (.not. POINT_CAN_BE_BURIED .and. .not. iglob_is_surface_external_mesh(iglob)) cycle
 
+          x = dble(xstore(iglob))
+          y = dble(ystore(iglob))
+          z = dble(zstore(iglob))
+
           ! distance to GLL point
-          dist_squared = (x_target - dble(xstore(iglob)))**2 &
-                       + (y_target - dble(ystore(iglob)))**2 &
-                       + (z_target - dble(zstore(iglob)))**2
+          dist_squared = (x_target - x)*(x_target - x) &
+                       + (y_target - y)*(y_target - y) &
+                       + (z_target - z)*(z_target - z)
 
           if (dist_squared < distmin_squared) then
             distmin_squared = dist_squared
@@ -204,9 +209,9 @@
             iy_initial_guess = j
             iz_initial_guess = k
 
-            x_found = xstore(iglob)
-            y_found = ystore(iglob)
-            z_found = zstore(iglob)
+            x_found = x
+            y_found = y
+            z_found = z
           endif
 
         enddo
@@ -494,24 +499,48 @@
                                 ispec,ix_initial_guess,iy_initial_guess,iz_initial_guess)
 
     ! compute final distance squared between asked and found
-    final_distance_squared_this_element = (x_target-x)**2 + (y_target-y)**2 + (z_target-z)**2
+    final_distance_squared_this_element = (x_target-x)*(x_target-x) + (y_target-y)*(y_target-y) + (z_target-z)*(z_target-z)
 
     ! if we have found an element that gives a shorter distance
     if (final_distance_squared_this_element < final_distance_squared) then
+
+      ! check if location is better in case almost similar distances
+      ! since we allow xi/eta/gamma to go a bit outside of the element range [-1.01,1.01],
+      ! we keep the element where xi/eta/gamma is still within element
+      !
+      ! note: this can avoid problems when points on interfaces, say between acoustic/elastic, have been choosen.
+      !       the point search takes whatever element comes last with a best position, even if the point
+      !       has been located slightly away from the element. thus, we try to check if the previous location
+      !       was accurate enough with coordinates still within an element.
+      is_better_location = .true.
+      if (abs(final_distance_squared_this_element - final_distance_squared) < 1.d-15) then
+        if (abs(xi) > 1.d0 .or. abs(eta) > 1.d0 .or. abs(gamma) > 1.d0) then
+          if (abs(xi_found) > 1.d0 .or. abs(eta_found) > 1.d0 .or. abs(gamma_found) > 1.d0) then
+            ! old position is also out of element, let's take the new one
+            is_better_location = .true.
+          else
+            ! old position is still within element and new distance has only little improved, so keep old one
+            is_better_location = .false.
+          endif
+        endif
+      endif
+
       ! store information about the point found
-      ! note: xi/eta/gamma will be in range [-1,1]
-      ispec_selected = ispec
+      if (is_better_location) then
+        ! note: xi/eta/gamma will be in range [-1,1]
+        ispec_selected = ispec
 
-      xi_found = xi
-      eta_found = eta
-      gamma_found = gamma
+        xi_found = xi
+        eta_found = eta
+        gamma_found = gamma
 
-      x_found = x
-      y_found = y
-      z_found = z
+        x_found = x
+        y_found = y
+        z_found = z
 
-      !   store final distance squared between asked and found
-      final_distance_squared = final_distance_squared_this_element
+        !   store final distance squared between asked and found
+        final_distance_squared = final_distance_squared_this_element
+      endif
     endif
 
 !! DK DK dec 2017
