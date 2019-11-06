@@ -19,6 +19,7 @@ jobs:
 
     - name: Install packages
       run: |
+        sudo apt update
         sudo apt install -yq --no-install-recommends gfortran g++ openmpi-bin libopenmpi-dev
         echo "compiler versions:" ${FC} ${MPIFC} ${CC}
         gcc --version
