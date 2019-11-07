@@ -105,7 +105,7 @@
 
           ! with specific format
           ! fixing the format is needed for some compilers
-          ! (say, cray fortran would write same numbers as 2*1500.0 with write(..,*))
+          ! (say, cray Fortran would write same numbers as 2*1500.0 with write(..,*))
           ! however, we might loose location resolution if the range is not appropriate for the specifier (e,f,..).
           ! we thus try to estimate a good format string based on the maximum value of the numbers to output
           if (max(abs(stlat),abs(stlon),abs(stele),abs(stbur)) >= 1.d9) then

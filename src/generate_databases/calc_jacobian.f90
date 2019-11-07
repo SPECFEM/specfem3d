@@ -31,7 +31,7 @@
                            gammax_elem,gammay_elem,gammaz_elem,jacobian_elem, &
                            xelm,yelm,zelm,dershape3D)
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO,MAX_STRING_LEN
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO,MAX_STRING_LEN
   use generate_databases_par, only: NGNOD,OUTPUT_FILES
 
   implicit none

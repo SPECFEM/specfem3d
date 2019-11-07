@@ -47,14 +47,14 @@
 
   ! user output
   print *, 'reading mesh files in: ',trim(localpath_name)
-  print *, ''
+  print *
   print *, '  using NGNOD = ',NGNOD
   if (NGNOD == 8) then
     print *, '  linear elements'
   else if (NGNOD == 27) then
     print *, '  quadratic elements'
   endif
-  print *, ''
+  print *
 
   ! reads node coordinates
   open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file', &
@@ -164,7 +164,7 @@
     read(98,*,iostat=ier) num_elmnt,(elmnts(inode,num_elmnt), inode=1,NGNOD)
 
     ! debug
-    !print*,'ispec: ',ispec,'num_elmnt:',num_elmnt,elmnts(1:NGNOD,num_elmnt)
+    !print *,'ispec: ',ispec,'num_elmnt:',num_elmnt,elmnts(1:NGNOD,num_elmnt)
 
     if (ier /= 0) then
       print *,'Error while attempting to read ',NGNOD,'element data values from the mesh file'
