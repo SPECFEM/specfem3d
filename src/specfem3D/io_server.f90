@@ -10,15 +10,15 @@ module io_server
   integer :: n_msg_shake_each_proc=3
   integer :: n_msg_vol_each_proc=0
 
-  real(kind=CUSTOM_REAL), dimension(:,:),   allocatable   :: seismo_pres
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable   :: seismo_disp, seismo_velo, seismo_acce
-  integer, dimension(:,:), allocatable                    :: id_rec_globs
-
   integer                                           :: size_surf_array=0, surf_xdmf_pos
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: surf_x,   surf_y,   surf_z,  &
                                                        surf_ux,  surf_uy,  surf_uz, &
                                                        shake_ux, shake_uy, shake_uz
 
+  real(kind=CUSTOM_REAL), dimension(:,:),   allocatable   :: seismo_pres
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable   :: seismo_disp, seismo_velo, seismo_acce
+  integer, dimension(:,:), allocatable                    :: id_rec_globs
+ 
   ! output file names
   character(len=64) :: fname_h5_seismo     = ""
   character(len=64) :: fname_h5_data_surf  = ""
@@ -101,13 +101,17 @@ subroutine do_io_start_idle()
  
   ! allocate temporal arrays for seismo signals
   call allocate_seismo_arrays(islice_num_rec_local)
-
+ 
   ! initialize receive count
   ! count the number of messages being sent
   n_recv_msg_seismo = n_procs_with_rec*n_msg_seismo_each_proc*n_seismo_type
 
-  max_seismo_out = int(NSTEP/NTSTEP_BETWEEN_OUTPUT_SEISMOS)
-  if (mod(NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS) /= 0) max_seismo_out = max_seismo_out+1
+  if (NTSTEP_BETWEEN_OUTPUT_SEISMOS < NSTEP) then
+    max_seismo_out = int(NSTEP/NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+    if (mod(NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS) /= 0) max_seismo_out = max_seismo_out+1
+  else
+    max_seismo_out = 1
+  endif
 
   !
   ! initialize surface movie
@@ -158,11 +162,11 @@ subroutine do_io_start_idle()
     call idle_mpi_io(status)
 
     ! debug output
-    !print *,                 "msg: " , status(MPI_TAG) , " rank: ", status(MPI_SOURCE), &
-    !          "  counters, seismo: " , rec_count_seismo, "/"      , n_recv_msg_seismo,  &
-    !                      ", surf: " , rec_count_surf  , "/"      , n_recv_msg_surf,    &
-    !                      ", shake: ", rec_count_shake , "/"      , n_recv_msg_shake,   &
-    !                      ", vol: "  , rec_count_vol   , "/"      , n_recv_msg_vol
+    print *,                 "msg: " , status(MPI_TAG) , " rank: ", status(MPI_SOURCE), &
+              "  counters, seismo: " , rec_count_seismo, "/"      , n_recv_msg_seismo,  &
+                          ", surf: " , rec_count_surf  , "/"      , n_recv_msg_surf,    &
+                          ", shake: ", rec_count_shake , "/"      , n_recv_msg_shake,   &
+                          ", vol: "  , rec_count_vol   , "/"      , n_recv_msg_vol
 
     !
     ! receive seismograms
@@ -182,7 +186,7 @@ subroutine do_io_start_idle()
       call recv_seismo_data(status,islice_num_rec_local,rec_count_seismo)
       rec_count_seismo = rec_count_seismo+1
     endif
-  
+
     !
     ! receive surface movie data
     !
@@ -323,11 +327,10 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
   call h5_init(h5, fname_h5_data_vol)
   ! create a hdf5 file
   call h5_create_file(h5)
+  call h5_close_file(h5)
 
   ! get n_msg_vol_each_proc
   call recv_i_inter(n_msg_vol_each_proc, 1, 0, io_tag_vol_nmsg)
-
-  call h5_close_file(h5)
 
   ! get nspec and nglob from each process
   do iproc = 0, NPROC-1
@@ -723,6 +726,8 @@ subroutine get_receiver_info(islice_num_rec_local)
   call recv_i_inter(nrec_temp, 1, 0, io_tag_num_recv)
   nrec = nrec_temp(1)
 
+  call recv_dp_inter(t0, 1, 0, io_tag_seismo_tzero)
+ 
   do iproc = 0, NPROC-1
     call recv_i_inter(nrec_local_temp, 1, iproc, io_tag_local_rec)
     islice_num_rec_local(iproc) = nrec_local_temp
@@ -751,6 +756,8 @@ subroutine allocate_seismo_arrays(islice_num_rec_local)
   allocate(id_rec_globs(max_num_rec,0:NPROC-1),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array id_rec_globs')
   if (ier /= 0) stop 'error allocating array id_rec_globs'
+  ! initialize
+  id_rec_globs(:,:) = 0
 
   if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
     allocate(seismo_disp(NDIM,nrec,nstep_temp),stat=ier)
@@ -784,18 +791,45 @@ subroutine deallocate_arrays()
 
   integer :: ier
 
+  ! seismo
   deallocate(id_rec_globs,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error deallocating array id_rec_globs')
   if (ier /= 0) stop 'error deallocating array id_rec_globs'
 
+  if (allocated(seismo_disp)) then
+    deallocate(seismo_disp,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error deallocating array seimo_disp')
+    if (ier /= 0) stop 'error deallocating array seismo_disp'
+  endif
+  if (allocated(seismo_velo)) then
+    deallocate(seismo_velo,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error deallocating array seismo_velo')
+    if (ier /= 0) stop 'error deallocating array seismo_velo'
+  endif
+  if (allocated(seismo_acce)) then
+    deallocate(seismo_acce,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error deallocating array seismo_acce')
+    if (ier /= 0) stop 'error deallocating array seismo_acce'
+  endif
+  if (allocated(seismo_pres)) then
+    deallocate(seismo_pres,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error deallocating array seismo_pres')
+    if (ier /= 0) stop 'error deallocating array seismo_pres'
+  endif
+
+  ! surface movie
   deallocate(surf_x,stat=ier)
   deallocate(surf_y,stat=ier)
   deallocate(surf_z,stat=ier)
 
-  ! surface movie
   deallocate(surf_ux,stat=ier)
   deallocate(surf_uy,stat=ier)
   deallocate(surf_uz,stat=ier)
+
+  ! shake map
+  deallocate(shake_ux,stat=ier)
+  deallocate(shake_uy,stat=ier)
+  deallocate(shake_uz,stat=ier)
 
 end subroutine deallocate_arrays
 
@@ -806,7 +840,7 @@ subroutine count_seismo_type()
 
   implicit none
 
-  integer :: n_type
+  integer :: n_type = 0
 
   if (SAVE_SEISMOGRAMS_DISPLACEMENT) n_type = n_type+1
   if (SAVE_SEISMOGRAMS_VELOCITY)     n_type = n_type+1
@@ -844,7 +878,7 @@ subroutine recv_seismo_data(status, islice_num_rec_local, rec_count_seismo)
 
   integer :: count, rec_id_glob, sender, nrec_passed, irec_passed, tag, irec, id_rec_glob, ier
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: seismo_temp
-  integer                                               :: msg_size
+  integer                                               :: msg_size,time_window
 
   sender       = status(MPI_SOURCE)
   tag          = status(MPI_TAG)
@@ -854,7 +888,8 @@ subroutine recv_seismo_data(status, islice_num_rec_local, rec_count_seismo)
   ! get vector values i.e. disp, velo, acce
   if (tag /= io_tag_seismo_body_pres) then
     ! allocate temp array size
-    allocate(seismo_temp(NDIM,nrec_passed,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+    time_window = int(msg_size/NDIM/nrec_passed)
+    allocate(seismo_temp(NDIM,nrec_passed,time_window),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array seismo_temp')
     if (ier /= 0) stop 'error allocating array seismo_temp'
 
@@ -863,7 +898,8 @@ subroutine recv_seismo_data(status, islice_num_rec_local, rec_count_seismo)
 
   ! get scalar value i.e. pres
   else
-    allocate(seismo_temp(1,nrec_passed,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+    time_window = int(msg_size/1/nrec_passed)
+    allocate(seismo_temp(1,nrec_passed,time_window),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array seismo_temp')
     if (ier /= 0) stop 'error allocating array seismo_temp'
     count = msg_size 
@@ -871,22 +907,24 @@ subroutine recv_seismo_data(status, islice_num_rec_local, rec_count_seismo)
   endif
 
   ! set local array to the global array
-  do irec_passed=1,nrec_passed
-    id_rec_glob = id_rec_globs(irec_passed,sender)
-    ! disp
-    if (tag == io_tag_seismo_body_disp) then
-      seismo_disp(:,id_rec_glob,:) = seismo_temp(:,irec_passed,:)
-    ! velo
-    elseif (tag == io_tag_seismo_body_velo) then
-      seismo_velo(:,id_rec_glob,:) = seismo_temp(:,irec_passed,:)
-    ! acce
-    elseif (tag == io_tag_seismo_body_acce) then
-      seismo_acce(:,id_rec_glob,:) = seismo_temp(:,irec_passed,:)
-    ! pres
-    else
-      seismo_pres(id_rec_glob,:) = seismo_temp(1,irec_passed,:)
-    endif
-  enddo
+  if (nrec_passed >= 1) then
+    do irec_passed=1,nrec_passed
+      id_rec_glob = id_rec_globs(irec_passed,sender)
+      ! disp
+      if (tag == io_tag_seismo_body_disp) then
+        seismo_disp(:,id_rec_glob,:) = seismo_temp(:,irec_passed,:)
+      ! velo
+      elseif (tag == io_tag_seismo_body_velo) then
+        seismo_velo(:,id_rec_glob,:) = seismo_temp(:,irec_passed,:)
+      ! acce
+      elseif (tag == io_tag_seismo_body_acce) then
+        seismo_acce(:,id_rec_glob,:) = seismo_temp(:,irec_passed,:)
+      ! pres
+      elseif (tag == io_tag_seismo_body_pres) then
+        seismo_pres(id_rec_glob,:) = seismo_temp(1,irec_passed,:)
+      endif
+    enddo
+  endif
 
   ! deallocate temp array
   deallocate(seismo_temp,stat=ier)
@@ -921,9 +959,6 @@ subroutine do_io_seismogram_init()
   use io_server
 
   implicit none
-
-  ! local parameters
-  ! timing
 
   ! hdf5 varianles
   character(len=64) :: fname_h5_base = "seismograms.h5"
@@ -1013,6 +1048,8 @@ subroutine do_io_seismogram_init()
     call h5_create_dataset_collect(h5, "pres", shape(val_array2d), 2, CUSTOM_REAL)
     deallocate(val_array2d)
   endif
+
+  call h5_close_file(h5)
 
 end subroutine do_io_seismogram_init
 

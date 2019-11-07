@@ -573,7 +573,7 @@
   call h5_write_dataset_p_2d_i(h5, dset_name, spec_elm_conn_xdmf)
 
   ! stores arrays in binary files
-  if (SAVE_MESH_FILES) call save_arrays_solver_files(nspec,nglob,ibool)
+  !if (SAVE_MESH_FILES) call save_arrays_solver_files(nspec,nglob,ibool)
 
   ! if SAVE_MESH_FILES is true then the files have already been saved, no need to save them again
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then

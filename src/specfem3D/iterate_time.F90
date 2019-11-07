@@ -38,7 +38,7 @@
   implicit none
 
   ! for EXACT_UNDOING_TO_DISK
-  integer :: ispec,iglob,i,j,k,counter,record_length,ier,req,n_msg_vol_each_proc=0
+  integer :: ispec,iglob,i,j,k,counter,record_length,ier,n_msg_vol_each_proc=0
   integer, dimension(:), allocatable :: integer_mask_ibool_exact_undo
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: buffer_for_disk
   character(len=MAX_STRING_LEN) outputname
@@ -197,6 +197,8 @@
       ! seismo
       ! send nrec and nrec_local
       call send_i_inter(nrec, 1, 0, io_tag_num_recv)
+      ! send t0
+      call send_dp_inter(t0, 1, 0, io_tag_seismo_tzero)
     endif
     ! send the number of local receiver to the io node
     if (compute_task) call send_i_inter(nrec_local, 1, 0, io_tag_local_rec)
@@ -411,7 +413,7 @@ if (compute_task) then
 
 endif ! if compute_task
 
-call synchronize_inter()
+  !if(HDF5_ENABLED) call synchronize_inter()
 
   end subroutine iterate_time
 

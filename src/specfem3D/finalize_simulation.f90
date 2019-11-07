@@ -192,7 +192,13 @@
   deallocate(xstore,ystore,zstore)
   deallocate(kappastore,mustore)
   deallocate(ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
-
+  !
+  deallocate(coupling_ac_el_normal,coupling_ac_el_jacobian2Dw,coupling_ac_el_ijk,coupling_ac_el_ispec)
+  deallocate(coupling_ac_po_normal,coupling_ac_po_jacobian2Dw,coupling_ac_po_ijk,coupling_ac_po_ispec)
+  deallocate(coupling_el_po_normal,coupling_el_po_jacobian2Dw,coupling_el_po_ijk,coupling_po_el_ijk,&
+             coupling_el_po_ispec,coupling_po_el_ispec)
+  !deallocate(num_elem_colors_elastic)
+ 
   ! ADIOS file i/o
   if (ADIOS_ENABLED) then
     call adios_cleanup()

@@ -118,7 +118,7 @@ contains
             print *,'Error file open:', file_path
             print *
             print *,'check if path exists:', file_path
-            stop 'Error file open Database'
+            stop 'Error file open h5'
         endif
     end subroutine h5_create_file
 
@@ -126,6 +126,10 @@ contains
     subroutine h5_open_file(this)
         type(h5io), intent(in) :: this
         call h5fopen_f(trim(file_path), H5F_ACC_RDWR_F, file_id, error)
+        if (error /= 0) then
+            print *, 'Error file open', file_path
+            stop 'Error file open h5'
+        endif
     end subroutine h5_open_file
 
 

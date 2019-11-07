@@ -406,8 +406,8 @@
   if(HDF5_ENABLED) then
     call world_unsplit_inter()
   endif
-  call finalize_mpi()
 
+  call finalize_mpi()
 
   end program xspecfem3D
 

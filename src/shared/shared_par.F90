@@ -57,6 +57,7 @@ module constants
   integer :: io_tag_seismo_body_velo  = 13
   integer :: io_tag_seismo_body_acce  = 14
   integer :: io_tag_seismo_body_pres  = 15
+  integer :: io_tag_seismo_tzero      = 16
 
   integer :: io_tag_surface_nfaces    = 20
   integer :: io_tag_surface_offset    = 21
