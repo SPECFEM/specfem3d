@@ -185,6 +185,7 @@
   ! get MPI starting
   time_start = wtime()
 
+  !!!!!!
   ! start idling of io server
   if (HDF5_ENABLED) then
     call synchronize_inter()
@@ -241,7 +242,8 @@
     endif
 
   endif
-
+  ! initialization of io server end
+  !!!!!!!
 
 if (compute_task) then
 

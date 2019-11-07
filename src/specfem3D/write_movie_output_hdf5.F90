@@ -89,7 +89,6 @@
   subroutine wmo_movie_surface_output_h5()
 
 ! output of surface moviedata files
-! IO is done by only a master process
 
 ! option MOVIE_TYPE == 1: only at top, free surface
 !        MOVIE_TYPE == 2: for all external, outer mesh surfaces

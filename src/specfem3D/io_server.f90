@@ -13,7 +13,11 @@ module io_server
   integer                                           :: size_surf_array=0, surf_xdmf_pos
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: surf_x,   surf_y,   surf_z,  &
                                                        surf_ux,  surf_uy,  surf_uz, &
-                                                       shake_ux, shake_uy, shake_uz
+                                                       shake_ux, shake_uy, shake_uz, &
+                                                       surf_x_aug,   surf_y_aug,   surf_z_aug,  &
+                                                       surf_ux_aug,  surf_uy_aug,  surf_uz_aug, &
+                                                       shake_ux_aug, shake_uy_aug, shake_uz_aug
+
 
   real(kind=CUSTOM_REAL), dimension(:,:),   allocatable   :: seismo_pres
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable   :: seismo_disp, seismo_velo, seismo_acce
@@ -46,6 +50,34 @@ contains
       write (str, *) k
       str = adjustl(str)
   end function r2c
+
+
+  ! reorder and expand the input array (for only corner nodes) to high res array (all GLL)
+  subroutine recompose_for_hires(arr_in, arr_out)
+    use specfem_par
+    implicit none
+
+    integer                                             :: nfaces_actual
+    real(kind=CUSTOM_REAL), dimension(:), intent(in)    :: arr_in
+    real(kind=CUSTOM_REAL), dimension(:), intent(inout) :: arr_out
+    integer :: i,j,k,c,factor_face_aug=16,npoint_per_face=25,npoint_corner=4
+
+    nfaces_actual=size(arr_in)/(NGLLX*NGLLY)
+
+    c=1
+    do i=0, nfaces_actual-1
+      do j=0,3 !y
+        do k=0,3 !x
+          arr_out(c  +j*4*4+k*4)=arr_in(i*npoint_per_face+1+k+j*NGLLX)
+          arr_out(c+1+j*4*4+k*4)=arr_in(i*npoint_per_face+2+k+j*NGLLX)
+          arr_out(c+2+j*4*4+k*4)=arr_in(i*npoint_per_face+7+k+j*NGLLX)
+          arr_out(c+3+j*4*4+k*4)=arr_in(i*npoint_per_face+6+k+j*NGLLX)
+        enddo
+      enddo
+      c=c+factor_face_aug*npoint_corner
+    enddo
+
+  end subroutine recompose_for_hires
 
 end module io_server
 
@@ -451,7 +483,7 @@ subroutine shakemap_init(nfaces_perproc, surface_offset)
   implicit none
 
   integer, dimension(0:NPROC-1), intent(in) :: nfaces_perproc, surface_offset
-  integer                                   :: ier
+  integer                                   :: ier, len_array_aug
   character(len=64)                         :: dset_name
   character(len=64)                         :: group_name
  
@@ -469,22 +501,40 @@ subroutine shakemap_init(nfaces_perproc, surface_offset)
   allocate(shake_ux(size_surf_array),stat=ier)
   allocate(shake_uy(size_surf_array),stat=ier)
   allocate(shake_uz(size_surf_array),stat=ier)
+  if(USE_HIGHRES_FOR_MOVIES) then
+    len_array_aug=size(surf_x_aug)
+    allocate(shake_ux_aug(len_array_aug),stat=ier)
+    allocate(shake_uy_aug(len_array_aug),stat=ier)
+    allocate(shake_uz_aug(len_array_aug),stat=ier)
+  endif
 
   ! write xyz coords in h5 
   group_name = "surf_coord"
   call h5_create_group(h5, group_name)
   call h5_open_group(h5, group_name)
-  
-  dset_name = "x"
-  call h5_write_dataset_1d_d(h5, dset_name, surf_x)
-  call h5_close_dataset(h5)
-  dset_name = "y"
-  call h5_write_dataset_1d_d(h5, dset_name, surf_y)
-  call h5_close_dataset(h5)
-  dset_name = "z"
-  call h5_write_dataset_1d_d(h5, dset_name, surf_z)
-  call h5_close_dataset(h5)
-  
+ 
+  if (.not. USE_HIGHRES_FOR_MOVIES) then
+    dset_name = "x"
+    call h5_write_dataset_1d_d(h5, dset_name, surf_x)
+    call h5_close_dataset(h5)
+    dset_name = "y"
+    call h5_write_dataset_1d_d(h5, dset_name, surf_y)
+    call h5_close_dataset(h5)
+    dset_name = "z"
+    call h5_write_dataset_1d_d(h5, dset_name, surf_z)
+    call h5_close_dataset(h5)
+  else
+    dset_name = "x"
+    call h5_write_dataset_1d_d(h5, dset_name, surf_x_aug)
+    call h5_close_dataset(h5)
+    dset_name = "y"
+    call h5_write_dataset_1d_d(h5, dset_name, surf_y_aug)
+    call h5_close_dataset(h5)
+    dset_name = "z"
+    call h5_write_dataset_1d_d(h5, dset_name, surf_z_aug)
+    call h5_close_dataset(h5)
+  endif
+
   call h5_close_group(h5)
   call h5_close_file(h5)
 
@@ -528,6 +578,7 @@ end subroutine recv_shake_data
 
 
 subroutine write_shake_io()
+  use specfem_par
   use io_server
   use phdf5_utils
 
@@ -546,21 +597,35 @@ subroutine write_shake_io()
   group_name = "shakemap"
   call h5_create_group(h5, group_name)
   call h5_open_group(h5, group_name)
-  dset_name = "shakemap_ux"
-  call h5_write_dataset_1d_d(h5, dset_name, shake_ux)
-  call h5_close_dataset(h5)
-  dset_name = "shakemap_uy"
-  call h5_write_dataset_1d_d(h5, dset_name, shake_uy)
-  call h5_close_dataset(h5)
-  dset_name = "shakemap_uz"
-  call h5_write_dataset_1d_d(h5, dset_name, shake_uz)
-  call h5_close_dataset(h5)
+  if (.not. USE_HIGHRES_FOR_MOVIES) then
+    dset_name = "shakemap_ux"
+    call h5_write_dataset_1d_d(h5, dset_name, shake_ux)
+    call h5_close_dataset(h5)
+    dset_name = "shakemap_uy"
+    call h5_write_dataset_1d_d(h5, dset_name, shake_uy)
+    call h5_close_dataset(h5)
+    dset_name = "shakemap_uz"
+    call h5_write_dataset_1d_d(h5, dset_name, shake_uz)
+    call h5_close_dataset(h5)
+  else
+    dset_name = "shakemap_ux"
+    call recompose_for_hires(shake_ux, shake_ux_aug)
+    call h5_write_dataset_1d_d(h5, dset_name, shake_ux_aug)
+    call h5_close_dataset(h5)
+    dset_name = "shakemap_uy"
+     call recompose_for_hires(shake_uy, shake_uy_aug)
+    call h5_write_dataset_1d_d(h5, dset_name, shake_uy_aug)
+    call h5_close_dataset(h5)
+    dset_name = "shakemap_uz"
+    call recompose_for_hires(shake_uz, shake_uz_aug)
+    call h5_write_dataset_1d_d(h5, dset_name, shake_uz_aug)
+    call h5_close_dataset(h5)
+  endif
 
   call h5_close_group(h5)
   call h5_close_file(h5)
 
 end subroutine write_shake_io
-
 
 !
 ! surface movie
@@ -573,11 +638,12 @@ subroutine surf_mov_init(nfaces_perproc, surface_offset)
 
   implicit none
 
-  integer, dimension(0:NPROC-1), intent(in) :: nfaces_perproc, surface_offset
-  integer                                   :: ier
-  character(len=64)                         :: dset_name
-  character(len=64)                         :: group_name
- 
+  integer, dimension(0:NPROC-1), intent(in)         :: nfaces_perproc, surface_offset
+  integer                                           :: ier, nfaces_actual, nfaces_aug=16,nnodes_per_face_aug=4
+  integer                                           :: len_array_aug
+  character(len=64)                                 :: dset_name
+  character(len=64)                                 :: group_name
+  
   type(h5io) :: h5
   h5 = h5io()
 
@@ -604,6 +670,17 @@ subroutine surf_mov_init(nfaces_perproc, surface_offset)
   allocate(surf_uy(size_surf_array),stat=ier)
   allocate(surf_uz(size_surf_array),stat=ier)
 
+  if (USE_HIGHRES_FOR_MOVIES) then
+    nfaces_actual = size_surf_array/(NGLLX*NGLLY)
+    len_array_aug = nfaces_actual*nfaces_aug*nnodes_per_face_aug
+    allocate(surf_x_aug(len_array_aug),stat=ier)
+    allocate(surf_y_aug(len_array_aug),stat=ier)
+    allocate(surf_z_aug(len_array_aug),stat=ier)
+    allocate(surf_ux_aug(len_array_aug),stat=ier)
+    allocate(surf_uy_aug(len_array_aug),stat=ier)
+    allocate(surf_uz_aug(len_array_aug),stat=ier)
+  endif
+
   ! x
   call recvv_cr_inter(surf_x, size_surf_array, 0, io_tag_surface_x)
   ! y
@@ -615,17 +692,35 @@ subroutine surf_mov_init(nfaces_perproc, surface_offset)
   group_name = "surf_coord"
   call h5_create_group(h5, group_name)
   call h5_open_group(h5, group_name)
-  
-  dset_name = "x"
-  call h5_write_dataset_1d_d(h5, dset_name, surf_x)
-  call h5_close_dataset(h5)
-  dset_name = "y"
-  call h5_write_dataset_1d_d(h5, dset_name, surf_y)
-  call h5_close_dataset(h5)
-  dset_name = "z"
-  call h5_write_dataset_1d_d(h5, dset_name, surf_z)
-  call h5_close_dataset(h5)
-  
+
+  ! low resolution output
+  if (.not. USE_HIGHRES_FOR_MOVIES) then
+    dset_name = "x"
+    call h5_write_dataset_1d_d(h5, dset_name, surf_x)
+    call h5_close_dataset(h5)
+    dset_name = "y"
+    call h5_write_dataset_1d_d(h5, dset_name, surf_y)
+    call h5_close_dataset(h5)
+    dset_name = "z"
+    call h5_write_dataset_1d_d(h5, dset_name, surf_z)
+    call h5_close_dataset(h5)
+  ! high resolution output
+  else
+    ! nfaces*25nodes => n*16faces*4
+    dset_name = "x"
+    call recompose_for_hires(surf_x,surf_x_aug)
+    call h5_write_dataset_1d_d(h5, dset_name, surf_x_aug)
+    call h5_close_dataset(h5)
+    dset_name = "y"
+    call recompose_for_hires(surf_y,surf_y_aug)
+    call h5_write_dataset_1d_d(h5, dset_name, surf_y_aug)
+    call h5_close_dataset(h5)
+    dset_name = "z"
+    call recompose_for_hires(surf_z,surf_z_aug)
+    call h5_write_dataset_1d_d(h5, dset_name, surf_z_aug)
+    call h5_close_dataset(h5)
+  endif
+
   call h5_close_group(h5)
   call h5_close_file(h5)
 
@@ -672,15 +767,17 @@ end subroutine recv_surf_data
 
 subroutine write_surf_io(it_io)
   use io_server
+  use specfem_par
   use phdf5_utils
 
   implicit none
 
-  integer, intent(in) :: it_io
-  character(len=64)   :: dset_name
-  character(len=64)   :: group_name
-  character(len=10)   :: tempstr
-  type(h5io)          :: h5
+  integer, intent(in)                               :: it_io
+  integer                                           :: ier, nfaces_actual, nfaces_aug=16,nnodes_per_face_aug=4
+  character(len=64)                                 :: dset_name
+  character(len=64)                                 :: group_name
+  character(len=10)                                 :: tempstr
+  type(h5io)                                        :: h5
   h5 = h5io()
 
   ! continue opening hdf5 file till the end of write process
@@ -693,15 +790,30 @@ subroutine write_surf_io(it_io)
   call h5_create_group(h5, group_name)
   call h5_open_group(h5, group_name)
 
-  dset_name = "ux"
-  call h5_write_dataset_1d_d(h5, dset_name, surf_ux)
-  call h5_close_dataset(h5)
-  dset_name = "uy"
-  call h5_write_dataset_1d_d(h5, dset_name, surf_uy)
-  call h5_close_dataset(h5)
-  dset_name = "uz"
-  call h5_write_dataset_1d_d(h5, dset_name, surf_uz)
-  call h5_close_dataset(h5)
+  if (.not. USE_HIGHRES_FOR_MOVIES) then
+    dset_name = "ux"
+    call h5_write_dataset_1d_d(h5, dset_name, surf_ux)
+    call h5_close_dataset(h5)
+    dset_name = "uy"
+    call h5_write_dataset_1d_d(h5, dset_name, surf_uy)
+    call h5_close_dataset(h5)
+    dset_name = "uz"
+    call h5_write_dataset_1d_d(h5, dset_name, surf_uz)
+    call h5_close_dataset(h5)
+  else
+    dset_name = "ux"
+    call recompose_for_hires(surf_ux, surf_ux_aug)
+    call h5_write_dataset_1d_d(h5, dset_name, surf_ux_aug)
+    call h5_close_dataset(h5)
+    dset_name = "uy"
+    call recompose_for_hires(surf_uy, surf_uy_aug)
+    call h5_write_dataset_1d_d(h5, dset_name, surf_uy_aug)
+    call h5_close_dataset(h5)
+    dset_name = "uz"
+    call recompose_for_hires(surf_uz, surf_uz_aug)
+    call h5_write_dataset_1d_d(h5, dset_name, surf_uz_aug)
+    call h5_close_dataset(h5)
+  endif
 
   call h5_close_group(h5)
   call h5_close_file(h5)
@@ -830,6 +942,22 @@ subroutine deallocate_arrays()
   deallocate(shake_ux,stat=ier)
   deallocate(shake_uy,stat=ier)
   deallocate(shake_uz,stat=ier)
+
+  if (USE_HIGHRES_FOR_MOVIES) then
+    ! surface movie
+    deallocate(surf_x_aug,stat=ier)
+    deallocate(surf_y_aug,stat=ier)
+    deallocate(surf_z_aug,stat=ier)
+
+    deallocate(surf_ux_aug,stat=ier)
+    deallocate(surf_uy_aug,stat=ier)
+    deallocate(surf_uz_aug,stat=ier)
+
+    ! shake map
+    deallocate(shake_ux_aug,stat=ier)
+    deallocate(shake_uy_aug,stat=ier)
+    deallocate(shake_uz_aug,stat=ier)
+  endif
 
 end subroutine deallocate_arrays
 
@@ -1108,15 +1236,20 @@ subroutine write_xdmf_surface_header()
   use specfem_par
   use io_server
   implicit none
-  integer :: num_elm
+  integer :: num_elm, num_nodes
+  
+  if (.not. USE_HIGHRES_FOR_MOVIES) then
+    num_nodes = size(surf_x)
+  else
+    num_nodes = size(surf_x_aug)
+  endif
 
-  num_elm = int(size(surf_x)/4)
+  num_elm = num_nodes/4
 
   ! writeout xdmf file for surface movie
   fname_xdmf_surf = trim(OUTPUT_FILES)//"/movie_surface.xmf"
 
   open(unit=xdmf_surf, file=fname_xdmf_surf)
-
   write(xdmf_surf,'(a)') '<?xml version="1.0" ?>'
   write(xdmf_surf,*) '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
   write(xdmf_surf,*) '<Xdmf Version="3.0">'
@@ -1124,15 +1257,15 @@ subroutine write_xdmf_surface_header()
   write(xdmf_surf,*) '    <Topology Name="topo" TopologyType="Quadrilateral" NumberOfElements="'//trim(i2c(num_elm))//'"/>'
   write(xdmf_surf,*) '    <Geometry GeometryType="X_Y_Z">'
   write(xdmf_surf,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="' &
-                                                        //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(size(surf_x)))//'">'
+                                                        //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
   write(xdmf_surf,*) '        ./DATABASES_MPI/movie_surface.h5:/surf_coord/x'
   write(xdmf_surf,*) '      </DataItem>'
   write(xdmf_surf,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                                        //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(size(surf_y)))//'">'
+                                                        //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
   write(xdmf_surf,*) '        ./DATABASES_MPI/movie_surface.h5:/surf_coord/y'
   write(xdmf_surf,*) '      </DataItem>'
   write(xdmf_surf,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                                       //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(size(surf_z)))//'">'
+                                                       //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
   write(xdmf_surf,*) '        ./DATABASES_MPI/movie_surface.h5:/surf_coord/z'
   write(xdmf_surf,*) '      </DataItem>'
   write(xdmf_surf,*) '    </Geometry>'
@@ -1142,7 +1275,7 @@ subroutine write_xdmf_surface_header()
 
   write(xdmf_surf,*) '  </Domain>'
   write(xdmf_surf,*) '</Xdmf>'
-! 20 lines
+  ! 20 lines
   
   ! position where the additional data will be inserted
   surf_xdmf_pos = 17
@@ -1164,6 +1297,14 @@ subroutine write_xdmf_surface_body(it_io)
   character(len=20)  :: it_str
   character(len=20)  :: temp_str
 
+  integer :: num_nodes
+  
+  if (.not. USE_HIGHRES_FOR_MOVIES) then
+    num_nodes = size(surf_x)
+  else
+    num_nodes = size(surf_x_aug)
+  endif
+
   ! create a group for each io step
  
   ! open xdmf file
@@ -1174,7 +1315,6 @@ subroutine write_xdmf_surface_body(it_io)
     read(xdmf_surf, *)
   enddo
 
-  ! append data link of this time step
   write(it_str, "(i6.6)") it_io
   write(xdmf_surf,*) '<Grid Name="surf_mov" GridType="Uniform">'
   write(xdmf_surf,*) '  <Time Value="'//trim(r2c(sngl((it_io-1)*DT-t0)))//'" />'
@@ -1182,19 +1322,19 @@ subroutine write_xdmf_surface_body(it_io)
   write(xdmf_surf,*) '  <Geometry Reference="/Xdmf/Domain/Geometry" />'
   write(xdmf_surf,*) '  <Attribute Name="ux" AttributeType="Scalar" Center="Node">'
   write(xdmf_surf,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(size(surf_ux)))//'">'
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
   write(xdmf_surf,*) '      ./DATABASES_MPI/movie_surface.h5:/it_'//trim(it_str)//'/ux'
   write(xdmf_surf,*) '    </DataItem>'
   write(xdmf_surf,*) '  </Attribute>'
   write(xdmf_surf,*) '  <Attribute Name="uy" AttributeType="Scalar" Center="Node">'
   write(xdmf_surf,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(size(surf_uy)))//'">'
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
   write(xdmf_surf,*) '      ./DATABASES_MPI/movie_surface.h5:/it_'//trim(it_str)//'/uy'
   write(xdmf_surf,*) '    </DataItem>'
   write(xdmf_surf,*) '  </Attribute>'
   write(xdmf_surf,*) '  <Attribute Name="uz" AttributeType="Scalar" Center="Node">'
   write(xdmf_surf,*) '     <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(size(surf_uz)))//'">'
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
   write(xdmf_surf,*) '       ./DATABASES_MPI/movie_surface.h5:/it_'//trim(it_str)//'/uz'
   write(xdmf_surf,*) '     </DataItem>'
   write(xdmf_surf,*) '  </Attribute>'
@@ -1202,7 +1342,7 @@ subroutine write_xdmf_surface_body(it_io)
   write(xdmf_surf,*) '</Grid>'
   write(xdmf_surf,*) '</Domain>'
   write(xdmf_surf,*) '</Xdmf>'
-!
+  !
   surf_xdmf_pos = surf_xdmf_pos+20
 
   close(xdmf_surf)
@@ -1214,9 +1354,15 @@ subroutine write_xdmf_shakemap()
   use specfem_par
   use io_server
   implicit none
-  integer :: num_elm
+  integer :: num_elm, num_nodes
+  
+  if (.not. USE_HIGHRES_FOR_MOVIES) then
+    num_nodes = size(surf_x)
+  else
+    num_nodes = size(surf_x_aug)
+  endif
 
-  num_elm = int(size(surf_x)/4)
+  num_elm = num_nodes/4
 
   ! writeout xdmf file for surface movie
   fname_xdmf_shake = trim(OUTPUT_FILES)//"/shakemap.xmf"
@@ -1231,33 +1377,33 @@ subroutine write_xdmf_shakemap()
   write(xdmf_shake,*) '    <Topology Name="topo" TopologyType="Quadrilateral" NumberOfElements="'//trim(i2c(num_elm))//'"/>'
   write(xdmf_shake,*) '    <Geometry GeometryType="X_Y_Z">'
   write(xdmf_shake,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="' &
-                                                    //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(size(surf_x)))//'">'
+                                                    //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
   write(xdmf_shake,*) '        ./DATABASES_MPI/shakemap.h5:/surf_coord/x'
   write(xdmf_shake,*) '      </DataItem>'
   write(xdmf_shake,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                                    //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(size(surf_y)))//'">'
+                                                    //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
   write(xdmf_shake,*) '        ./DATABASES_MPI/shakemap.h5:/surf_coord/y'
   write(xdmf_shake,*) '      </DataItem>'
   write(xdmf_shake,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                                   //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(size(surf_z)))//'">'
+                                                   //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
   write(xdmf_shake,*) '        ./DATABASES_MPI/shakemap.h5:/surf_coord/z'
   write(xdmf_shake,*) '      </DataItem>'
   write(xdmf_shake,*) '    </Geometry>'
   write(xdmf_shake,*) '    <Attribute Name="shake_ux" AttributeType="Scalar" Center="Node">'
   write(xdmf_shake,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                                  //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(size(shake_ux)))//'">'
+                                                  //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
   write(xdmf_shake,*) '        ./DATABASES_MPI/shakemap.h5:/shakemap/shakemap_ux'
   write(xdmf_shake,*) '      </DataItem>'
   write(xdmf_shake,*) '    </Attribute>'
   write(xdmf_shake,*) '    <Attribute Name="shake_uy" AttributeType="Scalar" Center="Node">'
   write(xdmf_shake,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                                 //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(size(shake_uy)))//'">'
+                                                 //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
   write(xdmf_shake,*) '        ./DATABASES_MPI/shakemap.h5:/shakemap/shakemap_uy'
   write(xdmf_shake,*) '      </DataItem>'
   write(xdmf_shake,*) '    </Attribute>'
   write(xdmf_shake,*) '    <Attribute Name="shake_uz" AttributeType="Scalar" Center="Node">'
   write(xdmf_shake,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                                //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(size(shake_uz)))//'">'
+                                                //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
   write(xdmf_shake,*) '        ./DATABASES_MPI/shakemap.h5:/shakemap/shakemap_uz'
   write(xdmf_shake,*) '      </DataItem>'
   write(xdmf_shake,*) '    </Attribute>'
