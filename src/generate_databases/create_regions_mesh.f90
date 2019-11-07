@@ -415,7 +415,7 @@
     DO_IRREGULAR_ELEMENT_SEPARATION
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,PML_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
-    NGNOD,NGNOD2D,NSPEC_IRREGULAR
+    NGNOD,NGNOD2D,nspec_irregular
 
   use create_regions_mesh_ext_par
 
@@ -577,7 +577,7 @@
 
     ! checks each element shape
     irregular_element_number(:) = 0
-    NSPEC_IRREGULAR = nspec
+    nspec_irregular = nspec
     cube_edge_size_squared = 1.e9
 
     do ispec = 1, nspec
@@ -589,7 +589,7 @@
       enddo
       ! checks if element is regular (is a cube)
       call check_element_regularity(xelm_real,yelm_real,zelm_real,any_regular_elem,cube_edge_size_squared, &
-                                    NSPEC_IRREGULAR,ispec,nspec,irregular_element_number,ANY_FAULT_IN_THIS_PROC)
+                                    nspec_irregular,ispec,nspec,irregular_element_number,ANY_FAULT_IN_THIS_PROC)
     enddo
   else
     ! default case of previous versions: don't separate and assume each element to be irregular in shape
@@ -599,39 +599,39 @@
       call flush_IMAIN()
     endif
     ! assigns each element as being irregular (value /= 0)
-    NSPEC_IRREGULAR = nspec
+    nspec_irregular = nspec
     do ispec = 1,nspec
       irregular_element_number(ispec) = ispec
     enddo
   endif
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '    nspec regular   = ',nspec-NSPEC_IRREGULAR
-    write(IMAIN,*) '    nspec irregular = ',NSPEC_IRREGULAR
+    write(IMAIN,*) '    nspec regular   = ',nspec-nspec_irregular
+    write(IMAIN,*) '    nspec irregular = ',nspec_irregular
     write(IMAIN,*)
     call flush_IMAIN()
   endif
 
-  if (NSPEC_IRREGULAR > 0) then
-    allocate(xixstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+  if (nspec_irregular > 0) then
+    allocate(xixstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 766')
-    allocate(xiystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(xiystore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 767')
-    allocate(xizstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(xizstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 768')
-    allocate(etaxstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(etaxstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 769')
-    allocate(etaystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(etaystore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 770')
-    allocate(etazstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(etazstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 771')
-    allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 772')
-    allocate(gammaystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(gammaystore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 773')
-    allocate(gammazstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(gammazstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 774')
-    allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 775')
     if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
   else

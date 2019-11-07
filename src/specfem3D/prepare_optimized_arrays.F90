@@ -181,7 +181,7 @@
   enddo
 
   ! number of irregular elements in this partition
-  num_irreg = count(ispec_is_irregular(:))
+  num_irreg = count(ispec_is_irregular(:) .eqv. .true.)
 
   ! checks
   if (num_irreg /= NSPEC_IRREGULAR) then
