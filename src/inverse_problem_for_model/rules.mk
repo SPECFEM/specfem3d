@@ -363,6 +363,7 @@ hdf5_inverse_OBJECTS= \
 	$O/read_mesh_databases_hdf5_stub.spec_hdf5.o \
 	$O/write_seismograms_hdf5_stub.spec_hdf5.o \
 	$O/write_movie_output_hdf5_stub.spec_hdf5.o \
+	$O/io_server_stub.spec_hdf5.o \
 	$(EMPTY_MACRO)
 hdf5_inverse_SHARED_OBJECTS =	\
 	$O/phdf5_utils_stub.shared_nohdf5.o \
