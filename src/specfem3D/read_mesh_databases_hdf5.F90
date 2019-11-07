@@ -558,11 +558,11 @@
     if (I_should_read_the_database) then
       dsetname = "nspec_cpml"
       call h5_read_dataset_p_scalar_i(h5, dsetname, NSPEC_CPML)
-      dsetname = "cpml_width_x"
+      dsetname = "CPML_width_x"
       call h5_read_dataset_p_scalar_r(h5, dsetname, CPML_width_x)
-      dsetname = "cpml_width_y"
+      dsetname = "CPML_width_y"
       call h5_read_dataset_p_scalar_r(h5, dsetname, CPML_width_y)
-      dsetname = "cpml_width_z"
+      dsetname = "CPML_width_z"
       call h5_read_dataset_p_scalar_r(h5, dsetname, CPML_width_z)
       dsetname = "min_distance_between_CPML_parameter"
       call h5_read_dataset_p_scalar_r(h5, dsetname, min_distance_between_CPML_parameter)
