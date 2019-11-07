@@ -1466,6 +1466,15 @@
     endif
   endif
 
+  ! ASDF format seismograms
+  if (ASDF_FORMAT) then
+    if (.not. (SIMULATION_TYPE == 3 .and. (.not. SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)) ) then
+      ! initializes the ASDF data structure by allocating arrays
+      call init_asdf_data(nrec_local)
+      call synchronize_all()
+    endif
+  endif
+
   end subroutine setup_receivers_precompute_intp
 
 !

@@ -259,8 +259,6 @@
       endif
     endif
 
-    if (ASDF_FORMAT) call init_asdf_data(nrec_local)
-
     ! loop on all the local receivers
     do irec_local = 1,nrec_local
 
@@ -288,9 +286,6 @@
 
   else if (WRITE_SEISMOGRAMS_BY_MASTER .and. ASDF_FORMAT) then
     ! ASDF format
-    call init_asdf_data(nrec_local)
-    call synchronize_all()
-
     do irec_local = 1, nrec_local
 
       ! get global number of that receiver

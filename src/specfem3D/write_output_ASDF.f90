@@ -40,32 +40,32 @@
   ! Variables
   integer :: total_seismos_local, ier
 
-  total_seismos_local = nrec_local*3 ! 3 components
+  total_seismos_local = nrec_local * 3 ! 3 components
 
   asdf_container%nrec_local = nrec_local
 
-  allocate(asdf_container%receiver_name_array(nrec_local), STAT=ier,stat=ier)
+  allocate(asdf_container%receiver_name_array(nrec_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2008')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%network_array(nrec_local), STAT=ier,stat=ier)
+  allocate(asdf_container%network_array(nrec_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2009')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%component_array(total_seismos_local), STAT=ier,stat=ier)
+  allocate(asdf_container%component_array(total_seismos_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2010')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%receiver_lat(nrec_local), STAT=ier,stat=ier)
+  allocate(asdf_container%receiver_lat(nrec_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2011')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%receiver_lo(nrec_local), STAT=ier,stat=ier)
+  allocate(asdf_container%receiver_lo(nrec_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2012')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%receiver_el(nrec_local), STAT=ier,stat=ier)
+  allocate(asdf_container%receiver_el(nrec_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2013')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%receiver_dpt(nrec_local), STAT=ier,stat=ier)
+  allocate(asdf_container%receiver_dpt(nrec_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2014')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%records(total_seismos_local), STAT=ier,stat=ier)
+  allocate(asdf_container%records(total_seismos_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2015')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
 
@@ -130,7 +130,7 @@
   i = (irec_local-1)*(3) + (index_increment)
   asdf_container%component_array(i) = chn(1:3)
 
-  allocate(asdf_container%records(i)%record(NSTEP), STAT=ier,stat=ier)
+  allocate(asdf_container%records(i)%record(NSTEP),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2017')
   if (ier /= 0) call exit_MPI (myrank, 'Allocating ASDF container failed.')
 
@@ -862,11 +862,30 @@
   character(len=2) :: mo, da, hr, minute
   character(len=15) :: second
   real :: real_sec
+  integer :: stime,iyr,imo,ida,ihr,imin,isec
 
   ! extract msec
   fraction_sec = time - int(time)
 
-  call gmtime(int(time), iatime)
+  ! function returns UTC time
+  !call gmtime(int(time), iatime)
+  !
+  ! note: gmtime is not a standard Fortran function, but an extension.
+  !       thus, it's implementation can differ from one compiler to another.
+  !       we see problems with gmtime() on IBM xlf compilers.
+  !       however, the C/C++ gmtime() function is C99 standard, thus we call here a wrapper function in param_reader.c
+  !
+  stime = int(time)
+  call get_utctime_params(stime,iyr,imo,ida,ihr,imin,isec)
+
+  ! see e.g.: https://gcc.gnu.org/onlinedocs/gcc-5.5.0/gfortran/GMTIME.html
+  iatime(1) = isec
+  iatime(2) = imin
+  iatime(3) = ihr
+  iatime(4) = ida
+  iatime(5) = imo
+  iatime(6) = iyr
+
   write(yr, "(I4.4)") iatime(6) + 1900
   write(mo, "(I2.2)") iatime(5) + 1
   write(da, "(I2.2)") iatime(4)
@@ -876,6 +895,7 @@
   real_sec = iatime(1) + fraction_sec
   write(second, "(I2.2, F0.4)") int(real_sec), real_sec-int(real_sec)
 
+  ! format example: 2018-01-31T16:40:02.8900
   time_string = trim(yr)//"-"//trim(mo)//"-"//trim(da)//"T"//&
                   trim(hr)//':'//trim(minute)//':'//trim(second)
 
@@ -980,53 +1000,63 @@
   len_station_depth = len(trim(station_depth))
   len_station_ele = len(trim(station_ele))
 
+  ! header
+  stationxmlstring = &
+    '<FDSNStationXML schemaVersion="1.0" xmlns="http://www.fdsn.org/xml/station/1">'
 
-  stationxmlstring = '<FDSNStationXML schemaVersion="1.0" xmlns="http://www.fdsn.org/xml/station/1">'//&
-                     '<Source>SPECFEM3D_GLOBE</Source>'//&
-                     '<Module>SPECFEM3D_GLOBE/asdf-library</Module>'//&
-                     '<ModuleURI>http://seismic-data.org</ModuleURI>'//&
-                     '<Created>'//trim(start_time_string)//'</Created>'//&
-                     '<Network code="'//trim(network_name(1:len(network_name)))//'"'//&
-                     '><Station code="'//trim(station_name(1:len(station_name)))//'">'//&
-                     '<Latitude unit="DEGREES">'//trim(station_lat(1:len_station_lat))//'</Latitude>'//&
-                     '<Longitude unit="DEGREES">'//trim(station_lon(1:len_station_lon))//'</Longitude>'//&
-                     '<Elevation>'//trim(station_ele(1:len_station_ele))//'</Elevation>'//&
-                     '<Site>'//&
-                     '<Name>N/A</Name>'//&
-                     '</Site>'//&
-                     '<CreationDate>'//trim(start_time_string)//'</CreationDate>'//&
-                     '<TotalNumberChannels>3</TotalNumberChannels>'//&
-                     '<SelectedNumberChannels>3</SelectedNumberChannels>'//&
-                     '<Channel locationCode="S3" code="MXN"'//&
-                     ' startDate="'//trim(start_time_string)//'">'//&
-                     '<Latitude unit="DEGREES">'//trim(station_lat(1:len_station_lat))//'</Latitude>'//&
-                     '<Longitude unit="DEGREES">'//trim(station_lon(1:len_station_lon))//'</Longitude>'//&
-                     '<Elevation>'//trim(station_ele(1:len_station_ele))//'</Elevation>'//&
-                     '<Depth>'//trim(station_depth(1:len_station_depth))//'</Depth>'//&
-                     '<Azimuth>0.0</Azimuth>'//&
-                     '<Dip>0.0</Dip>'//&
-                     '</Channel>'//&
-                     '<Channel locationCode="S3" code="MXE"'//&
-                     ' startDate="'//trim(start_time_string)//'">'//&
-                     '<Latitude unit="DEGREES">'//trim(station_lat(1:len_station_lat))//'</Latitude>'//&
-                     '<Longitude unit="DEGREES">'//trim(station_lon(1:len_station_lon))//'</Longitude>'//&
-                     '<Elevation>'//trim(station_ele(1:len_station_ele))//'</Elevation>'//&
-                     '<Depth>'//trim(station_depth(1:len_station_depth))//'</Depth>'//&
-                     '<Azimuth>90.0</Azimuth>'//&
-                     '<Dip>0.0</Dip>'//&
-                     '</Channel>'//&
-                     '<Channel locationCode="S3" code="MXZ"'//&
-                     ' startDate="'//trim(start_time_string)//'">'//&
-                     '<Latitude unit="DEGREES">'//trim(station_lat(1:len_station_lat))//'</Latitude>'//&
-                     '<Longitude unit="DEGREES">'//trim(station_lon(1:len_station_lon))//'</Longitude>'//&
-                     '<Elevation>'//trim(station_ele(1:len_station_ele))//'</Elevation>'//&
-                     '<Depth>'//trim(station_depth(1:len_station_depth))//'</Depth>'//&
-                     '<Azimuth>0.0</Azimuth>'//&
-                     '<Dip>90.0</Dip>'//&
-                     '</Channel>'//&
-                     '</Station>'//&
-                     '</Network>'//&
-                     '</FDSNStationXML>'
+  ! info
+  stationxmlstring = stationxmlstring // &
+    '<Source>SPECFEM3D_Cartesian</Source>'//&
+    '<Module>SPECFEM3D_Cartesian/asdf-library</Module>'//&
+    '<ModuleURI>http://seismic-data.org</ModuleURI>'//&
+    '<Created>'//trim(start_time_string)//'</Created>'
+
+  ! station
+  stationxmlstring = stationxmlstring // &
+    '<Network code="'//trim(network_name(1:len(network_name)))//'">'//&
+    '<Station code="'//trim(station_name(1:len(station_name)))//'">'//&
+    '  <Latitude unit="DEGREES">'//trim(station_lat(1:len_station_lat))//'</Latitude>'//&
+    '  <Longitude unit="DEGREES">'//trim(station_lon(1:len_station_lon))//'</Longitude>'//&
+    '  <Elevation>'//trim(station_ele(1:len_station_ele))//'</Elevation>'//&
+    '  <Site>'//&
+    '    <Name>N/A</Name>'//&
+    '  </Site>'//&
+    '  <CreationDate>'//trim(start_time_string)//'</CreationDate>'
+
+  ! channels
+  stationxmlstring = stationxmlstring // &
+    '  <TotalNumberChannels>3</TotalNumberChannels>'//&
+    '  <SelectedNumberChannels>3</SelectedNumberChannels>'//&
+    '  <Channel locationCode="S3" code="MXN" startDate="'//trim(start_time_string)//'">'//&
+    '    <Latitude unit="DEGREES">'//trim(station_lat(1:len_station_lat))//'</Latitude>'//&
+    '    <Longitude unit="DEGREES">'//trim(station_lon(1:len_station_lon))//'</Longitude>'//&
+    '    <Elevation>'//trim(station_ele(1:len_station_ele))//'</Elevation>'//&
+    '    <Depth>'//trim(station_depth(1:len_station_depth))//'</Depth>'//&
+    '    <Azimuth>0.0</Azimuth>'//&
+    '    <Dip>0.0</Dip>'//&
+    '  </Channel>'//&
+    '  <Channel locationCode="S3" code="MXE" startDate="'//trim(start_time_string)//'">'//&
+    '    <Latitude unit="DEGREES">'//trim(station_lat(1:len_station_lat))//'</Latitude>'//&
+    '    <Longitude unit="DEGREES">'//trim(station_lon(1:len_station_lon))//'</Longitude>'//&
+    '    <Elevation>'//trim(station_ele(1:len_station_ele))//'</Elevation>'//&
+    '    <Depth>'//trim(station_depth(1:len_station_depth))//'</Depth>'//&
+    '    <Azimuth>90.0</Azimuth>'//&
+    '    <Dip>0.0</Dip>'//&
+    '  </Channel>'//&
+    '  <Channel locationCode="S3" code="MXZ" startDate="'//trim(start_time_string)//'">'//&
+    '    <Latitude unit="DEGREES">'//trim(station_lat(1:len_station_lat))//'</Latitude>'//&
+    '    <Longitude unit="DEGREES">'//trim(station_lon(1:len_station_lon))//'</Longitude>'//&
+    '    <Elevation>'//trim(station_ele(1:len_station_ele))//'</Elevation>'//&
+    '    <Depth>'//trim(station_depth(1:len_station_depth))//'</Depth>'//&
+    '    <Azimuth>0.0</Azimuth>'//&
+    '    <Dip>90.0</Dip>'//&
+    '  </Channel>'
+
+  ! finish
+  stationxmlstring = stationxmlstring // &
+    '</Station>'//&
+    '</Network>'//&
+    '</FDSNStationXML>'
 
   end subroutine station_to_stationxml
 

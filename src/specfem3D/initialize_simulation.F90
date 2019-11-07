@@ -41,6 +41,8 @@
 
   integer :: ier
   logical :: BROADCAST_AFTER_READ
+  character(len=MAX_STRING_LEN) :: path_to_add
+  logical :: simul_run_flag
 
   ! myrank is the rank of each process, between 0 and NPROC-1.
   ! as usual in MPI, process 0 is in charge of coordinating everything
@@ -48,8 +50,22 @@
   call world_rank(myrank)
 
   ! open main output file, only written to by process 0
-  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
-    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_solver.txt',status='unknown')
+  if (myrank == 0) then
+    if (IMAIN /= ISTANDARD_OUTPUT) then
+      open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_solver.txt',status='unknown',action='write',iostat=ier)
+      if (ier /= 0 ) call exit_MPI(myrank,'Error opening file output_solver.txt for writing output info')
+    endif
+
+    write(IMAIN,*) '**********************************************'
+    write(IMAIN,*) '**** Specfem 3-D Solver - MPI version f90 ****'
+    write(IMAIN,*) '**********************************************'
+    write(IMAIN,*)
+    write(IMAIN,*) 'Running Git package version of the code: ', git_package_version
+    write(IMAIN,*) 'which is Git ', git_commit_version
+    write(IMAIN,*) 'dating ', git_date_version
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
 
   ! read the parameter file
   BROADCAST_AFTER_READ = .true.
@@ -61,13 +77,6 @@
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '**********************************************'
-    write(IMAIN,*) '**** Specfem 3-D Solver - MPI version f90 ****'
-    write(IMAIN,*) '**********************************************'
-    write(IMAIN,*)
-    write(IMAIN,*) 'Running Git package version of the code: ', git_package_version
-    write(IMAIN,*) 'which is Git ', git_commit_version
-    write(IMAIN,*) 'dating ', git_date_version
     write(IMAIN,*)
     if (FIX_UNDERFLOW_PROBLEM) write(IMAIN,*) 'Fixing slow underflow trapping problem using small initial field'
     write(IMAIN,*)
@@ -125,13 +134,22 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
+  ! synchronizes processes
+  call synchronize_all()
+
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+    simul_run_flag = .true.
+  else
+    simul_run_flag = .false.
+  endif
 
   if (ADIOS_ENABLED) then
     call adios_setup()
   endif
 
   if ((SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) .and. READ_ADJSRC_ASDF) then
-    call asdf_setup(current_asdf_handle)
+    call asdf_setup(current_asdf_handle, path_to_add, simul_run_flag)
   endif
 
   ! reads in numbers of spectral elements and points for the part of the mesh handled by this process

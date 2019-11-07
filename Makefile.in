@@ -281,7 +281,7 @@ MPILIBS += $(ADIOS_LINK)
 @COND_ASDF_FALSE@ASDF = no
 
 #FCFLAGS += @ASDF_FCFLAGS@
-MPILIBS += @ASDF_LIBS@
+@COND_ASDF_TRUE@MPILIBS += @ASDF_LIBS@ -lasdf -lhdf5hl_fortran -lhdf5_hl -lhdf5 -lstdc++
 
 #######################################
 ####

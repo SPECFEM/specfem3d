@@ -61,6 +61,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <regex.h>
+#include <time.h>
 
 #ifndef LINE_MAX
 #define LINE_MAX 255
@@ -232,5 +233,45 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
   free(namecopy);
   regfree(&compiled_pattern);
   *ierr = 1;
+  return;
+}
+
+
+/* ----------------------------------------------------------------------------- */
+
+// time function
+
+/* ----------------------------------------------------------------------------- */
+
+void
+FC_FUNC_(get_utctime_params,GET_UTCTIME_PARAMS)(int* stime_in,
+                                                int* iyr, int* imo, int* ida,
+                                                int* ihr, int* imin, int* isec) {
+
+// note: gmtime() function in C/C++ is C99 standard. however, gmtime() in fortran is an extension and differs between compilers.
+//       here we use this wrapper function to convert an input time (integer) to an UTC output time
+
+  time_t stime;
+  struct tm * ptm;
+
+  // converts to time_t value
+  stime = (time_t) *stime_in;
+
+  // converts to tm structure as UTC time
+  ptm = gmtime( &stime);
+  if (ptm == NULL){
+    fprintf(stderr, "Error calling gmtime() in get_utctime_params routine, exiting..\n");
+    exit(-1);
+  }
+
+  // sets time values as integers
+  *iyr = ptm->tm_year;
+  *imo = ptm->tm_mon;
+  *ida = ptm->tm_mday;
+
+  *ihr = ptm->tm_hour;
+  *imin = ptm->tm_min;
+  *isec = ptm->tm_sec;
+
   return;
 }

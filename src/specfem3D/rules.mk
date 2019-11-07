@@ -281,7 +281,7 @@ asdf_specfem3D_SHARED_STUBS = \
 
 # conditional asdf linking
 ifeq ($(ASDF),yes)
-SPECFEM_LINK_FLAGS += $(ASDF_LIBS) -lhdf5hl_fortran -lhdf5_hl -lhdf5 -lstdc++
+SPECFEM_LINK_FLAGS += $(ASDF_LIBS)
 specfem3D_OBJECTS += $(asdf_specfem3D_OBJECTS)
 specfem3D_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_OBJECTS)
 else
