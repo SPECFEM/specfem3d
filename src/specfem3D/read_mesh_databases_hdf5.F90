@@ -46,7 +46,7 @@
   character(len=40) :: dsetname
   character(len=5)  :: gname_proc_head = "proc_"
   character(len=11) :: gname_proc
-  character(len=10) :: tempstr
+  character(len=64) :: tempstr
 
   ! mpi variables
   integer :: info, comm
@@ -64,8 +64,8 @@
 ! start reading the databases
   if (I_should_read_the_database) then
     ! set file name
-    prname = "/external_mesh.h5"
-    database_hdf5 = LOCAL_PATH(1:len_trim(LOCAL_PATH))//prname
+    tempstr = "/external_mesh.h5"
+    database_hdf5 = LOCAL_PATH(1:len_trim(LOCAL_PATH))//trim(tempstr)
     ! set group name
     write(tempstr, "(i6.6)") myrank
     gname_proc = gname_proc_head // trim(tempstr)
@@ -1917,7 +1917,7 @@
   character(len=30) :: dsetname
   character(len=5)  :: gname_proc_head = "proc_"
   character(len=11) :: gname_proc
-  character(len=10) :: tempstr
+  character(len=64) :: tempstr
 
   ! mpi variables
   integer :: info, comm
@@ -1928,8 +1928,8 @@
 
   if (I_should_read_the_database) then
     ! set file name
-    prname = "/external_mesh.h5"
-    database_hdf5 = LOCAL_PATH(1:len_trim(LOCAL_PATH))//prname
+    tempstr = "/external_mesh.h5"
+    database_hdf5 = LOCAL_PATH(1:len_trim(LOCAL_PATH))//trim(tempstr)
     ! set group name
     write(tempstr, "(i6.6)") myrank
     gname_proc = gname_proc_head // trim(tempstr)

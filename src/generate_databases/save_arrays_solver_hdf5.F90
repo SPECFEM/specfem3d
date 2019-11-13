@@ -90,7 +90,7 @@
   ! hdf5 valiables
   character(len=64) :: group_name
   character(len=64) :: dset_name
-  character(len=10) :: tempstr
+  character(len=64) :: tempstr
   character(len=5)  :: gname_proc_head = "proc_"
   type(h5io)        :: h5
 
@@ -103,8 +103,8 @@
   integer, dimension(9,nspec*64) :: spec_elm_conn_xdmf
 
   ! saves mesh file external_mesh.h5
-  prname = "/external_mesh.h5"
-  filename = LOCAL_PATH(1:len_trim(LOCAL_PATH))//prname
+  tempstr = "/external_mesh.h5"
+  filename = LOCAL_PATH(1:len_trim(LOCAL_PATH))//trim(tempstr)
 
   h5 = h5io()
 

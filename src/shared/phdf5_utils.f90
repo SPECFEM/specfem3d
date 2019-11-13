@@ -1991,13 +1991,13 @@ contains
         integer :: info, comm
 
         ! hdf5 valiables
-        character(len=64) :: filename, prname, dset_name
+        character(len=64) :: filename, prname, dset_name, tempstr
         type(h5io)        :: h5
 
         call world_rank(myrank)
 
-        prname = "/external_mesh.h5"
-        filename = LOCAL_PATH(1:len_trim(LOCAL_PATH))//prname
+        tempstr = "/external_mesh.h5"
+        filename = LOCAL_PATH(1:len_trim(LOCAL_PATH))//trim(tempstr)
         h5 = h5io()
 
         ! get mpi parameters
@@ -2040,8 +2040,8 @@ contains
 
         call world_rank(myrank)
 
-        prname = "/external_mesh.h5"
-        fname = LOCAL_PATH(1:len_trim(LOCAL_PATH))//prname
+        tempstr = "/external_mesh.h5"
+        fname = LOCAL_PATH(1:len_trim(LOCAL_PATH))//trim(tempstr)
         write(tempstr, "(i6.6)") myrank
         gname = "proc_" // trim(tempstr)
         
