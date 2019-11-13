@@ -43,7 +43,8 @@ module phdf5_utils ! class-like module
          h5_gather_dsetsize, h5_create_dataset_in_main_proc, &
          h5_write_dataset_1d_r_collect, h5_write_dataset_1d_c_collect, h5_write_dataset_2d_r_collect, &
          h5_write_dataset_1d_to_2d_r_collect_hyperslab, h5_write_dataset_2d_to_3d_r_collect_hyperslab, &
-         h5_write_dataset_2d_r_collect_hyperslab, h5_write_dataset_3d_r_collect_hyperslab
+         h5_write_dataset_2d_r_collect_hyperslab, h5_write_dataset_3d_r_collect_hyperslab, &
+         write_attenuation_file_in_h5, read_attenuation_file_in_h5
 
 
 
@@ -1403,6 +1404,9 @@ contains
         ! create dataset
         call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, CUSTOM_REAL)
         if(this_rank==0) call h5_close_file(this)
+
+        call synchronize_all()
+
         call h5_open_file_p(this)
         
         write(tempstr, "(i6.6)") this_rank
@@ -1450,7 +1454,10 @@ contains
         ! create dataset
         call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, CUSTOM_REAL)
         if(this_rank==0) call h5_close_file(this)
-        call h5_open_file(this)
+
+        call synchronize_all()
+
+        call h5_open_file_p(this)
 
         write(tempstr, "(i6.6)") this_rank
         group_name = gname_proc_head // trim(tempstr)
@@ -1963,5 +1970,97 @@ contains
         call synchronize_all()
     end subroutine h5_create_dataset_in_main_proc
 
+
+!
+! higher level utilities
+!
+
+    subroutine write_attenuation_file_in_h5(factor_common, scale_factor, factor_common_kappa, scale_factor_kappa)
+        use shared_parameters, only: NPROC, LOCAL_PATH 
+        use constants, only: CUSTOM_REAL 
+        implicit none 
+
+        real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:,:) :: factor_common
+        real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:)   :: scale_factor
+        real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:,:) :: factor_common_kappa
+        real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:)   :: scale_factor_kappa
+
+        integer :: myrank 
+
+        ! mpi variables
+        integer :: info, comm
+
+        ! hdf5 valiables
+        character(len=64) :: filename, prname, dset_name
+        type(h5io)        :: h5
+
+        call world_rank(myrank)
+
+        prname = "/external_mesh.h5"
+        filename = LOCAL_PATH(1:len_trim(LOCAL_PATH))//prname
+        h5 = h5io()
+
+        ! get mpi parameters
+        call world_get_comm(comm)
+        call get_info_null(info)
+
+        ! initialize h5 object
+        call h5_init(h5, filename)
+        call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
+
+        dset_name = "scale_factor"
+        call h5_write_dataset_p_4d_r(h5, dset_name, scale_factor)
+        dset_name = "scale_factor_kappa"
+        call h5_write_dataset_p_4d_r(h5, dset_name, scale_factor_kappa)
+        dset_name = "factor_common"
+        call h5_write_dataset_p_5d_r(h5, dset_name, factor_common)
+        dset_name = "factor_common_kappa"
+        call h5_write_dataset_p_5d_r(h5, dset_name, factor_common_kappa)
+
+        call h5_destructor(h5)
+
+    end subroutine write_attenuation_file_in_h5
+
+
+    subroutine read_attenuation_file_in_h5(factor_common, scale_factor, factor_common_kappa, scale_factor_kappa)
+        use shared_parameters, only: NPROC, LOCAL_PATH 
+        use constants, only: CUSTOM_REAL 
+ 
+        implicit none 
+
+        real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:,:) :: factor_common
+        real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:)   :: scale_factor
+        real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:,:) :: factor_common_kappa
+        real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:)   :: scale_factor_kappa
+
+        integer :: myrank
+        ! hdf5 valiables
+        character(len=64) :: fname, prname, gname, dset_name, tempstr
+        type(h5io)        :: h5
+
+        call world_rank(myrank)
+
+        prname = "/external_mesh.h5"
+        fname = LOCAL_PATH(1:len_trim(LOCAL_PATH))//prname
+        write(tempstr, "(i6.6)") myrank
+        gname = "proc_" // trim(tempstr)
+        
+        h5 = h5io()
+        ! initialize h5 object
+        call h5_init(h5, fname)
+        call h5_open_file_p(h5)
+        call h5_open_group(h5, gname)
+
+        call h5_read_dataset_p_4d_r(h5, "scale_factor", scale_factor)
+        call h5_read_dataset_p_4d_r(h5, "scale_factor_kappa", scale_factor_kappa)
+        call h5_read_dataset_p_5d_r(h5, "factor_common", factor_common)
+        call h5_read_dataset_p_5d_r(h5, "factor_common_kappa", factor_common_kappa)
+ 
+        call h5_close_group(h5)
+        call h5_close_file(h5)
+ 
+    end subroutine read_attenuation_file_in_h5
+
 end module phdf5_utils
+
 

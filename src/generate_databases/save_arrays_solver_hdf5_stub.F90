@@ -31,15 +31,10 @@
                     num_interfaces_ext_mesh,my_neighbors_ext_mesh,nibool_interfaces_ext_mesh, &
                     max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                     SAVE_MESH_FILES,ANISOTROPY)
-
   use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IOUT, &
     USE_MESH_COLORING_GPU
-
   use create_regions_mesh_ext_par
-
-
   use constants, only: CUSTOM_REAL
-
   implicit none
   integer,intent(in) :: nspec,nglob
   ! ocean load
@@ -52,9 +47,6 @@
   integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
   integer,intent(in) :: max_interface_size_ext_mesh
   integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
-
   logical,intent(in) :: SAVE_MESH_FILES
   logical,intent(in) :: ANISOTROPY
-
-
   end subroutine save_arrays_solver_ext_mesh_h5

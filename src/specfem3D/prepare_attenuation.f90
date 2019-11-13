@@ -35,6 +35,8 @@
 
   use shared_parameters, only: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
 
+  use phdf5_utils
+
   implicit none
 
   ! local parameters
@@ -72,15 +74,13 @@
 
   ! reads in attenuation arrays
   call create_name_database(prname,myrank,LOCAL_PATH)
-  if (I_should_read_the_database) then
+  if (I_should_read_the_database .and. .not. HDF5_ENABLED) then
       open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', status='old',action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
           print *,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
           call exit_mpi(myrank,'error opening attenuation.bin file')
       endif
-  endif
 
-  if (I_should_read_the_database) then
       read(27) ispec
       if (ispec /= NSPEC_ATTENUATION_AB) then
           close(27)
@@ -94,6 +94,8 @@
       read(27) scale_factor_kappa
 
       close(27)
+  else if (I_should_read_the_database .and. HDF5_ENABLED) then
+      call read_attenuation_file_in_h5(factor_common,scale_factor,factor_common_kappa,scale_factor_kappa)
   endif
 
   call bcast_all_i_for_database(ispec, 1)

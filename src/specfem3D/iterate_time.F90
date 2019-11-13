@@ -368,12 +368,6 @@ if (compute_task) then
       endif
     endif
 
-
-!    ! send stop signal to io server
-!    if (it == it_end .and. HDF5_ENABLED) then
-!      call synchronize_all()
-!      call isend_i_inter(0,1,0,io_tag_end,req)
-!    endif
   !
   !---- end of time iteration loop
   !

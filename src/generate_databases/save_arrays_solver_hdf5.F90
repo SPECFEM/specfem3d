@@ -140,9 +140,6 @@
 !
   if (myrank == 0) print *, "start dataset preparation and write"
 
-  !call h5_open_file_p(h5)
-
-!
   ! set dwrite flag true to pre_define the dataset on file before write.
 
   dset_name = "nspec"
@@ -666,4 +663,5 @@
     enddo
 
   end subroutine get_connectivity_for_movie
+
 

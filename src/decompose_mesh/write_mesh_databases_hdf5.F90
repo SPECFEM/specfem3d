@@ -133,13 +133,6 @@
                                 glob2loc_nodes, 1, nparts)
 
      ! writes out MPI interfaces elements
-     !print *,' my interfaces:',my_ninterface,maxval(my_nb_interfaces)
-     !if (my_ninterface == 0) then
-     ! write(IIN_database) my_ninterface, 0       ! avoids problem with maxval for empty array my_nb_interfaces
-     !else
-     ! write(IIN_database) my_ninterface, maxval(my_nb_interfaces)
-     !endif
-
      call write_interfaces_database_h5(gname_proc, h5, &
                                 tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
                                 my_ninterface, my_interfaces, my_nb_interfaces, &
@@ -152,9 +145,8 @@
                                 glob2loc_nodes_parts, glob2loc_nodes, part, &
                                 nspec2D_moho, ibelm_moho, nodes_ibelm_moho, NGNOD2D)
 
-     !close(IIN_database)
 
-
+     ! #TODO: add hdf5 support for fault simulation
      ! write fault database
      if (ANY_FAULT) then
         write(prname, "(i6.6,'_Database_fault')") ipart

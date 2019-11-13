@@ -25,8 +25,8 @@ module phdf5_utils
          h5_write_dataset_p_4d_i, h5_write_dataset_p_4d_r, &
          h5_write_dataset_p_5d_r, &
          bool_array2integer, int_array2bool, &
-         h5_gather_dsetsize, h5_create_dataset_in_main_proc, h5_create_dataset_setter
-
+         h5_gather_dsetsize, h5_create_dataset_in_main_proc, h5_create_dataset_setter, &
+         write_attenuation_file_in_h5, read_attenuation_file_in_h5
 
 
     ! default constructor
@@ -112,9 +112,6 @@ contains
         type(h5io), intent(in) :: this
         character(len=*), intent(in)      :: dataset_name
         real(kind=CUSTOM_REAL), dimension(:), intent(in) :: data
-        integer(HID_T)                    :: dspace_id ! dataspace id is local.
-        integer                           :: rank = 1
-        integer(HSIZE_T), dimension(1)    :: dim
     end subroutine h5_write_dataset_1d_d
 
 
@@ -371,6 +368,24 @@ contains
         integer, intent(in)                :: dtype_id ! 1:int, 4:real4, 8:real8,
         integer, intent(in)                :: data_rank
     end subroutine
+
+!
+! higher level utilities
+!
+    subroutine write_attenuation_file_in_h5(factor_common, scale_factor, factor_common_kappa, scale_factor_kappa)
+        real, allocatable, dimension(:,:,:,:,:) :: factor_common
+        real, allocatable, dimension(:,:,:,:)   :: scale_factor
+        real, allocatable, dimension(:,:,:,:,:) :: factor_common_kappa
+        real, allocatable, dimension(:,:,:,:)   :: scale_factor_kappa
+    end subroutine write_attenuation_file_in_h5
+
+
+    subroutine read_attenuation_file_in_h5(factor_common, scale_factor, factor_common_kappa, scale_factor_kappa)
+        real, allocatable, dimension(:,:,:,:,:) :: factor_common
+        real, allocatable, dimension(:,:,:,:)   :: scale_factor
+        real, allocatable, dimension(:,:,:,:,:) :: factor_common_kappa
+        real, allocatable, dimension(:,:,:,:)   :: scale_factor_kappa
+    end subroutine read_attenuation_file_in_h5
 
 
 end module phdf5_utils

@@ -138,7 +138,7 @@ asdf_shared_OBJECTS = \
 asdf_shared_STUBS = \
 	$O/asdf_method_stubs.cc.o \
 	$O/asdf_manager_stubs.shared_asdf.o \
-        $(EMPTY_MACRO)
+	$(EMPTY_MACRO)
 
 ifeq ($(ASDF),yes)
 shared_OBJECTS += $(asdf_shared_OBJECTS)
@@ -158,10 +158,10 @@ hdf5_shared_MODULES = \
 
 hdf5_shared_STUBS_OBJECTS = \
 	$O/phdf5_utils_stubs.shared_nohdf5.o \
-        $(EMPTY_MACRO)
+	$(EMPTY_MACRO)
 hdf5_shared_STUBS_MODULES = \
 	$O/phdf5_utils.$(FC_MODEXT) \
-        $(EMPTY_MACRO)
+	$(EMPTY_MACRO)
 
 
 ifeq ($(HDF5),yes)
