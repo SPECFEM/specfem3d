@@ -83,9 +83,10 @@
 !! \param iorientation The recorded seismogram's orientation direction
   subroutine store_asdf_data(seismogram_tmp, irec_local, irec, chn, iorientation)
 
-  use constants, only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL,NDIM,myrank,IIN_SU1
 
-  use specfem_par
+  use specfem_par, only: &
+    station_name,network_name,NSTEP,nrec,OUTPUT_FILES
 
   use asdf_data, only: asdf_container
 
@@ -169,27 +170,27 @@
 
 ! writes out seismograms in ASDF format
 
-  use constants, only: OUTPUT_PROVENANCE
+  use constants, only: NDIM,itag,MAX_LENGTH_NETWORK_NAME,MAX_LENGTH_STATION_NAME, &
+    CUSTOM_REAL,IMAIN,myrank
+
+  ! for ASDF
+  use constants, only: ASDF_OUTPUT_PROVENANCE,ASDF_MAX_STRING_LENGTH, &
+    ASDF_MAX_PARFILE_LENGTH,ASDF_MAX_QUAKEML_LENGTH,ASDF_MAX_STATIONXML_LENGTH, &
+    ASDF_MAX_CONSTANTS_LENGTH,ASDF_MAX_TIME_STRING_LENGTH
+
   use asdf_data, only: asdf_container
 
-  use iso_c_binding
-  use iso_Fortran_env
+  use iso_c_binding, only: C_NULL_CHAR,c_ptr
+!  use iso_Fortran_env
 
-  use specfem_par
+  use specfem_par, only: seismo_offset,DT,NSTEP,nrec_local, &
+    OUTPUT_FILES,WRITE_SEISMOGRAMS_BY_MASTER
 
   implicit none
 
-  ! Parameters
-  integer, parameter :: MAX_STRING_LENGTH = 1024
-  integer, parameter :: MAX_QUAKEML_LENGTH = 8096
-  integer, parameter :: MAX_STATIONXML_LENGTH = 16182
-  integer, parameter :: MAX_PARFILE_LENGTH = 20000
-  integer, parameter :: MAX_CONSTANTS_LENGTH = 45000
-  integer, parameter :: MAX_TIME_STRING_LENGTH = 22
-
   !--- Character strings to be written to the ASDF file
-  character(len=MAX_QUAKEML_LENGTH) :: quakeml
-  character(len=MAX_STATIONXML_LENGTH) :: stationxml
+  character(len=ASDF_MAX_QUAKEML_LENGTH) :: quakeml
+  character(len=ASDF_MAX_STATIONXML_LENGTH) :: stationxml
 
   integer :: stationxml_length
   integer :: nsamples  ! constant, as in SPECFEM
@@ -206,13 +207,19 @@
   ! data. dimension = nsamples * num_channels_per_station * num_stations
 
   !-- ASDF variables
+  ! daniel: note that these are file pointers to hid_t which (at least in newer HDF5 versions) become int64
+  !         the corresponding Fortran integer would be integer(kind=8).
+  !         one might have to check if the compiler uses 64-bit or 32-bit pointers.
+  integer(kind=8) :: file_id
+  integer(kind=8), dimension(3) ::  data_ids
   !   These variables are used to know where further writes should be done.
   !   They have to be cleaned as soon as they become useless
-  integer :: waveforms_grp  ! Group "/Waveforms/"
-  integer, dimension(3) ::  data_ids   ! BS BS
+  integer(kind=8) :: waveforms_grp  ! Group "/Waveforms/"
+  integer(kind=8) :: station_grp
+  integer(kind=8) :: stationxml_grp
 
-  integer :: station_grp, stationxml_grp, current_proc, sender, receiver ! BS BS
-  real (kind=CUSTOM_REAL), dimension(:,:), allocatable :: one_seismogram ! BS BS
+  integer :: current_proc, sender, receiver
+  real (kind=CUSTOM_REAL), dimension(:,:), allocatable :: one_seismogram
 
   !--- MPI variables
   integer :: mysize, comm
@@ -238,19 +245,19 @@
   integer, dimension(:), allocatable :: displs, rcounts
 
   ! temporary name built from network, station and channel names.
-  character(len=MAX_STRING_LENGTH) :: waveform_name
+  character(len=ASDF_MAX_STRING_LENGTH) :: waveform_name
 
   ! C/Fortran interop for C-allocated strings
   integer :: len_prov, len_constants, len_Parfile
   type(c_ptr) :: cptr
   character, pointer :: fptr(:)
   character, dimension(:), allocatable, TARGET :: provenance
-  character(len=MAX_CONSTANTS_LENGTH) :: sf_constants
-  character(len=MAX_PARFILE_LENGTH) :: sf_parfile
+  character(len=ASDF_MAX_CONSTANTS_LENGTH) :: sf_constants
+  character(len=ASDF_MAX_PARFILE_LENGTH) :: sf_parfile
 
   ! Time variables
-  character(len=MAX_TIME_STRING_LENGTH) :: start_time_string, end_time_string, &
-                    cmt_start_time_string, pde_start_time_string
+  character(len=ASDF_MAX_TIME_STRING_LENGTH) :: start_time_string, end_time_string, &
+                                                cmt_start_time_string, pde_start_time_string
 
   ! alias MPI communicator
   call world_duplicate(comm)
@@ -267,9 +274,7 @@
                    !        the routine is called from write_seismograms()
 
   ! Calculate start_time
-  call get_time(startTime, start_time_string, pde_start_time_string, &
-          cmt_start_time_string, end_time_string)
-
+  call get_time_cmt(startTime, start_time_string, pde_start_time_string, cmt_start_time_string, end_time_string)
   start_time = startTime*(int(1000000000,kind=8)) ! convert to nanoseconds
 
   !--------------------------------------------------------
@@ -279,7 +284,7 @@
   ! Generate minimal QuakeML for SPECFEM3D
   call cmt_to_quakeml(quakeml, pde_start_time_string, cmt_start_time_string)
 
-  if (OUTPUT_PROVENANCE) then
+  if (ASDF_OUTPUT_PROVENANCE) then
     ! Generate specfem provenance string
     call ASDF_generate_sf_provenance_f(trim(start_time_string)//C_NULL_CHAR, &
                                        trim(end_time_string)//C_NULL_CHAR, cptr, len_prov)
@@ -383,7 +388,7 @@
                        3, &
                        mysize)
 
-  !!! Now gather all the coordiante information for these stations
+  ! Now gather all the coordiante information for these stations
   do i = 1, mysize
     displs(i) = (i-1) * max_num_stations_gather
     rcounts(i) = num_stations_gather(i)
@@ -418,7 +423,6 @@
                       max_num_stations_gather, &
                       mysize)
 
-
   deallocate(stations_names)
   deallocate(networks_names)
   deallocate(component_names)
@@ -435,87 +439,141 @@
   ! we only want to do these steps one time
   if (seismo_offset == 0) then
     if (myrank == 0) then
-      call ASDF_initialize_hdf5_f(ier);
+      ! user output
+      write(IMAIN,*) 'creating ASDF file: ',trim(OUTPUT_FILES) // "synthetic.h5"
+      call flush_IMAIN()
 
-      call ASDF_create_new_file_serial_f(trim(OUTPUT_FILES) // "synthetic.h5" // C_NULL_CHAR, &
-                                          current_asdf_handle)
+      ! initialize HDF5
+      call ASDF_initialize_hdf5_f(ier)
+      if (ier /= 0) call exit_MPI(myrank,'Error ASDF initialize hdf5 failed')
 
-      call ASDF_write_string_attribute_f(current_asdf_handle, "file_format" // C_NULL_CHAR, &
+      ! creates file for synthetics
+      call ASDF_create_new_file_serial_f(trim(OUTPUT_FILES) // "synthetic.h5" // C_NULL_CHAR, file_id)
+
+      ! checks file identifier
+      if (file_id == 0) then
+        print *,'Error: ASDF failed to create new file',trim(OUTPUT_FILES) // "synthetic.h5"
+        print *,'Please check if your installation supports asdf-library calls... exiting'
+        call exit_MPI(myrank,'Error creating ASDF file for synthetics')
+      endif
+
+      ! sets file attributes
+      call ASDF_write_string_attribute_f(file_id, "file_format" // C_NULL_CHAR, &
                                            "ASDF" // C_NULL_CHAR, ier)
-      call ASDF_write_string_attribute_f(current_asdf_handle, "file_format_version" // C_NULL_CHAR, &
+      if (ier /= 0) call exit_MPI(myrank,'Error ASDF attribute file_format failed')
+
+      call ASDF_write_string_attribute_f(file_id, "file_format_version" // C_NULL_CHAR, &
                                            "1.0.0" // C_NULL_CHAR, ier)
+      if (ier /= 0) call exit_MPI(myrank,'Error ASDF attribute file_format_version failed')
 
-      call ASDF_write_quakeml_f(current_asdf_handle, trim(quakeml) // C_NULL_CHAR, ier)
+      ! sets event info in quakeML format
+      call ASDF_write_quakeml_f(file_id, trim(quakeml) // C_NULL_CHAR, ier)
+      if (ier /= 0) call exit_MPI(myrank,'Error ASDF write quakeml failed')
 
-      if (OUTPUT_PROVENANCE) then
-        call ASDF_write_provenance_data_f(current_asdf_handle, provenance(1:len_prov+1), ier)
+      ! provenance
+      if (ASDF_OUTPUT_PROVENANCE) then
+        ! keeps track of all setup choices
+        call ASDF_write_provenance_data_f(file_id, provenance(1:len_prov+1), ier)
+        if (ier /= 0) call exit_MPI(myrank,'Error ASDF write provenance failed')
 
         call read_file("setup/constants.h", sf_constants, len_constants)
         call read_file("DATA/Par_file", sf_parfile, len_Parfile)
 
-        call ASDF_write_auxiliary_data_f(current_asdf_handle, trim(sf_constants) // &
-                                         C_NULL_CHAR, trim(sf_parfile(1:len_Parfile)) // &
-                                         C_NULL_CHAR, ier)
+        call ASDF_write_auxiliary_data_f(file_id, trim(sf_constants) // C_NULL_CHAR, &
+                                         trim(sf_parfile(1:len_Parfile)) // C_NULL_CHAR, ier)
+        if (ier /= 0) call exit_MPI(myrank,'Error ASDF write auxiliary data failed')
       endif
 
-      call ASDF_create_waveforms_group_f(current_asdf_handle, waveforms_grp)
+      ! waveforms
+      call ASDF_create_waveforms_group_f(file_id, waveforms_grp)
 
       do k = 1, mysize ! Need to set up metadata for all processes
         do j = 1, num_stations_gather(k) ! loop over number of stations on that process
+          ! group for station
           call ASDF_create_stations_group_f(waveforms_grp, &
-               trim(network_names_gather(j, k)) // "." //      &
-               trim(station_names_gather(j, k)) // C_NULL_CHAR, &
-               station_grp)
-          stationxml_length = 1423 + len(trim(station_names_gather(j,k))) + len(trim(network_names_gather(j,k)))
+                                            trim(network_names_gather(j, k)) // "." //      &
+                                            trim(station_names_gather(j, k)) // C_NULL_CHAR, &
+                                            station_grp)
 
-          call ASDF_define_station_xml_f(station_grp, stationxml_length, &
-                                         stationxml_grp)
-          !write(*,*) station_names_gather(j,k)
-
+          ! gathers station info
           call station_to_stationxml(station_names_gather(j,k), network_names_gather(j,k), &
                                     station_lats_gather(j,k), station_longs_gather(j,k), &
                                     station_elevs_gather(j,k), station_depths_gather(j,k), &
                                     start_time_string, stationxml)
+
+          ! allocates memory block for stationXML info
+          stationxml_length = len_trim(stationxml) + 1  ! plus one for the additional null character
+          call ASDF_define_station_xml_f(station_grp, stationxml_length, stationxml_grp)
+
+          ! writes stationXML
           call ASDF_write_station_xml_f(stationxml_grp, trim(stationxml)//C_NULL_CHAR, ier)
+          if (ier /= 0) call exit_MPI(myrank,'Error ASDF write station XML failed')
+
+          ! waveforms
           do  i = 1, 3 ! loop over each component
             ! Generate unique waveform name
-            write(waveform_name, '(a)') &
-               trim(network_names_gather(j,k)) // "." // &
-               trim(station_names_gather(j,k)) // ".S3."//trim(component_names_gather(i+(3*(j-1)),k)) &
-               //"__"//trim(start_time_string(1:19))//"__"//trim(end_time_string(1:19))//"__synthetic"
+            ! example: HT.LIT.S3.MXN__2008-01-06T05:14:19__2008-01-06T05:14:53
+            write(waveform_name, '(a)') trim(network_names_gather(j,k)) // "." // &
+                                        trim(station_names_gather(j,k)) // ".S3." // &
+                                        trim(component_names_gather(i+(3*(j-1)),k)) //"__"// &
+                                        trim(start_time_string(1:19))//"__"//trim(end_time_string(1:19))//"__synthetic"
+
             call ASDF_define_waveform_f(station_grp, &
-              nsamples, start_time, sampling_rate, &
-              "Shot_ASDF" // C_NULL_CHAR, &
-              trim(waveform_name) // C_NULL_CHAR, &
-              data_ids(i))
-              !write(*,*) trim(waveform_name), ' DEFINED'
-              call ASDF_close_dataset_f(data_ids(i), ier)
+                                        nsamples, start_time, sampling_rate, &
+                                        "Shot_ASDF" // C_NULL_CHAR, &
+                                        trim(waveform_name) // C_NULL_CHAR, &
+                                        data_ids(i))
+
+            !write(*,*) trim(waveform_name), ' DEFINED'
+            call ASDF_close_dataset_f(data_ids(i), ier)
+            if (ier /= 0) call exit_MPI(myrank,'Error ASDF close dataset waveform failed')
           enddo
 
           call ASDF_close_dataset_f(stationxml_grp, ier)
+          if (ier /= 0) call exit_MPI(myrank,'Error ASDF close dataset failed')
+
           call ASDF_close_group_f(station_grp, ier)
+          if (ier /= 0) call exit_MPI(myrank,'Error ASDF close station group failed')
 
         enddo
       enddo
 
       call ASDF_close_group_f(waveforms_grp, ier)
-      call ASDF_close_file_f(current_asdf_handle, ier)
+      if (ier /= 0) call exit_MPI(myrank,'Error ASDF close waveforms group failed')
+
+      call ASDF_close_file_f(file_id, ier)
+      if (ier /= 0) call exit_MPI(myrank,'Error ASDF close file failed')
+
       call ASDF_finalize_hdf5_f(ier)
+      if (ier /= 0) call exit_MPI(myrank,'Error ASDF finalize hdf5 failed')
 
     endif ! (myrank == 0)
   endif ! (seismo_offset == 0)
 
+  ! synchronizes MPI processes
   call synchronize_all()
 
   ! Now write waveforms
   if (WRITE_SEISMOGRAMS_BY_MASTER) then
 
+    ! only master writes
     if (myrank == 0) then
+      ! user output
+      write(IMAIN,*) 'writing waveforms by master...'
+      write(IMAIN,*)
+      call flush_IMAIN()
 
       call ASDF_initialize_hdf5_f(ier);
-      call ASDF_open_serial_f(trim(OUTPUT_FILES)//"/synthetic.h5" // C_NULL_CHAR, current_asdf_handle)
-      call ASDF_open_waveforms_group_f(current_asdf_handle, waveforms_grp)
+      if (ier /= 0) call exit_MPI(myrank,'Error ASDF initialize hdf5 seismogram failed')
 
+      call ASDF_open_serial_f(trim(OUTPUT_FILES)//"/synthetic.h5" // C_NULL_CHAR, file_id)
+      ! checks file identifier
+      if (file_id == 0) then
+        print *,'Error: ASDF failed to open file',trim(OUTPUT_FILES) // "/synthetic.h5"
+        call exit_MPI(myrank,'Error opening ASDF file for synthetics')
+      endif
+
+      call ASDF_open_waveforms_group_f(file_id, waveforms_grp)
     endif
 
     do k = 1, mysize ! Need to write data from all processes
@@ -567,89 +625,127 @@
 
           do  i = 1, NDIM ! loop over each component
             ! Generate unique waveform name
-            write(waveform_name, '(a)') &
-              trim(network_names_gather(j,k)) // "." // &
-              trim(station_names_gather(j,k)) // ".S3." //trim(component_names_gather(i+(3*(j-1)),k)) &
-                //"__"//trim(start_time_string(1:19))//"__"//trim(end_time_string(1:19))//"__synthetic"
+            ! example: HT.LIT.S3.MXN__2008-01-06T05:14:19__2008-01-06T05:14:53
+            write(waveform_name, '(a)') trim(network_names_gather(j,k)) // "." // &
+                                        trim(station_names_gather(j,k)) // ".S3." // &
+                                        trim(component_names_gather(i+(3*(j-1)),k)) //"__"// &
+                                        trim(start_time_string(1:19))//"__"//trim(end_time_string(1:19))//"__synthetic"
+
             call ASDF_open_waveform_f(station_grp, &
-              trim(waveform_name) // C_NULL_CHAR, &
-              data_ids(i))
+                                      trim(waveform_name) // C_NULL_CHAR, &
+                                      data_ids(i))
 
             call ASDF_write_partial_waveform_f(data_ids(i), &
                                         one_seismogram(i,1:NSTEP), 0, NSTEP, ier)
+            if (ier /= 0) call exit_MPI(myrank,'Error ASDF write partial waveform failed')
+
             call ASDF_close_dataset_f(data_ids(i), ier)
+            if (ier /= 0) call exit_MPI(myrank,'Error ASDF close dataset waveform failed')
 
           enddo
-          call ASDF_close_group_f(station_grp, ier)
-        endif
 
+          call ASDF_close_group_f(station_grp, ier)
+          if (ier /= 0) call exit_MPI(myrank,'Error ASDF close stations group waveform failed')
+
+        endif
      enddo
     enddo
 
+    ! closes file
     if (myrank == 0) then
-
       call ASDF_close_group_f(waveforms_grp, ier)
-      call ASDF_close_file_f(current_asdf_handle, ier)
-      call ASDF_finalize_hdf5_f(ier)
+      if (ier /= 0) call exit_MPI(myrank,'Error ASDF close group failed')
 
+      call ASDF_close_file_f(file_id, ier)
+      if (ier /= 0) call exit_MPI(myrank,'Error ASDF close file failed')
+
+      call ASDF_finalize_hdf5_f(ier)
+      if (ier /= 0) call exit_MPI(myrank,'Error ASDF finalize hdf5 failed')
     endif
 
-  else ! write seismograms in parallel
+  else
+    ! write seismograms in parallel
+    ! user output
+    if (myrank == 0) then
+      ! user output
+      write(IMAIN,*) 'writing waveforms in parallel...'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
 
+    ! initialize
     call ASDF_initialize_hdf5_f(ier);
-    call ASDF_open_f(trim(OUTPUT_FILES)//"/synthetic.h5" // C_NULL_CHAR, comm, current_asdf_handle)
+    if (ier /= 0) call exit_MPI(myrank,'Error ASDF parallel initialize hdf5 failed')
 
-    call ASDF_open_waveforms_group_f(current_asdf_handle, waveforms_grp)
+    call ASDF_open_f(trim(OUTPUT_FILES)//"/synthetic.h5" // C_NULL_CHAR, comm, file_id)
+    ! checks file identifier
+    if (file_id == 0) then
+      print *,'Error rank ',myrank,': ASDF failed to open file',trim(OUTPUT_FILES) // "/synthetic.h5"
+      call exit_MPI(myrank,'Error opening ASDF file for synthetics')
+    endif
+
+    call ASDF_open_waveforms_group_f(file_id, waveforms_grp)
 
     do k = 1, mysize ! Need to open ASDF groups on all processes
       do j = 1, num_stations_gather(k) ! loop over number of stations on that process
         call ASDF_open_stations_group_f(waveforms_grp, &
-          trim(network_names_gather(j, k)) // "." //      &
-          trim(station_names_gather(j, k)) // C_NULL_CHAR, &
-          station_grp)
+                                        trim(network_names_gather(j, k)) // "." //      &
+                                        trim(station_names_gather(j, k)) // C_NULL_CHAR, &
+                                        station_grp)
 
         l = (j-1)*(NDIM) ! Index of current receiver in asdf_container%records
 
         do  i = 1, NDIM ! loop over each component
 
           ! Generate unique waveform name
-          write(waveform_name, '(a)') &
-            trim(network_names_gather(j,k)) // "." // &
-            trim(station_names_gather(j,k)) // ".S3." //trim(component_names_gather(i+(1*(j-1)),k)) &
-            //"__"//trim(start_time_string(1:19))//"__"//trim(end_time_string(1:19))//"__synthetic"
+          ! example: HT.LIT.S3.MXN__2008-01-06T05:14:19__2008-01-06T05:14:53
+          write(waveform_name, '(a)') trim(network_names_gather(j,k)) // "." // &
+                                      trim(station_names_gather(j,k)) // ".S3." // &
+                                      trim(component_names_gather(i+(3*(j-1)),k)) //"__"// &
+                                      trim(start_time_string(1:19))//"__"//trim(end_time_string(1:19))//"__synthetic"
 
           call ASDF_open_waveform_f(station_grp, &
-            trim(waveform_name) // C_NULL_CHAR, data_ids(i))
+                                    trim(waveform_name) // C_NULL_CHAR, data_ids(i))
 
           if (k == myrank+1) then
 
             one_seismogram(i,:) = asdf_container%records(l+i)%record(1:NSTEP)
 
             call ASDF_write_partial_waveform_f(data_ids(i), &
-                                      one_seismogram(i,1:NSTEP), 0, NSTEP, ier)
+                                               one_seismogram(i,1:NSTEP), 0, NSTEP, ier)
+            if (ier /= 0) call exit_MPI(myrank,'Error ASDF parallel write partial waveform failed')
+
           endif
 
           call ASDF_close_dataset_f(data_ids(i), ier)
+          if (ier /= 0) call exit_MPI(myrank,'Error ASDF parallel close dataset waveform failed')
+
         enddo
         call ASDF_close_group_f(station_grp, ier)
+        if (ier /= 0) call exit_MPI(myrank,'Error ASDF parallel close group waveform failed')
+
       enddo
     enddo
 
+    ! makes sure all are finished writing
     call synchronize_all()
 
-
+    ! closes file
     call ASDF_close_group_f(waveforms_grp, ier)
-    call ASDF_close_file_f(current_asdf_handle, ier)
+    if (ier /= 0) call exit_MPI(myrank,'Error ASDF parallel close group failed')
+
+    call ASDF_close_file_f(file_id, ier)
+    if (ier /= 0) call exit_MPI(myrank,'Error ASDF parallel close file failed')
+
     call ASDF_finalize_hdf5_f(ier)
+    if (ier /= 0) call exit_MPI(myrank,'Error ASDF parallel finalize hdf5 failed')
 
   endif ! WRITE_SEISMOGRAMS_BY_MASTER
-
 
   !--------------------------------------------------------
   ! Clean up
   !--------------------------------------------------------
-
-  if (OUTPUT_PROVENANCE) deallocate(provenance)
+  if (ASDF_OUTPUT_PROVENANCE) deallocate(provenance)
   deallocate(station_names_gather)
   deallocate(network_names_gather)
   deallocate(component_names_gather)
@@ -658,8 +754,10 @@
   deallocate(station_elevs_gather)
   deallocate(station_depths_gather)
   deallocate(num_stations_gather)
-
   deallocate(one_seismogram)
+
+  ! all done
+  call synchronize_all()
 
   end subroutine write_asdf
 
@@ -673,13 +771,14 @@
 !! \start_time_string The start date stored as a character string
   subroutine cmt_to_quakeml(quakemlstring, pde_start_time_string, cmt_start_time_string)
 
-  !use asdf_data, only: asdf_container
-  use specfem_par
+  use constants, only: ASDF_MAX_QUAKEML_LENGTH,ASDF_MAX_TIME_STRING_LENGTH
+
+  use specfem_par, only: hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz
 
   implicit none
-  character(len=*) :: quakemlstring
-  character(len=*) :: pde_start_time_string
-  character(len=*) :: cmt_start_time_string
+  character(len=ASDF_MAX_QUAKEML_LENGTH) :: quakemlstring
+  character(len=ASDF_MAX_TIME_STRING_LENGTH) :: pde_start_time_string
+  character(len=ASDF_MAX_TIME_STRING_LENGTH) :: cmt_start_time_string
   character(len=13) :: cmt_lon_str, cmt_lat_str, cmt_depth_str, hdur_str
   character(len=13) :: pde_lat_str, pde_lon_str, pde_depth_str
   character(len=25) :: M0_str, mb_str, ms_str, Mw_str
@@ -694,35 +793,37 @@
   write(cmt_lat_str, "(g12.5)") 12.3 !cmt_lat
   write(cmt_lon_str, "(g12.5)") 112.9 !cmt_lon
   write(cmt_depth_str, "(g12.5)") 0.0 !cmt_depth*1000 ! km to m conversion
+
+  ! takes first source description
   write(hdur_str, "(g12.5)") hdur(1)
   write(M0_str, "(g12.5)") 0.0!M0*1e-7 ! dyn-cm to N-m conversion
   write(mb_str, "(g12.5)") 0.0!mb
   write(ms_str, "(g12.5)") 0.0!ms
   write(Mw_str, "(g12.5)") 0.0!Mw
-  write(Mrr_str, "(g12.5)") 0.0!Mrr*1e-7
-  write(Mtt_str, "(g12.5)") 0.0!Mtt*1e-7
-  write(Mpp_str, "(g12.5)") 0.0!Mpp*1e-7
-  write(Mrt_str, "(g12.5)") 0.0!Mrt*1e-7
-  write(Mrp_str, "(g12.5)") 0.0!Mrp*1e-7
-  write(Mtp_str, "(g12.5)") 0.0!Mtp*1e-7
+  write(Mrr_str, "(g12.5)") Mxx(1) !Mrr*1e-7
+  write(Mtt_str, "(g12.5)") Myy(1) !Mtt*1e-7
+  write(Mpp_str, "(g12.5)") Mzz(1) !Mpp*1e-7
+  write(Mrt_str, "(g12.5)") Mxy(1) !Mrt*1e-7
+  write(Mrp_str, "(g12.5)") Mxz(1) !Mrp*1e-7
+  write(Mtp_str, "(g12.5)") Myz(1) !Mtp*1e-7
 
   ! header version
   quakemlstring = &
     '<q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">'
 
   ! event
-  quakemlstring = quakemlstring // &
+  quakemlstring = trim(quakemlstring) // &
     '<eventParameters publicID="smi:local/'//trim(event_name)//'#eventPrm">'// &
     '<event publicID="smi:local/'//trim(event_name)//'#eventID">'
 
   ! info preferences
-  quakemlstring = quakemlstring // &
+  quakemlstring = trim(quakemlstring) // &
     '<preferredOriginID>smi:local/'//trim(event_name)//'/origin#cmtorigin</preferredOriginID>'// &
     '<preferredMagnitudeID>smi:local/'//trim(event_name)//'/magnitude#moment_mag</preferredMagnitudeID>'// &
     '<preferredFocalMechanismID>smi:local/'//trim(event_name)//'/focal_mechanism</preferredFocalMechanismID>'
 
   ! event name
-  quakemlstring = quakemlstring // &
+  quakemlstring = trim(quakemlstring) // &
     '<type>earthquake</type>'// &
     '<typeCertainty>known</typeCertainty>'// &
     '<description>'// &
@@ -731,11 +832,29 @@
     '</description>'
 
   ! event origin
-  quakemlstring = quakemlstring // &
+  quakemlstring = trim(quakemlstring) // &
     '<origin publicID="smi:local/'//trim(event_name)//'/origin#reforigin">'//&
     '  <time>'//&
     '    <value>'//trim(pde_start_time_string)//'</value>'//&
     '  </time>'//&
+    '  <latitude>'//&
+    '    <value>'//trim(pde_lat_str)//'</value>'//&
+    '  </latitude>'//&
+    '  <longitude>'//&
+    '    <value>'//trim(pde_lon_str)//'</value>'//&
+    '  </longitude>'//&
+    '  <depth>'//&
+    '    <value>'//trim(pde_depth_str)//'</value>'//&
+    '  </depth>'//&
+    '  <type>hypocenter</type>'//&
+    '  <comment id="smi:local/'//trim(event_name)//'/comment#ref_origin">'//&
+    '    <text>Hypocenter catalog: PDE</text>'//&
+    '  </comment>'//&
+    '</origin>'
+
+  ! event cmtorigin
+  quakemlstring = trim(quakemlstring) // &
+    '<origin publicID="smi:local/'//trim(event_name)//'/origin#cmtorigin">'//&
     '  <time>'//&
     '    <value>'//trim(cmt_start_time_string)//'</value>'//&
     '  </time>'// &
@@ -743,42 +862,19 @@
     '    <value>'//trim(cmt_lat_str)//'</value>'//&
     '  </latitude>'//&
     '  <longitude>'//&
-    '    <value></value>'//&
+    '    <value>'//trim(cmt_lon_str)//'</value>'//&
     '  </longitude>'//&
     '  <depth>'//&
-    '    <value></value>'//&
-    '  </depth>'//&
-    '  <type>hypocenter</type>'//&
-    '  <comment id="smi:local/comment#ref_origin">'//&
-    '    <text>Hypocenter catalog: PDE</text>'//&
-    '  </comment>'//&
-    '</origin>'
-
-  ! event cmtorigin
-  quakemlstring = quakemlstring // &
-    '<origin publicID="smi:local/origin#cmtorigin">'//&
-    '  <time>'//&
-    '    <value><value>'//&
-    '  </time>'//&
-    '  <latitude>'//&
-    '    <value></value>'//&
-    '  </latitude>'//&
-    '  <longitude>'//&
-    '    <value></value>'//&
-    '  </longitude>'//&
-    '  <depth>'//&
-    '    <value></value>'//&
+    '    <value>'//trim(cmt_depth_str)//'</value>'//&
     '  </depth>'//&
     '</origin>'
 
   ! event focal mechanism (empty for now...)
-  quakemlstring = quakemlstring // &
+  quakemlstring = trim(quakemlstring) // &
     '<focalMechanism publicID="smi:local/focal_mechanism">'//&
     '<momentTensor publicID="smi:local//momenttensor">'//&
-    '  <derivedOriginID>smi:local/origin#cmtorigin'//&
-    '  </derivedOriginID>'//&
-    '  <momentMagnitudeID>smi:local//magnitude#moment_mag'//&
-    '  </momentMagnitudeID>'//&
+    '  <derivedOriginID>smi:local/origin#cmtorigin'//'</derivedOriginID>'//&
+    '  <momentMagnitudeID>smi:local//magnitude#moment_mag'//'</momentMagnitudeID>'//&
     '  <scalarMoment>'//&
     '    <value></value>'//&
     '  </scalarMoment>'//&
@@ -816,7 +912,7 @@
     '</focalMechanism>'
 
   ! event magnitudes
-  quakemlstring = quakemlstring // &
+  quakemlstring = trim(quakemlstring) // &
     '<magnitude publicID="smi:local/magnitude#moment_mag">'//&
     '  <mag>'//&
     '  <value></value>'//&
@@ -837,7 +933,7 @@
     '</magnitude>'
 
   ! event finish
-  quakemlstring = quakemlstring // &
+  quakemlstring = trim(quakemlstring) // &
     '</event>'//&
     '</eventParameters>'//&
     '</q:quakeml>'
@@ -853,14 +949,19 @@
 !! \param time_string a string representation of the input time
   subroutine convert_systime_to_string(time, time_string)
 
+  use constants, only: ASDF_MAX_TIME_STRING_LENGTH
+
   implicit none
+
   double precision, intent(in) :: time
-  character(len=*), intent(out) :: time_string
+  character(len=ASDF_MAX_TIME_STRING_LENGTH), intent(out) :: time_string
+
+  ! local parameters
   real :: fraction_sec
   integer :: iatime(9)
   character(len=4) :: yr
   character(len=2) :: mo, da, hr, minute
-  character(len=15) :: second
+  character(len=15) :: str_second
   real :: real_sec
   integer :: stime,iyr,imo,ida,ihr,imin,isec
 
@@ -893,11 +994,11 @@
   write(minute, "(I2.2)") iatime(2)
 
   real_sec = iatime(1) + fraction_sec
-  write(second, "(I2.2, F0.4)") int(real_sec), real_sec-int(real_sec)
+  write(str_second, "(I2.2, F0.4)") int(real_sec), real_sec-int(real_sec)
 
   ! format example: 2018-01-31T16:40:02.8900
   time_string = trim(yr)//"-"//trim(mo)//"-"//trim(da)//"T"//&
-                  trim(hr)//':'//trim(minute)//':'//trim(second)
+                  trim(hr)//':'//trim(minute)//':'//trim(str_second)
 
   end subroutine convert_systime_to_string
 
@@ -914,16 +1015,18 @@
 !! \param cmt_start_time_string A string for defining the waveform name start
 !time using CMT
 !! \param end_time_string A string for defining the waveform name end time
-  subroutine get_time(starttime, start_time_string, pde_start_time_string, cmt_start_time_string, end_time_string)
+  subroutine get_time_cmt(starttime, start_time_string, pde_start_time_string, cmt_start_time_string, end_time_string)
+
+  use constants, only: ASDF_MAX_TIME_STRING_LENGTH
 
   use specfem_par, only: &
     NSTEP,DT,hdur,yr,tshift_src!,jda,mo,da,ho,mi,sec
 
   implicit none
-  character(len=*) :: start_time_string
-  character(len=*) :: end_time_string
-  character(len=*) :: cmt_start_time_string
-  character(len=*) :: pde_start_time_string
+  character(len=ASDF_MAX_TIME_STRING_LENGTH) :: start_time_string
+  character(len=ASDF_MAX_TIME_STRING_LENGTH) :: end_time_string
+  character(len=ASDF_MAX_TIME_STRING_LENGTH) :: cmt_start_time_string
+  character(len=ASDF_MAX_TIME_STRING_LENGTH) :: pde_start_time_string
   double precision, intent(inout) :: starttime
   double precision :: trace_length_in_sec
   integer :: year
@@ -959,7 +1062,7 @@
   !write(*,*) fmtdate(values,'The CPU time used by this program is now %c
   !seconds')
 
-  end subroutine get_time
+  end subroutine get_time_cmt
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -972,11 +1075,14 @@
   subroutine station_to_stationxml(station_name, network_name, latitude, longitude, elevation, &
                                    burial_depth, start_time_string, stationxmlstring)
 
+  use constants, only: ASDF_MAX_STATIONXML_LENGTH,ASDF_MAX_TIME_STRING_LENGTH, &
+    MAX_LENGTH_NETWORK_NAME,MAX_LENGTH_STATION_NAME
+
   implicit none
-  character(len=*) :: stationxmlstring
-  character(len=*) :: station_name
-  character(len=*) :: network_name
-  character(len=*) :: start_time_string
+  character(len=ASDF_MAX_STATIONXML_LENGTH) :: stationxmlstring
+  character(len=MAX_LENGTH_STATION_NAME) :: station_name
+  character(len=MAX_LENGTH_NETWORK_NAME) :: network_name
+  character(len=ASDF_MAX_TIME_STRING_LENGTH) :: start_time_string
 
   character(len=15) :: station_lat, station_lon, station_ele, station_depth
   integer :: len_station_name, len_network_name, len_station_lat
@@ -1005,14 +1111,14 @@
     '<FDSNStationXML schemaVersion="1.0" xmlns="http://www.fdsn.org/xml/station/1">'
 
   ! info
-  stationxmlstring = stationxmlstring // &
+  stationxmlstring = trim(stationxmlstring) // &
     '<Source>SPECFEM3D_Cartesian</Source>'//&
     '<Module>SPECFEM3D_Cartesian/asdf-library</Module>'//&
     '<ModuleURI>http://seismic-data.org</ModuleURI>'//&
     '<Created>'//trim(start_time_string)//'</Created>'
 
   ! station
-  stationxmlstring = stationxmlstring // &
+  stationxmlstring = trim(stationxmlstring) // &
     '<Network code="'//trim(network_name(1:len(network_name)))//'">'//&
     '<Station code="'//trim(station_name(1:len(station_name)))//'">'//&
     '  <Latitude unit="DEGREES">'//trim(station_lat(1:len_station_lat))//'</Latitude>'//&
@@ -1024,7 +1130,7 @@
     '  <CreationDate>'//trim(start_time_string)//'</CreationDate>'
 
   ! channels
-  stationxmlstring = stationxmlstring // &
+  stationxmlstring = trim(stationxmlstring) // &
     '  <TotalNumberChannels>3</TotalNumberChannels>'//&
     '  <SelectedNumberChannels>3</SelectedNumberChannels>'//&
     '  <Channel locationCode="S3" code="MXN" startDate="'//trim(start_time_string)//'">'//&
@@ -1053,7 +1159,7 @@
     '  </Channel>'
 
   ! finish
-  stationxmlstring = stationxmlstring // &
+  stationxmlstring = trim(stationxmlstring) // &
     '</Station>'//&
     '</Network>'//&
     '</FDSNStationXML>'

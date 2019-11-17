@@ -249,7 +249,6 @@
 
     ! debug: for vtk output
     if (SAVE_MESH_FILES) tmp2(ispec) = pmax
-
   enddo
 
   ! Vp velocity

@@ -297,9 +297,10 @@
     call synchronize_all()
     call close_asdf_data()
 
-! only the master process does the writing of seismograms and
-! collects the data from all other processes
   else
+    ! only the master process does the writing of seismograms and
+    ! collects the data from all other processes
+
     ! only written out by master process - WRITE_SEISMOGRAMS_BY_MASTER
 
     if (myrank == 0) then
