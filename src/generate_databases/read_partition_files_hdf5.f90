@@ -516,6 +516,7 @@
 
   ! close hdf5
   call h5_close_group(h5)
+  call h5_close_file(h5)
   call h5_destructor(h5)
  
   end subroutine read_partition_files_hdf5
