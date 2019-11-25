@@ -1079,7 +1079,7 @@ end module my_mpi
   integer :: ier
 
   call MPI_ISEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,my_local_mpi_comm_inter,req,ier)
-
+ 
   end subroutine isend_i_inter
 
 
@@ -2051,7 +2051,6 @@ end subroutine world_unsplit_inter
     call world_rank(myrank)
 
     ! TODO: add check if NPROC+1 = sizeval
-
     if (myrank == sizeval-1) then ! we use the last rank as the io node
       io_task = .true. ! set io node flag
       compute_task = .false.
@@ -2061,17 +2060,17 @@ end subroutine world_unsplit_inter
       compute_task = .true.
       key = 1
     endif
-
+ 
     ! split communicator into compute_comm and io_comm
     call MPI_COMM_SPLIT(my_local_mpi_comm_world, key, myrank, split_comm, ier)
-
-    ! create inter commicator and set as my_local_mpi_comm
+ 
+    ! create inter commicator and set as my_local_mpi_comm_inter
     io_start   = sizeval-1
     comp_start = 0
     if (io_task) then
-      call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, comp_start, 0, inter_comm, ier)
+      call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, comp_start, 10, inter_comm, ier)
     else
-      call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, io_start,   0, inter_comm, ier)
+      call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, io_start,   10, inter_comm, ier)
     endif
     my_local_mpi_comm_world = split_comm
  
@@ -2079,10 +2078,10 @@ end subroutine world_unsplit_inter
     my_local_mpi_comm_inter = inter_comm
    
     call world_size(sizeval)
-
+ 
     ! exclude io node from the other computer nodes
     if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) NPROC = NPROC-1
-
+ 
   end subroutine
 
 ! wait for an arrival of any mpi message

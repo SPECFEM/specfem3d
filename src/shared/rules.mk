@@ -160,7 +160,7 @@ hdf5_shared_STUBS_OBJECTS = \
 	$O/phdf5_utils_stubs.shared_nohdf5.o \
 	$(EMPTY_MACRO)
 hdf5_shared_STUBS_MODULES = \
-	$O/phdf5_utils.$(FC_MODEXT) \
+	$O/phdf5_utils_stubs.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 

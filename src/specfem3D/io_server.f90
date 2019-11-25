@@ -99,14 +99,14 @@ subroutine do_io_start_idle()
   integer, dimension(1)        :: nrec_temp
 
   ! vars surface movie
-  integer                       :: rec_count_surf=0, n_recv_msg_surf,surf_out_count=0, it_io,max_surf_out=0
+  integer                       :: rec_count_surf=0, n_recv_msg_surf=0,surf_out_count=0, it_io,max_surf_out=0
   integer, dimension(0:NPROC-1) :: nfaces_perproc, surface_offset
 
   ! vars shakemap
-  integer :: rec_count_shake=0, n_recv_msg_shake, shake_out_count=0,max_shake_out=0
+  integer :: rec_count_shake=0, n_recv_msg_shake=0, shake_out_count=0,max_shake_out=0
 
   ! vars volumne movie
-  integer                       :: rec_count_vol=0, n_recv_msg_vol, vol_out_count=0, max_vol_out=0
+  integer                       :: rec_count_vol=0, n_recv_msg_vol=0, vol_out_count=0, max_vol_out=0
   integer, dimension(0:NPROC-1) :: rec_count_vol_par_proc
   integer, dimension(0:NPROC-1) :: nelm_par_proc, nglob_par_proc ! storing the number of elements and gll nodes 
   logical, dimension(5)         :: val_type_mov ! true if movie file will be created, (pressure, div_glob, div, curlxyz, velocity_xyz)
@@ -194,11 +194,11 @@ subroutine do_io_start_idle()
     call idle_mpi_io(status)
 
     ! debug output
-    print *,                 "msg: " , status(MPI_TAG) , " rank: ", status(MPI_SOURCE), &
-              "  counters, seismo: " , rec_count_seismo, "/"      , n_recv_msg_seismo,  &
-                          ", surf: " , rec_count_surf  , "/"      , n_recv_msg_surf,    &
-                          ", shake: ", rec_count_shake , "/"      , n_recv_msg_shake,   &
-                          ", vol: "  , rec_count_vol   , "/"      , n_recv_msg_vol
+!    print *,                 "msg: " , status(MPI_TAG) , " rank: ", status(MPI_SOURCE), &
+!              "  counters, seismo: " , rec_count_seismo, "/"      , n_recv_msg_seismo,  &
+!                          ", surf: " , rec_count_surf  , "/"      , n_recv_msg_surf,    &
+!                          ", shake: ", rec_count_shake , "/"      , n_recv_msg_shake,   &
+!                          ", vol: "  , rec_count_vol   , "/"      , n_recv_msg_vol
 
     !
     ! receive seismograms

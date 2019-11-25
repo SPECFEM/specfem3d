@@ -197,12 +197,12 @@
 
       ! seismo
       ! send nrec and nrec_local
-      call send_i_inter(nrec, 1, 0, io_tag_num_recv)
+      call send_i_inter((/nrec/), 1, 0, io_tag_num_recv)
       ! send t0
-      call send_dp_inter(t0, 1, 0, io_tag_seismo_tzero)
+      call send_dp_inter((/t0/), 1, 0, io_tag_seismo_tzero)
     endif
     ! send the number of local receiver to the io node
-    if (compute_task) call send_i_inter(nrec_local, 1, 0, io_tag_local_rec)
+    if (compute_task) call send_i_inter((/nrec_local/), 1, 0, io_tag_local_rec)
 
     ! surface movie/vol/shakemap
     if (compute_task .and. myrank == 0) then
@@ -212,7 +212,7 @@
         ! send faces_surface_offset
         call send_i_inter(faces_surface_offset,NPROC, 0, io_tag_surface_offset)
         ! send size of store_val
-        call send_i_inter(size(store_val_x_all), 1, 0, io_tag_surface_coord_len)
+        call send_i_inter((/size(store_val_x_all)/), 1, 0, io_tag_surface_coord_len)
         ! send store_val_x/y/z_all
         call sendv_cr_inter(store_val_x_all,size(store_val_x_all), 0, io_tag_surface_x)
         call sendv_cr_inter(store_val_y_all,size(store_val_y_all), 0, io_tag_surface_y)
@@ -230,15 +230,15 @@
         if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
           n_msg_vol_each_proc = n_msg_vol_each_proc+3 ! velocity_x,velocity_y,velocity_z
         endif
-        call send_i_inter(n_msg_vol_each_proc,1,0,io_tag_vol_nmsg)
+        call send_i_inter((/n_msg_vol_each_proc/),1,0,io_tag_vol_nmsg)
 
       endif
     endif ! end if compute_task and myrank == 0
 
     if (compute_task .and. MOVIE_VOLUME) then
       ! send nspec and nglob in each process
-      call send_i_inter(NSPEC_AB,1,0,io_tag_vol_nspec)
-      call send_i_inter(NGLOB_AB,1,0,io_tag_vol_nglob)
+      call send_i_inter((/NSPEC_AB/),1,0,io_tag_vol_nspec)
+      call send_i_inter((/NGLOB_AB/),1,0,io_tag_vol_nglob)
     endif
 
   endif
