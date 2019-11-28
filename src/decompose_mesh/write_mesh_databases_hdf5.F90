@@ -64,7 +64,7 @@
 
   ! opens output file
   prname = "Database.h5"
-  IIN_database_hdf5 = outputpath_name(1:len_trim(outputpath_name))//prname
+  IIN_database_hdf5 = outputpath_name(1:len_trim(outputpath_name))//'/'//prname
 
   ! initialize hdf5 io
   h5 = h5io()
