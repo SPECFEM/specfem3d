@@ -106,7 +106,7 @@
   ! precalculates tau_sigma depending on period band (constant for all Q_mu), and
   ! determines central frequency f_c_source of attenuation period band
   call get_attenuation_constants(min_resolved_period,tau_sigma_dble, &
-            f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
+                                 f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
   ! determines alphaval,betaval,gammaval for runge-kutta scheme
   tau_sigma(:) = real(tau_sigma_dble(:),kind=CUSTOM_REAL)

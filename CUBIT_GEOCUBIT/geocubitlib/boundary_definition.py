@@ -72,6 +72,18 @@ def define_4side_lateral_surfaces():
     surf_ymin = []
     surf_xmax = []
     surf_ymax = []
+
+    # min/max of bounding box
+    xmin_box = cubit.get_total_bounding_box("volume", list_vol)[0]
+    xmax_box = cubit.get_total_bounding_box("volume", list_vol)[1]
+    ymin_box = cubit.get_total_bounding_box("volume", list_vol)[3]
+    ymax_box = cubit.get_total_bounding_box("volume", list_vol)[4]
+    zmin_box = cubit.get_total_bounding_box("volume", list_vol)[6]
+    zmax_box = cubit.get_total_bounding_box("volume", list_vol)[7]
+    #print('absorbing boundary xmin:' + str(xmin_box) + ' xmax: ' + str(xmax_box))
+    #print('absorbing boundary ymin:' + str(ymin_box) + ' ymax: ' + str(ymax_box))
+    #print('absorbing boundary zmin:' + str(zmin_box) + ' zmax: ' + str(zmax_box))
+
     for id_vol in list_vol:
         surf_vertical = []
         xsurf = []
@@ -80,15 +92,31 @@ def define_4side_lateral_surfaces():
         lsurf = cubit.get_relatives("volume", id_vol, "surface")
         for k in lsurf:
             normal = cubit.get_surface_normal(k)
-            center_point = cubit.get_center_point("surface", k)
+            # checks if normal is horizontal (almost 0, i.e., +/- 0.3)
             if normal[2] >= -1 * tres and normal[2] <= tres:
-                surf_vertical.append(k)
-                xsurf.append(center_point[0])
-                ysurf.append(center_point[1])
+                # checks if surface is on minimum/maximum side of the whole model
+                center_point = cubit.get_center_point("surface", k)
+                # note: for models with smaller volumes inscribed, we want only the outermost surfaces
+                #       as absorbing ones
+                tol = 0.001
+                #sbox = cubit.get_bounding_box('surface', k)
+                # xmin of surface box relative to total box xmin
+                if (abs(center_point[0] - xmin_box) / abs(xmax_box - xmin_box) <= tol) or \
+                   (abs(center_point[0] - xmax_box) / abs(xmax_box - xmin_box) <= tol) or \
+                   (abs(center_point[1] - ymin_box) / abs(ymax_box - ymin_box) <= tol) or \
+                   (abs(center_point[1] - ymax_box) / abs(ymax_box - ymin_box) <= tol):
+                    # adds as vertical surface
+                    surf_vertical.append(k)
+                    xsurf.append(center_point[0])
+                    ysurf.append(center_point[1])
         surf_xmin.append(surf_vertical[xsurf.index(min(xsurf))])
         surf_ymin.append(surf_vertical[ysurf.index(min(ysurf))])
         surf_xmax.append(surf_vertical[xsurf.index(max(xsurf))])
         surf_ymax.append(surf_vertical[ysurf.index(max(ysurf))])
+    #print('define_4side_lateral_surfaces: xmin ',surf_xmin)
+    #print('define_4side_lateral_surfaces: xmax ',surf_xmax)
+    #print('define_4side_lateral_surfaces: ymin ',surf_ymin)
+    #print('define_4side_lateral_surfaces: ymax ',surf_ymax)
     return surf_xmin, surf_ymin, surf_xmax, surf_ymax
 
 
@@ -96,8 +124,7 @@ def lateral_boundary_are_absorbing(iproc=0, cpuxmin=0, cpuxmax=1,
                                    cpuymin=0, cpuymax=1, cpux=1, cpuy=1):
     #
     xmin, ymin, xmax, ymax = define_4side_lateral_surfaces()
-    iproc_xmin, iproc_xmax, iproc_ymin, iproc_ymax, listfull = map_boundary(
-        cpuxmin, cpuxmax, cpuymin, cpuymax, cpux, cpuy)
+    iproc_xmin, iproc_xmax, iproc_ymin, iproc_ymax, listfull = map_boundary(cpuxmin, cpuxmax, cpuymin, cpuymax, cpux, cpuy)
     if not isinstance(iproc_xmin, list):
         iproc_xmin = [iproc_xmin]
     if not isinstance(iproc_ymin, list):
@@ -167,10 +194,17 @@ def define_surf(iproc=0, cpuxmin=0, cpuxmax=1,
     zmax_box = cubit.get_total_bounding_box("volume", list_vol)[7]
     # it is the z_min of the box ... box= xmin,xmax,d,ymin,ymax,d,zmin...
     zmin_box = cubit.get_total_bounding_box("volume", list_vol)[6]
-    # xmin_box = cubit.get_total_bounding_box("volume", list_vol)[0]
-    # xmax_box = cubit.get_total_bounding_box("volume", list_vol)[1]
-    # ymin_box = cubit.get_total_bounding_box("volume", list_vol)[3]
-    # ymax_box = cubit.get_total_bounding_box("volume", list_vol)[4]
+    xmin_box = cubit.get_total_bounding_box("volume", list_vol)[0]
+    xmax_box = cubit.get_total_bounding_box("volume", list_vol)[1]
+    ymin_box = cubit.get_total_bounding_box("volume", list_vol)[3]
+    ymax_box = cubit.get_total_bounding_box("volume", list_vol)[4]
+
+    print('total bounding box:')
+    print('  xmin: ',xmin_box,' xmax: ',xmax_box)
+    print('  ymin: ',ymin_box,' ymax: ',ymax_box)
+    print('  zmin: ',zmin_box,' zmax: ',zmax_box)
+    print('')
+
     list_surf = cubit.parse_cubit_list("surface", "all")
 
     absorbing_surface_distance_tolerance = 0.001
@@ -256,6 +290,11 @@ def define_surf(iproc=0, cpuxmin=0, cpuxmax=1,
         abs_xmax = list(Set(abs_xmaxtmp) - Set(abs_xmintmp))
         abs_ymin = list(Set(abs_ymintmp) - Set(abs_ymaxtmp))
         abs_ymax = list(Set(abs_ymaxtmp) - Set(abs_ymintmp))
+
+        print('lateral absorbing boundary:')
+        print('  abs_xmin: ',abs_xmin,' abs_xmax: ',abs_xmax)
+        print('  abs_ymin: ',abs_xmin,' abs_ymax: ',abs_xmax)
+
     return absorbing_surf, abs_xmin, abs_xmax, abs_ymin, abs_ymax, top_surf, \
         bottom_surf, xmin, ymin, xmax, ymax
 
