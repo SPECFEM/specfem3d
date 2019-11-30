@@ -1075,7 +1075,7 @@
 !------------------------------------------------------------------------------------
 !
 
-  subroutine write_VTK_data_elem_i_meshfemCPML(nglob,nspec,nodes_coords,ibool, &
+  subroutine write_VTK_data_elem_i_meshfemCPML(nglob,nspec,NGLL,nodes_coords,ibool, &
                                                nspec_CPML,CPML_regions,is_CPML,filename)
 
 ! special routine for meshfem3D with simpler earth_mesh arrays
@@ -1084,14 +1084,10 @@
 
   implicit none
 
-  ! from constants_meshfem3D.h
-  integer, parameter :: NGLLX_M = 2
-  integer, parameter :: NGLLY_M = NGLLX_M, NGLLZ_M = NGLLX_M
-
-  integer :: nspec,nglob
+  integer :: nspec,nglob,NGLL
 
   ! global coordinates
-  integer, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: ibool
+  integer, dimension(NGLL,NGLL,NGLL,nspec) :: ibool
   double precision, dimension(nglob,NDIM) :: nodes_coords
 
   ! element flag array
@@ -1121,8 +1117,10 @@
   write(IOUT_VTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
   do ispec = 1,nspec
     write(IOUT_VTK,'(9i12)') 8, &
-                             ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(2,2,1,ispec)-1,ibool(1,2,1,ispec)-1, &
-                             ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(2,2,2,ispec)-1,ibool(1,2,2,ispec)-1
+                             ibool(1,1,1,ispec)-1,ibool(NGLL,1,1,ispec)-1, &
+                             ibool(NGLL,NGLL,1,ispec)-1,ibool(1,NGLL,1,ispec)-1, &
+                             ibool(1,1,NGLL,ispec)-1,ibool(NGLL,1,NGLL,ispec)-1, &
+                             ibool(NGLL,NGLL,NGLL,ispec)-1,ibool(1,NGLL,NGLL,ispec)-1
   enddo
   write(IOUT_VTK,*) ''
 
@@ -1152,7 +1150,7 @@
 !------------------------------------------------------------------------------------
 !
 
-  subroutine write_VTK_data_elem_i_meshfem(nspec,xstore_mesh,ystore_mesh,zstore_mesh, &
+  subroutine write_VTK_data_elem_i_meshfem(nspec,NGLL,xstore_mesh,ystore_mesh,zstore_mesh, &
                                            ibool,elem_data,filename)
 
 ! special routine for meshfem3D with simpler earth_mesh arrays
@@ -1161,15 +1159,11 @@
 
   implicit none
 
-  ! from constants_meshfem3D.h
-  integer, parameter :: NGLLX_M = 2
-  integer, parameter :: NGLLY_M = NGLLX_M, NGLLZ_M = NGLLX_M
-
-  integer :: nspec
+  integer :: nspec,NGLL
 
   ! global coordinates
-  integer, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: ibool
-  double precision, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: xstore_mesh,ystore_mesh,zstore_mesh
+  integer, dimension(NGLL,NGLL,NGLL,nspec) :: ibool
+  double precision, dimension(NGLL,NGLL,NGLL,nspec) :: xstore_mesh,ystore_mesh,zstore_mesh
 
   ! element flag array
   integer, dimension(nspec) :: elem_data
@@ -1185,11 +1179,11 @@
   write(IOUT_VTK,'(a)') 'material model VTK file'
   write(IOUT_VTK,'(a)') 'ASCII'
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
-  write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nspec*NGLLX_M*NGLLY_M*NGLLZ_M, ' float'
+  write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nspec*NGLL*NGLL*NGLL, ' float'
   do ispec = 1,nspec
-    do k = 1,NGLLZ_M
-      do j = 1,NGLLY_M
-        do i = 1,NGLLX_M
+    do k = 1,NGLL
+      do j = 1,NGLL
+        do i = 1,NGLL
           write(IOUT_VTK,*) xstore_mesh(i,j,k,ispec),ystore_mesh(i,j,k,ispec),zstore_mesh(i,j,k,ispec)
         enddo
       enddo
@@ -1201,8 +1195,10 @@
   write(IOUT_VTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
   do ispec = 1,nspec
     write(IOUT_VTK,'(9i12)') 8, &
-                             ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(2,2,1,ispec)-1,ibool(1,2,1,ispec)-1, &
-                             ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(2,2,2,ispec)-1,ibool(1,2,2,ispec)-1
+                             ibool(1,1,1,ispec)-1,ibool(NGLL,1,1,ispec)-1, &
+                             ibool(NGLL,NGLL,1,ispec)-1,ibool(1,NGLL,1,ispec)-1, &
+                             ibool(1,1,NGLL,ispec)-1,ibool(NGLL,1,NGLL,ispec)-1, &
+                             ibool(NGLL,NGLL,NGLL,ispec)-1,ibool(1,NGLL,NGLL,ispec)-1
   enddo
   write(IOUT_VTK,*) ''
 

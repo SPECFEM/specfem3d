@@ -154,7 +154,7 @@ end module my_mpi
   ! write a stamp file to disk to let the user know that the run failed
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
     ! notifies which run directory failed
-    write(filename,"('run',i4.4,'_failed')") mygroup + 1
+    write(filename,"('run_with_directory_',i4.4,'_failed')") mygroup + 1
     inquire(file=trim(filename), exist=run_file_exists)
     if (run_file_exists) then
       open(unit=9765,file=trim(filename),status='old',position='append',action='write',iostat=ier)
@@ -167,7 +167,7 @@ end module my_mpi
     endif
 
     ! notifies which rank failed
-    write(filename,"('run_with_local_rank_',i8.8,'and_global_rank_',i8.8,'_failed')") my_local_rank,my_global_rank
+    write(filename,"('run_with_local_rank_',i8.8,'_and_global_rank_',i8.8,'_failed')") my_local_rank,my_global_rank
     open(unit=9765,file=trim(filename),status='unknown',action='write')
     write(9765,*) 'run with local rank ',my_local_rank,' and global rank ',my_global_rank,' failed'
     close(9765)

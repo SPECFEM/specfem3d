@@ -79,6 +79,8 @@
   integer :: idoubling_bottom,idoubling_top
   integer :: nz_top,nz_bottom,nz_doubling
   integer :: one_exclude
+  integer :: nblocks_doubling_vol,nblocks_doubling_surf,nblocks_doubling_edge
+  integer :: nglob_vol,nglob_surf,nglob_edge
 
   ! number of elements horizontally in each slice (i.e. per processor)
   NEX_PER_PROC_XI = NEX_XI / NPROC_XI
@@ -245,7 +247,9 @@
         if (isubregion > 1 .and. isubregion < max_subregion) one_exclude = 1
 
         NGLOB_NO_DOUBLING = NGLOB_NO_DOUBLING &
-          + (NEX_PER_PROC_XI/doubling_factor + 1) * (NEX_PER_PROC_ETA/doubling_factor + 1) * (NER_REGULAR_SINGLE - one_exclude)
+          + (NEX_PER_PROC_XI/doubling_factor*(NGLLX_M-1) + 1) &
+             * (NEX_PER_PROC_ETA/doubling_factor*(NGLLX_M-1) + 1) &
+             * (NER_REGULAR_SINGLE*(NGLLX_M-1) - one_exclude)
 
       else
         ! doubling layer
@@ -294,15 +298,58 @@
         NSPEC2D_DOUBLING_B_ETA = NSPEC2D_DOUBLING_B_ETA  + 10 * NUM2D_DOUBLING_BRICKS_ETA
 
         ! exact number of global points
+        !
+        !! example :
+        !!                        nblocks_xi/2=5
+        !!                  ____________________________________
+        !!                  I      I      I      I      I      I
+        !!                  I      I      I      I      I      I
+        !!                  I      I      I      I      I      I
+        !! nblocks_eta/2=3  I______+______+______+______+______I
+        !!                  I      I      I      I      I      I
+        !!                  I      I      I      I      I      I
+        !!                  I      I      I      I      I      I
+        !!                  I______+______+______+______+______I
+        !!                  I      I      I      I      I      I
+        !!                  I      I      I      I      I      I
+        !!                  I      I      I      I      I      I
+        !!                  I______I______I______I______I______I
+        !!
+        !! NGLOB for this doubling layer = 3*5*Volume - ((3-1)*5+(5-1)*3)*Surface + (3-1)*(5-1)*Edge
+        !!
+        !! 32*NGLLX**3 - 70*NGLLX**2 + 52*NGLLX - 13 -> nb GLL points in a superbrick (Volume)
+        !! 8*NGLLX**2-11*NGLLX+4 -> nb GLL points on a superbrick side (Surface)
+        !! 2*NGLLX-1 -> nb GLL points on a corner edge of a superbrick (Edge)
+        !
+        !! for the one layer superbrick :
+        !! NGLOB = 28.NGLL^3 - 62.NGLL^2 + 47.NGLL - 12 (Volume)
+        !! NGLOB = 6.NGLL^2 - 8.NGLL + 3 (Surface)
+        !! NGLOB = NGLL (Edge)
+        !!
+        !! those results were obtained by using the script UTILS/doubling_brick/count_nglob_analytical.pl
+        !! with an opendx file of the superbrick's geometry
+        !
+        !! for the basic doubling bricks (two layers)
+        !! NGLOB = 8.NGLL^3 - 12.NGLL^2 + 6.NGLL - 1 (VOLUME)
+        !! NGLOB = 5.NGLL^2 - 5.NGLL + 1 (SURFACE 1)
+        !! NGLOB = 6.NGLL^2 - 7.NGLL + 2 (SURFACE 2)
+        !
         ! case of the doubling regions
+        nblocks_doubling_vol  = (NEX_PER_PROC_XI/(doubling_factor * 2))*(NEX_PER_PROC_ETA/(doubling_factor * 2))
+        nblocks_doubling_surf = (NEX_PER_PROC_XI/(doubling_factor * 2)-1)*(NEX_PER_PROC_ETA/(doubling_factor * 2)) &
+                              + (NEX_PER_PROC_ETA/(doubling_factor * 2)-1)*(NEX_PER_PROC_XI/(doubling_factor * 2))
+        nblocks_doubling_edge = (NEX_PER_PROC_XI/(doubling_factor * 2)-1)*(NEX_PER_PROC_ETA/(doubling_factor * 2)-1)
+
+        ! following global node counts are for a superbrick layer
+        ! (compare also with globe version read_compute_parameters.f90)
+        nglob_vol = 32*NGLLX_M**3 - 70*NGLLX_M**2 + 52*NGLLX_M - 13
+        nglob_surf = 8*NGLLX_M**2 - 11*NGLLX_M + 4
+        nglob_edge = 2*NGLLX_M-1
+
         ! current, single doubling layer points
-        NGLOB_DOUBLING_SINGLE = &
-          (NEX_PER_PROC_XI/(doubling_factor * 2))*(NEX_PER_PROC_ETA/(doubling_factor * 2)) &
-              *(32*NGLLX_M**3 - 70*NGLLX_M**2 + 52*NGLLX_M - 13) &
-          - ((NEX_PER_PROC_XI/(doubling_factor * 2)-1)*(NEX_PER_PROC_ETA/(doubling_factor * 2)) &
-          + (NEX_PER_PROC_ETA/(doubling_factor * 2)-1)*(NEX_PER_PROC_XI/(doubling_factor * 2)))&
-              * (8*NGLLX_M**2 - 11*NGLLX_M + 4) &
-          + (NEX_PER_PROC_XI/(doubling_factor * 2)-1)*(NEX_PER_PROC_ETA/(doubling_factor * 2)-1)*(NGLLX_M+1)
+        NGLOB_DOUBLING_SINGLE = nblocks_doubling_vol * nglob_vol &
+                              - nblocks_doubling_surf * nglob_surf &
+                              + nblocks_doubling_edge * nglob_edge
 
         ! total doubling layer points
         NGLOB_DOUBLING = NGLOB_DOUBLING + NGLOB_DOUBLING_SINGLE

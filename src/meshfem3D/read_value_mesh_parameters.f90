@@ -328,7 +328,7 @@
   do
     read(unit=iunit,fmt="(a)",iostat=ier) string_read
     if (ier /= 0) then
-      print *,'Error reading parameter file Mesh_Par_file, please check file...'
+      print *,'Error reading parameter file Mesh_Par_file: missing next line. Please check file...'
       stop 'Error while reading parameter file Mesh_Par_file'
     endif
 

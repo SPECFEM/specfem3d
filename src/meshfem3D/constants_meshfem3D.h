@@ -33,7 +33,8 @@
 !------------------------------------------------------
 
 ! number of GLL points not set in the mesher, do not modify this value
-  integer, parameter :: NGLLX_M = 2
+! we can use 2 for NGNOD == 8 only and faster meshing; or 3 to allow also for NGNOD == 27 meshing
+  integer, parameter :: NGLLX_M = 3
   integer, parameter :: NGLLY_M = NGLLX_M
   integer, parameter :: NGLLZ_M = NGLLX_M
 

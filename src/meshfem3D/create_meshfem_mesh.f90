@@ -63,8 +63,10 @@ end module create_meshfem_par
 ! create the different regions of the mesh
 
   use constants, only: IMAIN,myrank
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+  use shared_parameters, only: NGNOD,NGNOD2D
 
-  use meshfem3D_par, only: &
+  use meshfem3D_par, only: NSPEC_AB,NGLOB_AB, &
     ibool, &
     xstore,ystore,zstore, &
     iproc_xi_current,iproc_eta_current,addressing,nspec, &
@@ -93,6 +95,17 @@ end module create_meshfem_par
   double precision :: VP_MAX
 
   ! **************
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) 'creating mesh:'
+    write(IMAIN,*) '  NGLLX/NGLLY/NGLLZ = ',NGLLX_M,NGLLY_M,NGLLZ_M
+    write(IMAIN,*) '  NGNOD/NGNOD2D     = ',NGNOD,NGNOD2D
+    write(IMAIN,*) '  NSPEC_AB          = ',NSPEC_AB
+    write(IMAIN,*) '  NGLOB_AB          = ',NGLOB_AB
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
 
   !--- Initialize ADIOS and setup the buffer size
   if (ADIOS_ENABLED) then
@@ -193,7 +206,7 @@ end module create_meshfem_par
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NGLLCUBE_M
 
   use meshfem3D_par, only: NSPEC_AB,nspec,ibool, &
-    xstore,ystore,zstore,npointot, &
+    xstore,ystore,zstore, &
     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP
 
   use create_meshfem_par
@@ -211,9 +224,6 @@ end module create_meshfem_par
 
   ! assign theoretical number of elements
   nspec = NSPEC_AB
-
-  ! compute maximum number of points
-  npointot = nspec * NGLLCUBE_M
 
   ! make sure everybody is synchronized
   call synchronize_all()
@@ -273,7 +283,8 @@ end module create_meshfem_par
 
   subroutine cmm_create_mesh_elements()
 
-  use constants, only: CUSTOM_REAL,IMAIN,NGNOD_EIGHT_CORNERS,HUGEVAL,myrank
+  use constants, only: CUSTOM_REAL,IMAIN,NGNOD_EIGHT_CORNERS,HUGEVAL,myrank, &
+    GAUSSALPHA,GAUSSBETA,NDIM
 
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M, &
     NGLOB_DOUBLING_SUPERBRICK,NSPEC_DOUBLING_SUPERBRICK, &
@@ -288,6 +299,8 @@ end module create_meshfem_par
     nspec, &
     USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
     nsubregions,subregions
+
+  use shared_parameters, only: NGNOD
 
   use create_meshfem_par
 
@@ -326,6 +339,26 @@ end module create_meshfem_par
   logical, dimension(NSPEC_DOUBLING_SUPERBRICK,6) :: iboun_sb
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
   double precision, dimension(NGLOB_DOUBLING_SUPERBRICK) :: x_superbrick,y_superbrick,z_superbrick
+
+  ! topology
+  double precision :: xigll(NGLLX_M),yigll(NGLLY_M),zigll(NGLLZ_M), &
+                      wxgll(NGLLX_M),wygll(NGLLY_M),wzgll(NGLLZ_M)
+  double precision :: shape3D(NGNOD,NGLLX_M,NGLLY_M,NGLLZ_M), &
+                      dershape3D(NDIM,NGNOD,NGLLX_M,NGLLY_M,NGLLZ_M)
+
+  ! set up coordinates of the Gauss-Lobatto-Legendre points
+  if (NGLLX_M >= 3 .and. NGLLY_M >= 3 .and. NGLLZ_M >= 3) then
+    call zwgljd(xigll,wxgll,NGLLX_M,GAUSSALPHA,GAUSSBETA)
+    call zwgljd(yigll,wygll,NGLLY_M,GAUSSALPHA,GAUSSBETA)
+    call zwgljd(zigll,wzgll,NGLLZ_M,GAUSSALPHA,GAUSSBETA)
+
+    ! get the 3-D shape functions
+    call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD,NGLLX_M,NGLLY_M,NGLLZ_M)
+  else
+    ! dummy, shape function not needed
+    shape3D(:,:,:,:) = 0.d0
+  endif
+
 
   ! allocate material ids array
   allocate(material_num(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
@@ -452,7 +485,7 @@ end module create_meshfem_par
             ispec_material_id(ispec) = material_num(ir,ix,iy)
 
             ! store coordinates
-            call store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec)
+            call store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec,shape3D)
 
             ! detect mesh boundaries
             call get_flags_boundaries(nspec,iproc_xi_current,iproc_eta_current, &
@@ -502,7 +535,7 @@ end module create_meshfem_par
               ispec_material_id(ispec) = material_num(ir,ix,iy)
 
               ! store coordinates
-              call store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec)
+              call store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec,shape3D)
 
               ! detect mesh boundaries
               call get_flags_boundaries(nspec,iproc_xi_current,iproc_eta_current, &
@@ -655,7 +688,7 @@ end module create_meshfem_par
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NGLLCUBE_M
 
   use meshfem3D_par, only: prname,ibool,xstore,ystore,zstore, &
-    UTM_X_MIN,UTM_X_MAX,NGLOB_AB,nspec,npointot
+    UTM_X_MIN,UTM_X_MAX,NGLOB_AB,nspec
 
   use create_meshfem_par
 
@@ -668,6 +701,7 @@ end module create_meshfem_par
   integer :: ieoff,ilocnum
 
   ! variables for creating array ibool (some arrays also used for AVS or DX files)
+  integer :: npointot
   integer, dimension(:), allocatable :: iglob,locval
   logical, dimension(:), allocatable :: ifseg
   double precision, dimension(:), allocatable :: xp,yp,zp
@@ -680,6 +714,9 @@ end module create_meshfem_par
     write(IMAIN,*)
     call flush_IMAIN()
   endif
+
+  ! compute maximum number of points
+  npointot = nspec * NGLLCUBE_M
 
   ! allocate memory for arrays
   allocate(iglob(npointot),stat=ier)
@@ -745,7 +782,7 @@ end module create_meshfem_par
     enddo
     ! vtk file format output
     filename = prname(1:len_trim(prname))//'mesh_debug.vtk'
-    call write_VTK_data_elem_i_meshfem(nspec,xstore,ystore,zstore,ibool,ispec_material_id,filename)
+    call write_VTK_data_elem_i_meshfem(nspec,NGLLX_M,xstore,ystore,zstore,ibool,ispec_material_id,filename)
 
     ! invalid nglob, stops mesher
     call exit_MPI(myrank,'incorrect global number, please check mesh input parameters')

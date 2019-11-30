@@ -37,6 +37,8 @@
     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ, &
     PI,MAX_STRING_LEN,NDIM,myrank
 
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+
   ! CPML
   use shared_parameters, only: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
 
@@ -158,13 +160,13 @@
   do ispec = 1,nspec
     ! corner points
     i1 = ibool(1,1,1,ispec)
-    i2 = ibool(2,1,1,ispec)
-    i3 = ibool(2,2,1,ispec)
-    i4 = ibool(1,2,1,ispec)
-    i5 = ibool(1,1,2,ispec)
-    i6 = ibool(2,1,2,ispec)
-    i7 = ibool(2,2,2,ispec)
-    i8 = ibool(1,2,2,ispec)
+    i2 = ibool(NGLLX_M,1,1,ispec)
+    i3 = ibool(NGLLX_M,NGLLY_M,1,ispec)
+    i4 = ibool(1,NGLLY_M,1,ispec)
+    i5 = ibool(1,1,NGLLZ_M,ispec)
+    i6 = ibool(NGLLX_M,1,NGLLZ_M,ispec)
+    i7 = ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+    i8 = ibool(1,NGLLY_M,NGLLZ_M,ispec)
 
     ! Xmin CPML
     limit = xmin_all + THICKNESS_OF_X_PML * SMALL_PERCENTAGE_TOLERANCE
@@ -195,7 +197,7 @@
 
     ! Ymax CPML
     limit = ymax_all - THICKNESS_OF_Y_PML * SMALL_PERCENTAGE_TOLERANCE
-    if (  nodes_coords(i1,2) > limit .and. nodes_coords(i2,2) > limit .and. &
+    if ( nodes_coords(i1,2) > limit .and. nodes_coords(i2,2) > limit .and. &
          nodes_coords(i3,2) > limit .and. nodes_coords(i4,2) > limit .and. &
          nodes_coords(i5,2) > limit .and. nodes_coords(i6,2) > limit .and. &
          nodes_coords(i7,2) > limit .and. nodes_coords(i8,2) > limit) then
@@ -204,7 +206,7 @@
 
     ! Zmin CPML
     limit = zmin_all + THICKNESS_OF_Z_PML * SMALL_PERCENTAGE_TOLERANCE
-    if (  nodes_coords(i1,3) < limit .and. nodes_coords(i2,3) < limit .and. &
+    if ( nodes_coords(i1,3) < limit .and. nodes_coords(i2,3) < limit .and. &
          nodes_coords(i3,3) < limit .and. nodes_coords(i4,3) < limit .and. &
          nodes_coords(i5,3) < limit .and. nodes_coords(i6,3) < limit .and. &
          nodes_coords(i7,3) < limit .and. nodes_coords(i8,3) < limit) then
@@ -299,7 +301,7 @@
     if (myrank == 0) then
       write(IMAIN,*) '  saving VTK file: ',trim(filename)
     endif
-    call write_VTK_data_elem_i_meshfemCPML(nglob,nspec,nodes_coords,ibool, &
+    call write_VTK_data_elem_i_meshfemCPML(nglob,nspec,NGLLX_M,nodes_coords,ibool, &
                                            nspec_CPML,CPML_regions,is_CPML,filename)
   endif
 

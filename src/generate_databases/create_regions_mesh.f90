@@ -826,7 +826,7 @@
   call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
 
 ! get the 3-D shape functions
-  call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
+  call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ)
 
 ! get the 2-D shape functions
   call get_shape2D(shape2D_x,dershape2D_x,yigll,zigll,NGLLY,NGLLZ,NGNOD,NGNOD2D)

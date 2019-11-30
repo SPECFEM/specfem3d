@@ -946,10 +946,10 @@ contains
   ! Write interfaces (element and common nodes) pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
   subroutine write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, &
-                              iproc, ninterfaces, &
-                              my_ninterface, my_interfaces, my_nb_interfaces, glob2loc_elmnts, &
-                              glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-                              glob2loc_nodes, num_phase, nparts)
+                                       iproc, ninterfaces, &
+                                       my_ninterface, my_interfaces, my_nb_interfaces, glob2loc_elmnts, &
+                                       glob2loc_nodes_nparts, glob2loc_nodes_parts, &
+                                       glob2loc_nodes, num_phase, nparts)
 
   integer, intent(in)  :: IIN_database
   integer, intent(in)  :: iproc

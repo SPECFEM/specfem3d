@@ -27,13 +27,13 @@
 
 ! 3D shape functions for 8-node or 27-node element
 
-  subroutine get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
+  subroutine get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ)
 
-  use constants
+  use constants, only: NDIM,myrank,ZERO,ONE,TINYVAL
 
   implicit none
 
-  integer, intent(in) :: NGNOD
+  integer, intent(in) :: NGNOD,NGLLX,NGLLY,NGLLZ
 
 ! Gauss-Lobatto-Legendre points of integration
   double precision, intent(in) :: xigll(NGLLX)
@@ -74,14 +74,14 @@
         !--- case of a 3D 8-node element (Dhatt-Touzot p. 115)
         if (NGNOD == 8) then
 
-          ra1 = one + xi
-          ra2 = one - xi
+          ra1 = ONE + xi
+          ra2 = ONE - xi
 
-          rb1 = one + eta
-          rb2 = one - eta
+          rb1 = ONE + eta
+          rb2 = ONE - eta
 
-          rc1 = one + gamma
-          rc2 = one - gamma
+          rc1 = ONE + gamma
+          rc2 = ONE - gamma
 
           shape3D(1,i,j,k) = ONE_EIGHTH*ra2*rb2*rc2
           shape3D(2,i,j,k) = ONE_EIGHTH*ra1*rb2*rc2
@@ -123,7 +123,7 @@
 
           ! note: put further initialization for NGNOD == 27 into subroutine
           !       to avoid compilation errors in case NGNOD == 8
-          call get_shape3D_27(NGNOD,shape3D,dershape3D,xi,eta,gamma,i,j,k)
+          call get_shape3D_27(NGNOD,NGLLX,NGLLY,NGLLZ,shape3D,dershape3D,xi,eta,gamma,i,j,k)
 
         endif
 
@@ -395,13 +395,13 @@
 
 !--- case of a 3D 27-node element
 
-  subroutine get_shape3D_27(NGNOD,shape3D,dershape3D,xi,eta,gamma,i,j,k)
+  subroutine get_shape3D_27(NGNOD,NGLLX,NGLLY,NGLLZ,shape3D,dershape3D,xi,eta,gamma,i,j,k)
 
-  use constants
+  use constants, only: ONE,HALF,TWO,NDIM
 
   implicit none
 
-  integer, intent(in) :: NGNOD,i,j,k
+  integer, intent(in) :: NGNOD,NGLLX,NGLLY,NGLLZ,i,j,k
 
 ! 3D shape functions and their derivatives
   double precision, intent(out) :: shape3D(NGNOD,NGLLX,NGLLY,NGLLZ)

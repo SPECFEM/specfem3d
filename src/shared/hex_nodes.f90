@@ -626,7 +626,7 @@
 !
 
 
-  subroutine hex_nodes_anchor_ijk(NGNOD,anchor_iax,anchor_iay,anchor_iaz)
+  subroutine hex_nodes_anchor_ijk_NGLL(NGNOD,anchor_iax,anchor_iay,anchor_iaz,NGLLX,NGLLY,NGLLZ)
 
 ! gets control point indices
 !
@@ -638,12 +638,11 @@
 !  zelm(ia) = dble(zstore(iglob))
 !enddo
 
-  use constants, only: MIDX,MIDY,MIDZ,NGLLX,NGLLY,NGLLZ
-
   implicit none
 
   integer, intent(in) :: NGNOD
   integer, dimension(NGNOD), intent(out) :: anchor_iax,anchor_iay,anchor_iaz
+  integer, intent(in) :: NGLLX,NGLLY,NGLLZ
 
   ! local parameters
   integer :: ia
@@ -662,7 +661,7 @@
     if (iaddx(ia) == 0) then
       iax = 1
     else if (iaddx(ia) == 1) then
-      iax = MIDX
+      iax = (NGLLX+1)/2
     else if (iaddx(ia) == 2) then
       iax = NGLLX
     else
@@ -674,7 +673,7 @@
     if (iaddy(ia) == 0) then
       iay = 1
     else if (iaddy(ia) == 1) then
-      iay = MIDY
+      iay = (NGLLY+1)/2
     else if (iaddy(ia) == 2) then
       iay = NGLLY
     else
@@ -686,7 +685,7 @@
     if (iaddz(ia) == 0) then
       iaz = 1
     else if (iaddz(ia) == 1) then
-      iaz = MIDZ
+      iaz = (NGLLZ+1)/2
     else if (iaddz(ia) == 2) then
       iaz = NGLLZ
     else
@@ -695,5 +694,5 @@
     anchor_iaz(ia) = iaz
   enddo
 
-  end subroutine hex_nodes_anchor_ijk
+  end subroutine hex_nodes_anchor_ijk_NGLL
 

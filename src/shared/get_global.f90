@@ -34,16 +34,14 @@
 
 ! leave sorting subroutines in same source file to allow for inlining
 
-  use constants
-
   implicit none
 
-  integer npointot
-  integer nglob
-  integer iglob(npointot),locval(npointot)
-  logical ifseg(npointot)
-  double precision xp(npointot),yp(npointot),zp(npointot)
-  double precision UTM_X_MIN,UTM_X_MAX
+  integer :: npointot
+  integer :: nglob
+  integer :: iglob(npointot),locval(npointot)
+  logical :: ifseg(npointot)
+  double precision :: xp(npointot),yp(npointot),zp(npointot)
+  double precision :: UTM_X_MIN,UTM_X_MAX
 
   integer :: ier
 
@@ -51,7 +49,7 @@
 
 ! geometry tolerance parameter to calculate number of independent grid points
 ! small value for double precision and to avoid sensitivity to roundoff
-  double precision SMALLVALTOL
+  double precision :: SMALLVALTOL
 
 ! define geometrical tolerance based upon typical size of the model
   SMALLVALTOL = 1.d-10 * dabs(UTM_X_MAX - UTM_X_MIN)
@@ -87,7 +85,7 @@
 !! DK DK they cannot be vectorized. Thus the compiler is right.
 !! DK DK
 
-  use constants
+  use constants,only: NGLLX,NGLLY,NGLLZ
 
   implicit none
 

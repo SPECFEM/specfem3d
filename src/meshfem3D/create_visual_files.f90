@@ -72,9 +72,10 @@
     enddo
     write(IOUT,'(a31)') '*ELEMENT, TYPE=C3D8R, ELSET=EB1'
     do ispec=1,nspec
-      write(IOUT,'(i10,8(a,i10))') ispec,',',ibool(1,1,2,ispec),',',ibool(1,1,1,ispec),',',ibool(1,2,1,ispec), &
-                  ',',ibool(1,2,2,ispec),',',ibool(2,1,2,ispec),',',ibool(2,1,1,ispec),',',ibool(2,2,1,ispec),',', &
-                  ibool(2,2,2,ispec)
+      write(IOUT,'(i10,8(a,i10))') ispec,',',ibool(1,1,NGLLZ_M,ispec),',',ibool(1,1,1,ispec), &
+                                   ',',ibool(1,NGLLY_M,1,ispec), ',',ibool(1,NGLLY_M,NGLLZ_M,ispec), &
+                                   ',',ibool(NGLLX_M,1,NGLLZ_M,ispec),',',ibool(NGLLX_M,1,1,ispec), &
+                                   ',',ibool(NGLLX_M,NGLLY_M,1,ispec),',',ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
     enddo
     close(IOUT)
 
@@ -107,8 +108,10 @@
       ! point order in OpenDX in 3D is 4,1,8,5,3,2,7,6, *not* 1,2,3,4,5,6,7,8 as in AVS
       ! in the case of OpenDX, node numbers start at zero
       write(IOUT,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") &
-                 ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(1,2,2,ispec)-1,ibool(2,2,2,ispec)-1, &
-                 ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(1,2,1,ispec)-1,ibool(2,2,1,ispec)-1
+                 ibool(1,1,NGLLZ_M,ispec)-1,ibool(NGLLX_M,1,NGLLZ_M,ispec)-1, &
+                 ibool(1,NGLLY_M,NGLLX_M,ispec)-1,ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)-1, &
+                 ibool(1,1,1,ispec)-1,ibool(NGLLX_M,1,1,ispec)-1, &
+                 ibool(1,NGLLY_M,1,ispec)-1,ibool(NGLLX_M,NGLLY_M,1,ispec)-1
     enddo
 
     ! ************* generate element data values ******************
@@ -159,8 +162,10 @@
     write(IOUT,'(a,i12,i12)') "CELLS ",nspec,nspec*9
     do ispec=1,nspec
       write(IOUT,'(9i12)') 8, &
-            ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(2,2,1,ispec)-1,ibool(1,2,1,ispec)-1, &
-            ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(2,2,2,ispec)-1,ibool(1,2,2,ispec)-1
+            ibool(1,1,1,ispec)-1,ibool(NGLLX_M,1,1,ispec)-1, &
+            ibool(NGLLX_M,NGLLY_M,1,ispec)-1,ibool(1,NGLLY_M,1,ispec)-1, &
+            ibool(1,1,NGLLZ_M,ispec)-1,ibool(NGLLX_M,1,NGLLZ_M,ispec)-1, &
+            ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)-1,ibool(1,NGLLY_M,NGLLZ_M,ispec)-1
     enddo
     write(IOUT,*)
 

@@ -38,40 +38,40 @@
   use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,SAVE_MESH_AS_CUBIT,NDIM
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NUMBER_OF_MATERIAL_PROPERTIES
 
-  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,NGNOD,NGNOD2D
 
   implicit none
 
   ! number of spectral elements in each block
-  integer nspec
+  integer :: nspec
 
   ! number of vertices in each block
-  integer nglob
+  integer :: nglob
 
   ! MPI Cartesian topology
   ! E for East (= XI_MIN), W for West (= XI_MAX), S for South (= ETA_MIN), N for North (= ETA_MAX)
   integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
-  integer iproc_xi,iproc_eta
-  integer NPROC_XI,NPROC_ETA
-  logical iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec)
-  integer addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
+  integer :: iproc_xi,iproc_eta
+  integer :: NPROC_XI,NPROC_ETA
+  logical :: iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec)
+  integer :: addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
 
   ! arrays with the mesh
-  integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
+  integer :: ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
   double precision :: nodes_coords(nglob,NDIM)
 
   !! VM VM add all GLL points for Axisem coupling
   double precision, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: xstore, ystore, zstore
 
-  integer ispec_material_id(nspec)
+  integer :: ispec_material_id(nspec)
 
   ! boundary parameters locator
-  integer NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
-  integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
-  integer ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),ibelm_xmax(NSPEC2DMAX_XMIN_XMAX)
-  integer ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),ibelm_ymax(NSPEC2DMAX_YMIN_YMAX)
-  integer ibelm_bottom(NSPEC2D_BOTTOM)
-  integer ibelm_top(NSPEC2D_TOP)
+  integer :: NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
+  integer :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
+  integer :: ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),ibelm_xmax(NSPEC2DMAX_XMIN_XMAX)
+  integer :: ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),ibelm_ymax(NSPEC2DMAX_YMIN_YMAX)
+  integer :: ibelm_bottom(NSPEC2D_BOTTOM)
+  integer :: ibelm_top(NSPEC2D_TOP)
 
   ! material properties
   integer :: NMATERIALS
@@ -104,6 +104,11 @@
   !integer,dimension(2,nspec) :: material_index
   integer,dimension(:,:),allocatable :: material_index
   character(len=MAX_STRING_LEN), dimension(6,1) :: undef_mat_prop
+
+  ! temporary array for local nodes (either NGNOD2D or NGNOD)
+  integer, dimension(NGNOD) :: loc_node
+  integer, dimension(NGNOD) :: anchor_iax,anchor_iay,anchor_iaz
+  integer :: ia,inode
 
   ! assignes material index
   ! format: (1,ispec) = #material_id , (2,ispec) = #material_definition
@@ -149,8 +154,9 @@
 
   ! global nodes
   write(IIN_database) nglob
-  do iglob=1,nglob
-     write(IIN_database) iglob,nodes_coords(iglob,1),nodes_coords(iglob,2),nodes_coords(iglob,3)
+  do iglob = 1,nglob
+    ! format: #id #x #y #z
+    write(IIN_database) iglob,nodes_coords(iglob,1),nodes_coords(iglob,2),nodes_coords(iglob,3)
   enddo
 
   ! materials
@@ -203,14 +209,33 @@
   enddo
 
   ! spectral elements
+  !
+  ! note: check with routine write_partition_database() to produce identical output
   write(IIN_database) nspec
-  do ispec=1,nspec
-      write(IIN_database) ispec,material_index(1,ispec),material_index(2,ispec), &
-           ibool(1,1,1,ispec),ibool(2,1,1,ispec),ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(1,1,2,ispec), &
-           ibool(2,1,2,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec)
+
+  ! sets up node addressing
+  call hex_nodes_anchor_ijk_NGLL(NGNOD,anchor_iax,anchor_iay,anchor_iaz,NGLLX_M,NGLLY_M,NGLLZ_M)
+
+  do ispec = 1,nspec
+    ! format: #ispec #material_id #dummy/tomo_id #iglob1 #iglob2 ..
+
+    ! assumes NGLLX_M == NGLLY_M == NGLLZ_M == 2
+    !write(IIN_database) ispec,material_index(1,ispec),material_index(2,ispec), &
+    !       ibool(1,1,1,ispec),ibool(2,1,1,ispec),ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(1,1,2,ispec), &
+    !       ibool(2,1,2,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec)
+
+    ! gets anchor nodes
+    do ia = 1,NGNOD
+      iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+      loc_node(ia) = iglob
+    enddo
+    ! output
+    write(IIN_database) ispec,material_index(1,ispec),material_index(2,ispec),(loc_node(ia),ia = 1,NGNOD)
   enddo
 
   ! Boundaries
+  !
+  ! note: check with routine write_boundaries_database() to produce identical output
   write(IIN_database) 1,nspec2D_xmin
   write(IIN_database) 2,nspec2D_xmax
   write(IIN_database) 3,nspec2D_ymin
@@ -218,32 +243,124 @@
   write(IIN_database) 5,NSPEC2D_BOTTOM
   write(IIN_database) 6,NSPEC2D_TOP
 
-  do i=1,nspec2D_xmin
-     write(IIN_database) ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY_M,1,ibelm_xmin(i)), &
-          ibool(1,1,NGLLZ_M,ibelm_xmin(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_xmin(i))
+  do i = 1,nspec2D_xmin
+    ispec = ibelm_xmin(i)
+    ! gets anchor nodes on xmin
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iax(ia) == 1) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for xmin'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for xmin'
+    write(IIN_database) ispec,(loc_node(inode), inode = 1,NGNOD2D)
+
+    ! assumes NGLLX_M == NGLLY_M == NGLLZ_M == 2
+    !write(IIN_database) ispec,ibool(1,1,1,ispec),ibool(1,NGLLY_M,1,ispec), &
+    !                          ibool(1,1,NGLLZ_M,ispec),ibool(1,NGLLY_M,NGLLZ_M,ispec)
   enddo
-  do i=1,nspec2D_xmax
-     write(IIN_database) ibelm_xmax(i),ibool(NGLLX_M,1,1,ibelm_xmax(i)),ibool(NGLLX_M,NGLLY_M,1,ibelm_xmax(i)), &
-          ibool(NGLLX_M,1,NGLLZ_M,ibelm_xmax(i)),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_xmax(i))
+
+  do i = 1,nspec2D_xmax
+    ispec = ibelm_xmax(i)
+    ! gets anchor nodes on xmax
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iax(ia) == NGLLX_M) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for xmax'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for xmax'
+    write(IIN_database) ispec,(loc_node(inode), inode = 1,NGNOD2D)
+
+    ! write(IIN_database) ibelm_xmax(i),ibool(NGLLX_M,1,1,ibelm_xmax(i)),ibool(NGLLX_M,NGLLY_M,1,ibelm_xmax(i)), &
+    !      ibool(NGLLX_M,1,NGLLZ_M,ibelm_xmax(i)),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_xmax(i))
   enddo
-  do i=1,nspec2D_ymin
-     write(IIN_database) ibelm_ymin(i),ibool(1,1,1,ibelm_ymin(i)),ibool(NGLLX_M,1,1,ibelm_ymin(i)), &
-          ibool(1,1,NGLLZ_M,ibelm_ymin(i)),ibool(NGLLX_M,1,NGLLZ_M,ibelm_ymin(i))
+
+  do i = 1,nspec2D_ymin
+    ispec = ibelm_ymin(i)
+    ! gets anchor nodes on ymin
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iay(ia) == 1) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for ymin'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for ymin'
+    write(IIN_database) ispec,(loc_node(inode), inode = 1,NGNOD2D)
+
+    ! write(IIN_database) ibelm_ymin(i),ibool(1,1,1,ibelm_ymin(i)),ibool(NGLLX_M,1,1,ibelm_ymin(i)), &
+    !      ibool(1,1,NGLLZ_M,ibelm_ymin(i)),ibool(NGLLX_M,1,NGLLZ_M,ibelm_ymin(i))
   enddo
-  do i=1,nspec2D_ymax
-     write(IIN_database) ibelm_ymax(i),ibool(NGLLX_M,NGLLY_M,1,ibelm_ymax(i)),ibool(1,NGLLY_M,1,ibelm_ymax(i)), &
-          ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_ymax(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_ymax(i))
+
+  do i = 1,nspec2D_ymax
+    ispec = ibelm_ymax(i)
+    ! gets anchor nodes on ymax
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iay(ia) == NGLLY_M) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for ymax'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for ymax'
+    write(IIN_database) ispec,(loc_node(inode), inode = 1,NGNOD2D)
+
+    ! write(IIN_database) ibelm_ymax(i),ibool(NGLLX_M,NGLLY_M,1,ibelm_ymax(i)),ibool(1,NGLLY_M,1,ibelm_ymax(i)), &
+    !      ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_ymax(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_ymax(i))
   enddo
-  do i=1,NSPEC2D_BOTTOM
-     write(IIN_database) ibelm_bottom(i),ibool(1,1,1,ibelm_bottom(i)),ibool(NGLLX_M,1,1,ibelm_bottom(i)), &
-          ibool(NGLLX_M,NGLLY_M,1,ibelm_bottom(i)),ibool(1,NGLLY_M,1,ibelm_bottom(i))
+
+  do i = 1,NSPEC2D_BOTTOM
+    ispec = ibelm_bottom(i)
+    ! gets anchor nodes on bottom
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iaz(ia) == 1) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for bottom'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for bottom'
+    write(IIN_database) ispec,(loc_node(inode), inode = 1,NGNOD2D)
+
+    ! write(IIN_database) ibelm_bottom(i),ibool(1,1,1,ibelm_bottom(i)),ibool(NGLLX_M,1,1,ibelm_bottom(i)), &
+    !      ibool(NGLLX_M,NGLLY_M,1,ibelm_bottom(i)),ibool(1,NGLLY_M,1,ibelm_bottom(i))
   enddo
-  do i=1,NSPEC2D_TOP
-     write(IIN_database) ibelm_top(i),ibool(1,1,NGLLZ_M,ibelm_top(i)),ibool(NGLLX_M,1,NGLLZ_M,ibelm_top(i)), &
-          ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_top(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_top(i))
+
+  do i = 1,NSPEC2D_TOP
+    ispec = ibelm_top(i)
+    ! gets anchor nodes on top
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iaz(ia) == NGLLZ_M) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for top'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for top'
+    write(IIN_database) ispec,(loc_node(inode), inode = 1,NGNOD2D)
+
+    ! write(IIN_database) ibelm_top(i),ibool(1,1,NGLLZ_M,ibelm_top(i)),ibool(NGLLX_M,1,NGLLZ_M,ibelm_top(i)), &
+    !      ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_top(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_top(i))
   enddo
 
   ! CPML
+  !
+  ! note: check with routine write_cpml_database() to produce identical output
   call sum_all_i(nspec_CPML,nspec_CPML_total)
   call synchronize_all()
   call bcast_all_singlei(nspec_CPML_total)
@@ -261,6 +378,8 @@
   endif
 
   ! MPI Interfaces
+  !
+  ! note: check with routine write_interfaces_database() to produce identical output
   if (NPROC_XI >= 2 .or. NPROC_ETA >= 2) then
     ! determines number of MPI interfaces for each slice
     nb_interfaces = 4
@@ -317,43 +436,55 @@
 
     write(IIN_database) nb_interfaces,nspec_interfaces_max
 
+    ! face elements
     if (interfaces(W)) then
       write(IIN_database) addressing(iproc_xi-1,iproc_eta),nspec_interface(W)
       do ispec = 1,nspec
-        if (iMPIcut_xi(1,ispec)) write(IIN_database) ispec,4,ibool(1,1,1,ispec),ibool(1,2,1,ispec), &
-                                                    ibool(1,1,2,ispec),ibool(1,2,2,ispec)
+        if (iMPIcut_xi(1,ispec)) then
+          ! note: face outputs 4 corner points
+          write(IIN_database) ispec,4,ibool(1,1,1,ispec),ibool(1,NGLLY_M,1,ispec), &
+                                      ibool(1,1,NGLLZ_M,ispec),ibool(1,NGLLY_M,NGLLZ_M,ispec)
+        endif
       enddo
     endif
 
     if (interfaces(E)) then
       write(IIN_database) addressing(iproc_xi+1,iproc_eta),nspec_interface(E)
       do ispec = 1,nspec
-        if (iMPIcut_xi(2,ispec)) write(IIN_database) ispec,4,ibool(2,1,1,ispec),ibool(2,2,1,ispec), &
-                                                    ibool(2,1,2,ispec),ibool(2,2,2,ispec)
+        if (iMPIcut_xi(2,ispec)) then
+          write(IIN_database) ispec,4,ibool(NGLLX_M,1,1,ispec),ibool(NGLLX_M,NGLLY_M,1,ispec), &
+                                      ibool(NGLLX_M,1,NGLLZ_M,ispec),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+        endif
       enddo
     endif
 
     if (interfaces(S)) then
       write(IIN_database) addressing(iproc_xi,iproc_eta-1),nspec_interface(S)
       do ispec = 1,nspec
-        if (iMPIcut_eta(1,ispec)) write(IIN_database) ispec,4,ibool(1,1,1,ispec),ibool(2,1,1,ispec), &
-                                                     ibool(1,1,2,ispec),ibool(2,1,2,ispec)
+        if (iMPIcut_eta(1,ispec)) then
+          write(IIN_database) ispec,4,ibool(1,1,1,ispec),ibool(NGLLX_M,1,1,ispec), &
+                                      ibool(1,1,NGLLZ_M,ispec),ibool(NGLLX_M,1,NGLLZ_M,ispec)
+        endif
       enddo
     endif
 
     if (interfaces(N)) then
       write(IIN_database) addressing(iproc_xi,iproc_eta+1),nspec_interface(N)
       do ispec = 1,nspec
-        if (iMPIcut_eta(2,ispec)) write(IIN_database) ispec,4,ibool(2,2,1,ispec),ibool(1,2,1,ispec), &
-                                                     ibool(2,2,2,ispec),ibool(1,2,2,ispec)
+        if (iMPIcut_eta(2,ispec)) then
+          write(IIN_database) ispec,4,ibool(NGLLX_M,NGLLY_M,1,ispec),ibool(1,NGLLY_M,1,ispec), &
+                                      ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec),ibool(1,NGLLY_M,NGLLZ_M,ispec)
+        endif
       enddo
     endif
 
+    ! edge elements
     if (interfaces(NW)) then
       write(IIN_database) addressing(iproc_xi-1,iproc_eta+1),nspec_interface(NW)
       do ispec = 1,nspec
         if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
-          write(IIN_database) ispec,2,ibool(1,2,1,ispec),ibool(1,2,2,ispec),-1,-1
+          ! note: edge elements output 2 corners and 2 dummy values
+          write(IIN_database) ispec,2,ibool(1,NGLLY_M,1,ispec),ibool(1,NGLLY_M,NGLLZ_M,ispec),-1,-1
         endif
       enddo
     endif
@@ -362,7 +493,7 @@
       write(IIN_database) addressing(iproc_xi+1,iproc_eta+1),nspec_interface(NE)
       do ispec = 1,nspec
         if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
-          write(IIN_database) ispec,2,ibool(2,2,1,ispec),ibool(2,2,2,ispec),-1,-1
+          write(IIN_database) ispec,2,ibool(NGLLX_M,NGLLY_M,1,ispec),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec),-1,-1
         endif
       enddo
     endif
@@ -371,7 +502,7 @@
       write(IIN_database) addressing(iproc_xi+1,iproc_eta-1),nspec_interface(SE)
       do ispec = 1,nspec
         if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
-          write(IIN_database) ispec,2,ibool(2,1,1,ispec),ibool(2,1,2,ispec),-1,-1
+          write(IIN_database) ispec,2,ibool(NGLLX_M,1,1,ispec),ibool(NGLLX_M,1,NGLLZ_M,ispec),-1,-1
         endif
       enddo
     endif
@@ -380,7 +511,7 @@
       write(IIN_database) addressing(iproc_xi-1,iproc_eta-1),nspec_interface(SW)
       do ispec = 1,nspec
         if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
-          write(IIN_database) ispec,2,ibool(1,1,1,ispec),ibool(1,1,2,ispec),-1,-1
+          write(IIN_database) ispec,2,ibool(1,1,1,ispec),ibool(1,1,NGLLZ_M,ispec),-1,-1
         endif
       enddo
     endif
@@ -683,8 +814,8 @@
     !
     allocate(shape3D(NGNOD,NGLLX,NGLLY,NGLLZ),dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1351')
-    call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
-    !
+
+    call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ)
 
     !! reading parameters for coupling
 
@@ -752,31 +883,31 @@
       write(89,*) ispec,ielm,1
 
       xelm(1)=xgrid(1,1,1,ispec)
-      xelm(2)=xgrid(2,1,1,ispec)
-      xelm(3)=xgrid(2,2,1,ispec)
-      xelm(4)=xgrid(1,2,1,ispec)
-      xelm(5)=xgrid(1,1,2,ispec)
-      xelm(6)=xgrid(2,1,2,ispec)
-      xelm(7)=xgrid(2,2,2,ispec)
-      xelm(8)=xgrid(1,2,2,ispec)
+      xelm(2)=xgrid(NGLLX_M,1,1,ispec)
+      xelm(3)=xgrid(NGLLX_M,NGLLY_M,1,ispec)
+      xelm(4)=xgrid(1,NGLLY_M,1,ispec)
+      xelm(5)=xgrid(1,1,NGLLZ_M,ispec)
+      xelm(6)=xgrid(NGLLX_M,1,NGLLZ_M,ispec)
+      xelm(7)=xgrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+      xelm(8)=xgrid(1,NGLLY_M,NGLLZ_M,ispec)
 
       yelm(1)=ygrid(1,1,1,ispec)
-      yelm(2)=ygrid(2,1,1,ispec)
-      yelm(3)=ygrid(2,2,1,ispec)
-      yelm(4)=ygrid(1,2,1,ispec)
-      yelm(5)=ygrid(1,1,2,ispec)
-      yelm(6)=ygrid(2,1,2,ispec)
-      yelm(7)=ygrid(2,2,2,ispec)
-      yelm(8)=ygrid(1,2,2,ispec)
+      yelm(2)=ygrid(NGLLX_M,1,1,ispec)
+      yelm(3)=ygrid(NGLLX_M,NGLLY_M,1,ispec)
+      yelm(4)=ygrid(1,NGLLY_M,1,ispec)
+      yelm(5)=ygrid(1,1,NGLLZ_M,ispec)
+      yelm(6)=ygrid(NGLLX_M,1,NGLLZ_M,ispec)
+      yelm(7)=ygrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+      yelm(8)=ygrid(1,NGLLY_M,NGLLZ_M,ispec)
 
       zelm(1)=zgrid(1,1,1,ispec)
-      zelm(2)=zgrid(2,1,1,ispec)
-      zelm(3)=zgrid(2,2,1,ispec)
-      zelm(4)=zgrid(1,2,1,ispec)
-      zelm(5)=zgrid(1,1,2,ispec)
-      zelm(6)=zgrid(2,1,2,ispec)
-      zelm(7)=zgrid(2,2,2,ispec)
-      zelm(8)=zgrid(1,2,2,ispec)
+      zelm(2)=zgrid(NGLLX_M,1,1,ispec)
+      zelm(3)=zgrid(NGLLX_M,NGLLY_M,1,ispec)
+      zelm(4)=zgrid(1,NGLLY_M,1,ispec)
+      zelm(5)=zgrid(1,1,NGLLZ_M,ispec)
+      zelm(6)=zgrid(NGLLX_M,1,NGLLY_M,ispec)
+      zelm(7)=zgrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+      zelm(8)=zgrid(1,NGLLY_M,NGLLZ_M,ispec)
 
       call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
       zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.
@@ -811,31 +942,31 @@
       write(89,*) ispec,ielm,2
 
       xelm(1)=xgrid(1,1,1,ispec)
-      xelm(2)=xgrid(2,1,1,ispec)
-      xelm(3)=xgrid(2,2,1,ispec)
-      xelm(4)=xgrid(1,2,1,ispec)
-      xelm(5)=xgrid(1,1,2,ispec)
-      xelm(6)=xgrid(2,1,2,ispec)
-      xelm(7)=xgrid(2,2,2,ispec)
-      xelm(8)=xgrid(1,2,2,ispec)
+      xelm(2)=xgrid(NGLLX_M,1,1,ispec)
+      xelm(3)=xgrid(NGLLX_M,NGLLY_M,1,ispec)
+      xelm(4)=xgrid(1,NGLLY_M,1,ispec)
+      xelm(5)=xgrid(1,1,NGLLZ_M,ispec)
+      xelm(6)=xgrid(NGLLX_M,1,NGLLZ_M,ispec)
+      xelm(7)=xgrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+      xelm(8)=xgrid(1,NGLLY_M,NGLLZ_M,ispec)
 
       yelm(1)=ygrid(1,1,1,ispec)
-      yelm(2)=ygrid(2,1,1,ispec)
-      yelm(3)=ygrid(2,2,1,ispec)
-      yelm(4)=ygrid(1,2,1,ispec)
-      yelm(5)=ygrid(1,1,2,ispec)
-      yelm(6)=ygrid(2,1,2,ispec)
-      yelm(7)=ygrid(2,2,2,ispec)
-      yelm(8)=ygrid(1,2,2,ispec)
+      yelm(2)=ygrid(NGLLX_M,1,1,ispec)
+      yelm(3)=ygrid(NGLLX_M,NGLLY_M,1,ispec)
+      yelm(4)=ygrid(1,NGLLY_M,1,ispec)
+      yelm(5)=ygrid(1,1,NGLLZ_M,ispec)
+      yelm(6)=ygrid(NGLLX_M,1,NGLLZ_M,ispec)
+      yelm(7)=ygrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+      yelm(8)=ygrid(1,NGLLY_M,NGLLZ_M,ispec)
 
       zelm(1)=zgrid(1,1,1,ispec)
-      zelm(2)=zgrid(2,1,1,ispec)
-      zelm(3)=zgrid(2,2,1,ispec)
-      zelm(4)=zgrid(1,2,1,ispec)
-      zelm(5)=zgrid(1,1,2,ispec)
-      zelm(6)=zgrid(2,1,2,ispec)
-      zelm(7)=zgrid(2,2,2,ispec)
-      zelm(8)=zgrid(1,2,2,ispec)
+      zelm(2)=zgrid(NGLLX_M,1,1,ispec)
+      zelm(3)=zgrid(NGLLX_M,NGLLY_M,1,ispec)
+      zelm(4)=zgrid(1,NGLLY_M,1,ispec)
+      zelm(5)=zgrid(1,1,NGLLZ_M,ispec)
+      zelm(6)=zgrid(NGLLX_M,1,NGLLZ_M,ispec)
+      zelm(7)=zgrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+      zelm(8)=zgrid(1,NGLLY_M,NGLLZ_M,ispec)
 
       call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
       zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.
@@ -870,31 +1001,31 @@
       write(89,*) ispec,ielm,3
 
       xelm(1)=xgrid(1,1,1,ispec)
-      xelm(2)=xgrid(2,1,1,ispec)
-      xelm(3)=xgrid(2,2,1,ispec)
-      xelm(4)=xgrid(1,2,1,ispec)
-      xelm(5)=xgrid(1,1,2,ispec)
-      xelm(6)=xgrid(2,1,2,ispec)
-      xelm(7)=xgrid(2,2,2,ispec)
-      xelm(8)=xgrid(1,2,2,ispec)
+      xelm(2)=xgrid(NGLLX_M,1,1,ispec)
+      xelm(3)=xgrid(NGLLX_M,NGLLY_M,1,ispec)
+      xelm(4)=xgrid(1,NGLLY_M,1,ispec)
+      xelm(5)=xgrid(1,1,NGLLZ_M,ispec)
+      xelm(6)=xgrid(NGLLX_M,1,NGLLZ_M,ispec)
+      xelm(7)=xgrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+      xelm(8)=xgrid(1,NGLLY_M,NGLLZ_M,ispec)
 
       yelm(1)=ygrid(1,1,1,ispec)
-      yelm(2)=ygrid(2,1,1,ispec)
-      yelm(3)=ygrid(2,2,1,ispec)
-      yelm(4)=ygrid(1,2,1,ispec)
-      yelm(5)=ygrid(1,1,2,ispec)
-      yelm(6)=ygrid(2,1,2,ispec)
-      yelm(7)=ygrid(2,2,2,ispec)
-      yelm(8)=ygrid(1,2,2,ispec)
+      yelm(2)=ygrid(NGLLX_M,1,1,ispec)
+      yelm(3)=ygrid(NGLLX_M,NGLLY_M,1,ispec)
+      yelm(4)=ygrid(1,NGLLY_M,1,ispec)
+      yelm(5)=ygrid(1,1,NGLLZ_M,ispec)
+      yelm(6)=ygrid(NGLLX_M,1,NGLLZ_M,ispec)
+      yelm(7)=ygrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+      yelm(8)=ygrid(1,NGLLY_M,NGLLZ_M,ispec)
 
       zelm(1)=zgrid(1,1,1,ispec)
-      zelm(2)=zgrid(2,1,1,ispec)
-      zelm(3)=zgrid(2,2,1,ispec)
-      zelm(4)=zgrid(1,2,1,ispec)
-      zelm(5)=zgrid(1,1,2,ispec)
-      zelm(6)=zgrid(2,1,2,ispec)
-      zelm(7)=zgrid(2,2,2,ispec)
-      zelm(8)=zgrid(1,2,2,ispec)
+      zelm(2)=zgrid(NGLLX_M,1,1,ispec)
+      zelm(3)=zgrid(NGLLX_M,NGLLY_M,1,ispec)
+      zelm(4)=zgrid(1,NGLLY_M,1,ispec)
+      zelm(5)=zgrid(1,1,NGLLZ_M,ispec)
+      zelm(6)=zgrid(NGLLX_M,1,NGLLZ_M,ispec)
+      zelm(7)=zgrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+      zelm(8)=zgrid(1,NGLLY_M,NGLLZ_M,ispec)
 
       call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
       zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.
@@ -929,31 +1060,31 @@
       write(89,*) ispec,ielm,4
 
       xelm(1)=xgrid(1,1,1,ispec)
-      xelm(2)=xgrid(2,1,1,ispec)
-      xelm(3)=xgrid(2,2,1,ispec)
-      xelm(4)=xgrid(1,2,1,ispec)
-      xelm(5)=xgrid(1,1,2,ispec)
-      xelm(6)=xgrid(2,1,2,ispec)
-      xelm(7)=xgrid(2,2,2,ispec)
-      xelm(8)=xgrid(1,2,2,ispec)
+      xelm(2)=xgrid(NGLLX_M,1,1,ispec)
+      xelm(3)=xgrid(NGLLX_M,NGLLY_M,1,ispec)
+      xelm(4)=xgrid(1,NGLLY_M,1,ispec)
+      xelm(5)=xgrid(1,1,NGLLZ_M,ispec)
+      xelm(6)=xgrid(NGLLX_M,1,NGLLZ_M,ispec)
+      xelm(7)=xgrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+      xelm(8)=xgrid(1,NGLLY_M,NGLLZ_M,ispec)
 
       yelm(1)=ygrid(1,1,1,ispec)
-      yelm(2)=ygrid(2,1,1,ispec)
-      yelm(3)=ygrid(2,2,1,ispec)
-      yelm(4)=ygrid(1,2,1,ispec)
-      yelm(5)=ygrid(1,1,2,ispec)
-      yelm(6)=ygrid(2,1,2,ispec)
-      yelm(7)=ygrid(2,2,2,ispec)
-      yelm(8)=ygrid(1,2,2,ispec)
+      yelm(2)=ygrid(NGLLX_M,1,1,ispec)
+      yelm(3)=ygrid(NGLLX_M,NGLLY_M,1,ispec)
+      yelm(4)=ygrid(1,NGLLY_M,1,ispec)
+      yelm(5)=ygrid(1,1,NGLLZ_M,ispec)
+      yelm(6)=ygrid(NGLLX_M,1,NGLLZ_M,ispec)
+      yelm(7)=ygrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+      yelm(8)=ygrid(1,NGLLY_M,NGLLZ_M,ispec)
 
       zelm(1)=zgrid(1,1,1,ispec)
-      zelm(2)=zgrid(2,1,1,ispec)
-      zelm(3)=zgrid(2,2,1,ispec)
-      zelm(4)=zgrid(1,2,1,ispec)
-      zelm(5)=zgrid(1,1,2,ispec)
-      zelm(6)=zgrid(2,1,2,ispec)
-      zelm(7)=zgrid(2,2,2,ispec)
-      zelm(8)=zgrid(1,2,2,ispec)
+      zelm(2)=zgrid(NGLLX_M,1,1,ispec)
+      zelm(3)=zgrid(NGLLX_M,NGLLY_M,1,ispec)
+      zelm(4)=zgrid(1,NGLLY_M,1,ispec)
+      zelm(5)=zgrid(1,1,NGLLZ_M,ispec)
+      zelm(6)=zgrid(NGLLX_M,1,NGLLZ_M,ispec)
+      zelm(7)=zgrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+      zelm(8)=zgrid(1,NGLLY_M,NGLLZ_M,ispec)
 
       call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
       zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.
@@ -988,31 +1119,31 @@
       write(89,*) ispec,ielm,5
 
       xelm(1)=xgrid(1,1,1,ispec)
-      xelm(2)=xgrid(2,1,1,ispec)
-      xelm(3)=xgrid(2,2,1,ispec)
-      xelm(4)=xgrid(1,2,1,ispec)
-      xelm(5)=xgrid(1,1,2,ispec)
-      xelm(6)=xgrid(2,1,2,ispec)
-      xelm(7)=xgrid(2,2,2,ispec)
-      xelm(8)=xgrid(1,2,2,ispec)
+      xelm(2)=xgrid(NGLLX_M,1,1,ispec)
+      xelm(3)=xgrid(NGLLX_M,NGLLY_M,1,ispec)
+      xelm(4)=xgrid(1,NGLLY_M,1,ispec)
+      xelm(5)=xgrid(1,1,NGLLZ_M,ispec)
+      xelm(6)=xgrid(NGLLX_M,1,NGLLZ_M,ispec)
+      xelm(7)=xgrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+      xelm(8)=xgrid(1,NGLLY_M,NGLLZ_M,ispec)
 
       yelm(1)=ygrid(1,1,1,ispec)
-      yelm(2)=ygrid(2,1,1,ispec)
-      yelm(3)=ygrid(2,2,1,ispec)
-      yelm(4)=ygrid(1,2,1,ispec)
-      yelm(5)=ygrid(1,1,2,ispec)
-      yelm(6)=ygrid(2,1,2,ispec)
-      yelm(7)=ygrid(2,2,2,ispec)
-      yelm(8)=ygrid(1,2,2,ispec)
+      yelm(2)=ygrid(NGLLX_M,1,1,ispec)
+      yelm(3)=ygrid(NGLLX_M,NGLLY_M,1,ispec)
+      yelm(4)=ygrid(1,NGLLY_M,1,ispec)
+      yelm(5)=ygrid(1,1,NGLLZ_M,ispec)
+      yelm(6)=ygrid(NGLLX_M,1,NGLLZ_M,ispec)
+      yelm(7)=ygrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+      yelm(8)=ygrid(1,NGLLY_M,NGLLZ_M,ispec)
 
       zelm(1)=zgrid(1,1,1,ispec)
-      zelm(2)=zgrid(2,1,1,ispec)
-      zelm(3)=zgrid(2,2,1,ispec)
-      zelm(4)=zgrid(1,2,1,ispec)
-      zelm(5)=zgrid(1,1,2,ispec)
-      zelm(6)=zgrid(2,1,2,ispec)
-      zelm(7)=zgrid(2,2,2,ispec)
-      zelm(8)=zgrid(1,2,2,ispec)
+      zelm(2)=zgrid(NGLLX_M,1,1,ispec)
+      zelm(3)=zgrid(NGLLX_M,NGLLY_M,1,ispec)
+      zelm(4)=zgrid(1,NGLLY_M,1,ispec)
+      zelm(5)=zgrid(1,1,NGLLZ_M,ispec)
+      zelm(6)=zgrid(NGLLX_M,1,NGLLZ_M,ispec)
+      zelm(7)=zgrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+      zelm(8)=zgrid(1,NGLLY_M,NGLLZ_M,ispec)
 
       call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
       zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top ! 6371000.
@@ -1048,31 +1179,31 @@
          write(89,*) ispec,ielm,6
 
          xelm(1)=xgrid(1,1,1,ispec)
-         xelm(2)=xgrid(2,1,1,ispec)
-         xelm(3)=xgrid(2,2,1,ispec)
-         xelm(4)=xgrid(1,2,1,ispec)
-         xelm(5)=xgrid(1,1,2,ispec)
-         xelm(6)=xgrid(2,1,2,ispec)
-         xelm(7)=xgrid(2,2,2,ispec)
-         xelm(8)=xgrid(1,2,2,ispec)
+         xelm(2)=xgrid(NGLLX_M,1,1,ispec)
+         xelm(3)=xgrid(NGLLX_M,NGLLY_M,1,ispec)
+         xelm(4)=xgrid(1,NGLLY_M,1,ispec)
+         xelm(5)=xgrid(1,1,NGLLZ_M,ispec)
+         xelm(6)=xgrid(NGLLX_M,1,NGLLZ_M,ispec)
+         xelm(7)=xgrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+         xelm(8)=xgrid(1,NGLLY_M,NGLLZ_M,ispec)
 
          yelm(1)=ygrid(1,1,1,ispec)
-         yelm(2)=ygrid(2,1,1,ispec)
-         yelm(3)=ygrid(2,2,1,ispec)
-         yelm(4)=ygrid(1,2,1,ispec)
-         yelm(5)=ygrid(1,1,2,ispec)
-         yelm(6)=ygrid(2,1,2,ispec)
-         yelm(7)=ygrid(2,2,2,ispec)
-         yelm(8)=ygrid(1,2,2,ispec)
+         yelm(2)=ygrid(NGLLX_M,1,1,ispec)
+         yelm(3)=ygrid(NGLLX_M,NGLLY_M,1,ispec)
+         yelm(4)=ygrid(1,NGLLY_M,1,ispec)
+         yelm(5)=ygrid(1,1,NGLLZ_M,ispec)
+         yelm(6)=ygrid(NGLLX_M,1,NGLLZ_M,ispec)
+         yelm(7)=ygrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+         yelm(8)=ygrid(1,NGLLY_M,NGLLZ_M,ispec)
 
          zelm(1)=zgrid(1,1,1,ispec)
-         zelm(2)=zgrid(2,1,1,ispec)
-         zelm(3)=zgrid(2,2,1,ispec)
-         zelm(4)=zgrid(1,2,1,ispec)
-         zelm(5)=zgrid(1,1,2,ispec)
-         zelm(6)=zgrid(2,1,2,ispec)
-         zelm(7)=zgrid(2,2,2,ispec)
-         zelm(8)=zgrid(1,2,2,ispec)
+         zelm(2)=zgrid(NGLLX_M,1,1,ispec)
+         zelm(3)=zgrid(NGLLX_M,NGLLY_M,1,ispec)
+         zelm(4)=zgrid(1,NGLLY_M,1,ispec)
+         zelm(5)=zgrid(1,1,NGLLZ_M,ispec)
+         zelm(6)=zgrid(NGLLX_M,1,NGLLZ_M,ispec)
+         zelm(7)=zgrid(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+         zelm(8)=zgrid(1,NGLLY_M,NGLLZ_M,ispec)
 
          call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
          zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.

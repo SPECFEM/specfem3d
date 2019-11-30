@@ -55,39 +55,41 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
 
   use safe_alloc_mod, only: safe_alloc,safe_dealloc
 
+  use shared_parameters, only: NGNOD,NGNOD2D
+
   implicit none
 
   ! MPI variables
   integer :: sizeprocs
 
   ! number of spectral elements in each block
-  integer nspec
+  integer :: nspec
 
   ! number of vertices in each block
-  integer nglob
+  integer :: nglob
 
   ! MPI Cartesian topology
   ! E for East (= XI_MIN), W for West (= XI_MAX),
   ! S for South (= ETA_MIN), N for North (= ETA_MAX)
   integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
-  integer iproc_xi,iproc_eta
-  integer NPROC_XI,NPROC_ETA
-  logical iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec)
-  integer addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
+  integer :: iproc_xi,iproc_eta
+  integer :: NPROC_XI,NPROC_ETA
+  logical :: iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec)
+  integer :: addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
 
   ! arrays with the mesh
-  integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
+  integer :: ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
   double precision :: nodes_coords(nglob,NDIM)
 
-  integer ispec_material_id(nspec)
+  integer :: ispec_material_id(nspec)
 
   ! boundary parameters locator
-  integer NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
-  integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
-  integer ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),ibelm_xmax(NSPEC2DMAX_XMIN_XMAX)
-  integer ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),ibelm_ymax(NSPEC2DMAX_YMIN_YMAX)
-  integer ibelm_bottom(NSPEC2D_BOTTOM)
-  integer ibelm_top(NSPEC2D_TOP)
+  integer :: NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
+  integer :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
+  integer :: ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),ibelm_xmax(NSPEC2DMAX_XMIN_XMAX)
+  integer :: ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),ibelm_ymax(NSPEC2DMAX_YMIN_YMAX)
+  integer :: ibelm_bottom(NSPEC2D_BOTTOM)
+  integer :: ibelm_top(NSPEC2D_TOP)
 
   ! material properties
   integer :: NMATERIALS
@@ -119,8 +121,6 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   double precision , dimension(:,:),allocatable :: matpropl
   character(len=MAX_STRING_LEN*6*NMATERIALS) :: undef_matpropl
 
-  integer :: ngnod, ngnod2d
-
   !--- Local parameters for ADIOS ---
   character(len=MAX_STRING_LEN) :: output_name
   character(len=*), parameter :: group_name = "SPECFEM3D_DATABASES"
@@ -147,11 +147,17 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   integer :: interface_num, ispec_interface
   integer :: comm
 
+  ! temporary array for local nodes (either NGNOD2D or NGNOD)
+  integer, dimension(NGNOD) :: loc_node
+  integer, dimension(NGNOD) :: anchor_iax,anchor_iay,anchor_iaz
+  integer :: ia,inode,iglob
+
+  ! sets up node addressing
+  call hex_nodes_anchor_ijk_NGLL(NGNOD,anchor_iax,anchor_iay,anchor_iaz,NGLLX_M,NGLLY_M,NGLLZ_M)
+
   !---------------------------.
   ! Setup the values to write |
   !---------------------------'
-  ngnod   = NGLLX_M * NGLLY_M *  NGLLZ_M
-  ngnod2d = NGLLX_M * NGLLY_M
 
   ! assignes material index
   ! format: (1,ispec) = #material_id , (2,ispec) = #material_definition
@@ -240,61 +246,139 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   enddo
   if (icount /= nundef) stop 'Error icount not equal to ndef'
 
-  ! Boundaries
-  call safe_alloc(nodes_ibelm_xmin, ngnod2d, nspec2d_xmin, "nodes_ibelm_xmin")
-  call safe_alloc(nodes_ibelm_xmax, ngnod2d, nspec2d_xmax, "nodes_ibelm_xmax")
-  call safe_alloc(nodes_ibelm_ymin, ngnod2d, nspec2d_ymin, "nodes_ibelm_ymin")
-  call safe_alloc(nodes_ibelm_ymax, ngnod2d, nspec2d_ymax, "nodes_ibelm_ymax")
-  call safe_alloc(nodes_ibelm_bottom, ngnod2d, nspec2d_bottom, "nodes_ibelm_bottom")
-  call safe_alloc(nodes_ibelm_top, ngnod2d, nspec2d_top, "nodes_ibelm_top")
+  ! element anchor points
   call safe_alloc(elmnts_mesh, NGNOD, nspec, "elmnts_mesh")
 
   do ispec = 1, nspec
-    elmnts_mesh(1,ispec) = ibool(1,1,1,ispec)
-    elmnts_mesh(2,ispec) = ibool(2,1,1,ispec)
-    elmnts_mesh(3,ispec) = ibool(2,2,1,ispec)
-    elmnts_mesh(4,ispec) = ibool(1,2,1,ispec)
-    elmnts_mesh(5,ispec) = ibool(1,1,2,ispec)
-    elmnts_mesh(6,ispec) = ibool(2,1,2,ispec)
-    elmnts_mesh(7,ispec) = ibool(2,2,2,ispec)
-    elmnts_mesh(8,ispec) = ibool(1,2,2,ispec)
+    ! gets anchor nodes
+    do ia = 1,NGNOD
+      iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+      elmnts_mesh(ia,ispec) = iglob
+    enddo
   enddo
 
-  do i=1,nspec2d_xmin
-      nodes_ibelm_xmin(1, i) = ibool(1,1,1,ibelm_xmin(i))
-      nodes_ibelm_xmin(2, i) = ibool(1,NGLLY_M,1,ibelm_xmin(i))
-      nodes_ibelm_xmin(3, i) = ibool(1,1,NGLLZ_M,ibelm_xmin(i))
-      nodes_ibelm_xmin(4, i) = ibool(1,NGLLY_M,NGLLZ_M,ibelm_xmin(i))
+  ! Boundaries
+  call safe_alloc(nodes_ibelm_xmin, NGNOD2D, nspec2d_xmin, "nodes_ibelm_xmin")
+  call safe_alloc(nodes_ibelm_xmax, NGNOD2D, nspec2d_xmax, "nodes_ibelm_xmax")
+  call safe_alloc(nodes_ibelm_ymin, NGNOD2D, nspec2d_ymin, "nodes_ibelm_ymin")
+  call safe_alloc(nodes_ibelm_ymax, NGNOD2D, nspec2d_ymax, "nodes_ibelm_ymax")
+  call safe_alloc(nodes_ibelm_bottom, NGNOD2D, nspec2d_bottom, "nodes_ibelm_bottom")
+  call safe_alloc(nodes_ibelm_top, NGNOD2D, nspec2d_top, "nodes_ibelm_top")
+
+  do i = 1,nspec2d_xmin
+    ispec = ibelm_xmin(i)
+    ! gets anchor nodes on xmin
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iax(ia) == 1) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for xmin'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for xmin'
+    nodes_ibelm_xmin(1:NGNOD2D,i) = loc_node(1:NGNOD2D)
+    ! assumes NGLLX_M == NGLLY_M == NGLLZ_M == 2 and NGNOD2D = 4
+    !nodes_ibelm_xmin(1, i) = ibool(1,1,1,ibelm_xmin(i))
+    !nodes_ibelm_xmin(2, i) = ibool(1,NGLLY_M,1,ibelm_xmin(i))
+    !nodes_ibelm_xmin(3, i) = ibool(1,1,NGLLZ_M,ibelm_xmin(i))
+    !nodes_ibelm_xmin(4, i) = ibool(1,NGLLY_M,NGLLZ_M,ibelm_xmin(i))
   enddo
-  do i=1,nspec2D_xmax
-    nodes_ibelm_xmax(1, i) = ibool(NGLLX_M,1,1,ibelm_xmax(i))
-    nodes_ibelm_xmax(2, i) = ibool(NGLLX_M,NGLLY_M,1,ibelm_xmax(i))
-    nodes_ibelm_xmax(3, i) = ibool(NGLLX_M,1,NGLLZ_M,ibelm_xmax(i))
-    nodes_ibelm_xmax(4, i) = ibool(NGLLX_M,NGLLY_M,NGLLZ_M, ibelm_xmax(i))
+  do i = 1,nspec2D_xmax
+    ispec = ibelm_xmax(i)
+    ! gets anchor nodes on xmax
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iax(ia) == NGLLX_M) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for xmax'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for xmax'
+    nodes_ibelm_xmax(1:NGNOD2D,i) = loc_node(1:NGNOD2D)
+    !nodes_ibelm_xmax(1, i) = ibool(NGLLX_M,1,1,ibelm_xmax(i))
+    !nodes_ibelm_xmax(2, i) = ibool(NGLLX_M,NGLLY_M,1,ibelm_xmax(i))
+    !nodes_ibelm_xmax(3, i) = ibool(NGLLX_M,1,NGLLZ_M,ibelm_xmax(i))
+    !nodes_ibelm_xmax(4, i) = ibool(NGLLX_M,NGLLY_M,NGLLZ_M, ibelm_xmax(i))
   enddo
-  do i=1,nspec2D_ymin
-    nodes_ibelm_ymin(1, i) = ibool(1,1,1,ibelm_ymin(i))
-    nodes_ibelm_ymin(2, i) = ibool(NGLLX_M,1,1,ibelm_ymin(i))
-    nodes_ibelm_ymin(3, i) = ibool(1,1,NGLLZ_M,ibelm_ymin(i))
-    nodes_ibelm_ymin(4, i) = ibool(NGLLX_M,1,NGLLZ_M,ibelm_ymin(i))
+  do i = 1,nspec2D_ymin
+    ispec = ibelm_ymin(i)
+    ! gets anchor nodes on ymin
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iay(ia) == 1) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for ymin'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for ymin'
+    nodes_ibelm_ymin(1:NGNOD2D,i) = loc_node(1:NGNOD2D)
+    !nodes_ibelm_ymin(1, i) = ibool(1,1,1,ibelm_ymin(i))
+    !nodes_ibelm_ymin(2, i) = ibool(NGLLX_M,1,1,ibelm_ymin(i))
+    !nodes_ibelm_ymin(3, i) = ibool(1,1,NGLLZ_M,ibelm_ymin(i))
+    !nodes_ibelm_ymin(4, i) = ibool(NGLLX_M,1,NGLLZ_M,ibelm_ymin(i))
   enddo
-  do i=1,nspec2D_ymax
-    nodes_ibelm_ymax(1, i) = ibool(NGLLX_M,NGLLY_M,1,ibelm_ymax(i))
-    nodes_ibelm_ymax(2, i) = ibool(1,NGLLY_M,1,ibelm_ymax(i))
-    nodes_ibelm_ymax(3, i) = ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_ymax(i))
-    nodes_ibelm_ymax(4, i) = ibool(1,NGLLY_M,NGLLZ_M,ibelm_ymax(i))
+  do i = 1,nspec2D_ymax
+    ispec = ibelm_ymax(i)
+    ! gets anchor nodes on ymax
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iay(ia) == NGLLY_M) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for ymax'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for ymax'
+    nodes_ibelm_ymax(1:NGNOD2D,i) = loc_node(1:NGNOD2D)
+    !nodes_ibelm_ymax(1, i) = ibool(NGLLX_M,NGLLY_M,1,ibelm_ymax(i))
+    !nodes_ibelm_ymax(2, i) = ibool(1,NGLLY_M,1,ibelm_ymax(i))
+    !nodes_ibelm_ymax(3, i) = ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_ymax(i))
+    !nodes_ibelm_ymax(4, i) = ibool(1,NGLLY_M,NGLLZ_M,ibelm_ymax(i))
   enddo
-  do i=1,NSPEC2D_BOTTOM
-    nodes_ibelm_bottom(1, i) = ibool(1,1,1,ibelm_bottom(i))
-    nodes_ibelm_bottom(2, i) = ibool(NGLLX_M,1,1,ibelm_bottom(i))
-    nodes_ibelm_bottom(3, i) = ibool(NGLLX_M,NGLLY_M,1,ibelm_bottom(i))
-    nodes_ibelm_bottom(4, i) = ibool(1,NGLLY_M,1,ibelm_bottom(i))
+  do i = 1,NSPEC2D_BOTTOM
+    ispec = ibelm_bottom(i)
+    ! gets anchor nodes on bottom
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iaz(ia) == 1) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for bottom'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for bottom'
+    nodes_ibelm_bottom(1:NGNOD2D,i) = loc_node(1:NGNOD2D)
+    !nodes_ibelm_bottom(1, i) = ibool(1,1,1,ibelm_bottom(i))
+    !nodes_ibelm_bottom(2, i) = ibool(NGLLX_M,1,1,ibelm_bottom(i))
+    !nodes_ibelm_bottom(3, i) = ibool(NGLLX_M,NGLLY_M,1,ibelm_bottom(i))
+    !nodes_ibelm_bottom(4, i) = ibool(1,NGLLY_M,1,ibelm_bottom(i))
   enddo
-  do i=1,NSPEC2D_TOP
-    nodes_ibelm_top(1, i) = ibool(1,1,NGLLZ_M,ibelm_top(i))
-    nodes_ibelm_top(2, i) = ibool(NGLLX_M,1,NGLLZ_M,ibelm_top(i))
-    nodes_ibelm_top(3, i) = ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_top(i))
-    nodes_ibelm_top(4, i) = ibool(1,NGLLY_M,NGLLZ_M,ibelm_top(i))
+  do i = 1,NSPEC2D_TOP
+    ispec = ibelm_top(i)
+    ! gets anchor nodes on top
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iaz(ia) == NGLLZ_M) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for top'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for top'
+    nodes_ibelm_top(1:NGNOD2D,i) = loc_node(1:NGNOD2D)
+    !nodes_ibelm_top(1, i) = ibool(1,1,NGLLZ_M,ibelm_top(i))
+    !nodes_ibelm_top(2, i) = ibool(NGLLX_M,1,NGLLZ_M,ibelm_top(i))
+    !nodes_ibelm_top(3, i) = ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_top(i))
+    !nodes_ibelm_top(4, i) = ibool(1,NGLLY_M,NGLLZ_M,ibelm_top(i))
   enddo
 
   ! CPML
@@ -381,14 +465,10 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
         if (iMPIcut_xi(1,ispec)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 4
-          interfaces_mesh(3, ispec_interface, interface_num) &
-              = ibool(1,1,1,ispec)
-          interfaces_mesh(4, ispec_interface, interface_num) &
-              = ibool(1,2,1,ispec)
-          interfaces_mesh(5, ispec_interface, interface_num) &
-              = ibool(1,1,2,ispec)
-          interfaces_mesh(6, ispec_interface, interface_num) &
-              = ibool(1,2,2,ispec)
+          interfaces_mesh(3, ispec_interface, interface_num) = ibool(1,1,1,ispec)
+          interfaces_mesh(4, ispec_interface, interface_num) = ibool(1,NGLLY_M,1,ispec)
+          interfaces_mesh(5, ispec_interface, interface_num) = ibool(1,1,NGLLZ_M,ispec)
+          interfaces_mesh(6, ispec_interface, interface_num) = ibool(1,NGLLX_M,NGLLZ_M,ispec)
           ispec_interface = ispec_interface + 1
          endif
       enddo
@@ -403,14 +483,10 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
         if (iMPIcut_xi(2,ispec)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 4
-          interfaces_mesh(3, ispec_interface, interface_num) &
-              = ibool(2,1,1,ispec)
-          interfaces_mesh(4, ispec_interface, interface_num) &
-              = ibool(2,2,1,ispec)
-          interfaces_mesh(5, ispec_interface, interface_num) &
-              = ibool(2,1,2,ispec)
-          interfaces_mesh(6, ispec_interface, interface_num) &
-              = ibool(2,2,2,ispec)
+          interfaces_mesh(3, ispec_interface, interface_num) = ibool(NGLLX_M,1,1,ispec)
+          interfaces_mesh(4, ispec_interface, interface_num) = ibool(NGLLX_M,NGLLY_M,1,ispec)
+          interfaces_mesh(5, ispec_interface, interface_num) = ibool(NGLLX_M,1,NGLLZ_M,ispec)
+          interfaces_mesh(6, ispec_interface, interface_num) = ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
           ispec_interface = ispec_interface + 1
          endif
       enddo
@@ -425,14 +501,10 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
         if (iMPIcut_eta(1,ispec)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 4
-          interfaces_mesh(3, ispec_interface, interface_num) &
-              = ibool(1,1,1,ispec)
-          interfaces_mesh(4, ispec_interface, interface_num) &
-              = ibool(2,1,1,ispec)
-          interfaces_mesh(5, ispec_interface, interface_num) &
-              = ibool(1,1,2,ispec)
-          interfaces_mesh(6, ispec_interface, interface_num) &
-              = ibool(2,1,2,ispec)
+          interfaces_mesh(3, ispec_interface, interface_num) = ibool(1,1,1,ispec)
+          interfaces_mesh(4, ispec_interface, interface_num) = ibool(NGLLX_M,1,1,ispec)
+          interfaces_mesh(5, ispec_interface, interface_num) = ibool(1,1,NGLLZ_M,ispec)
+          interfaces_mesh(6, ispec_interface, interface_num) = ibool(NGLLX_M,1,NGLLZ_M,ispec)
           ispec_interface = ispec_interface + 1
         endif
       enddo
@@ -447,14 +519,10 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
         if (iMPIcut_eta(2,ispec)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 4
-          interfaces_mesh(3, ispec_interface, interface_num) &
-              = ibool(2,2,1,ispec)
-          interfaces_mesh(4, ispec_interface, interface_num) &
-              = ibool(1,2,1,ispec)
-          interfaces_mesh(5, ispec_interface, interface_num) &
-              = ibool(2,2,2,ispec)
-          interfaces_mesh(6, ispec_interface, interface_num) &
-              = ibool(1,2,2,ispec)
+          interfaces_mesh(3, ispec_interface, interface_num) = ibool(NGLLX_M,NGLLY_M,1,ispec)
+          interfaces_mesh(4, ispec_interface, interface_num) = ibool(1,NGLLY_M,1,ispec)
+          interfaces_mesh(5, ispec_interface, interface_num) = ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+          interfaces_mesh(6, ispec_interface, interface_num) = ibool(1,NGLLY_M,NGLLZ_M,ispec)
           ispec_interface = ispec_interface + 1
         endif
       enddo
@@ -469,10 +537,8 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
         if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
-          interfaces_mesh(3, ispec_interface, interface_num) &
-              = ibool(1,2,1,ispec)
-          interfaces_mesh(4, ispec_interface, interface_num) &
-              = ibool(1,2,2,ispec)
+          interfaces_mesh(3, ispec_interface, interface_num) = ibool(1,NGLLY_M,1,ispec)
+          interfaces_mesh(4, ispec_interface, interface_num) = ibool(1,NGLLY_M,NGLLZ_M,ispec)
           interfaces_mesh(5, ispec_interface, interface_num) = -1
           interfaces_mesh(6, ispec_interface, interface_num) = -1
           ispec_interface = ispec_interface + 1
@@ -489,10 +555,8 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
         if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
-          interfaces_mesh(3, ispec_interface, interface_num) &
-              = ibool(2,2,1,ispec)
-          interfaces_mesh(4, ispec_interface, interface_num) &
-              = ibool(2,2,2,ispec)
+          interfaces_mesh(3, ispec_interface, interface_num) = ibool(NGLLX_M,NGLLY_M,1,ispec)
+          interfaces_mesh(4, ispec_interface, interface_num) = ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
           interfaces_mesh(5, ispec_interface, interface_num) = -1
           interfaces_mesh(6, ispec_interface, interface_num) = -1
           ispec_interface = ispec_interface + 1
@@ -509,10 +573,8 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
         if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
-          interfaces_mesh(3, ispec_interface, interface_num) &
-              = ibool(2,1,1,ispec)
-          interfaces_mesh(4, ispec_interface, interface_num) &
-              = ibool(2,1,2,ispec)
+          interfaces_mesh(3, ispec_interface, interface_num) = ibool(NGLLX_M,1,1,ispec)
+          interfaces_mesh(4, ispec_interface, interface_num) = ibool(NGLLX_M,1,NGLLZ_M,ispec)
           interfaces_mesh(5, ispec_interface, interface_num) = -1
           interfaces_mesh(6, ispec_interface, interface_num) = -1
           ispec_interface = ispec_interface + 1
@@ -529,10 +591,8 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
         if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
-          interfaces_mesh(3, ispec_interface, interface_num) &
-              = ibool(1,1,1,ispec)
-          interfaces_mesh(4, ispec_interface, interface_num) &
-              = ibool(1,1,2,ispec)
+          interfaces_mesh(3, ispec_interface, interface_num) = ibool(1,1,1,ispec)
+          interfaces_mesh(4, ispec_interface, interface_num) = ibool(1,1,NGLLZ_M,ispec)
           interfaces_mesh(5, ispec_interface, interface_num) = -1
           interfaces_mesh(6, ispec_interface, interface_num) = -1
           ispec_interface = ispec_interface + 1
@@ -638,7 +698,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   local_dim = 2 * nspec_wmax
   call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(material_index))
 
-  local_dim = NGLLX_M * NGLLY_M * NGLLZ_M * nspec_wmax
+  local_dim = NGNOD * nspec_wmax
   call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(elmnts_mesh))
 
   local_dim = nspec2d_xmin_wmax
@@ -668,10 +728,10 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(nodes_ibelm_top))
 
   if (nspec_CPML_total > 0) then
-     local_dim=nspec_CPML
+     local_dim = nspec_CPML
      call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(CPML_to_spec))
      call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(CPML_regions))
-     local_dim=nspec
+     local_dim = nspec
      call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(is_CPML))
   endif
 
@@ -750,7 +810,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
                                    STRINGIFY_VAR(material_index))
   ! WARNING: the order is a little bit different than for Fortran output
   !          It should not matter, but it may.
-  local_dim = NGLLX_M * NGLLY_M * NGLLZ_M * nspec_wmax
+  local_dim = NGNOD * nspec_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(elmnts_mesh))
 
@@ -813,7 +873,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
 
   ! CPML
   if (nspec_CPML_total > 0) then
-     local_dim=nspec_CPML
+     local_dim = nspec_CPML
      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(CPML_to_spec))
      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &

@@ -605,10 +605,8 @@
   integer i
   double precision :: xtmp1_nu1,xtmp2_nu1,xtmp_ak_nu1
 
-
   !--- compute central angular frequency of source (non dimensionalized)
   w_c_source = TWO_PI * f_c_source
-
 
   !--- quantity by which to scale mu_0 to get mu
 
@@ -619,7 +617,6 @@
   ! and in Aki, K. and Richards, P. G., Quantitative seismology, theory and methods,
   ! W. H. Freeman, (1980), second edition, sections 5.5 and 5.5.2, eq. (5.81) p. 170
   factor_scale_mu0 = ONE + TWO * log(f_c_source / ATTENUATION_f0_REFERENCE ) / (PI * Q_val)
-
 
   !--- quantity by which to scale mu to get mu_unrelaxed
   xtmp1_nu1 = ONE
@@ -635,7 +632,6 @@
 
   !--- total factor by which to scale mu0 to get mu_unrelaxed
   scale_factor = factor_scale_mu * factor_scale_mu0
-
 
   !--- check that the correction factor is close to one
   if (scale_factor < 0.5 .or. scale_factor > 1.5) then
@@ -971,7 +967,6 @@
 
   ! Determine the Source frequency
 !  omega_not =  1.0e+03 * 10.0d0**(0.5 * (log10(f1) + log10(f2)))
-
 
   ! Determine the Frequencies at which to compare solutions
   !   The frequencies should be equally spaced in log10 frequency

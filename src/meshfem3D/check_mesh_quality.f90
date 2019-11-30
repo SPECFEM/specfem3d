@@ -38,20 +38,20 @@
   subroutine check_mesh_quality(VP_MAX,NGLOB,NSPEC,x,y,z,ibool, &
                                 CREATE_VTK_FILES,prname)
 
-  use constants
-  use shared_parameters, only: NGNOD
+  use constants,only: IMAIN,myrank,MAX_STRING_LEN,CUSTOM_REAL,HUGEVAL,OUTPUT_FILES
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   implicit none
 
   double precision :: VP_MAX           ! maximum vp in volume block id 3
 
-  integer :: NGLOB                    ! number of nodes
-  integer :: NSPEC
+  integer,intent(in) :: NGLOB                    ! number of nodes
+  integer,intent(in) :: NSPEC
 
-  double precision, dimension(NGLOB) :: x,y,z
-  integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC) :: ibool
+  double precision, dimension(NGLOB),intent(in) :: x,y,z
+  integer,dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),intent(in) :: ibool
 
-  logical :: CREATE_VTK_FILES
+  logical,intent(in) :: CREATE_VTK_FILES
   character(len=MAX_STRING_LEN) :: prname
 
   ! local parameters
@@ -77,8 +77,8 @@
 
   ! for histogram
   integer, parameter :: NCLASS = 20
-  integer classes_skewness(0:NCLASS-1)
-  integer classes_skewnessMPI(0:NCLASS-1)
+  integer :: classes_skewness(0:NCLASS-1)
+  integer :: classes_skewnessMPI(0:NCLASS-1)
   integer :: iclass
   double precision :: current_percent,total_percent
 
@@ -98,8 +98,6 @@
      write(IMAIN,*) 'start computing the minimum and maximum edge size'
      call flush_IMAIN()
   endif
-
-  if (NGNOD /= 8) stop 'error: check_mesh_quality only supports NGNOD == 8 for now'
 
   ! ************* compute min and max of skewness and ratios ******************
 
@@ -132,10 +130,9 @@
 
   ! loop on all the elements
   do ispec = 1,NSPEC
-
      call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,dt_suggested, &
-                                    equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio, &
-                                    stability,distmin,distmax)
+                                      equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio, &
+                                      stability,distmin,distmax)
 
      ! store element number in which the edge of minimum or maximum length is located
      if (distmin < distance_min) ispec_min_edge_length = ispec
@@ -159,7 +156,6 @@
      stability_max = max(stability_max,stability)
      dt_suggested_max = min(dt_suggested_max,dt_suggested)
      distance_max = max(distance_max,distmax)
-
   enddo
 
   call synchronize_all()
@@ -261,7 +257,6 @@
 
   ! loop on all the elements
   do ispec = 1,NSPEC
-
      call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,dt_suggested, &
                                       equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio, &
                                       stability,distmin,distmax)
@@ -370,17 +365,17 @@
                                         equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio, &
                                         stability,distmin,distmax)
 
-  use constants
-  use constants_meshfem3D, only: NGLLX_M
+  use constants,only: NGNOD_EIGHT_CORNERS,PI,HUGEVAL
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   implicit none
 
-  integer :: NSPEC,NGLOB
+  integer,intent(in) :: NSPEC,NGLOB
 
-  double precision, dimension(NGLOB) :: x,y,z
+  double precision, dimension(NGLOB),intent(in) :: x,y,z
 
-  integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC) :: ibool
-  integer :: ispec
+  integer, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,NSPEC),intent(in) :: ibool
+  integer,intent(in) :: ispec
 
   ! for stability
   double precision :: VP_MAX,dt_suggested
@@ -388,7 +383,6 @@
   double precision :: stability,distmin,distmax
 
   ! local parameters
-  double precision, dimension(NGNOD_EIGHT_CORNERS) :: xelm,yelm,zelm
   double precision :: vectorA_x,vectorA_y,vectorA_z
   double precision :: vectorB_x,vectorB_y,vectorB_z
   double precision :: norm_A,norm_B,angle_vectors,argument_of_arccos
@@ -399,17 +393,30 @@
   double precision, dimension(NGLL_MAX_STABILITY) :: percent_GLL
 
   ! topology of faces of cube for skewness
-  integer faces_topo(6,6)
-  integer :: iface,icorner,i
+  integer :: faces_topo(6,6)
+  integer :: iface,icorner
+
+  ! topology of the elements
+  double precision, dimension(NGNOD_EIGHT_CORNERS) :: xelm,yelm,zelm
+  integer, dimension(NGNOD_EIGHT_CORNERS) :: anchor_iax,anchor_iay,anchor_iaz
+  integer :: ia,iglob
 
   integer,parameter :: true_NGLLX = 5
 
+  ! sets up node addressing
+  call hex_nodes_anchor_ijk_NGLL(NGNOD_EIGHT_CORNERS,anchor_iax,anchor_iay,anchor_iaz,NGLLX_M,NGLLY_M,NGLLZ_M)
 
   ! store the corners of this element for the skewness routine
-  do i = 1,NGNOD_EIGHT_CORNERS
-     xelm(i) = x(ibool(i,ispec))
-     yelm(i) = y(ibool(i,ispec))
-     zelm(i) = z(ibool(i,ispec))
+  do ia = 1,NGNOD_EIGHT_CORNERS
+    ! assumes NGLLX_M == NGLLY_M == NGLLZ_M == 2 == NGNOD_EIGHT_CORNERS
+    !xelm(ia) = x(ibool(i,ispec))
+    !yelm(ia) = y(ibool(i,ispec))
+    !zelm(ia) = z(ibool(i,ispec))
+    ! general
+    iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+    xelm(ia) = x(iglob)
+    yelm(ia) = y(iglob)
+    zelm(ia) = z(iglob)
   enddo
 
   ! define percentage of smallest distance between GLL points for NGLL points
@@ -437,42 +444,51 @@
   if (NGLLX_M > NGLL_MAX_STABILITY) stop 'degree too high to compute stability value'
 
   ! define topology of faces of cube for skewness
-
-  ! face 1
+  ! (see hex_nodes.f90)
+  !
+  !           5 * -------- * 8
+  !            /|         /|
+  !         6 * -------- *7|
+  !           |1* - - -  | * 4                 z
+  !           |/         |/                   |
+  !           * -------- *                    o--> y
+  !          2           3                 x /
+  !
+  ! face 1 - left
   faces_topo(1,1) = 5
   faces_topo(1,2) = 1
   faces_topo(1,3) = 2
   faces_topo(1,4) = 6
 
-  ! face 2
+  ! face 2 - bottom
   faces_topo(2,1) = 1
-  faces_topo(2,2) = 3
-  faces_topo(2,3) = 4
+  faces_topo(2,2) = 4
+  faces_topo(2,3) = 3
   faces_topo(2,4) = 2
 
-  ! face 3
+  ! face 3 - right
   faces_topo(3,1) = 7
   faces_topo(3,2) = 3
   faces_topo(3,3) = 4
   faces_topo(3,4) = 8
 
-  ! face 4
+  ! face 4 - top
   faces_topo(4,1) = 5
   faces_topo(4,2) = 6
-  faces_topo(4,3) = 8
-  faces_topo(4,4) = 7
+  faces_topo(4,3) = 7
+  faces_topo(4,4) = 8
 
-  ! face 5
+  ! face 5 - back
   faces_topo(5,1) = 5
   faces_topo(5,2) = 1
-  faces_topo(5,3) = 3
-  faces_topo(5,4) = 7
+  faces_topo(5,3) = 4
+  faces_topo(5,4) = 8
 
-  ! face 6
+  ! face 6 - front
   faces_topo(6,1) = 6
   faces_topo(6,2) = 2
-  faces_topo(6,3) = 4
-  faces_topo(6,4) = 8
+  faces_topo(6,3) = 3
+  faces_topo(6,4) = 7
 
   ! define wraparound for angles for skewness calculation
   faces_topo(:,5) = faces_topo(:,1)
@@ -503,6 +519,11 @@
 
         ! angle formed by the two vectors
         argument_of_arccos = (vectorA_x*vectorB_x + vectorA_y*vectorB_y + vectorA_z*vectorB_z) / (norm_A * norm_B)
+
+        ! debug
+        !if (iface == 2) &
+        !  print*,'debug:',argument_of_arccos,dacos(argument_of_arccos),(2*dacos(argument_of_arccos)-PI)/PI,equiangle_skewness, &
+        !        'icorner',icorner,iface,norm_A,norm_B
 
         ! compute equiangle skewness
         if (abs(argument_of_arccos) <= 0.9999999d0) then

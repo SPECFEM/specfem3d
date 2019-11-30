@@ -34,7 +34,7 @@
   implicit none
 
 ! number of spectral elements in each block
-  integer npointot
+  integer :: npointot
 
 ! local to global indexing array
   integer, dimension(:,:,:,:), allocatable :: ibool

@@ -81,8 +81,8 @@
      write(IIN_database) nnodes_loc
 
      call write_glob2loc_nodes_database(IIN_database, ipart, nnodes_loc, nodes_coords, &
-                                glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-                                glob2loc_nodes, nnodes, 2)
+                                        glob2loc_nodes_nparts, glob2loc_nodes_parts, &
+                                        glob2loc_nodes, nnodes, 2)
 
      call write_material_props_database(IIN_database,count_def_mat,count_undef_mat, &
                                         mat_prop, undef_mat_prop)
@@ -90,28 +90,28 @@
      ! writes out spectral element indices
      write(IIN_database) nspec_local
      call write_partition_database(IIN_database, ipart, nspec_local, nspec, elmnts, &
-                                glob2loc_elmnts, glob2loc_nodes_nparts, &
-                                glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 2)
+                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
+                                   glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 2)
 
      ! writes out absorbing/free-surface boundaries
      call write_boundaries_database(IIN_database, ipart, nspec, nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &
-                                nspec2D_ymax, nspec2D_bottom, nspec2D_top, &
-                                ibelm_xmin, ibelm_xmax, ibelm_ymin, &
-                                ibelm_ymax, ibelm_bottom, ibelm_top, &
-                                nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, &
-                                nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top, &
-                                glob2loc_elmnts, glob2loc_nodes_nparts, &
-                                glob2loc_nodes_parts, glob2loc_nodes, part, NGNOD2D)
+                                    nspec2D_ymax, nspec2D_bottom, nspec2D_top, &
+                                    ibelm_xmin, ibelm_xmax, ibelm_ymin, &
+                                    ibelm_ymax, ibelm_bottom, ibelm_top, &
+                                    nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, &
+                                    nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top, &
+                                    glob2loc_elmnts, glob2loc_nodes_nparts, &
+                                    glob2loc_nodes_parts, glob2loc_nodes, part, NGNOD2D)
 
      ! writes out C-PML elements indices, CPML-regions and thickness of C-PML layer
      call write_cpml_database(IIN_database, ipart, nspec, nspec_cpml, CPML_to_spec, &
-          CPML_regions, is_CPML, glob2loc_elmnts, part)
+                              CPML_regions, is_CPML, glob2loc_elmnts, part)
 
      ! gets number of MPI interfaces
      call write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
-                                my_ninterface, my_interfaces, my_nb_interfaces, &
-                                glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-                                glob2loc_nodes, 1, nparts)
+                                    my_ninterface, my_interfaces, my_nb_interfaces, &
+                                    glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
+                                    glob2loc_nodes, 1, nparts)
 
      ! writes out MPI interfaces elements
      !print *,' my interfaces:',my_ninterface,maxval(my_nb_interfaces)

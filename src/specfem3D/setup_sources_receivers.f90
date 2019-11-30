@@ -106,7 +106,7 @@
   ! define (i,j,k) indices of the control/anchor points
   allocate(anchor_iax(NGNOD),anchor_iay(NGNOD),anchor_iaz(NGNOD),stat=ier)
   if (ier /= 0 ) call exit_MPI(myrank,'Error allocating array anchor_i**')
-  call hex_nodes_anchor_ijk(NGNOD,anchor_iax,anchor_iay,anchor_iaz)
+  call hex_nodes_anchor_ijk_NGLL(NGNOD,anchor_iax,anchor_iay,anchor_iaz,NGLLX,NGLLY,NGLLZ)
 
   ! builds search tree
   if (.not. DO_BRUTE_FORCE_POINT_SEARCH) call setup_search_kdtree()

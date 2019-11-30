@@ -259,9 +259,12 @@ cavity: do i_cavity = 1,ncavity
             ! ibool(1,1,1,ispec) , ibool(1,2,1,ispec) , ibool(1,1,2,ispec) , ibool(1,2,2,ispec)
 
             ! surface mid-point
-            x1 = xstore(1,1,1,ispec) * 0.25 + xstore(1,2,1,ispec) * 0.25 + xstore(1,1,2,ispec) * 0.25 + xstore(1,2,2,ispec) * 0.25
-            y1 = ystore(1,1,1,ispec) * 0.25 + ystore(1,2,1,ispec) * 0.25 + ystore(1,1,2,ispec) * 0.25 + ystore(1,2,2,ispec) * 0.25
-            z1 = zstore(1,1,1,ispec) * 0.25 + zstore(1,2,1,ispec) * 0.25 + zstore(1,1,2,ispec) * 0.25 + zstore(1,2,2,ispec) * 0.25
+            x1 = 0.25*(xstore(1,1,1,ispec) + xstore(1,NGLLY_M,1,ispec)+ &
+                       xstore(1,1,NGLLZ_M,ispec) + xstore(1,NGLLY_M,NGLLZ_M,ispec))
+            y1 = 0.25*(ystore(1,1,1,ispec) + ystore(1,NGLLY_M,1,ispec)+ &
+                       ystore(1,1,NGLLZ_M,ispec) + ystore(1,NGLLY_M,NGLLZ_M,ispec))
+            z1 = 0.25*(zstore(1,1,1,ispec) + zstore(1,NGLLY_M,1,ispec)+ &
+                       zstore(1,1,NGLLZ_M,ispec) + zstore(1,NGLLY_M,NGLLZ_M,ispec))
 
             ! index in total array (counts from rank 0 up)
             icav_glob = icav
@@ -281,9 +284,12 @@ cavity: do i_cavity = 1,ncavity
             ! ibool(2,1,1,ispec) , ibool(2,2,1,ispec) , ibool(2,1,2,ispec) , ibool(2,2,2,ispec)
 
             ! surface mid-point
-            x1 = xstore(2,1,1,ispec) * 0.25 + xstore(2,2,1,ispec) * 0.25 + xstore(2,1,2,ispec) * 0.25 + xstore(2,2,2,ispec) * 0.25
-            y1 = ystore(2,1,1,ispec) * 0.25 + ystore(2,2,1,ispec) * 0.25 + ystore(2,1,2,ispec) * 0.25 + ystore(2,2,2,ispec) * 0.25
-            z1 = zstore(2,1,1,ispec) * 0.25 + zstore(2,2,1,ispec) * 0.25 + zstore(2,1,2,ispec) * 0.25 + zstore(2,2,2,ispec) * 0.25
+            x1 = 0.25*(xstore(NGLLX_M,1,1,ispec) + xstore(NGLLX_M,NGLLY_M,1,ispec)+ &
+                       xstore(NGLLX_M,1,NGLLZ_M,ispec) + xstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec))
+            y1 = 0.25*(ystore(NGLLX_M,1,1,ispec) + ystore(NGLLX_M,NGLLY_M,1,ispec)+ &
+                       ystore(NGLLX_M,1,NGLLZ_M,ispec) + ystore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec))
+            z1 = 0.25*(zstore(NGLLX_M,1,1,ispec) + zstore(NGLLX_M,NGLLY_M,1,ispec)+ &
+                       zstore(NGLLX_M,1,NGLLZ_M,ispec) + zstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec))
 
             ! index in total array (counts from rank 0 up)
             icav_glob = icav + 1
@@ -303,9 +309,12 @@ cavity: do i_cavity = 1,ncavity
             ! ibool(1,1,1,ispec),ibool(2,1,1,ispec),ibool(1,1,2,ispec),ibool(2,1,2,ispec)
 
             ! surface mid-point
-            x1 = xstore(1,1,1,ispec) * 0.25 + xstore(2,1,1,ispec) * 0.25 + xstore(1,1,2,ispec) * 0.25 + xstore(2,1,2,ispec) * 0.25
-            y1 = ystore(1,1,1,ispec) * 0.25 + ystore(2,1,1,ispec) * 0.25 + ystore(1,1,2,ispec) * 0.25 + ystore(2,1,2,ispec) * 0.25
-            z1 = zstore(1,1,1,ispec) * 0.25 + zstore(2,1,1,ispec) * 0.25 + zstore(1,1,2,ispec) * 0.25 + zstore(2,1,2,ispec) * 0.25
+            x1 = 0.25*(xstore(1,1,1,ispec) + xstore(NGLLX_M,1,1,ispec) + &
+                       xstore(1,1,NGLLZ_M,ispec) + xstore(NGLLX_M,1,NGLLZ_M,ispec))
+            y1 = 0.25*(ystore(1,1,1,ispec) + ystore(NGLLX_M,1,1,ispec) + &
+                       ystore(1,1,NGLLZ_M,ispec) + ystore(NGLLX_M,1,NGLLZ_M,ispec))
+            z1 = 0.25*(zstore(1,1,1,ispec) + zstore(NGLLX_M,1,1,ispec) + &
+                       zstore(1,1,NGLLZ_M,ispec) + zstore(NGLLX_M,1,NGLLZ_M,ispec))
 
             ! index in total array (counts from rank 0 up)
             icav_glob = icav + 2
@@ -325,9 +334,12 @@ cavity: do i_cavity = 1,ncavity
             ! ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec)
 
             ! surface mid-point
-            x1 = xstore(2,2,1,ispec) * 0.25 + xstore(1,2,1,ispec) * 0.25 + xstore(2,2,2,ispec) * 0.25 + xstore(1,2,2,ispec) * 0.25
-            y1 = ystore(2,2,1,ispec) * 0.25 + ystore(1,2,1,ispec) * 0.25 + ystore(2,2,2,ispec) * 0.25 + ystore(1,2,2,ispec) * 0.25
-            z1 = zstore(2,2,1,ispec) * 0.25 + zstore(1,2,1,ispec) * 0.25 + zstore(2,2,2,ispec) * 0.25 + zstore(1,2,2,ispec) * 0.25
+            x1 = 0.25*(xstore(NGLLX_M,NGLLY_M,1,ispec) + xstore(1,NGLLY_M,1,ispec) + &
+                       xstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec) + xstore(1,NGLLY_M,NGLLZ_M,ispec))
+            y1 = 0.25*(ystore(NGLLX_M,NGLLY_M,1,ispec) + ystore(1,NGLLY_M,1,ispec) + &
+                       ystore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec) + ystore(1,NGLLY_M,NGLLZ_M,ispec))
+            z1 = 0.25*(zstore(NGLLX_M,NGLLY_M,1,ispec) + zstore(1,NGLLY_M,1,ispec) + &
+                       zstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec) + zstore(1,NGLLY_M,NGLLZ_M,ispec))
 
             ! index in total array (counts from rank 0 up)
             icav_glob = icav + 3
@@ -374,9 +386,12 @@ cavity: do i_cavity = 1,ncavity
           ! ibool(1,1,1,ispec) , ibool(1,2,1,ispec) , ibool(1,1,2,ispec) , ibool(1,2,2,ispec)
 
           ! surface mid-point
-          x1 = xstore(1,1,1,ispec) * 0.25 + xstore(1,2,1,ispec) * 0.25 + xstore(1,1,2,ispec) * 0.25 + xstore(1,2,2,ispec) * 0.25
-          y1 = ystore(1,1,1,ispec) * 0.25 + ystore(1,2,1,ispec) * 0.25 + ystore(1,1,2,ispec) * 0.25 + ystore(1,2,2,ispec) * 0.25
-          z1 = zstore(1,1,1,ispec) * 0.25 + zstore(1,2,1,ispec) * 0.25 + zstore(1,1,2,ispec) * 0.25 + zstore(1,2,2,ispec) * 0.25
+          x1 = 0.25*(xstore(1,1,1,ispec) + xstore(1,NGLLY_M,1,ispec) + &
+                     xstore(1,1,NGLLZ_M,ispec) + xstore(1,NGLLY_M,NGLLZ_M,ispec))
+          y1 = 0.25*(ystore(1,1,1,ispec) + ystore(1,NGLLY_M,1,ispec) + &
+                     ystore(1,1,NGLLZ_M,ispec) + ystore(1,NGLLY_M,NGLLZ_M,ispec))
+          z1 = 0.25*(zstore(1,1,1,ispec) + zstore(1,NGLLY_M,1,ispec) + &
+                     zstore(1,1,NGLLZ_M,ispec) + zstore(1,NGLLY_M,NGLLZ_M,ispec))
 
           ! loops over all cavity surface points
           do icav = 1, 4*num_cav_total
@@ -397,9 +412,12 @@ cavity: do i_cavity = 1,ncavity
           ! ibool(2,1,1,ispec) , ibool(2,2,1,ispec) , ibool(2,1,2,ispec) , ibool(2,2,2,ispec)
 
           ! surface mid-point
-          x1 = xstore(2,1,1,ispec) * 0.25 + xstore(2,2,1,ispec) * 0.25 + xstore(2,1,2,ispec) * 0.25 + xstore(2,2,2,ispec) * 0.25
-          y1 = ystore(2,1,1,ispec) * 0.25 + ystore(2,2,1,ispec) * 0.25 + ystore(2,1,2,ispec) * 0.25 + ystore(2,2,2,ispec) * 0.25
-          z1 = zstore(2,1,1,ispec) * 0.25 + zstore(2,2,1,ispec) * 0.25 + zstore(2,1,2,ispec) * 0.25 + zstore(2,2,2,ispec) * 0.25
+          x1 = 0.25*(xstore(NGLLX_M,1,1,ispec) + xstore(NGLLX_M,NGLLY_M,1,ispec) + &
+                     xstore(NGLLX_M,1,NGLLZ_M,ispec) + xstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec))
+          y1 = 0.25*(ystore(NGLLX_M,1,1,ispec) + ystore(NGLLX_M,NGLLY_M,1,ispec) + &
+                     ystore(NGLLX_M,1,NGLLZ_M,ispec) + ystore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec))
+          z1 = 0.25*(zstore(NGLLX_M,1,1,ispec) + zstore(NGLLX_M,NGLLY_M,1,ispec) + &
+                     zstore(NGLLX_M,1,NGLLZ_M,ispec) + zstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec))
 
           ! loops over all cavity surface points
           do icav = 1, 4*num_cav_total
@@ -420,9 +438,12 @@ cavity: do i_cavity = 1,ncavity
           ! ibool(1,1,1,ispec),ibool(2,1,1,ispec),ibool(1,1,2,ispec),ibool(2,1,2,ispec)
 
           ! surface mid-point
-          x1 = xstore(1,1,1,ispec) * 0.25 + xstore(2,1,1,ispec) * 0.25 + xstore(1,1,2,ispec) * 0.25 + xstore(2,1,2,ispec) * 0.25
-          y1 = ystore(1,1,1,ispec) * 0.25 + ystore(2,1,1,ispec) * 0.25 + ystore(1,1,2,ispec) * 0.25 + ystore(2,1,2,ispec) * 0.25
-          z1 = zstore(1,1,1,ispec) * 0.25 + zstore(2,1,1,ispec) * 0.25 + zstore(1,1,2,ispec) * 0.25 + zstore(2,1,2,ispec) * 0.25
+          x1 = 0.25*(xstore(1,1,1,ispec) + xstore(NGLLX_M,1,1,ispec) + &
+                     xstore(1,1,NGLLZ_M,ispec) + xstore(NGLLX_M,1,NGLLZ_M,ispec))
+          y1 = 0.25*(ystore(1,1,1,ispec) + ystore(NGLLX_M,1,1,ispec) + &
+                     ystore(1,1,NGLLZ_M,ispec) + ystore(NGLLX_M,1,NGLLZ_M,ispec))
+          z1 = 0.25*(zstore(1,1,1,ispec) + zstore(NGLLX_M,1,1,ispec) + &
+                     zstore(1,1,NGLLZ_M,ispec) + zstore(NGLLX_M,1,NGLLZ_M,ispec))
 
           ! loops over all cavity surface points
           do icav = 1, 4*num_cav_total
@@ -443,9 +464,12 @@ cavity: do i_cavity = 1,ncavity
           ! ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec)
 
           ! surface mid-point
-          x1 = xstore(2,2,1,ispec) * 0.25 + xstore(1,2,1,ispec) * 0.25 + xstore(2,2,2,ispec) * 0.25 + xstore(1,2,2,ispec) * 0.25
-          y1 = ystore(2,2,1,ispec) * 0.25 + ystore(1,2,1,ispec) * 0.25 + ystore(2,2,2,ispec) * 0.25 + ystore(1,2,2,ispec) * 0.25
-          z1 = zstore(2,2,1,ispec) * 0.25 + zstore(1,2,1,ispec) * 0.25 + zstore(2,2,2,ispec) * 0.25 + zstore(1,2,2,ispec) * 0.25
+          x1 = 0.25*(xstore(NGLLX_M,NGLLY_M,1,ispec) + xstore(1,NGLLY_M,1,ispec) + &
+                     xstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec) + xstore(1,NGLLY_M,NGLLZ_M,ispec))
+          y1 = 0.25*(ystore(NGLLX_M,NGLLY_M,1,ispec) + ystore(1,NGLLY_M,1,ispec) + &
+                     ystore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec) + ystore(1,NGLLY_M,NGLLZ_M,ispec))
+          z1 = 0.25*(zstore(NGLLX_M,NGLLY_M,1,ispec) + zstore(1,NGLLY_M,1,ispec) + &
+                     zstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec) + zstore(1,NGLLY_M,NGLLZ_M,ispec))
 
           ! loops over all cavity surface points
           do icav = 1, 4*num_cav_total
