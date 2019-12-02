@@ -1671,8 +1671,15 @@ end module my_mpi
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mod(sizeval,NUMBER_OF_SIMULTANEOUS_RUNS) /= 0) then
-    if (myrank == 0) print *,'Error: the number of MPI processes ',sizeval, &
-                            ' is not a multiple of NUMBER_OF_SIMULTANEOUS_RUNS = ',NUMBER_OF_SIMULTANEOUS_RUNS
+    if (myrank == 0) then
+      print *,'Error: the number of MPI processes ',sizeval, &
+              ' is not a multiple of NUMBER_OF_SIMULTANEOUS_RUNS = ',NUMBER_OF_SIMULTANEOUS_RUNS
+      print *
+      print *,'make sure to launch program with NPROC * NUMBER_OF_SIMULTANEOUS_RUNS processes'
+      print *,'for example: NPROC = 1 and NUMBER_OF_SIMULTANEOUS_RUNS = 4'
+      print *,' > mpirun -np 4 ./bin/xspecfem3D'
+      print *
+    endif
     stop 'the number of MPI processes is not a multiple of NUMBER_OF_SIMULTANEOUS_RUNS'
   endif
 

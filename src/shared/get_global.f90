@@ -85,7 +85,7 @@
 !! DK DK they cannot be vectorized. Thus the compiler is right.
 !! DK DK
 
-  use constants,only: NGLLX,NGLLY,NGLLZ
+  use constants, only: NGLLX,NGLLY,NGLLZ
 
   implicit none
 

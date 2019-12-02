@@ -38,7 +38,7 @@
   subroutine check_mesh_quality(VP_MAX,NGLOB,NSPEC,x,y,z,ibool, &
                                 CREATE_VTK_FILES,prname)
 
-  use constants,only: IMAIN,myrank,MAX_STRING_LEN,CUSTOM_REAL,HUGEVAL,OUTPUT_FILES
+  use constants, only: IMAIN,myrank,MAX_STRING_LEN,CUSTOM_REAL,HUGEVAL,OUTPUT_FILES
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   implicit none
@@ -365,7 +365,7 @@
                                         equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio, &
                                         stability,distmin,distmax)
 
-  use constants,only: NGNOD_EIGHT_CORNERS,PI,HUGEVAL
+  use constants, only: NGNOD_EIGHT_CORNERS,PI,HUGEVAL
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   implicit none
@@ -522,7 +522,7 @@
 
         ! debug
         !if (iface == 2) &
-        !  print*,'debug:',argument_of_arccos,dacos(argument_of_arccos),(2*dacos(argument_of_arccos)-PI)/PI,equiangle_skewness, &
+        !  print *,'debug:',argument_of_arccos,dacos(argument_of_arccos),(2*dacos(argument_of_arccos)-PI)/PI,equiangle_skewness, &
         !        'icorner',icorner,iface,norm_A,norm_B
 
         ! compute equiangle skewness

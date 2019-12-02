@@ -124,7 +124,7 @@
 ! the topology of the nodes is described in file hex_nodes.f90 as well as in
 ! UTILS/chunk_notes_scanned/numbering_convention_27_nodes.*
 
-  use constants,only: NGNOD_EIGHT_CORNERS
+  use constants, only: NGNOD_EIGHT_CORNERS
   use shared_parameters, only: NGNOD
 
   implicit none
