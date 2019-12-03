@@ -28,12 +28,12 @@
 ! for acoustic solver
 
   subroutine compute_stacey_acoustic(NSPEC_AB,NGLOB_AB, &
-                            potential_dot_dot_acoustic,potential_dot_acoustic, &
-                            ibool,iphase, &
-                            abs_boundary_jacobian2Dw,abs_boundary_ijk,abs_boundary_ispec, &
-                            num_abs_boundary_faces,rhostore,kappastore,ispec_is_acoustic, &
-                            SIMULATION_TYPE,SAVE_FORWARD,it,b_reclen_potential, &
-                            b_absorb_potential,b_num_abs_boundary_faces)
+                                     potential_dot_dot_acoustic,potential_dot_acoustic, &
+                                     ibool,iphase, &
+                                     abs_boundary_jacobian2Dw,abs_boundary_ijk,abs_boundary_ispec, &
+                                     num_abs_boundary_faces,rhostore,kappastore,ispec_is_acoustic, &
+                                     SIMULATION_TYPE,SAVE_FORWARD,it,b_reclen_potential, &
+                                     b_absorb_potential,b_num_abs_boundary_faces)
 
   use constants
 
@@ -124,12 +124,12 @@
 ! for acoustic solver for back propagation wave field
 
   subroutine compute_stacey_acoustic_backward(NSPEC_AB, &
-                            ibool,iphase, &
-                            abs_boundary_ijk,abs_boundary_ispec, &
-                            num_abs_boundary_faces,ispec_is_acoustic, &
-                            SIMULATION_TYPE,NSTEP,it,NGLOB_ADJOINT, &
-                            b_potential_dot_dot_acoustic,b_reclen_potential, &
-                            b_absorb_potential,b_num_abs_boundary_faces)
+                                              ibool,iphase, &
+                                              abs_boundary_ijk,abs_boundary_ispec, &
+                                              num_abs_boundary_faces,ispec_is_acoustic, &
+                                              SIMULATION_TYPE,NSTEP,it,NGLOB_ADJOINT, &
+                                              b_potential_dot_dot_acoustic,b_reclen_potential, &
+                                              b_absorb_potential,b_num_abs_boundary_faces)
 
   use constants
 
@@ -202,14 +202,15 @@
   enddo ! num_abs_boundary_faces
 
   end subroutine compute_stacey_acoustic_backward
+
 !
 !=====================================================================
 ! for acoustic solver on GPU
 
   subroutine compute_stacey_acoustic_GPU(iphase,num_abs_boundary_faces, &
-                            SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
-                            b_reclen_potential,b_absorb_potential, &
-                            b_num_abs_boundary_faces,Mesh_pointer)
+                                         SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                         b_reclen_potential,b_absorb_potential, &
+                                         b_num_abs_boundary_faces,Mesh_pointer)
 
   use constants
 

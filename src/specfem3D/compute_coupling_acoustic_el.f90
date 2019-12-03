@@ -28,13 +28,13 @@
 ! for acoustic solver
 
   subroutine compute_coupling_acoustic_el(NSPEC_AB,NGLOB_AB, &
-                        ibool,displ,potential_dot_dot_acoustic, &
-                        num_coupling_ac_el_faces, &
-                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                        coupling_ac_el_normal, &
-                        coupling_ac_el_jacobian2Dw, &
-                        iphase, &
-                        PML_CONDITIONS,SIMULATION_TYPE,backward_simulation)
+                                          ibool,displ,potential_dot_dot_acoustic, &
+                                          num_coupling_ac_el_faces, &
+                                          coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                                          coupling_ac_el_normal, &
+                                          coupling_ac_el_jacobian2Dw, &
+                                          iphase, &
+                                          PML_CONDITIONS,SIMULATION_TYPE,backward_simulation)
 
 ! returns the updated pressure array: potential_dot_dot_acoustic
 

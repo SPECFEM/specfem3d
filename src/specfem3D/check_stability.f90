@@ -433,6 +433,102 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine check_stability_backward()
+
+! only for backward/reconstructed wavefield
+
+  use specfem_par
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+  use specfem_par_acoustic
+
+  implicit none
+
+  ! norm of the backward displacement
+  real(kind=CUSTOM_REAL) b_Usolidnorm, b_Usolidnorm_all
+  real(kind=CUSTOM_REAL) b_Usolidnormp, b_Usolidnormp_all
+  real(kind=CUSTOM_REAL) b_Usolidnorms, b_Usolidnorms_all
+  real(kind=CUSTOM_REAL) b_Usolidnormw, b_Usolidnormw_all
+
+  ! checks if anything to do
+  if (SIMULATION_TYPE /= 3 ) return
+
+  ! initializes backward field norms
+  b_Usolidnorm_all = 0.0_CUSTOM_REAL
+  b_Usolidnormp_all = 0.0_CUSTOM_REAL
+  b_Usolidnorms_all = 0.0_CUSTOM_REAL
+  b_Usolidnormw_all = 0.0_CUSTOM_REAL
+
+  if (ELASTIC_SIMULATION) then
+    ! way 2
+    if (GPU_MODE) then
+      call get_norm_elastic_from_device(b_Usolidnorm,Mesh_pointer,3)
+    else
+      b_Usolidnorm = maxval(sqrt(b_displ(1,:)**2 + b_displ(2,:)**2 + b_displ(3,:)**2))
+    endif
+    ! compute max of all slices
+    call max_all_cr(b_Usolidnorm,b_Usolidnorm_all)
+  endif
+  if (ACOUSTIC_SIMULATION) then
+    ! way 2
+    if (GPU_MODE) then
+      call get_norm_acoustic_from_device(b_Usolidnormp,Mesh_pointer,3)
+    else
+      b_Usolidnormp = maxval(abs(b_potential_dot_dot_acoustic(:)))
+    endif
+    ! compute max of all slices
+    call max_all_cr(b_Usolidnormp,b_Usolidnormp_all)
+  endif
+  if (POROELASTIC_SIMULATION) then
+    b_Usolidnorms = maxval(sqrt(b_displs_poroelastic(1,:)**2 + b_displs_poroelastic(2,:)**2 + &
+                                b_displs_poroelastic(3,:)**2))
+    b_Usolidnormw = maxval(sqrt(b_displw_poroelastic(1,:)**2 + b_displw_poroelastic(2,:)**2 + &
+                                b_displw_poroelastic(3,:)**2))
+    ! compute max of all slices
+    call max_all_cr(b_Usolidnorms,b_Usolidnorms_all)
+    call max_all_cr(b_Usolidnormw,b_Usolidnormw_all)
+  endif
+  ! check stability of the code, exit if unstable
+  ! negative values can occur with some compilers when the unstable value is greater
+  ! than the greatest possible floating-point number of the machine
+  !if (b_Usolidnorm > STABILITY_THRESHOLD .or. b_Usolidnorm < 0.0_CUSTOM_REAL) &
+  !  call exit_MPI(myrank,'single backward simulation became unstable and blew up')
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) 'Time step for back propagation # ',it
+    if (ELASTIC_SIMULATION) &
+      write(IMAIN,*) 'Max norm displacement vector U (backward) in all slices (m) = ',b_Usolidnorm_all
+    if (ACOUSTIC_SIMULATION) &
+      write(IMAIN,*) 'Max norm pressure P (backward) in all slices (Pa) = ',b_Usolidnormp_all
+    if (POROELASTIC_SIMULATION) then
+      write(IMAIN,*) 'Max norm displacement vector Us (backward) in all slices (m) = ',b_Usolidnorms_all
+      write(IMAIN,*) 'Max norm displacement vector W (backward) in all slices (m) = ',b_Usolidnormw_all
+    endif
+    ! flushes file buffer for main output file (IMAIN)
+    call flush_IMAIN()
+
+    ! check stability of the code, exit if unstable
+    ! this trick checks for NaN (Not a Number), which is not even equal to itself
+    if (b_Usolidnorm_all > STABILITY_THRESHOLD .or. b_Usolidnorm_all < 0.0_CUSTOM_REAL &
+      .or. b_Usolidnorm_all /= b_Usolidnorm_all &
+      .or. b_Usolidnormp_all > STABILITY_THRESHOLD .or. b_Usolidnormp_all < 0.0_CUSTOM_REAL &
+      .or. b_Usolidnormp_all /= b_Usolidnormp_all &
+      .or. b_Usolidnorms_all > STABILITY_THRESHOLD .or. b_Usolidnorms_all < 0.0_CUSTOM_REAL &
+      .or. b_Usolidnorms_all /= b_Usolidnorms_all &
+      .or. b_Usolidnormw_all > STABILITY_THRESHOLD .or. b_Usolidnormw_all < 0.0_CUSTOM_REAL &
+      .or. b_Usolidnormw_all /= b_Usolidnormw_all) &
+        call exit_MPI(myrank,'backward simulation became unstable and blew up')
+
+  endif ! myrank
+
+  end subroutine check_stability_backward
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
   subroutine it_print_elapsed_time()
 
   use specfem_par

@@ -30,16 +30,16 @@
 ! absorbing boundary terms for poroelastic media (type Stacey conditions)
 
   subroutine compute_stacey_poroelastic(NSPEC_AB,NGLOB_AB,accels,accelw, &
-                        ibool,iphase, &
-                        abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                        abs_boundary_ijk,abs_boundary_ispec, &
-                        num_abs_boundary_faces, &
-                        velocs,velocw,rho_vpI,rho_vpII,rho_vsI, &
-                        rhoarraystore,phistore,tortstore, &
-                        ispec_is_poroelastic,SIMULATION_TYPE,SAVE_FORWARD, &
-                        NSTEP,it,NGLOB_ADJOINT,b_accels,b_accelw, &
-                        b_num_abs_boundary_faces,b_reclen_field_poro,b_absorb_fields, &
-                        b_absorb_fieldw)
+                                        ibool,iphase, &
+                                        abs_boundary_normal,abs_boundary_jacobian2Dw, &
+                                        abs_boundary_ijk,abs_boundary_ispec, &
+                                        num_abs_boundary_faces, &
+                                        velocs,velocw,rho_vpI,rho_vpII,rho_vsI, &
+                                        rhoarraystore,phistore,tortstore, &
+                                        ispec_is_poroelastic,SIMULATION_TYPE,SAVE_FORWARD, &
+                                        NSTEP,it,NGLOB_ADJOINT,b_accels,b_accelw, &
+                                        b_num_abs_boundary_faces,b_reclen_field_poro,b_absorb_fields, &
+                                        b_absorb_fieldw)
 
   use constants
 

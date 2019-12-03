@@ -1275,23 +1275,23 @@ TRACE("acoustic_enforce_free_surf_cuda");
 
     // sets potentials to zero at free surface
     enforce_free_surface_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_acoustic,
-                                                                             mp->d_potential_dot_acoustic,
-                                                                             mp->d_potential_dot_dot_acoustic,
-                                                                             mp->num_free_surface_faces,
-                                                                             mp->d_free_surface_ispec,
-                                                                             mp->d_free_surface_ijk,
-                                                                             mp->d_ibool,
-                                                                             mp->d_ispec_is_acoustic);
+                                                                            mp->d_potential_dot_acoustic,
+                                                                            mp->d_potential_dot_dot_acoustic,
+                                                                            mp->num_free_surface_faces,
+                                                                            mp->d_free_surface_ispec,
+                                                                            mp->d_free_surface_ijk,
+                                                                            mp->d_ibool,
+                                                                            mp->d_ispec_is_acoustic);
     // for backward/reconstructed potentials
     if (mp->simulation_type == 3) {
       enforce_free_surface_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_acoustic,
-                                                                               mp->d_b_potential_dot_acoustic,
-                                                                               mp->d_b_potential_dot_dot_acoustic,
-                                                                               mp->num_free_surface_faces,
-                                                                               mp->d_free_surface_ispec,
-                                                                               mp->d_free_surface_ijk,
-                                                                               mp->d_ibool,
-                                                                               mp->d_ispec_is_acoustic);
+                                                                              mp->d_b_potential_dot_acoustic,
+                                                                              mp->d_b_potential_dot_dot_acoustic,
+                                                                              mp->num_free_surface_faces,
+                                                                              mp->d_free_surface_ispec,
+                                                                              mp->d_free_surface_ijk,
+                                                                              mp->d_ibool,
+                                                                              mp->d_ispec_is_acoustic);
     }
   }
 

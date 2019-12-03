@@ -181,9 +181,11 @@ inverse_problem_for_model_OBJECTS += \
 	$O/prepare_wavefields.spec.o \
 	$O/print_stf_file.spec.o \
 	$O/read_external_stf.spec.o \
+	$O/read_forward_arrays.spec.o \
 	$O/read_mesh_databases.spec.o \
 	$O/read_stations.spec.o \
 	$O/save_adjoint_kernels.spec.o \
+	$O/save_forward_arrays.spec.o \
 	$O/setup_GLL_points.spec.o \
 	$O/setup_movie_meshes.spec.o \
 	$O/setup_sources_receivers.spec.o \

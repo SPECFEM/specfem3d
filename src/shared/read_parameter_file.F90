@@ -318,8 +318,6 @@
       write(*,'(a)') 'UNDO_ATTENUATION_AND_OR_PML     = .false.'
       write(*,*)
     endif
-!! DK DK temporary, will soon be implemented
-    if (UNDO_ATTENUATION_AND_OR_PML) stop 'error: UNDO_ATTENUATION_AND_OR_PML not implemented in this code yet'
 
     call read_value_integer(NT_DUMP_ATTENUATION, 'NT_DUMP_ATTENUATION', ier)
     if (ier /= 0) then
@@ -763,6 +761,25 @@
          &see at the end of the standard output file of the run for detailed and easy instructions about how to fix that'
     endif
 
+    ! re-sets attenuation flags
+    if (.not. ATTENUATION) then
+      ! turns off UNDO_ATTENUATION when ATTENUATION is off in the Par_file
+      UNDO_ATTENUATION_AND_OR_PML = .false.
+    endif
+    ! for pure forward simulation, no need to store undo_attenuation arrays; uses default iteration routine
+    if (SIMULATION_TYPE == 1 .and. .not. SAVE_FORWARD) then
+      UNDO_ATTENUATION_AND_OR_PML = .false.
+    endif
+
+    ! re-sets ADIOS flags
+    if (.not. ADIOS_ENABLED) then
+      ADIOS_FOR_DATABASES = .false.
+      ADIOS_FOR_MESH = .false.
+      ADIOS_FOR_FORWARD_ARRAYS = .false.
+      ADIOS_FOR_KERNELS = .false.
+      ! ADIOS_FOR_UNDO_ATTENUATION = .false. ! not implemented yet
+    endif
+
     ! checks parameter settings
     call check_simulation_parameters()
 
@@ -848,6 +865,14 @@
       stop 'Error for PML, please set STACEY_ABSORBING_CONDITIONS and STACEY_INSTEAD_OF_FREE_SURFACE to .false. in Par_file'
   endif
 
+  ! UNDO_ATT
+  if (UNDO_ATTENUATION_AND_OR_PML .and. GPU_MODE) &
+    stop 'For GPU_MODE, UNDO_ATTENUATION_AND_OR_PML is not implemented in this code yet'
+
+  ! attenuation for backward simulation
+  if (SIMULATION_TYPE == 3 .and. ATTENUATION .and. .not. UNDO_ATTENUATION_AND_OR_PML) &
+    stop 'For SIMULATION_TYPE == 3 and attenuation, simulations need flag UNDO_ATTENUATION_AND_OR_PML set to .true.'
+
   ! external STF
   if (USE_EXTERNAL_SOURCE_FILE .and. GPU_MODE) &
     stop 'USE_EXTERNAL_SOURCE_FILE in GPU_MODE simulation not supported yet'
@@ -902,6 +927,7 @@
   integer :: i,irange
   character(len=MAX_STRING_LEN) :: sources_filename
   character(len=MAX_STRING_LEN) :: path_to_add
+  character(len=MAX_STRING_LEN) :: tmp_TOMOGRAPHY_PATH,tmp_LOCAL_PATH
 
   ! updates values for simulation settings
   ! LDDRK scheme
@@ -917,14 +943,14 @@
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
 
 !! DK DK remove leading ./ if any, Paul Cristini said it could lead to problems when NUMBER_OF_SIMULTANEOUS_RUNS > 1
-    LOCAL_PATH_new = adjustl(LOCAL_PATH)
-    if (index (LOCAL_PATH_new, './') == 1) then
-      LOCAL_PATH = LOCAL_PATH_new(3:)
+    tmp_LOCAL_PATH = adjustl(LOCAL_PATH)
+    if (index (tmp_LOCAL_PATH, './') == 1) then
+      LOCAL_PATH = tmp_LOCAL_PATH(3:)
     endif
 
-    TOMOGRAPHY_PATH_new = adjustl(TOMOGRAPHY_PATH)
-    if (index (TOMOGRAPHY_PATH_new, './') == 1) then
-      TOMOGRAPHY_PATH = TOMOGRAPHY_PATH_new(3:)
+    tmp_TOMOGRAPHY_PATH = adjustl(TOMOGRAPHY_PATH)
+    if (index (tmp_TOMOGRAPHY_PATH, './') == 1) then
+      TOMOGRAPHY_PATH = tmp_TOMOGRAPHY_PATH(3:)
     endif
 
     TRACTION_PATH_new = adjustl(TRACTION_PATH)
@@ -1212,39 +1238,62 @@
   implicit none
 
   ! broadcasts setting
-  call bcast_all_singlei(NPROC)
+  ! simulation parameters
   call bcast_all_singlei(SIMULATION_TYPE)
   call bcast_all_singlei(NOISE_TOMOGRAPHY)
   call bcast_all_singlel(SAVE_FORWARD)
+
   call bcast_all_singlel(INVERSE_FWI_FULL_PROBLEM)
   call bcast_all_singlei(UTM_PROJECTION_ZONE)
   call bcast_all_singlel(SUPPRESS_UTM_PROJECTION)
+
+  call bcast_all_singlei(NPROC)
   call bcast_all_singlei(NSTEP)
   call bcast_all_singledp(DT)
+
   call bcast_all_singlel(LTS_MODE)
   call bcast_all_singlei(PARTITIONING_TYPE)
+
+  ! LDDRK
   call bcast_all_singlel(USE_LDDRK)
+  ! call bcast_all_singlel(INCREASE_CFL_FOR_LDDRK) ! not needed any further
+  ! call bcast_all_singledp(RATIO_BY_WHICH_TO_INCREASE_IT) ! not needed any further
+
+  ! mesh
   call bcast_all_singlei(NGNOD)
   call bcast_all_string(MODEL)
+
+  call bcast_all_string(TOMOGRAPHY_PATH)
   call bcast_all_string(SEP_MODEL_DIRECTORY)
+
   call bcast_all_singlel(APPROXIMATE_OCEAN_LOAD)
   call bcast_all_singlel(TOPOGRAPHY)
   call bcast_all_singlel(ATTENUATION)
   call bcast_all_singlel(ANISOTROPY)
   call bcast_all_singlel(GRAVITY)
+
   call bcast_all_singledp(ATTENUATION_f0_REFERENCE)
   call bcast_all_singledp(MIN_ATTENUATION_PERIOD)
   call bcast_all_singledp(MAX_ATTENUATION_PERIOD)
   call bcast_all_singlel(COMPUTE_FREQ_BAND_AUTOMATIC)
+
   call bcast_all_singlel(USE_OLSEN_ATTENUATION)
   call bcast_all_singledp(OLSEN_ATTENUATION_RATIO)
-  call bcast_all_string(TOMOGRAPHY_PATH)
+
+  ! absorbing boundaries
   call bcast_all_singlel(PML_CONDITIONS)
   call bcast_all_singlel(PML_INSTEAD_OF_FREE_SURFACE)
   call bcast_all_singledp(f0_FOR_PML)
+
   call bcast_all_singlel(STACEY_ABSORBING_CONDITIONS)
   call bcast_all_singlel(STACEY_INSTEAD_OF_FREE_SURFACE)
   call bcast_all_singlel(BOTTOM_FREE_SURFACE)
+
+  ! undoing att
+  call bcast_all_singlel(UNDO_ATTENUATION_AND_OR_PML)
+  call bcast_all_singlei(NT_DUMP_ATTENUATION)
+
+  ! visualization
   call bcast_all_singlel(CREATE_SHAKEMAP)
   call bcast_all_singlel(MOVIE_SURFACE)
   call bcast_all_singlei(MOVIE_TYPE)
@@ -1253,14 +1302,20 @@
   call bcast_all_singlel(USE_HIGHRES_FOR_MOVIES)
   call bcast_all_singlei(NTSTEP_BETWEEN_FRAMES)
   call bcast_all_singledp(HDUR_MOVIE)
+
   call bcast_all_singlel(SAVE_MESH_FILES)
   call bcast_all_string(LOCAL_PATH)
   call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_INFO)
-  call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_SEISMOS)
-  call bcast_all_singlei(NTSTEP_BETWEEN_READ_ADJSRC)
+
+  ! sources
   call bcast_all_singlel(USE_SOURCES_RECEIVERS_Z)
   call bcast_all_singlel(USE_FORCE_POINT_SOURCE)
   call bcast_all_singlel(USE_RICKER_TIME_FUNCTION)
+  call bcast_all_singlel(USE_EXTERNAL_SOURCE_FILE)
+  call bcast_all_singlel(PRINT_SOURCE_TIME_FUNCTION)
+
+  ! seismograms
+  call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_SEISMOS)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_DISPLACEMENT)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_VELOCITY)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_ACCELERATION)
@@ -1272,24 +1327,44 @@
   call bcast_all_singlel(WRITE_SEISMOGRAMS_BY_MASTER)
   call bcast_all_singlel(SAVE_ALL_SEISMOS_IN_ONE_FILE)
   call bcast_all_singlel(USE_TRICK_FOR_BETTER_PRESSURE)
+
+  ! source encoding
   call bcast_all_singlel(USE_SOURCE_ENCODING)
+
+  ! energy
   call bcast_all_singlel(OUTPUT_ENERGY)
   call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_ENERGY)
+
+  ! adjoint kernels
+  call bcast_all_singlei(NTSTEP_BETWEEN_READ_ADJSRC)
   call bcast_all_singlel(READ_ADJSRC_ASDF)
   call bcast_all_singlel(ANISOTROPIC_KL)
   call bcast_all_singlel(SAVE_TRANSVERSE_KL)
+  call bcast_all_singlel(ANISOTROPIC_VELOCITY_KL)
   call bcast_all_singlel(APPROXIMATE_HESS_KL)
   call bcast_all_singlel(SAVE_MOHO_MESH)
-  call bcast_all_singlel(PRINT_SOURCE_TIME_FUNCTION)
+
+  ! coupling
+  call bcast_all_singlel(COUPLE_WITH_INJECTION_TECHNIQUE)
+  call bcast_all_singlei(INJECTION_TECHNIQUE_TYPE)
+  call bcast_all_singlel(MESH_A_CHUNK_OF_THE_EARTH)
+  call bcast_all_string(TRACTION_PATH)
+  call bcast_all_string(FKMODEL_FILE)
+  call bcast_all_singlel(RECIPROCITY_AND_KH_INTEGRAL)
+
+  ! simultaneous runs
   call bcast_all_singlei(NUMBER_OF_SIMULTANEOUS_RUNS)
   call bcast_all_singlel(BROADCAST_SAME_MESH_AND_MODEL)
+
+  ! GPU
   call bcast_all_singlel(GPU_MODE)
+
+  ! ADIOS
   call bcast_all_singlel(ADIOS_ENABLED)
   call bcast_all_singlel(ADIOS_FOR_DATABASES)
   call bcast_all_singlel(ADIOS_FOR_MESH)
   call bcast_all_singlel(ADIOS_FOR_FORWARD_ARRAYS)
   call bcast_all_singlel(ADIOS_FOR_KERNELS)
-  call bcast_all_singlel(USE_EXTERNAL_SOURCE_FILE)
 
   ! broadcast all parameters computed from others
   call bcast_all_singlei(IMODEL)
@@ -1297,13 +1372,6 @@
 
   call bcast_all_singlei(NSOURCES)
   call bcast_all_singlel(HAS_FINITE_FAULT_SOURCE)
-
-  call bcast_all_singlel(COUPLE_WITH_INJECTION_TECHNIQUE)
-  call bcast_all_singlel(MESH_A_CHUNK_OF_THE_EARTH)
-  call bcast_all_singlei(INJECTION_TECHNIQUE_TYPE)
-  call bcast_all_string(TRACTION_PATH)
-  call bcast_all_string(FKMODEL_FILE)
-  call bcast_all_singlel(RECIPROCITY_AND_KH_INTEGRAL)
 
   end subroutine broadcast_computed_parameters
 

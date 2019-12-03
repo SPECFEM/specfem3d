@@ -435,25 +435,25 @@
   if (myrank == 0) then
     ! shakemaps
     call gatherv_all_cr(shakemap_ux,nfaces_surface_points, &
-         shakemap_ux_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
+                        shakemap_ux_all,nfaces_perproc_surface,faces_surface_offset, &
+                        nfaces_surface_glob_points,NPROC)
     call gatherv_all_cr(shakemap_uy,nfaces_surface_points, &
-         shakemap_uy_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
+                        shakemap_uy_all,nfaces_perproc_surface,faces_surface_offset, &
+                        nfaces_surface_glob_points,NPROC)
     call gatherv_all_cr(shakemap_uz,nfaces_surface_points, &
-         shakemap_uz_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
+                        shakemap_uz_all,nfaces_perproc_surface,faces_surface_offset, &
+                        nfaces_surface_glob_points,NPROC)
   else
     ! shakemaps
     call gatherv_all_cr(shakemap_ux,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
+                        dummy,nfaces_perproc_surface,faces_surface_offset, &
+                        1,NPROC)
     call gatherv_all_cr(shakemap_uy,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
+                        dummy,nfaces_perproc_surface,faces_surface_offset, &
+                        1,NPROC)
     call gatherv_all_cr(shakemap_uz,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
+                        dummy,nfaces_perproc_surface,faces_surface_offset, &
+                        1,NPROC)
   endif
 
   ! creates shakemap file

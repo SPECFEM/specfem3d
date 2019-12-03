@@ -26,7 +26,7 @@
 !=====================================================================
 
 
-  subroutine update_displacement_scheme()
+  subroutine update_displ_Newmark()
 
 ! explicit Newmark time scheme with acoustic & elastic domains:
 ! (see e.g. Hughes, 1987; Chaljub et al., 2003)
@@ -76,7 +76,34 @@
   ! poroelastic domain
   if (POROELASTIC_SIMULATION) call update_displacement_poroelastic()
 
-  end subroutine update_displacement_scheme
+  end subroutine update_displ_Newmark
+
+!
+!--------------------------------------------------------------------------------------------------------------
+!
+
+
+  subroutine update_displ_Newmark_backward()
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+
+  implicit none
+
+  ! time marching
+
+  ! acoustic domain
+  if (ACOUSTIC_SIMULATION) call update_displacement_acoustic_backward()
+
+  ! elastic domain
+  if (ELASTIC_SIMULATION) call update_displacement_elastic_backward()
+
+  ! poroelastic domain
+  if (POROELASTIC_SIMULATION) call update_displacement_poroelastic_backward()
+
+  end subroutine update_displ_Newmark_backward
 
 !
 !--------------------------------------------------------------------------------------------------------------
@@ -176,6 +203,47 @@
 !--------------------------------------------------------------------------------------------------------------
 !
 
+  subroutine update_displacement_acoustic_backward()
+
+! updates acoustic potentials
+
+  use specfem_par
+  use specfem_par_acoustic
+  use pml_par
+
+  implicit none
+
+  ! checks
+  if (SIMULATION_TYPE /= 3) return
+
+  ! Newmark time marching
+  if (.not. GPU_MODE) then
+    ! wavefields on CPU
+    ! Since we do not do anything in PML region in case of backward simulation
+    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
+      continue
+    endif
+
+    b_potential_acoustic(:) = b_potential_acoustic(:) + &
+                              b_deltat * b_potential_dot_acoustic(:) + &
+                              b_deltatsqover2 * b_potential_dot_dot_acoustic(:)
+    b_potential_dot_acoustic(:) = b_potential_dot_acoustic(:) + &
+                                  b_deltatover2 * b_potential_dot_dot_acoustic(:)
+    b_potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
+
+  else
+    ! wavefields on GPU
+    ! already done in forward call...
+    continue
+  endif ! GPU_MODE
+
+  end subroutine update_displacement_acoustic_backward
+
+
+!
+!--------------------------------------------------------------------------------------------------------------
+!
+
   subroutine update_displacement_elastic()
 
   ! updates elastic wavefields
@@ -212,6 +280,7 @@
       enddo
     endif
 
+    ! coupling with adjoint wavefields
     if (SIMULATION_TYPE /= 1) accel_adj_coupling(:,:) = accel(:,:)
 
     if (FORCE_VECTORIZATION_VAL) then
@@ -285,6 +354,47 @@
 
   end subroutine update_displacement_elastic
 
+
+!
+!--------------------------------------------------------------------------------------------------------------
+!
+
+  subroutine update_displacement_elastic_backward()
+
+  ! updates elastic wavefields
+
+  use specfem_par
+  use specfem_par_elastic
+  use pml_par
+
+  implicit none
+
+  ! checks
+  if (SIMULATION_TYPE /= 3) return
+
+  ! Newmark time marching
+  if (.not. GPU_MODE) then
+    ! wavefields on CPU
+
+    ! updates elastic displacement and velocity
+    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
+      ! Since we do not do anything in PML region in case of backward simulation, skip
+      continue
+    endif
+
+    ! adjoint simulations
+    b_displ(:,:) = b_displ(:,:) + b_deltat * b_veloc(:,:) + b_deltatsqover2 * b_accel(:,:)
+    b_veloc(:,:) = b_veloc(:,:) + b_deltatover2 * b_accel(:,:)
+    b_accel(:,:) = 0._CUSTOM_REAL
+
+  else
+    ! wavefields on GPU
+    ! already done in forward call..
+    continue
+  endif ! GPU_MODE
+
+  end subroutine update_displacement_elastic_backward
+
 !
 !--------------------------------------------------------------------------------------------------------------
 !
@@ -339,4 +449,41 @@
 
   end subroutine update_displacement_poroelastic
 
+!
+!--------------------------------------------------------------------------------------------------------------
+!
+
+  subroutine update_displacement_poroelastic_backward()
+
+! updates poroelastic wavefields
+
+  use specfem_par
+  use specfem_par_poroelastic
+
+  implicit none
+
+  ! Newmark time marching
+
+  if (.not. GPU_MODE) then
+    ! wavefields on CPU
+
+    ! poroelastic backward fields
+    ! solid phase
+    b_displs_poroelastic(:,:) = b_displs_poroelastic(:,:) + b_deltat * b_velocs_poroelastic(:,:) + &
+                                b_deltatsqover2 * b_accels_poroelastic(:,:)
+    b_velocs_poroelastic(:,:) = b_velocs_poroelastic(:,:) + b_deltatover2 * b_accels_poroelastic(:,:)
+    b_accels_poroelastic(:,:) = 0._CUSTOM_REAL
+
+    ! fluid phase
+    b_displw_poroelastic(:,:) = b_displw_poroelastic(:,:) + b_deltat * b_velocw_poroelastic(:,:) + &
+                                b_deltatsqover2 * b_accelw_poroelastic(:,:)
+    b_velocw_poroelastic(:,:) = b_velocw_poroelastic(:,:) + b_deltatover2 * b_accelw_poroelastic(:,:)
+    b_accelw_poroelastic(:,:) = 0._CUSTOM_REAL
+
+  else
+    ! wavefields on GPU
+    continue
+  endif ! GPU_MODE
+
+  end subroutine update_displacement_poroelastic_backward
 

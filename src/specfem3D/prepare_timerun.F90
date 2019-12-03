@@ -187,6 +187,9 @@
 
     if (ATTENUATION) then
       write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
+      if (UNDO_ATTENUATION_AND_OR_PML) &
+        write(IMAIN,*) 'using undo_attenuation scheme'
+
       if (USE_OLSEN_ATTENUATION) then
         write(IMAIN,*) 'using attenuation from Olsen et al.'
       else
@@ -264,9 +267,9 @@
     endif
 
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
 
     ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
     where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
@@ -301,17 +304,17 @@
 
     ! assemble mass matrix
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassx, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassy, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassz, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
 
     ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
     where(rmassx <= 0._CUSTOM_REAL) rmassx = 1._CUSTOM_REAL
@@ -324,9 +327,9 @@
     ! ocean load
     if (APPROXIMATE_OCEAN_LOAD) then
       call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_ocean_load, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                        my_neighbors_ext_mesh)
       where(rmass_ocean_load <= 0._CUSTOM_REAL) rmass_ocean_load = 1._CUSTOM_REAL
       rmass_ocean_load(:) = 1._CUSTOM_REAL / rmass_ocean_load(:)
     endif
@@ -334,14 +337,14 @@
 
   if (POROELASTIC_SIMULATION) then
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
 
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_fluid_poroelastic, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
 
     ! fills mass matrix with fictitious non-zero values to make sure it can be inverted globally
     where(rmass_solid_poroelastic <= 0._CUSTOM_REAL) rmass_solid_poroelastic = 1._CUSTOM_REAL
@@ -389,11 +392,24 @@
 
   ! adjoint runs: timing
   if (SIMULATION_TYPE == 3) then
-    ! backward/reconstructed wavefields: time stepping is in time-reversed sense
-    ! (negative time increments)
-    b_deltat = - real(DT,kind=CUSTOM_REAL)
-    b_deltatover2 = b_deltat/2._CUSTOM_REAL
-    b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
+    if (UNDO_ATTENUATION_AND_OR_PML) then
+      ! moves forward
+      b_deltat = deltat
+      b_deltatover2 = deltatover2
+      b_deltatsqover2 = deltatsqover2
+    else
+      ! reconstructed wavefield moves backward in time from last snapshot
+      ! backward/reconstructed wavefields: time stepping is in time-reversed sense
+      ! (negative time increments)
+      b_deltat = - real(DT,kind=CUSTOM_REAL)
+      b_deltatover2 = b_deltat/2._CUSTOM_REAL
+      b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
+    endif
+  else
+    ! will not be used, but initialized
+    b_deltat = 0._CUSTOM_REAL
+    b_deltatover2 = 0._CUSTOM_REAL
+    b_deltatsqover2 = 0._CUSTOM_REAL
   endif
 
   ! synchonizes
@@ -404,7 +420,6 @@
 !
 !-------------------------------------------------------------------------------------------------
 !
-
 
 
   subroutine prepare_timerun_lddrk()
@@ -878,11 +893,6 @@
     sloc_der = 0._CUSTOM_REAL
   endif
 
-  ! attenuation backward memories
-  if (ATTENUATION .and. SIMULATION_TYPE == 3) then
-    ! precompute Runge-Kutta coefficients if attenuation
-    call get_attenuation_memory_values(tau_sigma,b_deltat,b_alphaval,b_betaval,b_gammaval)
-  endif
 
   ! initializes adjoint kernels and reconstructed/backward wavefields
   if (SIMULATION_TYPE == 3) then
@@ -909,22 +919,6 @@
       b_veloc = 0._CUSTOM_REAL
       b_accel = 0._CUSTOM_REAL
       if (FIX_UNDERFLOW_PROBLEM) b_displ = VERYSMALLVAL
-
-      ! memory variables if attenuation
-      if (ATTENUATION) then
-        b_R_trace = 0._CUSTOM_REAL
-        b_R_xx = 0._CUSTOM_REAL
-        b_R_yy = 0._CUSTOM_REAL
-        b_R_xy = 0._CUSTOM_REAL
-        b_R_xz = 0._CUSTOM_REAL
-        b_R_yz = 0._CUSTOM_REAL
-        b_epsilondev_trace = 0._CUSTOM_REAL
-        b_epsilondev_xx = 0._CUSTOM_REAL
-        b_epsilondev_yy = 0._CUSTOM_REAL
-        b_epsilondev_xy = 0._CUSTOM_REAL
-        b_epsilondev_xz = 0._CUSTOM_REAL
-        b_epsilondev_yz = 0._CUSTOM_REAL
-      endif
 
       ! moho kernels
       if (SAVE_MOHO_MESH) moho_kl(:,:) = 0._CUSTOM_REAL

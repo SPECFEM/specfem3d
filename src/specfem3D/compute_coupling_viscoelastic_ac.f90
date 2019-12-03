@@ -28,15 +28,15 @@
 ! for elastic solver
 
   subroutine compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
-                        ibool,accel,potential_dot_dot_acoustic, &
-                        num_coupling_ac_el_faces, &
-                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                        coupling_ac_el_normal, &
-                        coupling_ac_el_jacobian2Dw, &
-                        iphase, &
-                        PML_CONDITIONS, &
-                        SIMULATION_TYPE,backward_simulation, &
-                        potential_acoustic,potential_dot_acoustic)
+                                              ibool,accel,potential_dot_dot_acoustic, &
+                                              num_coupling_ac_el_faces, &
+                                              coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                                              coupling_ac_el_normal, &
+                                              coupling_ac_el_jacobian2Dw, &
+                                              iphase, &
+                                              PML_CONDITIONS, &
+                                              SIMULATION_TYPE,backward_simulation, &
+                                              potential_acoustic,potential_dot_acoustic)
 
 ! returns the updated acceleration array: accel
 

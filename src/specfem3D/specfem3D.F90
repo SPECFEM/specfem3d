@@ -384,7 +384,11 @@
 #endif
 
   ! steps through time iterations
-  call iterate_time()
+  if (UNDO_ATTENUATION_AND_OR_PML) then
+    call iterate_time_undoatt()
+  else
+    call iterate_time()
+  endif
 
   ! saves last time frame and finishes kernel calculations
   call finalize_simulation()

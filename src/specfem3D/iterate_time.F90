@@ -198,7 +198,7 @@
     endif
 
     ! updates wavefields using Newmark time scheme
-    if (.not. USE_LDDRK) call update_displacement_scheme()
+    if (.not. USE_LDDRK) call update_displ_Newmark()
 
     ! calculates stiffness term
     if (.not. GPU_MODE) then
@@ -256,7 +256,7 @@
     ! restores last time snapshot saved for backward/reconstruction of wavefields
     ! note: this must be read in after the Newmark time scheme
     if (SIMULATION_TYPE == 3 .and. it == 1) then
-      call it_read_forward_arrays()
+      call read_forward_arrays()
     endif
 
     ! calculating gravity field at current timestep
@@ -300,7 +300,6 @@
   !
   enddo   ! end of main time loop
 
-
   ! close the huge file that contains a dump of all the time steps to disk
   if (EXACT_UNDOING_TO_DISK) close(IFILE_FOR_EXACT_UNDOING)
 
@@ -316,7 +315,7 @@
   ! Transfer fields from GPU card to host for further analysis
   if (GPU_MODE) call it_transfer_from_GPU()
 
-!----  close energy file
+  ! closes energy file
   if (OUTPUT_ENERGY .and. myrank == 0) close(IOUT_ENERGY)
 
 #ifdef VTK_VIS
@@ -369,7 +368,6 @@
                                              epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
                                              R_trace,epsilondev_trace, &
                                              size(epsilondev_xx))
-
     endif
 
   else if (SIMULATION_TYPE == 3) then
@@ -431,104 +429,3 @@
                               APPROXIMATE_HESS_KL)
 
   end subroutine it_cleanup_GPU
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-
-  subroutine it_read_forward_arrays()
-
-  use specfem_par
-  use specfem_par_acoustic
-  use specfem_par_elastic
-  use specfem_par_poroelastic
-
-  implicit none
-
-  integer :: ier
-
-! restores last time snapshot saved for backward/reconstruction of wavefields
-! note: this is done here after the Newmark time scheme, otherwise the indexing for sources
-!          and adjoint sources will become more complicated
-!          that is, index it for adjoint sources will match index NSTEP - 1 for backward/reconstructed wavefields
-  if (ADIOS_FOR_FORWARD_ARRAYS) then
-    call read_forward_arrays_adios()
-  else
-    ! reads in wavefields
-    open(unit=IIN,file=trim(prname)//'save_forward_arrays.bin',status='old', &
-          action='read',form='unformatted',iostat=ier)
-    if (ier /= 0) then
-      print *,'error: opening save_forward_arrays'
-      print *,'path: ',trim(prname)//'save_forward_arrays.bin'
-      call exit_mpi(myrank,'error open file save_forward_arrays.bin')
-    endif
-
-    if (ACOUSTIC_SIMULATION) then
-      read(IIN) b_potential_acoustic
-      read(IIN) b_potential_dot_acoustic
-      read(IIN) b_potential_dot_dot_acoustic
-    endif
-
-    ! elastic wavefields
-    if (ELASTIC_SIMULATION) then
-      read(IIN) b_displ
-      read(IIN) b_veloc
-      read(IIN) b_accel
-      ! memory variables if attenuation
-      if (ATTENUATION) then
-        read(IIN) b_R_trace
-        read(IIN) b_R_xx
-        read(IIN) b_R_yy
-        read(IIN) b_R_xy
-        read(IIN) b_R_xz
-        read(IIN) b_R_yz
-        read(IIN) b_epsilondev_trace
-        read(IIN) b_epsilondev_xx
-        read(IIN) b_epsilondev_yy
-        read(IIN) b_epsilondev_xy
-        read(IIN) b_epsilondev_xz
-        read(IIN) b_epsilondev_yz
-      endif
-    endif
-
-    ! poroelastic wavefields
-    if (POROELASTIC_SIMULATION) then
-      read(IIN) b_displs_poroelastic
-      read(IIN) b_velocs_poroelastic
-      read(IIN) b_accels_poroelastic
-      read(IIN) b_displw_poroelastic
-      read(IIN) b_velocw_poroelastic
-      read(IIN) b_accelw_poroelastic
-    endif
-
-    close(IIN)
-  endif
-
-  if (GPU_MODE) then
-    if (ACOUSTIC_SIMULATION) then
-    ! transfers fields onto GPU
-      call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
-                                          b_potential_dot_acoustic, &
-                                          b_potential_dot_dot_acoustic, &
-                                          Mesh_pointer)
-    endif
-    ! elastic wavefields
-    if (ELASTIC_SIMULATION) then
-      ! puts elastic wavefield to GPU
-      call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
-      ! memory variables if attenuation
-      if (ATTENUATION) then
-        call transfer_b_fields_att_to_device(Mesh_pointer, &
-                           b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                           size(b_R_xx), &
-                           b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
-                           b_epsilondev_xz,b_epsilondev_yz, &
-                           b_R_trace,b_epsilondev_trace, &
-                           size(b_epsilondev_xx))
-      endif
-    endif
-  endif
-
-  end subroutine it_read_forward_arrays
-

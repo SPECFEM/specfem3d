@@ -38,70 +38,14 @@
 
   implicit none
 
-  integer :: ier
-
   ! write gravity perturbations
   if (GRAVITY_SIMULATION) call gravity_output()
 
   ! save last frame
+  if (SAVE_FORWARD) call save_forward_arrays()
 
-  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-    if (ADIOS_FOR_FORWARD_ARRAYS) then
-      call save_forward_arrays_adios()
-    else
-      open(unit=IOUT,file=prname(1:len_trim(prname))//'save_forward_arrays.bin', &
-            status='unknown',form='unformatted',iostat=ier)
-      if (ier /= 0) then
-        print *,'error: opening save_forward_arrays.bin'
-        print *,'path: ',prname(1:len_trim(prname))//'save_forward_arrays.bin'
-        call exit_mpi(myrank,'error opening file save_forward_arrays.bin')
-      endif
-
-      if (ACOUSTIC_SIMULATION) then
-        write(IOUT) potential_acoustic
-        write(IOUT) potential_dot_acoustic
-        write(IOUT) potential_dot_dot_acoustic
-      endif
-
-      if (ELASTIC_SIMULATION) then
-        write(IOUT) displ
-        write(IOUT) veloc
-        write(IOUT) accel
-
-        if (ATTENUATION) then
-          write(IOUT) R_trace
-          write(IOUT) R_xx
-          write(IOUT) R_yy
-          write(IOUT) R_xy
-          write(IOUT) R_xz
-          write(IOUT) R_yz
-          write(IOUT) epsilondev_trace
-          write(IOUT) epsilondev_xx
-          write(IOUT) epsilondev_yy
-          write(IOUT) epsilondev_xy
-          write(IOUT) epsilondev_xz
-          write(IOUT) epsilondev_yz
-        endif
-      endif
-
-      if (POROELASTIC_SIMULATION) then
-        write(IOUT) displs_poroelastic
-        write(IOUT) velocs_poroelastic
-        write(IOUT) accels_poroelastic
-        write(IOUT) displw_poroelastic
-        write(IOUT) velocw_poroelastic
-        write(IOUT) accelw_poroelastic
-      endif
-
-      close(IOUT)
-    endif
-  endif
-
-  ! adjoint simulations
-  if (SIMULATION_TYPE == 3) then
-    ! adjoint kernels
-    call save_adjoint_kernels()
-  endif
+  ! adjoint simulations kernels
+  if (SIMULATION_TYPE == 3) call save_adjoint_kernels()
 
   ! seismograms and source parameter gradients for (pure type=2) adjoint simulation runs
   if (SIMULATION_TYPE == 2) then
@@ -119,18 +63,14 @@
     ! closes absorbing wavefield saved/to-be-saved by forward simulations
     if (num_abs_boundary_faces > 0 .and. (SIMULATION_TYPE == 3 .or. &
           (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
-
+      ! closes files
       if (ELASTIC_SIMULATION) call close_file_abs(IOABS)
       if (ACOUSTIC_SIMULATION) call close_file_abs(IOABS_AC)
-
     endif
   endif
 
-  ! C-PML absorbing boundary conditions
-  if (PML_CONDITIONS) then
-    ! deallocates C_PML arrays
-    call pml_cleanup()
-  endif
+  ! C-PML absorbing boundary conditions deallocates C_PML arrays
+  if (PML_CONDITIONS) call pml_cleanup()
 
   ! free arrays
   ! mass matrices

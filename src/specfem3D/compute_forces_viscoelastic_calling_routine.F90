@@ -39,13 +39,17 @@
 
   implicit none
 
-  integer:: iphase
-  integer:: iface,ispec,igll,i,j,k,iglob,ispec_CPML
+  integer :: iphase
+  integer :: iface,ispec,igll,i,j,k,iglob,ispec_CPML
+  logical :: backward_simulation
 
   ! debug timing
   double precision, external :: wtime
   double precision :: t_start,tCPU
   logical, parameter :: DO_TIMING = .false.
+
+  ! forward fields
+  backward_simulation = .false.
 
   ! kbai added the following two synchronizations to ensure that the displacement and velocity values
   ! at nodes on MPI interfaces stay equal on all processors that share the node.
@@ -78,7 +82,7 @@
                                      R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
                                      epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                                      epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
-                                     .false.)
+                                     backward_simulation)
 
     ! debug timing
     if (DO_TIMING .and. myrank == 0 .and. iphase == 2) then
@@ -91,14 +95,14 @@
       ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
       if (STACEY_ABSORBING_CONDITIONS) then
         call compute_stacey_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
-                         ibool,iphase, &
-                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                         abs_boundary_ijk,abs_boundary_ispec, &
-                         num_abs_boundary_faces, &
-                         veloc,rho_vp,rho_vs, &
-                         ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
-                         it, &
-                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
+                                         ibool,iphase, &
+                                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
+                                         abs_boundary_ijk,abs_boundary_ispec, &
+                                         num_abs_boundary_faces, &
+                                         veloc,rho_vp,rho_vs, &
+                                         ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
+                                         it, &
+                                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
       endif
 
       ! acoustic coupling
@@ -107,30 +111,30 @@
           if (SIMULATION_TYPE == 1) then
             ! forward definition: pressure = - potential_dot_dot
             call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
-                         ibool,accel,potential_dot_dot_acoustic, &
-                         num_coupling_ac_el_faces, &
-                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                         coupling_ac_el_normal, &
-                         coupling_ac_el_jacobian2Dw, &
-                         iphase, &
-                         PML_CONDITIONS, &
-                         SIMULATION_TYPE,.false., &
-                         potential_acoustic,potential_dot_acoustic)
+                                                  ibool,accel,potential_dot_dot_acoustic, &
+                                                  num_coupling_ac_el_faces, &
+                                                  coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                                                  coupling_ac_el_normal, &
+                                                  coupling_ac_el_jacobian2Dw, &
+                                                  iphase, &
+                                                  PML_CONDITIONS, &
+                                                  SIMULATION_TYPE,backward_simulation, &
+                                                  potential_acoustic,potential_dot_acoustic)
 
 
           else
             ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
             ! adjoint definition: pressure^\dagger = potential^\dagger
             call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
-                                ibool,accel,potential_acoustic, &
-                                num_coupling_ac_el_faces, &
-                                coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                                coupling_ac_el_normal, &
-                                coupling_ac_el_jacobian2Dw, &
-                                iphase, &
-                                PML_CONDITIONS, &
-                                SIMULATION_TYPE,.false., &
-                                potential_acoustic,potential_dot_acoustic)
+                                                  ibool,accel,potential_acoustic, &
+                                                  num_coupling_ac_el_faces, &
+                                                  coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                                                  coupling_ac_el_normal, &
+                                                  coupling_ac_el_jacobian2Dw, &
+                                                  iphase, &
+                                                  PML_CONDITIONS, &
+                                                  SIMULATION_TYPE,backward_simulation, &
+                                                  potential_acoustic,potential_dot_acoustic)
 
           endif
         endif ! num_coupling_ac_el_faces
@@ -154,11 +158,11 @@
     if (iphase == 1) then
        ! sends accel values to corresponding MPI interface neighbors
        call assemble_MPI_vector_async_send(NPROC,NGLOB_AB,accel, &
-               buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
-               num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-               nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-               my_neighbors_ext_mesh, &
-               request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
+                                           buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+                                           num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                           nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                           my_neighbors_ext_mesh, &
+                                           request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
     else
       ! waits for send/receive requests to be completed and assembles values
@@ -251,7 +255,7 @@
     endif
   endif
 
-end subroutine compute_forces_viscoelastic_calling
+  end subroutine compute_forces_viscoelastic_calling
 
 !
 !=====================================================================
@@ -259,7 +263,7 @@ end subroutine compute_forces_viscoelastic_calling
 
 ! elastic solver for backward/reconstructed wavefields
 
-subroutine compute_forces_viscoelastic_backward_calling()
+  subroutine compute_forces_viscoelastic_backward_calling()
 
   use specfem_par
   use specfem_par_acoustic
@@ -271,11 +275,14 @@ subroutine compute_forces_viscoelastic_backward_calling()
 
   implicit none
 
-  integer:: iphase
-
+  integer :: iphase
+  logical :: backward_simulation
   ! checks
   if (SIMULATION_TYPE /= 3) &
     call exit_MPI(myrank,'error calling compute_forces_viscoelastic_backward() with wrong SIMULATION_TYPE')
+
+  ! backward fields
+  backward_simulation = .true.
 
   ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
   do iphase = 1,2
@@ -290,19 +297,19 @@ subroutine compute_forces_viscoelastic_backward_calling()
                                      b_R_xx_lddrk,b_R_yy_lddrk,b_R_xy_lddrk,b_R_xz_lddrk,b_R_yz_lddrk, &
                                      b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
                                      b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
-                                     .true.)
+                                     backward_simulation)
 
     ! computes additional contributions
     if (iphase == 1) then
       ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
       if (STACEY_ABSORBING_CONDITIONS) then
         call compute_stacey_viscoelastic_backward(NSPEC_AB, &
-                         ibool,iphase, &
-                         abs_boundary_ijk,abs_boundary_ispec, &
-                         num_abs_boundary_faces, &
-                         ispec_is_elastic,SIMULATION_TYPE, &
-                         NSTEP,it,NGLOB_ADJOINT,b_accel, &
-                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
+                                                  ibool,iphase, &
+                                                  abs_boundary_ijk,abs_boundary_ispec, &
+                                                  num_abs_boundary_faces, &
+                                                  ispec_is_elastic,SIMULATION_TYPE, &
+                                                  NSTEP,it,NGLOB_ADJOINT,b_accel, &
+                                                  b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
       endif
 
       ! acoustic coupling
@@ -310,15 +317,15 @@ subroutine compute_forces_viscoelastic_backward_calling()
         if (num_coupling_ac_el_faces > 0) then
           ! backward simulations
           call compute_coupling_viscoelastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                        ibool,b_accel,b_potential_dot_dot_acoustic, &
-                        num_coupling_ac_el_faces, &
-                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                        coupling_ac_el_normal, &
-                        coupling_ac_el_jacobian2Dw, &
-                        iphase, &
-                        PML_CONDITIONS, &
-                        SIMULATION_TYPE,.true., &
-                        potential_acoustic,potential_dot_acoustic)
+                                                ibool,b_accel,b_potential_dot_dot_acoustic, &
+                                                num_coupling_ac_el_faces, &
+                                                coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                                                coupling_ac_el_normal, &
+                                                coupling_ac_el_jacobian2Dw, &
+                                                iphase, &
+                                                PML_CONDITIONS, &
+                                                SIMULATION_TYPE,backward_simulation, &
+                                                potential_acoustic,potential_dot_acoustic)
 
         endif ! num_coupling_ac_el_faces
       endif
@@ -340,11 +347,11 @@ subroutine compute_forces_viscoelastic_backward_calling()
       ! sends accel values to corresponding MPI interface neighbors
       ! adjoint simulations
       call assemble_MPI_vector_async_send(NPROC,NGLOB_ADJOINT,b_accel, &
-                 b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
-                 num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                 nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                 my_neighbors_ext_mesh, &
-                 b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
+                                          b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
+                                          num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                          my_neighbors_ext_mesh, &
+                                          b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
     else
       ! waits for send/receive requests to be completed and assembles values
       ! adjoint simulations
@@ -366,12 +373,12 @@ subroutine compute_forces_viscoelastic_backward_calling()
 ! updates acceleration with ocean load term
   if (APPROXIMATE_OCEAN_LOAD) then
     call compute_coupling_ocean_backward(NSPEC_AB,NGLOB_AB, &
-                                     ibool,rmassx,rmassy,rmassz, &
-                                     rmass_ocean_load, &
-                                     free_surface_normal,free_surface_ijk,free_surface_ispec, &
-                                     num_free_surface_faces, &
-                                     SIMULATION_TYPE, &
-                                     NGLOB_ADJOINT,b_accel)
+                                         ibool,rmassx,rmassy,rmassz, &
+                                         rmass_ocean_load, &
+                                         free_surface_normal,free_surface_ijk,free_surface_ispec, &
+                                         num_free_surface_faces, &
+                                         SIMULATION_TYPE, &
+                                         NGLOB_ADJOINT,b_accel)
   endif
 
 
@@ -504,32 +511,32 @@ subroutine compute_forces_viscoelastic_backward_calling()
       ! adjoint simulations
       if (SIMULATION_TYPE == 3) then
         call transfer_boun_accel_from_device(Mesh_pointer, b_accel, &
-                        b_buffer_send_vector_ext_mesh, &
-                        3) ! 3 == adjoint b_accel
+                                             b_buffer_send_vector_ext_mesh, &
+                                             3) ! 3 == adjoint b_accel
         call assemble_MPI_vector_send_cuda(NPROC, &
-                        b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh, &
-                        b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
+                                           b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
+                                           num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                           nibool_interfaces_ext_mesh, &
+                                           my_neighbors_ext_mesh, &
+                                           b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
       endif !adjoint
 
     else
       ! waits for send/receive requests to be completed and assembles values
       call assemble_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel, Mesh_pointer, &
-                      buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
-                      max_nibool_interfaces_ext_mesh, &
-                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                      request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
-                      1)
+                                          buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                          max_nibool_interfaces_ext_mesh, &
+                                          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                          request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
+                                          1)
       ! adjoint simulations
       if (SIMULATION_TYPE == 3) then
         call assemble_MPI_vector_write_cuda(NPROC,NGLOB_AB,b_accel, Mesh_pointer, &
-                              b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
-                              max_nibool_interfaces_ext_mesh, &
-                              nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                              b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh, &
-                              3)
+                                            b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                            max_nibool_interfaces_ext_mesh, &
+                                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                            b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh, &
+                                            3)
       endif !adjoint
     endif
 

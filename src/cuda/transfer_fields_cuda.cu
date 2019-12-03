@@ -178,6 +178,20 @@ void FC_FUNC_(transfer_b_accel_from_device,
 /* ----------------------------------------------------------------------------------------------- */
 
 extern "C"
+void FC_FUNC_(transfer_b_accel_to_device,
+              TRANSFER_B_accel_to_DEVICE)(int* size, realw* b_accel,long* Mesh_pointer) {
+
+  TRACE("transfer_b_accel_to_device");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_accel,b_accel,sizeof(realw)*(*size),cudaMemcpyHostToDevice),40057);
+
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern "C"
 void FC_FUNC_(transfer_sigma_from_device,
               TRANSFER_SIGMA_FROM_DEVICE)(int* size, realw* sigma_kl,long* Mesh_pointer) {
 
@@ -200,6 +214,20 @@ void FC_FUNC_(transfer_b_displ_from_device,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   print_CUDA_error_if_any(cudaMemcpy(b_displ,mp->d_b_displ,sizeof(realw)*(*size),cudaMemcpyDeviceToHost),40056);
+
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern "C"
+void FC_FUNC_(transfer_b_displ_to_device,
+              TRANSFER_B_DISPL_to_DEVICE)(int* size, realw* b_displ,long* Mesh_pointer) {
+
+  TRACE("transfer_b_displ_to_device");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_displ,b_displ,sizeof(realw)*(*size),cudaMemcpyHostToDevice),40057);
 
 }
 
@@ -453,6 +481,46 @@ void FC_FUNC_(transfer_b_fields_ac_from_device,
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("after transfer_b_fields_ac_from_device");
+#endif
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern "C"
+void FC_FUNC_(transfer_b_potential_ac_from_device,
+              TRANSFER_B_potentical_AC_FROM_DEVICE)(int* size,
+                                                    field* b_potential_acoustic,
+                                                    long* Mesh_pointer) {
+  TRACE("transfer_b_potential_ac_from_device");
+
+  //get mesh pointer out of fortran integer container
+  Mesh* mp = (Mesh*)(*Mesh_pointer);
+
+  print_CUDA_error_if_any(cudaMemcpy(b_potential_acoustic,mp->d_b_potential_acoustic,
+                                     sizeof(field)*(*size),cudaMemcpyDeviceToHost),53111);
+
+#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
+  exit_on_cuda_error("after transfer_b_potential_ac_from_device");
+#endif
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern "C"
+void FC_FUNC_(transfer_b_potential_ac_to_device,
+              TRANSFER_B_potentical_AC_TO_DEVICE)(int* size,
+                                                  field* b_potential_acoustic,
+                                                  long* Mesh_pointer) {
+  TRACE("transfer_b_potential_ac_to_device");
+
+  //get mesh pointer out of fortran integer container
+  Mesh* mp = (Mesh*)(*Mesh_pointer);
+
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_potential_acoustic,b_potential_acoustic,
+                                     sizeof(field)*(*size),cudaMemcpyHostToDevice),53112);
+
+#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
+  exit_on_cuda_error("after transfer_b_potential_ac_to_device");
 #endif
 }
 

@@ -26,7 +26,7 @@
 !=====================================================================
 
 
-subroutine read_forward_arrays_adios()
+  subroutine read_forward_arrays_adios()
 
   use adios_read_mod
 
@@ -365,4 +365,4 @@ subroutine read_forward_arrays_adios()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 
-end subroutine read_forward_arrays_adios
+  end subroutine read_forward_arrays_adios

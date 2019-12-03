@@ -101,7 +101,7 @@ end module constants
   logical :: APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ATTENUATION,ANISOTROPY
   logical :: GRAVITY
 
-  character(len=MAX_STRING_LEN) :: TOMOGRAPHY_PATH,TOMOGRAPHY_PATH_new
+  character(len=MAX_STRING_LEN) :: TOMOGRAPHY_PATH
 
   ! attenuation
   logical :: USE_OLSEN_ATTENUATION
@@ -134,7 +134,7 @@ end module constants
 
   ! mesh
   logical :: SAVE_MESH_FILES
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH,LOCAL_PATH_new
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! seismograms
   integer :: NTSTEP_BETWEEN_OUTPUT_INFO

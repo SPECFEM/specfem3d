@@ -36,6 +36,10 @@ module specfem_par
 
   implicit none
 
+!-----------------------------------------------------------------
+! simulation
+!-----------------------------------------------------------------
+
 ! number of spectral element and global points
   integer :: NSPEC_AB, NGLOB_AB
 
@@ -61,16 +65,6 @@ module specfem_par
 ! density
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore
 
-! GPU
-! CUDA mesh pointer to integer wrapper
-  integer(kind=8) :: Mesh_pointer
-
-  integer(kind=8) :: Fault_pointer
-
-! ASDF
-! asdf file handle
-  integer :: current_asdf_handle
-
 ! use integer array to store topography values
   integer :: NX_TOPO,NY_TOPO
   integer, dimension(:,:), allocatable :: itopo_bathy
@@ -92,6 +86,17 @@ module specfem_par
   integer, dimension(:), allocatable :: free_surface_ispec
   integer :: num_free_surface_faces
 
+! attenuation
+  integer :: NSPEC_ATTENUATION_AB
+  character(len=MAX_STRING_LEN) :: prname_Q
+
+! additional mass matrix for ocean load
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
+
+!-----------------------------------------------------------------
+! coupling
+!-----------------------------------------------------------------
+
 ! for couple with external code : DSM and AxiSEM (added by VM) for the moment
   integer :: it_dsm, it_fk
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary, Tract_dsm_boundary
@@ -101,15 +106,15 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: Displ_axisem_time, Tract_axisem_time
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: Displ_specfem_time, Tract_specfem_time
 
-! attenuation
-  integer :: NSPEC_ATTENUATION_AB
-  character(len=MAX_STRING_LEN) :: prname_Q
 
-! additional mass matrix for ocean load
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
+!-----------------------------------------------------------------
+! time scheme
+!-----------------------------------------------------------------
 
 ! time scheme
   real(kind=CUSTOM_REAL) :: deltat,deltatover2,deltatsqover2
+  ! backward/reconstructed
+  real(kind=CUSTOM_REAL) :: b_deltat, b_deltatover2, b_deltatsqover2
 
 ! LDDRK time scheme
   integer :: NSTAGE_TIME_SCHEME,istage
@@ -117,6 +122,23 @@ module specfem_par
 
 ! time loop step
   integer :: it
+
+!! DK DK added this temporarily here to make SPECFEM3D and SPECFEM3D_GLOBE much more similar
+!! DK DK in terms of the structure of their main time iteration loop; these are future features
+!! DK DK that are missing in this code but implemented in the other and that could thus be cut and pasted one day
+  integer :: it_begin,it_end
+  integer :: seismo_offset,seismo_current
+  ! adjoint seismograms
+  integer :: it_adj_written
+
+  ! UNDO_ATTENUATION_AND_OR_PML
+  integer :: NSUBSET_ITERATIONS
+  integer :: iteration_on_subset,it_of_this_subset
+  integer :: it_subset_end
+
+!-----------------------------------------------------------------
+! sources
+!-----------------------------------------------------------------
 
 ! parameters for the source
   integer, dimension(:), allocatable :: islice_selected_source,ispec_selected_source
@@ -139,6 +161,16 @@ module specfem_par
   ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)
   ! [ = sign(Myy) = sign(Mzz) since they have to be equal in the acoustic setting]
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: pm1_source_encoding
+
+  ! parameters for a force source located exactly at a grid point
+  double precision, dimension(:), allocatable :: factor_force_source
+  double precision, dimension(:), allocatable :: comp_dir_vect_source_E
+  double precision, dimension(:), allocatable :: comp_dir_vect_source_N
+  double precision, dimension(:), allocatable :: comp_dir_vect_source_Z_UP
+
+!-----------------------------------------------------------------
+! receivers
+!-----------------------------------------------------------------
 
 ! receiver information
   integer :: nrec,nrec_local
@@ -166,13 +198,9 @@ module specfem_par
 ! seismograms
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: seismograms_d,seismograms_v,seismograms_a,seismograms_p
 
-!! DK DK added this temporarily here to make SPECFEM3D and SPECFEM3D_GLOBE much more similar
-!! DK DK in terms of the structure of their main time iteration loop; these are future features
-!! DK DK that are missing in this code but implemented in the other and that could thus be cut and pasted one day
-  integer :: it_begin,it_end
-  integer :: seismo_offset,seismo_current
-  ! adjoint seismograms
-  integer :: it_adj_written
+!-----------------------------------------------------------------
+! GLL points & weights
+!-----------------------------------------------------------------
 
 ! Gauss-Lobatto-Legendre points of integration and weights
   double precision, dimension(NGLLX) :: xigll,wxgll
@@ -196,12 +224,6 @@ module specfem_par
 
 ! timer MPI
   double precision :: time_start
-
-! parameters for a force source located exactly at a grid point
-  double precision, dimension(:), allocatable :: factor_force_source
-  double precision, dimension(:), allocatable :: comp_dir_vect_source_E
-  double precision, dimension(:), allocatable :: comp_dir_vect_source_N
-  double precision, dimension(:), allocatable :: comp_dir_vect_source_Z_UP
 
 ! array for NB_RUN_ACOUSTIC_GPU > 1
   integer, dimension(:), allocatable :: run_number_of_the_source
@@ -247,10 +269,11 @@ module specfem_par
   double precision, dimension(:), allocatable   :: integral_vol, integral_boun
   double precision, dimension(:,:), allocatable :: f_integrand_KH
 
-! ADJOINT parameters
+!-----------------------------------------------------------------
+! adjoint simulations
+!-----------------------------------------------------------------
 
-  ! time scheme
-  real(kind=CUSTOM_REAL) b_deltat, b_deltatover2, b_deltatsqover2
+! ADJOINT parameters
 
   ! absorbing stacey wavefield parts
   integer :: b_num_abs_boundary_faces
@@ -271,6 +294,10 @@ module specfem_par
   ! adjoint elements
   integer :: NSPEC_ADJOINT, NGLOB_ADJOINT
 
+!-----------------------------------------------------------------
+! noise
+!-----------------------------------------------------------------
+
   ! parameter module for noise simulations
   integer :: irec_master_noise
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sigma_kl
@@ -278,6 +305,10 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: noise_surface_movie
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: &
              normal_x_noise,normal_y_noise,normal_z_noise, mask_noise
+
+!-----------------------------------------------------------------
+! gravity
+!-----------------------------------------------------------------
 
   ! for gravity integrals
   double precision, dimension(NTOTAL_OBSERVATION) :: x_observation,y_observation,z_observation, &
@@ -295,6 +326,10 @@ module specfem_par
   logical :: VTK_MODE = .false.
 #endif
 
+!-----------------------------------------------------------------
+! point search
+!-----------------------------------------------------------------
+
   ! point search
   ! (i,j,k) indices of the control/anchor points of the element
   integer, dimension(:), allocatable :: anchor_iax,anchor_iay,anchor_iaz
@@ -302,6 +337,19 @@ module specfem_par
   ! coordinates of element midpoints
   double precision, dimension(:,:), allocatable :: xyz_midpoints
 
+!-----------------------------------------------------------------
+! GPU
+!-----------------------------------------------------------------
+
+! CUDA mesh pointer to integer wrapper
+  integer(kind=8) :: Mesh_pointer
+
+! for dynamic rupture computations on GPU
+  integer(kind=8) :: Fault_pointer
+
+! ASDF
+! asdf file handle
+  integer :: current_asdf_handle
 
 end module specfem_par
 

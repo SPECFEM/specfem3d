@@ -51,7 +51,7 @@
 ! not work because it would be discontinuous at such an interface and would
 ! therefore not be consistent with the basis functions.
 
-subroutine compute_forces_acoustic_calling()
+  subroutine compute_forces_acoustic_calling()
 
   use specfem_par
   use specfem_par_acoustic
@@ -69,23 +69,27 @@ subroutine compute_forces_acoustic_calling()
   ! iphase: iphase = 1 is for computing outer elements (on MPI interface),
   !         iphase = 2 is for computing inner elements
   integer :: iphase
+  logical :: backward_simulation
 
   ! debug timing
   double precision, external :: wtime
   double precision :: t_start,tCPU
   logical, parameter :: DO_TIMING = .false.
 
+  ! for forward simulations
+  backward_simulation = .false.
+
   ! enforces free surface (zeroes potentials at free surface)
-  call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE, &
-                        BOTTOM_FREE_SURFACE,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                        ibool,free_surface_ijk,free_surface_ispec, &
-                        num_free_surface_faces,ispec_is_acoustic)
+  call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
+                                     potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+                                     ibool,free_surface_ijk,free_surface_ispec, &
+                                     num_free_surface_faces,ispec_is_acoustic)
 
   if (USE_LDDRK) then
-    call acoustic_enforce_free_surface_lddrk(NSPEC_AB,NGLOB_AB_LDDRK,STACEY_INSTEAD_OF_FREE_SURFACE, &
-                        BOTTOM_FREE_SURFACE,potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
-                        ibool,free_surface_ijk,free_surface_ispec, &
-                        num_free_surface_faces,ispec_is_acoustic)
+    call acoustic_enforce_free_surface_lddrk(NSPEC_AB,NGLOB_AB_LDDRK,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
+                                             potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
+                                             ibool,free_surface_ijk,free_surface_ispec, &
+                                             num_free_surface_faces,ispec_is_acoustic)
   endif
 
   ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
@@ -97,7 +101,8 @@ subroutine compute_forces_acoustic_calling()
     endif
 
     ! acoustic pressure term
-    call compute_forces_acoustic(iphase,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,.false.)
+    call compute_forces_acoustic(iphase,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+                                 backward_simulation)
 
     ! debug timing
     if (DO_TIMING .and. myrank == 0 .and. iphase == 2) then
@@ -110,12 +115,12 @@ subroutine compute_forces_acoustic_calling()
       ! Stacey absorbing boundary conditions
       if (STACEY_ABSORBING_CONDITIONS) then
         call compute_stacey_acoustic(NSPEC_AB,NGLOB_AB, &
-                          potential_dot_dot_acoustic,potential_dot_acoustic, &
-                          ibool,iphase, &
-                          abs_boundary_jacobian2Dw,abs_boundary_ijk,abs_boundary_ispec, &
-                          num_abs_boundary_faces,rhostore,kappastore,ispec_is_acoustic, &
-                          SIMULATION_TYPE,SAVE_FORWARD,it,b_reclen_potential, &
-                          b_absorb_potential,b_num_abs_boundary_faces)
+                                     potential_dot_dot_acoustic,potential_dot_acoustic, &
+                                     ibool,iphase, &
+                                     abs_boundary_jacobian2Dw,abs_boundary_ijk,abs_boundary_ispec, &
+                                     num_abs_boundary_faces,rhostore,kappastore,ispec_is_acoustic, &
+                                     SIMULATION_TYPE,SAVE_FORWARD,it,b_reclen_potential, &
+                                     b_absorb_potential,b_num_abs_boundary_faces)
       endif
 
       ! elastic coupling
@@ -124,25 +129,25 @@ subroutine compute_forces_acoustic_calling()
           if (SIMULATION_TYPE == 1) then
             ! forward definition: \bfs=\frac{1}{\rho}\bfnabla\phi
             call compute_coupling_acoustic_el(NSPEC_AB,NGLOB_AB, &
-                                ibool,displ,potential_dot_dot_acoustic, &
-                                num_coupling_ac_el_faces, &
-                                coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                                coupling_ac_el_normal, &
-                                coupling_ac_el_jacobian2Dw, &
-                                iphase, &
-                                PML_CONDITIONS,SIMULATION_TYPE,.false.)
+                                              ibool,displ,potential_dot_dot_acoustic, &
+                                              num_coupling_ac_el_faces, &
+                                              coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                                              coupling_ac_el_normal, &
+                                              coupling_ac_el_jacobian2Dw, &
+                                              iphase, &
+                                              PML_CONDITIONS,SIMULATION_TYPE,backward_simulation)
 
           else
             ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
             ! adjoint definition: \partial_t^2 \bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger
             call compute_coupling_acoustic_el(NSPEC_AB,NGLOB_AB, &
-                                ibool,accel,potential_dot_dot_acoustic, &
-                                num_coupling_ac_el_faces, &
-                                coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                                coupling_ac_el_normal, &
-                                coupling_ac_el_jacobian2Dw, &
-                                iphase, &
-                                PML_CONDITIONS,SIMULATION_TYPE,.false.)
+                                              ibool,accel,potential_dot_dot_acoustic, &
+                                              num_coupling_ac_el_faces, &
+                                              coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                                              coupling_ac_el_normal, &
+                                              coupling_ac_el_jacobian2Dw, &
+                                              iphase, &
+                                              PML_CONDITIONS,SIMULATION_TYPE,backward_simulation)
           endif
         endif
       endif
@@ -152,13 +157,13 @@ subroutine compute_forces_acoustic_calling()
         if (num_coupling_ac_po_faces > 0) then
           if (SIMULATION_TYPE == 1) then
             call compute_coupling_acoustic_po(NSPEC_AB,NGLOB_AB, &
-                          ibool,displs_poroelastic,displw_poroelastic, &
-                          potential_dot_dot_acoustic, &
-                          num_coupling_ac_po_faces, &
-                          coupling_ac_po_ispec,coupling_ac_po_ijk, &
-                          coupling_ac_po_normal, &
-                          coupling_ac_po_jacobian2Dw, &
-                          iphase)
+                                              ibool,displs_poroelastic,displw_poroelastic, &
+                                              potential_dot_dot_acoustic, &
+                                              num_coupling_ac_po_faces, &
+                                              coupling_ac_po_ispec,coupling_ac_po_ijk, &
+                                              coupling_ac_po_normal, &
+                                              coupling_ac_po_jacobian2Dw, &
+                                              iphase)
           else
             stop 'not implemented yet'
           endif
@@ -176,19 +181,19 @@ subroutine compute_forces_acoustic_calling()
     if (iphase == 1) then
       ! sends potential_dot_dot_acoustic values to corresponding MPI interface neighbors (non-blocking)
       call assemble_MPI_scalar_async_send(NPROC,NGLOB_AB,potential_dot_dot_acoustic, &
-                        buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh, &
-                        request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
+                                          buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
+                                          num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                          my_neighbors_ext_mesh, &
+                                          request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
     else
 
       ! waits for send/receive requests to be completed and assembles values
       call assemble_MPI_scalar_async_recv(NPROC,NGLOB_AB,potential_dot_dot_acoustic, &
-                        buffer_recv_scalar_ext_mesh,num_interfaces_ext_mesh, &
-                        max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
+                                          buffer_recv_scalar_ext_mesh,num_interfaces_ext_mesh, &
+                                          max_nibool_interfaces_ext_mesh, &
+                                          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                          request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
     endif
   enddo
 
@@ -258,16 +263,16 @@ subroutine compute_forces_acoustic_calling()
   endif
 
 ! enforces free surface (zeroes potentials at free surface)
-  call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE, &
-                        BOTTOM_FREE_SURFACE,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                        ibool,free_surface_ijk,free_surface_ispec, &
-                        num_free_surface_faces,ispec_is_acoustic)
+  call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
+                                     potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+                                     ibool,free_surface_ijk,free_surface_ispec, &
+                                     num_free_surface_faces,ispec_is_acoustic)
 
   if (USE_LDDRK) then
-    call acoustic_enforce_free_surface_lddrk(NSPEC_AB,NGLOB_AB_LDDRK,STACEY_INSTEAD_OF_FREE_SURFACE, &
-                        BOTTOM_FREE_SURFACE,potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
-                        ibool,free_surface_ijk,free_surface_ispec, &
-                        num_free_surface_faces,ispec_is_acoustic)
+    call acoustic_enforce_free_surface_lddrk(NSPEC_AB,NGLOB_AB_LDDRK,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
+                                             potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
+                                             ibool,free_surface_ijk,free_surface_ispec, &
+                                             num_free_surface_faces,ispec_is_acoustic)
   endif
 
   if (SIMULATION_TYPE /= 1) then
@@ -285,7 +290,7 @@ subroutine compute_forces_acoustic_calling()
     endif
   endif
 
-end subroutine compute_forces_acoustic_calling
+  end subroutine compute_forces_acoustic_calling
 
 !
 !=====================================================================
@@ -317,7 +322,7 @@ end subroutine compute_forces_acoustic_calling
 ! therefore not be consistent with the basis functions.
 
 
-subroutine compute_forces_acoustic_backward_calling()
+  subroutine compute_forces_acoustic_backward_calling()
 
   use specfem_par
   use specfem_par_acoustic
@@ -327,35 +332,40 @@ subroutine compute_forces_acoustic_backward_calling()
   implicit none
 
   ! local parameters
-  integer:: iphase
+  integer :: iphase
+  logical :: backward_simulation
 
   ! checks
   if (SIMULATION_TYPE /= 3) &
     call exit_MPI(myrank,'error calling compute_forces_acoustic_backward() with wrong SIMULATION_TYPE')
 
+  ! backward fields
+  backward_simulation = .true.
+
   ! adjoint simulations
-  call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_ADJOINT,STACEY_INSTEAD_OF_FREE_SURFACE, &
-                      BOTTOM_FREE_SURFACE,b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
-                      ibool,free_surface_ijk,free_surface_ispec, &
-                      num_free_surface_faces,ispec_is_acoustic)
+  call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_ADJOINT,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
+                                     b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
+                                     ibool,free_surface_ijk,free_surface_ispec, &
+                                     num_free_surface_faces,ispec_is_acoustic)
 
   ! distinguishes two runs: for elements on MPI interfaces, and elements within the partitions
   do iphase = 1,2
 
     ! adjoint simulations
-    call compute_forces_acoustic(iphase,b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic,.true.)
+    call compute_forces_acoustic(iphase,b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
+                                 backward_simulation)
 
     ! computes additional contributions
     if (iphase == 1) then
       ! Stacey absorbing boundary conditions
       if (STACEY_ABSORBING_CONDITIONS) then
          call compute_stacey_acoustic_backward(NSPEC_AB, &
-                              ibool,iphase, &
-                              abs_boundary_ijk,abs_boundary_ispec, &
-                              num_abs_boundary_faces,ispec_is_acoustic, &
-                              SIMULATION_TYPE,NSTEP,it,NGLOB_ADJOINT, &
-                              b_potential_dot_dot_acoustic,b_reclen_potential, &
-                              b_absorb_potential,b_num_abs_boundary_faces)
+                                               ibool,iphase, &
+                                               abs_boundary_ijk,abs_boundary_ispec, &
+                                               num_abs_boundary_faces,ispec_is_acoustic, &
+                                               SIMULATION_TYPE,NSTEP,it,NGLOB_ADJOINT, &
+                                               b_potential_dot_dot_acoustic,b_reclen_potential, &
+                                               b_absorb_potential,b_num_abs_boundary_faces)
       endif
 
       ! elastic coupling
@@ -363,13 +373,13 @@ subroutine compute_forces_acoustic_backward_calling()
         if (num_coupling_ac_el_faces > 0) then
           ! adjoint/kernel simulations
           call compute_coupling_acoustic_el(NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                            ibool,b_displ,b_potential_dot_dot_acoustic, &
-                            num_coupling_ac_el_faces, &
-                            coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                            coupling_ac_el_normal, &
-                            coupling_ac_el_jacobian2Dw, &
-                            iphase, &
-                            PML_CONDITIONS,SIMULATION_TYPE,.true.)
+                                            ibool,b_displ,b_potential_dot_dot_acoustic, &
+                                            num_coupling_ac_el_faces, &
+                                            coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                                            coupling_ac_el_normal, &
+                                            coupling_ac_el_jacobian2Dw, &
+                                            iphase, &
+                                            PML_CONDITIONS,SIMULATION_TYPE,backward_simulation)
         endif
       endif
 
@@ -393,19 +403,19 @@ subroutine compute_forces_acoustic_backward_calling()
       ! sends b_potential_dot_dot_acoustic values to corresponding MPI interface neighbors (non-blocking)
       ! adjoint simulations
       call assemble_MPI_scalar_async_send(NPROC,NGLOB_ADJOINT,b_potential_dot_dot_acoustic, &
-                      b_buffer_send_scalar_ext_mesh,b_buffer_recv_scalar_ext_mesh, &
-                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                      my_neighbors_ext_mesh, &
-                      b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh)
+                                          b_buffer_send_scalar_ext_mesh,b_buffer_recv_scalar_ext_mesh, &
+                                          num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                          my_neighbors_ext_mesh, &
+                                          b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh)
 
     else
       ! adjoint simulations
       call assemble_MPI_scalar_async_recv(NPROC,NGLOB_ADJOINT,b_potential_dot_dot_acoustic, &
-                      b_buffer_recv_scalar_ext_mesh,num_interfaces_ext_mesh, &
-                      max_nibool_interfaces_ext_mesh, &
-                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                      b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh)
+                                          b_buffer_recv_scalar_ext_mesh,num_interfaces_ext_mesh, &
+                                          max_nibool_interfaces_ext_mesh, &
+                                          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                          b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh)
     endif
   enddo
 
@@ -435,18 +445,18 @@ subroutine compute_forces_acoustic_backward_calling()
 
 ! enforces free surface (zeroes potentials at free surface)
   ! adjoint simulations
-  call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_ADJOINT,STACEY_INSTEAD_OF_FREE_SURFACE, &
-                      BOTTOM_FREE_SURFACE,b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
-                      ibool,free_surface_ijk,free_surface_ispec, &
-                      num_free_surface_faces,ispec_is_acoustic)
+  call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_ADJOINT,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
+                                     b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
+                                     ibool,free_surface_ijk,free_surface_ispec, &
+                                     num_free_surface_faces,ispec_is_acoustic)
 
-end subroutine compute_forces_acoustic_backward_calling
+  end subroutine compute_forces_acoustic_backward_calling
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_forces_acoustic_GPU_calling()
+  subroutine compute_forces_acoustic_GPU_calling()
 
   use specfem_par
   use specfem_par_acoustic
@@ -477,9 +487,9 @@ subroutine compute_forces_acoustic_GPU_calling()
       ! Stacey absorbing boundary conditions
       if (STACEY_ABSORBING_CONDITIONS) then
          call compute_stacey_acoustic_GPU(iphase,num_abs_boundary_faces, &
-                              SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
-                              b_reclen_potential,b_absorb_potential, &
-                              b_num_abs_boundary_faces,Mesh_pointer)
+                                          SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                          b_reclen_potential,b_absorb_potential, &
+                                          b_num_abs_boundary_faces,Mesh_pointer)
       endif
 
       ! elastic coupling
@@ -496,13 +506,13 @@ subroutine compute_forces_acoustic_GPU_calling()
         if (num_coupling_ac_po_faces > 0) then
           if (SIMULATION_TYPE == 1) then
             call compute_coupling_acoustic_po(NSPEC_AB,NGLOB_AB, &
-                          ibool,displs_poroelastic,displw_poroelastic, &
-                          potential_dot_dot_acoustic, &
-                          num_coupling_ac_po_faces, &
-                          coupling_ac_po_ispec,coupling_ac_po_ijk, &
-                          coupling_ac_po_normal, &
-                          coupling_ac_po_jacobian2Dw, &
-                          iphase)
+                                              ibool,displs_poroelastic,displw_poroelastic, &
+                                              potential_dot_dot_acoustic, &
+                                              num_coupling_ac_po_faces, &
+                                              coupling_ac_po_ispec,coupling_ac_po_ijk, &
+                                              coupling_ac_po_normal, &
+                                              coupling_ac_po_jacobian2Dw, &
+                                              iphase)
           else
             stop 'not implemented yet'
           endif
@@ -527,11 +537,11 @@ subroutine compute_forces_acoustic_GPU_calling()
                                          buffer_send_scalar_ext_mesh, &
                                          1) ! -- 1 == fwd accel
       call assemble_MPI_scalar_send_cuda(NPROC, &
-                        buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh, &
-                        request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
+                                         buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
+                                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                         nibool_interfaces_ext_mesh, &
+                                         my_neighbors_ext_mesh, &
+                                         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
 
       ! adjoint simulations
       if (SIMULATION_TYPE == 3) then
@@ -541,11 +551,11 @@ subroutine compute_forces_acoustic_GPU_calling()
                                            3) ! -- 3 == adjoint b_accel
 
         call assemble_MPI_scalar_send_cuda(NPROC, &
-                          b_buffer_send_scalar_ext_mesh,b_buffer_recv_scalar_ext_mesh, &
-                          num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                          nibool_interfaces_ext_mesh, &
-                          my_neighbors_ext_mesh, &
-                          b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh)
+                                           b_buffer_send_scalar_ext_mesh,b_buffer_recv_scalar_ext_mesh, &
+                                           num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                           nibool_interfaces_ext_mesh, &
+                                           my_neighbors_ext_mesh, &
+                                           b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh)
 
       endif
 
@@ -553,24 +563,24 @@ subroutine compute_forces_acoustic_GPU_calling()
 
       ! waits for send/receive requests to be completed and assembles values
       call assemble_MPI_scalar_write_cuda(NPROC,NGLOB_AB,potential_dot_dot_acoustic, &
-                        Mesh_pointer, &
-                        buffer_recv_scalar_ext_mesh, &
-                        num_interfaces_ext_mesh, &
-                        max_nibool_interfaces_ext_mesh, &
-!                       nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh, &
-                        1)
+                                          Mesh_pointer, &
+                                          buffer_recv_scalar_ext_mesh, &
+                                          num_interfaces_ext_mesh, &
+                                          max_nibool_interfaces_ext_mesh, &
+                                         ! nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                          request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh, &
+                                          1)
 
       ! adjoint simulations
       if (SIMULATION_TYPE == 3) then
         call assemble_MPI_scalar_write_cuda(NPROC,NGLOB_AB,b_potential_dot_dot_acoustic, &
-                        Mesh_pointer, &
-                        b_buffer_recv_scalar_ext_mesh, &
-                        num_interfaces_ext_mesh, &
-                        max_nibool_interfaces_ext_mesh, &
-!                       nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh, &
-                        3)
+                                            Mesh_pointer, &
+                                            b_buffer_recv_scalar_ext_mesh, &
+                                            num_interfaces_ext_mesh, &
+                                            max_nibool_interfaces_ext_mesh, &
+                                           ! nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                            b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh, &
+                                            3)
       endif
     endif
   enddo
@@ -599,16 +609,16 @@ subroutine compute_forces_acoustic_GPU_calling()
 ! enforces free surface (zeroes potentials at free surface)
   call acoustic_enforce_free_surf_cuda(Mesh_pointer,STACEY_INSTEAD_OF_FREE_SURFACE)
 
-end subroutine compute_forces_acoustic_GPU_calling
+  end subroutine compute_forces_acoustic_GPU_calling
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE, &
-                        BOTTOM_FREE_SURFACE,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                        ibool,free_surface_ijk,free_surface_ispec, &
-                        num_free_surface_faces,ispec_is_acoustic)
+  subroutine acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
+                                           potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+                                           ibool,free_surface_ijk,free_surface_ispec, &
+                                           num_free_surface_faces,ispec_is_acoustic)
 
   use constants
 
@@ -658,16 +668,16 @@ subroutine acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FRE
 
   enddo
 
-end subroutine acoustic_enforce_free_surface
+  end subroutine acoustic_enforce_free_surface
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine acoustic_enforce_free_surface_lddrk(NSPEC_AB,NGLOB_AB_LDDRK,STACEY_INSTEAD_OF_FREE_SURFACE, &
-                        BOTTOM_FREE_SURFACE, potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
-                        ibool,free_surface_ijk,free_surface_ispec, &
-                        num_free_surface_faces,ispec_is_acoustic)
+  subroutine acoustic_enforce_free_surface_lddrk(NSPEC_AB,NGLOB_AB_LDDRK,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
+                                                 potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
+                                                 ibool,free_surface_ijk,free_surface_ispec, &
+                                                 num_free_surface_faces,ispec_is_acoustic)
 
   use constants
 
@@ -709,12 +719,12 @@ subroutine acoustic_enforce_free_surface_lddrk(NSPEC_AB,NGLOB_AB_LDDRK,STACEY_IN
         iglob = ibool(i,j,k,ispec)
 
         ! sets potentials to zero
-        potential_acoustic_lddrk(iglob)         = 0._CUSTOM_REAL
-        potential_dot_acoustic_lddrk(iglob)     = 0._CUSTOM_REAL
+        potential_acoustic_lddrk(iglob)     = 0._CUSTOM_REAL
+        potential_dot_acoustic_lddrk(iglob) = 0._CUSTOM_REAL
       enddo
     endif
 
   enddo
 
-end subroutine acoustic_enforce_free_surface_lddrk
+  end subroutine acoustic_enforce_free_surface_lddrk
 

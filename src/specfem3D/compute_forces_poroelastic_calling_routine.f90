@@ -46,35 +46,36 @@ subroutine compute_forces_poroelastic_calling()
     if (.not. GPU_MODE) then
 
       ! solid phase
-      call compute_forces_poro_solid_part( iphase, &
-                          displs_poroelastic,accels_poroelastic, &
-                          displw_poroelastic,velocw_poroelastic, &
-                          epsilonsdev_xx,epsilonsdev_yy,epsilonsdev_xy, &
-                          epsilonsdev_xz,epsilonsdev_yz,epsilons_trace_over_3)
+      ! forward field
+      call compute_forces_poro_solid_part(iphase, &
+                                          displs_poroelastic,accels_poroelastic, &
+                                          displw_poroelastic,velocw_poroelastic, &
+                                          epsilonsdev_xx,epsilonsdev_yy,epsilonsdev_xy, &
+                                          epsilonsdev_xz,epsilonsdev_yz,epsilons_trace_over_3)
 
       ! fluid phase
-      call compute_forces_poro_fluid_part( iphase, &
-                          displw_poroelastic,accelw_poroelastic, &
-                          velocw_poroelastic,displs_poroelastic, &
-                          epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy, &
-                          epsilonwdev_xz,epsilonwdev_yz,epsilonw_trace_over_3)
+      call compute_forces_poro_fluid_part(iphase, &
+                                          displw_poroelastic,accelw_poroelastic, &
+                                          velocw_poroelastic,displs_poroelastic, &
+                                          epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy, &
+                                          epsilonwdev_xz,epsilonwdev_yz,epsilonw_trace_over_3)
 
       ! adjoint simulations: backward/reconstructed wavefield
       if (SIMULATION_TYPE == 3) then
 
         ! solid phase
-        call compute_forces_poro_solid_part( iphase, &
-                            b_displs_poroelastic,b_accels_poroelastic, &
-                            b_displw_poroelastic,b_velocw_poroelastic, &
-                            b_epsilonsdev_xx,b_epsilonsdev_yy,b_epsilonsdev_xy, &
-                            b_epsilonsdev_xz,b_epsilonsdev_yz,b_epsilons_trace_over_3)
+        call compute_forces_poro_solid_part(iphase, &
+                                            b_displs_poroelastic,b_accels_poroelastic, &
+                                            b_displw_poroelastic,b_velocw_poroelastic, &
+                                            b_epsilonsdev_xx,b_epsilonsdev_yy,b_epsilonsdev_xy, &
+                                            b_epsilonsdev_xz,b_epsilonsdev_yz,b_epsilons_trace_over_3)
 
         ! fluid phase
-        call compute_forces_poro_fluid_part( iphase, &
-                            b_displw_poroelastic,b_accelw_poroelastic, &
-                            b_velocw_poroelastic,b_displs_poroelastic, &
-                            b_epsilonwdev_xx,b_epsilonwdev_yy,b_epsilonwdev_xy, &
-                            b_epsilonwdev_xz,b_epsilonwdev_yz,b_epsilonw_trace_over_3)
+        call compute_forces_poro_fluid_part(iphase, &
+                                            b_displw_poroelastic,b_accelw_poroelastic, &
+                                            b_velocw_poroelastic,b_displs_poroelastic, &
+                                            b_epsilonwdev_xx,b_epsilonwdev_yy,b_epsilonwdev_xy, &
+                                            b_epsilonwdev_xz,b_epsilonwdev_yz,b_epsilonw_trace_over_3)
       endif
 
     else
@@ -88,28 +89,28 @@ subroutine compute_forces_poroelastic_calling()
       ! adds poroelastic absorbing boundary terms to accelerations (type Stacey conditions)
       if (STACEY_ABSORBING_CONDITIONS) &
         call compute_stacey_poroelastic(NSPEC_AB,NGLOB_AB,accels_poroelastic,accelw_poroelastic, &
-                          ibool,iphase, &
-                          abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                          abs_boundary_ijk,abs_boundary_ispec, &
-                          num_abs_boundary_faces, &
-                          velocs_poroelastic,velocw_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
-                          rhoarraystore,phistore,tortstore, &
-                          ispec_is_poroelastic,SIMULATION_TYPE,SAVE_FORWARD, &
-                          NSTEP,it,NGLOB_ADJOINT,b_accels_poroelastic,b_accelw_poroelastic, &
-                          b_num_abs_boundary_faces,b_reclen_field_poro,b_absorb_fields, &
-                          b_absorb_fieldw)
+                                        ibool,iphase, &
+                                        abs_boundary_normal,abs_boundary_jacobian2Dw, &
+                                        abs_boundary_ijk,abs_boundary_ispec, &
+                                        num_abs_boundary_faces, &
+                                        velocs_poroelastic,velocw_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
+                                        rhoarraystore,phistore,tortstore, &
+                                        ispec_is_poroelastic,SIMULATION_TYPE,SAVE_FORWARD, &
+                                        NSTEP,it,NGLOB_ADJOINT,b_accels_poroelastic,b_accelw_poroelastic, &
+                                        b_num_abs_boundary_faces,b_reclen_field_poro,b_absorb_fields, &
+                                        b_absorb_fieldw)
 
       ! acoustic coupling
       if (ACOUSTIC_SIMULATION) then
         call compute_coupling_poroelastic_ac(NSPEC_AB,NGLOB_AB, &
-                          ibool,accels_poroelastic,accelw_poroelastic, &
-                          potential_dot_dot_acoustic, &
-                          num_coupling_ac_po_faces, &
-                          coupling_ac_po_ispec,coupling_ac_po_ijk, &
-                          coupling_ac_po_normal, &
-                          coupling_ac_po_jacobian2Dw, &
-                          rhoarraystore,phistore,tortstore, &
-                          iphase)
+                                             ibool,accels_poroelastic,accelw_poroelastic, &
+                                             potential_dot_dot_acoustic, &
+                                             num_coupling_ac_po_faces, &
+                                             coupling_ac_po_ispec,coupling_ac_po_ijk, &
+                                             coupling_ac_po_normal, &
+                                             coupling_ac_po_jacobian2Dw, &
+                                             rhoarraystore,phistore,tortstore, &
+                                             iphase)
 
         ! adjoint simulations
         ! chris:'adjoint acoustic-poroelastic simulation not implemented yet'
@@ -151,49 +152,49 @@ subroutine compute_forces_poroelastic_calling()
     if (iphase == 1) then
       ! sends accel values to corresponding MPI interface neighbors
       call assemble_MPI_vector_poro_s(NPROC,NGLOB_AB,accels_poroelastic, &
-                        accelw_poroelastic, &
-                        buffer_send_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_s, &
-                        buffer_send_vector_ext_mesh_w,buffer_recv_vector_ext_mesh_w, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh, &
-                        request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s, &
-                        request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
+                                      accelw_poroelastic, &
+                                      buffer_send_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_s, &
+                                      buffer_send_vector_ext_mesh_w,buffer_recv_vector_ext_mesh_w, &
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh, &
+                                      request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s, &
+                                      request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
 
       ! adjoint simulations
       if (SIMULATION_TYPE == 3) then
-      call assemble_MPI_vector_poro_s(NPROC,NGLOB_ADJOINT,b_accels_poroelastic, &
-                        b_accelw_poroelastic, &
-                        b_buffer_send_vector_ext_meshs,b_buffer_recv_vector_ext_meshs, &
-                        b_buffer_send_vector_ext_meshw,b_buffer_recv_vector_ext_meshw, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh, &
-                        b_request_send_vector_ext_meshs,b_request_recv_vector_ext_meshs, &
-                        b_request_send_vector_ext_meshw,b_request_recv_vector_ext_meshw)
+        call assemble_MPI_vector_poro_s(NPROC,NGLOB_ADJOINT,b_accels_poroelastic, &
+                                        b_accelw_poroelastic, &
+                                        b_buffer_send_vector_ext_meshs,b_buffer_recv_vector_ext_meshs, &
+                                        b_buffer_send_vector_ext_meshw,b_buffer_recv_vector_ext_meshw, &
+                                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                        my_neighbors_ext_mesh, &
+                                        b_request_send_vector_ext_meshs,b_request_recv_vector_ext_meshs, &
+                                        b_request_send_vector_ext_meshw,b_request_recv_vector_ext_meshw)
       endif !adjoint
 
     else
       ! waits for send/receive requests to be completed and assembles values
       call assemble_MPI_vector_poro_w(NPROC,NGLOB_AB,accels_poroelastic, &
-                        accelw_poroelastic, &
-                        buffer_recv_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_w, &
-                        num_interfaces_ext_mesh, &
-                        max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s, &
-                        request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
+                                      accelw_poroelastic, &
+                                      buffer_recv_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_w, &
+                                      num_interfaces_ext_mesh, &
+                                      max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s, &
+                                      request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
 
       ! adjoint simulations
       if (SIMULATION_TYPE == 3) then
       call assemble_MPI_vector_poro_w(NPROC,NGLOB_ADJOINT,b_accels_poroelastic, &
-                        b_accelw_poroelastic, &
-                        b_buffer_recv_vector_ext_meshs,b_buffer_recv_vector_ext_meshw, &
-                        num_interfaces_ext_mesh, &
-                        max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        b_request_send_vector_ext_meshs,b_request_recv_vector_ext_meshs, &
-                        b_request_send_vector_ext_meshw,b_request_recv_vector_ext_meshw)
+                                      b_accelw_poroelastic, &
+                                      b_buffer_recv_vector_ext_meshs,b_buffer_recv_vector_ext_meshw, &
+                                      num_interfaces_ext_mesh, &
+                                      max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      b_request_send_vector_ext_meshs,b_request_recv_vector_ext_meshs, &
+                                      b_request_send_vector_ext_meshw,b_request_recv_vector_ext_meshw)
       endif !adjoint
 
     endif
@@ -241,50 +242,49 @@ subroutine compute_forces_poroelastic_calling()
 !
 ! corrector:
 !   updates the velocity term which requires a(t+delta)
-! solid phase
+  ! solid phase
   velocs_poroelastic(:,:) = velocs_poroelastic(:,:) + deltatover2*accels_poroelastic(:,:)
 
-! fluid phase
+  ! fluid phase
   velocw_poroelastic(:,:) = velocw_poroelastic(:,:) + deltatover2*accelw_poroelastic(:,:)
 
   ! adjoint simulations
-! solid phase
+  ! solid phase
   if (SIMULATION_TYPE == 3) b_velocs_poroelastic(:,:) = b_velocs_poroelastic(:,:) + &
-                               b_deltatover2*b_accels_poroelastic(:,:)
+                                                        b_deltatover2*b_accels_poroelastic(:,:)
 
-! fluid phase
+  ! fluid phase
   if (SIMULATION_TYPE == 3) b_velocw_poroelastic(:,:) = b_velocw_poroelastic(:,:) + &
-                               b_deltatover2*b_accelw_poroelastic(:,:)
+                                                        b_deltatover2*b_accelw_poroelastic(:,:)
 
-! elastic coupling
-    if (ELASTIC_SIMULATION) &
-      call compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool, &
-                        accel,veloc, &
-                        accels_poroelastic,velocs_poroelastic, &
-                        accelw_poroelastic,velocw_poroelastic, &
-                        rmass,rmass_solid_poroelastic, &
-                        SIMULATION_TYPE,NSPEC_ADJOINT, &
-                        num_coupling_el_po_faces, &
-                        coupling_el_po_ispec,coupling_el_po_ijk, &
-                        deltatover2)
+  ! elastic coupling
+  if (ELASTIC_SIMULATION) &
+    call compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool, &
+                                       accel,veloc, &
+                                       accels_poroelastic,velocs_poroelastic, &
+                                       accelw_poroelastic,velocw_poroelastic, &
+                                       rmass,rmass_solid_poroelastic, &
+                                       SIMULATION_TYPE,NSPEC_ADJOINT, &
+                                       num_coupling_el_po_faces, &
+                                       coupling_el_po_ispec,coupling_el_po_ijk, &
+                                       deltatover2)
 
 
-end subroutine compute_forces_poroelastic_calling
+  end subroutine compute_forces_poroelastic_calling
 
 !-----------------------------------------------------------------------------------------------------------------
 
-subroutine compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool, &
-                        accel,veloc, &
-                        accels_poroelastic,velocs_poroelastic, &
-                        accelw_poroelastic,velocw_poroelastic, &
-                        rmass,rmass_solid_poroelastic, &
-                        SIMULATION_TYPE,NSPEC_ADJOINT, &
-                        num_coupling_el_po_faces, &
-                        coupling_el_po_ispec,coupling_el_po_ijk, &
-                        deltatover2)
-!*******************************************************************************
+  subroutine compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool, &
+                                           accel,veloc, &
+                                           accels_poroelastic,velocs_poroelastic, &
+                                           accelw_poroelastic,velocw_poroelastic, &
+                                           rmass,rmass_solid_poroelastic, &
+                                           SIMULATION_TYPE,NSPEC_ADJOINT, &
+                                           num_coupling_el_po_faces, &
+                                           coupling_el_po_ispec,coupling_el_po_ijk, &
+                                           deltatover2)
+
 !         assembling the displacements on the elastic-poro boundaries
-!*******************************************************************************
 
   use constants
 
@@ -383,4 +383,4 @@ subroutine compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool, &
     enddo ! igll
   enddo ! iface
 
-end subroutine compute_continuity_disp_po_el
+  end subroutine compute_continuity_disp_po_el
