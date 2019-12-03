@@ -8,22 +8,29 @@ program create_adjsrc_waveform
 !
   implicit none
 
-  integer :: i, is, ie, nstep, j, itime ,ifile, ios, i1, i2, nstep_old
-  integer :: idx, idx2, nargs, ncomp,itaper_length
-  character(len=256) :: arg(100), file(3)
-  character(len=256) :: filename,basename,basename2
-  character(len=256) :: data_dir,syn_dir
-  character(len=64) :: net_sta
-  character(len=3) :: channel
-  character(len=1) :: comp(3) = (/ 'X', 'Y', 'Z' /)
   integer,parameter :: NMAX = 30000
   real*8, parameter :: EPS = 1.0d-17
   real*8, parameter :: PI = 3.1415926d0
-  real*8 :: ts, te, norm
+
   real*8 :: trace_syn(5,NMAX),trace_dat(5,NMAX), out(NMAX), adj(NMAX), tw(NMAX)
+  real*8 :: ts, te, norm
   real*8 :: dt, t0, t0_old, dt_old, costh, sinth, th, baz
+
+  integer :: i, is, ie, nstep, j, itime ,ifile, ios, i1, i2, nstep_old
+  integer :: idx, idx2, nargs, ncomp,itaper_length
+
+  character(len=256) :: arg(100), file(3)
+  character(len=256) :: filename
+  character(len=256) :: data_dir
+
+  character(len=256) :: basename,basename2,syn_dir
+  character(len=64) :: net_sta
+  character(len=3) :: channel
+  character(len=1) :: comp(3) = (/ 'X', 'Y', 'Z' /)
+
   logical :: lrot,single_file
 
+  ! initializes
   lrot = .false.
   single_file = .false.
 
