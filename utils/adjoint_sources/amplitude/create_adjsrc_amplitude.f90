@@ -87,7 +87,9 @@ program create_adjsrc_amplitude
   endif
 
   ! user output
-  print *, 'ifile = ', ifile, '  lrot = ', lrot
+  print *, 'xcreate_adjsrc_amplitude:'
+  print *, '  measurement window start/end = ',ts,'/',te
+  print *, '  component ifile = ', ifile, '  lrot = ', lrot
   print *, ' '
 
   ! reads seismograms (ascii format)
@@ -154,8 +156,12 @@ program create_adjsrc_amplitude
     if (abs(norm) > EPS) then
       adj(1:nstep) =  out(1:nstep) * tw(1:nstep) / norm
     else
-      print *, 'norm < EPS for file '//trim(file(i))
-      adj(:) = 0.
+      if (ifile /= 0 .and. ifile /= i) then
+        print *,'  component set to zero'
+      else
+        print *, '  norm < EPS for file '//trim(file(i))
+      endif
+      adj(:) = 0.0
     endif
     data(i,:) = adj(:)
 

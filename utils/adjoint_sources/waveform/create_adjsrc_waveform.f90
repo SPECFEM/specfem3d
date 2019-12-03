@@ -114,7 +114,8 @@ program create_adjsrc_waveform
 
   ! user output
   print *, 'xcreate_adjsrc_waveform:'
-  print *, '  ifile = ', ifile, '  lrot = ', lrot
+  print *, '  measurement window start/end = ',ts,'/',te
+  print *, '  component ifile = ', ifile, '  lrot = ', lrot
   print *, '  single file = ',single_file
 
   ! gets directory from filename
@@ -287,13 +288,13 @@ program create_adjsrc_waveform
     else
       ! user output
       if (single_file) then
-        if (comp(ifile) /= channel(3:3)) then
+        if (ifile /= 0 .and. comp(ifile) /= channel(3:3)) then
           print *,'  component set to zero'
         else
           print *, '  norm < EPS for file '//trim(file(i))
         endif
       else
-        if (ifile /= i) then
+        if (ifile /= 0 .and. ifile /= i) then
           print *,'  component set to zero'
         else
           print *, '  norm < EPS for file '//trim(file(i))

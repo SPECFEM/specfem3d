@@ -8,8 +8,8 @@ comp="MXP"
 en="semp"
 
 # window start/end time
-t_start=32.0
-t_end=38.0
+t_start=9.0  # 32.0
+t_end=30.0   # 38.0
 
 #################################################
 
