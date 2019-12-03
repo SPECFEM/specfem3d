@@ -38,7 +38,7 @@ cd $current_pwd/OUTPUT_FILES/SEM
 collect_seismo_lsf_multi.pl $current_pwd/OUTPUT_FILES/lsf_machines $current_pwd/DATA/Par_file
 #xcut_velocity 29.0 32.5 3 GSC*.semd
 xcreate_adjsrc_traveltime 29.0 32.5 3 GSC*.semd
-rename .semd.adj .adj *.semd.ad
+#rename .semd.adj .adj *.semd.ad
 cd $current_pwd
 ##########################################################################
 

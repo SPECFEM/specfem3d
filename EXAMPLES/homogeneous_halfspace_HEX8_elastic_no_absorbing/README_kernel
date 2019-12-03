@@ -59,6 +59,8 @@ step-by-step kernel tutorial:
    - make designated directory for adjoint sources:
      > mkdir OUTPUT_FILES/SEM/
      > mv OUTPUT_FILES/*.adj OUTPUT_FILES/SEM/
+
+     in case needed, rename to have ending .adj:
      > cd OUTPUT_FILES/SEM/
      > rename .semd.adj .adj *.adj
 

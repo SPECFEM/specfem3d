@@ -63,9 +63,11 @@ step-by-step kernel tutorial:
    - make designated directory for adjoint sources:
      > mkdir SEM/
      > mv OUTPUT_FILES/*.adj SEM/
+
+     in case needed, rename to have ending .adj:
      > cd SEM/
      > rename .semd.adj .adj *.adj
-(on some linux machines, the last line may be rename 's/.semd.adj/.adj/' *.adj)
+      (on some linux machines, the last line may be rename 's/.semd.adj/.adj/' *.adj)
 
      this should create the files:
           SEM/DB.X20.BXX.adj

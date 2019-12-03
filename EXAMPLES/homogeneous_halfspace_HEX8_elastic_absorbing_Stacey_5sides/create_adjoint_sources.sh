@@ -15,9 +15,10 @@ cd SEM/
 # checks exit code
 if [[ $? -ne 0 ]]; then exit 1; fi
 
-if [ ! -e X20.DB.BXZ.semd.adj ]; then echo "error creating adjoint sources, please check..."; exit 1; fi
+if [ ! -e X20.DB.BXZ.adj ]; then echo "error creating adjoint sources, please check..."; exit 1; fi
 
-rename .semd.adj .adj *semd.adj
+# renames
+#rename .semd.adj .adj *semd.adj
 
 cd ../
 

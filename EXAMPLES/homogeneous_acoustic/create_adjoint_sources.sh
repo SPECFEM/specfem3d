@@ -72,13 +72,14 @@ cd SEM/
 # checks exit code
 if [[ $? -ne 0 ]]; then exit 1; fi
 
-if [ ! -e $sta.$compx.$en.adj ]; then echo "error creating adjoint sources, please check..."; exit 1; fi
+if [ ! -e $sta.$compx.adj ]; then echo "error creating adjoint sources, please check..."; exit 1; fi
 echo
 
+# renames
 # (acoustic adjoint sources are read from component 1 -> MXX.adj)
-mv -v $sta.$compx.$en.adj $sta.$compx.adj
-mv -v $sta.$compy.$en.adj $sta.$compy.adj
-mv -v $sta.$compz.$en.adj $sta.$compz.adj
+#mv -v $sta.$compx.$en.adj $sta.$compx.adj
+#mv -v $sta.$compy.$en.adj $sta.$compy.adj
+#mv -v $sta.$compz.$en.adj $sta.$compz.adj
 
 # create STATIONS_ADJOINT file with adjoint source location
 fgrep $station ../DATA/STATIONS > ./STATIONS_ADJOINT
