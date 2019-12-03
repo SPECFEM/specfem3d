@@ -530,7 +530,7 @@ contains
        endif
     enddo
 
-    nspec_local = count2
+    nspec_local = count2 - 1
     allocate(if_cpml(nspec_local),stat=ier)
     if (ier /= 0) stop 'Error allocating array if_cpml'
 

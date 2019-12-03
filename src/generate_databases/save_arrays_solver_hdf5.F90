@@ -94,13 +94,17 @@
   character(len=5)  :: gname_proc_head = "proc_"
   type(h5io)        :: h5
 
-  ! dump dataset size
-  integer, dimension(NPROC,4) :: dsize_dump
-
   ! element node connectivity for movie output
   ! the node ids are stored after dividing one 4th order spectral element into 8 of 2nd order element
   ! thus this is output may not work for NGLL* /= 5
   integer, dimension(9,nspec*64) :: spec_elm_conn_xdmf
+
+  ! dump dataset size
+  integer, dimension(NPROC,4)                :: dsize_dump
+  integer, dimension(1,1)                    :: i2d_dummy = reshape((/0/),(/1,1/)) 
+  integer, dimension(1,1,1)                  :: i3d_dummy = reshape((/0/),(/1,1,1/)) 
+  real(kind=CUSTOM_REAL), dimension(1,1)     :: r2d_dummy = reshape((/0.0/),(/1,1/)) 
+  real(kind=CUSTOM_REAL), dimension(1,1,1)   :: r3d_dummy = reshape((/0.0/),(/1,1,1/)) 
 
   ! saves mesh file external_mesh.h5
   tempstr = "/external_mesh.h5"
@@ -316,9 +320,9 @@
   call h5_write_dataset_p_1d_i(h5, dset_name, (/num_abs_boundary_faces/))
   if (num_abs_boundary_faces > 0) then
     dset_name = "abs_boundary_ispec"
-    call h5_write_dataset_p_1d_i(h5, dset_name, abs_boundary_ispec)
+    call h5_write_dataset_p_1d_i(h5, dset_name, abs_boundary_ispec) !!!!!! stopping here
     dset_name = "abs_boundary_ijk"
-    call h5_write_dataset_p_3d_i(h5, dset_name, abs_boundary_ijk)
+    call h5_write_dataset_p_3d_i(h5, dset_name, abs_boundary_ijk) !!!!!!!!!!!!!!!!!!!!!!!
     dset_name = "abs_boundary_jacobian2Dw"
     call h5_write_dataset_p_2d_r(h5, dset_name, abs_boundary_jacobian2Dw)
     dset_name = "abs_boundary_normal"
@@ -339,7 +343,36 @@
         call h5_write_dataset_p_1d_r(h5, dset_name, rmassz_acoustic)
      endif
     endif
+  else
+    dset_name = "abs_boundary_ispec"
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/0/)) !!!!!! stopping here
+    dset_name = "abs_boundary_ijk"
+    call h5_write_dataset_p_3d_i(h5, dset_name, i3d_dummy) !!!!!!!!!!!!!!!!!!!!!!!
+    dset_name = "abs_boundary_jacobian2Dw"
+    call h5_write_dataset_p_2d_r(h5, dset_name, r2d_dummy)
+    dset_name = "abs_boundary_normal"
+    call h5_write_dataset_p_3d_r(h5, dset_name, r3d_dummy)
+
+    if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
+      ! store mass matrix contributions
+      if (ELASTIC_SIMULATION) then
+        dset_name = "rmassx"
+        call h5_write_dataset_p_1d_r(h5, dset_name, (/0.0/))
+        dset_name = "rmassy"
+        call h5_write_dataset_p_1d_r(h5, dset_name, (/0.0/))
+        dset_name = "rmassz"
+        call h5_write_dataset_p_1d_r(h5, dset_name, (/0.0/))
+     endif
+      if (ACOUSTIC_SIMULATION) then
+        dset_name = "rmassz_acoustic"
+        call h5_write_dataset_p_1d_r(h5, dset_name, (/0.0/))
+     endif
+    endif
+ 
+
   endif
+
+  call synchronize_all()
 
   dset_name = "nspec2D_xmin"
   call h5_write_dataset_p_1d_i(h5, dset_name, (/nspec2D_xmin/))
@@ -378,6 +411,15 @@
     call h5_write_dataset_p_2d_r(h5, dset_name, free_surface_jacobian2Dw)
     dset_name = "free_surface_normal"
     call h5_write_dataset_p_3d_r(h5, dset_name, free_surface_normal)
+  else
+    dset_name = "free_surface_ispec"
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/0/))
+    dset_name = "free_surface_ijk"
+    call h5_write_dataset_p_3d_i(h5, dset_name, i3d_dummy)
+    dset_name = "free_surface_jacobian2Dw"
+    call h5_write_dataset_p_2d_r(h5, dset_name, r2d_dummy)
+    dset_name = "free_surface_normal"
+    call h5_write_dataset_p_3d_r(h5, dset_name, r3d_dummy)
   endif
 
   ! acoustic-elastic coupling surface
@@ -392,6 +434,15 @@
     call h5_write_dataset_p_2d_r(h5, dset_name, coupling_ac_el_jacobian2Dw)
     dset_name = "coupling_ac_el_normal"
     call h5_write_dataset_p_3d_r(h5, dset_name, coupling_ac_el_normal)
+  else
+    dset_name = "coupling_ac_el_ispec"
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/0/))
+    dset_name = "coupling_ac_el_ijk"
+    call h5_write_dataset_p_3d_i(h5, dset_name, i3d_dummy)
+    dset_name = "coupling_ac_el_jacobian2Dw"
+    call h5_write_dataset_p_2d_r(h5, dset_name, r2d_dummy)
+    dset_name = "coupling_ac_el_normal"
+    call h5_write_dataset_p_3d_r(h5, dset_name, r3d_dummy)
   endif
   
   ! acoustic-poroelastic coupling surface
@@ -406,6 +457,15 @@
     call h5_write_dataset_p_2d_r(h5, dset_name, coupling_ac_po_jacobian2Dw)
     dset_name = "coupling_ac_po_normal"
     call h5_write_dataset_p_3d_r(h5, dset_name, coupling_ac_po_normal)
+  else
+    dset_name = "coupling_ac_po_ispec"
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/0/))
+    dset_name = "coupling_ac_po_ijk"
+    call h5_write_dataset_p_3d_i(h5, dset_name, i3d_dummy)
+    dset_name = "coupling_ac_po_jacobian2Dw"
+    call h5_write_dataset_p_2d_r(h5, dset_name, r2d_dummy)
+    dset_name = "coupling_ac_po_normal"
+    call h5_write_dataset_p_3d_r(h5, dset_name, r3d_dummy)
   endif
 
   ! elastic-poroelastic coupling surface
@@ -424,6 +484,19 @@
     call h5_write_dataset_p_2d_r(h5, dset_name, coupling_el_po_jacobian2Dw)
     dset_name = "coupling_el_po_normal"
     call h5_write_dataset_p_3d_r(h5, dset_name, coupling_el_po_normal)
+  else
+    dset_name = "coupling_el_po_ispec"
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/0/))
+    dset_name = "coupling_po_el_ispec"
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/0/))
+    dset_name = "coupling_el_po_ijk"
+    call h5_write_dataset_p_3d_i(h5, dset_name, i3d_dummy)
+    dset_name = "coupling_po_el_ijk"
+    call h5_write_dataset_p_3d_i(h5, dset_name, i3d_dummy)
+    dset_name = "coupling_el_po_jacobian2Dw"
+    call h5_write_dataset_p_2d_r(h5, dset_name, r2d_dummy)
+    dset_name = "coupling_el_po_normal"
+    call h5_write_dataset_p_3d_r(h5, dset_name, r3d_dummy)
   endif
 
   !MPI interfaces
@@ -447,6 +520,15 @@
     call h5_write_dataset_p_1d_i(h5, dset_name, (/nibool_interfaces_ext_mesh/))
     dset_name = "ibool_interfaces_ext_mesh_dummy"
     call h5_write_dataset_p_2d_i(h5, dset_name, ibool_interfaces_ext_mesh_dummy)
+  else
+    dset_name = "max_nibool_interfaces_ext_mesh"
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/0/))
+    dset_name = "my_neighbors_ext_mesh"
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/0/))
+    dset_name = "nibool_interfaces_ext_mesh"
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/0/))
+    dset_name = "ibool_interfaces_ext_mesh_dummy"
+    call h5_write_dataset_p_2d_i(h5, dset_name, i2d_dummy)
   endif
   
   ! anisotropy
@@ -509,6 +591,9 @@
     if (num_phase_ispec_acoustic > 0) then
       dset_name = "phase_ispec_inner_acoustic"
       call h5_write_dataset_p_2d_i(h5, dset_name, phase_ispec_inner_acoustic)
+    else
+      dset_name = "phase_ispec_inner_acoustic"
+      call h5_write_dataset_p_2d_i(h5, dset_name, i2d_dummy)
     endif
   endif
 
@@ -522,6 +607,9 @@
     if (num_phase_ispec_elastic > 0) then
       dset_name = "phase_ispec_inner_elastic"
       call h5_write_dataset_p_2d_i(h5, dset_name, phase_ispec_inner_elastic)
+    else
+      dset_name = "phase_ispec_inner_elastic"
+      call h5_write_dataset_p_2d_i(h5, dset_name, i2d_dummy)
     endif
   endif
 
@@ -534,6 +622,9 @@
     if (num_phase_ispec_poroelastic > 0) then
       dset_name = "phase_ispec_inner_poroelastic"
       call h5_write_dataset_p_2d_i(h5, dset_name, phase_ispec_inner_poroelastic)
+    else
+      dset_name = "phase_ispec_inner_poroelastic"
+      call h5_write_dataset_p_2d_i(h5, dset_name, i2d_dummy)
     endif
   endif
 
