@@ -156,14 +156,15 @@ program combine_sem
   ! sum kernels
   if (myrank == 0) then
     print *,'summing kernels in: '
-    print *,kernel_paths(1:npath)
+    do i = 1,npath
+      print *,'  ',trim(kernel_paths(i))
+    enddo
     print *
   endif
 
   do iker=1,nker
-      call combine_sem_array(kernel_names(iker),kernel_paths,output_dir,npath)
+    call combine_sem_array(kernel_names(iker),kernel_paths,output_dir,npath)
   enddo
-
 
   if (myrank == 0) write(*,*) 'done writing all arrays, see directory: ', output_dir
   call finalize_mpi()

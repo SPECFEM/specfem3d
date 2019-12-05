@@ -72,19 +72,17 @@ extern "C"
 void FC_FUNC_(update_displacement_cuda,
               UPDATE_DISPLACMENT_CUDA)(long* Mesh_pointer,
                                           realw* deltat_F,
-                                          realw* deltatsqover2_F,
                                           realw* deltatover2_F,
-                                          realw* b_deltat_F,
-                                          realw* b_deltatsqover2_F,
-                                          realw* b_deltatover2_F) {
+                                          realw* deltatsqover2_F,
+                                          int* FORWARD_OR_ADJOINT) {
 
   TRACE("\tupdate_displacement_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
 
   realw deltat = *deltat_F;
-  realw deltatsqover2 = *deltatsqover2_F;
   realw deltatover2 = *deltatover2_F;
+  realw deltatsqover2 = *deltatsqover2_F;
 
   int size = NDIM * mp->NGLOB_AB;
 
@@ -96,6 +94,19 @@ void FC_FUNC_(update_displacement_cuda,
 
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
+
+  // sets gpu arrays
+  realw* displ, *veloc, *accel;
+  if (*FORWARD_OR_ADJOINT == 1) {
+    displ = mp->d_displ;
+    veloc = mp->d_veloc;
+    accel = mp->d_accel;
+  } else {
+    // for backward/reconstructed fields
+    displ = mp->d_b_displ;
+    veloc = mp->d_b_veloc;
+    accel = mp->d_b_accel;
+  }
 
   // Cuda timing
   cudaEvent_t start,stop;
@@ -111,18 +122,8 @@ void FC_FUNC_(update_displacement_cuda,
   //printf("rank %d - max displ: %f veloc: %f accel: %f\n",mp->myrank,max_d,max_v,max_a);
 
   //launch kernel
-  UpdateDispVeloc_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_displ,mp->d_veloc,mp->d_accel,
+  UpdateDispVeloc_kernel<<<grid,threads,0,mp->compute_stream>>>(displ,veloc,accel,
                                                                 size,deltat,deltatsqover2,deltatover2);
-
-  // kernel for backward fields
-  if (mp->simulation_type == 3) {
-    realw b_deltat = *b_deltat_F;
-    realw b_deltatsqover2 = *b_deltatsqover2_F;
-    realw b_deltatover2 = *b_deltatover2_F;
-
-    UpdateDispVeloc_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_displ,mp->d_b_veloc,mp->d_b_accel,
-                                                                  size,b_deltat,b_deltatsqover2,b_deltatover2);
-  }
 
   // Cuda timing
   if (CUDA_TIMING_UPDATE ){
@@ -190,16 +191,19 @@ __global__ void UpdatePotential_kernel(field* potential_acoustic,
 /* ----------------------------------------------------------------------------------------------- */
 
 extern "C"
-void FC_FUNC_(it_update_displacement_ac_cuda,
-              it_update_displacement_ac_cuda)(long* Mesh_pointer,
-                                               realw* deltat_F,
-                                               realw* deltatsqover2_F,
-                                               realw* deltatover2_F,
-                                               realw* b_deltat_F,
-                                               realw* b_deltatsqover2_F,
-                                               realw* b_deltatover2_F) {
-  TRACE("\tit_update_displacement_ac_cuda");
+void FC_FUNC_(update_displacement_ac_cuda,
+              UPDATE_DISPLACEMENT_AC_CUDA)(long* Mesh_pointer,
+                                           realw* deltat_F,
+                                           realw* deltatover2_F,
+                                           realw* deltatsqover2_F,
+                                           int* FORWARD_OR_ADJOINT) {
+  TRACE("\tupdate_displacement_ac_cuda");
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
+
+  // safety check
+  if (*FORWARD_OR_ADJOINT != 1 && *FORWARD_OR_ADJOINT != 3) {
+    exit_on_error("Error invalid FORWARD_OR_ADJOINT in update_displacement_ac_cuda() routine");
+  }
 
   int size = mp->NGLOB_AB;
 
@@ -215,8 +219,21 @@ void FC_FUNC_(it_update_displacement_ac_cuda,
   //launch kernel
   // forward wavefields
   realw deltat = *deltat_F;
-  realw deltatsqover2 = *deltatsqover2_F;
   realw deltatover2 = *deltatover2_F;
+  realw deltatsqover2 = *deltatsqover2_F;
+
+  // sets gpu arrays
+  field* potential, *potential_dot, *potential_dot_dot;
+  if (*FORWARD_OR_ADJOINT == 1) {
+    potential = mp->d_potential_acoustic;
+    potential_dot = mp->d_potential_dot_acoustic;
+    potential_dot_dot = mp->d_potential_dot_dot_acoustic;
+  } else {
+    // for backward/reconstructed fields
+    potential = mp->d_b_potential_acoustic;
+    potential_dot = mp->d_b_potential_dot_acoustic;
+    potential_dot_dot = mp->d_b_potential_dot_dot_acoustic;
+  }
 
   // Cuda timing
   cudaEvent_t start,stop;
@@ -224,22 +241,10 @@ void FC_FUNC_(it_update_displacement_ac_cuda,
     start_timing_cuda(&start,&stop);
   }
 
-  UpdatePotential_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_acoustic,
-                                                                 mp->d_potential_dot_acoustic,
-                                                                 mp->d_potential_dot_dot_acoustic,
-                                                                 size,deltat,deltatsqover2,deltatover2);
-
-  // backward/reconstructed wavefields
-  if (mp->simulation_type == 3) {
-    realw b_deltat = *b_deltat_F;
-    realw b_deltatsqover2 = *b_deltatsqover2_F;
-    realw b_deltatover2 = *b_deltatover2_F;
-
-    UpdatePotential_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_acoustic,
-                                                                  mp->d_b_potential_dot_acoustic,
-                                                                  mp->d_b_potential_dot_dot_acoustic,
-                                                                  size,b_deltat,b_deltatsqover2,b_deltatover2);
-  }
+  UpdatePotential_kernel<<<grid,threads,0,mp->compute_stream>>>(potential,
+                                                                potential_dot,
+                                                                potential_dot_dot,
+                                                                size,deltat,deltatsqover2,deltatover2);
 
   // Cuda timing
   if (CUDA_TIMING_UPDATE ){
@@ -258,7 +263,7 @@ void FC_FUNC_(it_update_displacement_ac_cuda,
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);
-  exit_on_cuda_error("it_update_displacement_ac_cuda");
+  exit_on_cuda_error("update_displacement_ac_cuda");
 #endif
 }
 
@@ -518,15 +523,44 @@ __global__ void kernel_3_acoustic_cuda_device(field* potential_dot_acoustic,
 
 /* ----------------------------------------------------------------------------------------------- */
 
+__global__ void kernel_3_acoustic_single_cuda_device(field* potential_dot_acoustic,
+                                                     field* potential_dot_dot_acoustic,
+                                                     int size,
+                                                     realw deltatover2,
+                                                     realw* rmass_acoustic) {
+
+  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
+
+  realw rmass;
+  field p_dot_dot;
+  // because of block and grid sizing problems, there is a small
+  // amount of buffer at the end of the calculation
+  if (id < size) {
+    rmass = rmass_acoustic[id];
+    // multiplies pressure with the inverse of the mass matrix
+    p_dot_dot = rmass*potential_dot_dot_acoustic[id];
+    potential_dot_dot_acoustic[id] = p_dot_dot;
+    potential_dot_acoustic[id] += deltatover2*p_dot_dot;
+  }
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
 extern "C"
 void FC_FUNC_(kernel_3_acoustic_cuda,
               KERNEL_3_ACOUSTIC_CUDA)(long* Mesh_pointer,
                                       realw* deltatover2_F,
-                                      realw* b_deltatover2_F) {
+                                      realw* b_deltatover2_F,
+                                      int* FORWARD_OR_ADJOINT_f) {
 
 TRACE("kernel_3_acoustic_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
+  int FORWARD_OR_ADJOINT = *FORWARD_OR_ADJOINT_f;
+  // safety check
+  if (FORWARD_OR_ADJOINT != 0 && FORWARD_OR_ADJOINT != 1 && FORWARD_OR_ADJOINT != 3) {
+    exit_on_error("Error invalid FORWARD_OR_ADJOINT in Kernel_2_acoustic() routine");
+  }
 
   int size = mp->NGLOB_AB;
 
@@ -542,15 +576,35 @@ TRACE("kernel_3_acoustic_cuda");
   realw deltaover2 = *deltatover2_F;
   realw b_deltaover2 = *b_deltatover2_F;
 
-  kernel_3_acoustic_cuda_device<<< grid, threads>>>(mp->d_potential_dot_acoustic,
-                                                    mp->d_potential_dot_dot_acoustic,
-                                                    mp->d_b_potential_dot_acoustic,
-                                                    mp->d_b_potential_dot_dot_acoustic,
-                                                    mp->simulation_type,
-                                                    size,
-                                                    deltaover2,
-                                                    b_deltaover2,
-                                                    mp->d_rmass_acoustic);
+  if (FORWARD_OR_ADJOINT == 0){
+    // This kernel treats both forward and adjoint wavefield within the same call, to increase performance
+    kernel_3_acoustic_cuda_device<<< grid, threads>>>(mp->d_potential_dot_acoustic,
+                                                      mp->d_potential_dot_dot_acoustic,
+                                                      mp->d_b_potential_dot_acoustic,
+                                                      mp->d_b_potential_dot_dot_acoustic,
+                                                      mp->simulation_type,
+                                                      size,
+                                                      deltaover2,
+                                                      b_deltaover2,
+                                                      mp->d_rmass_acoustic);
+  }else{
+    // sets gpu arrays
+    field* potential, *potential_dot, *potential_dot_dot;
+    if (FORWARD_OR_ADJOINT == 1) {
+      potential_dot = mp->d_potential_dot_acoustic;
+      potential_dot_dot = mp->d_potential_dot_dot_acoustic;
+    } else {
+      // for backward/reconstructed fields
+      potential_dot = mp->d_b_potential_dot_acoustic;
+      potential_dot_dot = mp->d_b_potential_dot_dot_acoustic;
+      deltaover2 = b_deltaover2;
+    }
+    kernel_3_acoustic_single_cuda_device<<< grid, threads>>>(potential_dot,
+                                                             potential_dot_dot,
+                                                             size,
+                                                             deltaover2,
+                                                             mp->d_rmass_acoustic);
+  }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);

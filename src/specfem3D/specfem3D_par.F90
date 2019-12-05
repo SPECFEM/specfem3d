@@ -277,6 +277,7 @@ module specfem_par
 
   ! absorbing stacey wavefield parts
   integer :: b_num_abs_boundary_faces
+  logical :: SAVE_STACEY
 
   ! Moho mesh
   real(CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_top
@@ -475,7 +476,7 @@ module specfem_par_acoustic
 ! potential
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic,potential_dot_acoustic, &
                                     potential_dot_dot_acoustic
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_adj_coupling
+  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_adj_coupling ! not used yet
 
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic

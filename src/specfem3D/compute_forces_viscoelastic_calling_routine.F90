@@ -48,6 +48,18 @@
   double precision :: t_start,tCPU
   logical, parameter :: DO_TIMING = .false.
 
+  ! GPU
+  if (GPU_MODE) then
+    ! checks if for kernel simulation with both, forward & backward fields
+    if (SIMULATION_TYPE == 3 .and. .not. UNDO_ATTENUATION_AND_OR_PML) then
+      ! runs with the additionally optimized GPU routine
+      ! (combines forward/backward fields in main compute_kernel_acoustic)
+      call compute_forces_viscoelastic_GPU_calling()
+      ! all done
+      return
+    endif
+  endif
+
   ! forward fields
   backward_simulation = .false.
 

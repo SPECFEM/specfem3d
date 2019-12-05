@@ -63,11 +63,11 @@
 
   if (ELASTIC_SIMULATION) then
     ! store the displ field at n-1 time step
-    allocate(PML_displ_old(3,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+    allocate(PML_displ_old(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2256')
     if (ier /= 0) stop 'error allocating PML_displ_old array'
     ! store the displ field at n time step
-    allocate(PML_displ_new(3,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+    allocate(PML_displ_new(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2257')
     if (ier /= 0) stop 'error allocating PML_displ_new array'
     if (ier /= 0) stop 'error allocating displ_new array'

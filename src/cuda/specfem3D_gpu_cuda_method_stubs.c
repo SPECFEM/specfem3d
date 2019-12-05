@@ -219,7 +219,8 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
 void FC_FUNC_(compute_coupling_ac_el_cuda,
               COMPUTE_COUPLING_AC_EL_CUDA)(long* Mesh_pointer,
                                            int* iphasef,
-                                           int* num_coupling_ac_el_facesf) {}
+                                           int* num_coupling_ac_el_facesf,
+                                           int* FOWARD_OR_ADJOINT) {}
 
 void FC_FUNC_(compute_coupling_el_ac_cuda,
               COMPUTE_COUPLING_EL_AC_CUDA)(long* Mesh_pointer,
@@ -238,11 +239,13 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
               COMPUTE_FORCES_ACOUSTIC_CUDA)(long* Mesh_pointer,
                                             int* iphase,
                                             int* nspec_outer_acoustic,
-                                            int* nspec_inner_acoustic) {}
+                                            int* nspec_inner_acoustic,
+                                            int* FORWARD_OR_ADJOINT_f) {}
 
 void FC_FUNC_(acoustic_enforce_free_surf_cuda,
               ACOUSTIC_ENFORCE_FREE_SURF_CUDA)(long* Mesh_pointer,
-                                               int* ABSORB_INSTEAD_OF_FREE_SURFACE) {}
+                                               int* ABSORB_INSTEAD_OF_FREE_SURFACE,
+                                               int* FORWARD_OR_ADJOINT) {}
 
 
 //
@@ -291,7 +294,13 @@ void FC_FUNC_(compute_kernels_hess_cuda,
 void FC_FUNC_(compute_stacey_acoustic_cuda,
               COMPUTE_STACEY_ACOUSTIC_CUDA)(long* Mesh_pointer,
                                             int* iphasef,
-                                            realw* h_b_absorb_potential) {}
+                                            realw* h_b_absorb_potential,
+                                            int* FORWARD_OR_ADJOINT_f) {}
+
+void FC_FUNC_(compute_stacey_acoustic_undoatt_cuda,
+              COMPUTE_STACEY_ACOUSTIC_UNDOATT_CUDA)(long* Mesh_pointer,
+                                                     int* iphasef,
+                                                     int* FORWARD_OR_ADJOINT_f) {}
 
 
 //
@@ -792,20 +801,16 @@ void FC_FUNC_(transfer_compute_kernel_fields_from_device,
 void FC_FUNC_(update_displacement_cuda,
               UPDATE_DISPLACMENT_CUDA)(long* Mesh_pointer,
                                           realw* deltat_F,
-                                          realw* deltatsqover2_F,
                                           realw* deltatover2_F,
-                                          realw* b_deltat_F,
-                                          realw* b_deltatsqover2_F,
-                                          realw* b_deltatover2_F) {}
+                                          realw* deltatsqover2_F,
+                                          int* FORWARD_OR_ADJOINT) {}
 
-void FC_FUNC_(it_update_displacement_ac_cuda,
-              it_update_displacement_ac_cuda)(long* Mesh_pointer,
-                                               realw* deltat_F,
-                                               realw* deltatsqover2_F,
-                                               realw* deltatover2_F,
-                                               realw* b_deltat_F,
-                                               realw* b_deltatsqover2_F,
-                                               realw* b_deltatover2_F) {}
+void FC_FUNC_(update_displacement_ac_cuda,
+              UPDATE_DISPLACEMENT_AC_CUDA)(long* Mesh_pointer,
+                                           realw* deltat_F,
+                                           realw* deltatover2_F,
+                                           realw* deltatsqover2_F,
+                                           int* FORWARD_OR_ADJOINT) {}
 
 void FC_FUNC_(kernel_3_a_cuda,
               KERNEL_3_A_CUDA)(long* Mesh_pointer,
@@ -821,7 +826,8 @@ void FC_FUNC_(kernel_3_b_cuda,
 void FC_FUNC_(kernel_3_acoustic_cuda,
               KERNEL_3_ACOUSTIC_CUDA)(long* Mesh_pointer,
                                       realw* deltatover2_F,
-                                      realw* b_deltatover2_F) {}
+                                      realw* b_deltatover2_F,
+                                      int* FORWARD_OR_ADJOINT_f) {}
 
 
 //

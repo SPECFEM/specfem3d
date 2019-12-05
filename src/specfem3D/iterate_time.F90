@@ -200,58 +200,50 @@
     ! updates wavefields using Newmark time scheme
     if (.not. USE_LDDRK) call update_displ_Newmark()
 
+    ! updates backward wavefields using Newmark time scheme
+    if (.not. USE_LDDRK .and. SIMULATION_TYPE == 3) call update_displ_Newmark_backward()
+
     ! calculates stiffness term
-    if (.not. GPU_MODE) then
-      ! wavefields on CPU
+    ! note: the order of the computations for acoustic and elastic domains is crucial for coupled simulations
+    if (SIMULATION_TYPE == 3) then
+      ! kernel/adjoint simulations
 
-      ! note: the order of the computations for acoustic and elastic domains is crucial for coupled simulations
-      if (SIMULATION_TYPE == 3) then
-        ! kernel/adjoint simulations
-
-        ! adjoint wavefields
-        if (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) then
-          ! coupled acoustic-elastic simulations
-          ! 1. elastic domain w/ adjoint wavefields
-          call compute_forces_viscoelastic_calling()
-          ! 2. acoustic domain w/ adjoint wavefields
-          call compute_forces_acoustic_calling()
-        else
-          ! non-coupled simulations
-          ! (purely acoustic or elastic)
-          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
-          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
-        endif
-
-        ! backward/reconstructed wavefields
-        ! acoustic solver
-        ! (needs to be done after elastic one)
-        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_backward_calling()
-        ! elastic solver
-        ! (needs to be done first, before poroelastic one)
-        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_backward_calling()
-
+      ! adjoint wavefields
+      if (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) then
+        ! coupled acoustic-elastic simulations
+        ! 1. elastic domain w/ adjoint wavefields
+        call compute_forces_viscoelastic_calling()
+        ! 2. acoustic domain w/ adjoint wavefields
+        call compute_forces_acoustic_calling()
       else
-        ! forward simulations
-        do istage = 1, NSTAGE_TIME_SCHEME
-          if (USE_LDDRK) call update_displ_lddrk()
-          ! 1. acoustic domain
-          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
-          ! 2. elastic domain
-          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
-        enddo
+        ! non-coupled simulations
+        ! (purely acoustic or elastic)
+        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
+        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
       endif
 
-      ! poroelastic solver
-      if (POROELASTIC_SIMULATION) call compute_forces_poroelastic_calling()
-
-    else
-      ! wavefields on GPU
+      ! backward/reconstructed wavefields
       ! acoustic solver
-      if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_GPU_calling()
+      ! (needs to be done after elastic one)
+      if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_backward_calling()
       ! elastic solver
       ! (needs to be done first, before poroelastic one)
-      if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_GPU_calling()
+      if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_backward_calling()
+
+    else
+      ! forward simulations
+      do istage = 1, NSTAGE_TIME_SCHEME
+        if (USE_LDDRK) call update_displ_lddrk()
+        ! 1. acoustic domain
+        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
+        ! 2. elastic domain
+        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
+      enddo
     endif
+
+    ! poroelastic solver
+    if (POROELASTIC_SIMULATION) call compute_forces_poroelastic_calling()
+
 
     ! restores last time snapshot saved for backward/reconstruction of wavefields
     ! note: this must be read in after the Newmark time scheme

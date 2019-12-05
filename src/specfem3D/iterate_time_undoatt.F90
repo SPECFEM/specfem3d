@@ -265,23 +265,13 @@
           endif
 
           ! calculates stiffness term
-          if (.not. GPU_MODE) then
-            ! acoustic solver
-            ! (needs to be done first, before elastic one)
-            if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
-            ! elastic solver
-            if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
-          else
-            ! on GPU
-            ! acoustic solver
-            if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_GPU_calling()
-            ! elastic solver
-            ! (needs to be done first, before poroelastic one)
-            if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_GPU_calling()
-          endif
+          ! acoustic solver
+          ! (needs to be done first, before elastic one)
+          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
+          ! elastic solver
+          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
           ! poroelastic solver
           if (POROELASTIC_SIMULATION) call compute_forces_poroelastic_calling()
-
         enddo ! istage
 
         ! calculating gravity field at current timestep
@@ -361,26 +351,15 @@
           endif
 
           ! calculates stiffness term
-          if (.not. GPU_MODE) then
-            ! backward/reconstructed wavefields
-            ! acoustic solver
-            ! (needs to be done after elastic one)
-            if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_backward_calling()
-            ! elastic solver
-            ! (needs to be done first, before poroelastic one)
-            if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_backward_calling()
-          else
-            ! on GPU
-            stop 'GPU_MODE in undo_att iterations not supported yet' ! safety stop
-            ! acoustic solver
-            if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_GPU_calling()
-            ! elastic solver
-            ! (needs to be done first, before poroelastic one)
-            if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_GPU_calling()
-          endif
+          ! backward/reconstructed wavefields
+          ! acoustic solver
+          ! (needs to be done after elastic one)
+          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_backward_calling()
+          ! elastic solver
+          ! (needs to be done first, before poroelastic one)
+          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_backward_calling()
           ! poroelastic solver
           if (POROELASTIC_SIMULATION) stop 'POROELASTIC simulations in undo_att iterations not supported yet'
-
         enddo ! istage
 
         ! transfers wavefields from GPU to CPU for buffering
@@ -469,23 +448,13 @@
           endif
 
           ! calculates stiffness term
-          if (.not. GPU_MODE) then
-            ! acoustic solver
-            ! (needs to be done first, before elastic one)
-            if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
-            ! elastic solver
-            if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
-          else
-            ! on GPU
-            ! acoustic solver
-            if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_GPU_calling()
-            ! elastic solver
-            ! (needs to be done first, before poroelastic one)
-            if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_GPU_calling()
-          endif
+          ! acoustic solver
+          ! (needs to be done first, before elastic one)
+          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
+          ! elastic solver
+          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
           ! poroelastic solver
           if (POROELASTIC_SIMULATION) call compute_forces_poroelastic_calling()
-
         enddo ! istage
 
         ! write the seismograms with time shift (GPU_MODE transfer included)

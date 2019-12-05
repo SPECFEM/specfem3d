@@ -75,6 +75,8 @@
 
   ! only add these contributions in first pass
   if (iphase /= 1) return
+  ! checks if anything to do
+  if (num_coupling_ac_el_faces == 0) return
 
 ! loops on all coupling faces
   do iface = 1,num_coupling_ac_el_faces
@@ -114,12 +116,12 @@
           if (SIMULATION_TYPE == 1) then
             ispec_CPML = spec_to_CPML(ispec)
             call pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k, &
-                                                  displ_x,displ_y,displ_z,displ, &
-                                                  num_coupling_ac_el_faces,rmemory_coupling_ac_el_displ)
+                                                               displ_x,displ_y,displ_z,displ, &
+                                                               num_coupling_ac_el_faces,rmemory_coupling_ac_el_displ)
           endif
 
+          ! safety stop
           if (SIMULATION_TYPE == 3) then
-            ! safety stop
             stop 'TODO: Coupling acoustic-elastic for CPML in compute_coupling_acoustic_el() not implemented yet...'
           endif
         endif
@@ -153,4 +155,4 @@
 
   enddo ! iface
 
-end subroutine compute_coupling_acoustic_el
+  end subroutine compute_coupling_acoustic_el

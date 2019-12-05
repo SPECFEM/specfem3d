@@ -8,10 +8,19 @@ comp="BXX"
 en="semd"
 
 # window start/end time
-t_start=10.0
-t_end=25.0
+t_start=$1   # e.g. 10.0
+t_end=$2     #      25.0
 
 #################################################
+
+# usage: ./create_adjoint_sources.sh t_start t_end
+
+if [ "$t_start" == "" ] || [ "$t_end" == "" ]; then echo "usage: ./create_adjoint_sources.sh t_start t_end"; exit 1; fi
+
+echo
+echo "adjoint sources:"
+echo "  window start/end = $t_start / $t_end"
+echo
 
 # adjoint sources will be in folder SEM/
 currentdir=`pwd`

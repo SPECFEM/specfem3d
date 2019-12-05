@@ -28,13 +28,13 @@
 ! for acoustic solver
 
   subroutine compute_coupling_acoustic_po(NSPEC_AB,NGLOB_AB, &
-                        ibool,displs_poroelastic,displw_poroelastic, &
-                        potential_dot_dot_acoustic, &
-                        num_coupling_ac_po_faces, &
-                        coupling_ac_po_ispec,coupling_ac_po_ijk, &
-                        coupling_ac_po_normal, &
-                        coupling_ac_po_jacobian2Dw, &
-                        iphase)
+                                          ibool,displs_poroelastic,displw_poroelastic, &
+                                          potential_dot_dot_acoustic, &
+                                          num_coupling_ac_po_faces, &
+                                          coupling_ac_po_ispec,coupling_ac_po_ijk, &
+                                          coupling_ac_po_normal, &
+                                          coupling_ac_po_jacobian2Dw, &
+                                          iphase)
 
 ! returns the updated pressure array: potential_dot_dot_acoustic
 
@@ -70,6 +70,8 @@
 
   ! only add these contributions in first pass
   if (iphase /= 1) return
+  ! checks if anything to do
+  if (num_coupling_ac_po_faces == 0) return
 
 ! loops on all coupling faces
   do iface = 1,num_coupling_ac_po_faces
@@ -120,4 +122,4 @@
 
   enddo ! iface
 
-end subroutine compute_coupling_acoustic_po
+  end subroutine compute_coupling_acoustic_po

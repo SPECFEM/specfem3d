@@ -619,11 +619,11 @@
     allocate(potential_dot_dot_acoustic(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1793')
     if (ier /= 0) stop 'error allocating array potential_dot_dot_acoustic'
-    if (SIMULATION_TYPE /= 1) then
-      allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1794')
-      if (ier /= 0) stop 'error allocating array potential_acoustic_adj_coupling'
-    endif
+    !if (SIMULATION_TYPE /= 1) then
+    !  allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier) ! not used yet
+    !  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1794')
+    !  if (ier /= 0) stop 'error allocating array potential_acoustic_adj_coupling'
+    !endif
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1795')
