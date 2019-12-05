@@ -111,38 +111,37 @@
       write_time_begin = wtime()
 
       ! checks if anything to do
-!      if (nrec_local > 0) then
 
-        ! writes out seismogram files
-        select case(SIMULATION_TYPE)
-        case (1,3)
-          ! forward/kernel simulations
-          ! forward/backward wavefield
-          ! forward & kernel simulations
-          if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-            call write_seismograms_to_file_h5(seismograms_d,1)
-          if (SAVE_SEISMOGRAMS_VELOCITY) &
-            call write_seismograms_to_file_h5(seismograms_v,2)
-          if (SAVE_SEISMOGRAMS_ACCELERATION) &
-            call write_seismograms_to_file_h5(seismograms_a,3)
-          if (SAVE_SEISMOGRAMS_PRESSURE) & 
-            call write_seismograms_to_file_h5(seismograms_p,4) !!!!!!! this causes mem leak when pure elastic sim
-        case (2)
-          ! adjoint simulations
-          ! adjoint wavefield
-          ! adjoint simulations
-          if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-            call write_adj_seismograms_to_file_h5(seismograms_d,1)
-          if (SAVE_SEISMOGRAMS_VELOCITY) &
-            call write_adj_seismograms_to_file_h5(seismograms_v,2)
-          if (SAVE_SEISMOGRAMS_ACCELERATION) &
-            call write_adj_seismograms_to_file_h5(seismograms_a,3)
-          if (SAVE_SEISMOGRAMS_PRESSURE) &
-            call write_adj_seismograms_to_file_h5(seismograms_p,4)
-          ! updates adjoint time counter
-          it_adj_written = it
-        end select
-!     endif
+      ! writes out seismogram files
+      select case(SIMULATION_TYPE)
+      case (1,3)
+        ! forward/kernel simulations
+        ! forward/backward wavefield
+        ! forward & kernel simulations
+        if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
+          call write_seismograms_to_file_h5(seismograms_d,1)
+        if (SAVE_SEISMOGRAMS_VELOCITY) &
+          call write_seismograms_to_file_h5(seismograms_v,2)
+        if (SAVE_SEISMOGRAMS_ACCELERATION) &
+          call write_seismograms_to_file_h5(seismograms_a,3)
+        if (SAVE_SEISMOGRAMS_PRESSURE) & 
+          call write_seismograms_to_file_h5(seismograms_p,4) !!!!!!! this causes mem leak when pure elastic sim
+      case (2)
+        ! adjoint simulations
+        ! adjoint wavefield
+        ! adjoint simulations
+        if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
+          call write_adj_seismograms_to_file_h5(seismograms_d,1)
+        if (SAVE_SEISMOGRAMS_VELOCITY) &
+          call write_adj_seismograms_to_file_h5(seismograms_v,2)
+        if (SAVE_SEISMOGRAMS_ACCELERATION) &
+          call write_adj_seismograms_to_file_h5(seismograms_a,3)
+        if (SAVE_SEISMOGRAMS_PRESSURE) &
+          call write_adj_seismograms_to_file_h5(seismograms_p,4)
+        ! updates adjoint time counter
+        it_adj_written = it
+      end select
+
       ! synchronizes processes (waits for all processes to finish writing)
       call synchronize_all()
 
@@ -219,27 +218,27 @@
   endif
 
   if (nrec_local > 0) then
-      ! send global ids of local receivers (integer array)
-      do irec_local = 1,nrec_local
-        ! get global number of that receiver
-        irec = number_receiver_global(irec_local)
-        tmp_irec(irec_local) = irec
-      enddo
+    ! send global ids of local receivers (integer array)
+    do irec_local = 1,nrec_local
+      ! get global number of that receiver
+      irec = number_receiver_global(irec_local)
+      tmp_irec(irec_local) = irec
+    enddo
 
-      call isend_i_inter(tmp_irec,nrec_local,receiver,io_tag_seismo_ids_rec,req)
+    call isend_i_inter(tmp_irec,nrec_local,receiver,io_tag_seismo_ids_rec,req)
 
-      ! send seismograms (instead of one seismo)
-      if (NTSTEP_BETWEEN_OUTPUT_SEISMOS > NSTEP) then
-        time_window = NSTEP
-      else 
-        time_window = NTSTEP_BETWEEN_OUTPUT_SEISMOS
-      endif
+    ! send seismograms (instead of one seismo)
+    if (NTSTEP_BETWEEN_OUTPUT_SEISMOS > NSTEP) then
+      time_window = NSTEP
+    else 
+      time_window = NTSTEP_BETWEEN_OUTPUT_SEISMOS
+    endif
 
-      if (istore /= 4) then
-        call isend_cr_inter(seismograms(:,:,1:time_window),NDIM*nrec_local*time_window,receiver,io_tag_seismo,req)
-      else
-        call isend_cr_inter(seismograms(1,:,1:time_window),1*nrec_local*time_window,receiver,io_tag_seismo,req)
-      endif
+    if (istore /= 4) then
+      call isend_cr_inter(seismograms(:,:,1:time_window),NDIM*nrec_local*time_window,receiver,io_tag_seismo,req)
+    else
+      call isend_cr_inter(seismograms(1,:,1:time_window),1*nrec_local*time_window,receiver,io_tag_seismo,req)
+    endif
   endif
 
 !  endif ! myrank

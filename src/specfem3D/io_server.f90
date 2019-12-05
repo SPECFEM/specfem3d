@@ -1013,29 +1013,29 @@ subroutine recv_seismo_data(status, islice_num_rec_local, rec_count_seismo)
   nrec_passed  = islice_num_rec_local(sender)
   call get_size_msg(status,msg_size)
 
-  ! get vector values i.e. disp, velo, acce
-  if (tag /= io_tag_seismo_body_pres) then
-    ! allocate temp array size
-    time_window = int(msg_size/NDIM/nrec_passed)
-    allocate(seismo_temp(NDIM,nrec_passed,time_window),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array seismo_temp')
-    if (ier /= 0) stop 'error allocating array seismo_temp'
+  if (nrec_passed > 0) then
+    ! get vector values i.e. disp, velo, acce
+    if (tag /= io_tag_seismo_body_pres) then
+      ! allocate temp array size
+      time_window = int(msg_size/NDIM/nrec_passed)
+      allocate(seismo_temp(NDIM,nrec_passed,time_window),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array seismo_temp')
+      if (ier /= 0) stop 'error allocating array seismo_temp'
 
-    count = msg_size 
-    call recvv_cr_inter(seismo_temp, count, sender, tag)
+      count = msg_size 
+      call recvv_cr_inter(seismo_temp, count, sender, tag)
 
-  ! get scalar value i.e. pres
-  else
-    time_window = int(msg_size/1/nrec_passed)
-    allocate(seismo_temp(1,nrec_passed,time_window),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array seismo_temp')
-    if (ier /= 0) stop 'error allocating array seismo_temp'
-    count = msg_size 
-    call recvv_cr_inter(seismo_temp, count, sender, tag)
-  endif
+    ! get scalar value i.e. pres
+    else
+      time_window = int(msg_size/1/nrec_passed)
+      allocate(seismo_temp(1,nrec_passed,time_window),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array seismo_temp')
+      if (ier /= 0) stop 'error allocating array seismo_temp'
+      count = msg_size 
+      call recvv_cr_inter(seismo_temp, count, sender, tag)
+    endif
 
-  ! set local array to the global array
-  if (nrec_passed >= 1) then
+    ! set local array to the global array
     do irec_passed=1,nrec_passed
       id_rec_glob = id_rec_globs(irec_passed,sender)
       ! disp
@@ -1052,13 +1052,13 @@ subroutine recv_seismo_data(status, islice_num_rec_local, rec_count_seismo)
         seismo_pres(id_rec_glob,:) = seismo_temp(1,irec_passed,:)
       endif
     enddo
+
+    ! deallocate temp array
+    deallocate(seismo_temp,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error deallocating array seismo_temp')
+    if (ier /= 0) stop 'error allocating dearray seismo_temp'
+
   endif
-
-  ! deallocate temp array
-  deallocate(seismo_temp,stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error deallocating array seismo_temp')
-  if (ier /= 0) stop 'error allocating dearray seismo_temp'
-
 end subroutine recv_seismo_data
 
 

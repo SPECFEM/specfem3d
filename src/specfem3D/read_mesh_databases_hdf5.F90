@@ -787,18 +787,30 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1527')
   if (ier /= 0) stop 'Error allocating arrays ibelm_xmin,ibelm_xmax etc.'
   if (I_should_read_the_database) then
-    dsetname = "ibelm_xmin"
-    call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_xmin)
-    dsetname = "ibelm_xmax"
-    call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_xmax)
-    dsetname = "ibelm_ymin"
-    call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_ymin)
-    dsetname = "ibelm_ymax"
-    call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_ymax)
-    dsetname = "ibelm_bottom"
-    call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_bottom)
-    dsetname = "ibelm_top"
-    call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_top)
+    if(nspec2D_xmin > 0) then
+      dsetname = "ibelm_xmin"
+      call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_xmin)
+    endif
+    if(nspec2D_xmax > 0) then
+      dsetname = "ibelm_xmax"
+      call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_xmax)
+    endif
+    if(nspec2D_ymin > 0) then
+      dsetname = "ibelm_ymin"
+      call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_ymin)
+    endif
+    if(nspec2D_ymax > 0) then
+      dsetname = "ibelm_ymax"
+      call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_ymax)
+    endif
+    if(NSPEC2D_BOTTOM > 0) then
+      dsetname = "ibelm_bottom"
+      call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_bottom)
+    endif
+    if(NSPEC2D_TOP > 0) then
+      dsetname = "ibelm_top"
+      call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_top)
+    endif
   endif
   if (size(ibelm_xmin) > 0) call bcast_all_i_for_database(ibelm_xmin(1), size(ibelm_xmin))
   if (size(ibelm_xmax) > 0) call bcast_all_i_for_database(ibelm_xmax(1), size(ibelm_xmax))

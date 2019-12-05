@@ -199,6 +199,14 @@
              coupling_el_po_ispec,coupling_po_el_ispec)
   !deallocate(num_elem_colors_elastic)
  
+  if (ELASTIC_SIMULATION) then
+    ! displacement,velocity,acceleration
+    deallocate(displ,veloc,accel)
+    if (SIMULATION_TYPE /= 1) then
+      deallocate(accel_adj_coupling)
+    endif
+  endif
+ 
   ! ADIOS file i/o
   if (ADIOS_ENABLED) then
     call adios_cleanup()
