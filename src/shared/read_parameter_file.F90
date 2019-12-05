@@ -762,14 +762,14 @@
     endif
 
     ! re-sets attenuation flags
-    if (.not. ATTENUATION) then
-      ! turns off UNDO_ATTENUATION when ATTENUATION is off in the Par_file
-      UNDO_ATTENUATION_AND_OR_PML = .false.
-    endif
+    !if (.not. ATTENUATION) then
+    !  ! turns off UNDO_ATTENUATION when ATTENUATION is off in the Par_file
+    !  UNDO_ATTENUATION_AND_OR_PML = .false.
+    !endif
     ! for pure forward simulation, no need to store undo_attenuation arrays; uses default iteration routine
-    if (SIMULATION_TYPE == 1 .and. .not. SAVE_FORWARD) then
-      UNDO_ATTENUATION_AND_OR_PML = .false.
-    endif
+    !if (SIMULATION_TYPE == 1 .and. .not. SAVE_FORWARD) then
+    !  UNDO_ATTENUATION_AND_OR_PML = .false.
+    !endif
 
     ! re-sets ADIOS flags
     if (.not. ADIOS_ENABLED) then
@@ -866,8 +866,8 @@
   endif
 
   ! UNDO_ATT
-  if (UNDO_ATTENUATION_AND_OR_PML .and. GPU_MODE) &
-    stop 'For GPU_MODE, UNDO_ATTENUATION_AND_OR_PML is not implemented in this code yet'
+  !if (UNDO_ATTENUATION_AND_OR_PML .and. GPU_MODE) &
+  !  stop 'For GPU_MODE, UNDO_ATTENUATION_AND_OR_PML is not implemented in this code yet'
 
   ! attenuation for backward simulation
   if (SIMULATION_TYPE == 3 .and. ATTENUATION .and. .not. UNDO_ATTENUATION_AND_OR_PML) &

@@ -55,8 +55,6 @@
   if (.not. UNDO_ATTENUATION_AND_OR_PML) return
 
   ! safety checks
-  if (GPU_MODE) &
-    call exit_MPI(myrank,'for undo_attenuation, GPU_MODE is not supported yet')
   if (NOISE_TOMOGRAPHY /= 0) &
     call exit_MPI(myrank,'for undo_attenuation, NOISE_TOMOGRAPHY is not supported yet')
   if (SIMULATION_TYPE == 3 .and. POROELASTIC_SIMULATION) &
@@ -265,9 +263,8 @@
           endif
 
           ! calculates stiffness term
-          ! acoustic solver
-          ! (needs to be done first, before elastic one)
-          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
+          ! acoustic solver (needs to be done first, before elastic one)
+          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_forward_calling()
           ! elastic solver
           if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
           ! poroelastic solver
@@ -351,12 +348,10 @@
           endif
 
           ! calculates stiffness term
-          ! backward/reconstructed wavefields
-          ! acoustic solver
-          ! (needs to be done after elastic one)
+          ! backward/reconstructed wavefields (propagates forward in time)
+          ! acoustic solver (needs to be done first in forward direction)
           if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_backward_calling()
           ! elastic solver
-          ! (needs to be done first, before poroelastic one)
           if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_backward_calling()
           ! poroelastic solver
           if (POROELASTIC_SIMULATION) stop 'POROELASTIC simulations in undo_att iterations not supported yet'
@@ -450,7 +445,7 @@
           ! calculates stiffness term
           ! acoustic solver
           ! (needs to be done first, before elastic one)
-          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
+          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_forward_calling()
           ! elastic solver
           if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
           ! poroelastic solver

@@ -47,13 +47,20 @@
 ! local parameters
   real(kind=CUSTOM_REAL) :: stf_used,hlagrange
   logical :: ibool_read_adj_arrays
-  double precision :: stf,time_source_dble
+  double precision :: stf,time_source_dble,time_t
   double precision,external :: get_stf_acoustic
 
   integer :: isource,iglob,ispec,i,j,k
   integer :: irec_local,irec,it_sub_adj
 
   character(len=MAX_STRING_LEN) :: adj_source_file
+
+  ! sets current initial time
+  if (USE_LDDRK) then
+    time_t = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0
+  else
+    time_t = dble(it-1)*DT - t0
+  endif
 
 ! forward simulations
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
@@ -74,11 +81,7 @@
 
         if (ispec_is_acoustic(ispec)) then
           ! current time
-          if (USE_LDDRK) then
-            time_source_dble = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
-          else
-            time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
-          endif
+          time_source_dble = time_t - tshift_src(isource)
 
           ! determines source time function value
           stf = get_stf_acoustic(time_source_dble,isource)
@@ -228,21 +231,49 @@
                          ibool,NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
                          sourcearrays,kappastore,SIMULATION_TYPE,NSTEP
 
+  ! undo_att
+  use specfem_par, only: UNDO_ATTENUATION_AND_OR_PML,NSUBSET_ITERATIONS,NT_DUMP_ATTENUATION, &
+                         iteration_on_subset,it_of_this_subset
+
   use specfem_par_acoustic, only: ispec_is_acoustic,b_potential_dot_dot_acoustic
 
   implicit none
 
 ! local parameters
-  real(kind=CUSTOM_REAL) stf_used
+  real(kind=CUSTOM_REAL) :: stf_used
 
-  double precision :: stf,time_source_dble
+  double precision :: stf,time_source_dble,time_t
   double precision, external :: get_stf_acoustic
 
-  integer :: isource,iglob,ispec,i,j,k
+  integer :: isource,iglob,ispec,i,j,k,it_tmp
 
   ! checks if anything to do
   if (SIMULATION_TYPE /= 3) return
 
+  ! checks if this slice has sources to add
+  if (nsources_local == 0) return
+
+  ! iteration step
+  if (UNDO_ATTENUATION_AND_OR_PML) then
+    ! example: NSTEP is a multiple of NT_DUMP_ATTENUATION
+    !         NT_DUMP_ATTENUATION = 301, NSTEP = 1204, NSUBSET_ITERATIONS = 4, iteration_on_subset = 1 -> 4,
+    !              1. subset, it_temp goes from 301 down to 1
+    !              2. subset, it_temp goes from 602 down to 302
+    !              3. subset, it_temp goes from 903 down to 603
+    !              4. subset, it_temp goes from 1204 down to 904
+    !valid for multiples only:
+    !it_tmp = iteration_on_subset * NT_DUMP_ATTENUATION - it_of_this_subset + 1
+    !
+    ! example: NSTEP is **NOT** a multiple of NT_DUMP_ATTENUATION
+    !          NT_DUMP_ATTENUATION = 301, NSTEP = 900, NSUBSET_ITERATIONS = 3, iteration_on_subset = 1 -> 3
+    !              1. subset, it_temp goes from (900 - 602) = 298 down to 1
+    !              2. subset, it_temp goes from (900 - 301) = 599 down to 299
+    !              3. subset, it_temp goes from (900 - 0)   = 900 down to 600
+    !works always:
+    it_tmp = NSTEP - (NSUBSET_ITERATIONS - iteration_on_subset)*NT_DUMP_ATTENUATION - it_of_this_subset + 1
+  else
+    it_tmp = it
+  endif
 
 ! NOTE: adjoint sources and backward wavefield timing:
 !             idea is to start with the backward field b_potential,.. at time (T)
@@ -269,57 +300,59 @@
 !       for step it=1: (NSTEP -it + 1)*DT - t0 for backward wavefields corresponds to time T
 
 ! note:  b_potential() is read in after Newmark time scheme, thus
-!           b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
-!           thus indexing is NSTEP - it , instead of NSTEP - it - 1
+!        b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
+!        thus indexing is NSTEP - it , instead of NSTEP - it - 1
+!
+!        this leads to the timing (NSTEP-(it-1)-1)*DT-t0-tshift_src for the source time function here
 
-! adjoint simulations
-  if (nsources_local > 0) then
+  ! sets current initial time
+  if (USE_LDDRK) then
+    time_t = dble(NSTEP-it_tmp)*DT - dble(C_LDDRK(istage))*DT - t0
+  else
+    time_t = dble(NSTEP-it_tmp)*DT - t0
+  endif
 
-    ! adds acoustic sources
-    do isource = 1,NSOURCES
+  ! adds sources in backward fields
+  ! adds acoustic sources
+  do isource = 1,NSOURCES
 
-      !   add the source (only if this proc carries the source)
-      if (myrank == islice_selected_source(isource)) then
+    !   add the source (only if this proc carries the source)
+    if (myrank == islice_selected_source(isource)) then
 
-        ispec = ispec_selected_source(isource)
+      ispec = ispec_selected_source(isource)
 
-        if (ispec_is_acoustic(ispec)) then
-          ! current time
-          if (USE_LDDRK) then
-            time_source_dble = dble(NSTEP-it)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
-          else
-            time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
-          endif
+      if (ispec_is_acoustic(ispec)) then
+        ! current time
+        time_source_dble = time_t - tshift_src(isource)
 
-          ! determines source time function value
-          stf = get_stf_acoustic(time_source_dble,isource)
+        ! determines source time function value
+        stf = get_stf_acoustic(time_source_dble,isource)
 
-          !! VM VM add external source time function
-          if (USE_EXTERNAL_SOURCE_FILE) then
-            ! time-reversed
-            stf = user_source_time_function(NSTEP-it+1, isource)
-          endif
+        !! VM VM add external source time function
+        if (USE_EXTERNAL_SOURCE_FILE) then
+          ! time-reversed
+          stf = user_source_time_function(NSTEP-it_tmp+1, isource)
+        endif
 
-          ! distinguishes between single and double precision for reals
-          stf_used = real(stf,kind=CUSTOM_REAL)
+        ! distinguishes between single and double precision for reals
+        stf_used = real(stf,kind=CUSTOM_REAL)
 
-          ! add source array
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
-                ! adds source contribution
-                ! note: acoustic source for pressure gets divided by kappa
-                iglob = ibool(i,j,k,ispec)
-                b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
-                        - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
-              enddo
+        ! add source array
+        do k=1,NGLLZ
+          do j=1,NGLLY
+            do i=1,NGLLX
+              ! adds source contribution
+              ! note: acoustic source for pressure gets divided by kappa
+              iglob = ibool(i,j,k,ispec)
+              b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
+                      - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
             enddo
           enddo
+        enddo
 
-        endif ! ispec_is_acoustic
-      endif ! myrank
-    enddo ! NSOURCES
-  endif
+      endif ! ispec_is_acoustic
+    endif ! myrank
+  enddo ! NSOURCES
 
   end subroutine compute_add_sources_acoustic_backward
 
@@ -337,7 +370,8 @@
                          USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS, &
                          NSOURCES,it,SIMULATION_TYPE,NSTEP,nrec, &
                          NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer, &
-                         INVERSE_FWI_FULL_PROBLEM,run_number_of_the_source
+                         INVERSE_FWI_FULL_PROBLEM,run_number_of_the_source, &
+                         GPU_MODE
 
   implicit none
 
@@ -354,6 +388,9 @@
   integer :: irec_local,irec
 
   character(len=MAX_STRING_LEN) :: adj_source_file
+
+  ! checks if anything to do
+  if (.not. GPU_MODE) return
 
 ! forward simulations
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
@@ -458,40 +495,120 @@
     endif ! nadj_rec_local > 0
   endif
 
-! note:  b_potential() is read in after Newmark time scheme, thus
-!           b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
-!           thus indexing is NSTEP - it , instead of NSTEP - it - 1
+  end subroutine compute_add_sources_acoustic_GPU
 
-! adjoint simulations
-  if (SIMULATION_TYPE == 3 .and. nsources_local > 0) then
+!
+!=====================================================================
+!
 
-    if (NSOURCES > 0) then
-      do isource = 1,NSOURCES
-        ! current time
-        if (USE_LDDRK) then
-          time_source_dble = dble(NSTEP-it)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
-        else
-          time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
-        endif
+  subroutine compute_add_sources_acoustic_backward_GPU()
 
-        ! determines source time function value
-        stf = get_stf_acoustic(time_source_dble,isource)
+  use constants
+  use specfem_par, only: nsources_local,tshift_src,DT,t0,USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
+                         NSOURCES,myrank,it, &
+                         SIMULATION_TYPE,NSTEP, &
+                         GPU_MODE,Mesh_pointer,run_number_of_the_source
+  ! undo_att
+  use specfem_par, only: UNDO_ATTENUATION_AND_OR_PML,NSUBSET_ITERATIONS,NT_DUMP_ATTENUATION, &
+                         iteration_on_subset,it_of_this_subset
 
-        !! VM VM add external source time function
-        if (USE_EXTERNAL_SOURCE_FILE) then
-           stf = user_source_time_function(NSTEP-it+1, isource)
-        endif
+  implicit none
 
-        ! stores precomputed source time function factor
-        stf_pre_compute(isource) = stf
-      enddo
+  ! local parameters
+  double precision :: stf,time_source_dble,time_t
+  double precision, external :: get_stf_acoustic
 
-      ! only implements SIMTYPE=3
-      call compute_add_sources_ac_s3_cuda(Mesh_pointer,NSOURCES,stf_pre_compute,run_number_of_the_source)
-    endif
+  double precision, dimension(NSOURCES) :: stf_pre_compute
+
+  integer :: isource,it_tmp
+
+  ! checks if anything to do
+  if (SIMULATION_TYPE /= 3) return
+  if (.not. GPU_MODE) return
+
+  ! checks if this slice has sources to add
+  if (nsources_local == 0) return
+
+  ! iteration step
+  if (UNDO_ATTENUATION_AND_OR_PML) then
+    ! example: NSTEP is a multiple of NT_DUMP_ATTENUATION
+    !         NT_DUMP_ATTENUATION = 301, NSTEP = 1204, NSUBSET_ITERATIONS = 4, iteration_on_subset = 1 -> 4,
+    !              1. subset, it_temp goes from 301 down to 1
+    !              2. subset, it_temp goes from 602 down to 302
+    !              3. subset, it_temp goes from 903 down to 603
+    !              4. subset, it_temp goes from 1204 down to 904
+    !valid for multiples only:
+    !it_tmp = iteration_on_subset * NT_DUMP_ATTENUATION - it_of_this_subset + 1
+    !
+    ! example: NSTEP is **NOT** a multiple of NT_DUMP_ATTENUATION
+    !          NT_DUMP_ATTENUATION = 301, NSTEP = 900, NSUBSET_ITERATIONS = 3, iteration_on_subset = 1 -> 3
+    !              1. subset, it_temp goes from (900 - 602) = 298 down to 1
+    !              2. subset, it_temp goes from (900 - 301) = 599 down to 299
+    !              3. subset, it_temp goes from (900 - 0)   = 900 down to 600
+    !works always:
+    it_tmp = NSTEP - (NSUBSET_ITERATIONS - iteration_on_subset)*NT_DUMP_ATTENUATION - it_of_this_subset + 1
+  else
+    it_tmp = it
   endif
 
-  end subroutine compute_add_sources_acoustic_GPU
+! NOTE: adjoint sources and backward wavefield timing:
+!             idea is to start with the backward field b_potential,.. at time (T)
+!             and convolve with the adjoint field at time (T-t)
+!
+! backward/reconstructed wavefields:
+!       time for b_potential( it ) would correspond to (NSTEP - it - 1)*DT - t0
+!       if we read in saved wavefields b_potential() before Newmark time scheme
+!       (see sources for simulation_type 1 and seismograms)
+!       since at the beginning of the time loop, the numerical Newmark time scheme updates
+!       the wavefields, that is b_potential( it=1) would correspond to time (NSTEP -1 - 1)*DT - t0
+!
+!       b_potential is now read in after Newmark time scheme:
+!       we read the backward/reconstructed wavefield at the end of the first time loop,
+!       such that b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
+!       assuming that until that end the backward/reconstructed wavefield and adjoint fields
+!       have a zero contribution to adjoint kernels.
+!       thus the correct indexing is NSTEP - it + 1, instead of NSTEP - it
+!
+! adjoint wavefields:
+!       since the adjoint source traces were derived from the seismograms,
+!       it follows that for the adjoint wavefield, the time equivalent to ( T - t ) uses the time-reversed
+!       adjoint source traces which start at -t0 and end at time (NSTEP-1)*DT - t0
+!       for step it=1: (NSTEP -it + 1)*DT - t0 for backward wavefields corresponds to time T
+
+! note:  b_potential() is read in after Newmark time scheme, thus
+!        b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
+!        thus indexing is NSTEP - it , instead of NSTEP - it - 1
+!
+!        this leads to the timing (NSTEP-(it-1)-1)*DT-t0-tshift_src for the source time function here
+
+  ! sets current initial time
+  if (USE_LDDRK) then
+    time_t = dble(NSTEP-it_tmp)*DT - dble(C_LDDRK(istage))*DT - t0
+  else
+    time_t = dble(NSTEP-it_tmp)*DT - t0
+  endif
+
+  ! adds sources in backward fields
+  do isource = 1,NSOURCES
+    ! current time
+    time_source_dble = time_t - tshift_src(isource)
+
+    ! determines source time function value
+    stf = get_stf_acoustic(time_source_dble,isource)
+
+    !! VM VM add external source time function
+    if (USE_EXTERNAL_SOURCE_FILE) then
+       stf = user_source_time_function(NSTEP-it_tmp+1, isource)
+    endif
+
+    ! stores precomputed source time function factor
+    stf_pre_compute(isource) = stf
+  enddo
+
+  ! only implements SIMTYPE=3
+  call compute_add_sources_ac_s3_cuda(Mesh_pointer,NSOURCES,stf_pre_compute,run_number_of_the_source)
+
+  end subroutine compute_add_sources_acoustic_backward_GPU
 
 !
 !=====================================================================
@@ -591,6 +708,3 @@
   get_stf_acoustic = stf
 
   end function get_stf_acoustic
-
-
-

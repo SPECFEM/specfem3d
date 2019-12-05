@@ -220,7 +220,7 @@ void FC_FUNC_(compute_coupling_ac_el_cuda,
               COMPUTE_COUPLING_AC_EL_CUDA)(long* Mesh_pointer,
                                            int* iphasef,
                                            int* num_coupling_ac_el_facesf,
-                                           int* FOWARD_OR_ADJOINT) {}
+                                           int* FORWARD_OR_ADJOINT) {}
 
 void FC_FUNC_(compute_coupling_el_ac_cuda,
               COMPUTE_COUPLING_EL_AC_CUDA)(long* Mesh_pointer,

@@ -197,16 +197,17 @@
       if (mod(it,NTSTEP_BETWEEN_OUTPUT_ENERGY) == 0 .or. it == 5 .or. it == NSTEP) call compute_energy()
     endif
 
-    ! updates wavefields using Newmark time scheme
-    if (.not. USE_LDDRK) call update_displ_Newmark()
-
-    ! updates backward wavefields using Newmark time scheme
-    if (.not. USE_LDDRK .and. SIMULATION_TYPE == 3) call update_displ_Newmark_backward()
-
     ! calculates stiffness term
     ! note: the order of the computations for acoustic and elastic domains is crucial for coupled simulations
     if (SIMULATION_TYPE == 3) then
       ! kernel/adjoint simulations
+      ! updates backward wavefields using Newmark time scheme
+      if (.not. USE_LDDRK) then
+        ! forward fields
+        call update_displ_Newmark()
+        ! backward fields
+        call update_displ_Newmark_backward()
+      endif
 
       ! adjoint wavefields
       if (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) then
@@ -214,11 +215,10 @@
         ! 1. elastic domain w/ adjoint wavefields
         call compute_forces_viscoelastic_calling()
         ! 2. acoustic domain w/ adjoint wavefields
-        call compute_forces_acoustic_calling()
+        call compute_forces_acoustic_forward_calling()
       else
-        ! non-coupled simulations
-        ! (purely acoustic or elastic)
-        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
+        ! non-coupled simulations (purely acoustic or elastic)
+        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_forward_calling()
         if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
       endif
 
@@ -232,11 +232,19 @@
 
     else
       ! forward simulations
-      do istage = 1, NSTAGE_TIME_SCHEME
-        if (USE_LDDRK) call update_displ_lddrk()
-        ! 1. acoustic domain
-        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
-        ! 2. elastic domain
+      do istage = 1, NSTAGE_TIME_SCHEME   ! Newmark has only NSTAGE == 1
+        ! updates wavefields
+        if (USE_LDDRK) then
+          ! LDDRK update
+          call update_displ_lddrk()
+        else
+          ! Newmark update
+          call update_displ_Newmark()
+        endif
+
+        ! computes acoustic domain (first)
+        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_forward_calling()
+        ! computes elastic domain
         if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
       enddo
     endif

@@ -1019,6 +1019,9 @@
   integer :: ier
   integer(kind=8) :: filesize
 
+  ! initializes
+  SAVE_STACEY = .false.
+
 ! stacey absorbing fields will be reconstructed for adjoint simulations
 ! using snapshot files of wavefields
   if (STACEY_ABSORBING_CONDITIONS) then

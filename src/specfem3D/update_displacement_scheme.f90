@@ -121,6 +121,8 @@
 
   subroutine update_displacement_acoustic()
 
+! updates potentials (forward fields only)
+
   use specfem_par
   use specfem_par_acoustic
   use pml_par
@@ -156,7 +158,7 @@
 
   subroutine update_displacement_acoustic_backward()
 
-! updates acoustic potentials
+! updates acoustic potentials (backward fields only)
 
   use specfem_par
   use specfem_par_acoustic
@@ -278,7 +280,7 @@
 
   subroutine update_displacement_elastic()
 
-  ! updates elastic wavefields
+! updates elastic wavefields (forward fields only)
 
   use specfem_par
   use specfem_par_elastic
@@ -314,7 +316,7 @@
 
   subroutine update_displacement_elastic_backward()
 
-  ! updates elastic wavefields
+! updates elastic wavefields (backward fields only)
 
   use specfem_par
   use specfem_par_elastic
@@ -450,7 +452,7 @@
 
   subroutine update_displacement_poroelastic()
 
-! updates poroelastic wavefields
+! updates poroelastic wavefields (forward fields only)
 
   use specfem_par
   use specfem_par_poroelastic
@@ -458,7 +460,6 @@
   implicit none
 
   ! Newmark time marching
-
   if (.not. GPU_MODE) then
     ! wavefields on CPU
 
@@ -475,22 +476,6 @@
     velocw_poroelastic(:,:) = velocw_poroelastic(:,:) + deltatover2 * accelw_poroelastic(:,:)
     accelw_poroelastic(:,:) = 0._CUSTOM_REAL
 
-    ! adjoint simulations
-    if (SIMULATION_TYPE == 3) then
-      ! poroelastic backward fields
-      ! solid phase
-      b_displs_poroelastic(:,:) = b_displs_poroelastic(:,:) + b_deltat * b_velocs_poroelastic(:,:) + &
-                                  b_deltatsqover2 * b_accels_poroelastic(:,:)
-      b_velocs_poroelastic(:,:) = b_velocs_poroelastic(:,:) + b_deltatover2 * b_accels_poroelastic(:,:)
-      b_accels_poroelastic(:,:) = 0._CUSTOM_REAL
-
-      ! fluid phase
-      b_displw_poroelastic(:,:) = b_displw_poroelastic(:,:) + b_deltat * b_velocw_poroelastic(:,:) + &
-                                  b_deltatsqover2 * b_accelw_poroelastic(:,:)
-      b_velocw_poroelastic(:,:) = b_velocw_poroelastic(:,:) + b_deltatover2 * b_accelw_poroelastic(:,:)
-      b_accelw_poroelastic(:,:) = 0._CUSTOM_REAL
-    endif
-
   else
     ! wavefields on GPU
     call exit_MPI(myrank,'poroelastic time marching scheme on GPU not implemented yet...')
@@ -504,7 +489,7 @@
 
   subroutine update_displacement_poroelastic_backward()
 
-! updates poroelastic wavefields
+! updates poroelastic wavefields (backward fields only)
 
   use specfem_par
   use specfem_par_poroelastic
@@ -512,7 +497,6 @@
   implicit none
 
   ! Newmark time marching
-
   if (.not. GPU_MODE) then
     ! wavefields on CPU
 
@@ -531,7 +515,7 @@
 
   else
     ! wavefields on GPU
-    continue
+    call exit_MPI(myrank,'poroelastic time marching scheme on GPU not implemented yet...')
   endif ! GPU_MODE
 
   end subroutine update_displacement_poroelastic_backward

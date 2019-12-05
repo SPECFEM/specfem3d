@@ -317,8 +317,8 @@
   subroutine read_field_on_pml_interface(b_accel,b_veloc,b_displ,nglob_interface_PML_elastic, &
                                          b_PML_field,b_reclen_PML_field)
 
-  use specfem_par, only: NGLOB_AB,ibool,NSTEP,it,UNDO_ATTENUATION_AND_OR_PML
-  use pml_par, only: NSPEC_CPML,CPML_to_spec,points_interface_PML_elastic
+  use specfem_par, only: NGLOB_AB,NSTEP,it,UNDO_ATTENUATION_AND_OR_PML ! ibool
+  use pml_par, only: points_interface_PML_elastic ! NSPEC_CPML,CPML_to_spec
   use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
   implicit none
 
@@ -326,7 +326,7 @@
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: b_displ,b_veloc,b_accel
   real(kind=CUSTOM_REAL), dimension(9,nglob_interface_PML_elastic) :: b_PML_field
 
-  integer :: iglob,iglob_pml,ispec,ispec_pml,i,j,k,it_temp
+  integer :: iglob,iglob_pml,it_temp ! i,j,k,ispec,ispec_pml
 
   !do ispec_pml = 1, NSPEC_CPML
   !  ispec = CPML_to_spec(ispec_pml)
@@ -402,8 +402,8 @@
   subroutine read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic, &
                                              nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
 
-  use specfem_par, only: NGLOB_AB,ibool,NSTEP,it,UNDO_ATTENUATION_AND_OR_PML
-  use pml_par, only: NSPEC_CPML,CPML_to_spec,points_interface_PML_acoustic
+  use specfem_par, only: NGLOB_AB,NSTEP,it,UNDO_ATTENUATION_AND_OR_PML ! ibool
+  use pml_par, only: points_interface_PML_acoustic ! NSPEC_CPML,CPML_to_spec
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
   implicit none
@@ -413,7 +413,7 @@
   real(kind=CUSTOM_REAL), dimension(3,nglob_interface_PML_acoustic) :: b_PML_potential
 
   ! local parameter
-  integer :: iglob,iglob_pml,ispec,ispec_pml,i,j,k,it_temp
+  integer :: iglob,iglob_pml,it_temp ! i,j,k,ispec,ispec_pml
 
   !do ispec_pml = 1, NSPEC_CPML
   !  ispec = CPML_to_spec(ispec_pml)

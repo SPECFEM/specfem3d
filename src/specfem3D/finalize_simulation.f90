@@ -61,8 +61,7 @@
   ! using snapshot files of wavefields
   if (STACEY_ABSORBING_CONDITIONS) then
     ! closes absorbing wavefield saved/to-be-saved by forward simulations
-    if (num_abs_boundary_faces > 0 .and. (SIMULATION_TYPE == 3 .or. &
-          (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
+    if (num_abs_boundary_faces > 0 .and. SAVE_STACEY) then
       ! closes files
       if (ELASTIC_SIMULATION) call close_file_abs(IOABS)
       if (ACOUSTIC_SIMULATION) call close_file_abs(IOABS_AC)
