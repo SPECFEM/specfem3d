@@ -325,7 +325,7 @@ subroutine do_io_start_idle()
   ! 
 
   ! deallocate arrays
-  call deallocate_arrays()
+!  call deallocate_arrays()
 
 end subroutine do_io_start_idle
 
