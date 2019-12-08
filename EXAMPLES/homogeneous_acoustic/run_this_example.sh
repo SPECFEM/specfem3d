@@ -19,6 +19,7 @@ rm -f *
 ln -s ../../../bin/xdecompose_mesh
 ln -s ../../../bin/xgenerate_databases
 ln -s ../../../bin/xspecfem3D
+ln -s ../../../bin/xcombine_vol_data_vtk
 cd ../
 
 # stores setup

@@ -25,6 +25,12 @@ ln -s ../../../bin/xspecfem3D
 ln -s ../../../bin/xcombine_vol_data_vtk
 cd ../
 
+
+## limits run time
+cp DATA/Par_file DATA/Par_file.org
+sed -i "s:^NSTEP .*:NSTEP = 300:" DATA/Par_file
+sed -i "s:^USE_TRICK_FOR_BETTER_PRESSURE .*:USE_TRICK_FOR_BETTER_PRESSURE = .false.:" DATA/Par_file
+
 # stores setup
 cp DATA/Par_file OUTPUT_FILES/
 cp DATA/CMTSOLUTION OUTPUT_FILES/

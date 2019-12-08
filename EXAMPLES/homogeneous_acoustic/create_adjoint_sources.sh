@@ -8,10 +8,14 @@ comp="MXP"
 en="semp"
 
 # window start/end time
-t_start=9.0  # 32.0
-t_end=30.0   # 38.0
+t_start=$1  # 9.0  # 32.0
+t_end=$2    # 26.0   # 30.0   # 38.0
 
 #################################################
+
+# set defaults
+if [ "$t_start" == "" ]; then t_start=9.0; fi
+if [ "$t_end" == "" ]; then t_end=26.0; fi
 
 # adjoint sources will be in folder SEM/
 currentdir=`pwd`
