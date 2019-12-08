@@ -231,6 +231,12 @@
     call flush_IMAIN()
   endif
 
+  ! safety checks
+  if (ACOUSTIC_SIMULATION) then
+    if (USE_TRICK_FOR_BETTER_PRESSURE .and. SIMULATION_TYPE == 3) &
+      stop 'for SIMULATION_TYPE == 3, acoustic kernels need to have USE_TRICK_FOR_BETTER_PRESSURE set to .false.'
+  endif
+
   end subroutine prepare_timerun_user_output
 !
 !-------------------------------------------------------------------------------------------------

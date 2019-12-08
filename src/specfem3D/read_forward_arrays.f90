@@ -108,12 +108,12 @@
       ! memory variables if attenuation
       if (ATTENUATION) then
         call transfer_b_fields_att_to_device(Mesh_pointer, &
-                           b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                           size(b_R_xx), &
-                           b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
-                           b_epsilondev_xz,b_epsilondev_yz, &
-                           b_R_trace,b_epsilondev_trace, &
-                           size(b_epsilondev_xx))
+                                             b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                                             size(b_R_xx), &
+                                             b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                                             b_epsilondev_xz,b_epsilondev_yz, &
+                                             b_R_trace,b_epsilondev_trace, &
+                                             size(b_epsilondev_xx))
       endif
     endif
   endif
@@ -199,12 +199,12 @@
       ! memory variables if attenuation
       if (ATTENUATION) then
         call transfer_b_fields_att_to_device(Mesh_pointer, &
-                           b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                           size(b_R_xx), &
-                           b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
-                           b_epsilondev_xz,b_epsilondev_yz, &
-                           b_R_trace,b_epsilondev_trace, &
-                           size(b_epsilondev_xx))
+                                             b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                                             size(b_R_xx), &
+                                             b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                                             b_epsilondev_xz,b_epsilondev_yz, &
+                                             b_R_trace,b_epsilondev_trace, &
+                                             size(b_epsilondev_xx))
       endif
     endif
   endif

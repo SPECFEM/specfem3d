@@ -38,7 +38,7 @@
   implicit none
 
   ! local parameters
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_potential_acoustic_buffer
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_potential_acoustic_buffer,b_potential_dot_dot_acoustic_buffer
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_displ_elastic_buffer,b_accel_elastic_buffer
   !real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: b_noise_surface_movie_buffer
 
@@ -91,7 +91,7 @@
     if (myrank == 0) then
       if (ACOUSTIC_SIMULATION) then
         ! buffer(NGLOB_AB,NT_DUMP_ATTENUATION) in MB
-        sizeval = dble(NGLOB_AB) * dble(NT_DUMP_ATTENUATION) * dble(CUSTOM_REAL) / 1024.d0 / 1024.d0
+        sizeval = 2.0 * dble(NGLOB_AB) * dble(NT_DUMP_ATTENUATION) * dble(CUSTOM_REAL) / 1024.d0 / 1024.d0
         write(IMAIN,*) '  size of acoustic wavefield buffer per slice      = ', sngl(sizeval),'MB'
       endif
       if (ELASTIC_SIMULATION) then
@@ -103,8 +103,9 @@
     endif
     ! buffer arrays
     if (ACOUSTIC_SIMULATION) then
-      allocate(b_potential_acoustic_buffer(NGLOB_AB,NT_DUMP_ATTENUATION),stat=ier)
-      if (ier /= 0 ) call exit_MPI(myrank,'error allocating b_potential_acoustic')
+      allocate(b_potential_acoustic_buffer(NGLOB_AB,NT_DUMP_ATTENUATION), &
+               b_potential_dot_dot_acoustic_buffer(NGLOB_AB,NT_DUMP_ATTENUATION),stat=ier)
+      if (ier /= 0 ) call exit_MPI(myrank,'error allocating b_potential_acoustic arrays')
     endif
     if (ELASTIC_SIMULATION) then
       allocate(b_displ_elastic_buffer(NDIM,NGLOB_AB,NT_DUMP_ATTENUATION),stat=ier)
@@ -119,6 +120,15 @@
       !  allocate(b_noise_surface_movie_buffer(NDIM,NGLLX,NGLLY,NSPEC_TOP,NT_DUMP_ATTENUATION),stat=ier)
       !  if (ier /= 0 ) call exit_MPI(myrank,'Error allocating b_noise_surface_movie_buffer')
       !endif
+    endif
+
+    ! for faster GPU mem copies
+    if (GPU_MODE) then
+      if (ACOUSTIC_SIMULATION) call register_host_array(NGLOB_AB,b_potential_acoustic)
+      if (ELASTIC_SIMULATION) then
+        call register_host_array(NDIM*NGLOB_AB,b_displ)
+        if (APPROXIMATE_HESS_KL) call register_host_array(NDIM*NGLOB_AB,b_accel)
+      endif
     endif
   endif
 
@@ -362,6 +372,7 @@
           ! note these transfers are blocking at the moment, might be done async in future...
           if (ACOUSTIC_SIMULATION) then
             call transfer_b_potential_ac_from_device(NGLOB_AB,b_potential_acoustic,Mesh_pointer)
+            call transfer_b_potential_dot_dot_ac_from_device(NGLOB_AB,b_potential_dot_dot_acoustic,Mesh_pointer)
           endif
           if (ELASTIC_SIMULATION) then
             call transfer_b_displ_from_device(NDIM*NGLOB_AB,b_displ,Mesh_pointer)
@@ -372,6 +383,7 @@
         ! stores wavefield in buffers
         if (ACOUSTIC_SIMULATION) then
           b_potential_acoustic_buffer(:,it_of_this_subset) = b_potential_acoustic(:)
+          b_potential_dot_dot_acoustic_buffer(:,it_of_this_subset) = b_potential_dot_dot_acoustic(:)
         endif
         if (ELASTIC_SIMULATION) then
           b_displ_elastic_buffer(:,:,it_of_this_subset) = b_displ(:,:)
@@ -403,6 +415,7 @@
         ! of the displacement read back from the memory buffers
         if (ACOUSTIC_SIMULATION) then
           b_potential_acoustic(:) = b_potential_acoustic_buffer(:,it_subset_end-it_of_this_subset+1)
+          b_potential_dot_dot_acoustic(:) = b_potential_dot_dot_acoustic_buffer(:,it_subset_end-it_of_this_subset+1)
         endif
         if (ELASTIC_SIMULATION) then
           b_displ(:,:) = b_displ_elastic_buffer(:,:,it_subset_end-it_of_this_subset+1)
@@ -418,6 +431,7 @@
           ! daniel debug: check if these transfers could be made async to overlap
           if (ACOUSTIC_SIMULATION) then
             call transfer_b_potential_ac_to_device(NGLOB_AB,b_potential_acoustic,Mesh_pointer)
+            call transfer_b_potential_dot_dot_ac_to_device(NGLOB_AB,b_potential_dot_dot_acoustic,Mesh_pointer)
           endif
           if (ELASTIC_SIMULATION) then
             call transfer_b_displ_to_device(NDIM*NGLOB_AB,b_displ,Mesh_pointer)
@@ -469,10 +483,18 @@
 
   ! frees undo_attenuation buffers
   if (SIMULATION_TYPE == 3) then
-    if (ACOUSTIC_SIMULATION) deallocate(b_potential_acoustic_buffer)
+    if (ACOUSTIC_SIMULATION) deallocate(b_potential_acoustic_buffer,b_potential_dot_dot_acoustic_buffer)
     if (ELASTIC_SIMULATION) then
       deallocate(b_displ_elastic_buffer)
       if (APPROXIMATE_HESS_KL) deallocate(b_accel_elastic_buffer)
+    endif
+    ! GPU un-maps memory lock
+    if (GPU_MODE) then
+      if (ACOUSTIC_SIMULATION) call unregister_host_array(b_potential_acoustic)
+      if (ELASTIC_SIMULATION) then
+        call unregister_host_array(b_displ)
+        if (APPROXIMATE_HESS_KL) call unregister_host_array(b_accel)
+      endif
     endif
   endif
 

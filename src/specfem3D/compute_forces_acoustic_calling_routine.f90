@@ -97,23 +97,10 @@
   if (GPU_MODE .and. PML_CONDITIONS) call exit_MPI(myrank,'PML conditions not yet implemented on GPUs')
 
   ! enforces free surface (zeroes potentials at free surface)
-  if (.not. GPU_MODE) then
-    ! on CPU
-    call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
-                                       potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                                       ibool,free_surface_ijk,free_surface_ispec, &
-                                       num_free_surface_faces,ispec_is_acoustic)
-
-    if (USE_LDDRK) then
-      call acoustic_enforce_free_surface_lddrk(NSPEC_AB,NGLOB_AB_LDDRK,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
-                                               potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
-                                               ibool,free_surface_ijk,free_surface_ispec, &
-                                               num_free_surface_faces,ispec_is_acoustic)
-    endif
-  else
-    ! on GPU
-    ! enforces free surface (zeroes potentials at free surface)
-    call acoustic_enforce_free_surf_cuda(Mesh_pointer,STACEY_INSTEAD_OF_FREE_SURFACE,1) ! 1 == forward
+  call acoustic_enforce_free_surface(NGLOB_AB,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+                                     backward_simulation)
+  if (USE_LDDRK) then
+    call acoustic_enforce_free_surface_lddrk(NGLOB_AB_LDDRK,potential_acoustic_lddrk,potential_dot_acoustic_lddrk)
   endif
 
   ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
@@ -350,22 +337,10 @@
   endif
 
   ! enforces free surface (zeroes potentials at free surface)
-  if (.not. GPU_MODE) then
-    ! on CPU
-    call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
-                                       potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                                       ibool,free_surface_ijk,free_surface_ispec, &
-                                       num_free_surface_faces,ispec_is_acoustic)
-
-    if (USE_LDDRK) then
-      call acoustic_enforce_free_surface_lddrk(NSPEC_AB,NGLOB_AB_LDDRK,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
-                                               potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
-                                               ibool,free_surface_ijk,free_surface_ispec, &
-                                               num_free_surface_faces,ispec_is_acoustic)
-    endif
-  else
-    ! on GPU
-    call acoustic_enforce_free_surf_cuda(Mesh_pointer,STACEY_INSTEAD_OF_FREE_SURFACE,1) ! 1 == forward
+  call acoustic_enforce_free_surface(NGLOB_AB,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+                                     backward_simulation)
+  if (USE_LDDRK) then
+    call acoustic_enforce_free_surface_lddrk(NGLOB_AB_LDDRK,potential_acoustic_lddrk,potential_dot_acoustic_lddrk)
   endif
 
   ! coupling - not used yet
@@ -452,22 +427,11 @@
   if (GPU_MODE .and. PML_CONDITIONS) call exit_MPI(myrank,'PML conditions not yet implemented on GPUs')
 
   ! enforces free surface (zeroes potentials at free surface)
-  if (.not. GPU_MODE) then
-    ! on CPU
-    call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_ADJOINT,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
-                                       b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
-                                       ibool,free_surface_ijk,free_surface_ispec, &
-                                       num_free_surface_faces,ispec_is_acoustic)
-    if (USE_LDDRK) then
-      call acoustic_enforce_free_surface_lddrk(NSPEC_AB,NGLOB_AB_LDDRK,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
-                                               potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
-                                               ibool,free_surface_ijk,free_surface_ispec, &
-                                               num_free_surface_faces,ispec_is_acoustic)
-    endif
-  else
-    ! on GPU
-    ! enforces free surface (zeroes potentials at free surface)
-    call acoustic_enforce_free_surf_cuda(Mesh_pointer,STACEY_INSTEAD_OF_FREE_SURFACE,3) ! 3 == backward
+  call acoustic_enforce_free_surface(NGLOB_ADJOINT,b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
+                                     backward_simulation)
+  if (USE_LDDRK) then
+    stop 'LDDRK for backward fields not implemented yet'
+    !call acoustic_enforce_free_surface_lddrk(NGLOB_AB_LDDRK,b_potential_acoustic_lddrk,b_potential_dot_acoustic_lddrk)
   endif
 
   ! distinguishes two runs: for elements on MPI interfaces, and elements within the partitions
@@ -636,15 +600,11 @@
   endif
 
   ! enforces free surface (zeroes potentials at free surface)
-  if (.not. GPU_MODE) then
-    ! on CPU
-    call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_ADJOINT,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
-                                       b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
-                                       ibool,free_surface_ijk,free_surface_ispec, &
-                                       num_free_surface_faces,ispec_is_acoustic)
-  else
-    ! on GPU
-    call acoustic_enforce_free_surf_cuda(Mesh_pointer,STACEY_INSTEAD_OF_FREE_SURFACE,3) ! 3 == backward
+  call acoustic_enforce_free_surface(NGLOB_ADJOINT,b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
+                                     backward_simulation)
+  if (USE_LDDRK) then
+    stop 'LDDRK for backward fields not implemented yet'
+    !call acoustic_enforce_free_surface_lddrk(NGLOB_AB_LDDRK,b_potential_acoustic_lddrk,b_potential_dot_acoustic_lddrk)
   endif
 
   end subroutine compute_forces_acoustic_backward_calling
@@ -811,58 +771,59 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
-                                           potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                                           ibool,free_surface_ijk,free_surface_ispec, &
-                                           num_free_surface_faces,ispec_is_acoustic)
+  subroutine acoustic_enforce_free_surface(NGLOB_AB,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+                                           backward_simulation)
 
   use constants
+  use specfem_par, only: Mesh_pointer,ibool,free_surface_ijk,free_surface_ispec,num_free_surface_faces, &
+    STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE,GPU_MODE
+  use specfem_par_acoustic, only: ispec_is_acoustic
 
   implicit none
 
-  integer :: NSPEC_AB,NGLOB_AB
-  logical :: STACEY_INSTEAD_OF_FREE_SURFACE, BOTTOM_FREE_SURFACE
+  integer,intent(in) :: NGLOB_AB
 
-! acoustic potentials
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: &
+  ! acoustic potentials
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: &
         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
 
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  logical, intent(in) :: backward_simulation
 
-! free surface
-  integer :: num_free_surface_faces
-  integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
-  integer :: free_surface_ispec(num_free_surface_faces)
-
-  logical, dimension(NSPEC_AB) :: ispec_is_acoustic
-
-! local parameters
+  ! local parameters
   integer :: iface,igll,i,j,k,ispec,iglob
 
   ! checks if free surface became an absorbing boundary
   if (STACEY_INSTEAD_OF_FREE_SURFACE .and. .not. BOTTOM_FREE_SURFACE) return
 
-! enforce potentials to be zero at surface
-  do iface = 1, num_free_surface_faces
+  ! enforce potentials to be zero at surface
+  if (.not. GPU_MODE) then
+    ! on CPU
+    do iface = 1, num_free_surface_faces
+      ispec = free_surface_ispec(iface)
+      if (ispec_is_acoustic(ispec)) then
+        do igll = 1, NGLLSQUARE
+          i = free_surface_ijk(1,igll,iface)
+          j = free_surface_ijk(2,igll,iface)
+          k = free_surface_ijk(3,igll,iface)
+          iglob = ibool(i,j,k,ispec)
 
-    ispec = free_surface_ispec(iface)
-
-    if (ispec_is_acoustic(ispec)) then
-
-      do igll = 1, NGLLSQUARE
-        i = free_surface_ijk(1,igll,iface)
-        j = free_surface_ijk(2,igll,iface)
-        k = free_surface_ijk(3,igll,iface)
-        iglob = ibool(i,j,k,ispec)
-
-        ! sets potentials to zero
-        potential_acoustic(iglob)         = 0._CUSTOM_REAL
-        potential_dot_acoustic(iglob)     = 0._CUSTOM_REAL
-        potential_dot_dot_acoustic(iglob) = 0._CUSTOM_REAL
-      enddo
+          ! sets potentials to zero
+          potential_acoustic(iglob)         = 0._CUSTOM_REAL
+          potential_dot_acoustic(iglob)     = 0._CUSTOM_REAL
+          potential_dot_dot_acoustic(iglob) = 0._CUSTOM_REAL
+        enddo
+      endif
+    enddo
+  else
+    ! on GPU
+    if (backward_simulation) then
+      ! backward arrays
+      call acoustic_enforce_free_surf_cuda(Mesh_pointer,STACEY_INSTEAD_OF_FREE_SURFACE,3) ! 3 == backward
+    else
+      ! forward arrays
+      call acoustic_enforce_free_surf_cuda(Mesh_pointer,STACEY_INSTEAD_OF_FREE_SURFACE,1) ! 1 == forward
     endif
-
-  enddo
+  endif
 
   end subroutine acoustic_enforce_free_surface
 
@@ -870,38 +831,31 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine acoustic_enforce_free_surface_lddrk(NSPEC_AB,NGLOB_AB_LDDRK,STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
-                                                 potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
-                                                 ibool,free_surface_ijk,free_surface_ispec, &
-                                                 num_free_surface_faces,ispec_is_acoustic)
+  subroutine acoustic_enforce_free_surface_lddrk(NGLOB_AB_LDDRK,potential_acoustic_lddrk,potential_dot_acoustic_lddrk)
 
   use constants
+  use specfem_par, only: ibool,free_surface_ijk,free_surface_ispec,num_free_surface_faces, &
+    STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE,GPU_MODE
+  use specfem_par_acoustic, only: ispec_is_acoustic
 
   implicit none
 
-  integer :: NSPEC_AB,NGLOB_AB_LDDRK
-  logical :: STACEY_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE
+  integer,intent(in) :: NGLOB_AB_LDDRK
 
-! acoustic potentials
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB_LDDRK) :: &
+  ! acoustic potentials
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB_LDDRK),intent(inout) :: &
             potential_acoustic_lddrk,potential_dot_acoustic_lddrk
 
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
-
-! free surface
-  integer :: num_free_surface_faces
-  integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
-  integer :: free_surface_ispec(num_free_surface_faces)
-
-  logical, dimension(NSPEC_AB) :: ispec_is_acoustic
-
-! local parameters
+  ! local parameters
   integer :: iface,igll,i,j,k,ispec,iglob
+
+  ! safety check
+  if (GPU_MODE) stop 'for GPU_MODE, enforce free surface with LDDRK not implemented yet'
 
   ! checks if free surface became an absorbing boundary
   if (STACEY_INSTEAD_OF_FREE_SURFACE .and. .not. BOTTOM_FREE_SURFACE) return
 
-! enforce potentials to be zero at surface
+  ! enforce potentials to be zero at surface
   do iface = 1, num_free_surface_faces
 
     ispec = free_surface_ispec(iface)

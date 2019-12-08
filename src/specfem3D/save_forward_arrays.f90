@@ -117,8 +117,7 @@
   if (GPU_MODE) then
     ! acoustic potentials
     if (ACOUSTIC_SIMULATION) &
-      call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
-                                          potential_dot_acoustic, potential_dot_dot_acoustic, &
+      call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                                           Mesh_pointer)
 
     ! elastic wavefield

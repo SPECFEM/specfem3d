@@ -101,8 +101,7 @@
                                 num_elem_colors_acoustic)
 
     if (SIMULATION_TYPE == 3) &
-      call prepare_fields_acoustic_adj_dev(Mesh_pointer, &
-                                APPROXIMATE_HESS_KL)
+      call prepare_fields_acoustic_adj_dev(Mesh_pointer,APPROXIMATE_HESS_KL)
 
   endif
 

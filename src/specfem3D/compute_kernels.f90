@@ -182,12 +182,12 @@
   ! for noise simulations --- source strength kernel
   if (NOISE_TOMOGRAPHY == 3) then
     call compute_kernels_strength_noise(NGLLSQUARE*num_free_surface_faces,ibool, &
-                        sigma_kl,displ,deltat,it, &
-                        normal_x_noise,normal_y_noise,normal_z_noise, &
-                        noise_surface_movie, &
-                        NSPEC_AB,NGLOB_AB, &
-                        num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                        GPU_MODE,Mesh_pointer)
+                                        sigma_kl,displ,deltat,it, &
+                                        normal_x_noise,normal_y_noise,normal_z_noise, &
+                                        noise_surface_movie, &
+                                        NSPEC_AB,NGLOB_AB, &
+                                        num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+                                        GPU_MODE,Mesh_pointer)
   endif
 
   end subroutine compute_kernels_el
@@ -210,53 +210,64 @@
   real(kind=CUSTOM_REAL) :: kappal,rhol
   integer :: i,j,k,ispec,iglob
 
-  ! updates kernels on GPU
-  if (GPU_MODE) then
+  ! safety check
+  !
+  ! for USE_TRICK_FOR_BETTER_PRESSURE, the potential_acoustic becomes the potential_dot_dot_acoustic:
+  !  "use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+  !   use the second derivative of the source for the source time function instead of the source itself,
+  !   and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+  !   this is mathematically equivalent, but numerically significantly more accurate because in the explicit
+  !   Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
+  !   thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+  !   is accurate at second order and thus contains significantly less numerical noise."
+  ! however, for kernels expressions, we need both b_potential_acoustic and b_potential_dot_dot_acoustic as defined
+  ! from the original acoustic potential definition.
+  if (USE_TRICK_FOR_BETTER_PRESSURE) stop 'for acoustic kernels, please set USE_TRICK_FOR_BETTER_PRESSURE to .false.'
 
-    ! computes contribution to density and bulk modulus kernel
-    call compute_kernels_acoustic_cuda(Mesh_pointer,deltat)
+  ! updates acoustic kernels
+  if (.not. GPU_MODE) then
+    ! on CPU
+    ! updates kernels
+    do ispec = 1, NSPEC_AB
+      ! acoustic domains
+      if (ispec_is_acoustic(ispec)) then
 
-    ! kernels are done
-    return
-  endif
+        ! backward fields: displacement vector
+        call compute_gradient_in_acoustic(ispec,b_potential_acoustic,b_displ_elm)
+        ! adjoint fields: acceleration vector
+        ! new expression (\partial_t^2\bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger)
+        call compute_gradient_in_acoustic(ispec,potential_acoustic,accel_elm)
 
-  ! updates kernels
-  do ispec = 1, NSPEC_AB
-    ! acoustic domains
-    if (ispec_is_acoustic(ispec)) then
+        do k = 1, NGLLZ
+          do j = 1, NGLLY
+            do i = 1, NGLLX
+              iglob = ibool(i,j,k,ispec)
 
-      ! backward fields: displacement vector
-      call compute_gradient_in_acoustic(ispec,b_potential_acoustic,b_displ_elm)
-      ! adjoint fields: acceleration vector
-      ! new expression (\partial_t^2\bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger)
-      call compute_gradient_in_acoustic(ispec,potential_acoustic,accel_elm)
+              ! new expression
+              ! density kernel
+              rhol = rhostore(i,j,k,ispec)
+              rho_ac_kl(i,j,k,ispec) =  rho_ac_kl(i,j,k,ispec) &
+                        + deltat * rhol * (accel_elm(1,i,j,k) * b_displ_elm(1,i,j,k) &
+                                         + accel_elm(2,i,j,k) * b_displ_elm(2,i,j,k) &
+                                         + accel_elm(3,i,j,k) * b_displ_elm(3,i,j,k))
 
-      do k = 1, NGLLZ
-        do j = 1, NGLLY
-          do i = 1, NGLLX
-            iglob = ibool(i,j,k,ispec)
+              ! bulk modulus kernel
+              kappal = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
+              kappa_ac_kl(i,j,k,ispec) = kappa_ac_kl(i,j,k,ispec) &
+                                    + deltat * kappal  &
+                                    * potential_acoustic(iglob) &
+                                    * b_potential_dot_dot_acoustic(iglob)
 
-            ! new expression
-            ! density kernel
-            rhol = rhostore(i,j,k,ispec)
-            rho_ac_kl(i,j,k,ispec) =  rho_ac_kl(i,j,k,ispec) &
-                      + deltat * rhol * (accel_elm(1,i,j,k) * b_displ_elm(1,i,j,k) &
-                                       + accel_elm(2,i,j,k) * b_displ_elm(2,i,j,k) &
-                                       + accel_elm(3,i,j,k) * b_displ_elm(3,i,j,k))
-
-            ! bulk modulus kernel
-            kappal = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
-            kappa_ac_kl(i,j,k,ispec) = kappa_ac_kl(i,j,k,ispec) &
-                                  + deltat * kappal  &
-                                  * potential_acoustic(iglob) &
-                                  * b_potential_dot_dot_acoustic(iglob)
-
+            enddo
           enddo
         enddo
-      enddo
-    endif ! ispec_is_acoustic
-
-  enddo
+      endif ! ispec_is_acoustic
+    enddo
+  else
+    ! on GPU
+    ! computes contribution to density and bulk modulus kernel
+    call compute_kernels_acoustic_cuda(Mesh_pointer,deltat)
+  endif
 
   end subroutine compute_kernels_ac
 
@@ -362,6 +373,8 @@
   else
     ! TO DO
     ! updates kernels on GPU
+    ! safety stop
+    stop 'POROELASTIC kernels on GPU not implemented yet'
     !call compute_kernels_poroelastic_cuda(Mesh_pointer,deltat)
   endif
 
@@ -384,96 +397,91 @@
   integer :: i,j,k,ispec,iglob
   real(kind=CUSTOM_REAL) :: kappal,rhol
 
-  ! updates kernels on GPU
-  if (GPU_MODE) then
+  ! updates Hessian kernels
+  if (.not. GPU_MODE) then
+    ! on CPU
+    ! loops over all elements
+    do ispec = 1, NSPEC_AB
+      ! acoustic domains
+      if (ispec_is_acoustic(ispec)) then
 
+        ! adjoint fields: acceleration vector
+        call compute_gradient_in_acoustic(ispec,potential_dot_dot_acoustic,accel_elm)
+
+        ! backward fields: acceleration vector
+        call compute_gradient_in_acoustic(ispec,b_potential_dot_dot_acoustic,b_accel_elm)
+
+        ! backward fields: displacement vector
+        call compute_gradient_in_acoustic(ispec,b_potential_dot_acoustic,b_veloc_elm)
+
+        do k = 1, NGLLZ
+          do j = 1, NGLLY
+            do i = 1, NGLLX
+              iglob = ibool(i,j,k,ispec)
+
+              ! approximates Hessian
+              ! term with adjoint acceleration and backward/reconstructed acceleration
+              hess_ac_kl(i,j,k,ispec) =  hess_ac_kl(i,j,k,ispec) &
+                 + deltat * dot_product(accel_elm(:,i,j,k), b_accel_elm(:,i,j,k))
+
+              rhol = rhostore(i,j,k,ispec)
+              hess_rho_ac_kl(i,j,k,ispec) =  hess_rho_ac_kl(i,j,k,ispec) &
+                        + deltat * rhol * (b_veloc_elm(1,i,j,k) * b_veloc_elm(1,i,j,k) &
+                                         + b_veloc_elm(2,i,j,k) * b_veloc_elm(2,i,j,k) &
+                                         + b_veloc_elm(3,i,j,k) * b_veloc_elm(3,i,j,k))
+
+              kappal = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
+              hess_kappa_ac_kl(i,j,k,ispec) = hess_kappa_ac_kl(i,j,k,ispec) &
+                                    + deltat * kappal  &
+                                    * b_potential_dot_acoustic(iglob) &
+                                    * b_potential_dot_acoustic(iglob)
+
+            enddo
+          enddo
+        enddo
+      endif
+
+      ! elastic domains
+      if (ispec_is_elastic(ispec)) then
+        do k = 1, NGLLZ
+          do j = 1, NGLLY
+            do i = 1, NGLLX
+              iglob = ibool(i,j,k,ispec)
+
+              b_epsilondev_loc(1) = b_epsilondev_xx(i,j,k,ispec)
+              b_epsilondev_loc(2) = b_epsilondev_yy(i,j,k,ispec)
+              b_epsilondev_loc(3) = b_epsilondev_xy(i,j,k,ispec)
+              b_epsilondev_loc(4) = b_epsilondev_xz(i,j,k,ispec)
+              b_epsilondev_loc(5) = b_epsilondev_yz(i,j,k,ispec)
+
+              ! approximates Hessian
+              ! term with adjoint acceleration and backward/reconstructed acceleration
+              hess_kl(i,j,k,ispec) =  hess_kl(i,j,k,ispec) &
+                 + deltat * dot_product(accel(:,iglob), b_accel(:,iglob))
+
+              !! preconditionning kernels (Shin et al 2001)
+              hess_rho_kl(i,j,k,ispec) =  hess_rho_kl(i,j,k,ispec) &
+                  + deltat * dot_product(b_veloc(:,iglob), b_veloc(:,iglob))
+
+              hess_mu_kl(i,j,k,ispec) = hess_mu_kl(i,j,k,ispec) &
+                   + deltat * (b_epsilondev_loc(1)*b_epsilondev_loc(1) + b_epsilondev_loc(2)*b_epsilondev_loc(2) &
+                   + (b_epsilondev_loc(1)+b_epsilondev_loc(2)) * (b_epsilondev_loc(1)+b_epsilondev_loc(2)) &
+                   + 2 * (b_epsilondev_loc(3)*b_epsilondev_loc(3) + b_epsilondev_loc(4)*b_epsilondev_loc(4) + &
+                   b_epsilondev_loc(5)*b_epsilondev_loc(5)) )
+
+              hess_kappa_kl(i,j,k,ispec) = hess_kappa_kl(i,j,k,ispec) &
+                       + deltat * (9 * b_epsilon_trace_over_3(i,j,k,ispec) * b_epsilon_trace_over_3(i,j,k,ispec))
+
+            enddo
+          enddo
+        enddo
+      endif
+    enddo
+  else
+    ! on GPU
     ! computes contribution to density and bulk modulus kernel
-    call compute_kernels_hess_cuda(Mesh_pointer,deltat, &
-                                  ELASTIC_SIMULATION,ACOUSTIC_SIMULATION)
-
-    ! done on GPU
-    return
+    call compute_kernels_hess_cuda(Mesh_pointer,deltat,ELASTIC_SIMULATION,ACOUSTIC_SIMULATION)
   endif
-
-  ! loops over all elements
-  do ispec = 1, NSPEC_AB
-
-    ! acoustic domains
-    if (ispec_is_acoustic(ispec)) then
-
-   ! adjoint fields: acceleration vector
-      call compute_gradient_in_acoustic(ispec,potential_dot_dot_acoustic,accel_elm)
-
-      ! adjoint fields: acceleration vector
-      call compute_gradient_in_acoustic(ispec,b_potential_dot_dot_acoustic,b_accel_elm)
-
-      ! backward fields: displacement vector
-      call compute_gradient_in_acoustic(ispec,b_potential_dot_acoustic,b_veloc_elm)
-
-      do k = 1, NGLLZ
-        do j = 1, NGLLY
-          do i = 1, NGLLX
-            iglob = ibool(i,j,k,ispec)
-
-            ! approximates Hessian
-            ! term with adjoint acceleration and backward/reconstructed acceleration
-            hess_ac_kl(i,j,k,ispec) =  hess_ac_kl(i,j,k,ispec) &
-               + deltat * dot_product(accel_elm(:,i,j,k), b_accel_elm(:,i,j,k))
-
-            rhol = rhostore(i,j,k,ispec)
-            hess_rho_ac_kl(i,j,k,ispec) =  hess_rho_ac_kl(i,j,k,ispec) &
-                      + deltat * rhol * (b_veloc_elm(1,i,j,k) * b_veloc_elm(1,i,j,k) &
-                                       + b_veloc_elm(2,i,j,k) * b_veloc_elm(2,i,j,k) &
-                                       + b_veloc_elm(3,i,j,k) * b_veloc_elm(3,i,j,k))
-
-            kappal = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
-            hess_kappa_ac_kl(i,j,k,ispec) = hess_kappa_ac_kl(i,j,k,ispec) &
-                                  + deltat * kappal  &
-                                  * b_potential_dot_acoustic(iglob) &
-                                  * b_potential_dot_acoustic(iglob)
-
-          enddo
-        enddo
-      enddo
-    endif
-
-    ! elastic domains
-    if (ispec_is_elastic(ispec)) then
-      do k = 1, NGLLZ
-        do j = 1, NGLLY
-          do i = 1, NGLLX
-            iglob = ibool(i,j,k,ispec)
-
-            b_epsilondev_loc(1) = b_epsilondev_xx(i,j,k,ispec)
-            b_epsilondev_loc(2) = b_epsilondev_yy(i,j,k,ispec)
-            b_epsilondev_loc(3) = b_epsilondev_xy(i,j,k,ispec)
-            b_epsilondev_loc(4) = b_epsilondev_xz(i,j,k,ispec)
-            b_epsilondev_loc(5) = b_epsilondev_yz(i,j,k,ispec)
-
-            ! approximates Hessian
-            ! term with adjoint acceleration and backward/reconstructed acceleration
-            hess_kl(i,j,k,ispec) =  hess_kl(i,j,k,ispec) &
-               + deltat * dot_product(accel(:,iglob), b_accel(:,iglob))
-
-            !! preconditionning kernels (Shin et al 2001)
-            hess_rho_kl(i,j,k,ispec) =  hess_rho_kl(i,j,k,ispec) &
-                + deltat * dot_product(b_veloc(:,iglob), b_veloc(:,iglob))
-
-            hess_mu_kl(i,j,k,ispec) = hess_mu_kl(i,j,k,ispec) &
-                 + deltat * (b_epsilondev_loc(1)*b_epsilondev_loc(1) + b_epsilondev_loc(2)*b_epsilondev_loc(2) &
-                 + (b_epsilondev_loc(1)+b_epsilondev_loc(2)) * (b_epsilondev_loc(1)+b_epsilondev_loc(2)) &
-                 + 2 * (b_epsilondev_loc(3)*b_epsilondev_loc(3) + b_epsilondev_loc(4)*b_epsilondev_loc(4) + &
-                 b_epsilondev_loc(5)*b_epsilondev_loc(5)) )
-
-            hess_kappa_kl(i,j,k,ispec) = hess_kappa_kl(i,j,k,ispec) &
-                     + deltat * (9 * b_epsilon_trace_over_3(i,j,k,ispec) * b_epsilon_trace_over_3(i,j,k,ispec))
-
-          enddo
-        enddo
-      enddo
-    endif
-
-  enddo
 
   end subroutine compute_kernels_Hessian
 

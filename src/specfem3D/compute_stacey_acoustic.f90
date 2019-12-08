@@ -40,29 +40,30 @@
 
   implicit none
 
-  integer :: NSPEC_AB,NGLOB_AB
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB
 
 ! potentials
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic, &
-                                                 potential_dot_acoustic
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: potential_dot_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: potential_dot_dot_acoustic
+
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
 ! communication overlap
-  integer :: iphase
+  integer,intent(in) :: iphase
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rhostore,kappastore
-  logical, dimension(NSPEC_AB) :: ispec_is_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: rhostore,kappastore
+  logical, dimension(NSPEC_AB),intent(in) :: ispec_is_acoustic
 
 ! absorbing boundary surface
-  integer :: num_abs_boundary_faces
-  real(kind=CUSTOM_REAL) :: abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces)
-  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
-  integer :: abs_boundary_ispec(num_abs_boundary_faces)
+  integer,intent(in) :: num_abs_boundary_faces
+  real(kind=CUSTOM_REAL),intent(in) :: abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces)
+  integer,intent(in) :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
+  integer,intent(in) :: abs_boundary_ispec(num_abs_boundary_faces)
 
 ! adjoint simulations
-  integer :: it
-  integer :: b_num_abs_boundary_faces,b_reclen_potential
-  real(kind=CUSTOM_REAL),dimension(NGLLSQUARE,b_num_abs_boundary_faces) :: b_absorb_potential
+  integer,intent(in) :: it
+  integer,intent(in) :: b_num_abs_boundary_faces,b_reclen_potential
+  real(kind=CUSTOM_REAL),dimension(NGLLSQUARE,b_num_abs_boundary_faces),intent(inout) :: b_absorb_potential
 
 ! local parameters
   real(kind=CUSTOM_REAL) :: rhol,cpl,jacobianw,absorbl
@@ -135,27 +136,27 @@
 
   implicit none
 
-  integer :: NSPEC_AB
+  integer,intent(in) :: NSPEC_AB
 
 ! potentials
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
 ! communication overlap
-  integer :: iphase
+  integer,intent(in) :: iphase
 
-  logical, dimension(NSPEC_AB) :: ispec_is_acoustic
+  logical, dimension(NSPEC_AB),intent(in) :: ispec_is_acoustic
 
 ! absorbing boundary surface
-  integer :: num_abs_boundary_faces
-  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
-  integer :: abs_boundary_ispec(num_abs_boundary_faces)
+  integer,intent(in) :: num_abs_boundary_faces
+  integer,intent(in) :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
+  integer,intent(in) :: abs_boundary_ispec(num_abs_boundary_faces)
 
 ! adjoint simulations
-  integer:: SIMULATION_TYPE
-  integer:: NSTEP,it,NGLOB_ADJOINT
-  integer:: b_num_abs_boundary_faces,b_reclen_potential
-  real(kind=CUSTOM_REAL),dimension(NGLOB_ADJOINT) :: b_potential_dot_dot_acoustic
-  real(kind=CUSTOM_REAL),dimension(NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_potential
+  integer,intent(in) :: SIMULATION_TYPE
+  integer,intent(in) :: NSTEP,it,NGLOB_ADJOINT
+  integer,intent(in) :: b_num_abs_boundary_faces,b_reclen_potential
+  real(kind=CUSTOM_REAL),dimension(NGLOB_ADJOINT),intent(inout) :: b_potential_dot_dot_acoustic
+  real(kind=CUSTOM_REAL),dimension(NGLLSQUARE,b_num_abs_boundary_faces),intent(in) :: b_absorb_potential
 
 ! local parameters
   integer :: ispec,iglob,i,j,k,iface,igll
@@ -217,24 +218,25 @@
 
   implicit none
 
-  integer :: NSPEC_AB,NGLOB_AB
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB
 
 ! potentials
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: b_potential_dot_dot_acoustic, &
-                                                 b_potential_dot_acoustic
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: b_potential_dot_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: b_potential_dot_dot_acoustic
+
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
 ! communication overlap
-  integer :: iphase
+  integer,intent(in) :: iphase
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rhostore,kappastore
-  logical, dimension(NSPEC_AB) :: ispec_is_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: rhostore,kappastore
+  logical, dimension(NSPEC_AB),intent(in) :: ispec_is_acoustic
 
 ! absorbing boundary surface
-  integer :: num_abs_boundary_faces
-  real(kind=CUSTOM_REAL) :: abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces)
-  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
-  integer :: abs_boundary_ispec(num_abs_boundary_faces)
+  integer,intent(in) :: num_abs_boundary_faces
+  real(kind=CUSTOM_REAL),intent(in) :: abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces)
+  integer,intent(in) :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
+  integer,intent(in) :: abs_boundary_ispec(num_abs_boundary_faces)
 
 ! local parameters
   real(kind=CUSTOM_REAL) :: rhol,cpl,jacobianw,absorbl
@@ -298,10 +300,10 @@
 ! potentials
 
 ! communication overlap
-  integer :: iphase
+  integer,intent(in) :: iphase
 
 ! absorbing boundary surface
-  integer :: num_abs_boundary_faces
+  integer,intent(in) :: num_abs_boundary_faces
 
 ! adjoint simulations
   integer, intent(in) :: SIMULATION_TYPE
