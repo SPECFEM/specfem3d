@@ -100,9 +100,7 @@ void FC_FUNC_(compute_add_sources_el_cuda,
                                      NSOURCES*sizeof(realw),cudaMemcpyHostToDevice),18);
   free(stf_pre_compute);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_add_sources_el_cuda copy");
-#endif
+  GPU_ERROR_CHECKING("compute_add_sources_el_cuda copy");
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(NSOURCES,&num_blocks_x,&num_blocks_y);
@@ -118,9 +116,7 @@ void FC_FUNC_(compute_add_sources_el_cuda,
                                                                     mp->d_ispec_is_elastic,
                                                                     NSOURCES);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_add_sources_el_cuda");
-#endif
+  GPU_ERROR_CHECKING("compute_add_sources_el_cuda");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -147,9 +143,7 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
                                      NSOURCES*sizeof(realw),cudaMemcpyHostToDevice),18);
   free(stf_pre_compute);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_add_sources_el_s3_cuda copy");
-#endif
+  GPU_ERROR_CHECKING("compute_add_sources_el_s3_cuda copy");
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(NSOURCES,&num_blocks_x,&num_blocks_y);
@@ -165,9 +159,7 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
                                                                     mp->d_ispec_is_elastic,
                                                                     NSOURCES);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_add_sources_el_s3_cuda");
-#endif
+  GPU_ERROR_CHECKING("compute_add_sources_el_s3_cuda");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -223,9 +215,7 @@ TRACE("\tadd_source_master_rec_noise_cu");
                                                                                     mp->d_noise_sourcearray,
                                                                                     it);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("add_source_master_rec_noise_cuda_kernel");
-#endif
+  GPU_ERROR_CHECKING("add_source_master_rec_noise_cuda_kernel");
   }
 }
 
@@ -318,8 +308,6 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
                                                                                mp->d_ispec_selected_rec_loc,
                                                                                mp->nadj_rec_local);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("add_sources_SIM_TYPE_2_OR_3_kernel");
-#endif
+  GPU_ERROR_CHECKING("add_sources_SIM_TYPE_2_OR_3_kernel");
 }
 

@@ -555,8 +555,6 @@ void FC_FUNC_(compute_seismograms_cuda,
     }
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("after compute_seismograms_cuda");
-#endif
+  GPU_ERROR_CHECKING("after compute_seismograms_cuda");
 }
 

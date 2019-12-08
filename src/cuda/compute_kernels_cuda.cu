@@ -257,9 +257,7 @@ void FC_FUNC_(compute_kernels_elastic_cuda,
                                                  mp->NSPEC_AB);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_kernels_elastic_cuda");
-#endif
+  GPU_ERROR_CHECKING("compute_kernels_elastic_cuda");
 }
 
 
@@ -341,9 +339,7 @@ TRACE("compute_kernels_strgth_noise_cu");
                                                                mp->d_sigma_kl,*deltat,
                                                                mp->num_free_surface_faces);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_kernels_strength_noise_cuda_kernel");
-#endif
+  GPU_ERROR_CHECKING("compute_kernels_strength_noise_cuda_kernel");
 }
 
 
@@ -567,9 +563,7 @@ TRACE("compute_kernels_acoustic_cuda");
                                                     mp->NSPEC_AB,
                                                     mp->gravity);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_kernels_acoustic_kernel");
-#endif
+  GPU_ERROR_CHECKING("compute_kernels_acoustic_kernel");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -801,8 +795,6 @@ void FC_FUNC_(compute_kernels_hess_cuda,
   }
 
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_kernels_hess_cuda");
-#endif
+  GPU_ERROR_CHECKING("compute_kernels_hess_cuda");
 }
 

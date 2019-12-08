@@ -110,9 +110,7 @@ void FC_FUNC_(update_displacement_cuda,
 
   // Cuda timing
   cudaEvent_t start,stop;
-  if (CUDA_TIMING_UPDATE ){
-    start_timing_cuda(&start,&stop);
-  }
+  if (CUDA_TIMING_UPDATE ) start_timing_cuda(&start,&stop);
 
   // debug
   //realw max_d,max_v,max_a;
@@ -137,9 +135,7 @@ void FC_FUNC_(update_displacement_cuda,
     printf("  performance: %f GFlop/s\n", flops/time * 1.e-9);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("update_displacement_cuda");
-#endif
+  GPU_ERROR_CHECKING("update_displacement_cuda");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -162,10 +158,10 @@ __global__ void UpdatePotential_kernel(field* potential_acoustic,
   // because of block and grid sizing problems, there is a small
   // amount of buffer at the end of the calculation
   if (id < size) {
-    field p_dot_dot = potential_dot_dot_acoustic[id];
     field p_dot = potential_dot_acoustic[id];
-    potential_acoustic[id] +=   deltat*p_dot
-                              + deltatsqover2*p_dot_dot;
+    field p_dot_dot = potential_dot_dot_acoustic[id];
+
+    potential_acoustic[id] += deltat*p_dot + deltatsqover2*p_dot_dot;
 
     potential_dot_acoustic[id] = p_dot + deltatover2*p_dot_dot;
 
@@ -237,9 +233,7 @@ void FC_FUNC_(update_displacement_ac_cuda,
 
   // Cuda timing
   cudaEvent_t start,stop;
-  if (CUDA_TIMING_UPDATE ){
-    start_timing_cuda(&start,&stop);
-  }
+  if (CUDA_TIMING_UPDATE ) start_timing_cuda(&start,&stop);
 
   UpdatePotential_kernel<<<grid,threads,0,mp->compute_stream>>>(potential,
                                                                 potential_dot,
@@ -261,10 +255,8 @@ void FC_FUNC_(update_displacement_ac_cuda,
     printf("  performance: %f GFlop/s\n", flops/time * 1.e-9);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);
-  exit_on_cuda_error("update_displacement_ac_cuda");
-#endif
+  GPU_ERROR_CHECKING("update_displacement_ac_cuda");
 }
 
 
@@ -322,11 +314,8 @@ __global__ void kernel_3_cuda_device(realw* veloc,
       b_veloc[3*id]   += b_deltatover2*ax;
       b_veloc[3*id+1] += b_deltatover2*ay;
       b_veloc[3*id+2] += b_deltatover2*az;
-
     }
-
   }
-
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -364,9 +353,7 @@ __global__ void kernel_3_accel_cuda_device(realw* accel,
       b_accel[3*id]   = ax;
       b_accel[3*id+1] = ay;
       b_accel[3*id+2] = az;
-
     }
-
   }
 }
 
@@ -434,10 +421,8 @@ void FC_FUNC_(kernel_3_a_cuda,
                                                                        mp->d_rmassz);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);
-  exit_on_cuda_error("after kernel 3 a");
-#endif
+  GPU_ERROR_CHECKING("after kernel 3 a");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -475,10 +460,8 @@ void FC_FUNC_(kernel_3_b_cuda,
                                                                         size,b_deltatover2);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);
-  exit_on_cuda_error("after kernel 3 b");
-#endif
+  GPU_ERROR_CHECKING("after kernel 3 b");
 }
 
 
@@ -553,7 +536,7 @@ void FC_FUNC_(kernel_3_acoustic_cuda,
                                       realw* b_deltatover2_F,
                                       int* FORWARD_OR_ADJOINT_f) {
 
-TRACE("kernel_3_acoustic_cuda");
+  TRACE("kernel_3_acoustic_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
   int FORWARD_OR_ADJOINT = *FORWARD_OR_ADJOINT_f;
@@ -606,9 +589,7 @@ TRACE("kernel_3_acoustic_cuda");
                                                              mp->d_rmass_acoustic);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);
-  exit_on_cuda_error("after kernel 3 ");
-#endif
+  GPU_ERROR_CHECKING("after kernel 3 ");
 }
 

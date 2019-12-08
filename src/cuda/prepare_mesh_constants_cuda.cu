@@ -362,9 +362,7 @@ void FC_FUNC_(prepare_constants_device,
   mp->Kelvin_Voigt_damping = 0;
   // JC JC here we will need to add GPU support for the new C-PML routines
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("prepare_constants_device");
-#endif
+  GPU_ERROR_CHECKING("prepare_constants_device");
 }
 
 
@@ -503,9 +501,7 @@ void FC_FUNC_(prepare_fields_acoustic_device,
     mp->h_num_elem_colors_acoustic = (int*) num_elem_colors_acoustic;
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("prepare_fields_acoustic_device");
-#endif
+  GPU_ERROR_CHECKING("prepare_fields_acoustic_device");
 }
 
 
@@ -578,9 +574,7 @@ void FC_FUNC_(prepare_fields_acoustic_adj_dev,
     print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_b_send_potential_dot_dot_buffer),mp->size_mpi_buffer_potential*sizeof(field)),3014);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("prepare_fields_acoustic_adj_dev");
-#endif
+  GPU_ERROR_CHECKING("prepare_fields_acoustic_adj_dev");
 }
 
 
@@ -983,9 +977,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
   //printf("prepare_fields_elastic_device: rank %d - done\n",mp->myrank);
   //synchronize_mpi();
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("prepare_fields_elastic_device");
-#endif
+  GPU_ERROR_CHECKING("prepare_fields_elastic_device");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -1153,9 +1145,7 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
   //printf("prepare_fields_elastic_adj_dev: rank %d - done\n",mp->myrank);
   //synchronize_mpi();
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("prepare_fields_elastic_adj_dev");
-#endif
+  GPU_ERROR_CHECKING("prepare_fields_elastic_adj_dev");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -1179,9 +1169,7 @@ void FC_FUNC_(prepare_sim2_or_3_const_device,
                                        (mp->nadj_rec_local)* NDIM * sizeof(field) * (*NTSTEP_BETWEEN_READ_ADJSRC)),6005);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("prepare_sim2_or_3_const_device");
-#endif
+  GPU_ERROR_CHECKING("prepare_sim2_or_3_const_device");
 }
 
 
@@ -1244,10 +1232,8 @@ void FC_FUNC_(prepare_fields_noise_device,
     print_CUDA_error_if_any(cudaMemset(mp->d_sigma_kl,0,NGLL3*mp->NSPEC_AB*sizeof(realw)),7403);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //printf("jacobian_size = %d\n",25*(*num_free_surface_faces));
-  exit_on_cuda_error("prepare_fields_noise_device");
-#endif
+  GPU_ERROR_CHECKING("prepare_fields_noise_device");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -1299,9 +1285,7 @@ void FC_FUNC_(prepare_fields_gravity_device,
     }
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("prepare_fields_gravity_device");
-#endif
+  GPU_ERROR_CHECKING("prepare_fields_gravity_device");
 }
 
 /* ----------------------------------------------------------------------------------------------- */

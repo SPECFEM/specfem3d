@@ -154,9 +154,7 @@ TRACE("transfer_surface_to_host");
   print_CUDA_error_if_any(cudaMemcpy(h_noise_surface_movie,mp->d_noise_surface_movie,
                                      3*NGLL2*(mp->num_free_surface_faces)*sizeof(realw),cudaMemcpyDeviceToHost),44002);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("transfer_surface_to_host");
-#endif
+  GPU_ERROR_CHECKING("transfer_surface_to_host");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -280,7 +278,5 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
                                                                mp->d_free_surface_jacobian2Dw);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("noise_read_add_surface_movie_cuda_kernel");
-#endif
+  GPU_ERROR_CHECKING("noise_read_add_surface_movie_cuda_kernel");
 }

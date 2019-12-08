@@ -552,9 +552,7 @@ void FC_FUNC_(get_norm_acoustic_from_device,
     get_maximum_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,size,d_max);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("kernel get_maximum_kernel");
-#endif
+  GPU_ERROR_CHECKING("kernel get_maximum_kernel");
 
   // synchronizes
   //synchronize_cuda();
@@ -613,11 +611,10 @@ void FC_FUNC_(get_norm_acoustic_from_device,
   // return result
   *norm = max;
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //double end_time = get_time();
   //printf("Elapsed time: %e\n",end_time-start_time);
-  exit_on_cuda_error("get_norm_acoustic_from_device");
-#endif
+
+  GPU_ERROR_CHECKING("get_norm_acoustic_from_device");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -704,11 +701,10 @@ void FC_FUNC_(get_norm_elastic_from_device,
     get_maximum_vector_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_displ,size,d_max);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //double end_time = get_time();
   //printf("Elapsed time: %e\n",end_time-start_time);
-  exit_on_cuda_error("kernel get_norm_elastic_from_device");
-#endif
+
+  GPU_ERROR_CHECKING("kernel get_norm_elastic_from_device");
 
   // synchronizes
   //synchronize_cuda();
@@ -740,11 +736,10 @@ void FC_FUNC_(get_norm_elastic_from_device,
   cudaFree(d_max);
   free(h_max);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //double end_time = get_time();
   //printf("Elapsed time: %e\n",end_time-start_time);
-  exit_on_cuda_error("get_norm_elastic_from_device");
-#endif
+
+  GPU_ERROR_CHECKING("get_norm_elastic_from_device");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -843,10 +838,7 @@ TRACE("get_max_accel");
  free(h_debug);
  fflush(stdout);
 
- #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
- exit_on_cuda_error("check_phase_ispec");
- #endif
-
+ GPU_ERROR_CHECKING("check_phase_ispec");
  }
 */
 
@@ -908,9 +900,7 @@ TRACE("get_max_accel");
  free(h_debug);
  fflush(stdout);
 
- #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
- exit_on_cuda_error("check_ispec_is");
- #endif
+ GPU_ERROR_CHECKING("check_ispec_is");
  }
 */
 /* ----------------------------------------------------------------------------------------------- */
@@ -967,10 +957,7 @@ TRACE("get_max_accel");
  free(h_debug);
  fflush(stdout);
 
- #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
- exit_on_cuda_error("check_array_ispec");
- #endif
-
+ GPU_ERROR_CHECKING("check_array_ispec");
  }
 */
 

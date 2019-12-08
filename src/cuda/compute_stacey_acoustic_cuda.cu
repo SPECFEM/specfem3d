@@ -357,9 +357,7 @@ TRACE("compute_stacey_acoustic_cuda");
                                        mp->d_b_reclen_potential,cudaMemcpyDeviceToHost),7701);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_stacey_acoustic_kernel");
-#endif
+  GPU_ERROR_CHECKING("compute_stacey_acoustic_kernel");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -403,7 +401,7 @@ TRACE("compute_stacey_acoustic_undoatt_cuda");
 
   // no absorbing boundary need to be stored, only propagates forward in time
   // sets gpu arrays
-  field* potential, *potential_dot, *potential_dot_dot;
+  field *potential_dot, *potential_dot_dot;
   if (FORWARD_OR_ADJOINT == 1) {
     potential_dot = mp->d_potential_dot_acoustic;
     potential_dot_dot = mp->d_potential_dot_dot_acoustic;
@@ -428,8 +426,6 @@ TRACE("compute_stacey_acoustic_undoatt_cuda");
 
   //  no need to store absorbed wavefield part
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_stacey_acoustic_undoatt_cuda");
-#endif
+  GPU_ERROR_CHECKING("compute_stacey_acoustic_undoatt_cuda");
 }
 

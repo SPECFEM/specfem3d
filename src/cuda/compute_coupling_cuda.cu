@@ -175,11 +175,10 @@ void FC_FUNC_(compute_coupling_ac_el_cuda,
                                                         mp->simulation_type,
                                                         backward_simulation);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //double end_time = get_time();
   //printf("Elapsed time: %e\n",end_time-start_time);
-  exit_on_cuda_error("compute_coupling_acoustic_el_kernel");
-#endif
+
+  GPU_ERROR_CHECKING("compute_coupling_acoustic_el_kernel");
 }
 
 
@@ -336,11 +335,10 @@ void FC_FUNC_(compute_coupling_el_ac_cuda,
 
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //double end_time = get_time();
   //printf("Elapsed time: %e\n",end_time-start_time);
-  exit_on_cuda_error("compute_coupling_el_ac_cuda");
-#endif
+
+  GPU_ERROR_CHECKING("compute_coupling_el_ac_cuda");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -435,9 +433,7 @@ void FC_FUNC_(compute_coupling_ocean_cuda,
   print_CUDA_error_if_any(cudaMemset(mp->d_updated_dof_ocean_load,0,
                                      sizeof(int)*mp->NGLOB_AB),88501);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("before kernel compute_coupling_ocean_cuda");
-#endif
+  GPU_ERROR_CHECKING("before kernel compute_coupling_ocean_cuda");
 
   compute_coupling_ocean_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel,
                                                                            mp->d_rmassx,mp->d_rmassy,mp->d_rmassz,
@@ -466,9 +462,6 @@ void FC_FUNC_(compute_coupling_ocean_cuda,
 
   }
 
-
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_coupling_ocean_cuda");
-#endif
+  GPU_ERROR_CHECKING("compute_coupling_ocean_cuda");
 }
 

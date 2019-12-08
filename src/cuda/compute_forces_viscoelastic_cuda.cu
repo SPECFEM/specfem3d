@@ -3549,9 +3549,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
 
   TRACE("\tKernel_2");
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("before kernel Kernel 2");
-#endif
+  GPU_ERROR_CHECKING("before kernel Kernel 2");
 
   // if the grid can handle the number of blocks, we let it be 1D
   // grid_2_x = nb_elem_color;
@@ -3997,9 +3995,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
     }
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("Kernel_2_impl");
-#endif
+  GPU_ERROR_CHECKING("Kernel_2_impl");
 }
 
 /* ----------------------------------------------------------------------------------------------- */

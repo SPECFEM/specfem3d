@@ -955,9 +955,8 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
                        realw* d_kappastore,
                        int FORWARD_OR_ADJOINT){
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("before acoustic kernel Kernel 2");
-#endif
+  GPU_ERROR_CHECKING("before acoustic kernel Kernel 2");
+
   // safety check
   if (FORWARD_OR_ADJOINT != 0 && FORWARD_OR_ADJOINT != 1 && FORWARD_OR_ADJOINT != 3) {
     exit_on_error("Error invalid FORWARD_OR_ADJOINT in Kernel_2_acoustic() routine");
@@ -1091,9 +1090,7 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
     printf("  performance: %f GFlop/s\n", flops/time * 1.e-9);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("kernel Kernel_2");
-#endif
+  GPU_ERROR_CHECKING("kernel Kernel_2");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -1284,8 +1281,6 @@ TRACE("acoustic_enforce_free_surf_cuda");
                                                                             mp->d_ispec_is_acoustic);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("enforce_free_surface_cuda");
-#endif
+  GPU_ERROR_CHECKING("enforce_free_surface_cuda");
 }
 

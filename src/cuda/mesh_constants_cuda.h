@@ -92,7 +92,12 @@
 
 // error checking after cuda function calls
 // (note: this synchronizes many calls, thus e.g. no asynchronuous memcpy possible)
-//#define ENABLE_VERY_SLOW_ERROR_CHECKING
+#define ENABLE_VERY_SLOW_ERROR_CHECKING 0
+#if ENABLE_VERY_SLOW_ERROR_CHECKING == 1
+#define GPU_ERROR_CHECKING(x) exit_on_cuda_error(x);
+#else
+#define GPU_ERROR_CHECKING(x)
+#endif
 
 // maximum function
 #define MAX(x,y)     (((x) < (y)) ? (y) : (x))
@@ -374,13 +379,17 @@ double get_time();
 void get_free_memory(double* free_db, double* used_db, double* total_db);
 void print_CUDA_error_if_any(cudaError_t err, int num);
 void pause_for_debugger(int pause);
+
 void exit_on_cuda_error(const char* kernel_name);
 void exit_on_error(const char* info);
+
 void synchronize_cuda();
 void synchronize_mpi();
+
 void start_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop);
 void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str);
 void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str,realw* t);
+
 void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y);
 realw get_device_array_maximum_value(realw* array,int size);
 
