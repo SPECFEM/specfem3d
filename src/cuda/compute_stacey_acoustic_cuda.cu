@@ -350,7 +350,7 @@ TRACE("compute_stacey_acoustic_cuda");
   }
 
   //  adjoint simulations: stores absorbed wavefield part
-  if (mp->simulation_type == 1 && mp->save_forward ){
+  if (mp->simulation_type == 1 && mp->save_forward){
     // (cudaMemcpy implicitly synchronizes all other cuda operations)
     // copies array to CPU
     print_CUDA_error_if_any(cudaMemcpy(h_b_absorb_potential,mp->d_b_absorb_potential,

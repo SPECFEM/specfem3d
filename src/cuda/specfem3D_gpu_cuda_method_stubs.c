@@ -225,10 +225,12 @@ void FC_FUNC_(compute_coupling_ac_el_cuda,
 void FC_FUNC_(compute_coupling_el_ac_cuda,
               COMPUTE_COUPLING_EL_AC_CUDA)(long* Mesh_pointer,
                                            int* iphasef,
-                                           int* num_coupling_ac_el_facesf) {}
+                                           int* num_coupling_ac_el_facesf,
+                                           int* FORWARD_OR_ADJOINT) {}
 
 void FC_FUNC_(compute_coupling_ocean_cuda,
-              COMPUTE_COUPLING_OCEAN_CUDA)(long* Mesh_pointer) {}
+              COMPUTE_COUPLING_OCEAN_CUDA)(long* Mesh_pointer,
+                                           int* FORWARD_OR_ADJOINT) {}
 
 
 //
@@ -260,7 +262,8 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
                                                 int* nspec_inner_elastic,
                                                 int* COMPUTE_AND_STORE_STRAIN,
                                                 int* ATTENUATION,
-                                                int* ANISOTROPY) {}
+                                                int* ANISOTROPY,
+                                                int* FORWARD_OR_ADJOINT_f) {}
 
 
 //
@@ -269,7 +272,8 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
 
 void FC_FUNC_(compute_kernels_elastic_cuda,
               COMPUTE_KERNELS_ELASTIC_CUDA)(long* Mesh_pointer,
-                                            realw* deltat_f) {}
+                                            realw* deltat_f,
+                                            int* undo_attenuation) {}
 
 void FC_FUNC_(compute_kernels_strgth_noise_cu,
               COMPUTE_KERNELS_STRGTH_NOISE_CU)(long* Mesh_pointer,
@@ -309,8 +313,15 @@ void FC_FUNC_(compute_stacey_acoustic_undoatt_cuda,
 
 void FC_FUNC_(compute_stacey_viscoelastic_cuda,
               COMPUTE_STACEY_VISCOELASTIC_CUDA)(long* Mesh_pointer,
-                                           int* iphasef,
-                                           realw* b_absorb_field) {}
+                                                int* iphasef,
+                                                realw* b_absorb_field,
+                                                int* FORWARD_OR_ADJOINT_f) {}
+
+void FC_FUNC_(compute_stacey_viscoelastic_undoatt_cuda,
+              COMPUTE_STACEY_VISCOELASTIC_UNDOATT_CUDA)(long* Mesh_pointer,
+                                                        int* iphasef,
+                                                        realw* b_absorb_field,
+                                                        int* FORWARD_OR_ADJOINT_f) {}
 
 
 //
@@ -652,6 +663,9 @@ void FC_FUNC_(transfer_veloc_from_device,
 void FC_FUNC_(transfer_b_veloc_from_device,
               TRNASFER_B_VELOC_FROM_DEVICE)(int* size, realw* b_veloc,long* Mesh_pointer) {}
 
+void FC_FUNC_(transfer_b_veloc_to_device,
+              TRANSFER_B_VELOC_TO_DEVICE)(int* size, realw* b_veloc,long* Mesh_pointer) {}
+
 void FC_FUNC_(transfer_accel_to_device,
               TRNASFER_ACCEL_TO_DEVICE)(int* size, realw* accel,long* Mesh_pointer) {}
 
@@ -832,7 +846,8 @@ void FC_FUNC_(kernel_3_a_cuda,
               KERNEL_3_A_CUDA)(long* Mesh_pointer,
                                realw* deltatover2_F,
                                realw* b_deltatover2_F,
-                               int* APPROXIMATE_OCEAN_LOAD) {}
+                               int* APPROXIMATE_OCEAN_LOAD,
+                               int* FORWARD_OR_ADJOINT) {}
 
 void FC_FUNC_(kernel_3_b_cuda,
               KERNEL_3_B_CUDA)(long* Mesh_pointer,

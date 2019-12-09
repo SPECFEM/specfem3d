@@ -714,8 +714,15 @@ __device__  __forceinline__ void get_dot_product(realw jacobianl,
 // kernel without attenuation
 //
 // we use templates to distinguish between calls with forward or adjoint texture fields
+//
+// note: the templating has been mostly needed for texture cache loading. since the template expression
+//       >   template<int FORWARD_OR_ADJOINT> __global__ void ..
+//       needs to have a constant expression FORWARD_OR_ADJOINT at compile time, this leads to two different
+//       function calls for each case of the forward_or_adjoint values. to avoid such lengthy calling routines,
+//       we will pass it here as function arguments and make the if-statement where needed for the texture loads.
+//       this shouldn't affect performance much, since they are only evaluated for texture memory usages.
 
-template<int FORWARD_OR_ADJOINT> __global__ void
+__global__ void
 #ifdef USE_LAUNCH_BOUNDS
 // adds compiler specification
 __launch_bounds__(NGLL3_PADDED,LAUNCH_MIN_BLOCKS)
@@ -735,7 +742,8 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
                         realw_const_p d_hprime_xx,
                         realw_const_p d_hprimewgll_xx,
                         realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
-                        realw_const_p d_kappav,realw_const_p d_muv){
+                        realw_const_p d_kappav,realw_const_p d_muv,
+                        const int FORWARD_OR_ADJOINT){
 
 // elastic compute kernel without attenuation for isotropic elements
 //
@@ -833,7 +841,11 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
   // each thread writes one of the NGLL^3 = 125 data points
   if (threadIdx.x < NGLL3 ){
     // copy displacement from global memory to shared memory
-    load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
+    if (FORWARD_OR_ADJOINT == 3){
+      load_shared_memory_displ<3>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
+    }else{
+      load_shared_memory_displ<1>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
+    }
   }
 
 // counts:
@@ -1010,7 +1022,7 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
 /* ----------------------------------------------------------------------------------------------- */
 
 
-template<int FORWARD_OR_ADJOINT> __global__ void
+__global__ void
 #ifdef USE_LAUNCH_BOUNDS
 // adds compiler specification
 __launch_bounds__(NGLL3_PADDED,LAUNCH_MIN_BLOCKS)
@@ -1035,7 +1047,8 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
                               realw_p epsilondev_xx,realw_p epsilondev_yy,realw_p epsilondev_xy,
                               realw_p epsilondev_xz,realw_p epsilondev_yz,
                               realw_p epsilon_trace_over_3,
-                              const int SIMULATION_TYPE){
+                              const int SIMULATION_TYPE,
+                              const int FORWARD_OR_ADJOINT){
 
 // elastic compute kernel without attenuation for isotropic elements
 //
@@ -1112,7 +1125,11 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   // each thread writes one of the NGLL^3 = 125 data points
   if (threadIdx.x < NGLL3 ){
     // copy displacement from global memory to shared memory
-    load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
+    if (FORWARD_OR_ADJOINT == 3){
+      load_shared_memory_displ<3>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
+    }else{
+      load_shared_memory_displ<1>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
+    }
   }
 
   // synchronize all the threads (one thread for each of the NGLL grid points of the
@@ -1217,7 +1234,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-template<int FORWARD_OR_ADJOINT> __global__ void
+__global__ void
 #ifdef USE_LAUNCH_BOUNDS
 // adds compiler specification
 __launch_bounds__(NGLL3_PADDED,LAUNCH_MIN_BLOCKS)
@@ -1241,7 +1258,8 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
                         realw_p epsilondev_xx,realw_p epsilondev_yy,realw_p epsilondev_xy,
                         realw_p epsilondev_xz,realw_p epsilondev_yz,
                         realw_p epsilon_trace_over_3,
-                        const int SIMULATION_TYPE){
+                        const int SIMULATION_TYPE,
+                        const int FORWARD_OR_ADJOINT){
 
 // elastic compute kernel without attenuation for isotropic elements
 //
@@ -1325,7 +1343,11 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
   // each thread writes one of the NGLL^3 = 125 data points
   if (threadIdx.x < NGLL3 ){
     // copy displacement from global memory to shared memory
-    load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
+    if (FORWARD_OR_ADJOINT == 3){
+      load_shared_memory_displ<3>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
+    } else {
+      load_shared_memory_displ<1>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
+    }
   }
 
   // loads mesh values here to give compiler possibility to overlap memory fetches with some computations
@@ -1472,9 +1494,15 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
     // no atomic operation needed, colors don't share global points between elements
 
 #ifdef USE_TEXTURES_FIELDS
-    d_accel[iglob*3]     = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3) + sum_terms1;
-    d_accel[iglob*3 + 1] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 1) + sum_terms2;
-    d_accel[iglob*3 + 2] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 2) + sum_terms3;
+    if (FORWARD_OR_ADJOINT == 3){
+      d_accel[iglob*3]     = texfetch_accel<3>(iglob*3) + sum_terms1;
+      d_accel[iglob*3 + 1] = texfetch_accel<3>(iglob*3 + 1) + sum_terms2;
+      d_accel[iglob*3 + 2] = texfetch_accel<3>(iglob*3 + 2) + sum_terms3;
+    }else{
+      d_accel[iglob*3]     = texfetch_accel<1>(iglob*3) + sum_terms1;
+      d_accel[iglob*3 + 1] = texfetch_accel<1>(iglob*3 + 1) + sum_terms2;
+      d_accel[iglob*3 + 2] = texfetch_accel<1>(iglob*3 + 2) + sum_terms3;
+    }
 #else
     d_accel[iglob*3]     += sum_terms1;
     d_accel[iglob*3 + 1] += sum_terms2;
@@ -1488,9 +1516,15 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
 
       // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
-      d_accel[iglob*3]     = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3) + sum_terms1;
-      d_accel[iglob*3 + 1] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 1) + sum_terms2;
-      d_accel[iglob*3 + 2] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 2) + sum_terms3;
+      if (FORWARD_OR_ADJOINT == 3){
+        d_accel[iglob*3]     = texfetch_accel<3>(iglob*3) + sum_terms1;
+        d_accel[iglob*3 + 1] = texfetch_accel<3>(iglob*3 + 1) + sum_terms2;
+        d_accel[iglob*3 + 2] = texfetch_accel<3>(iglob*3 + 2) + sum_terms3;
+      }else{
+        d_accel[iglob*3]     = texfetch_accel<1>(iglob*3) + sum_terms1;
+        d_accel[iglob*3 + 1] = texfetch_accel<1>(iglob*3 + 1) + sum_terms2;
+        d_accel[iglob*3 + 2] = texfetch_accel<1>(iglob*3 + 2) + sum_terms3;
+      }
 #else
       d_accel[iglob*3]     += sum_terms1;
       d_accel[iglob*3 + 1] += sum_terms2;
@@ -1512,7 +1546,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
 /* ----------------------------------------------------------------------------------------------- */
 
 
-template<int FORWARD_OR_ADJOINT> __global__ void
+__global__ void
 #ifdef USE_LAUNCH_BOUNDS
 // adds compiler specification
 __launch_bounds__(NGLL3_PADDED,LAUNCH_MIN_BLOCKS)
@@ -1543,7 +1577,8 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
                         realw_const_p d_minus_g,
                         realw_const_p d_minus_deriv_gravity,
                         realw_const_p d_rhostore,
-                        realw_const_p wgll_cube ){
+                        realw_const_p wgll_cube,
+                        const int FORWARD_OR_ADJOINT){
 
 // elastic compute kernel without attenuation for isotropic elements
 //
@@ -1635,7 +1670,11 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
   // each thread writes one of the NGLL^3 = 125 data points
   if (threadIdx.x < NGLL3 ){
     // copy displacement from global memory to shared memory
-    load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
+    if (FORWARD_OR_ADJOINT == 3){
+      load_shared_memory_displ<3>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
+    } else {
+      load_shared_memory_displ<1>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
+    }
   }
 
   // synchronize all the threads (one thread for each of the NGLL grid points of the
@@ -1756,9 +1795,15 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
     // no atomic operation needed, colors don't share global points between elements
 
 #ifdef USE_TEXTURES_FIELDS
-    d_accel[iglob*3]     = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3) + sum_terms1;
-    d_accel[iglob*3 + 1] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 1) + sum_terms2;
-    d_accel[iglob*3 + 2] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 2) + sum_terms3;
+    if (FORWARD_OR_ADJOINT == 3){
+      d_accel[iglob*3]     = texfetch_accel<3>(iglob*3) + sum_terms1;
+      d_accel[iglob*3 + 1] = texfetch_accel<3>(iglob*3 + 1) + sum_terms2;
+      d_accel[iglob*3 + 2] = texfetch_accel<3>(iglob*3 + 2) + sum_terms3;
+    } else {
+      d_accel[iglob*3]     = texfetch_accel<1>(iglob*3) + sum_terms1;
+      d_accel[iglob*3 + 1] = texfetch_accel<1>(iglob*3 + 1) + sum_terms2;
+      d_accel[iglob*3 + 2] = texfetch_accel<1>(iglob*3 + 2) + sum_terms3;
+    }
 #else
     d_accel[iglob*3]     += sum_terms1;
     d_accel[iglob*3 + 1] += sum_terms2;
@@ -1772,9 +1817,15 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
 
       // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
-      d_accel[iglob*3]     = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3) + sum_terms1;
-      d_accel[iglob*3 + 1] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 1) + sum_terms2;
-      d_accel[iglob*3 + 2] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 2) + sum_terms3;
+      if (FORWARD_OR_ADJOINT == 3){
+        d_accel[iglob*3]     = texfetch_accel<3>(iglob*3) + sum_terms1;
+        d_accel[iglob*3 + 1] = texfetch_accel<3>(iglob*3 + 1) + sum_terms2;
+        d_accel[iglob*3 + 2] = texfetch_accel<3>(iglob*3 + 2) + sum_terms3;
+      }else{
+        d_accel[iglob*3]     = texfetch_accel<1>(iglob*3) + sum_terms1;
+        d_accel[iglob*3 + 1] = texfetch_accel<1>(iglob*3 + 1) + sum_terms2;
+        d_accel[iglob*3 + 2] = texfetch_accel<1>(iglob*3 + 2) + sum_terms3;
+      }
 #else
       d_accel[iglob*3]     += sum_terms1;
       d_accel[iglob*3 + 1] += sum_terms2;
@@ -1796,7 +1847,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
 /* ----------------------------------------------------------------------------------------------- */
 
 
-template<int FORWARD_OR_ADJOINT> __global__ void
+__global__ void
 #ifdef USE_LAUNCH_BOUNDS
 // adds compiler specification
 __launch_bounds__(NGLL3_PADDED,LAUNCH_MIN_BLOCKS)
@@ -1835,7 +1886,8 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
                         realw_const_p d_minus_g,
                         realw_const_p d_minus_deriv_gravity,
                         realw_const_p d_rhostore,
-                        realw_const_p wgll_cube ){
+                        realw_const_p wgll_cube,
+                        const int FORWARD_OR_ADJOINT){
 
 // elastic compute kernel without attenuation for anisotropic elements
 //
@@ -1928,7 +1980,11 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
   // each thread writes one of the NGLL^3 = 125 data points
   if (threadIdx.x < NGLL3 ){
     // copy displacement from global memory to shared memory
-    load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
+    if (FORWARD_OR_ADJOINT == 3){
+      load_shared_memory_displ<3>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
+    } else{
+      load_shared_memory_displ<1>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
+    }
   }
 
   // synchronize all the threads (one thread for each of the NGLL grid points of the
@@ -2087,9 +2143,15 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
     // no atomic operation needed, colors don't share global points between elements
 
 #ifdef USE_TEXTURES_FIELDS
-    d_accel[iglob*3]     = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3) + sum_terms1;
-    d_accel[iglob*3 + 1] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 1) + sum_terms2;
-    d_accel[iglob*3 + 2] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 2) + sum_terms3;
+    if (FORWARD_OR_ADJOINT == 3){
+      d_accel[iglob*3]     = texfetch_accel<3>(iglob*3) + sum_terms1;
+      d_accel[iglob*3 + 1] = texfetch_accel<3>(iglob*3 + 1) + sum_terms2;
+      d_accel[iglob*3 + 2] = texfetch_accel<3>(iglob*3 + 2) + sum_terms3;
+    } else {
+      d_accel[iglob*3]     = texfetch_accel<1>(iglob*3) + sum_terms1;
+      d_accel[iglob*3 + 1] = texfetch_accel<1>(iglob*3 + 1) + sum_terms2;
+      d_accel[iglob*3 + 2] = texfetch_accel<1>(iglob*3 + 2) + sum_terms3;
+    }
 #else
     d_accel[iglob*3]     += sum_terms1;
     d_accel[iglob*3 + 1] += sum_terms2;
@@ -2103,9 +2165,15 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
 
       // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
-      d_accel[iglob*3]     = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3) + sum_terms1;
-      d_accel[iglob*3 + 1] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 1) + sum_terms2;
-      d_accel[iglob*3 + 2] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 2) + sum_terms3;
+      if (FORWARD_OR_ADJOINT == 3){
+        d_accel[iglob*3]     = texfetch_accel<3>(iglob*3) + sum_terms1;
+        d_accel[iglob*3 + 1] = texfetch_accel<3>(iglob*3 + 1) + sum_terms2;
+        d_accel[iglob*3 + 2] = texfetch_accel<3>(iglob*3 + 2) + sum_terms3;
+      } else {
+        d_accel[iglob*3]     = texfetch_accel<1>(iglob*3) + sum_terms1;
+        d_accel[iglob*3 + 1] = texfetch_accel<1>(iglob*3 + 1) + sum_terms2;
+        d_accel[iglob*3 + 2] = texfetch_accel<1>(iglob*3 + 2) + sum_terms3;
+      }
 #else
       d_accel[iglob*3]     += sum_terms1;
       d_accel[iglob*3 + 1] += sum_terms2;
@@ -2141,7 +2209,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
 //
 // we use templates to distinguish between calls with forward or adjoint texture fields
 
-template<int FORWARD_OR_ADJOINT> __global__ void
+__global__ void
 #ifdef USE_LAUNCH_BOUNDS
 // adds compiler specification
 __launch_bounds__(NGLL3_PADDED,LAUNCH_MIN_BLOCKS)
@@ -2187,7 +2255,8 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
                   realw_const_p d_minus_g,
                   realw_const_p d_minus_deriv_gravity,
                   realw_const_p d_rhostore,
-                  realw_const_p wgll_cube){
+                  realw_const_p wgll_cube,
+                  const int FORWARD_OR_ADJOINT){
 
 
 // elastic compute kernel with attenuation
@@ -2280,15 +2349,25 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
   // copy displacement from global memory to shared memory
   // each thread writes one of the NGLL^3 = 125 data points
   if (threadIdx.x < NGLL3 ){
-    load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,s_dummyx_loc,s_dummyy_loc,s_dummyz_loc);
+    if (FORWARD_OR_ADJOINT == 3){
+      load_shared_memory_displ<3>(&tx,&iglob,d_displ,s_dummyx_loc,s_dummyy_loc,s_dummyz_loc);
+    } else {
+      load_shared_memory_displ<1>(&tx,&iglob,d_displ,s_dummyx_loc,s_dummyy_loc,s_dummyz_loc);
+    }
 
     // attenuation
     // use first order Taylor expansion of displacement for local storage of stresses
     // at this current time step, to fix attenuation in a consistent way
 #ifdef USE_TEXTURES_FIELDS
-    sh_tempx_att[tx] = s_dummyx_loc[tx] + d_deltat * texfetch_veloc<FORWARD_OR_ADJOINT>(iglob*3);
-    sh_tempy_att[tx] = s_dummyy_loc[tx] + d_deltat * texfetch_veloc<FORWARD_OR_ADJOINT>(iglob*3 + 1);
-    sh_tempz_att[tx] = s_dummyz_loc[tx] + d_deltat * texfetch_veloc<FORWARD_OR_ADJOINT>(iglob*3 + 2);
+    if (FORWARD_OR_ADJOINT == 3){
+      sh_tempx_att[tx] = s_dummyx_loc[tx] + d_deltat * texfetch_veloc<3>(iglob*3);
+      sh_tempy_att[tx] = s_dummyy_loc[tx] + d_deltat * texfetch_veloc<3>(iglob*3 + 1);
+      sh_tempz_att[tx] = s_dummyz_loc[tx] + d_deltat * texfetch_veloc<3>(iglob*3 + 2);
+    } else {
+      sh_tempx_att[tx] = s_dummyx_loc[tx] + d_deltat * texfetch_veloc<1>(iglob*3);
+      sh_tempy_att[tx] = s_dummyy_loc[tx] + d_deltat * texfetch_veloc<1>(iglob*3 + 1);
+      sh_tempz_att[tx] = s_dummyz_loc[tx] + d_deltat * texfetch_veloc<1>(iglob*3 + 2);
+    }
 #else
     sh_tempx_att[tx] = s_dummyx_loc[tx] + d_deltat * d_veloc[iglob*3];
     sh_tempy_att[tx] = s_dummyy_loc[tx] + d_deltat * d_veloc[iglob*3 + 1];
@@ -2475,9 +2554,15 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     // no atomic operation needed, colors don't share global points between elements
 
 #ifdef USE_TEXTURES_FIELDS
-    d_accel[iglob*3]     = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3) + sum_terms1;
-    d_accel[iglob*3 + 1] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 1) + sum_terms2;
-    d_accel[iglob*3 + 2] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 2) + sum_terms3;
+    if (FORWARD_OR_ADJOINT == 3){
+      d_accel[iglob*3]     = texfetch_accel<3>(iglob*3) + sum_terms1;
+      d_accel[iglob*3 + 1] = texfetch_accel<3>(iglob*3 + 1) + sum_terms2;
+      d_accel[iglob*3 + 2] = texfetch_accel<3>(iglob*3 + 2) + sum_terms3;
+    } else {
+      d_accel[iglob*3]     = texfetch_accel<1>(iglob*3) + sum_terms1;
+      d_accel[iglob*3 + 1] = texfetch_accel<1>(iglob*3 + 1) + sum_terms2;
+      d_accel[iglob*3 + 2] = texfetch_accel<1>(iglob*3 + 2) + sum_terms3;
+    }
 #else
     d_accel[iglob*3]     += sum_terms1;
     d_accel[iglob*3 + 1] += sum_terms2;
@@ -2491,9 +2576,15 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 
       // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
-      d_accel[iglob*3]     = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3) + sum_terms1;
-      d_accel[iglob*3 + 1] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 1) + sum_terms2;
-      d_accel[iglob*3 + 2] = texfetch_accel<FORWARD_OR_ADJOINT>(iglob*3 + 2) + sum_terms3;
+      if (FORWARD_OR_ADJOINT == 3){
+        d_accel[iglob*3]     = texfetch_accel<3>(iglob*3) + sum_terms1;
+        d_accel[iglob*3 + 1] = texfetch_accel<3>(iglob*3 + 1) + sum_terms2;
+        d_accel[iglob*3 + 2] = texfetch_accel<3>(iglob*3 + 2) + sum_terms3;
+      }else{
+        d_accel[iglob*3]     = texfetch_accel<1>(iglob*3) + sum_terms1;
+        d_accel[iglob*3 + 1] = texfetch_accel<1>(iglob*3 + 1) + sum_terms2;
+        d_accel[iglob*3 + 2] = texfetch_accel<1>(iglob*3 + 2) + sum_terms3;
+      }
 #else
       d_accel[iglob*3]     += sum_terms1;
       d_accel[iglob*3 + 1] += sum_terms2;
@@ -3251,7 +3342,7 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
 /* ----------------------------------------------------------------------------------------------- */
 
 
-template<int FORWARD_OR_ADJOINT> __global__ void
+__global__ void
 #ifdef USE_LAUNCH_BOUNDS
 // adds compiler specification
 __launch_bounds__(NGLL3_PADDED,LAUNCH_MIN_BLOCKS)
@@ -3273,7 +3364,8 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
                         realw_const_p d_hprime_xx,
                         realw_const_p d_hprimewgll_xx,
                         realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
-                        realw_const_p d_kappav,realw_const_p d_muv){
+                        realw_const_p d_kappav,realw_const_p d_muv,
+                        const int FORWARD_OR_ADJOINT){
 
 // elastic compute kernel without attenuation for isotropic elements with kelvin voigt damping aroung the fault
 //
@@ -3379,7 +3471,11 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
   // each thread writes one of the NGLL^3 = 125 data points
   if (threadIdx.x < NGLL3 ){
     // copy displacement from global memory to shared memory
-    load_shared_memory_displ_visco<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,d_veloc,kelvin_voigt_eta,sh_tempx,sh_tempy,sh_tempz);
+    if (FORWARD_OR_ADJOINT == 3){
+      load_shared_memory_displ_visco<3>(&tx,&iglob,d_displ,d_veloc,kelvin_voigt_eta,sh_tempx,sh_tempy,sh_tempz);
+    } else {
+      load_shared_memory_displ_visco<1>(&tx,&iglob,d_displ,d_veloc,kelvin_voigt_eta,sh_tempx,sh_tempy,sh_tempz);
+    }
   }
 
 // counts:
@@ -3515,9 +3611,9 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
 
 
 void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
-              int COMPUTE_AND_STORE_STRAIN,
-              int ATTENUATION,
-              int ANISOTROPY,
+              const int COMPUTE_AND_STORE_STRAIN,
+              const int ATTENUATION,
+              const int ANISOTROPY,
               int* d_ibool,
               realw* d_xix,realw* d_xiy,realw* d_xiz,
               realw* d_etax,realw* d_etay,realw* d_etaz,
@@ -3545,11 +3641,17 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
               realw* d_c34store,realw* d_c35store,realw* d_c36store,
               realw* d_c44store,realw* d_c45store,realw* d_c46store,
               realw* d_c55store,realw* d_c56store,realw* d_c66store,
-              realw* d_rhostore){
+              realw* d_rhostore,
+              const int FORWARD_OR_ADJOINT){
 
   TRACE("\tKernel_2");
 
   GPU_ERROR_CHECKING("before kernel Kernel 2");
+
+  // safety check
+  if (FORWARD_OR_ADJOINT != 0 && FORWARD_OR_ADJOINT != 1 && FORWARD_OR_ADJOINT != 3) {
+    exit_on_error("Error invalid FORWARD_OR_ADJOINT in Kernel_2_acoustic() routine");
+  }
 
   // if the grid can handle the number of blocks, we let it be 1D
   // grid_2_x = nb_elem_color;
@@ -3569,94 +3671,145 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
     start_timing_cuda(&start,&stop);
   }
 
+  // defines local parameters for forward/adjoint function calls
+  realw *displ,*veloc,*accel;
+  realw *epsilondev_xx,*epsilondev_yy,*epsilondev_xy,*epsilondev_xz,*epsilondev_yz;
+  realw *epsilon_trace_over_3;
+  realw *R_xx,*R_yy,*R_xy,*R_xz,*R_yz,*R_trace;
+  realw *alphaval,*betaval,*gammaval;
+
+  // sets gpu arrays
+  if (FORWARD_OR_ADJOINT == 1 || FORWARD_OR_ADJOINT == 0) {
+    displ = mp->d_displ;
+    veloc = mp->d_veloc;
+    accel = mp->d_accel;
+    epsilondev_xx = d_epsilondev_xx;
+    epsilondev_yy = d_epsilondev_yy;
+    epsilondev_xy = d_epsilondev_xy;
+    epsilondev_xz = d_epsilondev_xz;
+    epsilondev_yz = d_epsilondev_yz;
+    epsilon_trace_over_3 = d_epsilon_trace_over_3;
+    R_xx = d_R_xx;
+    R_yy = d_R_yy;
+    R_xy = d_R_xy;
+    R_xz = d_R_xz;
+    R_yz = d_R_yz;
+    R_trace = d_R_trace;
+    alphaval = mp->d_alphaval;
+    betaval = mp->d_betaval;
+    gammaval = mp->d_gammaval;
+  } else {
+    // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
+    displ = mp->d_b_displ;
+    veloc = mp->d_b_veloc;
+    accel = mp->d_b_accel;
+    epsilondev_xx = d_b_epsilondev_xx;
+    epsilondev_yy = d_b_epsilondev_yy;
+    epsilondev_xy = d_b_epsilondev_xy;
+    epsilondev_xz = d_b_epsilondev_xz;
+    epsilondev_yz = d_b_epsilondev_yz;
+    epsilon_trace_over_3 = d_b_epsilon_trace_over_3;
+    R_xx = d_b_R_xx;
+    R_yy = d_b_R_yy;
+    R_xy = d_b_R_xy;
+    R_xz = d_b_R_xz;
+    R_yz = d_b_R_yz;
+    R_trace = d_b_R_trace;
+    alphaval = mp->d_b_alphaval;
+    betaval = mp->d_b_betaval;
+    gammaval = mp->d_b_gammaval;
+  }
+
   // cuda kernel call
   if (ATTENUATION ){
     TRACE("\tKernel_2: Kernel_2_att_impl");
     // compute kernels with attenuation
     // forward wavefields -> FORWARD_OR_ADJOINT == 1
-    Kernel_2_att_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                                                d_ibool,
-                                                                mp->d_phase_ispec_inner_elastic,
-                                                                mp->num_phase_ispec_elastic,
-                                                                d_iphase,
-                                                                mp->d_irregular_element_number,
-                                                                mp->use_mesh_coloring_gpu,
-                                                                d_deltat,
-                                                                mp->d_displ,mp->d_veloc,mp->d_accel,
-                                                                d_xix, d_xiy, d_xiz,
-                                                                d_etax, d_etay, d_etaz,
-                                                                d_gammax, d_gammay, d_gammaz,
-                                                                mp->xix_regular,mp->jacobian_regular,
-                                                                mp->d_hprime_xx,
-                                                                mp->d_hprimewgll_xx,
-                                                                mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                                d_kappav, d_muv,
-                                                                d_epsilondev_xx,d_epsilondev_yy,d_epsilondev_xy,
-                                                                d_epsilondev_xz,d_epsilondev_yz,
-                                                                d_epsilon_trace_over_3,
-                                                                mp->simulation_type,
-                                                                mp->NSPEC_AB,
-                                                                d_factor_common,
-                                                                d_R_xx,d_R_yy,d_R_xy,d_R_xz,d_R_yz,
-                                                                d_factor_common_kappa,
-                                                                d_R_trace,d_epsilondev_trace,
-                                                                mp->d_alphaval,mp->d_betaval,mp->d_gammaval,
-                                                                ANISOTROPY,
-                                                                d_c11store,d_c12store,d_c13store,
-                                                                d_c14store,d_c15store,d_c16store,
-                                                                d_c22store,d_c23store,d_c24store,
-                                                                d_c25store,d_c26store,d_c33store,
-                                                                d_c34store,d_c35store,d_c36store,
-                                                                d_c44store,d_c45store,d_c46store,
-                                                                d_c55store,d_c56store,d_c66store,
-                                                                mp->gravity,
-                                                                mp->d_minus_g,
-                                                                mp->d_minus_deriv_gravity,
-                                                                d_rhostore,
-                                                                mp->d_wgll_cube);
+    Kernel_2_att_impl<<<grid,threads,0,mp->compute_stream>>>( nb_blocks_to_compute,
+                                                              d_ibool,
+                                                              mp->d_phase_ispec_inner_elastic,
+                                                              mp->num_phase_ispec_elastic,
+                                                              d_iphase,
+                                                              mp->d_irregular_element_number,
+                                                              mp->use_mesh_coloring_gpu,
+                                                              d_deltat,
+                                                              displ,veloc,accel,
+                                                              d_xix, d_xiy, d_xiz,
+                                                              d_etax, d_etay, d_etaz,
+                                                              d_gammax, d_gammay, d_gammaz,
+                                                              mp->xix_regular,mp->jacobian_regular,
+                                                              mp->d_hprime_xx,
+                                                              mp->d_hprimewgll_xx,
+                                                              mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                              d_kappav, d_muv,
+                                                              epsilondev_xx,epsilondev_yy,epsilondev_xy,
+                                                              epsilondev_xz,epsilondev_yz,
+                                                              epsilon_trace_over_3,
+                                                              mp->simulation_type,
+                                                              mp->NSPEC_AB,
+                                                              d_factor_common,
+                                                              R_xx,R_yy,R_xy,R_xz,R_yz,
+                                                              d_factor_common_kappa,
+                                                              R_trace,d_epsilondev_trace,
+                                                              alphaval,betaval,gammaval,
+                                                              ANISOTROPY,
+                                                              d_c11store,d_c12store,d_c13store,
+                                                              d_c14store,d_c15store,d_c16store,
+                                                              d_c22store,d_c23store,d_c24store,
+                                                              d_c25store,d_c26store,d_c33store,
+                                                              d_c34store,d_c35store,d_c36store,
+                                                              d_c44store,d_c45store,d_c46store,
+                                                              d_c55store,d_c56store,d_c66store,
+                                                              mp->gravity,
+                                                              mp->d_minus_g,
+                                                              mp->d_minus_deriv_gravity,
+                                                              d_rhostore,
+                                                              mp->d_wgll_cube,
+                                                              FORWARD_OR_ADJOINT);
 
-    if (mp->simulation_type == 3) {
+    if (mp->simulation_type == 3 && FORWARD_OR_ADJOINT == 0) {
       // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
-      Kernel_2_att_impl<3><<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                                                   d_ibool,
-                                                                   mp->d_phase_ispec_inner_elastic,
-                                                                   mp->num_phase_ispec_elastic,
-                                                                   d_iphase,
-                                                                   mp->d_irregular_element_number,
-                                                                   mp->use_mesh_coloring_gpu,
-                                                                   d_deltat,
-                                                                   mp->d_b_displ,mp->d_b_veloc,mp->d_b_accel,
-                                                                   d_xix, d_xiy, d_xiz,
-                                                                   d_etax, d_etay, d_etaz,
-                                                                   d_gammax, d_gammay, d_gammaz,
-                                                                   mp->xix_regular,mp->jacobian_regular,
-                                                                   mp->d_hprime_xx,
-                                                                   mp->d_hprimewgll_xx,
-                                                                   mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                                   d_kappav, d_muv,
-                                                                   d_b_epsilondev_xx,d_b_epsilondev_yy,d_b_epsilondev_xy,
-                                                                   d_b_epsilondev_xz,d_b_epsilondev_yz,
-                                                                   d_b_epsilon_trace_over_3,
-                                                                   mp->simulation_type,
-                                                                   mp->NSPEC_AB,
-                                                                   d_factor_common,
-                                                                   d_b_R_xx,d_b_R_yy,d_b_R_xy,d_b_R_xz,d_b_R_yz,
-                                                                   d_factor_common_kappa,
-                                                                   d_b_R_trace,d_b_epsilondev_trace,
-                                                                   mp->d_b_alphaval,mp->d_b_betaval,mp->d_b_gammaval,
-                                                                   ANISOTROPY,
-                                                                   d_c11store,d_c12store,d_c13store,
-                                                                   d_c14store,d_c15store,d_c16store,
-                                                                   d_c22store,d_c23store,d_c24store,
-                                                                   d_c25store,d_c26store,d_c33store,
-                                                                   d_c34store,d_c35store,d_c36store,
-                                                                   d_c44store,d_c45store,d_c46store,
-                                                                   d_c55store,d_c56store,d_c66store,
-                                                                   mp->gravity,
-                                                                   mp->d_minus_g,
-                                                                   mp->d_minus_deriv_gravity,
-                                                                   d_rhostore,
-                                                                   mp->d_wgll_cube);
+      Kernel_2_att_impl<<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+                                                               d_ibool,
+                                                               mp->d_phase_ispec_inner_elastic,
+                                                               mp->num_phase_ispec_elastic,
+                                                               d_iphase,
+                                                               mp->d_irregular_element_number,
+                                                               mp->use_mesh_coloring_gpu,
+                                                               d_deltat,
+                                                               mp->d_b_displ,mp->d_b_veloc,mp->d_b_accel,
+                                                               d_xix, d_xiy, d_xiz,
+                                                               d_etax, d_etay, d_etaz,
+                                                               d_gammax, d_gammay, d_gammaz,
+                                                               mp->xix_regular,mp->jacobian_regular,
+                                                               mp->d_hprime_xx,
+                                                               mp->d_hprimewgll_xx,
+                                                               mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                               d_kappav, d_muv,
+                                                               d_b_epsilondev_xx,d_b_epsilondev_yy,d_b_epsilondev_xy,
+                                                               d_b_epsilondev_xz,d_b_epsilondev_yz,
+                                                               d_b_epsilon_trace_over_3,
+                                                               mp->simulation_type,
+                                                               mp->NSPEC_AB,
+                                                               d_factor_common,
+                                                               d_b_R_xx,d_b_R_yy,d_b_R_xy,d_b_R_xz,d_b_R_yz,
+                                                               d_factor_common_kappa,
+                                                               d_b_R_trace,d_b_epsilondev_trace,
+                                                               mp->d_b_alphaval,mp->d_b_betaval,mp->d_b_gammaval,
+                                                               ANISOTROPY,
+                                                               d_c11store,d_c12store,d_c13store,
+                                                               d_c14store,d_c15store,d_c16store,
+                                                               d_c22store,d_c23store,d_c24store,
+                                                               d_c25store,d_c26store,d_c33store,
+                                                               d_c34store,d_c35store,d_c36store,
+                                                               d_c44store,d_c45store,d_c46store,
+                                                               d_c55store,d_c56store,d_c66store,
+                                                               mp->gravity,
+                                                               mp->d_minus_g,
+                                                               mp->d_minus_deriv_gravity,
+                                                               d_rhostore,
+                                                               mp->d_wgll_cube,
+                                                               3);  // 3 == backward
     }
   }else{
     // compute kernels without attenuation
@@ -3664,77 +3817,79 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
       TRACE("\tKernel_2: Kernel_2_noatt_ani_impl");
       // full anisotropy
       // forward wavefields -> FORWARD_OR_ADJOINT == 1
-      Kernel_2_noatt_ani_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                                                        d_ibool,
-                                                                        mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
-                                                                        d_iphase,
-                                                                        mp->d_irregular_element_number,
-                                                                        mp->use_mesh_coloring_gpu,
-                                                                        mp->d_displ,
-                                                                        mp->d_accel,
-                                                                        d_xix, d_xiy, d_xiz,
-                                                                        d_etax, d_etay, d_etaz,
-                                                                        d_gammax, d_gammay, d_gammaz,
-                                                                        mp->xix_regular,mp->jacobian_regular,
-                                                                        mp->d_hprime_xx,
-                                                                        mp->d_hprimewgll_xx,
-                                                                        mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                                        d_kappav, d_muv,
-                                                                        COMPUTE_AND_STORE_STRAIN,
-                                                                        d_epsilondev_xx,d_epsilondev_yy,d_epsilondev_xy,
-                                                                        d_epsilondev_xz,d_epsilondev_yz,
-                                                                        d_epsilon_trace_over_3,
-                                                                        mp->simulation_type,
-                                                                        ANISOTROPY,
-                                                                        d_c11store,d_c12store,d_c13store,
-                                                                        d_c14store,d_c15store,d_c16store,
-                                                                        d_c22store,d_c23store,d_c24store,
-                                                                        d_c25store,d_c26store,d_c33store,
-                                                                        d_c34store,d_c35store,d_c36store,
-                                                                        d_c44store,d_c45store,d_c46store,
-                                                                        d_c55store,d_c56store,d_c66store,
-                                                                        mp->gravity,
-                                                                        mp->d_minus_g,
-                                                                        mp->d_minus_deriv_gravity,
-                                                                        d_rhostore,
-                                                                        mp->d_wgll_cube );
+      Kernel_2_noatt_ani_impl<<<grid,threads,0,mp->compute_stream>>>( nb_blocks_to_compute,
+                                                                      d_ibool,
+                                                                      mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
+                                                                      d_iphase,
+                                                                      mp->d_irregular_element_number,
+                                                                      mp->use_mesh_coloring_gpu,
+                                                                      displ,
+                                                                      accel,
+                                                                      d_xix, d_xiy, d_xiz,
+                                                                      d_etax, d_etay, d_etaz,
+                                                                      d_gammax, d_gammay, d_gammaz,
+                                                                      mp->xix_regular,mp->jacobian_regular,
+                                                                      mp->d_hprime_xx,
+                                                                      mp->d_hprimewgll_xx,
+                                                                      mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                                      d_kappav, d_muv,
+                                                                      COMPUTE_AND_STORE_STRAIN,
+                                                                      epsilondev_xx,epsilondev_yy,epsilondev_xy,
+                                                                      epsilondev_xz,epsilondev_yz,
+                                                                      epsilon_trace_over_3,
+                                                                      mp->simulation_type,
+                                                                      ANISOTROPY,
+                                                                      d_c11store,d_c12store,d_c13store,
+                                                                      d_c14store,d_c15store,d_c16store,
+                                                                      d_c22store,d_c23store,d_c24store,
+                                                                      d_c25store,d_c26store,d_c33store,
+                                                                      d_c34store,d_c35store,d_c36store,
+                                                                      d_c44store,d_c45store,d_c46store,
+                                                                      d_c55store,d_c56store,d_c66store,
+                                                                      mp->gravity,
+                                                                      mp->d_minus_g,
+                                                                      mp->d_minus_deriv_gravity,
+                                                                      d_rhostore,
+                                                                      mp->d_wgll_cube,
+                                                                      FORWARD_OR_ADJOINT);
       // backward/reconstructed wavefield
-      if (mp->simulation_type == 3) {
+      if (mp->simulation_type == 3 && FORWARD_OR_ADJOINT == 0) {
         // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
-        Kernel_2_noatt_ani_impl<3><<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                                                           d_ibool,
-                                                                           mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
-                                                                           d_iphase,
-                                                                           mp->d_irregular_element_number,
-                                                                           mp->use_mesh_coloring_gpu,
-                                                                           mp->d_b_displ,
-                                                                           mp->d_b_accel,
-                                                                           d_xix, d_xiy, d_xiz,
-                                                                           d_etax, d_etay, d_etaz,
-                                                                           d_gammax, d_gammay, d_gammaz,
-                                                                           mp->xix_regular,mp->jacobian_regular,
-                                                                           mp->d_hprime_xx,
-                                                                           mp->d_hprimewgll_xx,
-                                                                           mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                                           d_kappav, d_muv,
-                                                                           COMPUTE_AND_STORE_STRAIN,
-                                                                           d_b_epsilondev_xx,d_b_epsilondev_yy,d_b_epsilondev_xy,
-                                                                           d_b_epsilondev_xz,d_b_epsilondev_yz,
-                                                                           d_b_epsilon_trace_over_3,
-                                                                           mp->simulation_type,
-                                                                           ANISOTROPY,
-                                                                           d_c11store,d_c12store,d_c13store,
-                                                                           d_c14store,d_c15store,d_c16store,
-                                                                           d_c22store,d_c23store,d_c24store,
-                                                                           d_c25store,d_c26store,d_c33store,
-                                                                           d_c34store,d_c35store,d_c36store,
-                                                                           d_c44store,d_c45store,d_c46store,
-                                                                           d_c55store,d_c56store,d_c66store,
-                                                                           mp->gravity,
-                                                                           mp->d_minus_g,
-                                                                           mp->d_minus_deriv_gravity,
-                                                                           d_rhostore,
-                                                                           mp->d_wgll_cube );
+        Kernel_2_noatt_ani_impl<<< grid,threads,0,mp->compute_stream>>>( nb_blocks_to_compute,
+                                                                         d_ibool,
+                                                                         mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
+                                                                         d_iphase,
+                                                                         mp->d_irregular_element_number,
+                                                                         mp->use_mesh_coloring_gpu,
+                                                                         mp->d_b_displ,
+                                                                         mp->d_b_accel,
+                                                                         d_xix, d_xiy, d_xiz,
+                                                                         d_etax, d_etay, d_etaz,
+                                                                         d_gammax, d_gammay, d_gammaz,
+                                                                         mp->xix_regular,mp->jacobian_regular,
+                                                                         mp->d_hprime_xx,
+                                                                         mp->d_hprimewgll_xx,
+                                                                         mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                                         d_kappav, d_muv,
+                                                                         COMPUTE_AND_STORE_STRAIN,
+                                                                         d_b_epsilondev_xx,d_b_epsilondev_yy,d_b_epsilondev_xy,
+                                                                         d_b_epsilondev_xz,d_b_epsilondev_yz,
+                                                                         d_b_epsilon_trace_over_3,
+                                                                         mp->simulation_type,
+                                                                         ANISOTROPY,
+                                                                         d_c11store,d_c12store,d_c13store,
+                                                                         d_c14store,d_c15store,d_c16store,
+                                                                         d_c22store,d_c23store,d_c24store,
+                                                                         d_c25store,d_c26store,d_c33store,
+                                                                         d_c34store,d_c35store,d_c36store,
+                                                                         d_c44store,d_c45store,d_c46store,
+                                                                         d_c55store,d_c56store,d_c66store,
+                                                                         mp->gravity,
+                                                                         mp->d_minus_g,
+                                                                         mp->d_minus_deriv_gravity,
+                                                                         d_rhostore,
+                                                                         mp->d_wgll_cube,
+                                                                         3); // 3 == backward
       }
     }else{
       // isotropic case
@@ -3742,102 +3897,49 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
         TRACE("\tKernel_2: Kernel_2_noatt_iso_grav_impl");
         // with gravity
         // forward wavefields -> FORWARD_OR_ADJOINT == 1
-        Kernel_2_noatt_iso_grav_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                                                          d_ibool,
-                                                                          mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
-                                                                          d_iphase,
-                                                                          mp->d_irregular_element_number,
-                                                                          mp->use_mesh_coloring_gpu,
-                                                                          mp->d_displ,
-                                                                          mp->d_accel,
-                                                                          d_xix, d_xiy, d_xiz,
-                                                                          d_etax, d_etay, d_etaz,
-                                                                          d_gammax, d_gammay, d_gammaz,
-                                                                          mp->xix_regular,mp->jacobian_regular,
-                                                                          mp->d_hprime_xx,
-                                                                          mp->d_hprimewgll_xx,
-                                                                          mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                                          d_kappav, d_muv,
-                                                                          COMPUTE_AND_STORE_STRAIN,
-                                                                          d_epsilondev_xx,d_epsilondev_yy,d_epsilondev_xy,
-                                                                          d_epsilondev_xz,d_epsilondev_yz,
-                                                                          d_epsilon_trace_over_3,
-                                                                          mp->simulation_type,
-                                                                          mp->gravity,
-                                                                          mp->d_minus_g,
-                                                                          mp->d_minus_deriv_gravity,
-                                                                          d_rhostore,
-                                                                          mp->d_wgll_cube );
-
-        // backward/reconstructed wavefield
-        if (mp->simulation_type == 3) {
-          // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
-          Kernel_2_noatt_iso_grav_impl<3><<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                                                             d_ibool,
-                                                                             mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
-                                                                             d_iphase,
-                                                                             mp->d_irregular_element_number,
-                                                                             mp->use_mesh_coloring_gpu,
-                                                                             mp->d_b_displ,
-                                                                             mp->d_b_accel,
-                                                                             d_xix, d_xiy, d_xiz,
-                                                                             d_etax, d_etay, d_etaz,
-                                                                             d_gammax, d_gammay, d_gammaz,
-                                                                             mp->xix_regular,mp->jacobian_regular,
-                                                                             mp->d_hprime_xx,
-                                                                             mp->d_hprimewgll_xx,
-                                                                             mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                                             d_kappav, d_muv,
-                                                                             COMPUTE_AND_STORE_STRAIN,
-                                                                             d_b_epsilondev_xx,d_b_epsilondev_yy,d_b_epsilondev_xy,
-                                                                             d_b_epsilondev_xz,d_b_epsilondev_yz,
-                                                                             d_b_epsilon_trace_over_3,
-                                                                             mp->simulation_type,
-                                                                             mp->gravity,
-                                                                             mp->d_minus_g,
-                                                                             mp->d_minus_deriv_gravity,
-                                                                             d_rhostore,
-                                                                             mp->d_wgll_cube );
-        }
-      }else{
-        // without gravity
-        if (mp->use_mesh_coloring_gpu) {
-          TRACE("\tKernel_2: Kernel_2_noatt_iso_col_impl");
-          // with mesh coloring
-          // forward wavefields -> FORWARD_OR_ADJOINT == 1
-          Kernel_2_noatt_iso_col_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+        Kernel_2_noatt_iso_grav_impl<<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
                                                                             d_ibool,
                                                                             mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                             d_iphase,
+                                                                            mp->d_irregular_element_number,
                                                                             mp->use_mesh_coloring_gpu,
-                                                                            mp->d_displ,
-                                                                            mp->d_accel,
+                                                                            displ,
+                                                                            accel,
                                                                             d_xix, d_xiy, d_xiz,
                                                                             d_etax, d_etay, d_etaz,
                                                                             d_gammax, d_gammay, d_gammaz,
+                                                                            mp->xix_regular,mp->jacobian_regular,
                                                                             mp->d_hprime_xx,
                                                                             mp->d_hprimewgll_xx,
                                                                             mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
                                                                             d_kappav, d_muv,
                                                                             COMPUTE_AND_STORE_STRAIN,
-                                                                            d_epsilondev_xx,d_epsilondev_yy,d_epsilondev_xy,
-                                                                            d_epsilondev_xz,d_epsilondev_yz,
-                                                                            d_epsilon_trace_over_3,
-                                                                            mp->simulation_type);
+                                                                            epsilondev_xx,epsilondev_yy,epsilondev_xy,
+                                                                            epsilondev_xz,epsilondev_yz,
+                                                                            epsilon_trace_over_3,
+                                                                            mp->simulation_type,
+                                                                            mp->gravity,
+                                                                            mp->d_minus_g,
+                                                                            mp->d_minus_deriv_gravity,
+                                                                            d_rhostore,
+                                                                            mp->d_wgll_cube,
+                                                                            FORWARD_OR_ADJOINT);
 
-          // backward/reconstructed wavefield
-          if (mp->simulation_type == 3) {
-            // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
-            Kernel_2_noatt_iso_col_impl<3><<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+        // backward/reconstructed wavefield
+        if (mp->simulation_type == 3 && FORWARD_OR_ADJOINT == 0) {
+          // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
+          Kernel_2_noatt_iso_grav_impl<<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
                                                                                d_ibool,
                                                                                mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                                d_iphase,
+                                                                               mp->d_irregular_element_number,
                                                                                mp->use_mesh_coloring_gpu,
                                                                                mp->d_b_displ,
                                                                                mp->d_b_accel,
                                                                                d_xix, d_xiy, d_xiz,
                                                                                d_etax, d_etay, d_etaz,
                                                                                d_gammax, d_gammay, d_gammaz,
+                                                                               mp->xix_regular,mp->jacobian_regular,
                                                                                mp->d_hprime_xx,
                                                                                mp->d_hprimewgll_xx,
                                                                                mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
@@ -3846,49 +3948,54 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                                d_b_epsilondev_xx,d_b_epsilondev_yy,d_b_epsilondev_xy,
                                                                                d_b_epsilondev_xz,d_b_epsilondev_yz,
                                                                                d_b_epsilon_trace_over_3,
-                                                                               mp->simulation_type);
-          }
-        }else{
-          // without mesh coloring
-          if (COMPUTE_AND_STORE_STRAIN ){
-            TRACE("\tKernel_2: Kernel_2_noatt_iso_strain_impl");
-            // stores strains
-            // forward wavefields -> FORWARD_OR_ADJOINT == 1
-            Kernel_2_noatt_iso_strain_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+                                                                               mp->simulation_type,
+                                                                               mp->gravity,
+                                                                               mp->d_minus_g,
+                                                                               mp->d_minus_deriv_gravity,
+                                                                               d_rhostore,
+                                                                               mp->d_wgll_cube,
+                                                                               3); // 3 == backward
+        }
+      }else{
+        // without gravity
+        if (mp->use_mesh_coloring_gpu) {
+          TRACE("\tKernel_2: Kernel_2_noatt_iso_col_impl");
+          // with mesh coloring
+          // forward wavefields -> FORWARD_OR_ADJOINT == 1
+          Kernel_2_noatt_iso_col_impl<<<grid,threads,0,mp->compute_stream>>>( nb_blocks_to_compute,
                                                                               d_ibool,
                                                                               mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                               d_iphase,
-                                                                              mp->d_irregular_element_number,
-                                                                              mp->d_displ,
-                                                                              mp->d_accel,
+                                                                              mp->use_mesh_coloring_gpu,
+                                                                              displ,
+                                                                              accel,
                                                                               d_xix, d_xiy, d_xiz,
                                                                               d_etax, d_etay, d_etaz,
                                                                               d_gammax, d_gammay, d_gammaz,
-                                                                              mp->xix_regular,mp->jacobian_regular,
                                                                               mp->d_hprime_xx,
                                                                               mp->d_hprimewgll_xx,
                                                                               mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
                                                                               d_kappav, d_muv,
                                                                               COMPUTE_AND_STORE_STRAIN,
-                                                                              d_epsilondev_xx,d_epsilondev_yy,d_epsilondev_xy,
-                                                                              d_epsilondev_xz,d_epsilondev_yz,
-                                                                              d_epsilon_trace_over_3,
-                                                                              mp->simulation_type);
+                                                                              epsilondev_xx,epsilondev_yy,epsilondev_xy,
+                                                                              epsilondev_xz,epsilondev_yz,
+                                                                              epsilon_trace_over_3,
+                                                                              mp->simulation_type,
+                                                                              FORWARD_OR_ADJOINT);
 
-            // backward/reconstructed wavefield
-            if (mp->simulation_type == 3) {
-              // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
-              Kernel_2_noatt_iso_strain_impl<3><<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+          // backward/reconstructed wavefield
+          if (mp->simulation_type == 3 && FORWARD_OR_ADJOINT == 0) {
+            // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
+            Kernel_2_noatt_iso_col_impl<<< grid,threads,0,mp->compute_stream>>>( nb_blocks_to_compute,
                                                                                  d_ibool,
                                                                                  mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                                  d_iphase,
-                                                                                 mp->d_irregular_element_number,
+                                                                                 mp->use_mesh_coloring_gpu,
                                                                                  mp->d_b_displ,
                                                                                  mp->d_b_accel,
                                                                                  d_xix, d_xiy, d_xiz,
                                                                                  d_etax, d_etay, d_etaz,
                                                                                  d_gammax, d_gammay, d_gammaz,
-                                                                                 mp->xix_regular,mp->jacobian_regular,
                                                                                  mp->d_hprime_xx,
                                                                                  mp->d_hprimewgll_xx,
                                                                                  mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
@@ -3897,40 +4004,119 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                                  d_b_epsilondev_xx,d_b_epsilondev_yy,d_b_epsilondev_xy,
                                                                                  d_b_epsilondev_xz,d_b_epsilondev_yz,
                                                                                  d_b_epsilon_trace_over_3,
-                                                                                 mp->simulation_type);
+                                                                                 mp->simulation_type,
+                                                                                 3); // 3 == backward
+          }
+        }else{
+          // without mesh coloring
+          if (COMPUTE_AND_STORE_STRAIN ){
+            TRACE("\tKernel_2: Kernel_2_noatt_iso_strain_impl");
+            // stores strains
+            // forward wavefields -> FORWARD_OR_ADJOINT == 1
+            Kernel_2_noatt_iso_strain_impl<<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+                                                                                  d_ibool,
+                                                                                  mp->d_phase_ispec_inner_elastic,
+                                                                                  mp->num_phase_ispec_elastic,
+                                                                                  d_iphase,
+                                                                                  mp->d_irregular_element_number,
+                                                                                  displ,
+                                                                                  accel,
+                                                                                  d_xix, d_xiy, d_xiz,
+                                                                                  d_etax, d_etay, d_etaz,
+                                                                                  d_gammax, d_gammay, d_gammaz,
+                                                                                  mp->xix_regular,mp->jacobian_regular,
+                                                                                  mp->d_hprime_xx,
+                                                                                  mp->d_hprimewgll_xx,
+                                                                                  mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                                                  d_kappav, d_muv,
+                                                                                  COMPUTE_AND_STORE_STRAIN,
+                                                                                  epsilondev_xx,epsilondev_yy,epsilondev_xy,
+                                                                                  epsilondev_xz,epsilondev_yz,
+                                                                                  epsilon_trace_over_3,
+                                                                                  mp->simulation_type,
+                                                                                  FORWARD_OR_ADJOINT);
+
+            // backward/reconstructed wavefield
+            if (mp->simulation_type == 3 && FORWARD_OR_ADJOINT == 0) {
+              // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
+              Kernel_2_noatt_iso_strain_impl<<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+                                                                                     d_ibool,
+                                                                                     mp->d_phase_ispec_inner_elastic,
+                                                                                     mp->num_phase_ispec_elastic,
+                                                                                     d_iphase,
+                                                                                     mp->d_irregular_element_number,
+                                                                                     mp->d_b_displ,
+                                                                                     mp->d_b_accel,
+                                                                                     d_xix, d_xiy, d_xiz,
+                                                                                     d_etax, d_etay, d_etaz,
+                                                                                     d_gammax, d_gammay, d_gammaz,
+                                                                                     mp->xix_regular,mp->jacobian_regular,
+                                                                                     mp->d_hprime_xx,
+                                                                                     mp->d_hprimewgll_xx,
+                                                                                     mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                                                     d_kappav, d_muv,
+                                                                                     COMPUTE_AND_STORE_STRAIN,
+                                                                                     d_b_epsilondev_xx,d_b_epsilondev_yy,d_b_epsilondev_xy,
+                                                                                     d_b_epsilondev_xz,d_b_epsilondev_yz,
+                                                                                     d_b_epsilon_trace_over_3,
+                                                                                     mp->simulation_type,
+                                                                                     3); // 3 == backward
             }
           }else{
             if (mp->Kelvin_Voigt_damping) {
               TRACE("\tKernel_2: Kernel_2_noatt_iso_kelvinvoigt_impl");
               // Kelvin_Voigt_damping == true means there is fault in this partition
-              Kernel_2_noatt_iso_kelvinvoigt_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                                                                           d_ibool,
-                                                                                           mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
-                                                                                           d_iphase,
-                                                                                           mp->d_irregular_element_number,
-                                                                                           mp->d_Kelvin_Voigt_eta,
-                                                                                           mp->d_displ,
-                                                                                           mp->d_veloc,
-                                                                                           mp->d_accel,
-                                                                                           d_xix, d_xiy, d_xiz,
-                                                                                           d_etax, d_etay, d_etaz,
-                                                                                           d_gammax, d_gammay, d_gammaz,
-                                                                                           mp->xix_regular,mp->jacobian_regular,
-                                                                                           mp->d_hprime_xx,
-                                                                                           mp->d_hprimewgll_xx,
-                                                                                           mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                                                           d_kappav, d_muv);
+              Kernel_2_noatt_iso_kelvinvoigt_impl<<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+                                                                                         d_ibool,
+                                                                                         mp->d_phase_ispec_inner_elastic,
+                                                                                         mp->num_phase_ispec_elastic,
+                                                                                         d_iphase,
+                                                                                         mp->d_irregular_element_number,
+                                                                                         mp->d_Kelvin_Voigt_eta,
+                                                                                         displ,
+                                                                                         veloc,
+                                                                                         accel,
+                                                                                         d_xix, d_xiy, d_xiz,
+                                                                                         d_etax, d_etay, d_etaz,
+                                                                                         d_gammax, d_gammay, d_gammaz,
+                                                                                         mp->xix_regular,mp->jacobian_regular,
+                                                                                         mp->d_hprime_xx,
+                                                                                         mp->d_hprimewgll_xx,
+                                                                                         mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                                                         d_kappav, d_muv,
+                                                                                         FORWARD_OR_ADJOINT);
             }else{
               TRACE("\tKernel_2: Kernel_2_noatt_iso_impl");
               // without storing strains
               // forward wavefields -> FORWARD_OR_ADJOINT == 1
-              Kernel_2_noatt_iso_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+              Kernel_2_noatt_iso_impl<<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+                                                                             d_ibool,
+                                                                             mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
+                                                                             d_iphase,
+                                                                             mp->d_irregular_element_number,
+                                                                             displ,
+                                                                             accel,
+                                                                             d_xix, d_xiy, d_xiz,
+                                                                             d_etax, d_etay, d_etaz,
+                                                                             d_gammax, d_gammay, d_gammaz,
+                                                                             mp->xix_regular,mp->jacobian_regular,
+                                                                             mp->d_hprime_xx,
+                                                                             mp->d_hprimewgll_xx,
+                                                                             mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                                             d_kappav, d_muv,
+                                                                             FORWARD_OR_ADJOINT);
+
+              // backward/reconstructed wavefield
+              if (mp->simulation_type == 3 && FORWARD_OR_ADJOINT == 0) {
+                // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
+                Kernel_2_noatt_iso_impl<<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
                                                                                 d_ibool,
-                                                                                mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
+                                                                                mp->d_phase_ispec_inner_elastic,
+                                                                                mp->num_phase_ispec_elastic,
                                                                                 d_iphase,
                                                                                 mp->d_irregular_element_number,
-                                                                                mp->d_displ,
-                                                                                mp->d_accel,
+                                                                                mp->d_b_displ,
+                                                                                mp->d_b_accel,
                                                                                 d_xix, d_xiy, d_xiz,
                                                                                 d_etax, d_etay, d_etaz,
                                                                                 d_gammax, d_gammay, d_gammaz,
@@ -3938,26 +4124,8 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                                 mp->d_hprime_xx,
                                                                                 mp->d_hprimewgll_xx,
                                                                                 mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                                                d_kappav, d_muv);
-
-              // backward/reconstructed wavefield
-              if (mp->simulation_type == 3) {
-                // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
-                Kernel_2_noatt_iso_impl<3><<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                                                                   d_ibool,
-                                                                                   mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
-                                                                                   d_iphase,
-                                                                                   mp->d_irregular_element_number,
-                                                                                   mp->d_b_displ,
-                                                                                   mp->d_b_accel,
-                                                                                   d_xix, d_xiy, d_xiz,
-                                                                                   d_etax, d_etay, d_etaz,
-                                                                                   d_gammax, d_gammay, d_gammaz,
-                                                                                   mp->xix_regular,mp->jacobian_regular,
-                                                                                   mp->d_hprime_xx,
-                                                                                   mp->d_hprimewgll_xx,
-                                                                                   mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                                                   d_kappav, d_muv);
+                                                                                d_kappav, d_muv,
+                                                                                3); // 3 == backward
               }
             }
           } // COMPUTE_AND_STORE_STRAIN
@@ -4010,7 +4178,8 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
                                                 int* nspec_inner_elastic,
                                                 int* COMPUTE_AND_STORE_STRAIN,
                                                 int* ATTENUATION,
-                                                int* ANISOTROPY) {
+                                                int* ANISOTROPY,
+                                                int* FORWARD_OR_ADJOINT_f) {
 
   TRACE("\tcompute_forces_viscoelastic_cuda");
   // EPIK_TRACER("compute_forces_viscoelastic_cuda");
@@ -4018,6 +4187,7 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
   //double start_time = get_time();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
+  int FORWARD_OR_ADJOINT = *FORWARD_OR_ADJOINT_f;
 
   int num_elements;
 
@@ -4102,7 +4272,8 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
                mp->d_c34store + offset,mp->d_c35store + offset,mp->d_c36store + offset,
                mp->d_c44store + offset,mp->d_c45store + offset,mp->d_c46store + offset,
                mp->d_c55store + offset,mp->d_c56store + offset,mp->d_c66store + offset,
-               mp->d_rhostore + offset);
+               mp->d_rhostore + offset,
+               FORWARD_OR_ADJOINT);
 
       // for padded and aligned arrays
       offset += nb_blocks_to_compute * NGLL3_PADDED;
@@ -4148,7 +4319,8 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
              mp->d_c34store,mp->d_c35store,mp->d_c36store,
              mp->d_c44store,mp->d_c45store,mp->d_c46store,
              mp->d_c55store,mp->d_c56store,mp->d_c66store,
-             mp->d_rhostore);
+             mp->d_rhostore,
+             FORWARD_OR_ADJOINT);
   }
 }
 

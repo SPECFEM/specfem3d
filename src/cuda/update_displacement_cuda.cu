@@ -270,12 +270,8 @@ void FC_FUNC_(update_displacement_ac_cuda,
 
 __global__ void kernel_3_cuda_device(realw* veloc,
                                      realw* accel,
-                                     realw* b_veloc,
-                                     realw* b_accel,
                                      int size,
-                                     int simulation_type,
                                      realw deltatover2,
-                                     realw b_deltatover2,
                                      realw* rmassx,
                                      realw* rmassy,
                                      realw* rmassz) {
@@ -301,29 +297,13 @@ __global__ void kernel_3_cuda_device(realw* veloc,
     veloc[3*id]   += deltatover2*ax;
     veloc[3*id+1] += deltatover2*ay;
     veloc[3*id+2] += deltatover2*az;
-
-    if (simulation_type==3){
-      ax = b_accel[3*id  ]*rx;
-      ay = b_accel[3*id+1]*ry;
-      az = b_accel[3*id+2]*rz;
-
-      b_accel[3*id]   = ax;
-      b_accel[3*id+1] = ay;
-      b_accel[3*id+2] = az;
-
-      b_veloc[3*id]   += b_deltatover2*ax;
-      b_veloc[3*id+1] += b_deltatover2*ay;
-      b_veloc[3*id+2] += b_deltatover2*az;
-    }
   }
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
 __global__ void kernel_3_accel_cuda_device(realw* accel,
-                                           realw* b_accel,
                                            int size,
-                                           int simulation_type,
                                            realw* rmassx,
                                            realw* rmassy,
                                            realw* rmassz) {
@@ -344,16 +324,6 @@ __global__ void kernel_3_accel_cuda_device(realw* accel,
     accel[3*id  ] = ax;
     accel[3*id+1] = ay;
     accel[3*id+2] = az;
-
-    if (simulation_type==3){
-      ax = b_accel[3*id  ]*rx;
-      ay = b_accel[3*id+1]*ry;
-      az = b_accel[3*id+2]*rz;
-
-      b_accel[3*id]   = ax;
-      b_accel[3*id+1] = ay;
-      b_accel[3*id+2] = az;
-    }
   }
 }
 
@@ -382,11 +352,17 @@ void FC_FUNC_(kernel_3_a_cuda,
               KERNEL_3_A_CUDA)(long* Mesh_pointer,
                                realw* deltatover2_F,
                                realw* b_deltatover2_F,
-                               int* APPROXIMATE_OCEAN_LOAD) {
+                               int* APPROXIMATE_OCEAN_LOAD,
+                               int* FORWARD_OR_ADJOINT) {
 
   TRACE("\tkernel_3_a_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
+
+  // safety check
+  if (*FORWARD_OR_ADJOINT != 1 && *FORWARD_OR_ADJOINT != 3) {
+    exit_on_error("Error invalid FORWARD_OR_ADJOINT in update_displacement_ac_cuda() routine");
+  }
 
   int size = mp->NGLOB_AB;
 
@@ -399,23 +375,32 @@ void FC_FUNC_(kernel_3_a_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
+  // sets gpu arrays
+  realw *veloc, *accel;
+  realw deltatover2;
+  if (*FORWARD_OR_ADJOINT == 1) {
+    veloc = mp->d_veloc;
+    accel = mp->d_accel;
+    deltatover2 = *deltatover2_F;
+  } else {
+    // for backward/reconstructed fields
+    veloc = mp->d_b_veloc;
+    accel = mp->d_b_accel;
+    deltatover2 = *b_deltatover2_F;
+  }
+
   // check whether we can update accel and veloc, or only accel at this point
   if (*APPROXIMATE_OCEAN_LOAD == 0){
-   realw deltatover2 = *deltatover2_F;
-   realw b_deltatover2 = *b_deltatover2_F;
    // updates both, accel and veloc
-   kernel_3_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_veloc,
-                                                                 mp->d_accel,
-                                                                 mp->d_b_veloc,
-                                                                 mp->d_b_accel,
-                                                                 size,mp->simulation_type,deltatover2,b_deltatover2,
+   kernel_3_cuda_device<<< grid, threads,0,mp->compute_stream>>>(veloc,
+                                                                 accel,
+                                                                 size,
+                                                                 deltatover2,
                                                                  mp->d_rmassx,mp->d_rmassy,mp->d_rmassz);
   }else{
    // updates only accel
-   kernel_3_accel_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_accel,
-                                                                       mp->d_b_accel,
+   kernel_3_accel_cuda_device<<< grid, threads,0,mp->compute_stream>>>(accel,
                                                                        size,
-                                                                       mp->simulation_type,
                                                                        mp->d_rmassx,
                                                                        mp->d_rmassy,
                                                                        mp->d_rmassz);

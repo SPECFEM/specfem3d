@@ -499,7 +499,7 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 
 //solving a single wavefield
 
-template<int FORWARD_OR_ADJOINT> __global__ void
+__global__ void
 #ifdef USE_LAUNCH_BOUNDS
 // adds compiler specification
 __launch_bounds__(NGLL3_PADDED,LAUNCH_MIN_BLOCKS_ACOUSTIC)
@@ -524,7 +524,8 @@ Kernel_2_acoustic_single_impl(const int nb_blocks_to_compute,
                               const int gravity,
                               realw_const_p minus_g,
                               realw* d_kappastore,
-                              realw_const_p wgll_cube){
+                              realw_const_p wgll_cube,
+                              const int FORWAR_OR_ADJOINT){
 
   // block-id == number of local element id in phase_ispec array
   int bx = blockIdx.y*gridDim.x+blockIdx.x;
@@ -588,7 +589,11 @@ Kernel_2_acoustic_single_impl(const int nb_blocks_to_compute,
   // loads potential values into shared memory
   if (threadIdx.x < NGLL3) {
 #ifdef USE_TEXTURES_FIELDS
-    s_dummy_loc[tx] = texfetch_potential<FORWARD_OR_ADJOINT>(iglob);
+    if (FORWARD_OR_ADJOINT == 3){
+      s_dummy_loc[tx] = texfetch_potential<3>(iglob);
+    }else{
+      s_dummy_loc[tx] = texfetch_potential<1>(iglob);
+    }
 #else
     // changing iglob indexing to match fortran row changes fast style
     s_dummy_loc[tx] = d_potential_acoustic[iglob];
@@ -721,7 +726,11 @@ Kernel_2_acoustic_single_impl(const int nb_blocks_to_compute,
 #ifdef USE_MESH_COLORING_GPU
   // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
-    d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<FORWARD_OR_ADJOINT>(iglob) + sum_terms;
+    if (FORWARD_OR_ADJOINT == 3){
+      d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<3>(iglob) + sum_terms;
+    }else{
+      d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<1>(iglob) + sum_terms;
+    }
 #else
     d_potential_dot_dot_acoustic[iglob] += sum_terms;
 #endif // USE_TEXTURES_FIELDS
@@ -730,7 +739,11 @@ Kernel_2_acoustic_single_impl(const int nb_blocks_to_compute,
     if (use_mesh_coloring_gpu ){
       // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
-      d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<FORWARD_OR_ADJOINT>(iglob) + sum_terms;
+      if (FORWARD_OR_ADJOINT == 3){
+        d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<3>(iglob) + sum_terms;
+      }else{
+        d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<1>(iglob) + sum_terms;
+      }
 #else
       d_potential_dot_dot_acoustic[iglob] += sum_terms;
 #endif // USE_TEXTURES_FIELDS
@@ -953,7 +966,7 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
                        realw* d_gammax,realw* d_gammay,realw* d_gammaz,
                        realw* d_rhostore,
                        realw* d_kappastore,
-                       int FORWARD_OR_ADJOINT){
+                       const int FORWARD_OR_ADJOINT){
 
   GPU_ERROR_CHECKING("before acoustic kernel Kernel 2");
 
@@ -983,6 +996,20 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   }
   int nb_field = mp->simulation_type == 3 ? 2 : 1 ;
 
+  // sets gpu arrays
+  field* potential, *potential_dot_dot;
+  if (FORWARD_OR_ADJOINT == 1 || FORWARD_OR_ADJOINT == 0) {
+    // forward wavefields -> FORWARD_OR_ADJOINT == 1
+    potential = mp->d_potential_acoustic;
+    potential_dot_dot = mp->d_potential_dot_dot_acoustic;
+  } else {
+    // for backward/reconstructed fields
+    // backward wavefields -> FORWARD_OR_ADJOINT == 3
+    potential = mp->d_b_potential_acoustic;
+    potential_dot_dot = mp->d_b_potential_dot_dot_acoustic;
+  }
+
+  // acoustic kernel
   if (FORWARD_OR_ADJOINT == 0){
     // This kernel treats both forward and adjoint wavefield within the same call, to increase performance
     // ( ~37% faster for pure acoustic simulations )
@@ -1010,60 +1037,28 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
                                                                       mp->d_wgll_cube);
   } else {
     // solving a single wavefield
-    // sets gpu arrays
-    field* potential, *potential_dot_dot;
-    if (FORWARD_OR_ADJOINT == 1) {
-      potential = mp->d_potential_acoustic;
-      potential_dot_dot = mp->d_potential_dot_dot_acoustic;
-      // forward wavefields -> FORWARD_OR_ADJOINT == 1
-      Kernel_2_acoustic_single_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                                                              d_ibool,
-                                                                              mp->d_phase_ispec_inner_acoustic,
-                                                                              mp->num_phase_ispec_acoustic,
-                                                                              d_iphase,
-                                                                              potential,
-                                                                              potential_dot_dot,
-                                                                              d_xix, d_xiy, d_xiz,
-                                                                              d_etax, d_etay, d_etaz,
-                                                                              d_gammax, d_gammay, d_gammaz,
-                                                                              mp->d_irregular_element_number,
-                                                                              mp->xix_regular,mp->jacobian_regular,
-                                                                              mp->d_hprime_xx,
-                                                                              mp->d_hprimewgll_xx,
-                                                                              mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                                              d_rhostore,
-                                                                              mp->use_mesh_coloring_gpu,
-                                                                              mp->gravity,
-                                                                              mp->d_minus_g,
-                                                                              d_kappastore,
-                                                                              mp->d_wgll_cube);
-    } else {
-      // for backward/reconstructed fields
-      potential = mp->d_b_potential_acoustic;
-      potential_dot_dot = mp->d_b_potential_dot_dot_acoustic;
-      // forward wavefields -> FORWARD_OR_ADJOINT == 3
-      Kernel_2_acoustic_single_impl<3><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                                                              d_ibool,
-                                                                              mp->d_phase_ispec_inner_acoustic,
-                                                                              mp->num_phase_ispec_acoustic,
-                                                                              d_iphase,
-                                                                              potential,
-                                                                              potential_dot_dot,
-                                                                              d_xix, d_xiy, d_xiz,
-                                                                              d_etax, d_etay, d_etaz,
-                                                                              d_gammax, d_gammay, d_gammaz,
-                                                                              mp->d_irregular_element_number,
-                                                                              mp->xix_regular,mp->jacobian_regular,
-                                                                              mp->d_hprime_xx,
-                                                                              mp->d_hprimewgll_xx,
-                                                                              mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                                              d_rhostore,
-                                                                              mp->use_mesh_coloring_gpu,
-                                                                              mp->gravity,
-                                                                              mp->d_minus_g,
-                                                                              d_kappastore,
-                                                                              mp->d_wgll_cube);
-    }
+    Kernel_2_acoustic_single_impl<<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+                                                                         d_ibool,
+                                                                         mp->d_phase_ispec_inner_acoustic,
+                                                                         mp->num_phase_ispec_acoustic,
+                                                                         d_iphase,
+                                                                         potential,
+                                                                         potential_dot_dot,
+                                                                         d_xix, d_xiy, d_xiz,
+                                                                         d_etax, d_etay, d_etaz,
+                                                                         d_gammax, d_gammay, d_gammaz,
+                                                                         mp->d_irregular_element_number,
+                                                                         mp->xix_regular,mp->jacobian_regular,
+                                                                         mp->d_hprime_xx,
+                                                                         mp->d_hprimewgll_xx,
+                                                                         mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                                         d_rhostore,
+                                                                         mp->use_mesh_coloring_gpu,
+                                                                         mp->gravity,
+                                                                         mp->d_minus_g,
+                                                                         d_kappastore,
+                                                                         mp->d_wgll_cube,
+                                                                         FORWARD_OR_ADJOINT);
   }
 
   // Cuda timing

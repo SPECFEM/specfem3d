@@ -124,7 +124,7 @@ extern "C"
 void FC_FUNC_(transfer_b_veloc_from_device,
               TRNASFER_B_VELOC_FROM_DEVICE)(int* size, realw* b_veloc,long* Mesh_pointer) {
 
-  TRACE("transfer_b_accel_from_device");
+  TRACE("transfer_b_veloc_from_device");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
@@ -132,6 +132,19 @@ void FC_FUNC_(transfer_b_veloc_from_device,
 
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
+extern "C"
+void FC_FUNC_(transfer_b_veloc_to_device,
+              TRANSFER_B_VELOC_TO_DEVICE)(int* size, realw* b_veloc,long* Mesh_pointer) {
+
+  TRACE("transfer_b_veloc_to_device");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_veloc,b_veloc,sizeof(realw)*(*size),cudaMemcpyHostToDevice),40011);
+
+}
 
 /* ----------------------------------------------------------------------------------------------- */
 
