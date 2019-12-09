@@ -544,6 +544,19 @@ void FC_FUNC_(kernel_3_acoustic_cuda,
   realw deltaover2 = *deltatover2_F;
   realw b_deltaover2 = *b_deltatover2_F;
 
+  // sets gpu arrays
+  field *potential_dot, *potential_dot_dot;
+  if (FORWARD_OR_ADJOINT == 1 || FORWARD_OR_ADJOINT == 0) {
+    potential_dot = mp->d_potential_dot_acoustic;
+    potential_dot_dot = mp->d_potential_dot_dot_acoustic;
+  } else {
+    // for backward/reconstructed fields
+    potential_dot = mp->d_b_potential_dot_acoustic;
+    potential_dot_dot = mp->d_b_potential_dot_dot_acoustic;
+    deltaover2 = b_deltaover2;
+  }
+
+  // update kernel
   if (FORWARD_OR_ADJOINT == 0){
     // This kernel treats both forward and adjoint wavefield within the same call, to increase performance
     kernel_3_acoustic_cuda_device<<< grid, threads>>>(mp->d_potential_dot_acoustic,
@@ -556,17 +569,7 @@ void FC_FUNC_(kernel_3_acoustic_cuda,
                                                       b_deltaover2,
                                                       mp->d_rmass_acoustic);
   }else{
-    // sets gpu arrays
-    field* potential, *potential_dot, *potential_dot_dot;
-    if (FORWARD_OR_ADJOINT == 1) {
-      potential_dot = mp->d_potential_dot_acoustic;
-      potential_dot_dot = mp->d_potential_dot_dot_acoustic;
-    } else {
-      // for backward/reconstructed fields
-      potential_dot = mp->d_b_potential_dot_acoustic;
-      potential_dot_dot = mp->d_b_potential_dot_dot_acoustic;
-      deltaover2 = b_deltaover2;
-    }
+    // single field kernel
     kernel_3_acoustic_single_cuda_device<<< grid, threads>>>(potential_dot,
                                                              potential_dot_dot,
                                                              size,
