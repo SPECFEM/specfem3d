@@ -678,7 +678,8 @@ end module user_noise_distribution
 ! read surface movie (displacement) at every time steps, injected as the source of "ensemble forward wavefield"
 ! in step 2, call noise_read_add_surface_movie(..., NSTEP-it+1 ,...)
 ! in step 3, call noise_read_add_surface_movie(..., it ,...)
-  subroutine noise_read_add_surface_movie(nmovie_points,accel, &
+  subroutine noise_read_add_surface_movie(nmovie_points, &
+                                          accel, &
                                           normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
                                           ibool,noise_surface_movie,it,NSPEC_AB_VAL,NGLOB_AB_VAL, &
                                           num_free_surface_faces,free_surface_ispec,free_surface_ijk, &

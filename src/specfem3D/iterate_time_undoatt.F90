@@ -39,7 +39,7 @@
 
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_potential_acoustic_buffer,b_potential_dot_dot_acoustic_buffer
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_displ_elastic_buffer,b_accel_elastic_buffer
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_displ_elastic_buffer,b_veloc_elastic_buffer,b_accel_elastic_buffer
   !real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: b_noise_surface_movie_buffer
 
   double precision :: sizeval
@@ -111,8 +111,9 @@
       allocate(b_displ_elastic_buffer(NDIM,NGLOB_AB,NT_DUMP_ATTENUATION),stat=ier)
       if (ier /= 0 ) call exit_MPI(myrank,'error allocating b_displ_elastic')
       if (APPROXIMATE_HESS_KL) then
-        allocate(b_accel_elastic_buffer(NDIM,NGLOB_AB,NT_DUMP_ATTENUATION),stat=ier)
-        if (ier /= 0 ) call exit_MPI(myrank,'error allocating b_accel_elastic')
+        allocate(b_veloc_elastic_buffer(NDIM,NGLOB_AB,NT_DUMP_ATTENUATION), &
+                 b_accel_elastic_buffer(NDIM,NGLOB_AB,NT_DUMP_ATTENUATION),stat=ier)
+        if (ier /= 0 ) call exit_MPI(myrank,'error allocating b_accel_elastic arrays')
       endif
       ! noise kernel for source strength (sigma_kernel) needs buffer for reconstructed noise_surface_movie array,
       ! otherwise we need file i/o which will considerably slow down performance
@@ -376,7 +377,10 @@
           endif
           if (ELASTIC_SIMULATION) then
             call transfer_b_displ_from_device(NDIM*NGLOB_AB,b_displ,Mesh_pointer)
-            if (APPROXIMATE_HESS_KL) call transfer_b_accel_from_device(NDIM*NGLOB_AB,b_accel,Mesh_pointer)
+            if (APPROXIMATE_HESS_KL) then
+              call transfer_b_veloc_from_device(NDIM*NGLOB_AB,b_veloc,Mesh_pointer)
+              call transfer_b_accel_from_device(NDIM*NGLOB_AB,b_accel,Mesh_pointer)
+            endif
           endif
         endif
 
@@ -387,7 +391,10 @@
         endif
         if (ELASTIC_SIMULATION) then
           b_displ_elastic_buffer(:,:,it_of_this_subset) = b_displ(:,:)
-          if (APPROXIMATE_HESS_KL) b_accel_elastic_buffer(:,:,it_of_this_subset) = b_accel(:,:)
+          if (APPROXIMATE_HESS_KL) then
+            b_veloc_elastic_buffer(:,:,it_of_this_subset) = b_veloc(:,:)
+            b_accel_elastic_buffer(:,:,it_of_this_subset) = b_accel(:,:)
+          endif
         endif
 
         ! for noise kernel
@@ -419,7 +426,10 @@
         endif
         if (ELASTIC_SIMULATION) then
           b_displ(:,:) = b_displ_elastic_buffer(:,:,it_subset_end-it_of_this_subset+1)
-          if (APPROXIMATE_HESS_KL) b_accel(:,:) = b_accel_elastic_buffer(:,:,it_subset_end-it_of_this_subset+1)
+          if (APPROXIMATE_HESS_KL) then
+            b_veloc(:,:) = b_veloc_elastic_buffer(:,:,it_subset_end-it_of_this_subset+1)
+            b_accel(:,:) = b_accel_elastic_buffer(:,:,it_subset_end-it_of_this_subset+1)
+          endif
           ! for noise kernel
           !if (NOISE_TOMOGRAPHY == 3) then
           !  noise_surface_movie(:,:,:,:) = b_noise_surface_movie_buffer(:,:,:,:,it_subset_end-it_of_this_subset+1)
@@ -435,7 +445,10 @@
           endif
           if (ELASTIC_SIMULATION) then
             call transfer_b_displ_to_device(NDIM*NGLOB_AB,b_displ,Mesh_pointer)
-            if (APPROXIMATE_HESS_KL) call transfer_b_accel_to_device(NDIM*NGLOB_AB,b_accel,Mesh_pointer)
+            if (APPROXIMATE_HESS_KL) then
+              call transfer_b_veloc_to_device(NDIM*NGLOB_AB,b_veloc,Mesh_pointer)
+              call transfer_b_accel_to_device(NDIM*NGLOB_AB,b_accel,Mesh_pointer)
+            endif
           endif
         endif
 
@@ -486,7 +499,7 @@
     if (ACOUSTIC_SIMULATION) deallocate(b_potential_acoustic_buffer,b_potential_dot_dot_acoustic_buffer)
     if (ELASTIC_SIMULATION) then
       deallocate(b_displ_elastic_buffer)
-      if (APPROXIMATE_HESS_KL) deallocate(b_accel_elastic_buffer)
+      if (APPROXIMATE_HESS_KL) deallocate(b_veloc_elastic_buffer,b_accel_elastic_buffer)
     endif
     ! GPU un-maps memory lock
     if (GPU_MODE) then

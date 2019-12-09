@@ -38,7 +38,9 @@ subroutine compute_forces_poroelastic_calling()
 
   integer:: iphase
 
+  ! safety checks
   if (OUTPUT_ENERGY) call exit_MPI(myrank,'calculation of energy currently not implemented for poroelastic media')
+  if (UNDO_ATTENUATION_AND_OR_PML) stop 'for UNDO_ATTENUATION_AND_OR_PML, poroelastic forces routine not implemented yet'
 
 ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
   do iphase = 1,2

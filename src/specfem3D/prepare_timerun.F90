@@ -236,6 +236,10 @@
     if (USE_TRICK_FOR_BETTER_PRESSURE .and. SIMULATION_TYPE == 3) &
       stop 'for SIMULATION_TYPE == 3, acoustic kernels need to have USE_TRICK_FOR_BETTER_PRESSURE set to .false.'
   endif
+  if (UNDO_ATTENUATION_AND_OR_PML) then
+    if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION .and. SIMULATION_TYPE == 3) &
+      stop 'for SIMULATION_TYPE == 3, UNDO_ATT for coupled elastic/acoustic simulations not implemented yet'
+  endif
 
   end subroutine prepare_timerun_user_output
 !
