@@ -36,9 +36,9 @@
   use gravity_perturbation, only: gravity_timeseries, GRAVITY_SIMULATION
 
   implicit none
-
+  real :: ts, te,pts,pte,ave_s=0,ave_m=0,ave_f=0 !debug time
   ! for EXACT_UNDOING_TO_DISK
-  integer :: ispec,iglob,i,j,k,counter,record_length,ier,n_msg_vol_each_proc=0
+  integer :: ispec,iglob,i,j,k,counter,record_length,ier
   integer, dimension(:), allocatable :: integer_mask_ibool_exact_undo
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: buffer_for_disk
   character(len=MAX_STRING_LEN) outputname
@@ -185,69 +185,23 @@
   ! get MPI starting
   time_start = wtime()
 
-  !!!!!!
   ! start idling of io server
   if (HDF5_ENABLED) then
-    call synchronize_inter()
     if (io_task) then
       call do_io_start_idle()
-    elseif (myrank == 0) then
-      ! initialization of io node from compute node side
-      ! this part should be moved into io_server.f90 later
-
-      ! seismo
-      ! send nrec and nrec_local
-      call send_i_inter((/nrec/), 1, 0, io_tag_num_recv)
-      ! send t0
-      call send_dp_inter((/t0/), 1, 0, io_tag_seismo_tzero)
+    else ! compute node passes necessary info. to io node
+      call pass_info_to_io()
     endif
-    ! send the number of local receiver to the io node
-    if (compute_task) call send_i_inter((/nrec_local/), 1, 0, io_tag_local_rec)
-
-    ! surface movie/vol/shakemap
-    if (compute_task .and. myrank == 0) then
-      if (MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
-        ! send nfaces_perproc_surface
-        call send_i_inter(nfaces_perproc_surface,NPROC, 0, io_tag_surface_nfaces)
-        ! send faces_surface_offset
-        call send_i_inter(faces_surface_offset,NPROC, 0, io_tag_surface_offset)
-        ! send size of store_val
-        call send_i_inter((/size(store_val_x_all)/), 1, 0, io_tag_surface_coord_len)
-        ! send store_val_x/y/z_all
-        call sendv_cr_inter(store_val_x_all,size(store_val_x_all), 0, io_tag_surface_x)
-        call sendv_cr_inter(store_val_y_all,size(store_val_y_all), 0, io_tag_surface_y)
-        call sendv_cr_inter(store_val_z_all,size(store_val_z_all), 0, io_tag_surface_z)
-      endif
-      if (MOVIE_VOLUME) then
-        ! count number of messges for volume movie
-        if (ACOUSTIC_SIMULATION .and. .not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then
-            n_msg_vol_each_proc = n_msg_vol_each_proc+1 ! pressure
-        endif
-        if (ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
-          if (ELASTIC_SIMULATION) n_msg_vol_each_proc = n_msg_vol_each_proc+1 ! div_glob
-          n_msg_vol_each_proc = n_msg_vol_each_proc+4 ! div, curl_x, curl_y, curl_z
-        endif
-        if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
-          n_msg_vol_each_proc = n_msg_vol_each_proc+3 ! velocity_x,velocity_y,velocity_z
-        endif
-        call send_i_inter((/n_msg_vol_each_proc/),1,0,io_tag_vol_nmsg)
-
-      endif
-    endif ! end if compute_task and myrank == 0
-
-    if (compute_task .and. MOVIE_VOLUME) then
-      ! send nspec and nglob in each process
-      call send_i_inter((/NSPEC_AB/),1,0,io_tag_vol_nspec)
-      call send_i_inter((/NGLOB_AB/),1,0,io_tag_vol_nglob)
-    endif
-
   endif
-  ! initialization of io server end
-  !!!!!!!
 
-if (compute_task) then
-
+  if (compute_task) then
+  call cpu_time(ts) !!!!!!!!!!!!!!!!!!!
   do it = it_begin,it_end
+    ! debug
+!    if(mod(it,10)==0) then
+!      print *, "it = ",it, "rank ", myrank
+!      if(mod(it,NTSTEP_BETWEEN_FRAMES)==0) print *, "movie out time"
+!    endif
 
     ! simulation status output and stability check
     if (mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == it_begin + 4 .or. it == it_end) then
@@ -262,6 +216,8 @@ if (compute_task) then
     ! updates wavefields using Newmark time scheme
     if (.not. USE_LDDRK) call update_displacement_scheme()
 
+
+    call cpu_time(pts)
     ! calculates stiffness term
     if (.not. GPU_MODE) then
       ! wavefields on CPU
@@ -292,8 +248,8 @@ if (compute_task) then
         ! (needs to be done first, before poroelastic one)
         if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_backward_calling()
 
-      else
-        ! forward simulations
+      else ! forward simulations
+
         do istage = 1, NSTAGE_TIME_SCHEME
           if (USE_LDDRK) call update_displ_lddrk()
           ! 1. acoustic domain
@@ -301,7 +257,7 @@ if (compute_task) then
           ! 2. elastic domain
           if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
         enddo
-      endif
+     endif
 
       ! poroelastic solver
       if (POROELASTIC_SIMULATION) call compute_forces_poroelastic_calling()
@@ -314,7 +270,9 @@ if (compute_task) then
       ! (needs to be done first, before poroelastic one)
       if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_GPU_calling()
     endif
-
+    call cpu_time(pte)
+    ave_f=ave_f+(pte-pts)
+ 
     ! restores last time snapshot saved for backward/reconstruction of wavefields
     ! note: this must be read in after the Newmark time scheme
     if (SIMULATION_TYPE == 3 .and. it == 1) then
@@ -326,25 +284,31 @@ if (compute_task) then
 
 
     ! write the seismograms with time shift (GPU_MODE transfer included)
+    call cpu_time(pts)
     if (HDF5_ENABLED) then
       call write_seismograms_h5()
     else
       call write_seismograms()
     endif
+    call cpu_time(pte)
+    ave_s=ave_s+(pte-pts)
 
-
-  ! adjoint simulations: kernels
+    ! adjoint simulations: kernels
     if (SIMULATION_TYPE == 3) then
       call compute_kernels()
     endif
 
 
     ! outputs movie files
+    call cpu_time(pts)
     if (HDF5_ENABLED) then
       call write_movie_output_h5()
     else
       call write_movie_output()
     endif
+    call cpu_time(pte)
+    ave_m=ave_m+(pte-pts)
+ 
 
     ! first step of noise tomography, i.e., save a surface movie at every time step
     ! modified from the subroutine 'write_movie_surface'
@@ -373,6 +337,11 @@ if (compute_task) then
   !
   enddo   ! end of main time loop
 
+  call cpu_time(te)
+  print *, "time for it loop is ", te-ts
+  print *, "summed time for only seismo out ", ave_s
+  print *, "summed time for only movie out ", ave_m
+  print *, "summed time for compute force ", ave_f
 
   ! close the huge file that contains a dump of all the time steps to disk
   if (EXACT_UNDOING_TO_DISK) close(IFILE_FOR_EXACT_UNDOING)
@@ -407,9 +376,9 @@ if (compute_task) then
   ! cleanup GPU arrays
   if (GPU_MODE) call it_cleanup_GPU()
 
-endif ! if compute_task
+  endif ! if compute_task
 
-  !if(HDF5_ENABLED) call synchronize_inter()
+  if(HDF5_ENABLED) call synchronize_inter()
 
   end subroutine iterate_time
 
@@ -608,4 +577,3 @@ endif ! if compute_task
   endif
 
   end subroutine it_read_forward_arrays
-

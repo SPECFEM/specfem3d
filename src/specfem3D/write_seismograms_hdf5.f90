@@ -36,8 +36,6 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
 
-  use phdf5_utils
-
   implicit none
 
   ! local parameters
@@ -45,21 +43,6 @@
   double precision, external :: wtime
   double precision :: write_time_begin,write_time
   logical :: do_save_seismograms
-
-  ! hdf5 varianles
-
-  ! mpi variables
-  integer :: info, comm, error
-
-  ! arrays
-  integer :: i, irec
-  real(kind=CUSTOM_REAL), dimension(NSTEP)                :: time_array
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable     :: val_array2d
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable   :: val_array3d
-  character(len=MAX_LENGTH_STATION_NAME), dimension(nrec) :: stations
-  character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec) :: networks
-  real(kind=CUSTOM_REAL), dimension(nrec,3) :: rec_coords
-
 
   ! update position in seismograms
   seismo_current = seismo_current + 1
@@ -125,7 +108,7 @@
         if (SAVE_SEISMOGRAMS_ACCELERATION) &
           call write_seismograms_to_file_h5(seismograms_a,3)
         if (SAVE_SEISMOGRAMS_PRESSURE) & 
-          call write_seismograms_to_file_h5(seismograms_p,4) !!!!!!! this causes mem leak when pure elastic sim
+          call write_seismograms_to_file_h5(seismograms_p,4)
       case (2)
         ! adjoint simulations
         ! adjoint wavefield
@@ -186,19 +169,10 @@
   real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
 
   ! local parameters
-  integer :: irec,irec_local
-
   character(len=4) component
 
-  integer :: nrec_local_received,total_seismos,receiver
-  integer :: iproc,ier,i,req
-  integer,dimension(1) :: tmp_nrec_local_received,tmp_nrec_local
-  integer,dimension(0:NPROC-1) :: islice_num_rec_local
-  integer,dimension(nrec_local) :: tmp_irec
+  integer :: nrec_local_received,total_seismos,req
   integer :: io_tag_seismo, time_window
-
-  ! using io server, receiver is always 0
-  receiver = 0
 
   ! saves displacement, velocity, acceleration, or pressure
   if (istore == 1) then
@@ -218,15 +192,6 @@
   endif
 
   if (nrec_local > 0) then
-    ! send global ids of local receivers (integer array)
-    do irec_local = 1,nrec_local
-      ! get global number of that receiver
-      irec = number_receiver_global(irec_local)
-      tmp_irec(irec_local) = irec
-    enddo
-
-    call isend_i_inter(tmp_irec,nrec_local,receiver,io_tag_seismo_ids_rec,req)
-
     ! send seismograms (instead of one seismo)
     if (NTSTEP_BETWEEN_OUTPUT_SEISMOS > NSTEP) then
       time_window = NSTEP
@@ -235,13 +200,11 @@
     endif
 
     if (istore /= 4) then
-      call isend_cr_inter(seismograms(:,:,1:time_window),NDIM*nrec_local*time_window,receiver,io_tag_seismo,req)
+      call isend_cr_inter(seismograms(:,:,1:time_window),NDIM*nrec_local*time_window,0,io_tag_seismo,req)
     else
-      call isend_cr_inter(seismograms(1,:,1:time_window),1*nrec_local*time_window,receiver,io_tag_seismo,req)
+      call isend_cr_inter(seismograms(1,:,1:time_window),1*nrec_local*time_window,0,io_tag_seismo,req)
     endif
   endif
-
-!  endif ! myrank
 
   end subroutine write_seismograms_to_file_h5
 

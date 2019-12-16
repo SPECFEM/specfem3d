@@ -103,8 +103,9 @@
   ! temporary array for single elements
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: val_element
   real(kind=CUSTOM_REAL),dimension(1):: dummy
-  integer :: ispec2D,ispec,ipoin,iglob,ier,ia,req
+  integer :: ispec2D,ispec,ipoin,iglob,ier,ia,ireq
   integer :: npoin_elem
+  integer, dimension(3) :: req_dump
 
   ! surface points for single face
   if (USE_HIGHRES_FOR_MOVIES) then
@@ -158,9 +159,13 @@
   enddo
 
  ! send surface body to io node
-  call isend_cr_inter(store_val_ux,nfaces_surface_points,0,io_tag_surface_ux,req)
-  call isend_cr_inter(store_val_uy,nfaces_surface_points,0,io_tag_surface_uy,req)
-  call isend_cr_inter(store_val_uz,nfaces_surface_points,0,io_tag_surface_uz,req)
+  call isend_cr_inter(store_val_ux,nfaces_surface_points,0,io_tag_surface_ux,req_dump(1))
+  call isend_cr_inter(store_val_uy,nfaces_surface_points,0,io_tag_surface_uy,req_dump(2))
+  call isend_cr_inter(store_val_uz,nfaces_surface_points,0,io_tag_surface_uz,req_dump(3))
+
+  do ireq=1,size(req_dump)
+    call wait_req(req_dump(ireq))
+  enddo
 
 end subroutine wmo_movie_surface_output_h5
 
@@ -294,11 +299,10 @@ subroutine wmo_movie_volume_output_h5()
   use specfem_par_poroelastic
   use specfem_par_acoustic
   use specfem_par_movie
-  use phdf5_utils
   implicit none
 
   ! local parameters
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB)               :: send_array
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB)               :: d_p
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: veloc_element
   ! divergence and curl only in the global nodes
   real(kind=CUSTOM_REAL),dimension(:),allocatable          :: div_glob
@@ -312,8 +316,9 @@ subroutine wmo_movie_volume_output_h5()
 #else
   integer :: i,j,k
 #endif
-
-  send_array(:) = 0._CUSTOM_REAL
+  integer, dimension(9) :: req_dump
+  integer :: req_count,ireq
+  req_count=0
 
   ! gets component characters: X/Y/Z or E/N/Z
   call write_channel_name(1,channel)
@@ -327,6 +332,9 @@ subroutine wmo_movie_volume_output_h5()
   velocity_x(:,:,:,:) = 0._CUSTOM_REAL
   velocity_y(:,:,:,:) = 0._CUSTOM_REAL
   velocity_z(:,:,:,:) = 0._CUSTOM_REAL
+
+  ! array size to be sent
+  arrsize = NGLLX*NGLLY*NGLLZ*NSPEC_AB
 
   if (ACOUSTIC_SIMULATION) then
     ! uses velocity_x,.. as temporary arrays to store velocity on all GLL points
@@ -345,14 +353,13 @@ subroutine wmo_movie_volume_output_h5()
       do ispec = 1,NSPEC_AB
         DO_LOOP_IJK
           iglob = ibool(INDEX_IJK,ispec)
-          send_array(iglob) = - potential_dot_dot_acoustic(iglob)
+          d_p(iglob) = - potential_dot_dot_acoustic(iglob)
         ENDDO_LOOP_IJK
       enddo
 
       ! send pressure_loc
-      arrsize = NGLOB_AB
-      call isend_cr_inter(send_array,arrsize,0,io_tag_vol_pres,req)
-      call wait_req(req)
+      call isend_cr_inter(d_p,NGLOB_AB,0,io_tag_vol_pres,req_dump(req_count))
+      req_count = req_count+1
     endif
   endif ! acoustic
 
@@ -374,9 +381,8 @@ subroutine wmo_movie_volume_output_h5()
                               ispec_is_elastic)
 
       ! send div_glob
-      arrsize = NGLOB_AB
-      call isend_cr_inter(div_glob,arrsize,0,io_tag_vol_divglob,req)
-      call wait_req(req)
+      call isend_cr_inter(div_glob,NGLOB_AB,0,io_tag_vol_divglob,req_dump(req_count))
+      req_count = req_count+1
     endif ! elastic
 
     ! saves full snapshot data to local disk
@@ -393,62 +399,29 @@ subroutine wmo_movie_volume_output_h5()
 
     ! div and curl on elemental level
     ! writes our divergence
-    arrsize = NGLOB_AB
-    call convert_elmbase_to_nodebase(div,send_array)
-    call isend_cr_inter(send_array,arrsize,0,io_tag_vol_div,req)
-    call wait_req(req)
+    call isend_cr_inter(div,arrsize,0,io_tag_vol_div,req_dump(req_count))
+    req_count = req_count+1
  
-
     ! writes out curl
-    call convert_elmbase_to_nodebase(curl_x,send_array)
-    call isend_cr_inter(send_array,arrsize,0,io_tag_vol_curlx,req)
-    call wait_req(req)
-    call convert_elmbase_to_nodebase(curl_y,send_array)
-    call isend_cr_inter(send_array,arrsize,0,io_tag_vol_curly,req)
-    call wait_req(req)
-    call convert_elmbase_to_nodebase(curl_z,send_array)
-    call isend_cr_inter(send_array,arrsize,0,io_tag_vol_curlz,req)
-    call wait_req(req)
- 
-
+    call isend_cr_inter(curl_x,arrsize,0,io_tag_vol_curlx,req_dump(req_count))
+    req_count = req_count+1
+    call isend_cr_inter(curl_y,arrsize,0,io_tag_vol_curly,req_dump(req_count))
+    req_count = req_count+1
+    call isend_cr_inter(curl_z,arrsize,0,io_tag_vol_curlz,req_dump(req_count))
+    req_count = req_count+1
   endif
 
   ! velocity
   if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
-
-    arrsize = NGLOB_AB
-    call convert_elmbase_to_nodebase(velocity_x,send_array)
-    call isend_cr_inter(send_array,arrsize,0,io_tag_vol_velox,req)
-    call wait_req(req)
-    call convert_elmbase_to_nodebase(velocity_y,send_array)
-    call isend_cr_inter(send_array,arrsize,0,io_tag_vol_veloy,req)
-    call wait_req(req)
-    call convert_elmbase_to_nodebase(velocity_z,send_array)
-    call isend_cr_inter(send_array,arrsize,0,io_tag_vol_veloz,req)
-    call wait_req(req)
- 
+    call isend_cr_inter(velocity_x,arrsize,0,io_tag_vol_velox,req_dump(req_count))
+    req_count = req_count+1
+    call isend_cr_inter(velocity_y,arrsize,0,io_tag_vol_veloy,req_dump(req_count))
+    req_count = req_count+1
+    call isend_cr_inter(velocity_z,arrsize,0,io_tag_vol_veloz,req_dump(req_count))
+    req_count = req_count+1
   endif
 
-end subroutine wmo_movie_volume_output_h5
-
-! # TODO: check if the vectorization loop definition is fine
-subroutine convert_elmbase_to_nodebase(arr_in, arr_out)
-  use specfem_par
-
-  implicit none
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB), intent(in) :: arr_in
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(out)                  :: arr_out
-  integer                                                                   :: ispec,iglob
-#ifdef FORCE_VECTORIZATION
-  integer :: ijk
-#else
-  integer :: i,j,k
-#endif
-
-  do ispec=1, NSPEC_AB
-    DO_LOOP_IJK
-      iglob = ibool(INDEX_IJK,ispec)
-      arr_out(iglob) = arr_in(INDEX_IJK,ispec)
-    ENDDO_LOOP_IJK
+  do ireq=1,req_count-1
+    call wait_req(req_dump(ireq))
   enddo
-end subroutine convert_elmbase_to_nodebase
+end subroutine wmo_movie_volume_output_h5

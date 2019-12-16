@@ -49,8 +49,6 @@ module constants
   logical :: compute_task = .true.
 
   ! mpi tags for io server implementation
-  integer :: io_tag_num_recv          = 50
-  integer :: io_tag_local_rec         = 51
   integer :: io_tag_seismo_nrec       = 10
   integer :: io_tag_seismo_ids_rec    = 11
   integer :: io_tag_seismo_body_disp  = 12
@@ -58,6 +56,9 @@ module constants
   integer :: io_tag_seismo_body_acce  = 14
   integer :: io_tag_seismo_body_pres  = 15
   integer :: io_tag_seismo_tzero      = 16
+
+  integer :: io_tag_num_recv          = 17
+  integer :: io_tag_local_rec         = 18
 
   integer :: io_tag_surface_nfaces    = 20
   integer :: io_tag_surface_offset    = 21

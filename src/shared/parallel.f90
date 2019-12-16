@@ -2020,7 +2020,7 @@ subroutine world_unsplit_inter()
 
   call synchronize_inter()
   call MPI_COMM_FREE(my_local_mpi_comm_inter,ier)
-  call MPI_COMM_FREE(my_local_mpi_comm_world,ier)
+  !call MPI_COMM_FREE(my_local_mpi_comm_world,ier)
 
 end subroutine world_unsplit_inter
 
