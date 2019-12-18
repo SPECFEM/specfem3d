@@ -37,6 +37,8 @@
 
   implicit none
 
+  integer :: ireq
+
   if (.not. MOVIE_SIMULATION) return
 
   ! gets resulting array values onto CPU
@@ -65,19 +67,36 @@
     call wmo_create_shakemap_h5()
   endif
 
-  ! saves MOVIE on the SURFACE
-  if (MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
-    call wmo_movie_surface_output_h5()
-  endif
+  ! wait all isend procs
+  ! wait till all mpi_isends are finished
+  if (mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
+    if (n_req_surf /= 0) then
+      do ireq=1, n_req_surf
+        call wait_req(req_dump_surf(ireq))
+      enddo
+    endif
+    ! wait till all mpi_isends are finished
+    if (n_req_vol /= 0) then
+      do ireq=1, n_req_vol
+        call wait_req(req_dump_vol(ireq))
+      enddo
+    endif
 
-  ! saves MOVIE in full 3D MESH
-  if (MOVIE_VOLUME .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
-    call wmo_movie_volume_output_h5()
-  endif
+    ! saves MOVIE on the SURFACE
+    if (MOVIE_SURFACE) then
+      call wmo_movie_surface_output_h5()
+    endif
 
-  ! creates cross-section PNM image
-  if (PNM_IMAGE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
-    call write_PNM_create_image() ! this is excluded from this file. need to check
+    ! saves MOVIE in full 3D MESH
+    if (MOVIE_VOLUME) then
+      call wmo_movie_volume_output_h5()
+    endif
+
+    ! creates cross-section PNM image
+    if (PNM_IMAGE) then
+      call write_PNM_create_image() ! this is excluded from this file. need to check
+    endif
+
   endif
 
   end subroutine write_movie_output_h5
@@ -105,7 +124,6 @@
   real(kind=CUSTOM_REAL),dimension(1):: dummy
   integer :: ispec2D,ispec,ipoin,iglob,ier,ia,ireq
   integer :: npoin_elem
-  integer, dimension(3) :: req_dump
 
   ! surface points for single face
   if (USE_HIGHRES_FOR_MOVIES) then
@@ -159,13 +177,11 @@
   enddo
 
  ! send surface body to io node
-  call isend_cr_inter(store_val_ux,nfaces_surface_points,0,io_tag_surface_ux,req_dump(1))
-  call isend_cr_inter(store_val_uy,nfaces_surface_points,0,io_tag_surface_uy,req_dump(2))
-  call isend_cr_inter(store_val_uz,nfaces_surface_points,0,io_tag_surface_uz,req_dump(3))
+  call isend_cr_inter(store_val_ux,nfaces_surface_points,0,io_tag_surface_ux,req_dump_surf(1))
+  call isend_cr_inter(store_val_uy,nfaces_surface_points,0,io_tag_surface_uy,req_dump_surf(2))
+  call isend_cr_inter(store_val_uz,nfaces_surface_points,0,io_tag_surface_uz,req_dump_surf(3))
 
-  do ireq=1,size(req_dump)
-    call wait_req(req_dump(ireq))
-  enddo
+  n_req_surf = 3
 
 end subroutine wmo_movie_surface_output_h5
 
@@ -277,8 +293,7 @@ subroutine wmo_create_shakemap_h5()
   implicit none
 
   ! local parameters
-  integer :: ier, req
-  real(kind=CUSTOM_REAL),dimension(1):: dummy
+  integer :: req
 
  ! send surface body to io node
   call isend_cr_inter(shakemap_ux,nfaces_surface_points,0,io_tag_shake_ux,req)
@@ -316,9 +331,8 @@ subroutine wmo_movie_volume_output_h5()
 #else
   integer :: i,j,k
 #endif
-  integer, dimension(9) :: req_dump
   integer :: req_count,ireq
-  req_count=0
+  req_count=1
 
   ! gets component characters: X/Y/Z or E/N/Z
   call write_channel_name(1,channel)
@@ -358,7 +372,7 @@ subroutine wmo_movie_volume_output_h5()
       enddo
 
       ! send pressure_loc
-      call isend_cr_inter(d_p,NGLOB_AB,0,io_tag_vol_pres,req_dump(req_count))
+      call isend_cr_inter(d_p,NGLOB_AB,0,io_tag_vol_pres,req_dump_vol(req_count))
       req_count = req_count+1
     endif
   endif ! acoustic
@@ -381,7 +395,7 @@ subroutine wmo_movie_volume_output_h5()
                               ispec_is_elastic)
 
       ! send div_glob
-      call isend_cr_inter(div_glob,NGLOB_AB,0,io_tag_vol_divglob,req_dump(req_count))
+      call isend_cr_inter(div_glob,NGLOB_AB,0,io_tag_vol_divglob,req_dump_vol(req_count))
       req_count = req_count+1
     endif ! elastic
 
@@ -399,29 +413,29 @@ subroutine wmo_movie_volume_output_h5()
 
     ! div and curl on elemental level
     ! writes our divergence
-    call isend_cr_inter(div,arrsize,0,io_tag_vol_div,req_dump(req_count))
+    call isend_cr_inter(div,arrsize,0,io_tag_vol_div,req_dump_vol(req_count))
     req_count = req_count+1
  
     ! writes out curl
-    call isend_cr_inter(curl_x,arrsize,0,io_tag_vol_curlx,req_dump(req_count))
+    call isend_cr_inter(curl_x,arrsize,0,io_tag_vol_curlx,req_dump_vol(req_count))
     req_count = req_count+1
-    call isend_cr_inter(curl_y,arrsize,0,io_tag_vol_curly,req_dump(req_count))
+    call isend_cr_inter(curl_y,arrsize,0,io_tag_vol_curly,req_dump_vol(req_count))
     req_count = req_count+1
-    call isend_cr_inter(curl_z,arrsize,0,io_tag_vol_curlz,req_dump(req_count))
+    call isend_cr_inter(curl_z,arrsize,0,io_tag_vol_curlz,req_dump_vol(req_count))
     req_count = req_count+1
   endif
 
   ! velocity
   if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
-    call isend_cr_inter(velocity_x,arrsize,0,io_tag_vol_velox,req_dump(req_count))
+    call isend_cr_inter(velocity_x,arrsize,0,io_tag_vol_velox,req_dump_vol(req_count))
     req_count = req_count+1
-    call isend_cr_inter(velocity_y,arrsize,0,io_tag_vol_veloy,req_dump(req_count))
+    call isend_cr_inter(velocity_y,arrsize,0,io_tag_vol_veloy,req_dump_vol(req_count))
     req_count = req_count+1
-    call isend_cr_inter(velocity_z,arrsize,0,io_tag_vol_veloz,req_dump(req_count))
+    call isend_cr_inter(velocity_z,arrsize,0,io_tag_vol_veloz,req_dump_vol(req_count))
     req_count = req_count+1
   endif
 
-  do ireq=1,req_count-1
-    call wait_req(req_dump(ireq))
-  enddo
+  ! store the number of mpi_isend reqs
+  n_req_vol = req_count-1
+
 end subroutine wmo_movie_volume_output_h5

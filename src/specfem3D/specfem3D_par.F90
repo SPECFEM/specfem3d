@@ -295,6 +295,13 @@ module specfem_par
   logical :: VTK_MODE = .false.
 #endif
 
+  ! hdf5
+  ! mpi_req dump
+  integer :: n_req_vol=0, n_req_surf=0
+  integer, dimension(9) :: req_dump_vol
+  integer, dimension(3) :: req_dump_surf
+
+
 end module specfem_par
 
 !=====================================================================

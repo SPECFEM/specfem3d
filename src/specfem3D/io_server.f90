@@ -291,43 +291,38 @@ subroutine do_io_start_idle()
       rec_count_seismo = 0 ! reset the counter then wait for the messages of next iteration.
       seismo_out_count = seismo_out_count+1
     endif
-    
-    ! write movie surface and volume
-    if (rec_count_surf == n_recv_msg_surf .and. &
-        rec_count_vol == n_recv_msg_vol) then
 
-      ! write surf movie
-      if (MOVIE_SURFACE) then
-        it_io          = NTSTEP_BETWEEN_FRAMES*(surf_out_count+1)
-        call write_surf_io(it_io)
-        rec_count_surf = 0 ! reset counter
-        surf_out_count = surf_out_count+1
+    ! write surf movie
+    if (MOVIE_SURFACE .and. rec_count_surf == n_recv_msg_surf) then
+      it_io          = NTSTEP_BETWEEN_FRAMES*(surf_out_count+1)
+      call write_surf_io(it_io)
+      rec_count_surf = 0 ! reset counter
+      surf_out_count = surf_out_count+1
 
-        ! write out xdmf at each timestep
-        call write_xdmf_surface_body(it_io)
+      ! write out xdmf at each timestep
+      call write_xdmf_surface_body(it_io)
 
-        print *, "surface write done at it = ", it_io
+      print *, "surface write done at it = ", it_io
+    endif
+
+    ! write volume movie
+    if (MOVIE_VOLUME .and. rec_count_vol  == n_recv_msg_vol) then
+      ! write dumped vol data
+      call write_vol_data(it_io,val_type_mov,nelm_par_proc,nglob_par_proc)
+
+      rec_count_vol = 0 ! reset counter
+      vol_out_count = vol_out_count+1
+      if (vol_out_count==1) then
+        ! create xdmf header file
+        call write_xdmf_vol_header(nelm_par_proc,nglob_par_proc)
       endif
 
-      ! write volume movie
-      if (MOVIE_VOLUME) then
-        ! write dumped vol data
-        call write_vol_data(it_io,val_type_mov,nelm_par_proc,nglob_par_proc)
+      call write_xdmf_vol_body_header(it_io)
+      call write_xdmf_vol_body(it_io, nelm_par_proc, nglob_par_proc, val_type_mov)
+      call write_xdmf_vol_body_close()
 
-        rec_count_vol = 0 ! reset counter
-        vol_out_count = vol_out_count+1
-        if (vol_out_count==1) then
-          ! create xdmf header file
-          call write_xdmf_vol_header(nelm_par_proc,nglob_par_proc)
-        endif
+      print *, "volume write done at it = ", it_io
 
-        call write_xdmf_vol_body_header(it_io)
-        call write_xdmf_vol_body(it_io, nelm_par_proc, nglob_par_proc, val_type_mov)
-        call write_xdmf_vol_body_close()
-
-        print *, "volume write done at it = ", it_io
-      
-      endif
     endif
 
     ! write shakemap
