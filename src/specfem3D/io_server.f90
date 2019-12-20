@@ -35,7 +35,6 @@ module io_server
   character(len=64) :: fname_xdmf_shake    = ""
 
   type vol_data_dump
-    real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: d4darr
     real(kind=CUSTOM_REAL), dimension(:), allocatable :: d1darr
   end type vol_data_dump
 
@@ -43,12 +42,6 @@ module io_server
   type(vol_data_dump), dimension(:), allocatable :: vd_pres, vd_divglob, vd_div,  &
                                                     vd_curlx, vd_curly, vd_curlz, &
                                                     vd_velox, vd_veloy, vd_veloz
-
-  type local_ibool
-    integer, dimension(:,:,:,:), allocatable :: ibool_loc
-  end type local_ibool
-
-  type(local_ibool), dimension(:), allocatable :: local_ibools
 
 contains
   function i2c(k) result(str)
@@ -274,7 +267,7 @@ subroutine do_io_start_idle()
            status(MPI_TAG) == io_tag_vol_veloz        &
       ) then
         it_io = NTSTEP_BETWEEN_FRAMES*(vol_out_count+1)
-        call recv_vol_data(status,rec_count_vol,it_io, val_type_mov, nelm_par_proc)
+        call recv_vol_data(status,rec_count_vol,it_io, val_type_mov)
         rec_count_vol = rec_count_vol+1
         ! finish gathering the whole data at each time step
       endif
@@ -308,7 +301,7 @@ subroutine do_io_start_idle()
     ! write volume movie
     if (MOVIE_VOLUME .and. rec_count_vol  == n_recv_msg_vol) then
       ! write dumped vol data
-      call write_vol_data(it_io,val_type_mov,nelm_par_proc,nglob_par_proc)
+      call write_vol_data(it_io,val_type_mov)
 
       rec_count_vol = 0 ! reset counter
       vol_out_count = vol_out_count+1
@@ -387,18 +380,10 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
     call recv_i_inter(nglob_par_proc(iproc), 1, iproc, io_tag_vol_nglob)! NGLOB_AB
   enddo
 
-  ! get local ibools
-  allocate(local_ibools(0:NPROC-1))
-  do iproc = 0, NPROC-1
-    allocate(local_ibools(iproc)%ibool_loc(NGLLX,NGLLY,NGLLZ,nelm_par_proc(iproc)))
-    ibsize = NGLLX*NGLLY*NGLLZ*nelm_par_proc(iproc)
-    call recv_i_inter(local_ibools(iproc)%ibool_loc, ibsize, iproc, 999999)
-  enddo
-
 end subroutine movie_volume_init
 
 
-subroutine recv_vol_data(status, rec_count_vol, it_io, val_type_mov, nelm_par_proc)
+subroutine recv_vol_data(status, rec_count_vol, it_io, val_type_mov)
   use io_server
   use specfem_par
   use my_mpi
@@ -407,8 +392,7 @@ subroutine recv_vol_data(status, rec_count_vol, it_io, val_type_mov, nelm_par_pr
   integer, intent(in)                  :: status(MPI_STATUS_SIZE)
   integer, intent(in)                  :: rec_count_vol,it_io
   logical, dimension(5), intent(inout) :: val_type_mov
-  integer, dimension(0:NPROC-1), intent(in) :: nelm_par_proc ! nspec_ab loc
-  integer :: sender, ier, tag, arrsize, msgsize, nspec_loc
+  integer :: sender, ier, tag, arrsize, msgsize
   logical :: if_aloc
 
   ! flag for allocating dump arrays only at the initial timestep
@@ -422,8 +406,6 @@ subroutine recv_vol_data(status, rec_count_vol, it_io, val_type_mov, nelm_par_pr
   tag    = status(MPI_TAG)
   ! get message size
   call get_size_msg(status,msgsize)
-
-  nspec_loc = nelm_par_proc(sender)
 
   ! receive data and store to dump arrays
   !
@@ -441,41 +423,41 @@ subroutine recv_vol_data(status, rec_count_vol, it_io, val_type_mov, nelm_par_pr
     call recvv_cr_inter(vd_divglob(sender)%d1darr,msgsize,sender,tag)
   elseif (tag == io_tag_vol_div) then
     val_type_mov(3) = .true.
-    if(if_aloc) allocate(vd_div(sender)%d4darr(NGLLX,NGLLY,NGLLZ,nspec_loc),stat=ier)
-    vd_div(sender)%d4darr(:,:,:,:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_div(sender)%d4darr,msgsize,sender,tag)
+    if(if_aloc) allocate(vd_div(sender)%d1darr(msgsize),stat=ier)
+    vd_div(sender)%d1darr(:) = 0._CUSTOM_REAL
+    call recvv_cr_inter(vd_div(sender)%d1darr,msgsize,sender,tag)
   elseif (tag == io_tag_vol_curlx) then
     val_type_mov(4) = .true.
-    if(if_aloc) allocate(vd_curlx(sender)%d4darr(NGLLX,NGLLY,NGLLZ,nspec_loc),stat=ier)
-    vd_curlx(sender)%d4darr(:,:,:,:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_curlx(sender)%d4darr,msgsize,sender,tag)
+    if(if_aloc) allocate(vd_curlx(sender)%d1darr(msgsize),stat=ier)
+    vd_curlx(sender)%d1darr(:) = 0._CUSTOM_REAL
+    call recvv_cr_inter(vd_curlx(sender)%d1darr,msgsize,sender,tag)
   elseif (tag == io_tag_vol_curly) then
-    if(if_aloc) allocate(vd_curly(sender)%d4darr(NGLLX,NGLLY,NGLLZ,nspec_loc),stat=ier)
-    vd_curly(sender)%d4darr(:,:,:,:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_curly(sender)%d4darr,msgsize,sender,tag)
+    if(if_aloc) allocate(vd_curly(sender)%d1darr(msgsize),stat=ier)
+    vd_curly(sender)%d1darr(:) = 0._CUSTOM_REAL
+    call recvv_cr_inter(vd_curly(sender)%d1darr,msgsize,sender,tag)
   elseif (tag == io_tag_vol_curlz) then
-    if(if_aloc) allocate(vd_curlz(sender)%d4darr(NGLLX,NGLLY,NGLLZ,nspec_loc),stat=ier)
-    vd_curlz(sender)%d4darr(:,:,:,:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_curlz(sender)%d4darr,msgsize,sender,tag)
+    if(if_aloc) allocate(vd_curlz(sender)%d1darr(msgsize),stat=ier)
+    vd_curlz(sender)%d1darr(:) = 0._CUSTOM_REAL
+    call recvv_cr_inter(vd_curlz(sender)%d1darr,msgsize,sender,tag)
   elseif (tag == io_tag_vol_velox) then
     val_type_mov(5) = .true.
-    if(if_aloc) allocate(vd_velox(sender)%d4darr(NGLLX,NGLLY,NGLLZ,nspec_loc),stat=ier)
-    vd_velox(sender)%d4darr(:,:,:,:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_velox(sender)%d4darr,msgsize,sender,tag)
+    if(if_aloc) allocate(vd_velox(sender)%d1darr(msgsize),stat=ier)
+    vd_velox(sender)%d1darr(:) = 0._CUSTOM_REAL
+    call recvv_cr_inter(vd_velox(sender)%d1darr,msgsize,sender,tag)
   elseif (tag == io_tag_vol_veloy) then
-    if(if_aloc) allocate(vd_veloy(sender)%d4darr(NGLLX,NGLLY,NGLLZ,nspec_loc),stat=ier)
-    vd_veloy(sender)%d4darr(:,:,:,:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_veloy(sender)%d4darr,msgsize,sender,tag)
+    if(if_aloc) allocate(vd_veloy(sender)%d1darr(msgsize),stat=ier)
+    vd_veloy(sender)%d1darr(:) = 0._CUSTOM_REAL
+    call recvv_cr_inter(vd_veloy(sender)%d1darr,msgsize,sender,tag)
   elseif (tag == io_tag_vol_veloz) then
-    if(if_aloc) allocate(vd_veloz(sender)%d4darr(NGLLX,NGLLY,NGLLZ,nspec_loc),stat=ier)
-    vd_veloz(sender)%d4darr(:,:,:,:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_veloz(sender)%d4darr,msgsize,sender,tag)
+    if(if_aloc) allocate(vd_veloz(sender)%d1darr(msgsize),stat=ier)
+    vd_veloz(sender)%d1darr(:) = 0._CUSTOM_REAL
+    call recvv_cr_inter(vd_veloz(sender)%d1darr,msgsize,sender,tag)
   endif
 
 end subroutine recv_vol_data
 
 
-subroutine write_vol_data(it_io, val_type_mov, nelm_par_proc, nglob_par_proc)
+subroutine write_vol_data(it_io, val_type_mov)
   use io_server
   use specfem_par
   use phdf5_utils
@@ -483,9 +465,7 @@ subroutine write_vol_data(it_io, val_type_mov, nelm_par_proc, nglob_par_proc)
 
   integer, intent(in) :: it_io
   logical, dimension(5), intent(inout) :: val_type_mov
-  integer, dimension(0:NPROC-1), intent(in) :: nelm_par_proc, nglob_par_proc
-  integer :: i,j, num_max_type=5, nelms, nnodes
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: temp_1d
+  integer :: i,j, num_max_type=5
 
   ! make output file
   character(len=10) :: tempstr
@@ -514,10 +494,6 @@ subroutine write_vol_data(it_io, val_type_mov, nelm_par_proc, nglob_par_proc)
     call h5_create_subgroup(h5, group_name)
     call h5_open_subgroup(h5, group_name)
 
-    nelms  = nelm_par_proc(i)
-    nnodes = nglob_par_proc(i)
-    allocate(temp_1d(nnodes))
-
     ! loop for each value type
     do j=1, num_max_type
       if (val_type_mov(j) .eqv. .true.) then
@@ -533,47 +509,39 @@ subroutine write_vol_data(it_io, val_type_mov, nelm_par_proc, nglob_par_proc)
 
         elseif (j==3) then
           dset_name = "div"
-          call elm2node(vd_div(i)%d4darr,temp_1d,nelms,nnodes,i)
-          call h5_write_dataset_1d_d(h5, dset_name, temp_1d)
+          call h5_write_dataset_1d_d(h5, dset_name, vd_div(i)%d1darr)
           call h5_close_dataset(h5)
 
         elseif (j==4) then
           dset_name = "curl_x"
-          call elm2node(vd_curlx(i)%d4darr,temp_1d,nelms,nnodes,i)
-          call h5_write_dataset_1d_d(h5, dset_name, temp_1d)
+          call h5_write_dataset_1d_d(h5, dset_name, vd_curlx(i)%d1darr)
           call h5_close_dataset(h5)
  
           dset_name = "curl_y"
-          call elm2node(vd_curly(i)%d4darr,temp_1d,nelms,nnodes,i)
-          call h5_write_dataset_1d_d(h5, dset_name, temp_1d)
+          call h5_write_dataset_1d_d(h5, dset_name, vd_curly(i)%d1darr)
           call h5_close_dataset(h5)
  
           dset_name = "curl_z"
-          call elm2node(vd_curlz(i)%d4darr,temp_1d,nelms,nnodes,i)
-          call h5_write_dataset_1d_d(h5, dset_name, temp_1d)
+          call h5_write_dataset_1d_d(h5, dset_name, vd_curlz(i)%d1darr)
           call h5_close_dataset(h5)
  
         else
           dset_name = "velo_x"
-          call elm2node(vd_velox(i)%d4darr,temp_1d,nelms,nnodes,i)
-          call h5_write_dataset_1d_d(h5, dset_name, temp_1d)
+          call h5_write_dataset_1d_d(h5, dset_name, vd_velox(i)%d1darr)
           call h5_close_dataset(h5)
  
           dset_name = "velo_y"
-          call elm2node(vd_veloy(i)%d4darr,temp_1d,nelms,nnodes,i)
-          call h5_write_dataset_1d_d(h5, dset_name, temp_1d)
+          call h5_write_dataset_1d_d(h5, dset_name, vd_veloy(i)%d1darr)
           call h5_close_dataset(h5)
  
           dset_name = "velo_z"
-          call elm2node(vd_veloz(i)%d4darr,temp_1d,nelms,nnodes,i)
-          call h5_write_dataset_1d_d(h5, dset_name, temp_1d)
+          call h5_write_dataset_1d_d(h5, dset_name, vd_veloz(i)%d1darr)
           call h5_close_dataset(h5)
         endif
 
       endif
     enddo
 
-    deallocate(temp_1d)
     call h5_close_subgroup(h5)
   enddo
 
@@ -582,25 +550,6 @@ subroutine write_vol_data(it_io, val_type_mov, nelm_par_proc, nglob_par_proc)
 
 end subroutine write_vol_data
 
-
-subroutine elm2node(arr_in, arr_out, nelms, nnodes, iproc)
-  use specfem_par
-  use io_server
-
-  implicit none
-  integer, intent(in)                                                   :: nelms, nnodes, iproc
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nelms), intent(in) :: arr_in
-  real(kind=CUSTOM_REAL), dimension(nnodes), intent(out)                :: arr_out
-  integer                                                               :: ispec,iglob
-  integer :: i,j,k
-
-  do ispec=1, nelms
-    do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
-      iglob = local_ibools(iproc)%ibool_loc(i,j,k,ispec)
-      arr_out(iglob) = arr_in(i,j,k,ispec)
-    enddo; enddo; enddo;
-  enddo
-end subroutine elm2node
 
 !
 ! shakemap
@@ -1688,7 +1637,6 @@ subroutine write_xdmf_vol_body(it_io,nelm_par_proc, nglob_par_proc, val_type_mov
                                                 //trim(it_str)//'/proc_'//trim(proc_str)//'/'//trim(type_str)
           write(xdmf_vol_step, *)  '        </DataItem>'
           write(xdmf_vol_step, *)  '    </Attribute>'
- 
           ! y
           write(xdmf_vol_step, *)  '    <Attribute Name="'//trim(type_str1)//'" AttributeType="Scalar" Center="Node">'
           write(xdmf_vol_step, *)  '        <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
@@ -1818,7 +1766,7 @@ subroutine pass_info_to_io()
     call send_i_inter((/NGLOB_AB/),1,0,io_tag_vol_nglob)
 
     ! debug  send ibool
-    call send_i_inter(ibool,size(ibool),0,999999)
+!    call send_i_inter(ibool,size(ibool),0,999999)
   endif
 
 end subroutine pass_info_to_io

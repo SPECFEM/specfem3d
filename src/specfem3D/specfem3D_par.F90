@@ -578,7 +578,10 @@ module specfem_par_movie
   ! to save full 3D snapshot of velocity (movie volume
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: div, curl_x, curl_y, curl_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: velocity_x,velocity_y,velocity_z
-
+  ! arrays for hdf5 output
+  real(kind=CUSTOM_REAL), dimension(:),allocatable:: div_on_node, curl_x_on_node, curl_y_on_node, curl_z_on_node
+  real(kind=CUSTOM_REAL), dimension(:),allocatable:: velocity_x_on_node,velocity_y_on_node,velocity_z_on_node
+ 
   ! surface point locations
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y

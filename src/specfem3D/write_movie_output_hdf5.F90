@@ -67,10 +67,9 @@
     call wmo_create_shakemap_h5()
   endif
 
-  ! wait all isend procs
+ if (mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
   ! wait till all mpi_isends are finished
-  if (mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
-    if (n_req_surf /= 0) then
+  if (n_req_surf /= 0) then
       do ireq=1, n_req_surf
         call wait_req(req_dump_surf(ireq))
       enddo
@@ -322,7 +321,7 @@ subroutine wmo_movie_volume_output_h5()
   ! divergence and curl only in the global nodes
   real(kind=CUSTOM_REAL),dimension(:),allocatable          :: div_glob
   integer,dimension(:),allocatable                         :: valence
-  integer                                                  :: ispec,ier,iglob,req,arrsize
+  integer                                                  :: ispec,ier,iglob,req
   character(len=3)                                         :: channel
   character(len=1)                                         :: compx,compy,compz
   character(len=MAX_STRING_LEN)                            :: outputname
@@ -343,12 +342,9 @@ subroutine wmo_movie_volume_output_h5()
   compz(1:1) = channel(3:3) ! Z
 
   ! saves velocity here to avoid static offset on displacement for movies
-  velocity_x(:,:,:,:) = 0._CUSTOM_REAL
-  velocity_y(:,:,:,:) = 0._CUSTOM_REAL
-  velocity_z(:,:,:,:) = 0._CUSTOM_REAL
-
-  ! array size to be sent
-  arrsize = NGLLX*NGLLY*NGLLZ*NSPEC_AB
+  velocity_x_on_node(:) = 0._CUSTOM_REAL
+  velocity_y_on_node(:) = 0._CUSTOM_REAL
+  velocity_z_on_node(:) = 0._CUSTOM_REAL
 
   if (ACOUSTIC_SIMULATION) then
     ! uses velocity_x,.. as temporary arrays to store velocity on all GLL points
@@ -357,9 +353,9 @@ subroutine wmo_movie_volume_output_h5()
       if (.not. ispec_is_acoustic(ispec)) cycle
       ! calculates velocity
       call compute_gradient_in_acoustic(ispec,potential_dot_acoustic,veloc_element)
-      velocity_x(:,:,:,ispec) = veloc_element(1,:,:,:)
-      velocity_y(:,:,:,ispec) = veloc_element(2,:,:,:)
-      velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)
+!      velocity_x(:,:,:,ispec) = veloc_element(1,:,:,:)
+!      velocity_y(:,:,:,ispec) = veloc_element(2,:,:,:)
+!      velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)
     enddo
 
     ! outputs pressure field for purely acoustic simulations
@@ -388,10 +384,10 @@ subroutine wmo_movie_volume_output_h5()
     ! saves full snapshot data to local disk
     if (ELASTIC_SIMULATION) then
       ! calculates divergence and curl of velocity field
-      call wmo_movie_div_curl(veloc, &
+      call wmo_movie_div_curl_h5(veloc, &
                               div_glob,valence, &
-                              div,curl_x,curl_y,curl_z, &
-                              velocity_x,velocity_y,velocity_z, &
+                              div_on_node,curl_x_on_node,curl_y_on_node,curl_z_on_node, &
+                              velocity_x_on_node,velocity_y_on_node,velocity_z_on_node, &
                               ispec_is_elastic)
 
       ! send div_glob
@@ -402,10 +398,10 @@ subroutine wmo_movie_volume_output_h5()
     ! saves full snapshot data to local disk
     if (POROELASTIC_SIMULATION) then
       ! calculates divergence and curl of velocity field
-      call wmo_movie_div_curl(velocs_poroelastic, &
+      call wmo_movie_div_curl_h5(velocs_poroelastic, &
                               div_glob,valence, &
-                              div,curl_x,curl_y,curl_z, &
-                              velocity_x,velocity_y,velocity_z, &
+                              div_on_node,curl_x_on_node,curl_y_on_node,curl_z_on_node, &
+                              velocity_x_on_node,velocity_y_on_node,velocity_z_on_node, &
                               ispec_is_poroelastic)
     endif ! poroelastic
 
@@ -413,25 +409,25 @@ subroutine wmo_movie_volume_output_h5()
 
     ! div and curl on elemental level
     ! writes our divergence
-    call isend_cr_inter(div,arrsize,0,io_tag_vol_div,req_dump_vol(req_count))
+    call isend_cr_inter(div_on_node,NGLOB_AB,0,io_tag_vol_div,req_dump_vol(req_count))
     req_count = req_count+1
  
     ! writes out curl
-    call isend_cr_inter(curl_x,arrsize,0,io_tag_vol_curlx,req_dump_vol(req_count))
+    call isend_cr_inter(curl_x_on_node,NGLOB_AB,0,io_tag_vol_curlx,req_dump_vol(req_count))
     req_count = req_count+1
-    call isend_cr_inter(curl_y,arrsize,0,io_tag_vol_curly,req_dump_vol(req_count))
+    call isend_cr_inter(curl_y_on_node,NGLOB_AB,0,io_tag_vol_curly,req_dump_vol(req_count))
     req_count = req_count+1
-    call isend_cr_inter(curl_z,arrsize,0,io_tag_vol_curlz,req_dump_vol(req_count))
+    call isend_cr_inter(curl_z_on_node,NGLOB_AB,0,io_tag_vol_curlz,req_dump_vol(req_count))
     req_count = req_count+1
   endif
 
   ! velocity
   if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
-    call isend_cr_inter(velocity_x,arrsize,0,io_tag_vol_velox,req_dump_vol(req_count))
+    call isend_cr_inter(velocity_x_on_node,NGLOB_AB,0,io_tag_vol_velox,req_dump_vol(req_count))
     req_count = req_count+1
-    call isend_cr_inter(velocity_y,arrsize,0,io_tag_vol_veloy,req_dump_vol(req_count))
+    call isend_cr_inter(velocity_y_on_node,NGLOB_AB,0,io_tag_vol_veloy,req_dump_vol(req_count))
     req_count = req_count+1
-    call isend_cr_inter(velocity_z,arrsize,0,io_tag_vol_veloz,req_dump_vol(req_count))
+    call isend_cr_inter(velocity_z_on_node,NGLOB_AB,0,io_tag_vol_veloz,req_dump_vol(req_count))
     req_count = req_count+1
   endif
 
@@ -439,3 +435,209 @@ subroutine wmo_movie_volume_output_h5()
   n_req_vol = req_count-1
 
 end subroutine wmo_movie_volume_output_h5
+
+
+! this h5 version returns the arrays in nodes base in stead of element base
+! by the requirement of xdmf3
+subroutine wmo_movie_div_curl_h5(veloc, &
+                                div_glob,valence, &
+                                div_on_node,curl_x_on_node,curl_y_on_node,curl_z_on_node, &
+                                velocity_x_on_node,velocity_y_on_node,velocity_z_on_node, &
+                                ispec_is)
+
+! calculates div, curl and velocity
+
+  use constants
+
+  use specfem_par, only: NSPEC_AB,NGLOB_AB,ibool,hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,irregular_element_number, &
+                          xix_regular
+
+  implicit none
+
+
+  ! velocity field
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_AB),intent(in) :: veloc
+
+  ! divergence and curl only in the global nodes
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB),intent(out) :: div_glob
+  integer,dimension(NGLOB_AB),intent(out) :: valence
+
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(out) :: div_on_node, curl_x_on_node, curl_y_on_node, curl_z_on_node
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: velocity_x_on_node,velocity_y_on_node,velocity_z_on_node
+  logical,dimension(NSPEC_AB),intent(in) :: ispec_is
+
+  ! local parameters
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: veloc_element
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl, &
+                                dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
+  real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
+  real(kind=CUSTOM_REAL) hp1,hp2,hp3
+  real(kind=CUSTOM_REAL) tempx1l,tempx2l,tempx3l
+  real(kind=CUSTOM_REAL) tempy1l,tempy2l,tempy3l
+  real(kind=CUSTOM_REAL) tempz1l,tempz2l,tempz3l
+  integer :: ispec,ispec_irreg,i,j,k,l,iglob
+
+  ! initializes
+  div_glob(:) = 0.0_CUSTOM_REAL
+  valence(:) = 0
+
+  ! loops over elements
+  do ispec = 1,NSPEC_AB
+    ! only selected elements
+    if (.not. ispec_is(ispec)) cycle
+
+    ispec_irreg = irregular_element_number(ispec)
+
+    ! loads veloc to local element
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
+          iglob = ibool(i,j,k,ispec)
+          veloc_element(1,i,j,k) = veloc(1,iglob)
+          veloc_element(2,i,j,k) = veloc(2,iglob)
+          veloc_element(3,i,j,k) = veloc(3,iglob)
+        enddo
+      enddo
+    enddo
+
+    ! calculates divergence and curl of velocity field
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
+          tempx1l = 0._CUSTOM_REAL
+          tempx2l = 0._CUSTOM_REAL
+          tempx3l = 0._CUSTOM_REAL
+
+          tempy1l = 0._CUSTOM_REAL
+          tempy2l = 0._CUSTOM_REAL
+          tempy3l = 0._CUSTOM_REAL
+
+          tempz1l = 0._CUSTOM_REAL
+          tempz2l = 0._CUSTOM_REAL
+          tempz3l = 0._CUSTOM_REAL
+
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+
+          do l = 1,NGLLX
+            hp1 = hprime_xx(i,l)
+            tempx1l = tempx1l + veloc_element(1,l,j,k)*hp1
+            tempy1l = tempy1l + veloc_element(2,l,j,k)*hp1
+            tempz1l = tempz1l + veloc_element(3,l,j,k)*hp1
+
+            hp2 = hprime_yy(j,l)
+            tempx2l = tempx2l + veloc_element(1,i,l,k)*hp2
+            tempy2l = tempy2l + veloc_element(2,i,l,k)*hp2
+            tempz2l = tempz2l + veloc_element(3,i,l,k)*hp2
+
+            hp3 = hprime_zz(k,l)
+            tempx3l = tempx3l + veloc_element(1,i,j,l)*hp3
+            tempy3l = tempy3l + veloc_element(2,i,j,l)*hp3
+            tempz3l = tempz3l + veloc_element(3,i,j,l)*hp3
+          enddo
+
+          if (ispec_irreg /= 0) then ! irregular element
+            ! get derivatives of ux, uy and uz with respect to x, y and z
+            xixl = xix(i,j,k,ispec_irreg)
+            xiyl = xiy(i,j,k,ispec_irreg)
+            xizl = xiz(i,j,k,ispec_irreg)
+            etaxl = etax(i,j,k,ispec_irreg)
+            etayl = etay(i,j,k,ispec_irreg)
+            etazl = etaz(i,j,k,ispec_irreg)
+            gammaxl = gammax(i,j,k,ispec_irreg)
+            gammayl = gammay(i,j,k,ispec_irreg)
+            gammazl = gammaz(i,j,k,ispec_irreg)
+
+            dvxdxl(i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+            dvxdyl(i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+            dvxdzl(i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+
+            dvydxl(i,j,k) = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
+            dvydyl(i,j,k) = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
+            dvydzl(i,j,k) = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
+
+            dvzdxl(i,j,k) = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
+            dvzdyl(i,j,k) = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
+            dvzdzl(i,j,k) = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
+
+          else ! regular element
+
+            dvxdxl(i,j,k) = xix_regular*tempx1l
+            dvxdyl(i,j,k) = xix_regular*tempx2l
+            dvxdzl(i,j,k) = xix_regular*tempx3l
+
+            dvydxl(i,j,k) = xix_regular*tempy1l
+            dvydyl(i,j,k) = xix_regular*tempy2l
+            dvydzl(i,j,k) = xix_regular*tempy3l
+
+            dvzdxl(i,j,k) = xix_regular*tempz1l
+            dvzdyl(i,j,k) = xix_regular*tempz2l
+            dvzdzl(i,j,k) = xix_regular*tempz3l
+
+          endif
+
+        enddo
+      enddo
+    enddo
+
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
+
+          iglob = ibool(i,j,k,ispec)
+ 
+          ! divergence \nabla \cdot \bf{v}
+          div_on_node(iglob) = dvxdxl(i,j,k) + dvydyl(i,j,k) + dvzdzl(i,j,k)
+
+          ! curl
+          curl_x_on_node(iglob) = dvzdyl(i,j,k) - dvydzl(i,j,k)
+          curl_y_on_node(iglob) = dvxdzl(i,j,k) - dvzdxl(i,j,k)
+          curl_z_on_node(iglob) = dvydxl(i,j,k) - dvxdyl(i,j,k)
+
+          ! velocity field
+          velocity_x_on_node(iglob) = veloc_element(1,i,j,k)
+          velocity_y_on_node(iglob) = veloc_element(2,i,j,k)
+          velocity_z_on_node(iglob) = veloc_element(3,i,j,k)
+
+          valence(iglob) = valence(iglob)+1
+          div_glob(iglob) = div_glob(iglob) + div_on_node(iglob)
+        enddo
+      enddo
+    enddo
+  enddo !NSPEC_AB
+
+  do i = 1,NGLOB_AB
+    ! checks if point has a contribution
+    ! note: might not be the case for points in acoustic elements
+    if (valence(i) /= 0) then
+      ! averages by number of contributions
+      div_glob(i) = div_glob(i)/valence(i)
+    endif
+  enddo
+
+  end subroutine wmo_movie_div_curl_h5
+

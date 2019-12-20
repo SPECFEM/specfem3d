@@ -1099,7 +1099,7 @@ contains
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
        ! write array using fortran pointer
-        if (size(data) == 0)then
+        if (size(data) == 0) then
             call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, dummy_1d_array, dim, error,xfer_prp=plist_id)
         else
             f_ptr = c_loc(data(1))

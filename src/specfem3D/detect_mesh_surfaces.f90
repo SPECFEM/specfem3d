@@ -72,33 +72,62 @@
   if (MOVIE_VOLUME) then
     ! acoustic
     if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION) then
-      allocate(velocity_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1731')
-      allocate(velocity_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1732')
-      allocate(velocity_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1733')
-      if (ier /= 0) stop 'error allocating array movie velocity_x etc.'
-      velocity_x(:,:,:,:) = 0._CUSTOM_REAL
-      velocity_y(:,:,:,:) = 0._CUSTOM_REAL
-      velocity_z(:,:,:,:) = 0._CUSTOM_REAL
+      if (.not. HDF5_ENABLED) then
+        allocate(velocity_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1731')
+        allocate(velocity_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1732')
+        allocate(velocity_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1733')
+        if (ier /= 0) stop 'error allocating array movie velocity_x etc.'
+        velocity_x(:,:,:,:) = 0._CUSTOM_REAL
+        velocity_y(:,:,:,:) = 0._CUSTOM_REAL
+        velocity_z(:,:,:,:) = 0._CUSTOM_REAL
+      else
+        allocate(velocity_x_on_node(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1731')
+        allocate(velocity_y_on_node(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1732')
+        allocate(velocity_z_on_node(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1733')
+        if (ier /= 0) stop 'error allocating array movie velocity_x etc.'
+        velocity_x_on_node(:) = 0._CUSTOM_REAL
+        velocity_y_on_node(:) = 0._CUSTOM_REAL
+        velocity_z_on_node(:) = 0._CUSTOM_REAL
+      endif
     endif
 
     ! elastic only
     if (ELASTIC_SIMULATION) then
-      allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1734')
-      allocate(curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1735')
-      allocate(curl_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1736')
-      allocate(curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1737')
-      if (ier /= 0) stop 'error allocating array movie div and curl'
-      div(:,:,:,:) = 0._CUSTOM_REAL
-      curl_x(:,:,:,:) = 0._CUSTOM_REAL
-      curl_y(:,:,:,:) = 0._CUSTOM_REAL
-      curl_z(:,:,:,:) = 0._CUSTOM_REAL
+      if (.not. HDF5_ENABLED) then
+        allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1734')
+        allocate(curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1735')
+        allocate(curl_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1736')
+        allocate(curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1737')
+        if (ier /= 0) stop 'error allocating array movie div and curl'
+        div(:,:,:,:) = 0._CUSTOM_REAL
+        curl_x(:,:,:,:) = 0._CUSTOM_REAL
+        curl_y(:,:,:,:) = 0._CUSTOM_REAL
+        curl_z(:,:,:,:) = 0._CUSTOM_REAL
+      else
+        allocate(div_on_node(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1734')
+        allocate(curl_x_on_node(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1735')
+        allocate(curl_y_on_node(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1736')
+        allocate(curl_z_on_node(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1737')
+        if (ier /= 0) stop 'error allocating array movie div and curl'
+        div_on_node(:) = 0._CUSTOM_REAL
+        curl_x_on_node(:) = 0._CUSTOM_REAL
+        curl_y_on_node(:) = 0._CUSTOM_REAL
+        curl_z_on_node(:) = 0._CUSTOM_REAL
+      endif
     endif
   endif
 
