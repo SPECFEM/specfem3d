@@ -144,6 +144,9 @@
 !
   if (myrank == 0) print *, "start dataset preparation and write"
 
+  ! open file
+  call h5_open_file_p_collect(h5)
+
   ! set dwrite flag true to pre_define the dataset on file before write.
 
   dset_name = "nspec"
@@ -707,6 +710,7 @@
 
   if (myrank == 0) print *, "write mesh dataset finished"
 
+  call h5_close_file(h5)
   call h5_destructor(h5)
   if (myrank == 0) print *, "all h5 object closed"
   
