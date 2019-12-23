@@ -696,7 +696,7 @@ contains
         integer, intent(in)                :: dtype_id ! 1:int, 4:real4, 8:real8,
         integer, intent(in)                :: rank
 
-        integer(HID_T)                                :: dspace_id
+        integer(HID_T)                     :: dspace_id
 
         dim = dim_in ! convert data type
 
@@ -1091,8 +1091,8 @@ contains
         call h5_open_dataset(this,trim(dataset_name))
         
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
 
         ! write array using fortran pointer
         if (size(data) == 0) then
@@ -1135,8 +1135,8 @@ contains
         call h5_open_dataset(this,trim(dataset_name))
         
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
 
         ! write array using fortran pointer
         f_ptr = c_loc(data(1))
@@ -1179,8 +1179,8 @@ contains
         call h5_open_dataset(this,trim(dataset_name))
         
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
 
 
         ! write array using fortran pointer
@@ -1219,8 +1219,8 @@ contains
         call h5_open_dataset(this,trim(dataset_name))
         
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
 
         ! write array using fortran pointer
         f_ptr = c_loc(data(1,1))
@@ -1263,8 +1263,8 @@ contains
         call h5_open_dataset(this,trim(dataset_name))
         
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
 
         ! write array using fortran pointer
         f_ptr = c_loc(data(1,1,1))
@@ -1302,8 +1302,8 @@ contains
         call h5_open_dataset(this,trim(dataset_name))
         
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
 
 
         ! write array using fortran pointer
@@ -1347,8 +1347,8 @@ contains
         call h5_open_dataset(this,trim(dataset_name))
         
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
 
         ! write array using fortran pointer
         f_ptr = c_loc(data(1,1,1,1))
@@ -1386,8 +1386,8 @@ contains
         call h5_open_dataset(this,trim(dataset_name))
         
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
 
         ! write array using fortran pointer
         f_ptr = c_loc(data(1,1,1,1))
@@ -1430,8 +1430,8 @@ contains
         call h5_open_dataset(this,trim(dataset_name))
         
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
 
 
         ! write array using fortran pointer
@@ -1483,8 +1483,8 @@ contains
         call h5_open_dataset(this,trim(dataset_name))
         
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
 
         ! write array using fortran pointer
         f_ptr = c_loc(data(1))
