@@ -37,8 +37,6 @@
 
   implicit none
 
-  integer :: ireq
-
   if (.not. MOVIE_SIMULATION) return
 
   ! gets resulting array values onto CPU
@@ -67,19 +65,9 @@
     call wmo_create_shakemap_h5()
   endif
 
- if (mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
-  ! wait till all mpi_isends are finished
-  if (n_req_surf /= 0) then
-      do ireq=1, n_req_surf
-        call wait_req(req_dump_surf(ireq))
-      enddo
-    endif
-    ! wait till all mpi_isends are finished
-    if (n_req_vol /= 0) then
-      do ireq=1, n_req_vol
-        call wait_req(req_dump_vol(ireq))
-      enddo
-    endif
+  if (mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
+    ! wait
+    call wait_all_send()
 
     ! saves MOVIE on the SURFACE
     if (MOVIE_SURFACE) then
@@ -100,6 +88,30 @@
 
   end subroutine write_movie_output_h5
 
+
+  subroutine wait_all_send()
+  use specfem_par
+ 
+  implicit none
+
+  integer :: ireq
+  
+  ! wait till all mpi_isends are finished
+  if (n_req_surf /= 0) then
+    do ireq=1, n_req_surf
+      call wait_req(req_dump_surf(ireq))
+    enddo
+  endif
+  ! wait till all mpi_isends are finished
+  if (n_req_vol /= 0) then
+    do ireq=1, n_req_vol
+      call wait_req(req_dump_vol(ireq))
+    enddo
+  endif
+
+  call synchronize_all()
+
+  end subroutine wait_all_send
 
 
 !================================================================
@@ -309,6 +321,7 @@ subroutine wmo_movie_volume_output_h5()
 ! outputs movie files for div, curl and velocity
 
   use specfem_par
+  use constants, only: dest_ionod
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_acoustic
@@ -368,7 +381,7 @@ subroutine wmo_movie_volume_output_h5()
       enddo
 
       ! send pressure_loc
-      call isend_cr_inter(d_p,NGLOB_AB,0,io_tag_vol_pres,req_dump_vol(req_count))
+      call isend_cr_inter(d_p,NGLOB_AB,dest_ionod,io_tag_vol_pres,req_dump_vol(req_count))
       req_count = req_count+1
     endif
   endif ! acoustic
@@ -391,7 +404,7 @@ subroutine wmo_movie_volume_output_h5()
                               ispec_is_elastic)
 
       ! send div_glob
-      call isend_cr_inter(div_glob,NGLOB_AB,0,io_tag_vol_divglob,req_dump_vol(req_count))
+      call isend_cr_inter(div_glob,NGLOB_AB,dest_ionod,io_tag_vol_divglob,req_dump_vol(req_count))
       req_count = req_count+1
     endif ! elastic
 
@@ -409,25 +422,25 @@ subroutine wmo_movie_volume_output_h5()
 
     ! div and curl on elemental level
     ! writes our divergence
-    call isend_cr_inter(div_on_node,NGLOB_AB,0,io_tag_vol_div,req_dump_vol(req_count))
+    call isend_cr_inter(div_on_node,NGLOB_AB,dest_ionod,io_tag_vol_div,req_dump_vol(req_count))
     req_count = req_count+1
  
     ! writes out curl
-    call isend_cr_inter(curl_x_on_node,NGLOB_AB,0,io_tag_vol_curlx,req_dump_vol(req_count))
+    call isend_cr_inter(curl_x_on_node,NGLOB_AB,dest_ionod,io_tag_vol_curlx,req_dump_vol(req_count))
     req_count = req_count+1
-    call isend_cr_inter(curl_y_on_node,NGLOB_AB,0,io_tag_vol_curly,req_dump_vol(req_count))
+    call isend_cr_inter(curl_y_on_node,NGLOB_AB,dest_ionod,io_tag_vol_curly,req_dump_vol(req_count))
     req_count = req_count+1
-    call isend_cr_inter(curl_z_on_node,NGLOB_AB,0,io_tag_vol_curlz,req_dump_vol(req_count))
+    call isend_cr_inter(curl_z_on_node,NGLOB_AB,dest_ionod,io_tag_vol_curlz,req_dump_vol(req_count))
     req_count = req_count+1
   endif
 
   ! velocity
   if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
-    call isend_cr_inter(velocity_x_on_node,NGLOB_AB,0,io_tag_vol_velox,req_dump_vol(req_count))
+    call isend_cr_inter(velocity_x_on_node,NGLOB_AB,dest_ionod,io_tag_vol_velox,req_dump_vol(req_count))
     req_count = req_count+1
-    call isend_cr_inter(velocity_y_on_node,NGLOB_AB,0,io_tag_vol_veloy,req_dump_vol(req_count))
+    call isend_cr_inter(velocity_y_on_node,NGLOB_AB,dest_ionod,io_tag_vol_veloy,req_dump_vol(req_count))
     req_count = req_count+1
-    call isend_cr_inter(velocity_z_on_node,NGLOB_AB,0,io_tag_vol_veloz,req_dump_vol(req_count))
+    call isend_cr_inter(velocity_z_on_node,NGLOB_AB,dest_ionod,io_tag_vol_veloz,req_dump_vol(req_count))
     req_count = req_count+1
   endif
 

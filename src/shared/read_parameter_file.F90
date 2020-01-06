@@ -759,6 +759,14 @@
       write(*,*)
     endif
 
+    ! read number of io dedicated nodes
+    call read_value_integer(NIONOD, 'NIONOD', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'NIONOD                    = 1'
+      write(*,*)
+    endif
+
     ! closes parameter file
     call close_parameter_file()
 
@@ -1299,6 +1307,7 @@
   call bcast_all_singlel(ADIOS_FOR_KERNELS)
   call bcast_all_singlel(USE_EXTERNAL_SOURCE_FILE)
   call bcast_all_singlel(HDF5_ENABLED)
+  call bcast_all_singlei(NIONOD)
  
   ! broadcast all parameters computed from others
   call bcast_all_singlei(IMODEL)

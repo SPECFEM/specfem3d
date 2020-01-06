@@ -123,17 +123,15 @@
 
   ! create hdf5 file and write datasets independently
   ! create file, groups and datasets of all mpi rank
-  if (myrank == 0) then
-    call h5_create_file(h5)
-    ! create group
-    do iproc = 0, NPROC-1
-      write(tempstr, "(i6.6)") iproc
-      group_name = gname_proc_head // trim(tempstr)
+  call h5_create_file_p(h5)
+  ! create group
+  do iproc = 0, NPROC-1
+    write(tempstr, "(i6.6)") iproc
+    group_name = gname_proc_head // trim(tempstr)
 
-      call h5_create_group(h5, group_name)
-    enddo
-    call h5_close_file(h5)
-  endif
+    call h5_create_group(h5, group_name)
+  enddo
+  call h5_close_file(h5)
   call synchronize_all()
 
   call get_connectivity_for_movie(nspec, ibool, spec_elm_conn_xdmf)
@@ -145,7 +143,8 @@
   if (myrank == 0) print *, "start dataset preparation and write"
 
   ! open file
-!  call h5_open_file_p_collect(h5)
+!  call h5_open_file_p_collect(h5) ! collective writing is faster but mpi error occurs
+! when using more than 128 cpus
   call h5_open_file_p(h5)
 
   ! set dwrite flag true to pre_define the dataset on file before write.
@@ -324,9 +323,9 @@
   call h5_write_dataset_p_1d_i(h5, dset_name, (/num_abs_boundary_faces/))
   if (num_abs_boundary_faces > 0) then
     dset_name = "abs_boundary_ispec"
-    call h5_write_dataset_p_1d_i(h5, dset_name, abs_boundary_ispec) !!!!!! stopping here
+    call h5_write_dataset_p_1d_i(h5, dset_name, abs_boundary_ispec)
     dset_name = "abs_boundary_ijk"
-    call h5_write_dataset_p_3d_i(h5, dset_name, abs_boundary_ijk) !!!!!!!!!!!!!!!!!!!!!!!
+    call h5_write_dataset_p_3d_i(h5, dset_name, abs_boundary_ijk)
     dset_name = "abs_boundary_jacobian2Dw"
     call h5_write_dataset_p_2d_r(h5, dset_name, abs_boundary_jacobian2Dw)
     dset_name = "abs_boundary_normal"
@@ -349,9 +348,9 @@
     endif
   else
     dset_name = "abs_boundary_ispec"
-    call h5_write_dataset_p_1d_i(h5, dset_name, (/0/)) !!!!!! stopping here
+    call h5_write_dataset_p_1d_i(h5, dset_name, (/0/))
     dset_name = "abs_boundary_ijk"
-    call h5_write_dataset_p_3d_i(h5, dset_name, i3d_dummy) !!!!!!!!!!!!!!!!!!!!!!!
+    call h5_write_dataset_p_3d_i(h5, dset_name, i3d_dummy)
     dset_name = "abs_boundary_jacobian2Dw"
     call h5_write_dataset_p_2d_r(h5, dset_name, r2d_dummy)
     dset_name = "abs_boundary_normal"

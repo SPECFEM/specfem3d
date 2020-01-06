@@ -301,7 +301,6 @@ module specfem_par
   integer, dimension(9) :: req_dump_vol
   integer, dimension(3) :: req_dump_surf
 
-
 end module specfem_par
 
 !=====================================================================

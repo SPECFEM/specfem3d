@@ -2055,55 +2055,60 @@ end subroutine world_unsplit_inter
   subroutine separate_compute_and_io_nodes()
     use my_mpi
 
-    use constants, only: io_task,compute_task
-    use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS
+    use constants, only: io_task,compute_task,dest_ionod,nproc_io
+    use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,NIONOD
 
     implicit none
 
-    integer :: sizeval,myrank,ier,key,NPROC, &
+    integer :: sizeval,myrank,ier,key,NPROC,idio,nnode_comp, &
                split_comm,inter_comm,io_start,comp_start
 
     ! split comm into computation nodes and io node
-    ! here we use rank=0 (intra comm) as the io node as the mpi wrapper functions in this file
-    ! specifies rank=0 as the destination of mpi communication
-    ! for using one additional node, xspecfem3D need to be run with +1 node e.g.
-    ! mpirun -n $((NPROC+1)) xspecfem3D ...
+    ! here we use the last NIONOD ranks (intra comm) as the io node
+    ! for using one additional node, xspecfem3D need to be run with + NIONOD node 
+    ! thus for running mpirun, it should be like e.g.
+    ! mpirun -n $((NPROC+NIONOD)) ./bin/xspecfem3D
 
     ! get the local mpi_size and rank
     call world_size(sizeval)
     call world_rank(myrank)
 
-    ! TODO: add check if NPROC+1 = sizeval
-    if (myrank == sizeval-1) then ! we use the last rank as the io node
-      io_task = .true. ! set io node flag
+    nnode_comp = sizeval-NIONOD
+
+    if (myrank >= nnode_comp) then ! we use the last ranks as the io nodes
+      io_task      = .true. ! set io node flag
       compute_task = .false.
-      key = 0
+      key          = 0
+      idio         = myrank-(nnode_comp) ! id of io_node
+      nproc_io     = nnode_comp/NIONOD   ! number of compute nodes which use this io node
+      if (idio < mod(nnode_comp,NIONOD)) nproc_io = nproc_io+1
     else
-      io_task = .false.
+      io_task      = .false.
       compute_task = .true.
-      key = 1
+      key          = 1
+      dest_ionod   = mod(myrank,NIONOD) ! set the destination of mpi communication
     endif
- 
+
     ! split communicator into compute_comm and io_comm
     call MPI_COMM_SPLIT(my_local_mpi_comm_world, key, myrank, split_comm, ier)
- 
-    ! create inter commicator and set as my_local_mpi_comm_inter
-    io_start   = sizeval-1
+
+    ! create inter communicator and set as my_local_mpi_comm_inter
+    io_start   = nnode_comp+dest_ionod
     comp_start = 0
     if (io_task) then
-      call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, comp_start, 10, inter_comm, ier)
+      call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, comp_start, 1111, inter_comm, ier)
     else
-      call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, io_start,   10, inter_comm, ier)
+      call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, io_start,   1111, inter_comm, ier)
     endif
     my_local_mpi_comm_world = split_comm
- 
+
     ! use inter_comm as my_local_mpi_comm_world for all send/recv
     my_local_mpi_comm_inter = inter_comm
    
     call world_size(sizeval)
- 
+
     ! exclude io node from the other computer nodes
-    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) NPROC = NPROC-1
+    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) NPROC = NPROC-NIONOD
  
   end subroutine
 

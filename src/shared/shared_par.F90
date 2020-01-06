@@ -94,6 +94,11 @@ module constants
   integer :: xdmf_vol_step            = 515
   integer :: xdmf_shake               = 191
 
+  ! responsible id of io node
+  integer :: dest_ionod = 0
+  ! number of computer nodes sending info to each io node
+  integer :: nproc_io
+
 end module constants
 
 !
@@ -216,6 +221,9 @@ end module constants
 
   ! hdf5 file output
   logical :: HDF5_ENABLED
+
+  ! number of io dedicated nodes
+  integer :: NIONOD
 
   ! external code coupling (DSM, AxiSEM)
   logical :: COUPLE_WITH_INJECTION_TECHNIQUE

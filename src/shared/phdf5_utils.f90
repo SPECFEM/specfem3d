@@ -24,7 +24,7 @@ module phdf5_utils ! class-like module
          h5_create_file_prop_list, h5_close_prop_list, &
          h5_open_group_prop_list, h5_create_group_prop_list, h5_close_group_prop_list,&
          h5_create_dataset_prop_list, h5_create_dataset_prop_list_collect, &
-         h5_create_dataset_collect, &
+         h5_create_dataset_gen, &
          h5_create_group_p, h5_open_group_p, &
          h5_read_dataset_p_scalar_i, h5_read_dataset_p_scalar_r,&
          h5_read_dataset_p_1d_i, h5_read_dataset_p_1d_r, h5_read_dataset_p_1d_l,&
@@ -40,7 +40,7 @@ module phdf5_utils ! class-like module
          h5_write_dataset_p_4d_i, h5_write_dataset_p_4d_r, &
          h5_write_dataset_p_5d_r, &
          bool_array2integer, int_array2bool, &
-         h5_gather_dsetsize, h5_create_dataset_in_main_proc, &
+         h5_gather_dsetsize, create_dataset_collect, &
          h5_write_dataset_1d_to_2d_r_collect_hyperslab, h5_write_dataset_2d_to_3d_r_collect_hyperslab, &
          h5_write_dataset_2d_r_collect_hyperslab, h5_write_dataset_3d_r_collect_hyperslab, &
          write_attenuation_file_in_h5, read_attenuation_file_in_h5
@@ -687,7 +687,7 @@ contains
     end subroutine h5_open_file_p_collect
 
 
-    subroutine h5_create_dataset_collect(this, dataset_name, dim_in, rank, dtype_id)
+    subroutine h5_create_dataset_gen(this, dataset_name, dim_in, rank, dtype_id)
         type(h5io), intent(in)       :: this
         character(len=*), intent(in) :: dataset_name
         integer, dimension(:), intent(in)  :: dim_in
@@ -730,7 +730,7 @@ contains
         call h5sclose_f(dspace_id, error)
         if (error /= 0) write(*,*) 'hdf5 dataspace close failed for ', dataset_name
 
-    end subroutine h5_create_dataset_collect
+    end subroutine h5_create_dataset_gen
 
 
     subroutine h5_create_group_p(this, group_name)
@@ -1080,7 +1080,7 @@ contains
         endif
  
         ! create dataset
-        call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, 1)
+        call create_dataset_collect(this, dataset_name, dim, rank, 1, file_id)
 
 
         write(tempstr, "(i6.6)") this_rank
@@ -1125,7 +1125,7 @@ contains
         dim = shape(data)
 
         ! create dataset
-        call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, CUSTOM_REAL)
+        call create_dataset_collect(this, dataset_name, dim, rank, CUSTOM_REAL, file_id)
 
         write(tempstr, "(i6.6)") this_rank
         group_name = gname_proc_head // trim(tempstr)
@@ -1169,7 +1169,7 @@ contains
         dim = shape(data)
 
         ! create dataset
-        call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, 1)
+        call create_dataset_collect(this, dataset_name, dim, rank, 1, file_id)
 
         write(tempstr, "(i6.6)") this_rank
         group_name = gname_proc_head // trim(tempstr)
@@ -1209,7 +1209,7 @@ contains
         dim = shape(data)
 
         ! create dataset
-        call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, CUSTOM_REAL)
+        call create_dataset_collect(this, dataset_name, dim, rank, CUSTOM_REAL, file_id)
 
         write(tempstr, "(i6.6)") this_rank
         group_name = gname_proc_head // trim(tempstr)
@@ -1253,7 +1253,7 @@ contains
         dim = shape(data)
 
         ! create dataset
-        call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, 1)
+        call create_dataset_collect(this, dataset_name, dim, rank, 1, file_id)
 
         write(tempstr, "(i6.6)") this_rank
         group_name = gname_proc_head // trim(tempstr)
@@ -1292,7 +1292,7 @@ contains
         dim = shape(data)
 
         ! create dataset
-        call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, CUSTOM_REAL)
+        call create_dataset_collect(this, dataset_name, dim, rank, CUSTOM_REAL, file_id)
             
         write(tempstr, "(i6.6)") this_rank
         group_name = gname_proc_head // trim(tempstr)
@@ -1337,7 +1337,7 @@ contains
         dim = shape(data)
 
         ! create dataset
-        call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, 1)
+        call create_dataset_collect(this, dataset_name, dim, rank, 1, file_id)
         
         write(tempstr, "(i6.6)") this_rank
         group_name = gname_proc_head // trim(tempstr)
@@ -1376,7 +1376,7 @@ contains
         dim = shape(data)
 
         ! create dataset
-        call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, CUSTOM_REAL)
+        call create_dataset_collect(this, dataset_name, dim, rank, CUSTOM_REAL, file_id)
 
         write(tempstr, "(i6.6)") this_rank
         group_name = gname_proc_head // trim(tempstr)
@@ -1420,7 +1420,7 @@ contains
         dim = shape(data)
 
         ! create dataset
-        call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, CUSTOM_REAL)
+        call create_dataset_collect(this, dataset_name, dim, rank, CUSTOM_REAL, file_id)
 
         write(tempstr, "(i6.6)") this_rank
         group_name = gname_proc_head // trim(tempstr)
@@ -1470,7 +1470,7 @@ contains
         dim = shape(data_in)
 
         ! create dataset
-        call h5_create_dataset_in_main_proc(this, dataset_name, dim, rank, 1)
+        call create_dataset_collect(this, dataset_name, dim, rank, 1, file_id)
 
         allocate(data(size(data_in)), stat=error)
         call bool_array2integer(this, data_in, data)
@@ -1774,12 +1774,13 @@ contains
     end subroutine
 
 
-    subroutine h5_create_dataset_in_main_proc(this, dataset_name, dim, data_rank, dtype_id)
+    subroutine create_dataset_collect(this, dataset_name, dim, data_rank, dtype_id, base_id)
         type(h5io), intent(in)                      :: this
         character(len=*), intent(in)                :: dataset_name
         integer(HSIZE_T), dimension(:), intent(in)  :: dim
         integer, intent(in)                         :: dtype_id ! 1:int, 4:real4, 8:real8,
         integer, intent(in)                         :: data_rank
+        integer(HID_T), intent(in)                  :: base_id ! base (file_id or group_id) of dataset creation
 
         integer, dimension(data_rank,0:total_proc-1)  :: all_dim
         integer(HSIZE_T), dimension(data_rank)        :: dim_h5
@@ -1803,20 +1804,20 @@ contains
             dim_h5 = all_dim(:,iproc)
             call h5screate_simple_f(data_rank, dim_h5, dspace_id, error)
             if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ', dataset_name
-            
+
             call h5pcreate_f(H5P_DATASET_CREATE_F, plist_id, error)
 
             ! This is required for this data pattern
             call H5Pset_alloc_time_f(plist_id, H5D_ALLOC_TIME_EARLY_F, error)
 
             if (dtype_id == 1) then
-                call h5dcreate_f(file_id, trim(group_and_dataset_name), H5T_NATIVE_INTEGER, dspace_id, dataset_id, error, &
+                call h5dcreate_f(base_id, trim(group_and_dataset_name), H5T_NATIVE_INTEGER, dspace_id, dataset_id, error, &
                                          dcpl_id=plist_id)
             else if (dtype_id == 4) then
-                call h5dcreate_f(file_id, trim(group_and_dataset_name), H5T_NATIVE_REAL, dspace_id, dataset_id, error, &
+                call h5dcreate_f(base_id, trim(group_and_dataset_name), H5T_NATIVE_REAL, dspace_id, dataset_id, error, &
                                          dcpl_id=plist_id)
             else
-                call h5dcreate_f(file_id, trim(group_and_dataset_name), H5T_NATIVE_DOUBLE, dspace_id, dataset_id, error, &
+                call h5dcreate_f(base_id, trim(group_and_dataset_name), H5T_NATIVE_DOUBLE, dspace_id, dataset_id, error, &
                                          dcpl_id=plist_id)
             endif
             if (error /= 0) write(*,*) 'hdf5 dataset create failed for ', dataset_name
@@ -1830,7 +1831,7 @@ contains
         enddo
 
         call synchronize_all()
-    end subroutine h5_create_dataset_in_main_proc
+    end subroutine create_dataset_collect
 
 
 !
