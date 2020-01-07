@@ -109,6 +109,8 @@
     enddo
   endif
 
+  n_req_surf = 0; n_req_vol = 0
+
   call synchronize_all()
 
   end subroutine wait_all_send

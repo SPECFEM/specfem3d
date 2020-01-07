@@ -2093,11 +2093,11 @@ end subroutine world_unsplit_inter
     call MPI_COMM_SPLIT(my_local_mpi_comm_world, key, myrank, split_comm, ier)
 
     ! create inter communicator and set as my_local_mpi_comm_inter
-    io_start   = nnode_comp+dest_ionod
-    comp_start = 0
     if (io_task) then
+      comp_start = 0 !idio
       call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, comp_start, 1111, inter_comm, ier)
     else
+      io_start = nnode_comp !+dest_ionod
       call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, io_start,   1111, inter_comm, ier)
     endif
     my_local_mpi_comm_world = split_comm
@@ -2105,8 +2105,6 @@ end subroutine world_unsplit_inter
     ! use inter_comm as my_local_mpi_comm_world for all send/recv
     my_local_mpi_comm_inter = inter_comm
    
-    call world_size(sizeval)
-
     ! exclude io node from the other computer nodes
     if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) NPROC = NPROC-NIONOD
  

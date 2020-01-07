@@ -1918,10 +1918,10 @@ contains
         call h5_read_dataset_p_4d_r(h5, "scale_factor_kappa", scale_factor_kappa)
         call h5_read_dataset_p_5d_r(h5, "factor_common", factor_common)
         call h5_read_dataset_p_5d_r(h5, "factor_common_kappa", factor_common_kappa)
- 
+
         call h5_close_group(h5)
         call h5_close_file(h5)
- 
+
     end subroutine read_attenuation_file_in_h5
 
 end module phdf5_utils
