@@ -694,6 +694,8 @@ ac_ct_FC
 LDFLAGS
 FCFLAGS
 FC
+COND_HDF5_FALSE
+COND_HDF5_TRUE
 COND_ASDF_FALSE
 COND_ASDF_TRUE
 COND_ADIOS_FALSE
@@ -704,6 +706,8 @@ COND_OMP_FALSE
 COND_OMP_TRUE
 COND_CUDA_PLUS_FALSE
 COND_CUDA_PLUS_TRUE
+COND_CUDA10_FALSE
+COND_CUDA10_TRUE
 COND_CUDA9_FALSE
 COND_CUDA9_TRUE
 COND_CUDA8_FALSE
@@ -751,6 +755,7 @@ infodir
 docdir
 oldincludedir
 includedir
+runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -782,6 +787,7 @@ enable_openmp
 enable_vtk
 with_adios
 with_asdf
+with_hdf5
 with_scotch_dir
 with_scotch_includedir
 with_scotch_libdir
@@ -862,6 +868,7 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
+runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1114,6 +1121,15 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
+  -runstatedir | --runstatedir | --runstatedi | --runstated \
+  | --runstate | --runstat | --runsta | --runst | --runs \
+  | --run | --ru | --r)
+    ac_prev=runstatedir ;;
+  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
+  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
+  | --run=* | --ru=* | --r=*)
+    runstatedir=$ac_optarg ;;
+
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1251,7 +1267,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+		libdir localedir mandir runstatedir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1404,6 +1420,7 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
+  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1452,6 +1469,7 @@ Optional Packages:
   --with-cuda             build CUDA GPU enabled version [default=no]
   --with-adios            build ADIOS enabled version [default=no]
   --with-asdf             build ASDF enabled version [default=no]
+  --with-hdf5             build HDF5 enabled version [default=no]
   --with-scotch-dir=DIR   define the root path to Scotch (e.g. /opt/scotch/)
   --with-scotch-includedir=DIR
                           define the path to the Scotch headers (e.g.
@@ -2884,12 +2902,21 @@ else
   COND_CUDA9_FALSE=
 fi
 
+ if test x"$want_cuda" = xcuda10; then
+  COND_CUDA10_TRUE=
+  COND_CUDA10_FALSE='#'
+else
+  COND_CUDA10_TRUE='#'
+  COND_CUDA10_FALSE=
+fi
+
 # cuda linking for cuda 5x and 6x and 7x and 8x and ..
  if test "$want_cuda" = cuda5 \
      -o "$want_cuda" = cuda6 \
      -o "$want_cuda" = cuda7 \
      -o "$want_cuda" = cuda8 \
      -o "$want_cuda" = cuda9 \
+     -o "$want_cuda" = cuda10 \
 ; then
   COND_CUDA_PLUS_TRUE=
   COND_CUDA_PLUS_FALSE='#'
@@ -2979,6 +3006,28 @@ else
   COND_ASDF_TRUE='#'
   COND_ASDF_FALSE=
 fi
+
+
+###
+### HDF5
+###
+
+
+# Check whether --with-hdf5 was given.
+if test "${with_hdf5+set}" = set; then :
+  withval=$with_hdf5; want_hdf5="$withval"
+else
+  want_hdf5=no
+fi
+
+ if test x$"$want_hdf5" != xno; then
+  COND_HDF5_TRUE=
+  COND_HDF5_FALSE='#'
+else
+  COND_HDF5_TRUE='#'
+  COND_HDF5_FALSE=
+fi
+
 
 
 ############################################################
@@ -9782,9 +9831,27 @@ $as_echo "#define HAVE_VTK /**/" >>confdefs.h
 
 fi
 
+###
+### HDF5
+###
+#AS_IF([test x"$want_hdf5" != xno], [
+#    AS_BOX([HDF5])
+#    CIT_HDF5_HEADER
+#    CIT_HDF5_LIB_PARALLEL
+#])
+#AX_LIB_HDF5([parallel])
+#if test "$with_hdf5" = "yes"; then
+#	CC="$HDF5_CC"
+#	FC="$HDF5_FC"
+#else
+#	AC_MSG_ERROR([Unable to find HDF5, we need parallel HDF5.])
+#fi
+
+
 ##
 ## Git version info
 ##
+
 $as_echo "## ---------------- ##
 ## git version info ##
 ## ---------------- ##"
@@ -10047,6 +10114,10 @@ if test -z "${COND_CUDA9_TRUE}" && test -z "${COND_CUDA9_FALSE}"; then
   as_fn_error $? "conditional \"COND_CUDA9\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
+if test -z "${COND_CUDA10_TRUE}" && test -z "${COND_CUDA10_FALSE}"; then
+  as_fn_error $? "conditional \"COND_CUDA10\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
 if test -z "${COND_CUDA_PLUS_TRUE}" && test -z "${COND_CUDA_PLUS_FALSE}"; then
   as_fn_error $? "conditional \"COND_CUDA_PLUS\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
@@ -10065,6 +10136,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_ASDF_TRUE}" && test -z "${COND_ASDF_FALSE}"; then
   as_fn_error $? "conditional \"COND_ASDF\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_HDF5_TRUE}" && test -z "${COND_HDF5_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HDF5\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_SCOTCH_TRUE}" && test -z "${COND_SCOTCH_FALSE}"; then

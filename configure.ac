@@ -107,13 +107,15 @@ AM_CONDITIONAL([COND_CUDA6], [test x"$want_cuda" = xcuda6])
 AM_CONDITIONAL([COND_CUDA7], [test x"$want_cuda" = xcuda7])
 AM_CONDITIONAL([COND_CUDA8], [test x"$want_cuda" = xcuda8])
 AM_CONDITIONAL([COND_CUDA9], [test x"$want_cuda" = xcuda9])
+AM_CONDITIONAL([COND_CUDA10], [test x"$want_cuda" = xcuda10])
 # cuda linking for cuda 5x and 6x and 7x and 8x and ..
 AM_CONDITIONAL([COND_CUDA_PLUS],
   [test "$want_cuda" = cuda5 \
      -o "$want_cuda" = cuda6 \
      -o "$want_cuda" = cuda7 \
      -o "$want_cuda" = cuda8 \
-     -o "$want_cuda" = cuda9 \]
+     -o "$want_cuda" = cuda9 \
+     -o "$want_cuda" = cuda10 \]
 )
 
 ###
