@@ -121,6 +121,23 @@ XMESHFEM_OBJECTS = \
 	$(meshfem3D_OBJECTS) $(meshfem3D_SHARED_OBJECTS) \
 	$(COND_MPI_OBJECTS)
 
+# using hdf5 files
+ifeq ($(HDF5),yes)
+hdf5_meshfem3D_SHARED_OBJECTS = \
+	$O/phdf5_utils.shared_hdf5.o \
+	$(EMPTY_MACRO)
+hdf5_meshfem3D_OBJECTS = \
+	$O/save_databases_hdf5.mesh.o
+else
+hdf5_meshfem3D_SHARED_OBJECTS = \
+	$O/phdf5_utils_stub.shared_nohdf5.o \
+	$(EMPTY_MACRO)
+hdf5_meshfem3D_OBJECTS = \
+	$O/save_databases_hdf5_stub.mesh.o
+endif
+meshfem3D_OBJECTS += $(hdf5_meshfem3D_OBJECTS)
+meshfem3D_SHARED_OBJECTS += $(hdf5_meshfem3D_SHARED_OBJECTS)
+
 
 #######################################
 

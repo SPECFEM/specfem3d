@@ -153,10 +153,10 @@
  
   ! open dataset glob2loc_nodes
   ! get attribute nnodes_ext_mesh
-  dsetname = "glob2loc_nodes"
-  attrname = "nnodes_loc"
-  call h5_read_attribute_p(h5,attrname,dsetname,attr_data)
-  nnodes_ext_mesh = attr_data(1)
+  !dsetname = "glob2loc_nodes"
+  dsetname = "nnodes_loc"
+  call h5_read_dataset_p_scalar_i(h5,dsetname,nnodes_ext_mesh)
+  !nnodes_ext_mesh = attr_data(1)
 
   ! open and read dataset nodes_coords
   dsetname = "nodes_coords"
@@ -180,10 +180,10 @@
  
   ! open dataset elm_conn
   ! read attribute nspec_local == nelmnts_ext_mesh
-  dsetname = "elm_conn"
-  attrname = "nspec_local"
-  call h5_read_attribute_p(h5,attrname,dsetname,attr_data)
-  nelmnts_ext_mesh = attr_data(1)
+  !dsetname = "elm_conn"
+  dsetname = "nspec_local"
+  call h5_read_dataset_p_scalar_i(h5,dsetname,nelmnts_ext_mesh)
+  !nelmnts_ext_mesh = attr_data(1)
 
   ! memory allocation
   allocate(elmnts_ext_mesh(NGNOD,nelmnts_ext_mesh),stat=ier)
@@ -194,6 +194,7 @@
   if (ier /= 0) stop 'Error allocating array mat_ext_mesh'
 
   ! read elmnts_ext_mesh == elm_conn
+  dsetname = "elm_conn"
   call h5_read_dataset_p_2d_i(h5, dsetname, elmnts_ext_mesh)
 
   ! open and read dataset mat_mesh == mat_ext_mesh

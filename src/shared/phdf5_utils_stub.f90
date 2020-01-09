@@ -24,7 +24,6 @@ module phdf5_utils
          h5_write_dataset_p_3d_i, h5_write_dataset_p_3d_r, &
          h5_write_dataset_p_4d_i, h5_write_dataset_p_4d_r, &
          h5_write_dataset_p_5d_r, &
-         h5_write_dataset_p_1d_r_sub, &
          bool_array2integer, int_array2bool, &
          h5_gather_dsetsize, create_dataset_collect, h5_create_dataset_setter, &
          write_attenuation_file_in_h5, read_attenuation_file_in_h5

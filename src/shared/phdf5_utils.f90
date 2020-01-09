@@ -34,8 +34,8 @@ module phdf5_utils ! class-like module
          h5_read_dataset_p_5d_r, &
          h5_read_attribute_p, &
          h5_set_group_name, &
-         h5_write_dataset_p_1d_i, h5_write_dataset_p_1d_r, h5_write_dataset_p_1d_l, &
-         h5_write_dataset_p_2d_i, h5_write_dataset_p_2d_r, &
+         h5_write_dataset_p_1d_i, h5_write_dataset_p_1d_ia, h5_write_dataset_p_1d_r, h5_write_dataset_p_1d_l, &
+         h5_write_dataset_p_2d_i, h5_write_dataset_p_2d_ia, h5_write_dataset_p_2d_r, h5_write_dataset_p_2d_d,&
          h5_write_dataset_p_3d_i, h5_write_dataset_p_3d_r, &
          h5_write_dataset_p_4d_i, h5_write_dataset_p_4d_r, &
          h5_write_dataset_p_5d_r, &
@@ -1110,6 +1110,60 @@ contains
     end subroutine h5_write_dataset_p_1d_i
 
 
+    ! write 1d integer and attribute
+    subroutine h5_write_dataset_p_1d_ia(this, dataset_name, data, attribute_name, attr_data)
+        type(h5io), intent(in)               :: this
+        character(len=*), intent(in)         :: dataset_name
+        character(len=*), intent(in)         :: attribute_name
+        integer, dimension(:), intent(in), target    :: data
+        integer, intent(in)                  :: attr_data
+        integer                              :: rank = 1
+        integer(HSIZE_T), dimension(1)       :: dim
+
+        character(len=10) :: tempstr
+        character(len=5)  :: gname_proc_head = "proc_"
+        character(len=64) :: group_name
+
+        dim = shape(data)
+
+        ! add dummy 0 for no_element array
+        if (size(data) == 0) then
+            dim = 1
+        endif
+ 
+        ! create dataset
+        call create_dataset_collect(this, dataset_name, dim, rank, 1, file_id)
+
+        write(tempstr, "(i6.6)") this_rank
+        group_name = gname_proc_head // trim(tempstr)
+ 
+        !! create datasets of all processes for independent write
+        call h5_open_group(this, group_name)
+        call h5_open_dataset(this,trim(dataset_name))
+        
+        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
+        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+
+        ! write array using fortran pointer
+        if (size(data) == 0) then
+            call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, dummy_1d_array, dim, error,xfer_prp=plist_id)
+        else
+            f_ptr = c_loc(data(1))
+            call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, f_ptr, error, &
+                            xfer_prp=plist_id)
+        endif
+        if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
+
+        ! add attribute
+        call h5_add_attribute_i(this, attribute_name, (/attr_data/))
+
+        call h5_close_prop_list(this)
+        call h5_close_dataset(this)
+        call h5_close_group(this)
+    end subroutine h5_write_dataset_p_1d_ia
+
+
     subroutine h5_write_dataset_p_1d_r(this, dataset_name, data)
         type(h5io), intent(in)                                      :: this
         character(len=*), intent(in)                                :: dataset_name
@@ -1195,6 +1249,51 @@ contains
     end subroutine h5_write_dataset_p_2d_i
 
 
+    subroutine h5_write_dataset_p_2d_ia(this, dataset_name, data, attribute_name, attr_data)
+        type(h5io), intent(in)               :: this
+        character(len=*), intent(in)         :: dataset_name
+        character(len=*), intent(in)         :: attribute_name
+        integer, dimension(:,:), intent(in), target    :: data
+        integer, intent(in)                  :: attr_data
+        integer                              :: rank = 2
+        integer(HSIZE_T), dimension(2)       :: dim
+
+        character(len=10) :: tempstr
+        character(len=5)  :: gname_proc_head = "proc_"
+        character(len=64) :: group_name
+
+        dim = shape(data)
+
+        ! create dataset
+        call create_dataset_collect(this, dataset_name, dim, rank, 1, file_id)
+
+        write(tempstr, "(i6.6)") this_rank
+        group_name = gname_proc_head // trim(tempstr)
+
+        !! create datasets of all processes for independent write
+        call h5_open_group(this, group_name)
+        call h5_open_dataset(this,trim(dataset_name))
+        
+        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
+        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+
+
+        ! write array using fortran pointer
+        f_ptr = c_loc(data(1,1))
+        call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, f_ptr, error, &
+                        xfer_prp=plist_id)
+        if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
+
+        ! add attribute
+        call h5_add_attribute_i(this, attribute_name, (/attr_data/))
+
+        call h5_close_prop_list(this)
+        call h5_close_dataset(this)
+        call h5_close_group(this)
+    end subroutine h5_write_dataset_p_2d_ia
+
+
     subroutine h5_write_dataset_p_2d_r(this, dataset_name, data)
         type(h5io), intent(in)                                        :: this
         character(len=*), intent(in)                                  :: dataset_name
@@ -1237,6 +1336,45 @@ contains
         call h5_close_dataset(this)
         call h5_close_group(this)
     end subroutine h5_write_dataset_p_2d_r
+
+
+    subroutine h5_write_dataset_p_2d_d(this, dataset_name, data)
+        type(h5io), intent(in)                                        :: this
+        character(len=*), intent(in)                                  :: dataset_name
+        double precision, dimension(:,:), intent(in), target    :: data
+        integer                                                       :: rank = 2
+        integer(HSIZE_T), dimension(2)                                :: dim
+
+        character(len=10) :: tempstr
+        character(len=5)  :: gname_proc_head = "proc_"
+        character(len=64) :: group_name
+
+        dim = shape(data)
+
+        ! create dataset
+        call create_dataset_collect(this, dataset_name, dim, rank, 8, file_id)
+
+        write(tempstr, "(i6.6)") this_rank
+        group_name = gname_proc_head // trim(tempstr)
+
+        !! create datasets of all processes for independent write
+        call h5_open_group(this, group_name)
+        call h5_open_dataset(this,trim(dataset_name))
+        
+        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
+        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+!        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+
+        ! write array using fortran pointer
+        f_ptr = c_loc(data(1,1))
+        call h5dwrite_f(dataset_id, H5T_NATIVE_DOUBLE, f_ptr, error, &
+                       xfer_prp=plist_id)
+        if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
+
+        call h5_close_prop_list(this)
+        call h5_close_dataset(this)
+        call h5_close_group(this)
+    end subroutine h5_write_dataset_p_2d_d
 
 
     subroutine h5_write_dataset_p_3d_i(this, dataset_name, data)
