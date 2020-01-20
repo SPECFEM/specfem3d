@@ -22,12 +22,12 @@ CAVITY_FILE                     = cavity.dat
 # number of elements at the surface along edges of the mesh at the surface
 # (must be 8 * multiple of NPROC below if mesh is not regular and contains mesh doublings)
 # (must be multiple of NPROC below if mesh is regular)
-NEX_XI                          = 12 # 192
-NEX_ETA                         = 6 #96
+NEX_XI                          = 12
+NEX_ETA                         = 6
 
 # number of MPI processors along xi and eta (can be different)
-NPROC_XI                        = 2 #16
-NPROC_ETA                       = 1 # 6
+NPROC_XI                        = 2
+NPROC_ETA                       = 1
 
 #-----------------------------------------------------------
 #
