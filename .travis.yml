@@ -143,8 +143,11 @@ before_install:
 
   # updates repository
   - |
-    sudo apt-get -qq update
-    sleep 5
+    travis_retry sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B05F25D762E3157
+    travis_retry sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 78BD65473CB3BD13
+    travis_retry sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 762E3157
+    travis_retry sudo apt-get update
+
 
 install:
   - bash .travis/run_install.sh
