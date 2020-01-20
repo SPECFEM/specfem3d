@@ -123,6 +123,9 @@ env:
     # regular element mesh
     - TESTID=32 TESTCOV=0 TESTDIR=25 TESTFLAGS="--enable-vectorization" CUDA=false
 
+    # adjoint simulation
+    - TESTID=33 TESTCOV=0 TESTDIR=26 TESTFLAGS="--with-mpi" CUDA=false
+
 before_install:
   # informations on git
   - |

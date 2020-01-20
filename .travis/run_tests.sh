@@ -34,6 +34,7 @@ case "$TESTDIR" in
   23) dir=EXAMPLES/Gmsh_simple_lddrk/ ;;
   24) dir=EXAMPLES/decompose_mesh_MPI/ ;;
   25) dir=EXAMPLES/meshfem3D_examples/regular_element_mesh/ ;;
+  26) dir=EXAMPLES/small_adjoint_multiple_sources/ ;;
   *) dir=EXAMPLES/homogeneous_halfspace/ ;;
 esac
 
@@ -547,6 +548,18 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.regular_elements\\r'
+
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.small_adjoint\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
+  ##
+  ## testing regular elements example
+  ##
+  cd EXAMPLES/small_adjoint_multiple_sources/
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  ./run_this_example.sh
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.small_adjoint\\r'
 
 
 ##
