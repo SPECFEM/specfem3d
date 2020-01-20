@@ -110,12 +110,14 @@
   if (SIMULATION_TYPE == 2) deallocate(hpxir_store,hpetar_store,hpgammar_store)
   ! adjoint sources
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
-    if (SIMULATION_TYPE == 2) then
-      deallocate(number_adjsources_global)
-      deallocate(hxir_adjstore,hetar_adjstore,hgammar_adjstore)
-    else
-      nullify(number_adjsources_global)
-      nullify(hxir_adjstore,hetar_adjstore,hgammar_adjstore)
+    if (nadj_rec_local > 0) then
+      if (SIMULATION_TYPE == 2) then
+        deallocate(number_adjsources_global)
+        deallocate(hxir_adjstore,hetar_adjstore,hgammar_adjstore)
+      else
+        nullify(number_adjsources_global)
+        nullify(hxir_adjstore,hetar_adjstore,hgammar_adjstore)
+      endif
     endif
   endif
   ! seismograms
