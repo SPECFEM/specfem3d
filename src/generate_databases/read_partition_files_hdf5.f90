@@ -39,7 +39,6 @@
   integer :: num_moho
   integer :: i,j,count,error
 
-  character(len=128) :: IIN_database_hdf5
 
   ! group names
   character(len=14) :: material_gname = "material_props"
@@ -79,7 +78,7 @@
 
   call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
   call h5_open_file_p(h5)
- 
+
 ! read physical properties of the materials at first
 ! as this group is only out side of prop_n groups
 ! added poroelastic properties and filled with 0 the last 10 entries for elastic/acoustic
@@ -98,18 +97,18 @@
   nmat_ext_mesh = attr_data(1)
   ! read data mat_prop
   ! allocate array for nodes coords
-  allocate(mat_prop(17,nmat_ext_mesh),stat=ier)
+  allocate(materials_ext_mesh(16,nmat_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 585')
   if (ier /= 0) stop 'Error allocating array mat_prop'
-  mat_prop(:,:) = 0.d0
-  call h5_read_dataset_p_2d_d(h5, dsetname, mat_prop)
+  materials_ext_mesh(:,:) = 0.d0
+  call h5_read_dataset_p_2d_d(h5, dsetname, materials_ext_mesh)
 
   if (myrank == 0) then
     write(IMAIN,*) 'defined materials    : ',nmat_ext_mesh
   endif
   call synchronize_all()
 
- 
+
   ! open dataset undef_mat_prop
   ! read attribute  nundefMat_ext_mesh
   dsetname = "undef_mat_prop"
@@ -150,7 +149,7 @@
   !
   ! read nnodes_ext_mesh and nodes_coords_ext_mesh
   !
- 
+
   ! open dataset glob2loc_nodes
   ! get attribute nnodes_ext_mesh
   !dsetname = "glob2loc_nodes"
@@ -173,11 +172,11 @@
   endif
   call synchronize_all()
 
- 
+
   !
   ! read element indexing, nelmnts_ext_mesh and mat_ext_mesh
   !
- 
+
   ! open dataset elm_conn
   ! read attribute nspec_local == nelmnts_ext_mesh
   !dsetname = "elm_conn"
@@ -200,7 +199,7 @@
   ! open and read dataset mat_mesh == mat_ext_mesh
   dsetname = "mat_mesh"
   call h5_read_dataset_p_2d_i(h5, dsetname, mat_ext_mesh)
- 
+
   NSPEC_AB = nelmnts_ext_mesh
 
   call sum_all_i(nspec_ab,num)
@@ -225,7 +224,7 @@
   nspec2D_top_ext    = dset_n_bound(6)
   NSPEC2D_BOTTOM     = nspec2D_bottom_ext
   NSPEC2D_TOP        = nspec2D_top_ext
- 
+
 ! memory arrocation
   allocate(ibelm_xmin(nspec2D_xmin),nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 589')
@@ -267,7 +266,7 @@
   nodes_ibelm_top    = dset_alloc(2:NGNOD2D+1,sum(dset_n_bound(1:5))+1:sum(dset_n_bound(1:6)))
 
   deallocate(dset_alloc)
- 
+
   call sum_all_i(nspec2D_xmin,num_xmin)
   call sum_all_i(nspec2D_xmax,num_xmax)
   call sum_all_i(nspec2D_ymin,num_ymin)
@@ -285,7 +284,7 @@
   endif
   call synchronize_all()
 
- 
+
 !
 ! read cpml conditions
 !
@@ -387,14 +386,14 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array dset_dim_alloc_1d')
     if (ier /= 0) stop 'Error allocating array dset_dim_alloc_1d'
     call h5_read_dataset_p_1d_i(h5, dsetname, dset_alloc_1d)
-  
+
     ! read num_interfaces_ext_mesh
     num_interfaces_ext_mesh     = dset_alloc_1d(1)
     ! read max_interface_size_ext_mesh
     max_interface_size_ext_mesh = dset_alloc_1d(2)
 
     deallocate(dset_alloc_1d)
-  
+
   else
     num_interfaces_ext_mesh = 0
     max_interface_size_ext_mesh = 0
@@ -418,23 +417,25 @@
   if (ier /= 0) stop 'Error allocating array nibool_interfaces_ext_mesh'
 
   ! read my_neighbors_ext_mesh and my_nelmnts_neighbors_ext_mesh
-  dsetname = "my_nb_interfaces"
-  allocate(dset_alloc(2, num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array my_nb_interfaces')
-  if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
-  call h5_read_dataset_p_2d_i(h5, dsetname, dset_alloc)
+  if (NPROC > 1) then
+    dsetname = "my_nb_interfaces"
+    allocate(dset_alloc(2, num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array my_nb_interfaces')
+    if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
+    call h5_read_dataset_p_2d_i(h5, dsetname, dset_alloc)
 
-  my_neighbors_ext_mesh         = dset_alloc(1,:)
-  my_nelmnts_neighbors_ext_mesh = dset_alloc(2,:)
+    my_neighbors_ext_mesh         = dset_alloc(1,:)
+    my_nelmnts_neighbors_ext_mesh = dset_alloc(2,:)
 
-  deallocate(dset_alloc)
+    deallocate(dset_alloc)
 
-  ! read my_interfaces_ext_mesh
-  dsetname = "my_interfaces"
-  allocate(dset_alloc(6, sum(my_nelmnts_neighbors_ext_mesh(:))),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array my_nb_interfaces')
-  if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
-  call h5_read_dataset_p_2d_i(h5, dsetname, dset_alloc)
+    ! read my_interfaces_ext_mesh
+    dsetname = "my_interfaces"
+    allocate(dset_alloc(6, sum(my_nelmnts_neighbors_ext_mesh(:))),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array my_nb_interfaces')
+    if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
+    call h5_read_dataset_p_2d_i(h5, dsetname, dset_alloc)
+  endif
 
   ! loops over MPI interfaces with other partitions
   count = 1
@@ -461,15 +462,15 @@
       count = count + 1
     enddo
   enddo
- 
-  deallocate(dset_alloc)
- 
+
+  if (NPROC > 1) deallocate(dset_alloc)
+
   call sum_all_i(num_interfaces_ext_mesh,num)
   if (myrank == 0) then
     write(IMAIN,*) 'number of MPI partition interfaces: ',num
   endif
   call synchronize_all()
- 
+
   ! optional moho
   if (SAVE_MOHO_MESH) then
     ! checks if additional line exists
@@ -506,7 +507,7 @@
       write(IMAIN,*) 'moho surfaces: ',num_moho
     endif
     call synchronize_all()
-  
+
   else
     ! allocate dummy array
     nspec2D_moho_ext = 0
@@ -519,5 +520,5 @@
   call h5_close_group(h5)
   call h5_close_file(h5)
   call h5_destructor(h5)
- 
+
   end subroutine read_partition_files_hdf5

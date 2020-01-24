@@ -35,12 +35,12 @@
                             nspec_CPML,CPML_to_spec,CPML_regions,is_CPML, &
                             xstore, ystore, zstore)
 
-  use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,SAVE_MESH_AS_CUBIT,NDIM,myrank
+  use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,SAVE_MESH_AS_CUBIT,NDIM
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NUMBER_OF_MATERIAL_PROPERTIES
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,NGNOD,NGNOD2D,LOCAL_PATH
 
-  use meshfem3d_par, only: NPROC
+  use meshfem3d_par, only: NPROC, myrank
 
   use phdf5_utils
   use my_mpi
@@ -84,7 +84,7 @@
   ! first dimension  : material_id
   ! second dimension : #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
   double precision , dimension(NMATERIALS,NUMBER_OF_MATERIAL_PROPERTIES) :: material_properties
-  double precision , dimension(17,NMATERIALS) :: mat_prop
+  double precision , dimension(16,NMATERIALS) :: mat_prop
 
 
   ! CPML
@@ -93,7 +93,6 @@
   logical, dimension(nspec), intent(in) :: is_CPML
   integer :: nspec_CPML_total,ispec_CPML
 
-  double precision , dimension(17) :: matpropl
   integer :: i,ispec,iglob,ier
 
   ! name of the database files
@@ -128,12 +127,12 @@
   character(len=10) :: tempstr
   character(len=64) :: group_name
   character(len=64) :: dset_name, attrname
- 
+
   ! material
   ! for attribute count_def_mat and count_undef_mat
   character(len=13)              :: m_aname = "count_def_mat"
   character(len=15)              :: u_aname = "count_undef_mat"
- 
+
   ! for dataset mat_prop, undef_mat_prop
   character(len=40)              :: mdsetname = "mat_prop"
   character(len=40)              :: udsetname = "undef_mat_prop"
@@ -458,7 +457,7 @@
   ! create a dataset for nspec_cpml and nspec_cpml_local
   dset_name = "nspec_cpml_globloc"
   call h5_write_dataset_p_1d_i(h5, dset_name, ncpmls)
- 
+
 
 
 
@@ -524,6 +523,7 @@
     ! allocate tempral array size
     allocate(num_neighbors_elmnts(2,nb_interfaces),stat=ier)
     if (ier /= 0) stop 'Error allocating array num_neighbors_elmnts'
+
     allocate(neighbors_elmnts(6, sum(nspec_interface(:))))
     if (ier /= 0) stop 'Error allocating array neighbors_elmnts'
 
@@ -666,25 +666,25 @@
       enddo
     endif
 
+    ! write my_nb_interfaces
+    dset_name = "my_nb_interfaces"
+    call h5_write_dataset_p_2d_i(h5, dset_name, num_neighbors_elmnts)
+
+    ! write my_interfaces
+    dset_name = "my_interfaces"
+    call h5_write_dataset_p_2d_i(h5, dset_name, neighbors_elmnts)
+
+    deallocate(num_neighbors_elmnts, neighbors_elmnts)
   else
 
     ! only one slice, no MPI interfaces
     num_interface_and_max = (/0, 0/)
- 
+
   endif
 
   dset_name = "my_ninterface_and_max"
   call h5_write_dataset_p_1d_i(h5, dset_name, num_interface_and_max)
 
-  ! write my_nb_interfaces
-  dset_name = "my_nb_interfaces"
-  call h5_write_dataset_p_2d_i(h5, dset_name, num_neighbors_elmnts)
-
-  ! write my_interfaces
-  dset_name = "my_interfaces"
-  call h5_write_dataset_p_2d_i(h5, dset_name, neighbors_elmnts)
- 
-  deallocate(num_neighbors_elmnts, neighbors_elmnts)
 
   call synchronize_all()
   call h5_close_file(h5)
