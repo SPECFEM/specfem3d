@@ -214,11 +214,11 @@ subroutine do_io_start_idle()
     call idle_mpi_io(status)
 
     ! debug output
-    print *,                 "msg: " , status(MPI_TAG) , " send/recv rank: ", status(MPI_SOURCE), "/",myrank, &
-              "  counters, seismo: " , rec_count_seismo, "/"      , n_recv_msg_seismo,  &
-                          ", surf: " , rec_count_surf  , "/"      , n_recv_msg_surf,    &
-                          ", shake: ", rec_count_shake , "/"      , n_recv_msg_shake,   &
-                          ", vol: "  , rec_count_vol   , "/"      , n_recv_msg_vol
+!    print *,                 "msg: " , status(MPI_TAG) , " send/recv rank: ", status(MPI_SOURCE), "/",myrank, &
+!              "  counters, seismo: " , rec_count_seismo, "/"      , n_recv_msg_seismo,  &
+!                          ", surf: " , rec_count_surf  , "/"      , n_recv_msg_surf,    &
+!                          ", shake: ", rec_count_shake , "/"      , n_recv_msg_shake,   &
+!                          ", vol: "  , rec_count_vol   , "/"      , n_recv_msg_vol
 
     !
     ! receive seismograms
@@ -507,25 +507,15 @@ subroutine wait_vol_recv()
   integer :: i
 
   do i = 0, nproc_io-1
-print *, "111"
     if (vd_pres(i)%req    /= VAL_NOT_ASSIGNED) call wait_req(vd_pres(i)%req)
- print *, "222 io side",vd_divglob(i)%req
     if (vd_divglob(i)%req /= VAL_NOT_ASSIGNED) call wait_req(vd_divglob(i)%req)
- print *, "333"
     if (vd_div(i)%req     /= VAL_NOT_ASSIGNED) call wait_req(vd_div(i)%req)
- print *, "444"
     if (vd_curlx(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_curlx(i)%req)
- print *, "555"
     if (vd_curly(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_curly(i)%req)
- print *, "666"
     if (vd_curlz(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_curlz(i)%req)
- print *, "777"
     if (vd_velox(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_velox(i)%req)
- print *, "888"
     if (vd_veloy(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_veloy(i)%req)
- print *, "999"
     if (vd_veloz(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_veloz(i)%req)
- print *, "101010"
   enddo
 
 end subroutine wait_vol_recv
