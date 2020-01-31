@@ -125,8 +125,6 @@ module decompose_mesh_par
 
   integer, parameter :: IIN_database = 15
 
-  character(len=MAX_STRING_LEN) :: IIN_database_hdf5
-
   ! LTS simulations
   ! element p-refinement values (like 1 2 4 8 ..; p == 1 being coarsest, p == 8 finer local time step dt/p )
   integer,dimension(:),allocatable :: ispec_p_refine

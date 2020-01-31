@@ -331,10 +331,10 @@ subroutine wmo_movie_volume_output_h5()
   implicit none
 
   ! local parameters
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB)               :: d_p
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB)               :: d_p,div_glob
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: veloc_element
   ! divergence and curl only in the global nodes
-  real(kind=CUSTOM_REAL),dimension(:),allocatable          :: div_glob
+!  real(kind=CUSTOM_REAL),dimension(:),allocatable          :: div_glob
   integer,dimension(:),allocatable                         :: valence
   integer                                                  :: ispec,ier,iglob,req
   character(len=3)                                         :: channel
@@ -390,8 +390,8 @@ subroutine wmo_movie_volume_output_h5()
 
   if (ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
     ! allocate array for global points
-    allocate(div_glob(NGLOB_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2004')
+!    allocate(div_glob(NGLOB_AB),stat=ier)
+!    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2004')
     allocate(valence(NGLOB_AB), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2005')
     if (ier /= 0) stop 'error allocating arrays for movie div and curl'
@@ -420,7 +420,8 @@ subroutine wmo_movie_volume_output_h5()
                               ispec_is_poroelastic)
     endif ! poroelastic
 
-    deallocate(div_glob,valence)
+!    deallocate(div_glob,valence)
+    deallocate(valence)
 
     ! div and curl on elemental level
     ! writes our divergence

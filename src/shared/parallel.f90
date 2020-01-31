@@ -1274,6 +1274,29 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine irecvv_cr_inter(recvbuf, recvcount, dest, recvtag, req)
+
+  use my_mpi
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  include "precision.h"
+
+  integer :: recvcount,dest,recvtag,req
+  real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
+
+  integer :: ier
+
+  call MPI_IRECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag, &
+                my_local_mpi_comm_inter,req,ier)
+
+  end subroutine irecvv_cr_inter
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 
 !  subroutine recv_singlei(recvbuf, dest, recvtag)
 !  end subroutine recv_singlei

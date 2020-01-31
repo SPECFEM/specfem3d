@@ -99,6 +99,9 @@ module constants
   ! number of computer nodes sending info to each io node
   integer :: nproc_io
 
+  ! store HDF5 output file name
+  character(len=MAX_STRING_LEN) :: IIN_database_hdf5
+
 end module constants
 
 !

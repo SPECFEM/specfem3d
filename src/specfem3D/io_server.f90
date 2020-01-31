@@ -34,8 +34,9 @@ module io_server
   character(len=64) :: fname_xdmf_vol_step = ""
   character(len=64) :: fname_xdmf_shake    = ""
 
+  integer, parameter :: VAL_NOT_ASSIGNED = 9999999
   type vol_data_dump
-    integer :: glob_rank
+    integer :: req=VAL_NOT_ASSIGNED
     real(kind=CUSTOM_REAL), dimension(:), allocatable :: d1darr
   end type vol_data_dump
 
@@ -117,47 +118,47 @@ subroutine do_io_start_idle()
 
   ! vars volumne movie
   integer                       :: rec_count_vol=0, n_recv_msg_vol=0, vol_out_count=0, max_vol_out=0
-  integer, dimension(0:NPROC-1) :: nelm_par_proc, nglob_par_proc ! storing the number of elements and gll nodes 
+  integer, dimension(0:NPROC-1) :: nelm_par_proc, nglob_par_proc ! storing the number of elements and gll nodes
   logical, dimension(5)         :: val_type_mov ! true if movie file will be created, (pressure, div_glob, div, curlxyz, velocity_xyz)
 
   ! prepare for receiving message from write_seismograms
   print *, "io node rank:", myrank," is waiting for the first message"
 
   !
-  ! initialization seismo 
+  ! initialization seismo
   !
 
   if (myrank == 0) then
     ! get receiver info from compute nodes
     call get_receiver_info(islice_num_rec_local)
-   
+
     ! initialize output file for seismo
     call do_io_seismogram_init()
-  
-    ! count the number of procs having receivers (n_procs_with_rec) 
+
+    ! count the number of procs having receivers (n_procs_with_rec)
     ! and the number of receivers on each procs (islice...)
-    call count_nprocs_with_recs(islice_num_rec_local) 
-  
+    call count_nprocs_with_recs(islice_num_rec_local)
+
     ! check the seismo types to be saved
     call count_seismo_type()
-   
+
     ! allocate temporal arrays for seismo signals
     call allocate_seismo_arrays(islice_num_rec_local)
-   
+
     ! initialize receive count
     ! count the number of messages being sent
     n_recv_msg_seismo = n_procs_with_rec*n_msg_seismo_each_proc*n_seismo_type
-  
+
     if (NTSTEP_BETWEEN_OUTPUT_SEISMOS < NSTEP) then
       max_seismo_out = int(NSTEP/NTSTEP_BETWEEN_OUTPUT_SEISMOS)
       if (mod(NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS) /= 0) max_seismo_out = max_seismo_out+1
     else
       max_seismo_out = 1
     endif
-  
-    ! receive the global id of received 
+
+    ! receive the global id of received
     call recv_id_rec(islice_num_rec_local)
-  
+
     !
     ! initialize surface movie
     !
@@ -167,7 +168,7 @@ subroutine do_io_start_idle()
         n_recv_msg_surf = n_msg_surf_each_proc*NPROC
         print *, "surf move init done"
         call write_xdmf_surface_header()
-  
+
         max_surf_out = int(NSTEP/NTSTEP_BETWEEN_FRAMES)
       endif
     !
@@ -212,21 +213,21 @@ subroutine do_io_start_idle()
     ! waiting for a mpi message
     call idle_mpi_io(status)
 
-!    ! debug output
-!    print *,                 "msg: " , status(MPI_TAG) , " send/recv rank: ", status(MPI_SOURCE), "/",myrank, &
-!              "  counters, seismo: " , rec_count_seismo, "/"      , n_recv_msg_seismo,  &
-!                          ", surf: " , rec_count_surf  , "/"      , n_recv_msg_surf,    &
-!                          ", shake: ", rec_count_shake , "/"      , n_recv_msg_shake,   &
-!                          ", vol: "  , rec_count_vol   , "/"      , n_recv_msg_vol
+    ! debug output
+    print *,                 "msg: " , status(MPI_TAG) , " send/recv rank: ", status(MPI_SOURCE), "/",myrank, &
+              "  counters, seismo: " , rec_count_seismo, "/"      , n_recv_msg_seismo,  &
+                          ", surf: " , rec_count_surf  , "/"      , n_recv_msg_surf,    &
+                          ", shake: ", rec_count_shake , "/"      , n_recv_msg_shake,   &
+                          ", vol: "  , rec_count_vol   , "/"      , n_recv_msg_vol
 
     !
     ! receive seismograms
     !
 
-    if (status(MPI_TAG) == io_tag_seismo_body_disp .or. & 
-        status(MPI_TAG) == io_tag_seismo_body_velo .or. & 
-        status(MPI_TAG) == io_tag_seismo_body_acce .or. & 
-        status(MPI_TAG) == io_tag_seismo_body_pres      & 
+    if (status(MPI_TAG) == io_tag_seismo_body_disp .or. &
+        status(MPI_TAG) == io_tag_seismo_body_velo .or. &
+        status(MPI_TAG) == io_tag_seismo_body_acce .or. &
+        status(MPI_TAG) == io_tag_seismo_body_pres      &
     ) then
       call recv_seismo_data(status,islice_num_rec_local,rec_count_seismo)
       rec_count_seismo = rec_count_seismo+1
@@ -306,6 +307,8 @@ subroutine do_io_start_idle()
 
     ! write volume movie
     if (MOVIE_VOLUME .and. rec_count_vol  == n_recv_msg_vol) then
+      ! wait all vol data are reached
+      call wait_vol_recv()
 
       ! write dumped vol data
       call write_vol_data(it_io,val_type_mov)
@@ -340,9 +343,9 @@ subroutine do_io_start_idle()
     endif
 
   enddo
-  ! 
-  !  end of idling loop 
-  ! 
+  !
+  !  end of idling loop
+  !
 
   ! deallocate arrays
 !  call deallocate_arrays()
@@ -365,7 +368,7 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
 
   integer :: iproc, count=0, id_glob, comm, info
 
-  integer, dimension(0:NPROC-1), intent(inout) :: nelm_par_proc, nglob_par_proc ! storing the number of elements and gll nodes 
+  integer, dimension(0:NPROC-1), intent(inout) :: nelm_par_proc, nglob_par_proc ! storing the number of elements and gll nodes
 
   ! make output file
   character(len=64) :: group_name
@@ -385,7 +388,7 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
   ! initialize h5 object
   call h5_init(h5, fname_h5_data_vol)
   call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
- 
+
   ! create a hdf5 file
   call h5_create_file(h5)
   call h5_close_file(h5)
@@ -398,7 +401,7 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
   ! make an array of global2local relation of sending compute node ids
   allocate(id_proc_glob2loc(0:NPROC-1))
   id_proc_glob2loc(:) = -999999
- 
+
   do iproc = 0, NPROC-1
     if(mod(iproc,NIONOD)==myrank) then
       id_proc_loc2glob(count) = iproc
@@ -423,7 +426,7 @@ subroutine recv_vol_data(status, rec_count_vol, it_io, val_type_mov)
   use specfem_par
   use my_mpi
   implicit none
-  
+
   integer, intent(in)                  :: status(MPI_STATUS_SIZE)
   integer, intent(in)                  :: rec_count_vol,it_io
   logical, dimension(5), intent(inout) :: val_type_mov
@@ -452,46 +455,80 @@ subroutine recv_vol_data(status, rec_count_vol, it_io, val_type_mov)
     val_type_mov(1) = .true.
     if(if_aloc) allocate(vd_pres(sender_loc)%d1darr(msgsize),stat=ier)
     vd_pres(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_pres(sender_loc)%d1darr,msgsize,sender_glob,tag)
+    call irecvv_cr_inter(vd_pres(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_pres(sender_loc)%req)
   elseif (tag == io_tag_vol_divglob) then
     val_type_mov(2) = .true.
-    if(if_aloc) allocate(vd_divglob(sender_loc)%d1darr(msgsize),stat=ier)
+  if(if_aloc) allocate(vd_divglob(sender_loc)%d1darr(msgsize),stat=ier)
     vd_divglob(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_divglob(sender_loc)%d1darr,msgsize,sender_glob,tag)
+    call irecvv_cr_inter(vd_divglob(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_divglob(sender_loc)%req)
   elseif (tag == io_tag_vol_div) then
     val_type_mov(3) = .true.
     if(if_aloc) allocate(vd_div(sender_loc)%d1darr(msgsize),stat=ier)
     vd_div(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_div(sender_loc)%d1darr,msgsize,sender_glob,tag)
+    ! #BUG: cannot receive the array when using single proc
+    call irecvv_cr_inter(vd_div(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_div(sender_loc)%req)
   elseif (tag == io_tag_vol_curlx) then
     val_type_mov(4) = .true.
     if(if_aloc) allocate(vd_curlx(sender_loc)%d1darr(msgsize),stat=ier)
     vd_curlx(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_curlx(sender_loc)%d1darr,msgsize,sender_glob,tag)
+    call irecvv_cr_inter(vd_curlx(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_curlx(sender_loc)%req)
   elseif (tag == io_tag_vol_curly) then
     if(if_aloc) allocate(vd_curly(sender_loc)%d1darr(msgsize),stat=ier)
     vd_curly(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_curly(sender_loc)%d1darr,msgsize,sender_glob,tag)
+    call irecvv_cr_inter(vd_curly(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_curly(sender_loc)%req)
   elseif (tag == io_tag_vol_curlz) then
     if(if_aloc) allocate(vd_curlz(sender_loc)%d1darr(msgsize),stat=ier)
     vd_curlz(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_curlz(sender_loc)%d1darr,msgsize,sender_glob,tag)
+    call irecvv_cr_inter(vd_curlz(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_curlz(sender_loc)%req)
   elseif (tag == io_tag_vol_velox) then
     val_type_mov(5) = .true.
     if(if_aloc) allocate(vd_velox(sender_loc)%d1darr(msgsize),stat=ier)
     vd_velox(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_velox(sender_loc)%d1darr,msgsize,sender_glob,tag)
+    call irecvv_cr_inter(vd_velox(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_velox(sender_loc)%req)
   elseif (tag == io_tag_vol_veloy) then
     if(if_aloc) allocate(vd_veloy(sender_loc)%d1darr(msgsize),stat=ier)
     vd_veloy(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_veloy(sender_loc)%d1darr,msgsize,sender_glob,tag)
+    call irecvv_cr_inter(vd_veloy(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_veloy(sender_loc)%req)
   elseif (tag == io_tag_vol_veloz) then
     if(if_aloc) allocate(vd_veloz(sender_loc)%d1darr(msgsize),stat=ier)
     vd_veloz(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call recvv_cr_inter(vd_veloz(sender_loc)%d1darr,msgsize,sender_glob,tag)
+    call irecvv_cr_inter(vd_veloz(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_veloz(sender_loc)%req)
   endif
 
 end subroutine recv_vol_data
+
+
+subroutine wait_vol_recv()
+  use io_server
+  use my_mpi
+  use constants, only: nproc_io
+  implicit none
+
+  integer :: i
+
+  do i = 0, nproc_io-1
+print *, "111"
+    if (vd_pres(i)%req    /= VAL_NOT_ASSIGNED) call wait_req(vd_pres(i)%req)
+ print *, "222 io side",vd_divglob(i)%req
+    if (vd_divglob(i)%req /= VAL_NOT_ASSIGNED) call wait_req(vd_divglob(i)%req)
+ print *, "333"
+    if (vd_div(i)%req     /= VAL_NOT_ASSIGNED) call wait_req(vd_div(i)%req)
+ print *, "444"
+    if (vd_curlx(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_curlx(i)%req)
+ print *, "555"
+    if (vd_curly(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_curly(i)%req)
+ print *, "666"
+    if (vd_curlz(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_curlz(i)%req)
+ print *, "777"
+    if (vd_velox(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_velox(i)%req)
+ print *, "888"
+    if (vd_veloy(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_veloy(i)%req)
+ print *, "999"
+    if (vd_veloz(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_veloz(i)%req)
+ print *, "101010"
+  enddo
+
+end subroutine wait_vol_recv
 
 
 subroutine write_vol_data(it_io, val_type_mov)
@@ -519,16 +556,16 @@ subroutine write_vol_data(it_io, val_type_mov)
   ! initialization of h5 file
   call h5_init(h5, fname_h5_data_vol)
   call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
-  
+
   ! create a hdf5 file
   call h5_open_file(h5)
- 
+
   ! create time group in h5
   write(tempstr, "(i6.6)") it_io
   group_name = "it_"//tempstr
   call h5_create_group(h5, group_name)
   call h5_open_group(h5, group_name)
- 
+
   ! loop to write the volume data for each process
   do i = 0, NPROC-1
 
@@ -549,17 +586,17 @@ subroutine write_vol_data(it_io, val_type_mov)
             dset_name = "pressure"
             call h5_write_dataset_1d_d(h5, dset_name, vd_pres(id_loc)%d1darr)
             call h5_close_dataset(h5)
- 
+
           elseif (j==2) then
             dset_name = "div_glob"
             call h5_write_dataset_1d_d(h5, dset_name, vd_divglob(id_loc)%d1darr)
             call h5_close_dataset(h5)
- 
+
           elseif (j==3) then
             dset_name = "div"
             call h5_write_dataset_1d_d(h5, dset_name, vd_div(id_loc)%d1darr)
             call h5_close_dataset(h5)
- 
+
           elseif (j==4) then
             dset_name = "curl_x"
             call h5_write_dataset_1d_d(h5, dset_name, vd_curlx(id_loc)%d1darr)
@@ -581,7 +618,7 @@ subroutine write_vol_data(it_io, val_type_mov)
             dset_name = "velo_y"
             call h5_write_dataset_1d_d(h5, dset_name, vd_veloy(id_loc)%d1darr)
             call h5_close_dataset(h5)
- 
+
             dset_name = "velo_z"
             call h5_write_dataset_1d_d(h5, dset_name, vd_veloz(id_loc)%d1darr)
             call h5_close_dataset(h5)
@@ -615,7 +652,7 @@ subroutine shakemap_init(nfaces_perproc, surface_offset)
   integer                                   :: ier, len_array_aug
   character(len=64)                         :: dset_name
   character(len=64)                         :: group_name
- 
+
   type(h5io) :: h5
   h5 = h5io()
 
@@ -637,11 +674,11 @@ subroutine shakemap_init(nfaces_perproc, surface_offset)
     allocate(shake_uz_aug(len_array_aug),stat=ier)
   endif
 
-  ! write xyz coords in h5 
+  ! write xyz coords in h5
   group_name = "surf_coord"
   call h5_create_group(h5, group_name)
   call h5_open_group(h5, group_name)
- 
+
   if (.not. USE_HIGHRES_FOR_MOVIES) then
     dset_name = "x"
     call h5_write_dataset_1d_d(h5, dset_name, surf_x)
@@ -672,7 +709,7 @@ end subroutine shakemap_init
 subroutine recv_shake_data(status, nfaces_perproc, surface_offset)
   use io_server
   use my_mpi
-  use specfem_par  
+  use specfem_par
   implicit none
 
   integer, dimension(0:NPROC-1), intent(in)         :: nfaces_perproc, surface_offset
@@ -772,7 +809,7 @@ subroutine surf_mov_init(nfaces_perproc, surface_offset)
   integer                                           :: len_array_aug
   character(len=64)                                 :: dset_name
   character(len=64)                                 :: group_name
-  
+
   type(h5io) :: h5
   h5 = h5io()
 
@@ -817,7 +854,7 @@ subroutine surf_mov_init(nfaces_perproc, surface_offset)
   ! z
   call recvv_cr_inter(surf_z, size_surf_array, 0, io_tag_surface_z)
 
-  ! write xyz coords in h5 
+  ! write xyz coords in h5
   group_name = "surf_coord"
   call h5_create_group(h5, group_name)
   call h5_open_group(h5, group_name)
@@ -859,7 +896,7 @@ end subroutine surf_mov_init
 subroutine recv_surf_data(status, nfaces_perproc, surface_offset)
   use io_server
   use my_mpi
-  use specfem_par  
+  use specfem_par
   implicit none
 
   integer, dimension(0:NPROC-1), intent(in)         :: nfaces_perproc, surface_offset
@@ -869,13 +906,13 @@ subroutine recv_surf_data(status, nfaces_perproc, surface_offset)
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: temp_array
   sender = status(MPI_SOURCE)
   tag    = status(MPI_TAG)
-  
+
   allocate(temp_array(nfaces_perproc(sender)), stat=ier)
   temp_array(:) = 0._CUSTOM_REAL
   call get_size_msg(status, msgsize)
- 
+
   call recvv_cr_inter(temp_array,nfaces_perproc(sender),sender,tag)
- 
+
   if (tag == io_tag_surface_ux) then
     do i = 1, size(temp_array)
       surf_ux(i+surface_offset(sender)) = temp_array(i)
@@ -889,7 +926,7 @@ subroutine recv_surf_data(status, nfaces_perproc, surface_offset)
       surf_uz(i+surface_offset(sender)) = temp_array(i)
     enddo
   endif
- 
+
   deallocate(temp_array, stat=ier)
 
 end subroutine recv_surf_data
@@ -949,9 +986,9 @@ subroutine write_surf_io(it_io)
 
 end subroutine write_surf_io
 
-! 
+!
 ! seismo
-! 
+!
 
 subroutine get_receiver_info(islice_num_rec_local)
   use specfem_par
@@ -962,13 +999,13 @@ subroutine get_receiver_info(islice_num_rec_local)
   integer                      :: ier, iproc, nrec_local_temp
   integer, dimension(1)        :: nrec_temp
   integer,dimension(0:NPROC-1) :: islice_num_rec_local
- 
+
 
   call recv_i_inter(nrec_temp, 1, 0, io_tag_num_recv)
   nrec = nrec_temp(1)
 
   call recv_dp_inter(t0, 1, 0, io_tag_seismo_tzero)
- 
+
   do iproc = 0, NPROC-1
     call recv_i_inter(nrec_local_temp, 1, iproc, io_tag_local_rec)
     islice_num_rec_local(iproc) = nrec_local_temp
@@ -1116,7 +1153,7 @@ subroutine recv_id_rec(islice_num_rec_local)
 
   integer :: sender
   integer, dimension(0:NPROC-1), intent(in) :: islice_num_rec_local
- 
+
   do sender = 0, NPROC-1
     if (islice_num_rec_local(sender) /= 0) then
       call recv_i_inter(id_rec_globs(:,sender), size(id_rec_globs(:,sender)), sender, io_tag_seismo_ids_rec)
@@ -1200,7 +1237,7 @@ subroutine count_nprocs_with_recs(islice_num_rec_local)
 
   integer, dimension(0:NPROC-1) :: islice_num_rec_local
   integer                       :: irec, iproc
-  
+
   do iproc = 0, NPROC-1
     if (islice_num_rec_local(iproc) > 0) &
       n_procs_with_rec = n_procs_with_rec+1
@@ -1244,7 +1281,7 @@ subroutine do_io_seismogram_init()
 
   ! create time dataset it = 1 ~ NSTEP
   do i = 1, NSTEP
-    if (SIMULATION_TYPE == 1) then ! forward simulation ! distinguish between single and double precision for reals 
+    if (SIMULATION_TYPE == 1) then ! forward simulation ! distinguish between single and double precision for reals
       time_array(i) = real( dble(i-1)*DT - t0 ,kind=CUSTOM_REAL)
     else if (SIMULATION_TYPE == 3) then
       ! adjoint simulation: backward/reconstructed wavefields
@@ -1270,7 +1307,7 @@ subroutine do_io_seismogram_init()
   enddo
   ! closes output file
   close(IOUT_SU)
-  
+
   ! coordination
   call h5_write_dataset_2d_r_no_group(h5, "coords", rec_coords)
   call h5_close_dataset(h5)
@@ -1285,7 +1322,7 @@ subroutine do_io_seismogram_init()
 
   ! prepare datasets for physical values
   if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
-    allocate(val_array3d(NDIM,nrec,NSTEP),stat=error) 
+    allocate(val_array3d(NDIM,nrec,NSTEP),stat=error)
     call h5_create_dataset_gen(h5, "disp", shape(val_array3d), 3, CUSTOM_REAL)
     deallocate(val_array3d)
   endif
@@ -1365,7 +1402,7 @@ subroutine write_xdmf_surface_header()
   use io_server
   implicit none
   integer :: num_elm, num_nodes
-  
+
   if (.not. USE_HIGHRES_FOR_MOVIES) then
     num_nodes = size(surf_x)
   else
@@ -1404,7 +1441,7 @@ subroutine write_xdmf_surface_header()
   write(xdmf_surf,*) '  </Domain>'
   write(xdmf_surf,*) '</Xdmf>'
   ! 20 lines
-  
+
   ! position where the additional data will be inserted
   surf_xdmf_pos = 17
 
@@ -1416,7 +1453,7 @@ end subroutine write_xdmf_surface_header
 subroutine write_xdmf_surface_body(it_io)
   use specfem_par
   use io_server
- 
+
   implicit none
 
   integer, intent(in) :: it_io
@@ -1426,7 +1463,7 @@ subroutine write_xdmf_surface_body(it_io)
   character(len=20)  :: temp_str
 
   integer :: num_nodes
-  
+
   if (.not. USE_HIGHRES_FOR_MOVIES) then
     num_nodes = size(surf_x)
   else
@@ -1434,7 +1471,7 @@ subroutine write_xdmf_surface_body(it_io)
   endif
 
   ! create a group for each io step
- 
+
   ! open xdmf file
   open(unit=xdmf_surf, file=fname_xdmf_surf)
 
@@ -1463,7 +1500,7 @@ subroutine write_xdmf_surface_body(it_io)
   write(xdmf_surf,*) '  <Attribute Name="uz" AttributeType="Scalar" Center="Node">'
   write(xdmf_surf,*) '     <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
-  write(xdmf_surf,*) '       ./DATABASES_MPI/movie_surface.h5:/it_'//trim(it_str)//'/uz'
+  write(xdmf_surf,*) '      ./DATABASES_MPI/movie_surface.h5:/it_'//trim(it_str)//'/uz'
   write(xdmf_surf,*) '     </DataItem>'
   write(xdmf_surf,*) '  </Attribute>'
   write(xdmf_surf,*) '</Grid>'
@@ -1483,7 +1520,7 @@ subroutine write_xdmf_shakemap()
   use io_server
   implicit none
   integer :: num_elm, num_nodes
-  
+
   if (.not. USE_HIGHRES_FOR_MOVIES) then
     num_nodes = size(surf_x)
   else
@@ -1538,7 +1575,7 @@ subroutine write_xdmf_shakemap()
   write(xdmf_shake,*) '  </Grid>'
   write(xdmf_shake,*) '  </Domain>'
   write(xdmf_shake,*) '</Xdmf>'
-  
+
 
   close(xdmf_shake)
 
@@ -1558,7 +1595,7 @@ subroutine write_xdmf_vol_header(nelm_par_proc,nglob_par_proc)
   fname_xdmf_vol = trim(OUTPUT_FILES)//"/movie_volume.xmf"
 
   open(unit=xdmf_vol, file=fname_xdmf_vol)
- 
+
   ! definition of topology and geometry
   ! refer only control nodes (8 or 27) as a coarse output
   ! data array need to be extracted from full data array on gll points
@@ -1570,7 +1607,7 @@ subroutine write_xdmf_vol_header(nelm_par_proc,nglob_par_proc)
   write(xdmf_vol,*) '    <Grid Name="mesh" GridType="Collection"  CollectionType="Spatial">'
   ! loop for writing information of mesh partitions
   do iproc=0,NPROC-1
-    nelm=i2c(nelm_par_proc(iproc)*64)
+    nelm=i2c(nelm_par_proc(iproc)*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1))
     nglo=i2c(nglob_par_proc(iproc))
     write(proc_str, "(i6.6)") iproc
 
@@ -1578,7 +1615,8 @@ subroutine write_xdmf_vol_header(nelm_par_proc,nglob_par_proc)
     write(xdmf_vol,*) '<Topology TopologyType="Mixed" NumberOfElements="'//trim(nelm)//'">'
     write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Int" Precision="4" Dimensions="'&
                            //trim(nelm)//' 9">'
-    write(xdmf_vol,*) '       ./DATABASES_MPI/external_mesh.h5:/proc_'//trim(proc_str)//'/spec_elm_conn_xdmf'
+    write(xdmf_vol,*) '       ./DATABASES_MPI/external_mesh.h5:/proc_'&
+                           //trim(proc_str)//'/spec_elm_conn_xdmf'
     write(xdmf_vol,*) '    </DataItem>'
     write(xdmf_vol,*) '</Topology>'
     write(xdmf_vol,*) '<Geometry GeometryType="X_Y_Z">'
@@ -1599,7 +1637,7 @@ subroutine write_xdmf_vol_header(nelm_par_proc,nglob_par_proc)
   enddo
 
   ! loop for writing xml includes of timestep information
-  nout = int(NSTEP/NTSTEP_BETWEEN_FRAMES) +1 
+  nout = int(NSTEP/NTSTEP_BETWEEN_FRAMES) +1
   write(xdmf_vol,*) '</Grid>' ! close mesh info
   write(xdmf_vol,*) '<!-- time series data -->'
   write(xdmf_vol,*) '<Grid Name="results" GridType="Collection" CollectionType="Temporal">'
@@ -1611,7 +1649,7 @@ subroutine write_xdmf_vol_header(nelm_par_proc,nglob_par_proc)
 
   write(xdmf_vol,*) '</Domain>'
   write(xdmf_vol,*) '</Xdmf>'
-  
+
   close(xdmf_vol)
 
 end subroutine write_xdmf_vol_header
@@ -1642,16 +1680,16 @@ subroutine write_xdmf_vol_body(it_io,nelm_par_proc, nglob_par_proc, val_type_mov
     write(ioidstr, "(i5.5)") idionod
 
     nglo=i2c(nglob_par_proc(iproc))
- 
+
     write(xdmf_vol_step, *)  '<Grid Name="data_'//trim(proc_str)//'" Type="Uniform">'
     write(xdmf_vol_step, *)  '    <Topology Reference="/Xdmf/Domain/Grid[@Name=''mesh'']/Grid[@Name=''mesh_'&
                                       //trim(proc_str)//''']/Topology" />'
     write(xdmf_vol_step, *)  '    <Geometry Reference="/Xdmf/Domain/Grid[@Name=''mesh'']/Grid[@Name=''mesh_'&
                                       //trim(proc_str)//''']/Geometry" />'
- 
+
     do itype=1,5
       if (val_type_mov(itype)) then
- 
+
         if (itype < 4) then
 
           ! write pressure
@@ -1709,9 +1747,9 @@ subroutine write_xdmf_vol_body(it_io,nelm_par_proc, nglob_par_proc, val_type_mov
                                                 //trim(it_str)//'/proc_'//trim(proc_str)//'/'//trim(type_str2)
           write(xdmf_vol_step, *)  '        </DataItem>'
           write(xdmf_vol_step, *)  '    </Attribute>'
- 
+
         endif
- 
+
       endif ! if vol_type_mov == true
     enddo
     write(xdmf_vol_step, *)  '</Grid>'
@@ -1743,12 +1781,12 @@ subroutine write_xdmf_vol_body_close()
   use specfem_par
   use io_server
   implicit none
-  
+
   open(unit=xdmf_vol_step, file=fname_xdmf_vol_step, position="append", action="write")
   write(xdmf_vol_step, *) '</Grid>'
   close(xdmf_vol_step)
 end subroutine write_xdmf_vol_body_close
- 
+
 
 subroutine pass_info_to_io()
   use specfem_par
@@ -1757,7 +1795,7 @@ subroutine pass_info_to_io()
   use specfem_par_poroelastic
   use specfem_par_movie
   use constants, only: dest_ionod
- 
+
   implicit none
 
   integer ::  n_msg_vol_each_proc = 0,irec,irec_local,i_ionod

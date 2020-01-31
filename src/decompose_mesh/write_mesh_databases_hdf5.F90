@@ -32,6 +32,7 @@
 
   use phdf5_utils
 
+  use constants, only: IIN_database_hdf5
   use decompose_mesh_par
 
   implicit none

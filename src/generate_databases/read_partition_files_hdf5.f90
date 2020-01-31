@@ -97,11 +97,11 @@
   nmat_ext_mesh = attr_data(1)
   ! read data mat_prop
   ! allocate array for nodes coords
-  allocate(materials_ext_mesh(16,nmat_ext_mesh),stat=ier)
+  allocate(mat_prop(17,nmat_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 585')
   if (ier /= 0) stop 'Error allocating array mat_prop'
-  materials_ext_mesh(:,:) = 0.d0
-  call h5_read_dataset_p_2d_d(h5, dsetname, materials_ext_mesh)
+  mat_prop(:,:) = 0.d0
+  call h5_read_dataset_p_2d_d(h5, dsetname, mat_prop)
 
   if (myrank == 0) then
     write(IMAIN,*) 'defined materials    : ',nmat_ext_mesh
