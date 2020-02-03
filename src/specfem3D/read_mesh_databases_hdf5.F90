@@ -1311,8 +1311,11 @@
   endif
 
   ! close hdf5
-  call h5_close_group(h5)
-  call h5_destructor(h5)
+  if (I_should_read_the_database) then
+    call h5_close_group(h5)
+    call h5_close_file(h5)
+    call h5_destructor(h5)
+  endif
 
   end subroutine read_mesh_databases_h5
 

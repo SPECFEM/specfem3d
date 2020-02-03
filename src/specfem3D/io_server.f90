@@ -71,18 +71,18 @@ contains
     integer                                             :: nfaces_actual
     real(kind=CUSTOM_REAL), dimension(:), intent(in)    :: arr_in
     real(kind=CUSTOM_REAL), dimension(:), intent(inout) :: arr_out
-    integer :: i,j,k,c,factor_face_aug=16,npoint_per_face=25,npoint_corner=4
+    integer :: i,j,k,c,factor_face_aug=(NGLLX-1)*(NGLLY-1),npoint_per_face=NGLLX*NGLLY,npoint_corner=4
 
-    nfaces_actual=size(arr_in)/(NGLLX*NGLLY)
+    nfaces_actual=size(arr_in)/(NGLLX*NGLLY) ! expecting NGLLX==NGLLY==NGLLZ
 
     c=1
     do i=0, nfaces_actual-1
-      do j=0,3 !y
-        do k=0,3 !x
-          arr_out(c  +j*4*4+k*4)=arr_in(i*npoint_per_face+1+k+j*NGLLX)
-          arr_out(c+1+j*4*4+k*4)=arr_in(i*npoint_per_face+2+k+j*NGLLX)
-          arr_out(c+2+j*4*4+k*4)=arr_in(i*npoint_per_face+7+k+j*NGLLX)
-          arr_out(c+3+j*4*4+k*4)=arr_in(i*npoint_per_face+6+k+j*NGLLX)
+      do j=0,NGLLY-2 !y
+        do k=0,NGLLX-2 !x
+          arr_out(c  +j*(NGLLX-1)*4+k*4)=arr_in(i*npoint_per_face+1      +k+j*NGLLX)
+          arr_out(c+1+j*(NGLLX-1)*4+k*4)=arr_in(i*npoint_per_face+2      +k+j*NGLLX)
+          arr_out(c+2+j*(NGLLX-1)*4+k*4)=arr_in(i*npoint_per_face+2+NGLLX+k+j*NGLLX)
+          arr_out(c+3+j*(NGLLX-1)*4+k*4)=arr_in(i*npoint_per_face+1+NGLLX+k+j*NGLLX)
         enddo
       enddo
       c=c+factor_face_aug*npoint_corner
@@ -795,7 +795,7 @@ subroutine surf_mov_init(nfaces_perproc, surface_offset)
   implicit none
 
   integer, dimension(0:NPROC-1), intent(in)         :: nfaces_perproc, surface_offset
-  integer                                           :: ier, nfaces_actual, nfaces_aug=16,nnodes_per_face_aug=4
+  integer                                           :: ier, nfaces_actual, nfaces_aug=(NGLLX-1)*(NGLLY-1),nnodes_per_face_aug=4
   integer                                           :: len_array_aug
   character(len=64)                                 :: dset_name
   character(len=64)                                 :: group_name
@@ -930,7 +930,7 @@ subroutine write_surf_io(it_io)
   implicit none
 
   integer, intent(in)                               :: it_io
-  integer                                           :: ier, nfaces_actual, nfaces_aug=16,nnodes_per_face_aug=4
+  !integer                                           :: ier, nfaces_actual, nfaces_aug=16,nnodes_per_face_aug=4
   character(len=64)                                 :: dset_name
   character(len=64)                                 :: group_name
   character(len=10)                                 :: tempstr

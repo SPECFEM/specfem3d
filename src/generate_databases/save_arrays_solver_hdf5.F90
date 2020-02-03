@@ -95,9 +95,8 @@
   type(h5io)        :: h5
 
   ! element node connectivity for movie output
-  ! the node ids are stored after dividing one 4th order spectral element into 8 of 2nd order element
-  ! thus this is output may not work for NGLL* /= 5
-  integer, dimension(9,nspec*64) :: spec_elm_conn_xdmf
+  ! the node ids are stored after dividing one NGLL*-th order spectral element into NGLLX*NGLLY*NGLLZ elements
+  integer, dimension(9,nspec*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)) :: spec_elm_conn_xdmf
 
   ! dump dataset size
   integer, dimension(NPROC,4)                :: dsize_dump
@@ -718,11 +717,13 @@
 
 
   subroutine get_connectivity_for_movie(nspec,ibool,elm_conn)
-    use generate_databases_par, only: NGLLX,NGLLY,NGLLZ 
+    use generate_databases_par, only: NGLLX,NGLLY,NGLLZ
+
     implicit none
-    integer,intent(in) :: nspec
-    integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
-    integer, dimension(9,nspec*64), intent(inout) :: elm_conn
+
+    integer, intent(in)                                          :: nspec
+    integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in)       :: ibool
+    integer, dimension(9,nspec*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)), intent(inout) :: elm_conn
 
     integer :: ispec,ii,iglob,icub,jcub,kcub,cell_type=9, dp=2
 
@@ -730,19 +731,11 @@
       ! extract information from full GLL grid
       ! node order follows vtk format
 
-      do icub=0,3
-        do jcub=0,3
-          do kcub=0,3
-            ii = 1+(ispec-1)*64 + (icub*16+jcub*4+kcub)
+      do icub=0,NGLLX-2
+        do jcub=0,NGLLY-2
+          do kcub=0,NGLLZ-2
+            ii = 1+(ispec-1)*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1) + (icub*(NGLLY-1)*(NGLLZ-1)+jcub*(NGLLZ-1)+kcub)
             elm_conn(1, ii)  = cell_type
-!            elm_conn(2, ii)  = ibool(icub+1,jcub+2,kcub+1,ispec)-1 ! node id starts 0 in xdmf rule
-!            elm_conn(3, ii)  = ibool(icub+1,jcub+1,kcub+1,ispec)-1
-!            elm_conn(4, ii)  = ibool(icub+2,jcub+1,kcub+1,ispec)-1
-!            elm_conn(5, ii)  = ibool(icub+2,jcub+2,kcub+1,ispec)-1
-!            elm_conn(6, ii)  = ibool(icub+1,jcub+2,kcub+2,ispec)-1
-!            elm_conn(7, ii)  = ibool(icub+1,jcub+1,kcub+2,ispec)-1
-!            elm_conn(8, ii)  = ibool(icub+2,jcub+1,kcub+2,ispec)-1
-!            elm_conn(9, ii)  = ibool(icub+2,jcub+2,kcub+2,ispec)-1
             elm_conn(2, ii)  = ibool(icub+1,jcub+1,kcub+1,ispec)-1 ! node id starts 0 in xdmf rule
             elm_conn(3, ii)  = ibool(icub+2,jcub+1,kcub+1,ispec)-1
             elm_conn(4, ii)  = ibool(icub+2,jcub+2,kcub+1,ispec)-1
@@ -751,7 +744,6 @@
             elm_conn(7, ii)  = ibool(icub+2,jcub+1,kcub+2,ispec)-1
             elm_conn(8, ii)  = ibool(icub+2,jcub+2,kcub+2,ispec)-1
             elm_conn(9, ii)  = ibool(icub+1,jcub+2,kcub+2,ispec)-1
- 
           enddo
         enddo
       enddo
