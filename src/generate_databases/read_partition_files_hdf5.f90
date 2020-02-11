@@ -150,12 +150,9 @@
   ! read nnodes_ext_mesh and nodes_coords_ext_mesh
   !
 
-  ! open dataset glob2loc_nodes
-  ! get attribute nnodes_ext_mesh
-  !dsetname = "glob2loc_nodes"
   dsetname = "nnodes_loc"
   call h5_read_dataset_p_scalar_i(h5,dsetname,nnodes_ext_mesh)
-  !nnodes_ext_mesh = attr_data(1)
+  n_control_node = nnodes_ext_mesh
 
   ! open and read dataset nodes_coords
   dsetname = "nodes_coords"

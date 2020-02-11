@@ -224,6 +224,7 @@ end module constants
 
   ! hdf5 file output
   logical :: HDF5_ENABLED
+  integer :: n_control_node
 
   ! number of io dedicated nodes
   integer :: NIONOD

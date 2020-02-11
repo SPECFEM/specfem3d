@@ -638,7 +638,10 @@ contains
 
   else
     allocate(elm_conn(NGNOD, nspec_local))
-    allocate(elm_conn_xdmf(1+NGNOD, nspec_local)) ! 1 additional col for cell type id
+    ! NGNOD = 27 array will not be used, only the 8 corner nodes
+    ! are necessary for checkmesh visualization
+    !allocate(elm_conn_xdmf(1+NGNOD, nspec_local)) ! 1 additional col for cell type id
+    allocate(elm_conn_xdmf(1+8, nspec_local)) ! 1 additional col for cell type id
     allocate(mat_mesh(2, nspec_local))
     allocate(ispec_local(nspec_local))
   
@@ -674,7 +677,9 @@ contains
           elm_conn_xdmf(8,count) = loc_nodes(6)
           elm_conn_xdmf(9,count) = loc_nodes(7)
         else ! NGNOD = 27
-          elm_conn_xdmf(1,count)  = 50 ! cell type id xdmf
+         ! NGNOD = 27 array will not be used, only the 8 corner nodes
+         ! are necessary for checkmesh visualization
+          elm_conn_xdmf(1,count)  = 9 !50 ! cell type id xdmf
           elm_conn_xdmf(2,count)  = loc_nodes(0)
           elm_conn_xdmf(3,count)  = loc_nodes(1)
           elm_conn_xdmf(4,count)  = loc_nodes(2)
@@ -683,25 +688,25 @@ contains
           elm_conn_xdmf(7,count)  = loc_nodes(5)
           elm_conn_xdmf(8,count)  = loc_nodes(6)
           elm_conn_xdmf(9,count)  = loc_nodes(7)
-          elm_conn_xdmf(10,count) = loc_nodes(8)
-          elm_conn_xdmf(11,count) = loc_nodes(9)
-          elm_conn_xdmf(12,count) = loc_nodes(10)
-          elm_conn_xdmf(13,count) = loc_nodes(11)
-          elm_conn_xdmf(14,count) = loc_nodes(12)
-          elm_conn_xdmf(15,count) = loc_nodes(13)
-          elm_conn_xdmf(16,count) = loc_nodes(14)
-          elm_conn_xdmf(17,count) = loc_nodes(15)
-          elm_conn_xdmf(18,count) = loc_nodes(16)
-          elm_conn_xdmf(19,count) = loc_nodes(17)
-          elm_conn_xdmf(20,count) = loc_nodes(18)
-          elm_conn_xdmf(21,count) = loc_nodes(19)
-          elm_conn_xdmf(22,count) = loc_nodes(26)
-          elm_conn_xdmf(23,count) = loc_nodes(20)
-          elm_conn_xdmf(24,count) = loc_nodes(25)
-          elm_conn_xdmf(25,count) = loc_nodes(24)
-          elm_conn_xdmf(26,count) = loc_nodes(22)
-          elm_conn_xdmf(27,count) = loc_nodes(21)
-          elm_conn_xdmf(28,count) = loc_nodes(23)
+!          elm_conn_xdmf(10,count) = loc_nodes(8)
+!          elm_conn_xdmf(11,count) = loc_nodes(9)
+!          elm_conn_xdmf(12,count) = loc_nodes(10)
+!          elm_conn_xdmf(13,count) = loc_nodes(11)
+!          elm_conn_xdmf(14,count) = loc_nodes(12)
+!          elm_conn_xdmf(15,count) = loc_nodes(13)
+!          elm_conn_xdmf(16,count) = loc_nodes(14)
+!          elm_conn_xdmf(17,count) = loc_nodes(15)
+!          elm_conn_xdmf(18,count) = loc_nodes(16)
+!          elm_conn_xdmf(19,count) = loc_nodes(17)
+!          elm_conn_xdmf(20,count) = loc_nodes(18)
+!          elm_conn_xdmf(21,count) = loc_nodes(19)
+!          elm_conn_xdmf(22,count) = loc_nodes(26)
+!          elm_conn_xdmf(23,count) = loc_nodes(20)
+!          elm_conn_xdmf(24,count) = loc_nodes(25)
+!          elm_conn_xdmf(25,count) = loc_nodes(24)
+!          elm_conn_xdmf(26,count) = loc_nodes(22)
+!          elm_conn_xdmf(27,count) = loc_nodes(21)
+!          elm_conn_xdmf(28,count) = loc_nodes(23)
         endif
 
         count = count + 1

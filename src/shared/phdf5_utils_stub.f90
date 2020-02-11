@@ -26,7 +26,8 @@ module phdf5_utils
          h5_write_dataset_p_5d_r, &
          bool_array2integer, int_array2bool, &
          h5_gather_dsetsize, create_dataset_collect, h5_create_dataset_setter, &
-         write_attenuation_file_in_h5, read_attenuation_file_in_h5
+         write_attenuation_file_in_h5, read_attenuation_file_in_h5, &
+         write_checkmesh_data_h5, write_checkmesh_xdmf_h5
 
 
     ! default constructor
@@ -386,6 +387,20 @@ contains
         real, allocatable, dimension(:,:,:,:,:) :: factor_common_kappa
         real, allocatable, dimension(:,:,:,:)   :: scale_factor_kappa
     end subroutine read_attenuation_file_in_h5
+
+
+    subroutine write_checkmesh_data_h5(dset_name,dump_array)
+        use constants, only: CUSTOM_REAL, MAX_STRING_LEN
+        implicit none
+        real(kind=CUSTOM_REAL),dimension(:), intent(in) :: dump_array
+        character(len=MAX_STRING_LEN), intent(in)       :: dset_name
+    end subroutine write_checkmesh_data_h5
+ 
+
+    subroutine write_checkmesh_xdmf_h5(NSPEC_AB)
+        implicit none 
+        integer, intent(in)                             :: NSPEC_AB
+    end subroutine write_checkmesh_xdmf_h5
 
 
 end module phdf5_utils

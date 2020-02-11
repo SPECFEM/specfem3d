@@ -35,6 +35,8 @@
 ! returns: maximum velocity in model ( model_speed_max ), minimum_period_resolved
 
   use constants
+  use shared_parameters, only: HDF5_ENABLED
+  use phdf5_utils
 
   implicit none
 
@@ -433,7 +435,7 @@
   endif
 
   ! debug: for vtk output
-  if (SAVE_MESH_FILES) then
+  if (SAVE_MESH_FILES .and. .not. HDF5_ENABLED) then
     call create_name_database(prname,myrank,LOCAL_PATH)
 
     ! user output
@@ -457,6 +459,25 @@
                                        tmp2,filename)
 
     deallocate(tmp1,tmp2)
+  else if (SAVE_MESH_FILES .and. HDF5_ENABLED) then 
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) 'saving h5 files for Courant number and minimum period'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+
+    ! Courant number
+    if (DT_PRESENT) then
+      filename = 'res_Courant_number'
+      call write_checkmesh_data_h5(filename,tmp1)
+    else
+      ! minimum period estimate
+      filename = 'res_minimum_period'
+      call write_checkmesh_data_h5(filename,tmp2)
+      call write_checkmesh_xdmf_h5(NSPEC_AB)
+    endif
+    deallocate(tmp1,tmp2)
   endif
 
   end subroutine check_mesh_resolution
@@ -476,6 +497,8 @@
 ! returns: maximum velocity in model ( model_speed_max ), minimum_period_resolved
 
   use constants
+  use shared_parameters, only: HDF5_ENABLED
+  use phdf5_utils
 
   implicit none
 
@@ -816,20 +839,48 @@
   endif
 
   ! debug: for vtk output
-  if (SAVE_MESH_FILES) then
+  if (SAVE_MESH_FILES .and. .not. HDF5_ENABLED) then
     call create_name_database(prname,myrank,LOCAL_PATH)
+    
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) 'saving VTK files for Courant number and minimum period'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+
     ! Courant number
     if (DT_PRESENT) then
       filename = trim(prname)//'res_Courant_number'
       call write_VTU_data_elem_cr_binary(NSPEC_AB,NGLOB_AB, &
-                                  xstore,ystore,zstore,ibool, &
-                                  tmp1,filename)
+                                         xstore,ystore,zstore,ibool, &
+                                         tmp1,filename)
     endif
     ! minimum period estimate
     filename = trim(prname)//'res_minimum_period'
     call write_VTU_data_elem_cr_binary(NSPEC_AB,NGLOB_AB, &
-                                xstore,ystore,zstore,ibool, &
-                                tmp2,filename)
+                                       xstore,ystore,zstore,ibool, &
+                                       tmp2,filename)
+
+    deallocate(tmp1,tmp2)
+  else if (SAVE_MESH_FILES .and. HDF5_ENABLED) then 
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) 'saving h5 files for Courant number and minimum period'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+
+    ! Courant number
+    if (DT_PRESENT) then
+      filename = 'res_Courant_number'
+      call write_checkmesh_data_h5(filename,tmp1)
+    else
+      ! minimum period estimate
+      filename = 'res_minimum_period'
+      call write_checkmesh_data_h5(filename,tmp2)
+      call write_checkmesh_xdmf_h5(NSPEC_AB)
+    endif
     deallocate(tmp1,tmp2)
   endif
 

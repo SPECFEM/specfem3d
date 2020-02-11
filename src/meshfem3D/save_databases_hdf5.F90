@@ -326,14 +326,14 @@
     elm_conn(8,ispec) = ibool(1,2,2,ispec)
 
     elm_conn_xdmf(1,ispec) = 9
-    elm_conn_xdmf(2,ispec) = ibool(1,1,1,ispec)
-    elm_conn_xdmf(3,ispec) = ibool(2,1,1,ispec)
-    elm_conn_xdmf(4,ispec) = ibool(2,2,1,ispec)
-    elm_conn_xdmf(5,ispec) = ibool(1,2,1,ispec)
-    elm_conn_xdmf(6,ispec) = ibool(1,1,2,ispec)
-    elm_conn_xdmf(7,ispec) = ibool(2,1,2,ispec)
-    elm_conn_xdmf(8,ispec) = ibool(2,2,2,ispec)
-    elm_conn_xdmf(9,ispec) = ibool(1,2,2,ispec) ! <- elm_conn, elm_conn_xdmf
+    elm_conn_xdmf(2,ispec) = ibool(1,1,1,ispec) -1 ! starting 0 in vtk format
+    elm_conn_xdmf(3,ispec) = ibool(2,1,1,ispec) -1
+    elm_conn_xdmf(4,ispec) = ibool(2,2,1,ispec) -1
+    elm_conn_xdmf(5,ispec) = ibool(1,2,1,ispec) -1
+    elm_conn_xdmf(6,ispec) = ibool(1,1,2,ispec) -1
+    elm_conn_xdmf(7,ispec) = ibool(2,1,2,ispec) -1
+    elm_conn_xdmf(8,ispec) = ibool(2,2,2,ispec) -1
+    elm_conn_xdmf(9,ispec) = ibool(1,2,2,ispec) -1 ! <- elm_conn, elm_conn_xdmf
   enddo
 
   ! create a dataset for elm_conn
