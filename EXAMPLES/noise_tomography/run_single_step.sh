@@ -14,12 +14,30 @@ echo `date`
 currentdir=`pwd`
 
 # setup Par_file
+#case $step in
+#1) cp -v DATA/Par_file_step1 DATA/Par_file ;;
+#2) cp -v DATA/Par_file_step2 DATA/Par_file ;;
+#3) cp -v DATA/Par_file_step3 DATA/Par_file ;;
+#*) echo "step not recognized: $step"; echo "please use as step number 1, 2 or 3"; exit 1 ;;
+#esac
+
+cp DATA/Par_file_step1 DATA/Par_file
 case $step in
-1) cp -v DATA/Par_file_step1 DATA/Par_file ;;
-2) cp -v DATA/Par_file_step2 DATA/Par_file ;;
-3) cp -v DATA/Par_file_step3 DATA/Par_file ;;
+1) sed -i "s:^SIMULATION_TYPE .*:SIMULATION_TYPE = 1:" DATA/Par_file
+   sed -i "s:^NOISE_TOMOGRAPHY .*:NOISE_TOMOGRAPHY = 1:" DATA/Par_file
+   sed -i "s:^SAVE_FORWARD .*:SAVE_FORWARD = .false.:" DATA/Par_file
+   ;;
+2) sed -i "s:^SIMULATION_TYPE .*:SIMULATION_TYPE = 1:" DATA/Par_file
+   sed -i "s:^NOISE_TOMOGRAPHY .*:NOISE_TOMOGRAPHY = 2:" DATA/Par_file
+   sed -i "s:^SAVE_FORWARD .*:SAVE_FORWARD = .true.:" DATA/Par_file
+   ;;
+3) sed -i "s:^SIMULATION_TYPE .*:SIMULATION_TYPE = 3:" DATA/Par_file
+   sed -i "s:^NOISE_TOMOGRAPHY .*:NOISE_TOMOGRAPHY = 3:" DATA/Par_file
+   sed -i "s:^SAVE_FORWARD .*:SAVE_FORWARD = .false.:" DATA/Par_file
+   ;;
 *) echo "step not recognized: $step"; echo "please use as step number 1, 2 or 3"; exit 1 ;;
 esac
+
 
 # get the number of processors, ignoring comments in the Par_file
 NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
@@ -105,10 +123,14 @@ if [[ $? -ne 0 ]]; then exit 1; fi
 # backup
 mkdir -p OUTPUT_FILES/step_${step}
 rm -rf OUTPUT_FILES/step_${step}/*
+
 mv OUTPUT_FILES/*.sem* OUTPUT_FILES/step_${step}/
 mv OUTPUT_FILES/output_*.txt OUTPUT_FILES/step_${step}/
 mv OUTPUT_FILES/STATIONS OUTPUT_FILES/step_${step}/
 mv OUTPUT_FILES/Par_file OUTPUT_FILES/step_${step}/
+
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
 
 echo
 echo "see results in directory: OUTPUT_FILES/"

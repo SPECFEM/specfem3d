@@ -51,7 +51,7 @@
     if (ACOUSTIC_SIMULATION) then
       ! transfers whole fields
       call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
-                potential_dot_acoustic,potential_dot_dot_acoustic,Mesh_pointer)
+                                          potential_dot_acoustic,potential_dot_dot_acoustic,Mesh_pointer)
     endif
     ! elastic domains
     if (ELASTIC_SIMULATION) then
@@ -160,25 +160,25 @@
   ! updates/gathers velocity field
   if (myrank == 0) then
     call gatherv_all_cr(store_val_ux,nfaces_surface_points, &
-         store_val_ux_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
+                        store_val_ux_all,nfaces_perproc_surface,faces_surface_offset, &
+                        nfaces_surface_glob_points,NPROC)
     call gatherv_all_cr(store_val_uy,nfaces_surface_points, &
-         store_val_uy_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
+                        store_val_uy_all,nfaces_perproc_surface,faces_surface_offset, &
+                        nfaces_surface_glob_points,NPROC)
     call gatherv_all_cr(store_val_uz,nfaces_surface_points, &
-         store_val_uz_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
+                        store_val_uz_all,nfaces_perproc_surface,faces_surface_offset, &
+                        nfaces_surface_glob_points,NPROC)
   else
     !slaves
     call gatherv_all_cr(store_val_ux,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
+                        dummy,nfaces_perproc_surface,faces_surface_offset, &
+                        1,NPROC)
     call gatherv_all_cr(store_val_uy,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
+                        dummy,nfaces_perproc_surface,faces_surface_offset, &
+                        1,NPROC)
     call gatherv_all_cr(store_val_uz,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
+                        dummy,nfaces_perproc_surface,faces_surface_offset, &
+                        1,NPROC)
   endif
 
   ! file output

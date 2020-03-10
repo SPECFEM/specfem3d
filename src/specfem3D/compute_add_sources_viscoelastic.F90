@@ -241,11 +241,14 @@
     else if (NOISE_TOMOGRAPHY == 2) then
       ! second step of noise tomography, i.e., read the surface movie saved at every timestep
       ! use the movie to drive the ensemble forward wavefield
-      call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces,accel, &
-                             normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
-                             ibool,noise_surface_movie,NSTEP-it+1,NSPEC_AB,NGLOB_AB, &
-                             num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                             free_surface_jacobian2Dw)
+      call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces, &
+                                        accel, &
+                                        normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
+                                        ibool,noise_surface_movie, &
+                                        NSTEP-it+1, &
+                                        NSPEC_AB,NGLOB_AB, &
+                                        num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+                                        free_surface_jacobian2Dw)
       ! be careful, since ensemble forward sources are reversals of generating wavefield "eta"
       ! hence the "NSTEP-it+1", i.e., start reading from the last timestep
       ! note the ensemble forward sources are generally distributed on the surface of the earth
@@ -405,7 +408,9 @@
       call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces, &
                                         b_accel, &
                                         normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
-                                        ibool,noise_surface_movie,it,NSPEC_AB,NGLOB_AB, &
+                                        ibool,noise_surface_movie, &
+                                        it, &
+                                        NSPEC_AB,NGLOB_AB, &
                                         num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
                                         free_surface_jacobian2Dw)
     endif

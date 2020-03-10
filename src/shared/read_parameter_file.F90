@@ -971,10 +971,17 @@
     NSTEP = 2 * NSTEP - 1
 
     ! for noise simulations, we need to save movies at the surface (where the noise is generated)
-    ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
-    MOVIE_TYPE = 1
-    MOVIE_SURFACE = .true.
+    ! and thus we force MOVIE_SURFACE in the mesher to be .true., in order to use variables defined for surface movies later
+    ! the noise surface wavefield will be stored/load in files DATABASES_MPI/proc***_surface_movie
+    !
+    ! for the solver, setting MOVIE_SURFACE can be used to plot/visualize the wavefield, but is not needed for noise simulations.
+    ! however, noise simulations require movie type 1 and highres
+    ! defaults
+    MOVIE_TYPE = 1                      ! 1 == only top surface (no side/bottom faces)
     USE_HIGHRES_FOR_MOVIES = .true.     ! we need to save surface movie everywhere, i.e. at all GLL points on the surface
+    ! let user decide
+    !MOVIE_SURFACE = .true.             ! (not necessary) to store/load generating wavefield for plotting
+    !SAVE_DISPLACEMENT = .true.         ! (not necessary) stores displacement (flag not necessary, but to avoid confusion)
   endif
 
   ! the default value of NTSTEP_BETWEEN_READ_ADJSRC (0) is to read the whole trace at the same time

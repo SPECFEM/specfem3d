@@ -179,9 +179,9 @@ __global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* d_ib
     int igll = threadIdx.x;
 
     int ipoin = NGLL2*iface + igll;
-    int i=free_surface_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)]-1;
-    int j=free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
-    int k=free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)]-1;
+    int i = free_surface_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)]-1;
+    int j = free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
+    int k = free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)]-1;
 
     int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
@@ -189,9 +189,12 @@ __global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* d_ib
     realw normal_y = normal_y_noise[ipoin];
     realw normal_z = normal_z_noise[ipoin];
 
+    // along noise direction
     realw eta = (noise_surface_movie[INDEX3(NDIM,NGLL2,0,igll,iface)]*normal_x +
-                noise_surface_movie[INDEX3(NDIM,NGLL2,1,igll,iface)]*normal_y +
-                noise_surface_movie[INDEX3(NDIM,NGLL2,2,igll,iface)]*normal_z);
+                 noise_surface_movie[INDEX3(NDIM,NGLL2,1,igll,iface)]*normal_y +
+                 noise_surface_movie[INDEX3(NDIM,NGLL2,2,igll,iface)]*normal_z);
+
+    realw val = eta * mask_noise[ipoin] * free_surface_jacobian2Dw[igll+NGLL2*iface];
 
     // error from cuda-memcheck and ddt seems "incorrect", because we
     // are passing a __constant__ variable pointer around like it was
@@ -221,9 +224,9 @@ __global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* d_ib
     // atomicAdd(&accel[iglob*3+1],eta*mask_noise[ipoin]*normal_y*wgllwgll_xy[tx]*free_surface_jacobian2Dw[igll+NGLL2*iface]);
     // atomicAdd(&accel[iglob*3+2],eta*mask_noise[ipoin]*normal_z*wgllwgll_xy[tx]*free_surface_jacobian2Dw[igll+NGLL2*iface]);
 
-    atomicAdd(&accel[iglob*3]  ,eta*mask_noise[ipoin]*normal_x*free_surface_jacobian2Dw[igll+NGLL2*iface]);
-    atomicAdd(&accel[iglob*3+1],eta*mask_noise[ipoin]*normal_y*free_surface_jacobian2Dw[igll+NGLL2*iface]);
-    atomicAdd(&accel[iglob*3+2],eta*mask_noise[ipoin]*normal_z*free_surface_jacobian2Dw[igll+NGLL2*iface]);
+    atomicAdd(&accel[iglob*3]  , val * normal_x);
+    atomicAdd(&accel[iglob*3+1], val * normal_y);
+    atomicAdd(&accel[iglob*3+2], val * normal_z);
 
   }
 }
@@ -251,7 +254,8 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
   dim3 grid(num_blocks_x,num_blocks_y,1);
   dim3 threads(NGLL2,1,1);
 
-  if (NOISE_TOMOGRAPHY == 2) { // add surface source to forward field
+  if (NOISE_TOMOGRAPHY == 2) {
+    // add surface source to forward field
     noise_read_add_surface_movie_cuda_kernel<<<grid,threads>>>(mp->d_accel,
                                                                mp->d_ibool,
                                                                mp->d_free_surface_ispec,
@@ -264,7 +268,8 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
                                                                mp->d_mask_noise,
                                                                mp->d_free_surface_jacobian2Dw);
   }
-  else if (NOISE_TOMOGRAPHY == 3) { // add surface source to adjoint (backward) field
+  else if (NOISE_TOMOGRAPHY == 3) {
+    // add surface source to adjoint (backward) field
     noise_read_add_surface_movie_cuda_kernel<<<grid,threads>>>(mp->d_b_accel,
                                                                mp->d_ibool,
                                                                mp->d_free_surface_ispec,

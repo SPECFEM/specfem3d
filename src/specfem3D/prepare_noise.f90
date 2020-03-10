@@ -39,7 +39,7 @@
   implicit none
 
   ! local parameters
-  integer :: ier
+  integer :: ier,num
 
   ! for noise simulations
   if (NOISE_TOMOGRAPHY /= 0) then
@@ -51,9 +51,12 @@
     endif
 
     ! checks if free surface is defined
-    if (num_free_surface_faces == 0) then
-      write(*,*) myrank, " doesn't have a free_surface_face"
-      ! stop 'error: noise simulations need a free surface'
+    call sum_all_i(num_free_surface_faces,num)
+    if (myrank == 0) then
+      if (num == 0) then
+        print *,"Error: noise simulation doesn't have a free_surface_face "
+        call exit_mpi(myrank,'Error: noise simulations needs a free surface')
+      endif
     endif
 
     ! allocates arrays

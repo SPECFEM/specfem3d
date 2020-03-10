@@ -125,13 +125,24 @@
   ! for noise simulations, we need to save movies at the surface (where the noise is generated)
   ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
   if (NOISE_TOMOGRAPHY /= 0) then
-    MOVIE_TYPE = 1
-    MOVIE_SURFACE = .true.
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'Noise simulation: ',NOISE_TOMOGRAPHY
+      write(IMAIN,*) '  creating surface movie arrays to store/load the generating ensemble forward source'
+    endif
+    ! note: we only set MOVIE_SURFACE here in the meshing to create the necessary arrays for the free surface.
+    !       the solver will use these arrays when NOISE_TOMOGRAPHY /= 0.
+    !       however, the solver will not need MOVIE_SURFACE to be set for noise simulations.
+    !       Users can nevertheless set it if they want to plot/visualize the surface wavefield.
+    ! defaults
+    MOVIE_TYPE = 1                      ! 1 == only top surface (no side/bottom faces)
+    MOVIE_SURFACE = .true.              ! to create arrays needed to store/load generating wavefield
     USE_HIGHRES_FOR_MOVIES = .true.     ! we need to save surface movie everywhere, i.e. at all GLL points on the surface
+    SAVE_DISPLACEMENT = .true.          ! (not necessary) stores displacement (flag not necessary, but to avoid confusion)
   endif
 
+  ! user output
   if (myrank == 0) then
-
     write(IMAIN,*)
     if (SUPPRESS_UTM_PROJECTION) then
       write(IMAIN,*) 'suppressing UTM projection'
