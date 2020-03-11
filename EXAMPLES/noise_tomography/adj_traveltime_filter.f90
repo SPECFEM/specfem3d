@@ -62,12 +62,15 @@ program adj_traveltime
   ! filter frequencies
   integer :: ifreq, nfreq
   real :: F1,F2,D(8),G,DELT
-  !real  freq_low(2),freq_high(2)
-  !data  freq_low  / 1.0d-4 , 1.0d-4/
-  !data  freq_high / 5.0d-1 , 5.0d-2/
-  real  freq_low(1),freq_high(1)
-  data  freq_low  / 0.01d0 /
-  data  freq_high / 0.2d0 /
+  integer :: ISW
+
+  ! frequency band
+  !real, parameter :: freq_low(2) = (/ 0.0001d , 0.0001d /)
+  !real, parameter :: freq_high(2) = (/ 0.5d , 0.05d /)
+  ! single frequency band
+  real, parameter :: freq_low(1) = 0.01d0    ! 1 / 100s
+  real, parameter :: freq_high(1) = 0.2d0    ! 1 / 5s
+
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! user output
@@ -141,6 +144,7 @@ program adj_traveltime
   file_data = './SEM/'//trim(network)//'.'//trim(station)//'.'//comp//'.semd'
   open(unit=1001,file=trim(file_data),status='old',action='read',iostat=ier)
   if (ier /= 0) stop 'Error opening station trace file in SEM/ '
+
   ! reads in data
   do itime = 1,nstep
     ! original
@@ -149,6 +153,7 @@ program adj_traveltime
     ! the reversed seismogram involves $C^\alpha\beta(t)=C^\beta\alpha(-t)$
     read(1001,*) t_trace(itime),data_trace(nstep-itime+1)
   enddo
+
   close(1001)
 
   ! stores original data
@@ -190,7 +195,7 @@ program adj_traveltime
 
   if (taper_type == 1) then
     ! cosine taper, otherwise using a constant (1.0) instead
-    do l=1,length_window
+    do l = 1,length_window
       taper(l) = (1.0-cos(pi*2.0*(l-1)/(length_window-1)))/2.0
     enddo
   endif
@@ -225,13 +230,13 @@ program adj_traveltime
       print *,'  f_min = ',sngl(F1),'Hz , f_max = ',sngl(F2), 'Hz'
       print *,'  T_min = ',sngl(1.d0/F2),'(s) , T_max = ',sngl(1.d0/F1), '(s)'
 
-      call BNDPAS(F1,F2,DELT,D,G,nstep)
+      call BNDPAS(F1,F2,DELT,D,G,nstep,ISW)
       !    F1 = LOW FREQUENCY CUTOFF (6 DB DOWN)
       !    F2 = HIGH FREQUENCY CUTOFF (6 DB DOWN)
       !    DELT = SAMPLE INTERVAL IN MILLISECONDS
       !    D = WILL CONTAIN 8 Z DOMAIN COEFICIENTS OF RECURSIVE FILTER
       !    G = WILL CONTAIN THE GAIN OF THE FILTER,
-      call FILTER(data_temp(:),nstep,D,G,2)
+      call FILTER(data_temp(:),nstep,D,G,2,ISW)
       !     X = DATA VECTOR OF LENGTH N CONTAINING DATA TO BE FILTERED
       !     D = FILTER COEFFICIENTS CALCULATED BY BNDPAS
       !     G = FILTER GAIN
@@ -278,7 +283,7 @@ program adj_traveltime
 
     !!!! choose which one to use !!!!
     ! normalized adjoint sources
-    if (abs(Norm_adj_temp) > 1.e-24) then
+    if (abs(Norm_adj_temp) > 0.d0) then
       adj_temp(:) = adj_temp(:) / Norm_adj_temp
     else
       ! zero trace
@@ -367,7 +372,8 @@ end program adj_traveltime
 ! http://www-lgit.obs.ujf-grenoble.fr/users/jrevilla/seiscomp/patch/pack/plugins/seisan/LIB/bndpas.for
 
 
-subroutine BNDPAS(F1,F2,DELT,D,G,N)
+  subroutine BNDPAS(F1,F2,DELT,D,G,N,ISW)
+
 ! RECURSIVE BUTTERWORTH BAND PASS FILTER (KANASEWICH, TIME SERIES
 ! ANALYSIS IN GEOPHYSICS, UNIVERSITY OF ALBERTA PRESS, 1975; SHANKS,
 ! JOHN L, RECURSION FILTERS FOR DIGITAL PROCESSING, GEOPHYSICS, V32,
@@ -376,10 +382,23 @@ subroutine BNDPAS(F1,F2,DELT,D,G,N)
 ! PHASE SHIFT.  THE GAIN AT THE TWO FREQUENCIES SPECIFIED AS
 ! CUTOFF FREQUENCIES WILL BE -6DB AND THE ROLLOFF WILL BE ABOUT
 ! THE FILTER TO PREVENT ALIASING PROBLEMS.
-    COMPLEX P(4),S(8),Z1,Z2
-    real D(8),XC(3),XD(3),XE(3)
-    double precision :: X(N)
-    DATA ISW/0/,TWOPI/6.2831853/
+
+  implicit none
+
+  real, intent(in) :: F1,F2,DELT
+  integer, intent(in) :: N
+
+  real, intent(out) :: D(8),G
+  integer, intent(out) :: ISW
+
+  ! local parameters
+  COMPLEX :: P(4),S(8),Z1,Z2
+
+  real :: DT,TDT,FDT,W1,W2,WW,HWID,A,B,C
+  integer :: I
+
+  double precision, parameter :: TWOPI = 2.d0 * 3.141592653589793d0
+
 ! THIS SECTION CALCULATES THE FILTER AND MUST BE CALLED BEFORE
 ! FILTER IS CALLED
 
@@ -389,140 +408,197 @@ subroutine BNDPAS(F1,F2,DELT,D,G,N)
 !    D = WILL CONTAIN 8 Z DOMAIN COEFICIENTS OF RECURSIVE FILTER
 !    G = WILL CONTAIN THE GAIN OF THE FILTER,
 
-      DT=DELT/1000.0
-      TDT=2.0/DT
-      FDT=4.0/DT
-      ISW=1
-      P(1)=CMPLX(-.3826834,.9238795)
-      P(2)=CMPLX(-.3826834,-.9238795)
-      P(3)=CMPLX(-.9238795,.3826834)
-      P(4)=CMPLX(-.9238795,-.3826834)
-      W1=TWOPI*F1
-      W2=TWOPI*F2
-      W1=TDT*TAN(W1/TDT)
-      W2=TDT*TAN(W2/TDT)
-      HWID=(W2-W1)/2.0
-      WW=W1*W2
-      DO 19 I=1,4
-      Z1=P(I)*HWID
-      Z2=Z1*Z1-WW
-      Z2=CSQRT(Z2)
-      S(I)=Z1+Z2
-   19 S(I+4)=Z1-Z2
-      G=.5/HWID
-      G=G*G
-      G=G*G
-      DO 29 I=1,7,2
-      B=-2.0*REAL(S(I))
-      Z1=S(I)*S(I+1)
-      C=REAL(Z1)
-      A=TDT+B+C/TDT
-      G=G*A
-      D(I)=(C*DT-FDT)/A
-   29 D(I+1)=(A-2.0*B)/A
-      G=G*G
-    5 FORMAT ('-FILTER GAIN IS ', 9E12.6)
-      return
+  DT = DELT/1000.0
+  TDT = 2.0/DT
+  FDT = 4.0/DT
 
-      ENTRY FILTER(X,N,D,G,IG)
+  ISW = 1
+
+  P(1) = CMPLX(-.3826834,.9238795)
+  P(2) = CMPLX(-.3826834,-.9238795)
+  P(3) = CMPLX(-.9238795,.3826834)
+  P(4) = CMPLX(-.9238795,-.3826834)
+
+  W1 = TWOPI*F1
+  W2 = TWOPI*F2
+  W1 = TDT*TAN(W1/TDT)
+  W2 = TDT*TAN(W2/TDT)
+  HWID = (W2-W1)/2.0
+  WW = W1*W2
+
+  do I = 1,4
+    Z1 = P(I)*HWID
+    Z2 = Z1*Z1-WW
+    Z2 = CSQRT(Z2)
+    S(I) = Z1+Z2
+    S(I+4) = Z1-Z2
+  enddo
+
+  G = 0.5/HWID
+  G = G*G
+  G = G*G
+
+  do I = 1,7,2
+    B = -2.0*REAL(S(I))
+    Z1 = S(I)*S(I+1)
+    C = REAL(Z1)
+    A = TDT+B+C/TDT
+    G = G*A
+    D(I) = (C*DT-FDT)/A
+    D(I+1) = (A-2.0*B)/A
+  enddo
+
+  G = G*G
+
+  !debug
+  !print *,'debug: FILTER GAIN IS ',G
+
+  end subroutine BNDPAS
+
+  subroutine FILTER(X,N,D,G,IG,ISW)
 
 !     X = DATA VECTOR OF LENGTH N CONTAINING DATA TO BE FILTERED
 !     D = FILTER COEFFICIENTS CALCULATED BY BNDPAS
 !     G = FILTER GAIN
 !     IG = 1  one pass
-!     ig = 2  two passes
+!     IG = 2  two passes
 
-      if (ISW == 1) goto 31
-      write(*,6)
-    6 FORMAT ('1BNDPAS MUST BE CALLED BEFORE FILTER')
-      return
+  implicit none
+  integer,intent(in) :: N
+  double precision,intent(inout) :: X(N)
 
-!     APPLY FILTER IN FORWARD DIRECTION
+  real,intent(in) :: D(N),G
+  integer,intent(in) :: IG
 
-   31 XM2=X(1)
-      XM1=X(2)
-      XM=X(3)
-      XC(1)=XM2
-      XC(2)=XM1-D(1)*XC(1)
-      XC(3)=XM-XM2-D(1)*XC(2)-D(2)*XC(1)
-      XD(1)=XC(1)
-      XD(2)=XC(2)-D(3)*XD(1)
-      XD(3)=XC(3)-XC(1)-D(3)*XD(2)-D(4)*XD(1)
-      XE(1)=XD(1)
-      XE(2)=XD(2)-D(5)*XE(1)
-      XE(3)=XD(3)-XD(1)-D(5)*XE(2)-D(6)*XE(1)
-      X(1)=XE(1)
-      X(2)=XE(2)-D(7)*X(1)
-      X(3)=XE(3)-XE(1)-D(7)*X(2)-D(8)*X(1)
-      DO 39 I=4,N
-      XM2=XM1
-      XM1=XM
-      XM=X(I)
-      K=I-((I-1)/3)*3
-      goto (34,35,36),K
-   34 M=1
-      M1=3
-      M2=2
-      goto 37
-   35 M=2
-      M1=1
-      M2=3
-      goto 37
-   36 M=3
-      M1=2
-      M2=1
-   37 XC(M)=XM-XM2-D(1)*XC(M1)-D(2)*XC(M2)
-      XD(M)=XC(M)-XC(M2)-D(3)*XD(M1)-D(4)*XD(M2)
-      XE(M)=XD(M)-XD(M2)-D(5)*XE(M1)-D(6)*XE(M2)
-   39 X(I)=XE(M)-XE(M2)-D(7)*X(I-1)-D(8)*X(I-2)
-!
-!
-      if (ig == 1) goto 3333
-      XM2=X(N)
-      XM1=X(N-1)
-      XM=X(N-2)
-      XC(1)=XM2
-      XC(2)=XM1-D(1)*XC(1)
-      XC(3)=XM-XM2-D(1)*XC(2)-D(2)*XC(1)
-      XD(1)=XC(1)
-      XD(2)=XC(2)-D(3)*XD(1)
-      XD(3)=XC(3)-XC(1)-D(3)*XD(2)-D(4)*XD(1)
-      XE(1)=XD(1)
-      XE(2)=XD(2)-D(5)*XE(1)
-      XE(3)=XD(3)-XD(1)-D(5)*XE(2)-D(6)*XE(1)
-      X(N)=XE(1)
-      X(N-1)=XE(2)-D(7)*X(1)
-      X(N-2)=XE(3)-XE(1)-D(7)*X(2)-D(8)*X(1)
-      DO 49 I=4,N
-      XM2=XM1
-      XM1=XM
-      J=N-I+1
-      XM=X(J)
-      K=I-((I-1)/3)*3
-      goto (44,45,46),K
-   44 M=1
-      M1=3
-      M2=2
-      goto 47
-   45 M=2
-      M1=1
-      M2=3
-      goto 47
-   46 M=3
-      M1=2
-      M2=1
-   47 XC(M)=XM-XM2-D(1)*XC(M1)-D(2)*XC(M2)
-      XD(M)=XC(M)-XC(M2)-D(3)*XD(M1)-D(4)*XD(M2)
-      XE(M)=XD(M)-XD(M2)-D(5)*XE(M1)-D(6)*XE(M2)
-   49 X(J)=XE(M)-XE(M2)-D(7)*X(J+1)-D(8)*X(J+2)
- 3333 continue
-      if (ig == 1) then
-        gg=sqrt(g)   ! if only pass once, modify gain
-      else
-        gg=g
-      endif
-      DO 59 I=1,N
-   59 X(I)=X(I)/gg
-      return
-END
+  integer, intent(in) :: ISW
+
+  ! local parameters
+  real :: XC(3),XD(3),XE(3)
+  real :: XM,XM1,XM2,GG
+  integer :: K,I,J,M,M1,M2
+
+  ! check
+  if (ISW /= 1) then
+    print *,'1BNDPAS MUST BE CALLED BEFORE FILTER'
+    stop 'Invalid ISW in FILTER() routine'
+  endif
+
+  ! APPLY FILTER IN FORWARD DIRECTION
+  XM2 = X(1)
+  XM1 = X(2)
+  XM = X(3)
+
+  XC(1) = XM2
+  XC(2) = XM1-D(1)*XC(1)
+  XC(3) = XM-XM2-D(1)*XC(2)-D(2)*XC(1)
+
+  XD(1) = XC(1)
+  XD(2) = XC(2)-D(3)*XD(1)
+  XD(3) = XC(3)-XC(1)-D(3)*XD(2)-D(4)*XD(1)
+
+  XE(1) = XD(1)
+  XE(2) = XD(2)-D(5)*XE(1)
+  XE(3) = XD(3)-XD(1)-D(5)*XE(2)-D(6)*XE(1)
+
+  X(1) = XE(1)
+  X(2) = XE(2)-D(7)*X(1)
+  X(3) = XE(3)-XE(1)-D(7)*X(2)-D(8)*X(1)
+
+  do I = 4,N
+    XM2 = XM1
+    XM1 = XM
+    XM = X(I)
+
+    K = I-((I-1)/3)*3
+
+    select case(K)
+    case (1)
+      M = 1
+      M1 = 3
+      M2 = 2
+    case (2)
+      M = 2
+      M1 = 1
+      M2 = 3
+    case (3)
+      M = 3
+      M1 = 2
+      M2 = 1
+    case default
+      stop 'Invalid K value in FILTER'
+    end select
+
+    XC(M) = XM-XM2-D(1)*XC(M1)-D(2)*XC(M2)
+    XD(M) = XC(M)-XC(M2)-D(3)*XD(M1)-D(4)*XD(M2)
+    XE(M) = XD(M)-XD(M2)-D(5)*XE(M1)-D(6)*XE(M2)
+
+    X(I) = XE(M)-XE(M2)-D(7)*X(I-1)-D(8)*X(I-2)
+  enddo
+
+  if (IG /= 1) then
+    XM2 = X(N)
+    XM1 = X(N-1)
+    XM = X(N-2)
+
+    XC(1) = XM2
+    XC(2) = XM1-D(1)*XC(1)
+    XC(3) = XM-XM2-D(1)*XC(2)-D(2)*XC(1)
+
+    XD(1) = XC(1)
+    XD(2) = XC(2)-D(3)*XD(1)
+    XD(3) = XC(3)-XC(1)-D(3)*XD(2)-D(4)*XD(1)
+
+    XE(1) = XD(1)
+    XE(2) = XD(2)-D(5)*XE(1)
+    XE(3) = XD(3)-XD(1)-D(5)*XE(2)-D(6)*XE(1)
+
+    X(N) = XE(1)
+    X(N-1) = XE(2)-D(7)*X(1)
+    X(N-2) = XE(3)-XE(1)-D(7)*X(2)-D(8)*X(1)
+
+    DO I = 4,N
+      XM2 = XM1
+      XM1 = XM
+
+      J = N-I+1
+      XM = X(J)
+
+      K = I-((I-1)/3)*3
+
+      select case (K)
+      case (1)
+        M = 1
+        M1 = 3
+        M2 = 2
+      case (2)
+        M = 2
+        M1 = 1
+        M2 = 3
+      case (3)
+        M = 3
+        M1 = 2
+        M2 = 1
+      case default
+        stop 'Invalid K value in FILTER'
+      end select
+
+      XC(M) = XM-XM2-D(1)*XC(M1)-D(2)*XC(M2)
+      XD(M) = XC(M)-XC(M2)-D(3)*XD(M1)-D(4)*XD(M2)
+      XE(M) = XD(M)-XD(M2)-D(5)*XE(M1)-D(6)*XE(M2)
+      X(J) = XE(M)-XE(M2)-D(7)*X(J+1)-D(8)*X(J+2)
+    enddo
+  endif
+
+  if (IG == 1) then
+    GG = sqrt(G)   ! if only pass once, modify gain
+  else
+    GG = G
+  endif
+
+  do I = 1,N
+    X(I) = X(I)/GG
+  enddo
+
+  end subroutine FILTER
+
 

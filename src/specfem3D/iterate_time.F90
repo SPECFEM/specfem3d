@@ -277,7 +277,8 @@
     ! modified from the subroutine 'write_movie_surface'
     if (NOISE_TOMOGRAPHY == 1) then
       call noise_save_surface_movie(displ,ibool,noise_surface_movie,it,NSPEC_AB,NGLOB_AB, &
-                            num_free_surface_faces,free_surface_ispec,free_surface_ijk,Mesh_pointer,GPU_MODE)
+                                    num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+                                    Mesh_pointer,GPU_MODE)
     endif
 
 #ifdef VTK_VIS

@@ -168,6 +168,11 @@
     write(IMAIN,*)
     write(IMAIN,*) 'Simulation setup:'
     write(IMAIN,*)
+    if (NOISE_TOMOGRAPHY /= 0) then
+      write(IMAIN,*) 'noise simulation:'
+      write(IMAIN,*) '  simulation type = ',NOISE_TOMOGRAPHY
+      write(IMAIN,*)
+    endif
 
     if (ACOUSTIC_SIMULATION) then
       write(IMAIN,*) 'incorporating acoustic simulation'
