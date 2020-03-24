@@ -520,7 +520,7 @@
   enddo
 
   if (myrank == 0) then
-    write(IMAIN,*) 'maximum interface points x/y = ',max_npx_interface,max_npy_interface
+    write(IMAIN,*) '  maximum interface points x/y = ',max_npx_interface,max_npy_interface
     call flush_IMAIN()
   endif
 
@@ -530,6 +530,7 @@
   allocate(ner_layer(number_of_layers),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1283')
   if (ier /= 0) stop 'Error allocating array ner_layer'
+  ner_layer(:) = 0
 
   ! loop on all the layers
   do ilayer = 1,number_of_layers
@@ -547,5 +548,10 @@
   enddo
 
   close(IIN)
+
+  if (myrank == 0) then
+    write(IMAIN,*) '  interfaces done'
+    call flush_IMAIN()
+  endif
 
   end subroutine get_interfaces_mesh_count

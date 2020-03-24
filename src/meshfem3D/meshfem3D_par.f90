@@ -52,10 +52,7 @@ module meshfem3D_par
   integer :: nspec
 
 ! meshing parameters
-  double precision, dimension(:), allocatable :: rns
-
   double precision, dimension(:,:,:), allocatable :: xgrid,ygrid,zgrid
-
   integer, dimension(:,:,:,:), allocatable :: ibool
 
 ! arrays with the mesh in double precision
