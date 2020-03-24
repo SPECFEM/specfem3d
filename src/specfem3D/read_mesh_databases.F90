@@ -1205,6 +1205,7 @@
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_poroelastic
+  use specfem_par_noise
 
   implicit none
 

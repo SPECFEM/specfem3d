@@ -220,9 +220,11 @@
   call read_value_double_precision(RECORD_LENGTH_IN_SECONDS, 'solver.RECORD_LENGTH_IN_SECONDS')
   if (err_occurred() /= 0) return
 
-! compute total number of time steps, rounded to next multiple of 100
+  ! compute total number of time steps, rounded to next multiple of 100
   NSTEP = 100 * (int(RECORD_LENGTH_IN_SECONDS / (100.d0*DT)) + 1)
-  if ( NOISE_TOMOGRAPHY /= 0 )   NSTEP = 2*NSTEP-1   ! time steps needs to be doubled, due to +/- branches
+
+  ! noise simulations: time steps needs to be doubled, due to +/- branches
+  if ( NOISE_TOMOGRAPHY /= 0 ) NSTEP = 2*NSTEP-1
 
 ! compute the total number of sources in the CMTSOLUTION file
 ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
