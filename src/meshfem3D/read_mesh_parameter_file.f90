@@ -244,6 +244,10 @@
       print *,'Error reading region ',ireg,' out of ',NSUBREGIONS
       stop 'Error reading regions in Mesh_Par_file'
     endif
+    ! check for negative values: if ix or iy == -1, it means we take full range
+    if (ix_end_region == -1) ix_end_region = NEX_XI
+    if (iy_end_region == -1) iy_end_region = NEX_ETA
+
     ! stores region
     subregions(ireg,1) = ix_beg_region
     subregions(ireg,2) = ix_end_region

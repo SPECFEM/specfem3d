@@ -296,18 +296,6 @@ module specfem_par
   integer :: NSPEC_ADJOINT, NGLOB_ADJOINT
 
 !-----------------------------------------------------------------
-! noise
-!-----------------------------------------------------------------
-
-  ! parameter module for noise simulations
-  integer :: irec_master_noise
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sigma_kl
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: noise_sourcearray
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: noise_surface_movie
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: &
-             normal_x_noise,normal_y_noise,normal_z_noise, mask_noise
-
-!-----------------------------------------------------------------
 ! gravity
 !-----------------------------------------------------------------
 
@@ -716,3 +704,24 @@ module specfem_par_coupling
 
 end module specfem_par_coupling
 
+!=====================================================================
+
+module specfem_par_noise
+
+! parameter module for noise simulations
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  ! NOISE_TOMOGRAPHY
+  ! parameter module for noise simulations
+  integer :: irec_master_noise
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: noise_sourcearray
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: noise_surface_movie
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: normal_x_noise,normal_y_noise,normal_z_noise, mask_noise
+
+  ! noise strength kernel
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sigma_kl
+
+end module specfem_par_noise

@@ -496,7 +496,7 @@ end module user_noise_distribution
   real(kind=CUSTOM_REAL) :: noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP)
   ! local parameters
   integer itime, i, j, k, ier, nlines
-  real(kind=CUSTOM_REAL) :: junk,junkval
+  real(kind=CUSTOM_REAL) :: junk
   real(kind=CUSTOM_REAL) :: noise_src(NSTEP),noise_src_u(NDIM,NSTEP)
   double precision, dimension(NDIM) :: nu_master       ! component direction chosen at the master receiver
   double precision :: xi_noise, eta_noise, gamma_noise ! master receiver location
@@ -549,7 +549,7 @@ end module user_noise_distribution
   ! counts line reads noise source S(t)
   nlines = 0
   do while(ier == 0)
-    read(IIN_NOISE,*,iostat=ier) junk, junkval
+    read(IIN_NOISE,*,iostat=ier) junk, junk
     if (ier == 0)  nlines = nlines + 1
   enddo
   rewind(IIN_NOISE)
@@ -669,62 +669,51 @@ end module user_noise_distribution
 ! step 1: calculate the "ensemble forward source"
 ! save surface movie (displacement) at every time steps, for step 2 & 3.
 
-  subroutine noise_save_surface_movie(displ,ibool, &
-                                      noise_surface_movie,it, &
-                                      nspec,nglob, &
-                                      num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                                      Mesh_pointer,GPU_MODE)
+  subroutine noise_save_surface_movie()
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE
 
+  use specfem_par, only: it,ibool, &
+    num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+    Mesh_pointer,GPU_MODE
+
+  use specfem_par_elastic, only: displ
+  use specfem_par_noise, only: noise_surface_movie
+
   implicit none
-
-  ! input parameters
-  integer,intent(in) :: it
-  integer,intent(in) :: nspec,nglob
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
-  real(kind=CUSTOM_REAL), dimension(NDIM,nglob),intent(in) ::  displ
-
-  integer,intent(in) :: num_free_surface_faces
-  integer, dimension(num_free_surface_faces),intent(in) :: free_surface_ispec
-  integer, dimension(3,NGLLSQUARE,num_free_surface_faces),intent(in) :: free_surface_ijk
 
   ! local parameters
   integer :: ispec,i,j,k,iglob,iface,igll
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,num_free_surface_faces) :: noise_surface_movie
-  integer(kind=8) :: Mesh_pointer
-  logical :: GPU_MODE
 
+  ! checks if anything to do
   if (.not. (num_free_surface_faces > 0)) return
 
   ! writes out wavefield at surface
-  if (num_free_surface_faces > 0) then
+  if (.not. GPU_MODE) then
+    ! on CPU
+    ! loops over surface points
+    ! get coordinates of surface mesh and surface displacement
+    do iface = 1, num_free_surface_faces
 
-    if (.not. GPU_MODE) then
-      ! loops over surface points
-      ! get coordinates of surface mesh and surface displacement
-      do iface = 1, num_free_surface_faces
+      ispec = free_surface_ispec(iface)
 
-        ispec = free_surface_ispec(iface)
+      do igll = 1, NGLLSQUARE
+        i = free_surface_ijk(1,igll,iface)
+        j = free_surface_ijk(2,igll,iface)
+        k = free_surface_ijk(3,igll,iface)
 
-        do igll = 1, NGLLSQUARE
-          i = free_surface_ijk(1,igll,iface)
-          j = free_surface_ijk(2,igll,iface)
-          k = free_surface_ijk(3,igll,iface)
-
-          iglob = ibool(i,j,k,ispec)
-          noise_surface_movie(:,igll,iface) = displ(:,iglob)
-        enddo
+        iglob = ibool(i,j,k,ispec)
+        noise_surface_movie(:,igll,iface) = displ(:,iglob)
       enddo
-    else
-      ! GPU_MODE == 1
-      call transfer_surface_to_host(Mesh_pointer,noise_surface_movie)
-    endif
-
-    ! save surface motion to disk
-    call write_abs(2,noise_surface_movie,CUSTOM_REAL*NDIM*NGLLSQUARE*num_free_surface_faces,it)
-
+    enddo
+  else
+    ! on GPU
+    ! GPU_MODE == 1
+    call transfer_surface_to_host(Mesh_pointer,noise_surface_movie)
   endif
+
+  ! save surface motion to disk
+  call write_abs(2,noise_surface_movie,CUSTOM_REAL*NDIM*NGLLSQUARE*num_free_surface_faces,it)
 
   end subroutine noise_save_surface_movie
 

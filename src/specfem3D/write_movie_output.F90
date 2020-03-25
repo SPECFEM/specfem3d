@@ -50,13 +50,14 @@
     ! acoustic domains
     if (ACOUSTIC_SIMULATION) then
       ! transfers whole fields
-      call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
-                                          potential_dot_acoustic,potential_dot_dot_acoustic,Mesh_pointer)
+      call transfer_fields_ac_from_device(NGLOB_AB, &
+                                          potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,Mesh_pointer)
     endif
     ! elastic domains
     if (ELASTIC_SIMULATION) then
       ! transfers whole fields
-      call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc, accel, Mesh_pointer)
+      call transfer_fields_el_from_device(NDIM*NGLOB_AB, &
+                                          displ,veloc,accel,Mesh_pointer)
     endif
   endif
 
@@ -551,9 +552,12 @@
     ! allocate array for global points
     allocate(div_glob(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2004')
+    div_glob(:) = 0._CUSTOM_REAL
+
     allocate(valence(NGLOB_AB), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2005')
     if (ier /= 0) stop 'error allocating arrays for movie div and curl'
+    valence(:) = 0
 
     ! saves full snapshot data to local disk
     if (ELASTIC_SIMULATION) then

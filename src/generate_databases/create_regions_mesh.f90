@@ -926,7 +926,7 @@
 
 ! creates global indexing array ibool
 
-  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,NDIM
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,NDIM,IMAIN
   use create_regions_mesh_ext_par
 
   implicit none
@@ -955,29 +955,32 @@
 ! allocate memory for arrays
   allocate(locval(npointot),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 808')
+  locval = 0
+
   allocate(ifseg(npointot),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 809')
+  ifseg = .false.
+
   allocate(xp(npointot),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 810')
+  xp = 0.d0
+
   allocate(yp(npointot),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 811')
+  yp = 0.d0
+
   allocate(zp(npointot),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 812')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-
-! creates temporary global point arrays
-  locval = 0
-  ifseg = .false.
-  xp = 0.d0
-  yp = 0.d0
   zp = 0.d0
 
-  do ispec=1,nspec
+! creates temporary global point arrays
+  do ispec = 1,nspec
     ieoff = NGLLX * NGLLY * NGLLZ * (ispec-1)
     ilocnum = 0
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
           ilocnum = ilocnum + 1
           xp(ilocnum+ieoff) = xstore(i,j,k,ispec)
           yp(ilocnum+ieoff) = ystore(i,j,k,ispec)
@@ -991,8 +994,20 @@
   x_min = minval(nodes_coords_ext_mesh(1,:))
   x_max = maxval(nodes_coords_ext_mesh(1,:))
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '    creating ibool indexing     : x min/max = ',sngl(x_min),'/',sngl(x_max)
+    call flush_IMAIN()
+  endif
+
 ! gets ibool indexing from local (GLL points) to global points
   call get_global(npointot,xp,yp,zp,ibool,locval,ifseg,nglob,x_min,x_max)
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '    creating indirect addressing: nglob = ',nglob
+    call flush_IMAIN()
+  endif
 
 ! we can create a new indirect addressing to reduce cache misses
   call get_global_indirect_addressing(nspec,nglob,ibool)
@@ -1004,15 +1019,27 @@
   deallocate(locval,stat=ier); if (ier /= 0) stop 'error in deallocate'
   deallocate(ifseg,stat=ier); if (ier /= 0) stop 'error in deallocate'
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '    creating unique point locations'
+    call flush_IMAIN()
+  endif
+
 ! unique global point locations
   nglob_dummy = nglob
   allocate(xstore_dummy(nglob_dummy),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 813')
+  xstore_dummy(:) = 0.d0
+
   allocate(ystore_dummy(nglob_dummy),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 814')
+  ystore_dummy(:) = 0.d0
+
   allocate(zstore_dummy(nglob_dummy),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 815')
   if (ier /= 0) stop 'error in allocate'
+  zstore_dummy(:) = 0.d0
+
   do ispec = 1, nspec
      do k = 1, NGLLZ
         do j = 1, NGLLY

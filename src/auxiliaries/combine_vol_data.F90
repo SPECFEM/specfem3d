@@ -79,6 +79,9 @@
   character(len=MAX_STRING_LEN) :: var_name, value_file_name, mesh_file_name
   integer(kind=8) :: value_handle, mesh_handle
   integer :: ibool_offset, x_global_offset
+#ifdef USE_VTK_INSTEAD_OF_MESH
+  real :: val
+#endif
 
   ! MPI initialization
   call init_mpi()
@@ -168,6 +171,7 @@
             status='old',action='read',form='unformatted',iostat=ier)
       read(27) NSPEC_AB
       read(27) NGLOB_AB
+      read(27) NSPEC_IRREGULAR
     endif
 
     ! ibool and global point arrays file
@@ -184,7 +188,6 @@
       call read_coordinates_adios_mesh(mesh_handle, x_global_offset, &
                                        NGLOB_AB, xstore, ystore, zstore)
     else
-      read(27) NSPEC_IRREGULAR
       read(27) ibool
       read(27) xstore
       read(27) ystore
@@ -251,6 +254,9 @@
 
     print *,'  points:',np,numpoin
 
+    ! checks integer overflow
+    if (numpoin > 2147483646.d0 - np ) stop 'Error number of points might exceed integer limit'
+
     ! stores total number of points written
     np = np + numpoin
 
@@ -290,6 +296,7 @@
             status='old',action='read',form='unformatted')
       read(27) NSPEC_AB
       read(27) NGLOB_AB
+      read(27) NSPEC_IRREGULAR
     endif
 
     ! ibool file
@@ -301,7 +308,6 @@
                                  NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
     else
       if (ier /= 0) stop 'error allocating array ibool'
-      read(27) NSPEC_IRREGULAR
       read(27) ibool
       close(27)
     endif
@@ -314,7 +320,7 @@
     else
       ! subdivided spectral elements
       call cvd_write_GLL_elements(NSPEC_AB,NGLOB_AB,ibool, &
-                                np,nelement,it,nee,numpoin)
+                                  np,nelement,it,nee,numpoin)
     endif
 
     print *,'  elements:',ne,nelement
@@ -369,7 +375,15 @@
   write(IOUT_VTK,'(a)') "SCALARS "//trim(data_array_name)//" float"
   write(IOUT_VTK,'(a)') "LOOKUP_TABLE default"
   do it = 1,npp
-      write(IOUT_VTK,*) total_dat(it)
+    val = total_dat(it)
+    ! vtk produces reading errors for float scalars like 1.e-43
+    ! for single precision, smallest and largest possible floating-point numbers are: 1.17549435E-38   3.40282347E+38
+    ! let's limit the size to single precision values
+    if (val > 0.0 .and. val < tiny(val)) val = 0.0
+    if (val < 0.0 .and. val > -tiny(val)) val = 0.0
+    if (val > huge(val)) val = huge(val)
+    if (val < -huge(val)) val = -huge(val)
+    write(IOUT_VTK,*) val
   enddo
   write(IOUT_VTK,*) ''
   close(IOUT_VTK)
@@ -394,8 +408,8 @@
 !=============================================================
 
   subroutine cvd_count_totals_ext_mesh(num_node,node_list,LOCAL_PATH, &
-                          npp,nee,HIGH_RESOLUTION_MESH, &
-                          mesh_handle,ADIOS_FOR_MESH)
+                                       npp,nee,HIGH_RESOLUTION_MESH, &
+                                       mesh_handle,ADIOS_FOR_MESH)
 ! counts total number of points and elements for external meshes in given slice list
 ! returns: total number of elements (nee) and number of points (npp)
 
@@ -447,6 +461,7 @@
 
       read(27) NSPEC_AB
       read(27) NGLOB_AB
+      read(27) NSPEC_IRREGULAR
     endif
 
     ! gets ibool
@@ -459,7 +474,6 @@
         call read_ibool_adios_mesh(mesh_handle, ibool_offset, &
                                    NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
       else
-        read(27) NSPEC_IRREGULAR
         read(27) ibool
       endif
     endif
@@ -484,15 +498,15 @@
       if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1147')
       if (ier /= 0) stop 'error allocating array mask_ibool'
       mask_ibool = .false.
-      do ispec=1,NSPEC_AB
-        iglob1=ibool(1,1,1,ispec)
-        iglob2=ibool(NGLLX,1,1,ispec)
-        iglob3=ibool(NGLLX,NGLLY,1,ispec)
-        iglob4=ibool(1,NGLLY,1,ispec)
-        iglob5=ibool(1,1,NGLLZ,ispec)
-        iglob6=ibool(NGLLX,1,NGLLZ,ispec)
-        iglob7=ibool(NGLLX,NGLLY,NGLLZ,ispec)
-        iglob8=ibool(1,NGLLY,NGLLZ,ispec)
+      do ispec = 1,NSPEC_AB
+        iglob1 = ibool(1,1,1,ispec)
+        iglob2 = ibool(NGLLX,1,1,ispec)
+        iglob3 = ibool(NGLLX,NGLLY,1,ispec)
+        iglob4 = ibool(1,NGLLY,1,ispec)
+        iglob5 = ibool(1,1,NGLLZ,ispec)
+        iglob6 = ibool(NGLLX,1,NGLLZ,ispec)
+        iglob7 = ibool(NGLLX,NGLLY,NGLLZ,ispec)
+        iglob8 = ibool(1,NGLLY,NGLLZ,ispec)
         mask_ibool(iglob1) = .true.
         mask_ibool(iglob2) = .true.
         mask_ibool(iglob3) = .true.

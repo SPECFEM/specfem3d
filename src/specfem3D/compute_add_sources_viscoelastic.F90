@@ -31,8 +31,7 @@
 
   use constants
   use specfem_par, only: station_name,network_name,num_free_surface_faces,free_surface_ispec, &
-                        free_surface_ijk,free_surface_jacobian2Dw,noise_sourcearray,irec_master_noise, &
-                        normal_x_noise,normal_y_noise,normal_z_noise,mask_noise,noise_surface_movie, &
+                        free_surface_ijk,free_surface_jacobian2Dw, &
                         nsources_local,tshift_src,dt,t0,SU_FORMAT, &
                         USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
                         USE_BINARY_FOR_SEISMOGRAMS,NSPEC_AB,NGLOB_AB,ibool,NSOURCES,myrank,it,islice_selected_source, &
@@ -43,6 +42,9 @@
                         INVERSE_FWI_FULL_PROBLEM
 
   use specfem_par_elastic, only: accel,ispec_is_elastic
+
+  use specfem_par_noise, only: noise_sourcearray,irec_master_noise, &
+    normal_x_noise,normal_y_noise,normal_z_noise,mask_noise,noise_surface_movie
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
 
@@ -267,8 +269,6 @@
   use constants
   use specfem_par, only: num_free_surface_faces,free_surface_ispec, &
                         free_surface_ijk,free_surface_jacobian2Dw, &
-                        normal_x_noise,normal_y_noise,normal_z_noise, &
-                        mask_noise,noise_surface_movie, &
                         nsources_local,tshift_src,dt,t0, &
                         USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
                         NSPEC_AB,NGLOB_AB,ibool, &
@@ -276,6 +276,9 @@
                         sourcearrays,SIMULATION_TYPE,NSTEP,NOISE_TOMOGRAPHY
 
   use specfem_par_elastic, only: b_accel,ispec_is_elastic
+
+  use specfem_par_noise, only: normal_x_noise,normal_y_noise,normal_z_noise, &
+    mask_noise,noise_surface_movie
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
 
@@ -427,7 +430,6 @@
   use constants
   use specfem_par, only: station_name,network_name, &
                         num_free_surface_faces, &
-                        irec_master_noise,noise_surface_movie, &
                         nsources_local,tshift_src,dt,t0,SU_FORMAT, &
                         USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS, &
                         NSOURCES,it,SIMULATION_TYPE,NSTEP, &
@@ -436,6 +438,8 @@
                         Mesh_pointer, &
                         source_adjoint,nadj_rec_local,number_adjsources_global, &
                         INVERSE_FWI_FULL_PROBLEM,GPU_MODE
+
+  use specfem_par_noise, only: irec_master_noise,noise_surface_movie
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
 

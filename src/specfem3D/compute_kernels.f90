@@ -71,6 +71,7 @@
 
   use specfem_par
   use specfem_par_elastic
+  use specfem_par_noise
 
   implicit none
   ! local parameters
