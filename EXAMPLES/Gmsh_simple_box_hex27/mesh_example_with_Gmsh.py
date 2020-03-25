@@ -73,7 +73,7 @@ aniso_flag = 0
 
 # mesh size
 mesh_element_size_Z = 100.0
-mesh_element_size_XY = 100.0 
+mesh_element_size_XY = 100.0
 
 # elevation function (for stretching top)
 elevation_type = 2    # 0 == no stretching, 1 == sine function, 2 == peak
