@@ -1,0 +1,40 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+Gmsh example for an acoustic model with (quadratic) hex-27 elements.
+
+requires:
+ * Gmsh       - for downloading, see http://gmsh.info
+ * pygmsh     - python wrapper, see https://pypi.python.org/pypi/pygmsh
+ * numpy      - scientific computing with python, see http://www.numpy.org
+
+
+tested for:
+- python 3.7: Gmsh version 4.0, pygmsh version 6.0.2, numpy version 1.18.1
+
+0. installation:
+  
+   - Gmsh:
+       download Gmsh and install package (make sure that command gmsh is in your PATH)
+       http://gmsh.info
+
+   - pygmsh:
+       for installation using pip, type:
+       > pip install -U pygmsh
+   
+   (finally check your installation, see if you can run a simple pygmsh example: https://github.com/nschloe/pygmsh)
+
+1. to generate mesh, type:
+
+    > ./mesh_example_with_Gmsh.py
+
+
+2. run simulation:
+    
+   - run script:
+     > ./run_this_example.sh
+
+
+Compare your seismograms in OUTPUT_FILES/ with the reference ones in directory REF_SEIS/
+

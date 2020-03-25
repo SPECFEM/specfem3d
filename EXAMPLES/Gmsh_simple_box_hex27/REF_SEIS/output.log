@@ -1,0 +1,89 @@
+running example: Wed Mar 25 10:29:24 CET 2020
+
+   setting up example...
+
+
+  decomposing mesh...
+
+
+ **********************
+ Serial mesh decomposer
+ **********************
+
+ reading mesh files in: ./MESH-default
+
+   using NGNOD =           27
+   quadratic elements
+
+ total number of nodes: 
+   nnodes =         9261
+ total number of spectral elements:
+   nspec =         1000
+ materials:
+   num_mat =            1
+   defined =            1 undefined =            0
+   no poroelastic material file found
+   defined materials  :            1
+   undefined materials:            1  (interfaces/tomography models/..)
+ absorbing boundaries:
+   nspec2D_xmin =          100
+   nspec2D_xmax =          100
+   nspec2D_ymin =          100
+   nspec2D_ymax =          100
+   nspec2D_bottom =          100
+   nspec2D_top =          100
+   no absorbing_cpml_file file found
+   no moho_surface_file file found
+
+ Par_file_faults not found: assuming that there are no faults
+
+ node valence:
+   min =            1  max =            8
+ neighbors:
+   nsize =            8
+   valence: sup_neighbor =           38 max_neighbor =           26
+
+ local time stepping: turned OFF
+
+ partitioning:
+   number of partitions requested =            1
+
+   array size xadj  :         1001  memory:    3.81851196E-03 MB
+   array size adjncy:        26000  memory:    9.91821289E-02 MB
+   sup_neighbor     :           26
+
+   mesh2dual: max_neighbor =           26
+   written file: ./DATABASES_MPI/part_array.vtk
+
+ element distribution:
+   partition            0        has         1000  elements
+   elements per partition: min/max   =         1000        1000
+   elements per partition: imbalance =    0.00000000     %
+                           (0% being totally balanced, 100% being unbalanced)
+
+ load distribution:
+   element loads: min/max =           10          10
+
+   partition            0        has        10000  load units
+   load per partition: min/max   =        10000       10000
+   load per partition: imbalance =    0.00000000     %
+                       (0% being totally balanced, 100% being unbalanced)
+
+ partitions: 
+   num =            1
+
+ Databases files in directory: ./DATABASES_MPI
+
+ finished successfully
+
+
+  running database generation...
+
+
+  running solver...
+
+
+see results in directory: OUTPUT_FILES/
+
+done
+Wed Mar 25 10:29:31 CET 2020

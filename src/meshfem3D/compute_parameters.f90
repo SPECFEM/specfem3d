@@ -114,7 +114,7 @@
     NSPEC_NO_DOUBLING = NEX_XI * NEX_ETA * NER
 
     ! checks integer overflow
-    if (dble(NEX_XI) * dble(NEX_ETA) >  2147483646.d0 / dble(NER) ) &
+    if (dble(NEX_XI) * dble(NEX_ETA) > 2147483646.d0 / dble(NER) ) &
       stop 'Error number of elements might exceed integer limit'
 
     ! %%%%%%%%%%%%%% surface elements %%%%%%%%%%%%%%%%%%%

@@ -1,0 +1,298 @@
+Python version:  3.7
+pygmsh version:  6.0.2
+Gmsh version  :  4
+
+meshing:
+characteristic length:  100.0 100.0
+top surface    :  s0 midpoint =  [500.0, 500.0, 0.0]
+bottom surface :  s1 midpoint =  [500.0, 500.0, -1000.0]
+extrude surface:  s0
+
+-------- geo script
+// This code was created by pygmsh v6.0.2.
+Mesh.RecombineAll = 1;
+Mesh.Recombine3DAll = 1;
+Mesh.Algorithm = 8;
+Mesh.ElementOrder = 2;
+Mesh.HighOrderOptimize = 1;
+Geometry.ExtrudeReturnLateralEntities = 1;
+p0 = newp;
+Point(p0) = {0.0, 0.0, 0.0, 100.0};
+p1 = newp;
+Point(p1) = {1000.0, 0.0, 0.0, 100.0};
+p2 = newp;
+Point(p2) = {1000.0, 1000.0, 0.0, 100.0};
+p3 = newp;
+Point(p3) = {0.0, 1000.0, 0.0, 100.0};
+l0 = newl;
+Line(l0) = {p0, p1};
+l1 = newl;
+Line(l1) = {p1, p2};
+l2 = newl;
+Line(l2) = {p2, p3};
+l3 = newl;
+Line(l3) = {p3, p0};
+ll0 = newll;
+Line Loop(ll0) = {l0, l1, l2, l3};
+s0 = news;
+Plane Surface(s0) = {ll0};
+p4 = newp;
+Point(p4) = {0.0, 0.0, -1000.0, 100.0};
+p5 = newp;
+Point(p5) = {1000.0, 0.0, -1000.0, 100.0};
+p6 = newp;
+Point(p6) = {1000.0, 1000.0, -1000.0, 100.0};
+p7 = newp;
+Point(p7) = {0.0, 1000.0, -1000.0, 100.0};
+l4 = newl;
+Line(l4) = {p4, p5};
+l5 = newl;
+Line(l5) = {p5, p6};
+l6 = newl;
+Line(l6) = {p6, p7};
+l7 = newl;
+Line(l7) = {p7, p4};
+ll1 = newll;
+Line Loop(ll1) = {l4, l5, l6, l7};
+s1 = news;
+Plane Surface(s1) = {ll1};
+ex1[] = Extrude {0,0,-1000.0} {Surface{s0}; Layers{{2,8},{0.1,1}}; Recombine;};
+Coherence;
+Physical Volume("vol1") = {ex1[1]};
+Physical Surface("top") = {s0};
+Physical Surface("bottom") = {s1};
+Physical Surface("ymin") = {ex1[2]};
+Physical Surface("xmax") = {ex1[3]};
+Physical Surface("ymax") = {ex1[4]};
+Physical Surface("xmin") = {ex1[5]};
+-------- end geo script
+
+script written to:  MESH/box.geo
+
+Info    : Running 'gmsh -3 /var/folders/0b/8r9lhyv48v58lf006s7hkfmr0000gn/T/tmpb55uvlga.geo -format msh -bin -o /var/folders/0b/8r9lhyv48v58lf006s7hkfmr0000gn/T/tmpct5lrjqk.msh' [Gmsh 4.2.1, 1 node, max. 1 thread]
+Info    : Started on Wed Mar 25 10:27:14 2020
+Info    : Reading '/var/folders/0b/8r9lhyv48v58lf006s7hkfmr0000gn/T/tmpb55uvlga.geo'...
+Info    : Done reading '/var/folders/0b/8r9lhyv48v58lf006s7hkfmr0000gn/T/tmpb55uvlga.geo'
+Info    : Meshing 1D...
+Info    : Meshing curve 1 (Line)
+Info    : Meshing curve 2 (Line)
+Info    : Meshing curve 3 (Line)
+Info    : Meshing curve 4 (Line)
+Info    : Meshing curve 7 (Line)
+Info    : Meshing curve 8 (Line)
+Info    : Meshing curve 9 (Line)
+Info    : Meshing curve 10 (Line)
+Info    : Meshing curve 19 (extruded)
+Info    : Meshing curve 20 (extruded)
+Info    : Meshing curve 24 (extruded)
+Info    : Meshing curve 28 (extruded)
+Info    : Done meshing 1D (0.001273 s)
+Info    : Meshing 2D...
+Info    : Meshing surface 6 (Plane, Frontal Quad)
+Info    : Blossom: 280 internal 40 closed
+Info    : Blossom recombination completed (0.002683 s): 100 quads, 0 triangles, 0 invalid quads, 0 quads with Q < 0.1, avg Q = 0.999183, min Q = 0.989624
+Info    : Meshing surface 12 (Plane, Frontal Quad)
+Info    : Blossom: 280 internal 40 closed
+Info    : Blossom recombination completed (0.002579 s): 100 quads, 0 triangles, 0 invalid quads, 0 quads with Q < 0.1, avg Q = 0.999183, min Q = 0.989624
+Info    : Meshing surface 21 (extruded)
+Info    : Meshing surface 25 (extruded)
+Info    : Meshing surface 29 (extruded)
+Info    : Meshing surface 33 (extruded)
+Info    : Done meshing 2D (0.026056 s)
+Info    : Meshing 3D...
+Info    : Meshing volume 1 (extruded)
+Info    : Recombination timing:
+Info    :  - Cumulative time recombination: 0 s
+Info    : Recombination cumulative statistics:
+Info    :  - Percentage of hexahedra (#)  : nan
+Info    :  - Percentage of hexahedra (Vol): nan
+vol(1) =  1.00000E+09
+Info    : Mesh Conformity: OK
+Info    : Done meshing 3D (0.018586 s)
+Info    : Optimizing 3D mesh...
+Info    : Done optimizing 3D mesh (4.8e-05 s)
+Info    : Meshing order 2 (curvilinear on)...
+Info    : Meshing curve 1 order 2
+Info    : Meshing curve 2 order 2
+Info    : Meshing curve 3 order 2
+Info    : Meshing curve 4 order 2
+Info    : Meshing curve 7 order 2
+Info    : Meshing curve 8 order 2
+Info    : Meshing curve 9 order 2
+Info    : Meshing curve 10 order 2
+Info    : Meshing curve 19 order 2
+Info    : Meshing curve 20 order 2
+Info    : Meshing curve 24 order 2
+Info    : Meshing curve 28 order 2
+Info    : Meshing surface 6 order 2
+Info    : Meshing surface 12 order 2
+Info    : Meshing surface 21 order 2
+Info    : Meshing surface 25 order 2
+Info    : Meshing surface 29 order 2
+Info    : Meshing surface 33 order 2
+Info    : Meshing volume 1 order 2
+Info    : Done meshing order 2 (0.09503 s)
+Info    : Optimizing high-order mesh...
+Info    : Optimizing mesh...
+Info    : Computing connectivity and bad elements for entity 1...
+Info    : Starting patch generation from 0 bad elements...
+Info    : Constructing 0 primary patches
+Info    : Computing patch connectivity...
+Info    : Identifying groups of primary patches...
+Info    : Merging primary patches into 0 patches...
+Info    : Computing boundaries for 0 patches...
+Info    : Generated 0 patches
+Info    : Optimization succeeded
+Info    : Done optimizing mesh (0.177461 s)
+Info    : Done optimizing high-order mesh (0.177461 s)
+Info    : 9261 vertices 1728 elements
+Info    : Writing '/var/folders/0b/8r9lhyv48v58lf006s7hkfmr0000gn/T/tmpct5lrjqk.msh'...
+Info    : Done writing '/var/folders/0b/8r9lhyv48v58lf006s7hkfmr0000gn/T/tmpct5lrjqk.msh'
+Info    : Stopped on Wed Mar 25 10:27:14 2020
+
+Mesh results: 
+  points:  9261
+  cells:  2
+         quad9 600
+         hexahedron27 1000
+  point_data:  0
+  cell_data:  2
+         quad9
+           gmsh:physical 600
+         hexahedron27
+           gmsh:physical 1000
+  field_data:  7
+         top 2
+         bottom 2
+         ymin 2
+         xmax 2
+         ymax 2
+         xmin 2
+         vol1 2
+
+stretching vertical coordinates:
+  using peak-function
+  elevation min/max =  0.0 199.99191046776014
+
+VTK file written to :  MESH/box.vtu
+Gmsh file written to:  MESH/box.msh
+
+exporting Gmsh file to specfem format...
+
+reading file:  MESH/box.msh
+
+mesh data:
+number of points:  9261
+cells     :  2 items
+   quad9
+   hexahedron27
+point_data:  0 items
+cell_data :  2 items
+   quad9
+     gmsh:physical 600
+     gmsh:geometrical 0
+   hexahedron27
+     gmsh:physical 1000
+     gmsh:geometrical 0
+field_data:  7 items
+   top
+   bottom
+   ymin
+   xmax
+   ymax
+   xmin
+   vol1
+
+element types found: 
+  hex type :  hexahedron27
+  quad type:  quad9
+
+cleaning points...
+  number of points                     =  9261
+  number of points needed by hexahedra =  9261
+  unused points:  []
+
+exporting mesh files:
+  number of nodes       =  9261
+  exported to:  MESH/nodes_coords_file
+
+  number of hexahedra   =  1000
+  exported to:  MESH/mesh_file
+
+  number of hexahedra with material =  1000
+  exported to:  MESH/materials_file
+
+  material ids:  [1]
+
+surfaces:
+  number of quads       =  600
+
+determining boundary surfaces:
+  surface index:  [2, 3, 7, 5, 4, 6]
+
+  number of quads with material =  600
+
+  surface index counts:  [100, 100, 100, 100, 100, 100]
+
+  top    surface: number of quads =  100
+    dimension:
+    xmin/xmax =  0.0 / 1000.0
+    ymin/ymax =  0.0 / 1000.0
+    zmin/zmax =  0.0 / 199.99191046776014
+  bottom surface: number of quads =  100
+    dimension:
+    xmin/xmax =  0.0 / 1000.0
+    ymin/ymax =  0.0 / 1000.0
+    zmin/zmax =  -1000.0 / -1000.0
+  xmin   surface: number of quads =  100
+    dimension:
+    xmin/xmax =  0.0 / 0.0
+    ymin/ymax =  0.0 / 1000.0
+    zmin/zmax =  -1000.0 / 0.0
+  xmax   surface: number of quads =  100
+    dimension:
+    xmin/xmax =  1000.0 / 1000.0
+    ymin/ymax =  0.0 / 1000.0
+    zmin/zmax =  -1000.0 / 0.0
+  ymin   surface: number of quads =  100
+    dimension:
+    xmin/xmax =  0.0 / 1000.0
+    ymin/ymax =  0.0 / 0.0
+    zmin/zmax =  -1000.0 / 0.0
+  ymax   surface: number of quads =  100
+    dimension:
+    xmin/xmax =  0.0 / 1000.0
+    ymin/ymax =  1000.0 / 1000.0
+    zmin/zmax =  -1000.0 / 0.0
+
+surface     zmax: 100
+  exported to:  MESH/free_or_absorbing_surface_file_zmax
+
+surface   bottom: 100
+  exported to:  MESH/absorbing_surface_file_bottom
+
+surface     xmin: 100
+  exported to:  MESH/absorbing_surface_file_xmin
+
+surface     xmax: 100
+  exported to:  MESH/absorbing_surface_file_xmax
+
+surface     ymin: 100
+  exported to:  MESH/absorbing_surface_file_ymin
+
+surface     ymax: 100
+  exported to:  MESH/absorbing_surface_file_ymax
+
+
+  done, see files in directory: MESH/
+
+finished Gmsh2specfem successfully
+
+creating nummaterial velocity file...
+  rho,vp,vs    =  1028.0 1480.0 0.0
+  Q_mu,Q_kappa =  9999.0 400.0
+  aniso_flag   =  0
+  domain id    =  1
+
+  written to:  MESH/nummaterial_velocity_file
+
