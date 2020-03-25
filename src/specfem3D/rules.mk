@@ -181,6 +181,7 @@ specfem3D_MODULES = \
 	$(FC_MODDIR)/specfem_par_poroelastic.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par_movie.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par_coupling.$(FC_MODEXT) \
+	$(FC_MODDIR)/specfem_par_noise.$(FC_MODEXT) \
 	$(FC_MODDIR)/user_noise_distribution.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
