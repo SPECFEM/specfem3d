@@ -126,6 +126,9 @@ env:
     # adjoint simulation
     - TESTID=33 TESTCOV=0 TESTDIR=26 TESTFLAGS="--with-mpi" CUDA=false
 
+    # gmsh example w/ hex27
+    - TESTID=34 TESTCOV=0 TESTDIR=27 TESTFLAGS="--without-mpi" CUDA=false
+
 before_install:
   # informations on git
   - |

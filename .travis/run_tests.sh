@@ -35,6 +35,7 @@ case "$TESTDIR" in
   24) dir=EXAMPLES/decompose_mesh_MPI/ ;;
   25) dir=EXAMPLES/meshfem3D_examples/regular_element_mesh/ ;;
   26) dir=EXAMPLES/small_adjoint_multiple_sources/ ;;
+  27) dir=EXAMPLES/Gmsh_simple_box_hex27/ ;;
   *) dir=EXAMPLES/homogeneous_halfspace/ ;;
 esac
 
@@ -208,6 +209,10 @@ else
   # regular elements example
   if [ "$TESTID" == "32" ]; then
     sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
+  fi
+  # Gmsh example w/ hex27
+  if [ "$TESTID" == "34" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 2000:" DATA/Par_file
   fi
 
   # coverage run
@@ -614,6 +619,17 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "3" ]; then
 fi
 echo -en 'travis_fold:end:coverage.serial-meshfem\\r'
 
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.Gmsh-hex27\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "3" ]; then
+  ##
+  ## testing Gmsh-hex27 example
+  ##
+  cd EXAMPLES/Gmsh_simple_box_hex27/
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  ./run_this_example.sh
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.Gmsh-hex27\\r'
 
 # done
 echo "done `pwd`"
