@@ -44,8 +44,11 @@ module io_server
   type(vol_data_dump), dimension(:), allocatable :: vd_pres, vd_divglob, vd_div,  &
                                                     vd_curlx, vd_curly, vd_curlz, &
                                                     vd_velox, vd_veloy, vd_veloz
+  ! local-global processor id relation
+  integer, dimension(:), allocatable :: id_proc_glob2loc, id_proc_loc2glob
+  ! io node id <-> proc id in compute nodes relation
+  integer, dimension(:), allocatable :: dest_ioids
 
-  integer, dimension(:), allocatable:: id_proc_glob2loc, id_proc_loc2glob
 contains
   function i2c(k) result(str)
   !   "Convert an integer to string."
@@ -358,6 +361,7 @@ end subroutine do_io_start_idle
 !
 subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
   use io_server
+  use my_mpi
   use specfem_par
   use specfem_par_elastic
   use specfem_par_poroelastic
@@ -366,9 +370,10 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
   use phdf5_utils
   implicit none
 
-  integer :: iproc, count=0, id_glob, comm, info
+  integer :: iproc, count=0, id_glob, comm, info, sender, dump, ier
 
   integer, dimension(0:NPROC-1), intent(inout) :: nelm_par_proc, nglob_par_proc ! storing the number of elements and gll nodes
+  integer                                      :: status(MPI_STATUS_SIZE)
 
   ! make output file
   character(len=64) :: group_name
@@ -377,7 +382,7 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
   type(h5io)        :: h5
   h5 = h5io()
 
-  write(ioidstr, "(i5.5)") myrank
+  write(ioidstr, "(i5.5)") my_io_id
   fname_h5_data_vol = LOCAL_PATH(1:len_trim(LOCAL_PATH))//"/movie_volume_"//ioidstr//".h5"
 
   ! initialization of h5 file
@@ -402,19 +407,27 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
   allocate(id_proc_glob2loc(0:NPROC-1))
   id_proc_glob2loc(:) = -999999
 
-  do iproc = 0, NPROC-1
-    if(mod(iproc,NIONOD)==myrank) then
-      id_proc_loc2glob(count) = iproc
-      id_proc_glob2loc(iproc) = count
-      count                   = count+1
-    endif
+  allocate(dest_ioids(0:NPROC-1))
+
+  ! make a sender list which communicate with this io node
+  print *, "nproc_io,", nproc_io, "rank", myrank
+  do iproc = 0, nproc_io-1
+    call mpi_probe(MPI_ANY_SOURCE, io_tag_vol_sendlist, my_local_mpi_comm_inter, status, ier)
+    sender = status(MPI_SOURCE)
+    call recv_i_inter((/dump/),1,sender,io_tag_vol_sendlist)
+    id_proc_loc2glob(iproc) = sender
+    id_proc_glob2loc(sender) = iproc
   enddo
 
-  ! get nspec and nglob from each process
+  ! gather other informations for making a volume data output
   if (myrank == 0) then
     do iproc = 0, NPROC-1
+      ! get nspec and nglob from each process
       call recv_i_inter(nelm_par_proc(iproc),  1, iproc, io_tag_vol_nspec) ! NSPEC_AB
       call recv_i_inter(nglob_par_proc(iproc), 1, iproc, io_tag_vol_nglob) ! NGLOB_AB
+
+      ! array if io node ids of each compute procs
+      call recv_i_inter(dest_ioids(iproc), 1, iproc, io_tag_vol_ioid)
     enddo
   endif
 
@@ -1404,7 +1417,7 @@ subroutine write_xdmf_surface_header()
   ! writeout xdmf file for surface movie
   fname_xdmf_surf = trim(OUTPUT_FILES)//"/movie_surface.xmf"
 
-  open(unit=xdmf_surf, file=fname_xdmf_surf)
+  open(unit=xdmf_surf, file=fname_xdmf_surf, recl=256)
   write(xdmf_surf,'(a)') '<?xml version="1.0" ?>'
   write(xdmf_surf,*) '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
   write(xdmf_surf,*) '<Xdmf Version="3.0">'
@@ -1463,7 +1476,7 @@ subroutine write_xdmf_surface_body(it_io)
   ! create a group for each io step
 
   ! open xdmf file
-  open(unit=xdmf_surf, file=fname_xdmf_surf)
+  open(unit=xdmf_surf, file=fname_xdmf_surf, recl=256)
 
   ! skip lines till the position where we want to write new information
   do i = 1, surf_xdmf_pos
@@ -1522,7 +1535,7 @@ subroutine write_xdmf_shakemap()
   ! writeout xdmf file for surface movie
   fname_xdmf_shake = trim(OUTPUT_FILES)//"/shakemap.xmf"
 
-  open(unit=xdmf_shake, file=fname_xdmf_shake)
+  open(unit=xdmf_shake, file=fname_xdmf_shake, recl=256)
 
   write(xdmf_shake,'(a)') '<?xml version="1.0" ?>'
   write(xdmf_shake,*) '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
@@ -1584,7 +1597,7 @@ subroutine write_xdmf_vol_header(nelm_par_proc,nglob_par_proc)
   ! writeout xdmf file for volume movie
   fname_xdmf_vol = trim(OUTPUT_FILES)//"/movie_volume.xmf"
 
-  open(unit=xdmf_vol, file=fname_xdmf_vol)
+  open(unit=xdmf_vol, file=fname_xdmf_vol, recl=256)
 
   ! definition of topology and geometry
   ! refer only control nodes (8 or 27) as a coarse output
@@ -1660,7 +1673,7 @@ subroutine write_xdmf_vol_body(it_io,nelm_par_proc, nglob_par_proc, val_type_mov
   ! writeout xdmf file for volume movie
   write(it_str, "(i6.6)") it_io
 
-  open(unit=xdmf_vol_step, file=fname_xdmf_vol_step, position="append", action="write")
+  open(unit=xdmf_vol_step, file=fname_xdmf_vol_step, position="append", action="write", recl=256)
 
 
   do iproc=0, NPROC-1
@@ -1759,7 +1772,7 @@ subroutine write_xdmf_vol_body_header(it_io)
   write(it_str, "(i6.6)") it_io
   fname_xdmf_vol_step = trim(OUTPUT_FILES)//"it_"//trim(it_str)//".xmf"
 
-  open(unit=xdmf_vol_step, file=fname_xdmf_vol_step)
+  open(unit=xdmf_vol_step, file=fname_xdmf_vol_step, recl=256)
   write(xdmf_vol_step,*) '<Grid Name="result"  GridType="Collection"  CollectionType="Spatial">'
   write(xdmf_vol_step,*) '<Time Value="'//trim(r2c(sngl((it_io-1)*DT-t0)))//'" />'
 
@@ -1772,7 +1785,7 @@ subroutine write_xdmf_vol_body_close()
   use io_server
   implicit none
 
-  open(unit=xdmf_vol_step, file=fname_xdmf_vol_step, position="append", action="write")
+  open(unit=xdmf_vol_step, file=fname_xdmf_vol_step, position="append", action="write", recl=256)
   write(xdmf_vol_step, *) '</Grid>'
   close(xdmf_vol_step)
 end subroutine write_xdmf_vol_body_close
@@ -1851,9 +1864,14 @@ subroutine pass_info_to_io()
   endif ! end if myrank == 0
 
   if (MOVIE_VOLUME) then
+    ! send the compute node list to io node
+    call send_i_inter((/0/),1,dest_ionod,io_tag_vol_sendlist)
+
     ! send nspec and nglob in each process
     call send_i_inter((/NSPEC_AB/),1,0,io_tag_vol_nspec)
     call send_i_inter((/NGLOB_AB/),1,0,io_tag_vol_nglob)
+    ! send the id of ionode which is the destination of this compute node
+    call send_i_inter((/dest_ionod/), 1, 0, io_tag_vol_ioid)
   endif
 
 end subroutine pass_info_to_io

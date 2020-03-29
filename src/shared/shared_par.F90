@@ -86,7 +86,8 @@ module constants
   integer :: io_tag_vol_nmsg          = 49
   integer :: io_tag_vol_nspec         = 50
   integer :: io_tag_vol_nglob         = 51
-
+  integer :: io_tag_vol_sendlist      = 52
+  integer :: io_tag_vol_ioid          = 53
   integer :: io_tag_end               = 60
 
   integer :: xdmf_surf                = 114
@@ -98,7 +99,8 @@ module constants
   integer :: dest_ionod = 0
   ! number of computer nodes sending info to each io node
   integer :: nproc_io
-
+  ! id for io node
+  integer :: my_io_id
   ! store HDF5 output file name
   character(len=MAX_STRING_LEN) :: IIN_database_hdf5
 
