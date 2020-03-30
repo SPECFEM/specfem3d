@@ -103,6 +103,8 @@ module constants
   integer :: my_io_id
   ! store HDF5 output file name
   character(len=MAX_STRING_LEN) :: IIN_database_hdf5
+  ! string length for node name array
+  integer :: n_str_nodename = 64
 
 end module constants
 

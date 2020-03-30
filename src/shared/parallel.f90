@@ -2102,16 +2102,16 @@ end subroutine world_unsplit_inter
   ! 
   subroutine select_io_node(node_names, myrank, sizeval, key, io_start)
 
-    use constants, only:io_task,compute_task,dest_ionod,nproc_io,CUSTOM_REAL,my_io_id
+    use constants, only:io_task,compute_task,dest_ionod,nproc_io,CUSTOM_REAL,my_io_id,n_str_nodename
     use shared_parameters, only: NIONOD
 
     implicit none
 
     integer, intent(in)                         :: myrank, sizeval
     integer, intent(out)                        :: key, io_start
-    character(len=4096), dimension(0:sizeval-1), intent(in) :: node_names
+    character(len=n_str_nodename), dimension(0:sizeval-1), intent(in) :: node_names
 
-    character(len=4096), dimension(sizeval) :: dump_node_names ! names of cluster nodes
+    character(len=n_str_nodename), dimension(sizeval) :: dump_node_names ! names of cluster nodes
     integer, dimension(sizeval)           :: n_procs_on_node ! number of procs on each cluster node
     integer, dimension(:), allocatable    :: n_ionode_on_cluster ! number of ionode on the cluster nodes
     integer :: i,j,c,n_cluster_node=0,my_cluster_id=-1,n_rest_io,n_ionode,n_comp_node
@@ -2258,16 +2258,17 @@ end subroutine world_unsplit_inter
   subroutine separate_compute_and_io_nodes()
     use my_mpi
 
-    use constants, only: io_task,compute_task,dest_ionod,nproc_io
+    use constants !, only: io_task,compute_task,dest_ionod,nproc_io
     use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,NIONOD
 
     implicit none
 
-    integer :: sizeval,myrank,ier,key,NPROC,nnode_comp, &
+    integer :: sizeval,ier,key,NPROC,nnode_comp, &
                split_comm,inter_comm,io_start,comp_start
 
     ! test node name
-    character(len=4096), dimension(:), allocatable :: node_names
+    character(len=n_str_nodename), dimension(:), allocatable :: node_names
+    character(len=n_str_nodename) :: this_node_name
     integer :: node_len
 
 
@@ -2285,9 +2286,9 @@ end subroutine world_unsplit_inter
 
     ! to select io node and compute nodes on the same cluster node.
     allocate(node_names(0:sizeval-1))
-    call MPI_GET_PROCESSOR_NAME(node_names(myrank),node_len,ier)
+    call MPI_GET_PROCESSOR_NAME(this_node_name,node_len,ier)
     ! share the node name between procs
-    call gather_all_all_single_ch(node_names(myrank),node_names,sizeval,4096)
+    call gather_all_all_single_ch(this_node_name,node_names,sizeval,n_str_nodename)
     call synchronize_all()
 
     ! select the task of this roc
