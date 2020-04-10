@@ -65,7 +65,7 @@ __global__ void prepare_boundary_potential_on_device(field* d_potential_dot_dot_
 /* ----------------------------------------------------------------------------------------------- */
 
 // prepares and transfers the inter-element edge-nodes to the host to be MPI'd
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_boun_pot_from_device,
               TRANSFER_BOUN_POT_FROM_DEVICE)(long* Mesh_pointer,
                                              field* potential_dot_dot_acoustic,
@@ -182,7 +182,7 @@ __global__ void assemble_boundary_potential_on_device(field* d_potential_dot_dot
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_asmbl_pot_to_device,
               TRANSFER_ASMBL_POT_TO_DEVICE)(long* Mesh_pointer,
                                             field* potential_dot_dot_acoustic,

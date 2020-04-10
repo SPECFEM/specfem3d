@@ -256,14 +256,16 @@ __global__ void compute_stacey_acoustic_undoatt_kernel( field* potential_dot_aco
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_stacey_acoustic_cuda,
               COMPUTE_STACEY_ACOUSTIC_CUDA)(long* Mesh_pointer,
                                             int* iphasef,
                                             realw* h_b_absorb_potential,
                                             int* FORWARD_OR_ADJOINT_f) {
-TRACE("compute_stacey_acoustic_cuda");
-  //double start_time = get_time();
+
+  TRACE("compute_stacey_acoustic_cuda");
+
+  //double start_time = get_time_val();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
   int FORWARD_OR_ADJOINT = *FORWARD_OR_ADJOINT_f;
@@ -362,13 +364,15 @@ TRACE("compute_stacey_acoustic_cuda");
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_stacey_acoustic_undoatt_cuda,
               COMPUTE_STACEY_ACOUSTIC_UNDOATT_CUDA)(long* Mesh_pointer,
                                                      int* iphasef,
                                                      int* FORWARD_OR_ADJOINT_f) {
-TRACE("compute_stacey_acoustic_undoatt_cuda");
-  //double start_time = get_time();
+
+  TRACE("compute_stacey_acoustic_undoatt_cuda");
+
+  //double start_time = get_time_val();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
   int FORWARD_OR_ADJOINT = *FORWARD_OR_ADJOINT_f;

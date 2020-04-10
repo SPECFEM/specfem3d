@@ -105,7 +105,7 @@ void get_stf_for_gpu(field* stf_pre_compute, double* h_stf_pre_compute, int * ru
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_add_sources_ac_cuda,
               COMPUTE_ADD_SOURCES_AC_CUDA)(long* Mesh_pointer,
                                            int* NSOURCESf,
@@ -151,7 +151,7 @@ void FC_FUNC_(compute_add_sources_ac_cuda,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_add_sources_ac_s3_cuda,
               COMPUTE_ADD_SOURCES_AC_s3_CUDA)(long* Mesh_pointer,
                                               int* NSOURCESf,
@@ -264,7 +264,7 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(field* potential_dot_dot_a
 /* ----------------------------------------------------------------------------------------------- */
 
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
               ADD_SOURCES_AC_SIM_2_OR_3_CUDA)(long* Mesh_pointer,
                                               realw* h_source_adjoint,

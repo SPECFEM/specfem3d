@@ -113,10 +113,8 @@ void FC_FUNC_(sync_copy_from_device,
 // src/cuda/check_fields_cuda.cu
 //
 
-void FC_FUNC_(pause_for_debug,PAUSE_FOR_DEBUG)() {}
-
 void FC_FUNC_(output_free_device_memory,
-              OUTPUT_FREE_DEVICE_MEMORY)(int* myrank_f) {}
+              OUTPUT_FREE_DEVICE_MEMORY)(int* myrank) {}
 
 void FC_FUNC_(get_free_device_memory,
               get_FREE_DEVICE_MEMORY)(realw* free, realw* used, realw* total) {}
@@ -320,7 +318,6 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
 void FC_FUNC_(compute_stacey_viscoelastic_undoatt_cuda,
               COMPUTE_STACEY_VISCOELASTIC_UNDOATT_CUDA)(long* Mesh_pointer,
                                                         int* iphasef,
-                                                        realw* b_absorb_field,
                                                         int* FORWARD_OR_ADJOINT_f) {}
 
 
@@ -439,6 +436,17 @@ void FC_FUNC_(fault_solver_gpu,
 // src/cuda/helper_functions.cu
 //
 
+void FC_FUNC_(pause_for_debug,
+              PAUSE_FOR_DEBUG)() {}
+
+//void FC_FUNC_(fortranflush,FORTRANFLUSH)(int* rank){}
+
+//void FC_FUNC_(fortranprint,FORTRANPRINT)(int* id) {}
+
+//void FC_FUNC_(fortranprintf,FORTRANPRINTF)(realw* val) {}
+
+//void FC_FUNC_(fortranprintd,FORTRANPRINTD)(double* val) {}
+
 
 //
 // src/cuda/initialize_cuda.cu
@@ -454,14 +462,6 @@ void FC_FUNC_(initialize_cuda_device,
 //
 // src/cuda/noise_tomography_cuda.cu
 //
-
-void FC_FUNC_(fortranflush,FORTRANFLUSH)(int* rank){}
-
-void FC_FUNC_(fortranprint,FORTRANPRINT)(int* id) {}
-
-void FC_FUNC_(fortranprintf,FORTRANPRINTF)(realw* val) {}
-
-void FC_FUNC_(fortranprintd,FORTRANPRINTD)(double* val) {}
 
 void FC_FUNC_(make_displ_rand,MAKE_DISPL_RAND)(long* Mesh_pointer,realw* h_displ) {}
 
@@ -638,6 +638,40 @@ void FC_FUNC_(prepare_cleanup_device,
                                       int* ANISOTROPY,
                                       int* APPROXIMATE_OCEAN_LOAD,
                                       int* APPROXIMATE_HESS_KL) {}
+
+
+//
+// src/cuda/smooth_cuda.cu
+//
+
+void FC_FUNC_(prepare_gpu_smooth,
+              PREPARE_GPU_SMOOTH)(long * Container,
+                                  realw * xstore_me,
+                                  realw * ystore_me,
+                                  realw * zstore_me,
+                                  realw * sigma_h2_inv,
+                                  realw * sigma_v2_inv,
+                                  realw * h_criterion,
+                                  realw * v_criterion,
+                                  int * nspec_me,
+                                  int * nker,
+                                  realw * wgll_cube){}
+
+void FC_FUNC_(compute_smooth,
+              COMPUTE_SMOOTH)(long * smooth_pointer,
+                              realw * jacobian,
+                              realw * jacobian_regular,
+                              int * irregular_element_number,
+                              realw * xstore_other,
+                              realw * ystore_other,
+                              realw * zstore_other,
+                              realw * data_other,
+                              const int * nspec_other,
+                              const int * nspec_irregular_other){}
+
+void FC_FUNC_(get_smooth,
+              GET_SMOOTH)(long * smooth_pointer,
+                          realw * data_smooth) {}
 
 
 //

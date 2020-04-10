@@ -27,31 +27,31 @@
 !=====================================================================
 */
 
-// Gauss-Lobatto-Legendre
-#define NGLL 5
-#define NGLLX 5
-#define NGLL2 25
-#define NGLL3 125
+#ifndef SMOOTH_CUDA_H
+#define SMOOTH_CUDA_H
 
-typedef float realw;
-typedef const realw* __restrict__ realw_const_p;
-typedef realw* __restrict__ realw_p;
+#include "mesh_constants_cuda.h"
 
 
-void print_CUDA_error_if_any(cudaError_t err, int num);
-void synchronize_cuda();
+// smoothing data structure
 typedef struct Smooth_data_ {
-realw * x_me;
-realw * y_me;
-realw * z_me;
-realw * data_smooth;
-realw * normalisation;
-realw * wgll_cube;
-realw sigma_h2_inv;
-realw sigma_v2_inv;
-realw h_criterion;
-realw v_criterion;
-int nspec_me;
-int nker;
+  realw * x_me;
+  realw * y_me;
+  realw * z_me;
+
+  realw * data_smooth;
+  realw * normalisation;
+  realw * wgll_cube;
+
+  realw sigma_h2_inv;
+  realw sigma_v2_inv;
+
+  realw h_criterion;
+  realw v_criterion;
+
+  int nspec_me;
+  int nker;
 } Smooth_data;
 
+
+#endif  // SMOOTH_CUDA_H

@@ -112,14 +112,14 @@ __global__ void compute_coupling_acoustic_el_kernel(realw* displ,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_coupling_ac_el_cuda,
               COMPUTE_COUPLING_AC_EL_CUDA)(long* Mesh_pointer,
                                            int* iphasef,
                                            int* num_coupling_ac_el_facesf,
                                            int* FORWARD_OR_ADJOINT) {
   TRACE("compute_coupling_ac_el_cuda");
-  //double start_time = get_time();
+  //double start_time = get_time_val();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
   int iphase            = *iphasef;
@@ -175,7 +175,7 @@ void FC_FUNC_(compute_coupling_ac_el_cuda,
                                                         mp->simulation_type,
                                                         backward_simulation);
 
-  //double end_time = get_time();
+  //double end_time = get_time_val();
   //printf("Elapsed time: %e\n",end_time-start_time);
 
   GPU_ERROR_CHECKING("compute_coupling_acoustic_el_kernel");
@@ -287,14 +287,14 @@ __global__ void compute_coupling_elastic_ac_kernel(field* potential_dot_dot_acou
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_coupling_el_ac_cuda,
               COMPUTE_COUPLING_EL_AC_CUDA)(long* Mesh_pointer,
                                            int* iphasef,
                                            int* num_coupling_ac_el_facesf,
                                            int* FORWARD_OR_ADJOINT) {
   TRACE("compute_coupling_el_ac_cuda");
-  //double start_time = get_time();
+  //double start_time = get_time_val();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
   int iphase            = *iphasef;
@@ -353,7 +353,7 @@ void FC_FUNC_(compute_coupling_el_ac_cuda,
                                                        displ,
                                                        mp->simulation_type,
                                                        backward_simulation);
-  //double end_time = get_time();
+  //double end_time = get_time_val();
   //printf("Elapsed time: %e\n",end_time-start_time);
 
   GPU_ERROR_CHECKING("compute_coupling_el_ac_cuda");
@@ -426,7 +426,7 @@ __global__ void compute_coupling_ocean_cuda_kernel(realw* accel,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_coupling_ocean_cuda,
               COMPUTE_COUPLING_OCEAN_CUDA)(long* Mesh_pointer,
                                            int* FORWARD_OR_ADJOINT) {

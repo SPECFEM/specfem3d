@@ -27,21 +27,15 @@
 !=====================================================================
 */
 
+#include "mesh_constants_cuda.h"
 #include "smooth_cuda.h"
-#include "config.h"
 
-#include <stdio.h>
 
-// copies integer array from CPU host to GPU device
-void copy_todevice_int(void** d_array_addr_ptr,int* h_array,int size){
-  cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int));
-  cudaMemcpy((int*) *d_array_addr_ptr,h_array,size*sizeof(int),cudaMemcpyHostToDevice);
-}
+/* ----------------------------------------------------------------------------------------------- */
 
-void copy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size){
-  cudaMalloc((void**)d_array_addr_ptr,size*sizeof(realw));
-  cudaMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(realw),cudaMemcpyHostToDevice);
-}
+// smoothing routines
+
+/* ----------------------------------------------------------------------------------------------- */
 
 __global__ void process_smooth(realw_const_p xstore_me,realw_const_p ystore_me,realw_const_p zstore_me,
                                realw_const_p xstore_other,realw_const_p ystore_other,realw_const_p zstore_other,
@@ -140,6 +134,8 @@ __global__ void process_smooth(realw_const_p xstore_me,realw_const_p ystore_me,r
   normalisation[NGLL3*ispec + igll] += normalisation_slice;
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
 __global__ void normalize_data(realw_p data_smooth, realw_const_p normalisation,int nker, int nspec_me){
   int ispec = blockIdx.x + gridDim.x*blockIdx.y;
 
@@ -147,7 +143,9 @@ __global__ void normalize_data(realw_p data_smooth, realw_const_p normalisation,
   for (int j=0;j<nker;j++) data_smooth[NGLL3*nspec_me*j + NGLL3*ispec + threadIdx.x] /= norm/nker;
 }
 
-extern "C"
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
 void FC_FUNC_(prepare_gpu_smooth,
               PREPARE_GPU_SMOOTH)(long * Container,
                                   realw * xstore_me,
@@ -160,6 +158,8 @@ void FC_FUNC_(prepare_gpu_smooth,
                                   int * nspec_me,
                                   int * nker,
                                   realw * wgll_cube){
+
+  TRACE("prepare_gpu_smooth");
 
   Smooth_data* sp = (Smooth_data*)malloc( sizeof(Smooth_data) );
   *Container = (long)sp;
@@ -183,7 +183,9 @@ void FC_FUNC_(prepare_gpu_smooth,
   print_CUDA_error_if_any(cudaMemset(sp->normalisation,0,NGLL3*(*nspec_me)*sizeof(realw)),2003);
 }
 
-extern "C"
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
 void FC_FUNC_(compute_smooth,
               COMPUTE_SMOOTH)(long * smooth_pointer,
                               realw * jacobian,
@@ -195,6 +197,9 @@ void FC_FUNC_(compute_smooth,
                               realw * data_other,
                               const int * nspec_other,
                               const int * nspec_irregular_other){
+
+  TRACE("compute_smooth");
+
   realw * x_other;
   realw * y_other;
   realw * z_other;
@@ -251,9 +256,14 @@ void FC_FUNC_(compute_smooth,
   cudaFree(d_irregular_element_number);
 }
 
-extern "C"
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
 void FC_FUNC_(get_smooth,
-              GET_SMOOTH)(long * smooth_pointer,realw * data_smooth){
+              GET_SMOOTH)(long * smooth_pointer,
+                          realw * data_smooth) {
+
+  TRACE("get_smooth");
 
   Smooth_data * sp = (Smooth_data*)*smooth_pointer;
 

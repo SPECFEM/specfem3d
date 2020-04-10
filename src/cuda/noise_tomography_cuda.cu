@@ -29,66 +29,11 @@
 
 #include "mesh_constants_cuda.h"
 
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(fortranflush,FORTRANFLUSH)(int* rank){
-TRACE("fortranflush");
-
-  fflush(stdout);
-  fflush(stderr);
-  printf("Flushing proc %d!\n",*rank);
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(fortranprint,FORTRANPRINT)(int* id) {
-TRACE("fortranprint");
-
-  int procid;
-#ifdef WITH_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD,&procid);
-#else
-  procid = 0;
-#endif
-  printf("%d: sends msg_id %d\n",procid,*id);
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(fortranprintf,FORTRANPRINTF)(realw* val) {
-TRACE("fortranprintf");
-
-  int procid;
-#ifdef WITH_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD,&procid);
-#else
-  procid = 0;
-#endif
-  printf("%d: sends val %e\n",procid,*val);
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(fortranprintd,FORTRANPRINTD)(double* val) {
-TRACE("fortranprintd");
-
-  int procid;
-#ifdef WITH_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD,&procid);
-#else
-  procid = 0;
-#endif
-  printf("%d: sends val %e\n",procid,*val);
-}
 
 /* ----------------------------------------------------------------------------------------------- */
 
 // randomize displ for testing
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(make_displ_rand,MAKE_DISPL_RAND)(long* Mesh_pointer,realw* h_displ) {
 TRACE("make_displ_rand");
 
@@ -130,7 +75,7 @@ __global__ void transfer_surface_to_host_kernel(int* free_surface_ispec,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_surface_to_host,
               TRANSFER_SURFACE_TO_HOST)(long* Mesh_pointer,
                                         realw* h_noise_surface_movie) {
@@ -233,7 +178,7 @@ __global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* d_ib
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(noise_read_add_surface_movie_cu,
               NOISE_READ_ADD_SURFACE_MOVIE_CU)(long* Mesh_pointer,
                                                realw* h_noise_surface_movie,

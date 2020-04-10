@@ -67,7 +67,7 @@ __global__ void prepare_boundary_accel_on_device(realw* d_accel, realw* d_send_a
 
 // prepares and transfers the inter-element edge-nodes to the host to be MPI'd
 // (elements on boundary)
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_boun_accel_from_device,
               TRANSFER_BOUN_ACCEL_FROM_DEVICE)(long* Mesh_pointer,
                                                realw* accel,
@@ -137,7 +137,7 @@ TRACE("\ttransfer_boun_accel_from_device");
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_boundary_from_device_a,
               TRANSFER_BOUNDARY_FROM_DEVICE_A)(long* Mesh_pointer,
                                                const int* nspec_outer_elastic) {
@@ -176,7 +176,7 @@ void FC_FUNC_(transfer_boundary_from_device_a,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_boundary_to_device_a,
               TRANSFER_BOUNDARY_TO_DEVICE_A)(long* Mesh_pointer,
                                              realw* buffer_recv_vector_ext_mesh,
@@ -294,7 +294,7 @@ __global__ void synchronize_boundary_accel_on_device(realw* d_accel, realw* d_se
 /* ----------------------------------------------------------------------------------------------- */
 
 // FORWARD_OR_ADJOINT == 1 for accel, and == 3 for b_accel
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_asmbl_accel_to_device,
               TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer, realw* accel,
                                               realw* buffer_recv_vector_ext_mesh,
@@ -332,7 +332,7 @@ TRACE("\ttransfer_asmbl_accel_to_device");
     dim3 grid(num_blocks_x,num_blocks_y);
     dim3 threads(blocksize,1,1);
 
-    //double start_time = get_time();
+    //double start_time = get_time_val();
     // cudaEvent_t start, stop;
     // realw time;
     // cudaEventCreate(&start);
@@ -364,7 +364,7 @@ TRACE("\ttransfer_asmbl_accel_to_device");
     // printf("Boundary Assemble Kernel Execution Time: %f ms\n",time);
   }
 
-  //double end_time = get_time();
+  //double end_time = get_time_val();
   //printf("Elapsed time: %e\n",end_time-start_time);
 
   GPU_ERROR_CHECKING("transfer_asmbl_accel_to_device");
@@ -378,7 +378,7 @@ TRACE("\ttransfer_asmbl_accel_to_device");
 
 // FORWARD_OR_ADJOINT == 1 for accel, and == 3 for b_accel
 // This sync function is for FAULT_SOLVER
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_sync_accel_to_device,
               TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer, realw* accel,
                                               realw* buffer_recv_vector_ext_mesh,
@@ -416,7 +416,7 @@ TRACE("\ttransfer_sync_accel_to_device");
     dim3 grid(num_blocks_x,num_blocks_y);
     dim3 threads(blocksize,1,1);
 
-    //double start_time = get_time();
+    //double start_time = get_time_val();
     // cudaEvent_t start, stop;
     // realw time;
     // cudaEventCreate(&start);
@@ -449,7 +449,7 @@ TRACE("\ttransfer_sync_accel_to_device");
   }
 
 
-  //double end_time = get_time();
+  //double end_time = get_time_val();
   //printf("Elapsed time: %e\n",end_time-start_time);
 
   GPU_ERROR_CHECKING("transfer_asmbl_accel_to_device");
@@ -459,7 +459,7 @@ TRACE("\ttransfer_sync_accel_to_device");
 
 //daniel: not used ...
 //
-//extern "C"
+//extern EXTERN_LANG
 //void FC_FUNC_(assemble_accel_on_device,
 //              ASSEMBLE_ACCEL_on_DEVICE)(long* Mesh_pointer, realw* accel,
 //                                              realw* buffer_recv_vector_ext_mesh,
@@ -478,7 +478,7 @@ TRACE("\ttransfer_sync_accel_to_device");
 //  int num_blocks_x, num_blocks_y;
 //  get_blocks_xy(size_padded/blocksize,&num_blocks_x,&num_blocks_y);
 //
-//  //double start_time = get_time();
+//  //double start_time = get_time_val();
 //  dim3 grid(num_blocks_x,num_blocks_y);
 //  dim3 threads(blocksize,1,1);
 //
@@ -507,7 +507,7 @@ TRACE("\ttransfer_sync_accel_to_device");
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(sync_copy_from_device,
               SYNC_copy_FROM_DEVICE)(long* Mesh_pointer,
                                      int* iphase,

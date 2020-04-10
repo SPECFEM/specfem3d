@@ -68,7 +68,7 @@ __global__ void UpdateDispVeloc_kernel(realw* displ,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(update_displacement_cuda,
               UPDATE_DISPLACMENT_CUDA)(long* Mesh_pointer,
                                           realw* deltat_F,
@@ -186,7 +186,7 @@ __global__ void UpdatePotential_kernel(field* potential_acoustic,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(update_displacement_ac_cuda,
               UPDATE_DISPLACEMENT_AC_CUDA)(long* Mesh_pointer,
                                            realw* deltat_F,
@@ -347,7 +347,7 @@ __global__ void kernel_3_veloc_cuda_device(realw* veloc,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(kernel_3_a_cuda,
               KERNEL_3_A_CUDA)(long* Mesh_pointer,
                                realw* deltatover2_F,
@@ -412,7 +412,7 @@ void FC_FUNC_(kernel_3_a_cuda,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(kernel_3_b_cuda,
               KERNEL_3_B_CUDA)(long* Mesh_pointer,
                                realw* deltatover2_F,
@@ -514,7 +514,7 @@ __global__ void kernel_3_acoustic_single_cuda_device(field* potential_dot_acoust
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(kernel_3_acoustic_cuda,
               KERNEL_3_ACOUSTIC_CUDA)(long* Mesh_pointer,
                                       realw* deltatover2_F,

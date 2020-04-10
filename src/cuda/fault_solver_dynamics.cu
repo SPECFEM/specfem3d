@@ -27,20 +27,22 @@
  !=====================================================================
  */
 
-#include "fault_struct_cuda.h"
 #include "mesh_constants_cuda.h"
+#include "fault_struct_cuda.h"
 
 // asserts
 #include <assert.h>
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(initialize_fault_solver,
               INITIALIZE_FAULT_SOLVER)(long* Fault_solver,
                                        int* num_of_faults,
                                        realw* v_healing,
                                        realw* v_rupt) {
+
+  TRACE("initialize_fault_solver");
 
   Fault_solver_dynamics *Fdyn = (Fault_solver_dynamics*)malloc(sizeof(Fault_solver_dynamics));
   Fdyn->faults = (Fault*)malloc((*num_of_faults)*sizeof(Fault));
@@ -50,13 +52,17 @@ void FC_FUNC_(initialize_fault_solver,
   *Fault_solver = (long) Fdyn;
 }
 
-extern "C"
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
 void FC_FUNC_(initialize_fault_data,
               INITIALIZE_FAULT_DATA)(long* Fault_solver,
                                      int* iglob,
                                      int* num_of_records,
                                      int* nt,
                                      int* ifault) {
+
+  TRACE("initialize_fault_data");
 
   Fault_data *fault_data_recorder = (Fault_data*)malloc(sizeof(Fault_data));
   fault_data_recorder->NRECORD = *num_of_records;
@@ -124,7 +130,7 @@ void allocate_cuda_memory_test(void** d_array_addr_ptr,int size) {
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_todevice_fault_data,
               TRANSFER_TODEVICE_FAULT_DATA)(long* Fault_pointer,
                                             int* fault_index,
@@ -141,6 +147,8 @@ void FC_FUNC_(transfer_todevice_fault_data,
                                             realw* invM2,
                                             int* ibulk1,
                                             int* ibulk2) {
+
+  TRACE("transfer_todevice_fault_data");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Fault* Flt = &(Fsolver->faults[*fault_index]);
@@ -164,7 +172,7 @@ void FC_FUNC_(transfer_todevice_fault_data,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_tohost_fault_data,
               TRANSFER_TOHOST_FAULT_DATA)(long* Fault_pointer,
                                           int* fault_index,
@@ -173,6 +181,8 @@ void FC_FUNC_(transfer_tohost_fault_data,
                                           realw* D,
                                           realw* V,
                                           realw* T) {
+
+  TRACE("transfer_tohost_fault_data");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Fault* Flt = &(Fsolver->faults[*fault_index]);
@@ -185,12 +195,14 @@ void FC_FUNC_(transfer_tohost_fault_data,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_tohost_datat,
               TRANSFER_TOHOST_DATAT)(long* Fault_pointer,
                                      realw* h_dataT,
                                      int* it,
                                      int* ifault) {
+
+  TRACE("transfer_tohost_datat");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Fault* fault_pointer = Fsolver->faults + *ifault;
@@ -202,7 +214,7 @@ void FC_FUNC_(transfer_tohost_datat,
 
 /*-------------------------------------------------------------------------------------------------*/
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_todevice_rsf_data,
               TRANSFER_TODEVICE_RSF_DATA)(long* Fault_pointer,
                                           int *NGLOB_AB,
@@ -218,6 +230,8 @@ void FC_FUNC_(transfer_todevice_rsf_data,
                                           realw* C,
                                           realw* fw,
                                           realw* Vw) {
+
+  TRACE("transfer_todevice_rsf_data");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Rsf_type* Rsf  = &((Fsolver->faults[*fault_index]).rsf);
@@ -238,7 +252,7 @@ void FC_FUNC_(transfer_todevice_rsf_data,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_todevice_swf_data,
               TRANSFER_TODEVICE_SWF_DATA)(long* Fault_pointer,
                                           int *NGLOB_AB,
@@ -249,6 +263,8 @@ void FC_FUNC_(transfer_todevice_swf_data,
                                           realw* T,
                                           realw* C,
                                           realw* theta) {
+
+  TRACE("transfer_todevice_swf_data");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Swf_type* Swf  = &((Fsolver->faults[*fault_index]).swf);
@@ -264,7 +280,7 @@ void FC_FUNC_(transfer_todevice_swf_data,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_tohost_rsf_data,
               TRANSFER_TOHOST_RSF_DATA)(long* Fault_pointer,
                                         int *NGLOB_AB,
@@ -280,6 +296,8 @@ void FC_FUNC_(transfer_tohost_rsf_data,
                                         realw* C,
                                         realw* fw,
                                         realw* Vw) {
+
+  TRACE("transfer_tohost_rsf_data");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Rsf_type* Rsf  = &((Fsolver->faults[*fault_index]).rsf);
@@ -300,7 +318,7 @@ void FC_FUNC_(transfer_tohost_rsf_data,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_tohost_swf_data,
               TRANSFER_TOHOST_SWF_DATA)(long* Fault_pointer,
                                         int *NGLOB_AB,
@@ -311,6 +329,8 @@ void FC_FUNC_(transfer_tohost_swf_data,
                                         realw* T,
                                         realw* C,
                                         realw* theta) {
+
+  TRACE("transfer_tohost_swf_data");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Swf_type *Swf = &((Fsolver -> faults[*fault_index]).swf);
@@ -458,8 +478,13 @@ __device__ __forceinline__ double  asinh_slatec(realw x) {
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__device__ __forceinline__ void funcd(double x,double *fn,double *df,realw tStick,realw Seff,
-                                      realw Z,realw f0,realw V0,realw a,realw b,realw L,realw theta,realw cohesion,int statelaw) {
+__device__ __forceinline__ void funcd(double x,double *fn,double *df,
+                                      realw tStick,realw Seff,
+                                      realw Z,realw f0,realw V0,
+                                      realw a,realw b,
+                                      realw L,realw theta,
+                                      realw cohesion,
+                                      int statelaw) {
   /*real(kind=CUSTOM_REAL) :: tStick,Seff,Z,f0,V0,a,b,L,theta
   double precision :: arg,fn,df,x
   integer :: statelaw*/
@@ -488,8 +513,14 @@ will be chosen to be one-tenth machine precision.
 ! nos    number of coefficients in os.
 ! eta    requested accuracy of series.*/
 
-__device__ __forceinline__ double rtsafe(realw x1,realw x2,realw xacc,realw tStick,realw Seff,realw Z,
-        realw f0,realw V0,realw a,realw b,realw L,realw theta,realw cohesion,int statelaw) {
+__device__ __forceinline__ double rtsafe(realw x1,realw x2,
+                                         realw xacc,
+                                         realw tStick,realw Seff,
+                                         realw Z, realw f0,realw V0,
+                                         realw a,realw b,
+                                         realw L,realw theta,
+                                         realw cohesion,
+                                         int statelaw) {
 
   const int  MAXIT=200;
   int j;
@@ -894,6 +925,7 @@ __global__  void compute_dynamic_fault_cuda(realw* Displ, /*mesh quantities*/
 }
 
 /* ----------------------------------------------------------------------------------------------- */
+
 __global__ void store_dataT(realw* store_dataT,
                             realw* V_slip,
                             realw* D_slip,
@@ -916,14 +948,18 @@ __global__ void store_dataT(realw* store_dataT,
   store_dataT[it*n_record*7 + tx*7 + 6] = T[3*irec + 2];
 }
 
+/* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(fault_solver_gpu,
               FAULT_SOLVER_GPU)(long* Mesh_pointer,
                                 long* Fault_pointer,
                                 realw* dt,
                                 int* myrank,
                                 int* it) {
+
+  TRACE("fault_solver_gpu");
+
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Fault* Flt = Fsolver->faults;
   Mesh*  mp = (Mesh*)(*Mesh_pointer);
@@ -934,6 +970,7 @@ void FC_FUNC_(fault_solver_gpu,
     Flt = &(Fsolver->faults[ifault]);
     Rsf_type* rsf = &(Flt->rsf);
     Swf_type* swf = &(Flt->swf);
+
     if(Flt->NGLOB_AB > 0){
       num_of_block = (int) (Flt->NGLOB_AB/128)+1;
       num_of_block2 = (int) (Flt->output_dataT->NRECORD/128)+1;

@@ -44,22 +44,18 @@
 #ifndef MESH_CONSTANTS_CUDA_H
 #define MESH_CONSTANTS_CUDA_H
 
-#include <cuda_runtime.h>
-#include <cuda.h>
-
-#include <stdio.h>
-#include <stdlib.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <math.h>
-#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#ifdef WITH_MPI
-#include <mpi.h>
-#endif
-
 #include "config.h"
+
+#include <cuda_runtime.h>
+#include <cuda.h>
 
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -240,6 +236,17 @@
 // maximum grid dimension in one direction of GPU
 #define MAXIMUM_GRID_DIM 65535
 
+/*----------------------------------------------------------------------------------------------- */
+
+// balancing work group x/y-size
+#undef BALANCE_WORK_GROUP
+
+#ifdef BALANCE_WORK_GROUP
+#pragma message ("\nCompiling with: BALANCE_WORK_GROUP enabled\n")
+// maximum number of work group units in one dimension
+#define BALANCE_WORK_GROUP_UNITS 7552 // == 32 * 236 for Knights Corner test
+#endif
+
 /* ----------------------------------------------------------------------------------------------- */
 
 // indexing
@@ -251,6 +258,14 @@
 
 #define INDEX4_PADDED(xsize,ysize,zsize,x,y,z,i) x + xsize*(y + ysize*z) + (i)*NGLL3_PADDED
 
+/*----------------------------------------------------------------------------------------------- */
+
+#ifdef __cplusplus
+#define EXTERN_LANG "C"
+#else
+#define EXTERN_LANG
+#endif
+
 /* ----------------------------------------------------------------------------------------------- */
 
 // custom type declarations
@@ -261,6 +276,7 @@
 // double precision temporary variables leads to 10% performance decrease
 // in Kernel_2_impl (not very much..)
 typedef float realw;
+
 // textures
 typedef texture<float, cudaTextureType1D, cudaReadModeElementType> realw_texture;
 
@@ -375,7 +391,7 @@ typedef field* __restrict__ field_p;
 /* ----------------------------------------------------------------------------------------------- */
 
 // defined in check_fields_cuda.cu
-double get_time();
+double get_time_val();
 void get_free_memory(double* free_db, double* used_db, double* total_db);
 void print_CUDA_error_if_any(cudaError_t err, int num);
 void pause_for_debugger(int pause);
@@ -390,7 +406,6 @@ void start_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop);
 void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str);
 void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str,realw* t);
 
-void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y);
 realw get_device_array_maximum_value(realw* array,int size);
 
 // defined in helper_functions.cu
@@ -713,4 +728,50 @@ typedef struct mesh_ {
 } Mesh;
 
 
+/* ----------------------------------------------------------------------------------------------- */
+
+// kernel setup function
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// moved here into header to inline function calls if possible
+
+static inline void get_blocks_xy(int num_blocks, int* num_blocks_x, int* num_blocks_y) {
+
+// Initially sets the blocks_x to be the num_blocks, and adds rows as needed (block size limit of 65535).
+// If an additional row is added, the row length is cut in
+// half. If the block count is odd, there will be 1 too many blocks,
+// which must be managed at runtime with an if statement.
+
+  *num_blocks_x = num_blocks;
+  *num_blocks_y = 1;
+
+  while (*num_blocks_x > MAXIMUM_GRID_DIM) {
+    *num_blocks_x = (int) ceil(*num_blocks_x * 0.5f);
+    *num_blocks_y = *num_blocks_y * 2;
+  }
+
+#if DEBUG == 1
+  printf("work group - total %d has group size x = %d / y = %d\n",
+         num_blocks,*num_blocks_x,*num_blocks_y);
 #endif
+
+  // tries to balance x- and y-group
+#ifdef BALANCE_WORK_GROUP
+  if (*num_blocks_x > BALANCE_WORK_GROUP_UNITS && *num_blocks_y < BALANCE_WORK_GROUP_UNITS){
+    while (*num_blocks_x > BALANCE_WORK_GROUP_UNITS && *num_blocks_y < BALANCE_WORK_GROUP_UNITS) {
+      *num_blocks_x = (int) ceil (*num_blocks_x * 0.5f);
+      *num_blocks_y = *num_blocks_y * 2;
+    }
+  }
+
+#if DEBUG == 1
+  printf("balancing work group with limit size %d - total %d has group size x = %d / y = %d\n",
+         BALANCE_WORK_GROUP_UNITS,num_blocks,*num_blocks_x,*num_blocks_y);
+#endif
+
+#endif
+}
+
+
+#endif  // MESH_CONSTANTS_CUDA_H

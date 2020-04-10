@@ -62,7 +62,7 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(prepare_constants_device,
               PREPARE_CONSTANTS_DEVICE)(long* Mesh_pointer,
                                         int* h_NGLLX, int* NSPEC_AB, int* NGLOB_AB,
@@ -372,7 +372,7 @@ void FC_FUNC_(prepare_constants_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(prepare_fields_acoustic_device,
               PREPARE_FIELDS_ACOUSTIC_DEVICE)(long* Mesh_pointer,
                                               realw* rmass_acoustic, realw* rhostore, realw* kappastore,
@@ -507,7 +507,7 @@ void FC_FUNC_(prepare_fields_acoustic_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(prepare_fields_acoustic_adj_dev,
               PREPARE_FIELDS_ACOUSTIC_ADJ_DEV)(long* Mesh_pointer,
                                               int* APPROXIMATE_HESS_KL) {
@@ -584,7 +584,7 @@ void FC_FUNC_(prepare_fields_acoustic_adj_dev,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(prepare_fields_elastic_device,
               PREPARE_FIELDS_ELASTIC_DEVICE)(long* Mesh_pointer,
                                              realw* rmassx, realw* rmassy, realw* rmassz,
@@ -982,7 +982,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(prepare_fields_elastic_adj_dev,
               PREPARE_FIELDS_ELASTIC_ADJ_DEV)(long* Mesh_pointer,
                                              int* size_f,
@@ -1154,7 +1154,7 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(prepare_sim2_or_3_const_device,
               PREPARE_SIM2_OR_3_CONST_DEVICE)(long* Mesh_pointer,int *nadj_rec_local, int* NTSTEP_BETWEEN_READ_ADJSRC) {
 
@@ -1179,7 +1179,7 @@ void FC_FUNC_(prepare_sim2_or_3_const_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(prepare_fields_noise_device,
               PREPARE_FIELDS_NOISE_DEVICE)(long* Mesh_pointer,
                                            int* NSPEC_AB, int* NGLOB_AB,
@@ -1242,7 +1242,7 @@ void FC_FUNC_(prepare_fields_noise_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(prepare_fields_gravity_device,
               PREPARE_FIELDS_gravity_DEVICE)(long* Mesh_pointer,
                                              int* GRAVITY,
@@ -1293,7 +1293,7 @@ void FC_FUNC_(prepare_fields_gravity_device,
 // unused yet...
 
 /*
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(prepare_seismogram_fields,
               PREPARE_SEISMOGRAM_FIELDS)(long* Mesh_pointer,int* nrec_local, double* nu_rec, double* hxir, double* hetar, double* hgammar) {
 
@@ -1330,7 +1330,7 @@ void FC_FUNC_(prepare_seismogram_fields,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(prepare_fault_device,
               PREPARE_FAULT_DEVICE)(long* Mesh_pointer,
                                     int* KELVIN_VOIGT_DAMPING,
@@ -1356,7 +1356,7 @@ void FC_FUNC_(prepare_fault_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(prepare_cleanup_device,
               PREPARE_CLEANUP_DEVICE)(long* Mesh_pointer,
                                       int* ACOUSTIC_SIMULATION,

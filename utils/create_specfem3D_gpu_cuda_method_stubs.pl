@@ -91,7 +91,7 @@ foreach $name (@objects) {
     #    $line =~ s#\(c\) California Institute of Technology and University of Pau, October 2007#\(c\) California Institute of Technology and University of Pau, November 2007#og;
     #    $line =~ s#rmass_sigma#rmass_time_integral_of_sigma#og;
 
-    if($line =~ /extern "C"/){
+    if($line =~ /extern EXTERN_LANG/){
       # new function declaration starts
       #print "$line\n";
       if( $line =~/FC_FUNC/ ){

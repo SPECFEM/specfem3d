@@ -329,7 +329,7 @@ __global__ void compute_element_strain_cudakernel(int* ispec_is_elastic,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_kernels_elastic_cuda,
               COMPUTE_KERNELS_ELASTIC_CUDA)(long* Mesh_pointer,
                                             realw* deltat_f,
@@ -462,7 +462,7 @@ __global__ void compute_kernels_strength_noise_cuda_kernel(realw* displ,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_kernels_strgth_noise_cu,
               COMPUTE_KERNELS_STRGTH_NOISE_CU)(long* Mesh_pointer,
                                                     realw* h_noise_surface_movie,
@@ -679,7 +679,7 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
 /* ----------------------------------------------------------------------------------------------- */
 
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_kernels_acoustic_cuda,
               COMPUTE_KERNELS_ACOUSTIC_CUDA)(long* Mesh_pointer,
                                              realw* deltat_f) {
@@ -887,7 +887,7 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_kernels_hess_cuda,
               COMPUTE_KERNELS_HESS_CUDA)(long* Mesh_pointer,
                                          realw* deltat_f,

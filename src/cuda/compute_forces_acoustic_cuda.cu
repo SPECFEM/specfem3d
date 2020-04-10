@@ -1094,7 +1094,7 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_forces_acoustic_cuda,
               COMPUTE_FORCES_ACOUSTIC_CUDA)(long* Mesh_pointer,
                                             int* iphase,
@@ -1103,7 +1103,7 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
                                             int* FORWARD_OR_ADJOINT_f) {
 
   TRACE("compute_forces_acoustic_cuda");
-  //double start_time = get_time();
+  //double start_time = get_time_val();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
   int FORWARD_OR_ADJOINT = *FORWARD_OR_ADJOINT_f;
@@ -1230,7 +1230,7 @@ __global__ void enforce_free_surface_cuda_kernel(
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(acoustic_enforce_free_surf_cuda,
               ACOUSTIC_ENFORCE_FREE_SURF_CUDA)(long* Mesh_pointer,
                                                int* ABSORB_INSTEAD_OF_FREE_SURFACE,

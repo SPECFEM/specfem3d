@@ -308,7 +308,7 @@ __global__ void compute_stacey_elastic_undoatt_kernel(realw* veloc,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_stacey_viscoelastic_cuda,
               COMPUTE_STACEY_VISCOELASTIC_CUDA)(long* Mesh_pointer,
                                                 int* iphasef,
@@ -431,7 +431,7 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_stacey_viscoelastic_undoatt_cuda,
               COMPUTE_STACEY_VISCOELASTIC_UNDOATT_CUDA)(long* Mesh_pointer,
                                                         int* iphasef,

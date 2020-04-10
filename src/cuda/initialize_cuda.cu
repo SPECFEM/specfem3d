@@ -35,7 +35,7 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(initialize_cuda_device,
               INITIALIZE_CUDA_DEVICE)(int* myrank_f,int* ncuda_devices) {
   TRACE("initialize_cuda_device");

@@ -351,7 +351,7 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_seismograms_cuda,
               COMPUTE_SEISMOGRAMS_CUDA)(long* Mesh_pointer_f,
                                         realw* seismograms_d,

@@ -29,247 +29,6 @@
 
 #include "mesh_constants_cuda.h"
 
-/* ----------------------------------------------------------------------------------------------- */
-
-// Helper functions
-
-/* ----------------------------------------------------------------------------------------------- */
-
-double get_time()
-{
-  struct timeval t;
-  struct timezone tzp;
-  gettimeofday(&t, &tzp);
-  return t.tv_sec + t.tv_usec*1e-6;
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(pause_for_debug,PAUSE_FOR_DEBUG)() {
-  TRACE("pause_for_debug");
-
-  pause_for_debugger(1);
-}
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void pause_for_debugger(int pause) {
-  if (pause) {
-    int myrank;
-#ifdef WITH_MPI
-    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-#else
-    myrank = 0;
-#endif
-    printf("I'm rank %d\n",myrank);
-    int i = 0;
-    char hostname[256];
-    gethostname(hostname, sizeof(hostname));
-    printf("PID %d on %s:%d ready for attach\n", getpid(), hostname,myrank);
-    FILE *file = fopen("./attach_gdb.txt","w+");
-    if (file != NULL){
-      fprintf(file,"PID %d on %s:%d ready for attach\n", getpid(), hostname,myrank);
-      fclose(file);
-    }
-    fflush(stdout);
-    while (0 == i)
-      sleep(5);
-  }
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void exit_on_cuda_error(const char* kernel_name) {
-  // sync and check to catch errors from previous async operations
-  synchronize_cuda();
-  cudaError_t err = cudaGetLastError();
-  if (err != cudaSuccess){
-    fprintf(stderr,"Error after %s: %s\n", kernel_name, cudaGetErrorString(err));
-
-    //debugging
-    //pause_for_debugger(0);
-
-    // outputs error file
-    FILE* fp;
-    int myrank;
-    char filename[BUFSIZ];
-#ifdef WITH_MPI
-    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-#else
-    myrank = 0;
-#endif
-    sprintf(filename,OUTPUT_FILES"/error_message_%06d.txt",myrank);
-    fp = fopen(filename,"a+");
-    if (fp != NULL){
-      fprintf(fp,"Error after %s: %s\n", kernel_name, cudaGetErrorString(err));
-      fclose(fp);
-    }
-
-    // stops program
-    //free(kernel_name);
-#ifdef WITH_MPI
-    MPI_Abort(MPI_COMM_WORLD,1);
-#endif
-    exit(EXIT_FAILURE);
-  }
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void exit_on_error(const char* info) {
-  printf("\nERROR: %s\n",info);
-  fflush(stdout);
-
-  // outputs error file
-  FILE* fp;
-  int myrank;
-  char filename[BUFSIZ];
-#ifdef WITH_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-#else
-  myrank = 0;
-#endif
-  sprintf(filename,OUTPUT_FILES"/error_message_%06d.txt",myrank);
-  fp = fopen(filename,"a+");
-  if (fp != NULL){
-    fprintf(fp,"ERROR: %s\n",info);
-    fclose(fp);
-  }
-
-  // stops program
-#ifdef WITH_MPI
-  MPI_Abort(MPI_COMM_WORLD,1);
-#endif
-  //free(info);
-  exit(EXIT_FAILURE);
-  return;
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void print_CUDA_error_if_any(cudaError_t err, int num) {
-  if (cudaSuccess != err)
-  {
-    printf("\nCUDA error !!!!! <%s> !!!!! \nat CUDA call error code: # %d\n",cudaGetErrorString(err),num);
-    fflush(stdout);
-
-    // outputs error file
-    FILE* fp;
-    int myrank;
-    char filename[BUFSIZ];
-#ifdef WITH_MPI
-    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-#else
-    myrank = 0;
-#endif
-    sprintf(filename,OUTPUT_FILES"/error_message_%06d.txt",myrank);
-    fp = fopen(filename,"a+");
-    if (fp != NULL){
-      fprintf(fp,"\nCUDA error !!!!! <%s> !!!!! \nat CUDA call error code: # %d\n",cudaGetErrorString(err),num);
-      fclose(fp);
-    }
-
-    // stops program
-#ifdef WITH_MPI
-    MPI_Abort(MPI_COMM_WORLD,1);
-#endif
-    exit(EXIT_FAILURE);
-  }
-  return;
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-// CUDA synchronization
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void synchronize_cuda(){
-#if CUDA_VERSION >= 4000
-    cudaDeviceSynchronize();
-#else
-    cudaThreadSynchronize();
-#endif
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void synchronize_mpi(){
-#ifdef WITH_MPI
-    MPI_Barrier(MPI_COMM_WORLD);
-#endif
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-// Timing helper functions
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void start_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop){
-  // creates & starts event
-  cudaEventCreate(start);
-  cudaEventCreate(stop);
-  cudaEventRecord( *start, 0);
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str){
-  realw time;
-  // stops events
-  cudaEventRecord( *stop, 0);
-  cudaEventSynchronize( *stop );
-  cudaEventElapsedTime( &time, *start, *stop );
-  cudaEventDestroy( *start );
-  cudaEventDestroy( *stop );
-  // user output
-  printf("%s: Execution Time = %f ms\n",info_str,time);
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str,realw* t){
-  realw time;
-  // stops events
-  cudaEventRecord( *stop, 0);
-  cudaEventSynchronize( *stop );
-  cudaEventElapsedTime( &time, *start, *stop );
-  cudaEventDestroy( *start );
-  cudaEventDestroy( *stop );
-  // user output
-  printf("%s: Execution Time = %f ms\n",info_str,time);
-
-  // returns time
-  *t = time;
-}
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
-// CUDA kernel setup functions
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y) {
-
-// Initially sets the blocks_x to be the num_blocks, and adds rows as needed (block size limit of 65535).
-// If an additional row is added, the row length is cut in
-// half. If the block count is odd, there will be 1 too many blocks,
-// which must be managed at runtime with an if statement.
-
-  *num_blocks_x = num_blocks;
-  *num_blocks_y = 1;
-
-  while (*num_blocks_x > MAXIMUM_GRID_DIM) {
-    *num_blocks_x = (int) ceil(*num_blocks_x * 0.5f);
-    *num_blocks_y = *num_blocks_y * 2;
-  }
-
-  return;
-}
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -299,7 +58,7 @@ void get_free_memory(double* free_db, double* used_db, double* total_db) {
 /* ----------------------------------------------------------------------------------------------- */
 
 // Saves GPU memory usage to file
-void output_free_memory(int myrank,char* info_str) {
+void output_free_memory(int myrank, char* info_str) {
 
   TRACE("output_free_memory");
 
@@ -339,23 +98,33 @@ void output_free_memory(int myrank,char* info_str) {
 /* ----------------------------------------------------------------------------------------------- */
 
 // Fortran-callable version of above method
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(output_free_device_memory,
-              OUTPUT_FREE_DEVICE_MEMORY)(int* myrank_f) {
+              OUTPUT_FREE_DEVICE_MEMORY)(int* myrank) {
+
   TRACE("output_free_device_memory");
 
-  char info[64];
-  int myrank = *myrank_f;
+  char info_str[15]; // add extra character for null termination
+  int len;
 
-  sprintf(info,"f %d:",myrank);
-  output_free_memory(myrank,info);
+  // safety check to avoid string buffer overflow
+  if (*myrank > 99999999) { exit_on_error("Error: rank too large in output_free_device_memory() routine"); }
+
+  len = snprintf (info_str, 15, "rank %8d:", *myrank);
+  if (len >= 15){ printf("warning: string length truncated (from %d) in output_free_device_memory() routine\n", len); }
+
+  //debug
+  //printf("debug: info ***%s***\n",info_str);
+
+  // writes to output file
+  output_free_memory(*myrank, info_str);
 }
 
 
 /* ----------------------------------------------------------------------------------------------- */
 
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(get_free_device_memory,
               get_FREE_DEVICE_MEMORY)(realw* free, realw* used, realw* total) {
   TRACE("get_free_device_memory");
@@ -477,12 +246,12 @@ __global__ void get_maximum_kernel(field* array, int size, realw* d_max){
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(get_norm_acoustic_from_device,
               GET_NORM_ACOUSTIC_FROM_DEVICE)(realw* norm,long* Mesh_pointer,int* sim_type) {
 
   TRACE("get_norm_acoustic_from_device");
-  //double start_time = get_time();
+  //double start_time = get_time_val();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
   realw max = 0.0;
@@ -611,7 +380,7 @@ void FC_FUNC_(get_norm_acoustic_from_device,
   // return result
   *norm = max;
 
-  //double end_time = get_time();
+  //double end_time = get_time_val();
   //printf("Elapsed time: %e\n",end_time-start_time);
 
   GPU_ERROR_CHECKING("get_norm_acoustic_from_device");
@@ -658,14 +427,14 @@ __global__ void get_maximum_vector_kernel(realw* array, int size, realw* d_max){
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(get_norm_elastic_from_device,
               GET_NORM_ELASTIC_FROM_DEVICE)(realw* norm,
                                             long* Mesh_pointer,
                                             int* type) {
 
   TRACE("\tget_norm_elastic_from_device");
-  //double start_time = get_time();
+  //double start_time = get_time_val();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
   realw max,res;
@@ -701,7 +470,7 @@ void FC_FUNC_(get_norm_elastic_from_device,
     get_maximum_vector_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_displ,size,d_max);
   }
 
-  //double end_time = get_time();
+  //double end_time = get_time_val();
   //printf("Elapsed time: %e\n",end_time-start_time);
 
   GPU_ERROR_CHECKING("kernel get_norm_elastic_from_device");
@@ -736,7 +505,7 @@ void FC_FUNC_(get_norm_elastic_from_device,
   cudaFree(d_max);
   free(h_max);
 
-  //double end_time = get_time();
+  //double end_time = get_time_val();
   //printf("Elapsed time: %e\n",end_time-start_time);
 
   GPU_ERROR_CHECKING("get_norm_elastic_from_device");
@@ -749,7 +518,7 @@ void FC_FUNC_(get_norm_elastic_from_device,
 /* ----------------------------------------------------------------------------------------------- */
 
 /*
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(get_max_accel,
               GET_MAX_ACCEL)(int* itf,int* sizef,long* Mesh_pointer) {
 
@@ -970,7 +739,7 @@ TRACE("get_max_accel");
 //max: helper functions
 
 /*
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(check_max_norm_displ_gpu,
               CHECK_MAX_NORM_DISPL_GPU)(int* size, realw* displ,long* Mesh_pointer,int* announceID) {
 
@@ -990,7 +759,7 @@ void FC_FUNC_(check_max_norm_displ_gpu,
 
 /* ----------------------------------------------------------------------------------------------- */
 /*
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(check_max_norm_vector,
               CHECK_MAX_NORM_VECTOR)(int* size, realw* vector1, int* announceID) {
 
@@ -1017,7 +786,7 @@ TRACE("check_max_norm_vector");
 /* ----------------------------------------------------------------------------------------------- */
 
 /*
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(check_max_norm_displ,
               CHECK_MAX_NORM_DISPL)(int* size, realw* displ, int* announceID) {
 
@@ -1035,7 +804,7 @@ TRACE("check_max_norm_displ");
 /* ----------------------------------------------------------------------------------------------- */
 
 /*
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(check_max_norm_b_displ_gpu,
               CHECK_MAX_NORM_B_DISPL_GPU)(int* size, realw* b_displ,long* Mesh_pointer,int* announceID) {
 
@@ -1064,7 +833,7 @@ void FC_FUNC_(check_max_norm_b_displ_gpu,
 /* ----------------------------------------------------------------------------------------------- */
 
 /*
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(check_max_norm_b_accel_gpu,
               CHECK_MAX_NORM_B_ACCEL_GPU)(int* size, realw* b_accel,long* Mesh_pointer,int* announceID) {
 
@@ -1086,7 +855,7 @@ void FC_FUNC_(check_max_norm_b_accel_gpu,
 /* ----------------------------------------------------------------------------------------------- */
 
 /*
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(check_max_norm_b_veloc_gpu,
               CHECK_MAX_NORM_B_VELOC_GPU)(int* size, realw* b_veloc,long* Mesh_pointer,int* announceID) {
 
@@ -1108,7 +877,7 @@ void FC_FUNC_(check_max_norm_b_veloc_gpu,
 /* ----------------------------------------------------------------------------------------------- */
 
 /*
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(check_max_norm_b_displ,
               CHECK_MAX_NORM_B_DISPL)(int* size, realw* b_displ,int* announceID) {
 
@@ -1126,7 +895,7 @@ TRACE("check_max_norm_b_displ");
 /* ----------------------------------------------------------------------------------------------- */
 
 /*
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(check_max_norm_b_accel,
               CHECK_MAX_NORM_B_ACCEL)(int* size, realw* b_accel,int* announceID) {
 
@@ -1144,7 +913,7 @@ TRACE("check_max_norm_b_accel");
 /* ----------------------------------------------------------------------------------------------- */
 
 /*
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(check_error_vectors,
               CHECK_ERROR_VECTORS)(int* sizef, realw* vector1,realw* vector2) {
 

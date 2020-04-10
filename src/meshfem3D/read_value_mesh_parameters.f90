@@ -271,8 +271,12 @@
   if (ier /= 0) then
     print *,'Error while reading your input Mesh_Par_file in routine read_material_parameters()'
     print *
-    print *,'We recently changed the input format from mat_id,rho,vp,vs,Q_mu,anisotropy_flag,domain_id'
-    print *,'to mat_id,rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,domain_id in order to add support for Q_Kappa.'
+    print *,'We recently changed the input format from:'
+    print *,'  mat_id,rho,vp,vs,Q_mu,anisotropy_flag,domain_id'
+    print *,'to:'
+    print *,'  mat_id,rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,domain_id'
+    print *,'in order to add support for Q_Kappa.'
+    print *
     print *,'It is likely that your input file still uses the old convention and needs to be updated.'
     print *,'If you do not know what value to add for Q_Kappa, add 9999., i.e negligible Q_Kappa attenuation'
     print *,'and then your results will be unchanged compared to older versions of the code.'

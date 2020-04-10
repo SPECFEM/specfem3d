@@ -41,7 +41,7 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_fields_el_to_device,
               TRANSFER_FIELDS_EL_TO_DEVICE)(int* size, realw* displ, realw* veloc, realw* accel,long* Mesh_pointer) {
 
@@ -57,7 +57,7 @@ void FC_FUNC_(transfer_fields_el_to_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_fields_el_from_device,
               TRANSFER_FIELDS_EL_FROM_DEVICE)(int* size, realw* displ, realw* veloc, realw* accel,long* Mesh_pointer) {
 
@@ -73,7 +73,7 @@ void FC_FUNC_(transfer_fields_el_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_fields_to_device,
               TRANSFER_B_FIELDS_TO_DEVICE)(int* size, realw* b_displ, realw* b_veloc, realw* b_accel,
                                            long* Mesh_pointer) {
@@ -90,7 +90,7 @@ void FC_FUNC_(transfer_b_fields_to_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_fields_from_device,
               TRANSFER_B_FIELDS_FROM_DEVICE)(int* size, realw* b_displ, realw* b_veloc, realw* b_accel,long* Mesh_pointer) {
 
@@ -106,7 +106,7 @@ void FC_FUNC_(transfer_b_fields_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_veloc_from_device,
               TRANSFER_VELOC_FROM_DEVICE)(int* size, realw* veloc, long* Mesh_pointer) {
 
@@ -120,7 +120,7 @@ void FC_FUNC_(transfer_veloc_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_veloc_from_device,
               TRNASFER_B_VELOC_FROM_DEVICE)(int* size, realw* b_veloc,long* Mesh_pointer) {
 
@@ -134,7 +134,7 @@ void FC_FUNC_(transfer_b_veloc_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_veloc_to_device,
               TRANSFER_B_VELOC_TO_DEVICE)(int* size, realw* b_veloc,long* Mesh_pointer) {
 
@@ -148,7 +148,7 @@ void FC_FUNC_(transfer_b_veloc_to_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_accel_to_device,
               TRNASFER_ACCEL_TO_DEVICE)(int* size, realw* accel,long* Mesh_pointer) {
 
@@ -162,7 +162,7 @@ void FC_FUNC_(transfer_accel_to_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_accel_from_device,
               TRANSFER_ACCEL_FROM_DEVICE)(int* size, realw* accel,long* Mesh_pointer) {
 
@@ -176,7 +176,7 @@ void FC_FUNC_(transfer_accel_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_accel_from_device,
               TRNASFER_B_ACCEL_FROM_DEVICE)(int* size, realw* b_accel,long* Mesh_pointer) {
 
@@ -190,7 +190,7 @@ void FC_FUNC_(transfer_b_accel_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_accel_to_device,
               TRANSFER_B_accel_to_DEVICE)(int* size, realw* b_accel,long* Mesh_pointer) {
 
@@ -204,7 +204,7 @@ void FC_FUNC_(transfer_b_accel_to_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_sigma_from_device,
               TRANSFER_SIGMA_FROM_DEVICE)(int* size, realw* sigma_kl,long* Mesh_pointer) {
 
@@ -218,7 +218,7 @@ void FC_FUNC_(transfer_sigma_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_displ_from_device,
               TRANSFER_B_DISPL_FROM_DEVICE)(int* size, realw* b_displ,long* Mesh_pointer) {
 
@@ -232,7 +232,7 @@ void FC_FUNC_(transfer_b_displ_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_displ_to_device,
               TRANSFER_B_DISPL_to_DEVICE)(int* size, realw* b_displ,long* Mesh_pointer) {
 
@@ -246,7 +246,7 @@ void FC_FUNC_(transfer_b_displ_to_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_displ_from_device,
               TRANSFER_DISPL_FROM_DEVICE)(int* size, realw* displ,long* Mesh_pointer) {
 
@@ -262,7 +262,7 @@ void FC_FUNC_(transfer_displ_from_device,
 
 // attenuation fields
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_fields_att_to_device,
               TRANSFER_B_FIELDS_ATT_TO_DEVICE)(long* Mesh_pointer,
                                                realw* b_R_xx,realw* b_R_yy,realw* b_R_xy,
@@ -299,7 +299,7 @@ void FC_FUNC_(transfer_b_fields_att_to_device,
 
 // attenuation fields
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_fields_att_from_device,
               TRANSFER_FIELDS_ATT_FROM_DEVICE)(long* Mesh_pointer,
                                                realw* R_xx,realw* R_yy,realw* R_xy,realw* R_xz,realw* R_yz,
@@ -334,7 +334,7 @@ void FC_FUNC_(transfer_fields_att_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_kernels_el_to_host,
               TRANSFER_KERNELS_EL_TO_HOST)(long* Mesh_pointer,
                                             realw* h_rho_kl,
@@ -366,7 +366,7 @@ void FC_FUNC_(transfer_kernels_el_to_host,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_kernels_noise_to_host,
               TRANSFER_KERNELS_NOISE_TO_HOST)(long* Mesh_pointer,
                                               realw* h_sigma_kl,
@@ -388,7 +388,7 @@ void FC_FUNC_(transfer_kernels_noise_to_host,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_fields_ac_to_device,
               TRANSFER_FIELDS_AC_TO_DEVICE)(int* size,
                                             field* potential_acoustic,
@@ -413,7 +413,7 @@ void FC_FUNC_(transfer_fields_ac_to_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_fields_ac_to_device,
               TRANSFER_B_FIELDS_AC_TO_DEVICE)(int* size,
                                               field* b_potential_acoustic,
@@ -439,7 +439,7 @@ void FC_FUNC_(transfer_b_fields_ac_to_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_fields_ac_from_device,
               TRANSFER_FIELDS_AC_FROM_DEVICE)(int* size,
                                               field* potential_acoustic,
@@ -463,7 +463,7 @@ void FC_FUNC_(transfer_fields_ac_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_fields_ac_from_device,
               TRANSFER_B_FIELDS_AC_FROM_DEVICE)(int* size,
                                                 field* b_potential_acoustic,
@@ -487,7 +487,7 @@ void FC_FUNC_(transfer_b_fields_ac_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_potential_ac_from_device,
               TRANSFER_B_potentical_AC_FROM_DEVICE)(int* size,
                                                     field* b_potential_acoustic,
@@ -505,7 +505,7 @@ void FC_FUNC_(transfer_b_potential_ac_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_potential_dot_dot_ac_from_device,
               TRANSFER_B_potentical_DOT_DOT_AC_FROM_DEVICE)(int* size,
                                                             field* b_potential_dot_dot_acoustic,
@@ -523,7 +523,7 @@ void FC_FUNC_(transfer_b_potential_dot_dot_ac_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_potential_ac_to_device,
               TRANSFER_B_potentical_AC_TO_DEVICE)(int* size,
                                                   field* b_potential_acoustic,
@@ -541,7 +541,7 @@ void FC_FUNC_(transfer_b_potential_ac_to_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_potential_dot_dot_ac_to_device,
               TRANSFER_B_potentical_DOT_DOT_AC_TO_DEVICE)(int* size,
                                                           field* b_potential_dot_dot_acoustic,
@@ -559,7 +559,7 @@ void FC_FUNC_(transfer_b_potential_dot_dot_ac_to_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_dot_dot_from_device,
               TRNASFER_DOT_DOT_FROM_DEVICE)(int* size, field* potential_dot_dot_acoustic,long* Mesh_pointer) {
 
@@ -575,7 +575,7 @@ void FC_FUNC_(transfer_dot_dot_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_dot_dot_from_device,
               TRNASFER_B_DOT_DOT_FROM_DEVICE)(int* size, field* b_potential_dot_dot_acoustic,long* Mesh_pointer) {
 
@@ -592,7 +592,7 @@ void FC_FUNC_(transfer_b_dot_dot_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_kernels_ac_to_host,
               TRANSFER_KERNELS_AC_TO_HOST)(long* Mesh_pointer,realw* h_rho_ac_kl,realw* h_kappa_ac_kl,int* NSPEC_AB) {
 
@@ -616,7 +616,7 @@ void FC_FUNC_(transfer_kernels_ac_to_host,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_kernels_hess_el_tohost,
               TRANSFER_KERNELS_HESS_EL_TOHOST)(long* Mesh_pointer,
                  realw* h_hess_kl,
@@ -647,7 +647,7 @@ void FC_FUNC_(transfer_kernels_hess_el_tohost,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_kernels_hess_ac_tohost,
               TRANSFER_KERNELS_HESS_AC_TOHOST)(long* Mesh_pointer,
                  realw* h_hess_ac_kl,
@@ -675,7 +675,7 @@ void FC_FUNC_(transfer_kernels_hess_ac_tohost,
 
 /* ----------------------------------------------------------------------------------------------- */
 /*
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_compute_kernel_answers_from_device,
               TRANSFER_COMPUTE_KERNEL_ANSWERS_FROM_DEVICE)(long* Mesh_pointer,
                                                            realw* rho_kl,int* size_rho,
@@ -694,7 +694,7 @@ TRACE("transfer_compute_kernel_answers_from_device");
 
 /* ----------------------------------------------------------------------------------------------- */
 /*
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_compute_kernel_fields_from_device,
               TRANSFER_COMPUTE_KERNEL_FIELDS_FROM_DEVICE)(long* Mesh_pointer,
                                                           realw* accel, int* size_accel,
@@ -745,7 +745,7 @@ TRACE("transfer_compute_kernel_fields_from_device");
 /* ----------------------------------------------------------------------------------------------- */
 // register host array for pinned memory
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(register_host_array,
               REGISTER_HOST_ARRAY)(int *size, realw *h_array) {
 
@@ -764,7 +764,7 @@ void FC_FUNC_(register_host_array,
 }
 
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(unregister_host_array,
               UNREGISTER_HOST_ARRAY)(realw *h_array) {
 

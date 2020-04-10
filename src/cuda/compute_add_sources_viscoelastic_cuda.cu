@@ -76,7 +76,7 @@ __global__ void compute_add_sources_kernel(realw* accel,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_add_sources_el_cuda,
               COMPUTE_ADD_SOURCES_EL_CUDA)(long* Mesh_pointer,
                                            double* h_stf_pre_compute,
@@ -121,7 +121,7 @@ void FC_FUNC_(compute_add_sources_el_cuda,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_add_sources_el_s3_cuda,
               COMPUTE_ADD_SOURCES_EL_S3_CUDA)(long* Mesh_pointer,
                                               double* h_stf_pre_compute,
@@ -190,7 +190,7 @@ __global__ void add_source_master_rec_noise_cuda_kernel(int* d_ibool,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(add_source_master_rec_noise_cu,
               ADD_SOURCE_MASTER_REC_NOISE_CU)(long* Mesh_pointer,
                                               int* it_f,
@@ -267,7 +267,7 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(add_sources_el_sim_type_2_or_3,
               ADD_SOURCES_EL_SIM_TYPE_2_OR_3)(long* Mesh_pointer,
                                               realw* h_source_adjoint,
