@@ -260,7 +260,7 @@
 ! #(1)material_domain_id #(2)material_id  #(3)rho  #(4)vp   #(5)vs   #(6)Q_kappa   #(7)Q_mu  #(8)anisotropy_flag
 !
 ! where
-!     material_domain_id : 1=acoustic / 2=elastic
+!     material_domain_id : 1=acoustic / 2=elastic / 3=poroelastic
 !     material_id        : POSITIVE integer identifier corresponding to the identifier of material block
 !     rho                : density
 !     vp                 : P-velocity
@@ -281,7 +281,7 @@
 ! #(1)material_domain_id #(2)material_id  tomography elastic  #(3)tomography_filename #(4)positive_unique_number
 !
 ! where
-!     material_domain_id : 1=acoustic / 2=elastic
+!     material_domain_id : 1=acoustic / 2=elastic / 3=poroelastic
 !     material_id        : NEGATIVE integer identifier corresponding to the identifier of material block
 !     tomography_filename: filename of the tomography file
 !     positive_unique_number: a positive unique identifier

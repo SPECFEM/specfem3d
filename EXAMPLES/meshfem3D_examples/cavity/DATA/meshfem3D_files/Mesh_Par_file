@@ -82,7 +82,7 @@ NMATERIALS                      = 1
 #     Q_Kappa          : Q_Kappa attenuation quality factor
 #     Q_mu             : Q_mu attenuation quality factor
 #     anisotropy_flag  : 0 = no anisotropy / 1,2,... check the implementation in file aniso_model.f90
-#     domain_id        : 1 = acoustic / 2 = elastic
+#     domain_id        : 1 = acoustic / 2 = elastic / 3 = poroelastic
 1  1450  391  230  9999. 9999.  0  2
 
 #-----------------------------------------------------------

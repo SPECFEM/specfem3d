@@ -502,11 +502,11 @@ class mesh(object, mesh_tools):
                 qmu = 9999.0
                 ani = 0
                 # material domain id
-                if "acoustic" in name:
+                if name.startswith('acoustic'):
                     imaterial = 1
-                elif "elastic" in name:
+                elif name.startswith('elastic'):
                     imaterial = 2
-                elif "poroelastic" in name:
+                elif name.startswith('poroelastic'):
                     imaterial = 3
                 else:
                     imaterial = 0
@@ -761,7 +761,7 @@ class mesh(object, mesh_tools):
 ! #(1)domain_id #(2)material_id #(3)rho #(4)vp #(5)vs #(6)Q_k #(7)Q_mu #(8)ani
 !
 ! where
-!     domain_id          : 1=acoustic / 2=elastic
+!     domain_id          : 1=acoustic / 2=elastic / 3=poroelastic
 !     material_id        : POSITIVE integer identifier of material block
 !     rho                : density
 !     vp                 : P-velocity
@@ -778,7 +778,7 @@ class mesh(object, mesh_tools):
 ! #(1)domain_id #(2)material_id  tomography elastic  #(3)filename #(4)positive
 !
 ! where
-!     domain_id : 1=acoustic / 2=elastic
+!     domain_id : 1=acoustic / 2=elastic / 3=poroelastic
 !     material_id        : NEGATIVE integer identifier of material block
 !     filename           : filename of the tomography file
 !     positive           : a positive unique identifier

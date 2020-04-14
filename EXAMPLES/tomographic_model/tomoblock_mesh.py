@@ -31,11 +31,11 @@ print(sys.path)
 print("")
 
 try:
-	from geocubitlib import boundary_definition
-	from geocubitlib import cubit2specfem3d
+    from geocubitlib import boundary_definition
+    from geocubitlib import cubit2specfem3d
 except:
     import boundary_definition
-	import cubit2specfem3d
+    import cubit2specfem3d
 
 # bounding faces
 boundary_definition.entities=['face']
