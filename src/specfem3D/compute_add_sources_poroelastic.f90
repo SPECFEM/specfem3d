@@ -79,7 +79,12 @@
         if (ispec_is_poroelastic(ispec)) then
           ! current time
           if (USE_LDDRK) then
-            time_source_dble = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            ! LDDRK
+            ! note: the LDDRK scheme updates displacement after the stiffness computations and
+            !       after adding boundary/coupling/source terms.
+            !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+            !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+            time_source_dble = dble(it-1-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
           else
             time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
           endif
@@ -277,7 +282,12 @@
           ! note: time step is now at NSTEP-it
           ! current time
           if (USE_LDDRK) then
-            time_source_dble = dble(NSTEP-it)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            ! LDDRK
+            ! note: the LDDRK scheme updates displacement after the stiffness computations and
+            !       after adding boundary/coupling/source terms.
+            !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+            !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+            time_source_dble = dble(NSTEP-it-1)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
           else
             time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
           endif

@@ -67,7 +67,12 @@
 
   ! sets current initial time
   if (USE_LDDRK) then
-    time_t = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0
+    ! LDDRK
+    ! note: the LDDRK scheme updates displacement after the stiffness computations and
+    !       after adding boundary/coupling/source terms.
+    !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+    !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+    time_t = dble(it-1-1)*DT + dble(C_LDDRK(istage))*DT - t0
   else
     time_t = dble(it-1)*DT - t0
   endif
@@ -351,7 +356,12 @@
 
   ! sets current initial time
   if (USE_LDDRK) then
-    time_t = dble(NSTEP-it_tmp)*DT - dble(C_LDDRK(istage))*DT - t0
+    ! LDDRK
+    ! note: the LDDRK scheme updates displacement after the stiffness computations and
+    !       after adding boundary/coupling/source terms.
+    !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+    !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+    time_t = dble(NSTEP-it_tmp-1)*DT - dble(C_LDDRK(istage))*DT - t0
   else
     time_t = dble(NSTEP-it_tmp)*DT - t0
   endif
@@ -470,7 +480,12 @@
     if (NSOURCES > 0) then
       ! sets current initial time
       if (USE_LDDRK) then
-        time_t = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0
+        ! LDDRK
+        ! note: the LDDRK scheme updates displacement after the stiffness computations and
+        !       after adding boundary/coupling/source terms.
+        !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+        !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+        time_t = dble(it-1-1)*DT + dble(C_LDDRK(istage))*DT - t0
       else
         time_t = dble(it-1)*DT - t0
       endif
@@ -583,7 +598,12 @@
       do isource = 1,NSOURCES
         ! current time
         if (USE_LDDRK) then
-          time_source_dble = dble(NSTEP-it)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+          ! LDDRK
+          ! note: the LDDRK scheme updates displacement after the stiffness computations and
+          !       after adding boundary/coupling/source terms.
+          !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+          !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+          time_source_dble = dble(NSTEP-it-1)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
         else
           time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
         endif
@@ -699,7 +719,12 @@
   if (NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
     ! sets current initial time
     if (USE_LDDRK) then
-      time_t = dble(NSTEP-it_tmp)*DT - dble(C_LDDRK(istage))*DT - t0
+      ! LDDRK
+      ! note: the LDDRK scheme updates displacement after the stiffness computations and
+      !       after adding boundary/coupling/source terms.
+      !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+      !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+      time_t = dble(NSTEP-it_tmp-1)*DT - dble(C_LDDRK(istage))*DT - t0
     else
       time_t = dble(NSTEP-it_tmp)*DT - t0
     endif

@@ -703,19 +703,49 @@
 !! for LDDRK high-order time scheme
 !!
 !!-----------------------------------------------------------
-  integer, parameter :: NSTAGE = 6
+! see reference:
+! Berland J., Ch. Bogey, Ch. Bailly, 2006.
+! Low-dissipation and low-dispersion fourth-order Runge–Kutta algorithm
+! Computers & Fluids 35 (2006) 1459–1463
 
-  real(kind=CUSTOM_REAL), dimension(NSTAGE), parameter :: ALPHA_LDDRK = &
+  integer, parameter :: NSTAGE_LDDRK = 6
+
+  real(kind=CUSTOM_REAL), dimension(NSTAGE_LDDRK), parameter :: ALPHA_LDDRK = &
     (/0.0_CUSTOM_REAL,-0.737101392796_CUSTOM_REAL, -1.634740794341_CUSTOM_REAL, &
       -0.744739003780_CUSTOM_REAL,-1.469897351522_CUSTOM_REAL,-2.813971388035_CUSTOM_REAL/)
 
-  real(kind=CUSTOM_REAL), dimension(NSTAGE), parameter :: BETA_LDDRK = &
+  real(kind=CUSTOM_REAL), dimension(NSTAGE_LDDRK), parameter :: BETA_LDDRK = &
     (/0.032918605146_CUSTOM_REAL,0.823256998200_CUSTOM_REAL,0.381530948900_CUSTOM_REAL, &
       0.200092213184_CUSTOM_REAL,1.718581042715_CUSTOM_REAL,0.27_CUSTOM_REAL/)
 
-  real(kind=CUSTOM_REAL), dimension(NSTAGE), parameter :: C_LDDRK = &
+  real(kind=CUSTOM_REAL), dimension(NSTAGE_LDDRK), parameter :: C_LDDRK = &
     (/0.0_CUSTOM_REAL,0.032918605146_CUSTOM_REAL,0.249351723343_CUSTOM_REAL, &
       0.466911705055_CUSTOM_REAL,0.582030414044_CUSTOM_REAL,0.847252983783_CUSTOM_REAL/)
+
+
+!!-----------------------------------------------------------
+!!
+!! symplectic time scheme - Position-Extended Forest-Ruth-Like (PEFRL) scheme (4th order)
+!!
+!!-----------------------------------------------------------
+! see reference:
+! Omelyan,  I.M. Mryglod and R. Folk, 2002.
+! Optimized Forest-Ruth- and Suzuki-like algorithms for integration of motion in many-body systems,
+! Computer Physics Communications 146, 188
+! http://arxiv.org/abs/cond-mat/0110585
+
+  integer, parameter :: NSTAGE_SYMPLECTIC = 4
+
+  ! PEFRL scheme coefficients (see Omelyan et al, 2002, eq. (20))
+  double precision, parameter :: PEFRL_xi = 0.1786178958448091d0
+  double precision, parameter :: PEFRL_lambda = -0.2123418310626054d0
+  double precision, parameter :: PEFRL_chi = -0.06626458266981849d0
+
+  real(kind=CUSTOM_REAL), dimension(NSTAGE_SYMPLECTIC), parameter :: ALPHA_SYMPL_PEFRL = &
+    (/ PEFRL_xi, PEFRL_chi, 1.0_CUSTOM_REAL - 2.0_CUSTOM_REAL*(PEFRL_chi + PEFRL_xi), PEFRL_chi /)
+  real(kind=CUSTOM_REAL), dimension(NSTAGE_SYMPLECTIC), parameter :: BETA_SYMPL_PEFRL = &
+    (/ 0.5_CUSTOM_REAL - PEFRL_lambda, PEFRL_lambda, PEFRL_lambda, 0.5_CUSTOM_REAL - PEFRL_lambda /)
+
 
 !!----------------------
 !!
