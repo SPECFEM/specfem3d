@@ -705,8 +705,8 @@
 !!-----------------------------------------------------------
 ! see reference:
 ! Berland J., Ch. Bogey, Ch. Bailly, 2006.
-! Low-dissipation and low-dispersion fourth-order Runge–Kutta algorithm
-! Computers & Fluids 35 (2006) 1459–1463
+! Low-dissipation and low-dispersion fourth-order Runge-Kutta algorithm
+! Computers & Fluids 35 (2006) 1459-1463
 
   integer, parameter :: NSTAGE_LDDRK = 6
 
@@ -731,7 +731,7 @@
 ! see reference:
 ! Omelyan,  I.M. Mryglod and R. Folk, 2002.
 ! Optimized Forest-Ruth- and Suzuki-like algorithms for integration of motion in many-body systems,
-! Computer Physics Communications 146, 188
+! Computer Physics communications 146, 188
 ! http://arxiv.org/abs/cond-mat/0110585
 
   integer, parameter :: NSTAGE_SYMPLECTIC = 4

@@ -28,7 +28,7 @@
 
   subroutine print_stf_file()
 
-  use constants,only: MAX_STRING_LEN,CUSTOM_REAL,IMAIN,IO_STF, &
+  use constants, only: MAX_STRING_LEN,CUSTOM_REAL,IMAIN,IO_STF, &
     C_LDDRK,myrank
 
   use specfem_par, only: NSTEP,SIMULATION_TYPE,OUTPUT_FILES, &
