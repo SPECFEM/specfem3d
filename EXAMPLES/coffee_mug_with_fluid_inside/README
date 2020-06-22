@@ -1,0 +1,32 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+This examples uses the coffee cup mesh to run a simulation with coupled acoustic/elastic domains.
+The source is placed inside the coffee (acoustic domain). The example is purely for fun. 
+
+
+The mesh is provided by the Cubit/Trelis file `coffee_cup_with_handle_CUBIT_mesh.cub`. For running 
+the simulation one needs:
+
+* block definitions for exporting the mesh to SPECFEM format:
+  For such an irregular mesh, they can be created by running the script `create_mesh.py` within Cubit/Trelis (-> Play script file...).
+
+  This has already been done for the provided cubit *.cub file.
+
+* run cubit2specfem to export files to a MESH/ folder: 
+  can be done by running the script `run_cubit2specfem3d.py` within Cubit/Trelis.
+
+  This has already been done for the default mesh provided in folder MESH-default/.
+
+
+To run the simulation, type:
+> ./run_this_example.sh
+
+
+The simulation creates movie files which can be converted to AVS*.inp files by the script:
+> ./xcreate_movie_files.sh
+
+Paraview can be used to view these files. Enjoy :)
+
+
