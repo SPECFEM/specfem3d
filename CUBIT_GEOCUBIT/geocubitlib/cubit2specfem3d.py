@@ -475,6 +475,7 @@ class mesh(object, mesh_tools):
         self.xmax = False
         self.ymax = False
         self.zmax = False
+        # re-indexes
         cubit.cmd('compress all')
 
     def __repr__(self):
@@ -491,8 +492,13 @@ class mesh(object, mesh_tools):
         for block in blocks:
             name = cubit.get_exodus_entity_name('block', block)
             ty = cubit.get_block_element_type(block)
-            # print(block,blocks,ty,self.hex,self.face)
+            # info
+            print("block definitions: block",block,"name:",name,"from blocks:",blocks,"type:",ty,"self:",self.hex,self.face)
+            # checks element types
             if self.hex in ty:
+                # volume block w/ hex elements
+                # info
+                print('block definitions: block with volume elements', name,block,ty)
                 flag = None
                 vp = None
                 vs = None
@@ -571,7 +577,8 @@ class mesh(object, mesh_tools):
                             kind = 'tomography'
                 elif nattrib == 1:
                     flag = cubit.get_block_attribute_value(block, 0)
-                    # print('only 1 attribute ', name,block,flag)
+                    #debug
+                    #print('debug: only 1 attribute ', name,block,flag)
                     vp, vs, rho, qk, qmu, ani = (0, 0, 0, 9999., 9999., 0)
                 else:
                     flag = block
@@ -589,7 +596,11 @@ class mesh(object, mesh_tools):
                 elif flag == 0 or nattrib == 1:
                     par = tuple([imaterial, flag, name])
                 material[block] = par
+
             elif ty == self.face or ty == 'SHELL4' or ty == 'SHELL9':
+                # surface block w/ SHELL,SHELL4,SHELL9,QUAD,..
+                # info
+                print('block definitions: block with surface elements', name,block,ty)
                 block_bc_flag.append(4)
                 block_bc.append(block)
                 bc[block] = 4  # face has connectivity = 4
@@ -597,8 +608,10 @@ class mesh(object, mesh_tools):
                     self.topography = block
                 if self.freetxt in name:
                     self.free = block
+
             elif ty == 'SPHERE':
                 pass
+
             else:
                 # block elements differ from HEX8/QUAD4/SHELL4
                 print('****************************************')
@@ -615,6 +628,7 @@ class mesh(object, mesh_tools):
                 print('****************************************')
                 continue
                 return None, None, None, None, None, None, None, None
+
         nsets = cubit.get_nodeset_id_list()
         if len(nsets) == 0:
             self.receivers = None
@@ -656,6 +670,7 @@ class mesh(object, mesh_tools):
 
     def get_hex_connectivity(self, ind):
         if self.hex27:
+            # quadratic elements hex27
             cubit.silent_cmd('group "nh" add Node in hex ' + str(ind))
             group1 = cubit.get_id_from_name("nh")
             result = cubit.get_group_nodes(group1)
@@ -664,16 +679,19 @@ class mesh(object, mesh_tools):
                     'Error: hexes with less than 27 nodes, hex27 True')
             cubit.cmd('del group ' + str(group1))
         else:
+            # linear elements hex8
             result = cubit.get_connectivity('hex', ind)
         return result
 
     def get_face_connectivity(self, ind):
         if self.hex27:
+            # quadratic elements hex27
             cubit.silent_cmd('group "nf" add Node in face ' + str(ind))
             group1 = cubit.get_id_from_name("nf")
             result = cubit.get_group_nodes(group1)
             cubit.cmd('del group ' + str(group1))
         else:
+            # linear elements
             result = cubit.get_connectivity('face', ind)
         return result
 
@@ -741,7 +759,8 @@ class mesh(object, mesh_tools):
                 txt = '%1i %3i %s %s \n' % (properties[0], properties[
                                             1], properties[2], helpstring)
                 #
-        # print(txt)
+        # info output
+        print("material: ",txt)
         return txt
 
     def nummaterial_write(self, nummaterial_name, placeholder=True):
@@ -940,8 +959,7 @@ class mesh(object, mesh_tools):
                     faces = cubit.get_sub_elements('hex', h, 2)
                     for f in faces:
                         if f in dic_quads_all.keys():
-                            txt = self.create_facenode_string(
-                                h, f, normal, cknormal=True)
+                            txt = self.create_facenode_string(h, f, normal, cknormal=True)
                             freehex.write(txt)
             elif block == self.free:
                 name = cubit.get_exodus_entity_name('block', block)
@@ -955,8 +973,7 @@ class mesh(object, mesh_tools):
                     faces = cubit.get_sub_elements('hex', h, 2)
                     for f in faces:
                         if f in dic_quads_all.keys():
-                            txt = self.create_facenode_string(
-                                h, f, normal, cknormal=False)
+                            txt = self.create_facenode_string(h, f, normal, cknormal=False)
                             freehex.write(txt)
         freehex.close()
         print('Ok')
@@ -1057,6 +1074,7 @@ class mesh(object, mesh_tools):
         if not absname:
             absname = self.absname
 
+        # CPML
         if self.cpml:
             if not absname:
                 absname = self.cpmlname
@@ -1073,12 +1091,12 @@ class mesh(object, mesh_tools):
                     for hexa in lcpml:
                         abshex_cpml.write(('%10i %10i\n') % (hexa, icpml))
 
+        # absorbing surfaces
         stacey_absorb = True
         if stacey_absorb:
-            #
-            #
             if not absname:
                 absname = self.absname
+            print('Writing abs surface ' + absname + '.....')
             # loops through all block definitions
             list_hex = cubit.parse_cubit_list('hex', 'all')
             for block, flag in zip(self.block_bc, self.block_bc_flag):
@@ -1112,6 +1130,7 @@ class mesh(object, mesh_tools):
                         print("abs all - experimental, check the output")
                         cknormal = False
                         abshex_local = open(absname, 'w')
+                        normal = None
                     else:
                         if block == 1003:
                             print("xmin")
@@ -1134,7 +1153,7 @@ class mesh(object, mesh_tools):
                             abshex_local = open(absname + '_bottom', 'w')
                             normal = (0, 0, -1)
                         elif block == 1000:
-                            print("custumized")
+                            print("custom")
                             abshex_local = open(absname, 'w')
                             cknormal = False
                             normal = None
@@ -1150,8 +1169,7 @@ class mesh(object, mesh_tools):
                             faces = cubit.get_sub_elements('hex', h, 2)
                             for f in faces:
                                 if f in dic_quads_all.keys():
-                                    txt = self.create_facenode_string(
-                                        h, f, normal=normal, cknormal=cknormal)
+                                    txt = self.create_facenode_string(h, f, normal=normal, cknormal=cknormal)
                                     abshex_local.write(txt)
                         abshex_local.close()
                         print('Ok')
@@ -1194,8 +1212,7 @@ class mesh(object, mesh_tools):
                     faces = cubit.get_sub_elements('hex', h, 2)
                     for f in faces:
                         if f in dic_quads_all.keys():
-                            txt = self.create_facenode_string(
-                                h, f, cknormal=False)
+                            txt = self.create_facenode_string(h, f, cknormal=False)
                             surfhex_local.write(txt)
                 # closes file
                 surfhex_local.close()
