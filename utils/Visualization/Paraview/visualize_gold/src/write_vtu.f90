@@ -286,7 +286,7 @@ do i_t=1,t_nstep
         endif
         read(27) NSPEC_AB
         read(27) NGLOB_AB
-
+        read(27) ios    ! skip dummy
         ! ibool file
         allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
         read(27) ibool
@@ -445,6 +445,7 @@ do i_t=1,t_nstep
         endif
         read(27) NSPEC_AB
         read(27) NGLOB_AB
+        read(27) ios    ! skip dummy
         ! ibool file
         allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
         read(27) ibool
@@ -587,6 +588,7 @@ do i_t=1,t_nstep
         endif
         read(27) NSPEC_AB
         read(27) NGLOB_AB
+        read(27) ios    ! skip dummy
         ! ibool file
         allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
         read(27) ibool

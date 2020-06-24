@@ -126,6 +126,7 @@
           status='old',action='read',form='unformatted')
     read(27) NSPEC_AB
     read(27) NGLOB_AB
+    read(27) ier    ! skip dummy
 
     ! ibool file
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
