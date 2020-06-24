@@ -317,8 +317,11 @@ subroutine read_model_database()
 
   read(IIN) ival !nspec
   if (ival /= nspec) call exit_mpi(myrank,'Error invalid nspec value in external_mesh.bin')
+
   read(IIN) ival !nglob
   if (ival /= nglob) call exit_mpi(myrank,'Error invalid nglob value in external_mesh.bin')
+
+  read(IIN) ival ! skip nspec_irregular
 
   ! allocate arrays for storing the databases
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)

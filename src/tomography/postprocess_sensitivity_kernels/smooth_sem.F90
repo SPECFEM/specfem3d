@@ -162,7 +162,14 @@ program smooth_sem
   ! parse command line arguments
   if (command_argument_count() /= NARGS) then
     if (myrank == 0) then
-        print *,'USAGE:  mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR GPU_MODE'
+      print *,'USAGE:  mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR GPU_MODE'
+      print *,'  with'
+      print *,'   SIGMA_H SIGMA_V  - horizontal & vertical smoothing lengths'
+      print *,'   KERNEL_NAME      - sensitivity kernel name (e.g., alpha_kernel for proc***_alpha_kernel.bin files)'
+      print *,'   INPUT_DIR        - input directory holding kernel files'
+      print *,'   OUPUT_DIR        - output directory for smoothed kernel'
+      print *,'   GPU_MODE         - set to .true. to use GPU, otherwise set to .false. for CPU run'
+      print *
       stop 'Please check command line arguments'
     endif
   endif

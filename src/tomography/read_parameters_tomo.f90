@@ -113,8 +113,10 @@ subroutine read_parameters_tomo()
     print *
     print *,'with'
     print *,'  step_factor        - factor to scale gradient (e.g. 0.03 for 3 percent update)'
-    print *,'  INPUT-KERNELS-DIR/ - (optional) directory which holds summed kernels (e.g. alpha_kernel.bin,..)'
-    print *,'  OUTPUT-MODEL-DIR/  - (optional) directory which will hold new model files (e.g. vp_new.bin,..)'
+    print *,'  INPUT-KERNELS-DIR/ - (optional) directory which holds summed kernels (e.g. alpha_kernel.bin,..), default ' &
+            // trim(INPUT_KERNELS_DIR)
+    print *,'  OUTPUT-MODEL-DIR/  - (optional) directory which will hold new model files (e.g. vp_new.bin,..), default ' &
+            // trim(OUTPUT_MODEL_DIR)
     print *
     print *,'Please rerun e.g. like: mpirun -np ',sizeprocs,' ./bin/xadd_model 0.03'
     print *

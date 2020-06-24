@@ -54,7 +54,7 @@
 !       proc000***_rho_kernel_smooth.bin
 !
 !- topo/ contains:
-!       proc000***_solver_data.bin
+!       proc000***_external_mesh.bin
 !
 ! new models are stored in
 !- OUTPUT_MODEL/ as
