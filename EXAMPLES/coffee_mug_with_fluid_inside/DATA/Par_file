@@ -19,7 +19,7 @@ INVERSE_FWI_FULL_PROBLEM        = .false.
 # Use a negative zone number for the Southern hemisphere:
 # The Northern hemisphere corresponds to zones +1 to +60,
 # The Southern hemisphere corresponds to zones -1 to -60.
-UTM_PROJECTION_ZONE             = 0 
+UTM_PROJECTION_ZONE             = 0
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
@@ -27,7 +27,7 @@ NPROC                           = 4
 
 # time step parameters
 NSTEP                           = 2000
-DT                              = 2.e-6 
+DT                              = 2.e-6
 
 # set to true to use local-time stepping (LTS)
 LTS_MODE                        = .false.

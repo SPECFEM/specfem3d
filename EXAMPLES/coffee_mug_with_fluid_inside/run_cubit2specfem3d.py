@@ -18,7 +18,7 @@ print("")
 
 import cubit
 import boundary_definition
-import cubit2specfem3d 
+import cubit2specfem3d
 
 # gets version string
 cubit_version = cubit.get_version()
@@ -36,7 +36,7 @@ print("")
 os.system('mkdir -p MESH')
 
 reload(cubit2specfem3d)
-cubit2specfem3d.export2SPECFEM3D('MESH') 
+cubit2specfem3d.export2SPECFEM3D('MESH')
 
 # all files needed by SCOTCH are now in directory MESH
 

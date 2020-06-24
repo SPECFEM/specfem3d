@@ -6,8 +6,8 @@ import sys
 
 # checks for path for modules
 found_lib = False
-for path in sys.path: 
-    if "geocubitlib" in path: 
+for path in sys.path:
+    if "geocubitlib" in path:
         found_lib = True
         break
 if not found_lib: sys.path.append('../../CUBIT_GEOCUBIT/geocubitlib')
@@ -18,7 +18,7 @@ print("")
 
 import cubit
 import boundary_definition
-import cubit2specfem3d 
+import cubit2specfem3d
 
 # gets version string
 cubit_version = cubit.get_version()
