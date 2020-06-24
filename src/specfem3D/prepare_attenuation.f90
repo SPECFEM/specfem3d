@@ -98,8 +98,10 @@
 
   ! broadcasts
   call bcast_all_i_for_database(ispec, 1)
-  if (size(factor_common) > 0) call bcast_all_cr_for_database(factor_common(1,1,1,1,1), size(factor_common))
-  if (size(scale_factor) > 0) call bcast_all_cr_for_database(scale_factor(1,1,1,1), size(scale_factor))
+  if (size(factor_common) > 0) &
+    call bcast_all_cr_for_database(factor_common(1,1,1,1,1), size(factor_common))
+  if (size(scale_factor) > 0) &
+    call bcast_all_cr_for_database(scale_factor(1,1,1,1), size(scale_factor))
   call bcast_all_cr_for_database(factor_common_kappa(1,1,1,1,1), size(factor_common_kappa))
   call bcast_all_cr_for_database(scale_factor_kappa(1,1,1,1), size(scale_factor_kappa))
 

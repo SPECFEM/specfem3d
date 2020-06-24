@@ -34,10 +34,10 @@
     sequence
     double precision, dimension(:,:), pointer :: tau_eps_storage
     double precision, dimension(:), pointer :: Q_storage
-    integer Q_resolution
-    integer Q_max
+    integer :: Q_resolution
+    integer :: Q_max
   end type model_attenuation_storage_var
-  type (model_attenuation_storage_var) AM_S
+  type (model_attenuation_storage_var) :: AM_S
 
   ! attenuation_simplex_variables
   type attenuation_simplex_variables
@@ -756,7 +756,7 @@
   f2 = 1.0d0 / min_period
 
   ! use the logarithmic central frequency
-  f_c_source = 10.0d0**(0.5 * (log10(f1) + log10(f2)))
+  f_c_source = 10.0d0**(0.5d0 * (log10(f1) + log10(f2)))
 
   end subroutine get_attenuation_source_freq
 

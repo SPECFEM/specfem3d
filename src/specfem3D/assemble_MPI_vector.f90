@@ -213,16 +213,14 @@
     enddo
 
     ! set the value to that of the highest-rank processor
-  do iinterface = 1, num_interfaces_ext_mesh
-    if (myrank < my_neighbors_ext_mesh(iinterface)) then
-      do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-        iglob = ibool_interfaces_ext_mesh(ipoin,iinterface)
-        array_val(:,iglob) = buffer_recv_vector(:,ipoin,iinterface)
-      enddo
-    endif
-  enddo
-
-
+    do iinterface = 1, num_interfaces_ext_mesh
+      if (myrank < my_neighbors_ext_mesh(iinterface)) then
+        do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+          iglob = ibool_interfaces_ext_mesh(ipoin,iinterface)
+          array_val(:,iglob) = buffer_recv_vector(:,ipoin,iinterface)
+        enddo
+      endif
+    enddo
 
   ! wait for communications completion (send)
     do iinterface = 1, num_interfaces_ext_mesh

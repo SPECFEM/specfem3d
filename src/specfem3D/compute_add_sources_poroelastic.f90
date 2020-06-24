@@ -33,6 +33,7 @@
   use specfem_par, only: station_name,network_name,USE_FORCE_POINT_SOURCE, &
                          tshift_src,dt,t0,USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
                          USE_BINARY_FOR_SEISMOGRAMS,ibool, &
+                         UNDO_ATTENUATION_AND_OR_PML, &
                          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
                          sourcearrays,SIMULATION_TYPE,NSTEP, &
                          ispec_selected_rec, &
@@ -287,7 +288,12 @@
             !       after adding boundary/coupling/source terms.
             !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
             !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
-            time_source_dble = dble(NSTEP-it-1)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            if (UNDO_ATTENUATION_AND_OR_PML) then
+              ! stepping moves forward from snapshot position
+              time_source_dble = dble(NSTEP-it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            else
+              time_source_dble = dble(NSTEP-it-1)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            endif
           else
             time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
           endif

@@ -33,7 +33,7 @@
 
   use specfem_par, only: NSTEP,SIMULATION_TYPE,OUTPUT_FILES, &
     NSOURCES,islice_selected_source,ispec_selected_source,tshift_src,t0, &
-    DT,USE_LDDRK, &
+    DT,USE_LDDRK,UNDO_ATTENUATION_AND_OR_PML, &
     USE_EXTERNAL_SOURCE_FILE,user_source_time_function
 
   use specfem_par_acoustic, only: ispec_is_acoustic
@@ -98,7 +98,12 @@
             !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
             !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
             istage = 1  ! only 1. stage output (corresponds to u(n))
-            time_source_dble = dble(NSTEP-it-1)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            if (UNDO_ATTENUATION_AND_OR_PML) then
+              ! stepping moves forward from snapshot position
+              time_source_dble = dble(NSTEP-it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            else
+              time_source_dble = dble(NSTEP-it-1)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            endif
           else
             time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
           endif

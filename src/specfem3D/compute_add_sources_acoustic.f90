@@ -317,7 +317,12 @@
     !       after adding boundary/coupling/source terms.
     !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
     !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
-    time_t = dble(NSTEP-it_tmp-1)*DT - dble(C_LDDRK(istage))*DT - t0
+    if (UNDO_ATTENUATION_AND_OR_PML) then
+      ! stepping moves forward from snapshot position
+      time_t = dble(NSTEP-it_tmp-1)*DT + dble(C_LDDRK(istage))*DT - t0
+    else
+      time_t = dble(NSTEP-it_tmp-1)*DT - dble(C_LDDRK(istage))*DT - t0
+    endif
   else
     time_t = dble(NSTEP-it_tmp)*DT - t0
   endif
@@ -606,7 +611,13 @@
     !       after adding boundary/coupling/source terms.
     !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
     !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
-    time_t = dble(NSTEP-it_tmp-1)*DT - dble(C_LDDRK(istage))*DT - t0
+    if (UNDO_ATTENUATION_AND_OR_PML) then
+      ! steps forward in time
+      time_t = dble(NSTEP-it_tmp-1)*DT + dble(C_LDDRK(istage))*DT - t0
+    else
+      ! steps backward
+      time_t = dble(NSTEP-it_tmp-1)*DT - dble(C_LDDRK(istage))*DT - t0
+    endif
   else
     time_t = dble(NSTEP-it_tmp)*DT - t0
   endif
