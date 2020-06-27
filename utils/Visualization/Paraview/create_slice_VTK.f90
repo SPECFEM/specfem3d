@@ -266,28 +266,28 @@
   write(IOUT_VTK,'(a)') "SCALARS gll_data float"
   write(IOUT_VTK,'(a)') "LOOKUP_TABLE default"
   do ispec = 1,nspec
-    i = ibool(1,1,1,ispec)
+    !i = ibool(1,1,1,ispec)
     write(IOUT_VTK,'(3e18.6)') gll_data(1,1,1,ispec)
 
-    i = ibool(NGLLX,1,1,ispec)
+    !i = ibool(NGLLX,1,1,ispec)
     write(IOUT_VTK,'(3e18.6)') gll_data(NGLLX,1,1,ispec)
 
-    i = ibool(NGLLX,NGLLY,1,ispec)
+    !i = ibool(NGLLX,NGLLY,1,ispec)
     write(IOUT_VTK,'(3e18.6)') gll_data(NGLLX,NGLLY,1,ispec)
 
-    i = ibool(1,NGLLY,1,ispec)
+    !i = ibool(1,NGLLY,1,ispec)
     write(IOUT_VTK,'(3e18.6)') gll_data(1,NGLLY,1,ispec)
 
-    i = ibool(1,1,NGLLZ,ispec)
+    !i = ibool(1,1,NGLLZ,ispec)
     write(IOUT_VTK,'(3e18.6)') gll_data(1,1,NGLLZ,ispec)
 
-    i = ibool(NGLLX,1,NGLLZ,ispec)
+    !i = ibool(NGLLX,1,NGLLZ,ispec)
     write(IOUT_VTK,'(3e18.6)') gll_data(NGLLX,1,NGLLZ,ispec)
 
-    i = ibool(NGLLX,NGLLY,NGLLZ,ispec)
+    !i = ibool(NGLLX,NGLLY,NGLLZ,ispec)
     write(IOUT_VTK,'(3e18.6)') gll_data(NGLLX,NGLLY,NGLLZ,ispec)
 
-    i = ibool(1,NGLLY,NGLLZ,ispec)-1
+    !i = ibool(1,NGLLY,NGLLZ,ispec)-1
     write(IOUT_VTK,'(3e18.6)') gll_data(1,NGLLY,NGLLZ,ispec)
   enddo
   write(IOUT_VTK,*) ''

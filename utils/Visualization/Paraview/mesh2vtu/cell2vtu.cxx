@@ -11,23 +11,23 @@
 //              Brian Savage savage13@gps.caltech.edu
 //              California Institute of Technology
 //              Geologial and Planetary Sciences
-// 
+//
 // Input:       in binary
 //              integer    number of points
 //              3 floats   (x,y,z) point 0
 //                ...
 //              3 floats   (x,y,z) point n-1
 //              integer    number of cells
-//              8 integers, 1 float    (1-8) cell 0, scalar 
+//              8 integers, 1 float    (1-8) cell 0, scalar
 //                ...      define a hexahedron of 8 points and corresponding scalar
 //              8 integers, 1 float    (1-8) cell n-1, scalar
-//              
+//
 // Date:        4  June 2004 ver 1.0 (was ugrid)
 //                 - original version, only read in x,y,z,s points
 //              25 June 2004 ver 2.0 (cell2vtu)
 //                 - reads in cell definition
 //                 - input is done in binary
-// 
+//
 //-----------------------------------------------------------------------------
 
 #include <stdio.h>
@@ -36,94 +36,149 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <vtk/vtkFloatArray.h>
-#include <vtk/vtkPoints.h>
-#include <vtk/vtkCellData.h>
-#include <vtk/vtkUnstructuredGrid.h>
-#include <vtk/vtkXMLUnstructuredGridWriter.h>
-#include <vtk/vtkUnstructuredGridToPolyDataFilter.h>
-#include <vtk/vtkXMLPolyDataWriter.h>
-#include <vtk/vtkUnstructuredGridToPolyDataFilter.h>
-#include <vtk/vtkDelaunay3D.h>
-#include <vtk/vtkCellArray.h>
-#include <vtk/vtkPointSet.h>
-#include <vtk/vtkHexahedron.h>
+#include <vtkFloatArray.h>
+#include <vtkPoints.h>
+#include <vtkCellData.h>
+#include <vtkUnstructuredGrid.h>
+#include <vtkXMLUnstructuredGridWriter.h>
+#if VTK_MAJOR_VERSION <= 5
+#include <vtkUnstructuredGridToPolyDataFilter.h>
+#endif
+#include <vtkXMLPolyDataWriter.h>
+#include <vtkDelaunay3D.h>
+#include <vtkCellArray.h>
+#include <vtkPointSet.h>
+#include <vtkHexahedron.h>
 
+void usage(char *progname)
+{
+  printf("Usage: %s -i input-file -o output-file\n"
+         "    Takes an input file (binary) with a number of points and a number of cells\n"
+         "    and transforms them into an unstructured grid file\n"
+         "\n"
+         "    -i input-file (Binary file)\n"
+         "    -o output-file (XML Unstructured Grid File)\n"
+         "\n"
+         "    Input Binary files have this structure:\n"
+         "      number_of_points                  integer (4 bytes)\n"
+         "      x_1, y_1, z_1                     3 reals (4 bytes each)\n"
+         "      ...\n"
+         "      x_n, y_n, z_n                     3 reals (4 bytes each)\n"
+         "      number_of_cells                   integer (4 bytes)\n"
+         "      cell_1 (eight points), scalar_1   8 integers (4 bytes each), 1 real (4 bytes)\n"
+         "      ...\n"
+         "      cell_n, scalar_n                  8 integers (4 bytes each), 1 real (4 bytes)\n"
+         "\n", progname);
+}
 
-int main(int argc, char** argv) {
+bool parse_args(int argc, char **argv, char **input, char **output)
+{
+  int c;
 
-  if (argc < 3) {
-    printf("Usage: ugrid input_file output_file\n");
-    return 0;
+  *input = *output = NULL;
+
+  while ( (c = getopt(argc, argv, "i:o:")) != -1) {
+    switch (c) {
+    case 'i':
+      *input = optarg;
+      break;
+    case 'o':
+      *output = optarg;
+      break;
+    case '?':
+      usage(argv[0]);
+      return false;
+    default:
+      printf("?? getopt returned character code 0%o ??\n", c);
+      return false;
+    }
   }
 
+  if (*input == NULL) {
+    printf("ERROR: Must specify input file -i input-file\n\n");
+    usage(argv[0]);
+    return false;
+  }
+
+  if (*output == NULL) {
+    printf("ERROR: Must specify output file -o output-file\n\n");
+    usage(argv[0]);
+    return false;
+  }
+
+  return true;
+}
+
+int main(int argc, char** argv) {
+  char *input, *output;
   float xyz[3];
+  float scalar;
   int cell[8];
-  FILE *file;
   int i, j;
   int npts, ncells;
-  int pid[8];
-
   int fd;
-  
-  if((fd = open(argv[1], O_RDONLY)) == -1) {
-    printf("Error opening file: %s.\n", argv[1]);
-    return 0;
+
+  if (!parse_args(argc, argv, &input, &output)) {
+    return 1;
+  }
+
+  if ((fd = open(input, O_RDONLY)) == -1) {
+    printf("Error opening file: %s.\n", input);
+    return 1;
   }
 
   if(read(fd, &npts, sizeof(int)) != sizeof(int)) {
-    printf("Bad read on file (in points): %s\n", argv[1]);
+    printf("Bad read on file (in points): %s\n", input);
+    return 1;
   }
-  
+
   vtkUnstructuredGrid *dataSet = vtkUnstructuredGrid::New();
-  float *xV = new float[npts];
-  float *yV = new float[npts];
-  float *zV = new float[npts];
   vtkPoints *newPts = vtkPoints::New();
   vtkFloatArray *newScalars = vtkFloatArray::New();
   printf("cell2vtu: Reading in points: %d\n", npts);
   for (i = 0 ; i < npts ; i++)
     {
-      read(fd, &xV[i], sizeof(float));
-      read(fd, &yV[i], sizeof(float));
-      read(fd, &zV[i], sizeof(float));
-      xyz[0] = xV[i]; 
-      xyz[1] = yV[i]; 
-      xyz[2] = zV[i];
+      read(fd, &xyz[0], sizeof(float));
+      read(fd, &xyz[1], sizeof(float));
+      read(fd, &xyz[2], sizeof(float));
       newPts -> InsertPoint(i, xyz);
     }
 
   vtkCellArray *cells = vtkCellArray::New();
   if(read(fd, &ncells, sizeof(int)) != sizeof(int)) {
-    printf("Bad read on file (in cells): %s\n", argv[1]);
+    printf("Bad read on file (in cells): %s\n", input);
+    return 1;
   }
-  printf("cell2vtu: Reading in cells: %d\n", ncells);  
-  float *sV = new float[ncells];
+  printf("cell2vtu: Reading in cells: %d\n", ncells);
   int *cellTypes = new int[ncells];
   vtkHexahedron *hex = vtkHexahedron::New();
- 
+
   hex->GetPointIds()->SetNumberOfIds(8);
 
   for(i = 0; i < ncells; i++) {
     for(j = 0; j < 8; j++) {
       read(fd, &cell[j], sizeof(int));
-      hex->GetPointIds()->SetId(j,cell[j]);      
+      hex->GetPointIds()->SetId(j,cell[j]);
     }
     cells->InsertNextCell(hex);
     cellTypes[i] = hex->GetCellType();
-    read(fd, &sV[i], sizeof(float));
-    newScalars -> InsertValue(i, sV[i]);
+    read(fd, &scalar, sizeof(float));
+    newScalars -> InsertValue(i, scalar);
   }
-  
+
   close(fd);
-  
+
   dataSet -> SetPoints(newPts);
   dataSet -> SetCells(cellTypes, cells);
   dataSet -> GetCellData() -> SetScalars(newScalars);
-  
+
   vtkXMLUnstructuredGridWriter* writer = vtkXMLUnstructuredGridWriter::New();
+#if VTK_MAJOR_VERSION <= 5
   writer -> SetInput(dataSet);
-  writer -> SetFileName(argv[2]);
+#else
+  writer -> SetInputData(dataSet);
+#endif
+  writer -> SetFileName(output);
   writer -> Write();
 
   writer -> Delete();
@@ -131,9 +186,9 @@ int main(int argc, char** argv) {
   newScalars -> Delete();
   dataSet -> Delete();
   cells -> Delete();
-  
+
   //  printf("Done.\n");
- 
+
   return 0;
 
 }
