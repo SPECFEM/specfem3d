@@ -52,6 +52,7 @@
                             kxx,kxy,kxz,kyy,kyz,kzz,rho_bar
   real(kind=CUSTOM_REAL) :: cpIsquare,cpIIsquare,cssquare,H_biot,M_biot,C_biot,D_biot, &
                             afactor,bfactor,cfactor
+  real(kind=CUSTOM_REAL) :: vpI_poro,vpII_poro,vs_poro
 
   integer :: ispec,i,j,k
 
@@ -233,71 +234,152 @@
                                 ANISOTROPY)
 
           ! stores velocity model
-          if (idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then
 
-            ! elastic or acoustic material
-
-            ! density
-            rhostore(i,j,k,ispec) = rho
-
-            ! kappa, mu
-            kappastore(i,j,k,ispec) = rho*( vp*vp - FOUR_THIRDS*vs*vs )
-            mustore(i,j,k,ispec) = rho*vs*vs
-
-            ! attenuation
-            qkappa_attenuation_store(i,j,k,ispec) = qkappa_atten
-            qmu_attenuation_store(i,j,k,ispec) = qmu_atten
-
-            ! Stacey, a completer par la suite
-            rho_vp(i,j,k,ispec) = rho*vp
-            rho_vs(i,j,k,ispec) = rho*vs
-            !
-            !end pll
-
-          else
-
-            ! poroelastic material
-
+          ! converts model coefficients
+          ! will only be used to store into array, but not used further
+          select case(idomain_id)
+          case (IDOMAIN_ACOUSTIC)
+            ! parameters for poroelastic model arrays
+            ! assuming vs = 0
+            rho_s = 0.0     ! solid properties
+            kappa_s = 0.0
+            rho_f = rho     ! fluid properties
+            kappa_f = rho*vp*vp
+            eta_f = 0.0
+            kappa_fr = rho*vp*vp  ! frame properties
+            mu_fr = 0.0
+            phi = 1.0       ! fluid
+            tort = 0.0
+            kxx = 0.0
+            kxy = 0.0
+            kxz = 0.0
+            kyy = 0.0
+            kyz = 0.0
+            kzz = 0.0
+          case (IDOMAIN_ELASTIC)
             ! solid properties
-            rhoarraystore(1,i,j,k,ispec) = rho_s
-            kappaarraystore(1,i,j,k,ispec) = kappa_s
-            ! fluid properties
-            rhoarraystore(2,i,j,k,ispec) = rho_f
-            kappaarraystore(2,i,j,k,ispec) = kappa_f
-            etastore(i,j,k,ispec) = eta_f
-            ! frame properties
-            kappaarraystore(3,i,j,k,ispec) = kappa_fr
-            mustore(i,j,k,ispec) = mu_fr
-            phistore(i,j,k,ispec) = phi
-            tortstore(i,j,k,ispec) = tort
-            permstore(1,i,j,k,ispec) = kxx
-            permstore(2,i,j,k,ispec) = kxy
-            permstore(3,i,j,k,ispec) = kxz
-            permstore(4,i,j,k,ispec) = kyy
-            permstore(5,i,j,k,ispec) = kyz
-            permstore(6,i,j,k,ispec) = kzz
+            rho_s = rho     ! solid properties
+            kappa_s = rho*(vp*vp - FOUR_THIRDS*vs*vs)
+            rho_f = rho     ! fluid properties
+            kappa_f = rho*(vp*vp - FOUR_THIRDS*vs*vs)
+            eta_f = 0.0
+            kappa_fr = rho*(vp*vp - FOUR_THIRDS*vs*vs)  ! frame properties
+            mu_fr = rho*vs*vs
+            phi = 0.0       ! solid
+            tort = 0.0
+            kxx = 0.0
+            kxy = 0.0
+            kxz = 0.0
+            kyy = 0.0
+            kyz = 0.0
+            kzz = 0.0
+          case (IDOMAIN_POROELASTIC)
+            ! parameters for acoustic/elastic model arrays
+            ! selects solid parameters for elastic arrays
+            rho = rho_s
+            vp = sqrt((kappa_s + FOUR_THIRDS * mu_fr) / rho_s)
+            vs = sqrt(mu_fr / rho_s)
+          end select
 
-            !Biot coefficients for the input phi
-            D_biot = kappa_s*(1._CUSTOM_REAL + phi*(kappa_s/kappa_f - 1._CUSTOM_REAL))
-            H_biot = (kappa_s - kappa_fr)*(kappa_s - kappa_fr)/(D_biot - kappa_fr) &
-                      + kappa_fr + 4._CUSTOM_REAL*mu_fr/3._CUSTOM_REAL
+          ! elastic or acoustic material
+          ! density
+          rhostore(i,j,k,ispec) = rho
+
+          ! kappa, mu
+          kappastore(i,j,k,ispec) = rho*( vp*vp - FOUR_THIRDS*vs*vs )
+          mustore(i,j,k,ispec) = rho*vs*vs
+
+          ! attenuation
+          qkappa_attenuation_store(i,j,k,ispec) = qkappa_atten
+          qmu_attenuation_store(i,j,k,ispec) = qmu_atten
+
+          ! Stacey, a completer par la suite
+          rho_vp(i,j,k,ispec) = rho*vp
+          rho_vs(i,j,k,ispec) = rho*vs
+          !
+          !end pll
+
+          ! poroelastic material store
+          ! solid properties
+          rhoarraystore(1,i,j,k,ispec) = rho_s
+          kappaarraystore(1,i,j,k,ispec) = kappa_s
+          ! fluid properties
+          rhoarraystore(2,i,j,k,ispec) = rho_f
+          kappaarraystore(2,i,j,k,ispec) = kappa_f
+          etastore(i,j,k,ispec) = eta_f
+          ! frame properties
+          kappaarraystore(3,i,j,k,ispec) = kappa_fr
+          mustore(i,j,k,ispec) = mu_fr
+          phistore(i,j,k,ispec) = phi
+          tortstore(i,j,k,ispec) = tort
+          permstore(1,i,j,k,ispec) = kxx
+          permstore(2,i,j,k,ispec) = kxy
+          permstore(3,i,j,k,ispec) = kxz
+          permstore(4,i,j,k,ispec) = kyy
+          permstore(5,i,j,k,ispec) = kyz
+          permstore(6,i,j,k,ispec) = kzz
+
+          !Biot coefficients for the input phi
+          D_biot = kappa_s*(1._CUSTOM_REAL + phi*(kappa_s/kappa_f - 1._CUSTOM_REAL))
+          if (abs(D_biot - kappa_fr) > 1.e-20) then
+            H_biot = (kappa_s - kappa_fr)*(kappa_s - kappa_fr)/(D_biot - kappa_fr) + kappa_fr + FOUR_THIRDS * mu_fr
             C_biot = kappa_s*(kappa_s - kappa_fr)/(D_biot - kappa_fr)
             M_biot = kappa_s*kappa_s/(D_biot - kappa_fr)
-            ! Approximated velocities (no viscous dissipation)
-            rho_bar =  (1._CUSTOM_REAL - phi)*rho_s + phi*rho_f
+          else
+            H_biot = kappa_s + FOUR_THIRDS * mu_fr
+            C_biot = kappa_s
+            M_biot = 0.0
+          endif
+          ! Approximated velocities (no viscous dissipation)
+          rho_bar =  (1._CUSTOM_REAL - phi)*rho_s + phi*rho_f
+          if (abs(tort) > 1.e-20) then
             afactor = rho_bar - phi/tort*rho_f
             bfactor = H_biot + phi*rho_bar/(tort*rho_f)*M_biot - TWO*phi/tort*C_biot
             cfactor = phi/(tort*rho_f)*(H_biot*M_biot - C_biot*C_biot)
-            cpIsquare = (bfactor + sqrt(bfactor*bfactor - 4._CUSTOM_REAL*afactor*cfactor))/(2._CUSTOM_REAL*afactor)
+          else
+            afactor = 0.0
+            bfactor = 0.0
+            cfactor = 0.0
+          endif
+
+          if (abs(afactor) > 1.e-20) then
+            cpIsquare  = (bfactor + sqrt(bfactor*bfactor - 4._CUSTOM_REAL*afactor*cfactor))/(2._CUSTOM_REAL*afactor)
             cpIIsquare = (bfactor - sqrt(bfactor*bfactor - 4._CUSTOM_REAL*afactor*cfactor))/(2._CUSTOM_REAL*afactor)
             cssquare = mu_fr/afactor
+          else
+            cpIsquare =  vp*vp
+            cpIIsquare = vp*vp
+            cssquare = mu_fr
+          endif
 
-            ! AC based on cpI,cpII & cs
-            rho_vpI(i,j,k,ispec) = (rho_bar - phi/tort*rho_f)*sqrt(cpIsquare)
-            rho_vpII(i,j,k,ispec) = (rho_bar - phi/tort*rho_f)*sqrt(cpIIsquare)
-            rho_vsI(i,j,k,ispec) = (rho_bar - phi/tort*rho_f)*sqrt(cssquare)
+          ! AC based on cpI,cpII & cs
+          if (abs(tort) > 1.e-20) then
+            rho_vpI(i,j,k,ispec)  = (rho_bar - phi/tort*rho_f) * sqrt(cpIsquare)
+            rho_vpII(i,j,k,ispec) = (rho_bar - phi/tort*rho_f) * sqrt(cpIIsquare)
+            rho_vsI(i,j,k,ispec)  = (rho_bar - phi/tort*rho_f) * sqrt(cssquare)
 
-          endif !if (idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC)
+            vs_poro   = rho_vsI(i,j,k,ispec) / ( (1.0_CUSTOM_REAL - phi) * rho_s + phi * rho_f - phi/tort * rho_f )
+            vpI_poro  = rho_vpI(i,j,k,ispec) / ( (1.0_CUSTOM_REAL - phi) * rho_s + phi * rho_f - phi/tort * rho_f )
+            vpII_poro = rho_vpII(i,j,k,ispec)/ ( (1.0_CUSTOM_REAL - phi) * rho_s + phi * rho_f - phi/tort * rho_f )
+          else
+            rho_vpI(i,j,k,ispec)  = rho_bar * sqrt(cpIsquare)
+            rho_vpII(i,j,k,ispec) = rho_bar * sqrt(cpIIsquare)
+            rho_vsI(i,j,k,ispec)  = rho_bar * sqrt(cssquare)
+
+            vs_poro   = rho_vsI(i,j,k,ispec) / ( (1.0_CUSTOM_REAL - phi) * rho_s + phi * rho_f )
+            vpI_poro  = rho_vpI(i,j,k,ispec) / ( (1.0_CUSTOM_REAL - phi) * rho_s + phi * rho_f )
+            vpII_poro = rho_vpII(i,j,k,ispec)/ ( (1.0_CUSTOM_REAL - phi) * rho_s + phi * rho_f )
+          endif
+
+          !debug
+          if (.false.) then
+            if (myrank == 0 .and. idomain_id == 1 .and. i == 1 .and. j == 1 .and. k == 1) &
+              print *,'debug: model domain ',idomain_id,'ispec ',ispec,' vp/vs/rho = ',vp,vs,rho, 'rhovp/rhovs ',rho*vp,rho*vs, &
+                      ' rhovpI/rhovpII/rhovsI = ',rho_vpI(i,j,k,ispec),rho_vpII(i,j,k,ispec),rho_vsI(i,j,k,ispec), &
+                      ' vp_poro ',vpI_poro,' vpII_poro ',vpII_poro,' vs_poro ',vs_poro, &
+                      ' D/H/C/M biot ',D_biot,H_biot,C_biot,M_biot,' rho_bar/a/b/c factor',rho_bar,afactor,bfactor,cfactor, &
+                      ' cpIsq/cpIIsq/cssq ',cpIsquare,cpIIsquare,cssquare
+          endif
 
           ! stores anisotropic parameters
           if (ANISOTROPY) then
@@ -326,15 +408,15 @@
 
 
           ! stores material domain
-          select case (idomain_id )
-          case (IDOMAIN_ACOUSTIC )
+          select case (idomain_id)
+          case (IDOMAIN_ACOUSTIC)
             ispec_is_acoustic(ispec) = .true.
-          case (IDOMAIN_ELASTIC )
+          case (IDOMAIN_ELASTIC)
             ispec_is_elastic(ispec) = .true.
-          case (IDOMAIN_POROELASTIC )
+          case (IDOMAIN_POROELASTIC)
             ispec_is_poroelastic(ispec) = .true.
           case default
-            stop 'Error material domain index'
+            stop 'Error invalid material domain index, must be 1==acoustic,2==elastic or 3==poroelastic'
           end select
 
         enddo
@@ -358,7 +440,7 @@
   enddo
 
   ! checks material domains
-  do ispec=1,nspec
+  do ispec = 1,nspec
     ! checks if domain is set
     if ((ispec_is_acoustic(ispec) .eqv. .false.) .and. &
         (ispec_is_elastic(ispec) .eqv. .false.) .and. &
