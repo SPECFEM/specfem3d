@@ -38,17 +38,16 @@
   implicit none
 
 ! number of spectral elements in each block
-  integer :: myrank,nspec,NPROC
+  integer,intent(in) :: myrank,nspec,NPROC
 
 ! arrays with the mesh
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
 ! MPI communication
-  integer :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
-  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: &
-            ibool_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
+  integer,intent(in) :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: my_neighbors_ext_mesh
+  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
 
   ! local parameters
   integer, dimension(:), allocatable :: elastic_flag,acoustic_flag,poroelastic_flag
@@ -56,6 +55,7 @@
   integer :: max_nibool_interfaces_ext_mesh
   integer :: count_elastic,count_acoustic,count_poroelastic
   integer :: ispec,i,j,k,iglob,ier,inum
+  integer :: glob_ac_el,glob_ac_po,glob_el_po
 
   ! initializes number of coupling faces
   num_coupling_ac_el_faces = 0
@@ -124,31 +124,33 @@
   allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 693')
   if (ier /= 0) stop 'error allocating array ibool_interfaces_ext_mesh_dummy'
+
   do i = 1, num_interfaces_ext_mesh
      ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
   enddo
+
   ! sums acoustic flags
   if (ACOUSTIC_SIMULATION) then
     call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,acoustic_flag, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy, &
-                        my_neighbors_ext_mesh)
+                                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy, &
+                                        my_neighbors_ext_mesh)
   endif
 
   ! sums elastic flags
   if (ELASTIC_SIMULATION) then
     call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,elastic_flag, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy, &
-                        my_neighbors_ext_mesh)
+                                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy, &
+                                        my_neighbors_ext_mesh)
   endif
 
   ! sums poroelastic flags
   if (POROELASTIC_SIMULATION) then
     call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,poroelastic_flag, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy, &
-                        my_neighbors_ext_mesh)
+                                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy, &
+                                        my_neighbors_ext_mesh)
   endif
 
   ! determines common faces between different domains
@@ -166,6 +168,20 @@
   ! elastic - poroelastic domain coupling
   if (ELASTIC_SIMULATION .and. POROELASTIC_SIMULATION) then
     call get_coupling_surfaces_el_poro(myrank,nspec,ibool,elastic_flag)
+  endif
+
+  ! counts in all slices
+  call sum_all_i(num_coupling_ac_el_faces,glob_ac_el)
+  call sum_all_i(num_coupling_ac_po_faces,glob_ac_po)
+  call sum_all_i(num_coupling_el_po_faces,glob_el_po)
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '     acoustic - elastic     coupling : total number of faces = ',glob_ac_el
+    write(IMAIN,*) '     acoustic - poroelastic coupling : total number of faces = ',glob_ac_po
+    write(IMAIN,*) '      elastic - poroelastic coupling : total number of faces = ',glob_el_po
+    write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   ! frees temporary arrays
@@ -361,6 +377,7 @@
 ! note: no need to store material parameters on these coupling points
 !          for acoustic-elastic interface
   num_coupling_ac_el_faces = inum
+
   allocate(coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 699')
   if (ier /= 0) stop 'error allocating array coupling_ac_el_normal'
@@ -373,18 +390,13 @@
   allocate(coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 702')
   if (ier /= 0) stop 'error allocating array coupling_ac_el_ispec'
+
   do inum = 1,num_coupling_ac_el_faces
     coupling_ac_el_normal(:,:,inum) = tmp_normal(:,:,inum)
     coupling_ac_el_jacobian2Dw(:,inum) = tmp_jacobian2Dw(:,inum)
     coupling_ac_el_ijk(:,:,inum) = tmp_ijk(:,:,inum)
     coupling_ac_el_ispec(inum) = tmp_ispec(inum)
   enddo
-
-! user output
-  call sum_all_i(num_coupling_ac_el_faces,inum)
-  if (myrank == 0) then
-    write(IMAIN,*) '     acoustic-elastic coupling    : total number of faces = ',inum
-  endif
 
   deallocate(mask_ibool)
 
@@ -465,23 +477,23 @@
   ! loops over all element faces and
   ! counts number of coupling faces between acoustic and poroelastic elements
   inum = 0
-  do ispec=1,nspec
+  do ispec = 1,nspec
 
     if (ispec_is_poroelastic(ispec)) then
 
       ! loops over each face
-      do iface_ref= 1, 6
+      do iface_ref = 1, 6
 
         ! takes indices of corners of reference face
         call get_element_corners(ispec,iface_ref,xcoord,ycoord,zcoord,iglob_corners_ref, &
-                                ibool,nspec,nglob_dummy,xstore_dummy,ystore_dummy,zstore_dummy, &
-                                iface_all_corner_ijk)
+                                 ibool,nspec,nglob_dummy,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                 iface_all_corner_ijk)
 
         ! checks if face has acoustic side
-        if (acoustic_flag( iglob_corners_ref(1)) >= 1 .and. &
-            acoustic_flag( iglob_corners_ref(2)) >= 1 .and. &
-            acoustic_flag( iglob_corners_ref(3)) >= 1 .and. &
-            acoustic_flag( iglob_corners_ref(4)) >= 1) then
+        if (acoustic_flag(iglob_corners_ref(1)) >= 1 .and. &
+            acoustic_flag(iglob_corners_ref(2)) >= 1 .and. &
+            acoustic_flag(iglob_corners_ref(3)) >= 1 .and. &
+            acoustic_flag(iglob_corners_ref(4)) >= 1) then
 
           ! gets face GLL points i,j,k indices from poroelastic element face
           call get_element_face_gll_indices(iface_ref,ijk_face,NGLLX,NGLLY)
@@ -493,15 +505,15 @@
                                           wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                           ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
-          ! normal convention: points away from acoustic, reference element
+          ! normal convention: points away from poroelastic, reference element
           !                                switch normal direction if necessary
-          do j=1,NGLLY
-            do i=1,NGLLX
+          do j = 1,NGLLY
+            do i = 1,NGLLX
               ! directs normals such that they point outwards of element
               call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
-                                          ibool,nspec,nglob_dummy, &
-                                          xstore_dummy,ystore_dummy,zstore_dummy, &
-                                          normal_face(:,i,j) )
+                                           ibool,nspec,nglob_dummy, &
+                                           xstore_dummy,ystore_dummy,zstore_dummy, &
+                                           normal_face(:,i,j) )
               ! reverse the sign, we know we are in a poroelastic element
               normal_face(:,i,j) = - normal_face(:,i,j)
             enddo
@@ -511,8 +523,8 @@
           inum = inum + 1
           tmp_ispec(inum) = ispec
           igll = 0
-          do j=1,NGLLY
-            do i=1,NGLLX
+          do j = 1,NGLLY
+            do i = 1,NGLLX
               ! adds all GLL points on this face
               igll = igll + 1
 
@@ -535,6 +547,7 @@
 ! that i,j,k, & face correspond to poroelastic interface. Note that the normal
 ! is pointing outward the acoustic element
   num_coupling_ac_po_faces = inum
+
   allocate(coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 707')
   if (ier /= 0) stop 'error allocating array coupling_ac_po_normal'
@@ -547,18 +560,13 @@
   allocate(coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 710')
   if (ier /= 0) stop 'error allocating array coupling_ac_po_ispec'
+
   do inum = 1,num_coupling_ac_po_faces
     coupling_ac_po_normal(:,:,inum) = tmp_normal(:,:,inum)
     coupling_ac_po_jacobian2Dw(:,inum) = tmp_jacobian2Dw(:,inum)
     coupling_ac_po_ijk(:,:,inum) = tmp_ijk(:,:,inum)
     coupling_ac_po_ispec(inum) = tmp_ispec(inum)
   enddo
-
-! user output
-  call sum_all_i(num_coupling_ac_po_faces,inum)
-  if (myrank == 0) then
-    write(IMAIN,*) '     acoustic-poroelastic coupling: total number of faces = ',inum
-  endif
 
   end subroutine get_coupling_surfaces_ac_poro
 
@@ -596,7 +604,8 @@
   integer,dimension(NGNOD2D_FOUR_CORNERS) :: iglob_corners_ref,iglob_corners_ref_el
   integer :: ispec,i,j,k,igll,ier
   integer :: ispec_el,ispec_ref_el
-  integer :: inum,iface_ref,iface_ref_el,iface_el,icorner
+  integer :: inum,iface_ref,iface_ref_el,iface_el,icorner,imatch
+  integer :: iglob_po,iglob_el
 
   ! corners indices of reference cube faces
   integer,dimension(3,4),parameter :: iface1_corner_ijk = &
@@ -615,6 +624,9 @@
              reshape( (/ iface1_corner_ijk,iface2_corner_ijk, &
                  iface3_corner_ijk,iface4_corner_ijk, &
                  iface5_corner_ijk,iface6_corner_ijk /),(/3,4,6/))   ! all faces
+
+  logical :: found_elastic_elem
+  integer, external :: get_iglob_index
 
 ! allocates temporary arrays
   allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6),stat=ier)
@@ -645,12 +657,12 @@
   ! loops over all element faces and
   ! counts number of coupling faces between elastic and poroelastic elements
   inum = 0
-  do ispec=1,nspec
+  do ispec = 1,nspec
 
     if (ispec_is_poroelastic(ispec)) then
 
       ! loops over each face
-      do iface_ref= 1, 6
+      do iface_ref = 1, 6
 
         ! takes indices of corners of reference face
         call get_element_corners(ispec,iface_ref,xcoord,ycoord,zcoord,iglob_corners_ref, &
@@ -658,74 +670,127 @@
                                 iface_all_corner_ijk)
 
         ! checks if face has elastic side
-        if (elastic_flag( iglob_corners_ref(1)) >= 1 .and. &
-            elastic_flag( iglob_corners_ref(2)) >= 1 .and. &
-            elastic_flag( iglob_corners_ref(3)) >= 1 .and. &
-            elastic_flag( iglob_corners_ref(4)) >= 1) then
+        if (elastic_flag(iglob_corners_ref(1)) >= 1 .and. &
+            elastic_flag(iglob_corners_ref(2)) >= 1 .and. &
+            elastic_flag(iglob_corners_ref(3)) >= 1 .and. &
+            elastic_flag(iglob_corners_ref(4)) >= 1) then
+
+          ! gets face GLL points i,j,k indices from poroelastic element face
+          call get_element_face_gll_indices(iface_ref,ijk_face_po,NGLLX,NGLLY)
+
+          ! gets face GLL 2Djacobian, weighted from element face
+          call get_jacobian_boundary_face(nspec, &
+                                          xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                          dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                          ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
+
+          ! normal convention: points away from poroelastic, reference element
+          ! (check with contribution in compute_coupling_viscoelastic_po() routine)
+          do j = 1,NGLLY
+            do i = 1,NGLLX
+              ! directs normals such that they point outwards of poroelastic element
+              call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
+                                          ibool,nspec,nglob_dummy, &
+                                          xstore_dummy,ystore_dummy,zstore_dummy, &
+                                          normal_face(:,i,j) )
+            enddo
+          enddo
 
           ! need to find elastic element for coupling
           !
           ! note: this assumes that both, elastic and poroelastic element, are in the same
           !          partition; check with decomposition that this is valid for this mesh partitioning
-          do ispec_el=1,nspec
+          found_elastic_elem = .false.
+
+          do ispec_el = 1,nspec
             if (ispec_is_elastic(ispec_el)) then
-              do iface_el=6,1,-1
+              do iface_el = 6,1,-1
                 ! takes indices of corners of reference face
+                imatch = 0
                 do icorner = 1,NGNOD2D_FOUR_CORNERS
                   i = iface_all_corner_ijk(1,icorner,iface_el)
                   j = iface_all_corner_ijk(2,icorner,iface_el)
                   k = iface_all_corner_ijk(3,icorner,iface_el)
                   ! global reference indices
                   iglob_corners_ref_el(icorner) = ibool(i,j,k,ispec_el)
+                  ! counts corners matching with reference corners from poroelastic side
+                  if (iglob_corners_ref_el(icorner) == iglob_corners_ref(1) .or. &
+                      iglob_corners_ref_el(icorner) == iglob_corners_ref(2) .or. &
+                      iglob_corners_ref_el(icorner) == iglob_corners_ref(3) .or. &
+                      iglob_corners_ref_el(icorner) == iglob_corners_ref(4)) imatch = imatch + 1
                 enddo
 
-                if ((iglob_corners_ref(1) == iglob_corners_ref_el(3)) .and. &
-                    (iglob_corners_ref(3) == iglob_corners_ref_el(1))) then
+                if (imatch == NGNOD2D_FOUR_CORNERS) then
+                  ! found matching elastic element
+                  found_elastic_elem = .true.
 
                   iface_ref_el = iface_el ![Christina Morency]: for some reason this shows a wrong orientation
                                           ! but the calculation is ok.
                   ispec_ref_el = ispec_el
 
-                  ! gets face GLL points i,j,k indices from poroelastic element face
-                  call get_element_face_gll_indices(iface_ref,ijk_face_po,NGLLX,NGLLY)
                   ! gets face GLL points i,j,k indices from elastic element face
                   call get_element_face_gll_indices(iface_ref_el,ijk_face_el,NGLLX,NGLLY)
-
-                  ! gets face GLL 2Djacobian, weighted from element face
-                  call get_jacobian_boundary_face(nspec, &
-                                                  xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-                                                  dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-                                                  wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                                                  ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
-
-                  ! normal convention: points away from poroelastic, reference element
-                  do j=1,NGLLY
-                    do i=1,NGLLX
-                      ! directs normals such that they point outwards of poroelastic element
-                      call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
-                                                  ibool,nspec,nglob_dummy, &
-                                                  xstore_dummy,ystore_dummy,zstore_dummy, &
-                                                  normal_face(:,i,j) )
-                    enddo
-                  enddo
 
                   ! stores informations about this face
                   inum = inum + 1
                   tmp_ispec(inum) = ispec
                   tmp_ispec_el(inum) = ispec_ref_el
                   igll = 0
-                  do j=1,NGLLY
-                    do i=1,NGLLX
+                  do j = 1,NGLLY
+                    do i = 1,NGLLX
                       ! adds all GLL points on this face
                       igll = igll + 1
 
                       ! we need to store local i,j,k,ispec info
                       tmp_ijk(:,igll,inum) = ijk_face_po(:,i,j)
-                      tmp_ijk_el(:,igll,inum) = ijk_face_el(:,NGLLY-j+1,NGLLX-i+1)
 
-                      ! stores weighted jacobian and normals
-                      tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(i,j)
-                      tmp_normal(:,igll,inum) = normal_face(:,i,j)
+                      ! checks global index from both poroelastic/elastic element sides
+                      ! note: the indexing order i,j,k might be different and won't necessarily match between the 2 elements
+                      !       here, we try to find the ijk order to match iglob from both element faces
+
+                      ! global index from poroelastic element side
+                      iglob_po = get_iglob_index(tmp_ijk(:,igll,inum),ispec,nspec,ibool)
+
+                      ! debug corner iglob
+                      !print *,'debug: interface poro-elastic corners A: ',(iglob_corners_ref(ii),ii=1,4)
+                      !print *,'debug: interface poro-elastic corners B: ',(iglob_corners_ref_el(ii),ii=1,4)
+                      ! shows for example:
+                      !   debug: interface poro-elastic corners A:       629634      632214      632294      629714
+                      !   debug: interface poro-elastic corners B:       629634      629714      632294      632214
+
+                      ! 1. try: matching i,j
+                      tmp_ijk_el(:,igll,inum) = ijk_face_el(:,i,j)
+                      iglob_el = get_iglob_index(tmp_ijk_el(:,igll,inum),ispec_el,nspec,ibool)
+                      !print *,'debug: interface poro-elastic ij-match indexing iglob_po = ',iglob_po,'iglob_el = ',iglob_el
+                      if (iglob_po == iglob_el) then
+                        ! stores weighted jacobian and normals
+                        tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(i,j)
+                        tmp_normal(:,igll,inum) = normal_face(:,i,j)
+                      else
+                        ! 2. try: inverse indexing
+                        tmp_ijk_el(:,igll,inum) = ijk_face_el(:,NGLLY-j+1,NGLLX-i+1)
+                        iglob_el = get_iglob_index(tmp_ijk_el(:,igll,inum),ispec_el,nspec,ibool)
+                        !print *,'debug: interface poro-elastic inverse indexing iglob_po = ',iglob_po,'iglob_el = ',iglob_el
+                        if (iglob_po == iglob_el) then
+                          ! stores weighted jacobian and normals
+                          tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(NGLLY-j+1,NGLLY-i+1)
+                          tmp_normal(:,igll,inum) = normal_face(:,NGLLY-j+1,NGLLY-i+1)
+                        else
+                          ! 3. try: switched indexing
+                          tmp_ijk_el(:,igll,inum) = ijk_face_el(:,j,i)
+                          iglob_el = get_iglob_index(tmp_ijk_el(:,igll,inum),ispec_el,nspec,ibool)
+                          !print *,'debug: interface poro-elastic switched indexing iglob_po = ',iglob_po,'iglob_el = ',iglob_el
+                          if (iglob_po == iglob_el) then
+                            ! stores weighted jacobian and normals
+                            tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(j,i)
+                            tmp_normal(:,igll,inum) = normal_face(:,j,i)
+                          else
+                            print *,'Error: interface poro-elastic index mismatch: iglob_po = ',iglob_po,'iglob_el = ',iglob_el
+                            stop 'Error interface index not matching'
+                          endif
+                        endif
+                      endif
                     enddo
                   enddo
                 endif ! if
@@ -733,6 +798,13 @@
               enddo ! do iface_ref_el=1,6
             endif ! if (ispec_is_elastic(ispec_el)) then
           enddo ! do ispec_el=1,nspec
+
+          ! checks if found matching elastic element
+          if (.not. found_elastic_elem) then
+            print *,'Error: interface poro-elastic, matching elastic face not found: poro element = ',ispec,'face = ',iface_ref
+            print *,'Please check if partitioning contains matching interface elements'
+            stop 'Error interface poro-elastic face not matching'
+          endif
         endif ! elastic_flag
       enddo ! iface_ref
     endif ! ispec_is_poroelastic
@@ -744,6 +816,7 @@
 ! that i,j,k, & face correspond to poroelastic interface. Note that the normal
 ! is pointing outward the poroelastic element
   num_coupling_el_po_faces = inum
+
   allocate(coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 717')
   if (ier /= 0) stop 'error allocating array coupling_el_po_normal'
@@ -762,6 +835,7 @@
   allocate(coupling_po_el_ispec(num_coupling_el_po_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 722')
   if (ier /= 0) stop 'error allocating array coupling_po_el_ispec'
+
   do inum = 1,num_coupling_el_po_faces
     coupling_el_po_normal(:,:,inum) = tmp_normal(:,:,inum)
     coupling_el_po_jacobian2Dw(:,inum) = tmp_jacobian2Dw(:,inum)
@@ -771,11 +845,31 @@
     coupling_po_el_ispec(inum) = tmp_ispec_el(inum)
   enddo
 
-! user output
-  call sum_all_i(num_coupling_el_po_faces,inum)
-  if (myrank == 0) then
-    write(IMAIN,*) '     elastic-poroelastic coupling : total number of faces = ',inum
-  endif
-
   end subroutine get_coupling_surfaces_el_poro
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
+  integer function get_iglob_index(ijk_index,ispec_in,nspec,ibool)
+
+  use constants, only: NGLLX,NGLLY,NGLLZ
+
+  implicit none
+
+  integer, dimension(3),intent(in) :: ijk_index
+  integer, intent(in) :: ispec_in
+
+  integer, intent(in) :: nspec
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
+
+  ! local parameters
+  integer :: ii,jj,kk
+
+  ii = ijk_index(1)
+  jj = ijk_index(2)
+  kk = ijk_index(3)
+  get_iglob_index = ibool(ii,jj,kk,ispec_in)
+
+  end function
