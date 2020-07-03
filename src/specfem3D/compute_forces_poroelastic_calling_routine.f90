@@ -265,7 +265,7 @@ subroutine compute_forces_poroelastic_calling()
                                        accel,veloc, &
                                        accels_poroelastic,velocs_poroelastic, &
                                        accelw_poroelastic,velocw_poroelastic, &
-                                       rmass,rmass_solid_poroelastic, &
+                                       rmassx,rmassy,rmassz,rmass_solid_poroelastic, &
                                        SIMULATION_TYPE,NSPEC_ADJOINT, &
                                        num_coupling_el_po_faces, &
                                        coupling_el_po_ispec,coupling_el_po_ijk, &
@@ -280,7 +280,7 @@ subroutine compute_forces_poroelastic_calling()
                                            accel,veloc, &
                                            accels_poroelastic,velocs_poroelastic, &
                                            accelw_poroelastic,velocw_poroelastic, &
-                                           rmass,rmass_solid_poroelastic, &
+                                           rmassx,rmassy,rmassz,rmass_solid_poroelastic, &
                                            SIMULATION_TYPE,NSPEC_ADJOINT, &
                                            num_coupling_el_po_faces, &
                                            coupling_el_po_ispec,coupling_el_po_ijk, &
@@ -298,7 +298,8 @@ subroutine compute_forces_poroelastic_calling()
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: velocs_poroelastic,accels_poroelastic
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: velocw_poroelastic,accelw_poroelastic
 
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: rmass,rmass_solid_poroelastic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: rmassx,rmassy,rmassz
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: rmass_solid_poroelastic
 
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
@@ -314,10 +315,11 @@ subroutine compute_forces_poroelastic_calling()
   real(kind=CUSTOM_REAL),intent(in) :: deltatover2
 
 ! local variables
-  integer, dimension(NGLOB_AB) :: icount
+  logical, dimension(NGLOB_AB) :: mask_iglob
   integer :: ispec,i,j,k,l,iglob,igll,iface
+  real(kind=CUSTOM_REAL) :: rmass_sumx,rmass_sumy,rmass_sumz
 
-  icount(:)=0
+  mask_iglob(:) = .false.
 
 ! loops on all coupling faces
   do iface = 1,num_coupling_el_po_faces
@@ -333,17 +335,19 @@ subroutine compute_forces_poroelastic_calling()
 
       ! gets global index of this common GLL point
       iglob = ibool(i,j,k,ispec)
-      icount(iglob) = icount(iglob) + 1
 
-      if (icount(iglob) == 1) then
+      if (.not. mask_iglob(iglob)) then
+        ! done only once per global point
+        mask_iglob(iglob) = .true.
 
         ! recovering original velocities and accelerations on boundaries (elastic side)
         veloc(1,iglob) = veloc(1,iglob) - deltatover2*accel(1,iglob)
         veloc(2,iglob) = veloc(2,iglob) - deltatover2*accel(2,iglob)
         veloc(3,iglob) = veloc(3,iglob) - deltatover2*accel(3,iglob)
-        accel(1,iglob) = accel(1,iglob) / rmass(iglob)
-        accel(2,iglob) = accel(2,iglob) / rmass(iglob)
-        accel(3,iglob) = accel(3,iglob) / rmass(iglob)
+        accel(1,iglob) = accel(1,iglob) / rmassx(iglob)
+        accel(2,iglob) = accel(2,iglob) / rmassy(iglob)
+        accel(3,iglob) = accel(3,iglob) / rmassz(iglob)
+
         ! recovering original velocities and accelerations on boundaries (poro side)
         velocs_poroelastic(1,iglob) = velocs_poroelastic(1,iglob) - deltatover2*accels_poroelastic(1,iglob)
         velocs_poroelastic(2,iglob) = velocs_poroelastic(2,iglob) - deltatover2*accels_poroelastic(2,iglob)
@@ -351,23 +355,31 @@ subroutine compute_forces_poroelastic_calling()
         accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) / rmass_solid_poroelastic(iglob)
         accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) / rmass_solid_poroelastic(iglob)
         accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) / rmass_solid_poroelastic(iglob)
+
+        ! note: rmass holds inverted values, thus taking the sum of rmass + rmass_solid involves inverting rmass first
+        rmass_sumx = 1.0_CUSTOM_REAL / rmassx(iglob) + 1.0_CUSTOM_REAL / rmass_solid_poroelastic(iglob)
+        rmass_sumy = 1.0_CUSTOM_REAL / rmassy(iglob) + 1.0_CUSTOM_REAL / rmass_solid_poroelastic(iglob)
+        rmass_sumz = 1.0_CUSTOM_REAL / rmassz(iglob) + 1.0_CUSTOM_REAL / rmass_solid_poroelastic(iglob)
+
         ! assembling accelerations
-        accel(1,iglob) = ( accel(1,iglob) + accels_poroelastic(1,iglob) ) / &
-                                 ( 1.0/rmass(iglob) +1.0/rmass_solid_poroelastic(iglob) )
-        accel(2,iglob) = ( accel(2,iglob) + accels_poroelastic(2,iglob) ) / &
-                                 ( 1.0/rmass(iglob) +1.0/rmass_solid_poroelastic(iglob) )
-        accel(3,iglob) = ( accel(3,iglob) + accels_poroelastic(3,iglob) ) / &
-                                 ( 1.0/rmass(iglob) +1.0/rmass_solid_poroelastic(iglob) )
+        accel(1,iglob) = ( accel(1,iglob) + accels_poroelastic(1,iglob) ) / rmass_sumx
+        accel(2,iglob) = ( accel(2,iglob) + accels_poroelastic(2,iglob) ) / rmass_sumy
+        accel(3,iglob) = ( accel(3,iglob) + accels_poroelastic(3,iglob) ) / rmass_sumz
+
+        ! matching poroelastic solid wavefield with elastic wavefield acceleration
         accels_poroelastic(1,iglob) = accel(1,iglob)
         accels_poroelastic(2,iglob) = accel(2,iglob)
         accels_poroelastic(3,iglob) = accel(3,iglob)
+
         ! updating velocities
         velocs_poroelastic(1,iglob) = velocs_poroelastic(1,iglob) + deltatover2*accels_poroelastic(1,iglob)
         velocs_poroelastic(2,iglob) = velocs_poroelastic(2,iglob) + deltatover2*accels_poroelastic(2,iglob)
         velocs_poroelastic(3,iglob) = velocs_poroelastic(3,iglob) + deltatover2*accels_poroelastic(3,iglob)
+
         veloc(1,iglob) = veloc(1,iglob) + deltatover2*accel(1,iglob)
         veloc(2,iglob) = veloc(2,iglob) + deltatover2*accel(2,iglob)
         veloc(3,iglob) = veloc(3,iglob) + deltatover2*accel(3,iglob)
+
         ! zeros w
         accelw_poroelastic(1,iglob) = 0.d0
         accelw_poroelastic(2,iglob) = 0.d0
@@ -381,7 +393,7 @@ subroutine compute_forces_poroelastic_calling()
           l = NSPEC_ADJOINT ! to avoid compilation warnings
         endif
 
-      endif !if (icount(iglob) == 1)
+      endif
     enddo ! igll
   enddo ! iface
 
