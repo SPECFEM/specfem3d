@@ -393,6 +393,8 @@
 
 ! outputs binary files for single mesh parameters (for example vp, vs, rho, ..)
 
+  use constants, only: IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC
+
   use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
 
   ! MPI interfaces
@@ -590,25 +592,7 @@
       filename = prname(1:len_trim(prname))//'coupling_acoustic_elastic'
       call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
                                  iglob_tmp,num_points,filename)
-
-      ! saves acoustic/elastic flag
-      allocate(v_tmp_i(nspec),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 654')
-      if (ier /= 0) stop 'error allocating array v_tmp_i'
-      do i = 1,nspec
-        if (ispec_is_acoustic(i)) then
-          v_tmp_i(i) = 1
-        else if (ispec_is_elastic(i)) then
-          v_tmp_i(i) = 2
-        else
-          v_tmp_i(i) = 0
-        endif
-      enddo
-      filename = prname(1:len_trim(prname))//'acoustic_elastic_flag'
-      call write_VTK_data_elem_i(nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                                 v_tmp_i,filename)
-
-      deallocate(iglob_tmp,v_tmp_i)
+      deallocate(iglob_tmp)
     endif !if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION )
 
     ! acoustic-poroelastic domains
@@ -632,25 +616,7 @@
       filename = prname(1:len_trim(prname))//'coupling_acoustic_poroelastic'
       call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
                                  iglob_tmp,num_points,filename)
-
-      ! saves acoustic/poroelastic flag
-      allocate(v_tmp_i(nspec),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 656')
-      if (ier /= 0) stop 'error allocating array v_tmp_i'
-      do i = 1,nspec
-        if (ispec_is_acoustic(i)) then
-          v_tmp_i(i) = 1
-        else if (ispec_is_poroelastic(i)) then
-          v_tmp_i(i) = 2
-        else
-          v_tmp_i(i) = 0
-        endif
-      enddo
-      filename = prname(1:len_trim(prname))//'acoustic_poroelastic_flag'
-      call write_VTK_data_elem_i(nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                                 v_tmp_i,filename)
-
-      deallocate(v_tmp_i,iglob_tmp)
+      deallocate(iglob_tmp)
     endif !if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION )
 
     ! elastic-poroelastic domains
@@ -674,26 +640,33 @@
       filename = prname(1:len_trim(prname))//'coupling_elastic_poroelastic'
       call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
                                  iglob_tmp,num_points,filename)
+      deallocate(iglob_tmp)
+    endif !if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION
 
-      ! saves elastic/poroelastic flag
+    ! mixed simulations
+    if ((ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) .or. &
+        (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION) .or. &
+        (ELASTIC_SIMULATION .and. POROELASTIC_SIMULATION)) then
+      ! saves acoustic/elastic/poroelastic flag
       allocate(v_tmp_i(nspec),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 658')
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 656')
       if (ier /= 0) stop 'error allocating array v_tmp_i'
-      do i=1,nspec
-        if (ispec_is_elastic(i)) then
-          v_tmp_i(i) = 1
+      do i = 1,nspec
+        if (ispec_is_acoustic(i)) then
+          v_tmp_i(i) = IDOMAIN_ACOUSTIC
+        else if (ispec_is_elastic(i)) then
+          v_tmp_i(i) = IDOMAIN_ELASTIC
         else if (ispec_is_poroelastic(i)) then
-          v_tmp_i(i) = 2
+          v_tmp_i(i) = IDOMAIN_POROELASTIC
         else
           v_tmp_i(i) = 0
         endif
       enddo
-      filename = prname(1:len_trim(prname))//'elastic_poroelastic_flag'
+      filename = prname(1:len_trim(prname))//'acoustic_elastic_poroelastic_flag'
       call write_VTK_data_elem_i(nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                                  v_tmp_i,filename)
-
-      deallocate(v_tmp_i,iglob_tmp)
-    endif !if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION
+      deallocate(v_tmp_i)
+    endif
 
     ! MPI
     if (NPROC > 1) then
