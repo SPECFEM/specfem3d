@@ -1485,8 +1485,8 @@ end module my_mpi
   integer :: ier
 
   call MPI_GATHERV(sendbuf,sendcnt,CUSTOM_MPI_TYPE, &
-                  recvbuf,recvcount,recvoffset,CUSTOM_MPI_TYPE, &
-                  0,my_local_mpi_comm_world,ier)
+                   recvbuf,recvcount,recvoffset,CUSTOM_MPI_TYPE, &
+                   0,my_local_mpi_comm_world,ier)
 
   end subroutine gatherv_all_cr
 

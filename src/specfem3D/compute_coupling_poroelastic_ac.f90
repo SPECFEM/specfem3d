@@ -126,19 +126,13 @@
       !          it means you have to calculate and update the acoustic pressure first before
       !          calculating this term...
 ! contribution to the solid phase
-      accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) + jacobianw*nx*pressure*&
-                                  (1._CUSTOM_REAL-phil/tortl)
-      accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) + jacobianw*ny*pressure*&
-                                  (1._CUSTOM_REAL-phil/tortl)
-      accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) + jacobianw*nz*pressure*&
-                                  (1._CUSTOM_REAL-phil/tortl)
+      accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) + jacobianw * nx * pressure * (1._CUSTOM_REAL - phil/tortl)
+      accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) + jacobianw * ny * pressure * (1._CUSTOM_REAL - phil/tortl)
+      accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) + jacobianw * nz * pressure * (1._CUSTOM_REAL - phil/tortl)
 ! contribution to the fluid phase
-      accelw_poroelastic(1,iglob) = accelw_poroelastic(1,iglob) + jacobianw*nx*pressure*&
-                                  (1._CUSTOM_REAL-rhol_f/rhol_bar)
-      accelw_poroelastic(2,iglob) = accelw_poroelastic(2,iglob) + jacobianw*ny*pressure*&
-                                  (1._CUSTOM_REAL-rhol_f/rhol_bar)
-      accelw_poroelastic(3,iglob) = accelw_poroelastic(3,iglob) + jacobianw*nz*pressure*&
-                                  (1._CUSTOM_REAL-rhol_f/rhol_bar)
+      accelw_poroelastic(1,iglob) = accelw_poroelastic(1,iglob) + jacobianw * nx * pressure * (1._CUSTOM_REAL - rhol_f/rhol_bar)
+      accelw_poroelastic(2,iglob) = accelw_poroelastic(2,iglob) + jacobianw * ny * pressure * (1._CUSTOM_REAL - rhol_f/rhol_bar)
+      accelw_poroelastic(3,iglob) = accelw_poroelastic(3,iglob) + jacobianw * nz * pressure * (1._CUSTOM_REAL - rhol_f/rhol_bar)
 
     enddo ! igll
 

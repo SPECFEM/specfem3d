@@ -25,11 +25,11 @@
 !
 !=====================================================================
 
-  subroutine compute_forces_poro_fluid_part( iphase, &
-                        displw_poroelastic,accelw_poroelastic, &
-                        velocw_poroelastic,displs_poroelastic, &
-                        epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy, &
-                        epsilonwdev_xz,epsilonwdev_yz,epsilonw_trace_over_3)
+  subroutine compute_forces_poro_fluid_part(iphase, &
+                                            displw_poroelastic,accelw_poroelastic, &
+                                            velocw_poroelastic,displs_poroelastic, &
+                                            epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy, &
+                                            epsilonwdev_xz,epsilonwdev_yz,epsilonw_trace_over_3)
 
 
 ! compute forces for the fluid poroelastic part
@@ -74,16 +74,16 @@
   real(kind=CUSTOM_REAL) :: duxdxl,duydxl,duzdxl,duxdyl,duydyl,duzdyl,duxdzl,duydzl,duzdzl
   real(kind=CUSTOM_REAL) :: dwxdxl,dwydxl,dwzdxl,dwxdyl,dwydyl,dwzdyl,dwxdzl,dwydzl,dwzdzl
 
-  real(kind=CUSTOM_REAL) duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl
-  real(kind=CUSTOM_REAL) duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl
-  real(kind=CUSTOM_REAL) duxdxl_plus_duydyl_plus_duzdzl,dwxdxl_plus_dwydyl_plus_dwzdzl
+  real(kind=CUSTOM_REAL) :: duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl
+  real(kind=CUSTOM_REAL) :: duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl
+  real(kind=CUSTOM_REAL) :: duxdxl_plus_duydyl_plus_duzdzl,dwxdxl_plus_dwydyl_plus_dwzdzl
 
-  real(kind=CUSTOM_REAL) hp1,hp2,hp3
-  real(kind=CUSTOM_REAL) fac1,fac2,fac3
+  real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
+  real(kind=CUSTOM_REAL) :: fac1,fac2,fac3
 
-  real(kind=CUSTOM_REAL) tempx1ls,tempx2ls,tempx3ls,tempx1lw,tempx2lw,tempx3lw
-  real(kind=CUSTOM_REAL) tempy1ls,tempy2ls,tempy3ls,tempy1lw,tempy2lw,tempy3lw
-  real(kind=CUSTOM_REAL) tempz1ls,tempz2ls,tempz3ls,tempz1lw,tempz2lw,tempz3lw
+  real(kind=CUSTOM_REAL) :: tempx1ls,tempx2ls,tempx3ls,tempx1lw,tempx2lw,tempx3lw
+  real(kind=CUSTOM_REAL) :: tempy1ls,tempy2ls,tempy3ls,tempy1lw,tempy2lw,tempy3lw
+  real(kind=CUSTOM_REAL) :: tempz1ls,tempz2ls,tempz3ls,tempz1lw,tempz2lw,tempz3lw
 
   real(kind=CUSTOM_REAL) :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy
   real(kind=CUSTOM_REAL) :: sigmap
@@ -150,29 +150,29 @@
           lambdalplus2mul_G = lambdal_G + 2._CUSTOM_REAL*mul_G
 
           ! derivative along x,y,z for u_s and w
-          tempx1ls = 0.
-          tempx2ls = 0.
-          tempx3ls = 0.
+          tempx1ls = 0.0_CUSTOM_REAL
+          tempx2ls = 0.0_CUSTOM_REAL
+          tempx3ls = 0.0_CUSTOM_REAL
 
-          tempy1ls = 0.
-          tempy2ls = 0.
-          tempy3ls = 0.
+          tempy1ls = 0.0_CUSTOM_REAL
+          tempy2ls = 0.0_CUSTOM_REAL
+          tempy3ls = 0.0_CUSTOM_REAL
 
-          tempz1ls = 0.
-          tempz2ls = 0.
-          tempz3ls = 0.
+          tempz1ls = 0.0_CUSTOM_REAL
+          tempz2ls = 0.0_CUSTOM_REAL
+          tempz3ls = 0.0_CUSTOM_REAL
 
-          tempx1lw = 0.
-          tempx2lw = 0.
-          tempx3lw = 0.
+          tempx1lw = 0.0_CUSTOM_REAL
+          tempx2lw = 0.0_CUSTOM_REAL
+          tempx3lw = 0.0_CUSTOM_REAL
 
-          tempy1lw = 0.
-          tempy2lw = 0.
-          tempy3lw = 0.
+          tempy1lw = 0.0_CUSTOM_REAL
+          tempy2lw = 0.0_CUSTOM_REAL
+          tempy3lw = 0.0_CUSTOM_REAL
 
-          tempz1lw = 0.
-          tempz2lw = 0.
-          tempz3lw = 0.
+          tempz1lw = 0.0_CUSTOM_REAL
+          tempz2lw = 0.0_CUSTOM_REAL
+          tempz3lw = 0.0_CUSTOM_REAL
 
 !! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
 !! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
@@ -380,15 +380,15 @@
             tempz3(i,j,k) = jacobianl * sigma_zz* xix_regular
 
             tempx1p(i,j,k) = jacobianl * sigmap * xix_regular
-            tempy1p(i,j,k) = 0.0
-            tempz1p(i,j,k) = 0.0
+            tempy1p(i,j,k) = 0.0_CUSTOM_REAL
+            tempz1p(i,j,k) = 0.0_CUSTOM_REAL
 
-            tempx2p(i,j,k) = 0.0
+            tempx2p(i,j,k) = 0.0_CUSTOM_REAL
             tempy2p(i,j,k) = jacobianl * sigmap * xix_regular
-            tempz2p(i,j,k) = 0.0
+            tempz2p(i,j,k) = 0.0_CUSTOM_REAL
 
-            tempx3p(i,j,k) = 0.0
-            tempy3p(i,j,k) = 0.0
+            tempx3p(i,j,k) = 0.0_CUSTOM_REAL
+            tempy3p(i,j,k) = 0.0_CUSTOM_REAL
             tempz3p(i,j,k) = jacobianl * sigmap * xix_regular
           endif
 
@@ -403,29 +403,29 @@
       do j = 1,NGLLY
         do i = 1,NGLLX
 
-          tempx1ls = 0.
-          tempy1ls = 0.
-          tempz1ls = 0.
+          tempx1ls = 0.0_CUSTOM_REAL
+          tempy1ls = 0.0_CUSTOM_REAL
+          tempz1ls = 0.0_CUSTOM_REAL
 
-          tempx2ls = 0.
-          tempy2ls = 0.
-          tempz2ls = 0.
+          tempx2ls = 0.0_CUSTOM_REAL
+          tempy2ls = 0.0_CUSTOM_REAL
+          tempz2ls = 0.0_CUSTOM_REAL
 
-          tempx3ls = 0.
-          tempy3ls = 0.
-          tempz3ls = 0.
+          tempx3ls = 0.0_CUSTOM_REAL
+          tempy3ls = 0.0_CUSTOM_REAL
+          tempz3ls = 0.0_CUSTOM_REAL
 
-          tempx1lw = 0.
-          tempy1lw = 0.
-          tempz1lw = 0.
+          tempx1lw = 0.0_CUSTOM_REAL
+          tempy1lw = 0.0_CUSTOM_REAL
+          tempz1lw = 0.0_CUSTOM_REAL
 
-          tempx2lw = 0.
-          tempy2lw = 0.
-          tempz2lw = 0.
+          tempx2lw = 0.0_CUSTOM_REAL
+          tempy2lw = 0.0_CUSTOM_REAL
+          tempz2lw = 0.0_CUSTOM_REAL
 
-          tempx3lw = 0.
-          tempy3lw = 0.
-          tempz3lw = 0.
+          tempx3lw = 0.0_CUSTOM_REAL
+          tempy3lw = 0.0_CUSTOM_REAL
+          tempz3lw = 0.0_CUSTOM_REAL
 
           ! we can merge these loops because NGLLX = NGLLY = NGLLZ
           do l=1,NGLLX
@@ -495,7 +495,7 @@
 
           etal_f = etastore(i,j,k,ispec)
 
-          if (etal_f > 0.d0) then
+          if (etal_f > 0.0_CUSTOM_REAL) then
 
             permlxx = permstore(1,i,j,k,ispec)
             permlxy = permstore(2,i,j,k,ispec)
@@ -509,7 +509,7 @@
                  - permlxy*(permlxy*permlzz-permlyz*permlxz) &
                  + permlxx*(permlyy*permlzz-permlyz*permlyz)
 
-            if (detk /= 0.d0) then
+            if (detk /= 0.0_CUSTOM_REAL) then
              invpermlxx = (permlyy*permlzz-permlyz*permlyz)/detk
              invpermlxy = (permlxz*permlyz-permlxy*permlzz)/detk
              invpermlxz = (permlxy*permlyz-permlxz*permlyy)/detk

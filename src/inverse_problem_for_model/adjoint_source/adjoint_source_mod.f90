@@ -29,10 +29,11 @@ module adjoint_source
 
   !! IMPORT VARIABLES FROM SPECFEM -------------------------------------------------------------------------------------------------
   use specfem_par, only: CUSTOM_REAL, NDIM, MAX_STRING_LEN, OUTPUT_FILES, IIN, network_name, station_name, nrec_local, &
-       seismograms_d, seismograms_p, number_receiver_global
+       seismograms_d, seismograms_p, number_receiver_global, &
+       ELASTIC_SIMULATION,ACOUSTIC_SIMULATION
 
-  use specfem_par_elastic, only: ispec_is_elastic, ELASTIC_SIMULATION
-  use specfem_par_acoustic, only: ispec_is_acoustic, ACOUSTIC_SIMULATION
+  use specfem_par_elastic, only: ispec_is_elastic
+  use specfem_par_acoustic, only: ispec_is_acoustic
 
   !!--------------------------------------------------------------------------------------------------------------------------------
   !! IMPORT inverse_problem VARIABLES

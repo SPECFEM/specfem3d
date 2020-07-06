@@ -34,18 +34,16 @@
 module IO_model
 
   !! IMPORT VARIABLES FROM SPECFEM -------------------------------------------------------------------------------------------------
-  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,  ANISOTROPY
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,  ANISOTROPY, ACOUSTIC_SIMULATION, ELASTIC_SIMULATION
 
   use specfem_par, only: CUSTOM_REAL,  NGLLX, NGLLY, NGLLZ, NSPEC_AB,  myrank, mygroup, &
                          rhostore, mustore, kappastore, FOUR_THIRDS, PI
 
-  use specfem_par_elastic, only: rho_vp, rho_vs, ELASTIC_SIMULATION,  NSPEC_ANISO, &
+  use specfem_par_elastic, only: rho_vp, rho_vs,  NSPEC_ANISO, &
                                   c11store,c12store,c13store,c14store,c15store,c16store, &
                                   c22store,c23store,c24store,c25store,c26store,c33store, &
                                   c34store,c35store,c36store,c44store,c45store,c46store, &
                                   c55store,c56store,c66store
-
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
 
   !---------------------------------------------------------------------------------------------------------------------------------
   use inverse_problem_par

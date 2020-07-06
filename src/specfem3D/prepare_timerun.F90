@@ -297,8 +297,6 @@
 
   if (ELASTIC_SIMULATION) then
     ! switches to three-component mass matrix
-
-    !! CD CD !!
     if (STACEY_ABSORBING_CONDITIONS) then
       if (USE_LDDRK) then
         rmassx(:) = rmass(:)
@@ -315,8 +313,6 @@
       rmassy(:) = rmass(:)
       rmassz(:) = rmass(:)
     endif
-    !! CD CD
-
     ! not needed anymore
     deallocate(rmass)
 

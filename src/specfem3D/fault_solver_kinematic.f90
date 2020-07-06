@@ -170,7 +170,6 @@ contains
   call initialize_fault(bc,IIN_BIN)
 
   if (bc%nspec > 0) then
-
     allocate(bc%T(3,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1994')
     allocate(bc%D(3,bc%nglob),stat=ier)
@@ -194,7 +193,11 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1998')
     bc%v_kin_t1 = 0e0_CUSTOM_REAL
     bc%v_kin_t2 = 0e0_CUSTOM_REAL
-
+  else
+    ! dummy allocations (for subroutine arguments)
+    allocate(bc%T(3,1), &
+             bc%D(3,1), &
+             bc%V(3,1))
   endif
 
   call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,7,iflt)
@@ -364,6 +367,11 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2000')
     allocate(dataXZ%zcoord(bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2001')
+  else
+    ! dummy allocations (for subroutine arguments)
+    allocate(dataXZ%xcoord(1), &
+             dataXZ%ycoord(1), &
+             dataXZ%zcoord(1))
   endif
 
   end subroutine init_dataXZ

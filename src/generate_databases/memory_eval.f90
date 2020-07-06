@@ -32,8 +32,9 @@
                         APPROXIMATE_OCEAN_LOAD,memory_size)
 
   use constants
+  use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
   use generate_databases_par, only: PML_CONDITIONS,nspec_cpml,nspec_irregular
-  use create_regions_mesh_ext_par, only: NSPEC_ANISO,NSPEC_PORO,ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
+  use create_regions_mesh_ext_par, only: NSPEC_ANISO,NSPEC_PORO
 
   implicit none
 
@@ -43,8 +44,6 @@
   logical, intent(in) :: APPROXIMATE_OCEAN_LOAD
   ! output
   double precision, intent(out) :: memory_size
-  ! local parameters
-  logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
 
   memory_size = 0.d0
 
@@ -73,7 +72,6 @@
 
   ! see: read_mesh_databases.f90
   ! acoustic arrays
-  call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
   if (ACOUSTIC_SIMULATION) then
     ! potential_acoustic, potentical_dot_acoustic, potential_dot_dot_acoustic
     memory_size = memory_size + 3.d0*NGLOB_AB*dble(CUSTOM_REAL)
@@ -119,7 +117,6 @@
   endif
 
   ! elastic arrays
-  call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   if (ELASTIC_SIMULATION) then
     ! displacement,velocity,acceleration
     memory_size = memory_size + 3.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)
@@ -145,7 +142,6 @@
   endif
 
   ! elastic arrays
-  call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
   if (POROELASTIC_SIMULATION) then
     ! displs_poroelastic,..
     memory_size = memory_size + 6.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)

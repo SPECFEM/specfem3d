@@ -81,7 +81,7 @@ program add_model
   ! ============ program starts here =====================
 
   ! initializes arrays
-  call initialize()
+  call add_model_initialize()
 
   ! reads in parameters needed
   call read_parameters_tomo()
@@ -202,9 +202,11 @@ end program add_model
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine initialize()
+  subroutine add_model_initialize()
 
 ! initializes arrays
+
+  use constants, only: myrank
 
   use tomography_par
 
@@ -243,5 +245,5 @@ subroutine initialize()
   NSPEC = NSPEC_AB
   NGLOB = NGLOB_AB
 
-end subroutine initialize
+  end subroutine add_model_initialize
 

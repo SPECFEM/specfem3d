@@ -99,10 +99,10 @@ end module create_meshfem_par
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) 'creating mesh:'
-    write(IMAIN,*) '  NGLLX/NGLLY/NGLLZ = ',NGLLX_M,NGLLY_M,NGLLZ_M
-    write(IMAIN,*) '  NGNOD/NGNOD2D     = ',NGNOD,NGNOD2D
-    write(IMAIN,*) '  NSPEC_AB          = ',NSPEC_AB
-    write(IMAIN,*) '  NGLOB_AB          = ',NGLOB_AB
+    write(IMAIN,*) '  NGLLX_M/NGLLY_M/NGLLZ_M = ',NGLLX_M,NGLLY_M,NGLLZ_M
+    write(IMAIN,*) '  NGNOD/NGNOD2D           = ',NGNOD,NGNOD2D
+    write(IMAIN,*) '  NSPEC_AB                = ',NSPEC_AB
+    write(IMAIN,*) '  NGLOB_AB                = ',NGLOB_AB
     write(IMAIN,*)
     call flush_IMAIN()
   endif

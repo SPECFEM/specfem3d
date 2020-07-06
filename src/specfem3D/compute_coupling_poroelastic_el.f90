@@ -29,7 +29,7 @@
 
   subroutine compute_coupling_poroelastic_el(iphase)
 
-! returns the updated accelerations array: accels_poroelatsic (& accelw_poroelastic )
+! returns the updated accelerations array: accels_poroelastic (& accelw_poroelastic )
 
   use constants
   use specfem_par, only: ibool,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -121,17 +121,17 @@
       ! (note: should be the same as for corresponding i',j',k',ispec_poroelastic or ispec_elastic )
       iglob_el = ibool(i,j,k,ispec_el)
 
-      tempx1l = 0.
-      tempx2l = 0.
-      tempx3l = 0.
+      tempx1l = 0.0_CUSTOM_REAL
+      tempx2l = 0.0_CUSTOM_REAL
+      tempx3l = 0.0_CUSTOM_REAL
 
-      tempy1l = 0.
-      tempy2l = 0.
-      tempy3l = 0.
+      tempy1l = 0.0_CUSTOM_REAL
+      tempy2l = 0.0_CUSTOM_REAL
+      tempy3l = 0.0_CUSTOM_REAL
 
-      tempz1l = 0.
-      tempz2l = 0.
-      tempz3l = 0.
+      tempz1l = 0.0_CUSTOM_REAL
+      tempz2l = 0.0_CUSTOM_REAL
+      tempz3l = 0.0_CUSTOM_REAL
 
       ! we can merge these loops because NGLLX = NGLLY = NGLLZ
       do l=1,NGLLX
@@ -268,7 +268,7 @@
       k = coupling_el_po_ijk(3,igll,iface)
 
       iglob_po = ibool(i,j,k,ispec_po)
-      if (iglob_el /= iglob_po) stop 'poroelastic-elastic coupling error'
+      if (iglob_el /= iglob_po) stop 'poroelastic-elastic coupling error in compute_coupling_poroelastic_el()'
 
       ! get poroelastic parameters of current local GLL
       phil = phistore(i,j,k,ispec_po)
@@ -297,29 +297,29 @@
       lambdalplus2mul_G = lambdal_G + 2._CUSTOM_REAL*mul_G
 
       ! derivative along x,y,z for u_s and w
-      tempx1ls = 0.
-      tempx2ls = 0.
-      tempx3ls = 0.
+      tempx1ls = 0.0_CUSTOM_REAL
+      tempx2ls = 0.0_CUSTOM_REAL
+      tempx3ls = 0.0_CUSTOM_REAL
 
-      tempy1ls = 0.
-      tempy2ls = 0.
-      tempy3ls = 0.
+      tempy1ls = 0.0_CUSTOM_REAL
+      tempy2ls = 0.0_CUSTOM_REAL
+      tempy3ls = 0.0_CUSTOM_REAL
 
-      tempz1ls = 0.
-      tempz2ls = 0.
-      tempz3ls = 0.
+      tempz1ls = 0.0_CUSTOM_REAL
+      tempz2ls = 0.0_CUSTOM_REAL
+      tempz3ls = 0.0_CUSTOM_REAL
 
-      tempx1lw = 0.
-      tempx2lw = 0.
-      tempx3lw = 0.
+      tempx1lw = 0.0_CUSTOM_REAL
+      tempx2lw = 0.0_CUSTOM_REAL
+      tempx3lw = 0.0_CUSTOM_REAL
 
-      tempy1lw = 0.
-      tempy2lw = 0.
-      tempy3lw = 0.
+      tempy1lw = 0.0_CUSTOM_REAL
+      tempy2lw = 0.0_CUSTOM_REAL
+      tempy3lw = 0.0_CUSTOM_REAL
 
-      tempz1lw = 0.
-      tempz2lw = 0.
-      tempz3lw = 0.
+      tempz1lw = 0.0_CUSTOM_REAL
+      tempz2lw = 0.0_CUSTOM_REAL
+      tempz3lw = 0.0_CUSTOM_REAL
 
       ! first double loop over GLL points to compute and store gradients
       ! we can merge these loops because NGLLX = NGLLY = NGLLZ
@@ -489,14 +489,14 @@
       !
       ! note: continuity of displacement is enforced after the velocity update
       ! contribution to the solid phase
-      accels_poroelastic(1,iglob_po) = accels_poroelastic(1,iglob_po) + jacobianw*&
-          ( (sigma_xx*nx + sigma_xy*ny + sigma_xz*nz)/2.d0 - phil/tortl*sigmap*nx )
+      accels_poroelastic(1,iglob_po) = accels_poroelastic(1,iglob_po) + jacobianw * &
+          ( (sigma_xx*nx + sigma_xy*ny + sigma_xz*nz) * 0.5_CUSTOM_REAL - phil/tortl*sigmap*nx )
 
-      accels_poroelastic(2,iglob_po) = accels_poroelastic(2,iglob_po) + jacobianw*&
-          ( (sigma_xy*nx + sigma_yy*ny + sigma_yz*nz)/2.d0 - phil/tortl*sigmap*ny )
+      accels_poroelastic(2,iglob_po) = accels_poroelastic(2,iglob_po) + jacobianw * &
+          ( (sigma_xy*nx + sigma_yy*ny + sigma_yz*nz) * 0.5_CUSTOM_REAL - phil/tortl*sigmap*ny )
 
-      accels_poroelastic(3,iglob_po) = accels_poroelastic(3,iglob_po) + jacobianw*&
-          ( (sigma_xz*nx + sigma_yz*ny + sigma_zz*nz)/2.d0 - phil/tortl*sigmap*nz )
+      accels_poroelastic(3,iglob_po) = accels_poroelastic(3,iglob_po) + jacobianw * &
+          ( (sigma_xz*nx + sigma_yz*ny + sigma_zz*nz) * 0.5_CUSTOM_REAL - phil/tortl*sigmap*nz )
       ! contribution to the fluid phase
       ! w = 0
 

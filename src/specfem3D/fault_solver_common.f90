@@ -136,9 +136,9 @@ contains
   integer :: ij,k,e,ier
 
   read(IIN_BIN) bc%nspec,bc%nglob
-  if (.not. PARALLEL_FAULT .and. bc%nspec == 0) return
-  if (bc%nspec > 0) then
 
+  if (bc%nspec > 0) then
+    ! array allocations
     allocate(bc%ibulk1(bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2159')
     allocate(bc%ibulk2(bc%nglob),stat=ier)
@@ -185,10 +185,13 @@ contains
         bc%B(k) = bc%B(k) + jacobian2Dw(ij,e)
       enddo
     enddo
+  else
+    ! dummy allocations (for subroutine arguments)
+    allocate(bc%coord(3,1))
   endif
 
+  ! fault parallelization across multiple MPI processes
   if (PARALLEL_FAULT) then
-
     tmp_vec = 0._CUSTOM_REAL
     if (bc%nspec > 0) tmp_vec(1,bc%ibulk1) = bc%B
     ! assembles with other MPI processes
@@ -206,7 +209,6 @@ contains
                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                                      my_neighbors_ext_mesh)
     if (bc%nspec > 0) nxyz = tmp_vec(:,bc%ibulk1)
-
   endif
 
   if (bc%nspec > 0) then
@@ -226,7 +228,6 @@ contains
     ! WARNING: In non-split nodes at fault edges M is assembled across the fault.
     ! hence invM1+invM2=2/(M1+M2) instead of 1/M1+1/M2
     ! In a symmetric mesh (M1=M2) Z will be twice its intended value
-
   endif
 
   end subroutine initialize_fault
@@ -459,7 +460,6 @@ contains
   close(IIN)
 
   if (PARALLEL_FAULT) then
-
     ! For each output point, find the processor that contains the nearest node
     allocate(iproc(dataT%npoin),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2174')
@@ -512,6 +512,7 @@ contains
       deallocate(glob_indx,iglob_tmp,name_tmp)
 
     else
+      ! no local points
       dataT%npoin = 0
       deallocate(dataT%iglob)
       deallocate(dataT%name)
@@ -538,6 +539,9 @@ contains
     dataT%longFieldNames(6) = "vertical up-dip shear stress (MPa)"
     dataT%longFieldNames(7) = "normal stress (MPa)"
     dataT%shortFieldNames = "h-slip h-slip-rate h-shear-stress v-slip v-slip-rate v-shear-stress n-stress"
+  else
+    ! dummy allocations (for subroutine arguments)
+    allocate(dataT%dat(1,1,1))
   endif
 
   end subroutine init_dataT
@@ -554,7 +558,7 @@ contains
 
   integer :: i,k
 
-  do i=1,dataT%npoin
+  do i = 1,dataT%npoin
     k = dataT%iglob(i)
     dataT%dat(1,i,itime) = d(1,k)
     dataT%dat(2,i,itime) = v(1,k)
@@ -588,8 +592,9 @@ contains
 
   write(my_fmt,'(a,i1,a)') '(',dataT%ndat+1,'(E15.7))'
 
-  do i=1,dataT%npoin
+  do i = 1,dataT%npoin
     open(IOUT,file=trim(OUTPUT_FILES)//trim(dataT%name(i))//'.dat',status='replace')
+
     write(IOUT,*) "# problem=TPV104" ! WARNING: this should be a user input
     write(IOUT,*) "# author=Surendra Nadh Somala" ! WARNING: this should be a user input
     write(IOUT,1000) time_values(2), time_values(3), time_values(1), time_values(5), time_values(6), time_values(7)
@@ -599,16 +604,20 @@ contains
     write(IOUT,*) "# time_step=",dataT%dt
     write(IOUT,*) "# location=",trim(dataT%name(i))
     write(IOUT,*) "# Column #1 = Time (s)"
+
     do k=1,dataT%ndat
       write(IOUT,1100) k+1,trim(dataT%longFieldNames(k))
     enddo
+
     write(IOUT,*) "#"
     write(IOUT,*) "# The line below lists the names of the data fields:"
     write(IOUT,'(a256)') "# t " // trim(dataT%shortFieldNames)
     write(IOUT,*) "#"
-    do k=1,dataT%nt
+
+    do k = 1,dataT%nt
       write(IOUT,my_fmt) k*dataT%dt, dataT%dat(:,i,k)
     enddo
+
     close(IOUT)
   enddo
 

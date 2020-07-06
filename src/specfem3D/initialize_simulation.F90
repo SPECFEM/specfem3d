@@ -255,6 +255,8 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2413')
   allocate(mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2414')
+  allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating rho array 2414')
   if (ier /= 0) stop 'error allocating arrays for material properties'
 
   ! material flags

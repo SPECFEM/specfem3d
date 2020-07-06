@@ -205,8 +205,8 @@ contains
 
     integer                                                       :: irec,isrc,ier
     integer                                                       :: icomp, it, irec_local
-    real(kind=CUSTOM_REAL)                                        :: DT, lw_tap
-    double precision                                              :: DT_dble
+    real(kind=CUSTOM_REAL)                                        :: DT_cr, lw_tap
+    double precision                                              :: DT
     character(len=256)                                            :: name_file
     character(len=MAX_STRING_LEN)                                 :: TRAC_PATH, dsname
     integer(kind=8)                                               :: filesize
@@ -217,8 +217,8 @@ contains
 
     ! time discretization -----------------------------------------------------------------------------------------------------------
     NSTEP = acqui_simu(ievent)%Nt_data
-    DT = acqui_simu(ievent)%dt_data
-    DT_dble = DT
+    DT_cr = acqui_simu(ievent)%dt_data
+    DT = DT_cr
     NSTEP_STF = 1
 
     deltat = real(DT,kind=CUSTOM_REAL)
@@ -288,8 +288,9 @@ contains
                 do isrc=1,NSOURCES
                    raw_stf(:)=acqui_simu(ievent)%user_source_time_function(:,isrc)
                    call bwfilt (raw_stf, filt_stf, &
-                        DT, NSTEP, 1, 4, acqui_simu(ievent)%fl_event(inversion_param%current_ifrq), &
-                                         acqui_simu(ievent)%fh_event(inversion_param%current_ifrq))
+                                DT_cr, NSTEP, 1, 4, &
+                                acqui_simu(ievent)%fl_event(inversion_param%current_ifrq), &
+                                acqui_simu(ievent)%fh_event(inversion_param%current_ifrq))
                    lw_tap = 2.5_CUSTOM_REAL
                    call apodise_sig(filt_stf, NSTEP, lw_tap)
                    user_source_time_function(:,isrc)=filt_stf(:)
@@ -772,29 +773,11 @@ contains
 
     !! info on mesh and parameters ---------------
     if (SIMULATION_TYPE == 1) then
-       if (ELASTIC_SIMULATION) then
-          call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
-                                     ibool,xstore,ystore,zstore, &
-                                     kappastore,mustore,rho_vp,rho_vs, &
-                                     DT_dble,model_speed_max,min_resolved_period, &
-                                     LOCAL_PATH,SAVE_MESH_FILES)
-
-       else if (ACOUSTIC_SIMULATION) then
-          allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-          if (ier /= 0) call exit_MPI_without_rank('error allocating array 525')
-          if (ier /= 0) stop 'error allocating array rho_vp'
-          allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-          if (ier /= 0) call exit_MPI_without_rank('error allocating array 526')
-          if (ier /= 0) stop 'error allocating array rho_vs'
-          rho_vp = sqrt( kappastore / rhostore ) * rhostore
-          rho_vs = 0.0_CUSTOM_REAL
-          call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
-                                     ibool,xstore,ystore,zstore, &
-                                     kappastore,mustore,rho_vp,rho_vs, &
-                                     DT_dble,model_speed_max,min_resolved_period, &
-                                     LOCAL_PATH,SAVE_MESH_FILES)
-          deallocate(rho_vp,rho_vs)
-       endif
+      call check_mesh_resolution(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                                 ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
+                                 kappastore,mustore,rhostore, &
+                                 phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
+                                 DT, model_speed_max,min_resolved_period)
     endif
 
   end subroutine InitSpecfemForOneRun
@@ -1326,26 +1309,10 @@ contains
     real(kind=CUSTOM_REAL) :: cmax,cmax_glob,pmax,pmax_glob
     real(kind=CUSTOM_REAL) :: dt_suggested,dt_suggested_glob,avg_distance
     real(kind=CUSTOM_REAL) :: vel_min,vel_max
-    integer                :: ispec, ier
+    integer                :: ispec
     logical                :: has_vs_zero
 
-    !!! dummy arrays for acosutic case if needed
-    !!! occurs when not purely elastic simulation
-    if (ELASTIC_SIMULATION) then
-       ! nothing to do
-    else if (ACOUSTIC_SIMULATION) then
-       allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-       if (ier /= 0) call exit_MPI_without_rank('error allocating array 542')
-       if (ier /= 0) stop 'error allocating array rho_vp'
-       allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-       if (ier /= 0) call exit_MPI_without_rank('error allocating array 543')
-       if (ier /= 0) stop 'error allocating array rho_vs'
-       rho_vp = sqrt( kappastore / rhostore ) * rhostore
-       rho_vs = 0.0_CUSTOM_REAL
-    endif
-
-
-    ModelIsSuitable=.true.
+    ModelIsSuitable = .true.
 
     vpmin_glob = HUGEVAL
     vpmax_glob = -HUGEVAL
@@ -1379,11 +1346,16 @@ contains
     has_vs_zero = .false.
 
     do ispec = 1,NSPEC_AB
-
-       !! min max in element
-       call  get_vpvs_minmax(vpmin, vpmax, vsmin, vsmax, poissonmin, poissonmax, &
-                             ispec, has_vs_zero, &
-                             NSPEC_AB, kappastore, mustore, rho_vp, rho_vs)
+       ! determines minimum/maximum velocities within this element
+       if (ispec_is_elastic(ispec) .or. ispec_is_acoustic(ispec)) then
+          ! elastic/acoustic
+          !! min max in element
+          call  get_vpvs_minmax(vpmin, vpmax, vsmin, vsmax, poissonmin, poissonmax, &
+                                ispec, has_vs_zero, &
+                                NSPEC_AB, kappastore, mustore, rhostore)
+       else
+         call exit_MPI(myrank,'Poroelastic elements in specfem_interface_mod not implement yet')
+       endif
 
        !! min/max for whole cpu partition
        vpmin_glob = min(vpmin_glob, vpmin)

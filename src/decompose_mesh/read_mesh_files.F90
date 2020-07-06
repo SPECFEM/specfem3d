@@ -387,6 +387,8 @@
         if (len_trim(line) == 0) cycle
         if (line(1:1) == '#' .or. line(1:1) == '!') cycle
 
+        ! format:
+        ! #rho_s #rho_f #phi #tort #kxx #kxy #kxz #kyy #kyz #kzz #kappa_s #kappa_f #kappa_fr #eta #mu_fr
         read(line,*,iostat=ier) rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
         if (ier /= 0) then
           stop 'Error reading nummaterial_poroelastic_file, please check if it has the required format...'

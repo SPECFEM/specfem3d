@@ -196,6 +196,11 @@ end module constants
   !! VM VM number of source for external source time function
   integer :: NSOURCES_STF
 
+  ! simulation type
+  logical :: ACOUSTIC_SIMULATION = .false.
+  logical :: ELASTIC_SIMULATION = .false.
+  logical :: POROELASTIC_SIMULATION = .false.
+
   end module shared_compute_parameters
 
 !
