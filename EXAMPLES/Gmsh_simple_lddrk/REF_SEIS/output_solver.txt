@@ -25,7 +25,7 @@
 
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
- velocity model:   default 
+ velocity model:   default
 
  Reading mesh databases...
  done
@@ -58,33 +58,33 @@
 
 
  ********
- Model: P   velocity min,max =    2800.00000       2800.00000    
- Model: S   velocity min,max =    1500.00000       1500.00000    
+ Model: P   velocity min,max =    2800.00000       2800.00000
+ Model: S   velocity min,max =    1500.00000       1500.00000
 
- Model: Poisson's ratio min,max =   0.298747778      0.298747778    
+ Model: Poisson's ratio min,max =   0.298747778      0.298747778
  ********
 
  *********************************************
  *** Verification of simulation parameters ***
  *********************************************
 
- *** Xmin and Xmax of the model =    0.00000000       10000.0000    
- *** Ymin and Ymax of the model =    0.00000000       8000.00000    
- *** Zmin and Zmax of the model =   -5000.00000       190.346359    
+ *** Xmin and Xmax of the model =    0.00000000       10000.0000
+ *** Ymin and Ymax of the model =    0.00000000       8000.00000
+ *** Zmin and Zmax of the model =   -5000.00000       190.346359
 
- *** Max GLL point distance =    764.522949    
- *** Min GLL point distance =    41.5252075    
- *** Max/min ratio =    18.4110565    
+ *** Max GLL point distance =    764.522949
+ *** Min GLL point distance =    41.5252075
+ *** Max/min ratio =    18.4110565
 
- *** Max element size =    2335.65601    
- *** Min element size =    240.484589    
- *** Max/min ratio =    9.71228981    
+ *** Max element size =    2335.65601
+ *** Min element size =    240.484589
+ *** Max/min ratio =    9.71228981
 
- *** Minimum period resolved =    1.94638002    
+ *** Minimum period resolved =    1.94638002
  *** Maximum suggested time step =    7.41521548E-03
 
  *** for DT :    7.0000000000000001E-003
- *** Max stability for wave velocities =   0.472002447    
+ *** Max stability for wave velocities =   0.472002447
 
  Elapsed time for checking mesh resolution in seconds =    1.8799999999999999E-004
  saving VTK files for Courant number and minimum period
@@ -121,10 +121,10 @@
                   in element           41
                   in elastic domain
 
-   using moment tensor source: 
+   using moment tensor source:
      xi coordinate of source in that element:   -5.2254149109824970E-004
      eta coordinate of source in that element:    5.2248058345352180E-004
-     gamma coordinate of source in that element:   0.13017612038624007     
+     gamma coordinate of source in that element:   0.13017612038624007
 
    source time function:
      using Gaussian source time function
@@ -133,24 +133,24 @@
 
    magnitude of the source:
         scalar moment M0 =    1.5811388300841894E+019  dyne-cm
-     moment magnitude Mw =    2.0993135269588752     
+     moment magnitude Mw =    2.0993135269588752
 
    original (requested) position of the source:
 
-             latitude:    5500.0000000000000     
-            longitude:    2500.0000000000000     
+             latitude:    5500.0000000000000
+            longitude:    2500.0000000000000
 
-                x:    2500.0000000000000     
-                y:    5500.0000000000000     
+                x:    2500.0000000000000
+                y:    5500.0000000000000
             depth:   0.10000000000000001       km
-   topo elevation:    51.107578277587891     
+   topo elevation:    51.107578277587891
 
    position of the source that will be used:
 
-                x:    2500.0000000000000     
-                y:    5500.0000000000000     
+                x:    2500.0000000000000
+                y:    5500.0000000000000
             depth:   0.10000000000000002       km
-                z:   -48.892421722412124     
+                z:   -48.892421722412124
 
    error in location of the source:    1.42108547E-14  m
 
@@ -182,254 +182,254 @@
 
 
  station #            1     DB    X1
-      original latitude:    4000.00000    
-      original longitude:    1000.00000    
-      original x:    1000.00000    
-      original y:    4000.00000    
+      original latitude:    4000.00000
+      original longitude:    1000.00000
+      original x:    1000.00000
+      original y:    4000.00000
       original depth:    0.00000000      m
-      horizontal distance:    2.12132025    
-      target x, y, z:    1000.00000       4000.00000       14.9785995    
+      horizontal distance:    2.12132025
+      target x, y, z:    1000.00000       4000.00000       14.9785995
       closest estimate found:    13.8116016      m away
 
       receiver located in slice            0
                        in element           61
                        in elastic domain
-      at coordinates: 
-      xi    =    1.0024873779325505     
-      eta   =   0.99751237777520785     
-      gamma =   -1.0100000000000000     
-      rotation matrix: 
-      nu1 =    1.00000000       0.00000000       0.00000000    
-      nu2 =    0.00000000       1.00000000       0.00000000    
-      nu3 =    0.00000000       0.00000000       1.00000000    
-      x:    1000.0000000000001     
-      y:    4000.0000000000014     
+      at coordinates:
+      xi    =    1.0024873779325505
+      eta   =   0.99751237777520785
+      gamma =   -1.0100000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    1000.0000000000001
+      y:    4000.0000000000014
       depth:    13.811601448891720       m
-      z:    1.1669980994481244     
+      z:    1.1669980994481244
 
 
 
  station #            2     DB    X2
-      original latitude:    4000.00000    
-      original longitude:    2000.00000    
-      original x:    2000.00000    
-      original y:    4000.00000    
+      original latitude:    4000.00000
+      original longitude:    2000.00000
+      original x:    2000.00000
+      original y:    4000.00000
       original depth:    0.00000000      m
-      horizontal distance:    1.58113885    
-      target x, y, z:    2000.00000       4000.00000       22.7423191    
+      horizontal distance:    1.58113885
+      target x, y, z:    2000.00000       4000.00000       22.7423191
       closest estimate found:    21.6610489      m away
 
       receiver located in slice            0
                        in element           33
                        in elastic domain
-      at coordinates: 
-      xi    =   0.99688632816277101     
-      eta   =  -0.99688657230277455     
-      gamma =   -1.0100000000000000     
-      rotation matrix: 
-      nu1 =    1.00000000       0.00000000       0.00000000    
-      nu2 =    0.00000000       1.00000000       0.00000000    
-      nu3 =    0.00000000       0.00000000       1.00000000    
-      x:    2000.0000000000000     
-      y:    4000.0000000000005     
+      at coordinates:
+      xi    =   0.99688632816277101
+      eta   =  -0.99688657230277455
+      gamma =   -1.0100000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    2000.0000000000000
+      y:    4000.0000000000005
       depth:    21.661049325160366       m
-      z:    1.0812697818952990     
+      z:    1.0812697818952990
 
 
 
  station #            3     DB    X3
-      original latitude:    4000.00000    
-      original longitude:    3000.00000    
-      original x:    3000.00000    
-      original y:    4000.00000    
+      original latitude:    4000.00000
+      original longitude:    3000.00000
+      original x:    3000.00000
+      original y:    4000.00000
       original depth:    0.00000000      m
-      horizontal distance:    1.58113885    
-      target x, y, z:    3000.00000       4000.00000       21.9623718    
+      horizontal distance:    1.58113885
+      target x, y, z:    3000.00000       4000.00000       21.9623718
       closest estimate found:    20.8484402      m away
 
       receiver located in slice            1
                        in element           61
                        in elastic domain
-      at coordinates: 
-      xi    =   0.99749272988556070     
-      eta   =   0.99749272988556170     
-      gamma =   -1.0100000000000000     
-      rotation matrix: 
-      nu1 =    1.00000000       0.00000000       0.00000000    
-      nu2 =    0.00000000       1.00000000       0.00000000    
-      nu3 =    0.00000000       0.00000000       1.00000000    
-      x:    3000.0000000000000     
-      y:    4000.0000000000000     
+      at coordinates:
+      xi    =   0.99749272988556070
+      eta   =   0.99749272988556170
+      gamma =   -1.0100000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    3000.0000000000000
+      y:    4000.0000000000000
       depth:    20.848441019386691       m
-      z:    1.1139308067851836     
+      z:    1.1139308067851836
 
 
 
  station #            4     DB    X4
-      original latitude:    4000.00000    
-      original longitude:    4000.00000    
-      original x:    4000.00000    
-      original y:    4000.00000    
+      original latitude:    4000.00000
+      original longitude:    4000.00000
+      original x:    4000.00000
+      original y:    4000.00000
       original depth:    0.00000000      m
-      horizontal distance:    2.12132025    
-      target x, y, z:    4000.00000       4000.00000       12.7807446    
+      horizontal distance:    2.12132025
+      target x, y, z:    4000.00000       4000.00000       12.7807446
       closest estimate found:    11.5789280      m away
 
       receiver located in slice            1
                        in element           61
                        in elastic domain
-      at coordinates: 
-      xi    =   0.99856299585435437     
-      eta   =   -1.0014370041456457     
-      gamma =   -1.0100000000000000     
-      rotation matrix: 
-      nu1 =    1.00000000       0.00000000       0.00000000    
-      nu2 =    0.00000000       1.00000000       0.00000000    
-      nu3 =    0.00000000       0.00000000       1.00000000    
-      x:    4000.0000000000000     
-      y:    4000.0000000000000     
+      at coordinates:
+      xi    =   0.99856299585435437
+      eta   =   -1.0014370041456457
+      gamma =   -1.0100000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    4000.0000000000000
+      y:    4000.0000000000000
       depth:    11.578927877648544       m
-      z:    1.2018166749637604     
+      z:    1.2018166749637604
 
 
 
  station #            5     DB    X5
-      original latitude:    4000.00000    
-      original longitude:    5000.00000    
-      original x:    5000.00000    
-      original y:    4000.00000    
+      original latitude:    4000.00000
+      original longitude:    5000.00000
+      original x:    5000.00000
+      original y:    4000.00000
       original depth:    0.00000000      m
-      horizontal distance:    2.91547585    
-      target x, y, z:    5000.00000       4000.00000      -1.44768143    
+      horizontal distance:    2.91547585
+      target x, y, z:    5000.00000       4000.00000      -1.44768143
       closest estimate found:    2.44249065E-15  m away
 
       receiver located in slice            2
                        in element            5
                        in elastic domain
-      at coordinates: 
-      xi    =    1.0005413392946556     
-      eta   =  -0.99945817255656655     
-      gamma =  -0.98841858112294034     
-      rotation matrix: 
-      nu1 =    1.00000000       0.00000000       0.00000000    
-      nu2 =    0.00000000       1.00000000       0.00000000    
-      nu3 =    0.00000000       0.00000000       1.00000000    
-      x:    5000.0000000000000     
-      y:    4000.0000000000000     
+      at coordinates:
+      xi    =    1.0005413392946556
+      eta   =  -0.99945817255656655
+      gamma =  -0.98841858112294034
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    5000.0000000000000
+      y:    4000.0000000000000
       depth:    2.4424906541753444E-015  m
-      z:   -1.4476814270019556     
+      z:   -1.4476814270019556
 
 
 
  station #            6     DB    X6
-      original latitude:    4000.00000    
-      original longitude:    6000.00000    
-      original x:    6000.00000    
-      original y:    4000.00000    
+      original latitude:    4000.00000
+      original longitude:    6000.00000
+      original x:    6000.00000
+      original y:    4000.00000
       original depth:    0.00000000      m
-      horizontal distance:    3.80788660    
-      target x, y, z:    6000.00000       4000.00000      -15.2326841    
+      horizontal distance:    3.80788660
+      target x, y, z:    6000.00000       4000.00000      -15.2326841
       closest estimate found:    4.54750820E-13  m away
 
       receiver located in slice            3
                        in element           41
                        in elastic domain
-      at coordinates: 
-      xi    =  -0.99980424783159028     
-      eta   =    1.0001952638396152     
-      gamma =  -0.87808616004862461     
-      rotation matrix: 
-      nu1 =    1.00000000       0.00000000       0.00000000    
-      nu2 =    0.00000000       1.00000000       0.00000000    
-      nu3 =    0.00000000       0.00000000       1.00000000    
-      x:    6000.0000000000000     
-      y:    3999.9999999999995     
+      at coordinates:
+      xi    =  -0.99980424783159028
+      eta   =    1.0001952638396152
+      gamma =  -0.87808616004862461
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    6000.0000000000000
+      y:    3999.9999999999995
       depth:    1.7763568394002505E-015  m
-      z:   -15.232684135437010     
+      z:   -15.232684135437010
 
 
 
  station #            7     DB    X7
-      original latitude:    4000.00000    
-      original longitude:    7000.00000    
-      original x:    7000.00000    
-      original y:    4000.00000    
+      original latitude:    4000.00000
+      original longitude:    7000.00000
+      original x:    7000.00000
+      original y:    4000.00000
       original depth:    0.00000000      m
-      horizontal distance:    4.74341631    
-      target x, y, z:    7000.00000       4000.00000      -23.2190742    
+      horizontal distance:    4.74341631
+      target x, y, z:    7000.00000       4000.00000      -23.2190742
       closest estimate found:    4.54747351E-13  m away
 
       receiver located in slice            3
                        in element           77
                        in elastic domain
-      at coordinates: 
-      xi    =   0.99996289107584946     
-      eta   =    1.0000375971963416     
-      gamma =  -0.81423115528513945     
-      rotation matrix: 
-      nu1 =    1.00000000       0.00000000       0.00000000    
-      nu2 =    0.00000000       1.00000000       0.00000000    
-      nu3 =    0.00000000       0.00000000       1.00000000    
-      x:    7000.0000000000000     
-      y:    3999.9999999999995     
+      at coordinates:
+      xi    =   0.99996289107584946
+      eta   =    1.0000375971963416
+      gamma =  -0.81423115528513945
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    7000.0000000000000
+      y:    3999.9999999999995
       depth:    0.0000000000000000       m
-      z:   -23.219074249267578     
+      z:   -23.219074249267578
 
 
 
  station #            8     DB    X8
-      original latitude:    4000.00000    
-      original longitude:    8000.00000    
-      original x:    8000.00000    
-      original y:    4000.00000    
+      original latitude:    4000.00000
+      original longitude:    8000.00000
+      original x:    8000.00000
+      original y:    4000.00000
       original depth:    0.00000000      m
-      horizontal distance:    5.70087719    
-      target x, y, z:    8000.00000       4000.00000      -22.3266735    
+      horizontal distance:    5.70087719
+      target x, y, z:    8000.00000       4000.00000      -22.3266735
       closest estimate found:    4.54747351E-13  m away
 
       receiver located in slice            3
                        in element           77
                        in elastic domain
-      at coordinates: 
-      xi    =   -1.0000039061870623     
-      eta   =    1.0000039061870603     
-      gamma =  -0.82138511656205548     
-      rotation matrix: 
-      nu1 =    1.00000000       0.00000000       0.00000000    
-      nu2 =    0.00000000       1.00000000       0.00000000    
-      nu3 =    0.00000000       0.00000000       1.00000000    
-      x:    8000.0000000000000     
-      y:    3999.9999999999995     
+      at coordinates:
+      xi    =   -1.0000039061870623
+      eta   =    1.0000039061870603
+      gamma =  -0.82138511656205548
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    8000.0000000000000
+      y:    3999.9999999999995
       depth:    0.0000000000000000       m
-      z:   -22.326673507690430     
+      z:   -22.326673507690430
 
 
 
  station #            9     DB    X9
-      original latitude:    4000.00000    
-      original longitude:    9000.00000    
-      original x:    9000.00000    
-      original y:    4000.00000    
+      original latitude:    4000.00000
+      original longitude:    9000.00000
+      original x:    9000.00000
+      original y:    4000.00000
       original depth:    0.00000000      m
-      horizontal distance:    6.67083216    
-      target x, y, z:    9000.00000       4000.00000       12.9016790    
+      horizontal distance:    6.67083216
+      target x, y, z:    9000.00000       4000.00000       12.9016790
       closest estimate found:    11.6516743      m away
 
       receiver located in slice            3
                        in element           29
                        in elastic domain
-      at coordinates: 
-      xi    =   0.99999999999999878     
-      eta   =   -1.0000000000000000     
-      gamma =   -1.0100000000000000     
-      rotation matrix: 
-      nu1 =    1.00000000       0.00000000       0.00000000    
-      nu2 =    0.00000000       1.00000000       0.00000000    
-      nu3 =    0.00000000       0.00000000       1.00000000    
-      x:    8999.9999999999982     
-      y:    3999.9999999999991     
+      at coordinates:
+      xi    =   0.99999999999999878
+      eta   =   -1.0000000000000000
+      gamma =   -1.0100000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    8999.9999999999982
+      y:    3999.9999999999991
       depth:    11.651674014001591       m
-      z:    1.2500050249998740     
+      z:    1.2500050249998740
 
 
  maximum error in location of all the receivers:    21.6610489      m
@@ -485,7 +485,7 @@
    number of regular shaped elements  :            0
    number of irregular shaped elements:           80
    fused array done
-   bandwidth test (STREAM TRIAD): 
+   bandwidth test (STREAM TRIAD):
       memory accesses =   0.210697174     MB
       timing  min/max =    7.00000010E-06 s /    7.99999998E-06 s
       timing      avg =    7.30000011E-06 s
@@ -520,9 +520,9 @@
  Max norm displacement vector U in all slices (m) =    3.83770737E-10
  Time steps done =            5  out of         4000
  Time steps remaining =         3995
- Estimated remaining time in seconds =    39.3499527    
+ Estimated remaining time in seconds =    39.3499527
  Estimated remaining time in hh:mm:ss =      0 h 00 m 39 s
- Estimated total run time in seconds =    39.3992004    
+ Estimated total run time in seconds =    39.3992004
  Estimated total run time in hh:mm:ss =      0 h 00 m 39 s
  We have done   0.125000000     % of that
  The run will finish approximately on (in local time): Mon Jul 06, 2020 18:02
@@ -533,120 +533,120 @@
 
  Time step #          500
  Time:    2.49300003      seconds
- Elapsed time in seconds =    5.8421260000000004     
+ Elapsed time in seconds =    5.8421260000000004
  Elapsed time in hh:mm:ss =      0 h 00 m 05 s
  Mean elapsed time per time step in seconds =    1.16842519E-02
  Max norm displacement vector U in all slices (m) =    3.19695973E-04
  Time steps done =          500  out of         4000
  Time steps remaining =         3500
- Estimated remaining time in seconds =    40.8948822    
+ Estimated remaining time in seconds =    40.8948822
  Estimated remaining time in hh:mm:ss =      0 h 00 m 40 s
- Estimated total run time in seconds =    46.7370071    
+ Estimated total run time in seconds =    46.7370071
  Estimated total run time in hh:mm:ss =      0 h 00 m 46 s
  We have done    12.5000000     % of that
  The run will finish approximately on (in local time): Mon Jul 06, 2020 18:02
 
  Time step #         1000
  Time:    5.99300003      seconds
- Elapsed time in seconds =    12.101370999999999     
+ Elapsed time in seconds =    12.101370999999999
  Elapsed time in hh:mm:ss =      0 h 00 m 12 s
  Mean elapsed time per time step in seconds =    1.21013708E-02
  Max norm displacement vector U in all slices (m) =    3.15617537E-04
  Time steps done =         1000  out of         4000
  Time steps remaining =         3000
- Estimated remaining time in seconds =    36.3041115    
+ Estimated remaining time in seconds =    36.3041115
  Estimated remaining time in hh:mm:ss =      0 h 00 m 36 s
- Estimated total run time in seconds =    48.4054832    
+ Estimated total run time in seconds =    48.4054832
  Estimated total run time in hh:mm:ss =      0 h 00 m 48 s
  We have done    25.0000000     % of that
  The run will finish approximately on (in local time): Mon Jul 06, 2020 18:02
 
  Time step #         1500
  Time:    9.49300003      seconds
- Elapsed time in seconds =    18.570912000000000     
+ Elapsed time in seconds =    18.570912000000000
  Elapsed time in hh:mm:ss =      0 h 00 m 18 s
  Mean elapsed time per time step in seconds =    1.23806084E-02
  Max norm displacement vector U in all slices (m) =    3.15998885E-04
  Time steps done =         1500  out of         4000
  Time steps remaining =         2500
- Estimated remaining time in seconds =    30.9515209    
+ Estimated remaining time in seconds =    30.9515209
  Estimated remaining time in hh:mm:ss =      0 h 00 m 30 s
- Estimated total run time in seconds =    49.5224304    
+ Estimated total run time in seconds =    49.5224304
  Estimated total run time in hh:mm:ss =      0 h 00 m 49 s
  We have done    37.5000000     % of that
  The run will finish approximately on (in local time): Mon Jul 06, 2020 18:02
 
  Time step #         2000
  Time:    12.9930000      seconds
- Elapsed time in seconds =    24.763968999999999     
+ Elapsed time in seconds =    24.763968999999999
  Elapsed time in hh:mm:ss =      0 h 00 m 24 s
  Mean elapsed time per time step in seconds =    1.23819849E-02
  Max norm displacement vector U in all slices (m) =    3.19668994E-04
  Time steps done =         2000  out of         4000
  Time steps remaining =         2000
- Estimated remaining time in seconds =    24.7639694    
+ Estimated remaining time in seconds =    24.7639694
  Estimated remaining time in hh:mm:ss =      0 h 00 m 24 s
- Estimated total run time in seconds =    49.5279388    
+ Estimated total run time in seconds =    49.5279388
  Estimated total run time in hh:mm:ss =      0 h 00 m 49 s
  We have done    50.0000000     % of that
  The run will finish approximately on (in local time): Mon Jul 06, 2020 18:01
 
  Time step #         2500
  Time:    16.4930000      seconds
- Elapsed time in seconds =    31.096007999999998     
+ Elapsed time in seconds =    31.096007999999998
  Elapsed time in hh:mm:ss =      0 h 00 m 31 s
  Mean elapsed time per time step in seconds =    1.24384034E-02
  Max norm displacement vector U in all slices (m) =    3.16583988E-04
  Time steps done =         2500  out of         4000
  Time steps remaining =         1500
- Estimated remaining time in seconds =    18.6576042    
+ Estimated remaining time in seconds =    18.6576042
  Estimated remaining time in hh:mm:ss =      0 h 00 m 18 s
- Estimated total run time in seconds =    49.7536125    
+ Estimated total run time in seconds =    49.7536125
  Estimated total run time in hh:mm:ss =      0 h 00 m 49 s
  We have done    62.5000000     % of that
  The run will finish approximately on (in local time): Mon Jul 06, 2020 18:01
 
  Time step #         3000
  Time:    19.9930000      seconds
- Elapsed time in seconds =    37.531790999999998     
+ Elapsed time in seconds =    37.531790999999998
  Elapsed time in hh:mm:ss =      0 h 00 m 37 s
  Mean elapsed time per time step in seconds =    1.25105968E-02
  Max norm displacement vector U in all slices (m) =    3.17427592E-04
  Time steps done =         3000  out of         4000
  Time steps remaining =         1000
- Estimated remaining time in seconds =    12.5105972    
+ Estimated remaining time in seconds =    12.5105972
  Estimated remaining time in hh:mm:ss =      0 h 00 m 12 s
- Estimated total run time in seconds =    50.0423889    
+ Estimated total run time in seconds =    50.0423889
  Estimated total run time in hh:mm:ss =      0 h 00 m 50 s
  We have done    75.0000000     % of that
  The run will finish approximately on (in local time): Mon Jul 06, 2020 18:01
 
  Time step #         3500
  Time:    23.4930000      seconds
- Elapsed time in seconds =    44.171965000000000     
+ Elapsed time in seconds =    44.171965000000000
  Elapsed time in hh:mm:ss =      0 h 00 m 44 s
  Mean elapsed time per time step in seconds =    1.26205618E-02
  Max norm displacement vector U in all slices (m) =    3.16461170E-04
  Time steps done =         3500  out of         4000
  Time steps remaining =          500
- Estimated remaining time in seconds =    6.31028080    
+ Estimated remaining time in seconds =    6.31028080
  Estimated remaining time in hh:mm:ss =      0 h 00 m 06 s
- Estimated total run time in seconds =    50.4822464    
+ Estimated total run time in seconds =    50.4822464
  Estimated total run time in hh:mm:ss =      0 h 00 m 50 s
  We have done    87.5000000     % of that
  The run will finish approximately on (in local time): Mon Jul 06, 2020 18:02
 
  Time step #         4000
  Time:    26.9930000      seconds
- Elapsed time in seconds =    51.062620000000003     
+ Elapsed time in seconds =    51.062620000000003
  Elapsed time in hh:mm:ss =      0 h 00 m 51 s
  Mean elapsed time per time step in seconds =    1.27656553E-02
  Max norm displacement vector U in all slices (m) =    3.15874757E-04
  Time steps done =         4000  out of         4000
  Time steps remaining =            0
- Estimated remaining time in seconds =    0.00000000    
+ Estimated remaining time in seconds =    0.00000000
  Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
- Estimated total run time in seconds =    51.0626183    
+ Estimated total run time in seconds =    51.0626183
  Estimated total run time in hh:mm:ss =      0 h 00 m 51 s
  We have done    100.000000     % of that
 
@@ -655,7 +655,7 @@
  Writing the seismograms in parallel took    8.68799984E-02  seconds
 
  Time loop finished. Timing info:
- Total elapsed time in seconds =    51.165075000000002     
+ Total elapsed time in seconds =    51.165075000000002
  Total elapsed time in hh:mm:ss =      0 h 00 m 51 s
 
  End of the simulation
