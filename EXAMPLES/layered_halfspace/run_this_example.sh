@@ -8,6 +8,15 @@ echo
 echo "   setting up example..."
 echo
 
+# example should use NGLLX = 6
+NGLLX=`grep "NGLLX =" ../../setup/constants.h | cut -d = -f 2`
+if [[ $NGLLX -ne 6 ]]; then
+  echo ""
+  echo "This example is intended to use NGLLX = 6 set in setup/constants.h"
+  echo "Please recompile to be able to compare against reference solution in REF_SEIS/ ..."
+  echo ""
+fi
+
 # cleans output files
 mkdir -p OUTPUT_FILES
 rm -rf OUTPUT_FILES/*
