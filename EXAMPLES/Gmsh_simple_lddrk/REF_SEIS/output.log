@@ -1,4 +1,4 @@
-running example: Fri Mar 16 14:31:11 AST 2018
+running example: Mon Jul  6 18:01:15 CEST 2020
 
    setting up example...
 
@@ -10,6 +10,11 @@ running example: Fri Mar 16 14:31:11 AST 2018
  Serial mesh decomposer
  **********************
 
+ reading mesh files in: ./MESH-default
+
+   using NGNOD =            8
+   linear elements
+
  total number of nodes: 
    nnodes =          495
  total number of spectral elements:
@@ -18,6 +23,8 @@ running example: Fri Mar 16 14:31:11 AST 2018
    num_mat =            1
    defined =            1 undefined =            0
    no poroelastic material file found
+   defined materials  :            1
+   undefined materials:            1  (interfaces/tomography models/..)
  absorbing boundaries:
    nspec2D_xmin =           32
    nspec2D_xmax =           32
@@ -27,26 +34,69 @@ running example: Fri Mar 16 14:31:11 AST 2018
    nspec2D_top =           80
    no absorbing_cpml_file file found
    no moho_surface_file file found
+
  Par_file_faults not found: assuming that there are no faults
- node valence:  min =            1  max =            8
-   nsize =            8 sup_neighbor =           38
- mesh2dual:
-   max_neighbor =           26
+
+ node valence:
+   min =            1  max =            8
+ neighbors:
+   nsize =            8
+   valence: sup_neighbor =           38 max_neighbor =           26
+
+ local time stepping: turned OFF
+
+ partitioning:
+   number of partitions requested =            4
+
+   array size xadj  :          321  memory:    1.22451782E-03 MB
+   array size adjncy:         8320  memory:    3.17382812E-02 MB
+   sup_neighbor     :           26
+
+   mesh2dual: max_neighbor =           26
+
+ partitioning type:            1
+   running SCOTCH partitioning
+
+ SCOTCH partitioning
+ finished partitioning
+
+   written file: ./OUTPUT_FILES/DATABASES_MPI/part_array.vtk
+
+ element distribution:
+   partition            0        has           80  elements
+   partition            1        has           80  elements
+   partition            2        has           80  elements
+   partition            3        has           80  elements
+   elements per partition: min/max   =           80          80
+   elements per partition: imbalance =    0.00000000     %
+                           (0% being totally balanced, 100% being unbalanced)
+
+ load distribution:
+   element loads: min/max =           59          59
+
+   partition            0        has         4720  load units
+   partition            1        has         4720  load units
+   partition            2        has         4720  load units
+   partition            3        has         4720  load units
+   load per partition: min/max   =         4720        4720
+   load per partition: imbalance =    0.00000000     %
+                       (0% being totally balanced, 100% being unbalanced)
+
  partitions: 
    num =            4
 
  Databases files in directory: ./OUTPUT_FILES/DATABASES_MPI
+
  finished successfully
 
 
-  running database generation on  4  processors...
+  running database generation on  4 processors...
 
 
-  running solver on  4  processors...
+  running solver on  4 processors...
 
 
 see results in directory: OUTPUT_FILES/
 
 done
-Fri Mar 16 14:32:00 AST 2018
-
+Mon Jul 6 18:02:07 CEST 2020
