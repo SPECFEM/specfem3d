@@ -39,13 +39,11 @@
   subroutine save_adjoint_kernels()
 
   use constants, only: CUSTOM_REAL, NGLLX, NGLLY, NGLLZ, SAVE_WEIGHTS
+  use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
 
   use specfem_par, only: LOCAL_PATH, NSPEC_AB, ADIOS_FOR_KERNELS, NOISE_TOMOGRAPHY, NSPEC_ADJOINT, &
                          APPROXIMATE_HESS_KL, ANISOTROPIC_KL, SAVE_TRANSVERSE_KL
 
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
-  use specfem_par_elastic, only: ELASTIC_SIMULATION
-  use specfem_par_poroelastic, only: POROELASTIC_SIMULATION
   use specfem_par_noise, only: sigma_kl
 
   implicit none

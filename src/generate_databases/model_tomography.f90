@@ -83,7 +83,7 @@
 
   implicit none
 
-  integer :: myrank
+  integer,intent(in) :: myrank
 
   ! stores rank
   myrank_tomo = myrank

@@ -398,9 +398,6 @@ module specfem_par_elastic
   integer :: nspec_elastic
   integer :: iglob_check_elastic
 
-  logical :: ELASTIC_SIMULATION
-
-
 ! ADJOINT elastic
 
   ! (backward/reconstructed) wavefields
@@ -495,8 +492,6 @@ module specfem_par_acoustic
   integer :: nspec_acoustic
   integer :: iglob_check_acoustic
 
-  logical :: ACOUSTIC_SIMULATION
-
 ! ADJOINT acoustic
 
   ! (backward/reconstructed) wavefield potentials
@@ -567,8 +562,6 @@ module specfem_par_poroelastic
   integer, dimension(:,:), allocatable :: phase_ispec_inner_poroelastic
   integer :: num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic
   integer :: iglob_check_poroelastic
-
-  logical :: POROELASTIC_SIMULATION
 
 ! ADJOINT poroelastic
 

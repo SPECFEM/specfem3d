@@ -131,7 +131,7 @@
   deallocate(xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian)
   deallocate(deriv_mapping)
   deallocate(xstore,ystore,zstore)
-  deallocate(kappastore,mustore)
+  deallocate(kappastore,mustore,rhostore)
   deallocate(ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
 
   ! ADIOS file i/o

@@ -56,6 +56,8 @@
 
   use constants
 
+  use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
+
   use specfem_par, only: NSPEC_IRREGULAR,ispec_is_inner,ATTENUATION,xix,xiy,xiz, &
             etax,etay,etaz,gammax,gammay,gammaz,jacobian,irregular_element_number,xix_regular,jacobian_regular
 
@@ -137,7 +139,6 @@
 
   !real(kind=CUSTOM_REAL) :: minimum(1)
   integer :: ier,i
-  logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
   character(len=MAX_STRING_LEN) :: filename
 
   integer, dimension(:), allocatable :: iglob_tmp

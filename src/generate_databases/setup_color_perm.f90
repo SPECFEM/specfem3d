@@ -25,18 +25,19 @@
 !
 !=====================================================================
 
-  subroutine setup_color_perm(myrank,nspec,nglob,ibool,ANISOTROPY,SAVE_MESH_FILES)
+  subroutine setup_color_perm(nspec,nglob,ibool,ANISOTROPY,SAVE_MESH_FILES)
 
 ! sets up mesh coloring and permutes elements
 
-  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN,USE_MESH_COLORING_GPU
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,IMAIN,USE_MESH_COLORING_GPU
   use create_regions_mesh_ext_par
+
   implicit none
 
-  integer :: myrank,nspec,nglob
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer,intent(in) :: nspec,nglob
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-  logical :: ANISOTROPY,SAVE_MESH_FILES
+  logical,intent(in) :: ANISOTROPY,SAVE_MESH_FILES
 
   ! local parameters
   integer, dimension(:), allocatable :: perm

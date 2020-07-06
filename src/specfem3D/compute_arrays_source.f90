@@ -287,8 +287,7 @@
   subroutine compute_arrays_adjoint_source_SU()
 
   use specfem_par, only: myrank,source_adjoint,it,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,nrec_local
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
-  use specfem_par_elastic, only: ELASTIC_SIMULATION
+  use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
   use constants
 
   implicit none

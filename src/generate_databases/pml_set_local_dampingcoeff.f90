@@ -26,9 +26,11 @@
 !=====================================================================
 
 
-subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
+subroutine pml_set_local_dampingcoeff(xstore,ystore,zstore)
 
   ! calculates damping profiles and auxiliary coefficients on C-PML points
+
+  use constants, only: myrank,ZERO,ONE,TWO,HUGEVAL
 
   use generate_databases_par, only: ibool,NGLOB_AB,d_store_x,d_store_y,d_store_z, &
                                     K_store_x,K_store_y,K_store_z,alpha_store_x,alpha_store_y,alpha_store_z,CPML_to_spec, &
@@ -38,15 +40,13 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                                     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ, &
                                     SIMULATION_TYPE,SAVE_FORWARD,nspec => NSPEC_AB,is_CPML, &
                                     mask_ibool_interior_domain,nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
-                                    nglob_interface_PML_elastic,points_interface_PML_elastic, &
-                                    ZERO,ONE,TWO,HUGEVAL
+                                    nglob_interface_PML_elastic,points_interface_PML_elastic
 
   use create_regions_mesh_ext_par, only: rhostore,rho_vp,ispec_is_acoustic,ispec_is_elastic, &
                                          ELASTIC_SIMULATION, ACOUSTIC_SIMULATION
 
   implicit none
 
-  integer, intent(in) :: myrank
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: xstore,ystore,zstore
 
   ! local parameters

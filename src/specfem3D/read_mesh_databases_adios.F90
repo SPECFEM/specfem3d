@@ -203,16 +203,17 @@
   call adios_perform_reads(handle, ier)
   if (ier /= 0) call abort_mpi()
 
-  ! number of acoustic elements in this partition
-  nspec_acoustic = count(ispec_is_acoustic(:))
   ! all processes will have acoustic_simulation set if any flag is .true.
   call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
-  ! number of elastic elements in this partition
-  nspec_elastic = count(ispec_is_elastic(:))
   ! elastic simulation
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   ! poroelastic
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
+
+  ! number of acoustic elements in this partition
+  nspec_acoustic = count(ispec_is_acoustic(:))
+  ! number of elastic elements in this partition
+  nspec_elastic = count(ispec_is_elastic(:))
 
   ! checks simulation types are valid
   if ((.not. ACOUSTIC_SIMULATION) .and. &
@@ -636,13 +637,6 @@
     rmassz_acoustic(:) = 0._CUSTOM_REAL
   endif
 
-  ! this array is needed for acoustic simulations but also for elastic
-  ! simulations with CPML, thus we now allocate it and read it in all
-  ! cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
-  allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1797')
-  if (ier /= 0) stop 'error allocating array rhostore'
-
 !TODO
 #endif
   ! elastic simulation
@@ -879,6 +873,17 @@
     allocate(epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1874')
     if (ier /= 0) stop 'error allocating array epsilons_trace_over_3 etc.'
+  else
+    ! dummy allocations (needed for subroutine arguments)
+    allocate(rhoarraystore(2,1,1,1,1), &
+             kappaarraystore(3,1,1,1,1), &
+             etastore(1,1,1,1), &
+             tortstore(1,1,1,1), &
+             phistore(1,1,1,1), &
+             permstore(6,1,1,1,1), &
+             rho_vpI(1,1,1,1), &
+             rho_vpII(1,1,1,1), &
+             rho_vsI(1,1,1,1))
   endif
 
   ! C-PML absorbing boundary conditions

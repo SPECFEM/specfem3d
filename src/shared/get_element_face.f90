@@ -500,11 +500,12 @@ end subroutine get_element_face_gll_indices
                                  ibool,nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
                                  iface_all_corner_ijk)
 
-  use constants
+  use constants, only: NGNOD2D_FOUR_CORNERS,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
   implicit none
 
-  integer,intent(in) :: ispec,iface_ref,nspec,nglob
+  integer,intent(in) :: ispec,iface_ref
+  integer,intent(in) :: nspec,nglob
 
   ! face corner locations
   real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS),intent(out) :: xcoord,ycoord,zcoord

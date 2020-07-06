@@ -625,14 +625,14 @@ end subroutine initialize
 subroutine get_external_mesh()
 
   use specfem_par, only: CUSTOM_REAL,NSPEC_AB,NGLOB_AB,NSPEC_IRREGULAR,NGLLX,NGLLY,NGLLZ, &
-    LOCAL_PATH,SAVE_MESH_FILES,model_speed_max,DT,myrank,IMAIN,ISTANDARD_OUTPUT
+    model_speed_max,DT,myrank,IMAIN,ISTANDARD_OUTPUT
 
   use specfem_par, only: ibool,xstore,ystore,zstore,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
     kappastore,mustore,rhostore
 
-  use specfem_par_elastic, only: ELASTIC_SIMULATION,ispec_is_elastic,rho_vp,rho_vs,min_resolved_period
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,ispec_is_acoustic
-  use specfem_par_poroelastic, only: POROELASTIC_SIMULATION,ispec_is_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
+  use specfem_par_elastic, only: ispec_is_elastic,min_resolved_period
+  use specfem_par_acoustic, only: ispec_is_acoustic
+  use specfem_par_poroelastic, only: ispec_is_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
     phistore,tortstore,rhoarraystore
 
   use tomography_par, only: OUTPUT_MODEL_DIR
@@ -708,6 +708,8 @@ subroutine get_external_mesh()
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 942')
   allocate(mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 943')
+  allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating rho array 943')
   if (ier /= 0) stop 'Error allocating arrays for material properties'
 
   ! material flags
@@ -754,41 +756,13 @@ subroutine get_external_mesh()
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
     open(unit=IMAIN,file=trim(OUTPUT_MODEL_DIR)//'/output_mesh_resolution_initial.txt',status='unknown')
 
-  if (ELASTIC_SIMULATION) then
-    call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
-                               ibool,xstore,ystore,zstore, &
-                               kappastore,mustore,rho_vp,rho_vs, &
-                               DT,model_speed_max,min_resolved_period, &
-                               LOCAL_PATH,SAVE_MESH_FILES)
-
-  else if (POROELASTIC_SIMULATION) then
-    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 947')
-    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 948')
-    rho_vp = 0.0_CUSTOM_REAL
-    rho_vs = 0.0_CUSTOM_REAL
-    call check_mesh_resolution_poro(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                                    DT,model_speed_max,min_resolved_period, &
-                                    phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
-                                    LOCAL_PATH,SAVE_MESH_FILES)
-    deallocate(rho_vp,rho_vs)
-  else if (ACOUSTIC_SIMULATION) then
-    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 949')
-    if (ier /= 0) stop 'Error allocating array rho_vp'
-    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 950')
-    if (ier /= 0) stop 'Error allocating array rho_vs'
-    rho_vp = sqrt( kappastore / rhostore ) * rhostore
-    rho_vs = 0.0_CUSTOM_REAL
-    call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
-                               ibool,xstore,ystore,zstore, &
-                               kappastore,mustore,rho_vp,rho_vs, &
-                               DT,model_speed_max,min_resolved_period, &
-                               LOCAL_PATH,SAVE_MESH_FILES)
-    deallocate(rho_vp,rho_vs)
-  endif
+  ! mesh resolution
+  call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
+                             ibool,xstore,ystore,zstore, &
+                             ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
+                             kappastore,mustore,rhostore, &
+                             phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
+                             DT,model_speed_max,min_resolved_period)
 
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
 
@@ -802,8 +776,9 @@ subroutine save_new_databases()
 
   use specfem_par
   use specfem_par_elastic
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,ispec_is_acoustic
-  use specfem_par_poroelastic, only: POROELASTIC_SIMULATION,ispec_is_poroelastic
+  use specfem_par_acoustic, only: ispec_is_acoustic
+  use specfem_par_poroelastic, only: ispec_is_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
+    phistore,tortstore,rhoarraystore
 
   use tomography_model_iso, only: model_vs_new,model_vp_new,model_rho_new,OUTPUT_MODEL_DIR
 
@@ -948,6 +923,11 @@ subroutine save_new_databases()
   rmass_solid_poroelastic_new = 0._CUSTOM_REAL
   rmass_fluid_poroelastic_new = 0._CUSTOM_REAL
 
+  ! safety check
+  if (POROELASTIC_SIMULATION) &
+    stop 'Error saving new databases for POROELASTIC models not implemented yet'
+  if (ACOUSTIC_SIMULATION) &
+    stop 'Error saving new databases for ACOUSTIC models not implemented yet'
 
   ! new resolution check
   ! open main output file, only written to by process 0
@@ -955,18 +935,12 @@ subroutine save_new_databases()
     open(unit=IMAIN,file=trim(OUTPUT_MODEL_DIR)//'/output_mesh_resolution_final.txt',status='unknown')
 
   ! calculate min_resolved_period (needed for attenuation model)
-  if (ELASTIC_SIMULATION) then
-    call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
-                               ibool,xstore,ystore,zstore, &
-                               kappastore_new,mustore_new,rho_vp_new,rho_vs_new, &
-                               -1.0d0,model_speed_max,min_resolved_period, &
-                               LOCAL_PATH,SAVE_MESH_FILES)
-
-  else if (POROELASTIC_SIMULATION) then
-    stop 'Error saving new databases for POROELASTIC models not implemented yet'
-  else if (ACOUSTIC_SIMULATION) then
-    stop 'Error saving new databases for ACOUSTIC models not implemented yet'
-  endif
+  call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
+                             ibool,xstore,ystore,zstore, &
+                             ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
+                             kappastore_new,mustore_new,rhostore_new, &
+                             phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
+                             -1.0d0,model_speed_max,min_resolved_period)
 
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
 

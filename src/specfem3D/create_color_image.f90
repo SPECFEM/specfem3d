@@ -805,8 +805,8 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
 
   use specfem_par, only: mustore,kappastore,rhostore,ibool,myrank
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
-  use specfem_par_elastic, only: ELASTIC_SIMULATION,rho_vp
+  use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
+  use specfem_par_elastic, only: rho_vp
 
   implicit none
 
@@ -842,10 +842,12 @@
   subroutine get_iglob_veloc(iglob,ispec,val_vector)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,potential_acoustic,potential_dot_acoustic, &
+  use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
+  use specfem_par_acoustic, only: potential_acoustic,potential_dot_acoustic, &
                                 ispec_is_acoustic,b_potential_acoustic,b_potential_dot_acoustic
-  use specfem_par_elastic, only: ELASTIC_SIMULATION,displ,veloc,ispec_is_elastic
+  use specfem_par_elastic, only: displ,veloc,ispec_is_elastic
   use specfem_par, only: SIMULATION_TYPE,SAVE_DISPLACEMENT,ibool
+
   implicit none
 
   integer,intent(in) :: iglob,ispec

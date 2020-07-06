@@ -28,16 +28,15 @@
 module family_parameter
 
   !! IMPORT VARIABLES FROM SPECFEM -------------------------------------------------------------------------------------------------
-  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,  ANISOTROPIC_KL, ANISOTROPY, APPROXIMATE_HESS_KL
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,  ANISOTROPIC_KL, ANISOTROPY, APPROXIMATE_HESS_KL, &
+    ELASTIC_SIMULATION,ACOUSTIC_SIMULATION
 
   use specfem_par, only: CUSTOM_REAL, NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, NSPEC_AB, myrank
 
   use specfem_par_elastic, only: cijkl_kl, rho_kl, mu_kl, kappa_kl, ispec_is_elastic, hess_rho_kl, &
-       hess_mu_kl, hess_kappa_kl, ELASTIC_SIMULATION
+       hess_mu_kl, hess_kappa_kl
 
-
-  use specfem_par_acoustic, only: hess_kappa_ac_kl, hess_rho_ac_kl, rho_ac_kl, kappa_ac_kl, ispec_is_acoustic, &
-       ACOUSTIC_SIMULATION
+  use specfem_par_acoustic, only: hess_kappa_ac_kl, hess_rho_ac_kl, rho_ac_kl, kappa_ac_kl, ispec_is_acoustic
 
   !---------------------------------------------------------------------------------------------------------------------------------
   use inverse_problem_par

@@ -29,10 +29,12 @@
   subroutine pml_allocate_arrays()
 
   use pml_par
-  use specfem_par, only: NSPEC_AB,PML_CONDITIONS,SIMULATION_TYPE,SAVE_FORWARD,NSTEP,myrank,prname
+  use specfem_par, only: NSPEC_AB,PML_CONDITIONS,SIMULATION_TYPE,SAVE_FORWARD,NSTEP,myrank,prname, &
+    ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
+
   use constants, only: NDIM,NGLLX,NGLLY,NGLLZ
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,num_coupling_ac_el_faces
-  use specfem_par_elastic, only: ELASTIC_SIMULATION
+
+  use specfem_par_acoustic, only: num_coupling_ac_el_faces
 
   implicit none
 
@@ -354,9 +356,7 @@
   ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
   ! in order to be able to use these arrays as arguments in subroutine calls
 
-  use specfem_par, only: SIMULATION_TYPE
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
-  use specfem_par_elastic, only: ELASTIC_SIMULATION
+  use specfem_par, only: SIMULATION_TYPE,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
 
   use pml_par
 
@@ -538,9 +538,7 @@
 
 ! deallocates C_PML arrays
 
-  use specfem_par, only: SIMULATION_TYPE
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
-  use specfem_par_elastic, only: ELASTIC_SIMULATION
+  use specfem_par, only: SIMULATION_TYPE,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
 
   use pml_par
 

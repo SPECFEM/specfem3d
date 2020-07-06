@@ -25,7 +25,9 @@
 !
 !=====================================================================
 
-  subroutine get_model(myrank)
+  subroutine get_model()
+
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,TWO,IMAIN
 
   use generate_databases_par, only: IMODEL, &
     IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL, &
@@ -33,16 +35,15 @@
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
     nspec => NSPEC_AB,ibool,mat_ext_mesh, &
     mat_prop,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh, &
-    ANISOTROPY,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,TWO,IMAIN
+    ANISOTROPY
 
   use create_regions_mesh_ext_par
 
+  ! injection technique
   use constants, only: INJECTION_TECHNIQUE_IS_FK,INJECTION_TECHNIQUE_IS_DSM,INJECTION_TECHNIQUE_IS_AXISEM
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH,INJECTION_TECHNIQUE_TYPE
 
   implicit none
-
-  integer :: myrank
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: vp,vs,rho,qkappa_atten,qmu_atten
@@ -416,7 +417,7 @@
           case (IDOMAIN_POROELASTIC)
             ispec_is_poroelastic(ispec) = .true.
           case default
-            stop 'Error invalid material domain index, must be 1==acoustic,2==elastic or 3==poroelastic'
+            stop 'Error invalid material domain index, must be 1 == acoustic,2 == elastic or 3 == poroelastic'
           end select
 
         enddo
@@ -755,11 +756,13 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_model_binaries(myrank,nspec,LOCAL_PATH)
+  subroutine get_model_binaries(nspec,LOCAL_PATH)
 
 ! reads in material parameters from external binary files
 
-  use generate_databases_par, only: IMAIN, IMODEL, IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP, ADIOS_FOR_MESH
+  use constants, only: myrank,IMAIN,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER,IMODEL_SEP
+
+  use generate_databases_par, only: IMODEL,ADIOS_FOR_MESH
 
   use create_regions_mesh_ext_par
 
@@ -770,8 +773,8 @@
   implicit none
 
   ! number of spectral elements in each block
-  integer :: myrank,nspec
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH
+  integer,intent(in) :: nspec
+  character(len=MAX_STRING_LEN),intent(in) :: LOCAL_PATH
 
   ! external GLL models
   ! variables for importing models from files in SPECFEM format, e.g.,  proc000000_vp.bin etc.

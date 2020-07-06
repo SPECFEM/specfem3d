@@ -29,9 +29,11 @@
 
 ! create the different regions of the mesh
 
+  use constants, only: myrank
+
   use generate_databases_par, only: nspec => NSPEC_AB,nglob => NGLOB_AB, &
       ibool,xstore,ystore,zstore, &
-      npointot,myrank,LOCAL_PATH, &
+      npointot,LOCAL_PATH, &
       nnodes_ext_mesh,nelmnts_ext_mesh, &
       nodes_coords_ext_mesh, elmnts_ext_mesh, &
       max_memory_size,num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
@@ -70,7 +72,7 @@
     write(IMAIN,*) '  ...allocating arrays '
     call flush_IMAIN()
   endif
-  call crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
+  call crm_ext_allocate_arrays(nspec,LOCAL_PATH, &
                                nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                                nspec2D_bottom,nspec2D_top,ANISOTROPY, &
                                nodes_coords_ext_mesh,nnodes_ext_mesh,elmnts_ext_mesh,nelmnts_ext_mesh,ANY_FAULT_IN_THIS_PROC)
@@ -89,10 +91,10 @@
   endif
   if (ANY_FAULT_IN_THIS_PROC) then
    ! compute jacobians with fault open and *store needed for ibool.
-    call crm_ext_setup_jacobian(myrank,xstore,ystore,zstore,nspec, &
+    call crm_ext_setup_jacobian(xstore,ystore,zstore,nspec, &
                                 nodes_coords_open, nnodes_coords_open,elmnts_ext_mesh,nelmnts_ext_mesh)
   else ! with no fault
-    call crm_ext_setup_jacobian(myrank,xstore,ystore,zstore,nspec, &
+    call crm_ext_setup_jacobian(xstore,ystore,zstore,nspec, &
                                 nodes_coords_ext_mesh,nnodes_ext_mesh,elmnts_ext_mesh,nelmnts_ext_mesh)
   endif
 
@@ -123,7 +125,7 @@
       call flush_IMAIN()
     endif
     if (ANY_FAULT_IN_THIS_PROC) then
-      call crm_ext_setup_jacobian(myrank,xstore,ystore,zstore,nspec, &
+      call crm_ext_setup_jacobian(xstore,ystore,zstore,nspec, &
                                   nodes_coords_ext_mesh,nnodes_ext_mesh, &
                                   elmnts_ext_mesh,nelmnts_ext_mesh)
     endif
@@ -143,13 +145,13 @@
     write(IMAIN,*) '  ...preparing MPI interfaces '
     call flush_IMAIN()
   endif
-  call get_MPI(myrank,nglob_dummy,nspec,ibool, &
-               nelmnts_ext_mesh,elmnts_ext_mesh, &
-               my_nelmnts_neighbors_ext_mesh, my_interfaces_ext_mesh, &
-               ibool_interfaces_ext_mesh, &
-               nibool_interfaces_ext_mesh, &
-               num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-               my_neighbors_ext_mesh)
+  call get_MPI_interface(nglob_dummy,nspec,ibool, &
+                         nelmnts_ext_mesh,elmnts_ext_mesh, &
+                         my_nelmnts_neighbors_ext_mesh, my_interfaces_ext_mesh, &
+                         ibool_interfaces_ext_mesh, &
+                         nibool_interfaces_ext_mesh, &
+                         num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
+                         my_neighbors_ext_mesh)
 
 ! setting up parallel fault
   if (PARALLEL_FAULT .and. ANY_FAULT) then
@@ -167,7 +169,7 @@
     write(IMAIN,*) '  ...setting up absorbing boundaries'
     call flush_IMAIN()
   endif
-  call get_absorbing_boundary(myrank,nspec,ibool, &
+  call get_absorbing_boundary(nspec,ibool, &
                               nodes_coords_ext_mesh,nnodes_ext_mesh, &
                               ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                               nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
@@ -192,8 +194,7 @@
       write(IMAIN,*) '  ...setting up Moho surface'
       call flush_IMAIN()
     endif
-    call crm_setup_moho(myrank,nspec, &
-                        nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
+    call crm_setup_moho(nspec,nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
   endif
 
@@ -204,7 +205,7 @@
     write(IMAIN,*) '  ...determining velocity model'
     call flush_IMAIN()
   endif
-  call get_model(myrank)
+  call get_model()
 
 ! sets up acoustic-elastic-poroelastic coupling surfaces
   call synchronize_all()
@@ -213,8 +214,7 @@
     write(IMAIN,*) '  ...detecting acoustic-elastic-poroelastic surfaces '
     call flush_IMAIN()
   endif
-  call get_coupling_surfaces(myrank, &
-                             nspec,ibool,NPROC, &
+  call get_coupling_surfaces(nspec,ibool,NPROC, &
                              nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                              num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                              my_neighbors_ext_mesh)
@@ -226,8 +226,7 @@
     write(IMAIN,*) '  ...element inner/outer separation '
     call flush_IMAIN()
   endif
-  call crm_setup_inner_outer_elemnts(myrank,nspec, &
-                                     num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
+  call crm_setup_inner_outer_elemnts(nspec,num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                                      ibool,SAVE_MESH_FILES)
 
@@ -238,7 +237,7 @@
     write(IMAIN,*) '  ...element mesh coloring '
     call flush_IMAIN()
   endif
-  call setup_color_perm(myrank,nspec,nglob,ibool,ANISOTROPY,SAVE_MESH_FILES)
+  call setup_color_perm(nspec,nglob,ibool,ANISOTROPY,SAVE_MESH_FILES)
 
 ! overwrites material parameters from external binary files
   call synchronize_all()
@@ -247,7 +246,7 @@
     write(IMAIN,*) '  ...external binary models '
     call flush_IMAIN()
   endif
-  call get_model_binaries(myrank,nspec,LOCAL_PATH)
+  call get_model_binaries(nspec,LOCAL_PATH)
 
 ! calculates damping profiles and auxiliary coefficients on all C-PML points
   if (PML_CONDITIONS) then
@@ -257,7 +256,7 @@
       write(IMAIN,*) '  ...creating C-PML damping profiles '
       call flush_IMAIN()
     endif
-    call pml_set_local_dampingcoeff(myrank,xstore_dummy,ystore_dummy,zstore_dummy)
+    call pml_set_local_dampingcoeff(xstore_dummy,ystore_dummy,zstore_dummy)
   endif
 
 ! creates mass matrix
@@ -313,11 +312,12 @@
     endif
     call crm_save_moho()
   endif
+  call synchronize_all()
 
 ! computes the approximate amount of memory needed to run the solver
-  call synchronize_all()
   call memory_eval(nspec,nglob_dummy,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh, &
                    APPROXIMATE_OCEAN_LOAD,memory_size)
+
   call max_all_dp(memory_size, max_memory_size)
 
 ! checks the mesh, stability and resolved period
@@ -327,21 +327,12 @@
     write(IMAIN,*) '  ...checking mesh resolution'
     call flush_IMAIN()
   endif
-
-  if (POROELASTIC_SIMULATION) then
-    !chris: check for poro: At the moment cpI & cpII are for eta=0
-    call check_mesh_resolution_poro(nspec,nglob_dummy,ibool, &
-                                    xstore_dummy,ystore_dummy,zstore_dummy, &
-                                    -1.0d0, model_speed_max,min_resolved_period, &
-                                    phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
-                                    LOCAL_PATH,SAVE_MESH_FILES )
-  else
-    call check_mesh_resolution(nspec,nglob_dummy, &
-                               ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
-                               kappastore,mustore,rho_vp,rho_vs, &
-                               -1.0d0,model_speed_max,min_resolved_period, &
-                               LOCAL_PATH,SAVE_MESH_FILES)
-  endif
+  call check_mesh_resolution(nspec,nglob_dummy, &
+                             ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
+                             ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
+                             kappastore,mustore,rhostore, &
+                             phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
+                             -1.0d0,model_speed_max,min_resolved_period)
 
 ! saves binary mesh files for attenuation
   if (ATTENUATION) then
@@ -362,33 +353,17 @@
              gammaxstore,gammaystore,gammazstore)
   deallocate(jacobianstore)
   deallocate(qkappa_attenuation_store,qmu_attenuation_store)
-  deallocate(kappastore,mustore,rho_vp,rho_vs)
+  deallocate(kappastore,mustore,rhostore,rho_vp,rho_vs)
   deallocate(rho_vpI,rho_vpII,rho_vsI)
   deallocate(rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore)
 
-  if (.not. SAVE_MOHO_MESH) then
-    deallocate(xstore_dummy,ystore_dummy,zstore_dummy)
-  endif
-
-  if (ACOUSTIC_SIMULATION) then
-    deallocate(rmass_acoustic)
-  endif
-
-  if (ELASTIC_SIMULATION) then
-    deallocate(rmass)
-  endif
-
-  if (POROELASTIC_SIMULATION) then
-    deallocate(rmass_solid_poroelastic,rmass_fluid_poroelastic)
-  endif
-
+  if (.not. SAVE_MOHO_MESH) deallocate(xstore_dummy,ystore_dummy,zstore_dummy)
+  if (ACOUSTIC_SIMULATION) deallocate(rmass_acoustic)
+  if (ELASTIC_SIMULATION) deallocate(rmass)
+  if (POROELASTIC_SIMULATION) deallocate(rmass_solid_poroelastic,rmass_fluid_poroelastic)
   if (STACEY_ABSORBING_CONDITIONS) then
-     if (ELASTIC_SIMULATION) then
-       deallocate(rmassx,rmassy,rmassz)
-     endif
-     if (ACOUSTIC_SIMULATION) then
-       deallocate(rmassz_acoustic)
-     endif
+    if (ELASTIC_SIMULATION) deallocate(rmassx,rmassy,rmassz)
+    if (ACOUSTIC_SIMULATION) deallocate(rmassz_acoustic)
   endif
 
   ! user output
@@ -405,13 +380,13 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
+  subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH, &
                                      nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                                      nspec2D_bottom,nspec2D_top,ANISOTROPY, &
                                      nodes_coords_ext_mesh,nnodes_ext_mesh, &
                                      elmnts_ext_mesh,nelmnts_ext_mesh,ANY_FAULT_IN_THIS_PROC)
 
-  use constants, only: NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN, &
+  use constants, only: myrank,NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN, &
     DO_IRREGULAR_ELEMENT_SEPARATION
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,PML_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
@@ -421,20 +396,20 @@
 
   implicit none
 
-  integer :: nspec,myrank
+  integer :: nspec
   integer :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-            nspec2D_bottom,nspec2D_top
+             nspec2D_bottom,nspec2D_top
 
   character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   logical :: ANISOTROPY,ANY_FAULT_IN_THIS_PROC
 
-! data from the external mesh
+  ! data from the external mesh
   integer :: nnodes_ext_mesh,nelmnts_ext_mesh
   double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
   integer, dimension(NGNOD,nelmnts_ext_mesh) :: elmnts_ext_mesh
 
-! local parameters
+  ! local parameters
   integer :: ier,ispec,ia
   logical :: any_regular_elem
   double precision :: cube_edge_size_squared
@@ -458,7 +433,7 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 723')
   if (ier /= 0) stop 'error allocating array xelm etc.'
 
-! attenuation
+  ! attenuation
   allocate(qkappa_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 724')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
@@ -467,27 +442,27 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 725')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
-! create the name for the database of the current slide and region
+  ! create the name for the database of the current slide and region
   call create_name_database(prname,myrank,LOCAL_PATH)
 
-! Gauss-Lobatto-Legendre points of integration
+  ! Gauss-Lobatto-Legendre points of integration
   allocate(xigll(NGLLX),yigll(NGLLY),zigll(NGLLZ),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 726')
   if (ier /= 0) stop 'error allocating array xigll etc.'
 
-! Gauss-Lobatto-Legendre weights of integration
+  ! Gauss-Lobatto-Legendre weights of integration
   allocate(wxgll(NGLLX),wygll(NGLLY),wzgll(NGLLZ),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 727')
   if (ier /= 0) stop 'error allocating array wxgll etc.'
 
-! 3D shape functions and their derivatives
+  ! 3D shape functions and their derivatives
   allocate(shape3D(NGNOD,NGLLX,NGLLY,NGLLZ),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 728')
   allocate(dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 729')
   if (ier /= 0) stop 'error allocating array shape3D etc.'
 
-! 2D shape functions and their derivatives
+  ! 2D shape functions and their derivatives
   allocate(shape2D_x(NGNOD2D,NGLLY,NGLLZ),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 730')
   allocate(shape2D_y(NGNOD2D,NGLLX,NGLLZ),stat=ier)
@@ -516,14 +491,10 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 740')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
-! Stacey
-  allocate(rho_vp(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 741')
-  allocate(rho_vs(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 742')
-  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  ! model parameters
+  ! (full arrays needed for reading in acoustic/elastic/poroelastic velocity models)
 
-! array with model density
+  ! acoustic/elastic array with model density
   allocate(rhostore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 743')
   allocate(kappastore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
@@ -532,16 +503,24 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 745')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
+  ! Stacey
+  allocate(rho_vp(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 741')
+  allocate(rho_vs(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 742')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+
 !EB EB April 2018 : we should find a way to know if there are any poroelastic
 ! element before these costly allocations. The commented part does notwork
 ! because POROELASTIC_SIMULATION flag is set after (in get_model)
 !  if (POROELASTIC_SIMULATION) then
-  NSPEC_PORO = nspec
+!    NSPEC_PORO = nspec
 !  else
 !    NSPEC_PORO = 1
 !  endif
 
-! array with poroelastic model
+  ! array with poroelastic model
+  NSPEC_PORO = nspec
   allocate(rhoarraystore(2,NGLLX,NGLLY,NGLLZ,NSPEC_PORO),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 746')
   allocate(kappaarraystore(3,NGLLX,NGLLY,NGLLZ,NSPEC_PORO),stat=ier)
@@ -562,7 +541,8 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 754')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
-! get the number of regular and irregular elements
+  ! mesh arrays
+  ! get the number of regular and irregular elements
   any_regular_elem = .false.
   allocate(irregular_element_number(nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 755')
@@ -659,7 +639,7 @@
     if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
   endif
 
-! absorbing boundary
+  ! absorbing boundary
   ! absorbing faces
   num_abs_boundary_faces = nspec2D_xmin + nspec2D_xmax + nspec2D_ymin + nspec2D_ymax + nspec2D_bottom
   ! adds faces of free surface if it also absorbs
@@ -717,7 +697,7 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 783')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
-! array with anisotropy
+  ! array with anisotropy
   if (ANISOTROPY) then
     NSPEC_ANISO = nspec
   else
@@ -775,6 +755,9 @@
   allocate(ispec_is_poroelastic(nspec), stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 807')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  ispec_is_acoustic(:) = .false.
+  ispec_is_elastic(:) = .false.
+  ispec_is_poroelastic(:) = .false.
 
   ! initializes Moho surface
   NSPEC2D_MOHO = 0
@@ -786,14 +769,13 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine crm_ext_setup_jacobian(myrank, &
-                                    xstore,ystore,zstore,nspec, &
+  subroutine crm_ext_setup_jacobian(xstore,ystore,zstore,nspec, &
                                     nodes_coords_ext_mesh,nnodes_ext_mesh, &
                                     elmnts_ext_mesh,nelmnts_ext_mesh)
 
-  use generate_databases_par, only: NGNOD,NGNOD2D,NDIM,NGLLX,NGLLY,NGLLZ,GAUSSALPHA,GAUSSBETA,CUSTOM_REAL
+  use constants, only: myrank,NDIM,NGLLX,NGLLY,NGLLZ,GAUSSALPHA,GAUSSBETA,CUSTOM_REAL,OUTPUT_FILES
+  use generate_databases_par, only: NGNOD,NGNOD2D
   use create_regions_mesh_ext_par
-  use constants, only: OUTPUT_FILES
 
   implicit none
 
@@ -806,9 +788,6 @@
   integer :: nnodes_ext_mesh,nelmnts_ext_mesh
   double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
   integer, dimension(NGNOD,nelmnts_ext_mesh) :: elmnts_ext_mesh
-
-! proc numbers for MPI
-  integer :: myrank
 
 ! local parameters
   integer :: ispec,ia,i,j,k,ispec_irreg
@@ -1059,21 +1038,20 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine crm_setup_moho( myrank,nspec, &
-                        nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
-                        nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
+  subroutine crm_setup_moho(nspec,nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
+                            nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
 
-  use generate_databases_par, only: NGNOD2D,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,IMAIN, &
-    NDIM,NGLLSQUARE,NGNOD2D_FOUR_CORNERS
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,IMAIN,NDIM,NGLLSQUARE,NGNOD2D_FOUR_CORNERS
+  use generate_databases_par, only: NGNOD2D
   use create_regions_mesh_ext_par
 
   implicit none
 
+  integer,intent(in) :: nspec
+
   integer :: nspec2D_moho_ext
   integer, dimension(nspec2D_moho_ext) :: ibelm_moho
   integer, dimension(NGNOD2D,nspec2D_moho_ext) :: nodes_ibelm_moho
-
-  integer :: myrank,nspec
 
   ! data from the external mesh
   integer :: nnodes_ext_mesh
@@ -1406,20 +1384,19 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine crm_setup_inner_outer_elemnts(myrank,nspec, &
-                                           num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
+  subroutine crm_setup_inner_outer_elemnts(nspec,num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                                            ibool,SAVE_MESH_FILES)
 
 ! locates inner and outer elements
 
-  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,IMAIN
   use create_regions_mesh_ext_par
 
   implicit none
 
-  integer :: myrank,nspec
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer,intent(in) :: nspec
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
   ! MPI interfaces
   integer :: num_interfaces_ext_mesh,max_interface_size_ext_mesh

@@ -52,8 +52,6 @@
                                   c34store,c35store,c36store,c44store,c45store,c46store, &
                                   c55store,c56store,c66store
 
-
-
   implicit none
 
 ! communication overlap
@@ -149,29 +147,29 @@
       lambdalplus2mul_G = lambdal_G + 2._CUSTOM_REAL*mul_G
 
       ! derivative along x,y,z for u_s and w
-      tempx1ls = 0.
-      tempx2ls = 0.
-      tempx3ls = 0.
+      tempx1ls = 0.0_CUSTOM_REAL
+      tempx2ls = 0.0_CUSTOM_REAL
+      tempx3ls = 0.0_CUSTOM_REAL
 
-      tempy1ls = 0.
-      tempy2ls = 0.
-      tempy3ls = 0.
+      tempy1ls = 0.0_CUSTOM_REAL
+      tempy2ls = 0.0_CUSTOM_REAL
+      tempy3ls = 0.0_CUSTOM_REAL
 
-      tempz1ls = 0.
-      tempz2ls = 0.
-      tempz3ls = 0.
+      tempz1ls = 0.0_CUSTOM_REAL
+      tempz2ls = 0.0_CUSTOM_REAL
+      tempz3ls = 0.0_CUSTOM_REAL
 
-      tempx1lw = 0.
-      tempx2lw = 0.
-      tempx3lw = 0.
+      tempx1lw = 0.0_CUSTOM_REAL
+      tempx2lw = 0.0_CUSTOM_REAL
+      tempx3lw = 0.0_CUSTOM_REAL
 
-      tempy1lw = 0.
-      tempy2lw = 0.
-      tempy3lw = 0.
+      tempy1lw = 0.0_CUSTOM_REAL
+      tempy2lw = 0.0_CUSTOM_REAL
+      tempy3lw = 0.0_CUSTOM_REAL
 
-      tempz1lw = 0.
-      tempz2lw = 0.
-      tempz3lw = 0.
+      tempz1lw = 0.0_CUSTOM_REAL
+      tempz2lw = 0.0_CUSTOM_REAL
+      tempz3lw = 0.0_CUSTOM_REAL
 
       ! first double loop over GLL points to compute and store gradients
       ! we can merge these loops because NGLLX = NGLLY = NGLLZ
@@ -218,10 +216,9 @@
         endif ! adjoint
       enddo
 
-
-      if (ispec_irreg_po /= 0 ) then !irregular element
-
-        ! get derivatives of ux, uy and uz with respect to x, y and z
+      ! get derivatives of ux, uy and uz with respect to x, y and z
+      if (ispec_irreg_po /= 0 ) then
+        !irregular element
         xixl = xix(i,j,k,ispec_irreg_po)
         xiyl = xiy(i,j,k,ispec_irreg_po)
         xizl = xiz(i,j,k,ispec_irreg_po)
@@ -257,8 +254,8 @@
         dwzdyl = xiyl*tempz1lw + etayl*tempz2lw + gammayl*tempz3lw
         dwzdzl = xizl*tempz1lw + etazl*tempz2lw + gammazl*tempz3lw
 
-      else !regular element
-
+      else
+        !regular element
         ! derivatives of displacement
         duxdxl = xix_regular*tempx1ls
         duxdyl = xix_regular*tempx2ls
@@ -283,7 +280,6 @@
         dwzdxl = xix_regular*tempz1lw
         dwzdyl = xix_regular*tempz2lw
         dwzdzl = xix_regular*tempz3lw
-
       endif
 
       !precompute some sums to save CPU time
@@ -333,18 +329,19 @@
       ! (note: should be the same as for corresponding
       ! i',j',k',ispec_poroelastic or ispec_elastic )
       iglob_el = ibool(i,j,k,ispec_el)
-      if (iglob_el /= iglob_po) stop 'poroelastic-elastic coupling error'
-      tempx1l = 0.
-      tempx2l = 0.
-      tempx3l = 0.
+      if (iglob_el /= iglob_po) stop 'poroelastic-elastic coupling error in compute_coupling_viscoelastic_po()'
 
-      tempy1l = 0.
-      tempy2l = 0.
-      tempy3l = 0.
+      tempx1l = 0.0_CUSTOM_REAL
+      tempx2l = 0.0_CUSTOM_REAL
+      tempx3l = 0.0_CUSTOM_REAL
 
-      tempz1l = 0.
-      tempz2l = 0.
-      tempz3l = 0.
+      tempy1l = 0.0_CUSTOM_REAL
+      tempy2l = 0.0_CUSTOM_REAL
+      tempy3l = 0.0_CUSTOM_REAL
+
+      tempz1l = 0.0_CUSTOM_REAL
+      tempz2l = 0.0_CUSTOM_REAL
+      tempz3l = 0.0_CUSTOM_REAL
 
       ! we can merge these loops because NGLLX = NGLLY = NGLLZ
       do l=1,NGLLX
@@ -367,9 +364,9 @@
         tempz3l = tempz3l + displ(3,iglob)*hp3
       enddo
 
-      if (ispec_irreg_el /= 0 ) then !irregular element
-
-        ! get derivatives of ux, uy and uz with respect to x, y and z
+      ! get derivatives of ux, uy and uz with respect to x, y and z
+      if (ispec_irreg_el /= 0 ) then
+        !irregular element
         xixl = xix(i,j,k,ispec_irreg_el)
         xiyl = xiy(i,j,k,ispec_irreg_el)
         xizl = xiz(i,j,k,ispec_irreg_el)
@@ -392,8 +389,8 @@
         duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
         duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
 
-      else ! regular element
-
+      else
+        ! regular element
         duxdxl = xix_regular*tempx1l
         duxdyl = xix_regular*tempx2l
         duxdzl = xix_regular*tempx3l
@@ -486,14 +483,9 @@
       ! continuity of displacement and traction on global point
       !
       ! note: continuity of displacement is enforced after the velocity update
-      accel(1,iglob_el) = accel(1,iglob_el) - jacobianw* &
-               ( sigma_xx*nx + sigma_xy*ny + sigma_xz*nz )/2.d0
-
-      accel(2,iglob_el) = accel(2,iglob_el) - jacobianw* &
-               ( sigma_xy*nx + sigma_yy*ny + sigma_yz*nz )/2.d0
-
-      accel(3,iglob_el) = accel(3,iglob_el) - jacobianw* &
-               ( sigma_xz*nx + sigma_yz*ny + sigma_zz*nz )/2.d0
+      accel(1,iglob_el) = accel(1,iglob_el) - jacobianw * ( sigma_xx*nx + sigma_xy*ny + sigma_xz*nz ) * 0.5_CUSTOM_REAL
+      accel(2,iglob_el) = accel(2,iglob_el) - jacobianw * ( sigma_xy*nx + sigma_yy*ny + sigma_yz*nz ) * 0.5_CUSTOM_REAL
+      accel(3,iglob_el) = accel(3,iglob_el) - jacobianw * ( sigma_xz*nx + sigma_yz*ny + sigma_zz*nz ) * 0.5_CUSTOM_REAL
 
     enddo ! igll
 

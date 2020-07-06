@@ -25,20 +25,21 @@
 !
 !=====================================================================
 
-  subroutine get_coupling_surfaces(myrank,nspec,ibool,NPROC, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-                        my_neighbors_ext_mesh)
+  subroutine get_coupling_surfaces(nspec,ibool,NPROC, &
+                                   nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                   num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
+                                   my_neighbors_ext_mesh)
 
 ! determines coupling surface for acoustic-elastic domains
 ! based on ispec_is_acoustic, ispec_is_elastic and ispec_is_poroelastic arrays
 
-  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,IMAIN
   use create_regions_mesh_ext_par
+
   implicit none
 
 ! number of spectral elements in each block
-  integer,intent(in) :: myrank,nspec,NPROC
+  integer,intent(in) :: nspec,NPROC
 
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
@@ -157,17 +158,17 @@
 
   ! acoustic - elastic domain coupling
   if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
-    call get_coupling_surfaces_ac_el(myrank,nspec,ibool,elastic_flag)
+    call get_coupling_surfaces_ac_el(nspec,ibool,elastic_flag)
   endif
 
   ! acoustic - poroelastic domain coupling
   if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION) then
-    call get_coupling_surfaces_ac_poro(myrank,nspec,ibool,acoustic_flag)
+    call get_coupling_surfaces_ac_poro(nspec,ibool,acoustic_flag)
   endif
 
   ! elastic - poroelastic domain coupling
   if (ELASTIC_SIMULATION .and. POROELASTIC_SIMULATION) then
-    call get_coupling_surfaces_el_poro(myrank,nspec,ibool,elastic_flag)
+    call get_coupling_surfaces_el_poro(nspec,ibool,elastic_flag)
   endif
 
   ! counts in all slices
@@ -193,22 +194,23 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_coupling_surfaces_ac_el(myrank,nspec,ibool,elastic_flag)
+  subroutine get_coupling_surfaces_ac_el(nspec,ibool,elastic_flag)
 
 ! determines coupling surface for acoustic-elastic domains
 
-  use generate_databases_par, only: NGNOD2D,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE,IMAIN
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE,IMAIN
+  use generate_databases_par, only: NGNOD2D
   use create_regions_mesh_ext_par
 
   implicit none
 
 ! number of spectral elements in each block
-  integer :: myrank,nspec
+  integer,intent(in) :: nspec
 
 ! arrays with the mesh
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-  integer,dimension(nglob_dummy) :: elastic_flag
+  integer,dimension(nglob_dummy),intent(in) :: elastic_flag
 
 ! local parameters
   ! (assumes NGLLX=NGLLY=NGLLZ)
@@ -249,16 +251,16 @@
 
   ! allocates temporary arrays
   allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 694')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 694')
   if (ier /= 0) stop 'error allocating array tmp_normal'
   allocate(tmp_jacobian2Dw(NGLLSQUARE,nspec*6),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 695')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 695')
   if (ier /= 0) stop 'error allocating array tmp_jacobian2Dw'
   allocate(tmp_ijk(3,NGLLSQUARE,nspec*6),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 696')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 696')
   if (ier /= 0) stop 'error allocating array tmp_ijk'
   allocate(tmp_ispec(nspec*6),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 697')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 697')
   if (ier /= 0) stop 'error allocating array tmp_ispec'
   tmp_ispec(:) = 0
   tmp_ijk(:,:,:) = 0
@@ -266,7 +268,7 @@
   tmp_jacobian2Dw(:,:) = 0.0
 
   allocate(mask_ibool(nglob_dummy),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 698')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 698')
   if (ier /= 0) stop 'error allocating array mask_ibool'
   mask_ibool(:) = .false.
 
@@ -379,16 +381,16 @@
   num_coupling_ac_el_faces = inum
 
   allocate(coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 699')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 699')
   if (ier /= 0) stop 'error allocating array coupling_ac_el_normal'
   allocate(coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 700')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 700')
   if (ier /= 0) stop 'error allocating array coupling_ac_el_jacobian2Dw'
   allocate(coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 701')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 701')
   if (ier /= 0) stop 'error allocating array coupling_ac_el_ijk'
   allocate(coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 702')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 702')
   if (ier /= 0) stop 'error allocating array coupling_ac_el_ispec'
 
   do inum = 1,num_coupling_ac_el_faces
@@ -407,21 +409,23 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_coupling_surfaces_ac_poro(myrank,nspec,ibool,acoustic_flag)
+  subroutine get_coupling_surfaces_ac_poro(nspec,ibool,acoustic_flag)
 
 ! determines coupling surface for acoustic-poroelastic domains
 
-  use generate_databases_par, only: NGNOD2D,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE,IMAIN
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE,IMAIN
+  use generate_databases_par, only: NGNOD2D
   use create_regions_mesh_ext_par
+
   implicit none
 
 ! number of spectral elements in each block
-  integer :: myrank,nspec
+  integer,intent(in) :: nspec
 
 ! arrays with the mesh
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-  integer,dimension(nglob_dummy) :: acoustic_flag
+  integer,dimension(nglob_dummy),intent(in) :: acoustic_flag
 
 ! local parameters
   ! (assumes NGLLX=NGLLY=NGLLZ)
@@ -458,16 +462,16 @@
 
   ! allocates temporary arrays
   allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 703')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 703')
   if (ier /= 0) stop 'error allocating array tmp_normal'
   allocate(tmp_jacobian2Dw(NGLLSQUARE,nspec*6),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 704')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 704')
   if (ier /= 0) stop 'error allocating array tmp_jacobian2Dw'
   allocate(tmp_ijk(3,NGLLSQUARE,nspec*6),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 705')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 705')
   if (ier /= 0) stop 'error allocating array tmp_ijk'
   allocate(tmp_ispec(nspec*6),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 706')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 706')
   if (ier /= 0) stop 'error allocating array tmp_ispec'
   tmp_ispec(:) = 0
   tmp_ijk(:,:,:) = 0
@@ -549,16 +553,16 @@
   num_coupling_ac_po_faces = inum
 
   allocate(coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 707')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 707')
   if (ier /= 0) stop 'error allocating array coupling_ac_po_normal'
   allocate(coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 708')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 708')
   if (ier /= 0) stop 'error allocating array coupling_ac_po_jacobian2Dw'
   allocate(coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 709')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 709')
   if (ier /= 0) stop 'error allocating array coupling_ac_po_ijk'
   allocate(coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 710')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 710')
   if (ier /= 0) stop 'error allocating array coupling_ac_po_ispec'
 
   do inum = 1,num_coupling_ac_po_faces
@@ -574,21 +578,22 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_coupling_surfaces_el_poro(myrank,nspec,ibool,elastic_flag)
+  subroutine get_coupling_surfaces_el_poro(nspec,ibool,elastic_flag)
 
 ! determines coupling surface for elastic-poroelastic domains
 
-  use generate_databases_par, only: NGNOD2D,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE,IMAIN
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE,IMAIN
+  use generate_databases_par, only: NGNOD2D
   use create_regions_mesh_ext_par
   implicit none
 
 ! number of spectral elements in each block
-  integer :: myrank,nspec
+  integer,intent(in) :: nspec
 
 ! arrays with the mesh
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-  integer,dimension(nglob_dummy) :: elastic_flag
+  integer,dimension(nglob_dummy),intent(in) :: elastic_flag
 
 ! local parameters
   ! (assumes NGLLX=NGLLY=NGLLZ)
@@ -630,22 +635,22 @@
 
 ! allocates temporary arrays
   allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 711')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 711')
   if (ier /= 0) stop 'error allocating array tmp_normal'
   allocate(tmp_jacobian2Dw(NGLLSQUARE,nspec*6),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 712')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 712')
   if (ier /= 0) stop 'error allocating array tmp_jacobian2Dw'
   allocate(tmp_ijk(3,NGLLSQUARE,nspec*6),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 713')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 713')
   if (ier /= 0) stop 'error allocating array tmp_ijk'
   allocate(tmp_ijk_el(3,NGLLSQUARE,nspec*6),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 714')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 714')
   if (ier /= 0) stop 'error allocating array tmp_ijk_el'
   allocate(tmp_ispec(nspec*6),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 715')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 715')
   if (ier /= 0) stop 'error allocating array tmp_ispec'
   allocate(tmp_ispec_el(nspec*6),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 716')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 716')
   if (ier /= 0) stop 'error allocating array tmp_ispec_el'
   tmp_ispec(:) = 0
   tmp_ispec_el(:) = 0
@@ -818,22 +823,22 @@
   num_coupling_el_po_faces = inum
 
   allocate(coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 717')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 717')
   if (ier /= 0) stop 'error allocating array coupling_el_po_normal'
   allocate(coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 718')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 718')
   if (ier /= 0) stop 'error allocating array coupling_el_po_jacobian2Dw'
   allocate(coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 719')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 719')
   if (ier /= 0) stop 'error allocating array coupling_el_po_ijk'
   allocate(coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 720')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 720')
   if (ier /= 0) stop 'error allocating array coupling_po_el_ijk'
   allocate(coupling_el_po_ispec(num_coupling_el_po_faces),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 721')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 721')
   if (ier /= 0) stop 'error allocating array coupling_el_po_ispec'
   allocate(coupling_po_el_ispec(num_coupling_el_po_faces),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 722')
+  if (ier /= 0) call exit_MPI(myrank,'error allocating array 722')
   if (ier /= 0) stop 'error allocating array coupling_po_el_ispec'
 
   do inum = 1,num_coupling_el_po_faces
