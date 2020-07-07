@@ -73,7 +73,7 @@
   ! checks if anything to do
   if (num_coupling_ac_po_faces == 0) return
 
-! loops on all coupling faces
+  ! loops on all coupling faces
   do iface = 1,num_coupling_ac_po_faces
 
     ! gets corresponding elements
@@ -100,6 +100,7 @@
       ny = coupling_ac_po_normal(2,igll,iface)
       nz = coupling_ac_po_normal(3,igll,iface)
 
+      ! compute dot product [u_s + u_w]*n
       ! calculates displacement component along normal
       ! (normal points outwards of acoustic element)
       displ_n = displ_x*nx + displ_y*ny + displ_z*nz
@@ -116,7 +117,7 @@
       !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
       !          it also means you have to calculate and update this here first before
       !          calculating the coupling on the elastic side for the acceleration...
-      potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) + jacobianw*displ_n
+      potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) + jacobianw * displ_n
 
     enddo ! igll
 

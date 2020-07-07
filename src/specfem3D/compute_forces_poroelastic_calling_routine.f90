@@ -202,31 +202,27 @@ subroutine compute_forces_poroelastic_calling()
     endif
   enddo
 
-! solid phase
-! multiplies with inverse of mass matrix (note: rmass has been inverted already)
+  ! multiplies with inverse of mass matrix (note: rmass has been inverted already)
+  ! solid phase
   accels_poroelastic(1,:) = accels_poroelastic(1,:)*rmass_solid_poroelastic(:)
   accels_poroelastic(2,:) = accels_poroelastic(2,:)*rmass_solid_poroelastic(:)
   accels_poroelastic(3,:) = accels_poroelastic(3,:)*rmass_solid_poroelastic(:)
-
-  ! adjoint simulations
-  if (SIMULATION_TYPE == 3) then
-    b_accels_poroelastic(1,:) = b_accels_poroelastic(1,:)*rmass_solid_poroelastic(:)
-    b_accels_poroelastic(2,:) = b_accels_poroelastic(2,:)*rmass_solid_poroelastic(:)
-    b_accels_poroelastic(3,:) = b_accels_poroelastic(3,:)*rmass_solid_poroelastic(:)
-  endif !adjoint
-
-! fluid phase
-! multiplies with inverse of mass matrix (note: rmass has been inverted already)
+  ! fluid phase
   accelw_poroelastic(1,:) = accelw_poroelastic(1,:)*rmass_fluid_poroelastic(:)
   accelw_poroelastic(2,:) = accelw_poroelastic(2,:)*rmass_fluid_poroelastic(:)
   accelw_poroelastic(3,:) = accelw_poroelastic(3,:)*rmass_fluid_poroelastic(:)
 
   ! adjoint simulations
   if (SIMULATION_TYPE == 3) then
+    ! solid
+    b_accels_poroelastic(1,:) = b_accels_poroelastic(1,:)*rmass_solid_poroelastic(:)
+    b_accels_poroelastic(2,:) = b_accels_poroelastic(2,:)*rmass_solid_poroelastic(:)
+    b_accels_poroelastic(3,:) = b_accels_poroelastic(3,:)*rmass_solid_poroelastic(:)
+    ! fluid
     b_accelw_poroelastic(1,:) = b_accelw_poroelastic(1,:)*rmass_fluid_poroelastic(:)
     b_accelw_poroelastic(2,:) = b_accelw_poroelastic(2,:)*rmass_fluid_poroelastic(:)
     b_accelw_poroelastic(3,:) = b_accelw_poroelastic(3,:)*rmass_fluid_poroelastic(:)
-  endif !adjoint
+  endif
 
 ! updates velocities
 ! Newmark finite-difference time scheme with elastic domains:
@@ -244,20 +240,19 @@ subroutine compute_forces_poroelastic_calling()
 !
 ! corrector:
 !   updates the velocity term which requires a(t+delta)
+
   ! solid phase
   velocs_poroelastic(:,:) = velocs_poroelastic(:,:) + deltatover2*accels_poroelastic(:,:)
-
   ! fluid phase
   velocw_poroelastic(:,:) = velocw_poroelastic(:,:) + deltatover2*accelw_poroelastic(:,:)
 
   ! adjoint simulations
-  ! solid phase
-  if (SIMULATION_TYPE == 3) b_velocs_poroelastic(:,:) = b_velocs_poroelastic(:,:) + &
-                                                        b_deltatover2*b_accels_poroelastic(:,:)
-
-  ! fluid phase
-  if (SIMULATION_TYPE == 3) b_velocw_poroelastic(:,:) = b_velocw_poroelastic(:,:) + &
-                                                        b_deltatover2*b_accelw_poroelastic(:,:)
+  if (SIMULATION_TYPE == 3) then
+    ! solid phase
+    b_velocs_poroelastic(:,:) = b_velocs_poroelastic(:,:) + b_deltatover2*b_accels_poroelastic(:,:)
+    ! fluid phase
+    b_velocw_poroelastic(:,:) = b_velocw_poroelastic(:,:) + b_deltatover2*b_accelw_poroelastic(:,:)
+  endif
 
   ! elastic coupling
   if (ELASTIC_SIMULATION) &
@@ -286,7 +281,7 @@ subroutine compute_forces_poroelastic_calling()
                                            coupling_el_po_ispec,coupling_el_po_ijk, &
                                            deltatover2)
 
-!         assembling the displacements on the elastic-poro boundaries
+! assembling the displacements on the elastic-poro boundaries
 
   use constants
 
@@ -391,6 +386,7 @@ subroutine compute_forces_poroelastic_calling()
         if (SIMULATION_TYPE == 3) then
           !chris: to do
           l = NSPEC_ADJOINT ! to avoid compilation warnings
+          !stop 'kernel simulation in routine compute_continuity_disp_po_el() not implement yet'
         endif
 
       endif

@@ -29,14 +29,14 @@
 ! for poroelastic solver
 
   subroutine compute_coupling_poroelastic_ac(NSPEC_AB,NGLOB_AB, &
-                        ibool,accels_poroelastic,accelw_poroelastic, &
-                        potential_dot_dot_acoustic, &
-                        num_coupling_ac_po_faces, &
-                        coupling_ac_po_ispec,coupling_ac_po_ijk, &
-                        coupling_ac_po_normal, &
-                        coupling_ac_po_jacobian2Dw, &
-                        rhoarraystore,phistore,tortstore, &
-                        iphase)
+                                             ibool,accels_poroelastic,accelw_poroelastic, &
+                                             potential_dot_dot_acoustic, &
+                                             num_coupling_ac_po_faces, &
+                                             coupling_ac_po_ispec,coupling_ac_po_ijk, &
+                                             coupling_ac_po_normal, &
+                                             coupling_ac_po_jacobian2Dw, &
+                                             rhoarraystore,phistore,tortstore, &
+                                             iphase)
 
 ! returns the updated accelerations array: accels_poroelatsic & accelw_poroelastic
 
@@ -71,7 +71,7 @@
 ! local parameters
   real(kind=CUSTOM_REAL) :: pressure
   real(kind=CUSTOM_REAL) :: rhol_s,rhol_f,phil,tortl,rhol_bar
-  real(kind=CUSTOM_REAL) :: nx,ny,nz,jacobianw
+  real(kind=CUSTOM_REAL) :: nx,ny,nz,jacobianw,fac_s,fac_w
 
   integer :: iface,igll,ispec,iglob
   integer :: i,j,k
@@ -101,7 +101,10 @@
       tortl = tortstore(i,j,k,ispec)
       rhol_s = rhoarraystore(1,i,j,k,ispec)
       rhol_f = rhoarraystore(2,i,j,k,ispec)
-      rhol_bar = (1._CUSTOM_REAL-phil)*rhol_s + phil*rhol_f
+      rhol_bar = (1.0_CUSTOM_REAL - phil) * rhol_s + phil * rhol_f
+
+      fac_s = 1.0_CUSTOM_REAL - phil/tortl
+      fac_w = 1.0_CUSTOM_REAL - rhol_f/rhol_bar
 
       ! acoustic pressure on global point
       pressure = - potential_dot_dot_acoustic(iglob)
@@ -125,14 +128,15 @@
       !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
       !          it means you have to calculate and update the acoustic pressure first before
       !          calculating this term...
-! contribution to the solid phase
-      accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) + jacobianw * nx * pressure * (1._CUSTOM_REAL - phil/tortl)
-      accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) + jacobianw * ny * pressure * (1._CUSTOM_REAL - phil/tortl)
-      accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) + jacobianw * nz * pressure * (1._CUSTOM_REAL - phil/tortl)
-! contribution to the fluid phase
-      accelw_poroelastic(1,iglob) = accelw_poroelastic(1,iglob) + jacobianw * nx * pressure * (1._CUSTOM_REAL - rhol_f/rhol_bar)
-      accelw_poroelastic(2,iglob) = accelw_poroelastic(2,iglob) + jacobianw * ny * pressure * (1._CUSTOM_REAL - rhol_f/rhol_bar)
-      accelw_poroelastic(3,iglob) = accelw_poroelastic(3,iglob) + jacobianw * nz * pressure * (1._CUSTOM_REAL - rhol_f/rhol_bar)
+
+      ! contribution to the solid phase
+      accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) + jacobianw * nx * pressure * fac_s
+      accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) + jacobianw * ny * pressure * fac_s
+      accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) + jacobianw * nz * pressure * fac_s
+      ! contribution to the fluid phase
+      accelw_poroelastic(1,iglob) = accelw_poroelastic(1,iglob) + jacobianw * nx * pressure * fac_w
+      accelw_poroelastic(2,iglob) = accelw_poroelastic(2,iglob) + jacobianw * ny * pressure * fac_w
+      accelw_poroelastic(3,iglob) = accelw_poroelastic(3,iglob) + jacobianw * nz * pressure * fac_w
 
     enddo ! igll
 

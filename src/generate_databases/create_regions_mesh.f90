@@ -876,17 +876,26 @@
     do while (irregular_element_number(ispec) /= 0)
       ispec = ispec + 1
     enddo
+
     ! gets corner positions of regular element
     do ia = 1,NGNOD
       xelm(ia) = nodes_coords_ext_mesh(1,elmnts_ext_mesh(ia,ispec))
       yelm(ia) = nodes_coords_ext_mesh(2,elmnts_ext_mesh(ia,ispec))
       zelm(ia) = nodes_coords_ext_mesh(3,elmnts_ext_mesh(ia,ispec))
     enddo
+
     ! jacobian and derivatives of mapping
     call calc_jacobian(myrank,xix_reg,xiy_reg,xiz_reg, &
                        etax_reg,etay_reg,etaz_reg, &
                        gammax_reg,gammay_reg,gammaz_reg, &
                        jacobian_reg,xelm,yelm,zelm,dershape3D)
+
+    ! only xix == etay == gammaz are non-zero for regular elements
+    ! debug
+    !print*,'debug: xix    ',xix_reg(1,1,1),xiy_reg(1,1,1),xiz_reg(1,1,1)
+    !print*,'debug: etax   ',etax_reg(1,1,1),etay_reg(1,1,1),etaz_reg(1,1,1)
+    !print*,'debug: gammax ',gammax_reg(1,1,1),gammay_reg(1,1,1),gammaz_reg(1,1,1)
+
     ! saves regular values
     xix_regular = xix_reg(1,1,1)
     jacobian_regular  = jacobian_reg(1,1,1)

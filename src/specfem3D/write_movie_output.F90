@@ -484,6 +484,7 @@
   use specfem_par_poroelastic
   use specfem_par_acoustic
   use specfem_par_movie
+
   implicit none
 
   ! local parameters
@@ -585,6 +586,7 @@
                               velocity_x,velocity_y,velocity_z, &
                               ispec_is_poroelastic)
     endif ! poroelastic
+
     deallocate(div_glob,valence)
 
     ! div and curl on elemental level
@@ -616,25 +618,23 @@
   endif
 
   ! velocity
-  if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
-    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file movie output velocity x'
-    write(27) velocity_x
-    close(27)
+  write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
+  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+  if (ier /= 0) stop 'error opening file movie output velocity x'
+  write(27) velocity_x
+  close(27)
 
-    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compy,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file movie output velocity y'
-    write(27) velocity_y
-    close(27)
+  write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compy,it
+  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+  if (ier /= 0) stop 'error opening file movie output velocity y'
+  write(27) velocity_y
+  close(27)
 
-    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compz,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file movie output velocity z'
-    write(27) velocity_z
-    close(27)
-  endif
+  write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compz,it
+  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+  if (ier /= 0) stop 'error opening file movie output velocity z'
+  write(27) velocity_z
+  close(27)
 
   end subroutine wmo_movie_volume_output
 
