@@ -42,10 +42,12 @@ module decompose_mesh_par
 
   implicit none
 
-!! DK DK added this because poroelastic repartitioning routine of Christina Morency is currently broken
-! implement mesh repartitioning of poroelastic-elastic interface
-! (the risk being to break the nice load balancing created by the domain decomposer for high-performance computing)
-  logical, parameter :: PORO_INTERFACE_REPARTITIONING = .false.
+! note: the poroelastic repartitioning routine to parallelize the poroelastic-elastic interface
+!       might break the load balancing created by the domain decomposer for high-performance computing
+!
+!       however, poroelastic-elastic interface need to have coupled poroelastic and elastic elements in the same
+!       partition in order to compute proper coupling terms for now...
+  logical, parameter :: PORO_INTERFACE_REPARTITIONING = .true.
 
 ! number of partitions
   integer :: nparts

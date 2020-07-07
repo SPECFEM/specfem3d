@@ -703,6 +703,7 @@ class mesh(object, mesh_tools):
         print('number of material:', flag)
         if flag > 0:
             vel = properties[2]
+            print('  material:', properties[:])
             if properties[2] is None and type(vel) != str:
                 # velocity model scales with given vp value
                 if vel >= 30:
@@ -714,7 +715,7 @@ class mesh(object, mesh_tools):
                        3 - 0.0043 * vp**4 + 0.000106 * vp**4) * m2km
                 txt = '%1i %3i %20f %20f %20f %1i %1i\n' % (
                    properties[0], properties[1], rho, vel, vel / (3**.5), 0, 0)
-            elif type(vel) != str and vel != 0.:
+            elif type(vel) != str and vel != 0.0:
                 # velocity model given as vp,vs,rho,..
                 # format nummaterials file: #material_domain_id #material_id
                 # #rho #vp #vs #Q_kappa #Q_mu #anisotropy_flag

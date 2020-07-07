@@ -196,6 +196,7 @@ CONTAINS
 !     3. set the coordinates on both sides equal to their average
 !          coords(k1) = 0.5*( coords(k1)+coords(k2) )
 !          coords(k2) = coords(k1)
+
   subroutine close_fault_single(f,nodes_coords,nnodes)
 
   type(fault_type), intent(in) :: f
@@ -249,6 +250,7 @@ CONTAINS
 ! Lexicographic reordering of fault elements (based on their centroid)
 ! to make sure both sides are ordered in the same way
 ! and hence elements facing each other have the same index
+
   subroutine reorder_fault_elements(nodes_coords,nnodes)
 
   integer, intent(in)  :: nnodes
@@ -263,6 +265,7 @@ CONTAINS
   end subroutine reorder_fault_elements
 
 ! ---------------------------------------------------------------------------------------------------
+
   subroutine reorder_fault_elements_single(f,nodes_coords,nnodes)
 
   type(fault_type), intent(inout) :: f
@@ -306,6 +309,7 @@ CONTAINS
   end subroutine reorder_fault_elements_single
 
 ! ---------------------------------------------------------------------------------------------------
+
   subroutine lex_order(xyz_c,locval,nspec)
 
   integer, intent(in) :: nspec
@@ -335,7 +339,7 @@ CONTAINS
   ! Repartitioning : two coupled elements on fault side1/side2 are transfered to the same partition
   !--------------------------------------------------
 
-  subroutine fault_repartition (nelmnts, nnodes, elmnts, nsize, nproc, part, esize, nodes_coords)
+  subroutine fault_repartition(nelmnts, nnodes, elmnts, nsize, nproc, part, esize, nodes_coords)
 
   integer, intent(in) :: nelmnts,nsize
   integer, intent(in) :: nnodes, nproc, esize
@@ -344,10 +348,11 @@ CONTAINS
   double precision, dimension(NDIM,nnodes), intent(in) :: nodes_coords
 
   if (PARALLEL_FAULT) then
-    call fault_repartition_parallel (nelmnts,part,nodes_coords,nnodes)
+    ! fault can be parallelized
+    call fault_repartition_parallel(nelmnts,part, nodes_coords, nnodes, nproc)
   else
     ! move all fault elements to the same partition (proc=0)
-    call fault_repartition_not_parallel (nelmnts, nnodes, elmnts, nsize, nproc, part, esize)
+    call fault_repartition_not_parallel(nelmnts, nnodes, elmnts, nsize, nproc, part, esize)
   endif
 
   end subroutine fault_repartition
@@ -358,7 +363,7 @@ CONTAINS
 !               Fault elements and neighbors are assigned to the same processor.
 !               Part, once modified, will be input for write_partition_database.
 
-  subroutine fault_repartition_not_parallel (nelmnts, nnodes, elmnts, nsize, nproc, part, esize)
+  subroutine fault_repartition_not_parallel(nelmnts, nnodes, elmnts, nsize, nproc, part, esize)
 
   integer, intent(in) :: nelmnts,nsize
   integer, intent(in) :: nnodes, nproc, esize
@@ -371,38 +376,41 @@ CONTAINS
   integer  :: k1, k2, k,e,iflt,inode,ier
   integer, dimension(:), allocatable :: elem_proc_null
 
+  ! user output
+  print *,'fault repartitioning: (non-parallel version)'
+
  ! downloading processor 0
-  nproc_null = count( part == 0)
+  nproc_null = count( part(:) == 0)
+  print *,'  elements in slice proc 0 redistributed in [{nproc}- nproc0] :',nproc_null
 
-  print *, 'Elements proc = 0 redistributed in [{nproc}- nproc0] :'
-  print *, nproc_null
-
-  if (nproc_null /= 0) then
-
-    allocate(elem_proc_null(nproc_null),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 84')
-   ! Filling up proc = 0 elements
-    nproc_null = 0
-    do i = 0,nelmnts-1
-      if (part(i) == 0) then
-        nproc_null = nproc_null + 1
-        elem_proc_null(nproc_null) = i
-      endif
-    enddo
-   ! Redistributing proc-0 elements on the rest of processors
-    ipart=1
-    if (nproc > 1) then
-      do i = 1, nproc_null
-        part(elem_proc_null(i)) = ipart
-        if (ipart == nproc-1) ipart = 0
-        ipart = ipart +1
+  ! distributs elements in slice 0 to higher procs
+  if (nproc > 1) then
+    if (nproc_null /= 0) then
+      allocate(elem_proc_null(nproc_null),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 84')
+      ! Filling up proc = 0 elements
+      nproc_null = 0
+      do i = 0,nelmnts-1
+        if (part(i) == 0) then
+          nproc_null = nproc_null + 1
+          elem_proc_null(nproc_null) = i
+        endif
       enddo
+      ! Redistributing proc-0 elements on the rest of processors
+      ipart = 1
+      if (nproc > 1) then
+        do i = 1, nproc_null
+          part(elem_proc_null(i)) = ipart
+          if (ipart == nproc-1) ipart = 0
+          ipart = ipart +1
+        enddo
+      endif
+      deallocate(elem_proc_null)
     endif
-    deallocate(elem_proc_null)
   endif
 
 ! Fault zone layer = the set of elements that contain at least one fault node
-  print *, "Fault zone layer :"
+  print *,"  fault zone layer :"
 
 ! List of elements per node
 !  nnodes_elmnts(i) = number of elements containing node #i (i=0:nnodes-1)
@@ -410,65 +418,90 @@ CONTAINS
 !  nsize = maximun number of elements in a node.
 !  esize = nodes per element.
 
-  nnodes_elmnts(:) = 0
-  nodes_elmnts(:)  = 0
+  ! repartitions elements
+  if (nproc > 1) then
+    nnodes_elmnts(:) = 0
+    nodes_elmnts(:)  = 0
 
-  do i = 0, esize*nelmnts-1
-    nodes_elmnts(elmnts(i)*nsize+nnodes_elmnts(elmnts(i))) = i/esize
-    nnodes_elmnts(elmnts(i)) = nnodes_elmnts(elmnts(i)) + 1
-  enddo
+    do i = 0, esize*nelmnts-1
+      nodes_elmnts(elmnts(i)*nsize + nnodes_elmnts(elmnts(i))) = i/esize
+      nnodes_elmnts(elmnts(i)) = nnodes_elmnts(elmnts(i)) + 1
+    enddo
 
-  do iflt=1,size(faults)
-    do e=1,faults(iflt)%nspec
-      do k=1,4
-
-        inode = faults(iflt)%inodes1(k,e)-1  ! node index, starting at 0
-        k1 = nsize*inode
-        k2 = k1 + nnodes_elmnts(inode) -1
-        part( nodes_elmnts(k1:k2) ) = 0
-        inode = faults(iflt)%inodes2(k,e)-1
-        k1 = nsize*inode
-        k2 = k1 + nnodes_elmnts(inode) -1
-        part( nodes_elmnts(k1:k2) ) = 0
-
+    do iflt = 1,size(faults)
+      do e = 1,faults(iflt)%nspec
+        do k = 1,4
+          ! 1. fault side
+          inode = faults(iflt)%inodes1(k,e)-1  ! node index, starting at 0
+          k1 = nsize*inode
+          k2 = k1 + nnodes_elmnts(inode) -1
+          ! moves elements to proc0
+          part( nodes_elmnts(k1:k2) ) = 0
+          ! 2. fault side
+          inode = faults(iflt)%inodes2(k,e)-1
+          k1 = nsize*inode
+          k2 = k1 + nnodes_elmnts(inode) -1
+          ! moves elements to proc0
+          part( nodes_elmnts(k1:k2) ) = 0
+        enddo
       enddo
     enddo
-  enddo
+  endif
 
-  nproc_null_final = count( part == 0)
-  print *, nproc_null_final
+  nproc_null_final = count( part(:) == 0)
+  print *,'  final number of elements in slice proc 0 (containing fault surfaces):',nproc_null
+  print *
 
   end subroutine fault_repartition_not_parallel
 
 ! ---------------------------------------------------------------------------------------------------
-  subroutine fault_repartition_parallel(nelmnts, part, nodes_coords,nnodes)
+
+  subroutine fault_repartition_parallel(nelmnts, part, nodes_coords, nnodes, nproc)
 
   integer, intent(in) :: nelmnts
   integer, dimension(0:nelmnts-1), intent(inout) :: part
-  integer, intent(in) :: nnodes
+  integer, intent(in) :: nnodes,nproc
   double precision, dimension(NDIM,nnodes), intent(in) :: nodes_coords
 
-  integer  :: i,iflt,e,e1,e2,proc1,proc2
+  integer  :: i,iflt,e,e1,e2,proc1,proc2,counter,num_fault_elem
+
+  ! user output
+  print *,'fault repartitioning: (parallel version)'
 
  ! Reorder both fault sides so that elements facing each other have the same index
   call reorder_fault_elements(nodes_coords,nnodes)
 
+  num_fault_elem = 0
+  do iflt = 1,size(faults)
+    num_fault_elem = num_fault_elem + faults(iflt)%nspec
+  enddo
+  print *,'  total number of fault elements: ',num_fault_elem
+  print *
+
+  ! repartitions elements
+  if (nproc > 1) then
 !JPA loop over all faults
 !JPA loop over all fault element pairs
 !JPA assign both elements to the processor with lowest rank among the pair
 
-  do i=1,2 !JPA do it twice, to handle triple junctions (intersections between two faults)
-    do iflt=1,size(faults)
-      do e=1,faults(iflt)%nspec
-        e1 = faults(iflt)%ispec1(e) - 1
-        e2 = faults(iflt)%ispec2(e) - 1
-        proc1 = part(e1)
-        proc2 = part(e2)
-        part(e1) = min(proc1,proc2)
-        part(e2) = part(e1)
+    do i = 1,2 !JPA do it twice, to handle triple junctions (intersections between two faults)
+      counter = 0
+      do iflt = 1,size(faults)
+        do e = 1,faults(iflt)%nspec
+          e1 = faults(iflt)%ispec1(e) - 1  ! part array between [0,nelmnts-1]
+          e2 = faults(iflt)%ispec2(e) - 1
+          proc1 = part(e1)
+          proc2 = part(e2)
+          ! moves elements to lower partition of the two
+          part(e1) = min(proc1,proc2)
+          part(e2) = part(e1)
+          counter = counter + 1
+        enddo
       enddo
+      print *,'  repartition loop',i,' changed ',counter,' coupled fault elements out of ',num_fault_elem
     enddo
-  enddo
+    print *
+  endif
 
   end subroutine fault_repartition_parallel
 
