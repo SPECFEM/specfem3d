@@ -70,16 +70,16 @@
   integer :: abs_boundary_ispec(num_abs_boundary_faces)
 
 ! adjoint simulations
-  integer:: SIMULATION_TYPE
-  integer:: NSTEP,it,NGLOB_ADJOINT
-  integer:: b_num_abs_boundary_faces,b_reclen_field_poro
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_fields, &
-                                                                               b_absorb_fieldw
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_ADJOINT):: b_accels,b_accelw
-  logical:: SAVE_FORWARD
+  integer :: SIMULATION_TYPE
+  integer :: NSTEP,it,NGLOB_ADJOINT
+  integer :: b_num_abs_boundary_faces,b_reclen_field_poro
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces) :: b_absorb_fields, &
+                                                                                b_absorb_fieldw
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_ADJOINT) :: b_accels,b_accelw
+  logical :: SAVE_FORWARD
 
 ! local parameters
-  real(kind=CUSTOM_REAL) vx,vy,vz,vfx,vfy,vfz,nx,ny,nz,tx,ty,tz,tfx,tfy,tfz,vn,vfn,jacobianw
+  real(kind=CUSTOM_REAL) :: vx,vy,vz,vfx,vfy,vfz,nx,ny,nz,tx,ty,tz,tfx,tfy,tfz,vn,vfn,jacobianw
   integer :: ispec,iglob,i,j,k,iface,igll
   real(kind=CUSTOM_REAL) :: rhol_s,rhol_f,rhol_bar,phil,tortl
   !integer:: reclen1,reclen2
@@ -90,14 +90,13 @@
   ! checks if anything to do
   if (num_abs_boundary_faces == 0) return
 
-! adjoint simulations:
+  ! adjoint simulations
   if (SIMULATION_TYPE == 3) then
     ! reads in absorbing boundary array (when first phase is running)
     ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
     call read_abs(IOABS,b_absorb_fields,b_reclen_field_poro,NSTEP-it+1)
     call read_abs(IOABS,b_absorb_fieldw,b_reclen_field_poro,NSTEP-it+1)
-  endif !adjoint
-
+  endif
 
   ! absorbs absorbing-boundary surface using Stacey condition (Clayton & Enquist)
   do iface = 1,num_abs_boundary_faces
@@ -115,14 +114,14 @@
         k = abs_boundary_ijk(3,igll,iface)
 
         ! gets velocity
-        iglob=ibool(i,j,k,ispec)
-        vx=velocs(1,iglob)
-        vy=velocs(2,iglob)
-        vz=velocs(3,iglob)
+        iglob = ibool(i,j,k,ispec)
+        vx = velocs(1,iglob)
+        vy = velocs(2,iglob)
+        vz = velocs(3,iglob)
         !
-        vfx=velocw(1,iglob)
-        vfy=velocw(2,iglob)
-        vfz=velocw(3,iglob)
+        vfx = velocw(1,iglob)
+        vfy = velocw(2,iglob)
+        vfz = velocw(3,iglob)
 
         ! gets properties
         phil = phistore(i,j,k,ispec)
@@ -145,12 +144,9 @@
         ty = rho_vpI(i,j,k,ispec)*vn*ny + rho_vsI(i,j,k,ispec)*(vy-vn*ny)
         tz = rho_vpI(i,j,k,ispec)*vn*nz + rho_vsI(i,j,k,ispec)*(vz-vn*nz)
         !
-        tfx = rho_vpII(i,j,k,ispec)/(phil*rhol_bar)*tortl*rhol_f*vfn*nx - &
-              rho_vsI(i,j,k,ispec)/rhol_bar*rhol_f*(vx-vn*nx)
-        tfy = rho_vpII(i,j,k,ispec)/(phil*rhol_bar)*tortl*rhol_f*vfn*ny - &
-              rho_vsI(i,j,k,ispec)/rhol_bar*rhol_f*(vy-vn*ny)
-        tfz = rho_vpII(i,j,k,ispec)/(phil*rhol_bar)*tortl*rhol_f*vfn*nz - &
-              rho_vsI(i,j,k,ispec)/rhol_bar*rhol_f*(vz-vn*nz)
+        tfx = rho_vpII(i,j,k,ispec)/(phil*rhol_bar)*tortl*rhol_f*vfn*nx - rho_vsI(i,j,k,ispec)/rhol_bar*rhol_f*(vx-vn*nx)
+        tfy = rho_vpII(i,j,k,ispec)/(phil*rhol_bar)*tortl*rhol_f*vfn*ny - rho_vsI(i,j,k,ispec)/rhol_bar*rhol_f*(vy-vn*ny)
+        tfz = rho_vpII(i,j,k,ispec)/(phil*rhol_bar)*tortl*rhol_f*vfn*nz - rho_vsI(i,j,k,ispec)/rhol_bar*rhol_f*(vz-vn*nz)
 
         ! gets associated, weighted jacobian
         jacobianw = abs_boundary_jacobian2Dw(igll,iface)

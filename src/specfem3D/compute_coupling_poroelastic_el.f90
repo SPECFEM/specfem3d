@@ -72,7 +72,7 @@
   real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26, &
                         c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
-  integer :: iface,igll,ispec_po,ispec_el,iglob,iglob_po,iglob_el
+  integer :: iface,igll,ispec_po,ispec_el,iglob,iglob1,iglob2,iglob3,iglob_po,iglob_el
   integer :: i,j,k,l,ispec_irreg_po,ispec_irreg_el
 
   real(kind=CUSTOM_REAL) tempx1l,tempx2l,tempx3l
@@ -96,6 +96,16 @@
 
   ! only add these contributions in first pass
   if (iphase /= 1) return
+
+  ! safety check
+  ! adjoint simulations
+  if (SIMULATION_TYPE == 3) then
+    ! to do
+    stop 'compute_coupling_poroelastic_el() : adjoint run not implemented yet'
+    ! dummy to avoid compiler warnings
+    iglob = NGLOB_ADJOINT
+    iglob = NSPEC_ADJOINT
+  endif ! adjoint
 
 ! loops on all coupling faces
   do iface = 1,num_coupling_el_po_faces
@@ -134,29 +144,29 @@
       tempz3l = 0.0_CUSTOM_REAL
 
       ! we can merge these loops because NGLLX = NGLLY = NGLLZ
-      do l=1,NGLLX
+      do l = 1,NGLLX
         hp1 = hprime_xx(i,l)
-        iglob = ibool(l,j,k,ispec_el)
-        tempx1l = tempx1l + displ(1,iglob)*hp1
-        tempy1l = tempy1l + displ(2,iglob)*hp1
-        tempz1l = tempz1l + displ(3,iglob)*hp1
+        iglob1 = ibool(l,j,k,ispec_el)
+        tempx1l = tempx1l + displ(1,iglob1)*hp1
+        tempy1l = tempy1l + displ(2,iglob1)*hp1
+        tempz1l = tempz1l + displ(3,iglob1)*hp1
 
         hp2 = hprime_yy(j,l)
-        iglob = ibool(i,l,k,ispec_el)
-        tempx2l = tempx2l + displ(1,iglob)*hp2
-        tempy2l = tempy2l + displ(2,iglob)*hp2
-        tempz2l = tempz2l + displ(3,iglob)*hp2
+        iglob2 = ibool(i,l,k,ispec_el)
+        tempx2l = tempx2l + displ(1,iglob2)*hp2
+        tempy2l = tempy2l + displ(2,iglob2)*hp2
+        tempz2l = tempz2l + displ(3,iglob2)*hp2
 
         hp3 = hprime_zz(k,l)
-        iglob = ibool(i,j,l,ispec_el)
-        tempx3l = tempx3l + displ(1,iglob)*hp3
-        tempy3l = tempy3l + displ(2,iglob)*hp3
-        tempz3l = tempz3l + displ(3,iglob)*hp3
+        iglob3 = ibool(i,j,l,ispec_el)
+        tempx3l = tempx3l + displ(1,iglob3)*hp3
+        tempy3l = tempy3l + displ(2,iglob3)*hp3
+        tempz3l = tempz3l + displ(3,iglob3)*hp3
       enddo
 
-      if (ispec_irreg_el /= 0 ) then !irregular element
-
-        ! get derivatives of ux, uy and uz with respect to x, y and z
+      ! get derivatives of ux, uy and uz with respect to x, y and z
+      if (ispec_irreg_el /= 0) then
+        ! irregular element
         xixl = xix(i,j,k,ispec_irreg_el)
         xiyl = xiy(i,j,k,ispec_irreg_el)
         xizl = xiz(i,j,k,ispec_irreg_el)
@@ -178,9 +188,8 @@
         duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
         duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
         duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
-
-      else ! regular element
-
+      else
+        ! regular element
         duxdxl = xix_regular*tempx1l
         duxdyl = xix_regular*tempx2l
         duxdzl = xix_regular*tempx3l
@@ -192,7 +201,6 @@
         duzdxl = xix_regular*tempz1l
         duzdyl = xix_regular*tempz2l
         duzdzl = xix_regular*tempz3l
-
       endif
 
       ! precompute some sums to save CPU time
@@ -244,7 +252,6 @@
                   c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl
 
       else
-
         ! isotropic case
         lambdalplus2mul = kappal + FOUR_THIRDS * mul
         lambdal = lambdalplus2mul - 2.*mul
@@ -325,51 +332,36 @@
       ! we can merge these loops because NGLLX = NGLLY = NGLLZ
       do l = 1,NGLLX
         hp1 = hprime_xx(i,l)
-        iglob = ibool(l,j,k,ispec_po)
-        tempx1ls = tempx1ls + displs_poroelastic(1,iglob)*hp1
-        tempy1ls = tempy1ls + displs_poroelastic(2,iglob)*hp1
-        tempz1ls = tempz1ls + displs_poroelastic(3,iglob)*hp1
-        tempx1lw = tempx1lw + displw_poroelastic(1,iglob)*hp1
-        tempy1lw = tempy1lw + displw_poroelastic(2,iglob)*hp1
-        tempz1lw = tempz1lw + displw_poroelastic(3,iglob)*hp1
-        ! adjoint simulations
-        if (SIMULATION_TYPE == 3) then
-          ! to do
-          stop 'compute_coupling_poroelastic_el() : adjoint run not implemented yet'
-
-          ! dummy to avoid compiler warnings
-          iglob = NGLOB_ADJOINT
-          iglob = NSPEC_ADJOINT
-        endif ! adjoint
+        iglob1 = ibool(l,j,k,ispec_po)
+        tempx1ls = tempx1ls + displs_poroelastic(1,iglob1)*hp1
+        tempy1ls = tempy1ls + displs_poroelastic(2,iglob1)*hp1
+        tempz1ls = tempz1ls + displs_poroelastic(3,iglob1)*hp1
+        tempx1lw = tempx1lw + displw_poroelastic(1,iglob1)*hp1
+        tempy1lw = tempy1lw + displw_poroelastic(2,iglob1)*hp1
+        tempz1lw = tempz1lw + displw_poroelastic(3,iglob1)*hp1
 
         hp2 = hprime_yy(j,l)
-        iglob = ibool(i,l,k,ispec_po)
-        tempx2ls = tempx2ls + displs_poroelastic(1,iglob)*hp2
-        tempy2ls = tempy2ls + displs_poroelastic(2,iglob)*hp2
-        tempz2ls = tempz2ls + displs_poroelastic(3,iglob)*hp2
-        tempx2lw = tempx2lw + displw_poroelastic(1,iglob)*hp2
-        tempy2lw = tempy2lw + displw_poroelastic(2,iglob)*hp2
-        tempz2lw = tempz2lw + displw_poroelastic(3,iglob)*hp2
-        ! adjoint simulations
-        if (SIMULATION_TYPE == 3) then
-        endif ! adjoint
+        iglob2 = ibool(i,l,k,ispec_po)
+        tempx2ls = tempx2ls + displs_poroelastic(1,iglob2)*hp2
+        tempy2ls = tempy2ls + displs_poroelastic(2,iglob2)*hp2
+        tempz2ls = tempz2ls + displs_poroelastic(3,iglob2)*hp2
+        tempx2lw = tempx2lw + displw_poroelastic(1,iglob2)*hp2
+        tempy2lw = tempy2lw + displw_poroelastic(2,iglob2)*hp2
+        tempz2lw = tempz2lw + displw_poroelastic(3,iglob2)*hp2
 
         hp3 = hprime_zz(k,l)
-        iglob = ibool(i,j,l,ispec_po)
-        tempx3ls = tempx3ls + displs_poroelastic(1,iglob)*hp3
-        tempy3ls = tempy3ls + displs_poroelastic(2,iglob)*hp3
-        tempz3ls = tempz3ls + displs_poroelastic(3,iglob)*hp3
-        tempx3lw = tempx3lw + displw_poroelastic(1,iglob)*hp3
-        tempy3lw = tempy3lw + displw_poroelastic(2,iglob)*hp3
-        tempz3lw = tempz3lw + displw_poroelastic(3,iglob)*hp3
-        ! adjoint simulations
-        if (SIMULATION_TYPE == 3) then
-        endif ! adjoint
+        iglob3 = ibool(i,j,l,ispec_po)
+        tempx3ls = tempx3ls + displs_poroelastic(1,iglob3)*hp3
+        tempy3ls = tempy3ls + displs_poroelastic(2,iglob3)*hp3
+        tempz3ls = tempz3ls + displs_poroelastic(3,iglob3)*hp3
+        tempx3lw = tempx3lw + displw_poroelastic(1,iglob3)*hp3
+        tempy3lw = tempy3lw + displw_poroelastic(2,iglob3)*hp3
+        tempz3lw = tempz3lw + displw_poroelastic(3,iglob3)*hp3
       enddo
 
-      if (ispec_irreg_po /= 0 ) then !irregular element
-
-        ! get derivatives of ux, uy and uz with respect to x, y and z
+      ! get derivatives of ux, uy and uz with respect to x, y and z
+      if (ispec_irreg_po /= 0 ) then
+        ! irregular element
         xixl = xix(i,j,k,ispec_irreg_po)
         xiyl = xiy(i,j,k,ispec_irreg_po)
         xizl = xiz(i,j,k,ispec_irreg_po)
@@ -404,9 +396,8 @@
         dwzdxl = xixl*tempz1lw + etaxl*tempz2lw + gammaxl*tempz3lw
         dwzdyl = xiyl*tempz1lw + etayl*tempz2lw + gammayl*tempz3lw
         dwzdzl = xizl*tempz1lw + etazl*tempz2lw + gammazl*tempz3lw
-
-      else !regular element
-
+      else
+        ! regular element
         ! derivatives of displacement
         duxdxl = xix_regular*tempx1ls
         duxdyl = xix_regular*tempx2ls
@@ -431,7 +422,6 @@
         dwzdxl = xix_regular*tempz1lw
         dwzdyl = xix_regular*tempz2lw
         dwzdzl = xix_regular*tempz3lw
-
       endif
 
       ! precompute some sums to save CPU time

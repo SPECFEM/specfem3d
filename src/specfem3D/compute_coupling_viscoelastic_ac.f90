@@ -154,9 +154,9 @@
       !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
       !          it means you have to calculate and update the acoustic pressure first before
       !          calculating this term...
-      accel(1,iglob) = accel(1,iglob) + jacobianw*nx*pressure_x
-      accel(2,iglob) = accel(2,iglob) + jacobianw*ny*pressure_y
-      accel(3,iglob) = accel(3,iglob) + jacobianw*nz*pressure_z
+      accel(1,iglob) = accel(1,iglob) + jacobianw * nx * pressure_x
+      accel(2,iglob) = accel(2,iglob) + jacobianw * ny * pressure_y
+      accel(3,iglob) = accel(3,iglob) + jacobianw * nz * pressure_z
 
     enddo ! igll
 

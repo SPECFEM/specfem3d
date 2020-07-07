@@ -51,7 +51,7 @@
   double precision :: stf,time_source_dble
   double precision,external :: get_stf_poroelastic
 
-  logical ibool_read_adj_arrays
+  logical :: ibool_read_adj_arrays
   integer :: isource,iglob,i,j,k,ispec,it_sub_adj
   integer :: irec_local,irec
   real(kind=CUSTOM_REAL) :: phil,tortl,rhol_s,rhol_f,rhol_bar
@@ -66,7 +66,7 @@
 !$OMP PARALLEL if (NSOURCES > 100) &
 !$OMP DEFAULT(SHARED) &
 !$OMP PRIVATE(isource,time_source_dble,stf_used,stf,iglob,ispec,i,j,k, &
-!$OMP phil,tortl,rhol_s,rhol_f,rhol_bar,fac_s,fac_w)
+!$OMP         phil,tortl,rhol_s,rhol_f,rhol_bar,fac_s,fac_w)
 
     ! adds poroelastic sources
 !$OMP DO
@@ -102,9 +102,9 @@
           stf_used = real(stf,kind=CUSTOM_REAL)
 
           ! adds source array
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
+          do k = 1,NGLLZ
+            do j = 1,NGLLY
+              do i = 1,NGLLX
                 iglob = ibool(i,j,k,ispec)
                 ! get poroelastic parameters of current local GLL
                 phil = phistore(i,j,k,ispec)
@@ -311,9 +311,9 @@
           stf_used = real(stf,kind=CUSTOM_REAL)
 
           !  add source array
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
+          do k = 1,NGLLZ
+            do j = 1,NGLLY
+              do i = 1,NGLLX
                 iglob = ibool(i,j,k,ispec)
                 ! get poroelastic parameters of current local GLL
                 phil = phistore(i,j,k,ispec)
@@ -321,7 +321,6 @@
                 rhol_s = rhoarraystore(1,i,j,k,ispec)
                 rhol_f = rhoarraystore(2,i,j,k,ispec)
                 rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
-
 
                 ! we distinguish between a single force which can be applied both in fluid and solid
                 ! and a moment-tensor source which only makes sense for a solid

@@ -519,6 +519,7 @@
                                            xstore_dummy,ystore_dummy,zstore_dummy, &
                                            normal_face(:,i,j) )
               ! reverse the sign, we know we are in a poroelastic element
+              ! thus, pointing outwards of acoustic element
               normal_face(:,i,j) = - normal_face(:,i,j)
             enddo
           enddo
