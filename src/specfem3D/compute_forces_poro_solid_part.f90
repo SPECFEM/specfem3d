@@ -95,7 +95,6 @@
   real(kind=CUSTOM_REAL) :: permlxx,permlxy,permlxz,permlyz,permlyy,permlzz, &
                             invpermlxx,invpermlxy,invpermlxz,invpermlyz,invpermlyy,invpermlzz,detk
   real(kind=CUSTOM_REAL) :: D_biot,H_biot,C_biot,M_biot,rhol_bar
-
   real(kind=CUSTOM_REAL) :: mul_G,lambdal_G,lambdalplus2mul_G
 
   if (iphase == 1) then
@@ -108,8 +107,9 @@
   do ispec_p = 1,num_elements
 
     ispec = phase_ispec_inner_poroelastic(ispec_p,iphase)
+
     ispec_irreg = irregular_element_number(ispec)
-    if (ispec_irreg == 0 ) jacobianl = jacobian_regular
+    if (ispec_irreg == 0) jacobianl = jacobian_regular
  !
     ! first double loop over GLL points to compute and store gradients
     !
@@ -129,13 +129,16 @@
           !frame properties
           mul_fr = mustore(i,j,k,ispec)
           kappal_fr = kappaarraystore(3,i,j,k,ispec)
+
           rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
+
           !Biot coefficients for the input phi
           D_biot = kappal_s*(1._CUSTOM_REAL + phil*(kappal_s/kappal_f - 1._CUSTOM_REAL))
           H_biot = (kappal_s - kappal_fr)*(kappal_s - kappal_fr)/(D_biot - kappal_fr) + &
                     kappal_fr + 4._CUSTOM_REAL*mul_fr/3._CUSTOM_REAL
           C_biot = kappal_s*(kappal_s - kappal_fr)/(D_biot - kappal_fr)
           M_biot = kappal_s*kappal_s/(D_biot - kappal_fr)
+
           !The RHS has the form : div T -phi/c div T_f + phi/ceta_f_k^-1.partial t w
           !where T = G:grad u_s + C_biot div w I
           !and T_f = C_biot div u_s I + M_biot div w I
@@ -327,7 +330,6 @@
             epsilonsdev_yz(i,j,k,ispec) = 0.5 * duzdyl_plus_duydzl
           endif
 
-
           ! weak formulation term based on stress tensor (non-symmetric form)
           ! define symmetric components of sigma
           sigma_yx = sigma_xy
@@ -350,17 +352,17 @@
             tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
             tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
 
-            tempx1p(i,j,k) = jacobianl * sigmap*xixl
-            tempy1p(i,j,k) = jacobianl * sigmap*xiyl
-            tempz1p(i,j,k) = jacobianl * sigmap*xizl
+            tempx1p(i,j,k) = jacobianl * sigmap * xixl
+            tempy1p(i,j,k) = jacobianl * sigmap * xiyl
+            tempz1p(i,j,k) = jacobianl * sigmap * xizl
 
-            tempx2p(i,j,k) = jacobianl * sigmap*etaxl
-            tempy2p(i,j,k) = jacobianl * sigmap*etayl
-            tempz2p(i,j,k) = jacobianl * sigmap*etazl
+            tempx2p(i,j,k) = jacobianl * sigmap * etaxl
+            tempy2p(i,j,k) = jacobianl * sigmap * etayl
+            tempz2p(i,j,k) = jacobianl * sigmap * etazl
 
-            tempx3p(i,j,k) = jacobianl * sigmap*gammaxl
-            tempy3p(i,j,k) = jacobianl * sigmap*gammayl
-            tempz3p(i,j,k) = jacobianl * sigmap*gammazl
+            tempx3p(i,j,k) = jacobianl * sigmap * gammaxl
+            tempy3p(i,j,k) = jacobianl * sigmap * gammayl
+            tempz3p(i,j,k) = jacobianl * sigmap * gammazl
 
           else
             ! regular element
@@ -370,11 +372,11 @@
 
             tempx2(i,j,k) = jacobianl * sigma_yx * xix_regular
             tempy2(i,j,k) = jacobianl * sigma_yy * xix_regular
-            tempz2(i,j,k) = jacobianl * sigma_zz * xix_regular
+            tempz2(i,j,k) = jacobianl * sigma_yz * xix_regular
 
-            tempx3(i,j,k) = jacobianl * sigma_zx* xix_regular
-            tempy3(i,j,k) = jacobianl * sigma_zy* xix_regular
-            tempz3(i,j,k) = jacobianl * sigma_zz* xix_regular
+            tempx3(i,j,k) = jacobianl * sigma_zx * xix_regular
+            tempy3(i,j,k) = jacobianl * sigma_zy * xix_regular
+            tempz3(i,j,k) = jacobianl * sigma_zz * xix_regular
 
             tempx1p(i,j,k) = jacobianl * sigmap * xix_regular
             tempy1p(i,j,k) = 0.0_CUSTOM_REAL
