@@ -386,7 +386,7 @@
                                      nodes_coords_ext_mesh,nnodes_ext_mesh, &
                                      elmnts_ext_mesh,nelmnts_ext_mesh,ANY_FAULT_IN_THIS_PROC)
 
-  use constants, only: myrank,NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN, &
+  use constants, only: myrank,NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,GAUSSALPHA,GAUSSBETA, &
     DO_IRREGULAR_ELEMENT_SEPARATION
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,PML_INSTEAD_OF_FREE_SURFACE,BOTTOM_FREE_SURFACE, &
@@ -410,7 +410,7 @@
   integer, dimension(NGNOD,nelmnts_ext_mesh) :: elmnts_ext_mesh
 
   ! local parameters
-  integer :: ier,ispec,ia
+  integer :: ier,ispec,ia,i,j,k
   logical :: any_regular_elem
   double precision :: cube_edge_size_squared
   real, dimension(NGNOD) :: xelm_real,yelm_real,zelm_real
@@ -428,10 +428,6 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
-
-  allocate(xelm(NGNOD),yelm(NGNOD),zelm(NGNOD),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 723')
-  if (ier /= 0) stop 'error allocating array xelm etc.'
 
   ! attenuation
   allocate(qkappa_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
@@ -490,6 +486,37 @@
   allocate(wgllwgll_yz(NGLLY,NGLLZ),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 740')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+
+  ! set up coordinates of the Gauss-Lobatto-Legendre points
+  call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
+  call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
+  call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
+
+  ! get the 3-D shape functions
+  call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ)
+
+  ! get the 2-D shape functions
+  call get_shape2D(shape2D_x,dershape2D_x,yigll,zigll,NGLLY,NGLLZ,NGNOD,NGNOD2D)
+  call get_shape2D(shape2D_y,dershape2D_y,xigll,zigll,NGLLX,NGLLZ,NGNOD,NGNOD2D)
+  call get_shape2D(shape2D_bottom,dershape2D_bottom,xigll,yigll,NGLLX,NGLLY,NGNOD,NGNOD2D)
+  call get_shape2D(shape2D_top,dershape2D_top,xigll,yigll,NGLLX,NGLLY,NGNOD,NGNOD2D)
+
+  ! 2D weights
+  do j = 1,NGLLY
+    do i = 1,NGLLX
+      wgllwgll_xy(i,j) = wxgll(i)*wygll(j)
+    enddo
+  enddo
+  do k = 1,NGLLZ
+    do i = 1,NGLLX
+      wgllwgll_xz(i,k) = wxgll(i)*wzgll(k)
+    enddo
+  enddo
+  do k = 1,NGLLZ
+    do j = 1,NGLLY
+      wgllwgll_yz(j,k) = wygll(j)*wzgll(k)
+    enddo
+  enddo
 
   ! model parameters
   ! (full arrays needed for reading in acoustic/elastic/poroelastic velocity models)
@@ -774,7 +801,7 @@
                                     elmnts_ext_mesh,nelmnts_ext_mesh)
 
   use constants, only: myrank,NDIM,NGLLX,NGLLY,NGLLZ,GAUSSALPHA,GAUSSBETA,CUSTOM_REAL,OUTPUT_FILES
-  use generate_databases_par, only: NGNOD,NGNOD2D
+  use generate_databases_par, only: NGNOD
   use create_regions_mesh_ext_par
 
   implicit none
@@ -790,45 +817,15 @@
   integer, dimension(NGNOD,nelmnts_ext_mesh) :: elmnts_ext_mesh
 
 ! local parameters
-  integer :: ispec,ia,i,j,k,ispec_irreg
+  integer :: ispec,ia,ispec_irreg
   logical :: any_regular_elem
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: xix_reg,xiy_reg,xiz_reg,etax_reg,etay_reg,etaz_reg, &
                                                           gammax_reg,gammay_reg,gammaz_reg,jacobian_reg
+  double precision, dimension(NGNOD) :: xelm,yelm,zelm
 
   ! debug
   logical, parameter :: DEBUG_ELEMENT = .false.
   character(len=MAX_STRING_LEN) :: filename
-
-! set up coordinates of the Gauss-Lobatto-Legendre points
-  call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
-  call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
-  call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
-
-! get the 3-D shape functions
-  call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ)
-
-! get the 2-D shape functions
-  call get_shape2D(shape2D_x,dershape2D_x,yigll,zigll,NGLLY,NGLLZ,NGNOD,NGNOD2D)
-  call get_shape2D(shape2D_y,dershape2D_y,xigll,zigll,NGLLX,NGLLZ,NGNOD,NGNOD2D)
-  call get_shape2D(shape2D_bottom,dershape2D_bottom,xigll,yigll,NGLLX,NGLLY,NGNOD,NGNOD2D)
-  call get_shape2D(shape2D_top,dershape2D_top,xigll,yigll,NGLLX,NGLLY,NGNOD,NGNOD2D)
-
-! 2D weights
-  do j=1,NGLLY
-    do i=1,NGLLX
-      wgllwgll_xy(i,j) = wxgll(i)*wygll(j)
-    enddo
-  enddo
-  do k=1,NGLLZ
-    do i=1,NGLLX
-      wgllwgll_xz(i,k) = wxgll(i)*wzgll(k)
-    enddo
-  enddo
-  do k=1,NGLLZ
-    do j=1,NGLLY
-      wgllwgll_yz(j,k) = wygll(j)*wzgll(k)
-    enddo
-  enddo
 
 ! point locations
   xstore(:,:,:,:) = 0.d0
@@ -869,6 +866,7 @@
     endif
 
   enddo
+
   ! get xix derivative and jacobian on a regular element
   if (any_regular_elem) then
     ! find a regular element
@@ -892,9 +890,19 @@
 
     ! only xix == etay == gammaz are non-zero for regular elements
     ! debug
-    !print*,'debug: xix    ',xix_reg(1,1,1),xiy_reg(1,1,1),xiz_reg(1,1,1)
-    !print*,'debug: etax   ',etax_reg(1,1,1),etay_reg(1,1,1),etaz_reg(1,1,1)
-    !print*,'debug: gammax ',gammax_reg(1,1,1),gammay_reg(1,1,1),gammaz_reg(1,1,1)
+    print*,'debug: xix    ',xix_reg(1,1,1),xiy_reg(1,1,1),xiz_reg(1,1,1)
+    print*,'debug: etax   ',etax_reg(1,1,1),etay_reg(1,1,1),etaz_reg(1,1,1)
+    print*,'debug: gammax ',gammax_reg(1,1,1),gammay_reg(1,1,1),gammaz_reg(1,1,1)
+
+    ! check
+    if (abs(xix_reg(1,1,1) - etay_reg(1,1,1)) > 1.e-20) then
+      print *,'Error: regular element should have xix == etay ',xix_reg(1,1,1),etay_reg(1,1,1)
+      stop 'Invalid regular element xix/etay'
+    endif
+    if (abs(xix_reg(1,1,1) - gammaz_reg(1,1,1)) > 1.e-20) then
+      print *,'Error: regular element should have xix == gammaz ',xix_reg(1,1,1),gammaz_reg(1,1,1)
+      stop 'Invalid regular element xix/gammaz'
+    endif
 
     ! saves regular values
     xix_regular = xix_reg(1,1,1)

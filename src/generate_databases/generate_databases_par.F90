@@ -184,8 +184,6 @@
   double precision, dimension(:,:,:,:), allocatable :: shape3D
   double precision, dimension(:,:,:,:,:), allocatable :: dershape3D
 
-  double precision, dimension(:), allocatable :: xelm,yelm,zelm
-
 ! regular elements
   real(kind=CUSTOM_REAL) :: xix_regular,jacobian_regular
   integer, dimension(:), allocatable :: irregular_element_number
