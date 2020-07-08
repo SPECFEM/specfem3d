@@ -1,0 +1,23 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+This example creates a layered mesh with an oceanic layer on top, 
+two compacted sediment layers in the middle (poroelastic material) overlaying an elastic bottom layer.
+It therefore couples both an acoustic (fluid) and an elastic layer with poroelastic layers.
+
+The example follows the setup presented in Morency et al. (2008), figure 14, 
+but extends the model to 3D and enlarges the source-receiver distances.
+
+To run the simulation, type:
+
+> ./run_this_example.sh
+
+which uses the in-house mesher xmeshfem3D to create the mesh layout, or
+
+> ./run_this_example.sh 1
+
+to use the provided Cubit/Trelis mesh in MESH-default/ with a mesh partitioner (Scotch).
+
+Compare your seismograms in OUTPUT_FILES/ with the reference ones in directory REF_SEIS/
+
