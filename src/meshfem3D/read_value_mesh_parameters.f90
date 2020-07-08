@@ -250,7 +250,7 @@
 
 ! material parameter list
 
-  subroutine read_material_parameters(iunit,material_properties,imat,NMATERIALS,ier) ! mat_id,rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,domain_id, ier)
+  subroutine read_material_parameters(iunit,material_properties,imat,NMATERIALS,ier)
 
   use constants, only: MAX_STRING_LEN,DONT_IGNORE_JUNK,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC
   use constants_meshfem3D, only: NUMBER_OF_MATERIAL_PROPERTIES
