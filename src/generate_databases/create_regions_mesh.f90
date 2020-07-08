@@ -822,6 +822,7 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: xix_reg,xiy_reg,xiz_reg,etax_reg,etay_reg,etaz_reg, &
                                                           gammax_reg,gammay_reg,gammaz_reg,jacobian_reg
   double precision, dimension(NGNOD) :: xelm,yelm,zelm
+  double precision,parameter :: threshold_zero = 1.e-25
 
   ! debug
   logical, parameter :: DEBUG_ELEMENT = .false.
@@ -890,16 +891,16 @@
 
     ! only xix == etay == gammaz are non-zero for regular elements
     ! debug
-    print*,'debug: xix    ',xix_reg(1,1,1),xiy_reg(1,1,1),xiz_reg(1,1,1)
-    print*,'debug: etax   ',etax_reg(1,1,1),etay_reg(1,1,1),etaz_reg(1,1,1)
-    print*,'debug: gammax ',gammax_reg(1,1,1),gammay_reg(1,1,1),gammaz_reg(1,1,1)
+    !print*,'debug: xix    ',xix_reg(1,1,1),xiy_reg(1,1,1),xiz_reg(1,1,1)
+    !print*,'debug: etax   ',etax_reg(1,1,1),etay_reg(1,1,1),etaz_reg(1,1,1)
+    !print*,'debug: gammax ',gammax_reg(1,1,1),gammay_reg(1,1,1),gammaz_reg(1,1,1)
 
     ! check
-    if (abs(xix_reg(1,1,1) - etay_reg(1,1,1)) > 1.e-20) then
+    if (abs(xix_reg(1,1,1) - etay_reg(1,1,1)) > threshold_zero) then
       print *,'Error: regular element should have xix == etay ',xix_reg(1,1,1),etay_reg(1,1,1)
       stop 'Invalid regular element xix/etay'
     endif
-    if (abs(xix_reg(1,1,1) - gammaz_reg(1,1,1)) > 1.e-20) then
+    if (abs(xix_reg(1,1,1) - gammaz_reg(1,1,1)) > threshold_zero) then
       print *,'Error: regular element should have xix == gammaz ',xix_reg(1,1,1),gammaz_reg(1,1,1)
       stop 'Invalid regular element xix/gammaz'
     endif
@@ -992,7 +993,7 @@
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '    creating ibool indexing     : x min/max = ',sngl(x_min),'/',sngl(x_max)
+    write(IMAIN,*) '     creating ibool indexing     : x min/max = ',sngl(x_min),'/',sngl(x_max)
     call flush_IMAIN()
   endif
 
@@ -1001,7 +1002,7 @@
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '    creating indirect addressing: nglob = ',nglob
+    write(IMAIN,*) '     creating indirect addressing: nglob = ',nglob
     call flush_IMAIN()
   endif
 
@@ -1017,7 +1018,7 @@
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '    creating unique point locations'
+    write(IMAIN,*) '     creating unique point locations'
     call flush_IMAIN()
   endif
 

@@ -205,21 +205,27 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1319')
   if (ier /= 0) stop 'Error allocation of material_properties'
   material_properties(:,:) = 0.d0
+
   do imat = 1,NMATERIALS
-    call read_material_parameters(IIN,mat_id,rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,domain_id,ier)
+    call read_material_parameters(IIN,material_properties,imat,NMATERIALS,ier)
     if (ier /= 0) then
       print *,'Error reading material ',imat,' out of ',NMATERIALS
       stop 'Error reading materials in Mesh_Par_file'
     endif
-    ! stores material
-    material_properties(imat,1) = rho
-    material_properties(imat,2) = vp
-    material_properties(imat,3) = vs
-    material_properties(imat,4) = Q_Kappa
-    material_properties(imat,5) = Q_mu
-    material_properties(imat,6) = anisotropy_flag
-    material_properties(imat,7) = domain_id
-    material_properties(imat,8) = mat_id
+    ! user output
+    domain_id = material_properties(imat,7)
+    mat_id = material_properties(imat,8)
+    if (myrank == 0) then
+      select case(domain_id)
+      case(IDOMAIN_ACOUSTIC)
+        write(IMAIN,*) '    material ',mat_id,' acoustic'
+      case(IDOMAIN_ELASTIC)
+        write(IMAIN,*) '    material ',mat_id,' elastic'
+      case (IDOMAIN_POROELASTIC)
+        write(IMAIN,*) '    material ',mat_id,' poroelastic'
+      end select
+      call flush_IMAIN()
+    endif
   enddo
 
   ! user output
@@ -256,6 +262,15 @@
     subregions(ireg,5) = iz_beg_region
     subregions(ireg,6) = iz_end_region
     subregions(ireg,7) = imaterial_number
+
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) '    region ',ireg,' with material ',imaterial_number
+      write(IMAIN,*) '      nex_xi  begin/end = ',ix_beg_region,ix_end_region
+      write(IMAIN,*) '      nex_eta begin/end = ',iy_beg_region,iy_end_region
+      write(IMAIN,*) '      nz      begin/end = ',iz_beg_region,iz_end_region
+      call flush_IMAIN()
+    endif
   enddo
 
   ! close parameter file
@@ -263,7 +278,8 @@
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '  done successfully'
+    write(IMAIN,*)
+    write(IMAIN,*) '  reading Mesh_Par_file done successfully'
     write(IMAIN,*)
     write(IMAIN,*) '  checking mesh setup...'
     call flush_IMAIN()
@@ -319,10 +335,8 @@
 
     ! checks domain id (1 = acoustic / 2 = elastic / 3 = poroelastic)
     select case (domain_id)
-    case (IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC)
+    case (IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC)
       continue
-    case (IDOMAIN_POROELASTIC)
-      stop 'Error materials for poro-elastic domains not implemented yet'
     case default
       stop 'Error invalid domain ID in materials'
     end select

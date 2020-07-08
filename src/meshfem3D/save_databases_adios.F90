@@ -188,15 +188,23 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   enddo
 
   ! defined material properties
-  ! pad dummy zeros to fill up 17 entries (poroelastic medium not allowed)
+  ! pad dummy zeros to fill up 17 entries
   call safe_alloc(matpropl,17, ndef,"matpropl")
   matpropl(:,:) = 0.d0
   icount = 0
   do i = 1,NMATERIALS
+    domain_id = material_properties(i,7)
     mat_id = material_properties(i,8)
     if (mat_id > 0) then
       icount = icount + 1
-      matpropl(1:7, icount) = material_properties(i,1:7)
+      matpropl(:,icount) = 0.d0
+      select case(domain_id)
+      case (IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC)
+        matpropl(1:7,icount) = material_properties(i,1:7)
+      case (IDOMAIN_POROELASTIC)
+        matpropl(1:7,icount) = material_properties(i,1:7)
+        matpropl(8:17,icount) = material_properties(i,9:18)
+      end select
     endif
   enddo
   if (icount /= ndef) stop 'Error icount not equal to ndef'
@@ -229,6 +237,8 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
         undef_matpropl(is:ie) = 'acoustic'
       case (IDOMAIN_ELASTIC)
         undef_matpropl(is:ie) = 'elastic'
+      case (IDOMAIN_POROELASTIC)
+        undef_matpropl(is:ie) = 'poroelastic'
       end select
       ! default name
       is = (icount-1)*6*MAX_STRING_LEN + (3*MAX_STRING_LEN + 1)
