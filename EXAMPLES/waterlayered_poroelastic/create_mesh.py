@@ -126,7 +126,7 @@ cubit.cmd('block 1 attribute count 4')
 cubit.cmd('block 1 attribute index 1 1  ')       # material 1
 cubit.cmd('block 1 attribute index 2 1500 ')     # vp
 cubit.cmd('block 1 attribute index 3 0 ')        # vs
-cubit.cmd('block 1 attribute index 4 1020 ')     # rho 
+cubit.cmd('block 1 attribute index 4 1020 ')     # rho
 
 cubit.cmd('block 2 name "poroelastic 1" ')       # poroelastic material region (will be fully defined in nummaterial_poroelastic_file)
 cubit.cmd('block 2 attribute count 7')
