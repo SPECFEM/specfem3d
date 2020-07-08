@@ -26,7 +26,7 @@
 !=====================================================================
 
 ! number of material properties + element ID in input file Mesh_Par_file
-  integer, parameter :: NUMBER_OF_MATERIAL_PROPERTIES = 8
+  integer, parameter :: NUMBER_OF_MATERIAL_PROPERTIES = 18
 
 !------------------------------------------------------
 !----------- do not modify anything below -------------

@@ -62,7 +62,7 @@ end module create_meshfem_par
 
 ! create the different regions of the mesh
 
-  use constants, only: IMAIN,myrank
+  use constants, only: IMAIN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,myrank
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
   use shared_parameters, only: NGNOD,NGNOD2D
 
@@ -90,9 +90,9 @@ end module create_meshfem_par
 
   ! number of elements on the boundaries
   integer :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
-
   ! material properties
   double precision :: VP_MAX
+  integer :: domain_id,imat
 
   ! **************
 
@@ -151,7 +151,13 @@ end module create_meshfem_par
                         NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
 
   ! checks mesh resolution
-  VP_MAX = maxval(material_properties(:,2))
+  VP_MAX = 0.0
+  do imat = 1,NMATERIALS
+    domain_id = material_properties(imat,7)
+    if (domain_id == IDOMAIN_ACOUSTIC .or. domain_id == IDOMAIN_ELASTIC) then
+      VP_MAX = max(VP_MAX,material_properties(imat,2))
+    endif
+  enddo
   call check_mesh_quality(VP_MAX,nglob,nspec, &
                           nodes_coords(:,1),nodes_coords(:,2),nodes_coords(:,3),ibool, &
                           CREATE_VTK_FILES,prname)
@@ -397,7 +403,11 @@ end module create_meshfem_par
         enddo
       enddo
     enddo
-
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) '    has material ',imaterial_number
+      call flush_IMAIN()
+    endif
   enddo
 
   if (USE_REGULAR_MESH) then
@@ -433,9 +443,9 @@ end module create_meshfem_par
     ! user output
     if (myrank == 0) then
       if (modulo(isubregion,2) == 1) then
-        write(IMAIN,*) '  creating mesh region ',isubregion
+        write(IMAIN,*) '  creating mesh region ',isubregion,' (regular mesh)'
       else
-        write(IMAIN,*) '  creating mesh region ',isubregion,' with doubling layer'
+        write(IMAIN,*) '  creating mesh region ',isubregion,' (with doubling layer)'
       endif
       call flush_IMAIN()
     endif

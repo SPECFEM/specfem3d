@@ -35,7 +35,8 @@
                             nspec_CPML,CPML_to_spec,CPML_regions,is_CPML, &
                             xstore, ystore, zstore)
 
-  use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,SAVE_MESH_AS_CUBIT,NDIM
+  use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
+    SAVE_MESH_AS_CUBIT,NDIM
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NUMBER_OF_MATERIAL_PROPERTIES
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,NGNOD,NGNOD2D
@@ -166,12 +167,33 @@
   ! writes out defined materials
   do i = 1,NMATERIALS
     ! material properties format: #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
+    domain_id = material_properties(i,7)
     mat_id = material_properties(i,8)
     if (mat_id > 0) then
-      ! pad dummy zeros to fill up 17 entries (poroelastic medium not allowed)
+      ! pad dummy zeros to fill up 17 entries
       matpropl(:) = 0.d0
-      ! material properties format: #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id
-      matpropl(1:7) = material_properties(i,1:7)
+      select case(domain_id)
+      case (IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC)
+        ! material properties format:
+        !#(1)rho  #(2)vp #(3)vs #(4)Q_Kappa #(5)Q_mu #(6)anisotropy_flag #(7)domain_id #(8)mat_id
+        !
+        ! output format for xgenerate_database (same as for cubit/trelis inputs):
+        !   rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,material_domain_id
+        !
+        ! skipping mat_id, not needed
+        matpropl(1:7) = material_properties(i,1:7)
+      case (IDOMAIN_POROELASTIC)
+        ! material properties format:
+        !#(1)rho_s #(2)rho_f #(3)phi #(4)tort #(5)eta #(6)0 #(7)domain_id #(8)mat_id
+        !            .. #(9)kxx #(10)kxy #(11)kxz #(12)kyy #(13)kyz #(14)kzz #(15)kappa_s #(16)kappa_f #(17)kappa_fr #(18)mu_fr
+        !
+        ! output format for xgenerate_database (same as for cubit/trelis inputs):
+        !   rhos,rhof,phi,tort,eta,0,material_domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,mufr
+        matpropl(1:7) = material_properties(i,1:7)
+        ! skipping mat_id, not needed
+        matpropl(8:17) = material_properties(i,9:18)
+      end select
+      ! writes to database
       write(IIN_database) matpropl(:)
     endif
   enddo
@@ -194,6 +216,8 @@
         undef_mat_prop(3,1) = 'acoustic'
       case (IDOMAIN_ELASTIC)
         undef_mat_prop(3,1) = 'elastic'
+      case (IDOMAIN_POROELASTIC)
+        undef_mat_prop(3,1) = 'poroelastic'
       end select
       ! default name
       undef_mat_prop(4,1) = 'tomography_model.xyz'
