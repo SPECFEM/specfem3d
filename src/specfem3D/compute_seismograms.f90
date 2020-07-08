@@ -48,7 +48,6 @@
     b_displ,b_veloc,b_accel
   use specfem_par_poroelastic, only: ispec_is_poroelastic,displs_poroelastic,velocs_poroelastic,accels_poroelastic
 
-
   implicit none
 
   ! local parameters

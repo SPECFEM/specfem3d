@@ -36,12 +36,12 @@
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB),intent(in) :: scalar_field
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(out) :: vector_field_element
 
-    ! no need to test the two others because NGLLX == NGLLY = NGLLZ in unstructured meshes
-    if (NGLLX == 5 .or. NGLLX == 6 .or. NGLLX == 7) then
-      call compute_gradient_in_acoustic_fast_Deville(ispec,scalar_field,vector_field_element)
-    else
-      call compute_gradient_in_acoustic_generic_slow(ispec,scalar_field,vector_field_element)
-    endif
+  ! no need to test the two others because NGLLX == NGLLY = NGLLZ in unstructured meshes
+  if (NGLLX == 5 .or. NGLLX == 6 .or. NGLLX == 7) then
+    call compute_gradient_in_acoustic_fast_Deville(ispec,scalar_field,vector_field_element)
+  else
+    call compute_gradient_in_acoustic_generic_slow(ispec,scalar_field,vector_field_element)
+  endif
 
   end subroutine compute_gradient_in_acoustic
 
@@ -62,7 +62,7 @@
 ! returns: (1/rho) times gradient vector field (vector_field_element) in specified element
 !             or in gravity case, just gradient vector field
 
-  use constants
+  use constants, only: NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
   use specfem_par, only: NGLOB_AB,xix,xiy,xiz,etax,etay,etaz, &
                          gammax,gammay,gammaz,xix_regular,irregular_element_number, &
                          ibool,rhostore,hprime_xx,hprime_yy,hprime_zz ! ,GRAVITY
@@ -91,19 +91,19 @@
         do i = 1,NGLLX
 
           ! derivative along x
-          temp1l = ZERO
+          temp1l = 0._CUSTOM_REAL
           do l = 1,NGLLX
             temp1l = temp1l + scalar_field(ibool(l,j,k,ispec))*hprime_xx(i,l)
           enddo
 
           ! derivative along y
-          temp2l = ZERO
+          temp2l = 0._CUSTOM_REAL
           do l = 1,NGLLZ
             temp2l = temp2l + scalar_field(ibool(i,l,k,ispec))*hprime_yy(j,l)
           enddo
 
           ! derivative along z
-          temp3l = ZERO
+          temp3l = 0._CUSTOM_REAL
           do l = 1,NGLLZ
             temp3l = temp3l + scalar_field(ibool(i,j,l,ispec))*hprime_zz(k,l)
           enddo
@@ -143,19 +143,19 @@
         do i = 1,NGLLX
 
           ! derivative along x
-          temp1l = ZERO
+          temp1l = 0._CUSTOM_REAL
           do l = 1,NGLLX
             temp1l = temp1l + scalar_field(ibool(l,j,k,ispec))*hprime_xx(i,l)
           enddo
 
           ! derivative along y
-          temp2l = ZERO
+          temp2l = 0._CUSTOM_REAL
           do l = 1,NGLLZ
             temp2l = temp2l + scalar_field(ibool(i,l,k,ispec))*hprime_yy(j,l)
           enddo
 
           ! derivative along z
-          temp3l = ZERO
+          temp3l = 0._CUSTOM_REAL
           do l = 1,NGLLZ
             temp3l = temp3l + scalar_field(ibool(i,j,l,ispec))*hprime_zz(k,l)
           enddo
@@ -199,7 +199,7 @@
 ! returns: (1/rho) times gradient vector field (vector_field_element) in specified element
 !             or in gravity case, just gradient vector field
 
-  use constants
+  use constants, only: NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,m1,m2
   use specfem_par, only: NGLOB_AB,xix,xiy,xiz,etax,etay,etaz, &
                          gammax,gammay,gammaz,xix_regular,irregular_element_number, &
                          ibool,rhostore,hprime_xx,hprime_xxT ! ,GRAVITY
@@ -223,27 +223,27 @@
   real(kind=CUSTOM_REAL) :: rho_invl
   integer :: i,j,k,ispec_irreg
 
-! double loop over GLL points to compute and store gradients
+  ! double loop over GLL points to compute and store gradients
   vector_field_element(:,:,:,:) = 0._CUSTOM_REAL
 
   ! gets value of the field inside the element and make it local
-    do k = 1,NGLLZ
-      do j = 1,NGLLY
-        do i = 1,NGLLX
-          field_local(i,j,k) = scalar_field(ibool(i,j,k,ispec))
-        enddo
+  do k = 1,NGLLZ
+    do j = 1,NGLLY
+      do i = 1,NGLLX
+        field_local(i,j,k) = scalar_field(ibool(i,j,k,ispec))
       enddo
     enddo
+  enddo
 
-    ! derivatives along x, y and z
+  ! derivatives along x, y and z
 
-    ! subroutines adapted from Deville, Fischer and Mund, High-order methods
-    ! for incompressible fluid flow, Cambridge University Press (2002),
-    ! pages 386 and 389 and Figure 8.3.1
+  ! subroutines adapted from Deville, Fischer and Mund, High-order methods
+  ! for incompressible fluid flow, Cambridge University Press (2002),
+  ! pages 386 and 389 and Figure 8.3.1
 
-    ! computes 1. matrix multiplication for temp1
-    ! computes 2. matrix multiplication for temp2
-    ! computes 3. matrix multiplication for temp3
+  ! computes 1. matrix multiplication for temp1
+  ! computes 2. matrix multiplication for temp2
+  ! computes 3. matrix multiplication for temp3
   if (NGLLX == 5) then
     call mxm5_single(hprime_xx,m1,field_local,temp1,m2)
     call mxm5_3dmat_single(field_local,m1,hprime_xxT,m1,temp2,NGLLX)
