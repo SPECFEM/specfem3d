@@ -347,7 +347,7 @@
 
   ! checks domain
   if (domain_id /= IDOMAIN_ACOUSTIC .and. domain_id /= IDOMAIN_ELASTIC .and. domain_id /= IDOMAIN_POROELASTIC) then
-    print *,'Error: material has invalid domain_id, must be either 1==acoustic,2==elastic or 3==poroelastic'
+    print *,'Error: material has invalid domain_id, must be either 1 == acoustic,2 == elastic or 3 == poroelastic'
     print *,'  line : ',trim(string_read)
     stop 'Invalid domain_id in material parameters'
   endif
