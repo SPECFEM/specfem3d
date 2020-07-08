@@ -129,6 +129,9 @@ env:
     # gmsh example w/ hex27
     - TESTID=34 TESTCOV=0 TESTDIR=27 TESTFLAGS="--without-mpi" CUDA=false
 
+    # gmsh example w/ hex27
+    - TESTID=35 TESTCOV=0 TESTDIR=28 TESTFLAGS="--enable-vectorization --with-mpi" CUDA=false
+
 before_install:
   # informations on git
   - |

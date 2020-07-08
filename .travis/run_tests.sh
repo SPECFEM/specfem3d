@@ -36,6 +36,7 @@ case "$TESTDIR" in
   25) dir=EXAMPLES/meshfem3D_examples/regular_element_mesh/ ;;
   26) dir=EXAMPLES/small_adjoint_multiple_sources/ ;;
   27) dir=EXAMPLES/Gmsh_simple_box_hex27/ ;;
+  28) dir=EXAMPLES/waterlayered_poroelastic/ ;;
   *) dir=EXAMPLES/homogeneous_halfspace/ ;;
 esac
 
@@ -213,6 +214,10 @@ else
   # Gmsh example w/ hex27
   if [ "$TESTID" == "34" ]; then
     sed -i "s:^NSTEP .*:NSTEP    = 2000:" DATA/Par_file
+  fi
+  # waterlayered poroelastic
+  if [ "$TESTID" == "35" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
   fi
 
   # coverage run
@@ -565,6 +570,18 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.small_adjoint\\r'
+
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.waterlayered_poroelastic\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
+  ##
+  ## testing regular elements example
+  ##
+  cd EXAMPLES/waterlayered_poroelastic/
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  ./run_this_example.sh
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.waterlayered_poroelastic\\r'
 
 
 ##
