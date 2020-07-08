@@ -317,9 +317,9 @@
       else
         ! debug
         !print *,'debug: regular element should have xix == etay == gammaz ',xix_reg(1,1,1),etay_reg(1,1,1),gammaz_reg(1,1,1)
-        !print*,'  xix    ',xix_reg(1,1,1),xiy_reg(1,1,1),xiz_reg(1,1,1)
-        !print*,'  etax   ',etax_reg(1,1,1),etay_reg(1,1,1),etaz_reg(1,1,1)
-        !print*,'  gammax ',gammax_reg(1,1,1),gammay_reg(1,1,1),gammaz_reg(1,1,1)
+        !print *,'  xix    ',xix_reg(1,1,1),xiy_reg(1,1,1),xiz_reg(1,1,1)
+        !print *,'  etax   ',etax_reg(1,1,1),etay_reg(1,1,1),etaz_reg(1,1,1)
+        !print *,'  gammax ',gammax_reg(1,1,1),gammay_reg(1,1,1),gammaz_reg(1,1,1)
         ! non-regular (might be due to difference in orientation)
         is_regular_element = .false.
       endif

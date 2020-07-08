@@ -891,9 +891,9 @@
 
     ! only xix == etay == gammaz are non-zero for regular elements
     ! debug
-    !print*,'debug: xix    ',xix_reg(1,1,1),xiy_reg(1,1,1),xiz_reg(1,1,1)
-    !print*,'debug: etax   ',etax_reg(1,1,1),etay_reg(1,1,1),etaz_reg(1,1,1)
-    !print*,'debug: gammax ',gammax_reg(1,1,1),gammay_reg(1,1,1),gammaz_reg(1,1,1)
+    !print *,'debug: xix    ',xix_reg(1,1,1),xiy_reg(1,1,1),xiz_reg(1,1,1)
+    !print *,'debug: etax   ',etax_reg(1,1,1),etay_reg(1,1,1),etaz_reg(1,1,1)
+    !print *,'debug: gammax ',gammax_reg(1,1,1),gammay_reg(1,1,1),gammaz_reg(1,1,1)
 
     ! check
     if (abs(xix_reg(1,1,1) - etay_reg(1,1,1)) > threshold_zero) then
