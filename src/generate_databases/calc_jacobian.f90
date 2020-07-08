@@ -184,8 +184,11 @@
   subroutine check_element_regularity(xelm,yelm,zelm,any_regular_elem,cube_edge_size_squared, &
                                       nspec_irregular,ispec,nspec,irregular_element_number,ANY_FAULT_IN_THIS_PROC)
 
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,myrank
   use generate_databases_par, only: NGNOD,USE_MESH_COLORING_GPU
+  use create_regions_mesh_ext_par, only: dershape3D
 
+  implicit none
   real, dimension(NGNOD),intent(in) :: xelm,yelm,zelm
 
   logical, intent(inout) :: any_regular_elem
@@ -200,10 +203,18 @@
   double precision :: dist1_sq,dist2_sq,dist3_sq
   double precision :: threshold
   double precision,parameter :: threshold_percentage = 1.e-5
+  double precision,parameter :: threshold_zero = 1.e-25
+
   logical :: eqx1,eqx2,eqx3,eqx4,eqx5,eqx6
   logical :: eqy1,eqy2,eqy3,eqy4,eqy5,eqy6
   logical :: eqz1,eqz2,eqz3,eqz4,eqz5,eqz6
+  logical :: is_regular_element
   logical, external :: is_equal_number
+
+  ! jacobian
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: xix_reg,xiy_reg,xiz_reg,etax_reg,etay_reg,etaz_reg, &
+                                                          gammax_reg,gammay_reg,gammaz_reg,jacobian_reg
+  double precision, dimension(NGNOD) :: xelm_dble,yelm_dble,zelm_dble
 
   ! by default, we assume to have a perfect regular shape (cube)
 
@@ -278,7 +289,43 @@
 
     threshold = threshold_percentage * dist1_sq
 
+    is_regular_element = .false.
+
+    ! checks derivatives of shape function
     if (abs(dist2_sq - dist1_sq) < threshold .and. abs(dist3_sq - dist1_sq) < threshold) then
+      ! regular shape
+      ! checks shape functions and orientation
+      xelm_dble(:) = dble(xelm(:))
+      yelm_dble(:) = dble(yelm(:))
+      zelm_dble(:) = dble(zelm(:))
+
+      ! jacobian and derivatives of mapping
+      call calc_jacobian(myrank,xix_reg,xiy_reg,xiz_reg, &
+                         etax_reg,etay_reg,etaz_reg, &
+                         gammax_reg,gammay_reg,gammaz_reg, &
+                         jacobian_reg,xelm_dble,yelm_dble,zelm_dble,dershape3D)
+
+      ! only xix == etay == gammaz are non-zero for regular elements
+      ! check
+      if ((abs(xix_reg(1,1,1) - etay_reg(1,1,1)) < threshold_zero) .and. &
+          (abs(xix_reg(1,1,1) - gammaz_reg(1,1,1)) < threshold_zero) .and. &
+           abs(xiy_reg(1,1,1)) < threshold_zero .and. abs(xiz_reg(1,1,1)) < threshold_zero .and. &
+           abs(etax_reg(1,1,1)) < threshold_zero .and. abs(etaz_reg(1,1,1)) < threshold_zero .and. &
+           abs(gammax_reg(1,1,1)) < threshold_zero .and. abs(gammay_reg(1,1,1)) < threshold_zero) then
+        ! regular shape
+        is_regular_element = .true.
+      else
+        ! debug
+        !print *,'debug: regular element should have xix == etay == gammaz ',xix_reg(1,1,1),etay_reg(1,1,1),gammaz_reg(1,1,1)
+        !print*,'  xix    ',xix_reg(1,1,1),xiy_reg(1,1,1),xiz_reg(1,1,1)
+        !print*,'  etax   ',etax_reg(1,1,1),etay_reg(1,1,1),etaz_reg(1,1,1)
+        !print*,'  gammax ',gammax_reg(1,1,1),gammay_reg(1,1,1),gammaz_reg(1,1,1)
+        ! non-regular (might be due to difference in orientation)
+        is_regular_element = .false.
+      endif
+    endif
+
+    if (is_regular_element) then
       ! regular shape
       irregular_element_number(ispec) = 0
       ! test if first cube found in mesh
