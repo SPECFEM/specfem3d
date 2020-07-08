@@ -1,0 +1,13 @@
+PDE  2020 01 01 00 00 00.00  1600 0 -1800 3.2 3.2 explosive
+event name:       water_explosive
+time shift:        0.0000
+half duration:     4.0
+latorUTM:       1000.0
+longorUTM:      2000.0
+depth:         -1900.0
+Mrr:       1.000000e+21
+Mtt:       1.000000e+21
+Mpp:       1.000000e+21
+Mrt:       0.000000
+Mrp:       0.000000
+Mtp:       0.000000
