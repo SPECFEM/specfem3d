@@ -70,7 +70,7 @@
   ! the variables read are declared and stored in structure
   if (myrank == 0) call read_salton_sea_model()
 
-  ! broadcast the information read on the master to the nodes
+  ! broadcast the information read on the main to the nodes
   call bcast_all_r(vp_array, size(vp_array))
 
   end subroutine model_salton_trough_broadcast

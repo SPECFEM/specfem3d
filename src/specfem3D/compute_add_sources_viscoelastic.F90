@@ -43,7 +43,7 @@
 
   use specfem_par_elastic, only: accel,ispec_is_elastic
 
-  use specfem_par_noise, only: noise_sourcearray,irec_master_noise, &
+  use specfem_par_noise, only: noise_sourcearray,irec_main_noise, &
     normal_x_noise,normal_y_noise,normal_z_noise,mask_noise,noise_surface_movie
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
@@ -241,10 +241,10 @@
       ! hence, instead of a moment tensor 'sourcearrays', a 'noise_sourcearray' for a point force is needed.
       ! furthermore, the CMTSOLUTION needs to be zero, i.e., no earthquakes.
       ! now this must be manually set in DATA/CMTSOLUTION, by USERS.
-      call add_source_master_rec_noise(nrec,NSTEP,accel,noise_sourcearray, &
-                                       ibool,islice_selected_rec,ispec_selected_rec, &
-                                       it,irec_master_noise, &
-                                       NSPEC_AB,NGLOB_AB)
+      call add_source_main_rec_noise(nrec,NSTEP,accel,noise_sourcearray, &
+                                     ibool,islice_selected_rec,ispec_selected_rec, &
+                                     it,irec_main_noise, &
+                                     NSPEC_AB,NGLOB_AB)
     else if (NOISE_TOMOGRAPHY == 2) then
       ! second step of noise tomography, i.e., read the surface movie saved at every timestep
       ! use the movie to drive the ensemble forward wavefield
@@ -455,7 +455,7 @@
                         source_adjoint,nadj_rec_local,number_adjsources_global, &
                         INVERSE_FWI_FULL_PROBLEM,GPU_MODE
 
-  use specfem_par_noise, only: irec_master_noise,noise_surface_movie
+  use specfem_par_noise, only: irec_main_noise,noise_surface_movie
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
 
@@ -646,7 +646,7 @@
       ! hence, instead of a moment tensor 'sourcearrays', a 'noise_sourcearray' for a point force is needed.
       ! furthermore, the CMTSOLUTION needs to be zero, i.e., no earthquakes.
       ! now this must be manually set in DATA/CMTSOLUTION, by USERS.
-      call add_source_master_rec_noise_cu(Mesh_pointer,it,irec_master_noise,islice_selected_rec)
+      call add_source_main_rec_noise_cu(Mesh_pointer,it,irec_main_noise,islice_selected_rec)
     else if (NOISE_TOMOGRAPHY == 2) then
       ! second step of noise tomography, i.e., read the surface movie saved at every timestep
       ! use the movie to drive the ensemble forward wavefield

@@ -184,7 +184,7 @@
 !  use iso_Fortran_env
 
   use specfem_par, only: seismo_offset,DT,NSTEP,nrec_local, &
-    OUTPUT_FILES,WRITE_SEISMOGRAMS_BY_MASTER
+    OUTPUT_FILES,WRITE_SEISMOGRAMS_BY_MAIN
 
   implicit none
 
@@ -554,12 +554,12 @@
   call synchronize_all()
 
   ! Now write waveforms
-  if (WRITE_SEISMOGRAMS_BY_MASTER) then
+  if (WRITE_SEISMOGRAMS_BY_MAIN) then
 
-    ! only master writes
+    ! only main writes
     if (myrank == 0) then
       ! user output
-      write(IMAIN,*) 'writing waveforms by master...'
+      write(IMAIN,*) 'writing waveforms by main...'
       write(IMAIN,*)
       call flush_IMAIN()
 
@@ -580,14 +580,14 @@
 
         current_proc = k - 1
         sender=current_proc
-        receiver=0 ! the master proc does all the writing
+        receiver=0 ! the main proc does all the writing
 
       do j = 1, num_stations_gather(k) ! loop over number of stations on that process
 
         l = (j-1)*(NDIM) ! Index of current receiver in asdf_container%records
 
-        ! First get the information to the master proc
-        if (current_proc == 0) then ! current_proc is master proc
+        ! First get the information to the main proc
+        if (current_proc == 0) then ! current_proc is main proc
 
           !one_seismogram(:,:) = seismograms(:,j,:)
           if (myrank == 0) then
@@ -597,7 +597,7 @@
             enddo
           endif
 
-       else ! current_proc is not master proc
+       else ! current_proc is not main proc
 
           if (myrank == current_proc) then
 
@@ -740,7 +740,7 @@
     call ASDF_finalize_hdf5_f(ier)
     if (ier /= 0) call exit_MPI(myrank,'Error ASDF parallel finalize hdf5 failed')
 
-  endif ! WRITE_SEISMOGRAMS_BY_MASTER
+  endif ! WRITE_SEISMOGRAMS_BY_MAIN
 
   !--------------------------------------------------------
   ! Clean up

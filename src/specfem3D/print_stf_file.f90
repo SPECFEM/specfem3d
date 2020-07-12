@@ -133,18 +133,18 @@
       enddo
     endif
 
-    ! master collects stf (if it does not already have it, i.e. if this source is not on the master)
+    ! main collects stf (if it does not already have it, i.e. if this source is not on the main)
     if (islice_selected_source(isource) /= 0) then
       if (myrank == 0) then
-        ! master collects
+        ! main collects
         call recvv_cr(source_time_function,NSTEP,islice_selected_source(isource),0)
       else if (myrank == islice_selected_source(isource)) then
-        ! slave sends to master
+        ! secondary sends to main
         call sendv_cr(source_time_function,NSTEP,0,0)
       endif
     endif
 
-    ! master prints out to file
+    ! main prints out to file
     if (myrank == 0) then
       ! opens source time function file
       if (NSOURCES == 1) then

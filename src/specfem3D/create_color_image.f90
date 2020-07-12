@@ -475,7 +475,7 @@
 
   ! MPI assembling array image_color_vp_display on process zero for color output
   if (NPROC > 1) then
-    ! master collects
+    ! main collects
     if (myrank == 0) then
       do iproc = 1, NPROC-1
         if (nb_pixel_per_proc(iproc) > 0) then
@@ -490,7 +490,7 @@
       enddo
     else
       if (nb_pixel_loc > 0) then
-        ! slave processes send
+        ! secondary processes send
         call sendv_cr(data_pixel_send,nb_pixel_loc,0,43)
       endif
     endif
@@ -574,13 +574,13 @@
       enddo
     else
       if (nb_pixel_loc > 0) then
-        ! slave processes send
+        ! secondary processes send
         call sendv_cr(data_pixel_send(1),nb_pixel_loc,0,43)
       endif
     endif
   endif
 
-  ! master process writes out file
+  ! main process writes out file
   if (myrank == 0) then
     ! writes output file
     call write_PNM_data(image_color_data,iglob_image_color, &

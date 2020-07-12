@@ -41,7 +41,7 @@
   integer :: ier
   logical :: some_parameters_missing_from_Par_file
 
-  ! read from a single processor (the master) and then use MPI to broadcast to others
+  ! read from a single processor (the main) and then use MPI to broadcast to others
   ! to avoid an I/O bottleneck in the case of very large runs
   if (myrank == 0) then
 
@@ -510,10 +510,10 @@
       write(*,*)
     endif
 
-    call read_value_logical(WRITE_SEISMOGRAMS_BY_MASTER, 'WRITE_SEISMOGRAMS_BY_MASTER', ier)
+    call read_value_logical(WRITE_SEISMOGRAMS_BY_MAIN, 'WRITE_SEISMOGRAMS_BY_MAIN', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
-      write(*,'(a)') 'WRITE_SEISMOGRAMS_BY_MASTER     = .false.'
+      write(*,'(a)') 'WRITE_SEISMOGRAMS_BY_MAIN     = .false.'
       write(*,*)
     endif
 
@@ -788,7 +788,7 @@
 
   endif ! of if (myrank == 0) then
 
-  ! read from a single processor (the master) and then use MPI to broadcast to others
+  ! read from a single processor (the main) and then use MPI to broadcast to others
   ! to avoid an I/O bottleneck in the case of very large runs
   if (BROADCAST_AFTER_READ) call broadcast_computed_parameters()
 
@@ -916,7 +916,7 @@
   subroutine read_compute_parameters()
 
 ! computes additional parameters
-! (only executed by master process)
+! (only executed by main process)
 
   use constants
   use shared_parameters
@@ -1099,7 +1099,7 @@
   subroutine get_number_of_sources(sources_filename)
 
 ! determines number of sources depending on number of lines in source file
-! (only executed by master process)
+! (only executed by main process)
 
   use constants, only: IIN,IN_DATA_FILES,HUGEVAL,TINYVAL, &
     NLINES_PER_CMTSOLUTION_SOURCE,NLINES_PER_FORCESOLUTION_SOURCE
@@ -1331,7 +1331,7 @@
   call bcast_all_singlel(USE_BINARY_FOR_SEISMOGRAMS)
   call bcast_all_singlel(SU_FORMAT)
   call bcast_all_singlel(ASDF_FORMAT)
-  call bcast_all_singlel(WRITE_SEISMOGRAMS_BY_MASTER)
+  call bcast_all_singlel(WRITE_SEISMOGRAMS_BY_MAIN)
   call bcast_all_singlel(SAVE_ALL_SEISMOS_IN_ONE_FILE)
   call bcast_all_singlel(USE_TRICK_FOR_BETTER_PRESSURE)
 

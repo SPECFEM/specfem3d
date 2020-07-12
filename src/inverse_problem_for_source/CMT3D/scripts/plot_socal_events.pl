@@ -2,7 +2,7 @@
 
 # this script plots given station and cmt files on
 # a southern california topography map.
-# Special thanks to Carl's master script and his effort
+# Special thanks to Carl's main script and his effort
 # of putting together the topo-bathymetry grid file for
 # this region
 

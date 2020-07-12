@@ -21,11 +21,11 @@ $edir = "$basedir/KERNELS_MODELS/event_kernels/kernel_${smodel}";
 $edir_smooth = "$basedir/KERNELS_MODELS/event_kernels_smooth/kernel_${smodel}";
 $dir_done = "/net/sierra/raid1/carltape/socal/socal_3D/RUNS/SMOOTH_EVENT_KERNELS/$smodel";
 
-$masterdir = "$basedir/smooth";
+$maindir = "$basedir/smooth";
 
 if(not -e $edir) {die("edir $edir does not exist");}
 if(not -e $edir_smooth) {`mkdir $edir_smooth`;}
-if(not -e $masterdir) {die("masterdir $masterdir does not exist");}
+if(not -e $maindir) {die("maindir $maindir does not exist");}
 if(not -e ${dir_done}) {die("dir_done $dir_done does not exist");}
 
 # read in the list of kernels that you want to sum
@@ -90,13 +90,13 @@ for ($i = $imin; $i <= $imax; $i++) {
      `ln -s $efiles_in $edir_out`;
 
      # copy run scripts and link executable file
-     `cp $masterdir/run.lsf $edir_copy`;
-     `cp $masterdir/go.bash $edir_copy`;
-     `ln -s $masterdir/topo $edir_copy`;
-     `ln -s $masterdir/smooth_sem_fun $edir_copy`;
-     `ln -s $masterdir/xcombine_vol_data $edir_copy`;
-     `ln -s $masterdir/slice_file $edir_copy`;
-     `ln -s $masterdir/combine.bash $edir_copy`;
+     `cp $maindir/run.lsf $edir_copy`;
+     `cp $maindir/go.bash $edir_copy`;
+     `ln -s $maindir/topo $edir_copy`;
+     `ln -s $maindir/smooth_sem_fun $edir_copy`;
+     `ln -s $maindir/xcombine_vol_data $edir_copy`;
+     `ln -s $maindir/slice_file $edir_copy`;
+     `ln -s $maindir/combine.bash $edir_copy`;
 
      # change the label for the run
      `sed "/smooth_model/s/smooth_model/${eid}_smooth/" ${edir_copy}/go.bash > ${edir_copy}/run.tmp`;

@@ -358,7 +358,7 @@ cavity: do i_cavity = 1,ncavity
 
       !print *,'cavity boundary:',myrank,'array:',cavity_boundary(:,:)
 
-      ! collects on master processes
+      ! collects on main processes
       if (myrank == 0) then
         allocate(tmp_all(4,num_cav_total*4),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 1329')

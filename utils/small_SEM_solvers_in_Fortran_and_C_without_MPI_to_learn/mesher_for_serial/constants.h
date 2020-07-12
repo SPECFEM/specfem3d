@@ -366,8 +366,8 @@
 ! in which case it is 4
   integer, parameter :: NUMCORNERS_SHARED = 4
 
-! number of slaves per corner
-  integer, parameter :: NUMSLAVES = 2
+! number of secondarys per corner
+  integer, parameter :: NUMSECONDARYS = 2
 
 ! number of layers in PREM
   integer, parameter :: NR = 640

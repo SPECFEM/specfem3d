@@ -239,7 +239,7 @@ end module user_noise_distribution
                                    noise_sourcearray,xigll,yigll,zigll, &
                                    ibool, &
                                    xstore,ystore,zstore, &
-                                   irec_master_noise,normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
+                                   irec_main_noise,normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
                                    nspec,nglob, &
                                    num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
                                    ispec_is_acoustic)
@@ -270,7 +270,7 @@ end module user_noise_distribution
   logical, dimension(nspec),intent(in) :: ispec_is_acoustic
 
   ! output parameters
-  integer,intent(inout) :: irec_master_noise
+  integer,intent(inout) :: irec_main_noise
   real(kind=CUSTOM_REAL),intent(inout) :: noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP)
   real(kind=CUSTOM_REAL), dimension(nmovie_points),intent(inout) :: normal_x_noise,normal_y_noise,normal_z_noise,mask_noise
 
@@ -279,52 +279,52 @@ end module user_noise_distribution
   real(kind=CUSTOM_REAL) :: normal_x_noise_out,normal_y_noise_out,normal_z_noise_out,mask_noise_out
   character(len=MAX_STRING_LEN) :: filename
 
-  ! read master receiver ID -- the ID in "STATIONS"
-  filename = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/irec_master_noise'
+  ! read main receiver ID -- the ID in "STATIONS"
+  filename = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/irec_main_noise'
   open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ier)
   if (ier /= 0) &
-    call exit_MPI(myrank, 'file '//trim(filename)//' does NOT exist! This file contains the ID of the master receiver')
+    call exit_MPI(myrank, 'file '//trim(filename)//' does NOT exist! This file contains the ID of the main receiver')
 
-  read(IIN_NOISE,*,iostat=ier) irec_master_noise
-  if (ier /= 0) call exit_MPI(myrank,'error reading file irec_master_noise')
+  read(IIN_NOISE,*,iostat=ier) irec_main_noise
+  if (ier /= 0) call exit_MPI(myrank,'error reading file irec_main_noise')
 
   close(IIN_NOISE)
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '  master station: ID = ',irec_master_noise
+    write(IMAIN,*) '  main station: ID = ',irec_main_noise
     call flush_IMAIN()
   endif
 
   ! checks value
-  if (irec_master_noise <= 0 .or. irec_master_noise > nrec) then
-    print *,'Error: irec_master_noise value:',irec_master_noise,'must be positive and less than ',nrec
-    call exit_MPI(myrank,'error irec_master_noise value')
+  if (irec_main_noise <= 0 .or. irec_main_noise > nrec) then
+    print *,'Error: irec_main_noise value:',irec_main_noise,'must be positive and less than ',nrec
+    call exit_MPI(myrank,'error irec_main_noise value')
   endif
 
-  ! writes out master as file info
+  ! writes out main as file info
   if (myrank == 0) then
-    open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES)//'/irec_master_noise', &
+    open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES)//'/irec_main_noise', &
             status='unknown',action='write',iostat=ier)
-    if (ier /= 0) call exit_MPI(myrank,'error opening file '//trim(OUTPUT_FILES)//'/irec_master_noise')
-    write(IOUT_NOISE,*) 'The master receiver is: (RECEIVER ID)', irec_master_noise
+    if (ier /= 0) call exit_MPI(myrank,'error opening file '//trim(OUTPUT_FILES)//'/irec_main_noise')
+    write(IOUT_NOISE,*) 'The main receiver is: (RECEIVER ID)', irec_main_noise
     close(IOUT_NOISE)
   endif
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '  master station: xi/eta/gamma = ', &
-      sngl(xi_receiver(irec_master_noise)),sngl(eta_receiver(irec_master_noise)),sngl(gamma_receiver(irec_master_noise))
-    write(IMAIN,*) '  master station: in slice ',islice_selected_rec(irec_master_noise)
+    write(IMAIN,*) '  main station: xi/eta/gamma = ', &
+      sngl(xi_receiver(irec_main_noise)),sngl(eta_receiver(irec_main_noise)),sngl(gamma_receiver(irec_main_noise))
+    write(IMAIN,*) '  main station: in slice ',islice_selected_rec(irec_main_noise)
     call flush_IMAIN()
   endif
 
   ! compute source arrays for "ensemble forward source", which is source of "ensemble forward wavefield"
-  if (myrank == islice_selected_rec(irec_master_noise) .or. myrank == 0) then ! myrank == 0 is used for output only
-    call compute_arrays_source_noise(xi_receiver(irec_master_noise), &
-                                     eta_receiver(irec_master_noise), &
-                                     gamma_receiver(irec_master_noise), &
-                                     nu_rec(:,:,irec_master_noise),noise_sourcearray, &
+  if (myrank == islice_selected_rec(irec_main_noise) .or. myrank == 0) then ! myrank == 0 is used for output only
+    call compute_arrays_source_noise(xi_receiver(irec_main_noise), &
+                                     eta_receiver(irec_main_noise), &
+                                     gamma_receiver(irec_main_noise), &
+                                     nu_rec(:,:,irec_main_noise),noise_sourcearray, &
                                      xigll,yigll,zigll,NSTEP)
   endif
 
@@ -491,15 +491,15 @@ end module user_noise_distribution
   double precision, dimension(NGLLX) :: xigll
   double precision, dimension(NGLLY) :: yigll
   double precision, dimension(NGLLZ) :: zigll
-  double precision, dimension(NDIM,NDIM) :: nu_single  ! rotation matrix at the master receiver
+  double precision, dimension(NDIM,NDIM) :: nu_single  ! rotation matrix at the main receiver
   ! output parameters
   real(kind=CUSTOM_REAL) :: noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP)
   ! local parameters
   integer itime, i, j, k, ier, nlines
   real(kind=CUSTOM_REAL) :: junk
   real(kind=CUSTOM_REAL) :: noise_src(NSTEP),noise_src_u(NDIM,NSTEP)
-  double precision, dimension(NDIM) :: nu_master       ! component direction chosen at the master receiver
-  double precision :: xi_noise, eta_noise, gamma_noise ! master receiver location
+  double precision, dimension(NDIM) :: nu_main       ! component direction chosen at the main receiver
+  double precision :: xi_noise, eta_noise, gamma_noise ! main receiver location
 
   ! receiver Lagrange interpolators
   double precision,dimension(NGLLX) :: hxir
@@ -509,15 +509,15 @@ end module user_noise_distribution
 
   character(len=MAX_STRING_LEN) :: filename
 
-  ! master receiver component direction, \nu_master
-  filename = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/nu_master'
+  ! main receiver component direction, \nu_main
+  filename = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/nu_main'
   open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ier)
   if (ier /= 0 .and. myrank == 0) &
     call exit_MPI(myrank, &
-      'file '//trim(filename)//' does NOT exist! nu_master is the component direction (ENZ) for master receiver')
+      'file '//trim(filename)//' does NOT exist! nu_main is the component direction (ENZ) for main receiver')
 
   do itime = 1,3
-    read(IIN_NOISE,*,iostat=ier) nu_master(itime)
+    read(IIN_NOISE,*,iostat=ier) nu_main(itime)
     if (ier /= 0 .and. myrank == 0) &
       call exit_MPI(myrank, &
         'file '//trim(filename)//' has wrong length, the vector should have three components (ENZ)')
@@ -526,14 +526,14 @@ end module user_noise_distribution
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '  master station: direction vector nu = ',nu_master(:)
+    write(IMAIN,*) '  main station: direction vector nu = ',nu_main(:)
     call flush_IMAIN()
   endif
 
   ! outputs to file for checking
   if (myrank == 0) then
-    open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES)//'nu_master',status='unknown',action='write')
-    write(IOUT_NOISE,*) 'The direction (ENZ) of selected component of master receiver is', nu_master
+    open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES)//'nu_main',status='unknown',action='write')
+    write(IOUT_NOISE,*) 'The direction (ENZ) of selected component of main receiver is', nu_main
     close(IOUT_NOISE)
   endif
 
@@ -587,9 +587,9 @@ end module user_noise_distribution
 
   ! rotates to Cartesian
   do itime = 1, NSTEP
-    noise_src_u(:,itime) = nu_single(1,:) * noise_src(itime) * nu_master(1) &
-                         + nu_single(2,:) * noise_src(itime) * nu_master(2) &
-                         + nu_single(3,:) * noise_src(itime) * nu_master(3)
+    noise_src_u(:,itime) = nu_single(1,:) * noise_src(itime) * nu_main(1) &
+                         + nu_single(2,:) * noise_src(itime) * nu_main(2) &
+                         + nu_single(3,:) * noise_src(itime) * nu_main(3)
   enddo
 
   ! receiver interpolators
@@ -616,10 +616,10 @@ end module user_noise_distribution
 ! =============================================================================================================
 
 ! step 1: calculate the "ensemble forward source"
-! add noise spectrum to the location of master receiver
-  subroutine add_source_master_rec_noise(nrec,NSTEP,accel,noise_sourcearray, &
+! add noise spectrum to the location of main receiver
+  subroutine add_source_main_rec_noise(nrec,NSTEP,accel,noise_sourcearray, &
                                          ibool,islice_selected_rec,ispec_selected_rec, &
-                                         it,irec_master_noise, &
+                                         it,irec_main_noise, &
                                          nspec,nglob)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,myrank
@@ -627,7 +627,7 @@ end module user_noise_distribution
   implicit none
 
   ! input parameters
-  integer,intent(in) :: nrec,NSTEP,irec_master_noise
+  integer,intent(in) :: nrec,NSTEP,irec_main_noise
   integer,intent(in) :: nspec,nglob
   integer, dimension(nrec),intent(in) :: islice_selected_rec,ispec_selected_rec
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
@@ -638,15 +638,15 @@ end module user_noise_distribution
   ! local parameters
   integer :: i,j,k,iglob,ispec, it
 
-  if (irec_master_noise <= 0) then
-    print *,'Error rank',myrank,'invalid master id ',irec_master_noise
-    stop 'Error invalid irec_master_noise'
+  if (irec_main_noise <= 0) then
+    print *,'Error rank',myrank,'invalid main id ',irec_main_noise
+    stop 'Error invalid irec_main_noise'
   endif
 
   ! adds noise source (only if this proc carries the noise)
-  if (myrank == islice_selected_rec(irec_master_noise)) then
+  if (myrank == islice_selected_rec(irec_main_noise)) then
 
-    ispec = ispec_selected_rec(irec_master_noise)
+    ispec = ispec_selected_rec(irec_main_noise)
 
     ! adds nosie source contributions
     do k = 1,NGLLZ
@@ -660,7 +660,7 @@ end module user_noise_distribution
 
   endif
 
-  end subroutine add_source_master_rec_noise
+  end subroutine add_source_main_rec_noise
 
 ! =============================================================================================================
 ! =============================================================================================================

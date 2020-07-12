@@ -73,7 +73,7 @@ contains
     endif
 
     NEVENT=0
-    ! only master reads acqui file
+    ! only main reads acqui file
     if (myrank == 0) then
        !! 1/ read to count the number of events
        open(666,file=trim(acqui_file),iostat=ier)
@@ -270,7 +270,7 @@ contains
     endif
 
 
-    ! master broadcasts read values
+    ! main broadcasts read values
     call mpi_bcast(nevent, 1, mpi_integer, 0, my_local_mpi_comm_world, ier)
     if (myrank > 0) then
       allocate(acqui_simu(NEVENT),stat=ier)

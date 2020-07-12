@@ -451,7 +451,7 @@
   call sum_all_dp(potential_energy,potential_energy_glob)
   total_energy_glob = kinetic_energy_glob + potential_energy_glob
 
-! write the total to disk from the master
+! write the total to disk from the main
   if (myrank == 0) write(IOUT_ENERGY,*) it,sngl(kinetic_energy_glob),sngl(potential_energy_glob),sngl(total_energy_glob)
 
   end subroutine compute_energy_generic_slow
@@ -857,7 +857,7 @@
   call sum_all_dp(potential_energy,potential_energy_glob)
   total_energy_glob = kinetic_energy_glob + potential_energy_glob
 
-! write the total to disk from the master
+! write the total to disk from the main
   if (myrank == 0) write(IOUT_ENERGY,*) it,sngl(kinetic_energy_glob),sngl(potential_energy_glob),sngl(total_energy_glob)
 
   contains

@@ -170,7 +170,7 @@
                         store_val_uz_all,nfaces_perproc_surface,faces_surface_offset, &
                         nfaces_surface_glob_points,NPROC)
   else
-    !slaves
+    !secondarys
     call gatherv_all_cr(store_val_ux,nfaces_surface_points, &
                         dummy,nfaces_perproc_surface,faces_surface_offset, &
                         1,NPROC)
@@ -432,7 +432,7 @@
   integer :: ier
   real(kind=CUSTOM_REAL),dimension(1):: dummy
 
-  ! master collects
+  ! main collects
   if (myrank == 0) then
     ! shakemaps
     call gatherv_all_cr(shakemap_ux,nfaces_surface_points, &

@@ -117,10 +117,10 @@ for ii=1:nevent
     if ~isempty(itemp)
         ievent_full(ii) = itemp;
     else
-        error(['event ' eids{ii} ' is not on the master list']);
+        error(['event ' eids{ii} ' is not on the main list']);
     end
 end
-disp('all input EIDs matched to the master list');
+disp('all input EIDs matched to the main list');
 
 % if 0==1
 %     fid = fopen([odir ftag '_window_picks_by_' stks{kk}],'w');

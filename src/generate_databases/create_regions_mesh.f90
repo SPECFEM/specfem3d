@@ -423,7 +423,7 @@
     write(IMAIN,*) '    NGNOD   = ',NGNOD
     write(IMAIN,*) '    NGNOD2D = ',NGNOD2D
     write(IMAIN,*)
-    write(IMAIN,*) '    master process setup: '
+    write(IMAIN,*) '    main process setup: '
     write(IMAIN,*) '    nspec           = ',nspec
     write(IMAIN,*)
     call flush_IMAIN()

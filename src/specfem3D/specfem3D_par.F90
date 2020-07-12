@@ -709,7 +709,7 @@ module specfem_par_noise
 
   ! NOISE_TOMOGRAPHY
   ! parameter module for noise simulations
-  integer :: irec_master_noise
+  integer :: irec_main_noise
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: noise_sourcearray
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: noise_surface_movie
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: normal_x_noise,normal_y_noise,normal_z_noise, mask_noise

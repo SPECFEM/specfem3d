@@ -55,7 +55,7 @@
   ! gets total number of threads for this MPI process
   num_threads = OMP_GET_NUM_THREADS()
 
-  ! OpenMP master thread only
+  ! OpenMP main thread only
   if (thread_id == 0) then
     ! gets additional environment info
     num_procs = OMP_GET_NUM_PROCS()

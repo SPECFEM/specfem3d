@@ -93,7 +93,7 @@
   ! the variables read are declared and stored in structure MEXT_V
   if (myrank == 0) call read_external_model()
 
-  ! broadcast the information read on the master to the nodes
+  ! broadcast the information read on the main to the nodes
   call bcast_all_dp(MEXT_V%dvs, size(MEXT_V%dvs))
 
   end subroutine model_external_broadcast

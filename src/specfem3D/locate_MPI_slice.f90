@@ -80,7 +80,7 @@
   z_found_all(:,:) = 0.d0
   final_distance_all(:,:) = HUGEVAL
 
-  ! gather all (on master process)
+  ! gather all (on main process)
   call gather_all_i(ispec_selected_subset,npoints_subset,ispec_selected_all,npoints_subset,NPROC)
   call gather_all_i(idomain_subset,npoints_subset,idomain_all,npoints_subset,NPROC)
 

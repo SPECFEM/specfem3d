@@ -28,7 +28,7 @@ echo
 #////////////////////////////// SIMULATION IS STARTING ////////////////////////////////////////////////////////////
 # Note that one noise sensitivity kernel contains two contributions,
 # both the 1st and the 2nd contributions may be obtained through THREE steps.
-# Each contribution requires a distinct 'master' receiver, as shown in Tromp et al., 2010, GJI,
+# Each contribution requires a distinct 'main' receiver, as shown in Tromp et al., 2010, GJI,
 # each step requires slightly different Par_file, as documented in the Manual
 #
 # Please see the paper & Manual for more details on noise simulations
@@ -41,8 +41,8 @@ echo "*************************************"
 echo "1. contribution..."
 echo "*************************************"
 echo
-# the master receiver is receiver 1
-cp -v NOISE_TOMOGRAPHY/irec_master_noise_contribution1  NOISE_TOMOGRAPHY/irec_master_noise
+# the main receiver is receiver 1
+cp -v NOISE_TOMOGRAPHY/irec_main_noise_contribution1  NOISE_TOMOGRAPHY/irec_main_noise
 
 ## step 1 of noise simulation
 ./run_single_step.sh 1
@@ -117,8 +117,8 @@ echo "2. contribution..."
 echo "*************************************"
 echo
 
-# the master receiver is receiver 2
-cp -v NOISE_TOMOGRAPHY/irec_master_noise_contribution2 NOISE_TOMOGRAPHY/irec_master_noise
+# the main receiver is receiver 2
+cp -v NOISE_TOMOGRAPHY/irec_main_noise_contribution2 NOISE_TOMOGRAPHY/irec_main_noise
 
 ## step 1 of noise simulation
 ./run_single_step.sh 1

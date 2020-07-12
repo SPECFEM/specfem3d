@@ -67,7 +67,7 @@ void output_free_memory(int myrank, char* info_str) {
   double free_db,used_db,total_db;
   int do_output_info;
 
-  // by default, only master process outputs device infos to avoid file cluttering
+  // by default, only main process outputs device infos to avoid file cluttering
   do_output_info = 0;
   if (myrank == 0){
     do_output_info = 1;

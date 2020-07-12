@@ -92,7 +92,7 @@
       write_time_begin = wtime()
 
       ! checks if anything to do
-      if (nrec_local > 0 .or. (WRITE_SEISMOGRAMS_BY_MASTER .and. myrank == 0) .or. ASDF_FORMAT) then
+      if (nrec_local > 0 .or. (WRITE_SEISMOGRAMS_BY_MAIN .and. myrank == 0) .or. ASDF_FORMAT) then
 
         ! writes out seismogram files
         select case(SIMULATION_TYPE)
@@ -162,8 +162,8 @@
         ! output
         write(IMAIN,*)
         write(IMAIN,*) 'Total number of time steps written: ', it-it_begin+1
-        if (WRITE_SEISMOGRAMS_BY_MASTER) then
-          write(IMAIN,*) 'Writing the seismograms by master proc alone took ',sngl(write_time),' seconds'
+        if (WRITE_SEISMOGRAMS_BY_MAIN) then
+          write(IMAIN,*) 'Writing the seismograms by main proc alone took ',sngl(write_time),' seconds'
         else
           write(IMAIN,*) 'Writing the seismograms in parallel took ',sngl(write_time),' seconds'
         endif
@@ -194,7 +194,7 @@
           nrec,nrec_local,islice_selected_rec, &
           seismo_offset,seismo_current, &
           NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS,ASDF_FORMAT, &
-          WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS
+          WRITE_SEISMOGRAMS_BY_MAIN,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS
 
   implicit none
 
@@ -206,7 +206,7 @@
 
   character(len=1) component
 
-  ! parameters for master collects seismograms
+  ! parameters for main collects seismograms
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: one_seismogram
   integer :: nrec_local_received,total_seismos,receiver,sender
   integer :: iproc,ier,i
@@ -233,7 +233,7 @@
   if (ier /= 0) stop 'error while allocating one temporary seismogram'
 
   ! write out seismograms: all processes write their local seismograms themselves
-  if (.not. WRITE_SEISMOGRAMS_BY_MASTER) then
+  if (.not. WRITE_SEISMOGRAMS_BY_MAIN) then
 
     if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
       ! note: saving in a single file while using multiple outputs when NTSTEP_BETWEEN_OUTPUT_SEISMOS is less than NSTEP
@@ -284,7 +284,7 @@
     ! create one large file instead of one small file per station to avoid file system overload
     if (SAVE_ALL_SEISMOS_IN_ONE_FILE) close(IOUT)
 
-  else if (WRITE_SEISMOGRAMS_BY_MASTER .and. ASDF_FORMAT) then
+  else if (WRITE_SEISMOGRAMS_BY_MAIN .and. ASDF_FORMAT) then
     ! ASDF format
     do irec_local = 1, nrec_local
 
@@ -298,13 +298,13 @@
     call close_asdf_data()
 
   else
-    ! only the master process does the writing of seismograms and
+    ! only the main process does the writing of seismograms and
     ! collects the data from all other processes
 
-    ! only written out by master process - WRITE_SEISMOGRAMS_BY_MASTER
+    ! only written out by main process - WRITE_SEISMOGRAMS_BY_MAIN
 
     if (myrank == 0) then
-      ! on the master, gather all the seismograms
+      ! on the main, gather all the seismograms
 
       ! create one large file instead of one small file per station to avoid file system overload
       if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
@@ -389,7 +389,7 @@
       if (SAVE_ALL_SEISMOS_IN_ONE_FILE) close(IOUT)
 
     else
-      ! on the nodes, send the seismograms to the master
+      ! on the nodes, send the seismograms to the main
       receiver = 0
       tmp_nrec_local(1) = nrec_local
       call send_i(tmp_nrec_local,1,receiver,itag)
@@ -409,7 +409,7 @@
       endif
     endif ! myrank
 
-  endif ! of if (WRITE_SEISMOGRAMS_BY_MASTER)
+  endif ! of if (WRITE_SEISMOGRAMS_BY_MAIN)
 
   deallocate(one_seismogram)
 

@@ -209,7 +209,7 @@ end program xdecompose_mesh_mpi
 !-------------------------------------------
 !
 !
-! send partitioned arrays form the master to all other process
+! send partitioned arrays form the main to all other process
 !
 !
 !--------------------------------------------
@@ -218,7 +218,7 @@ end program xdecompose_mesh_mpi
 
 !
 !  this should take a long time because we
-!  use send from master to each other
+!  use send from main to each other
 !  in sequential way
 !
 
@@ -474,7 +474,7 @@ end program xdecompose_mesh_mpi
 !------------------------------------------------------
 !
 !
-! send whole arrays from master to other
+! send whole arrays from main to other
 ! (it is small arrays that do not need to be distributed
 ! except for elmnts_glob)
 !

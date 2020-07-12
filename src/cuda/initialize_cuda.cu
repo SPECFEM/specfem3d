@@ -181,7 +181,7 @@ void FC_FUNC_(initialize_cuda_device,
   FILE* fp;
   int do_output_info;
 
-  // by default, only master process outputs device infos to avoid file cluttering
+  // by default, only main process outputs device infos to avoid file cluttering
   do_output_info = 0;
   if (myrank == 0){
     do_output_info = 1;

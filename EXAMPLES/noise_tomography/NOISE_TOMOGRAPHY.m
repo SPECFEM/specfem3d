@@ -213,7 +213,7 @@ end
 fprintf('\n  preparing source time function S_squared:\n    NSTEP = %i / dt = %f \n',NSTEP,dt);
 
 % the file S_squared should be put into directory ./NOISE_TOMOGRAPHY/
-% together with other two files: irec_master_noise & nu_master
+% together with other two files: irec_main_noise & nu_main
 S_squared=zeros(NSTEP,2); % first column: time (not used in SPECFEM3D package)
                           % second column: source time function
 S_squared(:,1)=([1:NSTEP]-N_mid)*dt;

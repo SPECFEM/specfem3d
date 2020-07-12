@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# reads in a Par_file as master (template) and updates parameters and comments in all other Par_files
+# reads in a Par_file as main (template) and updates parameters and comments in all other Par_files
 # in current directory to have a consistent set of Par_files
 #
 from __future__ import print_function
@@ -22,7 +22,8 @@ DEPRECATED_RENAMED_PARAMETERS = [ \
   ("OCEANS", "APPROXIMATE_OCEAN_LOAD"), \
   ("NZ_DOUGLING_1", "NZ_DOUBLING_1"), \
   ("NZ_DOUGLING_2", "NZ_DOUBLING_2"), \
-  ("EXTERNAL_SOURCE_FILE","USE_EXTERNAL_SOURCE_FILE") \
+  ("EXTERNAL_SOURCE_FILE","USE_EXTERNAL_SOURCE_FILE"),
+  ("WRITE_SEISMOGRAMS_BY_MASTER","WRITE_SEISMOGRAMS_BY_MAIN") \
 ]
 
 # exclude other possible files with similar name, but with different format
@@ -48,9 +49,9 @@ EXCLUDE_DIR_LIST = [ \
 # ordered dictionary: ordering is kept, what is filled in first, will be listed first
 #
 # each dictionary entry will have format (value,comment,appendix), use for example:
-# (value,comment,appendix) = master_parameters[name]
+# (value,comment,appendix) = main_parameters[name]
 #
-master_parameters = collections.OrderedDict()
+main_parameters = collections.OrderedDict()
 
 # Mesh_Par_file data lines (NMATERIALS and NREGIONS sections)
 mesh_par_file_data_counter = 0
@@ -226,7 +227,7 @@ def read_Par_file_sections(parameters,file,verbose=False):
         print("")
         print("  got %d parameters" % nsections)
         print("")
-        #print("master file sections")
+        #print("main file sections")
         #print("")
         #print(parameters)
 
@@ -360,36 +361,36 @@ def get_files_in_subdirectories(dir,files,basename):
 #----------------------------------------------------------------------------
 #
 
-def compare_and_replace_file(master_file,temp_file,verbose=False,replace=False):
+def compare_and_replace_file(main_file,temp_file,verbose=False,replace=False):
     """
-    notifies user if template is different than master
+    notifies user if template is different than main
     e.g. by different indentation or white space)
     """
     # diff files
-    command = "diff " + master_file + " " + temp_file
+    command = "diff " + main_file + " " + temp_file
     #print command
     ret = os.system(command)
     if ret > 0:
         # got some differences
-        # replaces master with new file format
+        # replaces main with new file format
         print("")
-        print("replacing master with new parameter file format:")
+        print("replacing main with new parameter file format:")
         print("")
 
         # copy over
         if replace:
-            command = "cp -v " + temp_file + " " + master_file
+            command = "cp -v " + temp_file + " " + main_file
             #command = "echo hello"
             #print command
             ret = os.system(command)
             if ret != 0:
-                print("Error replacing file with new format",master_file)
+                print("Error replacing file with new format",main_file)
                 sys.tracebacklimit=0
-                raise Exception('file can not be updated: %s' % master_file)
+                raise Exception('file can not be updated: %s' % main_file)
     else:
         if verbose:
             print("  no differences")
-            print("  master file format is okay")
+            print("  main file format is okay")
             print("")
 
 
@@ -398,7 +399,7 @@ def check_and_update_Par_file(my_parameters,file):
     updates parameter entries
     """
     global DEPRECATED_RENAMED_PARAMETERS
-    global master_parameters
+    global main_parameters
     global is_Mesh_Par_file
 
     # checks for old, deprecated parameters
@@ -407,7 +408,7 @@ def check_and_update_Par_file(my_parameters,file):
     my_parameters_new = my_parameters.copy()
 
     for name in my_parameters.keys():
-        if not name in master_parameters.keys():
+        if not name in main_parameters.keys():
             if (not "MESH_PAR_FILE_DATA" in name) and (not "NZ_DOUBLING" in name):
                 print("  deprecated parameter: ",name)
                 nold_parameters += 1
@@ -446,32 +447,32 @@ def check_and_update_Par_file(my_parameters,file):
     if my_parameters_new != my_parameters: my_parameters = my_parameters_new.copy()
     #print(my_parameters.keys())
 
-    # add missing master parameters and replaces comment lines to compare sections
+    # add missing main parameters and replaces comment lines to compare sections
     nmissing_parameters = 0
     #print("  searching missing parameters...")
-    for name in master_parameters.keys():
+    for name in main_parameters.keys():
         if (not "MESH_PAR_FILE_DATA" in name):
             # checks if missing
             if not name in my_parameters.keys():
                 print("  misses parameter: ",name)
                 nmissing_parameters += 1
-                # adds from master template record
-                (val,comment,appendix) = master_parameters[name]
+                # adds from main template record
+                (val,comment,appendix) = main_parameters[name]
                 my_parameters[name] = (val,comment,appendix)
 
     # updates comments
     nold_comments = 0
-    for name in master_parameters.keys():
+    for name in main_parameters.keys():
         if (not "MESH_PAR_FILE_DATA" in name):
             # checks we have this parameter
             if not name in my_parameters.keys():
-                print("Error comparing master with current file format parameter",name)
+                print("Error comparing main with current file format parameter",name)
                 sys.tracebacklimit=0
                 raise Exception('parameter list invalid: %s' % file)
 
             # compares and replaces comments and appendix
             (val_orig,comment_orig,appendix_orig) = my_parameters[name]
-            (val,comment,appendix) = master_parameters[name]
+            (val,comment,appendix) = main_parameters[name]
             if comment_orig != comment or appendix != appendix_orig:
                 nold_comments += 1
                 # replace with new comment/appendix and only keep original value
@@ -482,7 +483,7 @@ def check_and_update_Par_file(my_parameters,file):
     iorder_new = 0
     num_material_entries = 0
     num_region_entries = 0
-    for name in master_parameters.keys():
+    for name in main_parameters.keys():
         if not is_Mesh_Par_file:
             # regular Par_file must have a one-to-one match
             # checks that name is available
@@ -600,11 +601,11 @@ def check_and_update_Par_file(my_parameters,file):
         # user info
         print("  updating parameter file...")
 
-        # opens temporary file with master info
+        # opens temporary file with main info
         tmp_file = "_____temp09_____"
         write_template_file(ordered_parameters,tmp_file)
 
-        # notifies user if template is different than master
+        # notifies user if template is different than main
         # (e.g. by different indentation or white space)
         compare_and_replace_file(file,tmp_file,verbose=True,replace=replace)
 
@@ -635,41 +636,41 @@ def check_parameter_file_type(file):
 #----------------------------------------------------------------------------
 #
 
-def update_Par_files(master_file,replace=False):
+def update_Par_files(main_file,replace=False):
     """
-    uses a master to update other parameter files
+    uses a main to update other parameter files
     """
-    global master_parameters
+    global main_parameters
     global is_Mesh_Par_file
 
     # user info
     print("")
-    print("master file: ",master_file)
+    print("main file: ",main_file)
     print("")
 
     # determines file type
-    check_parameter_file_type(master_file)
+    check_parameter_file_type(main_file)
 
     # reads in parameters
-    read_Par_file_sections(master_parameters,master_file,verbose=True)
+    read_Par_file_sections(main_parameters,main_file,verbose=True)
 
-    # opens temporary file with master info
+    # opens temporary file with main info
     tmp_file = "_____temp01_____"
-    write_template_file(master_parameters,tmp_file,verbose=True)
+    write_template_file(main_parameters,tmp_file,verbose=True)
 
-    # notifies user if template is different than master
+    # notifies user if template is different than main
     # (e.g. by different indentation or white space)
-    print("checking differences between new format and master:")
+    print("checking differences between new format and main:")
     print("  (different formatting or whitespace can lead to differences)")
     print("")
-    compare_and_replace_file(master_file,tmp_file,verbose=True,replace=replace)
+    compare_and_replace_file(main_file,tmp_file,verbose=True,replace=replace)
 
     # clean up temporary file
     command = "rm -f " + tmp_file
     os.system(command)
 
     # finds all Par_files
-    basename = os.path.basename(master_file)
+    basename = os.path.basename(main_file)
     current_dir = os.getcwd()
 
     # user info
@@ -724,9 +725,9 @@ def update_Par_files(master_file,replace=False):
 
 def usage():
     print("usage:")
-    print("    ./process_DATA_Par_files_to_update_their_parameters_from_a_master.py Master-Par-file replace")
+    print("    ./process_DATA_Par_files_to_update_their_parameters_from_a_main.py Main-Par-file replace")
     print("  with")
-    print("    Master-Par_file - Par_file which serves as master template (e.g. DATA/Par_file)")
+    print("    Main-Par_file - Par_file which serves as main template (e.g. DATA/Par_file)")
     print("    replace         = flag to force replacing of file [0==check-only/1==replace]")
 
 #
@@ -739,11 +740,11 @@ if __name__ == '__main__':
         usage()
         sys.exit(1)
     else:
-        master_file = sys.argv[1]
+        main_file = sys.argv[1]
         if int(sys.argv[2]) == 1:
             replace = True
         else:
             replace = False
 
-    update_Par_files(master_file,replace=replace)
+    update_Par_files(main_file,replace=replace)
 

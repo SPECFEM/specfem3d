@@ -10,18 +10,18 @@ setup_kernel_dir.pl
 copy_kernel_dir.pl
 copy_SEM_dir.pl
 
-In both cases, they require the directory Master_Dir, which is used to link run directories 
+In both cases, they require the directory Main_Dir, which is used to link run directories
 for all the requested event IDs.  The organization is as follows:
 
 BASIN_KERNEL/
    setup_kernel_dir.pl
-   Master_Dir/
+   Main_Dir/
    done_dirs/
        copy_kernel_dir.pl
 
 BASIN_FORWARD/
    setup_forward_dir.pl
-   Master_Dir/
+   Main_Dir/
    done_dirs/
        copy_SEM_dir.pl
 

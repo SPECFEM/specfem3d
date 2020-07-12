@@ -168,7 +168,7 @@
 
   if (SU_station_file_exists) then
 
-    ! master reads in available station information
+    ! main reads in available station information
     if (myrank == 0) then
       open(unit=IOUT_SU,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
       if (ier /= 0) call exit_mpi(myrank,'error opening file '//trim(filename))

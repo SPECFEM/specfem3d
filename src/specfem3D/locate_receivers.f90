@@ -255,7 +255,7 @@
       endif
     enddo ! loop over subset
 
-    ! master process locates best location in all slices
+    ! main process locates best location in all slices
     call locate_MPI_slice(nrec_subset_current_size,irec_already_done, &
                           ispec_selected_rec_subset, &
                           x_found_subset, y_found_subset, z_found_subset, &
@@ -268,11 +268,11 @@
 
   enddo ! loop over stations
 
-  ! bcast from master process
+  ! bcast from main process
   call bcast_all_i(islice_selected_rec,nrec)
-  ! note: in principle, only islice must be updated on all slave processes, the ones containing the best location
+  ! note: in principle, only islice must be updated on all secondary processes, the ones containing the best location
   !       could have valid entries in all other arrays set before already.
-  !       nevertheless, for convenience we broadcast all needed receiver arrays back to the slaves
+  !       nevertheless, for convenience we broadcast all needed receiver arrays back to the secondarys
   call bcast_all_i(idomain,nrec)
   call bcast_all_i(ispec_selected_rec,nrec)
 
@@ -291,7 +291,7 @@
   allocate(is_CPML_rec(nrec),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'Error allocating is_CPML_rec array')
   if (myrank == 0) then
-    ! only master collects
+    ! only main collects
     allocate(is_CPML_rec_all(nrec),stat=ier)
   else
     ! dummy

@@ -39,7 +39,7 @@ module vtk_window_par
   real,dimension(:),allocatable :: vtkdata
   logical,dimension(:),allocatable :: vtkmask
 
-  ! multi-mpi processes, gather data arrays on master
+  ! multi-mpi processes, gather data arrays on main
   real,dimension(:),allocatable :: vtkdata_all
   integer,dimension(:),allocatable :: vtkdata_points_all
   integer,dimension(:),allocatable :: vtkdata_offset_all
@@ -165,7 +165,7 @@ end module vtk_window_par
       call eval_shape3D_element_anchors(xelm,yelm,zelm,ispec,ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
     endif
 
-    ! master collects corner locations
+    ! main collects corner locations
     if (islice_selected_source(isource) /= 0) then
       if (myrank == 0) then
         call recvv_cr(xelm,NGNOD,islice_selected_source(isource),0)
@@ -263,7 +263,7 @@ end module vtk_window_par
       call eval_shape3D_element_anchors(xelm,yelm,zelm,ispec,ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
     endif
 
-    ! master collects corner locations
+    ! main collects corner locations
     if (islice_selected_rec(irec) /= 0) then
       if (myrank == 0) then
         call recvv_cr(xelm,NGNOD,islice_selected_rec(irec),0)
@@ -571,7 +571,7 @@ end module vtk_window_par
       free_conn_offset_all(i) = sum(free_conn_nspec_all(1:i-1))
     enddo
 
-    ! global data arrays (only needed on master process)
+    ! global data arrays (only needed on main process)
     if (myrank == 0) then
       ! gather locations
       allocate(free_x_all(free_np_all),stat=ier)
@@ -884,7 +884,7 @@ end module vtk_window_par
       vol_conn_offset_all(i) = sum(vol_conn_nspec_all(1:i-1))
     enddo
 
-    ! global data arrays (only needed on master process)
+    ! global data arrays (only needed on main process)
     if (myrank == 0) then
       ! point data
       allocate(vtkdata_all(vtkdata_numpoints_all),stat=ier)

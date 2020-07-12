@@ -1051,7 +1051,7 @@
       write(IMAIN,*) '    ',nadj_files_found_tot,' adjoint component trace files found in all slices'
       call flush_IMAIN()
 
-      ! master process checks if any adjoint files found
+      ! main process checks if any adjoint files found
       if (nadj_files_found_tot == 0) then
         print *,'Error no adjoint traces found: ',nadj_files_found_tot
         print *,'in directory : ',OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/../SEM/'
@@ -1130,7 +1130,7 @@
 
   ! statistics about allocation memory for seismograms & source_adjoint
   ! seismograms
-  ! gather from slaves on master
+  ! gather from secondarys on main
   call gather_all_singlei(nrec_local,tmp_rec_local_all,NPROC)
   ! user output
   if (myrank == 0) then
@@ -1148,8 +1148,8 @@
     endif
     ! outputs info
     write(IMAIN,*) 'seismograms:'
-    if (WRITE_SEISMOGRAMS_BY_MASTER) then
-      write(IMAIN,*) '  seismograms written by master process only'
+    if (WRITE_SEISMOGRAMS_BY_MAIN) then
+      write(IMAIN,*) '  seismograms written by main process only'
     else
       write(IMAIN,*) '  seismograms written by all processes'
     endif
@@ -1166,7 +1166,7 @@
     ! note: nadj_rec_local is the number of "adjoint sources". that is, local receiver locations which will act as adjoint source
     !       locations.
 
-    ! gather from slaves on master
+    ! gather from secondarys on main
     call gather_all_singlei(nadj_rec_local,tmp_rec_local_all,NPROC)
     ! user output
     if (myrank == 0) then
@@ -1533,7 +1533,7 @@
         call eval_shape3D_element_anchors(xelm,yelm,zelm,ispec,ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
       endif
 
-      ! master collects corner locations
+      ! main collects corner locations
       if (islice_selected_source(isource) /= 0) then
         if (myrank == 0) then
           call recvv_cr(xelm,NGNOD,islice_selected_source(isource),0)
@@ -1578,7 +1578,7 @@
       call eval_shape3D_element_anchors(xelm,yelm,zelm,ispec,ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
     endif
 
-    ! master collects corner locations
+    ! main collects corner locations
     if (islice_selected_rec(irec) /= 0) then
       if (myrank == 0) then
         call recvv_cr(xelm,NGNOD,islice_selected_rec(irec),0)

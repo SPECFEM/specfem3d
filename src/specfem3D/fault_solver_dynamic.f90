@@ -1499,7 +1499,7 @@ contains
 
     bc%dataXZ_all%npoin = npoin_all
 
-    ! only master ranks needs to allocate gathering arrays **_all
+    ! only main ranks needs to allocate gathering arrays **_all
     if (myrank == 0) then
       allocate(bc%dataXZ_all%xcoord(npoin_all),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1404')

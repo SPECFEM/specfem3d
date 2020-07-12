@@ -195,11 +195,11 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
                                               double* h_stf_pre_compute,
                                               int* h_NSOURCES) {}
 
-void FC_FUNC_(add_source_master_rec_noise_cu,
-              ADD_SOURCE_MASTER_REC_NOISE_CU)(long* Mesh_pointer,
-                                              int* it_f,
-                                              int* irec_master_noise_f,
-                                              int* islice_selected_rec) {}
+void FC_FUNC_(add_source_main_rec_noise_cu,
+              ADD_SOURCE_MAIN_REC_NOISE_CU)(long* Mesh_pointer,
+                                            int* it_f,
+                                            int* irec_main_noise_f,
+                                            int* islice_selected_rec) {}
 
 void FC_FUNC_(add_sources_el_sim_type_2_or_3,
               ADD_SOURCES_EL_SIM_TYPE_2_OR_3)(long* Mesh_pointer,

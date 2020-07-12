@@ -155,7 +155,7 @@
   if (USE_FORCE_POINT_SOURCE) then
     ! point forces
     if (myrank == 0) then
-      ! only master process reads in FORCESOLUTION file
+      ! only main process reads in FORCESOLUTION file
       call get_force(filename,tshift_src,hdur,lat,long,depth,NSOURCES,min_tshift_src_original,factor_force_source, &
                      comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
                      user_source_time_function)
@@ -168,7 +168,7 @@
   else
     ! CMT moment tensors
     if (myrank == 0) then
-      ! only master process reads in CMTSOLUTION file
+      ! only main process reads in CMTSOLUTION file
       call get_cmt(filename,tshift_src,hdur,lat,long,depth,moment_tensor, &
                    DT,NSOURCES,min_tshift_src_original,user_source_time_function)
     endif
@@ -176,7 +176,7 @@
     call bcast_all_dp(moment_tensor,6*NSOURCES)
   endif
 
-  ! broadcasts general source information read on the master to the nodes
+  ! broadcasts general source information read on the main to the nodes
   call bcast_all_dp(tshift_src,NSOURCES)
   call bcast_all_dp(hdur,NSOURCES)
   call bcast_all_dp(lat,NSOURCES)
@@ -289,7 +289,7 @@
       endif
     enddo ! loop over subset
 
-    ! master process locates best location in all slices
+    ! main process locates best location in all slices
     call locate_MPI_slice(nsources_subset_current_size,isources_already_done, &
                           ispec_selected_source_subset, &
                           x_found_subset, y_found_subset, z_found_subset, &
@@ -302,7 +302,7 @@
 
   enddo ! end of loop on all the sources
 
-  ! bcast from master process
+  ! bcast from main process
   call bcast_all_i(islice_selected_source,NSOURCES)
   call bcast_all_i(idomain,NSOURCES)
   call bcast_all_i(ispec_selected_source,NSOURCES)
@@ -322,7 +322,7 @@
   allocate(is_CPML_source(NSOURCES),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'Error allocating is_CPML_source array')
   if (myrank == 0) then
-    ! only master collects
+    ! only main collects
     allocate(is_CPML_source_all(NSOURCES),stat=ier)
   else
     ! dummy

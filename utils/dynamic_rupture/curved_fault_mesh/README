@@ -44,7 +44,7 @@ Thank Jean-Paul Ampuero for his helpful suggestion.
 
 Software and package requirements:
   CUBIT (or Trelis)
-  GEOCUBIT (a package provided in the Specfem3D code in the directory: specfem3d-master/CUBIT_GEOCUBIT/)
+  GEOCUBIT (a package provided in the Specfem3D code in the directory: specfem3d/CUBIT_GEOCUBIT/)
   Python and Python packages: numpy and scipy
   GMT (No need if both free surface and fault are planar. For GMT 5+ you need to add "gmt" in all the GMT commands in the scripts: ./Surface/create_surface_data.sh and ./Interface/create_interface_data.sh)
 

@@ -89,13 +89,13 @@
     mask_noise(:)                = 0._CUSTOM_REAL
     noise_surface_movie(:,:,:) = 0._CUSTOM_REAL
 
-    ! sets up noise source for master receiver station
+    ! sets up noise source for main receiver station
     call read_parameters_noise(nrec,NSTEP,NGLLSQUARE*num_free_surface_faces, &
                                islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu_rec, &
                                noise_sourcearray,xigll,yigll,zigll, &
                                ibool, &
                                xstore,ystore,zstore, &
-                               irec_master_noise,normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
+                               irec_main_noise,normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
                                NSPEC_AB,NGLOB_AB, &
                                num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
                                ispec_is_acoustic)

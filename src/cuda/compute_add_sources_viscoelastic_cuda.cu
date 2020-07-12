@@ -168,14 +168,14 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void add_source_master_rec_noise_cuda_kernel(int* d_ibool,
-                                                        int* ispec_selected_rec,
-                                                        int irec_master_noise,
-                                                        realw* accel,
-                                                        realw* noise_sourcearray,
-                                                        int it) {
+__global__ void add_source_main_rec_noise_cuda_kernel(int* d_ibool,
+                                                      int* ispec_selected_rec,
+                                                      int irec_main_noise,
+                                                      realw* accel,
+                                                      realw* noise_sourcearray,
+                                                      int it) {
   int tx = threadIdx.x;
-  int iglob = d_ibool[tx + NGLL3_PADDED*(ispec_selected_rec[irec_master_noise-1]-1)]-1;
+  int iglob = d_ibool[tx + NGLL3_PADDED*(ispec_selected_rec[irec_main_noise-1]-1)]-1;
 
   // not sure if we need atomic operations but just in case...
   // accel[3*iglob] += noise_sourcearray[3*tx + 3*125*it];
@@ -191,31 +191,31 @@ __global__ void add_source_master_rec_noise_cuda_kernel(int* d_ibool,
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
-void FC_FUNC_(add_source_master_rec_noise_cu,
-              ADD_SOURCE_MASTER_REC_NOISE_CU)(long* Mesh_pointer,
-                                              int* it_f,
-                                              int* irec_master_noise_f,
-                                              int* islice_selected_rec) {
+void FC_FUNC_(add_source_main_rec_noise_cu,
+              ADD_SOURCE_MAIN_REC_NOISE_CU)(long* Mesh_pointer,
+                                            int* it_f,
+                                            int* irec_main_noise_f,
+                                            int* islice_selected_rec) {
 
-TRACE("\tadd_source_master_rec_noise_cu");
+TRACE("\tadd_source_main_rec_noise_cu");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   int it = *it_f-1; // -1 for Fortran -> C indexing differences
-  int irec_master_noise = *irec_master_noise_f;
+  int irec_main_noise = *irec_main_noise_f;
 
   dim3 grid(1,1,1);
   dim3 threads(NGLL3,1,1);
 
-  if (mp->myrank == islice_selected_rec[irec_master_noise-1]) {
-    add_source_master_rec_noise_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_ibool,
-                                                                                    mp->d_ispec_selected_rec,
-                                                                                    irec_master_noise,
-                                                                                    mp->d_accel,
-                                                                                    mp->d_noise_sourcearray,
-                                                                                    it);
+  if (mp->myrank == islice_selected_rec[irec_main_noise-1]) {
+    add_source_main_rec_noise_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_ibool,
+                                                                                 mp->d_ispec_selected_rec,
+                                                                                 irec_main_noise,
+                                                                                 mp->d_accel,
+                                                                                 mp->d_noise_sourcearray,
+                                                                                 it);
 
-  GPU_ERROR_CHECKING("add_source_master_rec_noise_cuda_kernel");
+  GPU_ERROR_CHECKING("add_source_main_rec_noise_cuda_kernel");
   }
 }
 
