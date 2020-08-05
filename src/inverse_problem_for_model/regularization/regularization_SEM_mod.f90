@@ -104,20 +104,20 @@ module regularization
 !!!!!!  type(list_iglob),              private, dimension(:),         allocatable  :: list_iglob_to_send
 
   !! for derivatives in gll
-  integer,                       private,              parameter             :: NGLLd=10
-  double precision,              private,              parameter             :: ONE_EIGHTH = 0.125d0, ONE=1.d0, ZERO=1.d0
+  integer,                       private,              parameter             :: NGLLd = 10
+  double precision,              private,              parameter             :: ONE_EIGHTH = 0.125d0, ONE = 1.d0, ZERO = 1.d0
   double precision,              private, dimension(NGLLd)                   :: gll_points, wgll_points
   double precision,              private, dimension(NGLLd,NGLLd)             :: hlagrange_prime
   double precision,              private, dimension(NGLLX,NGLLd)             :: hlagrange
   double precision,              private, dimension(NGLLd,NGLLX)             :: hlagrange_old
   double precision,              private, dimension(8,NGLLd,NGLLd,NGLLd)     :: shape_function
-  double precision,              private, dimension(3,8,NGLLd,NGLLd,NGLLd)   :: dershape_function
+  double precision,              private, dimension(:,:,:,:,:),allocatable   :: dershape_function
   double precision,              private, dimension(8)                       :: xnodelm, ynodelm, znodelm
   double precision,              private, dimension(NGLLX,NGLLX,NGLLX)       :: field_initial
   double precision,              private, dimension(NGLLd,NGLLd,NGLLd)       :: dfdx, dfdy, dfdz
   double precision,              private, dimension(NGLLd,NGLLd,NGLLd)       :: xstore_interp, ystore_interp, zstore_interp
   double precision,              private, dimension(NGLLd,NGLLd,NGLLd)       :: field_interpolated, Laplacian_of_field_interpolated
-  double precision,              private, dimension(NGLLd,NGLLd,NGLLd,3,3)   :: Jacobian_shape_function
+  double precision,              private, dimension(:,:,:,:,:),allocatable   :: Jacobian_shape_function
 
   !! for checking
   real(kind=CUSTOM_REAL),        private                                      :: lambda
@@ -2425,7 +2425,7 @@ contains
 
   subroutine setup_interpolation_for_higher_degree()
 
-    integer                              :: i1, i2
+    integer                              :: i1, i2, ier
     double precision                     :: lagrange_deriv_GLL
     double precision,dimension(NGLLX)    :: h,hprime
     double precision,dimension(NGLLd)    :: h1,hprime1
@@ -2447,6 +2447,10 @@ contains
        call lagrange_any(xigll(i1), NGLLd, gll_points, h1, hprime1)
        hlagrange_old(:,i1)=h1(:)
     enddo
+
+    ! allocates dershape_function array (uses dynamic allocation to avoid stack issues with newer gcc compilers)
+    allocate(dershape_function(3,8,NGLLd,NGLLd,NGLLd),stat=ier)
+    if (ier /= 0) stop 'Error allocating dershape_function array'
 
     call get_shape3D_genric(NGLLd, gll_points, shape_function, dershape_function)
 
@@ -2708,7 +2712,13 @@ contains
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable, intent(in)    ::  field_to_derivate
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable, intent(inout) ::  laplacian_of_field, double_laplacian_of_field
 
-    integer :: ispec, iglob
+    integer :: ispec, iglob, ier
+
+    ! allocates jacobian array for element (uses dynamic allocation to avoid stack issues with gcc compilers version >= 10)
+    if (.not. allocated(Jacobian_shape_function)) then
+      allocate(Jacobian_shape_function(NGLLd,NGLLd,NGLLd,3,3),stat=ier)
+      if (ier /= 0) stop 'Error allocating Jacobian_shape_function array'
+    endif
 
     do ispec = 1, NSPEC_AB
 
