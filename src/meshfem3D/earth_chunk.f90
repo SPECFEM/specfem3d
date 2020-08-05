@@ -1767,11 +1767,11 @@
 
   implicit none
 
-  integer NGLLX,NGLLY,NGLLZ,nel_depth,iz,Ndepth
-  double precision xstore(NGLLX,NGLLY,NGLLZ),ystore(NGLLX,NGLLY,NGLLZ),zstore(NGLLX,NGLLY,NGLLZ)
-  double precision profondeur
-  integer current_layer(0:nel_depth-1),ilayer,k
-  integer updown(NGLLZ) !! will be also used for VM coupling with AxiSEM
+  integer :: NGLLX,NGLLY,NGLLZ,nel_depth,iz,Ndepth
+  double precision :: xstore(NGLLX,NGLLY,NGLLZ),ystore(NGLLX,NGLLY,NGLLZ),zstore(NGLLX,NGLLY,NGLLZ)
+  double precision :: profondeur
+  integer :: current_layer(0:nel_depth-1),ilayer,k
+  integer :: updown(NGLLZ) !! will be also used for VM coupling with AxiSEM
 
   updown(:) = 0
   if (ilayer == current_layer(iz)) then
@@ -2735,13 +2735,25 @@
   subroutine CalGridProf(ProfForGemini,Niveau_elm,zlayer,nlayer,NEX_GAMMA,Z_DEPTH_BLOCK)
 
   implicit none
-  integer :: NEX_GAMMA,nlayer,nbbloc(100000),Niveau_elm(0:NEX_GAMMA-1)
-  double precision :: ProfForGemini(0:NEX_GAMMA-1,3),zlayer(nlayer)
-  double precision :: Z_DEPTH_BLOCK,zpoint(100000),zz(100000)
+  integer :: NEX_GAMMA,nlayer
+  integer :: Niveau_elm(0:NEX_GAMMA-1)
+  double precision :: ProfForGemini(0:NEX_GAMMA-1,3)
+  double precision :: zlayer(nlayer)
+  double precision :: Z_DEPTH_BLOCK
+
+  ! local parameters
+  integer,dimension(:),allocatable :: nbbloc
+  double precision,dimension(:),allocatable :: zpoint,zz
   double precision :: epsillon
-  integer :: nb, n, i,j,k,ilayer,ilay,nd,niveau
+  integer :: nb,n,i,j,k,ilayer,ilay,nd,niveau,ier
   double precision :: p, pas, longeur
   logical :: test
+
+  ! allocate
+  allocate(nbbloc(100000), &
+           zpoint(100000), &
+           zz(100000),stat=ier)
+  if (ier /= 0) stop 'Error allocating nbbloc arrays'
 
   epsillon = 1d-3
   nbbloc(:) = 0
@@ -2836,6 +2848,9 @@
     Niveau_elm(ilay-1)=niveau
     write(*,'(i5,2f15.3,i10)') ilay,zz(ilay),zz(ilay+1),niveau
   enddo
+
+  ! free memory
+  deallocate(nbbloc,zpoint,zz)
 
   end subroutine CalGridProf
 
