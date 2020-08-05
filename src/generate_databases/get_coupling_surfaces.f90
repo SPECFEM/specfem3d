@@ -198,7 +198,7 @@
 
 ! determines coupling surface for acoustic-elastic domains
 
-  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE,IMAIN
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE
   use generate_databases_par, only: NGNOD2D
   use create_regions_mesh_ext_par
 
@@ -413,7 +413,7 @@
 
 ! determines coupling surface for acoustic-poroelastic domains
 
-  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE,IMAIN
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE
   use generate_databases_par, only: NGNOD2D
   use create_regions_mesh_ext_par
 
@@ -583,7 +583,7 @@
 
 ! determines coupling surface for elastic-poroelastic domains
 
-  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE,IMAIN
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,NGLLSQUARE
   use generate_databases_par, only: NGNOD2D
   use create_regions_mesh_ext_par
   implicit none

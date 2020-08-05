@@ -209,7 +209,7 @@ end module create_meshfem_par
   subroutine cmm_allocate_arrays()
 
   use constants, only: IMAIN,myrank
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NGLLCUBE_M
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   use meshfem3D_par, only: NSPEC_AB,nspec,ibool, &
     xstore,ystore,zstore, &

@@ -800,7 +800,7 @@
                                     nodes_coords_ext_mesh,nnodes_ext_mesh, &
                                     elmnts_ext_mesh,nelmnts_ext_mesh)
 
-  use constants, only: myrank,NDIM,NGLLX,NGLLY,NGLLZ,GAUSSALPHA,GAUSSBETA,CUSTOM_REAL,OUTPUT_FILES
+  use constants, only: myrank,NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,OUTPUT_FILES
   use generate_databases_par, only: NGNOD
   use create_regions_mesh_ext_par
 

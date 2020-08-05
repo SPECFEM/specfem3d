@@ -1,5 +1,6 @@
 # based on
 # PetersonNoiseModel.m
+from __future__ import print_function
 
 #from math import pi,log10
 

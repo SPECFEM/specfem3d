@@ -568,7 +568,7 @@
   subroutine find_local_coordinates(x_target,y_target,z_target,xi,eta,gamma,x,y,z, &
                                     ispec,ix_initial_guess,iy_initial_guess,iz_initial_guess)
 
-  use constants, only: HUGEVAL,NUM_ITER,NDIM
+  use constants, only: HUGEVAL,NUM_ITER
   use specfem_par, only: xstore,ystore,zstore,ibool,NGNOD,anchor_iax,anchor_iay,anchor_iaz, &
                          xigll,yigll,zigll
 

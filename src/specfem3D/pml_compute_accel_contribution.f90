@@ -319,7 +319,7 @@
 
   use specfem_par, only: NGLOB_AB,NSTEP,it,UNDO_ATTENUATION_AND_OR_PML ! ibool
   use pml_par, only: points_interface_PML_elastic ! NSPEC_CPML,CPML_to_spec
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
+  use constants, only: CUSTOM_REAL,NDIM
   implicit none
 
   integer, intent(in) :: nglob_interface_PML_elastic,b_reclen_PML_field
@@ -404,7 +404,7 @@
 
   use specfem_par, only: NGLOB_AB,NSTEP,it,UNDO_ATTENUATION_AND_OR_PML ! ibool
   use pml_par, only: points_interface_PML_acoustic ! NSPEC_CPML,CPML_to_spec
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
+  use constants, only: CUSTOM_REAL
 
   implicit none
 

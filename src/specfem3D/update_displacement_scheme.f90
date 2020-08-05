@@ -208,7 +208,7 @@
 
 ! updates acoustic potentials
 
-  use specfem_par, only: NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,NGLOB_AB
+  use specfem_par, only: CUSTOM_REAL,NGLOB_AB
 
   implicit none
 
@@ -366,7 +366,7 @@
 
 ! updates elastic wavefields in PML
 
-  use specfem_par, only: NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,NGLOB_AB,FORCE_VECTORIZATION_VAL
+  use specfem_par, only: NDIM,CUSTOM_REAL,NGLOB_AB,FORCE_VECTORIZATION_VAL
 
   implicit none
 

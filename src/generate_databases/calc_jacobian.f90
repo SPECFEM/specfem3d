@@ -184,7 +184,7 @@
   subroutine check_element_regularity(xelm,yelm,zelm,any_regular_elem,cube_edge_size_squared, &
                                       nspec_irregular,ispec,nspec,irregular_element_number,ANY_FAULT_IN_THIS_PROC)
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,myrank
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,myrank
   use generate_databases_par, only: NGNOD,USE_MESH_COLORING_GPU
   use create_regions_mesh_ext_par, only: dershape3D
 

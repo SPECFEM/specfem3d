@@ -671,7 +671,7 @@ end module user_noise_distribution
 
   subroutine noise_save_surface_movie()
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE
+  use constants, only: CUSTOM_REAL,NDIM,NGLLSQUARE
 
   use specfem_par, only: it,ibool, &
     num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
