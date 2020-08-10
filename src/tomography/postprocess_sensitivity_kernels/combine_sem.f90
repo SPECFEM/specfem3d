@@ -63,8 +63,8 @@ program combine_sem
 
   integer, parameter :: NARGS = 3
 
-  character(len=MAX_STRING_LEN) :: kernel_paths(MAX_KERNEL_PATHS), kernel_names(MAX_KERNEL_PATHS), &
-    kernel_names_comma_delimited
+  character(len=MAX_STRING_LEN),dimension(:),allocatable :: kernel_paths, kernel_names
+  character(len=MAX_STRING_LEN) :: kernel_names_comma_delimited
   character(len=MAX_STRING_LEN) :: sline,prname_lp,output_dir,input_file
   character(len=MAX_STRING_LEN) :: arg(NARGS)
   integer :: npath,nker
@@ -91,6 +91,13 @@ program combine_sem
   endif
   call synchronize_all()
 
+  ! allocates arrays
+  allocate(kernel_paths(MAX_KERNEL_PATHS), kernel_names(MAX_KERNEL_PATHS), stat=ier)
+  if (ier /= 0) stop 'Error allocating kernel name arrays'
+  kernel_paths(:) = ''
+  kernel_names(:) = ''
+
+  ! reads in arguments
   do i = 1, NARGS
     call get_command_argument(i,arg(i), status=ier)
   enddo
