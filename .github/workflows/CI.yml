@@ -9,6 +9,7 @@ jobs:
   linuxCheck:
     name: Test on ${{ matrix.os }}    
     runs-on: ${{ matrix.os }}
+    mpi: 3
     
     strategy:
       matrix:
@@ -42,6 +43,7 @@ jobs:
   macosCheck:
     name: Test on Mac
     runs-on: macos-latest
+    mpi: 3
 
     steps:
     - uses: actions/checkout@v1
