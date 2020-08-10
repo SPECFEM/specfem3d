@@ -886,7 +886,8 @@ void FC_FUNC_(kernel_3_a_cuda,
 void FC_FUNC_(kernel_3_b_cuda,
               KERNEL_3_B_CUDA)(long* Mesh_pointer,
                                realw* deltatover2_F,
-                               realw* b_deltatover2_F) {}
+                               realw* b_deltatover2_F,
+                               int* FORWARD_OR_ADJOINT) {}
 
 void FC_FUNC_(kernel_3_acoustic_cuda,
               KERNEL_3_ACOUSTIC_CUDA)(long* Mesh_pointer,

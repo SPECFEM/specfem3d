@@ -854,7 +854,8 @@
     ! corrector:
     ! updates the velocity term which requires a(t+delta)
     ! GPU_MODE: this is handled in 'kernel_3' at the same time as accel*rmass
-    call kernel_3_b_cuda(Mesh_pointer,deltatover2,b_deltatover2)
+    call kernel_3_b_cuda(Mesh_pointer,deltatover2,b_deltatover2,1) ! 1 == forward
+    if (SIMULATION_TYPE == 3) call kernel_3_b_cuda(Mesh_pointer,deltatover2,b_deltatover2,3) ! 3 == backward
   endif
 
   end subroutine compute_forces_viscoelastic_GPU_calling

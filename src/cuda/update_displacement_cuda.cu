@@ -416,7 +416,8 @@ extern EXTERN_LANG
 void FC_FUNC_(kernel_3_b_cuda,
               KERNEL_3_B_CUDA)(long* Mesh_pointer,
                                realw* deltatover2_F,
-                               realw* b_deltatover2_F) {
+                               realw* b_deltatover2_F,
+                               int* FORWARD_OR_ADJOINT) {
   TRACE("\tkernel_3_b_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
@@ -432,18 +433,24 @@ void FC_FUNC_(kernel_3_b_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
-  realw deltatover2 = *deltatover2_F;
-  // updates only veloc at this point
-  kernel_3_veloc_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_veloc,
-                                                                      mp->d_accel,
-                                                                      size,deltatover2);
-
-  if (mp->simulation_type == 3) {
-    realw b_deltatover2 = *b_deltatover2_F;
-    kernel_3_veloc_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_b_veloc,
-                                                                        mp->d_b_accel,
-                                                                        size,b_deltatover2);
+  // sets gpu arrays
+  realw *veloc, *accel;
+  realw deltatover2;
+  if (*FORWARD_OR_ADJOINT == 1) {
+    veloc = mp->d_veloc;
+    accel = mp->d_accel;
+    deltatover2 = *deltatover2_F;
+  } else {
+    // for backward/reconstructed fields
+    veloc = mp->d_b_veloc;
+    accel = mp->d_b_accel;
+    deltatover2 = *b_deltatover2_F;
   }
+
+  // updates only veloc at this point
+  kernel_3_veloc_cuda_device<<< grid, threads,0,mp->compute_stream>>>(veloc,
+                                                                      accel,
+                                                                      size,deltatover2);
 
   //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);
   GPU_ERROR_CHECKING("after kernel 3 b");
