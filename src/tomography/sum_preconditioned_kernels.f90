@@ -57,7 +57,7 @@ program sum_preconditioned_kernels
 
   implicit none
 
-  character(len=MAX_STRING_LEN) :: kernel_list(MAX_KERNEL_PATHS)
+  character(len=MAX_STRING_LEN),dimension(:),allocatable :: kernel_list
   character(len=MAX_STRING_LEN) :: sline, kernel_name,prname_lp
   integer :: nker
   integer :: ier
@@ -77,6 +77,11 @@ program sum_preconditioned_kernels
     write(*,*) 'reading kernel list: '
   endif
   call synchronize_all()
+
+  ! allocates array
+  allocate(kernel_list(MAX_KERNEL_PATHS),stat=ier)
+  if (ier /= 0) stop 'Error allocating kernel_list array'
+  kernel_list(:) = ''
 
   ! reads in event list
   nker=0
