@@ -83,6 +83,7 @@ else
     ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TESTFLAGS}
   fi
 fi
+if [[ $? -ne 0 ]]; then exit 1; fi
 
 # we output to console
 sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
@@ -98,6 +99,7 @@ echo -en 'travis_fold:end:configure\\r'
 echo 'Build...' && echo -en 'travis_fold:start:build\\r'
 echo "compilation:"
 make clean; make -j2 all
+if [[ $? -ne 0 ]]; then exit 1; fi
 echo -en 'travis_fold:end:build\\r'
 
 ###########################################################
@@ -236,6 +238,7 @@ else
     # default script
     ./run_this_example.sh
   fi
+  if [[ $? -ne 0 ]]; then exit 1; fi
 
   # seismogram comparison
   if [ "$TESTCOV" == "0" ] && [ ! "$TESTID" == "11" ]; then
@@ -243,6 +246,7 @@ else
   fi
   cd $WORKDIR
 fi
+if [[ $? -ne 0 ]]; then exit 1; fi
 echo -en 'travis_fold:end:tests\\r'
 
 
@@ -262,6 +266,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   cd EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.elastic-noabs\\r'
@@ -274,6 +279,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   cd EXAMPLES/homogeneous_halfspace_HEX27_elastic_no_absorbing/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.elastic-hex27-noabs\\r'
@@ -286,6 +292,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   cd EXAMPLES/homogeneous_poroelastic/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.poro\\r'
@@ -302,6 +309,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   sed -i "s:^t_start.*:t_start=-6.0:" create_adjoint_sources.sh
   sed -i "s:^t_end.*:t_end=-5.55:" create_adjoint_sources.sh
   ./run_this_example_kernel.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cp -v DATA/Par_file.org DATA/Par_file
   cd $WORKDIR
 fi
@@ -330,6 +338,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   cd EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.pmlacoustic\\r'
@@ -342,6 +351,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   cd EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.pmlelastic\\r'
@@ -359,6 +369,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step2
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step3
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.noise\\r'
@@ -374,6 +385,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   cd EXAMPLES/tomographic_model/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.tomo\\r'
@@ -387,6 +399,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   cd EXAMPLES/layered_halfspace/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.layered\\r'
@@ -399,6 +412,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   cd EXAMPLES/waterlayered_halfspace/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.waterlayer\\r'
@@ -415,6 +429,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd EXAMPLES/meshfem3D_examples/simple_model/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.meshfem3D-simple\\r'
@@ -428,6 +443,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd EXAMPLES/meshfem3D_examples/socal1D/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.meshfem3D-socal\\r'
@@ -442,6 +458,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   sed -i "s:^MODEL .*:MODEL    = 1d_socal:" DATA/Par_file
   rm -f REF_SEIS; ln -s REF_SEIS.1d_socal REF_SEIS
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.meshfem3D-socal.1d_socal\\r'
@@ -456,6 +473,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   sed -i "s:^MODEL .*:MODEL    = 1d_prem:" DATA/Par_file
   rm -f REF_SEIS; ln -s REF_SEIS.1d_prem REF_SEIS
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.meshfem3D-socal.1d_prem\\r'
@@ -470,6 +488,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   sed -i "s:^MODEL .*:MODEL    = 1d_cascadia:" DATA/Par_file
   rm -f REF_SEIS; ln -s REF_SEIS.1d_cascadia REF_SEIS
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.meshfem3D-socal.1d_cascadia\\r'
@@ -482,6 +501,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd EXAMPLES/meshfem3D_examples/cavity/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.meshfem3D-cavity\\r'
@@ -494,6 +514,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd EXAMPLES/meshfem3D_examples/sep_bathymetry/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.meshfem3D-sep\\r'
@@ -507,6 +528,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd EXAMPLES/fault_examples/tpv5/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.fault\\r'
@@ -519,6 +541,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd EXAMPLES/small_example_coupling_FK_specfem/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.coupleFK\\r'
@@ -531,6 +554,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd EXAMPLES/Gmsh_simple_lddrk/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.Gmsh\\r'
@@ -543,6 +567,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd EXAMPLES/decompose_mesh_MPI/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.decompose_mpi\\r'
@@ -555,6 +580,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd EXAMPLES/meshfem3D_examples/regular_element_mesh/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.regular_elements\\r'
@@ -567,6 +593,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd EXAMPLES/small_adjoint_multiple_sources/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.small_adjoint\\r'
@@ -579,6 +606,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd EXAMPLES/waterlayered_poroelastic/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.waterlayered_poroelastic\\r'
@@ -597,6 +625,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "3" ]; then
   sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cp -v DATA/Par_file.org DATA/Par_file
   cd $WORKDIR
 fi
@@ -630,6 +659,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "3" ]; then
   sed -i "s:^NPROC_XI .*:NPROC_XI    = 1:" DATA/meshfem3D_files/Mesh_Par_file
   sed -i "s:^NPROC_ETA .*:NPROC_ETA    = 1:" DATA/meshfem3D_files/Mesh_Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cp -v DATA/Par_file.org DATA/Par_file
   cp -v DATA/meshfem3D_files/Mesh_Par_file.org DATA/meshfem3D_files/Mesh_Par_file
   cd $WORKDIR
@@ -644,6 +674,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "3" ]; then
   cd EXAMPLES/Gmsh_simple_box_hex27/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.Gmsh-hex27\\r'
