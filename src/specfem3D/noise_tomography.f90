@@ -557,6 +557,7 @@ end module user_noise_distribution
   ! checks to be sure that file is matching simulation setup
   if (nlines /= NSTEP) then
     print *,'Error: invalid number of lines ',nlines,' in file NOISE_TOMOGRAPHY/S_squared'
+    print *,'       should be equal to NSTEP = ',NSTEP
     print *,'Please check file...'
     call exit_MPI(myrank,'Error invalid number of lines in file S_squared')
   endif

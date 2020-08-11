@@ -116,9 +116,8 @@ if [ "$TESTID" == "4" ]; then
   make tests
 elif [ "$TESTID" == "14" ]; then
   # noise example
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step1
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step2
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step3
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  sed -i '10,$ d' NOISE_TOMOGRAPHY/S_squared  # truncates file, deletes all lines from line 10 till end
   ./run_this_example.sh
 else
   # default setup
@@ -365,9 +364,8 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ## testing noise
   ##
   cd EXAMPLES/noise_tomography/
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step1
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step2
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step3
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  sed -i '10,$ d' NOISE_TOMOGRAPHY/S_squared  # truncates file, deletes all lines from line 10 till end
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
   cd $WORKDIR
