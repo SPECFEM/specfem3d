@@ -178,8 +178,9 @@
 
   ! elastic simulation
   if (ELASTIC_SIMULATION) then
-
-    if (NB_RUNS_ACOUSTIC_GPU > 1) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with elastic or coupled simulations'
+    ! checks
+    if (NB_RUNS_ACOUSTIC_GPU > 1) &
+      call exit_mpi(myrank,'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with elastic or coupled simulations')
 
     ! displacement,velocity,acceleration
     allocate(displ(NDIM,NGLOB_AB),stat=ier)
@@ -346,7 +347,10 @@
   ! poroelastic
   if (POROELASTIC_SIMULATION) then
     ! checks
-    if (GPU_MODE) call exit_mpi(myrank,'POROELASTICITY not supported by GPU mode yet...')
+    if (GPU_MODE) &
+      call exit_mpi(myrank,'POROELASTICITY not supported by GPU mode yet...')
+    if (NB_RUNS_ACOUSTIC_GPU > 1) &
+      call exit_mpi(myrank,'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with poroelastic or coupled simulations')
 
     ! displacement,velocity,acceleration for the solid (s) & fluid (w) phases
     allocate(displs_poroelastic(NDIM,NGLOB_AB),stat=ier)

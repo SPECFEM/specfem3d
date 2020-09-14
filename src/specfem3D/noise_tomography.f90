@@ -39,10 +39,6 @@
 !
 ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-! =============================================================================================================
-! =============================================================================================================
-! =============================================================================================================
-
 module user_noise_distribution
 
 !daniel: TODO -- setting USE_PIERO_DISTRIBUTION = .true. will produce errors
@@ -56,8 +52,8 @@ contains
 ! this subroutine must be modified by USERS for their own noise distribution
 
   subroutine noise_distribution_direction(xcoord_in,ycoord_in,zcoord_in, &
-                  normal_x_noise_out,normal_y_noise_out,normal_z_noise_out, &
-                  mask_noise_out)
+                                          normal_x_noise_out,normal_y_noise_out,normal_z_noise_out, &
+                                          mask_noise_out)
 
   use constants
 
@@ -92,8 +88,8 @@ contains
 !
 ! USERS: need to modify this subroutine for their own noise characteristics
   subroutine noise_distribution_direction_d(xcoord_in,ycoord_in,zcoord_in, &
-                                           normal_x_noise_out,normal_y_noise_out,normal_z_noise_out, &
-                                           mask_noise_out)
+                                            normal_x_noise_out,normal_y_noise_out,normal_z_noise_out, &
+                                            mask_noise_out)
   use constants
 
   implicit none
@@ -148,9 +144,9 @@ contains
 
   ! coordinates "x/y/zcoord_in" actually contain r theta phi, therefore convert back to x y z
   ! call rthetaphi_2_xyz(xcoord,ycoord,zcoord, xcoord_in,ycoord_in,zcoord_in)
-  xcoord=xcoord_in
-  ycoord=ycoord_in
-  zcoord=zcoord_in
+  xcoord = xcoord_in
+  ycoord = ycoord_in
+  zcoord = zcoord_in
 
   !PB NOT UNIF DISTRIBUTION OF NOISE ON THE SURFACE OF A SPHERE
   !PB lon lat colat ARE IN RADIANS SINCE ARE OBTAINED FROM Cartesian COORDINATES
@@ -227,11 +223,9 @@ contains
 
 end module user_noise_distribution
 
-
-
+!
 ! =============================================================================================================
-! =============================================================================================================
-! =============================================================================================================
+!
 
 ! read parameters
   subroutine read_parameters_noise(nrec,NSTEP,nmovie_points, &
@@ -367,13 +361,14 @@ end module user_noise_distribution
 
   end subroutine read_parameters_noise
 
+!
 ! =============================================================================================================
-! =============================================================================================================
-! =============================================================================================================
+!
 
-! check for consistency of the parameters
   subroutine check_parameters_noise(NOISE_TOMOGRAPHY,SIMULATION_TYPE,SAVE_FORWARD, &
                                     LOCAL_PATH,NSPEC_TOP,NSTEP)
+
+! check for consistency of the parameters
 
   use constants, only: CUSTOM_REAL,NDIM,NGLLSQUARE,MAX_STRING_LEN,IOUT_NOISE,OUTPUT_FILES,myrank
 
@@ -494,8 +489,9 @@ end module user_noise_distribution
   double precision, dimension(NDIM,NDIM) :: nu_single  ! rotation matrix at the main receiver
   ! output parameters
   real(kind=CUSTOM_REAL) :: noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP)
+
   ! local parameters
-  integer itime, i, j, k, ier, nlines
+  integer :: itime, i, j, k, ier, nlines
   real(kind=CUSTOM_REAL) :: junk
   real(kind=CUSTOM_REAL) :: noise_src(NSTEP),noise_src_u(NDIM,NSTEP)
   double precision, dimension(NDIM) :: nu_main       ! component direction chosen at the main receiver
@@ -512,12 +508,13 @@ end module user_noise_distribution
   ! main receiver component direction, \nu_main
   filename = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/nu_main'
   open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ier)
-  if (ier /= 0 .and. myrank == 0) &
+  if (ier /= 0 .and. myrank == 0) then
     call exit_MPI(myrank, &
       'file '//trim(filename)//' does NOT exist! nu_main is the component direction (ENZ) for main receiver')
+  endif
 
-  do itime = 1,3
-    read(IIN_NOISE,*,iostat=ier) nu_main(itime)
+  do i = 1,3
+    read(IIN_NOISE,*,iostat=ier) nu_main(i)
     if (ier /= 0 .and. myrank == 0) &
       call exit_MPI(myrank, &
         'file '//trim(filename)//' has wrong length, the vector should have three components (ENZ)')
@@ -543,8 +540,9 @@ end module user_noise_distribution
   ! noise file (source time function)
   filename = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/S_squared'
   open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ier)
-  if (ier /= 0 .and. myrank == 0)  &
+  if (ier /= 0 .and. myrank == 0) then
     call exit_MPI(myrank, 'file '//trim(filename)//' does NOT exist! This file should have been generated using Matlab scripts')
+  endif
 
   ! counts line reads noise source S(t)
   nlines = 0

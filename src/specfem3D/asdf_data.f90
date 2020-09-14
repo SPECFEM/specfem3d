@@ -45,7 +45,7 @@ module asdf_data
 
     !size info
     integer :: nreceivers
-    integer :: nrec_local
+    integer :: nrec_store
 
     !seismic record info
     real, pointer :: receiver_lat(:), receiver_lo(:)

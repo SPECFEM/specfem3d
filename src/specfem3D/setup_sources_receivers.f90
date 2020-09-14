@@ -289,9 +289,10 @@
 !
 !-------------------------------------------------------------------------------------------------
 !
-!EB EB When NB_RUNS_ACOUSTIC_GPU > 1, the file SOURCE_FILE actually contains the sources for all the runs.
-!This routine is intended to get the array that contains the run number of each source described in SOURCE_FILE.
-!The line i of the file run_number_of_the_source contains the run number \in [ 0;NB_RUNS_ACOUSTIC_GPU-1] of the source i
+! When NB_RUNS_ACOUSTIC_GPU > 1, the file SOURCE_FILE actually contains the sources for all the runs.
+! This routine is intended to get the array that contains the run number of each source described in SOURCE_FILE.
+! The line i of the file run_number_of_the_source contains the run number \in [ 0;NB_RUNS_ACOUSTIC_GPU-1] of the source i
+
   subroutine get_run_number_of_the_source()
 
   use constants
@@ -305,11 +306,11 @@
   if (NB_RUNS_ACOUSTIC_GPU == 1) then
     run_number_of_the_source(:) = 0
   else
-
+    ! reads file DATA/run_number_of_the_source
     filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'run_number_of_the_source'
-    open(unit=IIN,file=filename,status='old',action='read',iostat=ier)
+    open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ier)
     if (ier /= 0) then
-      print *,'Error opening file: ',filename
+      print *,'Error opening file: ',trim(filename)
       stop 'Error opening run_number_of_the_source file'
     endif
 
@@ -323,7 +324,7 @@
     if (icounter /= NSOURCES) stop 'Error total number of lines in run_number_of_the_source file is not equal to NSOURCES'
 
     ! Fills the array run_number_of_the_source
-    open(unit=IIN,file=filename,status='old',action='read')
+    open(unit=IIN,file=trim(filename),status='old',action='read')
     ! reads run number for each source
     do isource = 1,NSOURCES
       read(IIN,"(a)") string
@@ -1108,7 +1109,7 @@
   implicit none
 
   ! local parameters
-  integer :: irec,irec_local,isource,ier
+  integer :: irec,irec_local,isource,ier,nrec_store
   integer,dimension(0:NPROC-1) :: tmp_rec_local_all
   integer :: maxrec,maxproc(1)
   double precision :: sizeval
@@ -1470,7 +1471,18 @@
   if (ASDF_FORMAT) then
     if (.not. (SIMULATION_TYPE == 3 .and. (.not. SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)) ) then
       ! initializes the ASDF data structure by allocating arrays
-      call init_asdf_data(nrec_local)
+      if (WRITE_SEISMOGRAMS_BY_MAIN) then
+        if (myrank == 0) then
+          ! main process holds all seismograms
+          nrec_store = nrec * NB_RUNS_ACOUSTIC_GPU
+        else
+          nrec_store = 0
+        endif
+      else
+        ! each process writes out its local receivers
+        nrec_store = nrec_local * NB_RUNS_ACOUSTIC_GPU
+      endif
+      call init_asdf_data(nrec_store)
       call synchronize_all()
     endif
   endif

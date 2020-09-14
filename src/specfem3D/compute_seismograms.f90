@@ -36,11 +36,13 @@
     hxir_store,hetar_store,hgammar_store,number_receiver_global,nrec_local, &
     nu_source,nu_rec,Mxx,Myy,Mzz,Mxy,Mxz,Myz,tshift_src,hdur_Gaussian, &
     hprime_xx,hprime_yy,hprime_zz, &
-    seismograms_d,seismograms_v,seismograms_a,seismograms_p, &
     hpxir_store,hpetar_store,hpgammar_store,seismograms_eps, &
     Mxx_der,Myy_der,Mzz_der,Mxy_der,Mxz_der,Myz_der,sloc_der, &
     USE_TRICK_FOR_BETTER_PRESSURE, &
     SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE
+
+  ! seismograms
+  use specfem_par, only: seismograms_d,seismograms_v,seismograms_a,seismograms_p
 
   use specfem_par_acoustic, only: ispec_is_acoustic,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
     b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic

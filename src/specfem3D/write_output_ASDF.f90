@@ -26,8 +26,8 @@
 !=====================================================================
 
 !> Initializes the data structure for ASDF
-!! \param nrec_local The number of receivers on the local processor
-  subroutine init_asdf_data(nrec_local)
+!! \param nrec_store The number of receivers on the local processor
+  subroutine init_asdf_data(nrec_store)
 
   use specfem_par, only: myrank
 
@@ -35,34 +35,34 @@
 
   implicit none
   ! Parameters
-  integer,intent(in) :: nrec_local
+  integer,intent(in) :: nrec_store
 
   ! Variables
   integer :: total_seismos_local, ier
 
-  total_seismos_local = nrec_local * 3 ! 3 components
+  total_seismos_local = nrec_store * 3 ! 3 components
 
-  asdf_container%nrec_local = nrec_local
+  asdf_container%nrec_store = nrec_store
 
-  allocate(asdf_container%receiver_name_array(nrec_local),stat=ier)
+  allocate(asdf_container%receiver_name_array(nrec_store),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2008')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%network_array(nrec_local),stat=ier)
+  allocate(asdf_container%network_array(nrec_store),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2009')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
   allocate(asdf_container%component_array(total_seismos_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2010')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%receiver_lat(nrec_local),stat=ier)
+  allocate(asdf_container%receiver_lat(nrec_store),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2011')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%receiver_lo(nrec_local),stat=ier)
+  allocate(asdf_container%receiver_lo(nrec_store),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2012')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%receiver_el(nrec_local),stat=ier)
+  allocate(asdf_container%receiver_el(nrec_store),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2013')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%receiver_dpt(nrec_local),stat=ier)
+  allocate(asdf_container%receiver_dpt(nrec_store),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2014')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
   allocate(asdf_container%records(total_seismos_local),stat=ier)
@@ -81,12 +81,12 @@
 !! \param irec The global index of the receiver
 !! \param chn The broadband channel simulated
 !! \param iorientation The recorded seismogram's orientation direction
-  subroutine store_asdf_data(seismogram_tmp, irec_local, irec, chn, iorientation)
+  subroutine store_asdf_data(one_seismogram, irec_local, irec, chn, iorientation)
 
   use constants, only: CUSTOM_REAL,NDIM,myrank,IIN_SU1
 
   use specfem_par, only: &
-    station_name,network_name,NSTEP,nrec,OUTPUT_FILES
+    station_name,network_name,NSTEP,nrec,OUTPUT_FILES,NTSTEP_BETWEEN_OUTPUT_SEISMOS
 
   use asdf_data, only: asdf_container
 
@@ -95,12 +95,18 @@
   ! Parameters
   character(len=3),intent(in) :: chn
   integer,intent(in) :: irec_local, irec, iorientation
-  real(kind=CUSTOM_REAL),dimension(NDIM,NSTEP),intent(in) :: seismogram_tmp
+  real(kind=CUSTOM_REAL),dimension(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS),intent(in) :: one_seismogram
+
+  real(kind=CUSTOM_REAL),dimension(NSTEP) :: seismogram_tmp
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
 
   ! local Variables
   integer :: length_station_name, length_network_name
   integer :: ier, i, index_increment
+
+  ! copy trace values
+  seismogram_tmp(:) = 0._CUSTOM_REAL
+  seismogram_tmp(1:NTSTEP_BETWEEN_OUTPUT_SEISMOS) = one_seismogram(iorientation,1:NTSTEP_BETWEEN_OUTPUT_SEISMOS)
 
   allocate(x_found(nrec),y_found(nrec),z_found(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2016')
@@ -110,11 +116,12 @@
   open(unit=IIN_SU1,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='old',iostat=ier)
   if (ier /= 0) stop 'error opening output_list_stations.txt file'
 
-  do i=1,nrec
+  do i = 1,nrec
    read(IIN_SU1,*) station_name(i),network_name(i),x_found(i),y_found(i),z_found(i)
    if (i == irec) then
      length_station_name = len_trim(station_name(i))
      length_network_name = len_trim(network_name(i))
+
      asdf_container%receiver_name_array(irec_local) = station_name(i)(1:length_station_name)
      asdf_container%network_array(irec_local) = network_name(i)(1:length_network_name)
      asdf_container%receiver_lat(irec_local) = x_found(i)
@@ -135,7 +142,7 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2017')
   if (ier /= 0) call exit_MPI (myrank, 'Allocating ASDF container failed.')
 
-  asdf_container%records(i)%record(1:NSTEP) = seismogram_tmp(iorientation,1:NSTEP)
+  asdf_container%records(i)%record(1:NSTEP) = seismogram_tmp(1:NSTEP)
 
   end subroutine store_asdf_data
 
@@ -153,7 +160,7 @@
   !Variables
   integer :: i
 
-  do i = 1, asdf_container%nrec_local*3 ! 3 components
+  do i = 1, asdf_container%nrec_store * 3 ! 3 components
     deallocate(asdf_container%records(i)%record)
   enddo
   deallocate(asdf_container%receiver_name_array)
@@ -183,8 +190,7 @@
   use iso_c_binding, only: C_NULL_CHAR,c_ptr
 !  use iso_Fortran_env
 
-  use specfem_par, only: seismo_offset,DT,NSTEP,nrec_local, &
-    OUTPUT_FILES,WRITE_SEISMOGRAMS_BY_MAIN
+  use specfem_par, only: seismo_offset,DT,NSTEP,OUTPUT_FILES,WRITE_SEISMOGRAMS_BY_MAIN
 
   implicit none
 
@@ -263,7 +269,8 @@
   call world_duplicate(comm)
   call world_size(mysize)
 
-  num_stations(1) = nrec_local
+  num_stations(1) = asdf_container%nrec_store
+
   sampling_rate = 1.0/DT
   !nsamples = seismo_current * (NSTEP / NTSTEP_BETWEEN_OUTPUT_SEISMOS)
   nsamples = NSTEP ! BS BS: The total number of samples to be written to the
@@ -352,13 +359,13 @@
   enddo
 
   call all_gatherv_all_ch(stations_names, &
-                       num_stations(1) * MAX_LENGTH_STATION_NAME, &
-                       station_names_gather, &
-                       rcounts, &
-                       displs, &
-                       max_num_stations_gather, &
-                       MAX_LENGTH_STATION_NAME, &
-                       mysize)
+                          num_stations(1) * MAX_LENGTH_STATION_NAME, &
+                          station_names_gather, &
+                          rcounts, &
+                          displs, &
+                          max_num_stations_gather, &
+                          MAX_LENGTH_STATION_NAME, &
+                          mysize)
 
   do i = 1, mysize
     displs(i) = (i-1) * max_num_stations_gather * MAX_LENGTH_NETWORK_NAME
@@ -366,13 +373,13 @@
   enddo
 
   call all_gatherv_all_ch(networks_names, &
-                       num_stations(1) * MAX_LENGTH_NETWORK_NAME, &
-                       network_names_gather, &
-                       rcounts, &
-                       displs, &
-                       max_num_stations_gather, &
-                       MAX_LENGTH_NETWORK_NAME, &
-                       mysize)
+                          num_stations(1) * MAX_LENGTH_NETWORK_NAME, &
+                          network_names_gather, &
+                          rcounts, &
+                          displs, &
+                          max_num_stations_gather, &
+                          MAX_LENGTH_NETWORK_NAME, &
+                          mysize)
 
   do i = 1, mysize
     displs(i) = (i-1) * max_num_stations_gather * 3
@@ -380,13 +387,13 @@
   enddo
 
   call all_gatherv_all_ch(component_names, &
-                       num_stations(1)*3*3, &!*3*3, &
-                       component_names_gather, &
-                       rcounts*3, &
-                       displs*3, &
-                       max_num_stations_gather*3, &
-                       3, &
-                       mysize)
+                          num_stations(1)*3*3, &!*3*3, &
+                          component_names_gather, &
+                          rcounts*3, &
+                          displs*3, &
+                          max_num_stations_gather*3, &
+                          3, &
+                          mysize)
 
   ! Now gather all the coordiante information for these stations
   do i = 1, mysize
@@ -578,9 +585,9 @@
 
     do k = 1, mysize ! Need to write data from all processes
 
-        current_proc = k - 1
-        sender=current_proc
-        receiver=0 ! the main proc does all the writing
+      current_proc = k - 1
+      sender = current_proc
+      receiver = 0 ! the main proc does all the writing
 
       do j = 1, num_stations_gather(k) ! loop over number of stations on that process
 
@@ -597,7 +604,7 @@
             enddo
           endif
 
-       else ! current_proc is not main proc
+        else ! current_proc is not main proc
 
           if (myrank == current_proc) then
 
@@ -619,9 +626,9 @@
         if (myrank == 0) then
 
           call ASDF_open_stations_group_f(waveforms_grp, &
-            trim(network_names_gather(j, k)) // "." //      &
-            trim(station_names_gather(j, k)) // C_NULL_CHAR, &
-            station_grp)
+                                          trim(network_names_gather(j, k)) // "." //      &
+                                          trim(station_names_gather(j, k)) // C_NULL_CHAR, &
+                                          station_grp)
 
           do  i = 1, NDIM ! loop over each component
             ! Generate unique waveform name

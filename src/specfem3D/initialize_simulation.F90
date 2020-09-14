@@ -419,16 +419,27 @@
 
   ! safety check
   if (NB_RUNS_ACOUSTIC_GPU > 1) then
-
-   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with NUMBER_OF_SIMULTANEOUS_RUNS > 1 yet'
-   if (SIMULATION_TYPE /= 1) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with SIMULATION_TYPE /= 1 yet'
-   if (STACEY_ABSORBING_CONDITIONS) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with STACEY_ABSORBING_CONDITIONS yet'
-   if (.not. SAVE_SEISMOGRAMS_PRESSURE ) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with elastic wavefield seismograms yet'
-   if (.not. GPU_MODE ) stop 'NB_RUNS_ACOUSTIC_GPU > 1 only applies with GPU_MODE'
-   if (INVERSE_FWI_FULL_PROBLEM) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with INVERSE_FWI_FULL_PROBLEM yet'
-   if (myrank == 1) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with MPI mode yet'
-
+    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) &
+      stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with NUMBER_OF_SIMULTANEOUS_RUNS > 1 yet'
+    if (SIMULATION_TYPE /= 1) &
+      stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with SIMULATION_TYPE /= 1 yet'
+    if (STACEY_ABSORBING_CONDITIONS) &
+      stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with STACEY_ABSORBING_CONDITIONS yet'
+    if (SAVE_SEISMOGRAMS_DISPLACEMENT .or. SAVE_SEISMOGRAMS_VELOCITY .or. SAVE_SEISMOGRAMS_ACCELERATION) &
+      stop 'Invalid seismogram output for NB_RUNS_ACOUSTIC_GPU > 1, only pressure output implemented yet'
+    if (.not. SAVE_SEISMOGRAMS_PRESSURE ) &
+      stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with elastic wavefield seismograms yet'
+    if (.not. GPU_MODE ) &
+      stop 'NB_RUNS_ACOUSTIC_GPU > 1 only applies with GPU_MODE'
+    if (INVERSE_FWI_FULL_PROBLEM) &
+      stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with INVERSE_FWI_FULL_PROBLEM yet'
+    if (myrank == 1) &
+      stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with MPI mode yet'
   endif
+
+  ! file output
+  if (SU_FORMAT .and. ASDF_FORMAT) &
+    stop 'Please choose either SU_FORMAT or ASDF_FORMAT, both outputs together are not implemented yet...'
 
   end subroutine initialize_simulation_check
 

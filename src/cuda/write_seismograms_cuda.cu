@@ -537,8 +537,10 @@ void FC_FUNC_(compute_seismograms_cuda,
     realw * seismo_temp;
     if (mp->save_seismograms_p){
       // EB EB We need to reorganize data to match host array shape :
-      // if NB_RUNS_ACOUSTIC_GPU = 1 from fortran shape (1,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS) to (NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
-      // if NB_RUNS_ACOUSTIC_GPU > 1 from fortran shape (NB_RUNS_ACOUSTIC_GPU,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS) to (NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+      // if NB_RUNS_ACOUSTIC_GPU = 1:
+      //   from fortran shape (1,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS) to (NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+      // if NB_RUNS_ACOUSTIC_GPU > 1:
+      //    from fortran shape (NB_RUNS_ACOUSTIC_GPU,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS) to (NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
       seismo_temp = (realw*)malloc(size * NB_RUNS_ACOUSTIC_GPU * sizeof(realw));
       print_CUDA_error_if_any(cudaMemcpy(seismo_temp,mp->d_seismograms_p,
                                          size * NB_RUNS_ACOUSTIC_GPU * sizeof(realw),cudaMemcpyDeviceToHost),72004);

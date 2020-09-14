@@ -44,7 +44,9 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
                                 NMATERIALS,material_properties, &
                                 nspec_CPML,CPML_to_spec,CPML_regions,is_CPML)
 
-  use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ADIOS_TRANSPORT_METHOD, &
+  use constants, only: MAX_STRING_LEN, &
+    IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
+    ADIOS_TRANSPORT_METHOD, &
     NGLLX,NGLLY,NGLLZ,NDIM,myrank
 
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NUMBER_OF_MATERIAL_PROPERTIES
