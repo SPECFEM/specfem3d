@@ -82,7 +82,8 @@
                                 hxir_store,hetar_store,hgammar_store,nu_rec, &
                                 islice_selected_rec,NSTEP, &
                                 SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY, &
-                                SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE)
+                                SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE, &
+                                NB_RUNS_ACOUSTIC_GPU)
 
 
   ! prepares fields on GPU for acoustic simulations

@@ -216,9 +216,9 @@ __global__ void compute_element_strain_cudakernel(int* ispec_is_elastic,
   int ijk_ispec = ijk + NGLL3*ispec;
   //int ijk_ispec_padded = ijk + NGLL3_PADDED*ispec;
 
-  __shared__ field sh_tempx[NGLL3];
-  __shared__ field sh_tempy[NGLL3];
-  __shared__ field sh_tempz[NGLL3];
+  __shared__ realw sh_tempx[NGLL3];
+  __shared__ realw sh_tempy[NGLL3];
+  __shared__ realw sh_tempz[NGLL3];
 
   float tempx1l,tempx2l,tempx3l;
   float tempy1l,tempy2l,tempy3l;
@@ -866,7 +866,7 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
                             d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
                             rhol,xix_regular,gravity);
 
-    //sun function is here to sum over wavefields, in case of NB_RUNS_ACOUSTIC_GPU>1
+    //sum function is here to sum over wavefields, in case of NB_RUNS_ACOUSTIC_GPU>1
 
     // approximates hessian
     hess_kl[ijk + NGLL3*ispec] += deltat * sum(accel_loc[0]*b_accel_loc[0] +

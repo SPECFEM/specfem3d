@@ -140,7 +140,7 @@ __global__ void compute_acoustic_seismogram_kernel(int nrec_local,
       realw hlagrange = hxir * hetar * hgammar;
       int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,I,J,K,ispec)]-1;
 
-      sh_dxd[tx] = hlagrange*pressure[iglob];
+      sh_dxd[tx] = hlagrange * pressure[iglob];
     }
     __syncthreads();
 
@@ -148,12 +148,14 @@ __global__ void compute_acoustic_seismogram_kernel(int nrec_local,
       if (tx % (2*s) == 0) {sh_dxd[tx] += sh_dxd[tx + s];}
       __syncthreads();
     }
+    //debug
+    //if (tx == 0) printf("debug: seismo %i x/y = %f/%f\n",irec_local,sh_dxd[0].x,sh_dxd[0].y);
 
     int it = seismo_current - 1;
     int idx = INDEX2(nrec_local,irec_local,it);
 
     // Signe moins car pression = -potential_dot_dot
-   if (tx == 0) seismograms[idx] = -sh_dxd[0];
+    if (tx == 0) seismograms[idx] = -sh_dxd[0];
   }
 }
 
@@ -266,7 +268,7 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
 
   // loads into shared memory
   if (tx < NGLL2) sh_hprime_xx[tx] = d_hprime_xx[tx];
-  if (tx < NGLL3) s_dummy_loc[tx] = (realw)scalar_potential[iglob];
+  if (tx < NGLL3) s_dummy_loc[tx] = realw_(scalar_potential[iglob]); // quick fix to convert field to realw
 
 
   // synchronize all the threads (one thread for each of the NGLL grid points of the
@@ -534,24 +536,40 @@ void FC_FUNC_(compute_seismograms_cuda,
       print_CUDA_error_if_any(cudaMemcpy(seismograms_a,mp->d_seismograms_a,NDIM * size * sizeof(realw),cudaMemcpyDeviceToHost),72003);
 
     // EB EB Temporary solution : in the future we will also declare host pressure seismograms as (1,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
-    realw * seismo_temp;
     if (mp->save_seismograms_p){
       // EB EB We need to reorganize data to match host array shape :
-      // if NB_RUNS_ACOUSTIC_GPU = 1:
-      //   from fortran shape (1,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS) to (NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
-      // if NB_RUNS_ACOUSTIC_GPU > 1:
-      //    from fortran shape (NB_RUNS_ACOUSTIC_GPU,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS) to (NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
-      seismo_temp = (realw*)malloc(size * NB_RUNS_ACOUSTIC_GPU * sizeof(realw));
+      // if NB_RUNS_ACOUSTIC_GPU = 1: from fortran shape
+      //   (1,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS) to (NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+      // if NB_RUNS_ACOUSTIC_GPU > 1: from fortran shape
+      //   (NB_RUNS_ACOUSTIC_GPU,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS) to (NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+      realw *seismo_temp = (realw*) malloc(size * NB_RUNS_ACOUSTIC_GPU * sizeof(realw));
       print_CUDA_error_if_any(cudaMemcpy(seismo_temp,mp->d_seismograms_p,
                                          size * NB_RUNS_ACOUSTIC_GPU * sizeof(realw),cudaMemcpyDeviceToHost),72004);
 
-      for (int it = 0; it<NTSTEP_BETWEEN_OUTPUT_SEISMOS; it++)
-        for (int i_recloc=0; i_recloc<mp->nrec_local; i_recloc++)
+      for (int it = 0; it<NTSTEP_BETWEEN_OUTPUT_SEISMOS; it++){
+        for (int i_recloc=0; i_recloc<mp->nrec_local; i_recloc++){
           for (int i_run=0; i_run<NB_RUNS_ACOUSTIC_GPU; i_run++){
             seismograms_p[INDEX4(NDIM,mp->nrec_local,NB_RUNS_ACOUSTIC_GPU,0,i_recloc,i_run,it)] = seismo_temp[INDEX3(NB_RUNS_ACOUSTIC_GPU,mp->nrec_local,i_run,i_recloc,it)];
             seismograms_p[INDEX4(NDIM,mp->nrec_local,NB_RUNS_ACOUSTIC_GPU,1,i_recloc,i_run,it)] = 0.f;
             seismograms_p[INDEX4(NDIM,mp->nrec_local,NB_RUNS_ACOUSTIC_GPU,2,i_recloc,i_run,it)] = 0.f;
           }
+        }
+      }
+
+      // debug - checks min/max
+      //for (int i_recloc=0; i_recloc<mp->nrec_local; i_recloc++){
+      //  for (int i_run=0; i_run<NB_RUNS_ACOUSTIC_GPU; i_run++){
+      //    float xmin,xmax;
+      //    xmin = 0.f;
+      //    xmax = 0.f;
+      //    for (int it = 0; it<NTSTEP_BETWEEN_OUTPUT_SEISMOS; it++){
+      //      int idx = INDEX4(NDIM,mp->nrec_local,NB_RUNS_ACOUSTIC_GPU,0,i_recloc,i_run,it);
+      //      xmin = min(xmin,seismograms_p[idx]);
+      //      xmax = max(xmax,seismograms_p[idx]);
+      //    }
+      //    printf("debug: gpu seismo: run %i receiver %i min/max = %f/%f\n",i_run,i_recloc,xmin,xmax);
+      //  }
+      //}
 
       free(seismo_temp);
     }

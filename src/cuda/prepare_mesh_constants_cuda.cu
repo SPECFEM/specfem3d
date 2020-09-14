@@ -96,7 +96,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* islice_selected_rec,
                                         int* NTSTEP_BETWEEN_OUTPUT_SEISMOS,
                                         int* SAVE_SEISMOGRAMS_DISPLACEMENT,int* SAVE_SEISMOGRAMS_VELOCITY,
-                                        int* SAVE_SEISMOGRAMS_ACCELERATION,int* SAVE_SEISMOGRAMS_PRESSURE) {
+                                        int* SAVE_SEISMOGRAMS_ACCELERATION,int* SAVE_SEISMOGRAMS_PRESSURE,
+                                        int* h_NB_RUNS_ACOUSTIC_GPU) {
 
   TRACE("prepare_constants_device");
 
@@ -118,12 +119,18 @@ void FC_FUNC_(prepare_constants_device,
   mp->absorbing_conditions = *ABSORBING_CONDITIONS;
   mp->save_forward = *SAVE_FORWARD;
 
+  // checks setup
 // DK DK August 2018: adding this test, following a suggestion by Etienne Bachmann
   if (*h_NGLLX != NGLLX) {
     exit_on_error("make sure that the NGLL constants are equal in the two files:\n" \
                   "  setup/constants.h and src/cuda/mesh_constants_cuda.h\n" \
                   "and then please re-compile; also make sure that the value of NGLL3_PADDED " \
                   "is consistent with the value of NGLL\n");
+  }
+  if (*h_NB_RUNS_ACOUSTIC_GPU != NB_RUNS_ACOUSTIC_GPU){
+    exit_on_error("make sure that the NB_RUNS_ACOUSTIC_GPU constants are equal in the two files:\n" \
+                  "  setup/constants.h and src/cuda/mesh_constants_cuda.h\n" \
+                  "and then please re-compile...\n");
   }
 
   // sets constant arrays

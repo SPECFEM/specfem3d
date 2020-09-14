@@ -322,6 +322,7 @@ inline __host__ __device__ field Make_field(realw* b){ return b[0];}
 inline __host__ __device__ field Make_field(realw b){ return b;}
 inline __host__ __device__ field max(field b){ return b;}
 inline __host__ __device__ realw sum(field b){ return b;}
+inline __host__ __device__ realw realw_(field b){ return b; }
 #endif
 
 #if NB_RUNS_ACOUSTIC_GPU == 2
@@ -346,6 +347,8 @@ inline __host__ __device__ field operator+(field a, realw b){ return a;}
 inline __device__ void atomicAdd(field* address, float val){}
 inline __device__ void atomicAdd(realw* address, field val){}
 inline __host__ __device__ void operator+=(realw &a, field b){}
+// work-around to have something like: realw a = realw_(field)
+inline __host__ __device__ realw realw_(field b){ return b.x; }
 
 //texture are not compatible for the moment with floatN data
 #undef USE_TEXTURES_FIELDS
@@ -376,6 +379,8 @@ inline __host__ __device__ field operator+(field a, realw b){ return a;}
 inline __device__ void atomicAdd(field* address, float val){}
 inline __device__ void atomicAdd(realw* address, field val){}
 inline __host__ __device__ void operator+=(realw &a, field b){}
+// work-around to have something like: realw a = realw_(field)
+inline __host__ __device__ realw realw_(field b){ return b.x; }
 
 //texture are not compatible for the moment with floatN data
 #undef USE_TEXTURES_FIELDS

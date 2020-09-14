@@ -448,7 +448,7 @@ contains
        allocate(seismograms_a(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 511')
        if (ier /= 0) stop 'error allocating array seismograms_a'
-       allocate(seismograms_p(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+       allocate(seismograms_p(NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 512')
        if (ier /= 0) stop 'error allocating array seismograms_p'
 

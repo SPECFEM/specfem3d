@@ -512,7 +512,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* islice_selected_rec,
                                         int* NTSTEP_BETWEEN_OUTPUT_SEISMOS,
                                         int* SAVE_SEISMOGRAMS_DISPLACEMENT,int* SAVE_SEISMOGRAMS_VELOCITY,
-                                        int* SAVE_SEISMOGRAMS_ACCELERATION,int* SAVE_SEISMOGRAMS_PRESSURE) {}
+                                        int* SAVE_SEISMOGRAMS_ACCELERATION,int* SAVE_SEISMOGRAMS_PRESSURE,
+                                        int* h_NB_RUNS_ACOUSTIC_GPU) {}
 
 void FC_FUNC_(prepare_fields_acoustic_device,
               PREPARE_FIELDS_ACOUSTIC_DEVICE)(long* Mesh_pointer,

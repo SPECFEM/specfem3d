@@ -598,7 +598,7 @@
 
   subroutine write_one_seismogram(one_seismogram,irec_local,irec,component,istore)
 
-  use constants,only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,OUTPUT_FILES,NB_RUNS_ACOUSTIC_GPU
+  use constants, only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,OUTPUT_FILES,NB_RUNS_ACOUSTIC_GPU
 
   use specfem_par, only: DT,t0,it, &
     NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS,ASDF_FORMAT,WRITE_SEISMOGRAMS_BY_MAIN, &

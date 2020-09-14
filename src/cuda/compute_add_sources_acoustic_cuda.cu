@@ -86,9 +86,9 @@ void get_stf_for_gpu(field* stf_pre_compute, double* h_stf_pre_compute, int * ru
 
   TRACE("get_stf_for_gpu");
   realw realw_to_field[NB_RUNS_ACOUSTIC_GPU];
+
   //Conversion to GPU precision
   //Converts source time function to the field format. The stf value is saved only into its corresponding run. For other runs, a zero will be added
-
 
   for (int i_source=0;i_source < NSOURCES;i_source++){
     for (int i_run=0;i_run < NB_RUNS_ACOUSTIC_GPU;i_run++)

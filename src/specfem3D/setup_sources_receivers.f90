@@ -298,14 +298,13 @@
   use constants
   use specfem_par, only: run_number_of_the_source,NSOURCES
   character(len=MAX_STRING_LEN) :: filename,string
-  integer :: ier,isource,icounter
+  integer :: ier,isource,icounter,id_run
 
   allocate(run_number_of_the_source(NSOURCES),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2059')
+  run_number_of_the_source(:) = 0
 
-  if (NB_RUNS_ACOUSTIC_GPU == 1) then
-    run_number_of_the_source(:) = 0
-  else
+  if (NB_RUNS_ACOUSTIC_GPU > 1) then
     ! reads file DATA/run_number_of_the_source
     filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'run_number_of_the_source'
     open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ier)
@@ -328,7 +327,18 @@
     ! reads run number for each source
     do isource = 1,NSOURCES
       read(IIN,"(a)") string
-      read(string,*) run_number_of_the_source(isource)
+      ! reads run id: for each source entry in CMTSOLUTION/FORCESOLUTION a corresponding line in run_number_of_the_source
+      !               with a run id must be given. the run id must be between 0 and NB_RUNS_ACOUSTIC_GPU-1
+      read(string,*) id_run
+      ! checks that id between 0 and NB_RUNS_ACOUSTIC_GPU - 1
+      if (id_run < 0 .or. id_run >= NB_RUNS_ACOUSTIC_GPU) then
+        print *,'Error: run id entry in run_number_of_the_source file must be between 0 and NB_RUNS_ACOUSTIC_GPU-1'
+        print *,'    setting: NB_RUNS_ACOUSTIC_GPU = ',NB_RUNS_ACOUSTIC_GPU
+        print *,'             file line entry ',isource,' has invalid run id ',id_run
+        stop 'Error invalid run id for source line in run_number_of_the_source file'
+      endif
+      ! sets source id for run
+      run_number_of_the_source(isource) = id_run
     enddo
   endif
 
