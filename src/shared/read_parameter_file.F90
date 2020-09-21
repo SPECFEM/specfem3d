@@ -803,7 +803,7 @@
   !   $ assign -U on g:all        (g:all  - all file open requests)
   ! see: https://pubs.cray.com/bundle/Cray_Fortran_Reference_Manual_100_S-3901_Fortran_ditaval.xml/..
   !             ..page/Cray_Fortran_Implementation_Specifics.html
-  ! or use the fortran statement here below:
+  ! or use the Fortran statement here below:
 
   !debug
   !if (myrank == 0) print *,'...compiled by Cray compilers'

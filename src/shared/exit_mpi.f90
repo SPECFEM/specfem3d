@@ -127,11 +127,11 @@
 
   logical :: is_connected
 
-  ! note: Cray systems don't flush print statements before ending with an mpi abort,
+  ! note: Cray systems don't flush print statements before ending with an MPI abort,
   !       which often omits debugging statements with print before it.
   !
-  !       to check which unit is used for standard output, one might also use a fortran2003 module iso_fortran_env:
-  !         use, intrinsic :: iso_fortran_env, only : output_unit
+  !       to check which unit is used for standard output, one might also use a Fortran2003 module iso_Fortran_env:
+  !         use, intrinsic :: iso_Fortran_env, only: output_unit
 
   ! checks default stdout unit 6
   inquire(unit=6,opened=is_connected)
