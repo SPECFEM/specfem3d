@@ -40,7 +40,6 @@
   character(len=*),intent(in) :: error_msg
 
   character(len=MAX_STRING_LEN) :: outputname
-  logical :: is_connected
 
   ! write error message to screen
   write(*,*) error_msg(1:len(error_msg))
@@ -57,18 +56,9 @@
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
 
   ! flushes possible left-overs from print-statements
-  !
-  ! note: Cray system doesn't flush print statements before ending with an mpi abort,
-  !       which often omits debugging statements with print before it.
-  !       to check which unit is used for standard output, one might also use a fortran2003 module iso_fortran_env:
-  !         use, intrinsic :: iso_fortran_env, only : output_unit
-  ! checks default stdout unit 6
-  inquire(unit=6,opened=is_connected)
-  if (is_connected) call flush(6)
-  ! checks Cray stdout unit 101
-  inquire(unit=101,opened=is_connected)
-  if (is_connected) call flush(101)
+  call flush_stdout()
 
+  ! abort execution
   call abort_mpi()
 
   end subroutine exit_MPI
@@ -86,25 +76,15 @@
   implicit none
 
   character(len=*) :: error_msg
-  logical :: is_connected
 
   ! write error message to screen
   write(*,*) error_msg(1:len(error_msg))
   write(*,*) 'Error detected, aborting MPI...'
 
   ! flushes possible left-overs from print-statements
-  !
-  ! note: Cray system doesn't flush print statements before ending with an mpi abort,
-  !       which often omits debugging statements with print before it.
-  !       to check which unit is used for standard output, one might also use a fortran2003 module iso_fortran_env:
-  !         use, intrinsic :: iso_fortran_env, only : output_unit
-  ! checks default stdout unit 6
-  inquire(unit=6,opened=is_connected)
-  if (is_connected) call flush(6)
-  ! checks Cray stdout unit 101
-  inquire(unit=101,opened=is_connected)
-  if (is_connected) call flush(101)
+  call flush_stdout()
 
+  ! abort execution
   call abort_mpi()
 
   end subroutine exit_MPI_without_rank
@@ -135,3 +115,32 @@
 
   end subroutine flush_IMAIN
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine flush_stdout()
+
+! flushes possible left-overs from print-statements
+
+  implicit none
+
+  logical :: is_connected
+
+  ! note: Cray systems don't flush print statements before ending with an mpi abort,
+  !       which often omits debugging statements with print before it.
+  !
+  !       to check which unit is used for standard output, one might also use a fortran2003 module iso_fortran_env:
+  !         use, intrinsic :: iso_fortran_env, only : output_unit
+
+  ! checks default stdout unit 6
+  inquire(unit=6,opened=is_connected)
+  if (is_connected) &
+    flush(6)
+
+  ! checks Cray stdout unit 101
+  inquire(unit=101,opened=is_connected)
+  if (is_connected) &
+    flush(101)
+
+  end subroutine flush_stdout
