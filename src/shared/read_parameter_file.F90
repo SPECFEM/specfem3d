@@ -792,6 +792,27 @@
   ! to avoid an I/O bottleneck in the case of very large runs
   if (BROADCAST_AFTER_READ) call broadcast_computed_parameters()
 
+  ! Cray compilers
+#if _CRAYFTN
+  ! Cray uses compressed formats by default for list-directed output, for example:
+  !     write(*,*) 10,10            leads to output -> 2*10           compressed, instead of:       10        10
+  !     write(*,*) 1,1.78e-5                        -> 1,   1.78e-5   comma delimiter, instead of:   1         1.78e-5
+  ! this leads to problems when writing seismograms in ASCII-format.
+  ! to circumvent this behaviour, one can use cray's assign environment:
+  !   $ setenv FILENV ASGTMP
+  !   $ assign -U on g:all        (g:all  - all file open requests)
+  ! see: https://pubs.cray.com/bundle/Cray_Fortran_Reference_Manual_100_S-3901_Fortran_ditaval.xml/..
+  !             ..page/Cray_Fortran_Implementation_Specifics.html
+  ! or use the fortran statement here below:
+
+  !debug
+  !if (myrank == 0) print *,'...compiled by Cray compilers'
+
+  ! assigns -U (uncompressed format) for all subsequent file opens
+  ! includes seismograms, but not the already opened IMAIN file output
+  call assign('assign -U on g:all',ier)
+#endif
+
   end subroutine read_parameter_file
 
 !

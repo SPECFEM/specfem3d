@@ -33,27 +33,41 @@
 
   implicit none
 
-! identifier for error message file
+  ! identifier for error message file
   integer, parameter :: IERROR = 30
 
   integer, intent(in) :: myrank
   character(len=*),intent(in) :: error_msg
 
   character(len=MAX_STRING_LEN) :: outputname
+  logical :: is_connected
 
-! write error message to screen
+  ! write error message to screen
   write(*,*) error_msg(1:len(error_msg))
   write(*,*) 'Error detected, aborting MPI... proc ',myrank
 
-! write error message to file
+  ! write error message to file
   write(outputname,"('/error_message',i6.6,'.txt')") myrank
   open(unit=IERROR,file=trim(OUTPUT_FILES)//outputname,status='unknown')
   write(IERROR,*) error_msg(1:len(error_msg))
   write(IERROR,*) 'Error detected, aborting MPI... proc ',myrank
   close(IERROR)
 
-! close output file
+  ! close output file
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
+
+  ! flushes possible left-overs from print-statements
+  !
+  ! note: Cray system doesn't flush print statements before ending with an mpi abort,
+  !       which often omits debugging statements with print before it.
+  !       to check which unit is used for standard output, one might also use a fortran2003 module iso_fortran_env:
+  !         use, intrinsic :: iso_fortran_env, only : output_unit
+  ! checks default stdout unit 6
+  inquire(unit=6,opened=is_connected)
+  if (is_connected) call flush(6)
+  ! checks Cray stdout unit 101
+  inquire(unit=101,opened=is_connected)
+  if (is_connected) call flush(101)
 
   call abort_mpi()
 
@@ -71,11 +85,25 @@
 
   implicit none
 
-  character(len=*) error_msg
+  character(len=*) :: error_msg
+  logical :: is_connected
 
-! write error message to screen
+  ! write error message to screen
   write(*,*) error_msg(1:len(error_msg))
   write(*,*) 'Error detected, aborting MPI...'
+
+  ! flushes possible left-overs from print-statements
+  !
+  ! note: Cray system doesn't flush print statements before ending with an mpi abort,
+  !       which often omits debugging statements with print before it.
+  !       to check which unit is used for standard output, one might also use a fortran2003 module iso_fortran_env:
+  !         use, intrinsic :: iso_fortran_env, only : output_unit
+  ! checks default stdout unit 6
+  inquire(unit=6,opened=is_connected)
+  if (is_connected) call flush(6)
+  ! checks Cray stdout unit 101
+  inquire(unit=101,opened=is_connected)
+  if (is_connected) call flush(101)
 
   call abort_mpi()
 
@@ -89,7 +117,7 @@
 
   subroutine flush_IMAIN()
 
-  use constants
+  use constants, only: IMAIN
 
   implicit none
 
