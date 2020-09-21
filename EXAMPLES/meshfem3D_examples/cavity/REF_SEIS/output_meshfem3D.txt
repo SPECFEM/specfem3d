@@ -3,10 +3,47 @@
  *** Specfem3D MPI meshfem3D - f90 version ***
  ******************************************
 
+ Reading parameters from ./DATA/Par_file
+
  Reading mesh parameters from file ./DATA/meshfem3D_files/Mesh_Par_file
+   input parameters...
+   doubling layers...
+   visualization...
+   CPML...
+   domain materials...
+     material            1  elastic
+   domain regions...
+     region            1  with material            1
+       nex_xi  begin/end =            1          12
+       nex_eta begin/end =            1           6
+       nz      begin/end =            1          12
+     region            2  with material            1
+       nex_xi  begin/end =            1          12
+       nex_eta begin/end =            1           6
+       nz      begin/end =           13          28
+     region            3  with material            1
+       nex_xi  begin/end =            1          12
+       nex_eta begin/end =            1           6
+       nz      begin/end =           29          29
+     region            4  with material            1
+       nex_xi  begin/end =            1          12
+       nex_eta begin/end =            1           6
+       nz      begin/end =           30          35
+
+   reading Mesh_Par_file done successfully
+
+   checking mesh setup...
+   all okay
+
 
  Reading interface data from file ./DATA/meshfem3D_files/interfaces.dat
- maximum interface points x/y =            2           2
+   maximum interface points x/y =            2           2
+   interfaces done
+
+ parameter setup:
+   total number of elements =         1260
+   total number of points   =        11999
+
 
  Creating global slice addressing
 
@@ -77,8 +114,8 @@
    origin x/y     (m) =    0.00000000       0.00000000
    spacing x/y    (m) =    288.000000       144.000000
 
-   dimension x-direction (m) =    0.00000000     /   576.000000
-   dimension y-direction (m) =    0.00000000     /   288.000000
+   dimension x-direction (m) =    0.00000000     /   288.000000
+   dimension y-direction (m) =    0.00000000     /   144.000000
 
    total number of file points =            4  should be            4
    this point total is okay
@@ -96,8 +133,8 @@
    origin x/y     (m) =    0.00000000       0.00000000
    spacing x/y    (m) =    288.000000       144.000000
 
-   dimension x-direction (m) =    0.00000000     /   576.000000
-   dimension y-direction (m) =    0.00000000     /   288.000000
+   dimension x-direction (m) =    0.00000000     /   288.000000
+   dimension y-direction (m) =    0.00000000     /   144.000000
 
    total number of file points =            4  should be            4
    this point total is okay
@@ -115,8 +152,8 @@
    origin x/y     (m) =    0.00000000       0.00000000
    spacing x/y    (m) =    288.000000       144.000000
 
-   dimension x-direction (m) =    0.00000000     /   576.000000
-   dimension y-direction (m) =    0.00000000     /   288.000000
+   dimension x-direction (m) =    0.00000000     /   288.000000
+   dimension y-direction (m) =    0.00000000     /   144.000000
 
    total number of file points =            4  should be            4
    this point total is okay
@@ -134,8 +171,8 @@
    origin x/y     (m) =    0.00000000       0.00000000
    spacing x/y    (m) =    288.000000       144.000000
 
-   dimension x-direction (m) =    0.00000000     /   576.000000
-   dimension y-direction (m) =    0.00000000     /   288.000000
+   dimension x-direction (m) =    0.00000000     /   288.000000
+   dimension y-direction (m) =    0.00000000     /   144.000000
 
    total number of file points =            4  should be            4
    this point total is okay
@@ -151,24 +188,39 @@
  Creating mesh in the model
  **************************
 
+ creating mesh:
+   NGLLX_M/NGLLY_M/NGLLZ_M =            3           3           3
+   NGNOD/NGNOD2D           =            8           4
+   NSPEC_AB                =         1260
+   NGLOB_AB                =        11999
+
  allocating mesh arrays
 
  number of subregions =            4
    defining subregion            1
+     has material            1
    defining subregion            2
+     has material            1
    defining subregion            3
+     has material            1
    defining subregion            4
+     has material            1
 
  number of mesh regions =            1
-   creating mesh region            1
+   creating mesh region            1  (regular mesh)
 
  mesh dimensions:
    Xmin and Xmax of the model =    0.00000000       288.000000
    Ymin and Ymax of the model =    0.00000000       144.000000
-   Zmin and Zmax of the model =   -70.5000000      -0.00000000
+   Zmin and Zmax of the model =   -70.5000000       0.00000000
 
  exact area =    41472.0000     (m^2)
             =    4.14719991E-02 (km^2)
+
+   Max element size =    24.0000000     (m)
+   Min element size =    1.50000000     (m)
+   Max/min ratio =    16.0000000
+
 
  creating indirect addressing for unstructured mesh
 
@@ -187,6 +239,8 @@
      found            6 cavity elements in slice            1
 
      total cavity elements found =            6
+
+ no PML region
 
 
  saving mesh files
@@ -265,18 +319,18 @@
  -----------------------
 
  total number of elements in mesh slice 0:         1260
- total number of points in mesh slice 0:         1764
+ total number of points in mesh slice 0:        11999
 
  total number of elements in entire mesh:         2520
- approximate total number of points in entire mesh (with duplicates on MPI edges):    3528.0000000000000
- approximate total number of DOFs in entire mesh (with duplicates on MPI edges):    10584.000000000000
+ approximate total number of points in entire mesh (with duplicates on MPI edges):    23998.000000000000
+ approximate total number of DOFs in entire mesh (with duplicates on MPI edges):    71994.000000000000
 
  using single precision for the calculations
 
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    7.9944849014282227E-002
+ Elapsed time for mesh generation and buffer creation in seconds =   0.18895099999999998
  End of mesh generation
 
  done
