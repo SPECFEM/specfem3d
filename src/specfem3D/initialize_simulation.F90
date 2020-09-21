@@ -190,11 +190,13 @@
   allocate(irregular_element_number(NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2388')
   if (ier /= 0) stop 'error allocating arrays for irregular element numbering'
+  irregular_element_number(:) = 0
 
   ! allocate arrays for storing the databases
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2389')
   if (ier /= 0) stop 'error allocating ibool'
+  ibool(:,:,:,:) = 0
 
   if (NSPEC_IRREGULAR > 0) then
      allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
@@ -240,6 +242,9 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2409')
   endif
   if (ier /= 0) stop 'error allocating arrays for databases'
+  xix(:,:,:,:) = 0.0; xiy(:,:,:,:) = 0.0; xiz(:,:,:,:) = 0.0
+  etax(:,:,:,:) = 0.0; etay(:,:,:,:) = 0.0; etaz(:,:,:,:) = 0.0
+  gammax(:,:,:,:) = 0.0; gammay(:,:,:,:) = 0.0; gammaz(:,:,:,:) = 0.0
 
   ! mesh node locations
   allocate(xstore(NGLOB_AB),stat=ier)
@@ -249,6 +254,7 @@
   allocate(zstore(NGLOB_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2412')
   if (ier /= 0) stop 'error allocating arrays for mesh nodes'
+  xstore(:) = 0.0; ystore(:) = 0.0; zstore(:) = 0.0
 
   ! material properties
   allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
@@ -258,6 +264,7 @@
   allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating rho array 2414')
   if (ier /= 0) stop 'error allocating arrays for material properties'
+  kappastore(:,:,:,:) = 0.0; mustore(:,:,:,:) = 0.0; rhostore(:,:,:,:) = 0.0
 
   ! material flags
   allocate(ispec_is_acoustic(NSPEC_AB),stat=ier)

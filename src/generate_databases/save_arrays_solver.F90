@@ -476,8 +476,8 @@
   ! vp values - VTK file output
   filename = prname(1:len_trim(prname))//'vp'
   call write_VTK_data_gll_cr(nspec,nglob, &
-                      xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                      v_tmp,filename)
+                             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                             v_tmp,filename)
 
 
   ! vs (for checking the mesh and model)
@@ -497,8 +497,8 @@
   ! vs values - VTK file output
   filename = prname(1:len_trim(prname))//'vs'
   call write_VTK_data_gll_cr(nspec,nglob, &
-                      xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                      v_tmp,filename)
+                             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                             v_tmp,filename)
 
   ! outputs density model for check
   v_tmp = 0.0
@@ -518,8 +518,8 @@
   ! shear attenuation - VTK file output
   filename = prname(1:len_trim(prname))//'qmu'
   call write_VTK_data_gll_cr(nspec,nglob, &
-                      xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                      qmu_attenuation_store,filename)
+                             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                             qmu_attenuation_store,filename)
 
   ! bulk attenuation Qkappa
   open(unit=IOUT,file=prname(1:len_trim(prname))//'qkappa.bin',status='unknown',form='unformatted',iostat=ier)
@@ -530,8 +530,8 @@
   ! bulk attenuation - VTK file output
   filename = prname(1:len_trim(prname))//'qkappa'
   call write_VTK_data_gll_cr(nspec,nglob, &
-                      xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                      qkappa_attenuation_store,filename)
+                             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                             qkappa_attenuation_store,filename)
 
   ! frees temporary array
   deallocate(v_tmp)
@@ -564,9 +564,9 @@
       enddo
       filename = prname(1:len_trim(prname))//'free_surface'
       call write_VTK_data_points(nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy, &
-                        iglob_tmp,NGLLSQUARE*num_free_surface_faces, &
-                        filename)
+                                 xstore_dummy,ystore_dummy,zstore_dummy, &
+                                 iglob_tmp,NGLLSQUARE*num_free_surface_faces, &
+                                 filename)
 
       deallocate(iglob_tmp)
     endif

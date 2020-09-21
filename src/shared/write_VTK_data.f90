@@ -48,7 +48,7 @@
                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                                    elem_flag,prname_file)
 
-  use constants
+  use constants, only: MAX_STRING_LEN,IOUT_VTK,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
   implicit none
 
@@ -118,7 +118,7 @@
                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                                    elem_flag,prname_file)
 
-  use constants
+  use constants, only: MAX_STRING_LEN,IOUT_VTK,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
   implicit none
 
@@ -191,7 +191,7 @@
                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                                    gll_data,prname_file)
 
-  use constants
+  use constants, only: MAX_STRING_LEN,IOUT_VTK,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
   implicit none
 
@@ -286,7 +286,7 @@
                                   xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                                   gll_data,prname_file)
 
-  use constants
+  use constants, only: MAX_STRING_LEN,IOUT_VTK,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
   implicit none
 
@@ -380,7 +380,7 @@
                                    points_globalindices,num_points_globalindices, &
                                    prname_file)
 
-  use constants
+  use constants, only: MAX_STRING_LEN,IOUT_VTK,CUSTOM_REAL
 
   implicit none
 
@@ -552,7 +552,7 @@
                                          xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                                          elem_vector,prname_file)
 
-  use constants
+  use constants, only: MAX_STRING_LEN,IOUT_VTK,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
   implicit none
 

@@ -323,9 +323,9 @@ module signal_processing
     allocate(w_tap(nt),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 297')
     i0 = 2
-    i1 = (lwa/100.) * nt + i0
+    i1 = int(lwa/100.0) * nt + i0
     i3 = nt-1
-    i2 = i3  - (lwa/100.) * nt
+    i2 = i3  - int(lwa/100.0) * nt
     wh = 1._CUSTOM_REAL
     call taper_window_W(w_tap,i0,i1,i2,i3,nt,wh)
     signal(:) = signal(:)*w_tap(:)

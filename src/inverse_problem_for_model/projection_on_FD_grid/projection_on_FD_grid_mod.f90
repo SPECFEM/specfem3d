@@ -88,7 +88,7 @@ contains
 
               !! get value of model on FD grid by trilinear interpolation
               i_fd = floor((x_sem -  ox_fd_proj)/ hx_fd_proj) + 1
-              j_fd = floor((y_sem -  oy_fd_proj)/ hy_fd_proj)  + 1
+              j_fd = floor((y_sem -  oy_fd_proj)/ hy_fd_proj) + 1
               k_fd = floor((z_sem -  oz_fd_proj)/ hz_fd_proj) + 1
 
               if (i_fd <= nx_fd_proj .and. j_fd <= ny_fd_proj .and. k_fd <= nz_fd_proj .and. &
@@ -113,10 +113,10 @@ contains
                  z_loc = z_sem - (oz_fd_proj + real( k_fd - 1, CUSTOM_REAL) * hz_fd_proj)
 
                  call TrilinearInterp(Vinterp, x_loc, y_loc, z_loc, v1, v2, v3, v4, v5, v6, v7, v8, &
-                      hx_fd_proj, hy_fd_proj, hz_fd_proj)
+                                      hx_fd_proj, hy_fd_proj, hz_fd_proj)
               else
 
-                 Vinterp=0.
+                 Vinterp = 0.
 
               endif
 
@@ -238,12 +238,12 @@ contains
           enddo
        enddo
 
-       kmin =  1+ (zmin  - oz_fd_proj) / hz_fd_proj
-       kmax =  1+ (zmax  - oz_fd_proj) / hz_fd_proj
-       jmin =  1+ (ymin  - oy_fd_proj) / hy_fd_proj
-       jmax =  1+ (ymax  - oy_fd_proj) / hy_fd_proj
-       imin =  1+ (xmin  - ox_fd_proj) / hx_fd_proj
-       imax =  1+ (xmax  - ox_fd_proj) / hx_fd_proj
+       kmin =  1+ int((zmin  - oz_fd_proj) / hz_fd_proj)
+       kmax =  1+ int((zmax  - oz_fd_proj) / hz_fd_proj)
+       jmin =  1+ int((ymin  - oy_fd_proj) / hy_fd_proj)
+       jmax =  1+ int((ymax  - oy_fd_proj) / hy_fd_proj)
+       imin =  1+ int((xmin  - ox_fd_proj) / hx_fd_proj)
+       imax =  1+ int((xmax  - ox_fd_proj) / hx_fd_proj)
 
         if (DEBUG_MODE) then
           write(IIDD,*) ' projection SEM2FD : boundary element'

@@ -215,7 +215,7 @@ contains
 
     if (myrank == 0 .and. DEBUG_MODE) write(INVERSE_LOG_FILE,*) ' initialize event number  : ', ievent
 
-    ! time discretization -----------------------------------------------------------------------------------------------------------
+    ! time discretization
     NSTEP = acqui_simu(ievent)%Nt_data
     DT_cr = acqui_simu(ievent)%dt_data
     DT = DT_cr
@@ -228,7 +228,7 @@ contains
     b_deltatover2 = b_deltat/2._CUSTOM_REAL
     b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
 
-    ! prepare source (only one source allowed for now) -----------------------------------------------------------------------------
+    ! prepare source (only one source allowed for now)
     NSOURCES = acqui_simu(ievent)%nsources_tot  !! VM VM replace nsource_loc by nsource_tot since all arrays below
     if (USE_EXTERNAL_SOURCE_FILE) then          !! are using nsource_tot
       NSOURCES_STF = NSOURCES
@@ -338,7 +338,7 @@ contains
 
     end select
 
-    ! prepare receiver for the current event --------------------------------------------------------------------------------------
+    ! prepare receiver for the current event
     !! store current variables
     nrec=acqui_simu(ievent)%nsta_tot
     nrec_local=acqui_simu(ievent)%nsta_slice
@@ -523,7 +523,7 @@ contains
     INVERSE_FWI_FULL_PROBLEM = .true.
     NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
 
-    ! initializes adjoint sources --------------------------------------------------------------------------------------------------
+    ! initializes adjoint sources
     if (allocated(source_adjoint)) deallocate(source_adjoint)
     allocate(source_adjoint(NDIM,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 524')
@@ -568,8 +568,8 @@ contains
 
     endif
 
-    !! clean arrays ----------------------------------------------------------------------------------------------------------------
-    ! reset all forward wavefields----------------------------------------------------------------------------------------------------
+    !! clean arrays
+    ! reset all forward wavefields
     call prepare_wavefields()  !! routine from specfem
 
     ! memory variables if attenuation
@@ -600,10 +600,10 @@ contains
        endif
     endif
 
-    ! reaset all adjoint wavefield   -------------------------------------------------------------------------------------------------
+    ! reaset all adjoint wavefield
     ! elastic domain
     if (ELASTIC_SIMULATION) then
-       ! from prepare_timerun_lddrk() --
+       ! from prepare_timerun_lddrk()
        if (SIMULATION_TYPE == 3) then
           b_R_xx_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
           b_R_yy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
@@ -676,7 +676,7 @@ contains
     endif
 
 
-    !! open boundary files ----------------------------------------------------------------------------------------------
+    !! open boundary files
     if (STACEY_ABSORBING_CONDITIONS) then
 
        if (SIMULATION_TYPE == 3 ) then  !! read only open
@@ -764,14 +764,14 @@ contains
     !! reallocate all GPU memory according the Fortran arrays
     if (GPU_MODE) call prepare_GPU()
 
-    !! open new log file for specfem -----------------------------------------------------------------------------------------------
+    !! open new log file for specfem
     if (myrank == 0 .and. SIMULATION_TYPE == 1) then
        close(IMAIN)
        write(name_file,'(a15,i5.5,a1,i5.5,a4)') '/output_solver_',ievent,'_',iter_inverse,'.txt'
        open(unit=IMAIN,file=trim(OUTPUT_FILES)//trim(name_file),status='unknown')
     endif
 
-    !! info on mesh and parameters ---------------
+    !! info on mesh and parameters
     if (SIMULATION_TYPE == 1) then
       call check_mesh_resolution(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                                  ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
@@ -783,9 +783,9 @@ contains
   end subroutine InitSpecfemForOneRun
 
 
-!-----------------------------------------------------------------------------------------------------------------------------------
+!---------------------------------------------------------------------------------------------
 !> finalize, specfem after running each event
-!-----------------------------------------------------------------------------------------------------------------------------------
+!---------------------------------------------------------------------------------------------
 
   subroutine  FinalizeSpecfemForOneRun(acqui_simu, ievent)
 
@@ -794,7 +794,7 @@ contains
     integer                                                       :: ier
 
 
-    !! manage files due to coupling with axisem -----------------------------------------------------
+    !! manage files due to coupling with axisem
     select case (acqui_simu(ievent)%source_type)
 
     case('axisem')
@@ -809,7 +809,7 @@ contains
 
     end select
 
-    !! finalize specfem run --------------------------------------------------------------------------
+    !! finalize specfem run
     if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
        open(unit=IOUT,file=prname(1:len_trim(prname))//'save_forward_arrays.bin', &
             status='unknown',form='unformatted',iostat=ier)
@@ -898,9 +898,9 @@ contains
   end subroutine FinalizeSpecfemForOneRun
 
 
-!-----------------------------------------------------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------
 ! Initialize for one step FWI
-!-----------------------------------------------------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------
 
   subroutine InitForOneStepFWI(inversion_param)
 
@@ -978,9 +978,9 @@ contains
   end subroutine InitForOneStepFWI
 
 
-!--------------------------------------------------------------------------------------------------------------------------
+!-------------------------------------------------------------------
 !> General initialization for specfem in order to do FWI.  Directly some specfem subroutines are called to initialize modeling
-!----------------------------------------------------------------------------------------------------------------------------
+!-------------------------------------------------------------------
 
   subroutine InitializeSpecfemForInversion()
 
@@ -992,7 +992,7 @@ contains
     implicit none
 
 
-    !! following subroutines are directly from specfem3D git devel version--------------------------------------------------
+    !! following subroutines are directly from specfem3D git devel version
     call initialize_simulation()     !! here : we need to initialize with NGLOB_ADJ=NSPEC_ADJ=NSPEC_STRAIN_ONLY=1
 
     !! creating dummy inputs : STATION, CMTSOLUTION, STATION_ADJOINT and SEM
@@ -1033,12 +1033,12 @@ contains
                                                ATTENUATION,ANISOTROPY,APPROXIMATE_OCEAN_LOAD, &
                                                APPROXIMATE_HESS_KL)
 
-    !!---------------------------------------------------------------------------------------------------------------------
+    !!--------------------------------------------------------------------
     !! this is specific prepare_timerun version for FWI (subroutine defined below)
     call PrepareTimerunInverseProblem()          !! absord boundary are closed here
     !! TODO
     !!if (USE_UNDO_ATT) call prepare_time_iteration() !! allocate arrays for store saving snapshots and displacement
-    !-----------------------------------------------------------------------------------------------------------------------
+    !---------------------------------------------------------------------
 
   end subroutine InitializeSpecfemForInversion
 
@@ -1064,12 +1064,12 @@ contains
     NSPEC_ADJOINT = NSPEC_AB
     NGLOB_ADJOINT = NGLOB_AB
 
-    ! from prepare_timerun_constants() -----------------------------------------------
+    ! from prepare_timerun_constants()
     b_deltat = - real(DT,kind=CUSTOM_REAL)
     b_deltatover2 = b_deltat/2._CUSTOM_REAL
     b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
 
-    ! from prepare_timerun_lddrk() -------------------------------------------------
+    ! from prepare_timerun_lddrk()
     if (ELASTIC_SIMULATION) then
        allocate(b_R_xx_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 527')
@@ -1105,7 +1105,7 @@ contains
        endif
     endif
 
-    !! from prepare_timerun_adjoint()-----------------------------------------------------------------
+    !! from prepare_timerun_adjoint()
     ! attenuation backward memories
     if (ATTENUATION .and. SIMULATION_TYPE == 3) then
        ! precompute Runge-Kutta coefficients if attenuation
@@ -1252,11 +1252,11 @@ contains
   end subroutine PrepareTimerunInverseProblem
 
 
-!-----------------------------------------------------------------------------------------------------------------------------------
+!----------------------------------------------------------------------
 !>  copy summed GPU kernel overs events in specfem CPU arrays
 !!
 !!
-!-----------------------------------------------------------------------------------------------------------------------------------
+!----------------------------------------------------------------------
 
   subroutine TransfertKernelFromGPUArrays()
 
@@ -1290,9 +1290,9 @@ contains
   end subroutine TransfertKernelFromGPUArrays
 
 
-!-------------------------------------------------------------------------------------------------------------
+!-------------------------------------------------------------------
 ! test if we can saftely perform a simulation in new model
-!-------------------------------------------------------------------------------------------------------------
+!-------------------------------------------------------------------
 
   subroutine  CheckModelSuitabilityForModeling(ModelIsSuitable)
 
@@ -1504,11 +1504,11 @@ contains
   end subroutine CheckModelSuitabilityForModeling
 
 
-!-----------------------------------------------------------------------------------------------------------------------------------
+!-------------------------------------------------------------------
 !> create dummy file in order to initialize specfem before setting the right parameters
 !! need to imporve this by using because that files are not working for every cases.
 !! may be use the flag INVERSE_FWI_FULL_PROBLEM
-!-----------------------------------------------------------------------------------------------------------------------------------
+!-------------------------------------------------------------------
 
   subroutine CreateInitDummyFiles()
 

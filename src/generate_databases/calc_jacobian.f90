@@ -196,7 +196,7 @@
   integer, intent(inout) :: nspec_irregular
 
   integer, intent(in) :: ispec,nspec
-  integer, dimension(nspec),intent(out) :: irregular_element_number
+  integer, dimension(nspec),intent(inout) :: irregular_element_number
   logical, intent(in) :: ANY_FAULT_IN_THIS_PROC
 
   ! local parameters

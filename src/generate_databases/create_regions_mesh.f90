@@ -343,7 +343,8 @@
       call flush_IMAIN()
     endif
     call get_attenuation_model(nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
-                               mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
+                               mustore,rho_vs,kappastore,rho_vp, &
+                               qkappa_attenuation_store,qmu_attenuation_store, &
                                ispec_is_elastic,min_resolved_period,prname,ATTENUATION_f0_REFERENCE)
   endif
 
@@ -433,10 +434,12 @@
   allocate(qkappa_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 724')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  qkappa_attenuation_store(:,:,:,:) = 9999.9
 
   allocate(qmu_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 725')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  qmu_attenuation_store(:,:,:,:) = 9999.9
 
   ! create the name for the database of the current slide and region
   call create_name_database(prname,myrank,LOCAL_PATH)
@@ -445,11 +448,13 @@
   allocate(xigll(NGLLX),yigll(NGLLY),zigll(NGLLZ),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 726')
   if (ier /= 0) stop 'error allocating array xigll etc.'
+  xigll(:) = 0.0; yigll(:) = 0.0; zigll(:) = 0.0
 
   ! Gauss-Lobatto-Legendre weights of integration
   allocate(wxgll(NGLLX),wygll(NGLLY),wzgll(NGLLZ),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 727')
   if (ier /= 0) stop 'error allocating array wxgll etc.'
+  wxgll(:) = 0.0; wygll(:) = 0.0; wzgll(:) = 0.0
 
   ! 3D shape functions and their derivatives
   allocate(shape3D(NGNOD,NGLLX,NGLLY,NGLLZ),stat=ier)
@@ -457,6 +462,7 @@
   allocate(dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 729')
   if (ier /= 0) stop 'error allocating array shape3D etc.'
+  shape3D(:,:,:,:) = 0.0; dershape3D(:,:,:,:,:) = 0.0
 
   ! 2D shape functions and their derivatives
   allocate(shape2D_x(NGNOD2D,NGLLY,NGLLZ),stat=ier)
@@ -468,6 +474,8 @@
   allocate(shape2D_top(NGNOD2D,NGLLX,NGLLY),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 733')
   if (ier /= 0) stop 'error allocating array shape2D_x etc.'
+  shape2D_x(:,:,:) = 0.0; shape2D_y(:,:,:) = 0.0
+  shape2D_bottom(:,:,:) = 0.0; shape2D_top(:,:,:) = 0.0
 
   allocate(dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 734')
@@ -478,6 +486,8 @@
   allocate(dershape2D_top(NDIM2D,NGNOD2D,NGLLX,NGLLY),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 737')
   if (ier /= 0) stop 'error allocating array dershape2D_x etc.'
+  dershape2D_x(:,:,:,:) = 0.0; dershape2D_y(:,:,:,:) = 0.0
+  dershape2D_bottom(:,:,:,:) = 0.0; dershape2D_top(:,:,:,:) = 0.0
 
   allocate(wgllwgll_xy(NGLLX,NGLLY),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 738')
@@ -486,6 +496,7 @@
   allocate(wgllwgll_yz(NGLLY,NGLLZ),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 740')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  wgllwgll_xy(:,:) = 0.0; wgllwgll_xz(:,:) = 0.0; wgllwgll_yz(:,:) = 0.0
 
   ! set up coordinates of the Gauss-Lobatto-Legendre points
   call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
@@ -529,6 +540,7 @@
   allocate(mustore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 745')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  rhostore(:,:,:,:) = 0.0; kappastore(:,:,:,:) = 0.0; mustore(:,:,:,:) = 0.0
 
   ! Stacey
   allocate(rho_vp(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
@@ -536,6 +548,7 @@
   allocate(rho_vs(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 742')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  rho_vp(:,:,:,:) = 0.0; rho_vs(:,:,:,:) = 0.0
 
 !EB EB April 2018 : we should find a way to know if there are any poroelastic
 ! element before these costly allocations. The commented part does notwork
@@ -571,8 +584,10 @@
   ! mesh arrays
   ! get the number of regular and irregular elements
   any_regular_elem = .false.
+
   allocate(irregular_element_number(nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 755')
+  irregular_element_number(:) = 0
 
   ! distinguishes between regular and irregular elements (based on cube shape)
   if (DO_IRREGULAR_ELEMENT_SEPARATION) then
@@ -665,6 +680,10 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 765')
     if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
   endif
+  xixstore(:,:,:,:) = 0.0; xiystore(:,:,:,:) = 0.0; xizstore(:,:,:,:) = 0.0
+  etaxstore(:,:,:,:) = 0.0; etaystore(:,:,:,:) = 0.0; etazstore(:,:,:,:) = 0.0
+  gammaxstore(:,:,:,:) = 0.0; gammaystore(:,:,:,:) = 0.0; gammazstore(:,:,:,:) = 0.0
+  jacobianstore(:,:,:,:) = 0.0
 
   ! absorbing boundary
   ! absorbing faces
@@ -695,6 +714,8 @@
   allocate(abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 779')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  abs_boundary_ispec(:) = 0; abs_boundary_ijk(:,:,:) = 0
+  abs_boundary_jacobian2Dw(:,:) = 0.0; abs_boundary_normal(:,:,:) = 0.0
 
   ! free surface faces
   num_free_surface_faces = nspec2D_top
@@ -723,6 +744,8 @@
   allocate(free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 783')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  free_surface_ispec(:) = 0; free_surface_ijk(:,:,:) = 0
+  free_surface_jacobian2Dw(:,:) = 0.0; free_surface_normal(:,:,:) = 0.0
 
   ! array with anisotropy
   if (ANISOTROPY) then
@@ -773,6 +796,13 @@
   allocate(c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 804')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  c11store(:,:,:,:) = 0.0; c12store(:,:,:,:) = 0.0; c13store(:,:,:,:) = 0.0
+  c14store(:,:,:,:) = 0.0; c15store(:,:,:,:) = 0.0; c16store(:,:,:,:) = 0.0
+  c22store(:,:,:,:) = 0.0; c23store(:,:,:,:) = 0.0; c24store(:,:,:,:) = 0.0
+  c25store(:,:,:,:) = 0.0; c26store(:,:,:,:) = 0.0; c33store(:,:,:,:) = 0.0
+  c34store(:,:,:,:) = 0.0; c35store(:,:,:,:) = 0.0; c36store(:,:,:,:) = 0.0
+  c44store(:,:,:,:) = 0.0; c45store(:,:,:,:) = 0.0; c46store(:,:,:,:) = 0.0
+  c55store(:,:,:,:) = 0.0; c56store(:,:,:,:) = 0.0; c66store(:,:,:,:) = 0.0
 
   ! material flags
   allocate(ispec_is_acoustic(nspec),stat=ier)
@@ -800,9 +830,15 @@
                                     nodes_coords_ext_mesh,nnodes_ext_mesh, &
                                     elmnts_ext_mesh,nelmnts_ext_mesh)
 
-  use constants, only: myrank,NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,OUTPUT_FILES
+  use constants, only: myrank,NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,MAX_STRING_LEN,OUTPUT_FILES
   use generate_databases_par, only: NGNOD
-  use create_regions_mesh_ext_par
+
+  use create_regions_mesh_ext_par, only: shape3D,dershape3D, &
+    xixstore,xiystore,xizstore, &
+    etaxstore,etaystore,etazstore, &
+    gammaxstore,gammaystore,gammazstore, &
+    jacobianstore, &
+    irregular_element_number,xix_regular,jacobian_regular
 
   implicit none
 
@@ -845,13 +881,15 @@
     ! CUBIT should provide a mesh ordering such that the 3D jacobian is defined
     ! (otherwise mesh would be degenerated)
     ispec_irreg = irregular_element_number(ispec)
-    !irregular_element_number is 0 only if the element is regular
+
+    ! irregular_element_number is 0 only if the element is regular
     if (ispec_irreg /= 0) then
       call calc_jacobian(myrank,xixstore(:,:,:,ispec_irreg),xiystore(:,:,:,ispec_irreg),xizstore(:,:,:,ispec_irreg), &
                          etaxstore(:,:,:,ispec_irreg),etaystore(:,:,:,ispec_irreg),etazstore(:,:,:,ispec_irreg), &
                          gammaxstore(:,:,:,ispec_irreg),gammaystore(:,:,:,ispec_irreg),gammazstore(:,:,:,ispec_irreg), &
                          jacobianstore(:,:,:,ispec_irreg),xelm,yelm,zelm,dershape3D)
     else
+      ! sets flag for regular elements
       any_regular_elem = .true.
     endif
     call calc_coords(xstore(:,:,:,ispec),ystore(:,:,:,ispec),zstore(:,:,:,ispec), &
@@ -865,7 +903,6 @@
         print *,'  written out:',trim(filename)
       endif
     endif
-
   enddo
 
   ! get xix derivative and jacobian on a regular element
@@ -875,6 +912,18 @@
     do while (irregular_element_number(ispec) /= 0)
       ispec = ispec + 1
     enddo
+
+    ! checks index
+    if (ispec < 1 .or. ispec > nspec) then
+      print *,'Error: element ',ispec,' - regular element index out of bounds ',nspec
+      print *,'  regular elements indices:'
+      do ispec = 1,nspec
+        if (irregular_element_number(ispec) == 0) then
+          print *,'  ispec index ',ispec,' has ispec_irreg = ',irregular_element_number(ispec)
+        endif
+      enddo
+      call exit_mpi(myrank,'Invalid regular element index')
+    endif
 
     ! gets corner positions of regular element
     do ia = 1,NGNOD
@@ -889,6 +938,13 @@
                        gammax_reg,gammay_reg,gammaz_reg, &
                        jacobian_reg,xelm,yelm,zelm,dershape3D)
 
+    ! debug
+    !print *,'debug: rank ',myrank,' regular elements indices:',any_regular_elem
+    !do ispec = 1,nspec
+    !  if (irregular_element_number(ispec) == 0) then
+    !    print *,'debug: rank',myrank,'  ispec index ',ispec,' has ispec_irreg = ',irregular_element_number(ispec)
+    !  endif
+    !enddo
     ! only xix == etay == gammaz are non-zero for regular elements
     ! debug
     !print *,'debug: xix    ',xix_reg(1,1,1),xiy_reg(1,1,1),xiz_reg(1,1,1)
@@ -897,12 +953,12 @@
 
     ! check
     if (abs(xix_reg(1,1,1) - etay_reg(1,1,1)) > threshold_zero) then
-      print *,'Error: regular element should have xix == etay ',xix_reg(1,1,1),etay_reg(1,1,1)
-      stop 'Invalid regular element xix/etay'
+      print *,'Error: element ',ispec,' - regular element should have xix == etay ',xix_reg(1,1,1),etay_reg(1,1,1)
+      call exit_mpi(myrank,'Invalid regular element xix/etay')
     endif
     if (abs(xix_reg(1,1,1) - gammaz_reg(1,1,1)) > threshold_zero) then
-      print *,'Error: regular element should have xix == gammaz ',xix_reg(1,1,1),gammaz_reg(1,1,1)
-      stop 'Invalid regular element xix/gammaz'
+      print *,'Error: element ',ispec,' - regular element should have xix == gammaz ',xix_reg(1,1,1),gammaz_reg(1,1,1)
+      call exit_mpi(myrank,'Invalid regular element xix/gammaz')
     endif
 
     ! saves regular values
