@@ -283,6 +283,7 @@
   ! prints source time functions to output files
   if (PRINT_SOURCE_TIME_FUNCTION) call print_stf_file()
 
+  ! fused wavefield simulations
   call get_run_number_of_the_source()
 
   end subroutine setup_sources
@@ -305,6 +306,16 @@
   run_number_of_the_source(:) = 0
 
   if (NB_RUNS_ACOUSTIC_GPU > 1) then
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'fused wavefield simulation:'
+      write(IMAIN,*) '  NB_RUNS_ACOUSTIC_GPU = ',NB_RUNS_ACOUSTIC_GPU
+      write(IMAIN,*) '  NSOURCES             = ',NSOURCES
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+
     ! reads file DATA/run_number_of_the_source
     filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'run_number_of_the_source'
     open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ier)
@@ -340,7 +351,22 @@
       ! sets source id for run
       run_number_of_the_source(isource) = id_run
     enddo
-  endif
+
+    ! user output
+    if (myrank == 0) then
+      do isource = 1,NSOURCES
+        write(IMAIN,*) '  source ',isource,' assigned to wavefield run number ',run_number_of_the_source(isource)
+      enddo
+      write(IMAIN,*)
+      ! warning
+      if (NSOURCES /= NB_RUNS_ACOUSTIC_GPU) then
+        write(IMAIN,*) '  *** WARNING: number of sources ',NSOURCES, &
+                       ' does not match number of runs ',NB_RUNS_ACOUSTIC_GPU,' ***'
+        write(IMAIN,*)
+      endif
+      call flush_IMAIN()
+    endif
+  endif ! NB_RUNS_ACOUSTIC_GPU
 
   end subroutine get_run_number_of_the_source
 
