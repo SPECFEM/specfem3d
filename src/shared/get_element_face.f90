@@ -26,9 +26,9 @@
 !=====================================================================
 
   subroutine get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                              ibool,nspec,nglob, &
-                              xstore_dummy,ystore_dummy,zstore_dummy, &
-                              iface_id )
+                                 ibool,nspec,nglob, &
+                                 xstore_dummy,ystore_dummy,zstore_dummy, &
+                                 iface_id )
 
 ! returns iface_id of face in reference element, determined by corner locations xcoord/ycoord/zcoord;
 
@@ -39,24 +39,21 @@
   integer,intent(in) :: ispec,nspec,nglob
   integer,intent(out) :: iface_id
 
-! face corner locations
+  ! face corner locations
   real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS),intent(in) :: xcoord,ycoord,zcoord
 
-! index array
+  ! index array
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-! global point locations
+  ! global point locations
   real(kind=CUSTOM_REAL),intent(in) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
 
-! local parameters
+  ! local parameters
   real(kind=CUSTOM_REAL) :: xcoord_face,ycoord_face,zcoord_face
   real(kind=CUSTOM_REAL) :: midpoint_faces(NDIM,6),midpoint(NDIM),midpoint_distances(6)
   real(kind=CUSTOM_REAL) :: edge_length,avg_factor
 
-  ! distance tolerance (relative to coordinate range)
-  real(kind=CUSTOM_REAL), parameter :: TOL_DIST = 1.e-4
-
-! corners indices of reference cube faces
+  ! corners indices of reference cube faces
   ! shapes of arrays below
   integer,dimension(2),parameter :: face_shape = (/3,4/)
   integer,dimension(3),parameter :: all_faces_shape = (/3,4,6/)
@@ -85,15 +82,15 @@
                   iface3_corner_ijk,iface4_corner_ijk, &
                   iface5_corner_ijk,iface6_corner_ijk /),all_faces_shape)
 
-! face orientation
+  ! face orientation
   integer  :: ifa,icorner,i,j,k,iglob,iloc(1)
 
-! initializes
+  ! initializes
   iface_id = -1
   avg_factor = 1.0_CUSTOM_REAL / NGNOD2D_FOUR_CORNERS
 
-! gets face midpoint by its corners
-  midpoint(:) = 0.0
+  ! gets face midpoint by its corners
+  midpoint(:) = 0.0_CUSTOM_REAL
   do icorner = 1,NGNOD2D_FOUR_CORNERS
     midpoint(1) = midpoint(1) + xcoord(icorner) * avg_factor
     midpoint(2) = midpoint(2) + ycoord(icorner) * avg_factor
@@ -101,7 +98,7 @@
   enddo
 
 ! determines element face by minimum distance of midpoints
-  midpoint_faces(:,:) = 0.0
+  midpoint_faces(:,:) = 0.0_CUSTOM_REAL
   do ifa = 1,6
 
     ! face corners
@@ -137,9 +134,9 @@
   !       the check here takes the first edge of the surface element as a proxy for the scale
   edge_length = (xcoord(1)-xcoord(2))**2 + (ycoord(1)-ycoord(2))**2 + (zcoord(1)-zcoord(2))**2
 
-  if (midpoint_distances(iloc(1)) > TOL_DIST * edge_length) then
+  if (midpoint_distances(iloc(1)) > TOLERANCE_FACE_DETECTION * edge_length) then
     print *,'error element face midpoint distance:',midpoint_distances(iloc(1)), &
-            ' - edge length:',edge_length,' tolerance:',TOL_DIST*edge_length
+            ' - edge length:',edge_length,' tolerance:',TOLERANCE_FACE_DETECTION*edge_length,TOLERANCE_FACE_DETECTION
     ! corner locations
     do icorner = 1,NGNOD2D_FOUR_CORNERS
       i = iface_all_corner_ijk(1,icorner,iloc(1))

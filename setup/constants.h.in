@@ -426,6 +426,9 @@
 ! postprocess the colors to balance them if Droux (1993) algorithm is not used
   logical, parameter :: BALANCE_COLORS_SIMPLE_ALGO = .false.
 
+! face detection distance tolerance (relative to coordinate range)
+  double precision, parameter :: TOLERANCE_FACE_DETECTION = 1.d-4
+
 !!-----------------------------------------------------------
 !!
 !! in-situ visualization (using VTK)
