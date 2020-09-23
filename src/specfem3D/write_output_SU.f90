@@ -287,10 +287,17 @@
   endif
 
   ! time increment
-  sampling_deltat = DT*subsamp_seismos
-  if (NINT(sampling_deltat*1.0d6) < 65536) then
+  sampling_deltat = DT * subsamp_seismos
+
+  ! INTEGER(kind=2) values range from -32,768 to 32,767
+  !debug
+  !print *,'debug: SU header ',NSTEP/subsamp_seismos,NINT(sampling_deltat*1.0d6),NINT(sampling_deltat*1.0d3),NINT(sampling_deltat)
+  !print *,'debug: SU header ',NINT(sampling_deltat*1.0d6,kind=2),NINT(sampling_deltat*1.0d3,kind=2),NINT(sampling_deltat,kind=2)
+
+  ! adapts time step info
+  if (NINT(sampling_deltat*1.0d6) < 32768) then
     header3(1) = NINT(sampling_deltat*1.0d6, kind=2)  ! deltat (unit: 10^{-6} second)
-  else if (NINT(sampling_deltat*1.0d3) < 65536) then
+  else if (NINT(sampling_deltat*1.0d3) < 32768) then
     header3(1) = NINT(sampling_deltat*1.0d3, kind=2)  ! deltat (unit: 10^{-3} second)
   else
     header3(1) = NINT(sampling_deltat, kind=2)  ! deltat (unit: 10^{0} second)
