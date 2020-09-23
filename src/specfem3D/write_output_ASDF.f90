@@ -86,7 +86,7 @@
   use constants, only: CUSTOM_REAL,NDIM,myrank,IIN_SU1
 
   use specfem_par, only: &
-    station_name,network_name,NSTEP,nrec,OUTPUT_FILES,NTSTEP_BETWEEN_OUTPUT_SEISMOS
+    station_name,network_name,NSTEP,nrec,OUTPUT_FILES,NTSTEP_BETWEEN_OUTPUT_SEISMOS,subsamp_seismos,nlength_seismogram
 
   use asdf_data, only: asdf_container
 
@@ -95,9 +95,9 @@
   ! Parameters
   character(len=3),intent(in) :: chn
   integer,intent(in) :: irec_local, irec, iorientation
-  real(kind=CUSTOM_REAL),dimension(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS),intent(in) :: one_seismogram
+  real(kind=CUSTOM_REAL),dimension(NDIM,nlength_seismogram),intent(in) :: one_seismogram
 
-  real(kind=CUSTOM_REAL),dimension(NSTEP) :: seismogram_tmp
+  real(kind=CUSTOM_REAL),dimension(NSTEP/subsamp_seismos) :: seismogram_tmp
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
 
   ! local Variables
@@ -106,7 +106,7 @@
 
   ! copy trace values
   seismogram_tmp(:) = 0._CUSTOM_REAL
-  seismogram_tmp(1:NTSTEP_BETWEEN_OUTPUT_SEISMOS) = one_seismogram(iorientation,1:NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+  seismogram_tmp(1:nlength_seismogram) = one_seismogram(iorientation,:)
 
   allocate(x_found(nrec),y_found(nrec),z_found(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2016')
@@ -138,11 +138,11 @@
   i = (irec_local-1)*(3) + (index_increment)
   asdf_container%component_array(i) = chn(1:3)
 
-  allocate(asdf_container%records(i)%record(NSTEP),stat=ier)
+  allocate(asdf_container%records(i)%record(NSTEP/subsamp_seismos),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2017')
   if (ier /= 0) call exit_MPI (myrank, 'Allocating ASDF container failed.')
 
-  asdf_container%records(i)%record(1:NSTEP) = seismogram_tmp(1:NSTEP)
+  asdf_container%records(i)%record(1:NSTEP/subsamp_seismos) = seismogram_tmp(1:NSTEP/subsamp_seismos)
 
   end subroutine store_asdf_data
 
@@ -190,7 +190,7 @@
   use iso_c_binding, only: C_NULL_CHAR,c_ptr
 !  use iso_Fortran_env
 
-  use specfem_par, only: seismo_offset,DT,NSTEP,OUTPUT_FILES,WRITE_SEISMOGRAMS_BY_MAIN
+  use specfem_par, only: seismo_offset,DT,NSTEP,subsamp_seismos,OUTPUT_FILES,WRITE_SEISMOGRAMS_BY_MAIN
 
   implicit none
 
@@ -225,7 +225,7 @@
   integer(kind=8) :: stationxml_grp
 
   integer :: current_proc, sender, receiver
-  real (kind=CUSTOM_REAL), dimension(:,:), allocatable :: one_seismogram
+  real (kind=CUSTOM_REAL), dimension(:,:), allocatable :: full_seismogram
 
   !--- MPI variables
   integer :: mysize, comm
@@ -271,14 +271,13 @@
 
   num_stations(1) = asdf_container%nrec_store
 
-  sampling_rate = 1.0/DT
+  sampling_rate = 1.0/(DT*subsamp_seismos)
+
+  ! BS BS: The total number of samples to be written to the ASDF file should be NSTEP.
+  !        seismo_current is equivalent to NTSTEP_BETWEEN_OUTPUT_SEISMOS (except when it==it_end), as only in this case
+  !        the routine is called from write_seismograms()
   !nsamples = seismo_current * (NSTEP / NTSTEP_BETWEEN_OUTPUT_SEISMOS)
-  nsamples = NSTEP ! BS BS: The total number of samples to be written to the
-                   !        ASDF file should be NSTEP.
-                   !        seismo_current is equivalent to
-                   !        NTSTEP_BETWEEN_OUTPUT_SEISMOS (except when
-                   !        it==it_end), as only in this case
-                   !        the routine is called from write_seismograms()
+  nsamples = NSTEP/subsamp_seismos
 
   ! Calculate start_time
   call get_time_cmt(startTime, start_time_string, pde_start_time_string, cmt_start_time_string, end_time_string)
@@ -436,7 +435,7 @@
   deallocate(displs)
   deallocate(rcounts)
 
-  allocate(one_seismogram(NDIM,NSTEP),stat=ier)
+  allocate(full_seismogram(NDIM,NSTEP/subsamp_seismos),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2032')
 
   !--------------------------------------------------------
@@ -594,30 +593,29 @@
         l = (j-1)*(NDIM) ! Index of current receiver in asdf_container%records
 
         ! First get the information to the main proc
-        if (current_proc == 0) then ! current_proc is main proc
-
-          !one_seismogram(:,:) = seismograms(:,j,:)
+        if (current_proc == 0) then
+          ! current_proc is main proc
           if (myrank == 0) then
             do i = 1, NDIM
             !  write(*,*) j, l, l+i, size(asdf_container%records)
-              one_seismogram(i,:) = asdf_container%records(l+i)%record(1:NSTEP)
+              full_seismogram(i,:) = asdf_container%records(l+i)%record(1:NSTEP/subsamp_seismos)
             enddo
           endif
 
-        else ! current_proc is not main proc
-
+        else
+          ! current_proc is not main proc
           if (myrank == current_proc) then
 
-            !one_seismogram(:,:) = seismograms(:,j,:)
+            !full_seismogram(:,:) = seismograms(:,j,:)
             do i = 1, NDIM
-              one_seismogram(i,:) = asdf_container%records(l+i)%record(1:NSTEP)
+              full_seismogram(i,:) = asdf_container%records(l+i)%record(1:NSTEP/subsamp_seismos)
             enddo
 
-            call sendv_cr(one_seismogram,NDIM*NSTEP,receiver,itag)
+            call sendv_cr(full_seismogram,NDIM*NSTEP/subsamp_seismos,receiver,itag)
 
           else if (myrank == 0) then
 
-            call recvv_cr(one_seismogram,NDIM*NSTEP,sender,itag)
+            call recvv_cr(full_seismogram,NDIM*NSTEP/subsamp_seismos,sender,itag)
 
           endif
         endif
@@ -643,7 +641,7 @@
                                       data_ids(i))
 
             call ASDF_write_partial_waveform_f(data_ids(i), &
-                                        one_seismogram(i,1:NSTEP), 0, NSTEP, ier)
+                                               full_seismogram(i,1:NSTEP/subsamp_seismos), 0, NSTEP/subsamp_seismos, ier)
             if (ier /= 0) call exit_MPI(myrank,'Error ASDF write partial waveform failed')
 
             call ASDF_close_dataset_f(data_ids(i), ier)
@@ -716,10 +714,10 @@
 
           if (k == myrank+1) then
 
-            one_seismogram(i,:) = asdf_container%records(l+i)%record(1:NSTEP)
+            full_seismogram(i,:) = asdf_container%records(l+i)%record(1:NSTEP/subsamp_seismos)
 
             call ASDF_write_partial_waveform_f(data_ids(i), &
-                                               one_seismogram(i,1:NSTEP), 0, NSTEP, ier)
+                                               full_seismogram(i,1:NSTEP/subsamp_seismos), 0, NSTEP/subsamp_seismos, ier)
             if (ier /= 0) call exit_MPI(myrank,'Error ASDF parallel write partial waveform failed')
 
           endif
@@ -761,7 +759,7 @@
   deallocate(station_elevs_gather)
   deallocate(station_depths_gather)
   deallocate(num_stations_gather)
-  deallocate(one_seismogram)
+  deallocate(full_seismogram)
 
   ! all done
   call synchronize_all()

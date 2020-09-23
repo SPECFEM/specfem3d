@@ -80,7 +80,8 @@
                                 nspec_acoustic,nspec_elastic, &
                                 myrank,SAVE_FORWARD, &
                                 hxir_store,hetar_store,hgammar_store,nu_rec, &
-                                islice_selected_rec,NSTEP, &
+                                islice_selected_rec, &
+                                NTSTEP_BETWEEN_OUTPUT_SEISMOS/subsamp_seismos, &
                                 SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY, &
                                 SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE, &
                                 NB_RUNS_ACOUSTIC_GPU)
@@ -324,13 +325,13 @@
   memory_size = memory_size + nrec_local * dble(SIZE_INTEGER)
   ! d_seismograms_d,d_seismograms_v,d_seismograms_a,d_seismograms_p
   if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-    memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
+    memory_size = memory_size + NDIM * nlength_seismogram * nrec_local * dble(CUSTOM_REAL)
   if (SAVE_SEISMOGRAMS_VELOCITY) &
-    memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
+    memory_size = memory_size + NDIM * nlength_seismogram * nrec_local * dble(CUSTOM_REAL)
   if (SAVE_SEISMOGRAMS_ACCELERATION) &
-    memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
+    memory_size = memory_size + NDIM * nlength_seismogram * nrec_local * dble(CUSTOM_REAL)
   if (SAVE_SEISMOGRAMS_PRESSURE) &
-    memory_size = memory_size + NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL) * NB_RUNS_ACOUSTIC_GPU
+    memory_size = memory_size + nlength_seismogram * nrec_local * dble(CUSTOM_REAL) * NB_RUNS_ACOUSTIC_GPU
 
   ! acoustic simulations
   if (ACOUSTIC_SIMULATION) then

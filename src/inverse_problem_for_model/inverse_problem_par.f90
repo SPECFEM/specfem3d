@@ -28,13 +28,12 @@
 
 module inverse_problem_par
 
-  !! IMPORT VARIABLES ------------------------------------------------------------------------------------------------
+  !! IMPORT VARIABLES
   use specfem_par, only: CUSTOM_REAL, MAX_STRING_LEN, MAX_LENGTH_STATION_NAME, MAX_LENGTH_NETWORK_NAME
-  !-------------------------------------------------------------------------------------------------------------------
 
   implicit none
 
-  !! ------------------------------ compialtion config parameters -----------------------------------------------------------------
+  !! ------------------------------ compilation config parameters ---------------------------------
 
   !! maximum line length allowed in input files
   integer,                       public, parameter  :: MAX_LEN_STRING=256
@@ -60,15 +59,15 @@ module inverse_problem_par
   !! use simplified station location instead of specfem subroutine which can be problematic with a
   !! big number of stations
   logical,                       public             :: USE_LIGHT_STATIONS=.true.
-  ! ------------------------------  global parameters for fwi ---------------------------------------------------------------------
+  ! ------------------------------  global parameters for fwi ---------------------------------------
   !! name for outputs files
   character(len=MAX_STRING_LEN), public             :: prname_specfem
   character(len=8),              public             :: prefix_to_path='./'
   character(len=MAX_STRING_LEN), public             :: type_input='exploration'
 
-!################################################# STRUCTURES ######################################################################
+!################################################# STRUCTURES ###############################################
 
-  ! PROJECTION IN FD GRID STRUCTURE -----------------------------------------------------------------------------------------------
+  ! PROJECTION IN FD GRID STRUCTURE
   type, public :: profd
 
      integer                                                                  :: nx, ny, nz
@@ -80,11 +79,10 @@ module inverse_problem_par
      integer,                               dimension(:,:),       allocatable :: index_on_fd_grid
      double precision,                      dimension(:,:),       allocatable :: hxi, heta, hgamma
 
-  end type profd !-----------------------------------------------------------------------------------------------------------------
+  end type profd
 
-  ! INVERSION PARAMETERS STRUCTURE ------------------------------------------------------------------------------------------------
+  ! INVERSION PARAMETERS STRUCTURE
   type, public :: inver
-
 
      !! inputs files to read -------------------------------------------------------------------------------
      character(len= MAX_LEN_STRING)                                           :: input_acqui_file
@@ -219,9 +217,9 @@ module inverse_problem_par
      logical                                                                  :: get_synthetic_velocity=.true.
      logical                                                                  :: get_synthetic_acceleration=.true.
 
-  end type inver !------------------------------------------------------------------------------------------------------------------
+  end type inver
 
-  ! ACQUISITION STRUCTURE  ---------------------------------------------------------------------------------------------------------
+  ! ACQUISITION STRUCTURE
   type, public :: acqui
 
      !!------------------  event general parameters ----------------------
@@ -357,9 +355,9 @@ module inverse_problem_par
      character(len= MAX_LEN_STRING)                                            :: traction_dir
 
 
-  end type acqui !-----------------------------------------------------------------------------------------------------------------
+  end type acqui
 
-  ! SET OF POINT SOURCES  (in development test not working yet)--------------------------------------------------------------------
+  ! SET OF POINT SOURCES  (in development test not working yet)
   type, public :: source_points
 
      !! number of sources
@@ -377,18 +375,18 @@ module inverse_problem_par
      !! size(NDIM,NSOURCES)
      !real(kind=CUSTOM_REAL),                dimension(:,:)                     :: source_position
 
-  end type source_points  !--------------------------------------------------------------------------------------------------------
+  end type source_points
 
-  ! STATIONS POINTS (in development test not working yet)--------------------------------------------------------------------------
+  ! STATIONS POINTS (in development test not working yet)
   type, public :: station_network
 
      integer                                                                   :: NREC
      integer,                               dimension(:),      allocatable     :: ispec
      real(kind=CUSTOM_REAL),                dimension(:,:),    allocatable     :: hxir, hetar, hgammar
 
-  end type station_network !-------------------------------------------------------------------------------------------------------
+  end type station_network
 
-  ! REGULARIZATION STRUCTURE ------------------------------------------------------------------------------------------------------
+  ! REGULARIZATION STRUCTURE
   type, public :: regul
 
      integer                                                                  :: iglob
@@ -398,7 +396,7 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL),                dimension(:,:),      allocatable  :: Deriv_FD_Matrix
      integer                                                                  :: nReg, nNei, MaxOrder
 
-  end type regul !-----------------------------------------------------------------------------------------------------------------
+  end type regul
 
 contains
   ! -------------------------------------------------------------------------------------------------

@@ -43,6 +43,8 @@
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) "Reading mesh databases..."
+    write(IMAIN,*) "  reads binary mesh files: proc***_external_mesh.bin"
+    write(IMAIN,*) "  from directory         : ",trim(LOCAL_PATH)
     call flush_IMAIN()
   endif
 
@@ -1076,7 +1078,7 @@
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) "done"
+    write(IMAIN,*) "  done"
     write(IMAIN,*)
     call flush_IMAIN()
   endif

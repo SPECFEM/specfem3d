@@ -60,9 +60,6 @@
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'Total number of samples for seismograms = ',NSTEP
-    write(IMAIN,*)
     write(IMAIN,*) 'found a total of ',nrec_tot_found,' receivers in all the slices'
     write(IMAIN,*)
     if (NSOURCES > 1) then
@@ -122,7 +119,7 @@
   use specfem_par, only: myrank,NSTEP,NSOURCES,SIMULATION_TYPE, &
     NTSTEP_BETWEEN_OUTPUT_SEISMOS,NTSTEP_BETWEEN_READ_ADJSRC, &
     USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF, &
-    SAVE_ALL_SEISMOS_IN_ONE_FILE
+    SAVE_ALL_SEISMOS_IN_ONE_FILE,ASDF_FORMAT
 
   implicit none
 
@@ -137,22 +134,28 @@
 
   !! VM VM set the size of user_source_time_function
   if (USE_EXTERNAL_SOURCE_FILE) then
-     NSTEP_STF = NSTEP
-     NSOURCES_STF = NSOURCES
-  else !! We don't need the array user_source_time_function : use a small dummy array
-     NSTEP_STF = 1
-     NSOURCES_STF = 1
+    NSTEP_STF = NSTEP
+    NSOURCES_STF = NSOURCES
+  else
+    ! We don't need the array user_source_time_function : use a small dummy array
+    NSTEP_STF = 1
+    NSOURCES_STF = 1
   endif
 
   ! check
   if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
     ! requires to have full length of seismograms
     if (NTSTEP_BETWEEN_OUTPUT_SEISMOS < NSTEP) then
-      if (myrank == 0) then
-        print *, 'Error: Setting SAVE_ALL_SEISMOS_IN_ONE_FILE to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP'
-      endif
+      print *, 'Error: Setting SAVE_ALL_SEISMOS_IN_ONE_FILE to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP'
       call exit_MPI(myrank, &
                     'Setting SAVE_ALL_SEISMOS_IN_ONE_FILE not supported for current NTSTEP_BETWEEN_OUTPUT_SEISMOS in Par_file')
+    endif
+  endif
+  if (ASDF_FORMAT) then
+    ! ASDF storage requires to have full length of seismograms
+    if (NTSTEP_BETWEEN_OUTPUT_SEISMOS < NSTEP) then
+      print *, 'Error: Setting ASDF_FORMAT to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP'
+      call exit_MPI(myrank,'Error: Setting ASDF_FORMAT to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP')
     endif
   endif
 
@@ -1148,7 +1151,7 @@
   integer :: irec,irec_local,isource,ier,nrec_store
   integer,dimension(0:NPROC-1) :: tmp_rec_local_all
   integer :: maxrec,maxproc(1)
-  double precision :: sizeval
+  double precision :: sizeval,size_s
   ! interpolants
   double precision,dimension(NGLLX) :: hxir
   double precision,dimension(NGLLY) :: hetar
@@ -1165,8 +1168,33 @@
   !         nadj_rec_local - determines the number of adjoint sources, i.e., number of station locations (STATIONS_ADJOINT), which
   !                          act as sources to drive the adjoint wavefield
 
-  ! statistics about allocation memory for seismograms & source_adjoint
-  ! seismograms
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) 'seismograms:'
+    if (WRITE_SEISMOGRAMS_BY_MAIN) then
+      write(IMAIN,*) '  seismograms written by main process only'
+    else
+      write(IMAIN,*) '  seismograms written by all processes'
+    endif
+    write(IMAIN,*)
+    write(IMAIN,*) '  Total number of simulation steps (NSTEP)                       = ',NSTEP
+    write(IMAIN,*) '  writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS = ',NTSTEP_BETWEEN_OUTPUT_SEISMOS
+    write(IMAIN,*) '  number of subsampling steps for seismograms (subsamp_seismos)  = ',subsamp_seismos
+    write(IMAIN,*) '  Total number of samples for seismograms                        = ',NSTEP/subsamp_seismos
+    write(IMAIN,*)
+  endif
+  ! checks SU_FORMAT output length
+  if (SU_FORMAT .and. (NSTEP/subsamp_seismos > 32768)) then
+    print *
+    print *,"!!! BEWARE !!! Two many samples for SU format ! The .su file created will be unusable"
+    print *
+    call exit_MPI(myrank,'Error: Two many samples for SU format ! The .su file created will be unusable')
+  endif
+
+  ! seismogram array length
+  nlength_seismogram = NTSTEP_BETWEEN_OUTPUT_SEISMOS/subsamp_seismos
+
+  ! statistics about allocation memory for seismograms & source_adjoint seismograms
   ! gather from secondarys on main
   call gather_all_singlei(nrec_local,tmp_rec_local_all,NPROC)
   ! user output
@@ -1175,22 +1203,21 @@
     maxrec = maxval(tmp_rec_local_all(:))
     ! note: MAXLOC will determine the lower bound index as '1'.
     maxproc = maxloc(tmp_rec_local_all(:)) - 1
+
     ! seismograms array size in MB
-    if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
-      ! seismograms need seismograms(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
-      sizeval = dble(maxrec) * dble(NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * CUSTOM_REAL / 1024. / 1024. )
-    else
-      ! adjoint seismograms need seismograms(NDIM*NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
-      sizeval = dble(maxrec) * dble(NDIM * NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * CUSTOM_REAL / 1024. / 1024. )
+    ! seismograms need seismograms(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS/subsamp_seismos)
+    size_s = dble(maxrec) * dble(NDIM) * dble(nlength_seismogram * CUSTOM_REAL / 1024. / 1024. )
+    sizeval = 0.d0
+    if (SAVE_SEISMOGRAMS_DISPLACEMENT) sizeval = sizeval + size_s
+    if (SAVE_SEISMOGRAMS_VELOCITY) sizeval = sizeval + size_s
+    if (SAVE_SEISMOGRAMS_ACCELERATION) sizeval = sizeval + size_s
+    if (SAVE_SEISMOGRAMS_PRESSURE) sizeval = sizeval + dble(NB_RUNS_ACOUSTIC_GPU) * size_s
+    ! adjoint strain seismogram needs seismograms_eps(NDIM*NDIM,nrec_local,NSTEP)
+    if (SIMULATION_TYPE == 2) then
+      sizeval = sizeval + dble(maxrec) * dble(NDIM * NDIM) * dble(NSTEP * CUSTOM_REAL / 1024. / 1024. )
     endif
+
     ! outputs info
-    write(IMAIN,*) 'seismograms:'
-    if (WRITE_SEISMOGRAMS_BY_MAIN) then
-      write(IMAIN,*) '  seismograms written by main process only'
-    else
-      write(IMAIN,*) '  seismograms written by all processes'
-    endif
-    write(IMAIN,*) '  writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS = ',NTSTEP_BETWEEN_OUTPUT_SEISMOS
     write(IMAIN,*) '  maximum number of local receivers is ',maxrec,' in slice ',maxproc(1)
     write(IMAIN,*) '  size of maximum seismogram array       = ', sngl(sizeval),'MB'
     write(IMAIN,*) '                                         = ', sngl(sizeval/1024.d0),'GB'
@@ -1211,6 +1238,7 @@
       maxrec = maxval(tmp_rec_local_all(:))
       ! note: MAXLOC will determine the lower bound index as '1'.
       maxproc = maxloc(tmp_rec_local_all(:)) - 1
+
       ! source_adjoint size in MB
       !source_adjoint(NDIM,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC)
       sizeval = dble(maxrec) * dble(NDIM * NTSTEP_BETWEEN_READ_ADJSRC * CUSTOM_REAL / 1024. / 1024. )
@@ -1234,6 +1262,7 @@
   allocate(number_receiver_global(nrec_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2074')
   if (ier /= 0) stop 'error allocating array number_receiver_global'
+  number_receiver_global(:) = 0
 
   ! stores local receivers interpolation factors
   if (nrec_local > 0) then
@@ -1245,6 +1274,7 @@
     allocate(hgammar_store(NGLLZ,nrec_local),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2077')
     if (ier /= 0) stop 'error allocating array hxir_store etc.'
+    hxir_store(:,:) = 0.0; hetar_store(:,:) = 0.0; hgammar_store(:,:) = 0.0
 
     ! allocates derivatives
     if (SIMULATION_TYPE == 2) then
@@ -1255,6 +1285,7 @@
       allocate(hpgammar_store(NGLLZ,nrec_local),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2080')
       if (ier /= 0) stop 'error allocating array hpxir_store'
+      hpxir_store(:,:) = 0.0; hpetar_store(:,:) = 0.0; hpgammar_store(:,:) = 0.0
     endif
 
     ! define local to global receiver numbering mapping
@@ -1337,7 +1368,7 @@
     !
     ! allocate seismogram array
     if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
-      allocate(seismograms_d(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+      allocate(seismograms_d(NDIM,nrec_local,nlength_seismogram),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2087')
     else
       allocate(seismograms_d(1,1,1),stat=ier)
@@ -1346,7 +1377,7 @@
     if (ier /= 0) stop 'error allocating array seismograms_d'
 
     if (SAVE_SEISMOGRAMS_VELOCITY) then
-      allocate(seismograms_v(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+      allocate(seismograms_v(NDIM,nrec_local,nlength_seismogram),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2089')
     else
       allocate(seismograms_v(1,1,1),stat=ier)
@@ -1355,7 +1386,7 @@
     if (ier /= 0) stop 'error allocating array seismograms_v'
 
     if (SAVE_SEISMOGRAMS_ACCELERATION) then
-      allocate(seismograms_a(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+      allocate(seismograms_a(NDIM,nrec_local,nlength_seismogram),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2091')
     else
       allocate(seismograms_a(1,1,1),stat=ier)
@@ -1365,7 +1396,8 @@
 
     if (SAVE_SEISMOGRAMS_PRESSURE) then
       !NB_RUNS_ACOUSTIC_GPU is set to 1 by default in constants.h
-      allocate(seismograms_p(NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+      !daniel todo: use single component only, i.e., NDIM == 1, for pressure is enough
+      allocate(seismograms_p(NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,nlength_seismogram),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2093')
     else
       allocate(seismograms_p(1,1,1),stat=ier)

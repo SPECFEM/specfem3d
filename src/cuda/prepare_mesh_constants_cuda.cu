@@ -94,7 +94,7 @@ void FC_FUNC_(prepare_constants_device,
                                         int* SAVE_FORWARD,
                                         realw* h_xir,realw* h_etar, realw* h_gammar,double * nu_rec,
                                         int* islice_selected_rec,
-                                        int* NTSTEP_BETWEEN_OUTPUT_SEISMOS,
+                                        int* nlength_seismogram,
                                         int* SAVE_SEISMOGRAMS_DISPLACEMENT,int* SAVE_SEISMOGRAMS_VELOCITY,
                                         int* SAVE_SEISMOGRAMS_ACCELERATION,int* SAVE_SEISMOGRAMS_PRESSURE,
                                         int* h_NB_RUNS_ACOUSTIC_GPU) {
@@ -324,7 +324,7 @@ void FC_FUNC_(prepare_constants_device,
     free(h_nu_rec);
 
     // seismograms
-    int size =  (*NTSTEP_BETWEEN_OUTPUT_SEISMOS) * (*nrec_local);
+    int size =  (*nlength_seismogram) * (*nrec_local);
 
     if (mp->save_seismograms_d)
       print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_d,NDIM * size * sizeof(realw)),1801);
@@ -1208,17 +1208,15 @@ void FC_FUNC_(prepare_fields_noise_device,
   mp->num_free_surface_faces = *num_free_surface_faces;
 
   copy_todevice_int((void**)&mp->d_free_surface_ispec,free_surface_ispec,mp->num_free_surface_faces);
-  copy_todevice_int((void**)&mp->d_free_surface_ijk,free_surface_ijk,
-                    3*NGLL2*mp->num_free_surface_faces);
+  copy_todevice_int((void**)&mp->d_free_surface_ijk,free_surface_ijk,NDIM*NGLL2*mp->num_free_surface_faces);
 
   // alloc storage for the surface buffer to be copied
   print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_noise_surface_movie,
-                                     3*NGLL2*mp->num_free_surface_faces*sizeof(realw)),7005);
+                                     NDIM*NGLL2*mp->num_free_surface_faces*sizeof(realw)),7005);
 
   // prepares noise source array
   if (*NOISE_TOMOGRAPHY == 1){
-    copy_todevice_realw((void**)&mp->d_noise_sourcearray,noise_sourcearray,
-                        3*NGLL3*(*NSTEP));
+    copy_todevice_realw((void**)&mp->d_noise_sourcearray,noise_sourcearray,NDIM*NGLL3*(*NSTEP));
   }
 
   // prepares noise directions

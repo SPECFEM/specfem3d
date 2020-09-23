@@ -126,11 +126,9 @@ contains
     type(inver),                                    intent(inout) ::  inversion_param
     character(len=MAX_LEN_STRING)                                 ::  name_file_tmp
 
-
     logical                                                       :: save_COUPLE_WITH_INJECTION_TECHNIQUE
 
     save_COUPLE_WITH_INJECTION_TECHNIQUE = COUPLE_WITH_INJECTION_TECHNIQUE
-
 
     if (myrank == 0) write(INVERSE_LOG_FILE,*) '  - > Compute gradient for event :', ievent , ' iteration : ', iter_inverse
 
@@ -224,6 +222,7 @@ contains
     deltat = real(DT,kind=CUSTOM_REAL)
     deltatover2 = deltat/2._CUSTOM_REAL
     deltatsqover2 = deltat*deltat/2._CUSTOM_REAL
+
     b_deltat = - real(DT,kind=CUSTOM_REAL)
     b_deltatover2 = b_deltat/2._CUSTOM_REAL
     b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
@@ -439,16 +438,16 @@ contains
        if (allocated(seismograms_p)) deallocate(seismograms_p)
 
        ! allocate seismogram array
-       allocate(seismograms_d(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+       allocate(seismograms_d(NDIM,nrec_local,nlength_seismogram),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 509')
        if (ier /= 0) stop 'error allocating array seismograms_d'
-       allocate(seismograms_v(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+       allocate(seismograms_v(NDIM,nrec_local,nlength_seismogram),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 510')
        if (ier /= 0) stop 'error allocating array seismograms_v'
-       allocate(seismograms_a(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+       allocate(seismograms_a(NDIM,nrec_local,nlength_seismogram),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 511')
        if (ier /= 0) stop 'error allocating array seismograms_a'
-       allocate(seismograms_p(NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+       allocate(seismograms_p(NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,nlength_seismogram),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 512')
        if (ier /= 0) stop 'error allocating array seismograms_p'
 
@@ -530,9 +529,9 @@ contains
     if (ier /= 0) stop 'error allocating array adj_sourcearrays'
     source_adjoint(:,:,:) = 0._CUSTOM_REAL
     if (SIMULATION_TYPE == 3) then
-       do icomp=1,NDIM
-          do it=1,NTSTEP_BETWEEN_OUTPUT_SEISMOS
-             do irec_local=1, nadj_rec_local
+       do icomp = 1,NDIM
+          do it = 1,NTSTEP_BETWEEN_READ_ADJSRC
+             do irec_local = 1, nadj_rec_local
                 source_adjoint(icomp, irec_local, it) = acqui_simu(ievent)%adjoint_sources(icomp,irec_local,it)
              enddo
           enddo
@@ -1506,7 +1505,7 @@ contains
 
 !-------------------------------------------------------------------
 !> create dummy file in order to initialize specfem before setting the right parameters
-!! need to imporve this by using because that files are not working for every cases.
+!! need to improve this by using because that files are not working for every cases.
 !! may be use the flag INVERSE_FWI_FULL_PROBLEM
 !-------------------------------------------------------------------
 

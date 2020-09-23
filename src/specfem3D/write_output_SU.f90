@@ -32,7 +32,8 @@
   use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IMAIN,NDIM,NB_RUNS_ACOUSTIC_GPU,OUTPUT_FILES, &
     IIN_SU1,IIN_SU2,IIN_SU3
 
-  use specfem_par, only: myrank,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,seismo_offset,seismo_current, &
+  use specfem_par, only: myrank,NSTEP,subsamp_seismos,nlength_seismogram, &
+    seismo_offset,seismo_current, &
     nrec,nrec_local,number_receiver_global, &
     WRITE_SEISMOGRAMS_BY_MAIN,station_name,network_name
 
@@ -40,7 +41,7 @@
 
   ! arguments
   integer,intent(in) :: istore,nrec_store
-  real(kind=CUSTOM_REAL), dimension(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS,nrec_store),intent(in) :: all_seismograms
+  real(kind=CUSTOM_REAL), dimension(NDIM,nlength_seismogram,nrec_store),intent(in) :: all_seismograms
 
   ! local parameters
   character(len=MAX_STRING_LEN) :: procname,final_LOCAL_PATH
@@ -192,7 +193,7 @@
                                x_found(irec),y_found(irec),z_found(irec),x_found_source,y_found_source,z_found_source)
       ! writes section header
       ! position in bytes
-      ioffset = 4*(irec_local-1)*(60+NSTEP) + 1
+      ioffset = 4*(irec_local-1)*(60+NSTEP/subsamp_seismos) + 1
       select case (istore)
       case (1,2,3)
         write(IIN_SU1,pos=ioffset) header1,header2,header3,header4
@@ -205,7 +206,7 @@
 
     ! writes seismos
     ! position in bytes
-    ioffset = 4*(irec_local-1)*(60+NSTEP) + 4 * 60 + 4 * seismo_offset + 1
+    ioffset = 4*(irec_local-1)*(60+NSTEP/subsamp_seismos) + 4 * 60 + 4 * seismo_offset + 1
 
     select case (istore)
     case (1,2,3)
@@ -237,16 +238,14 @@
   subroutine determine_SU_header(irec,dx,header1,header2,header3,header4, &
                                  x_found,y_found,z_found,x_found_source,y_found_source,z_found_source)
 
-
-  use constants
-
-  use specfem_par, only: nrec,NSTEP,DT
+  use specfem_par, only: nrec,NSTEP,DT,subsamp_seismos
 
   implicit none
 
   integer :: irec
   double precision :: x_found,y_found,z_found
   double precision :: x_found_source,y_found_source,z_found_source
+  double precision :: sampling_deltat
   real :: dx
 
 ! Arrays for Seismic Unix header
@@ -280,15 +279,21 @@
 
   ! time steps
   header2(1) = 0  ! dummy
-  header2(2) = int(NSTEP, kind=2)
+  if (NSTEP/subsamp_seismos < 32768) then
+    header2(2) = int(NSTEP/subsamp_seismos, kind=2)
+  else
+    print *,"!!! BEWARE !!! Two many samples for SU format ! The .su file created won't be usable"
+    header2(2) = -9999
+  endif
 
   ! time increment
-  if (NINT(DT*1.0d6) < 65536) then
-    header3(1) = NINT(DT*1.0d6, kind=2)  ! deltat (unit: 10^{-6} second)
-  else if (NINT(DT*1.0d3) < 65536) then
-    header3(1) = NINT(DT*1.0d3, kind=2)  ! deltat (unit: 10^{-3} second)
+  sampling_deltat = DT*subsamp_seismos
+  if (NINT(sampling_deltat*1.0d6) < 65536) then
+    header3(1) = NINT(sampling_deltat*1.0d6, kind=2)  ! deltat (unit: 10^{-6} second)
+  else if (NINT(sampling_deltat*1.0d3) < 65536) then
+    header3(1) = NINT(sampling_deltat*1.0d3, kind=2)  ! deltat (unit: 10^{-3} second)
   else
-    header3(1) = NINT(DT, kind=2)  ! deltat (unit: 10^{0} second)
+    header3(1) = NINT(sampling_deltat, kind=2)  ! deltat (unit: 10^{0} second)
   endif
   header3(2) = 0  ! dummy
 

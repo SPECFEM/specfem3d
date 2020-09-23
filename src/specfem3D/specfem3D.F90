@@ -348,15 +348,19 @@
 
   ! reads in external mesh
   if (ADIOS_FOR_MESH) then
+    ! ADIOS file format
     call read_mesh_databases_adios()
   else
+    ! binary file
     call read_mesh_databases()
   endif
 
   ! reads in moho mesh
   if (ADIOS_FOR_MESH) then
+    ! ADIOS file format
     call read_mesh_databases_moho_adios()
   else
+    ! binary file
     call read_mesh_databases_moho()
   endif
 

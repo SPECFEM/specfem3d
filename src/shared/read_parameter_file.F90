@@ -489,6 +489,13 @@
       write(*,*)
     endif
 
+    call read_value_integer(subsamp_seismos, 'subsamp_seismos', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'subsamp_seismos                 = 1'
+      write(*,*)
+    endif
+
     call read_value_logical(USE_BINARY_FOR_SEISMOGRAMS, 'USE_BINARY_FOR_SEISMOGRAMS', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
@@ -843,6 +850,9 @@
    stop 'Error: at least one of SAVE_SEISMOGRAMS_DISPLACEMENT SAVE_SEISMOGRAMS_VELOCITY SAVE_SEISMOGRAMS_ACCELERATION &
              &SAVE_SEISMOGRAMS_PRESSURE must be true'
 
+  if (subsamp_seismos < 1) &
+    stop 'Error: subsamp_seismos must be >= 1'
+
   ! this could be implemented in the future if needed,
   ! see comments in the source code around the USE_TRICK_FOR_BETTER_PRESSURE
   ! option (use a "grep" command to find them) to see how this could/should be done
@@ -1003,6 +1013,39 @@
     ! let user decide
     !MOVIE_SURFACE = .true.             ! (not necessary) to store/load generating wavefield for plotting
     !SAVE_DISPLACEMENT = .true.         ! (not necessary) stores displacement (flag not necessary, but to avoid confusion)
+  endif
+
+  ! make sure NSTEP is a multiple of subsamp_seismos
+  ! if not, increase it a little bit, to the next multiple
+  if (mod(NSTEP,subsamp_seismos) /= 0) then
+    if (NOISE_TOMOGRAPHY /= 0) then
+      if (myrank == 0) then
+        print *,'Noise simulation: Invalid number of NSTEP = ',NSTEP
+        print *,'Must be a multiple of subsamp_seismos = ',subsamp_seismos
+      endif
+      stop 'Error: NSTEP must be a multiple of subsamp_seismos'
+    else
+      NSTEP = (NSTEP/subsamp_seismos + 1)*subsamp_seismos
+      ! user output
+      if (myrank == 0) then
+        print *
+        print *,'NSTEP is not a multiple of subsamp_seismos'
+        print *,'thus increasing it automatically to the next multiple, which is ',NSTEP
+        print *
+      endif
+    endif
+  endif
+
+  ! output seismograms at least once at the end of the simulation
+  NTSTEP_BETWEEN_OUTPUT_SEISMOS = min(NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+
+  ! make sure NSTEP_BETWEEN_OUTPUT_SEISMOS is a multiple of subsamp_seismos
+  if (mod(NTSTEP_BETWEEN_OUTPUT_SEISMOS,subsamp_seismos) /= 0) then
+    if (myrank == 0) then
+      print *,'Invalid number of NTSTEP_BETWEEN_OUTPUT_SEISMOS = ',NTSTEP_BETWEEN_OUTPUT_SEISMOS
+      print *,'Must be a multiple of subsamp_seismos = ',subsamp_seismos
+    endif
+    stop 'Error: NTSTEP_BETWEEN_OUTPUT_SEISMOS must be a multiple of subsamp_seismos'
   endif
 
   ! the default value of NTSTEP_BETWEEN_READ_ADJSRC (0) is to read the whole trace at the same time
@@ -1349,6 +1392,7 @@
   call bcast_all_singlel(SAVE_SEISMOGRAMS_ACCELERATION)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_PRESSURE)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)
+  call bcast_all_singlei(subsamp_seismos)
   call bcast_all_singlel(USE_BINARY_FOR_SEISMOGRAMS)
   call bcast_all_singlel(SU_FORMAT)
   call bcast_all_singlel(ASDF_FORMAT)

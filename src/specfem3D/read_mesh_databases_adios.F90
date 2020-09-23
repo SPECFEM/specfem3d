@@ -148,6 +148,14 @@
 
   integer :: comm
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "Reading mesh databases..."
+    write(IMAIN,*) "  reads ADIOS mesh file: external_mesh.bp"
+    write(IMAIN,*) "  from directory       : ",trim(LOCAL_PATH)
+    call flush_IMAIN()
+  endif
+
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
@@ -157,8 +165,8 @@
 
   call world_get_comm(comm)
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
-                               "verbose=1", ier)
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, "verbose=1", ier)
+
   call adios_read_open_file (handle, database_name, 0, comm, ier)
   if (ier /= 0) call abort_mpi()
 
@@ -1789,6 +1797,13 @@
   allocate(request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1943')
   if (ier /= 0) stop 'error allocating array buffer_send_vector_ext_mesh etc.'
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "  done"
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
 
   end subroutine read_mesh_databases_adios
 

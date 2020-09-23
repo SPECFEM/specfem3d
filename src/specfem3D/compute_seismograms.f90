@@ -31,7 +31,7 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO
 
   use specfem_par, only: SIMULATION_TYPE,NGLOB_AB,NSPEC_AB,ibool,NGLOB_ADJOINT, &
-    deltat,DT,t0,NSTEP,it,seismo_current, &
+    deltat,DT,t0,NSTEP,it,seismo_current,subsamp_seismos, &
     ispec_selected_source,ispec_selected_rec, &
     hxir_store,hetar_store,hgammar_store,number_receiver_global,nrec_local, &
     nu_source,nu_rec,Mxx,Myy,Mzz,Mxy,Mxz,Myz,tshift_src,hdur_Gaussian, &
@@ -215,7 +215,7 @@
                                         hprime_xx,hprime_yy,hprime_zz)
 
         stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(irec),hdur_Gaussian(irec))
-        stf_deltat = stf * deltat
+        stf_deltat = stf * deltat * subsamp_seismos
 
         Mxx_der(irec_local) = Mxx_der(irec_local) + eps_s(1,1) * stf_deltat
         Myy_der(irec_local) = Myy_der(irec_local) + eps_s(2,2) * stf_deltat
@@ -237,7 +237,7 @@
     endif
 
     ! we only store if needed
-    ! note: current index is seismo_current, this allows to store arrays only up to NTSTEP_BETWEEN_OUTPUT_SEISMOS
+    ! note: current index is seismo_current, this allows to store arrays only up to nlength_seismogram
     !       which could be used to limit the allocation size of these arrays for a large number of receivers
     if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
       seismograms_d(:,irec_local,seismo_current) = real(rotation_seismo(:,1)*dxd + rotation_seismo(:,2)*dyd &

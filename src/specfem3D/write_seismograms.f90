@@ -42,24 +42,6 @@
   double precision :: write_time_begin,write_time
   logical :: do_save_seismograms
 
-  ! update position in seismograms
-  seismo_current = seismo_current + 1
-
-  ! note: there might be some confusion about adjoint simulations, i.e. adjoint receivers and adjoint sources:
-  !       for pure adjoint simulations (SIMULATION_TYPE == 2), CMT source locations become adjoint receivers
-  !       for recording seismograms; station locations become (possible) adjoint sources.
-  !       thus,
-  !       1. adjoint sources are located at the receiver positions given in STATIONS file,
-  !          'nadj_rec_local' is the number of local adjoint sources, i.e. station positions acting as adjoint source
-  !       2. adjoint "receivers" are located at the CMT source positions given in CMTSOLUTION file,
-  !          'nrec_local' is the number of local adjoint receivers, i.e. source positions acting as receivers for
-  !          recording adjoint seismograms.
-
-  ! remember for pure adjoint runs (see setup_receivers routine):
-  ! - nrec_local              -> between 1 to NSOURCES
-  ! - number_receiver_global  -> local to global mapping for "adjoint" receivers, i.e. at source positions
-  ! - ispec_selected_source   -> element containing source position, which becomes an adjoint "receiver"
-
   ! check if we need to save seismos
   if (SIMULATION_TYPE == 3 .and. (.not. SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)) then
     do_save_seismograms = .false.
@@ -67,24 +49,49 @@
     do_save_seismograms = .true.
   endif
 
-  ! gets seismogram values
-  if (GPU_MODE) then
-    ! on GPU
-    if (nrec_local > 0 .and. do_save_seismograms) then
-      ! gets resulting array values onto CPU
-      call compute_seismograms_cuda(Mesh_pointer,seismograms_d,seismograms_v,seismograms_a,seismograms_p, &
-                                    seismo_current,NTSTEP_BETWEEN_OUTPUT_SEISMOS,it,it_end, &
-                                    ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,USE_TRICK_FOR_BETTER_PRESSURE)
+  ! checks subsampling recurrence
+  if (mod(it-1,subsamp_seismos) == 0) then
+
+    ! update position in seismograms
+    seismo_current = seismo_current + 1
+
+    ! check for edge effects
+    if (seismo_current < 1 .or. seismo_current > nlength_seismogram) &
+      call exit_mpi(myrank,'Error: seismo_current out of bounds in recording of seismograms')
+
+    ! note: there might be some confusion about adjoint simulations, i.e. adjoint receivers and adjoint sources:
+    !       for pure adjoint simulations (SIMULATION_TYPE == 2), CMT source locations become adjoint receivers
+    !       for recording seismograms; station locations become (possible) adjoint sources.
+    !       thus,
+    !       1. adjoint sources are located at the receiver positions given in STATIONS file,
+    !          'nadj_rec_local' is the number of local adjoint sources, i.e. station positions acting as adjoint source
+    !       2. adjoint "receivers" are located at the CMT source positions given in CMTSOLUTION file,
+    !          'nrec_local' is the number of local adjoint receivers, i.e. source positions acting as receivers for
+    !          recording adjoint seismograms.
+
+    ! remember for pure adjoint runs (see setup_receivers routine):
+    ! - nrec_local              -> between 1 to NSOURCES
+    ! - number_receiver_global  -> local to global mapping for "adjoint" receivers, i.e. at source positions
+    ! - ispec_selected_source   -> element containing source position, which becomes an adjoint "receiver"
+
+    ! gets seismogram values
+    if (do_save_seismograms .and. nrec_local > 0) then
+      if (GPU_MODE) then
+        ! on GPU
+        ! gets resulting array values onto CPU
+        call compute_seismograms_cuda(Mesh_pointer,seismograms_d,seismograms_v,seismograms_a,seismograms_p, &
+                                      seismo_current,nlength_seismogram,NTSTEP_BETWEEN_OUTPUT_SEISMOS,it,it_end, &
+                                      ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,USE_TRICK_FOR_BETTER_PRESSURE)
+      else
+        ! on CPU
+        call compute_seismograms()
+      endif
     endif
-  else
-    ! on CPU
-    if (nrec_local > 0 .and. do_save_seismograms) then
-      call compute_seismograms()
-    endif
-  endif
+
+  endif ! subsamp_seismos
 
   ! write the current or final seismograms
-  if (seismo_current == NTSTEP_BETWEEN_OUTPUT_SEISMOS .or. it == it_end) then
+  if (mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == it_end) then
 
     if (do_save_seismograms .and. .not. INVERSE_FWI_FULL_PROBLEM) then
 
@@ -131,7 +138,7 @@
         write_time = wtime() - write_time_begin
         ! output
         write(IMAIN,*)
-        write(IMAIN,*) 'Total number of time steps written: ', it-it_begin+1
+        write(IMAIN,*) 'Total number of time steps done: ', it-it_begin+1
         if (WRITE_SEISMOGRAMS_BY_MAIN) then
           write(IMAIN,*) 'Writing the seismograms by main proc alone took ',sngl(write_time),' seconds'
         else
@@ -163,8 +170,9 @@
   use specfem_par, only: myrank,number_receiver_global,NPROC, &
           nrec,nrec_local,islice_selected_rec, &
           seismo_offset,seismo_current, &
-          NTSTEP_BETWEEN_OUTPUT_SEISMOS,ASDF_FORMAT,SU_FORMAT, &
-          WRITE_SEISMOGRAMS_BY_MAIN,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS
+          ASDF_FORMAT,SU_FORMAT, &
+          WRITE_SEISMOGRAMS_BY_MAIN,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS, &
+          nlength_seismogram
 
   ! seismograms
   use specfem_par, only: seismograms_d,seismograms_v,seismograms_a,seismograms_p
@@ -227,13 +235,13 @@
   endif
 
   ! allocates single trace array
-  allocate(one_seismogram(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+  allocate(one_seismogram(NDIM,nlength_seismogram),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2420')
   if (ier /= 0) stop 'error while allocating one temporary seismogram'
   one_seismogram(:,:) = 0._CUSTOM_REAL
 
   ! allocates array for all seismograms
-  allocate(all_seismograms(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS,nrec_store),stat=ier)
+  allocate(all_seismograms(NDIM,nlength_seismogram,nrec_store),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating all_seismograms array')
   if (ier /= 0) stop 'error while allocating all_seismograms array'
   all_seismograms(:,:,:) = 0._CUSTOM_REAL
@@ -310,7 +318,7 @@
               case (4)
                 ! pressure
                 do i = 1,seismo_current
-                  one_seismogram(:,i) = seismograms_p(:,irec_local,i)
+                  one_seismogram(1,i) = seismograms_p(1,irec_local,i) ! single component
                 enddo
               end select
 
@@ -368,6 +376,7 @@
           call send_i(tmp_irec,1,receiver,itag)
 
           ! sets trace
+          one_seismogram(:,:) = 0._CUSTOM_REAL
           select case (istore)
           case (1)
             ! displacement
@@ -387,7 +396,7 @@
           case (4)
             ! pressure
             do i = 1,seismo_current
-              one_seismogram(:,i) = seismograms_p(:,irec_local,i)
+              one_seismogram(1,i) = seismograms_p(1,irec_local,i) ! single component
             enddo
           end select
 
@@ -432,7 +441,7 @@
       case (4)
         ! pressure
         do i = 1,seismo_current
-          one_seismogram(:,i) = seismograms_p(:,irec_local,i)
+          one_seismogram(1,i) = seismograms_p(1,irec_local,i) ! single component
         enddo
       end select
 
@@ -601,14 +610,14 @@
   use constants, only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,OUTPUT_FILES,NB_RUNS_ACOUSTIC_GPU
 
   use specfem_par, only: DT,t0,it, &
-    NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS,ASDF_FORMAT,WRITE_SEISMOGRAMS_BY_MAIN, &
+    NSTEP,ASDF_FORMAT,WRITE_SEISMOGRAMS_BY_MAIN, &
     SIMULATION_TYPE,station_name,network_name, &
-    nrec,nrec_local
+    nrec,nrec_local,nlength_seismogram
 
   implicit none
 
   integer, intent(in) :: istore
-  real(kind=CUSTOM_REAL), dimension(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS),intent(in) :: one_seismogram
+  real(kind=CUSTOM_REAL), dimension(NDIM,nlength_seismogram),intent(in) :: one_seismogram
   integer,intent(in) :: irec_local,irec
   character(len=1),intent(in) :: component
 
@@ -683,10 +692,10 @@
 
   use constants, only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES,NB_RUNS_ACOUSTIC_GPU
 
-  use specfem_par, only: myrank,number_receiver_global,nrec_local,it,DT, &
-    NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS,WRITE_SEISMOGRAMS_BY_MAIN,SU_FORMAT,ASDF_FORMAT, &
+  use specfem_par, only: myrank,number_receiver_global,nrec_local,DT, &
+    WRITE_SEISMOGRAMS_BY_MAIN,SU_FORMAT,ASDF_FORMAT, &
     t0,seismo_offset,seismo_current, &
-    it_adj_written
+    it_adj_written,subsamp_seismos,nlength_seismogram
 
   ! seismograms
   use specfem_par, only: seismograms_d,seismograms_v,seismograms_a,seismograms_p
@@ -731,7 +740,7 @@
   nrec_store = nrec_local
 
   ! allocates array for all seismograms
-  allocate(all_seismograms(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS,nrec_store),stat=ier)
+  allocate(all_seismograms(NDIM,nlength_seismogram,nrec_store),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating all_seismograms array')
   if (ier /= 0) stop 'error while allocating all_seismograms array'
   all_seismograms(:,:,:) = 0._CUSTOM_REAL
@@ -759,7 +768,7 @@
     case (4)
       ! pressure
       do i = 1,seismo_current
-        all_seismograms(:,i,irec_local) = seismograms_p(:,irec_local,i)
+        all_seismograms(1,i,irec_local) = seismograms_p(1,irec_local,i) ! single component
       enddo
     end select
   enddo
@@ -788,7 +797,8 @@
       do iorientation = 1,number_of_components
 
         ! gets channel name
-        if (istore == 4) then ! this is for pressure
+        if (istore == 4) then
+          ! this is for pressure
           call write_channel_name(istore,channel)
         else
           call write_channel_name(iorientation,channel)
@@ -798,11 +808,10 @@
         ! file name includes the name of the station, the network and the component
         write(sisname,"(a3,'.',a1,i6.6,'.',a3,'.sem',a1)") '/NT','S',irec,channel,component
 
-        ! save seismograms in text format with no subsampling.
-        ! Because we do not subsample the output, this can result in large files
-        ! if the simulation uses many time steps. However, subsampling the output
-        ! here would result in a loss of accuracy when one later convolves
-        ! the results with the source time function
+        ! save seismograms in text format
+        !
+        ! note: subsampling the seismograms can result in a loss of accuracy when one later convolves
+        !       the results with the source time function - know what you are doing.
         if (seismo_offset == 0) then
           !open new file
           open(unit=IOUT,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//sisname(1:len_trim(sisname)), &
@@ -814,13 +823,13 @@
         endif
 
         ! make sure we never write more than the maximum number of time steps
-        do isample = it_adj_written+1,min(it,NSTEP)
+        do isample = 1,seismo_current
           ! current time
           ! subtract half duration of the source to make sure travel time is correct
-          time = dble(isample-1)*DT - t0
+          time = dble(isample-1)*DT*subsamp_seismos + dble(it_adj_written)*DT - t0
 
           ! distinguish between single and double precision for reals
-          write(IOUT,*) real(time,kind=CUSTOM_REAL),' ',all_seismograms(iorientation,isample-it_adj_written,irec_local)
+          write(IOUT,*) real(time,kind=CUSTOM_REAL),' ',all_seismograms(iorientation,isample,irec_local)
         enddo
 
         close(IOUT)
@@ -888,7 +897,7 @@
         ! file name includes the name of the station, the network and the component
         write(sisname,"(a3,'.',a1,i6.6,'.',a3,'.sem',a1)") '/NT','S',irec,chn,component
 
-        ! save seismograms in text format with no subsampling.
+        ! save seismograms in text format (with no subsampling).
         ! Because we do not subsample the output, this can result in large files
         ! if the simulation uses many time steps. However, subsampling the output
         ! here would result in a loss of accuracy when one later convolves

@@ -118,7 +118,7 @@ end module constants
   ! To use a bottom free surface instead of absorbing Stacey or PML condition
   logical :: BOTTOM_FREE_SURFACE
 
-! sources and receivers Z coordinates given directly instead of with depth
+  ! sources and receivers Z coordinates given directly instead of with depth
   logical :: USE_SOURCES_RECEIVERS_Z
 
   ! for simultaneous runs from the same batch job
@@ -139,6 +139,7 @@ end module constants
   ! seismograms
   integer :: NTSTEP_BETWEEN_OUTPUT_INFO
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NTSTEP_BETWEEN_READ_ADJSRC
+  integer :: subsamp_seismos
   logical :: SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE
   logical :: SAVE_SEISMOGRAMS_IN_ADJOINT_RUN
   logical :: WRITE_SEISMOGRAMS_BY_MAIN,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS,SU_FORMAT
