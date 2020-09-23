@@ -225,6 +225,9 @@ SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic 
 # (usually they are unused and not very meaningful, leave this off in almost all cases)
 SAVE_SEISMOGRAMS_IN_ADJOINT_RUN = .false.
 
+# subsampling of the seismograms to create smaller files (but less accurately sampled in time)
+subsamp_seismos                 = 1
+
 # save seismograms in binary or ASCII format (binary is smaller but may not be portable between machines)
 USE_BINARY_FOR_SEISMOGRAMS      = .true.
 
