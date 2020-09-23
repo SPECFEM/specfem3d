@@ -80,7 +80,7 @@
         ! on GPU
         ! gets resulting array values onto CPU
         call compute_seismograms_cuda(Mesh_pointer,seismograms_d,seismograms_v,seismograms_a,seismograms_p, &
-                                      seismo_current,nlength_seismogram,NTSTEP_BETWEEN_OUTPUT_SEISMOS,it,it_end, &
+                                      seismo_current,nlength_seismogram,it,it_end, &
                                       ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,USE_TRICK_FOR_BETTER_PRESSURE)
       else
         ! on CPU
