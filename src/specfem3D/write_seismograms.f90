@@ -846,27 +846,46 @@
 
 ! write adjoint seismograms (strain) to text files
 
-  subroutine write_adj_seismograms2_to_file(myrank,seismograms_eps,number_receiver_global,nrec_local,it,DT,NSTEP,t0)
+  subroutine write_adj_seismograms2_to_file()
 
-  use constants, only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
+  use constants, only: myrank,IMAIN,CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
+
+  use specfem_par, only: seismograms_eps, &
+    number_receiver_global,nrec_local,DT,NSTEP,t0, &
+    seismo_offset,subsamp_seismos, &
+    GPU_MODE
 
   implicit none
-  integer :: myrank
-  integer :: nrec_local,NSTEP,it
-  integer, dimension(nrec_local) :: number_receiver_global
-  ! note: seismograms here is still an array of size *,*,*,NSTEP
-  real(kind=CUSTOM_REAL), dimension(NDIM,NDIM,nrec_local,NSTEP) :: seismograms_eps
-  double precision :: t0,DT
 
   ! local parameters
   integer :: irec,irec_local
   integer :: idimval,jdimval,isample
+  real(kind=CUSTOM_REAL) :: time_t
 
   character(len=4) :: chn
   character(len=1) :: component
   character(len=MAX_STRING_LEN) :: sisname
 
+  ! todo: strain seismograms are not implemented yet for GPU simulations
+  if (GPU_MODE) then
+    ! user info
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'Note: For GPU simulations, adjoint strain seismograms NT.S****.SNN.semd,.. are not implemented yet.'
+      write(IMAIN,*) '      Please set GPU_MODE to .false. to compute and output strains as well.'
+      write(IMAIN,*)
+    endif
+    return
+  endif
+
   component = 'd'
+
+  ! this write routine here is called at the very end, thus seismo_offset should be equal to NSTEP/subsamp_seismos
+  ! checks
+  if (seismo_offset /= NSTEP/subsamp_seismos) then
+    print *,'Error: writing strain seismograms has wrong index lengths ',seismo_offset,'should be ',NSTEP/subsamp_seismos
+    call exit_MPI(myrank,'Error writing strain seismograms, has wrong index length')
+  endif
 
   do irec_local = 1,nrec_local
 
@@ -906,9 +925,12 @@
 
         ! make sure we never write more than the maximum number of time steps
         ! subtract half duration of the source to make sure travel time is correct
-        do isample = 1,min(it,NSTEP)
+        do isample = 1,seismo_offset
+          ! time
           ! distinguish between single and double precision for reals
-          write(IOUT,*) real(dble(isample-1)*DT - t0,kind=CUSTOM_REAL),' ',seismograms_eps(jdimval,idimval,irec_local,isample)
+          time_t = real(dble(isample-1)*DT*subsamp_seismos - t0,kind=CUSTOM_REAL)
+          ! output
+          write(IOUT,*) time_t,' ',seismograms_eps(jdimval,idimval,irec_local,isample)
         enddo
 
         close(IOUT)

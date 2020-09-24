@@ -79,9 +79,10 @@
                                 USE_MESH_COLORING_GPU, &
                                 nspec_acoustic,nspec_elastic, &
                                 myrank,SAVE_FORWARD, &
-                                hxir_store,hetar_store,hgammar_store,nu_rec, &
+                                hxir_store,hetar_store,hgammar_store, &
+                                nu_rec,nu_source, &
                                 islice_selected_rec, &
-                                NTSTEP_BETWEEN_OUTPUT_SEISMOS/subsamp_seismos, &
+                                nlength_seismogram, &
                                 SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY, &
                                 SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE, &
                                 NB_RUNS_ACOUSTIC_GPU)
@@ -155,7 +156,6 @@
                                 b_alphaval,b_betaval,b_gammaval, &
                                 ANISOTROPIC_KL, &
                                 APPROXIMATE_HESS_KL)
-
   endif
 
   ! prepares fields on GPU for poroelastic simulations
@@ -163,12 +163,12 @@
     stop 'todo poroelastic simulations on GPU'
   endif
 
-  ! synchronizes processes
-  !call synchronize_all()
-
   ! prepares needed receiver array for adjoint runs
-  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) &
-    call prepare_sim2_or_3_const_device(Mesh_pointer,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC)
+  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
+    call prepare_sim2_or_3_const_device(Mesh_pointer,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC, &
+                                        hxir_adjstore,hetar_adjstore,hgammar_adjstore, &
+                                        nrec,islice_selected_rec,ispec_selected_rec)
+  endif
 
   ! prepares fields on GPU for noise simulations
   if (NOISE_TOMOGRAPHY > 0) then
@@ -323,6 +323,12 @@
   memory_size = memory_size + NDIM * NDIM * nrec_local * dble(CUSTOM_REAL)
   ! d_ispec_selected_rec_loc
   memory_size = memory_size + nrec_local * dble(SIZE_INTEGER)
+
+  if (SIMULATION_TYPE == 2) then
+    ! d_hxir_adj, d_hetar_adj, d_hgammar_adj
+    memory_size = memory_size + 3.d0 * NGLLX * nadj_rec_local * dble(CUSTOM_REAL)
+  endif
+
   ! d_seismograms_d,d_seismograms_v,d_seismograms_a,d_seismograms_p
   if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
     memory_size = memory_size + NDIM * nlength_seismogram * nrec_local * dble(CUSTOM_REAL)
@@ -347,7 +353,6 @@
     memory_size = memory_size + 2.d0 * num_phase_ispec_acoustic * dble(SIZE_INTEGER)
     ! d_ispec_is_acoustic
     memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
-
   endif
 
   ! elastic simulations

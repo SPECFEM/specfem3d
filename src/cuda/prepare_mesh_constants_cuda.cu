@@ -86,14 +86,15 @@ void FC_FUNC_(prepare_constants_device,
                                         realw* h_sourcearrays,
                                         int* h_islice_selected_source, int* h_ispec_selected_source,
                                         int* h_ispec_selected_rec,
-                                        int* nrec,int* nrec_local,
+                                        int* nrec, int* nrec_local,
                                         int* SIMULATION_TYPE,
                                         int* USE_MESH_COLORING_GPU_f,
                                         int* nspec_acoustic,int* nspec_elastic,
                                         int* h_myrank,
                                         int* SAVE_FORWARD,
-                                        realw* h_xir,realw* h_etar, realw* h_gammar,double * nu_rec,
-                                        int* islice_selected_rec,
+                                        realw* h_xir,realw* h_etar, realw* h_gammar,
+                                        double* nu_rec, double* nu_source,
+                                        int* h_islice_selected_rec,
                                         int* nlength_seismogram,
                                         int* SAVE_SEISMOGRAMS_DISPLACEMENT,int* SAVE_SEISMOGRAMS_VELOCITY,
                                         int* SAVE_SEISMOGRAMS_ACCELERATION,int* SAVE_SEISMOGRAMS_PRESSURE,
@@ -295,33 +296,30 @@ void FC_FUNC_(prepare_constants_device,
   copy_todevice_int((void**)&mp->d_islice_selected_source,h_islice_selected_source,(*NSOURCES));
   copy_todevice_int((void**)&mp->d_ispec_selected_source,h_ispec_selected_source,(*NSOURCES));
 
-
-  // receiver stations
+  // seismogram outputs
   mp->save_seismograms_d = *SAVE_SEISMOGRAMS_DISPLACEMENT;
   mp->save_seismograms_v = *SAVE_SEISMOGRAMS_VELOCITY;
   mp->save_seismograms_a = *SAVE_SEISMOGRAMS_ACCELERATION;
   mp->save_seismograms_p = *SAVE_SEISMOGRAMS_PRESSURE;
 
+  // receiver stations
   mp->nrec_local = *nrec_local; // number of receiver located in this partition
-  // note that:
-  // size(ispec_selected_rec) = nrec
+
+  // note: for adjoint simulations (SIMULATION_TYPE == 2),
+  //         nrec_local     - is set to the number of sources (CMTSOLUTIONs), which act as "adjoint receiver" locations
+  //                          for storing seismograms or strains
+  //
+  //         nadj_rec_local - determines the number of "adjoint sources", i.e., number of station locations (STATIONS_ADJOINT),
+  //                          which act as sources to drive the adjoint wavefield
+  //
+  //         still, size(ispec_selected_rec) = nrec
+  //
+  //         hxir,.. arrays are interpolators for: - receiver locations (STATIONS) in case SIMULATION_TYPE == 1 or 3,
+  //                                               - "adjoint receiver" locations (CMTSOLUTIONs) in case SIMULATION_TYPE == 2
   if (mp->nrec_local > 0){
     copy_todevice_realw((void**)&mp->d_hxir,h_xir,NGLLX*mp->nrec_local);
     copy_todevice_realw((void**)&mp->d_hetar,h_etar,NGLLY*mp->nrec_local);
     copy_todevice_realw((void**)&mp->d_hgammar,h_gammar,NGLLZ*mp->nrec_local);
-
-    // stores only local receiver rotations in d_nu_rec
-    realw* h_nu_rec;
-    h_nu_rec = (realw*)malloc(NDIM * NDIM * mp->nrec_local * sizeof(realw));
-    int irec_loc = 0;
-    for (int i=0;i < (*nrec);i++){
-      if (mp->myrank == islice_selected_rec[i]){
-         for (int j = 0; j < 9; j++) h_nu_rec[j + NDIM * NDIM * irec_loc] = (realw)nu_rec[j + NDIM * NDIM * i];
-         irec_loc = irec_loc + 1;
-      }
-    }
-    copy_todevice_realw((void**)&mp->d_nu_rec,h_nu_rec,NDIM * NDIM * (*nrec_local));
-    free(h_nu_rec);
 
     // seismograms
     int size =  (*nlength_seismogram) * (*nrec_local);
@@ -335,15 +333,65 @@ void FC_FUNC_(prepare_constants_device,
     if (mp->save_seismograms_p)
       print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_p,size * sizeof(field)),1804);
 
+    // stores only local receiver rotations in d_nu_rec
+    realw* h_nu_rec;
+    h_nu_rec = (realw*)malloc(NDIM * NDIM * mp->nrec_local * sizeof(realw));
+    int irec_loc = 0;
+    if (mp->simulation_type == 1 || mp->simulation_type == 3){
+      // forward/kernel simulations: receiver positions at STATIONS locations
+      //                             nu_rec,.. are for actual receiver locations
+      //                             seismograms are taken at these receiver locations (specified by STATIONS)
+      for (int i=0;i < (*nrec); i++){
+        if (mp->myrank == h_islice_selected_rec[i]){
+          for (int j = 0; j < 9; j++) h_nu_rec[j + NDIM * NDIM * irec_loc] = (realw)nu_rec[j + NDIM * NDIM * i];
+          irec_loc = irec_loc + 1;
+        }
+      }
+    }else{
+      // "pure" adjoint simulation: "adjoint receivers" are located at CMTSOLUTION source locations
+      //                            nu_source,.. are for "adjoint receivers" locations
+      //                            seismograms are taken at the "adjoint receivers" location (specified by CMTSOLUTION)
+      for(int i=0; i < (*NSOURCES); i++) {
+        if (mp->myrank == h_islice_selected_source[i]){
+          for (int j = 0; j < 9; j++) h_nu_rec[j + NDIM * NDIM * irec_loc] = (realw)nu_source[j + NDIM * NDIM * i];
+          irec_loc = irec_loc+1;
+        }
+      }
+    }
+    // checks
+    if (irec_loc != mp->nrec_local) exit_on_error("prepare_constants_device: nrec_local not equal for d_nu_rec\n");
+    // allocates on device
+    copy_todevice_realw((void**)&mp->d_nu_rec,h_nu_rec,NDIM * NDIM * (*nrec_local));
+    free(h_nu_rec);
+
+    // stores only local receiver array
     int *ispec_selected_rec_loc;
     ispec_selected_rec_loc = (int*)malloc(mp->nrec_local * sizeof(int));
     irec_loc = 0;
-    for(int i=0;i<*nrec;i++) {
-      if ( mp->myrank == islice_selected_rec[i]){
-        ispec_selected_rec_loc[irec_loc] = h_ispec_selected_rec[i];
-        irec_loc = irec_loc+1;
+    if (mp->simulation_type == 1 || mp->simulation_type == 3){
+      // forward/kernel simulations: receiver positions at STATIONS locations
+      //                             xir_store,.. are for actual receiver locations
+      //                             seismograms are taken at these receiver locations (specified by STATIONS)
+      for(int i=0; i < (*nrec); i++) {
+        if (mp->myrank == h_islice_selected_rec[i]){
+          ispec_selected_rec_loc[irec_loc] = h_ispec_selected_rec[i];
+          irec_loc = irec_loc+1;
+        }
+      }
+    }else{
+      // "pure" adjoint simulation: "adjoint receivers" are located at CMTSOLUTION source locations
+      //                            xir_store,.. are for "adjoint receivers" locations
+      //                            seismograms are taken at the "adjoint receivers" location (specified by CMTSOLUTION)
+      for(int i=0; i < (*NSOURCES); i++) {
+        if (mp->myrank == h_islice_selected_source[i]){
+          ispec_selected_rec_loc[irec_loc] = h_ispec_selected_source[i];
+          irec_loc = irec_loc+1;
+        }
       }
     }
+    // checks
+    if (irec_loc != mp->nrec_local) exit_on_error("prepare_constants_device: nrec_local not equal for d_ispec_selected_rec_loc\n");
+    // allocates on device
     copy_todevice_int((void**)&mp->d_ispec_selected_rec_loc,ispec_selected_rec_loc,mp->nrec_local);
     free(ispec_selected_rec_loc);
   }
@@ -578,7 +626,8 @@ void FC_FUNC_(prepare_fields_acoustic_adj_dev,
 
   // mpi buffer
   if (mp->size_mpi_buffer_potential > 0){
-    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_b_send_potential_dot_dot_buffer),mp->size_mpi_buffer_potential*sizeof(field)),3014);
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_b_send_potential_dot_dot_buffer),
+                                       mp->size_mpi_buffer_potential*sizeof(field)),3014);
   }
 
   GPU_ERROR_CHECKING("prepare_fields_acoustic_adj_dev");
@@ -1163,17 +1212,62 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
 
 extern EXTERN_LANG
 void FC_FUNC_(prepare_sim2_or_3_const_device,
-              PREPARE_SIM2_OR_3_CONST_DEVICE)(long* Mesh_pointer,int *nadj_rec_local, int* NTSTEP_BETWEEN_READ_ADJSRC) {
+              PREPARE_SIM2_OR_3_CONST_DEVICE)(long* Mesh_pointer,int *nadj_rec_local, int* NTSTEP_BETWEEN_READ_ADJSRC,
+                                              realw* hxir_adjstore, realw* hetar_adjstore, realw* hgammar_adjstore,
+                                              int* nrec, int* h_islice_selected_rec, int* h_ispec_selected_rec) {
 
   TRACE("prepare_sim2_or_3_const_device");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer);
+
+  // for SIMULATION_TYPE == 2 or 3:
+  //         nadj_rec_local - determines the number of "adjoint sources", i.e., number of station locations (STATIONS_ADJOINT),
+  //                          which act as sources to drive the adjoint wavefield
 
   // adjoint source arrays
   mp->nadj_rec_local = *nadj_rec_local;
   if (mp->nadj_rec_local > 0){
     print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_source_adjoint,
                                        (mp->nadj_rec_local)* NDIM * sizeof(field) * (*NTSTEP_BETWEEN_READ_ADJSRC)),6005);
+
+    // adjoint simulations
+    if (mp->simulation_type == 2){
+      // "pure" adjoint simulation: "adjoint sources" are located at receiver STATIONS locations
+      //                            however, xir_store,.. are for "adjoint receiver" locations (specified by CMTSOLUTION)
+      //                            thus, we need to store separate arrays xir_adj,.. for "adjoint sources"
+
+      // hxir for "adjoint receivers" are at CMT locations (needed for seismograms),
+      // hxir_adj for "adjoint sources" are at receiver STATIONS locations (needed to add adjoint sources)
+      // sets local adjoint source positions
+      copy_todevice_realw((void**)&mp->d_hxir_adj,hxir_adjstore,NGLLX*mp->nadj_rec_local);
+      copy_todevice_realw((void**)&mp->d_hetar_adj,hetar_adjstore,NGLLX*mp->nadj_rec_local);
+      copy_todevice_realw((void**)&mp->d_hgammar_adj,hgammar_adjstore,NGLLX*mp->nadj_rec_local);
+
+      // stores only local "adjoint sources" array
+      int *ispec_selected_adjrec_loc;
+      ispec_selected_adjrec_loc = (int*)malloc(mp->nadj_rec_local * sizeof(int));
+      int iadjrec_loc = 0;
+      for(int i=0; i < (*nrec); i++) {
+        if (mp->myrank == h_islice_selected_rec[i]){
+          ispec_selected_adjrec_loc[iadjrec_loc] = h_ispec_selected_rec[i];
+          iadjrec_loc = iadjrec_loc+1;
+        }
+      }
+      // checks
+      if (iadjrec_loc != mp->nadj_rec_local) exit_on_error("prepare_sim2_or_3_const_device: nadj_rec_local not equal\n");
+      // allocates on GPU
+      copy_todevice_int((void**)&mp->d_ispec_selected_adjrec_loc,ispec_selected_adjrec_loc,mp->nadj_rec_local);
+      free(ispec_selected_adjrec_loc);
+
+    }else{
+      // kernel simulations (SIMULATION_TYPE == 3)
+      // adjoint source arrays and receiver arrays are the same, no need to allocate new arrays, just point to the existing ones
+      mp->d_hxir_adj = mp->d_hxir;
+      mp->d_hetar_adj = mp->d_hetar;
+      mp->d_hgammar_adj = mp->d_hgammar;
+      // "adjoint source" locations and receiver location arrays are the same.
+      mp->d_ispec_selected_adjrec_loc = mp->d_ispec_selected_rec_loc;
+    }
   }
 
   GPU_ERROR_CHECKING("prepare_sim2_or_3_const_device");

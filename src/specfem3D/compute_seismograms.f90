@@ -28,10 +28,11 @@
 
   subroutine compute_seismograms()
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO
+  use constants, only: myrank,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO
 
   use specfem_par, only: SIMULATION_TYPE,NGLOB_AB,NSPEC_AB,ibool,NGLOB_ADJOINT, &
-    deltat,DT,t0,NSTEP,it,seismo_current,subsamp_seismos, &
+    deltat,DT,t0,NSTEP,it, &
+    seismo_current,seismo_offset,subsamp_seismos, &
     ispec_selected_source,ispec_selected_rec, &
     hxir_store,hetar_store,hgammar_store,number_receiver_global,nrec_local, &
     nu_source,nu_rec,Mxx,Myy,Mzz,Mxy,Mxz,Myz,tshift_src,hdur_Gaussian, &
@@ -57,7 +58,7 @@
   ! interpolated wavefield values
   double precision :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd
 
-  integer :: irec_local,irec
+  integer :: irec_local,irec,idx
   integer :: iglob,ispec,i,j,k
 
   ! adjoint locals
@@ -256,7 +257,12 @@
 
     ! adjoint simulations
     if (SIMULATION_TYPE == 2) then
-      seismograms_eps(:,:,irec_local,it) = eps_s(:,:)
+      ! current index in seismogram_eps
+      idx = seismo_offset + seismo_current
+      ! checks bounds
+      if (idx < 1 .or. idx > NSTEP/subsamp_seismos) call exit_mpi(myrank,'Error: seismograms_eps has wrong current index')
+      ! stores strain value
+      seismograms_eps(:,:,irec_local,idx) = eps_s(:,:)
     endif
 
   enddo ! nrec_local

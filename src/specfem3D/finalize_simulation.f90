@@ -51,7 +51,7 @@
   if (SIMULATION_TYPE == 2) then
     if (nrec_local > 0) then
       ! seismograms (strain)
-      call write_adj_seismograms2_to_file(myrank,seismograms_eps,number_receiver_global,nrec_local,it,DT,NSTEP,t0)
+      call write_adj_seismograms2_to_file()
       ! source gradients  (for sources in elastic domains)
       call save_kernels_source_derivatives()
     endif

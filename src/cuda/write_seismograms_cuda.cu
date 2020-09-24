@@ -384,6 +384,11 @@ void FC_FUNC_(compute_seismograms_cuda,
   int it = *itf;
   int it_end = *it_endf;
 
+  // note: mp->d_ispec_selected_rec_loc is the array holding spectral elements in which the local receivers are located
+  //       for "pure" adjoint simulation (SIMULATION_TYPE == 2), adjoint "receivers" are located at CMT source positions,
+  //       otherwise receivers are located at station positions.
+  //       the array mp->d_ispec_selected_rec_loc is setup accordingly in prepare_constants_device() routine.
+
   // warning: put in fortran routine prepare_GPU()
   /*
   if (it == 0){

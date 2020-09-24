@@ -1053,8 +1053,10 @@
 
   ! total times steps must be dividable by adjoint source chunks/blocks
   if (mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0) then
-    print *,'When NOISE_TOMOGRAPHY is not equal to zero, ACTUAL_NSTEP=2*NSTEP-1'
-    stop 'Error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! Please modify Par_file and recompile solver'
+    print *,'Error: NSTEP ',NSTEP,' not a multiple of NTSTEP_BETWEEN_READ_ADJSRC ',NTSTEP_BETWEEN_READ_ADJSRC
+    print *,'       Please change NTSTEP_BETWEEN_READ_ADJSRC in the Par_file!'
+    print *,'       (in case NOISE_TOMOGRAPHY is not equal to zero, NSTEP from Par_file becomes 2*NSTEP-1)'
+    stop 'Error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! Please modify Par_file and rerun solver'
   endif
 
   ! checks number of nodes for 2D and 3D shape functions for quadrilaterals and hexahedra

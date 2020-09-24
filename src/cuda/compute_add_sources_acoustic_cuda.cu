@@ -278,28 +278,41 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // checks
-  if (*nadj_rec_local/NB_RUNS_ACOUSTIC_GPU != mp->nadj_rec_local) exit_on_cuda_error("add_sources_ac_sim_type_2_or_3: nadj_rec_local not equal\n");
+  if (*nadj_rec_local != mp->nadj_rec_local) exit_on_cuda_error("add_sources_ac_sim_type_2_or_3: nadj_rec_local not equal\n");
+
+  // note: for acoustic simulations with fused wavefields, NB_RUNS_ACOUSTIC_GPU > 1
+  //       and thus the number of adjoint sources might become different in future
+  //       todo: not implemented yet for adjoint/kernel simulation
+  //if (*nadj_rec_local/NB_RUNS_ACOUSTIC_GPU != mp->nadj_rec_local)
+  //  exit_on_cuda_error("add_sources_ac_sim_type_2_or_3: nadj_rec_local not equal\n");
+
+  // checks if anything to do
+  if (mp->nadj_rec_local == 0) return;
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(mp->nadj_rec_local,&num_blocks_x,&num_blocks_y);
 
   dim3 grid(num_blocks_x,num_blocks_y,1);
   dim3 threads(NGLLX,NGLLY,NGLLZ);
+
   int it_index = *NTSTEP_BETWEEN_READ_ADJSRC - (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC - 1 ;
+
   // copies extracted array values onto GPU
-  if ( (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC==0) print_CUDA_error_if_any(cudaMemcpy(mp->d_source_adjoint,h_source_adjoint,
-                                                                mp->nadj_rec_local*3*sizeof(field)*(*NTSTEP_BETWEEN_READ_ADJSRC),cudaMemcpyHostToDevice),99099);
+  if ( (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC==0){
+    print_CUDA_error_if_any(cudaMemcpy(mp->d_source_adjoint,h_source_adjoint,
+                                       mp->nadj_rec_local*NDIM*sizeof(field)*(*NTSTEP_BETWEEN_READ_ADJSRC),cudaMemcpyHostToDevice),99099);
+  }
 
   // launches cuda kernel for acoustic adjoint sources
   add_sources_ac_SIM_TYPE_2_OR_3_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
                                                                                 *nrec,it_index,*NTSTEP_BETWEEN_READ_ADJSRC,
                                                                                 mp->d_source_adjoint,
-                                                                                mp->d_hxir,
-                                                                                mp->d_hetar,
-                                                                                mp->d_hgammar,
+                                                                                mp->d_hxir_adj,
+                                                                                mp->d_hetar_adj,
+                                                                                mp->d_hgammar_adj,
                                                                                 mp->d_ibool,
                                                                                 mp->d_ispec_is_acoustic,
-                                                                                mp->d_ispec_selected_rec_loc,
+                                                                                mp->d_ispec_selected_adjrec_loc,
                                                                                 mp->nadj_rec_local,
                                                                                 mp->d_kappastore);
 

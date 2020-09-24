@@ -1108,6 +1108,7 @@
     allocate(source_adjoint(NDIM,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2073')
     if (ier /= 0) stop 'error allocating array source_adjoint'
+    source_adjoint(:,:,:) = 0.0_CUSTOM_REAL
 
     ! note:
     ! computes adjoint sources in chunks/blocks during time iterations.
@@ -1212,9 +1213,9 @@
     if (SAVE_SEISMOGRAMS_VELOCITY) sizeval = sizeval + size_s
     if (SAVE_SEISMOGRAMS_ACCELERATION) sizeval = sizeval + size_s
     if (SAVE_SEISMOGRAMS_PRESSURE) sizeval = sizeval + dble(NB_RUNS_ACOUSTIC_GPU) * size_s
-    ! adjoint strain seismogram needs seismograms_eps(NDIM*NDIM,nrec_local,NSTEP)
+    ! adjoint strain seismogram needs seismograms_eps(NDIM*NDIM,nrec_local,NSTEP/subsamp_seismos)
     if (SIMULATION_TYPE == 2) then
-      sizeval = sizeval + dble(maxrec) * dble(NDIM * NDIM) * dble(NSTEP * CUSTOM_REAL / 1024. / 1024. )
+      sizeval = sizeval + dble(maxrec) * dble(NDIM * NDIM) * dble(NSTEP/subsamp_seismos * CUSTOM_REAL / 1024. / 1024. )
     endif
 
     ! outputs info
@@ -1426,7 +1427,7 @@
     ! Thus, we flip this assignment for pure adjoint simulations, that is source locations becomes receiver locations,
     ! and receiver locations become "adjoint source" locations.
     if (nrec_local > 0) then
-      allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP),stat=ier)
+      allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP/subsamp_seismos),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2095')
       if (ier /= 0) stop 'error allocating array seismograms_eps'
       seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
