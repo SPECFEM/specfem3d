@@ -11,15 +11,32 @@
    visualization...
    CPML...
    domain materials...
+     material            1  elastic
+     material            2  elastic
    domain regions...
-   done successfully
+     region            1  with material            1
+       nex_xi  begin/end =            1          48
+       nex_eta begin/end =            1          48
+       nz      begin/end =            1           5
+     region            2  with material            2
+       nex_xi  begin/end =            1          48
+       nex_eta begin/end =            1          48
+       nz      begin/end =            6          10
+
+   reading Mesh_Par_file done successfully
 
    checking mesh setup...
    all okay
 
 
  Reading interface data from file ./DATA/meshfem3D_files/interfaces.dat
- maximum interface points x/y =            2           2
+   maximum interface points x/y =            2           2
+   interfaces done
+
+ parameter setup:
+   total number of elements =         5760
+   total number of points   =        50421
+
 
  Creating global slice addressing
 
@@ -106,19 +123,21 @@
  **************************
 
  creating mesh:
-   NGLLX/NGLLY/NGLLZ =            3           3           3
-   NGNOD/NGNOD2D     =            8           4
-   NSPEC_AB          =         5760
-   NGLOB_AB          =        50421
+   NGLLX_M/NGLLY_M/NGLLZ_M =            3           3           3
+   NGNOD/NGNOD2D           =            8           4
+   NSPEC_AB                =         5760
+   NGLOB_AB                =        50421
 
  allocating mesh arrays
 
  number of subregions =            2
    defining subregion            1
+     has material            1
    defining subregion            2
+     has material            2
 
  number of mesh regions =            1
-   creating mesh region            1
+   creating mesh region            1  (regular mesh)
 
  mesh dimensions:
    Xmin and Xmax of the model =    0.00000000       30000.0000
@@ -226,7 +245,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =   0.11734799999999999
+ Elapsed time for mesh generation and buffer creation in seconds =   0.16743900000000000
  End of mesh generation
 
  done

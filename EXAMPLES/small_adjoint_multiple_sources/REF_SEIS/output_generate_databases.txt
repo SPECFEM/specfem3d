@@ -67,7 +67,7 @@
      NGNOD   =            8
      NGNOD2D =            4
 
-     master process setup:
+     main process setup:
      nspec           =         5760
 
      separating regular/irregular element shapes
@@ -87,6 +87,9 @@
    ...setting up jacobian
 
    ...indexing global points
+      creating ibool indexing     : x min/max =    0.00000000     /   15000.0000
+      creating indirect addressing: nglob =       385769
+      creating unique point locations
 
    ...preparing MPI interfaces
       total MPI interface points:        31980
@@ -106,21 +109,25 @@
    ...setting up mesh surface
 
    ...determining velocity model
-               10  % time remaining:   1.4350043509693979E-007 s
-               20  % time remaining:   1.2531346543983107E-007 s
-               30  % time remaining:   1.0884753415166428E-007 s
-               40  % time remaining:   9.6218533702995150E-008 s
-               50  % time remaining:   8.0997420549465398E-008 s
-               60  % time remaining:   6.8045908434214668E-008 s
-               70  % time remaining:   7.4108955585415983E-008 s
-               80  % time remaining:   4.7182436694129139E-008 s
-               90  % time remaining:   2.2686323793408290E-008 s
+               10  % time remaining:   2.6806640824725044E-007 s
+               20  % time remaining:   2.4477961216325657E-007 s
+               30  % time remaining:   2.1503664820193074E-007 s
+               40  % time remaining:   1.8607132661782100E-007 s
+               50  % time remaining:   1.5617464911883873E-007 s
+               60  % time remaining:   1.2431278558915443E-007 s
+               70  % time remaining:   9.3474862788298211E-008 s
+               80  % time remaining:   6.2298056984218401E-008 s
+               90  % time remaining:   3.1100635440850514E-008 s
               100  % time remaining:   0.0000000000000000      s
 
    ...detecting acoustic-elastic-poroelastic surfaces
       total acoustic elements   :           0
       total elastic elements    :       23040
       total poroelastic elements:           0
+
+      acoustic - elastic     coupling : total number of faces =            0
+      acoustic - poroelastic coupling : total number of faces =            0
+       elastic - poroelastic coupling : total number of faces =            0
 
 
    ...element inner/outer separation
@@ -165,8 +172,8 @@
 
 
  ********
- Model: P velocity min,max =    4100.00000       5800.00000
- Model: S velocity min,max =    2400.00000       3350.00000
+ Model: P   velocity min,max =    4100.00000       5800.00000
+ Model: S   velocity min,max =    2400.00000       3350.00000
 
  Model: Poisson's ratio min,max =   0.239366516      0.249693319
  ********
@@ -190,7 +197,7 @@
  *** Minimum period resolved =   0.325520813
  *** Maximum suggested time step =    7.75289582E-03
 
- Elapsed time for checking mesh resolution in seconds =    8.6690000000002598E-003
+ Elapsed time for checking mesh resolution in seconds =    1.0169000000000317E-002
  saving VTK files for Courant number and minimum period
 
 
@@ -218,7 +225,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    6.7740859999999996
+ Elapsed time for mesh generation and buffer creation in seconds =    6.2297409999999998
  End of mesh generation
 
  done
