@@ -294,8 +294,10 @@
       if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
     else
       ! on GPU
-      call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank,it)  ! GPU fault solver
-      if (mod(it,500) == 0 .and. it /= 0) call synchronize_GPU(it)  ! output results every 500 steps
+      ! GPU fault solver
+      call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank,it)
+      ! output results every 500 steps
+      if (mod(it,500) == 0 .and. it /= 0) call synchronize_GPU(it)
     endif
   endif
 
@@ -797,7 +799,9 @@
     ! adds dynamic source
     ! if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
     ! if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
-    call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank,it)  ! GPU fault solver
+    ! GPU fault solver
+    call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank,it)
+
     !call transfer_boundary_from_device_a(Mesh_pointer,nspec_outer_elastic)
     ! transfer data from mp->d_boundary to mp->h_boundary
     !call sync_copy_from_device(Mesh_pointer,2,buffer_send_vector_ext_mesh)

@@ -32,7 +32,7 @@
 
   program check_mesh_quality
 
-  use constants
+  use constants, only: NDIM
 
   implicit none
 

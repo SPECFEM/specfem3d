@@ -75,7 +75,7 @@ typedef struct fault_ {
 } Fault ;
 
 
-typedef struct fault_solver_dynamics_{
+typedef struct fault_solver_dynamics_ {
   Fault* faults;
   realw v_healing;
   realw v_rupt;
@@ -84,11 +84,10 @@ typedef struct fault_solver_dynamics_{
   int RATE_AND_STATE;
 } Fault_solver_dynamics;
 
-enum Simulationtype
-{
-  Slipweakening=0,
-  RateandstateAging=1,
-  RateandstateStron=2
+enum Simulationtype {
+  Slipweakening     = 0,
+  RateandstateAging = 1,
+  RateandstateStron = 2
 };
 
 

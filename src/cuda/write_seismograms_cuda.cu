@@ -384,6 +384,29 @@ void FC_FUNC_(compute_seismograms_cuda,
   int it = *itf;
   int it_end = *it_endf;
 
+  // selects wavefields (see corresponding handling in compute_seismograms.f90)
+  realw* displ, *veloc, *accel;
+  field* potential_acoustic, *potential_dot_acoustic, *potential_dot_dot_acoustic;
+  if (mp->simulation_type == 1 || mp->simulation_type == 2){
+    // forward simulations & pure adjoint simulations
+    // wavefields stored in displ,veloc,accel
+    displ = mp->d_displ;
+    veloc = mp->d_veloc;
+    accel = mp->d_accel;
+    potential_acoustic = mp->d_potential_acoustic;
+    potential_dot_acoustic = mp->d_potential_dot_acoustic;
+    potential_dot_dot_acoustic = mp->d_potential_dot_dot_acoustic;
+  }else{
+    // kernel simulations
+    // reconstructed forward wavefield stored in b_displ, b_veloc, b_accel
+    displ = mp->d_b_displ;
+    veloc = mp->d_b_veloc;
+    accel = mp->d_b_accel;
+    potential_acoustic = mp->d_b_potential_acoustic;
+    potential_dot_acoustic = mp->d_b_potential_dot_acoustic;
+    potential_dot_dot_acoustic = mp->d_b_potential_dot_dot_acoustic;
+  }
+
   // note: mp->d_ispec_selected_rec_loc is the array holding spectral elements in which the local receivers are located
   //       for "pure" adjoint simulation (SIMULATION_TYPE == 2), adjoint "receivers" are located at CMT source positions,
   //       otherwise receivers are located at station positions.
@@ -418,7 +441,7 @@ void FC_FUNC_(compute_seismograms_cuda,
   if (*ELASTIC_SIMULATION){
     if (mp->save_seismograms_d)
         compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
-                                                                                 mp->d_displ,
+                                                                                 displ,
                                                                                  mp->d_ibool,
                                                                                  mp->d_hxir,mp->d_hetar,mp->d_hgammar,
                                                                                  mp->d_seismograms_d,
@@ -429,7 +452,7 @@ void FC_FUNC_(compute_seismograms_cuda,
 
     if (mp->save_seismograms_v)
         compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
-                                                                                 mp->d_veloc,
+                                                                                 veloc,
                                                                                  mp->d_ibool,
                                                                                  mp->d_hxir,mp->d_hetar,mp->d_hgammar,
                                                                                  mp->d_seismograms_v,
@@ -439,7 +462,7 @@ void FC_FUNC_(compute_seismograms_cuda,
 
     if (mp->save_seismograms_a)
         compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
-                                                                                 mp->d_accel,
+                                                                                 accel,
                                                                                  mp->d_ibool,
                                                                                  mp->d_hxir,mp->d_hetar,mp->d_hgammar,
                                                                                  mp->d_seismograms_a,
@@ -453,7 +476,7 @@ void FC_FUNC_(compute_seismograms_cuda,
     if (mp->save_seismograms_p){
         if (*USE_TRICK_FOR_BETTER_PRESSURE){
           compute_acoustic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
-                                                                                    mp->d_potential_acoustic,
+                                                                                    potential_acoustic,
                                                                                     mp->d_ibool,
                                                                                     mp->d_hxir,mp->d_hetar,mp->d_hgammar,
                                                                                     mp->d_seismograms_p,
@@ -461,7 +484,7 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                     seismo_current);
         }else{
           compute_acoustic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
-                                                                                    mp->d_potential_dot_dot_acoustic,
+                                                                                    potential_dot_dot_acoustic,
                                                                                     mp->d_ibool,
                                                                                     mp->d_hxir,mp->d_hetar,mp->d_hgammar,
                                                                                     mp->d_seismograms_p,
@@ -474,7 +497,7 @@ void FC_FUNC_(compute_seismograms_cuda,
     if (mp->save_seismograms_d)
       compute_acoustic_vectorial_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
                                                                                           mp->d_ispec_is_acoustic,
-                                                                                          mp->d_potential_acoustic,
+                                                                                          potential_acoustic,
                                                                                           mp->d_seismograms_d,
                                                                                           mp->d_rhostore,
                                                                                           mp->d_ibool,
@@ -493,7 +516,7 @@ void FC_FUNC_(compute_seismograms_cuda,
     if (mp->save_seismograms_v)
       compute_acoustic_vectorial_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
                                                                                           mp->d_ispec_is_acoustic,
-                                                                                          mp->d_potential_dot_acoustic,
+                                                                                          potential_dot_acoustic,
                                                                                           mp->d_seismograms_v,
                                                                                           mp->d_rhostore,
                                                                                           mp->d_ibool,
@@ -512,7 +535,7 @@ void FC_FUNC_(compute_seismograms_cuda,
     if (mp->save_seismograms_a)
       compute_acoustic_vectorial_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
                                                                                           mp->d_ispec_is_acoustic,
-                                                                                          mp->d_potential_dot_dot_acoustic,
+                                                                                          potential_dot_dot_acoustic,
                                                                                           mp->d_seismograms_a,
                                                                                           mp->d_rhostore,
                                                                                           mp->d_ibool,
