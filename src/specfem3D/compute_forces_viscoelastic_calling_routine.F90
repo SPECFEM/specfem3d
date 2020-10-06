@@ -72,7 +72,7 @@
   if (SIMULATION_TYPE_DYN) then
     ! only needed for parallel simulations
     if (NPROC > 1) then
-      ! GPU needs to transfer fields to CPU first - todo: in future, limit this to the mpi boundary buffers only
+      ! GPU needs to transfer fields to CPU first - todo: in future, limit this to the MPI boundary buffers only
       if (GPU_MODE) then
         ! transfers displacement & velocity to the CPU
         call transfer_displ_from_device(NDIM*NGLOB_AB, displ, Mesh_pointer)
