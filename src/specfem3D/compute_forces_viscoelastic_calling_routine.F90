@@ -70,14 +70,33 @@
   ! at nodes on MPI interfaces stay equal on all processors that share the node.
   ! Do this only for dynamic rupture simulations
   if (SIMULATION_TYPE_DYN) then
-    call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,displ, &
-                                             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                             my_neighbors_ext_mesh)
-    call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,veloc, &
-                                             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                             my_neighbors_ext_mesh)
+    ! only needed for parallel simulations
+    if (NPROC > 1) then
+      ! GPU needs to transfer fields to CPU first - todo: in future, limit this to the mpi boundary buffers only
+      if (GPU_MODE) then
+        ! transfers displacement & velocity to the CPU
+        call transfer_displ_from_device(NDIM*NGLOB_AB, displ, Mesh_pointer)
+        call transfer_veloc_from_device(NDIM*NGLOB_AB, veloc, Mesh_pointer)
+      endif
+
+      ! displacement
+      call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,displ, &
+                                               num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                               nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                               my_neighbors_ext_mesh)
+      ! velocity
+      call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,veloc, &
+                                               num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                               nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                               my_neighbors_ext_mesh)
+
+      ! GPU: copies "corrected" wavefields from CPU to GPU
+      if (GPU_MODE) then
+        ! transfers displacement & velocity back to the GPU
+        call transfer_displ_to_device(NDIM*NGLOB_AB,displ, Mesh_pointer)
+        call transfer_veloc_to_device(NDIM*NGLOB_AB,veloc, Mesh_pointer)
+      endif
+    endif
   endif
 
 ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
@@ -288,6 +307,49 @@
   ! Percy, Fault boundary term B*tau is added to the assembled forces
   !        which at this point are stored in the array 'accel'
   if (SIMULATION_TYPE_DYN .or. SIMULATION_TYPE_KIN) then
+
+    if (.false.) then
+      ! will remove later if GPU fault solver is fully tested
+      ! transfers wavefields to the CPU
+      call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel, Mesh_pointer)
+
+      ! adds dynamic source
+      if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
+      if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
+      ! GPU fault solver
+      !call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank,it)
+
+      !call transfer_boundary_from_device_a(Mesh_pointer,nspec_outer_elastic)
+      ! transfer data from mp->d_boundary to mp->h_boundary
+      !call sync_copy_from_device(Mesh_pointer,2,buffer_send_vector_ext_mesh)
+      ! transfer data from mp->h_boundary to send_buffer
+      !call assemble_MPI_vector_send_cuda(NPROC, &
+      !              buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+      !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+      !              nibool_interfaces_ext_mesh, &
+      !              my_neighbors_ext_mesh, &
+      !              request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
+
+      ! transfers MPI buffers onto GPU
+      !call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
+      !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+      !              request_recv_vector_ext_mesh)
+      ! waits for send/receive requests to be completed and assembles values
+      !call synchronize_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel, Mesh_pointer, &
+      !                  buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+      !                  max_nibool_interfaces_ext_mesh, &
+      !                  nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+      !                  request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
+      !                  1)
+
+      !if (mod(it,500) == 0 .and. it /= 0) call synchronize_GPU(it)  ! output results every 500 steps
+
+      ! transfers acceleration back to GPU
+      ! call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
+      ! will remove later if GPU fault solver is fully tested
+    endif
+
+
     if (.not. GPU_MODE) then
       ! on CPU
       if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
@@ -411,9 +473,8 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
-  use pml_par
-  use fault_solver_dynamic, only: bc_dynflt_set3d_all,SIMULATION_TYPE_DYN
-  use fault_solver_kinematic, only: bc_kinflt_set_all,SIMULATION_TYPE_KIN
+  use fault_solver_dynamic, only: SIMULATION_TYPE_DYN
+  use fault_solver_kinematic, only: SIMULATION_TYPE_KIN
 
   implicit none
 
@@ -556,9 +617,10 @@
                                             b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
       else
         ! on GPU
-        call transfer_boun_accel_from_device(Mesh_pointer, b_accel, &
+        call transfer_boun_accel_from_device(Mesh_pointer, &
                                              b_buffer_send_vector_ext_mesh, &
                                              3) ! 3 == adjoint b_accel
+
         call assemble_MPI_vector_send_cuda(NPROC, &
                                            b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
                                            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -757,9 +819,10 @@
 
       ! adjoint simulations
       if (SIMULATION_TYPE == 3) then
-        call transfer_boun_accel_from_device(Mesh_pointer, b_accel, &
+        call transfer_boun_accel_from_device(Mesh_pointer, &
                                              b_buffer_send_vector_ext_mesh, &
                                              3) ! 3 == adjoint b_accel
+
         call assemble_MPI_vector_send_cuda(NPROC, &
                                            b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
                                            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &

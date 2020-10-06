@@ -138,7 +138,7 @@
   nundef = 0
   do i = 1,NMATERIALS
     ! material properties format: #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
-    mat_id = material_properties(i,8)
+    mat_id = int(material_properties(i,8))
     if (mat_id > 0) ndef = ndef + 1
     if (mat_id < 0) nundef = nundef + 1
   enddo
@@ -167,8 +167,8 @@
   ! writes out defined materials
   do i = 1,NMATERIALS
     ! material properties format: #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
-    domain_id = material_properties(i,7)
-    mat_id = material_properties(i,8)
+    domain_id = int(material_properties(i,7))
+    mat_id = int(material_properties(i,8))
     if (mat_id > 0) then
       ! pad dummy zeros to fill up 17 entries
       matpropl(:) = 0.d0
@@ -200,8 +200,8 @@
 
   ! writes out undefined materials
   do i = 1,NMATERIALS
-    domain_id = material_properties(i,7)
-    mat_id = material_properties(i,8)
+    domain_id = int(material_properties(i,7))
+    mat_id = int(material_properties(i,8))
     if (mat_id < 0) then
       ! format:
       ! #material_id #type-keyword #domain-name #tomo-filename #tomo_id #domain_id
@@ -635,8 +635,8 @@
   endif
 
   do i = 1,NMATERIALS
-     domain_id = material_properties(i,7)
-     mat_id =  material_properties(i,8)
+     domain_id = int(material_properties(i,7))
+     mat_id =  int(material_properties(i,8))
      if (domain_id > 0) then
         write(IIN_database,'(2i6,5f15.5,i6)') domain_id,mat_id,material_properties(i,1:5),0
      else

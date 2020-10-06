@@ -216,7 +216,8 @@
                                         hprime_xx,hprime_yy,hprime_zz)
 
         stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(irec),hdur_Gaussian(irec))
-        stf_deltat = stf * deltat * subsamp_seismos
+
+        stf_deltat = real(stf * deltat * subsamp_seismos,kind=CUSTOM_REAL)
 
         Mxx_der(irec_local) = Mxx_der(irec_local) + eps_s(1,1) * stf_deltat
         Myy_der(irec_local) = Myy_der(irec_local) + eps_s(2,2) * stf_deltat

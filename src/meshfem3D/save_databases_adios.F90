@@ -184,7 +184,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   ndef = 0
   nundef = 0
   do i = 1,NMATERIALS
-    mat_id = material_properties(i,8)
+    mat_id = int(material_properties(i,8))
     if (mat_id > 0) ndef = ndef + 1
     if (mat_id < 0) nundef = nundef + 1
   enddo
@@ -195,8 +195,8 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   matpropl(:,:) = 0.d0
   icount = 0
   do i = 1,NMATERIALS
-    domain_id = material_properties(i,7)
-    mat_id = material_properties(i,8)
+    domain_id = int(material_properties(i,7))
+    mat_id = int(material_properties(i,8))
     if (mat_id > 0) then
       icount = icount + 1
       matpropl(:,icount) = 0.d0
@@ -216,8 +216,8 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   undef_matpropl(:) = ''
   icount = 0
   do i = 1,NMATERIALS
-    domain_id = material_properties(i,7)
-    mat_id = material_properties(i,8)
+    domain_id = int(material_properties(i,7))
+    mat_id = int(material_properties(i,8))
     if (mat_id < 0) then
       icount = icount + 1
       ! format:

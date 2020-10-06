@@ -45,13 +45,11 @@ typedef realw field;
 
 void FC_FUNC_(transfer_boun_pot_from_device,
               TRANSFER_BOUN_POT_FROM_DEVICE)(long* Mesh_pointer,
-                                             field* potential_dot_dot_acoustic,
                                              field* send_potential_dot_dot_buffer,
                                              const int* FORWARD_OR_ADJOINT){}
 
 void FC_FUNC_(transfer_asmbl_pot_to_device,
               TRANSFER_ASMBL_POT_TO_DEVICE)(long* Mesh_pointer,
-                                            field* potential_dot_dot_acoustic,
                                             field* buffer_recv_scalar_ext_mesh,
                                             const int* FORWARD_OR_ADJOINT) {}
 
@@ -62,7 +60,6 @@ void FC_FUNC_(transfer_asmbl_pot_to_device,
 
 void FC_FUNC_(transfer_boun_accel_from_device,
               TRANSFER_BOUN_ACCEL_FROM_DEVICE)(long* Mesh_pointer,
-                                               realw* accel,
                                                realw* send_accel_buffer,
                                                const int* FORWARD_OR_ADJOINT){}
 
@@ -77,7 +74,7 @@ void FC_FUNC_(transfer_boundary_to_device_a,
                                              const int* max_nibool_interfaces_ext_mesh) {}
 
 void FC_FUNC_(transfer_asmbl_accel_to_device,
-              TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer, realw* accel,
+              TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer,
                                               realw* buffer_recv_vector_ext_mesh,
                                               const int* num_interfaces_ext_mesh,
                                               const int* max_nibool_interfaces_ext_mesh,
@@ -86,7 +83,7 @@ void FC_FUNC_(transfer_asmbl_accel_to_device,
                                               const int* FORWARD_OR_ADJOINT) {}
 
 void FC_FUNC_(transfer_sync_accel_to_device,
-              TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer, realw* accel,
+              TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer,
                                               realw* buffer_recv_vector_ext_mesh,
                                               const int* num_interfaces_ext_mesh,
                                               const int* max_nibool_interfaces_ext_mesh,
@@ -698,6 +695,9 @@ void FC_FUNC_(transfer_b_fields_from_device,
 void FC_FUNC_(transfer_veloc_from_device,
               TRANSFER_VELOC_FROM_DEVICE)(int* size, realw* veloc, long* Mesh_pointer) {}
 
+void FC_FUNC_(transfer_veloc_to_device,
+              TRANSFER_VELOC_TO_DEVICE)(int* size, realw* veloc, long* Mesh_pointer) {}
+
 void FC_FUNC_(transfer_b_veloc_from_device,
               TRNASFER_B_VELOC_FROM_DEVICE)(int* size, realw* b_veloc,long* Mesh_pointer) {}
 
@@ -727,6 +727,9 @@ void FC_FUNC_(transfer_b_displ_to_device,
 
 void FC_FUNC_(transfer_displ_from_device,
               TRANSFER_DISPL_FROM_DEVICE)(int* size, realw* displ,long* Mesh_pointer) {}
+
+void FC_FUNC_(transfer_displ_to_device,
+              TRANSFER_DISPL_TO_DEVICE)(int* size, realw* displ, long* Mesh_pointer) {}
 
 void FC_FUNC_(transfer_b_fields_att_to_device,
               TRANSFER_B_FIELDS_ATT_TO_DEVICE)(long* Mesh_pointer,

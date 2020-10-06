@@ -231,9 +231,9 @@
         ! on GPU
         ! sends potential_dot_dot_acoustic values to corresponding MPI interface neighbors (non-blocking)
         call transfer_boun_pot_from_device(Mesh_pointer, &
-                                           potential_dot_dot_acoustic, &
                                            buffer_send_scalar_ext_mesh, &
                                            1) ! -- 1 == fwd accel
+
         call assemble_MPI_scalar_send_cuda(NPROC, &
                                            buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
                                            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -531,7 +531,6 @@
       else
         ! on GPU
         call transfer_boun_pot_from_device(Mesh_pointer, &
-                                           b_potential_dot_dot_acoustic, &
                                            b_buffer_send_scalar_ext_mesh, &
                                            3) ! -- 3 == adjoint b_accel
 
@@ -688,9 +687,9 @@
     if (iphase == 1) then
       ! sends potential_dot_dot_acoustic values to corresponding MPI interface neighbors (non-blocking)
       call transfer_boun_pot_from_device(Mesh_pointer, &
-                                         potential_dot_dot_acoustic, &
                                          buffer_send_scalar_ext_mesh, &
                                          1) ! -- 1 == fwd accel
+
       call assemble_MPI_scalar_send_cuda(NPROC, &
                                          buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
                                          num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -701,7 +700,6 @@
       ! adjoint simulations
       if (SIMULATION_TYPE == 3) then
         call transfer_boun_pot_from_device(Mesh_pointer, &
-                                           b_potential_dot_dot_acoustic, &
                                            b_buffer_send_scalar_ext_mesh, &
                                            3) ! -- 3 == adjoint b_accel
 

@@ -643,13 +643,22 @@ contains
 
   implicit none
 
+! arrays:
+!   F == accel - (output) force/acceleration
+!   V == veloc - (input) velocity
+!   D == displ - (input) displacement
+
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: V,D
   real(kind=CUSTOM_REAL), dimension(:,:), intent(inout) :: F
 
+  ! local parameters
   integer :: i
 
+  ! checks if anything to do
   if (.not. allocated(faults)) return
-  do i=1,size(faults)
+
+  ! loops over faults
+  do i = 1,size(faults)
     call BC_DYNFLT_set3d(faults(i),F,V,D,i)
   enddo
 
@@ -663,9 +672,13 @@ contains
 
   implicit none
 
-  real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
+  ! fault
   type(bc_dynandkinflt_type), intent(inout) :: bc
+  ! force/accel
+  real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
+  ! velocity,displacement
   real(kind=CUSTOM_REAL), intent(in) :: V(:,:),D(:,:)
+  ! fault id
   integer, intent(in) :: iflt
 
   ! local parameters
@@ -678,8 +691,8 @@ contains
 
   if (bc%nspec > 0) then !Surendra : for parallel faults
 
-    half_dt = 0.5e0_CUSTOM_REAL*bc%dt
-    Vf_old = sqrt(bc%V(1,:)*bc%V(1,:)+bc%V(2,:)*bc%V(2,:))
+    half_dt = 0.5_CUSTOM_REAL * bc%dt
+    Vf_old = sqrt(bc%V(1,:)*bc%V(1,:) + bc%V(2,:)*bc%V(2,:))
 
     ! get predicted values
     dD = get_jump(bc,D) ! dD_predictor
@@ -708,12 +721,12 @@ contains
 
     ! Solve for normal stress (negative is compressive)
     ! Opening implies free stress
-    if (bc%allow_opening) T(3,:) = min(T(3,:),0.e0_CUSTOM_REAL)
+    if (bc%allow_opening) T(3,:) = min(T(3,:),0.0_CUSTOM_REAL)
 
     ! smooth loading within nucleation patch
     !WARNING : ad hoc for SCEC benchmark TPV10x
     if (RATE_AND_STATE) then
-      TxExt = 0._CUSTOM_REAL
+      TxExt = 0.0_CUSTOM_REAL
       TLoad = 1.0_CUSTOM_REAL
       DTau0 = 1.0_CUSTOM_REAL
       timeval = it*bc%dt !time will never be zero. it starts from 1
@@ -765,7 +778,7 @@ contains
       endif
 
       ! Update strength
-      strength = -bc%MU * min(T(3,:),0.e0_CUSTOM_REAL) + bc%swf%C
+      strength = -bc%MU * min(T(3,:),0.0_CUSTOM_REAL) + bc%swf%C
 
       ! Solve for shear stress
       tnew = min(tStick,strength)
@@ -777,8 +790,8 @@ contains
       theta_old = bc%rsf%theta
       call rsf_update_state(Vf_old,bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
-                         bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
+        Vf_new(i) = rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+                           bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
 
       enddo
       ! second pass
@@ -786,8 +799,8 @@ contains
       tmp_Vf(:) = 0.5_CUSTOM_REAL*(Vf_old(:) + Vf_new(:))
       call rsf_update_state(tmp_Vf,bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
-                         bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
+        Vf_new(i) = rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+                           bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
 
 
       enddo
@@ -796,7 +809,7 @@ contains
 
     endif
 
-    tStick = max(tStick,1e0_CUSTOM_REAL) ! to avoid division by zero
+    tStick = max(tStick,1.0_CUSTOM_REAL) ! to avoid division by zero
     T(1,:) = tnew * T(1,:)/tStick
     T(2,:) = tnew * T(2,:)/tStick
 
@@ -818,14 +831,13 @@ contains
     bc%D = dD
     bc%V = dV + half_dt*dA
 
-
     ! Rotate tractions back to (x,y,z) frame
     T = rotate(bc,T,-1)
 
     ! Add boundary term B*T to M*a
     call add_BT(bc,MxA,T)
     !-- intermediate storage of outputs --
-    Vf_new = sqrt(bc%V(1,:)*bc%V(1,:)+bc%V(2,:)*bc%V(2,:))
+    Vf_new = sqrt(bc%V(1,:)*bc%V(1,:) + bc%V(2,:)*bc%V(2,:))
     if (.not. RATE_AND_STATE) then
       theta_new = bc%swf%theta
       dc = bc%swf%dc
@@ -835,7 +847,7 @@ contains
     endif
 
     call store_dataXZ(bc%dataXZ, strength, theta_old, theta_new, dc, &
-         Vf_old, Vf_new, it*bc%dt,bc%dt)
+                      Vf_old, Vf_new, it*bc%dt,bc%dt)
 
     call store_dataT(bc%dataT,bc%D,bc%V,bc%T,it)
     if (RATE_AND_STATE) then

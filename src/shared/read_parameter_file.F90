@@ -801,6 +801,7 @@
 
   ! Cray compilers
 #if _CRAYFTN
+#warning "Warning: using Cray compiler assign function for un-compressed file output"
   ! Cray uses compressed formats by default for list-directed output, for example:
   !     write(*,*) 10,10            leads to output -> 2*10           compressed, instead of:       10        10
   !     write(*,*) 1,1.78e-5                        -> 1,   1.78e-5   comma delimiter, instead of:   1         1.78e-5
