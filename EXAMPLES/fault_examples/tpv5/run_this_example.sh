@@ -36,13 +36,13 @@ MESHDIR=./MESH-default
 
 # prepares default mesh
 if [ ! -e "$MESHDIR/absorbing_surface_file_xmax" ]; then
-echo "unzipping mesh files in MESH-default/ ..."
-echo
-cd $MESHDIR/
-bunzip2 *.bz2
-cd ../
-echo
-echo
+  echo "unzipping mesh files in MESH-default/ ..."
+  echo
+  cd $MESHDIR/
+  bunzip2 *.bz2
+  cd ../
+  echo
+  echo
 fi
 
 # decomposes mesh using the pre-saved mesh files in MESH-default

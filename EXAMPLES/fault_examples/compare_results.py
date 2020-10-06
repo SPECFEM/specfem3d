@@ -3,12 +3,14 @@
 # compares results in a multi-column file, e.g. faultst-120dp000.dat
 #
 #########################################################################
+from __future__ import print_function
+
 import numpy as np
 import numpy.linalg as alg
 import sys
 
 def usage():
-    print "compare_results filename1 filename2"
+    print("compare_results filename1 filename2")
 
 def diff_measure(x1,x2):
     p = alg.norm(x1 + x2)
@@ -20,7 +22,7 @@ def diff_measure(x1,x2):
 
 
 def main(argv):
-    #print len(sys.argv)
+    #print(len(sys.argv))
     if len(argv) != 2:
         usage()
         exit()
@@ -34,7 +36,7 @@ def main(argv):
         col1 = dat1[:,index]
         col2 = dat2[:,index]
         diff = diff_measure(col1, col2);
-        print "the difference between the 2 files for column ", index, " is : ",diff
+        print("the difference between the 2 files for column ", index, " is : ",diff)
 
 if __name__=="__main__":
     main(sys.argv[1:])
