@@ -74,9 +74,9 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(out) :: vector_field_element
 
 ! local parameters
-  real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
-  real(kind=CUSTOM_REAL) temp1l,temp2l,temp3l
-  real(kind=CUSTOM_REAL) rho_invl
+  real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
+  real(kind=CUSTOM_REAL) :: temp1l,temp2l,temp3l
+  real(kind=CUSTOM_REAL) :: rho_invl
   integer :: i,j,k,l,ispec_irreg
 
 ! double loop over GLL points to compute and store gradients
@@ -98,7 +98,7 @@
 
           ! derivative along y
           temp2l = 0._CUSTOM_REAL
-          do l = 1,NGLLZ
+          do l = 1,NGLLY
             temp2l = temp2l + scalar_field(ibool(i,l,k,ispec))*hprime_yy(j,l)
           enddo
 
@@ -150,7 +150,7 @@
 
           ! derivative along y
           temp2l = 0._CUSTOM_REAL
-          do l = 1,NGLLZ
+          do l = 1,NGLLY
             temp2l = temp2l + scalar_field(ibool(i,l,k,ispec))*hprime_yy(j,l)
           enddo
 
