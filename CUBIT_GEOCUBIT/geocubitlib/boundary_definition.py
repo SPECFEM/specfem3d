@@ -92,6 +92,9 @@ def define_4side_lateral_surfaces():
         lsurf = cubit.get_relatives("volume", id_vol, "surface")
         for k in lsurf:
             normal = cubit.get_surface_normal(k)
+            #debug
+            #print("#debug: define_4side_lateral_surfaces volume: ",id_vol," surface: ",k,"normal",normal)
+
             # checks if normal is horizontal (almost 0, i.e., +/- 0.3)
             if normal[2] >= -1 * tres and normal[2] <= tres:
                 # checks if surface is on minimum/maximum side of the whole model
@@ -109,10 +112,13 @@ def define_4side_lateral_surfaces():
                     surf_vertical.append(k)
                     xsurf.append(center_point[0])
                     ysurf.append(center_point[1])
-        surf_xmin.append(surf_vertical[xsurf.index(min(xsurf))])
-        surf_ymin.append(surf_vertical[ysurf.index(min(ysurf))])
-        surf_xmax.append(surf_vertical[xsurf.index(max(xsurf))])
-        surf_ymax.append(surf_vertical[ysurf.index(max(ysurf))])
+        # adds surfaces when on boundary
+        if len(surf_vertical) > 0:
+            surf_xmin.append(surf_vertical[xsurf.index(min(xsurf))])
+            surf_ymin.append(surf_vertical[ysurf.index(min(ysurf))])
+            surf_xmax.append(surf_vertical[xsurf.index(max(xsurf))])
+            surf_ymax.append(surf_vertical[ysurf.index(max(ysurf))])
+    #debug
     #print('define_4side_lateral_surfaces: xmin ',surf_xmin)
     #print('define_4side_lateral_surfaces: xmax ',surf_xmax)
     #print('define_4side_lateral_surfaces: ymin ',surf_ymin)
@@ -407,6 +413,7 @@ def build_block_side(surf_list, name, obj='surface', id_0=1):
         except:
             pass
 
+#########################################
 
 def define_bc(*args, **keys):
     id_0 = 1
@@ -422,8 +429,11 @@ def define_bc(*args, **keys):
     cpuxmax = keys.get("cpuxmax", cpux)
     cpuymax = keys.get("cpuymax", cpuy)
     optionsea = keys.get("optionsea", False)
-    #
+
+    # boundary condition surfaces detection
     if parallel:
+        # parallel sides
+        # (for example box-like models with parallel sides on xmin/max, ymin/max, bottom/top)
         absorbing_surf, abs_xmin, abs_xmax, abs_ymin, abs_ymax, top_surf, \
             bottom_surf, xmin, ymin, xmax, ymax = \
             define_surf(iproc=iproc, cpuxmin=cpuxmin, cpuxmax=cpuxmax,
@@ -493,6 +503,8 @@ def define_bc(*args, **keys):
                 build_block_side(bottom_surf, entity +
                                  '_abs_bottom', obj=entity, id_0=1002)
     elif closed:
+        # closed boundary surfaces
+        # (for example sphere or cylinder-like models)
         print("##closed region not ready")
         # surf = define_absorbing_surf_sphere()
         # v_list, name_list = define_block()
@@ -505,6 +517,12 @@ def define_bc(*args, **keys):
         #     build_block_side(surf, entity + '_closedvol',
         #                      obj=entity, id_0=id_side)
         #     id_side = id_side + 1
+
+    else:
+        # case should not happen, parallel is default
+        print("## no boundary surfaces detection")
+        print("## Please select option parallel=True for parallel boundary surfaces detection")
+        #print("## Please select option closed=True for sphere-like boundary surfaces detection")
 
 #########################################
 
