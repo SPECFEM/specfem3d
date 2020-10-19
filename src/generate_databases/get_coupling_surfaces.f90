@@ -634,6 +634,9 @@
   logical :: found_elastic_elem
   integer, external :: get_iglob_index
 
+  logical, dimension(8) :: found_order
+  integer :: iorder,ii,jj
+
 ! allocates temporary arrays
   allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'error allocating array 711')
@@ -730,10 +733,11 @@
                 if (imatch == NGNOD2D_FOUR_CORNERS) then
                   ! found matching elastic element
                   found_elastic_elem = .true.
-
-                  iface_ref_el = iface_el ![Christina Morency]: for some reason this shows a wrong orientation
-                                          ! but the calculation is ok.
+                  iface_ref_el = iface_el
                   ispec_ref_el = ispec_el
+
+                  ![Christina Morency]: for some reason this shows a wrong orientation
+                  !                     but the calculation is ok.
 
                   ! gets face GLL points i,j,k indices from elastic element face
                   call get_element_face_gll_indices(iface_ref_el,ijk_face_el,NGLLX,NGLLY)
@@ -743,63 +747,162 @@
                   tmp_ispec(inum) = ispec
                   tmp_ispec_el(inum) = ispec_ref_el
                   igll = 0
+
+                  ! checks global index from both poroelastic/elastic element sides
+                  ! note: the indexing order i,j,k might be different and won't necessarily match between the 2 elements
+                  !       here, we try to find the ijk order to match iglob from both element faces
+
+                  ! finds matching ordering
+                  found_order(:) = .true.
                   do j = 1,NGLLY
                     do i = 1,NGLLX
-                      ! adds all GLL points on this face
-                      igll = igll + 1
-
-                      ! we need to store local i,j,k,ispec info
-                      tmp_ijk(:,igll,inum) = ijk_face_po(:,i,j)
-
-                      ! checks global index from both poroelastic/elastic element sides
-                      ! note: the indexing order i,j,k might be different and won't necessarily match between the 2 elements
-                      !       here, we try to find the ijk order to match iglob from both element faces
-
                       ! global index from poroelastic element side
-                      iglob_po = get_iglob_index(tmp_ijk(:,igll,inum),ispec,nspec,ibool)
-
-                      ! debug corner iglob
-                      !print *,'debug: interface poro-elastic corners A: ',(iglob_corners_ref(ii),ii=1,4)
-                      !print *,'debug: interface poro-elastic corners B: ',(iglob_corners_ref_el(ii),ii=1,4)
-                      ! shows for example:
-                      !   debug: interface poro-elastic corners A:       629634      632214      632294      629714
-                      !   debug: interface poro-elastic corners B:       629634      629714      632294      632214
-
+                      iglob_po = get_iglob_index(ijk_face_po(:,i,j),ispec,nspec,ibool)
+                      ! index possibilities
+                      ! sets the order flag to false if it finds any iglob pair which doesn't match
                       ! 1. try: matching i,j
-                      tmp_ijk_el(:,igll,inum) = ijk_face_el(:,i,j)
-                      iglob_el = get_iglob_index(tmp_ijk_el(:,igll,inum),ispec_el,nspec,ibool)
-                      !print *,'debug: interface poro-elastic ij-match indexing iglob_po = ',iglob_po,'iglob_el = ',iglob_el
-                      if (iglob_po == iglob_el) then
-                        ! stores weighted jacobian and normals
-                        tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(i,j)
-                        tmp_normal(:,igll,inum) = normal_face(:,i,j)
-                      else
-                        ! 2. try: inverse indexing
-                        tmp_ijk_el(:,igll,inum) = ijk_face_el(:,NGLLY-j+1,NGLLX-i+1)
-                        iglob_el = get_iglob_index(tmp_ijk_el(:,igll,inum),ispec_el,nspec,ibool)
-                        !print *,'debug: interface poro-elastic inverse indexing iglob_po = ',iglob_po,'iglob_el = ',iglob_el
-                        if (iglob_po == iglob_el) then
+                      iglob_el = get_iglob_index(ijk_face_el(:,i,j),ispec_el,nspec,ibool)
+                      if (iglob_po /= iglob_el) found_order(1) = .false.
+                      ! 2. try: ji-inverse indexing
+                      iglob_el = get_iglob_index(ijk_face_el(:,NGLLY-j+1,NGLLX-i+1),ispec_el,nspec,ibool)
+                      if (iglob_po /= iglob_el) found_order(2) = .false.
+                      ! 3. try: ji-switched indexing
+                      iglob_el = get_iglob_index(ijk_face_el(:,j,i),ispec_el,nspec,ibool)
+                      if (iglob_po /= iglob_el) found_order(3) = .false.
+                      ! 4. try: ij-inverse
+                      iglob_el = get_iglob_index(ijk_face_el(:,NGLLX-i+1,NGLLY-j+1),ispec_el,nspec,ibool)
+                      if (iglob_po /= iglob_el) found_order(4) = .false.
+                      ! 5. try: i-inverse
+                      iglob_el = get_iglob_index(ijk_face_el(:,NGLLX-i+1,j),ispec_el,nspec,ibool)
+                      if (iglob_po /= iglob_el) found_order(5) = .false.
+                      ! 6. try: j-inverse
+                      iglob_el = get_iglob_index(ijk_face_el(:,i,NGLLY-j+1),ispec_el,nspec,ibool)
+                      if (iglob_po /= iglob_el) found_order(6) = .false.
+                      ! 7. try: i-switched-inverse
+                      iglob_el = get_iglob_index(ijk_face_el(:,NGLLY-j+1,i),ispec_el,nspec,ibool)
+                      if (iglob_po /= iglob_el) found_order(7) = .false.
+                      ! 8. try: j-switched-inverse
+                      iglob_el = get_iglob_index(ijk_face_el(:,j,NGLLX-i+1),ispec_el,nspec,ibool)
+                      if (iglob_po /= iglob_el) found_order(8) = .false.
+                    enddo
+                  enddo
+                  !debug
+                  !print *,'debug: ispec po/el = ',ispec,ispec_el,' face number ',inum, 'order',found_order
+
+                  ! saves matching indexing
+                  if (any(found_order)) then
+                    ! sets ordering number
+                    ! (finds first occurrence of a .true. flag. there's probably better ways to do it,
+                    !   but findloc() is standard 2008 and so far we only use features up to standard 2003)
+                    iorder = 0
+                    do ii = 1,8
+                      if (found_order(ii) .eqv. .true.) then
+                        iorder = ii
+                        exit
+                      endif
+                    enddo
+                    ! checks
+                    if (iorder == 0) stop 'Error interface ordering flags'
+
+                    ! stores matching indices
+                    do j = 1,NGLLY
+                      do i = 1,NGLLX
+                        ! adds all GLL points on this face
+                        igll = igll + 1
+                        ! we need to store local i,j,k,ispec info
+                        tmp_ijk(:,igll,inum) = ijk_face_po(:,i,j)
+                        ! global index from poroelastic element side
+                        iglob_po = get_iglob_index(tmp_ijk(:,igll,inum),ispec,nspec,ibool)
+                        ! global index elastic side
+                        select case(iorder)
+                        case(1)
+                          ! 1. try: matching i,j
+                          tmp_ijk_el(:,igll,inum) = ijk_face_el(:,i,j)
+                          iglob_el = get_iglob_index(tmp_ijk_el(:,igll,inum),ispec_el,nspec,ibool)
+                          ! stores weighted jacobian and normals
+                          tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(i,j)
+                          tmp_normal(:,igll,inum) = normal_face(:,i,j)
+                        case(2)
+                          ! 2. try: ji-inverse indexing
+                          tmp_ijk_el(:,igll,inum) = ijk_face_el(:,NGLLY-j+1,NGLLX-i+1)
+                          iglob_el = get_iglob_index(tmp_ijk_el(:,igll,inum),ispec_el,nspec,ibool)
                           ! stores weighted jacobian and normals
                           tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(NGLLY-j+1,NGLLY-i+1)
                           tmp_normal(:,igll,inum) = normal_face(:,NGLLY-j+1,NGLLY-i+1)
-                        else
-                          ! 3. try: switched indexing
+                        case(3)
+                          ! 3. try: ji-switched indexing
                           tmp_ijk_el(:,igll,inum) = ijk_face_el(:,j,i)
                           iglob_el = get_iglob_index(tmp_ijk_el(:,igll,inum),ispec_el,nspec,ibool)
-                          !print *,'debug: interface poro-elastic switched indexing iglob_po = ',iglob_po,'iglob_el = ',iglob_el
-                          if (iglob_po == iglob_el) then
-                            ! stores weighted jacobian and normals
-                            tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(j,i)
-                            tmp_normal(:,igll,inum) = normal_face(:,j,i)
-                          else
-                            print *,'Error: interface poro-elastic index mismatch: iglob_po = ',iglob_po,'iglob_el = ',iglob_el
-                            stop 'Error interface index not matching'
-                          endif
+                          ! stores weighted jacobian and normals
+                          tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(j,i)
+                          tmp_normal(:,igll,inum) = normal_face(:,j,i)
+                        case(4)
+                          ! 4. try: ij-inverse
+                          tmp_ijk_el(:,igll,inum) = ijk_face_el(:,NGLLX-i+1,NGLLY-j+1)
+                          iglob_el = get_iglob_index(tmp_ijk_el(:,igll,inum),ispec_el,nspec,ibool)
+                          ! stores weighted jacobian and normals
+                          tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(NGLLX-i+1,NGLLY-j+1)
+                          tmp_normal(:,igll,inum) = normal_face(:,NGLLX-i+1,NGLLY-j+1)
+                        case(5)
+                          ! 5. try: i-inverse
+                          tmp_ijk_el(:,igll,inum) = ijk_face_el(:,NGLLX-i+1,j)
+                          iglob_el = get_iglob_index(tmp_ijk_el(:,igll,inum),ispec_el,nspec,ibool)
+                          ! stores weighted jacobian and normals
+                          tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(NGLLX-i+1,j)
+                          tmp_normal(:,igll,inum) = normal_face(:,NGLLX-i+1,j)
+                        case(6)
+                          ! 6. try: j-inverse
+                          tmp_ijk_el(:,igll,inum) = ijk_face_el(:,i,NGLLY-j+1)
+                          iglob_el = get_iglob_index(tmp_ijk_el(:,igll,inum),ispec_el,nspec,ibool)
+                          ! stores weighted jacobian and normals
+                          tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(i,NGLLY-j+1)
+                          tmp_normal(:,igll,inum) = normal_face(:,i,NGLLY-j+1)
+                        case(7)
+                          ! 7. try: i-switched-inverse
+                          tmp_ijk_el(:,igll,inum) = ijk_face_el(:,NGLLY-j+1,i)
+                          iglob_el = get_iglob_index(tmp_ijk_el(:,igll,inum),ispec_el,nspec,ibool)
+                          ! stores weighted jacobian and normals
+                          tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(NGLLY-j+1,i)
+                          tmp_normal(:,igll,inum) = normal_face(:,NGLLY-j+1,i)
+                        case(8)
+                          ! 8. try: j-switched-inverse
+                          tmp_ijk_el(:,igll,inum) = ijk_face_el(:,j,NGLLX-i+1)
+                          iglob_el = get_iglob_index(tmp_ijk_el(:,igll,inum),ispec_el,nspec,ibool)
+                          ! stores weighted jacobian and normals
+                          tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(j,NGLLX-i+1)
+                          tmp_normal(:,igll,inum) = normal_face(:,j,NGLLX-i+1)
+                        case default
+                          stop 'Error indexing poro-elastic face'
+                        end select
+                        ! checks
+                        if (iglob_po /= iglob_el) then
+                          print *,'Error: interface poro-elastic mismatch index iglob_po = ',iglob_po,'iglob_el = ',iglob_el
+                          print *,'  ispec po/el = ',ispec,ispec_el,' GLL index ',igll,' i/j = ',i,j, ' face number ',inum
+                          stop 'Error indexing poro-elastic face'
                         endif
-                      endif
+                      enddo
                     enddo
-                  enddo
-                endif ! if
+                  else
+                    ! matching ordering not found, exiting
+                    print *,'Error: interface poro-elastic index ordering mismatch: face number inum = ',inum
+                    print *,'  interface poro-elastic corners A po: ',(iglob_corners_ref(ii),ii=1,4)
+                    print *,'  interface poro-elastic corners B el: ',(iglob_corners_ref_el(ii),ii=1,4)
+                    ! shows for example:
+                    !   debug: interface poro-elastic corners A:       629634      632214      632294      629714
+                    !   debug: interface poro-elastic corners B:       629634      629714      632294      632214
+                    ! face indexing
+                    do jj = 1,NGLLY
+                      do ii = 1,NGLLX
+                        iglob_po = get_iglob_index(ijk_face_po(:,ii,jj),ispec,nspec,ibool)
+                        iglob_el = get_iglob_index(ijk_face_el(:,ii,jj),ispec_el,nspec,ibool)
+                        print *,'  face index ii/jj ',ii,jj,' iglob_po = ',iglob_po,'iglob_el = ',iglob_el
+                      enddo
+                    enddo
+                    print *,'  Please check your mesh, could not detect correct face indexing'
+                    ! exiting
+                    stop 'Error poro-elastic interface indexing not matching'
+                  endif ! found_order
+                endif ! if imatch
 
               enddo ! do iface_ref_el=1,6
             endif ! if (ispec_is_elastic(ispec_el)) then
