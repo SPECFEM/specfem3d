@@ -216,6 +216,22 @@
 #undef USE_LAUNCH_BOUNDS
 #endif
 
+#ifdef GPU_DEVICE_Turing
+// specifics see: https://docs.nvidia.com/cuda/turing-tuning-guide/index.html
+// register file size 64k 32-bit registers per SM
+// shared memory size 64KB per SM (maximum shared memory per thread block)
+// maximum registers 255 per thread
+#undef USE_LAUNCH_BOUNDS
+#endif
+
+#ifdef GPU_DEVICE_Ampere
+// specifics see: https://docs.nvidia.com/cuda/ampere-tuning-guide/index.html
+// register file size 64k 32-bit registers per SM
+// shared memory size 164KB per SM (maximum shared memory, 163KB per thread block)
+// maximum registers 255 per thread
+#undef USE_LAUNCH_BOUNDS
+#endif
+
 // acoustic kernel
 // performance statistics: kernel Kernel_2_acoustic_impl():
 //       shared memory per block = 2200    for Kepler: -> limits active blocks to 16 (maximum possible)

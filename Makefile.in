@@ -155,6 +155,12 @@ PART_LIBS  += $(PATOH_LIBS)
 @COND_CUDA9_TRUE@CUDA9 = yes
 @COND_CUDA9_FALSE@CUDA9 = no
 
+@COND_CUDA10_TRUE@CUDA10 = yes
+@COND_CUDA10_FALSE@CUDA10 = no
+
+@COND_CUDA11_TRUE@CUDA11 = yes
+@COND_CUDA11_FALSE@CUDA11 = no
+
 # CUDA compilation with linking
 @COND_CUDA_PLUS_TRUE@CUDA_PLUS = yes
 @COND_CUDA_PLUS_FALSE@CUDA_PLUS = no
@@ -181,6 +187,9 @@ CUDA_LINK = @CUDA_LDFLAGS@ @CUDA_LIBS@ -lstdc++
 # Maxwell (cuda7,K2200): -gencode=arch=compute_50,code=sm_50
 # Pascal (cuda8,P100): -gencode=arch=compute_60,code=sm_60
 # Volta (cuda9,V100): -gencode=arch=compute_70,code=sm_70
+# Turing (cuda10,T4): -gencode=arch=compute_75,code=sm_75
+# Ampere (cuda11,A100): -gencode=arch=compute_80,code=sm_80
+
 GENCODE_20 = -gencode=arch=compute_20,code=\"sm_20,compute_20\"
 GENCODE_30 = -gencode=arch=compute_30,code=\"sm_30,compute_30\"
 GENCODE_35 = -gencode=arch=compute_35,code=\"sm_35,compute_35\"
@@ -188,8 +197,14 @@ GENCODE_37 = -gencode=arch=compute_37,code=\"sm_37\"
 GENCODE_50 = -gencode=arch=compute_50,code=\"sm_50,compute_50\"
 GENCODE_60 = -gencode=arch=compute_60,code=\"sm_60,compute_60\"
 GENCODE_70 = -gencode=arch=compute_70,code=\"sm_70,compute_70\"
+GENCODE_75 = -gencode=arch=compute_75,code=\"sm_75,compute_75\"
+GENCODE_80 = -gencode=arch=compute_80,code=\"sm_80,compute_80\"
 
 # cuda preprocessor flag
+# CUDA version 11.0
+@COND_CUDA_TRUE@@COND_CUDA11_TRUE@GENCODE = $(GENCODE_80) $(FC_DEFINE)GPU_DEVICE_Ampere
+# CUDA version 10.0
+@COND_CUDA_TRUE@@COND_CUDA10_TRUE@GENCODE = $(GENCODE_75) $(FC_DEFINE)GPU_DEVICE_Turing
 # CUDA version 9.0
 @COND_CUDA_TRUE@@COND_CUDA9_TRUE@GENCODE = $(GENCODE_70) $(FC_DEFINE)GPU_DEVICE_Volta
 # CUDA version 8.0
