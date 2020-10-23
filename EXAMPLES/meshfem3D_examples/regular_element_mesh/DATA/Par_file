@@ -380,3 +380,6 @@ ADIOS_FOR_KERNELS               = .false.
 # HDF5 Database I/O flag which is useful for a massively parallelized calculation.
 HDF5_ENABLED                    = .false.
 
+# number of IO dedicated procs, available only with HDF5 output option
+NIONOD                          = 2
+
