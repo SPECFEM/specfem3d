@@ -30,11 +30,11 @@
 !!
 !! \author MPBL
 !==============================================================================
+
 #include "config.fh"
 
 
-!==============================================================================
-subroutine save_forward_arrays_adios()
+  subroutine save_forward_arrays_adios()
 
   use adios_helpers_mod
   use specfem_par
@@ -251,4 +251,4 @@ subroutine save_forward_arrays_adios()
   call adios_set_path(handle, '', ier)
   call adios_close(handle, ier)
 
-end subroutine save_forward_arrays_adios
+  end subroutine save_forward_arrays_adios

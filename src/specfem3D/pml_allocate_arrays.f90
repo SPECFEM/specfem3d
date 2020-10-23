@@ -29,10 +29,12 @@
   subroutine pml_allocate_arrays()
 
   use pml_par
-  use specfem_par, only: NSPEC_AB,PML_CONDITIONS,SIMULATION_TYPE,SAVE_FORWARD,NSTEP,myrank,prname
+  use specfem_par, only: NSPEC_AB,PML_CONDITIONS,SIMULATION_TYPE,SAVE_FORWARD,NSTEP,myrank,prname, &
+    ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
+
   use constants, only: NDIM,NGLLX,NGLLY,NGLLZ
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,num_coupling_ac_el_faces
-  use specfem_par_elastic, only: ELASTIC_SIMULATION
+
+  use specfem_par_acoustic, only: num_coupling_ac_el_faces
 
   implicit none
 
@@ -63,11 +65,11 @@
 
   if (ELASTIC_SIMULATION) then
     ! store the displ field at n-1 time step
-    allocate(PML_displ_old(3,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+    allocate(PML_displ_old(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2256')
     if (ier /= 0) stop 'error allocating PML_displ_old array'
     ! store the displ field at n time step
-    allocate(PML_displ_new(3,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+    allocate(PML_displ_new(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2257')
     if (ier /= 0) stop 'error allocating PML_displ_new array'
     if (ier /= 0) stop 'error allocating displ_new array'
@@ -354,9 +356,7 @@
   ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
   ! in order to be able to use these arrays as arguments in subroutine calls
 
-  use specfem_par, only: SIMULATION_TYPE
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
-  use specfem_par_elastic, only: ELASTIC_SIMULATION
+  use specfem_par, only: SIMULATION_TYPE,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
 
   use pml_par
 
@@ -538,9 +538,7 @@
 
 ! deallocates C_PML arrays
 
-  use specfem_par, only: SIMULATION_TYPE
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
-  use specfem_par_elastic, only: ELASTIC_SIMULATION
+  use specfem_par, only: SIMULATION_TYPE,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
 
   use pml_par
 

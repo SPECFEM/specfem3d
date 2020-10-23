@@ -6,7 +6,7 @@
 
 # forward or adjoint simulation
 # 1 = forward, 2 = adjoint, 3 = both simultaneously
-SIMULATION_TYPE                 = 3
+SIMULATION_TYPE                 = 1
 # 0 = earthquake simulation,  1/2/3 = three steps in noise simulation
 NOISE_TOMOGRAPHY                = 0
 SAVE_FORWARD                    = .false.
@@ -26,8 +26,8 @@ SUPPRESS_UTM_PROJECTION         = .true.
 NPROC                           = 4
 
 # time step parameters
-NSTEP                           = 10000
-DT                              = 0.001
+NSTEP                           = 4000
+DT                              = 0.003
 
 # set to true to use local-time stepping (LTS)
 LTS_MODE                        = .false.
@@ -159,13 +159,13 @@ NTSTEP_BETWEEN_FRAMES           = 200
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
-SAVE_MESH_FILES                 = .false.
+SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
 LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
-NTSTEP_BETWEEN_OUTPUT_INFO      = 100
+NTSTEP_BETWEEN_OUTPUT_INFO      = 1000
 
 #-----------------------------------------------------------
 #
@@ -216,26 +216,29 @@ NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 
 # decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
 # currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
-SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
-SAVE_SEISMOGRAMS_VELOCITY       = .true.
-SAVE_SEISMOGRAMS_ACCELERATION   = .true.
-SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic (i.e. fluid) elements only
+SAVE_SEISMOGRAMS_DISPLACEMENT   = .false.
+SAVE_SEISMOGRAMS_VELOCITY       = .false.
+SAVE_SEISMOGRAMS_ACCELERATION   = .false.
+SAVE_SEISMOGRAMS_PRESSURE       = .true.   # currently implemented in acoustic (i.e. fluid) elements only
 
 # save seismograms also when running the adjoint runs for an inverse problem
 # (usually they are unused and not very meaningful, leave this off in almost all cases)
-SAVE_SEISMOGRAMS_IN_ADJOINT_RUN = .false.
+SAVE_SEISMOGRAMS_IN_ADJOINT_RUN = .true.
+
+# subsampling of the seismograms to create smaller files (but less accurately sampled in time)
+subsamp_seismos                 = 1
 
 # save seismograms in binary or ASCII format (binary is smaller but may not be portable between machines)
 USE_BINARY_FOR_SEISMOGRAMS      = .false.
 
 # output seismograms in Seismic Unix format (binary with 240-byte-headers)
-SU_FORMAT                       = .false.
+SU_FORMAT                       = .true.
 
 # output seismograms in ASDF (requires asdf-library)
 ASDF_FORMAT                     = .false.
 
-# decide if master process writes all the seismograms or if all processes do it in parallel
-WRITE_SEISMOGRAMS_BY_MASTER     = .false.
+# decide if main process writes all the seismograms or if all processes do it in parallel
+WRITE_SEISMOGRAMS_BY_MAIN       = .false.
 
 # save all seismograms in one large combined file instead of one file per seismogram
 # to avoid overloading shared non-local file systems such as LUSTRE or GPFS for instance
@@ -248,7 +251,7 @@ SAVE_ALL_SEISMOS_IN_ONE_FILE    = .false.
 # Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
 # thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
 # is accurate at second order and thus contains significantly less numerical noise.
-USE_TRICK_FOR_BETTER_PRESSURE   = .false.
+USE_TRICK_FOR_BETTER_PRESSURE   = .true.
 
 #-----------------------------------------------------------
 #

@@ -1,4 +1,6 @@
-#!/usr/python
+#!/usr/bin/env python
+from __future__ import print_function
+
 import os
 from math import *
 Mega=1.0e6

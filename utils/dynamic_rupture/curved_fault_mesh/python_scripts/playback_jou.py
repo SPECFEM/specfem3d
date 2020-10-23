@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 # Please set up the path for CUBIT (or Trelis)
 # Instead, you could set up the path from ~/.bashrc
@@ -5,7 +7,7 @@ sys.path.append('/opt/linux64/Trelis-14.0/bin/')
 
 import cubit
 
-print  "Init CUBIT..."
+print("Init CUBIT...")
 try:
     # output all the information to the screen.
     #cubit.init([""])
@@ -20,11 +22,11 @@ for i in range(len(sys.argv)):                        # read parameter from shel
 input_file = P1
 
 
-print  "Begin to playback the CUBIT script..."
+print("Begin to playback the CUBIT script...")
 ###  Read the CUBIT journal and playback it.
 with open(input_file) as f:
     content = f.readlines()
 for line in content:
     cubit.cmd(line)
 
-print  "Finish playback..."
+print("Finish playback...")

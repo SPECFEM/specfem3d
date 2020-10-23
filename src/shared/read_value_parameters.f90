@@ -99,7 +99,7 @@
 
 !--------------------
 
-  subroutine open_parameter_file_from_master_only(ier)
+  subroutine open_parameter_file_from_main_only(ier)
 
   use constants, only: MAX_STRING_LEN,IN_DATA_FILES
 
@@ -112,7 +112,7 @@
   filename_main = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file'
 
 ! also see if we are running several independent runs in parallel
-! to do so, add the right directory for that run for the master process only here
+! to do so, add the right directory for that run for the main process only here
   filename_run0001 = 'run0001/'//filename_main(1:len_trim(filename_main))
 
   call param_open(filename_main, len(filename_main), ier)
@@ -133,8 +133,12 @@
 
   if (exists_main_Par_file .and. exists_run0001_Par_file) then
     print *
-    print *,'cannot have both DATA/Par_file and run0001/DATA/Par_file present, please remove one of them'
-    stop 'error: two different copies of the Par_file'
+    print *,'Cannot have both DATA/Par_file and run0001/DATA/Par_file present, please remove one of them.'
+    print *
+    print *,'In case you want to run simultaneous runs with: NUMBER_OF_SIMULTANEOUS_RUNS > 1 '
+    print *,'make sure to remove DATA/Par_file and only have run0***/DATA/Par_file available'
+    print *
+    stop 'Error: two different copies of the Par_file'
   endif
 
   call param_open(filename_main, len(filename_main), ier)
@@ -143,11 +147,13 @@
     if (ier /= 0) then
       print *
       print *,'opening file failed, please check your file path and run-directory.'
+      print *,'checked: ',trim(filename_main)
+      print *,'         ',trim(filename_run0001)
       stop 'error opening Par_file'
     endif
   endif
 
-  end subroutine open_parameter_file_from_master_only
+  end subroutine open_parameter_file_from_main_only
 
 !--------------------
 
@@ -174,8 +180,9 @@
   call param_open(filename, len(filename), ier)
   if (ier /= 0) then
     print *
-    print *,'opening file failed, please check your file path and run-directory.'
-    stop 'error opening Par_file'
+    print *,'opening file failed: ',trim(filename)
+    print *,'Please check your file path and run-directory.'
+    stop 'Error opening Par_file'
   endif
 
   end subroutine open_parameter_file

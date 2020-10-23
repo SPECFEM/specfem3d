@@ -111,6 +111,7 @@
     if ( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
     read(27,iostat=ier) NGLOB_AB
     if ( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
+    read(27,iostat=ier) ios   ! skip dummy
 
     ! ibool file
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)

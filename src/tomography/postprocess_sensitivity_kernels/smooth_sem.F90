@@ -28,7 +28,7 @@
 ! XSMOOTH_SEM
 !
 ! USAGE
-!   mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR USE_GPU
+!   mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR [USE_GPU]
 !
 !
 ! COMMAND LINE ARGUMENTS
@@ -37,7 +37,7 @@
 !   KERNEL_NAME            - kernel name, e.g. alpha_kernel
 !   INPUT_DIR              - directory from which kernels are read
 !   OUTPUT_DIR             - directory to which smoothed kernels are written
-!   USE_GPU                - use GPUs for computation
+!   USE_GPU                - (optional) use GPUs for computation
 !
 ! DESCRIPTION
 !   Smooths kernels by convolution with a Gaussian. Writes the resulting
@@ -63,9 +63,9 @@ program smooth_sem
     MAX_STRING_LEN,IIN,IOUT,GAUSSALPHA,GAUSSBETA,PI,MAX_KERNEL_NAMES
 
   use specfem_par
-  use specfem_par_elastic, only: ELASTIC_SIMULATION,ispec_is_elastic,rho_vp,rho_vs,min_resolved_period
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,ispec_is_acoustic
-  use specfem_par_poroelastic, only: POROELASTIC_SIMULATION,ispec_is_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
+  use specfem_par_elastic, only: ispec_is_elastic,min_resolved_period
+  use specfem_par_acoustic, only: ispec_is_acoustic
+  use specfem_par_poroelastic, only: ispec_is_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
     phistore,tortstore,rhoarraystore
   use specfem_par_movie
 
@@ -97,10 +97,9 @@ program smooth_sem
   character(len=MAX_STRING_LEN*2) :: local_data_file
 
 
-  character(len=MAX_STRING_LEN) :: kernel_names(MAX_KERNEL_NAMES)
+  character(len=MAX_STRING_LEN),dimension(:),allocatable :: kernel_names
   character(len=MAX_STRING_LEN) :: kernel_names_comma_delimited
   integer :: nker
-  real t1,t2
 
   ! smoothing parameters
   character(len=MAX_STRING_LEN*2) :: ks_file
@@ -146,25 +145,49 @@ program smooth_sem
 
   logical :: BROADCAST_AFTER_READ, USE_GPU
 
+  ! timing
+  double precision, external :: wtime
+  real :: t1,t2
+
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
 
   if (myrank == 0) print *,"Running XSMOOTH_SEM"
   call synchronize_all()
-  call cpu_time(t1)
+
+  ! timing
+  t1 = wtime()
 
   ! parse command line arguments
-  if (command_argument_count() /= NARGS) then
+  if (command_argument_count() < NARGS-1) then
     if (myrank == 0) then
-        print *,'USAGE:  mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR GPU_MODE'
+      print *,'USAGE:  mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR [GPU_MODE]'
+      print *,'  with'
+      print *,'   SIGMA_H SIGMA_V  - horizontal & vertical smoothing lengths'
+      print *,'   KERNEL_NAME      - sensitivity kernel name (e.g., alpha_kernel for proc***_alpha_kernel.bin files)'
+      print *,'   INPUT_DIR        - input directory holding kernel files'
+      print *,'   OUPUT_DIR        - output directory for smoothed kernel'
+      print *,'   GPU_MODE         - (optional) set to .true. to use GPU, otherwise set to .false. for CPU run (default off)'
+      print *
       stop 'Please check command line arguments'
     endif
   endif
   call synchronize_all()
 
+  ! allocates array
+  allocate(kernel_names(MAX_KERNEL_NAMES),stat=ier)
+  if (ier /= 0) stop 'Error allocating kernel_names array'
+  kernel_names(:) = ''
+
+  ! parse command line arguments
   do i = 1, NARGS
-    call get_command_argument(i,arg(i), status=ier)
+    if (command_argument_count() >= i) then
+      call get_command_argument(i,arg(i), status=ier)
+    else
+      ! optional argument
+      arg(i) = ''
+    endif
   enddo
 
   read(arg(1),*) sigma_h
@@ -172,7 +195,11 @@ program smooth_sem
   kernel_names_comma_delimited = arg(3)
   input_dir= arg(4)
   output_dir = arg(5)
-  read(arg(6),*) USE_GPU
+  if (command_argument_count() == 6) then
+    read(arg(6),*) USE_GPU
+  else
+    USE_GPU = .false.
+  endif
 
   call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
   kernel_name = kernel_names(1)
@@ -182,8 +209,7 @@ program smooth_sem
   if (nker > 1) then
     if (myrank == 0) then
       ! The machinery for reading multiple names from the command line is in place,
-      ! but the smoothing routines themselves have not yet been modified to work
-      !  on multiple arrays.
+      ! but the smoothing routines themselves have not yet been modified to work on multiple arrays.
       if (myrank == 0) then
         print *,'Smoothing only first name in list: ',trim(kernel_name)
         print *
@@ -316,6 +342,8 @@ program smooth_sem
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1004')
   allocate(mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1005')
+  allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating rho array 1005')
   if (ier /= 0) stop 'Error allocating arrays for material properties'
 
   ! material flags
@@ -356,41 +384,13 @@ program smooth_sem
     print *
   endif
 
-  if (ELASTIC_SIMULATION) then
-    call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
-                               ibool,xstore,ystore,zstore, &
-                               kappastore,mustore,rho_vp,rho_vs, &
-                               DT,model_speed_max,min_resolved_period, &
-                               LOCAL_PATH,SAVE_MESH_FILES)
-
-  else if (POROELASTIC_SIMULATION) then
-    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1009')
-    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1010')
-    rho_vp = 0.0_CUSTOM_REAL
-    rho_vs = 0.0_CUSTOM_REAL
-    call check_mesh_resolution_poro(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                                    DT,model_speed_max,min_resolved_period, &
-                                    phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
-                                    LOCAL_PATH,SAVE_MESH_FILES)
-    deallocate(rho_vp,rho_vs)
-  else if (ACOUSTIC_SIMULATION) then
-    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1011')
-    if (ier /= 0) stop 'Error allocating array rho_vp'
-    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1012')
-    if (ier /= 0) stop 'Error allocating array rho_vs'
-    rho_vp = sqrt( kappastore / rhostore ) * rhostore
-    rho_vs = 0.0_CUSTOM_REAL
-    call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
-                               ibool,xstore,ystore,zstore, &
-                               kappastore,mustore,rho_vp,rho_vs, &
-                               DT,model_speed_max,min_resolved_period, &
-                               LOCAL_PATH,SAVE_MESH_FILES)
-    deallocate(rho_vp,rho_vs)
-  endif
+  ! mesh resolution
+  call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &
+                             ibool,xstore,ystore,zstore, &
+                             ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
+                             kappastore,mustore,rhostore, &
+                             phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
+                             DT,model_speed_max,min_resolved_period)
 
   ! for smoothing, we use cell centers to find and locate nearby elements
   !
@@ -413,12 +413,10 @@ program smooth_sem
   do ispec = 1, nspec_AB
 
     DO_LOOP_IJK
-
       iglob = ibool(INDEX_IJK,ispec)
       xl(INDEX_IJK,ispec) = xstore(iglob)
       yl(INDEX_IJK,ispec) = ystore(iglob)
       zl(INDEX_IJK,ispec) = zstore(iglob)
-
     ENDDO_LOOP_IJK
 
     cx0(ispec) = (xl(1,1,1,ispec) + xl(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
@@ -678,7 +676,7 @@ program smooth_sem
     read(IIN) zstore
 
     if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
-    ! reads in jacobian
+      ! reads in jacobian
       read(IIN) irregular_element_number
       read(IIN) xix_regular
       read(IIN) jacobian_regular
@@ -790,7 +788,7 @@ program smooth_sem
             do k=1,NGLLZ
               do j=1,NGLLY
                 do i=1,NGLLX
-                  if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec)
+                  if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
                   factor(i,j,k) = jacobianl * wgll_cube(i,j,k)
                 enddo
               enddo
@@ -917,13 +915,15 @@ program smooth_sem
     close(IMAIN)
   endif
 
+  ! timing
+  t2 = wtime()
 
-  call cpu_time(t2)
-
-  if (USE_GPU) then
-    print *,'Computation time with GPU:',t2-t1
-  else
-    print *,'Computation time with CPU:',t2-t1
+  if (myrank == 0) then
+    if (USE_GPU) then
+      print *,'Computation time with GPU:',t2-t1
+    else
+      print *,'Computation time with CPU:',t2-t1
+    endif
   endif
 
   ! stop all the processes and exit

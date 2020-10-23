@@ -225,6 +225,9 @@ SAVE_SEISMOGRAMS_PRESSURE       = .true.   # currently implemented in acoustic (
 # (usually they are unused and not very meaningful, leave this off in almost all cases)
 SAVE_SEISMOGRAMS_IN_ADJOINT_RUN = .false.
 
+# subsampling of the seismograms to create smaller files (but less accurately sampled in time)
+subsamp_seismos                 = 1
+
 # save seismograms in binary or ASCII format (binary is smaller but may not be portable between machines)
 USE_BINARY_FOR_SEISMOGRAMS      = .false.
 
@@ -234,8 +237,8 @@ SU_FORMAT                       = .false.
 # output seismograms in ASDF (requires asdf-library)
 ASDF_FORMAT                     = .false.
 
-# decide if master process writes all the seismograms or if all processes do it in parallel
-WRITE_SEISMOGRAMS_BY_MASTER     = .false.
+# decide if main process writes all the seismograms or if all processes do it in parallel
+WRITE_SEISMOGRAMS_BY_MAIN       = .false.
 
 # save all seismograms in one large combined file instead of one file per seismogram
 # to avoid overloading shared non-local file systems such as LUSTRE or GPFS for instance

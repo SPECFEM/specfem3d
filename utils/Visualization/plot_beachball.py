@@ -6,6 +6,7 @@
 #   - obspy : install for example via pip install -U obspy
 #
 from __future__ import print_function
+
 import sys
 import os
 import datetime

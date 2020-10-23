@@ -181,7 +181,7 @@
   enddo
 
   ! number of irregular elements in this partition
-  num_irreg = count(ispec_is_irregular(:))
+  num_irreg = count(ispec_is_irregular(:) .eqv. .true.)
 
   ! checks
   if (num_irreg /= NSPEC_IRREGULAR) then
@@ -437,12 +437,21 @@
     write(IMAIN,*) "     memory accesses = ",sngl(mem),'MB'
     write(IMAIN,*) "     timing  min/max = ",sngl(t_min),'s / ',sngl(t_max),'s'
     write(IMAIN,*) "     timing      avg = ",sngl(t_avg),'s'
-    write(IMAIN,*) "     bandwidth       = ",sngl(mem / t_avg / 1024.d0),'GB/s'
+    if (abs(t_avg) > 0.0) then
+      write(IMAIN,*) "     bandwidth       = ",sngl(mem / t_avg / 1024.d0),'GB/s'
+    else
+      write(IMAIN,*) "     bandwidth       = ",'n/a'
+    endif
+
     if (FORCE_VECTORIZATION_VAL) then
       write(IMAIN,*) "     with force_vectorization:"
       write(IMAIN,*) "     timing  min/max = ",sngl(t_min_force),'s / ',sngl(t_max_force),'s'
       write(IMAIN,*) "     timing      avg = ",sngl(t_avg_force),'s'
-      write(IMAIN,*) "     bandwidth       = ",sngl(mem / t_avg_force / 1024.d0),'GB/s'
+      if (abs(t_avg) > 0.0) then
+        write(IMAIN,*) "     bandwidth       = ",sngl(mem / t_avg_force / 1024.d0),'GB/s'
+      else
+        write(IMAIN,*) "     bandwidth       = ",'n/a'
+      endif
       ! warning/suggestion to switch, if forcing vectorization slows down
       if (t_avg < 0.9*t_avg_force) then
         write(IMAIN,*) "****"

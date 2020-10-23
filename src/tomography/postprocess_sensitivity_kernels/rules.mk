@@ -161,13 +161,14 @@ xsmooth_sem_SHARED_OBJECTS = \
 	$(EMPTY_MACRO)
 
 cuda_smooth_sem_STUBS = \
-	$O/smooth_sem_cuda_stubs.postprocess.o \
+	$O/specfem3D_gpu_cuda_method_stubs.cudacc.o \
 	$(EMPTY_MACRO)
 
 cuda_smooth_sem_OBJECTS = \
-	$O/smooth_cuda.postprocess.cuda.o \
 	$O/check_fields_cuda.cuda.o \
+	$O/helper_functions.cuda.o \
 	$O/initialize_cuda.cuda.o \
+	$O/smooth_cuda.cuda.o \
 	$(EMPTY_MACRO)
 
 cuda_smooth_sem_DEVICE_OBJ = \
@@ -227,8 +228,6 @@ $O/%.postprocess.o: $S/%.c ${SETUP}/config.h
 ###
 ### CUDA
 ###
-$O/%.postprocess.cuda.o: $S/%.cu ${SETUP}/config.h $S/smooth_cuda.h
-	${NVCC} -c $< -o $@ $(NVCC_FLAGS)
 
 $(cuda_smooth_sem_DEVICE_OBJ): $(cuda_smooth_sem_OBJECTS)
 	${NVCCLINK} -o $(cuda_smooth_sem_DEVICE_OBJ) $(cuda_smooth_sem_OBJECTS)

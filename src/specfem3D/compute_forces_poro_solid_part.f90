@@ -25,11 +25,11 @@
 !
 !=====================================================================
 
-  subroutine compute_forces_poro_solid_part( iphase, &
-                        displs_poroelastic,accels_poroelastic, &
-                        displw_poroelastic,velocw_poroelastic, &
-                        epsilonsdev_xx,epsilonsdev_yy,epsilonsdev_xy, &
-                        epsilonsdev_xz,epsilonsdev_yz,epsilons_trace_over_3)
+  subroutine compute_forces_poro_solid_part(iphase, &
+                                            displs_poroelastic,accels_poroelastic, &
+                                            displw_poroelastic,velocw_poroelastic, &
+                                            epsilonsdev_xx,epsilonsdev_yy,epsilonsdev_xy, &
+                                            epsilonsdev_xz,epsilonsdev_yz,epsilons_trace_over_3)
 
 ! compute forces for the solid poroelastic part
 
@@ -50,18 +50,17 @@
 
   integer :: iphase
 
-! displacement and acceleration
+  ! displacement and acceleration
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic,accels_poroelastic
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displw_poroelastic,velocw_poroelastic
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: &
        epsilonsdev_xx,epsilonsdev_yy,epsilonsdev_xy,epsilonsdev_xz,epsilonsdev_yz
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilons_trace_over_3
 
-! local parameters
-
+  ! local parameters
   integer :: ispec,i,j,k,l,iglob,num_elements,ispec_p,ispec_irreg
 
-! spatial derivatives
+  ! spatial derivatives
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3, &
     tempx1p,tempx2p,tempx3p,tempy1p,tempy2p,tempy3p,tempz1p,tempz2p,tempz3p
@@ -69,16 +68,16 @@
   real(kind=CUSTOM_REAL) :: duxdxl,duydxl,duzdxl,duxdyl,duydyl,duzdyl,duxdzl,duydzl,duzdzl
   real(kind=CUSTOM_REAL) :: dwxdxl,dwydxl,dwzdxl,dwxdyl,dwydyl,dwzdyl,dwxdzl,dwydzl,dwzdzl
 
-  real(kind=CUSTOM_REAL) duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl
-  real(kind=CUSTOM_REAL) duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl
-  real(kind=CUSTOM_REAL) duxdxl_plus_duydyl_plus_duzdzl,dwxdxl_plus_dwydyl_plus_dwzdzl
+  real(kind=CUSTOM_REAL) :: duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl
+  real(kind=CUSTOM_REAL) :: duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl
+  real(kind=CUSTOM_REAL) :: duxdxl_plus_duydyl_plus_duzdzl,dwxdxl_plus_dwydyl_plus_dwzdzl
 
-  real(kind=CUSTOM_REAL) hp1,hp2,hp3
-  real(kind=CUSTOM_REAL) fac1,fac2,fac3
+  real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
+  real(kind=CUSTOM_REAL) :: fac1,fac2,fac3
 
-  real(kind=CUSTOM_REAL) tempx1ls,tempx2ls,tempx3ls,tempx1lw,tempx2lw,tempx3lw
-  real(kind=CUSTOM_REAL) tempy1ls,tempy2ls,tempy3ls,tempy1lw,tempy2lw,tempy3lw
-  real(kind=CUSTOM_REAL) tempz1ls,tempz2ls,tempz3ls,tempz1lw,tempz2lw,tempz3lw
+  real(kind=CUSTOM_REAL) :: tempx1ls,tempx2ls,tempx3ls,tempx1lw,tempx2lw,tempx3lw
+  real(kind=CUSTOM_REAL) :: tempy1ls,tempy2ls,tempy3ls,tempy1lw,tempy2lw,tempy3lw
+  real(kind=CUSTOM_REAL) :: tempz1ls,tempz2ls,tempz3ls,tempz1lw,tempz2lw,tempz3lw
 
   real(kind=CUSTOM_REAL) :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy
   real(kind=CUSTOM_REAL) :: sigmap
@@ -96,7 +95,6 @@
   real(kind=CUSTOM_REAL) :: permlxx,permlxy,permlxz,permlyz,permlyy,permlzz, &
                             invpermlxx,invpermlxy,invpermlxz,invpermlyz,invpermlyy,invpermlzz,detk
   real(kind=CUSTOM_REAL) :: D_biot,H_biot,C_biot,M_biot,rhol_bar
-
   real(kind=CUSTOM_REAL) :: mul_G,lambdal_G,lambdalplus2mul_G
 
   if (iphase == 1) then
@@ -109,8 +107,9 @@
   do ispec_p = 1,num_elements
 
     ispec = phase_ispec_inner_poroelastic(ispec_p,iphase)
+
     ispec_irreg = irregular_element_number(ispec)
-    if (ispec_irreg == 0 ) jacobianl = jacobian_regular
+    if (ispec_irreg == 0) jacobianl = jacobian_regular
  !
     ! first double loop over GLL points to compute and store gradients
     !
@@ -130,13 +129,16 @@
           !frame properties
           mul_fr = mustore(i,j,k,ispec)
           kappal_fr = kappaarraystore(3,i,j,k,ispec)
+
           rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
+
           !Biot coefficients for the input phi
           D_biot = kappal_s*(1._CUSTOM_REAL + phil*(kappal_s/kappal_f - 1._CUSTOM_REAL))
           H_biot = (kappal_s - kappal_fr)*(kappal_s - kappal_fr)/(D_biot - kappal_fr) + &
                     kappal_fr + 4._CUSTOM_REAL*mul_fr/3._CUSTOM_REAL
           C_biot = kappal_s*(kappal_s - kappal_fr)/(D_biot - kappal_fr)
           M_biot = kappal_s*kappal_s/(D_biot - kappal_fr)
+
           !The RHS has the form : div T -phi/c div T_f + phi/ceta_f_k^-1.partial t w
           !where T = G:grad u_s + C_biot div w I
           !and T_f = C_biot div u_s I + M_biot div w I
@@ -145,29 +147,29 @@
           lambdalplus2mul_G = lambdal_G + 2._CUSTOM_REAL*mul_G
 
           ! derivative along x,y,z for u_s and w
-          tempx1ls = 0.
-          tempx2ls = 0.
-          tempx3ls = 0.
+          tempx1ls = 0.0_CUSTOM_REAL
+          tempx2ls = 0.0_CUSTOM_REAL
+          tempx3ls = 0.0_CUSTOM_REAL
 
-          tempy1ls = 0.
-          tempy2ls = 0.
-          tempy3ls = 0.
+          tempy1ls = 0.0_CUSTOM_REAL
+          tempy2ls = 0.0_CUSTOM_REAL
+          tempy3ls = 0.0_CUSTOM_REAL
 
-          tempz1ls = 0.
-          tempz2ls = 0.
-          tempz3ls = 0.
+          tempz1ls = 0.0_CUSTOM_REAL
+          tempz2ls = 0.0_CUSTOM_REAL
+          tempz3ls = 0.0_CUSTOM_REAL
 
-          tempx1lw = 0.
-          tempx2lw = 0.
-          tempx3lw = 0.
+          tempx1lw = 0.0_CUSTOM_REAL
+          tempx2lw = 0.0_CUSTOM_REAL
+          tempx3lw = 0.0_CUSTOM_REAL
 
-          tempy1lw = 0.
-          tempy2lw = 0.
-          tempy3lw = 0.
+          tempy1lw = 0.0_CUSTOM_REAL
+          tempy2lw = 0.0_CUSTOM_REAL
+          tempy3lw = 0.0_CUSTOM_REAL
 
-          tempz1lw = 0.
-          tempz2lw = 0.
-          tempz3lw = 0.
+          tempz1lw = 0.0_CUSTOM_REAL
+          tempz2lw = 0.0_CUSTOM_REAL
+          tempz3lw = 0.0_CUSTOM_REAL
 
 !! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
 !! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
@@ -215,9 +217,9 @@
             tempz3lw = tempz3lw + displw_poroelastic(3,iglob)*hp3
           enddo
 
-          if (ispec_irreg /= 0 ) then !irregular element
-
-            ! get derivatives of ux, uy and uz with respect to x, y and z
+          ! get derivatives of ux, uy and uz with respect to x, y and z
+          if (ispec_irreg /= 0) then
+            !irregular element
             xixl = xix(i,j,k,ispec_irreg)
             xiyl = xiy(i,j,k,ispec_irreg)
             xizl = xiz(i,j,k,ispec_irreg)
@@ -254,8 +256,8 @@
             dwzdyl = xiyl*tempz1lw + etayl*tempz2lw + gammayl*tempz3lw
             dwzdzl = xizl*tempz1lw + etazl*tempz2lw + gammazl*tempz3lw
 
-          else !regular element
-
+          else
+            !regular element
             ! derivatives of displacement
             duxdxl = xix_regular*tempx1ls
             duxdyl = xix_regular*tempx2ls
@@ -280,7 +282,6 @@
             dwzdxl = xix_regular*tempz1lw
             dwzdyl = xix_regular*tempz2lw
             dwzdzl = xix_regular*tempz3lw
-
           endif
 
           ! precompute some sums to save CPU time
@@ -329,16 +330,16 @@
             epsilonsdev_yz(i,j,k,ispec) = 0.5 * duzdyl_plus_duydzl
           endif
 
-
           ! weak formulation term based on stress tensor (non-symmetric form)
           ! define symmetric components of sigma
           sigma_yx = sigma_xy
           sigma_zx = sigma_xz
           sigma_zy = sigma_yz
 
+          ! form dot product with test vector, non-symmetric form (which is
+          ! useful in the case of PML)
           if (ispec_irreg /= 0) then
-            ! form dot product with test vector, non-symmetric form (which is
-            ! useful in the case of PML)
+            ! irregular element
             tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
             tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
             tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
@@ -351,43 +352,42 @@
             tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
             tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
 
-            tempx1p(i,j,k) = jacobianl * sigmap*xixl
-            tempy1p(i,j,k) = jacobianl * sigmap*xiyl
-            tempz1p(i,j,k) = jacobianl * sigmap*xizl
+            tempx1p(i,j,k) = jacobianl * sigmap * xixl
+            tempy1p(i,j,k) = jacobianl * sigmap * xiyl
+            tempz1p(i,j,k) = jacobianl * sigmap * xizl
 
-            tempx2p(i,j,k) = jacobianl * sigmap*etaxl
-            tempy2p(i,j,k) = jacobianl * sigmap*etayl
-            tempz2p(i,j,k) = jacobianl * sigmap*etazl
+            tempx2p(i,j,k) = jacobianl * sigmap * etaxl
+            tempy2p(i,j,k) = jacobianl * sigmap * etayl
+            tempz2p(i,j,k) = jacobianl * sigmap * etazl
 
-            tempx3p(i,j,k) = jacobianl * sigmap*gammaxl
-            tempy3p(i,j,k) = jacobianl * sigmap*gammayl
-            tempz3p(i,j,k) = jacobianl * sigmap*gammazl
+            tempx3p(i,j,k) = jacobianl * sigmap * gammaxl
+            tempy3p(i,j,k) = jacobianl * sigmap * gammayl
+            tempz3p(i,j,k) = jacobianl * sigmap * gammazl
 
-          else ! regular element
-            ! form dot product with test vector, non-symmetric form (which is
-            ! useful in the case of PML)
+          else
+            ! regular element
             tempx1(i,j,k) = jacobianl * sigma_xx * xix_regular
             tempy1(i,j,k) = jacobianl * sigma_xy * xix_regular
             tempz1(i,j,k) = jacobianl * sigma_xz * xix_regular
 
             tempx2(i,j,k) = jacobianl * sigma_yx * xix_regular
             tempy2(i,j,k) = jacobianl * sigma_yy * xix_regular
-            tempz2(i,j,k) = jacobianl * sigma_zz * xix_regular
+            tempz2(i,j,k) = jacobianl * sigma_yz * xix_regular
 
-            tempx3(i,j,k) = jacobianl * sigma_zx* xix_regular
-            tempy3(i,j,k) = jacobianl * sigma_zy* xix_regular
-            tempz3(i,j,k) = jacobianl * sigma_zz* xix_regular
+            tempx3(i,j,k) = jacobianl * sigma_zx * xix_regular
+            tempy3(i,j,k) = jacobianl * sigma_zy * xix_regular
+            tempz3(i,j,k) = jacobianl * sigma_zz * xix_regular
 
             tempx1p(i,j,k) = jacobianl * sigmap * xix_regular
-            tempy1p(i,j,k) = 0.0
-            tempz1p(i,j,k) = 0.0
+            tempy1p(i,j,k) = 0.0_CUSTOM_REAL
+            tempz1p(i,j,k) = 0.0_CUSTOM_REAL
 
-            tempx2p(i,j,k) = 0.0
+            tempx2p(i,j,k) = 0.0_CUSTOM_REAL
             tempy2p(i,j,k) = jacobianl * sigmap * xix_regular
-            tempz2p(i,j,k) = 0.0
+            tempz2p(i,j,k) = 0.0_CUSTOM_REAL
 
-            tempx3p(i,j,k) = 0.0
-            tempy3p(i,j,k) = 0.0
+            tempx3p(i,j,k) = 0.0_CUSTOM_REAL
+            tempy3p(i,j,k) = 0.0_CUSTOM_REAL
             tempz3p(i,j,k) = jacobianl * sigmap * xix_regular
           endif
 
@@ -402,29 +402,29 @@
       do j = 1,NGLLY
         do i = 1,NGLLX
 
-          tempx1ls = 0.
-          tempy1ls = 0.
-          tempz1ls = 0.
+          tempx1ls = 0.0_CUSTOM_REAL
+          tempy1ls = 0.0_CUSTOM_REAL
+          tempz1ls = 0.0_CUSTOM_REAL
 
-          tempx2ls = 0.
-          tempy2ls = 0.
-          tempz2ls = 0.
+          tempx2ls = 0.0_CUSTOM_REAL
+          tempy2ls = 0.0_CUSTOM_REAL
+          tempz2ls = 0.0_CUSTOM_REAL
 
-          tempx3ls = 0.
-          tempy3ls = 0.
-          tempz3ls = 0.
+          tempx3ls = 0.0_CUSTOM_REAL
+          tempy3ls = 0.0_CUSTOM_REAL
+          tempz3ls = 0.0_CUSTOM_REAL
 
-          tempx1lw = 0.
-          tempy1lw = 0.
-          tempz1lw = 0.
+          tempx1lw = 0.0_CUSTOM_REAL
+          tempy1lw = 0.0_CUSTOM_REAL
+          tempz1lw = 0.0_CUSTOM_REAL
 
-          tempx2lw = 0.
-          tempy2lw = 0.
-          tempz2lw = 0.
+          tempx2lw = 0.0_CUSTOM_REAL
+          tempy2lw = 0.0_CUSTOM_REAL
+          tempz2lw = 0.0_CUSTOM_REAL
 
-          tempx3lw = 0.
-          tempy3lw = 0.
-          tempz3lw = 0.
+          tempx3lw = 0.0_CUSTOM_REAL
+          tempy3lw = 0.0_CUSTOM_REAL
+          tempz3lw = 0.0_CUSTOM_REAL
 
           ! we can merge these loops because NGLLX = NGLLY = NGLLZ
           do l=1,NGLLX
@@ -486,7 +486,7 @@
 
           etal_f = etastore(i,j,k,ispec)
 
-          if (etal_f > 0.d0) then
+          if (etal_f > 0.0_CUSTOM_REAL) then
 
             permlxx = permstore(1,i,j,k,ispec)
             permlxy = permstore(2,i,j,k,ispec)
@@ -552,7 +552,9 @@
                        + velocw_poroelastic(2,iglob)*bl_relaxed(5) &
                        + velocw_poroelastic(3,iglob)*bl_relaxed(6)
             !      endif
+
             if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
+
             accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) &
                                         + phil/tortl*wxgll(i)*wygll(j)*wzgll(k)*jacobianl*viscodampx
             accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) &
@@ -570,7 +572,7 @@
             !    enddo
             !  enddo
 
-          endif ! if (etal_f > 0.d0) then
+          endif ! if (etal_f > 0.0) then
 
         enddo ! second loop over the GLL points
       enddo

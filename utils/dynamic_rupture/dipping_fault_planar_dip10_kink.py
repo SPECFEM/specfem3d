@@ -2,6 +2,8 @@
 # Planar - Dipping Fault.
 # P. Galvez, ETH-Zurich and J-P Ampuero (Caltech). August 26, 2014.
 # K. Bai (Caltech). October 2016. Added fault kink (change of dip angle) and re-scaling trick.
+from __future__ import print_function
+
 import sys
 
 # by STEP3
@@ -24,9 +26,9 @@ def define_bc_topo2(entities,self):
      topo = self.topo
      v_list,name_list=define_block()
      build_block(v_list,name_list)
-     print entities
+     print(entities)
      for entity in entities:
-         print "##entity: "+str(entity)
+         print("##entity: "+str(entity))
          build_block_side(xmin,entity+'_abs_xmin',obj=entity,id_0=1003)
          build_block_side(xmax,entity+'_abs_xmax',obj=entity,id_0=1005)
          build_block_side(ymin,entity+'_abs_ymin',obj=entity,id_0=1004)
@@ -62,7 +64,7 @@ def get_global_scale(Xmax,Xmin,Ymax,Ymin,Zmin,h_size):
 
 
 def main(parameter):
-    print parameter
+    print(parameter)
     cubit.init('[]')
     cubit.cmd('reset')
     Radian = math.pi/180
@@ -179,7 +181,7 @@ def main(parameter):
 
     ##### USER: define material properties ################
     cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
-    print 'we are here'
+    print('we are here')
 
     #for iblock in range(1,11,1):
     for iblock in range(1,3,1):
@@ -193,17 +195,17 @@ def main(parameter):
     fault = fault_input(1,fu,fd)
 
 def usage():
-    print "Generate mesh for a planar dipping fault with a kink (change of dip angle)"
-    print "usage: python dipping_fault_planar_dip10_kink.py L W H A1 A2 ZK DA"
-    print "  L  = fault length"
-    print "  W  = along-dip width of the fault segment below the kink"
-    print "  H  = element size"
-    print "  A1 = shallow dip angle"
-    print "  A2 = deep dip angle"
-    print "  ZK = kink depth"
-    print "  DA = distance from fault edges to absorbing boundaries divided by fault length"
-    print "  All input lengths in km, angles in degree. Output mesh is in m."
-    print "  To change material properties, edit the script in section commented as 'USER'"
+    print("Generate mesh for a planar dipping fault with a kink (change of dip angle)")
+    print("usage: python dipping_fault_planar_dip10_kink.py L W H A1 A2 ZK DA")
+    print("  L  = fault length")
+    print("  W  = along-dip width of the fault segment below the kink")
+    print("  H  = element size")
+    print("  A1 = shallow dip angle")
+    print("  A2 = deep dip angle")
+    print("  ZK = kink depth")
+    print("  DA = distance from fault edges to absorbing boundaries divided by fault length")
+    print("  All input lengths in km, angles in degree. Output mesh is in m.")
+    print("  To change material properties, edit the script in section commented as 'USER'")
 
 if __name__ == '__main__':
     if(len(sys.argv) != 8):

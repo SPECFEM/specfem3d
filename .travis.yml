@@ -123,6 +123,15 @@ env:
     # regular element mesh
     - TESTID=32 TESTCOV=0 TESTDIR=25 TESTFLAGS="--enable-vectorization" CUDA=false
 
+    # adjoint simulation
+    - TESTID=33 TESTCOV=0 TESTDIR=26 TESTFLAGS="--with-mpi" CUDA=false
+
+    # gmsh example w/ hex27
+    - TESTID=34 TESTCOV=0 TESTDIR=27 TESTFLAGS="--without-mpi" CUDA=false
+
+    # waterlayered_poroelastic example
+    - TESTID=35 TESTCOV=0 TESTDIR=28 TESTFLAGS="--enable-vectorization --with-mpi" CUDA=false
+
 before_install:
   # informations on git
   - |
@@ -140,8 +149,11 @@ before_install:
 
   # updates repository
   - |
-    sudo apt-get -qq update
-    sleep 5
+    travis_retry sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B05F25D762E3157
+    travis_retry sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 78BD65473CB3BD13
+    travis_retry sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 762E3157
+    travis_retry sudo apt-get update
+
 
 install:
   - bash .travis/run_install.sh

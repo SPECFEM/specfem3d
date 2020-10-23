@@ -68,19 +68,16 @@ end subroutine read_mesh_databases_moho_adios
 ! subroutines from save_kernels_adios.F90 |
 !-----------------------------------------'
 
-subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
+subroutine define_kernel_adios_variables(handle)
 
   use adios_manager_mod
 
   implicit none
   integer(kind=8), intent(inout) :: handle
-  logical, intent(in) :: SAVE_WEIGHTS
 
   integer(kind=8) :: unused_i8
-  logical :: unused_l
 
   unused_i8 = handle
-  unused_l  = SAVE_WEIGHTS
 
   call no_adios_err()
 end subroutine define_kernel_adios_variables

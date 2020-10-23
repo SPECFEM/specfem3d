@@ -1,6 +1,7 @@
 #!python
 #!/usr/bin/env python
 # Surendra Nadh Somala, Caltech 2012
+from __future__ import print_function
 
 import cubit
 import cubit2specfem3d

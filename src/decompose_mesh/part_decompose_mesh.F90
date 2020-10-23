@@ -946,10 +946,10 @@ contains
   ! Write interfaces (element and common nodes) pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
   subroutine write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, &
-                              iproc, ninterfaces, &
-                              my_ninterface, my_interfaces, my_nb_interfaces, glob2loc_elmnts, &
-                              glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-                              glob2loc_nodes, num_phase, nparts)
+                                       iproc, ninterfaces, &
+                                       my_ninterface, my_interfaces, my_nb_interfaces, glob2loc_elmnts, &
+                                       glob2loc_nodes_nparts, glob2loc_nodes_parts, &
+                                       glob2loc_nodes, num_phase, nparts)
 
   integer, intent(in)  :: IIN_database
   integer, intent(in)  :: iproc
@@ -1164,8 +1164,8 @@ contains
   !               expensive calculations in specfem simulations
   !--------------------------------------------------
 
-  subroutine acoustic_elastic_poro_load (elmnts_load,nspec,count_def_mat,count_undef_mat, &
-                                         num_material,mat_prop,undef_mat_prop,ATTENUATION)
+  subroutine acoustic_elastic_poro_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
+                                        num_material,mat_prop,undef_mat_prop,ATTENUATION)
   !
   ! note:
   !   acoustic material = domainID 1  (stored in mat_prop(6,..) )
@@ -1260,10 +1260,10 @@ contains
   ! Repartitioning : two coupled poroelastic/elastic elements are transferred to the same partition
   !--------------------------------------------------
 
-  subroutine poro_elastic_repartitioning (nspec, nnodes, elmnts, &
-                                          nb_materials, num_material, mat_prop, &
-                                          sup_neighbor, nsize, &
-                                          nproc, part, NGNOD)
+  subroutine poro_elastic_repartitioning(nspec, nnodes, elmnts, &
+                                         nb_materials, num_material, mat_prop, &
+                                         sup_neighbor, nsize, &
+                                         nproc, part, NGNOD)
 
   implicit none
 
@@ -1292,7 +1292,7 @@ contains
   integer, dimension(:), allocatable  :: nodes_elmnts
   integer  :: max_neighbor
 
-  integer  :: i, iface, ier, idomain_id
+  integer  :: i, iface, ier, idomain_id, counter
   integer  :: el, el_adj
   logical  :: is_repartitioned
 
@@ -1315,6 +1315,12 @@ contains
   ! checks if any poroelastic/elastic elements are set
   if (.not. any(is_poroelastic)) return
   if (.not. any(is_elastic)) return
+
+  ! user output
+  print *,'poroelastic-elastic repartitioning:'
+  print *,'  number of elastic     materials = ',count(is_elastic(:))
+  print *,'  number of poroelastic materials = ',count(is_poroelastic(:))
+  print *
 
   ! gets neighbors by 4 common nodes (face)
   allocate(xadj(0:nspec),stat=ier)
@@ -1348,51 +1354,62 @@ contains
       endif
     endif
   enddo
+  print *,'  coupled elastic-poroelastic faces = ',nfaces_coupled
+  print *
 
-  ! coupled elements
-  allocate(faces_coupled(2,nfaces_coupled),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 50')
-  if (ier /= 0) stop 'error allocating array faces_coupled'
-  faces_coupled(:,:) = -1
+  ! repartitions elements
+  if (nproc > 1) then
+    ! coupled elements
+    allocate(faces_coupled(2,nfaces_coupled),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 50')
+    if (ier /= 0) stop 'error allocating array faces_coupled'
+    faces_coupled(:,:) = -1
 
-  ! stores elements indices
-  nfaces_coupled = 0
-  do el = 0, nspec-1
-    if (num_material(el+1) > 0) then
-      if (is_poroelastic(num_material(el+1))) then
-        do el_adj = xadj(el), xadj(el+1) - 1
-          if (num_material(adjncy(el_adj)+1) > 0) then
-            if (is_elastic(abs(num_material(adjncy(el_adj)+1)))) then
-              nfaces_coupled = nfaces_coupled + 1
-              faces_coupled(1,nfaces_coupled) = el
-              faces_coupled(2,nfaces_coupled) = adjncy(el_adj)
+    ! stores elements indices
+    nfaces_coupled = 0
+    do el = 0, nspec-1
+      if (num_material(el+1) > 0) then
+        if (is_poroelastic(num_material(el+1))) then
+          do el_adj = xadj(el), xadj(el+1) - 1
+            if (num_material(adjncy(el_adj)+1) > 0) then
+              if (is_elastic(abs(num_material(adjncy(el_adj)+1)))) then
+                nfaces_coupled = nfaces_coupled + 1
+                faces_coupled(1,nfaces_coupled) = el
+                faces_coupled(2,nfaces_coupled) = adjncy(el_adj)
+              endif
             endif
-          endif
-        enddo
-      endif
-    endif
-  enddo
-
-  ! puts coupled elements into same partition
-  do i = 1, nfaces_coupled*nproc
-     is_repartitioned = .false.
-     do iface = 1, nfaces_coupled
-        if (part(faces_coupled(1,iface)) /= part(faces_coupled(2,iface))) then
-           if (part(faces_coupled(1,iface)) < part(faces_coupled(2,iface))) then
-              part(faces_coupled(2,iface)) = part(faces_coupled(1,iface))
-           else
-              part(faces_coupled(1,iface)) = part(faces_coupled(2,iface))
-           endif
-           is_repartitioned = .true.
+          enddo
         endif
-     enddo
-     if (.not. is_repartitioned) then
+      endif
+    enddo
+
+    ! puts coupled elements into same partition
+    do i = 1, nfaces_coupled*nproc
+      counter = 0
+      is_repartitioned = .false.
+      do iface = 1, nfaces_coupled
+        if (part(faces_coupled(1,iface)) /= part(faces_coupled(2,iface))) then
+          ! moves elements to lower partition
+          if (part(faces_coupled(1,iface)) < part(faces_coupled(2,iface))) then
+            part(faces_coupled(2,iface)) = part(faces_coupled(1,iface))
+          else
+            part(faces_coupled(1,iface)) = part(faces_coupled(2,iface))
+          endif
+          counter = counter + 1
+          is_repartitioned = .true.
+        endif
+      enddo
+      print *,'  repartition loop',i,' changed ',counter,' coupled faces out of ',nfaces_coupled,is_repartitioned
+      if (.not. is_repartitioned) then
         exit
-     endif
-  enddo
+      endif
+    enddo
+    print *
+
+    deallocate(faces_coupled)
+  endif
 
   deallocate(xadj,adjncy,nnodes_elmnts,nodes_elmnts)
-  deallocate(faces_coupled)
 
   end subroutine poro_elastic_repartitioning
 
@@ -1400,9 +1417,9 @@ contains
   ! Repartitioning : two coupled moho surface elements are transferred to the same partition
   !--------------------------------------------------
 
-  subroutine moho_surface_repartitioning (nspec, nnodes, elmnts, &
-                                          sup_neighbor, nsize, nproc, part, &
-                                          nspec2D_moho,ibelm_moho,nodes_ibelm_moho, NGNOD, NGNOD2D)
+  subroutine moho_surface_repartitioning(nspec, nnodes, elmnts, &
+                                         sup_neighbor, nsize, nproc, part, &
+                                         nspec2D_moho,ibelm_moho,nodes_ibelm_moho, NGNOD, NGNOD2D)
 
   implicit none
 
@@ -1450,11 +1467,11 @@ contains
 
   ! temporary flag arrays
   ! element ids start from 0
-  allocate( is_moho(0:nspec-1),stat=ier)
+  allocate(is_moho(0:nspec-1),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 51')
   if (ier /= 0) stop 'error allocating array is_moho'
   ! node ids start from 0
-  allocate( node_is_moho(0:nnodes-1),stat=ier)
+  allocate(node_is_moho(0:nnodes-1),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 52')
   if (ier /= 0) stop 'error allocating array node_is_moho'
 
@@ -1468,12 +1485,20 @@ contains
     is_moho(el) = .true.
 
     ! sets node flags
-    do j=1,4
+    do j = 1,4
       ! note: assumes that node indices in nodes_ibelm_* arrays are in the range from 1 to nodes
       inode = nodes_ibelm_moho(j,ispec2D) - 1
       node_is_moho(inode) = .true.
     enddo
   enddo
+
+  ! checks if any moho elements are set
+  if (.not. any(is_moho)) return
+
+  ! user output
+  print *,'Moho surface repartitioning:'
+  print *,'  initial number of moho elements = ',count(is_moho(:))
+  print *,'  initial number of moho nodes    = ',count(node_is_moho(:))
 
   ! checks if element has moho surface
   do el = 0, nspec-1
@@ -1490,13 +1515,15 @@ contains
     ! sets flag if it has a surface
     if (counter == NGNOD2D_FOUR_CORNERS) is_moho(el) = .true.
   enddo
+  print *,'  total number of elements with moho nodes = ',count(is_moho(:))
+  print *
 
   ! statistics output
   counter = 0
-  do el=0, nspec-1
-   if (is_moho(el)) counter = counter + 1
+  do el = 0, nspec-1
+    if (is_moho(el)) counter = counter + 1
   enddo
-  print *,'  moho elements = ',counter
+  print *,'  total number of moho elements = ',counter
 
   ! gets neighbors by 4 common nodes (face)
   ! contains number of adjacent elements (neighbors)
@@ -1515,8 +1542,8 @@ contains
   if (ier /= 0) stop 'error allocating array nodes_elmnts'
 
   call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbor, &
-                      elmnts, xadj, adjncy, nnodes_elmnts, &
-                      nodes_elmnts, max_neighbor, 4, NGNOD)
+                              elmnts, xadj, adjncy, nnodes_elmnts, &
+                              nodes_elmnts, max_neighbor, 4, NGNOD)
 
   ! counts coupled elements
   nfaces_coupled = 0
@@ -1528,49 +1555,59 @@ contains
         enddo
      endif
   enddo
+  print *,'  coupled moho faces = ',nfaces_coupled
+  print *
 
-  ! coupled elements
-  allocate(faces_coupled(2,nfaces_coupled),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 57')
-  if (ier /= 0) stop 'error allocating array faces_coupled'
-  faces_coupled(:,:) = -1
+  ! repartitions elements
+  if (nproc > 1) then
+    ! coupled elements
+    allocate(faces_coupled(2,nfaces_coupled),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 57')
+    if (ier /= 0) stop 'error allocating array faces_coupled'
+    faces_coupled(:,:) = -1
 
-  ! stores elements indices
-  nfaces_coupled = 0
-  do el = 0, nspec-1
-     if (is_moho(el)) then
-        do el_adj = xadj(el), xadj(el+1) - 1
-           if (is_moho(adjncy(el_adj))) then
-              nfaces_coupled = nfaces_coupled + 1
-              faces_coupled(1,nfaces_coupled) = el
-              faces_coupled(2,nfaces_coupled) = adjncy(el_adj)
-           endif
-        enddo
-     endif
-  enddo
+    ! stores elements indices
+    nfaces_coupled = 0
+    do el = 0, nspec-1
+       if (is_moho(el)) then
+          do el_adj = xadj(el), xadj(el+1) - 1
+             if (is_moho(adjncy(el_adj))) then
+                nfaces_coupled = nfaces_coupled + 1
+                faces_coupled(1,nfaces_coupled) = el
+                faces_coupled(2,nfaces_coupled) = adjncy(el_adj)
+             endif
+          enddo
+       endif
+    enddo
 
-  ! puts coupled elements into same partition
-  do i = 1, nfaces_coupled*nproc
-     is_repartitioned = .false.
-     do iface = 1, nfaces_coupled
+    ! puts coupled elements into same partition
+    do i = 1, nfaces_coupled*nproc
+      counter = 0
+      is_repartitioned = .false.
+      do iface = 1, nfaces_coupled
         if (part(faces_coupled(1,iface)) /= part(faces_coupled(2,iface))) then
-           ! coupled moho elements are in different partitions
-           if (part(faces_coupled(1,iface)) < part(faces_coupled(2,iface))) then
-              part(faces_coupled(2,iface)) = part(faces_coupled(1,iface))
-           else
-              part(faces_coupled(1,iface)) = part(faces_coupled(2,iface))
-           endif
-           is_repartitioned = .true.
+          ! coupled moho elements are in different partitions
+          if (part(faces_coupled(1,iface)) < part(faces_coupled(2,iface))) then
+            part(faces_coupled(2,iface)) = part(faces_coupled(1,iface))
+          else
+            part(faces_coupled(1,iface)) = part(faces_coupled(2,iface))
+          endif
+          counter = counter + 1
+          is_repartitioned = .true.
         endif
-     enddo
-     if (.not. is_repartitioned) then
+      enddo
+      print *,'  repartition loop',i,' changed ',counter,' coupled faces out of ',nfaces_coupled,is_repartitioned
+      if (.not. is_repartitioned) then
         exit
-     endif
-  enddo
+      endif
+    enddo
+    print *
+
+    deallocate(faces_coupled)
+  endif
 
   deallocate(is_moho,node_is_moho)
   deallocate(xadj,adjncy,nnodes_elmnts,nodes_elmnts)
-  deallocate(faces_coupled)
 
   end subroutine moho_surface_repartitioning
 

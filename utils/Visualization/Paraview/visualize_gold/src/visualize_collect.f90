@@ -72,6 +72,7 @@ do i_proc = 1, nproc
 
   read(27) NSPEC_AB
   read(27) NGLOB_AB
+  read(27) ios    ! skip dummy
   ! gets ibool
   if (out_res /= 2) then
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))

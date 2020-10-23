@@ -15,8 +15,10 @@
 # ----------------------------------------------------------------------
 #
 # PREREQUISITES: numpy
-
+#
 # ======================================================================
+from __future__ import print_function
+
 import numpy
 import sys
 
@@ -28,7 +30,7 @@ for i in range(len(sys.argv)):                        # read parameter from shel
     P4=sys.argv[i+4]
     P5=sys.argv[i+5]
 
-print P1,P2,P3,P4,P5
+print(P1,P2,P3,P4,P5)
 # Define parameters.
 interfaceFile = P1
 numContours = int(P3)
@@ -88,7 +90,7 @@ j.write("create surface net u curve {idCBeg} to {idCEnd} v curve {idPBeg} to {id
 #width  = numpy.max(intCoords[:,:,1]) - numpy.min(intCoords[:,:,1])
 #offset_x = (numpy.max(intCoords[:,:,0]) + numpy.min(intCoords[:,:,0]))/2.0
 #offset_y = (numpy.max(intCoords[:,:,1]) + numpy.min(intCoords[:,:,1]))/2.0
-#print length,width, offset_x, offset_y
+#print(length,width, offset_x, offset_y)
 #
 #
 #create surface rectangle width length  height width

@@ -27,13 +27,13 @@
 
 ! 3D shape functions for 8-node or 27-node element
 
-  subroutine get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
+  subroutine get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ)
 
-  use constants
+  use constants, only: NDIM,myrank,ZERO,ONE,TINYVAL
 
   implicit none
 
-  integer, intent(in) :: NGNOD
+  integer, intent(in) :: NGNOD,NGLLX,NGLLY,NGLLZ
 
 ! Gauss-Lobatto-Legendre points of integration
   double precision, intent(in) :: xigll(NGLLX)
@@ -74,14 +74,14 @@
         !--- case of a 3D 8-node element (Dhatt-Touzot p. 115)
         if (NGNOD == 8) then
 
-          ra1 = one + xi
-          ra2 = one - xi
+          ra1 = ONE + xi
+          ra2 = ONE - xi
 
-          rb1 = one + eta
-          rb2 = one - eta
+          rb1 = ONE + eta
+          rb2 = ONE - eta
 
-          rc1 = one + gamma
-          rc2 = one - gamma
+          rc1 = ONE + gamma
+          rc2 = ONE - gamma
 
           shape3D(1,i,j,k) = ONE_EIGHTH*ra2*rb2*rc2
           shape3D(2,i,j,k) = ONE_EIGHTH*ra1*rb2*rc2
@@ -123,7 +123,7 @@
 
           ! note: put further initialization for NGNOD == 27 into subroutine
           !       to avoid compilation errors in case NGNOD == 8
-          call get_shape3D_27(NGNOD,shape3D,dershape3D,xi,eta,gamma,i,j,k)
+          call get_shape3D_27(NGNOD,NGLLX,NGLLY,NGLLZ,shape3D,dershape3D,xi,eta,gamma,i,j,k)
 
         endif
 
@@ -283,56 +283,111 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine eval_shape3D_element_corners(xelm,yelm,zelm,ispec, &
+  subroutine eval_shape3D_element_anchors(xelm,yelm,zelm,ispec, &
                                           ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
 
-  use constants
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,myrank
+  use shared_parameters, only: NGNOD
 
   implicit none
 
   integer, intent(in) :: ispec
   integer, intent(in) :: NSPEC_AB,NGLOB_AB
 
-  real(kind=CUSTOM_REAL),dimension(NGNOD_EIGHT_CORNERS),intent(out) :: xelm,yelm,zelm
+  real(kind=CUSTOM_REAL),dimension(NGNOD),intent(out) :: xelm,yelm,zelm
 
   ! mesh coordinates
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB), intent(in) :: xstore,ystore,zstore
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB), intent(in) :: ibool
 
-! 8 node corners
-  xelm(1)=xstore(ibool(1,1,1,ispec))
-  yelm(1)=ystore(ibool(1,1,1,ispec))
-  zelm(1)=zstore(ibool(1,1,1,ispec))
+  ! local parameters
+  integer :: ia,iax,iay,iaz,iglob
+  integer, dimension(NGNOD) :: iaddx,iaddy,iaddz
 
-  xelm(2)=xstore(ibool(NGLLX,1,1,ispec))
-  yelm(2)=ystore(ibool(NGLLX,1,1,ispec))
-  zelm(2)=zstore(ibool(NGLLX,1,1,ispec))
+  if (NGNOD == 8) then
+    ! 8 node corners
+    xelm(1) = xstore(ibool(1,1,1,ispec))
+    yelm(1) = ystore(ibool(1,1,1,ispec))
+    zelm(1) = zstore(ibool(1,1,1,ispec))
 
-  xelm(3)=xstore(ibool(NGLLX,NGLLY,1,ispec))
-  yelm(3)=ystore(ibool(NGLLX,NGLLY,1,ispec))
-  zelm(3)=zstore(ibool(NGLLX,NGLLY,1,ispec))
+    xelm(2) = xstore(ibool(NGLLX,1,1,ispec))
+    yelm(2) = ystore(ibool(NGLLX,1,1,ispec))
+    zelm(2) = zstore(ibool(NGLLX,1,1,ispec))
 
-  xelm(4)=xstore(ibool(1,NGLLY,1,ispec))
-  yelm(4)=ystore(ibool(1,NGLLY,1,ispec))
-  zelm(4)=zstore(ibool(1,NGLLY,1,ispec))
+    xelm(3) = xstore(ibool(NGLLX,NGLLY,1,ispec))
+    yelm(3) = ystore(ibool(NGLLX,NGLLY,1,ispec))
+    zelm(3) = zstore(ibool(NGLLX,NGLLY,1,ispec))
 
-  xelm(5)=xstore(ibool(1,1,NGLLZ,ispec))
-  yelm(5)=ystore(ibool(1,1,NGLLZ,ispec))
-  zelm(5)=zstore(ibool(1,1,NGLLZ,ispec))
+    xelm(4) = xstore(ibool(1,NGLLY,1,ispec))
+    yelm(4) = ystore(ibool(1,NGLLY,1,ispec))
+    zelm(4) = zstore(ibool(1,NGLLY,1,ispec))
 
-  xelm(6)=xstore(ibool(NGLLX,1,NGLLZ,ispec))
-  yelm(6)=ystore(ibool(NGLLX,1,NGLLZ,ispec))
-  zelm(6)=zstore(ibool(NGLLX,1,NGLLZ,ispec))
+    xelm(5) = xstore(ibool(1,1,NGLLZ,ispec))
+    yelm(5) = ystore(ibool(1,1,NGLLZ,ispec))
+    zelm(5) = zstore(ibool(1,1,NGLLZ,ispec))
 
-  xelm(7)=xstore(ibool(NGLLX,NGLLY,NGLLZ,ispec))
-  yelm(7)=ystore(ibool(NGLLX,NGLLY,NGLLZ,ispec))
-  zelm(7)=zstore(ibool(NGLLX,NGLLY,NGLLZ,ispec))
+    xelm(6) = xstore(ibool(NGLLX,1,NGLLZ,ispec))
+    yelm(6) = ystore(ibool(NGLLX,1,NGLLZ,ispec))
+    zelm(6) = zstore(ibool(NGLLX,1,NGLLZ,ispec))
 
-  xelm(8)=xstore(ibool(1,NGLLY,NGLLZ,ispec))
-  yelm(8)=ystore(ibool(1,NGLLY,NGLLZ,ispec))
-  zelm(8)=zstore(ibool(1,NGLLY,NGLLZ,ispec))
+    xelm(7) = xstore(ibool(NGLLX,NGLLY,NGLLZ,ispec))
+    yelm(7) = ystore(ibool(NGLLX,NGLLY,NGLLZ,ispec))
+    zelm(7) = zstore(ibool(NGLLX,NGLLY,NGLLZ,ispec))
 
-  end subroutine eval_shape3D_element_corners
+    xelm(8) = xstore(ibool(1,NGLLY,NGLLZ,ispec))
+    yelm(8) = ystore(ibool(1,NGLLY,NGLLZ,ispec))
+    zelm(8) = zstore(ibool(1,NGLLY,NGLLZ,ispec))
+
+  else if (NGNOD == 27) then
+    ! define topology of the control element
+    call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
+
+    ! define coordinates of the control points of the element
+    do ia = 1,NGNOD
+      iax = 0
+      iay = 0
+      iaz = 0
+      ! index i
+      if (iaddx(ia) == 0) then
+        iax = 1
+      else if (iaddx(ia) == 1) then
+        iax = (NGLLX+1)/2
+      else if (iaddx(ia) == 2) then
+        iax = NGLLX
+      else
+        call exit_MPI(myrank,'incorrect value of iaddx')
+      endif
+      ! index j
+      if (iaddy(ia) == 0) then
+        iay = 1
+      else if (iaddy(ia) == 1) then
+        iay = (NGLLY+1)/2
+      else if (iaddy(ia) == 2) then
+        iay = NGLLY
+      else
+        call exit_MPI(myrank,'incorrect value of iaddy')
+      endif
+      ! index k
+      if (iaddz(ia) == 0) then
+        iaz = 1
+      else if (iaddz(ia) == 1) then
+        iaz = (NGLLZ+1)/2
+      else if (iaddz(ia) == 2) then
+        iaz = NGLLZ
+      else
+        call exit_MPI(myrank,'incorrect value of iaddz')
+      endif
+
+      iglob = ibool(iax,iay,iaz,ispec)
+      xelm(ia) = xstore(iglob)
+      yelm(ia) = ystore(iglob)
+      zelm(ia) = zstore(iglob)
+    enddo
+  else
+    stop 'Invalid NGNOD in routine eval_shape3D_element_anchors()'
+  endif
+
+  end subroutine eval_shape3D_element_anchors
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -340,13 +395,13 @@
 
 !--- case of a 3D 27-node element
 
-  subroutine get_shape3D_27(NGNOD,shape3D,dershape3D,xi,eta,gamma,i,j,k)
+  subroutine get_shape3D_27(NGNOD,NGLLX,NGLLY,NGLLZ,shape3D,dershape3D,xi,eta,gamma,i,j,k)
 
-  use constants
+  use constants, only: ONE,HALF,TWO,NDIM
 
   implicit none
 
-  integer, intent(in) :: NGNOD,i,j,k
+  integer, intent(in) :: NGNOD,NGLLX,NGLLY,NGLLZ,i,j,k
 
 ! 3D shape functions and their derivatives
   double precision, intent(out) :: shape3D(NGNOD,NGLLX,NGLLY,NGLLZ)

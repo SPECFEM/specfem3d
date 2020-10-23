@@ -1,0 +1,686 @@
+ **********************************************
+ **** Specfem 3-D Solver - MPI version f90 ****
+ **********************************************
+
+ Running Git package version of the code: 3.0.0
+ which is Git undefined in the case of old tar ball builds
+ dating undefined in the case of old tar ball builds
+
+
+
+
+ There are            1  MPI processes
+ Processes are numbered from 0 to            0
+
+ There is a total of            1  slices
+
+  NDIM =            3
+
+  NGLLX =            5
+  NGLLY =            5
+  NGLLZ =            5
+
+ using single precision for the calculations
+ using force vectorization
+
+ smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
+
+ velocity model:   default
+
+ Reading mesh databases...
+ done
+
+ total acoustic elements    :        1000
+ total elastic elements     :           0
+ total poroelastic elements :           0
+
+ Mesh resolution:
+
+ ********
+ minimum and maximum number of elements
+ and points in the CUBIT + SCOTCH mesh:
+
+ NSPEC_global_min =         1000
+ NSPEC_global_max =         1000
+ NSPEC_global_max / NSPEC_global_min imbalance =    1.00000000      =    0.00000000      %
+ NSPEC_global_sum =         1000
+
+ NGLOB_global_min =        68921
+ NGLOB_global_max =        68921
+ NGLOB_global_max / NGLOB_global_min imbalance =    1.00000000      =    0.00000000      %
+ NGLOB_global_sum =        68921
+
+ If you have elements of a single type (all acoustic, all elastic, all poroelastic, and without CPML)
+ in the whole mesh, then there should be no significant imbalance in the above numbers.
+ Otherwise, it is normal to have imbalance in elements and points because the domain decomposer
+ compensates for the different cost of different elements by partitioning them unevenly among processes.
+ ********
+
+
+ ********
+ Model: P velocity min,max =    1480.00000       1480.00000
+ Model: S velocity min,max =    0.00000000       0.00000000
+
+ Model: Poisson's ratio min,max =   0.500000000      0.500000000
+ ********
+
+ *********************************************
+ *** Verification of simulation parameters ***
+ *********************************************
+
+ *** Xmin and Xmax of the model =    0.00000000       1000.00000
+ *** Ymin and Ymax of the model =    0.00000000       1000.00000
+ *** Zmin and Zmax of the model =   -1000.00000       199.991913
+
+ *** Max GLL point distance =    44.1888428
+ *** Min GLL point distance =    8.62260818
+ *** Max/min ratio =    5.12476540
+
+ *** Max element size =    134.999115
+ *** Min element size =    50.0000000
+ *** Max/min ratio =    2.69998240
+
+ *** Minimum period resolved =   0.114019521
+ *** Maximum suggested time step =    2.91304337E-03
+
+ *** for DT :    3.0000000000000001E-003
+ *** Max stability for wave velocities =   0.514925420
+
+ Elapsed time for checking mesh resolution in seconds =    1.0920000000000001E-003
+ saving VTK files for Courant number and minimum period
+
+
+ ******************************************
+ There is a total of            1  slices
+ ******************************************
+
+
+ kd-tree:
+   total data points:         1000
+   theoretical   number of nodes:         1994
+                tree memory size:    6.08520508E-02 MB
+   actual        number of nodes:         1999
+                tree memory size:    6.10046387E-02 MB
+   maximum depth   :           12
+   creation timing :    4.23997641E-04 (s)
+
+
+ sources:           1
+
+ ********************
+  locating sources
+ ********************
+
+ reading source information from ./DATA/CMTSOLUTION file
+
+ no UTM projection
+
+
+ source #            1
+   source located in slice            0
+                  in element          978
+                  in acoustic domain
+
+   using moment tensor source:
+     xi coordinate of source in that element:   0.98564173227074603
+     eta coordinate of source in that element:   0.98564173227074559
+     gamma coordinate of source in that element:   0.80986826938879042
+
+   source time function:
+     using Gaussian source time function
+     using trick for better pressure (second derivatives)
+     half duration:   0.14999999999999999       seconds
+     time shift:    0.0000000000000000       seconds
+
+   magnitude of the source:
+        scalar moment M0 =    1.2247448713915892E+019  dyne-cm
+     moment magnitude Mw =    2.0253639437534225
+
+   original (requested) position of the source:
+
+             latitude:    200.00000000000000
+            longitude:    200.00000000000000
+
+                x:    199.99999999999989
+                y:    199.99999999999997
+            depth:   0.69999999999999996       km
+   topo elevation:    36.706550598144531
+
+   position of the source that will be used:
+
+                x:    199.99999999999989
+                y:    199.99999999999997
+            depth:   0.70000000000000007       km
+                z:   -663.29344940185558
+
+   error in location of the source:    1.63270290E-13  m
+
+
+
+ maximum error in location of the sources:    1.63270290E-13  m
+
+
+ Elapsed time for detection of sources in seconds =    3.8000000000000186E-004
+
+ End of source detection - done
+
+
+ printing the source-time function
+
+ receivers:
+
+ there are           12  stations in file ./DATA/STATIONS
+ saving           12  stations inside the model in file ./DATA/STATIONS_FILTERED
+ excluding            0  stations located outside the model
+
+
+ Total number of receivers =           12
+
+
+ ********************
+  locating receivers
+ ********************
+
+ reading receiver information from ./DATA/STATIONS_FILTERED file
+
+
+ station #            1     DB    X1
+      original latitude:    200.000000
+      original longitude:    200.000000
+      original x:    200.000000
+      original y:    200.000000
+      original depth:    10.0000000      m
+      horizontal distance:    1.17185711E-16
+      target x, y, z:    200.000000       200.000000       26.7065506
+      closest estimate found:    7.10542736E-15  m away
+
+      receiver located in slice            0
+                       in element          971
+                       in acoustic domain
+      at coordinates:
+      xi    =   0.98564173227074603
+      eta   =   0.98564173227074547
+      gamma =   0.86057838797747110
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    200.00000000000000
+      y:    200.00000000000000
+      depth:    9.9999999999999929       m
+      z:    26.706550598144538
+
+
+
+ station #            2     DB    X2
+      original latitude:    200.000000
+      original longitude:    400.000000
+      original x:    400.000000
+      original y:    200.000000
+      original depth:    10.0000000      m
+      horizontal distance:   0.200000003
+      target x, y, z:    400.000000       200.000000       69.5291901
+      closest estimate found:    7.10542736E-14  m away
+
+      receiver located in slice            0
+                       in element          331
+                       in acoustic domain
+      at coordinates:
+      xi    =   0.99693270101626641
+      eta   =  -0.99693239816069301
+      gamma =   0.85169180433050529
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    400.00000000000000
+      y:    199.99999999999994
+      depth:    10.000000000000043       m
+      z:    69.529190063476520
+
+
+
+ station #            3     DB    X3
+      original latitude:    200.000000
+      original longitude:    600.000000
+      original x:    600.000000
+      original y:    200.000000
+      original depth:    10.0000000      m
+      horizontal distance:   0.400000006
+      target x, y, z:    600.000000       200.000000       66.4014740
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          581
+                       in acoustic domain
+      at coordinates:
+      xi    =   0.99985229932793596
+      eta   =   0.99985199401701264
+      gamma =   0.73517094073130773
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    600.00000000000000
+      y:    200.00000000000000
+      depth:    10.000000000000000       m
+      z:    66.401473999023438
+
+
+
+ station #            4     DB    X4
+      original latitude:    200.000000
+      original longitude:    800.000000
+      original x:    800.000000
+      original y:    200.000000
+      original depth:    10.0000000      m
+      horizontal distance:   0.600000024
+      target x, y, z:    800.000000       200.000000       20.1416302
+      closest estimate found:    1.13686838E-13  m away
+
+      receiver located in slice            0
+                       in element           11
+                       in acoustic domain
+      at coordinates:
+      xi    =    1.0000024413900335
+      eta   =    1.0000021362158458
+      gamma =   0.60583156830077523
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    799.99999999999989
+      y:    200.00000000000000
+      depth:    10.000000000000000       m
+      z:    20.141630172729492
+
+
+
+ station #            5     DB    X5
+      original latitude:    800.000000
+      original longitude:    200.000000
+      original x:    200.000000
+      original y:    800.000000
+      original depth:    10.0000000      m
+      horizontal distance:   0.600000024
+      target x, y, z:    200.000000       800.000000       20.1416245
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          591
+                       in acoustic domain
+      at coordinates:
+      xi    =  -0.99999938965681934
+      eta   =    1.0000012206964217
+      gamma =   0.60583151046596129
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    200.00000000000000
+      y:    800.00000000000000
+      depth:    10.000000000000000       m
+      z:    20.141624450683594
+
+
+
+ station #            6     DB    X6
+      original latitude:    800.000000
+      original longitude:    400.000000
+      original x:    400.000000
+      original y:    800.000000
+      original depth:    10.0000000      m
+      horizontal distance:   0.632455528
+      target x, y, z:    400.000000       800.000000       60.2518921
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          611
+                       in acoustic domain
+      at coordinates:
+      xi    =    1.0000012207020061
+      eta   =  -0.99999877929612857
+      gamma =   0.50603096798589264
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    400.00000000000000
+      y:    800.00000000000000
+      depth:    10.000000000000000       m
+      z:    60.251892089843750
+
+
+
+ station #            7     DB    X7
+      original latitude:    800.000000
+      original longitude:    600.000000
+      original x:    600.000000
+      original y:    800.000000
+      original depth:    10.0000000      m
+      horizontal distance:   0.721110284
+      target x, y, z:    600.000000       800.000000       66.4037476
+      closest estimate found:    1.42108547E-14  m away
+
+      receiver located in slice            0
+                       in element           61
+                       in acoustic domain
+      at coordinates:
+      xi    =  -0.99999999999999956
+      eta   =  -0.99999999999999800
+      gamma =   0.73525488717828869
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    600.00000000000000
+      y:    800.00000000000000
+      depth:    10.000000000000014       m
+      z:    66.403747558593736
+
+
+
+ station #            8     DB    X8
+      original latitude:    800.000000
+      original longitude:    800.000000
+      original x:    800.000000
+      original y:    800.000000
+      original depth:    10.0000000      m
+      horizontal distance:   0.848528147
+      target x, y, z:    800.000000       800.000000       27.1915131
+      closest estimate found:    1.60816713E-13  m away
+
+      receiver located in slice            0
+                       in element           71
+                       in acoustic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =    1.0000000000000000
+      gamma =   0.87953503166719538
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    799.99999999999989
+      y:    799.99999999999989
+      depth:    10.000000000000004       m
+      z:    27.191513061523434
+
+
+
+ station #            9     DB    X9
+      original latitude:    400.000000
+      original longitude:    200.000000
+      original x:    200.000000
+      original y:    400.000000
+      original depth:    10.0000000      m
+      horizontal distance:   0.200000003
+      target x, y, z:    200.000000       400.000000       69.5288391
+      closest estimate found:    8.16351449E-14  m away
+
+      receiver located in slice            0
+                       in element          651
+                       in acoustic domain
+      at coordinates:
+      xi    =   0.99689058277855791
+      eta   =   0.99689028042832739
+      gamma =   0.85167853106514613
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    200.00000000000006
+      y:    399.99999999999994
+      depth:    9.9999999999999858       m
+      z:    69.528839111328139
+
+
+
+ station #           10     DB    X10
+      original latitude:    600.000000
+      original longitude:    200.000000
+      original x:    200.000000
+      original y:    600.000000
+      original depth:    10.0000000      m
+      horizontal distance:   0.400000006
+      target x, y, z:    200.000000       600.000000       66.4013290
+      closest estimate found:    1.13686838E-13  m away
+
+      receiver located in slice            0
+                       in element          451
+                       in acoustic domain
+      at coordinates:
+      xi    =   0.99983521012165555
+      eta   =    1.0001644851046425
+      gamma =   0.73516599912154323
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    200.00000000000000
+      y:    600.00000000000011
+      depth:    10.000000000000000       m
+      z:    66.401329040527344
+
+
+
+ station #           11     DB    X11
+      original latitude:    400.000000
+      original longitude:    800.000000
+      original x:    800.000000
+      original y:    400.000000
+      original depth:    10.0000000      m
+      horizontal distance:   0.632455528
+      target x, y, z:    800.000000       400.000000       60.2518997
+      closest estimate found:    5.72857869E-14  m away
+
+      receiver located in slice            0
+                       in element           31
+                       in acoustic domain
+      at coordinates:
+      xi    =   -1.0000024413675099
+      eta   =   -1.0000018310150138
+      gamma =   0.50603177718813575
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    800.00000000000000
+      y:    399.99999999999994
+      depth:    10.000000000000007       m
+      z:    60.251899719238274
+
+
+
+ station #           12     DB    X12
+      original latitude:    600.000000
+      original longitude:    800.000000
+      original x:    800.000000
+      original y:    600.000000
+      original depth:    10.0000000      m
+      horizontal distance:   0.721110284
+      target x, y, z:    800.000000       600.000000       57.2237778
+      closest estimate found:    2.27484671E-13  m away
+
+      receiver located in slice            0
+                       in element          481
+                       in acoustic domain
+      at coordinates:
+      xi    =  -0.99999877929836245
+      eta   =    1.0000012207012663
+      gamma =   0.39320102071895996
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    800.00000000000023
+      y:    600.00000000000000
+      depth:    9.9999999999999929       m
+      z:    57.223777770996101
+
+
+ maximum error in location of all the receivers:    2.27484671E-13  m
+
+ Elapsed time for receiver detection in seconds =    3.8369999999999967E-003
+
+ End of receiver detection - done
+
+ source arrays:
+   number of sources is            1
+   size of source array                 =    1.43051147E-03 MB
+                                        =    1.39698386E-06 GB
+
+ seismograms:
+   seismograms written by all processes
+   writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS =         2000
+   maximum number of local receivers is           12  in slice            0
+   size of maximum seismogram array       =   0.274658203     MB
+                                          =    2.68220901E-04 GB
+
+
+ Total number of samples for seismograms =         2000
+
+ found a total of           12  receivers in all the slices
+
+
+ Simulation setup:
+
+ incorporating acoustic simulation
+   no elastic simulation
+   no poroelastic simulation
+
+   no attenuation
+   no anisotropy
+   no oceans
+   no gravity
+   no movie simulation
+
+
+ preparing mass matrices
+ preparing constants
+ preparing wavefields
+   no dynamic faults
+   no kinematic faults
+ preparing gravity
+   no gravity simulation
+
+ preparing Stacey absorbing boundaries
+ preparing optimized arrays
+   number of regular shaped elements  :            0
+   number of irregular shaped elements:         1000
+   fused array done
+   bandwidth test (STREAM TRIAD):
+      memory accesses =    2.36621475     MB
+      timing  min/max =    1.01999998E-04 s /    1.46999999E-04 s
+      timing      avg =    1.12200003E-04 s
+      bandwidth       =    20.5949783     GB/s
+      with force_vectorization:
+      timing  min/max =    1.10000001E-04 s /    1.74000001E-04 s
+      timing      avg =    1.20600002E-04 s
+      bandwidth       =    19.1605034     GB/s
+
+
+ Elapsed time for preparing timerun in seconds =    5.5280000000000051E-003
+
+ ************
+  time loop
+ ************
+               scheme:         Newmark
+
+            time step:    3.00000003E-03  s
+ number of time steps:         2000
+ total simulated time:    6.00000000      seconds
+ start time: -0.449999988      seconds
+
+ All processes are synchronized before the time loop
+
+ Starting time iteration loop...
+
+ Time step #            5
+ Time:  -0.437999994      seconds
+ Elapsed time in seconds =    1.1611999999999997E-002
+ Elapsed time in hh:mm:ss =      0 h 00 m 00 s
+ Mean elapsed time per time step in seconds =    2.32239999E-03
+ Max norm pressure P in all slices (Pa) =    134.281891
+ Time steps done =            5  out of         2000
+ Time steps remaining =         1995
+ Estimated remaining time in seconds =    4.63318777
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 04 s
+ Estimated total run time in seconds =    4.64480019
+ Estimated total run time in hh:mm:ss =      0 h 00 m 04 s
+ We have done   0.250000000     % of that
+ The run will finish approximately on (in local time): Wed Mar 25, 2020 10:29
+ ************************************************************
+ **** BEWARE: the above time estimates are not very reliable
+ **** because fewer than 100 iterations have been performed
+ ************************************************************
+
+ Time step #          500
+ Time:    1.04700005      seconds
+ Elapsed time in seconds =    1.4172100000000001
+ Elapsed time in hh:mm:ss =      0 h 00 m 01 s
+ Mean elapsed time per time step in seconds =    2.83441995E-03
+ Max norm pressure P in all slices (Pa) =    130314952.
+ Time steps done =          500  out of         2000
+ Time steps remaining =         1500
+ Estimated remaining time in seconds =    4.25162983
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 04 s
+ Estimated total run time in seconds =    5.66883993
+ Estimated total run time in hh:mm:ss =      0 h 00 m 05 s
+ We have done    25.0000000     % of that
+ The run will finish approximately on (in local time): Wed Mar 25, 2020 10:29
+
+ Time step #         1000
+ Time:    2.54699993      seconds
+ Elapsed time in seconds =    2.8081730000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 02 s
+ Mean elapsed time per time step in seconds =    2.80817295E-03
+ Max norm pressure P in all slices (Pa) =    2330759.75
+ Time steps done =         1000  out of         2000
+ Time steps remaining =         1000
+ Estimated remaining time in seconds =    2.80817294
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 02 s
+ Estimated total run time in seconds =    5.61634588
+ Estimated total run time in hh:mm:ss =      0 h 00 m 05 s
+ We have done    50.0000000     % of that
+ The run will finish approximately on (in local time): Wed Mar 25, 2020 10:29
+
+ Time step #         1500
+ Time:    4.04699993      seconds
+ Elapsed time in seconds =    4.2261629999999997
+ Elapsed time in hh:mm:ss =      0 h 00 m 04 s
+ Mean elapsed time per time step in seconds =    2.81744194E-03
+ Max norm pressure P in all slices (Pa) =    30157.7051
+ Time steps done =         1500  out of         2000
+ Time steps remaining =          500
+ Estimated remaining time in seconds =    1.40872097
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 01 s
+ Estimated total run time in seconds =    5.63488388
+ Estimated total run time in hh:mm:ss =      0 h 00 m 05 s
+ We have done    75.0000000     % of that
+ The run will finish approximately on (in local time): Wed Mar 25, 2020 10:29
+
+ Time step #         2000
+ Time:    5.54699993      seconds
+ Elapsed time in seconds =    5.6406479999999997
+ Elapsed time in hh:mm:ss =      0 h 00 m 05 s
+ Mean elapsed time per time step in seconds =    2.82032392E-03
+ Max norm pressure P in all slices (Pa) =    23624.1055
+ Time steps done =         2000  out of         2000
+ Time steps remaining =            0
+ Estimated remaining time in seconds =    0.00000000
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
+ Estimated total run time in seconds =    5.64064789
+ Estimated total run time in hh:mm:ss =      0 h 00 m 05 s
+ We have done    100.000000     % of that
+
+
+ Total number of time steps written:         2000
+ Writing the seismograms in parallel took    3.03840004E-02  seconds
+
+ Time loop finished. Timing info:
+ Total elapsed time in seconds =    5.6742909999999993
+ Total elapsed time in hh:mm:ss =      0 h 00 m 05 s
+
+ End of the simulation
+

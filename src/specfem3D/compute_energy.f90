@@ -168,9 +168,9 @@
               tempz3(i,j,k) = tempz3(i,j,k) + dummyz_loc(i,j,l)*hp3
             enddo
 
-            if (ispec_irreg /= 0 ) then ! irregular element
-
-              ! get derivatives of ux, uy and uz with respect to x, y and z
+            ! get derivatives of ux, uy and uz with respect to x, y and z
+            if (ispec_irreg /= 0) then
+              ! irregular element
               xixl = xix(i,j,k,ispec_irreg)
               xiyl = xiy(i,j,k,ispec_irreg)
               xizl = xiz(i,j,k,ispec_irreg)
@@ -193,9 +193,8 @@
               duzdxl = xixl*tempz1(i,j,k) + etaxl*tempz2(i,j,k) + gammaxl*tempz3(i,j,k)
               duzdyl = xiyl*tempz1(i,j,k) + etayl*tempz2(i,j,k) + gammayl*tempz3(i,j,k)
               duzdzl = xizl*tempz1(i,j,k) + etazl*tempz2(i,j,k) + gammazl*tempz3(i,j,k)
-
-            else ! regular element
-
+            else
+              ! regular element
               jacobianl = jacobian_regular
 
               duxdxl = xix_regular*tempx1(i,j,k)
@@ -209,7 +208,6 @@
               duzdxl = xix_regular*tempz1(i,j,k)
               duzdyl = xix_regular*tempz2(i,j,k)
               duzdzl = xix_regular*tempz3(i,j,k)
-
             endif
 
             ! precompute some sums to save CPU time
@@ -368,9 +366,9 @@
               tempx3(i,j,k) = tempx3(i,j,k) + dummyx_loc(i,j,l)*hp3
             enddo
 
-            if (ispec_irreg /= 0 ) then ! irregular element
-
-              ! get derivatives of ux, uy and uz with respect to x, y and z
+            ! get derivatives of ux, uy and uz with respect to x, y and z
+            if (ispec_irreg /= 0) then
+              ! irregular element
               xixl = xix(i,j,k,ispec_irreg)
               xiyl = xiy(i,j,k,ispec_irreg)
               xizl = xiz(i,j,k,ispec_irreg)
@@ -393,9 +391,8 @@
               duzdxl = xixl*tempz1(i,j,k) + etaxl*tempz2(i,j,k) + gammaxl*tempz3(i,j,k)
               duzdyl = xiyl*tempz1(i,j,k) + etayl*tempz2(i,j,k) + gammayl*tempz3(i,j,k)
               duzdzl = xizl*tempz1(i,j,k) + etazl*tempz2(i,j,k) + gammazl*tempz3(i,j,k)
-
-            else ! regular element
-
+            else
+              ! regular element
               jacobianl = jacobian_regular
 
               duxdxl = xix_regular*tempx1(i,j,k)
@@ -409,7 +406,6 @@
               duzdxl = xix_regular*tempz1(i,j,k)
               duzdyl = xix_regular*tempz2(i,j,k)
               duzdzl = xix_regular*tempz3(i,j,k)
-
             endif
 
             rhol = rhostore(i,j,k,ispec)
@@ -455,7 +451,7 @@
   call sum_all_dp(potential_energy,potential_energy_glob)
   total_energy_glob = kinetic_energy_glob + potential_energy_glob
 
-! write the total to disk from the master
+! write the total to disk from the main
   if (myrank == 0) write(IOUT_ENERGY,*) it,sngl(kinetic_energy_glob),sngl(potential_energy_glob),sngl(total_energy_glob)
 
   end subroutine compute_energy_generic_slow
@@ -576,9 +572,9 @@
 
             iglob = ibool(i,j,k,ispec)
 
-            if (ispec_irreg /= 0 ) then ! irregular element
-
-              ! get derivatives of ux, uy and uz with respect to x, y and z
+            ! get derivatives of ux, uy and uz with respect to x, y and z
+            if (ispec_irreg /= 0) then
+              ! irregular element
               xixl = xix(i,j,k,ispec_irreg)
               xiyl = xiy(i,j,k,ispec_irreg)
               xizl = xiz(i,j,k,ispec_irreg)
@@ -601,9 +597,8 @@
               duzdxl = xixl*tempz1(i,j,k) + etaxl*tempz2(i,j,k) + gammaxl*tempz3(i,j,k)
               duzdyl = xiyl*tempz1(i,j,k) + etayl*tempz2(i,j,k) + gammayl*tempz3(i,j,k)
               duzdzl = xizl*tempz1(i,j,k) + etazl*tempz2(i,j,k) + gammazl*tempz3(i,j,k)
-
-            else ! regular element
-
+            else
+              ! regular element
               jacobianl = jacobian_regular
 
               duxdxl = xix_regular*tempx1(i,j,k)
@@ -617,7 +612,6 @@
               duzdxl = xix_regular*tempz1(i,j,k)
               duzdyl = xix_regular*tempz2(i,j,k)
               duzdzl = xix_regular*tempz3(i,j,k)
-
             endif
 
             ! precompute some sums to save CPU time
@@ -778,9 +772,9 @@
 
             iglob = ibool(i,j,k,ispec)
 
-            if (ispec_irreg /= 0 ) then ! irregular element
-
-              ! get derivatives of ux, uy and uz with respect to x, y and z
+            ! get derivatives of ux, uy and uz with respect to x, y and z
+            if (ispec_irreg /= 0) then
+              ! irregular element
               xixl = xix(i,j,k,ispec_irreg)
               xiyl = xiy(i,j,k,ispec_irreg)
               xizl = xiz(i,j,k,ispec_irreg)
@@ -803,9 +797,8 @@
               duzdxl = xixl*tempz1(i,j,k) + etaxl*tempz2(i,j,k) + gammaxl*tempz3(i,j,k)
               duzdyl = xiyl*tempz1(i,j,k) + etayl*tempz2(i,j,k) + gammayl*tempz3(i,j,k)
               duzdzl = xizl*tempz1(i,j,k) + etazl*tempz2(i,j,k) + gammazl*tempz3(i,j,k)
-
-            else ! regular element
-
+            else
+              ! regular element
               jacobianl = jacobian_regular
 
               duxdxl = xix_regular*tempx1(i,j,k)
@@ -819,7 +812,6 @@
               duzdxl = xix_regular*tempz1(i,j,k)
               duzdyl = xix_regular*tempz2(i,j,k)
               duzdzl = xix_regular*tempz3(i,j,k)
-
             endif
 
             rhol = rhostore(i,j,k,ispec)
@@ -865,7 +857,7 @@
   call sum_all_dp(potential_energy,potential_energy_glob)
   total_energy_glob = kinetic_energy_glob + potential_energy_glob
 
-! write the total to disk from the master
+! write the total to disk from the main
   if (myrank == 0) write(IOUT_ENERGY,*) it,sngl(kinetic_energy_glob),sngl(potential_energy_glob),sngl(total_energy_glob)
 
   contains

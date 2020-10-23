@@ -1,0 +1,91 @@
+PDE  1999 01 01 00 00 00.00  2500 2500 -1000 4.2 4.2 a1
+event name:      7_133_2528
+time shift:       0.0000
+half duration:    5.0
+latorUTM:       8696.0
+longorUTM:      8443.0
+depth:          0.0
+Mrr:       1.0e7
+Mtt:       1.0e7
+Mpp:       1.0e7
+Mrt:       0.0
+Mrp:       0.0
+Mtp:       0.0
+PDE  1999 01 01 00 00 00.00  2500 2500 -1000 4.2 4.2 a1
+event name:      7_133_2528
+time shift:       0.0000
+half duration:    5.0
+latorUTM:       8696.0
+longorUTM:      8443.0
+depth:          1.0
+Mrr:       1.0e7
+Mtt:       1.0e7
+Mpp:       1.0e7
+Mrt:       0.0
+Mrp:       0.0
+Mtp:       0.0
+PDE  1999 01 01 00 00 00.00  2500 2500 -1000 4.2 4.2 a1
+event name:      7_133_2528
+time shift:       0.0000
+half duration:    5.0
+latorUTM:       8696.0
+longorUTM:      8443.0
+depth:          2.0
+Mrr:       1.0e7
+Mtt:       1.0e7
+Mpp:       1.0e7
+Mrt:       0.0
+Mrp:       0.0
+Mtp:       0.0
+PDE  1999 01 01 00 00 00.00  2500 2500 -1000 4.2 4.2 a1
+event name:      7_133_2528
+time shift:       0.0000
+half duration:    5.0
+latorUTM:       8696.0
+longorUTM:      8443.0
+depth:          3.0
+Mrr:       1.0e7
+Mtt:       1.0e7
+Mpp:       1.0e7
+Mrt:       0.0
+Mrp:       0.0
+Mtp:       0.0
+PDE  1999 01 01 00 00 00.00  2500 2500 -1000 4.2 4.2 a1
+event name:      7_133_2528
+time shift:       0.0000
+half duration:    5.0
+latorUTM:       8696.0
+longorUTM:      8443.0
+depth:          4.0
+Mrr:       1.0e7
+Mtt:       1.0e7
+Mpp:       1.0e7
+Mrt:       0.0
+Mrp:       0.0
+Mtp:       0.0
+PDE  1999 01 01 00 00 00.00  2500 2500 -1000 4.2 4.2 a1
+event name:      7_133_2528
+time shift:       0.0000
+half duration:    5.0
+latorUTM:       8696.0
+longorUTM:      8443.0
+depth:          5.0
+Mrr:       1.0e7
+Mtt:       1.0e7
+Mpp:       1.0e7
+Mrt:       0.0
+Mrp:       0.0
+Mtp:       0.0
+PDE  1999 01 01 00 00 00.00  2500 2500 -1000 4.2 4.2 a1
+event name:      7_133_2528
+time shift:       0.0000
+half duration:    5.0
+latorUTM:       8696.0
+longorUTM:      8443.0
+depth:          5.8
+Mrr:       1.0e7
+Mtt:       1.0e7
+Mpp:       1.0e7
+Mrt:       0.0
+Mrp:       0.0
+Mtp:       0.0

@@ -186,7 +186,7 @@ $O/adios_helpers.shared_adios.o: \
 #### rule to build each .o file below
 ####
 
-$O/%.mesh_module.o: $S/%.f90 $O/shared_par.shared_module.o
+$O/%.mesh_module.o: $S/%.f90 $O/shared_par.shared_module.o $S/constants_meshfem3D.h
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.mesh.o: $S/%.f90 $O/shared_par.shared_module.o $O/meshfem3D_par.mesh_module.o

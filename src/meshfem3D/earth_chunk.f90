@@ -65,33 +65,33 @@
 !--- Other
 !
 
-  integer NGNOD
+  integer :: NGNOD
 
-  integer  nel_lat, nel_lon, nel_depth, NX, NY, NZ, Ndepth, nglob, kglob, ilocnum, ieoff, npointot
-  integer ilat, ilon, ispec, iz, i, j, k, nspec, ia, izshift, index_mat
-  integer ispec2Dxmin, ispec2Dxmax, ispec2Dymin, ispec2Dymax, ispec2Dzmin, ispec2Dzmax
-  integer ilayer_current, ilayer
-  integer nlat_dsm, nlon_dsm, ier
+  integer :: nel_lat, nel_lon, nel_depth, NX, NY, NZ, Ndepth, nglob, kglob, ilocnum, ieoff, npointot
+  integer :: ilat, ilon, ispec, iz, i, j, k, nspec, ia, izshift, index_mat
+  integer :: ispec2Dxmin, ispec2Dxmax, ispec2Dymin, ispec2Dymax, ispec2Dzmin, ispec2Dzmax
+  integer :: ilayer_current, ilayer
+  integer :: nlat_dsm, nlon_dsm, ier
 
   integer iaddx(NGNOD), iaddy(NGNOD), iaddz(NGNOD)
 
   integer, allocatable :: inum_loc(:,:,:,:), iglob(:), loc(:), current_layer(:)
 
-  double precision ratio_eta, ratio_xi
-  double precision ANGULAR_WIDTH_ETA_RAD, ANGULAR_WIDTH_XI_RAD, Z_DEPTH_BLOCK, UTM_X_MIN, UTM_X_MAX
-  double precision lat_center_chunk, lon_center_chunk, chunk_depth, chunk_azi
-  double precision deg2rad
-  double precision x, y, z, px, py, pz, z_bottom
+  double precision :: ratio_eta, ratio_xi
+  double precision :: ANGULAR_WIDTH_ETA_RAD, ANGULAR_WIDTH_XI_RAD, Z_DEPTH_BLOCK, UTM_X_MIN, UTM_X_MAX
+  double precision :: lat_center_chunk, lon_center_chunk, chunk_depth, chunk_azi
+  double precision :: deg2rad
+  double precision :: x, y, z, px, py, pz, z_bottom
 
-  double precision rotation_matrix(3,3)
-  double precision zlayer(nlayer), vpv(nlayer,4), vsv(nlayer,4), density(nlayer,4)
-  double precision xelm(NGNOD), yelm(NGNOD), zelm(NGNOD)
-  double precision xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ)
+  double precision :: rotation_matrix(3,3)
+  double precision :: zlayer(nlayer), vpv(nlayer,4), vsv(nlayer,4), density(nlayer,4)
+  double precision :: xelm(NGNOD), yelm(NGNOD), zelm(NGNOD)
+  double precision :: xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ)
 
   !! 3D shape functions and their derivatives
-  double precision shape3D(NGNOD,NGLLX,NGLLY,NGLLZ), dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision :: shape3D(NGNOD,NGLLX,NGLLY,NGLLZ), dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
   !! GLL points and weights of integration
-  double precision xigll(NGLLX), yigll(NGLLY), zigll(NGLLZ), wxgll(NGLLX), wygll(NGLLY), wzgll(NGLLZ)
+  double precision :: xigll(NGLLX), yigll(NGLLY), zigll(NGLLZ), wxgll(NGLLX), wygll(NGLLY), wzgll(NGLLZ)
 
   double precision, allocatable :: xp(:), yp(:), zp(:), xgrid(:,:,:,:), ygrid(:,:,:,:), zgrid(:,:,:,:)
   double precision, allocatable :: lon_zmin(:,:), lat_zmin(:,:)
@@ -100,17 +100,17 @@
 
   !! For new outputs (list of ggl on boundary, spherical or Cartesian)
   !! AND for coupling with AxiSEM
-  integer ::  istore_for_new_outputs
-  integer ::   updown(NGLLZ)
+  integer :: istore_for_new_outputs
+  integer :: updown(NGLLZ)
   double precision , dimension(NGLLX,NGLLY,NGLLZ) ::  longitud, latitud, radius
 
-  logical test
+  logical :: test
 
   logical, allocatable :: ifseg(:)
   logical, dimension(:,:), allocatable :: iboun ! boundary locator
 
-  character(len=100) line
-  character(len=250) model1D_file
+  character(len=100) :: line
+  character(len=250) :: model1D_file
 
   character(len=10), parameter :: MESH = "./MESH/"
 
@@ -266,7 +266,7 @@
 !
 !--- get the 3-D shape functions
 !
-  call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
+  call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ)
 
 !
 !--- rotation matrix to switch to the geographical coordinates
@@ -1069,7 +1069,7 @@
 !
 !--- get the 3-D shape functions
 !
-  call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
+  call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ)
 
 !
 !--- rotation matrix to switch to the geographical coordinates
@@ -1767,11 +1767,11 @@
 
   implicit none
 
-  integer NGLLX,NGLLY,NGLLZ,nel_depth,iz,Ndepth
-  double precision xstore(NGLLX,NGLLY,NGLLZ),ystore(NGLLX,NGLLY,NGLLZ),zstore(NGLLX,NGLLY,NGLLZ)
-  double precision profondeur
-  integer current_layer(0:nel_depth-1),ilayer,k
-  integer updown(NGLLZ) !! will be also used for VM coupling with AxiSEM
+  integer :: NGLLX,NGLLY,NGLLZ,nel_depth,iz,Ndepth
+  double precision :: xstore(NGLLX,NGLLY,NGLLZ),ystore(NGLLX,NGLLY,NGLLZ),zstore(NGLLX,NGLLY,NGLLZ)
+  double precision :: profondeur
+  integer :: current_layer(0:nel_depth-1),ilayer,k
+  integer :: updown(NGLLZ) !! will be also used for VM coupling with AxiSEM
 
   updown(:) = 0
   if (ilayer == current_layer(iz)) then
@@ -2735,13 +2735,25 @@
   subroutine CalGridProf(ProfForGemini,Niveau_elm,zlayer,nlayer,NEX_GAMMA,Z_DEPTH_BLOCK)
 
   implicit none
-  integer :: NEX_GAMMA,nlayer,nbbloc(100000),Niveau_elm(0:NEX_GAMMA-1)
-  double precision :: ProfForGemini(0:NEX_GAMMA-1,3),zlayer(nlayer)
-  double precision :: Z_DEPTH_BLOCK,zpoint(100000),zz(100000)
+  integer :: NEX_GAMMA,nlayer
+  integer :: Niveau_elm(0:NEX_GAMMA-1)
+  double precision :: ProfForGemini(0:NEX_GAMMA-1,3)
+  double precision :: zlayer(nlayer)
+  double precision :: Z_DEPTH_BLOCK
+
+  ! local parameters
+  integer,dimension(:),allocatable :: nbbloc
+  double precision,dimension(:),allocatable :: zpoint,zz
   double precision :: epsillon
-  integer :: nb, n, i,j,k,ilayer,ilay,nd,niveau
+  integer :: nb,n,i,j,k,ilayer,ilay,nd,niveau,ier
   double precision :: p, pas, longeur
   logical :: test
+
+  ! allocate
+  allocate(nbbloc(100000), &
+           zpoint(100000), &
+           zz(100000),stat=ier)
+  if (ier /= 0) stop 'Error allocating nbbloc arrays'
 
   epsillon = 1d-3
   nbbloc(:) = 0
@@ -2836,6 +2848,9 @@
     Niveau_elm(ilay-1)=niveau
     write(*,'(i5,2f15.3,i10)') ilay,zz(ilay),zz(ilay+1),niveau
   enddo
+
+  ! free memory
+  deallocate(nbbloc,zpoint,zz)
 
   end subroutine CalGridProf
 

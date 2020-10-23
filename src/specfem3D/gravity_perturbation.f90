@@ -52,7 +52,7 @@ contains
 
 !=====================================================================
 
-subroutine gravity_init()
+  subroutine gravity_init()
 
   use specfem_par, only: NGLOB_AB, NSTEP, NSPEC_AB, mustore, &
        xstore, ystore, zstore, &
@@ -184,13 +184,13 @@ subroutine gravity_init()
 
   enddo
 
-end subroutine gravity_init
+  end subroutine gravity_init
 
 !=====================================================================
 
 ! recompute 3D jacobian at a given point for a 8-node element : modified from recompute_jacobian
 
-subroutine recompute_jacobian_gravity(xelm,yelm,zelm,xi,eta,gamma,jacobian)
+  subroutine recompute_jacobian_gravity(xelm,yelm,zelm,xi,eta,gamma,jacobian)
 
   use constants
   use specfem_par, only: NGNOD
@@ -310,11 +310,11 @@ subroutine recompute_jacobian_gravity(xelm,yelm,zelm,xi,eta,gamma,jacobian)
   if (jacobian <= ZERO) stop '3D Jacobian undefined'
 
 
-end subroutine recompute_jacobian_gravity
+  end subroutine recompute_jacobian_gravity
 
 !=====================================================================
 
-subroutine gravity_timeseries()
+  subroutine gravity_timeseries()
 
   use specfem_par, only: xstore, ystore, zstore, it, NGLOB_AB
   use specfem_par_elastic, only: displ
@@ -355,11 +355,11 @@ subroutine gravity_timeseries()
     enddo
   endif
 
-end subroutine gravity_timeseries
+  end subroutine gravity_timeseries
 
 !=====================================================================
 
-subroutine gravity_output()
+  subroutine gravity_output()
 
   use specfem_par, only: myrank,NPROC,NSTEP,DT,OUTPUT_FILES
 
@@ -392,7 +392,7 @@ subroutine gravity_output()
     enddo
   endif
 
-end subroutine gravity_output
+  end subroutine gravity_output
 
 !=====================================================================
 

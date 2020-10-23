@@ -1,3 +1,30 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                              CNRS, France
+!                       and Princeton University, USA
+!                 (there are currently many more authors!)
+!                           (c) October 2017
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 3 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 module Teleseismic_IO_mod
 
   ! from specfem
@@ -46,7 +73,7 @@ contains
     endif
 
     NEVENT=0
-    ! only master reads acqui file
+    ! only main reads acqui file
     if (myrank == 0) then
        !! 1/ read to count the number of events
        open(666,file=trim(acqui_file),iostat=ier)
@@ -243,7 +270,7 @@ contains
     endif
 
 
-    ! master broadcasts read values
+    ! main broadcasts read values
     call mpi_bcast(nevent, 1, mpi_integer, 0, my_local_mpi_comm_world, ier)
     if (myrank > 0) then
       allocate(acqui_simu(NEVENT),stat=ier)
@@ -483,11 +510,11 @@ contains
        acqui_simu(ievent)%islice_selected_rec(:)=-1
 
        !! SB SB si je comprends bien ce sont des matrices de rotations ?
-       allocate(acqui_simu(ievent)%nu(NDIM,NDIM,nsta),stat=ier)
+       allocate(acqui_simu(ievent)%nu_rec(NDIM,NDIM,nsta),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 362')
-       acqui_simu(ievent)%nu(:,:,:)=0.
+       acqui_simu(ievent)%nu_rec(:,:,:)=0.
        do idim = 1, NDIM
-          acqui_simu(ievent)%nu(idim,idim,:)=1.
+          acqui_simu(ievent)%nu_rec(idim,idim,:)=1.
        enddo
 
        nsta_slice=0

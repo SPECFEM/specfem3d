@@ -1,0 +1,6 @@
+# poroelastic properties 
+# for each layer defined with domain_id 3 in nummaterial_velocity_file 
+# format:
+#rho_s   #rho_f   #phi  #tort  #kxx   #kxy   #kxz   #kyy   #kyz   #kzz   #kappa_s   #kappa_f  #kappa_fr  #eta    #mu_fr
+2500.d0 1020.d0   0.4   2.0    1d-11  0.0    0.0    1d-11  0.0    1d-11  16.0554d9  2.295d9   10.0d9     0.0     9.63342d9
+2500.d0 1020.d0   0.1   2.0    1d-11  0.0    0.0    1d-11  0.0    1d-11  16.0554d9  2.295d9   10.0d9     0.0     9.63342d9

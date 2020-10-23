@@ -6,34 +6,34 @@ CXX=g++
 
 ## modify to match your library paths
 # VTK libraries
-VTK=/opt/seismo-util
-LIBS=-L$(VTK)/lib/vtk -lvtkCommon -lvtkIO -lvtkRendering -lvtkFiltering -lvtkGraphics
+VTK := /usr
 
-INCLUDES=-I$(VTK)/include -I$(VTK)/include/vtk
-CPPFLAGS= -O3 $(INCLUDES) -Wno-deprecated
+EXISTS := $(shell cmake --find-package -DNAME:STRING=VTK -DCOMPILER_ID:STRING=$(CXX) -DLANGUAGE:STRING=CXX -DMODE:STRING=EXIST &> /dev/null ; echo $$?)
+ifeq ($(EXISTS),0)
+VTK_CPPFLAGS := $(shell cmake --find-package -DNAME:STRING=VTK -DCOMPILER_ID:STRING=$(CXX) -DLANGUAGE:STRING=CXX -DMODE:STRING=COMPILE)
+VTK_LDFLAGS := $(shell cmake --find-package -DNAME:STRING=VTK -DCOMPILER_ID:STRING=$(CXX) -DLANGUAGE:STRING=CXX -DMODE:STRING=LINK)
+else
+$(warning CMake not found or could not find VTK development headers. Using $$(VTK)=$(VTK) instead.)
+VTK_CPPFLAGS := -I$(VTK)/include -I$(VTK)/include/vtk
+VTK_LDFLAGS := -L$(VTK)/lib64/vtk -L$(VTK)/lib/vtk -lvtkCommon -lvtkIO -lvtkFiltering -lvtkGraphics
+endif
+
+CPPFLAGS = -O3 $(VTK_CPPFLAGS) -Wall -Wno-deprecated
+LIBS = $(VTK_LDFLAGS)
 
 #############################################################
 
+TARGETS = mesh2vtu cell2vtu surf2vtu ugrid ugrid_pts
 
-all: mesh2vtu ugrid ugrid_pts
+all: $(TARGETS)
 
-mesh2vtu: mesh2vtu.o
-	$(CXX) $(CPPFLAGS) -o mesh2vtu mesh2vtu.o $(LIBS)
+%: %.o
+	$(CXX) $(CPPFLAGS) -o $@ $< $(LIBS)
 
-mesh2vtu.o: mesh2vtu.cxx
-	$(CXX) $(CPPFLAGS) -c mesh2vtu.cxx -o mesh2vtu.o
-
-ugrid: ugrid.o
-	$(CXX) $(CPPFLAGS) -o ugrid ugrid.o $(LIBS)
-
-ugrid.o: ugrid.cxx
-	$(CXX) $(CPPFLAGS) -c ugrid.cxx -o ugrid.o
-
-ugrid_pts: ugrid_pts.o
-	$(CXX) $(CPPFLAGS) -o ugrid_pts ugrid_pts.o $(LIBS)
-
-ugrid_pts.o: ugrid_pts.cxx
-	$(CXX) $(CPPFLAGS) -c ugrid_pts.cxx -o ugrid_pts.o
+%.o: %.cxx
+	$(CXX) $(CPPFLAGS) -c $< -o $@
 
 clean:
-	rm -f mesh2vtu ugrid ugrid_pts *.o *~ core
+	-rm -f $(TARGETS) $(addsuffix .o, $(TARGETS))
+.PHONY: clean
+

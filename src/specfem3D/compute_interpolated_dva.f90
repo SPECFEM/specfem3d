@@ -25,10 +25,10 @@
 !
 !=====================================================================
 
-subroutine compute_interpolated_dva_viscoelast(displ,veloc,accel,NGLOB_AB, &
-                                    ispec,NSPEC_AB,ibool, &
-                                    hxir,hetar,hgammar, &
-                                    dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+  subroutine compute_interpolated_dva_viscoelast(displ,veloc,accel,NGLOB_AB, &
+                                                 ispec,NSPEC_AB,ibool, &
+                                                 hxir,hetar,hgammar, &
+                                                 dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
 
 ! returns displacement/velocity/acceleration (dxd,..,vxd,..,axd,.. ) at receiver location
 
@@ -73,33 +73,34 @@ subroutine compute_interpolated_dva_viscoelast(displ,veloc,accel,NGLOB_AB, &
         hlagrange = hxir(i) * hetar(j) * hgammar(k)
 
         ! displacement
-        dxd = dxd + dble(displ(1,iglob))*hlagrange
-        dyd = dyd + dble(displ(2,iglob))*hlagrange
-        dzd = dzd + dble(displ(3,iglob))*hlagrange
+        dxd = dxd + dble(displ(1,iglob)) * hlagrange
+        dyd = dyd + dble(displ(2,iglob)) * hlagrange
+        dzd = dzd + dble(displ(3,iglob)) * hlagrange
         ! velocity
-        vxd = vxd + dble(veloc(1,iglob))*hlagrange
-        vyd = vyd + dble(veloc(2,iglob))*hlagrange
-        vzd = vzd + dble(veloc(3,iglob))*hlagrange
+        vxd = vxd + dble(veloc(1,iglob)) * hlagrange
+        vyd = vyd + dble(veloc(2,iglob)) * hlagrange
+        vzd = vzd + dble(veloc(3,iglob)) * hlagrange
         ! acceleration
-        axd = axd + dble(accel(1,iglob))*hlagrange
-        ayd = ayd + dble(accel(2,iglob))*hlagrange
-        azd = azd + dble(accel(3,iglob))*hlagrange
+        axd = axd + dble(accel(1,iglob)) * hlagrange
+        ayd = ayd + dble(accel(2,iglob)) * hlagrange
+        azd = azd + dble(accel(3,iglob)) * hlagrange
 
       enddo
     enddo
   enddo
 
-end subroutine compute_interpolated_dva_viscoelast
+  end subroutine compute_interpolated_dva_viscoelast
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
-                        potential_dot_dot_acoustic,potential_acoustic,NGLOB_AB, &
-                        ispec,NSPEC_AB,ibool, &
-                        hxir,hetar,hgammar, &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd,USE_TRICK_FOR_BETTER_PRESSURE)
+  subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
+                                             potential_dot_dot_acoustic,potential_acoustic,NGLOB_AB, &
+                                             ispec,NSPEC_AB,ibool, &
+                                             hxir,hetar,hgammar, &
+                                             dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd, &
+                                             USE_TRICK_FOR_BETTER_PRESSURE)
 
 ! for acoustic elements
 ! returns displacement/velocity/acceleration/pressure (dxd,..,vxd,..,axd,..,pd) at receiver location
@@ -152,19 +153,19 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
         hlagrange = hxir(i) * hetar(j) * hgammar(k)
 
         ! displacement
-        dxd = dxd + hlagrange*displ_element(1,i,j,k)
-        dyd = dyd + hlagrange*displ_element(2,i,j,k)
-        dzd = dzd + hlagrange*displ_element(3,i,j,k)
+        dxd = dxd + hlagrange * displ_element(1,i,j,k)
+        dyd = dyd + hlagrange * displ_element(2,i,j,k)
+        dzd = dzd + hlagrange * displ_element(3,i,j,k)
 
         ! velocity
-        vxd = vxd + hlagrange*veloc_element(1,i,j,k)
-        vyd = vyd + hlagrange*veloc_element(2,i,j,k)
-        vzd = vzd + hlagrange*veloc_element(3,i,j,k)
+        vxd = vxd + hlagrange * veloc_element(1,i,j,k)
+        vyd = vyd + hlagrange * veloc_element(2,i,j,k)
+        vzd = vzd + hlagrange * veloc_element(3,i,j,k)
 
         ! acceleration
-        axd = axd + hlagrange*accel_element(1,i,j,k)
-        ayd = ayd + hlagrange*accel_element(2,i,j,k)
-        azd = azd + hlagrange*accel_element(3,i,j,k)
+        axd = axd + hlagrange * accel_element(1,i,j,k)
+        ayd = ayd + hlagrange * accel_element(2,i,j,k)
+        azd = azd + hlagrange * accel_element(3,i,j,k)
 
         ! global index
         iglob = ibool(i,j,k,ispec)
@@ -178,7 +179,7 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
           ! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
           ! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
           ! is accurate at second order and thus contains significantly less numerical noise.
-          pd = pd - hlagrange*potential_acoustic(iglob)
+          pd = pd - hlagrange * potential_acoustic(iglob)
           ! that trick is not implemented for the calculation of displacement, velocity nor acceleration seismograms
           ! in acoustic elements yet; to do so we would need to recompute them using the second integral in time of the
           ! current formulas in that case. Same remark for recording stations located in solid (elastic/viscoelastic) elements
@@ -194,12 +195,12 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
           ayd = ZERO
           azd = ZERO
         else
-          pd = pd - hlagrange*potential_dot_dot_acoustic(iglob)
+          pd = pd - hlagrange * potential_dot_dot_acoustic(iglob)
         endif
 
       enddo
     enddo
   enddo
 
-end subroutine compute_interpolated_dva_acoust
+  end subroutine compute_interpolated_dva_acoust
 

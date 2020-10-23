@@ -1,5 +1,10 @@
+#-----------------------------------------------------------
+#
+# Meshing input parameters
+#
+#-----------------------------------------------------------
 
-#rdinates of mesh block in latitude/longitude and depth in km
+# coordinates of mesh block in latitude/longitude and depth in km
 LATITUDE_MIN                    = -1500.0d0
 LATITUDE_MAX                    = 1500.d0
 LONGITUDE_MIN                   = -1500.0d0
@@ -10,7 +15,10 @@ SUPPRESS_UTM_PROJECTION         = .true.
 
 # file that contains the interfaces of the model / mesh
 INTERFACES_FILE                 = interfaces.dat
-CAVITY_FILE      = no_cavity.dat
+
+# file that contains the cavity
+CAVITY_FILE                     = no_cavity.dat
+
 # number of elements at the surface along edges of the mesh at the surface
 # (must be 8 * multiple of NPROC below if mesh is not regular and contains mesh doublings)
 # (must be multiple of NPROC below if mesh is regular)
@@ -21,6 +29,12 @@ NEX_ETA                         = 80
 NPROC_XI                        = 4
 NPROC_ETA                       = 4
 
+#-----------------------------------------------------------
+#
+# Doubling layers
+#
+#-----------------------------------------------------------
+
 # Regular/irregular mesh
 USE_REGULAR_MESH                = .true.
 # Only for irregular meshes, number of doubling layers and their position
@@ -30,19 +44,36 @@ NDOUBLINGS                      = 1
 NZ_DOUBLING_1                   = 110
 NZ_DOUBLING_2                   = 0
 
+#-----------------------------------------------------------
+#
+# Visualization
+#
+#-----------------------------------------------------------
+
 # create mesh files for visualisation or further checking
 CREATE_ABAQUS_FILES             = .false.
 CREATE_DX_FILES                 = .false.
 CREATE_VTK_FILES                = .false.
 
+# path to store the databases files
 LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
+
+#-----------------------------------------------------------
+#
+# CPML
+#
+#-----------------------------------------------------------
 
 # CPML perfectly matched absorbing layers
 THICKNESS_OF_X_PML              = 0.001d0
 THICKNESS_OF_Y_PML              = 0.001d0
 THICKNESS_OF_Z_PML              = 0.001d0
 
-# path to store the databases files
+#-----------------------------------------------------------
+#
+# Domain materials
+#
+#-----------------------------------------------------------
 
 # number of materials
 NMATERIALS                      = 1
@@ -54,8 +85,15 @@ NMATERIALS                      = 1
 #     domain_id        : 1 = acoustic / 2 = elastic
 1  2000  3297.849  2222.536  10.  20.  0  2
 
+#-----------------------------------------------------------
+#
+# Domain regions
+#
+#-----------------------------------------------------------
+
 # number of regions
 NREGIONS                        = 1
 # define the different regions of the model as :
 #NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
 1             80      1               80       1         80    1
+

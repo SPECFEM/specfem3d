@@ -132,6 +132,7 @@
          status='old',action='read',form='unformatted',iostat=ier)
     read(27) NSPEC_AB
     read(27) NGLOB_AB
+    read(27) NSPEC_IRREGULAR
 
     ! ibool and global point arrays file
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
@@ -141,7 +142,6 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1158')
     if (ier /= 0) stop 'error allocating array xstore etc.'
 
-    read(27) NSPEC_IRREGULAR
     read(27) ibool
     read(27) xstore
     read(27) ystore
@@ -229,11 +229,12 @@
           status='old',action='read',form='unformatted')
     read(27) NSPEC_AB
     read(27) NGLOB_AB
+    read(27) NSPEC_IRREGULAR
+
     ! ibool file
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1162')
     if (ier /= 0) stop 'error allocating array ibool'
-    read(27) NSPEC_IRREGULAR
     read(27) ibool
     close(27)
 
@@ -313,26 +314,25 @@
 
   do it = 1, num_node
 
-      ! gets number of elements and points for this slice
-      iproc = node_list(it)
-      write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
-      open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin', &
-            status='old',action='read',form='unformatted',iostat=ier)
-      if (ier /= 0) then
-        print *,'Error opening: ',prname_lp(1:len_trim(prname_lp))//'external_mesh.bin'
-        stop
-      endif
+    ! gets number of elements and points for this slice
+    iproc = node_list(it)
+    write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
+    open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin', &
+          status='old',action='read',form='unformatted',iostat=ier)
+    if (ier /= 0) then
+      print *,'Error opening: ',prname_lp(1:len_trim(prname_lp))//'external_mesh.bin'
+      stop
+    endif
 
-      read(27) NSPEC_AB
-      read(27) NGLOB_AB
-
+    read(27) NSPEC_AB
+    read(27) NGLOB_AB
+    read(27) NSPEC_IRREGULAR
 
     ! gets ibool
     if (.not. HIGH_RESOLUTION_MESH) then
       allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1164')
       if (ier /= 0) stop 'error allocating array ibool'
-      read(27) NSPEC_IRREGULAR
       read(27) ibool
     endif
 
@@ -356,15 +356,15 @@
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1165')
       if (ier /= 0) stop 'error allocating array mask_ibool'
       mask_ibool = .false.
-      do ispec=1,NSPEC_AB
-        iglob1=ibool(1,1,1,ispec)
-        iglob2=ibool(NGLLX,1,1,ispec)
-        iglob3=ibool(NGLLX,NGLLY,1,ispec)
-        iglob4=ibool(1,NGLLY,1,ispec)
-        iglob5=ibool(1,1,NGLLZ,ispec)
-        iglob6=ibool(NGLLX,1,NGLLZ,ispec)
-        iglob7=ibool(NGLLX,NGLLY,NGLLZ,ispec)
-        iglob8=ibool(1,NGLLY,NGLLZ,ispec)
+      do ispec = 1,NSPEC_AB
+        iglob1 = ibool(1,1,1,ispec)
+        iglob2 = ibool(NGLLX,1,1,ispec)
+        iglob3 = ibool(NGLLX,NGLLY,1,ispec)
+        iglob4 = ibool(1,NGLLY,1,ispec)
+        iglob5 = ibool(1,1,NGLLZ,ispec)
+        iglob6 = ibool(NGLLX,1,NGLLZ,ispec)
+        iglob7 = ibool(NGLLX,NGLLY,NGLLZ,ispec)
+        iglob8 = ibool(1,NGLLY,NGLLZ,ispec)
         mask_ibool(iglob1) = .true.
         mask_ibool(iglob2) = .true.
         mask_ibool(iglob3) = .true.
@@ -423,7 +423,6 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1166')
     if (ier /= 0) stop 'error allocating total dat array'
     total_dat(:) = 0.0
-
   endif
 
   ! writes our corner point locations
@@ -432,16 +431,15 @@
   if (ier /= 0) stop 'error allocating array mask_ibool'
   mask_ibool(:) = .false.
   numpoin = 0
-  do ispec=1,NSPEC_AB
-
-    iglob1=ibool(1,1,1,ispec)
-    iglob2=ibool(NGLLX,1,1,ispec)
-    iglob3=ibool(NGLLX,NGLLY,1,ispec)
-    iglob4=ibool(1,NGLLY,1,ispec)
-    iglob5=ibool(1,1,NGLLZ,ispec)
-    iglob6=ibool(NGLLX,1,NGLLZ,ispec)
-    iglob7=ibool(NGLLX,NGLLY,NGLLZ,ispec)
-    iglob8=ibool(1,NGLLY,NGLLZ,ispec)
+  do ispec = 1,NSPEC_AB
+    iglob1 = ibool(1,1,1,ispec)
+    iglob2 = ibool(NGLLX,1,1,ispec)
+    iglob3 = ibool(NGLLX,NGLLY,1,ispec)
+    iglob4 = ibool(1,NGLLY,1,ispec)
+    iglob5 = ibool(1,1,NGLLZ,ispec)
+    iglob6 = ibool(NGLLX,1,NGLLZ,ispec)
+    iglob7 = ibool(NGLLX,NGLLY,NGLLZ,ispec)
+    iglob8 = ibool(1,NGLLY,NGLLZ,ispec)
 
     if (.not. mask_ibool(iglob1)) then
       numpoin = numpoin + 1
@@ -577,7 +575,6 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1168')
     if (ier /= 0) stop 'error allocating total dat array'
     total_dat(:) = 0.0
-
   endif
 
   ! writes out point locations and values
@@ -639,7 +636,6 @@
     ! VTK
     ! note: indices for vtk start at 0
     write(IOUT_VTK,'(a,i12,i12)') "CELLS ",nee,nee*9
-
   endif
 
   ! writes out element indices
@@ -653,16 +649,16 @@
   num_ibool(:) = 0
   numpoin = 0
   n = 0
-  do ispec=1,NSPEC_AB
+  do ispec = 1,NSPEC_AB
     ! gets corner indices
-    iglob1=ibool(1,1,1,ispec)
-    iglob2=ibool(NGLLX,1,1,ispec)
-    iglob3=ibool(NGLLX,NGLLY,1,ispec)
-    iglob4=ibool(1,NGLLY,1,ispec)
-    iglob5=ibool(1,1,NGLLZ,ispec)
-    iglob6=ibool(NGLLX,1,NGLLZ,ispec)
-    iglob7=ibool(NGLLX,NGLLY,NGLLZ,ispec)
-    iglob8=ibool(1,NGLLY,NGLLZ,ispec)
+    iglob1 = ibool(1,1,1,ispec)
+    iglob2 = ibool(NGLLX,1,1,ispec)
+    iglob3 = ibool(NGLLX,NGLLY,1,ispec)
+    iglob4 = ibool(1,NGLLY,1,ispec)
+    iglob5 = ibool(1,1,NGLLZ,ispec)
+    iglob6 = ibool(NGLLX,1,NGLLZ,ispec)
+    iglob7 = ibool(NGLLX,NGLLY,NGLLZ,ispec)
+    iglob8 = ibool(1,NGLLY,NGLLZ,ispec)
 
     ! sets increasing numbering
     if (.not. mask_ibool(iglob1)) then
@@ -705,7 +701,7 @@
       num_ibool(iglob8) = numpoin
       mask_ibool(iglob8) = .true.
     endif
-    n =n + 1
+    n = n + 1
 
     ! outputs corner indices (starting with 0)
     conn(1,ne +n) = num_ibool(iglob1) -1 + np
@@ -765,7 +761,7 @@
   mask_ibool(:) = .false.
   num_ibool(:) = 0
   numpoin = 0
-  do ispec=1,NSPEC_AB
+  do ispec = 1,NSPEC_AB
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX

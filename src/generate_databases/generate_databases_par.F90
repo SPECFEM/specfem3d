@@ -34,7 +34,7 @@
   implicit none
 
 ! number of spectral elements in each block
-  integer npointot
+  integer :: npointot
 
 ! local to global indexing array
   integer, dimension(:,:,:,:), allocatable :: ibool
@@ -159,6 +159,9 @@
   module create_regions_mesh_ext_par
 
   use constants, only: CUSTOM_REAL,MAX_STRING_LEN
+  use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
+
+  implicit none
 
 ! global point coordinates
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_dummy
@@ -180,8 +183,6 @@
 ! 3D shape functions and their derivatives
   double precision, dimension(:,:,:,:), allocatable :: shape3D
   double precision, dimension(:,:,:,:,:), allocatable :: dershape3D
-
-  double precision, dimension(:), allocatable :: xelm,yelm,zelm
 
 ! regular elements
   real(kind=CUSTOM_REAL) :: xix_regular,jacobian_regular
@@ -295,8 +296,6 @@
 
   integer :: num_phase_ispec_poroelastic
   integer,dimension(:,:),allocatable :: phase_ispec_inner_poroelastic
-
-  logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
 
   ! mesh coloring
   integer :: num_colors_outer_acoustic,num_colors_inner_acoustic

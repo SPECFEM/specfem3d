@@ -25,24 +25,25 @@
 !
 !=====================================================================
 
-  subroutine get_MPI(myrank,nglob,nspec,ibool, &
-                    nelmnts_ext_mesh,elmnts_ext_mesh, &
-                    my_nelmnts_neighbors_ext_mesh, my_interfaces_ext_mesh, &
-                    ibool_interfaces_ext_mesh, &
-                    nibool_interfaces_ext_mesh, &
-                    num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-                    my_neighbors_ext_mesh)
+  subroutine get_MPI_interface(nglob,nspec,ibool, &
+                               nelmnts_ext_mesh,elmnts_ext_mesh, &
+                               my_nelmnts_neighbors_ext_mesh, my_interfaces_ext_mesh, &
+                               ibool_interfaces_ext_mesh, &
+                               nibool_interfaces_ext_mesh, &
+                               num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
+                               my_neighbors_ext_mesh)
 
 ! sets up the MPI interface for communication between partitions
-  use generate_databases_par, only: NPROC,NGNOD,NGLLX,NGLLY,NGLLZ,SMALLVAL_TOL,IMAIN
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,SMALLVAL_TOL,IMAIN
+  use generate_databases_par, only: NGNOD,NPROC
   use create_regions_mesh_ext_par
 
   implicit none
 
-  integer :: myrank,nglob,nspec
+  integer,intent(in) :: nglob,nspec
 
 ! global indexing
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
 ! external mesh, element indexing
   integer :: nelmnts_ext_mesh
@@ -59,7 +60,6 @@
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
   integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: &
     ibool_interfaces_ext_mesh
-
 
   !local parameters
   double precision, dimension(:), allocatable :: xp,yp,zp
@@ -234,5 +234,5 @@
     if (inum /= iglob .or. inum > ilocnum) call exit_mpi(myrank,'error MPI assembly')
   endif
 
-  end subroutine get_MPI
+  end subroutine get_MPI_interface
 

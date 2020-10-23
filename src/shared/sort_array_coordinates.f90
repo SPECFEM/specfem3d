@@ -34,7 +34,7 @@
 !
 ! returns: sorted indexing array (ibool),  reordering array (iglob) & number of global points (nglob)
 
-  use constants
+  use constants, only: NDIM
 
   implicit none
 

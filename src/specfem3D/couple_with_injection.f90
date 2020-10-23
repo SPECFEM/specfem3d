@@ -1379,7 +1379,7 @@
   ! TIME_WINDOW      tmax_fk
   !!----------------------------------------------------------------
 
-  ! only master process reads
+  ! only main process reads
   if (myrank /= 0) return
 
   !! set default values

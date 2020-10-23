@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import h5py
 
 def open_bin(fname, id_signal):

@@ -1,0 +1,29 @@
+running example: Thu Sep 24 12:44:23 +03 2020
+
+setting up example...
+
+creating adjoint source
+  adjoint station: EX.GRO1S
+  component: 2 (1=X/2=Y/3=Z)
+  length: 500
+  time step size: 0.008
+  minimum period: 0.3255
+
+ricker frequency: 3.07219662058371735791
+ricker time step support: 40
+
+done
+
+running mesher on  4 processors...
+
+
+running database generation on  4 processors...
+
+
+running solver on  4 processors...
+
+
+see results in directory: OUTPUT_FILES/
+
+done
+Thu Sep 24 12:44:59 +03 2020

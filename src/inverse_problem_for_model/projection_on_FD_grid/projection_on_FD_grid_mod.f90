@@ -1,12 +1,39 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                              CNRS, France
+!                       and Princeton University, USA
+!                 (there are currently many more authors!)
+!                           (c) October 2017
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 3 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 module projection_on_FD_grid
 
-  !! IMPORT SPECFEM VARIABLES -----------------------------------------------------------------------------------------------------
+  !! IMPORT SPECFEM VARIABLES
   use specfem_par, only: NGLLX, NGLLY, NGLLZ, NDIM, NSPEC_AB, &
        NGLOB_AB, ibool, xstore, ystore, zstore,  NUM_ITER, NGNOD, xigll, yigll, zigll, NPROC, HUGEVAL, &
        MIDX, MIDY, MIDZ
 
 
-  !! IMPORT INVERSE_PROBLEM VARIABLES ---------------------------------------------------------------------------------------------
+  !! IMPORT INVERSE_PROBLEM VARIABLES
   use inverse_problem_par
 
   implicit none
@@ -22,12 +49,14 @@ module projection_on_FD_grid
   real(kind=CUSTOM_REAL), private                                  :: xfd, yfd, zfd
 
   real(kind=CUSTOM_REAL), private, dimension(:,:,:), allocatable   :: valence , valence_tmp, model_on_FD_grid_tmp
+
 contains
-!!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 !--------------------------------------------------------------------------------------------------------------------
 !  Projection FD grid model on SEM mesh
 !--------------------------------------------------------------------------------------------------------------------
-subroutine Project_model_FD_grid2SEM(model_on_SEM_mesh, model_on_FD_grid, myrank)
+
+  subroutine Project_model_FD_grid2SEM(model_on_SEM_mesh, model_on_FD_grid, myrank)
 
   integer,                                                 intent(in)    :: myrank
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable, intent(inout) :: model_on_SEM_mesh
@@ -59,7 +88,7 @@ subroutine Project_model_FD_grid2SEM(model_on_SEM_mesh, model_on_FD_grid, myrank
 
               !! get value of model on FD grid by trilinear interpolation
               i_fd = floor((x_sem -  ox_fd_proj)/ hx_fd_proj) + 1
-              j_fd = floor((y_sem -  oy_fd_proj)/ hy_fd_proj)  + 1
+              j_fd = floor((y_sem -  oy_fd_proj)/ hy_fd_proj) + 1
               k_fd = floor((z_sem -  oz_fd_proj)/ hz_fd_proj) + 1
 
               if (i_fd <= nx_fd_proj .and. j_fd <= ny_fd_proj .and. k_fd <= nz_fd_proj .and. &
@@ -84,10 +113,10 @@ subroutine Project_model_FD_grid2SEM(model_on_SEM_mesh, model_on_FD_grid, myrank
                  z_loc = z_sem - (oz_fd_proj + real( k_fd - 1, CUSTOM_REAL) * hz_fd_proj)
 
                  call TrilinearInterp(Vinterp, x_loc, y_loc, z_loc, v1, v2, v3, v4, v5, v6, v7, v8, &
-                      hx_fd_proj, hy_fd_proj, hz_fd_proj)
+                                      hx_fd_proj, hy_fd_proj, hz_fd_proj)
               else
 
-                 Vinterp=0.
+                 Vinterp = 0.
 
               endif
 
@@ -98,14 +127,14 @@ subroutine Project_model_FD_grid2SEM(model_on_SEM_mesh, model_on_FD_grid, myrank
      enddo
   enddo
 
+  end subroutine Project_model_FD_grid2SEM
 
-end subroutine Project_model_FD_grid2SEM
 
-!!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
 !  read fd grid parameters !!
 !--------------------------------------------------------------------------------------------------------------------
-subroutine read_fd_grid_parameters_for_projection()
+
+  subroutine read_fd_grid_parameters_for_projection()
 
   integer ier
 
@@ -122,13 +151,13 @@ subroutine read_fd_grid_parameters_for_projection()
   read(676, *)  nx_fd_proj, ny_fd_proj, nz_fd_proj
   close(676)
 
+  end subroutine read_fd_grid_parameters_for_projection
 
-end subroutine read_fd_grid_parameters_for_projection
 
-!!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
 !  pre-compute interpolation coeffs for projection on FD GRID
 !--------------------------------------------------------------------------------------------------------------------
+
   subroutine compute_interpolation_coeff_FD_SEM(projection_fd, myrank)
 
 
@@ -209,12 +238,12 @@ end subroutine read_fd_grid_parameters_for_projection
           enddo
        enddo
 
-       kmin =  1+ (zmin  - oz_fd_proj) / hz_fd_proj
-       kmax =  1+ (zmax  - oz_fd_proj) / hz_fd_proj
-       jmin =  1+ (ymin  - oy_fd_proj) / hy_fd_proj
-       jmax =  1+ (ymax  - oy_fd_proj) / hy_fd_proj
-       imin =  1+ (xmin  - ox_fd_proj) / hx_fd_proj
-       imax =  1+ (xmax  - ox_fd_proj) / hx_fd_proj
+       kmin =  1+ int((zmin  - oz_fd_proj) / hz_fd_proj)
+       kmax =  1+ int((zmax  - oz_fd_proj) / hz_fd_proj)
+       jmin =  1+ int((ymin  - oy_fd_proj) / hy_fd_proj)
+       jmax =  1+ int((ymax  - oy_fd_proj) / hy_fd_proj)
+       imin =  1+ int((xmin  - ox_fd_proj) / hx_fd_proj)
+       imax =  1+ int((xmax  - ox_fd_proj) / hx_fd_proj)
 
         if (DEBUG_MODE) then
           write(IIDD,*) ' projection SEM2FD : boundary element'
@@ -333,7 +362,6 @@ end subroutine read_fd_grid_parameters_for_projection
         enddo
      enddo
 
-
 !!$    point_already_found(:,:,:)=0
 !!$    !! loop over elements
 !!$    do ispec = 1, NSPEC_AB
@@ -451,10 +479,11 @@ end subroutine read_fd_grid_parameters_for_projection
 
   end subroutine compute_interpolation_coeff_FD_SEM
 
-!!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 !--------------------------------------------------------------------------------------------------------------------
 !  perform projection on FD grid
 !--------------------------------------------------------------------------------------------------------------------
+
   subroutine Project_model_SEM2FD_grid(model_on_SEM_mesh, model_on_FD_grid, projection_fd, myrank)
 
      type(profd),                                               intent(in)     :: projection_fd
@@ -536,12 +565,13 @@ end subroutine read_fd_grid_parameters_for_projection
 
    end subroutine Project_model_SEM2FD_grid
 
-!!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 !--------------------------------------------------------------------------------------------------------------------
 !  locate MPI slice which contains the point and bcast to all
 !--------------------------------------------------------------------------------------------------------------------
+
   subroutine locate_MPI_slice_and_bcast_to_all_1(x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found, &
-       xi, eta, gamma, ispec_selected, islice_selected, distance_from_target, myrank)
+                                                 xi, eta, gamma, ispec_selected, islice_selected, distance_from_target, myrank)
 
     integer,                                        intent(in)        :: myrank
     integer,                                        intent(inout)     :: ispec_selected, islice_selected
@@ -670,12 +700,12 @@ end subroutine read_fd_grid_parameters_for_projection
 
   end subroutine locate_MPI_slice_and_bcast_to_all_1
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 !--------------------------------------------------------------------------------------------------------------------
 !  locate point in mesh.
 !--------------------------------------------------------------------------------------------------------------------
   subroutine locate_point_in_mesh_simple(x_to_locate, y_to_locate, z_to_locate, iaddx, iaddy, iaddz, elemsize_max_glob, &
-       ispec_selected, xi_found, eta_found, gamma_found, x_found, y_found, z_found, myrank)
+                                         ispec_selected, xi_found, eta_found, gamma_found, x_found, y_found, z_found, myrank)
 
 ! note: this routine differs slightly from the one in locate_point.f90
 !       by "simply" finding the best element using its inner GLL points
@@ -821,7 +851,7 @@ end subroutine read_fd_grid_parameters_for_projection
 
      ! recompute jacobian for the new point
        call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-            xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
+                               xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
 
 !!$       if (iter_loop==1 .and. DEBUG_MODE) write(IIDD,'(a24,3f20.5)') 'Initilal guess        :', x, y, z
 
@@ -855,7 +885,7 @@ end subroutine read_fd_grid_parameters_for_projection
 
     ! compute final coordinates of point found
     call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-         xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
+                            xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
 
     ! store xi,eta,gamma and x,y,z of point found
     ! note: xi/eta/gamma will be in range [-1,1]
@@ -869,12 +899,12 @@ end subroutine read_fd_grid_parameters_for_projection
 
   end subroutine locate_point_in_mesh_simple
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 !--------------------------------------------------------------------------------------------------------------------
 !  locate point in element.
 !--------------------------------------------------------------------------------------------------------------------
   subroutine locate_point_in_element(x_to_locate, y_to_locate, z_to_locate, iaddx, iaddy, iaddz, elemsize_max_glob, &
-       ispec_selected, xi_found, eta_found, gamma_found, x_found, y_found, z_found, myrank, ispec)
+                                     ispec_selected, xi_found, eta_found, gamma_found, x_found, y_found, z_found, myrank, ispec)
 
     double precision,                   intent(in)     :: x_to_locate, y_to_locate, z_to_locate
     real(kind=CUSTOM_REAL),             intent(in)     :: elemsize_max_glob
@@ -1017,7 +1047,7 @@ end subroutine read_fd_grid_parameters_for_projection
 
      ! recompute jacobian for the new point
        call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-            xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
+                               xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
 
 !!$       if (iter_loop==1 .and. DEBUG_MODE) write(IIDD,'(a24,3f20.5)') 'Initilal guess        :', x, y, z
 
@@ -1051,7 +1081,7 @@ end subroutine read_fd_grid_parameters_for_projection
 
     ! compute final coordinates of point found
     call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-         xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
+                            xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
 
     ! store xi,eta,gamma and x,y,z of point found
     ! note: xi/eta/gamma will be in range [-1,1]
@@ -1066,12 +1096,11 @@ end subroutine read_fd_grid_parameters_for_projection
   end subroutine locate_point_in_element
 
 
-
-!!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
 !  trilinear interpolation
 !--------------------------------------------------------------------------------------------------------------------
-subroutine TrilinearInterp(Vinterp,  x_loc, y_loc, z_loc, v1, v2, v3, v4, v5, v6, v7, v8, lx, ly, lz)
+
+  subroutine TrilinearInterp(Vinterp,  x_loc, y_loc, z_loc, v1, v2, v3, v4, v5, v6, v7, v8, lx, ly, lz)
 
   real(kind=CUSTOM_REAL), intent(inout) :: Vinterp
   real(kind=CUSTOM_REAL), intent(in)    :: x_loc, y_loc, z_loc
@@ -1092,7 +1121,6 @@ subroutine TrilinearInterp(Vinterp,  x_loc, y_loc, z_loc, v1, v2, v3, v4, v5, v6
   v7 *                   dx  *                   dy  *                   dz  + &
   v8 * (1._CUSTOM_REAL - dx) *                   dy  *                   dz
 
-end subroutine TrilinearInterp
-
+  end subroutine TrilinearInterp
 
 end module projection_on_FD_grid

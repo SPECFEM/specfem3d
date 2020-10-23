@@ -49,13 +49,10 @@ module meshfem3D_par
   implicit none
 
 ! number of spectral elements in each block
-  integer :: nspec,npointot
+  integer :: nspec
 
 ! meshing parameters
-  double precision, dimension(:), allocatable :: rns
-
   double precision, dimension(:,:,:), allocatable :: xgrid,ygrid,zgrid
-
   integer, dimension(:,:,:,:), allocatable :: ibool
 
 ! arrays with the mesh in double precision

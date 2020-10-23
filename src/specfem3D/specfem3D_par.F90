@@ -36,46 +36,40 @@ module specfem_par
 
   implicit none
 
-! number of spectral element and global points
+!-----------------------------------------------------------------
+! simulation
+!-----------------------------------------------------------------
+
+  ! number of spectral element and global points
   integer :: NSPEC_AB, NGLOB_AB
 
-! mesh parameters
+  ! mesh parameters
   integer, dimension(:,:,:,:), allocatable :: ibool
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore,ystore,zstore
 
-! regular/irregular element shapes
+  ! regular/irregular element shapes
   integer :: NSPEC_IRREGULAR
   integer, dimension(:), allocatable :: irregular_element_number
   real(kind=CUSTOM_REAL) :: xix_regular,jacobian_regular
 
-! derivatives (of mapping to reference element)
+  ! derivatives (of mapping to reference element)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
     deriv_mapping
 
-! material properties
+  ! material properties
   ! isotropic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: kappastore,mustore
 
-! density
+  ! density
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore
 
-! GPU
-! CUDA mesh pointer to integer wrapper
-  integer(kind=8) :: Mesh_pointer
-
-  integer(kind=8) :: Fault_pointer
-
-! ASDF
-! asdf file handle
-  integer :: current_asdf_handle
-
-! use integer array to store topography values
+  ! use integer array to store topography values
   integer :: NX_TOPO,NY_TOPO
   integer, dimension(:,:), allocatable :: itopo_bathy
 
-! absorbing boundary arrays (for all boundaries) - keeps all infos, allowing for irregular surfaces
+  ! absorbing boundary arrays (for all boundaries) - keeps all infos, allowing for irregular surfaces
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: abs_boundary_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: abs_boundary_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: abs_boundary_ijk
@@ -85,14 +79,25 @@ module specfem_par
   integer :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP
   integer, dimension(:), allocatable :: ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top
 
-! free surface arrays
+  ! free surface arrays
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: free_surface_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: free_surface_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: free_surface_ijk
   integer, dimension(:), allocatable :: free_surface_ispec
   integer :: num_free_surface_faces
 
-! for couple with external code : DSM and AxiSEM (added by VM) for the moment
+  ! attenuation
+  integer :: NSPEC_ATTENUATION_AB
+  character(len=MAX_STRING_LEN) :: prname_Q
+
+  ! additional mass matrix for ocean load
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
+
+!-----------------------------------------------------------------
+! coupling
+!-----------------------------------------------------------------
+
+  ! for couple with external code : DSM and AxiSEM (added by VM) for the moment
   integer :: it_dsm, it_fk
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary, Tract_dsm_boundary
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: Veloc_axisem, Tract_axisem
@@ -101,24 +106,38 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: Displ_axisem_time, Tract_axisem_time
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: Displ_specfem_time, Tract_specfem_time
 
-! attenuation
-  integer :: NSPEC_ATTENUATION_AB
-  character(len=MAX_STRING_LEN) :: prname_Q
 
-! additional mass matrix for ocean load
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
-
+!-----------------------------------------------------------------
 ! time scheme
-  real(kind=CUSTOM_REAL) :: deltat,deltatover2,deltatsqover2
+!-----------------------------------------------------------------
 
-! LDDRK time scheme
+  ! time scheme
+  real(kind=CUSTOM_REAL) :: deltat,deltatover2,deltatsqover2
+  ! backward/reconstructed
+  real(kind=CUSTOM_REAL) :: b_deltat, b_deltatover2, b_deltatsqover2
+
+  ! LDDRK time scheme
   integer :: NSTAGE_TIME_SCHEME,istage
   integer :: NGLOB_AB_LDDRK,NSPEC_ATTENUATION_AB_LDDRK
 
-! time loop step
+  ! time loop step
   integer :: it
 
-! parameters for the source
+!! DK DK added this temporarily here to make SPECFEM3D and SPECFEM3D_GLOBE much more similar
+!! DK DK in terms of the structure of their main time iteration loop; these are future features
+!! DK DK that are missing in this code but implemented in the other and that could thus be cut and pasted one day
+  integer :: it_begin,it_end
+
+  ! UNDO_ATTENUATION_AND_OR_PML
+  integer :: NSUBSET_ITERATIONS
+  integer :: iteration_on_subset,it_of_this_subset
+  integer :: it_subset_end
+
+!-----------------------------------------------------------------
+! sources
+!-----------------------------------------------------------------
+
+  ! parameters for the source
   integer, dimension(:), allocatable :: islice_selected_source,ispec_selected_source
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sourcearray
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: sourcearrays
@@ -140,46 +159,57 @@ module specfem_par
   ! [ = sign(Myy) = sign(Mzz) since they have to be equal in the acoustic setting]
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: pm1_source_encoding
 
-! receiver information
+  ! parameters for a force source located exactly at a grid point
+  double precision, dimension(:), allocatable :: factor_force_source
+  double precision, dimension(:), allocatable :: comp_dir_vect_source_E
+  double precision, dimension(:), allocatable :: comp_dir_vect_source_N
+  double precision, dimension(:), allocatable :: comp_dir_vect_source_Z_UP
+
+!-----------------------------------------------------------------
+! receivers
+!-----------------------------------------------------------------
+
+  ! receiver information
   integer :: nrec,nrec_local
   integer :: nrec_tot_found
   character(len=MAX_STRING_LEN) :: rec_filename,filtered_rec_filename
   integer, dimension(:), allocatable :: islice_selected_rec,ispec_selected_rec
   double precision, dimension(:), allocatable :: xi_receiver,eta_receiver,gamma_receiver
   double precision, dimension(:,:), allocatable :: hpxir_store,hpetar_store,hpgammar_store
-  double precision, dimension(:,:,:), allocatable :: nu
+  double precision, dimension(:,:,:), allocatable :: nu_rec
 
-! Lagrange interpolators at receivers
+  ! Lagrange interpolators at receivers
   integer, dimension(:), allocatable, target :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable, target :: hxir_store,hetar_store,hgammar_store
 
-! adjoint sources
+  ! adjoint sources
   integer :: nadj_rec_local
   integer, dimension(:), pointer :: number_adjsources_global
   real(kind=CUSTOM_REAL), dimension(:,:), pointer :: hxir_adjstore,hetar_adjstore,hgammar_adjstore
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: source_adjoint
 
-! timing information for the stations
+  ! timing information for the stations
   character(len=MAX_LENGTH_STATION_NAME), allocatable, dimension(:) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), allocatable, dimension(:) :: network_name
 
-! seismograms
+  ! seismograms
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: seismograms_d,seismograms_v,seismograms_a,seismograms_p
+  integer :: nlength_seismogram
 
-!! DK DK added this temporarily here to make SPECFEM3D and SPECFEM3D_GLOBE much more similar
-!! DK DK in terms of the structure of their main time iteration loop; these are future features
-!! DK DK that are missing in this code but implemented in the other and that could thus be cut and pasted one day
-  integer :: it_begin,it_end
   integer :: seismo_offset,seismo_current
   ! adjoint seismograms
   integer :: it_adj_written
 
-! Gauss-Lobatto-Legendre points of integration and weights
+!-----------------------------------------------------------------
+! GLL points & weights
+!-----------------------------------------------------------------
+
+  ! Gauss-Lobatto-Legendre points of integration and weights
   double precision, dimension(NGLLX) :: xigll,wxgll
   double precision, dimension(NGLLY) :: yigll,wygll
   double precision, dimension(NGLLZ) :: zigll,wzgll
 
-! array with derivatives of Lagrange polynomials and precalculated products
+  ! array with derivatives of Lagrange polynomials and precalculated products
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy,hprime_yyT,hprimewgll_yy
   real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz,hprime_zzT,hprimewgll_zz
@@ -190,23 +220,17 @@ module specfem_par
   ! arrays for Deville and force_vectorization
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
 
-! proc numbers for MPI
+  ! proc numbers for MPI
   integer :: sizeprocs
   character(len=MAX_STRING_LEN) :: prname
 
-! timer MPI
+  ! timer MPI
   double precision :: time_start
 
-! parameters for a force source located exactly at a grid point
-  double precision, dimension(:), allocatable :: factor_force_source
-  double precision, dimension(:), allocatable :: comp_dir_vect_source_E
-  double precision, dimension(:), allocatable :: comp_dir_vect_source_N
-  double precision, dimension(:), allocatable :: comp_dir_vect_source_Z_UP
-
-! array for NB_RUN_ACOUSTIC_GPU > 1
+  ! array for NB_RUN_ACOUSTIC_GPU > 1
   integer, dimension(:), allocatable :: run_number_of_the_source
 
-! for assembling in case of external mesh
+  ! for assembling in case of external mesh
   integer :: num_interfaces_ext_mesh
   integer :: max_nibool_interfaces_ext_mesh
   integer, dimension(:), allocatable :: my_neighbors_ext_mesh
@@ -229,14 +253,14 @@ module specfem_par
   integer, dimension(:), allocatable :: request_send_vector_ext_mesh_w
   integer, dimension(:), allocatable :: request_recv_vector_ext_mesh_w
 
-! for detecting surface receivers and source in case of external mesh
+  ! for detecting surface receivers and source in case of external mesh
   logical, dimension(:), allocatable :: iglob_is_surface_external_mesh
   logical, dimension(:), allocatable :: ispec_is_surface_external_mesh
 
-! MPI partition surfaces
+  ! MPI partition surfaces
   logical, dimension(:), allocatable :: ispec_is_inner
 
-! maximum speed in velocity model
+  ! maximum speed in velocity model
   real(kind=CUSTOM_REAL):: model_speed_max
 
   ! gravity
@@ -247,13 +271,13 @@ module specfem_par
   double precision, dimension(:), allocatable   :: integral_vol, integral_boun
   double precision, dimension(:,:), allocatable :: f_integrand_KH
 
-! ADJOINT parameters
-
-  ! time scheme
-  real(kind=CUSTOM_REAL) b_deltat, b_deltatover2, b_deltatsqover2
+!-----------------------------------------------------------------
+! adjoint simulations
+!-----------------------------------------------------------------
 
   ! absorbing stacey wavefield parts
   integer :: b_num_abs_boundary_faces
+  logical :: SAVE_STACEY
 
   ! Moho mesh
   real(CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_top
@@ -271,13 +295,9 @@ module specfem_par
   ! adjoint elements
   integer :: NSPEC_ADJOINT, NGLOB_ADJOINT
 
-  ! parameter module for noise simulations
-  integer :: irec_master_noise
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sigma_kl
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: noise_sourcearray
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: noise_surface_movie
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: &
-             normal_x_noise,normal_y_noise,normal_z_noise, mask_noise
+!-----------------------------------------------------------------
+! gravity
+!-----------------------------------------------------------------
 
   ! for gravity integrals
   double precision, dimension(NTOTAL_OBSERVATION) :: x_observation,y_observation,z_observation, &
@@ -300,6 +320,30 @@ module specfem_par
   integer :: n_req_vol=0, n_req_surf=0
   integer, dimension(9) :: req_dump_vol
   integer, dimension(3) :: req_dump_surf
+!-----------------------------------------------------------------
+! point search
+!-----------------------------------------------------------------
+
+  ! point search
+  ! (i,j,k) indices of the control/anchor points of the element
+  integer, dimension(:), allocatable :: anchor_iax,anchor_iay,anchor_iaz
+
+  ! coordinates of element midpoints
+  double precision, dimension(:,:), allocatable :: xyz_midpoints
+
+!-----------------------------------------------------------------
+! GPU
+!-----------------------------------------------------------------
+
+  ! CUDA mesh pointer to integer wrapper
+  integer(kind=8) :: Mesh_pointer
+
+  ! for dynamic rupture computations on GPU
+  integer(kind=8) :: Fault_pointer
+
+  ! ASDF
+  ! asdf file handle
+  integer :: current_asdf_handle
 
 end module specfem_par
 
@@ -325,14 +369,14 @@ module specfem_par_elastic
     epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: epsilon_trace_over_3
 
-! displacement, velocity, acceleration
+  ! displacement, velocity, acceleration
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ,veloc,accel
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accel_adj_coupling
 
-! mass matrix
+  ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
 
-! Stacey
+  ! Stacey
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassx,rmassy,rmassz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs
 
@@ -344,25 +388,22 @@ module specfem_par_elastic
             c55store,c56store,c66store
   integer :: NSPEC_ANISO
 
-! for attenuation and/or kernel simulations
+  ! for attenuation and/or kernel simulations
   integer :: NSPEC_STRAIN_ONLY
   logical :: COMPUTE_AND_STORE_STRAIN
 
-! material flag
+  ! material flag
   logical, dimension(:), allocatable :: ispec_is_elastic
   integer, dimension(:,:), allocatable :: phase_ispec_inner_elastic
   integer :: num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic
 
-! mesh coloring
+  ! mesh coloring
   integer :: num_colors_outer_elastic,num_colors_inner_elastic
   integer, dimension(:), allocatable :: num_elem_colors_elastic
   integer :: nspec_elastic
   integer :: iglob_check_elastic
 
-  logical :: ELASTIC_SIMULATION
-
-
-! ADJOINT elastic
+  ! ADJOINT elastic
 
   ! (backward/reconstructed) wavefields
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_displ, b_veloc, b_accel
@@ -422,43 +463,41 @@ module specfem_par_acoustic
   use constants, only: CUSTOM_REAL
   implicit none
 
-! potential
+  ! potential
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic,potential_dot_acoustic, &
                                     potential_dot_dot_acoustic
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_adj_coupling
+  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_adj_coupling ! not used yet
 
-! mass matrix
+  ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassz_acoustic
 
-! acoustic-elastic coupling surface
+  ! acoustic-elastic coupling surface
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_ac_el_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_ac_el_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: coupling_ac_el_ijk
   integer, dimension(:), allocatable :: coupling_ac_el_ispec
   integer :: num_coupling_ac_el_faces
 
-! acoustic-poroelastic coupling surface
+  ! acoustic-poroelastic coupling surface
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_ac_po_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_ac_po_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: coupling_ac_po_ijk
   integer, dimension(:), allocatable :: coupling_ac_po_ispec
   integer :: num_coupling_ac_po_faces
 
-! material flag
+  ! material flag
   logical, dimension(:), allocatable :: ispec_is_acoustic
   integer, dimension(:,:), allocatable :: phase_ispec_inner_acoustic
   integer :: num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic
 
-! mesh coloring
+  ! mesh coloring
   integer :: num_colors_outer_acoustic,num_colors_inner_acoustic
   integer, dimension(:), allocatable :: num_elem_colors_acoustic
   integer :: nspec_acoustic
   integer :: iglob_check_acoustic
 
-  logical :: ACOUSTIC_SIMULATION
-
-! ADJOINT acoustic
+  ! ADJOINT acoustic
 
   ! (backward/reconstructed) wavefield potentials
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: b_potential_acoustic, &
@@ -494,11 +533,11 @@ module specfem_par_poroelastic
   use constants, only: CUSTOM_REAL
   implicit none
 
-! mass matrix
+  ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_solid_poroelastic, &
     rmass_fluid_poroelastic
 
-! displacement, velocity, acceleration
+  ! displacement, velocity, acceleration
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accels_poroelastic,velocs_poroelastic,displs_poroelastic
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accelw_poroelastic,velocw_poroelastic,displw_poroelastic
 
@@ -508,7 +547,7 @@ module specfem_par_poroelastic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
     epsilons_trace_over_3,epsilonw_trace_over_3
 
-! material properties
+  ! material properties
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: etastore,tortstore
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: phistore
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rhoarraystore
@@ -516,20 +555,18 @@ module specfem_par_poroelastic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: permstore
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vpI,rho_vpII,rho_vsI
 
-! elastic-poroelastic coupling surface
+  ! elastic-poroelastic coupling surface
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_el_po_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_el_po_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: coupling_el_po_ijk,coupling_po_el_ijk
   integer, dimension(:), allocatable :: coupling_el_po_ispec,coupling_po_el_ispec
   integer :: num_coupling_el_po_faces
 
-! material flag
+  ! material flag
   logical, dimension(:), allocatable :: ispec_is_poroelastic
   integer, dimension(:,:), allocatable :: phase_ispec_inner_poroelastic
   integer :: num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic
   integer :: iglob_check_poroelastic
-
-  logical :: POROELASTIC_SIMULATION
 
 ! ADJOINT poroelastic
 
@@ -580,7 +617,7 @@ module specfem_par_movie
   ! arrays for hdf5 output
   real(kind=CUSTOM_REAL), dimension(:),allocatable:: div_on_node, curl_x_on_node, curl_y_on_node, curl_z_on_node
   real(kind=CUSTOM_REAL), dimension(:),allocatable:: velocity_x_on_node,velocity_y_on_node,velocity_z_on_node
- 
+
   ! surface point locations
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y
@@ -637,7 +674,7 @@ module specfem_par_coupling
 
 ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
 
-! FK elastic
+  ! FK elastic
   integer :: npt,nlayer,kpsv
   integer :: NF_FOR_STORING, NF_FOR_FFT, NPOW_FOR_FFT, NP_RESAMP, NPOW_FOR_INTERP
   integer :: NPTS_STORED, NPTS_INTERP
@@ -668,3 +705,24 @@ module specfem_par_coupling
 
 end module specfem_par_coupling
 
+!=====================================================================
+
+module specfem_par_noise
+
+! parameter module for noise simulations
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  ! NOISE_TOMOGRAPHY
+  ! parameter module for noise simulations
+  integer :: irec_main_noise
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: noise_sourcearray
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: noise_surface_movie
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: normal_x_noise,normal_y_noise,normal_z_noise, mask_noise
+
+  ! noise strength kernel
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sigma_kl
+
+end module specfem_par_noise

@@ -36,12 +36,12 @@
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB),intent(in) :: scalar_field
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(out) :: vector_field_element
 
-    ! no need to test the two others because NGLLX == NGLLY = NGLLZ in unstructured meshes
-    if (NGLLX == 5 .or. NGLLX == 6 .or. NGLLX == 7) then
-      call compute_gradient_in_acoustic_fast_Deville(ispec,scalar_field,vector_field_element)
-    else
-      call compute_gradient_in_acoustic_generic_slow(ispec,scalar_field,vector_field_element)
-    endif
+  ! no need to test the two others because NGLLX == NGLLY = NGLLZ in unstructured meshes
+  if (NGLLX == 5 .or. NGLLX == 6 .or. NGLLX == 7) then
+    call compute_gradient_in_acoustic_fast_Deville(ispec,scalar_field,vector_field_element)
+  else
+    call compute_gradient_in_acoustic_generic_slow(ispec,scalar_field,vector_field_element)
+  endif
 
   end subroutine compute_gradient_in_acoustic
 
@@ -62,7 +62,7 @@
 ! returns: (1/rho) times gradient vector field (vector_field_element) in specified element
 !             or in gravity case, just gradient vector field
 
-  use constants
+  use constants, only: NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
   use specfem_par, only: NGLOB_AB,xix,xiy,xiz,etax,etay,etaz, &
                          gammax,gammay,gammaz,xix_regular,irregular_element_number, &
                          ibool,rhostore,hprime_xx,hprime_yy,hprime_zz ! ,GRAVITY
@@ -74,9 +74,9 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(out) :: vector_field_element
 
 ! local parameters
-  real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
-  real(kind=CUSTOM_REAL) temp1l,temp2l,temp3l
-  real(kind=CUSTOM_REAL) rho_invl
+  real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
+  real(kind=CUSTOM_REAL) :: temp1l,temp2l,temp3l
+  real(kind=CUSTOM_REAL) :: rho_invl
   integer :: i,j,k,l,ispec_irreg
 
 ! double loop over GLL points to compute and store gradients
@@ -84,38 +84,38 @@
 
   ispec_irreg = irregular_element_number(ispec)
 
-  if (ispec_irreg /= 0 ) then ! irregular element
+  if (ispec_irreg /= 0) then
+    ! irregular element
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
 
-  do k = 1,NGLLZ
-    do j = 1,NGLLY
-      do i = 1,NGLLX
+          ! derivative along x
+          temp1l = 0._CUSTOM_REAL
+          do l = 1,NGLLX
+            temp1l = temp1l + scalar_field(ibool(l,j,k,ispec))*hprime_xx(i,l)
+          enddo
 
-        ! derivative along x
-        temp1l = ZERO
-        do l = 1,NGLLX
-          temp1l = temp1l + scalar_field(ibool(l,j,k,ispec))*hprime_xx(i,l)
-        enddo
+          ! derivative along y
+          temp2l = 0._CUSTOM_REAL
+          do l = 1,NGLLY
+            temp2l = temp2l + scalar_field(ibool(i,l,k,ispec))*hprime_yy(j,l)
+          enddo
 
-        ! derivative along y
-        temp2l = ZERO
-        do l = 1,NGLLZ
-          temp2l = temp2l + scalar_field(ibool(i,l,k,ispec))*hprime_yy(j,l)
-        enddo
+          ! derivative along z
+          temp3l = 0._CUSTOM_REAL
+          do l = 1,NGLLZ
+            temp3l = temp3l + scalar_field(ibool(i,j,l,ispec))*hprime_zz(k,l)
+          enddo
 
-        ! derivative along z
-        temp3l = ZERO
-        do l = 1,NGLLZ
-          temp3l = temp3l + scalar_field(ibool(i,j,l,ispec))*hprime_zz(k,l)
-        enddo
-
-        ! Daniel Peter: TODO - check gravity case here
+          ! Daniel Peter: TODO - check gravity case here
 !! DK DK NEVER put an "if" statement inside a critical loop, since that prevents vectorization
 !! DK DK and thus drastically slows down the code; put it outside the loop, and duplicate the content of the loop
-!       if (GRAVITY) then
-!         rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
-!       else
-          rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
-!       endif
+          !if (GRAVITY) then
+          ! rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+          !else
+            rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+          !endif
 
           xixl = xix(i,j,k,ispec_irreg)
           xiyl = xiy(i,j,k,ispec_irreg)
@@ -132,51 +132,51 @@
           vector_field_element(2,i,j,k) = (temp1l*xiyl + temp2l*etayl + temp3l*gammayl) * rho_invl
           vector_field_element(3,i,j,k) = (temp1l*xizl + temp2l*etazl + temp3l*gammazl) * rho_invl
 
+        enddo
       enddo
     enddo
-  enddo
 
-  else ! regular element
+  else
+    ! regular element
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
 
-  do k = 1,NGLLZ
-    do j = 1,NGLLY
-      do i = 1,NGLLX
+          ! derivative along x
+          temp1l = 0._CUSTOM_REAL
+          do l = 1,NGLLX
+            temp1l = temp1l + scalar_field(ibool(l,j,k,ispec))*hprime_xx(i,l)
+          enddo
 
-        ! derivative along x
-        temp1l = ZERO
-        do l = 1,NGLLX
-          temp1l = temp1l + scalar_field(ibool(l,j,k,ispec))*hprime_xx(i,l)
-        enddo
+          ! derivative along y
+          temp2l = 0._CUSTOM_REAL
+          do l = 1,NGLLY
+            temp2l = temp2l + scalar_field(ibool(i,l,k,ispec))*hprime_yy(j,l)
+          enddo
 
-        ! derivative along y
-        temp2l = ZERO
-        do l = 1,NGLLZ
-          temp2l = temp2l + scalar_field(ibool(i,l,k,ispec))*hprime_yy(j,l)
-        enddo
+          ! derivative along z
+          temp3l = 0._CUSTOM_REAL
+          do l = 1,NGLLZ
+            temp3l = temp3l + scalar_field(ibool(i,j,l,ispec))*hprime_zz(k,l)
+          enddo
 
-        ! derivative along z
-        temp3l = ZERO
-        do l = 1,NGLLZ
-          temp3l = temp3l + scalar_field(ibool(i,j,l,ispec))*hprime_zz(k,l)
-        enddo
-
-        ! Daniel Peter: TODO - check gravity case here
+          ! Daniel Peter: TODO - check gravity case here
 !! DK DK NEVER put an "if" statement inside a critical loop, since that prevents vectorization
 !! DK DK and thus drastically slows down the code; put it outside the loop, and duplicate the content of the loop
-!       if (GRAVITY) then
-!         rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
-!       else
-          rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
-!       endif
+          !if (GRAVITY) then
+          ! rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+          !else
+            rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+          !endif
 
           ! derivatives of acoustic scalar potential field on GLL points
           vector_field_element(1,i,j,k) = temp1l * xix_regular * rho_invl
           vector_field_element(2,i,j,k) = temp2l * xix_regular * rho_invl
           vector_field_element(3,i,j,k) = temp3l * xix_regular * rho_invl
 
+        enddo
       enddo
     enddo
-  enddo
 
   endif
 
@@ -199,7 +199,7 @@
 ! returns: (1/rho) times gradient vector field (vector_field_element) in specified element
 !             or in gravity case, just gradient vector field
 
-  use constants
+  use constants, only: NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,m1,m2
   use specfem_par, only: NGLOB_AB,xix,xiy,xiz,etax,etay,etaz, &
                          gammax,gammay,gammaz,xix_regular,irregular_element_number, &
                          ibool,rhostore,hprime_xx,hprime_xxT ! ,GRAVITY
@@ -223,27 +223,27 @@
   real(kind=CUSTOM_REAL) :: rho_invl
   integer :: i,j,k,ispec_irreg
 
-! double loop over GLL points to compute and store gradients
+  ! double loop over GLL points to compute and store gradients
   vector_field_element(:,:,:,:) = 0._CUSTOM_REAL
 
   ! gets value of the field inside the element and make it local
-    do k = 1,NGLLZ
-      do j = 1,NGLLY
-        do i = 1,NGLLX
-          field_local(i,j,k) = scalar_field(ibool(i,j,k,ispec))
-        enddo
+  do k = 1,NGLLZ
+    do j = 1,NGLLY
+      do i = 1,NGLLX
+        field_local(i,j,k) = scalar_field(ibool(i,j,k,ispec))
       enddo
     enddo
+  enddo
 
-    ! derivatives along x, y and z
+  ! derivatives along x, y and z
 
-    ! subroutines adapted from Deville, Fischer and Mund, High-order methods
-    ! for incompressible fluid flow, Cambridge University Press (2002),
-    ! pages 386 and 389 and Figure 8.3.1
+  ! subroutines adapted from Deville, Fischer and Mund, High-order methods
+  ! for incompressible fluid flow, Cambridge University Press (2002),
+  ! pages 386 and 389 and Figure 8.3.1
 
-    ! computes 1. matrix multiplication for temp1
-    ! computes 2. matrix multiplication for temp2
-    ! computes 3. matrix multiplication for temp3
+  ! computes 1. matrix multiplication for temp1
+  ! computes 2. matrix multiplication for temp2
+  ! computes 3. matrix multiplication for temp3
   if (NGLLX == 5) then
     call mxm5_single(hprime_xx,m1,field_local,temp1,m2)
     call mxm5_3dmat_single(field_local,m1,hprime_xxT,m1,temp2,NGLLX)
@@ -260,20 +260,20 @@
 
   ispec_irreg = irregular_element_number(ispec)
 
-  if (ispec_irreg /= 0 ) then ! irregular element
+  if (ispec_irreg /= 0) then
+    ! irregular element
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
 
-  do k = 1,NGLLZ
-    do j = 1,NGLLY
-      do i = 1,NGLLX
-
-        ! Daniel Peter: TODO - check gravity case here
+          ! Daniel Peter: TODO - check gravity case here
 !! DK DK NEVER put an "if" statement inside a critical loop, since that prevents vectorization
 !! DK DK and thus drastically slows down the code; put it outside the loop, and duplicate the content of the loop
-!       if (GRAVITY) then
-!         rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
-!       else
-          rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
-!       endif
+          !if (GRAVITY) then
+          ! rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+          !else
+            rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+          !endif
 
           xixl = xix(i,j,k,ispec_irreg)
           xiyl = xiy(i,j,k,ispec_irreg)
@@ -290,33 +290,33 @@
           vector_field_element(2,i,j,k) = (temp1(i,j,k)*xiyl + temp2(i,j,k)*etayl + temp3(i,j,k)*gammayl) * rho_invl
           vector_field_element(3,i,j,k) = (temp1(i,j,k)*xizl + temp2(i,j,k)*etazl + temp3(i,j,k)*gammazl) * rho_invl
 
+        enddo
       enddo
     enddo
-  enddo
 
-  else ! regular element
+  else
+    ! regular element
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
 
-  do k = 1,NGLLZ
-    do j = 1,NGLLY
-      do i = 1,NGLLX
-
-        ! Daniel Peter: TODO - check gravity case here
+          ! Daniel Peter: TODO - check gravity case here
 !! DK DK NEVER put an "if" statement inside a critical loop, since that prevents vectorization
 !! DK DK and thus drastically slows down the code; put it outside the loop, and duplicate the content of the loop
-!       if (GRAVITY) then
-!         rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
-!       else
-          rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
-!       endif
+          !if (GRAVITY) then
+          ! rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+          !else
+            rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+          !endif
 
           ! derivatives of acoustic scalar potential field on GLL points
           vector_field_element(1,i,j,k) = temp1(i,j,k) * xix_regular * rho_invl
           vector_field_element(2,i,j,k) = temp2(i,j,k) * xix_regular * rho_invl
           vector_field_element(3,i,j,k) = temp3(i,j,k) * xix_regular * rho_invl
 
+        enddo
       enddo
     enddo
-  enddo
 
   endif
 

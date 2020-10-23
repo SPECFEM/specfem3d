@@ -1,3 +1,30 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                              CNRS, France
+!                       and Princeton University, USA
+!                 (there are currently many more authors!)
+!                           (c) October 2017
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 3 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 !
 !
 ! import or export external model from specfem mesh or FD grid
@@ -7,18 +34,16 @@
 module IO_model
 
   !! IMPORT VARIABLES FROM SPECFEM -------------------------------------------------------------------------------------------------
-  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,  ANISOTROPY
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,  ANISOTROPY, ACOUSTIC_SIMULATION, ELASTIC_SIMULATION
 
   use specfem_par, only: CUSTOM_REAL,  NGLLX, NGLLY, NGLLZ, NSPEC_AB,  myrank, mygroup, &
                          rhostore, mustore, kappastore, FOUR_THIRDS, PI
 
-  use specfem_par_elastic, only: rho_vp, rho_vs, ELASTIC_SIMULATION,  NSPEC_ANISO, &
+  use specfem_par_elastic, only: rho_vp, rho_vs,  NSPEC_ANISO, &
                                   c11store,c12store,c13store,c14store,c15store,c16store, &
                                   c22store,c23store,c24store,c25store,c26store,c33store, &
                                   c34store,c35store,c36store,c44store,c45store,c46store, &
                                   c55store,c56store,c66store
-
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
 
   !---------------------------------------------------------------------------------------------------------------------------------
   use inverse_problem_par

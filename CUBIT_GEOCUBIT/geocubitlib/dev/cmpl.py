@@ -23,7 +23,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
-#
+from __future__ import print_function
+
 try:
     import start as start
     cubit                   = start.start_cubit()
@@ -31,7 +32,7 @@ except:
     try:
         import cubit
     except:
-        print 'error importing cubit, check if cubit is installed'
+        print('error importing cubit, check if cubit is installed')
         pass
 
 
@@ -119,7 +120,7 @@ def mesh_cpml(list_vol,remesh=True,refinement=None,top_surf=None,size=None):
             for refdepth in refinement:
                 cubit.cmd('refine surf '+top_surf+' numsplit 1 bias 1 depth '+str(refdepth))
         except:
-            print 'DEBUG: error in refinement cpml'
+            print('DEBUG: error in refinement cpml')
         xmin=xmin-size
         xmax=xmax+size
         ymin=ymin-size
@@ -145,7 +146,7 @@ def collecting_cpml(ip,size=None,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,
     from utilities import list2str
     #
     if not size:
-        print 'cpml size must be specified'
+        print('cpml size must be specified')
         return
 
 
@@ -187,7 +188,7 @@ def collecting_cpml(ip,size=None,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,
 
     #
     #
-    #print boundary_dict
+    #print(boundary_dict)
     block_list=cubit.get_block_id_list()
     for block in block_list:
         ty=cubit.get_block_element_type(block)

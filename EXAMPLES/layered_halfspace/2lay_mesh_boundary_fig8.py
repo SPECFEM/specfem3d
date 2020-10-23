@@ -6,8 +6,13 @@
 ####      specific to the settings of Komatitsch and Tromp 1999, Fig.8
 ####      Aug 2009
 ###########################################################################
+from __future__ import print_function
+
 import os
 import sys
+
+# current working directory
+print("current dir: ",os.getcwd())
 
 # default directories
 SEMoutput='MESH'
@@ -15,6 +20,19 @@ CUBIToutput='MESH_GEOCUBIT'
 
 os.system('mkdir -p '+ SEMoutput)
 os.system('mkdir -p '+ CUBIToutput)
+
+# checks path for modules
+found_lib = False
+for path in sys.path:
+    if "geocubitlib" in path:
+        found_lib = True
+        break
+if not found_lib:
+    sys.path.append('../../CUBIT_GEOCUBIT/geocubitlib')
+    sys.path.append('../../CUBIT_GEOCUBIT')
+print("path:")
+for path in sys.path: print("  ",path)
+print("")
 
 ## obsolete:
 #import boundary_definition
@@ -34,7 +52,7 @@ except:
 version = cubit.get_version()
 version_major = int(version.split(".")[0])
 version_minor = int(version.split(".")[1])
-print "cubit version: ",version
+print("cubit version: ",version)
 
 cubit.cmd('reset')
 cubit.cmd('brick x 134000 y 134000 z 60000')

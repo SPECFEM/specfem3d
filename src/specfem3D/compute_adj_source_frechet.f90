@@ -188,7 +188,7 @@
         eps_s(2,3) = eps_s(2,3) + eps_array(2,3,i,j,k)*hlagrange
         eps_s(3,3) = eps_s(3,3) + eps_array(3,3,i,j,k)*hlagrange
 
-        if (ispec_irreg /= 0 ) then
+        if (ispec_irreg /= 0) then
           !irregular element
           xix_s = xix_s + xix(i,j,k,ispec_irreg)*hlagrange
           xiy_s = xiy_s + xiy(i,j,k,ispec_irreg)*hlagrange

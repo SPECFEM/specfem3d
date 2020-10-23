@@ -1,6 +1,6 @@
 #-----------------------------------------------------------
 #
-# Meshing input parameters (created by matlab xspemfem_gui)
+# Meshing input parameters
 #
 #-----------------------------------------------------------
 
@@ -39,6 +39,10 @@ NPROC_ETA                       = 1
 USE_REGULAR_MESH                = .true.
 # Only for irregular meshes, number of doubling layers and their position
 NDOUBLINGS                      = 0
+# NZ_DOUBLING_1 is the parameter to set up if there is only one doubling layer
+# (more doubling entries can be added if needed to match NDOUBLINGS value)
+NZ_DOUBLING_1                   = 6
+NZ_DOUBLING_2                   = 9
 
 #-----------------------------------------------------------
 #
@@ -70,6 +74,7 @@ THICKNESS_OF_Z_PML              = 12.3d0
 # Domain materials
 #
 #-----------------------------------------------------------
+
 # number of materials
 NMATERIALS                      = 2
 # define the different materials in the model as:
@@ -92,3 +97,4 @@ NREGIONS                        = 1
 # define the different regions of the model as :
 #NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
 1 25 1 50 1 12 1
+

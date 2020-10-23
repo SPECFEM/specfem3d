@@ -38,13 +38,13 @@
   use constants
 
   use specfem_par, only: myrank,USE_BINARY_FOR_SEISMOGRAMS,SAVE_ALL_SEISMOS_IN_ONE_FILE,NTSTEP_BETWEEN_OUTPUT_SEISMOS, &
-    seismo_offset,seismo_current
+    seismo_offset,seismo_current,subsamp_seismos
 
   implicit none
 
   integer,intent(in) :: NSTEP,it,SIMULATION_TYPE
 
-  real(kind=CUSTOM_REAL), dimension(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS),intent(in) :: one_seismogram
+  real(kind=CUSTOM_REAL), dimension(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS/subsamp_seismos),intent(in) :: one_seismogram
 
   double precision,intent(in) :: t0,DT
 
@@ -112,12 +112,12 @@
     if (SIMULATION_TYPE == 1) then
       ! forward simulation
       ! distinguish between single and double precision for reals
-      time_t = real( dble(it_current-1)*DT - t0 ,kind=CUSTOM_REAL)
+      time_t = real( dble(it_current-1)*DT*subsamp_seismos - t0 ,kind=CUSTOM_REAL)
     else if (SIMULATION_TYPE == 3) then
       ! adjoint simulation: backward/reconstructed wavefields
       ! distinguish between single and double precision for reals
       ! note: compare time_t with time used for source term
-      time_t = real( dble(NSTEP-it_current)*DT - t0 ,kind=CUSTOM_REAL)
+      time_t = real( dble(NSTEP)*DT - dble(it_current)*DT*subsamp_seismos - t0 ,kind=CUSTOM_REAL)
     endif
 
     if (USE_BINARY_FOR_SEISMOGRAMS) then

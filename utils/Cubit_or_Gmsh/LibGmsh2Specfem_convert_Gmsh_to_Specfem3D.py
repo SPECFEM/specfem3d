@@ -22,15 +22,17 @@
 #
 #--------------------------------------------------------------
 #--------------------------------------------------------------
-
+#
 #     PACKAGES
 ####################################################
+from __future__ import print_function
+
 import sys, string, time
 from os.path import splitext, isfile
 try:
     from numpy import *
 except ImportError:
-    print "error: package python-numpy is not installed"
+    print("error: package python-numpy is not installed")
 
 
 ###################################################
@@ -63,8 +65,8 @@ def OuvreGmsh(Dir,Nom):
             fic=Nom+'.msh'
 
       else:
-            print 'File extension is not correct'
-            print 'script aborted'
+            print('File extension is not correct')
+            print('script aborted')
             sys.exit()
 
       #
@@ -127,7 +129,7 @@ def OuvreGmsh(Dir,Nom):
                   Bord_top=Zon
 
       ###################################################
-      print 'Physical Names', PhysCar
+      print('Physical Names', PhysCar)
 
 
       ###################################################
@@ -146,7 +148,7 @@ def OuvreGmsh(Dir,Nom):
 
       NbNodes=int(string.split(lignes[PosNodes+1])[0])    #   Total number of nodes
 
-      print 'Number of nodes: ',NbNodes
+      print('Number of nodes: ',NbNodes)
 
       Nodes=zeros((NbNodes,4),dtype=float)                #   Array receiving nodes index and coordinates
 
@@ -196,7 +198,7 @@ def OuvreGmsh(Dir,Nom):
 
       Ninc2DBordTop, Ninc2DBordBottom, Ninc2DBordxmax, Ninc2DBordxmin, Ninc2DBordymax, Ninc2DBordymin, = 0, 0, 0, 0, 0, 0
 
-      print 'Number of elements: ', NbElements
+      print('Number of elements: ', NbElements)
 
       for Ninc in range(NbElements):
 
@@ -218,8 +220,8 @@ def OuvreGmsh(Dir,Nom):
 
             #       First case : Surface element
 
-            #print 'elem ',Ninc,Pos,TypElem,ZonP,'xmax,xmin,ymax,ymin,top,bottom', \
-            #      Bord_xmax,Bord_xmin,Bord_ymax,Bord_ymin,Bord_top,Bord_bottom
+            #print('elem ',Ninc,Pos,TypElem,ZonP,'xmax,xmin,ymax,ymin,top,bottom', \
+            #      Bord_xmax,Bord_xmin,Bord_ymax,Bord_ymin,Bord_top,Bord_bottom)
 
             if TypElem==surfElem:
                   #   Get nodes indexes of the surface element
@@ -257,12 +259,12 @@ def OuvreGmsh(Dir,Nom):
                   Ninc3D+=1
 
             else:
-                  print "ERROR : wrong element type flag (3 or 5 only)"
+                  print("ERROR : wrong element type flag (3 or 5 only)")
 
                 #       Reduce arrays (exclude zeros elements)
 
-      print 'number of elements: xmax,xmin,ymax,ymin,top,bottom = ',Ninc2DBordxmax,Ninc2DBordxmin,Ninc2DBordymax,Ninc2DBordymin, \
-                  Ninc2DBordTop,Ninc2DBordBottom
+      print('number of elements: xmax,xmin,ymax,ymin,top,bottom = ', \
+            Ninc2DBordxmax,Ninc2DBordxmin,Ninc2DBordymax,Ninc2DBordymin,Ninc2DBordTop,Ninc2DBordBottom)
 
       Elements                =   Elements[:Ninc3D,:]
       Milieu                  =   Milieu[:Ninc3D,:]
@@ -297,10 +299,10 @@ def OuvreGmsh(Dir,Nom):
                                 #   Nodes in common between 3D current element and boundary
                         rr = set.intersection(nodes3DcurrentElement, NodesBordxmax)
                         if len(rr) != 4:
-                              print "WARNING : wrong 2D boundary element type : ONLY QUADRANGLES"
-                              print "Size of wrong intersection :"+str(len(rr))
-                              print "Nodes :"
-                              print rr
+                              print("WARNING : wrong 2D boundary element type : ONLY QUADRANGLES")
+                              print("Size of wrong intersection :"+str(len(rr)))
+                              print("Nodes :")
+                              print(rr)
                               sys.exit()
                         else:
                               el = concatenate(([Ct3D+1], list(rr)))
@@ -309,10 +311,10 @@ def OuvreGmsh(Dir,Nom):
                   if not set.isdisjoint(nodes3DcurrentElement, NodesBordxmin):
                         rr = set.intersection(nodes3DcurrentElement, NodesBordxmin)
                         if len(rr) != 4:
-                              print "WARNING : wrong 2D boundary element type : ONLY QUADRANGLES"
-                              print "Size of wrong intersection :"+str(len(rr))
-                              print "Nodes :"
-                              print rr
+                              print("WARNING : wrong 2D boundary element type : ONLY QUADRANGLES")
+                              print("Size of wrong intersection :"+str(len(rr)))
+                              print("Nodes :")
+                              print(rr)
                               sys.exit()
                         else:
                               el = concatenate(([Ct3D+1], list(rr)))
@@ -321,10 +323,10 @@ def OuvreGmsh(Dir,Nom):
                   if not set.isdisjoint(nodes3DcurrentElement, NodesBordymax):
                         rr = set.intersection(nodes3DcurrentElement, NodesBordymax)
                         if len(rr) != 4:
-                              print "WARNING : wrong 2D boundary element type : ONLY QUADRANGLES"
-                              print "Size of wrong intersection :"+str(len(rr))
-                              print "Nodes :"
-                              print rr
+                              print("WARNING : wrong 2D boundary element type : ONLY QUADRANGLES")
+                              print("Size of wrong intersection :"+str(len(rr)))
+                              print("Nodes :")
+                              print(rr)
                               sys.exit()
                         else:
                               el = concatenate(([Ct3D+1], list(rr)))
@@ -333,10 +335,10 @@ def OuvreGmsh(Dir,Nom):
                   if not set.isdisjoint(nodes3DcurrentElement, NodesBordymin):
                         rr = set.intersection(nodes3DcurrentElement, NodesBordymin)
                         if len(rr) != 4:
-                              print "WARNING : wrong 2D boundary element type : ONLY QUADRANGLES"
-                              print "Size of wrong intersection :"+str(len(rr))
-                              print "Nodes :"
-                              print rr
+                              print("WARNING : wrong 2D boundary element type : ONLY QUADRANGLES")
+                              print("Size of wrong intersection :"+str(len(rr)))
+                              print("Nodes :")
+                              print(rr)
                               sys.exit()
                         else:
                               el = concatenate(([Ct3D+1], list(rr)))
@@ -345,10 +347,10 @@ def OuvreGmsh(Dir,Nom):
                   if not set.isdisjoint(nodes3DcurrentElement, NodesBordTop):
                         rr = set.intersection(nodes3DcurrentElement, NodesBordTop)
                         if len(rr) != 4:
-                              print "WARNING : wrong 2D boundary element type : ONLY QUADRANGLES"
-                              print "Size of wrong intersection :"+str(len(rr))
-                              print "Nodes :"
-                              print rr
+                              print("WARNING : wrong 2D boundary element type : ONLY QUADRANGLES")
+                              print("Size of wrong intersection :"+str(len(rr)))
+                              print("Nodes :")
+                              print(rr)
                               sys.exit()
                         else:
                               el = concatenate(([Ct3D+1], list(rr)))
@@ -357,10 +359,10 @@ def OuvreGmsh(Dir,Nom):
                   if not set.isdisjoint(nodes3DcurrentElement, NodesBordBottom):
                         rr = set.intersection(nodes3DcurrentElement, NodesBordBottom)
                         if len(rr) != 4:
-                              print "WARNING : wrong 2D boundary element type : ONLY QUADRANGLES"
-                              print "Size of wrong intersection :"+str(len(rr))
-                              print "Nodes :"
-                              print rr
+                              print("WARNING : wrong 2D boundary element type : ONLY QUADRANGLES")
+                              print("Size of wrong intersection :"+str(len(rr)))
+                              print("Nodes :")
+                              print(rr)
                               sys.exit()
                         else:
                               el = concatenate(([Ct3D+1], list(rr)))

@@ -111,14 +111,18 @@ executable when using option \texttt{SAVE\_MESH\_FILES}. These binary
 files define the model parameters on all GLL points which can be used
 for iterative inversion procedures. Note that for simulation setups with attenuation,
 it will also read in the external binary mesh files for $Q_{\kappa}$ and $Q_{\mu}$.
-Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.
+To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf}
+and in folder \texttt{utils/attenuation}, the tool
+\texttt{conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90}.
+
 
 \item [{\texttt{salton\_trough}}] A 3D $V_{p}$ model for Southern California.
 Users must provide the corresponding data file \texttt{regrid3\_vel\_p.bin}
 in directory \texttt{DATA/st\_3D\_block\_harvard/}.
 
 \item [{\texttt{tomo}}] For a user-specified 3D isotropic model which uses
-a tomographic model file \texttt{tomographic\_model.xyz} in directory
+a tomographic model file \texttt{tomography\_model.xyz} in directory
 \texttt{DATA}. See Section \ref{sec:Using-tomographic}, for a discussion
 on how to specify your own 3D tomographic model.
 \end{description}
@@ -153,7 +157,10 @@ of \texttt{ATTENUATION\_f0\_REFERENCE} in the main constants file
 The code uses a constant $Q$ quality factor, write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS).
 The approximation is thus performed in a given frequency band determined based on that \texttt{ATTENUATION\_f0\_REFERENCE} reference frequency.
 Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.
-To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
+To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf}
+and in folder \texttt{utils/attenuation}, the tool
+\texttt{conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90}.
+
 \item [{\texttt{ANISOTROPY}}] Set to \texttt{.true.} if you want to use
 an anisotropy model. Please see the file \texttt{model\_aniso.f90}
 in subdirectory \texttt{src/generate\_databases/} for the current
@@ -362,7 +369,7 @@ kill all the runs or let the others finish using a fail-safe mechanism
 (in most cases, should be set to true).
 
 TODO / future work to do: currently the \texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL}
-option assumes to have the (master) mesh files in \texttt{run0001/DATABASES\_MPI} or
+option assumes to have the (main) mesh files in \texttt{run0001/DATABASES\_MPI} or
 \texttt{run0001/OUTPUT\_FILES/DATABASES\_MPI}.
 However, for adjoint runs you still need a \texttt{DATABASES\_MPI/} folder in each of the sub-runs directories,
 e.g. \texttt{run0002/DATABASES\_MPI}, etc. to store the forward wavefields, kernels etc. of each sub-run.

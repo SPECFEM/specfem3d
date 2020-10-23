@@ -67,7 +67,7 @@
 !  !    write(IMAIN,*)
 !   endif
 
-!  ! broadcast the information read on the master to the nodes
+!  ! broadcast the information read on the main to the nodes
 !  ! call MPI_BCAST(ibedrock,NX_TOPO_ANT*NY_TOPO_ANT,MPI_REAL,0,MPI_COMM_WORLD,ier)
 ! call bcast_all_cr(ibedrock,NX_TOPO_ANT*NY_TOPO_ANT)
 

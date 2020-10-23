@@ -30,7 +30,7 @@
 #include "config.fh"
 
 
-  subroutine compute_forces_viscoelastic(iphase, &
+  subroutine compute_forces_viscoelastic(iphase,deltat, &
                                          displ,veloc,accel, &
                                          alphaval,betaval,gammaval, &
                                          R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
@@ -54,7 +54,7 @@
                          hprimewgll_xx,hprimewgll_xxT, &
                          hprimewgll_yy,hprimewgll_zz, &
                          kappastore,mustore,ibool, &
-                         ATTENUATION,deltat, &
+                         ATTENUATION, &
                          NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_LDDRK, &
                          ANISOTROPY,SIMULATION_TYPE, &
                          NSPEC_ADJOINT,is_moho_top,is_moho_bot, &
@@ -80,6 +80,9 @@
 
   implicit none
 
+  integer,intent(in) :: iphase
+  real(kind=CUSTOM_REAL), intent(in) :: deltat
+
   ! displacement, velocity and acceleration
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(in) :: displ,veloc
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: accel
@@ -99,8 +102,6 @@
   real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK),intent(inout) :: &
     R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk
   real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK),intent(inout) :: R_trace_lddrk
-
-  integer,intent(in) :: iphase
 
   ! CPML adjoint
   logical,intent(in) :: backward_simulation
@@ -910,8 +911,7 @@
                                              epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                                              backward_simulation)
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,ONE_THIRD,FOUR_THIRDS, &
-    m1,m2
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ONE_THIRD,m1,m2
 
   use fault_solver_dynamic, only: Kelvin_Voigt_eta
 

@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 import numpy
 from   scipy.interpolate     import griddata
@@ -26,6 +28,6 @@ smooth_data   = gaussian_filter(Grid_data, sigma, mode='nearest')
 for y in range(Ynum):
   for x in range(Xnum):
     if(x%inc == 0 and y%inc == 0 and not numpy.math.isnan(smooth_data[x,y])):
-        print grid_x[x,y], grid_y[x,y], smooth_data[x,y]
+        print(grid_x[x,y], grid_y[x,y], smooth_data[x,y])
 
 

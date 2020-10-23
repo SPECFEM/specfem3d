@@ -22,6 +22,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
+from __future__ import print_function
+
 try:
     import start as start
     cubit = start.start_cubit()
@@ -29,7 +31,7 @@ except:
     try:
         import cubit
     except:
-        print 'error importing cubit, check if cubit is installed'
+        print('error importing cubit, check if cubit is installed')
         pass
 
 
@@ -80,7 +82,7 @@ def cubit_command_check(iproc, command, stop=True):
     flag = True
     er = cubit.get_error_count()
     cubit.cmd(command)
-    print command
+    print(command)
     ner = cubit.get_error_count()
     if ner > er:
         text = '"Proc: ' + str(iproc) + ' ERROR ' + str(command) + \
@@ -151,7 +153,7 @@ def savemesh(mpiflag, iproc=0, filename=None):
             saving = False
         if ind > len(total_saved) + 10:
             saving = False
-        print sum(total_saved), '/', len(total_saved), ' saved'
+        print(sum(total_saved), '/', len(total_saved), ' saved')
 
     info_total_saved = mpi.allgather(infosave)
     if isinstance(info_total_saved, int):
@@ -211,7 +213,7 @@ def savemesh(mpiflag, iproc=0, filename=None):
         totstat_file.write(str(total_max_skew))
         totstat_file.close()
 
-    print 'meshing process end... proc ', iproc
+    print('meshing process end... proc ', iproc)
 
 
 def importgeometry(geometryfile, iproc=0, filename=None):
@@ -220,13 +222,13 @@ def importgeometry(geometryfile, iproc=0, filename=None):
     mpiflag, iproc, numproc, mpi = start.start_mpi()
 
     if iproc == 0:
-        print 'importing geometry....'
+        print('importing geometry....')
     a = ['ok from ' + str(iproc)]
 
     mpi.barrier()
     total_a = mpi.allgather(a)
     if iproc == 0:
-        print total_a
+        print(total_a)
 
     def runimport(geometryfile, iproc, filename=None):
         import start as start
@@ -263,7 +265,7 @@ def load_curves(acis_filename):
     import os
     #
     #
-    print acis_filename
+    print(acis_filename)
     if acis_filename and os.path.exists(acis_filename):
         tmp_curve = cubit.get_last_id("curve")
         command = "import acis '" + acis_filename + "'"
@@ -272,7 +274,7 @@ def load_curves(acis_filename):
         curves = ' '.join(str(x)
                           for x in range(tmp_curve + 1, tmp_curve_after + 1))
     elif not os.path.exists(acis_filename):
-        print str(acis_filename) + ' not found'
+        print(str(acis_filename) + ' not found')
         curves = None
     return [curves]
 
@@ -392,7 +394,7 @@ def savegeometry(iproc=0, surf=False, filename=None):
             saving = False
         if ind > len(total_saved) + 10:
             saving = False
-        print sum(total_saved), '/', len(total_saved), ' saved'
+        print(sum(total_saved), '/', len(total_saved), ' saved')
 
     info_total_saved = mpi.allgather(infosave)
     if isinstance(info_total_saved, int):
@@ -498,10 +500,10 @@ def get_v_h_list(vol_id_list, chktop=False):
     # check that all the surf are Horizontal or vertical
     surf_all = surf_vertical + surf_or
     if len(surf_all) != len(lsurf):
-        print 'not all the surf are horizontal or vertical, check the normals'
-        print 'list of surfaces: ', surf_all
-        print 'list of vertical surface', surf_vertical
-        print 'list of horizontal surface', surf_or
+        print('not all the surf are horizontal or vertical, check the normals')
+        print('list of surfaces: ', surf_all)
+        print('list of vertical surface', surf_vertical)
+        print('list of horizontal surface', surf_or)
 
     bottom = [bottom]
     return surf_or, surf_vertical, list_curve_or, \

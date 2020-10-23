@@ -38,76 +38,20 @@
 
   implicit none
 
-  integer :: ier
-
   ! write gravity perturbations
   if (GRAVITY_SIMULATION) call gravity_output()
 
   ! save last frame
+  if (SAVE_FORWARD) call save_forward_arrays()
 
-  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-    if (ADIOS_FOR_FORWARD_ARRAYS) then
-      call save_forward_arrays_adios()
-    else
-      open(unit=IOUT,file=prname(1:len_trim(prname))//'save_forward_arrays.bin', &
-            status='unknown',form='unformatted',iostat=ier)
-      if (ier /= 0) then
-        print *,'error: opening save_forward_arrays.bin'
-        print *,'path: ',prname(1:len_trim(prname))//'save_forward_arrays.bin'
-        call exit_mpi(myrank,'error opening file save_forward_arrays.bin')
-      endif
-
-      if (ACOUSTIC_SIMULATION) then
-        write(IOUT) potential_acoustic
-        write(IOUT) potential_dot_acoustic
-        write(IOUT) potential_dot_dot_acoustic
-      endif
-
-      if (ELASTIC_SIMULATION) then
-        write(IOUT) displ
-        write(IOUT) veloc
-        write(IOUT) accel
-
-        if (ATTENUATION) then
-          write(IOUT) R_trace
-          write(IOUT) R_xx
-          write(IOUT) R_yy
-          write(IOUT) R_xy
-          write(IOUT) R_xz
-          write(IOUT) R_yz
-          write(IOUT) epsilondev_trace
-          write(IOUT) epsilondev_xx
-          write(IOUT) epsilondev_yy
-          write(IOUT) epsilondev_xy
-          write(IOUT) epsilondev_xz
-          write(IOUT) epsilondev_yz
-        endif
-      endif
-
-      if (POROELASTIC_SIMULATION) then
-        write(IOUT) displs_poroelastic
-        write(IOUT) velocs_poroelastic
-        write(IOUT) accels_poroelastic
-        write(IOUT) displw_poroelastic
-        write(IOUT) velocw_poroelastic
-        write(IOUT) accelw_poroelastic
-      endif
-
-      close(IOUT)
-    endif
-  endif
-
-  ! adjoint simulations
-  if (SIMULATION_TYPE == 3) then
-    ! adjoint kernels
-    call save_adjoint_kernels()
-  endif
+  ! adjoint simulations kernels
+  if (SIMULATION_TYPE == 3) call save_adjoint_kernels()
 
   ! seismograms and source parameter gradients for (pure type=2) adjoint simulation runs
   if (SIMULATION_TYPE == 2) then
     if (nrec_local > 0) then
       ! seismograms (strain)
-      call write_adj_seismograms2_to_file(myrank,seismograms_eps,number_receiver_global,nrec_local,it,DT,NSTEP,t0)
+      call write_adj_seismograms2_to_file()
       ! source gradients  (for sources in elastic domains)
       call save_kernels_source_derivatives()
     endif
@@ -117,20 +61,15 @@
   ! using snapshot files of wavefields
   if (STACEY_ABSORBING_CONDITIONS) then
     ! closes absorbing wavefield saved/to-be-saved by forward simulations
-    if (num_abs_boundary_faces > 0 .and. (SIMULATION_TYPE == 3 .or. &
-          (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
-
+    if (num_abs_boundary_faces > 0 .and. SAVE_STACEY) then
+      ! closes files
       if (ELASTIC_SIMULATION) call close_file_abs(IOABS)
       if (ACOUSTIC_SIMULATION) call close_file_abs(IOABS_AC)
-
     endif
   endif
 
-  ! C-PML absorbing boundary conditions
-  if (PML_CONDITIONS) then
-    ! deallocates C_PML arrays
-    call pml_cleanup()
-  endif
+  ! C-PML absorbing boundary conditions deallocates C_PML arrays
+  if (PML_CONDITIONS) call pml_cleanup()
 
   ! free arrays
   ! mass matrices
@@ -161,7 +100,7 @@
   deallocate(islice_selected_rec,ispec_selected_rec)
   deallocate(xi_receiver,eta_receiver,gamma_receiver)
   deallocate(station_name,network_name)
-  deallocate(nu)
+  deallocate(nu_rec)
   deallocate(pm1_source_encoding)
   deallocate(sourcearrays)
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) deallocate(source_adjoint)
@@ -171,12 +110,14 @@
   if (SIMULATION_TYPE == 2) deallocate(hpxir_store,hpetar_store,hpgammar_store)
   ! adjoint sources
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
-    if (SIMULATION_TYPE == 2) then
-      deallocate(number_adjsources_global)
-      deallocate(hxir_adjstore,hetar_adjstore,hgammar_adjstore)
-    else
-      nullify(number_adjsources_global)
-      nullify(hxir_adjstore,hetar_adjstore,hgammar_adjstore)
+    if (nadj_rec_local > 0) then
+      if (SIMULATION_TYPE == 2) then
+        deallocate(number_adjsources_global)
+        deallocate(hxir_adjstore,hetar_adjstore,hgammar_adjstore)
+      else
+        nullify(number_adjsources_global)
+        nullify(hxir_adjstore,hetar_adjstore,hgammar_adjstore)
+      endif
     endif
   endif
   ! seismograms
@@ -190,7 +131,7 @@
   deallocate(xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian)
   deallocate(deriv_mapping)
   deallocate(xstore,ystore,zstore)
-  deallocate(kappastore,mustore)
+  deallocate(kappastore,mustore,rhostore)
   deallocate(ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
   !
   deallocate(coupling_ac_el_normal,coupling_ac_el_jacobian2Dw,coupling_ac_el_ijk,coupling_ac_el_ispec)

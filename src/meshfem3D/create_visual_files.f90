@@ -35,44 +35,49 @@
   implicit none
 
 ! Mesh files for visualization
-  logical :: CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES
+  logical,intent(in) :: CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES
 
 ! number of spectral elements in each block
-  integer :: nspec
+  integer,intent(in) :: nspec
 
 ! number of vertices in each block
-  integer :: nglob
+  integer,intent(in) :: nglob
 
 ! name of the database files
-  character(len=MAX_STRING_LEN) :: prname
+  character(len=MAX_STRING_LEN),intent(in) :: prname
 
 ! arrays with the mesh
-  integer :: ispec_material_id(nspec)
-  integer :: ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
-  double precision :: nodes_coords(nglob,NDIM)
-  character(len=MAX_STRING_LEN) :: filename
+  integer,dimension(nspec),intent(in) :: ispec_material_id
+  integer,dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),intent(in) :: ibool
+  double precision,dimension(nglob,NDIM),intent(in) :: nodes_coords
 
-!  ---------------
-  integer i,ipoin,ispec
+  ! local parameters
+  character(len=MAX_STRING_LEN) :: filename
+  integer :: i,ipoin,ispec,ier
 
   if (CREATE_ABAQUS_FILES) then
 
     filename = prname(1:len_trim(prname))//'mesh.INP'
-    open(unit=64,file=trim(filename),status='unknown',action='write',form='formatted')
+    open(unit=IOUT,file=trim(filename),status='unknown',action='write',form='formatted',iostat=ier)
+    if (ier /= 0) then
+      print *,'Error opening file: ',trim(filename)
+      stop 'Error opening file for CREATE_ABAQUS_FILES'
+    endif
 
-    write(64,'(a8)') '*HEADING'
-    write(64,'(a27)') 'SPECFEM3D meshfem3D(mesh): '
-    write(64,'(a5)') '*NODE'
+    write(IOUT,'(a8)') '*HEADING'
+    write(IOUT,'(a27)') 'SPECFEM3D meshfem3D(mesh): '
+    write(IOUT,'(a5)') '*NODE'
     do i=1,nglob
-      write(64,'(i10,3(a,e15.6))') i,',',nodes_coords(i,1),',',nodes_coords(i,2),',',nodes_coords(i,3)
+      write(IOUT,'(i10,3(a,e15.6))') i,',',nodes_coords(i,1),',',nodes_coords(i,2),',',nodes_coords(i,3)
     enddo
-    write(64,'(a31)') '*ELEMENT, TYPE=C3D8R, ELSET=EB1'
+    write(IOUT,'(a31)') '*ELEMENT, TYPE=C3D8R, ELSET=EB1'
     do ispec=1,nspec
-      write(64,'(i10,8(a,i10))') ispec,',',ibool(1,1,2,ispec),',',ibool(1,1,1,ispec),',',ibool(1,2,1,ispec), &
-            ',',ibool(1,2,2,ispec),',',ibool(2,1,2,ispec),',',ibool(2,1,1,ispec),',',ibool(2,2,1,ispec),',', &
-            ibool(2,2,2,ispec)
+      write(IOUT,'(i10,8(a,i10))') ispec,',',ibool(1,1,NGLLZ_M,ispec),',',ibool(1,1,1,ispec), &
+                                   ',',ibool(1,NGLLY_M,1,ispec), ',',ibool(1,NGLLY_M,NGLLZ_M,ispec), &
+                                   ',',ibool(NGLLX_M,1,NGLLZ_M,ispec),',',ibool(NGLLX_M,1,1,ispec), &
+                                   ',',ibool(NGLLX_M,NGLLY_M,1,ispec),',',ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
     enddo
-    close(64)
+    close(IOUT)
 
   endif
 
@@ -80,50 +85,56 @@
   if (CREATE_DX_FILES) then
 
     filename = prname(1:len_trim(prname))//'mesh.dx'
-    open(unit=66,file=trim(filename),status='unknown')
+    open(unit=IOUT,file=trim(filename),status='unknown',iostat=ier)
+    if (ier /= 0) then
+      print *,'Error opening file: ',trim(filename)
+      stop 'Error opening file for CREATE_DX_FILES'
+    endif
 
     ! write OpenDX header
-    write(66,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
+    write(IOUT,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
 
     do ipoin = 1,nglob
-      write(66,*) sngl(nodes_coords(ipoin,1)),sngl(nodes_coords(ipoin,2)),sngl(nodes_coords(ipoin,3))
+      write(IOUT,*) sngl(nodes_coords(ipoin,1)),sngl(nodes_coords(ipoin,2)),sngl(nodes_coords(ipoin,3))
     enddo
 
     ! ************* generate elements ******************
 
-    write(66,*) 'object 2 class array type int rank 1 shape ',8,' items ',nspec,' data follows'
+    write(IOUT,*) 'object 2 class array type int rank 1 shape ',8,' items ',nspec,' data follows'
 
     do ispec=1,nspec
 
       ! point order in OpenDX in 2D is 1,4,2,3 *not* 1,2,3,4 as in AVS
       ! point order in OpenDX in 3D is 4,1,8,5,3,2,7,6, *not* 1,2,3,4,5,6,7,8 as in AVS
       ! in the case of OpenDX, node numbers start at zero
-      write(66,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") &
-             ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(1,2,2,ispec)-1,ibool(2,2,2,ispec)-1, &
-             ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(1,2,1,ispec)-1,ibool(2,2,1,ispec)-1
+      write(IOUT,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") &
+                 ibool(1,1,NGLLZ_M,ispec)-1,ibool(NGLLX_M,1,NGLLZ_M,ispec)-1, &
+                 ibool(1,NGLLY_M,NGLLX_M,ispec)-1,ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)-1, &
+                 ibool(1,1,1,ispec)-1,ibool(NGLLX_M,1,1,ispec)-1, &
+                 ibool(1,NGLLY_M,1,ispec)-1,ibool(NGLLX_M,NGLLY_M,1,ispec)-1
     enddo
 
     ! ************* generate element data values ******************
 
     ! output OpenDX header for data
-    write(66,*) 'attribute "element type" string "cubes"'
+    write(IOUT,*) 'attribute "element type" string "cubes"'
 
-    write(66,*) 'attribute "ref" string "positions"'
-    write(66,*) 'object 3 class array type float rank 0 items ',nspec,' data follows'
+    write(IOUT,*) 'attribute "ref" string "positions"'
+    write(IOUT,*) 'object 3 class array type float rank 0 items ',nspec,' data follows'
 
     ! loop on all the elements
     do ispec = 1,nspec
-      write(66,*)  ispec_material_id(ispec)
+      write(IOUT,*)  ispec_material_id(ispec)
     enddo
 
-    write(66,*) 'attribute "dep" string "connections"'
-    write(66,*) 'object "irregular positions irregular connections" class field'
-    write(66,*) 'component "positions" value 1'
-    write(66,*) 'component "connections" value 2'
-    write(66,*) 'component "data" value 3'
-    write(66,*) 'end'
+    write(IOUT,*) 'attribute "dep" string "connections"'
+    write(IOUT,*) 'object "irregular positions irregular connections" class field'
+    write(IOUT,*) 'component "positions" value 1'
+    write(IOUT,*) 'component "connections" value 2'
+    write(IOUT,*) 'component "data" value 3'
+    write(IOUT,*) 'end'
 
-    close(66)
+    close(IOUT)
 
   endif
 
@@ -131,40 +142,46 @@
 
     ! vtk file output
     filename = prname(1:len_trim(prname))//'mesh.vtk'
-    open(66,file=trim(filename),status='unknown')
+    open(IOUT,file=trim(filename),status='unknown',iostat=ier)
+    if (ier /= 0) then
+      print *,'Error opening file: ',trim(filename)
+      stop 'Error opening file mesh.INP for CREATE_ABAQUS_FILES'
+    endif
 
-    write(66,'(a)') '# vtk DataFile Version 3.1'
-    write(66,'(a)') 'material model VTK file'
-    write(66,'(a)') 'ASCII'
-    write(66,'(a)') 'DATASET UNSTRUCTURED_GRID'
-    write(66, '(a,i12,a)') 'POINTS ', nglob, ' float'
+    write(IOUT,'(a)') '# vtk DataFile Version 3.1'
+    write(IOUT,'(a)') 'material model VTK file'
+    write(IOUT,'(a)') 'ASCII'
+    write(IOUT,'(a)') 'DATASET UNSTRUCTURED_GRID'
+    write(IOUT, '(a,i12,a)') 'POINTS ', nglob, ' float'
     do ipoin = 1,nglob
-      write(66,*) sngl(nodes_coords(ipoin,1)),sngl(nodes_coords(ipoin,2)),sngl(nodes_coords(ipoin,3))
+      write(IOUT,*) sngl(nodes_coords(ipoin,1)),sngl(nodes_coords(ipoin,2)),sngl(nodes_coords(ipoin,3))
     enddo
-    write(66,*) ''
+    write(IOUT,*)
 
     ! note: indices for vtk start at 0
-    write(66,'(a,i12,i12)') "CELLS ",nspec,nspec*9
+    write(IOUT,'(a,i12,i12)') "CELLS ",nspec,nspec*9
     do ispec=1,nspec
-      write(66,'(9i12)') 8, &
-            ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(2,2,1,ispec)-1,ibool(1,2,1,ispec)-1, &
-            ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(2,2,2,ispec)-1,ibool(1,2,2,ispec)-1
+      write(IOUT,'(9i12)') 8, &
+            ibool(1,1,1,ispec)-1,ibool(NGLLX_M,1,1,ispec)-1, &
+            ibool(NGLLX_M,NGLLY_M,1,ispec)-1,ibool(1,NGLLY_M,1,ispec)-1, &
+            ibool(1,1,NGLLZ_M,ispec)-1,ibool(NGLLX_M,1,NGLLZ_M,ispec)-1, &
+            ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)-1,ibool(1,NGLLY_M,NGLLZ_M,ispec)-1
     enddo
-    write(66,*) ''
+    write(IOUT,*)
 
     ! type: hexahedrons
-    write(66,'(a,i12)') "CELL_TYPES ",nspec
-    write(66,'(6i12)') (12,ispec=1,nspec)
-    write(66,*) ''
+    write(IOUT,'(a,i12)') "CELL_TYPES ",nspec
+    write(IOUT,'(6i12)') (12,ispec=1,nspec)
+    write(IOUT,*)
 
-    write(66,'(a,i12)') "CELL_DATA ",nspec
-    write(66,'(a)') "SCALARS material_id float"
-    write(66,'(a)') "LOOKUP_TABLE default"
+    write(IOUT,'(a,i12)') "CELL_DATA ",nspec
+    write(IOUT,'(a)') "SCALARS material_id float"
+    write(IOUT,'(a)') "LOOKUP_TABLE default"
     do ispec = 1,nspec
-      write(66,*) ispec_material_id(ispec)
+      write(IOUT,*) ispec_material_id(ispec)
     enddo
-    write(66,*) ''
-    close(66)
+    write(IOUT,*)
+    close(IOUT)
 
   endif
 

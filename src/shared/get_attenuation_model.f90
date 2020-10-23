@@ -34,10 +34,10 @@
     sequence
     double precision, dimension(:,:), pointer :: tau_eps_storage
     double precision, dimension(:), pointer :: Q_storage
-    integer Q_resolution
-    integer Q_max
+    integer :: Q_resolution
+    integer :: Q_max
   end type model_attenuation_storage_var
-  type (model_attenuation_storage_var) AM_S
+  type (model_attenuation_storage_var) :: AM_S
 
   ! attenuation_simplex_variables
   type attenuation_simplex_variables
@@ -71,13 +71,14 @@
 !   Estimation of Q for Long-Period (>2 sec) Waves in the Los Angeles Basin
 !   BSSA, 93, 2, p. 627-638
 
-  use constants
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
-  real(kind=CUSTOM_REAL) :: vs_val
-  double precision :: Q_mu
-  double precision :: OLSEN_ATTENUATION_RATIO
+  real(kind=CUSTOM_REAL),intent(in) :: vs_val
+  double precision,intent(out) :: Q_mu
+
+  double precision,intent(in) :: OLSEN_ATTENUATION_RATIO
 
   !local parameters
   integer :: int_Q_mu
@@ -113,12 +114,68 @@
     stop 'Error no Olsen model specified, please set rule in get_attenuation_model.f90'
   endif
 
-  ! limits Q_mu value range
-  if (Q_mu < 1.0d0) Q_mu = 1.0d0
-  if (Q_mu > ATTENUATION_COMP_MAXIMUM) Q_mu = ATTENUATION_COMP_MAXIMUM
-
-
   end subroutine get_attenuation_model_olsen
+
+!
+!------------------------------------------------------------------------
+!
+
+  subroutine get_attenuation_model_olsen_qkappa(vp_val,vs_val,Q_mu,Q_kappa, &
+                                                USE_ANDERSON_CRITERIA,SCALING_FACTOR_QP_FROM_QS)
+
+! scales Q_kappa from Q_mu and vs/vp ratio
+
+  use constants, only: CUSTOM_REAL,ATTENUATION_COMP_MAXIMUM
+
+  implicit none
+
+  real(kind=CUSTOM_REAL), intent(in) :: vp_val,vs_val
+  double precision, intent(in) :: Q_mu
+  double precision, intent(out) :: Q_kappa
+
+  logical, intent(in) :: USE_ANDERSON_CRITERIA
+  double precision, intent(in) :: SCALING_FACTOR_QP_FROM_QS
+
+  ! local parameters
+  double precision :: L_val,Q_s,Q_p
+
+  ! Anderson & Hart (1978), Q of the Earth, JGR, 83, No. B12
+  ! conversion between (Qp,Qs) and (Qkappa,Qmu)
+  ! factor L
+  L_val = 4.0d0/3.d0 * (vs_val/vp_val)**2
+
+  ! attenuation Qs (eq.1)
+  Q_s = Q_mu
+
+  ! scales Qp from Qs (scaling factor introduced by Zhinan?)
+  ! todo: should we scale Qkappa directly? e.g. Q_kappa = 10.d0 * Q_mu
+  Q_p = SCALING_FACTOR_QP_FROM_QS * Q_s
+
+  ! Anderson & Hart criteria: Qs/Qp >= L (eq. 4) since Qmu and Qkappa must be positive
+  if (USE_ANDERSON_CRITERIA) then
+    ! enforces (eq. 4) from Anderson & Hart
+    ! note: this might lead to Q_p < Q_s
+    if ((Q_s - L_val * Q_p) <= 0.d0 ) then
+      ! negligible bulk attenuation (1/Q_kappa -> zero)
+      Q_kappa = ATTENUATION_COMP_MAXIMUM
+    else
+      ! converts to bulk attenuation (eq. 3)
+      Q_kappa = (1.0d0 - L_val) * Q_p * Q_s / (Q_s - L_val * Q_p)
+    endif
+  else
+    ! note: this case might lead to: Q_kappa < Q_mu
+    !       thus having a solid with stronger bulk attenuation than shear attenuation?
+
+    ! avoids division by zero
+    if (abs(Q_s - L_val * Q_p) <= 1.d-5 ) then
+      Q_kappa = ATTENUATION_COMP_MAXIMUM
+    else
+      ! converts to bulk attenuation (eq. 3)
+      Q_kappa = (1.0d0 - L_val) * Q_p * Q_s / (Q_s - L_val * Q_p)
+    endif
+  endif
+
+  end subroutine get_attenuation_model_olsen_qkappa
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -130,7 +187,10 @@
 
 ! precalculates attenuation arrays and stores arrays into files
   use phdf5_utils
-  use constants
+
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,N_SLS, &
+    CUSTOM_REAL,MAX_STRING_LEN,HUGEVAL,IMAIN, &
+    ATTENUATION_COMP_MAXIMUM
 
   use shared_parameters, only: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD,COMPUTE_FREQ_BAND_AUTOMATIC,HDF5_ENABLED
 
@@ -159,8 +219,7 @@
   double precision, dimension(N_SLS) :: tau_sigma_dble,beta_dble,beta_dble_kappa
   double precision factor_scale_dble,one_minus_sum_beta_dble, &
                    factor_scale_dble_kappa,one_minus_sum_beta_dble_kappa
-  double precision :: Q_mu,Q_kappa,Q_p,Q_s
-  double precision :: L_val
+  double precision :: Q_mu,Q_kappa
   double precision :: f_c_source
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tau_sigma
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tauinv
@@ -175,6 +234,9 @@
   ! enforces ratio Qs/Qp >= L factor from Anderson & Hart (1978)
   ! IMPORTANT: this flag applies only if USE_OLSEN_ATTENUATION is true
   logical, parameter :: USE_ANDERSON_CRITERIA = .true.
+
+  ! scaling factor to scale Qp from Qs
+  double precision,parameter :: SCALING_FACTOR_QP_FROM_QS = 1.5d0
 
   !-----------------------------------------------------
 
@@ -292,43 +354,8 @@
             ! bulk attenuation
             ! compressional wave speed vp
             vp_val = (kappastore(i,j,k,ispec) + 2.0d0 * mustore(i,j,k,ispec) / 3.0d0) / rho_vp(i,j,k,ispec)
-
-            ! Anderson & Hart (1978), Q of the Earth, JGR, 83, No. B12
-            ! conversion between (Qp,Qs) and (Qkappa,Qmu)
-            ! factor L
-            L_val = 4.0d0/3.d0 * (vs_val/vp_val)**2
-
-            ! attenuation Qs (eq.1)
-            Q_s = Q_mu
-
-            ! scales Qp from Qs (scaling factor introduced by Zhinan?)
-            ! todo: should we scale Qkappa directly? e.g. Q_kappa = 10.d0 * Q_mu
-            Q_p = 1.5d0 * Q_s
-
-            ! Anderson & Hart criteria: Qs/Qp >= L (eq. 4) since Qmu and Qkappa must be positive
-            if (USE_ANDERSON_CRITERIA) then
-              ! enforces (eq. 4) from Anderson & Hart
-              ! note: this might lead to Q_p < Q_s
-              if ((Q_s - L_val * Q_p) <= 0.d0 ) then
-                ! negligible bulk attenuation (1/Q_kappa -> zero)
-                Q_kappa = ATTENUATION_COMP_MAXIMUM
-              else
-                ! converts to bulk attenuation (eq. 3)
-                Q_kappa = (1.0d0 - L_val) * Q_p * Q_s / (Q_s - L_val * Q_p)
-              endif
-            else
-              ! note: this case might lead to: Q_kappa < Q_mu
-              !       thus having a solid with stronger bulk attenuation than shear attenuation?
-
-              ! avoids division by zero
-              if (abs(Q_s - L_val * Q_p) <= 1.d-5 ) then
-                Q_kappa = ATTENUATION_COMP_MAXIMUM
-              else
-                ! converts to bulk attenuation (eq. 3)
-                Q_kappa = (1.0d0 - L_val) * Q_p * Q_s / (Q_s - L_val * Q_p)
-              endif
-            endif
-
+            call get_attenuation_model_olsen_qkappa(vp_val,vs_val,Q_mu,Q_kappa, &
+                                                    USE_ANDERSON_CRITERIA,SCALING_FACTOR_QP_FROM_QS)
           else
             ! takes Q set in (CUBIT) mesh
             Q_kappa = qkappa_attenuation_store(i,j,k,ispec)
@@ -429,8 +456,9 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL), dimension(N_SLS) :: tau_s, alphaval,betaval,gammaval
-  real(kind=CUSTOM_REAL) :: deltat
+  real(kind=CUSTOM_REAL), dimension(N_SLS),intent(in) :: tau_s
+  real(kind=CUSTOM_REAL), dimension(N_SLS),intent(out) :: alphaval,betaval,gammaval
+  real(kind=CUSTOM_REAL),intent(in) :: deltat
 
   ! local parameter
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tauinv
@@ -514,7 +542,7 @@
 
   implicit none
 
-  double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD,ATTENUATION_f0_REFERENCE
+  double precision,intent(in) :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD,ATTENUATION_f0_REFERENCE
   double precision :: f_c_source,Q_mu,Q_kappa
   double precision, dimension(N_SLS) :: tau_sigma
   double precision, dimension(N_SLS) :: beta,beta_kappa
@@ -598,21 +626,21 @@
 
   implicit none
 
-  double precision, intent(in) :: ATTENUATION_f0_REFERENCE
-  double precision :: scale_factor, Q_val, f_c_source
+  double precision,intent(in) :: Q_val, f_c_source
   ! strain and stress relaxation times
-  double precision, dimension(N_SLS) :: tau_eps, tau_sigma
+  double precision, dimension(N_SLS),intent(in) :: tau_eps, tau_sigma
+  double precision, intent(in) :: ATTENUATION_f0_REFERENCE
+
+  double precision,intent(out) :: scale_factor
 
   ! local parameters
-  double precision w_c_source
-  double precision factor_scale_mu0, factor_scale_mu
-  integer i
+  double precision :: w_c_source
+  double precision :: factor_scale_mu0, factor_scale_mu
   double precision :: xtmp1_nu1,xtmp2_nu1,xtmp_ak_nu1
-
+  integer :: i
 
   !--- compute central angular frequency of source (non dimensionalized)
   w_c_source = TWO_PI * f_c_source
-
 
   !--- quantity by which to scale mu_0 to get mu
 
@@ -623,7 +651,6 @@
   ! and in Aki, K. and Richards, P. G., Quantitative seismology, theory and methods,
   ! W. H. Freeman, (1980), second edition, sections 5.5 and 5.5.2, eq. (5.81) p. 170
   factor_scale_mu0 = ONE + TWO * log(f_c_source / ATTENUATION_f0_REFERENCE ) / (PI * Q_val)
-
 
   !--- quantity by which to scale mu to get mu_unrelaxed
   xtmp1_nu1 = ONE
@@ -640,13 +667,14 @@
   !--- total factor by which to scale mu0 to get mu_unrelaxed
   scale_factor = factor_scale_mu * factor_scale_mu0
 
-
   !--- check that the correction factor is close to one
   if (scale_factor < 0.5 .or. scale_factor > 1.5) then
-    write(*,*) "error : in get_attenuation_scale_factor() "
-    write(*,*) "  scale factor: ", scale_factor, " should be between 0.5 and 1.5"
-    write(*,*) "  Q value = ", Q_val, " central frequency = ",f_c_source
-    write(*,*) "  please check your reference frequency ATTENUATION_f0_REFERENCE in constants.h"
+    print *,"Error : in get_attenuation_scale_factor() "
+    print *,"  scale factor: ", scale_factor, " should be between 0.5 and 1.5"
+    print *,"  factor scale_mu = ",factor_scale_mu," factor scale_mu0 = ",factor_scale_mu0
+    print *,"  Q value = ", Q_val, " central frequency = ",f_c_source
+    print *,"  ATTENUATION_f0_REFERENCE = ",ATTENUATION_f0_REFERENCE
+    print *,"  please check your reference frequency ATTENUATION_f0_REFERENCE in constants.h"
     call exit_MPI(myrank,'unreliable correction factor in attenuation model')
   endif
 
@@ -764,7 +792,7 @@
   f2 = 1.0d0 / min_period
 
   ! use the logarithmic central frequency
-  f_c_source = 10.0d0**(0.5 * (log10(f1) + log10(f2)))
+  f_c_source = 10.0d0**(0.5d0 * (log10(f1) + log10(f2)))
 
   end subroutine get_attenuation_source_freq
 
@@ -844,7 +872,7 @@
   implicit none
 
   double precision,intent(in) :: Q_in
-  double precision, dimension(N_SLS),intent(out) :: tau_eps
+  double precision, dimension(N_SLS),intent(inout) :: tau_eps
   integer,intent(inout) :: rw
 
   ! local parameters
@@ -975,7 +1003,6 @@
 
   ! Determine the Source frequency
 !  omega_not =  1.0e+03 * 10.0d0**(0.5 * (log10(f1) + log10(f2)))
-
 
   ! Determine the Frequencies at which to compare solutions
   !   The frequencies should be equally spaced in log10 frequency

@@ -436,7 +436,7 @@
           SAVE_MESH_FILES,ATTENUATION, &
           ABSORBING_CONDITIONS,INCLUDE_CENTRAL_CUBE,INFLATE_CENTRAL_CUBE,SAVE_FORWARD,CASE_3D, &
           OUTPUT_SEISMOS_ASCII_TEXT,OUTPUT_SEISMOS_SAC_ALPHANUM,OUTPUT_SEISMOS_SAC_BINARY, &
-          ROTATE_SEISMOGRAMS_RT,HONOR_1D_SPHERICAL_MOHO,WRITE_SEISMOGRAMS_BY_MASTER, &
+          ROTATE_SEISMOGRAMS_RT,HONOR_1D_SPHERICAL_MOHO,WRITE_SEISMOGRAMS_BY_MAIN, &
           SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_LARGE_FILE
 
   character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL
@@ -611,7 +611,7 @@
           OUTPUT_SEISMOS_ASCII_TEXT,OUTPUT_SEISMOS_SAC_ALPHANUM,OUTPUT_SEISMOS_SAC_BINARY, &
           ROTATE_SEISMOGRAMS_RT,ratio_divide_central_cube,HONOR_1D_SPHERICAL_MOHO,CUT_SUPERBRICK_XI,CUT_SUPERBRICK_ETA, &
           DIFF_NSPEC1D_RADIAL,DIFF_NSPEC2D_XI,DIFF_NSPEC2D_ETA, &
-          WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_LARGE_FILE,.false.)
+          WRITE_SEISMOGRAMS_BY_MAIN,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_LARGE_FILE,.false.)
 
     if (err_occurred() /= 0) then
           call exit_MPI(myrank,'an error occurred while reading the parameter file')
@@ -647,7 +647,7 @@
 
   endif
 
-! broadcast the information read on the master to the nodes
+! broadcast the information read on the main to the nodes
 #ifdef USE_MPI
     call MPI_BCAST(NSOURCES,1,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
 
@@ -1004,7 +1004,7 @@
     if (THREE_D_MODEL == THREE_D_MODEL_S20RTS) then
 ! the variables read are declared and stored in structure D3MM_V
       if (myrank == 0) call read_mantle_model(D3MM_V)
-! broadcast the information read on the master to the nodes
+! broadcast the information read on the main to the nodes
 #ifdef USE_MPI
       call MPI_BCAST(D3MM_V%dvs_a,(NK+1)*(NS+1)*(NS+1),MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
       call MPI_BCAST(D3MM_V%dvs_b,(NK+1)*(NS+1)*(NS+1),MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
@@ -1020,7 +1020,7 @@
          call read_sea99_s_model(SEA99M_V)
          call read_iso3d_dpzhao_model(JP3DM_V)
       endif
-! broadcast the information read on the master to the nodes
+! broadcast the information read on the main to the nodes
 ! SEA99M_V
 #ifdef USE_MPI
       call MPI_BCAST(SEA99M_V%sea99_ndep,1,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
@@ -1092,7 +1092,7 @@
    else if (THREE_D_MODEL == THREE_D_MODEL_SEA99) then
 ! the variables read are declared and stored in structure SEA99M_V
       if (myrank == 0) call read_sea99_s_model(SEA99M_V)
-! broadcast the information read on the master to the nodes
+! broadcast the information read on the main to the nodes
 ! SEA99M_V
 #ifdef USE_MPI
       call MPI_BCAST(SEA99M_V%sea99_ndep,1,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
@@ -1203,7 +1203,7 @@
   if (ANISOTROPIC_3D_MANTLE) then
 ! the variables read are declared and stored in structure AMM_V
     if (myrank == 0) call read_aniso_mantle_model(AMM_V)
-! broadcast the information read on the master to the nodes
+! broadcast the information read on the main to the nodes
 #ifdef USE_MPI
     call MPI_BCAST(AMM_V%npar1,1,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
     call MPI_BCAST(AMM_V%beta,14*34*37*73,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
@@ -1214,7 +1214,7 @@
   if (CRUSTAL) then
 ! the variables read are declared and stored in structure CM_V
     if (myrank == 0) call read_crustal_model(CM_V)
-! broadcast the information read on the master to the nodes
+! broadcast the information read on the main to the nodes
 #ifdef USE_MPI
     call MPI_BCAST(CM_V%thlr,NKEYS_CRUST*NLAYERS_CRUST,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
     call MPI_BCAST(CM_V%velocp,NKEYS_CRUST*NLAYERS_CRUST,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
@@ -1263,7 +1263,7 @@
 ! read topography and bathymetry file
   if (TOPOGRAPHY .or. OCEANS) then
     if (myrank == 0) call read_topo_bathy_file(ibathy_topo)
-! broadcast the information read on the master to the nodes
+! broadcast the information read on the main to the nodes
 #ifdef USE_MPI
     call MPI_BCAST(ibathy_topo,NX_BATHY*NY_BATHY,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
 #endif

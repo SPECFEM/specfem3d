@@ -47,15 +47,16 @@ cuda_OBJECTS = \
 	$O/compute_kernels_cuda.cuda.o \
 	$O/compute_stacey_acoustic_cuda.cuda.o \
 	$O/compute_stacey_viscoelastic_cuda.cuda.o \
+	$O/fault_solver_dynamics.cuda.o \
 	$O/helper_functions.cuda.o \
 	$O/initialize_cuda.cuda.o \
 	$O/noise_tomography_cuda.cuda.o \
 	$O/prepare_mesh_constants_cuda.cuda.o \
 	$O/save_and_compare_cpu_vs_gpu.cudacc.o \
+	$O/smooth_cuda.cuda.o \
 	$O/transfer_fields_cuda.cuda.o \
 	$O/update_displacement_cuda.cuda.o \
 	$O/write_seismograms_cuda.cuda.o \
-        $O/fault_solver_dynamics.cuda.o \
 	$(EMPTY_MACRO)
 
 cuda_STUBS = \

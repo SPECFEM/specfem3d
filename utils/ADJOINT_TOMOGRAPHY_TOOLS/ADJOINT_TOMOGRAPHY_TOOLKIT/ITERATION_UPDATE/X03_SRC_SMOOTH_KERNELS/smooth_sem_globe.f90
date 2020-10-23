@@ -446,7 +446,7 @@ program smooth_sem_globe
               !  print *,'tk: ',tk(i,j,k,ispec),'bk:',bk(i,j,k,ispec)
               !  print *,'sum exp_val: ',sum(exp_val(:,:,:)),'sum factor:',sum(factor(:,:,:))
               !  print *,'sum kernel:',sum(kernel(:,:,:,ispec2))
-              !  call exit_MPI('error NaN')
+              !  call exit_MPI(myrank,'error NaN')
               !endif
 
             enddo
@@ -483,7 +483,7 @@ program smooth_sem_globe
             print *,'rank:',myrank
             print *,'i,j,k,ispec:',i,j,k,ispec
             print *,'tk: ',tk(i,j,k,ispec),'bk:',bk(i,j,k,ispec)
-            call exit_MPI('error NaN')
+            call exit_MPI(myrank,'error NaN')
           endif
 
         enddo
@@ -571,7 +571,7 @@ end program smooth_sem_globe
         !  print *,'i,j,k:',ii,jj,kk
         !  print *,'dist_h: ',dist_h,'dist_v:',dist_v
         !  print *,'sigma_h2:',sigma_h2,'sigma_v2:',sigma_v2
-        !  call exit_MPI('error NaN')
+        !  call exit_MPI(myrank,'error NaN')
         !endif
 
       enddo

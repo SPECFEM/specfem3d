@@ -27,13 +27,15 @@
 
 !==============================================================================
 !> Initialize ASDF for reading the adjoint sources
-subroutine asdf_setup(file_id)
+subroutine asdf_setup(file_id, path_to_add, simul_run_flag)
 
   use iso_c_binding, only: C_NULL_CHAR
   implicit none
 
   ! asdf file handle
   integer,intent(inout) :: file_id
+  character(len=*), intent(in) :: path_to_add
+  logical, intent(in) :: simul_run_flag
 
   ! local parameters
   character(len=512) :: filename
@@ -43,7 +45,11 @@ subroutine asdf_setup(file_id)
   call world_duplicate(comm)
   call ASDF_initialize_hdf5_f(ier)
 
-  filename = 'SEM/adjoint.h5' // C_NULL_CHAR
+  if (simul_run_flag) then
+    filename = trim(path_to_add) // 'SEM/adjoint.h5' // C_NULL_CHAR
+  else
+    filename = 'SEM/adjoint.h5' // C_NULL_CHAR
+  endif
 
   call ASDF_open_read_only_f(filename, comm, file_id)
 

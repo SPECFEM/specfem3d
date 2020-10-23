@@ -33,7 +33,7 @@
 
   implicit none
 
-! identifier for error message file
+  ! identifier for error message file
   integer, parameter :: IERROR = 30
 
   integer, intent(in) :: myrank
@@ -41,20 +41,24 @@
 
   character(len=MAX_STRING_LEN) :: outputname
 
-! write error message to screen
+  ! write error message to screen
   write(*,*) error_msg(1:len(error_msg))
   write(*,*) 'Error detected, aborting MPI... proc ',myrank
 
-! write error message to file
+  ! write error message to file
   write(outputname,"('/error_message',i6.6,'.txt')") myrank
   open(unit=IERROR,file=trim(OUTPUT_FILES)//outputname,status='unknown')
   write(IERROR,*) error_msg(1:len(error_msg))
   write(IERROR,*) 'Error detected, aborting MPI... proc ',myrank
   close(IERROR)
 
-! close output file
+  ! close output file
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
 
+  ! flushes possible left-overs from print-statements
+  call flush_stdout()
+
+  ! abort execution
   call abort_mpi()
 
   end subroutine exit_MPI
@@ -71,12 +75,16 @@
 
   implicit none
 
-  character(len=*) error_msg
+  character(len=*) :: error_msg
 
-! write error message to screen
+  ! write error message to screen
   write(*,*) error_msg(1:len(error_msg))
   write(*,*) 'Error detected, aborting MPI...'
 
+  ! flushes possible left-overs from print-statements
+  call flush_stdout()
+
+  ! abort execution
   call abort_mpi()
 
   end subroutine exit_MPI_without_rank
@@ -89,11 +97,11 @@
 
   subroutine flush_IMAIN()
 
-  use constants
+  use constants, only: IMAIN
 
   implicit none
 
-  ! only master process writes out to main output file
+  ! only main process writes out to main output file
   ! file I/O in Fortran is buffered by default
   !
   ! note: Fortran2003 includes a FLUSH statement
@@ -107,3 +115,32 @@
 
   end subroutine flush_IMAIN
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine flush_stdout()
+
+! flushes possible left-overs from print-statements
+
+  implicit none
+
+  logical :: is_connected
+
+  ! note: Cray systems don't flush print statements before ending with an MPI abort,
+  !       which often omits debugging statements with print before it.
+  !
+  !       to check which unit is used for standard output, one might also use a Fortran2003 module iso_Fortran_env:
+  !         use, intrinsic :: iso_Fortran_env, only: output_unit
+
+  ! checks default stdout unit 6
+  inquire(unit=6,opened=is_connected)
+  if (is_connected) &
+    flush(6)
+
+  ! checks Cray stdout unit 101
+  inquire(unit=101,opened=is_connected)
+  if (is_connected) &
+    flush(101)
+
+  end subroutine flush_stdout

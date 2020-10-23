@@ -20,7 +20,7 @@
 if (@ARGV < 3) {die("Usage: setup_kernel_dir.pl model dir_suffix nstat\n")}
 ($smodel,$hdur_lab,$nstat) = @ARGV;
 
-$master_dir = "/ibrixfs1/home/carltape/BASIN_KERNEL/Master_Dir";
+$main_dir = "/ibrixfs1/home/carltape/BASIN_KERNEL/Main_Dir";
 $scripts_dir = "/ibrixfs1/home/carltape/BASIN_KERNEL/Scripts";
 
 # directory containing SEM-inverted CMTSOLUTION files
@@ -111,8 +111,8 @@ for ($i = $imin; $i <= $imax; $i++) {
 
         #----------------------------
 
-        # replicate the master directory
-        `${scripts_dir}/copy_basin_sem_dir.bash ${master_dir} $eid`;
+        # replicate the main directory
+        `${scripts_dir}/copy_basin_sem_dir.bash ${main_dir} $eid`;
 
               # modify the EID label for the post-processing script
               # eid=9818433

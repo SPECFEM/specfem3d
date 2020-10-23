@@ -124,6 +124,8 @@ contains
   ! Read available SEP files, assign default values for unfound files.
   allocate(vp_sep(ni, nj, NZ),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 625')
+  vp_sep(:,:,:) = 0.0
+
   call read_sep_binary_mpiio(trim(SEP_MODEL_DIRECTORY) // "/" // sep_bin_vp, &
                              NX, NY, NZ, ni, nj, NZ, &
                              imin, jmin, kmin, vp_sep)
@@ -138,6 +140,8 @@ contains
   if (vs_exists) then
     allocate(vs_sep(ni, nj, NZ),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 626')
+    vs_sep(:,:,:) = 0.0
+
     call read_sep_binary_mpiio(trim(SEP_MODEL_DIRECTORY) // "/" // sep_bin_vs, &
                                NX, NY, NZ, ni, nj, NZ, &
                                imin, jmin, kmin, vs_sep)
@@ -151,6 +155,8 @@ contains
   if (rho_exists) then
     allocate(rho_sep(ni, nj, NZ),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 627')
+    rho_sep(:,:,:) = 0.0
+
     call read_sep_binary_mpiio(trim(SEP_MODEL_DIRECTORY) // "/" // sep_bin_rho, &
                                NX, NY, NZ, ni, nj, NZ, &
                                imin, jmin, kmin, rho_sep)

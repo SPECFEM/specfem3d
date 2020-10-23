@@ -475,7 +475,7 @@
 
   ! MPI assembling array image_color_vp_display on process zero for color output
   if (NPROC > 1) then
-    ! master collects
+    ! main collects
     if (myrank == 0) then
       do iproc = 1, NPROC-1
         if (nb_pixel_per_proc(iproc) > 0) then
@@ -490,7 +490,7 @@
       enddo
     else
       if (nb_pixel_loc > 0) then
-        ! slave processes send
+        ! secondary processes send
         call sendv_cr(data_pixel_send,nb_pixel_loc,0,43)
       endif
     endif
@@ -574,13 +574,13 @@
       enddo
     else
       if (nb_pixel_loc > 0) then
-        ! slave processes send
+        ! secondary processes send
         call sendv_cr(data_pixel_send(1),nb_pixel_loc,0,43)
       endif
     endif
   endif
 
-  ! master process writes out file
+  ! main process writes out file
   if (myrank == 0) then
     ! writes output file
     call write_PNM_data(image_color_data,iglob_image_color, &
@@ -805,8 +805,8 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
 
   use specfem_par, only: mustore,kappastore,rhostore,ibool,myrank
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
-  use specfem_par_elastic, only: ELASTIC_SIMULATION,rho_vp
+  use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
+  use specfem_par_elastic, only: rho_vp
 
   implicit none
 
@@ -842,10 +842,12 @@
   subroutine get_iglob_veloc(iglob,ispec,val_vector)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,potential_acoustic,potential_dot_acoustic, &
+  use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
+  use specfem_par_acoustic, only: potential_acoustic,potential_dot_acoustic, &
                                 ispec_is_acoustic,b_potential_acoustic,b_potential_dot_acoustic
-  use specfem_par_elastic, only: ELASTIC_SIMULATION,displ,veloc,ispec_is_elastic
+  use specfem_par_elastic, only: displ,veloc,ispec_is_elastic
   use specfem_par, only: SIMULATION_TYPE,SAVE_DISPLACEMENT,ibool
+
   implicit none
 
   integer,intent(in) :: iglob,ispec

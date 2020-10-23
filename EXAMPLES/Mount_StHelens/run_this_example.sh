@@ -6,13 +6,8 @@
 # prior to running this script, you must create the mesh files
 # in directory MESH/
 #
-
 ###################################################
 
-# number of processes
-NPROC=4
-
-##################################################
 
 echo "running example: `date`"
 currentdir=`pwd`
@@ -26,49 +21,76 @@ echo
 echo "   setting up example..."
 echo
 
-mkdir -p bin
-mkdir -p OUTPUT_FILES/DATABASES_MPI
-
-rm -f OUTPUT_FILES/*
-rm -rf OUTPUT_FILES/DATABASES_MPI/*
-
-cd $currentdir
+# cleans output files
+mkdir -p OUTPUT_FILES
+rm -rf OUTPUT_FILES/*
 
 # links executables
+mkdir -p bin
 cd bin/
-rm -f ./x*
-cp ../../../bin/xdecompose_mesh ./
-cp ../../../bin/xgenerate_databases ./
-cp ../../../bin/xspecfem3D ./
+rm -f *
+ln -s ../../../bin/xdecompose_mesh
+ln -s ../../../bin/xgenerate_databases
+ln -s ../../../bin/xspecfem3D
 cd ../
-
-# decomposes mesh
-echo
-echo "  decomposing mesh..."
-echo
-./bin/xdecompose_mesh $NPROC MESH/ OUTPUT_FILES/DATABASES_MPI/
 
 # stores setup
 cp DATA/Par_file OUTPUT_FILES/
 cp DATA/CMTSOLUTION OUTPUT_FILES/
 cp DATA/STATIONS OUTPUT_FILES/
 
+# get the number of processors, ignoring comments in the Par_file
+NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
+
+BASEMPIDIR=`grep ^LOCAL_PATH DATA/Par_file | cut -d = -f 2 `
+mkdir -p $BASEMPIDIR
+
+# decomposes mesh
+echo
+echo "  decomposing mesh..."
+echo
+./bin/xdecompose_mesh $NPROC ./MESH-default/ $BASEMPIDIR
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
+
 # runs database generation
-echo
-echo "  running database generation..."
-echo
-mpirun -np $NPROC ./bin/xgenerate_databases
+if [ "$NPROC" -eq 1 ]; then
+  # This is a serial simulation
+  echo
+  echo "  running database generation..."
+  echo
+  ./bin/xgenerate_databases
+else
+  # This is a MPI simulation
+  echo
+  echo "  running database generation on $NPROC processors..."
+  echo
+  mpirun -np $NPROC ./bin/xgenerate_databases
+fi
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
 
 # runs simulation
-echo
-echo "  running solver..."
-echo
-mpirun -np $NPROC ./bin/xspecfem3D
+if [ "$NPROC" -eq 1 ]; then
+  # This is a serial simulation
+  echo
+  echo "  running solver..."
+  echo
+  ./bin/xspecfem3D
+else
+  # This is a MPI simulation
+  echo
+  echo "  running solver on $NPROC processors..."
+  echo
+  mpirun -np $NPROC ./bin/xspecfem3D
+fi
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
 
 echo
 echo "see results in directory: OUTPUT_FILES/"
 echo
 echo "done"
-date
+echo `date`
 
 

@@ -26,9 +26,9 @@ $dtag2 = "collect";
 
 #==========================================================
 
-$masterdir = "$basedir/smooth";
+$maindir = "$basedir/smooth";
 if(not -e $edirall) {die("edirall $edirall does not exist");}
-if(not -e $masterdir) {die("masterdir $masterdir does not exist");}
+if(not -e $maindir) {die("maindir $maindir does not exist");}
 
 # read in the list of kernels that you want to sum
 $kernel_list = "$basedir/KERNELS_MODELS/kernels_run";
@@ -104,13 +104,13 @@ for ($i = $imin; $i <= $imax; $i++) {
        # NOTE: the link leaves the danger of over-writing input files
 
        # copy run scripts and link executable file
-       `cp $masterdir/run* $edir_local`;
-       `cp $masterdir/go.bash $edir_local`;
-       `ln -s $masterdir/topo $edir_local`;
-       `ln -s $masterdir/smooth_sem_fun $edir_local`;
-       `ln -s $masterdir/xcombine_vol_data $edir_local`;
-       `ln -s $masterdir/slice_file $edir_local`;
-       `ln -s $masterdir/combine.bash $edir_local`;
+       `cp $maindir/run* $edir_local`;
+       `cp $maindir/go.bash $edir_local`;
+       `ln -s $maindir/topo $edir_local`;
+       `ln -s $maindir/smooth_sem_fun $edir_local`;
+       `ln -s $maindir/xcombine_vol_data $edir_local`;
+       `ln -s $maindir/slice_file $edir_local`;
+       `ln -s $maindir/combine.bash $edir_local`;
 
        # change the label for the run
        `sed "/smooth_model/s/smooth_model/${eid}S/" ${edir_local}/go.bash > ${edir_local}/run.tmp`;

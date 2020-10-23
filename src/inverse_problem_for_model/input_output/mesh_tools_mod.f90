@@ -1,6 +1,31 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                              CNRS, France
+!                       and Princeton University, USA
+!                 (there are currently many more authors!)
+!                           (c) October 2017
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 3 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 module mesh_tools
-
-
 
   use specfem_par, only: CUSTOM_REAL, HUGEVAL, TINYVAL, NGNOD, NUM_ITER, NPROC, MAX_STRING_LEN, &
                          NGLLX, NGLLY, NGLLZ, NDIM, NSPEC_AB, NGLOB_AB, MIDX, MIDY, MIDZ, &
@@ -15,7 +40,6 @@ module mesh_tools
 
   implicit none
 
-
   PUBLIC  ::  compute_source_coeff,create_mass_matrices_Stacey_duplication_routine,  compute_force_elastic_arrays_source
 
 !!$  PRIVATE ::  locate_MPI_slice_and_bcast_to_all
@@ -23,7 +47,6 @@ module mesh_tools
 contains
 
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
 ! locate sources
 !--------------------------------------------------------------------------------------------------------------------
@@ -107,12 +130,12 @@ contains
 !!$  end subroutine locate_source
 
 
-!!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
 !  locate MPI slice which contains the point and bcast to all  (TODO PUT IT ON OTHER MODULE)
 !--------------------------------------------------------------------------------------------------------------------
+
   subroutine get_MPI_slice_and_bcast_to_all(x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found, &
-       xi, eta, gamma, ispec_selected, islice_selected, distance_from_target, myrank)
+                                            xi, eta, gamma, ispec_selected, islice_selected, distance_from_target, myrank)
 
     integer,                                        intent(in)        :: myrank
     integer,                                        intent(inout)     :: ispec_selected, islice_selected
@@ -221,12 +244,14 @@ contains
     deallocate(ispec_selected_all)
 
   end subroutine get_MPI_slice_and_bcast_to_all
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 !--------------------------------------------------------------------------------------------------------------------
 !  locate point in mesh.
 !--------------------------------------------------------------------------------------------------------------------
+
   subroutine get_point_in_mesh(x_to_locate, y_to_locate, z_to_locate, iaddx, iaddy, iaddz, elemsize_max_glob, &
-       ispec_selected, xi_found, eta_found, gamma_found, x_found, y_found, z_found, myrank)
+                               ispec_selected, xi_found, eta_found, gamma_found, x_found, y_found, z_found, myrank)
 
     double precision,                   intent(in)     :: x_to_locate, y_to_locate, z_to_locate
     real(kind=CUSTOM_REAL),             intent(in)     :: elemsize_max_glob
@@ -363,7 +388,7 @@ contains
 
      ! recompute jacobian for the new point
        call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-            xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
+                               xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
 
        ! compute distance to target location
        dx = - (x - x_target)
@@ -393,7 +418,7 @@ contains
 
     ! compute final coordinates of point found
     call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-         xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
+                            xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
 
     ! store xi,eta,gamma and x,y,z of point found
     ! note: xi/eta/gamma will be in range [-1,1]
@@ -407,10 +432,11 @@ contains
 
   end subroutine get_point_in_mesh
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 !---------------------------------------------------------------
 ! compute lagrange interpolation for point
 !---------------------------------------------------------------
+
   subroutine  compute_source_coeff(xi,eta,gamma,ispec,interparray,Mxx,Myy,Mzz,Mxy,Mxz,Myz,factor_source,Fx,Fy,Fz,type,nu_source)
 
     real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(out)    :: interparray
@@ -490,20 +516,23 @@ contains
     end select
 
   end subroutine compute_source_coeff
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 !---------------------------------------------------------------
 ! compute mass matrix
 !---------------------------------------------------------------
+
   subroutine create_mass_matrices_Stacey_duplication_routine()
 
     use constants, only: NGLLSQUARE
-    use shared_parameters, only: NPROC, DT, STACEY_ABSORBING_CONDITIONS, PML_CONDITIONS
+    use shared_parameters, only: NPROC, DT, STACEY_ABSORBING_CONDITIONS, PML_CONDITIONS, ELASTIC_SIMULATION,ACOUSTIC_SIMULATION
+
     use specfem_par, only: kappastore, rhostore, ibool, wxgll, wygll, wzgll, jacobian, &
          NGLLX, NGLLY, NGLLZ, NSPEC_AB, NGLOB_AB, num_abs_boundary_faces, abs_boundary_ispec, abs_boundary_ijk, &
          abs_boundary_normal, abs_boundary_jacobian2Dw, num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, my_neighbors_ext_mesh
-    use specfem_par_elastic, only: rmass, rmassx, rmassy, rmassz, rho_vp, rho_vs, ispec_is_elastic, ELASTIC_SIMULATION
-    use specfem_par_acoustic, only: rmass_acoustic, rmassz_acoustic, ispec_is_acoustic, ACOUSTIC_SIMULATION
+    use specfem_par_elastic, only: rmass, rmassx, rmassy, rmassz, rho_vp, rho_vs, ispec_is_elastic
+    use specfem_par_acoustic, only: rmass_acoustic, rmassz_acoustic, ispec_is_acoustic
 
     integer                           :: i, j, k, ispec, iglob, iface, igll, ier
     double precision                  :: weight
@@ -511,8 +540,6 @@ contains
     real(kind=CUSTOM_REAL)            :: deltat, deltatover2
     real(kind=CUSTOM_REAL)            :: tx, ty, tz
     real(kind=CUSTOM_REAL)            :: nx, ny, nz, vn, sn
-
-
 
     ! acoustic domains
     if (ACOUSTIC_SIMULATION) then
@@ -666,7 +693,6 @@ contains
 
      endif
 
-
      !! need to create new masss matrix because the model is changed compared to
      !! the one stored in databases_mpi
      if (ELASTIC_SIMULATION) then
@@ -740,10 +766,10 @@ contains
 
    end subroutine create_mass_matrices_Stacey_duplication_routine
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------
 ! force source delta function in ispec in solid
 !---------------------------------------------------------------
+
    subroutine compute_force_elastic_arrays_source(interparray, Fx, Fy, Fz, hxi, heta, hgamma)
 
      real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable, intent(inout)  :: interparray
@@ -771,9 +797,11 @@ contains
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 !---------------------------------------------------------------
 ! trilinear interpolation with cheking
 !---------------------------------------------------------------
+
    subroutine Get_value_by_trilinear_interp(interpolated_value,  x, y, z, regular_grid_array, nx, ny, nz, ox, oy, oz, hx, hy, hz)
 
       real(kind=CUSTOM_REAL),                                intent(inout)  :: interpolated_value

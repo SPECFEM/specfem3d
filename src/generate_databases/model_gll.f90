@@ -140,11 +140,17 @@
   !!! update arrays that will be saved and used in the solver xspecfem3D
   !!! the following part is neccessary if you uncommented something above
 
+  ! density
   rhostore(:,:,:,:) = rho_read(:,:,:,:)
+
+  ! bulk moduli: kappa = rho * (vp**2 - 4/3 vs**2)
   kappastore(:,:,:,:) = rhostore(:,:,:,:) * ( vp_read(:,:,:,:) * vp_read(:,:,:,:) &
                                               - FOUR_THIRDS * vs_read(:,:,:,:) * vs_read(:,:,:,:) )
+
+  ! shear moduli: mu = rho * vs**2
   mustore(:,:,:,:) = rhostore(:,:,:,:) * vs_read(:,:,:,:) * vs_read(:,:,:,:)
 
+  ! products rho*vp and rho*vs (used to speed up absorbing boundaries contributions)
   rho_vp(:,:,:,:) = rhostore(:,:,:,:) * vp_read(:,:,:,:)
   rho_vs(:,:,:,:) = rhostore(:,:,:,:) * vs_read(:,:,:,:)
 

@@ -29,61 +29,59 @@
 
 ! absorbing boundary term for elastic media (Stacey conditions)
 
-  subroutine compute_stacey_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
-                        ibool,iphase, &
-                        abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                        abs_boundary_ijk,abs_boundary_ispec, &
-                        num_abs_boundary_faces,veloc,rho_vp,rho_vs, &
-                        ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
-                        it,b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
+  subroutine compute_stacey_viscoelastic_forward(NSPEC_AB,NGLOB_AB,accel, &
+                                                 ibool,iphase, &
+                                                 abs_boundary_normal,abs_boundary_jacobian2Dw, &
+                                                 abs_boundary_ijk,abs_boundary_ispec, &
+                                                 num_abs_boundary_faces,veloc,rho_vp,rho_vs, &
+                                                 ispec_is_elastic, &
+                                                 it,b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
 
   use constants
 
-  use specfem_par, only: it_dsm, it_fk, Veloc_dsm_boundary, Tract_dsm_boundary, Veloc_axisem, Tract_axisem, Tract_axisem_time
 
+  use specfem_par, only: SAVE_STACEY
   use specfem_par_elastic, only: displ
 
+  ! boundary coupling
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,INJECTION_TECHNIQUE_TYPE,RECIPROCITY_AND_KH_INTEGRAL
-
-! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
+  use specfem_par, only: it_dsm, it_fk, Veloc_dsm_boundary, Tract_dsm_boundary, Veloc_axisem, Tract_axisem, Tract_axisem_time
+  ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
   use specfem_par_coupling, only: npt,nbdglb, &
      VX_t, VY_t, VZ_t, TX_t, TY_t, TZ_t, NP_RESAMP, &
      vx_FK,vy_FK,vz_FK,tx_FK,ty_FK,tz_FK
 
   implicit none
 
-  integer :: NSPEC_AB,NGLOB_AB
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB
 
 ! acceleration
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: accel
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: accel
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
 ! communication overlap
-  integer :: iphase
+  integer,intent(in) :: iphase
 
 ! Stacey conditions
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: veloc
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vp,rho_vs
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(in) :: veloc
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: rho_vp,rho_vs
 
-  logical, dimension(NSPEC_AB) :: ispec_is_elastic
+  logical, dimension(NSPEC_AB),intent(in) :: ispec_is_elastic
 
 ! absorbing boundary surface
-  integer :: num_abs_boundary_faces
-  real(kind=CUSTOM_REAL) :: abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces)
-  real(kind=CUSTOM_REAL) :: abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces)
-  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
-  integer :: abs_boundary_ispec(num_abs_boundary_faces)
+  integer,intent(in) :: num_abs_boundary_faces
+  real(kind=CUSTOM_REAL),intent(in) :: abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces)
+  real(kind=CUSTOM_REAL),intent(in) :: abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces)
+  integer,intent(in) :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
+  integer,intent(in) :: abs_boundary_ispec(num_abs_boundary_faces)
 
 ! adjoint simulations
-  integer:: SIMULATION_TYPE
-  integer:: it
-  integer:: b_num_abs_boundary_faces,b_reclen_field
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
+  integer,intent(in) :: it
+  integer,intent(in) :: b_num_abs_boundary_faces,b_reclen_field
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),intent(inout) :: b_absorb_field
 
-  logical:: SAVE_FORWARD
-
-! local parameters
-  real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw
+  ! local parameters
+  real(kind=CUSTOM_REAL) :: vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw
   integer :: ispec,iglob,i,j,k,iface,igll
 
 !! comment from Vadim Monteiller, Feb 2017:
@@ -301,7 +299,7 @@
         accel(3,iglob) = accel(3,iglob) - tz*jacobianw
 
         ! adjoint simulations
-        if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+        if (SAVE_STACEY) then
           b_absorb_field(1,igll,iface) = tx*jacobianw
           b_absorb_field(2,igll,iface) = ty*jacobianw
           b_absorb_field(3,igll,iface) = tz*jacobianw
@@ -333,7 +331,7 @@
   endif
 
   ! adjoint simulations: stores absorbed wavefield part
-  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+  if (SAVE_STACEY) then
     ! writes out absorbing boundary value
     call write_abs(IOABS,b_absorb_field,b_reclen_field,it)
   endif
@@ -343,7 +341,7 @@
     !! TODO: maybe call integrand_for_computing_Kirchoff_Helmholtz_integral here
   endif
 
-  end subroutine compute_stacey_viscoelastic
+  end subroutine compute_stacey_viscoelastic_forward
 
 !
 !=====================================================================
@@ -354,39 +352,39 @@
 ! absorbing boundary term for elastic media (Stacey conditions)
 
   subroutine compute_stacey_viscoelastic_backward(NSPEC_AB, &
-                        ibool,iphase, &
-                        abs_boundary_ijk,abs_boundary_ispec, &
-                        num_abs_boundary_faces, &
-                        ispec_is_elastic,SIMULATION_TYPE, &
-                        NSTEP,it,NGLOB_ADJOINT,b_accel, &
-                        b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
+                                                  ibool,iphase, &
+                                                  abs_boundary_ijk,abs_boundary_ispec, &
+                                                  num_abs_boundary_faces, &
+                                                  ispec_is_elastic,SIMULATION_TYPE, &
+                                                  NSTEP,it,NGLOB_ADJOINT,b_accel, &
+                                                  b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
 
   use constants
   use specfem_par, only: myrank
 
   implicit none
 
-  integer :: NSPEC_AB
+  integer,intent(in) :: NSPEC_AB
 
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
 ! communication overlap
-  integer :: iphase
+  integer,intent(in) :: iphase
 
-  logical, dimension(NSPEC_AB) :: ispec_is_elastic
+  logical, dimension(NSPEC_AB),intent(in) :: ispec_is_elastic
 
 ! absorbing boundary surface
-  integer :: num_abs_boundary_faces
-  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
-  integer :: abs_boundary_ispec(num_abs_boundary_faces)
+  integer,intent(in) :: num_abs_boundary_faces
+  integer,intent(in) :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
+  integer,intent(in) :: abs_boundary_ispec(num_abs_boundary_faces)
 
 ! adjoint simulations
-  integer:: SIMULATION_TYPE
-  integer:: NSTEP,it,NGLOB_ADJOINT
-  integer:: b_num_abs_boundary_faces,b_reclen_field
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
+  integer,intent(in) :: SIMULATION_TYPE
+  integer,intent(in) :: NSTEP,it,NGLOB_ADJOINT
+  integer,intent(in) :: b_num_abs_boundary_faces,b_reclen_field
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),intent(inout) :: b_absorb_field
 
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_ADJOINT):: b_accel
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_ADJOINT),intent(inout) :: b_accel
 
 ! local parameters
   integer :: ispec,iglob,i,j,k,iface,igll
@@ -486,36 +484,138 @@
 !=====================================================================
 !
 
+  subroutine compute_stacey_viscoelastic_backward_undoatt(NSPEC_AB,NGLOB_AB,b_accel,b_veloc, &
+                                                          ibool,iphase, &
+                                                          abs_boundary_normal,abs_boundary_jacobian2Dw, &
+                                                          abs_boundary_ijk,abs_boundary_ispec, &
+                                                          num_abs_boundary_faces, &
+                                                          rho_vp,rho_vs,ispec_is_elastic)
+
+  use constants
+  use specfem_par, only: myrank,SIMULATION_TYPE
+
+  implicit none
+
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB
+
+  ! acceleration
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: b_accel
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(in) :: b_veloc
+
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
+
+  ! communication overlap
+  integer,intent(in) :: iphase
+
+  ! absorbing boundary surface
+  integer,intent(in) :: num_abs_boundary_faces
+  real(kind=CUSTOM_REAL),intent(in) :: abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces)
+  real(kind=CUSTOM_REAL),intent(in) :: abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces)
+  integer,intent(in) :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
+  integer,intent(in) :: abs_boundary_ispec(num_abs_boundary_faces)
+
+  ! Stacey conditions
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: rho_vp,rho_vs
+  logical, dimension(NSPEC_AB),intent(in) :: ispec_is_elastic
+
+  ! local parameters
+  real(kind=CUSTOM_REAL) :: vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw
+  integer :: ispec,iglob,i,j,k,iface,igll
+
+  ! checks
+  if (SIMULATION_TYPE /= 3) &
+    call exit_MPI(myrank,'error calling routine compute_stacey_viscoelastic_backward() with wrong SIMULATION_TYPE')
+
+  ! only add these contributions in first pass
+  if (iphase /= 1) return
+
+  ! checks if anything to do
+  if (num_abs_boundary_faces == 0) return
+
+  ! absorbs absorbing-boundary surface using Stacey condition (Clayton and Enquist)
+  do iface = 1,num_abs_boundary_faces
+
+    ispec = abs_boundary_ispec(iface)
+
+    if (ispec_is_elastic(ispec)) then
+      ! reference GLL points on boundary face
+      do igll = 1,NGLLSQUARE
+        ! gets local indices for GLL point
+        i = abs_boundary_ijk(1,igll,iface)
+        j = abs_boundary_ijk(2,igll,iface)
+        k = abs_boundary_ijk(3,igll,iface)
+
+        ! gets velocity
+        iglob = ibool(i,j,k,ispec)
+
+        vx = b_veloc(1,iglob)
+        vy = b_veloc(2,iglob)
+        vz = b_veloc(3,iglob)
+
+        ! gets associated normal
+        nx = abs_boundary_normal(1,igll,iface)
+        ny = abs_boundary_normal(2,igll,iface)
+        nz = abs_boundary_normal(3,igll,iface)
+
+        ! velocity component in normal direction (normal points out of element)
+        vn = vx*nx + vy*ny + vz*nz
+
+        ! stacey term: velocity vector component * vp * rho in normal direction + vs * rho component tangential to it
+        tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
+        ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
+        tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
+
+        ! gets associated, weighted jacobian
+        jacobianw = abs_boundary_jacobian2Dw(igll,iface)
+
+        ! adds stacey term (weak form)
+        b_accel(1,iglob) = b_accel(1,iglob) - tx*jacobianw
+        b_accel(2,iglob) = b_accel(2,iglob) - ty*jacobianw
+        b_accel(3,iglob) = b_accel(3,iglob) - tz*jacobianw
+      enddo
+    endif ! ispec_is_elastic
+  enddo
+
+  end subroutine compute_stacey_viscoelastic_backward_undoatt
+
+
+
+!
+!=====================================================================
+!
+
 ! for elastic solver on GPU
 
 ! absorbing boundary term for elastic media (Stacey conditions)
 
   subroutine compute_stacey_viscoelastic_GPU(iphase,num_abs_boundary_faces, &
-                        SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
-                        b_num_abs_boundary_faces,b_reclen_field,b_absorb_field,Mesh_pointer)
+                                             SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                             b_num_abs_boundary_faces,b_reclen_field,b_absorb_field,Mesh_pointer, &
+                                             FORWARD_OR_ADJOINT)
 
   use constants
 
-  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,UNDO_ATTENUATION_AND_OR_PML
 
   implicit none
 
 ! communication overlap
-  integer :: iphase
+  integer,intent(in) :: iphase
 
 ! absorbing boundary surface
-  integer :: num_abs_boundary_faces
+  integer,intent(in) :: num_abs_boundary_faces
 
 ! adjoint simulations
-  integer:: SIMULATION_TYPE
-  integer:: NSTEP,it
-  integer:: b_num_abs_boundary_faces,b_reclen_field
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
+  integer,intent(in) :: SIMULATION_TYPE
+  integer,intent(in) :: NSTEP,it
+  integer,intent(in) :: b_num_abs_boundary_faces,b_reclen_field
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),intent(inout) :: b_absorb_field
 
-  logical:: SAVE_FORWARD
+  logical,intent(in) :: SAVE_FORWARD
 
   ! GPU_MODE variables
-  integer(kind=8) :: Mesh_pointer
+  integer(kind=8),intent(in) :: Mesh_pointer
+  integer, intent(in) :: FORWARD_OR_ADJOINT
 
   !! For coupling with DSM
 
@@ -546,19 +646,25 @@
   ! checks if anything to do
   if (num_abs_boundary_faces == 0) return
 
-! adjoint simulations:
-  if (SIMULATION_TYPE == 3) then
-    ! reads in absorbing boundary array (when first phase is running)
-    ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
-    call read_abs(IOABS,b_absorb_field,b_reclen_field,NSTEP-it+1)
-  endif !adjoint
+  if (UNDO_ATTENUATION_AND_OR_PML) then
+    ! no need to store boundaries on disk
+    ! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)
+    call compute_stacey_viscoelastic_undoatt_cuda(Mesh_pointer,iphase,FORWARD_OR_ADJOINT)
+  else
+    ! adjoint simulations:
+    if (SIMULATION_TYPE == 3) then
+      ! reads in absorbing boundary array (when first phase is running)
+      ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
+      call read_abs(IOABS,b_absorb_field,b_reclen_field,NSTEP-it+1)
+    endif !adjoint
 
-  call compute_stacey_viscoelastic_cuda(Mesh_pointer,iphase,b_absorb_field)
+    call compute_stacey_viscoelastic_cuda(Mesh_pointer,iphase,b_absorb_field,FORWARD_OR_ADJOINT)
 
-  ! adjoint simulations: stores absorbed wavefield part
-  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-    ! writes out absorbing boundary value
-    call write_abs(IOABS,b_absorb_field,b_reclen_field,it)
+    ! adjoint simulations: stores absorbed wavefield part
+    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+      ! writes out absorbing boundary value
+      call write_abs(IOABS,b_absorb_field,b_reclen_field,it)
+    endif
   endif
 
   !! CD CD : begin

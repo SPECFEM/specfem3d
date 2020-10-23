@@ -1,0 +1,32 @@
+# number of interfaces
+4
+#
+# We describe each interface below, structured as a 2D-grid, with several parameters : 
+# number of points along XI and ETA, minimal XI ETA coordinates 
+# and spacing between points which must be constant.
+# Then the records contain the Z coordinates of the NXI x NETA points.
+#
+# top interface number 1 
+# SUPPRESS_UTM_PROJECTION  NXI  NETA LONG_MIN   LAT_MIN    SPACING_XI SPACING_ETA
+# layer 1 top (-4200m)
+ .true.                    2    2    0.0        0.0        4800.d0    4800.d0
+ interface4.dat
+# layer 2 top (-3300m)
+ .true.                    2    2    0.0        0.0        4800.d0    4800.d0
+ interface3.dat
+# layer 3 top (-2400m)
+ .true.                    2    2    0.0        0.0        4800.d0    4800.d0
+ interface2.dat
+# layer 4 top (0m)
+ .true.                    2    2    0.0        0.0        4800.d0    4800.d0
+ interface1.dat
+#
+# for each layer, we give the number of spectral elements in the vertical direction
+# layer 1
+2  # bottom layer
+# layer 2
+3  # lower porous
+# layer 3
+3  # upper porous
+# layer 4
+8  # top water layer

@@ -22,6 +22,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
+from __future__ import print_function
+
 import os
 
 
@@ -45,7 +47,7 @@ def readcfg(filename=None, importmenu=False, mpiflag=False):
         menusurface = False
         single = False
     else:
-        print 'error: no configuration file'
+        print('error: no configuration file')
         import sys
         sys.exit()
     #
@@ -112,16 +114,16 @@ def readcfg(filename=None, importmenu=False, mpiflag=False):
             for name, value in self.items():
                 names.append(name)
                 values.append(value)
-            print names, values
+            print(names, values)
             a = zip(names, values)
             a.sort()
             arc = ''
             for o in a:
                 if o[0][0] != arc:
                     print
-                print o[0], ' -> ', o[1]
+                print(o[0], ' -> ', o[1])
                 arc = o[0][0]
-            print __name__
+            print(__name__)
             return '____'
 
     #
@@ -209,7 +211,7 @@ def readcfg(filename=None, importmenu=False, mpiflag=False):
             except:
                 pass
 
-        # print dcfg
+        # print(dcfg)
 
         if dcfg['nsurf']:
             surface_name = []
@@ -286,7 +288,7 @@ def readcfg(filename=None, importmenu=False, mpiflag=False):
             pass
 
         if dcfg['irregulargridded_surf']:
-            print 'test'
+            print('test')
             dcfg['xmin'] = dcfg['longitude_min']
             dcfg['ymin'] = dcfg['latitude_min']
             dcfg['xmax'] = dcfg['longitude_max']

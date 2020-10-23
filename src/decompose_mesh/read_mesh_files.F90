@@ -45,6 +45,17 @@
   logical :: file_found
   integer :: ispec,ier
 
+  ! user output
+  print *, 'reading mesh files in: ',trim(localpath_name)
+  print *
+  print *, '  using NGNOD = ',NGNOD
+  if (NGNOD == 8) then
+    print *, '  linear elements'
+  else if (NGNOD == 27) then
+    print *, '  quadratic elements'
+  endif
+  print *
+
   ! reads node coordinates
   open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file', &
         status='old', form='formatted', iostat = ier)
@@ -107,11 +118,57 @@
     !             point 1 = (0,0,0), point 2 = (0,1,0), point 3 = (1,1,0), point 4 = (1,0,0)
     !          then top (positive z-direction) of element
     !             point 5 = (0,0,1), point 6 = (0,1,1), point 7 = (1,1,1), point 8 = (1,0,1)
-
+    !
+    ! NGNOD == 8 ordering:
+    !   SPECFEM ordering
+    !           8 ------ 7
+    !          /|      / |            z
+    !         5 ----- 6  |            |
+    !         | |     |  |            |
+    !         | 4 ----|- 3            |-------> y
+    !         |/      |/               \
+    !         1 ----- 2                 \ x
+    !
+    ! NGNOD == 27 ordering:
+    !   SPECFEM ordering
+    !   1. corner nodes  1-8: same as hex8
+    !   2. midside nodes (nodes located in the middle of an edge): edges bottom, mid (bottom-to-top), top
+    !   3. side center nodes (nodes located in the middle of a face): bottom,front,right,back,left,top
+    !   4. center node
+    !
+    !      8----19-----7
+    !      |\          |\
+    !      | 20    26  | 18
+    !      16  \ 24    15 \
+    !      |    5----17+---6
+    !      | 25 |  27  | 23|
+    !      4----+-11---3   |
+    !       \  13    22 \  14
+    !        12 |  21    10|
+    !          \|         \|
+    !           1----9----2
+    !
+    ! compare with http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
+    !      3----13-----2
+    !      |\          |\
+    !      | 15    24  | 14        v
+    !      9  \ 20     11 \        |
+    !      |    7----19+---6       |
+    !      | 22 |  26  | 23|       |-----> u
+    !      0----+-8----1   |        \
+    !       \  17    25 \  18        \
+    !        10 |  21    12|          w
+    !          \|         \|
+    !           4----16----5
+    !
     read(98,*,iostat=ier) num_elmnt,(elmnts(inode,num_elmnt), inode=1,NGNOD)
+
+    ! debug
+    !print *,'ispec: ',ispec,'num_elmnt:',num_elmnt,elmnts(1:NGNOD,num_elmnt)
 
     if (ier /= 0) then
       print *,'Error while attempting to read ',NGNOD,'element data values from the mesh file'
+      print *,'  ispec: ',ispec,'num_elmnt: ',num_elmnt,'elemnts',elmnts(1:NGNOD,num_elmnt)
       if (NGNOD == 8) print *,'check if your mesh file is indeed composed of HEX8 elements'
       if (NGNOD == 27) print *,'check if your mesh file is indeed composed of HEX27 elements'
       stop 'Error reading element data from the mesh file'
@@ -330,6 +387,8 @@
         if (len_trim(line) == 0) cycle
         if (line(1:1) == '#' .or. line(1:1) == '!') cycle
 
+        ! format:
+        ! #rho_s #rho_f #phi #tort #kxx #kxy #kxz #kyy #kyz #kzz #kappa_s #kappa_f #kappa_fr #eta #mu_fr
         read(line,*,iostat=ier) rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
         if (ier /= 0) then
           stop 'Error reading nummaterial_poroelastic_file, please check if it has the required format...'

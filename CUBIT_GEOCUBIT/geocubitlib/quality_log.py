@@ -22,6 +22,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
+from __future__ import print_function
+
 try:
     import start as start
     cubit = start.start_cubit()
@@ -29,7 +31,7 @@ except:
     try:
         import cubit
     except:
-        print 'error importing cubit, check if cubit is installed'
+        print('error importing cubit, check if cubit is installed')
         pass
 
 
@@ -199,6 +201,6 @@ def quality_log(tqfile=None):
     if toclose:
         totstat_file.close()
 
-    print 'max specfem3d skewness: ', mesh.max_skewness
-    print 'min edge length: ', mesh.min_edge_length
+    print('max specfem3d skewness: ', mesh.max_skewness)
+    print('min edge length: ', mesh.min_edge_length)
     return mesh.max_skewness, mesh.min_edge_length

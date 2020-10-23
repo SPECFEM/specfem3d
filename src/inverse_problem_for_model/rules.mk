@@ -136,6 +136,7 @@ inverse_problem_for_model_OBJECTS += \
 	$O/compute_forces_viscoelastic_calling_routine.spec.o \
 	$O/compute_forces_viscoelastic.spec.o \
 	$O/compute_element_att_memory.spec.o \
+	$O/compute_element_strain.spec.o \
 	$O/compute_forces_poro_fluid_part.spec.o \
 	$O/compute_forces_poroelastic_calling_routine.spec.o \
 	$O/compute_forces_poro_solid_part.spec.o \
@@ -181,9 +182,11 @@ inverse_problem_for_model_OBJECTS += \
 	$O/prepare_wavefields.spec.o \
 	$O/print_stf_file.spec.o \
 	$O/read_external_stf.spec.o \
+	$O/read_forward_arrays.spec.o \
 	$O/read_mesh_databases.spec.o \
 	$O/read_stations.spec.o \
 	$O/save_adjoint_kernels.spec.o \
+	$O/save_forward_arrays.spec.o \
 	$O/setup_GLL_points.spec.o \
 	$O/setup_movie_meshes.spec.o \
 	$O/setup_sources_receivers.spec.o \
@@ -291,6 +294,7 @@ cuda_inverse_problem_for_model_OBJECTS = \
 	$O/noise_tomography_cuda.cuda.o \
 	$O/prepare_mesh_constants_cuda.cuda.o \
 	$O/save_and_compare_cpu_vs_gpu.cudacc.o \
+	$O/smooth_cuda.cuda.o \
 	$O/transfer_fields_cuda.cuda.o \
 	$O/update_displacement_cuda.cuda.o \
 	$O/write_seismograms_cuda.cuda.o \

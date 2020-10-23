@@ -59,12 +59,12 @@
   endif
 
   ! takes number of faces for top, free surface only
-  if (MOVIE_TYPE == 1) then
+  if (MOVIE_TYPE == 1 .or. (NOISE_TOMOGRAPHY /= 0)) then
     nfaces_surface = num_free_surface_faces
   endif
 
   ! handles movies and shakemaps
-  if (MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
+  if (MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. (NOISE_TOMOGRAPHY /= 0)) then
     call setup_movie_meshes()
   endif
 

@@ -87,7 +87,7 @@ end module my_mpi
   ! thus read the parameter file
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
   if (myrank == 0) then
-    call open_parameter_file_from_master_only(ier)
+    call open_parameter_file_from_main_only(ier)
     ! we need to make sure that NUMBER_OF_SIMULTANEOUS_RUNS and BROADCAST_SAME_MESH_AND_MODEL are read
     call read_value_integer(NUMBER_OF_SIMULTANEOUS_RUNS, 'NUMBER_OF_SIMULTANEOUS_RUNS', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter NUMBER_OF_SIMULTANEOUS_RUNS'
@@ -97,7 +97,7 @@ end module my_mpi
     call close_parameter_file()
   endif
 
-  ! broadcast parameters read from master to all processes
+  ! broadcast parameters read from main to all processes
   my_local_mpi_comm_world = MPI_COMM_WORLD
   call bcast_all_singlei(NUMBER_OF_SIMULTANEOUS_RUNS)
   call bcast_all_singlel(BROADCAST_SAME_MESH_AND_MODEL)
@@ -156,7 +156,7 @@ end module my_mpi
   ! write a stamp file to disk to let the user know that the run failed
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
     ! notifies which run directory failed
-    write(filename,"('run',i4.4,'_failed')") mygroup + 1
+    write(filename,"('run_with_directory_',i4.4,'_failed')") mygroup + 1
     inquire(file=trim(filename), exist=run_file_exists)
     if (run_file_exists) then
       open(unit=9765,file=trim(filename),status='old',position='append',action='write',iostat=ier)
@@ -169,7 +169,7 @@ end module my_mpi
     endif
 
     ! notifies which rank failed
-    write(filename,"('run_with_local_rank_',i8.8,'and_global_rank_',i8.8,'_failed')") my_local_rank,my_global_rank
+    write(filename,"('run_with_local_rank_',i8.8,'_and_global_rank_',i8.8,'_failed')") my_local_rank,my_global_rank
     open(unit=9765,file=trim(filename),status='unknown',action='write')
     write(9765,*) 'run with local rank ',my_local_rank,' and global rank ',my_global_rank,' failed'
     close(9765)
@@ -1752,8 +1752,8 @@ end module my_mpi
   integer :: ier
 
   call MPI_GATHERV(sendbuf,sendcnt,CUSTOM_MPI_TYPE, &
-                  recvbuf,recvcount,recvoffset,CUSTOM_MPI_TYPE, &
-                  0,my_local_mpi_comm_world,ier)
+                   recvbuf,recvcount,recvoffset,CUSTOM_MPI_TYPE, &
+                   0,my_local_mpi_comm_world,ier)
 
   end subroutine gatherv_all_cr
 
@@ -1995,8 +1995,15 @@ end subroutine
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mod(sizeval,NUMBER_OF_SIMULTANEOUS_RUNS) /= 0) then
-    if (myrank == 0) print *,'Error: the number of MPI processes ',sizeval, &
-                            ' is not a multiple of NUMBER_OF_SIMULTANEOUS_RUNS = ',NUMBER_OF_SIMULTANEOUS_RUNS
+    if (myrank == 0) then
+      print *,'Error: the number of MPI processes ',sizeval, &
+              ' is not a multiple of NUMBER_OF_SIMULTANEOUS_RUNS = ',NUMBER_OF_SIMULTANEOUS_RUNS
+      print *
+      print *,'make sure to launch program with NPROC * NUMBER_OF_SIMULTANEOUS_RUNS processes'
+      print *,'for example: NPROC = 1 and NUMBER_OF_SIMULTANEOUS_RUNS = 4'
+      print *,' > mpirun -np 4 ./bin/xspecfem3D'
+      print *
+    endif
     stop 'the number of MPI processes is not a multiple of NUMBER_OF_SIMULTANEOUS_RUNS'
   endif
 

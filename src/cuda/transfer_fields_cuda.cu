@@ -41,7 +41,7 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_fields_el_to_device,
               TRANSFER_FIELDS_EL_TO_DEVICE)(int* size, realw* displ, realw* veloc, realw* accel,long* Mesh_pointer) {
 
@@ -57,7 +57,7 @@ void FC_FUNC_(transfer_fields_el_to_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_fields_el_from_device,
               TRANSFER_FIELDS_EL_FROM_DEVICE)(int* size, realw* displ, realw* veloc, realw* accel,long* Mesh_pointer) {
 
@@ -73,7 +73,7 @@ void FC_FUNC_(transfer_fields_el_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_fields_to_device,
               TRANSFER_B_FIELDS_TO_DEVICE)(int* size, realw* b_displ, realw* b_veloc, realw* b_accel,
                                            long* Mesh_pointer) {
@@ -90,7 +90,7 @@ void FC_FUNC_(transfer_b_fields_to_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_fields_from_device,
               TRANSFER_B_FIELDS_FROM_DEVICE)(int* size, realw* b_displ, realw* b_veloc, realw* b_accel,long* Mesh_pointer) {
 
@@ -106,7 +106,7 @@ void FC_FUNC_(transfer_b_fields_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_veloc_from_device,
               TRANSFER_VELOC_FROM_DEVICE)(int* size, realw* veloc, long* Mesh_pointer) {
 
@@ -118,11 +118,51 @@ void FC_FUNC_(transfer_veloc_from_device,
 
 }
 
+/* ----------------------------------------------------------------------------------------------- */
 
+extern EXTERN_LANG
+void FC_FUNC_(transfer_veloc_to_device,
+              TRANSFER_VELOC_TO_DEVICE)(int* size, realw* veloc, long* Mesh_pointer) {
+
+  TRACE("transfer_veloc_to_device");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_veloc,veloc,sizeof(realw)*(*size),cudaMemcpyHostToDevice),40009);
+
+}
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
+void FC_FUNC_(transfer_b_veloc_from_device,
+              TRNASFER_B_VELOC_FROM_DEVICE)(int* size, realw* b_veloc,long* Mesh_pointer) {
+
+  TRACE("transfer_b_veloc_from_device");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
+  print_CUDA_error_if_any(cudaMemcpy(b_veloc,mp->d_b_veloc,sizeof(realw)*(*size),cudaMemcpyDeviceToHost),40010);
+
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
+void FC_FUNC_(transfer_b_veloc_to_device,
+              TRANSFER_B_VELOC_TO_DEVICE)(int* size, realw* b_veloc,long* Mesh_pointer) {
+
+  TRACE("transfer_b_veloc_to_device");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_veloc,b_veloc,sizeof(realw)*(*size),cudaMemcpyHostToDevice),40011);
+
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
 void FC_FUNC_(transfer_accel_to_device,
               TRNASFER_ACCEL_TO_DEVICE)(int* size, realw* accel,long* Mesh_pointer) {
 
@@ -136,7 +176,7 @@ void FC_FUNC_(transfer_accel_to_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_accel_from_device,
               TRANSFER_ACCEL_FROM_DEVICE)(int* size, realw* accel,long* Mesh_pointer) {
 
@@ -150,7 +190,7 @@ void FC_FUNC_(transfer_accel_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_accel_from_device,
               TRNASFER_B_ACCEL_FROM_DEVICE)(int* size, realw* b_accel,long* Mesh_pointer) {
 
@@ -164,7 +204,21 @@ void FC_FUNC_(transfer_b_accel_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
+void FC_FUNC_(transfer_b_accel_to_device,
+              TRANSFER_B_accel_to_DEVICE)(int* size, realw* b_accel,long* Mesh_pointer) {
+
+  TRACE("transfer_b_accel_to_device");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_accel,b_accel,sizeof(realw)*(*size),cudaMemcpyHostToDevice),40057);
+
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
 void FC_FUNC_(transfer_sigma_from_device,
               TRANSFER_SIGMA_FROM_DEVICE)(int* size, realw* sigma_kl,long* Mesh_pointer) {
 
@@ -178,21 +232,35 @@ void FC_FUNC_(transfer_sigma_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_displ_from_device,
-              TRANSFER_B_DISPL_FROM_DEVICE)(int* size, realw* displ,long* Mesh_pointer) {
+              TRANSFER_B_DISPL_FROM_DEVICE)(int* size, realw* b_displ,long* Mesh_pointer) {
 
   TRACE("transfer_b_displ_from_device");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
-  print_CUDA_error_if_any(cudaMemcpy(displ,mp->d_b_displ,sizeof(realw)*(*size),cudaMemcpyDeviceToHost),40056);
+  print_CUDA_error_if_any(cudaMemcpy(b_displ,mp->d_b_displ,sizeof(realw)*(*size),cudaMemcpyDeviceToHost),40056);
 
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
+void FC_FUNC_(transfer_b_displ_to_device,
+              TRANSFER_B_DISPL_to_DEVICE)(int* size, realw* b_displ,long* Mesh_pointer) {
+
+  TRACE("transfer_b_displ_to_device");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_displ,b_displ,sizeof(realw)*(*size),cudaMemcpyHostToDevice),40057);
+
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
 void FC_FUNC_(transfer_displ_from_device,
               TRANSFER_DISPL_FROM_DEVICE)(int* size, realw* displ,long* Mesh_pointer) {
 
@@ -206,9 +274,23 @@ void FC_FUNC_(transfer_displ_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
+extern EXTERN_LANG
+void FC_FUNC_(transfer_displ_to_device,
+              TRANSFER_DISPL_TO_DEVICE)(int* size, realw* displ, long* Mesh_pointer) {
+
+  TRACE("transfer_displ_to_device");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_displ,displ,sizeof(realw)*(*size),cudaMemcpyHostToDevice),40066);
+
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
 // attenuation fields
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_fields_att_to_device,
               TRANSFER_B_FIELDS_ATT_TO_DEVICE)(long* Mesh_pointer,
                                                realw* b_R_xx,realw* b_R_yy,realw* b_R_xy,
@@ -238,16 +320,14 @@ void FC_FUNC_(transfer_b_fields_att_to_device,
   print_CUDA_error_if_any(cudaMemcpy(mp->d_b_epsilondev_yz,b_epsilondev_yz,*size_epsilondev*sizeof(realw),cudaMemcpyHostToDevice),43120);
   print_CUDA_error_if_any(cudaMemcpy(mp->d_b_epsilondev_trace,b_epsilondev_trace,*size_epsilondev*sizeof(realw),cudaMemcpyHostToDevice),43121);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("after transfer_b_fields_att_to_device");
-#endif
+  GPU_ERROR_CHECKING("after transfer_b_fields_att_to_device");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
 // attenuation fields
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_fields_att_from_device,
               TRANSFER_FIELDS_ATT_FROM_DEVICE)(long* Mesh_pointer,
                                                realw* R_xx,realw* R_yy,realw* R_xy,realw* R_xz,realw* R_yz,
@@ -275,16 +355,14 @@ void FC_FUNC_(transfer_fields_att_from_device,
   print_CUDA_error_if_any(cudaMemcpy(epsilondev_yz,mp->d_epsilondev_yz,*size_epsilondev*sizeof(realw),cudaMemcpyDeviceToHost),43130);
   print_CUDA_error_if_any(cudaMemcpy(epsilondev_trace,mp->d_epsilondev_trace,*size_epsilondev*sizeof(realw),cudaMemcpyDeviceToHost),43131);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("after transfer_fields_att_from_device");
-#endif
+  GPU_ERROR_CHECKING("after transfer_fields_att_from_device");
 }
 
 // JC JC here we will need to add GPU support for the new C-PML routines
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_kernels_el_to_host,
               TRANSFER_KERNELS_EL_TO_HOST)(long* Mesh_pointer,
                                             realw* h_rho_kl,
@@ -316,7 +394,7 @@ void FC_FUNC_(transfer_kernels_el_to_host,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_kernels_noise_to_host,
               TRANSFER_KERNELS_NOISE_TO_HOST)(long* Mesh_pointer,
                                               realw* h_sigma_kl,
@@ -338,7 +416,7 @@ void FC_FUNC_(transfer_kernels_noise_to_host,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_fields_ac_to_device,
               TRANSFER_FIELDS_AC_TO_DEVICE)(int* size,
                                             field* potential_acoustic,
@@ -358,14 +436,12 @@ void FC_FUNC_(transfer_fields_ac_to_device,
   print_CUDA_error_if_any(cudaMemcpy(mp->d_potential_dot_dot_acoustic,potential_dot_dot_acoustic,
                                      sizeof(field)*(*size),cudaMemcpyHostToDevice),50130);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("after transfer_fields_ac_to_device");
-#endif
+  GPU_ERROR_CHECKING("after transfer_fields_ac_to_device");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_fields_ac_to_device,
               TRANSFER_B_FIELDS_AC_TO_DEVICE)(int* size,
                                               field* b_potential_acoustic,
@@ -385,15 +461,13 @@ void FC_FUNC_(transfer_b_fields_ac_to_device,
   print_CUDA_error_if_any(cudaMemcpy(mp->d_b_potential_dot_dot_acoustic,b_potential_dot_dot_acoustic,
                                      sizeof(field)*(*size),cudaMemcpyHostToDevice),51130);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("after transfer_b_fields_ac_to_device");
-#endif
+  GPU_ERROR_CHECKING("after transfer_b_fields_ac_to_device");
 }
 
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_fields_ac_from_device,
               TRANSFER_FIELDS_AC_FROM_DEVICE)(int* size,
                                               field* potential_acoustic,
@@ -412,14 +486,12 @@ void FC_FUNC_(transfer_fields_ac_from_device,
   print_CUDA_error_if_any(cudaMemcpy(potential_dot_dot_acoustic,mp->d_potential_dot_dot_acoustic,
                                      sizeof(field)*(*size),cudaMemcpyDeviceToHost),52131);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("after transfer_fields_ac_from_device");
-#endif
+  GPU_ERROR_CHECKING("after transfer_fields_ac_from_device");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_fields_ac_from_device,
               TRANSFER_B_FIELDS_AC_FROM_DEVICE)(int* size,
                                                 field* b_potential_acoustic,
@@ -438,14 +510,84 @@ void FC_FUNC_(transfer_b_fields_ac_from_device,
   print_CUDA_error_if_any(cudaMemcpy(b_potential_dot_dot_acoustic,mp->d_b_potential_dot_dot_acoustic,
                                      sizeof(field)*(*size),cudaMemcpyDeviceToHost),53131);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("after transfer_b_fields_ac_from_device");
-#endif
+  GPU_ERROR_CHECKING("after transfer_b_fields_ac_from_device");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
+void FC_FUNC_(transfer_b_potential_ac_from_device,
+              TRANSFER_B_potentical_AC_FROM_DEVICE)(int* size,
+                                                    field* b_potential_acoustic,
+                                                    long* Mesh_pointer) {
+  TRACE("transfer_b_potential_ac_from_device");
+
+  //get mesh pointer out of fortran integer container
+  Mesh* mp = (Mesh*)(*Mesh_pointer);
+
+  print_CUDA_error_if_any(cudaMemcpy(b_potential_acoustic,mp->d_b_potential_acoustic,
+                                     sizeof(field)*(*size),cudaMemcpyDeviceToHost),53111);
+
+  GPU_ERROR_CHECKING("after transfer_b_potential_ac_from_device");
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
+void FC_FUNC_(transfer_b_potential_dot_dot_ac_from_device,
+              TRANSFER_B_potentical_DOT_DOT_AC_FROM_DEVICE)(int* size,
+                                                            field* b_potential_dot_dot_acoustic,
+                                                            long* Mesh_pointer) {
+  TRACE("transfer_b_potential_dot_dot_ac_from_device");
+
+  //get mesh pointer out of fortran integer container
+  Mesh* mp = (Mesh*)(*Mesh_pointer);
+
+  print_CUDA_error_if_any(cudaMemcpy(b_potential_dot_dot_acoustic,mp->d_b_potential_dot_dot_acoustic,
+                                     sizeof(field)*(*size),cudaMemcpyDeviceToHost),53112);
+
+  GPU_ERROR_CHECKING("after transfer_b_potential_dot_dot_ac_from_device");
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
+void FC_FUNC_(transfer_b_potential_ac_to_device,
+              TRANSFER_B_potentical_AC_TO_DEVICE)(int* size,
+                                                  field* b_potential_acoustic,
+                                                  long* Mesh_pointer) {
+  TRACE("transfer_b_potential_ac_to_device");
+
+  //get mesh pointer out of fortran integer container
+  Mesh* mp = (Mesh*)(*Mesh_pointer);
+
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_potential_acoustic,b_potential_acoustic,
+                                     sizeof(field)*(*size),cudaMemcpyHostToDevice),53112);
+
+  GPU_ERROR_CHECKING("after transfer_b_potential_ac_to_device");
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
+void FC_FUNC_(transfer_b_potential_dot_dot_ac_to_device,
+              TRANSFER_B_potentical_DOT_DOT_AC_TO_DEVICE)(int* size,
+                                                          field* b_potential_dot_dot_acoustic,
+                                                          long* Mesh_pointer) {
+  TRACE("transfer_b_potential_ac_to_device");
+
+  //get mesh pointer out of fortran integer container
+  Mesh* mp = (Mesh*)(*Mesh_pointer);
+
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_b_potential_dot_dot_acoustic,b_potential_dot_dot_acoustic,
+                                     sizeof(field)*(*size),cudaMemcpyHostToDevice),53113);
+
+  GPU_ERROR_CHECKING("after transfer_b_potential_dot_dot_ac_to_device");
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
 void FC_FUNC_(transfer_dot_dot_from_device,
               TRNASFER_DOT_DOT_FROM_DEVICE)(int* size, field* potential_dot_dot_acoustic,long* Mesh_pointer) {
 
@@ -461,7 +603,7 @@ void FC_FUNC_(transfer_dot_dot_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_dot_dot_from_device,
               TRNASFER_B_DOT_DOT_FROM_DEVICE)(int* size, field* b_potential_dot_dot_acoustic,long* Mesh_pointer) {
 
@@ -478,7 +620,7 @@ void FC_FUNC_(transfer_b_dot_dot_from_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_kernels_ac_to_host,
               TRANSFER_KERNELS_AC_TO_HOST)(long* Mesh_pointer,realw* h_rho_ac_kl,realw* h_kappa_ac_kl,int* NSPEC_AB) {
 
@@ -502,7 +644,7 @@ void FC_FUNC_(transfer_kernels_ac_to_host,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_kernels_hess_el_tohost,
               TRANSFER_KERNELS_HESS_EL_TOHOST)(long* Mesh_pointer,
                  realw* h_hess_kl,
@@ -533,7 +675,7 @@ void FC_FUNC_(transfer_kernels_hess_el_tohost,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_kernels_hess_ac_tohost,
               TRANSFER_KERNELS_HESS_AC_TOHOST)(long* Mesh_pointer,
                  realw* h_hess_ac_kl,
@@ -561,7 +703,7 @@ void FC_FUNC_(transfer_kernels_hess_ac_tohost,
 
 /* ----------------------------------------------------------------------------------------------- */
 /*
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_compute_kernel_answers_from_device,
               TRANSFER_COMPUTE_KERNEL_ANSWERS_FROM_DEVICE)(long* Mesh_pointer,
                                                            realw* rho_kl,int* size_rho,
@@ -580,7 +722,7 @@ TRACE("transfer_compute_kernel_answers_from_device");
 
 /* ----------------------------------------------------------------------------------------------- */
 /*
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_compute_kernel_fields_from_device,
               TRANSFER_COMPUTE_KERNEL_FIELDS_FROM_DEVICE)(long* Mesh_pointer,
                                                           realw* accel, int* size_accel,
@@ -624,9 +766,39 @@ TRACE("transfer_compute_kernel_fields_from_device");
   cudaMemcpy(b_epsilon_trace_over_3,mp->d_b_epsilon_trace_over_3,*size_epsilon_trace_over_3*sizeof(realw),
        cudaMemcpyDeviceToHost);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("after transfer_compute_kernel_fields_from_device");
-#endif
+  GPU_ERROR_CHECKING("after transfer_compute_kernel_fields_from_device");
 }
 */
 
+/* ----------------------------------------------------------------------------------------------- */
+// register host array for pinned memory
+
+extern EXTERN_LANG
+void FC_FUNC_(register_host_array,
+              REGISTER_HOST_ARRAY)(int *size, realw *h_array) {
+
+  TRACE("register_host_array");
+
+  // page-locks the memory to automatically accelerate calls to functions such as cudaMemcpy()
+  // since the memory can be accessed directly by the device, it can be read or written with
+  // much higher bandwidth than pageable memory that has not been registered.
+  // Page-locking excessive amounts of memory may degrade system performance,
+  // since it reduces the amount of memory available to the system for paging.
+  // As a result, this function is best used sparingly to register staging areas for data exchange between host and device.
+
+  print_CUDA_error_if_any(cudaHostRegister(h_array, (*size)*sizeof(realw), 0),55001);
+
+  GPU_ERROR_CHECKING ("after register_host_array");
+}
+
+
+extern EXTERN_LANG
+void FC_FUNC_(unregister_host_array,
+              UNREGISTER_HOST_ARRAY)(realw *h_array) {
+
+  TRACE("unregister_host_array");
+
+  print_CUDA_error_if_any(cudaHostUnregister(h_array),55002);
+
+  GPU_ERROR_CHECKING ("after unregister_host_array");
+}

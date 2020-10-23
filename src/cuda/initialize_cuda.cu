@@ -35,7 +35,7 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(initialize_cuda_device,
               INITIALIZE_CUDA_DEVICE)(int* myrank_f,int* ncuda_devices) {
   TRACE("initialize_cuda_device");
@@ -181,7 +181,7 @@ void FC_FUNC_(initialize_cuda_device,
   FILE* fp;
   int do_output_info;
 
-  // by default, only master process outputs device infos to avoid file cluttering
+  // by default, only main process outputs device infos to avoid file cluttering
   do_output_info = 0;
   if (myrank == 0){
     do_output_info = 1;

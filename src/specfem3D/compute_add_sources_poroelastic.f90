@@ -33,6 +33,7 @@
   use specfem_par, only: station_name,network_name,USE_FORCE_POINT_SOURCE, &
                          tshift_src,dt,t0,USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
                          USE_BINARY_FOR_SEISMOGRAMS,ibool, &
+                         UNDO_ATTENUATION_AND_OR_PML, &
                          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
                          sourcearrays,SIMULATION_TYPE,NSTEP, &
                          ispec_selected_rec, &
@@ -50,7 +51,7 @@
   double precision :: stf,time_source_dble
   double precision,external :: get_stf_poroelastic
 
-  logical ibool_read_adj_arrays
+  logical :: ibool_read_adj_arrays
   integer :: isource,iglob,i,j,k,ispec,it_sub_adj
   integer :: irec_local,irec
   real(kind=CUSTOM_REAL) :: phil,tortl,rhol_s,rhol_f,rhol_bar
@@ -65,7 +66,7 @@
 !$OMP PARALLEL if (NSOURCES > 100) &
 !$OMP DEFAULT(SHARED) &
 !$OMP PRIVATE(isource,time_source_dble,stf_used,stf,iglob,ispec,i,j,k, &
-!$OMP phil,tortl,rhol_s,rhol_f,rhol_bar,fac_s,fac_w)
+!$OMP         phil,tortl,rhol_s,rhol_f,rhol_bar,fac_s,fac_w)
 
     ! adds poroelastic sources
 !$OMP DO
@@ -79,7 +80,12 @@
         if (ispec_is_poroelastic(ispec)) then
           ! current time
           if (USE_LDDRK) then
-            time_source_dble = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            ! LDDRK
+            ! note: the LDDRK scheme updates displacement after the stiffness computations and
+            !       after adding boundary/coupling/source terms.
+            !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+            !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+            time_source_dble = dble(it-1-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
           else
             time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
           endif
@@ -96,9 +102,9 @@
           stf_used = real(stf,kind=CUSTOM_REAL)
 
           ! adds source array
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
+          do k = 1,NGLLZ
+            do j = 1,NGLLY
+              do i = 1,NGLLX
                 iglob = ibool(i,j,k,ispec)
                 ! get poroelastic parameters of current local GLL
                 phil = phistore(i,j,k,ispec)
@@ -277,7 +283,17 @@
           ! note: time step is now at NSTEP-it
           ! current time
           if (USE_LDDRK) then
-            time_source_dble = dble(NSTEP-it)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            ! LDDRK
+            ! note: the LDDRK scheme updates displacement after the stiffness computations and
+            !       after adding boundary/coupling/source terms.
+            !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+            !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+            if (UNDO_ATTENUATION_AND_OR_PML) then
+              ! stepping moves forward from snapshot position
+              time_source_dble = dble(NSTEP-it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            else
+              time_source_dble = dble(NSTEP-it-1)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            endif
           else
             time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
           endif
@@ -295,9 +311,9 @@
           stf_used = real(stf,kind=CUSTOM_REAL)
 
           !  add source array
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
+          do k = 1,NGLLZ
+            do j = 1,NGLLY
+              do i = 1,NGLLX
                 iglob = ibool(i,j,k,ispec)
                 ! get poroelastic parameters of current local GLL
                 phil = phistore(i,j,k,ispec)
@@ -305,7 +321,6 @@
                 rhol_s = rhoarraystore(1,i,j,k,ispec)
                 rhol_f = rhoarraystore(2,i,j,k,ispec)
                 rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
-
 
                 ! we distinguish between a single force which can be applied both in fluid and solid
                 ! and a moment-tensor source which only makes sense for a solid

@@ -85,7 +85,7 @@ These scripts have been placed in the directory scripts_tomo:
 prepare_measure_adj.pl -- prepares the directory for running the measurement code WITH PLOTS
 run_measure_adj.pl     -- runs the code and makes output plots
 run_mt_cc_plot.pl         -- runs the code in cross-correlation mode AND multi-taper mode for plots
-run_tomo.pl               -- master script that calls prepare_measure_adj.pl and run_measure_adj.pl
+run_tomo.pl               -- main script that calls prepare_measure_adj.pl and run_measure_adj.pl
 combine_2_adj_src.pl      -- combines two sets of adjoint sources and creates a new STATIONS_ADJOINT file
 combine_2_adj_src_all.pl  -- calls combine_2_adj_src.pl repeatedly to make the final set of adjoint sources
 

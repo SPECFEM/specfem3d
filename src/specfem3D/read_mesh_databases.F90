@@ -43,6 +43,8 @@
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) "Reading mesh databases..."
+    write(IMAIN,*) "  reads binary mesh files: proc***_external_mesh.bin"
+    write(IMAIN,*) "  from directory         : ",trim(LOCAL_PATH)
     call flush_IMAIN()
   endif
 
@@ -129,11 +131,17 @@
   if (size(ispec_is_poroelastic) > 0) &
     call bcast_all_l_for_database(ispec_is_poroelastic(1), size(ispec_is_poroelastic))
 
-  ! acoustic
-  ! number of acoustic elements in this partition
-  nspec_acoustic = count(ispec_is_acoustic(:))
   ! all processes will have acoustic_simulation set if any flag is .true.
   call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
+  call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
+  call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
+
+  ! number of acoustic elements in this partition
+  nspec_acoustic = count(ispec_is_acoustic(:))
+  ! number of elastic elements in this partition
+  nspec_elastic = count(ispec_is_elastic(:))
+
+  ! acoustic
   if (ACOUSTIC_SIMULATION) then
     ! potentials
     ! NB_RUNS_ACOUSTIC_GPU is set to 1 by default in constants.h
@@ -146,11 +154,11 @@
     allocate(potential_dot_dot_acoustic(NGLOB_AB*NB_RUNS_ACOUSTIC_GPU),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1422')
     if (ier /= 0) stop 'Error allocating array potential_dot_dot_acoustic'
-    if (SIMULATION_TYPE /= 1) then
-      allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1423')
-      if (ier /= 0) stop 'Error allocating array potential_acoustic_adj_coupling'
-    endif
+    !if (SIMULATION_TYPE /= 1) then
+    !  allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier) ! not used yet
+    !  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1423')
+    !  if (ier /= 0) stop 'Error allocating array potential_acoustic_adj_coupling'
+    !endif
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1424')
@@ -165,23 +173,16 @@
     rmassz_acoustic(:) = 0._CUSTOM_REAL
   endif
 
-! this array is needed for acoustic simulations but also for elastic simulations with CPML,
-! thus we now allocate it and read it in all cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
-  allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1426')
-  if (ier /= 0) stop 'Error allocating array rhostore'
+! rho array is needed for acoustic simulations but also for elastic simulations with CPML,
+! read it in all cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
   if (I_should_read_the_database) read(27) rhostore
   call bcast_all_cr_for_database(rhostore(1,1,1,1), size(rhostore))
 
-  ! elastic
-  ! number of elastic elements in this partition
-  nspec_elastic = count(ispec_is_elastic(:))
-
   ! elastic simulation
-  call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   if (ELASTIC_SIMULATION) then
-
-    if (NB_RUNS_ACOUSTIC_GPU > 1) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with elastic or coupled simulations'
+    ! checks
+    if (NB_RUNS_ACOUSTIC_GPU > 1) &
+      call exit_mpi(myrank,'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with elastic or coupled simulations')
 
     ! displacement,velocity,acceleration
     allocate(displ(NDIM,NGLOB_AB),stat=ier)
@@ -346,10 +347,12 @@
   endif
 
   ! poroelastic
-  call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
   if (POROELASTIC_SIMULATION) then
-
-    if (GPU_MODE) call exit_mpi(myrank,'POROELASTICITY not supported by GPU mode yet...')
+    ! checks
+    if (GPU_MODE) &
+      call exit_mpi(myrank,'POROELASTICITY not supported by GPU mode yet...')
+    if (NB_RUNS_ACOUSTIC_GPU > 1) &
+      call exit_mpi(myrank,'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with poroelastic or coupled simulations')
 
     ! displacement,velocity,acceleration for the solid (s) & fluid (w) phases
     allocate(displs_poroelastic(NDIM,NGLOB_AB),stat=ier)
@@ -462,6 +465,17 @@
       call bcast_all_cr_for_database(rho_vpII(1,1,1,1), size(rho_vpII))
     if (size(rho_vsI) > 0) &
       call bcast_all_cr_for_database(rho_vsI(1,1,1,1), size(rho_vsI))
+  else
+    ! dummy allocations (needed for subroutine arguments)
+    allocate(rhoarraystore(2,1,1,1,1), &
+             kappaarraystore(3,1,1,1,1), &
+             etastore(1,1,1,1), &
+             tortstore(1,1,1,1), &
+             phistore(1,1,1,1), &
+             permstore(6,1,1,1,1), &
+             rho_vpI(1,1,1,1), &
+             rho_vpII(1,1,1,1), &
+             rho_vsI(1,1,1,1))
   endif
 
   ! checks simulation types are valid
@@ -1064,7 +1078,7 @@
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) "done"
+    write(IMAIN,*) "  done"
     write(IMAIN,*)
     call flush_IMAIN()
   endif
@@ -1205,6 +1219,7 @@
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_poroelastic
+  use specfem_par_noise
 
   implicit none
 
@@ -1674,7 +1689,8 @@
 
 ! reads in the value of NSPEC_AB and NGLOB_AB
 
-  use specfem_par
+  use constants, only: MAX_STRING_LEN,myrank,I_should_read_the_database,IIN
+  use specfem_par, only: prname,NSPEC_AB,NSPEC_IRREGULAR,NGLOB_AB,LOCAL_PATH
 
   implicit none
   ! Local variables

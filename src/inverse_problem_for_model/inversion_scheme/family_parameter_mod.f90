@@ -1,16 +1,42 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                              CNRS, France
+!                       and Princeton University, USA
+!                 (there are currently many more authors!)
+!                           (c) October 2017
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 3 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 module family_parameter
 
   !! IMPORT VARIABLES FROM SPECFEM -------------------------------------------------------------------------------------------------
-  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,  ANISOTROPIC_KL, ANISOTROPY, APPROXIMATE_HESS_KL
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,  ANISOTROPIC_KL, ANISOTROPY, APPROXIMATE_HESS_KL, &
+    ELASTIC_SIMULATION,ACOUSTIC_SIMULATION
 
   use specfem_par, only: CUSTOM_REAL, NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, NSPEC_AB, myrank
 
   use specfem_par_elastic, only: cijkl_kl, rho_kl, mu_kl, kappa_kl, ispec_is_elastic, hess_rho_kl, &
-       hess_mu_kl, hess_kappa_kl, ELASTIC_SIMULATION
+       hess_mu_kl, hess_kappa_kl
 
-
-  use specfem_par_acoustic, only: hess_kappa_ac_kl, hess_rho_ac_kl, rho_ac_kl, kappa_ac_kl, ispec_is_acoustic, &
-       ACOUSTIC_SIMULATION
+  use specfem_par_acoustic, only: hess_kappa_ac_kl, hess_rho_ac_kl, rho_ac_kl, kappa_ac_kl, ispec_is_acoustic
 
   !---------------------------------------------------------------------------------------------------------------------------------
   use inverse_problem_par

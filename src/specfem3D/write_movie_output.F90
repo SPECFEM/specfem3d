@@ -50,13 +50,14 @@
     ! acoustic domains
     if (ACOUSTIC_SIMULATION) then
       ! transfers whole fields
-      call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
-                potential_dot_acoustic,potential_dot_dot_acoustic,Mesh_pointer)
+      call transfer_fields_ac_from_device(NGLOB_AB, &
+                                          potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,Mesh_pointer)
     endif
     ! elastic domains
     if (ELASTIC_SIMULATION) then
       ! transfers whole fields
-      call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc, accel, Mesh_pointer)
+      call transfer_fields_el_from_device(NDIM*NGLOB_AB, &
+                                          displ,veloc,accel,Mesh_pointer)
     endif
   endif
 
@@ -160,25 +161,25 @@
   ! updates/gathers velocity field
   if (myrank == 0) then
     call gatherv_all_cr(store_val_ux,nfaces_surface_points, &
-         store_val_ux_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
+                        store_val_ux_all,nfaces_perproc_surface,faces_surface_offset, &
+                        nfaces_surface_glob_points,NPROC)
     call gatherv_all_cr(store_val_uy,nfaces_surface_points, &
-         store_val_uy_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
+                        store_val_uy_all,nfaces_perproc_surface,faces_surface_offset, &
+                        nfaces_surface_glob_points,NPROC)
     call gatherv_all_cr(store_val_uz,nfaces_surface_points, &
-         store_val_uz_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
+                        store_val_uz_all,nfaces_perproc_surface,faces_surface_offset, &
+                        nfaces_surface_glob_points,NPROC)
   else
-    !slaves
+    !secondarys
     call gatherv_all_cr(store_val_ux,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
+                        dummy,nfaces_perproc_surface,faces_surface_offset, &
+                        1,NPROC)
     call gatherv_all_cr(store_val_uy,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
+                        dummy,nfaces_perproc_surface,faces_surface_offset, &
+                        1,NPROC)
     call gatherv_all_cr(store_val_uz,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
+                        dummy,nfaces_perproc_surface,faces_surface_offset, &
+                        1,NPROC)
   endif
 
   ! file output
@@ -431,29 +432,29 @@
   integer :: ier
   real(kind=CUSTOM_REAL),dimension(1):: dummy
 
-  ! master collects
+  ! main collects
   if (myrank == 0) then
     ! shakemaps
     call gatherv_all_cr(shakemap_ux,nfaces_surface_points, &
-         shakemap_ux_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
+                        shakemap_ux_all,nfaces_perproc_surface,faces_surface_offset, &
+                        nfaces_surface_glob_points,NPROC)
     call gatherv_all_cr(shakemap_uy,nfaces_surface_points, &
-         shakemap_uy_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
+                        shakemap_uy_all,nfaces_perproc_surface,faces_surface_offset, &
+                        nfaces_surface_glob_points,NPROC)
     call gatherv_all_cr(shakemap_uz,nfaces_surface_points, &
-         shakemap_uz_all,nfaces_perproc_surface,faces_surface_offset, &
-         nfaces_surface_glob_points,NPROC)
+                        shakemap_uz_all,nfaces_perproc_surface,faces_surface_offset, &
+                        nfaces_surface_glob_points,NPROC)
   else
     ! shakemaps
     call gatherv_all_cr(shakemap_ux,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
+                        dummy,nfaces_perproc_surface,faces_surface_offset, &
+                        1,NPROC)
     call gatherv_all_cr(shakemap_uy,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
+                        dummy,nfaces_perproc_surface,faces_surface_offset, &
+                        1,NPROC)
     call gatherv_all_cr(shakemap_uz,nfaces_surface_points, &
-         dummy,nfaces_perproc_surface,faces_surface_offset, &
-         1,NPROC)
+                        dummy,nfaces_perproc_surface,faces_surface_offset, &
+                        1,NPROC)
   endif
 
   ! creates shakemap file
@@ -483,6 +484,7 @@
   use specfem_par_poroelastic
   use specfem_par_acoustic
   use specfem_par_movie
+
   implicit none
 
   ! local parameters
@@ -551,9 +553,12 @@
     ! allocate array for global points
     allocate(div_glob(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2004')
+    div_glob(:) = 0._CUSTOM_REAL
+
     allocate(valence(NGLOB_AB), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2005')
     if (ier /= 0) stop 'error allocating arrays for movie div and curl'
+    valence(:) = 0
 
     ! saves full snapshot data to local disk
     if (ELASTIC_SIMULATION) then
@@ -581,6 +586,7 @@
                               velocity_x,velocity_y,velocity_z, &
                               ispec_is_poroelastic)
     endif ! poroelastic
+
     deallocate(div_glob,valence)
 
     ! div and curl on elemental level
@@ -612,25 +618,23 @@
   endif
 
   ! velocity
-  if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
-    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file movie output velocity x'
-    write(27) velocity_x
-    close(27)
+  write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
+  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+  if (ier /= 0) stop 'error opening file movie output velocity x'
+  write(27) velocity_x
+  close(27)
 
-    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compy,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file movie output velocity y'
-    write(27) velocity_y
-    close(27)
+  write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compy,it
+  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+  if (ier /= 0) stop 'error opening file movie output velocity y'
+  write(27) velocity_y
+  close(27)
 
-    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compz,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file movie output velocity z'
-    write(27) velocity_z
-    close(27)
-  endif
+  write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compz,it
+  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+  if (ier /= 0) stop 'error opening file movie output velocity z'
+  write(27) velocity_z
+  close(27)
 
   end subroutine wmo_movie_volume_output
 

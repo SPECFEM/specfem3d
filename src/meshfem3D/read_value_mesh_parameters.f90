@@ -250,29 +250,94 @@
 
 ! material parameter list
 
-  subroutine read_material_parameters(iunit,mat_id,rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,domain_id, ier)
+  subroutine read_material_parameters(iunit,material_properties,imat,NMATERIALS,ier)
 
-  use constants, only: MAX_STRING_LEN,DONT_IGNORE_JUNK
-
+  use constants, only: MAX_STRING_LEN,DONT_IGNORE_JUNK,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC
+  use constants_meshfem3D, only: NUMBER_OF_MATERIAL_PROPERTIES
   implicit none
 
-  integer :: iunit
+  integer,intent(in) :: iunit,imat,NMATERIALS
+  double precision, dimension(NMATERIALS,NUMBER_OF_MATERIAL_PROPERTIES),intent(inout):: material_properties
+  integer,intent(out) :: ier
+
+  ! local parameters
   integer :: mat_id
   double precision :: rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag
+  double precision :: kxx,kxy,kxz,kyy,kyz,kzz
+  double precision :: phi,tort,rho_s,rho_f,kappa_s,kappa_f,mu_fr,kappa_fr,eta
   integer :: domain_id
-  integer :: ier
+  integer :: i,counter,idummy
   character(len=MAX_STRING_LEN) :: string_read
+  character(len=16) :: dummy
+  logical :: new_number
+  logical, external :: is_numeric,is_digit_alpha
 
+  ! initializes
+  material_properties(imat,:) = 0.d0
   ier = 0
+
   call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ier)
   if (ier /= 0) return
 
-  read(string_read,*,iostat=ier) mat_id,rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,domain_id
+  ! counts numbers on line
+  ! example:  1 1020.0  1500.0 0.0  9999.0 9999.0  0  1
+  counter = 0
+  new_number = .true.
+  do i = 1,len_trim(string_read)
+    ! checks if character is a number
+    if (is_digit_alpha(string_read(i:i))) then
+      ! new numbers must start with a numeric
+      if (new_number .and. is_numeric(string_read(i:i))) then
+        ! new number starts
+        counter = counter + 1
+        new_number = .false.
+      endif
+    else
+      ! a space, tab, .., between numbers reset flag
+      if (.not. new_number) new_number = .true.
+    endif
+  enddo
+  ! debug
+  !print *,'debug: material parameters ',counter,' items: string ***',trim(string_read),'***'
+
+  domain_id = 0
+  ier = 0
+  select case (counter)
+  case (8)
+    ! default line
+    ! format: #material_id  #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id
+    read(string_read,*,iostat=ier) mat_id,rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,domain_id
+    if (domain_id /= 1 .and. domain_id /= 2) stop 'material parameters for acoustic/elastic must have domain_id == 1 or 2'
+  case (17)
+    ! poroelastic line
+    ! format:
+    ! #material_id #rho_s #rho_f #phi #tort #kxx #kxy #kxz #kyy #kyz #kzz #kappa_s  #kappa_f #kappa_fr #eta #mu_fr    #domain_id
+    ! 1           2500.d0 1020.d0 0.4 2.0  1d-11 0.0  0.0 1d-11 0.0 1d-11 16.0554d9 2.295d9  10.0d9    0.0  9.63342d9  3
+    read(string_read,*,iostat=ier) mat_id,rho_s,rho_f,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
+                                   kappa_s,kappa_f,kappa_fr,eta,mu_fr,domain_id
+  case (3)
+    ! tomography line
+    ! format: #material_id #type-keyword #domain-name #tomo-filename #tomo_id #domain_id
+    ! example: -1 tomography elastic tomography_model.xyz 0 2
+    read(string_read,*,iostat=ier) mat_id,dummy,dummy,dummy,idummy,domain_id
+  case default
+    print *,'Error: material parameter line format not recognized:'
+    print *,'  line :',trim(string_read)
+    print *
+    ier = 1
+  end select
   if (ier /= 0) then
     print *,'Error while reading your input Mesh_Par_file in routine read_material_parameters()'
     print *
-    print *,'We recently changed the input format from mat_id,rho,vp,vs,Q_mu,anisotropy_flag,domain_id'
-    print *,'to mat_id,rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,domain_id in order to add support for Q_Kappa.'
+    print *,'For acoustic/elastic materials, we recently changed the input format from:'
+    print *,'  mat_id,rho,vp,vs,Q_mu,anisotropy_flag,domain_id'
+    print *,'to:'
+    print *,'  mat_id,rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,domain_id'
+    print *,'in order to add support for Q_Kappa.'
+    print *
+    print *,'For poroelastic materials, we use the input format:'
+    print *,'  mat_id,rho_s,rho_f,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappa_s,kappa_f,kappa_fr,eta,mu_fr,domain_id'
+    print *
     print *,'It is likely that your input file still uses the old convention and needs to be updated.'
     print *,'If you do not know what value to add for Q_Kappa, add 9999., i.e negligible Q_Kappa attenuation'
     print *,'and then your results will be unchanged compared to older versions of the code.'
@@ -280,7 +345,88 @@
     stop 'Error in input Mesh_Par_file in routine read_material_parameters()'
   endif
 
+  ! checks domain
+  if (domain_id /= IDOMAIN_ACOUSTIC .and. domain_id /= IDOMAIN_ELASTIC .and. domain_id /= IDOMAIN_POROELASTIC) then
+    print *,'Error: material has invalid domain_id, must be either 1 == acoustic,2 == elastic or 3 == poroelastic'
+    print *,'  line : ',trim(string_read)
+    stop 'Invalid domain_id in material parameters'
+  endif
+
+  ! stores material
+  select case(domain_id)
+  case (IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC)
+    ! acoustic/elastic material properties
+    ! input format: #material_id  #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id
+    material_properties(imat,1) = rho
+    material_properties(imat,2) = vp
+    material_properties(imat,3) = vs
+    material_properties(imat,4) = Q_Kappa
+    material_properties(imat,5) = Q_mu
+    material_properties(imat,6) = anisotropy_flag
+    material_properties(imat,7) = domain_id
+    material_properties(imat,8) = mat_id
+  case (IDOMAIN_POROELASTIC)
+    ! poroelastic
+    ! input format: #material_id #rho_s #rho_f #phi #tort #kxx #kxy #kxz #kyy #kyz #kzz ..
+    !                                                        .. #kappa_s  #kappa_f #kappa_fr #eta #mu_fr #domain_id
+    ! output format:
+    !   rhos,rhof,phi,tort,eta,0,material_domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,mufr
+    material_properties(imat,1) = rho_s      ! rho
+    material_properties(imat,2) = rho_f      ! vp
+    material_properties(imat,3) = phi        ! vs
+    material_properties(imat,4) = tort       ! Q_Kappa - not implemented yet
+    material_properties(imat,5) = eta        ! Q_mu - not implemented yet
+    material_properties(imat,6) = 0          ! anisotropy_flag - not implemented yet
+    material_properties(imat,7) = domain_id  ! must be position 7
+    material_properties(imat,8) = mat_id     ! must be position 8
+    material_properties(imat,9) = kxx
+    material_properties(imat,10) = kxy
+    material_properties(imat,11) = kxz
+    material_properties(imat,12) = kyy
+    material_properties(imat,13) = kyz
+    material_properties(imat,14) = kzz
+    material_properties(imat,15) = kappa_s
+    material_properties(imat,16) = kappa_f
+    material_properties(imat,17) = kappa_fr
+    material_properties(imat,18) = mu_fr      ! anisotropy_flag - not implemented yet
+  end select
+
   end subroutine read_material_parameters
+
+!--------------------
+
+  logical function is_numeric(char)
+
+  ! returns .true. if input character is a number
+
+  implicit none
+  character(len=1), intent(in) :: char
+
+  is_numeric = .false.
+
+  if (index('0123456789', char) /= 0) then
+    is_numeric = .true.
+  endif
+
+  end function
+
+
+  logical function is_digit_alpha(char)
+
+  ! returns .true. if input character is a number or a '.' or a 'd' or a 'e' or a '-'
+  ! examples: 5.0, 1.d0, 7.e-12
+
+  implicit none
+  character(len=1), intent(in) :: char
+
+  is_digit_alpha = .false.
+
+  if (index('0123456789.de-', char) /= 0) then
+    is_digit_alpha = .true.
+  endif
+
+  end function
+
 
 !--------------------
 
@@ -328,7 +474,7 @@
   do
     read(unit=iunit,fmt="(a)",iostat=ier) string_read
     if (ier /= 0) then
-      print *,'Error reading parameter file Mesh_Par_file, please check file...'
+      print *,'Error reading parameter file Mesh_Par_file: missing next line. Please check file...'
       stop 'Error while reading parameter file Mesh_Par_file'
     endif
 

@@ -163,7 +163,7 @@ end module constants
   logical :: APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ATTENUATION,ANISOTROPY
   logical :: GRAVITY
 
-  character(len=MAX_STRING_LEN) :: TOMOGRAPHY_PATH,TOMOGRAPHY_PATH_new
+  character(len=MAX_STRING_LEN) :: TOMOGRAPHY_PATH
 
   ! attenuation
   logical :: USE_OLSEN_ATTENUATION
@@ -180,7 +180,7 @@ end module constants
   ! To use a bottom free surface instead of absorbing Stacey or PML condition
   logical :: BOTTOM_FREE_SURFACE
 
-! sources and receivers Z coordinates given directly instead of with depth
+  ! sources and receivers Z coordinates given directly instead of with depth
   logical :: USE_SOURCES_RECEIVERS_Z
 
   ! for simultaneous runs from the same batch job
@@ -196,14 +196,15 @@ end module constants
 
   ! mesh
   logical :: SAVE_MESH_FILES
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH,LOCAL_PATH_new
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! seismograms
   integer :: NTSTEP_BETWEEN_OUTPUT_INFO
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NTSTEP_BETWEEN_READ_ADJSRC
+  integer :: subsamp_seismos
   logical :: SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE
   logical :: SAVE_SEISMOGRAMS_IN_ADJOINT_RUN
-  logical :: WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS,SU_FORMAT
+  logical :: WRITE_SEISMOGRAMS_BY_MAIN,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS,SU_FORMAT
   logical :: ASDF_FORMAT, READ_ADJSRC_ASDF
 
   ! sources
@@ -264,6 +265,11 @@ end module constants
 
   !! VM VM number of source for external source time function
   integer :: NSOURCES_STF
+
+  ! simulation type
+  logical :: ACOUSTIC_SIMULATION = .false.
+  logical :: ELASTIC_SIMULATION = .false.
+  logical :: POROELASTIC_SIMULATION = .false.
 
   end module shared_compute_parameters
 

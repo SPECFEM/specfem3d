@@ -94,6 +94,7 @@
 
     ! user output
     print *,'  mesh2dual: max_neighbor = ',max_neighbor
+    print *
 
 !! DK DK Oct 2012: added this safety test
     if (max_neighbor > sup_neighbor) stop 'found max_neighbor > sup_neighbor in domain decomposition'
@@ -209,34 +210,29 @@
   !
   !       the following routines modify the partitioning array part() by putting elements at a
   !       common interface into the same partition.
-
+  !
+  !       this likely break the load balancing created by the domain decomposer for high-performance computing.
+  !
+  !       todo in future: try to avoid the need of having coupled elements in the same partition? ...
 
   ! re-partitioning puts poroelastic-elastic coupled elements into same partition
-  !  integer  :: nfaces_coupled
-  !  integer, dimension(:,:), pointer  :: faces_coupled
+  if (PORO_INTERFACE_REPARTITIONING) &
+    call poro_elastic_repartitioning(nspec, nnodes, elmnts, &
+                                     count_def_mat, num_material , mat_prop, &
+                                     sup_neighbor, nsize, &
+                                     nparts, part, NGNOD)
 
-  ! TODO: supposed to rebalance, but currently broken
-!! DK DK added this because poroelastic repartitioning routine of Christina Morency is currently broken
-! implement mesh repartitioning of poroelastic-elastic interface
-! (the risk being to break the nice load balancing created by the domain decomposer for high-performance computing)
-  if (PORO_INTERFACE_REPARTITIONING) then
-    call poro_elastic_repartitioning (nspec, nnodes, elmnts, &
-                                      count_def_mat, num_material , mat_prop, &
-                                      sup_neighbor, nsize, &
-                                      nparts, part, NGNOD)
-  endif
-
-! re-partitioning transfers two coupled elements on fault side 1 and side 2 to the same partition
-  if (ANY_FAULT) call fault_repartition (nspec, nnodes, elmnts, nsize, nparts, part, NGNOD, nodes_coords)
-
+  ! re-partitioning transfers two coupled elements on fault side 1 and side 2 to the same partition
+  if (ANY_FAULT) &
+    call fault_repartition(nspec, nnodes, elmnts, nsize, nparts, part, NGNOD, nodes_coords)
 
   ! re-partitioning puts moho-surface coupled elements into same partition
-! (the risk being to break the nice load balancing created by the domain decomposer for high-performance computing)
-  if (SAVE_MOHO_MESH) call moho_surface_repartitioning (nspec, nnodes, elmnts, &
-                                      sup_neighbor, nsize, nparts, part, &
-                                      nspec2D_moho,ibelm_moho,nodes_ibelm_moho, NGNOD, NGNOD2D)
+  if (SAVE_MOHO_MESH) &
+    call moho_surface_repartitioning(nspec, nnodes, elmnts, &
+                                     sup_neighbor, nsize, nparts, part, &
+                                     nspec2D_moho,ibelm_moho,nodes_ibelm_moho, NGNOD, NGNOD2D)
 
-  ! debug: for vtk output
+  ! final partitioning: vtk output
   if (SAVE_MESH_FILES) then
     ! element partitioning
     filename = trim(LOCAL_PATH)//'/part_array'
