@@ -23,10 +23,10 @@ UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
-NPROC                           = 4
+NPROC                           = 10
 
 # time step parameters
-NSTEP                           = 5000
+NSTEP                           = 100
 DT                              = 0.05
 
 # set to true to use local-time stepping (LTS)
@@ -149,13 +149,13 @@ NT_DUMP_ATTENUATION             = 500
 # save AVS or OpenDX movies
 # MOVIE_TYPE = 1 to show the top surface
 # MOVIE_TYPE = 2 to show all the external faces of the mesh
-CREATE_SHAKEMAP                 = .false.
-MOVIE_SURFACE                   = .false.
+CREATE_SHAKEMAP                 = .true.
+MOVIE_SURFACE                   = .true.
 MOVIE_TYPE                      = 1
-MOVIE_VOLUME                    = .false.
-SAVE_DISPLACEMENT               = .false.
+MOVIE_VOLUME                    = .true.
+SAVE_DISPLACEMENT               = .true.
 USE_HIGHRES_FOR_MOVIES          = .false.
-NTSTEP_BETWEEN_FRAMES           = 200
+NTSTEP_BETWEEN_FRAMES           = 20
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
@@ -212,7 +212,7 @@ PRINT_SOURCE_TIME_FUNCTION      = .false.
 #-----------------------------------------------------------
 
 # interval in time steps for writing of seismograms
-NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
+NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 50
 
 # decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
 # currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
@@ -378,4 +378,8 @@ ADIOS_FOR_FORWARD_ARRAYS        = .false.
 ADIOS_FOR_KERNELS               = .false.
 
 # HDF5 Database I/O flag which is useful for a massively parallelized calculation.
-HDF5_ENABLED            = .false.
+HDF5_ENABLED                    = .true.
+
+# number of IO dedicated procs, available only with HDF5 output option
+NIONOD                          = 2
+
