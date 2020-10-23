@@ -107,7 +107,7 @@
           call write_seismograms_to_file_h5(seismograms_v,2)
         if (SAVE_SEISMOGRAMS_ACCELERATION) &
           call write_seismograms_to_file_h5(seismograms_a,3)
-        if (SAVE_SEISMOGRAMS_PRESSURE) & 
+        if (SAVE_SEISMOGRAMS_PRESSURE) &
           call write_seismograms_to_file_h5(seismograms_p,4)
       case (2)
         ! adjoint simulations
@@ -160,7 +160,7 @@
           nrec,nrec_local,islice_selected_rec, &
           seismo_offset,seismo_current, &
           NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS,ASDF_FORMAT, &
-          WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS, NSTEP
+          SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS, NSTEP
 
 
   implicit none
@@ -195,7 +195,7 @@
     ! send seismograms (instead of one seismo)
     if (NTSTEP_BETWEEN_OUTPUT_SEISMOS > NSTEP) then
       time_window = NSTEP
-    else 
+    else
       time_window = NTSTEP_BETWEEN_OUTPUT_SEISMOS
     endif
 

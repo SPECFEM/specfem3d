@@ -72,9 +72,9 @@
     ! initialze hdf5
     call world_get_comm(comm)
     call get_info_null(info)
-  
+
     call h5_init(h5, database_hdf5)
-  
+
     call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
     call h5_open_file_p(h5)
     call h5_open_group(h5, gname_proc)
@@ -188,11 +188,11 @@
     allocate(potential_dot_dot_acoustic(NGLOB_AB*NB_RUNS_ACOUSTIC_GPU),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1422')
     if (ier /= 0) stop 'Error allocating array potential_dot_dot_acoustic'
-    if (SIMULATION_TYPE /= 1) then
-      allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1423')
-      if (ier /= 0) stop 'Error allocating array potential_acoustic_adj_coupling'
-    endif
+    !if (SIMULATION_TYPE /= 1) then
+    !  allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
+    !  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1423')
+    !  if (ier /= 0) stop 'Error allocating array potential_acoustic_adj_coupling'
+    !endif
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1424')
@@ -212,9 +212,9 @@
 
 ! this array is needed for acoustic simulations but also for elastic simulations with CPML,
 ! thus we now allocate it and read it in all cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
-  allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1426')
-  if (ier /= 0) stop 'Error allocating array rhostore'
+  !allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  !if (ier /= 0) call exit_MPI_without_rank('error allocating array 1426')
+  !if (ier /= 0) stop 'Error allocating array rhostore'
   if (I_should_read_the_database) then
     dsetname = "rhostore"
     call h5_read_dataset_p_4d_r(h5, dsetname, rhostore)
@@ -492,7 +492,7 @@
       call h5_read_dataset_p_1d_r(h5, dsetname, rmass_solid_poroelastic)
       dsetname = "rmass_fluid_poroelastic"
       call h5_read_dataset_p_1d_r(h5, dsetname, rmass_fluid_poroelastic)
- 
+
       dsetname = "rhoarraystore"
       call h5_read_dataset_p_5d_r(h5, dsetname, rhoarraystore)
       dsetname = "kappaarraystore"
@@ -1453,6 +1453,7 @@
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_poroelastic
+  use specfem_par_noise
 
   implicit none
 
@@ -1951,7 +1952,7 @@
     ! initialze hdf5
     call world_get_comm(comm)
     call get_info_null(info)
-  
+
     call h5_init(h5, database_hdf5)
     call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
     call h5_open_file_p(h5)
@@ -1974,6 +1975,6 @@
   call bcast_all_i_for_database(NSPEC_AB, 1)
   call bcast_all_i_for_database(NGLOB_AB, 1)
   call bcast_all_i_for_database(NSPEC_IRREGULAR, 1)
- 
+
   end subroutine read_mesh_for_init_h5
 
