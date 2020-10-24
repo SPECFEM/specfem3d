@@ -24,12 +24,14 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
 module constants
 
   include "constants.h"
+
+  ! proc number for MPI process
+  integer :: myrank
 
   ! a negative initial value is a convention that indicates that groups (i.e. sub-communicators, one per run) are off by default
   integer :: mygroup = -1
@@ -41,6 +43,68 @@ module constants
   ! if doing simultaneous runs for the same mesh and model, see who should read the mesh and the model and broadcast it to others
   ! we put a default value here
   logical :: I_should_read_the_database = .true.
+
+  ! flag for io-dedicated/compute node.
+  logical :: io_task      = .false.
+  logical :: compute_task = .true.
+
+  ! mpi tags for io server implementation
+  integer :: io_tag_seismo_nrec       = 10
+  integer :: io_tag_seismo_ids_rec    = 11
+  integer :: io_tag_seismo_body_disp  = 12
+  integer :: io_tag_seismo_body_velo  = 13
+  integer :: io_tag_seismo_body_acce  = 14
+  integer :: io_tag_seismo_body_pres  = 15
+  integer :: io_tag_seismo_tzero      = 16
+
+  integer :: io_tag_num_recv          = 17
+  integer :: io_tag_local_rec         = 18
+
+  integer :: io_tag_surface_nfaces    = 20
+  integer :: io_tag_surface_offset    = 21
+  integer :: io_tag_surface_x         = 22
+  integer :: io_tag_surface_y         = 23
+  integer :: io_tag_surface_z         = 24
+  integer :: io_tag_surface_ux        = 25
+  integer :: io_tag_surface_uy        = 26
+  integer :: io_tag_surface_uz        = 27
+  integer :: io_tag_surface_coord_len = 28
+
+  integer :: io_tag_shake_ux          = 30
+  integer :: io_tag_shake_uy          = 31
+  integer :: io_tag_shake_uz          = 32
+
+  integer :: io_tag_vol_pres          = 40
+  integer :: io_tag_vol_divglob       = 41
+  integer :: io_tag_vol_div           = 42
+  integer :: io_tag_vol_curlx         = 43
+  integer :: io_tag_vol_curly         = 44
+  integer :: io_tag_vol_curlz         = 45
+  integer :: io_tag_vol_velox         = 46
+  integer :: io_tag_vol_veloy         = 47
+  integer :: io_tag_vol_veloz         = 48
+  integer :: io_tag_vol_nmsg          = 49
+  integer :: io_tag_vol_nspec         = 50
+  integer :: io_tag_vol_nglob         = 51
+  integer :: io_tag_vol_sendlist      = 52
+  integer :: io_tag_vol_ioid          = 53
+  integer :: io_tag_end               = 60
+
+  integer :: xdmf_surf                = 114
+  integer :: xdmf_vol                 = 514
+  integer :: xdmf_vol_step            = 515
+  integer :: xdmf_shake               = 191
+
+  ! responsible id of io node
+  integer :: dest_ionod = 0
+  ! number of computer nodes sending info to each io node
+  integer :: nproc_io
+  ! id for io node
+  integer :: my_io_id
+  ! store HDF5 output file name
+  character(len=MAX_STRING_LEN) :: IIN_database_hdf5
+  ! string length for node name array
+  integer :: n_str_nodename = 64
 
 end module constants
 
@@ -78,11 +142,21 @@ end module constants
   ! number of time step for external source time function
   integer :: NSTEP_STF
 
+  ! Local Time Stepping (LTS)
+  logical :: LTS_MODE
+
+  ! partitioning scheme
+  integer :: PARTITIONING_TYPE
+
   ! LDD Runge-Kutta time scheme
   logical :: USE_LDDRK
+  logical :: INCREASE_CFL_FOR_LDDRK
+  double precision :: RATIO_BY_WHICH_TO_INCREASE_IT
 
+  ! mesh
   integer :: NGNOD
 
+  character(len=MAX_STRING_LEN) :: MODEL
   character(len=MAX_STRING_LEN) :: SEP_MODEL_DIRECTORY
 
   ! physical parameters
@@ -106,7 +180,7 @@ end module constants
   ! To use a bottom free surface instead of absorbing Stacey or PML condition
   logical :: BOTTOM_FREE_SURFACE
 
-! sources and receivers Z coordinates given directly instead of with depth
+  ! sources and receivers Z coordinates given directly instead of with depth
   logical :: USE_SOURCES_RECEIVERS_Z
 
   ! for simultaneous runs from the same batch job
@@ -127,14 +201,16 @@ end module constants
   ! seismograms
   integer :: NTSTEP_BETWEEN_OUTPUT_INFO
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NTSTEP_BETWEEN_READ_ADJSRC
+  integer :: subsamp_seismos
   logical :: SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE
   logical :: SAVE_SEISMOGRAMS_IN_ADJOINT_RUN
-  logical :: WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS,SU_FORMAT
+  logical :: WRITE_SEISMOGRAMS_BY_MAIN,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS,SU_FORMAT
   logical :: ASDF_FORMAT, READ_ADJSRC_ASDF
 
   ! sources
   logical :: USE_FORCE_POINT_SOURCE
   logical :: USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
+  logical :: HAS_FINITE_FAULT_SOURCE
 
   ! external source time function
   logical :: USE_EXTERNAL_SOURCE_FILE
@@ -151,10 +227,17 @@ end module constants
   logical :: ADIOS_ENABLED
   logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
 
+  ! hdf5 file output
+  logical :: HDF5_ENABLED
+  integer :: n_control_node
+
+  ! number of io dedicated nodes
+  integer :: NIONOD
+
   ! external code coupling (DSM, AxiSEM)
   logical :: COUPLE_WITH_INJECTION_TECHNIQUE
   integer :: INJECTION_TECHNIQUE_TYPE
-  character(len=MAX_STRING_LEN) :: TRACTION_PATH
+  character(len=MAX_STRING_LEN) :: TRACTION_PATH,TRACTION_PATH_new
   character(len=MAX_STRING_LEN) :: FKMODEL_FILE
   logical :: MESH_A_CHUNK_OF_THE_EARTH
   logical :: RECIPROCITY_AND_KH_INTEGRAL
@@ -182,6 +265,11 @@ end module constants
 
   !! VM VM number of source for external source time function
   integer :: NSOURCES_STF
+
+  ! simulation type
+  logical :: ACOUSTIC_SIMULATION = .false.
+  logical :: ELASTIC_SIMULATION = .false.
+  logical :: POROELASTIC_SIMULATION = .false.
 
   end module shared_compute_parameters
 

@@ -29,9 +29,10 @@
 ! compute the integrated derivatives of source parameters (M_jk and X_s)
 
   subroutine compute_adj_source_frechet(ispec,displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_m_s, &
-           hxir,hetar,hgammar,hpxir,hpetar,hpgammar, hprime_xx,hprime_yy,hprime_zz)
+                                        hxir,hetar,hgammar,hpxir,hpetar,hpgammar, &
+                                        hprime_xx,hprime_yy,hprime_zz)
 
-  use constants
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
 
   use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,xix_regular, &
                           irregular_element_number
@@ -45,9 +46,12 @@
   ! output
   real(kind=CUSTOM_REAL) :: eps_s(NDIM,NDIM), eps_m_s(NDIM)
 
-  ! auxilliary
-  double precision :: hxir(NGLLX), hetar(NGLLY), hgammar(NGLLZ), &
-             hpxir(NGLLX),hpetar(NGLLY),hpgammar(NGLLZ)
+  ! receiver Lagrange interpolators
+  double precision,dimension(NGLLX),intent(in) :: hxir
+  double precision,dimension(NGLLY),intent(in) :: hetar
+  double precision,dimension(NGLLZ),intent(in) :: hgammar
+  double precision :: hpxir(NGLLX),hpetar(NGLLY),hpgammar(NGLLZ)
+
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy
   real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz
@@ -102,7 +106,8 @@
         enddo
 
 ! dudx
-        if (ispec_irreg /= 0) then !irregular element
+        if (ispec_irreg /= 0) then
+          !irregular element
 
           xixl = xix(i,j,k,ispec_irreg)
           xiyl = xiy(i,j,k,ispec_irreg)
@@ -126,7 +131,8 @@
           duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
           duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
 
-        else !regular element
+        else
+          !regular element
 
           duxdxl = xix_regular*tempx1l
           duxdyl = xix_regular*tempx2l
@@ -182,7 +188,8 @@
         eps_s(2,3) = eps_s(2,3) + eps_array(2,3,i,j,k)*hlagrange
         eps_s(3,3) = eps_s(3,3) + eps_array(3,3,i,j,k)*hlagrange
 
-        if (ispec_irreg /= 0 ) then !irregular element
+        if (ispec_irreg /= 0) then
+          !irregular element
           xix_s = xix_s + xix(i,j,k,ispec_irreg)*hlagrange
           xiy_s = xiy_s + xiy(i,j,k,ispec_irreg)*hlagrange
           xiz_s = xiz_s + xiz(i,j,k,ispec_irreg)*hlagrange
@@ -192,7 +199,8 @@
           gammax_s = gammax_s + gammax(i,j,k,ispec_irreg)*hlagrange
           gammay_s = gammay_s + gammay(i,j,k,ispec_irreg)*hlagrange
           gammaz_s = gammaz_s + gammaz(i,j,k,ispec_irreg)*hlagrange
-        else !regular element
+        else
+          !regular element
           xix_s = xix_s + xix_regular*hlagrange
           etay_s = xix_s
           gammaz_s = xix_s
@@ -209,7 +217,7 @@
 
 ! compute the gradient of M_jk * eps_jk, and then interpolate it
 
-  eps_m_s = 0.
+  eps_m_s = 0._CUSTOM_REAL
   do k = 1,NGLLZ
     do j = 1,NGLLY
       do i = 1,NGLLX

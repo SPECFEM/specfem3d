@@ -24,8 +24,6 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
 
 
 !==============================================================================
@@ -43,7 +41,7 @@
 !! \note Everything is define in this single function, even the group size.
 !!       It is the reason why this function require only an handle on an ADIOS
 !!       file as an argument.
-subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
+subroutine define_kernel_adios_variables(handle)
 
   use adios_write_mod
 
@@ -58,7 +56,6 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
 
   ! Parameters
   integer(kind=8), intent(INOUT) :: handle
-  logical, intent(IN) :: SAVE_WEIGHTS
   ! Variables
   character(len=MAX_STRING_LEN) :: output_name, group_name
   integer(kind=8) :: group, groupsize, adios_totalsize

@@ -51,7 +51,8 @@
     write(IMAIN,*) '-----------------------'
     write(IMAIN,*)
     write(IMAIN,*) 'total number of elements in mesh slice 0: ',NSPEC_AB
-    write(IMAIN,*) 'total number of irregular elements in mesh slice 0: ',nspec_irregular
+    write(IMAIN,*) 'total number of   regular elements in mesh slice 0: ',NSPEC_AB - NSPEC_IRREGULAR
+    write(IMAIN,*) 'total number of irregular elements in mesh slice 0: ',NSPEC_IRREGULAR
     write(IMAIN,*) 'total number of points in mesh slice 0: ',NGLOB_AB
     write(IMAIN,*)
     write(IMAIN,*) 'total number of elements in entire mesh: ',nspec_total

@@ -24,8 +24,6 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
 
 
   subroutine make_gravity(nspl,rspl,gspl,gspl2, &
@@ -458,112 +456,118 @@
   implicit none
 
 ! Argument variables
-  integer kdis(28),n,ndis
-  double precision r(n),s1(n),s2(n),s3(n)
-  double precision y(n),yprime(n)
+  integer :: kdis(28),n,ndis
+  double precision :: r(n),s1(n),s2(n),s3(n)
+  double precision :: y(n),yprime(n)
 
 ! Local variables
-  integer i,j,j1,j2
-  integer k,nd,ndp
-  double precision a0,b0,b1
-  double precision f(3,1000),h,h2,h2a
-  double precision h2b,h3a,ha,s13
-  double precision s21,s32,yy(3)
+  integer :: i,j,j1,j2
+  integer :: k,nd,ndp
+  double precision :: a0,b0,b1
+  double precision :: f(3,1000),h,h2,h2a
+  double precision :: h2b,h3a,ha,s13
+  double precision :: s21,s32,yy(3)
 
   yy(1) = 0.d0
   yy(2) = 0.d0
   yy(3) = 0.d0
 
-  ndp=ndis+1
-  do 3 nd=1,ndp
-  if (nd == 1) goto 4
-  if (nd == ndp) goto 5
-  j1=kdis(nd-1)+1
-  j2=kdis(nd)-2
-  goto 6
-    4 j1=1
-  j2=kdis(1)-2
-  goto 6
-    5 j1=kdis(ndis)+1
-  j2=n-2
-    6 if ((j2+1-j1) > 0) goto 11
-  j2=j2+2
-  yy(1)=(y(j2)-y(j1))/(r(j2)-r(j1))
-  s1(j1)=yy(1)
-  s1(j2)=yy(1)
-  s2(j1)=yy(2)
-  s2(j2)=yy(2)
-  s3(j1)=yy(3)
-  s3(j2)=yy(3)
-  goto 3
-   11 a0=0.0d0
-  if (j1 == 1) goto 7
-  h=r(j1+1)-r(j1)
-  h2=r(j1+2)-r(j1)
-  yy(1)=h*h2*(h2-h)
-  h=h*h
-  h2=h2*h2
-  b0=(y(j1)*(h-h2)+y(j1+1)*h2-y(j1+2)*h)/yy(1)
-  goto 8
- 7 b0=0.0d0
- 8 b1=b0
+  ndp = ndis+1
+  do 3 nd = 1,ndp
+    if (nd == 1) then
+      j1 = 1
+      j2 = kdis(1)-2
+    else if (nd == ndp) then
+      j1 = kdis(ndis)+1
+      j2 = n-2
+    else
+      j1 = kdis(nd-1)+1
+      j2 = kdis(nd)-2
+    endif
 
-  if (j2 > 1000) stop 'error in subroutine deriv for j2'
+    if ((j2+1-j1) > 0) goto 11
 
-  do i=j1,j2
-    h=r(i+1)-r(i)
-    yy(1)=y(i+1)-y(i)
-    h2=h*h
-    ha=h-a0
-    h2a=h-2.0d0*a0
-    h3a=2.0d0*h-3.0d0*a0
-    h2b=h2*b0
-    s1(i)=h2/ha
-    s2(i)=-ha/(h2a*h2)
-    s3(i)=-h*h2a/h3a
-    f(1,i)=(yy(1)-h*b0)/(h*ha)
-    f(2,i)=(h2b-yy(1)*(2.0d0*h-a0))/(h*h2*h2a)
-    f(3,i)=-(h2b-3.0d0*yy(1)*ha)/(h*h3a)
-    a0=s3(i)
-    b0=f(3,i)
-  enddo
+    j2 = j2+2
+    yy(1) = (y(j2)-y(j1))/(r(j2)-r(j1))
+    s1(j1) = yy(1)
+    s1(j2) = yy(1)
+    s2(j1) = yy(2)
+    s2(j2) = yy(2)
+    s3(j1) = yy(3)
+    s3(j2) = yy(3)
+    goto 3
 
-  i=j2+1
-  h=r(i+1)-r(i)
-  yy(1)=y(i+1)-y(i)
-  h2=h*h
-  ha=h-a0
-  h2a=h*ha
-  h2b=h2*b0-yy(1)*(2.d0*h-a0)
-  s1(i)=h2/ha
-  f(1,i)=(yy(1)-h*b0)/h2a
-  ha=r(j2)-r(i+1)
-  yy(1)=-h*ha*(ha+h)
-  ha=ha*ha
-  yy(1)=(y(i+1)*(h2-ha)+y(i)*ha-y(j2)*h2)/yy(1)
-  s3(i)=(yy(1)*h2a+h2b)/(h*h2*(h-2.0d0*a0))
-  s13=s1(i)*s3(i)
-  s2(i)=f(1,i)-s13
+11  a0 = 0.0d0
 
-  do j=j1,j2
-    k=i-1
-    s32=s3(k)*s2(i)
-    s1(i)=f(3,k)-s32
-    s21=s2(k)*s1(i)
-    s3(k)=f(2,k)-s21
-    s13=s1(k)*s3(k)
-    s2(k)=f(1,k)-s13
-    i=k
-  enddo
+    if (j1 == 1) then
+      b0 = 0.0d0
+    else
+      h = r(j1+1)-r(j1)
+      h2 = r(j1+2)-r(j1)
+      yy(1) = h*h2*(h2-h)
+      h = h*h
+      h2 = h2*h2
+      b0 = (y(j1)*(h-h2)+y(j1+1)*h2-y(j1+2)*h)/yy(1)
+    endif
+    b1 = b0
 
-  s1(i)=b1
-  j2=j2+2
-  s1(j2)=yy(1)
-  s2(j2)=yy(2)
-  s3(j2)=yy(3)
+    if (j2 > 1000) stop 'error in subroutine deriv for j2'
+
+    do i = j1,j2
+      h = r(i+1)-r(i)
+      yy(1) = y(i+1)-y(i)
+      h2 = h*h
+      ha = h-a0
+      h2a = h-2.0d0*a0
+      h3a = 2.0d0*h-3.0d0*a0
+      h2b = h2*b0
+      s1(i) = h2/ha
+      s2(i) = -ha/(h2a*h2)
+      s3(i) = -h*h2a/h3a
+      f(1,i) = (yy(1)-h*b0)/(h*ha)
+      f(2,i) = (h2b-yy(1)*(2.0d0*h-a0))/(h*h2*h2a)
+      f(3,i) = -(h2b-3.0d0*yy(1)*ha)/(h*h3a)
+      a0 = s3(i)
+      b0 = f(3,i)
+    enddo
+
+    i = j2+1
+    h = r(i+1)-r(i)
+    yy(1) = y(i+1)-y(i)
+    h2 = h*h
+    ha = h-a0
+    h2a = h*ha
+    h2b = h2*b0-yy(1)*(2.d0*h-a0)
+    s1(i) = h2/ha
+    f(1,i) = (yy(1)-h*b0)/h2a
+    ha = r(j2)-r(i+1)
+    yy(1) = -h*ha*(ha+h)
+    ha = ha*ha
+    yy(1) = (y(i+1)*(h2-ha)+y(i)*ha-y(j2)*h2)/yy(1)
+    s3(i) = (yy(1)*h2a+h2b)/(h*h2*(h-2.0d0*a0))
+    s13 = s1(i)*s3(i)
+    s2(i) = f(1,i)-s13
+
+    do j = j1,j2
+      k = i-1
+      s32 = s3(k)*s2(i)
+      s1(i) = f(3,k)-s32
+      s21 = s2(k)*s1(i)
+      s3(k) = f(2,k)-s21
+      s13 = s1(k)*s3(k)
+      s2(k) = f(1,k)-s13
+      i = k
+    enddo
+
+    s1(i) = b1
+    j2 = j2+2
+    s1(j2) = yy(1)
+    s2(j2) = yy(2)
+    s3(j2) = yy(3)
+
  3 continue
 
-  do i=1,n
+  do i = 1,n
     yprime(i)=s1(i)
   enddo
 

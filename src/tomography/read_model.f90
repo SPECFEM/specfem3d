@@ -37,7 +37,7 @@ subroutine read_model_iso()
   character(len=MAX_STRING_LEN) :: m_file, fname
 
   ! user output
-  if (myrank == 0) print *,'reading model...'
+  if (myrank == 0) print *,'reading isotropic model...'
 
   ! allocate arrays for storing the databases
   allocate(model_vp(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
@@ -316,9 +316,18 @@ subroutine read_model_database()
   endif
 
   read(IIN) ival !nspec
-  if (ival /= nspec) call exit_mpi(myrank,'Error invalid nspec value in external_mesh.bin')
+  if (ival /= nspec) then
+    print *,'Error: invalid nspec ',ival,' found, should be ',nspec
+    call exit_mpi(myrank,'Error invalid nspec value in external_mesh.bin')
+  endif
+
   read(IIN) ival !nglob
-  if (ival /= nglob) call exit_mpi(myrank,'Error invalid nglob value in external_mesh.bin')
+  if (ival /= nglob) then
+    print *,'Error: invalid nglob ',ival,' found, should be ',nglob
+    call exit_mpi(myrank,'Error invalid nglob value in external_mesh.bin')
+  endif
+
+  read(IIN) ival ! skip nspec_irregular
 
   ! allocate arrays for storing the databases
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)

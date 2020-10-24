@@ -6,7 +6,7 @@
 #  Carl Tape
 #  20-Oct-2009
 #
-#  This is the master program for running the measurement code on all the
+#  This is the main program for running the measurement code on all the
 #  events for which the windowing code has been run.
 #
 #  NOTE: The command run_measure_adj.pl below contains additional input parameters.

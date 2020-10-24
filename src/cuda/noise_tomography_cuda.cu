@@ -29,66 +29,11 @@
 
 #include "mesh_constants_cuda.h"
 
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(fortranflush,FORTRANFLUSH)(int* rank){
-TRACE("fortranflush");
-
-  fflush(stdout);
-  fflush(stderr);
-  printf("Flushing proc %d!\n",*rank);
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(fortranprint,FORTRANPRINT)(int* id) {
-TRACE("fortranprint");
-
-  int procid;
-#ifdef WITH_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD,&procid);
-#else
-  procid = 0;
-#endif
-  printf("%d: sends msg_id %d\n",procid,*id);
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(fortranprintf,FORTRANPRINTF)(realw* val) {
-TRACE("fortranprintf");
-
-  int procid;
-#ifdef WITH_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD,&procid);
-#else
-  procid = 0;
-#endif
-  printf("%d: sends val %e\n",procid,*val);
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(fortranprintd,FORTRANPRINTD)(double* val) {
-TRACE("fortranprintd");
-
-  int procid;
-#ifdef WITH_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD,&procid);
-#else
-  procid = 0;
-#endif
-  printf("%d: sends val %e\n",procid,*val);
-}
 
 /* ----------------------------------------------------------------------------------------------- */
 
 // randomize displ for testing
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(make_displ_rand,MAKE_DISPL_RAND)(long* Mesh_pointer,realw* h_displ) {
 TRACE("make_displ_rand");
 
@@ -130,7 +75,7 @@ __global__ void transfer_surface_to_host_kernel(int* free_surface_ispec,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(transfer_surface_to_host,
               TRANSFER_SURFACE_TO_HOST)(long* Mesh_pointer,
                                         realw* h_noise_surface_movie) {
@@ -154,9 +99,7 @@ TRACE("transfer_surface_to_host");
   print_CUDA_error_if_any(cudaMemcpy(h_noise_surface_movie,mp->d_noise_surface_movie,
                                      3*NGLL2*(mp->num_free_surface_faces)*sizeof(realw),cudaMemcpyDeviceToHost),44002);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("transfer_surface_to_host");
-#endif
+  GPU_ERROR_CHECKING("transfer_surface_to_host");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -181,9 +124,9 @@ __global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* d_ib
     int igll = threadIdx.x;
 
     int ipoin = NGLL2*iface + igll;
-    int i=free_surface_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)]-1;
-    int j=free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
-    int k=free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)]-1;
+    int i = free_surface_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)]-1;
+    int j = free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
+    int k = free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)]-1;
 
     int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
@@ -191,9 +134,12 @@ __global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* d_ib
     realw normal_y = normal_y_noise[ipoin];
     realw normal_z = normal_z_noise[ipoin];
 
+    // along noise direction
     realw eta = (noise_surface_movie[INDEX3(NDIM,NGLL2,0,igll,iface)]*normal_x +
-                noise_surface_movie[INDEX3(NDIM,NGLL2,1,igll,iface)]*normal_y +
-                noise_surface_movie[INDEX3(NDIM,NGLL2,2,igll,iface)]*normal_z);
+                 noise_surface_movie[INDEX3(NDIM,NGLL2,1,igll,iface)]*normal_y +
+                 noise_surface_movie[INDEX3(NDIM,NGLL2,2,igll,iface)]*normal_z);
+
+    realw val = eta * mask_noise[ipoin] * free_surface_jacobian2Dw[igll+NGLL2*iface];
 
     // error from cuda-memcheck and ddt seems "incorrect", because we
     // are passing a __constant__ variable pointer around like it was
@@ -223,16 +169,16 @@ __global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* d_ib
     // atomicAdd(&accel[iglob*3+1],eta*mask_noise[ipoin]*normal_y*wgllwgll_xy[tx]*free_surface_jacobian2Dw[igll+NGLL2*iface]);
     // atomicAdd(&accel[iglob*3+2],eta*mask_noise[ipoin]*normal_z*wgllwgll_xy[tx]*free_surface_jacobian2Dw[igll+NGLL2*iface]);
 
-    atomicAdd(&accel[iglob*3]  ,eta*mask_noise[ipoin]*normal_x*free_surface_jacobian2Dw[igll+NGLL2*iface]);
-    atomicAdd(&accel[iglob*3+1],eta*mask_noise[ipoin]*normal_y*free_surface_jacobian2Dw[igll+NGLL2*iface]);
-    atomicAdd(&accel[iglob*3+2],eta*mask_noise[ipoin]*normal_z*free_surface_jacobian2Dw[igll+NGLL2*iface]);
+    atomicAdd(&accel[iglob*3]  , val * normal_x);
+    atomicAdd(&accel[iglob*3+1], val * normal_y);
+    atomicAdd(&accel[iglob*3+2], val * normal_z);
 
   }
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(noise_read_add_surface_movie_cu,
               NOISE_READ_ADD_SURFACE_MOVIE_CU)(long* Mesh_pointer,
                                                realw* h_noise_surface_movie,
@@ -253,7 +199,8 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
   dim3 grid(num_blocks_x,num_blocks_y,1);
   dim3 threads(NGLL2,1,1);
 
-  if (NOISE_TOMOGRAPHY == 2) { // add surface source to forward field
+  if (NOISE_TOMOGRAPHY == 2) {
+    // add surface source to forward field
     noise_read_add_surface_movie_cuda_kernel<<<grid,threads>>>(mp->d_accel,
                                                                mp->d_ibool,
                                                                mp->d_free_surface_ispec,
@@ -266,7 +213,8 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
                                                                mp->d_mask_noise,
                                                                mp->d_free_surface_jacobian2Dw);
   }
-  else if (NOISE_TOMOGRAPHY == 3) { // add surface source to adjoint (backward) field
+  else if (NOISE_TOMOGRAPHY == 3) {
+    // add surface source to adjoint (backward) field
     noise_read_add_surface_movie_cuda_kernel<<<grid,threads>>>(mp->d_b_accel,
                                                                mp->d_ibool,
                                                                mp->d_free_surface_ispec,
@@ -280,7 +228,5 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
                                                                mp->d_free_surface_jacobian2Dw);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("noise_read_add_surface_movie_cuda_kernel");
-#endif
+  GPU_ERROR_CHECKING("noise_read_add_surface_movie_cuda_kernel");
 }

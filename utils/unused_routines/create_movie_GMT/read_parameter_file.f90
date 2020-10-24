@@ -220,9 +220,11 @@
   call read_value_double_precision(RECORD_LENGTH_IN_SECONDS, 'solver.RECORD_LENGTH_IN_SECONDS')
   if (err_occurred() /= 0) return
 
-! compute total number of time steps, rounded to next multiple of 100
+  ! compute total number of time steps, rounded to next multiple of 100
   NSTEP = 100 * (int(RECORD_LENGTH_IN_SECONDS / (100.d0*DT)) + 1)
-  if ( NOISE_TOMOGRAPHY /= 0 )   NSTEP = 2*NSTEP-1   ! time steps needs to be doubled, due to +/- branches
+
+  ! noise simulations: time steps needs to be doubled, due to +/- branches
+  if ( NOISE_TOMOGRAPHY /= 0 ) NSTEP = 2*NSTEP-1
 
 ! compute the total number of sources in the CMTSOLUTION file
 ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
@@ -254,6 +256,7 @@
   if (err_occurred() /= 0) return
   call read_value_double_precision(HDUR_MOVIE, 'solver.HDUR_MOVIE')
   if (err_occurred() /= 0) return
+
 ! computes a default hdur_movie that creates nice looking movies.
 ! Sets HDUR_MOVIE as the minimum period the mesh can resolve for Southern California model
   if (HDUR_MOVIE <= TINYVAL .and. (MODEL == 'Harvard_LA' .or. MODEL == 'SoCal')) &

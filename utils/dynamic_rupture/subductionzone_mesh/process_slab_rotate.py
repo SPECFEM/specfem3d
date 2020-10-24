@@ -1,6 +1,8 @@
 #!/usr/bin/python2.7
 #from matplotlib.mlab import griddata
 #this script generates topology and slab interface in cubit
+from __future__ import print_function
+
 import cubit
 import os
 import sys

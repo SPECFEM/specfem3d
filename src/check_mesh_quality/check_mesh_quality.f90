@@ -32,7 +32,7 @@
 
   program check_mesh_quality
 
-  use constants
+  use constants, only: NDIM,HUGEVAL,ZERO
 
   implicit none
 
@@ -277,8 +277,10 @@
         zelm(ia) = z(ibool(ia,ispec))
       enddo
 
-      call local_version_of_calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian,NDIM,NGNOD, &
-                  local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5,jacobian)
+      call local_version_of_calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian, &
+                                          NDIM,NGNOD, &
+                                          local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5,jacobian)
+
       if (found_a_negative_jacobian) then
         print *,'detected an element with negative Jacobian in the input mesh: element ',ispec, &
                      ' in which the Jacobian is ',jacobian
@@ -1100,7 +1102,8 @@
 !
 
   subroutine local_version_of_calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian, &
-                                  NDIM,NGNOD,local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5,jacobian)
+                                            NDIM,NGNOD, &
+                                            local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5,jacobian)
 
   implicit none
 

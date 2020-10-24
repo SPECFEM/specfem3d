@@ -33,11 +33,12 @@ subroutine read_partition_files_adios()
     NDIM,NGLLX,NGNOD,NGNOD2D,NPROC,NSPEC_AB,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
     nspec2D_top_ext,nspec2D_bottom_ext,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
     nspec_cpml,nspec_cpml_tot, &
-    nodes_coords_ext_mesh,materials_ext_mesh,undef_mat_prop,nundefMat_ext_mesh, &
+    nodes_coords_ext_mesh,mat_prop,undef_mat_prop,nundefMat_ext_mesh, &
     elmnts_ext_mesh,nelmnts_ext_mesh,mat_ext_mesh, &
     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
     nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,nodes_ibelm_bottom,nodes_ibelm_top, &
-    num_interfaces_ext_mesh,my_neighbors_ext_mesh,my_interfaces_ext_mesh,ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh, &
+    num_interfaces_ext_mesh,my_neighbors_ext_mesh,my_interfaces_ext_mesh, &
+    ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh, &
     my_nelmnts_neighbors_ext_mesh,max_interface_size_ext_mesh, &
     nmat_ext_mesh,nnodes_ext_mesh
 
@@ -159,9 +160,9 @@ subroutine read_partition_files_adios()
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 668')
   if (ier /= 0) stop 'error allocating array nodes_coords_ext_mesh'
 
-  allocate(materials_ext_mesh(16,nmat_ext_mesh),stat=ier)
+  allocate(mat_prop(17,nmat_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 669')
-  if (ier /= 0) stop 'error allocating array materials_ext_mesh'
+  if (ier /= 0) stop 'error allocating array mat_prop'
   allocate(undef_mat_prop(6,nundefMat_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 670')
   if (ier /= 0) stop 'error allocating array undef_mat_prop'
@@ -256,7 +257,7 @@ subroutine read_partition_files_adios()
   ! Read arrays from Database |
   !---------------------------'
   start(1) = local_dim_nodes_coords * myrank
-  count(1) = 3 * nnodes_ext_mesh
+  count(1) = NDIM * nnodes_ext_mesh
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count)
@@ -265,12 +266,12 @@ subroutine read_partition_files_adios()
 
   if (nmat_ext_mesh /= 0) then
     start(1) = local_dim_matpropl * myrank
-    count(1) = 16 * nmat_ext_mesh
+    count(1) = 17 * nmat_ext_mesh
     sel_num = sel_num+1
     sel => selections(sel_num)
     call adios_selection_boundingbox (sel , 1, start, count)
     ! Remember: "matpropl" has been transposed in meshfem3D
-    call adios_schedule_read(handle, sel, "matpropl/array", 0, 1, materials_ext_mesh, ier)
+    call adios_schedule_read(handle, sel, "matpropl/array", 0, 1, mat_prop, ier)
   endif
 
   if (nundefMat_ext_mesh /= 0) then

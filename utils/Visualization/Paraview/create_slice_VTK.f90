@@ -126,6 +126,7 @@
           status='old',action='read',form='unformatted')
     read(27) NSPEC_AB
     read(27) NGLOB_AB
+    read(27) ier    ! skip dummy
 
     ! ibool file
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
@@ -212,87 +213,86 @@
   write(IMAIN,*) '  vtk file: '
   write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
 
-  open(IOVTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
-  write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
-  write(IOVTK,'(a)') 'material model VTK file'
-  write(IOVTK,'(a)') 'ASCII'
-  write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
+  open(IOUT_VTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
+  write(IOUT_VTK,'(a)') '# vtk DataFile Version 3.1'
+  write(IOUT_VTK,'(a)') 'material model VTK file'
+  write(IOUT_VTK,'(a)') 'ASCII'
+  write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
 
   ! writes out all points for each element, not just global ones
-  write(IOVTK, '(a,i12,a)') 'POINTS ', nspec*8, ' float'
+  write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nspec*8, ' float'
   do ispec=1,nspec
     i = ibool(1,1,1,ispec)
-    write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
 
     i = ibool(NGLLX,1,1,ispec)
-    write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
 
     i = ibool(NGLLX,NGLLY,1,ispec)
-    write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
 
     i = ibool(1,NGLLY,1,ispec)
-    write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
 
     i = ibool(1,1,NGLLZ,ispec)
-    write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
 
     i = ibool(NGLLX,1,NGLLZ,ispec)
-    write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
 
     i = ibool(NGLLX,NGLLY,NGLLZ,ispec)
-    write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
 
     i = ibool(1,NGLLY,NGLLZ,ispec)
-    write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
-  write(IOVTK,*) ''
+  write(IOUT_VTK,*) ''
 
   ! note: indices for vtk start at 0
-  write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
+  write(IOUT_VTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
   do ispec=1,nspec
-    write(IOVTK,'(9i12)') 8,(ispec-1)*8,(ispec-1)*8+1,(ispec-1)*8+2,(ispec-1)*8+3, &
+    write(IOUT_VTK,'(9i12)') 8,(ispec-1)*8,(ispec-1)*8+1,(ispec-1)*8+2,(ispec-1)*8+3, &
           (ispec-1)*8+4,(ispec-1)*8+5,(ispec-1)*8+6,(ispec-1)*8+7
   enddo
-  write(IOVTK,*) ''
+  write(IOUT_VTK,*) ''
 
   ! type: hexahedrons
-  write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
-  write(IOVTK,'(6i12)') (12,ispec=1,nspec)
-  write(IOVTK,*) ''
+  write(IOUT_VTK,'(a,i12)') "CELL_TYPES ",nspec
+  write(IOUT_VTK,'(6i12)') (12,ispec=1,nspec)
+  write(IOUT_VTK,*) ''
 
   ! writes out gll-data (velocity) for each element point
-  write(IOVTK,'(a,i12)') "POINT_DATA ",nspec*8
-  write(IOVTK,'(a)') "SCALARS gll_data float"
-  write(IOVTK,'(a)') "LOOKUP_TABLE default"
+  write(IOUT_VTK,'(a,i12)') "POINT_DATA ",nspec*8
+  write(IOUT_VTK,'(a)') "SCALARS gll_data float"
+  write(IOUT_VTK,'(a)') "LOOKUP_TABLE default"
   do ispec = 1,nspec
-    i = ibool(1,1,1,ispec)
-    write(IOVTK,'(3e18.6)') gll_data(1,1,1,ispec)
+    !i = ibool(1,1,1,ispec)
+    write(IOUT_VTK,'(3e18.6)') gll_data(1,1,1,ispec)
 
-    i = ibool(NGLLX,1,1,ispec)
-    write(IOVTK,'(3e18.6)') gll_data(NGLLX,1,1,ispec)
+    !i = ibool(NGLLX,1,1,ispec)
+    write(IOUT_VTK,'(3e18.6)') gll_data(NGLLX,1,1,ispec)
 
-    i = ibool(NGLLX,NGLLY,1,ispec)
-    write(IOVTK,'(3e18.6)') gll_data(NGLLX,NGLLY,1,ispec)
+    !i = ibool(NGLLX,NGLLY,1,ispec)
+    write(IOUT_VTK,'(3e18.6)') gll_data(NGLLX,NGLLY,1,ispec)
 
-    i = ibool(1,NGLLY,1,ispec)
-    write(IOVTK,'(3e18.6)') gll_data(1,NGLLY,1,ispec)
+    !i = ibool(1,NGLLY,1,ispec)
+    write(IOUT_VTK,'(3e18.6)') gll_data(1,NGLLY,1,ispec)
 
-    i = ibool(1,1,NGLLZ,ispec)
-    write(IOVTK,'(3e18.6)') gll_data(1,1,NGLLZ,ispec)
+    !i = ibool(1,1,NGLLZ,ispec)
+    write(IOUT_VTK,'(3e18.6)') gll_data(1,1,NGLLZ,ispec)
 
-    i = ibool(NGLLX,1,NGLLZ,ispec)
-    write(IOVTK,'(3e18.6)') gll_data(NGLLX,1,NGLLZ,ispec)
+    !i = ibool(NGLLX,1,NGLLZ,ispec)
+    write(IOUT_VTK,'(3e18.6)') gll_data(NGLLX,1,NGLLZ,ispec)
 
-    i = ibool(NGLLX,NGLLY,NGLLZ,ispec)
-    write(IOVTK,'(3e18.6)') gll_data(NGLLX,NGLLY,NGLLZ,ispec)
+    !i = ibool(NGLLX,NGLLY,NGLLZ,ispec)
+    write(IOUT_VTK,'(3e18.6)') gll_data(NGLLX,NGLLY,NGLLZ,ispec)
 
-    i = ibool(1,NGLLY,NGLLZ,ispec)-1
-    write(IOVTK,'(3e18.6)') gll_data(1,NGLLY,NGLLZ,ispec)
+    !i = ibool(1,NGLLY,NGLLZ,ispec)-1
+    write(IOUT_VTK,'(3e18.6)') gll_data(1,NGLLY,NGLLZ,ispec)
   enddo
-  write(IOVTK,*) ''
+  write(IOUT_VTK,*) ''
 
-  close(IOVTK)
-
+  close(IOUT_VTK)
 
   end subroutine write_VTK_data_gll_cr
 

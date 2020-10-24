@@ -25,34 +25,35 @@
 !
 !=====================================================================
 
-  subroutine get_model(myrank)
+  subroutine get_model()
+
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,TWO,IMAIN
 
   use generate_databases_par, only: IMODEL, &
-    IMODEL_DEFAULT,IMODEL_GLL,IMODEL_1D_PREM,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
-    IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
+    IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL, &
     IMODEL_COUPLED, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
     nspec => NSPEC_AB,ibool,mat_ext_mesh, &
-    materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh, &
-    ANISOTROPY,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,TWO,IMAIN
+    mat_prop,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh, &
+    ANISOTROPY
 
   use create_regions_mesh_ext_par
 
+  ! injection technique
   use constants, only: INJECTION_TECHNIQUE_IS_FK,INJECTION_TECHNIQUE_IS_DSM,INJECTION_TECHNIQUE_IS_AXISEM
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH,INJECTION_TECHNIQUE_TYPE
 
   implicit none
 
-  integer :: myrank
-
   ! local parameters
   real(kind=CUSTOM_REAL) :: vp,vs,rho,qkappa_atten,qmu_atten
   real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25, &
-                        c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
+                            c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
   real(kind=CUSTOM_REAL) :: kappa_s,kappa_f,kappa_fr,mu_fr,rho_s,rho_f,phi,tort,eta_f, &
-                        kxx,kxy,kxz,kyy,kyz,kzz,rho_bar
+                            kxx,kxy,kxz,kyy,kyz,kzz,rho_bar
   real(kind=CUSTOM_REAL) :: cpIsquare,cpIIsquare,cssquare,H_biot,M_biot,C_biot,D_biot, &
-                        afactor,bfactor,cfactor
+                            afactor,bfactor,cfactor
+  real(kind=CUSTOM_REAL) :: vpI_poro,vpII_poro,vs_poro
 
   integer :: ispec,i,j,k
 
@@ -80,11 +81,11 @@
   ! prepares external model values if needed
   select case (IMODEL)
   case (IMODEL_USER_EXTERNAL)
-    call model_external_broadcast(myrank)
+    call model_external_broadcast()
   case (IMODEL_SALTON_TROUGH)
-    call model_salton_trough_broadcast(myrank)
+    call model_salton_trough_broadcast()
   case (IMODEL_COUPLED)
-    call model_coupled_broadcast(myrank)
+    call model_coupled_broadcast()
   end select
 
 ! DP: not sure if this here should check if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) ..
@@ -221,84 +222,165 @@
           imaterial_def = mat_ext_mesh(2,ispec)
 
           ! assigns material properties
-          call get_model_values(materials_ext_mesh,nmat_ext_mesh, &
-                               undef_mat_prop,nundefMat_ext_mesh, &
-                               imaterial_id,imaterial_def, &
-                               xmesh,ymesh,zmesh, &
-                               rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
-                               rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
-                               phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
-                               c11,c12,c13,c14,c15,c16, &
-                               c22,c23,c24,c25,c26,c33, &
-                               c34,c35,c36,c44,c45,c46,c55,c56,c66, &
-                               ANISOTROPY)
+          call get_model_values(mat_prop,nmat_ext_mesh, &
+                                undef_mat_prop,nundefMat_ext_mesh, &
+                                imaterial_id,imaterial_def, &
+                                xmesh,ymesh,zmesh,ispec, &
+                                rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
+                                rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
+                                phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
+                                c11,c12,c13,c14,c15,c16, &
+                                c22,c23,c24,c25,c26,c33, &
+                                c34,c35,c36,c44,c45,c46,c55,c56,c66, &
+                                ANISOTROPY)
 
           ! stores velocity model
-          if (idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then
 
-            ! elastic or acoustic material
-
-            ! density
-            rhostore(i,j,k,ispec) = rho
-
-            ! kappa, mu
-            kappastore(i,j,k,ispec) = rho*( vp*vp - FOUR_THIRDS*vs*vs )
-            mustore(i,j,k,ispec) = rho*vs*vs
-
-            ! attenuation
-            qkappa_attenuation_store(i,j,k,ispec) = qkappa_atten
-            qmu_attenuation_store(i,j,k,ispec) = qmu_atten
-
-            ! Stacey, a completer par la suite
-            rho_vp(i,j,k,ispec) = rho*vp
-            rho_vs(i,j,k,ispec) = rho*vs
-            !
-            !end pll
-
-          else
-
-            ! poroelastic material
-
+          ! converts model coefficients
+          ! will only be used to store into array, but not used further
+          select case(idomain_id)
+          case (IDOMAIN_ACOUSTIC)
+            ! parameters for poroelastic model arrays
+            ! assuming vs = 0
+            rho_s = 0.0     ! solid properties
+            kappa_s = 0.0
+            rho_f = rho     ! fluid properties
+            kappa_f = rho*vp*vp
+            eta_f = 0.0
+            kappa_fr = rho*vp*vp  ! frame properties
+            mu_fr = 0.0
+            phi = 1.0       ! fluid
+            tort = 0.0
+            kxx = 0.0
+            kxy = 0.0
+            kxz = 0.0
+            kyy = 0.0
+            kyz = 0.0
+            kzz = 0.0
+          case (IDOMAIN_ELASTIC)
             ! solid properties
-            rhoarraystore(1,i,j,k,ispec) = rho_s
-            kappaarraystore(1,i,j,k,ispec) = kappa_s
-            ! fluid properties
-            rhoarraystore(2,i,j,k,ispec) = rho_f
-            kappaarraystore(2,i,j,k,ispec) = kappa_f
-            etastore(i,j,k,ispec) = eta_f
-            ! frame properties
-            kappaarraystore(3,i,j,k,ispec) = kappa_fr
-            mustore(i,j,k,ispec) = mu_fr
-            phistore(i,j,k,ispec) = phi
-            tortstore(i,j,k,ispec) = tort
-            permstore(1,i,j,k,ispec) = kxx
-            permstore(2,i,j,k,ispec) = kxy
-            permstore(3,i,j,k,ispec) = kxz
-            permstore(4,i,j,k,ispec) = kyy
-            permstore(5,i,j,k,ispec) = kyz
-            permstore(6,i,j,k,ispec) = kzz
+            rho_s = rho     ! solid properties
+            kappa_s = rho*(vp*vp - FOUR_THIRDS*vs*vs)
+            rho_f = rho     ! fluid properties
+            kappa_f = rho*(vp*vp - FOUR_THIRDS*vs*vs)
+            eta_f = 0.0
+            kappa_fr = rho*(vp*vp - FOUR_THIRDS*vs*vs)  ! frame properties
+            mu_fr = rho*vs*vs
+            phi = 0.0       ! solid
+            tort = 0.0
+            kxx = 0.0
+            kxy = 0.0
+            kxz = 0.0
+            kyy = 0.0
+            kyz = 0.0
+            kzz = 0.0
+          case (IDOMAIN_POROELASTIC)
+            ! parameters for acoustic/elastic model arrays
+            ! selects solid parameters for elastic arrays
+            rho = rho_s
+            vp = sqrt((kappa_s + FOUR_THIRDS * mu_fr) / rho_s)
+            vs = sqrt(mu_fr / rho_s)
+          end select
 
-            !Biot coefficients for the input phi
-            D_biot = kappa_s*(1._CUSTOM_REAL + phi*(kappa_s/kappa_f - 1._CUSTOM_REAL))
-            H_biot = (kappa_s - kappa_fr)*(kappa_s - kappa_fr)/(D_biot - kappa_fr) &
-                      + kappa_fr + 4._CUSTOM_REAL*mu_fr/3._CUSTOM_REAL
+          ! elastic or acoustic material
+          ! density
+          rhostore(i,j,k,ispec) = rho
+
+          ! kappa, mu
+          kappastore(i,j,k,ispec) = rho*( vp*vp - FOUR_THIRDS*vs*vs )
+          mustore(i,j,k,ispec) = rho*vs*vs
+
+          ! attenuation
+          qkappa_attenuation_store(i,j,k,ispec) = qkappa_atten
+          qmu_attenuation_store(i,j,k,ispec) = qmu_atten
+
+          ! Stacey, a completer par la suite
+          rho_vp(i,j,k,ispec) = rho*vp
+          rho_vs(i,j,k,ispec) = rho*vs
+          !
+          !end pll
+
+          ! poroelastic material store
+          ! solid properties
+          rhoarraystore(1,i,j,k,ispec) = rho_s
+          kappaarraystore(1,i,j,k,ispec) = kappa_s
+          ! fluid properties
+          rhoarraystore(2,i,j,k,ispec) = rho_f
+          kappaarraystore(2,i,j,k,ispec) = kappa_f
+          etastore(i,j,k,ispec) = eta_f
+          ! frame properties
+          kappaarraystore(3,i,j,k,ispec) = kappa_fr
+          mustore(i,j,k,ispec) = mu_fr
+          phistore(i,j,k,ispec) = phi
+          tortstore(i,j,k,ispec) = tort
+          permstore(1,i,j,k,ispec) = kxx
+          permstore(2,i,j,k,ispec) = kxy
+          permstore(3,i,j,k,ispec) = kxz
+          permstore(4,i,j,k,ispec) = kyy
+          permstore(5,i,j,k,ispec) = kyz
+          permstore(6,i,j,k,ispec) = kzz
+
+          !Biot coefficients for the input phi
+          D_biot = kappa_s*(1._CUSTOM_REAL + phi*(kappa_s/kappa_f - 1._CUSTOM_REAL))
+          if (abs(D_biot - kappa_fr) > 1.e-20) then
+            H_biot = (kappa_s - kappa_fr)*(kappa_s - kappa_fr)/(D_biot - kappa_fr) + kappa_fr + FOUR_THIRDS * mu_fr
             C_biot = kappa_s*(kappa_s - kappa_fr)/(D_biot - kappa_fr)
             M_biot = kappa_s*kappa_s/(D_biot - kappa_fr)
-            ! Approximated velocities (no viscous dissipation)
-            rho_bar =  (1._CUSTOM_REAL - phi)*rho_s + phi*rho_f
+          else
+            H_biot = kappa_s + FOUR_THIRDS * mu_fr
+            C_biot = kappa_s
+            M_biot = 0.0
+          endif
+          ! Approximated velocities (no viscous dissipation)
+          rho_bar =  (1._CUSTOM_REAL - phi)*rho_s + phi*rho_f
+          if (abs(tort) > 1.e-20) then
             afactor = rho_bar - phi/tort*rho_f
             bfactor = H_biot + phi*rho_bar/(tort*rho_f)*M_biot - TWO*phi/tort*C_biot
             cfactor = phi/(tort*rho_f)*(H_biot*M_biot - C_biot*C_biot)
-            cpIsquare = (bfactor + sqrt(bfactor*bfactor - 4._CUSTOM_REAL*afactor*cfactor))/(2._CUSTOM_REAL*afactor)
+          else
+            afactor = 0.0
+            bfactor = 0.0
+            cfactor = 0.0
+          endif
+
+          if (abs(afactor) > 1.e-20) then
+            cpIsquare  = (bfactor + sqrt(bfactor*bfactor - 4._CUSTOM_REAL*afactor*cfactor))/(2._CUSTOM_REAL*afactor)
             cpIIsquare = (bfactor - sqrt(bfactor*bfactor - 4._CUSTOM_REAL*afactor*cfactor))/(2._CUSTOM_REAL*afactor)
             cssquare = mu_fr/afactor
+          else
+            cpIsquare =  vp*vp
+            cpIIsquare = vp*vp
+            cssquare = mu_fr
+          endif
 
-            ! AC based on cpI,cpII & cs
-            rho_vpI(i,j,k,ispec) = (rho_bar - phi/tort*rho_f)*sqrt(cpIsquare)
-            rho_vpII(i,j,k,ispec) = (rho_bar - phi/tort*rho_f)*sqrt(cpIIsquare)
-            rho_vsI(i,j,k,ispec) = (rho_bar - phi/tort*rho_f)*sqrt(cssquare)
+          ! AC based on cpI,cpII & cs
+          if (abs(tort) > 1.e-20) then
+            rho_vpI(i,j,k,ispec)  = (rho_bar - phi/tort*rho_f) * sqrt(cpIsquare)
+            rho_vpII(i,j,k,ispec) = (rho_bar - phi/tort*rho_f) * sqrt(cpIIsquare)
+            rho_vsI(i,j,k,ispec)  = (rho_bar - phi/tort*rho_f) * sqrt(cssquare)
 
-          endif !if (idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC)
+            vs_poro   = rho_vsI(i,j,k,ispec) / ( (1.0_CUSTOM_REAL - phi) * rho_s + phi * rho_f - phi/tort * rho_f )
+            vpI_poro  = rho_vpI(i,j,k,ispec) / ( (1.0_CUSTOM_REAL - phi) * rho_s + phi * rho_f - phi/tort * rho_f )
+            vpII_poro = rho_vpII(i,j,k,ispec)/ ( (1.0_CUSTOM_REAL - phi) * rho_s + phi * rho_f - phi/tort * rho_f )
+          else
+            rho_vpI(i,j,k,ispec)  = rho_bar * sqrt(cpIsquare)
+            rho_vpII(i,j,k,ispec) = rho_bar * sqrt(cpIIsquare)
+            rho_vsI(i,j,k,ispec)  = rho_bar * sqrt(cssquare)
+
+            vs_poro   = rho_vsI(i,j,k,ispec) / ( (1.0_CUSTOM_REAL - phi) * rho_s + phi * rho_f )
+            vpI_poro  = rho_vpI(i,j,k,ispec) / ( (1.0_CUSTOM_REAL - phi) * rho_s + phi * rho_f )
+            vpII_poro = rho_vpII(i,j,k,ispec)/ ( (1.0_CUSTOM_REAL - phi) * rho_s + phi * rho_f )
+          endif
+
+          !debug
+          if (.false.) then
+            if (myrank == 0 .and. idomain_id == 1 .and. i == 1 .and. j == 1 .and. k == 1) &
+              print *,'debug: model domain ',idomain_id,'ispec ',ispec,' vp/vs/rho = ',vp,vs,rho, 'rhovp/rhovs ',rho*vp,rho*vs, &
+                      ' rhovpI/rhovpII/rhovsI = ',rho_vpI(i,j,k,ispec),rho_vpII(i,j,k,ispec),rho_vsI(i,j,k,ispec), &
+                      ' vp_poro ',vpI_poro,' vpII_poro ',vpII_poro,' vs_poro ',vs_poro, &
+                      ' D/H/C/M biot ',D_biot,H_biot,C_biot,M_biot,' rho_bar/a/b/c factor',rho_bar,afactor,bfactor,cfactor, &
+                      ' cpIsq/cpIIsq/cssq ',cpIsquare,cpIIsquare,cssquare
+          endif
 
           ! stores anisotropic parameters
           if (ANISOTROPY) then
@@ -327,15 +409,15 @@
 
 
           ! stores material domain
-          select case (idomain_id )
-          case (IDOMAIN_ACOUSTIC )
+          select case (idomain_id)
+          case (IDOMAIN_ACOUSTIC)
             ispec_is_acoustic(ispec) = .true.
-          case (IDOMAIN_ELASTIC )
+          case (IDOMAIN_ELASTIC)
             ispec_is_elastic(ispec) = .true.
-          case (IDOMAIN_POROELASTIC )
+          case (IDOMAIN_POROELASTIC)
             ispec_is_poroelastic(ispec) = .true.
           case default
-            stop 'Error material domain index'
+            stop 'Error invalid material domain index, must be 1 == acoustic,2 == elastic or 3 == poroelastic'
           end select
 
         enddo
@@ -344,11 +426,11 @@
 
     ! user output
     if (myrank == 0) then
-      if (mod(ispec,nspec/10) == 0) then
+      if (mod(ispec,max(nspec/10,1)) == 0) then
         tCPU = wtime() - time_start
         ! remaining
         tCPU = (10.0-ispec/(nspec/10.0))/ispec/(nspec/10.0)*tCPU
-        write(IMAIN,*) "    ",ispec/(nspec/10) * 10," %", &
+        write(IMAIN,*) "    ",ispec/(max(nspec/10,1)) * 10," %", &
                       " time remaining:", tCPU,"s"
 
         ! flushes file buffer for main output file (IMAIN)
@@ -359,7 +441,7 @@
   enddo
 
   ! checks material domains
-  do ispec=1,nspec
+  do ispec = 1,nspec
     ! checks if domain is set
     if ((ispec_is_acoustic(ispec) .eqv. .false.) .and. &
         (ispec_is_elastic(ispec) .eqv. .false.) .and. &
@@ -399,10 +481,10 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_model_values(materials_ext_mesh,nmat_ext_mesh, &
+  subroutine get_model_values(mat_prop,nmat_ext_mesh, &
                               undef_mat_prop,nundefMat_ext_mesh, &
                               imaterial_id,imaterial_def, &
-                              xmesh,ymesh,zmesh, &
+                              xmesh,ymesh,zmesh,ispec, &
                               rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
                               rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                               phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
@@ -424,7 +506,7 @@
   implicit none
 
   integer, intent(in) :: nmat_ext_mesh
-  double precision, dimension(16,nmat_ext_mesh), intent(in) :: materials_ext_mesh
+  double precision, dimension(17,nmat_ext_mesh), intent(in) :: mat_prop
 
   integer, intent(in) :: nundefMat_ext_mesh
   character(len=MAX_STRING_LEN), dimension(6,nundefMat_ext_mesh) :: undef_mat_prop
@@ -432,6 +514,7 @@
   integer, intent(in) :: imaterial_id,imaterial_def
 
   double precision, intent(in) :: xmesh,ymesh,zmesh
+  integer, intent(in) :: ispec
 
   real(kind=CUSTOM_REAL) :: vp,vs,rho,qkappa_atten,qmu_atten
 
@@ -481,7 +564,7 @@
 
   case (IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP)
     ! material values determined by mesh properties
-    call model_default(materials_ext_mesh,nmat_ext_mesh, &
+    call model_default(mat_prop,nmat_ext_mesh, &
                        undef_mat_prop,nundefMat_ext_mesh, &
                        imaterial_id,imaterial_def, &
                        xmesh,ymesh,zmesh, &
@@ -622,7 +705,7 @@
     !        be able to superimpose a model onto the default one:
 
     ! material values determined by mesh properties
-    call model_default(materials_ext_mesh,nmat_ext_mesh, &
+    call model_default(mat_prop,nmat_ext_mesh, &
                        undef_mat_prop,nundefMat_ext_mesh, &
                        imaterial_id,imaterial_def, &
                        xmesh,ymesh,zmesh,rho,vp,vs, &
@@ -632,7 +715,7 @@
 
     ! user model from external routine
     ! adds/gets velocity model as specified in model_external_values.f90
-    call model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id)
+    call model_external_values(xmesh,ymesh,zmesh,ispec,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id)
 
   case (IMODEL_COUPLED)
     ! user model for coupling with injection method
@@ -673,11 +756,13 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_model_binaries(myrank,nspec,LOCAL_PATH)
+  subroutine get_model_binaries(nspec,LOCAL_PATH)
 
 ! reads in material parameters from external binary files
 
-  use generate_databases_par, only: IMAIN, IMODEL, IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP, ADIOS_FOR_MESH
+  use constants, only: myrank,IMAIN,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER,IMODEL_SEP
+
+  use generate_databases_par, only: IMODEL,ADIOS_FOR_MESH
 
   use create_regions_mesh_ext_par
 
@@ -688,8 +773,8 @@
   implicit none
 
   ! number of spectral elements in each block
-  integer :: myrank,nspec
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH
+  integer,intent(in) :: nspec
+  character(len=MAX_STRING_LEN),intent(in) :: LOCAL_PATH
 
   ! external GLL models
   ! variables for importing models from files in SPECFEM format, e.g.,  proc000000_vp.bin etc.
@@ -702,7 +787,7 @@
   case (IMODEL_GLL)
     ! note:
     ! import the model from files in SPECFEM format
-    ! note that those those files should be saved in LOCAL_PATH
+    ! note that those files should be saved in LOCAL_PATH
     if (ADIOS_FOR_MESH) then
       call model_gll_adios(myrank,nspec,LOCAL_PATH)
     else

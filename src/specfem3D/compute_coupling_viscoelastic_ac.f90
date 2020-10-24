@@ -28,15 +28,15 @@
 ! for elastic solver
 
   subroutine compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
-                        ibool,accel,potential_dot_dot_acoustic, &
-                        num_coupling_ac_el_faces, &
-                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                        coupling_ac_el_normal, &
-                        coupling_ac_el_jacobian2Dw, &
-                        iphase, &
-                        PML_CONDITIONS, &
-                        SIMULATION_TYPE,backward_simulation, &
-                        potential_acoustic,potential_dot_acoustic)
+                                              ibool,accel,potential_dot_dot_acoustic, &
+                                              num_coupling_ac_el_faces, &
+                                              coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                                              coupling_ac_el_normal, &
+                                              coupling_ac_el_jacobian2Dw, &
+                                              iphase, &
+                                              PML_CONDITIONS, &
+                                              SIMULATION_TYPE,backward_simulation, &
+                                              potential_acoustic,potential_dot_acoustic)
 
 ! returns the updated acceleration array: accel
 
@@ -154,9 +154,9 @@
       !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
       !          it means you have to calculate and update the acoustic pressure first before
       !          calculating this term...
-      accel(1,iglob) = accel(1,iglob) + jacobianw*nx*pressure_x
-      accel(2,iglob) = accel(2,iglob) + jacobianw*ny*pressure_y
-      accel(3,iglob) = accel(3,iglob) + jacobianw*nz*pressure_z
+      accel(1,iglob) = accel(1,iglob) + jacobianw * nx * pressure_x
+      accel(2,iglob) = accel(2,iglob) + jacobianw * ny * pressure_y
+      accel(3,iglob) = accel(3,iglob) + jacobianw * nz * pressure_z
 
     enddo ! igll
 

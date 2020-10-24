@@ -346,50 +346,71 @@
   ! reads in parameters
   call initialize_simulation()
 
-  ! reads in external mesh
-  if (ADIOS_FOR_MESH) then
-    call read_mesh_databases_adios()
-  else
-    call read_mesh_databases()
-  endif
+  ! simulation initialization for compute nodes
+  if (compute_task) then
+    ! reads in external mesh
+    if (ADIOS_FOR_MESH) then
+      call read_mesh_databases_adios()
+    elseif (HDF5_ENABLED) then
+      call read_mesh_databases_h5()
+    else
+      call read_mesh_databases()
+    endif
 
-  ! reads in moho mesh
-  if (ADIOS_FOR_MESH) then
-    call read_mesh_databases_moho_adios()
-  else
-    call read_mesh_databases_moho()
-  endif
+    ! reads in moho mesh
+    if (ADIOS_FOR_MESH) then
+      call read_mesh_databases_moho_adios()
+  !  elseif (HDF5_ENABLED) then ! not implemented yet
+  !    call read_mesh_databases_moho_h5()
+    else
+      call read_mesh_databases_moho()
+    endif
 
-  ! reads adjoint parameters
-  call read_mesh_databases_adjoint()
+    ! reads adjoint parameters
+    call read_mesh_databases_adjoint()
 
-  ! for coupling with external codes
-  call couple_with_injection_setup()
+    ! for coupling with external codes
+    call couple_with_injection_setup()
 
-  ! sets up reference element GLL points/weights/derivatives
-  call setup_GLL_points()
+    ! sets up reference element GLL points/weights/derivatives
+    call setup_GLL_points()
 
-  ! detects surfaces
-  call detect_mesh_surfaces()
+    ! detects surfaces
+    call detect_mesh_surfaces()
 
-  ! prepares sources and receivers
-  call setup_sources_receivers()
+    ! prepares sources and receivers
+    call setup_sources_receivers()
 
-  ! sets up and precomputes simulation arrays
-  call prepare_timerun()
+    ! sets up and precomputes simulation arrays
+    call prepare_timerun()
 
 #ifdef VTK_VIS
-  ! vtk window in-situ visualization
-  call vtk_window_prepare()
+    ! vtk window in-situ visualization
+    call vtk_window_prepare()
 #endif
 
-  ! steps through time iterations
-  call iterate_time()
+  endif ! simulation preparation only on compute nodes
 
-  ! saves last time frame and finishes kernel calculations
-  call finalize_simulation()
+  ! steps through time iterations
+  if (UNDO_ATTENUATION_AND_OR_PML) then
+    call iterate_time_undoatt()
+  else
+    call iterate_time()
+  endif
+
+  ! simulation initialization for compute nodes
+  if (compute_task) then
+
+    ! saves last time frame and finishes kernel calculations
+    call finalize_simulation()
+
+  endif ! simulation preparation for compute nodes
 
   ! MPI finish
+  if(HDF5_ENABLED .and. NIONOD > 0) then
+    call world_unsplit_inter()
+  endif
+
   call finalize_mpi()
 
   end program xspecfem3D

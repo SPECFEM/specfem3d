@@ -79,7 +79,7 @@
   write(IOUT,*) '! min vector length = ',NGLLSQUARE
   write(IOUT,*) '! min critical vector length = ',NGLLSQUARE * NDIM
   write(IOUT,*) '!'
-  write(IOUT,*) '! master process: total points per AB slice = ',NGLOB_AB
+  write(IOUT,*) '! main process: total points per AB slice = ',NGLOB_AB
   write(IOUT,*) '! total elements per AB slice = (will be read in external file)'
   write(IOUT,*) '! total points per AB slice = (will be read in external file)'
   write(IOUT,*) '!'

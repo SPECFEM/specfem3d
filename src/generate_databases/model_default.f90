@@ -31,13 +31,13 @@
 !
 !--------------------------------------------------------------------------------------------------
 
-  subroutine model_default(materials_ext_mesh,nmat_ext_mesh, &
-                          undef_mat_prop,nundefMat_ext_mesh, &
-                          imaterial_id,imaterial_def, &
-                          xmesh,ymesh,zmesh, &
-                          rho,vp,vs,iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
-                          rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
-                          phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
+  subroutine model_default(mat_prop,nmat_ext_mesh, &
+                           undef_mat_prop,nundefMat_ext_mesh, &
+                           imaterial_id,imaterial_def, &
+                           xmesh,ymesh,zmesh, &
+                           rho,vp,vs,iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
+                           rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
+                           phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
 
 ! takes model values specified by mesh properties
 
@@ -47,7 +47,7 @@
   implicit none
 
   integer, intent(in) :: nmat_ext_mesh
-  double precision, dimension(16,nmat_ext_mesh), intent(in) :: materials_ext_mesh
+  double precision, dimension(17,nmat_ext_mesh), intent(in) :: mat_prop
 
   integer, intent(in) :: nundefMat_ext_mesh
   character(len=MAX_STRING_LEN), dimension(6,nundefMat_ext_mesh) :: undef_mat_prop
@@ -61,8 +61,7 @@
   integer :: iflag_aniso
   integer :: idomain_id
 
-  real(kind=CUSTOM_REAL) :: kappa_s,kappa_f,kappa_fr,mu_fr,rho_s,rho_f,phi,tort,eta_f, &
-                           kxx,kxy,kxz,kyy,kyz,kzz
+  real(kind=CUSTOM_REAL) :: kappa_s,kappa_f,kappa_fr,mu_fr,rho_s,rho_f,phi,tort,eta_f,kxx,kxy,kxz,kyy,kyz,kzz
 
   ! local parameters
   integer :: iflag,flag_below,flag_above
@@ -71,13 +70,37 @@
   character(len=MAX_STRING_LEN) :: str_domain
   integer :: ier
 
+  ! initializes
+  vp = 0._CUSTOM_REAL
+  vs = 0._CUSTOM_REAL
+  rho = 0._CUSTOM_REAL
+  qkappa_atten = 0._CUSTOM_REAL
+  qmu_atten = 0._CUSTOM_REAL
+  iflag_aniso = 0
+
+  rho_s = 0._CUSTOM_REAL
+  rho_f = 0._CUSTOM_REAL
+  phi = 0._CUSTOM_REAL
+  tort = 0._CUSTOM_REAL
+  eta_f = 0._CUSTOM_REAL
+  kxx = 0._CUSTOM_REAL
+  kxy = 0._CUSTOM_REAL
+  kxz = 0._CUSTOM_REAL
+  kyy = 0._CUSTOM_REAL
+  kyz = 0._CUSTOM_REAL
+  kzz = 0._CUSTOM_REAL
+  kappa_s = 0._CUSTOM_REAL
+  kappa_f = 0._CUSTOM_REAL
+  kappa_fr = 0._CUSTOM_REAL
+  mu_fr = 0._CUSTOM_REAL
+
   ! check if the material is known or unknown
   if (imaterial_id > 0) then
     ! gets velocity model as specified by (cubit) mesh files for elastic & acoustic
     ! or from nummaterial_poroelastic_file for poroelastic (too many arguments for cubit)
 
     ! material domain_id
-    idomain_id = nint(materials_ext_mesh(7,imaterial_id))
+    idomain_id = nint(mat_prop(7,imaterial_id))
 
     select case (idomain_id)
 
@@ -85,44 +108,46 @@
       ! (visco)elastic or acoustic
 
       ! density
-      ! materials_ext_mesh format:
+      ! mat_prop format:
       ! #index1 = rho #index2 = vp #index3 = vs #index4 = Q_Kappa #index5 = Q_mu #index6 = iflag_aniso
-      rho = materials_ext_mesh(1,imaterial_id)
+      rho = mat_prop(1,imaterial_id)
 
       ! isotropic values: vp, vs
-      vp = materials_ext_mesh(2,imaterial_id)
-      vs = materials_ext_mesh(3,imaterial_id)
+      vp = mat_prop(2,imaterial_id)
+      vs = mat_prop(3,imaterial_id)
 
       ! attenuation
-      qkappa_atten = materials_ext_mesh(4,imaterial_id)
-      qmu_atten = materials_ext_mesh(5,imaterial_id)
+      qkappa_atten = mat_prop(4,imaterial_id)
+      qmu_atten = mat_prop(5,imaterial_id)
 
       ! anisotropy
-      iflag_aniso = nint(materials_ext_mesh(6,imaterial_id))
+      iflag_aniso = nint(mat_prop(6,imaterial_id))
 
     case (IDOMAIN_POROELASTIC)
       ! poroelastic
-      ! materials_ext_mesh format:
-      ! rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz
+      ! mat_prop format:
+      ! # rho_s,rho_f,phi,tort,eta,0,domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappa_s,kappa_f,kappa_fr,mu_fr,
+      !
+      ! solid properties: rho_s, kappa_s
+      ! fluid properties: rho_f, kappa_f, eta_f
+      ! frame properties: kappa_fr, mu_fr, phi, tort, kxx, kxy, kxz, kyy, kyz, kzz
 
-      ! solid properties
-      rho_s =  materials_ext_mesh(1,imaterial_id)
-      kappa_s =  materials_ext_mesh(13,imaterial_id)
-      ! fluid properties
-      rho_f =  materials_ext_mesh(2,imaterial_id)
-      kappa_f =  materials_ext_mesh(14,imaterial_id)
-      eta_f =  materials_ext_mesh(5,imaterial_id)
-      ! frame properties
-      kappa_fr =  materials_ext_mesh(15,imaterial_id)
-      mu_fr =  materials_ext_mesh(16,imaterial_id)
-      phi =  materials_ext_mesh(3,imaterial_id)
-      tort =  materials_ext_mesh(4,imaterial_id)
-      kxx =  materials_ext_mesh(7,imaterial_id)
-      kxy =  materials_ext_mesh(8,imaterial_id)
-      kxz =  materials_ext_mesh(9,imaterial_id)
-      kyy =  materials_ext_mesh(10,imaterial_id)
-      kyz =  materials_ext_mesh(11,imaterial_id)
-      kzz =  materials_ext_mesh(12,imaterial_id)
+      rho_s =  mat_prop(1,imaterial_id)
+      rho_f =  mat_prop(2,imaterial_id)
+      phi =  mat_prop(3,imaterial_id)
+      tort =  mat_prop(4,imaterial_id)
+      eta_f =  mat_prop(5,imaterial_id)
+
+      kxx =  mat_prop(8,imaterial_id)
+      kxy =  mat_prop(9,imaterial_id)
+      kxz =  mat_prop(10,imaterial_id)
+      kyy =  mat_prop(11,imaterial_id)
+      kyz =  mat_prop(12,imaterial_id)
+      kzz =  mat_prop(13,imaterial_id)
+      kappa_s =  mat_prop(14,imaterial_id)
+      kappa_f =  mat_prop(15,imaterial_id)
+      kappa_fr =  mat_prop(16,imaterial_id)
+      mu_fr =  mat_prop(17,imaterial_id)
 
     case default
       print *,'Error: domain id = ',idomain_id,'not recognized'
@@ -152,13 +177,13 @@
 
       ! dummy: takes 1. defined material
       iflag = 1
-      rho = materials_ext_mesh(1,iflag)
-      vp = materials_ext_mesh(2,iflag)
-      vs = materials_ext_mesh(3,iflag)
-      qkappa_atten = materials_ext_mesh(4,iflag)
-      qmu_atten = materials_ext_mesh(5,iflag)
-      iflag_aniso = nint(materials_ext_mesh(6,iflag))
-      idomain_id = nint(materials_ext_mesh(7,iflag))
+      rho = mat_prop(1,iflag)
+      vp = mat_prop(2,iflag)
+      vs = mat_prop(3,iflag)
+      qkappa_atten = mat_prop(4,iflag)
+      qmu_atten = mat_prop(5,iflag)
+      iflag_aniso = nint(mat_prop(6,iflag))
+      idomain_id = nint(mat_prop(7,iflag))
 
     case (2)
       ! tomography models

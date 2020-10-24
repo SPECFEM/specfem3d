@@ -107,13 +107,15 @@ AM_CONDITIONAL([COND_CUDA6], [test x"$want_cuda" = xcuda6])
 AM_CONDITIONAL([COND_CUDA7], [test x"$want_cuda" = xcuda7])
 AM_CONDITIONAL([COND_CUDA8], [test x"$want_cuda" = xcuda8])
 AM_CONDITIONAL([COND_CUDA9], [test x"$want_cuda" = xcuda9])
+AM_CONDITIONAL([COND_CUDA10], [test x"$want_cuda" = xcuda10])
 # cuda linking for cuda 5x and 6x and 7x and 8x and ..
 AM_CONDITIONAL([COND_CUDA_PLUS],
   [test "$want_cuda" = cuda5 \
      -o "$want_cuda" = cuda6 \
      -o "$want_cuda" = cuda7 \
      -o "$want_cuda" = cuda8 \
-     -o "$want_cuda" = cuda9 \]
+     -o "$want_cuda" = cuda9 \
+     -o "$want_cuda" = cuda10 \]
 )
 
 ###
@@ -159,6 +161,18 @@ AC_ARG_WITH([asdf],
     [want_asdf="$withval"],
     [want_asdf=no])
 AM_CONDITIONAL([COND_ASDF], [test x$"$want_asdf" != xno])
+
+###
+### HDF5
+###
+
+AC_ARG_WITH([hdf5],
+    [AC_HELP_STRING([--with-hdf5],
+        [build HDF5 enabled version @<:@default=no@:>@])],
+    [want_hdf5="$withval"],
+    [want_hdf5=no])
+AM_CONDITIONAL([COND_HDF5], [test x$"$want_hdf5" != xno])
+
 
 ############################################################
 
@@ -464,6 +478,41 @@ AS_IF([test x"$want_vtk" != xno], [
     CIT_PATH_VTK
 ])
 
+###
+### HDF5
+###
+#AS_IF([test x"$want_hdf5" != xno], [
+#    AS_BOX([HDF5])
+#    CIT_HDF5_HEADER
+#    CIT_HDF5_LIB_PARALLEL
+#])
+#AX_LIB_HDF5([parallel])
+#if test "$with_hdf5" = "yes"; then
+#	CC="$HDF5_CC"
+#	FC="$HDF5_FC"
+#else
+#	AC_MSG_ERROR([Unable to find HDF5, we need parallel HDF5.])
+#fi
+
+
+##
+## Git version info
+##
+
+AS_BOX([git version info])
+CIG_PKG_GIT(SPECFEM3D)
+AC_DEFINE_UNQUOTED([SPECFEM3D_VERSION], ["$PACKAGE_VERSION"], [Define SPECFEM3D version])
+#AC_DEFINE_UNQUOTED([SPECFEM3D_DOI], ["10.5281/zenodo.xxxxx"], [Define SPECFEM3D doi])
+AS_IF([test -d $srcdir/.git], [
+    GIT_VERSION_DEPS="$srcdir/.git/logs/HEAD"
+    AC_MSG_NOTICE([building from git repository])
+    AC_SUBST(GIT_VERSION_DEPS)
+], [
+    dnl Only substitute if not in a git repository.
+    AC_MSG_NOTICE([not a git repository])
+    AC_CONFIG_FILES([setup/version.fh])
+])
+
 ############################################################
 
 AS_BOX([setting up default simulation setup])
@@ -477,16 +526,7 @@ AC_CONFIG_FILES([
     setup/config.fh
 ])
 
-AS_IF([test -d $srcdir/.git], [
-    GIT_VERSION_DEPS="$srcdir/.git/logs/HEAD"
-    AC_MSG_NOTICE([building from git repository])
-    AC_SUBST(GIT_VERSION_DEPS)
-], [
-    dnl Only substitute if not in a git repository.
-    AC_MSG_NOTICE([not a git repository])
-    AC_CONFIG_FILES([setup/version.fh])
-])
-
+# Scotch makefile
 if test "$USE_BUNDLED_SCOTCH" = 1; then
   AC_CONFIG_FILES([
 	  ${SCOTCH_DIR}/src/Makefile.inc

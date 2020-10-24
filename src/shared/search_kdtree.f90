@@ -313,7 +313,7 @@ contains
   ! debug
   !if (be_verbose) then
   !  print *,'target  : ',xyz_target(:)
-  !  print *,'nearest : ',kdtree_nodes_location(:,ipoint_min),'distance:',dist_min*6371.,'(km)',ipoint_min,iglob_min
+  !  print *,'nearest : ',kdtree_nodes_location(:,ipoint_min),'distance:',dist_min,'(m)',ipoint_min,iglob_min
   !endif
 
   end subroutine kdtree_find_nearest_neighbor
@@ -926,7 +926,7 @@ contains
     if (node%ipoint < 1 ) stop 'Error searched node has wrong point index'
 
     ! squared distance to associated data point
-    dist = get_distance_squared(xyz_target(:),points_data(:,node%ipoint))
+    dist = get_distance_squared(xyz_target,points_data(1,node%ipoint))
 
     ! note: using <= instead of < for comparison. both would be fine, but the first leads to identical location result
     !       as with a brute force search, if the target location is exactly on a shared GLL point.
@@ -975,7 +975,7 @@ contains
     if (associated(node%right)) then
       ! checks right node as a final node
       if (node%right%idim == 0) then
-        dist = get_distance_squared(xyz_target(:),points_data(:,node%right%ipoint))
+        dist = get_distance_squared(xyz_target,points_data(1,node%right%ipoint))
         if (dist <= dist_min) then
           ! stores minimum point
           dist_min = dist
@@ -992,7 +992,7 @@ contains
     if (associated(node%left)) then
       ! checks left node as a final node
       if (node%left%idim == 0) then
-        dist = get_distance_squared(xyz_target(:),points_data(:,node%left%ipoint))
+        dist = get_distance_squared(xyz_target,points_data(1,node%left%ipoint))
         if (dist <= dist_min) then
           ! stores minimum point
           dist_min = dist
@@ -1046,7 +1046,7 @@ contains
     xyz(:) = points_data(:,node%ipoint)
 
     ! squared distance to associated data point
-    dist = get_distance_squared(xyz_target(:),xyz(:))
+    dist = get_distance_squared(xyz_target,xyz)
     if (dist <= r_squared) then
       ! debug
       !print *,'     new node: ',node%ipoint,'distance = ',dist,'radius = ',r_squared
@@ -1092,7 +1092,7 @@ contains
       ! checks right node as a final node
       if (node%right%idim == 0) then
         xyz(:) = points_data(:,node%right%ipoint)
-        dist = get_distance_squared(xyz_target(:),xyz(:))
+        dist = get_distance_squared(xyz_target,xyz)
         if (dist <= r_squared) then
           ! counts point
           num_nodes = num_nodes + 1
@@ -1116,7 +1116,7 @@ contains
       ! checks left node as a final node
       if (node%left%idim == 0) then
         xyz(:) = points_data(:,node%left%ipoint)
-        dist = get_distance_squared(xyz_target(:),xyz(:))
+        dist = get_distance_squared(xyz_target,xyz)
         if (dist <= r_squared) then
           ! counts point
           num_nodes = num_nodes + 1
@@ -1176,7 +1176,7 @@ contains
     xyz(:) = points_data(:,node%ipoint)
 
     ! squared distance to associated data point
-    call get_distance_ellip(xyz_target(:),xyz(:),dist_v,dist_h)
+    call get_distance_ellip(xyz_target,xyz,dist_v,dist_h)
     if (dist_v <= r_squared_v .and. dist_h <= r_squared_h) then
       ! debug
       !print *,'     new node: ',node%ipoint,'distance = ',dist,'radius = ',r_squared
@@ -1224,7 +1224,7 @@ contains
       ! checks right node as a final node
       if (node%right%idim == 0) then
         xyz(:) = points_data(:,node%right%ipoint)
-        call get_distance_ellip(xyz_target(:),xyz(:),dist_v,dist_h)
+        call get_distance_ellip(xyz_target,xyz,dist_v,dist_h)
         if (dist_v <= r_squared_v .and. dist_h <= r_squared_h) then
           ! counts point
           num_nodes = num_nodes + 1
@@ -1249,7 +1249,7 @@ contains
       ! checks left node as a final node
       if (node%left%idim == 0) then
         xyz(:) = points_data(:,node%left%ipoint)
-        call get_distance_ellip(xyz_target(:),xyz(:),dist_v,dist_h)
+        call get_distance_ellip(xyz_target,xyz,dist_v,dist_h)
         if (dist_v <= r_squared_v .and. dist_h <= r_squared_h) then
           ! counts point
           num_nodes = num_nodes + 1

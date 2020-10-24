@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
   subroutine initialize_simulation()
 
@@ -40,28 +39,23 @@
 
   include 'version.fh'
 
-  integer ier
-  logical BROADCAST_AFTER_READ
+  integer :: ier
+  logical :: BROADCAST_AFTER_READ
+  character(len=MAX_STRING_LEN) :: path_to_add
+  logical :: simul_run_flag
 
   ! myrank is the rank of each process, between 0 and NPROC-1.
   ! as usual in MPI, process 0 is in charge of coordinating everything
   ! and also takes care of the main output
   call world_rank(myrank)
 
-  ! read the parameter file
-  BROADCAST_AFTER_READ = .true.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
-
-  ! checks flags
-  call initialize_simulation_check()
-
   ! open main output file, only written to by process 0
-  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
-    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_solver.txt',status='unknown')
-
-  ! user output
   if (myrank == 0) then
-    write(IMAIN,*)
+    if (IMAIN /= ISTANDARD_OUTPUT) then
+      open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_solver.txt',status='unknown',action='write',iostat=ier)
+      if (ier /= 0 ) call exit_MPI(myrank,'Error opening file output_solver.txt for writing output info')
+    endif
+
     write(IMAIN,*) '**********************************************'
     write(IMAIN,*) '**** Specfem 3-D Solver - MPI version f90 ****'
     write(IMAIN,*) '**********************************************'
@@ -70,192 +64,254 @@
     write(IMAIN,*) 'which is Git ', git_commit_version
     write(IMAIN,*) 'dating ', git_date_version
     write(IMAIN,*)
-    if (FIX_UNDERFLOW_PROBLEM) write(IMAIN,*) 'Fixing slow underflow trapping problem using small initial field'
-    write(IMAIN,*)
-    write(IMAIN,*) 'There are ',NPROC,' MPI processes'
-    write(IMAIN,*) 'Processes are numbered from 0 to ',NPROC-1
-    write(IMAIN,*)
-    write(IMAIN,*) 'There is a total of ',NPROC,' slices'
-    write(IMAIN,*)
-    write(IMAIN,*) ' NDIM = ',NDIM
-    write(IMAIN,*)
-    write(IMAIN,*) ' NGLLX = ',NGLLX
-    write(IMAIN,*) ' NGLLY = ',NGLLY
-    write(IMAIN,*) ' NGLLZ = ',NGLLZ
-    write(IMAIN,*)
-    ! write information about precision used for floating-point operations
-    if (CUSTOM_REAL == SIZE_REAL) then
-      write(IMAIN,*) 'using single precision for the calculations'
-    else
-      write(IMAIN,*) 'using double precision for the calculations'
-    endif
-    write(IMAIN,*)
-    write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ', &
-                   tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
-    write(IMAIN,*)
-    write(IMAIN,'(a)',advance='no') ' velocity model: '
-
-    select case (IMODEL)
-    case (IMODEL_DEFAULT)
-    write(IMAIN,'(a)',advance='yes') '  default '
-    case (IMODEL_GLL)
-    write(IMAIN,'(a)',advance='yes') '  gll'
-    case (IMODEL_1D_PREM)
-    write(IMAIN,'(a)',advance='yes') '  1d_prem'
-    case (IMODEL_1D_CASCADIA)
-    write(IMAIN,'(a)',advance='yes') '  1d_cascadia'
-    case (IMODEL_1D_SOCAL)
-    write(IMAIN,'(a)',advance='yes') '  1d_socal'
-    case (IMODEL_SALTON_TROUGH)
-    write(IMAIN,'(a)',advance='yes') '  salton_trough'
-    case (IMODEL_TOMO)
-    write(IMAIN,'(a)',advance='yes') '  tomo'
-    case (IMODEL_USER_EXTERNAL)
-    write(IMAIN,'(a)',advance='yes') '  external'
-    case (IMODEL_IPATI)
-    write(IMAIN,'(a)',advance='yes') '  ipati'
-    case (IMODEL_IPATI_WATER)
-    write(IMAIN,'(a)',advance='yes') '  ipati_water'
-    case (IMODEL_SEP)
-    write(IMAIN,'(a)',advance='yes') '  SEP'
-    case (IMODEL_COUPLED)
-    write(IMAIN,'(a)',advance='yes') '  model coupled with injection method'
-    end select
-
-    write(IMAIN,*)
     call flush_IMAIN()
   endif
 
-  if (ADIOS_ENABLED) then
-    call adios_setup()
+  ! read the parameter file
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(BROADCAST_AFTER_READ)
+
+  if(HDF5_ENABLED) then
+    call separate_compute_and_io_nodes()
+    call world_rank(myrank)
   endif
 
-  if ((SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) .and. READ_ADJSRC_ASDF) then
-    call asdf_setup(current_asdf_handle)
-  endif
+  if(compute_task) then
 
-  ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
-  call create_name_database(prname,myrank,LOCAL_PATH)
+    ! checks flags
+    call initialize_simulation_check()
 
-! read the value of NSPEC_AB and NGLOB_AB because we need it to define some array sizes below
-  if (ADIOS_FOR_MESH) then
-    call read_mesh_for_init_ADIOS(NSPEC_AB, NGLOB_AB)
-  else
-    call read_mesh_for_init()
-  endif
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*)
+      if (FIX_UNDERFLOW_PROBLEM) write(IMAIN,*) 'Fixing slow underflow trapping problem using small initial field'
+      write(IMAIN,*)
+      write(IMAIN,*) 'There are ',NPROC,' MPI processes'
+      write(IMAIN,*) 'Processes are numbered from 0 to ',NPROC-1
+      write(IMAIN,*)
+      write(IMAIN,*) 'There is a total of ',NPROC,' slices'
+      write(IMAIN,*)
+      write(IMAIN,*) ' NDIM = ',NDIM
+      write(IMAIN,*)
+      write(IMAIN,*) ' NGLLX = ',NGLLX
+      write(IMAIN,*) ' NGLLY = ',NGLLY
+      write(IMAIN,*) ' NGLLZ = ',NGLLZ
+      write(IMAIN,*)
+      ! write information about precision used for floating-point operations
+      if (CUSTOM_REAL == SIZE_REAL) then
+        write(IMAIN,*) 'using single precision for the calculations'
+      else
+        call read_mesh_for_init()
+      endif
 
-  ! attenuation arrays size
-  if (ATTENUATION) then
-    NSPEC_ATTENUATION_AB = NSPEC_AB
-  else
-    ! if attenuation is off, set dummy size of arrays to one
-    NSPEC_ATTENUATION_AB = 1
-  endif
+      ! attenuation arrays size
+      if (ATTENUATION) then
+        NSPEC_ATTENUATION_AB = NSPEC_AB
+      else
+        ! if attenuation is off, set dummy size of arrays to one
+        NSPEC_ATTENUATION_AB = 1
+      endif
+      if (FORCE_VECTORIZATION_VAL) write(IMAIN,*) 'using force vectorization'
+      write(IMAIN,*)
+      write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ', &
+                     tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
+      write(IMAIN,*)
 
-  ! needed for attenuation and/or kernel computations
-  if (ATTENUATION .or. SIMULATION_TYPE == 3) then
-    COMPUTE_AND_STORE_STRAIN = .true.
-    NSPEC_STRAIN_ONLY = NSPEC_AB
-  else
-    COMPUTE_AND_STORE_STRAIN = .false.
-    NSPEC_STRAIN_ONLY = 1
-  endif
+      write(IMAIN,'(a)',advance='no') ' velocity model: '
+      select case (IMODEL)
+      case (IMODEL_DEFAULT)
+      write(IMAIN,'(a)',advance='yes') '  default '
+      case (IMODEL_GLL)
+      write(IMAIN,'(a)',advance='yes') '  gll'
+      case (IMODEL_1D_PREM)
+      write(IMAIN,'(a)',advance='yes') '  1d_prem'
+      case (IMODEL_1D_CASCADIA)
+      write(IMAIN,'(a)',advance='yes') '  1d_cascadia'
+      case (IMODEL_1D_SOCAL)
+      write(IMAIN,'(a)',advance='yes') '  1d_socal'
+      case (IMODEL_SALTON_TROUGH)
+      write(IMAIN,'(a)',advance='yes') '  salton_trough'
+      case (IMODEL_TOMO)
+      write(IMAIN,'(a)',advance='yes') '  tomo'
+      case (IMODEL_USER_EXTERNAL)
+      write(IMAIN,'(a)',advance='yes') '  external'
+      case (IMODEL_IPATI)
+      write(IMAIN,'(a)',advance='yes') '  ipati'
+      case (IMODEL_IPATI_WATER)
+      write(IMAIN,'(a)',advance='yes') '  ipati_water'
+      case (IMODEL_SEP)
+      write(IMAIN,'(a)',advance='yes') '  SEP'
+      case (IMODEL_COUPLED)
+      write(IMAIN,'(a)',advance='yes') '  model coupled with injection method'
+      end select
 
-  ! anisotropy arrays size
-  if (ANISOTROPY) then
-    NSPEC_ANISO = NSPEC_AB
-  else
-    ! if off, set dummy size
-    NSPEC_ANISO = 1
-  endif
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+    ! synchronizes processes
+    call synchronize_all()
 
-  allocate(irregular_element_number(NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2388')
+    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+      write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+      simul_run_flag = .true.
+    else
+      simul_run_flag = .false.
+    endif
+
+    if (ADIOS_ENABLED) then
+      call adios_setup()
+    endif
+
+    if ((SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) .and. READ_ADJSRC_ASDF) then
+      call asdf_setup(current_asdf_handle, path_to_add, simul_run_flag)
+    endif
+
+    if (HDF5_ENABLED .eqv. .false.) then
+      ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
+      call create_name_database(prname,myrank,LOCAL_PATH)
+    endif
+
+  ! read the value of NSPEC_AB and NGLOB_AB because we need it to define some array sizes below
+    if (ADIOS_FOR_MESH) then
+      call read_mesh_for_init_ADIOS(NSPEC_AB, NGLOB_AB)
+    elseif (HDF5_ENABLED) then
+      call read_mesh_for_init_h5()
+    else
+      call read_mesh_for_init()
+    endif
+
+    ! attenuation arrays size
+    if (ATTENUATION) then
+      NSPEC_ATTENUATION_AB = NSPEC_AB
+    else
+      ! if attenuation is off, set dummy size of arrays to one
+      NSPEC_ATTENUATION_AB = 1
+    endif
+
+      ! needed for attenuation and/or kernel computations
+      if (ATTENUATION .or. SIMULATION_TYPE == 3) then
+        COMPUTE_AND_STORE_STRAIN = .true.
+        NSPEC_STRAIN_ONLY = NSPEC_AB
+      else
+        COMPUTE_AND_STORE_STRAIN = .false.
+        NSPEC_STRAIN_ONLY = 1
+      endif
+
+      ! anisotropy arrays size
+      if (ANISOTROPY) then
+        NSPEC_ANISO = NSPEC_AB
+      else
+        ! if off, set dummy size
+        NSPEC_ANISO = 1
+      endif
+
+    allocate(irregular_element_number(NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2388')
     if (ier /= 0) stop 'error allocating arrays for irregular element numbering'
+    irregular_element_number(:) = 0
 
-  ! allocate arrays for storing the databases
-  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2389')
+    ! allocate arrays for storing the databases
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2389')
     if (ier /= 0) stop 'error allocating ibool'
+    ibool(:,:,:,:) = 0
 
-  if (NSPEC_IRREGULAR > 0) then
-     allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2390')
-     allocate(xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2391')
-     allocate(xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2392')
-     allocate(etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2393')
-     allocate(etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2394')
-     allocate(etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2395')
-     allocate(gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2396')
-     allocate(gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2397')
-     allocate(gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2398')
-     allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2399')
-  else
-    allocate(xix(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2400')
-    allocate(xiy(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2401')
-    allocate(xiz(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2402')
-    allocate(etax(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2403')
-    allocate(etay(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2404')
-    allocate(etaz(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2405')
-    allocate(gammax(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2406')
-    allocate(gammay(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2407')
-    allocate(gammaz(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2408')
-    allocate(jacobian(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2409')
-  endif
-  if (ier /= 0) stop 'error allocating arrays for databases'
+    if (NSPEC_IRREGULAR > 0) then
+       allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2390')
+       allocate(xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2391')
+       allocate(xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2392')
+       allocate(etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2393')
+       allocate(etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2394')
+       allocate(etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2395')
+       allocate(gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2396')
+       allocate(gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2397')
+       allocate(gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2398')
+       allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2399')
+    else
+      allocate(xix(1,1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2400')
+      allocate(xiy(1,1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2401')
+      allocate(xiz(1,1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2402')
+      allocate(etax(1,1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2403')
+      allocate(etay(1,1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2404')
+      allocate(etaz(1,1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2405')
+      allocate(gammax(1,1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2406')
+      allocate(gammay(1,1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2407')
+      allocate(gammaz(1,1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2408')
+      allocate(jacobian(1,1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2409')
+    endif
+    if (ier /= 0) stop 'error allocating arrays for databases'
+    xix(:,:,:,:) = 0.0; xiy(:,:,:,:) = 0.0; xiz(:,:,:,:) = 0.0
+    etax(:,:,:,:) = 0.0; etay(:,:,:,:) = 0.0; etaz(:,:,:,:) = 0.0
+    gammax(:,:,:,:) = 0.0; gammay(:,:,:,:) = 0.0; gammaz(:,:,:,:) = 0.0
 
-  ! mesh node locations
-  allocate(xstore(NGLOB_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2410')
-  allocate(ystore(NGLOB_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2411')
-  allocate(zstore(NGLOB_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2412')
-  if (ier /= 0) stop 'error allocating arrays for mesh nodes'
+    ! mesh node locations
+    allocate(xstore(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2410')
+    allocate(ystore(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2411')
+    allocate(zstore(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2412')
+    if (ier /= 0) stop 'error allocating arrays for mesh nodes'
+    xstore(:) = 0.0; ystore(:) = 0.0; zstore(:) = 0.0
 
-  ! material properties
-  allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2413')
-  allocate(mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2414')
-  if (ier /= 0) stop 'error allocating arrays for material properties'
+    ! material properties
+    allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2413')
+    allocate(mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2414')
+    allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating rho array 2414')
+    if (ier /= 0) stop 'error allocating arrays for material properties'
+    kappastore(:,:,:,:) = 0.0; mustore(:,:,:,:) = 0.0; rhostore(:,:,:,:) = 0.0
 
-  ! material flags
-  allocate(ispec_is_acoustic(NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2415')
-  allocate(ispec_is_elastic(NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2416')
-  allocate(ispec_is_poroelastic(NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2417')
-  if (ier /= 0) stop 'error allocating arrays for material flags'
-  ispec_is_acoustic(:) = .false.
-  ispec_is_elastic(:) = .false.
-  ispec_is_poroelastic(:) = .false.
+    ! material flags
+    allocate(ispec_is_acoustic(NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2415')
+    allocate(ispec_is_elastic(NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2416')
+    allocate(ispec_is_poroelastic(NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2417')
+    if (ier /= 0) stop 'error allocating arrays for material flags'
+    ispec_is_acoustic(:) = .false.
+    ispec_is_elastic(:) = .false.
+    ispec_is_poroelastic(:) = .false.
 
-  ! initializes adjoint simulations
-  call initialize_simulation_adjoint()
+    ! initializes adjoint simulations
+    call initialize_simulation_adjoint()
 
-  ! initializes GPU cards
-  if (GPU_MODE) call initialize_GPU()
+    ! initializes GPU cards
+    if (GPU_MODE) call initialize_GPU()
+
+    ! output info for possible OpenMP
+    call init_openmp()
+
+  endif ! if compute_task
+
+  ! synchronizes processes
+  call synchronize_all()
+
+  if (HDF5_ENABLED) call synchronize_inter()
 
   end subroutine initialize_simulation
 
@@ -298,7 +354,7 @@
   endif
 
   ! check that we have at least one source
-  if (NSOURCES < 1) call exit_MPI(myrank,'need at least one source')
+  if (NSOURCES < 1 .and. .not. HAS_FINITE_FAULT_SOURCE) call exit_MPI(myrank,'need at least one source')
 
   ! check simulation type
   if (SIMULATION_TYPE /= 1 .and. SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &
@@ -329,9 +385,9 @@
     if (STACEY_INSTEAD_OF_FREE_SURFACE) then
       print *, 'please modify Par_file and recompile solver'
       stop 'STACEY_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with PML_CONDITIONS = .true.'
-    else if (.not. SUPPRESS_UTM_PROJECTION) then
-      print *, 'please modify Par_file and recompile solver'
-      stop 'SUPPRESS_UTM_PROJECTION must be activated when PML_CONDITIONS is set to .true.'
+    !else if (.not. SUPPRESS_UTM_PROJECTION) then
+    !  print *, 'please modify Par_file and recompile solver'
+    !  stop 'SUPPRESS_UTM_PROJECTION must be activated when PML_CONDITIONS is set to .true.'
     endif
   else
     if (PML_INSTEAD_OF_FREE_SURFACE) &
@@ -393,16 +449,27 @@
 
   ! safety check
   if (NB_RUNS_ACOUSTIC_GPU > 1) then
-
-   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with NUMBER_OF_SIMULTANEOUS_RUNS > 1 yet'
-   if (SIMULATION_TYPE /= 1) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with SIMULATION_TYPE /= 1 yet'
-   if (STACEY_ABSORBING_CONDITIONS) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with STACEY_ABSORBING_CONDITIONS yet'
-   if (.not. SAVE_SEISMOGRAMS_PRESSURE ) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with elastic wavefield seismograms yet'
-   if (.not. GPU_MODE ) stop 'NB_RUNS_ACOUSTIC_GPU > 1 only applies with GPU_MODE'
-   if (INVERSE_FWI_FULL_PROBLEM) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with INVERSE_FWI_FULL_PROBLEM yet'
-   if (myrank == 1) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with MPI mode yet'
-
+    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) &
+      stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with NUMBER_OF_SIMULTANEOUS_RUNS > 1 yet'
+    if (SIMULATION_TYPE /= 1) &
+      stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with SIMULATION_TYPE /= 1 yet'
+    if (STACEY_ABSORBING_CONDITIONS) &
+      stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with STACEY_ABSORBING_CONDITIONS yet'
+    if (SAVE_SEISMOGRAMS_DISPLACEMENT .or. SAVE_SEISMOGRAMS_VELOCITY .or. SAVE_SEISMOGRAMS_ACCELERATION) &
+      stop 'Invalid seismogram output for NB_RUNS_ACOUSTIC_GPU > 1, only pressure output implemented yet'
+    if (.not. SAVE_SEISMOGRAMS_PRESSURE ) &
+      stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with elastic wavefield seismograms yet'
+    if (.not. GPU_MODE ) &
+      stop 'NB_RUNS_ACOUSTIC_GPU > 1 only applies with GPU_MODE'
+    if (INVERSE_FWI_FULL_PROBLEM) &
+      stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with INVERSE_FWI_FULL_PROBLEM yet'
+    if (myrank == 1) &
+      stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with MPI mode yet'
   endif
+
+  ! file output
+  if (SU_FORMAT .and. ASDF_FORMAT) &
+    stop 'Please choose either SU_FORMAT or ASDF_FORMAT, both outputs together are not implemented yet...'
 
   end subroutine initialize_simulation_check
 

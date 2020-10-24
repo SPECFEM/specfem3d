@@ -48,11 +48,13 @@ FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) $(COND_OPENMP_FFLAGS)
 MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK) $(COND_OPENMP_FFLAGS)
 
 CC = @CC@
+CXX = @CXX@
 CFLAGS = @CFLAGS@ $(CPPFLAGS)
 CPPFLAGS = -I${SETUP} @CPPFLAGS@ $(COND_MPI_CPPFLAGS)
 
 # all linker flags
-MPILIBS += @LDFLAGS@ @LIBS@
+LDFLAGS = @LDFLAGS@
+MPILIBS += $(LDFLAGS) @LIBS@
 
 #######################################
 ####
@@ -97,13 +99,36 @@ SCOTCH_LIBDIR = @SCOTCH_LIBDIR@
 @COND_SCOTCH_TRUE@SCOTCH_LIBS = -L${SCOTCH_LIBDIR} -lscotch -lscotcherr
 @COND_SCOTCH_FALSE@SCOTCH_LIBS =
 
-@COND_SCOTCH_TRUE@SCOTCH_FLAGS = $(SCOTCH_INC) $(FC_DEFINE)USE_SCOTCH
+@COND_SCOTCH_TRUE@SCOTCH_FLAGS = $(FC_DEFINE)USE_SCOTCH $(SCOTCH_INC)
 @COND_SCOTCH_FALSE@SCOTCH_FLAGS =
 
-### added support for METIS as well, thus uncomment the line below and compile METIS if you want to use it instead of SCOTCH
-# add $(FC_DEFINE)USE_METIS_INSTEAD_OF_SCOTCH
-#@COND_SCOTCH_TRUE@SCOTCH_LIBS = -L./external_libs/metis-4.0.3 -L./metis-4.0.3 -lmetis
-#@COND_SCOTCH_TRUE@SCOTCH_FLAGS = $(FC_DEFINE)USE_METIS_INSTEAD_OF_SCOTCH
+## METIS
+## uncomment for METIS support and re-compile
+## to use it, set PARTITIONING_TYPE = 2 (in your Par_file)
+# Metis v4 (using version in folder external_libs/):
+#METIS_INC = $(FC_DEFINE)USE_METIS -I./external_libs/metis-4.0.3/Lib
+#METIS_LIBS = -lmetis -L./external_libs/metis-4.0.3
+# Metis v5 (must be installed on your system):
+#METIS_INC = $(FC_DEFINE)USE_METIS
+#METIS_LIBS = -lmetis
+
+## PaToH
+## uncomment for PATOH support and re-compile
+## to use it, set PARTITIONING_TYPE = 3 (in your Par_file)
+# PaToH v3.2 (using version in folder external_libs/):
+#PATOH_INC = $(FC_DEFINE)USE_PATOH -I./external_libs/patoh/
+#PATOH_LIBS = -L./external_libs/patoh/ -lpatoh -lconfig++ -lstdc++
+
+## compilation flag for partitioner
+# default: scotch
+PART_FLAGS = $(SCOTCH_FLAGS)
+PART_LIBS  = $(SCOTCH_LIBS)
+# metis support
+PART_FLAGS += $(METIS_INC)
+PART_LIBS  += $(METIS_LIBS)
+# patoh support
+PART_FLAGS += $(PATOH_INC)
+PART_LIBS  += $(PATOH_LIBS)
 
 #######################################
 ####
@@ -129,6 +154,9 @@ SCOTCH_LIBDIR = @SCOTCH_LIBDIR@
 
 @COND_CUDA9_TRUE@CUDA9 = yes
 @COND_CUDA9_FALSE@CUDA9 = no
+
+@COND_CUDA10_TRUE@CUDA10 = yes
+@COND_CUDA10_FALSE@CUDA10 = no
 
 # CUDA compilation with linking
 @COND_CUDA_PLUS_TRUE@CUDA_PLUS = yes
@@ -161,16 +189,20 @@ GENCODE_30 = -gencode=arch=compute_30,code=\"sm_30,compute_30\"
 GENCODE_35 = -gencode=arch=compute_35,code=\"sm_35,compute_35\"
 GENCODE_37 = -gencode=arch=compute_37,code=\"sm_37\"
 GENCODE_50 = -gencode=arch=compute_50,code=\"sm_50,compute_50\"
+GENCODE_52 = -gencode=arch=compute_52,code=\"sm_52,compute_52\"
 GENCODE_60 = -gencode=arch=compute_60,code=\"sm_60,compute_60\"
 GENCODE_70 = -gencode=arch=compute_70,code=\"sm_70,compute_70\"
+GENCODE_75 = -gencode=arch=compute_75,code=\"sm_75,compute_75\"
 
 # cuda preprocessor flag
+# CUDA version 10.0
+@COND_CUDA_TRUE@@COND_CUDA10_TRUE@GENCODE = $(GENCODE_75) $(FC_DEFINE)GPU_DEVICE_Turing
 # CUDA version 9.0
 @COND_CUDA_TRUE@@COND_CUDA9_TRUE@GENCODE = $(GENCODE_70) $(FC_DEFINE)GPU_DEVICE_Volta
 # CUDA version 8.0
 @COND_CUDA_TRUE@@COND_CUDA8_TRUE@GENCODE = $(GENCODE_60) $(FC_DEFINE)GPU_DEVICE_Pascal
 # CUDA version 7.x
-@COND_CUDA_TRUE@@COND_CUDA7_TRUE@GENCODE = $(GENCODE_50) $(FC_DEFINE)GPU_DEVICE_Maxwell
+@COND_CUDA_TRUE@@COND_CUDA7_TRUE@GENCODE = $(GENCODE_52) $(FC_DEFINE)GPU_DEVICE_Maxwell
 # CUDA version 6.5
 @COND_CUDA_TRUE@@COND_CUDA6_TRUE@GENCODE = $(GENCODE_37) $(FC_DEFINE)GPU_DEVICE_K80
 # CUDA version 5.x
@@ -183,7 +215,7 @@ GENCODE_70 = -gencode=arch=compute_70,code=\"sm_70,compute_70\"
 @COND_CUDA_TRUE@@COND_CUDA_PLUS_TRUE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -dc -DCUDA $(GENCODE)
 @COND_CUDA_TRUE@@COND_CUDA_PLUS_FALSE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -DCUDA -DUSE_OLDER_CUDA4_GPU $(GENCODE)
 
-@COND_CUDA_TRUE@@COND_CUDA_PLUS_TRUE@NVCCLINK_BASE = $(NVCC) $(CUDA_INC) $(MPI_INCLUDES) $(COND_MPI_CPPFLAGS) -DCUDA
+@COND_CUDA_TRUE@@COND_CUDA_PLUS_TRUE@NVCCLINK_BASE = $(NVCC) $(CUDA_FLAGS) $(CUDA_INC) $(MPI_INCLUDES) $(COND_MPI_CPPFLAGS) -DCUDA
 @COND_CUDA_TRUE@@COND_CUDA_PLUS_TRUE@NVCCLINK = $(NVCCLINK_BASE) -dlink $(GENCODE)
 @COND_CUDA_TRUE@@COND_CUDA_PLUS_FALSE@NVCCLINK = $(NVCCLINK_BASE) -DUSE_OLDER_CUDA4_GPU $(GENCODE)
 
@@ -201,18 +233,10 @@ GENCODE_70 = -gencode=arch=compute_70,code=\"sm_70,compute_70\"
 @COND_OMP_TRUE@OPENMP = yes
 @COND_OMP_FALSE@OPENMP = no
 
-@COND_OMP_TRUE@OMP_FLAGS = @OMP_FCFLAGS@ $(FC_DEFINE)USE_OPENMP
-@COND_OMP_FALSE@OMP_FLAGS =
-
-FCFLAGS += $(OMP_FLAGS)
+@COND_OMP_TRUE@FCFLAGS += $(FC_DEFINE)USE_OPENMP @OMP_FCFLAGS@
 
 @COND_OMP_TRUE@OMP_LIBS = $(OMP_LIB)
 @COND_OMP_FALSE@OMP_LIBS =
-
-# objects toggled between openmp and non-openmp version
-#@COND_OMP_TRUE@COND_OMP_OBJECTS = $O/older_not_maintained_compute_forces_viscoelastic_Dev_openmp.openmp.o
-@COND_OMP_TRUE@COND_OMP_OBJECTS =
-@COND_OMP_FALSE@COND_OMP_OBJECTS =
 
 #######################################
 ####
@@ -264,7 +288,18 @@ MPILIBS += $(ADIOS_LINK)
 @COND_ASDF_FALSE@ASDF = no
 
 #FCFLAGS += @ASDF_FCFLAGS@
-MPILIBS += @ASDF_LIBS@
+@COND_ASDF_TRUE@MPILIBS += @ASDF_LIBS@ -lasdf -lhdf5hl_fortran -lhdf5_hl -lhdf5 -lstdc++
+
+#######################################
+####
+#### HDF5
+#### with configure: ./configure --with-hdf5
+####
+#######################################
+
+@COND_HDF5_TRUE@HDF5 = yes
+@COND_HDF5_FALSE@HDF5 = no
+
 
 #######################################
 ####

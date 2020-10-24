@@ -25,16 +25,16 @@
 !
 !=====================================================================
 
+
   subroutine get_flags_boundaries(nspec,iproc_xi,iproc_eta,ispec,idoubling, &
                                   xstore,ystore,zstore,iboun,iMPIcut_xi,iMPIcut_eta, &
                                   NPROC_XI,NPROC_ETA, &
                                   UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,NEX_XI,NEX_ETA)
 
   use constants
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,IFLAG_ONE_LAYER_TOPOGRAPHY
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
   integer,intent(in) :: nspec
   integer,intent(in) :: ispec,idoubling
@@ -57,33 +57,33 @@
   ! local parameters
   double precision :: target_val,sizeslice,TOLERANCE_METERS
   double precision :: dx,dy
-  double precision :: xelm(8),yelm(8),zelm(8)
+  double precision :: xelm(NGNOD_EIGHT_CORNERS),yelm(NGNOD_EIGHT_CORNERS),zelm(NGNOD_EIGHT_CORNERS)
 
 ! find the coordinates of the eight corner nodes of the element
-  xelm(1)=xstore(1,1,1)
-  yelm(1)=ystore(1,1,1)
-  zelm(1)=zstore(1,1,1)
-  xelm(2)=xstore(NGLLX_M,1,1)
-  yelm(2)=ystore(NGLLX_M,1,1)
-  zelm(2)=zstore(NGLLX_M,1,1)
-  xelm(3)=xstore(NGLLX_M,NGLLY_M,1)
-  yelm(3)=ystore(NGLLX_M,NGLLY_M,1)
-  zelm(3)=zstore(NGLLX_M,NGLLY_M,1)
-  xelm(4)=xstore(1,NGLLY_M,1)
-  yelm(4)=ystore(1,NGLLY_M,1)
-  zelm(4)=zstore(1,NGLLY_M,1)
-  xelm(5)=xstore(1,1,NGLLZ_M)
-  yelm(5)=ystore(1,1,NGLLZ_M)
-  zelm(5)=zstore(1,1,NGLLZ_M)
-  xelm(6)=xstore(NGLLX_M,1,NGLLZ_M)
-  yelm(6)=ystore(NGLLX_M,1,NGLLZ_M)
-  zelm(6)=zstore(NGLLX_M,1,NGLLZ_M)
-  xelm(7)=xstore(NGLLX_M,NGLLY_M,NGLLZ_M)
-  yelm(7)=ystore(NGLLX_M,NGLLY_M,NGLLZ_M)
-  zelm(7)=zstore(NGLLX_M,NGLLY_M,NGLLZ_M)
-  xelm(8)=xstore(1,NGLLY_M,NGLLZ_M)
-  yelm(8)=ystore(1,NGLLY_M,NGLLZ_M)
-  zelm(8)=zstore(1,NGLLY_M,NGLLZ_M)
+  xelm(1) = xstore(1,1,1)
+  yelm(1) = ystore(1,1,1)
+  zelm(1) = zstore(1,1,1)
+  xelm(2) = xstore(NGLLX_M,1,1)
+  yelm(2) = ystore(NGLLX_M,1,1)
+  zelm(2) = zstore(NGLLX_M,1,1)
+  xelm(3) = xstore(NGLLX_M,NGLLY_M,1)
+  yelm(3) = ystore(NGLLX_M,NGLLY_M,1)
+  zelm(3) = zstore(NGLLX_M,NGLLY_M,1)
+  xelm(4) = xstore(1,NGLLY_M,1)
+  yelm(4) = ystore(1,NGLLY_M,1)
+  zelm(4) = zstore(1,NGLLY_M,1)
+  xelm(5) = xstore(1,1,NGLLZ_M)
+  yelm(5) = ystore(1,1,NGLLZ_M)
+  zelm(5) = zstore(1,1,NGLLZ_M)
+  xelm(6) = xstore(NGLLX_M,1,NGLLZ_M)
+  yelm(6) = ystore(NGLLX_M,1,NGLLZ_M)
+  zelm(6) = zstore(NGLLX_M,1,NGLLZ_M)
+  xelm(7) = xstore(NGLLX_M,NGLLY_M,NGLLZ_M)
+  yelm(7) = ystore(NGLLX_M,NGLLY_M,NGLLZ_M)
+  zelm(7) = zstore(NGLLX_M,NGLLY_M,NGLLZ_M)
+  xelm(8) = xstore(1,NGLLY_M,NGLLZ_M)
+  yelm(8) = ystore(1,NGLLY_M,NGLLZ_M)
+  zelm(8) = zstore(1,NGLLY_M,NGLLZ_M)
 
 ! compute geometrical tolerance small compared to size of model and size of element to detect edges
   dx = dabs(UTM_X_MAX - UTM_X_MIN)

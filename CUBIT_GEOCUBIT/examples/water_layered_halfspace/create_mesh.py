@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-
-
-
+import os
 import cubit
 try:
     cubit.init([""])
@@ -29,5 +27,6 @@ from geocubitlib import boundary_definition,exportlib
 
 boundary_definition.define_bc(parallel=True)
 
-exportlib.collect(outdir='.')
-exportlib.e2SEM(outdir='.')
+os.system('mkdir -p MESH/')
+exportlib.collect(outdir='MESH/')
+exportlib.e2SEM(outdir='MESH/')

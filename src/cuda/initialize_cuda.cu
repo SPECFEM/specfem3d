@@ -35,7 +35,7 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(initialize_cuda_device,
               INITIALIZE_CUDA_DEVICE)(int* myrank_f,int* ncuda_devices) {
   TRACE("initialize_cuda_device");
@@ -88,9 +88,21 @@ void FC_FUNC_(initialize_cuda_device,
   //
   // being verbose and catches error from first call to CUDA runtime function, without synchronize call
   cudaError_t err = cudaGetLastError();
+
+  // adds quick check on versions
+  int driverVersion = 0, runtimeVersion = 0;
+  cudaDriverGetVersion(&driverVersion);
+  cudaRuntimeGetVersion(&runtimeVersion);
+
+  // exit in case first cuda call failed
   if (err != cudaSuccess){
     fprintf(stderr,"Error after cudaGetDeviceCount: %s\n", cudaGetErrorString(err));
-    exit_on_error("CUDA runtime error: cudaGetDeviceCount failed\n\nplease check if driver and runtime libraries work together\nor on titan enable environment: CRAY_CUDA_PROXY=1 to use single GPU with multiple MPI processes\n\nexiting...\n");
+    fprintf(stderr,"CUDA Device count: %d\n",device_count);
+    fprintf(stderr,"CUDA Driver Version / Runtime Version: %d.%d / %d.%d\n",
+            driverVersion / 1000, (driverVersion % 100) / 10,
+            runtimeVersion / 1000, (runtimeVersion % 100) / 10);
+
+    exit_on_error("CUDA runtime error: cudaGetDeviceCount failed\n\nplease check if driver and runtime libraries work together\nor on cluster environments enable MPS (Multi-Process Service) to use single GPU with multiple MPI processes\n\nexiting...\n");
   }
 
   // returns device count to fortran
@@ -160,12 +172,16 @@ void FC_FUNC_(initialize_cuda_device,
     exit_on_error("CUDA runtime error: there is no CUDA-enabled device found\n");
   }
 
+  // memory usage
+  double free_db,used_db,total_db;
+  get_free_memory(&free_db,&used_db,&total_db);
+
   // outputs device infos to file
   char filename[BUFSIZ];
   FILE* fp;
   int do_output_info;
 
-  // by default, only master process outputs device infos to avoid file cluttering
+  // by default, only main process outputs device infos to avoid file cluttering
   do_output_info = 0;
   if (myrank == 0){
     do_output_info = 1;
@@ -214,9 +230,12 @@ void FC_FUNC_(initialize_cuda_device,
       }else{
         fprintf(fp,"  concurrentKernels: FALSE\n");
       }
+      fprintf(fp,"CUDA Device count: %d\n",device_count);
+      fprintf(fp,"CUDA Driver Version / Runtime Version          %d.%d / %d.%d\n",
+              driverVersion / 1000, (driverVersion % 100) / 10,
+              runtimeVersion / 1000, (runtimeVersion % 100) / 10);
+
       // outputs initial memory infos via cudaMemGetInfo()
-      double free_db,used_db,total_db;
-      get_free_memory(&free_db,&used_db,&total_db);
       fprintf(fp,"memory usage:\n");
       fprintf(fp,"  rank %d: GPU memory usage: used = %f MB, free = %f MB, total = %f MB\n",myrank,
               used_db/1024.0/1024.0, free_db/1024.0/1024.0, total_db/1024.0/1024.0);

@@ -24,19 +24,16 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
   subroutine setup_sources_receivers()
 
   use specfem_par
 
-  use kdtree_search, only: kdtree_delete,kdtree_nodes_location,kdtree_nodes_index
-
   implicit none
 
-  ! builds search tree
-  if (.not. DO_BRUTE_FORCE_POINT_SEARCH) call setup_search_kdtree()
+  ! setup for point search
+  call setup_point_search_arrays()
 
   ! sets number of timestep parameters
   call setup_timesteps()
@@ -56,11 +53,13 @@
   ! write source and receiver VTK files for Paraview
   call setup_sources_receivers_VTKfile()
 
+  ! frees memory
+  deallocate(xyz_midpoints)
+  deallocate(anchor_iax,anchor_iay,anchor_iaz)
+  if (.not. DO_BRUTE_FORCE_POINT_SEARCH) call setup_free_kdtree()
+
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'Total number of samples for seismograms = ',NSTEP
-    write(IMAIN,*)
     write(IMAIN,*) 'found a total of ',nrec_tot_found,' receivers in all the slices'
     write(IMAIN,*)
     if (NSOURCES > 1) then
@@ -68,15 +67,6 @@
       write(IMAIN,*)
     endif
     call flush_IMAIN()
-  endif
-
-  ! frees tree memory
-  if (.not. DO_BRUTE_FORCE_POINT_SEARCH) then
-    ! deletes tree arrays
-    deallocate(kdtree_nodes_location)
-    deallocate(kdtree_nodes_index)
-    ! deletes search tree nodes
-    call kdtree_delete()
   endif
 
   ! synchronizes processes
@@ -88,12 +78,48 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine setup_point_search_arrays()
+
+  use constants
+  use specfem_par
+
+  implicit none
+
+  ! local parameters
+  integer :: ispec,iglob,ier
+
+  ! prepares midpoints coordinates
+  allocate(xyz_midpoints(NDIM,NSPEC_AB),stat=ier)
+  if (ier /= 0 ) call exit_MPI(myrank,'Error allocating array xyz_midpoints')
+
+  ! store x/y/z coordinates of center point
+  do ispec = 1,NSPEC_AB
+    iglob = ibool(MIDX,MIDY,MIDZ,ispec)
+    xyz_midpoints(1,ispec) =  dble(xstore(iglob))
+    xyz_midpoints(2,ispec) =  dble(ystore(iglob))
+    xyz_midpoints(3,ispec) =  dble(zstore(iglob))
+  enddo
+
+  ! define (i,j,k) indices of the control/anchor points
+  allocate(anchor_iax(NGNOD),anchor_iay(NGNOD),anchor_iaz(NGNOD),stat=ier)
+  if (ier /= 0 ) call exit_MPI(myrank,'Error allocating array anchor_i**')
+  call hex_nodes_anchor_ijk_NGLL(NGNOD,anchor_iax,anchor_iay,anchor_iaz,NGLLX,NGLLY,NGLLZ)
+
+  ! builds search tree
+  if (.not. DO_BRUTE_FORCE_POINT_SEARCH) call setup_search_kdtree()
+
+  end subroutine setup_point_search_arrays
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine setup_timesteps()
 
   use specfem_par, only: myrank,NSTEP,NSOURCES,SIMULATION_TYPE, &
     NTSTEP_BETWEEN_OUTPUT_SEISMOS,NTSTEP_BETWEEN_READ_ADJSRC, &
     USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF, &
-    SAVE_ALL_SEISMOS_IN_ONE_FILE
+    SAVE_ALL_SEISMOS_IN_ONE_FILE,ASDF_FORMAT
 
   implicit none
 
@@ -108,22 +134,28 @@
 
   !! VM VM set the size of user_source_time_function
   if (USE_EXTERNAL_SOURCE_FILE) then
-     NSTEP_STF = NSTEP
-     NSOURCES_STF = NSOURCES
-  else !! We don't need the array user_source_time_function : use a small dummy array
-     NSTEP_STF = 1
-     NSOURCES_STF = 1
+    NSTEP_STF = NSTEP
+    NSOURCES_STF = NSOURCES
+  else
+    ! We don't need the array user_source_time_function : use a small dummy array
+    NSTEP_STF = 1
+    NSOURCES_STF = 1
   endif
 
   ! check
   if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
     ! requires to have full length of seismograms
     if (NTSTEP_BETWEEN_OUTPUT_SEISMOS < NSTEP) then
-      if (myrank == 0) then
-        print *, 'Error: Setting SAVE_ALL_SEISMOS_IN_ONE_FILE to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP'
-      endif
+      print *, 'Error: Setting SAVE_ALL_SEISMOS_IN_ONE_FILE to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP'
       call exit_MPI(myrank, &
                     'Setting SAVE_ALL_SEISMOS_IN_ONE_FILE not supported for current NTSTEP_BETWEEN_OUTPUT_SEISMOS in Par_file')
+    endif
+  endif
+  if (ASDF_FORMAT) then
+    ! ASDF storage requires to have full length of seismograms
+    if (NTSTEP_BETWEEN_OUTPUT_SEISMOS < NSTEP) then
+      print *, 'Error: Setting ASDF_FORMAT to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP'
+      call exit_MPI(myrank,'Error: Setting ASDF_FORMAT to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP')
     endif
   endif
 
@@ -254,33 +286,44 @@
   ! prints source time functions to output files
   if (PRINT_SOURCE_TIME_FUNCTION) call print_stf_file()
 
+  ! fused wavefield simulations
   call get_run_number_of_the_source()
 
   end subroutine setup_sources
 !
 !-------------------------------------------------------------------------------------------------
 !
-!EB EB When NB_RUNS_ACOUSTIC_GPU > 1, the file SOURCE_FILE actually contains the sources for all the runs.
-!This routine is intended to get the array that contains the run number of each source described in SOURCE_FILE.
-!The line i of the file run_number_of_the_source contains the run number \in [ 0;NB_RUNS_ACOUSTIC_GPU-1] of the source i
+! When NB_RUNS_ACOUSTIC_GPU > 1, the file SOURCE_FILE actually contains the sources for all the runs.
+! This routine is intended to get the array that contains the run number of each source described in SOURCE_FILE.
+! The line i of the file run_number_of_the_source contains the run number \in [ 0;NB_RUNS_ACOUSTIC_GPU-1] of the source i
+
   subroutine get_run_number_of_the_source()
 
   use constants
   use specfem_par, only: run_number_of_the_source,NSOURCES
   character(len=MAX_STRING_LEN) :: filename,string
-  integer :: ier,isource,icounter
+  integer :: ier,isource,icounter,id_run
 
   allocate(run_number_of_the_source(NSOURCES),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2059')
+  run_number_of_the_source(:) = 0
 
-  if (NB_RUNS_ACOUSTIC_GPU == 1) then
-    run_number_of_the_source(:) = 0
-  else
+  if (NB_RUNS_ACOUSTIC_GPU > 1) then
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'fused wavefield simulation:'
+      write(IMAIN,*) '  NB_RUNS_ACOUSTIC_GPU = ',NB_RUNS_ACOUSTIC_GPU
+      write(IMAIN,*) '  NSOURCES             = ',NSOURCES
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
 
+    ! reads file DATA/run_number_of_the_source
     filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'run_number_of_the_source'
-    open(unit=IIN,file=filename,status='old',action='read',iostat=ier)
+    open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ier)
     if (ier /= 0) then
-      print *,'Error opening file: ',filename
+      print *,'Error opening file: ',trim(filename)
       stop 'Error opening run_number_of_the_source file'
     endif
 
@@ -294,13 +337,39 @@
     if (icounter /= NSOURCES) stop 'Error total number of lines in run_number_of_the_source file is not equal to NSOURCES'
 
     ! Fills the array run_number_of_the_source
-    open(unit=IIN,file=filename,status='old',action='read')
+    open(unit=IIN,file=trim(filename),status='old',action='read')
     ! reads run number for each source
     do isource = 1,NSOURCES
       read(IIN,"(a)") string
-      read(string,*) run_number_of_the_source(isource)
+      ! reads run id: for each source entry in CMTSOLUTION/FORCESOLUTION a corresponding line in run_number_of_the_source
+      !               with a run id must be given. the run id must be between 0 and NB_RUNS_ACOUSTIC_GPU-1
+      read(string,*) id_run
+      ! checks that id between 0 and NB_RUNS_ACOUSTIC_GPU - 1
+      if (id_run < 0 .or. id_run >= NB_RUNS_ACOUSTIC_GPU) then
+        print *,'Error: run id entry in run_number_of_the_source file must be between 0 and NB_RUNS_ACOUSTIC_GPU-1'
+        print *,'    setting: NB_RUNS_ACOUSTIC_GPU = ',NB_RUNS_ACOUSTIC_GPU
+        print *,'             file line entry ',isource,' has invalid run id ',id_run
+        stop 'Error invalid run id for source line in run_number_of_the_source file'
+      endif
+      ! sets source id for run
+      run_number_of_the_source(isource) = id_run
     enddo
-  endif
+
+    ! user output
+    if (myrank == 0) then
+      do isource = 1,NSOURCES
+        write(IMAIN,*) '  source ',isource,' assigned to wavefield run number ',run_number_of_the_source(isource)
+      enddo
+      write(IMAIN,*)
+      ! warning
+      if (NSOURCES /= NB_RUNS_ACOUSTIC_GPU) then
+        write(IMAIN,*) '  *** WARNING: number of sources ',NSOURCES, &
+                       ' does not match number of runs ',NB_RUNS_ACOUSTIC_GPU,' ***'
+        write(IMAIN,*)
+      endif
+      call flush_IMAIN()
+    endif
+  endif ! NB_RUNS_ACOUSTIC_GPU
 
   end subroutine get_run_number_of_the_source
 
@@ -548,7 +617,7 @@
   implicit none
 
   ! local parameters
-  integer :: nrec_simulation
+  integer :: nrec_simulation,nrec_filtered
   integer :: irec,isource,ier
   character(len=MAX_STRING_LEN) :: path_to_add
 
@@ -578,7 +647,10 @@
     filtered_rec_filename = path_to_add(1:len_trim(path_to_add))//filtered_rec_filename(1:len_trim(filtered_rec_filename))
   endif
 
-  call station_filter(rec_filename,filtered_rec_filename,nrec)
+  call station_filter(rec_filename,filtered_rec_filename,nrec_filtered)
+
+  ! sets actual number of stations
+  nrec = nrec_filtered
 
   if (nrec < 1) call exit_MPI(myrank,'need at least one receiver')
   call synchronize_all()
@@ -609,13 +681,13 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2065')
   allocate(network_name(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2066')
-  allocate(nu(NDIM,NDIM,nrec), stat=ier)
+  allocate(nu_rec(NDIM,NDIM,nrec), stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2067')
   if (ier /= 0) stop 'error allocating arrays for receivers'
 
   ! locate receivers in the mesh
   call locate_receivers(filtered_rec_filename,nrec,islice_selected_rec,ispec_selected_rec, &
-                        xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
+                        xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu_rec, &
                         utm_x_source(1),utm_y_source(1))
 
   ! count number of receivers located in this slice
@@ -762,6 +834,7 @@
 
   character(len=3),dimension(NDIM) :: comp
   character(len=MAX_STRING_LEN) :: filename
+  character(len=MAX_STRING_LEN) :: adj_source_file
 
   double precision, dimension(NGLLX) :: hxis,hpxis
   double precision, dimension(NGLLY) :: hetas,hpetas
@@ -1018,7 +1091,7 @@
       write(IMAIN,*) '    ',nadj_files_found_tot,' adjoint component trace files found in all slices'
       call flush_IMAIN()
 
-      ! master process checks if any adjoint files found
+      ! main process checks if any adjoint files found
       if (nadj_files_found_tot == 0) then
         print *,'Error no adjoint traces found: ',nadj_files_found_tot
         print *,'in directory : ',OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/../SEM/'
@@ -1035,12 +1108,12 @@
     allocate(source_adjoint(NDIM,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2073')
     if (ier /= 0) stop 'error allocating array source_adjoint'
+    source_adjoint(:,:,:) = 0.0_CUSTOM_REAL
 
     ! note:
     ! computes adjoint sources in chunks/blocks during time iterations.
     ! we moved it to compute_add_sources_viscoelastic.f90 & compute_add_sources_acoustic.f90,
     ! because we may need to read in adjoint sources block by block
-
   endif
 
   ! user info
@@ -1076,14 +1149,54 @@
   implicit none
 
   ! local parameters
-  integer :: irec,irec_local,isource,ier
+  integer :: irec,irec_local,isource,ier,nrec_store
   integer,dimension(0:NPROC-1) :: tmp_rec_local_all
   integer :: maxrec,maxproc(1)
-  double precision :: sizeval
+  double precision :: sizeval,size_s
+  ! interpolants
+  double precision,dimension(NGLLX) :: hxir
+  double precision,dimension(NGLLY) :: hetar
+  double precision,dimension(NGLLZ) :: hgammar
+  double precision :: hpxir(NGLLX), hpetar(NGLLY),hpgammar(NGLLZ)
 
-  ! statistics about allocation memory for seismograms & source_adjoint
-  ! seismograms
-  ! gather from slaves on master
+  integer :: i,j,k
+  real(kind=CUSTOM_REAL) :: hxi,heta,hgamma
+
+  ! note: for adjoint simulations (SIMULATION_TYPE == 2),
+  !         nrec_local     - is set to the number of sources (CMTSOLUTIONs), which act as "receiver" locations
+  !                          for storing seismograms or strains
+  !
+  !         nadj_rec_local - determines the number of adjoint sources, i.e., number of station locations (STATIONS_ADJOINT), which
+  !                          act as sources to drive the adjoint wavefield
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) 'seismograms:'
+    if (WRITE_SEISMOGRAMS_BY_MAIN) then
+      write(IMAIN,*) '  seismograms written by main process only'
+    else
+      write(IMAIN,*) '  seismograms written by all processes'
+    endif
+    write(IMAIN,*)
+    write(IMAIN,*) '  Total number of simulation steps (NSTEP)                       = ',NSTEP
+    write(IMAIN,*) '  writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS = ',NTSTEP_BETWEEN_OUTPUT_SEISMOS
+    write(IMAIN,*) '  number of subsampling steps for seismograms (subsamp_seismos)  = ',subsamp_seismos
+    write(IMAIN,*) '  Total number of samples for seismograms                        = ',NSTEP/subsamp_seismos
+    write(IMAIN,*)
+  endif
+  ! checks SU_FORMAT output length
+  if (SU_FORMAT .and. (NSTEP/subsamp_seismos > 32768)) then
+    print *
+    print *,"!!! BEWARE !!! Two many samples for SU format ! The .su file created will be unusable"
+    print *
+    call exit_MPI(myrank,'Error: Two many samples for SU format ! The .su file created will be unusable')
+  endif
+
+  ! seismogram array length
+  nlength_seismogram = NTSTEP_BETWEEN_OUTPUT_SEISMOS/subsamp_seismos
+
+  ! statistics about allocation memory for seismograms & source_adjoint seismograms
+  ! gather from secondarys on main
   call gather_all_singlei(nrec_local,tmp_rec_local_all,NPROC)
   ! user output
   if (myrank == 0) then
@@ -1091,22 +1204,21 @@
     maxrec = maxval(tmp_rec_local_all(:))
     ! note: MAXLOC will determine the lower bound index as '1'.
     maxproc = maxloc(tmp_rec_local_all(:)) - 1
+
     ! seismograms array size in MB
-    if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
-      ! seismograms need seismograms(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
-      sizeval = dble(maxrec) * dble(NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * CUSTOM_REAL / 1024. / 1024. )
-    else
-      ! adjoint seismograms need seismograms(NDIM*NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
-      sizeval = dble(maxrec) * dble(NDIM * NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * CUSTOM_REAL / 1024. / 1024. )
+    ! seismograms need seismograms(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS/subsamp_seismos)
+    size_s = dble(maxrec) * dble(NDIM) * dble(nlength_seismogram * CUSTOM_REAL / 1024. / 1024. )
+    sizeval = 0.d0
+    if (SAVE_SEISMOGRAMS_DISPLACEMENT) sizeval = sizeval + size_s
+    if (SAVE_SEISMOGRAMS_VELOCITY) sizeval = sizeval + size_s
+    if (SAVE_SEISMOGRAMS_ACCELERATION) sizeval = sizeval + size_s
+    if (SAVE_SEISMOGRAMS_PRESSURE) sizeval = sizeval + dble(NB_RUNS_ACOUSTIC_GPU) * size_s
+    ! adjoint strain seismogram needs seismograms_eps(NDIM*NDIM,nrec_local,NSTEP/subsamp_seismos)
+    if (SIMULATION_TYPE == 2) then
+      sizeval = sizeval + dble(maxrec) * dble(NDIM * NDIM) * dble(NSTEP/subsamp_seismos * CUSTOM_REAL / 1024. / 1024. )
     endif
+
     ! outputs info
-    write(IMAIN,*) 'seismograms:'
-    if (WRITE_SEISMOGRAMS_BY_MASTER) then
-      write(IMAIN,*) '  seismograms written by master process only'
-    else
-      write(IMAIN,*) '  seismograms written by all processes'
-    endif
-    write(IMAIN,*) '  writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS = ',NTSTEP_BETWEEN_OUTPUT_SEISMOS
     write(IMAIN,*) '  maximum number of local receivers is ',maxrec,' in slice ',maxproc(1)
     write(IMAIN,*) '  size of maximum seismogram array       = ', sngl(sizeval),'MB'
     write(IMAIN,*) '                                         = ', sngl(sizeval/1024.d0),'GB'
@@ -1116,7 +1228,10 @@
 
   ! adjoint sources
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
-    ! gather from slaves on master
+    ! note: nadj_rec_local is the number of "adjoint sources". that is, local receiver locations which will act as adjoint source
+    !       locations.
+
+    ! gather from secondarys on main
     call gather_all_singlei(nadj_rec_local,tmp_rec_local_all,NPROC)
     ! user output
     if (myrank == 0) then
@@ -1124,6 +1239,7 @@
       maxrec = maxval(tmp_rec_local_all(:))
       ! note: MAXLOC will determine the lower bound index as '1'.
       maxproc = maxloc(tmp_rec_local_all(:)) - 1
+
       ! source_adjoint size in MB
       !source_adjoint(NDIM,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC)
       sizeval = dble(maxrec) * dble(NDIM * NTSTEP_BETWEEN_READ_ADJSRC * CUSTOM_REAL / 1024. / 1024. )
@@ -1138,35 +1254,43 @@
     endif
   endif
 
-
+  ! receivers: for forward/kernel simulations, receivers are determined by the STATIONS files,
+  !            for pure adjoint simulations, CMT source locations become "receiver" locations.
+  !
+  ! following arrays are used to handle seismograms at "receiver" locations
+  !
   ! needs to be allocate for subroutine calls (even if nrec_local == 0)
   allocate(number_receiver_global(nrec_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2074')
   if (ier /= 0) stop 'error allocating array number_receiver_global'
+  number_receiver_global(:) = 0
 
   ! stores local receivers interpolation factors
   if (nrec_local > 0) then
     ! allocate Lagrange interpolators for receivers
-    allocate(hxir_store(nrec_local,NGLLX),stat=ier)
+    allocate(hxir_store(NGLLX,nrec_local),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2075')
-    allocate(hetar_store(nrec_local,NGLLY),stat=ier)
+    allocate(hetar_store(NGLLY,nrec_local),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2076')
-    allocate(hgammar_store(nrec_local,NGLLZ),stat=ier)
+    allocate(hgammar_store(NGLLZ,nrec_local),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2077')
     if (ier /= 0) stop 'error allocating array hxir_store etc.'
+    hxir_store(:,:) = 0.0; hetar_store(:,:) = 0.0; hgammar_store(:,:) = 0.0
 
     ! allocates derivatives
     if (SIMULATION_TYPE == 2) then
-      allocate(hpxir_store(nrec_local,NGLLX),stat=ier)
+      allocate(hpxir_store(NGLLX,nrec_local),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2078')
-      allocate(hpetar_store(nrec_local,NGLLY),stat=ier)
+      allocate(hpetar_store(NGLLY,nrec_local),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2079')
-      allocate(hpgammar_store(nrec_local,NGLLZ),stat=ier)
+      allocate(hpgammar_store(NGLLZ,nrec_local),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2080')
       if (ier /= 0) stop 'error allocating array hpxir_store'
+      hpxir_store(:,:) = 0.0; hpetar_store(:,:) = 0.0; hpgammar_store(:,:) = 0.0
     endif
 
     ! define local to global receiver numbering mapping
+    number_receiver_global(:) = 0
     irec_local = 0
     if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
       do irec = 1,nrec
@@ -1205,34 +1329,35 @@
       endif
 
       ! stores interpolators
-      hxir_store(irec_local,:) = hxir(:)
-      hetar_store(irec_local,:) = hetar(:)
-      hgammar_store(irec_local,:) = hgammar(:)
+      hxir_store(:,irec_local) = hxir(:)
+      hetar_store(:,irec_local) = hetar(:)
+      hgammar_store(:,irec_local) = hgammar(:)
 
       ! stores derivatives
       if (SIMULATION_TYPE == 2) then
-        hpxir_store(irec_local,:) = hpxir(:)
-        hpetar_store(irec_local,:) = hpetar(:)
-        hpgammar_store(irec_local,:) = hpgammar(:)
+        hpxir_store(:,irec_local) = hpxir(:)
+        hpetar_store(:,irec_local) = hpetar(:)
+        hpgammar_store(:,irec_local) = hpgammar(:)
       endif
     enddo
   else
+    ! dummy arrays
     ! VM VM need to allocate Lagrange interpolators for receivers with 0 because it is used
     ! in calling subroutines parmeters. (otherwise it can be crash at runtime).
-    allocate(hxir_store(nrec_local,NGLLX),stat=ier)
+    allocate(hxir_store(1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2081')
-    allocate(hetar_store(nrec_local,NGLLY),stat=ier)
+    allocate(hetar_store(1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2082')
-    allocate(hgammar_store(nrec_local,NGLLZ),stat=ier)
+    allocate(hgammar_store(1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2083')
     if (ier /= 0) stop 'error allocating array hxir_store etc.'
     ! allocates derivatives
     if (SIMULATION_TYPE == 2) then
-      allocate(hpxir_store(nrec_local,NGLLX),stat=ier)
+      allocate(hpxir_store(1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2084')
-      allocate(hpetar_store(nrec_local,NGLLY),stat=ier)
+      allocate(hpetar_store(1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2085')
-      allocate(hpgammar_store(nrec_local,NGLLZ),stat=ier)
+      allocate(hpgammar_store(1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2086')
       if (ier /= 0) stop 'error allocating array hpxir_store'
     endif
@@ -1240,9 +1365,11 @@
 
   ! seismograms
   if (nrec_local > 0) then
+    ! note: nrec_local is the number of local "receivers" for which we will store seismograms
+    !
     ! allocate seismogram array
     if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
-      allocate(seismograms_d(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+      allocate(seismograms_d(NDIM,nrec_local,nlength_seismogram),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2087')
     else
       allocate(seismograms_d(1,1,1),stat=ier)
@@ -1251,7 +1378,7 @@
     if (ier /= 0) stop 'error allocating array seismograms_d'
 
     if (SAVE_SEISMOGRAMS_VELOCITY) then
-      allocate(seismograms_v(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+      allocate(seismograms_v(NDIM,nrec_local,nlength_seismogram),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2089')
     else
       allocate(seismograms_v(1,1,1),stat=ier)
@@ -1260,7 +1387,7 @@
     if (ier /= 0) stop 'error allocating array seismograms_v'
 
     if (SAVE_SEISMOGRAMS_ACCELERATION) then
-      allocate(seismograms_a(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+      allocate(seismograms_a(NDIM,nrec_local,nlength_seismogram),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2091')
     else
       allocate(seismograms_a(1,1,1),stat=ier)
@@ -1270,7 +1397,8 @@
 
     if (SAVE_SEISMOGRAMS_PRESSURE) then
       !NB_RUNS_ACOUSTIC_GPU is set to 1 by default in constants.h
-      allocate(seismograms_p(NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+      !daniel todo: use single component only, i.e., NDIM == 1, for pressure is enough
+      allocate(seismograms_p(NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,nlength_seismogram),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2093')
     else
       allocate(seismograms_p(1,1,1),stat=ier)
@@ -1283,20 +1411,150 @@
     seismograms_v(:,:,:) = 0._CUSTOM_REAL
     seismograms_a(:,:,:) = 0._CUSTOM_REAL
     seismograms_p(:,:,:) = 0._CUSTOM_REAL
+  else
+    ! dummy allocations
+    allocate(seismograms_d(1,1,1))
+    allocate(seismograms_v(1,1,1))
+    allocate(seismograms_a(1,1,1))
+    allocate(seismograms_p(1,1,1))
   endif
 
   ! seismograms
   if (SIMULATION_TYPE == 2) then
+    ! strain
+    ! for adjoint simulations, nrec_local is the number of "receivers" at which we store seismograms and the strain (epsilon)
+    ! field. "receiver" locations for adjoint simulations are determined by the CMTSOLUTIONs locations, i.e., original sources.
+    ! Thus, we flip this assignment for pure adjoint simulations, that is source locations becomes receiver locations,
+    ! and receiver locations become "adjoint source" locations.
     if (nrec_local > 0) then
-      allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP),stat=ier)
+      allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP/subsamp_seismos),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2095')
       if (ier /= 0) stop 'error allocating array seismograms_eps'
       seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
+    else
+      ! dummy array
+      allocate(seismograms_eps(1,1,1,1))
     endif
   endif
   ! adjoint seismograms writing
   it_adj_written = 0
 
+  ! adjoint sources
+  ! optimizing arrays for adjoint sources
+  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
+    ! local adjoint sources arrays
+    if (nadj_rec_local > 0) then
+      ! determines adjoint sources arrays
+      if (SIMULATION_TYPE == 2) then
+        ! pure adjoint simulations
+        allocate(number_adjsources_global(nadj_rec_local),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating number_adjsources_global array')
+
+        ! addressing from local to global receiver index
+        number_adjsources_global(:) = 0
+        irec_local = 0
+        do irec = 1,nrec
+          ! add the source (only if this proc carries the source)
+          if (myrank == islice_selected_rec(irec)) then
+            irec_local = irec_local + 1
+            number_adjsources_global(irec_local) = irec
+          endif
+        enddo
+        if (irec_local /= nadj_rec_local) stop 'Error invalid number of nadj_rec_local found'
+
+        ! allocate Lagrange interpolators for adjoint sources
+        !
+        ! note: adjoint sources for SIMULATION_TYPE == 2 and 3 are located at the receivers,
+        !       however, the interpolator arrays hxir_store are used for "receiver" locations which are different
+        !       for pure adjoint or kernel simulations
+        !
+        !       we will thus allocate interpolator arrays especially for adjoint source locations. for kernel simulations,
+        !       these would be the same as hxir_store, but not for pure adjoint simulations.
+        !
+        ! storing these arrays is cheaper than storing a full (i,j,k) array for each element
+        allocate(hxir_adjstore(NGLLX,nadj_rec_local),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating hxir_adjstore array')
+        allocate(hetar_adjstore(NGLLY,nadj_rec_local),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating hetar_adjstore array')
+        allocate(hgammar_adjstore(NGLLZ,nadj_rec_local),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating hgammar_adjstore array')
+
+        ! define and store Lagrange interpolators at all the adjoint source locations
+        do irec_local = 1,nadj_rec_local
+          irec = number_adjsources_global(irec_local)
+
+          ! receiver positions (become adjoint source locations)
+          call lagrange_any(xi_receiver(irec),NGLLX,xigll,hxir,hpxir)
+          call lagrange_any(eta_receiver(irec),NGLLY,yigll,hetar,hpetar)
+          call lagrange_any(gamma_receiver(irec),NGLLZ,zigll,hgammar,hpgammar)
+
+          ! stores interpolators
+          hxir_adjstore(:,irec_local) = hxir(:)
+          hetar_adjstore(:,irec_local) = hetar(:)
+          hgammar_adjstore(:,irec_local) = hgammar(:)
+        enddo
+      else
+        ! kernel simulations (SIMULATION_TYPE == 3)
+        ! adjoint source arrays and receiver arrays are the same, no need to allocate new arrays, just point to the existing ones
+        number_adjsources_global => number_receiver_global
+        hxir_adjstore => hxir_store
+        hetar_adjstore => hetar_store
+        hgammar_adjstore => hgammar_store
+      endif
+    endif ! nadj_rec_local
+  endif
+
+  ! safety check
+  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
+    ! adjoint source in this partitions
+    if (nadj_rec_local > 0) then
+!! DK DK Aug 2018: added this because Lei Zhang may have detected a problem
+      do irec_local = 1, nadj_rec_local
+        irec = number_adjsources_global(irec_local)
+        if (irec <= 0) stop 'Error invalid irec for local adjoint source'
+        ! adds source array
+        do k = 1,NGLLZ
+          do j = 1,NGLLY
+            do i = 1,NGLLX
+              hxi = hxir_adjstore(i,irec_local)
+              heta = hetar_adjstore(j,irec_local)
+              hgamma = hgammar_adjstore(k,irec_local)
+              ! debug
+              !print *,'hxi/heta/hgamma = ',hxi,heta,hgamma,irec_local,i,j,k
+              ! checks if array values valid
+              ! Lagrange interpolators shoud be between [-0.2,1.0]
+              if (abs(hxi) > 1.1 .or. abs(heta) > 1.1 .or. abs(hgamma) > 1.1) then
+                print *,'ERROR: trying to use arrays hxir_adjstore/hetar_adjstore/hgammar_adjstore with irec_local = ', &
+                        irec_local,' but these arrays are invalid!'
+                call exit_MPI_without_rank('ERROR: trying to use arrays hxir_adjstore/hetar_adjstore/hgammar_adjstore &
+                                           &but these arrays are invalid!')
+              endif
+            enddo
+          enddo
+        enddo
+      enddo
+    endif
+  endif
+
+  ! ASDF format seismograms
+  if (ASDF_FORMAT) then
+    if (.not. (SIMULATION_TYPE == 3 .and. (.not. SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)) ) then
+      ! initializes the ASDF data structure by allocating arrays
+      if (WRITE_SEISMOGRAMS_BY_MAIN) then
+        if (myrank == 0) then
+          ! main process holds all seismograms
+          nrec_store = nrec * NB_RUNS_ACOUSTIC_GPU
+        else
+          nrec_store = 0
+        endif
+      else
+        ! each process writes out its local receivers
+        nrec_store = nrec_local * NB_RUNS_ACOUSTIC_GPU
+      endif
+      call init_asdf_data(nrec_store)
+      call synchronize_all()
+    endif
+  endif
 
   end subroutine setup_receivers_precompute_intp
 
@@ -1306,9 +1564,16 @@
 
   subroutine setup_sources_receivers_VTKfile()
 
-  use specfem_par
+  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,OUTPUT_FILES,IOUT_VTK,myrank
+
+  use specfem_par, only: SIMULATION_TYPE,NSOURCES,nrec,NGNOD,NSPEC_AB,NGLOB_AB, &
+    xstore,ystore,zstore,ibool, &
+    ispec_selected_source,islice_selected_source,xi_source,eta_source,gamma_source, &
+    ispec_selected_rec,islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver
+
   implicit none
 
+  ! local parameters
   double precision :: shape3D(NGNOD)
   double precision :: xil,etal,gammal
   double precision :: xmesh,ymesh,zmesh
@@ -1327,30 +1592,29 @@
 
   if (myrank == 0) then
     ! vtk file
-    open(IOVTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown',iostat=ier)
+    open(IOUT_VTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown',iostat=ier)
     if (ier /= 0) stop 'error opening sr.vtk file'
     ! vtk header
-    write(IOVTK,'(a)') '# vtk DataFile Version 2.0'
-    write(IOVTK,'(a)') 'Source and Receiver VTK file'
-    write(IOVTK,'(a)') 'ASCII'
-    write(IOVTK,'(a)') 'DATASET POLYDATA'
-    write(IOVTK, '(a,i6,a)') 'POINTS ', totalpoints, ' float'
+    write(IOUT_VTK,'(a)') '# vtk DataFile Version 2.0'
+    write(IOUT_VTK,'(a)') 'Source and Receiver VTK file'
+    write(IOUT_VTK,'(a)') 'ASCII'
+    write(IOUT_VTK,'(a)') 'DATASET POLYDATA'
+    write(IOUT_VTK, '(a,i6,a)') 'POINTS ', totalpoints, ' float'
   endif
 
   ! sources
   if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
-    do isource=1,NSOURCES
+    do isource = 1,NSOURCES
       ! spectral element id
       ispec = ispec_selected_source(isource)
 
-      ! gets element ancor nodes
+      ! gets element anchor nodes
       if (myrank == islice_selected_source(isource)) then
-        ! find the coordinates of the eight corner nodes of the element
-        call eval_shape3D_element_corners(xelm,yelm,zelm,ispec, &
-                        ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
-
+        ! find the coordinates of the anchor nodes of the element
+        call eval_shape3D_element_anchors(xelm,yelm,zelm,ispec,ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
       endif
-      ! master collects corner locations
+
+      ! main collects corner locations
       if (islice_selected_source(isource) /= 0) then
         if (myrank == 0) then
           call recvv_cr(xelm,NGNOD,islice_selected_source(isource),0)
@@ -1368,34 +1632,34 @@
         xil = xi_source(isource)
         etal = eta_source(isource)
         gammal = gamma_source(isource)
-        call eval_shape3D_single(myrank,shape3D,xil,etal,gammal,NGNOD)
+        call eval_shape3D_single(shape3D,xil,etal,gammal,NGNOD)
 
         ! interpolates source locations
-        xmesh = 0.0
-        ymesh = 0.0
-        zmesh = 0.0
-        do ia=1,NGNOD
+        xmesh = 0.d0
+        ymesh = 0.d0
+        zmesh = 0.d0
+        do ia = 1,NGNOD
           xmesh = xmesh + shape3D(ia)*xelm(ia)
           ymesh = ymesh + shape3D(ia)*yelm(ia)
           zmesh = zmesh + shape3D(ia)*zelm(ia)
         enddo
 
         ! writes out to VTK file
-        write(IOVTK,'(3e18.6)') xmesh,ymesh,zmesh
+        write(IOUT_VTK,'(3e18.6)') xmesh,ymesh,zmesh
       endif
     enddo ! NSOURCES
   endif
 
   ! receivers
-  do irec=1,nrec
+  do irec = 1,nrec
     ispec = ispec_selected_rec(irec)
 
-    ! find the coordinates of the eight corner nodes of the element
+    ! find the coordinates of the anchor (eight corners for NGNOD=8) nodes of the element
     if (myrank == islice_selected_rec(irec)) then
-      call eval_shape3D_element_corners(xelm,yelm,zelm,ispec, &
-                      ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
+      call eval_shape3D_element_anchors(xelm,yelm,zelm,ispec,ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
     endif
-    ! master collects corner locations
+
+    ! main collects corner locations
     if (islice_selected_rec(irec) /= 0) then
       if (myrank == 0) then
         call recvv_cr(xelm,NGNOD,islice_selected_rec(irec),0)
@@ -1413,12 +1677,12 @@
       xil = xi_receiver(irec)
       etal = eta_receiver(irec)
       gammal = gamma_receiver(irec)
-      call eval_shape3D_single(myrank,shape3D,xil,etal,gammal,NGNOD)
+      call eval_shape3D_single(shape3D,xil,etal,gammal,NGNOD)
 
       ! interpolates receiver locations
-      xmesh = 0.0
-      ymesh = 0.0
-      zmesh = 0.0
+      xmesh = 0.d0
+      ymesh = 0.d0
+      zmesh = 0.d0
       do ia=1,NGNOD
         xmesh = xmesh + shape3D(ia)*xelm(ia)
         ymesh = ymesh + shape3D(ia)*yelm(ia)
@@ -1426,14 +1690,14 @@
       enddo
 
       ! writes out to VTK file
-      write(IOVTK,'(3e18.6)') xmesh,ymesh,zmesh
+      write(IOUT_VTK,'(3e18.6)') xmesh,ymesh,zmesh
     endif
   enddo
 
   ! closes vtk file
   if (myrank == 0) then
-    write(IOVTK,*)
-    close(IOVTK)
+    write(IOUT_VTK,*)
+    close(IOUT_VTK)
 
     ! creates additional receiver and source files
     if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
@@ -1444,7 +1708,7 @@
       ! vtk file for receivers only
       write(system_command, &
   "('awk ',a1,'{if (NR < 5) print $0;if (NR == 5)print ',a1,'POINTS',i6,' float',a1,';if &
-      &(NR > 5+',i6,')print $0}',a1,' < ',a,' > ',a)")&
+      &(NR > 5+',i6,')print $0}',a1,'<',a,'>',a)")&
       "'",'"',nrec,'"',NSOURCES,"'",trim(filename),trim(filename_new)
 
       ! extracts source locations
@@ -1455,7 +1719,7 @@
         "'",'"',NSOURCES,'"'
 
       write(system_command2, &
-  "('if (NR > 5 && NR < 6+',i6,')print $0}END{print ',a,'}',a1,' < ',a,' > ',a)") &
+  "('if (NR > 5 && NR < 6+',i6,')print $0}END{print ',a,'}',a1,'<',a,'>',a)") &
         NSOURCES,'" "',"'",trim(filename),trim(filename_new)
 
       system_command = trim(system_command1)//trim(system_command2)
@@ -1473,11 +1737,14 @@
 
   use specfem_par
 
-  use kdtree_search, only: kdtree_setup,kdtree_set_verbose,kdtree_delete,kdtree_find_nearest_neighbor, &
+  use kdtree_search, only: kdtree_setup,kdtree_set_verbose, &
     kdtree_num_nodes,kdtree_nodes_location,kdtree_nodes_index
 
   implicit none
   integer :: ier,ispec,iglob
+
+  ! checks if anything to do
+  if (DO_BRUTE_FORCE_POINT_SEARCH) return
 
   ! kdtree search
 
@@ -1527,3 +1794,26 @@
   call synchronize_all()
 
   end subroutine setup_search_kdtree
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine setup_free_kdtree()
+
+  use specfem_par
+  use kdtree_search, only: kdtree_delete,kdtree_nodes_location,kdtree_nodes_index
+
+  implicit none
+
+  ! checks if anything to do
+  if (DO_BRUTE_FORCE_POINT_SEARCH) return
+
+  ! deletes tree arrays
+  deallocate(kdtree_nodes_location)
+  deallocate(kdtree_nodes_index)
+
+  ! deletes search tree nodes
+  call kdtree_delete()
+
+  end subroutine setup_free_kdtree

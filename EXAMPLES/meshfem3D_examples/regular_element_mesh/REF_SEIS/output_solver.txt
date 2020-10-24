@@ -1,0 +1,1010 @@
+
+ **********************************************
+ **** Specfem 3-D Solver - MPI version f90 ****
+ **********************************************
+
+ Running Git package version of the code: 3.0.0
+ which is Git undefined in the case of old tar ball builds
+ dating undefined in the case of old tar ball builds
+
+
+ There are            1  MPI processes
+ Processes are numbered from 0 to            0
+
+ There is a total of            1  slices
+
+  NDIM =            3
+
+  NGLLX =            5
+  NGLLY =            5
+  NGLLZ =            5
+
+ using single precision for the calculations
+ using force vectorization
+
+ smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
+
+ velocity model:   default
+
+ Reading mesh databases...
+ done
+
+ total acoustic elements    :        1000
+ total elastic elements     :        1000
+ total poroelastic elements :           0
+
+ Mesh resolution:
+
+ ********
+ minimum and maximum number of elements
+ and points in the CUBIT + SCOTCH mesh:
+
+ NSPEC_global_min =         2000
+ NSPEC_global_max =         2000
+ NSPEC_global_max / NSPEC_global_min imbalance =    1.00000000      =    0.00000000      %
+ NSPEC_global_sum =         2000
+
+ NGLOB_global_min =       136161
+ NGLOB_global_max =       136161
+ NGLOB_global_max / NGLOB_global_min imbalance =    1.00000000      =    0.00000000      %
+ NGLOB_global_sum =       136161
+
+ If you have elements of a single type (all acoustic, all elastic, all poroelastic, and without CPML)
+ in the whole mesh, then there should be no significant imbalance in the above numbers.
+ Otherwise, it is normal to have imbalance in elements and points because the domain decomposer
+ compensates for the different cost of different elements by partitioning them unevenly among processes.
+ ********
+
+
+ ********
+ Model: P velocity min,max =    1520.00000       3499.99976
+ Model: S velocity min,max =    0.00000000       2000.00000
+
+ Model: Poisson's ratio min,max =   0.257575691      0.500000000
+ ********
+
+ *********************************************
+ *** Verification of simulation parameters ***
+ *********************************************
+
+ *** Xmin and Xmax of the model =    0.00000000       1000.00000
+ *** Ymin and Ymax of the model =    0.00000000       1000.00000
+ *** Zmin and Zmax of the model =   -2000.00000       0.00000000
+
+ *** Max GLL point distance =    32.7326965
+ *** Min GLL point distance =    17.2673035
+ *** Max/min ratio =    1.89564610
+
+ *** Max element size =    100.000000
+ *** Min element size =    100.000000
+ *** Max/min ratio =    1.00000000
+
+ *** Minimum period resolved =    8.22368413E-02
+ *** Maximum suggested time step =    2.46675778E-03
+
+ *** for DT :    2.5000000000000001E-003
+ *** Max stability for wave velocities =   0.506738007
+
+ Elapsed time for checking mesh resolution in seconds =    2.1559999999999999E-003
+ saving VTK files for Courant number and minimum period
+
+
+ ******************************************
+ There is a total of            1  slices
+ ******************************************
+
+
+ kd-tree:
+   total data points:         2000
+   theoretical   number of nodes:         3994
+                tree memory size:   0.121887207     MB
+   actual        number of nodes:         3999
+                tree memory size:   0.122039795     MB
+   maximum depth   :           13
+   creation timing :    6.62997365E-04 (s)
+
+
+ sources:           1
+
+ ********************
+  locating sources
+ ********************
+
+ reading source information from ./DATA/CMTSOLUTION file
+
+ no UTM projection
+
+
+ source #            1
+   source located in slice            0
+                  in element          475
+                  in elastic domain
+
+   using moment tensor source:
+     xi coordinate of source in that element:    1.0000000000000000
+     eta coordinate of source in that element:    0.0000000000000000
+     gamma coordinate of source in that element:    1.0000000000000000
+
+   source time function:
+     using Gaussian source time function
+     half duration:    8.0000000000000002E-002  seconds
+     time shift:    0.0000000000000000       seconds
+
+   magnitude of the source:
+        scalar moment M0 =    1.6992242347612633E+021  dyne-cm
+     moment magnitude Mw =    3.4535006530429477
+
+   original (requested) position of the source:
+
+             latitude:    750.00000000000000
+            longitude:    500.00000000000000
+
+                x:    500.00000000000000
+                y:    750.00000000000000
+            depth:    1.5000000000000000       km
+   topo elevation:    0.0000000000000000
+
+   position of the source that will be used:
+
+                x:    500.00000000000000
+                y:    750.00000000000000
+            depth:    1.5000000000000000       km
+                z:   -1500.0000000000000
+
+   error in location of the source:    0.00000000      m
+
+
+
+ maximum error in location of the sources:    0.00000000      m
+
+
+ Elapsed time for detection of sources in seconds =    5.6300000000000100E-004
+
+ End of source detection - done
+
+
+ Each source is being convolved with HDUR_MOVIE =    0.0000000000000000
+
+
+ printing the source-time function
+
+ receivers:
+
+ there are           19  stations in file ./DATA/STATIONS
+ saving           19  stations inside the model in file ./DATA/STATIONS_FILTERED
+ excluding            0  stations located outside the model
+
+
+ Total number of receivers =           19
+
+
+ ********************
+  locating receivers
+ ********************
+
+ reading receiver information from ./DATA/STATIONS_FILTERED file
+
+
+ station #            1     DB    X10
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    100.000000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -100.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         1835
+                       in acoustic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    100.00000000000000       m
+      z:   -100.00000000000000
+
+ *******************************************************
+ ***** WARNING: receiver located in C-PML region *******
+ *******************************************************
+
+
+
+ station #            2     DB    X20
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    200.000000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -200.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         1835
+                       in acoustic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =   -1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    200.00000000000000       m
+      z:   -200.00000000000000
+
+ *******************************************************
+ ***** WARNING: receiver located in C-PML region *******
+ *******************************************************
+
+
+
+ station #            3     DB    X30
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    300.000000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -300.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         1735
+                       in acoustic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =   -1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    300.00000000000000       m
+      z:   -300.00000000000000
+
+
+
+ station #            4     DB    X40
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    400.000000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -400.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         1535
+                       in acoustic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    400.00000000000000       m
+      z:   -400.00000000000000
+
+
+
+ station #            5     DB    X50
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    500.000000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -500.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         1435
+                       in acoustic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    500.00000000000000       m
+      z:   -500.00000000000000
+
+
+
+ station #            6     DB    X60
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    600.000000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -600.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         1335
+                       in acoustic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    600.00000000000000       m
+      z:   -600.00000000000000
+
+
+
+ station #            7     DB    X70
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    700.000000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -700.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         1335
+                       in acoustic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =   -1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    700.00000000000000       m
+      z:   -700.00000000000000
+
+
+
+ station #            8     DB    X80
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    800.000000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -800.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         1235
+                       in acoustic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =   -1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    800.00000000000000       m
+      z:   -800.00000000000000
+
+
+
+ station #            9     DB    X90
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    900.000000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -900.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         1035
+                       in acoustic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    900.00000000000000       m
+      z:   -900.00000000000000
+
+
+
+ station #           10     DB    Y00
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    1000.00000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -1000.00000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          935
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    1000.0000000000000       m
+      z:   -1000.0000000000000
+
+
+
+ station #           11     DB    Y10
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    1100.00000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -1100.00000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          835
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    1100.0000000000000       m
+      z:   -1100.0000000000000
+
+
+
+ station #           12     DB    Y20
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    1200.00000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -1200.00000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          835
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =   -1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    1200.0000000000000       m
+      z:   -1200.0000000000000
+
+
+
+ station #           13     DB    Y30
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    1300.00000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -1300.00000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          735
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =   -1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    1300.0000000000000       m
+      z:   -1300.0000000000000
+
+
+
+ station #           14     DB    Y40
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    1400.00000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -1400.00000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          535
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    1400.0000000000000       m
+      z:   -1400.0000000000000
+
+
+
+ station #           15     DB    Y50
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    1500.00000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -1500.00000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          435
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    1500.0000000000000       m
+      z:   -1500.0000000000000
+
+
+
+ station #           16     DB    Y60
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    1600.00000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -1600.00000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          335
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    1600.0000000000000       m
+      z:   -1600.0000000000000
+
+
+
+ station #           17     DB    Y70
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    1700.00000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -1700.00000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          335
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =   -1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    1700.0000000000000       m
+      z:   -1700.0000000000000
+
+
+
+ station #           18     DB    Y80
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    1800.00000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -1800.00000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          235
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =   -1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    1800.0000000000000       m
+      z:   -1800.0000000000000
+
+
+
+ station #           19     DB    Y90
+      original latitude:    300.000000
+      original longitude:    500.000000
+      original x:    500.000000
+      original y:    300.000000
+      original depth:    1900.00000      m
+      horizontal distance:   0.449999988
+      target x, y, z:    500.000000       300.000000      -1900.00000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element           35
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    500.00000000000000
+      y:    300.00000000000000
+      depth:    1900.0000000000000       m
+      z:   -1900.0000000000000
+
+ *******************************************************
+ ***** WARNING: receiver located in C-PML region *******
+ *******************************************************
+
+
+ maximum error in location of all the receivers:    0.00000000      m
+
+ Elapsed time for receiver detection in seconds =    5.6509999999999963E-003
+
+ End of receiver detection - done
+
+ source arrays:
+   number of sources is            1
+   size of source array                 =    1.43051147E-03 MB
+                                        =    1.39698386E-06 GB
+
+ seismograms:
+   seismograms written by all processes
+   writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS =         1000
+   maximum number of local receivers is           19  in slice            0
+   size of maximum seismogram array       =   0.217437744     MB
+                                          =    2.12341547E-04 GB
+
+
+ Total number of samples for seismograms =         1000
+
+ found a total of           19  receivers in all the slices
+
+
+ Simulation setup:
+
+ incorporating acoustic simulation
+ incorporating elastic simulation
+   no poroelastic simulation
+
+ incorporating attenuation using            3  standard linear solids
+   not using attenuation from Olsen et al.
+   no anisotropy
+   no oceans
+   no gravity
+ incorporating movie simulation
+
+
+ preparing mass matrices
+ preparing constants
+ preparing wavefields
+   no dynamic faults
+   no kinematic faults
+ preparing attenuation
+ preparing gravity
+   no gravity simulation
+
+ preparing CPML
+   incorporating C-PML
+
+   number of C-PML spectral elements in the global mesh:         1424
+
+   thickness of C-PML layer in X direction:    200.000000
+   thickness of C-PML layer in Y direction:    200.000000
+   thickness of C-PML layer in Z direction:    200.000000
+
+   writing informations about C-PML elements in VTK-file format:
+   generating CPML_regions VTK file
+   generating CPML_damping_dx, CPML_damping_dy and CPML_damping_dz VTK files
+
+ preparing optimized arrays
+   number of regular shaped elements  :         2000
+   number of irregular shaped elements:            0
+   fused array done
+   bandwidth test (STREAM TRIAD):
+      memory accesses =    4.67471695     MB
+      timing  min/max =    2.28999997E-04 s /    2.69000011E-04 s
+      timing      avg =    2.46300013E-04 s
+      bandwidth       =    18.5349293     GB/s
+      with force_vectorization:
+      timing  min/max =    1.90000006E-04 s /    2.16999993E-04 s
+      timing      avg =    2.01100003E-04 s
+      bandwidth       =    22.7009106     GB/s
+
+
+ Elapsed time for preparing timerun in seconds =    1.2762600000000000
+
+ ************
+  time loop
+ ************
+               scheme:         Newmark
+
+            time step:    2.49999994E-03  s
+ number of time steps:         1000
+ total simulated time:    2.50000000      seconds
+ start time: -0.159999996      seconds
+
+ All processes are synchronized before the time loop
+
+ Starting time iteration loop...
+
+ Time step #            5
+ Time:  -0.150000006      seconds
+ Elapsed time in seconds =   0.16678199999999999
+ Elapsed time in hh:mm:ss =      0 h 00 m 00 s
+ Mean elapsed time per time step in seconds =    3.33563983E-02
+ Max norm displacement vector U in all slices (m) =    8.25107418E-05
+ Max norm pressure P in all slices (Pa) =    0.00000000
+ Time steps done =            5  out of         1000
+ Time steps remaining =          995
+ Estimated remaining time in seconds =    33.1896172
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 33 s
+ Estimated total run time in seconds =    33.3563995
+ Estimated total run time in hh:mm:ss =      0 h 00 m 33 s
+ We have done   0.500000000     % of that
+ The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+ ************************************************************
+ **** BEWARE: the above time estimates are not very reliable
+ **** because fewer than 100 iterations have been performed
+ ************************************************************
+
+ Time step #          100
+ Time:    8.74999985E-02  seconds
+ Elapsed time in seconds =    4.0413700000000006
+ Elapsed time in hh:mm:ss =      0 h 00 m 04 s
+ Mean elapsed time per time step in seconds =    4.04137000E-02
+ Max norm displacement vector U in all slices (m) =    13.3839350
+ Max norm pressure P in all slices (Pa) =    34273.6914
+ Time steps done =          100  out of         1000
+ Time steps remaining =          900
+ Estimated remaining time in seconds =    36.3723297
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 36 s
+ Estimated total run time in seconds =    40.4137001
+ Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ We have done    10.0000000     % of that
+ The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+
+ Time step #          200
+ Time:   0.337500006      seconds
+ Elapsed time in seconds =    8.1328490000000002
+ Elapsed time in hh:mm:ss =      0 h 00 m 08 s
+ Mean elapsed time per time step in seconds =    4.06642444E-02
+ Max norm displacement vector U in all slices (m) =    13.6527729
+ Max norm pressure P in all slices (Pa) =    248116.391
+ Time steps done =          200  out of         1000
+ Time steps remaining =          800
+ Estimated remaining time in seconds =    32.5313950
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 32 s
+ Estimated total run time in seconds =    40.6642456
+ Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ We have done    20.0000000     % of that
+ The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+
+ Time step #          300
+ Time:   0.587499976      seconds
+ Elapsed time in seconds =    12.203202000000001
+ Elapsed time in hh:mm:ss =      0 h 00 m 12 s
+ Mean elapsed time per time step in seconds =    4.06773388E-02
+ Max norm displacement vector U in all slices (m) =    13.7153120
+ Max norm pressure P in all slices (Pa) =    146521.375
+ Time steps done =          300  out of         1000
+ Time steps remaining =          700
+ Estimated remaining time in seconds =    28.4741383
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 28 s
+ Estimated total run time in seconds =    40.6773415
+ Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ We have done    30.0000000     % of that
+ The run will finish approximately on (in local time): Thu Jul 11, 2019 22:53
+
+ Time step #          400
+ Time:   0.837499976      seconds
+ Elapsed time in seconds =    16.247857000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 16 s
+ Mean elapsed time per time step in seconds =    4.06196415E-02
+ Max norm displacement vector U in all slices (m) =    13.7554073
+ Max norm pressure P in all slices (Pa) =    67509.3359
+ Time steps done =          400  out of         1000
+ Time steps remaining =          600
+ Estimated remaining time in seconds =    24.3717861
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 24 s
+ Estimated total run time in seconds =    40.6196442
+ Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ We have done    40.0000000     % of that
+ The run will finish approximately on (in local time): Thu Jul 11, 2019 22:53
+
+ Time step #          500
+ Time:    1.08749998      seconds
+ Elapsed time in seconds =    20.252223999999998
+ Elapsed time in hh:mm:ss =      0 h 00 m 20 s
+ Mean elapsed time per time step in seconds =    4.05044481E-02
+ Max norm displacement vector U in all slices (m) =    13.7837639
+ Max norm pressure P in all slices (Pa) =    6991.15820
+ Time steps done =          500  out of         1000
+ Time steps remaining =          500
+ Estimated remaining time in seconds =    20.2522240
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 20 s
+ Estimated total run time in seconds =    40.5044479
+ Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ We have done    50.0000000     % of that
+ The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+
+ Time step #          600
+ Time:    1.33749998      seconds
+ Elapsed time in seconds =    24.241401000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 24 s
+ Mean elapsed time per time step in seconds =    4.04023342E-02
+ Max norm displacement vector U in all slices (m) =    13.8039837
+ Max norm pressure P in all slices (Pa) =    2127.90820
+ Time steps done =          600  out of         1000
+ Time steps remaining =          400
+ Estimated remaining time in seconds =    16.1609344
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 16 s
+ Estimated total run time in seconds =    40.4023361
+ Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ We have done    60.0000000     % of that
+ The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+
+ Time step #          700
+ Time:    1.58749998      seconds
+ Elapsed time in seconds =    28.233600999999997
+ Elapsed time in hh:mm:ss =      0 h 00 m 28 s
+ Mean elapsed time per time step in seconds =    4.03337143E-02
+ Max norm displacement vector U in all slices (m) =    13.8184214
+ Max norm pressure P in all slices (Pa) =    660.727722
+ Time steps done =          700  out of         1000
+ Time steps remaining =          300
+ Estimated remaining time in seconds =    12.1001148
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 12 s
+ Estimated total run time in seconds =    40.3337173
+ Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ We have done    70.0000000     % of that
+ The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+
+ Time step #          800
+ Time:    1.83749998      seconds
+ Elapsed time in seconds =    32.233860000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 32 s
+ Mean elapsed time per time step in seconds =    4.02923264E-02
+ Max norm displacement vector U in all slices (m) =    13.8287477
+ Max norm pressure P in all slices (Pa) =    317.772461
+ Time steps done =          800  out of         1000
+ Time steps remaining =          200
+ Estimated remaining time in seconds =    8.05846500
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 08 s
+ Estimated total run time in seconds =    40.2923241
+ Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ We have done    80.0000000     % of that
+ The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+
+ Time step #          900
+ Time:    2.08750010      seconds
+ Elapsed time in seconds =    36.201464000000001
+ Elapsed time in hh:mm:ss =      0 h 00 m 36 s
+ Mean elapsed time per time step in seconds =    4.02238481E-02
+ Max norm displacement vector U in all slices (m) =    13.8361320
+ Max norm pressure P in all slices (Pa) =    199.344620
+ Time steps done =          900  out of         1000
+ Time steps remaining =          100
+ Estimated remaining time in seconds =    4.02238512
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 04 s
+ Estimated total run time in seconds =    40.2238503
+ Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ We have done    90.0000000     % of that
+ The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+
+ Time step #         1000
+ Time:    2.33750010      seconds
+ Elapsed time in seconds =    40.174351999999999
+ Elapsed time in hh:mm:ss =      0 h 00 m 40 s
+ Mean elapsed time per time step in seconds =    4.01743501E-02
+ Max norm displacement vector U in all slices (m) =    13.8414125
+ Max norm pressure P in all slices (Pa) =    134.316147
+ Time steps done =         1000  out of         1000
+ Time steps remaining =            0
+ Estimated remaining time in seconds =    0.00000000
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
+ Estimated total run time in seconds =    40.1743507
+ Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ We have done    100.000000     % of that
+
+
+ Total number of time steps written:         1000
+ Writing the seismograms in parallel took    8.54630023E-02  seconds
+
+ Time loop finished. Timing info:
+ Total elapsed time in seconds =    40.319132000000003
+ Total elapsed time in hh:mm:ss =      0 h 00 m 40 s
+
+ End of the simulation
+

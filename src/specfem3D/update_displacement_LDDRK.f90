@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
   subroutine update_displ_lddrk()
 
@@ -170,11 +169,14 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine update_veloc_elastic_lddrk_backward()
-
-! updates acceleration,velocity and displacement in elastic regions
-
-  end subroutine update_veloc_elastic_lddrk_backward
+! not used yet...
+!  subroutine update_veloc_elastic_lddrk_backward()
+!
+!! updates acceleration,velocity and displacement in elastic regions
+!
+!  implicit none
+!
+!  end subroutine update_veloc_elastic_lddrk_backward
 
 !
 !-------------------------------------------------------------------------------------------------

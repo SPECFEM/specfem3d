@@ -58,7 +58,7 @@ program sum_kernels
 
   implicit none
 
-  character(len=MAX_STRING_LEN) :: kernel_list(MAX_KERNEL_PATHS)
+  character(len=MAX_STRING_LEN),dimension(:),allocatable :: kernel_list
   character(len=MAX_STRING_LEN) :: sline, kernel_name,prname_lp
   integer :: nker
   integer :: ier
@@ -78,6 +78,11 @@ program sum_kernels
     write(*,*) 'reading kernel list: '
   endif
   call synchronize_all()
+
+  ! allocates array
+  allocate(kernel_list(MAX_KERNEL_PATHS),stat=ier)
+  if (ier /= 0) stop 'Error allocating kernel_list array'
+  kernel_list(:) = ''
 
   ! reads in event list
   nker=0
@@ -101,7 +106,7 @@ program sum_kernels
 
   ! needs local_path for mesh files
   BROADCAST_AFTER_READ = .true.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then

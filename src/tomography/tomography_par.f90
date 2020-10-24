@@ -27,8 +27,11 @@
 
 module tomography_par
 
-  use constants, only: CUSTOM_REAL,MAX_STRING_LEN, &
-    NGLLX,NGLLY,NGLLZ,IIN,IOUT,FOUR_THIRDS,R_EARTH_KM,GAUSSALPHA,GAUSSBETA
+  use constants, only: myrank, &
+    CUSTOM_REAL,MAX_STRING_LEN, &
+    NGLLX,NGLLY,NGLLZ, &
+    IIN,IOUT, &
+    FOUR_THIRDS,R_EARTH_KM,GAUSSALPHA,GAUSSBETA
 
   implicit none
 
@@ -46,7 +49,7 @@ module tomography_par
   real(kind=CUSTOM_REAL) :: step_fac,step_length
 
   ! MPI process
-  integer :: myrank,sizeprocs
+  integer :: sizeprocs
 
 end module tomography_par
 

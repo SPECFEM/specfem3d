@@ -28,7 +28,14 @@
 
   subroutine print_stf_file()
 
-  use specfem_par
+  use constants, only: MAX_STRING_LEN,CUSTOM_REAL,IMAIN,IO_STF, &
+    C_LDDRK,myrank
+
+  use specfem_par, only: NSTEP,SIMULATION_TYPE,OUTPUT_FILES, &
+    NSOURCES,islice_selected_source,ispec_selected_source,tshift_src,t0, &
+    DT,USE_LDDRK,UNDO_ATTENUATION_AND_OR_PML, &
+    USE_EXTERNAL_SOURCE_FILE,user_source_time_function
+
   use specfem_par_acoustic, only: ispec_is_acoustic
   use specfem_par_elastic, only: ispec_is_elastic
   use specfem_par_poroelastic, only: ispec_is_poroelastic
@@ -42,7 +49,7 @@
   double precision :: stf,time_source_dble
   double precision,external :: get_stf_acoustic,get_stf_viscoelastic,get_stf_poroelastic
 
-  integer :: isource,ispec,ier
+  integer :: isource,ispec,ier,it,istage
   character(len=MAX_STRING_LEN) :: plot_file
 
   ! check
@@ -72,16 +79,33 @@
         ! current source time
         if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 2) then
           if (USE_LDDRK) then
-            time_source_dble = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            ! LDDRK
+            ! note: the LDDRK scheme updates displacement after the stiffness computations and
+            !       after adding boundary/coupling/source terms.
+            !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+            !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+            istage = 1  ! only 1. stage output (corresponds to u(n))
+            time_source_dble = dble(it-1-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
           else
             time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
           endif
         else
           ! backward simulation (SIMULATION_TYPE == 3)
           if (USE_LDDRK) then
-            time_source_dble = dble(NSTEP-1)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            ! LDDRK
+            ! note: the LDDRK scheme updates displacement after the stiffness computations and
+            !       after adding boundary/coupling/source terms.
+            !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+            !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+            istage = 1  ! only 1. stage output (corresponds to u(n))
+            if (UNDO_ATTENUATION_AND_OR_PML) then
+              ! stepping moves forward from snapshot position
+              time_source_dble = dble(NSTEP-it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            else
+              time_source_dble = dble(NSTEP-it-1)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            endif
           else
-            time_source_dble = dble(NSTEP-1)*DT - t0 - tshift_src(isource)
+            time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
           endif
         endif
 
@@ -109,18 +133,18 @@
       enddo
     endif
 
-    ! master collects stf (if it does not already have it, i.e. if this source is not on the master)
+    ! main collects stf (if it does not already have it, i.e. if this source is not on the main)
     if (islice_selected_source(isource) /= 0) then
       if (myrank == 0) then
-        ! master collects
+        ! main collects
         call recvv_cr(source_time_function,NSTEP,islice_selected_source(isource),0)
       else if (myrank == islice_selected_source(isource)) then
-        ! slave sends to master
+        ! secondary sends to main
         call sendv_cr(source_time_function,NSTEP,0,0)
       endif
     endif
 
-    ! master prints out to file
+    ! main prints out to file
     if (myrank == 0) then
       ! opens source time function file
       if (NSOURCES == 1) then
@@ -132,31 +156,43 @@
       else
         write(plot_file,"('/plot_source_time_functionA',i7.7,'.txt')") isource
       endif
-      open(unit=IOSTF,file=trim(OUTPUT_FILES)//trim(plot_file),status='unknown',iostat=ier)
+      open(unit=IO_STF,file=trim(OUTPUT_FILES)//trim(plot_file),status='unknown',iostat=ier)
       if (ier /= 0) call exit_mpi(myrank,'Error opening plot_source_time_function file')
 
       do it = 1,NSTEP
-        ! overall time, note that t_shift_src will start at zero for simulation
+        ! overall time, note that tshift_src will start at zero for simulation
         if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 2) then
           if (USE_LDDRK) then
-            time_source = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0
+            ! LDDRK
+            ! note: the LDDRK scheme updates displacement after the stiffness computations and
+            !       after adding boundary/coupling/source terms.
+            !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+            !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+            istage = 1  ! only 1. stage output (corresponds to u(n))
+            time_source = dble(it-1-1)*DT + dble(C_LDDRK(istage))*DT - t0
           else
             time_source = dble(it-1)*DT - t0
           endif
         else
           ! backward simulation (SIMULATION_TYPE == 3)
           if (USE_LDDRK) then
-            time_source = dble(NSTEP-1)*DT - dble(C_LDDRK(istage))*DT - t0
+            ! LDDRK
+            ! note: the LDDRK scheme updates displacement after the stiffness computations and
+            !       after adding boundary/coupling/source terms.
+            !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+            !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+            istage = 1  ! only 1. stage output (corresponds to u(n))
+            time_source = dble(NSTEP-it-1)*DT - dble(C_LDDRK(istage))*DT - t0
           else
-            time_source = dble(NSTEP-1)*DT - t0
+            time_source = dble(NSTEP-it)*DT - t0
           endif
         endif
 
         ! file output
-        write(IOSTF,*) time_source,source_time_function(it)
+        write(IO_STF,*) time_source,source_time_function(it)
       enddo
 
-      close(IOSTF)
+      close(IO_STF)
 
     endif ! of if (myrank == 0) then
 

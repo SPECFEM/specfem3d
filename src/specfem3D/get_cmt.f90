@@ -26,9 +26,9 @@
 !=====================================================================
 
   subroutine get_cmt(CMTSOLUTION,tshift_cmt,hdur,lat,long,depth,moment_tensor, &
-                    DT,NSOURCES,min_tshift_cmt_original,user_source_time_function)
+                     DT,NSOURCES,min_tshift_cmt_original,user_source_time_function)
 
-  use constants, only: IIN,IN_DATA_FILES,MAX_STRING_LEN,CUSTOM_REAL
+  use constants, only: IIN,MAX_STRING_LEN,CUSTOM_REAL
   use shared_parameters, only: USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF
 
   implicit none
@@ -398,7 +398,7 @@
 
   ! scalar moment:
   ! see equation (1.4) in P.G. Silver and T.H. Jordan, 1982,
-  ! "Optimal estiamtion of scalar seismic moment",
+  ! "Optimal estimation of scalar seismic moment",
   ! Geophys. J.R. astr. Soc., 70, 755 - 787
   !
   ! or see equation (5.91) in Dahlen & Tromp (1998)
@@ -464,12 +464,23 @@
   ! conversion: dyne-cm = 10**-7 N-m
   !
   ! we follow here the USGS magnitude policy:
-  ! "All USGS statements of moment magnitude should use M = (log M0)/1.5-10.7
+  ! "Another source of confusion is the form of the formula for converting from scalar moment M0 to moment magnitude, M.
+  !  The preferred practice is to use M = (log Mo)/1.5-10.7, where Mo is in dyne-cm (dyne-cm=10-7 N-m),
+  !  the definition given by Hanks and Kanamori in 1979. An alternate form in Hanks and Kanamori's paper, M=(log M0-16.1)/1.5,
+  !  is sometimes used, with resulting confusion. These formulae look as if they should yield the same result, but the latter
+  !  is equivalent to M = (log Mo)/1.5-10.7333. The resulting round-off error occasionally leads to differences of 0.1
+  !  in the estimates of moment magnitude released by different groups.
+  !  All USGS statements of moment magnitude should use M = (log Mo)/1.5 - 10.7 = 2/3 (log M0) - 10.7 (Hanks & Kanamori, 1979)
   !  for converting from scalar moment M0 to moment magnitude. (..)"
   ! see: http://earthquake.usgs.gov/aboutus/docs/020204mag_policy.php
+  !      https://web.archive.org/web/20160428095841/http://earthquake.usgs.gov:80/aboutus/docs/020204mag_policy.php
 
-  Mw = 2.d0/3.d0 * log10( max(M0,tiny(M0)) ) - 10.7
-  ! this is to ensure M0>0.0 inorder to avoid arithmetic error.
+  if (M0 > 0.0d0) then
+    ! this is to ensure M0>0.0 inorder to avoid arithmetic error.
+    Mw = 2.d0/3.d0 * log10( max(M0,tiny(M0)) ) - 10.7
+  else
+    Mw = 0.0d0
+  endif
 
   ! return value
   get_cmt_moment_magnitude = Mw

@@ -80,36 +80,78 @@
 !!-----------------------------------------------------------
 
 ! input, output and main MPI I/O files
+! note: careful with these unit numbers, we mostly use units in the 40-50 range.
+!       cray Fortran e.g. reserves 0,5,6 (standard error,input,output units) and 100-102
   integer, parameter :: ISTANDARD_OUTPUT = 6
   integer, parameter :: IIN = 40,IOUT = 41
+
 ! uncomment this to write messages to a text file
   integer, parameter :: IMAIN = 42
 ! uncomment this to write messages to the screen
 ! integer, parameter :: IMAIN = ISTANDARD_OUTPUT
-! I/O unit for source and receiver vtk file
-  integer, parameter :: IOVTK = 98
-! I/O number for absorbing boundary snapshots (opened in C for speed)
-! Not a Fortran I/O unit! See write_c_binary.c for more information.
-  integer, parameter :: IOABS = 0
-  integer, parameter :: IOABS_AC = 1
-! I/O unit for plotting source time function
-  integer, Parameter :: IOSTF = 71
+
 ! I/O unit for noise simulations
   integer, parameter :: IIN_NOISE = 44, IOUT_NOISE = 45
 ! I/O unit for SU formatted seismograms
   integer, parameter :: IOUT_SU = 46
 ! I/O unit for SU formatted adjoint sources
   integer, parameter :: IIN_SU1 = 47, IIN_SU2 = 48, IIN_SU3 = 49
+! I/O unit for source and receiver vtk file
+  integer, parameter :: IOUT_VTK = 50
+! I/O unit for plotting source time function (I/O read & write)
+  integer, Parameter :: IO_STF = 51
+! I/O for total energy calculation
+  integer, parameter :: IOUT_ENERGY = 52
+
+! I/O number for absorbing boundary snapshots (opened in C for speed)
+! Not a Fortran I/O unit! See write_c_binary.c for more information.
+  integer, parameter :: IOABS = 0
+  integer, parameter :: IOABS_AC = 1
 
 ! ignore variable name field (junk) at the beginning of each input line
   logical, parameter :: IGNORE_JUNK = .true.,DONT_IGNORE_JUNK = .false.
 
+!!-----------------------------------------------------------
+!!
+!! ADIOS Related values
+!!
+!!-----------------------------------------------------------
   ! size of the ADIOS buffer to use
   integer, parameter :: ADIOS_BUFFER_SIZE_IN_MB = 200
-  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = 'MPI'
 
-  ! ASDF parameter
-  logical, parameter :: OUTPUT_PROVENANCE = .false.
+! ADIOS transport methods (see ADIOS manual for details)
+!! MPI (default)
+  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = 'MPI'
+  character(len=*), parameter :: ADIOS_METHOD_PARAMS =  ''
+! or
+!! POSIX
+!  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = "POSIX"
+!  character(len=*), parameter :: ADIOS_METHOD_PARAMS =  ''
+! or
+!! MPI_AGGREGATE
+!  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = "MPI_AGGREGATE"
+!  character(len=*), parameter :: ADIOS_METHOD_PARAMS =  "num_aggregators=64,num_ost=672"
+! or
+!! MPI_LUSTRE
+!  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = "MPI_LUSTRE"
+!  character(len=*), parameter :: ADIOS_METHOD_PARAMS =  "stripe_count=16,stripe_size=4194304,block_size=4194304"
+
+!!-----------------------------------------------------------
+!!
+!! ASDF parameters
+!!
+!!-----------------------------------------------------------
+
+! stores specfem provenance string in ASDF file
+  logical, parameter :: ASDF_OUTPUT_PROVENANCE = .false.
+
+! ASDF string lengths
+  integer, parameter :: ASDF_MAX_STRING_LENGTH = 1024
+  integer, parameter :: ASDF_MAX_QUAKEML_LENGTH = 8096
+  integer, parameter :: ASDF_MAX_STATIONXML_LENGTH = 16182
+  integer, parameter :: ASDF_MAX_PARFILE_LENGTH = 20000
+  integer, parameter :: ASDF_MAX_CONSTANTS_LENGTH = 45000
+  integer, parameter :: ASDF_MAX_TIME_STRING_LENGTH = 22
 
 !!-----------------------------------------------------------
 !!
@@ -120,6 +162,10 @@
 ! using this is more precise but more costly (but will be replaced with a cheap Bessel smoothing in the near future)
 ! see https://github.com/geodynamics/specfem3d/issues/621
   logical, parameter :: USE_QUADRATURE_RULE_FOR_SMOOTHING = .true.
+
+! kernel debugging
+! flag to save GLL weights for kernel benchmark examples
+  logical,parameter :: SAVE_WEIGHTS = .false.
 
 !!-----------------------------------------------------------
 !!
@@ -197,7 +243,7 @@
   integer, parameter :: NSOURCES_SUBSET_MAX = 100
   integer, parameter :: NREC_SUBSET_MAX = 200
 
-! use brute-force search (loops over all elements) or search in kd-tree for locating target point in mesh
+! use brute-force search (loop over all elements) or search in kd-tree for locating target point in mesh
 ! (brute-force search will be slower but even more accurate)
   logical, parameter :: DO_BRUTE_FORCE_POINT_SEARCH = .false.
 
@@ -298,10 +344,38 @@
 
 ! plots PNM cross-section image
 ! (EXPERIMENTAL feature)
-! (cross-section plane parameters can be specified in create_color_image.f90)
+! (additional cross-section parameters can be specified in create_color_image.f90)
 !! DK DK Jan 2013: here for performance and to reduce the size of the files, one day
 !! DK DK Jan 2013: we should switch to using the JPEG library directly, as already implemented in SPECFEM2D
   logical, parameter :: PNM_IMAGE = .false.
+
+! image data output:
+!   type = 1 : displ/velocity x-component
+!   type = 2 : displ/velocity y-component
+!   type = 3 : displ/velocity z-component
+!   type = 4 : displ/velocity norm
+  integer,parameter:: PNM_IMAGE_TYPE = 4
+
+! cross-section surface
+! cross-section origin point
+  real(kind=CUSTOM_REAL),parameter:: PNM_section_xorg = 0.0
+  real(kind=CUSTOM_REAL),parameter:: PNM_section_yorg = 0.0
+  real(kind=CUSTOM_REAL),parameter:: PNM_section_zorg = -100.0
+
+! cross-section surface normal
+  real(kind=CUSTOM_REAL),parameter:: PNM_section_nx = 0.0
+  real(kind=CUSTOM_REAL),parameter:: PNM_section_ny = 0.0
+  real(kind=CUSTOM_REAL),parameter:: PNM_section_nz = 1.0 ! for horizontal cross-section
+
+! cross-section (in-plane) horizontal-direction
+  real(kind=CUSTOM_REAL),parameter:: PNM_section_hdirx = 1.0
+  real(kind=CUSTOM_REAL),parameter:: PNM_section_hdiry = 0.0
+  real(kind=CUSTOM_REAL),parameter:: PNM_section_hdirz = 0.0
+
+! cross-section (in-plane) vertical-direction
+  real(kind=CUSTOM_REAL),parameter:: PNM_section_vdirx = 0.0
+  real(kind=CUSTOM_REAL),parameter:: PNM_section_vdiry = 1.0
+  real(kind=CUSTOM_REAL),parameter:: PNM_section_vdirz = 0.0
 
 ! geometry tolerance parameter to calculate number of independent grid points
 ! sensitive to actual size of model, assumes reference sphere of radius 1
@@ -310,10 +384,31 @@
 
 !!-----------------------------------------------------------
 !!
-!! mesh coloring for GPUs (not needed any more, obsolete)
+!! mesh optimization
 !!
 !!-----------------------------------------------------------
 
+! empirical choice for distorted elements to estimate time step and period resolved:
+! Courant number for time step estimate
+  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5
+
+! number of points per minimum wavelength for minimum period estimate
+  real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
+
+! separates regular/irregular shaped elements
+  logical, parameter :: DO_IRREGULAR_ELEMENT_SEPARATION = .true.
+
+! mesh partitioning algorithms, choices for PARTITIONING_TYPE
+  ! SCOTCH is original to program
+  integer, parameter :: SCOTCH = 1
+  ! METIS is another popular alternative currently in development
+  integer, parameter :: METIS = 2
+  ! PATOH is mostly used for LTS. It balances the p-levels across partitions as well as balancing total elements.
+  integer, parameter :: PATOH = 3
+  ! simple row partitioning
+  integer, parameter :: ROWS_PART = 4
+
+! GPU coloring
 ! add mesh coloring for the GPU + MPI implementation
 ! this is needed on NVIDIA hardware up to FERMI boards, included.
 ! Starting on KEPLER boards you can leave it off because on KEPLER hardware
@@ -330,6 +425,9 @@
 !
 ! postprocess the colors to balance them if Droux (1993) algorithm is not used
   logical, parameter :: BALANCE_COLORS_SIMPLE_ALGO = .false.
+
+! face detection distance tolerance (relative to coordinate range)
+  double precision, parameter :: TOLERANCE_FACE_DETECTION = 1.d-4
 
 !!-----------------------------------------------------------
 !!
@@ -351,6 +449,50 @@
 !!-----------------------------------------------------------
 
   integer, parameter :: NB_RUNS_ACOUSTIC_GPU = 1
+
+!!-----------------------------------------------------------
+!!
+!! local time stepping (LTS)
+!!
+!!-----------------------------------------------------------
+
+! decreases coarsest time step by this percentage factor
+  double precision,parameter :: LTS_SAFETY_MARGIN = 0.05d0
+
+! adds overlap elements
+  logical,parameter :: LTS_OVERLAP_REGION   = .false.
+
+! uses only 1 single p-level (for debugging)
+  logical,parameter :: LTS_SINGLE_P_LEVEL = .false.
+! uses only 2 p-levels (for debugging)
+  logical,parameter :: LTS_TWO_P_LEVEL = .false.
+
+! decreases final coarsest time step for stability
+  logical,parameter :: LTS_DECREASE_DT = .false.
+! time step margin to use for decrease
+  double precision,parameter :: LTS_STABILITY_MARGIN_DT = 0.6d0
+
+! scotch: balancing of p-levels
+  logical,parameter :: BALANCE_P_LEVELS = .true.
+! scotch balancing of p-levels using partial subsets of processes to distribute p-elements
+  logical,parameter :: BALANCE_P_LEVELS_PARTIAL = .false.
+! p-level partitions shouldn't be smaller than this
+  integer,parameter :: P_LEVEL_PARTIAL_SUBSET_MINIMUM = 200
+
+! partitioning for Local time stepping
+  ! tries to partition mesh such that p-levels are confined to an island (for METIS/PATOH)
+  logical,parameter :: PLEVEL_ISLAND = .false.
+
+  ! reorganize the partitions to try to optimize communication costs (for SCOTCH only)
+  logical,parameter :: SCOTCH_P_REMAP = .true.
+
+!!-----------------------------------------------------------
+!! MPI debugging
+!!-----------------------------------------------------------
+
+! debugging: without MPI assembly
+  logical,parameter :: ASSEMBLE_MPI_OFF = .false.
+
 
 !------------------------------------------------------
 !----------- do not modify anything below -------------
@@ -447,9 +589,6 @@
 
 ! flag for projection from latitude/longitude to UTM, and back
   integer, parameter :: ILONGLAT2UTM = 0, IUTM2LONGLAT = 1
-
-! for total energy calculation
-  integer, parameter :: IOUT_ENERGY = 937  ! file number for the energy file
 
 !!-----------------------------------------------------------
 !!
@@ -567,19 +706,49 @@
 !! for LDDRK high-order time scheme
 !!
 !!-----------------------------------------------------------
-  integer, parameter :: NSTAGE = 6
+! see reference:
+! Berland J., Ch. Bogey, Ch. Bailly, 2006.
+! Low-dissipation and low-dispersion fourth-order Runge-Kutta algorithm
+! Computers & Fluids 35 (2006) 1459-1463
 
-  real(kind=CUSTOM_REAL), dimension(NSTAGE), parameter :: ALPHA_LDDRK = &
+  integer, parameter :: NSTAGE_LDDRK = 6
+
+  real(kind=CUSTOM_REAL), dimension(NSTAGE_LDDRK), parameter :: ALPHA_LDDRK = &
     (/0.0_CUSTOM_REAL,-0.737101392796_CUSTOM_REAL, -1.634740794341_CUSTOM_REAL, &
       -0.744739003780_CUSTOM_REAL,-1.469897351522_CUSTOM_REAL,-2.813971388035_CUSTOM_REAL/)
 
-  real(kind=CUSTOM_REAL), dimension(NSTAGE), parameter :: BETA_LDDRK = &
+  real(kind=CUSTOM_REAL), dimension(NSTAGE_LDDRK), parameter :: BETA_LDDRK = &
     (/0.032918605146_CUSTOM_REAL,0.823256998200_CUSTOM_REAL,0.381530948900_CUSTOM_REAL, &
       0.200092213184_CUSTOM_REAL,1.718581042715_CUSTOM_REAL,0.27_CUSTOM_REAL/)
 
-  real(kind=CUSTOM_REAL), dimension(NSTAGE), parameter :: C_LDDRK = &
+  real(kind=CUSTOM_REAL), dimension(NSTAGE_LDDRK), parameter :: C_LDDRK = &
     (/0.0_CUSTOM_REAL,0.032918605146_CUSTOM_REAL,0.249351723343_CUSTOM_REAL, &
       0.466911705055_CUSTOM_REAL,0.582030414044_CUSTOM_REAL,0.847252983783_CUSTOM_REAL/)
+
+
+!!-----------------------------------------------------------
+!!
+!! symplectic time scheme - Position-Extended Forest-Ruth-Like (PEFRL) scheme (4th order)
+!!
+!!-----------------------------------------------------------
+! see reference:
+! Omelyan,  I.M. Mryglod and R. Folk, 2002.
+! Optimized Forest-Ruth- and Suzuki-like algorithms for integration of motion in many-body systems,
+! Computer Physics communications 146, 188
+! http://arxiv.org/abs/cond-mat/0110585
+
+  integer, parameter :: NSTAGE_SYMPLECTIC = 4
+
+  ! PEFRL scheme coefficients (see Omelyan et al, 2002, eq. (20))
+  double precision, parameter :: PEFRL_xi = 0.1786178958448091d0
+  double precision, parameter :: PEFRL_lambda = -0.2123418310626054d0
+  double precision, parameter :: PEFRL_chi = -0.06626458266981849d0
+
+  real(kind=CUSTOM_REAL), dimension(NSTAGE_SYMPLECTIC), parameter :: ALPHA_SYMPL_PEFRL = &
+    (/ PEFRL_xi, PEFRL_chi, 1.0_CUSTOM_REAL - 2.0_CUSTOM_REAL*(PEFRL_chi + PEFRL_xi), PEFRL_chi /)
+  real(kind=CUSTOM_REAL), dimension(NSTAGE_SYMPLECTIC), parameter :: BETA_SYMPL_PEFRL = &
+    (/ 0.5_CUSTOM_REAL - PEFRL_lambda, PEFRL_lambda, PEFRL_lambda, 0.5_CUSTOM_REAL - PEFRL_lambda /)
+
 
 !!----------------------
 !!

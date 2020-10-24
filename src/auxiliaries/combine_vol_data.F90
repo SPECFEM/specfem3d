@@ -72,13 +72,16 @@
   character(len=MAX_STRING_LEN*2) :: mesh_file,local_data_file
   character(len=MAX_STRING_LEN) :: data_array_name
   logical :: HIGH_RESOLUTION_MESH,BROADCAST_AFTER_READ
-  integer :: ires,myrank
+  integer :: ires
 
   ! Variables to read ADIOS files
   integer :: sizeprocs
   character(len=MAX_STRING_LEN) :: var_name, value_file_name, mesh_file_name
   integer(kind=8) :: value_handle, mesh_handle
   integer :: ibool_offset, x_global_offset
+#ifdef USE_VTK_INSTEAD_OF_MESH
+  real :: val
+#endif
 
   ! MPI initialization
   call init_mpi()
@@ -96,7 +99,7 @@
   ! needs local_path for mesh files
   myrank = 0
   BROADCAST_AFTER_READ = .false.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   ! reads in arguments
   do i = 1, command_argument_count()
@@ -128,13 +131,13 @@
 #ifdef USE_VTK_INSTEAD_OF_MESH
   ! VTK
   mesh_file = trim(outdir) // '/' // trim(filename)//'.vtk'
-  open(IOVTK,file=mesh_file(1:len_trim(mesh_file)),status='unknown',iostat=ier)
+  open(IOUT_VTK,file=mesh_file(1:len_trim(mesh_file)),status='unknown',iostat=ier)
   if (ier /= 0) stop 'error opening vtk output file'
 
-  write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
-  write(IOVTK,'(a)') 'material model VTK file'
-  write(IOVTK,'(a)') 'ASCII'
-  write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
+  write(IOUT_VTK,'(a)') '# vtk DataFile Version 3.1'
+  write(IOUT_VTK,'(a)') 'material model VTK file'
+  write(IOUT_VTK,'(a)') 'ASCII'
+  write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
 #else
     ! open paraview output mesh file
     mesh_file = trim(outdir) // '/' // trim(filename)//'.mesh'
@@ -168,6 +171,7 @@
             status='old',action='read',form='unformatted',iostat=ier)
       read(27) NSPEC_AB
       read(27) NGLOB_AB
+      read(27) NSPEC_IRREGULAR
     endif
 
     ! ibool and global point arrays file
@@ -184,7 +188,6 @@
       call read_coordinates_adios_mesh(mesh_handle, x_global_offset, &
                                        NGLOB_AB, xstore, ystore, zstore)
     else
-      read(27) NSPEC_IRREGULAR
       read(27) ibool
       read(27) xstore
       read(27) ystore
@@ -211,7 +214,7 @@
       endif
     else
       ! data file
-      write(prname,'(a,i6.6,a)') trim(indir)//'proc',iproc,'_'
+      write(prname,'(a,i6.6,a)') trim(indir)// '/proc',iproc,'_'
       local_data_file = trim(prname) // trim(filename) // '.bin'
       open(unit = 28,file = trim(local_data_file),status='old', &
             action='read',form ='unformatted',iostat=ier)
@@ -235,7 +238,10 @@
       deallocate(data_dp)
     endif
 
-    print *, trim(local_data_file)
+    ! output info
+    print *,'  file: ',trim(local_data_file)
+    print *,'  min/max value: ',minval(data_sp(:,:,:,:)),maxval(data_sp(:,:,:,:))
+    print *
 
     ! writes point coordinates and scalar value to mesh file
     if (.not. HIGH_RESOLUTION_MESH) then
@@ -248,6 +254,9 @@
 
     print *,'  points:',np,numpoin
 
+    ! checks integer overflow
+    if (numpoin > 2147483646.d0 - np ) stop 'Error number of points might exceed integer limit'
+
     ! stores total number of points written
     np = np + numpoin
 
@@ -259,7 +268,7 @@
 
 #ifdef USE_VTK_INSTEAD_OF_MESH
   ! VTK
-  write(IOVTK,*) ''
+  write(IOUT_VTK,*) ''
 #endif
 
   if (np /= npp) stop 'Error: Number of total points are not consistent'
@@ -287,6 +296,7 @@
             status='old',action='read',form='unformatted')
       read(27) NSPEC_AB
       read(27) NGLOB_AB
+      read(27) NSPEC_IRREGULAR
     endif
 
     ! ibool file
@@ -298,7 +308,6 @@
                                  NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
     else
       if (ier /= 0) stop 'error allocating array ibool'
-      read(27) NSPEC_IRREGULAR
       read(27) ibool
       close(27)
     endif
@@ -311,7 +320,7 @@
     else
       ! subdivided spectral elements
       call cvd_write_GLL_elements(NSPEC_AB,NGLOB_AB,ibool, &
-                                np,nelement,it,nee,numpoin)
+                                  np,nelement,it,nee,numpoin)
     endif
 
     print *,'  elements:',ne,nelement
@@ -325,7 +334,7 @@
 
 #ifdef USE_VTK_INSTEAD_OF_MESH
   ! VTK
-  write(IOVTK,*) ''
+  write(IOUT_VTK,*) ''
 #endif
 
   ! checks with total number of elements
@@ -338,9 +347,9 @@
 #ifdef USE_VTK_INSTEAD_OF_MESH
   ! VTK
   ! type: hexahedrons
-  write(IOVTK,'(a,i12)') "CELL_TYPES ",nee
-  write(IOVTK,'(6i12)') (12,it=1,nee)
-  write(IOVTK,*) ''
+  write(IOUT_VTK,'(a,i12)') "CELL_TYPES ",nee
+  write(IOUT_VTK,'(6i12)') (12,it=1,nee)
+  write(IOUT_VTK,*) ''
 
   ! point data values
   ! data array name
@@ -362,14 +371,22 @@
     data_array_name = trim(filename(1:8)) ! "pressure"
   endif
 
-  write(IOVTK,'(a,i12)') "POINT_DATA ",npp
-  write(IOVTK,'(a)') "SCALARS "//trim(data_array_name)//" float"
-  write(IOVTK,'(a)') "LOOKUP_TABLE default"
+  write(IOUT_VTK,'(a,i12)') "POINT_DATA ",npp
+  write(IOUT_VTK,'(a)') "SCALARS "//trim(data_array_name)//" float"
+  write(IOUT_VTK,'(a)') "LOOKUP_TABLE default"
   do it = 1,npp
-      write(IOVTK,*) total_dat(it)
+    val = total_dat(it)
+    ! vtk produces reading errors for float scalars like 1.e-43
+    ! for single precision, smallest and largest possible floating-point numbers are: 1.17549435E-38   3.40282347E+38
+    ! let's limit the size to single precision values
+    if (val > 0.0 .and. val < tiny(val)) val = 0.0
+    if (val < 0.0 .and. val > -tiny(val)) val = 0.0
+    if (val > huge(val)) val = huge(val)
+    if (val < -huge(val)) val = -huge(val)
+    write(IOUT_VTK,*) val
   enddo
-  write(IOVTK,*) ''
-  close(IOVTK)
+  write(IOUT_VTK,*) ''
+  close(IOUT_VTK)
 #else
   ! close mesh file
   call close_file()
@@ -391,8 +408,8 @@
 !=============================================================
 
   subroutine cvd_count_totals_ext_mesh(num_node,node_list,LOCAL_PATH, &
-                          npp,nee,HIGH_RESOLUTION_MESH, &
-                          mesh_handle,ADIOS_FOR_MESH)
+                                       npp,nee,HIGH_RESOLUTION_MESH, &
+                                       mesh_handle,ADIOS_FOR_MESH)
 ! counts total number of points and elements for external meshes in given slice list
 ! returns: total number of elements (nee) and number of points (npp)
 
@@ -444,6 +461,7 @@
 
       read(27) NSPEC_AB
       read(27) NGLOB_AB
+      read(27) NSPEC_IRREGULAR
     endif
 
     ! gets ibool
@@ -456,7 +474,6 @@
         call read_ibool_adios_mesh(mesh_handle, ibool_offset, &
                                    NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
       else
-        read(27) NSPEC_IRREGULAR
         read(27) ibool
       endif
     endif
@@ -481,15 +498,15 @@
       if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1147')
       if (ier /= 0) stop 'error allocating array mask_ibool'
       mask_ibool = .false.
-      do ispec=1,NSPEC_AB
-        iglob1=ibool(1,1,1,ispec)
-        iglob2=ibool(NGLLX,1,1,ispec)
-        iglob3=ibool(NGLLX,NGLLY,1,ispec)
-        iglob4=ibool(1,NGLLY,1,ispec)
-        iglob5=ibool(1,1,NGLLZ,ispec)
-        iglob6=ibool(NGLLX,1,NGLLZ,ispec)
-        iglob7=ibool(NGLLX,NGLLY,NGLLZ,ispec)
-        iglob8=ibool(1,NGLLY,NGLLZ,ispec)
+      do ispec = 1,NSPEC_AB
+        iglob1 = ibool(1,1,1,ispec)
+        iglob2 = ibool(NGLLX,1,1,ispec)
+        iglob3 = ibool(NGLLX,NGLLY,1,ispec)
+        iglob4 = ibool(1,NGLLY,1,ispec)
+        iglob5 = ibool(1,1,NGLLZ,ispec)
+        iglob6 = ibool(NGLLX,1,NGLLZ,ispec)
+        iglob7 = ibool(NGLLX,NGLLY,NGLLZ,ispec)
+        iglob8 = ibool(1,NGLLY,NGLLZ,ispec)
         mask_ibool(iglob1) = .true.
         mask_ibool(iglob2) = .true.
         mask_ibool(iglob3) = .true.
@@ -545,7 +562,7 @@
   if (it == 1) then
 #ifdef USE_VTK_INSTEAD_OF_MESH
     ! VTK
-    write(IOVTK, '(a,i12,a)') 'POINTS ', npp, ' float'
+    write(IOUT_VTK, '(a,i12,a)') 'POINTS ', npp, ' float'
     ! creates array to hold point data
     allocate(total_dat(npp),stat=ier)
     if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1148')
@@ -581,7 +598,7 @@
       z = zstore(iglob1)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(1,1,1,ispec)
 #else
       call write_real(x)
@@ -598,7 +615,7 @@
       z = zstore(iglob2)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(NGLLX,1,1,ispec)
 #else
       call write_real(x)
@@ -615,7 +632,7 @@
       z = zstore(iglob3)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(NGLLX,NGLLY,1,ispec)
 #else
       call write_real(x)
@@ -632,7 +649,7 @@
       z = zstore(iglob4)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(1,NGLLY,1,ispec)
 #else
       call write_real(x)
@@ -649,7 +666,7 @@
       z = zstore(iglob5)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(1,1,NGLLZ,ispec)
 #else
       call write_real(x)
@@ -666,7 +683,7 @@
       z = zstore(iglob6)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(NGLLX,1,NGLLZ,ispec)
 #else
       call write_real(x)
@@ -683,7 +700,7 @@
       z = zstore(iglob7)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(NGLLX,NGLLY,NGLLZ,ispec)
 #else
       call write_real(x)
@@ -700,7 +717,7 @@
       z = zstore(iglob8)
 #ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
-      write(IOVTK,'(3e18.6)') x,y,z
+      write(IOUT_VTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(1,NGLLY,NGLLZ,ispec)
 #else
       call write_real(x)
@@ -739,7 +756,7 @@
   if (it == 1) then
 #ifdef USE_VTK_INSTEAD_OF_MESH
     ! VTK
-    write(IOVTK, '(a,i12,a)') 'POINTS ', npp, ' float'
+    write(IOUT_VTK, '(a,i12,a)') 'POINTS ', npp, ' float'
     ! creates array to hold point data
     allocate(total_dat(npp),stat=ier)
     if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1150')
@@ -771,7 +788,7 @@
             z = zstore(iglob)
 #ifdef USE_VTK_INSTEAD_OF_MESH
             ! VTK
-            write(IOVTK,'(3e18.6)') x,y,z
+            write(IOUT_VTK,'(3e18.6)') x,y,z
             total_dat(np+numpoin) = dat(i,j,k,ispec)
 #else
             call write_real(x)
@@ -815,7 +832,7 @@
 #ifdef USE_VTK_INSTEAD_OF_MESH
     ! VTK
     ! note: indices for vtk start at 0
-    write(IOVTK,'(a,i12,i12)') "CELLS ",nee,nee*9
+    write(IOUT_VTK,'(a,i12,i12)') "CELLS ",nee,nee*9
 #else
     call write_integer(nee)
 #endif
@@ -896,7 +913,7 @@
 
 #ifdef USE_VTK_INSTEAD_OF_MESH
     ! VTK
-    write(IOVTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
+    write(IOUT_VTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
 #else
     call write_integer(n1)
     call write_integer(n2)
@@ -946,7 +963,7 @@
 #ifdef USE_VTK_INSTEAD_OF_MESH
     ! VTK
     ! note: indices for vtk start at 0
-    write(IOVTK,'(a,i12,i12)') "CELLS ",nee,nee*9
+    write(IOUT_VTK,'(a,i12,i12)') "CELLS ",nee,nee*9
 #else
     !nee = nelement * num_node
     call write_integer(nee)
@@ -1002,7 +1019,7 @@
 
 #ifdef USE_VTK_INSTEAD_OF_MESH
           ! VTK
-          write(IOVTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
+          write(IOUT_VTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
 #else
           call write_integer(n1)
           call write_integer(n2)

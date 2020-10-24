@@ -25,10 +25,10 @@
 !
 !=====================================================================
 
-subroutine read_adjoint_sources_ASDF(adj_source_name, adj_source, index_start, index_end)
+
+  subroutine read_adjoint_sources_ASDF(adj_source_name, adj_source, index_start, index_end)
 
   use specfem_par, only: NDIM,CUSTOM_REAL, myrank, current_asdf_handle
-
   use iso_c_binding, only: C_NULL_CHAR
 
   implicit none
@@ -61,12 +61,15 @@ subroutine read_adjoint_sources_ASDF(adj_source_name, adj_source, index_start, i
     call exit_MPI(myrank,'Adjoint source '//trim(adj_source_name)//' has wrong length, please check with your simulation duration')
   endif
 
-end subroutine read_adjoint_sources_ASDF
+  end subroutine read_adjoint_sources_ASDF
 
-subroutine check_adjoint_sources_ASDF(adj_src)
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine check_adjoint_sources_ASDF(adj_src)
 
   use specfem_par
-
   use iso_c_binding, only: C_NULL_CHAR
 
   implicit none
@@ -99,4 +102,4 @@ subroutine check_adjoint_sources_ASDF(adj_src)
       'file '//trim(adj_src)//' length is wrong, please check your adjoint sources and your simulation duration')
   endif
 
-end subroutine check_adjoint_sources_ASDF
+  end subroutine check_adjoint_sources_ASDF

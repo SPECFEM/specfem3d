@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
   subroutine detect_mesh_surfaces()
 
@@ -46,26 +45,26 @@
   if (MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
     if (MOVIE_TYPE == 2 .and. PLOT_CROSS_SECTIONS) then
       call detect_surface_cross_section(NPROC,NGLOB_AB,NSPEC_AB,ibool, &
-                              ispec_is_surface_external_mesh, &
-                              iglob_is_surface_external_mesh, &
-                              nfaces_surface, &
-                              num_interfaces_ext_mesh, &
-                              max_nibool_interfaces_ext_mesh, &
-                              nibool_interfaces_ext_mesh, &
-                              my_neighbors_ext_mesh, &
-                              ibool_interfaces_ext_mesh, &
-                              CROSS_SECTION_X,CROSS_SECTION_Y,CROSS_SECTION_Z, &
-                              xstore,ystore,zstore,myrank)
+                                        ispec_is_surface_external_mesh, &
+                                        iglob_is_surface_external_mesh, &
+                                        nfaces_surface, &
+                                        num_interfaces_ext_mesh, &
+                                        max_nibool_interfaces_ext_mesh, &
+                                        nibool_interfaces_ext_mesh, &
+                                        my_neighbors_ext_mesh, &
+                                        ibool_interfaces_ext_mesh, &
+                                        CROSS_SECTION_X,CROSS_SECTION_Y,CROSS_SECTION_Z, &
+                                        xstore,ystore,zstore)
     endif
   endif
 
   ! takes number of faces for top, free surface only
-  if (MOVIE_TYPE == 1) then
+  if (MOVIE_TYPE == 1 .or. (NOISE_TOMOGRAPHY /= 0)) then
     nfaces_surface = num_free_surface_faces
   endif
 
   ! handles movies and shakemaps
-  if (MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
+  if (MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. (NOISE_TOMOGRAPHY /= 0)) then
     call setup_movie_meshes()
   endif
 
@@ -73,29 +72,62 @@
   if (MOVIE_VOLUME) then
     ! acoustic
     if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION) then
-      allocate(velocity_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1731')
-      allocate(velocity_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1732')
-      allocate(velocity_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1733')
-      if (ier /= 0) stop 'error allocating array movie velocity_x etc.'
+      if (.not. HDF5_ENABLED) then
+        allocate(velocity_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1731')
+        allocate(velocity_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1732')
+        allocate(velocity_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1733')
+        if (ier /= 0) stop 'error allocating array movie velocity_x etc.'
+        velocity_x(:,:,:,:) = 0._CUSTOM_REAL
+        velocity_y(:,:,:,:) = 0._CUSTOM_REAL
+        velocity_z(:,:,:,:) = 0._CUSTOM_REAL
+      else
+        allocate(velocity_x_on_node(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1731')
+        allocate(velocity_y_on_node(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1732')
+        allocate(velocity_z_on_node(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1733')
+        if (ier /= 0) stop 'error allocating array movie velocity_x etc.'
+        velocity_x_on_node(:) = 0._CUSTOM_REAL
+        velocity_y_on_node(:) = 0._CUSTOM_REAL
+        velocity_z_on_node(:) = 0._CUSTOM_REAL
+      endif
     endif
+
     ! elastic only
     if (ELASTIC_SIMULATION) then
-      allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1734')
-      allocate(curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1735')
-      allocate(curl_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1736')
-      allocate(curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1737')
-      if (ier /= 0) stop 'error allocating array movie div and curl'
-      div(:,:,:,:) = 0._CUSTOM_REAL
-      curl_x(:,:,:,:) = 0._CUSTOM_REAL
-      curl_y(:,:,:,:) = 0._CUSTOM_REAL
-      curl_z(:,:,:,:) = 0._CUSTOM_REAL
+      if (.not. HDF5_ENABLED) then
+        allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1734')
+        allocate(curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1735')
+        allocate(curl_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1736')
+        allocate(curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1737')
+        if (ier /= 0) stop 'error allocating array movie div and curl'
+        div(:,:,:,:) = 0._CUSTOM_REAL
+        curl_x(:,:,:,:) = 0._CUSTOM_REAL
+        curl_y(:,:,:,:) = 0._CUSTOM_REAL
+        curl_z(:,:,:,:) = 0._CUSTOM_REAL
+      else
+        allocate(div_on_node(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1734')
+        allocate(curl_x_on_node(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1735')
+        allocate(curl_y_on_node(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1736')
+        allocate(curl_z_on_node(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1737')
+        if (ier /= 0) stop 'error allocating array movie div and curl'
+        div_on_node(:) = 0._CUSTOM_REAL
+        curl_x_on_node(:) = 0._CUSTOM_REAL
+        curl_y_on_node(:) = 0._CUSTOM_REAL
+        curl_z_on_node(:) = 0._CUSTOM_REAL
+      endif
     endif
   endif
 

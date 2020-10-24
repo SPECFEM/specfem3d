@@ -44,7 +44,7 @@ specfem3D_TARGETS = \
 
 specfem3D_OBJECTS = \
 	$O/specfem3D_par.spec_module.o \
-        $O/asdf_data.spec_module.o \
+	$O/asdf_data.spec_module.o \
 	$O/assemble_MPI_vector.spec.o \
 	$O/check_stability.spec.o \
 	$O/comp_source_time_function.spec.o \
@@ -61,11 +61,11 @@ specfem3D_OBJECTS = \
 	$O/compute_coupling_poroelastic_ac.spec.o \
 	$O/compute_coupling_poroelastic_el.spec.o \
 	$O/compute_forces_acoustic_calling_routine.spec.o \
-	$O/compute_forces_acoustic_NGLL5_fast.spec.o \
-	$O/compute_forces_acoustic_NGLLnot5_generic_slow.spec.o \
+	$O/compute_forces_acoustic.spec.o \
 	$O/compute_forces_viscoelastic_calling_routine.spec.o \
 	$O/compute_forces_viscoelastic.spec.o \
 	$O/compute_element_att_memory.spec.o \
+	$O/compute_element_strain.spec.o \
 	$O/compute_forces_poro_fluid_part.spec.o \
 	$O/compute_forces_poroelastic_calling_routine.spec.o \
 	$O/compute_forces_poro_solid_part.spec.o \
@@ -92,6 +92,7 @@ specfem3D_OBJECTS = \
 	$O/gravity_perturbation.spec.o \
 	$O/initialize_simulation.spec.o \
 	$O/iterate_time.spec.o \
+	$O/iterate_time_undoatt.spec.o \
 	$O/locate_MPI_slice.spec.o \
 	$O/locate_point.spec.o \
 	$O/locate_receivers.spec.o \
@@ -102,17 +103,21 @@ specfem3D_OBJECTS = \
 	$O/pml_output_VTKs.spec.o \
 	$O/pml_compute_accel_contribution.spec.o \
 	$O/pml_compute_memory_variables.spec.o \
-	$O/pml_par.spec.o \
+	$O/pml_par.spec_module.o \
 	$O/prepare_attenuation.spec.o \
 	$O/prepare_gpu.spec.o \
 	$O/prepare_gravity.spec.o \
 	$O/prepare_noise.spec.o \
+	$O/prepare_optimized_arrays.spec.o \
 	$O/prepare_timerun.spec.o \
 	$O/prepare_wavefields.spec.o \
 	$O/print_stf_file.spec.o \
 	$O/read_external_stf.spec.o \
+	$O/read_forward_arrays.spec.o \
 	$O/read_mesh_databases.spec.o \
+	$O/read_stations.spec.o \
 	$O/save_adjoint_kernels.spec.o \
+	$O/save_forward_arrays.spec.o \
 	$O/setup_GLL_points.spec.o \
 	$O/setup_movie_meshes.spec.o \
 	$O/setup_sources_receivers.spec.o \
@@ -143,6 +148,7 @@ specfem3D_SHARED_OBJECTS = \
 	$O/gll_library.shared.o \
 	$O/heap_sort.shared.o \
 	$O/hex_nodes.shared.o \
+	$O/init_openmp.shared.o \
 	$O/lagrange_poly.shared.o \
 	$O/netlib_specfun_erf.shared.o \
 	$O/param_reader.cc.o \
@@ -175,6 +181,7 @@ specfem3D_MODULES = \
 	$(FC_MODDIR)/specfem_par_poroelastic.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par_movie.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par_coupling.$(FC_MODEXT) \
+	$(FC_MODDIR)/specfem_par_noise.$(FC_MODEXT) \
 	$(FC_MODDIR)/user_noise_distribution.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
@@ -183,11 +190,6 @@ specfem3D_MODULES = \
 ### MPI
 ###
 specfem3D_SHARED_OBJECTS += $(COND_MPI_OBJECTS)
-
-###
-### OPENMP
-###
-specfem3D_SHARED_OBJECTS += $(COND_OMP_OBJECTS)
 
 ###
 ### CUDA
@@ -204,10 +206,12 @@ cuda_specfem3D_OBJECTS = \
 	$O/compute_kernels_cuda.cuda.o \
 	$O/compute_stacey_acoustic_cuda.cuda.o \
 	$O/compute_stacey_viscoelastic_cuda.cuda.o \
+	$O/helper_functions.cuda.o \
 	$O/initialize_cuda.cuda.o \
 	$O/noise_tomography_cuda.cuda.o \
 	$O/prepare_mesh_constants_cuda.cuda.o \
 	$O/save_and_compare_cpu_vs_gpu.cudacc.o \
+	$O/smooth_cuda.cuda.o \
 	$O/transfer_fields_cuda.cuda.o \
 	$O/update_displacement_cuda.cuda.o \
 	$O/write_seismograms_cuda.cuda.o \
@@ -283,7 +287,7 @@ asdf_specfem3D_SHARED_STUBS = \
 
 # conditional asdf linking
 ifeq ($(ASDF),yes)
-SPECFEM_LINK_FLAGS += $(ASDF_LIBS) -lhdf5hl_fortran -lhdf5_hl -lhdf5 -lstdc++
+SPECFEM_LINK_FLAGS += $(ASDF_LIBS)
 specfem3D_OBJECTS += $(asdf_specfem3D_OBJECTS)
 specfem3D_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_OBJECTS)
 else
@@ -305,6 +309,40 @@ specfem3D_MODULES += \
 	$(FC_MODDIR)/vtk_window_par.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 endif
+
+###
+### HDF5
+###
+
+ifeq ($(HDF5),yes)
+hdf5_specfem3D_OBJECTS = \
+	$O/read_mesh_databases_hdf5.spec_hdf5.o \
+	$O/write_seismograms_hdf5.spec_hdf5.o \
+	$O/write_movie_output_hdf5.spec_hdf5.o \
+	$O/io_server.spec_hdf5.o \
+	$(EMPTY_MACRO)
+hdf5_specfem3D_SHARED_OBJECTS =	\
+	$O/phdf5_utils.shared_hdf5.o \
+	$(EMPTY_MACRO)
+specfem3D_MODULES += \
+	$(FC_MODDIR)/io_server.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+specfem3D_OBJECTS += $(hdf5_specfem3D_OBJECTS)
+specfem3D_SHARED_OBJECTS += $(hdf5_specfem3D_SHARED_OBJECTS)
+else
+hdf5_specfem3D_OBJECTS= \
+	$O/read_mesh_databases_hdf5_stub.spec_hdf5.o \
+	$O/write_seismograms_hdf5_stub.spec_hdf5.o \
+	$O/write_movie_output_hdf5_stub.spec_hdf5.o \
+	$O/io_server_stub.spec_hdf5.o \
+	$(EMPTY_MACRO)
+hdf5_specfem3D_SHARED_OBJECTS =	\
+	$O/phdf5_utils_stub.shared_nohdf5.o \
+	$(EMPTY_MACRO)
+specfem3D_OBJECTS += $(hdf5_specfem3D_OBJECTS)
+specfem3D_SHARED_OBJECTS += $(hdf5_specfem3D_SHARED_OBJECTS)
+endif
+
 
 #######################################
 
@@ -352,27 +390,13 @@ endif
 # Version file
 $O/initialize_simulation.spec.o: ${SETUP}/version.fh
 
-## pml
-$O/compute_coupling_acoustic_el.spec.o: $O/pml_par.spec.o
-$O/compute_coupling_viscoelastic_ac.spec.o: $O/pml_par.spec.o
-$O/compute_forces_acoustic_calling_routine.spec.o: $O/pml_par.spec.o
-$O/compute_forces_acoustic_NGLL5_fast.spec.o: $O/pml_par.spec.o
-$O/compute_forces_acoustic_NGLLnot5_generic_slow.spec.o: $O/pml_par.spec.o
-$O/compute_energy.spec.o: $O/pml_par.spec.o
-$O/pml_allocate_arrays.spec.o: $O/pml_par.spec.o
-$O/pml_compute_accel_contribution.spec.o: $O/pml_par.spec.o
-$O/pml_compute_memory_variables.spec.o: $O/pml_par.spec.o
-$O/pml_output_VTKs.spec.o: $O/pml_par.spec.o
-$O/read_mesh_databases.spec.o: $O/pml_par.spec.o
-$O/update_displacement_scheme.spec.o: $O/pml_par.spec.o
-
 ## fault
 $O/fault_solver_dynamic.spec.o: $O/fault_solver_common.spec.o
 $O/fault_solver_kinematic.spec.o: $O/fault_solver_common.spec.o
-$O/compute_forces_viscoelastic.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o
-$O/compute_forces_viscoelastic_calling_routine.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
+$O/compute_forces_viscoelastic.spec.o: $O/fault_solver_dynamic.spec.o
+$O/compute_forces_viscoelastic_calling_routine.spec.o: $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
 
-$O/prepare_timerun.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
+$O/prepare_timerun.spec.o: $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
 $O/prepare_gpu.spec.o: $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
 
 ## gravity
@@ -380,12 +404,10 @@ $O/iterate_time.spec.o: $O/gravity_perturbation.spec.o
 $O/prepare_gravity.spec.o: $O/gravity_perturbation.spec.o
 
 ## adios
-$O/read_forward_arrays_adios.spec_adios.o: $O/pml_par.spec.o
-$O/read_mesh_databases_adios.spec_adios.o: $O/pml_par.spec.o
 $O/initialize_simulation.spec.o: $(adios_specfem3D_PREOBJECTS)
 $O/save_kernels_adios.spec_adios.o: $(adios_specfem3D_PREOBJECTS)
-$O/save_forward_arrays_adios.spec_adios.o: $O/pml_par.spec.o $(adios_specfem3D_PREOBJECTS)
-$O/finalize_simulation.spec.o: $O/pml_par.spec.o $O/gravity_perturbation.spec.o $(adios_specfem3D_PREOBJECTS)
+$O/save_forward_arrays_adios.spec_adios.o: $(adios_specfem3D_PREOBJECTS)
+$O/finalize_simulation.spec.o: $O/gravity_perturbation.spec.o $(adios_specfem3D_PREOBJECTS)
 $O/specfem3D_adios_stubs.spec_noadios.o: $O/adios_manager_stubs.shared_noadios.o
 $O/adios_helpers.shared_adios.o: \
 	$O/adios_helpers_definitions.shared_adios_module.o \
@@ -393,6 +415,10 @@ $O/adios_helpers.shared_adios.o: \
 
 ## ASDF compilation
 $O/write_output_ASDF.spec.o: $O/asdf_data.spec_module.o
+
+## hdf5
+$O/initialize_simulation.spec.o: $(hdf5_specfem3D_OBJECTS)
+$O/write_seismograms_hdf5.spec_hdf5.o: $(hdf5_specfem3D_OBJECTS)
 
 ## kdtree
 $O/locate_point.spec.o: $O/search_kdtree.shared.o
@@ -410,10 +436,10 @@ $O/%.spec_module.o: $S/%.F90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
-$O/%.spec.o: $S/%.f90 $O/specfem3D_par.spec_module.o
+$O/%.spec.o: $S/%.f90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec.o: $S/%.F90 $O/specfem3D_par.spec_module.o
+$O/%.spec.o: $S/%.F90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 ###
@@ -427,16 +453,16 @@ $(cuda_specfem3D_DEVICE_OBJ): $(cuda_OBJECTS)
 ### ADIOS compilation
 ###
 
-$O/%.spec_adios.o: $S/%.F90 $O/specfem3D_par.spec_module.o
+$O/%.spec_adios.o: $S/%.F90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec_adios.o: $S/%.f90 $O/specfem3D_par.spec_module.o
+$O/%.spec_adios.o: $S/%.f90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec_noadios.o: $S/%.F90 $O/specfem3D_par.spec_module.o
+$O/%.spec_noadios.o: $S/%.F90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec_noadios.o: $S/%.f90 $O/specfem3D_par.spec_module.o
+$O/%.spec_noadios.o: $S/%.f90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
@@ -457,4 +483,14 @@ $O/%.visualcc.o: $S/%.cpp ${SETUP}/config.h
 
 $O/%.visualcc.o: $S/%.c ${SETUP}/config.h
 	${CC} -c $(CPPFLAGS) $(CFLAGS) $(MPI_INCLUDES) -o $@ $<
+
+###
+### HDF5
+###
+
+$O/%.spec_hdf5.o: $S/%.F90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o $(hdf5_specfem3D_SHARED_OBJECTS)
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.spec_hdf5.o: $S/%.f90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o $(hdf5_specfem3D_SHARED_OBJECTS)
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 

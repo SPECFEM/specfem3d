@@ -25,37 +25,43 @@
  ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  !
  !=====================================================================*/
+
+#ifndef FAULT_STRUCT_CUDA_H
+#define FAULT_STRUCT_CUDA_H
+
 /* ----------------------------------------------------------------------------------------------- */
 
 // mesh pointer wrapper structure
 
 /* ----------------------------------------------------------------------------------------------- */
 
-#include "stdlib.h"
-#include "config.h"
+#include "mesh_constants_cuda.h"
 
-typedef float realw;
+
+// fault data structures
 
 typedef struct swf_type_{
   int kind;
   int healing ;
   realw *Dc,*mus,*mud,*theta, *T, *Coh;
-}Swf_type;
+} Swf_type;
+
 
 typedef struct rsf_type_{
   int StateLaw ; // By default using aging law
   realw *V0,*f0,*L,*V_init,*a,*b,*theta,*T,*C,*fw,*Vw;
-}Rsf_type;
+} Rsf_type;
+
 
 typedef struct fault_data_{
   int NRECORD;
   int NT;
   int* iglob; //record the global index of the station
   realw* dataT; //data pointer to the array
-}Fault_data;
+} Fault_data;
+
 
 typedef struct fault_ {
-
   // mesh resolution
   int NSPEC_AB;
   int NGLOB_AB;
@@ -66,21 +72,23 @@ typedef struct fault_ {
   int *ibulk1,*ibulk2;
   Swf_type swf;
   Rsf_type rsf;
+} Fault ;
 
-}Fault ;
 
-typedef struct fault_solver_dynamics_{
+typedef struct fault_solver_dynamics_ {
   Fault* faults;
   realw v_healing;
   realw v_rupt;
   int NTOUT,NSNAP;
   int Nbfaults;
   int RATE_AND_STATE;
-}Fault_solver_dynamics;
+} Fault_solver_dynamics;
 
-enum Simulationtype
-{
-  Slipweakening=0,
-  RateandstateAging=1,
-  RateandstateStron=2
+enum Simulationtype {
+  Slipweakening     = 0,
+  RateandstateAging = 1,
+  RateandstateStron = 2
 };
+
+
+#endif  // FAULT_STRUCT_CUDA_H

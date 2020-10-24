@@ -24,10 +24,9 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
 
-subroutine pml_output_VTKs()
+
+  subroutine pml_output_VTKs()
 
   ! outputs informations about C-PML elements in VTK-file format
 
@@ -43,25 +42,28 @@ subroutine pml_output_VTKs()
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable:: temp_d_store_x,temp_d_store_y,temp_d_store_z
   character(len=MAX_STRING_LEN) :: vtkfilename
 
+  ! user output
   if (myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'Writing informations about C-PML elements in VTK-file format'
+    write(IMAIN,*) '  writing informations about C-PML elements in VTK-file format:'
+    call flush_IMAIN()
   endif
 
   ! C-PML regions
   allocate(temp_CPML_regions(NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1981')
   if (ier /= 0) stop 'error allocating array temp_CPML_regions'
-
   temp_CPML_regions(:) = 0
 
-  do ispec_CPML=1,nspec_cpml
+  do ispec_CPML = 1,NSPEC_CPML
     ispec = CPML_to_spec(ispec_CPML)
-
     temp_CPML_regions(ispec) = CPML_regions(ispec_CPML)
   enddo
 
-  if (myrank == 0) write(IMAIN,*) 'Generating CPML_regions VTK file'
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  generating CPML_regions VTK file'
+    call flush_IMAIN()
+  endif
 
   vtkfilename = prname(1:len_trim(prname))//'CPML_regions'
   call write_VTK_data_elem_i(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool,temp_CPML_regions,vtkfilename)
@@ -78,20 +80,23 @@ subroutine pml_output_VTKs()
   allocate(temp_d_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1984')
   if (ier /= 0) stop 'error allocating array temp_d_store_z'
-
   temp_d_store_x(:,:,:,:) = 0._CUSTOM_REAL
   temp_d_store_y(:,:,:,:) = 0._CUSTOM_REAL
   temp_d_store_z(:,:,:,:) = 0._CUSTOM_REAL
 
-  do ispec_CPML=1,nspec_cpml
+  do ispec_CPML = 1,NSPEC_CPML
     ispec = CPML_to_spec(ispec_CPML)
-
     temp_d_store_x(:,:,:,ispec) = d_store_x(:,:,:,ispec_CPML)
     temp_d_store_y(:,:,:,ispec) = d_store_y(:,:,:,ispec_CPML)
     temp_d_store_z(:,:,:,ispec) = d_store_z(:,:,:,ispec_CPML)
   enddo
 
-  if (myrank == 0) write(IMAIN,*) 'Generating CPML_damping_dx, CPML_damping_dy and CPML_damping_dz VTK files'
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  generating CPML_damping_dx, CPML_damping_dy and CPML_damping_dz VTK files'
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
 
   vtkfilename = prname(1:len_trim(prname))//'CPML_damping_dx'
   call write_VTK_data_gll_cr(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool,temp_d_store_x,vtkfilename)
@@ -106,4 +111,4 @@ subroutine pml_output_VTKs()
   deallocate(temp_d_store_y)
   deallocate(temp_d_store_z)
 
-end subroutine pml_output_VTKs
+  end subroutine pml_output_VTKs

@@ -12,51 +12,85 @@ echo
 echo "   setting up example..."
 echo
 
-rm -r -f OUTPUT_FILES
+# cleans output files
 mkdir -p OUTPUT_FILES
-mkdir -p OUTPUT_FILES/DATABASES_MPI
-
-mkdir -p DATA DATA/meshfem3D_files bin
-
-# sets up local DATA/ directory
-cd DATA/
-cp ../Par_file_attenuation_3D Par_file
-cp ../FORCESOLUTION_attenuation_3D FORCESOLUTION
-cp ../STATIONS_attenuation_3D STATIONS
-cp ../interface1_attenuation_3D.dat ./meshfem3D_files/interface1.dat
-cp ../interfaces_attenuation_3D.dat ./meshfem3D_files/interfaces.dat
-cp ../Mesh_Par_file_attenuation_3D ./meshfem3D_files/Mesh_Par_file
-cd ../
-
-cd $currentdir
+rm -rf OUTPUT_FILES/*
 
 # links executables
-cd bin
-rm -f xmeshfem3D xgenerate_databases xspecfem3D
+mkdir -p bin
+cd bin/
+rm -f *
 ln -s ../../../../bin/xmeshfem3D
 ln -s ../../../../bin/xgenerate_databases
 ln -s ../../../../bin/xspecfem3D
-cd ..
+cd ../
 
-# Get the number of processors
-NPROC=`grep ^NPROC DATA/Par_file | cut -d = -f 2 | cut -d \# -f 1 | tr -d ' '`
+# stores setup
+cp DATA/Par_file OUTPUT_FILES/
+cp DATA/FORCESOLUTION OUTPUT_FILES/
+cp DATA/STATIONS OUTPUT_FILES/
+
+# get the number of processors, ignoring comments in the Par_file
+NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
+
+BASEMPIDIR=`grep ^LOCAL_PATH DATA/Par_file | cut -d = -f 2 `
+mkdir -p $BASEMPIDIR
+
+# runs in-house mesher
+if [ "$NPROC" -eq 1 ]; then
+  # This is a serial simulation
+  echo
+  echo "  running mesher..."
+  echo
+  ./bin/xmeshfem3D
+else
+  # This is a MPI simulation
+  echo
+  echo "  running mesher on $NPROC processors..."
+  echo
+  mpirun -np $NPROC ./bin/xmeshfem3D
+fi
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
 
 # runs database generation
-echo
-echo "  running mesher..."
-echo
-mpirun -n $NPROC ./bin/xmeshfem3D
-mpirun -n $NPROC ./bin/xgenerate_databases
+if [ "$NPROC" -eq 1 ]; then
+  # This is a serial simulation
+  echo
+  echo "  running database generation..."
+  echo
+  ./bin/xgenerate_databases
+else
+  # This is a MPI simulation
+  echo
+  echo "  running database generation on $NPROC processors..."
+  echo
+  mpirun -np $NPROC ./bin/xgenerate_databases
+fi
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
 
 # runs simulation
-echo
-echo "  running solver..."
-echo
-mpirun -n $NPROC ./bin/xspecfem3D
+if [ "$NPROC" -eq 1 ]; then
+  # This is a serial simulation
+  echo
+  echo "  running solver..."
+  echo
+  ./bin/xspecfem3D
+else
+  # This is a MPI simulation
+  echo
+  echo "  running solver on $NPROC processors..."
+  echo
+  mpirun -np $NPROC ./bin/xspecfem3D
+fi
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
 
 echo
 echo "see results in directory: OUTPUT_FILES/"
 echo "seismograms can be plotted using the gnuplot script present in this directory"
 echo
 echo "done"
-date
+echo `date`
+

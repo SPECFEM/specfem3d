@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-
+#
 # "create_mesh.py" is a script that generates mesh specific to homogenous halfspace example
 # i.e., a uniform mesh of 134 km x 134 km x 60 km with an element size 3.75 km.
 # It is not applicable to other examples.
-
+from __future__ import print_function
 
 import os
 import sys
@@ -17,28 +17,28 @@ import sys
 try:
     import cubit
 except ImportError:
-    print "Error: Importing cubit as python module failed"
-    print "could not import cubit, please check your PYTHONPATH settings..."
-    print ""
-    print "current path: "
-    print sys.path
-    print ""
-    print "try to include path to directory which includes file cubit.py, e.g. /opt/Trelis-15.0/bin/"
-    print ""
+    print("Error: Importing cubit as python module failed")
+    print("could not import cubit, please check your PYTHONPATH settings...")
+    print("")
+    print("current path: ")
+    print(sys.path)
+    print("")
+    print("try to include path to directory which includes file cubit.py, e.g. /opt/Trelis-15.0/bin/")
+    print("")
     sys.exit("Import cubit failed")
 
-print sys.path
+print(sys.path)
 
 cubit.init([""])
 
 # gets version string
 cubit_version = cubit.get_version()
-print "version: ",cubit_version
+print("version: ",cubit_version)
 
 # extracts major number
 v = cubit_version.split('.')
 cubit_version_major = int(v[0])
-print "major version number: ",cubit_version_major
+print("major version number: ",cubit_version_major)
 
 # current work directory
 cubit.cmd('pwd')
@@ -71,9 +71,9 @@ cubit.cmd('mesh volume all')
 # adds path to geocubit (if not setup yet)
 sys.path.append('../../CUBIT_GEOCUBIT/')
 
-print "path: "
-print sys.path
-print ""
+print("path: ")
+print(sys.path)
+print("")
 
 # avoids assigning empty blocks
 cubit.cmd('set duplicate block elements on')
@@ -91,17 +91,17 @@ if use_explicit == 1:
     boundary_definition.entities=['face']
     boundary_definition.define_bc(boundary_definition.entities,parallel=True)
     from geocubitlib import cubit2specfem3d
-    print ""
-    print "material properties: assigned as block attributes"
-    print ""
+    print("")
+    print("material properties: assigned as block attributes")
+    print("")
     # sets the id of the volume block
     # (volume block starts at id 4)
     id_block = 1
-    print "cubit block:"
-    print "  volume block id = " + str(id_block)
-    print ""
+    print("cubit block:")
+    print("  volume block id = " + str(id_block))
+    print("")
     # Define material properties
-    print "#### DEFINE MATERIAL PROPERTIES #######################"
+    print("#### DEFINE MATERIAL PROPERTIES #######################")
     # elastic material
     cubit.cmd('block '+str(id_block)+' name "elastic 1" ')        # elastic material region
     cubit.cmd('block '+str(id_block)+' attribute count 7')
@@ -119,9 +119,9 @@ if use_explicit == 1:
     #cubit.cmd('block '+str(id_block)+' attribute index 2 1480 ')  # vp
     #cubit.cmd('block '+str(id_block)+' attribute index 3 0 ')      # vs
     #cubit.cmd('block '+str(id_block)+' attribute index 4 1028 ')  # rho (ocean salt water density:
-    print ""
-    print "exporting to SPECFEM3D-format:"
-    print ""
+    print("")
+    print("exporting to SPECFEM3D-format:")
+    print("")
     # Export to SPECFEM3D format
     cubit2specfem3d.export2SPECFEM3D('MESH/')
     # backup cubit
@@ -129,22 +129,22 @@ if use_explicit == 1:
     cubit.cmd('save as "MESH/meshing.cub" overwrite')
 else:
     from geocubitlib import exportlib
-    print ""
-    print "exporting to SPECFEM3D-format:"
-    print ""
+    print("")
+    print("exporting to SPECFEM3D-format:")
+    print("")
     # Export to SPECFEM3D format
     # note: exportlib-commands will overwrite material properties
     exportlib.define_blocks(outdir='MESH/',save_cubfile=True,outfilename='top')
     exportlib.e2SEM(outdir='MESH/')
     # Define material properties
-    print "#### DEFINE MATERIAL PROPERTIES #######################"
+    print("#### DEFINE MATERIAL PROPERTIES #######################")
     # elastic material
     material_cfg=[{'material region':'2','id_block':'1','vp':'2800','vs':'1500','rho':'2300','Qkappa':'9999.0','Qmu':'9999.0','anisotropy_flag':'0'}]
     # modifies material file
     nummaterial_velocity_file='MESH/nummaterial_velocity_file'
     f=open(nummaterial_velocity_file,'w')
     for block in material_cfg:
-        print block
+        print(block)
         s=block['material region']+' '
         s=s+block['id_block']+' '
         s=s+block['rho']+' '

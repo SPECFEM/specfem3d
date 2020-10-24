@@ -19,6 +19,7 @@
 # it uses gmsh to generate a hexahedral mesh.
 #
 from __future__ import print_function
+
 import sys
 import os
 import math
@@ -34,6 +35,7 @@ except:
 import meshio
 
 # from python file import
+sys.path.append('../../utils/Cubit_or_Gmsh/')
 from Gmsh2specfem import export2SPECFEM3D
 
 
@@ -63,6 +65,9 @@ mesh_element_size_XY = 1000.0
 
 ##############################################################
 
+# globals
+python_major_version = 0
+pygmsh_major_version = 0
 
 #--------------------------------------------------------------------------------------------------
 #
@@ -277,6 +282,7 @@ def mesh_3D():
     #       thus to obtain a top with some elevation, we will stretch the mesh points accordingly after the mesh was generated.
     #       it is done here in a simple way to show how one could modify the mesh.
     global xsize,ysize,zsize,mesh_element_size_XY,mesh_element_size_Z
+    global python_major_version,pygmsh_major_version
 
     # output directory for mesh files
     os.system("mkdir -p MESH/")
@@ -353,19 +359,31 @@ def mesh_3D():
     geom.add_raw_code('Coherence;')
 
     # Physical Volume
-    geom.add_physical_volume(vol, label="vol1")
+    if pygmsh_major_version < 6:
+        geom.add_physical_volume(vol, label="vol1")
+    else:
+        geom.add_physical(vol, label="vol1")
 
     # Physical Surfaces
     # note: extrude only returns lateral surfaces. we thus had to create the bottom surface explicitly.
     #       geometries and mesh from extruded surface will then merge with bottom surface.
     # top and bottom
-    geom.add_physical_surface(surface_top, label='top')
-    geom.add_physical_surface(surface_bottom, label='bottom')
-    # lateral sides
-    geom.add_physical_surface(lat[0], label='ymin')
-    geom.add_physical_surface(lat[1], label='xmax')
-    geom.add_physical_surface(lat[2], label='ymax')
-    geom.add_physical_surface(lat[3], label='xmin')
+    if pygmsh_major_version < 6:
+        geom.add_physical_surface(surface_top, label='top')
+        geom.add_physical_surface(surface_bottom, label='bottom')
+        # lateral sides
+        geom.add_physical_surface(lat[0], label='ymin')
+        geom.add_physical_surface(lat[1], label='xmax')
+        geom.add_physical_surface(lat[2], label='ymax')
+        geom.add_physical_surface(lat[3], label='xmin')
+    else:
+        geom.add_physical(surface_top, label='top')
+        geom.add_physical(surface_bottom, label='bottom')
+        # lateral sides
+        geom.add_physical(lat[0], label='ymin')
+        geom.add_physical(lat[1], label='xmax')
+        geom.add_physical(lat[2], label='ymax')
+        geom.add_physical(lat[3], label='xmin')
 
     # explicit volume meshing .. not needed, will be done when called by: gmsh -3 .. below
     #geom.add_raw_code('Mesh 3;')
@@ -383,7 +401,11 @@ def mesh_3D():
     print("")
 
     # meshing
-    points, cells, point_data, cell_data, field_data = pygmsh.generate_mesh(geom,verbose=True,num_quad_lloyd_steps=0)
+    if pygmsh_major_version < 6:
+        points, cells, point_data, cell_data, field_data = pygmsh.generate_mesh(geom,verbose=True)
+    else:
+        mesh = pygmsh.generate_mesh(geom,verbose=True)
+        points,cells,point_data,cell_data,field_data = mesh.points,mesh.cells,mesh.point_data,mesh.cell_data,mesh.field_data
 
     # mesh info
     print("")
@@ -408,13 +430,13 @@ def mesh_3D():
 
     # save as vtk-file
     filename = "MESH/box.vtu"
-    meshio.write(filename, points, cells)
+    mesh = meshio.Mesh(points, cells, point_data, cell_data, field_data)
+    meshio.write(filename, mesh)
     print("VTK file written to : ",filename)
 
     # saves as Gmsh-file (msh mesh format)
     filename = "MESH/box.msh"
-    meshio.write(filename, points, cells, point_data=point_data, cell_data=cell_data, field_data=field_data,
-                 file_format='gmsh-ascii')
+    meshio.write(filename, mesh, file_format='gmsh2-ascii')
     print("Gmsh file written to: ",filename)
     print("")
 
@@ -431,8 +453,16 @@ def mesh_3D():
 
 
 def create_mesh():
+    global python_major_version,pygmsh_major_version
+
     # version info
-    print("pygmsh version: ",pygmsh.__version__)
+    python_major_version = sys.version_info[0]
+    python_minor_version = sys.version_info[1]
+    print("Python version: ","{}.{}".format(python_major_version,python_minor_version))
+
+    version = pygmsh.__version__
+    pygmsh_major_version = int(version.split(".")[0])
+    print("pygmsh version: ",version)
 
     version = pygmsh.get_gmsh_major_version()
     print("Gmsh version  : ",version)

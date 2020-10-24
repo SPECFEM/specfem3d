@@ -1,0 +1,40 @@
+
+ *********************************************************************
+ Parallel mesh decomposer, by Vadim Monteiller, CNRS Marseille, France
+ *********************************************************************
+
+  READING MESH FILES
+ total number of nodes:
+   nnodes =        23273
+ total number of spectral elements:
+   nspec =        20736
+ materials:
+   num_mat =            1
+   defined =            1 undefined =            0
+ absorbing boundaries:
+   nspec2D_xmin =          576
+   nspec2D_xmax =          576
+   nspec2D_ymin =          576
+   nspec2D_ymax =          576
+   nspec2D_bottom =         1296
+   nspec2D_top =         1296
+  COMPUTE COMPUTATIONAL LOAD of EACH ELEMENT
+  Npart in each Cartesian direction
+           2           2           2
+  DECOMPOSING MESH
+
+  xmin, ymin, zmin    0.0000000000000000        0.0000000000000000       -60000.000000000000
+  sizes, nspec, nnodes        20736       23273
+
+  Load value by partition     42509.000000000000
+  made partion in 1st direction            2
+  Load value by partition     21255.000000000000
+  Load value by partition     10628.000000000000
+  Load value by partition     10628.000000000000
+  Load value by partition     21255.000000000000
+  Load value by partition     10628.000000000000
+  Load value by partition     10628.000000000000
+ made partition in 2nd and 3th direction           2           2
+  END OF ADJACENCY TABLE COMPUTATION
+  COMPUTE ADJACENCY
+  END OF MESH DECOMPOSER

@@ -27,31 +27,14 @@
 
   module generate_databases_par
 
-  use constants, only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,NDIM2D,NGNOD2D_FOUR_CORNERS,N_SLS, &
-    CUSTOM_REAL,SIZE_REAL,SIZE_DOUBLE, &
-    IMAIN,IIN,IOUT,ISTANDARD_OUTPUT, &
-    ZERO,ONE,TWO,FOUR_THIRDS,PI,HUGEVAL,GAUSSALPHA,GAUSSBETA, &
-    SMALLVAL_TOL,TINYVAL,HUGEVAL,R_EARTH, &
-    MAX_STRING_LEN,ATTENUATION_COMP_MAXIMUM, &
-    MINIMUM_THICKNESS_3D_OCEANS,RHO_APPROXIMATE_OCEAN_LOAD, &
-    CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
-    CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ, &
-    NPOWER,CPML_Rcoef, &
-    IMODEL_DEFAULT,IMODEL_GLL,IMODEL_1D_PREM,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
-    IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
-    IMODEL_1D_PREM_PB,IMODEL_SEP,IMODEL_COUPLED, &
-    IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
-    OUTPUT_FILES, &
-    NX_TOPO_FILE,NY_TOPO_FILE, &
-    USE_MESH_COLORING_GPU,MAX_NUMBER_OF_COLORS, &
-    ADIOS_TRANSPORT_METHOD
+  use constants
 
   use shared_parameters
 
   implicit none
 
 ! number of spectral elements in each block
-  integer npointot
+  integer :: npointot
 
 ! local to global indexing array
   integer, dimension(:,:,:,:), allocatable :: ibool
@@ -60,7 +43,7 @@
   double precision, dimension(:,:,:,:), allocatable :: xstore,ystore,zstore
 
 ! proc numbers for MPI
-  integer :: myrank,sizeprocs,ier
+  integer :: sizeprocs,ier
 
   integer :: NX_TOPO,NY_TOPO
   integer, dimension(:,:), allocatable :: itopo_bathy
@@ -104,7 +87,8 @@
   character(len=MAX_STRING_LEN) :: prname
 
 ! boundaries and materials
-  double precision, dimension(:,:), allocatable :: materials_ext_mesh
+  double precision, dimension(:,:), allocatable :: mat_prop
+  character(len=MAX_STRING_LEN), dimension(:,:), allocatable :: undef_mat_prop
 
   integer :: ispec2D, boundary_number
   integer :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom_ext, nspec2D_top_ext
@@ -114,7 +98,6 @@
   integer, dimension(:,:), allocatable :: nodes_ibelm_xmin,nodes_ibelm_xmax, &
               nodes_ibelm_ymin, nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
 
-  character(len=MAX_STRING_LEN), dimension(:,:), allocatable :: undef_mat_prop
 
 ! C-PML absorbing boundary conditions
 
@@ -176,6 +159,9 @@
   module create_regions_mesh_ext_par
 
   use constants, only: CUSTOM_REAL,MAX_STRING_LEN
+  use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
+
+  implicit none
 
 ! global point coordinates
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_dummy
@@ -197,8 +183,6 @@
 ! 3D shape functions and their derivatives
   double precision, dimension(:,:,:,:), allocatable :: shape3D
   double precision, dimension(:,:,:,:,:), allocatable :: dershape3D
-
-  double precision, dimension(:), allocatable :: xelm,yelm,zelm
 
 ! regular elements
   real(kind=CUSTOM_REAL) :: xix_regular,jacobian_regular
@@ -312,8 +296,6 @@
 
   integer :: num_phase_ispec_poroelastic
   integer,dimension(:,:),allocatable :: phase_ispec_inner_poroelastic
-
-  logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
 
   ! mesh coloring
   integer :: num_colors_outer_acoustic,num_colors_inner_acoustic

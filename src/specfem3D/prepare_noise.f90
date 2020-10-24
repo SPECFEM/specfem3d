@@ -34,20 +34,30 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+  use specfem_par_noise
   use specfem_par_movie
 
   implicit none
 
   ! local parameters
-  integer :: ier
+  integer :: ier,num
 
   ! for noise simulations
   if (NOISE_TOMOGRAPHY /= 0) then
 
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) "preparing noise arrays"
+      call flush_IMAIN()
+    endif
+
     ! checks if free surface is defined
-    if (num_free_surface_faces == 0) then
-      write(*,*) myrank, " doesn't have a free_surface_face"
-      ! stop 'error: noise simulations need a free surface'
+    call sum_all_i(num_free_surface_faces,num)
+    if (myrank == 0) then
+      if (num == 0) then
+        print *,"Error: noise simulation doesn't have a free_surface_face "
+        call exit_mpi(myrank,'Error: noise simulations needs a free surface')
+      endif
     endif
 
     ! allocates arrays
@@ -79,21 +89,23 @@
     mask_noise(:)                = 0._CUSTOM_REAL
     noise_surface_movie(:,:,:) = 0._CUSTOM_REAL
 
-    ! sets up noise source for master receiver station
-    call read_parameters_noise(myrank,nrec,NSTEP,NGLLSQUARE*num_free_surface_faces, &
-                               islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu, &
+    ! sets up noise source for main receiver station
+    call read_parameters_noise(nrec,NSTEP,NGLLSQUARE*num_free_surface_faces, &
+                               islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu_rec, &
                                noise_sourcearray,xigll,yigll,zigll, &
                                ibool, &
                                xstore,ystore,zstore, &
-                               irec_master_noise,normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
+                               irec_main_noise,normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
                                NSPEC_AB,NGLOB_AB, &
                                num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
                                ispec_is_acoustic)
 
     ! checks flags for noise simulation
-    call check_parameters_noise(myrank,NOISE_TOMOGRAPHY,SIMULATION_TYPE,SAVE_FORWARD, &
-                                LOCAL_PATH, &
-                                num_free_surface_faces,NSTEP)
+    call check_parameters_noise(NOISE_TOMOGRAPHY,SIMULATION_TYPE,SAVE_FORWARD, &
+                                LOCAL_PATH,num_free_surface_faces,NSTEP)
   endif
+
+  ! synchonizes
+  call synchronize_all()
 
   end subroutine prepare_noise

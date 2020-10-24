@@ -64,9 +64,9 @@ __global__ void compute_add_sources_kernel(realw* accel,
         stf = stf_pre_compute[isource];
         iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
-        atomicAdd(&accel[iglob*3],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 0,i,j,k)]*stf);
-        atomicAdd(&accel[iglob*3+1],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 1,i,j,k)]*stf);
-        atomicAdd(&accel[iglob*3+2],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 2,i,j,k)]*stf);
+        atomicAdd(&accel[iglob*3+0],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource,0,i,j,k)]*stf);
+        atomicAdd(&accel[iglob*3+1],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource,1,i,j,k)]*stf);
+        atomicAdd(&accel[iglob*3+2],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource,2,i,j,k)]*stf);
       }
     }
   }
@@ -76,7 +76,7 @@ __global__ void compute_add_sources_kernel(realw* accel,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_add_sources_el_cuda,
               COMPUTE_ADD_SOURCES_EL_CUDA)(long* Mesh_pointer,
                                            double* h_stf_pre_compute,
@@ -100,9 +100,7 @@ void FC_FUNC_(compute_add_sources_el_cuda,
                                      NSOURCES*sizeof(realw),cudaMemcpyHostToDevice),18);
   free(stf_pre_compute);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_add_sources_el_cuda copy");
-#endif
+  GPU_ERROR_CHECKING("compute_add_sources_el_cuda copy");
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(NSOURCES,&num_blocks_x,&num_blocks_y);
@@ -118,14 +116,12 @@ void FC_FUNC_(compute_add_sources_el_cuda,
                                                                     mp->d_ispec_is_elastic,
                                                                     NSOURCES);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_add_sources_el_cuda");
-#endif
+  GPU_ERROR_CHECKING("compute_add_sources_el_cuda");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_add_sources_el_s3_cuda,
               COMPUTE_ADD_SOURCES_EL_S3_CUDA)(long* Mesh_pointer,
                                               double* h_stf_pre_compute,
@@ -147,9 +143,7 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
                                      NSOURCES*sizeof(realw),cudaMemcpyHostToDevice),18);
   free(stf_pre_compute);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_add_sources_el_s3_cuda copy");
-#endif
+  GPU_ERROR_CHECKING("compute_add_sources_el_s3_cuda copy");
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(NSOURCES,&num_blocks_x,&num_blocks_y);
@@ -165,9 +159,7 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
                                                                     mp->d_ispec_is_elastic,
                                                                     NSOURCES);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_add_sources_el_s3_cuda");
-#endif
+  GPU_ERROR_CHECKING("compute_add_sources_el_s3_cuda");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -176,56 +168,54 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void add_source_master_rec_noise_cuda_kernel(int* d_ibool,
-                                                        int* ispec_selected_rec,
-                                                        int irec_master_noise,
-                                                        realw* accel,
-                                                        realw* noise_sourcearray,
-                                                        int it) {
+__global__ void add_source_main_rec_noise_cuda_kernel(int* d_ibool,
+                                                      int* ispec_selected_rec,
+                                                      int irec_main_noise,
+                                                      realw* accel,
+                                                      realw* noise_sourcearray,
+                                                      int it) {
   int tx = threadIdx.x;
-  int iglob = d_ibool[tx + NGLL3_PADDED*(ispec_selected_rec[irec_master_noise-1]-1)]-1;
+  int iglob = d_ibool[tx + NGLL3_PADDED*(ispec_selected_rec[irec_main_noise-1]-1)]-1;
 
   // not sure if we need atomic operations but just in case...
   // accel[3*iglob] += noise_sourcearray[3*tx + 3*125*it];
   // accel[1+3*iglob] += noise_sourcearray[1+3*tx + 3*125*it];
   // accel[2+3*iglob] += noise_sourcearray[2+3*tx + 3*125*it];
 
-  atomicAdd(&accel[iglob*3],noise_sourcearray[3*tx + 3*NGLL3*it]);
-  atomicAdd(&accel[iglob*3+1],noise_sourcearray[1+3*tx + 3*NGLL3*it]);
-  atomicAdd(&accel[iglob*3+2],noise_sourcearray[2+3*tx + 3*NGLL3*it]);
+  atomicAdd(&accel[iglob*3],  noise_sourcearray[0 + 3*tx + 3*NGLL3*it]);
+  atomicAdd(&accel[iglob*3+1],noise_sourcearray[1 + 3*tx + 3*NGLL3*it]);
+  atomicAdd(&accel[iglob*3+2],noise_sourcearray[2 + 3*tx + 3*NGLL3*it]);
 
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
-void FC_FUNC_(add_source_master_rec_noise_cu,
-              ADD_SOURCE_MASTER_REC_NOISE_CU)(long* Mesh_pointer,
-                                              int* it_f,
-                                              int* irec_master_noise_f,
-                                              int* islice_selected_rec) {
+extern EXTERN_LANG
+void FC_FUNC_(add_source_main_rec_noise_cu,
+              ADD_SOURCE_MAIN_REC_NOISE_CU)(long* Mesh_pointer,
+                                            int* it_f,
+                                            int* irec_main_noise_f,
+                                            int* islice_selected_rec) {
 
-TRACE("\tadd_source_master_rec_noise_cu");
+TRACE("\tadd_source_main_rec_noise_cu");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   int it = *it_f-1; // -1 for Fortran -> C indexing differences
-  int irec_master_noise = *irec_master_noise_f;
+  int irec_main_noise = *irec_main_noise_f;
 
   dim3 grid(1,1,1);
   dim3 threads(NGLL3,1,1);
 
-  if (mp->myrank == islice_selected_rec[irec_master_noise-1]) {
-    add_source_master_rec_noise_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_ibool,
-                                                                                    mp->d_ispec_selected_rec,
-                                                                                    irec_master_noise,
-                                                                                    mp->d_accel,
-                                                                                    mp->d_noise_sourcearray,
-                                                                                    it);
+  if (mp->myrank == islice_selected_rec[irec_main_noise-1]) {
+    add_source_main_rec_noise_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_ibool,
+                                                                                 mp->d_ispec_selected_rec,
+                                                                                 irec_main_noise,
+                                                                                 mp->d_accel,
+                                                                                 mp->d_noise_sourcearray,
+                                                                                 it);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("add_source_master_rec_noise_cuda_kernel");
-#endif
+  GPU_ERROR_CHECKING("add_source_main_rec_noise_cuda_kernel");
   }
 }
 
@@ -259,14 +249,15 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
       int j = threadIdx.y;
       int k = threadIdx.z;
       int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
-      realw xir    = xir_store[INDEX2(nadj_rec_local,irec_local,i)];
-      realw etar   = etar_store[INDEX2(nadj_rec_local,irec_local,j)];
-      realw gammar = gammar_store[INDEX2(nadj_rec_local,irec_local,k)];
 
-      realw lagrange =   xir * etar * gammar ;
+      realw hxir    = xir_store[INDEX2(NGLLX,i,irec_local)];
+      realw hetar   = etar_store[INDEX2(NGLLX,j,irec_local)];
+      realw hgammar = gammar_store[INDEX2(NGLLX,k,irec_local)];
+
+      realw lagrange =   hxir * hetar * hgammar ;
 
       // atomic operations are absolutely necessary for correctness!
-      atomicAdd(&accel[3*iglob],source_adjoint[INDEX3(NDIM,nadj_rec_local,0,irec_local,it)]*lagrange);
+      atomicAdd(&accel[0+3*iglob],source_adjoint[INDEX3(NDIM,nadj_rec_local,0,irec_local,it)]*lagrange);
       atomicAdd(&accel[1+3*iglob],source_adjoint[INDEX3(NDIM,nadj_rec_local,1,irec_local,it)]*lagrange);
       atomicAdd(&accel[2+3*iglob],source_adjoint[INDEX3(NDIM,nadj_rec_local,2,irec_local,it)]*lagrange);
     } // ispec_is_elastic
@@ -276,7 +267,7 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(add_sources_el_sim_type_2_or_3,
               ADD_SOURCES_EL_SIM_TYPE_2_OR_3)(long* Mesh_pointer,
                                               realw* h_source_adjoint,
@@ -292,6 +283,9 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
   // checks
   if (*nadj_rec_local != mp->nadj_rec_local) exit_on_error("add_sources_el_sim_type_2_or_3: nadj_rec_local not equal\n");
 
+  // checks if anything to do
+  if (mp->nadj_rec_local == 0) return;
+
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(mp->nadj_rec_local,&num_blocks_x,&num_blocks_y);
 
@@ -299,26 +293,24 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
   dim3 threads(NGLLX,NGLLY,NGLLZ);
 
   int it_index = *NTSTEP_BETWEEN_READ_ADJSRC - (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC - 1 ;
+
   // copies extracted array values onto GPU
-  if ( (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC==0) print_CUDA_error_if_any(cudaMemcpy(mp->d_source_adjoint,h_source_adjoint,
-                                                                mp->nadj_rec_local*3*sizeof(realw)*(*NTSTEP_BETWEEN_READ_ADJSRC),cudaMemcpyHostToDevice),99099);
-
-
-
+  if ( (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC==0){
+    print_CUDA_error_if_any(cudaMemcpy(mp->d_source_adjoint,h_source_adjoint,
+                                       mp->nadj_rec_local*NDIM*sizeof(realw)*(*NTSTEP_BETWEEN_READ_ADJSRC),cudaMemcpyHostToDevice),99099);
+  }
 
   add_sources_el_SIM_TYPE_2_OR_3_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel,
                                                                                *nrec,it_index,*NTSTEP_BETWEEN_READ_ADJSRC,
                                                                                mp->d_source_adjoint,
-                                                                               mp->d_hxir,
-                                                                               mp->d_hetar,
-                                                                               mp->d_hgammar,
+                                                                               mp->d_hxir_adj,
+                                                                               mp->d_hetar_adj,
+                                                                               mp->d_hgammar_adj,
                                                                                mp->d_ibool,
                                                                                mp->d_ispec_is_elastic,
-                                                                               mp->d_ispec_selected_rec_loc,
+                                                                               mp->d_ispec_selected_adjrec_loc,
                                                                                mp->nadj_rec_local);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("add_sources_SIM_TYPE_2_OR_3_kernel");
-#endif
+  GPU_ERROR_CHECKING("add_sources_SIM_TYPE_2_OR_3_kernel");
 }
 

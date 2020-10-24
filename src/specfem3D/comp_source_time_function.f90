@@ -29,7 +29,7 @@
 
   implicit none
 
-  double precision t,hdur
+  double precision, intent(in) :: t,hdur
 
   double precision, external :: netlib_specfun_erf
 

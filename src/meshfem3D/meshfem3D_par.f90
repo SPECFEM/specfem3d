@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
 module constants_meshfem3D
 
@@ -50,20 +49,17 @@ module meshfem3D_par
   implicit none
 
 ! number of spectral elements in each block
-  integer :: nspec,npointot
+  integer :: nspec
 
 ! meshing parameters
-  double precision, dimension(:), allocatable :: rns
-
   double precision, dimension(:,:,:), allocatable :: xgrid,ygrid,zgrid
-
   integer, dimension(:,:,:,:), allocatable :: ibool
 
 ! arrays with the mesh in double precision
   double precision, dimension(:,:,:,:), allocatable :: xstore,ystore,zstore
 
 ! proc numbers for MPI
-  integer :: myrank,sizeprocs
+  integer :: sizeprocs
 
 ! mesh point steps for interfaces
   integer :: npx_element_steps,npy_element_steps
@@ -127,15 +123,18 @@ module meshfem3D_par
 !  #3 #4 : ny_begining,ny_end
 !  #5 #6 : nz_begining,nz_end
 !     #7 : material number
-  integer, dimension(:,:), pointer :: subregions
+  integer, dimension(:,:), allocatable :: subregions
 
 ! material properties
   integer :: NMATERIALS
 ! first dimension  : material_id
 ! second dimension : #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id
-  double precision , dimension(:,:), pointer :: material_properties
+  double precision , dimension(:,:), allocatable :: material_properties
 
   logical :: BROADCAST_AFTER_READ
+
+  ! name of the database file
+  character(len=MAX_STRING_LEN) :: prname
 
 end module meshfem3D_par
 

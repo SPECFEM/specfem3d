@@ -132,11 +132,11 @@ inverse_problem_for_model_OBJECTS += \
 	$O/compute_coupling_poroelastic_ac.spec.o \
 	$O/compute_coupling_poroelastic_el.spec.o \
 	$O/compute_forces_acoustic_calling_routine.spec.o \
-	$O/compute_forces_acoustic_NGLL5_fast.spec.o \
-	$O/compute_forces_acoustic_NGLLnot5_generic_slow.spec.o \
+	$O/compute_forces_acoustic.spec.o \
 	$O/compute_forces_viscoelastic_calling_routine.spec.o \
 	$O/compute_forces_viscoelastic.spec.o \
 	$O/compute_element_att_memory.spec.o \
+	$O/compute_element_strain.spec.o \
 	$O/compute_forces_poro_fluid_part.spec.o \
 	$O/compute_forces_poroelastic_calling_routine.spec.o \
 	$O/compute_forces_poro_solid_part.spec.o \
@@ -172,17 +172,21 @@ inverse_problem_for_model_OBJECTS += \
 	$O/pml_output_VTKs.spec.o \
 	$O/pml_compute_accel_contribution.spec.o \
 	$O/pml_compute_memory_variables.spec.o \
-	$O/pml_par.spec.o \
+	$O/pml_par.spec_module.o \
 	$O/prepare_attenuation.spec.o \
 	$O/prepare_gpu.spec.o \
 	$O/prepare_gravity.spec.o \
 	$O/prepare_noise.spec.o \
+	$O/prepare_optimized_arrays.spec.o \
 	$O/prepare_timerun.spec.o \
 	$O/prepare_wavefields.spec.o \
 	$O/print_stf_file.spec.o \
 	$O/read_external_stf.spec.o \
+	$O/read_forward_arrays.spec.o \
 	$O/read_mesh_databases.spec.o \
+	$O/read_stations.spec.o \
 	$O/save_adjoint_kernels.spec.o \
+	$O/save_forward_arrays.spec.o \
 	$O/setup_GLL_points.spec.o \
 	$O/setup_movie_meshes.spec.o \
 	$O/setup_sources_receivers.spec.o \
@@ -214,6 +218,7 @@ inverse_problem_for_model_SHARED_OBJECTS = \
 	$O/gll_library.shared.o \
 	$O/heap_sort.shared.o \
 	$O/hex_nodes.shared.o \
+	$O/init_openmp.shared.o \
 	$O/lagrange_poly.shared.o \
 	$O/netlib_specfun_erf.shared.o \
 	$O/param_reader.cc.o \
@@ -284,10 +289,12 @@ cuda_inverse_problem_for_model_OBJECTS = \
 	$O/compute_kernels_cuda.cuda.o \
 	$O/compute_stacey_acoustic_cuda.cuda.o \
 	$O/compute_stacey_viscoelastic_cuda.cuda.o \
+	$O/helper_functions.cuda.o \
 	$O/initialize_cuda.cuda.o \
 	$O/noise_tomography_cuda.cuda.o \
 	$O/prepare_mesh_constants_cuda.cuda.o \
 	$O/save_and_compare_cpu_vs_gpu.cudacc.o \
+	$O/smooth_cuda.cuda.o \
 	$O/transfer_fields_cuda.cuda.o \
 	$O/update_displacement_cuda.cuda.o \
 	$O/write_seismograms_cuda.cuda.o \
@@ -334,6 +341,43 @@ adios_inverse_problem_for_model_STUBS = \
 
 adios_inverse_problem_for_model_PRESTUBS = \
 	$O/adios_manager_stubs.shared_noadios.o
+
+###
+### HDF5
+###
+
+ifeq ($(HDF5),yes)
+hdf5_inverse_OBJECTS = \
+	$O/read_mesh_databases_hdf5.spec_hdf5.o \
+	$O/write_seismograms_hdf5.spec_hdf5.o \
+	$O/write_movie_output_hdf5.spec_hdf5.o \
+	$O/io_server.spec_hdf5.o \
+	$(EMPTY_MACRO)
+hdf5_inverse_SHARED_OBJECTS =	\
+	$O/phdf5_utils.shared_hdf5.o \
+	$(EMPTY_MACRO)
+inverse_problem_for_model_MODULES += \
+	$(FC_MODDIR)/io_server.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
+inverse_problem_for_model_OBJECTS += $(hdf5_inverse_OBJECTS)
+inverse_problem_for_model_SHARED_OBJECTS += $(hdf5_inverse_SHARED_OBJECTS)
+else
+hdf5_inverse_OBJECTS= \
+	$O/read_mesh_databases_hdf5_stub.spec_hdf5.o \
+	$O/write_seismograms_hdf5_stub.spec_hdf5.o \
+	$O/write_movie_output_hdf5_stub.spec_hdf5.o \
+	$O/io_server_stub.spec_hdf5.o \
+	$(EMPTY_MACRO)
+hdf5_inverse_SHARED_OBJECTS =	\
+	$O/phdf5_utils_stub.shared_nohdf5.o \
+	$(EMPTY_MACRO)
+inverse_problem_for_model_OBJECTS += $(hdf5_inverse_OBJECTS)
+inverse_problem_for_model_SHARED_OBJECTS += $(hdf5_inverse_SHARED_OBJECTS)
+endif
+
+
+
 
 # conditional adios linking
 ifeq ($(ADIOS),no)

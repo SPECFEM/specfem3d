@@ -92,11 +92,11 @@ if (ios /= 0) then
   write(*,'(/,a)')'ERROR: output file "'//trim(pvd_file)//'" cannot be opened!'
   stop
 endif
-buffer=' < ?xml version="1.0"? > '
+buffer='<?xml version="1.0"?>'
 write(pvd_unit,'(a)')trim(buffer)
-buffer=' < VTKFile type="Collection" version="0.1" byte_order="'//trim(byte_order)//'" > '
+buffer='<VTKFile type="Collection" version="0.1" byte_order="'//trim(byte_order)//'">'
 write(pvd_unit,'(a)')trim(buffer)
-buffer=' < Collection > '
+buffer='<Collection>'
 write(pvd_unit,'(a)')trim(buffer)
 
 !slice_nnode=0
@@ -110,7 +110,7 @@ do i_t=1,t_nstep
 
   ! collect pvtu file name in pvd file
   write(num_str1,'(f16.6)')(t_start+(i_t-1)*t_inc)*dt !  Change format here if time is so big and so tiny
-  buffer=' < DataSet timestep="'//trim(adjustl(num_str1))//'" part="001" file="'//trim(pvtu_file)//'"/ > '
+  buffer='<DataSet timestep="'//trim(adjustl(num_str1))//'" part="001" file="'//trim(pvtu_file)//'"/>'
   write(pvd_unit,'(a)')trim(buffer)
 
   ! open pvtu file
@@ -118,44 +118,44 @@ do i_t=1,t_nstep
   open(unit=pvtu_unit, file=trim(pvtu_file), action='write', status='replace')
   ! write headers
 
-  buffer=' < ?xml version="1.0"? > '
+  buffer='<?xml version="1.0"?>'
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer=' < VTKFile type="PUnstructuredGrid" version="0.1" byte_order="'//trim(byte_order)//'" > ';
+  buffer='<VTKFile type="PUnstructuredGrid" version="0.1" byte_order="'//trim(byte_order)//'">';
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer=' < PUnstructuredGrid GhostLevel="0" > '
+  buffer='<PUnstructuredGrid GhostLevel="0">'
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer=' < PPoints > '
+  buffer='<PPoints>'
   write(pvtu_unit,'(a)')trim(buffer)
   write(num_str1,*)off(1);
-  buffer=' < PDataArray type="Float32" NumberOfComponents="3" format="appended"/ > '
+  buffer='<PDataArray type="Float32" NumberOfComponents="3" format="appended"/>'
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer=' < /PPoints > '
+  buffer='</PPoints>'
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer=' < PCells > '
+  buffer='<PCells>'
   write(pvtu_unit,'(a)')trim(buffer)
   write(num_str1,*)off(3);
-  buffer=' < PDataArray type="Int32" Name="connectivity" format="appended"/ > '
+  buffer='<PDataArray type="Int32" Name="connectivity" format="appended"/>'
   write(pvtu_unit,'(a)')trim(buffer)
   write(num_str1,*)off(4);
-  buffer=' < PDataArray type="Int32" Name="offsets" format="appended"/ > '
+  buffer='<PDataArray type="Int32" Name="offsets" format="appended"/>'
   write(pvtu_unit,'(a)')trim(buffer)
   write(num_str1,*)off(5);
-  buffer=' < PDataArray type="Int32" Name="types" format="appended"/ > '
+  buffer='<PDataArray type="Int32" Name="types" format="appended"/>'
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer=' < /PCells > '
+  buffer='</PCells>'
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer=' < PPointData > '
+  buffer='<PPointData>'
   write(pvtu_unit,'(a)')trim(buffer)
   write(num_str1,*)off(2);
-  buffer=' < PDataArray type="Float32" NumberOfComponents="1" Name="'//trim(out_vname)// &
-          '" format="appended"/ > '
+  buffer='<PDataArray type="Float32" NumberOfComponents="1" Name="'//trim(out_vname)// &
+          '" format="appended"/>'
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer=' < /PPointData > '
+  buffer='</PPointData>'
   write(pvtu_unit,'(a)')trim(buffer)
 
-  buffer=' < PCellData > '
+  buffer='<PCellData>'
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer=' < /PCellData > '
+  buffer='</PCellData>'
   write(pvtu_unit,'(a)')trim(buffer)
 
 
@@ -196,7 +196,7 @@ do i_t=1,t_nstep
     write(out_fname,fmt=format_str1)trim(file_head)//'_',tstep,trim(out_ext)
     !write(*,*)tstep,trim(out_fname)
     ! write vtu file to pvtu file
-    buffer=' < Piece Source="'//trim(out_fname)//'"/ > '
+    buffer='<Piece Source="'//trim(out_fname)//'"/>'
     write(pvtu_unit,'(a)')trim(buffer)
 
     ! open vtu file
@@ -209,52 +209,52 @@ do i_t=1,t_nstep
     endif
 
     ! write header
-    buffer=' < ?xml version="1.0"? > '
+    buffer='<?xml version="1.0"?>'
     write(vtu_unit,'(a)')trim(buffer)
-    buffer=' < VTKFile type="UnstructuredGrid" version="0.1" byte_order="'//trim(byte_order)//'" > ';
+    buffer='<VTKFile type="UnstructuredGrid" version="0.1" byte_order="'//trim(byte_order)//'">';
     write(vtu_unit,'(a)')trim(buffer)
-    buffer=' < UnstructuredGrid > '
+    buffer='<UnstructuredGrid>'
     write(vtu_unit,'(a)')trim(buffer)
     write(num_str1,*)slice_nnode(i_slice); write(num_str2,*)slice_nelmt(i_slice);
-    buffer=' < Piece NumberOfPoints="'//trim(adjustl(num_str1))//'" NumberOfCells="'//trim(adjustl(num_str2))//'" > '
+    buffer='<Piece NumberOfPoints="'//trim(adjustl(num_str1))//'" NumberOfCells="'//trim(adjustl(num_str2))//'">'
     write(vtu_unit,'(a)')trim(buffer)
-    buffer=' < Points > '
+    buffer='<Points>'
     write(vtu_unit,'(a)')trim(buffer)
     write(num_str1,*)off(1);
-    buffer=' < DataArray type="Float32" NumberOfComponents="3" format="appended" offset="'//trim(adjustl(num_str1))//'"/ > '
+    buffer='<DataArray type="Float32" NumberOfComponents="3" format="appended" offset="'//trim(adjustl(num_str1))//'"/>'
     write(vtu_unit,'(a)')trim(buffer)
-    buffer=' < /Points > '
+    buffer='</Points>'
     write(vtu_unit,'(a)')trim(buffer)
-    buffer=' < Cells > '
+    buffer='<Cells>'
     write(vtu_unit,'(a)')trim(buffer)
     write(num_str1,*)off(2);
-    buffer=' < DataArray type="Int32" Name="connectivity" format="appended" offset="'//trim(adjustl(num_str1))//'"/ > '
+    buffer='<DataArray type="Int32" Name="connectivity" format="appended" offset="'//trim(adjustl(num_str1))//'"/>'
     write(vtu_unit,'(a)')trim(buffer)
     write(num_str1,*)off(3);
-    buffer=' < DataArray type="Int32" Name="offsets" format="appended" offset="'//trim(adjustl(num_str1))//'"/ > '
+    buffer='<DataArray type="Int32" Name="offsets" format="appended" offset="'//trim(adjustl(num_str1))//'"/>'
     write(vtu_unit,'(a)')trim(buffer)
     write(num_str1,*)off(4);
-    buffer=' < DataArray type="Int32" Name="types" format="appended" offset="'//trim(adjustl(num_str1))//'"/ > '
+    buffer='<DataArray type="Int32" Name="types" format="appended" offset="'//trim(adjustl(num_str1))//'"/>'
     write(vtu_unit,'(a)')trim(buffer)
-    buffer=' < /Cells > '
+    buffer='</Cells>'
     write(vtu_unit,'(a)')trim(buffer)
-    buffer=' < PointData > '
+    buffer='<PointData>'
     write(vtu_unit,'(a)')trim(buffer)
     write(num_str1,*)off(5);
-    buffer=' < DataArray type="Float32" NumberOfComponents="1" Name="'//trim(out_vname)// &
-            '" format="appended" offset="'//trim(adjustl(num_str1))//'"/ > '
+    buffer='<DataArray type="Float32" NumberOfComponents="1" Name="'//trim(out_vname)// &
+            '" format="appended" offset="'//trim(adjustl(num_str1))//'"/>'
     write(vtu_unit,'(a)')trim(buffer)
-    buffer=' < /PointData > '
+    buffer='</PointData>'
     write(vtu_unit,'(a)')trim(buffer)
-    buffer=' < CellData > '
+    buffer='<CellData>'
     write(vtu_unit,'(a)')trim(buffer)
-    buffer=' < /CellData > '
+    buffer='</CellData>'
     write(vtu_unit,'(a)')trim(buffer)
-    buffer=' < /Piece > '
+    buffer='</Piece>'
     write(vtu_unit,'(a)')trim(buffer)
-    buffer=' < /UnstructuredGrid > '
+    buffer='</UnstructuredGrid>'
     write(vtu_unit,'(a)')trim(buffer)
-    buffer=' < AppendedData encoding="raw" > '
+    buffer='<AppendedData encoding="raw">'
     write(vtu_unit,'(a)')trim(buffer)
     buffer='_'
     write(vtu_unit,'(a)',advance='no')trim(buffer)
@@ -286,7 +286,7 @@ do i_t=1,t_nstep
         endif
         read(27) NSPEC_AB
         read(27) NGLOB_AB
-
+        read(27) ios    ! skip dummy
         ! ibool file
         allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
         read(27) ibool
@@ -445,6 +445,7 @@ do i_t=1,t_nstep
         endif
         read(27) NSPEC_AB
         read(27) NGLOB_AB
+        read(27) ios    ! skip dummy
         ! ibool file
         allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
         read(27) ibool
@@ -587,6 +588,7 @@ do i_t=1,t_nstep
         endif
         read(27) NSPEC_AB
         read(27) NGLOB_AB
+        read(27) ios    ! skip dummy
         ! ibool file
         allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
         read(27) ibool
@@ -689,9 +691,9 @@ do i_t=1,t_nstep
     ! Write post header for vtu file
     open(unit=vtu_unit, file=trim(vtu_file), action='write', status='old',position='append')
     write(vtu_unit,*) ! Write new line
-    buffer=' < /AppendedData > '
+    buffer='</AppendedData>'
     write(vtu_unit,'(a)')trim(buffer)
-    buffer=' < /VTKFile > '
+    buffer='</VTKFile>'
     write(vtu_unit,'(a)')trim(buffer)
     close(vtu_unit);
 
@@ -701,9 +703,9 @@ do i_t=1,t_nstep
   enddo  ! do i_slice
 
   ! Write post header for pvtu file
-  buffer=' < /PUnstructuredGrid > '
+  buffer='</PUnstructuredGrid>'
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer=' < /VTKFile > '
+  buffer='</VTKFile>'
   write(pvtu_unit,'(a)')trim(buffer)
   close(pvtu_unit);
 
@@ -713,9 +715,9 @@ do i_t=1,t_nstep
 enddo ! i_t
 
 ! write post header for pvd file
-buffer=' < /Collection > '
+buffer='</Collection>'
 write(pvd_unit,'(a)')trim(buffer)
-buffer=' < /VTKFile > '
+buffer='</VTKFile>'
 write(pvd_unit,'(a)')trim(buffer)
 close(pvd_unit);
 

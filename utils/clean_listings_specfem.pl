@@ -202,7 +202,7 @@ foreach $name (@objects) {
 
 # for spaces around comparisons we exclude that file because it contains print statements that print
 # XML file lines and thus it contains many < and > characters that must not be changed
-    if($basename_obtained ne 'write_output_ASDF.f90') {
+    if($basename_obtained ne 'write_output_ASDF.f90' && $basename_obtained ne 'config.h.in') {
 
 # make sure there is one white space on each side of comparison operators
       $line =~ s#\s*<\s*=\s*# <= #ogi;
@@ -229,6 +229,10 @@ foreach $name (@objects) {
 # also restore bash file pipes that may appear in some print statements that save bash scripts to disk for future processing
       $line =~ s#>\s*&#>&#ogi;
       $line =~ s#<\s*&#<&#ogi;
+
+# also restore xml-formatting strings '< and >'
+      $line =~ s#\'\s*<\s*#\'<#ogi;
+      $line =~ s#\s*>\s*\'#>\'#ogi;
 
 # also restore -> and <- that may be used in comments; do this in comments only
 # otherwise comparisons with negative numbers in source code may be affected (e.g. if (a < -100.) then...)

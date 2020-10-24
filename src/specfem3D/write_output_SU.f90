@@ -25,20 +25,23 @@
 !
 !=====================================================================
 
-  subroutine write_output_SU(seismograms,istore)
+  subroutine write_output_SU(all_seismograms,nrec_store,istore)
 
 ! writes out seismograms in SU (Seismic Unix) format
 
-  use specfem_par
-  use specfem_par_acoustic
-  use specfem_par_elastic
-  use specfem_par_poroelastic
+  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IMAIN,NDIM,NB_RUNS_ACOUSTIC_GPU,OUTPUT_FILES, &
+    IIN_SU1,IIN_SU2,IIN_SU3
+
+  use specfem_par, only: myrank,NSTEP,subsamp_seismos,nlength_seismogram, &
+    seismo_offset,seismo_current, &
+    nrec,nrec_local,number_receiver_global, &
+    WRITE_SEISMOGRAMS_BY_MAIN,station_name,network_name
 
   implicit none
 
   ! arguments
-  integer,intent(in) :: istore
-  real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS),intent(in) :: seismograms
+  integer,intent(in) :: istore,nrec_store
+  real(kind=CUSTOM_REAL), dimension(NDIM,nlength_seismogram,nrec_store),intent(in) :: all_seismograms
 
   ! local parameters
   character(len=MAX_STRING_LEN) :: procname,final_LOCAL_PATH
@@ -55,6 +58,26 @@
 
   character(len=1),parameter :: comp(4) = (/ 'd', 'v', 'a', 'p' /)
 
+  ! user output
+  if (myrank == 0) then
+    ! we only want to do these steps one time
+    if (seismo_offset == 0) then
+      ! user output
+      write(IMAIN,*) 'creating seismograms in SU file format'
+      if (WRITE_SEISMOGRAMS_BY_MAIN) then
+        write(IMAIN,*) 'writing waveforms by main...'
+      else
+        write(IMAIN,*) 'writing waveforms in parallel...'
+      endif
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+  endif
+
+  ! checks if anything to do
+  if (nrec_store == 0) return
+
+  ! reads in receiver positions
   allocate(x_found(nrec),y_found(nrec),z_found(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2189')
   if (ier /= 0) stop 'error allocating arrays x_found y_found z_found'
@@ -62,8 +85,7 @@
   ! reads in station locations from output_list file
   open(unit=IIN_SU1,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='old',iostat=ier)
   if (ier /= 0) stop 'error opening output_list_stations.txt file'
-
-  do irec=1,nrec
+  do irec = 1,nrec
    read(IIN_SU1,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
   enddo
   close(IIN_SU1)
@@ -71,7 +93,6 @@
   ! reads in source locations from output_list file
   open(unit=IIN_SU1,file=trim(OUTPUT_FILES)//'/output_list_sources.txt',status='old',iostat=ier)
   if (ier /= 0) stop 'error opening output_list_sources.txt file'
-
   read(IIN_SU1,*) x_found_source,y_found_source,z_found_source
   close(IIN_SU1)
 
@@ -126,8 +147,45 @@
     dx = 0.0
   endif
 
-  do irec_local = 1,nrec_local*NB_RUNS_ACOUSTIC_GPU
-    irec = number_receiver_global(mod(irec_local,nrec_local))
+  ! note: depending on the flag WRITE_SEISMOGRAMS_BY_MAIN, the input argument nrec_store is equal to nrec or nrec_local
+  do irec_local = 1,nrec_store
+
+    ! get global number of that receiver
+    if (.not. WRITE_SEISMOGRAMS_BY_MAIN) then
+      ! each process writes out its local receivers
+      if (NB_RUNS_ACOUSTIC_GPU == 1) then
+        irec = number_receiver_global(irec_local)
+      else
+        ! NB_RUNS_ACOUSTIC_GPU > 1
+        ! if irec_local is a multiple of nrec then mod(irec_local,nrec) == 0 and
+        ! the array access at number_receiver_global would be invalid;
+        ! for those cases we want irec associated to irec_local == nrec_store
+        if (mod(irec_local,nrec_local) == 0) then
+          irec = number_receiver_global(nrec_local)
+        else
+          irec = number_receiver_global(mod(irec_local,nrec_local))
+        endif
+      endif
+    else
+      ! only main process writes out all
+      if (NB_RUNS_ACOUSTIC_GPU == 1) then
+        irec = irec_local
+      else
+        ! NB_RUNS_ACOUSTIC_GPU > 1
+        if (mod(irec_local,nrec) == 0) then
+          irec = nrec
+        else
+          irec = mod(irec_local,nrec)
+        endif
+      endif
+    endif
+
+    ! safety check
+    if (irec < 1 .or. irec > nrec) then
+      print *,'Error: invalid irec',irec,' out of a total of nrec ',nrec,'receivers'
+      print *,'       local irec_local',irec_local,'from nrec_store',nrec_store
+      stop 'Invalid irec in write_output_SU() routine found'
+    endif
 
     if (seismo_offset == 0) then
       ! determines header
@@ -135,7 +193,7 @@
                                x_found(irec),y_found(irec),z_found(irec),x_found_source,y_found_source,z_found_source)
       ! writes section header
       ! position in bytes
-      ioffset = 4*(irec_local-1)*(60+NSTEP) + 1
+      ioffset = 4*(irec_local-1)*(60+NSTEP/subsamp_seismos) + 1
       select case (istore)
       case (1,2,3)
         write(IIN_SU1,pos=ioffset) header1,header2,header3,header4
@@ -148,14 +206,17 @@
 
     ! writes seismos
     ! position in bytes
-    ioffset = 4*(irec_local-1)*(60+NSTEP) + 4 * 60 + 4 * seismo_offset + 1
+    ioffset = 4*(irec_local-1)*(60+NSTEP/subsamp_seismos) + 4 * 60 + 4 * seismo_offset + 1
+
     select case (istore)
     case (1,2,3)
-      write(IIN_SU1,pos=ioffset) seismograms(1,irec_local,1:seismo_current)
-      write(IIN_SU2,pos=ioffset) seismograms(2,irec_local,1:seismo_current)
-      write(IIN_SU3,pos=ioffset) seismograms(3,irec_local,1:seismo_current)
+      ! displacement,velocity,acceleration (N,E,Z components)
+      write(IIN_SU1,pos=ioffset) all_seismograms(1,1:seismo_current,irec_local)
+      write(IIN_SU2,pos=ioffset) all_seismograms(2,1:seismo_current,irec_local)
+      write(IIN_SU3,pos=ioffset) all_seismograms(3,1:seismo_current,irec_local)
     case (4)
-      write(IIN_SU1,pos=ioffset) seismograms(1,irec_local,1:seismo_current)
+      ! pressure (single component)
+      write(IIN_SU1,pos=ioffset) all_seismograms(1,1:seismo_current,irec_local)
     end select
   enddo
 
@@ -177,16 +238,14 @@
   subroutine determine_SU_header(irec,dx,header1,header2,header3,header4, &
                                  x_found,y_found,z_found,x_found_source,y_found_source,z_found_source)
 
-
-  use constants
-
-  use specfem_par, only: nrec,NSTEP,DT
+  use specfem_par, only: nrec,NSTEP,DT,subsamp_seismos
 
   implicit none
 
   integer :: irec
   double precision :: x_found,y_found,z_found
   double precision :: x_found_source,y_found_source,z_found_source
+  double precision :: sampling_deltat
   real :: dx
 
 ! Arrays for Seismic Unix header
@@ -220,15 +279,28 @@
 
   ! time steps
   header2(1) = 0  ! dummy
-  header2(2) = int(NSTEP, kind=2)
+  if (NSTEP/subsamp_seismos < 32768) then
+    header2(2) = int(NSTEP/subsamp_seismos, kind=2)
+  else
+    print *,"!!! BEWARE !!! Two many samples for SU format ! The .su file created won't be usable"
+    header2(2) = -9999
+  endif
 
   ! time increment
-  if (NINT(DT*1.0d6) < 65536) then
-    header3(1) = NINT(DT*1.0d6, kind=2)  ! deltat (unit: 10^{-6} second)
-  else if (NINT(DT*1.0d3) < 65536) then
-    header3(1) = NINT(DT*1.0d3, kind=2)  ! deltat (unit: 10^{-3} second)
+  sampling_deltat = DT * subsamp_seismos
+
+  ! INTEGER(kind=2) values range from -32,768 to 32,767
+  !debug
+  !print *,'debug: SU header ',NSTEP/subsamp_seismos,NINT(sampling_deltat*1.0d6),NINT(sampling_deltat*1.0d3),NINT(sampling_deltat)
+  !print *,'debug: SU header ',NINT(sampling_deltat*1.0d6,kind=2),NINT(sampling_deltat*1.0d3,kind=2),NINT(sampling_deltat,kind=2)
+
+  ! adapts time step info
+  if (NINT(sampling_deltat*1.0d6) < 32768) then
+    header3(1) = NINT(sampling_deltat*1.0d6, kind=2)  ! deltat (unit: 10^{-6} second)
+  else if (NINT(sampling_deltat*1.0d3) < 32768) then
+    header3(1) = NINT(sampling_deltat*1.0d3, kind=2)  ! deltat (unit: 10^{-3} second)
   else
-    header3(1) = NINT(DT, kind=2)  ! deltat (unit: 10^{0} second)
+    header3(1) = NINT(sampling_deltat, kind=2)  ! deltat (unit: 10^{0} second)
   endif
   header3(2) = 0  ! dummy
 

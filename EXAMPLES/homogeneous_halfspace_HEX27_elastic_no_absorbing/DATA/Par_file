@@ -29,6 +29,13 @@ NPROC                           = 4
 NSTEP                           = 5000
 DT                              = 0.05
 
+# set to true to use local-time stepping (LTS)
+LTS_MODE                        = .false.
+
+# Partitioning algorithm for decompose_mesh
+# choose partitioner: 1==SCOTCH (default), 2==METIS, 3==PATOH, 4==ROWS_PART
+PARTITIONING_TYPE               = 1
+
 #-----------------------------------------------------------
 #
 # LDDRK time scheme
@@ -218,6 +225,9 @@ SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic 
 # (usually they are unused and not very meaningful, leave this off in almost all cases)
 SAVE_SEISMOGRAMS_IN_ADJOINT_RUN = .false.
 
+# subsampling of the seismograms to create smaller files (but less accurately sampled in time)
+subsamp_seismos                 = 1
+
 # save seismograms in binary or ASCII format (binary is smaller but may not be portable between machines)
 USE_BINARY_FOR_SEISMOGRAMS      = .false.
 
@@ -227,8 +237,8 @@ SU_FORMAT                       = .false.
 # output seismograms in ASDF (requires asdf-library)
 ASDF_FORMAT                     = .false.
 
-# decide if master process writes all the seismograms or if all processes do it in parallel
-WRITE_SEISMOGRAMS_BY_MASTER     = .false.
+# decide if main process writes all the seismograms or if all processes do it in parallel
+WRITE_SEISMOGRAMS_BY_MAIN       = .false.
 
 # save all seismograms in one large combined file instead of one file per seismogram
 # to avoid overloading shared non-local file systems such as LUSTRE or GPFS for instance
@@ -369,4 +379,10 @@ ADIOS_FOR_DATABASES             = .false.
 ADIOS_FOR_MESH                  = .false.
 ADIOS_FOR_FORWARD_ARRAYS        = .false.
 ADIOS_FOR_KERNELS               = .false.
+
+# HDF5 Database I/O flag which is useful for a massively parallelized calculation.
+HDF5_ENABLED                    = .false.
+
+# number of IO dedicated procs, available only with HDF5 output option
+NIONOD                          = 2
 

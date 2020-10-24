@@ -242,6 +242,7 @@
   ! timer MPI
   double precision, external :: wtime
   double precision :: time_start,tCPU
+  character(len=3) :: str_unit
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -275,9 +276,15 @@
     call flush_IMAIN()
   endif
 
+  if (myrank == 0) then
+    write(IMAIN,*) 'Reading parameters from ',IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file'
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
   ! read the parameter file (DATA/Par_file)
   BROADCAST_AFTER_READ = .true.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   ! make sure everybody is synchronized
   call synchronize_all()
@@ -335,7 +342,6 @@
   endif
 
   ! read the mesh parameter file (Data/meshfem3D_files/Mesh_Par_file)
-  ! nullify(subregions,material_properties)
   call read_mesh_parameter_file()
 
   ! get interface data from external file to count the spectral elements along Z
@@ -383,37 +389,34 @@
     endif
     call exit_MPI(myrank,'wrong number of MPI processes')
   endif
+  call synchronize_all()
 
   ! dynamic allocation of mesh arrays
-  allocate(rns(0:2*NER),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1352')
-  if (ier /= 0) stop 'Error allocating array rns'
-
   allocate(xgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1353')
   if (ier /= 0) stop 'Error allocating array xgrid'
+  xgrid(:,:,:) = 0.d0
+
   allocate(ygrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1354')
   if (ier /= 0) stop 'Error allocating array ygrid'
+  ygrid(:,:,:) = 0.d0
+
   allocate(zgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1355')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  zgrid(:,:,:) = 0.d0
 
   allocate(addressing(0:NPROC_XI-1,0:NPROC_ETA-1),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1356')
   if (ier /= 0) stop 'Error allocating array addressing'
-  allocate(iproc_xi_slice(0:NPROC-1),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1357')
-  if (ier /= 0) stop 'Error allocating array iproc_xi_slice'
-  allocate(iproc_eta_slice(0:NPROC-1),stat=ier)
+  addressing(:,:) = 0
+
+  allocate(iproc_xi_slice(0:NPROC-1), &
+           iproc_eta_slice(0:NPROC-1),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1358')
   if (ier /= 0) stop 'Error allocating array iproc_eta_slice'
-
   ! clear arrays
-  xgrid(:,:,:) = 0.d0
-  ygrid(:,:,:) = 0.d0
-  zgrid(:,:,:) = 0.d0
-
   iproc_xi_slice(:) = 0
   iproc_eta_slice(:) = 0
 
@@ -463,16 +466,33 @@
     write(IMAIN,*) 'There is a total of ',NPROC,' slices'
 
     write(IMAIN,*)
-    write(IMAIN,*) 'Shape functions defined by NGNOD = ',NGNOD_EIGHT_CORNERS,' control nodes'
-    write(IMAIN,*) 'Surface shape functions defined by NGNOD2D = ',NGNOD2D_FOUR_CORNERS,' control nodes'
+    write(IMAIN,*) 'Shape functions defined by NGNOD = ',NGNOD,' control nodes'
+    write(IMAIN,*) 'Surface shape functions defined by NGNOD2D = ',NGNOD2D,' control nodes'
     write(IMAIN,*) 'Beware! Curvature (i.e. HEX27 elements) is not handled by our internal mesher'
     write(IMAIN,*)
     call flush_IMAIN()
   endif
 
   ! check that the constants.h file is correct
-  if (NGNOD /= 8) call exit_MPI(myrank,'volume elements should have 8 control nodes in our internal mesher')
-  if (NGNOD2D /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes in our internal mesher')
+  if (NGNOD /= 8 .and. NGNOD /= 27) &
+    call exit_MPI(myrank,'Error must have set NGNOD == 8 or NGNOD == 27')
+  if (NGNOD2D /= 4 .and. NGNOD2D /= 9) &
+    call exit_MPI(myrank,'Error must have set NGNOD2D == 4 or NGNOD2D == 9')
+
+  if (NGLLX_M == 2 .and. NGLLY_M == 2 .and. NGLLZ_M == 2) then
+    if (NGNOD /= 8) &
+      call exit_MPI(myrank,'With NGLLX_M == 2, volume elements should have NGNOD == 8 control nodes in our internal mesher')
+    if (NGNOD2D /= 4) &
+      call exit_MPI(myrank,'With NGLLX_M == 2, surface elements should have NGNOD2D == 4 control nodes in our internal mesher')
+  endif
+
+  if (NGNOD == 27 .and. (NGLLX_M < 3 .or. NGLLY_M < 3 .or. NGLLZ_M < 3)) &
+    call exit_MPI(myrank,'NGNOD = 27 control nodes needs at least NGLLX_M == NGLLY_M == NGLLZ_M >= 3 in our internal mesher')
+  if (NGNOD2D == 9 .and. (NGLLX_M < 3 .or. NGLLY_M < 3 .or. NGLLZ_M < 3)) &
+    call exit_MPI(myrank,'NGNOD2D = 9 control nodes needs at least NGLLX_M == NGLLY_M == NGLLZ_M >= 3 in our internal mesher')
+
+!  if (.not. USE_REGULAR_MESH .and. NGLLX_M >= 3) &
+!    call exit_MPI(myrank,'NGLLX_M == NGLLY_M == NGLLZ_M >= 3 only supported with USE_REGULAR_MESH = .true. at the moment')
 
   ! check that reals are either 4 or 8 bytes
   if (CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
@@ -533,11 +553,18 @@
     else
       write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
     endif
-     if (PML_CONDITIONS) then
-       write(IMAIN,*)
-       write(IMAIN,*) 'PML thickness in X direction = ',THICKNESS_OF_X_PML,'m'
-       write(IMAIN,*) 'PML thickness in Y direction = ',THICKNESS_OF_Y_PML,'m'
-       write(IMAIN,*) 'PML thickness in Z direction = ',THICKNESS_OF_Z_PML,'m'
+    if (PML_CONDITIONS) then
+      if (SUPPRESS_UTM_PROJECTION) then
+        ! no UTM, thickness given in m
+        str_unit = '(m)'
+      else
+        ! UTM, thickness given in degree
+        str_unit = 'deg'
+      endif
+      write(IMAIN,*)
+      write(IMAIN,*) 'PML thickness in X direction = ',sngl(THICKNESS_OF_X_PML),str_unit
+      write(IMAIN,*) 'PML thickness in Y direction = ',sngl(THICKNESS_OF_Y_PML),str_unit
+      write(IMAIN,*) 'PML thickness in Z direction = ',sngl(THICKNESS_OF_Z_PML),str_unit
     endif
     write(IMAIN,*)
     call flush_IMAIN()

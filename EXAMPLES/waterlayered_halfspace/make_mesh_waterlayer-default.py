@@ -8,6 +8,8 @@
 # modified version: top layer is water
 #
 ###########################################################################
+from __future__ import print_function
+
 import os
 import sys
 
@@ -38,7 +40,7 @@ except:
 version = cubit.get_version()
 version_major = int(version.split(".")[0])
 version_minor = int(version.split(".")[1])
-print "cubit version: ",version
+print("cubit version: ",version)
 
 cubit.cmd('reset')
 cubit.cmd('brick x 134000 y 134000 z 60000')

@@ -31,10 +31,9 @@
   subroutine define_superbrick(x_superbrick,y_superbrick,z_superbrick,ibool_superbrick,iboun_sb)
 
   use constants
+  use constants_meshfem3D, only: NGLOB_DOUBLING_SUPERBRICK,NSPEC_DOUBLING_SUPERBRICK
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
   double precision, dimension(NGLOB_DOUBLING_SUPERBRICK) :: x_superbrick,y_superbrick,z_superbrick
@@ -661,10 +660,9 @@
   subroutine define_superbrick_one_layer(x_superbrick,y_superbrick,z_superbrick,ibool_superbrick,iboun_sb)
 
   use constants
+  use constants_meshfem3D, only: NGLOB_DOUBLING_SUPERBRICK,NSPEC_DOUBLING_SUPERBRICK
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
   double precision, dimension(NGLOB_DOUBLING_SUPERBRICK) :: x_superbrick,y_superbrick,z_superbrick
@@ -1209,10 +1207,9 @@
   subroutine define_basic_doubling_brick(x_superbrick,y_superbrick,z_superbrick,ibool_superbrick,iboun_sb,case_num)
 
   use constants
+  use constants_meshfem3D, only: NGLOB_DOUBLING_SUPERBRICK,NSPEC_DOUBLING_SUPERBRICK
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
   double precision, dimension(NGLOB_DOUBLING_SUPERBRICK) :: x_superbrick,y_superbrick,z_superbrick

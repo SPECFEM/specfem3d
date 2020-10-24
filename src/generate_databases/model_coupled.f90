@@ -56,7 +56,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine model_coupled_broadcast(myrank)
+  subroutine model_coupled_broadcast()
 
 ! standard routine to setup model
 
@@ -68,15 +68,13 @@
 
   implicit none
 
-  integer,intent(in) :: myrank
-
   ! safety check
   if (.not. (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH)) then
     print *,'Error: model coupling requires coupling with injection technique or mesh a chunk of the earth'
     stop 'Error model coupling'
   endif
 
-  call read_model_for_coupling_or_chunk(myrank)
+  call read_model_for_coupling_or_chunk()
 
   end subroutine model_coupled_broadcast
 
@@ -84,14 +82,13 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine read_model_for_coupling_or_chunk(myrank)
+  subroutine read_model_for_coupling_or_chunk()
 
-  use constants, only: IMAIN,IN_DATA_FILES
+  use constants, only: IMAIN,IN_DATA_FILES,myrank
 
   use model_coupled_par !! VM VM custom subroutine for coupling with DSM
 
   implicit none
-  integer, intent(in) :: myrank
 
   ! local parameters
   character(len=256) :: filename
@@ -232,7 +229,7 @@
   double precision :: r1,radius
   double precision :: rho,vp,vs
 
-  double precision, parameter :: Xtol = 1d-2
+  !double precision, parameter :: Xtol = 1d-2
 
   radius = dsqrt(x_eval**2 + y_eval**2 + (z_eval+ZREF)**2)
   radius = radius / 1000.d0

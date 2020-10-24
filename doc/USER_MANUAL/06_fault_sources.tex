@@ -234,7 +234,7 @@ in a Fortran 9x manual). The input for each fault has the following
 sequence (arguments in {[}brackets{]} are optional):
 
 \&\textbf{RUPTURE\_SWITCHES}  /
-RATE\_AND\_STATE ,TPV16 ,HETE\_RSF ,TPV10X
+RATE\_AND\_STATE ,TPV16 ,HETE\_RSF ,TPV10X ,TWF
 
 \&\textbf{BEGIN\_FAULT} /
 
@@ -250,6 +250,7 @@ followed by (n1+n2+n3) \&\textbf{DIST2D} blocks
 
 \&\textbf{SWF} mus, mud, dc {[}, nmus, nmud, ndc{]} /
 
+\&\textbf{TWF} nuc\_x, nuc\_y, nuc\_z, nuc\_r, nuc\_t0, nuc\_v /
 
 \&\textbf{RSF} V0,f0,a,b,L,V\_init,theta\_init,C,StateLaw {[} nV0,nf0,na,nb,nL,nV\_init,ntheta\_init,nC {]} /
 
@@ -273,6 +274,9 @@ followed by (nV0+nf0+na+nb+nL+nV\_init+ntheta\_init+nC) \&\textbf{DIST2D} blocks
          =.TRUE. turn on some ad hoc features for TPV101-104 simulations, a rate strengthening
    layer surrounding the rate weakening region.
    =.FALSE. turn off such feature
+    \item[{TWF}]
+         =.TRUE. turn on time-weakening nucleation. This function is activated only when
+         RATE\_AND\_STATE=.FALSE. and TWF=.TRUE.
    \end{description}
 
 \item [{\&\textbf{STRESS\_TENSOR}}] input block sets the initial fault stresses
@@ -315,6 +319,17 @@ of the fault:
 \item [{ndc}] = number of heterogeneous items for critical slip-weakening
 distance {[}default is 0{]}
 \item [{nC}] = number of heterogeneous items for cohesion
+\end{description}
+
+\item [{\&\textbf{TWF}}] input block sets the time-weakening friction parameters
+of the fault:
+\begin{description}
+\item [{nuc\_x}]  = x coordinate of the hypocenter (in m)
+\item [{nuc\_y}]  = y coordinate of the hypocenter (in m)
+\item [{nuc\_z}]  = z coordinate of the hypocenter (in m)
+\item [{nuc\_r}]  = the radius of time-weakening nucleation (in m)
+\item [{nuc\_t0}] = the cohesive time. The friction linearly decreases from static friction to dynamic friction during this time (in s)
+\item [{nuc\_v}]  = the time-weakening nucleation speed (in m/s)
 \end{description}
 
 \item [{\&\textbf{RSF}}] input block sets the rate and state friction parameters

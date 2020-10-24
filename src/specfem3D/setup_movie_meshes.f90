@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
 ! creation of arrays for movie and shakemap routines for external meshes
 
@@ -310,9 +309,9 @@
       store_val_z(ia) = zstore(iglob)
     enddo
   enddo
-  ! master process collects all info
+  ! main process collects all info
   ! collects locations only once
-  ! master collects all
+  ! main collects all
   if (myrank == 0) then
     call gatherv_all_cr(store_val_x,nfaces_surface_points, &
        store_val_x_all,nfaces_perproc_surface,faces_surface_offset, &
@@ -324,7 +323,7 @@
        store_val_z_all,nfaces_perproc_surface,faces_surface_offset, &
        nfaces_surface_glob_points,NPROC)
   else
-    ! slaves just send
+    ! secondarys just send
     call gatherv_all_cr(store_val_x,nfaces_surface_points, &
        dummy,nfaces_perproc_surface,faces_surface_offset, &
        1,NPROC)

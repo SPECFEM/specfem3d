@@ -3,7 +3,9 @@
  *** Specfem3D MPI database generation ***
  *****************************************
 
- Version: 3.0.0
+ Running Git package version of the code: 3.0.0
+ which is Git undefined in the case of old tar ball builds
+ dating undefined in the case of old tar ball builds
 
  This is process            0
  There are            4  MPI processes
@@ -49,7 +51,9 @@
    xmin,xmax :           32          32
    ymin,ymax :           40          40
    bottom,top:           80          80
- total number of C-PML elements in the global mesh:            0
+
+   total number of C-PML elements in the global mesh:            0
+
  number of MPI partition interfaces:           12
 
    minimum memory used so far     :   0.324791908     MB per process
@@ -58,12 +62,40 @@
  create regions:
 
    ...allocating arrays
+     NGLLX   =            5
+     NGLLY   =            5
+     NGLLZ   =            5
+     NGNOD   =            8
+     NGNOD2D =            4
+
+     master process setup:
+     nspec           =           80
+
+     separating regular/irregular element shapes
+     nspec regular   =            0
+     nspec irregular =           80
+
+     absorbing boundary faces:
+       num_abs_boundary_faces =           56
+
+     free surface faces:
+       num_free_surface_faces =           20
+
+
  File DATA/Par_file_faults not found: assuming that there are no faults
+
+
    ...setting up jacobian
+
    ...indexing global points
+     creating ibool indexing     : x min/max =    0.00000000     /   4999.72900
+     creating indirect addressing: nglob =         6137
+     creating unique point locations
+
    ...preparing MPI interfaces
       total MPI interface points:         3196
       total assembled MPI interface points:        3060
+
    ...setting up absorbing boundaries
       boundary xmin          20
       boundary xmax           0
@@ -74,35 +106,50 @@
       absorbing boundary:
       total number of free faces =           80
       total number of faces =          224
+
    ...setting up mesh surface
+
    ...determining velocity model
-               10  % time remaining:   1.6730278730392456E-005 s
-               20  % time remaining:   1.4066696166992188E-005 s
-               30  % time remaining:   1.1812895134077905E-005 s
-               40  % time remaining:   9.9409371614456177E-006 s
-               50  % time remaining:   8.1732869148254395E-006 s
-               60  % time remaining:   6.4596535700456315E-006 s
-               70  % time remaining:   4.8822590767994001E-006 s
-               80  % time remaining:   3.2307580113410950E-006 s
-               90  % time remaining:   1.6093254209259555E-006 s
+               10  % time remaining:   2.2359374999999918E-005 s
+               20  % time remaining:   2.0000000000000052E-005 s
+               30  % time remaining:   1.7135416083037786E-005 s
+               40  % time remaining:   1.4554687500000082E-005 s
+               50  % time remaining:   1.2171875000000030E-005 s
+               60  % time remaining:   9.7604169575497551E-006 s
+               70  % time remaining:   7.2790179294533873E-006 s
+               80  % time remaining:   4.8281250000000039E-006 s
+               90  % time remaining:   2.4236111291684236E-006 s
               100  % time remaining:   0.0000000000000000      s
+
    ...detecting acoustic-elastic-poroelastic surfaces
       total acoustic elements   :           0
       total elastic elements    :         320
       total poroelastic elements:           0
+
+      acoustic - elastic     coupling : total number of faces =            0
+      acoustic - poroelastic coupling : total number of faces =            0
+       elastic - poroelastic coupling : total number of faces =            0
+
+
    ...element inner/outer separation
       for overlapping of communications with calculations:
       percentage of   edge elements    45.0000000     %
       percentage of volume elements    55.0000000     %
+
    ...element mesh coloring
       use coloring =  F
+
    ...external binary models
       no external binary model used
+
    ...creating mass matrix
+
    ...saving databases
       saving mesh files for AVS, OpenDX, Paraview
       saving additonal mesh files with surface/coupling points
+
    ...checking mesh resolution
+ Mesh resolution:
 
  ********
  minimum and maximum number of elements
@@ -126,10 +173,10 @@
 
 
  ********
- Model: P velocity min,max =    2800.00024       2800.00024
- Model: S velocity min,max =    1500.00000       1500.00000
+ Model: P   velocity min,max =    2800.00000       2800.00000
+ Model: S   velocity min,max =    1500.00000       1500.00000
 
- Model: Poisson's ratio min,max =   0.298747808      0.298747808
+ Model: Poisson's ratio min,max =   0.298747778      0.298747778
  ********
 
  *********************************************
@@ -149,10 +196,11 @@
  *** Max/min ratio =    9.71228981
 
  *** Minimum period resolved =    1.94638002
- *** Maximum suggested time step =    7.41521502E-03
+ *** Maximum suggested time step =    7.41521548E-03
 
- Elapsed time for checking mesh resolution in seconds =    2.4294853210449219E-004
+ Elapsed time for checking mesh resolution in seconds =    1.7300000000000648E-004
  saving VTK files for Courant number and minimum period
+
 
    ...saving attenuation databases
 
@@ -172,17 +220,22 @@
    Logarithmic central frequency (Hz):   6.92049488E-02  period (s):   14.4498329
 
    Using full attenuation with both Q_kappa and Q_mu.
+
    Q_mu min/max           :    300.000000       300.000000
    Q_kappa min/max        :    400.000000       400.000000
 
 
- min and max of topography included in mesh in m is   -190.30737600000000          190.34635299999999
+ mesh regions done
+
+ min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is   -190.30737600000000          190.34635299999999
 
 
  Repartition of elements:
  -----------------------
 
  total number of elements in mesh slice 0:           80
+ total number of   regular elements in mesh slice 0:            0
+ total number of irregular elements in mesh slice 0:           80
  total number of points in mesh slice 0:         6137
 
  total number of elements in entire mesh:          320
@@ -196,7 +249,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =   0.16854405403137207
+ Elapsed time for mesh generation and buffer creation in seconds =   0.15235499999999999
  End of mesh generation
 
  done

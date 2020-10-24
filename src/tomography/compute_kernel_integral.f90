@@ -145,7 +145,7 @@
 
   do ispec = 1, NSPEC
     ispec_irreg = irregular_element_number(ispec)
-    if (ispec_irreg == 0 ) jacobianl = jacobian_regular
+    if (ispec_irreg == 0) jacobianl = jacobian_regular
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX
@@ -204,7 +204,7 @@
   enddo
 
   ! statistics
-  ! (note: sum_all_cr() will only return valid results to master process)
+  ! (note: sum_all_cr() will only return valid results to main process)
   ! kernel integration: for whole volume
   call sum_all_cr(kernel_integral_alpha,integral_alpha_sum)
   call sum_all_cr(kernel_integral_beta,integral_beta_sum)
@@ -397,7 +397,7 @@
   rms_rho = 0._CUSTOM_REAL
   do ispec = 1, NSPEC
     ispec_irreg = irregular_element_number(ispec)
-    if (ispec_irreg == 0 ) jacobianl = jacobian_regular
+    if (ispec_irreg == 0) jacobianl = jacobian_regular
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX
@@ -469,7 +469,7 @@
   enddo
 
   ! statistics
-  ! (note: sum_all_cr() will only return valid results to master process)
+  ! (note: sum_all_cr() will only return valid results to main process)
   ! kernel integration: for whole volume
   call sum_all_cr(integral_bulk,integral_bulk_sum)
   call sum_all_cr(integral_betav,integral_betav_sum)
@@ -670,7 +670,7 @@
 
   do ispec = 1, NSPEC
     ispec_irreg = irregular_element_number(ispec)
-    if (ispec_irreg == 0 ) jacobianl = jacobian_regular
+    if (ispec_irreg == 0) jacobianl = jacobian_regular
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX
@@ -738,7 +738,7 @@
   enddo
 
   ! statistics
-  ! (note: sum_all_cr() will only return valid results to master process)
+  ! (note: sum_all_cr() will only return valid results to main process)
   ! kernel integration: for whole volume
   call sum_all_cr(integral_bulk,integral_bulk_sum)
   call sum_all_cr(integral_beta,integral_beta_sum)

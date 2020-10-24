@@ -1,0 +1,19 @@
+-------------------
+README
+-------------------
+
+Small adjoint simulation example (mostly meant for test purposes):
+setup for a single station, used as adjoint source, and multiple CMTs given in CMTSOLUTION file
+
+Idea:
+We want to calculate the Green's functions from multiple source locations to a receiver.
+Using reciprocity, we can input the impulsive source at the receiver and output the seismograms at the source positions.
+
+To do so, we use a pure adjoint simulation (SIMULATION_TYPE == 2) with multiple CMTs defined in CMTSOLUTION,
+and input as adjoint source signal in SEM/ an "impulsive" trace in one of the components.
+
+To run the example simulation, use script:
+> ./run_this_example.sh
+
+Compare your seismograms in OUTPUT_FILES/ with the reference ones in directory REF_SEIS/
+

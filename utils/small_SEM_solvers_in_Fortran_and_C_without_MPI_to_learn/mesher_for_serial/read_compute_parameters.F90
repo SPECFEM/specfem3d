@@ -56,7 +56,7 @@
          OUTPUT_SEISMOS_ASCII_TEXT,OUTPUT_SEISMOS_SAC_ALPHANUM,OUTPUT_SEISMOS_SAC_BINARY, &
          ROTATE_SEISMOGRAMS_RT,ratio_divide_central_cube,HONOR_1D_SPHERICAL_MOHO,CUT_SUPERBRICK_XI,CUT_SUPERBRICK_ETA, &
          DIFF_NSPEC1D_RADIAL,DIFF_NSPEC2D_XI,DIFF_NSPEC2D_ETA, &
-         WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_LARGE_FILE,EMULATE_ONLY)
+         WRITE_SEISMOGRAMS_BY_MAIN,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_LARGE_FILE,EMULATE_ONLY)
 
 
   implicit none
@@ -88,7 +88,7 @@
           SAVE_MESH_FILES,ATTENUATION, &
           ABSORBING_CONDITIONS,INCLUDE_CENTRAL_CUBE,INFLATE_CENTRAL_CUBE,SAVE_FORWARD, &
           OUTPUT_SEISMOS_ASCII_TEXT,OUTPUT_SEISMOS_SAC_ALPHANUM,OUTPUT_SEISMOS_SAC_BINARY, &
-          ROTATE_SEISMOGRAMS_RT,WRITE_SEISMOGRAMS_BY_MASTER, &
+          ROTATE_SEISMOGRAMS_RT,WRITE_SEISMOGRAMS_BY_MAIN, &
           SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_LARGE_FILE,EMULATE_ONLY
 
   character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL
@@ -1076,7 +1076,7 @@
   if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(ROTATE_SEISMOGRAMS_RT, 'solver.ROTATE_SEISMOGRAMS_RT')
   if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
-  call read_value_logical(WRITE_SEISMOGRAMS_BY_MASTER, 'solver.WRITE_SEISMOGRAMS_BY_MASTER')
+  call read_value_logical(WRITE_SEISMOGRAMS_BY_MAIN, 'solver.WRITE_SEISMOGRAMS_BY_MAIN')
   if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(SAVE_ALL_SEISMOS_IN_ONE_FILE, 'solver.SAVE_ALL_SEISMOS_IN_ONE_FILE')
   if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'

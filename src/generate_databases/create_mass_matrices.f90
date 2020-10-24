@@ -29,7 +29,7 @@
 
 ! returns precomputed mass matrix in rmass array
 
-  use constants, only: NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,SIZE_REAL
+  use constants, only: NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
 
   use create_regions_mesh_ext_par
 
@@ -56,69 +56,71 @@
 
   ! elastic domains
   if (ELASTIC_SIMULATION) then
-     ! allocates memory
-     allocate(rmass(nglob),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 660')
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array rmass')
-     rmass(:) = 0._CUSTOM_REAL
+    ! allocates memory
+    allocate(rmass(nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 660')
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array rmass')
+    rmass(:) = 0._CUSTOM_REAL
 
-     ! returns elastic mass matrix
-     if (PML_CONDITIONS) then
-        call create_mass_matrices_pml_elastic(nspec,ibool)
-     else
-        do ispec=1,nspec
-           if (ispec_is_elastic(ispec)) then
-              ispec_irreg = irregular_element_number(ispec)
-              if (ispec_irreg == 0) jacobianl = jacobian_regular
-              do k=1,NGLLZ
-                 do j=1,NGLLY
-                    do i=1,NGLLX
-                       iglob = ibool(i,j,k,ispec)
+    ! returns elastic mass matrix
+    if (PML_CONDITIONS) then
+      call create_mass_matrices_pml_elastic(nspec,ibool)
+    else
+      do ispec = 1,nspec
+        if (ispec_is_elastic(ispec)) then
+          ispec_irreg = irregular_element_number(ispec)
+          if (ispec_irreg == 0) jacobianl = jacobian_regular
+          do k = 1,NGLLZ
+            do j = 1,NGLLY
+              do i = 1,NGLLX
+                iglob = ibool(i,j,k,ispec)
 
-                       weight = wxgll(i)*wygll(j)*wzgll(k)
-                       if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
-                       rmass(iglob) = rmass(iglob) + &
+                weight = wxgll(i)*wygll(j)*wzgll(k)
+                if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+
+                rmass(iglob) = rmass(iglob) + &
                                real( dble(jacobianl) * weight * dble(rhostore(i,j,k,ispec)),kind=CUSTOM_REAL)
-                    enddo
-                 enddo
               enddo
-           endif
-        enddo
-     endif
+            enddo
+          enddo
+        endif
+      enddo
+    endif
   endif
 
   ! acoustic domains
   if (ACOUSTIC_SIMULATION) then
-     ! allocates memory
-     allocate(rmass_acoustic(nglob),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 661')
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array rmass_acoustic')
-     rmass_acoustic(:) = 0._CUSTOM_REAL
+    ! allocates memory
+    allocate(rmass_acoustic(nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 661')
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array rmass_acoustic')
+    rmass_acoustic(:) = 0._CUSTOM_REAL
 
-     ! returns acoustic mass matrix
-     if (PML_CONDITIONS) then
-        call create_mass_matrices_pml_acoustic(nspec,ibool)
-     else
-        do ispec=1,nspec
-           if (ispec_is_acoustic(ispec)) then
-              ispec_irreg = irregular_element_number(ispec)
-              if (ispec_irreg == 0) jacobianl = jacobian_regular
-              do k=1,NGLLZ
-                 do j=1,NGLLY
-                    do i=1,NGLLX
-                      iglob = ibool(i,j,k,ispec)
+    ! returns acoustic mass matrix
+    if (PML_CONDITIONS) then
+      call create_mass_matrices_pml_acoustic(nspec,ibool)
+    else
+      do ispec = 1,nspec
+        if (ispec_is_acoustic(ispec)) then
+          ispec_irreg = irregular_element_number(ispec)
+          if (ispec_irreg == 0) jacobianl = jacobian_regular
+          do k = 1,NGLLZ
+            do j = 1,NGLLY
+              do i = 1,NGLLX
+                iglob = ibool(i,j,k,ispec)
 
-                      weight = wxgll(i)*wygll(j)*wzgll(k)
-                      if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
-                      ! distinguish between single and double precision for reals
-                      rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                               real( dble(jacobianl) * weight / dble(kappastore(i,j,k,ispec)) ,kind=CUSTOM_REAL)
-                    enddo
-                 enddo
+                weight = wxgll(i)*wygll(j)*wzgll(k)
+                if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+
+                ! distinguish between single and double precision for reals
+                rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                                        real( dble(jacobianl) * weight / dble(kappastore(i,j,k,ispec)),kind=CUSTOM_REAL)
               enddo
-           endif
-        enddo
-     endif
+            enddo
+          enddo
+        endif
+      enddo
+    endif
   endif
 
   ! poroelastic domains
@@ -134,17 +136,18 @@
     rmass_fluid_poroelastic(:) = 0._CUSTOM_REAL
 
     ! poroelastic mass matrices
-    do ispec=1,nspec
+    do ispec = 1,nspec
       if (ispec_is_poroelastic(ispec)) then
         ispec_irreg = irregular_element_number(ispec)
         if (ispec_irreg == 0) jacobianl = jacobian_regular
-        do k=1,NGLLZ
-          do j=1,NGLLY
-            do i=1,NGLLX
+        do k = 1,NGLLZ
+          do j = 1,NGLLY
+            do i = 1,NGLLX
               iglob = ibool(i,j,k,ispec)
 
               weight = wxgll(i)*wygll(j)*wzgll(k)
               if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+
               rho_s = rhoarraystore(1,i,j,k,ispec)
               rho_f = rhoarraystore(2,i,j,k,ispec)
               phi = phistore(i,j,k,ispec)
@@ -153,12 +156,13 @@
 
               ! for the solid mass matrix
               rmass_solid_poroelastic(iglob) = rmass_solid_poroelastic(iglob) + &
-                    real( dble(jacobianl) * weight * dble(rho_bar - phi*rho_f/tort) ,kind=CUSTOM_REAL)
+                    real( dble(jacobianl) * weight * dble(rho_bar - phi*rho_f/tort), &
+                         kind=CUSTOM_REAL)
 
               ! for the fluid mass matrix
               rmass_fluid_poroelastic(iglob) = rmass_fluid_poroelastic(iglob) + &
-                    real( dble(jacobianl) * weight * dble(rho_bar*rho_f*tort - &
-                                                phi*rho_f*rho_f)/dble(rho_bar*phi) ,kind=CUSTOM_REAL)
+                    real( dble(jacobianl) * weight * dble(rho_bar*rho_f*tort - phi*rho_f*rho_f) / dble(rho_bar*phi), &
+                         kind=CUSTOM_REAL)
             enddo
           enddo
         enddo
@@ -185,7 +189,7 @@
   use generate_databases_par, only: &
     APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY, &
     NX_TOPO,NY_TOPO,itopo_bathy,myrank, &
-    NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,SIZE_REAL,NGLLSQUARE,IMAIN, &
+    NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,NGLLSQUARE,IMAIN, &
     MINIMUM_THICKNESS_3D_OCEANS,RHO_APPROXIMATE_OCEAN_LOAD
 
   use create_regions_mesh_ext_par
@@ -234,12 +238,12 @@
       ! if top is already acoustic/poroelastic
       if (ispec_is_elastic(ispec_oceans)) then
 
-        do igll=1,NGLLSQUARE
+        do igll = 1,NGLLSQUARE
           ix_oceans = free_surface_ijk(1,igll,ispec2D)
           iy_oceans = free_surface_ijk(2,igll,ispec2D)
           iz_oceans = free_surface_ijk(3,igll,ispec2D)
 
-          iglobnum=ibool(ix_oceans,iy_oceans,iz_oceans,ispec_oceans)
+          iglobnum = ibool(ix_oceans,iy_oceans,iz_oceans,ispec_oceans)
 
           ! compute local height of oceans
           if (TOPOGRAPHY) then
@@ -303,7 +307,7 @@
 ! on Stacey edges for the crust_mantle and outer_core regions but not for the inner_core region
 ! thus the mass matrix must be replaced by three mass matrices including the "C" damping matrix
 
-  use generate_databases_par, only: DT,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,SIZE_REAL,NGLLSQUARE
+  use generate_databases_par, only: DT,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,NGLLSQUARE
   use create_regions_mesh_ext_par
 
   implicit none
@@ -346,7 +350,7 @@
 
   ! use the non-dimensional time step to make the mass matrix correction
   deltat = real(DT,kind=CUSTOM_REAL)
-  deltatover2 = real(0.5d0*deltat,kind=CUSTOM_REAL)
+  deltatover2 = real(0.5d0*DT,kind=CUSTOM_REAL)
 
   ! adds contributions to mass matrix to stabilize Stacey conditions
   do iface = 1,num_abs_boundary_faces
@@ -362,9 +366,6 @@
         j = abs_boundary_ijk(2,igll,iface)
         k = abs_boundary_ijk(3,igll,iface)
 
-        ! gets velocity
-        iglob = ibool(i,j,k,ispec)
-
         ! gets associated normal
         nx = abs_boundary_normal(1,igll,iface)
         ny = abs_boundary_normal(2,igll,iface)
@@ -379,6 +380,9 @@
 
         ! gets associated, weighted jacobian
         jacobianw = abs_boundary_jacobian2Dw(igll,iface)
+
+        ! gets velocity
+        iglob = ibool(i,j,k,ispec)
 
         ! assembles mass matrix on global points
         rmassx(iglob) = rmassx(iglob) + tx*jacobianw
@@ -397,14 +401,14 @@
         j = abs_boundary_ijk(2,igll,iface)
         k = abs_boundary_ijk(3,igll,iface)
 
-        ! gets global index
-        iglob = ibool(i,j,k,ispec)
+        ! C * DT/2 contribution
+        sn = deltatover2/rho_vp(i,j,k,ispec)
 
         ! gets associated, weighted jacobian
         jacobianw = abs_boundary_jacobian2Dw(igll,iface)
 
-        ! C * DT/2 contribution
-        sn = deltatover2/rho_vp(i,j,k,ispec)
+        ! gets global index
+        iglob = ibool(i,j,k,ispec)
 
         rmassz_acoustic(iglob) = rmassz_acoustic(iglob) + jacobianw*sn
       enddo
@@ -421,7 +425,7 @@
 
   use generate_databases_par, only: DT,is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
     K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec, &
-    NGLLX,NGLLY,NGLLZ,SIZE_REAL,CUSTOM_REAL, &
+    NGLLX,NGLLY,NGLLZ,CUSTOM_REAL, &
     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
     CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
@@ -442,192 +446,195 @@
   deltat = real(DT,kind=CUSTOM_REAL)
 
   ! loops over physical mesh elements
-  do ispec=1,nspec
-     if (.not. is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
-        ispec_irreg = irregular_element_number(ispec)
-        if (ispec_irreg == 0) jacobianl = jacobian_regular
-        do k=1,NGLLZ
-           do j=1,NGLLY
-              do i=1,NGLLX
-                 ! defines the material coefficient associated to the domain
-                 mat_coef = rhostore(i,j,k,ispec)
-                 iglob = ibool(i,j,k,ispec)
-                 weight = wxgll(i)*wygll(j)*wzgll(k)
-                 if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
-                 rmass(iglob) = rmass(iglob) + &
-                         real( dble(jacobianl) * weight * dble(mat_coef) ,kind=CUSTOM_REAL)
-              enddo
-           enddo
+  do ispec = 1,nspec
+    if (.not. is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
+      ispec_irreg = irregular_element_number(ispec)
+      if (ispec_irreg == 0) jacobianl = jacobian_regular
+      do k = 1,NGLLZ
+        do j = 1,NGLLY
+          do i = 1,NGLLX
+            ! defines the material coefficient associated to the domain
+            mat_coef = rhostore(i,j,k,ispec)
+            iglob = ibool(i,j,k,ispec)
+
+            weight = wxgll(i)*wygll(j)*wzgll(k)
+            if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+
+            rmass(iglob) = rmass(iglob) + real( dble(jacobianl) * weight * dble(mat_coef),kind=CUSTOM_REAL)
+          enddo
         enddo
-     endif
+      enddo
+    endif
   enddo
 
   ! loops over C-PML elements
-  do ispec_CPML=1,nspec_cpml
-     ispec = CPML_to_spec(ispec_CPML)
+  do ispec_CPML = 1,nspec_cpml
+    ispec = CPML_to_spec(ispec_CPML)
 
-     if (is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
+    if (is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
+
+      if (CPML_regions(ispec_CPML) == CPML_X_ONLY) then
         ! X_surface C-PML
-        if (CPML_regions(ispec_CPML) == CPML_X_ONLY) then
-           ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg == 0) jacobianl = jacobian_regular
-           do k=1,NGLLZ
-              do j=1,NGLLY
-                 do i=1,NGLLX
-                    ! defines the material coefficient associated to the domain
-                    mat_coef = rhostore(i,j,k,ispec)
-                    iglob = ibool(i,j,k,ispec)
-                    weight = wxgll(i)*wygll(j)*wzgll(k)
+        ispec_irreg = irregular_element_number(ispec)
+        if (ispec_irreg == 0) jacobianl = jacobian_regular
+        do k = 1,NGLLZ
+          do j = 1,NGLLY
+            do i = 1,NGLLX
+              ! defines the material coefficient associated to the domain
+              mat_coef = rhostore(i,j,k,ispec)
+              iglob = ibool(i,j,k,ispec)
 
-                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
-                    rmass(iglob) = rmass(iglob) + &
-                      real( dble(jacobianl) * weight * dble(mat_coef) * &
-                           (dble(K_store_x(i,j,k,ispec_CPML)) &
-                           + dble(d_store_x(i,j,k,ispec_CPML)) * deltat / 2.d0) ,kind=CUSTOM_REAL)
-                 enddo
-              enddo
-           enddo
+              weight = wxgll(i)*wygll(j)*wzgll(k)
+              if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
-           ! Y_surface C-PML
-        else if (CPML_regions(ispec_CPML) == CPML_Y_ONLY) then
-           ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg == 0) jacobianl = jacobian_regular
-           do k=1,NGLLZ
-              do j=1,NGLLY
-                 do i=1,NGLLX
-                    ! defines the material coefficient associated to the domain
-                    mat_coef = rhostore(i,j,k,ispec)
-                    iglob = ibool(i,j,k,ispec)
-                    weight = wxgll(i)*wygll(j)*wzgll(k)
+              rmass(iglob) = rmass(iglob) + &
+                real( dble(jacobianl) * weight * dble(mat_coef) * &
+                     (dble(K_store_x(i,j,k,ispec_CPML)) + dble(d_store_x(i,j,k,ispec_CPML)) * deltat / 2.d0),kind=CUSTOM_REAL)
+            enddo
+          enddo
+        enddo
 
-                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
-                    rmass(iglob) = rmass(iglob) + &
-                        real( dble(jacobianl) * weight * dble(mat_coef) * &
-                             (dble(K_store_y(i,j,k,ispec_CPML)) &
-                             + dble(d_store_y(i,j,k,ispec_CPML)) * deltat / 2.d0) ,kind=CUSTOM_REAL)
-                 enddo
-              enddo
-           enddo
+      else if (CPML_regions(ispec_CPML) == CPML_Y_ONLY) then
+        ! Y_surface C-PML
+        ispec_irreg = irregular_element_number(ispec)
+        if (ispec_irreg == 0) jacobianl = jacobian_regular
+        do k = 1,NGLLZ
+          do j = 1,NGLLY
+            do i = 1,NGLLX
+              ! defines the material coefficient associated to the domain
+              mat_coef = rhostore(i,j,k,ispec)
+              iglob = ibool(i,j,k,ispec)
 
-           ! Z_surface C-PML
-        else if (CPML_regions(ispec_CPML) == CPML_Z_ONLY) then
-           ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg == 0) jacobianl = jacobian_regular
-           do k=1,NGLLZ
-              do j=1,NGLLY
-                 do i=1,NGLLX
-                    ! defines the material coefficient associated to the domain
-                    mat_coef = rhostore(i,j,k,ispec)
-                    iglob = ibool(i,j,k,ispec)
-                    weight = wxgll(i)*wygll(j)*wzgll(k)
+              weight = wxgll(i)*wygll(j)*wzgll(k)
+              if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
-                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
-                    rmass(iglob) = rmass(iglob) + &
-                        real( dble(jacobianl) * weight * dble(mat_coef) * &
-                        (dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) &
-                        * deltat / 2.d0) ,kind=CUSTOM_REAL)
-                 enddo
-              enddo
-           enddo
+              rmass(iglob) = rmass(iglob) + &
+                real( dble(jacobianl) * weight * dble(mat_coef) * &
+                     (dble(K_store_y(i,j,k,ispec_CPML)) + dble(d_store_y(i,j,k,ispec_CPML)) * deltat / 2.d0),kind=CUSTOM_REAL)
+            enddo
+          enddo
+        enddo
 
-           ! XY_edge C-PML
-        else if (CPML_regions(ispec_CPML) == CPML_XY_ONLY) then
-           ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg == 0) jacobianl = jacobian_regular
-           do k=1,NGLLZ
-              do j=1,NGLLY
-                 do i=1,NGLLX
-                    ! defines the material coefficient associated to the domain
-                    mat_coef = rhostore(i,j,k,ispec)
-                    iglob = ibool(i,j,k,ispec)
-                    weight = wxgll(i)*wygll(j)*wzgll(k)
 
-                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
-                    rmass(iglob) = rmass(iglob) + &
-                      real( dble(jacobianl) * weight * dble(mat_coef) * &
-                          (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) + &
-                          (dble(d_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) + &
-                           dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) &
-                           * deltat / 2.d0) ,kind=CUSTOM_REAL)
-                 enddo
-              enddo
-           enddo
+      else if (CPML_regions(ispec_CPML) == CPML_Z_ONLY) then
+        ! Z_surface C-PML
+        ispec_irreg = irregular_element_number(ispec)
+        if (ispec_irreg == 0) jacobianl = jacobian_regular
+        do k=1,NGLLZ
+          do j=1,NGLLY
+            do i=1,NGLLX
+              ! defines the material coefficient associated to the domain
+              mat_coef = rhostore(i,j,k,ispec)
+              iglob = ibool(i,j,k,ispec)
 
-           ! XZ_edge C-PML
-        else if (CPML_regions(ispec_CPML) == CPML_XZ_ONLY) then
-           ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg == 0) jacobianl = jacobian_regular
-           do k=1,NGLLZ
-              do j=1,NGLLY
-                 do i=1,NGLLX
-                    ! defines the material coefficient associated to the domain
-                    mat_coef = rhostore(i,j,k,ispec)
-                    iglob = ibool(i,j,k,ispec)
-                    weight = wxgll(i)*wygll(j)*wzgll(k)
+              weight = wxgll(i)*wygll(j)*wzgll(k)
+              if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
-                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
-                    rmass(iglob) = rmass(iglob) + &
-                            real( dble(jacobianl) * weight * dble(mat_coef) * &
-                            (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
-                            (dble(d_store_x(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
-                            dble(d_store_z(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) &
-                            * deltat / 2.d0) ,kind=CUSTOM_REAL)
-                 enddo
-              enddo
-           enddo
+              rmass(iglob) = rmass(iglob) + &
+                real( dble(jacobianl) * weight * dble(mat_coef) * &
+                     (dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) * deltat / 2.d0),kind=CUSTOM_REAL)
+            enddo
+          enddo
+        enddo
 
-           ! YZ_edge C-PML
-        else if (CPML_regions(ispec_CPML) == CPML_YZ_ONLY) then
-           ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg == 0) jacobianl = jacobian_regular
-           do k=1,NGLLZ
-              do j=1,NGLLY
-                 do i=1,NGLLX
-                    ! defines the material coefficient associated to the domain
-                    mat_coef = rhostore(i,j,k,ispec)
-                    iglob = ibool(i,j,k,ispec)
-                    weight = wxgll(i)*wygll(j)*wzgll(k)
+      else if (CPML_regions(ispec_CPML) == CPML_XY_ONLY) then
+        ! XY_edge C-PML
+        ispec_irreg = irregular_element_number(ispec)
+        if (ispec_irreg == 0) jacobianl = jacobian_regular
+        do k=1,NGLLZ
+          do j=1,NGLLY
+            do i=1,NGLLX
+              ! defines the material coefficient associated to the domain
+              mat_coef = rhostore(i,j,k,ispec)
+              iglob = ibool(i,j,k,ispec)
 
-                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
-                    rmass(iglob) = rmass(iglob) + &
-                        real( dble(jacobianl) * weight * dble(mat_coef) * &
-                             (dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
-                             (dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
-                              dble(d_store_z(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML))) &
-                              * deltat / 2.d0) ,kind=CUSTOM_REAL)
-                 enddo
-              enddo
-           enddo
+              weight = wxgll(i)*wygll(j)*wzgll(k)
+              if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
-           ! XYZ_corner C-PML
-        else if (CPML_regions(ispec_CPML) == CPML_XYZ) then
-           ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg == 0) jacobianl = jacobian_regular
-           do k=1,NGLLZ
-              do j=1,NGLLY
-                 do i=1,NGLLX
-                    ! defines the material coefficient associated to the domain
-                    mat_coef = rhostore(i,j,k,ispec)
-                    iglob = ibool(i,j,k,ispec)
-                    weight = wxgll(i)*wygll(j)*wzgll(k)
+              rmass(iglob) = rmass(iglob) + &
+                real( dble(jacobianl) * weight * dble(mat_coef) * &
+                     (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) + &
+                      (dble(d_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) + &
+                       dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) * deltat / 2.d0),kind=CUSTOM_REAL)
+            enddo
+          enddo
+        enddo
 
-                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
-                    rmass(iglob) = rmass(iglob) + &
-                        real( dble(jacobianl) * weight * dble(mat_coef) * &
-                            (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) * &
-                            dble(K_store_z(i,j,k,ispec_CPML)) + (dble(d_store_x(i,j,k,ispec_CPML)) * &
-                            dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
-                            dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML)) * &
-                            dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) * &
-                            dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML))) * &
-                            deltat / 2.d0) ,kind=CUSTOM_REAL)
-                 enddo
-              enddo
-           enddo
-        else
-           stop 'error in PML mesh file'
-        endif
-     endif
+      else if (CPML_regions(ispec_CPML) == CPML_XZ_ONLY) then
+        ! XZ_edge C-PML
+        ispec_irreg = irregular_element_number(ispec)
+        if (ispec_irreg == 0) jacobianl = jacobian_regular
+        do k = 1,NGLLZ
+          do j = 1,NGLLY
+            do i = 1,NGLLX
+              ! defines the material coefficient associated to the domain
+              mat_coef = rhostore(i,j,k,ispec)
+              iglob = ibool(i,j,k,ispec)
+
+              weight = wxgll(i)*wygll(j)*wzgll(k)
+              if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+
+              rmass(iglob) = rmass(iglob) + &
+                real( dble(jacobianl) * weight * dble(mat_coef) * &
+                     (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
+                      (dble(d_store_x(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
+                       dble(d_store_z(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) * deltat / 2.d0),kind=CUSTOM_REAL)
+            enddo
+          enddo
+        enddo
+
+      else if (CPML_regions(ispec_CPML) == CPML_YZ_ONLY) then
+        ! YZ_edge C-PML
+        ispec_irreg = irregular_element_number(ispec)
+        if (ispec_irreg == 0) jacobianl = jacobian_regular
+        do k=1,NGLLZ
+          do j=1,NGLLY
+            do i=1,NGLLX
+              ! defines the material coefficient associated to the domain
+              mat_coef = rhostore(i,j,k,ispec)
+              iglob = ibool(i,j,k,ispec)
+
+              weight = wxgll(i)*wygll(j)*wzgll(k)
+              if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+
+              rmass(iglob) = rmass(iglob) + &
+                real( dble(jacobianl) * weight * dble(mat_coef) * &
+                     (dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
+                      (dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
+                       dble(d_store_z(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML))) * deltat / 2.d0) ,kind=CUSTOM_REAL)
+            enddo
+          enddo
+        enddo
+
+      else if (CPML_regions(ispec_CPML) == CPML_XYZ) then
+        ! XYZ_corner C-PML
+        ispec_irreg = irregular_element_number(ispec)
+        if (ispec_irreg == 0) jacobianl = jacobian_regular
+        do k = 1,NGLLZ
+          do j = 1,NGLLY
+            do i = 1,NGLLX
+              ! defines the material coefficient associated to the domain
+              mat_coef = rhostore(i,j,k,ispec)
+              iglob = ibool(i,j,k,ispec)
+
+              weight = wxgll(i)*wygll(j)*wzgll(k)
+              if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+
+              rmass(iglob) = rmass(iglob) + &
+                real( dble(jacobianl) * weight * dble(mat_coef) * &
+                     (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) * &
+                      dble(K_store_z(i,j,k,ispec_CPML)) + (dble(d_store_x(i,j,k,ispec_CPML)) * &
+                      dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
+                      dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML)) * &
+                      dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) * &
+                      dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML))) * deltat / 2.d0) ,kind=CUSTOM_REAL)
+            enddo
+          enddo
+        enddo
+      else
+        stop 'error in PML mesh file'
+      endif
+    endif
   enddo ! do ispec_CPML=1,nspec_cpml
 
   end subroutine create_mass_matrices_pml_elastic
@@ -640,7 +647,7 @@
 
   use generate_databases_par, only: DT,is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
     K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec, &
-    NGLLX,NGLLY,NGLLZ,SIZE_REAL,CUSTOM_REAL, &
+    NGLLX,NGLLY,NGLLZ,CUSTOM_REAL, &
     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
     CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 

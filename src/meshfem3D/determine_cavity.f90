@@ -28,14 +28,12 @@
 
   subroutine cmm_determine_cavity(nglob)
 
+  use constants, only: MF_IN_DATA_FILES,MAX_STRING_LEN,IMAIN,HUGEVAL,TINYVAL,NDIM,myrank
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+
   use create_meshfem_par, only: nodes_coords,ispec_material_id,iboun,iMPIcut_xi,iMPIcut_eta
 
-  use meshfem3D_par, only: ibool,xstore,ystore,zstore,nspec,NPROC_XI,NPROC_ETA,myrank,CAVITY_FILE
-
-  ! create the different regions of the mesh
-  use constants, only: MF_IN_DATA_FILES,MAX_STRING_LEN,IMAIN,CUSTOM_REAL,HUGEVAL,TINYVAL
-
-  use constants_meshfem3D, only: NGLLCUBE_M,NGLLX_M,NGLLY_M,NGLLZ_M
+  use meshfem3D_par, only: ibool,xstore,ystore,zstore,nspec,NPROC_XI,NPROC_ETA,CAVITY_FILE
 
   implicit none
 
@@ -70,9 +68,7 @@
 
   character(len=MAX_STRING_LEN) :: filename
 
-
   !-------------------------------cavity----------------------------------------
-
 
   ! begin cavity
   ! default
@@ -263,9 +259,12 @@ cavity: do i_cavity = 1,ncavity
             ! ibool(1,1,1,ispec) , ibool(1,2,1,ispec) , ibool(1,1,2,ispec) , ibool(1,2,2,ispec)
 
             ! surface mid-point
-            x1 = xstore(1,1,1,ispec) * 0.25 + xstore(1,2,1,ispec) * 0.25 + xstore(1,1,2,ispec) * 0.25 + xstore(1,2,2,ispec) * 0.25
-            y1 = ystore(1,1,1,ispec) * 0.25 + ystore(1,2,1,ispec) * 0.25 + ystore(1,1,2,ispec) * 0.25 + ystore(1,2,2,ispec) * 0.25
-            z1 = zstore(1,1,1,ispec) * 0.25 + zstore(1,2,1,ispec) * 0.25 + zstore(1,1,2,ispec) * 0.25 + zstore(1,2,2,ispec) * 0.25
+            x1 = 0.25*(xstore(1,1,1,ispec) + xstore(1,NGLLY_M,1,ispec)+ &
+                       xstore(1,1,NGLLZ_M,ispec) + xstore(1,NGLLY_M,NGLLZ_M,ispec))
+            y1 = 0.25*(ystore(1,1,1,ispec) + ystore(1,NGLLY_M,1,ispec)+ &
+                       ystore(1,1,NGLLZ_M,ispec) + ystore(1,NGLLY_M,NGLLZ_M,ispec))
+            z1 = 0.25*(zstore(1,1,1,ispec) + zstore(1,NGLLY_M,1,ispec)+ &
+                       zstore(1,1,NGLLZ_M,ispec) + zstore(1,NGLLY_M,NGLLZ_M,ispec))
 
             ! index in total array (counts from rank 0 up)
             icav_glob = icav
@@ -285,9 +284,12 @@ cavity: do i_cavity = 1,ncavity
             ! ibool(2,1,1,ispec) , ibool(2,2,1,ispec) , ibool(2,1,2,ispec) , ibool(2,2,2,ispec)
 
             ! surface mid-point
-            x1 = xstore(2,1,1,ispec) * 0.25 + xstore(2,2,1,ispec) * 0.25 + xstore(2,1,2,ispec) * 0.25 + xstore(2,2,2,ispec) * 0.25
-            y1 = ystore(2,1,1,ispec) * 0.25 + ystore(2,2,1,ispec) * 0.25 + ystore(2,1,2,ispec) * 0.25 + ystore(2,2,2,ispec) * 0.25
-            z1 = zstore(2,1,1,ispec) * 0.25 + zstore(2,2,1,ispec) * 0.25 + zstore(2,1,2,ispec) * 0.25 + zstore(2,2,2,ispec) * 0.25
+            x1 = 0.25*(xstore(NGLLX_M,1,1,ispec) + xstore(NGLLX_M,NGLLY_M,1,ispec)+ &
+                       xstore(NGLLX_M,1,NGLLZ_M,ispec) + xstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec))
+            y1 = 0.25*(ystore(NGLLX_M,1,1,ispec) + ystore(NGLLX_M,NGLLY_M,1,ispec)+ &
+                       ystore(NGLLX_M,1,NGLLZ_M,ispec) + ystore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec))
+            z1 = 0.25*(zstore(NGLLX_M,1,1,ispec) + zstore(NGLLX_M,NGLLY_M,1,ispec)+ &
+                       zstore(NGLLX_M,1,NGLLZ_M,ispec) + zstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec))
 
             ! index in total array (counts from rank 0 up)
             icav_glob = icav + 1
@@ -307,9 +309,12 @@ cavity: do i_cavity = 1,ncavity
             ! ibool(1,1,1,ispec),ibool(2,1,1,ispec),ibool(1,1,2,ispec),ibool(2,1,2,ispec)
 
             ! surface mid-point
-            x1 = xstore(1,1,1,ispec) * 0.25 + xstore(2,1,1,ispec) * 0.25 + xstore(1,1,2,ispec) * 0.25 + xstore(2,1,2,ispec) * 0.25
-            y1 = ystore(1,1,1,ispec) * 0.25 + ystore(2,1,1,ispec) * 0.25 + ystore(1,1,2,ispec) * 0.25 + ystore(2,1,2,ispec) * 0.25
-            z1 = zstore(1,1,1,ispec) * 0.25 + zstore(2,1,1,ispec) * 0.25 + zstore(1,1,2,ispec) * 0.25 + zstore(2,1,2,ispec) * 0.25
+            x1 = 0.25*(xstore(1,1,1,ispec) + xstore(NGLLX_M,1,1,ispec) + &
+                       xstore(1,1,NGLLZ_M,ispec) + xstore(NGLLX_M,1,NGLLZ_M,ispec))
+            y1 = 0.25*(ystore(1,1,1,ispec) + ystore(NGLLX_M,1,1,ispec) + &
+                       ystore(1,1,NGLLZ_M,ispec) + ystore(NGLLX_M,1,NGLLZ_M,ispec))
+            z1 = 0.25*(zstore(1,1,1,ispec) + zstore(NGLLX_M,1,1,ispec) + &
+                       zstore(1,1,NGLLZ_M,ispec) + zstore(NGLLX_M,1,NGLLZ_M,ispec))
 
             ! index in total array (counts from rank 0 up)
             icav_glob = icav + 2
@@ -329,9 +334,12 @@ cavity: do i_cavity = 1,ncavity
             ! ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec)
 
             ! surface mid-point
-            x1 = xstore(2,2,1,ispec) * 0.25 + xstore(1,2,1,ispec) * 0.25 + xstore(2,2,2,ispec) * 0.25 + xstore(1,2,2,ispec) * 0.25
-            y1 = ystore(2,2,1,ispec) * 0.25 + ystore(1,2,1,ispec) * 0.25 + ystore(2,2,2,ispec) * 0.25 + ystore(1,2,2,ispec) * 0.25
-            z1 = zstore(2,2,1,ispec) * 0.25 + zstore(1,2,1,ispec) * 0.25 + zstore(2,2,2,ispec) * 0.25 + zstore(1,2,2,ispec) * 0.25
+            x1 = 0.25*(xstore(NGLLX_M,NGLLY_M,1,ispec) + xstore(1,NGLLY_M,1,ispec) + &
+                       xstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec) + xstore(1,NGLLY_M,NGLLZ_M,ispec))
+            y1 = 0.25*(ystore(NGLLX_M,NGLLY_M,1,ispec) + ystore(1,NGLLY_M,1,ispec) + &
+                       ystore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec) + ystore(1,NGLLY_M,NGLLZ_M,ispec))
+            z1 = 0.25*(zstore(NGLLX_M,NGLLY_M,1,ispec) + zstore(1,NGLLY_M,1,ispec) + &
+                       zstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec) + zstore(1,NGLLY_M,NGLLZ_M,ispec))
 
             ! index in total array (counts from rank 0 up)
             icav_glob = icav + 3
@@ -350,7 +358,7 @@ cavity: do i_cavity = 1,ncavity
 
       !print *,'cavity boundary:',myrank,'array:',cavity_boundary(:,:)
 
-      ! collects on master processes
+      ! collects on main processes
       if (myrank == 0) then
         allocate(tmp_all(4,num_cav_total*4),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 1329')
@@ -378,9 +386,12 @@ cavity: do i_cavity = 1,ncavity
           ! ibool(1,1,1,ispec) , ibool(1,2,1,ispec) , ibool(1,1,2,ispec) , ibool(1,2,2,ispec)
 
           ! surface mid-point
-          x1 = xstore(1,1,1,ispec) * 0.25 + xstore(1,2,1,ispec) * 0.25 + xstore(1,1,2,ispec) * 0.25 + xstore(1,2,2,ispec) * 0.25
-          y1 = ystore(1,1,1,ispec) * 0.25 + ystore(1,2,1,ispec) * 0.25 + ystore(1,1,2,ispec) * 0.25 + ystore(1,2,2,ispec) * 0.25
-          z1 = zstore(1,1,1,ispec) * 0.25 + zstore(1,2,1,ispec) * 0.25 + zstore(1,1,2,ispec) * 0.25 + zstore(1,2,2,ispec) * 0.25
+          x1 = 0.25*(xstore(1,1,1,ispec) + xstore(1,NGLLY_M,1,ispec) + &
+                     xstore(1,1,NGLLZ_M,ispec) + xstore(1,NGLLY_M,NGLLZ_M,ispec))
+          y1 = 0.25*(ystore(1,1,1,ispec) + ystore(1,NGLLY_M,1,ispec) + &
+                     ystore(1,1,NGLLZ_M,ispec) + ystore(1,NGLLY_M,NGLLZ_M,ispec))
+          z1 = 0.25*(zstore(1,1,1,ispec) + zstore(1,NGLLY_M,1,ispec) + &
+                     zstore(1,1,NGLLZ_M,ispec) + zstore(1,NGLLY_M,NGLLZ_M,ispec))
 
           ! loops over all cavity surface points
           do icav = 1, 4*num_cav_total
@@ -401,9 +412,12 @@ cavity: do i_cavity = 1,ncavity
           ! ibool(2,1,1,ispec) , ibool(2,2,1,ispec) , ibool(2,1,2,ispec) , ibool(2,2,2,ispec)
 
           ! surface mid-point
-          x1 = xstore(2,1,1,ispec) * 0.25 + xstore(2,2,1,ispec) * 0.25 + xstore(2,1,2,ispec) * 0.25 + xstore(2,2,2,ispec) * 0.25
-          y1 = ystore(2,1,1,ispec) * 0.25 + ystore(2,2,1,ispec) * 0.25 + ystore(2,1,2,ispec) * 0.25 + ystore(2,2,2,ispec) * 0.25
-          z1 = zstore(2,1,1,ispec) * 0.25 + zstore(2,2,1,ispec) * 0.25 + zstore(2,1,2,ispec) * 0.25 + zstore(2,2,2,ispec) * 0.25
+          x1 = 0.25*(xstore(NGLLX_M,1,1,ispec) + xstore(NGLLX_M,NGLLY_M,1,ispec) + &
+                     xstore(NGLLX_M,1,NGLLZ_M,ispec) + xstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec))
+          y1 = 0.25*(ystore(NGLLX_M,1,1,ispec) + ystore(NGLLX_M,NGLLY_M,1,ispec) + &
+                     ystore(NGLLX_M,1,NGLLZ_M,ispec) + ystore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec))
+          z1 = 0.25*(zstore(NGLLX_M,1,1,ispec) + zstore(NGLLX_M,NGLLY_M,1,ispec) + &
+                     zstore(NGLLX_M,1,NGLLZ_M,ispec) + zstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec))
 
           ! loops over all cavity surface points
           do icav = 1, 4*num_cav_total
@@ -424,9 +438,12 @@ cavity: do i_cavity = 1,ncavity
           ! ibool(1,1,1,ispec),ibool(2,1,1,ispec),ibool(1,1,2,ispec),ibool(2,1,2,ispec)
 
           ! surface mid-point
-          x1 = xstore(1,1,1,ispec) * 0.25 + xstore(2,1,1,ispec) * 0.25 + xstore(1,1,2,ispec) * 0.25 + xstore(2,1,2,ispec) * 0.25
-          y1 = ystore(1,1,1,ispec) * 0.25 + ystore(2,1,1,ispec) * 0.25 + ystore(1,1,2,ispec) * 0.25 + ystore(2,1,2,ispec) * 0.25
-          z1 = zstore(1,1,1,ispec) * 0.25 + zstore(2,1,1,ispec) * 0.25 + zstore(1,1,2,ispec) * 0.25 + zstore(2,1,2,ispec) * 0.25
+          x1 = 0.25*(xstore(1,1,1,ispec) + xstore(NGLLX_M,1,1,ispec) + &
+                     xstore(1,1,NGLLZ_M,ispec) + xstore(NGLLX_M,1,NGLLZ_M,ispec))
+          y1 = 0.25*(ystore(1,1,1,ispec) + ystore(NGLLX_M,1,1,ispec) + &
+                     ystore(1,1,NGLLZ_M,ispec) + ystore(NGLLX_M,1,NGLLZ_M,ispec))
+          z1 = 0.25*(zstore(1,1,1,ispec) + zstore(NGLLX_M,1,1,ispec) + &
+                     zstore(1,1,NGLLZ_M,ispec) + zstore(NGLLX_M,1,NGLLZ_M,ispec))
 
           ! loops over all cavity surface points
           do icav = 1, 4*num_cav_total
@@ -447,9 +464,12 @@ cavity: do i_cavity = 1,ncavity
           ! ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec)
 
           ! surface mid-point
-          x1 = xstore(2,2,1,ispec) * 0.25 + xstore(1,2,1,ispec) * 0.25 + xstore(2,2,2,ispec) * 0.25 + xstore(1,2,2,ispec) * 0.25
-          y1 = ystore(2,2,1,ispec) * 0.25 + ystore(1,2,1,ispec) * 0.25 + ystore(2,2,2,ispec) * 0.25 + ystore(1,2,2,ispec) * 0.25
-          z1 = zstore(2,2,1,ispec) * 0.25 + zstore(1,2,1,ispec) * 0.25 + zstore(2,2,2,ispec) * 0.25 + zstore(1,2,2,ispec) * 0.25
+          x1 = 0.25*(xstore(NGLLX_M,NGLLY_M,1,ispec) + xstore(1,NGLLY_M,1,ispec) + &
+                     xstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec) + xstore(1,NGLLY_M,NGLLZ_M,ispec))
+          y1 = 0.25*(ystore(NGLLX_M,NGLLY_M,1,ispec) + ystore(1,NGLLY_M,1,ispec) + &
+                     ystore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec) + ystore(1,NGLLY_M,NGLLZ_M,ispec))
+          z1 = 0.25*(zstore(NGLLX_M,NGLLY_M,1,ispec) + zstore(1,NGLLY_M,1,ispec) + &
+                     zstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec) + zstore(1,NGLLY_M,NGLLZ_M,ispec))
 
           ! loops over all cavity surface points
           do icav = 1, 4*num_cav_total
@@ -500,7 +520,7 @@ cavity: do i_cavity = 1,ncavity
     if (inode_new_mesh /= nglob) call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
 
     ! old mesh arrays
-    allocate(nodes_coords_old(nglob_old,3),stat=ier)
+    allocate(nodes_coords_old(nglob_old,NDIM),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1333')
     allocate(ispec_material_id_old(nspec_old),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1334')
@@ -528,7 +548,7 @@ cavity: do i_cavity = 1,ncavity
     deallocate(iMPIcut_xi,iMPIcut_eta)
 
     ! re-allocates new mesh arrays
-    allocate(nodes_coords(nglob,3),stat=ier)
+    allocate(nodes_coords(nglob,NDIM),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1339')
     allocate(ispec_material_id(nspec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1340')

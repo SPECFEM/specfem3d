@@ -1,20 +1,23 @@
 #!/usr/bin/env python
-
-
-
+import os
 import cubit
 try:
     cubit.init([""])
 except:
     pass
 
-cfg='fullpath_myparameterfile.cfg'
-o='fullpath_specfem3d_meshfiles_outputdir'
-o1='fullpath_cubit_meshfiles_outputdir'
+#cfg='fullpath_myparameterfile.cfg'
+cfg='Mount_StHelens/mout_sthelens.cfg'
+
+
+o='MESH/'
+o1='cubit_mesh_files/'
 
 from geocubitlib import volumes, mesh_volume, exportlib
 volumes.volumes(cfg)
 mesh_volume.mesh(cfg)
+
+os.system('mkdir -p MESH/')
 exportlib.collect(outdir=o1)
 #exportlib.e2SEM(outdir=o,listblock=[4],listflag=[-1])
 exportlib.e2SEM(outdir=o)

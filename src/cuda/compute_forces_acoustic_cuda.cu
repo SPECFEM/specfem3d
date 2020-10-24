@@ -496,32 +496,36 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 }
 
 /* ----------------------------------------------------------------------------------------------- */
-//Reference kernel, solving a single wavefield
-/*
-template<int FORWARD_OR_ADJOINT> __global__ void
+
+//solving a single wavefield
+
+__global__ void
 #ifdef USE_LAUNCH_BOUNDS
 // adds compiler specification
 __launch_bounds__(NGLL3_PADDED,LAUNCH_MIN_BLOCKS_ACOUSTIC)
 #endif
-Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
-                       const int* d_ibool,
-                       const int* d_phase_ispec_inner_acoustic,
-                       const int num_phase_ispec_acoustic,
-                       const int d_iphase,
-                       realw_const_p d_potential_acoustic,
-                       realw_p d_potential_dot_dot_acoustic,
-                       realw* d_xix,realw* d_xiy,realw* d_xiz,
-                       realw* d_etax,realw* d_etay,realw* d_etaz,
-                       realw* d_gammax,realw* d_gammay,realw* d_gammaz,
-                       realw_const_p d_hprime_xx,
-                       realw_const_p hprimewgll_xx,
-                       realw_const_p wgllwgll_xy,realw_const_p wgllwgll_xz,realw_const_p wgllwgll_yz,
-                       realw* d_rhostore,
-                       const int use_mesh_coloring_gpu,
-                       const int gravity,
-                       realw_const_p minus_g,
-                       realw* d_kappastore,
-                       realw_const_p wgll_cube){
+Kernel_2_acoustic_single_impl(const int nb_blocks_to_compute,
+                              const int* d_ibool,
+                              const int* d_phase_ispec_inner_acoustic,
+                              const int num_phase_ispec_acoustic,
+                              const int d_iphase,
+                              field_const_p d_potential_acoustic,
+                              field_p d_potential_dot_dot_acoustic,
+                              realw* d_xix,realw* d_xiy,realw* d_xiz,
+                              realw* d_etax,realw* d_etay,realw* d_etaz,
+                              realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+                              const int* d_irregular_element_number,
+                              const realw xix_regular, const realw jacobian_regular,
+                              realw_const_p d_hprime_xx,
+                              realw_const_p hprimewgll_xx,
+                              realw_const_p wgllwgll_xy,realw_const_p wgllwgll_xz,realw_const_p wgllwgll_yz,
+                              realw* d_rhostore,
+                              const int use_mesh_coloring_gpu,
+                              const int gravity,
+                              realw_const_p minus_g,
+                              realw* d_kappastore,
+                              realw_const_p wgll_cube,
+                              const int FORWAR_OR_ADJOINT){
 
   // block-id == number of local element id in phase_ispec array
   int bx = blockIdx.y*gridDim.x+blockIdx.x;
@@ -535,53 +539,33 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 
   int I,J,K;
   int iglob,offset;
-  int working_element;
+  int working_element,ispec_irreg;
 
-  realw temp1l,temp2l,temp3l;
+  field temp1l,temp2l,temp3l;
   realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl;
   realw jacobianl;
 
-  realw dpotentialdxl,dpotentialdyl,dpotentialdzl;
+  field dpotentialdxl,dpotentialdyl,dpotentialdzl;
   realw fac1,fac2,fac3;
   realw rho_invl,kappa_invl;
 
-  realw sum_terms;
-  realw gravity_term;
+  field sum_terms;
+  field gravity_term;
 
-  __shared__ realw s_dummy_loc[NGLL3];
+  __shared__ field s_dummy_loc[NGLL3];
 
-  __shared__ realw s_temp1[NGLL3];
-  __shared__ realw s_temp2[NGLL3];
-  __shared__ realw s_temp3[NGLL3];
+  __shared__ field s_temp1[NGLL3];
+  __shared__ field s_temp2[NGLL3];
+  __shared__ field s_temp3[NGLL3];
 
   __shared__ realw sh_hprime_xx[NGLL2];
   __shared__ realw sh_hprimewgll_xx[NGLL2];
-
-// arithmetic intensity: ratio of number-of-arithmetic-operations / number-of-bytes-accessed-on-DRAM
-//
-// hand-counts on floating-point operations: counts addition/subtraction/multiplication/division
-//                                           no counts for operations on indices in for-loops (compiler will likely unrool loops)
-//
-//                                           counts accesses to global memory, but no shared memory or register loads/stores
-//                                           float has 4 bytes
-
-// counts: for simulations without gravity, without mesh_coloring
-//         counts floating-point operations (FLOP) per thread
-//         counts global memory accesses in bytes (BYTES) per block
-// 2 FLOP
-//
-// 0 BYTES
 
   // checks if anything to do
   if (bx >= nb_blocks_to_compute) return;
 
   // limits thread ids to range [0,125-1]
   if (tx >= NGLL3) tx = NGLL3-1;
-
-// counts:
-// + 1 FLOP
-//
-// + 0 BYTE
 
   // spectral-element id
 #ifdef USE_MESH_COLORING_GPU
@@ -598,71 +582,54 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 
   // local padded index
   offset = working_element*NGLL3_PADDED + tx;
-
+  ispec_irreg = d_irregular_element_number[working_element] -1;
   // global index
   iglob = d_ibool[offset] - 1;
-
-// counts:
-// + 7 FLOP
-//
-// + 2 float * 128 threads = 1024 BYTE
 
   // loads potential values into shared memory
   if (threadIdx.x < NGLL3) {
 #ifdef USE_TEXTURES_FIELDS
-    s_dummy_loc[tx] = texfetch_potential<FORWARD_OR_ADJOINT>(iglob);
+    if (FORWARD_OR_ADJOINT == 3){
+      s_dummy_loc[tx] = texfetch_potential<3>(iglob);
+    }else{
+      s_dummy_loc[tx] = texfetch_potential<1>(iglob);
+    }
 #else
     // changing iglob indexing to match fortran row changes fast style
     s_dummy_loc[tx] = d_potential_acoustic[iglob];
 #endif
   }
 
-// counts:
-// + 0 FLOP
-//
-// + 1 float * 125 threads = 500 BYTE
-
   // gravity
-  if (gravity ){
-    kappa_invl = 1.f / d_kappastore[working_element*NGLL3 + tx];
-  }
+  if (gravity) kappa_invl = 1.f / d_kappastore[working_element*NGLL3 + tx];
 
   // local index
   K = (tx/NGLL2);
   J = ((tx-K*NGLL2)/NGLLX);
   I = (tx-K*NGLL2-J*NGLLX);
 
-// counts:
-// + 8 FLOP
-//
-// + 0 BYTES
-
-  // note: loads mesh values here to give compiler possibility to overlap memory fetches with some computations;
-  //       arguments defined as realw* instead of const realw* __restrict__ to avoid that the compiler
-  //       loads all memory by texture loads (arrays accesses are coalescent, thus no need for texture reads)
-  //
   // calculates laplacian
-  xixl = d_xix[offset];
-  xiyl = d_xiy[offset];
-  xizl = d_xiz[offset];
-  etaxl = d_etax[offset];
-  etayl = d_etay[offset];
-  etazl = d_etaz[offset];
-  gammaxl = d_gammax[offset];
-  gammayl = d_gammay[offset];
-  gammazl = d_gammaz[offset];
+  if (ispec_irreg >= 0){
+    //irregular_element
+    int offset = ispec_irreg*NGLL3_PADDED + tx;
 
-  jacobianl = 1.f / (xixl*(etayl*gammazl-etazl*gammayl)
-                    -xiyl*(etaxl*gammazl-etazl*gammaxl)
-                    +xizl*(etaxl*gammayl-etayl*gammaxl));
+    xixl = d_xix[offset];
+    xiyl = d_xiy[offset];
+    xizl = d_xiz[offset];
+    etaxl = d_etax[offset];
+    etayl = d_etay[offset];
+    etazl = d_etaz[offset];
+    gammaxl = d_gammax[offset];
+    gammayl = d_gammay[offset];
+    gammazl = d_gammaz[offset];
+
+    jacobianl = 1.f / (xixl*(etayl*gammazl-etazl*gammayl)
+                      -xiyl*(etaxl*gammazl-etazl*gammaxl)
+                      +xizl*(etaxl*gammayl-etayl*gammaxl));
+  }
 
   // density (reciproc)
   rho_invl = 1.f / d_rhostore[offset];
-
-// counts:
-// + 16 FLOP
-//
-// + 10 float * 128 threads = 5120 BYTE
 
   // loads hprime into shared memory
   if (tx < NGLL2) {
@@ -675,20 +642,15 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
     sh_hprimewgll_xx[tx] = hprimewgll_xx[tx];
   }
 
-// counts:
-// + 0 FLOP
-//
-// + 2 * 1 float * 25 threads = 200 BYTE
-
   // synchronize all the threads (one thread for each of the NGLL grid points of the
   // current spectral element) because we need the whole element to be ready in order
   // to be able to compute the matrix products along cut planes of the 3D element below
   __syncthreads();
 
   // computes first matrix product
-  temp1l = 0.f;
-  temp2l = 0.f;
-  temp3l = 0.f;
+  temp1l = Make_field(0.f);
+  temp2l = Make_field(0.f);
+  temp3l = Make_field(0.f);
 
   for (int l=0;l<NGLLX;l++) {
     //assumes that hprime_xx = hprime_yy = hprime_zz
@@ -700,27 +662,24 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
     temp3l += s_dummy_loc[l*NGLL2+J*NGLLX+I] * sh_hprime_xx[l*NGLLX+K];
   }
 
-// counts:
-// + NGLLX * 3 * 8 FLOP = 120 FLOP
-//
-// + 0 BYTE
-
   // compute derivatives of ux, uy and uz with respect to x, y and z
   // derivatives of potential
-  dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l;
-  dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l;
-  dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l;
-
-// counts:
-// + 3 * 5 FLOP = 15 FLOP
-//
-// + 0 BYTE
-
-  // form the dot product with the test vector
   if (threadIdx.x < NGLL3) {
-    s_temp1[tx] = jacobianl * rho_invl * (dpotentialdxl*xixl + dpotentialdyl*xiyl + dpotentialdzl*xizl);
-    s_temp2[tx] = jacobianl * rho_invl * (dpotentialdxl*etaxl + dpotentialdyl*etayl + dpotentialdzl*etazl);
-    s_temp3[tx] = jacobianl * rho_invl * (dpotentialdxl*gammaxl + dpotentialdyl*gammayl + dpotentialdzl*gammazl);
+    if (ispec_irreg >= 0){
+      //irregular_element
+      dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l;
+      dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l;
+      dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l;
+
+      // form the dot product with the test vector
+      s_temp1[tx] = jacobianl * rho_invl * (dpotentialdxl*xixl + dpotentialdyl*xiyl + dpotentialdzl*xizl);
+      s_temp2[tx] = jacobianl * rho_invl * (dpotentialdxl*etaxl + dpotentialdyl*etayl + dpotentialdzl*etazl);
+      s_temp3[tx] = jacobianl * rho_invl * (dpotentialdxl*gammaxl + dpotentialdyl*gammayl + dpotentialdzl*gammazl);
+    }else{
+      s_temp1[tx] = jacobian_regular * rho_invl * temp1l * xix_regular * xix_regular;
+      s_temp2[tx] = jacobian_regular * rho_invl * temp2l * xix_regular * xix_regular;
+      s_temp3[tx] = jacobian_regular * rho_invl * temp3l * xix_regular * xix_regular;
+    }
   }
 
   // pre-computes gravity sum term
@@ -732,20 +691,15 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
     gravity_term = minus_g[iglob] * kappa_invl * jacobianl * wgll_cube[tx] * dpotentialdzl;
   }
 
-// counts:
-// + 3 * 7 FLOP = 21 FLOP
-//
-// + 0 BYTE
-
   // synchronize all the threads (one thread for each of the NGLL grid points of the
   // current spectral element) because we need the whole element to be ready in order
   // to be able to compute the matrix products along cut planes of the 3D element below
   __syncthreads();
 
   // computes second matrix product
-  temp1l = 0.f;
-  temp2l = 0.f;
-  temp3l = 0.f;
+  temp1l = Make_field(0.f);
+  temp2l = Make_field(0.f);
+  temp3l = Make_field(0.f);
 
   for (int l=0;l<NGLLX;l++) {
     //assumes hprimewgll_xx = hprimewgll_yy = hprimewgll_zz
@@ -757,11 +711,6 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
     temp3l += s_temp3[l*NGLL2+J*NGLLX+I] * sh_hprimewgll_xx[K*NGLLX+l];
   }
 
-// counts:
-// + NGLLX * 3 * 8 FLOP = 120 FLOP
-//
-// + 0 BYTE
-
   // summed terms with added gll weights
   fac1 = wgllwgll_yz[K*NGLLX+J];
   fac2 = wgllwgll_xz[K*NGLLX+I];
@@ -772,17 +721,16 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
   // adds gravity contribution
   if (gravity) sum_terms += gravity_term;
 
-// counts:
-// + 3 * 2 FLOP + 6 FLOP = 12 FLOP
-//
-// + 3 float * 128 threads = 1536 BYTE
-
   // assembles potential array
   if (threadIdx.x < NGLL3) {
 #ifdef USE_MESH_COLORING_GPU
   // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
-    d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<FORWARD_OR_ADJOINT>(iglob) + sum_terms;
+    if (FORWARD_OR_ADJOINT == 3){
+      d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<3>(iglob) + sum_terms;
+    }else{
+      d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<1>(iglob) + sum_terms;
+    }
 #else
     d_potential_dot_dot_acoustic[iglob] += sum_terms;
 #endif // USE_TEXTURES_FIELDS
@@ -791,7 +739,11 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
     if (use_mesh_coloring_gpu ){
       // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
-      d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<FORWARD_OR_ADJOINT>(iglob) + sum_terms;
+      if (FORWARD_OR_ADJOINT == 3){
+        d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<3>(iglob) + sum_terms;
+      }else{
+        d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<1>(iglob) + sum_terms;
+      }
 #else
       d_potential_dot_dot_acoustic[iglob] += sum_terms;
 #endif // USE_TEXTURES_FIELDS
@@ -800,13 +752,11 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
     }
 #endif // MESH_COLORING
   }
+}
 
+/* ----------------------------------------------------------------------------------------------- */
 
-
-
-
-
-
+/*
 // kernel useful for optimization: stripped-down version
 //                                 acoustic kernel without gravity and without mesh coloring
 
@@ -1004,7 +954,6 @@ Kernel_2_acoustic_perf_impl(const int nb_blocks_to_compute,
       atomicAdd(&d_potential_dot_dot_acoustic[iglob],sum_terms);
   }
 }
-
 */
 
 
@@ -1016,11 +965,16 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
                        realw* d_etax,realw* d_etay,realw* d_etaz,
                        realw* d_gammax,realw* d_gammay,realw* d_gammaz,
                        realw* d_rhostore,
-                       realw* d_kappastore){
+                       realw* d_kappastore,
+                       const int FORWARD_OR_ADJOINT){
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("before acoustic kernel Kernel 2");
-#endif
+  GPU_ERROR_CHECKING("before acoustic kernel Kernel 2");
+
+  // safety check
+  if (FORWARD_OR_ADJOINT != 0 && FORWARD_OR_ADJOINT != 1 && FORWARD_OR_ADJOINT != 3) {
+    exit_on_error("Error invalid FORWARD_OR_ADJOINT in Kernel_2_acoustic() routine");
+  }
+
   // if the grid can handle the number of blocks, we let it be 1D
   // grid_2_x = nb_elem_color;
   // nb_elem_color is just how many blocks we are computing now
@@ -1032,6 +986,9 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
+  // note: for computational efficienty, the FORWARD_OR_ADJOINT variable here can have a special case (== 0)
+  //       to combine forward and backward wavefield in the same kernel call
+
   // Cuda timing
   cudaEvent_t start, stop;
   if (CUDA_TIMING ){
@@ -1039,51 +996,70 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   }
   int nb_field = mp->simulation_type == 3 ? 2 : 1 ;
 
-  //This kernel treats both forward and adjoint wavefield within the same call, to increase performance ( ~37% faster for pure acoustic simulations )
-  Kernel_2_acoustic_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                                                    d_ibool,
-                                                                    mp->d_irregular_element_number,
-                                                                    mp->d_phase_ispec_inner_acoustic,
-                                                                    mp->num_phase_ispec_acoustic,
-                                                                    d_iphase,
-                                                                    mp->d_potential_acoustic, mp->d_potential_dot_dot_acoustic,
-                                                                    mp->d_b_potential_acoustic, mp->d_b_potential_dot_dot_acoustic,
-                                                                    nb_field,
-                                                                    d_xix, d_xiy, d_xiz,
-                                                                    d_etax, d_etay, d_etaz,
-                                                                    d_gammax, d_gammay, d_gammaz,
-                                                                    mp->xix_regular,mp->jacobian_regular,
-                                                                    mp->d_hprime_xx,
-                                                                    mp->d_hprimewgll_xx,
-                                                                    mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                                    d_rhostore,
-                                                                    mp->use_mesh_coloring_gpu,
-                                                                    mp->gravity,
-                                                                    mp->d_minus_g,
-                                                                    d_kappastore,
-                                                                    mp->d_wgll_cube);
+  // sets gpu arrays
+  field* potential, *potential_dot_dot;
+  if (FORWARD_OR_ADJOINT == 1 || FORWARD_OR_ADJOINT == 0) {
+    // forward wavefields -> FORWARD_OR_ADJOINT == 1
+    potential = mp->d_potential_acoustic;
+    potential_dot_dot = mp->d_potential_dot_dot_acoustic;
+  } else {
+    // for backward/reconstructed fields
+    // backward wavefields -> FORWARD_OR_ADJOINT == 3
+    potential = mp->d_b_potential_acoustic;
+    potential_dot_dot = mp->d_b_potential_dot_dot_acoustic;
+  }
 
-/* // Call to reference kernel, solving a single wavefield
- // forward wavefields -> FORWARD_OR_ADJOINT == 1
-  Kernel_2_acoustic_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                                                    d_ibool,
-                                                                    mp->d_phase_ispec_inner_acoustic,
-                                                                    mp->num_phase_ispec_acoustic,
-                                                                    d_iphase,
-                                                                    mp->d_potential_acoustic, mp->d_potential_dot_dot_acoustic,
-                                                                    d_xix, d_xiy, d_xiz,
-                                                                    d_etax, d_etay, d_etaz,
-                                                                    d_gammax, d_gammay, d_gammaz,
-                                                                    mp->d_hprime_xx,
-                                                                    mp->d_hprimewgll_xx,
-                                                                    mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                                    d_rhostore,
-                                                                    mp->use_mesh_coloring_gpu,
-                                                                    mp->gravity,
-                                                                    mp->d_minus_g,
-                                                                    d_kappastore,
-                                                                    mp->d_wgll_cube);
-*/
+  // acoustic kernel
+  if (FORWARD_OR_ADJOINT == 0){
+    // This kernel treats both forward and adjoint wavefield within the same call, to increase performance
+    // ( ~37% faster for pure acoustic simulations )
+    Kernel_2_acoustic_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+                                                                      d_ibool,
+                                                                      mp->d_irregular_element_number,
+                                                                      mp->d_phase_ispec_inner_acoustic,
+                                                                      mp->num_phase_ispec_acoustic,
+                                                                      d_iphase,
+                                                                      mp->d_potential_acoustic, mp->d_potential_dot_dot_acoustic,
+                                                                      mp->d_b_potential_acoustic, mp->d_b_potential_dot_dot_acoustic,
+                                                                      nb_field,
+                                                                      d_xix, d_xiy, d_xiz,
+                                                                      d_etax, d_etay, d_etaz,
+                                                                      d_gammax, d_gammay, d_gammaz,
+                                                                      mp->xix_regular,mp->jacobian_regular,
+                                                                      mp->d_hprime_xx,
+                                                                      mp->d_hprimewgll_xx,
+                                                                      mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                                      d_rhostore,
+                                                                      mp->use_mesh_coloring_gpu,
+                                                                      mp->gravity,
+                                                                      mp->d_minus_g,
+                                                                      d_kappastore,
+                                                                      mp->d_wgll_cube);
+  } else {
+    // solving a single wavefield
+    Kernel_2_acoustic_single_impl<<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+                                                                         d_ibool,
+                                                                         mp->d_phase_ispec_inner_acoustic,
+                                                                         mp->num_phase_ispec_acoustic,
+                                                                         d_iphase,
+                                                                         potential,
+                                                                         potential_dot_dot,
+                                                                         d_xix, d_xiy, d_xiz,
+                                                                         d_etax, d_etay, d_etaz,
+                                                                         d_gammax, d_gammay, d_gammaz,
+                                                                         mp->d_irregular_element_number,
+                                                                         mp->xix_regular,mp->jacobian_regular,
+                                                                         mp->d_hprime_xx,
+                                                                         mp->d_hprimewgll_xx,
+                                                                         mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                                         d_rhostore,
+                                                                         mp->use_mesh_coloring_gpu,
+                                                                         mp->gravity,
+                                                                         mp->d_minus_g,
+                                                                         d_kappastore,
+                                                                         mp->d_wgll_cube,
+                                                                         FORWARD_OR_ADJOINT);
+  }
 
   // Cuda timing
   if (CUDA_TIMING ){
@@ -1109,9 +1085,7 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
     printf("  performance: %f GFlop/s\n", flops/time * 1.e-9);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("kernel Kernel_2");
-#endif
+  GPU_ERROR_CHECKING("kernel Kernel_2");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -1120,20 +1094,22 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_forces_acoustic_cuda,
               COMPUTE_FORCES_ACOUSTIC_CUDA)(long* Mesh_pointer,
                                             int* iphase,
                                             int* nspec_outer_acoustic,
-                                            int* nspec_inner_acoustic) {
+                                            int* nspec_inner_acoustic,
+                                            int* FORWARD_OR_ADJOINT_f) {
 
   TRACE("compute_forces_acoustic_cuda");
-  //double start_time = get_time();
+  //double start_time = get_time_val();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
+  int FORWARD_OR_ADJOINT = *FORWARD_OR_ADJOINT_f;
 
+  // determines number of elements to loop over (inner/outer elements)
   int num_elements;
-
   if (*iphase == 1)
     num_elements = *nspec_outer_acoustic;
   else
@@ -1182,7 +1158,8 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
                          mp->d_etax + offset,mp->d_etay + offset,mp->d_etaz + offset,
                          mp->d_gammax + offset,mp->d_gammay + offset,mp->d_gammaz + offset,
                          mp->d_rhostore + offset,
-                         mp->d_kappastore + offset_nonpadded);
+                         mp->d_kappastore + offset_nonpadded,
+                         FORWARD_OR_ADJOINT);
 
       // for padded and aligned arrays
       offset += nb_blocks_to_compute * NGLL3_PADDED;
@@ -1199,7 +1176,8 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
                       mp->d_etax,mp->d_etay,mp->d_etaz,
                       mp->d_gammax,mp->d_gammay,mp->d_gammaz,
                       mp->d_rhostore,
-                      mp->d_kappastore);
+                      mp->d_kappastore,
+                      FORWARD_OR_ADJOINT);
 
   }
 }
@@ -1252,10 +1230,11 @@ __global__ void enforce_free_surface_cuda_kernel(
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(acoustic_enforce_free_surf_cuda,
               ACOUSTIC_ENFORCE_FREE_SURF_CUDA)(long* Mesh_pointer,
-                                               int* ABSORB_INSTEAD_OF_FREE_SURFACE) {
+                                               int* ABSORB_INSTEAD_OF_FREE_SURFACE,
+                                               int* FORWARD_OR_ADJOINT) {
 
 TRACE("acoustic_enforce_free_surf_cuda");
 
@@ -1273,30 +1252,30 @@ TRACE("acoustic_enforce_free_surf_cuda");
     dim3 grid(num_blocks_x,num_blocks_y,1);
     dim3 threads(NGLL2,1,1);
 
-    // sets potentials to zero at free surface
-    enforce_free_surface_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_acoustic,
-                                                                             mp->d_potential_dot_acoustic,
-                                                                             mp->d_potential_dot_dot_acoustic,
-                                                                             mp->num_free_surface_faces,
-                                                                             mp->d_free_surface_ispec,
-                                                                             mp->d_free_surface_ijk,
-                                                                             mp->d_ibool,
-                                                                             mp->d_ispec_is_acoustic);
-    // for backward/reconstructed potentials
-    if (mp->simulation_type == 3) {
-      enforce_free_surface_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_acoustic,
-                                                                               mp->d_b_potential_dot_acoustic,
-                                                                               mp->d_b_potential_dot_dot_acoustic,
-                                                                               mp->num_free_surface_faces,
-                                                                               mp->d_free_surface_ispec,
-                                                                               mp->d_free_surface_ijk,
-                                                                               mp->d_ibool,
-                                                                               mp->d_ispec_is_acoustic);
+    // sets gpu arrays
+    field* potential, *potential_dot, *potential_dot_dot;
+    if (*FORWARD_OR_ADJOINT == 1) {
+      potential = mp->d_potential_acoustic;
+      potential_dot = mp->d_potential_dot_acoustic;
+      potential_dot_dot = mp->d_potential_dot_dot_acoustic;
+    } else {
+      // for backward/reconstructed fields
+      potential = mp->d_b_potential_acoustic;
+      potential_dot = mp->d_b_potential_dot_acoustic;
+      potential_dot_dot = mp->d_b_potential_dot_dot_acoustic;
     }
+
+    // sets potentials to zero at free surface
+    enforce_free_surface_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(potential,
+                                                                            potential_dot,
+                                                                            potential_dot_dot,
+                                                                            mp->num_free_surface_faces,
+                                                                            mp->d_free_surface_ispec,
+                                                                            mp->d_free_surface_ijk,
+                                                                            mp->d_ibool,
+                                                                            mp->d_ispec_is_acoustic);
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("enforce_free_surface_cuda");
-#endif
+  GPU_ERROR_CHECKING("enforce_free_surface_cuda");
 }
 

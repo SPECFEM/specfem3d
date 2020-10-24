@@ -22,6 +22,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
+from __future__ import print_function
+
 try:
     import start as start
     cubit = start.start_cubit()
@@ -29,16 +31,16 @@ except:
     try:
         import cubit
     except:
-        print 'error importing cubit, check if cubit is installed'
+        print('error importing cubit, check if cubit is installed')
         pass
 
 
 def volumes(filename=None):
     """create the volumes"""
     import start as start
-    print'volume'
+    print('volume')
     cfg = start.start_cfg(filename=filename)
-    # print cfg
+    # print(cfg)
     #
     sandwich = 'verticalsandwich_volume_ascii_regulargrid_mpiregularmap'
     if cfg.volume_type == 'layercake_volume_ascii_regulargrid_regularmap':
@@ -79,9 +81,9 @@ def surfaces(filename=None,):
     """create the volumes"""
     import start as start
     sandwich = 'verticalsandwich_volume_ascii_regulargrid_mpiregularmap'
-    print'volume'
+    print('volume')
     cfg = start.start_cfg(filename=filename)
-    print cfg
+    print(cfg)
     if cfg.volume_type == 'layercake_volume_ascii_regulargrid_regularmap':
         layercake_volume_ascii_regulargrid_mpiregularmap(
             filename=filename, onlysurface=True)
@@ -134,7 +136,7 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,
             if iproc == 0 or not mpiflag:
                 coordx_0, coordy_0, elev_0, nx_0, ny_0 = lvolume.read_grid(
                     filename)
-                print 'end reading grd files ' + str(nx_0 * ny_0) + ' points'
+                print('end reading grd files ' + str(nx_0 * ny_0) + ' points')
             else:
                 pass
             if iproc == 0 or not mpiflag:
@@ -159,7 +161,7 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,
                 ny = mpi.bcast()
         else:
             coordx, coordy, elev, nx, ny = lvolume.read_grid(filename)
-        print str(iproc) + ' end of receving grd files '
+        print(str(iproc) + ' end of receving grd files ')
         nx_segment = int(nx / cfg.nproc_xi) + 1
         ny_segment = int(ny / cfg.nproc_eta) + 1
 
@@ -167,13 +169,13 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,
 
         if cfg.depth_bottom != cfg.zdepth[0]:
             if iproc == 0:
-                print 'the bottom of the block is at different \
-                depth than depth[0] in the configuration file'
+                print('the bottom of the block is at different \
+                       depth than depth[0] in the configuration file')
         nx = cfg.nproc_xi + 1
         ny = cfg.nproc_eta + 1
         nx_segment = 2
         ny_segment = 2
-        # if iproc == 0: print nx,ny,cfg.cpux,cfg.cpuy
+        # if iproc == 0: print(nx,ny,cfg.cpux,cfg.cpuy)
         # xp = (cfg.xmax - cfg.xmin) / float((nx - 1))
         # yp = (cfg.ymax - cfg.ymin) / float((ny - 1))
         #
@@ -209,10 +211,10 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,
                 coordx[ix, iy] = cfg.xmin + xlength * (ix)
                 coordy[ix, iy] = cfg.ymin + ylength * (iy)
 
-        # print coordx,coordy,nx,ny
+        # print(coordx,coordy,nx,ny)
     #
-    print 'end of building grid ' + str(iproc)
-    print 'number of point: ', len(coordx) * len(coordy)
+    print('end of building grid ' + str(iproc))
+    print('number of point: ', len(coordx) * len(coordy))
     #
     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     # for each processor
@@ -222,11 +224,11 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,
     nxmax_cpu = min(nx - 1, (nx_segment - 1) * (icpux + 1))
     nymax_cpu = min(ny - 1, (ny_segment - 1) * (icpuy + 1))
     # if iproc == 0:
-    #    print nx_segment,ny_segment,nx,ny
-    #    print icpux,icpuy,nxmin_cpu,nxmax_cpu
-    #    print icpux,icpuy,nymin_cpu,nymax_cpu
-    #    print coordx[0,0],coordx[nx-1,ny-1]
-    #    print coordy[0,0],coordy[nx-1,ny-1]
+    #    print(nx_segment,ny_segment,nx,ny)
+    #    print(icpux,icpuy,nxmin_cpu,nxmax_cpu)
+    #    print(icpux,icpuy,nymin_cpu,nymax_cpu)
+    #    print(coordx[0,0],coordx[nx-1,ny-1])
+    #    print(coordy[0,0],coordy[nx-1,ny-1])
     #
     #
     # icurve = 0
@@ -249,7 +251,7 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,
         else:
             sealevel = False
             bathymetry = False
-        print sealevel, bathymetry
+        print(sealevel, bathymetry)
 
         if cfg.bottomflat and inz == 0:  # bottom layer
                 #
@@ -391,10 +393,10 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,
                 #
                 isurf = isurf + 1
             else:
-                print "top_flat is not a valid option for sandwich"
+                print("top_flat is not a valid option for sandwich")
 
         else:
-            print inz, 'layer'
+            print(inz, 'layer')
             if cfg.geometry_format == 'regmesh':
                 if verticalsandwich:
                     zvertex = cfg.xwidth[inz]
@@ -494,7 +496,7 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,
                                       ' ' + str(y_current) + ' ' +
                                       str(zvertex))
                 #
-                print 'proc', iproc, 'vertex list created....', len(vertex)
+                print('proc', iproc, 'vertex list created....', len(vertex))
 
                 uline = []
                 vline = []
@@ -511,7 +513,7 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,
                         iv = iv + 1
                     command = 'create curve spline ' + positionx
                     cubit.cmd(command)
-                    # print command
+                    # print(command)
                     uline.append(cubit.get_last_id("curve"))
                 for ix in range(0, nxmax_cpu - nxmin_cpu + 1):
                     positiony = ''
@@ -520,7 +522,7 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,
                             vertex[ix + iy * (nxmax_cpu - nxmin_cpu + 1)]
                     command = 'create curve spline ' + positiony
                     cubit.cmd(command)
-                    # print command
+                    # print(command)
                     vline.append(cubit.get_last_id("curve"))
                 #
                 cubit.cmd("set info " + cfg.cubit_info)
@@ -528,8 +530,8 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,
                 cubit.cmd("set journal " + cfg.jou_info)
                 #
                 #
-                print 'proc', iproc, 'lines created....', \
-                    len(uline), '*', len(vline)
+                print('proc', iproc, 'lines created....', \
+                      len(uline), '*', len(vline))
                 umax = max(uline)
                 umin = min(uline)
                 vmax = max(vline)
@@ -573,10 +575,10 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,
                     create_volume(inz, inz + 1, method='loft')
                     ner2 = cubit.get_error_count()
                     if ner != ner2:
-                        print 'ERROR creating volume'
+                        print('ERROR creating volume')
                         break
                 else:
-                    print 'ERROR creating volume'
+                    print('ERROR creating volume')
                     break
         if ner == ner2 and not cfg.debug_geometry:
             # cubitcommand= 'del surface 1 to '+ str( cfg.nz )
@@ -694,7 +696,7 @@ def layercake_volume_fromacis_mpiregularmap(filename=None):
 
     # translate
     xmin, ymin = translate2zero()
-    print 'translate ...', -xmin, -ymin
+    print('translate ...', -xmin, -ymin)
     xmin_cpu = xmin_cpu - xmin
     ymin_cpu = ymin_cpu - ymin
     xmax_cpu = xmax_cpu - xmin
@@ -702,7 +704,7 @@ def layercake_volume_fromacis_mpiregularmap(filename=None):
 
     ss = cubit.parse_cubit_list('surface', 'all')
     box = cubit.get_total_bounding_box("surface", ss)
-    print 'dimension... ', box
+    print('dimension... ', box)
     # cutting the surfaces
     xwebcut(xmin_cpu)
     xwebcut(xmax_cpu)

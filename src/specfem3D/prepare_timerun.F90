@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
   subroutine prepare_timerun()
 
@@ -43,6 +42,9 @@
   double precision :: tCPU,tstart
   double precision, external :: wtime
 
+  ! synchonizes
+  call synchronize_all()
+
   ! get MPI starting time
   tstart = wtime()
 
@@ -52,6 +54,9 @@
   ! sets up mass matrices
   call prepare_timerun_mass_matrices()
 
+  ! sets up time increments
+  call prepare_timerun_constants()
+
   ! initializes arrays
   call prepare_wavefields()
 
@@ -59,9 +64,6 @@
   call BC_DYNFLT_init(prname,DT,myrank)
 
   call BC_KINFLT_init(prname,DT,myrank)
-
-  ! sets up time increments
-  call prepare_timerun_constants()
 
   ! prepares attenuation arrays
   call prepare_attenuation()
@@ -77,22 +79,26 @@
   ! prepares C-PML arrays
   if (PML_CONDITIONS) call prepare_timerun_pml()
 
+  ! Stacey boundaries
+  call prepare_timerun_stacey()
+
   ! prepares ADJOINT simulations
   call prepare_timerun_adjoint()
 
   ! prepares noise simulations
   call prepare_noise()
 
+  ! prepares coupling with injection boundary
+  call couple_with_injection_prepare_boundary()
+
   ! prepares GPU arrays
   if (GPU_MODE) call prepare_GPU()
 
-#ifdef USE_OPENMP
-  ! prepares arrays for OpenMP
-  call prepare_timerun_OpenMP()
-#endif
+  ! optimizes array memory layout for better performance
+  call prepare_optimized_arrays()
 
-  ! prepars coupling with injection boundary
-  call couple_with_injection_prepare_boundary()
+  ! synchronize all the processes
+  call synchronize_all()
 
   ! elapsed time since beginning of preparation
   if (myrank == 0) then
@@ -162,6 +168,11 @@
     write(IMAIN,*)
     write(IMAIN,*) 'Simulation setup:'
     write(IMAIN,*)
+    if (NOISE_TOMOGRAPHY /= 0) then
+      write(IMAIN,*) 'noise simulation:'
+      write(IMAIN,*) '  simulation type = ',NOISE_TOMOGRAPHY
+      write(IMAIN,*)
+    endif
 
     if (ACOUSTIC_SIMULATION) then
       write(IMAIN,*) 'incorporating acoustic simulation'
@@ -184,6 +195,9 @@
 
     if (ATTENUATION) then
       write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
+      if (UNDO_ATTENUATION_AND_OR_PML) &
+        write(IMAIN,*) 'using undo_attenuation scheme'
+
       if (USE_OLSEN_ATTENUATION) then
         write(IMAIN,*) 'using attenuation from Olsen et al.'
       else
@@ -222,6 +236,16 @@
     call flush_IMAIN()
   endif
 
+  ! safety checks
+  if (ACOUSTIC_SIMULATION) then
+    if (USE_TRICK_FOR_BETTER_PRESSURE .and. SIMULATION_TYPE == 3) &
+      stop 'for SIMULATION_TYPE == 3, acoustic kernels need to have USE_TRICK_FOR_BETTER_PRESSURE set to .false.'
+  endif
+  if (UNDO_ATTENUATION_AND_OR_PML) then
+    if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION .and. SIMULATION_TYPE == 3) &
+      stop 'for SIMULATION_TYPE == 3, UNDO_ATT for coupled elastic/acoustic simulations not implemented yet'
+  endif
+
   end subroutine prepare_timerun_user_output
 !
 !-------------------------------------------------------------------------------------------------
@@ -235,6 +259,12 @@
   use specfem_par_poroelastic
 
   implicit none
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "preparing mass matrices"
+    call flush_IMAIN()
+  endif
 
   ! synchronize all the processes before assembling the mass matrix
   ! to make sure all the nodes have finished to read their databases
@@ -255,9 +285,9 @@
     endif
 
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
 
     ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
     where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
@@ -267,8 +297,6 @@
 
   if (ELASTIC_SIMULATION) then
     ! switches to three-component mass matrix
-
-    !! CD CD !!
     if (STACEY_ABSORBING_CONDITIONS) then
       if (USE_LDDRK) then
         rmassx(:) = rmass(:)
@@ -285,24 +313,22 @@
       rmassy(:) = rmass(:)
       rmassz(:) = rmass(:)
     endif
-    !! CD CD
-
     ! not needed anymore
     deallocate(rmass)
 
     ! assemble mass matrix
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassx, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassy, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassz, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
 
     ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
     where(rmassx <= 0._CUSTOM_REAL) rmassx = 1._CUSTOM_REAL
@@ -315,9 +341,9 @@
     ! ocean load
     if (APPROXIMATE_OCEAN_LOAD) then
       call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_ocean_load, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                        my_neighbors_ext_mesh)
       where(rmass_ocean_load <= 0._CUSTOM_REAL) rmass_ocean_load = 1._CUSTOM_REAL
       rmass_ocean_load(:) = 1._CUSTOM_REAL / rmass_ocean_load(:)
     endif
@@ -325,14 +351,14 @@
 
   if (POROELASTIC_SIMULATION) then
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
 
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_fluid_poroelastic, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
 
     ! fills mass matrix with fictitious non-zero values to make sure it can be inverted globally
     where(rmass_solid_poroelastic <= 0._CUSTOM_REAL) rmass_solid_poroelastic = 1._CUSTOM_REAL
@@ -340,6 +366,9 @@
     rmass_solid_poroelastic(:) = 1._CUSTOM_REAL / rmass_solid_poroelastic(:)
     rmass_fluid_poroelastic(:) = 1._CUSTOM_REAL / rmass_fluid_poroelastic(:)
   endif
+
+  ! synchonizes
+  call synchronize_all()
 
   end subroutine prepare_timerun_mass_matrices
 
@@ -355,6 +384,11 @@
   use specfem_par
 
   implicit none
+
+  if (myrank == 0) then
+    write(IMAIN,*) "preparing constants"
+    call flush_IMAIN()
+  endif
 
   ! time scheme
   if (.not. USE_LDDRK) then
@@ -372,19 +406,34 @@
 
   ! adjoint runs: timing
   if (SIMULATION_TYPE == 3) then
-    ! backward/reconstructed wavefields: time stepping is in time-reversed sense
-    ! (negative time increments)
-    b_deltat = - real(DT,kind=CUSTOM_REAL)
-    b_deltatover2 = b_deltat/2._CUSTOM_REAL
-    b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
+    if (UNDO_ATTENUATION_AND_OR_PML) then
+      ! moves forward
+      b_deltat = deltat
+      b_deltatover2 = deltatover2
+      b_deltatsqover2 = deltatsqover2
+    else
+      ! reconstructed wavefield moves backward in time from last snapshot
+      ! backward/reconstructed wavefields: time stepping is in time-reversed sense
+      ! (negative time increments)
+      b_deltat = - real(DT,kind=CUSTOM_REAL)
+      b_deltatover2 = b_deltat/2._CUSTOM_REAL
+      b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
+    endif
+  else
+    ! will not be used, but initialized
+    b_deltat = 0._CUSTOM_REAL
+    b_deltatover2 = 0._CUSTOM_REAL
+    b_deltatsqover2 = 0._CUSTOM_REAL
   endif
+
+  ! synchonizes
+  call synchronize_all()
 
   end subroutine prepare_timerun_constants
 
 !
 !-------------------------------------------------------------------------------------------------
 !
-
 
 
   subroutine prepare_timerun_lddrk()
@@ -404,6 +453,14 @@
   else
     NGLOB_AB_LDDRK = 1
     NSPEC_ATTENUATION_AB_LDDRK = 1
+  endif
+
+  ! user output
+  if (USE_LDDRK) then
+    if (myrank == 0) then
+      write(IMAIN,*) "preparing LDDRK"
+      call flush_IMAIN()
+    endif
   endif
 
   if (ACOUSTIC_SIMULATION) then
@@ -514,6 +571,9 @@
       stop 'LDDRK has not been implemented for POROELASTIC_SIMULATION'
   endif
 
+  ! synchonizes
+  call synchronize_all()
+
   end subroutine prepare_timerun_lddrk
 
 !
@@ -522,34 +582,53 @@
 
   subroutine prepare_timerun_pml()
 
+  use constants, only: IMAIN,NGLLX,NGLLY,NGLLZ
+
+  use specfem_par, only: myrank,deltat,SIMULATION_TYPE,GPU_MODE, &
+    UNDO_ATTENUATION_AND_OR_PML,PML_CONDITIONS,SAVE_MESH_FILES
+
   use pml_par
-  use specfem_par, only: myrank,SIMULATION_TYPE,GPU_MODE,UNDO_ATTENUATION_AND_OR_PML
-  use constants, only: IMAIN,NGNOD_EIGHT_CORNERS
 
   implicit none
 
   ! local parameters
   integer :: ispec,ispec_CPML,NSPEC_CPML_GLOBAL
+  integer :: i,j,k,ier
+  real(kind=CUSTOM_REAL) :: deltatpow2,deltatpow3,deltatpow4,deltat_half
+  real(kind=CUSTOM_REAL) :: coef0_1,coef1_1,coef2_1, &
+                            coef0_2,coef1_2,coef2_2, &
+                            coef0_3,coef1_3,coef2_3
+  real(kind=CUSTOM_REAL) :: kappa_x,d_x,alpha_x, &
+                            kappa_y,d_y,alpha_y, &
+                            kappa_z,d_z,alpha_z
+  real(kind=CUSTOM_REAL) :: beta_x,beta_y,beta_z
+
+  ! checks if anything to do
+  if (.not. PML_CONDITIONS) return
+
+  if (myrank == 0) then
+    write(IMAIN,*) "preparing CPML"
+    call flush_IMAIN()
+  endif
 
   ! safety stops
   if (SIMULATION_TYPE /= 1 .and. .not. UNDO_ATTENUATION_AND_OR_PML) &
-          stop 'Error: PMLs for adjoint runs require the flag UNDO_ATTENUATION_AND_OR_PML to be set'
-
-  if (GPU_MODE) stop 'Error: PMLs only supported in CPU mode for now'
+    stop 'Error: PMLs for adjoint runs require the flag UNDO_ATTENUATION_AND_OR_PML to be set'
+  if (GPU_MODE) &
+    stop 'Error: PMLs only supported in CPU mode for now'
 
   ! total number of PML elements
   call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
 
   ! user output
   if (myrank == 0) then
+    write(IMAIN,*) '  incorporating C-PML  '
     write(IMAIN,*)
-    write(IMAIN,*) 'incorporating C-PML  '
+    write(IMAIN,*) '  number of C-PML spectral elements in the global mesh: ', NSPEC_CPML_GLOBAL
     write(IMAIN,*)
-    write(IMAIN,*) 'number of C-PML spectral elements in the global mesh: ', NSPEC_CPML_GLOBAL
-    write(IMAIN,*)
-    write(IMAIN,*) 'thickness of C-PML layer in X direction: ', CPML_width_x
-    write(IMAIN,*) 'thickness of C-PML layer in Y direction: ', CPML_width_y
-    write(IMAIN,*) 'thickness of C-PML layer in Z direction: ', CPML_width_z
+    write(IMAIN,*) '  thickness of C-PML layer in X direction: ', CPML_width_x
+    write(IMAIN,*) '  thickness of C-PML layer in Y direction: ', CPML_width_y
+    write(IMAIN,*) '  thickness of C-PML layer in Z direction: ', CPML_width_z
     write(IMAIN,*)
     call flush_IMAIN()
   endif
@@ -570,8 +649,7 @@
   enddo
 
   ! defines C-PML element type array: 1 = face, 2 = edge, 3 = corner
-  do ispec_CPML=1,NSPEC_CPML
-
+  do ispec_CPML = 1,NSPEC_CPML
     ! X_surface C-PML
     if (CPML_regions(ispec_CPML) == 1) then
       CPML_type(ispec_CPML) = 1
@@ -600,8 +678,178 @@
     else if (CPML_regions(ispec_CPML) == 7) then
       CPML_type(ispec_CPML) = 3
     endif
-
   enddo
+
+  ! useful constants
+  deltatpow2 = deltat**2
+  deltatpow3 = deltat**3
+  deltatpow4 = deltat**4
+  deltat_half = deltat * 0.5_CUSTOM_REAL
+
+  ! arrays for coefficients
+  allocate(convolution_coef_acoustic_alpha(9,NGLLX,NGLLY,NGLLZ,NSPEC_CPML), &
+           convolution_coef_acoustic_beta(9,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+  if (ier /= 0) call exit_MPI(myrank,'Error allocating coef_acoustic array')
+
+  ! initializes
+  convolution_coef_acoustic_alpha(:,:,:,:,:) = 0._CUSTOM_REAL
+  convolution_coef_acoustic_beta(:,:,:,:,:) = 0._CUSTOM_REAL
+
+  ! pre-computes convolution coefficients
+  do ispec_CPML = 1,NSPEC_CPML
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
+          kappa_x = k_store_x(i,j,k,ispec_CPML)
+          kappa_y = k_store_y(i,j,k,ispec_CPML)
+          kappa_z = k_store_z(i,j,k,ispec_CPML)
+          d_x = d_store_x(i,j,k,ispec_CPML)
+          d_y = d_store_y(i,j,k,ispec_CPML)
+          d_z = d_store_z(i,j,k,ispec_CPML)
+          alpha_x = alpha_store_x(i,j,k,ispec_CPML)
+          alpha_y = alpha_store_y(i,j,k,ispec_CPML)
+          alpha_z = alpha_store_z(i,j,k,ispec_CPML)
+
+          ! alpha coefficients
+          call compute_convolution_coef(alpha_x, coef0_1, coef1_1, coef2_1)
+          call compute_convolution_coef(alpha_y, coef0_2, coef1_2, coef2_2)
+          call compute_convolution_coef(alpha_z, coef0_3, coef1_3, coef2_3)
+
+          convolution_coef_acoustic_alpha(1,i,j,k,ispec_CPML) = coef0_1
+          convolution_coef_acoustic_alpha(2,i,j,k,ispec_CPML) = coef1_1
+          convolution_coef_acoustic_alpha(3,i,j,k,ispec_CPML) = coef2_1
+
+          convolution_coef_acoustic_alpha(4,i,j,k,ispec_CPML) = coef0_2
+          convolution_coef_acoustic_alpha(5,i,j,k,ispec_CPML) = coef1_2
+          convolution_coef_acoustic_alpha(6,i,j,k,ispec_CPML) = coef2_2
+
+          convolution_coef_acoustic_alpha(7,i,j,k,ispec_CPML) = coef0_3
+          convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML) = coef1_3
+          convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML) = coef2_3
+
+          ! beta coefficients
+          beta_x = alpha_x + d_x / kappa_x
+          beta_y = alpha_y + d_y / kappa_y
+          beta_z = alpha_z + d_z / kappa_z
+
+          call compute_convolution_coef(beta_x, coef0_1, coef1_1, coef2_1)
+          call compute_convolution_coef(beta_y, coef0_2, coef1_2, coef2_2)
+          call compute_convolution_coef(beta_z, coef0_3, coef1_3, coef2_3)
+
+          convolution_coef_acoustic_beta(1,i,j,k,ispec_CPML) = coef0_1
+          convolution_coef_acoustic_beta(2,i,j,k,ispec_CPML) = coef1_1
+          convolution_coef_acoustic_beta(3,i,j,k,ispec_CPML) = coef2_1
+
+          convolution_coef_acoustic_beta(4,i,j,k,ispec_CPML) = coef0_2
+          convolution_coef_acoustic_beta(5,i,j,k,ispec_CPML) = coef1_2
+          convolution_coef_acoustic_beta(6,i,j,k,ispec_CPML) = coef2_2
+
+          convolution_coef_acoustic_beta(7,i,j,k,ispec_CPML) = coef0_3
+          convolution_coef_acoustic_beta(8,i,j,k,ispec_CPML) = coef1_3
+          convolution_coef_acoustic_beta(9,i,j,k,ispec_CPML) = coef2_3
+        enddo
+      enddo
+    enddo
+  enddo
+
+  ! outputs informations about C-PML elements in VTK-file format
+  if (SAVE_MESH_FILES) call pml_output_VTKs()
+
+  ! synchonizes
+  call synchronize_all()
+
+  contains
+
+    subroutine compute_convolution_coef(bb,coef0,coef1,coef2)
+
+    use constants, only: CUSTOM_REAL
+    use specfem_par, only: deltat
+    use pml_par, only: min_distance_between_CPML_parameter
+
+    implicit none
+
+    real(kind=CUSTOM_REAL),intent(in) :: bb
+    real(kind=CUSTOM_REAL),intent(out) :: coef0, coef1, coef2
+
+    ! local parameters
+    logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
+
+    real(kind=CUSTOM_REAL) :: bbpow2,bbpow3,c0,c1
+    real(kind=CUSTOM_REAL) :: prod1,prod1_half
+
+    ! permanent factors (avoids divisions which are computationally expensive)
+    ! note: compilers precompute these constant factors (thus division in these statemenets are still fine)
+    real(kind=CUSTOM_REAL),parameter :: ONE_OVER_8 = 0.125_CUSTOM_REAL
+    real(kind=CUSTOM_REAL),parameter :: ONE_OVER_48 = 1._CUSTOM_REAL / 48._CUSTOM_REAL
+    !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_128 = 0.0078125_CUSTOM_REAL
+    real(kind=CUSTOM_REAL),parameter :: ONE_OVER_384 = 1._CUSTOM_REAL / 384._CUSTOM_REAL
+    real(kind=CUSTOM_REAL),parameter :: FACTOR_A = 3._CUSTOM_REAL / 8._CUSTOM_REAL
+    real(kind=CUSTOM_REAL),parameter :: FACTOR_B = 7._CUSTOM_REAL / 48._CUSTOM_REAL
+    real(kind=CUSTOM_REAL),parameter :: FACTOR_C = 5._CUSTOM_REAL / 128._CUSTOM_REAL
+    ! unused
+    !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_12 = 1._CUSTOM_REAL / 12._CUSTOM_REAL
+    !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_24 = 1._CUSTOM_REAL / 24._CUSTOM_REAL
+    !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_960 = 1._CUSTOM_REAL / 960._CUSTOM_REAL
+    !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_1920 = 1._CUSTOM_REAL / 1920._CUSTOM_REAL
+    !real(kind=CUSTOM_REAL),parameter :: SEVEN_OVER_3840 = 7._CUSTOM_REAL / 3840._CUSTOM_REAL
+    !real(kind=CUSTOM_REAL),parameter :: FIVE_OVER_11520 = 5._CUSTOM_REAL/11520._CUSTOM_REAL
+
+    ! helper variables
+    ! (writing out powers can help for speed, that is bb * bb is usually faster than bb**2)
+    bbpow2 = bb * bb
+    bbpow3 = bbpow2 * bb
+
+    prod1 = bb * deltat
+    prod1_half = prod1 * 0.5_CUSTOM_REAL
+
+    ! calculates coefficients
+    !
+    ! note: exponentials are expensive functions
+    c0 = exp(-prod1)
+    !
+    ! cheap exponential (up to 5 terms exp(x) = 1 + x *( 1 + x/2 * (1 + x/3 * (1 + x/4 * (1 + x/5 * ..))))
+    !x0 = -prod1
+    !c0 = 1.0 + x0 * (1.0 + 0.5 * x0 * (1.0  + 0.333333333333_CUSTOM_REAL * x0 * (1.0 + 0.25 * x0 * (1.0 + 0.2 * x0))))
+
+    !  real function my_exp(n, x) result(f)
+    !  integer, intent(in) :: n, x
+    !  f = 1.0
+    !  do i = n-1,1,-1
+    !      f = 1.0 + x * f / i
+    !  enddo
+    !  end function
+
+    ! determines coefficients
+    coef0 = c0
+
+    if (abs(bb) >= min_distance_between_CPML_parameter) then
+      if (FIRST_ORDER_CONVOLUTION) then
+        coef1 = (1._CUSTOM_REAL - c0 ) / bb
+        coef2 = 0._CUSTOM_REAL
+      else
+        ! calculates coefficients
+        c1 = exp(-prod1_half)
+        !
+        ! cheap exponential (up to 5 terms exp(x) = 1 + x *( 1 + x/2 * (1 + x/3 * (1 + x/4 * (1 + x/5 * ..))))
+        !x1 = -prod1_half
+        !c1 = 1.0 + x1 * (1.0 + 0.5 * x1 * (1.0  + 0.333333333333_CUSTOM_REAL * x1 * (1.0 + 0.25 * x1 * (1.0 + 0.2 * x1))))
+
+        coef1 = (1._CUSTOM_REAL - c1 ) / bb
+        coef2 = (1._CUSTOM_REAL - c1 ) * c1 / bb
+      endif
+    else
+      if (FIRST_ORDER_CONVOLUTION) then
+        coef1 = deltat
+        coef2 = 0._CUSTOM_REAL
+      else
+        coef1 = deltat_half + &
+                (- ONE_OVER_8 * deltatpow2 * bb + ONE_OVER_48 * deltatpow3 * bbpow2 - ONE_OVER_384 * deltatpow4 * bbpow3)
+        coef2 = deltat_half + &
+                (- FACTOR_A * deltatpow2 * bb + FACTOR_B * deltatpow3 * bbpow2 - FACTOR_C * deltatpow4 * bbpow3)
+      endif
+    endif
+
+    end subroutine compute_convolution_coef
 
   end subroutine prepare_timerun_pml
 
@@ -622,7 +870,14 @@
 
   ! local parameters
   integer :: ier
-  integer(kind=8) :: filesize
+  integer :: ispec,ispec2D
+
+  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
+    if (myrank == 0) then
+      write(IMAIN,*) "preparing adjoint fields"
+      call flush_IMAIN()
+    endif
+  endif
 
   ! moment tensor derivatives
   if (nrec_local > 0 .and. SIMULATION_TYPE == 2) then
@@ -651,11 +906,6 @@
     sloc_der = 0._CUSTOM_REAL
   endif
 
-  ! attenuation backward memories
-  if (ATTENUATION .and. SIMULATION_TYPE == 3) then
-    ! precompute Runge-Kutta coefficients if attenuation
-    call get_attenuation_memory_values(tau_sigma,b_deltat,b_alphaval,b_betaval,b_gammaval)
-  endif
 
   ! initializes adjoint kernels and reconstructed/backward wavefields
   if (SIMULATION_TYPE == 3) then
@@ -683,22 +933,6 @@
       b_accel = 0._CUSTOM_REAL
       if (FIX_UNDERFLOW_PROBLEM) b_displ = VERYSMALLVAL
 
-      ! memory variables if attenuation
-      if (ATTENUATION) then
-        b_R_trace = 0._CUSTOM_REAL
-        b_R_xx = 0._CUSTOM_REAL
-        b_R_yy = 0._CUSTOM_REAL
-        b_R_xy = 0._CUSTOM_REAL
-        b_R_xz = 0._CUSTOM_REAL
-        b_R_yz = 0._CUSTOM_REAL
-        b_epsilondev_trace = 0._CUSTOM_REAL
-        b_epsilondev_xx = 0._CUSTOM_REAL
-        b_epsilondev_yy = 0._CUSTOM_REAL
-        b_epsilondev_xy = 0._CUSTOM_REAL
-        b_epsilondev_xz = 0._CUSTOM_REAL
-        b_epsilondev_yz = 0._CUSTOM_REAL
-      endif
-
       ! moho kernels
       if (SAVE_MOHO_MESH) moho_kl(:,:) = 0._CUSTOM_REAL
     endif
@@ -719,7 +953,6 @@
       b_potential_dot_acoustic = 0._CUSTOM_REAL
       b_potential_dot_dot_acoustic = 0._CUSTOM_REAL
       if (FIX_UNDERFLOW_PROBLEM) b_potential_acoustic = VERYSMALLVAL
-
     endif
 
     ! poroelastic domain
@@ -745,38 +978,103 @@
       b_accelw_poroelastic = 0._CUSTOM_REAL
       if (FIX_UNDERFLOW_PROBLEM) b_displs_poroelastic = VERYSMALLVAL
       if (FIX_UNDERFLOW_PROBLEM) b_displw_poroelastic = VERYSMALLVAL
-
     endif
   endif
 
 ! initialize Moho boundary index
   if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-    ispec2D_moho_top = 0
-    ispec2D_moho_bot = 0
+    ! note: boundary arrays are setup in mesher, here we only need to assign the boundary element index (ispec2D)
+    !       to each corresponding element (ispec) for storing strain values at the right array place
+    allocate(ispec2D_moho_top(NSPEC_AB),ispec2D_moho_bot(NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating ispec2D_moho arrays')
+    ispec2D_moho_top(:) = 0
+    ispec2D_moho_bot(:) = 0
+
+    ! sets indexing from ispec to ispec2D
+    do ispec2D = 1,NSPEC2D_MOHO
+      ! bottom element
+      ispec = ibelm_moho_bot(ispec2D)
+      if (ispec < 1 .or. ispec > NSPEC_AB) stop 'Invalid index in ibelm_moho_bot'
+      ! indexing from ispec to ispec2D
+      ispec2D_moho_bot(ispec) = ispec2D
+
+      ! top element
+      ispec = ibelm_moho_top(ispec2D)
+      if (ispec < 1 .or. ispec > NSPEC_AB) stop 'Invalid index in ibelm_moho_bot'
+      ! indexing from ispec to ispec2D
+      ispec2D_moho_top(ispec) = ispec2D
+    enddo
   endif
+
+  ! synchonizes
+  call synchronize_all()
+
+  end subroutine prepare_timerun_adjoint
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_timerun_stacey()
+
+! prepares stacey absorbing boundary
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+
+  implicit none
+
+  ! local parameters
+  integer :: ier
+  integer(kind=8) :: filesize
+
+  ! initializes
+  SAVE_STACEY = .false.
 
 ! stacey absorbing fields will be reconstructed for adjoint simulations
 ! using snapshot files of wavefields
   if (STACEY_ABSORBING_CONDITIONS) then
 
+    if (myrank == 0) then
+      write(IMAIN,*) "preparing Stacey absorbing boundaries"
+      call flush_IMAIN()
+    endif
+
+    ! sets flag to check if we need to save the stacey contributions to file
+    if (UNDO_ATTENUATION_AND_OR_PML) then
+      ! not needed for undo_attenuation scheme
+      SAVE_STACEY = .false.
+    else
+      ! used for simulation type 1 and 3
+      if (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD)) then
+        SAVE_STACEY = .true.
+      else
+        SAVE_STACEY = .false.
+      endif
+    endif
+
     ! opens absorbing wavefield saved/to-be-saved by forward simulations
-    if (num_abs_boundary_faces > 0 .and. (SIMULATION_TYPE == 3 .or. &
-          (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
-
+    if (num_abs_boundary_faces > 0 .and. SAVE_STACEY) then
       b_num_abs_boundary_faces = num_abs_boundary_faces
+    else
+      b_num_abs_boundary_faces = 0
+    endif
 
-      ! elastic domains
-      if (ELASTIC_SIMULATION) then
-        ! allocates wavefield
-        allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2143')
-        if (ier /= 0) stop 'error allocating array b_absorb_field'
+    ! elastic domains
+    if (ELASTIC_SIMULATION) then
+      ! allocates wavefield
+      allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2143')
+      if (ier /= 0) stop 'error allocating array b_absorb_field'
 
+      if (num_abs_boundary_faces > 0 .and. SAVE_STACEY) then
         ! size of single record
         b_reclen_field = CUSTOM_REAL * NDIM * NGLLSQUARE * num_abs_boundary_faces
 
         ! check integer size limit: size of b_reclen_field must fit onto an 4-byte integer
-        if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE)) then
+        if (num_abs_boundary_faces > int(2147483646.0 / (CUSTOM_REAL * NDIM * NGLLSQUARE))) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field
           print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
           print *,'bit size Fortran: ',bit_size(b_reclen_field)
@@ -799,20 +1097,22 @@
                               filesize)
         endif
       endif
+    endif
 
-      ! acoustic domains
-      if (ACOUSTIC_SIMULATION) then
-        ! allocates wavefield
-        allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2144')
-        if (ier /= 0) stop 'error allocating array b_absorb_potential'
+    ! acoustic domains
+    if (ACOUSTIC_SIMULATION) then
+      ! allocates wavefield
+      allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2144')
+      if (ier /= 0) stop 'error allocating array b_absorb_potential'
 
+      if (num_abs_boundary_faces > 0 .and. SAVE_STACEY) then
         ! size of single record
         b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces * NB_RUNS_ACOUSTIC_GPU
 
 
         ! check integer size limit: size of b_reclen_potential must fit onto an 4-byte integer
-        if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NGLLSQUARE)) then
+        if (num_abs_boundary_faces > int(2147483646.0 / (CUSTOM_REAL * NGLLSQUARE))) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_potential
           print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces
           print *,'bit size Fortran: ',bit_size(b_reclen_potential)
@@ -843,22 +1143,24 @@
                               filesize)
         endif
       endif
+    endif
 
-      ! poroelastic domains
-      if (POROELASTIC_SIMULATION) then
-        ! allocates wavefields for solid and fluid phases
-        allocate(b_absorb_fields(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2145')
-        allocate(b_absorb_fieldw(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2146')
-        if (ier /= 0) stop 'error allocating array b_absorb_fields and b_absorb_fieldw'
+    ! poroelastic domains
+    if (POROELASTIC_SIMULATION) then
+      ! allocates wavefields for solid and fluid phases
+      allocate(b_absorb_fields(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2145')
+      allocate(b_absorb_fieldw(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2146')
+      if (ier /= 0) stop 'error allocating array b_absorb_fields and b_absorb_fieldw'
 
+      if (num_abs_boundary_faces > 0 .and. SAVE_STACEY) then
         ! size of single record
         b_reclen_field_poro = CUSTOM_REAL * NDIM * NGLLSQUARE * num_abs_boundary_faces
 
         ! check integer size limit: size of b_reclen_field must fit onto an
         ! 4-byte integer
-        if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE)) then
+        if (num_abs_boundary_faces > int(2147483646.0 / (CUSTOM_REAL * NDIM * NGLLSQUARE))) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field_poro
           print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
           print *,'bit size Fortran: ',bit_size(b_reclen_field_poro)
@@ -887,31 +1189,10 @@
                               filesize)
         endif
       endif
-    else
-      ! num_abs_boundary_faces is zero
-      ! needs dummy array
-      b_num_abs_boundary_faces = 0
-      if (ELASTIC_SIMULATION) then
-        allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2147')
-        if (ier /= 0) stop 'error allocating array b_absorb_field'
-      endif
-
-      if (ACOUSTIC_SIMULATION) then
-        allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2148')
-        if (ier /= 0) stop 'error allocating array b_absorb_potential'
-      endif
-
-      if (POROELASTIC_SIMULATION) then
-        allocate(b_absorb_fields(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2149')
-        allocate(b_absorb_fieldw(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2150')
-        if (ier /= 0) stop 'error allocating array b_absorb_fields and b_absorb_fieldw'
-      endif
     endif
-  else ! STACEY_ABSORBING_CONDITIONS
+
+  else
+    ! no STACEY_ABSORBING_CONDITIONS
     ! needs dummy array
     b_num_abs_boundary_faces = 0
     if (ELASTIC_SIMULATION) then
@@ -935,113 +1216,7 @@
     endif
   endif
 
-  end subroutine prepare_timerun_adjoint
+  ! synchonizes
+  call synchronize_all()
 
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-
-! OpenMP version uses "special" compute_forces_viscoelastic routine
-! we need to set num_elem_colors_elastic arrays
-
-#ifdef USE_OPENMP
-  subroutine prepare_timerun_OpenMP()
-
-  use specfem_par
-  use specfem_par_elastic
-
-  implicit none
-
-  ! local parameters
-  integer :: ier
-  integer :: NUM_THREADS
-  integer :: OMP_GET_MAX_THREADS
-
-  ! safety stop
-  print *
-  print *,'Note: there is currently no OpenMP version of the code!'
-  print *,'      a former implementation has been broken and moved to utils/unused_routines/ directory'
-  print *,'      Please re-compile the code, disenabling OpenMP support and/or consider contributing a new version if needed.'
-  print *
-
-! the old OpenMP implementation for compute_forces_viscoelastic is in utils/unused_routines/:
-! older_please_do_not_use_anymore_partial_OpenMP_port/older_not_maintained_compute_forces_viscoelastic_Dev_openmp.f90
-
-  stop 'OpenMP version is currently not implemented.'
-
-  ! unused below but might be helpful in future...
-
-  NUM_THREADS = OMP_GET_MAX_THREADS()
-  if (myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'Using:',NUM_THREADS, ' OpenMP threads'
-    write(IMAIN,*)
-    call flush_IMAIN()
-  endif
-
-  ! OpenMP for elastic simulation only supported yet
-  if (ELASTIC_SIMULATION) then
-
-!! DK DK July 2014: I do not know who wrote the OpenMP version, but it is currently broken
-!! DK DK July 2014: because the arrays below are undeclared; I therefore need to comment them out
-!! DK DK July 2014: for now and put a stop statement instead
-    stop 'from DK DK, July 2014: the OpenMP version is currently broken here, not sure who wrote it, please fix it if possible'
-
-!   ! allocate cfe_openmp local arrays for OpenMP version
-!   allocate(dummyx_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(dummyy_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(dummyz_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(dummyx_loc_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(dummyy_loc_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(dummyz_loc_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(newtempx1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(newtempx2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(newtempx3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(newtempy1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(newtempy2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(newtempy3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(newtempz1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(newtempz2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(newtempz3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempx1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempx2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempx3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempy1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempy2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempy3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempz1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempz2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempz3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempx1_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempx2_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempx3_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempy1_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempy2_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempy3_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempz1_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempz2_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-!   allocate(tempz3_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
-
-    ! set num_elem_colors array in case no mesh coloring is used
-    if (.not. USE_MESH_COLORING_GPU) then
-      ! deallocate dummy array
-      if (allocated(num_elem_colors_elastic)) deallocate(num_elem_colors_elastic)
-
-      ! loads with corresonding values
-      num_colors_outer_elastic = 1
-      num_colors_inner_elastic = 1
-      allocate(num_elem_colors_elastic(num_colors_outer_elastic + num_colors_inner_elastic),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2155')
-      if (ier /= 0) stop 'error allocating num_elem_colors_elastic array'
-
-      ! sets to all elements in inner/outer phase
-      num_elem_colors_elastic(1) = nspec_outer_elastic
-      num_elem_colors_elastic(2) = nspec_inner_elastic
-    endif
-
-  endif
-
-  end subroutine prepare_timerun_OpenMP
-#endif
-
+  end subroutine prepare_timerun_stacey

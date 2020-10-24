@@ -1722,11 +1722,11 @@ contains
 !!$    cc_max = cc_max_f1f2
 !!$    if (OUTPUT_MEASUREMENT_FILES) then
 !!$      open(10,file=trim(filename)//'.quality')
-!!$      write(10,*) ' <--------- F1 ------ F2 ---- tshift -- cc_max --- dlnA -->'
+!!$      write(10,*) '<--------- F1 ------ F2 ---- tshift -- cc_max --- dlnA -->'
 !!$      write(10,"(a,5F10.5)") 'Before',sngl(F1),sngl(F2),sngl(tshift),sngl(cc_max_f1f2),sngl(dlnA_f1f2)
 !!$    endif
 !!$    if (DISPLAY_DETAILS) then
-!!$      write(*,*) ' <--------- F1 ------ F2 ---- tshift -- cc_max --- dlnA -->'
+!!$      write(*,*) '<--------- F1 ------ F2 ---- tshift -- cc_max --- dlnA -->'
 !!$      write(*,"(a,5F10.5)") 'Before',sngl(F1),sngl(F2),sngl(tshift),sngl(cc_max_f1f2),sngl(dlnA_f1f2)
 !!$    endif
 !!$

@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
 ! compute the approximate amount of memory needed to run the solver
 
@@ -33,8 +32,9 @@
                         APPROXIMATE_OCEAN_LOAD,memory_size)
 
   use constants
+  use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
   use generate_databases_par, only: PML_CONDITIONS,nspec_cpml,nspec_irregular
-  use create_regions_mesh_ext_par, only: NSPEC_ANISO,NSPEC_PORO,ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
+  use create_regions_mesh_ext_par, only: NSPEC_ANISO,NSPEC_PORO
 
   implicit none
 
@@ -44,8 +44,6 @@
   logical, intent(in) :: APPROXIMATE_OCEAN_LOAD
   ! output
   double precision, intent(out) :: memory_size
-  ! local parameters
-  logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
 
   memory_size = 0.d0
 
@@ -74,7 +72,6 @@
 
   ! see: read_mesh_databases.f90
   ! acoustic arrays
-  call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
   if (ACOUSTIC_SIMULATION) then
     ! potential_acoustic, potentical_dot_acoustic, potential_dot_dot_acoustic
     memory_size = memory_size + 3.d0*NGLOB_AB*dble(CUSTOM_REAL)
@@ -86,6 +83,8 @@
 
   ! see: read_mesh_databases.f90 and pml_allocate_arrays.f90
   ! C-PML arrays
+  ! is_CPML
+  memory_size = memory_size + NSPEC_AB*dble(SIZE_LOGICAL)
   if (PML_CONDITIONS) then
      ! CPML_regions,CPML_to_spec,CPML_type
      memory_size = memory_size + 3.d0*nspec_cpml*dble(SIZE_INTEGER)
@@ -93,19 +92,8 @@
      ! spec_to_CPML
      memory_size = memory_size + NSPEC_AB*dble(SIZE_INTEGER)
 
-     ! is_CPML
-     memory_size = memory_size + NSPEC_AB*dble(SIZE_LOGICAL)
-
      ! d_store_x,d_store_y,d_store_z,d_store_x,d_store_y,d_store_z,alpha_store_x,alpha_store_y,alpha_store_z
      memory_size = memory_size + 9.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
-
-     ! PML_dux_dxl,PML_dux_dyl,PML_dux_dzl,
-     ! PML_duy_dxl,PML_duy_dyl,PML_duy_dzl,
-     ! PML_duz_dxl,PML_duz_dyl,PML_duz_dzl,
-     ! PML_dux_dxl_old,PML_dux_dyl_old,PML_dux_dzl_old,
-     ! PML_duy_dxl_old,PML_duy_dyl_old,PML_duy_dzl_old,
-     ! PML_duz_dxl_old,PML_duz_dyl_old,PML_duz_dzl_old
-     memory_size = memory_size + 18.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
 
      ! rmemory_dux_dxl_x,rmemory_dux_dyl_x,rmemory_dux_dzl_x,rmemory_duy_dxl_x,
      ! rmemory_duy_dyl_x,rmemory_duz_dxl_x,rmemory_duz_dzl_x,
@@ -124,15 +112,11 @@
      ! rmemory_potential_acoustic
      memory_size = memory_size + 3.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
 
-     ! accel_elastic_CPML
-     memory_size = memory_size + dble(NDIM)*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
-
      ! second derivative of the potential
      memory_size = memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
   endif
 
   ! elastic arrays
-  call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   if (ELASTIC_SIMULATION) then
     ! displacement,velocity,acceleration
     memory_size = memory_size + 3.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)
@@ -158,7 +142,6 @@
   endif
 
   ! elastic arrays
-  call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
   if (POROELASTIC_SIMULATION) then
     ! displs_poroelastic,..
     memory_size = memory_size + 6.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)
@@ -224,18 +207,18 @@
 
 ! compute the approximate amount of memory needed to run the mesher
 
- subroutine memory_eval_mesher(myrank,nspec,npointot,nnodes_ext_mesh, &
-                              nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
-                              max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
-                              nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top, &
-                              memory_size_request)
+ subroutine memory_eval_mesher(nspec,npointot,nnodes_ext_mesh, &
+                               nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
+                               max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
+                               nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top, &
+                               memory_size_request)
 
   use constants
   use generate_databases_par, only: NGNOD,NGNOD2D
 
   implicit none
 
-  integer,intent(in) :: myrank,nspec,npointot,nnodes_ext_mesh,nelmnts_ext_mesh, &
+  integer,intent(in) :: nspec,npointot,nnodes_ext_mesh,nelmnts_ext_mesh, &
            nmat_ext_mesh,num_interfaces_ext_mesh, &
            max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
            nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top

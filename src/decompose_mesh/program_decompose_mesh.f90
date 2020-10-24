@@ -29,8 +29,7 @@ program xdecompose_mesh
 
   use constants, only: MAX_STRING_LEN
 
-  use decompose_mesh, only: nparts,localpath_name,outputpath_name,read_mesh_files,check_valence, &
-                                  scotch_partitioning,write_mesh_databases,ADIOS_FOR_DATABASES
+  use decompose_mesh_par, only: nparts,localpath_name,outputpath_name,ADIOS_FOR_DATABASES,HDF5_ENABLED
 
   implicit none
 
@@ -38,6 +37,7 @@ program xdecompose_mesh
   logical :: BROADCAST_AFTER_READ
   character(len=MAX_STRING_LEN) :: arg(3)
 
+! user output
   print *
   print *,'**********************'
   print *,'Serial mesh decomposer'
@@ -66,7 +66,7 @@ program xdecompose_mesh
  ! needs local_path for mesh files
   myrank = 0
   BROADCAST_AFTER_READ = .false.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   ! checks adios parameters
   if (ADIOS_FOR_DATABASES) then
@@ -81,11 +81,24 @@ program xdecompose_mesh
 ! checks valence of nodes
   call check_valence()
 
-! partitions mesh
-  call scotch_partitioning()
+! sets up elements for local time stepping
+  call lts_setup_elements()
+
+! partitions mesh (using scotch, metis, or patoh partitioners via constants.h)
+  call decompose_mesh()
 
 ! writes out database files
-  call write_mesh_databases()
+  if (HDF5_ENABLED) then
+    print *, 'HDF5 Database output'
+    call write_mesh_databases_hdf5()
+  else
+    call write_mesh_databases()
+  endif
+
+! user output
+  print *
+  print *,'finished successfully'
+  print *
 
 end program xdecompose_mesh
 

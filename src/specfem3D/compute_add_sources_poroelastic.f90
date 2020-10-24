@@ -30,14 +30,15 @@
   subroutine compute_add_sources_poroelastic()
 
   use constants
-  use specfem_par, only: station_name,network_name,adj_source_file,USE_FORCE_POINT_SOURCE, &
+  use specfem_par, only: station_name,network_name,USE_FORCE_POINT_SOURCE, &
                          tshift_src,dt,t0,USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
                          USE_BINARY_FOR_SEISMOGRAMS,ibool, &
+                         UNDO_ATTENUATION_AND_OR_PML, &
                          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
                          sourcearrays,SIMULATION_TYPE,NSTEP, &
                          ispec_selected_rec, &
                          nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC, &
-                         hxir_store,hetar_store,hgammar_store,source_adjoint,number_receiver_global,nrec_local
+                         hxir_adjstore,hetar_adjstore,hgammar_adjstore,source_adjoint,number_adjsources_global,nadj_rec_local
 
   use specfem_par_poroelastic, only: b_accels_poroelastic,b_accelw_poroelastic,accels_poroelastic,accelw_poroelastic, &
                                       rhoarraystore,phistore,tortstore,ispec_is_poroelastic
@@ -45,19 +46,30 @@
   implicit none
 
 ! local parameters
-  real(kind=CUSTOM_REAL) stf_used
+  real(kind=CUSTOM_REAL) :: stf_used,hlagrange
 
   double precision :: stf,time_source_dble
   double precision,external :: get_stf_poroelastic
-  logical ibool_read_adj_arrays
+
+  logical :: ibool_read_adj_arrays
   integer :: isource,iglob,i,j,k,ispec,it_sub_adj
   integer :: irec_local,irec
   real(kind=CUSTOM_REAL) :: phil,tortl,rhol_s,rhol_f,rhol_bar
   real(kind=CUSTOM_REAL) :: fac_s,fac_w
 
+  character(len=MAX_STRING_LEN) :: adj_source_file
+
 ! forward simulations
   if (SIMULATION_TYPE == 1) then
 
+! openmp solver
+!$OMP PARALLEL if (NSOURCES > 100) &
+!$OMP DEFAULT(SHARED) &
+!$OMP PRIVATE(isource,time_source_dble,stf_used,stf,iglob,ispec,i,j,k, &
+!$OMP         phil,tortl,rhol_s,rhol_f,rhol_bar,fac_s,fac_w)
+
+    ! adds poroelastic sources
+!$OMP DO
     do isource = 1,NSOURCES
 
       !   add the source (only if this proc carries the source)
@@ -68,7 +80,12 @@
         if (ispec_is_poroelastic(ispec)) then
           ! current time
           if (USE_LDDRK) then
-            time_source_dble = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            ! LDDRK
+            ! note: the LDDRK scheme updates displacement after the stiffness computations and
+            !       after adding boundary/coupling/source terms.
+            !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+            !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+            time_source_dble = dble(it-1-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
           else
             time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
           endif
@@ -85,9 +102,9 @@
           stf_used = real(stf,kind=CUSTOM_REAL)
 
           ! adds source array
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
+          do k = 1,NGLLZ
+            do j = 1,NGLLY
+              do i = 1,NGLLX
                 iglob = ibool(i,j,k,ispec)
                 ! get poroelastic parameters of current local GLL
                 phil = phistore(i,j,k,ispec)
@@ -111,19 +128,37 @@
                 endif
 
                 ! solid phase
-                accels_poroelastic(:,iglob) = accels_poroelastic(:,iglob) &
-                             + fac_s * sourcearrays(isource,:,i,j,k)*stf_used
+!$OMP ATOMIC
+                accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) &
+                             + fac_s * sourcearrays(isource,1,i,j,k)*stf_used
+!$OMP ATOMIC
+                accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) &
+                             + fac_s * sourcearrays(isource,2,i,j,k)*stf_used
+!$OMP ATOMIC
+                accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) &
+                             + fac_s * sourcearrays(isource,3,i,j,k)*stf_used
+
                 ! fluid phase
-                accelw_poroelastic(:,iglob) = accelw_poroelastic(:,iglob) &
-                             + fac_w * sourcearrays(isource,:,i,j,k)*stf_used
+!$OMP ATOMIC
+                accelw_poroelastic(1,iglob) = accelw_poroelastic(1,iglob) &
+                             + fac_w * sourcearrays(isource,1,i,j,k)*stf_used
+!$OMP ATOMIC
+                accelw_poroelastic(2,iglob) = accelw_poroelastic(2,iglob) &
+                             + fac_w * sourcearrays(isource,2,i,j,k)*stf_used
+!$OMP ATOMIC
+                accelw_poroelastic(3,iglob) = accelw_poroelastic(3,iglob) &
+                             + fac_w * sourcearrays(isource,3,i,j,k)*stf_used
+
               enddo
             enddo
           enddo
 
         endif ! ispec_is_poroelastic
       endif ! myrank
-
     enddo ! NSOURCES
+!$OMP ENDDO
+!$OMP END PARALLEL
+
   endif ! forward
 
 ! NOTE: adjoint sources and backward wavefield timing:
@@ -175,53 +210,49 @@
       ! this must be done carefully, otherwise the adjoint sources may be added
       ! twice
       if (ibool_read_adj_arrays) then
-
+        if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use ASCII instead'
+        ! ASCII format
         !!! read ascii adjoint sources
-        do irec_local = 1, nrec_local
-          irec = number_receiver_global(irec_local)
-          if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use ASCII instead'
+        do irec_local = 1, nadj_rec_local
+          irec = number_adjsources_global(irec_local)
           ! compute source arrays
           ! reads in **net**.**sta**.**BH**.adj files
           adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
           call compute_arrays_adjoint_source(adj_source_file,irec_local)
         enddo
-
       endif ! if (ibool_read_adj_arrays)
 
       if (it < NSTEP) then
-
         ! receivers act as sources
-        do irec_local = 1, nrec_local
-
-          irec = number_receiver_global(irec_local)
+        do irec_local = 1, nadj_rec_local
+          irec = number_adjsources_global(irec_local)
+          ! element index
           ispec = ispec_selected_rec(irec)
           if (ispec_is_poroelastic(ispec)) then
             ! adds source array
             do k = 1,NGLLZ
               do j = 1,NGLLY
                 do i = 1,NGLLX
-                  iglob = ibool(i,j,k,ispec_selected_rec(irec))
+                  iglob = ibool(i,j,k,ispec)
                   ! get poroelastic parameters of current local GLL
-                  phil = phistore(i,j,k,ispec_selected_rec(irec))
-                  rhol_s = rhoarraystore(1,i,j,k,ispec_selected_rec(irec))
-                  rhol_f = rhoarraystore(2,i,j,k,ispec_selected_rec(irec))
+                  phil = phistore(i,j,k,ispec)
+                  rhol_s = rhoarraystore(1,i,j,k,ispec)
+                  rhol_f = rhoarraystore(2,i,j,k,ispec)
                   rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
+
+                  hlagrange = hxir_adjstore(i,irec_local) * hetar_adjstore(j,irec_local) * hgammar_adjstore(k,irec_local)
 
                   ! adjoint source is in the solid phase only since this is the only measurement
                   ! available
 
                   ! solid phase
-                  accels_poroelastic(:,iglob) = accels_poroelastic(:,iglob)   + &
-                                    source_adjoint(:,irec_local, &
-                                                   NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * &
-                                    hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
+                  accels_poroelastic(:,iglob) = accels_poroelastic(:,iglob) &
+                    + source_adjoint(:,irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * hlagrange
                   !
                   ! fluid phase
-                  accelw_poroelastic(:,iglob) = accelw_poroelastic(:,iglob)  &
-                                    - rhol_f/rhol_bar *&
-                                    source_adjoint(:,irec_local, &
-                                                  NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * &
-                                    hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
+                  accelw_poroelastic(:,iglob) = accelw_poroelastic(:,iglob) &
+                    - rhol_f/rhol_bar &
+                    * source_adjoint(:,irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * hlagrange
                 enddo
               enddo
             enddo
@@ -252,7 +283,17 @@
           ! note: time step is now at NSTEP-it
           ! current time
           if (USE_LDDRK) then
-            time_source_dble = dble(NSTEP-it)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            ! LDDRK
+            ! note: the LDDRK scheme updates displacement after the stiffness computations and
+            !       after adding boundary/coupling/source terms.
+            !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+            !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+            if (UNDO_ATTENUATION_AND_OR_PML) then
+              ! stepping moves forward from snapshot position
+              time_source_dble = dble(NSTEP-it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            else
+              time_source_dble = dble(NSTEP-it-1)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            endif
           else
             time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
           endif
@@ -270,9 +311,9 @@
           stf_used = real(stf,kind=CUSTOM_REAL)
 
           !  add source array
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
+          do k = 1,NGLLZ
+            do j = 1,NGLLY
+              do i = 1,NGLLX
                 iglob = ibool(i,j,k,ispec)
                 ! get poroelastic parameters of current local GLL
                 phil = phistore(i,j,k,ispec)
@@ -280,7 +321,6 @@
                 rhol_s = rhoarraystore(1,i,j,k,ispec)
                 rhol_f = rhoarraystore(2,i,j,k,ispec)
                 rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
-
 
                 ! we distinguish between a single force which can be applied both in fluid and solid
                 ! and a moment-tensor source which only makes sense for a solid

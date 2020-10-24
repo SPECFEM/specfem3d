@@ -53,17 +53,15 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine model_salton_trough_broadcast(myrank)
+  subroutine model_salton_trough_broadcast()
 
   use constants
   use salton_trough_par
-  implicit none
 
-  integer :: myrank
+  implicit none
 
   ! local parameters
   integer :: ier
-
 
   allocate(vp_array(GOCAD_ST_NU,GOCAD_ST_NV,GOCAD_ST_NW),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 867')
@@ -72,7 +70,7 @@
   ! the variables read are declared and stored in structure
   if (myrank == 0) call read_salton_sea_model()
 
-  ! broadcast the information read on the master to the nodes
+  ! broadcast the information read on the main to the nodes
   call bcast_all_r(vp_array, size(vp_array))
 
   end subroutine model_salton_trough_broadcast

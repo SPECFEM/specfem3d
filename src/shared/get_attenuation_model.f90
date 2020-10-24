@@ -29,20 +29,30 @@
 
   implicit none
 
+  ! model_attenuation_storage_var
+  type model_attenuation_storage_var
+    sequence
+    double precision, dimension(:,:), pointer :: tau_eps_storage
+    double precision, dimension(:), pointer :: Q_storage
+    integer :: Q_resolution
+    integer :: Q_max
+  end type model_attenuation_storage_var
+  type (model_attenuation_storage_var) :: AM_S
+
   ! attenuation_simplex_variables
   type attenuation_simplex_variables
     sequence
-    double precision Q  ! Q     = Desired Value of Attenuation or Q
-    double precision iQ ! iQ    = 1/Q
-    double precision, dimension(:), pointer ::  f
+    double precision :: Q  ! Q     = Desired Value of Attenuation or Q
+    double precision :: iQ ! iQ    = 1/Q
+    double precision, dimension(:), allocatable ::  f
     ! f = Frequencies at which to evaluate the solution
-    double precision, dimension(:), pointer :: tau_s
+    double precision, dimension(:), allocatable :: tau_s
     ! tau_s = Tau_sigma defined by the frequency range and
     !             number of standard linear solids
-    integer nf          ! nf    = Number of Frequencies
-    integer nsls        ! nsls  = Number of Standard Linear Solids
+    integer :: nf          ! nf    = Number of Frequencies
+    integer :: nsls        ! nsls  = Number of Standard Linear Solids
   end type attenuation_simplex_variables
-  type(attenuation_simplex_variables) AS_V
+  type(attenuation_simplex_variables) :: AS_V
 
   end module attenuation_model
 
@@ -61,13 +71,14 @@
 !   Estimation of Q for Long-Period (>2 sec) Waves in the Los Angeles Basin
 !   BSSA, 93, 2, p. 627-638
 
-  use constants
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
-  real(kind=CUSTOM_REAL) :: vs_val
-  double precision :: Q_mu
-  double precision :: OLSEN_ATTENUATION_RATIO
+  real(kind=CUSTOM_REAL),intent(in) :: vs_val
+  double precision,intent(out) :: Q_mu
+
+  double precision,intent(in) :: OLSEN_ATTENUATION_RATIO
 
   !local parameters
   integer :: int_Q_mu
@@ -103,31 +114,90 @@
     stop 'Error no Olsen model specified, please set rule in get_attenuation_model.f90'
   endif
 
-  ! limits Q_mu value range
-  if (Q_mu < 1.0d0) Q_mu = 1.0d0
-  if (Q_mu > ATTENUATION_COMP_MAXIMUM) Q_mu = ATTENUATION_COMP_MAXIMUM
-
-
   end subroutine get_attenuation_model_olsen
+
+!
+!------------------------------------------------------------------------
+!
+
+  subroutine get_attenuation_model_olsen_qkappa(vp_val,vs_val,Q_mu,Q_kappa, &
+                                                USE_ANDERSON_CRITERIA,SCALING_FACTOR_QP_FROM_QS)
+
+! scales Q_kappa from Q_mu and vs/vp ratio
+
+  use constants, only: CUSTOM_REAL,ATTENUATION_COMP_MAXIMUM
+
+  implicit none
+
+  real(kind=CUSTOM_REAL), intent(in) :: vp_val,vs_val
+  double precision, intent(in) :: Q_mu
+  double precision, intent(out) :: Q_kappa
+
+  logical, intent(in) :: USE_ANDERSON_CRITERIA
+  double precision, intent(in) :: SCALING_FACTOR_QP_FROM_QS
+
+  ! local parameters
+  double precision :: L_val,Q_s,Q_p
+
+  ! Anderson & Hart (1978), Q of the Earth, JGR, 83, No. B12
+  ! conversion between (Qp,Qs) and (Qkappa,Qmu)
+  ! factor L
+  L_val = 4.0d0/3.d0 * (vs_val/vp_val)**2
+
+  ! attenuation Qs (eq.1)
+  Q_s = Q_mu
+
+  ! scales Qp from Qs (scaling factor introduced by Zhinan?)
+  ! todo: should we scale Qkappa directly? e.g. Q_kappa = 10.d0 * Q_mu
+  Q_p = SCALING_FACTOR_QP_FROM_QS * Q_s
+
+  ! Anderson & Hart criteria: Qs/Qp >= L (eq. 4) since Qmu and Qkappa must be positive
+  if (USE_ANDERSON_CRITERIA) then
+    ! enforces (eq. 4) from Anderson & Hart
+    ! note: this might lead to Q_p < Q_s
+    if ((Q_s - L_val * Q_p) <= 0.d0 ) then
+      ! negligible bulk attenuation (1/Q_kappa -> zero)
+      Q_kappa = ATTENUATION_COMP_MAXIMUM
+    else
+      ! converts to bulk attenuation (eq. 3)
+      Q_kappa = (1.0d0 - L_val) * Q_p * Q_s / (Q_s - L_val * Q_p)
+    endif
+  else
+    ! note: this case might lead to: Q_kappa < Q_mu
+    !       thus having a solid with stronger bulk attenuation than shear attenuation?
+
+    ! avoids division by zero
+    if (abs(Q_s - L_val * Q_p) <= 1.d-5 ) then
+      Q_kappa = ATTENUATION_COMP_MAXIMUM
+    else
+      ! converts to bulk attenuation (eq. 3)
+      Q_kappa = (1.0d0 - L_val) * Q_p * Q_s / (Q_s - L_val * Q_p)
+    endif
+  endif
+
+  end subroutine get_attenuation_model_olsen_qkappa
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
-                                  mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
-                                  ispec_is_elastic,min_resolved_period,prname,ATTENUATION_f0_REFERENCE)
+  subroutine get_attenuation_model(nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
+                                   mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
+                                   ispec_is_elastic,min_resolved_period,prname,ATTENUATION_f0_REFERENCE)
 
 ! precalculates attenuation arrays and stores arrays into files
+  use phdf5_utils
 
-  use constants
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,N_SLS, &
+    CUSTOM_REAL,MAX_STRING_LEN,HUGEVAL,IMAIN, &
+    ATTENUATION_COMP_MAXIMUM
 
-  use shared_parameters, only: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD,COMPUTE_FREQ_BAND_AUTOMATIC
+  use shared_parameters, only: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD,COMPUTE_FREQ_BAND_AUTOMATIC,HDF5_ENABLED
 
   implicit none
 
   double precision,intent(in) :: OLSEN_ATTENUATION_RATIO,ATTENUATION_f0_REFERENCE
-  integer,intent(in) :: myrank,nspec
+  integer,intent(in) :: nspec
   logical,intent(in) :: USE_OLSEN_ATTENUATION
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: mustore
@@ -149,8 +219,7 @@
   double precision, dimension(N_SLS) :: tau_sigma_dble,beta_dble,beta_dble_kappa
   double precision factor_scale_dble,one_minus_sum_beta_dble, &
                    factor_scale_dble_kappa,one_minus_sum_beta_dble_kappa
-  double precision :: Q_mu,Q_kappa,Q_p,Q_s
-  double precision :: L_val
+  double precision :: Q_mu,Q_kappa
   double precision :: f_c_source
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tau_sigma
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tauinv
@@ -165,6 +234,9 @@
   ! enforces ratio Qs/Qp >= L factor from Anderson & Hart (1978)
   ! IMPORTANT: this flag applies only if USE_OLSEN_ATTENUATION is true
   logical, parameter :: USE_ANDERSON_CRITERIA = .true.
+
+  ! scaling factor to scale Qp from Qs
+  double precision,parameter :: SCALING_FACTOR_QP_FROM_QS = 1.5d0
 
   !-----------------------------------------------------
 
@@ -202,24 +274,27 @@
     write(IMAIN,*)
     write(IMAIN,*) "  Approximation is performed in the following frequency band:"
     write(IMAIN,*) "  Reference frequency requested by the user (Hz):",sngl(ATTENUATION_f0_REFERENCE), &
-                                            " period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
+                                                        " period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
     if (COMPUTE_FREQ_BAND_AUTOMATIC) then
       write(IMAIN,*)
       write(IMAIN,*) "  The following values are computed automatically by the code"
       write(IMAIN,*) "  based on the estimated maximum frequency resolution of your mesh"
       write(IMAIN,*) "  and can thus vary from what you have requested."
     endif
+
     write(IMAIN,*)
     write(IMAIN,*) "  Frequency band        min/max (Hz):",sngl(1.0/MAX_ATTENUATION_PERIOD),sngl(1.0/MIN_ATTENUATION_PERIOD)
     write(IMAIN,*) "  Period band           min/max (s) :",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
     write(IMAIN,*) "  Logarithmic central frequency (Hz):",sngl(f_c_source)," period (s):",sngl(1.0/f_c_source)
     write(IMAIN,*)
     write(IMAIN,*) "  Using full attenuation with both Q_kappa and Q_mu."
+
     if (USE_OLSEN_ATTENUATION) then
       write(IMAIN,*) "  Using Olsen scaling with attenuation ratio Qmu/vs = ",sngl(OLSEN_ATTENUATION_RATIO)
       if (USE_ANDERSON_CRITERIA) write(IMAIN,*) "  Using Anderson and Hart criteria for ratio Qs/Qp"
     endif
 
+    write(IMAIN,*)
     call flush_IMAIN()
   endif
 
@@ -279,43 +354,8 @@
             ! bulk attenuation
             ! compressional wave speed vp
             vp_val = (kappastore(i,j,k,ispec) + 2.0d0 * mustore(i,j,k,ispec) / 3.0d0) / rho_vp(i,j,k,ispec)
-
-            ! Anderson & Hart (1978), Q of the Earth, JGR, 83, No. B12
-            ! conversion between (Qp,Qs) and (Qkappa,Qmu)
-            ! factor L
-            L_val = 4.0d0/3.d0 * (vs_val/vp_val)**2
-
-            ! attenuation Qs (eq.1)
-            Q_s = Q_mu
-
-            ! scales Qp from Qs (scaling factor introduced by Zhinan?)
-            ! todo: should we scale Qkappa directly? e.g. Q_kappa = 10.d0 * Q_mu
-            Q_p = 1.5d0 * Q_s
-
-            ! Anderson & Hart criteria: Qs/Qp >= L (eq. 4) since Qmu and Qkappa must be positive
-            if (USE_ANDERSON_CRITERIA) then
-              ! enforces (eq. 4) from Anderson & Hart
-              ! note: this might lead to Q_p < Q_s
-              if ((Q_s - L_val * Q_p) <= 0.d0 ) then
-                ! negligible bulk attenuation (1/Q_kappa -> zero)
-                Q_kappa = ATTENUATION_COMP_MAXIMUM
-              else
-                ! converts to bulk attenuation (eq. 3)
-                Q_kappa = (1.0d0 - L_val) * Q_p * Q_s / (Q_s - L_val * Q_p)
-              endif
-            else
-              ! note: this case might lead to: Q_kappa < Q_mu
-              !       thus having a solid with stronger bulk attenuation than shear attenuation?
-
-              ! avoids division by zero
-              if (abs(Q_s - L_val * Q_p) <= 1.d-5 ) then
-                Q_kappa = ATTENUATION_COMP_MAXIMUM
-              else
-                ! converts to bulk attenuation (eq. 3)
-                Q_kappa = (1.0d0 - L_val) * Q_p * Q_s / (Q_s - L_val * Q_p)
-              endif
-            endif
-
+            call get_attenuation_model_olsen_qkappa(vp_val,vs_val,Q_mu,Q_kappa, &
+                                                    USE_ANDERSON_CRITERIA,SCALING_FACTOR_QP_FROM_QS)
           else
             ! takes Q set in (CUBIT) mesh
             Q_kappa = qkappa_attenuation_store(i,j,k,ispec)
@@ -334,7 +374,7 @@
 
           ! gets beta, on_minus_sum_beta and factor_scale
           ! based on calculation of strain relaxation times tau_eps
-          call get_attenuation_factors(myrank,Q_mu,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD, &
+          call get_attenuation_factors(Q_mu,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD, &
                                        f_c_source,tau_sigma_dble, &
                                        beta_dble,one_minus_sum_beta_dble,factor_scale_dble, &
                                        Q_kappa,beta_dble_kappa,one_minus_sum_beta_dble_kappa,factor_scale_dble_kappa, &
@@ -371,26 +411,31 @@
     write(IMAIN,*) "  Q_mu min/max           : ",sngl(qmin_all),sngl(qmax_all)
     write(IMAIN,*) "  Q_kappa min/max        : ",sngl(qmin_kappa_all),sngl(qmax_kappa_all)
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   ! stores attenuation arrays into files
-  open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', &
-        status='unknown',action='write',form='unformatted',iostat=ier)
-  if (ier /= 0) then
-    print *,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
-    call exit_mpi(myrank,'error opening attenuation.bin file')
+  if(.not. HDF5_ENABLED) then
+    open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', &
+          status='unknown',action='write',form='unformatted',iostat=ier)
+    if (ier /= 0) then
+      print *,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
+      call exit_mpi(myrank,'error opening attenuation.bin file')
+    endif
+    write(27) nspec
+
+    ! shear attenuation
+    write(27) factor_common
+    write(27) scale_factor
+
+    ! bulk attenuation
+    write(27) factor_common_kappa
+    write(27) scale_factor_kappa
+
+    close(27)
+  else
+    call write_attenuation_file_in_h5(factor_common,scale_factor,factor_common_kappa,scale_factor_kappa)
   endif
-  write(27) nspec
-
-  ! shear attenuation
-  write(27) factor_common
-  write(27) scale_factor
-
-  ! bulk attenuation
-  write(27) factor_common_kappa
-  write(27) scale_factor_kappa
-
-  close(27)
 
   ! frees memory
   deallocate(factor_common,scale_factor)
@@ -411,8 +456,9 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL), dimension(N_SLS) :: tau_s, alphaval,betaval,gammaval
-  real(kind=CUSTOM_REAL) :: deltat
+  real(kind=CUSTOM_REAL), dimension(N_SLS),intent(in) :: tau_s
+  real(kind=CUSTOM_REAL), dimension(N_SLS),intent(out) :: alphaval,betaval,gammaval
+  real(kind=CUSTOM_REAL),intent(in) :: deltat
 
   ! local parameter
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tauinv
@@ -478,7 +524,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_attenuation_factors(myrank,Q_mu,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD, &
+  subroutine get_attenuation_factors(Q_mu,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD, &
                                      f_c_source,tau_sigma, &
                                      beta,one_minus_sum_beta,factor_scale, &
                                      Q_kappa,beta_kappa,one_minus_sum_beta_kappa,factor_scale_kappa,ATTENUATION_f0_REFERENCE)
@@ -496,8 +542,7 @@
 
   implicit none
 
-  integer:: myrank
-  double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD,ATTENUATION_f0_REFERENCE
+  double precision,intent(in) :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD,ATTENUATION_f0_REFERENCE
   double precision :: f_c_source,Q_mu,Q_kappa
   double precision, dimension(N_SLS) :: tau_sigma
   double precision, dimension(N_SLS) :: beta,beta_kappa
@@ -514,7 +559,7 @@
   call get_attenuation_property_values(tau_sigma,tau_eps_kappa,beta_kappa,one_minus_sum_beta_kappa)
 
   ! determines the "scale factor"
-  call get_attenuation_scale_factor(myrank,f_c_source,tau_eps_kappa,tau_sigma,Q_kappa,factor_scale_kappa,ATTENUATION_f0_REFERENCE)
+  call get_attenuation_scale_factor(f_c_source,tau_eps_kappa,tau_sigma,Q_kappa,factor_scale_kappa,ATTENUATION_f0_REFERENCE)
   ! uncomment this to print the constants to use in the 3D viscoelastic analytical code for validation purposes
   ! if (myrank == 0) &
   !   print *,'for Q_Kappa,tau_eps_kappa,tau_sigma,factor_scale_kappa = ',Q_Kappa,tau_eps_kappa(:),tau_sigma(:),factor_scale_kappa
@@ -526,7 +571,7 @@
   call get_attenuation_property_values(tau_sigma,tau_eps,beta,one_minus_sum_beta)
 
   ! determines the "scale factor"
-  call get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_mu,factor_scale,ATTENUATION_f0_REFERENCE)
+  call get_attenuation_scale_factor(f_c_source,tau_eps,tau_sigma,Q_mu,factor_scale,ATTENUATION_f0_REFERENCE)
   ! uncomment this to print the constants to use in the 3D viscoelastic analytical code for validation purposes
   ! if (myrank == 0) &
   !   print *,'for Q_mu,tau_eps,tau_sigma,factor_scale = ',Q_mu,tau_eps(:),tau_sigma(:),factor_scale
@@ -573,7 +618,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_val,scale_factor,ATTENUATION_f0_REFERENCE)
+  subroutine get_attenuation_scale_factor(f_c_source,tau_eps,tau_sigma,Q_val,scale_factor,ATTENUATION_f0_REFERENCE)
 
 ! returns: physical dispersion scaling factor scale_factor
 
@@ -581,22 +626,21 @@
 
   implicit none
 
-  integer :: myrank
-  double precision, intent(in) :: ATTENUATION_f0_REFERENCE
-  double precision :: scale_factor, Q_val, f_c_source
+  double precision,intent(in) :: Q_val, f_c_source
   ! strain and stress relaxation times
-  double precision, dimension(N_SLS) :: tau_eps, tau_sigma
+  double precision, dimension(N_SLS),intent(in) :: tau_eps, tau_sigma
+  double precision, intent(in) :: ATTENUATION_f0_REFERENCE
+
+  double precision,intent(out) :: scale_factor
 
   ! local parameters
-  double precision w_c_source
-  double precision factor_scale_mu0, factor_scale_mu
-  integer i
+  double precision :: w_c_source
+  double precision :: factor_scale_mu0, factor_scale_mu
   double precision :: xtmp1_nu1,xtmp2_nu1,xtmp_ak_nu1
-
+  integer :: i
 
   !--- compute central angular frequency of source (non dimensionalized)
   w_c_source = TWO_PI * f_c_source
-
 
   !--- quantity by which to scale mu_0 to get mu
 
@@ -607,7 +651,6 @@
   ! and in Aki, K. and Richards, P. G., Quantitative seismology, theory and methods,
   ! W. H. Freeman, (1980), second edition, sections 5.5 and 5.5.2, eq. (5.81) p. 170
   factor_scale_mu0 = ONE + TWO * log(f_c_source / ATTENUATION_f0_REFERENCE ) / (PI * Q_val)
-
 
   !--- quantity by which to scale mu to get mu_unrelaxed
   xtmp1_nu1 = ONE
@@ -624,13 +667,14 @@
   !--- total factor by which to scale mu0 to get mu_unrelaxed
   scale_factor = factor_scale_mu * factor_scale_mu0
 
-
   !--- check that the correction factor is close to one
   if (scale_factor < 0.5 .or. scale_factor > 1.5) then
-    write(*,*) "error : in get_attenuation_scale_factor() "
-    write(*,*) "  scale factor: ", scale_factor, " should be between 0.5 and 1.5"
-    write(*,*) "  Q value = ", Q_val, " central frequency = ",f_c_source
-    write(*,*) "  please check your reference frequency ATTENUATION_f0_REFERENCE in constants.h"
+    print *,"Error : in get_attenuation_scale_factor() "
+    print *,"  scale factor: ", scale_factor, " should be between 0.5 and 1.5"
+    print *,"  factor scale_mu = ",factor_scale_mu," factor scale_mu0 = ",factor_scale_mu0
+    print *,"  Q value = ", Q_val, " central frequency = ",f_c_source
+    print *,"  ATTENUATION_f0_REFERENCE = ",ATTENUATION_f0_REFERENCE
+    print *,"  please check your reference frequency ATTENUATION_f0_REFERENCE in constants.h"
     call exit_MPI(myrank,'unreliable correction factor in attenuation model')
   endif
 
@@ -748,7 +792,7 @@
   f2 = 1.0d0 / min_period
 
   ! use the logarithmic central frequency
-  f_c_source = 10.0d0**(0.5 * (log10(f1) + log10(f2)))
+  f_c_source = 10.0d0**(0.5d0 * (log10(f1) + log10(f2)))
 
   end subroutine get_attenuation_source_freq
 
@@ -792,9 +836,125 @@
   double precision, dimension(N_SLS) :: tau_s, tau_eps
   double precision :: min_period,max_period
 
+  ! local parameters
+  integer :: rw
+
+  ! note: to speed up this attenuation routine, we will try to compute the attenuation factors only for new Q values.
+  !       often, Q values are given for simple Q-models, thus there is no need to recompute the same factors for every GLL point.
+  !       we use a storage table AM_S to check/retrieve and store computed tau_eps values for specific Q values.
+  !
+  ! tries first to READ from storage array
+  rw = 1
+  call model_attenuation_storage(Q_in, tau_eps, rw)
+
+  ! checks if value was found
+  if (rw > 0) return
+
+  ! new Q value, computes tau factors
   call attenuation_invert_by_simplex(min_period, max_period, N_SLS, Q_in, tau_s, tau_eps)
 
+  ! WRITE into storage array, to keep in case for next GLL points
+  rw = -1
+  call model_attenuation_storage(Q_in, tau_eps, rw)
+
   end subroutine get_attenuation_tau_eps
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine model_attenuation_storage(Q_in, tau_eps, rw)
+
+  use constants
+
+  use attenuation_model, only: AM_S
+
+  implicit none
+
+  double precision,intent(in) :: Q_in
+  double precision, dimension(N_SLS),intent(inout) :: tau_eps
+  integer,intent(inout) :: rw
+
+  ! local parameters
+  integer :: Qtmp
+  integer :: ier
+  !double precision :: Qnew
+
+  double precision, parameter :: ZERO_TOL = 1.e-5
+
+  integer, save :: first_time_called = 1
+
+  ! allocates arrays when first called
+  if (first_time_called == 1) then
+    first_time_called = 0
+    AM_S%Q_resolution = 10**ATTENUATION_COMP_RESOLUTION
+    AM_S%Q_max = ATTENUATION_COMP_MAXIMUM
+    Qtmp = AM_S%Q_resolution * AM_S%Q_max
+
+    allocate(AM_S%tau_eps_storage(N_SLS, Qtmp), &
+             AM_S%Q_storage(Qtmp),stat=ier)
+    if (ier /= 0) stop 'error allocating arrays for attenuation storage'
+    AM_S%Q_storage(:) = -1
+  endif
+
+  if (Q_in < 0.0d0 .or. Q_in > AM_S%Q_max) then
+    print *,'Error attenuation_storage()'
+    print *,'Attenuation Value out of Range: ', Q_in
+    print *,'Attenuation Value out of Range: Min, Max ', 0, AM_S%Q_max
+    stop 'Attenuation Value out of Range'
+  endif
+
+  ! check for zero Q value
+  if (rw > 0 .and. Q_in <= ZERO_TOL) then
+    !Q_in = 0.0d0;
+    tau_eps(:) = 0.0d0;
+    return
+  endif
+
+  ! Generate index for Storage Array
+  ! and Recast Q using this index
+  ! According to Brian, use float
+  !Qtmp = Q_in * Q_resolution
+  !Q_in = Qtmp / Q_resolution;
+
+  ! by default: resolution is Q_resolution = 10
+  ! converts Q to an array integer index:
+  ! e.g. Q = 150.31 -> Qtmp = 150.31 * 10 = int( 1503.10 ) = 1503
+  Qtmp = int(Q_in * dble(AM_S%Q_resolution))
+
+  ! rounds to corresponding double value:
+  ! e.g. Qnew = dble( 1503 ) / dble(10) = 150.30
+  ! but Qnew is not used any further...
+  !Qnew = dble(Qtmp) / dble(AM_S%Q_resolution)
+
+  if (rw > 0) then
+    ! checks
+    if (first_time_called == 0) then
+      if (.not. associated(AM_S%Q_storage)) &
+        stop 'error calling model_attenuation_storage() routine without AM_S array'
+    else
+      stop 'error calling model_attenuation_storage() routine with first_time_called value invalid'
+    endif
+
+    ! READ
+    if (AM_S%Q_storage(Qtmp) > 0) then
+      ! READ SUCCESSFUL
+      tau_eps(:) = AM_S%tau_eps_storage(:,Qtmp)
+      ! corresponding Q value would be:
+      !Q_in = AM_S%Q_storage(Qtmp)
+      rw = 1
+    else
+      ! READ NOT SUCCESSFUL
+      rw = -1
+    endif
+  else
+    ! WRITE SUCCESSFUL
+    AM_S%tau_eps_storage(:,Qtmp) = tau_eps(:)
+    AM_S%Q_storage(Qtmp) = Q_in
+    rw = 1
+  endif
+
+  end subroutine model_attenuation_storage
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -805,17 +965,20 @@
   implicit none
 
   ! Input / Output
-  double precision  t1, t2
-  double precision  Q_real
-  integer  n
-  double precision, dimension(n)   :: tau_s, tau_eps
+  double precision,intent(in) :: t1, t2
+  double precision,intent(in) :: Q_real
+  integer,intent(in) :: n
+  double precision, dimension(n),intent(in)  :: tau_s
+  double precision, dimension(n),intent(out) :: tau_eps
 
   ! Internal
-  integer i, iterations, err,prnt
-  double precision f1, f2, exp1,exp2, min_value !, dexpval
+  integer :: i, iterations, err,prnt
+  double precision :: f1, f2, exp1,exp2, min_value !, dexpval
+
   integer, parameter :: nf = 100
   double precision, dimension(nf) :: f
-  double precision, parameter :: PI = 3.14159265358979d0
+
+  !double precision, parameter :: PI = 3.14159265358979d0
   double precision, external :: attenuation_eval
 
   ! Values to be passed into the simplex minimization routine
@@ -841,7 +1004,6 @@
   ! Determine the Source frequency
 !  omega_not =  1.0e+03 * 10.0d0**(0.5 * (log10(f1) + log10(f2)))
 
-
   ! Determine the Frequencies at which to compare solutions
   !   The frequencies should be equally spaced in log10 frequency
   do i = 1,nf
@@ -855,7 +1017,7 @@
 !  enddo
 
 
-  ! Shove the paramters into the module
+  ! Shove the parameters into the module
   call attenuation_simplex_setup(nf,n,f,Q_real,tau_s)
 
   ! Set the Tau_epsilon (tau_eps) to an initial value at omega*tau = 1
@@ -895,11 +1057,13 @@
 
   implicit none
 
-  integer nf_in, nsls_in
-  double precision Q_in
-  double precision, dimension(nf_in)   :: f_in
-  double precision, dimension(nsls_in) :: tau_s_in
-  integer ier
+  integer,intent(in) :: nf_in, nsls_in
+  double precision,intent(in) :: Q_in
+  double precision, dimension(nf_in),intent(in)   :: f_in
+  double precision, dimension(nsls_in),intent(in) :: tau_s_in
+
+  ! local parameters
+  integer :: ier
 
   allocate(AS_V%f(nf_in),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1188')
@@ -947,13 +1111,14 @@
   implicit none
 
    ! Input
-  double precision, dimension(AS_V%nsls) :: Xin
-  double precision, dimension(AS_V%nsls) :: tau_eps
+  double precision, dimension(AS_V%nsls),intent(in) :: Xin
 
+  ! local parameters
+  double precision, dimension(AS_V%nsls) :: tau_eps
   double precision, dimension(AS_V%nf)   :: A, B, tan_delta
 
-  integer i
-  double precision xi, iQ2
+  integer :: i
+  double precision :: xi, iQ2
 
   tau_eps = Xin
 
@@ -1010,19 +1175,19 @@
   implicit none
 
   ! Input
-  integer nf, nsls
-  double precision, dimension(nf)   :: f
-  double precision, dimension(nsls) :: tau_s, tau_eps
+  integer,intent(in) :: nf, nsls
+  double precision, dimension(nf),intent(in)   :: f
+  double precision, dimension(nsls),intent(in) :: tau_s, tau_eps
   ! Output
-  double precision, dimension(nf)   :: A,B
+  double precision, dimension(nf),intent(out)   :: A,B
 
-  integer i,j
-  double precision w, pi, denom
-
-  PI = 3.14159265358979d0
+  integer :: i,j
+  double precision :: w, denom
+  double precision,parameter :: PI = 3.14159265358979d0
 
   A(:) = 0.0d0
   B(:) = 0.0d0
+
   do i = 1,nf
     w = 2.0d0 * PI * 10**f(i)
     do j = 1,nsls
@@ -1078,13 +1243,16 @@
   ! Input
   double precision, external :: funk
 
-  integer n
-  double precision x(n) ! Also Output
-  integer itercount, prnt, err
-  double precision tolf
+  integer,intent(in) :: n
+  double precision,intent(inout) :: x(n) ! Also Output
+  integer,intent(inout) :: itercount
+  integer,intent(in) :: prnt
+  integer,intent(out) :: err
+  double precision,intent(inout) :: tolf
 
+  ! local parameters
   !Internal
-  integer i,j, how
+  integer :: i,j, how
   integer, parameter :: none             = 0
   integer, parameter :: initial          = 1
   integer, parameter :: expand           = 2
@@ -1093,24 +1261,23 @@
   integer, parameter :: contract_inside  = 5
   integer, parameter :: shrink           = 6
 
-  integer maxiter, maxfun
-  integer func_evals
-  double precision tolx
+  integer :: maxiter, maxfun
+  integer :: func_evals
+  double precision :: tolx
 
-  double precision rho, chi, psi, sigma
-  double precision xin(n), y(n), v(n,n+1), fv(n+1)
-  double precision vtmp(n,n+1)
-  double precision usual_delta, zero_term_delta
-  double precision xbar(n), xr(n), fxr, xe(n), fxe, xc(n), fxc, fxcc, xcc(n)
-  integer place(n+1)
+  double precision :: rho, chi, psi, sigma
+  double precision :: xin(n), y(n), v(n,n+1), fv(n+1)
+  double precision :: vtmp(n,n+1)
+  double precision :: usual_delta, zero_term_delta
+  double precision :: xbar(n), xr(n), fxr, xe(n), fxe, xc(n), fxc, fxcc, xcc(n)
+  integer :: place(n+1)
 
-  double precision max_size_simplex, max_value
+  double precision :: max_size_simplex, max_value
 
   rho   = 1.0d0
   chi   = 2.0d0
   psi   = 0.5d0
   sigma = 0.5d0
-
 
   if (itercount > 0) then
      maxiter = itercount
@@ -1312,11 +1479,12 @@
 !
 
   implicit none
-  integer n
-  double precision fv(n)
+  integer,intent(in) :: n
+  double precision,intent(in) :: fv(n)
 
-  integer i
-  double precision m, z
+  ! local parameters
+  integer :: i
+  double precision :: m, z
 
   m = 0.0d0
   do i = 2,n
@@ -1348,11 +1516,12 @@
 !
 
   implicit none
-  integer n
-  double precision v(n,n+1)
+  integer,intent(in) :: n
+  double precision,intent(in) :: v(n,n+1)
 
-  integer i,j
-  double precision m, z
+  ! local parameters
+  integer :: i,j
+  double precision :: m, z
 
   m = 0.0d0
   do i = 1,n
@@ -1395,13 +1564,14 @@
 
   implicit none
 
-  integer n
-  double precision X(n)
-  integer I(n)
+  integer,intent(in) :: n
+  double precision,intent(inout) :: X(n)
+  integer,intent(out) :: I(n)
 
-  integer j,k
-  double precision rtmp
-  integer itmp
+  ! local parameters
+  integer :: j,k
+  double precision :: rtmp
+  integer :: itmp
 
   do j = 1,n
      I(j) = j

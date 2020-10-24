@@ -54,7 +54,7 @@
 !       proc000***_rho_kernel_smooth.bin
 !
 !- topo/ contains:
-!       proc000***_solver_data.bin
+!       proc000***_external_mesh.bin
 !
 ! new models are stored in
 !- OUTPUT_MODEL/ as
@@ -81,7 +81,7 @@ program add_model
   ! ============ program starts here =====================
 
   ! initializes arrays
-  call initialize()
+  call add_model_initialize()
 
   ! reads in parameters needed
   call read_parameters_tomo()
@@ -202,9 +202,11 @@ end program add_model
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine initialize()
+  subroutine add_model_initialize()
 
 ! initializes arrays
+
+  use constants, only: myrank
 
   use tomography_par
 
@@ -221,7 +223,7 @@ subroutine initialize()
 
   ! reads the parameter file
   BROADCAST_AFTER_READ = .true.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED not supported yet for xadd_model, please rerun program...'
 
@@ -243,5 +245,5 @@ subroutine initialize()
   NSPEC = NSPEC_AB
   NGLOB = NGLOB_AB
 
-end subroutine initialize
+  end subroutine add_model_initialize
 

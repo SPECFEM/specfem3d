@@ -83,7 +83,7 @@
 
   implicit none
 
-  integer :: myrank
+  integer,intent(in) :: myrank
 
   ! stores rank
   myrank_tomo = myrank
@@ -102,10 +102,10 @@
 
   ! otherwise:
 
-  ! only master reads in model file
+  ! only main reads in model file
   !integer, dimension(1) :: nrecord
   !if (myrank == 0) call read_model_tomography()
-  ! broadcast the information read on the master to the nodes, e.g.
+  ! broadcast the information read on the main to the nodes, e.g.
   !call bcast_all_i(nrecord,1)
 
   !if (myrank /= 0) then

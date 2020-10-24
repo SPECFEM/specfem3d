@@ -65,6 +65,8 @@ module fault_solver_dynamic
   ! simulation
   logical, save :: TPV10X = .false.  !Boundary velocity strengthening layers for
   ! TPV10X
+  ! time weakening
+  logical, save :: TWF = .false.   ! time weakening
 
   logical, save :: RATE_AND_STATE = .false.
 
@@ -74,7 +76,7 @@ module fault_solver_dynamic
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
 
   public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, Kelvin_Voigt_eta, &
-  SIMULATION_TYPE_DYN, transfer_faultdata_GPU, rsf_GPU_init, synchronize_GPU
+            SIMULATION_TYPE_DYN, transfer_faultdata_GPU, rsf_GPU_init, synchronize_GPU
 
 
 contains
@@ -106,7 +108,7 @@ contains
   integer, parameter :: IIN_PAR =151
   integer, parameter :: IIN_BIN =170
 
-  NAMELIST / RUPTURE_SWITCHES / RATE_AND_STATE , TPV16 , TPV10X , RSF_HETE
+  NAMELIST / RUPTURE_SWITCHES / RATE_AND_STATE , TPV16 , TPV10X , RSF_HETE, TWF
   NAMELIST / BEGIN_FAULT / dummy_idfault
 
   dummy_idfault = 0
@@ -248,7 +250,6 @@ contains
   call initialize_fault(bc,IIN_BIN)
 
   if (bc%nspec > 0) then
-
     allocate(bc%T(3,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1363')
     allocate(bc%D(3,bc%nglob),stat=ier)
@@ -284,7 +285,7 @@ contains
     call init_2d_distribution(bc%T0(3,:),bc%coord,IIN_PAR,n3)
     call init_fault_traction(bc,Sigma) !added the fault traction caused by a regional stress field
 
-   bc%T = bc%T0
+    bc%T = bc%T0
 
     !WARNING : Quick and dirty free surface condition at z=0
     !  do k=1,bc%nglob
@@ -294,44 +295,61 @@ contains
     ! Set friction parameters and initialize friction variables
     allocate(bc%MU(bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1367')
+
     if (RATE_AND_STATE) then
       allocate(bc%rsf,stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1368')
+
       call rsf_init(bc%rsf,bc%T0,bc%V,bc%Fload,bc%coord,IIN_PAR)
+
     else
       allocate(bc%swf,stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1369')
-      call swf_init(bc%swf,bc%MU,bc%coord,IIN_PAR)
-      if (TPV16) call TPV16_init() !WARNING: ad hoc, initializes T0 and swf
-    endif
 
+      call swf_init(bc%swf,bc%MU,bc%coord,IIN_PAR)
+
+      if (TPV16) call TPV16_init() !WARNING: ad hoc, initializes T0 and swf
+      if (TWF) then
+        allocate(bc%twf)
+        call twf_init(bc%twf,IIN_PAR)
+      endif
+    endif
 !! unused
 ! added by kangchen, this is specifically made for the Balochistan simulation
 !  call load_stress_tpv35()
 
+  else
+    ! dummy allocations (for subroutine arguments)
+    allocate(bc%T(3,1), &
+             bc%D(3,1), &
+             bc%V(3,1))
   endif
+
   !bc%T=bc%T0
   if (RATE_AND_STATE) then
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,8,iflt)
+
     if (bc%dataT%npoin > 0) then
-    bc%dataT%longFieldNames(8) = "log10 of state variable (log-seconds)"
-    if (bc%rsf%StateLaw == 1) then
-      bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" log-theta"
-    else
-      bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" psi"
-    endif
+      bc%dataT%longFieldNames(8) = "log10 of state variable (log-seconds)"
+      if (bc%rsf%StateLaw == 1) then
+        bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" log-theta"
+      else
+        bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" psi"
+      endif
     endif
   else
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,7,iflt)
   endif
 
   call init_dataXZ(bc%dataXZ,bc)
- ! output a fault snapshot at t=0
-  if (.not. PARALLEL_FAULT) then
-    if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,0,iflt)
-  else
+
+  ! output a fault snapshot at t=0
+  if (PARALLEL_FAULT) then
     call gather_dataXZ(bc)
     if (myrank == 0) call write_dataXZ(bc%dataXZ_all,0,iflt)
+  else
+    ! fault in single slice
+    if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,0,iflt)
   endif
 
   contains
@@ -625,13 +643,22 @@ contains
 
   implicit none
 
+! arrays:
+!   F == accel - (output) force/acceleration
+!   V == veloc - (input) velocity
+!   D == displ - (input) displacement
+
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: V,D
   real(kind=CUSTOM_REAL), dimension(:,:), intent(inout) :: F
 
+  ! local parameters
   integer :: i
 
+  ! checks if anything to do
   if (.not. allocated(faults)) return
-  do i=1,size(faults)
+
+  ! loops over faults
+  do i = 1,size(faults)
     call BC_DYNFLT_set3d(faults(i),F,V,D,i)
   enddo
 
@@ -645,9 +672,13 @@ contains
 
   implicit none
 
-  real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
+  ! fault
   type(bc_dynandkinflt_type), intent(inout) :: bc
+  ! force/accel
+  real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
+  ! velocity,displacement
   real(kind=CUSTOM_REAL), intent(in) :: V(:,:),D(:,:)
+  ! fault id
   integer, intent(in) :: iflt
 
   ! local parameters
@@ -656,11 +687,12 @@ contains
     theta_old, theta_new, dc, Vf_old, Vf_new, TxExt, tmp_Vf
   real(kind=CUSTOM_REAL) :: half_dt,TLoad,DTau0,GLoad,timeval
   integer :: i
+  real(kind=CUSTOM_REAL) :: nuc_x, nuc_y, nuc_z, nuc_r, nuc_t0, nuc_v, dist, tw_r, coh_size
 
   if (bc%nspec > 0) then !Surendra : for parallel faults
 
-    half_dt = 0.5e0_CUSTOM_REAL*bc%dt
-    Vf_old = sqrt(bc%V(1,:)*bc%V(1,:)+bc%V(2,:)*bc%V(2,:))
+    half_dt = 0.5_CUSTOM_REAL * bc%dt
+    Vf_old = sqrt(bc%V(1,:)*bc%V(1,:) + bc%V(2,:)*bc%V(2,:))
 
     ! get predicted values
     dD = get_jump(bc,D) ! dD_predictor
@@ -689,12 +721,12 @@ contains
 
     ! Solve for normal stress (negative is compressive)
     ! Opening implies free stress
-    if (bc%allow_opening) T(3,:) = min(T(3,:),0.e0_CUSTOM_REAL)
+    if (bc%allow_opening) T(3,:) = min(T(3,:),0.0_CUSTOM_REAL)
 
     ! smooth loading within nucleation patch
     !WARNING : ad hoc for SCEC benchmark TPV10x
     if (RATE_AND_STATE) then
-      TxExt = 0._CUSTOM_REAL
+      TxExt = 0.0_CUSTOM_REAL
       TLoad = 1.0_CUSTOM_REAL
       DTau0 = 1.0_CUSTOM_REAL
       timeval = it*bc%dt !time will never be zero. it starts from 1
@@ -719,13 +751,34 @@ contains
       bc%MU = swf_mu(bc%swf)
 
       ! combined with time-weakening for nucleation
-      !  if (associated(bc%twf)) bc%MU = min( bc%MU, twf_mu(bc%twf,bc%coord,timeval) )
+      if (TWF) then
+        timeval = it*bc%dt
+        nuc_x   = bc%twf%nuc_x
+        nuc_y   = bc%twf%nuc_y
+        nuc_z   = bc%twf%nuc_z
+        nuc_r   = bc%twf%nuc_r
+        nuc_t0  = bc%twf%nuc_t0
+        nuc_v   = bc%twf%nuc_v
+        do i=1,bc%nglob
+            dist = ((bc%coord(1,i)-nuc_x)**2 + (bc%coord(2,i)-nuc_y)**2 + (bc%coord(3,i)-nuc_z)**2)**0.5
+            if (dist <= nuc_r) then
+                tw_r     = timeval * nuc_v
+                coh_size = nuc_t0  * nuc_v
+                if (dist <= tw_r - coh_size) then
+                    bc%MU(i) = min(bc%MU(i), bc%swf%mud(i))
+                else if (dist > tw_r - coh_size .and. dist <= tw_r ) then
+                    bc%MU(i) = min(bc%MU(i), bc%swf%mud(i) + (dist-(tw_r-coh_size))/coh_size*(bc%swf%mus(i)-bc%swf%mud(i)))
+                endif
+            endif
+        enddo
+      endif
+
       if (TPV16) then
         where (bc%swf%T <= it*bc%dt) bc%MU = bc%swf%mud
       endif
 
       ! Update strength
-      strength = -bc%MU * min(T(3,:),0.e0_CUSTOM_REAL) + bc%swf%C
+      strength = -bc%MU * min(T(3,:),0.0_CUSTOM_REAL) + bc%swf%C
 
       ! Solve for shear stress
       tnew = min(tStick,strength)
@@ -737,8 +790,8 @@ contains
       theta_old = bc%rsf%theta
       call rsf_update_state(Vf_old,bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
-                         bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
+        Vf_new(i) = rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+                           bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
 
       enddo
       ! second pass
@@ -746,8 +799,8 @@ contains
       tmp_Vf(:) = 0.5_CUSTOM_REAL*(Vf_old(:) + Vf_new(:))
       call rsf_update_state(tmp_Vf,bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
-                         bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
+        Vf_new(i) = rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+                           bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
 
 
       enddo
@@ -756,7 +809,7 @@ contains
 
     endif
 
-    tStick = max(tStick,1e0_CUSTOM_REAL) ! to avoid division by zero
+    tStick = max(tStick,1.0_CUSTOM_REAL) ! to avoid division by zero
     T(1,:) = tnew * T(1,:)/tStick
     T(2,:) = tnew * T(2,:)/tStick
 
@@ -778,14 +831,13 @@ contains
     bc%D = dD
     bc%V = dV + half_dt*dA
 
-
     ! Rotate tractions back to (x,y,z) frame
     T = rotate(bc,T,-1)
 
     ! Add boundary term B*T to M*a
     call add_BT(bc,MxA,T)
     !-- intermediate storage of outputs --
-    Vf_new = sqrt(bc%V(1,:)*bc%V(1,:)+bc%V(2,:)*bc%V(2,:))
+    Vf_new = sqrt(bc%V(1,:)*bc%V(1,:) + bc%V(2,:)*bc%V(2,:))
     if (.not. RATE_AND_STATE) then
       theta_new = bc%swf%theta
       dc = bc%swf%dc
@@ -795,7 +847,7 @@ contains
     endif
 
     call store_dataXZ(bc%dataXZ, strength, theta_old, theta_new, dc, &
-         Vf_old, Vf_new, it*bc%dt,bc%dt)
+                      Vf_old, Vf_new, it*bc%dt,bc%dt)
 
     call store_dataT(bc%dataT,bc%D,bc%V,bc%T,it)
     if (RATE_AND_STATE) then
@@ -814,11 +866,12 @@ contains
 
   ! write dataXZ every NSNAP time step
   if (mod(it,NSNAP) == 0) then
-    if (.not. PARALLEL_FAULT) then
-      if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
-    else
+    if (PARALLEL_FAULT) then
       call gather_dataXZ(bc)
       if (myrank == 0) call write_dataXZ(bc%dataXZ_all,it,iflt)
+    else
+      ! fault in single slice
+      if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
     endif
   endif
 
@@ -896,6 +949,41 @@ contains
   mu = swf_mu(f)
 
   end subroutine swf_init
+
+!===============================================================
+
+  subroutine twf_init(f,IIN_PAR)
+
+  implicit none
+
+  type(twf_type), intent(out) :: f
+  integer, intent(in) :: IIN_PAR
+
+  integer :: ier
+
+  real(kind=CUSTOM_REAL) :: nuc_x, nuc_y, nuc_z, nuc_r, nuc_t0, nuc_v
+  NAMELIST / TWF / nuc_x, nuc_y, nuc_z, nuc_r,nuc_t0,nuc_v
+
+  nuc_x  = 0.0e0_CUSTOM_REAL
+  nuc_y  = 0.0e0_CUSTOM_REAL
+  nuc_z  = 0.0e0_CUSTOM_REAL
+
+  nuc_r  = 0.0e0_CUSTOM_REAL
+  nuc_t0 = 0.0e0_CUSTOM_REAL
+  nuc_v  = 0.0e0_CUSTOM_REAL
+  read(IIN_PAR, nml=TWF,iostat=ier)
+  if (ier /= 0) write(*,*) 'TWF not found in Par_file_faults.'
+
+  f%nuc_x  = nuc_x
+  f%nuc_y  = nuc_y
+  f%nuc_z  = nuc_z
+
+  f%nuc_r  = nuc_r
+  f%nuc_t0 = nuc_t0
+  f%nuc_v  = nuc_v
+
+  end subroutine twf_init
+
 
 !---------------------------------------------------------------------
 
@@ -1368,7 +1456,6 @@ contains
   dataXZ%npoin = bc%nglob
 
   if (bc%nglob > 0) then
-
     allocate(dataXZ%stg(bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1401')
     if (.not. RATE_AND_STATE) then
@@ -1376,13 +1463,13 @@ contains
     else
       dataXZ%sta => bc%rsf%theta
     endif
-    dataXZ%d1 => bc%d(1,:)
-    dataXZ%d2 => bc%d(2,:)
-    dataXZ%v1 => bc%v(1,:)
-    dataXZ%v2 => bc%v(2,:)
-    dataXZ%t1 => bc%t(1,:)
-    dataXZ%t2 => bc%t(2,:)
-    dataXZ%t3 => bc%t(3,:)
+    dataXZ%d1 => bc%D(1,:)
+    dataXZ%d2 => bc%D(2,:)
+    dataXZ%v1 => bc%V(1,:)
+    dataXZ%v2 => bc%V(2,:)
+    dataXZ%t1 => bc%T(1,:)
+    dataXZ%t2 => bc%T(2,:)
+    dataXZ%t3 => bc%T(3,:)
     dataXZ%xcoord => bc%coord(1,:)
     dataXZ%ycoord => bc%coord(2,:)
     dataXZ%zcoord => bc%coord(3,:)
@@ -1390,19 +1477,42 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1402')
     allocate(dataXZ%tPZ(bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1403')
-
-    !Percy, setting up initial rupture time null
-    dataXZ%tRUP = 0e0_CUSTOM_REAL
-    dataXZ%tPZ  = 0e0_CUSTOM_REAL
-
+  else
+    ! dummy allocations (for subroutine arguments)
+    dataXZ%sta => bc%D(1,:)  ! note: swf or rwf are not allocated when there are no fault elements, thus just a dummy pointer
+    dataXZ%d1 => bc%D(1,:)
+    dataXZ%d2 => bc%D(2,:)
+    dataXZ%v1 => bc%V(1,:)
+    dataXZ%v2 => bc%V(2,:)
+    dataXZ%t1 => bc%T(1,:)
+    dataXZ%t2 => bc%T(2,:)
+    dataXZ%t3 => bc%T(3,:)
+    dataXZ%xcoord => bc%coord(1,:)
+    dataXZ%ycoord => bc%coord(2,:)
+    dataXZ%zcoord => bc%coord(3,:)
+    allocate(dataXZ%tRUP(1), &
+             dataXZ%tPZ(1), &
+             dataXZ%stg(1))
   endif
+  ! setting up initial rupture time null
+  dataXZ%tRUP = 0.0_CUSTOM_REAL
+  dataXZ%tPZ  = 0.0_CUSTOM_REAL
 
-  !Surendra : for parallel fault
+  ! for parallel fault
   if (PARALLEL_FAULT) then
     npoin_all = 0
-    call sum_all_i(bc%nglob,npoin_all)
-    if (myrank == 0 .and. npoin_all > 0) then
-      bc%dataXZ_all%npoin = npoin_all
+    call sum_all_all_i(bc%nglob,npoin_all)
+
+    ! checks
+    if (npoin_all == 0) then
+      print *,'Error: no fault points found, please check fault setup'
+      call exit_MPI(myrank,'Error no fault points found')
+    endif
+
+    bc%dataXZ_all%npoin = npoin_all
+
+    ! only main ranks needs to allocate gathering arrays **_all
+    if (myrank == 0) then
       allocate(bc%dataXZ_all%xcoord(npoin_all),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1404')
       allocate(bc%dataXZ_all%ycoord(npoin_all),stat=ier)
@@ -1431,6 +1541,23 @@ contains
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1416')
       allocate(bc%dataXZ_all%sta(npoin_all),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1417')
+    else
+      ! dummy allocations (for subroutine arguments)
+      bc%dataXZ_all%npoin = 0
+      allocate(bc%dataXZ_all%xcoord(1), &
+               bc%dataXZ_all%ycoord(1), &
+               bc%dataXZ_all%zcoord(1), &
+               bc%dataXZ_all%t1(1), &
+               bc%dataXZ_all%t2(1), &
+               bc%dataXZ_all%t3(1), &
+               bc%dataXZ_all%d1(1), &
+               bc%dataXZ_all%d2(1), &
+               bc%dataXZ_all%v1(1), &
+               bc%dataXZ_all%v2(1), &
+               bc%dataXZ_all%tRUP(1), &
+               bc%dataXZ_all%tPZ(1), &
+               bc%dataXZ_all%stg(1), &
+               bc%dataXZ_all%sta(1))
     endif
 
 !note: crayftn compiler warns about possible copy which may slow down the code for dataXZ%npoin,dataXZ%xcoord,..
@@ -1439,19 +1566,23 @@ contains
 
     allocate(bc%npoin_perproc(NPROC),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1418')
-    bc%npoin_perproc=0
+    bc%npoin_perproc = 0
     call gather_all_singlei(dataXZ%npoin,bc%npoin_perproc,NPROC)
 
     allocate(bc%poin_offset(NPROC),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1419')
-    bc%poin_offset(1)=0
-    do iproc=2,NPROC
+    bc%poin_offset(1) = 0
+    do iproc = 2,NPROC
       bc%poin_offset(iproc) = sum(bc%npoin_perproc(1:iproc-1))
     enddo
 
     call gatherv_all_cr(dataXZ%xcoord,dataXZ%npoin,bc%dataXZ_all%xcoord,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
     call gatherv_all_cr(dataXZ%ycoord,dataXZ%npoin,bc%dataXZ_all%ycoord,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
     call gatherv_all_cr(dataXZ%zcoord,dataXZ%npoin,bc%dataXZ_all%zcoord,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
+  else
+    ! dummy allocations
+    allocate(bc%npoin_perproc(1), &
+             bc%poin_offset(1))
   endif
 
   end subroutine init_dataXZ
@@ -1799,19 +1930,25 @@ contains
 
   implicit none
 
-  integer :: it,ifault
+  integer,intent(in) :: it
 
-  do ifault=1,Nfaults
+  ! local parameters
+  integer :: ifault
+  type(bc_dynandkinflt_type) :: bc
 
-    call transfer_tohost_fault_data(Fault_pointer,ifault-1,faults(ifault)%nspec, &
-                                    faults(ifault)%nglob,faults(ifault)%D,faults(ifault)%V,faults(ifault)%T)
-    call transfer_tohost_datat(Fault_pointer, faults(ifault)%dataT%dat, it, ifault - 1)
+  do ifault = 1,Nfaults
 
-    call gather_dataXZ(faults(ifault))
-    call SCEC_write_dataT(faults(ifault)%dataT)
+    bc = faults(ifault)
 
-    if (myrank == 0) call write_dataXZ(faults(ifault)%dataXZ_all,it,ifault)
+    call transfer_tohost_fault_data(Fault_pointer,ifault-1,bc%nspec,bc%nglob,bc%D,bc%V,bc%T)
+    call transfer_tohost_datat(Fault_pointer, bc%dataT%dat, it, ifault - 1)
 
+    if (PARALLEL_FAULT) then
+      call gather_dataXZ(bc)
+    endif
+
+    call SCEC_write_dataT(bc%dataT)
+    if (myrank == 0) call write_dataXZ(bc%dataXZ_all,it,ifault)
   enddo
 
   end subroutine synchronize_GPU

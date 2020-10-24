@@ -33,7 +33,7 @@
 !! DK DK with an inverted order of indices in the main calling program in C
 
   subroutine read_arrays_solver(xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                    kappav,muv,ibool,rmass,myrank,xstore,ystore,zstore)
+                                kappav,muv,ibool,rmass,myrank,xstore,ystore,zstore)
 
   implicit none
 

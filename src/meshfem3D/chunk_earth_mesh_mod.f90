@@ -53,6 +53,7 @@ contains
 !!##################################################################################################################################
 !!                                  READ SPECFIC FILES FOR CHUNK OF THE EARTH MESH
 !!##################################################################################################################################
+
     subroutine mesh_chunk_earth()
 
       !! SB SB COMMENT THIS IERR (variable alreafy exist in module)
@@ -111,6 +112,7 @@ contains
 !!##################################################################################################################################
 !!                       READ INPUT FOR METRIC SYSTEM
 !!##################################################################################################################################
+
     subroutine read_metric_params()
 
       character(len=MAX_STRING_LEN) :: keyw
@@ -168,13 +170,15 @@ contains
           case('material')
              read(line(ipos0:ipos1),*,iostat=ier) i, rho, vp, vs, Q_Kappa, Q_mu, Aniso, iflag
              if (ier /= 0) then
-               print *,'error while reading your input file in routine chunk_earth_mesh_mod.f90'
+               print *,'Error while reading your input file in routine chunk_earth_mesh_mod.f90'
+               print *
                print *,'We recently changed the input format from i, rho, vp, vs, Q_mu, Aniso, iflag'
                print *,'to i, rho, vp, vs, Q_Kappa, Q_mu, Aniso, iflag in order to add support for Q_Kappa.'
                print *,'It is likely that your input file still uses the old convention and needs to be updated.'
                print *,'If you do not know what value to add for Q_Kappa, add 9999., i.e negligible Q_Kappa attenuation'
                print *,'and then your results will be unchanged compared to older versions of the code.'
-               stop 'error in input file format in routine chunk_earth_mesh_mod.f90'
+               print *
+               stop 'Error in input file format in routine chunk_earth_mesh_mod.f90'
              endif
              if (i <= nb_mat) then
                 material_prop(i,1) = rho
@@ -299,6 +303,7 @@ contains
 !!##################################################################################################################################
 !!                                  MESH THE CHUNK
 !!##################################################################################################################################
+
     subroutine mesh_metric_chunk()
 
       integer :: nx, ny, nz, ispec, ipoint, ilayer, ier
@@ -374,13 +379,15 @@ contains
 !!##################################################################################################################################
 !!                                  DEFINE FINAL MESH AND CONNECTIVITY
 !!##################################################################################################################################
+
     subroutine  create_mesh_metric_chunk()
 
       integer, dimension(:), allocatable :: iglob, locval
       logical, dimension(:), allocatable :: ifseg
       integer                            :: nglob
-      integer                            :: i, k, idom, IOVTK, ier
+      integer                            :: i, k, idom, ier
       character(len=10)                  :: MESH
+      character(len=MAX_STRING_LEN)      :: filename
 
       MESH='./MESH/' !! VM VM harcoded directory (todo fix it)
 
@@ -393,7 +400,8 @@ contains
 
       !! write coords
       k=0
-      open(27,file=trim(MESH)//'nodes_coords_file')
+      filename = trim(MESH)//'nodes_coords_file'
+      open(27,file=trim(filename))
       write(27,*) nglob
       write(*,*) " remaining points in mesh : ", nglob, " total point used in mesh building ", npoint_tot
       do i = 1, npoint_tot
@@ -410,7 +418,9 @@ contains
       deallocate(x_mesh_point, y_mesh_point, z_mesh_point)
       allocate(x_mesh_point(npoint_tot), y_mesh_point(npoint_tot), z_mesh_point(npoint_tot),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1254')
-      open(27,file=trim(MESH)//'nodes_coords_file')
+
+      filename = trim(MESH)//'nodes_coords_file'
+      open(27,file=trim(filename))
       read(27,*) k
       do i = 1, npoint_tot
          read(27,*) k,  x_mesh_point(i), y_mesh_point(i), z_mesh_point(i)
@@ -418,7 +428,8 @@ contains
       close(27)
 
       !! write elements
-      open(27,file=trim(MESH)//'mesh_file')
+      filename = trim(MESH)//'mesh_file'
+      open(27,file=trim(filename))
       write(27,*) nspec_tot
       do i =1, nspec_tot
          write(27,'(9i15)') i, &
@@ -458,7 +469,8 @@ contains
 
 
       !! write materials !!
-      open(27,file=trim(MESH)//'nummaterial_velocity_file')
+      filename = trim(MESH)//'nummaterial_velocity_file'
+      open(27,file=trim(filename))
       do i=1, nb_mat
          write(27,'(2i6,5f15.5,i6)') 2, Imaterial_domain(i), material_prop(i,1:5), 0
       enddo
@@ -466,7 +478,9 @@ contains
 
       allocate(Imatetrial_ispec(nspec_tot),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1255')
-      open(28,file=trim(MESH)//'/materials_file')
+
+      filename = trim(MESH)//'/materials_file'
+      open(28,file=trim(filename))
       do i=1, nspec_tot
          call Find_Domain(idom, i, iglob)
          write(28,*) i, Imaterial_domain(idom)
@@ -475,44 +489,16 @@ contains
       close(28)
 
       !! vtk mesh visualization file ---------------------------------------
-      IOVTK=27
-      open(IOVTK,file=trim(MESH)//'mesh_debug.vtk',status='unknown')
-      write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
-      write(IOVTK,'(a)') 'material model VTK file'
-      write(IOVTK,'(a)') 'ASCII'
-      write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
-      write(IOVTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
-      do i=1,npoint_tot
-         !!if (ifseg(i)) then
-            write(IOVTK,*) x_mesh_point(i), y_mesh_point(i), z_mesh_point(i)
-         !!endif
-      enddo
-
-      write(IOVTK,*)
-       write(IOVTK,'(a,i12,i12)') "CELLS ",nspec_tot,nspec_tot*9
-      do i =1, nspec_tot
-         write(27,'(9i15)') 8, &
-              iglob((EtoV(1, i)))-1, iglob((EtoV(2, i)))-1, iglob((EtoV(3, i)))-1, iglob((EtoV(4, i)))-1, &
-              iglob((EtoV(5, i)))-1, iglob((EtoV(6, i)))-1, iglob((EtoV(7, i)))-1, iglob((EtoV(8, i)))-1
-      enddo
-
-      write(IOVTK,*)
-      write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec_tot
-      write(IOVTK,'(6i12)') (12,i=1,nspec_tot)
-      write(IOVTK,*)
-      write(IOVTK,'(a,i12)') "CELL_DATA ",nspec_tot
-      write(IOVTK,'(a)') "SCALARS elem_val float"
-      write(IOVTK,'(a)') "LOOKUP_TABLE default"
-      do i =1, nspec_tot
-          write(IOVTK,*) Imatetrial_ispec(i)
-      enddo
-      close(IOVTK)
+      filename = trim(MESH)//'mesh_debug.vtk'
+      call write_VTK_data_elem_i_earthmesh(nspec_tot,npoint_tot,x_mesh_point,y_mesh_point,z_mesh_point, &
+                                           iglob,EtoV,Imatetrial_ispec,filename)
 
     end subroutine create_mesh_metric_chunk
 
 !!##################################################################################################################################
 !!                                  MESH LAYER WITH REGULAR ELEMENTS
 !!##################################################################################################################################
+
     subroutine mesh_regular_domain_Hex8(ox, oy, oz,  dx, dy, dz, nx,  ny, nz, top_surface, bottom_surface, &
          ispec, ipoint, ilayer, nlayer)
 
@@ -712,6 +698,7 @@ contains
 !!##################################################################################################################################
 !!                                        SUPER-BRICK 1 FOR DOUBLING
 !!##################################################################################################################################
+
     subroutine super_brick_1_Hex8(tupe, dx, dy, dz, x, y, z, ox, oy, top_surface, bottom_surface, ispec, ipoint)
 
       integer,                                       intent(in)    :: tupe
@@ -771,6 +758,7 @@ contains
     end subroutine super_brick_1_Hex8
 
 !! =============================== define 8 corner of one element of  normalized super-brick =======================================
+
    function elemref(type) result(elem)
 
      integer          :: type
@@ -916,7 +904,9 @@ contains
      elem(:,:) = ref(:,:)
 
    end function elemref
+
 !!===================================================================================================================
+
    subroutine Find_Domain(id, i, iglob)
      integer, dimension(:), allocatable :: iglob
      integer                            :: id, i
@@ -953,35 +943,34 @@ contains
 end module chunk_earth_mod
 
 !!$!! vtk debug file
-!!$      IOVTK=27
-!!$      open(IOVTK,file='raw_mesh_debug.vtk',status='unknown')
-!!$      write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
-!!$      write(IOVTK,'(a)') 'material model VTK file'
-!!$      write(IOVTK,'(a)') 'ASCII'
-!!$      write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
-!!$      write(IOVTK, '(a,i12,a)') 'POINTS ', npoint_tot, ' float'
+!!$      open(IOUT_VTK,file='raw_mesh_debug.vtk',status='unknown')
+!!$      write(IOUT_VTK,'(a)') '# vtk DataFile Version 3.1'
+!!$      write(IOUT_VTK,'(a)') 'material model VTK file'
+!!$      write(IOUT_VTK,'(a)') 'ASCII'
+!!$      write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
+!!$      write(IOUT_VTK, '(a,i12,a)') 'POINTS ', npoint_tot, ' float'
 !!$      do i=1,npoint_tot
-!!$         write(IOVTK,*) x_mesh_point(i), y_mesh_point(i), z_mesh_point(i)
+!!$         write(IOUT_VTK,*) x_mesh_point(i), y_mesh_point(i), z_mesh_point(i)
 !!$      enddo
-!!$      write(IOVTK,*)
-!!$      write(IOVTK,'(a,i12,i12)') "CELLS ",nspec_tot,nspec_tot*9
+!!$      write(IOUT_VTK,*)
+!!$      write(IOUT_VTK,'(a,i12,i12)') "CELLS ",nspec_tot,nspec_tot*9
 !!$      do i =1, nspec_tot
 !!$         write(27,'(9i15)') 8, &
 !!$              (EtoV(1, i))-1, (EtoV(2, i))-1,  (EtoV(3, i))-1, (EtoV(4, i))-1, &
 !!$              (EtoV(5, i))-1, (EtoV(6, i))-1,  (EtoV(7, i))-1, (EtoV(8, i))-1
 !!$      enddo
 !!$
-!!$      write(IOVTK,*)
-!!$      write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec_tot
-!!$      write(IOVTK,'(6i12)') (12,i=1,nspec_tot)
-!!$      write(IOVTK,*)
-!!$      write(IOVTK,'(a,i12)') "CELL_DATA ",nspec_tot
-!!$      write(IOVTK,'(a)') "SCALARS elem_val float"
-!!$      write(IOVTK,'(a)') "LOOKUP_TABLE default"
+!!$      write(IOUT_VTK,*)
+!!$      write(IOUT_VTK,'(a,i12)') "CELL_TYPES ",nspec_tot
+!!$      write(IOUT_VTK,'(6i12)') (12,i=1,nspec_tot)
+!!$      write(IOUT_VTK,*)
+!!$      write(IOUT_VTK,'(a,i12)') "CELL_DATA ",nspec_tot
+!!$      write(IOUT_VTK,'(a)') "SCALARS elem_val float"
+!!$      write(IOUT_VTK,'(a)') "LOOKUP_TABLE default"
 !!$      do i =1, nspec_tot
-!!$          write(IOVTK,*) 1
+!!$          write(IOUT_VTK,*) 1
 !!$      enddo
-!!$      close(IOVTK)
+!!$      close(IOUT_VTK)
 !!$
 !!$      !! write coords
 !!$      open(27,file=trim(MESH)//'RAW_nodes_coords_file')

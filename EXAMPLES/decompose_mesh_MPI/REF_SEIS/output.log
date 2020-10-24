@@ -1,0 +1,43 @@
+running example: Thu Dec 20 16:14:05 CET 2018
+
+   setting up example...
+
+The simulation will run on NPROC =  8  MPI tasks
+
+  decomposing mesh...
+
+
+ ************************
+ Parallel mesh decomposer
+ ************************
+
+ Parallel heuristic mesh decomposer
+
+ The decomposition is performed in the three Cartesian directions, given a
+ desired number of partitions in each direction. The domain should be a box.
+
+ Works for a topologically-rectangular domain in which the user has to
+ specify the number of slices to decompose the mesh into in the X, Y and Z directions.
+ Load imbalance is handled by taking into account the cost of the calculations inside each type
+ of spectral elements: acoustic, elastic, viscoelastic, ...
+
+ input_directory  = directory containing mesh files mesh_file,nodes_coords_file,.. = MESH
+ output_directory = directory for output files proc***_Databases = defined in Par_file
+
+
+ Par_file_faults not found: assuming that there are no faults
+
+ partitioning done successfully
+
+
+  running database generation on  8 processors...
+
+
+  running solver on  8 processors...
+
+
+see results in directory: OUTPUT_FILES/
+
+done
+Thu Dec 20 16:15:29 CET 2018
+

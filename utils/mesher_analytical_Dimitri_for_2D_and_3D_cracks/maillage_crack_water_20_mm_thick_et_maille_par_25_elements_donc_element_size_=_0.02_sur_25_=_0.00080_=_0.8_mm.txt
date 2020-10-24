@@ -1,0 +1,11 @@
+
+- cluster CPU
+
+- email SolTechnic
+
+=========================
+
+- maillage crack (water 20 mm thick et maille par 25 elements, donc element size = 0.02 sur 25 = 0.00080 = 0.8 mm)
+
+-relecture articles Sharham et Alexis
+

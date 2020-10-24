@@ -31,7 +31,7 @@
 
   subroutine earth_chunk_HEX8_Mesher(NGNOD)
 
-  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, PI, ZERO, TINYVAL, &
+  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, ZERO, &
     old_DSM_coupling_from_Vadim, INJECTION_TECHNIQUE_IS_AXISEM, INJECTION_TECHNIQUE_IS_DSM
 
   use shared_parameters, only: INJECTION_TECHNIQUE_TYPE
@@ -55,7 +55,6 @@
 !--- Parameters
 !
 
-  integer, parameter :: myrank = 0
   integer, parameter :: nlayer = 12 !! (number of layer in the model iasp91, or ak135, or prem (one more layer than the model)
 
   double precision, parameter :: GAUSSALPHA = 0.d0, GAUSSBETA = 0.d0
@@ -66,33 +65,33 @@
 !--- Other
 !
 
-  integer NGNOD
+  integer :: NGNOD
 
-  integer  nel_lat, nel_lon, nel_depth, NX, NY, NZ, Ndepth, nglob, kglob, ilocnum, ieoff, npointot
-  integer ilat, ilon, ispec, iz, i, j, k, nspec, ia, izshift, index_mat
-  integer ispec2Dxmin, ispec2Dxmax, ispec2Dymin, ispec2Dymax, ispec2Dzmin, ispec2Dzmax
-  integer ilayer_current, ilayer
-  integer nlat_dsm, nlon_dsm, ier
+  integer :: nel_lat, nel_lon, nel_depth, NX, NY, NZ, Ndepth, nglob, kglob, ilocnum, ieoff, npointot
+  integer :: ilat, ilon, ispec, iz, i, j, k, nspec, ia, izshift, index_mat
+  integer :: ispec2Dxmin, ispec2Dxmax, ispec2Dymin, ispec2Dymax, ispec2Dzmin, ispec2Dzmax
+  integer :: ilayer_current, ilayer
+  integer :: nlat_dsm, nlon_dsm, ier
 
   integer iaddx(NGNOD), iaddy(NGNOD), iaddz(NGNOD)
 
   integer, allocatable :: inum_loc(:,:,:,:), iglob(:), loc(:), current_layer(:)
 
-  double precision ratio_eta, ratio_xi
-  double precision ANGULAR_WIDTH_ETA_RAD, ANGULAR_WIDTH_XI_RAD, Z_DEPTH_BLOCK, UTM_X_MIN, UTM_X_MAX
-  double precision lat_center_chunk, lon_center_chunk, chunk_depth, chunk_azi
-  double precision deg2rad
-  double precision x, y, z, px, py, pz, z_bottom
+  double precision :: ratio_eta, ratio_xi
+  double precision :: ANGULAR_WIDTH_ETA_RAD, ANGULAR_WIDTH_XI_RAD, Z_DEPTH_BLOCK, UTM_X_MIN, UTM_X_MAX
+  double precision :: lat_center_chunk, lon_center_chunk, chunk_depth, chunk_azi
+  double precision :: deg2rad
+  double precision :: x, y, z, px, py, pz, z_bottom
 
-  double precision rotation_matrix(3,3)
-  double precision zlayer(nlayer), vpv(nlayer,4), vsv(nlayer,4), density(nlayer,4)
-  double precision xelm(NGNOD), yelm(NGNOD), zelm(NGNOD)
-  double precision xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ)
+  double precision :: rotation_matrix(3,3)
+  double precision :: zlayer(nlayer), vpv(nlayer,4), vsv(nlayer,4), density(nlayer,4)
+  double precision :: xelm(NGNOD), yelm(NGNOD), zelm(NGNOD)
+  double precision :: xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ)
 
   !! 3D shape functions and their derivatives
-  double precision shape3D(NGNOD,NGLLX,NGLLY,NGLLZ), dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision :: shape3D(NGNOD,NGLLX,NGLLY,NGLLZ), dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
   !! GLL points and weights of integration
-  double precision xigll(NGLLX), yigll(NGLLY), zigll(NGLLZ), wxgll(NGLLX), wygll(NGLLY), wzgll(NGLLZ)
+  double precision :: xigll(NGLLX), yigll(NGLLY), zigll(NGLLZ), wxgll(NGLLX), wygll(NGLLY), wzgll(NGLLZ)
 
   double precision, allocatable :: xp(:), yp(:), zp(:), xgrid(:,:,:,:), ygrid(:,:,:,:), zgrid(:,:,:,:)
   double precision, allocatable :: lon_zmin(:,:), lat_zmin(:,:)
@@ -101,17 +100,17 @@
 
   !! For new outputs (list of ggl on boundary, spherical or Cartesian)
   !! AND for coupling with AxiSEM
-  integer ::  istore_for_new_outputs
-  integer ::   updown(NGLLZ)
+  integer :: istore_for_new_outputs
+  integer :: updown(NGLLZ)
   double precision , dimension(NGLLX,NGLLY,NGLLZ) ::  longitud, latitud, radius
 
-  logical test
+  logical :: test
 
   logical, allocatable :: ifseg(:)
   logical, dimension(:,:), allocatable :: iboun ! boundary locator
 
-  character(len=100) line
-  character(len=250) model1D_file
+  character(len=100) :: line
+  character(len=250) :: model1D_file
 
   character(len=10), parameter :: MESH = "./MESH/"
 
@@ -267,7 +266,7 @@
 !
 !--- get the 3-D shape functions
 !
-  call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
+  call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ)
 
 !
 !--- rotation matrix to switch to the geographical coordinates
@@ -757,7 +756,7 @@
 
   subroutine earth_chunk_HEX27_Mesher(NGNOD)
 
-  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, PI, ZERO, TINYVAL, &
+  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, ZERO, &
     old_DSM_coupling_from_Vadim, INJECTION_TECHNIQUE_IS_AXISEM, INJECTION_TECHNIQUE_IS_DSM
 
   use shared_parameters, only: INJECTION_TECHNIQUE_TYPE
@@ -780,7 +779,6 @@
 !--- Parameters
 !
 
-  integer, parameter :: myrank = 0
   integer, parameter :: nlayer = 12 !! (number of layer in the model iasp91, or ak135, or prem (one more layer than the model)
 
   double precision, parameter :: GAUSSALPHA = 0.d0, GAUSSBETA = 0.d0
@@ -1071,7 +1069,7 @@
 !
 !--- get the 3-D shape functions
 !
-  call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
+  call get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ)
 
 !
 !--- rotation matrix to switch to the geographical coordinates
@@ -1769,11 +1767,11 @@
 
   implicit none
 
-  integer NGLLX,NGLLY,NGLLZ,nel_depth,iz,Ndepth
-  double precision xstore(NGLLX,NGLLY,NGLLZ),ystore(NGLLX,NGLLY,NGLLZ),zstore(NGLLX,NGLLY,NGLLZ)
-  double precision profondeur
-  integer current_layer(0:nel_depth-1),ilayer,k
-  integer updown(NGLLZ) !! will be also used for VM coupling with AxiSEM
+  integer :: NGLLX,NGLLY,NGLLZ,nel_depth,iz,Ndepth
+  double precision :: xstore(NGLLX,NGLLY,NGLLZ),ystore(NGLLX,NGLLY,NGLLZ),zstore(NGLLX,NGLLY,NGLLZ)
+  double precision :: profondeur
+  integer :: current_layer(0:nel_depth-1),ilayer,k
+  integer :: updown(NGLLZ) !! will be also used for VM coupling with AxiSEM
 
   updown(:) = 0
   if (ilayer == current_layer(iz)) then
@@ -2241,7 +2239,7 @@
   write(27,*) z(i),zindex(i),ziflag(i)
   close(27)
 
-end subroutine write_recdepth_dsm
+  end subroutine write_recdepth_dsm
 
 !=======================================================================================================
 !
@@ -2654,25 +2652,27 @@ end subroutine write_recdepth_dsm
 !===========================================================================!
 !
 
-subroutine Lyfnd(r,rb,n,i)
+  subroutine Lyfnd(r,rb,n,i)
 
   implicit none
+  integer :: i,n
+  double precision :: r,rb(n)
 
-  integer i,n
-  double precision r,rb(n)
-
-  i=1
+  i = 1
   do while (r > rb(i) )
      i = i + 1
   enddo
   i = i - 1
 
-end subroutine Lyfnd
+  end subroutine Lyfnd
 
-function IsNewLayer(x,r,n)
+!=====================================================================
+
+  function IsNewLayer(x,r,n)
+
   implicit none
-  integer IsNewLayer,n,i
-  double precision x,r(n)
+  integer :: IsNewLayer,n,i
+  double precision :: x,r(n)
   IsNewLayer = 0
   ! ce test fonctionne que si les mailles sont suffisament petites !! ATTENTION
   do i = 1, n-1
@@ -2681,10 +2681,11 @@ function IsNewLayer(x,r,n)
         return
      endif
   enddo
-end function IsNewLayer
+  end function IsNewLayer
 
+!=====================================================================
 
-subroutine StorePoint(z,k,zc)
+  subroutine StorePoint(z,k,zc)
 
   implicit none
 
@@ -2703,15 +2704,17 @@ subroutine StorePoint(z,k,zc)
         z(k) = zc
      endif
   endif
-end subroutine StorePoint
+  end subroutine StorePoint
 
-subroutine StorePointZ(z,k,zc,NoInter)
+!=====================================================================
+
+  subroutine StorePointZ(z,k,zc,NoInter)
 
   implicit none
 
-  integer k
-  double precision z(*),zc
-  logical NoInter
+  integer :: k
+  double precision :: z(*),zc
+  logical :: NoInter
 
   if (k == 0) then
      k = k + 1
@@ -2725,31 +2728,45 @@ subroutine StorePointZ(z,k,zc,NoInter)
         z(k) = zc
      endif
   endif
-end subroutine StorePointZ
+  end subroutine StorePointZ
 
- subroutine CalGridProf(ProfForGemini,Niveau_elm,zlayer,nlayer,NEX_GAMMA,Z_DEPTH_BLOCK)
+!=====================================================================
+
+  subroutine CalGridProf(ProfForGemini,Niveau_elm,zlayer,nlayer,NEX_GAMMA,Z_DEPTH_BLOCK)
 
   implicit none
-  integer NEX_GAMMA,nlayer,nbbloc(100000),Niveau_elm(0:NEX_GAMMA-1)
-  double precision ProfForGemini(0:NEX_GAMMA-1,3),zlayer(nlayer)
-  double precision Z_DEPTH_BLOCK,zpoint(100000),zz(100000)
-  double precision epsillon
-  integer nb, n, i,j,k,ilayer,ilay,nd,niveau
-  double precision p, pas, longeur
-  logical test
+  integer :: NEX_GAMMA,nlayer
+  integer :: Niveau_elm(0:NEX_GAMMA-1)
+  double precision :: ProfForGemini(0:NEX_GAMMA-1,3)
+  double precision :: zlayer(nlayer)
+  double precision :: Z_DEPTH_BLOCK
 
-  epsillon=1d-3
-   nbbloc(:)=0
-   ! point de depart
-   zpoint(1)=zlayer(nlayer) - Z_DEPTH_BLOCK
-   write(*,*) zlayer(nlayer) ,  Z_DEPTH_BLOCK
-   !! niveau de depart
-   call FindLayer_for_earth_chunk_mesh(ilayer,zlayer,zpoint(1),nlayer)
-   write(*,*) '              INITIALISATION calcul du niveau de depart : '
-   write(*,*)
-   write(*,*) 'zlayer : ', zlayer
-   write(*,*) 'premier point : '   , zpoint(1),ilayer
-    write(*,*)
+  ! local parameters
+  integer,dimension(:),allocatable :: nbbloc
+  double precision,dimension(:),allocatable :: zpoint,zz
+  double precision :: epsillon
+  integer :: nb,n,i,j,k,ilayer,ilay,nd,niveau,ier
+  double precision :: p, pas, longeur
+  logical :: test
+
+  ! allocate
+  allocate(nbbloc(100000), &
+           zpoint(100000), &
+           zz(100000),stat=ier)
+  if (ier /= 0) stop 'Error allocating nbbloc arrays'
+
+  epsillon = 1d-3
+  nbbloc(:) = 0
+  ! point de depart
+  zpoint(1) = zlayer(nlayer) - Z_DEPTH_BLOCK
+  write(*,*) zlayer(nlayer) ,  Z_DEPTH_BLOCK
+  !! niveau de depart
+  call FindLayer_for_earth_chunk_mesh(ilayer,zlayer,zpoint(1),nlayer)
+  write(*,*) '              INITIALISATION calcul du niveau de depart : '
+  write(*,*)
+  write(*,*) 'zlayer : ', zlayer
+  write(*,*) 'premier point : '   , zpoint(1),ilayer
+  write(*,*)
 
   !! on compte le nombre d'elements par niveau
   i = 1
@@ -2765,119 +2782,125 @@ end subroutine StorePointZ
   nd = i-1
   longeur = zlayer(nlayer) - zpoint(1)
 
-
-  do i=1,nb-1
-
-     pas = zpoint(i+1) - zpoint(i)
-     p = NEX_GAMMA * pas / longeur
+  do i = 1,nb-1
+    pas = zpoint(i+1) - zpoint(i)
+    p = NEX_GAMMA * pas / longeur
 
     if (p < 0.8d0) then
-        n = 1
+      n = 1
     else
-        n = max(int(p),2)
+      n = max(int(p),2)
     endif
 
-    nbbloc(i)=n
-
+    nbbloc(i) = n
   enddo
 
-  do j=1,nb-1
+  do j = 1,nb-1
     write(*,*) j,nbbloc(j)
   enddo
 
   !! on elimine les blocs en trop
-   write(*,*) 'SUM ',sum(nbbloc)
+  write(*,*) 'SUM ',sum(nbbloc)
 
-   nb = sum(nbbloc)
+  nb = sum(nbbloc)
 
-   do while (nb > NEX_GAMMA)
-
-      k  =  1
-      test = .true.
+  do while (nb > NEX_GAMMA)
+    k  =  1
+    test = .true.
 
     do  while (test)
+      j =  maxval(nbbloc)
+      ! on cherche l'indice du max
 
-         j =  maxval(nbbloc)
-         ! on cherche l'indice du max
+      if (j == nbbloc(k)) then
+        nbbloc(k ) = nbbloc(k) -1
+        test = .false.
+      endif
 
-         if (j == nbbloc(k)) then
-            nbbloc(k ) = nbbloc(k) -1
-            test = .false.
-         endif
+      k = k + 1
 
-         k = k + 1
+    enddo
 
-      enddo
-
-      nb = sum(nbbloc)
-      write(*,*) 'nb, ',nb,NEX_GAMMA
-   enddo
-
-  longeur = zlayer(nlayer) - zpoint(1)
-  k=1
-  zz(k)=zpoint(1)
-  do i=1,nd
-     pas = (zpoint(i+1) - zpoint(i)) / nbbloc(i)
-     write(*,*) i,nbbloc(i),pas
-     do while (zz(k) < zpoint(i+1) - epsillon)
-        k = k + 1
-        zz(k) = zz(k-1) + pas
-        write(*,*) zz(k), zpoint(i+1)
-     enddo
+    nb = sum(nbbloc)
+    write(*,*) 'nb, ',nb,NEX_GAMMA
   enddo
 
-   do ilay=1,NEX_GAMMA
+  longeur = zlayer(nlayer) - zpoint(1)
+  k = 1
+  zz(k) = zpoint(1)
+  do i = 1,nd
+    pas = (zpoint(i+1) - zpoint(i)) / nbbloc(i)
+    write(*,*) i,nbbloc(i),pas
+    do while (zz(k) < zpoint(i+1) - epsillon)
+      k = k + 1
+      zz(k) = zz(k-1) + pas
+      write(*,*) zz(k), zpoint(i+1)
+    enddo
+  enddo
 
-      ProfForGemini(ilay-1,1)  =  zz(ilay)
-      ProfForGemini(ilay-1,2)  =  zz(ilay+1)
-      ProfForGemini(ilay-1,3)  = 0.5d0 * (zz(ilay) + zz(ilay+1))
+  do ilay = 1,NEX_GAMMA
 
-      call FindLayer_for_earth_chunk_mesh(niveau,zlayer, ProfForGemini(ilay-1,3),nlayer)
-      Niveau_elm(ilay-1)=niveau
-      write(*,'(i5,2f15.3,i10)') ilay,zz(ilay),zz(ilay+1),niveau
-   enddo
+    ProfForGemini(ilay-1,1)  =  zz(ilay)
+    ProfForGemini(ilay-1,2)  =  zz(ilay+1)
+    ProfForGemini(ilay-1,3)  = 0.5d0 * (zz(ilay) + zz(ilay+1))
 
- end subroutine CalGridProf
+    call FindLayer_for_earth_chunk_mesh(niveau,zlayer, ProfForGemini(ilay-1,3),nlayer)
+    Niveau_elm(ilay-1)=niveau
+    write(*,'(i5,2f15.3,i10)') ilay,zz(ilay),zz(ilay+1),niveau
+  enddo
 
- subroutine  FindLayer_for_earth_chunk_mesh(i,z,r,n)
-   implicit none
-   integer i,n
-   double precision z(n),r
+  ! free memory
+  deallocate(nbbloc,zpoint,zz)
 
-   if (r > z(n) .or. r < z(1)) then
+  end subroutine CalGridProf
+
+!=====================================================================
+
+  subroutine  FindLayer_for_earth_chunk_mesh(i,z,r,n)
+
+  implicit none
+  integer :: i,n
+  double precision :: z(n),r
+
+  if (r > z(n) .or. r < z(1)) then
     write(*,*) 'STOP :: point ouside grid'
     stop
-   endif
-   i = 1
-   do while (r > z(i))
-     i = i + 1
-   enddo
+  endif
+  i = 1
+  do while (r > z(i))
+    i = i + 1
+  enddo
+
+  end subroutine FindLayer_for_earth_chunk_mesh
 
 
- end subroutine FindLayer_for_earth_chunk_mesh
-
+!=====================================================================
 
 !! VM VM add this for Axisem coupling
 
-subroutine  find_layer_in_axisem_model(i,u,r,z,n)
+  subroutine  find_layer_in_axisem_model(i,u,r,z,n)
 
-   implicit none
+  implicit none
 
-   integer i,n,u(5)
-   double precision z(n),r(5)
+  integer,intent(out) :: i
+  integer,dimension(5),intent(out) :: u
 
-   if (r(3) > z(n) .or. r(3) < z(1)) then
-      write(*,*) 'STOP :: point ouside grid'
-      stop
-   endif
-   i = 1
-   do while (r(3) > z(i))
-      i = i + 1
-   enddo
+  double precision, dimension(5),intent(in) :: r
+  integer,intent(in) :: n
+  double precision,intent(in) :: z(n)
 
-   u(:)=0
+  if (r(3) > z(n) .or. r(3) < z(1)) then
+    write(*,*) 'STOP :: point ouside grid'
+    stop
+  endif
+  i = 1
+  do while (r(3) > z(i))
+    i = i + 1
+  enddo
 
-end subroutine find_layer_in_axisem_model
+  u(:) = 0
+
+  end subroutine find_layer_in_axisem_model
 
 
 !=====================================================================

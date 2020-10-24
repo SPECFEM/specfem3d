@@ -117,7 +117,7 @@ xadd_model_OBJECTS = \
 
 xadd_model_SHARED_OBJECTS = \
 	$O/specfem3D_par.spec_module.o \
-	$O/pml_par.spec.o \
+	$O/pml_par.spec_module.o \
 	$O/read_mesh_databases.spec.o \
 	$O/shared_par.shared_module.o \
 	$O/create_name_database.shared.o \
@@ -164,7 +164,7 @@ xmodel_update_OBJECTS = \
 
 xmodel_update_SHARED_OBJECTS = \
 	$O/specfem3D_par.spec_module.o \
-	$O/pml_par.spec.o \
+	$O/pml_par.spec_module.o \
 	$O/initialize_simulation.spec.o \
 	$O/read_mesh_databases.spec.o \
 	$O/shared_par.shared_module.o \
@@ -173,6 +173,7 @@ xmodel_update_SHARED_OBJECTS = \
 	$O/exit_mpi.shared.o \
 	$O/get_attenuation_model.shared.o \
 	$O/gll_library.shared.o \
+	$O/init_openmp.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \

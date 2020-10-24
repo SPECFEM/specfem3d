@@ -25,33 +25,34 @@
 !
 !=====================================================================
 
-  subroutine get_absorbing_boundary(myrank,nspec,ibool, &
-                            nodes_coords_ext_mesh,nnodes_ext_mesh, &
-                            ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-                            nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
-                            nodes_ibelm_bottom,nodes_ibelm_top, &
-                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-                            nspec2D_bottom,nspec2D_top)
+  subroutine get_absorbing_boundary(nspec,ibool, &
+                                    nodes_coords_ext_mesh,nnodes_ext_mesh, &
+                                    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+                                    nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
+                                    nodes_ibelm_bottom,nodes_ibelm_top, &
+                                    nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                                    nspec2D_bottom,nspec2D_top)
 
 ! determines absorbing boundaries/free-surface, 2D jacobians, face normals for Stacey conditions
 
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,IMAIN
+
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE, PML_INSTEAD_OF_FREE_SURFACE, NGNOD2D, &
-    STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS, &
-    NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,IMAIN,BOTTOM_FREE_SURFACE
+    STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS,BOTTOM_FREE_SURFACE
 
   use create_regions_mesh_ext_par
 
+  ! injection technique
   use constants, only: INJECTION_TECHNIQUE_IS_DSM
-
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH,INJECTION_TECHNIQUE_TYPE
 
   implicit none
 
 ! number of spectral elements in each block
-  integer :: myrank,nspec
+  integer,intent(in) :: nspec
 
 ! arrays with the mesh
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
 ! data from the external mesh
   integer :: nnodes_ext_mesh
@@ -159,11 +160,11 @@
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
 
     ! weighted jacobian and normal
-    call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
+    call get_jacobian_boundary_face(nspec, &
+                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -233,11 +234,11 @@
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
 
     ! weighted jacobian and normal
-    call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
+    call get_jacobian_boundary_face(nspec, &
+                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -301,11 +302,11 @@
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
 
     ! weighted jacobian and normal
-    call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
+    call get_jacobian_boundary_face(nspec, &
+                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -369,11 +370,11 @@
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
 
     ! weighted jacobian and normal
-    call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
+    call get_jacobian_boundary_face(nspec, &
+                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -437,11 +438,11 @@
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
 
     ! weighted jacobian and normal
-    call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
+    call get_jacobian_boundary_face(nspec, &
+                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -524,11 +525,11 @@
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
 
     ! weighted jacobian and normal
-    call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
+    call get_jacobian_boundary_face(nspec, &
+                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
     ! normal convention: points away from element
     ! switch normal direction if necessary

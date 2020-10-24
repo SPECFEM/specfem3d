@@ -30,6 +30,7 @@
 !! * Only acoustic and elastic elements
 !! * Requires VP, VS and RHO models
 module model_sep_mod
+
   implicit none
 
 contains
@@ -39,12 +40,15 @@ contains
 
   subroutine model_sep()
 
-  use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, &
-                                    SEP_MODEL_DIRECTORY, FOUR_THIRDS, myrank, IMAIN
-  use create_regions_mesh_ext_par, only: rhostore, rho_vp, rho_vs, &
-                                         kappastore, mustore, &
-                                         rho_vpI, rho_vsI, rhoarraystore
+  use generate_databases_par, only: &
+    SEP_MODEL_DIRECTORY, FOUR_THIRDS, myrank, IMAIN
 
+  use create_regions_mesh_ext_par, only: &
+    rhostore, rho_vp, rho_vs, &
+    kappastore, mustore, &
+    rho_vpI, rho_vsI, rhoarraystore
+
+  implicit none
   real(kind=4), allocatable, dimension(:,:,:) :: vp_sep, vs_sep, rho_sep
   integer :: NX, NY, NZ
   real :: OX, OY, OZ, DX, DY, DZ
@@ -120,6 +124,8 @@ contains
   ! Read available SEP files, assign default values for unfound files.
   allocate(vp_sep(ni, nj, NZ),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 625')
+  vp_sep(:,:,:) = 0.0
+
   call read_sep_binary_mpiio(trim(SEP_MODEL_DIRECTORY) // "/" // sep_bin_vp, &
                              NX, NY, NZ, ni, nj, NZ, &
                              imin, jmin, kmin, vp_sep)
@@ -134,6 +140,8 @@ contains
   if (vs_exists) then
     allocate(vs_sep(ni, nj, NZ),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 626')
+    vs_sep(:,:,:) = 0.0
+
     call read_sep_binary_mpiio(trim(SEP_MODEL_DIRECTORY) // "/" // sep_bin_vs, &
                                NX, NY, NZ, ni, nj, NZ, &
                                imin, jmin, kmin, vs_sep)
@@ -147,6 +155,8 @@ contains
   if (rho_exists) then
     allocate(rho_sep(ni, nj, NZ),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 627')
+    rho_sep(:,:,:) = 0.0
+
     call read_sep_binary_mpiio(trim(SEP_MODEL_DIRECTORY) // "/" // sep_bin_rho, &
                                NX, NY, NZ, ni, nj, NZ, &
                                imin, jmin, kmin, rho_sep)
@@ -197,13 +207,14 @@ contains
 !! \note xyz SEP organized files are expected.
 
   subroutine read_sep_binary_mpiio(filename, NX, NY, NZ, ni, nj, nk, &
-                                 imin, jmin, kmin, var)
+                                   imin, jmin, kmin, var)
   use my_mpi
 
+  implicit none
   ! parameters
   character(len=*), intent(in) :: filename
   integer, intent(in) :: NX, NY, NZ, ni, nj, nk, imin, jmin, kmin
-  real(kind =4), dimension(:, :, :), intent(inout) :: var
+  real(kind=4), dimension(:, :, :), intent(inout) :: var
 
   ! variables
   integer :: fh
@@ -249,6 +260,7 @@ contains
   use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, NSPEC => NSPEC_AB, &
                                     ibool, xstore, ystore, zstore, &
                                     CUSTOM_REAL
+  implicit none
   !--- Parameters
   real(kind=4), dimension(:,:,:), intent(in) :: sep_var
   real, intent(in) :: xmin, ymin, DX, DY, DZ
@@ -289,7 +301,10 @@ contains
 
   subroutine find_slice_bounds_sep(NX, NY, NZ, OX, OY, OZ, DX, DY, DZ, &
                                  xmin, ymin, imin, jmin, kmin, ni, nj, nk)
+
   use generate_databases_par, only: xstore, ystore, zstore
+
+  implicit none
   ! Parameters
   integer, intent(in) :: NX, NY, NZ
   real, intent(in) :: OX, OY, OZ, DX, DY, DZ
@@ -332,6 +347,8 @@ contains
   use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, NSPEC => NSPEC_AB
   use create_regions_mesh_ext_par, only: rhostore, rho_vp, rho_vs, &
                                          ispec_is_acoustic, ispec_is_elastic
+
+  implicit none
   integer :: ispec, i, j, k
   integer :: num_acoustic_pts, num_elastic_pts
 

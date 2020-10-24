@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+#
 ###########################################################################
 #### TNM: This is the mesh generation, adapted from a journal file
 ####      specific to the settings of Komatitsch and Tromp 1999, Fig.8
@@ -9,6 +9,7 @@
 # modified version: top layer is water
 #
 ###########################################################################
+from __future__ import print_function
 
 import cubit
 import boundary_definition

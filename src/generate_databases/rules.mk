@@ -158,6 +158,34 @@ endif
 generate_databases_OBJECTS += $(adios_generate_databases_OBJECTS)
 generate_databases_SHARED_OBJECTS += $(adios_generate_databases_PREOBJECTS)
 
+# using PHDF5 file io
+hdf5_generate_databases_OBJECTS = \
+	$O/read_partition_files_hdf5.gen_hdf5.o \
+	$O/save_arrays_solver_hdf5.gen_hdf5.o \
+	$(EMPTY_MACRO)
+
+hdf5_generate_databases_STUBS = \
+	$O/read_partition_files_hdf5_stub.gen_hdf5.o \
+	$O/save_arrays_solver_hdf5_stub.gen_hdf5.o \
+	$(EMPTY_MACRO)
+
+
+ifeq ($(HDF5),yes)
+hdf5_generate_databases_SHARED_OBJECTS = \
+	$O/phdf5_utils.shared_hdf5.o \
+	$(EMPTY_MACRO)
+generate_databases_OBJECTS += $(hdf5_generate_databases_OBJECTS)
+generate_databases_SHARED_OBJECTS += $(hdf5_generate_databases_SHARED_OBJECTS)
+else
+hdf5_generate_databases_SHARED_OBJECTS = \
+	$O/phdf5_utils_stub.shared_nohdf5.o \
+	$(EMPTY_MACRO)
+generate_databases_OBJECTS += $(hdf5_generate_databases_STUBS)
+generate_databases_SHARED_OBJECTS += $(hdf5_generate_databases_SHARED_OBJECTS)
+endif
+
+
+
 
 # objects for the pure Fortran version
 XGENERATE_DATABASES_OBJECTS = \
@@ -268,4 +296,13 @@ $O/%.gen_noadios.o: $S/%.F90
 
 $O/%.gen_noadios.o: $S/%.f90
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+###
+### PHDF5 compilcation
+###
+$O/%.gen_hdf5.o: $S/%.f90 $O/shared_par.shared_module.o $(phdf5_generate_databases_SHARED_OBJECTS)
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+$O/%.gen_hdf5.o: $S/%.F90 $O/shared_par.shared_module.o $(phdf5_generate_databases_SHARED_OBJECTS)
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
 

@@ -24,8 +24,6 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
 
 
 !==============================================================================
@@ -40,13 +38,13 @@
 
   subroutine save_adjoint_kernels()
 
-  use constants, only: CUSTOM_REAL, NGLLX, NGLLY, NGLLZ
-  use specfem_par, only: LOCAL_PATH, myrank, sigma_kl, NSPEC_AB, ADIOS_FOR_KERNELS, NOISE_TOMOGRAPHY, NSPEC_ADJOINT, &
+  use constants, only: CUSTOM_REAL, NGLLX, NGLLY, NGLLZ, SAVE_WEIGHTS
+  use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
+
+  use specfem_par, only: LOCAL_PATH, NSPEC_AB, ADIOS_FOR_KERNELS, NOISE_TOMOGRAPHY, NSPEC_ADJOINT, &
                          APPROXIMATE_HESS_KL, ANISOTROPIC_KL, SAVE_TRANSVERSE_KL
 
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
-  use specfem_par_elastic, only: ELASTIC_SIMULATION
-  use specfem_par_poroelastic, only: POROELASTIC_SIMULATION
+  use specfem_par_noise, only: sigma_kl
 
   implicit none
 
@@ -85,11 +83,8 @@
   integer(kind=8) :: adios_handle
   integer :: ier
 
-  ! flag to save GLL weights
-  logical,parameter :: SAVE_WEIGHTS = .false.
-
   if (ADIOS_FOR_KERNELS) then
-    call define_kernel_adios_variables(adios_handle, SAVE_WEIGHTS)
+    call define_kernel_adios_variables(adios_handle)
   endif
 
   ! acoustic domains
@@ -157,7 +152,7 @@
 
   ! for noise simulations --- noise strength kernel
   if (NOISE_TOMOGRAPHY == 3) then
-    call save_kernels_strength_noise(myrank,LOCAL_PATH,sigma_kl,NSPEC_AB)
+    call save_kernels_strength_noise(LOCAL_PATH,sigma_kl,NSPEC_AB)
   endif
 
   ! for preconditioner
@@ -190,7 +185,7 @@
 !> Save weights for volume integration,
 !! in order to benchmark the kernels with analytical expressions.
 
-subroutine save_weights_kernel()
+  subroutine save_weights_kernel()
 
   use specfem_par
   use specfem_par_acoustic
@@ -207,6 +202,7 @@ subroutine save_weights_kernel()
   allocate(weights_kernel(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2253')
   if (ier /= 0) stop 'error allocating array weights_kernel'
+
   do ispec = 1, NSPEC_AB
     ispec_irreg = irregular_element_number(ispec)
     if (ispec_irreg == 0) jacobianl = jacobian_regular

@@ -1,0 +1,89 @@
+# Journal file formatting, etc.
+# ----------------------------------------------------------------------
+# Set units to SI.
+# ----------------------------------------------------------------------
+${Units('si')}
+# Reset geometry.
+# ----------------------------------------------------------------------
+reset
+# ----------------------------------------------------------------------
+# Create a cylinder.
+# ----------------------------------------------------------------------
+create cylinder height {60*km} radius {10*km}
+${idVol1=Id('volume')}
+# ----------------------------------------------------------------------
+# Create planar interface.
+# ----------------------------------------------------------------------
+create planar surface zplane
+${idInt=Id('surface')}
+rotate surface {idInt} about Y angle 70.000000
+rotate surface {idInt} about Z angle -230.000000
+surface {idInt} move z {-5.700000*km}
+# ----------------------------------------------------------------------
+# Create planar free surface.
+# ----------------------------------------------------------------------
+create planar surface zplane
+${idSur=Id('surface')}
+# ----------------------------------------------------------------------
+# Webcut blocks.
+# ----------------------------------------------------------------------
+webcut volume {idVol1} with sheet extended from surface {idSur}
+${idVol2=Id('volume')}
+webcut volume {idVol2} with sheet extended from surface {idInt}
+${idVol3=Id('volume')}
+# ----------------------------------------------------------------------
+# Find and name the fault surface.
+# ----------------------------------------------------------------------
+find surface overlap volume {idVol2} {idVol3}
+${idF1=GroupMemberId('surf_overlap','surface',0)}
+${idF2=GroupMemberId('surf_overlap','surface',1)}
+surface {idF1} name 'fault1'
+# ----------------------------------------------------------------------
+# Create semi-sphere
+# ----------------------------------------------------------------------
+create sphere radius {100.000000 *km}
+${idVol4=Id('volume')}
+webcut volume {idVol4} with sheet extended from surface {idSur}
+${idVol5=Id('volume')}
+${idround=Id('surface')}
+surface {idround} name 'spheresurf'
+# ----------------------------------------------------------------------
+# Substract the semi-spehere from the blocks that contain the fault
+# ----------------------------------------------------------------------
+subtract volume {idVol2} {idVol3} from volume {idVol5} keep
+${idVol6=Id('volume')}
+# ----------------------------------------------------------------------
+# Delete unused blocks and surfaces.
+# ----------------------------------------------------------------------
+delete surface all
+delete volume {idVol1} {idVol4} {idVol5} 
+# ----------------------------------------------------------------------
+# imprint and merge.
+# ----------------------------------------------------------------------
+imprint all
+merge all
+# ----------------------------------------------------------------------
+# Generate the mesh.
+# ----------------------------------------------------------------------
+volume all scheme TetMesh
+volume {idVol2} {idVol3} size {4.000000*km}
+mesh volume {idVol2} 
+mesh volume {idVol3}
+volume {idVol6} size {8.000000*km}
+mesh volume {idVol6} 
+THex Volume all
+# ----------------------------------------------------------------------
+# Smooth mesh to improve quality.
+# ----------------------------------------------------------------------
+set unmerge Duplicate_mesh on
+unmerge surface fault1 only
+surface {idF2} name 'fault2'
+# ----------------------------------------------------------------------
+# Seperate nodes on fault.
+# ----------------------------------------------------------------------
+set node constraint off
+node in surface fault1 move normal to surface fault1 distance {-0.01*m}
+node in surface fault2 move normal to surface fault2 distance {-0.01*m}
+compress all
+set node constraint on
+# End of file

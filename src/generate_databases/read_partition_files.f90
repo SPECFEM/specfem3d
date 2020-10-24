@@ -71,23 +71,23 @@
 ! added poroelastic properties and filled with 0 the last 10 entries for elastic/acoustic
   read(IIN) nmat_ext_mesh, nundefMat_ext_mesh
 
-  allocate(materials_ext_mesh(16,nmat_ext_mesh),stat=ier)
+  allocate(mat_prop(17,nmat_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 585')
-  if (ier /= 0) stop 'Error allocating array materials_ext_mesh'
-  materials_ext_mesh(:,:) = 0.d0
+  if (ier /= 0) stop 'Error allocating array mat_prop'
+  mat_prop(:,:) = 0.d0
 
   do imat = 1, nmat_ext_mesh
      ! (visco)elastic or acoustic format:
      ! #(1) rho   #(2) vp  #(3) vs  #(4) Q_Kappa  #(5) Q_mu  #(6) anisotropy_flag  #(7) material_domain_id
      ! and remaining entries are filled with zeros.
      !
-     ! poroelastic format:  rhos,rhof,phi,tort,eta,material_domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,mufr
-     read(IIN) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &
-          materials_ext_mesh(4,imat),  materials_ext_mesh(5,imat), materials_ext_mesh(6,imat), &
-          materials_ext_mesh(7,imat),  materials_ext_mesh(8,imat), materials_ext_mesh(9,imat), &
-          materials_ext_mesh(10,imat),  materials_ext_mesh(11,imat), materials_ext_mesh(12,imat), &
-          materials_ext_mesh(13,imat),  materials_ext_mesh(14,imat), materials_ext_mesh(15,imat), &
-          materials_ext_mesh(16,imat)
+     ! poroelastic format:  rhos,rhof,phi,tort,eta,0,material_domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,mufr
+     read(IIN) mat_prop(1,imat),  mat_prop(2,imat),  mat_prop(3,imat), &
+               mat_prop(4,imat),  mat_prop(5,imat),  mat_prop(6,imat), &
+               mat_prop(7,imat),  mat_prop(8,imat),  mat_prop(9,imat), &
+               mat_prop(10,imat), mat_prop(11,imat), mat_prop(12,imat), &
+               mat_prop(13,imat), mat_prop(14,imat), mat_prop(15,imat), &
+               mat_prop(16,imat), mat_prop(17,imat)
   enddo
 
   if (myrank == 0) then
@@ -105,7 +105,7 @@
      ! format example interface:
      ! e.g.: -1 interface 14 15 0 2
      read(IIN) undef_mat_prop(1,imat),undef_mat_prop(2,imat),undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
-          undef_mat_prop(5,imat), undef_mat_prop(6,imat)
+               undef_mat_prop(5,imat),undef_mat_prop(6,imat)
   enddo
 
   if (myrank == 0) then
@@ -128,7 +128,8 @@
      ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id8
      ! or
      ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id27
-     read(IIN) dummy_elmnt,mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec),(elmnts_ext_mesh(j,ispec),j=1,NGNOD)
+     read(IIN) dummy_elmnt,mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec), &
+               (elmnts_ext_mesh(j,ispec),j=1,NGNOD)
 
      ! check debug
      if (dummy_elmnt /= ispec) stop 'Error ispec order in materials file'
@@ -218,6 +219,8 @@
     write(IMAIN,*) '  xmin,xmax : ',num_xmin,num_xmax
     write(IMAIN,*) '  ymin,ymax : ',num_ymin,num_ymax
     write(IMAIN,*) '  bottom,top: ',num_bottom,num_top
+    write(IMAIN,*)
+    call flush_IMAIN()
   endif
   call synchronize_all()
 
@@ -227,54 +230,66 @@
 
   read(IIN) nspec_cpml_tot
   if (myrank == 0) then
-     write(IMAIN,*) 'total number of C-PML elements in the global mesh: ',nspec_cpml_tot
+    write(IMAIN,*) '  total number of C-PML elements in the global mesh: ',nspec_cpml_tot
+    call flush_IMAIN()
   endif
   call synchronize_all()
 
+  ! PML
+  ! array is_CPML gets always allocated to be usable in "if" checks
+  allocate(is_CPML(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 597')
+  if (ier /= 0) stop 'Error allocating array is_CPML'
+  is_CPML(:) = .false.
+
   if (nspec_cpml_tot > 0) then
-     ! reads number of C-PML elements in this partition
-     read(IIN) nspec_cpml
+    ! reads number of C-PML elements in this partition
+    read(IIN) nspec_cpml
 
-     if (myrank == 0) then
-        write(IMAIN,*) '  number of C-PML spectral elements in this partition: ',nspec_cpml
-     endif
-     call synchronize_all()
+    if (myrank == 0) then
+      write(IMAIN,*) '  number of C-PML spectral elements in this partition: ',nspec_cpml
+      call flush_IMAIN()
+    endif
+    call synchronize_all()
 
-     call sum_all_i(nspec_cpml,num_cpml)
+    call sum_all_i(nspec_cpml,num_cpml)
 
-     ! checks that the sum of C-PML elements over all partitions is correct
-     if (myrank == 0 .and. nspec_cpml_tot /= num_cpml) stop 'Error while summing C-PML elements over all partitions'
+    ! checks that the sum of C-PML elements over all partitions is correct
+    if (myrank == 0 .and. nspec_cpml_tot /= num_cpml) stop 'Error while summing C-PML elements over all partitions'
 
-     ! reads C-PML regions and C-PML spectral elements global indexing
-     allocate(CPML_to_spec(nspec_cpml),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 595')
-     if (ier /= 0) stop 'Error allocating array CPML_to_spec'
-     allocate(CPML_regions(nspec_cpml),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 596')
-     if (ier /= 0) stop 'Error allocating array CPML_regions'
+    ! reads C-PML regions and C-PML spectral elements global indexing
+    allocate(CPML_to_spec(nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 595')
+    if (ier /= 0) stop 'Error allocating array CPML_to_spec'
+    allocate(CPML_regions(nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 596')
+    if (ier /= 0) stop 'Error allocating array CPML_regions'
 
-     do i=1,nspec_cpml
-        ! #id_cpml_regions = 1 : X_surface C-PML
-        ! #id_cpml_regions = 2 : Y_surface C-PML
-        ! #id_cpml_regions = 3 : Z_surface C-PML
-        ! #id_cpml_regions = 4 : XY_edge C-PML
-        ! #id_cpml_regions = 5 : XZ_edge C-PML
-        ! #id_cpml_regions = 6 : YZ_edge C-PML
-        ! #id_cpml_regions = 7 : XYZ_corner C-PML
-        !
-        ! format: #id_cpml_element #id_cpml_regions
-        read(IIN) CPML_to_spec(i), CPML_regions(i)
-     enddo
+    do i = 1,nspec_cpml
+      ! #id_cpml_regions = 1 : X_surface C-PML
+      ! #id_cpml_regions = 2 : Y_surface C-PML
+      ! #id_cpml_regions = 3 : Z_surface C-PML
+      ! #id_cpml_regions = 4 : XY_edge C-PML
+      ! #id_cpml_regions = 5 : XZ_edge C-PML
+      ! #id_cpml_regions = 6 : YZ_edge C-PML
+      ! #id_cpml_regions = 7 : XYZ_corner C-PML
+      !
+      ! format: #id_cpml_element #id_cpml_regions
+      read(IIN) CPML_to_spec(i), CPML_regions(i)
+    enddo
 
-     ! reads mask of C-PML elements for all elements in this partition
-     allocate(is_CPML(NSPEC_AB),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 597')
-     if (ier /= 0) stop 'Error allocating array is_CPML'
-
-     do i=1,NSPEC_AB
-        read(IIN) is_CPML(i)
-     enddo
+    ! reads mask of C-PML elements for all elements in this partition
+    do i = 1,NSPEC_AB
+      read(IIN) is_CPML(i)
+    enddo
   endif
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+  call synchronize_all()
 
 ! MPI interfaces between different partitions
   if (NPROC > 1) then

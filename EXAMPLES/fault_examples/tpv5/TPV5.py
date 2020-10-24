@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 import math
 import os
 import sys
@@ -99,11 +101,12 @@ cubit.cmd("mesh surface 1")
 cubit.cmd("mesh volume 1")
 cubit.cmd("unmerge surface 2 3")
 
-
-########### Fault elements and nodes ###############
+# clean up sheet bodies
+cubit.cmd("delete volume 2 3")
 
 os.system('mkdir -p MESH')
 
+########### Fault elements and nodes ###############
 # fault surfaces (up/down)
 Au = [2]
 Ad = [3]

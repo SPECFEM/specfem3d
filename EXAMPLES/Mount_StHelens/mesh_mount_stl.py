@@ -8,8 +8,15 @@
 # ( try out script mesh_mount.py when using a different CUBIT version)
 #
 #############################################################
+from __future__ import print_function
+
+import os
+import sys
+import os.path
+
 import cubit
 cubit.init([""])
+
 try:
 	from geocubitlib import boundary_definition
 	from geocubitlib import cubit2specfem3d
@@ -17,31 +24,27 @@ except:
     import boundary_definition
 	import cubit2specfem3d
 
-import os
-import sys
-import os.path
-
 # time stamp
-print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+print("#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()))
 
 # working directory
 cwd = os.getcwd()
-print "#current working directory: " + str(cwd)
+print("#current working directory: " + str(cwd))
 if cwd[len(cwd)-14:len(cwd)] != "Mount_StHelens":
-  print ""
-  print "#please run this script from example directory: SPECFEM3D/example/Mount_StHelens/"
-  print ""
+  print("")
+  print("#please run this script from example directory: SPECFEM3D/example/Mount_StHelens/")
+  print("")
 
 cubit.cmd('version')
 cubit.cmd('reset')
 
 os.system('rm -f topo_brick.stl topo_vol.stl topo_vol2.stl')
 
-print "running meshing script..."
-print ""
-print "note: this script uses topography surface in STL format"
-print "         meshing will take around 2 min"
-print ""
+print("running meshing script...")
+print("")
+print("note: this script uses topography surface in STL format")
+print("         meshing will take around 2 min")
+print("")
 
 # note: this is a workaround to use STL file formats rather than ACIS formats.
 #          for our purpose to create a simple mesh, this STL formats are faster
@@ -68,9 +71,9 @@ cubit.cmd('export stl ascii "topo_brick.stl" overwrite')
 cubit.cmd('reset')
 #checks if new file available
 if not os.path.exists("topo_brick.stl"):
-  print ""
-  print "error creating new STL file topo_brick.stl, please check manually..."
-  print ""
+  print("")
+  print("error creating new STL file topo_brick.stl, please check manually...")
+  print("")
   cubit.cmd('pause')
 
 #############################################################
@@ -81,12 +84,12 @@ if not os.path.exists("topo_brick.stl"):
 
 # topography surface
 if os.path.exists("topo.stl"):
-  print "opening existing topography surface"
+  print("opening existing topography surface")
   # previously run, just reopen the cubit file
   cubit.cmd('import stl "topo.stl" merge stitch')
 else:
   # topo surface doesn't exist yet, this creates it:
-  print "reading in topography surface"
+  print("reading in topography surface")
   # reads in topography points and creates sheet surface
   execfile("./read_topo.py")
   # clear
@@ -111,9 +114,9 @@ cubit.cmd('export stl ascii "topo_vol.stl" surface 9 5 6 8 11 13 overwrite')
 cubit.cmd('reset')
 #checks if new file available
 if not os.path.exists("topo_vol.stl"):
-  print ""
-  print "error creating new STL file topo_vol.stl, please check manually..."
-  print ""
+  print("")
+  print("error creating new STL file topo_vol.stl, please check manually...")
+  print("")
   cubit.cmd('pause')
 
 #############################################################
@@ -125,9 +128,9 @@ if not os.path.exists("topo_vol.stl"):
 os.system('awk \'BEGIN{print \"solid Body_1\";}{if($0 !~ /solid/) print $0;}END{print \"endsolid Body_1\";}\' topo_vol.stl > topo_vol2.stl')
 #checks if new file available
 if not os.path.exists("topo_vol2.stl"):
-  print ""
-  print "error creating new STL file topo_vol2.stl, please check manually..."
-  print ""
+  print("")
+  print("error creating new STL file topo_vol2.stl, please check manually...")
+  print("")
   cubit.cmd('pause')
 
 #############################################################
@@ -200,4 +203,4 @@ cubit2specfem3d.export2SPECFEM3D('MESH')
 # all files needed by SCOTCH are now in directory MESH
 
 # time stamp
-print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+print("#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()))

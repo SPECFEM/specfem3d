@@ -52,6 +52,9 @@
   real(kind=CUSTOM_REAL) :: xloc,yloc,loc_ele,loc_distmin
   integer :: iproc,ier
 
+  !debug
+  !print *,'get elevation: ',npoints
+
   ! determine x/y from lat/lon
   do ipoin = 1, npoints
     ! convert station location to UTM
@@ -82,7 +85,7 @@
   if (ier /= 0) stop 'Error allocating elevation arrays'
 
   if (myrank == 0) then
-    ! only master gathers all
+    ! only main gathers all
     allocate(elevation_all(npoints,0:NPROC-1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2185')
     allocate(elevation_distmin_all(npoints,0:NPROC-1),stat=ier)
@@ -114,7 +117,7 @@
   call gather_all_dp(elevation,npoints,elevation_all,npoints,NPROC)
   call gather_all_dp(elevation_distmin,npoints,elevation_distmin_all,npoints,NPROC)
 
-  ! master process selects closest
+  ! main process selects closest
   if (myrank == 0) then
     ! loops over all receivers
     do ipoin = 1,npoints
@@ -139,7 +142,7 @@
   ! free temporary arrays
   deallocate(elevation_distmin,elevation_all,elevation_distmin_all)
 
-  ! master broadcasts to all slices
+  ! main broadcasts to all slices
   call bcast_all_dp(z_target,npoints)
 
   end subroutine get_elevation_and_z_coordinate_all

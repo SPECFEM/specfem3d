@@ -24,11 +24,9 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
 
-!==============================================================================
-subroutine read_mesh_for_init_ADIOS(nspec, nglob)
+
+  subroutine read_mesh_for_init_ADIOS(nspec, nglob)
 
   use adios_read_mod
   use specfem_par, only: myrank, LOCAL_PATH, MAX_STRING_LEN
@@ -69,10 +67,11 @@ subroutine read_mesh_for_init_ADIOS(nspec, nglob)
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 
-end subroutine read_mesh_for_init_ADIOS
+  end subroutine read_mesh_for_init_ADIOS
 
 !==============================================================================
-subroutine read_mesh_databases_adios()
+
+  subroutine read_mesh_databases_adios()
 
   use adios_read_mod
 
@@ -149,6 +148,14 @@ subroutine read_mesh_databases_adios()
 
   integer :: comm
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "Reading mesh databases..."
+    write(IMAIN,*) "  reads ADIOS mesh file: external_mesh.bp"
+    write(IMAIN,*) "  from directory       : ",trim(LOCAL_PATH)
+    call flush_IMAIN()
+  endif
+
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
@@ -158,8 +165,8 @@ subroutine read_mesh_databases_adios()
 
   call world_get_comm(comm)
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
-                               "verbose=1", ier)
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, "verbose=1", ier)
+
   call adios_read_open_file (handle, database_name, 0, comm, ier)
   if (ier /= 0) call abort_mpi()
 
@@ -204,16 +211,17 @@ subroutine read_mesh_databases_adios()
   call adios_perform_reads(handle, ier)
   if (ier /= 0) call abort_mpi()
 
-  ! number of acoustic elements in this partition
-  nspec_acoustic = count(ispec_is_acoustic(:))
   ! all processes will have acoustic_simulation set if any flag is .true.
   call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
-  ! number of elastic elements in this partition
-  nspec_elastic = count(ispec_is_elastic(:))
   ! elastic simulation
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   ! poroelastic
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
+
+  ! number of acoustic elements in this partition
+  nspec_acoustic = count(ispec_is_acoustic(:))
+  ! number of elastic elements in this partition
+  nspec_elastic = count(ispec_is_elastic(:))
 
   ! checks simulation types are valid
   if ((.not. ACOUSTIC_SIMULATION) .and. &
@@ -620,11 +628,11 @@ subroutine read_mesh_databases_adios()
     allocate(potential_dot_dot_acoustic(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1793')
     if (ier /= 0) stop 'error allocating array potential_dot_dot_acoustic'
-    if (SIMULATION_TYPE /= 1) then
-      allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1794')
-      if (ier /= 0) stop 'error allocating array potential_acoustic_adj_coupling'
-    endif
+    !if (SIMULATION_TYPE /= 1) then
+    !  allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier) ! not used yet
+    !  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1794')
+    !  if (ier /= 0) stop 'error allocating array potential_acoustic_adj_coupling'
+    !endif
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1795')
@@ -636,13 +644,6 @@ subroutine read_mesh_databases_adios()
     if (ier /= 0) stop 'error allocating array rmassz_acoustic'
     rmassz_acoustic(:) = 0._CUSTOM_REAL
   endif
-
-  ! this array is needed for acoustic simulations but also for elastic
-  ! simulations with CPML, thus we now allocate it and read it in all
-  ! cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
-  allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1797')
-  if (ier /= 0) stop 'error allocating array rhostore'
 
 !TODO
 #endif
@@ -880,6 +881,17 @@ subroutine read_mesh_databases_adios()
     allocate(epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1874')
     if (ier /= 0) stop 'error allocating array epsilons_trace_over_3 etc.'
+  else
+    ! dummy allocations (needed for subroutine arguments)
+    allocate(rhoarraystore(2,1,1,1,1), &
+             kappaarraystore(3,1,1,1,1), &
+             etastore(1,1,1,1), &
+             tortstore(1,1,1,1), &
+             phistore(1,1,1,1), &
+             permstore(6,1,1,1,1), &
+             rho_vpI(1,1,1,1), &
+             rho_vpII(1,1,1,1), &
+             rho_vsI(1,1,1,1))
   endif
 
   ! C-PML absorbing boundary conditions
@@ -887,7 +899,6 @@ subroutine read_mesh_databases_adios()
   allocate(is_CPML(NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1875')
   if (ier /= 0) stop 'error allocating array is_CPML'
-
   ! make sure there are no PMLs by default,
   ! and then below if NSPEC_CPML > 0 we will read the real flags for this mesh from the disk
   is_CPML(:) = .false.
@@ -1787,12 +1798,21 @@ subroutine read_mesh_databases_adios()
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1943')
   if (ier /= 0) stop 'error allocating array buffer_send_vector_ext_mesh etc.'
 
-end subroutine read_mesh_databases_adios
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "  done"
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
+  end subroutine read_mesh_databases_adios
 
 
 !-------------------------------------------------------------------------------
+
 !> Reads in moho meshes
-subroutine read_mesh_databases_moho_adios()
+
+  subroutine read_mesh_databases_moho_adios()
 
   use adios_read_mod
 
@@ -1984,4 +2004,4 @@ subroutine read_mesh_databases_moho_adios()
     if (ier /= 0) stop 'Error allocating array dsdx_top etc.'
   endif
 
-end subroutine read_mesh_databases_moho_adios
+  end subroutine read_mesh_databases_moho_adios

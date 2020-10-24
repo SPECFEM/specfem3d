@@ -25,35 +25,23 @@
 !
 !=====================================================================
 
-  subroutine read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  subroutine read_parameter_file(BROADCAST_AFTER_READ)
 
-  use constants
+  use constants, only: &
+    myrank, &
+    INJECTION_TECHNIQUE_IS_AXISEM,INJECTION_TECHNIQUE_IS_DSM,INJECTION_TECHNIQUE_IS_FK
 
   use shared_parameters
 
   implicit none
 
-  integer, intent(in) :: myrank
   logical, intent(in) :: BROADCAST_AFTER_READ
 
   ! local variables
   integer :: ier
-
-  character(len=MAX_STRING_LEN) :: MODEL
-
-  character(len=MAX_STRING_LEN) :: sources_filename
-
-  character(len=MAX_STRING_LEN) :: path_to_add
-
-  integer :: i,irange
-
   logical :: some_parameters_missing_from_Par_file
 
-  !LDDRK
-  logical :: INCREASE_CFL_FOR_LDDRK
-  double precision :: RATIO_BY_WHICH_TO_INCREASE_IT
-
-  ! read from a single processor (the master) and then use MPI to broadcast to others
+  ! read from a single processor (the main) and then use MPI to broadcast to others
   ! to avoid an I/O bottleneck in the case of very large runs
   if (myrank == 0) then
 
@@ -128,6 +116,20 @@
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
       write(*,'(a)') 'DT                              = 0.05'
+      write(*,*)
+    endif
+
+    call read_value_logical(LTS_MODE, 'LTS_MODE', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'LTS_MODE                        = .false.'
+      write(*,*)
+    endif
+
+    call read_value_integer(PARTITIONING_TYPE, 'PARTITIONING_TYPE', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'PARTITIONING_TYPE               = 1'
       write(*,*)
     endif
 
@@ -316,8 +318,6 @@
       write(*,'(a)') 'UNDO_ATTENUATION_AND_OR_PML     = .false.'
       write(*,*)
     endif
-!! DK DK temporary, will soon be implemented
-    if (UNDO_ATTENUATION_AND_OR_PML) stop 'error: UNDO_ATTENUATION_AND_OR_PML not implemented in this code yet'
 
     call read_value_integer(NT_DUMP_ATTENUATION, 'NT_DUMP_ATTENUATION', ier)
     if (ier /= 0) then
@@ -395,7 +395,7 @@
     call read_value_string(LOCAL_PATH, 'LOCAL_PATH', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
-      write(*,'(a)') 'LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI'
+      write(*,'(a)') 'LOCAL_PATH                      = OUTPUT_FILES/DATABASES_MPI'
       write(*,*)
     endif
 
@@ -489,6 +489,13 @@
       write(*,*)
     endif
 
+    call read_value_integer(subsamp_seismos, 'subsamp_seismos', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'subsamp_seismos                 = 1'
+      write(*,*)
+    endif
+
     call read_value_logical(USE_BINARY_FOR_SEISMOGRAMS, 'USE_BINARY_FOR_SEISMOGRAMS', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
@@ -510,10 +517,10 @@
       write(*,*)
     endif
 
-    call read_value_logical(WRITE_SEISMOGRAMS_BY_MASTER, 'WRITE_SEISMOGRAMS_BY_MASTER', ier)
+    call read_value_logical(WRITE_SEISMOGRAMS_BY_MAIN, 'WRITE_SEISMOGRAMS_BY_MAIN', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
-      write(*,'(a)') 'WRITE_SEISMOGRAMS_BY_MASTER     = .false.'
+      write(*,'(a)') 'WRITE_SEISMOGRAMS_BY_MAIN     = .false.'
       write(*,*)
     endif
 
@@ -748,16 +755,21 @@
       write(*,*)
     endif
 
-    ! ADIOS is very useful for very large simulations (say using 2000 MPI tasks or more)
-    ! but slows down the code if used for simulations that are small or medium size, because of the overhead any library has.
-    if (ADIOS_ENABLED .and. NPROC < 2000) then
-      print *
-      print *,'**************'
-      print *,'**************'
-      print *,'ADIOS significantly slows down small or medium-size runs, which is the case here, please consider turning it off'
-      print *,'**************'
-      print *,'**************'
-      print *
+    !-------------------------------------------------------
+    ! read hdf5 database io flag
+    call read_value_logical(HDF5_ENABLED, 'HDF5_ENABLED', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'HDF5_ENABLED                   = .false.'
+      write(*,*)
+    endif
+
+    ! read number of io dedicated nodes
+    call read_value_integer(NIONOD, 'NIONOD', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'NIONOD                    = 1'
+      write(*,*)
     endif
 
     ! closes parameter file
@@ -773,239 +785,58 @@
          &see at the end of the standard output file of the run for detailed and easy instructions about how to fix that'
     endif
 
+    ! re-sets attenuation flags
+    !if (.not. ATTENUATION) then
+    !  ! turns off UNDO_ATTENUATION when ATTENUATION is off in the Par_file
+    !  UNDO_ATTENUATION_AND_OR_PML = .false.
+    !endif
+    ! for pure forward simulation, no need to store undo_attenuation arrays; uses default iteration routine
+    !if (SIMULATION_TYPE == 1 .and. .not. SAVE_FORWARD) then
+    !  UNDO_ATTENUATION_AND_OR_PML = .false.
+    !endif
+
+    ! re-sets ADIOS flags
+    if (.not. ADIOS_ENABLED) then
+      ADIOS_FOR_DATABASES = .false.
+      ADIOS_FOR_MESH = .false.
+      ADIOS_FOR_FORWARD_ARRAYS = .false.
+      ADIOS_FOR_KERNELS = .false.
+      ! ADIOS_FOR_UNDO_ATTENUATION = .false. ! not implemented yet
+    endif
+
     ! checks parameter settings
     call check_simulation_parameters()
 
-    ! updates values for simulation settings
-    ! LDDRK scheme
-    if (USE_LDDRK .and. INCREASE_CFL_FOR_LDDRK) DT = DT * RATIO_BY_WHICH_TO_INCREASE_IT
-
-    ! to be consistent with external source file option turned to on
-    if (USE_EXTERNAL_SOURCE_FILE) USE_RICKER_TIME_FUNCTION = .false.
-
-    ! see if we are running several independent runs in parallel
-    ! if so, add the right directory for that run
-    ! (group numbers start at zero, but directory names start at run0001, thus we add one)
-    ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
-      write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-      LOCAL_PATH = path_to_add(1:len_trim(path_to_add))//LOCAL_PATH(1:len_trim(LOCAL_PATH))
-      TOMOGRAPHY_PATH = path_to_add(1:len_trim(path_to_add))//TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))
-      TRACTION_PATH = path_to_add(1:len_trim(path_to_add))//TRACTION_PATH(1:len_trim(TRACTION_PATH))
-    endif
-
-    ! noise simulations:
-    if (NOISE_TOMOGRAPHY /= 0) then
-      ! double the number of time steps, if running noise simulations (+/- branches)
-      NSTEP = 2 * NSTEP - 1
-
-      ! for noise simulations, we need to save movies at the surface (where the noise is generated)
-      ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
-      MOVIE_TYPE = 1
-      MOVIE_SURFACE = .true.
-      USE_HIGHRES_FOR_MOVIES = .true.     ! we need to save surface movie everywhere, i.e. at all GLL points on the surface
-    endif
-
-    ! the default value of NTSTEP_BETWEEN_READ_ADJSRC (0) is to read the whole trace at the same time
-    if (NTSTEP_BETWEEN_READ_ADJSRC == 0)  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
-
-    ! total times steps must be dividable by adjoint source chunks/blocks
-    if (mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0) then
-      print *,'When NOISE_TOMOGRAPHY is not equal to zero, ACTUAL_NSTEP=2*NSTEP-1'
-      stop 'Error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! Please modify Par_file and recompile solver'
-    endif
-
-    ! checks number of nodes for 2D and 3D shape functions for quadrilaterals and hexahedra
-    ! curvature (i.e. HEX27 elements) is not handled by our internal mesher, for that use CUBIT/Trelis or Gmsh for instance
-    if (NGNOD == 8) then
-      NGNOD2D = 4
-    else if (NGNOD == 27) then
-      NGNOD2D = 9
-    else if (NGNOD /= 8 .and. NGNOD /= 27) then
-      stop 'Error elements should have 8 or 27 control nodes, please modify NGNOD in Par_file and recompile solver'
-    endif
-
-
-    ! get the name of the file describing the sources
-    if (USE_FORCE_POINT_SOURCE) then
-      sources_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FORCESOLUTION'
-    else
-      sources_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'CMTSOLUTION'
-    endif
-    ! see if we are running several independent runs in parallel
-    ! if so, add the right directory for that run
-    ! (group numbers start at zero, but directory names start at run0001, thus we add one)
-    ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
-      write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-      sources_filename = path_to_add(1:len_trim(path_to_add))//sources_filename(1:len_trim(sources_filename))
-    endif
-
-    ! determines number of sources depending on number of lines in sources file
-    call get_number_of_sources(sources_filename)
-
-    ! converts all string characters to lowercase
-    irange = iachar('a') - iachar('A')
-    do i = 1,len_trim(MODEL)
-      if (lge(MODEL(i:i),'A') .and. lle(MODEL(i:i),'Z')) then
-        MODEL(i:i) = achar(iachar(MODEL(i:i)) + irange)
-      endif
-    enddo
-
-    ! determines velocity model
-    select case (trim(MODEL))
-
-    ! default mesh model
-    case ('default')
-      IMODEL = IMODEL_DEFAULT
-
-    ! 1-D models
-    case ('1d_prem')
-      IMODEL = IMODEL_1D_PREM
-    case ('1d_socal')
-      IMODEL = IMODEL_1D_SOCAL
-    case ('1d_cascadia')
-      IMODEL = IMODEL_1D_CASCADIA
-
-    ! user models
-    case ('1d_prem_pb')
-      IMODEL = IMODEL_1D_PREM_PB
-    case ('aniso')
-      IMODEL = IMODEL_DEFAULT
-      ANISOTROPY = .true.
-    case ('external')
-      IMODEL = IMODEL_USER_EXTERNAL
-    case ('ipati')
-      IMODEL = IMODEL_IPATI
-    case ('ipati_water')
-      IMODEL = IMODEL_IPATI_WATER
-    case ('gll')
-      IMODEL = IMODEL_GLL
-    case ('salton_trough')
-      IMODEL = IMODEL_SALTON_TROUGH
-    case ('tomo')
-      IMODEL = IMODEL_TOMO
-    case ('sep')
-      IMODEL = IMODEL_SEP
-      if (trim(SEP_MODEL_DIRECTORY) == '') then
-        stop 'Error using sep model requires defining a SEP_MODEL_DIRECTORY.'
-      endif
-      !inquire(directory=trim(SEP_MODEL_DIRECTORY), exists=sep_dir_exists)
-      !if (.not. sep_dir_exists) then
-      !  stop 'Error: SEP_MODEL_DIRECTORY should exist.'
-      !endif
-    case ('coupled')
-      IMODEL = IMODEL_COUPLED
-    case default
-      print *
-      print *,'********** model not recognized: ',trim(MODEL),' **************'
-      print *,'********** using model: default',' **************'
-      print *
-      IMODEL = IMODEL_DEFAULT
-    end select
-
-    ! check
-    if (IMODEL == IMODEL_IPATI .or. IMODEL == IMODEL_IPATI_WATER) then
-      if (USE_RICKER_TIME_FUNCTION .eqv. .false.) &
-        stop 'Error for IPATI model, please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
-    endif
+    ! computes additional parameters depending on setting
+    call read_compute_parameters()
 
   endif ! of if (myrank == 0) then
 
-  ! read from a single processor (the master) and then use MPI to broadcast to others
+  ! read from a single processor (the main) and then use MPI to broadcast to others
   ! to avoid an I/O bottleneck in the case of very large runs
-  if (BROADCAST_AFTER_READ) then
-    call bcast_all_singlei(NPROC)
-    call bcast_all_singlei(SIMULATION_TYPE)
-    call bcast_all_singlei(NOISE_TOMOGRAPHY)
-    call bcast_all_singlel(SAVE_FORWARD)
-    call bcast_all_singlel(INVERSE_FWI_FULL_PROBLEM)
-    call bcast_all_singlei(UTM_PROJECTION_ZONE)
-    call bcast_all_singlel(SUPPRESS_UTM_PROJECTION)
-    call bcast_all_singlei(NSTEP)
-    call bcast_all_singledp(DT)
-    call bcast_all_singlel(USE_LDDRK)
-    call bcast_all_singlei(NGNOD)
-    call bcast_all_string(MODEL)
-    call bcast_all_string(SEP_MODEL_DIRECTORY)
-    call bcast_all_singlel(APPROXIMATE_OCEAN_LOAD)
-    call bcast_all_singlel(TOPOGRAPHY)
-    call bcast_all_singlel(ATTENUATION)
-    call bcast_all_singlel(ANISOTROPY)
-    call bcast_all_singlel(GRAVITY)
-    call bcast_all_singledp(ATTENUATION_f0_REFERENCE)
-    call bcast_all_singledp(MIN_ATTENUATION_PERIOD)
-    call bcast_all_singledp(MAX_ATTENUATION_PERIOD)
-    call bcast_all_singlel(COMPUTE_FREQ_BAND_AUTOMATIC)
-    call bcast_all_singlel(USE_OLSEN_ATTENUATION)
-    call bcast_all_singledp(OLSEN_ATTENUATION_RATIO)
-    call bcast_all_string(TOMOGRAPHY_PATH)
-    call bcast_all_singlel(PML_CONDITIONS)
-    call bcast_all_singlel(PML_INSTEAD_OF_FREE_SURFACE)
-    call bcast_all_singledp(f0_FOR_PML)
-    call bcast_all_singlel(STACEY_ABSORBING_CONDITIONS)
-    call bcast_all_singlel(STACEY_INSTEAD_OF_FREE_SURFACE)
-    call bcast_all_singlel(BOTTOM_FREE_SURFACE)
-    call bcast_all_singlel(CREATE_SHAKEMAP)
-    call bcast_all_singlel(MOVIE_SURFACE)
-    call bcast_all_singlei(MOVIE_TYPE)
-    call bcast_all_singlel(MOVIE_VOLUME)
-    call bcast_all_singlel(SAVE_DISPLACEMENT)
-    call bcast_all_singlel(USE_HIGHRES_FOR_MOVIES)
-    call bcast_all_singlei(NTSTEP_BETWEEN_FRAMES)
-    call bcast_all_singledp(HDUR_MOVIE)
-    call bcast_all_singlel(SAVE_MESH_FILES)
-    call bcast_all_string(LOCAL_PATH)
-    call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_INFO)
-    call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_SEISMOS)
-    call bcast_all_singlei(NTSTEP_BETWEEN_READ_ADJSRC)
-    call bcast_all_singlel(USE_SOURCES_RECEIVERS_Z)
-    call bcast_all_singlel(USE_FORCE_POINT_SOURCE)
-    call bcast_all_singlel(USE_RICKER_TIME_FUNCTION)
-    call bcast_all_singlel(SAVE_SEISMOGRAMS_DISPLACEMENT)
-    call bcast_all_singlel(SAVE_SEISMOGRAMS_VELOCITY)
-    call bcast_all_singlel(SAVE_SEISMOGRAMS_ACCELERATION)
-    call bcast_all_singlel(SAVE_SEISMOGRAMS_PRESSURE)
-    call bcast_all_singlel(SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)
-    call bcast_all_singlel(USE_BINARY_FOR_SEISMOGRAMS)
-    call bcast_all_singlel(SU_FORMAT)
-    call bcast_all_singlel(ASDF_FORMAT)
-    call bcast_all_singlel(WRITE_SEISMOGRAMS_BY_MASTER)
-    call bcast_all_singlel(SAVE_ALL_SEISMOS_IN_ONE_FILE)
-    call bcast_all_singlel(USE_TRICK_FOR_BETTER_PRESSURE)
-    call bcast_all_singlel(USE_SOURCE_ENCODING)
-    call bcast_all_singlel(OUTPUT_ENERGY)
-    call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_ENERGY)
-    call bcast_all_singlel(READ_ADJSRC_ASDF)
-    call bcast_all_singlel(ANISOTROPIC_KL)
-    call bcast_all_singlel(SAVE_TRANSVERSE_KL)
-    call bcast_all_singlel(APPROXIMATE_HESS_KL)
-    call bcast_all_singlel(SAVE_MOHO_MESH)
-    call bcast_all_singlel(PRINT_SOURCE_TIME_FUNCTION)
-    call bcast_all_singlei(NUMBER_OF_SIMULTANEOUS_RUNS)
-    call bcast_all_singlel(BROADCAST_SAME_MESH_AND_MODEL)
-    call bcast_all_singlel(GPU_MODE)
-    call bcast_all_singlel(ADIOS_ENABLED)
-    call bcast_all_singlel(ADIOS_FOR_DATABASES)
-    call bcast_all_singlel(ADIOS_FOR_MESH)
-    call bcast_all_singlel(ADIOS_FOR_FORWARD_ARRAYS)
-    call bcast_all_singlel(ADIOS_FOR_KERNELS)
-    call bcast_all_singlel(USE_EXTERNAL_SOURCE_FILE)
+  if (BROADCAST_AFTER_READ) call broadcast_computed_parameters()
 
-    ! broadcast all parameters computed from others
-    call bcast_all_singlei(IMODEL)
-    call bcast_all_singlei(NGNOD2D)
+  ! Cray compilers
+#if _CRAYFTN
+#warning "Warning: using Cray compiler assign function for un-compressed file output"
+  ! Cray uses compressed formats by default for list-directed output, for example:
+  !     write(*,*) 10,10            leads to output -> 2*10           compressed, instead of:       10        10
+  !     write(*,*) 1,1.78e-5                        -> 1,   1.78e-5   comma delimiter, instead of:   1         1.78e-5
+  ! this leads to problems when writing seismograms in ASCII-format.
+  ! to circumvent this behaviour, one can use cray's assign environment:
+  !   $ setenv FILENV ASGTMP
+  !   $ assign -U on g:all        (g:all  - all file open requests)
+  ! see: https://pubs.cray.com/bundle/Cray_Fortran_Reference_Manual_100_S-3901_Fortran_ditaval.xml/..
+  !             ..page/Cray_Fortran_Implementation_Specifics.html
+  ! or use the Fortran statement here below:
 
-    call bcast_all_singlei(NSOURCES)
+  !debug
+  !if (myrank == 0) print *,'...compiled by Cray compilers'
 
-    call bcast_all_singlel(COUPLE_WITH_INJECTION_TECHNIQUE)
-    call bcast_all_singlel(MESH_A_CHUNK_OF_THE_EARTH)
-    call bcast_all_singlei(INJECTION_TECHNIQUE_TYPE)
-    call bcast_all_string(TRACTION_PATH)
-    call bcast_all_string(FKMODEL_FILE)
-    call bcast_all_singlel(RECIPROCITY_AND_KH_INTEGRAL)
-
-  endif ! of if (BROADCAST_AFTER_READ) then
+  ! assigns -U (uncompressed format) for all subsequent file opens
+  ! includes seismograms, but not the already opened IMAIN file output
+  call assign('assign -U on g:all',ier)
+#endif
 
   end subroutine read_parameter_file
 
@@ -1037,11 +868,15 @@
    stop 'Error: at least one of SAVE_SEISMOGRAMS_DISPLACEMENT SAVE_SEISMOGRAMS_VELOCITY SAVE_SEISMOGRAMS_ACCELERATION &
              &SAVE_SEISMOGRAMS_PRESSURE must be true'
 
+  if (subsamp_seismos < 1) &
+    stop 'Error: subsamp_seismos must be >= 1'
+
   ! this could be implemented in the future if needed,
   ! see comments in the source code around the USE_TRICK_FOR_BETTER_PRESSURE
   ! option (use a "grep" command to find them) to see how this could/should be done
   if (USE_TRICK_FOR_BETTER_PRESSURE .and. (SAVE_SEISMOGRAMS_DISPLACEMENT .or. SAVE_SEISMOGRAMS_VELOCITY .or. &
-        SAVE_SEISMOGRAMS_ACCELERATION)) stop 'USE_TRICK_FOR_BETTER_PRESSURE is currently incompatible with &
+        SAVE_SEISMOGRAMS_ACCELERATION)) &
+    stop 'USE_TRICK_FOR_BETTER_PRESSURE is currently incompatible with &
         &SAVE_SEISMOGRAMS_DISPLACEMENT .or. SAVE_SEISMOGRAMS_VELOCITY .or. SAVE_SEISMOGRAMS_ACCELERATION, &
         &only SAVE_SEISMOGRAMS_PRESSURE can be used'
 
@@ -1079,11 +914,267 @@
       stop 'Error for PML, please set STACEY_ABSORBING_CONDITIONS and STACEY_INSTEAD_OF_FREE_SURFACE to .false. in Par_file'
   endif
 
+  ! UNDO_ATT
+  !if (UNDO_ATTENUATION_AND_OR_PML .and. GPU_MODE) &
+  !  stop 'For GPU_MODE, UNDO_ATTENUATION_AND_OR_PML is not implemented in this code yet'
+
+  ! attenuation for backward simulation
+  if (SIMULATION_TYPE == 3 .and. ATTENUATION .and. .not. UNDO_ATTENUATION_AND_OR_PML) &
+    stop 'For SIMULATION_TYPE == 3 and attenuation, simulations need flag UNDO_ATTENUATION_AND_OR_PML set to .true.'
+
   ! external STF
   if (USE_EXTERNAL_SOURCE_FILE .and. GPU_MODE) &
     stop 'USE_EXTERNAL_SOURCE_FILE in GPU_MODE simulation not supported yet'
 
+  ! local time stepping (still in experimental implementation phase...)
+  if (LTS_MODE) then
+    if (USE_LDDRK) &
+      stop 'USE_LDDRK in LTS_MODE not supported yet'
+    if (PML_CONDITIONS) &
+      stop 'PML_CONDITIONS in LTS_MODE not supported yet'
+    if (GPU_MODE) &
+      stop 'GPU_MODE and LTS_MODE together not supported yet'
+  endif
+
+  ! PARTITIONING_TYPE
+  if (PARTITIONING_TYPE < 1 .or. PARTITIONING_TYPE > 4) &
+    stop 'PARTITIONING_TYPE must be 1,2,3 or 4 (for SCOTCH, METIS, PATOH or ROW_PARTS partitioner)'
+
+
+  ! Warnings
+
+  ! ADIOS is very useful for very large simulations (say using 2000 MPI tasks or more)
+  ! but slows down the code if used for simulations that are small or medium size, because of the overhead any library has.
+  if (ADIOS_ENABLED .and. NPROC < 2000) then
+    print *
+    print *,'**************'
+    print *,'**************'
+    print *,'ADIOS significantly slows down small or medium-size runs, which is the case here, please consider turning it off'
+    print *,'**************'
+    print *,'**************'
+    print *
+  endif
+
   end subroutine check_simulation_parameters
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
+  subroutine read_compute_parameters()
+
+! computes additional parameters
+! (only executed by main process)
+
+  use constants
+  use shared_parameters
+
+  implicit none
+
+  ! local parameters
+  integer :: i,irange
+  character(len=MAX_STRING_LEN) :: sources_filename
+  character(len=MAX_STRING_LEN) :: path_to_add
+  character(len=MAX_STRING_LEN) :: tmp_TOMOGRAPHY_PATH,tmp_LOCAL_PATH
+
+  ! updates values for simulation settings
+  ! LDDRK scheme
+  if (USE_LDDRK .and. INCREASE_CFL_FOR_LDDRK) DT = DT * RATIO_BY_WHICH_TO_INCREASE_IT
+
+  ! to be consistent with external source file option turned to on
+  if (USE_EXTERNAL_SOURCE_FILE) USE_RICKER_TIME_FUNCTION = .false.
+
+  ! see if we are running several independent runs in parallel
+  ! if so, add the right directory for that run
+  ! (group numbers start at zero, but directory names start at run0001, thus we add one)
+  ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+
+!! DK DK remove leading ./ if any, Paul Cristini said it could lead to problems when NUMBER_OF_SIMULTANEOUS_RUNS > 1
+    tmp_LOCAL_PATH = adjustl(LOCAL_PATH)
+    if (index (tmp_LOCAL_PATH, './') == 1) then
+      LOCAL_PATH = tmp_LOCAL_PATH(3:)
+    endif
+
+    tmp_TOMOGRAPHY_PATH = adjustl(TOMOGRAPHY_PATH)
+    if (index (tmp_TOMOGRAPHY_PATH, './') == 1) then
+      TOMOGRAPHY_PATH = tmp_TOMOGRAPHY_PATH(3:)
+    endif
+
+    TRACTION_PATH_new = adjustl(TRACTION_PATH)
+    if (index (TRACTION_PATH_new, './') == 1) then
+      TRACTION_PATH = TRACTION_PATH_new(3:)
+    endif
+
+    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+
+    LOCAL_PATH = path_to_add(1:len_trim(path_to_add))//LOCAL_PATH(1:len_trim(LOCAL_PATH))
+    TOMOGRAPHY_PATH = path_to_add(1:len_trim(path_to_add))//TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))
+    TRACTION_PATH = path_to_add(1:len_trim(path_to_add))//TRACTION_PATH(1:len_trim(TRACTION_PATH))
+  endif
+
+  ! noise simulations:
+  if (NOISE_TOMOGRAPHY /= 0) then
+    ! double the number of time steps, if running noise simulations (+/- branches)
+    NSTEP = 2 * NSTEP - 1
+
+    ! for noise simulations, we need to save movies at the surface (where the noise is generated)
+    ! and thus we force MOVIE_SURFACE in the mesher to be .true., in order to use variables defined for surface movies later
+    ! the noise surface wavefield will be stored/load in files DATABASES_MPI/proc***_surface_movie
+    !
+    ! for the solver, setting MOVIE_SURFACE can be used to plot/visualize the wavefield, but is not needed for noise simulations.
+    ! however, noise simulations require movie type 1 and highres
+    ! defaults
+    MOVIE_TYPE = 1                      ! 1 == only top surface (no side/bottom faces)
+    USE_HIGHRES_FOR_MOVIES = .true.     ! we need to save surface movie everywhere, i.e. at all GLL points on the surface
+    ! let user decide
+    !MOVIE_SURFACE = .true.             ! (not necessary) to store/load generating wavefield for plotting
+    !SAVE_DISPLACEMENT = .true.         ! (not necessary) stores displacement (flag not necessary, but to avoid confusion)
+  endif
+
+  ! make sure NSTEP is a multiple of subsamp_seismos
+  ! if not, increase it a little bit, to the next multiple
+  if (mod(NSTEP,subsamp_seismos) /= 0) then
+    if (NOISE_TOMOGRAPHY /= 0) then
+      if (myrank == 0) then
+        print *,'Noise simulation: Invalid number of NSTEP = ',NSTEP
+        print *,'Must be a multiple of subsamp_seismos = ',subsamp_seismos
+      endif
+      stop 'Error: NSTEP must be a multiple of subsamp_seismos'
+    else
+      NSTEP = (NSTEP/subsamp_seismos + 1)*subsamp_seismos
+      ! user output
+      if (myrank == 0) then
+        print *
+        print *,'NSTEP is not a multiple of subsamp_seismos'
+        print *,'thus increasing it automatically to the next multiple, which is ',NSTEP
+        print *
+      endif
+    endif
+  endif
+
+  ! output seismograms at least once at the end of the simulation
+  NTSTEP_BETWEEN_OUTPUT_SEISMOS = min(NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+
+  ! make sure NSTEP_BETWEEN_OUTPUT_SEISMOS is a multiple of subsamp_seismos
+  if (mod(NTSTEP_BETWEEN_OUTPUT_SEISMOS,subsamp_seismos) /= 0) then
+    if (myrank == 0) then
+      print *,'Invalid number of NTSTEP_BETWEEN_OUTPUT_SEISMOS = ',NTSTEP_BETWEEN_OUTPUT_SEISMOS
+      print *,'Must be a multiple of subsamp_seismos = ',subsamp_seismos
+    endif
+    stop 'Error: NTSTEP_BETWEEN_OUTPUT_SEISMOS must be a multiple of subsamp_seismos'
+  endif
+
+  ! the default value of NTSTEP_BETWEEN_READ_ADJSRC (0) is to read the whole trace at the same time
+  if (NTSTEP_BETWEEN_READ_ADJSRC == 0)  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
+
+  ! total times steps must be dividable by adjoint source chunks/blocks
+  if (mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0) then
+    print *,'Error: NSTEP ',NSTEP,' not a multiple of NTSTEP_BETWEEN_READ_ADJSRC ',NTSTEP_BETWEEN_READ_ADJSRC
+    print *,'       Please change NTSTEP_BETWEEN_READ_ADJSRC in the Par_file!'
+    print *,'       (in case NOISE_TOMOGRAPHY is not equal to zero, NSTEP from Par_file becomes 2*NSTEP-1)'
+    stop 'Error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! Please modify Par_file and rerun solver'
+  endif
+
+  ! checks number of nodes for 2D and 3D shape functions for quadrilaterals and hexahedra
+  ! curvature (i.e. HEX27 elements) is not handled by our internal mesher, for that use CUBIT/Trelis or Gmsh for instance
+  if (NGNOD == 8) then
+    NGNOD2D = 4
+  else if (NGNOD == 27) then
+    NGNOD2D = 9
+  else if (NGNOD /= 8 .and. NGNOD /= 27) then
+    stop 'Error elements should have 8 or 27 control nodes, please modify NGNOD in Par_file and recompile solver'
+  endif
+
+  ! get the name of the file describing the sources
+  if (USE_FORCE_POINT_SOURCE) then
+    sources_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FORCESOLUTION'
+  else
+    sources_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'CMTSOLUTION'
+  endif
+  ! see if we are running several independent runs in parallel
+  ! if so, add the right directory for that run
+  ! (group numbers start at zero, but directory names start at run0001, thus we add one)
+  ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+    sources_filename = path_to_add(1:len_trim(path_to_add))//sources_filename(1:len_trim(sources_filename))
+  endif
+
+  ! determines number of sources depending on number of lines in sources file
+  call get_number_of_sources(sources_filename)
+
+  ! converts all string characters to lowercase
+  irange = iachar('a') - iachar('A')
+  do i = 1,len_trim(MODEL)
+    if (lge(MODEL(i:i),'A') .and. lle(MODEL(i:i),'Z')) then
+      MODEL(i:i) = achar(iachar(MODEL(i:i)) + irange)
+    endif
+  enddo
+
+  ! determines velocity model
+  select case (trim(MODEL))
+
+  ! default mesh model
+  case ('default')
+    IMODEL = IMODEL_DEFAULT
+
+  ! 1-D models
+  case ('1d_prem')
+    IMODEL = IMODEL_1D_PREM
+  case ('1d_socal')
+    IMODEL = IMODEL_1D_SOCAL
+  case ('1d_cascadia')
+    IMODEL = IMODEL_1D_CASCADIA
+
+  ! user models
+  case ('1d_prem_pb')
+    IMODEL = IMODEL_1D_PREM_PB
+  case ('aniso')
+    IMODEL = IMODEL_DEFAULT
+    ANISOTROPY = .true.
+  case ('external')
+    IMODEL = IMODEL_USER_EXTERNAL
+  case ('ipati')
+    IMODEL = IMODEL_IPATI
+  case ('ipati_water')
+    IMODEL = IMODEL_IPATI_WATER
+  case ('gll')
+    IMODEL = IMODEL_GLL
+  case ('salton_trough')
+    IMODEL = IMODEL_SALTON_TROUGH
+  case ('tomo')
+    IMODEL = IMODEL_TOMO
+  case ('sep')
+    IMODEL = IMODEL_SEP
+    if (trim(SEP_MODEL_DIRECTORY) == '') then
+      stop 'Error using sep model requires defining a SEP_MODEL_DIRECTORY.'
+    endif
+    !inquire(directory=trim(SEP_MODEL_DIRECTORY), exists=sep_dir_exists)
+    !if (.not. sep_dir_exists) then
+    !  stop 'Error: SEP_MODEL_DIRECTORY should exist.'
+    !endif
+  case ('coupled')
+    IMODEL = IMODEL_COUPLED
+  case default
+    print *
+    print *,'********** model not recognized: ',trim(MODEL),' **************'
+    ! requires a valid name
+    stop 'Invalid MODEL name'
+    ! allows to continue with default
+    !print *,'********** using model: default',' **************'
+    !print *
+    !IMODEL = IMODEL_DEFAULT
+  end select
+
+  ! check
+  if (IMODEL == IMODEL_IPATI .or. IMODEL == IMODEL_IPATI_WATER) then
+    if (USE_RICKER_TIME_FUNCTION .eqv. .false.) &
+      stop 'Error for IPATI model, please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
+  endif
+
+  end subroutine read_compute_parameters
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1092,9 +1183,11 @@
   subroutine get_number_of_sources(sources_filename)
 
 ! determines number of sources depending on number of lines in source file
+! (only executed by main process)
 
-  use constants, only: IN_DATA_FILES,HUGEVAL,TINYVAL, &
+  use constants, only: IIN,IN_DATA_FILES,HUGEVAL,TINYVAL, &
     NLINES_PER_CMTSOLUTION_SOURCE,NLINES_PER_FORCESOLUTION_SOURCE
+
   use shared_parameters
 
   implicit none
@@ -1102,22 +1195,44 @@
   character(len=MAX_STRING_LEN),intent(in) :: sources_filename
 
   ! local variables
-  integer                       :: icounter,isource,idummy,ier
-  double precision              :: hdur, minval_hdur
+  integer :: icounter,isource,idummy,ier
+  double precision :: hdur, minval_hdur
   character(len=MAX_STRING_LEN) :: dummystring
 
+  ! initializes
+  NSOURCES = 0
+
+  ! checks if finite fault source
+  open(unit=IIN,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',iostat=ier)
+  if (ier == 0) then
+    HAS_FINITE_FAULT_SOURCE = .true.
+    !write(IMAIN,*) 'provides finite faults'
+    close(IIN)
+  else
+    HAS_FINITE_FAULT_SOURCE = .false.
+  endif
+
+  ! gets number of point sources
   if (USE_FORCE_POINT_SOURCE) then
     ! compute the total number of sources in the FORCESOLUTION file
     ! there are NLINES_PER_FORCESOLUTION_SOURCE lines per source in that file
-    open(unit=21,file=trim(sources_filename),status='old',action='read',iostat=ier)
-    if (ier /= 0) stop 'Error opening FORCESOLUTION file'
+    open(unit=IIN,file=trim(sources_filename),status='old',action='read',iostat=ier)
+    if (ier /= 0) then
+      if (HAS_FINITE_FAULT_SOURCE) then
+        ! no need for FORCESOLUTION file
+        return
+      else
+        stop 'Error opening FORCESOLUTION file'
+      endif
+    endif
+    !write(IMAIN,*) 'provides force solution'
 
     icounter = 0
     do while (ier == 0)
-      read(21,"(a)",iostat=ier) dummystring
+      read(IIN,"(a)",iostat=ier) dummystring
       if (ier == 0) icounter = icounter + 1
     enddo
-    close(21)
+    close(IIN)
 
     if (.not. USE_EXTERNAL_SOURCE_FILE) then
       if (mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0) &
@@ -1133,15 +1248,23 @@
   else
     ! compute the total number of sources in the CMTSOLUTION file
     ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
-    open(unit=21,file=trim(sources_filename),status='old',action='read',iostat=ier)
-    if (ier /= 0) stop 'Error opening CMTSOLUTION file'
+    open(unit=IIN,file=trim(sources_filename),status='old',action='read',iostat=ier)
+    if (ier /= 0) then
+      if (HAS_FINITE_FAULT_SOURCE) then
+        ! no need for CMTSOLUTION file
+        return
+      else
+        stop 'Error opening CMTSOLUTION file'
+      endif
+    endif
+    !write(IMAIN,*) 'provides CMT solution'
 
     icounter = 0
     do while (ier == 0)
-      read(21,"(a)",iostat=ier) dummystring
+      read(IIN,"(a)",iostat=ier) dummystring
       if (ier == 0) icounter = icounter + 1
     enddo
-    close(21)
+    close(IIN)
     if (.not. USE_EXTERNAL_SOURCE_FILE) then
       NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
       if (mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
@@ -1154,35 +1277,35 @@
     if (NSOURCES < 1) stop 'Error need at least one source in CMTSOLUTION file'
 
     ! compute the minimum value of hdur in CMTSOLUTION file
-    open(unit=21,file=trim(sources_filename),status='old',action='read')
+    open(unit=IIN,file=trim(sources_filename),status='old',action='read')
     minval_hdur = HUGEVAL
     do isource = 1,NSOURCES
 
       ! skip other information
       do idummy = 1,3
-        read(21,"(a)") dummystring
+        read(IIN,"(a)") dummystring
       enddo
 
       ! read half duration and compute minimum
-      read(21,"(a)") dummystring
+      read(IIN,"(a)") dummystring
       read(dummystring(15:len_trim(dummystring)),*) hdur
       minval_hdur = min(minval_hdur,hdur)
 
       ! skip other information
       if (.not. USE_EXTERNAL_SOURCE_FILE) then
         do idummy = 1,9
-          read(21,"(a)") dummystring
+          read(IIN,"(a)") dummystring
         enddo
       else
 ! we need to skip 10 lines instead of 9 when USE_EXTERNAL_SOURCE_FILE is .true.
 ! because there is an extra line for source time function file name
         do idummy = 1,10
-          read(21,"(a)") dummystring
+          read(IIN,"(a)") dummystring
         enddo
       endif
 
     enddo
-    close(21)
+    close(IIN)
 
     ! one cannot use a Heaviside source for the movies
     if ((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
@@ -1191,4 +1314,158 @@
 
   end subroutine get_number_of_sources
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
+  subroutine broadcast_computed_parameters()
+
+! broadcasts parameters to all processes
+
+  use constants
+  use shared_parameters
+
+  implicit none
+
+  ! broadcasts setting
+  ! simulation parameters
+  call bcast_all_singlei(SIMULATION_TYPE)
+  call bcast_all_singlei(NOISE_TOMOGRAPHY)
+  call bcast_all_singlel(SAVE_FORWARD)
+
+  call bcast_all_singlel(INVERSE_FWI_FULL_PROBLEM)
+  call bcast_all_singlei(UTM_PROJECTION_ZONE)
+  call bcast_all_singlel(SUPPRESS_UTM_PROJECTION)
+
+  call bcast_all_singlei(NPROC)
+  call bcast_all_singlei(NSTEP)
+  call bcast_all_singledp(DT)
+
+  call bcast_all_singlel(LTS_MODE)
+  call bcast_all_singlei(PARTITIONING_TYPE)
+
+  ! LDDRK
+  call bcast_all_singlel(USE_LDDRK)
+  ! call bcast_all_singlel(INCREASE_CFL_FOR_LDDRK) ! not needed any further
+  ! call bcast_all_singledp(RATIO_BY_WHICH_TO_INCREASE_IT) ! not needed any further
+
+  ! mesh
+  call bcast_all_singlei(NGNOD)
+  call bcast_all_string(MODEL)
+
+  call bcast_all_string(TOMOGRAPHY_PATH)
+  call bcast_all_string(SEP_MODEL_DIRECTORY)
+
+  call bcast_all_singlel(APPROXIMATE_OCEAN_LOAD)
+  call bcast_all_singlel(TOPOGRAPHY)
+  call bcast_all_singlel(ATTENUATION)
+  call bcast_all_singlel(ANISOTROPY)
+  call bcast_all_singlel(GRAVITY)
+
+  call bcast_all_singledp(ATTENUATION_f0_REFERENCE)
+  call bcast_all_singledp(MIN_ATTENUATION_PERIOD)
+  call bcast_all_singledp(MAX_ATTENUATION_PERIOD)
+  call bcast_all_singlel(COMPUTE_FREQ_BAND_AUTOMATIC)
+
+  call bcast_all_singlel(USE_OLSEN_ATTENUATION)
+  call bcast_all_singledp(OLSEN_ATTENUATION_RATIO)
+
+  ! absorbing boundaries
+  call bcast_all_singlel(PML_CONDITIONS)
+  call bcast_all_singlel(PML_INSTEAD_OF_FREE_SURFACE)
+  call bcast_all_singledp(f0_FOR_PML)
+
+  call bcast_all_singlel(STACEY_ABSORBING_CONDITIONS)
+  call bcast_all_singlel(STACEY_INSTEAD_OF_FREE_SURFACE)
+  call bcast_all_singlel(BOTTOM_FREE_SURFACE)
+
+  ! undoing att
+  call bcast_all_singlel(UNDO_ATTENUATION_AND_OR_PML)
+  call bcast_all_singlei(NT_DUMP_ATTENUATION)
+
+  ! visualization
+  call bcast_all_singlel(CREATE_SHAKEMAP)
+  call bcast_all_singlel(MOVIE_SURFACE)
+  call bcast_all_singlei(MOVIE_TYPE)
+  call bcast_all_singlel(MOVIE_VOLUME)
+  call bcast_all_singlel(SAVE_DISPLACEMENT)
+  call bcast_all_singlel(USE_HIGHRES_FOR_MOVIES)
+  call bcast_all_singlei(NTSTEP_BETWEEN_FRAMES)
+  call bcast_all_singledp(HDUR_MOVIE)
+
+  call bcast_all_singlel(SAVE_MESH_FILES)
+  call bcast_all_string(LOCAL_PATH)
+  call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_INFO)
+
+  ! sources
+  call bcast_all_singlel(USE_SOURCES_RECEIVERS_Z)
+  call bcast_all_singlel(USE_FORCE_POINT_SOURCE)
+  call bcast_all_singlel(USE_RICKER_TIME_FUNCTION)
+  call bcast_all_singlel(USE_EXTERNAL_SOURCE_FILE)
+  call bcast_all_singlel(PRINT_SOURCE_TIME_FUNCTION)
+
+  ! seismograms
+  call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+  call bcast_all_singlel(SAVE_SEISMOGRAMS_DISPLACEMENT)
+  call bcast_all_singlel(SAVE_SEISMOGRAMS_VELOCITY)
+  call bcast_all_singlel(SAVE_SEISMOGRAMS_ACCELERATION)
+  call bcast_all_singlel(SAVE_SEISMOGRAMS_PRESSURE)
+  call bcast_all_singlel(SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)
+  call bcast_all_singlei(subsamp_seismos)
+  call bcast_all_singlel(USE_BINARY_FOR_SEISMOGRAMS)
+  call bcast_all_singlel(SU_FORMAT)
+  call bcast_all_singlel(ASDF_FORMAT)
+  call bcast_all_singlel(WRITE_SEISMOGRAMS_BY_MAIN)
+  call bcast_all_singlel(SAVE_ALL_SEISMOS_IN_ONE_FILE)
+  call bcast_all_singlel(USE_TRICK_FOR_BETTER_PRESSURE)
+
+  ! source encoding
+  call bcast_all_singlel(USE_SOURCE_ENCODING)
+
+  ! energy
+  call bcast_all_singlel(OUTPUT_ENERGY)
+  call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_ENERGY)
+
+  ! adjoint kernels
+  call bcast_all_singlei(NTSTEP_BETWEEN_READ_ADJSRC)
+  call bcast_all_singlel(READ_ADJSRC_ASDF)
+  call bcast_all_singlel(ANISOTROPIC_KL)
+  call bcast_all_singlel(SAVE_TRANSVERSE_KL)
+  call bcast_all_singlel(ANISOTROPIC_VELOCITY_KL)
+  call bcast_all_singlel(APPROXIMATE_HESS_KL)
+  call bcast_all_singlel(SAVE_MOHO_MESH)
+
+  ! coupling
+  call bcast_all_singlel(COUPLE_WITH_INJECTION_TECHNIQUE)
+  call bcast_all_singlei(INJECTION_TECHNIQUE_TYPE)
+  call bcast_all_singlel(MESH_A_CHUNK_OF_THE_EARTH)
+  call bcast_all_string(TRACTION_PATH)
+  call bcast_all_string(FKMODEL_FILE)
+  call bcast_all_singlel(RECIPROCITY_AND_KH_INTEGRAL)
+
+  ! simultaneous runs
+  call bcast_all_singlei(NUMBER_OF_SIMULTANEOUS_RUNS)
+  call bcast_all_singlel(BROADCAST_SAME_MESH_AND_MODEL)
+
+  ! GPU
+  call bcast_all_singlel(GPU_MODE)
+
+  ! ADIOS
+  call bcast_all_singlel(ADIOS_ENABLED)
+  call bcast_all_singlel(ADIOS_FOR_DATABASES)
+  call bcast_all_singlel(ADIOS_FOR_MESH)
+  call bcast_all_singlel(ADIOS_FOR_FORWARD_ARRAYS)
+  call bcast_all_singlel(ADIOS_FOR_KERNELS)
+  call bcast_all_singlel(HDF5_ENABLED)
+  call bcast_all_singlei(NIONOD)
+
+  ! broadcast all parameters computed from others
+  call bcast_all_singlei(IMODEL)
+  call bcast_all_singlei(NGNOD2D)
+
+  call bcast_all_singlei(NSOURCES)
+  call bcast_all_singlel(HAS_FINITE_FAULT_SOURCE)
+
+  end subroutine broadcast_computed_parameters
 

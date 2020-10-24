@@ -1,8 +1,34 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                              CNRS, France
+!                       and Princeton University, USA
+!                 (there are currently many more authors!)
+!                           (c) October 2017
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 3 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 module  inversion_scheme
 
-  !! IMPORT VARIABLES FROM SPECFEM -------------------------------------------------------------------------------------------------
+  !! IMPORT VARIABLES FROM SPECFEM
   use specfem_par, only: CUSTOM_REAL, NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, myrank
-  !---------------------------------------------------------------------------------------------------------------------------------
 
   use inverse_problem_par
 
@@ -28,10 +54,11 @@ module  inversion_scheme
 
 contains
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 !--------------------------------------------------------------------------
 !> allocate arrays for inversion
 !-------------------------------------------------------------------------
+
   subroutine AllocateArraysForInversion(inversion_param)
 
     type(inver),                           intent(in)      :: inversion_param
@@ -72,7 +99,10 @@ contains
 
 
   end subroutine AllocateArraysForInversion
+
+
 !----------------------------------------------------------------------------------------------------------------------------------
+
   subroutine DeAllocateArraysForInversion()
 
     deallocate(bfgs_stored_gradient)
@@ -81,7 +111,10 @@ contains
     deallocate(wks_2)
 
   end subroutine DeAllocateArraysForInversion
+
+
 !----------------------------------------------------------------------------------------------------------------------------------
+
   subroutine ComputeDescentDirection(current_iteration, descent_direction, fwi_precond)
 
     real(kind=CUSTOM_REAL),  dimension(:,:,:,:,:),   allocatable, intent(inout)  :: descent_direction, fwi_precond
@@ -104,10 +137,11 @@ contains
 
   end subroutine ComputeDescentDirection
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 !--------------------------------------------------------------------------
 !> l-bfgs generic routine
 !-------------------------------------------------------------------------
+
   subroutine L_BFGS_GENERIC(current_iteration, descent_direction, fwi_precond)
 
     real(kind=CUSTOM_REAL),  dimension(:,:,:,:,:),   allocatable, intent(inout)  :: descent_direction, fwi_precond
@@ -187,7 +221,10 @@ contains
     descent_direction(:,:,:,:,:) = -1._CUSTOM_REAL * descent_direction(:,:,:,:,:)
 
   end subroutine L_BFGS_GENERIC
-  !----------------------------------------------------------------------------------------------------------
+
+
+!----------------------------------------------------------------------------------------------------------
+
   subroutine wolfe_rules(mwl1, mwl2, q0, qt, qp0, vqpt, step_length, td, tg, flag_wolfe)
 
     implicit none
@@ -227,9 +264,12 @@ contains
        if (myrank == 0) write(INVERSE_LOG_FILE,*) '   --- > Wolfe rules :  step too big '
     endif
     if (myrank == 0)  write(INVERSE_LOG_FILE,*)
+
   end subroutine wolfe_rules
 
-  !-------------------------------------------------------------------------------------------------
+
+!-------------------------------------------------------------------------------------------------
+
   subroutine StoreModelAndGradientForLBFGS(models_to_store, gradients_to_store, iteration_to_store)
 
     integer,                                                   intent(in) :: iteration_to_store
@@ -273,7 +313,9 @@ contains
     endif
 
   end subroutine StoreModelAndGradientForLBFGS
-  !---------------------------------------------------------------------------------------------
+
+
+!---------------------------------------------------------------------------------------------
 
   subroutine Parallel_ComputeInnerProduct(vect1, vect2, Niv, qp)
 
@@ -329,8 +371,9 @@ contains
     call sum_all_all_cr(qp_tmp_single, qp)
 
   end subroutine Parallel_ComputeInnerProduct
-  !---------------------------------------------------------------------------------------------
 
+
+!---------------------------------------------------------------------------------------------
 
    subroutine Parallel_ComputeL2normSquare(vect1 , Niv, qp)
 
@@ -375,12 +418,5 @@ contains
      call sum_all_all_cr(qp_tmp, qp)
 
   end subroutine Parallel_ComputeL2normSquare
-  !---------------------------------------------------------------------------------------------
-
-  !---------------------------------------------------------------------------------------------
-  !---------------------------------------------------------------------------------------------
-  !---------------------------------------------------------------------------------------------
-  !---------------------------------------------------------------------------------------------
-  !---------------------------------------------------------------------------------------------
 
 end module inversion_scheme

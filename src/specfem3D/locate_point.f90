@@ -32,11 +32,14 @@
   subroutine locate_point_in_mesh(x_target, y_target, z_target, &
                                   POINT_CAN_BE_BURIED, elemsize_max_glob, &
                                   ispec_selected, xi_found, eta_found, gamma_found, &
-                                  x_found, y_found, z_found, domain, nu, final_distance_squared)
+                                  x_found, y_found, z_found, domain, nu_point, final_distance_squared)
 
   use constants
-  use specfem_par, only: ibool,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
-                         xstore,ystore,zstore,xigll,yigll,zigll,ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
+  use specfem_par, only: ibool,myrank,NSPEC_AB,NGLOB_AB, &
+                         xstore,ystore,zstore, &
+                         ispec_is_surface_external_mesh,iglob_is_surface_external_mesh, &
+                         xyz_midpoints
+
   use specfem_par_acoustic, only: ispec_is_acoustic
   use specfem_par_elastic, only: ispec_is_elastic
   use specfem_par_poroelastic, only: ispec_is_poroelastic
@@ -49,39 +52,34 @@
   double precision,                      intent(in)     :: x_target, y_target, z_target
   logical,                               intent(in)     :: POINT_CAN_BE_BURIED
   real(kind=CUSTOM_REAL),                intent(in)     :: elemsize_max_glob
+
   double precision,                      intent(out)    :: x_found,  y_found,  z_found
   double precision,                      intent(out)    :: xi_found, eta_found, gamma_found
   integer,                               intent(out)    :: ispec_selected, domain
-  double precision, dimension(NDIM,NDIM),intent(out)    :: nu
+  double precision, dimension(NDIM,NDIM),intent(out)    :: nu_point
   double precision,                      intent(out)    :: final_distance_squared
 
   ! locals
-  integer                                               :: iter_loop , ispec, iglob, i, j, k
+  integer :: ispec, iglob, i, j, k
   ! location search
-  double precision                                      :: maximal_elem_size_squared, dist_squared
-  double precision                                      :: distmin_squared
-  double precision                                      :: x,y,z
-  double precision                                      :: xi,eta,gamma,dx,dy,dz,dxi,deta
-  double precision                                      :: xixs,xiys,xizs
-  double precision                                      :: etaxs,etays,etazs
-  double precision                                      :: gammaxs,gammays,gammazs, dgamma
-  ! coordinates of the control points of the surface element
-  double precision, dimension(NGNOD)                    :: xelm,yelm,zelm
-  integer                                               :: ia,iax,iay,iaz
-  integer                                               :: ix_initial_guess, iy_initial_guess, iz_initial_guess
-  integer, dimension(NGNOD)                             :: iaddx,iaddy,iaddz
-  integer                                               :: imin,imax,jmin,jmax,kmin,kmax
-
+  double precision :: maximal_elem_size_squared, dist_squared
+  double precision :: distmin_squared
   double precision :: final_distance_squared_this_element
+  double precision :: x,y,z
+  double precision :: xi,eta,gamma
+
+  integer :: ix_initial_guess, iy_initial_guess, iz_initial_guess
+  integer :: imin,imax,jmin,jmax,kmin,kmax
 
 !! DK DK dec 2017: also loop on all the elements in contact with the initial guess element to improve accuracy of estimate
-  logical, dimension(NGLOB_AB) :: flag_topological
+  logical, dimension(:),allocatable :: flag_topological    ! making array allocatable, otherwise will crash for large meshes
   integer :: number_of_mesh_elements_for_the_initial_guess
   logical :: use_adjacent_elements_search
 
 ! dynamic array
 !  integer, dimension(:), allocatable :: array_of_all_elements_of_ispec_selected
 !  logical, parameter :: USE_SINGLE_PASS = .false.
+!
 ! static array, max size is 50 (typically found around 18 to 24 elements)
   integer, dimension(50) :: array_of_all_elements_of_ispec_selected   ! 15% faster
   logical, parameter :: USE_SINGLE_PASS = .true.
@@ -93,6 +91,10 @@
   ! search elements
   integer :: ielem,num_elem_local,ier,ispec_nearest
   logical :: use_brute_force_search
+  logical :: is_better_location
+
+  !debug
+  !print *,'locate point in mesh: ',x_target, y_target, z_target
 
   ! sets maximal element size for search
   ! use 10 times the distance as a criterion for source detection
@@ -126,9 +128,13 @@
     xyz_target(2) = y_target
     xyz_target(3) = z_target
 
+    !debug
+    !print *,'find nearest neighbor',xyz_target
+
     ! finds closest element in slice
     call kdtree_find_nearest_neighbor(xyz_target,ispec_nearest,dist_nearest)
-    ! debug
+
+    !debug
     !print *,'closest element',ispec_nearest,'distance = ',dist_nearest
 
     ! single element for first detection loop
@@ -140,12 +146,12 @@
 !! DK DK dec 2017 changed this
   ! ! set which GLL points will be considered during research, depending on the possibility to bury the point or not
   ! if (.not. POINT_CAN_BE_BURIED) then
-    imin  = 1
-    imax  = NGLLX
-    jmin  = 1
-    jmax  = NGLLY
-    kmin  = 1
-    kmax  = NGLLZ
+  imin  = 1
+  imax  = NGLLX
+  jmin  = 1
+  jmax  = NGLLY
+  kmin  = 1
+  kmax  = NGLLZ
   ! else
   !   imin  = 2
   !   imax  = NGLLX-1
@@ -171,10 +177,9 @@
     if (.not. POINT_CAN_BE_BURIED .and. .not. ispec_is_surface_external_mesh(ispec)) cycle
 
     ! distance to element midpoint
-    iglob = ibool(MIDX,MIDY,MIDZ,ispec)
-    dist_squared = (x_target - dble(xstore(iglob)))**2 &
-                 + (y_target - dble(ystore(iglob)))**2 &
-                 + (z_target - dble(zstore(iglob)))**2
+    dist_squared = (x_target - xyz_midpoints(1,ispec))*(x_target - xyz_midpoints(1,ispec)) &
+                 + (y_target - xyz_midpoints(2,ispec))*(y_target - xyz_midpoints(2,ispec)) &
+                 + (z_target - xyz_midpoints(3,ispec))*(z_target - xyz_midpoints(3,ispec))
 
     ! we compare squared distances instead of distances to speed up the comparison by avoiding computing a square root
     if (dist_squared > maximal_elem_size_squared) cycle ! exclude elements that are too far from target
@@ -188,10 +193,14 @@
           ! skip inner GLL points in case station must lie on surface
           if (.not. POINT_CAN_BE_BURIED .and. .not. iglob_is_surface_external_mesh(iglob)) cycle
 
+          x = dble(xstore(iglob))
+          y = dble(ystore(iglob))
+          z = dble(zstore(iglob))
+
           ! distance to GLL point
-          dist_squared = (x_target - dble(xstore(iglob)))**2 &
-                       + (y_target - dble(ystore(iglob)))**2 &
-                       + (z_target - dble(zstore(iglob)))**2
+          dist_squared = (x_target - x)*(x_target - x) &
+                       + (y_target - y)*(y_target - y) &
+                       + (z_target - z)*(z_target - z)
 
           if (dist_squared < distmin_squared) then
             distmin_squared = dist_squared
@@ -200,9 +209,9 @@
             iy_initial_guess = j
             iz_initial_guess = k
 
-            x_found = xstore(iglob)
-            y_found = ystore(iglob)
-            z_found = zstore(iglob)
+            x_found = x
+            y_found = y
+            z_found = z
           endif
 
         enddo
@@ -212,8 +221,23 @@
   enddo
 
   ! get the rotation matrix that will be used to rotate
+  ! initializes rotation matrix
+  ! East
+  nu_point(1,1) = 1.d0
+  nu_point(1,2) = 0.d0
+  nu_point(1,3) = 0.d0
+  ! North
+  nu_point(2,1) = 0.d0
+  nu_point(2,2) = 1.d0
+  nu_point(2,3) = 0.d0
+  ! Vertical
+  nu_point(3,1) = 0.d0
+  nu_point(3,2) = 0.d0
+  nu_point(3,3) = 1.d0
   ! -- source force vector/receiver seismogram -- if the point is on the surface
-  call define_station_rotation_matrix(POINT_CAN_BE_BURIED,ix_initial_guess,iy_initial_guess,iz_initial_guess,ispec_selected,nu)
+  call define_station_rotation_matrix(POINT_CAN_BE_BURIED, &
+                                      ix_initial_guess,iy_initial_guess,iz_initial_guess, &
+                                      ispec_selected,nu_point)
 
   ! checks if initial guess lies on an element boundary
   if ((ix_initial_guess == 1 .or. ix_initial_guess == NGLLX) .or. &
@@ -296,6 +320,8 @@
     endif
 
     ! flagging corners
+    allocate(flag_topological(NGLOB_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating flag_topological array'
     flag_topological(:) = .false.
 
     ! mark the eight corners of the initial guess element
@@ -340,14 +366,18 @@
                 if (number_of_mesh_elements_for_the_initial_guess > 100) stop 'Error must increase array size in locate_point.f90'
 
                 array_of_all_elements_of_ispec_selected(number_of_mesh_elements_for_the_initial_guess) = ispec
+
                 ! let us not count it more than once, it may have a full edge in contact with it and would then be counted twice
                 goto 707
+
               endif
             enddo
           enddo
         enddo
-        707 continue
-      enddo
+
+707     continue
+
+      enddo ! ielem
 
     else
       ! note: this involves 2-passes over all elements and dynamic memory allocation
@@ -373,14 +403,19 @@
               if (flag_topological(ibool(i,j,k,ispec))) then
                 ! this element is in contact with the initial guess
                 number_of_mesh_elements_for_the_initial_guess = number_of_mesh_elements_for_the_initial_guess + 1
+
                 ! let us not count it more than once, it may have a full edge in contact with it and would then be counted twice
                 goto 700
+
               endif
             enddo
           enddo
         enddo
-        700 continue
-      enddo
+
+700     continue
+
+      enddo ! ielem
+
       ! debug
       !print *,'number_of_mesh_elements_for_the_initial_guess = ',number_of_mesh_elements_for_the_initial_guess
 
@@ -411,15 +446,19 @@
                 ! this element is in contact with the initial guess
                 number_of_mesh_elements_for_the_initial_guess = number_of_mesh_elements_for_the_initial_guess + 1
                 array_of_all_elements_of_ispec_selected(number_of_mesh_elements_for_the_initial_guess) = ispec
+
                 ! let us not count it more than once, it may have a full edge in contact with it and would then be counted twice
                 goto 800
+
               endif
             enddo
           enddo
         enddo
-        800 continue
-      enddo
-    endif
+
+800     continue
+
+      enddo ! ielem
+    endif ! USE_SINGLE_PASS
 
     ! debug
     !print *,'adjacent elements ',number_of_mesh_elements_for_the_initial_guess
@@ -432,14 +471,13 @@
       endif
     endif
 
+    deallocate(flag_topological)
+
   else
     ! no need for adjacent element, only loop within initial guess
     number_of_mesh_elements_for_the_initial_guess = 1
     array_of_all_elements_of_ispec_selected(1) = ispec_selected
   endif
-
-  ! define topology of the control element
-  call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
 
 !! DK DK dec 2017
   final_distance_squared = HUGEVAL
@@ -449,115 +487,60 @@
 !! DK DK dec 2017 set initial guess in the middle of the element, since we computed the true one only for the true initial guess
 !! DK DK dec 2017 the nonlinear process below will converge anyway
     if (i > 1) then
-      ix_initial_guess = (NGLLX+1) / 2
-      iy_initial_guess = (NGLLY+1) / 2
-      iz_initial_guess = (NGLLZ+1) / 2
+      ix_initial_guess = MIDX
+      iy_initial_guess = MIDY
+      iz_initial_guess = MIDZ
     endif
 
     ispec = array_of_all_elements_of_ispec_selected(i)
 
-    ! general coordinate of initial guess
-    xi    = xigll(ix_initial_guess)
-    eta   = yigll(iy_initial_guess)
-    gamma = zigll(iz_initial_guess)
-
-    ! define coordinates of the control points of the element
-    do ia = 1,NGNOD
-       iax = 0
-       iay = 0
-       iaz = 0
-       if (iaddx(ia) == 0) then
-          iax = 1
-       else if (iaddx(ia) == 1) then
-          iax = (NGLLX+1)/2
-       else if (iaddx(ia) == 2) then
-          iax = NGLLX
-       else
-          call exit_MPI(myrank,'incorrect value of iaddx')
-       endif
-
-       if (iaddy(ia) == 0) then
-          iay = 1
-       else if (iaddy(ia) == 1) then
-          iay = (NGLLY+1)/2
-       else if (iaddy(ia) == 2) then
-          iay = NGLLY
-       else
-          call exit_MPI(myrank,'incorrect value of iaddy')
-       endif
-
-       if (iaddz(ia) == 0) then
-          iaz = 1
-       else if (iaddz(ia) == 1) then
-          iaz = (NGLLZ+1)/2
-       else if (iaddz(ia) == 2) then
-          iaz = NGLLZ
-       else
-          call exit_MPI(myrank,'incorrect value of iaddz')
-       endif
-
-       iglob = ibool(iax,iay,iaz,ispec)
-       xelm(ia) = dble(xstore(iglob))
-       yelm(ia) = dble(ystore(iglob))
-       zelm(ia) = dble(zstore(iglob))
-    enddo
-
-    ! iterate to solve the non linear system
-    do iter_loop = 1, NUM_ITER
-
-      ! recompute jacobian for the new point
-      call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-                              xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
-
-      ! compute distance to target location
-      dx = - (x - x_target)
-      dy = - (y - y_target)
-      dz = - (z - z_target)
-
-      ! compute increments
-      dxi  = xixs*dx + xiys*dy + xizs*dz
-      deta = etaxs*dx + etays*dy + etazs*dz
-      dgamma = gammaxs*dx + gammays*dy + gammazs*dz
-
-      ! update values
-      xi = xi + dxi
-      eta = eta + deta
-      gamma = gamma + dgamma
-
-      ! impose that we stay in that element
-      ! (useful if user gives a point outside the mesh for instance)
-      if (xi > 1.01d0) xi     =  1.01d0
-      if (xi < -1.01d0) xi     = -1.01d0
-      if (eta > 1.01d0) eta    =  1.01d0
-      if (eta < -1.01d0) eta    = -1.01d0
-      if (gamma > 1.01d0) gamma  =  1.01d0
-      if (gamma < -1.01d0) gamma  = -1.01d0
-
-    enddo
-
-    ! compute final coordinates of point found
-    call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-                            xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
+    ! gets xi/eta/gamma and corresponding x/y/z coordinates
+    call find_local_coordinates(x_target,y_target,z_target,xi,eta,gamma,x,y,z, &
+                                ispec,ix_initial_guess,iy_initial_guess,iz_initial_guess)
 
     ! compute final distance squared between asked and found
-    final_distance_squared_this_element = (x_target-x)**2 + (y_target-y)**2 + (z_target-z)**2
+    final_distance_squared_this_element = (x_target-x)*(x_target-x) + (y_target-y)*(y_target-y) + (z_target-z)*(z_target-z)
 
     ! if we have found an element that gives a shorter distance
     if (final_distance_squared_this_element < final_distance_squared) then
+
+      ! check if location is better in case almost similar distances
+      ! since we allow xi/eta/gamma to go a bit outside of the element range [-1.01,1.01],
+      ! we keep the element where xi/eta/gamma is still within element
+      !
+      ! note: this can avoid problems when points on interfaces, say between acoustic/elastic, have been choosen.
+      !       the point search takes whatever element comes last with a best position, even if the point
+      !       has been located slightly away from the element. thus, we try to check if the previous location
+      !       was accurate enough with coordinates still within an element.
+      is_better_location = .true.
+      if (abs(final_distance_squared_this_element - final_distance_squared) < 1.d-15) then
+        if (abs(xi) > 1.d0 .or. abs(eta) > 1.d0 .or. abs(gamma) > 1.d0) then
+          if (abs(xi_found) > 1.d0 .or. abs(eta_found) > 1.d0 .or. abs(gamma_found) > 1.d0) then
+            ! old position is also out of element, let's take the new one
+            is_better_location = .true.
+          else
+            ! old position is still within element and new distance has only little improved, so keep old one
+            is_better_location = .false.
+          endif
+        endif
+      endif
+
       ! store information about the point found
-      ! note: xi/eta/gamma will be in range [-1,1]
-      ispec_selected = ispec
+      if (is_better_location) then
+        ! note: xi/eta/gamma will be in range [-1,1]
+        ispec_selected = ispec
 
-      xi_found = xi
-      eta_found = eta
-      gamma_found = gamma
+        xi_found = xi
+        eta_found = eta
+        gamma_found = gamma
 
-      x_found = x
-      y_found = y
-      z_found = z
+        x_found = x
+        y_found = y
+        z_found = z
 
-      !   store final distance squared between asked and found
-      final_distance_squared = final_distance_squared_this_element
+        !   store final distance squared between asked and found
+        final_distance_squared = final_distance_squared_this_element
+      endif
     endif
 
 !! DK DK dec 2017
@@ -578,20 +561,145 @@
 
   end subroutine locate_point_in_mesh
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine find_local_coordinates(x_target,y_target,z_target,xi,eta,gamma,x,y,z, &
+                                    ispec,ix_initial_guess,iy_initial_guess,iz_initial_guess)
+
+  use constants, only: HUGEVAL,NUM_ITER
+  use specfem_par, only: xstore,ystore,zstore,ibool,NGNOD,anchor_iax,anchor_iay,anchor_iaz, &
+                         xigll,yigll,zigll
+
+  implicit none
+
+  double precision,intent(in) :: x_target,y_target,z_target
+  double precision,intent(out) :: xi,eta,gamma
+  double precision,intent(out) :: x,y,z
+
+  integer,intent(in) :: ispec,ix_initial_guess,iy_initial_guess,iz_initial_guess
+
+  ! local parameters
+  integer :: ia,iter_loop
+  integer :: iglob
+
+  ! coordinates of the control points of the surface element
+  double precision :: xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
+
+  double precision :: dx,dy,dz,dx_min,dy_min,dz_min,d_min_sq
+  double precision :: dxi,deta,dgamma
+  double precision :: xix,xiy,xiz
+  double precision :: etax,etay,etaz
+  double precision :: gammax,gammay,gammaz
+
+  ! define coordinates of the control points of the element
+  do ia = 1,NGNOD
+    iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+    xelm(ia) = dble(xstore(iglob))
+    yelm(ia) = dble(ystore(iglob))
+    zelm(ia) = dble(zstore(iglob))
+  enddo
+
+  ! use initial guess in xi and eta
+  xi = xigll(ix_initial_guess)
+  eta = yigll(iy_initial_guess)
+  gamma = zigll(iz_initial_guess)
+
+  d_min_sq = HUGEVAL
+  dx_min = HUGEVAL
+  dy_min = HUGEVAL
+  dz_min = HUGEVAL
+
+  ! iterate to solve the non linear system
+  do iter_loop = 1,NUM_ITER
+
+    ! recompute Jacobian for the new point
+    call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
+                            xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
+
+    ! compute distance to target location
+    dx = - (x - x_target)
+    dy = - (y - y_target)
+    dz = - (z - z_target)
+
+    !debug
+    !print *,'  iter ',iter_loop,'dx',sngl(dx),sngl(dx_min),'dy',sngl(dy),sngl(dy_min),'dz',sngl(dz),sngl(dz_min),d_min_sq
+
+    ! compute increments
+    if ((dx**2 + dy**2 + dz**2) < d_min_sq) then
+      d_min_sq = dx**2 + dy**2 + dz**2
+      dx_min = dx
+      dy_min = dy
+      dz_min = dz
+
+      dxi = xix*dx + xiy*dy + xiz*dz
+      deta = etax*dx + etay*dy + etaz*dz
+      dgamma = gammax*dx + gammay*dy + gammaz*dz
+    else
+      ! new position is worse than old one, no change necessary
+      dxi = 0.d0
+      deta = 0.d0
+      dgamma = 0.d0
+    endif
+
+    ! decreases step length if step is large
+    if ((dxi**2 + deta**2 + dgamma**2) > 1.0d0) then
+      dxi = dxi * 0.33333333333d0
+      deta = deta * 0.33333333333d0
+      dgamma = dgamma * 0.33333333333d0
+    endif
+    ! alternative: impose limit on increments (seems to result in slightly less accurate locations)
+    !if (abs(dxi) > 0.3d0 ) dxi = sign(1.0d0,dxi)*0.3d0
+    !if (abs(deta) > 0.3d0 ) deta = sign(1.0d0,deta)*0.3d0
+    !if (abs(dgamma) > 0.3d0 ) dgamma = sign(1.0d0,dgamma)*0.3d0
+
+    !debug
+    !print *,'  dxi/..',(dxi**2 + deta**2 + dgamma**2),dxi,deta,dgamma
+
+    ! update values
+    xi = xi + dxi
+    eta = eta + deta
+    gamma = gamma + dgamma
+
+    ! impose that we stay in that element
+    ! (useful if user gives a receiver outside the mesh for instance)
+    ! we can go slightly outside the [1,1] segment since with finite elements
+    ! the polynomial solution is defined everywhere
+    ! can be useful for convergence of iterative scheme with distorted elements
+    !
+    ! note: we are more conservative here than in the 3D_GLOBE version, since the mesh can have voids or complex shapes,
+    !       and we want the point location not to be too far off the mesh volume
+    if (xi > 1.01d0) xi     =  1.01d0
+    if (xi < -1.01d0) xi     = -1.01d0
+    if (eta > 1.01d0) eta    =  1.01d0
+    if (eta < -1.01d0) eta    = -1.01d0
+    if (gamma > 1.01d0) gamma  =  1.01d0
+    if (gamma < -1.01d0) gamma  = -1.01d0
+
+  ! end of non linear iterations
+  enddo
+
+  ! compute final coordinates of point found
+  call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
+
+  end subroutine find_local_coordinates
+
 
 !--------------------------------------------------------------------------------------------------------------------
 !  Define the rotation matrix in the selected point
 !--------------------------------------------------------------------------------------------------------------------
 
   subroutine define_station_rotation_matrix(POINT_CAN_BE_BURIED,ix_initial_guess,iy_initial_guess,iz_initial_guess, &
-                                            ispec_selected,nu)
+                                            ispec_selected,nu_point)
 
   use constants
   use specfem_par, only: ibool,xstore,ystore,zstore,iglob_is_surface_external_mesh
 
   logical,                                intent(in)  :: POINT_CAN_BE_BURIED
   integer,                                intent(in)  :: ix_initial_guess,iy_initial_guess,iz_initial_guess,ispec_selected
-  double precision, dimension(NDIM,NDIM), intent(out) :: nu
+  double precision, dimension(NDIM,NDIM), intent(inout) :: nu_point
 
   ! local parameters
   ! for surface locating and normal computing with external mesh
@@ -599,24 +707,26 @@
   integer                                 :: pt0_ix,pt0_iy,pt0_iz,pt1_ix,pt1_iy,pt1_iz,pt2_ix,pt2_iy,pt2_iz
 
   ! Rotation matrix is diagonal if the point is inside the mesh, or if decided by user
-  if ( POINT_CAN_BE_BURIED .or. (.not. EXTERNAL_MESH_RECEIVERS_NORMAL) .or. (ispec_selected == 1) ) then
-
-    !     East
-    nu(1,1) = 1.d0
-    nu(1,2) = 0.d0
-    nu(1,3) = 0.d0
-    !     North
-    nu(2,1) = 0.d0
-    nu(2,2) = 1.d0
-    nu(2,3) = 0.d0
-    !     Vertical
-    nu(3,1) = 0.d0
-    nu(3,2) = 0.d0
-    nu(3,3) = 1.d0
+  if (POINT_CAN_BE_BURIED .or. (.not. EXTERNAL_MESH_RECEIVERS_NORMAL)) then
+    ! East
+    nu_point(1,1) = 1.d0
+    nu_point(1,2) = 0.d0
+    nu_point(1,3) = 0.d0
+    ! North
+    nu_point(2,1) = 0.d0
+    nu_point(2,2) = 1.d0
+    nu_point(2,3) = 0.d0
+    ! Vertical
+    nu_point(3,1) = 0.d0
+    nu_point(3,2) = 0.d0
+    nu_point(3,3) = 1.d0
 
   else
+    ! note: the following computes the normal at the corner of the element.
+    !       this normal is still fine for linear elements, however, for quadratic elements (NGNOD == 27)
+    !       there might be slight differences to the actual normal at the target point.
 
-    ! get normal to the face of the hexaedra if receiver is on the surface
+    ! get normal to the face of the hexahedra if receiver is on the surface
     pt0_ix = -1
     pt0_iy = -1
     pt0_iz = -1
@@ -627,8 +737,7 @@
     pt2_iy = -1
     pt2_iz = -1
     ! we get two vectors of the face (three points) to compute the normal
-    if (ix_initial_guess == 1 .and. &
-       iglob_is_surface_external_mesh(ibool(1,2,2,ispec_selected))) then
+    if (ix_initial_guess == 1 .and. iglob_is_surface_external_mesh(ibool(1,2,2,ispec_selected))) then
       pt0_ix = 1
       pt0_iy = NGLLY
       pt0_iz = 1
@@ -639,8 +748,7 @@
       pt2_iy = NGLLY
       pt2_iz = NGLLZ
     endif
-    if (ix_initial_guess == NGLLX .and. &
-       iglob_is_surface_external_mesh(ibool(NGLLX,2,2,ispec_selected))) then
+    if (ix_initial_guess == NGLLX .and. iglob_is_surface_external_mesh(ibool(NGLLX,2,2,ispec_selected))) then
       pt0_ix = NGLLX
       pt0_iy = 1
       pt0_iz = 1
@@ -651,8 +759,8 @@
       pt2_iy = 1
       pt2_iz = NGLLZ
     endif
-    if (iy_initial_guess == 1 .and. &
-       iglob_is_surface_external_mesh(ibool(2,1,2,ispec_selected))) then
+
+    if (iy_initial_guess == 1 .and. iglob_is_surface_external_mesh(ibool(2,1,2,ispec_selected))) then
       pt0_ix = 1
       pt0_iy = 1
       pt0_iz = 1
@@ -663,8 +771,7 @@
       pt2_iy = 1
       pt2_iz = NGLLZ
     endif
-    if (iy_initial_guess == NGLLY .and. &
-       iglob_is_surface_external_mesh(ibool(2,NGLLY,2,ispec_selected))) then
+    if (iy_initial_guess == NGLLY .and. iglob_is_surface_external_mesh(ibool(2,NGLLY,2,ispec_selected))) then
       pt0_ix = NGLLX
       pt0_iy = NGLLY
       pt0_iz = 1
@@ -675,8 +782,8 @@
       pt2_iy = NGLLY
       pt2_iz = NGLLZ
     endif
-    if (iz_initial_guess == 1 .and. &
-       iglob_is_surface_external_mesh(ibool(2,2,1,ispec_selected))) then
+
+    if (iz_initial_guess == 1 .and. iglob_is_surface_external_mesh(ibool(2,2,1,ispec_selected))) then
       pt0_ix = NGLLX
       pt0_iy = 1
       pt0_iz = 1
@@ -687,8 +794,7 @@
       pt2_iy = NGLLY
       pt2_iz = 1
     endif
-    if (iz_initial_guess == NGLLZ .and. &
-       iglob_is_surface_external_mesh(ibool(2,2,NGLLZ,ispec_selected))) then
+    if (iz_initial_guess == NGLLZ .and. iglob_is_surface_external_mesh(ibool(2,2,NGLLZ,ispec_selected))) then
       pt0_ix = 1
       pt0_iy = 1
       pt0_iz = NGLLZ
@@ -712,6 +818,7 @@
                 - ystore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected))
     u_vector(3) = zstore(ibool(pt1_ix,pt1_iy,pt1_iz,ispec_selected)) &
                 - zstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected))
+
     v_vector(1) = xstore(ibool(pt2_ix,pt2_iy,pt2_iz,ispec_selected)) &
                 - xstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected))
     v_vector(2) = ystore(ibool(pt2_ix,pt2_iy,pt2_iz,ispec_selected)) &
@@ -734,18 +841,18 @@
     v_vector(3) = w_vector(1)*u_vector(2) - w_vector(2)*u_vector(1)
 
     ! build rotation matrice nu
-    !     East (u)
-    nu(1,1) = u_vector(1)
-    nu(1,2) = v_vector(1)
-    nu(1,3) = w_vector(1)
-    !     North (v)
-    nu(2,1) = u_vector(2)
-    nu(2,2) = v_vector(2)
-    nu(2,3) = w_vector(2)
-    !     Vertical (w)
-    nu(3,1) = u_vector(3)
-    nu(3,2) = v_vector(3)
-    nu(3,3) = w_vector(3)
+    ! East (u)
+    nu_point(1,1) = u_vector(1)
+    nu_point(1,2) = v_vector(1)
+    nu_point(1,3) = w_vector(1)
+    ! North (v)
+    nu_point(2,1) = u_vector(2)
+    nu_point(2,2) = v_vector(2)
+    nu_point(2,3) = w_vector(2)
+    ! Vertical (w)
+    nu_point(3,1) = u_vector(3)
+    nu_point(3,2) = v_vector(3)
+    nu_point(3,3) = w_vector(3)
 
   endif
 

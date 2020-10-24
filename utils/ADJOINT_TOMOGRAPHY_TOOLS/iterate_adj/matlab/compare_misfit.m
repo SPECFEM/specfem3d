@@ -118,10 +118,10 @@ for ii=1:nevent
     if ~isempty(itemp)
         ievent_full(ii) = itemp;
     else
-        error(['event ' eids{ii} ' is not on the master list']);
+        error(['event ' eids{ii} ' is not on the main list']);
     end
 end
-disp('all input EIDs matched to the master list');
+disp('all input EIDs matched to the main list');
 
 %-----------------------
 % read in stations file (used for synthetics)

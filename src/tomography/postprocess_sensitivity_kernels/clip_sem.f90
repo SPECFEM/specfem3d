@@ -72,7 +72,7 @@ program clip_sem
   character(len=MAX_STRING_LEN) :: arg(NARGS)
   integer :: ier, iker,nker,i,j,k,ispec
 
-  character(len=MAX_STRING_LEN) :: kernel_names(MAX_KERNEL_NAMES)
+  character(len=MAX_STRING_LEN),dimension(:),allocatable :: kernel_names
   character(len=MAX_STRING_LEN) :: kernel_names_comma_delimited, kernel_name
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sem_array
@@ -101,6 +101,11 @@ program clip_sem
     call synchronize_all()
   endif
 
+  ! allocates array
+  allocate(kernel_names(MAX_KERNEL_NAMES),stat=ier)
+  if (ier /= 0) stop 'Error allocating kernel_names array'
+  kernel_names(:) = ''
+
   ! parse command line arguments
   do i = 1, NARGS
     call get_command_argument(i,arg(i), status=ier)
@@ -117,7 +122,7 @@ program clip_sem
 
   ! read simulation parameters
   BROADCAST_AFTER_READ = .true.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   ! checks number of MPI processes
   if (sizeprocs /= NPROC) then

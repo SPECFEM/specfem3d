@@ -1,3 +1,30 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                              CNRS, France
+!                       and Princeton University, USA
+!                 (there are currently many more authors!)
+!                           (c) October 2017
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 3 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
 !###################################################################################################################################
 !                                                                                                                                  !
 !                                                                                                                                  !
@@ -47,7 +74,7 @@ module input_output
   implicit none
 
   PUBLIC  :: init_input_output_mod, SetUpInversion, get_mode_running, dump_adjoint_sources, write_bin_sismo_on_disk, &
-             WirteOutputs
+             WriteOutputs
 
   PRIVATE :: read_acqui_file, read_inver_file, store_default_acqui_values, is_blank_line,& !bcast_all_acqui, &
              get_stations, read_data_gather, create_name_database_inversion, read_and_distribute_events_for_simultaneous_runs
@@ -402,7 +429,7 @@ contains
 !--------------------------------------------------------------------------------------------------------------------
 !  ! write final outputs model in disk
 !--------------------------------------------------------------------------------------------------------------------
-  subroutine WirteOutputs(inversion_param)
+  subroutine WriteOutputs(inversion_param)
 
     type(inver),                                                intent(in)    :: inversion_param
 
@@ -413,7 +440,7 @@ contains
     call WriteOuptutSEMmodel(inversion_param)
 
 
-  end subroutine WirteOutputs
+  end subroutine WriteOutputs
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
 !  ! get which option we want to run FWI or just direct problem
@@ -422,7 +449,7 @@ contains
 
     use my_mpi
     use specfem_par, only: myrank
-    include "precision.h"
+    !include "precision.h"
 
     type(inver),                                    intent(inout) :: inversion_param
     character(len=MAX_LEN_STRING),                  intent(inout) :: mode_running
@@ -473,7 +500,7 @@ contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------
-! master write adjoint sources gather to check
+! main write adjoint sources gather to check
 !----------------------------------------------------------------
 
   subroutine dump_adjoint_sources(iter, ievent, acqui_simu, myrank)
@@ -495,7 +522,7 @@ contains
   end subroutine dump_adjoint_sources
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------
-! master write synthetics gather to check
+! main write synthetics gather to check
 !----------------------------------------------------------------
   subroutine dump_seismograms(iter, ievent, array_to_write,  acqui_simu, myrank)
 
@@ -517,7 +544,7 @@ contains
   end subroutine dump_seismograms
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------
-! master write synthetics gather to check
+! main write synthetics gather to check
 !----------------------------------------------------------------
   subroutine dump_filtered_data(iter, ievent, array_to_write,  acqui_simu, myrank)
 
@@ -539,7 +566,7 @@ contains
   end subroutine dump_filtered_data
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------
-! master write waveform synthetic data gather (need to choose between write_bin_sismo_on_disk or write_gather_on_disk)
+! main write waveform synthetic data gather (need to choose between write_bin_sismo_on_disk or write_gather_on_disk)
 !----------------------------------------------------------------
   subroutine write_bin_sismo_on_disk(ievent, acqui_simu, array_to_write, name_file_to_write, myrank)
 
@@ -670,7 +697,7 @@ contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------
-! master read waveform data gather and bcast to MPI slice concerned
+! main read waveform data gather and bcast to MPI slice concerned
 !----------------------------------------------------------------
   subroutine read_data_gather(acqui_simu, myrank)
 
@@ -845,7 +872,7 @@ contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------
-! master read waveform data gather and bcast to MPI slice concerned
+! main read waveform data gather and bcast to MPI slice concerned
 !----------------------------------------------------------------
   subroutine read_pif_data_gather(acqui_simu, inversion_param, myrank)
 
@@ -1345,7 +1372,7 @@ contains
       write(INVERSE_LOG_FILE,*)
     endif
 
-    ! only master reads acqui file
+    ! only main reads acqui file
     if (myrank == 0) then
 
       !! 1/ read to count the number of events
@@ -1474,7 +1501,7 @@ contains
       write(INVERSE_LOG_FILE,*) '     READING acquisition passed '
     endif
 
-    ! master broadcasts read values
+    ! main broadcasts read values
     call MPI_BCAST(NEVENT,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
     if (myrank > 0) then
       allocate(acqui_simu(NEVENT),stat=ier)
@@ -1517,7 +1544,7 @@ contains
     character(len=MAX_LEN_STRING)                              :: line, keyw
     integer                                                    :: ipos0,ipos1,ier
 
-    ! only master reads inver_file
+    ! only main reads inver_file
     if (myrank == 0) then
 
        open(666, file=trim(inver_file))
@@ -1686,7 +1713,7 @@ contains
      inversion_param%dump_descent_direction_at_each_iteration=.true.
    endif
 
-   ! master broadcasts read values
+   ! main broadcasts read values
    call MPI_BCAST(inversion_param%Niter,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%Niter_wolfe,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%max_history_bfgs,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
@@ -1839,7 +1866,8 @@ contains
        endif
 
        call station_filter(rec_filename,filtered_rec_filename,nsta)
-       acqui_simu(ievent)%nsta_tot=nsta
+       acqui_simu(ievent)%nsta_tot = nsta
+
        allocate(acqui_simu(ievent)%station_name(nsta),acqui_simu(ievent)%network_name(nsta),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 440')
        allocate(acqui_simu(ievent)%position_station(3,nsta),stat=ier)
@@ -1856,14 +1884,15 @@ contains
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 446')
        allocate(acqui_simu(ievent)%number_receiver_global(nsta),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 447')
-       allocate(acqui_simu(ievent)%nu(NDIM,NDIM,nsta),stat=ier)
+       allocate(acqui_simu(ievent)%nu_rec(NDIM,NDIM,nsta),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 448')
 
        ! reads STATIONS_FILTERED file, locates receivers in the mesh and compute Lagrange interpolators
        call locate_receivers(filtered_rec_filename,nsta,acqui_simu(ievent)%islice_selected_rec, &
                              acqui_simu(ievent)%ispec_selected_rec, &
                              acqui_simu(ievent)%xi_rec,acqui_simu(ievent)%eta_rec,acqui_simu(ievent)%gamma_rec, &
-                             acqui_simu(ievent)%station_name,acqui_simu(ievent)%network_name,acqui_simu(ievent)%nu,1.0d0,1.0d0)
+                             acqui_simu(ievent)%station_name,acqui_simu(ievent)%network_name,acqui_simu(ievent)%nu_rec, &
+                             1.0d0,1.0d0)
        nrec_loc = 0
        do irec = 1, nsta
          if (myrank == acqui_simu(ievent)%islice_selected_rec(irec)) then
@@ -2091,7 +2120,7 @@ contains
           if (USE_FORCE_POINT_SOURCE) then
             ! point forces
             if (myrank == 0) then
-              ! only master process reads in FORCESOLUTION file
+              ! only main process reads in FORCESOLUTION file
               call get_force(filename,acqui_simu(ievent)%tshift,acqui_simu(ievent)%hdur, &
                              lat,long,depth,NSOURCES,min_tshift,factor_force_source, &
                              Fx,Fy,Fz,acqui_simu(ievent)%user_source_time_function)
@@ -2104,7 +2133,7 @@ contains
           else
             ! CMT moment tensors
             if (myrank == 0) then
-              ! only master process reads in CMTSOLUTION file
+              ! only main process reads in CMTSOLUTION file
               call get_cmt(filename,acqui_simu(ievent)%tshift,acqui_simu(ievent)%hdur,lat,long,depth,moment_tensor, &
                            DT,NSOURCES,min_tshift,acqui_simu(ievent)%user_source_time_function)
             endif
@@ -2112,7 +2141,7 @@ contains
             call bcast_all_dp(moment_tensor,6*NSOURCES)
           endif
 
-          ! broadcasts general source information read on the master to the nodes
+          ! broadcasts general source information read on the main to the nodes
           call bcast_all_dp(acqui_simu(ievent)%tshift,NSOURCES)
           call bcast_all_dp(acqui_simu(ievent)%hdur,NSOURCES)
           call bcast_all_dp(lat,NSOURCES)

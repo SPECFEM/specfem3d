@@ -22,11 +22,13 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
+from __future__ import print_function
+
 # mesh=SEM_metric_3D
 # mesh.check_metric()
-# print mesh
-#
-#
+# print(mesh)
+
+
 import math
 
 try:
@@ -36,7 +38,7 @@ except:
     try:
         import cubit
     except:
-        print 'error importing cubit, check if cubit is installed'
+        print('error importing cubit, check if cubit is installed')
         pass
 
 
@@ -66,22 +68,22 @@ class SEM_metric_3D(object):
         if self.max_skewness is not None:
             self.skew_hystogram = self.hyst(
                 0, self.max_skewness, self.skew_hyst)
-            print '-' * 70
-            print 'SKEWNESS'
-            print
+            print('-' * 70)
+            print('SKEWNESS')
+            print('')
             if len(self.hex_max_skewness) <= 30:
-                print 'max = ', self.max_skewness, ' in hexes ', \
-                    self.hex_max_skewness
-                print '(angle -> minimun =', self.min_angle, \
-                    ' maximun =', self.max_angle, ')'
+                print('max = ', self.max_skewness, ' in hexes ', \
+                      self.hex_max_skewness)
+                print('(angle -> minimun =', self.min_angle, \
+                      ' maximun =', self.max_angle, ')')
             else:
-                print 'max = ', self.max_skewness, ' in ', \
-                    len(self.hex_max_skewness), ' hexes '
-                print '(angle -> minimun =', self.min_angle, \
-                    ' maximun =', self.max_angle, ')'
-            print
-            print 'skew hystogram'
-            print
+                print('max = ', self.max_skewness, ' in ', \
+                      len(self.hex_max_skewness), ' hexes ')
+                print('(angle -> minimun =', self.min_angle, \
+                      ' maximun =', self.max_angle, ')')
+            print('')
+            print('skew hystogram')
+            print('')
             tot = 0
             for i in self.skew_hystogram.values():
                 tot = tot + len(i)
@@ -92,13 +94,13 @@ class SEM_metric_3D(object):
                 if self.skew_hystogram.has_key(i):
                     if (i + 1) * factor <= 1:
                         nshi = len(self.skew_hystogram[i])
-                        print i, ' [', i * factor, '->', (i + 1) * factor, \
+                        print(i, ' [', i * factor, '->', (i + 1) * factor, \
                             '[ : ', nshi, '/', tot, \
-                            ' hexes (', nshi / float(tot) * 100., '%)'
+                            ' hexes (', nshi / float(tot) * 100., '%)')
                 else:
                     if (i + 1) * factor <= 1:
-                        print i, ' [', i * factor, '->', (i + 1) * factor, \
-                            '[ : ', 0, '/', tot, ' hexes (0%)'
+                        print(i, ' [', i * factor, '->', (i + 1) * factor, \
+                            '[ : ', 0, '/', tot, ' hexes (0%)')
             print
         ###############################################
         if self.min_edge_length is not None:
@@ -106,26 +108,26 @@ class SEM_metric_3D(object):
                 self.min_edge_length, self.max_edge_length, self.edgemin_hyst)
             self.edgemax_hystogram = self.hyst(
                 self.min_edge_length, self.max_edge_length, self.edgemax_hyst)
-            print '-' * 70
-            print 'edge length'
-            print
+            print('-' * 70)
+            print('edge length')
+            print('')
             if len(self.hex_min_edge_length) <= 30:
-                print 'minimum edge length: ', self.min_edge_length, \
-                    ' in hexes ',  self.hex_min_edge_length
+                print('minimum edge length: ', self.min_edge_length, \
+                      ' in hexes ',  self.hex_min_edge_length)
             else:
-                print 'minimum edge length: ', self.min_edge_length, ' in ', \
-                    len(self.hex_min_edge_length), ' hexes.'
+                print('minimum edge length: ', self.min_edge_length, ' in ', \
+                      len(self.hex_min_edge_length), ' hexes.')
             if len(self.hex_max_edge_length) <= 30:
-                print 'maximum edge length: ', self.max_edge_length, \
-                    ' in hexes ',  self.hex_max_edge_length
+                print('maximum edge length: ', self.max_edge_length, \
+                      ' in hexes ',  self.hex_max_edge_length)
             else:
-                print 'maximum edge length: ', self.max_edge_length, \
-                    ' in ',  len(self.hex_max_edge_length), ' hexes.'
-            print
-            print 'edge length hystogram'
-            print
+                print('maximum edge length: ', self.max_edge_length, \
+                      ' in ',  len(self.hex_max_edge_length), ' hexes.')
+            print('')
+            print('edge length hystogram')
+            print('')
             factor = (self.max_edge_length - self.min_edge_length) / self.nbin
-            print 'minimum edge length'
+            print('minimum edge length')
             tot = 0
             for i in self.edgemin_hystogram.values():
                 tot = tot + len(i)
@@ -134,16 +136,16 @@ class SEM_metric_3D(object):
             for i in range(0, self.nbin + 1):
                 if self.edgemin_hystogram.has_key(i):
                     nh = len(self.edgemin_hystogram[i])
-                    print i, ' [', i * factor + self.min_edge_length, '->', \
-                        (i + 1) * factor + self.min_edge_length, \
-                        '[ : ', nh, '/', tot, \
-                        ' hexes (', nh / float(tot) * 100., '%)'
+                    print(i, ' [', i * factor + self.min_edge_length, '->', \
+                          (i + 1) * factor + self.min_edge_length, \
+                          '[ : ', nh, '/', tot, \
+                          ' hexes (', nh / float(tot) * 100., '%)')
                 else:
-                    print i, ' [', i * factor + self.min_edge_length, '->', \
-                        (i + 1) * factor + self.min_edge_length, \
-                        '[ : ', 0, '/', tot, ' hexes (0%)'
-            print
-            print 'maximum edge length'
+                    print(i, ' [', i * factor + self.min_edge_length, '->', \
+                          (i + 1) * factor + self.min_edge_length, \
+                          '[ : ', 0, '/', tot, ' hexes (0%)')
+            print('')
+            print('maximum edge length')
             tot = 0
             for i in self.edgemax_hystogram.values():
                 tot = tot + len(i)
@@ -152,21 +154,21 @@ class SEM_metric_3D(object):
             for i in range(0, self.nbin + 1):
                 if self.edgemax_hystogram.has_key(i):
                     nh = len(self.edgemax_hystogram[i])
-                    print i, ' [', i * factor + self.min_edge_length, \
-                        '->', (i + 1) * factor + self.min_edge_length, \
-                        '[ : ', len(self.edgemax_hystogram[i]), '/', tot, \
-                        ' hexes (', nh / float(tot) * 100., '%)'
+                    print(i, ' [', i * factor + self.min_edge_length, \
+                          '->', (i + 1) * factor + self.min_edge_length, \
+                          '[ : ', len(self.edgemax_hystogram[i]), '/', tot, \
+                          ' hexes (', nh / float(tot) * 100., '%)')
                 else:
-                    print i, ' [', i * factor + self.min_edge_length, \
-                        '->', (i + 1) * factor + self.min_edge_length, \
-                        '[ : ', 0, '/', tot, ' hexes (0%)'
+                    print(i, ' [', i * factor + self.min_edge_length, \
+                          '->', (i + 1) * factor + self.min_edge_length, \
+                          '[ : ', 0, '/', tot, ' hexes (0%)')
         if self.dt is not None:
-            print '-' * 70
-            print
-            print 'STABILITY'
-            print
-            print 'time step < ', self.dt, 's, for velocity = ', self.velocity
-            print
+            print('-' * 70)
+            print('')
+            print('STABILITY')
+            print('')
+            print('time step < ', self.dt, 's, for velocity = ', self.velocity)
+            print('')
         try:
             return str(len(self.list_hex)) + ' hexes checked'
         except:
@@ -194,7 +196,7 @@ class SEM_metric_3D(object):
             faces = [[0, 1, 2, 3], [4, 5, 6, 7], [1, 5, 6, 2],
                      [0, 4, 7, 3], [2, 6, 7, 3], [1, 5, 4, 0]]
         else:
-            print 'bad definition of nodes'
+            print('bad definition of nodes')
             return None, None, None
         x = []
         y = []
@@ -218,7 +220,7 @@ class SEM_metric_3D(object):
                 norm2 = math.sqrt(vx2 * vx2 + vy2 * vy2 + vz2 * vz2)
                 #
                 if norm1 == 0 or norm2 == 0:
-                    print 'degenerated mesh, 0 length edge'
+                    print('degenerated mesh, 0 length edge')
                     import sys
                     sys.exit()
                 angle = math.acos(
@@ -284,7 +286,7 @@ class SEM_metric_3D(object):
             cubit.silent_cmd(command)
         elif list_hex is None and self.list_hex is None:
             self.list_hex = cubit.parse_cubit_list('hex', 'all')
-        print 'list_hex: ', len(self.list_hex), ' hexes'
+        print('list_hex: ', len(self.list_hex), ' hexes')
     #
     #
     ##########################################################################
@@ -380,10 +382,10 @@ class SEM_metric_3D(object):
         #
         vmax = max(inv_lookup.keys())
         nmax = inv_lookup[max(inv_lookup.keys())]
-        print 'max hex valence ', vmax, ' at node ', nmax
-        print '_____'
+        print('max hex valence ', vmax, ' at node ', nmax)
+        print('_____')
         for v in inv_lookup.keys():
-            print ('valence %2i - %9i hexes ' % (v, len(inv_lookup[v])))
+            print(('valence %2i - %9i hexes ' % (v, len(inv_lookup[v]))))
         self.valence_summary = inv_lookup
         self.max_valence = vmax
         self.node_with_max_valence = nmax
@@ -586,7 +588,7 @@ class SEM_stability_3D(SEM_metric_3D):
         #
 
     def __repr__(self):
-        print 'check mesh stability'
+        print('check mesh stability')
         #
 
     def check_simulation_parameter(self, list_hex=None, volume=None,
@@ -603,8 +605,8 @@ class SEM_stability_3D(SEM_metric_3D):
         #
         for ind, h in enumerate(self.list_hex):
             if ind % 10000 == 0:
-                print 'hex checked: ' + \
-                    str(int(float(ind) / len(self.list_hex) * 100)) + '%'
+                print('hex checked: ' + \
+                      str(int(float(ind) / len(self.list_hex) * 100)) + '%')
             dt_tmp, pmax_tmp, _, _ = self.hex_simulation_parameter(
                 h, vp_static=vp_static, vs_static=vs_static)
             timestep_hyst[h] = dt_tmp
@@ -622,9 +624,9 @@ class SEM_stability_3D(SEM_metric_3D):
 
     def read_tomo(self, tomofile=None):
         if tomofile:
-            print 'reading tomography file ', tomofile
+            print('reading tomography file ', tomofile)
             # xtomo,ytomo,ztomo,vp,vs,rho=numpy.loadtxt(tomofile,skiprows=4)
-            print 'tomography file loaded'
+            print('tomography file loaded')
             tf = open(tomofile, 'r')
             orig_x, orig_y, orig_z, end_x, end_y, end_z = map(
                 float, tf.readline().split())
@@ -648,7 +650,7 @@ class SEM_stability_3D(SEM_metric_3D):
                 vp.append(v1)
                 vs.append(v2)
             tf.close()
-            print 'tomography file loaded'
+            print('tomography file loaded')
             #
             self.orig_x, self.orig_y, self.orig_z, self.end_x, self.end_y, \
                 self.end_z = orig_x, orig_y, orig_z, end_x, end_y, end_z
@@ -660,7 +662,7 @@ class SEM_stability_3D(SEM_metric_3D):
             self.xtomo, self.ytomo, self.ztomo, self.vp, self.vs = xtomo, \
                 ytomo, ztomo, vp, vs
         else:
-            print 'no tomofile!!!!'
+            print('no tomofile!!!!')
             #
             #
             #

@@ -28,33 +28,31 @@
 ! recompute 3D jacobian at a given point for a 8-node element
 
   subroutine recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
+                                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
 
-  use constants
+  use constants, only: NDIM,ZERO
 
   implicit none
 
-  double precision x,y,z,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
-  double precision xi,eta,gamma,jacobian
+  ! coordinates of the control points
+  integer, intent(in) :: NGNOD
+  double precision, intent(in) :: xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
+  double precision,intent(in) :: xi,eta,gamma
 
-  integer NGNOD
+  double precision,intent(out) :: x,y,z
+  double precision,intent(out) :: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
 
-! coordinates of the control points
-  double precision xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
+  ! local parameters
+  ! 3D shape functions and their derivatives at receiver
+  double precision :: shape3D(NGNOD)
+  double precision :: dershape3D(NDIM,NGNOD)
 
-! 3D shape functions and their derivatives at receiver
-  double precision shape3D(NGNOD)
-  double precision dershape3D(NDIM,NGNOD)
+  double precision :: jacobian
+  double precision :: xxi,yxi,zxi
+  double precision :: xeta,yeta,zeta
+  double precision :: xgamma,ygamma,zgamma
 
-  double precision xxi,yxi,zxi
-  double precision xeta,yeta,zeta
-  double precision xgamma,ygamma,zgamma
-  double precision ra1,ra2,rb1,rb2,rc1,rc2
-
-  integer ia
-
-! for 8-node element
-  double precision, parameter :: ONE_EIGHTH = 0.125d0
+  integer :: ia
 
 ! recompute jacobian for any (xi,eta,gamma) point, not necessarily a GLL point
 
@@ -62,110 +60,62 @@
   if (NGNOD /= 8 .and. NGNOD /= 27) stop 'elements should have 8 or 27 control nodes'
 
   if (NGNOD == 8) then
-
-! ***
-! *** create the 3D shape functions and the Jacobian for an 8-node element
-! ***
-
-!--- case of an 8-node 3D element (Dhatt-Touzot p. 115)
-
-    ra1 = one + xi
-    ra2 = one - xi
-
-    rb1 = one + eta
-    rb2 = one - eta
-
-    rc1 = one + gamma
-    rc2 = one - gamma
-
-    shape3D(1) = ONE_EIGHTH*ra2*rb2*rc2
-    shape3D(2) = ONE_EIGHTH*ra1*rb2*rc2
-    shape3D(3) = ONE_EIGHTH*ra1*rb1*rc2
-    shape3D(4) = ONE_EIGHTH*ra2*rb1*rc2
-    shape3D(5) = ONE_EIGHTH*ra2*rb2*rc1
-    shape3D(6) = ONE_EIGHTH*ra1*rb2*rc1
-    shape3D(7) = ONE_EIGHTH*ra1*rb1*rc1
-    shape3D(8) = ONE_EIGHTH*ra2*rb1*rc1
-
-    dershape3D(1,1) = - ONE_EIGHTH*rb2*rc2
-    dershape3D(1,2) = ONE_EIGHTH*rb2*rc2
-    dershape3D(1,3) = ONE_EIGHTH*rb1*rc2
-    dershape3D(1,4) = - ONE_EIGHTH*rb1*rc2
-    dershape3D(1,5) = - ONE_EIGHTH*rb2*rc1
-    dershape3D(1,6) = ONE_EIGHTH*rb2*rc1
-    dershape3D(1,7) = ONE_EIGHTH*rb1*rc1
-    dershape3D(1,8) = - ONE_EIGHTH*rb1*rc1
-
-    dershape3D(2,1) = - ONE_EIGHTH*ra2*rc2
-    dershape3D(2,2) = - ONE_EIGHTH*ra1*rc2
-    dershape3D(2,3) = ONE_EIGHTH*ra1*rc2
-    dershape3D(2,4) = ONE_EIGHTH*ra2*rc2
-    dershape3D(2,5) = - ONE_EIGHTH*ra2*rc1
-    dershape3D(2,6) = - ONE_EIGHTH*ra1*rc1
-    dershape3D(2,7) = ONE_EIGHTH*ra1*rc1
-    dershape3D(2,8) = ONE_EIGHTH*ra2*rc1
-
-    dershape3D(3,1) = - ONE_EIGHTH*ra2*rb2
-    dershape3D(3,2) = - ONE_EIGHTH*ra1*rb2
-    dershape3D(3,3) = - ONE_EIGHTH*ra1*rb1
-    dershape3D(3,4) = - ONE_EIGHTH*ra2*rb1
-    dershape3D(3,5) = ONE_EIGHTH*ra2*rb2
-    dershape3D(3,6) = ONE_EIGHTH*ra1*rb2
-    dershape3D(3,7) = ONE_EIGHTH*ra1*rb1
-    dershape3D(3,8) = ONE_EIGHTH*ra2*rb1
-
+    call recompute_jacobian_8(NGNOD,NDIM,xi,eta,gamma,shape3D,dershape3D)
   else
-
     ! note: put further setup for ngnod == 27 into subroutine
     !       to avoid compilation errors in case ngnod == 8
     call recompute_jacobian_27(NGNOD,NDIM,xi,eta,gamma,shape3D,dershape3D)
-
   endif
 
-! compute coordinates and jacobian matrix
-  x=ZERO
-  y=ZERO
-  z=ZERO
-  xxi=ZERO
-  xeta=ZERO
-  xgamma=ZERO
-  yxi=ZERO
-  yeta=ZERO
-  ygamma=ZERO
-  zxi=ZERO
-  zeta=ZERO
-  zgamma=ZERO
+  ! compute coordinates and jacobian matrix
+  x = ZERO
+  y = ZERO
+  z = ZERO
+  xxi = ZERO
+  xeta = ZERO
+  xgamma = ZERO
+  yxi = ZERO
+  yeta = ZERO
+  ygamma = ZERO
+  zxi = ZERO
+  zeta = ZERO
+  zgamma = ZERO
 
   do ia=1,NGNOD
-    x=x+shape3D(ia)*xelm(ia)
-    y=y+shape3D(ia)*yelm(ia)
-    z=z+shape3D(ia)*zelm(ia)
+    x = x+shape3D(ia)*xelm(ia)
+    y = y+shape3D(ia)*yelm(ia)
+    z = z+shape3D(ia)*zelm(ia)
 
-    xxi=xxi+dershape3D(1,ia)*xelm(ia)
-    xeta=xeta+dershape3D(2,ia)*xelm(ia)
-    xgamma=xgamma+dershape3D(3,ia)*xelm(ia)
-    yxi=yxi+dershape3D(1,ia)*yelm(ia)
-    yeta=yeta+dershape3D(2,ia)*yelm(ia)
-    ygamma=ygamma+dershape3D(3,ia)*yelm(ia)
-    zxi=zxi+dershape3D(1,ia)*zelm(ia)
-    zeta=zeta+dershape3D(2,ia)*zelm(ia)
-    zgamma=zgamma+dershape3D(3,ia)*zelm(ia)
+    ! Jacobian matrix elements
+    ! dx/dxi, dx/deta, etc.
+    xxi = xxi+dershape3D(1,ia)*xelm(ia)
+    xeta = xeta+dershape3D(2,ia)*xelm(ia)
+    xgamma = xgamma+dershape3D(3,ia)*xelm(ia)
+    yxi = yxi+dershape3D(1,ia)*yelm(ia)
+    yeta = yeta+dershape3D(2,ia)*yelm(ia)
+    ygamma = ygamma+dershape3D(3,ia)*yelm(ia)
+    zxi = zxi+dershape3D(1,ia)*zelm(ia)
+    zeta = zeta+dershape3D(2,ia)*zelm(ia)
+    zgamma = zgamma+dershape3D(3,ia)*zelm(ia)
   enddo
 
+  ! Jacobian determinant
   jacobian = xxi*(yeta*zgamma-ygamma*zeta) - xeta*(yxi*zgamma-ygamma*zxi) + xgamma*(yxi*zeta-yeta*zxi)
 
   if (jacobian <= ZERO) stop '3D Jacobian undefined'
 
-! invert the relation (Fletcher p. 50 vol. 2)
-  xix=(yeta*zgamma-ygamma*zeta)/jacobian
-  xiy=(xgamma*zeta-xeta*zgamma)/jacobian
-  xiz=(xeta*ygamma-xgamma*yeta)/jacobian
-  etax=(ygamma*zxi-yxi*zgamma)/jacobian
-  etay=(xxi*zgamma-xgamma*zxi)/jacobian
-  etaz=(xgamma*yxi-xxi*ygamma)/jacobian
-  gammax=(yxi*zeta-yeta*zxi)/jacobian
-  gammay=(xeta*zxi-xxi*zeta)/jacobian
-  gammaz=(xxi*yeta-xeta*yxi)/jacobian
+  ! inverse Jacobian matrix
+  !
+  ! invert the relation (Fletcher p. 50 vol. 2)
+  xix = (yeta*zgamma-ygamma*zeta)/jacobian
+  xiy = (xgamma*zeta-xeta*zgamma)/jacobian
+  xiz = (xeta*ygamma-xgamma*yeta)/jacobian
+  etax = (ygamma*zxi-yxi*zgamma)/jacobian
+  etay = (xxi*zgamma-xgamma*zxi)/jacobian
+  etaz = (xgamma*yxi-xxi*ygamma)/jacobian
+  gammax = (yxi*zeta-yeta*zxi)/jacobian
+  gammay = (xeta*zxi-xxi*zeta)/jacobian
+  gammaz = (xxi*yeta-xeta*yxi)/jacobian
 
   end subroutine recompute_jacobian
 
@@ -173,25 +123,106 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine recompute_jacobian_8(ngnod,ndim,xi,eta,gamma,shape3D,dershape3D)
+
+  implicit none
+
+  integer,intent(in) :: ngnod,ndim
+
+  double precision,intent(in) :: xi,eta,gamma
+
+! 3D shape functions and their derivatives at receiver
+  double precision,dimension(ngnod),intent(out) :: shape3D
+  double precision,dimension(ndim,ngnod),intent(out) :: dershape3D
+
+  ! local parameters
+  double precision :: ra1,ra2,rb1,rb2,rc1,rc2
+
+  double precision, parameter :: ONE  = 1.0d0
+  ! for 8-node element
+  double precision, parameter :: ONE_EIGHTH = 0.125d0
+
+
+! ***
+! *** create the 3D shape functions and the Jacobian for an 8-node element
+! ***
+
+!--- case of an 8-node 3D element (Dhatt-Touzot p. 115)
+
+  ra1 = ONE + xi
+  ra2 = ONE - xi
+
+  rb1 = ONE + eta
+  rb2 = ONE - eta
+
+  rc1 = ONE + gamma
+  rc2 = ONE - gamma
+
+  shape3D(1) = ONE_EIGHTH * ra2*rb2*rc2
+  shape3D(2) = ONE_EIGHTH * ra1*rb2*rc2
+  shape3D(3) = ONE_EIGHTH * ra1*rb1*rc2
+  shape3D(4) = ONE_EIGHTH * ra2*rb1*rc2
+  shape3D(5) = ONE_EIGHTH * ra2*rb2*rc1
+  shape3D(6) = ONE_EIGHTH * ra1*rb2*rc1
+  shape3D(7) = ONE_EIGHTH * ra1*rb1*rc1
+  shape3D(8) = ONE_EIGHTH * ra2*rb1*rc1
+
+  ! shape function derivatives dNa/dxi, etc. for all anchor points
+  ! evaluated analytically
+  dershape3D(1,1) = - ONE_EIGHTH * rb2*rc2
+  dershape3D(1,2) = ONE_EIGHTH * rb2*rc2
+  dershape3D(1,3) = ONE_EIGHTH * rb1*rc2
+  dershape3D(1,4) = - ONE_EIGHTH * rb1*rc2
+  dershape3D(1,5) = - ONE_EIGHTH * rb2*rc1
+  dershape3D(1,6) = ONE_EIGHTH * rb2*rc1
+  dershape3D(1,7) = ONE_EIGHTH * rb1*rc1
+  dershape3D(1,8) = - ONE_EIGHTH * rb1*rc1
+
+  dershape3D(2,1) = - ONE_EIGHTH * ra2*rc2
+  dershape3D(2,2) = - ONE_EIGHTH * ra1*rc2
+  dershape3D(2,3) = ONE_EIGHTH * ra1*rc2
+  dershape3D(2,4) = ONE_EIGHTH * ra2*rc2
+  dershape3D(2,5) = - ONE_EIGHTH * ra2*rc1
+  dershape3D(2,6) = - ONE_EIGHTH * ra1*rc1
+  dershape3D(2,7) = ONE_EIGHTH * ra1*rc1
+  dershape3D(2,8) = ONE_EIGHTH * ra2*rc1
+
+  dershape3D(3,1) = - ONE_EIGHTH * ra2*rb2
+  dershape3D(3,2) = - ONE_EIGHTH * ra1*rb2
+  dershape3D(3,3) = - ONE_EIGHTH * ra1*rb1
+  dershape3D(3,4) = - ONE_EIGHTH * ra2*rb1
+  dershape3D(3,5) = ONE_EIGHTH * ra2*rb2
+  dershape3D(3,6) = ONE_EIGHTH * ra1*rb2
+  dershape3D(3,7) = ONE_EIGHTH * ra1*rb1
+  dershape3D(3,8) = ONE_EIGHTH * ra2*rb1
+
+  end subroutine recompute_jacobian_8
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
   subroutine recompute_jacobian_27(ngnod,ndim,xi,eta,gamma,shape3D,dershape3D)
 
   implicit none
 
-  integer :: ngnod,ndim
+  integer,intent(in) :: ngnod,ndim
 
-  double precision :: xi,eta,gamma
+  double precision,intent(in) :: xi,eta,gamma
 
 ! 3D shape functions and their derivatives at receiver
-  double precision,dimension(ngnod) :: shape3D
-  double precision,dimension(ndim,ngnod) :: dershape3D
+  double precision,dimension(ngnod),intent(out) :: shape3D
+  double precision,dimension(ndim,ngnod),intent(out) :: dershape3D
 
   ! local parameters
-  double precision l1xi,l2xi,l3xi
-  double precision l1eta,l2eta,l3eta
-  double precision l1gamma,l2gamma,l3gamma
-  double precision l1pxi,l2pxi,l3pxi
-  double precision l1peta,l2peta,l3peta
-  double precision l1pgamma,l2pgamma,l3pgamma
+  double precision :: l1xi,l2xi,l3xi
+  double precision :: l1eta,l2eta,l3eta
+  double precision :: l1gamma,l2gamma,l3gamma
+  double precision :: l1pxi,l2pxi,l3pxi
+  double precision :: l1peta,l2peta,l3peta
+  double precision :: l1pgamma,l2pgamma,l3pgamma
 
   double precision, parameter :: HALF = 0.5d0
   double precision, parameter :: ONE  = 1.0d0
@@ -204,29 +235,29 @@
 ! *** create the 3D shape functions and the Jacobian for a 27-node element
 ! ***
 
-  l1xi=HALF*xi*(xi-ONE)
-  l2xi=ONE-xi**2
-  l3xi=HALF*xi*(xi+ONE)
+  l1xi = HALF*xi*(xi-ONE)
+  l2xi = ONE-xi**2
+  l3xi = HALF*xi*(xi+ONE)
 
-  l1pxi=xi-HALF
-  l2pxi=-TWO*xi
-  l3pxi=xi+HALF
+  l1pxi = xi-HALF
+  l2pxi = -TWO*xi
+  l3pxi = xi+HALF
 
-  l1eta=HALF*eta*(eta-ONE)
-  l2eta=ONE-eta**2
-  l3eta=HALF*eta*(eta+ONE)
+  l1eta = HALF*eta*(eta-ONE)
+  l2eta = ONE-eta**2
+  l3eta = HALF*eta*(eta+ONE)
 
-  l1peta=eta-HALF
-  l2peta=-TWO*eta
-  l3peta=eta+HALF
+  l1peta = eta-HALF
+  l2peta = -TWO*eta
+  l3peta = eta+HALF
 
-  l1gamma=HALF*gamma*(gamma-ONE)
-  l2gamma=ONE-gamma**2
-  l3gamma=HALF*gamma*(gamma+ONE)
+  l1gamma = HALF*gamma*(gamma-ONE)
+  l2gamma = ONE-gamma**2
+  l3gamma = HALF*gamma*(gamma+ONE)
 
-  l1pgamma=gamma-HALF
-  l2pgamma=-TWO*gamma
-  l3pgamma=gamma+HALF
+  l1pgamma = gamma-HALF
+  l2pgamma = -TWO*gamma
+  l3pgamma = gamma+HALF
 
 ! corner nodes
 
@@ -357,7 +388,6 @@
   dershape3D(1,27)=l2pxi*l2eta*l2gamma
   dershape3D(2,27)=l2xi*l2peta*l2gamma
   dershape3D(3,27)=l2xi*l2eta*l2pgamma
-
 
   end subroutine recompute_jacobian_27
 

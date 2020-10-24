@@ -44,22 +44,18 @@
 #ifndef MESH_CONSTANTS_CUDA_H
 #define MESH_CONSTANTS_CUDA_H
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <math.h>
-#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 
 #include "config.h"
 
-#ifdef WITH_MPI
-#include <mpi.h>
-#endif
-
-#include <cuda.h>
 #include <cuda_runtime.h>
+#include <cuda.h>
 
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -92,7 +88,12 @@
 
 // error checking after cuda function calls
 // (note: this synchronizes many calls, thus e.g. no asynchronuous memcpy possible)
-//#define ENABLE_VERY_SLOW_ERROR_CHECKING
+#define ENABLE_VERY_SLOW_ERROR_CHECKING 0
+#if ENABLE_VERY_SLOW_ERROR_CHECKING == 1
+#define GPU_ERROR_CHECKING(x) exit_on_cuda_error(x);
+#else
+#define GPU_ERROR_CHECKING(x)
+#endif
 
 // maximum function
 #define MAX(x,y)     (((x) < (y)) ? (y) : (x))
@@ -164,15 +165,17 @@
 // leads up to ~1% performance increase
 //#define MANUALLY_UNROLLED_LOOPS
 
-// compiler specifications
+// CUDA compiler specifications
 // (optional) use launch_bounds specification to increase compiler optimization
 // (depending on GPU type, register spilling might slow down the performance)
-// (uncomment if desired)
-//#define USE_LAUNCH_BOUNDS
-
 // elastic kernel
+#ifdef GPU_DEVICE_K20
+// specifics see: https://docs.nvidia.com/cuda/kepler-tuning-guide/index.html
+// maximum shared memory per thread block 48KB
+//
 // note: main kernel is Kernel_2_***_impl() which is limited by shared memory usage to 8 active blocks
 //       while register usage might use up to 9 blocks
+//
 //
 // performance statistics: kernel Kernel_2_noatt_impl():
 //       shared memory per block = 1700    for Kepler: total = 49152 -> limits active blocks to 16
@@ -183,7 +186,35 @@
 //       shared memory per block = 6100    for Kepler: total = 49152 -> limits active blocks to 8
 //       registers per thread    = 59
 //       registers per block     = 8192                total = 65536 -> limits active blocks to 8
+//
+// (uncomment if desired)
+//#define USE_LAUNCH_BOUNDS
 #define LAUNCH_MIN_BLOCKS 10
+//#pragma message ("\nCompiling with: USE_LAUNCH_BOUNDS enabled for K20\n")
+#endif
+
+// add more card specific values
+#ifdef GPU_DEVICE_Maxwell
+// specifics see: https://docs.nvidia.com/cuda/maxwell-tuning-guide/index.html
+// register file size 64k 32-bit registers per SM
+// shared memory 64KB for GM107 and 96KB for GM204
+#undef USE_LAUNCH_BOUNDS
+#endif
+
+#ifdef GPU_DEVICE_Pascal
+// specifics see: https://docs.nvidia.com/cuda/pascal-tuning-guide/index.html
+// register file size 64k 32-bit registers per SM
+// shared memory 64KB for GP100 and 96KB for GP104
+#undef USE_LAUNCH_BOUNDS
+#endif
+
+#ifdef GPU_DEVICE_Volta
+// specifics see: https://docs.nvidia.com/cuda/volta-tuning-guide/index.html
+// register file size 64k 32-bit registers per SM
+// shared memory size 96KB per SM (maximum shared memory per thread block)
+// maximum registers 255 per thread
+#undef USE_LAUNCH_BOUNDS
+#endif
 
 // acoustic kernel
 // performance statistics: kernel Kernel_2_acoustic_impl():
@@ -205,6 +236,17 @@
 // maximum grid dimension in one direction of GPU
 #define MAXIMUM_GRID_DIM 65535
 
+/*----------------------------------------------------------------------------------------------- */
+
+// balancing work group x/y-size
+#undef BALANCE_WORK_GROUP
+
+#ifdef BALANCE_WORK_GROUP
+#pragma message ("\nCompiling with: BALANCE_WORK_GROUP enabled\n")
+// maximum number of work group units in one dimension
+#define BALANCE_WORK_GROUP_UNITS 7552 // == 32 * 236 for Knights Corner test
+#endif
+
 /* ----------------------------------------------------------------------------------------------- */
 
 // indexing
@@ -216,6 +258,14 @@
 
 #define INDEX4_PADDED(xsize,ysize,zsize,x,y,z,i) x + xsize*(y + ysize*z) + (i)*NGLL3_PADDED
 
+/*----------------------------------------------------------------------------------------------- */
+
+#ifdef __cplusplus
+#define EXTERN_LANG "C"
+#else
+#define EXTERN_LANG
+#endif
+
 /* ----------------------------------------------------------------------------------------------- */
 
 // custom type declarations
@@ -226,6 +276,7 @@
 // double precision temporary variables leads to 10% performance decrease
 // in Kernel_2_impl (not very much..)
 typedef float realw;
+
 // textures
 typedef texture<float, cudaTextureType1D, cudaReadModeElementType> realw_texture;
 
@@ -271,6 +322,7 @@ inline __host__ __device__ field Make_field(realw* b){ return b[0];}
 inline __host__ __device__ field Make_field(realw b){ return b;}
 inline __host__ __device__ field max(field b){ return b;}
 inline __host__ __device__ realw sum(field b){ return b;}
+inline __host__ __device__ realw realw_(field b){ return b; }
 #endif
 
 #if NB_RUNS_ACOUSTIC_GPU == 2
@@ -295,6 +347,8 @@ inline __host__ __device__ field operator+(field a, realw b){ return a;}
 inline __device__ void atomicAdd(field* address, float val){}
 inline __device__ void atomicAdd(realw* address, field val){}
 inline __host__ __device__ void operator+=(realw &a, field b){}
+// work-around to have something like: realw a = realw_(field)
+inline __host__ __device__ realw realw_(field b){ return b.x; }
 
 //texture are not compatible for the moment with floatN data
 #undef USE_TEXTURES_FIELDS
@@ -325,6 +379,8 @@ inline __host__ __device__ field operator+(field a, realw b){ return a;}
 inline __device__ void atomicAdd(field* address, float val){}
 inline __device__ void atomicAdd(realw* address, field val){}
 inline __host__ __device__ void operator+=(realw &a, field b){}
+// work-around to have something like: realw a = realw_(field)
+inline __host__ __device__ realw realw_(field b){ return b.x; }
 
 //texture are not compatible for the moment with floatN data
 #undef USE_TEXTURES_FIELDS
@@ -335,23 +391,31 @@ typedef field* __restrict__ field_p;
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// utility functions: defined in check_fields_cuda.cu
+// utility functions
 
 /* ----------------------------------------------------------------------------------------------- */
 
-double get_time();
+// defined in check_fields_cuda.cu
+double get_time_val();
 void get_free_memory(double* free_db, double* used_db, double* total_db);
 void print_CUDA_error_if_any(cudaError_t err, int num);
 void pause_for_debugger(int pause);
+
 void exit_on_cuda_error(const char* kernel_name);
 void exit_on_error(const char* info);
+
 void synchronize_cuda();
 void synchronize_mpi();
+
 void start_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop);
 void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str);
 void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str,realw* t);
-void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y);
+
 realw get_device_array_maximum_value(realw* array,int size);
+
+// defined in helper_functions.cu
+void copy_todevice_int(void** d_array_addr_ptr,int* h_array,int size);
+void copy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size);
 
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -364,6 +428,8 @@ typedef struct mesh_ {
 
   // mesh resolution
   int NSPEC_AB;
+  int NSPEC_IRREGULAR;
+
   int NGLOB_AB;
 
   // mpi process
@@ -448,7 +514,9 @@ typedef struct mesh_ {
   int nrec_local;
 
   realw* d_hxir, *d_hetar, *d_hgammar;
-  realw* d_seismograms_d, *d_seismograms_v, *d_seismograms_a, * d_nu;
+  realw* d_nu_rec;
+
+  realw* d_seismograms_d, *d_seismograms_v, *d_seismograms_a;
   field* d_seismograms_p;
 
   int save_seismograms_d;
@@ -462,6 +530,9 @@ typedef struct mesh_ {
 
   // adjoint receivers/sources
   int nadj_rec_local;
+  int* d_ispec_selected_adjrec_loc;
+  realw* d_hxir_adj, *d_hetar_adj, *d_hgammar_adj;
+
   field* d_source_adjoint;
 
   // ------------------------------------------------------------------ //
@@ -520,8 +591,10 @@ typedef struct mesh_ {
   realw* d_R_xy;
   realw* d_R_xz;
   realw* d_R_yz;
+  realw* d_R_trace;
 
   realw* d_factor_common;
+  realw* d_factor_common_kappa;
 
   realw* d_alphaval;
   realw* d_betaval;
@@ -533,6 +606,7 @@ typedef struct mesh_ {
   realw* d_epsilondev_xy;
   realw* d_epsilondev_xz;
   realw* d_epsilondev_yz;
+  realw* d_epsilondev_trace;
   realw* d_epsilon_trace_over_3;
 
   // anisotropy
@@ -573,12 +647,14 @@ typedef struct mesh_ {
   realw* d_b_R_xy;
   realw* d_b_R_xz;
   realw* d_b_R_yz;
+  realw* d_b_R_trace;
 
   realw* d_b_epsilondev_xx;
   realw* d_b_epsilondev_yy;
   realw* d_b_epsilondev_xy;
   realw* d_b_epsilondev_xz;
   realw* d_b_epsilondev_yz;
+  realw* d_b_epsilondev_trace;
   realw* d_b_epsilon_trace_over_3;
 
   realw* d_b_alphaval;
@@ -661,4 +737,50 @@ typedef struct mesh_ {
 } Mesh;
 
 
+/* ----------------------------------------------------------------------------------------------- */
+
+// kernel setup function
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// moved here into header to inline function calls if possible
+
+static inline void get_blocks_xy(int num_blocks, int* num_blocks_x, int* num_blocks_y) {
+
+// Initially sets the blocks_x to be the num_blocks, and adds rows as needed (block size limit of 65535).
+// If an additional row is added, the row length is cut in
+// half. If the block count is odd, there will be 1 too many blocks,
+// which must be managed at runtime with an if statement.
+
+  *num_blocks_x = num_blocks;
+  *num_blocks_y = 1;
+
+  while (*num_blocks_x > MAXIMUM_GRID_DIM) {
+    *num_blocks_x = (int) ceil(*num_blocks_x * 0.5f);
+    *num_blocks_y = *num_blocks_y * 2;
+  }
+
+#if DEBUG == 1
+  printf("work group - total %d has group size x = %d / y = %d\n",
+         num_blocks,*num_blocks_x,*num_blocks_y);
 #endif
+
+  // tries to balance x- and y-group
+#ifdef BALANCE_WORK_GROUP
+  if (*num_blocks_x > BALANCE_WORK_GROUP_UNITS && *num_blocks_y < BALANCE_WORK_GROUP_UNITS){
+    while (*num_blocks_x > BALANCE_WORK_GROUP_UNITS && *num_blocks_y < BALANCE_WORK_GROUP_UNITS) {
+      *num_blocks_x = (int) ceil (*num_blocks_x * 0.5f);
+      *num_blocks_y = *num_blocks_y * 2;
+    }
+  }
+
+#if DEBUG == 1
+  printf("balancing work group with limit size %d - total %d has group size x = %d / y = %d\n",
+         BALANCE_WORK_GROUP_UNITS,num_blocks,*num_blocks_x,*num_blocks_y);
+#endif
+
+#endif
+}
+
+
+#endif  // MESH_CONSTANTS_CUDA_H

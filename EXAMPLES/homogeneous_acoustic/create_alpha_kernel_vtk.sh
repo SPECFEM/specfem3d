@@ -8,7 +8,7 @@ if [ ! -e OUTPUT_FILES/DATABASES_MPI/proc000000_alpha_acoustic_kernel.bin ]; the
 
 
 # creates kernel as vtk-file
-./bin/xcombine_vol_data_vtk 0 3 alpha_acoustic_kernel OUTPUT_FILES/DATABASES_MPI/ OUTPUT_FILES/ 0
+./bin/xcombine_vol_data_vtk 0 3 alpha_acoustic_kernel OUTPUT_FILES/DATABASES_MPI/ OUTPUT_FILES/ 1
 
 echo
 echo

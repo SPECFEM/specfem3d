@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
 module pml_par
 
@@ -63,6 +62,8 @@ module pml_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: K_store_x, K_store_y, K_store_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: alpha_store_x,alpha_store_y,alpha_store_z
 
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: convolution_coef_acoustic_alpha,convolution_coef_acoustic_beta
+
   ! minimum distance between parameters of CPML to avoid the singularities
   real(kind=CUSTOM_REAL) :: min_distance_between_CPML_parameter
 
@@ -75,22 +76,6 @@ module pml_par
   ! store the field of displ + (1-2 * \theta)/2*deltat * veloc for second order convolution scheme
   ! where displ is defined at n time step, while veloc is predicted veloc at "n" time step
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: PML_displ_new
-
-  ! derivatives of ux, uy and uz with respect to x, y and z
-  ! in PML_du* computation displ at "n" time step is used
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dux_dxl,PML_dux_dyl,PML_dux_dzl
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duy_dxl,PML_duy_dyl,PML_duy_dzl
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duz_dxl,PML_duz_dyl,PML_duz_dzl
-
-  ! in PML_du*_old computation we replace displ with displ_old
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dux_dxl_old,PML_dux_dyl_old,PML_dux_dzl_old
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duy_dxl_old,PML_duy_dyl_old,PML_duy_dzl_old
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duz_dxl_old,PML_duz_dyl_old,PML_duz_dzl_old
-
-  ! in PML_du*_new computation we replace displ with displ_new
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dux_dxl_new,PML_dux_dyl_new,PML_dux_dzl_new
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duy_dxl_new,PML_duy_dyl_new,PML_duy_dzl_new
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duz_dxl_new,PML_duz_dyl_new,PML_duz_dzl_new
 
   !store the field of
   !potential_acoustic + (1-2 * \theta)/2*deltat * potential_dot_acoustic + (1-\theta)/2*deltat**2 * potential_dot_dot_acoustic
@@ -128,12 +113,6 @@ module pml_par
 
   ! C-PML memory variable needed for potential
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_potential_acoustic
-
-  ! C-PML contribution to update acceleration to the global mesh
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: accel_elastic_CPML
-
-  ! C-PML contribution to update the second derivative of the potential to the global mesh
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: potential_dot_dot_acoustic_CPML
 
   ! C-PML contribution to update displacement on elastic/acoustic interface
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: rmemory_coupling_ac_el_displ

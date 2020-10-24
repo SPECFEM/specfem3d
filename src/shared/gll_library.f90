@@ -606,11 +606,13 @@
 !
 !------------------------------------------------------------------------
 
-  implicit none
-  include "constants.h"
+  use constants, only: TINYVAL,ONE
 
-  double precision z
-  integer n
+  implicit none
+
+  double precision,intent(in) :: z
+  integer,intent(in) :: n
+
   double precision, external :: pnleg
 
   if (abs(z+1.d0) > TINYVAL) then  ! if (z /= -1.d0)
@@ -634,11 +636,13 @@
 !
 !------------------------------------------------------------------------
 
-  implicit none
-  include "constants.h"
+  use constants, only: TINYVAL,ONE
 
-  double precision z
-  integer n
+  implicit none
+
+  double precision,intent(in) :: z
+  integer,intent(in) :: n
+
   double precision, external :: pnleg, pndleg
 
   if (abs(z+1.d0) > TINYVAL) then  ! if (z /= -1.d0)

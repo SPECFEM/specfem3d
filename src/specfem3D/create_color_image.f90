@@ -27,39 +27,14 @@
 
   module image_PNM_par
 
-  use constants, only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL,PNM_IMAGE_TYPE, &
+    PNM_section_hdirx,PNM_section_hdiry,PNM_section_hdirz, &
+    PNM_section_vdirx,PNM_section_vdiry,PNM_section_vdirz
+
+
 
   ! ----------------------------------------------
   ! USER PARAMETER
-
-  ! image data output:
-  !   type = 1 : displ/velocity x-component
-  !   type = 2 : displ/velocity y-component
-  !   type = 3 : displ/velocity z-component
-  !   type = 4 : displ/velocity norm
-  integer,parameter:: IMAGE_TYPE = 3
-
-  ! cross-section surface
-  ! cross-section origin point
-  real(kind=CUSTOM_REAL),parameter:: section_xorg = 0.0 ! 67000.0
-  real(kind=CUSTOM_REAL),parameter:: section_yorg = 0.0 ! 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_zorg = -100.0 ! 0.0
-
-  ! cross-section surface normal
-  real(kind=CUSTOM_REAL),parameter:: section_nx = 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_ny = 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_nz = 1.0
-
-  ! cross-section (in-plane) horizontal-direction
-  real(kind=CUSTOM_REAL),parameter:: section_hdirx = 1.0
-  real(kind=CUSTOM_REAL),parameter:: section_hdiry = 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_hdirz = 0.0
-
-  ! cross-section (in-plane) vertical-direction
-  real(kind=CUSTOM_REAL),parameter:: section_vdirx = 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_vdiry = 1.0
-  real(kind=CUSTOM_REAL),parameter:: section_vdirz = 0.0
-
   ! non linear display to enhance small amplitudes in color images
   real(kind=CUSTOM_REAL), parameter :: POWER_DISPLAY_COLOR = 0.30_CUSTOM_REAL
 
@@ -133,7 +108,7 @@
   integer, dimension(1,0:NPROC-1) :: tmp_pixel_per_proc
 
   ! checks image type
-  if (IMAGE_TYPE > 4 .or. IMAGE_TYPE < 1) then
+  if (PNM_IMAGE_TYPE > 4 .or. PNM_IMAGE_TYPE < 1) then
     call exit_mpi(myrank,'That type is not implemented for PNM images yet')
   endif
 
@@ -142,13 +117,13 @@
     write(IMAIN,*)
     write(IMAIN,*) '********'
     !   type = 1 : velocity V_x component
-    if (IMAGE_TYPE == 1) write(IMAIN,*) 'PNM image: velocity V_x component'
+    if (PNM_IMAGE_TYPE == 1) write(IMAIN,*) 'PNM image: velocity V_x component'
     !   type = 2 : velocity V_y component
-    if (IMAGE_TYPE == 2) write(IMAIN,*) 'PNM image: velocity V_y component'
+    if (PNM_IMAGE_TYPE == 2) write(IMAIN,*) 'PNM image: velocity V_y component'
     !   type = 3 : velocity V_z component
-    if (IMAGE_TYPE == 3) write(IMAIN,*) 'PNM image: velocity V_z component'
+    if (PNM_IMAGE_TYPE == 3) write(IMAIN,*) 'PNM image: velocity V_z component'
     !   type = 4 : velocity V norm
-    if (IMAGE_TYPE == 4) write(IMAIN,*) 'PNM image: velocity norm'
+    if (PNM_IMAGE_TYPE == 4) write(IMAIN,*) 'PNM image: velocity norm'
   endif
 
   ! finds global points on image surface
@@ -163,8 +138,6 @@
                             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
                             ibool_interfaces_ext_mesh, &
-                            section_xorg,section_yorg,section_zorg, &
-                            section_nx,section_ny,section_nz, &
                             xstore,ystore,zstore,myrank)
 
   ! extracts points on surface
@@ -188,12 +161,12 @@
             if (iglob_is_image_surface(iglob)) then
               countval = countval + 1
               ! coordinates with respect to horizontal and vertical direction
-              xcoord(countval)= xstore(iglob)*section_hdirx &
-                                + ystore(iglob)*section_hdiry &
-                                + zstore(iglob)*section_hdirz
-              zcoord(countval)= xstore(iglob)*section_vdirx &
-                                + ystore(iglob)*section_vdiry &
-                                + zstore(iglob)*section_vdirz
+              xcoord(countval)= xstore(iglob)*PNM_section_hdirx &
+                              + ystore(iglob)*PNM_section_hdiry &
+                              + zstore(iglob)*PNM_section_hdirz
+              zcoord(countval)= xstore(iglob)*PNM_section_vdirx &
+                              + ystore(iglob)*PNM_section_vdiry &
+                              + zstore(iglob)*PNM_section_vdirz
               iglob_coord(countval) = iglob
               ispec_coord(countval) = ispec
 
@@ -502,7 +475,7 @@
 
   ! MPI assembling array image_color_vp_display on process zero for color output
   if (NPROC > 1) then
-    ! master collects
+    ! main collects
     if (myrank == 0) then
       do iproc = 1, NPROC-1
         if (nb_pixel_per_proc(iproc) > 0) then
@@ -517,7 +490,7 @@
       enddo
     else
       if (nb_pixel_loc > 0) then
-        ! slave processes send
+        ! secondary processes send
         call sendv_cr(data_pixel_send,nb_pixel_loc,0,43)
       endif
     endif
@@ -563,13 +536,22 @@
     call get_iglob_veloc(iglob,ispec,val_vector)
 
     ! data type
-    if (IMAGE_TYPE == 4) then
+    select case (PNM_IMAGE_TYPE)
+    case (1)
+      ! x-velocity component
+      temp = val_vector(1)
+    case (2)
+      ! y-velocity component
+      temp = val_vector(2)
+    case (3)
+      ! z-velocity component
+      temp = val_vector(3)
+    case (4)
       ! velocity norm
       temp = sqrt( val_vector(1)**2 + val_vector(2)**2 + val_vector(3)**2)
-    else
-      ! velocity component
-      temp = val_vector(IMAGE_TYPE)
-    endif
+    case default
+      call exit_MPI(myrank,'Error invalid PNM_IMAGE_TYPE for image data selection')
+    end select
 
     ! stores data
     image_color_data(i,j) = temp
@@ -592,13 +574,13 @@
       enddo
     else
       if (nb_pixel_loc > 0) then
-        ! slave processes send
+        ! secondary processes send
         call sendv_cr(data_pixel_send(1),nb_pixel_loc,0,43)
       endif
     endif
   endif
 
-  ! master process writes out file
+  ! main process writes out file
   if (myrank == 0) then
     ! writes output file
     call write_PNM_data(image_color_data,iglob_image_color, &
@@ -823,8 +805,8 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
 
   use specfem_par, only: mustore,kappastore,rhostore,ibool,myrank
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
-  use specfem_par_elastic, only: ELASTIC_SIMULATION,rho_vp
+  use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
+  use specfem_par_elastic, only: rho_vp
 
   implicit none
 
@@ -860,10 +842,12 @@
   subroutine get_iglob_veloc(iglob,ispec,val_vector)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
-  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,potential_acoustic,potential_dot_acoustic, &
+  use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
+  use specfem_par_acoustic, only: potential_acoustic,potential_dot_acoustic, &
                                 ispec_is_acoustic,b_potential_acoustic,b_potential_dot_acoustic
-  use specfem_par_elastic, only: ELASTIC_SIMULATION,displ,veloc,ispec_is_elastic
+  use specfem_par_elastic, only: displ,veloc,ispec_is_elastic
   use specfem_par, only: SIMULATION_TYPE,SAVE_DISPLACEMENT,ibool
+
   implicit none
 
   integer,intent(in) :: iglob,ispec

@@ -268,7 +268,6 @@ xcreate_movie_shakemap_AVS_DX_GMT_OBJECTS = \
 xcreate_movie_shakemap_AVS_DX_GMT_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
 	$O/get_global.shared.o \
-	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
@@ -276,11 +275,11 @@ xcreate_movie_shakemap_AVS_DX_GMT_SHARED_OBJECTS = \
 	$O/utm_geo.shared.o \
 	$(EMPTY_MACRO)
 
-$E/xcreate_movie_shakemap_AVS_DX_GMT: $(xcreate_movie_shakemap_AVS_DX_GMT_OBJECTS) $(xcreate_movie_shakemap_AVS_DX_GMT_SHARED_OBJECTS)
+$E/xcreate_movie_shakemap_AVS_DX_GMT: $(xcreate_movie_shakemap_AVS_DX_GMT_OBJECTS)  $(xcreate_movie_shakemap_AVS_DX_GMT_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
 	@echo "building xcreate_movie_shakemap_AVS_DX_GMT"
 	@echo ""
-	${FCLINK} -o $@ $+
+	${FCLINK} -o $@ $+ $(MPILIBS)
 	@echo ""
 
 #######################################

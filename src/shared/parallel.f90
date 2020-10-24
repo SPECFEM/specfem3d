@@ -60,7 +60,7 @@ module my_mpi
 
   implicit none
 
-  integer :: my_local_mpi_comm_world, my_local_mpi_comm_for_bcast
+  integer :: my_local_mpi_comm_world, my_local_mpi_comm_for_bcast, my_local_mpi_info_null, my_local_mpi_comm_inter
 
 end module my_mpi
 
@@ -87,7 +87,7 @@ end module my_mpi
   ! thus read the parameter file
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
   if (myrank == 0) then
-    call open_parameter_file_from_master_only(ier)
+    call open_parameter_file_from_main_only(ier)
     ! we need to make sure that NUMBER_OF_SIMULTANEOUS_RUNS and BROADCAST_SAME_MESH_AND_MODEL are read
     call read_value_integer(NUMBER_OF_SIMULTANEOUS_RUNS, 'NUMBER_OF_SIMULTANEOUS_RUNS', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter NUMBER_OF_SIMULTANEOUS_RUNS'
@@ -97,13 +97,15 @@ end module my_mpi
     call close_parameter_file()
   endif
 
-  ! broadcast parameters read from master to all processes
+  ! broadcast parameters read from main to all processes
   my_local_mpi_comm_world = MPI_COMM_WORLD
   call bcast_all_singlei(NUMBER_OF_SIMULTANEOUS_RUNS)
   call bcast_all_singlel(BROADCAST_SAME_MESH_AND_MODEL)
 
 ! create sub-communicators if needed, if running more than one earthquake from the same job
   call world_split()
+
+  my_local_mpi_info_null = MPI_INFO_NULL
 
   end subroutine init_mpi
 
@@ -154,7 +156,7 @@ end module my_mpi
   ! write a stamp file to disk to let the user know that the run failed
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
     ! notifies which run directory failed
-    write(filename,"('run',i4.4,'_failed')") mygroup + 1
+    write(filename,"('run_with_directory_',i4.4,'_failed')") mygroup + 1
     inquire(file=trim(filename), exist=run_file_exists)
     if (run_file_exists) then
       open(unit=9765,file=trim(filename),status='old',position='append',action='write',iostat=ier)
@@ -167,7 +169,7 @@ end module my_mpi
     endif
 
     ! notifies which rank failed
-    write(filename,"('run_with_local_rank_',i8.8,'and_global_rank_',i8.8,'_failed')") my_local_rank,my_global_rank
+    write(filename,"('run_with_local_rank_',i8.8,'_and_global_rank_',i8.8,'_failed')") my_local_rank,my_global_rank
     open(unit=9765,file=trim(filename),status='unknown',action='write')
     write(9765,*) 'run with local rank ',my_local_rank,' and global rank ',my_global_rank,' failed'
     close(9765)
@@ -203,6 +205,25 @@ end module my_mpi
   if (ier /= 0 ) stop 'Error synchronize MPI processes'
 
   end subroutine synchronize_all
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine synchronize_inter()
+
+  use my_mpi
+
+  implicit none
+
+  integer :: ier
+
+  ! synchronizes MPI processes
+  call MPI_BARRIER(my_local_mpi_comm_inter,ier)
+  if (ier /= 0 ) stop 'Error synchronize MPI processes'
+
+  end subroutine synchronize_inter
+
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -951,6 +972,25 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+
+  subroutine any_all_1Darray_l(sendbuf, recvbuf, nx)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: nx
+  logical, dimension(nx) :: sendbuf, recvbuf
+  integer :: ier
+
+  call MPI_REDUCE(sendbuf,recvbuf,nx,MPI_LOGICAL,MPI_LOR,0,my_local_mpi_comm_world,ier)
+
+  end subroutine any_all_1Darray_l
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 !  subroutine sum_all_3Darray_dp(sendbuf, recvbuf, nx,ny,nz)
 !  end subroutine sum_all_3Darray_dp
 
@@ -985,6 +1025,29 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine isend_cr_inter(sendbuf, sendcount, dest, sendtag, req)
+
+  use my_mpi
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  include "precision.h"
+
+  integer :: sendcount, dest, sendtag, req
+  real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
+
+  integer :: ier
+
+  call MPI_ISEND(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag,my_local_mpi_comm_inter,req,ier)
+
+  end subroutine isend_cr_inter
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
   subroutine isend_i(sendbuf, sendcount, dest, sendtag, req)
 
   use my_mpi
@@ -999,6 +1062,26 @@ end module my_mpi
   call MPI_ISEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,my_local_mpi_comm_world,req,ier)
 
   end subroutine isend_i
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine isend_i_inter(sendbuf, sendcount, dest, sendtag, req)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: sendcount, dest, sendtag, req
+  integer, dimension(sendcount) :: sendbuf
+
+  integer :: ier
+
+  call MPI_ISEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,my_local_mpi_comm_inter,req,ier)
+
+  end subroutine isend_i_inter
+
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1081,6 +1164,27 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine recv_i_inter(recvbuf, recvcount, dest, recvtag )
+
+  use my_mpi
+
+  implicit none
+
+  integer :: dest,recvtag
+  integer :: recvcount
+  integer,dimension(recvcount):: recvbuf
+
+  integer :: ier
+
+  call MPI_RECV(recvbuf,recvcount,MPI_INTEGER,dest,recvtag, &
+                my_local_mpi_comm_inter,MPI_STATUS_IGNORE,ier)
+
+  end subroutine recv_i_inter
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine recv_dp(recvbuf, recvcount, dest, recvtag)
 
   use my_mpi
@@ -1101,6 +1205,28 @@ end module my_mpi
 !
 !-------------------------------------------------------------------------------------------------
 !
+
+  subroutine recv_dp_inter(recvbuf, recvcount, dest, recvtag)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: dest,recvtag
+  integer :: recvcount
+  double precision,dimension(recvcount):: recvbuf
+
+  integer :: ier
+
+  call MPI_RECV(recvbuf,recvcount,MPI_DOUBLE_PRECISION,dest,recvtag, &
+                my_local_mpi_comm_inter,MPI_STATUS_IGNORE,ier)
+
+  end subroutine recv_dp_inter
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 
   subroutine recvv_cr(recvbuf, recvcount, dest, recvtag )
 
@@ -1124,6 +1250,53 @@ end module my_mpi
 !
 !-------------------------------------------------------------------------------------------------
 !
+
+  subroutine recvv_cr_inter(recvbuf, recvcount, dest, recvtag )
+
+  use my_mpi
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  include "precision.h"
+
+  integer :: recvcount,dest,recvtag
+  real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
+
+  integer :: ier
+
+  call MPI_RECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag, &
+                my_local_mpi_comm_inter,MPI_STATUS_IGNORE,ier)
+
+  end subroutine recvv_cr_inter
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine irecvv_cr_inter(recvbuf, recvcount, dest, recvtag, req)
+
+  use my_mpi
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  include "precision.h"
+
+  integer :: recvcount,dest,recvtag,req
+  real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
+
+  integer :: ier
+
+  call MPI_IRECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag, &
+                my_local_mpi_comm_inter,req,ier)
+
+  end subroutine irecvv_cr_inter
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 
 !  subroutine recv_singlei(recvbuf, dest, recvtag)
 !  end subroutine recv_singlei
@@ -1161,6 +1334,27 @@ end module my_mpi
   call MPI_SEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,my_local_mpi_comm_world,ier)
 
   end subroutine send_i
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine send_i_inter(sendbuf, sendcount, dest, sendtag)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: dest,sendtag
+  integer :: sendcount
+  integer,dimension(sendcount):: sendbuf
+
+  integer :: ier
+
+  call MPI_SEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,my_local_mpi_comm_inter,ier)
+
+  end subroutine send_i_inter
+
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1224,6 +1418,27 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine send_dp_inter(sendbuf, sendcount, dest, sendtag)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: dest,sendtag
+  integer :: sendcount
+  double precision,dimension(sendcount):: sendbuf
+
+  integer :: ier
+
+  call MPI_SEND(sendbuf,sendcount,MPI_DOUBLE_PRECISION,dest,sendtag,my_local_mpi_comm_inter,ier)
+
+  end subroutine send_dp_inter
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
 
   use my_mpi
@@ -1240,6 +1455,28 @@ end module my_mpi
   call MPI_SEND(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag,my_local_mpi_comm_world,ier)
 
   end subroutine sendv_cr
+
+  !
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine sendv_cr_inter(sendbuf, sendcount, dest, sendtag)
+
+  use my_mpi
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  include "precision.h"
+
+  integer sendcount,dest,sendtag
+  real(kind=CUSTOM_REAL),dimension(sendcount) :: sendbuf
+  integer ier
+
+  call MPI_SEND(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag,my_local_mpi_comm_inter,ier)
+
+  end subroutine sendv_cr_inter
+
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1329,6 +1566,55 @@ end module my_mpi
 !
 !-------------------------------------------------------------------------------------------------
 !
+
+  subroutine gather_all_all_singlei(sendbuf, recvbuf, NPROC)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: NPROC
+  integer :: sendbuf
+  integer, dimension(0:NPROC-1) :: recvbuf
+
+  integer :: ier
+
+  call MPI_ALLGATHER(sendbuf,1,MPI_INTEGER, &
+                  recvbuf,1,MPI_INTEGER, &
+                  my_local_mpi_comm_world,ier)
+
+  end subroutine gather_all_all_singlei
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine gather_all_all_single_ch(sendbuf, recvbuf, NPROC, dim1)
+
+  use my_mpi
+
+  implicit none
+
+
+  integer                                   :: dim1 ! character length
+  integer                                   :: NPROC
+  character(len=dim1)                       :: sendbuf
+  character(len=dim1), dimension(0:NPROC-1) :: recvbuf
+
+  integer :: ier
+
+  call MPI_ALLGATHER(sendbuf,dim1,MPI_CHARACTER, &
+                  recvbuf,dim1,MPI_CHARACTER, &
+                  my_local_mpi_comm_world,ier)
+
+  end subroutine gather_all_all_single_ch
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 
   subroutine gather_all_cr(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
@@ -1432,8 +1718,6 @@ end module my_mpi
 
   implicit none
 
-  include "precision.h"
-
   integer :: sendcnt,recvcounttot,NPROC
   integer, dimension(NPROC) :: recvcount,recvoffset
   integer, dimension(sendcnt) :: sendbuf
@@ -1468,10 +1752,37 @@ end module my_mpi
   integer :: ier
 
   call MPI_GATHERV(sendbuf,sendcnt,CUSTOM_MPI_TYPE, &
-                  recvbuf,recvcount,recvoffset,CUSTOM_MPI_TYPE, &
-                  0,my_local_mpi_comm_world,ier)
+                   recvbuf,recvcount,recvoffset,CUSTOM_MPI_TYPE, &
+                   0,my_local_mpi_comm_world,ier)
 
   end subroutine gatherv_all_cr
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine gatherv_all_cr_inter(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
+
+  use my_mpi
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  include "precision.h"
+
+  integer :: sendcnt,recvcounttot,NPROC
+  integer, dimension(NPROC) :: recvcount,recvoffset
+  real(kind=CUSTOM_REAL), dimension(sendcnt) :: sendbuf
+  real(kind=CUSTOM_REAL), dimension(recvcounttot) :: recvbuf
+
+  integer :: ier
+
+  call MPI_GATHERV(sendbuf,sendcnt,CUSTOM_MPI_TYPE, &
+                  recvbuf,recvcount,recvoffset,CUSTOM_MPI_TYPE, &
+                  0,my_local_mpi_comm_inter,ier)
+
+  end subroutine gatherv_all_cr_inter
+
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1614,6 +1925,36 @@ end module my_mpi
 
   end subroutine world_get_comm
 
+
+  subroutine get_info_null(info)
+
+  use my_mpi
+
+  implicit none
+
+  integer, intent(out) :: info
+
+  info = my_local_mpi_info_null
+
+  end subroutine get_info_null
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine get_size_msg(status,size)
+
+  use my_mpi
+  implicit none
+
+  integer, intent(out) :: size
+  integer, intent(in)  :: status(MPI_STATUS_SIZE)
+  integer              :: ier
+
+  call MPI_GET_COUNT(status, MPI_INT, size, ier);
+
+end subroutine
+
 !
 !-------------------------------------------------------------------------------------------------
 !
@@ -1654,8 +1995,15 @@ end module my_mpi
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mod(sizeval,NUMBER_OF_SIMULTANEOUS_RUNS) /= 0) then
-    if (myrank == 0) print *,'Error: the number of MPI processes ',sizeval, &
-                            ' is not a multiple of NUMBER_OF_SIMULTANEOUS_RUNS = ',NUMBER_OF_SIMULTANEOUS_RUNS
+    if (myrank == 0) then
+      print *,'Error: the number of MPI processes ',sizeval, &
+              ' is not a multiple of NUMBER_OF_SIMULTANEOUS_RUNS = ',NUMBER_OF_SIMULTANEOUS_RUNS
+      print *
+      print *,'make sure to launch program with NPROC * NUMBER_OF_SIMULTANEOUS_RUNS processes'
+      print *,'for example: NPROC = 1 and NUMBER_OF_SIMULTANEOUS_RUNS = 4'
+      print *,' > mpirun -np 4 ./bin/xspecfem3D'
+      print *
+    endif
     stop 'the number of MPI processes is not a multiple of NUMBER_OF_SIMULTANEOUS_RUNS'
   endif
 
@@ -1740,3 +2088,251 @@ end module my_mpi
 
   end subroutine world_unsplit
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine world_unsplit_inter()
+  use my_mpi
+  implicit none
+  integer :: ier
+
+  call synchronize_inter()
+  call MPI_COMM_FREE(my_local_mpi_comm_inter,ier)
+  !call MPI_COMM_FREE(my_local_mpi_comm_world,ier)
+
+end subroutine world_unsplit_inter
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+!
+  subroutine select_io_node(node_names, myrank, sizeval, key, io_start)
+
+    use constants, only:io_task,compute_task,dest_ionod,nproc_io,CUSTOM_REAL,my_io_id,n_str_nodename
+    use shared_parameters, only: NIONOD
+
+    implicit none
+
+    integer, intent(in)                         :: myrank, sizeval
+    integer, intent(out)                        :: key, io_start
+    character(len=n_str_nodename), dimension(0:sizeval-1), intent(in) :: node_names
+
+    character(len=n_str_nodename), dimension(sizeval) :: dump_node_names ! names of cluster nodes
+    integer, dimension(sizeval)           :: n_procs_on_node ! number of procs on each cluster node
+    integer, dimension(:), allocatable    :: n_ionode_on_cluster ! number of ionode on the cluster nodes
+    integer :: i,j,c,n_cluster_node=0,my_cluster_id=-1,n_rest_io,n_ionode,n_comp_node
+    real(kind=CUSTOM_REAL) :: io_ratio ! dum
+
+    n_procs_on_node(:) = 0 ! initialize
+    dump_node_names(:) = "nan"
+
+    ! BUG: nprocs goes wrong when 2 cluster nodes and 64 compute 8 io procs
+    ! (only 62 compute nodes are assigned)
+
+    ! cluster_node_nums = [n_1,...,n_i,...n_cn,-1,-1,...] ! n_i is the number of procs on
+    ! each cluster node
+    do i = 1, sizeval
+        ! search the node name already found and registered in the dump_node_names array
+        c = 0
+        do j = 1, sizeval
+            if (node_names(i-1) .eq. dump_node_names(j)) c = j
+        enddo
+
+        ! if node_name[i-1] is not registered yet
+        if (c == 0) then
+            ! count the number of cluster node
+            n_cluster_node = n_cluster_node + 1
+
+            dump_node_names(n_cluster_node) = node_names(i-1) ! register the name
+            n_procs_on_node(n_cluster_node) = 1 ! count up the number of procs on this cluster node
+
+            c = n_cluster_node
+        else ! if node_name[i] has already be found, count up the number of procs
+            n_procs_on_node(c) = n_procs_on_node(c) + 1
+        endif
+
+        ! the id of cluster which this process belongs to
+        if (i-1==myrank) then
+            my_cluster_id = c
+        endif
+    enddo
+
+    ! warning when a cluster node has only one single proc.
+    do i = 1, n_cluster_node
+        if(n_procs_on_node(i) == 1) then
+            print *, "node name: " // trim(dump_node_names(i)) // " has only one procs."
+            print *, "this may lead a io performance issue by inter-clusternode communication."
+        endif
+    enddo
+
+    ! select NIONOD of io nodes
+    allocate(n_ionode_on_cluster(n_cluster_node))
+    !! decide the number of io node on each cluster node
+    ! at least one io node on each cluster node
+    n_ionode_on_cluster(:) = 1
+    ! check if the total number of io node > NIONOD
+    if (sum(n_ionode_on_cluster)>NIONOD) then
+        print *, "NIONOD in Parfile is too small"
+        print *, "at least one io node for each cluster node is necessary"
+        stop
+    endif
+
+    ! share the rest of ionodes based on the ratio of compute nodes
+    n_rest_io = NIONOD - sum(n_ionode_on_cluster)
+    if (n_rest_io /= 0) then
+        ! add io nodes one by one to the cluster node where
+        ! the io_node/total_node ratio is rowest
+        do i = 1, n_rest_io
+            io_ratio = 9999.0 !initialize at each i
+            do j = 1, n_cluster_node
+                if(io_ratio > real(n_ionode_on_cluster(j))/real(n_procs_on_node(j))) then
+                    ! dump if largest
+                    io_ratio = real(n_ionode_on_cluster(j))/real(n_procs_on_node(j))
+                    ! destination of additional io node
+                    c = j
+                endif
+            enddo
+            ! add one additional io node
+            n_ionode_on_cluster(c) = n_ionode_on_cluster(c) + 1
+        enddo
+    endif
+
+    !! choose the io node from the last rank of each cluster node
+    n_ionode = 0
+    do i = 1, n_cluster_node
+        c = 0
+        ! number of compute node on this cluster node
+        n_comp_node = n_procs_on_node(i) - n_ionode_on_cluster(i)
+        do j = 1, sizeval
+            ! if this rank is on i cluster node
+            if(dump_node_names(i) .eq. node_names(j-1)) then
+                c = c + 1
+                if(n_comp_node < c) then
+                    ! j is io node
+                    if (j-1 == myrank) then
+                        ! check  if j is myrank
+                        io_task      = .true. ! set io node flag
+                        compute_task = .false.
+                        key          = 0
+                        my_io_id     = n_ionode ! id of io_node
+                        nproc_io     = n_comp_node/n_ionode_on_cluster(i) ! number of compute nodes which use this io node
+                        dest_ionod   = -1
+                        if (c-n_comp_node-1 < mod(n_comp_node,n_ionode_on_cluster(i))) nproc_io = nproc_io + 1
+                    endif
+
+                    ! rank of io_start
+                    if(n_ionode==0) io_start=j-1
+
+                    n_ionode = n_ionode+1
+
+               else
+                    ! j is compute node
+                    if (j-1 == myrank) then
+                        io_task      = .false.
+                        compute_task = .true.
+                        key          = 1
+                        ! set the destination of mpi communication
+                        dest_ionod   = mod(c-1,n_ionode_on_cluster(i)) + n_ionode
+                    endif
+                endif
+            endif
+        enddo
+    enddo
+
+    !if(myrank==0) then
+    !  print *, "n_procs_on_node"
+    !  print *, n_procs_on_node
+    !  print *, "n_ionode_on_cluster"
+    !  print *, n_ionode_on_cluster
+    !endif
+    call synchronize_all()
+
+    if (io_task) print *, "rank ", myrank, " node ", trim(node_names(myrank)), " my_io_id", my_io_id, " nprocio ",nproc_io
+
+    do i = 0, n_ionode-1
+        call synchronize_all()
+        if (.not. io_task) then
+          if (dest_ionod == i) print *, "rank ", myrank, " node ", trim(node_names(myrank)), " dest ", dest_ionod
+        endif
+    enddo
+    deallocate(n_ionode_on_cluster)
+  end subroutine select_io_node
+
+
+
+! split compute nodes and io node
+  subroutine separate_compute_and_io_nodes()
+    use my_mpi
+
+    use constants !, only: io_task,compute_task,dest_ionod,nproc_io
+    use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,NIONOD
+
+    implicit none
+
+    integer :: sizeval,ier,key,NPROC,nnode_comp, &
+               split_comm,inter_comm,io_start,comp_start
+
+    ! test node name
+    character(len=n_str_nodename), dimension(:), allocatable :: node_names
+    character(len=n_str_nodename) :: this_node_name
+    integer :: node_len
+
+
+    ! split comm into computation nodes and io node
+    ! here we use the last NIONOD ranks (intra comm) as the io node
+    ! for using one additional node, xspecfem3D need to be run with + NIONOD node
+    ! thus for running mpirun, it should be like e.g.
+    ! mpirun -n $((NPROC+NIONOD)) ./bin/xspecfem3D
+
+    ! get the local mpi_size and rank
+    call world_size(sizeval)
+    call world_rank(myrank)
+
+    nnode_comp = sizeval-NIONOD
+
+    ! to select io node and compute nodes on the same cluster node.
+    allocate(node_names(0:sizeval-1))
+    call MPI_GET_PROCESSOR_NAME(this_node_name,node_len,ier)
+    ! share the node name between procs
+    call gather_all_all_single_ch(this_node_name,node_names,sizeval,n_str_nodename)
+    call synchronize_all()
+
+    ! select the task of this roc
+    if (NIONOD > 0) then
+      call select_io_node(node_names,myrank,sizeval,key,io_start)
+
+      ! split communicator into compute_comm and io_comm
+      call MPI_COMM_SPLIT(my_local_mpi_comm_world, key, myrank, split_comm, ier)
+
+      ! create inter communicator and set as my_local_mpi_comm_inter
+      if (io_task) then
+        comp_start = 0
+        call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, comp_start, 1111, inter_comm, ier)
+      else
+        !io_start = nnode_comp !+dest_ionod
+        call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, io_start,   1111, inter_comm, ier)
+      endif
+      my_local_mpi_comm_world = split_comm
+
+      ! use inter_comm as my_local_mpi_comm_world for all send/recv
+      my_local_mpi_comm_inter = inter_comm
+
+      ! exclude io node from the other computer nodes
+      if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) NPROC = NPROC-NIONOD
+    else
+      my_local_mpi_comm_inter = my_local_mpi_comm_world
+    endif
+
+    deallocate(node_names)
+  end subroutine
+
+! wait for an arrival of any mpi message
+  subroutine idle_mpi_io(status)
+    use my_mpi
+    integer, intent(inout) :: status(MPI_STATUS_SIZE)
+    integer :: ier
+
+    call mpi_probe( MPI_ANY_SOURCE, MPI_ANY_TAG, my_local_mpi_comm_inter, status, ier)
+
+  end subroutine idle_mpi_io

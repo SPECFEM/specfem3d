@@ -1,0 +1,72 @@
+# Github Actions workflow
+#
+# runs compilation tests on Linux Ubuntu and Mac platforms
+name: CI
+
+on: [push]
+
+jobs:
+  linuxCheck:
+    name: Test on ${{ matrix.os }}    
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest,ubuntu-16.04]
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Install packages
+      run: |
+        sudo apt update
+        sudo apt install -yq --no-install-recommends gfortran g++ openmpi-bin libopenmpi-dev
+        echo "compiler versions:" ${FC} ${MPIFC} ${CC}
+        gcc --version
+        gfortran --version
+        mpif90 --version
+        export TERM=xterm
+        echo "exports:"
+        export
+        echo ""
+
+    - name: configure
+      run: ./configure
+      
+    - name: make
+      run: make -j2 all
+      
+    - name: make tests
+      run: make tests
+
+  macosCheck:
+    name: Test on Mac
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Install dependencies
+      run: |
+        brew install gcc openmpi
+        echo "compiler versions:" ${FC} ${MPIFC} ${CC}
+        gcc --version
+        gfortran --version
+        mpif90 --version
+        export TERM=xterm
+        echo "exports:"
+        export
+        echo ""
+
+    - name: configure
+      run: |
+        ./configure
+        echo "modifying external_libs/scotch/src/Makefile.inc"
+        cp -v external_libs/scotch/src/Make.inc/Makefile.inc.i686_mac_darwin8 external_libs/scotch/src/Makefile.inc
+
+    - name: make
+      run: make -j2 all
+
+    - name: make tests
+      run: make tests
+

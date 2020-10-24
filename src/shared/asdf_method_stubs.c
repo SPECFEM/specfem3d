@@ -34,12 +34,18 @@
 
 // for ASDF reader setup
 
-void FC_FUNC_(asdf_setup,ASDF_SETUP)(void) {}
+void FC_FUNC_(asdf_setup,ASDF_SETUP)(void) {
+  fprintf(stderr,"ERROR: ASDF_FORMAT enabled without ASDF Support. To enable support, reconfigure with --with-asdf flag.\n");
+  exit(1);
+}
 void FC_FUNC_(asdf_cleanup,ASDF_CLEANUP)(void) {}
 
 // for ASDF writer
 
-void FC_FUNC_(init_asdf_data,INIT_ASDF_DATA)(void) {}
+void FC_FUNC_(init_asdf_data,INIT_ASDF_DATA)(void) {
+  fprintf(stderr,"ERROR: ASDF_FORMAT enabled without ASDF Support. To enable support, reconfigure with --with-asdf flag.\n");
+  exit(1);
+}
 void FC_FUNC_(store_asdf_data,STORE_ASDF_DATA)(void) {}
 void FC_FUNC_(close_asdf_data,CLOSE_ASDF_DATA)(void) {}
 void FC_FUNC_(write_asdf,WRITE_ASDF)(void) {}

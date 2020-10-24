@@ -910,7 +910,7 @@ subroutine define_bodyforce(f, iel_src2, ipol_src2, jpol_src2)
         endif
         write(69,*) 'iel,jpol,r:', liel_src, ljpol_src, &
              rcoord(lipol_src, ljpol_src, ielsolid(liel_src)) / 1.d3
-        write(69,*) 'North| s-dir -- > '
+        write(69,*) 'North| s-dir -->'
         do jpol=npol, 0, -1
            write(69,fmt1) (f(ipol, jpol, liel_src), ipol=0,npol)
         enddo
@@ -1143,7 +1143,7 @@ subroutine define_moment_tensor(iel_src2, ipol_src2, jpol_src2, source_term)
 
            write(69,*) 'iel,jpol,r:', liel_src, ljpol_src, &
                 rcoord(lipol_src,ljpol_src,ielsolid(liel_src)) / 1.d3
-           write(69,*)'North| s-dir -- > '
+           write(69,*)'North| s-dir -->'
            if (src_type(1) == 'dipole') then
               write(69,*) '  ', src_type(2), '+ component'
            else

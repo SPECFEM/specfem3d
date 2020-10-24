@@ -52,11 +52,11 @@
   double precision, dimension(npoints_subset), intent(in) :: final_distance_subset
 
   integer, intent(in) :: npoints_total
-  integer, dimension(npoints_total), intent(out)  :: ispec_selected, islice_selected, idomain
-  double precision, dimension(npoints_total), intent(out)  :: x_found, y_found, z_found
-  double precision, dimension(npoints_total), intent(out)  :: xi_point, eta_point, gamma_point
-  double precision, dimension(NDIM,NDIM,npoints_total), intent(out)  :: nu_point
-  double precision, dimension(npoints_total), intent(out)  :: final_distance
+  integer, dimension(npoints_total), intent(inout)  :: ispec_selected, islice_selected, idomain
+  double precision, dimension(npoints_total), intent(inout)  :: x_found, y_found, z_found
+  double precision, dimension(npoints_total), intent(inout)  :: xi_point, eta_point, gamma_point
+  double precision, dimension(NDIM,NDIM,npoints_total), intent(inout)  :: nu_point
+  double precision, dimension(npoints_total), intent(inout)  :: final_distance
 
   ! local parameters
   integer :: ipoin,ipoin_in_this_subset,iproc
@@ -69,8 +69,18 @@
   double precision, dimension(npoints_subset,0:NPROC-1) :: final_distance_all
   double precision, dimension(NDIM,NDIM,npoints_subset,0:NPROC-1) :: nu_all
 
+  ! initializes with dummy values
+  ispec_selected_all(:,:) = -1
+  idomain_all(:,:) = -1000
+  xi_all(:,:) = 0.d0
+  eta_all(:,:) = 0.d0
+  gamma_all(:,:) = 0.d0
+  x_found_all(:,:) = 0.d0
+  y_found_all(:,:) = 0.d0
+  z_found_all(:,:) = 0.d0
+  final_distance_all(:,:) = HUGEVAL
 
-  ! gather all (on master process)
+  ! gather all (on main process)
   call gather_all_i(ispec_selected_subset,npoints_subset,ispec_selected_all,npoints_subset,NPROC)
   call gather_all_i(idomain_subset,npoints_subset,idomain_all,npoints_subset,NPROC)
 

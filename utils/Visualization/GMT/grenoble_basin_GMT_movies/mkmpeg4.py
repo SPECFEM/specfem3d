@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-
+#
 # Creates an AVI animation from a sequence of images
 # The input images can be any format other than TIFF with ZLIB compression
+from __future__ import print_function
 
 import os, sys, re
 from optparse import OptionParser
@@ -59,7 +60,7 @@ def ConvertToSGI(files,verbose):
             return
 
     if verbose:
-        print 'Converting images to temporary RGB format...'
+        print('Converting images to temporary RGB format...')
 
     for f in files:
         os.system('convert %s %s.%d.sgi 1> /dev/null 2>&1' % (f, f, pid) )
@@ -78,23 +79,23 @@ def main():
     pid     = os.getpid()
 
     if not out:
-        print >>sys.stderr,'ERROR: [-o|--out=] output filename required'
+        print('ERROR: [-o|--out=] output filename required',file=sys.stderr)
         sys.exit()
 
     if not files:
-        print >>sys.stderr,'ERROR: input files required'
+        print('ERROR: input files required', file=sys.stderr)
         sys.exit()
 
     if verbose:
         if divx:
-            print 'DivX codec selected'
+            print('DivX codec selected')
         else:
-            print 'MS-MPEG4v2 codec selected'
+            print('MS-MPEG4v2 codec selected')
 
     ConvertToSGI(files,verbose)
 
     if verbose:
-        print 'Encoding...pass 1...'
+        print('Encoding...pass 1...')
 
     if divx:
         opts = "vbitrate=%d:mbd=2:keyint=100:v4mv:vqmin=3:vlelim=-4:vcelim=7:lumi_mask=0.07:dark_mask=0.10:naq:vqcomp=0.7:vqblur=0.2:mpeg_quant" % (bitrate)
@@ -106,7 +107,7 @@ def main():
         os.system(cmd)
 
         if verbose:
-            print 'Encoding...pass 2...'
+            print('Encoding...pass 2...')
 
 # (Emmanuel Chaljub: this step was not working so I just copy/pasted the encoding pass 1)
 #        cmd = "mencoder -ovc lavc -lavcopts vcodec=mpeg4:vpass=2:%s -mf type=sgi:fps=%d -nosound -o %s mf://\*.%d.sgi" % (opts, fps, out, pid)
@@ -127,7 +128,7 @@ def main():
         os.system(cmd)
 
         if verbose:
-            print 'Encoding...pass 2...'
+            print('Encoding...pass 2...')
 
 #        cmd = "mencoder -ovc lavc -lavcopts vcodec=msmpeg4v2:vpass=2:%s -mf type=sgi:fps=%d -nosound -o %s mf://\*.%d.sgi" % (opts, fps, out, pid)
         cmd = "mencoder -ovc lavc -lavcopts vcodec=msmpeg4v2:vpass=1:%s -mf type=sgi:fps=%d -nosound -o %s mf://\*.%d.sgi" % (opts, fps, out, pid)
@@ -142,7 +143,7 @@ def main():
     os.system("rm *.%d.sgi divx2pass.log" % (pid) )
 
     if verbose:
-        print 'Done'
+        print('Done')
 
 ##############################################################
 

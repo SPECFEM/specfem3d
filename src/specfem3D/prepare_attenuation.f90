@@ -24,8 +24,6 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
 
 
   subroutine prepare_attenuation()
@@ -36,6 +34,8 @@
   use specfem_par_poroelastic
 
   use shared_parameters, only: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
+
+  use phdf5_utils
 
   implicit none
 
@@ -48,6 +48,12 @@
 
   ! checks if attenuation is on and anything to do
   if (.not. ATTENUATION) return
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "preparing attenuation"
+    call flush_IMAIN()
+  endif
 
   ! if attenuation is on, shift shear moduli to center frequency of absorption period band, i.e.
   ! rescale mu to average (central) frequency for attenuation
@@ -68,15 +74,13 @@
 
   ! reads in attenuation arrays
   call create_name_database(prname,myrank,LOCAL_PATH)
-  if (I_should_read_the_database) then
+  if (I_should_read_the_database .and. .not. HDF5_ENABLED) then
       open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', status='old',action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
           print *,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
           call exit_mpi(myrank,'error opening attenuation.bin file')
       endif
-  endif
 
-  if (I_should_read_the_database) then
       read(27) ispec
       if (ispec /= NSPEC_ATTENUATION_AB) then
           close(27)
@@ -90,11 +94,16 @@
       read(27) scale_factor_kappa
 
       close(27)
+  else if (I_should_read_the_database .and. HDF5_ENABLED) then
+      call read_attenuation_file_in_h5(factor_common,scale_factor,factor_common_kappa,scale_factor_kappa)
   endif
 
+  ! broadcasts
   call bcast_all_i_for_database(ispec, 1)
-  if (size(factor_common) > 0) call bcast_all_cr_for_database(factor_common(1,1,1,1,1), size(factor_common))
-  if (size(scale_factor) > 0) call bcast_all_cr_for_database(scale_factor(1,1,1,1), size(scale_factor))
+  if (size(factor_common) > 0) &
+    call bcast_all_cr_for_database(factor_common(1,1,1,1,1), size(factor_common))
+  if (size(scale_factor) > 0) &
+    call bcast_all_cr_for_database(scale_factor(1,1,1,1), size(scale_factor))
   call bcast_all_cr_for_database(factor_common_kappa(1,1,1,1,1), size(factor_common_kappa))
   call bcast_all_cr_for_database(scale_factor_kappa(1,1,1,1), size(scale_factor_kappa))
 
@@ -102,12 +111,10 @@
   ! precalculates tau_sigma depending on period band (constant for all Q_mu), and
   ! determines central frequency f_c_source of attenuation period band
   call get_attenuation_constants(min_resolved_period,tau_sigma_dble, &
-            f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
+                                 f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
   ! determines alphaval,betaval,gammaval for runge-kutta scheme
   tau_sigma(:) = real(tau_sigma_dble(:),kind=CUSTOM_REAL)
-
-  call get_attenuation_memory_values(tau_sigma,deltat,alphaval,betaval,gammaval)
 
   ! shifts shear moduli
   do ispec = 1,NSPEC_AB
@@ -136,6 +143,23 @@
   deallocate(scale_factor)
   deallocate(scale_factor_kappa)
 
+  ! precompute Runge-Kutta coefficients
+  call get_attenuation_memory_values(tau_sigma,deltat,alphaval,betaval,gammaval)
+
+  ! attenuation backward memories
+  if (SIMULATION_TYPE == 3) then
+    ! precompute Runge-Kutta coefficients if attenuation
+    call get_attenuation_memory_values(tau_sigma,b_deltat,b_alphaval,b_betaval,b_gammaval)
+  endif
+
+  ! just to be sure to use the forward alpha/beta/gamma-val arrays
+  ! (in principle, should be already the same for undo_att as b_deltat is set to delta_t)
+  if (UNDO_ATTENUATION_AND_OR_PML) then
+    b_alphaval = alphaval
+    b_betaval = betaval
+    b_gammaval = gammaval
+  endif
+
   ! clear memory variables if attenuation
   ! initialize memory variables for attenuation
   epsilondev_trace(:,:,:,:) = 0._CUSTOM_REAL
@@ -160,5 +184,32 @@
     R_xz(:,:,:,:,:) = VERYSMALLVAL
     R_yz(:,:,:,:,:) = VERYSMALLVAL
   endif
+
+  if (SIMULATION_TYPE == 3) then
+    ! memory variables if attenuation
+    if (ELASTIC_SIMULATION) then
+      b_R_trace = 0._CUSTOM_REAL
+      b_R_xx = 0._CUSTOM_REAL
+      b_R_yy = 0._CUSTOM_REAL
+      b_R_xy = 0._CUSTOM_REAL
+      b_R_xz = 0._CUSTOM_REAL
+      b_R_yz = 0._CUSTOM_REAL
+      b_epsilondev_trace = 0._CUSTOM_REAL
+      b_epsilondev_xx = 0._CUSTOM_REAL
+      b_epsilondev_yy = 0._CUSTOM_REAL
+      b_epsilondev_xy = 0._CUSTOM_REAL
+      b_epsilondev_xz = 0._CUSTOM_REAL
+      b_epsilondev_yz = 0._CUSTOM_REAL
+    endif
+  endif
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "  attenuation period range min/max: ",MIN_ATTENUATION_PERIOD,'/',MAX_ATTENUATION_PERIOD,' (s)'
+    call flush_IMAIN()
+  endif
+
+  ! synchonizes
+  call synchronize_all()
 
   end subroutine prepare_attenuation

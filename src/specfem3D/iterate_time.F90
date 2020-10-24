@@ -24,8 +24,7 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
+
 
   subroutine iterate_time()
 
@@ -37,7 +36,7 @@
   use gravity_perturbation, only: gravity_timeseries, GRAVITY_SIMULATION
 
   implicit none
-
+  real :: ts, te,pts,pte,ave_s=0,ave_m=0,ave_f=0 !debug time
   ! for EXACT_UNDOING_TO_DISK
   integer :: ispec,iglob,i,j,k,counter,record_length,ier
   integer, dimension(:), allocatable :: integer_mask_ibool_exact_undo
@@ -90,7 +89,7 @@
 
   ! synchronize all processes to make sure everybody is ready to start time loop
   call synchronize_all()
-  if (myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
+  if (myrank == 0) write(IMAIN,*) 'All processes are synchronized before the time loop'
 
 !
 !   s t a r t   t i m e   i t e r a t i o n s
@@ -186,7 +185,23 @@
   ! get MPI starting
   time_start = wtime()
 
+  ! start idling of io server
+  if (HDF5_ENABLED) then
+    if (io_task) then
+      call do_io_start_idle()
+    else ! compute node passes necessary info. to io node
+      if(NIONOD > 0) call pass_info_to_io()
+    endif
+  endif
+
+  if (compute_task) then
+  call cpu_time(ts) !!!!!!!!!!!!!!!!!!!
   do it = it_begin,it_end
+    ! debug
+!    if(mod(it,10)==0) then
+!      print *, "it = ",it, "rank ", myrank
+!      if(mod(it,NTSTEP_BETWEEN_FRAMES)==0) print *, "movie out time"
+!    endif
 
     ! simulation status output and stability check
     if (mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == it_begin + 4 .or. it == it_end) then
@@ -198,87 +213,108 @@
       if (mod(it,NTSTEP_BETWEEN_OUTPUT_ENERGY) == 0 .or. it == 5 .or. it == NSTEP) call compute_energy()
     endif
 
-    ! updates wavefields using Newmark time scheme
-    if (.not. USE_LDDRK) call update_displacement_scheme()
+    call cpu_time(pts)
 
     ! calculates stiffness term
-    if (.not. GPU_MODE) then
-      ! wavefields on CPU
-
-      ! note: the order of the computations for acoustic and elastic domains is crucial for coupled simulations
-      if (SIMULATION_TYPE == 3) then
-        ! kernel/adjoint simulations
-
-        ! adjoint wavefields
-        if (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) then
-          ! coupled acoustic-elastic simulations
-          ! 1. elastic domain w/ adjoint wavefields
-          call compute_forces_viscoelastic_calling()
-          ! 2. acoustic domain w/ adjoint wavefields
-          call compute_forces_acoustic_calling()
-        else
-          ! non-coupled simulations
-          ! (purely acoustic or elastic)
-          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
-          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
-        endif
-
-        ! backward/reconstructed wavefields
-        ! acoustic solver
-        ! (needs to be done after elastic one)
-        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_backward_calling()
-        ! elastic solver
-        ! (needs to be done first, before poroelastic one)
-        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_backward_calling()
-
-      else
-        ! forward simulations
-        do istage = 1, NSTAGE_TIME_SCHEME
-          if (USE_LDDRK) call update_displ_lddrk()
-          ! 1. acoustic domain
-          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
-          ! 2. elastic domain
-          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
-        enddo
+    ! note: the order of the computations for acoustic and elastic domains is crucial for coupled simulations
+    if (SIMULATION_TYPE == 3) then
+      ! kernel/adjoint simulations
+      ! updates backward wavefields using Newmark time scheme
+      if (.not. USE_LDDRK) then
+        ! forward fields
+        call update_displ_Newmark()
+        ! backward fields
+        call update_displ_Newmark_backward()
       endif
 
-      ! poroelastic solver
-      if (POROELASTIC_SIMULATION) call compute_forces_poroelastic_calling()
+      ! adjoint wavefields
+      if (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) then
+        ! coupled acoustic-elastic simulations
+        ! 1. elastic domain w/ adjoint wavefields
+        call compute_forces_viscoelastic_calling()
+        ! 2. acoustic domain w/ adjoint wavefields
+        call compute_forces_acoustic_forward_calling()
+      else
+        ! non-coupled simulations (purely acoustic or elastic)
+        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_forward_calling()
+        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
+      endif
 
-    else
-      ! wavefields on GPU
+      ! backward/reconstructed wavefields
       ! acoustic solver
-      if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_GPU_calling()
+      ! (needs to be done after elastic one)
+      if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_backward_calling()
       ! elastic solver
       ! (needs to be done first, before poroelastic one)
-      if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_GPU_calling()
+      if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_backward_calling()
+
+    else
+      ! forward simulations
+      do istage = 1, NSTAGE_TIME_SCHEME   ! Newmark has only NSTAGE == 1
+        ! updates wavefields
+        if (USE_LDDRK) then
+          ! LDDRK update
+          call update_displ_lddrk()
+        else
+          ! Newmark update
+          call update_displ_Newmark()
+        endif
+
+        ! computes acoustic domain (first)
+        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_forward_calling()
+        ! computes elastic domain
+        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
+      enddo
     endif
+    call cpu_time(pte)
+    ave_f=ave_f+(pte-pts)
+
+
+    ! poroelastic solver
+    if (POROELASTIC_SIMULATION) call compute_forces_poroelastic_calling()
+
 
     ! restores last time snapshot saved for backward/reconstruction of wavefields
     ! note: this must be read in after the Newmark time scheme
     if (SIMULATION_TYPE == 3 .and. it == 1) then
-      call it_read_forward_arrays()
+      call read_forward_arrays()
     endif
 
     ! calculating gravity field at current timestep
     if (GRAVITY_SIMULATION) call gravity_timeseries()
 
+
     ! write the seismograms with time shift (GPU_MODE transfer included)
-    call write_seismograms()
+    call cpu_time(pts)
+    if (HDF5_ENABLED) then
+      call write_seismograms_h5()
+    else
+      call write_seismograms()
+    endif
+    call cpu_time(pte)
+    ave_s=ave_s+(pte-pts)
 
     ! adjoint simulations: kernels
     if (SIMULATION_TYPE == 3) then
       call compute_kernels()
     endif
 
+
     ! outputs movie files
-    call write_movie_output()
+    call cpu_time(pts)
+    if (HDF5_ENABLED) then
+      call write_movie_output_h5()
+    else
+      call write_movie_output()
+    endif
+    call cpu_time(pte)
+    ave_m=ave_m+(pte-pts)
+
 
     ! first step of noise tomography, i.e., save a surface movie at every time step
     ! modified from the subroutine 'write_movie_surface'
     if (NOISE_TOMOGRAPHY == 1) then
-      call noise_save_surface_movie(displ,ibool,noise_surface_movie,it,NSPEC_AB,NGLOB_AB, &
-                            num_free_surface_faces,free_surface_ispec,free_surface_ijk,Mesh_pointer,GPU_MODE)
+      call noise_save_surface_movie()
     endif
 
 #ifdef VTK_VIS
@@ -301,6 +337,11 @@
   !
   enddo   ! end of main time loop
 
+  call cpu_time(te)
+  print *, "time for it loop is ", te-ts
+  print *, "summed time for only seismo out ", ave_s
+  print *, "summed time for only movie out ", ave_m
+  print *, "summed time for compute force ", ave_f
 
   ! close the huge file that contains a dump of all the time steps to disk
   if (EXACT_UNDOING_TO_DISK) close(IFILE_FOR_EXACT_UNDOING)
@@ -317,7 +358,7 @@
   ! Transfer fields from GPU card to host for further analysis
   if (GPU_MODE) call it_transfer_from_GPU()
 
-!----  close energy file
+  ! closes energy file
   if (OUTPUT_ENERGY .and. myrank == 0) close(IOUT_ENERGY)
 
 #ifdef VTK_VIS
@@ -335,6 +376,10 @@
   ! cleanup GPU arrays
   if (GPU_MODE) call it_cleanup_GPU()
 
+  endif ! if compute_task
+
+  if(HDF5_ENABLED .and. NIONOD > 0) call synchronize_inter()
+
   end subroutine iterate_time
 
 !
@@ -348,6 +393,7 @@
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
+  use specfem_par_noise
 
   implicit none
 
@@ -366,10 +412,10 @@
 
       if (ATTENUATION) &
         call transfer_fields_att_from_device(Mesh_pointer, &
-                    R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
-                    epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
-                    size(epsilondev_xx))
-
+                                             R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
+                                             epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+                                             R_trace,epsilondev_trace, &
+                                             size(epsilondev_xx))
     endif
 
   else if (SIMULATION_TYPE == 3) then
@@ -431,103 +477,3 @@
                               APPROXIMATE_HESS_KL)
 
   end subroutine it_cleanup_GPU
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-
-  subroutine it_read_forward_arrays()
-
-  use specfem_par
-  use specfem_par_acoustic
-  use specfem_par_elastic
-  use specfem_par_poroelastic
-
-  implicit none
-
-  integer :: ier
-
-! restores last time snapshot saved for backward/reconstruction of wavefields
-! note: this is done here after the Newmark time scheme, otherwise the indexing for sources
-!          and adjoint sources will become more complicated
-!          that is, index it for adjoint sources will match index NSTEP - 1 for backward/reconstructed wavefields
-  if (ADIOS_FOR_FORWARD_ARRAYS) then
-    call read_forward_arrays_adios()
-  else
-    ! reads in wavefields
-    open(unit=IIN,file=trim(prname)//'save_forward_arrays.bin',status='old', &
-          action='read',form='unformatted',iostat=ier)
-    if (ier /= 0) then
-      print *,'error: opening save_forward_arrays'
-      print *,'path: ',trim(prname)//'save_forward_arrays.bin'
-      call exit_mpi(myrank,'error open file save_forward_arrays.bin')
-    endif
-
-    if (ACOUSTIC_SIMULATION) then
-      read(IIN) b_potential_acoustic
-      read(IIN) b_potential_dot_acoustic
-      read(IIN) b_potential_dot_dot_acoustic
-    endif
-
-    ! elastic wavefields
-    if (ELASTIC_SIMULATION) then
-      read(IIN) b_displ
-      read(IIN) b_veloc
-      read(IIN) b_accel
-      ! memory variables if attenuation
-      if (ATTENUATION) then
-        read(IIN) b_R_trace
-        read(IIN) b_R_xx
-        read(IIN) b_R_yy
-        read(IIN) b_R_xy
-        read(IIN) b_R_xz
-        read(IIN) b_R_yz
-        read(IIN) b_epsilondev_trace
-        read(IIN) b_epsilondev_xx
-        read(IIN) b_epsilondev_yy
-        read(IIN) b_epsilondev_xy
-        read(IIN) b_epsilondev_xz
-        read(IIN) b_epsilondev_yz
-      endif
-    endif
-
-    ! poroelastic wavefields
-    if (POROELASTIC_SIMULATION) then
-      read(IIN) b_displs_poroelastic
-      read(IIN) b_velocs_poroelastic
-      read(IIN) b_accels_poroelastic
-      read(IIN) b_displw_poroelastic
-      read(IIN) b_velocw_poroelastic
-      read(IIN) b_accelw_poroelastic
-    endif
-
-    close(IIN)
-  endif
-
-  if (GPU_MODE) then
-    if (ACOUSTIC_SIMULATION) then
-    ! transfers fields onto GPU
-      call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
-                                          b_potential_dot_acoustic, &
-                                          b_potential_dot_dot_acoustic, &
-                                          Mesh_pointer)
-    endif
-    ! elastic wavefields
-    if (ELASTIC_SIMULATION) then
-      ! puts elastic wavefield to GPU
-      call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
-      ! memory variables if attenuation
-      if (ATTENUATION) then
-        call transfer_b_fields_att_to_device(Mesh_pointer, &
-                           b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                           size(b_R_xx), &
-                           b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
-                           b_epsilondev_xz,b_epsilondev_yz, &
-                           size(b_epsilondev_xx))
-      endif
-    endif
-  endif
-
-  end subroutine it_read_forward_arrays
-

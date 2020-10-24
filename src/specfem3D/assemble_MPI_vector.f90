@@ -30,9 +30,9 @@
 !----
 
   subroutine assemble_MPI_vector_blocking(NPROC,NGLOB_AB,array_val, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                          num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                          my_neighbors_ext_mesh)
 
 ! assembles vector field in blocking way, only returns after values have been received and assembled
 
@@ -40,15 +40,15 @@
 
   implicit none
 
-  integer :: NPROC
-  integer :: NGLOB_AB
+  integer,intent(in) :: NPROC
+  integer,intent(in) :: NGLOB_AB
 
 ! array to assemble
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: array_val
 
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbors_ext_mesh
-  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh,my_neighbors_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
 
   ! local parameters
 
@@ -60,12 +60,11 @@
   integer, dimension(:), allocatable :: request_send_vector
   integer, dimension(:), allocatable :: request_recv_vector
 
-  integer ipoin,iinterface,ier
-
+  integer :: ipoin,iinterface,ier
 
 ! here we have to assemble all the contributions between partitions using MPI
 
-! assemble only if more than one partition
+  ! assemble only if more than one partition
   if (NPROC > 1) then
 
     allocate(buffer_send_vector(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
@@ -133,13 +132,16 @@
 !-------------------------------------------------------------------------------------------------
 !
   subroutine synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,array_val, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh,myrank)
+                                                 num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                                 nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                                 my_neighbors_ext_mesh)
+
 ! kbai added this subroutine to synchronize a vector field
 ! to ensure that its values at nodes on MPI interfaces stay equal on all processors that share the node.
+!
 ! Synchronize by setting the value to that of the processor with highest rank
 ! (it doesn't really matter which value we take, as long as all procs end up with exactly the same value).
+!
 ! We assume that the interfaces are ordered by increasing rank of the neighbor.
 ! Uses blocking communication: only returns after values have been received and assembled
 
@@ -147,15 +149,15 @@
 
   implicit none
 
-  integer :: NPROC
-  integer :: NGLOB_AB
+  integer,intent(in) :: NPROC
+  integer,intent(in) :: NGLOB_AB
 
 ! array to assemble
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: array_val
 
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh,myrank
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbors_ext_mesh
-  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh,my_neighbors_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
   ! local parameters
 
   ! send/receive temporary buffers
@@ -165,9 +167,7 @@
   integer, dimension(:), allocatable :: request_send_vector
   integer, dimension(:), allocatable :: request_recv_vector
 
-  integer ipoin,iinterface,ier,iglob
-
-
+  integer :: ipoin,iinterface,ier,iglob
 
 ! setting the value to that of the processor with highest rank
 
@@ -214,18 +214,16 @@
     enddo
 
     ! set the value to that of the highest-rank processor
-  do iinterface = 1, num_interfaces_ext_mesh
-    if (myrank < my_neighbors_ext_mesh(iinterface)) then
-      do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-        iglob = ibool_interfaces_ext_mesh(ipoin,iinterface)
-        array_val(:,iglob) = buffer_recv_vector(:,ipoin,iinterface)
-      enddo
-    endif
-  enddo
+    do iinterface = 1, num_interfaces_ext_mesh
+      if (myrank < my_neighbors_ext_mesh(iinterface)) then
+        do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+          iglob = ibool_interfaces_ext_mesh(ipoin,iinterface)
+          array_val(:,iglob) = buffer_recv_vector(:,ipoin,iinterface)
+        enddo
+      endif
+    enddo
 
-
-
-  ! wait for communications completion (send)
+    ! wait for communications completion (send)
     do iinterface = 1, num_interfaces_ext_mesh
       call wait_req(request_send_vector(iinterface))
     enddo
@@ -236,8 +234,6 @@
     deallocate(request_recv_vector)
   endif
 
-
-
   end subroutine synchronize_MPI_vector_blocking_ord
 
 !
@@ -245,33 +241,34 @@
 !
 
   subroutine assemble_MPI_vector_async_send(NPROC,NGLOB_AB,array_val, &
-                                           buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
-                                           num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                           nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                           my_neighbors_ext_mesh, &
-                                           request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
+                                            buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+                                            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                            my_neighbors_ext_mesh, &
+                                            request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
-    ! sends data
+! sends data
 
   use constants
 
   implicit none
 
-  integer :: NPROC
-  integer :: NGLOB_AB
+  integer,intent(in) :: NPROC
+  integer,intent(in) :: NGLOB_AB
 
   ! array to assemble
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: array_val
 
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
 
-  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
+  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
        buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh
 
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbors_ext_mesh
-  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh,my_neighbors_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
 
+  ! local parameters
   integer ipoin,iinterface
 
   ! here we have to assemble all the contributions between partitions using MPI
@@ -310,11 +307,11 @@
 !
 
   subroutine assemble_MPI_vector_async_w_ord(NPROC,NGLOB_AB,array_val, &
-                                            buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
-                                            max_nibool_interfaces_ext_mesh, &
-                                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                            request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
-                                            my_neighbors_ext_mesh,myrank)
+                                             buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                             max_nibool_interfaces_ext_mesh, &
+                                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                             request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
+                                             my_neighbors_ext_mesh)
 
 ! waits for data to receive and assembles
 
@@ -332,32 +329,33 @@
 
   implicit none
 
-  integer :: NPROC
-  integer :: NGLOB_AB
+  integer,intent(in) :: NPROC
+  integer,intent(in) :: NGLOB_AB
 
-! array to assemble
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
+  ! array to assemble
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: array_val
 
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh,myrank
+  integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
 
-  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
+  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
        buffer_recv_vector_ext_mesh
 
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
-  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: my_neighbors_ext_mesh
 
+  ! local parameters
   real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: mybuffer
   integer :: ipoin,iinterface,iglob
   logical :: need_add_my_contrib
 
 ! here we have to assemble all the contributions between partitions using MPI
 
-! assemble only if more than one partition
+  ! assemble only if more than one partition
   if (NPROC == 1) return
 
-! move interface values of array_val to local buffers
+  ! move interface values of array_val to local buffers
   do iinterface = 1, num_interfaces_ext_mesh
     do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
       iglob = ibool_interfaces_ext_mesh(ipoin,iinterface)
@@ -368,12 +366,12 @@
     enddo
   enddo
 
-! wait for communications completion (recv)
+  ! wait for communications completion (recv)
   do iinterface = 1, num_interfaces_ext_mesh
     call wait_req(request_recv_vector_ext_mesh(iinterface))
   enddo
 
-! adding all contributions in order of processor rank
+  ! adding all contributions in order of processor rank
   need_add_my_contrib = .true.
   do iinterface = 1, num_interfaces_ext_mesh
     if (need_add_my_contrib .and. myrank < my_neighbors_ext_mesh(iinterface)) call add_my_contrib()
@@ -384,7 +382,7 @@
   enddo
   if (need_add_my_contrib) call add_my_contrib()
 
-! wait for communications completion (send)
+  ! wait for communications completion (send)
   do iinterface = 1, num_interfaces_ext_mesh
     call wait_req(request_send_vector_ext_mesh(iinterface))
   enddo
@@ -413,12 +411,12 @@
 !
 
   subroutine assemble_MPI_vector_poro_s(NPROC,NGLOB_AB,array_val1,array_val2, &
-                      buffer_send_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_s, &
-                      buffer_send_vector_ext_mesh_w,buffer_recv_vector_ext_mesh_w, &
-                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
-                      request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s, &
-                      request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
+                                        buffer_send_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_s, &
+                                        buffer_send_vector_ext_mesh_w,buffer_recv_vector_ext_mesh_w, &
+                                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
+                                        request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s, &
+                                        request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
 
 ! sends data
 
@@ -426,30 +424,31 @@
 
   implicit none
 
-  integer :: NPROC
-  integer :: NGLOB_AB
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  integer,intent(in) :: NPROC
+  integer,intent(in) :: NGLOB_AB
+  integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
 
 ! array to assemble
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val1,array_val2
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: array_val1,array_val2
 
-  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
+  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
        buffer_send_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_s, &
        buffer_send_vector_ext_mesh_w,buffer_recv_vector_ext_mesh_w
 
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbors_ext_mesh
-  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s
-  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh,my_neighbors_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s
+  integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w
 
-  integer ipoin,iinterface
+  ! local parameters
+  integer :: ipoin,iinterface
 
 ! here we have to assemble all the contributions between partitions using MPI
 
-! assemble only if more than one partition
+  ! assemble only if more than one partition
   if (NPROC > 1) then
 
-! partition border copy into the buffer
+    ! partition border copy into the buffer
     do iinterface = 1, num_interfaces_ext_mesh
       do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
         buffer_send_vector_ext_mesh_s(:,ipoin,iinterface) = array_val1(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
@@ -457,9 +456,9 @@
       enddo
     enddo
 
-! send messages
+    ! send messages
     do iinterface = 1, num_interfaces_ext_mesh
-!val1
+      !val1
       call isend_cr(buffer_send_vector_ext_mesh_s(1,1,iinterface), &
                     NDIM*nibool_interfaces_ext_mesh(iinterface), &
                     my_neighbors_ext_mesh(iinterface), &
@@ -470,7 +469,7 @@
                     my_neighbors_ext_mesh(iinterface), &
                     itag, &
                     request_recv_vector_ext_mesh_s(iinterface))
-!val2
+      !val2
       call isend_cr(buffer_send_vector_ext_mesh_w(1,1,iinterface), &
                     NDIM*nibool_interfaces_ext_mesh(iinterface), &
                     my_neighbors_ext_mesh(iinterface), &
@@ -492,11 +491,11 @@
 !
 
   subroutine assemble_MPI_vector_poro_w(NPROC,NGLOB_AB,array_val1,array_val2, &
-            buffer_recv_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_w, &
-            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-            request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s, &
-            request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
+                                        buffer_recv_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_w, &
+                                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                        request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s, &
+                                        request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
 
 ! waits for data to receive and assembles
 
@@ -504,50 +503,51 @@
 
   implicit none
 
-  integer :: NPROC
-  integer :: NGLOB_AB
+  integer,intent(in) :: NPROC
+  integer,intent(in) :: NGLOB_AB
 
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
 
 ! array to assemble
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val1,array_val2
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: array_val1,array_val2
 
-  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
+  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
        buffer_recv_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_w
 
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
-  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s
-  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s
+  integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w
 
-  integer ipoin,iinterface
+  ! local parameters
+  integer :: ipoin,iinterface
 
 ! here we have to assemble all the contributions between partitions using MPI
 
 ! assemble only if more than one partition
   if (NPROC > 1) then
 
-! wait for communications completion (recv)
-  do iinterface = 1, num_interfaces_ext_mesh
-    call wait_req(request_recv_vector_ext_mesh_s(iinterface))
-    call wait_req(request_recv_vector_ext_mesh_w(iinterface))
-  enddo
-
-! adding contributions of neighbors
-  do iinterface = 1, num_interfaces_ext_mesh
-    do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-      array_val1(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
-           array_val1(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_vector_ext_mesh_s(:,ipoin,iinterface)
-      array_val2(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
-           array_val2(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_vector_ext_mesh_w(:,ipoin,iinterface)
+    ! wait for communications completion (recv)
+    do iinterface = 1, num_interfaces_ext_mesh
+      call wait_req(request_recv_vector_ext_mesh_s(iinterface))
+      call wait_req(request_recv_vector_ext_mesh_w(iinterface))
     enddo
-  enddo
 
-! wait for communications completion (send)
-  do iinterface = 1, num_interfaces_ext_mesh
-    call wait_req(request_send_vector_ext_mesh_s(iinterface))
-    call wait_req(request_send_vector_ext_mesh_w(iinterface))
-  enddo
+    ! adding contributions of neighbors
+    do iinterface = 1, num_interfaces_ext_mesh
+      do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+        array_val1(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
+             array_val1(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_vector_ext_mesh_s(:,ipoin,iinterface)
+        array_val2(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
+             array_val2(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_vector_ext_mesh_w(:,ipoin,iinterface)
+      enddo
+    enddo
+
+    ! wait for communications completion (send)
+    do iinterface = 1, num_interfaces_ext_mesh
+      call wait_req(request_send_vector_ext_mesh_s(iinterface))
+      call wait_req(request_send_vector_ext_mesh_w(iinterface))
+    enddo
 
   endif
 
@@ -562,24 +562,24 @@
 ! with cuda functions...
 
   subroutine transfer_boundary_to_device(NPROC, Mesh_pointer, &
-                                            buffer_recv_vector_ext_mesh, &
-                                            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                            request_recv_vector_ext_mesh)
+                                         buffer_recv_vector_ext_mesh, &
+                                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                         request_recv_vector_ext_mesh)
 
   use constants
 
   implicit none
 
-  integer :: NPROC
-  integer(kind=8) :: Mesh_pointer
+  integer,intent(in) :: NPROC
+  integer(kind=8),intent(in) :: Mesh_pointer
 
   ! array to assemble
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
 
-  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
+  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
        buffer_recv_vector_ext_mesh
 
-  integer, dimension(num_interfaces_ext_mesh) :: request_recv_vector_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_recv_vector_ext_mesh
 
   ! local parameters
   integer :: iinterface
@@ -597,7 +597,7 @@
 
     ! send contributions to GPU
     call transfer_boundary_to_device_a(Mesh_pointer, buffer_recv_vector_ext_mesh, &
-                                      num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh)
+                                       num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh)
   endif
 
   ! This step is done via previous function transfer_and_assemble...
@@ -616,11 +616,11 @@
 
 
   subroutine assemble_MPI_vector_send_cuda(NPROC, &
-                                          buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
-                                          num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                          nibool_interfaces_ext_mesh, &
-                                          my_neighbors_ext_mesh, &
-                                          request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
+                                           buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+                                           num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                           nibool_interfaces_ext_mesh, &
+                                           my_neighbors_ext_mesh, &
+                                           request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
 ! sends data
 ! note: array to assemble already filled into buffer_send_vector_ext_mesh array
@@ -629,15 +629,15 @@
 
   implicit none
 
-  integer :: NPROC
+  integer,intent(in) :: NPROC
 
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
 
-  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
+  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
        buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh
 
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbors_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh,my_neighbors_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
 
   ! local parameters
   integer :: iinterface
@@ -684,25 +684,26 @@
 
   implicit none
 
-  integer :: NPROC
-  integer :: NGLOB_AB
-  integer(kind=8) :: Mesh_pointer
+  integer,intent(in) :: NPROC
+  integer,intent(in) :: NGLOB_AB
+  integer(kind=8),intent(in) :: Mesh_pointer
 
   ! array to assemble
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(in) :: array_val
 
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
-  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
+  integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
        buffer_recv_vector_ext_mesh
 
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
-  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
 
-  integer :: FORWARD_OR_ADJOINT
+  integer,intent(in) :: FORWARD_OR_ADJOINT
 
   ! local parameters
   integer :: iinterface
+  real(kind=CUSTOM_REAL) :: dummy_val ! to avoid compiler warning
 
   ! here we have to assemble all the contributions between partitions using MPI
 
@@ -715,11 +716,14 @@
     enddo
 
     ! adding contributions of neighbors
-    call transfer_asmbl_accel_to_device(Mesh_pointer, array_val, &
+    call transfer_asmbl_accel_to_device(Mesh_pointer, &
                                         buffer_recv_vector_ext_mesh, &
                                         num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh, &
                                         nibool_interfaces_ext_mesh, &
                                         ibool_interfaces_ext_mesh,FORWARD_OR_ADJOINT)
+
+    ! to avoid compiler warning
+    dummy_val = array_val(1,1)
 
     ! This step is done via previous function transfer_and_assemble...
     ! do iinterface = 1, num_interfaces_ext_mesh
@@ -745,11 +749,11 @@
 
 
   subroutine synchronize_MPI_vector_write_cuda(NPROC,NGLOB_AB,array_val, Mesh_pointer, &
-                                            buffer_recv_vector_ext_mesh, &
-                                            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                            request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
-                                            FORWARD_OR_ADJOINT)
+                                               buffer_recv_vector_ext_mesh, &
+                                               num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                               nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                               request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
+                                               FORWARD_OR_ADJOINT)
 
 ! waits for data to receive and assembles
 
@@ -757,25 +761,26 @@
 
   implicit none
 
-  integer :: NPROC
-  integer :: NGLOB_AB
-  integer(kind=8) :: Mesh_pointer
+  integer,intent(in) :: NPROC
+  integer,intent(in) :: NGLOB_AB
+  integer(kind=8),intent(in) :: Mesh_pointer
 
   ! array to assemble
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(in) :: array_val
 
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
-  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
+  integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
        buffer_recv_vector_ext_mesh
 
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
-  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
 
-  integer :: FORWARD_OR_ADJOINT
+  integer,intent(in) :: FORWARD_OR_ADJOINT
 
   ! local parameters
   integer :: iinterface
+  real(kind=CUSTOM_REAL) :: dummy_val ! to avoid compiler warnings
 
   ! here we have to assemble all the contributions between partitions using MPI
 
@@ -788,11 +793,14 @@
     enddo
 
     ! adding contributions of neighbors
-    call transfer_sync_accel_to_device(Mesh_pointer, array_val, &
-                                        buffer_recv_vector_ext_mesh, &
-                                        num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh, &
-                                        nibool_interfaces_ext_mesh, &
-                                        ibool_interfaces_ext_mesh,FORWARD_OR_ADJOINT)
+    call transfer_sync_accel_to_device(Mesh_pointer, &
+                                       buffer_recv_vector_ext_mesh, &
+                                       num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh, &
+                                       nibool_interfaces_ext_mesh, &
+                                       ibool_interfaces_ext_mesh,FORWARD_OR_ADJOINT)
+
+    ! to avoid compiler warning
+    dummy_val = array_val(1,1)
 
     ! This step is done via previous function transfer_and_assemble...
     ! do iinterface = 1, num_interfaces_ext_mesh
@@ -832,14 +840,14 @@
 
   implicit none
 
-  integer :: NPROC
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  integer,intent(in) :: NPROC
+  integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
 
-  real(kind=CUSTOM_REAL), dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
+  real(kind=CUSTOM_REAL), dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
        buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh
 
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbors_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh,my_neighbors_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
 
   ! local parameters
   integer :: iinterface
@@ -881,12 +889,12 @@
 !
 
   subroutine assemble_MPI_scalar_write_cuda(NPROC,NGLOB_AB,array_val, &
-                        Mesh_pointer, &
-                        buffer_recv_scalar_ext_mesh,num_interfaces_ext_mesh, &
-                        max_nibool_interfaces_ext_mesh, &
-!                       nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh, &
-                        FORWARD_OR_ADJOINT)
+                                            Mesh_pointer, &
+                                            buffer_recv_scalar_ext_mesh,num_interfaces_ext_mesh, &
+                                            max_nibool_interfaces_ext_mesh, &
+!                                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                            request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh, &
+                                            FORWARD_OR_ADJOINT)
 
 ! waits for send/receiver to be completed and assembles contributions
 
@@ -894,26 +902,27 @@
 
   implicit none
 
-  integer :: NPROC
-  integer :: NGLOB_AB
-  integer(kind=8) :: Mesh_pointer
+  integer,intent(in) :: NPROC
+  integer,intent(in) :: NGLOB_AB
+  integer(kind=8),intent(in) :: Mesh_pointer
 
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
 
   ! array to assemble
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: array_val
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: array_val
 
-
-  real(kind=CUSTOM_REAL), dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
+  real(kind=CUSTOM_REAL), dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
        buffer_recv_scalar_ext_mesh
 
 ! integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
 ! integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
 
   integer :: FORWARD_OR_ADJOINT
 
+  ! local parameters
   integer :: iinterface ! ipoin
+  real(kind=CUSTOM_REAL) :: dummy_val ! to avoid compiler warning
 
   ! assemble only if more than one partition
   if (NPROC > 1) then
@@ -924,7 +933,10 @@
     enddo
 
     ! adding contributions of neighbors
-    call transfer_asmbl_pot_to_device(Mesh_pointer,array_val,buffer_recv_scalar_ext_mesh,FORWARD_OR_ADJOINT)
+    call transfer_asmbl_pot_to_device(Mesh_pointer,buffer_recv_scalar_ext_mesh,FORWARD_OR_ADJOINT)
+
+    ! to avoid compiler warning
+    dummy_val = array_val(1)
 
     ! note: adding contributions of neighbors has been done just above for cuda
     !do iinterface = 1, num_interfaces_ext_mesh

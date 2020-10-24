@@ -34,16 +34,14 @@
 
 ! leave sorting subroutines in same source file to allow for inlining
 
-  use constants
-
   implicit none
 
-  integer npointot
-  integer nglob
-  integer iglob(npointot),locval(npointot)
-  logical ifseg(npointot)
-  double precision xp(npointot),yp(npointot),zp(npointot)
-  double precision UTM_X_MIN,UTM_X_MAX
+  integer :: npointot
+  integer :: nglob
+  integer :: iglob(npointot),locval(npointot)
+  logical :: ifseg(npointot)
+  double precision :: xp(npointot),yp(npointot),zp(npointot)
+  double precision :: UTM_X_MIN,UTM_X_MAX
 
   integer :: ier
 
@@ -51,18 +49,15 @@
 
 ! geometry tolerance parameter to calculate number of independent grid points
 ! small value for double precision and to avoid sensitivity to roundoff
-  double precision SMALLVALTOL
+  double precision :: SMALLVALTOL
 
 ! define geometrical tolerance based upon typical size of the model
   SMALLVALTOL = 1.d-10 * dabs(UTM_X_MAX - UTM_X_MIN)
 
 ! dynamically allocate arrays
-  allocate(ninseg(npointot),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1236')
-  if (ier /= 0) stop 'error allocating array ninseg'
-  allocate(idummy(npointot),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1237')
-  if (ier /= 0) stop 'error allocating array idummy'
+  allocate(ninseg(npointot), &
+           idummy(npointot),stat=ier)
+  if (ier /= 0) stop 'Error allocating ninseg arrays'
 
   call sort_array_coordinates(npointot,xp,yp,zp,idummy,iglob,locval,ifseg, &
                               nglob,ninseg,SMALLVALTOL)
@@ -87,7 +82,7 @@
 !! DK DK they cannot be vectorized. Thus the compiler is right.
 !! DK DK
 
-  use constants
+  use constants, only: NGLLX,NGLLY,NGLLZ
 
   implicit none
 
@@ -101,12 +96,9 @@
   integer:: i,j,k,ispec,ier
 
 ! copies original array
-  allocate(copy_ibool_ori(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1238')
-  if (ier /= 0) call exit_MPI_without_rank('error in allocate')
-  allocate(mask_ibool(nglob),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1239')
-  if (ier /= 0) call exit_MPI_without_rank('error in allocate')
+  allocate(copy_ibool_ori(NGLLX,NGLLY,NGLLZ,nspec), &
+           mask_ibool(nglob),stat=ier)
+  if (ier /= 0) stop 'Error in allocating copy_ibool_ori arrays'
 
   mask_ibool(:) = -1
   copy_ibool_ori(:,:,:,:) = ibool(:,:,:,:)
@@ -132,8 +124,7 @@
   enddo
 
 ! cleanup
-  deallocate(copy_ibool_ori,stat=ier); if (ier /= 0) stop 'error in deallocate'
-  deallocate(mask_ibool,stat=ier); if (ier /= 0) stop 'error in deallocate'
+  deallocate(copy_ibool_ori,mask_ibool)
 
   end subroutine get_global_indirect_addressing
 

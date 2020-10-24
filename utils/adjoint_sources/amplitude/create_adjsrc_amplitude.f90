@@ -10,14 +10,23 @@ program create_adjsrc_amplitude
 !
   implicit none
 
-  integer :: i, is, ie, nstep, j, itime ,ifile,ios, i1, i2, nstep_old
-  character(len=256) :: arg(100), file(100)
-  character(len=256) :: filename
   integer,parameter :: NMAX = 30000
   real*8, parameter :: EPS = 1.0d-17
   real*8, parameter :: PI = 3.1415926d0
-  real*8 :: ts, te, data(5,NMAX), out(NMAX), adj(NMAX), tw(NMAX), norm
+
+  real*8 :: data(5,NMAX), out(NMAX), adj(NMAX), tw(NMAX)
+  real*8 :: ts, te, norm
   real*8 :: dt, t0, t0_old, dt_old, costh, sinth, th, baz
+
+  integer :: i, is, ie, nstep, j, itime ,ifile,ios, i1, i2, nstep_old, idx, idx2
+
+  character(len=256) :: arg(100), file(100)
+  character(len=256) :: filename
+
+  character(len=256) :: basename,basename2,syn_dir
+  character(len=64) :: net_sta
+  character(len=3) :: channel
+
   logical :: lrot
 
   i = 1
@@ -78,7 +87,9 @@ program create_adjsrc_amplitude
   endif
 
   ! user output
-  print *, 'ifile = ', ifile, '  lrot = ', lrot
+  print *, 'xcreate_adjsrc_amplitude:'
+  print *, '  measurement window start/end = ',ts,'/',te
+  print *, '  component ifile = ', ifile, '  lrot = ', lrot
   print *, ' '
 
   ! reads seismograms (ascii format)
@@ -116,8 +127,8 @@ program create_adjsrc_amplitude
   ! loops over seismogram components
   do i = i1, i2
     ! start and end index
-    is = (ts - t0) / dt + 1
-    ie = (te - t0) / dt + 1
+    is = int((ts - t0) / dt) + 1
+    ie = int((te - t0) / dt) + 1
     if (is < 1 .or. ie <= is .or. ie > nstep) then
       print *, 'Error in ts, te'; stop
     endif
@@ -145,8 +156,12 @@ program create_adjsrc_amplitude
     if (abs(norm) > EPS) then
       adj(1:nstep) =  out(1:nstep) * tw(1:nstep) / norm
     else
-      print *, 'norm < EPS for file '//trim(file(i))
-      adj(:) = 0.
+      if (ifile /= 0 .and. ifile /= i) then
+        print *,'  component set to zero'
+      else
+        print *, '  norm < EPS for file '//trim(file(i))
+      endif
+      adj(:) = 0.0
     endif
     data(i,:) = adj(:)
 
@@ -163,7 +178,32 @@ program create_adjsrc_amplitude
 
   ! file output for component BHE/BHN/BHZ
   do i = 1, 3
-    filename = trim(file(i))//'.adj'
+    filename = trim(file(i))
+    ! gets basename
+    ! example: filename = ../OUTPUT_FILES/DB.X1.MXX.semd  -> basename = DB.X1.MXX.semd
+    idx = index(filename,'/',.true.)  ! position of '/' reading from back
+    if (idx == 0) then
+      ! no / found
+      syn_dir = ''
+      basename = trim(filename)
+    else if (idx < len_trim(filename)) then
+      syn_dir = filename(1:idx)
+      basename = filename(idx+1:len_trim(filename))
+    endif
+    ! gets channel/component from basename
+    ! example: basename = DB.X1.MXX.semd -> format net.sta.comp.ending has channel MXX
+    ! checks if basename has '.'
+    idx = index(basename,'.')  ! DB.***
+    if (idx == 0) stop 'error getting component from basename, file name must have format "net.sta.comp.ending"'
+    ! second occurrence
+    basename2 = basename(idx+1:len_trim(basename))
+    idx2 = index(basename2,'.')  ! X1.***
+    net_sta = basename(1:(idx+idx2)-1)     ! DB.X1
+    channel = basename2(idx2+1:idx2+3) ! MXX
+
+    !filename = trim(file(i))//'.adj'
+    filename = trim(syn_dir)//trim(net_sta)//'.'//trim(channel)//'.adj'
+
     print *, 'write to asc file '//trim(filename)
     call dwrite_ascfile_c(trim(filename)//char(0),t0,dt,nstep,data(i,:))
   enddo

@@ -24,11 +24,9 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
 
-!==============================================================================
-subroutine read_forward_arrays_adios()
+
+  subroutine read_forward_arrays_adios()
 
   use adios_read_mod
 
@@ -367,4 +365,4 @@ subroutine read_forward_arrays_adios()
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 
-end subroutine read_forward_arrays_adios
+  end subroutine read_forward_arrays_adios

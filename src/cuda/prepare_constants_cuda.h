@@ -32,6 +32,16 @@
 
 typedef float realw;  // type of "working" variables
 
+// macros for version output
+#define VALUE_TO_STRING(x) #x
+#define VALUE(x) VALUE_TO_STRING(x)
+#define VAR_NAME_VALUE(var) #var " = "  VALUE(var)
+
+#pragma message ("Compiling with: " VAR_NAME_VALUE(CUDA_VERSION) "\n")
+#if defined(__CUDA_ARCH__)
+#pragma message ("Compiling with: " VAR_NAME_VALUE(__CUDA_ARCH__) "\n")
+#endif
+
 // CUDA version >= 5.0 needed for new symbol addressing and texture binding
 #if CUDA_VERSION < 5000
   #ifndef USE_OLDER_CUDA4_GPU

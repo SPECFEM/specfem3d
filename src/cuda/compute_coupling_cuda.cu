@@ -42,7 +42,9 @@ __global__ void compute_coupling_acoustic_el_kernel(realw* displ,
                                                     int* coupling_ac_el_ijk,
                                                     realw* coupling_ac_el_normal,
                                                     realw* coupling_ac_el_jacobian2Dw,
-                                                    int* d_ibool) {
+                                                    int* d_ibool,
+                                                    int simulation_type,
+                                                    int backward_simulation) {
 
   int igll = threadIdx.x;
   int iface = blockIdx.x + gridDim.x*blockIdx.y;
@@ -71,6 +73,15 @@ __global__ void compute_coupling_acoustic_el_kernel(realw* displ,
     displ_x = displ[iglob*3] ; // (1,iglob)
     displ_y = displ[iglob*3+1] ; // (2,iglob)
     displ_z = displ[iglob*3+2] ; // (3,iglob)
+
+    // adjoint wavefield case
+    if (simulation_type /= 1 && backward_simulation == 0){
+      // handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
+      // adjoint definition: \partial_t^2 \bfs^\dagger = - \frac{1}{\rho} \bfnabla\phi^\dagger
+      displ_x = - displ_x;
+      displ_y = - displ_y;
+      displ_z = - displ_z;
+    }
 
     // gets associated normal on GLL point
     nx = coupling_ac_el_normal[INDEX3(NDIM,NGLL2,0,igll,iface)]; // (1,igll,iface)
@@ -101,20 +112,25 @@ __global__ void compute_coupling_acoustic_el_kernel(realw* displ,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_coupling_ac_el_cuda,
               COMPUTE_COUPLING_AC_EL_CUDA)(long* Mesh_pointer,
                                            int* iphasef,
-                                           int* num_coupling_ac_el_facesf) {
+                                           int* num_coupling_ac_el_facesf,
+                                           int* FORWARD_OR_ADJOINT) {
   TRACE("compute_coupling_ac_el_cuda");
-  //double start_time = get_time();
+  //double start_time = get_time_val();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
   int iphase            = *iphasef;
   int num_coupling_ac_el_faces  = *num_coupling_ac_el_facesf;
+  int backward_simulation;
 
   // only add these contributions in first pass
   if (iphase != 1) return;
+
+  // checks if anything to do
+  if (*num_coupling_ac_el_facesf == 0) return;
 
   // way 1: exact blocksize to match NGLLSQUARE
   int blocksize = NGLL2;
@@ -125,34 +141,44 @@ void FC_FUNC_(compute_coupling_ac_el_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
-  // launches GPU kernel
-  compute_coupling_acoustic_el_kernel<<<grid,threads>>>(mp->d_displ,
-                                                       mp->d_potential_dot_dot_acoustic,
-                                                       num_coupling_ac_el_faces,
-                                                       mp->d_coupling_ac_el_ispec,
-                                                       mp->d_coupling_ac_el_ijk,
-                                                       mp->d_coupling_ac_el_normal,
-                                                       mp->d_coupling_ac_el_jacobian2Dw,
-                                                       mp->d_ibool);
-
-  //  adjoint simulations
-  if (mp->simulation_type == 3){
-    compute_coupling_acoustic_el_kernel<<<grid,threads>>>(mp->d_b_displ,
-                                                          mp->d_b_potential_dot_dot_acoustic,
-                                                          num_coupling_ac_el_faces,
-                                                          mp->d_coupling_ac_el_ispec,
-                                                          mp->d_coupling_ac_el_ijk,
-                                                          mp->d_coupling_ac_el_normal,
-                                                          mp->d_coupling_ac_el_jacobian2Dw,
-                                                          mp->d_ibool);
-
+  // sets gpu arrays
+  field* potential_dot_dot;
+  realw* displ;
+  if (*FORWARD_OR_ADJOINT == 1) {
+    // forward fields
+    backward_simulation = 0;
+    if (mp->simulation_type == 1){
+      // forward definition: \bfs=\frac{1}{\rho}\bfnabla\phi
+      displ = mp->d_displ;
+    }else{
+      // handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
+      // adjoint definition: \partial_t^2 \bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger
+      displ = mp->d_accel;
+    }
+    potential_dot_dot = mp->d_potential_dot_dot_acoustic;
+  } else {
+    // for backward/reconstructed fields
+    backward_simulation = 1;
+    displ = mp->d_b_displ;
+    potential_dot_dot = mp->d_b_potential_dot_dot_acoustic;
   }
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  //double end_time = get_time();
+  // launches GPU kernel
+  compute_coupling_acoustic_el_kernel<<<grid,threads>>>(displ,
+                                                        potential_dot_dot,
+                                                        num_coupling_ac_el_faces,
+                                                        mp->d_coupling_ac_el_ispec,
+                                                        mp->d_coupling_ac_el_ijk,
+                                                        mp->d_coupling_ac_el_normal,
+                                                        mp->d_coupling_ac_el_jacobian2Dw,
+                                                        mp->d_ibool,
+                                                        mp->simulation_type,
+                                                        backward_simulation);
+
+  //double end_time = get_time_val();
   //printf("Elapsed time: %e\n",end_time-start_time);
-  exit_on_cuda_error("compute_coupling_acoustic_el_kernel");
-#endif
+
+  GPU_ERROR_CHECKING("compute_coupling_acoustic_el_kernel");
 }
 
 
@@ -173,7 +199,9 @@ __global__ void compute_coupling_elastic_ac_kernel(field* potential_dot_dot_acou
                                                     int gravity,
                                                     realw* minus_g,
                                                     realw* rhostore,
-                                                    realw* displ) {
+                                                    realw* displ,
+                                                    int simulation_type,
+                                                    int backward_simulation) {
 
   int igll = threadIdx.x;
   int iface = blockIdx.x + gridDim.x*blockIdx.y;
@@ -235,6 +263,12 @@ __global__ void compute_coupling_elastic_ac_kernel(field* potential_dot_dot_acou
       pressure = - potential_dot_dot_acoustic[iglob];
     }
 
+    if (simulation_type /= 1 && backward_simulation == 0){
+      // handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
+      // adjoint definition: pressure^\dagger = potential^\dagger
+      pressure = - pressure;
+    }
+
     // continuity of displacement and pressure on global point
     //
     // note: Newmark time scheme together with definition of scalar potential:
@@ -247,20 +281,20 @@ __global__ void compute_coupling_elastic_ac_kernel(field* potential_dot_dot_acou
     atomicAdd(&accel[iglob*3],+ jacobianw*nx*pressure);
     atomicAdd(&accel[iglob*3+1],+ jacobianw*ny*pressure);
     atomicAdd(&accel[iglob*3+2],+ jacobianw*nz*pressure);
-
     //  }
   }
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_coupling_el_ac_cuda,
               COMPUTE_COUPLING_EL_AC_CUDA)(long* Mesh_pointer,
                                            int* iphasef,
-                                           int* num_coupling_ac_el_facesf) {
+                                           int* num_coupling_ac_el_facesf,
+                                           int* FORWARD_OR_ADJOINT) {
   TRACE("compute_coupling_el_ac_cuda");
-  //double start_time = get_time();
+  //double start_time = get_time_val();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
   int iphase            = *iphasef;
@@ -278,9 +312,35 @@ void FC_FUNC_(compute_coupling_el_ac_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
+  // sets gpu arrays
+  field* potential_dot_dot;
+  realw *accel,*displ;
+  int backward_simulation;
+  if (*FORWARD_OR_ADJOINT == 1) {
+    // forward fields
+    backward_simulation = 0;
+    if (mp->simulation_type == 1){
+      // forward definition: pressure = - potential_dot_dot
+      potential_dot_dot = mp->d_potential_dot_dot_acoustic;
+    }else{
+      // handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
+      // adjoint definition: pressure^\dagger = potential^\dagger
+      potential_dot_dot = mp->d_potential_acoustic;
+    }
+    accel = mp->d_accel;
+    displ = mp->d_displ;
+  } else {
+    // for backward/reconstructed fields
+    backward_simulation = 1;
+    accel = mp->d_b_accel;
+    displ = mp->d_b_displ;
+    potential_dot_dot = mp->d_b_potential_dot_dot_acoustic;
+  }
+
+
   // launches GPU kernel
-  compute_coupling_elastic_ac_kernel<<<grid,threads>>>(mp->d_potential_dot_dot_acoustic,
-                                                       mp->d_accel,
+  compute_coupling_elastic_ac_kernel<<<grid,threads>>>(potential_dot_dot,
+                                                       accel,
                                                        num_coupling_ac_el_faces,
                                                        mp->d_coupling_ac_el_ispec,
                                                        mp->d_coupling_ac_el_ijk,
@@ -290,30 +350,13 @@ void FC_FUNC_(compute_coupling_el_ac_cuda,
                                                        mp->gravity,
                                                        mp->d_minus_g,
                                                        mp->d_rhostore,
-                                                       mp->d_displ);
-
-  //  adjoint simulations
-  if (mp->simulation_type == 3){
-    compute_coupling_elastic_ac_kernel<<<grid,threads>>>(mp->d_b_potential_dot_dot_acoustic,
-                                                         mp->d_b_accel,
-                                                         num_coupling_ac_el_faces,
-                                                         mp->d_coupling_ac_el_ispec,
-                                                         mp->d_coupling_ac_el_ijk,
-                                                         mp->d_coupling_ac_el_normal,
-                                                         mp->d_coupling_ac_el_jacobian2Dw,
-                                                         mp->d_ibool,
-                                                         mp->gravity,
-                                                         mp->d_minus_g,
-                                                         mp->d_rhostore,
-                                                         mp->d_b_displ);
-
-  }
-
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  //double end_time = get_time();
+                                                       displ,
+                                                       mp->simulation_type,
+                                                       backward_simulation);
+  //double end_time = get_time_val();
   //printf("Elapsed time: %e\n",end_time-start_time);
-  exit_on_cuda_error("compute_coupling_el_ac_cuda");
-#endif
+
+  GPU_ERROR_CHECKING("compute_coupling_el_ac_cuda");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -383,13 +426,19 @@ __global__ void compute_coupling_ocean_cuda_kernel(realw* accel,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-extern "C"
+extern EXTERN_LANG
 void FC_FUNC_(compute_coupling_ocean_cuda,
-              COMPUTE_COUPLING_OCEAN_CUDA)(long* Mesh_pointer) {
+              COMPUTE_COUPLING_OCEAN_CUDA)(long* Mesh_pointer,
+                                           int* FORWARD_OR_ADJOINT) {
 
   TRACE("\tcompute_coupling_ocean_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
+  // safety check
+  if (*FORWARD_OR_ADJOINT != 1 && *FORWARD_OR_ADJOINT != 3) {
+    exit_on_error("Error invalid FORWARD_OR_ADJOINT in update_displacement_ac_cuda() routine");
+  }
 
   // checks if anything to do
   if (mp->num_free_surface_faces == 0) return;
@@ -403,45 +452,31 @@ void FC_FUNC_(compute_coupling_ocean_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
+  // sets gpu arrays
+  realw *accel;
+  if (*FORWARD_OR_ADJOINT == 1) {
+    accel = mp->d_accel;
+  } else {
+    // for backward/reconstructed fields
+    accel = mp->d_b_accel;
+  }
 
   // initializes temporary array to zero
   print_CUDA_error_if_any(cudaMemset(mp->d_updated_dof_ocean_load,0,
                                      sizeof(int)*mp->NGLOB_AB),88501);
 
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("before kernel compute_coupling_ocean_cuda");
-#endif
+  GPU_ERROR_CHECKING("before kernel compute_coupling_ocean_cuda");
 
-  compute_coupling_ocean_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel,
-                                                                           mp->d_rmassx,mp->d_rmassy,mp->d_rmassz,
-                                                                           mp->d_rmass_ocean_load,
-                                                                           mp->num_free_surface_faces,
-                                                                           mp->d_free_surface_ispec,
-                                                                           mp->d_free_surface_ijk,
-                                                                           mp->d_free_surface_normal,
-                                                                           mp->d_ibool,
-                                                                           mp->d_updated_dof_ocean_load);
-  // for backward/reconstructed potentials
-  if (mp->simulation_type == 3) {
-    // re-initializes array
-    print_CUDA_error_if_any(cudaMemset(mp->d_updated_dof_ocean_load,0,
-                                       sizeof(int)*mp->NGLOB_AB),88502);
+  compute_coupling_ocean_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(accel,
+                                                                            mp->d_rmassx,mp->d_rmassy,mp->d_rmassz,
+                                                                            mp->d_rmass_ocean_load,
+                                                                            mp->num_free_surface_faces,
+                                                                            mp->d_free_surface_ispec,
+                                                                            mp->d_free_surface_ijk,
+                                                                            mp->d_free_surface_normal,
+                                                                            mp->d_ibool,
+                                                                            mp->d_updated_dof_ocean_load);
 
-    compute_coupling_ocean_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_accel,
-                                                                             mp->d_rmassx,mp->d_rmassy,mp->d_rmassz,
-                                                                             mp->d_rmass_ocean_load,
-                                                                             mp->num_free_surface_faces,
-                                                                             mp->d_free_surface_ispec,
-                                                                             mp->d_free_surface_ijk,
-                                                                             mp->d_free_surface_normal,
-                                                                             mp->d_ibool,
-                                                                             mp->d_updated_dof_ocean_load);
-
-  }
-
-
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("compute_coupling_ocean_cuda");
-#endif
+  GPU_ERROR_CHECKING("compute_coupling_ocean_cuda");
 }
 

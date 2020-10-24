@@ -1,0 +1,35 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+This examples creates a homogeneous halfspace with a refined area in the middle of the model.
+It will be a single volume block with a constant elastic material property, using CUBIT. 
+
+
+0. (optional) re-create mesh:
+     run CUBIT/Trelis:
+     > claro (or cubit)
+
+     then run meshing script:
+     claro -> Menu "Tools" -> "Play Journal File" ... and select file: "block_mesh.py"
+
+     if everything goes fine, this creates the mesh files in subdirectory MESH/:
+        MESH/absorbing_surface_file_bottom
+        MESH/absorbing_surface_file_xmax
+        MESH/absorbing_surface_file_xmin
+        MESH/absorbing_surface_file_ymax
+        MESH/absorbing_surface_file_ymin
+        MESH/free_or_absorbing_surface_file_zmax
+        MESH/materials_file
+        MESH/mesh_file
+        MESH/nodes_coords_file
+        MESH/nummaterial_velocity_file
+
+     the cubit graphics window should show a mesh similar to the file homogeneous.png
+
+1. run the simulation, type:
+  > ./run_this_example
+
+  and compare the files in OUTPUT_FILES/ with the reference solution in REF_SEIS/
+
+

@@ -42,13 +42,13 @@ subroutine read_parameters_tomo()
   call get_command_argument(1,s_step_fac)
 
   if (trim(s_step_fac) == '') then
-    call usage()
+    call tomo_usage()
   endif
 
   ! read in parameter information
   read(s_step_fac,*,iostat=ier) step_fac
   if (ier /= 0) then
-    call usage()
+    call tomo_usage()
   endif
 
   ! safety check
@@ -96,9 +96,15 @@ subroutine read_parameters_tomo()
     close(IOUT)
   endif
 
-contains
+  end subroutine read_parameters_tomo
 
-  subroutine usage()
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine tomo_usage()
+
+  use tomography_par
 
   implicit none
 
@@ -107,8 +113,10 @@ contains
     print *
     print *,'with'
     print *,'  step_factor        - factor to scale gradient (e.g. 0.03 for 3 percent update)'
-    print *,'  INPUT-KERNELS-DIR/ - (optional) directory which holds summed kernels (e.g. alpha_kernel.bin,..)'
-    print *,'  OUTPUT-MODEL-DIR/  - (optional) directory which will hold new model files (e.g. vp_new.bin,..)'
+    print *,'  INPUT-KERNELS-DIR/ - (optional) directory which holds summed kernels (e.g. alpha_kernel.bin,..), default ' &
+            // trim(INPUT_KERNELS_DIR)
+    print *,'  OUTPUT-MODEL-DIR/  - (optional) directory which will hold new model files (e.g. vp_new.bin,..), default ' &
+            // trim(OUTPUT_MODEL_DIR)
     print *
     print *,'Please rerun e.g. like: mpirun -np ',sizeprocs,' ./bin/xadd_model 0.03'
     print *
@@ -116,7 +124,6 @@ contains
   call synchronize_all()
   call exit_MPI(myrank,'Error usage: add_model step_factor')
 
-  end subroutine usage
+  end subroutine tomo_usage
 
-end subroutine read_parameters_tomo
 

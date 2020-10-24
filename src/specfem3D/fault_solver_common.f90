@@ -32,7 +32,7 @@
 
 module fault_solver_common
 
-  use constants
+  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IMAIN,IOUT,IN_DATA_FILES
 
   implicit none
 
@@ -64,6 +64,11 @@ module fault_solver_common
                                                      theta => null(), T => null(), C => null()
   end type swf_type
 
+  type twf_type
+    real(kind=CUSTOM_REAL) ::  nuc_x, nuc_y, nuc_z, nuc_r, nuc_t0, nuc_v
+  end type twf_type
+
+
   type rsf_type
     integer :: StateLaw = 1 ! 1=ageing law, 2=slip law
     real(kind=CUSTOM_REAL), dimension(:), pointer :: V0 => null(), f0 => null(), L => null(), &
@@ -91,6 +96,7 @@ module fault_solver_common
     type(dataXZ_type)       :: dataXZ,dataXZ_all
     type(swf_type), pointer :: swf => null()
     type(rsf_type), pointer :: rsf => null()
+    type(twf_type), pointer :: twf => null()
     logical                 :: allow_opening = .false. ! default : do not allow opening
 
 !! DK DK added this in order to be able to use the type for both dynamic and kinematic faults
@@ -112,11 +118,12 @@ contains
 
 !---------------------------------------------------------------------
 
-subroutine initialize_fault (bc,IIN_BIN)
+  subroutine initialize_fault (bc,IIN_BIN)
 
   use specfem_par
   use specfem_par_elastic, only: rmassx
 
+  implicit none
 !! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
   type(bc_dynandkinflt_type), intent(inout) :: bc
   integer, intent(in)                 :: IIN_BIN
@@ -129,9 +136,9 @@ subroutine initialize_fault (bc,IIN_BIN)
   integer :: ij,k,e,ier
 
   read(IIN_BIN) bc%nspec,bc%nglob
-  if (.not. PARALLEL_FAULT .and. bc%nspec == 0) return
-  if (bc%nspec > 0) then
 
+  if (bc%nspec > 0) then
+    ! array allocations
     allocate(bc%ibulk1(bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2159')
     allocate(bc%ibulk2(bc%nglob),stat=ier)
@@ -178,10 +185,13 @@ subroutine initialize_fault (bc,IIN_BIN)
         bc%B(k) = bc%B(k) + jacobian2Dw(ij,e)
       enddo
     enddo
+  else
+    ! dummy allocations (for subroutine arguments)
+    allocate(bc%coord(3,1))
   endif
 
+  ! fault parallelization across multiple MPI processes
   if (PARALLEL_FAULT) then
-
     tmp_vec = 0._CUSTOM_REAL
     if (bc%nspec > 0) tmp_vec(1,bc%ibulk1) = bc%B
     ! assembles with other MPI processes
@@ -199,7 +209,6 @@ subroutine initialize_fault (bc,IIN_BIN)
                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                                      my_neighbors_ext_mesh)
     if (bc%nspec > 0) nxyz = tmp_vec(:,bc%ibulk1)
-
   endif
 
   if (bc%nspec > 0) then
@@ -219,16 +228,18 @@ subroutine initialize_fault (bc,IIN_BIN)
     ! WARNING: In non-split nodes at fault edges M is assembled across the fault.
     ! hence invM1+invM2=2/(M1+M2) instead of 1/M1+1/M2
     ! In a symmetric mesh (M1=M2) Z will be twice its intended value
-
   endif
 
-end subroutine initialize_fault
+  end subroutine initialize_fault
 
 !---------------------------------------------------------------------
-subroutine normalize_3d_vector(v)
 
+  subroutine normalize_3d_vector(v)
+
+  implicit none
   real(kind=CUSTOM_REAL), intent(inout) :: v(:,:)
 
+  ! local parameters
   real(kind=CUSTOM_REAL) :: norm
   integer :: k
 
@@ -238,17 +249,19 @@ subroutine normalize_3d_vector(v)
     v(:,k) = v(:,k) / norm
   enddo
 
-end subroutine normalize_3d_vector
+  end subroutine normalize_3d_vector
 
 !---------------------------------------------------------------------
+
 ! Percy: define fault directions according to SCEC conventions
 ! Fault coordinates (s,d,n) = (1,2,3)
 !   s = strike , d = dip , n = normal
 !   1 = strike , 2 = dip , 3 = normal
 ! with dip pointing downwards
 !
-subroutine compute_R(R,nglob,n)
+  subroutine compute_R(R,nglob,n)
 
+  implicit none
   integer :: nglob
   real(kind=CUSTOM_REAL), intent(out) :: R(3,3,nglob)
   real(kind=CUSTOM_REAL), intent(in) :: n(3,nglob)
@@ -277,12 +290,14 @@ subroutine compute_R(R,nglob,n)
   R(2,:,:) = d
   R(3,:,:) = n
 
-end subroutine compute_R
+  end subroutine compute_R
 
 
 !===============================================================
-function get_jump (bc,v) result(dv)
 
+  function get_jump (bc,v) result(dv)
+
+  implicit none
 !! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
   type(bc_dynandkinflt_type), intent(in) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: v(:,:)
@@ -293,11 +308,13 @@ function get_jump (bc,v) result(dv)
   dv(2,:) = v(2,bc%ibulk2)-v(2,bc%ibulk1)
   dv(3,:) = v(3,bc%ibulk2)-v(3,bc%ibulk1)
 
-end function get_jump
+  end function get_jump
 
 !---------------------------------------------------------------------
-function get_weighted_jump (bc,f) result(da)
 
+  function get_weighted_jump (bc,f) result(da)
+
+  implicit none
 !! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
   type(bc_dynandkinflt_type), intent(in) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: f(:,:)
@@ -312,11 +329,13 @@ function get_weighted_jump (bc,f) result(da)
   ! NOTE: In non-split nodes at fault edges M and f are assembled across the fault.
   ! Hence, f1=f2, invM1=invM2=1/(M1+M2) instead of invMi=1/Mi, and da=0.
 
-end function get_weighted_jump
+  end function get_weighted_jump
 
 !----------------------------------------------------------------------
-function rotate(bc,v,fb) result(vr)
 
+  function rotate(bc,v,fb) result(vr)
+
+  implicit none
 !! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
   type(bc_dynandkinflt_type), intent(in) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: v(3,bc%nglob)
@@ -339,12 +358,13 @@ function rotate(bc,v,fb) result(vr)
 
   endif
 
-end function rotate
+  end function rotate
 
 !----------------------------------------------------------------------
 
-subroutine add_BT(bc,MxA,T)
+  subroutine add_BT(bc,MxA,T)
 
+  implicit none
 !! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
   type(bc_dynandkinflt_type), intent(in) :: bc
   real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
@@ -358,16 +378,17 @@ subroutine add_BT(bc,MxA,T)
   MxA(2,bc%ibulk2) = MxA(2,bc%ibulk2) - bc%B*T(2,:)
   MxA(3,bc%ibulk2) = MxA(3,bc%ibulk2) - bc%B*T(3,:)
 
-end subroutine add_BT
+  end subroutine add_BT
 
 
 !===============================================================
 ! dataT outputs
 
-subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
+  subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
 
   use specfem_par, only: NPROC,myrank
 
+  implicit none
   integer, intent(in) :: nglob,NT,iflt,ndat
   real(kind=CUSTOM_REAL), intent(in) :: coord(3,nglob),DT
 !! DK DK use type(dataT_type) instead of class(dataT_type) for compatibility with some current compilers
@@ -439,7 +460,6 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
   close(IIN)
 
   if (PARALLEL_FAULT) then
-
     ! For each output point, find the processor that contains the nearest node
     allocate(iproc(dataT%npoin),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2174')
@@ -492,6 +512,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
       deallocate(glob_indx,iglob_tmp,name_tmp)
 
     else
+      ! no local points
       dataT%npoin = 0
       deallocate(dataT%iglob)
       deallocate(dataT%name)
@@ -518,13 +539,18 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
     dataT%longFieldNames(6) = "vertical up-dip shear stress (MPa)"
     dataT%longFieldNames(7) = "normal stress (MPa)"
     dataT%shortFieldNames = "h-slip h-slip-rate h-shear-stress v-slip v-slip-rate v-shear-stress n-stress"
+  else
+    ! dummy allocations (for subroutine arguments)
+    allocate(dataT%dat(1,1,1))
   endif
 
-end subroutine init_dataT
+  end subroutine init_dataT
 
 !---------------------------------------------------------------
-subroutine store_dataT(dataT,d,v,t,itime)
 
+  subroutine store_dataT(dataT,d,v,t,itime)
+
+  implicit none
 !! DK DK use type() instead of class() for compatibility with some current compilers
   type(dataT_type), intent(inout) :: dataT
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: d,v,t
@@ -532,7 +558,7 @@ subroutine store_dataT(dataT,d,v,t,itime)
 
   integer :: i,k
 
-  do i=1,dataT%npoin
+  do i = 1,dataT%npoin
     k = dataT%iglob(i)
     dataT%dat(1,i,itime) = d(1,k)
     dataT%dat(2,i,itime) = v(1,k)
@@ -543,12 +569,15 @@ subroutine store_dataT(dataT,d,v,t,itime)
     dataT%dat(7,i,itime) = t(3,k)/1.0e6_CUSTOM_REAL
   enddo
 
-end subroutine store_dataT
+  end subroutine store_dataT
 
 !------------------------------------------------------------------------
-subroutine SCEC_write_dataT(dataT)
+
+  subroutine SCEC_write_dataT(dataT)
 
   use specfem_par, only: OUTPUT_FILES
+
+  implicit none
 !! DK DK use type() instead of class() for compatibility with some current compilers
   type(dataT_type), intent(in) :: dataT
 
@@ -563,8 +592,9 @@ subroutine SCEC_write_dataT(dataT)
 
   write(my_fmt,'(a,i1,a)') '(',dataT%ndat+1,'(E15.7))'
 
-  do i=1,dataT%npoin
+  do i = 1,dataT%npoin
     open(IOUT,file=trim(OUTPUT_FILES)//trim(dataT%name(i))//'.dat',status='replace')
+
     write(IOUT,*) "# problem=TPV104" ! WARNING: this should be a user input
     write(IOUT,*) "# author=Surendra Nadh Somala" ! WARNING: this should be a user input
     write(IOUT,1000) time_values(2), time_values(3), time_values(1), time_values(5), time_values(6), time_values(7)
@@ -574,22 +604,26 @@ subroutine SCEC_write_dataT(dataT)
     write(IOUT,*) "# time_step=",dataT%dt
     write(IOUT,*) "# location=",trim(dataT%name(i))
     write(IOUT,*) "# Column #1 = Time (s)"
+
     do k=1,dataT%ndat
       write(IOUT,1100) k+1,trim(dataT%longFieldNames(k))
     enddo
+
     write(IOUT,*) "#"
     write(IOUT,*) "# The line below lists the names of the data fields:"
     write(IOUT,'(a256)') "# t " // trim(dataT%shortFieldNames)
     write(IOUT,*) "#"
-    do k=1,dataT%nt
+
+    do k = 1,dataT%nt
       write(IOUT,my_fmt) k*dataT%dt, dataT%dat(:,i,k)
     enddo
+
     close(IOUT)
   enddo
 
 1000 format ( ' # Date = ', i2.2, '/', i2.2, '/', i4.4, '; time = ',i2.2, ':', i2.2, ':', i2.2 )
 1100 format ( ' # Column #', i1, ' = ',a )
 
-end subroutine SCEC_write_dataT
+  end subroutine SCEC_write_dataT
 
 end module fault_solver_common

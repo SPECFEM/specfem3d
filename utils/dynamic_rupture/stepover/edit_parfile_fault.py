@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 import check_jump_or_not
 import re
@@ -38,7 +40,7 @@ def setparameter(stress, depth):
 
 def run_mpi_job():
     p = subprocess.Popen("mpirun -np 90 -perhost 3 -f ~/cpunodes ../bin/xspecfem3D",stdout = subprocess.PIPE,shell = True)
-    print "mpi job running"
+    print("mpi job running")
     p.communicate()
 
 def bisect_search(Tmax,Tmin,h):
@@ -47,9 +49,9 @@ def bisect_search(Tmax,Tmin,h):
     if(abs(Tmax - Tmin)<1e5):
         return (Tmax,Tmin)
     Tmid = 0.5*(Tmax + Tmin)
-    print 'now testing T = '+str(Tmid)
+    print('now testing T = '+str(Tmid))
     pf = test(Tmid,h)
-    print 'test results:'+ str(pf)
+    print('test results:'+ str(pf))
     if(pf):
         Tmax = Tmid
     else:
@@ -77,7 +79,7 @@ def main():
     (a,b) = bisect_search(63e6,69e6,65e3)
     (a,b) = bisect_search(62e6,68e6,60e3)
 
-    print (a,b)
+    print(a,b)
 
 
 if __name__ == "__main__":

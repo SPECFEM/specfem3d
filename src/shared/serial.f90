@@ -489,7 +489,7 @@
   ! we need to make sure that NUMBER_OF_SIMULTANEOUS_RUNS is read, thus read the parameter file
   myrank = 0
   BROADCAST_AFTER_READ = .false.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   if (NUMBER_OF_SIMULTANEOUS_RUNS <= 0) stop 'NUMBER_OF_SIMULTANEOUS_RUNS <= 0 makes no sense'
 
@@ -739,9 +739,24 @@
   integer :: nx
   double precision, dimension(nx) :: sendbuf, recvbuf
 
-  recvbuf = sendbuf
+  recvbuf(:) = sendbuf(:)
 
   end subroutine sum_all_1Darray_dp
+
+!
+!----
+!
+
+  subroutine any_all_1Darray_l(sendbuf, recvbuf, nx)
+
+  implicit none
+
+  integer :: nx
+  logical, dimension(nx) :: sendbuf, recvbuf
+
+  recvbuf(:) = sendbuf(:)
+
+  end subroutine any_all_1Darray_l
 
 !
 !----

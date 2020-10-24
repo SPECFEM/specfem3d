@@ -63,8 +63,8 @@ program combine_sem
 
   integer, parameter :: NARGS = 3
 
-  character(len=MAX_STRING_LEN) :: kernel_paths(MAX_KERNEL_PATHS), kernel_names(MAX_KERNEL_PATHS), &
-    kernel_names_comma_delimited
+  character(len=MAX_STRING_LEN),dimension(:),allocatable :: kernel_paths, kernel_names
+  character(len=MAX_STRING_LEN) :: kernel_names_comma_delimited
   character(len=MAX_STRING_LEN) :: sline,prname_lp,output_dir,input_file
   character(len=MAX_STRING_LEN) :: arg(NARGS)
   integer :: npath,nker
@@ -91,6 +91,13 @@ program combine_sem
   endif
   call synchronize_all()
 
+  ! allocates arrays
+  allocate(kernel_paths(MAX_KERNEL_PATHS), kernel_names(MAX_KERNEL_PATHS), stat=ier)
+  if (ier /= 0) stop 'Error allocating kernel name arrays'
+  kernel_paths(:) = ''
+  kernel_names(:) = ''
+
+  ! reads in arguments
   do i = 1, NARGS
     call get_command_argument(i,arg(i), status=ier)
   enddo
@@ -124,7 +131,7 @@ program combine_sem
 
   ! read simulation parameters
   BROADCAST_AFTER_READ = .true.
-  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+  call read_parameter_file(BROADCAST_AFTER_READ)
 
   ! checks number of MPI processes
   if (sizeprocs /= NPROC) then
@@ -156,14 +163,15 @@ program combine_sem
   ! sum kernels
   if (myrank == 0) then
     print *,'summing kernels in: '
-    print *,kernel_paths(1:npath)
+    do i = 1,npath
+      print *,'  ',trim(kernel_paths(i))
+    enddo
     print *
   endif
 
   do iker=1,nker
-      call combine_sem_array(kernel_names(iker),kernel_paths,output_dir,npath)
+    call combine_sem_array(kernel_names(iker),kernel_paths,output_dir,npath)
   enddo
-
 
   if (myrank == 0) write(*,*) 'done writing all arrays, see directory: ', output_dir
   call finalize_mpi()

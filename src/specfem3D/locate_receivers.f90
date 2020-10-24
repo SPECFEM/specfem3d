@@ -29,7 +29,7 @@
 !---- locate_receivers finds the correct position of the receivers
 !----
   subroutine locate_receivers(rec_filename,nrec,islice_selected_rec,ispec_selected_rec, &
-                              xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
+                              xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu_rec, &
                               utm_x_source,utm_y_source)
 
   use constants
@@ -37,6 +37,8 @@
   use specfem_par, only: USE_SOURCES_RECEIVERS_Z,ibool,myrank,NSPEC_AB,NGLOB_AB, &
                          xstore,ystore,zstore,SUPPRESS_UTM_PROJECTION,INVERSE_FWI_FULL_PROBLEM, &
                          SU_FORMAT
+  ! PML
+  use pml_par, only: is_CPML
 
   implicit none
 
@@ -49,14 +51,14 @@
   double precision, dimension(nrec),intent(out) :: xi_receiver,eta_receiver,gamma_receiver
   character(len=MAX_LENGTH_STATION_NAME), dimension(nrec),intent(out) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec),intent(out) :: network_name
-  double precision, dimension(NDIM,NDIM,nrec),intent(out) :: nu
+  double precision, dimension(NDIM,NDIM,nrec),intent(out) :: nu_rec
   double precision,intent(in) :: utm_x_source,utm_y_source
 
   ! local parameters
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
 
-  integer :: irec,ier,i
+  integer :: irec,ier,ispec
 
   ! timer MPI
   double precision, external :: wtime
@@ -69,10 +71,6 @@
   ! receiver information
   ! station information for writing the seismograms
   double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur,stutm_x,stutm_y,elevation
-
-  ! SU_FORMAT parameters
-  double precision :: llat,llon,lele,lbur
-  logical :: SU_station_file_exists
 
   ! domains
   integer, dimension(:),allocatable :: idomain
@@ -98,10 +96,10 @@
   double precision, dimension(NDIM,NDIM,NREC_SUBSET_MAX) :: nu_subset
   integer, dimension(NREC_SUBSET_MAX) :: ispec_selected_rec_subset,idomain_subset
   integer :: nrec_subset_current_size,irec_in_this_subset,irec_already_done
-  integer :: length_station_name,length_network_name
-  integer, allocatable, dimension(:) :: station_duplet
 
   logical :: is_done_stations
+
+  logical,dimension(:),allocatable :: is_CPML_rec,is_CPML_rec_all
 
   ! get MPI starting time
   tstart = wtime()
@@ -129,13 +127,6 @@
                             elemsize_min_glob,elemsize_max_glob, &
                             distance_min_glob,distance_max_glob)
 
-  ! checks if station locations already available
-  if (SU_FORMAT .and. (.not. INVERSE_FWI_FULL_PROBLEM) ) then
-    call read_stations_from_previous_run(is_done_stations)
-    ! check if done
-    if (is_done_stations) return
-  endif
-
   ! allocate memory for arrays using number of stations
   allocate(stlat(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1955')
@@ -145,88 +136,68 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1957')
   allocate(stbur(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1958')
+
+  ! reads STATIONS file
+  call read_stations(rec_filename,nrec,station_name,network_name,stlat,stlon,stele,stbur)
+
+  ! checks if station locations already available
+  if (SU_FORMAT .and. (.not. INVERSE_FWI_FULL_PROBLEM) ) then
+    call read_stations_SU_from_previous_run(nrec,station_name,network_name, &
+                                            islice_selected_rec,ispec_selected_rec, &
+                                            xi_receiver,eta_receiver,gamma_receiver, &
+                                            nu_rec,is_done_stations)
+    ! check if done
+    if (is_done_stations) then
+      ! free temporary arrays
+      deallocate(stlat)
+      deallocate(stlon)
+      deallocate(stele)
+      deallocate(stbur)
+
+      ! user output
+      if (myrank == 0) then
+        ! elapsed time since beginning of mesh generation
+        tCPU = wtime() - tstart
+        write(IMAIN,*)
+        write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
+        write(IMAIN,*)
+        write(IMAIN,*) 'End of receiver detection - done'
+        write(IMAIN,*)
+        call flush_IMAIN()
+      endif
+
+      ! all done
+      return
+    endif
+  endif
+
+  ! allocate memory for additional arrays using number of stations
   allocate(stutm_x(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1959')
   allocate(stutm_y(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1960')
   allocate(elevation(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1961')
+
   allocate(x_target(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1962')
   allocate(y_target(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1963')
   allocate(z_target(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1964')
+
   allocate(x_found(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1965')
   allocate(y_found(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1966')
   allocate(z_found(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1967')
+
   allocate(final_distance(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1968')
   allocate(idomain(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1969')
   if (ier /= 0) stop 'Error allocating arrays for locating receivers'
-
-  ! loop on all the stations to read the file
-  if (myrank == 0) then
-    ! opens STATIONS or STATIONS_ADJOINT file
-    open(unit=IIN,file=trim(rec_filename),status='old',action='read',iostat=ier)
-    if (ier /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
-    ! reads all stations
-    do irec = 1,nrec
-      read(IIN,*,iostat=ier) station_name(irec),network_name(irec),stlat(irec),stlon(irec),stele(irec),stbur(irec)
-      if (ier /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
-    enddo
-    ! close receiver file
-    close(IIN)
-
-    ! In case that the same station and network name appear twice (or more times) in the STATIONS
-    ! file, problems occur, as two (or more) seismograms are written (with mode
-    ! "append") to a file with same name. The philosophy here is to accept multiple
-    ! appearances and to just add a count to the station name in this case.
-    allocate(station_duplet(nrec),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1970')
-    if (ier /= 0 ) call exit_MPI(myrank,'Error allocating station_duplet array')
-    station_duplet(:) = 0
-    do irec = 1,nrec
-      do i = 1,irec-1
-        if ((station_name(irec) == station_name(i)) .and. (network_name(irec) == network_name(i))) then
-            station_duplet(i) = station_duplet(i) + 1
-            if (len_trim(station_name(irec)) <= MAX_LENGTH_STATION_NAME-3) then
-              write(station_name(irec),"(a,'_',i2.2)") trim(station_name(irec)),station_duplet(i)+1
-            else
-              call exit_MPI(myrank,'Please increase MAX_LENGTH_STATION_NAME by at least 3 to name station duplets')
-            endif
-        endif
-      enddo
-
-      ! checks name lengths
-      length_station_name = len_trim(station_name(irec))
-      length_network_name = len_trim(network_name(irec))
-      ! check that length conforms to standard
-      if (length_station_name < 1 .or. length_station_name > MAX_LENGTH_STATION_NAME) then
-        print *, 'Error: invalid station name ',trim(station_name(irec))
-        call exit_MPI(myrank,'wrong length of station name')
-      endif
-      if (length_network_name < 1 .or. length_network_name > MAX_LENGTH_NETWORK_NAME) then
-        print *, 'Error: invalid network name ',trim(network_name(irec))
-        call exit_MPI(myrank,'wrong length of network name')
-      endif
-
-    enddo
-    deallocate(station_duplet)
-
-  endif
-
-  ! broadcast values to other slices
-  call bcast_all_ch_array(station_name,nrec,MAX_LENGTH_STATION_NAME)
-  call bcast_all_ch_array(network_name,nrec,MAX_LENGTH_NETWORK_NAME)
-  call bcast_all_dp(stlat,nrec)
-  call bcast_all_dp(stlon,nrec)
-  call bcast_all_dp(stele,nrec)
-  call bcast_all_dp(stbur,nrec)
 
   ! determines target point locations (need to locate z coordinate of all receivers)
   ! note: we first locate all the target positions in the mesh to reduces the need of MPI communication
@@ -284,7 +255,7 @@
       endif
     enddo ! loop over subset
 
-    ! master process locates best location in all slices
+    ! main process locates best location in all slices
     call locate_MPI_slice(nrec_subset_current_size,irec_already_done, &
                           ispec_selected_rec_subset, &
                           x_found_subset, y_found_subset, z_found_subset, &
@@ -293,15 +264,15 @@
                           nrec,ispec_selected_rec, islice_selected_rec, &
                           x_found,y_found,z_found, &
                           xi_receiver, eta_receiver, gamma_receiver, &
-                          idomain,nu,final_distance)
+                          idomain,nu_rec,final_distance)
 
   enddo ! loop over stations
 
-  ! bcast from master process
+  ! bcast from main process
   call bcast_all_i(islice_selected_rec,nrec)
-  ! note: in principle, only islice must be updated on all slave processes, the ones containing the best location
+  ! note: in principle, only islice must be updated on all secondary processes, the ones containing the best location
   !       could have valid entries in all other arrays set before already.
-  !       nevertheless, for convenience we broadcast all needed receiver arrays back to the slaves
+  !       nevertheless, for convenience we broadcast all needed receiver arrays back to the secondarys
   call bcast_all_i(idomain,nrec)
   call bcast_all_i(ispec_selected_rec,nrec)
 
@@ -313,8 +284,33 @@
   call bcast_all_dp(y_found,nrec)
   call bcast_all_dp(z_found,nrec)
 
-  call bcast_all_dp(nu,NDIM*NDIM*nrec)
+  call bcast_all_dp(nu_rec,NDIM*NDIM*nrec)
   call bcast_all_dp(final_distance,nrec)
+
+  ! warning if receiver in C-PML region
+  allocate(is_CPML_rec(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI(myrank,'Error allocating is_CPML_rec array')
+  if (myrank == 0) then
+    ! only main collects
+    allocate(is_CPML_rec_all(nrec),stat=ier)
+  else
+    ! dummy
+    allocate(is_CPML_rec_all(1),stat=ier)
+  endif
+  ! sets flag if receiver element in PML
+  is_CPML_rec(:) = .false.
+  do irec = 1,nrec
+    if (islice_selected_rec(irec) == myrank) then
+      ispec = ispec_selected_rec(irec)
+      if (is_CPML(ispec)) then
+        is_CPML_rec(irec) = .true.
+        ! debug
+        !print *,'Warning: rank ',myrank,' has receiver ', &
+        !         irec,trim(network_name(irec))//'.'//trim(station_name(irec)),' in C-PML region'
+      endif
+    endif
+  enddo
+  call any_all_1Darray_l(is_CPML_rec,is_CPML_rec_all,nrec)
 
   ! this is executed by main process only
   if (myrank == 0) then
@@ -374,11 +370,11 @@
         write(IMAIN,*) '     gamma = ',gamma_receiver(irec)
 
         write(IMAIN,*) '     rotation matrix: '
-        nu_tmp(:) = nu(1,:,irec)
+        nu_tmp(:) = nu_rec(1,:,irec)
         write(IMAIN,*) '     nu1 = ',sngl(nu_tmp)
-        nu_tmp(:) = nu(2,:,irec)
+        nu_tmp(:) = nu_rec(2,:,irec)
         write(IMAIN,*) '     nu2 = ',sngl(nu_tmp)
-        nu_tmp(:) = nu(3,:,irec)
+        nu_tmp(:) = nu_rec(3,:,irec)
         write(IMAIN,*) '     nu3 = ',sngl(nu_tmp)
 
         if (SUPPRESS_UTM_PROJECTION) then
@@ -403,10 +399,15 @@
           write(IMAIN,*) '***** WARNING: receiver location estimate is poor *****'
           write(IMAIN,*) '*******************************************************'
         endif
-
+        ! add warning if located in PML
+        if (is_CPML_rec_all(irec)) then
+          write(IMAIN,*) '*******************************************************'
+          write(IMAIN,*) '***** WARNING: receiver located in C-PML region *******'
+          write(IMAIN,*) '*******************************************************'
+          write(IMAIN,*)
+        endif
         write(IMAIN,*)
       endif
-
     enddo
 
     ! compute maximal distance for all the receivers
@@ -439,7 +440,9 @@
     close(IOUT_SU)
 
     ! stores station infos for later runs
-    if (SU_FORMAT) call write_stations_for_next_run()
+    if (SU_FORMAT) call write_stations_SU_for_next_run(nrec,islice_selected_rec,ispec_selected_rec, &
+                                                       xi_receiver,eta_receiver,gamma_receiver, &
+                                                       x_found,y_found,z_found,nu_rec)
 
     ! elapsed time since beginning of mesh generation
     tCPU = wtime() - tstart
@@ -467,117 +470,10 @@
   deallocate(z_found)
   deallocate(final_distance)
   deallocate(idomain)
+  deallocate(is_CPML_rec,is_CPML_rec_all)
 
   ! synchronize all the processes to make sure everybody has finished
   call synchronize_all()
-
-contains
-
-!
-!--------------------------------------------------------
-!
-
-    subroutine read_stations_from_previous_run(is_done_stations)
-
-    implicit none
-    logical, intent(out) :: is_done_stations
-
-    ! initializes
-    is_done_stations = .false.
-
-    ! checks if file with station infos located from previous run exists
-    inquire(file=trim(OUTPUT_FILES)//'/SU_stations_info.bin',exist=SU_station_file_exists)
-    if (SU_station_file_exists) then
-      if (myrank == 0) then
-        ! opens STATIONS or STATIONS_ADJOINT file
-        open(unit=IIN,file=trim(rec_filename),status='old',action='read',iostat=ier)
-        if (ier /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
-        ! reads stations/network names
-        do irec = 1,nrec
-          read(IIN,*,iostat=ier) station_name(irec),network_name(irec),llat,llon,lele,lbur
-          if (ier /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
-        enddo
-        close(IIN)
-      endif
-      call bcast_all_ch_array(station_name,nrec,MAX_LENGTH_STATION_NAME)
-      call bcast_all_ch_array(network_name,nrec,MAX_LENGTH_NETWORK_NAME)
-
-      ! master reads in available station information
-      if (myrank == 0) then
-        open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
-              status='old',action='read',form='unformatted',iostat=ier)
-        if (ier /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
-
-        write(IMAIN,*) 'station details from SU_stations_info.bin'
-        call flush_IMAIN()
-
-        allocate(x_found(nrec),y_found(nrec),z_found(nrec),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1971')
-        ! reads in station infos
-        read(IOUT_SU) islice_selected_rec,ispec_selected_rec
-        read(IOUT_SU) xi_receiver,eta_receiver,gamma_receiver
-        read(IOUT_SU) x_found,y_found,z_found
-        read(IOUT_SU) nu
-        close(IOUT_SU)
-        ! write the locations of stations, so that we can load them and write them to SU headers later
-        open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_stations.txt', &
-              status='unknown',action='write',iostat=ier)
-        if (ier /= 0) &
-          call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
-
-        do irec = 1,nrec
-          write(IOUT_SU,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
-        enddo
-
-        close(IOUT_SU)
-        deallocate(x_found,y_found,z_found)
-      endif
-      ! main process broadcasts the results to all the slices
-      call bcast_all_i(islice_selected_rec,nrec)
-      call bcast_all_i(ispec_selected_rec,nrec)
-      call bcast_all_dp(xi_receiver,nrec)
-      call bcast_all_dp(eta_receiver,nrec)
-      call bcast_all_dp(gamma_receiver,nrec)
-      call bcast_all_dp(nu,NDIM*NDIM*nrec)
-      call synchronize_all()
-      ! user output
-      if (myrank == 0) then
-        ! elapsed time since beginning of mesh generation
-        tCPU = wtime() - tstart
-        write(IMAIN,*)
-        write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
-        write(IMAIN,*)
-        write(IMAIN,*) 'End of receiver detection - done'
-        write(IMAIN,*)
-        call flush_IMAIN()
-      endif
-
-      ! everything done
-      is_done_stations = .true.
-    endif
-
-    end subroutine read_stations_from_previous_run
-
-!
-!--------------------------------------------------------
-!
-
-    subroutine write_stations_for_next_run()
-
-    implicit none
-
-    open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
-         status='unknown',action='write',form='unformatted',iostat=ier)
-    if (ier == 0) then
-      write(IOUT_SU) islice_selected_rec,ispec_selected_rec
-      write(IOUT_SU) xi_receiver,eta_receiver,gamma_receiver
-      write(IOUT_SU) x_found,y_found,z_found
-      write(IOUT_SU) nu
-      close(IOUT_SU)
-    endif
-
-    end subroutine write_stations_for_next_run
-
 
   end subroutine locate_receivers
 

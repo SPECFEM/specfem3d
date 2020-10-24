@@ -29,7 +29,7 @@
 
 ! reads in an external source time function file
 
-  use constants, only: MAX_STRING_LEN,CUSTOM_REAL,IOSTF
+  use constants, only: MAX_STRING_LEN,CUSTOM_REAL,IO_STF
 
   use shared_parameters, only: NSTEP,NSTEP_STF,NSOURCES_STF,DT
 
@@ -52,7 +52,7 @@
   user_source_time_function(:,isource) = 0._CUSTOM_REAL
 
   ! opens specified file
-  open(IOSTF,file=trim(external_source_time_function_filename),status='old',action='read',iostat=ier)
+  open(IO_STF,file=trim(external_source_time_function_filename),status='old',action='read',iostat=ier)
   if (ier /= 0) then
     print *,'Error could not open external source file: ',trim(external_source_time_function_filename)
     stop 'Error opening external source time function file'
@@ -61,7 +61,7 @@
   ! gets number of file entries
   i = 0
   do while (ier == 0)
-    read(IOSTF,"(a256)",iostat=ier) line
+    read(IO_STF,"(a256)",iostat=ier) line
     if (ier == 0) then
       ! suppress leading white spaces, if any
       line = adjustl(line)
@@ -75,7 +75,7 @@
       i = i + 1
     endif
   enddo
-  rewind(IOSTF)
+  rewind(IO_STF)
 
   ! subtract one because the first line of the file contains the time step used
   i = i - 1
@@ -102,12 +102,12 @@
   endif
 
   ! read the time step used and check that it is the same as DT used for the code
-  read(IOSTF,*) dt_source
+  read(IO_STF,*) dt_source
   if (abs((dt_source - DT) / DT) > 1.d-3) stop 'error: the external source time file does not use the same time step as DT'
 
   ! read the source values
   do i = 1, NSTEP_STF
-    read(IOSTF,*,iostat=ier) user_source_time_function(i,isource)
+    read(IO_STF,*,iostat=ier) user_source_time_function(i,isource)
     if (ier /= 0) then
       print *,'Problem when reading external source time file: ', trim(external_source_time_function_filename)
       print *,'Please check, file format should be: #time #stf-value'
@@ -116,7 +116,7 @@
   enddo
 
   ! closes external STF file
-  close(IOSTF)
+  close(IO_STF)
 
   end subroutine read_external_source_time_function
 

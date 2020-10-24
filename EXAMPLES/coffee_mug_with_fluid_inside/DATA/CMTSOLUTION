@@ -1,0 +1,13 @@
+PDE  1999 01 01 00 00 00.00  67000 67000 -25000 4.2 4.2 homog_test
+event name:       homog_test
+time shift:       0.0000
+half duration:    4.e-4 
+latorUTM:         -1.5
+longorUTM:        0.0
+depth:            2.45
+Mrr:              1.e10
+Mtt:              1.e10
+Mpp:              1.e10
+Mrt:              0.0
+Mrp:              0.0
+Mtp:              0.0

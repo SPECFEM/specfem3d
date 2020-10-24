@@ -28,10 +28,28 @@
 
   subroutine compute_seismograms()
 
-  use specfem_par
-  use specfem_par_acoustic
-  use specfem_par_elastic
-  use specfem_par_poroelastic
+  use constants, only: myrank,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO
+
+  use specfem_par, only: SIMULATION_TYPE,NGLOB_AB,NSPEC_AB,ibool,NGLOB_ADJOINT, &
+    deltat,DT,t0,NSTEP,it, &
+    seismo_current,seismo_offset,subsamp_seismos, &
+    ispec_selected_source,ispec_selected_rec, &
+    hxir_store,hetar_store,hgammar_store,number_receiver_global,nrec_local, &
+    nu_source,nu_rec,Mxx,Myy,Mzz,Mxy,Mxz,Myz,tshift_src,hdur_Gaussian, &
+    hprime_xx,hprime_yy,hprime_zz, &
+    hpxir_store,hpetar_store,hpgammar_store,seismograms_eps, &
+    Mxx_der,Myy_der,Mzz_der,Mxy_der,Mxz_der,Myz_der,sloc_der, &
+    USE_TRICK_FOR_BETTER_PRESSURE, &
+    SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE
+
+  ! seismograms
+  use specfem_par, only: seismograms_d,seismograms_v,seismograms_a,seismograms_p
+
+  use specfem_par_acoustic, only: ispec_is_acoustic,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+    b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic
+  use specfem_par_elastic, only: ispec_is_elastic,displ,veloc,accel, &
+    b_displ,b_veloc,b_accel
+  use specfem_par_poroelastic, only: ispec_is_poroelastic,displs_poroelastic,velocs_poroelastic,accels_poroelastic
 
   implicit none
 
@@ -40,7 +58,7 @@
   ! interpolated wavefield values
   double precision :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd
 
-  integer :: irec_local,irec
+  integer :: irec_local,irec,idx
   integer :: iglob,ispec,i,j,k
 
   ! adjoint locals
@@ -49,6 +67,13 @@
   real(kind=CUSTOM_REAL):: stf_deltat
   double precision :: stf
   double precision,dimension(NDIM,NDIM) :: rotation_seismo
+  ! receiver Lagrange interpolators
+  double precision,dimension(NGLLX) :: hxir
+  double precision,dimension(NGLLY) :: hetar
+  double precision,dimension(NGLLZ) :: hgammar
+  double precision :: hpxir(NGLLX),hpetar(NGLLY),hpgammar(NGLLZ)
+
+  double precision, external :: comp_source_time_function
 
   do irec_local = 1,nrec_local
 
@@ -69,9 +94,9 @@
 
     ! gets local receiver interpolators
     ! (1-D Lagrange interpolators)
-    hxir(:) = hxir_store(irec_local,:)
-    hetar(:) = hetar_store(irec_local,:)
-    hgammar(:) = hgammar_store(irec_local,:)
+    hxir(:) = hxir_store(:,irec_local)
+    hetar(:) = hetar_store(:,irec_local)
+    hgammar(:) = hgammar_store(:,irec_local)
 
     ! gets global number of that receiver
     irec = number_receiver_global(irec_local)
@@ -96,9 +121,9 @@
       if (ispec_is_elastic(ispec)) then
         ! interpolates displ/veloc/accel at receiver locations
         call compute_interpolated_dva_viscoelast(displ,veloc,accel,NGLOB_AB, &
-                                      ispec,NSPEC_AB,ibool, &
-                                      hxir,hetar,hgammar, &
-                                      dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+                                                 ispec,NSPEC_AB,ibool, &
+                                                 hxir,hetar,hgammar, &
+                                                 dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
       endif ! elastic
 
       ! acoustic wave field
@@ -124,9 +149,9 @@
       if (ispec_is_poroelastic(ispec)) then
         ! interpolates displ/veloc/accel at receiver locations
         call compute_interpolated_dva_viscoelast(displs_poroelastic,velocs_poroelastic,accels_poroelastic,NGLOB_AB, &
-                                      ispec,NSPEC_AB,ibool, &
-                                      hxir,hetar,hgammar, &
-                                      dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+                                                 ispec,NSPEC_AB,ibool, &
+                                                 hxir,hetar,hgammar, &
+                                                 dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
       endif ! poroelastic
 
     case (3)
@@ -137,9 +162,9 @@
       if (ispec_is_elastic(ispec)) then
         ! backward field: interpolates displ/veloc/accel at receiver locations
         call compute_interpolated_dva_viscoelast(b_displ,b_veloc,b_accel,NGLOB_ADJOINT, &
-                                      ispec,NSPEC_AB,ibool, &
-                                      hxir,hetar,hgammar, &
-                                      dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+                                                 ispec,NSPEC_AB,ibool, &
+                                                 hxir,hetar,hgammar, &
+                                                 dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
       endif ! elastic
 
       ! acoustic wave field
@@ -180,9 +205,9 @@
         enddo
 
         ! gets derivatives of local receiver interpolators
-        hpxir(:) = hpxir_store(irec_local,:)
-        hpetar(:) = hpetar_store(irec_local,:)
-        hpgammar(:) = hpgammar_store(irec_local,:)
+        hpxir(:) = hpxir_store(:,irec_local)
+        hpetar(:) = hpetar_store(:,irec_local)
+        hpgammar(:) = hpgammar_store(:,irec_local)
 
         ! computes the integrated derivatives of source parameters (M_jk and X_s)
         call compute_adj_source_frechet(ispec,displ_element,Mxx(irec),Myy(irec),Mzz(irec), &
@@ -191,7 +216,8 @@
                                         hprime_xx,hprime_yy,hprime_zz)
 
         stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(irec),hdur_Gaussian(irec))
-        stf_deltat = stf * deltat
+
+        stf_deltat = real(stf * deltat * subsamp_seismos,kind=CUSTOM_REAL)
 
         Mxx_der(irec_local) = Mxx_der(irec_local) + eps_s(1,1) * stf_deltat
         Myy_der(irec_local) = Myy_der(irec_local) + eps_s(2,2) * stf_deltat
@@ -209,11 +235,11 @@
       ! adjoint "receiver" N/E/Z orientations given by nu_source array
       rotation_seismo(:,:) = nu_source(:,:,irec)
     else
-      rotation_seismo(:,:) = nu(:,:,irec)
+      rotation_seismo(:,:) = nu_rec(:,:,irec)
     endif
 
     ! we only store if needed
-    ! note: current index is seismo_current, this allows to store arrays only up to NTSTEP_BETWEEN_OUTPUT_SEISMOS
+    ! note: current index is seismo_current, this allows to store arrays only up to nlength_seismogram
     !       which could be used to limit the allocation size of these arrays for a large number of receivers
     if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
       seismograms_d(:,irec_local,seismo_current) = real(rotation_seismo(:,1)*dxd + rotation_seismo(:,2)*dyd &
@@ -232,7 +258,12 @@
 
     ! adjoint simulations
     if (SIMULATION_TYPE == 2) then
-      seismograms_eps(:,:,irec_local,it) = eps_s(:,:)
+      ! current index in seismogram_eps
+      idx = seismo_offset + seismo_current
+      ! checks bounds
+      if (idx < 1 .or. idx > NSTEP/subsamp_seismos) call exit_mpi(myrank,'Error: seismograms_eps has wrong current index')
+      ! stores strain value
+      seismograms_eps(:,:,irec_local,idx) = eps_s(:,:)
     endif
 
   enddo ! nrec_local

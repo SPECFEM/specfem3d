@@ -1,5 +1,6 @@
 #!/bin/bash
 testdir=`pwd`
+me=`basename "$0"`
 
 # sets source directory
 cd $ROOT/
@@ -9,9 +10,8 @@ cd $testdir/
 
 # title
 echo >> $testdir/results.log
-echo "configure.1" >> $testdir/results.log
+echo "$me in: $testdir" >> $testdir/results.log
 echo >> $testdir/results.log
-
 
 echo "directory: `pwd`" >> $testdir/results.log
 

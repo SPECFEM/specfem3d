@@ -10,7 +10,7 @@ if (@ARGV < 3) {die("Usage: setup_forward_dir.pl smodel imin imax\n")}
 #-----------------------------------
 # USER INPUT
 
-$master_dir = "/ibrixfs1/home/carltape/BASIN_FORWARD/Master_Dir";
+$main_dir = "/ibrixfs1/home/carltape/BASIN_FORWARD/Main_Dir";
 $scripts_dir = "/ibrixfs1/home/carltape/BASIN_FORWARD/Scripts";
 
 # directory containing CMTSOLUTION files for all events
@@ -79,7 +79,7 @@ for ($i = $imin; $i <= $imax; $i++) {
 
   # copy in a new CMTSOLUTION
   $cmtfile1 = "$eid/DATA/CMTSOLUTION";
-  `${scripts_dir}/copy_basin_sem_dir.bash ${master_dir} $eid`;
+  `${scripts_dir}/copy_basin_sem_dir.bash ${main_dir} $eid`;
   `cp $cmtfile $cmtfile1`;
 
   # change the half-duration
@@ -105,7 +105,7 @@ for ($i = $imin; $i <= $imax; $i++) {
 
 
 #--------------------
-#Master_dir=/ibrixfs1/home/carltape/BASIN_FORWARD/Master_Dir
+#Main_dir=/ibrixfs1/home/carltape/BASIN_FORWARD/Main_Dir
 #Scripts_dir=/ibrixfs1/home/carltape/BASIN_FORWARD/Scripts
 #
 #for eid in `cat /ibrixfs1/home/carltape/CMT/test_events`; do
@@ -114,7 +114,7 @@ for ($i = $imin; $i <= $imax; $i++) {
 #
 # echo "==== $eid ====="
 #
-# ${Scripts_dir}/copy_basin_sem_dir.bash ${Master_dir} $eid
+# ${Scripts_dir}/copy_basin_sem_dir.bash ${Main_dir} $eid
 # cp /ibrixfs1/home/carltape/CMT/CMT_files/CMTSOLUTION_$eid $eid/DATA/CMTSOLUTION
 #
 #done

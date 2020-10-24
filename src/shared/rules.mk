@@ -54,6 +54,7 @@ shared_OBJECTS = \
 	$O/gll_library.shared.o \
 	$O/hex_nodes.shared.o \
 	$O/heap_sort.shared.o \
+	$O/init_openmp.shared.o \
 	$O/lagrange_poly.shared.o \
 	$O/merge_sort.shared.o \
 	$O/netlib_specfun_erf.shared.o \
@@ -137,12 +138,38 @@ asdf_shared_OBJECTS = \
 asdf_shared_STUBS = \
 	$O/asdf_method_stubs.cc.o \
 	$O/asdf_manager_stubs.shared_asdf.o \
-        $(EMPTY_MACRO)
+	$(EMPTY_MACRO)
 
 ifeq ($(ASDF),yes)
 shared_OBJECTS += $(asdf_shared_OBJECTS)
 else
 shared_OBJECTS += $(asdf_shared_STUBS)
+endif
+
+###
+### HDF5
+###
+hdf5_shared_OBJECTS = \
+	$O/phdf5_utils.shared_hdf5.o \
+	$(EMPTY_MACRO)
+hdf5_shared_MODULES = \
+	$O/phdf5_utils.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
+hdf5_shared_STUBS_OBJECTS = \
+	$O/phdf5_utils_stubs.shared_nohdf5.o \
+	$(EMPTY_MACRO)
+hdf5_shared_STUBS_MODULES = \
+	$O/phdf5_utils_stubs.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
+
+ifeq ($(HDF5),yes)
+shared_OBJECTS += $(hdf5_shared_OBJECTS)
+shared_MODULES += $(hdf5_shared_MODULES)
+else
+shared_OBJECTS += $(hdf5_shared_STUBS_OBJECTS)
+shared_MODULES += $(hdf5_shared_STUBS_MODULES)
 endif
 
 #######################################
@@ -202,3 +229,11 @@ $O/%.shared_asdf.o: $S/%.f90
 $O/%.cc.o: $S/%.c ${SETUP}/config.h
 	${CC} -c $(CPPFLAGS) $(CFLAGS) -o $@ $<
 
+## hdf5
+ifeq ($(HDF5),yes)
+$O/%.shared_hdf5.o: $S/%.f90
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+else
+$O/%.shared_nohdf5.o: $S/%.f90
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+endif
