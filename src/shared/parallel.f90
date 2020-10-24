@@ -1079,7 +1079,7 @@ end module my_mpi
   integer :: ier
 
   call MPI_ISEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,my_local_mpi_comm_inter,req,ier)
- 
+
   end subroutine isend_i_inter
 
 
@@ -1615,7 +1615,7 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
- 
+
   subroutine gather_all_cr(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
   use my_mpi
@@ -2106,7 +2106,7 @@ end subroutine world_unsplit_inter
 !
 !-------------------------------------------------------------------------------------------------
 !
-  ! 
+!
   subroutine select_io_node(node_names, myrank, sizeval, key, io_start)
 
     use constants, only:io_task,compute_task,dest_ionod,nproc_io,CUSTOM_REAL,my_io_id,n_str_nodename
@@ -2126,9 +2126,9 @@ end subroutine world_unsplit_inter
 
     n_procs_on_node(:) = 0 ! initialize
     dump_node_names(:) = "nan"
-   
+
     ! BUG: nprocs goes wrong when 2 cluster nodes and 64 compute 8 io procs
-    ! (only 62 compute nodes are assigned)   
+    ! (only 62 compute nodes are assigned)
 
     ! cluster_node_nums = [n_1,...,n_i,...n_cn,-1,-1,...] ! n_i is the number of procs on
     ! each cluster node
@@ -2137,8 +2137,8 @@ end subroutine world_unsplit_inter
         c = 0
         do j = 1, sizeval
             if (node_names(i-1) .eq. dump_node_names(j)) c = j
-        enddo 
-        
+        enddo
+
         ! if node_name[i-1] is not registered yet
         if (c == 0) then
             ! count the number of cluster node
@@ -2151,7 +2151,7 @@ end subroutine world_unsplit_inter
         else ! if node_name[i] has already be found, count up the number of procs
             n_procs_on_node(c) = n_procs_on_node(c) + 1
         endif
-        
+
         ! the id of cluster which this process belongs to
         if (i-1==myrank) then
             my_cluster_id = c
@@ -2160,7 +2160,7 @@ end subroutine world_unsplit_inter
 
     ! warning when a cluster node has only one single proc.
     do i = 1, n_cluster_node
-        if(n_procs_on_node(i) == 1) then 
+        if(n_procs_on_node(i) == 1) then
             print *, "node name: " // trim(dump_node_names(i)) // " has only one procs."
             print *, "this may lead a io performance issue by inter-clusternode communication."
         endif
@@ -2177,7 +2177,7 @@ end subroutine world_unsplit_inter
         print *, "at least one io node for each cluster node is necessary"
         stop
     endif
-    
+
     ! share the rest of ionodes based on the ratio of compute nodes
     n_rest_io = NIONOD - sum(n_ionode_on_cluster)
     if (n_rest_io /= 0) then
@@ -2223,7 +2223,7 @@ end subroutine world_unsplit_inter
 
                     ! rank of io_start
                     if(n_ionode==0) io_start=j-1
-                    
+
                     n_ionode = n_ionode+1
 
                else
@@ -2249,7 +2249,7 @@ end subroutine world_unsplit_inter
     call synchronize_all()
 
     if (io_task) print *, "rank ", myrank, " node ", trim(node_names(myrank)), " my_io_id", my_io_id, " nprocio ",nproc_io
-    
+
     do i = 0, n_ionode-1
         call synchronize_all()
         if (.not. io_task) then
@@ -2281,7 +2281,7 @@ end subroutine world_unsplit_inter
 
     ! split comm into computation nodes and io node
     ! here we use the last NIONOD ranks (intra comm) as the io node
-    ! for using one additional node, xspecfem3D need to be run with + NIONOD node 
+    ! for using one additional node, xspecfem3D need to be run with + NIONOD node
     ! thus for running mpirun, it should be like e.g.
     ! mpirun -n $((NPROC+NIONOD)) ./bin/xspecfem3D
 
@@ -2299,26 +2299,30 @@ end subroutine world_unsplit_inter
     call synchronize_all()
 
     ! select the task of this roc
-    call select_io_node(node_names,myrank,sizeval,key,io_start)
-   
-    ! split communicator into compute_comm and io_comm
-    call MPI_COMM_SPLIT(my_local_mpi_comm_world, key, myrank, split_comm, ier)
- 
-    ! create inter communicator and set as my_local_mpi_comm_inter
-    if (io_task) then
-      comp_start = 0
-      call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, comp_start, 1111, inter_comm, ier)
+    if (NIONOD > 0) then
+      call select_io_node(node_names,myrank,sizeval,key,io_start)
+
+      ! split communicator into compute_comm and io_comm
+      call MPI_COMM_SPLIT(my_local_mpi_comm_world, key, myrank, split_comm, ier)
+
+      ! create inter communicator and set as my_local_mpi_comm_inter
+      if (io_task) then
+        comp_start = 0
+        call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, comp_start, 1111, inter_comm, ier)
+      else
+        !io_start = nnode_comp !+dest_ionod
+        call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, io_start,   1111, inter_comm, ier)
+      endif
+      my_local_mpi_comm_world = split_comm
+
+      ! use inter_comm as my_local_mpi_comm_world for all send/recv
+      my_local_mpi_comm_inter = inter_comm
+
+      ! exclude io node from the other computer nodes
+      if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) NPROC = NPROC-NIONOD
     else
-      !io_start = nnode_comp !+dest_ionod
-      call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, io_start,   1111, inter_comm, ier)
+      my_local_mpi_comm_inter = my_local_mpi_comm_world
     endif
-    my_local_mpi_comm_world = split_comm
-
-    ! use inter_comm as my_local_mpi_comm_world for all send/recv
-    my_local_mpi_comm_inter = inter_comm
-
-    ! exclude io node from the other computer nodes
-    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) NPROC = NPROC-NIONOD
 
     deallocate(node_names)
   end subroutine

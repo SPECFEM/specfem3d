@@ -190,7 +190,7 @@
     if (io_task) then
       call do_io_start_idle()
     else ! compute node passes necessary info. to io node
-      call pass_info_to_io()
+      if(NIONOD > 0) call pass_info_to_io()
     endif
   endif
 
@@ -378,7 +378,7 @@
 
   endif ! if compute_task
 
-  if(HDF5_ENABLED) call synchronize_inter()
+  if(HDF5_ENABLED .and. NIONOD > 0) call synchronize_inter()
 
   end subroutine iterate_time
 

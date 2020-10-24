@@ -407,7 +407,7 @@
   endif ! simulation preparation for compute nodes
 
   ! MPI finish
-  if(HDF5_ENABLED) then
+  if(HDF5_ENABLED .and. NIONOD > 0) then
     call world_unsplit_inter()
   endif
 

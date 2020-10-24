@@ -418,6 +418,7 @@ $O/write_output_ASDF.spec.o: $O/asdf_data.spec_module.o
 
 ## hdf5
 $O/initialize_simulation.spec.o: $(hdf5_specfem3D_OBJECTS)
+$O/write_seismograms_hdf5.spec_hdf5.o: $(hdf5_specfem3D_OBJECTS)
 
 ## kdtree
 $O/locate_point.spec.o: $O/search_kdtree.shared.o
@@ -490,6 +491,6 @@ $O/%.visualcc.o: $S/%.c ${SETUP}/config.h
 $O/%.spec_hdf5.o: $S/%.F90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o $(hdf5_specfem3D_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec_hdf5.o: $S/%.f90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o $(hdf5_specfem3D_SHARED_OBJECTS) 
+$O/%.spec_hdf5.o: $S/%.f90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o $(hdf5_specfem3D_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 

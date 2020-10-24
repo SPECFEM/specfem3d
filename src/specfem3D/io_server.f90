@@ -1275,7 +1275,6 @@ subroutine do_io_seismogram_init()
   ! hdf5 utility
   h5 = h5io()
   fname_h5_seismo = trim(OUTPUT_FILES)//fname_h5_base
-
   ! initialze hdf5
   call h5_init(h5, fname_h5_seismo)
 

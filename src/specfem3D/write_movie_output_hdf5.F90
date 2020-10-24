@@ -67,7 +67,7 @@
 
   if (mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
     ! wait
-    call wait_all_send()
+    if(NIONOD>0) call wait_all_send()
 
     ! saves MOVIE on the SURFACE
     if (MOVIE_SURFACE) then
@@ -91,11 +91,11 @@
 
   subroutine wait_all_send()
   use specfem_par
- 
+
   implicit none
 
   integer :: ireq
-  
+
   ! wait till all mpi_isends are finished
   if (n_req_surf /= 0) then
     do ireq=1, n_req_surf
@@ -189,12 +189,14 @@
     endif
   enddo
 
- ! send surface body to io node
-  call isend_cr_inter(store_val_ux,nfaces_surface_points,0,io_tag_surface_ux,req_dump_surf(1))
-  call isend_cr_inter(store_val_uy,nfaces_surface_points,0,io_tag_surface_uy,req_dump_surf(2))
-  call isend_cr_inter(store_val_uz,nfaces_surface_points,0,io_tag_surface_uz,req_dump_surf(3))
+  if (NIONOD > 0) then
+    ! send surface body to io node
+    call isend_cr_inter(store_val_ux,nfaces_surface_points,0,io_tag_surface_ux,req_dump_surf(1))
+    call isend_cr_inter(store_val_uy,nfaces_surface_points,0,io_tag_surface_uy,req_dump_surf(2))
+    call isend_cr_inter(store_val_uz,nfaces_surface_points,0,io_tag_surface_uz,req_dump_surf(3))
 
-  n_req_surf = 3
+    n_req_surf = 3
+  endif
 
 end subroutine wmo_movie_surface_output_h5
 
@@ -302,17 +304,18 @@ subroutine wmo_create_shakemap_h5()
 
   use specfem_par
   use specfem_par_movie
- 
+
   implicit none
 
   ! local parameters
   integer :: req
 
- ! send surface body to io node
-  call isend_cr_inter(shakemap_ux,nfaces_surface_points,0,io_tag_shake_ux,req)
-  call isend_cr_inter(shakemap_uy,nfaces_surface_points,0,io_tag_shake_uy,req)
-  call isend_cr_inter(shakemap_uz,nfaces_surface_points,0,io_tag_shake_uz,req)
-
+  if (NIONOD > 0) then
+    ! send surface body to io node
+    call isend_cr_inter(shakemap_ux,nfaces_surface_points,0,io_tag_shake_ux,req)
+    call isend_cr_inter(shakemap_uy,nfaces_surface_points,0,io_tag_shake_uy,req)
+    call isend_cr_inter(shakemap_uz,nfaces_surface_points,0,io_tag_shake_uz,req)
+  endif
 end subroutine wmo_save_shakemap_h5
 
 
@@ -382,9 +385,11 @@ subroutine wmo_movie_volume_output_h5()
         ENDDO_LOOP_IJK
       enddo
 
-      ! send pressure_loc
-      call isend_cr_inter(d_p,NGLOB_AB,dest_ionod,io_tag_vol_pres,req_dump_vol(req_count))
-      req_count = req_count+1
+      if (NIONOD > 0) then
+        ! send pressure_loc
+        call isend_cr_inter(d_p,NGLOB_AB,dest_ionod,io_tag_vol_pres,req_dump_vol(req_count))
+        req_count = req_count+1
+      endif
     endif
   endif ! acoustic
 
@@ -405,9 +410,11 @@ subroutine wmo_movie_volume_output_h5()
                               velocity_x_on_node,velocity_y_on_node,velocity_z_on_node, &
                               ispec_is_elastic)
 
-      ! send div_glob
-      call isend_cr_inter(div_glob,NGLOB_AB,dest_ionod,io_tag_vol_divglob,req_dump_vol(req_count))
-      req_count = req_count+1
+      if (NIONOD > 0) then
+        ! send div_glob
+        call isend_cr_inter(div_glob,NGLOB_AB,dest_ionod,io_tag_vol_divglob,req_dump_vol(req_count))
+        req_count = req_count+1
+      endif
     endif ! elastic
 
     ! saves full snapshot data to local disk
@@ -425,26 +432,30 @@ subroutine wmo_movie_volume_output_h5()
 
     ! div and curl on elemental level
     ! writes our divergence
-    call isend_cr_inter(div_on_node,NGLOB_AB,dest_ionod,io_tag_vol_div,req_dump_vol(req_count))
-    req_count = req_count+1
- 
-    ! writes out curl
-    call isend_cr_inter(curl_x_on_node,NGLOB_AB,dest_ionod,io_tag_vol_curlx,req_dump_vol(req_count))
-    req_count = req_count+1
-    call isend_cr_inter(curl_y_on_node,NGLOB_AB,dest_ionod,io_tag_vol_curly,req_dump_vol(req_count))
-    req_count = req_count+1
-    call isend_cr_inter(curl_z_on_node,NGLOB_AB,dest_ionod,io_tag_vol_curlz,req_dump_vol(req_count))
-    req_count = req_count+1
+    if (NIONOD > 0) then
+      call isend_cr_inter(div_on_node,NGLOB_AB,dest_ionod,io_tag_vol_div,req_dump_vol(req_count))
+      req_count = req_count+1
+
+      ! writes out curl
+      call isend_cr_inter(curl_x_on_node,NGLOB_AB,dest_ionod,io_tag_vol_curlx,req_dump_vol(req_count))
+      req_count = req_count+1
+      call isend_cr_inter(curl_y_on_node,NGLOB_AB,dest_ionod,io_tag_vol_curly,req_dump_vol(req_count))
+      req_count = req_count+1
+      call isend_cr_inter(curl_z_on_node,NGLOB_AB,dest_ionod,io_tag_vol_curlz,req_dump_vol(req_count))
+      req_count = req_count+1
+    endif
   endif
 
   ! velocity
   if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
-    call isend_cr_inter(velocity_x_on_node,NGLOB_AB,dest_ionod,io_tag_vol_velox,req_dump_vol(req_count))
-    req_count = req_count+1
-    call isend_cr_inter(velocity_y_on_node,NGLOB_AB,dest_ionod,io_tag_vol_veloy,req_dump_vol(req_count))
-    req_count = req_count+1
-    call isend_cr_inter(velocity_z_on_node,NGLOB_AB,dest_ionod,io_tag_vol_veloz,req_dump_vol(req_count))
-    req_count = req_count+1
+    if (NIONOD > 0) then
+      call isend_cr_inter(velocity_x_on_node,NGLOB_AB,dest_ionod,io_tag_vol_velox,req_dump_vol(req_count))
+      req_count = req_count+1
+      call isend_cr_inter(velocity_y_on_node,NGLOB_AB,dest_ionod,io_tag_vol_veloy,req_dump_vol(req_count))
+      req_count = req_count+1
+      call isend_cr_inter(velocity_z_on_node,NGLOB_AB,dest_ionod,io_tag_vol_veloz,req_dump_vol(req_count))
+      req_count = req_count+1
+    endif
   endif
 
   ! store the number of mpi_isend reqs
@@ -625,7 +636,7 @@ subroutine wmo_movie_div_curl_h5(veloc, &
         do i = 1,NGLLX
 
           iglob = ibool(i,j,k,ispec)
- 
+
           ! divergence \nabla \cdot \bf{v}
           div_on_node(iglob) = dvxdxl(i,j,k) + dvydyl(i,j,k) + dvzdzl(i,j,k)
 
