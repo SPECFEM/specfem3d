@@ -24,7 +24,7 @@ module phdf5_utils ! class-like module
          h5_create_file_prop_list, h5_close_prop_list, &
          h5_open_group_prop_list, h5_create_group_prop_list, h5_close_group_prop_list,&
          h5_create_dataset_prop_list, h5_create_dataset_prop_list_collect, &
-         h5_create_dataset_gen, &
+         h5_create_dataset_gen, h5_create_dataset_gen_in_group, &
          h5_create_group_p, h5_open_group_p, &
          h5_read_dataset_p_scalar_i, h5_read_dataset_p_scalar_r,&
          h5_read_dataset_p_1d_i, h5_read_dataset_p_1d_r, h5_read_dataset_p_1d_l,&
@@ -42,6 +42,7 @@ module phdf5_utils ! class-like module
          bool_array2integer, int_array2bool, &
          h5_gather_dsetsize, create_dataset_collect, &
          h5_write_dataset_1d_to_2d_r_collect_hyperslab, h5_write_dataset_2d_to_3d_r_collect_hyperslab, &
+         h5_write_dataset_1d_r_collect_hyperslab_in_group, &
          h5_write_dataset_2d_r_collect_hyperslab, h5_write_dataset_3d_r_collect_hyperslab, &
          write_attenuation_file_in_h5, read_attenuation_file_in_h5, &
          write_checkmesh_data_h5, write_checkmesh_xdmf_h5
@@ -164,7 +165,7 @@ contains
         character(len=*), intent(in) :: group_name
         call h5gopen_f(file_id, trim(group_name), group_id, error) ! group open
         if (error /= 0) write(*,*) 'hdf5 open group failed for, ', group_name
-        
+
         store_group_name = group_name
     end subroutine h5_open_group
 
@@ -195,7 +196,7 @@ contains
         type(h5io), intent(in) :: this
         call h5gclose_f(group_id, error) ! group open
         if (error /= 0) write(*,*) 'hdf5 close group failed'
-        
+
         group_id = parent_group_id
     end subroutine h5_close_subgroup
 
@@ -212,7 +213,7 @@ contains
     subroutine h5_open_dataset(this, dataset_name)
         type(h5io), intent(in) :: this
         character(len=*), intent(in) :: dataset_name
- 
+
         call h5dopen_f(group_id, trim(dataset_name), dataset_id, error)
         if (error /= 0) write(*,*) 'hdf5 open dataset failed for, ', dataset_name
     end subroutine h5_open_dataset
@@ -222,7 +223,7 @@ contains
     subroutine h5_open_dataset2(this, dataset_name)
         type(h5io), intent(in) :: this
         character(len=*), intent(in) :: dataset_name
- 
+
         call h5dopen_f(file_id, trim(dataset_name), dataset_id, error)
         if (error /= 0) write(*,*) 'hdf5 open dataset failed for, ', dataset_name
     end subroutine h5_open_dataset2
@@ -318,7 +319,7 @@ contains
         character(len=*), intent(in)                      :: dataset_name
         character(len=*), dimension(:), intent(in)        :: data_in
         integer(HID_T)                                    :: dspace_id ! dataspace id is local.
-        character(len=str_len), dimension(:), allocatable, target ::  data                   
+        character(len=str_len), dimension(:), allocatable, target ::  data
         integer                                           :: rank = 1
         integer(HSIZE_T), dimension(1)                    :: dim
         integer                                           :: i
@@ -339,7 +340,7 @@ contains
 
         call h5sclose_f(dspace_id, error)
         if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
- 
+
         deallocate(data, stat=error)
 
     end subroutine h5_write_dataset_1d_c
@@ -350,7 +351,7 @@ contains
         character(len=*), intent(in)                      :: dataset_name
         character(len=*), dimension(:), intent(in)        :: data_in
         integer(HID_T)                                    :: dspace_id ! dataspace id is local.
-        character(len=str_len), dimension(:), allocatable, target ::  data                   
+        character(len=str_len), dimension(:), allocatable, target ::  data
         integer                                           :: rank = 1
         integer(HSIZE_T), dimension(1)                    :: dim
         integer                                           :: i
@@ -371,7 +372,7 @@ contains
 
         call h5sclose_f(dspace_id, error)
         if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
- 
+
         deallocate(data, stat=error)
 
     end subroutine h5_write_dataset_1d_c_no_group
@@ -476,7 +477,7 @@ contains
         if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
     end subroutine h5_write_dataset_2d_r_no_group
 
-    
+
     subroutine h5_write_dataset_4d_r(this, dataset_name, data)
         type(h5io), intent(in) :: this
         character(len=*), intent(in)      :: dataset_name
@@ -501,10 +502,10 @@ contains
         endif
         call h5sclose_f(dspace_id, error)
         if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
- 
+
     end subroutine h5_write_dataset_4d_r
 
- 
+
     ! dataset writer for 2d character array
     subroutine h5_write_dataset_2d_c(this, dataset_name, data)
         type(h5io), intent(in) :: this
@@ -548,7 +549,7 @@ contains
         call h5tset_size_f(atype_id, taglen, error)
         if (error /= 0) write(*,*) 'hdf5 set_size failed for attribute, ', attribute_name
         ! here the attribute is written on the current openning dataset
-        call h5acreate_f(dataset_id, trim(attribute_name), atype_id, aspace_id, attr_id, error) 
+        call h5acreate_f(dataset_id, trim(attribute_name), atype_id, aspace_id, attr_id, error)
         if (error /= 0) write(*,*) 'hdf5 acreate failed for attribute, ', attribute_name
         call h5awrite_f(attr_id, atype_id, data, dim, error) ! write
         if (error /= 0) write(*,*) 'hdf5 awrite failed for attribute, ', attribute_name
@@ -687,7 +688,7 @@ contains
         type(h5io), intent(in)       :: this
         character(len=*), intent(in) :: dataset_name
         integer, dimension(:), intent(in)  :: dim_in
- 
+
         integer(HSIZE_T), dimension(:), allocatable :: dim
         integer, intent(in)                :: dtype_id ! 1:int, 4:real4, 8:real8,
         integer, intent(in)                :: rank
@@ -698,7 +699,7 @@ contains
 
         call h5screate_simple_f(rank, dim, dspace_id, error)
         if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ', dataset_name
-        
+
         call h5pcreate_f(H5P_DATASET_CREATE_F, plist_id, error)
 
         if (dtype_id == 1) then ! integer
@@ -710,7 +711,7 @@ contains
         else if (dtype_id == 4) then  !  real
             call h5dcreate_f(file_id, trim(dataset_name), H5T_NATIVE_REAL, dspace_id, dataset_id, error, &
                                      dcpl_id=plist_id)
-        else if (dtype_id == 8) then ! double 
+        else if (dtype_id == 8) then ! double
             call h5dcreate_f(file_id, trim(dataset_name), H5T_NATIVE_DOUBLE, dspace_id, dataset_id, error, &
                                      dcpl_id=plist_id)
         else
@@ -727,6 +728,53 @@ contains
         if (error /= 0) write(*,*) 'hdf5 dataspace close failed for ', dataset_name
 
     end subroutine h5_create_dataset_gen
+
+
+    subroutine h5_create_dataset_gen_in_group(this, dataset_name, dim_in, rank, dtype_id)
+        type(h5io), intent(in)       :: this
+        character(len=*), intent(in) :: dataset_name
+        integer, dimension(:), intent(in)  :: dim_in
+
+        integer(HSIZE_T), dimension(:), allocatable :: dim
+        integer, intent(in)                :: dtype_id ! 1:int, 4:real4, 8:real8,
+        integer, intent(in)                :: rank
+
+        integer(HID_T)                     :: dspace_id
+
+        dim = dim_in ! convert data type
+
+        call h5screate_simple_f(rank, dim, dspace_id, error)
+        if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ', dataset_name
+
+        call h5pcreate_f(H5P_DATASET_CREATE_F, plist_id, error)
+
+        if (dtype_id == 1) then ! integer
+            call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_INTEGER, dspace_id, dataset_id, error, &
+                                     dcpl_id=plist_id)
+        else if (dtype_id == 2) then ! character
+            call h5dcreate_f(group_id, trim(dataset_name), str_type, dspace_id, dataset_id, error, &
+                                     dcpl_id=plist_id)
+        else if (dtype_id == 4) then  !  real
+            call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_REAL, dspace_id, dataset_id, error, &
+                                     dcpl_id=plist_id)
+        else if (dtype_id == 8) then ! double
+            call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_DOUBLE, dspace_id, dataset_id, error, &
+                                     dcpl_id=plist_id)
+        else
+            print *, "specified dtype_id is not implemented yet for hdf5 io. aborting..."
+            stop
+        endif
+        if (error /= 0) write(*,*) 'hdf5 dataset create failed for ', dataset_name
+
+        call h5_close_prop_list(this)
+
+        call h5dclose_f(dataset_id,error)
+        if (error /= 0) write(*,*) 'hdf5 dataset close failed for ', dataset_name
+        call h5sclose_f(dspace_id, error)
+        if (error /= 0) write(*,*) 'hdf5 dataspace close failed for ', dataset_name
+
+    end subroutine h5_create_dataset_gen_in_group
+
 
 
     subroutine h5_create_group_p(this, group_name)
@@ -1074,18 +1122,18 @@ contains
         if (size(data) == 0) then
             dim = 1
         endif
- 
+
         ! create dataset
         call create_dataset_collect(this, dataset_name, dim, rank, 1, file_id)
 
 
         write(tempstr, "(i6.6)") this_rank
         group_name = gname_proc_head // trim(tempstr)
- 
+
         !! create datasets of all processes for independent write
         call h5_open_group(this, group_name)
         call h5_open_dataset(this,trim(dataset_name))
-        
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
 !        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
@@ -1126,17 +1174,17 @@ contains
         if (size(data) == 0) then
             dim = 1
         endif
- 
+
         ! create dataset
         call create_dataset_collect(this, dataset_name, dim, rank, 1, file_id)
 
         write(tempstr, "(i6.6)") this_rank
         group_name = gname_proc_head // trim(tempstr)
- 
+
         !! create datasets of all processes for independent write
         call h5_open_group(this, group_name)
         call h5_open_dataset(this,trim(dataset_name))
-        
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
 !        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
@@ -1170,7 +1218,7 @@ contains
         character(len=10) :: tempstr
         character(len=5)  :: gname_proc_head = "proc_"
         character(len=64) :: group_name
-        
+
 
         dim = shape(data)
 
@@ -1183,7 +1231,7 @@ contains
         !! create datasets of all processes for independent write
         call h5_open_group(this, group_name)
         call h5_open_dataset(this,trim(dataset_name))
-        
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
 !        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
@@ -1227,7 +1275,7 @@ contains
         !! create datasets of all processes for independent write
         call h5_open_group(this, group_name)
         call h5_open_dataset(this,trim(dataset_name))
-        
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
 !        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
@@ -1269,7 +1317,7 @@ contains
         !! create datasets of all processes for independent write
         call h5_open_group(this, group_name)
         call h5_open_dataset(this,trim(dataset_name))
-        
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
 !        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
@@ -1312,7 +1360,7 @@ contains
         !! create datasets of all processes for independent write
         call h5_open_group(this, group_name)
         call h5_open_dataset(this,trim(dataset_name))
-        
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
 !        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
@@ -1356,7 +1404,7 @@ contains
         !! create datasets of all processes for independent write
         call h5_open_group(this, group_name)
         call h5_open_dataset(this,trim(dataset_name))
-        
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
 !        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
@@ -1395,7 +1443,7 @@ contains
         !! create datasets of all processes for independent write
         call h5_open_group(this, group_name)
         call h5_open_dataset(this,trim(dataset_name))
-        
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
 !        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
@@ -1427,14 +1475,14 @@ contains
 
         ! create dataset
         call create_dataset_collect(this, dataset_name, dim, rank, CUSTOM_REAL, file_id)
-            
+
         write(tempstr, "(i6.6)") this_rank
         group_name = gname_proc_head // trim(tempstr)
 
         !! create datasets of all processes for independent write
         call h5_open_group(this, group_name)
         call h5_open_dataset(this,trim(dataset_name))
-        
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
 !        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
@@ -1472,14 +1520,14 @@ contains
 
         ! create dataset
         call create_dataset_collect(this, dataset_name, dim, rank, 1, file_id)
-        
+
         write(tempstr, "(i6.6)") this_rank
         group_name = gname_proc_head // trim(tempstr)
 
         !! create datasets of all processes for independent write
         call h5_open_group(this, group_name)
         call h5_open_dataset(this,trim(dataset_name))
-        
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
 !        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
@@ -1518,7 +1566,7 @@ contains
         !! create datasets of all processes for independent write
         call h5_open_group(this, group_name)
         call h5_open_dataset(this,trim(dataset_name))
-        
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
 !        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
@@ -1562,7 +1610,7 @@ contains
         !! create datasets of all processes for independent write
         call h5_open_group(this, group_name)
         call h5_open_dataset(this,trim(dataset_name))
-        
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
 !        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
@@ -1615,7 +1663,7 @@ contains
         !! create datasets of all processes for independent write
         call h5_open_group(this, group_name)
         call h5_open_dataset(this,trim(dataset_name))
-        
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
 !        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
@@ -1700,24 +1748,24 @@ contains
 
         ! open dataset
         call h5_open_dataset2(this,trim(dataset_name))
- 
+
         ! select a place where data is inserted.
         count(1)  = 3! NDIM
         count(2)  = dim(2) ! NSTEP partial
         count(3)  = 1 ! nrec
- 
+
         ! select hyperslab in the file
         call h5screate_simple_f(rank,count, mem_dspace_id, error)
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
- 
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
          if (if_collect) then
             call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
         else
             call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
         endif
- 
+
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
             call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, data, dim, error, &
@@ -1727,12 +1775,63 @@ contains
                             file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
- 
+
         call h5_close_prop_list(this)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
     end subroutine h5_write_dataset_2d_to_3d_r_collect_hyperslab
+
+
+    ! store local 1d array to global 1d array
+    subroutine h5_write_dataset_1d_r_collect_hyperslab_in_group(this, dataset_name, data, offset_in, if_collect)
+        type(h5io), intent(in)                                      :: this
+        character(len=*), intent(in)                                :: dataset_name
+        real(kind=CUSTOM_REAL), dimension(:), intent(in), target    :: data
+        integer                                                     :: rank = 1
+        integer(HSIZE_T), dimension(1)                              :: dim
+        integer(HSIZE_T), dimension(1)                              :: count ! size of hyperslab
+        integer, dimension(:), intent(in)                           :: offset_in
+        integer(HSSIZE_T), dimension(1)                             :: offset ! the position where the datablock is inserted
+        logical                                                     :: if_collect
+
+        dim = shape(data)
+        offset = offset_in ! convert data type
+
+        ! open dataset
+        call h5_open_dataset(this,trim(dataset_name))
+
+        ! select a place where data is inserted.
+        count(1)  = dim(1)
+
+        ! select hyperslab in the file
+        call h5screate_simple_f(rank,count, mem_dspace_id, error)
+        call h5dget_space_f(dataset_id, file_dspace_id, error)
+        call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
+
+        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
+         if (if_collect) then
+            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+        else
+            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+        endif
+
+        ! write array using fortran pointer
+        if (CUSTOM_REAL == 4) then
+            call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, data, dim, error, &
+                            file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
+        else
+            call h5dwrite_f(dataset_id, H5T_NATIVE_DOUBLE, data, dim, error, &
+                            file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
+        endif
+        if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
+
+        call h5_close_prop_list(this)
+        call h5sclose_f(mem_dspace_id, error)
+        call h5sclose_f(file_dspace_id, error)
+        call h5_close_dataset(this)
+    end subroutine h5_write_dataset_1d_r_collect_hyperslab_in_group
+
 
 
     ! store local 2d array to global 2d array
@@ -1752,23 +1851,23 @@ contains
 
         ! open dataset
         call h5_open_dataset2(this,trim(dataset_name))
- 
+
         ! select a place where data is inserted.
         count(1)  = dim(1)! nrec
         count(2)  = dim(2) ! NSTEP partial
- 
+
         ! select hyperslab in the file
         call h5screate_simple_f(rank,count, mem_dspace_id, error)
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
- 
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
          if (if_collect) then
             call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
         else
             call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
         endif
- 
+
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
             call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, data, dim, error, &
@@ -1778,7 +1877,7 @@ contains
                             file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
- 
+
         call h5_close_prop_list(this)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
@@ -1803,25 +1902,25 @@ contains
 
         ! open dataset
         call h5_open_dataset2(this,trim(dataset_name))
- 
+
         ! select a place where data is inserted.
-        count(1) = dim(1)  ! NDIM
+        count(1) = dim(1) ! NDIM
         count(2) = dim(2) ! nrec
         count(3) = dim(3) ! NSTEP partial
- 
+
 
         ! select hyperslab in the file
         call h5screate_simple_f(rank,count, mem_dspace_id, error)
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
- 
+
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
          if (if_collect) then
             call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
         else
             call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
         endif
- 
+
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
             call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, data, dim, error, &
@@ -1831,14 +1930,14 @@ contains
                             file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
- 
+
         call h5_close_prop_list(this)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
- 
+
     end subroutine h5_write_dataset_3d_r_collect_hyperslab
- 
+
     !
     ! other utilities
     !
@@ -1901,7 +2000,7 @@ contains
         else
 !            call gather_all_i(dim, data_rank, all_dim, data_rank, total_proc)
             call gather_all_all_i(dim, data_rank, all_dim, data_rank, total_proc)
- 
+
         endif
 
         call synchronize_all()
@@ -1973,16 +2072,16 @@ contains
 !
 
     subroutine write_attenuation_file_in_h5(factor_common, scale_factor, factor_common_kappa, scale_factor_kappa)
-        use shared_parameters, only: NPROC, LOCAL_PATH 
-        use constants, only: CUSTOM_REAL 
-        implicit none 
+        use shared_parameters, only: NPROC, LOCAL_PATH
+        use constants, only: CUSTOM_REAL
+        implicit none
 
         real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:,:) :: factor_common
         real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:)   :: scale_factor
         real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:,:) :: factor_common_kappa
         real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:)   :: scale_factor_kappa
 
-        integer :: myrank 
+        integer :: myrank
 
         ! mpi variables
         integer :: info, comm
@@ -2020,10 +2119,10 @@ contains
 
 
     subroutine read_attenuation_file_in_h5(factor_common, scale_factor, factor_common_kappa, scale_factor_kappa)
-        use shared_parameters, only: NPROC, LOCAL_PATH 
-        use constants, only: CUSTOM_REAL 
- 
-        implicit none 
+        use shared_parameters, only: NPROC, LOCAL_PATH
+        use constants, only: CUSTOM_REAL
+
+        implicit none
 
         real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:,:) :: factor_common
         real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:)   :: scale_factor
@@ -2041,7 +2140,7 @@ contains
         fname = LOCAL_PATH(1:len_trim(LOCAL_PATH))//trim(tempstr)
         write(tempstr, "(i6.6)") myrank
         gname = "proc_" // trim(tempstr)
-        
+
         h5 = h5io()
         ! initialize h5 object
         call h5_init(h5, fname)
@@ -2062,7 +2161,7 @@ contains
     subroutine write_checkmesh_data_h5(dset_name,dump_array)
         use shared_parameters, only: LOCAL_PATH, NPROC
         use constants, only: CUSTOM_REAL, MAX_STRING_LEN, myrank
- 
+
         implicit none
 
         real(kind=CUSTOM_REAL),dimension(:), intent(in) :: dump_array
@@ -2071,7 +2170,7 @@ contains
 
         ! mpi variables
         integer :: info, comm
-    
+
         ! hdf5 valiables
         character(len=64) :: tempstr
         character(len=5)  :: gname_proc_head = "proc_"
@@ -2080,12 +2179,12 @@ contains
         ! saves mesh file external_mesh.h5
         tempstr = "/external_mesh.h5"
         filename = LOCAL_PATH(1:len_trim(LOCAL_PATH))//trim(tempstr)
- 
+
         h5 = h5io()
         ! get mpi parameters
         call world_get_comm(comm)
         call get_info_null(info)
-    
+
         ! initialize h5 object
         call h5_init(h5, filename)
         call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
@@ -2104,7 +2203,7 @@ contains
     subroutine write_checkmesh_xdmf_h5(NSPEC_AB)
         use shared_parameters
         use constants
-        implicit none 
+        implicit none
 
         integer, intent(in)                             :: NSPEC_AB
         character(len=64)                               :: fname_xdmf_checkmesh    = ""
@@ -2115,7 +2214,7 @@ contains
         call gather_all_singlei(NSPEC_AB, nelms, NPROC)
         ! count and gather the number of controle nodes in each proc
         call gather_all_singlei(n_control_node, nnodes, NPROC)
- 
+
         if (myrank==0) then
 
             ! writeout xdmf file for surface movie
@@ -2137,7 +2236,7 @@ contains
                 nelm  = i2c(nelms(iproc))
                 nnode = i2c(nnodes(iproc))
                 write(proc_str, "(i6.6)") iproc
-    
+
                 write(xdmf_vol,*) '<Grid Name="mesh_'//trim(proc_str)//'">'
                 write(xdmf_vol,*) '<Topology TopologyType="Mixed" NumberOfElements="'//trim(nelm)//'">'
                 write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Int" Precision="4" Dimensions="'&
@@ -2170,7 +2269,7 @@ contains
                                                  //trim(proc_str)//'/'//trim(type_str)
                 write(xdmf_vol, *)  '        </DataItem>'
                 write(xdmf_vol, *)  '    </Attribute>'
- 
+
                 write(xdmf_vol,*) '</Grid>'
             enddo
 

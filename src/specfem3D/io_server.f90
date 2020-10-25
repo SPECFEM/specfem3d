@@ -49,6 +49,9 @@ module io_server
   ! io node id <-> proc id in compute nodes relation
   integer, dimension(:), allocatable :: dest_ioids
 
+  ! dummy variables
+  integer :: dummy_int
+
 contains
   function i2c(k) result(str)
   !   "Convert an integer to string."
@@ -115,6 +118,7 @@ subroutine do_io_start_idle()
   ! vars surface movie
   integer                       :: rec_count_surf=0, n_recv_msg_surf=0,surf_out_count=0, it_io,max_surf_out=0
   integer, dimension(0:NPROC-1) :: nfaces_perproc, surface_offset
+  integer                       :: num_nodes
 
   ! vars shakemap
   integer :: rec_count_shake=0, n_recv_msg_shake=0, shake_out_count=0,max_shake_out=0
@@ -170,7 +174,12 @@ subroutine do_io_start_idle()
       if (MOVIE_SURFACE) then
         n_recv_msg_surf = n_msg_surf_each_proc*NPROC
         print *, "surf move init done"
-        call write_xdmf_surface_header()
+        if (.not. USE_HIGHRES_FOR_MOVIES) then
+          num_nodes = size(surf_x)
+        else
+          num_nodes = size(surf_x_aug)
+        endif
+        call write_xdmf_surface_header(num_nodes, dummy_int)
 
         max_surf_out = int(NSTEP/NTSTEP_BETWEEN_FRAMES)
       endif
@@ -303,7 +312,7 @@ subroutine do_io_start_idle()
       surf_out_count = surf_out_count+1
 
       ! write out xdmf at each timestep
-      call write_xdmf_surface_body(it_io)
+      call write_xdmf_surface_body(it_io, num_nodes, dummy_int)
 
       print *, "surface write done at it = ", it_io
     endif
@@ -478,7 +487,6 @@ subroutine recv_vol_data(status, rec_count_vol, it_io, val_type_mov)
     val_type_mov(3) = .true.
     if(if_aloc) allocate(vd_div(sender_loc)%d1darr(msgsize),stat=ier)
     vd_div(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    ! #BUG: cannot receive the array when using single proc
     call irecvv_cr_inter(vd_div(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_div(sender_loc)%req)
   elseif (tag == io_tag_vol_curlx) then
     val_type_mov(4) = .true.
@@ -1399,17 +1407,12 @@ end subroutine write_seismograms_io
 !
 ! xdmf output routines
 !
-subroutine write_xdmf_surface_header()
+subroutine write_xdmf_surface_header(num_nodes, pos_line)
   use specfem_par
   use io_server
   implicit none
   integer :: num_elm, num_nodes
-
-  if (.not. USE_HIGHRES_FOR_MOVIES) then
-    num_nodes = size(surf_x)
-  else
-    num_nodes = size(surf_x_aug)
-  endif
+  integer, intent(out) :: pos_line ! useful for no ioserver mode
 
   num_elm = num_nodes/4
 
@@ -1452,27 +1455,25 @@ subroutine write_xdmf_surface_header()
 end subroutine write_xdmf_surface_header
 
 
-subroutine write_xdmf_surface_body(it_io)
+subroutine write_xdmf_surface_body(it_io, num_nodes, pos_line_store)
   use specfem_par
   use io_server
 
   implicit none
 
-  integer, intent(in) :: it_io
-  integer             :: i
+  integer, intent(in)    :: it_io
+  integer                :: i
+  integer, intent(in)    :: num_nodes
+  integer, intent(inout) :: pos_line_store ! useful for no ioserver mode
 
   character(len=20)  :: it_str
   character(len=20)  :: temp_str
 
-  integer :: num_nodes
+  ! for no ioserver mode
+  if (surf_xdmf_pos == 0) surf_xdmf_pos = pos_line_store
 
-  if (.not. USE_HIGHRES_FOR_MOVIES) then
-    num_nodes = size(surf_x)
-  else
-    num_nodes = size(surf_x_aug)
-  endif
-
-  ! create a group for each io step
+  ! redefinition for no ioserver case
+  if (fname_xdmf_surf == '' ) fname_xdmf_surf = trim(OUTPUT_FILES)//"/movie_surface.xmf"
 
   ! open xdmf file
   open(unit=xdmf_surf, file=fname_xdmf_surf, recl=256)
@@ -1513,6 +1514,8 @@ subroutine write_xdmf_surface_body(it_io)
   surf_xdmf_pos = surf_xdmf_pos+20
 
   close(xdmf_surf)
+
+  pos_line_store = surf_xdmf_pos
 
 end subroutine write_xdmf_surface_body
 

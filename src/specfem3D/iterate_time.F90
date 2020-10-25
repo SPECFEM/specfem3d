@@ -185,7 +185,7 @@
   ! get MPI starting
   time_start = wtime()
 
-  ! start idling of io server
+  ! start idling io server
   if (HDF5_ENABLED) then
     if (io_task) then
       call do_io_start_idle()

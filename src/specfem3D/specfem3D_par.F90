@@ -320,6 +320,7 @@ module specfem_par
   integer :: n_req_vol=0, n_req_surf=0
   integer, dimension(9) :: req_dump_vol
   integer, dimension(3) :: req_dump_surf
+  integer :: pos_xdmf_surf=0
 !-----------------------------------------------------------------
 ! point search
 !-----------------------------------------------------------------
