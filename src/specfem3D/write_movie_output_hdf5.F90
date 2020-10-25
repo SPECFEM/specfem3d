@@ -265,7 +265,7 @@ subroutine write_movie_surface_noserv()
       call h5_close_dataset(h5)
 
       ! write xdmf header
-      call write_xdmf_surface_header(size_surf_array)
+      call write_xdmf_surface_header(size_surf_array,pos_xdmf_surf)
 
       ! high resolution output
     else
@@ -376,7 +376,7 @@ end subroutine write_movie_surface_noserv
 
 subroutine wmo_create_shakemap_h5()
 
-! creation of shapemap file
+! creation of shakemap file
 !
 ! option MOVIE_TYPE == 1: uses horizontal peak-ground values, only at top, free surface
 !        MOVIE_TYPE == 2: uses norm of vector as peak-ground, for all external, outer mesh surfaces
@@ -490,9 +490,170 @@ subroutine wmo_create_shakemap_h5()
     call isend_cr_inter(shakemap_uz,nfaces_surface_points,0,io_tag_shake_uz,req)
   else
     !#TODO add  direct io
+    call write_shakemap_noserv()
   endif
 end subroutine wmo_save_shakemap_h5
 
+
+subroutine write_shakemap_noserv()
+  use io_server
+  use phdf5_utils
+  use specfem_par
+  use specfem_par_movie
+
+  implicit none
+
+  integer                                           :: ier, nfaces_actual, nfaces_aug=(NGLLX-1)*(NGLLY-1),nnodes_per_face_aug=4
+  integer                                           :: len_array_aug, len_array_aug_proc
+  character(len=64)                                 :: dset_name, group_name, tempstr
+  real(kind=CUSTOM_REAL)                            :: aug_factor
+  logical :: if_corrective = .true.
+
+  ! initialize h5 and xdmf  if it == 0
+  type(h5io) :: h5
+  h5 = h5io()
+  fname_h5_data_surf = LOCAL_PATH(1:len_trim(LOCAL_PATH))//"/shakemap.h5"
+
+  ! get the offset info from main rank
+  call bcast_all_cr(faces_surface_offset,size(faces_surface_offset))
+
+  if(myrank == 0) then
+    size_surf_array = size(store_val_x_all)
+    call bcast_all_singlei(size_surf_array)
+  else
+    call bcast_all_singlei(size_surf_array)
+  endif
+
+  nfaces_actual = size_surf_array/(NGLLX*NGLLY)
+  len_array_aug = nfaces_actual*nfaces_aug*nnodes_per_face_aug
+
+  ! initialization of h5 file
+  call h5_init(h5, fname_h5_data_surf)
+
+  if (myrank == 0) then
+    ! create a hdf5 file
+    call h5_create_file(h5)
+
+    ! save xyz coordinate array
+    group_name = "surf_coord"
+    call h5_create_group(h5, group_name)
+    call h5_open_group(h5, group_name)
+
+    ! low resolution output
+    if (.not. USE_HIGHRES_FOR_MOVIES) then
+      dset_name = "x"
+      call h5_write_dataset_1d_d(h5, dset_name, store_val_x_all)
+      call h5_close_dataset(h5)
+      dset_name = "y"
+      call h5_write_dataset_1d_d(h5, dset_name, store_val_y_all)
+      call h5_close_dataset(h5)
+      dset_name = "z"
+      call h5_write_dataset_1d_d(h5, dset_name, store_val_z_all)
+      call h5_close_dataset(h5)
+
+      ! write xdmf header
+      call write_xdmf_shakemap(size_surf_array)
+
+      ! high resolution output
+    else
+      allocate(surf_x_aug(len_array_aug),stat=ier)
+      allocate(surf_y_aug(len_array_aug),stat=ier)
+      allocate(surf_z_aug(len_array_aug),stat=ier)
+
+      ! nfaces*25nodes => n*16faces*4
+      dset_name = "x"
+      call recompose_for_hires(store_val_x_all,surf_x_aug)
+      call h5_write_dataset_1d_d(h5, dset_name, surf_x_aug)
+      call h5_close_dataset(h5)
+      dset_name = "y"
+      call recompose_for_hires(store_val_y_all,surf_y_aug)
+      call h5_write_dataset_1d_d(h5, dset_name, surf_y_aug)
+      call h5_close_dataset(h5)
+      dset_name = "z"
+      call recompose_for_hires(store_val_z_all,surf_z_aug)
+      call h5_write_dataset_1d_d(h5, dset_name, surf_z_aug)
+      call h5_close_dataset(h5)
+
+      ! write xdmf header
+      call write_xdmf_shakemap(len_array_aug)
+
+      deallocate(surf_x_aug, surf_y_aug, surf_z_aug, stat= ier)
+    endif
+
+    call h5_close_group(h5)
+    call h5_close_file(h5)
+
+  endif
+
+  call synchronize_all()
+
+
+  ! write dataset in one single h5 file in collective mode.
+  ! create a group for each io step
+  write(tempstr, "(i6.6)") it
+  group_name = "shakemap"
+
+  if (myrank == 0) then
+    call h5_open_file(h5)
+    call h5_create_group(h5, group_name)
+    call h5_open_group(h5, group_name)
+    if(.not. USE_HIGHRES_FOR_MOVIES)then
+      call h5_create_dataset_gen_in_group(h5,"shakemap_ux",(/size_surf_array/),1,CUSTOM_REAL)
+      call h5_create_dataset_gen_in_group(h5,"shakemap_uy",(/size_surf_array/),1,CUSTOM_REAL)
+      call h5_create_dataset_gen_in_group(h5,"shakemap_uz",(/size_surf_array/),1,CUSTOM_REAL)
+    else
+      call h5_create_dataset_gen_in_group(h5,"shakemap_ux",(/len_array_aug/),1,CUSTOM_REAL)
+      call h5_create_dataset_gen_in_group(h5,"shakemap_uy",(/len_array_aug/),1,CUSTOM_REAL)
+      call h5_create_dataset_gen_in_group(h5,"shakemap_uz",(/len_array_aug/),1,CUSTOM_REAL)
+   endif
+    call h5_close_group(h5)
+    call h5_close_file(h5)
+  endif
+
+  call synchronize_all()
+  call h5_open_file_p(h5)
+  call h5_open_group(h5, group_name)
+
+  if (.not. USE_HIGHRES_FOR_MOVIES) then
+    dset_name = "shakemap_ux"
+    call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, shakemap_ux, &
+                      (/faces_surface_offset(myrank+1)/), if_corrective)
+    dset_name = "shakemap_uy"
+    call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, shakemap_uy, &
+                      (/faces_surface_offset(myrank+1)/), if_corrective)
+    dset_name = "shakemap_uz"
+    call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, shakemap_uz, &
+                      (/faces_surface_offset(myrank+1)/), if_corrective)
+
+  else
+    nfaces_actual      = size(shakemap_ux)/(NGLLX*NGLLY)
+    len_array_aug_proc = nfaces_actual*nfaces_aug*nnodes_per_face_aug ! augmented array length for each proc
+    aug_factor         = real(len_array_aug)/real(size_surf_array)
+
+    allocate(surf_ux_aug(len_array_aug_proc),stat=ier)
+    allocate(surf_uy_aug(len_array_aug_proc),stat=ier)
+    allocate(surf_uz_aug(len_array_aug_proc),stat=ier)
+
+    dset_name = "shakemap_ux"
+    call recompose_for_hires(shakemap_ux, surf_ux_aug)
+    call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, &
+            surf_ux_aug, (/int(faces_surface_offset(myrank+1)*aug_factor)/), if_corrective)
+    dset_name = "shakemap_uy"
+    call recompose_for_hires(shakemap_uy, surf_uy_aug)
+    call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, &
+            surf_uy_aug, (/int(faces_surface_offset(myrank+1)*aug_factor)/), if_corrective)
+    dset_name = "shakemap_uz"
+    call recompose_for_hires(shakemap_uz, surf_uz_aug)
+    call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, &
+            surf_uz_aug, (/int(faces_surface_offset(myrank+1)*aug_factor)/), if_corrective)
+
+    deallocate(surf_ux_aug, surf_uy_aug, surf_uz_aug, stat= ier)
+  endif
+
+  call h5_close_group(h5)
+  call h5_close_file(h5)
+
+end subroutine write_shakemap_noserv
 
 !=====================================================================
 

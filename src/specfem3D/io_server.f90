@@ -171,14 +171,15 @@ subroutine do_io_start_idle()
     !
     if (MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
       call surf_mov_init(nfaces_perproc, surface_offset)
+      if (.not. USE_HIGHRES_FOR_MOVIES) then
+        num_nodes = size(surf_x)
+      else
+        num_nodes = size(surf_x_aug)
+      endif
+
       if (MOVIE_SURFACE) then
         n_recv_msg_surf = n_msg_surf_each_proc*NPROC
         print *, "surf move init done"
-        if (.not. USE_HIGHRES_FOR_MOVIES) then
-          num_nodes = size(surf_x)
-        else
-          num_nodes = size(surf_x_aug)
-        endif
         call write_xdmf_surface_header(num_nodes, dummy_int)
 
         max_surf_out = int(NSTEP/NTSTEP_BETWEEN_FRAMES)
@@ -349,7 +350,7 @@ subroutine do_io_start_idle()
       rec_count_shake = 0
       shake_out_count = shake_out_count+1
       ! write out xdmf at each timestep
-      call write_xdmf_shakemap()
+      call write_xdmf_shakemap(num_nodes)
 
       print *, "shakemap write done"
     endif
@@ -1520,17 +1521,11 @@ subroutine write_xdmf_surface_body(it_io, num_nodes, pos_line_store)
 end subroutine write_xdmf_surface_body
 
 
-subroutine write_xdmf_shakemap()
+subroutine write_xdmf_shakemap(num_nodes)
   use specfem_par
   use io_server
   implicit none
   integer :: num_elm, num_nodes
-
-  if (.not. USE_HIGHRES_FOR_MOVIES) then
-    num_nodes = size(surf_x)
-  else
-    num_nodes = size(surf_x_aug)
-  endif
 
   num_elm = num_nodes/4
 
