@@ -578,6 +578,7 @@ subroutine write_vol_data(it_io, val_type_mov)
   call h5_create_group(h5, group_name)
   call h5_open_group(h5, group_name)
 
+  ! #TODO this loop should be erased
   ! loop to write the volume data for each process
   do i = 0, NPROC-1
 
@@ -616,7 +617,7 @@ subroutine write_vol_data(it_io, val_type_mov)
 
             dset_name = "curl_y"
             call h5_write_dataset_1d_d(h5, dset_name, vd_curly(id_loc)%d1darr)
-             call h5_close_dataset(h5)
+            call h5_close_dataset(h5)
 
             dset_name = "curl_z"
             call h5_write_dataset_1d_d(h5, dset_name, vd_curlz(id_loc)%d1darr)
@@ -978,6 +979,10 @@ subroutine write_surf_io(it_io)
     dset_name = "uz"
     call h5_write_dataset_1d_d(h5, dset_name, surf_uz)
     call h5_close_dataset(h5)
+
+    surf_ux(:) = 0._CUSTOM_REAL
+    surf_uy(:) = 0._CUSTOM_REAL
+    surf_uz(:) = 0._CUSTOM_REAL
   else
     dset_name = "ux"
     call recompose_for_hires(surf_ux, surf_ux_aug)
@@ -991,10 +996,15 @@ subroutine write_surf_io(it_io)
     call recompose_for_hires(surf_uz, surf_uz_aug)
     call h5_write_dataset_1d_d(h5, dset_name, surf_uz_aug)
     call h5_close_dataset(h5)
+
+    surf_ux_aug(:) = 0._CUSTOM_REAL
+    surf_uy_aug(:) = 0._CUSTOM_REAL
+    surf_uz_aug(:) = 0._CUSTOM_REAL
   endif
 
   call h5_close_group(h5)
   call h5_close_file(h5)
+
 
 end subroutine write_surf_io
 

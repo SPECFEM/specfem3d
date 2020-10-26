@@ -12,7 +12,7 @@ module phdf5_utils ! class-like module
     public :: h5io, h5_init, h5_destructor, &
          h5_create_file, h5_open_file, h5_close_file, &
          h5_create_group, h5_open_group, h5_close_group, &
-         h5_create_subgroup, h5_open_subgroup, h5_close_subgroup, &
+         h5_create_subgroup, h5_open_subgroup, h5_open_or_create_group, h5_close_subgroup, &
          h5_open_dataset, h5_open_dataset2, h5_close_dataset, &
          h5_write_dataset_1d_i, h5_write_dataset_1d_d, h5_write_dataset_1d_c,&
          h5_write_dataset_1d_d_no_group, h5_write_dataset_1d_c_no_group,&
@@ -43,6 +43,7 @@ module phdf5_utils ! class-like module
          h5_gather_dsetsize, create_dataset_collect, &
          h5_write_dataset_1d_to_2d_r_collect_hyperslab, h5_write_dataset_2d_to_3d_r_collect_hyperslab, &
          h5_write_dataset_1d_r_collect_hyperslab_in_group, &
+         h5_write_dataset_2d_i_collect_hyperslab_in_group, &
          h5_write_dataset_2d_r_collect_hyperslab, h5_write_dataset_3d_r_collect_hyperslab, &
          write_attenuation_file_in_h5, read_attenuation_file_in_h5, &
          write_checkmesh_data_h5, write_checkmesh_xdmf_h5
@@ -183,6 +184,23 @@ contains
         parent_group_id = group_id
         group_id        = temp_group_id
     end subroutine h5_open_subgroup
+
+    subroutine h5_open_or_create_group(this, group_name)
+        ! Check if group with the given name exists. Create it if it doesn't,
+        ! open it if it does.
+        implicit none
+        type(h5io), intent(in) :: this
+        character(len=*), intent(in) :: group_name
+        ! Variable for checking if a group exists or not
+        logical :: group_exists
+
+        call h5lexists_f(file_id, group_name, group_exists, error)
+        if (group_exists) then
+            call h5gopen_f(file_id, group_name, group_id, error)
+        else
+            call h5gcreate_f(file_id, group_name, group_id, error)
+        end if
+    end subroutine h5_open_or_create_group
 
 
     subroutine h5_close_group(this)
@@ -1832,6 +1850,56 @@ contains
         call h5_close_dataset(this)
     end subroutine h5_write_dataset_1d_r_collect_hyperslab_in_group
 
+
+    ! store local 2d array to global 2d array
+    subroutine h5_write_dataset_2d_i_collect_hyperslab_in_group(this, dataset_name, data, offset_in, if_collect)
+        type(h5io), intent(in)                                      :: this
+        character(len=*), intent(in)                                :: dataset_name
+        integer, dimension(:,:), intent(in), target  :: data
+        integer                                                     :: rank = 2
+        integer(HSIZE_T), dimension(2)                              :: dim
+        integer(HSIZE_T), dimension(2)                              :: count ! size of hyperslab
+        integer, dimension(:), intent(in)                           :: offset_in
+        integer(HSSIZE_T), dimension(2)                             :: offset ! the position where the datablock is inserted
+        logical                                                     :: if_collect
+
+        dim = shape(data)
+        offset = offset_in ! convert data type
+
+        ! open dataset
+        call h5_open_dataset(this,trim(dataset_name))
+
+        ! select a place where data is inserted.
+        count(1)  = dim(1)
+        count(2)  = dim(2)
+
+        ! select hyperslab in the file
+        call h5screate_simple_f(rank,count, mem_dspace_id, error)
+        call h5dget_space_f(dataset_id, file_dspace_id, error)
+        call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
+
+        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
+         if (if_collect) then
+            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+        else
+            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+        endif
+
+        ! write array using fortran pointer
+        if (CUSTOM_REAL == 4) then
+            call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
+                            file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
+        else
+            call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
+                            file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
+        endif
+        if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
+
+        call h5_close_prop_list(this)
+        call h5sclose_f(mem_dspace_id, error)
+        call h5sclose_f(file_dspace_id, error)
+        call h5_close_dataset(this)
+    end subroutine h5_write_dataset_2d_i_collect_hyperslab_in_group
 
 
     ! store local 2d array to global 2d array

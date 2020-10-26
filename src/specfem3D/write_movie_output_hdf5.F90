@@ -197,7 +197,6 @@
 
     n_req_surf = 3
   else
-    ! #TODO add direct io method instead of passing to io servers
     call write_movie_surface_noserv()
   endif
 
@@ -489,7 +488,6 @@ subroutine wmo_create_shakemap_h5()
     call isend_cr_inter(shakemap_uy,nfaces_surface_points,0,io_tag_shake_uy,req)
     call isend_cr_inter(shakemap_uz,nfaces_surface_points,0,io_tag_shake_uz,req)
   else
-    !#TODO add  direct io
     call write_shakemap_noserv()
   endif
 end subroutine wmo_save_shakemap_h5
@@ -679,6 +677,11 @@ subroutine wmo_movie_volume_output_h5()
   character(len=3)                                         :: channel
   character(len=1)                                         :: compx,compy,compz
   character(len=MAX_STRING_LEN)                            :: outputname
+
+  integer :: iproc
+  logical :: pressure_io=.false., divglob_io=.false., div_io=.false., &
+             veloc_io=.false., curl_io=.false.
+
 #ifdef FORCE_VECTORIZATION
   integer :: ijk
 #else
@@ -687,7 +690,11 @@ subroutine wmo_movie_volume_output_h5()
   integer :: req_count,ireq
   req_count=1
 
-  ! gets component characters: X/Y/Z or E/N/Z
+  if (NIONOD == 0 .and. it == NTSTEP_BETWEEN_FRAMES) then
+    call prepare_vol_movie_noserv()
+  endif
+
+    ! gets component characters: X/Y/Z or E/N/Z
   call write_channel_name(1,channel)
   compx(1:1) = channel(3:3) ! either X or E
   call write_channel_name(2,channel)
@@ -727,6 +734,8 @@ subroutine wmo_movie_volume_output_h5()
         req_count = req_count+1
       else
         !#TODO add direct io
+        pressure_io=.true.
+        call write_vol_data_noserv(d_p,"pressure")
       endif
     endif
   endif ! acoustic
@@ -754,6 +763,8 @@ subroutine wmo_movie_volume_output_h5()
         req_count = req_count+1
       else
         !#TODO add direct io
+        divglob_io=.true.
+        call write_vol_data_noserv(div_glob,"div_glob")
       endif
     endif ! elastic
 
@@ -785,6 +796,12 @@ subroutine wmo_movie_volume_output_h5()
       req_count = req_count+1
     else
       !#TODO add direct io
+      div_io=.true.
+      curl_io=.true.
+      call write_vol_data_noserv(div_on_node,"div")
+      call write_vol_data_noserv(curl_x_on_node,"curl_x")
+      call write_vol_data_noserv(curl_y_on_node,"curl_y")
+      call write_vol_data_noserv(curl_z_on_node,"curl_z")
     endif
   endif
 
@@ -799,13 +816,171 @@ subroutine wmo_movie_volume_output_h5()
       req_count = req_count+1
     else
       !#TODO add direct io
+      veloc_io=.true.
+      call write_vol_data_noserv(velocity_x_on_node,"velo_x")
+      call write_vol_data_noserv(velocity_y_on_node,"velo_y")
+      call write_vol_data_noserv(velocity_z_on_node,"velo_z")
     endif
   endif
 
   ! store the number of mpi_isend reqs
   n_req_vol = req_count-1
 
+  if (it==NTSTEP_BETWEEN_FRAMES .and. myrank==0 .and. NIONOD == 0) then
+    ! create xdmf header
+    call write_xdmf_vol_noserv(pressure_io, divglob_io, div_io, veloc_io, curl_io)
+  endif
+
 end subroutine wmo_movie_volume_output_h5
+
+
+subroutine prepare_vol_movie_noserv()
+  use specfem_par
+  use specfem_par_movie
+
+  use io_server
+  use phdf5_utils
+
+  implicit none
+
+  integer, dimension(9,NSPEC_AB*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)) :: elm_conn_loc
+
+  !character(len=64) :: fname_h5_data_vol
+  character(len=64) :: group_name
+  character(len=64) :: dset_name
+  type(h5io)        :: h5
+  logical           :: if_collect = .true.
+  integer           :: iproc, ier, nglob_all, nspec_all
+
+  allocate(nglob_par_proc_nio(0:NPROC-1), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array nglob_par_proc')
+  if (ier /= 0) stop 'error allocating arrays for nglob_par_proc'
+   allocate(nelm_par_proc_nio(0:NPROC-1), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array nelm_par_proc')
+  if (ier /= 0) stop 'error allocating arrays for nelm_par_proc'
+  allocate(nglob_offset(0:NPROC-1), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array nglob_offset')
+  if (ier /= 0) stop 'error allocating arrays for nglob_offset'
+  allocate(nelm_offset(0:NPROC-1), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array nelm_offset')
+  if (ier /= 0) stop 'error allocating arrays for nelm_offset'
+
+
+
+  ! initialize h5 object
+  h5 = h5io()
+  fname_h5_data_vol = LOCAL_PATH(1:len_trim(LOCAL_PATH))//"/movie_volume.h5"
+  call h5_init(h5, fname_h5_data_vol)
+
+  ! group for storing node coordinates and mesh element connectivity
+  group_name = "mesh"
+
+  call gather_all_all_singlei((/NSPEC_AB/),nelm_par_proc_nio,NPROC)
+  call gather_all_all_singlei((/NGLOB_AB/),nglob_par_proc_nio,NPROC)
+
+  nglob_all = sum(nglob_par_proc_nio(0:NPROC-1))
+  nspec_all = sum(nelm_par_proc_nio(0:NPROC-1))
+
+  nglob_offset(0) = 0
+  nelm_offset(0)  = 0
+  do iproc = 1, NPROC-1
+    nglob_offset(iproc) = sum(nglob_par_proc_nio(0:iproc-1))
+    nelm_offset(iproc)  = sum(nelm_par_proc_nio(0:iproc-1))
+  enddo
+
+  do iproc=1,NPROC-1
+    nelm_offset(iproc) = nelm_offset(iproc)*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)
+  enddo
+
+  ! create connectivity dataset
+  call get_conn_for_movie(NSPEC_AB, elm_conn_loc, nglob_offset(myrank))
+
+  if(myrank==0) then
+
+   ! create a hdf5 file
+    call h5_create_file(h5)
+
+    ! create coordinate dataset
+    call h5_open_or_create_group(h5, group_name)
+
+    dset_name = "elm_conn"
+    call h5_create_dataset_gen_in_group(h5, dset_name, (/9,nspec_all*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)/), 2, 1)
+    dset_name = "x"
+    call h5_create_dataset_gen_in_group(h5, dset_name, (/nglob_all/), 1, CUSTOM_REAL)
+    dset_name = "y"
+    call h5_create_dataset_gen_in_group(h5, dset_name, (/nglob_all/), 1, CUSTOM_REAL)
+    dset_name = "z"
+    call h5_create_dataset_gen_in_group(h5, dset_name, (/nglob_all/), 1, CUSTOM_REAL)
+
+    call h5_close_group(h5)
+    call h5_close_file(h5)
+  endif
+
+  call h5_open_file_p(h5)
+  call h5_open_group(h5,group_name)
+
+
+  dset_name = "elm_conn"
+  call h5_write_dataset_2d_i_collect_hyperslab_in_group(h5,dset_name,elm_conn_loc,(/0,nelm_offset(myrank)/),if_collect)
+  dset_name = "x"
+  call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5,dset_name,xstore,(/nglob_offset(myrank)/),if_collect)
+  dset_name = "y"
+  call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5,dset_name,ystore,(/nglob_offset(myrank)/),if_collect)
+  dset_name = "z"
+  call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5,dset_name,zstore,(/nglob_offset(myrank)/),if_collect)
+
+  call h5_close_group(h5)
+  call h5_close_file(h5)
+
+end subroutine prepare_vol_movie_noserv
+
+
+subroutine write_vol_data_noserv(darr, dset_name)
+  use specfem_par
+  use specfem_par_movie
+  use phdf5_utils
+
+  implicit none
+
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: darr
+  character(len=*), intent(in)                     :: dset_name
+  character(len=64)                                :: fname_h5_data_vol, group_name
+  character(len=12)                                :: tempstr
+  type(h5io)                                       :: h5
+  integer                                          :: rank=1, dim
+  logical                                          :: if_collective = .true.
+
+  h5 = h5io()
+  fname_h5_data_vol = LOCAL_PATH(1:len_trim(LOCAL_PATH))//"/movie_volume.h5"
+  call h5_init(h5, fname_h5_data_vol)
+
+  write(tempstr, "(i6.6)") it
+  group_name = "it_"//tempstr
+
+  dim = sum(nglob_par_proc_nio(:))
+
+  if (myrank==0) then
+    ! create it group
+    call h5_open_file(h5)
+    ! check if group_name exists
+    call h5_open_or_create_group(h5, group_name)
+
+    ! create dataset
+    call h5_create_dataset_gen_in_group(h5, dset_name, (/dim/), rank, CUSTOM_REAL)
+    call h5_close_group(h5)
+    call h5_close_file(h5)
+  endif
+  call synchronize_all()
+
+  ! collective write
+  call h5_open_file_p(h5)
+  call h5_open_group(h5,group_name)
+  call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, &
+            darr, (/nglob_offset(myrank)/), if_collective)
+
+  call h5_close_group(h5)
+  call h5_close_file(h5)
+end subroutine write_vol_data_noserv
 
 
 ! this h5 version returns the arrays in nodes base in stead of element base
@@ -1011,4 +1186,180 @@ subroutine wmo_movie_div_curl_h5(veloc, &
   enddo
 
   end subroutine wmo_movie_div_curl_h5
+
+
+  subroutine get_conn_for_movie(nspec,elm_conn,o)
+    use specfem_par
+    implicit none
+
+    integer, intent(in)                                                    :: nspec
+    integer, dimension(9,nspec*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)), intent(out) :: elm_conn
+    integer, intent(in) :: o ! node id offset
+
+    integer :: ispec,ii,iglob,icub,jcub,kcub,cell_type=9, dp=2
+
+    do ispec=1, nspec
+      ! extract information from full GLL grid
+      ! node order follows vtk format
+
+      do icub=0,NGLLX-2
+        do jcub=0,NGLLY-2
+          do kcub=0,NGLLZ-2
+            ii = 1+(ispec-1)*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1) + (icub*(NGLLY-1)*(NGLLZ-1)+jcub*(NGLLZ-1)+kcub)
+            elm_conn(1, ii)  = cell_type
+            elm_conn(2, ii)  = ibool(icub+1,jcub+1,kcub+1,ispec)-1 +o! node id starts 0 in xdmf rule
+            elm_conn(3, ii)  = ibool(icub+2,jcub+1,kcub+1,ispec)-1 +o
+            elm_conn(4, ii)  = ibool(icub+2,jcub+2,kcub+1,ispec)-1 +o
+            elm_conn(5, ii)  = ibool(icub+1,jcub+2,kcub+1,ispec)-1 +o
+            elm_conn(6, ii)  = ibool(icub+1,jcub+1,kcub+2,ispec)-1 +o
+            elm_conn(7, ii)  = ibool(icub+2,jcub+1,kcub+2,ispec)-1 +o
+            elm_conn(8, ii)  = ibool(icub+2,jcub+2,kcub+2,ispec)-1 +o
+            elm_conn(9, ii)  = ibool(icub+1,jcub+2,kcub+2,ispec)-1 +o
+          enddo
+        enddo
+      enddo
+    enddo
+
+  end subroutine get_conn_for_movie
+
+
+subroutine write_xdmf_vol_noserv(pressure_io, divglob_io, div_io, veloc_io, curl_io)
+  use specfem_par
+  use specfem_par_movie
+  use io_server
+  implicit none
+
+  logical, intent(in) :: pressure_io, divglob_io, div_io, veloc_io, curl_io
+  character(len=20)                         :: proc_str, it_str,nelm, nglo
+  integer                                   :: iiout, nout, i, ii
+
+  ! writeout xdmf file for volume movie
+  fname_xdmf_vol = trim(OUTPUT_FILES)//"/movie_volume.xmf"
+
+  open(unit=xdmf_vol, file=fname_xdmf_vol, recl=256)
+
+  ! definition of topology and geometry
+  ! refer only control nodes (8 or 27) as a coarse output
+  ! data array need to be extracted from full data array on gll points
+  write(xdmf_vol,'(a)') '<?xml version="1.0" ?>'
+  write(xdmf_vol,*) '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
+  write(xdmf_vol,*) '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="3.0">'
+  write(xdmf_vol,*) '<Domain name="mesh">'
+  ! loop for writing information of mesh partitions
+  nelm=i2c(sum(nelm_par_proc_nio(:))*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1))
+  nglo=i2c(sum(nglob_par_proc_nio(:)))
+
+  write(xdmf_vol,*) '<Topology TopologyType="Mixed" NumberOfElements="'//trim(nelm)//'">'
+  write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Int" Precision="4" Dimensions="'&
+                         //trim(nelm)//' 9">'
+  write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume.h5:/mesh/elm_conn'
+  write(xdmf_vol,*) '    </DataItem>'
+  write(xdmf_vol,*) '</Topology>'
+  write(xdmf_vol,*) '<Geometry GeometryType="X_Y_Z">'
+  write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+  write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume.h5:/mesh/x'
+  write(xdmf_vol,*) '    </DataItem>'
+  write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+  write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume.h5:/mesh/y'
+  write(xdmf_vol,*) '    </DataItem>'
+  write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+  write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume.h5:/mesh/z'
+  write(xdmf_vol,*) '    </DataItem>'
+  write(xdmf_vol,*) '</Geometry>'
+  write(xdmf_vol,*) '<Grid Name="time_col" GridType="Collection" CollectionType="Temporal">'
+
+  do i = 1, int(NSTEP/NTSTEP_BETWEEN_FRAMES)
+
+    ii = i*NTSTEP_BETWEEN_FRAMES
+    write(it_str, "(i6.6)") ii
+
+
+    write(xdmf_vol,*) '<Grid Name="vol_mov" GridType="Uniform">'
+    write(xdmf_vol,*) '  <Time Value="'//trim(r2c(sngl((ii-1)*DT-t0)))//'" />'
+    write(xdmf_vol,*) '  <Topology Reference="/Xdmf/Domain/Topology" />'
+    write(xdmf_vol,*) '  <Geometry Reference="/Xdmf/Domain/Geometry" />'
+
+    if (pressure_io) then
+      write(xdmf_vol,*) '  <Attribute Name="pressure" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/pressure'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+    endif
+
+    if (divglob_io) then
+      write(xdmf_vol,*) '  <Attribute Name="div_glob" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/div_glob'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+    endif
+
+    if (div_io) then
+      write(xdmf_vol,*) '  <Attribute Name="div" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/div'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+    endif
+
+    if (veloc_io) then
+      write(xdmf_vol,*) '  <Attribute Name="velo_x" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/velo_x'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+      write(xdmf_vol,*) '  <Attribute Name="velo_y" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/velo_y'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+      write(xdmf_vol,*) '  <Attribute Name="velo_z" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/velo_z'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+    endif
+
+    if (curl_io) then
+      write(xdmf_vol,*) '  <Attribute Name="curl_x" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/curl_x'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+      write(xdmf_vol,*) '  <Attribute Name="curl_y" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/curl_y'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+      write(xdmf_vol,*) '  <Attribute Name="curl_z" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/curl_z'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+    endif
+
+    write(xdmf_vol,*) '</Grid>'
+  enddo
+
+  write(xdmf_vol,*) '</Grid>'
+  write(xdmf_vol,*) '</Domain>'
+  write(xdmf_vol,*) '</Xdmf>'
+
+  close(xdmf_vol)
+
+end subroutine write_xdmf_vol_noserv
+
 
