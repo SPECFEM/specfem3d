@@ -35,7 +35,7 @@
                             nspec_CPML,CPML_to_spec,CPML_regions,is_CPML, &
                             xstore, ystore, zstore)
 
-  use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,SAVE_MESH_AS_CUBIT,NDIM
+  use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC,SAVE_MESH_AS_CUBIT,NDIM
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NUMBER_OF_MATERIAL_PROPERTIES
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,NGNOD,NGNOD2D,LOCAL_PATH
@@ -84,7 +84,7 @@
   ! first dimension  : material_id
   ! second dimension : #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
   double precision , dimension(NMATERIALS,NUMBER_OF_MATERIAL_PROPERTIES) :: material_properties
-  double precision , dimension(16,NMATERIALS) :: mat_prop
+  double precision , dimension(17,NMATERIALS) :: mat_prop
 
 
   ! CPML
@@ -148,7 +148,7 @@
   integer, dimension(nspec)          :: ispec_local
 
   ! boundary
-  integer, dimension(8)          :: n_elms_on_bound
+  integer, dimension(6)          :: n_elms_on_bound
   integer, dimension(1+NGNOD2D,nspec2D_xmin   &
                               +nspec2D_xmax   &
                               +nspec2D_ymin   &
@@ -167,6 +167,10 @@
   integer, dimension(:,:), allocatable :: neighbors_elmnts
   integer :: count1, count2
 
+  ! temporary array for local nodes (either NGNOD2D or NGNOD)
+  integer, dimension(NGNOD) :: loc_node
+  integer, dimension(NGNOD) :: anchor_iax,anchor_iay,anchor_iaz
+  integer :: ia,inode
 
   ! opens output file
   IIN_database_hdf5 = LOCAL_PATH(1:len_trim(LOCAL_PATH))//'/'//'Database.h5'
@@ -207,25 +211,47 @@
   nundef = 0
   do i = 1,NMATERIALS
     ! material properties format: #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
-    mat_id = material_properties(i,8)
+    mat_id = int(material_properties(i,8))
     if (mat_id > 0) ndef = ndef + 1
     if (mat_id < 0) nundef = nundef + 1
-
-    mat_prop(1,i) = material_properties(i,1)
-    mat_prop(2,i) = material_properties(i,2)
-    mat_prop(3,i) = material_properties(i,3)
-    mat_prop(4,i) = material_properties(i,4)
-    mat_prop(5,i) = material_properties(i,5)
-    mat_prop(6,i) = material_properties(i,6)
-    mat_prop(7,i) = material_properties(i,7)
   enddo
-  !debug
-  !print *,'materials def/undef: ',ndef,nundef
 
   ! writes out undefined materials
   do i = 1,NMATERIALS
+    ! material properties format: #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
     domain_id = material_properties(i,7)
     mat_id = material_properties(i,8)
+    if (mat_id > 0) then
+      ! pad dummy zeros to fill up 17 entries
+      mat_prop(:,i) = 0.d0
+      select case(domain_id)
+      case (IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC)
+        ! material properties format:
+        !#(1)rho  #(2)vp #(3)vs #(4)Q_Kappa #(5)Q_mu #(6)anisotropy_flag #(7)domain_id #(8)mat_id
+        !
+        ! output format for xgenerate_database (same as for cubit/trelis inputs):
+        !   rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,material_domain_id
+        !
+        ! skipping mat_id, not needed
+        mat_prop(1:7,i) = material_properties(i,1:7)
+      case (IDOMAIN_POROELASTIC)
+        ! material properties format:
+        !#(1)rho_s #(2)rho_f #(3)phi #(4)tort #(5)eta #(6)0 #(7)domain_id #(8)mat_id
+        !            .. #(9)kxx #(10)kxy #(11)kxz #(12)kyy #(13)kyz #(14)kzz #(15)kappa_s #(16)kappa_f #(17)kappa_fr #(18)mu_fr
+        !
+        ! output format for xgenerate_database (same as for cubit/trelis inputs):
+        !   rhos,rhof,phi,tort,eta,0,material_domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,mufr
+        mat_prop(1:7,i) = material_properties(i,1:7)
+        ! skipping mat_id, not needed
+        mat_prop(8:17,i) = material_properties(i,9:18)
+      end select
+    endif
+  enddo
+
+  ! writes out undefined materials
+  do i = 1,NMATERIALS
+    domain_id = int(material_properties(i,7))
+    mat_id = int(material_properties(i,8))
     if (mat_id < 0) then
       ! format:
       ! #material_id #type-keyword #domain-name #tomo-filename #tomo_id #domain_id
@@ -240,6 +266,8 @@
         undef_mat_prop(3,1) = 'acoustic'
       case (IDOMAIN_ELASTIC)
         undef_mat_prop(3,1) = 'elastic'
+      case (IDOMAIN_POROELASTIC)
+        undef_mat_prop(3,1) = 'poroelastic'
       end select
       ! default name
       undef_mat_prop(4,1) = 'tomography_model.xyz'
@@ -276,6 +304,8 @@
 
   endif ! end write material info
 
+  call synchronize_all()
+
   ! create hdf5 file and write datasets independently
   ! create file, groups and datasets of all mpi rank
   call h5_open_file_p(h5)
@@ -308,32 +338,28 @@
   dset_name = "nnodes_loc"
   call h5_write_dataset_p_1d_i(h5, dset_name, (/nglob/))
 
+  ! sets up node addressing
+  call hex_nodes_anchor_ijk_NGLL(NGNOD,anchor_iax,anchor_iay,anchor_iaz,NGLLX_M,NGLLY_M,NGLLZ_M)
 
   ! spectral elements
   do ispec=1,nspec
     ispec_local(ispec) = ispec ! <- ispec_local is dummy
 
+    ! gets anchor nodes
+    do ia = 1,NGNOD
+      iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+      loc_node(ia) = iglob
+    enddo
+
     mat_mesh(1,ispec) = material_index(1,ispec)
     mat_mesh(2,ispec) = material_index(2,ispec) ! <- mat_mesh
 
-    elm_conn(1,ispec) = ibool(1,1,1,ispec)
-    elm_conn(2,ispec) = ibool(2,1,1,ispec)
-    elm_conn(3,ispec) = ibool(2,2,1,ispec)
-    elm_conn(4,ispec) = ibool(1,2,1,ispec)
-    elm_conn(5,ispec) = ibool(1,1,2,ispec)
-    elm_conn(6,ispec) = ibool(2,1,2,ispec)
-    elm_conn(7,ispec) = ibool(2,2,2,ispec)
-    elm_conn(8,ispec) = ibool(1,2,2,ispec)
-
     elm_conn_xdmf(1,ispec) = 9
-    elm_conn_xdmf(2,ispec) = ibool(1,1,1,ispec) -1 ! starting 0 in vtk format
-    elm_conn_xdmf(3,ispec) = ibool(2,1,1,ispec) -1
-    elm_conn_xdmf(4,ispec) = ibool(2,2,1,ispec) -1
-    elm_conn_xdmf(5,ispec) = ibool(1,2,1,ispec) -1
-    elm_conn_xdmf(6,ispec) = ibool(1,1,2,ispec) -1
-    elm_conn_xdmf(7,ispec) = ibool(2,1,2,ispec) -1
-    elm_conn_xdmf(8,ispec) = ibool(2,2,2,ispec) -1
-    elm_conn_xdmf(9,ispec) = ibool(1,2,2,ispec) -1 ! <- elm_conn, elm_conn_xdmf
+    do ia = 1, NGNOD
+      elm_conn(ia,ispec) = loc_node(ia) ! for generate_databases
+      elm_conn_xdmf(ia+1,ispec) = loc_node(ia)-1 ! for hdf5 visualization starting 0 in vtk format
+    enddo
+
   enddo
 
   ! create a dataset for elm_conn
@@ -366,51 +392,124 @@
   count1 = 1
 
   do i=1,nspec2D_xmin
-    glob2loc_elms_this_proc(1,count1) = ibelm_xmin(i)
-    glob2loc_elms_this_proc(2,count1) = ibool(1,1,1,ibelm_xmin(i))
-    glob2loc_elms_this_proc(3,count1) = ibool(1,NGLLY_M,1,ibelm_xmin(i))
-    glob2loc_elms_this_proc(4,count1) = ibool(1,1,NGLLZ_M,ibelm_xmin(i))
-    glob2loc_elms_this_proc(5,count1) = ibool(1,NGLLY_M,NGLLZ_M,ibelm_xmin(i))
+    ispec = ibelm_xmin(i)
+    glob2loc_elms_this_proc(1,count1) = ispec
+    ! gets anchor nodes on xmin
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iax(ia) == 1) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for xmin'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for xmin'
+
+    do inode=1,NGNOD2D
+      glob2loc_elms_this_proc(inode+1,count1) = loc_node(inode)
+    enddo
     count1 = count1 + 1
   enddo
+
   do i=1,nspec2D_xmax
-    glob2loc_elms_this_proc(1,count1) = ibelm_xmax(i)
-    glob2loc_elms_this_proc(2,count1) = ibool(NGLLX_M,1,1,ibelm_xmax(i))
-    glob2loc_elms_this_proc(3,count1) = ibool(NGLLX_M,NGLLY_M,1,ibelm_xmax(i))
-    glob2loc_elms_this_proc(4,count1) = ibool(NGLLX_M,1,NGLLZ_M,ibelm_xmax(i))
-    glob2loc_elms_this_proc(5,count1) = ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_xmax(i))
+    ispec = ibelm_xmax(i)
+    glob2loc_elms_this_proc(1,count1) = ispec
+    ! gets anchor nodes on xmax
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iax(ia) == NGLLX_M) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for xmax'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for xmax'
+
+    do inode=1,NGNOD2D
+      glob2loc_elms_this_proc(inode+1,count1) = loc_node(inode)
+    enddo
     count1 = count1 + 1
   enddo
+
   do i=1,nspec2D_ymin
-    glob2loc_elms_this_proc(1,count1) = ibelm_ymin(i)
-    glob2loc_elms_this_proc(2,count1) = ibool(1,1,1,ibelm_ymin(i))
-    glob2loc_elms_this_proc(3,count1) = ibool(NGLLX_M,1,1,ibelm_ymin(i))
-    glob2loc_elms_this_proc(4,count1) = ibool(1,1,NGLLZ_M,ibelm_ymin(i))
-    glob2loc_elms_this_proc(5,count1) = ibool(NGLLX_M,1,NGLLZ_M,ibelm_ymin(i))
+    ispec = ibelm_ymin(i)
+    glob2loc_elms_this_proc(1,count1) = ispec
+    ! gets anchor nodes on ymin
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iay(ia) == 1) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for ymin'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for ymin'
+    do inode=1,NGNOD2D
+      glob2loc_elms_this_proc(inode+1,count1) = loc_node(inode)
+    enddo
     count1 = count1 + 1
   enddo
+
   do i=1,nspec2D_ymax
-    glob2loc_elms_this_proc(1,count1) = ibelm_ymax(i)
-    glob2loc_elms_this_proc(2,count1) = ibool(NGLLX_M,NGLLY_M,1,ibelm_ymax(i))
-    glob2loc_elms_this_proc(3,count1) = ibool(1,NGLLY_M,1,ibelm_ymax(i))
-    glob2loc_elms_this_proc(4,count1) = ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_ymax(i))
-    glob2loc_elms_this_proc(5,count1) = ibool(1,NGLLY_M,NGLLZ_M,ibelm_ymax(i))
+    ispec = ibelm_ymax(i)
+    glob2loc_elms_this_proc(1,count1) = ispec
+    ! gets anchor nodes on ymax
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iay(ia) == NGLLY_M) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for ymax'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for ymax'
+    do inode=1,NGNOD2D
+      glob2loc_elms_this_proc(inode+1,count1) = loc_node(inode)
+    enddo
     count1 = count1 + 1
   enddo
+
   do i=1,NSPEC2D_BOTTOM
-    glob2loc_elms_this_proc(1,count1) = ibelm_bottom(i)
-    glob2loc_elms_this_proc(2,count1) = ibool(1,1,1,ibelm_bottom(i))
-    glob2loc_elms_this_proc(3,count1) = ibool(NGLLX_M,1,1,ibelm_bottom(i))
-    glob2loc_elms_this_proc(4,count1) = ibool(NGLLX_M,NGLLY_M,1,ibelm_bottom(i))
-    glob2loc_elms_this_proc(5,count1) = ibool(1,NGLLY_M,1,ibelm_bottom(i))
+    ispec = ibelm_bottom(i)
+    glob2loc_elms_this_proc(1,count1) = ispec
+    ! gets anchor nodes on bottom
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iaz(ia) == 1) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for bottom'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for bottom'
+    do inode=1,NGNOD2D
+      glob2loc_elms_this_proc(inode+1,count1) = loc_node(inode)
+    enddo
     count1 = count1 + 1
   enddo
+
   do i=1,NSPEC2D_TOP
-    glob2loc_elms_this_proc(1,count1) = ibelm_top(i)
-    glob2loc_elms_this_proc(2,count1) = ibool(1,1,NGLLZ_M,ibelm_top(i))
-    glob2loc_elms_this_proc(3,count1) = ibool(NGLLX_M,1,NGLLZ_M,ibelm_top(i))
-    glob2loc_elms_this_proc(4,count1) = ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_top(i))
-    glob2loc_elms_this_proc(5,count1) = ibool(1,NGLLY_M,NGLLZ_M,ibelm_top(i))
+    ispec = ibelm_top(i)
+    glob2loc_elms_this_proc(1,count1) = ispec
+    ! gets anchor nodes on top
+    inode = 0
+    do ia = 1,NGNOD
+      if (anchor_iaz(ia) == NGLLZ_M) then
+        iglob = ibool(anchor_iax(ia),anchor_iay(ia),anchor_iaz(ia),ispec)
+        inode = inode + 1
+        if (inode > NGNOD2D) stop 'inode index exceeds NGNOD2D for top'
+        loc_node(inode) = iglob
+      endif
+    enddo
+    if (inode /= NGNOD2D) stop 'Invalid number of inodes found for top'
+    do inode=1,NGNOD2D
+      glob2loc_elms_this_proc(inode+1,count1) = loc_node(inode)
+    enddo
     count1 = count1 + 1
   enddo
   ! <- glob2loc_elms
@@ -539,9 +638,9 @@
           neighbors_elmnts(1,count2) = ispec
           neighbors_elmnts(2,count2) = 4
           neighbors_elmnts(3,count2) = ibool(1,1,1,ispec)
-          neighbors_elmnts(4,count2) = ibool(1,2,1,ispec)
-          neighbors_elmnts(5,count2) = ibool(1,1,2,ispec)
-          neighbors_elmnts(6,count2) = ibool(1,2,2,ispec)
+          neighbors_elmnts(4,count2) = ibool(1,NGLLY_M,1,ispec)
+          neighbors_elmnts(5,count2) = ibool(1,1,NGLLZ_M,ispec)
+          neighbors_elmnts(6,count2) = ibool(1,NGLLY_M,NGLLZ_M,ispec)
           count2 = count2 + 1
         endif
       enddo
@@ -555,10 +654,10 @@
         if (iMPIcut_xi(2,ispec)) then
           neighbors_elmnts(1,count2) = ispec
           neighbors_elmnts(2,count2) = 4
-          neighbors_elmnts(3,count2) = ibool(2,1,1,ispec)
-          neighbors_elmnts(4,count2) = ibool(2,2,1,ispec)
-          neighbors_elmnts(5,count2) = ibool(2,1,2,ispec)
-          neighbors_elmnts(6,count2) = ibool(2,2,2,ispec)
+          neighbors_elmnts(3,count2) = ibool(NGLLX_M,1,1,ispec)
+          neighbors_elmnts(4,count2) = ibool(NGLLX_M,NGLLY_M,1,ispec)
+          neighbors_elmnts(5,count2) = ibool(NGLLX_M,1,NGLLZ_M,ispec)
+          neighbors_elmnts(6,count2) = ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
           count2 = count2 + 1
         endif
       enddo
@@ -573,9 +672,9 @@
           neighbors_elmnts(1,count2) = ispec
           neighbors_elmnts(2,count2) = 4
           neighbors_elmnts(3,count2) = ibool(1,1,1,ispec)
-          neighbors_elmnts(4,count2) = ibool(2,1,1,ispec)
-          neighbors_elmnts(5,count2) = ibool(1,1,2,ispec)
-          neighbors_elmnts(6,count2) = ibool(2,1,2,ispec)
+          neighbors_elmnts(4,count2) = ibool(NGLLX_M,1,1,ispec)
+          neighbors_elmnts(5,count2) = ibool(1,1,NGLLZ_M,ispec)
+          neighbors_elmnts(6,count2) = ibool(NGLLX_M,1,NGLLZ_M,ispec)
           count2 = count2 + 1
         endif
       enddo
@@ -589,10 +688,10 @@
         if (iMPIcut_eta(2,ispec)) then
           neighbors_elmnts(1,count2) = ispec
           neighbors_elmnts(2,count2) = 4
-          neighbors_elmnts(3,count2) = ibool(2,2,1,ispec)
-          neighbors_elmnts(4,count2) = ibool(1,2,1,ispec)
-          neighbors_elmnts(5,count2) = ibool(2,2,2,ispec)
-          neighbors_elmnts(6,count2) = ibool(1,2,2,ispec)
+          neighbors_elmnts(3,count2) = ibool(NGLLX_M,NGLLY_M,1,ispec)
+          neighbors_elmnts(4,count2) = ibool(1,NGLLY_M,1,ispec)
+          neighbors_elmnts(5,count2) = ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+          neighbors_elmnts(6,count2) = ibool(1,NGLLY_M,NGLLZ_M,ispec)
           count2 = count2 + 1
         endif
       enddo
@@ -606,8 +705,8 @@
         if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
           neighbors_elmnts(1,count2) = ispec
           neighbors_elmnts(2,count2) = 2
-          neighbors_elmnts(3,count2) = ibool(1,2,1,ispec)
-          neighbors_elmnts(4,count2) = ibool(1,2,2,ispec)
+          neighbors_elmnts(3,count2) = ibool(1,NGLLY_M,1,ispec)
+          neighbors_elmnts(4,count2) = ibool(1,NGLLY_M,NGLLZ_M,ispec)
           neighbors_elmnts(5,count2) = -1
           neighbors_elmnts(6,count2) = -1
           count2 = count2 + 1
@@ -623,8 +722,8 @@
         if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
           neighbors_elmnts(1,count2) = ispec
           neighbors_elmnts(2,count2) = 2
-          neighbors_elmnts(3,count2) = ibool(2,2,1,ispec)
-          neighbors_elmnts(4,count2) = ibool(2,2,2,ispec)
+          neighbors_elmnts(3,count2) = ibool(NGLLX_M,NGLLY_M,1,ispec)
+          neighbors_elmnts(4,count2) = ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
           neighbors_elmnts(5,count2) = -1
           neighbors_elmnts(6,count2) = -1
           count2 = count2 + 1
@@ -640,8 +739,8 @@
         if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
           neighbors_elmnts(1,count2) = ispec
           neighbors_elmnts(2,count2) = 2
-          neighbors_elmnts(3,count2) = ibool(2,1,1,ispec)
-          neighbors_elmnts(4,count2) = ibool(2,1,2,ispec)
+          neighbors_elmnts(3,count2) = ibool(NGLLX_M,1,1,ispec)
+          neighbors_elmnts(4,count2) = ibool(NGLLX_M,1,NGLLZ_M,ispec)
           neighbors_elmnts(5,count2) = -1
           neighbors_elmnts(6,count2) = -1
           count2 = count2 + 1
@@ -658,7 +757,7 @@
           neighbors_elmnts(1,count2) = ispec
           neighbors_elmnts(2,count2) = 2
           neighbors_elmnts(3,count2) = ibool(1,1,1,ispec)
-          neighbors_elmnts(4,count2) = ibool(1,1,2,ispec)
+          neighbors_elmnts(4,count2) = ibool(1,1,NGLLZ_M,ispec)
           neighbors_elmnts(5,count2) = -1
           neighbors_elmnts(6,count2) = -1
           count2 = count2 + 1
