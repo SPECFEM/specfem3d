@@ -343,7 +343,7 @@
 
     ! database arrays
     dset_name = "nodes_coords"
-    call h5_create_dataset_gen(h5, dset_name,(/3,sum(offset_nnodes(:))/), 2, CUSTOM_REAL)
+    call h5_create_dataset_gen(h5, dset_name,(/3,sum(offset_nnodes(:))/), 2, 8) ! double
     dset_name = "glob2loc_nodes"
     call h5_create_dataset_gen(h5, dset_name,(/sum(offset_nnodes(:))/), 1, 1)
     dset_name = "nnodes_loc"

@@ -312,7 +312,7 @@
     call h5_create_dataset_gen(h5,dset_name, (/sum(offset_nspec(:))/),1, 1)
 
     dset_name = "xix_regular" ! 1 r (/myrank/)
-    call h5_create_dataset_gen(h5, dset_name,(/NPROC/), 1, 1)
+    call h5_create_dataset_gen(h5, dset_name,(/NPROC/), 1, CUSTOM_REAL)
     dset_name = "jacobian_regular" ! 1 r (/myrank/)
     call h5_create_dataset_gen(h5, dset_name,(/NPROC/), 1, CUSTOM_REAL)
 

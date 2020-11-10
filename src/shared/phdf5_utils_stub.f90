@@ -170,7 +170,7 @@ contains
     end subroutine h5_create_group_prop_list
 
 
-    subroutine h5_create_dataset_prop_list(this)
+    subroutine h5_create_dataset_prop_list(this,if_collect)
         type(h5io), intent(in) :: this
     end subroutine h5_create_dataset_prop_list
 

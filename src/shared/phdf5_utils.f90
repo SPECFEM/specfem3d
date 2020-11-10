@@ -10,6 +10,7 @@ module phdf5_utils ! class-like module
 
     private
     public :: h5io, h5_init, h5_destructor, &
+        h5_check_collective, &
         h5_create_file, h5_open_file, h5_close_file, &
         h5_create_group, h5_open_group, h5_close_group, &
         h5_create_subgroup, h5_open_subgroup, h5_open_or_create_group, h5_close_subgroup, &
@@ -20,11 +21,15 @@ module phdf5_utils ! class-like module
         h5_write_dataset_2d_r_no_group, &
         h5_write_dataset_4d_r, &
         h5_add_attribute_i, &
-        h5_set_mpi_info, h5_create_file_p, h5_create_file_p_collect, h5_open_file_p, h5_open_file_p_collect, &
+        h5_set_mpi_info, &
+        h5_set_buffer_size, &
+        h5_set_sieve_buffer_size, &
+        h5_create_file_p, h5_create_file_p_collect, &
+        h5_open_file_p, h5_open_file_p_collect, &
         h5_close_file_p, &
-        h5_create_file_prop_list, h5_close_prop_list, &
+        h5_create_file_prop_list, h5_close_prop_list,h5_close_prop_list_nocheck, &
         h5_open_group_prop_list, h5_create_group_prop_list, h5_close_group_prop_list,&
-        h5_create_dataset_prop_list, h5_create_dataset_prop_list_collect, &
+        h5_create_dataset_prop_list, &
         h5_create_dataset_gen, h5_create_dataset_gen_in_group, &
         h5_create_group_p, h5_open_group_p, &
         h5_read_dataset_p_scalar_i, h5_read_dataset_p_scalar_r,&
@@ -132,6 +137,17 @@ contains
         type(h5io), intent(in) :: this
         call h5close_f(error)
     end subroutine h5_destructor
+
+
+    subroutine h5_check_collective(this,dataset_name)
+        type(h5io), intent(in) :: this
+        character(len=*), intent(in) :: dataset_name
+        integer :: io_mode
+        call h5pget_mpio_actual_io_mode_f(plist_id,io_mode,error)
+        if (io_mode == H5D_MPIO_NO_COLLECTIVE_F) print*, &
+            "collective write not possible for dataset: ", dataset_name
+
+    end subroutine h5_check_collective
 
 
     subroutine h5_create_file(this)
@@ -651,6 +667,21 @@ contains
         total_proc = nproc
     end subroutine h5_set_mpi_info
 
+    subroutine h5_set_sieve_buffer_size(this)
+        type(h5io), intent(in) :: this
+        integer(hsize_t)       :: buf_size = 512*1024 ! 16*1024*1024
+        integer(hsize_t)       :: alig_size = 256*1024 ! 16*1024*1024
+        call h5pset_sieve_buf_size_f(fplist_id, buf_size, error) ! buf_size may vary depending on machiens
+        call h5pset_alignment_f(fplist_id, buf_size, alig_size, error)
+    end subroutine h5_set_sieve_buffer_size
+
+
+    subroutine h5_set_buffer_size(this)
+        type(h5io), intent(in) :: this
+        integer(hsize_t)       :: buf_size = 512*1024 ! 16*1024*1024
+        call h5pset_buffer_f(plist_id, buf_size, error)
+    end subroutine h5_set_buffer_size
+
 
     subroutine h5_create_file_prop_list(this, if_collective)
         type(h5io), intent(in) :: this
@@ -689,31 +720,44 @@ contains
     end subroutine h5_create_group_prop_list
 
 
-    subroutine h5_create_dataset_prop_list(this)
+    subroutine h5_create_dataset_prop_list(this, if_collect)
         type(h5io), intent(in) :: this
+        logical, intent(in)    :: if_collect
         ! Setup file access property list with parallel I/O access.
         call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
         if (error /= 0) write(*,*) 'hdf5 create dataset plist failed.'
-        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+
+        ! use larger buffer size from the default
+        call h5_set_buffer_size(this)
+        if (if_collect) then
+            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+        else
+            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+        endif
         if (error /= 0) write(*,*) 'hdf5 dataset set_dxpl_mpio failed.'
     end subroutine h5_create_dataset_prop_list
 
 
-    subroutine h5_create_dataset_prop_list_collect(this)
+    subroutine h5_close_prop_list(this,dataset_name)
         type(h5io), intent(in) :: this
-        ! Setup file access property list with parallel I/O access.
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-        if (error /= 0) write(*,*) 'hdf5 create dataset plist failed.'
-        call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        if (error /= 0) write(*,*) 'hdf5 dataset set_dxpl_mpio failed.'
-    end subroutine h5_create_dataset_prop_list_collect
-
-
-    subroutine h5_close_prop_list(this)
-        type(h5io), intent(in) :: this
+        character(len=*), intent(in) :: dataset_name
+        !print *,"DEBUG closing dataset prop: ", dataset_name
+        ! check if the latest dataset transfer has been done in collective mode
+        call h5_check_collective(this, dataset_name)
         call h5pclose_f(plist_id, error) ! property list can be closed soon
         if (error /= 0) write(*,*) 'hdf5 close_prop_list failed.'
     end subroutine h5_close_prop_list
+
+
+    subroutine h5_close_prop_list_nocheck(this,dataset_name)
+        type(h5io), intent(in) :: this
+        character(len=*), intent(in) :: dataset_name
+        !print *,"DEBUG closing dataset prop: ", dataset_name
+        ! check if the latest dataset transfer has been done in collective mode
+        call h5pclose_f(plist_id, error) ! property list can be closed soon
+        if (error /= 0) write(*,*) 'hdf5 close_prop_list failed.'
+    end subroutine h5_close_prop_list_nocheck
+
 
 
     subroutine h5_close_file_prop_list(this)
@@ -735,7 +779,7 @@ contains
         call h5_create_file_prop_list(this, .false.)
         call h5fcreate_f(file_path, H5F_ACC_TRUNC_F, file_id, error, creation_prp=H5P_DEFAULT_F, access_prp=fplist_id)
         if (error /= 0) write(*,*) 'hdf5 create file p failed.'
-        !call h5_close_prop_list(this)
+        !call h5_close_prop_list(this,dataset_name)
     end subroutine h5_create_file_p
 
 
@@ -744,7 +788,7 @@ contains
         call h5_create_file_prop_list(this, .true.)
         call h5fcreate_f(file_path, H5F_ACC_TRUNC_F, file_id, error, creation_prp=H5P_DEFAULT_F, access_prp=fplist_id)
         if (error /= 0) write(*,*) 'hdf5 create file p failed.'
-        !call h5_close_prop_list(this)
+        !call h5_close_prop_list(this,dataset_name)
     end subroutine h5_create_file_p_collect
 
 
@@ -753,16 +797,17 @@ contains
         call h5_create_file_prop_list(this,.false.)
         call h5fopen_f(file_path, H5F_ACC_RDWR_F, file_id, error, access_prp=fplist_id)
         if (error /= 0) write(*,*) 'hdf5 open file p failed.'
-        !call h5_close_prop_list(this)
+        !call h5_close_prop_list(this,dataset_name)
     end subroutine h5_open_file_p
 
 
     subroutine h5_open_file_p_collect(this)
         type(h5io), intent(in) :: this
         call h5_create_file_prop_list(this, .true.)
+        call h5_set_sieve_buffer_size(this)
         call h5fopen_f(file_path, H5F_ACC_RDWR_F, file_id, error, access_prp=fplist_id)
         if (error /= 0) write(*,*) 'hdf5 open file p failed.'
-        !call h5_close_prop_list(this)
+        !call h5_close_prop_list(this,dataset_name)
     end subroutine h5_open_file_p_collect
 
 
@@ -783,7 +828,6 @@ contains
         if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ', dataset_name
 
         call h5pcreate_f(H5P_DATASET_CREATE_F, plist_id, error)
-
 
         if (dtype_id == 0) then ! bool uses integer
             call h5dcreate_f(file_id, trim(dataset_name), H5T_NATIVE_INTEGER, dspace_id, dataset_id, error, &
@@ -806,7 +850,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset create failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list_nocheck(this,dataset_name)
 
         call h5dclose_f(dataset_id,error)
         if (error /= 0) write(*,*) 'hdf5 dataset close failed for ', dataset_name
@@ -852,7 +896,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset create failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list_nocheck(this,dataset_name)
 
         call h5dclose_f(dataset_id,error)
         if (error /= 0) write(*,*) 'hdf5 dataset close failed for ', dataset_name
@@ -1207,19 +1251,14 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -1252,12 +1291,7 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         if(CUSTOM_REAL==4) then
@@ -1269,7 +1303,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -1304,19 +1338,14 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -1351,19 +1380,14 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -1396,12 +1420,7 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
@@ -1413,7 +1432,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -1448,12 +1467,7 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
@@ -1465,7 +1479,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -1498,19 +1512,14 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -1543,19 +1552,14 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -1589,12 +1593,7 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
@@ -1606,7 +1605,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -1639,19 +1638,14 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         call h5dread_f(dataset_id, H5T_NATIVE_DOUBLE, data, dim, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -1686,19 +1680,14 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -1734,12 +1723,7 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
@@ -1751,7 +1735,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -1787,19 +1771,14 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -1837,12 +1816,7 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
@@ -1854,7 +1828,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -1891,12 +1865,7 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
@@ -1908,7 +1877,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -1968,7 +1937,7 @@ contains
        endif
        if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5_close_dataset(this)
         call h5_close_group(this)
     end subroutine h5_write_dataset_p_1d_i
@@ -2022,7 +1991,7 @@ contains
         ! add attribute
         call h5_add_attribute_i(this, attribute_name, (/attr_data/))
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5_close_dataset(this)
         call h5_close_group(this)
     end subroutine h5_write_dataset_p_1d_ia
@@ -2067,7 +2036,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5_close_dataset(this)
         call h5_close_group(this)
     end subroutine h5_write_dataset_p_1d_r
@@ -2107,7 +2076,7 @@ contains
                         xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5_close_dataset(this)
         call h5_close_group(this)
     end subroutine h5_write_dataset_p_2d_i
@@ -2152,7 +2121,7 @@ contains
         ! add attribute
         call h5_add_attribute_i(this, attribute_name, (/attr_data/))
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5_close_dataset(this)
         call h5_close_group(this)
     end subroutine h5_write_dataset_p_2d_ia
@@ -2196,7 +2165,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5_close_dataset(this)
         call h5_close_group(this)
     end subroutine h5_write_dataset_p_2d_r
@@ -2235,7 +2204,7 @@ contains
                        xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5_close_dataset(this)
         call h5_close_group(this)
     end subroutine h5_write_dataset_p_2d_d
@@ -2274,7 +2243,7 @@ contains
                         xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5_close_dataset(this)
         call h5_close_group(this)
     end subroutine h5_write_dataset_p_3d_i
@@ -2319,7 +2288,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5_close_dataset(this)
         call h5_close_group(this)
     end subroutine h5_write_dataset_p_3d_r
@@ -2358,7 +2327,7 @@ contains
                         xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5_close_dataset(this)
         call h5_close_group(this)
     end subroutine h5_write_dataset_p_4d_i
@@ -2402,7 +2371,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5_close_dataset(this)
         call h5_close_group(this)
     end subroutine h5_write_dataset_p_4d_r
@@ -2447,7 +2416,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5_close_dataset(this)
         call h5_close_group(this)
     end subroutine h5_write_dataset_p_5d_r
@@ -2494,7 +2463,7 @@ contains
                         xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5_close_dataset(this)
         call h5_close_group(this)
         deallocate(data, stat=error)
@@ -2528,12 +2497,8 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-        if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
+
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
             call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, data, dim, error, &
@@ -2544,7 +2509,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -2579,12 +2544,7 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
@@ -2596,7 +2556,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -2633,19 +2593,14 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -2682,19 +2637,14 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -2726,12 +2676,7 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
@@ -2743,7 +2688,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -2776,12 +2721,7 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
@@ -2793,7 +2733,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -2827,19 +2767,14 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -2872,19 +2807,14 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -2918,12 +2848,7 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
@@ -2935,7 +2860,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -2968,19 +2893,14 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         call h5dwrite_f(dataset_id, H5T_NATIVE_DOUBLE, data, dim, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -3009,25 +2929,19 @@ contains
         count(2) = dim(2) ! nrec
         count(3) = dim(3) ! NSTEP partial
 
-
         ! select hyperslab in the file
         call h5screate_simple_f(rank,count, mem_dspace_id, error)
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -3057,18 +2971,12 @@ contains
         count(2) = dim(2) ! nrec
         count(3) = dim(3) ! NSTEP partial
 
-
         ! select hyperslab in the file
         call h5screate_simple_f(rank,count, mem_dspace_id, error)
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
@@ -3080,7 +2988,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -3116,19 +3024,14 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -3163,12 +3066,7 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
@@ -3180,7 +3078,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -3216,12 +3114,7 @@ contains
         call h5dget_space_f(dataset_id, file_dspace_id, error)
         call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
 
-        call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
-         if (if_collect) then
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
-        else
-            call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
-        endif
+        call h5_create_dataset_prop_list(this,if_collect)
 
         ! write array using fortran pointer
         if (CUSTOM_REAL == 4) then
@@ -3233,7 +3126,7 @@ contains
         endif
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
-        call h5_close_prop_list(this)
+        call h5_close_prop_list(this,dataset_name)
         call h5sclose_f(mem_dspace_id, error)
         call h5sclose_f(file_dspace_id, error)
         call h5_close_dataset(this)
@@ -3357,7 +3250,7 @@ contains
             endif
             if (error /= 0) write(*,*) 'hdf5 dataset create failed for ', dataset_name
 
-            call h5_close_prop_list(this)
+            call h5_close_prop_list(this,dataset_name)
             call h5dclose_f(dataset_id,error)
             if (error /= 0) write(*,*) 'hdf5 dataset close failed for ', dataset_name
             call h5sclose_f(dspace_id, error)
