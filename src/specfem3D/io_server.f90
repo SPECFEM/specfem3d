@@ -393,7 +393,7 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
   h5 = h5io()
 
   write(ioidstr, "(i5.5)") my_io_id
-  fname_h5_data_vol = LOCAL_PATH(1:len_trim(LOCAL_PATH))//"/movie_volume_"//ioidstr//".h5"
+  fname_h5_data_vol = LOCAL_PATH(1:len_trim(LOCAL_PATH))//"/movie_volume_"//ioidstr//".h5" ! #TODO generate only one h5 file for all io nodes
 
   ! initialization of h5 file
   ! get mpi parameters
@@ -441,6 +441,8 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
     enddo
   endif
 
+  ! # TODO make a list of ionodes offset
+
 end subroutine movie_volume_init
 
 
@@ -481,7 +483,7 @@ subroutine recv_vol_data(status, rec_count_vol, it_io, val_type_mov)
     call irecvv_cr_inter(vd_pres(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_pres(sender_loc)%req)
   elseif (tag == io_tag_vol_divglob) then
     val_type_mov(2) = .true.
-  if(if_aloc) allocate(vd_divglob(sender_loc)%d1darr(msgsize),stat=ier)
+    if(if_aloc) allocate(vd_divglob(sender_loc)%d1darr(msgsize),stat=ier)
     vd_divglob(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
     call irecvv_cr_inter(vd_divglob(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_divglob(sender_loc)%req)
   elseif (tag == io_tag_vol_div) then
@@ -1810,6 +1812,7 @@ subroutine pass_info_to_io()
 
   integer ::  n_msg_vol_each_proc = 0,irec,irec_local,i_ionod
   integer,dimension(nrec_local) :: tmp_irec
+  integer, dimension(9,NSPEC_AB*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)) :: elm_conn_loc
 
   ! initialization of io node from compute node side
 
@@ -1864,9 +1867,25 @@ subroutine pass_info_to_io()
       if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
         n_msg_vol_each_proc = n_msg_vol_each_proc+3 ! velocity_x,velocity_y,velocity_z
       endif
+      ! send the number of messages
       do i_ionod=0,NIONOD-1
         call send_i_inter((/n_msg_vol_each_proc/),1,i_ionod,io_tag_vol_nmsg)
       enddo
+
+!      ! send mesh information to reconstract io node based mesh database
+!      allocate(nglob_offset(0:NPROC-1), stat=ier)
+!      if (ier /= 0) call exit_MPI_without_rank('error allocating array nglob_offset')
+!      if (ier /= 0) stop 'error allocating arrays for nglob_offset'
+!      call gather_all_all_singlei((/NGLOB_AB/),nglob_par_proc_nio,NPROC)
+!      ! create connectivity dataset
+!      call get_conn_for_movie(NSPEC_AB, elm_conn_loc, nglob_offset(myrank))
+!      ! send elm_conn_loc
+!      call send_i_inter(elm_conn_loc,size(elm_conn_loc)),i_ionod, io_tag_vol_elmconn)
+!      ! send xstore, ystore, zstore
+!      call sendv_cr_inter(xstore, size(xstore), i_ionod, io_tag_vol_nodex)
+!      call sendv_cr_inter(ystore, size(ystore), i_ionod, io_tag_vol_nodey)
+!      call sendv_cr_inter(zstore, size(zstore), i_ionod, io_tag_vol_nodez)
+!      deallocate(nglob_offset, stat=ier)
     endif
   endif ! end if myrank == 0
 

@@ -56,6 +56,13 @@
   ! for interface
   integer, dimension(:), allocatable :: dset_alloc_1d
 
+  ! offset arrays
+  integer, dimension(0:NPROC-1) :: offset_nnodes
+  integer, dimension(0:NPROC-1) :: offset_nelems
+  integer, dimension(0:NPROC-1) :: offset_nelems_cpml
+  integer, dimension(0:NPROC-1) :: offset_n_elms_bounds
+  integer, dimension(0:NPROC-1) :: offset_n_elms_interface
+  integer, dimension(0:NPROC-1) :: offset_nb_interfaces
 
   ! mpi variables
   integer :: info, comm
@@ -64,12 +71,11 @@
   type(h5io) :: h5
   h5 = h5io()
 
-
 ! read databases about external mesh simulation
   ! get mpi parameters
   call world_get_comm(comm)
   call get_info_null(info)
-
+!
   ! opens Database file
   prname = "/Database.h5"
   IIN_database_hdf5 = LOCAL_PATH(1:len_trim(LOCAL_PATH))//prname
@@ -77,24 +83,24 @@
   call h5_init(h5, IIN_database_hdf5)
 
   call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
-  call h5_open_file_p(h5)
+  !call h5_open_file_p(h5)
+  call h5_open_file_p_collect(h5)
 
 ! read physical properties of the materials at first
 ! as this group is only out side of prop_n groups
 ! added poroelastic properties and filled with 0 the last 10 entries for elastic/acoustic
 !
-! read nmat_ext_mesh, nundefMat_ext_mesh, mat_prop
-
   ! open material parameters' data group
-  call h5_open_group_p(h5, material_gname)
+  !call h5_open_group_p(h5, material_gname)
+  call h5_open_group(h5, material_gname)
 
   ! open dataset mat_prop
   ! read attribute nmat_ext_mesh
   dsetname = "mat_prop"
   attrname = "count_def_mat"
   call h5_read_attribute_p(h5,attrname,dsetname,attr_data)
-
   nmat_ext_mesh = attr_data(1)
+
   ! read data mat_prop
   ! allocate array for nodes coords
   allocate(mat_prop(17,nmat_ext_mesh),stat=ier)
@@ -106,15 +112,12 @@
   if (myrank == 0) then
     write(IMAIN,*) 'defined materials    : ',nmat_ext_mesh
   endif
-  call synchronize_all()
-
 
   ! open dataset undef_mat_prop
   ! read attribute  nundefMat_ext_mesh
   dsetname = "undef_mat_prop"
   attrname = "count_undef_mat"
   call h5_read_attribute_p(h5,attrname,dsetname,attr_data)
-
   nundefMat_ext_mesh = attr_data(1)
   !print *, "num undef mat ext", nundefMat_ext_mesh
 
@@ -125,7 +128,6 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 585')
     if (ier /= 0) stop 'Error allocating array mat_prop'
     call h5_read_dataset_p_2d_c(h5, dsetname, undef_mat_prop)
-
   endif
 
   call h5_close_group(h5)
@@ -133,25 +135,34 @@
   if (myrank == 0) then
     write(IMAIN,*) 'undefined materials  : ',nundefMat_ext_mesh
   endif
-  call synchronize_all()
 
 
+!
+! read offset information
+  dsetname = "offset_nnodes"
+  call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, offset_nnodes, (/0/), .true.)
+  dsetname = "offset_nelems"
+  call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, offset_nelems, (/0/), .true.)
+  dsetname = "offset_nelems_cpml"
+  call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, offset_nelems_cpml, (/0/), .true.)
+  dsetname = "offset_n_elms_bounds"
+  call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, offset_n_elms_bounds, (/0/), .true.)
+  dsetname = "offset_n_elms_interface"
+  call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, offset_n_elms_interface, (/0/), .true.)
+  dsetname = "offset_nb_interfaces"
+  call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, offset_nb_interfaces, (/0/), .true.)
+
+!
 !
 ! start reading processor dependent data
 !
-
-  ! open the group for this processor
-  write(tempstr, "(i6.6)") myrank
-  gname_proc = gname_proc_head // trim(tempstr)
-  call h5_open_group(h5, gname_proc)
-
 
   !
   ! read nnodes_ext_mesh and nodes_coords_ext_mesh
   !
 
   dsetname = "nnodes_loc"
-  call h5_read_dataset_p_scalar_i(h5,dsetname,nnodes_ext_mesh)
+  call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nnodes_ext_mesh,(/myrank/),.true.)
   n_control_node = nnodes_ext_mesh
 
   ! open and read dataset nodes_coords
@@ -160,15 +171,12 @@
   allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 584')
   if (ier /= 0) stop 'Error allocating array nodes_coords_ext_mesh'
-
-  call h5_read_dataset_p_2d_d(h5, dsetname, nodes_coords_ext_mesh)
+  call h5_read_dataset_2d_d_collect_hyperslab(h5, dsetname, nodes_coords_ext_mesh, (/0,sum(offset_nnodes(0:myrank-1))/),.true.)
 
   call sum_all_i(nnodes_ext_mesh,num)
   if (myrank == 0) then
     write(IMAIN,*) 'external mesh points : ',num
   endif
-  call synchronize_all()
-
 
   !
   ! read element indexing, nelmnts_ext_mesh and mat_ext_mesh
@@ -176,9 +184,9 @@
 
   ! open dataset elm_conn
   ! read attribute nspec_local == nelmnts_ext_mesh
-  !dsetname = "elm_conn"
   dsetname = "nspec_local"
-  call h5_read_dataset_p_scalar_i(h5,dsetname,nelmnts_ext_mesh)
+  call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nelmnts_ext_mesh, (/myrank/), .true.)
+
   !nelmnts_ext_mesh = attr_data(1)
 
   ! memory allocation
@@ -191,11 +199,11 @@
 
   ! read elmnts_ext_mesh == elm_conn
   dsetname = "elm_conn"
-  call h5_read_dataset_p_2d_i(h5, dsetname, elmnts_ext_mesh)
+  call h5_read_dataset_2d_i_collect_hyperslab(h5, dsetname, elmnts_ext_mesh, (/0,sum(offset_nelems(0:myrank-1))/),.true.)
 
   ! open and read dataset mat_mesh == mat_ext_mesh
   dsetname = "mat_mesh"
-  call h5_read_dataset_p_2d_i(h5, dsetname, mat_ext_mesh)
+  call h5_read_dataset_2d_i_collect_hyperslab(h5, dsetname, mat_ext_mesh, (/0,sum(offset_nelems(0:myrank-1))/),.true.)
 
   NSPEC_AB = nelmnts_ext_mesh
 
@@ -203,7 +211,6 @@
   if (myrank == 0) then
     write(IMAIN,*) 'total number of spectral elements: ',num
   endif
-  call synchronize_all()
 
 !
 ! reads absorbing/free-surface boundaries
@@ -211,7 +218,7 @@
 
 ! open and read n_elms_on_bouund (nspec2D_xmin, xmax, ymin, ymax, button_ext, top_ext)
   dsetname = "n_elms_on_bound"
-  call h5_read_dataset_p_1d_i(h5, dsetname, dset_n_bound)
+  call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, dset_n_bound, (/6*myrank/), .true.)
 
   nspec2D_xmin       = dset_n_bound(1)
   nspec2D_xmax       = dset_n_bound(2)
@@ -247,7 +254,8 @@
   allocate(dset_alloc(1+NGNOD2D,sum(dset_n_bound(:))),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array glob2loc_elms')
   if (ier /= 0) stop 'Error allocating array glob2loc_elms'
-  call h5_read_dataset_p_2d_i(h5, dsetname, dset_alloc)
+  call h5_read_dataset_2d_i_collect_hyperslab(h5, dsetname, dset_alloc, &
+            (/0,sum(offset_n_elms_bounds(0:myrank-1))/),.true.)
 
   ibelm_xmin         = dset_alloc(1          ,                           1:dset_n_bound(1))
   ibelm_xmax         = dset_alloc(1          ,dset_n_bound(1)       +1:sum(dset_n_bound(1:2)))
@@ -261,9 +269,7 @@
   nodes_ibelm_ymax   = dset_alloc(2:NGNOD2D+1,sum(dset_n_bound(1:3))+1:sum(dset_n_bound(1:4)))
   nodes_ibelm_bottom = dset_alloc(2:NGNOD2D+1,sum(dset_n_bound(1:4))+1:sum(dset_n_bound(1:5)))
   nodes_ibelm_top    = dset_alloc(2:NGNOD2D+1,sum(dset_n_bound(1:5))+1:sum(dset_n_bound(1:6)))
-
   deallocate(dset_alloc)
-
   call sum_all_i(nspec2D_xmin,num_xmin)
   call sum_all_i(nspec2D_xmax,num_xmax)
   call sum_all_i(nspec2D_ymin,num_ymin)
@@ -279,8 +285,6 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
-  call synchronize_all()
-
 
 !
 ! read cpml conditions
@@ -295,7 +299,7 @@
   allocate(dset_alloc_1d(2),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array nspec_cpml_globloc')
   if (ier /= 0) stop 'Error allocating array nspec_cpml_globloc'
-  call h5_read_dataset_p_1d_i(h5, dsetname, dset_alloc_1d)
+  call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, dset_alloc_1d, (/2*myrank/), .true.)
 
   nspec_cpml_tot = dset_alloc_1d(1)
   nspec_cpml     = dset_alloc_1d(2)
@@ -313,14 +317,12 @@
       write(IMAIN,*) '  number of C-PML spectral elements in this partition: ',nspec_cpml
       call flush_IMAIN()
     endif
-    call synchronize_all()
 
     ! PML
     if (myrank == 0) then
       write(IMAIN,*) '  total number of C-PML elements in the global mesh: ',nspec_cpml_tot
       call flush_IMAIN()
     endif
-    call synchronize_all()
 
     call sum_all_i(nspec_cpml,num_cpml)
     ! checks that the sum of C-PML elements over all partitions is correct
@@ -339,7 +341,7 @@
     allocate(dset_alloc(2,nspec_cpml),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array glob2loc_elms')
     if (ier /= 0) stop 'Error allocating array glob2loc_elms'
-    call h5_read_dataset_p_2d_i(h5, dsetname, dset_alloc)
+    call h5_read_dataset_2d_i_collect_hyperslab(h5, dsetname, dset_alloc, (/0,sum(offset_nelems_cpml(0:myrank-1))/), .true.)
 
     CPML_to_spec = dset_alloc(1,:)
     CPML_regions = dset_alloc(2,:)
@@ -351,7 +353,7 @@
     allocate(dset_alloc_1d(NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array if_cpml')
     if (ier /= 0) stop 'Error allocating array if_cpml'
-    call h5_read_dataset_p_1d_i(h5, dsetname, dset_alloc_1d)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, dset_alloc_1d, (/sum(offset_nelems(0:myrank-1))/), .true.)
 
     ! convert integer array to logical array
     do i = 1, NSPEC_AB
@@ -369,8 +371,6 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
-  call synchronize_all()
-
 
 !
 ! read interfaces
@@ -382,7 +382,8 @@
     allocate(dset_alloc_1d(2),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array dset_dim_alloc_1d')
     if (ier /= 0) stop 'Error allocating array dset_dim_alloc_1d'
-    call h5_read_dataset_p_1d_i(h5, dsetname, dset_alloc_1d)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, dset_alloc_1d, (/myrank*2/), .true.)
+
 
     ! read num_interfaces_ext_mesh
     num_interfaces_ext_mesh     = dset_alloc_1d(1)
@@ -419,7 +420,10 @@
     allocate(dset_alloc(2, num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array my_nb_interfaces')
     if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
-    call h5_read_dataset_p_2d_i(h5, dsetname, dset_alloc)
+
+    call h5_read_dataset_2d_i_collect_hyperslab(h5, dsetname, dset_alloc, &
+                                                 (/0,sum(offset_nb_interfaces(0:myrank-1))/), .true.)
+
 
     my_neighbors_ext_mesh         = dset_alloc(1,:)
     my_nelmnts_neighbors_ext_mesh = dset_alloc(2,:)
@@ -431,7 +435,8 @@
     allocate(dset_alloc(6, sum(my_nelmnts_neighbors_ext_mesh(:))),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array my_nb_interfaces')
     if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
-    call h5_read_dataset_p_2d_i(h5, dsetname, dset_alloc)
+    call h5_read_dataset_2d_i_collect_hyperslab(h5, dsetname, dset_alloc, &
+                                                 (/0, sum(offset_n_elms_interface(0:myrank-1))/), .true.)
   endif
 
   ! loops over MPI interfaces with other partitions
@@ -466,7 +471,6 @@
   if (myrank == 0) then
     write(IMAIN,*) 'number of MPI partition interfaces: ',num
   endif
-  call synchronize_all()
 
   ! optional moho
   if (SAVE_MOHO_MESH) then
@@ -503,7 +507,6 @@
     if (myrank == 0) then
       write(IMAIN,*) 'moho surfaces: ',num_moho
     endif
-    call synchronize_all()
 
   else
     ! allocate dummy array
@@ -514,8 +517,7 @@
   endif
 
   ! close hdf5
-  call h5_close_group(h5)
-  call h5_close_file(h5)
+  call h5_close_file_p(h5)
   call h5_destructor(h5)
 
-  end subroutine read_partition_files_hdf5
+end subroutine read_partition_files_hdf5

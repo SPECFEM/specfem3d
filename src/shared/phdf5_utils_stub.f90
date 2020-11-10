@@ -16,7 +16,7 @@ module phdf5_utils
          h5_create_group_p, h5_open_group_p, &
          h5_open_dataset_p, &
          h5_read_dataset_p_1d_i, &
-         h5_read_dataset_p_2d_i, h5_read_dataset_p_2d_d, h5_read_dataset_p_2d_c, &
+         h5_read_dataset_p_2d_i, h5_read_dataset_p_2d_r, h5_read_dataset_p_2d_c, &
          h5_read_attribute_p, &
          h5_set_group_name, &
          h5_write_dataset_p_1d_i, h5_write_dataset_p_1d_r, h5_write_dataset_p_1d_l, &
@@ -216,11 +216,11 @@ contains
     end subroutine h5_read_dataset_p_2d_i
 
 
-    subroutine h5_read_dataset_p_2d_d(this, dataset_name, data)
+    subroutine h5_read_dataset_p_2d_r(this, dataset_name, data)
         type(h5io), intent(in) :: this
         character(len=*), intent(in) :: dataset_name
         double precision, dimension(:,:), intent(inout) :: data
-    end subroutine h5_read_dataset_p_2d_d
+    end subroutine h5_read_dataset_p_2d_r
 
 
     subroutine h5_read_dataset_p_2d_c(this, dataset_name, data)
@@ -395,10 +395,10 @@ contains
         real(kind=CUSTOM_REAL),dimension(:), intent(in) :: dump_array
         character(len=MAX_STRING_LEN), intent(in)       :: dset_name
     end subroutine write_checkmesh_data_h5
- 
+
 
     subroutine write_checkmesh_xdmf_h5(NSPEC_AB)
-        implicit none 
+        implicit none
         integer, intent(in)                             :: NSPEC_AB
     end subroutine write_checkmesh_xdmf_h5
 

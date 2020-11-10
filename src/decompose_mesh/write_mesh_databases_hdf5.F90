@@ -32,7 +32,7 @@
 
   use phdf5_utils
 
-  use constants, only: IIN_database_hdf5
+  use constants, only: IIN_database_hdf5, CUSTOM_REAL
   use decompose_mesh_par
 
   implicit none
@@ -48,6 +48,19 @@
   character(len=5)  :: gname_proc_head = "proc_"
   character(len=11) :: gname_proc
   character(len=10) :: tempstr
+  character(len=64) :: dset_name
+
+
+  ! offset arrays
+  integer, dimension(0:nparts-1, 6) :: n_elmet_on_bound_all_part
+  integer, dimension(0:nparts-1) :: my_ninterface_all
+  integer, dimension(0:nparts-1,0:ninterfaces-1) :: my_interfaces_all, my_nb_interfaces_all
+  integer, dimension(0:nparts-1) :: offset_nnodes           ! number of nodes in each partition
+  integer, dimension(0:nparts-1) :: offset_nelems           ! number of elements in each partition
+  integer, dimension(0:nparts-1) :: offset_nelems_cpml      ! number of cpml elements
+  integer, dimension(0:nparts-1) :: offset_n_elms_bounds    ! number of elements contacting to the bounds
+  integer, dimension(0:nparts-1) :: offset_n_elms_interface ! number of elements on the interfaces
+  integer, dimension(0:nparts-1) :: offset_nb_interfaces    ! number of interfaces
 
   allocate(my_interfaces(0:ninterfaces-1),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 115')
@@ -73,43 +86,109 @@
   ! create a hdf5 file
   call h5_create_file(h5)
 
-  ! prepare groups in hdf5 file
-  ! material data group
-  call h5_create_group(h5, gname_material)
-
   ! continue opening hdf5 file till the end of write process
   call h5_open_file(h5)
- 
+
+  ! prepare number of nodes and  offset arrays
+  do ipart = 0, nparts-1
+    ! gets number of nodes
+     call write_glob2loc_nodes_database_h5(gname_proc, h5, ipart, nodes_coords, &
+                                glob2loc_nodes_nparts, glob2loc_nodes_parts, &
+                                glob2loc_nodes, nnodes, 1, offset_nnodes)
+    ! gets number of elements
+     call write_partition_database_h5(gname_proc, h5, ipart, nspec, elmnts, &
+                                glob2loc_elmnts, glob2loc_nodes_nparts, &
+                                glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 1, offset_nelems)
+
+    ! gets number absorbing/free-surface boundaries
+    call write_boundaries_database_h5(gname_proc, h5, ipart, nspec, &
+                                nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &
+                                nspec2D_ymax, nspec2D_bottom, nspec2D_top, &
+                                ibelm_xmin, ibelm_xmax, ibelm_ymin, &
+                                ibelm_ymax, ibelm_bottom, ibelm_top, &
+                                nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, &
+                                nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top, &
+                                glob2loc_elmnts, glob2loc_nodes_nparts, &
+                                glob2loc_nodes_parts, glob2loc_nodes, part, NGNOD2D, n_elmet_on_bound_all_part(ipart,:), 1,&
+                                offset_n_elms_bounds)
+
+    ! count C-PML elements indices, CPML-regions and thickness of C-PML layer
+    call write_cpml_database_h5(gname_proc, h5, ipart, nspec, nspec_cpml, CPML_to_spec, &
+          CPML_regions, is_CPML, glob2loc_elmnts, part, offset_nelems_cpml, offset_nelems, 1)
+
+    ! count number of MPI interfaces
+    call write_interfaces_database_h5(gname_proc, h5, &
+                               tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
+                               my_ninterface_all(ipart), my_interfaces_all(ipart,:), my_nb_interfaces_all(ipart,:), &
+                               glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
+                               glob2loc_nodes, 1, nparts, offset_n_elms_interface, offset_nb_interfaces)
+
+
+  enddo
+
+  ! offset arrays
+  dset_name = "offset_nnodes"
+  call h5_write_dataset_1d_i_no_group(h5, dset_name, offset_nnodes)
+  dset_name = "offset_nelems"
+  call h5_write_dataset_1d_i_no_group(h5, dset_name, offset_nelems)
+  dset_name = "offset_nelems_cpml"
+  call h5_write_dataset_1d_i_no_group(h5, dset_name, offset_nelems_cpml)
+  dset_name = "offset_n_elms_bounds"
+  call h5_write_dataset_1d_i_no_group(h5, dset_name, offset_n_elms_bounds)
+  dset_name = "offset_n_elms_interface"
+  call h5_write_dataset_1d_i_no_group(h5, dset_name, offset_n_elms_interface)
+  dset_name = "offset_nb_interfaces"
+  call h5_write_dataset_1d_i_no_group(h5, dset_name, offset_nb_interfaces)
+
+  ! database arrays
+  dset_name = "nodes_coords"
+  call h5_create_dataset_gen(h5, dset_name,(/3,sum(offset_nnodes(:))/), 2, 8)
+  dset_name = "glob2loc_nodes"
+  call h5_create_dataset_gen(h5, dset_name,(/sum(offset_nnodes(:))/), 1, 1)
+  dset_name = "nnodes_loc"
+  call h5_create_dataset_gen(h5, dset_name,(/nparts/), 1, 1)
+  dset_name = "elm_conn"
+  call h5_create_dataset_gen(h5, dset_name,(/NGNOD,sum(offset_nelems(:))/), 2, 1)
+  dset_name = "elm_conn_xdmf"
+  call h5_create_dataset_gen(h5, dset_name,(/NGNOD+1,sum(offset_nelems(:))/), 2, 1)
+  dset_name = "nspec_local"
+  call h5_create_dataset_gen(h5, dset_name,(/nparts/), 1, 1)
+  dset_name = "mat_mesh"
+  call h5_create_dataset_gen(h5, dset_name,(/2,sum(offset_nelems(:))/), 2, 1)
+  dset_name = "ispec_local"
+  call h5_create_dataset_gen(h5, dset_name,(/sum(offset_nelems(:))/), 1, 1)
+  dset_name = "n_elms_on_bound"
+  call h5_create_dataset_gen(h5, dset_name,(/6*nparts/), 1, 1)
+  dset_name = "glob2loc_elms"
+  call h5_create_dataset_gen(h5, dset_name, (/1+NGNOD2D,sum(offset_n_elms_bounds(:))/),2,1)
+  dset_name = "elements_cpml"
+  call h5_create_dataset_gen(h5, dset_name, (/2,sum(offset_nelems_cpml(:))/),2,1)
+  dset_name = "if_cpml"
+  call h5_create_dataset_gen(h5, dset_name, (/sum(offset_nelems(:))/),1,1)
+  dset_name = "nspec_cpml_globloc"
+  call h5_create_dataset_gen(h5, dset_name, (/2*nparts/),1,1)
+  dset_name = "my_nb_interfaces"
+  call h5_create_dataset_gen(h5, dset_name,(/2, sum(offset_nb_interfaces(:))/), 2, 1)
+  dset_name = "my_interfaces"
+  call h5_create_dataset_gen(h5, dset_name,(/6, sum(offset_n_elms_interface(:))/), 2, 1)
+  dset_name = "my_ninterface_and_max"
+  call h5_create_dataset_gen(h5, dset_name,(/nparts*2/), 1, 1)
+
+
   ! writes out Database file for each partition
   do ipart = 0, nparts-1
 
-     ! set hdf5 group name
-     write(tempstr, "(i6.6)") ipart
-     gname_proc = gname_proc_head // trim(tempstr)
-     ! create a group for this part
-     call h5_create_group(h5, gname_proc)
-
-     ! gets number of nodes
-     call write_glob2loc_nodes_database_h5(gname_proc, h5, ipart, nnodes_loc, nodes_coords, &
-                                glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-                                glob2loc_nodes, nnodes, 1)
-
-     call write_partition_database_h5(gname_proc, h5, ipart, nspec_local, nspec, elmnts, &
-                                glob2loc_elmnts, glob2loc_nodes_nparts, &
-                                glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 1)
-
-
      ! writes out node coordinate locations
 
-     call write_glob2loc_nodes_database_h5(gname_proc, h5, ipart, nnodes_loc, nodes_coords, &
+     call write_glob2loc_nodes_database_h5(gname_proc, h5, ipart, nodes_coords, &
                                 glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-                                glob2loc_nodes, nnodes, 2)
+                                glob2loc_nodes, nnodes, 2, offset_nnodes)
 
      ! writes out spectral element indices
      !write(IIN_database) nspec_local
-     call write_partition_database_h5(gname_proc, h5, ipart, nspec_local, nspec, elmnts, &
+     call write_partition_database_h5(gname_proc, h5, ipart, nspec, elmnts, &
                                 glob2loc_elmnts, glob2loc_nodes_nparts, &
-                                glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 2)
+                                glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 2, offset_nelems)
 
      ! writes out absorbing/free-surface boundaries
      call write_boundaries_database_h5(gname_proc, h5, ipart, nspec, &
@@ -120,25 +199,20 @@
                                 nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, &
                                 nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top, &
                                 glob2loc_elmnts, glob2loc_nodes_nparts, &
-                                glob2loc_nodes_parts, glob2loc_nodes, part, NGNOD2D)
+                                glob2loc_nodes_parts, glob2loc_nodes, part, NGNOD2D, n_elmet_on_bound_all_part(ipart,:), 2,&
+                                offset_n_elms_bounds)
 
      ! writes out C-PML elements indices, CPML-regions and thickness of C-PML layer
      call write_cpml_database_h5(gname_proc, h5, ipart, nspec, nspec_cpml, CPML_to_spec, &
-          CPML_regions, is_CPML, glob2loc_elmnts, part)
-
-     ! gets number of MPI interfaces
-     call write_interfaces_database_h5(gname_proc, h5, &
-                                tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
-                                my_ninterface, my_interfaces, my_nb_interfaces, &
-                                glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-                                glob2loc_nodes, 1, nparts)
+          CPML_regions, is_CPML, glob2loc_elmnts, part, offset_nelems_cpml, offset_nelems, 2)
 
      ! writes out MPI interfaces elements
      call write_interfaces_database_h5(gname_proc, h5, &
                                 tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
-                                my_ninterface, my_interfaces, my_nb_interfaces, &
+                                my_ninterface_all(ipart), my_interfaces_all(ipart,:), my_nb_interfaces_all(ipart,:), &
                                 glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-                                glob2loc_nodes, 2, nparts)
+                                glob2loc_nodes, 2, nparts, offset_n_elms_interface, offset_nb_interfaces)
+
 
      ! writes out moho surface (optional)
      call write_moho_surface_database_h5(gname_proc, h5, ipart, nspec, &
@@ -171,6 +245,10 @@
      endif
 
   enddo ! end iproc loop
+
+  ! prepare groups in hdf5 file
+  ! material data group
+  call h5_create_group(h5, gname_material)
 
   ! write material properties
   call write_material_props_database_h5(gname_material, h5,count_def_mat,count_undef_mat, &

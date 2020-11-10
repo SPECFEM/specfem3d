@@ -88,6 +88,10 @@ module constants
   integer :: io_tag_vol_nglob         = 51
   integer :: io_tag_vol_sendlist      = 52
   integer :: io_tag_vol_ioid          = 53
+  integer :: io_tag_vol_elmconn       = 54
+  integer :: io_tag_vol_nodex         = 55
+  integer :: io_tag_vol_nodey         = 56
+  integer :: io_tag_vol_nodez         = 57
   integer :: io_tag_end               = 60
 
   integer :: xdmf_surf                = 114

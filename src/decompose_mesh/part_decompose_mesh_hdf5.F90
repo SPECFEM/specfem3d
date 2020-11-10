@@ -28,7 +28,6 @@
 module part_decompose_mesh_hdf5
 
   use phdf5_utils
-
   use constants, only: MAX_STRING_LEN,NGNOD2D_FOUR_CORNERS,NGNOD_EIGHT_CORNERS
 
   implicit none
@@ -38,9 +37,9 @@ contains
   !--------------------------------------------------
   ! Write nodes (their coordinates) pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
-  subroutine write_glob2loc_nodes_database_h5(gname_proc, h5, iproc, npgeo, &
+  subroutine write_glob2loc_nodes_database_h5(gname_proc, h5, iproc, &
                                            nodes_coords, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-                                           glob2loc_nodes, nnodes, num_phase)
+                                           glob2loc_nodes, nnodes, num_phase, offset_nnodes)
 
   use constants, only: NDIM
 
@@ -51,7 +50,8 @@ contains
 
   character(len=*), intent(in)     :: gname_proc
   integer, intent(in)     :: nnodes, iproc, num_phase
-  integer, intent(inout)  :: npgeo
+  integer                 :: npgeo
+  integer, dimension(0:), intent(inout) :: offset_nnodes
 
   double precision, dimension(NDIM,nnodes)  :: nodes_coords
   integer, dimension(:), pointer            :: glob2loc_nodes_nparts
@@ -63,13 +63,12 @@ contains
   ! for attribute (storing nnodes npgeo)
   character(len=10)              :: aname = "nnodes_loc"
 
-  ! for glob2loc_nodes_this_proc
-  integer, dimension(npgeo)            :: glob2loc_nodes_this_proc
-  character(len=40)                    :: gdsetname
-  ! for nodes_coords_this_proc
-  double precision, dimension(3,npgeo) :: nodes_coords_this_proc
-  character(len=40)                    :: ndsetname
+  character(len=40)                    :: dset_name
 
+  ! for glob2loc_nodes_this_proc
+  integer, dimension(:),allocatable             :: glob2loc_nodes_this_proc
+  ! for nodes_coords_this_proc
+  double precision, dimension(:,:), allocatable :: nodes_coords_this_proc
 
   if (num_phase == 1) then
   ! counts number of points in partition
@@ -82,7 +81,11 @@ contains
       enddo
     enddo
 
-   else
+    offset_nnodes(iproc) = npgeo  ! number of nodes in each partition
+
+  else
+    allocate(nodes_coords_this_proc(3,offset_nnodes(iproc)))
+    allocate(glob2loc_nodes_this_proc(offset_nnodes(iproc)))
     ! prepare the temporal arrays for hdf5 write.
     count = 1
     do i = 0, nnodes-1
@@ -99,24 +102,16 @@ contains
       enddo
     enddo
 
-    ! group names
-    gdsetname = "glob2loc_nodes"
-    ndsetname = "nodes_coords"
- 
-    ! open the target group
-    call h5_open_group(h5, gname_proc)
+    dset_name = "nodes_coords"
+    call h5_write_dataset_2d_d_collect_hyperslab(h5, dset_name, nodes_coords_this_proc, &
+                                                 (/0,sum(offset_nnodes(0:iproc-1))/), .false.)
+    dset_name = "glob2loc_nodes"
+    call h5_write_dataset_1d_i_collect_hyperslab(h5, dset_name, glob2loc_nodes_this_proc, &
+                                                (/sum(offset_nnodes(0:iproc-1))/), .false.)
+    dset_name = "nnodes_loc"
+    call h5_write_dataset_1d_i_collect_hyperslab(h5, dset_name, (/offset_nnodes(iproc)/), (/iproc/), .false.)
 
-    ! create a dataset for partial glob2loc_nodes array
-    call h5_write_dataset_1d_i(h5, gdsetname, glob2loc_nodes_this_proc)
-    call h5_close_dataset(h5)
-    ! create an attribute for npgeo
-    call h5_write_dataset_1d_i(h5,aname, (/npgeo/))
-    call h5_close_dataset(h5)
- 
-    ! create a dataset for partial nnodes_coords
-    call h5_write_dataset_2d_d(h5, ndsetname, nodes_coords_this_proc)
-    call h5_close_dataset(h5)
-
+    deallocate(nodes_coords_this_proc, glob2loc_nodes_this_proc)
   endif
 
   end subroutine write_glob2loc_nodes_database_h5
@@ -139,7 +134,7 @@ contains
   ! for attribute count_def_mat and count_undef_mat
   character(len=13)              :: m_aname = "count_def_mat"
   character(len=15)              :: u_aname = "count_undef_mat"
- 
+
   ! for dataset mat_prop, undef_mat_prop
   character(len=40)              :: mdsetname = "mat_prop"
   character(len=40)              :: udsetname = "undef_mat_prop"
@@ -183,7 +178,8 @@ contains
                                        nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, &
                                        nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top, &
                                        glob2loc_elmnts, glob2loc_nodes_nparts, &
-                                       glob2loc_nodes_parts, glob2loc_nodes, part, NGNOD2D)
+                                       glob2loc_nodes_parts, glob2loc_nodes, part, NGNOD2D,&
+                                       n_elms_on_bound, phase, offset_n_elms_bounds)
 
   implicit none
   ! phf5 io object
@@ -195,6 +191,9 @@ contains
   integer, intent(in)  :: NGNOD2D
   integer, intent(in)  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &
     nspec2D_ymax, nspec2D_bottom, nspec2D_top
+
+  integer, intent(in)               :: phase
+  integer, dimension(0:), intent(inout) :: offset_n_elms_bounds    ! number of elements contacting to the bounds
 
   integer, dimension(nspec2D_xmin),   intent(in) :: ibelm_xmin
   integer, dimension(nspec2D_xmax),   intent(in) :: ibelm_xmax
@@ -221,218 +220,211 @@ contains
   integer :: loc_nspec2D_xmin,loc_nspec2D_xmax,loc_nspec2D_ymin, &
              loc_nspec2D_ymax,loc_nspec2D_bottom,loc_nspec2D_top
 
+  character(len=40)                    :: dset_name
   ! for n_elms_on_bound
-  integer, dimension(6)          :: n_elms_on_bound
-  character(len=40)              :: ndsetname
+  integer, dimension(6), intent(inout) :: n_elms_on_bound
   ! for glob2loc_elms
   integer, dimension(:,:), allocatable :: glob2loc_elms_this_proc
-  character(len=40)                    :: gdsetname
   integer, dimension(2)                :: gdims
 
-  ! counts number of elements for boundary at xmin, xmax, ymin, ymax, bottom, top in this partition
-  loc_nspec2D_xmin = 0
-  do i=1,nspec2D_xmin
-     if (part(ibelm_xmin(i)) == iproc) then
-        loc_nspec2D_xmin = loc_nspec2D_xmin + 1
-     endif
-  enddo
-  !write(IIN_database) 1, loc_nspec2D_xmin
-  n_elms_on_bound(1) = loc_nspec2D_xmin
 
-  loc_nspec2D_xmax = 0
-  do i=1,nspec2D_xmax
-     if (part(ibelm_xmax(i)) == iproc) then
-        loc_nspec2D_xmax = loc_nspec2D_xmax + 1
-     endif
-  enddo
-  !write(IIN_database) 2, loc_nspec2D_xmax
-  n_elms_on_bound(2) = loc_nspec2D_xmax
+  if (phase == 1) then
+     ! counts number of elements for boundary at xmin, xmax, ymin, ymax, bottom, top in this partition
+     loc_nspec2D_xmin = 0
+     do i=1,nspec2D_xmin
+        if (part(ibelm_xmin(i)) == iproc) then
+           loc_nspec2D_xmin = loc_nspec2D_xmin + 1
+        endif
+     enddo
+     !write(IIN_database) 1, loc_nspec2D_xmin
+     n_elms_on_bound(1) = loc_nspec2D_xmin
 
-  loc_nspec2D_ymin = 0
-  do i=1,nspec2D_ymin
-     if (part(ibelm_ymin(i)) == iproc) then
-        loc_nspec2D_ymin = loc_nspec2D_ymin + 1
-     endif
-  enddo
-  !write(IIN_database) 3, loc_nspec2D_ymin
-  n_elms_on_bound(3) = loc_nspec2D_ymin
+     loc_nspec2D_xmax = 0
+     do i=1,nspec2D_xmax
+        if (part(ibelm_xmax(i)) == iproc) then
+           loc_nspec2D_xmax = loc_nspec2D_xmax + 1
+        endif
+     enddo
+     !write(IIN_database) 2, loc_nspec2D_xmax
+     n_elms_on_bound(2) = loc_nspec2D_xmax
 
-  loc_nspec2D_ymax = 0
-  do i=1,nspec2D_ymax
-     if (part(ibelm_ymax(i)) == iproc) then
-        loc_nspec2D_ymax = loc_nspec2D_ymax + 1
-     endif
-  enddo
-  !write(IIN_database) 4, loc_nspec2D_ymax
-  n_elms_on_bound(4) = loc_nspec2D_ymax
+     loc_nspec2D_ymin = 0
+     do i=1,nspec2D_ymin
+        if (part(ibelm_ymin(i)) == iproc) then
+           loc_nspec2D_ymin = loc_nspec2D_ymin + 1
+        endif
+     enddo
+     !write(IIN_database) 3, loc_nspec2D_ymin
+     n_elms_on_bound(3) = loc_nspec2D_ymin
 
-  loc_nspec2D_bottom = 0
-  do i=1,nspec2D_bottom
-     if (part(ibelm_bottom(i)) == iproc) then
-        loc_nspec2D_bottom = loc_nspec2D_bottom + 1
-     endif
-  enddo
-  !write(IIN_database) 5, loc_nspec2D_bottom
-  n_elms_on_bound(5) = loc_nspec2D_bottom
+     loc_nspec2D_ymax = 0
+     do i=1,nspec2D_ymax
+        if (part(ibelm_ymax(i)) == iproc) then
+           loc_nspec2D_ymax = loc_nspec2D_ymax + 1
+        endif
+     enddo
+     !write(IIN_database) 4, loc_nspec2D_ymax
+     n_elms_on_bound(4) = loc_nspec2D_ymax
 
-  loc_nspec2D_top = 0
-  do i=1,nspec2D_top
-     if (part(ibelm_top(i)) == iproc) then
-        loc_nspec2D_top = loc_nspec2D_top + 1
-     endif
-  enddo
-  !write(IIN_database) 6, loc_nspec2D_top
-  n_elms_on_bound(6) = loc_nspec2D_top
+     loc_nspec2D_bottom = 0
+     do i=1,nspec2D_bottom
+        if (part(ibelm_bottom(i)) == iproc) then
+           loc_nspec2D_bottom = loc_nspec2D_bottom + 1
+        endif
+     enddo
+     !write(IIN_database) 5, loc_nspec2D_bottom
+     n_elms_on_bound(5) = loc_nspec2D_bottom
 
+     loc_nspec2D_top = 0
+     do i=1,nspec2D_top
+        if (part(ibelm_top(i)) == iproc) then
+           loc_nspec2D_top = loc_nspec2D_top + 1
+        endif
+     enddo
+     !write(IIN_database) 6, loc_nspec2D_top
+     n_elms_on_bound(6) = loc_nspec2D_top
 
-  ! allocate the array size of glob2loc_elms_this_proc here using the element counts
-  gdims = (/1+NGNOD2D,loc_nspec2d_xmin  +loc_nspec2d_xmax &
-                     +loc_nspec2d_ymin  +loc_nspec2d_ymax &
-                     +loc_nspec2D_bottom+loc_nspec2d_top/)
-  allocate(glob2loc_elms_this_proc(gdims(1),gdims(2)),stat=ier)
-  if (ier /= 0) stop 'Error allocating array glob2loc_elms_this_proc'
+     offset_n_elms_bounds(iproc) = sum(n_elms_on_bound(:))
 
-  count = 1 ! initialilze the counter for glob2loc_elms_this_proc
+  else ! phase == 2
 
-  ! outputs element index and element node indices
-  ! note: assumes that element indices in ibelm_* arrays are in the range from 1 to nspec
-  !          (this is assigned by CUBIT, if this changes the following indexing must be changed as well)
-  !          while glob2loc_elmnts(.) is shifted from 0 to nspec-1  thus
-  !          we need to have the arg of glob2loc_elmnts start at 0, and thus we use glob2loc_nodes(ibelm_** -1)
-  do i=1,nspec2D_xmin
-     if (part(ibelm_xmin(i)) == iproc) then
-        do inode = 1,NGNOD2D
-          do j = glob2loc_nodes_nparts(nodes_ibelm_xmin(inode,i)-1), &
-                  glob2loc_nodes_nparts(nodes_ibelm_xmin(inode,i))-1
-             if (glob2loc_nodes_parts(j) == iproc) then
-                loc_node(inode) = glob2loc_nodes(j)+1
-             endif
-          enddo
-        enddo
-        !write(IIN_database) glob2loc_elmnts(ibelm_xmin(i)-1)+1, (loc_node(inode), inode = 1,NGNOD2D)
-        glob2loc_elms_this_proc(1,count) = glob2loc_elmnts(ibelm_xmin(i)-1)+1
-        do inode = 1, NGNOD2D
-          glob2loc_elms_this_proc(inode+1,count) = loc_node(inode)
-        enddo
-        count = count + 1
-     endif
-  enddo
+     ! allocate the array size of glob2loc_elms_this_proc here using the element counts
+     gdims = (/1+NGNOD2D, sum(n_elms_on_bound(:))/)
+     allocate(glob2loc_elms_this_proc(gdims(1),gdims(2)),stat=ier)
+     if (ier /= 0) stop 'Error allocating array glob2loc_elms_this_proc'
 
-  do i=1,nspec2D_xmax
-     if (part(ibelm_xmax(i)) == iproc) then
-        do inode = 1,NGNOD2D
-          do j = glob2loc_nodes_nparts(nodes_ibelm_xmax(inode,i)-1), &
-                  glob2loc_nodes_nparts(nodes_ibelm_xmax(inode,i))-1
-             if (glob2loc_nodes_parts(j) == iproc) then
-                loc_node(inode) = glob2loc_nodes(j)+1
-             endif
-          enddo
-        enddo
-        !write(IIN_database) glob2loc_elmnts(ibelm_xmax(i)-1)+1, (loc_node(inode), inode = 1,NGNOD2D)
-        glob2loc_elms_this_proc(1,count) = glob2loc_elmnts(ibelm_xmax(i)-1)+1
-        do inode = 1, NGNOD2D
-          glob2loc_elms_this_proc(inode+1,count) = loc_node(inode)
-        enddo
-        count = count + 1
-      endif
-  enddo
+     count = 1 ! initialilze the counter for glob2loc_elms_this_proc
 
-  do i=1,nspec2D_ymin
-     if (part(ibelm_ymin(i)) == iproc) then
-        do inode = 1,NGNOD2D
-          do j = glob2loc_nodes_nparts(nodes_ibelm_ymin(inode,i)-1), &
-                  glob2loc_nodes_nparts(nodes_ibelm_ymin(inode,i))-1
-             if (glob2loc_nodes_parts(j) == iproc) then
-                loc_node(inode) = glob2loc_nodes(j)+1
-             endif
-          enddo
-        enddo
-        !write(IIN_database) glob2loc_elmnts(ibelm_ymin(i)-1)+1, (loc_node(inode), inode = 1,NGNOD2D)
-        glob2loc_elms_this_proc(1,count) = glob2loc_elmnts(ibelm_ymin(i)-1)+1
-        do inode = 1, NGNOD2D
-          glob2loc_elms_this_proc(inode+1,count) = loc_node(inode)
-        enddo
-        count = count + 1
-      endif
-  enddo
+     ! outputs element index and element node indices
+     ! note: assumes that element indices in ibelm_* arrays are in the range from 1 to nspec
+     !          (this is assigned by CUBIT, if this changes the following indexing must be changed as well)
+     !          while glob2loc_elmnts(.) is shifted from 0 to nspec-1  thus
+     !          we need to have the arg of glob2loc_elmnts start at 0, and thus we use glob2loc_nodes(ibelm_** -1)
+     do i=1,nspec2D_xmin
+        if (part(ibelm_xmin(i)) == iproc) then
+           do inode = 1,NGNOD2D
+             do j = glob2loc_nodes_nparts(nodes_ibelm_xmin(inode,i)-1), &
+                     glob2loc_nodes_nparts(nodes_ibelm_xmin(inode,i))-1
+                if (glob2loc_nodes_parts(j) == iproc) then
+                   loc_node(inode) = glob2loc_nodes(j)+1
+                endif
+             enddo
+           enddo
+           !write(IIN_database) glob2loc_elmnts(ibelm_xmin(i)-1)+1, (loc_node(inode), inode = 1,NGNOD2D)
+           glob2loc_elms_this_proc(1,count) = glob2loc_elmnts(ibelm_xmin(i)-1)+1
+           do inode = 1, NGNOD2D
+             glob2loc_elms_this_proc(inode+1,count) = loc_node(inode)
+           enddo
+           count = count + 1
+        endif
+     enddo
 
-  do i=1,nspec2D_ymax
-     if (part(ibelm_ymax(i)) == iproc) then
-        do inode = 1,NGNOD2D
-          do j = glob2loc_nodes_nparts(nodes_ibelm_ymax(inode,i)-1), &
-                  glob2loc_nodes_nparts(nodes_ibelm_ymax(inode,i))-1
-             if (glob2loc_nodes_parts(j) == iproc) then
-                loc_node(inode) = glob2loc_nodes(j)+1
-             endif
-          enddo
-        enddo
-        !write(IIN_database) glob2loc_elmnts(ibelm_ymax(i)-1)+1, (loc_node(inode), inode = 1,NGNOD2D)
-        glob2loc_elms_this_proc(1,count) = glob2loc_elmnts(ibelm_ymax(i)-1)+1
-        do inode = 1, NGNOD2D
-          glob2loc_elms_this_proc(inode+1,count) = loc_node(inode)
-        enddo
-        count = count + 1
-     endif
-  enddo
+     do i=1,nspec2D_xmax
+        if (part(ibelm_xmax(i)) == iproc) then
+           do inode = 1,NGNOD2D
+             do j = glob2loc_nodes_nparts(nodes_ibelm_xmax(inode,i)-1), &
+                     glob2loc_nodes_nparts(nodes_ibelm_xmax(inode,i))-1
+                if (glob2loc_nodes_parts(j) == iproc) then
+                   loc_node(inode) = glob2loc_nodes(j)+1
+                endif
+             enddo
+           enddo
+           !write(IIN_database) glob2loc_elmnts(ibelm_xmax(i)-1)+1, (loc_node(inode), inode = 1,NGNOD2D)
+           glob2loc_elms_this_proc(1,count) = glob2loc_elmnts(ibelm_xmax(i)-1)+1
+           do inode = 1, NGNOD2D
+             glob2loc_elms_this_proc(inode+1,count) = loc_node(inode)
+           enddo
+           count = count + 1
+         endif
+     enddo
 
-  do i=1,nspec2D_bottom
-     if (part(ibelm_bottom(i)) == iproc) then
-        do inode = 1,NGNOD2D
-          do j = glob2loc_nodes_nparts(nodes_ibelm_bottom(inode,i)-1), &
-                  glob2loc_nodes_nparts(nodes_ibelm_bottom(inode,i))-1
-             if (glob2loc_nodes_parts(j) == iproc) then
-                loc_node(inode) = glob2loc_nodes(j)+1
-             endif
-          enddo
-        enddo
-        !write(IIN_database) glob2loc_elmnts(ibelm_bottom(i)-1)+1, (loc_node(inode), inode = 1,NGNOD2D)
-        glob2loc_elms_this_proc(1,count) = glob2loc_elmnts(ibelm_bottom(i)-1)+1
-        do inode = 1, NGNOD2D
-          glob2loc_elms_this_proc(inode+1,count) = loc_node(inode)
-        enddo
-        count = count + 1
-     endif
-  enddo
+     do i=1,nspec2D_ymin
+        if (part(ibelm_ymin(i)) == iproc) then
+           do inode = 1,NGNOD2D
+             do j = glob2loc_nodes_nparts(nodes_ibelm_ymin(inode,i)-1), &
+                     glob2loc_nodes_nparts(nodes_ibelm_ymin(inode,i))-1
+                if (glob2loc_nodes_parts(j) == iproc) then
+                   loc_node(inode) = glob2loc_nodes(j)+1
+                endif
+             enddo
+           enddo
+           !write(IIN_database) glob2loc_elmnts(ibelm_ymin(i)-1)+1, (loc_node(inode), inode = 1,NGNOD2D)
+           glob2loc_elms_this_proc(1,count) = glob2loc_elmnts(ibelm_ymin(i)-1)+1
+           do inode = 1, NGNOD2D
+             glob2loc_elms_this_proc(inode+1,count) = loc_node(inode)
+           enddo
+           count = count + 1
+         endif
+     enddo
 
-  do i=1,nspec2D_top
-     if (part(ibelm_top(i)) == iproc) then
-        do inode = 1,NGNOD2D
-          do j = glob2loc_nodes_nparts(nodes_ibelm_top(inode,i)-1), &
-                  glob2loc_nodes_nparts(nodes_ibelm_top(inode,i))-1
-             if (glob2loc_nodes_parts(j) == iproc) then
-                loc_node(inode) = glob2loc_nodes(j)+1
-             endif
-          enddo
-        enddo
-        !write(IIN_database) glob2loc_elmnts(ibelm_top(i)-1)+1, (loc_node(inode), inode = 1,NGNOD2D)
-        glob2loc_elms_this_proc(1,count) = glob2loc_elmnts(ibelm_top(i)-1)+1
-        do inode = 1, NGNOD2D
-          glob2loc_elms_this_proc(inode+1,count) = loc_node(inode)
-        enddo
-        count = count + 1
-     endif
-  enddo
+     do i=1,nspec2D_ymax
+        if (part(ibelm_ymax(i)) == iproc) then
+           do inode = 1,NGNOD2D
+             do j = glob2loc_nodes_nparts(nodes_ibelm_ymax(inode,i)-1), &
+                     glob2loc_nodes_nparts(nodes_ibelm_ymax(inode,i))-1
+                if (glob2loc_nodes_parts(j) == iproc) then
+                   loc_node(inode) = glob2loc_nodes(j)+1
+                endif
+             enddo
+           enddo
+           !write(IIN_database) glob2loc_elmnts(ibelm_ymax(i)-1)+1, (loc_node(inode), inode = 1,NGNOD2D)
+           glob2loc_elms_this_proc(1,count) = glob2loc_elmnts(ibelm_ymax(i)-1)+1
+           do inode = 1, NGNOD2D
+             glob2loc_elms_this_proc(inode+1,count) = loc_node(inode)
+           enddo
+           count = count + 1
+        endif
+     enddo
 
-  ! group names
-  ndsetname = "n_elms_on_bound"
-  gdsetname = "glob2loc_elms"
+     do i=1,nspec2D_bottom
+        if (part(ibelm_bottom(i)) == iproc) then
+           do inode = 1,NGNOD2D
+             do j = glob2loc_nodes_nparts(nodes_ibelm_bottom(inode,i)-1), &
+                     glob2loc_nodes_nparts(nodes_ibelm_bottom(inode,i))-1
+                if (glob2loc_nodes_parts(j) == iproc) then
+                   loc_node(inode) = glob2loc_nodes(j)+1
+                endif
+             enddo
+           enddo
+           !write(IIN_database) glob2loc_elmnts(ibelm_bottom(i)-1)+1, (loc_node(inode), inode = 1,NGNOD2D)
+           glob2loc_elms_this_proc(1,count) = glob2loc_elmnts(ibelm_bottom(i)-1)+1
+           do inode = 1, NGNOD2D
+             glob2loc_elms_this_proc(inode+1,count) = loc_node(inode)
+           enddo
+           count = count + 1
+        endif
+     enddo
 
-  ! prepare hdf5 write
-  call h5_open_group(h5, gname_proc)
+     do i=1,nspec2D_top
+        if (part(ibelm_top(i)) == iproc) then
+           do inode = 1,NGNOD2D
+             do j = glob2loc_nodes_nparts(nodes_ibelm_top(inode,i)-1), &
+                     glob2loc_nodes_nparts(nodes_ibelm_top(inode,i))-1
+                if (glob2loc_nodes_parts(j) == iproc) then
+                   loc_node(inode) = glob2loc_nodes(j)+1
+                endif
+             enddo
+           enddo
+           !write(IIN_database) glob2loc_elmnts(ibelm_top(i)-1)+1, (loc_node(inode), inode = 1,NGNOD2D)
+           glob2loc_elms_this_proc(1,count) = glob2loc_elmnts(ibelm_top(i)-1)+1
+           do inode = 1, NGNOD2D
+             glob2loc_elms_this_proc(inode+1,count) = loc_node(inode)
+           enddo
+           count = count + 1
+        endif
+     enddo
 
-  ! write n_elms_on_bound
-  call h5_write_dataset_1d_i(h5, ndsetname, n_elms_on_bound)
-  call h5_close_dataset(h5)
+     dset_name = "n_elms_on_bound"
+     call h5_write_dataset_1d_i_collect_hyperslab(h5, dset_name, n_elms_on_bound, (/6*iproc/), .false.)
+     ! write glob2loc_elms_this_proc
+     dset_name = "glob2loc_elms"
+     call h5_write_dataset_2d_i_collect_hyperslab(h5, dset_name, glob2loc_elms_this_proc, &
+               (/0,sum(offset_n_elms_bounds(0:iproc-1))/),.false.)
 
-  ! write glob2loc_elms_this_proc
-  call h5_write_dataset_2d_i(h5, gdsetname, glob2loc_elms_this_proc)
-  call h5_close_dataset(h5)
+     ! deallocate arrays
+     deallocate(glob2loc_elms_this_proc,stat=ier); if (ier /= 0) stop 'Error deallocating array glob2loc_elms_this_proc'
 
-  ! close hdf5
-  call h5_close_group(h5)
-
-  ! deallocate arrays
-  deallocate(glob2loc_elms_this_proc,stat=ier); if (ier /= 0) stop 'Error deallocating array glob2loc_elms_this_proc'
+   endif ! phase == 2
 
   end subroutine write_boundaries_database_h5
 
@@ -441,7 +433,7 @@ contains
   ! pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
   subroutine write_cpml_database_h5(gname_proc, h5, iproc, nspec, nspec_cpml, CPML_to_spec, &
-                                 CPML_regions, is_CPML, glob2loc_elmnts, part)
+                                 CPML_regions, is_CPML, glob2loc_elmnts, part, offset_nelems_cpml, offset_nelems,phase)
 
   implicit none
   ! phf5 io object
@@ -451,40 +443,34 @@ contains
   integer, intent(in)  :: iproc
   integer, intent(in)  :: nspec
   integer, intent(in)  :: nspec_cpml
-  integer              :: nspec_local
+  integer              :: nspec_local, nspec_cpml_local
 
   integer, dimension(nspec_cpml), intent(in) :: CPML_to_spec
   integer, dimension(nspec_cpml), intent(in) :: CPML_regions
 
-  logical, dimension(nspec), intent(in) :: is_CPML
+  logical, dimension(nspec), intent(in)   :: is_CPML
 
-  integer, dimension(:), pointer :: glob2loc_elmnts
+  integer, dimension(:), pointer          :: glob2loc_elmnts
 
   integer, dimension(1:nspec), intent(in) :: part
 
-  ! local parameters
-  integer :: i,nspec_cpml_local,count,count2,ier
+  integer, intent(in)                  :: phase
+  integer, dimension(0:), intent(inout) :: offset_nelems_cpml, offset_nelems
 
+  ! local parameters
+  integer :: i,count,count2,ier
+
+  character(len=40) :: dset_name
   ! for attribute nspec_cpml, nspec_cpml_local
-  character(len=18)              :: ndsetname = "nspec_cpml_globloc"
   integer, dimension(2)          :: ncpmls
 
   ! for dataset elements_cpml
   integer, dimension(:,:), allocatable  :: elements_cpml
-  character(len=40)                     :: edsetname
 
   ! for dataset if_cpml
   integer, dimension(:), allocatable  :: if_cpml
-  character(len=40)              :: idsetname
 
-  ! group names
-  edsetname = "elements_cpml"
-  idsetname = "if_cpml"
-
-  ! prepare hdf5 write
-  call h5_open_group(h5, gname_proc)
-
-  if (nspec_cpml > 0) then
+  if (phase == 1) then
     ! dump number of C-PML elements in this partition
     nspec_cpml_local = 0
     do i=1,nspec_cpml
@@ -493,95 +479,99 @@ contains
        endif
     enddo
 
-    ! dump attributevalues
-    ncpmls(1) = nspec_cpml
-    ncpmls(2) = nspec_cpml_local
+    offset_nelems_cpml(iproc) = nspec_cpml_local
 
-    count  = 1 ! initialize counter for elements_cpml array
-    count2 = 1 ! initialize conuter for if_cpml
+  else
 
-    allocate(elements_cpml(2,nspec_cpml_local),stat=ier)
-    if (ier /= 0) stop 'Error allocating array elements_cpml'
+    if (nspec_cpml > 0) then
 
-    ! dump C-PML regions and C-PML spectral elements global indexing
-    do i=1,nspec_cpml
-       ! #id_cpml_regions = 1 : X_surface C-PML
-       ! #id_cpml_regions = 2 : Y_surface C-PML
-       ! #id_cpml_regions = 3 : Z_surface C-PML
-       ! #id_cpml_regions = 4 : XY_edge C-PML
-       ! #id_cpml_regions = 5 : XZ_edge C-PML
-       ! #id_cpml_regions = 6 : YZ_edge C-PML
-       ! #id_cpml_regions = 7 : XYZ_corner C-PML
-       !
-       ! format: #id_cpml_element #id_cpml_regions
-       if (part(CPML_to_spec(i)) == iproc) then
-         elements_cpml(1,count) = glob2loc_elmnts(CPML_to_spec(i)-1)+1
-         elements_cpml(2,count) = CPML_regions(i)
-         count = count + 1
-       endif
-    enddo
+      ! dump attributevalues
+      ncpmls(1) = nspec_cpml
+      ncpmls(2) = offset_nelems_cpml(iproc)
 
-    ! dump mask of C-PML elements for all elements in this partition
-    ! count number of element in this iproc
-    do i=1,nspec
-       if (part(i) == iproc) then
-          !write(IIN_database) is_CPML(i)
-          count2 = count2 + 1
-       endif
-    enddo
+      nspec_cpml_local = offset_nelems_cpml(iproc)
 
-    nspec_local = count2 - 1
-    allocate(if_cpml(nspec_local),stat=ier)
-    if (ier /= 0) stop 'Error allocating array if_cpml'
+      count  = 1 ! initialize counter for elements_cpml array
+      count2 = 1 ! initialize conuter for if_cpml
 
-    count2 = 1 ! reinitialize counter2 to reuse it below
-    do i=1,nspec
-       if (part(i) == iproc) then
-         if (is_CPML(i)) then
-            if_cpml(count2) = 1
-         else
-            if_cpml(count2) = 0
+      allocate(elements_cpml(2,nspec_cpml_local),stat=ier)
+      if (ier /= 0) stop 'Error allocating array elements_cpml'
+
+      ! dump C-PML regions and C-PML spectral elements global indexing
+      do i=1,nspec_cpml
+         ! #id_cpml_regions = 1 : X_surface C-PML
+         ! #id_cpml_regions = 2 : Y_surface C-PML
+         ! #id_cpml_regions = 3 : Z_surface C-PML
+         ! #id_cpml_regions = 4 : XY_edge C-PML
+         ! #id_cpml_regions = 5 : XZ_edge C-PML
+         ! #id_cpml_regions = 6 : YZ_edge C-PML
+         ! #id_cpml_regions = 7 : XYZ_corner C-PML
+         !
+         ! format: #id_cpml_element #id_cpml_regions
+         if (part(CPML_to_spec(i)) == iproc) then
+           elements_cpml(1,count) = glob2loc_elmnts(CPML_to_spec(i)-1)+1
+           elements_cpml(2,count) = CPML_regions(i)
+           count = count + 1
          endif
-         count2 = count2 + 1
-       endif
-    enddo
-    
-    ! create a dataset for elements_cpml
-    call h5_write_dataset_2d_i(h5, edsetname, elements_cpml)
-    call h5_close_dataset(h5)
+      enddo
 
-    ! create a dataset for if_cpml
-    ! strangely here H5T_NATIVE_HBOOL may not be used.
-    call h5_write_dataset_1d_i(h5, idsetname, if_cpml)
-    call h5_close_dataset(h5)
+      ! dump mask of C-PML elements for all elements in this partition
+      ! count number of element in this iproc
+      do i=1,nspec
+         if (part(i) == iproc) then
+            !write(IIN_database) is_CPML(i)
+            count2 = count2 + 1
+         endif
+      enddo
 
-    ! deallocate local arrays
-    deallocate(elements_cpml,stat=ier); if (ier /= 0) stop 'Error deallocating array elements_cpml'
-    deallocate(if_cpml,stat=ier);       if (ier /= 0) stop 'Error deallocating array if_cpml'
+      nspec_local = count2 - 1
+      allocate(if_cpml(nspec_local),stat=ier)
+      if (ier /= 0) stop 'Error allocating array if_cpml'
 
-  else ! dummy dataset for no cpml case
-    ncpmls(1) = 0
-    ncpmls(2) = 0
-   
-  endif
+      count2 = 1 ! reinitialize counter2 to reuse it below
+      do i=1,nspec
+         if (part(i) == iproc) then
+           if (is_CPML(i)) then
+              if_cpml(count2) = 1
+           else
+              if_cpml(count2) = 0
+           endif
+           count2 = count2 + 1
+         endif
+      enddo
 
-  ! create a dataset for nspec_cpml and nspec_cpml_local
-  call h5_write_dataset_1d_i(h5, ndsetname, ncpmls)
-  call h5_close_dataset(h5)
- 
-  ! close hdf5
-  call h5_close_group(h5)
+      dset_name = "elements_cpml"
+      call h5_write_dataset_2d_i_collect_hyperslab(h5, dset_name, elements_cpml, (/0,sum(offset_nelems_cpml(0:iproc-1))/), .false.)
+      ! create a dataset for if_cpml
+        ! strangely here H5T_NATIVE_HBOOL may not be used.
+      dset_name = "if_cpml"
+      call h5_write_dataset_1d_i_collect_hyperslab(h5, dset_name, if_cpml, (/sum(offset_nelems(0:iproc-1))/), .false.)
 
+      ! deallocate local arrays
+      deallocate(elements_cpml,stat=ier); if (ier /= 0) stop 'Error deallocating array elements_cpml'
+      deallocate(if_cpml,stat=ier);       if (ier /= 0) stop 'Error deallocating array if_cpml'
+
+    else ! dummy dataset for no cpml case
+      ncpmls(1) = 0
+      ncpmls(2) = 0
+
+    endif
+
+    ! create a dataset for nspec_cpml and nspec_cpml_local
+    dset_name = "nspec_cpml_globloc"
+    call h5_write_dataset_1d_i_collect_hyperslab(h5, dset_name, ncpmls, (/2*iproc/), .false.)
+
+   endif ! phase == 2
   end subroutine write_cpml_database_h5
 
 
   !--------------------------------------------------
   ! Write elements (their nodes) pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
-  subroutine write_partition_database_h5(gname_proc, h5, iproc, nspec_local, nspec, elmnts, &
+  subroutine write_partition_database_h5(gname_proc, h5, iproc, nspec, elmnts, &
                                       glob2loc_elmnts, glob2loc_nodes_nparts, &
                                       glob2loc_nodes_parts, glob2loc_nodes, &
-                                      part, num_modele, NGNOD, num_phase)
+                                      part, num_modele, NGNOD, num_phase, offset_nelems)
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
 
@@ -591,11 +581,12 @@ contains
 
   character(len=*), intent(in)  :: gname_proc
   integer, intent(in)           :: iproc
-  integer, intent(inout)        :: nspec_local
+  integer                       :: nspec_local
 
   integer, intent(in)                  :: nspec
   integer, intent(in)                  :: NGNOD
   integer, dimension(0:NGNOD*nspec-1)  :: elmnts
+  integer, dimension(0:), intent(inout) :: offset_nelems           ! number of elements in each partition
 
   integer, dimension(:), pointer :: glob2loc_elmnts
   integer, dimension(:), pointer :: glob2loc_nodes_nparts
@@ -611,21 +602,16 @@ contains
   integer  :: i,j,k,count
   integer, dimension(0:NGNOD-1)  :: loc_nodes
 
+  character(len=40) :: dset_name
   ! for attribute (storing nnodes npgeo)
-  character(len=11)              :: aname = "nspec_local"
   ! for elm_conn
-  !integer, dimension(NGNOD, nspec_local) :: elm_conn
   integer, dimension(:, :), allocatable :: elm_conn
-  character(len=40)              :: dsetname = "elm_conn"
   ! for elem_conn_xdmf (mesh visualization)
   integer, dimension(:, :), allocatable :: elm_conn_xdmf
-  character(len=40)              :: dxsetname = "elm_conn_xdmf"
   ! for mat_mesh
   integer, dimension(:,:), allocatable :: mat_mesh
-  character(len=40)              :: mdsetname = "mat_mesh"
   ! for ispec_local
   integer, dimension(:), allocatable :: ispec_local
-  character(len=40)              :: idsetname = "ispec_local"
 
   if (num_phase == 1) then
     ! counts number of spectral elements in this partition
@@ -636,15 +622,16 @@ contains
        endif
     enddo
 
+    offset_nelems(iproc) = nspec_local
   else
-    allocate(elm_conn(NGNOD, nspec_local))
+    allocate(elm_conn(NGNOD, offset_nelems(iproc)))
     ! NGNOD = 27 array will not be used, only the 8 corner nodes
     ! are necessary for checkmesh visualization
     !allocate(elm_conn_xdmf(1+NGNOD, nspec_local)) ! 1 additional col for cell type id
-    allocate(elm_conn_xdmf(1+8, nspec_local)) ! 1 additional col for cell type id
-    allocate(mat_mesh(2, nspec_local))
-    allocate(ispec_local(nspec_local))
-  
+    allocate(elm_conn_xdmf(1+8, offset_nelems(iproc))) ! 1 additional col for cell type id
+    allocate(mat_mesh(2, offset_nelems(iproc)))
+    allocate(ispec_local(offset_nelems(iproc)))
+
     ! prepare a temporal array to be recorded in hdf5
     ! element corner indices
     count = 1
@@ -715,31 +702,16 @@ contains
       endif
     enddo
 
-    ! prepare hdf5 write
-    call h5_open_group(h5, gname_proc)
- 
-    ! create a dataset for elm_conn
-    call h5_write_dataset_2d_i(h5, dsetname, elm_conn)
-    call h5_close_dataset(h5)
-
-    ! create an attribute for npgeo
-    call h5_write_dataset_1d_i(h5, aname, (/nspec_local/))
-    call h5_close_dataset(h5)
-
-    ! create a dataset for elm_conn_xdmf
-    call h5_write_dataset_2d_i(h5, dxsetname, elm_conn_xdmf)
-    call h5_close_dataset(h5)
-
-    ! write mat_mesh
-    call h5_write_dataset_2d_i(h5, mdsetname, mat_mesh)
-    call h5_close_dataset(h5)
-
-    ! write ispec_local
-    call h5_write_dataset_1d_i(h5, idsetname, ispec_local)
-    call h5_close_dataset(h5)
-
-    ! close group
-    call h5_close_group(h5)
+    dset_name = "elm_conn"
+    call h5_write_dataset_2d_i_collect_hyperslab(h5, dset_name, elm_conn, (/0,sum(offset_nelems(0:iproc-1))/),.false.)
+    dset_name = "nspec_local"
+    call h5_write_dataset_1d_i_collect_hyperslab(h5, dset_name, (/offset_nelems(iproc)/), (/iproc/), .false.)
+    dset_name = "elm_conn_xdmf"
+    call h5_write_dataset_2d_i_collect_hyperslab(h5, dset_name, elm_conn_xdmf,(/0,sum(offset_nelems(0:iproc-1))/),.false.)
+    dset_name = "mat_mesh"
+    call h5_write_dataset_2d_i_collect_hyperslab(h5, dset_name, mat_mesh, (/0,sum(offset_nelems(0:iproc-1))/),.false.)
+    dset_name = "ispec_local"
+    call h5_write_dataset_1d_i_collect_hyperslab(h5, dset_name, ispec_local, (/sum(offset_nelems(0:iproc-1))/),.false.)
 
     deallocate(elm_conn,elm_conn_xdmf,mat_mesh,ispec_local)
 
@@ -756,7 +728,7 @@ contains
                               iproc, ninterfaces, &
                               my_ninterface, my_interfaces, my_nb_interfaces, glob2loc_elmnts, &
                               glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-                              glob2loc_nodes, num_phase, nparts)
+                              glob2loc_nodes, num_phase, nparts, offset_n_elms_interface, offset_nb_interfaces)
 
   implicit none
   type(h5io) :: h5
@@ -769,6 +741,9 @@ contains
   integer, dimension(:), pointer  :: tab_interfaces
   integer, dimension(0:ninterfaces-1), intent(inout)  :: my_interfaces
   integer, dimension(0:ninterfaces-1), intent(inout)  :: my_nb_interfaces
+  integer, dimension(0:), intent(inout) :: offset_n_elms_interface ! number of elements on the interfaces
+  integer, dimension(0:), intent(inout) :: offset_nb_interfaces    ! number of interfaces
+
   integer, dimension(:), pointer  :: glob2loc_elmnts
   integer, dimension(:), pointer  :: glob2loc_nodes_nparts
   integer, dimension(:), pointer  :: glob2loc_nodes_parts
@@ -783,18 +758,16 @@ contains
 
   integer  :: count_faces
 
+  character(len=40)              :: dset_name
   ! variables for my_ninterfaces_and_maxval
   integer, dimension(2)          :: num_interface_and_max
-  character(len=40)              :: ndsetname 
- 
+
 	! my_nb_interfaces in subgroup num_interface (2,my_ninterfaces)
   integer, dimension(:,:), allocatable :: num_neighbors_elmnts
-  character(len=40)                  :: mdsetname
- 
+
   ! my_interfaces
   integer, dimension(:,:), allocatable :: neighbors_elmnts
-  character(len=40)                    :: idsetname 
- 
+
   num_interface = 0
 
   if (num_phase == 1) then
@@ -819,14 +792,17 @@ contains
     enddo
     my_ninterface = sum(my_interfaces(:))
 
+    offset_nb_interfaces(iproc)     = my_ninterface         ! number of elements on the interfaces
+    offset_n_elms_interface(iproc) = sum(my_nb_interfaces(:))      ! number of interfaces
+
   else
     count_nb  = 1 ! count for num_neighbors_elmnts
     count_elm = 1 ! count for neighbors_elmnts
 
     ! allocate tempral array size
-    allocate(num_neighbors_elmnts(2,my_ninterface),stat=ier)
+    allocate(num_neighbors_elmnts(2,offset_nb_interfaces(iproc)),stat=ier)
     if (ier /= 0) stop 'Error allocating array num_neighbors_elmnts'
-    allocate(neighbors_elmnts(6, sum(my_nb_interfaces(:))))
+    allocate(neighbors_elmnts(6, offset_n_elms_interface(iproc)))
     if (ier /= 0) stop 'Error allocating array neighbors_elmnts'
 
     ! writes out MPI interface elements
@@ -834,10 +810,8 @@ contains
       do j = i+1, nparts-1
         if (my_interfaces(num_interface) == 1) then
           if (i == iproc) then
-            !write(IIN_database) j, my_nb_interfaces(num_interface)
             num_neighbors_elmnts(1,count_nb) = j
           else
-            !write(IIN_database) i, my_nb_interfaces(num_interface)
             num_neighbors_elmnts(1,count_nb) = i
           endif
           num_neighbors_elmnts(2,count_nb) = my_nb_interfaces(num_interface)
@@ -864,7 +838,7 @@ contains
                 !                   local_nodes(1), -1, -1, -1
                 neighbors_elmnts(1,count_elm) = local_elmnt
                 neighbors_elmnts(2,count_elm) = tab_interfaces(k*7+2)
-                neighbors_elmnts(3,count_elm) = local_nodes(1) 
+                neighbors_elmnts(3,count_elm) = local_nodes(1)
                 neighbors_elmnts(4,count_elm) = -1
                 neighbors_elmnts(5,count_elm) = -1
                 neighbors_elmnts(6,count_elm) = -1
@@ -887,8 +861,8 @@ contains
                 !                   local_nodes(1), local_nodes(2), -1, -1
                 neighbors_elmnts(1,count_elm) = local_elmnt
                 neighbors_elmnts(2,count_elm) = tab_interfaces(k*7+2)
-                neighbors_elmnts(3,count_elm) = local_nodes(1) 
-                neighbors_elmnts(4,count_elm) = local_nodes(2) 
+                neighbors_elmnts(3,count_elm) = local_nodes(1)
+                neighbors_elmnts(4,count_elm) = local_nodes(2)
                 neighbors_elmnts(5,count_elm) = -1
                 neighbors_elmnts(6,count_elm) = -1
 
@@ -923,16 +897,16 @@ contains
                 !     local_nodes(1), local_nodes(2),local_nodes(3), local_nodes(4)
                 neighbors_elmnts(1,count_elm) = local_elmnt
                 neighbors_elmnts(2,count_elm) = tab_interfaces(k*7+2)
-                neighbors_elmnts(3,count_elm) = local_nodes(1) 
-                neighbors_elmnts(4,count_elm) = local_nodes(2) 
-                neighbors_elmnts(5,count_elm) = local_nodes(3) 
-                neighbors_elmnts(6,count_elm) = local_nodes(4) 
+                neighbors_elmnts(3,count_elm) = local_nodes(1)
+                neighbors_elmnts(4,count_elm) = local_nodes(2)
+                neighbors_elmnts(5,count_elm) = local_nodes(3)
+                neighbors_elmnts(6,count_elm) = local_nodes(4)
 
              case default
                 print *, "fatal error in write_interfaces_database:", tab_interfaces(k*7+2), iproc
                 stop "fatal error in write_interfaces_database"
              end select
-          
+
           count_elm = count_elm + 1
           enddo
 
@@ -942,13 +916,6 @@ contains
       enddo
     enddo
 
-    ! hdf5 write
-    call h5_open_group(h5, gname_proc)
- 
-    ! group names
-    ndsetname = "my_ninterface_and_max"
-    mdsetname = "my_nb_interfaces"
-    idsetname = "my_interfaces"
 
     ! write my_ninterface and maxval
     if (my_ninterface == 0) then
@@ -956,24 +923,24 @@ contains
     else
       num_interface_and_max = (/my_ninterface, maxval(my_nb_interfaces)/)
     endif
-    call h5_write_dataset_1d_i(h5, ndsetname, num_interface_and_max)
-    call h5_close_dataset(h5)
-
     ! write my_nb_interfaces
-    call h5_write_dataset_2d_i(h5, mdsetname, num_neighbors_elmnts)
-    call h5_close_dataset(h5)
+    dset_name = "my_nb_interfaces"
+    call h5_write_dataset_2d_i_collect_hyperslab(h5, dset_name, num_neighbors_elmnts, &
+                                                 (/0,sum(offset_nb_interfaces(0:iproc-1))/), .false.)
 
     ! write my_interfaces
-    call h5_write_dataset_2d_i(h5, idsetname, neighbors_elmnts)
-    call h5_close_dataset(h5)
- 
-    ! close hdf5
-    call h5_close_group(h5)
+    dset_name = "my_interfaces"
+    call h5_write_dataset_2d_i_collect_hyperslab(h5, dset_name, neighbors_elmnts, &
+                                                 (/0, sum(offset_n_elms_interface(0:iproc-1))/), .false.)
+
+    dset_name = "my_ninterface_and_max"
+    call h5_write_dataset_1d_i_collect_hyperslab(h5, dset_name, num_interface_and_max, (/iproc*2/), .false.)
+
 
     ! allocate temporal array size
     deallocate(num_neighbors_elmnts,stat=ier); if (ier /= 0) stop 'Error deallocating array num_neighbors_elmnts'
     deallocate(neighbors_elmnts,stat=ier);     if (ier /= 0) stop 'Error deallocating array neighbors_elmnts'
- 
+
   endif
 
   end subroutine write_interfaces_database_h5
@@ -1078,7 +1045,7 @@ contains
   call h5_close_group(h5)
 
   deallocate(loc_moho_temp,stat=ier); if (ier /= 0) stop 'Error deallocating array loc_moho_temp'
- 
+
   end subroutine write_moho_surface_database_h5
 
 
