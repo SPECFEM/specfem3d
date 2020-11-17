@@ -669,8 +669,8 @@ contains
 
     subroutine h5_set_sieve_buffer_size(this)
         type(h5io), intent(in) :: this
-        integer(hsize_t)       :: buf_size = 512*1024 ! 16*1024*1024
-        integer(hsize_t)       :: alig_size = 256*1024 ! 16*1024*1024
+        integer(hsize_t)       :: buf_size  = 1024*1024*1024 ! 16*1024*1024
+        integer(hsize_t)       :: alig_size = 1024*1024*1024 ! 16*1024*1024
         call h5pset_sieve_buf_size_f(fplist_id, buf_size, error) ! buf_size may vary depending on machiens
         call h5pset_alignment_f(fplist_id, buf_size, alig_size, error)
     end subroutine h5_set_sieve_buffer_size
@@ -678,7 +678,7 @@ contains
 
     subroutine h5_set_buffer_size(this)
         type(h5io), intent(in) :: this
-        integer(hsize_t)       :: buf_size = 512*1024 ! 16*1024*1024
+        integer(hsize_t)       :: buf_size = 1024*1024*1024 ! 16*1024*1024
         call h5pset_buffer_f(plist_id, buf_size, error)
     end subroutine h5_set_buffer_size
 
@@ -821,6 +821,8 @@ contains
         integer, intent(in)                :: rank
 
         integer(HID_T)                     :: dspace_id
+        integer :: i
+        logical :: if_chunk = .true.
 
         dim = dim_in ! convert data type
 
@@ -828,6 +830,15 @@ contains
         if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ', dataset_name
 
         call h5pcreate_f(H5P_DATASET_CREATE_F, plist_id, error)
+        ! chunk size setting
+        !do i = 1, rank
+        !    if (dim(i) <= 0) then
+        !        if_chunk = .false.
+        !        print *, "dataset not chunk set: ", dataset_name
+        !    endif
+        !enddo
+        !if (if_chunk) call h5pset_chunk_f(plist_id,rank,dim,error)
+
 
         if (dtype_id == 0) then ! bool uses integer
             call h5dcreate_f(file_id, trim(dataset_name), H5T_NATIVE_INTEGER, dspace_id, dataset_id, error, &
@@ -2573,7 +2584,7 @@ contains
         integer(HSIZE_T), dimension(1)                              :: count ! size of hyperslab
         integer, dimension(:), intent(in)                           :: offset_in
         integer(HSSIZE_T), dimension(1)                             :: offset ! the position where the datablock is inserted
-        logical                                                     :: if_collect
+        logical, intent(in)                                         :: if_collect
 
         dim = shape(data_in)
         offset = offset_in ! convert data type
@@ -2581,10 +2592,12 @@ contains
         ! open dataset
         call h5_open_dataset2(this,trim(dataset_name))
 
+        ! if_collect == .false., this function gather all data from procs then write in a file at once
+
         ! select a place where data is inserted.
         count(1)  = dim(1)
-
         allocate(data(dim(1)))
+
         ! convert logical array to  integer array
         call bool_array2integer(this, data_in, data)
 
