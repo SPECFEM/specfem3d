@@ -4,6 +4,8 @@ module io_server
 
   implicit none
 
+
+  integer :: nglob_all_server, nspec_all_server !  total number of elements and nodes
   integer :: n_msg_seismo_each_proc=1,n_seismo_type=0
   integer :: n_procs_with_rec
   integer :: n_msg_surf_each_proc=3,surf_offset
@@ -36,14 +38,14 @@ module io_server
 
   integer, parameter :: VAL_NOT_ASSIGNED = 9999999
   type vol_data_dump
-    integer :: req=VAL_NOT_ASSIGNED
+    integer, dimension(:), allocatable :: req !=VAL_NOT_ASSIGNED should be
     real(kind=CUSTOM_REAL), dimension(:), allocatable :: d1darr
   end type vol_data_dump
 
   ! dumps for volume data
-  type(vol_data_dump), dimension(:), allocatable :: vd_pres, vd_divglob, vd_div,  &
-                                                    vd_curlx, vd_curly, vd_curlz, &
-                                                    vd_velox, vd_veloy, vd_veloz
+  type(vol_data_dump) :: vd_pres, vd_divglob, vd_div,  &
+                         vd_curlx, vd_curly, vd_curlz, &
+                         vd_velox, vd_veloy, vd_veloz
   ! local-global processor id relation
   integer, dimension(:), allocatable :: id_proc_glob2loc, id_proc_loc2glob
   ! io node id <-> proc id in compute nodes relation
@@ -51,6 +53,8 @@ module io_server
 
   ! dummy variables
   integer :: dummy_int
+
+  logical :: if_collect_server = .true.
 
 contains
   function i2c(k) result(str)
@@ -125,8 +129,11 @@ subroutine do_io_start_idle()
 
   ! vars volumne movie
   integer                       :: rec_count_vol=0, n_recv_msg_vol=0, vol_out_count=0, max_vol_out=0
-  integer, dimension(0:NPROC-1) :: nelm_par_proc, nglob_par_proc ! storing the number of elements and gll nodes
-  logical, dimension(5)         :: val_type_mov ! true if movie file will be created, (pressure, div_glob, div, curlxyz, velocity_xyz)
+  ! storing the number of elements and gll nodes
+  integer, dimension(0:NPROC-1)   :: nelm_par_proc, nglob_par_proc, nglob_par_proc_offset
+  integer, dimension(0:NIONOD-1)  :: nglob_par_io_offset
+  logical, dimension(5)           :: val_type_mov ! true if movie file will be created, (pressure, div_glob, div, curlxyz, velocity_xyz)
+
 
   ! prepare for receiving message from write_seismograms
   print *, "io node rank:", myrank," is waiting for the first message"
@@ -201,7 +208,7 @@ subroutine do_io_start_idle()
   ! initialize volume movie
   !
   if (MOVIE_VOLUME) then
-    call movie_volume_init(nelm_par_proc,nglob_par_proc)
+    call movie_volume_init(nelm_par_proc,nglob_par_proc,nglob_par_proc_offset,nglob_par_io_offset)
     print *, "movie volume init done"
     n_recv_msg_vol = n_msg_vol_each_proc*nproc_io
     max_vol_out    = int(NSTEP/NTSTEP_BETWEEN_FRAMES)
@@ -210,9 +217,28 @@ subroutine do_io_start_idle()
     val_type_mov(:) = .false.
 
     ! allocate dumping arrays
-    allocate(vd_pres(0:nproc_io-1),vd_divglob(0:nproc_io-1),   vd_div(0:nproc_io-1), &
-            vd_curlx(0:nproc_io-1),  vd_curly(0:nproc_io-1), vd_curlz(0:nproc_io-1), &
-            vd_velox(0:nproc_io-1),  vd_veloy(0:nproc_io-1), vd_veloz(0:nproc_io-1))
+    allocate(vd_pres%req(0:nproc_io-1),vd_divglob%req(0:nproc_io-1),   vd_div%req(0:nproc_io-1), &
+            vd_curlx%req(0:nproc_io-1),  vd_curly%req(0:nproc_io-1), vd_curlz%req(0:nproc_io-1), &
+            vd_velox%req(0:nproc_io-1),  vd_veloy%req(0:nproc_io-1), vd_veloz%req(0:nproc_io-1))
+    vd_pres%req(:)   = VAL_NOT_ASSIGNED
+    vd_divglob%req(:)= VAL_NOT_ASSIGNED
+    vd_div%req(:)    = VAL_NOT_ASSIGNED
+    vd_curlx%req(:)  = VAL_NOT_ASSIGNED
+    vd_curly%req(:)  = VAL_NOT_ASSIGNED
+    vd_curlz%req(:)  = VAL_NOT_ASSIGNED
+    vd_velox%req(:)  = VAL_NOT_ASSIGNED
+    vd_veloy%req(:)  = VAL_NOT_ASSIGNED
+    vd_veloz%req(:)  = VAL_NOT_ASSIGNED
+    allocate(   vd_pres%d1darr(nglob_par_io_offset(myrank)),&
+             vd_divglob%d1darr(nglob_par_io_offset(myrank)),&
+                 vd_div%d1darr(nglob_par_io_offset(myrank)),&
+               vd_curlx%d1darr(nglob_par_io_offset(myrank)),&
+               vd_curly%d1darr(nglob_par_io_offset(myrank)),&
+               vd_curlz%d1darr(nglob_par_io_offset(myrank)),&
+               vd_velox%d1darr(nglob_par_io_offset(myrank)),&
+               vd_veloy%d1darr(nglob_par_io_offset(myrank)),&
+               vd_veloz%d1darr(nglob_par_io_offset(myrank)))
+
 
   endif ! if MOVIE_VOLUME
 
@@ -287,7 +313,7 @@ subroutine do_io_start_idle()
            status(MPI_TAG) == io_tag_vol_veloz        &
       ) then
         it_io = NTSTEP_BETWEEN_FRAMES*(vol_out_count+1)
-        call recv_vol_data(status,rec_count_vol,it_io, val_type_mov)
+        call recv_vol_data(status,rec_count_vol,it_io, val_type_mov, nglob_par_proc_offset)
         rec_count_vol = rec_count_vol+1
         ! finish gathering the whole data at each time step
       endif
@@ -319,27 +345,22 @@ subroutine do_io_start_idle()
     endif
 
     ! write volume movie
-    if (MOVIE_VOLUME .and. rec_count_vol  == n_recv_msg_vol) then
+    if (MOVIE_VOLUME .and. rec_count_vol == n_recv_msg_vol) then
       ! wait all vol data are reached
       call wait_vol_recv()
 
       ! write dumped vol data
-      call write_vol_data(it_io,val_type_mov)
+      call write_vol_data(it_io,val_type_mov,nglob_par_io_offset)
 
       rec_count_vol = 0 ! reset counter
       vol_out_count = vol_out_count+1
       if (vol_out_count==1) then
         ! create xdmf header file
         if (myrank == 0) then
-          call write_xdmf_vol_header(nelm_par_proc,nglob_par_proc)
+          call write_xdmf_vol(val_type_mov)
         endif
       endif
 
-      if (myrank == 0) then
-        call write_xdmf_vol_body_header(it_io)
-        call write_xdmf_vol_body(it_io, nelm_par_proc, nglob_par_proc, val_type_mov)
-        call write_xdmf_vol_body_close()
-      endif
       print *, "volume write done at it = ", it_io
 
     endif
@@ -369,7 +390,7 @@ end subroutine do_io_start_idle
 !
 ! volume movie
 !
-subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
+subroutine movie_volume_init(nelm_par_proc,nglob_par_proc,nglob_par_proc_offset,nglob_par_io_offset)
   use io_server
   use my_mpi
   use specfem_par
@@ -380,20 +401,32 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
   use phdf5_utils
   implicit none
 
-  integer :: iproc, count=0, id_glob, comm, info, sender, dump, ier
+  integer :: iproc, iproc2, count=0, id_glob, comm, info, sender, dump, ier
 
-  integer, dimension(0:NPROC-1), intent(inout) :: nelm_par_proc, nglob_par_proc ! storing the number of elements and gll nodes
-  integer                                      :: status(MPI_STATUS_SIZE)
+  integer, dimension(0:NPROC-1), intent(inout)  :: nelm_par_proc, nglob_par_proc ! storing the number of elements and gll nodes
+  integer, dimension(0:nproc_io-1), intent(out) :: nglob_par_proc_offset ! offset intra io node info
+  integer, dimension(0:NIONOD-1), intent(out)   :: nglob_par_io_offset   ! offset inter io node info
+  integer, dimension(0:nproc_io-1)              :: nelm_par_proc_offset ! offset intra io node
+  integer, dimension(0:NIONOD-1)                :: nelm_par_io_offset   ! offset inter io node
+  integer                                       :: status(MPI_STATUS_SIZE)
+
+  ! arrays for storing elm_conn and xyzstore
+  integer                                           :: nglob_this_io=0, nelm_this_io=0
+  integer, dimension(:,:), allocatable              :: elm_conn_tmp
+  integer, dimension(:), allocatable                :: elm_conn_subtmp
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_tmp, ystore_tmp, zstore_tmp
+  integer :: nelm_tmp,nglo_tmp,ielm_sta,ielm_end,iglo_sta,iglo_end
+  integer :: node_id_off, node_id_off_inter
+  integer :: nelms_factor = (NGLLX-1)*(NGLLY-1)*(NGLLZ-1) ! divide one spectral element to
+  ! small rectangles for visualization purpose
 
   ! make output file
   character(len=64) :: group_name
   character(len=64) :: dset_name
-  character(len=5)  :: ioidstr
   type(h5io)        :: h5
   h5 = h5io()
 
-  write(ioidstr, "(i5.5)") my_io_id
-  fname_h5_data_vol = LOCAL_PATH(1:len_trim(LOCAL_PATH))//"/movie_volume_"//ioidstr//".h5" ! #TODO generate only one h5 file for all io nodes
+  fname_h5_data_vol = LOCAL_PATH(1:len_trim(LOCAL_PATH))//"/movie_volume.h5"
 
   ! initialization of h5 file
   ! get mpi parameters
@@ -403,10 +436,6 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
   ! initialize h5 object
   call h5_init(h5, fname_h5_data_vol)
   call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
-
-  ! create a hdf5 file
-  call h5_create_file(h5)
-  call h5_close_file(h5)
 
   ! get n_msg_vol_each_proc
   call recv_i_inter(n_msg_vol_each_proc, 1, 0, io_tag_vol_nmsg)
@@ -420,7 +449,7 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
   allocate(dest_ioids(0:NPROC-1))
 
   ! make a sender list which communicate with this io node
-  print *, "nproc_io,", nproc_io, "rank", myrank
+  print *, "number of compute node: ", nproc_io, ", for io node rank: ", myrank
   do iproc = 0, nproc_io-1
     call mpi_probe(MPI_ANY_SOURCE, io_tag_vol_sendlist, my_local_mpi_comm_inter, status, ier)
     sender = status(MPI_SOURCE)
@@ -430,23 +459,134 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc)
   enddo
 
   ! gather other informations for making a volume data output
-  if (myrank == 0) then
-    do iproc = 0, NPROC-1
-      ! get nspec and nglob from each process
-      call recv_i_inter(nelm_par_proc(iproc),  1, iproc, io_tag_vol_nspec) ! NSPEC_AB
-      call recv_i_inter(nglob_par_proc(iproc), 1, iproc, io_tag_vol_nglob) ! NGLOB_AB
+  do iproc = 0, NPROC-1
+    ! get nspec and nglob from each process
+    call recv_i_inter(nelm_par_proc(iproc),  1, iproc, io_tag_vol_nspec) ! NSPEC_AB
+    call recv_i_inter(nglob_par_proc(iproc), 1, iproc, io_tag_vol_nglob) ! NGLOB_AB
+    ! array if io node ids of each compute procs
+    call recv_i_inter(dest_ioids(iproc), 1, iproc, io_tag_vol_ioid)
+  enddo
 
-      ! array if io node ids of each compute procs
-      call recv_i_inter(dest_ioids(iproc), 1, iproc, io_tag_vol_ioid)
+  ! calculate nglob and nelm for this io_node
+  nglob_par_proc_offset(:) = 0
+  nelm_par_proc_offset(:)  = 0
+
+  do iproc=0, nproc_io-1
+    nglob_this_io = nglob_this_io + nglob_par_proc(id_proc_loc2glob(iproc))
+    nelm_this_io  = nelm_this_io  + nelm_par_proc (id_proc_loc2glob(iproc))
+    if (iproc>0) then
+      do iproc2=0, iproc-1
+        nglob_par_proc_offset(iproc) = nglob_par_proc_offset(iproc)+nglob_par_proc(id_proc_loc2glob(iproc2))
+        nelm_par_proc_offset(iproc)  = nelm_par_proc_offset(iproc) +nelm_par_proc (id_proc_loc2glob(iproc2))
+      enddo
+    endif
+  enddo
+
+  ! prepare intra io node offset array
+  call gather_all_all_singlei((/nglob_this_io/), nglob_par_io_offset, NIONOD)
+  call gather_all_all_singlei((/nelm_this_io/), nelm_par_io_offset, NIONOD)
+
+  ! prepare arrays for storing elm_conn_loc and xyzstore
+  allocate(xstore_tmp(nglob_this_io)) ! 1d array for this io_node
+  allocate(ystore_tmp(nglob_this_io))
+  allocate(zstore_tmp(nglob_this_io))
+  allocate(elm_conn_tmp(9,nelm_this_io*nelms_factor))
+
+  nspec_all_server = sum(nelm_par_proc(:))
+  nglob_all_server = sum(nglob_par_proc(:))
+
+  ! node id offset inter io nodes
+  node_id_off_inter = sum(nglob_par_io_offset(0:myrank-1))
+
+  do iproc=0, nproc_io-1
+    nelm_tmp = nelm_par_proc(id_proc_loc2glob(iproc))
+    nglo_tmp = nglob_par_proc(id_proc_loc2glob(iproc))
+    ielm_sta = nelm_par_proc_offset(iproc)+1
+    ielm_end = ielm_sta + nelm_tmp-1
+    iglo_sta = nglob_par_proc_offset(iproc)+1
+    iglo_end = iglo_sta + nglo_tmp-1
+    !print*,"iorank, iproc, ielm_sta, ielm_end, nelm_tmp, nspec_all", myrank, iproc, ielm_sta, ielm_end, nelm_tmp, nspec_all_server
+    !print*,"iorank, iproc, iglo_sta, iglo_end, nglo_tmp, nglob_all", myrank, iproc, iglo_sta, iglo_end, nglo_tmp, nglob_all_server
+
+    allocate(elm_conn_subtmp(9*nelm_tmp*nelms_factor))
+
+    ! receive elm_conn_loc
+    call recv_i_inter(elm_conn_subtmp, &
+        9*nelm_tmp*nelms_factor,id_proc_loc2glob(iproc),io_tag_vol_elmconn)
+
+    elm_conn_tmp(:,(ielm_sta-1)*nelms_factor+1:ielm_end*nelms_factor) &
+        = reshape(elm_conn_subtmp,(/9,nelm_tmp*nelms_factor/))
+
+    ! node id offset intra io node
+    node_id_off = 0
+    do iproc2=0,iproc-1
+      node_id_off = node_id_off + nglob_par_proc(id_proc_loc2glob(iproc2))
     enddo
+    !print *, "iorank, iproc, off, off_inter", myrank, iproc, node_id_off, node_id_off_inter
+
+    elm_conn_tmp(2:9,(ielm_sta-1)*nelms_factor+1:ielm_end*nelms_factor) &
+    = elm_conn_tmp(2:9,(ielm_sta-1)*nelms_factor+1:ielm_end*nelms_factor) &
+    + node_id_off + node_id_off_inter
+
+    ! receive xstore, ystore, zstore
+    call recvv_cr_inter(xstore_tmp(iglo_sta:iglo_end),nglo_tmp,id_proc_loc2glob(iproc),io_tag_vol_nodex)
+    call recvv_cr_inter(ystore_tmp(iglo_sta:iglo_end),nglo_tmp,id_proc_loc2glob(iproc),io_tag_vol_nodey)
+    call recvv_cr_inter(zstore_tmp(iglo_sta:iglo_end),nglo_tmp,id_proc_loc2glob(iproc),io_tag_vol_nodez)
+
+    deallocate(elm_conn_subtmp)
+  enddo
+
+  ! write mesh database in movie_volue.h5
+  group_name = "mesh"
+
+  if(myrank==0) then
+    ! create a hdf5 file
+    call h5_create_file(h5)
+    ! create coordinate dataset
+    call h5_open_or_create_group(h5, group_name)
+
+    dset_name = "elm_conn"
+    call h5_create_dataset_gen_in_group(h5, dset_name, &
+                (/9,nspec_all_server*nelms_factor/), 2, 1)
+    dset_name = "x"
+    call h5_create_dataset_gen_in_group(h5, dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+    dset_name = "y"
+    call h5_create_dataset_gen_in_group(h5, dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+    dset_name = "z"
+    call h5_create_dataset_gen_in_group(h5, dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+
+    call h5_close_group(h5)
+    call h5_close_file(h5)
   endif
+  call synchronize_all()
 
-  ! # TODO make a list of ionodes offset
+  call h5_open_file_p(h5)
+  call h5_open_group(h5,group_name)
 
+  dset_name = "elm_conn"
+  call h5_write_dataset_2d_i_collect_hyperslab_in_group(h5,dset_name,elm_conn_tmp,&
+              (/0,sum(nelm_par_io_offset(0:myrank-1))*nelms_factor/),if_collect_server)
+  dset_name = "x"
+  call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5,dset_name,xstore_tmp,&
+              (/sum(nglob_par_io_offset(0:myrank-1))/),if_collect_server)
+  dset_name = "y"
+  call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5,dset_name,ystore_tmp,&
+              (/sum(nglob_par_io_offset(0:myrank-1))/),if_collect_server)
+  dset_name = "z"
+  call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5,dset_name,zstore_tmp,&
+              (/sum(nglob_par_io_offset(0:myrank-1))/),if_collect_server)
+
+  call h5_close_group(h5)
+  call h5_close_file(h5)
+
+  call synchronize_all()
+
+  deallocate(elm_conn_tmp)
+  deallocate(xstore_tmp, ystore_tmp, zstore_tmp)
 end subroutine movie_volume_init
 
 
-subroutine recv_vol_data(status, rec_count_vol, it_io, val_type_mov)
+subroutine recv_vol_data(status, rec_count_vol, it_io, val_type_mov, nglob_par_proc_offset)
   use io_server
   use specfem_par
   use my_mpi
@@ -455,15 +595,8 @@ subroutine recv_vol_data(status, rec_count_vol, it_io, val_type_mov)
   integer, intent(in)                  :: status(MPI_STATUS_SIZE)
   integer, intent(in)                  :: rec_count_vol,it_io
   logical, dimension(5), intent(inout) :: val_type_mov
-  integer :: sender_glob, sender_loc, ier, tag, arrsize, msgsize
-  logical :: if_aloc
-
-  ! flag for allocating dump arrays only at the initial timestep
-  if (it_io == NTSTEP_BETWEEN_FRAMES) then
-    if_aloc = .true.
-  else
-    if_aloc = .false.
-  endif
+  integer, dimension(0:nproc_io-1), intent(in) :: nglob_par_proc_offset ! offset intra io node info
+  integer :: sender_glob, sender_loc, ier, tag, arrsize, msgsize, iglo_sta, iglo_end
 
   sender_glob = status(MPI_SOURCE)
   sender_loc  = id_proc_glob2loc(sender_glob)
@@ -472,51 +605,36 @@ subroutine recv_vol_data(status, rec_count_vol, it_io, val_type_mov)
   ! get message size
   call get_size_msg(status,msgsize)
 
+  iglo_sta = nglob_par_proc_offset(sender_loc)+1
+  iglo_end = iglo_sta + msgsize -1
+
   ! receive data and store to dump arrays
   !
   ! here necessary to check if file write has already finished before overwriting dump arrays
   !
   if (tag == io_tag_vol_pres) then
     val_type_mov(1) = .true.
-    if(if_aloc) allocate(vd_pres(sender_loc)%d1darr(msgsize),stat=ier)
-    vd_pres(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call irecvv_cr_inter(vd_pres(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_pres(sender_loc)%req)
+    call irecvv_cr_inter(vd_pres%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_pres%req(sender_loc))
   elseif (tag == io_tag_vol_divglob) then
     val_type_mov(2) = .true.
-    if(if_aloc) allocate(vd_divglob(sender_loc)%d1darr(msgsize),stat=ier)
-    vd_divglob(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call irecvv_cr_inter(vd_divglob(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_divglob(sender_loc)%req)
+    call irecvv_cr_inter(vd_divglob%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_divglob%req(sender_loc))
   elseif (tag == io_tag_vol_div) then
     val_type_mov(3) = .true.
-    if(if_aloc) allocate(vd_div(sender_loc)%d1darr(msgsize),stat=ier)
-    vd_div(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call irecvv_cr_inter(vd_div(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_div(sender_loc)%req)
+    call irecvv_cr_inter(vd_div%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_div%req(sender_loc))
   elseif (tag == io_tag_vol_curlx) then
     val_type_mov(4) = .true.
-    if(if_aloc) allocate(vd_curlx(sender_loc)%d1darr(msgsize),stat=ier)
-    vd_curlx(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call irecvv_cr_inter(vd_curlx(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_curlx(sender_loc)%req)
+    call irecvv_cr_inter(vd_curlx%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_curlx%req(sender_loc))
   elseif (tag == io_tag_vol_curly) then
-    if(if_aloc) allocate(vd_curly(sender_loc)%d1darr(msgsize),stat=ier)
-    vd_curly(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call irecvv_cr_inter(vd_curly(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_curly(sender_loc)%req)
+    call irecvv_cr_inter(vd_curly%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_curly%req(sender_loc))
   elseif (tag == io_tag_vol_curlz) then
-    if(if_aloc) allocate(vd_curlz(sender_loc)%d1darr(msgsize),stat=ier)
-    vd_curlz(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call irecvv_cr_inter(vd_curlz(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_curlz(sender_loc)%req)
+    call irecvv_cr_inter(vd_curlz%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_curlz%req(sender_loc))
   elseif (tag == io_tag_vol_velox) then
     val_type_mov(5) = .true.
-    if(if_aloc) allocate(vd_velox(sender_loc)%d1darr(msgsize),stat=ier)
-    vd_velox(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call irecvv_cr_inter(vd_velox(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_velox(sender_loc)%req)
+    call irecvv_cr_inter(vd_velox%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_velox%req(sender_loc))
   elseif (tag == io_tag_vol_veloy) then
-    if(if_aloc) allocate(vd_veloy(sender_loc)%d1darr(msgsize),stat=ier)
-    vd_veloy(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call irecvv_cr_inter(vd_veloy(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_veloy(sender_loc)%req)
+    call irecvv_cr_inter(vd_veloy%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_veloy%req(sender_loc))
   elseif (tag == io_tag_vol_veloz) then
-    if(if_aloc) allocate(vd_veloz(sender_loc)%d1darr(msgsize),stat=ier)
-    vd_veloz(sender_loc)%d1darr(:) = 0._CUSTOM_REAL
-    call irecvv_cr_inter(vd_veloz(sender_loc)%d1darr,msgsize,sender_glob,tag,vd_veloz(sender_loc)%req)
+    call irecvv_cr_inter(vd_veloz%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_veloz%req(sender_loc))
   endif
 
 end subroutine recv_vol_data
@@ -531,21 +649,21 @@ subroutine wait_vol_recv()
   integer :: i
 
   do i = 0, nproc_io-1
-    if (vd_pres(i)%req    /= VAL_NOT_ASSIGNED) call wait_req(vd_pres(i)%req)
-    if (vd_divglob(i)%req /= VAL_NOT_ASSIGNED) call wait_req(vd_divglob(i)%req)
-    if (vd_div(i)%req     /= VAL_NOT_ASSIGNED) call wait_req(vd_div(i)%req)
-    if (vd_curlx(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_curlx(i)%req)
-    if (vd_curly(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_curly(i)%req)
-    if (vd_curlz(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_curlz(i)%req)
-    if (vd_velox(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_velox(i)%req)
-    if (vd_veloy(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_veloy(i)%req)
-    if (vd_veloz(i)%req   /= VAL_NOT_ASSIGNED) call wait_req(vd_veloz(i)%req)
+    if (vd_pres%req(i)    /= VAL_NOT_ASSIGNED) call wait_req(vd_pres%req(i))
+    if (vd_divglob%req(i) /= VAL_NOT_ASSIGNED) call wait_req(vd_divglob%req(i))
+    if (vd_div%req(i)     /= VAL_NOT_ASSIGNED) call wait_req(vd_div%req(i))
+    if (vd_curlx%req(i)   /= VAL_NOT_ASSIGNED) call wait_req(vd_curlx%req(i))
+    if (vd_curly%req(i)   /= VAL_NOT_ASSIGNED) call wait_req(vd_curly%req(i))
+    if (vd_curlz%req(i)   /= VAL_NOT_ASSIGNED) call wait_req(vd_curlz%req(i))
+    if (vd_velox%req(i)   /= VAL_NOT_ASSIGNED) call wait_req(vd_velox%req(i))
+    if (vd_veloy%req(i)   /= VAL_NOT_ASSIGNED) call wait_req(vd_veloy%req(i))
+    if (vd_veloz%req(i)   /= VAL_NOT_ASSIGNED) call wait_req(vd_veloz%req(i))
   enddo
 
 end subroutine wait_vol_recv
 
 
-subroutine write_vol_data(it_io, val_type_mov)
+subroutine write_vol_data(it_io, val_type_mov,nglob_par_io_offset)
   use io_server
   use specfem_par
   use phdf5_utils
@@ -554,97 +672,110 @@ subroutine write_vol_data(it_io, val_type_mov)
   integer, intent(in) :: it_io
   logical, dimension(5), intent(inout) :: val_type_mov
   integer :: i,j, num_max_type=5, comm, info, id_loc
-
+  integer, dimension(0:NIONOD-1), intent(in) :: nglob_par_io_offset   ! offset inter io node info
+  integer :: io_offset
   ! make output file
   character(len=10) :: tempstr
   character(len=64) :: dset_name
   character(len=64) :: group_name
 
   type(h5io) :: h5
-  h5 = h5io()
 
-  ! get mpi parameters
-  call world_get_comm(comm)
-  call get_info_null(info)
+  ! calculate total number of nglob
+  !nglob_all = sum(nglob_par_io_offset(:))
+  io_offset = sum(nglob_par_io_offset(0:myrank-1))
 
   ! initialization of h5 file
+  h5 = h5io()
   call h5_init(h5, fname_h5_data_vol)
-  call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
-
-  ! create a hdf5 file
-  call h5_open_file(h5)
 
   ! create time group in h5
   write(tempstr, "(i6.6)") it_io
   group_name = "it_"//tempstr
-  call h5_create_group(h5, group_name)
-  call h5_open_group(h5, group_name)
 
-  ! #TODO this loop should be erased
-  ! loop to write the volume data for each process
-  do i = 0, NPROC-1
+  ! create dataset
+  if (myrank==0) then
+    ! create it group
+    call h5_open_file(h5)
+    ! check if group_name exists
+    call h5_open_or_create_group(h5, group_name)
 
-    id_loc = id_proc_glob2loc(i)
-
-    if (id_loc >= 0) then ! if i (proc) is assigned to this io node
-
-      ! create or open a processor subgroup
-      write(tempstr, "(i6.6)") i
-      group_name = "proc_"//tempstr
-      call h5_create_subgroup(h5, group_name)
-      call h5_open_subgroup(h5, group_name)
-
-      ! loop for each value type
-      do j=1, num_max_type
-        if (val_type_mov(j) .eqv. .true.) then
-          if (j==1) then
-            dset_name = "pressure"
-            call h5_write_dataset_1d_d(h5, dset_name, vd_pres(id_loc)%d1darr)
-            call h5_close_dataset(h5)
-
-          elseif (j==2) then
-            dset_name = "div_glob"
-            call h5_write_dataset_1d_d(h5, dset_name, vd_divglob(id_loc)%d1darr)
-            call h5_close_dataset(h5)
-
-          elseif (j==3) then
-            dset_name = "div"
-            call h5_write_dataset_1d_d(h5, dset_name, vd_div(id_loc)%d1darr)
-            call h5_close_dataset(h5)
-
-          elseif (j==4) then
-            dset_name = "curl_x"
-            call h5_write_dataset_1d_d(h5, dset_name, vd_curlx(id_loc)%d1darr)
-            call h5_close_dataset(h5)
-
-            dset_name = "curl_y"
-            call h5_write_dataset_1d_d(h5, dset_name, vd_curly(id_loc)%d1darr)
-            call h5_close_dataset(h5)
-
-            dset_name = "curl_z"
-            call h5_write_dataset_1d_d(h5, dset_name, vd_curlz(id_loc)%d1darr)
-            call h5_close_dataset(h5)
-
-          else
-            dset_name = "velo_x"
-            call h5_write_dataset_1d_d(h5, dset_name, vd_velox(id_loc)%d1darr)
-            call h5_close_dataset(h5)
-
-            dset_name = "velo_y"
-            call h5_write_dataset_1d_d(h5, dset_name, vd_veloy(id_loc)%d1darr)
-            call h5_close_dataset(h5)
-
-            dset_name = "velo_z"
-            call h5_write_dataset_1d_d(h5, dset_name, vd_veloz(id_loc)%d1darr)
-            call h5_close_dataset(h5)
-          endif
-
+    ! loop for each value type
+    do j=1, num_max_type
+      if (val_type_mov(j) .eqv. .true.) then
+        if (j==1) then
+          dset_name = "pressure"
+          call h5_create_dataset_gen_in_group(h5, dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+        elseif (j==2) then
+          dset_name = "div_glob"
+          call h5_create_dataset_gen_in_group(h5, dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+        elseif (j==3) then
+          dset_name = "div"
+          call h5_create_dataset_gen_in_group(h5, dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+        elseif (j==4) then
+          dset_name = "curl_x"
+          call h5_create_dataset_gen_in_group(h5, dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+          dset_name = "curl_y"
+          call h5_create_dataset_gen_in_group(h5, dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+          dset_name = "curl_z"
+          call h5_create_dataset_gen_in_group(h5, dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+        elseif (j==5) then
+          dset_name = "velo_x"
+          call h5_create_dataset_gen_in_group(h5, dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+          dset_name = "velo_y"
+          call h5_create_dataset_gen_in_group(h5, dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+          dset_name = "velo_z"
+          call h5_create_dataset_gen_in_group(h5, dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
         endif
-      enddo
+      endif
+    enddo
 
-    call h5_close_subgroup(h5)
+    call h5_close_group(h5)
+    call h5_close_file(h5)
+  endif ! if myrank==0
+  call synchronize_all()
 
-    endif ! end if i (proc) is assigned to this io node
+  call h5_open_file_p(h5)
+  call h5_open_group(h5,group_name)
+
+  ! loop for each value type
+  do j=1, num_max_type
+    if (val_type_mov(j) .eqv. .true.) then
+      if (j==1) then
+        dset_name = "pressure"
+        call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, &
+          vd_pres%d1darr, (/io_offset/), if_collect_server)
+      elseif (j==2) then
+        dset_name = "div_glob"
+        call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, &
+          vd_divglob%d1darr, (/io_offset/), if_collect_server)
+      elseif (j==3) then
+        dset_name = "div"
+        call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, &
+          vd_div%d1darr, (/io_offset/), if_collect_server)
+      elseif (j==4) then
+        dset_name = "curl_x"
+        call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, &
+          vd_curlx%d1darr, (/io_offset/), if_collect_server)
+        dset_name = "curl_y"
+        call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, &
+          vd_curly%d1darr, (/io_offset/), if_collect_server)
+        dset_name = "curl_z"
+        call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, &
+          vd_curlz%d1darr, (/io_offset/), if_collect_server)
+      elseif (j==5) then
+        dset_name = "velo_x"
+        call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, &
+          vd_velox%d1darr, (/io_offset/), if_collect_server)
+        dset_name = "velo_y"
+        call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, &
+          vd_veloy%d1darr, (/io_offset/), if_collect_server)
+        dset_name = "velo_z"
+        call h5_write_dataset_1d_r_collect_hyperslab_in_group(h5, dset_name, &
+          vd_veloz%d1darr, (/io_offset/), if_collect_server)
+      endif
+
+    endif
   enddo
 
   call h5_close_group(h5)
@@ -720,6 +851,7 @@ subroutine shakemap_init(nfaces_perproc, surface_offset)
   call h5_close_file(h5)
 
 end subroutine shakemap_init
+
 
 subroutine recv_shake_data(status, nfaces_perproc, surface_offset)
   use io_server
@@ -1593,15 +1725,20 @@ subroutine write_xdmf_shakemap(num_nodes)
 
 end subroutine write_xdmf_shakemap
 
-
-subroutine write_xdmf_vol_header(nelm_par_proc,nglob_par_proc)
+subroutine write_xdmf_vol(val_type_mov)
   use specfem_par
   use io_server
   implicit none
-
-  integer, dimension(0:NPROC-1), intent(in) :: nelm_par_proc, nglob_par_proc
+  logical, dimension(5), intent(inout) :: val_type_mov
+  logical :: pressure_io, divglob_io, div_io, veloc_io, curl_io
   character(len=20)                         :: proc_str, it_str,nelm, nglo
-  integer                                   :: iproc, iiout, nout
+  integer                                   :: iiout, nout, i, ii
+
+  pressure_io = val_type_mov(1)
+  divglob_io  = val_type_mov(2)
+  div_io      = val_type_mov(3)
+  curl_io     = val_type_mov(4)
+  veloc_io    = val_type_mov(5)
 
   ! writeout xdmf file for volume movie
   fname_xdmf_vol = trim(OUTPUT_FILES)//"/movie_volume.xmf"
@@ -1614,190 +1751,125 @@ subroutine write_xdmf_vol_header(nelm_par_proc,nglob_par_proc)
   write(xdmf_vol,'(a)') '<?xml version="1.0" ?>'
   write(xdmf_vol,*) '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
   write(xdmf_vol,*) '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="3.0">'
-  write(xdmf_vol,*) '<Domain>'
-  write(xdmf_vol,*) '    <!-- mesh info -->'
-  write(xdmf_vol,*) '    <Grid Name="mesh" GridType="Collection"  CollectionType="Spatial">'
+  write(xdmf_vol,*) '<Domain name="mesh">'
   ! loop for writing information of mesh partitions
-  do iproc=0,NPROC-1
-    nelm=i2c(nelm_par_proc(iproc)*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1))
-    nglo=i2c(nglob_par_proc(iproc))
-    write(proc_str, "(i6.6)") iproc
+  nelm=i2c(nspec_all_server*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1))
+  nglo=i2c(nglob_all_server)
 
-    write(xdmf_vol,*) '<Grid Name="mesh_'//trim(proc_str)//'">'
-    write(xdmf_vol,*) '<Topology TopologyType="Mixed" NumberOfElements="'//trim(nelm)//'">'
-    write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Int" Precision="4" Dimensions="'&
-                           //trim(nelm)//' 9">'
-    write(xdmf_vol,*) '       ./DATABASES_MPI/external_mesh.h5:/proc_'&
-                           //trim(proc_str)//'/spec_elm_conn_xdmf'
-    write(xdmf_vol,*) '    </DataItem>'
-    write(xdmf_vol,*) '</Topology>'
-    write(xdmf_vol,*) '<Geometry GeometryType="X_Y_Z">'
-    write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                        //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-    write(xdmf_vol,*) '       ./DATABASES_MPI/external_mesh.h5:/proc_'//trim(proc_str)//'/xstore_dummy'
-    write(xdmf_vol,*) '    </DataItem>'
-    write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                        //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-    write(xdmf_vol,*) '       ./DATABASES_MPI/external_mesh.h5:/proc_'//trim(proc_str)//'/ystore_dummy'
-    write(xdmf_vol,*) '    </DataItem>'
-    write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                        //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-    write(xdmf_vol,*) '       ./DATABASES_MPI/external_mesh.h5:/proc_'//trim(proc_str)//'/zstore_dummy'
-    write(xdmf_vol,*) '    </DataItem>'
-    write(xdmf_vol,*) '</Geometry>'
+  write(xdmf_vol,*) '<Topology TopologyType="Mixed" NumberOfElements="'//trim(nelm)//'">'
+  write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Int" Precision="4" Dimensions="'&
+                         //trim(nelm)//' 9">'
+  write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume.h5:/mesh/elm_conn'
+  write(xdmf_vol,*) '    </DataItem>'
+  write(xdmf_vol,*) '</Topology>'
+  write(xdmf_vol,*) '<Geometry GeometryType="X_Y_Z">'
+  write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+  write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume.h5:/mesh/x'
+  write(xdmf_vol,*) '    </DataItem>'
+  write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+  write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume.h5:/mesh/y'
+  write(xdmf_vol,*) '    </DataItem>'
+  write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+  write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume.h5:/mesh/z'
+  write(xdmf_vol,*) '    </DataItem>'
+  write(xdmf_vol,*) '</Geometry>'
+  write(xdmf_vol,*) '<Grid Name="time_col" GridType="Collection" CollectionType="Temporal">'
+
+  do i = 1, int(NSTEP/NTSTEP_BETWEEN_FRAMES)
+
+    ii = i*NTSTEP_BETWEEN_FRAMES
+    write(it_str, "(i6.6)") ii
+
+
+    write(xdmf_vol,*) '<Grid Name="vol_mov" GridType="Uniform">'
+    write(xdmf_vol,*) '  <Time Value="'//trim(r2c(sngl((ii-1)*DT-t0)))//'" />'
+    write(xdmf_vol,*) '  <Topology Reference="/Xdmf/Domain/Topology" />'
+    write(xdmf_vol,*) '  <Geometry Reference="/Xdmf/Domain/Geometry" />'
+
+    if (pressure_io) then
+      write(xdmf_vol,*) '  <Attribute Name="pressure" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/pressure'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+    endif
+
+    if (divglob_io) then
+      write(xdmf_vol,*) '  <Attribute Name="div_glob" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/div_glob'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+    endif
+
+    if (div_io) then
+      write(xdmf_vol,*) '  <Attribute Name="div" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/div'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+    endif
+
+    if (veloc_io) then
+      write(xdmf_vol,*) '  <Attribute Name="velo_x" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/velo_x'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+      write(xdmf_vol,*) '  <Attribute Name="velo_y" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/velo_y'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+      write(xdmf_vol,*) '  <Attribute Name="velo_z" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/velo_z'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+    endif
+
+    if (curl_io) then
+      write(xdmf_vol,*) '  <Attribute Name="curl_x" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/curl_x'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+      write(xdmf_vol,*) '  <Attribute Name="curl_y" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/curl_y'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+      write(xdmf_vol,*) '  <Attribute Name="curl_z" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
+      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/curl_z'
+      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '  </Attribute>'
+    endif
+
     write(xdmf_vol,*) '</Grid>'
   enddo
 
-  ! loop for writing xml includes of timestep information
-  nout = int(NSTEP/NTSTEP_BETWEEN_FRAMES) +1
-  write(xdmf_vol,*) '</Grid>' ! close mesh info
-  write(xdmf_vol,*) '<!-- time series data -->'
-  write(xdmf_vol,*) '<Grid Name="results" GridType="Collection" CollectionType="Temporal">'
-    do iiout = 1,nout-1
-      write(it_str, "(i6.6)") iiout*NTSTEP_BETWEEN_FRAMES
-      write(xdmf_vol,*) '    <xi:include href="it_'//trim(it_str)//'.xmf" />'
-    enddo
   write(xdmf_vol,*) '</Grid>'
-
   write(xdmf_vol,*) '</Domain>'
   write(xdmf_vol,*) '</Xdmf>'
 
   close(xdmf_vol)
 
-end subroutine write_xdmf_vol_header
 
 
-subroutine write_xdmf_vol_body(it_io,nelm_par_proc, nglob_par_proc, val_type_mov)
-  use specfem_par
-  use io_server
-  implicit none
-
-  integer, intent(in)                       :: it_io
-  integer, dimension(0:NPROC-1), intent(in) :: nelm_par_proc, nglob_par_proc
-  logical, dimension(5), intent(in)         :: val_type_mov
-  character(len=20) :: it_str, proc_str, type_str, type_str1, type_str2, nglo
-  integer           :: itype,iproc,idionod
-  character(len=5)  :: ioidstr
-
-  ! writeout xdmf file for volume movie
-  write(it_str, "(i6.6)") it_io
-
-  open(unit=xdmf_vol_step, file=fname_xdmf_vol_step, position="append", action="write", recl=256)
-
-
-  do iproc=0, NPROC-1
-    write(proc_str, "(i6.6)") iproc
-
-    idionod = mod(iproc,NIONOD)
-    write(ioidstr, "(i5.5)") idionod
-
-    nglo=i2c(nglob_par_proc(iproc))
-
-    write(xdmf_vol_step, *)  '<Grid Name="data_'//trim(proc_str)//'" Type="Uniform">'
-    write(xdmf_vol_step, *)  '    <Topology Reference="/Xdmf/Domain/Grid[@Name=''mesh'']/Grid[@Name=''mesh_'&
-                                      //trim(proc_str)//''']/Topology" />'
-    write(xdmf_vol_step, *)  '    <Geometry Reference="/Xdmf/Domain/Grid[@Name=''mesh'']/Grid[@Name=''mesh_'&
-                                      //trim(proc_str)//''']/Geometry" />'
-
-    do itype=1,5
-      if (val_type_mov(itype)) then
-
-        if (itype < 4) then
-
-          ! write pressure
-          if (itype == 1) then
-             type_str = "pressure"
-          ! write div_glob
-          elseif (itype == 2) then
-             type_str = "div_glob"
-          ! write div
-          elseif (itype == 3) then
-            type_str = "div"
-          endif
-
-          write(xdmf_vol_step, *)  '    <Attribute Name="'//trim(type_str)//'" AttributeType="Scalar" Center="Node">'
-          write(xdmf_vol_step, *)  '        <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                              //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-          write(xdmf_vol_step, *)  '            ./DATABASES_MPI/movie_volume_'//ioidstr//'.h5:/it_'&
-                                                 //trim(it_str)//'/proc_'//trim(proc_str)//'/'//trim(type_str)
-          write(xdmf_vol_step, *)  '        </DataItem>'
-          write(xdmf_vol_step, *)  '    </Attribute>'
-
-        else  ! curl or velocity
-          ! write curl xyz
-          if (val_type_mov(itype) .and. itype == 4) then
-            type_str  = "curl_x"
-            type_str1 = "curl_y"
-            type_str2 = "curl_z"
-          else if (val_type_mov(itype) .and. itype == 5) then
-            ! write velocity xyz
-            type_str  = "velo_x"
-            type_str1 = "velo_y"
-            type_str2 = "velo_z"
-          endif
-          ! x
-          write(xdmf_vol_step, *)  '    <Attribute Name="'//trim(type_str)//'" AttributeType="Scalar" Center="Node">'
-          write(xdmf_vol_step, *)  '        <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                                //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-          write(xdmf_vol_step, *)  '            ./DATABASES_MPI/movie_volume_'//ioidstr//'.h5:/it_'&
-                                                //trim(it_str)//'/proc_'//trim(proc_str)//'/'//trim(type_str)
-          write(xdmf_vol_step, *)  '        </DataItem>'
-          write(xdmf_vol_step, *)  '    </Attribute>'
-          ! y
-          write(xdmf_vol_step, *)  '    <Attribute Name="'//trim(type_str1)//'" AttributeType="Scalar" Center="Node">'
-          write(xdmf_vol_step, *)  '        <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                                //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-          write(xdmf_vol_step, *)  '            ./DATABASES_MPI/movie_volume_'//ioidstr//'.h5:/it_'&
-                                                //trim(it_str)//'/proc_'//trim(proc_str)//'/'//trim(type_str1)
-          write(xdmf_vol_step, *)  '        </DataItem>'
-          write(xdmf_vol_step, *)  '    </Attribute>'
-          ! z
-          write(xdmf_vol_step, *)  '    <Attribute Name="'//trim(type_str2)//'" AttributeType="Scalar" Center="Node">'
-          write(xdmf_vol_step, *)  '        <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                                //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-          write(xdmf_vol_step, *)  '            ./DATABASES_MPI/movie_volume_'//ioidstr//'.h5:/it_'&
-                                                //trim(it_str)//'/proc_'//trim(proc_str)//'/'//trim(type_str2)
-          write(xdmf_vol_step, *)  '        </DataItem>'
-          write(xdmf_vol_step, *)  '    </Attribute>'
-
-        endif
-
-      endif ! if vol_type_mov == true
-    enddo
-    write(xdmf_vol_step, *)  '</Grid>'
-  enddo
-
-  close(xdmf_vol_step)
-
-end subroutine write_xdmf_vol_body
-
-subroutine write_xdmf_vol_body_header(it_io)
-  use specfem_par
-  use io_server
-  implicit none
-  integer, intent(in) :: it_io
-  character(len=20)   :: it_str
-
-  write(it_str, "(i6.6)") it_io
-  fname_xdmf_vol_step = trim(OUTPUT_FILES)//"it_"//trim(it_str)//".xmf"
-
-  open(unit=xdmf_vol_step, file=fname_xdmf_vol_step, recl=256)
-  write(xdmf_vol_step,*) '<Grid Name="result"  GridType="Collection"  CollectionType="Spatial">'
-  write(xdmf_vol_step,*) '<Time Value="'//trim(r2c(sngl((it_io-1)*DT-t0)))//'" />'
-
-  close(xdmf_vol_step)
-end subroutine write_xdmf_vol_body_header
-
-
-subroutine write_xdmf_vol_body_close()
-  use specfem_par
-  use io_server
-  implicit none
-
-  open(unit=xdmf_vol_step, file=fname_xdmf_vol_step, position="append", action="write", recl=256)
-  write(xdmf_vol_step, *) '</Grid>'
-  close(xdmf_vol_step)
-end subroutine write_xdmf_vol_body_close
+end subroutine write_xdmf_vol
 
 
 subroutine pass_info_to_io()
@@ -1810,7 +1882,7 @@ subroutine pass_info_to_io()
 
   implicit none
 
-  integer ::  n_msg_vol_each_proc = 0,irec,irec_local,i_ionod
+  integer ::  n_msg_vol_each_proc = 0,irec,irec_local,i_ionod,ier
   integer,dimension(nrec_local) :: tmp_irec
   integer, dimension(9,NSPEC_AB*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)) :: elm_conn_loc
 
@@ -1871,21 +1943,6 @@ subroutine pass_info_to_io()
       do i_ionod=0,NIONOD-1
         call send_i_inter((/n_msg_vol_each_proc/),1,i_ionod,io_tag_vol_nmsg)
       enddo
-
-!      ! send mesh information to reconstract io node based mesh database
-!      allocate(nglob_offset(0:NPROC-1), stat=ier)
-!      if (ier /= 0) call exit_MPI_without_rank('error allocating array nglob_offset')
-!      if (ier /= 0) stop 'error allocating arrays for nglob_offset'
-!      call gather_all_all_singlei((/NGLOB_AB/),nglob_par_proc_nio,NPROC)
-!      ! create connectivity dataset
-!      call get_conn_for_movie(NSPEC_AB, elm_conn_loc, nglob_offset(myrank))
-!      ! send elm_conn_loc
-!      call send_i_inter(elm_conn_loc,size(elm_conn_loc)),i_ionod, io_tag_vol_elmconn)
-!      ! send xstore, ystore, zstore
-!      call sendv_cr_inter(xstore, size(xstore), i_ionod, io_tag_vol_nodex)
-!      call sendv_cr_inter(ystore, size(ystore), i_ionod, io_tag_vol_nodey)
-!      call sendv_cr_inter(zstore, size(zstore), i_ionod, io_tag_vol_nodez)
-!      deallocate(nglob_offset, stat=ier)
     endif
   endif ! end if myrank == 0
 
@@ -1893,11 +1950,32 @@ subroutine pass_info_to_io()
     ! send the compute node list to io node
     call send_i_inter((/0/),1,dest_ionod,io_tag_vol_sendlist)
 
-    ! send nspec and nglob in each process
-    call send_i_inter((/NSPEC_AB/),1,0,io_tag_vol_nspec)
-    call send_i_inter((/NGLOB_AB/),1,0,io_tag_vol_nglob)
-    ! send the id of ionode which is the destination of this compute node
-    call send_i_inter((/dest_ionod/), 1, 0, io_tag_vol_ioid)
+    do i_ionod=0, NIONOD-1
+      ! send nspec and nglob in each process
+      call send_i_inter((/NSPEC_AB/),1,i_ionod,io_tag_vol_nspec)
+      call send_i_inter((/NGLOB_AB/),1,i_ionod,io_tag_vol_nglob)
+      ! send the id of ionode which is the destination of this compute node
+      call send_i_inter((/dest_ionod/), 1, i_ionod, io_tag_vol_ioid)
+    enddo
+
+    ! send mesh information to reconstract io node based mesh database on volume movie h5 file
+    ! By this way, the required storage size will be larger but for taking some advantage
+    ! to reduce the IO time.
+    allocate(nglob_offset(0:NPROC-1), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array nglob_offset')
+    if (ier /= 0) stop 'error allocating arrays for nglob_offset'
+    ! gather nglobs of each proc
+    call gather_all_all_singlei((/NGLOB_AB/),nglob_offset,NPROC)
+    ! create connectivity dataset (it's node base but element base)
+    call get_conn_for_movie(NSPEC_AB, elm_conn_loc, 0)!nglob_offset(myrank))
+    ! send elm_conn_loc
+    call send_i_inter(elm_conn_loc,size(elm_conn_loc),dest_ionod, io_tag_vol_elmconn)
+    ! send xstore, ystore, zstore
+    call sendv_cr_inter(xstore, size(xstore), dest_ionod, io_tag_vol_nodex)
+    call sendv_cr_inter(ystore, size(ystore), dest_ionod, io_tag_vol_nodey)
+    call sendv_cr_inter(zstore, size(zstore), dest_ionod, io_tag_vol_nodez)
+
+    deallocate(nglob_offset, stat=ier)
   endif
 
 end subroutine pass_info_to_io

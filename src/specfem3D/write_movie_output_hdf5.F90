@@ -714,13 +714,15 @@ subroutine wmo_movie_volume_output_h5()
       if (.not. ispec_is_acoustic(ispec)) cycle
       ! calculates velocity
       call compute_gradient_in_acoustic(ispec,potential_dot_acoustic,veloc_element)
-!      velocity_x(:,:,:,ispec) = veloc_element(1,:,:,:)
-!      velocity_y(:,:,:,ispec) = veloc_element(2,:,:,:)
-!      velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)
+      !velocity_x(:,:,:,ispec) = veloc_element(1,:,:,:)
+      !velocity_y(:,:,:,ispec) = veloc_element(2,:,:,:)
+      !velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)
+      call elm2node_base(ispec,veloc_element, velocity_x_on_node, velocity_y_on_node, velocity_z_on_node)
     enddo
 
     ! outputs pressure field for purely acoustic simulations
     if (.not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then
+      d_p(:) = 0._CUSTOM_REAL
       do ispec = 1,NSPEC_AB
         DO_LOOP_IJK
           iglob = ibool(INDEX_IJK,ispec)
@@ -733,7 +735,7 @@ subroutine wmo_movie_volume_output_h5()
         call isend_cr_inter(d_p,NGLOB_AB,dest_ionod,io_tag_vol_pres,req_dump_vol(req_count))
         req_count = req_count+1
       else
-        !#TODO add direct io
+        ! direct io
         pressure_io=.true.
         call write_vol_data_noserv(d_p,"pressure")
       endif
@@ -742,8 +744,6 @@ subroutine wmo_movie_volume_output_h5()
 
   if (ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
     ! allocate array for global points
-!    allocate(div_glob(NGLOB_AB),stat=ier)
-!    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2004')
     allocate(valence(NGLOB_AB), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2005')
     if (ier /= 0) stop 'error allocating arrays for movie div and curl'
@@ -762,7 +762,7 @@ subroutine wmo_movie_volume_output_h5()
         call isend_cr_inter(div_glob,NGLOB_AB,dest_ionod,io_tag_vol_divglob,req_dump_vol(req_count))
         req_count = req_count+1
       else
-        !#TODO add direct io
+        ! direct io
         divglob_io=.true.
         call write_vol_data_noserv(div_glob,"div_glob")
       endif
@@ -778,7 +778,6 @@ subroutine wmo_movie_volume_output_h5()
                               ispec_is_poroelastic)
     endif ! poroelastic
 
-!    deallocate(div_glob,valence)
     deallocate(valence)
 
     ! div and curl on elemental level
@@ -795,7 +794,7 @@ subroutine wmo_movie_volume_output_h5()
       call isend_cr_inter(curl_z_on_node,NGLOB_AB,dest_ionod,io_tag_vol_curlz,req_dump_vol(req_count))
       req_count = req_count+1
     else
-      !#TODO add direct io
+      ! direct io
       div_io=.true.
       curl_io=.true.
       call write_vol_data_noserv(div_on_node,"div")
@@ -803,7 +802,7 @@ subroutine wmo_movie_volume_output_h5()
       call write_vol_data_noserv(curl_y_on_node,"curl_y")
       call write_vol_data_noserv(curl_z_on_node,"curl_z")
     endif
-  endif
+  endif ! elastic or poroelastic
 
   ! velocity
   if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
@@ -815,7 +814,7 @@ subroutine wmo_movie_volume_output_h5()
       call isend_cr_inter(velocity_z_on_node,NGLOB_AB,dest_ionod,io_tag_vol_veloz,req_dump_vol(req_count))
       req_count = req_count+1
     else
-      !#TODO add direct io
+      ! direct io
       veloc_io=.true.
       call write_vol_data_noserv(velocity_x_on_node,"velo_x")
       call write_vol_data_noserv(velocity_y_on_node,"velo_y")
@@ -849,7 +848,7 @@ subroutine prepare_vol_movie_noserv()
   character(len=64) :: group_name
   character(len=64) :: dset_name
   type(h5io)        :: h5
-  logical           :: if_collect = .true.
+  logical           :: if_collect = .true. ! in io_server.f90
   integer           :: iproc, ier, nglob_all, nspec_all
 
   allocate(nglob_par_proc_nio(0:NPROC-1), stat=ier)
@@ -1188,13 +1187,40 @@ subroutine wmo_movie_div_curl_h5(veloc, &
   end subroutine wmo_movie_div_curl_h5
 
 
+  subroutine elm2node_base(ispec,elm_base, node_base_x, node_base_y, node_base_z)
+    use specfem_par
+    use specfem_par_movie
+
+    implicit none
+
+    integer, intent(in) :: ispec
+    real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: elm_base
+    real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(inout) :: node_base_x, node_base_y, node_base_z
+    integer :: i,j,k,iglob
+
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
+          iglob = ibool(i,j,k,ispec)
+
+          ! velocity field
+          node_base_x(iglob) = elm_base(1,i,j,k)
+          node_base_y(iglob) = elm_base(2,i,j,k)
+          node_base_z(iglob) = elm_base(3,i,j,k)
+        enddo
+      enddo
+    enddo
+  end subroutine elm2node_base
+
+
+
   subroutine get_conn_for_movie(nspec,elm_conn,o)
     use specfem_par
     implicit none
 
     integer, intent(in)                                                    :: nspec
     integer, dimension(9,nspec*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)), intent(out) :: elm_conn
-    integer, intent(in) :: o ! node id offset
+    integer, intent(in) :: o ! node id offset (starting global element id of each proc)
 
     integer :: ispec,ii,iglob,icub,jcub,kcub,cell_type=9, dp=2
 
