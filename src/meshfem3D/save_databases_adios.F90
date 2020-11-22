@@ -35,21 +35,24 @@
 
 !==============================================================================
 subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
-                                nspec,nglob,iproc_xi,iproc_eta, &
-                                NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta, &
-                                ibool,nodes_coords,ispec_material_id, &
+                                nspec,nglob, &
+                                iMPIcut_xi,iMPIcut_eta, &
+                                nodes_coords,ispec_material_id, &
                                 nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-                                NSPEC2D_BOTTOM,NSPEC2D_TOP, NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-                                ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-                                NMATERIALS,material_properties, &
-                                nspec_CPML,CPML_to_spec,CPML_regions,is_CPML)
+                                ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
 
   use constants, only: MAX_STRING_LEN, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
     ADIOS_TRANSPORT_METHOD, &
     NGLLX,NGLLY,NGLLZ,NDIM,myrank
 
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NUMBER_OF_MATERIAL_PROPERTIES
+  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+
+  use meshfem3D_par, only: ibool, &
+    addressing,NPROC_XI,NPROC_ETA,iproc_xi_current,iproc_eta_current, &
+    NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+    NMATERIALS,material_properties, &
+    nspec_CPML,is_CPML,CPML_to_spec,CPML_regions
 
   use adios_helpers_mod, only: define_adios_global_array1d,define_adios_scalar, &
     write_adios_global_1d_array,write_adios_global_string_1d_array, &
@@ -61,54 +64,41 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
 
   implicit none
 
+  ! name of the database files
+  character(len=MAX_STRING_LEN),intent(in) :: LOCAL_PATH
+
   ! MPI variables
-  integer :: sizeprocs
+  integer,intent(in) :: sizeprocs
 
   ! number of spectral elements in each block
-  integer :: nspec
+  integer,intent(in) :: nspec
 
   ! number of vertices in each block
-  integer :: nglob
+  integer,intent(in) :: nglob
 
   ! MPI Cartesian topology
   ! E for East (= XI_MIN), W for West (= XI_MAX),
   ! S for South (= ETA_MIN), N for North (= ETA_MAX)
   integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
-  integer :: iproc_xi,iproc_eta
-  integer :: NPROC_XI,NPROC_ETA
-  logical :: iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec)
-  integer :: addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
+
+  logical,intent(in) :: iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec)
 
   ! arrays with the mesh
-  integer :: ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
-  double precision :: nodes_coords(nglob,NDIM)
-
-  integer :: ispec_material_id(nspec)
+  double precision,intent(in) :: nodes_coords(nglob,NDIM)
+  integer,intent(in) :: ispec_material_id(nspec)
 
   ! boundary parameters locator
-  integer :: NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
-  integer :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
-  integer :: ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),ibelm_xmax(NSPEC2DMAX_XMIN_XMAX)
-  integer :: ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),ibelm_ymax(NSPEC2DMAX_YMIN_YMAX)
-  integer :: ibelm_bottom(NSPEC2D_BOTTOM)
-  integer :: ibelm_top(NSPEC2D_TOP)
+  integer,intent(in) :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
 
-  ! material properties
-  integer :: NMATERIALS
-  ! first dimension  : material_id
-  ! second dimension : #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
-  double precision , dimension(NMATERIALS,NUMBER_OF_MATERIAL_PROPERTIES) :: material_properties
+  integer,intent(in) :: ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),ibelm_xmax(NSPEC2DMAX_XMIN_XMAX)
+  integer,intent(in) :: ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),ibelm_ymax(NSPEC2DMAX_YMIN_YMAX)
+  integer,intent(in) :: ibelm_bottom(NSPEC2D_BOTTOM)
+  integer,intent(in) :: ibelm_top(NSPEC2D_TOP)
 
+  ! local parameters
   ! CPML
-  integer, intent(in) :: nspec_CPML
-  integer, dimension(nspec_CPML), intent(in) :: CPML_to_spec,CPML_regions
-  logical, dimension(nspec), intent(in) :: is_CPML
   integer :: nspec_CPML_total
-
   integer :: i,ispec,ier
-
-  ! name of the database files
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
   ! for MPI interfaces
   integer ::  nb_interfaces,nspec_interfaces_max
@@ -406,19 +396,19 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
     nb_interfaces = 4
     interfaces(W:N) = .true.
     interfaces(NW:SW) = .false.
-    if (iproc_xi == 0) then
+    if (iproc_xi_current == 0) then
        nb_interfaces =  nb_interfaces -1
        interfaces(W) = .false.
     endif
-    if (iproc_xi == NPROC_XI-1) then
+    if (iproc_xi_current == NPROC_XI-1) then
        nb_interfaces =  nb_interfaces -1
        interfaces(E) = .false.
     endif
-    if (iproc_eta == 0) then
+    if (iproc_eta_current == 0) then
        nb_interfaces =  nb_interfaces -1
        interfaces(S) = .false.
     endif
-    if (iproc_eta == NPROC_ETA-1) then
+    if (iproc_eta_current == NPROC_ETA-1) then
        nb_interfaces =  nb_interfaces -1
        interfaces(N) = .false.
     endif
@@ -470,7 +460,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
     interfaces_mesh(:,:,:) = 0
 
     if (interfaces(W)) then
-      neighbors_mesh(interface_num) = addressing(iproc_xi-1,iproc_eta)
+      neighbors_mesh(interface_num) = addressing(iproc_xi_current-1,iproc_eta_current)
       num_elmnts_mesh(interface_num) = nspec_interface(W)
       ispec_interface = 1
       do ispec = 1,nspec
@@ -488,7 +478,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
     endif
 
     if (interfaces(E)) then
-      neighbors_mesh(interface_num) = addressing(iproc_xi+1,iproc_eta)
+      neighbors_mesh(interface_num) = addressing(iproc_xi_current+1,iproc_eta_current)
       num_elmnts_mesh(interface_num) = nspec_interface(E)
       ispec_interface = 1
       do ispec = 1,nspec
@@ -506,7 +496,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
     endif
 
     if (interfaces(S)) then
-      neighbors_mesh(interface_num) = addressing(iproc_xi,iproc_eta-1)
+      neighbors_mesh(interface_num) = addressing(iproc_xi_current,iproc_eta_current-1)
       num_elmnts_mesh(interface_num) = nspec_interface(S)
       ispec_interface = 1
       do ispec = 1,nspec
@@ -524,7 +514,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
     endif
 
     if (interfaces(N)) then
-      neighbors_mesh(interface_num) = addressing(iproc_xi,iproc_eta+1)
+      neighbors_mesh(interface_num) = addressing(iproc_xi_current,iproc_eta_current+1)
       num_elmnts_mesh(interface_num) = nspec_interface(N)
       ispec_interface = 1
       do ispec = 1,nspec
@@ -542,7 +532,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
     endif
 
     if (interfaces(NW)) then
-      neighbors_mesh(interface_num) = addressing(iproc_xi-1,iproc_eta+1)
+      neighbors_mesh(interface_num) = addressing(iproc_xi_current-1,iproc_eta_current+1)
       num_elmnts_mesh(interface_num) = nspec_interface(NW)
       ispec_interface = 1
       do ispec = 1,nspec
@@ -560,7 +550,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
     endif
 
     if (interfaces(NE)) then
-      neighbors_mesh(interface_num) = addressing(iproc_xi+1,iproc_eta+1)
+      neighbors_mesh(interface_num) = addressing(iproc_xi_current+1,iproc_eta_current+1)
       num_elmnts_mesh(interface_num) = nspec_interface(NE)
       ispec_interface = 1
       do ispec = 1,nspec
@@ -578,7 +568,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
     endif
 
     if (interfaces(SE)) then
-      neighbors_mesh(interface_num) = addressing(iproc_xi+1,iproc_eta-1)
+      neighbors_mesh(interface_num) = addressing(iproc_xi_current+1,iproc_eta_current-1)
       num_elmnts_mesh(interface_num) = nspec_interface(SE)
       ispec_interface = 1
       do ispec = 1,nspec
@@ -596,7 +586,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
     endif
 
     if (interfaces(SW)) then
-      neighbors_mesh(interface_num) = addressing(iproc_xi-1,iproc_eta-1)
+      neighbors_mesh(interface_num) = addressing(iproc_xi_current-1,iproc_eta_current-1)
       num_elmnts_mesh(interface_num) = nspec_interface(SW)
       ispec_interface = 1
       do ispec = 1,nspec

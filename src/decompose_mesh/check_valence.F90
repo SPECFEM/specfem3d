@@ -73,6 +73,7 @@
   ! checks nodes
   do inode = 1, nnodes
     if (.not. mask_nodes_elmnts(inode)) then
+      print *,'Error: node ',inode,' has valence ',used_nodes_elmnts(inode),' mask ',mask_nodes_elmnts(inode)
       stop 'ERROR: found some unused nodes (weird, but not necessarily fatal; your mesher may have created extra nodes&
               & or your mesh contains HEX27 elements while NGNOD in Par_file is set to 8).'
     endif

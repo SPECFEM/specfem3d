@@ -67,17 +67,13 @@ end module create_meshfem_par
   use shared_parameters, only: NGNOD,NGNOD2D
 
   use meshfem3D_par, only: NSPEC_AB,NGLOB_AB, &
-    ibool, &
-    xstore,ystore,zstore, &
-    iproc_xi_current,iproc_eta_current,addressing,nspec, &
+    ibool,xstore,ystore,zstore,nspec, &
     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-    NPROC_XI,NPROC_ETA, &
     NMATERIALS,material_properties, &
-    sizeprocs, prname, &
-    LOCAL_PATH, &
+    sizeprocs,prname,LOCAL_PATH, &
     CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
     ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
-    nspec_CPML,is_CPML,CPML_to_spec,CPML_regions
+    is_CPML,CPML_to_spec,CPML_regions
 
   use create_meshfem_par
 
@@ -166,25 +162,18 @@ end module create_meshfem_par
   ! saves mesh as databases file
   if (ADIOS_FOR_DATABASES) then
     call save_databases_adios(LOCAL_PATH,sizeprocs, &
-                              nspec,nglob,iproc_xi_current,iproc_eta_current, &
-                              NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta, &
-                              ibool,nodes_coords,ispec_material_id, &
+                              nspec,nglob, &
+                              iMPIcut_xi,iMPIcut_eta, &
+                              nodes_coords,ispec_material_id, &
                               nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-                              NSPEC2D_BOTTOM,NSPEC2D_TOP, NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-                              ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-                              NMATERIALS,material_properties, &
-                              nspec_CPML,CPML_to_spec,CPML_regions,is_CPML)
+                              ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
   else
     ! saves mesh as databases file  !! VM VM added xstore, ystore, zstore used for Axisem Coupling
-    call save_databases(prname,nspec,nglob,iproc_xi_current,iproc_eta_current, &
-                        NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta, &
-                        ibool,nodes_coords,ispec_material_id, &
-                        nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                        NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-                        ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-                        NMATERIALS,material_properties, &
-                        nspec_cpml,CPML_to_spec,CPML_regions,is_CPML, &
-                        xstore, ystore, zstore)
+    call save_databases(nspec,nglob, &
+                        iMPIcut_xi,iMPIcut_eta, &
+                        nodes_coords,ispec_material_id, &
+                        nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                        ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
   endif
 
   !--- Clean ADIOS. Make sure everything is already written
