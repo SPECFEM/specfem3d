@@ -49,6 +49,9 @@
   ! mpi variables
   integer :: info, comm
 
+  ! if collective read
+  logical :: if_col = .true.
+
   ! offset arrays
   integer, dimension(0:NPROC-1) :: offset_nglob
   integer, dimension(0:NPROC-1) :: offset_nspec
@@ -106,116 +109,90 @@
     call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
     call h5_open_file_p_collect(h5)
 
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nglob",offset_nglob, (/0/), .true.)
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec",offset_nspec, (/0/), .true.)
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec_irregular",offset_nspec_irregular, (/0/), .true.)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nglob",offset_nglob, (/0/), if_col)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec",offset_nspec, (/0/), if_col)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec_irregular",offset_nspec_irregular, (/0/), if_col)
     if(APPROXIMATE_OCEAN_LOAD) &
-      call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nglob_ocean",offset_nglob_ocean, (/0/), .true.)
+      call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nglob_ocean",offset_nglob_ocean, (/0/), if_col)
     if(POROELASTIC_SIMULATION) &
-      call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspecporo",offset_nspecporo, (/0/), .true.)
+      call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspecporo",offset_nspecporo, (/0/), if_col)
     if(PML_CONDITIONS)         &
-      call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspeccpml",offset_nspeccpml, (/0/), .true.)
+      call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspeccpml",offset_nspeccpml, (/0/), if_col)
     if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
       call h5_read_dataset_1d_i_collect_hyperslab(h5,&
-              "offset_nglob_interface_PML_acoustic",offset_nglob_interface_PML_acoustic, (/0/), .true.)
+              "offset_nglob_interface_PML_acoustic",offset_nglob_interface_PML_acoustic, (/0/), if_col)
       call h5_read_dataset_1d_i_collect_hyperslab(h5,&
-              "offset_nglob_interface_PML_elastic",offset_nglob_interface_PML_elastic, (/0/), .true.)
+              "offset_nglob_interface_PML_elastic",offset_nglob_interface_PML_elastic, (/0/), if_col)
     endif
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec2D_xmin",offset_nspec2D_xmin, (/0/), .true.)
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec2D_xmax",offset_nspec2D_xmax, (/0/), .true.)
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec2D_ymin",offset_nspec2D_ymin, (/0/), .true.)
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec2D_ymax",offset_nspec2D_ymax, (/0/), .true.)
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec2D_bottom_ext",offset_nspec2D_bottom_ext, (/0/), .true.)
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec2D_top_ext",offset_nspec2D_top_ext, (/0/), .true.)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec2D_xmin",offset_nspec2D_xmin, (/0/), if_col)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec2D_xmax",offset_nspec2D_xmax, (/0/), if_col)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec2D_ymin",offset_nspec2D_ymin, (/0/), if_col)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec2D_ymax",offset_nspec2D_ymax, (/0/), if_col)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec2D_bottom_ext",offset_nspec2D_bottom_ext, (/0/), if_col)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec2D_top_ext",offset_nspec2D_top_ext, (/0/), if_col)
     if (ELASTIC_SIMULATION .and. ANISOTROPY) call h5_read_dataset_1d_i_collect_hyperslab(h5,&
-                                                    "offset_nspec_aniso",offset_nspec_aniso, (/0/), .true.)
+                                                    "offset_nspec_aniso",offset_nspec_aniso, (/0/), if_col)
     if (USE_MESH_COLORING_GPU) then
       if (ACOUSTIC_SIMULATION) call h5_read_dataset_1d_i_collect_hyperslab(h5,&
-                                      "offset_num_colors_acoustic",offset_num_colors_acoustic, (/0/), .true.)
+                                      "offset_num_colors_acoustic",offset_num_colors_acoustic, (/0/), if_col)
       if (ELASTIC_SIMULATION)  call h5_read_dataset_1d_i_collect_hyperslab(h5,&
-                                      "offset_num_colors_elastic",offset_num_colors_elastic, (/0/), .true.)
+                                      "offset_num_colors_elastic",offset_num_colors_elastic, (/0/), if_col)
     endif
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec_ab",offset_nspec_ab, (/0/), .true.)
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nglob_ab",offset_nglob_ab, (/0/), .true.)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec_ab",offset_nspec_ab, (/0/), if_col)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nglob_ab",offset_nglob_ab, (/0/), if_col)
 
 
 ! info about external mesh simulation
     dsetname = "nspec"
-    !call h5_read_dataset_p_scalar_i(h5, dsetname, NSPEC_AB)
-    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, NSPEC_AB, (/myrank/),.true.)
+    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, NSPEC_AB, (/myrank/),if_col)
     dsetname = "nglob"
-    !call h5_read_dataset_p_scalar_i(h5, dsetname, NGLOB_AB)
-    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, NGLOB_AB, (/myrank/),.true.)
+    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, NGLOB_AB, (/myrank/),if_col)
     dsetname = "nspec_irregular"
-    !call h5_read_dataset_p_scalar_i(h5, dsetname, NSPEC_IRREGULAR)
-    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, NSPEC_IRREGULAR, (/myrank/),.true.)
+    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, NSPEC_IRREGULAR, (/myrank/),if_col)
     dsetname = "ibool"
-    !call h5_read_dataset_p_4d_i(h5, dsetname, ibool)
-    call h5_read_dataset_4d_i_collect_hyperslab(h5, dsetname, ibool, (/0,0,0,sum(offset_nglob(0:myrank-1))/), .true.)
+    call h5_read_dataset_4d_i_collect_hyperslab(h5, dsetname, ibool, (/0,0,0,sum(offset_nglob(0:myrank-1))/), if_col)
     dsetname = "xstore_dummy"
-    !call h5_read_dataset_p_1d_r(h5, dsetname, xstore)
-    call h5_read_dataset_1d_r_collect_hyperslab(h5,dsetname,xstore,(/sum(offset_nglob(0:myrank-1))/),.true.)
+    call h5_read_dataset_1d_r_collect_hyperslab(h5,dsetname,xstore,(/sum(offset_nglob(0:myrank-1))/),if_col)
     dsetname = "ystore_dummy"
-    !call h5_read_dataset_p_1d_r(h5, dsetname, ystore)
-    call h5_read_dataset_1d_r_collect_hyperslab(h5,dsetname,ystore,(/sum(offset_nglob(0:myrank-1))/),.true.)
+    call h5_read_dataset_1d_r_collect_hyperslab(h5,dsetname,ystore,(/sum(offset_nglob(0:myrank-1))/),if_col)
     dsetname = "zstore_dummy"
-    !call h5_read_dataset_p_1d_r(h5, dsetname, zstore)
-    call h5_read_dataset_1d_r_collect_hyperslab(h5,dsetname,zstore,(/sum(offset_nglob(0:myrank-1))/),.true.)
+    call h5_read_dataset_1d_r_collect_hyperslab(h5,dsetname,zstore,(/sum(offset_nglob(0:myrank-1))/),if_col)
     dsetname = "irregular_element_number"
-    !call h5_read_dataset_p_1d_i(h5, dsetname, irregular_element_number)
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,dsetname,irregular_element_number,(/sum(offset_nspec(0:myrank-1))/),.true.)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,dsetname,irregular_element_number,(/sum(offset_nspec(0:myrank-1))/),if_col)
     dsetname = "xix_regular"
-    !call h5_read_dataset_p_scalar_r(h5, dsetname, xix_regular)
-    call h5_read_dataset_scalar_r_collect_hyperslab(h5,dsetname,xix_regular,(/myrank/),.true.)
+    call h5_read_dataset_scalar_r_collect_hyperslab(h5,dsetname,xix_regular,(/myrank/),if_col)
     dsetname = "jacobian_regular"
-    !call h5_read_dataset_p_scalar_r(h5, dsetname, jacobian_regular)
-    call h5_read_dataset_scalar_r_collect_hyperslab(h5,dsetname,jacobian_regular,(/myrank/),.true.)
+    call h5_read_dataset_scalar_r_collect_hyperslab(h5,dsetname,jacobian_regular,(/myrank/),if_col)
     dsetname = "xixstore"
-    !call h5_read_dataset_p_4d_r(h5, dsetname, xix)
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,xix,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),.true.)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,xix,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "xiystore"
-    !call h5_read_dataset_p_4d_r(h5, dsetname, xiy)
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,xiy,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),.true.)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,xiy,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "xizstore"
-    !call h5_read_dataset_p_4d_r(h5, dsetname, xiz)
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,xiz,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),.true.)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,xiz,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "etaxstore"
-    !call h5_read_dataset_p_4d_r(h5, dsetname, etax)
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,etax,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),.true.)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,etax,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "etaystore"
-    !call h5_read_dataset_p_4d_r(h5, dsetname, etay)
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,etay,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),.true.)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,etay,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "etazstore"
-    !call h5_read_dataset_p_4d_r(h5, dsetname, etaz)
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,etaz,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),.true.)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,etaz,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "gammaxstore"
-    !call h5_read_dataset_p_4d_r(h5, dsetname, gammax)
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,gammax,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),.true.)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,gammax,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "gammaystore"
-    !call h5_read_dataset_p_4d_r(h5, dsetname, gammay)
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,gammay,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),.true.)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,gammay,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "gammazstore"
-    !call h5_read_dataset_p_4d_r(h5, dsetname, gammaz)
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,gammaz,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),.true.)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,gammaz,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "jacobianstore"
-    !call h5_read_dataset_p_4d_r(h5, dsetname, jacobian)
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,jacobian,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),.true.)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,jacobian,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "ispec_is_acoustic"
-    !call h5_read_dataset_p_1d_l(h5, dsetname, ispec_is_acoustic)
-    call h5_read_dataset_1d_l_collect_hyperslab(h5, dsetname, ispec_is_acoustic, (/sum(offset_nspec(0:myrank-1))/),.true.)
+    call h5_read_dataset_1d_l_collect_hyperslab(h5, dsetname, ispec_is_acoustic, (/sum(offset_nspec(0:myrank-1))/),if_col)
     dsetname = "ispec_is_elastic"
-    !call h5_read_dataset_p_1d_l(h5, dsetname, ispec_is_elastic)
-    call h5_read_dataset_1d_l_collect_hyperslab(h5, dsetname, ispec_is_elastic, (/sum(offset_nspec(0:myrank-1))/),.true.)
+    call h5_read_dataset_1d_l_collect_hyperslab(h5, dsetname, ispec_is_elastic, (/sum(offset_nspec(0:myrank-1))/),if_col)
     dsetname = "ispec_is_poroelastic"
-    !call h5_read_dataset_p_1d_l(h5, dsetname, ispec_is_poroelastic)
-    call h5_read_dataset_1d_l_collect_hyperslab(h5, dsetname, ispec_is_poroelastic, (/sum(offset_nspec(0:myrank-1))/),.true.)
+    call h5_read_dataset_1d_l_collect_hyperslab(h5, dsetname, ispec_is_poroelastic, (/sum(offset_nspec(0:myrank-1))/),if_col)
     dsetname = "kappastore"
-    !call h5_read_dataset_p_4d_r(h5, dsetname, kappastore)
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,kappastore,(/0,0,0,sum(offset_nspec(0:myrank-1))/),.true.)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,kappastore,(/0,0,0,sum(offset_nspec(0:myrank-1))/),if_col)
     dsetname = "mustore"
-    !call h5_read_dataset_p_4d_r(h5, dsetname, mustore)
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,mustore,(/0,0,0,sum(offset_nspec(0:myrank-1))/),.true.)
-
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,mustore,(/0,0,0,sum(offset_nspec(0:myrank-1))/),if_col)
   endif
 
   call bcast_all_i_for_database(NSPEC_AB, 1)
@@ -254,7 +231,7 @@
   ! acoustic
   ! number of acoustic elements in this partition
   nspec_acoustic = count(ispec_is_acoustic(:))
-  ! all processes will have acoustic_simulation set if any flag is .true.
+  ! all processes will have acoustic_simulation set if any flag is if_col
   call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
   if (ACOUSTIC_SIMULATION) then
     ! potentials
@@ -279,8 +256,7 @@
     if (ier /= 0) stop 'Error allocating array rmass_acoustic'
     if (I_should_read_the_database) then
       dsetname = "rmass_acoustic"
-      !call h5_read_dataset_p_1d_r(h5, dsetname, rmass_acoustic)
-      call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmass_acoustic,(/sum(offset_nglob(0:myrank-1))/),.true.)
+      call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmass_acoustic,(/sum(offset_nglob(0:myrank-1))/),if_col)
     endif
     if (size(rmass_acoustic) > 0) call bcast_all_cr_for_database(rmass_acoustic(1), size(rmass_acoustic))
 
@@ -299,7 +275,7 @@
   if (I_should_read_the_database) then
     dsetname = "rhostore"
     !call h5_read_dataset_p_4d_r(h5, dsetname, rhostore)
-    call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, rhostore, (/0,0,0,sum(offset_nspec(0:myrank-1))/),.true.)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, rhostore, (/0,0,0,sum(offset_nspec(0:myrank-1))/),if_col)
   endif
   call bcast_all_cr_for_database(rhostore(1,1,1,1), size(rhostore))
 
@@ -445,8 +421,7 @@
     ! reads mass matrices
     if (I_should_read_the_database) then
       dsetname = "rmass"
-      !call h5_read_dataset_p_1d_r(h5, dsetname, rmass)
-      call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmass, (/sum(offset_nglob(0:myrank-1))/), .true.)
+      call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmass, (/sum(offset_nglob(0:myrank-1))/), if_col)
     endif
     call bcast_all_cr_for_database(rmass(1), size(rmass))
     if (ier /= 0) stop 'Error reading in array rmass'
@@ -458,8 +433,7 @@
       if (ier /= 0) stop 'Error allocating array rmass_ocean_load'
       if (I_should_read_the_database) then
         dsetname = "rmass_ocean_load"
-        !call h5_read_dataset_p_1d_r(h5, dsetname, rmass_ocean_load)
-        call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmass_ocean_load, (/sum(offset_nglob_ocean(0:myrank-1))/),.true.)
+        call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmass_ocean_load, (/sum(offset_nglob_ocean(0:myrank-1))/),if_col)
       endif
       if (size(rmass_ocean_load) > 0) call bcast_all_cr_for_database(rmass_ocean_load(1), size(rmass_ocean_load))
     else
@@ -472,15 +446,13 @@
     !pll material parameters for stacey conditions
     if (I_should_read_the_database) then
       dsetname = "rho_vp"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, rho_vp)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, rho_vp, (/0,0,0,sum(offset_nspec(0:myrank-1))/),.true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, rho_vp, (/0,0,0,sum(offset_nspec(0:myrank-1))/),if_col)
     endif
     if (size(rho_vp) > 0) call bcast_all_cr_for_database(rho_vp(1,1,1,1), size(rho_vp))
     if (ier /= 0) stop 'Error reading in array rho_vp'
     if (I_should_read_the_database) then
       dsetname = "rho_vs"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, rho_vs)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, rho_vs, (/0,0,0,sum(offset_nspec(0:myrank-1))/),.true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, rho_vs, (/0,0,0,sum(offset_nspec(0:myrank-1))/),if_col)
     endif
     if (size(rho_vs) > 0) call bcast_all_cr_for_database(rho_vs(1,1,1,1), size(rho_vs))
     if (ier /= 0) stop 'Error reading in array rho_vs'
@@ -575,39 +547,28 @@
 
     if (I_should_read_the_database) then
       dsetname = "rmass_solid_poroelastic"
-      !call h5_read_dataset_p_1d_r(h5, dsetname, rmass_solid_poroelastic)
-      call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmass_solid_poroelastic, (/sum(offset_nglob(0:myrank-1))/),.true.)
+      call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmass_solid_poroelastic, (/sum(offset_nglob(0:myrank-1))/),if_col)
       dsetname = "rmass_fluid_poroelastic"
-      !call h5_read_dataset_p_1d_r(h5, dsetname, rmass_fluid_poroelastic)
-      call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmass_fluid_poroelastic, (/sum(offset_nglob(0:myrank-1))/),.true.)
+      call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmass_fluid_poroelastic, (/sum(offset_nglob(0:myrank-1))/),if_col)
       dsetname = "rhoarraystore"
-      !call h5_read_dataset_p_5d_r(h5, dsetname, rhoarraystore)
-      call h5_read_dataset_5d_r_collect_hyperslab(h5, dsetname, rhoarraystore, (/0,0,0,0,sum(offset_nspecporo(0:myrank-1))/),.true.)
+      call h5_read_dataset_5d_r_collect_hyperslab(h5, dsetname, rhoarraystore, (/0,0,0,0,sum(offset_nspecporo(0:myrank-1))/),if_col)
       dsetname = "kappaarraystore"
-      !call h5_read_dataset_p_5d_r(h5, dsetname, kappaarraystore)
       call h5_read_dataset_5d_r_collect_hyperslab(h5, dsetname, kappaarraystore,&
-                (/0,0,0,0,sum(offset_nspecporo(0:myrank-1))/),.true.)
+                (/0,0,0,0,sum(offset_nspecporo(0:myrank-1))/),if_col)
       dsetname = "etastore"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, etastore)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, etastore, (/0,0,0,sum(offset_nspecporo(0:myrank-1))/),.true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, etastore, (/0,0,0,sum(offset_nspecporo(0:myrank-1))/),if_col)
       dsetname = "tortstore"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, tortstore)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, tortstore, (/0,0,0,sum(offset_nspecporo(0:myrank-1))/),.true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, tortstore, (/0,0,0,sum(offset_nspecporo(0:myrank-1))/),if_col)
       dsetname = "permstore"
-      !call h5_read_dataset_p_5d_r(h5, dsetname, permstore)
-      call h5_read_dataset_5d_r_collect_hyperslab(h5, dsetname, permstore, (/0,0,0,0,sum(offset_nspecporo(0:myrank-1))/),.true.)
+      call h5_read_dataset_5d_r_collect_hyperslab(h5, dsetname, permstore, (/0,0,0,0,sum(offset_nspecporo(0:myrank-1))/),if_col)
       dsetname = "phistore"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, phistore)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, phistore, (/0,0,0,sum(offset_nspecporo(0:myrank-1))/),.true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, phistore, (/0,0,0,sum(offset_nspecporo(0:myrank-1))/),if_col)
       dsetname = "rho_vpI"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, rho_vpI)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, rho_vpI, (/0,0,0,sum(offset_nspecporo(0:myrank-1))/),.true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, rho_vpI, (/0,0,0,sum(offset_nspecporo(0:myrank-1))/),if_col)
       dsetname = "rho_vpII"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, rho_vpII)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, rho_vpII, (/0,0,0,sum(offset_nspecporo(0:myrank-1))/),.true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, rho_vpII, (/0,0,0,sum(offset_nspecporo(0:myrank-1))/),if_col)
       dsetname = "rho_vsI"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, rho_vsI)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, rho_vsI, (/0,0,0,sum(offset_nspecporo(0:myrank-1))/),.true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, rho_vsI, (/0,0,0,sum(offset_nspecporo(0:myrank-1))/),if_col)
     endif
     if (size(rmass_solid_poroelastic) > 0) &
       call bcast_all_cr_for_database(rmass_solid_poroelastic(1), size(rmass_solid_poroelastic))
@@ -654,20 +615,15 @@
   if (PML_CONDITIONS) then
     if (I_should_read_the_database) then
       dsetname = "nspec_cpml"
-      !call h5_read_dataset_p_scalar_i(h5, dsetname, NSPEC_CPML)
-      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, NSPEC_CPML, (/myrank/),.true.)
+      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, NSPEC_CPML, (/myrank/),if_col)
       dsetname = "CPML_width_x"
-      !call h5_read_dataset_p_scalar_r(h5, dsetname, CPML_width_x)
-      call h5_read_dataset_scalar_r_collect_hyperslab(h5, dsetname, CPML_width_x, (/myrank/),.true.)
+      call h5_read_dataset_scalar_r_collect_hyperslab(h5, dsetname, CPML_width_x, (/myrank/),if_col)
       dsetname = "CPML_width_y"
-      !call h5_read_dataset_p_scalar_r(h5, dsetname, CPML_width_y)
-      call h5_read_dataset_scalar_r_collect_hyperslab(h5, dsetname, CPML_width_y, (/myrank/),.true.)
+      call h5_read_dataset_scalar_r_collect_hyperslab(h5, dsetname, CPML_width_y, (/myrank/),if_col)
       dsetname = "CPML_width_z"
-      !call h5_read_dataset_p_scalar_r(h5, dsetname, CPML_width_z)
-      call h5_read_dataset_scalar_r_collect_hyperslab(h5, dsetname, CPML_width_z, (/myrank/),.true.)
+      call h5_read_dataset_scalar_r_collect_hyperslab(h5, dsetname, CPML_width_z, (/myrank/),if_col)
       dsetname = "min_distance_between_CPML_parameter"
-      !call h5_read_dataset_p_scalar_r(h5, dsetname, min_distance_between_CPML_parameter)
-      call h5_read_dataset_scalar_r_collect_hyperslab(h5, dsetname, min_distance_between_CPML_parameter, (/myrank/),.true.)
+      call h5_read_dataset_scalar_r_collect_hyperslab(h5, dsetname, min_distance_between_CPML_parameter, (/myrank/),if_col)
     endif
     call bcast_all_i_for_database(NSPEC_CPML, 1)
     call bcast_all_cr_for_database(CPML_width_x, 1)
@@ -675,7 +631,7 @@
     call bcast_all_cr_for_database(CPML_width_z, 1)
     call bcast_all_cr_for_database(min_distance_between_CPML_parameter, 1)
 
-    if (NSPEC_CPML > 0) then
+    if (sum(offset_nspeccpml) > 0) then
       allocate(CPML_regions(NSPEC_CPML),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1505')
       if (ier /= 0) stop 'Error allocating array CPML_regions'
@@ -713,42 +669,31 @@
 
       if (I_should_read_the_database) then
         dsetname = "CPML_regions"
-        !call h5_read_dataset_p_1d_i(h5, dsetname, CPML_regions)
-        call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, CPML_regions, (/sum(offset_nspeccpml(0:myrank-1))/),.true.)
+        call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, CPML_regions, (/sum(offset_nspeccpml(0:myrank-1))/),if_col)
         dsetname = "CPML_to_spec"
-        !call h5_read_dataset_p_1d_i(h5, dsetname, CPML_to_spec)
-        call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, CPML_to_spec, (/sum(offset_nspeccpml(0:myrank-1))/),.true.)
+        call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, CPML_to_spec, (/sum(offset_nspeccpml(0:myrank-1))/),if_col)
         dsetname = "is_CPML"
-        !call h5_read_dataset_p_1d_l(h5, dsetname, is_CPML)
-        call h5_read_dataset_1d_l_collect_hyperslab(h5, dsetname, is_CPML, (/sum(offset_nspec_ab(0:myrank-1))/),.true.)
+        call h5_read_dataset_1d_l_collect_hyperslab(h5, dsetname, is_CPML, (/sum(offset_nspec_ab(0:myrank-1))/),if_col)
         dsetname = "d_store_x"
-        !call h5_read_dataset_p_4d_r(h5, dsetname, d_store_x)
-        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, d_store_x, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),.true.)
+        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, d_store_x, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),if_col)
         dsetname = "d_store_y"
-        !call h5_read_dataset_p_4d_r(h5, dsetname, d_store_y)
-        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, d_store_y, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),.true.)
+        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, d_store_y, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),if_col)
         dsetname = "d_store_z"
-        !call h5_read_dataset_p_4d_r(h5, dsetname, d_store_z)
-        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, d_store_z, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),.true.)
+        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, d_store_z, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),if_col)
         dsetname = "k_store_x"
-        !call h5_read_dataset_p_4d_r(h5, dsetname, k_store_x)
-        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, k_store_x, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),.true.)
+        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, k_store_x, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),if_col)
         dsetname = "k_store_y"
-        !call h5_read_dataset_p_4d_r(h5, dsetname, k_store_y)
-        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, k_store_y, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),.true.)
+        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, k_store_y, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),if_col)
         dsetname = "k_store_z"
-        !call h5_read_dataset_p_4d_r(h5, dsetname, k_store_z)
-        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, k_store_z, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),.true.)
+        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, k_store_z, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),if_col)
         dsetname = "alpha_store_x"
-        !call h5_read_dataset_p_4d_r(h5, dsetname, alpha_store_x)
-        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, alpha_store_x, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),.true.)
+        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, alpha_store_x, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),if_col)
         dsetname = "alpha_store_y"
-        !call h5_read_dataset_p_4d_r(h5, dsetname, alpha_store_y)
-        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, alpha_store_y, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),.true.)
+        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, alpha_store_y, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),if_col)
         dsetname = "alpha_store_z"
-        !call h5_read_dataset_p_4d_r(h5, dsetname, alpha_store_z)
-        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, alpha_store_z, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),.true.)
+        call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, alpha_store_z, (/0,0,0,sum(offset_nspeccpml(0:myrank-1))/),if_col)
       endif
+
       if (size(CPML_regions) > 0) call bcast_all_i_for_database(CPML_regions(1), size(CPML_regions))
       if (size(CPML_to_spec) > 0) call bcast_all_i_for_database(CPML_to_spec(1), size(CPML_to_spec))
       if (size(is_CPML) > 0) call bcast_all_l_for_database(is_CPML(1), size(is_CPML))
@@ -765,39 +710,34 @@
       if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
         if (I_should_read_the_database) then
           dsetname = "nglob_interface_PML_acoustic"
-          !call h5_read_dataset_p_scalar_i(h5, dsetname, nglob_interface_PML_acoustic)
-          call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nglob_interface_PML_acoustic, (/myrank/),.true.)
+          call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nglob_interface_PML_acoustic, (/myrank/),if_col)
         endif
         call bcast_all_i_for_database(nglob_interface_PML_acoustic, 1)
         if (I_should_read_the_database) then
           dsetname = "nglob_interface_PML_elastic"
-          !call h5_read_dataset_p_scalar_i(h5, dsetname, nglob_interface_PML_elastic)
-          call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nglob_interface_PML_elastic, (/myrank/),.true.)
+          call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nglob_interface_PML_elastic, (/myrank/),if_col)
         endif
         call bcast_all_i_for_database(nglob_interface_PML_elastic, 1)
-        if (nglob_interface_PML_acoustic > 0) then
+        if (sum(offset_nglob_interface_PML_acoustic) > 0) then
           allocate(points_interface_PML_acoustic(nglob_interface_PML_acoustic),stat=ier)
           if (ier /= 0) call exit_MPI_without_rank('error allocating array 1516')
           if (ier /= 0) stop 'Error allocating array points_interface_PML_acoustic'
           if (I_should_read_the_database) then
             dsetname = "points_interface_PML_acoustic"
-            !call h5_read_dataset_p_1d_i(h5, dsetname, points_interface_PML_acoustic)
             call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, &
-                points_interface_PML_acoustic, (/sum(offset_nglob_interface_PML_acoustic(0:myrank-1))/),.true.)
+                points_interface_PML_acoustic, (/sum(offset_nglob_interface_PML_acoustic(0:myrank-1))/),if_col)
           endif
           if (size(points_interface_PML_acoustic) > 0) &
             call bcast_all_i_for_database(points_interface_PML_acoustic(1), size(points_interface_PML_acoustic))
         endif
-        if (nglob_interface_PML_elastic > 0) then
+        if (sum(offset_nglob_interface_PML_elastic) > 0) then
           allocate(points_interface_PML_elastic(nglob_interface_PML_elastic),stat=ier)
           if (ier /= 0) call exit_MPI_without_rank('error allocating array 1517')
           if (ier /= 0) stop 'Error allocating array points_interface_PML_elastic'
           if (I_should_read_the_database) then
             dsetname = "points_interface_PML_elastic"
-            !call h5_read_dataset_p_1d_i(h5, dsetname, points_interface_PML_elastic)
             call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, &
-                points_interface_PML_acoustic, (/sum(offset_nglob_interface_PML_elastic(0:myrank-1))/),.true.)
-
+                points_interface_PML_acoustic, (/sum(offset_nglob_interface_PML_elastic(0:myrank-1))/),if_col)
           endif
           if (size(points_interface_PML_elastic) > 0) &
             call bcast_all_i_for_database(points_interface_PML_elastic(1), size(points_interface_PML_elastic))
@@ -809,8 +749,7 @@
   ! absorbing boundary surface
   if (I_should_read_the_database) then
     dsetname = "num_abs_boundary_faces"
-    !call h5_read_dataset_p_scalar_i(h5, dsetname, num_abs_boundary_faces)
-    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, num_abs_boundary_faces, (/myrank/),.true.)
+    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, num_abs_boundary_faces, (/myrank/),if_col)
   endif
   call bcast_all_i_for_database(num_abs_boundary_faces, 1)
 
@@ -829,27 +768,24 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1521')
   if (ier /= 0) stop 'Error allocating array abs_boundary_ispec etc.'
 
-  if (num_abs_boundary_faces > 0) then
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_abs_boundary_faces",offset_num_abs_boundary_faces, (/0/), .true.)
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nglob_xy",offset_nglob_xy, (/0/), .true.)
+
+  call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_abs_boundary_faces",offset_num_abs_boundary_faces, (/0/), if_col)
+  if (sum(offset_num_abs_boundary_faces) > 0) then
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nglob_xy",offset_nglob_xy, (/0/), if_col)
 
     if (I_should_read_the_database) then
       dsetname = "abs_boundary_ispec"
-      !call h5_read_dataset_p_1d_i(h5, dsetname, abs_boundary_ispec)
       call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, abs_boundary_ispec, &
-              (/sum(offset_num_abs_boundary_faces(0:myrank-1))/),.true.)
+              (/sum(offset_num_abs_boundary_faces(0:myrank-1))/),if_col)
       dsetname = "abs_boundary_ijk"
-      !call h5_read_dataset_p_3d_i(h5, dsetname, abs_boundary_ijk)
       call h5_read_dataset_3d_i_collect_hyperslab(h5, dsetname, abs_boundary_ijk, &
-              (/0,0,sum(offset_num_abs_boundary_faces(0:myrank-1))/), .true.)
+              (/0,0,sum(offset_num_abs_boundary_faces(0:myrank-1))/), if_col)
       dsetname = "abs_boundary_jacobian2Dw"
-      !call h5_read_dataset_p_2d_r(h5, dsetname, abs_boundary_jacobian2Dw)
       call h5_read_dataset_2d_r_collect_hyperslab(h5, dsetname, abs_boundary_jacobian2Dw, &
-              (/0,sum(offset_num_abs_boundary_faces(0:myrank-1))/), .true.)
+              (/0,sum(offset_num_abs_boundary_faces(0:myrank-1))/), if_col)
       dsetname = "abs_boundary_normal"
-      !call h5_read_dataset_p_3d_r(h5, dsetname, abs_boundary_normal)
       call h5_read_dataset_3d_r_collect_hyperslab(h5, dsetname, abs_boundary_normal, &
-              (/0,0,sum(offset_num_abs_boundary_faces(0:myrank-1))/), .true.)
+              (/0,0,sum(offset_num_abs_boundary_faces(0:myrank-1))/), if_col)
     endif
     if (size(abs_boundary_ispec) > 0) &
       call bcast_all_i_for_database(abs_boundary_ispec(1), size(abs_boundary_ispec))
@@ -865,14 +801,11 @@
       if (ELASTIC_SIMULATION) then
         if (I_should_read_the_database) then
           dsetname = "rmassx"
-          !call h5_read_dataset_p_1d_r(h5, dsetname, rmassx)
-          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassx, (/sum(offset_nglob_xy(0:myrank-1))/),.true.)
+          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassx, (/sum(offset_nglob_xy(0:myrank-1))/),if_col)
           dsetname = "rmassy"
-          !call h5_read_dataset_p_1d_r(h5, dsetname, rmassy)
-          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassy, (/sum(offset_nglob_xy(0:myrank-1))/),.true.)
+          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassy, (/sum(offset_nglob_xy(0:myrank-1))/),if_col)
           dsetname = "rmassz"
-          !call h5_read_dataset_p_1d_r(h5, dsetname, rmassz)
-          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassz, (/sum(offset_nglob_xy(0:myrank-1))/),.true.)
+          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassz, (/sum(offset_nglob_xy(0:myrank-1))/),if_col)
         endif
         if (size(rmassx) > 0) call bcast_all_cr_for_database(rmassx(1), size(rmassx))
         if (size(rmassy) > 0) call bcast_all_cr_for_database(rmassy(1), size(rmassy))
@@ -881,8 +814,7 @@
       if (ACOUSTIC_SIMULATION) then
         if (I_should_read_the_database) then
           dsetname = "rmassz_acoustic"
-          !call h5_read_dataset_p_1d_r(h5, dsetname, rmassz_acoustic)
-          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassz_acoustic, (/sum(offset_nglob_xy(0:myrank-1))/),.true.)
+          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassz_acoustic, (/sum(offset_nglob_xy(0:myrank-1))/),if_col)
         endif
         if (size(rmassz_acoustic) > 0) call bcast_all_cr_for_database(rmassz_acoustic(1), size(rmassz_acoustic))
       endif
@@ -891,23 +823,17 @@
 
   if (I_should_read_the_database) then
     dsetname = "nspec2D_xmin"
-    !call h5_read_dataset_p_scalar_i(h5, dsetname, nspec2D_xmin)
-    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec2D_xmin, (/myrank/),.true.)
+    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec2D_xmin, (/myrank/),if_col)
     dsetname = "nspec2D_xmax"
-    !call h5_read_dataset_p_scalar_i(h5, dsetname, nspec2D_xmax)
-    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec2D_xmax, (/myrank/),.true.)
+    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec2D_xmax, (/myrank/),if_col)
     dsetname = "nspec2D_ymin"
-    !call h5_read_dataset_p_scalar_i(h5, dsetname, nspec2D_ymin)
-    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec2D_ymin, (/myrank/),.true.)
+    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec2D_ymin, (/myrank/),if_col)
     dsetname = "nspec2D_ymax"
-    !call h5_read_dataset_p_scalar_i(h5, dsetname, nspec2D_ymax)
-    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec2D_ymax, (/myrank/),.true.)
+    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec2D_ymax, (/myrank/),if_col)
     dsetname = "NSPEC2D_BOTTOM"
-    !call h5_read_dataset_p_scalar_i(h5, dsetname, NSPEC2D_BOTTOM)
-    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec2D_bottom, (/myrank/),.true.)
+    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec2D_bottom, (/myrank/),if_col)
     dsetname = "NSPEC2D_TOP"
-    !call h5_read_dataset_p_scalar_i(h5, dsetname, NSPEC2D_TOP)
-    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec2D_top, (/myrank/),.true.)
+    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec2D_top, (/myrank/),if_col)
   endif
   call bcast_all_i_for_database(nspec2D_xmin, 1)
   call bcast_all_i_for_database(nspec2D_xmax, 1)
@@ -929,38 +855,40 @@
   allocate(ibelm_top(NSPEC2D_TOP),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1527')
   if (ier /= 0) stop 'Error allocating arrays ibelm_xmin,ibelm_xmax etc.'
+
   if (I_should_read_the_database) then
-    if(nspec2D_xmin > 0) then
+    if(sum(offset_nspec2D_xmin) > 0) then
       dsetname = "ibelm_xmin"
-      !call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_xmin)
-      call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, ibelm_xmin, (/sum(offset_nspec2D_xmin(0:myrank-1))/),.true.)
+      call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, ibelm_xmin, (/sum(offset_nspec2D_xmin(0:myrank-1))/),if_col)
     endif
-    if(nspec2D_xmax > 0) then
+
+    if(sum(offset_nspec2D_xmax) > 0) then
       dsetname = "ibelm_xmax"
-      !call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_xmax)
-      call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, ibelm_xmax, (/sum(offset_nspec2D_xmax(0:myrank-1))/),.true.)
+      call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, ibelm_xmax, (/sum(offset_nspec2D_xmax(0:myrank-1))/),if_col)
     endif
-    if(nspec2D_ymin > 0) then
+
+    if(sum(offset_nspec2D_ymin) > 0) then
       dsetname = "ibelm_ymin"
-      !call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_ymin)
-      call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, ibelm_ymin, (/sum(offset_nspec2D_ymin(0:myrank-1))/),.true.)
+      call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, ibelm_ymin, (/sum(offset_nspec2D_ymin(0:myrank-1))/),if_col)
     endif
-    if(nspec2D_ymax > 0) then
+
+    if(sum(offset_nspec2D_ymax) > 0) then
       dsetname = "ibelm_ymax"
-      !call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_ymax)
-      call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, ibelm_ymax, (/sum(offset_nspec2D_ymax(0:myrank-1))/),.true.)
+      call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, ibelm_ymax, (/sum(offset_nspec2D_ymax(0:myrank-1))/),if_col)
     endif
-    if(NSPEC2D_BOTTOM > 0) then
+
+    if(sum(offset_nspec2D_bottom_ext) > 0) then
       dsetname = "ibelm_bottom"
-      !call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_bottom)
-      call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, ibelm_bottom, (/sum(offset_nspec2D_bottom_ext(0:myrank-1))/),.true.)
+      call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, ibelm_bottom, (/sum(offset_nspec2D_bottom_ext(0:myrank-1))/),if_col)
     endif
-    if(NSPEC2D_TOP > 0) then
+
+    if(sum(offset_nspec2D_top_ext) > 0) then
       dsetname = "ibelm_top"
-      !call h5_read_dataset_p_1d_i(h5, dsetname, ibelm_top)
-      call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, ibelm_top, (/sum(offset_nspec2D_top_ext(0:myrank-1))/),.true.)
+      call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, ibelm_top, (/sum(offset_nspec2D_top_ext(0:myrank-1))/),if_col)
     endif
+
   endif
+
   if (size(ibelm_xmin) > 0) call bcast_all_i_for_database(ibelm_xmin(1), size(ibelm_xmin))
   if (size(ibelm_xmax) > 0) call bcast_all_i_for_database(ibelm_xmax(1), size(ibelm_xmax))
   if (size(ibelm_ymin) > 0) call bcast_all_i_for_database(ibelm_ymin(1), size(ibelm_ymin))
@@ -971,8 +899,7 @@
   ! free surface
   if (I_should_read_the_database) then
     dsetname = "num_free_surface_faces"
-    !call h5_read_dataset_p_scalar_i(h5, dsetname, num_free_surface_faces)
-    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, num_free_surface_faces, (/myrank/),.true.)
+    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, num_free_surface_faces, (/myrank/),if_col)
   endif
   call bcast_all_i_for_database(num_free_surface_faces, 1)
   allocate(free_surface_ispec(num_free_surface_faces),stat=ier)
@@ -984,25 +911,21 @@
   allocate(free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1531')
   if (ier /= 0) stop 'Error allocating arrays free_surface_ispec etc.'
-  if (num_free_surface_faces > 0) then
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_free_surface_faces",offset_num_free_surface_faces, (/0/), .true.)
+  call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_free_surface_faces",offset_num_free_surface_faces, (/0/), if_col)
+  if (sum(offset_num_free_surface_faces) > 0) then
     if (I_should_read_the_database) then
       dsetname = "free_surface_ispec"
-      !call h5_read_dataset_p_1d_i(h5, dsetname, free_surface_ispec)
       call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, free_surface_ispec, &
-              (/sum(offset_num_free_surface_faces(0:myrank-1))/),.true.)
+              (/sum(offset_num_free_surface_faces(0:myrank-1))/),if_col)
       dsetname = "free_surface_ijk"
-      !call h5_read_dataset_p_3d_i(h5, dsetname, free_surface_ijk)
       call h5_read_dataset_3d_i_collect_hyperslab(h5, dsetname, free_surface_ijk, &
-              (/0,0,sum(offset_num_free_surface_faces(0:myrank-1))/),.true.)
+              (/0,0,sum(offset_num_free_surface_faces(0:myrank-1))/),if_col)
       dsetname = "free_surface_jacobian2Dw"
-      !call h5_read_dataset_p_2d_r(h5, dsetname, free_surface_jacobian2Dw)
       call h5_read_dataset_2d_r_collect_hyperslab(h5, dsetname, free_surface_jacobian2Dw, &
-              (/0,sum(offset_num_free_surface_faces(0:myrank-1))/),.true.)
+              (/0,sum(offset_num_free_surface_faces(0:myrank-1))/),if_col)
       dsetname = "free_surface_normal"
-      !call h5_read_dataset_p_3d_r(h5, dsetname, free_surface_normal)
       call h5_read_dataset_3d_r_collect_hyperslab(h5, dsetname, free_surface_normal, &
-              (/0,0,sum(offset_num_free_surface_faces(0:myrank-1))/),.true.)
+              (/0,0,sum(offset_num_free_surface_faces(0:myrank-1))/),if_col)
     endif
     if (size(free_surface_ispec) > 0) &
       call bcast_all_i_for_database(free_surface_ispec(1), size(free_surface_ispec))
@@ -1017,9 +940,8 @@
   ! acoustic-elastic coupling surface
   if (I_should_read_the_database) then
     dsetname = "num_coupling_ac_el_faces"
-    !call h5_read_dataset_p_scalar_i(h5, dsetname, num_coupling_ac_el_faces)
     call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, num_coupling_ac_el_faces, &
-                (/myrank/),.true.)
+                (/myrank/),if_col)
   endif
   call bcast_all_i_for_database(num_coupling_ac_el_faces, 1)
   allocate(coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
@@ -1031,25 +953,21 @@
   allocate(coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1535')
   if (ier /= 0) stop 'Error allocating array coupling_ac_el_normal etc.'
-  if (num_coupling_ac_el_faces > 0) then
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_coupling_ac_el_faces",offset_num_coupling_ac_el_faces,(/0/),.true.)
+  call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_coupling_ac_el_faces",offset_num_coupling_ac_el_faces,(/0/),if_col)
+  if (sum(offset_num_coupling_ac_el_faces) > 0) then
     if (I_should_read_the_database) then
       dsetname = "coupling_ac_el_ispec"
-      !call h5_read_dataset_p_1d_i(h5, dsetname, coupling_ac_el_ispec)
       call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, coupling_ac_el_ispec, &
-            (/sum(offset_num_coupling_ac_el_faces(0:myrank-1))/),.true.)
+            (/sum(offset_num_coupling_ac_el_faces(0:myrank-1))/),if_col)
       dsetname = "coupling_ac_el_ijk"
-      !call h5_read_dataset_p_3d_i(h5, dsetname, coupling_ac_el_ijk)
       call h5_read_dataset_3d_i_collect_hyperslab(h5, dsetname, coupling_ac_el_ijk, &
-                (/0,0,sum(offset_num_coupling_ac_el_faces(0:myrank-1))/),.true.)
+                (/0,0,sum(offset_num_coupling_ac_el_faces(0:myrank-1))/),if_col)
       dsetname = "coupling_ac_el_jacobian2Dw"
-      !call h5_read_dataset_p_2d_r(h5, dsetname, coupling_ac_el_jacobian2Dw)
       call h5_read_dataset_2d_r_collect_hyperslab(h5, dsetname, coupling_ac_el_jacobian2Dw, &
-               (/0,sum(offset_num_coupling_ac_el_faces(0:myrank-1))/),.true.)
+               (/0,sum(offset_num_coupling_ac_el_faces(0:myrank-1))/),if_col)
       dsetname = "coupling_ac_el_normal"
-      !call h5_read_dataset_p_3d_r(h5, dsetname, coupling_ac_el_normal)
       call h5_read_dataset_3d_r_collect_hyperslab(h5, dsetname, coupling_ac_el_normal, &
-               (/0,0,sum(offset_num_coupling_ac_el_faces(0:myrank-1))/),.true.)
+               (/0,0,sum(offset_num_coupling_ac_el_faces(0:myrank-1))/),if_col)
     endif
     if (size(coupling_ac_el_ispec) > 0) &
       call bcast_all_i_for_database(coupling_ac_el_ispec(1), size(coupling_ac_el_ispec))
@@ -1064,9 +982,8 @@
   ! acoustic-poroelastic coupling surface
   if (I_should_read_the_database) then
     dsetname = "num_coupling_ac_po_faces"
-    !call h5_read_dataset_p_scalar_i(h5, dsetname, num_coupling_ac_po_faces)
     call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, num_coupling_ac_po_faces, &
-            (/myrank/),.true.)
+            (/myrank/),if_col)
   endif
   call bcast_all_i_for_database(num_coupling_ac_po_faces, 1)
   allocate(coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces),stat=ier)
@@ -1078,25 +995,21 @@
   allocate(coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1539')
   if (ier /= 0) stop 'Error allocating array coupling_ac_po_normal etc.'
-  if (num_coupling_ac_po_faces > 0) then
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_coupling_ac_po_faces",offset_num_coupling_ac_po_faces, (/0/), .true.)
+  call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_coupling_ac_po_faces",offset_num_coupling_ac_po_faces, (/0/), if_col)
+  if (sum(offset_num_coupling_ac_po_faces) > 0) then
     if (I_should_read_the_database) then
       dsetname = "coupling_ac_po_ispec"
-      !call h5_read_dataset_p_1d_i(h5, dsetname, coupling_ac_po_ispec)
       call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, coupling_ac_po_ispec, &
-              (/sum(offset_num_coupling_ac_po_faces(0:myrank-1))/),.true.)
+              (/sum(offset_num_coupling_ac_po_faces(0:myrank-1))/),if_col)
       dsetname = "coupling_ac_po_ijk"
-      !call h5_read_dataset_p_3d_i(h5, dsetname, coupling_ac_po_ijk)
       call h5_read_dataset_3d_i_collect_hyperslab(h5, dsetname, coupling_ac_po_ijk, &
-              (/0,0,sum(offset_num_coupling_ac_po_faces(0:myrank-1))/),.true.)
+              (/0,0,sum(offset_num_coupling_ac_po_faces(0:myrank-1))/),if_col)
       dsetname = "coupling_ac_po_jacobian2Dw"
-      !call h5_read_dataset_p_2d_r(h5, dsetname, coupling_ac_po_jacobian2Dw)
       call h5_read_dataset_2d_r_collect_hyperslab(h5, dsetname, coupling_ac_po_jacobian2Dw, &
-              (/0,sum(offset_num_coupling_ac_po_faces(0:myrank-1))/),.true.)
+              (/0,sum(offset_num_coupling_ac_po_faces(0:myrank-1))/),if_col)
       dsetname = "coupling_ac_po_normal"
-      !call h5_read_dataset_p_3d_r(h5, dsetname, coupling_ac_po_normal)
       call h5_read_dataset_3d_r_collect_hyperslab(h5, dsetname, coupling_ac_po_normal, &
-              (/0,0,sum(offset_num_coupling_ac_po_faces(0:myrank-1))/),.true.)
+              (/0,0,sum(offset_num_coupling_ac_po_faces(0:myrank-1))/),if_col)
     endif
     if (size(coupling_ac_po_ispec) > 0) &
       call bcast_all_i_for_database(coupling_ac_po_ispec(1), size(coupling_ac_po_ispec))
@@ -1111,9 +1024,8 @@
   ! elastic-poroelastic coupling surface
   if (I_should_read_the_database) then
     dsetname = "num_coupling_el_po_faces"
-    !call h5_read_dataset_p_scalar_i(h5, dsetname, num_coupling_el_po_faces)
     call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, num_coupling_el_po_faces, &
-              (/myrank/),.true.)
+              (/myrank/),if_col)
   endif
   call bcast_all_i_for_database(num_coupling_el_po_faces, 1)
   allocate(coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
@@ -1129,33 +1041,28 @@
   allocate(coupling_po_el_ispec(num_coupling_el_po_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1545')
   if (ier /= 0) stop 'Error allocating array coupling_el_po_normal etc.'
-  if (num_coupling_el_po_faces > 0) then
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_coupling_el_po_faces",offset_num_coupling_el_po_faces, (/0/), .true.)
+
+  call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_coupling_el_po_faces",offset_num_coupling_el_po_faces, (/0/), if_col)
+  if (sum(offset_num_coupling_el_po_faces) > 0) then
     if (I_should_read_the_database) then
       dsetname = "coupling_el_po_ispec"
-      !call h5_read_dataset_p_1d_i(h5, dsetname, coupling_el_po_ispec)
       call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, coupling_el_po_ispec, &
-              (/sum(offset_num_coupling_el_po_faces(0:myrank-1))/),.true.)
+              (/sum(offset_num_coupling_el_po_faces(0:myrank-1))/),if_col)
       dsetname = "coupling_po_el_ispec"
-      !call h5_read_dataset_p_1d_i(h5, dsetname, coupling_po_el_ispec)
       call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, coupling_po_el_ispec, &
-              (/sum(offset_num_coupling_el_po_faces(0:myrank-1))/),.true.)
+              (/sum(offset_num_coupling_el_po_faces(0:myrank-1))/),if_col)
       dsetname = "coupling_el_po_ijk"
-      !call h5_read_dataset_p_3d_i(h5, dsetname, coupling_el_po_ijk)
       call h5_read_dataset_3d_i_collect_hyperslab(h5, dsetname, coupling_el_po_ijk, &
-              (/0,0,sum(offset_num_coupling_el_po_faces(0:myrank-1))/),.true.)
+              (/0,0,sum(offset_num_coupling_el_po_faces(0:myrank-1))/),if_col)
       dsetname = "coupling_po_el_ijk"
-      !call h5_read_dataset_p_3d_i(h5, dsetname, coupling_po_el_ijk)
       call h5_read_dataset_3d_i_collect_hyperslab(h5, dsetname, coupling_po_el_ijk, &
-              (/0,0,sum(offset_num_coupling_el_po_faces(0:myrank-1))/),.true.)
+              (/0,0,sum(offset_num_coupling_el_po_faces(0:myrank-1))/),if_col)
       dsetname = "coupling_el_po_jacobian2Dw"
-      !call h5_read_dataset_p_2d_r(h5, dsetname, coupling_el_po_jacobian2Dw)
       call h5_read_dataset_2d_r_collect_hyperslab(h5, dsetname, coupling_el_po_jacobian2Dw, &
-              (/0,sum(offset_num_coupling_el_po_faces(0:myrank-1))/),.true.)
+              (/0,sum(offset_num_coupling_el_po_faces(0:myrank-1))/),if_col)
       dsetname = "coupling_el_po_normal"
-      !call h5_read_dataset_p_3d_r(h5, dsetname, coupling_el_po_normal)
       call h5_read_dataset_3d_r_collect_hyperslab(h5, dsetname, coupling_el_po_normal, &
-              (/0,0,sum(offset_num_coupling_el_po_faces(0:myrank-1))/),.true.)
+              (/0,0,sum(offset_num_coupling_el_po_faces(0:myrank-1))/),if_col)
     endif
     if (size(coupling_el_po_ispec) > 0) &
       call bcast_all_i_for_database(coupling_el_po_ispec(1), size(coupling_el_po_ispec))
@@ -1174,8 +1081,7 @@
   ! MPI interfaces
   if (I_should_read_the_database) then
      dsetname = "num_interfaces_ext_mesh"
-     !call h5_read_dataset_p_scalar_i(h5, dsetname, num_interfaces_ext_mesh)
-     call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, num_interfaces_ext_mesh, (/myrank/),.true.)
+     call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, num_interfaces_ext_mesh, (/myrank/),if_col)
   endif
   call bcast_all_i_for_database(num_interfaces_ext_mesh, 1)
   allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
@@ -1183,12 +1089,11 @@
   allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1547')
   if (ier /= 0) stop 'Error allocating array my_neighbors_ext_mesh etc.'
-  if (num_interfaces_ext_mesh > 0) then
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_interfaces_ext_mesh",offset_num_interfaces_ext_mesh, (/0/), .true.)
+  call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_interfaces_ext_mesh",offset_num_interfaces_ext_mesh, (/0/), if_col)
+  if (sum(offset_num_interfaces_ext_mesh) > 0) then
     if (I_should_read_the_database) then
       dsetname = "max_nibool_interfaces_ext_mesh"
-      !call h5_read_dataset_p_scalar_i(h5, dsetname, max_nibool_interfaces_ext_mesh)
-      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, max_nibool_interfaces_ext_mesh, (/myrank/),.true.)
+      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, max_nibool_interfaces_ext_mesh, (/myrank/),if_col)
     endif
     call bcast_all_i_for_database(max_nibool_interfaces_ext_mesh, 1)
     allocate(ibool_interfaces_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
@@ -1196,17 +1101,14 @@
     if (ier /= 0) stop 'Error allocating array ibool_interfaces_ext_mesh'
     if (I_should_read_the_database) then
       dsetname = "my_neighbors_ext_mesh"
-      !call h5_read_dataset_p_1d_i(h5, dsetname, my_neighbors_ext_mesh)
       call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, my_neighbors_ext_mesh, &
-              (/sum(offset_num_interfaces_ext_mesh(0:myrank-1))/),.true.)
+              (/sum(offset_num_interfaces_ext_mesh(0:myrank-1))/),if_col)
       dsetname = "nibool_interfaces_ext_mesh"
-      !call h5_read_dataset_p_1d_i(h5, dsetname, nibool_interfaces_ext_mesh)
       call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, nibool_interfaces_ext_mesh, &
-              (/sum(offset_num_interfaces_ext_mesh(0:myrank-1))/),.true.)
+              (/sum(offset_num_interfaces_ext_mesh(0:myrank-1))/),if_col)
       dsetname = "ibool_interfaces_ext_mesh_dummy"
-      !call h5_read_dataset_p_2d_i(h5, dsetname, ibool_interfaces_ext_mesh)
       call h5_read_dataset_2d_i_collect_hyperslab(h5, dsetname, ibool_interfaces_ext_mesh, &
-              (/0,sum(offset_num_interfaces_ext_mesh(0:myrank-1))/),.true.)
+              (/0,sum(offset_num_interfaces_ext_mesh(0:myrank-1))/),if_col)
     endif
     if (size(my_neighbors_ext_mesh) > 0) &
       call bcast_all_i_for_database(my_neighbors_ext_mesh(1), size(my_neighbors_ext_mesh))
@@ -1223,68 +1125,47 @@
   if (ELASTIC_SIMULATION .and. ANISOTROPY) then
     if (I_should_read_the_database) then
       dsetname = "c11store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c11store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c11store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c11store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c12store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c12store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c12store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c12store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c13store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c13store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c13store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c13store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c14store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c14store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c14store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c14store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c15store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c15store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c15store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c15store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c16store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c16store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c16store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c16store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c22store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c22store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c22store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c22store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c23store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c23store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c23store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c23store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c24store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c24store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c24store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c24store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c25store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c25store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c25store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c25store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c26store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c26store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c26store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c26store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c33store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c33store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c33store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c33store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c34store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c34store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c34store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c34store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c35store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c35store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c35store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c35store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c36store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c36store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c36store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c36store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c44store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c44store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c44store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c44store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c45store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c45store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c45store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c45store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c46store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c46store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c46store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c46store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c55store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c55store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c55store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c55store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c56store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c56store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c56store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c56store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
       dsetname = "c66store"
-      !call h5_read_dataset_p_4d_r(h5, dsetname, c66store)
-      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c66store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), .true.)
+      call h5_read_dataset_4d_r_collect_hyperslab(h5, dsetname, c66store, (/0,0,0,sum(offset_nspec_aniso(0:myrank-1))/), if_col)
     endif
     if (size(c11store) > 0) call bcast_all_cr_for_database(c11store(1,1,1,1), size(c11store))
     if (size(c12store) > 0) call bcast_all_cr_for_database(c12store(1,1,1,1), size(c12store))
@@ -1315,22 +1196,18 @@
   if (ier /= 0) stop 'Error allocating array ispec_is_inner'
   if (I_should_read_the_database) then
     dsetname = "ispec_is_inner"
-    !call h5_read_dataset_p_1d_l(h5, dsetname, ispec_is_inner)
-    call h5_read_dataset_1d_l_collect_hyperslab(h5, dsetname, ispec_is_inner,(/sum(offset_nspec(0:myrank-1))/),.true.)
+    call h5_read_dataset_1d_l_collect_hyperslab(h5, dsetname, ispec_is_inner,(/sum(offset_nspec(0:myrank-1))/),if_col)
   endif
   if (size(ispec_is_inner) > 0) call bcast_all_l_for_database(ispec_is_inner(1), size(ispec_is_inner))
 
   if (ACOUSTIC_SIMULATION) then
     if (I_should_read_the_database) then
       dsetname = "nspec_inner_acoustic"
-      !call h5_read_dataset_p_scalar_i(h5, dsetname, nspec_inner_acoustic)
-      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec_inner_acoustic,(/myrank/),.true.)
+      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec_inner_acoustic,(/myrank/),if_col)
       dsetname = "nspec_outer_acoustic"
-      !call h5_read_dataset_p_scalar_i(h5, dsetname, nspec_outer_acoustic)
-      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec_outer_acoustic,(/myrank/),.true.)
+      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec_outer_acoustic,(/myrank/),if_col)
       dsetname = "num_phase_ispec_acoustic"
-      !call h5_read_dataset_p_scalar_i(h5, dsetname, num_phase_ispec_acoustic)
-      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, num_phase_ispec_acoustic,(/myrank/),.true.)
+      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, num_phase_ispec_acoustic,(/myrank/),if_col)
     endif
     call bcast_all_i_for_database(nspec_inner_acoustic, 1)
     call bcast_all_i_for_database(nspec_outer_acoustic, 1)
@@ -1339,14 +1216,13 @@
     allocate( phase_ispec_inner_acoustic(num_phase_ispec_acoustic,2),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1551')
     if (ier /= 0) stop 'Error allocating array phase_ispec_inner_acoustic'
-    if (num_phase_ispec_acoustic > 0) then
-      call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_phase_ispec_acoustic",&
-              offset_num_phase_ispec_acoustic, (/0/), .true.)
-      if (I_should_read_the_database) then
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_phase_ispec_acoustic",&
+            offset_num_phase_ispec_acoustic, (/0/), if_col)
+    if (sum(offset_num_phase_ispec_acoustic) > 0) then
+     if (I_should_read_the_database) then
         dsetname = "phase_ispec_inner_acoustic"
-        !call h5_read_dataset_p_2d_i(h5, dsetname, phase_ispec_inner_acoustic)
         call h5_read_dataset_2d_i_collect_hyperslab(h5, dsetname, phase_ispec_inner_acoustic,&
-                (/sum(offset_num_phase_ispec_acoustic(0:myrank-1)),0/),.true.)
+                (/sum(offset_num_phase_ispec_acoustic(0:myrank-1)),0/),if_col)
       endif
       if (size(phase_ispec_inner_acoustic) > 0) &
             call bcast_all_i_for_database(phase_ispec_inner_acoustic(1,1), size(phase_ispec_inner_acoustic))
@@ -1356,14 +1232,11 @@
   if (ELASTIC_SIMULATION) then
     if (I_should_read_the_database) then
       dsetname = "nspec_inner_elastic"
-      !call h5_read_dataset_p_scalar_i(h5, dsetname, nspec_inner_elastic)
-      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec_inner_elastic,(/myrank/),.true.)
+      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec_inner_elastic,(/myrank/),if_col)
       dsetname = "nspec_outer_elastic"
-      !call h5_read_dataset_p_scalar_i(h5, dsetname, nspec_outer_elastic)
-      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec_outer_elastic,(/myrank/),.true.)
+      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec_outer_elastic,(/myrank/),if_col)
       dsetname = "num_phase_ispec_elastic"
-      !call h5_read_dataset_p_scalar_i(h5, dsetname, num_phase_ispec_elastic)
-      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, num_phase_ispec_elastic,(/myrank/),.true.)
+      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, num_phase_ispec_elastic,(/myrank/),if_col)
     endif
     call bcast_all_i_for_database(nspec_inner_elastic, 1)
     call bcast_all_i_for_database(nspec_outer_elastic, 1)
@@ -1372,14 +1245,12 @@
     allocate( phase_ispec_inner_elastic(num_phase_ispec_elastic,2),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1552')
     if (ier /= 0) stop 'Error allocating array phase_ispec_inner_elastic'
-    if (num_phase_ispec_elastic > 0) then
-      call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_phase_ispec_elastic",offset_num_phase_ispec_elastic, (/0/), .true.)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_phase_ispec_elastic",offset_num_phase_ispec_elastic, (/0/), if_col)
+    if (sum(offset_num_phase_ispec_elastic) > 0) then
       if (I_should_read_the_database) then
          dsetname = "phase_ispec_inner_elastic"
-        !call h5_read_dataset_p_2d_i(h5, dsetname, phase_ispec_inner_elastic)
         call h5_read_dataset_2d_i_collect_hyperslab(h5, dsetname, phase_ispec_inner_elastic,&
-                (/sum(offset_num_phase_ispec_elastic(0:myrank-1)),0/),.true.)
-
+                (/sum(offset_num_phase_ispec_elastic(0:myrank-1)),0/),if_col)
       endif
       if (size(phase_ispec_inner_elastic) > 0) &
         call bcast_all_i_for_database(phase_ispec_inner_elastic(1,1), size(phase_ispec_inner_elastic))
@@ -1389,15 +1260,12 @@
   if (POROELASTIC_SIMULATION) then
     if (I_should_read_the_database) then
       dsetname = "nspec_inner_poroelastic"
-      !call h5_read_dataset_p_scalar_i(h5, dsetname, nspec_inner_poroelastic)
-      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec_inner_poroelastic,(/myrank/),.true.)
+      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec_inner_poroelastic,(/myrank/),if_col)
       dsetname = "nspec_outer_poroelastic"
-      !call h5_read_dataset_p_scalar_i(h5, dsetname, nspec_outer_poroelastic)
-      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec_outer_poroelastic,(/myrank/),.true.)
+      call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nspec_outer_poroelastic,(/myrank/),if_col)
       dsetname = "num_phase_ispec_poroelastic"
-      !call h5_read_dataset_p_scalar_i(h5, dsetname, num_phase_ispec_poroelastic)
       call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, num_phase_ispec_poroelastic,&
-              (/myrank/),.true.)
+              (/myrank/),if_col)
     endif
     call bcast_all_i_for_database(nspec_inner_poroelastic, 1)
     call bcast_all_i_for_database(nspec_outer_poroelastic, 1)
@@ -1406,14 +1274,13 @@
     allocate( phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1553')
     if (ier /= 0) stop 'Error allocating array phase_ispec_inner_poroelastic'
-    if (num_phase_ispec_poroelastic > 0) then
-      call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_phase_ispec_poroelastic",&
-              offset_num_phase_ispec_poroelastic, (/0/), .true.)
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_phase_ispec_poroelastic",&
+            offset_num_phase_ispec_poroelastic, (/0/), if_col)
+    if (sum(offset_num_phase_ispec_poroelastic) > 0) then
       if (I_should_read_the_database) then
         dsetname = "phase_ispec_inner_poroelastic"
-        !call h5_read_dataset_p_2d_i(h5,dsetname, phase_ispec_inner_poroelastic)
         call h5_read_dataset_2d_i_collect_hyperslab(h5, dsetname, phase_ispec_inner_poroelastic,&
-              (/sum(offset_num_phase_ispec_poroelastic(0:myrank-1)),0/),.true.)
+              (/sum(offset_num_phase_ispec_poroelastic(0:myrank-1)),0/),if_col)
       endif
       if (size(phase_ispec_inner_poroelastic) > 0) &
         call bcast_all_i_for_database(phase_ispec_inner_poroelastic(1,1), size(phase_ispec_inner_poroelastic))
@@ -1426,13 +1293,11 @@
     if (ACOUSTIC_SIMULATION) then
       if (I_should_read_the_database) then
         dsetname = "num_colors_outer_acoustic"
-        !call h5_read_dataset_p_scalar_i(h5, dsetname, num_colors_outer_acoustic)
         call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, &
-                num_colors_outer_acoustic,(/myrank/),.true.)
+                num_colors_outer_acoustic,(/myrank/),if_col)
         dsetname = "num_colors_inner_acoustic"
-        !call h5_read_dataset_p_scalar_i(h5, dsetname, num_colors_inner_acoustic)
         call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, &
-                num_colors_inner_acoustic,(/myrank/),.true.)
+                num_colors_inner_acoustic,(/myrank/),if_col)
       endif
       call bcast_all_i_for_database(num_colors_outer_acoustic, 1)
       call bcast_all_i_for_database(num_colors_inner_acoustic, 1)
@@ -1443,9 +1308,8 @@
 
       if (I_should_read_the_database) then
         dsetname = "num_elem_colors_acoustic"
-        !call h5_read_dataset_p_1d_i(h5, dsetname, num_elem_colors_acoustic)
         call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, &
-                num_elem_colors_acoustic,(/sum(offset_num_colors_acoustic(0:myrank-1))/),.true.)
+                num_elem_colors_acoustic,(/sum(offset_num_colors_acoustic(0:myrank-1))/),if_col)
       endif
       if (size(num_elem_colors_acoustic) > 0) &
         call bcast_all_i_for_database(num_elem_colors_acoustic(1), size(num_elem_colors_acoustic))
@@ -1454,13 +1318,11 @@
     if (ELASTIC_SIMULATION) then
       if (I_should_read_the_database) then
         dsetname = "num_colors_outer_elastic"
-        !call h5_read_dataset_p_scalar_i(h5, dsetname, num_colors_outer_elastic)
         call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, &
-                num_colors_outer_elastic,(/myrank/),.true.)
+                num_colors_outer_elastic,(/myrank/),if_col)
         dsetname = "num_colors_inner_elastic"
-        !call h5_read_dataset_p_scalar_i(h5, dsetname, num_colors_inner_elastic)
         call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, &
-                num_colors_inner_elastic,(/myrank/),.true.)
+                num_colors_inner_elastic,(/myrank/),if_col)
       endif
       call bcast_all_i_for_database(num_colors_outer_elastic, 1)
       call bcast_all_i_for_database(num_colors_inner_elastic, 1)
@@ -1471,9 +1333,8 @@
 
       if (I_should_read_the_database) then
         dsetname = "num_elem_colors_elastic"
-        !call h5_read_dataset_p_1d_i(h5, dsetname, num_elem_colors_elastic)
         call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, num_elem_colors_elastic,&
-                (/sum(offset_num_colors_elastic(0:myrank-1))/),.true.)
+                (/sum(offset_num_colors_elastic(0:myrank-1))/),if_col)
       endif
       if (size(num_elem_colors_elastic) > 0) &
         call bcast_all_i_for_database(num_elem_colors_elastic(1), size(num_elem_colors_elastic))
@@ -1508,23 +1369,19 @@
   ! used for receiver detection, movie files and shakemaps
   if (I_should_read_the_database) then
     dsetname = "nfaces_surface"
-    !call h5_read_dataset_p_scalar_i(h5, dsetname, nfaces_surface)
-    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nfaces_surface, (/myrank/), .true.)
+    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, nfaces_surface, (/myrank/), if_col)
     dsetname = "ispec_is_surface_external_mesh"
-    !call h5_read_dataset_p_1d_l(h5, dsetname, ispec_is_surface_external_mesh)
     call h5_read_dataset_1d_l_collect_hyperslab(h5, dsetname, ispec_is_surface_external_mesh, &
-            (/sum(offset_nspec_ab(0:myrank-1))/), .true.)
+            (/sum(offset_nspec_ab(0:myrank-1))/), if_col)
     dsetname = "iglob_is_surface_external_mesh"
-    !call h5_read_dataset_p_1d_l(h5, dsetname, iglob_is_surface_external_mesh)
     call h5_read_dataset_1d_l_collect_hyperslab(h5, dsetname, iglob_is_surface_external_mesh, &
-            (/sum(offset_nglob_ab(0:myrank-1))/), .true.)
-  endif
+            (/sum(offset_nglob_ab(0:myrank-1))/), if_col)
+ endif
   call bcast_all_i_for_database(nfaces_surface, 1)
   call bcast_all_l_for_database(ispec_is_surface_external_mesh(1), size(ispec_is_surface_external_mesh))
   call bcast_all_l_for_database(iglob_is_surface_external_mesh(1), size(iglob_is_surface_external_mesh))
 
   ! done reading database
-  !if (I_should_read_the_database) close(27)
 
   ! MPI communications
   if (ACOUSTIC_SIMULATION) then
@@ -2201,6 +2058,9 @@
   ! mpi variables
   integer :: info, comm
 
+  ! if collective read
+  logical :: if_col = .true.
+
   ! hdf5 utility
   type(h5io) :: h5
   h5 = h5io()
@@ -2220,13 +2080,13 @@
     ! read datasets
     dsetname = "nspec"
     !call h5_read_dataset_p_scalar_i(h5, dsetname, NSPEC_AB)
-    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, NSPEC_AB, (/myrank/),.true.)
+    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, NSPEC_AB, (/myrank/),if_col)
     dsetname = "nglob"
     !call h5_read_dataset_p_scalar_i(h5, dsetname, NGLOB_AB)
-    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, NGLOB_AB, (/myrank/),.true.)
+    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, NGLOB_AB, (/myrank/),if_col)
     dsetname = "nspec_irregular"
     !call h5_read_dataset_p_scalar_i(h5, dsetname, NSPEC_IRREGULAR)
-    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, NSPEC_IRREGULAR, (/myrank/),.true.)
+    call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, NSPEC_IRREGULAR, (/myrank/),if_col)
 
     ! close hdf5
     call h5_close_file(h5)

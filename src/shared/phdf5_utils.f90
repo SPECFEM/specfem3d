@@ -145,7 +145,7 @@ contains
         integer :: io_mode
         call h5pget_mpio_actual_io_mode_f(plist_id,io_mode,error)
         if (io_mode == H5D_MPIO_NO_COLLECTIVE_F) print*, &
-            "collective write not possible for dataset: ", dataset_name
+            "collective read/write not possible for dataset: ", dataset_name
 
     end subroutine h5_check_collective
 
@@ -669,8 +669,8 @@ contains
 
     subroutine h5_set_sieve_buffer_size(this)
         type(h5io), intent(in) :: this
-        integer(hsize_t)       :: buf_size  = 1024*1024*1024 ! 16*1024*1024
-        integer(hsize_t)       :: alig_size = 1024*1024*1024 ! 16*1024*1024
+        integer(hsize_t)       :: buf_size  = 1*1024*1024
+        integer(hsize_t)       :: alig_size = 1*1024*1024
         call h5pset_sieve_buf_size_f(fplist_id, buf_size, error) ! buf_size may vary depending on machiens
         call h5pset_alignment_f(fplist_id, buf_size, alig_size, error)
     end subroutine h5_set_sieve_buffer_size
@@ -678,7 +678,7 @@ contains
 
     subroutine h5_set_buffer_size(this)
         type(h5io), intent(in) :: this
-        integer(hsize_t)       :: buf_size = 1024*1024*1024 ! 16*1024*1024
+        integer(hsize_t)       :: buf_size = 1*1024*1024
         call h5pset_buffer_f(plist_id, buf_size, error)
     end subroutine h5_set_buffer_size
 
@@ -779,7 +779,6 @@ contains
         call h5_create_file_prop_list(this, .false.)
         call h5fcreate_f(file_path, H5F_ACC_TRUNC_F, file_id, error, creation_prp=H5P_DEFAULT_F, access_prp=fplist_id)
         if (error /= 0) write(*,*) 'hdf5 create file p failed.'
-        !call h5_close_prop_list(this,dataset_name)
     end subroutine h5_create_file_p
 
 
@@ -788,7 +787,6 @@ contains
         call h5_create_file_prop_list(this, .true.)
         call h5fcreate_f(file_path, H5F_ACC_TRUNC_F, file_id, error, creation_prp=H5P_DEFAULT_F, access_prp=fplist_id)
         if (error /= 0) write(*,*) 'hdf5 create file p failed.'
-        !call h5_close_prop_list(this,dataset_name)
     end subroutine h5_create_file_p_collect
 
 
@@ -797,7 +795,6 @@ contains
         call h5_create_file_prop_list(this,.false.)
         call h5fopen_f(file_path, H5F_ACC_RDWR_F, file_id, error, access_prp=fplist_id)
         if (error /= 0) write(*,*) 'hdf5 open file p failed.'
-        !call h5_close_prop_list(this,dataset_name)
     end subroutine h5_open_file_p
 
 
@@ -807,7 +804,6 @@ contains
         call h5_set_sieve_buffer_size(this)
         call h5fopen_f(file_path, H5F_ACC_RDWR_F, file_id, error, access_prp=fplist_id)
         if (error /= 0) write(*,*) 'hdf5 open file p failed.'
-        !call h5_close_prop_list(this,dataset_name)
     end subroutine h5_open_file_p_collect
 
 
