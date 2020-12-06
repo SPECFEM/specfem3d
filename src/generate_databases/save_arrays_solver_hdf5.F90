@@ -406,8 +406,6 @@
       dset_name = "rho_vsI" ! 4 r (/0,0,0,offset_nspecporo/)
       call h5_create_dataset_gen(h5, dset_name,(/NGLLX,NGLLY,NGLLZ,sum(offset_nspecporo(:))/), 4, CUSTOM_REAL)
    endif
-print*, myrank, "DEBUG 0008"
-
 
     ! C-PML absorbing boundary conditions
     if (PML_CONDITIONS) then
