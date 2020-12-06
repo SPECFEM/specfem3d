@@ -3277,7 +3277,7 @@ contains
 
     subroutine write_attenuation_file_in_h5(factor_common, scale_factor, factor_common_kappa, scale_factor_kappa)
         use shared_parameters, only: NPROC, LOCAL_PATH
-        use constants, only: CUSTOM_REAL
+        use constants, only: CUSTOM_REAL,myrank,N_SLS,NGLLX,NGLLY,NGLLZ
         implicit none
 
         real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:,:) :: factor_common
@@ -3285,79 +3285,107 @@ contains
         real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:,:) :: factor_common_kappa
         real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:)   :: scale_factor_kappa
 
-        integer :: myrank
+        integer, dimension(4) :: dims
+        integer :: nspec
 
-        ! mpi variables
-        integer :: info, comm
+        ! offset arrays
+        integer, dimension(0:NPROC-1) :: offset_nspec
 
         ! hdf5 valiables
-        character(len=64) :: filename, prname, dset_name, tempstr
+        character(len=64) :: filename, dset_name, tempstr
         type(h5io)        :: h5
 
-        call world_rank(myrank)
+        dims = shape(scale_factor)
+        nspec=dims(4)
+
+        ! prepare offset arrays
+        call gather_all_all_singlei(nspec,offset_nspec,NPROC) ! n spec in each proc
 
         tempstr = "/external_mesh.h5"
         filename = LOCAL_PATH(1:len_trim(LOCAL_PATH))//trim(tempstr)
         h5 = h5io()
 
-        ! get mpi parameters
-        call world_get_comm(comm)
-        call get_info_null(info)
-
         ! initialize h5 object
         call h5_init(h5, filename)
-        call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
 
+        ! prepare dataset
+        if(myrank == 0) then
+            call h5_open_file(h5)
+            dset_name = "scale_factor"
+            call h5_create_dataset_gen(h5, dset_name, (/NGLLX,NGLLY,NGLLZ,sum(offset_nspec)/), 4, CUSTOM_REAL)
+            dset_name = "scale_factor_kappa"
+            call h5_create_dataset_gen(h5, dset_name, (/NGLLX,NGLLY,NGLLZ,sum(offset_nspec)/), 4, CUSTOM_REAL)
+            dset_name = "factor_common"
+            call h5_create_dataset_gen(h5, dset_name, (/N_SLS,NGLLX,NGLLY,NGLLZ,sum(offset_nspec)/), 5, CUSTOM_REAL)
+            dset_name = "factor_common_kappa"
+            call h5_create_dataset_gen(h5, dset_name, (/N_SLS,NGLLX,NGLLY,NGLLZ,sum(offset_nspec)/), 5, CUSTOM_REAL)
+            call h5_close_file(h5)
+        endif
+
+        call synchronize_all()
+
+        ! write
+        call h5_open_file_p_collect(h5)
         dset_name = "scale_factor"
-        call h5_write_dataset_p_4d_r(h5, dset_name, scale_factor)
+        call h5_write_dataset_4d_r_collect_hyperslab(h5,dset_name,&
+                            scale_factor,(/0,0,0,sum(offset_nspec(0:myrank-1))/),.true.)
         dset_name = "scale_factor_kappa"
-        call h5_write_dataset_p_4d_r(h5, dset_name, scale_factor_kappa)
+        call h5_write_dataset_4d_r_collect_hyperslab(h5,dset_name,&
+                            scale_factor_kappa,(/0,0,0,sum(offset_nspec(0:myrank-1))/),.true.)
         dset_name = "factor_common"
-        call h5_write_dataset_p_5d_r(h5, dset_name, factor_common)
+        call h5_write_dataset_5d_r_collect_hyperslab(h5,dset_name,&
+                            factor_common,(/0,0,0,0,sum(offset_nspec(0:myrank-1))/),.true.)
         dset_name = "factor_common_kappa"
-        call h5_write_dataset_p_5d_r(h5, dset_name, factor_common_kappa)
+        call h5_write_dataset_5d_r_collect_hyperslab(h5,dset_name,&
+                            factor_common_kappa,(/0,0,0,0,sum(offset_nspec(0:myrank-1))/),.true.)
 
-        call h5_destructor(h5)
+        call h5_close_file_p(h5)
 
     end subroutine write_attenuation_file_in_h5
 
 
     subroutine read_attenuation_file_in_h5(factor_common, scale_factor, factor_common_kappa, scale_factor_kappa)
         use shared_parameters, only: NPROC, LOCAL_PATH
-        use constants, only: CUSTOM_REAL
+        use constants, only: CUSTOM_REAL,myrank
 
         implicit none
+
+        ! offset array
+        integer, dimension(0:NPROC-1) :: offset_nspec
 
         real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:,:) :: factor_common
         real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:)   :: scale_factor
         real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:,:) :: factor_common_kappa
         real(kind=CUSTOM_REAL), allocatable, dimension(:,:,:,:)   :: scale_factor_kappa
 
-        integer :: myrank
         ! hdf5 valiables
         character(len=64) :: fname, prname, gname, dset_name, tempstr
         type(h5io)        :: h5
 
-        call world_rank(myrank)
-
         tempstr = "/external_mesh.h5"
         fname = LOCAL_PATH(1:len_trim(LOCAL_PATH))//trim(tempstr)
-        write(tempstr, "(i6.6)") myrank
-        gname = "proc_" // trim(tempstr)
-
         h5 = h5io()
+
         ! initialize h5 object
         call h5_init(h5, fname)
-        call h5_open_file_p(h5)
-        call h5_open_group(h5, gname)
 
-        call h5_read_dataset_p_4d_r(h5, "scale_factor", scale_factor)
-        call h5_read_dataset_p_4d_r(h5, "scale_factor_kappa", scale_factor_kappa)
-        call h5_read_dataset_p_5d_r(h5, "factor_common", factor_common)
-        call h5_read_dataset_p_5d_r(h5, "factor_common_kappa", factor_common_kappa)
 
-        call h5_close_group(h5)
-        call h5_close_file(h5)
+        ! initialize h5 object
+        call h5_init(h5, fname)
+        call h5_open_file_p_collect(h5)
+        ! read offset array
+        call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nspec",offset_nspec, (/0/), .true.)
+
+        call h5_read_dataset_4d_r_collect_hyperslab(h5, "scale_factor", scale_factor, &
+                                                    (/0,0,0,sum(offset_nspec(0:myrank-1))/), .true.)
+        call h5_read_dataset_4d_r_collect_hyperslab(h5, "scale_factor_kappa", scale_factor_kappa,&
+                                                    (/0,0,0,sum(offset_nspec(0:myrank-1))/), .true.)
+        call h5_read_dataset_5d_r_collect_hyperslab(h5, "factor_common", factor_common, &
+                                                    (/0,0,0,0,sum(offset_nspec(0:myrank-1))/), .true.)
+        call h5_read_dataset_5d_r_collect_hyperslab(h5, "factor_common_kappa", factor_common_kappa, &
+                                                    (/0,0,0,0,sum(offset_nspec(0:myrank-1))/), .true.)
+
+        call h5_close_file_p(h5)
 
     end subroutine read_attenuation_file_in_h5
 
@@ -3405,9 +3433,7 @@ contains
         call synchronize_all()
 
         ! open file
-        call h5_open_file_p_collect(h5) ! collective writing is faster but mpi error occurs
-        ! when using more than 128 cpus
-        !call h5_write_dataset_p_1d_r(h5, dset_name, dump_array)
+        call h5_open_file_p_collect(h5)
         call h5_write_dataset_1d_r_collect_hyperslab(h5, dset_name, dump_array, (/sum(offset(0:myrank-1))/),.true.)
         call h5_close_file_p(h5)
         call h5_destructor(h5)
