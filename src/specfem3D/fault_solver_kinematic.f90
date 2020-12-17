@@ -104,7 +104,10 @@ contains
   endif
   ! WARNING TO DO: should be an MPI abort
 
-  read(IIN_PAR,*)  ! eta
+  ! Skip viscosity eta of each fault. Not used in kinematic simulations.
+  do iflt = 1,nbfaults
+    read(IIN_PAR,*) ! eta
+  enddo
   read(IIN_PAR,*) SIMULATION_TYPE
 
   ! fault simulation type == 2 for kinematic rupture simulation
