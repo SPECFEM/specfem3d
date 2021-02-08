@@ -47,44 +47,22 @@ from Gmsh2specfem import export2SPECFEM3D
 ##############################################################
 
 # model size
-xsize = 1000.0
-ysize = 1000.0
-zsize = 1000.0
+xsize = 10000.0
+ysize = 8000.0
+zsize = 5000.0
 
 # model parameters
-domain_id = 1     # 1==acoustic/ 2==elastic
-if domain_id == 1:
-  # acoustic
-  rho = 1028.0      # kg/m^3  (ocean salt water density)
-  vp = 1480.0       # m/s
-  vs = 0.0          # m/s
-  Q_kappa = 400.0
-  Q_mu = 9999.0
-elif domain_id == 2:
-  # elastic
-  rho = 2300.0      # kg/m^3
-  vp = 2800.0       # m/s
-  vs = 0.0          # m/s
-  Q_kappa = 400.0
-  Q_mu = 200.0
-else:
-  print("domain setup not supported yet, exiting")
-  sys.exit(1)
-
+rho = 2300.0      # kg/m^3
+vp = 2800.0       # m/s
+vs = 1500.0       # m/s
+Q_kappa = 400.0
+Q_mu = 300.0
 aniso_flag = 0
+domain_id = 2     # 1==acoustic/ 2==elastic
 
 # mesh size
-mesh_element_size_Z = 100.0
-mesh_element_size_XY = 100.0
-
-# elevation function (for stretching top)
-elevation_type = 2    # 0 == no stretching, 1 == sine function, 2 == peak
-
-# mesh type
-mesh_type = 2         # 1 == uniform mesh, 2 == refined top elements
-
-# hex type
-hex_type = 2          # 1 == hex 9 elements, 2 == hex 27 elements
+mesh_element_size_Z = 1250.0
+mesh_element_size_XY = 1000.0
 
 ##############################################################
 
@@ -251,7 +229,7 @@ def stretch_to_elevation(points,zmin,zmax):
     """
     stretches z-coordinates of points uniformly from bottom zmin to top zmax
     """
-    global xsize,ysize,elevation_type
+    global xsize,ysize
 
     print("stretching vertical coordinates:")
 
@@ -262,26 +240,12 @@ def stretch_to_elevation(points,zmin,zmax):
     if H <= 0.0:
         return points
 
-    if elevation_type == 1:
-        # simple sine-function as elevation variations
-        print("  using sine-function")
-        kx = 2.0 * 3.14159265 / xsize
-        ky = 4.0 * 3.14159265 / ysize
-        # amplitude
-        A = 200.0
-    elif elevation_type == 2:
-        # peak as elevation variations
-        print("  using peak-function")
-        kx = 0.5 * xsize
-        ky = 0.5 * ysize
-        # amplitude
-        A = 200.0
-    else:
-        print("  no stretching")
-        kx = 0.0
-        ky = 0.0
-        A = 0.0
-
+    # simple sine-function as elevation variations
+    print("  using sine-function")
+    kx = 2.0 * 3.14159265 / xsize
+    ky = 4.0 * 3.14159265 / ysize
+    # amplitude
+    A = 200.0
 
     ele_max = -1.e24
     ele_min = +1.e24
@@ -292,19 +256,7 @@ def stretch_to_elevation(points,zmin,zmax):
         z = p[2]
 
         # determine elevation at x,y with respect to zmax
-        if elevation_type == 1:
-            # sine-function
-            elevation = A * math.sin(x*kx) * math.sin(y*ky)
-        elif elevation_type == 2:
-            # peak
-            dist = math.sqrt((x - kx)**2 + (y - ky)**2)/xsize    # distance of point between [0, sqrt(2)/2*(xsize)]
-            if dist <= 0.5:
-                elevation = A * (1.0 - 2.0 * dist)
-            else:
-                elevation = 0.0
-        else:
-            # no stretch
-            elevation = 0.0
+        elevation = A * math.sin(x*kx) * math.sin(y*ky)
 
         if elevation > ele_max: ele_max = elevation
         if elevation < ele_min: ele_min = elevation
@@ -379,22 +331,9 @@ def create_gmsh_model(xmin,xmax,ymin,ymax,z_top,z_bottom,lc_XY,number_of_element
         gmsh.option.setNumber("Mesh.Recombine3DAll", 1)
         gmsh.option.setNumber("Mesh.Algorithm", 8)
         # mesh element order 1=linear,2=quadratic,.. (example works for linear elements only)
-        if hex_type == 1:
-            # hex 9 elements
-            gmsh.option.setNumber("Mesh.ElementOrder", 1)
-        elif hex_type == 2:
-            # hex 27 elements
-            gmsh.option.setNumber("Mesh.ElementOrder", 2)
-            # turn on algorithm (high order tools) to check for negative Jacobians
-            # see: https://gmsh.geuz.narkive.com/nW6gEHZR/detect-negative-jacobians
-            gmsh.option.setNumber("Mesh.HighOrderOptimize", 1)
-        else:
-            # default linear hex 9 elements
-            gmsh.option.setNumber("Mesh.ElementOrder", 1)
-
+        gmsh.option.setNumber("Mesh.ElementOrder", 1)
         # add lateral surfaces to extrude output
         gmsh.option.setNumber("Geometry.ExtrudeReturnLateralEntities", 1)
-
     else:
         # pygmsh versions 6.x
         geom.add_raw_code('Mesh.RecombineAll = 1;')
@@ -408,23 +347,11 @@ def create_gmsh_model(xmin,xmax,ymin,ymax,z_top,z_bottom,lc_XY,number_of_element
         #geom.add_raw_code('Mesh.Algorithm3D = 6;')
         # turns off mesh smoothing - outcommented as it will distort mesh
         #geom.add_raw_code('Mesh.Smoothing = 0;')
-
         # mesh element order 1=linear,2=quadratic,.. (example works for linear elements only)
-        if hex_type == 1:
-            # hex 9 elements
-            geom.add_raw_code('Mesh.ElementOrder = 1;')
-        elif hex_type == 2:
-            # hex 27 elements
-            geom.add_raw_code('Mesh.ElementOrder = 2;')
-            # turn on algorithm (high order tools) to check for negative Jacobians
-            # see: https://gmsh.geuz.narkive.com/nW6gEHZR/detect-negative-jacobians
-            geom.add_raw_code('Mesh.HighOrderOptimize = 1;')
-        else:
-            # default linear hex 9 elements
-            geom.add_raw_code('Mesh.ElementOrder = 1;')
-
+        geom.add_raw_code('Mesh.ElementOrder = 1;')
         # add lateral surfaces to extrude output
         geom.add_raw_code('Geometry.ExtrudeReturnLateralEntities = 1;')
+
 
     ## creates geometry
     # creates top rectangle
@@ -457,29 +384,21 @@ def create_gmsh_model(xmin,xmax,ymin,ymax,z_top,z_bottom,lc_XY,number_of_element
     # direction and length
     axis = [0,0,z_bottom]
 
-    # meshing
-    print("mesh type: ",mesh_type)
-    if mesh_type == 1:
-      # uniform element-layers
-      print("           uniform element-layers")
-      top,vol,lat = geom.extrude(surface_top, translation_axis=axis, num_layers=number_of_element_layers_Z, recombine=True)
-    elif mesh_type == 2:
-      # splits 2 element-layers into top (0.1 * height) layer, rest of element-layers for second (from 0.1 till bottom) layer
-      print("           with 2 element-layers into top")
-      if pygmsh_major_version >= 7:
-          # pygmsh versions 7.x
-          layers = [2,number_of_element_layers_Z - 2]
-          heights = [0.1,1]
-          print("           layers ",layers," heights ",heights)
-          top,vol,lat = geom.extrude(surface_top, translation_axis=axis, num_layers=layers, heights=heights, recombine=True)
-      else:
-          # pygmsh versions 6.x
-          layers = '{2,%d},{0.1,1}' % (number_of_element_layers_Z - 2)
-          print("           layers ",layers)
-          top,vol,lat = geom.extrude(surface_top, translation_axis=axis, num_layers=layers, recombine=True)
+    # uniform element-layers
+    #top,vol,lat = geom.extrude(surface_top, translation_axis=axis, num_layers=number_of_element_layers_Z, recombine=True)
+
+    # splits 2 element-layers into top (0.1 * height) layer, rest of element-layers for second (from 0.1 till bottom) layer
+    if pygmsh_major_version >= 7:
+        # pygmsh versions 7.x
+        layers = [2,number_of_element_layers_Z - 2]
+        heights = [0.1,1]
+        print("           layers ",layers," heights ",heights)
+        top,vol,lat = geom.extrude(surface_top, translation_axis=axis, num_layers=layers, heights=heights, recombine=True)
     else:
-      print("Invalid mesh type {}, please check ...".format(mesh_type))
-      sys.exit(1)
+        # pygmsh versions 6.x
+        layers = '{2,%d},{0.1,1}' % (number_of_element_layers_Z - 2)
+        print("           layers ",layers)
+        top,vol,lat = geom.extrude(surface_top, translation_axis=axis, num_layers=layers, recombine=True)
 
     # to make sure geometry points get merged, should be default however...
     if pygmsh_major_version >= 7:
@@ -671,8 +590,6 @@ def mesh_3D():
     #       it is done here in a simple way to show how one could modify the mesh.
     global xsize,ysize,zsize,mesh_element_size_XY,mesh_element_size_Z
     global python_major_version,pygmsh_major_version
-    global mesh_type
-    global hex_type
 
     # output directory for mesh files
     os.system("mkdir -p MESH/")
@@ -690,10 +607,10 @@ def mesh_3D():
     # characteristic length of mesh elements
     lc_XY = mesh_element_size_XY
 
-    number_of_element_layers_Z = int((z_top-z_bottom) / mesh_element_size_Z)
+    number_of_element_layers_Z = int(zsize / mesh_element_size_Z)
 
     # output info
-    lc_Z = (z_top - z_bottom) / number_of_element_layers_Z
+    lc_Z = zsize / number_of_element_layers_Z
     print("")
     print("meshing:")
     print("characteristic length: ",lc_XY,lc_Z)
@@ -717,7 +634,7 @@ def mesh_3D():
     meshio.write(filename, mesh)
     print("VTK file written to : ",filename)
 
-    # saves as Gmsh-file
+    # saves as Gmsh-file (msh mesh format)
     filename = "MESH/box.msh"
     if pygmsh_major_version >= 7:
         # pygmsh versions 7.x
