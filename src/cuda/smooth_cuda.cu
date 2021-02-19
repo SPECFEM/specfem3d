@@ -161,7 +161,7 @@ void FC_FUNC_(prepare_gpu_smooth,
 
   TRACE("prepare_gpu_smooth");
 
-  Smooth_data* sp = (Smooth_data*)malloc( sizeof(Smooth_data) );
+  Smooth_data* sp = (Smooth_data*) malloc( sizeof(Smooth_data) );
   *Container = (long)sp;
 
   copy_todevice_realw((void**)&sp->x_me,xstore_me, NGLL3*(*nspec_me));

@@ -335,7 +335,7 @@ void FC_FUNC_(prepare_constants_device,
 
     // stores only local receiver rotations in d_nu_rec
     realw* h_nu_rec;
-    h_nu_rec = (realw*)malloc(NDIM * NDIM * mp->nrec_local * sizeof(realw));
+    h_nu_rec = (realw*) calloc(NDIM * NDIM * mp->nrec_local, sizeof(realw));
     int irec_loc = 0;
     if (mp->simulation_type == 1 || mp->simulation_type == 3){
       // forward/kernel simulations: receiver positions at STATIONS locations
@@ -366,7 +366,7 @@ void FC_FUNC_(prepare_constants_device,
 
     // stores only local receiver array
     int *ispec_selected_rec_loc;
-    ispec_selected_rec_loc = (int*)malloc(mp->nrec_local * sizeof(int));
+    ispec_selected_rec_loc = (int*) calloc(mp->nrec_local, sizeof(int));
     irec_loc = 0;
     if (mp->simulation_type == 1 || mp->simulation_type == 3){
       // forward/kernel simulations: receiver positions at STATIONS locations
@@ -1245,7 +1245,7 @@ void FC_FUNC_(prepare_sim2_or_3_const_device,
 
       // stores only local "adjoint sources" array
       int *ispec_selected_adjrec_loc;
-      ispec_selected_adjrec_loc = (int*)malloc(mp->nadj_rec_local * sizeof(int));
+      ispec_selected_adjrec_loc = (int*) calloc(mp->nadj_rec_local, sizeof(int));
       int iadjrec_loc = 0;
       for(int i=0; i < (*nrec); i++) {
         if (mp->myrank == h_islice_selected_rec[i]){

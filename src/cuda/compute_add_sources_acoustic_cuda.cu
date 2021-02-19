@@ -120,7 +120,7 @@ void FC_FUNC_(compute_add_sources_ac_cuda,
 
   int NSOURCES = *NSOURCESf;
 
-  field* stf_pre_compute = (field*)malloc(NSOURCES * sizeof(field));
+  field* stf_pre_compute = (field*) malloc(NSOURCES * sizeof(field));
   get_stf_for_gpu(stf_pre_compute,h_stf_pre_compute,run_number_of_the_source,NSOURCES);
 
   // copies pre-computed source time factors onto GPU
@@ -166,7 +166,7 @@ void FC_FUNC_(compute_add_sources_ac_s3_cuda,
 
   int NSOURCES = *NSOURCESf;
 
-  field* stf_pre_compute = (field*)malloc(NSOURCES * sizeof(field));
+  field* stf_pre_compute = (field*) malloc(NSOURCES * sizeof(field));
   get_stf_for_gpu(stf_pre_compute,h_stf_pre_compute,run_number_of_the_source,NSOURCES);
 
   // copies source time factors onto GPU

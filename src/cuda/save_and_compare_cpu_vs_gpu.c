@@ -111,7 +111,7 @@ void get_max_from_surface_file_(int* nodes_per_iterationf,int* NSTEP) {
     exit(1);
   }
 
-  float* vector = (float*)malloc(nodes_per_iteration*sizeof(float));
+  float* vector = (float*) malloc(nodes_per_iteration*sizeof(float));
   float max_val;
   int i,idummy;
   max_val = 0.0;
@@ -202,8 +202,8 @@ void compare_surface_files_(int* bytes_per_iteration, int* number_of_iterations)
 
   /* pause_for_debug(); */
 
-  float* gpu_vector = (float*)malloc(*bytes_per_iteration);
-  float* cpu_vector = (float*)malloc(*bytes_per_iteration);
+  float* gpu_vector = (float*) malloc(*bytes_per_iteration);
+  float* cpu_vector = (float*) malloc(*bytes_per_iteration);
   int i,it,idummy,error_count=0;
   for(it=0;it<*number_of_iterations;it++) {
     int pos = (*bytes_per_iteration)*(it);
@@ -244,7 +244,7 @@ void compare_surface_files_(int* bytes_per_iteration, int* number_of_iterations)
 void compare_fvector_(float* vector, int* size, int* id, int* cpu_or_gpu) {
   FILE* fp;
   char cmp_filename[BUFSIZ];
-  float* compare_vector = (float*)malloc(*size*sizeof(float));
+  float* compare_vector = (float*) malloc(*size*sizeof(float));
   if (*cpu_or_gpu == 0) { //swap gpu/cpu for compare
     sprintf(cmp_filename, "debug_output_gpu_%d.dat",*id);
   }
@@ -288,7 +288,7 @@ void compare_fvector_(float* vector, int* size, int* id, int* cpu_or_gpu) {
 void compare_ivector_(int* vector, int* size, int* id, int* cpu_or_gpu) {
   FILE* fp;
   char cmp_filename[BUFSIZ];
-  int* compare_vector = (int*)malloc(*size*sizeof(int));
+  int* compare_vector = (int*) malloc(*size*sizeof(int));
   if (*cpu_or_gpu == 0) { //swap gpu/cpu for compare
     sprintf(cmp_filename, "debug_output_gpu_%d.dat",*id);
   }

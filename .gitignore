@@ -12,9 +12,9 @@ setup/constants_tomography.h
 setup/precision.h
 
 # Build time
-bin
-lib
-obj
+bin/
+lib/
+obj/
 src/decompose_mesh/*.mod
 src/generate_databases/*.mod
 src/meshfem3D/*.mod
@@ -34,4 +34,5 @@ doc/USER_MANUAL/Schedule
 # Trash files
 .*swp
 .*swo
+.*swn
 *~

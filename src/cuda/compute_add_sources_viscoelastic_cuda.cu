@@ -93,7 +93,7 @@ void FC_FUNC_(compute_add_sources_el_cuda,
 
   // convert to GPU precision
   realw* stf_pre_compute;
-  stf_pre_compute = (realw*)malloc(NSOURCES * sizeof(realw));
+  stf_pre_compute = (realw*) malloc(NSOURCES * sizeof(realw));
   for (int i_source=0;i_source < NSOURCES;i_source++) stf_pre_compute[i_source] = (realw)h_stf_pre_compute[i_source];
 
   print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,stf_pre_compute,
@@ -136,7 +136,7 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
 
   // convert to GPU precision
   realw* stf_pre_compute;
-  stf_pre_compute = (realw*)malloc(NSOURCES * sizeof(realw));
+  stf_pre_compute = (realw*) malloc(NSOURCES * sizeof(realw));
   for (int i_source=0;i_source < NSOURCES;i_source++) stf_pre_compute[i_source] = (realw)h_stf_pre_compute[i_source];
 
   print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,stf_pre_compute,
