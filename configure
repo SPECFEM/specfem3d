@@ -640,6 +640,8 @@ CUDA_FLAGS
 NVCC
 CONFIGURE_FLAGS
 ASDF_LIBS
+ADIOS2_CLIBS
+ADIOS2_CFLAGS
 ADIOS_LIBS
 ADIOS_FCFLAGS
 ADIOS_CONFIG
@@ -696,6 +698,8 @@ FCFLAGS
 FC
 COND_ASDF_FALSE
 COND_ASDF_TRUE
+COND_ADIOS2_FALSE
+COND_ADIOS2_TRUE
 COND_ADIOS_FALSE
 COND_ADIOS_TRUE
 COND_VTK_FALSE
@@ -785,6 +789,7 @@ with_cuda
 enable_openmp
 enable_vtk
 with_adios
+with_adios2
 with_asdf
 with_scotch_dir
 with_scotch_includedir
@@ -1455,6 +1460,7 @@ Optional Packages:
   --with-mpi              build parallel version [default=yes]
   --with-cuda             build CUDA GPU enabled version [default=no]
   --with-adios            build ADIOS enabled version [default=no]
+  --with-adios2           build ADIOS enabled version [default=no]
   --with-asdf             build ASDF enabled version [default=no]
   --with-scotch-dir=DIR   define the root path to Scotch (e.g. /opt/scotch/)
   --with-scotch-includedir=DIR
@@ -2980,6 +2986,27 @@ fi
 else
   COND_ADIOS_TRUE='#'
   COND_ADIOS_FALSE=
+fi
+
+
+###
+### ADIOS2
+###
+
+
+# Check whether --with-adios2 was given.
+if test "${with_adios2+set}" = set; then :
+  withval=$with_adios2; want_adios2="$withval"
+else
+  want_adios2=no
+fi
+
+ if test x"$want_adios2" != xno; then
+  COND_ADIOS2_TRUE=
+  COND_ADIOS2_FALSE='#'
+else
+  COND_ADIOS2_TRUE='#'
+  COND_ADIOS2_FALSE=
 fi
 
 
@@ -7670,6 +7697,44 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 fi
 
 ###
+### ADIOS2
+###
+
+if test x"$want_adios2" != xno; then :
+
+    $as_echo "## ------ ##
+## ADIOS2 ##
+## ------ ##"
+    if test "$want_mpi" != yes; then
+        as_fn_error $? "Cannot compile with ADIOS2 without MPI." "$LINENO" 5
+    fi
+
+    # for fortran compilation
+    CIT_ADIOS2_CONFIG
+
+    # for C file compilation
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ADIOS2 C flags and libs" >&5
+$as_echo_n "checking for ADIOS2 C flags and libs... " >&6; }
+    if test x"$ADIOS2_CONFIG" != x; then :
+
+      ADIOS2_CFLAGS=`$ADIOS2_CONFIG --c-flags`
+      ADIOS2_CLIBS=`$ADIOS2_CONFIG --c-libs`
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: done" >&5
+$as_echo "done" >&6; }
+
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no adios2_config" >&5
+$as_echo "no adios2_config" >&6; }
+fi
+
+
+
+    # in case adios2 c file compilation needs mpi
+
+
+fi
+
+###
 ### ASDF
 ###
 
@@ -7690,7 +7755,7 @@ CONFIGURE_FLAGS="FC=$FC FCFLAGS=$FCFLAGS"
 
 
 ###
-### CUDA
+### GPU
 ###
 
 if test x"$want_cuda" != xno; then :
@@ -10092,6 +10157,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_ADIOS_TRUE}" && test -z "${COND_ADIOS_FALSE}"; then
   as_fn_error $? "conditional \"COND_ADIOS\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_ADIOS2_TRUE}" && test -z "${COND_ADIOS2_FALSE}"; then
+  as_fn_error $? "conditional \"COND_ADIOS2\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_ASDF_TRUE}" && test -z "${COND_ASDF_FALSE}"; then

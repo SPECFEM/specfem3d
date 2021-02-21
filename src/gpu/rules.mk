@@ -26,8 +26,8 @@
 #=====================================================================
 
 ## compilation directories
-S := ${S_TOP}/src/cuda
-$(cuda_OBJECTS): S = ${S_TOP}/src/cuda
+S := ${S_TOP}/src/gpu
+$(cuda_OBJECTS): S = ${S_TOP}/src/gpu
 
 #######################################
 

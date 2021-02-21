@@ -155,11 +155,22 @@ AC_ARG_WITH([adios],
 AM_CONDITIONAL([COND_ADIOS], [test x"$want_adios" != xno])
 
 ###
+### ADIOS2
+###
+
+AC_ARG_WITH([adios2],
+    [AS_HELP_STRING([--with-adios2],
+        [build ADIOS enabled version @<:@default=no@:>@])],
+    [want_adios2="$withval"],
+    [want_adios2=no])
+AM_CONDITIONAL([COND_ADIOS2], [test x"$want_adios2" != xno])
+
+###
 ### ASDF
 ###
 
 AC_ARG_WITH([asdf],
-    [AC_HELP_STRING([--with-asdf],
+    [AS_HELP_STRING([--with-asdf],
         [build ASDF enabled version @<:@default=no@:>@])],
     [want_asdf="$withval"],
     [want_asdf=no])
@@ -407,6 +418,33 @@ AS_IF([test x"$want_adios" != xno], [
 ])
 
 ###
+### ADIOS2
+###
+
+AS_IF([test x"$want_adios2" != xno], [
+    AS_BOX([ADIOS2])
+    if test "$want_mpi" != yes; then
+        AC_MSG_ERROR([Cannot compile with ADIOS2 without MPI.])
+    fi
+
+    # for fortran compilation
+    CIT_ADIOS2_CONFIG
+
+    # for C file compilation
+    AC_MSG_CHECKING([for ADIOS2 C flags and libs])
+    AS_IF([test x"$ADIOS2_CONFIG" != x], [
+      ADIOS2_CFLAGS=`$ADIOS2_CONFIG --c-flags`
+      ADIOS2_CLIBS=`$ADIOS2_CONFIG --c-libs`
+      AC_MSG_RESULT(done)
+    ],[AC_MSG_RESULT(no adios2_config)])
+    AC_SUBST([ADIOS2_CFLAGS])
+    AC_SUBST([ADIOS2_CLIBS])
+
+    # in case adios2 c file compilation needs mpi
+    AC_SUBST([MPICC])
+])
+
+###
 ### ASDF
 ###
 
@@ -423,7 +461,7 @@ CONFIGURE_FLAGS="FC=$FC FCFLAGS=$FCFLAGS"
 AC_SUBST([CONFIGURE_FLAGS])
 
 ###
-### CUDA
+### GPU
 ###
 
 AS_IF([test x"$want_cuda" != xno], [

@@ -89,7 +89,8 @@ TRACE("\ttransfer_boun_accel_from_device");
     dim3 threads(blocksize,1,1);
 
     // selects arrays
-    realw* d_accel, *d_send_buffer;
+    realw* d_accel = NULL;
+    realw* d_send_buffer = NULL;
     if (*FORWARD_OR_ADJOINT == 1) {
       // forward wavefield
       d_accel = mp->d_accel;
@@ -326,7 +327,8 @@ TRACE("\ttransfer_asmbl_accel_to_device");
     dim3 threads(blocksize,1,1);
 
     // selects arrays
-    realw* d_accel, *d_send_buffer;
+    realw* d_accel = NULL;
+    realw* d_send_buffer = NULL;
     if (*FORWARD_OR_ADJOINT == 1) {
       // forward wavefield
       d_accel = mp->d_accel;
@@ -419,7 +421,8 @@ TRACE("\ttransfer_sync_accel_to_device");
     // cudaEventRecord( start, 0);
 
     // selects arrays
-    realw* d_accel, *d_send_buffer;
+    realw* d_accel = NULL;
+    realw* d_send_buffer = NULL;
     if (*FORWARD_OR_ADJOINT == 1) {
       // forward wavefield
       d_accel = mp->d_accel;

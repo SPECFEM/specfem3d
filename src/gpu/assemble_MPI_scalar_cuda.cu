@@ -88,7 +88,8 @@ TRACE("transfer_boun_pot_from_device");
     dim3 threads(blocksize,1,1);
 
     // selects arrays
-    field* d_potential_dot_dot, *d_send_buffer;
+    field* d_potential_dot_dot = NULL;
+    field* d_send_buffer = NULL;
     if (*FORWARD_OR_ADJOINT == 1) {
       // forward wavefield
       d_potential_dot_dot = mp->d_potential_dot_dot_acoustic;
@@ -203,7 +204,8 @@ TRACE("transfer_asmbl_pot_to_device");
     dim3 threads(blocksize,1,1);
 
     // selects arrays
-    field* d_potential_dot_dot, *d_send_buffer;
+    field* d_potential_dot_dot = NULL;
+    field* d_send_buffer = NULL;
     if (*FORWARD_OR_ADJOINT == 1) {
       // forward wavefield
       d_potential_dot_dot = mp->d_potential_dot_dot_acoustic;
