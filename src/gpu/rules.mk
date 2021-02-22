@@ -27,46 +27,95 @@
 
 ## compilation directories
 S := ${S_TOP}/src/gpu
-$(cuda_OBJECTS): S = ${S_TOP}/src/gpu
+
+KERNEL_DIR_NAME := kernels
+KERNEL_DIR := ${S}/${KERNEL_DIR_NAME}
 
 #######################################
 
-cuda_TARGETS = \
-	$(cuda_OBJECTS) \
+gpu_specfem3D_TARGETS = \
+	$(gpu_specfem3D_OBJECTS) \
 	$(EMPTY_MACRO)
 
-cuda_OBJECTS = \
-	$O/assemble_MPI_scalar_cuda.cuda.o \
-	$O/assemble_MPI_vector_cuda.cuda.o \
-	$O/check_fields_cuda.cuda.o \
-	$O/compute_add_sources_acoustic_cuda.cuda.o \
-	$O/compute_add_sources_viscoelastic_cuda.cuda.o \
-	$O/compute_coupling_cuda.cuda.o \
-	$O/compute_forces_acoustic_cuda.cuda.o \
-	$O/compute_forces_viscoelastic_cuda.cuda.o \
-	$O/compute_kernels_cuda.cuda.o \
-	$O/compute_stacey_acoustic_cuda.cuda.o \
-	$O/compute_stacey_viscoelastic_cuda.cuda.o \
-	$O/fault_solver_dynamics.cuda.o \
-	$O/helper_functions.cuda.o \
-	$O/initialize_cuda.cuda.o \
-	$O/noise_tomography_cuda.cuda.o \
-	$O/prepare_mesh_constants_cuda.cuda.o \
-	$O/save_and_compare_cpu_vs_gpu.cudacc.o \
-	$O/smooth_cuda.cuda.o \
-	$O/transfer_fields_cuda.cuda.o \
-	$O/update_displacement_cuda.cuda.o \
-	$O/write_seismograms_cuda.cuda.o \
+gpu_specfem3D_OBJECTS = \
+	$O/assemble_MPI_scalar_cuda.o \
+	$O/assemble_MPI_vector_cuda.o \
+	$O/check_fields_cuda.o \
+	$O/compute_add_sources_acoustic_cuda.o \
+	$O/compute_add_sources_viscoelastic_cuda.o \
+	$O/compute_coupling_cuda.o \
+	$O/compute_forces_acoustic_cuda.o \
+	$O/compute_forces_viscoelastic_cuda.o \
+	$O/compute_kernels_cuda.o \
+	$O/compute_stacey_acoustic_cuda.o \
+	$O/compute_stacey_viscoelastic_cuda.o \
+	$O/fault_solver_dynamics.o \
+	$O/helper_functions.o \
+	$O/initialize_cuda.o \
+	$O/noise_tomography_cuda.o \
+	$O/prepare_mesh_constants_cuda.o \
+	$O/save_and_compare_cpu_vs_gpu.o \
+	$O/smooth_cuda.o \
+	$O/transfer_fields_cuda.o \
+	$O/update_displacement_cuda.o \
+	$O/write_seismograms_cuda.o \
 	$(EMPTY_MACRO)
 
-cuda_STUBS = \
-	$O/specfem3D_gpu_cuda_method_stubs.cudacc.o \
+gpu_specfem3D_STUBS = \
+	$O/specfem3D_gpu_cuda_method_stubs.gpu_cc.o \
 	$(EMPTY_MACRO)
 
-cuda_DEVICE_OBJ = \
-	$O/cuda_device_obj.o \
-	$(EMPTY_MACRO)
 
+# CUDA
+ifeq ($(CUDA),yes)
+  cuda_specfem3D_DEVICE_OBJ =  $O/cuda_device_obj.o
+
+  # defines $(cuda_kernels_OBJS)
+  include $(KERNEL_DIR)/kernel_cuda.mk
+
+	# replaces .o endings with .cuda.o for Cuda object files
+	gpu_specfem3D_OBJECTS:=$(subst .o,.cuda.o,${gpu_specfem3D_OBJECTS})
+endif
+
+gpu_specfem3D_OBJECTS += $(cuda_specfem3D_DEVICE_OBJ) $(cuda_kernels_OBJS)
+
+###
+### variables
+###
+
+NVCC_CFLAGS := ${NVCC_FLAGS} -x cu
+
+BUILD_VERSION_TXT := with
+SELECTOR_CFLAG :=
+
+ifeq ($(CUDA),yes)
+  BUILD_VERSION_TXT += Cuda
+  SELECTOR_CFLAG += $(FC_DEFINE)USE_CUDA
+
+  ifeq ($(CUDA5),yes)
+    BUILD_VERSION_TXT += (v5)
+  endif
+  ifeq ($(CUDA6),yes)
+    BUILD_VERSION_TXT += (v6)
+  endif
+  ifeq ($(CUDA7),yes)
+    BUILD_VERSION_TXT += (v7)
+  endif
+  ifeq ($(CUDA8),yes)
+    BUILD_VERSION_TXT += (v8)
+  endif
+  ifeq ($(CUDA9),yes)
+    BUILD_VERSION_TXT += (v9)
+  endif
+  ifeq ($(CUDA10),yes)
+    BUILD_VERSION_TXT += (v10)
+  endif
+  ifeq ($(CUDA11),yes)
+    BUILD_VERSION_TXT += (v11)
+  endif
+endif
+
+BUILD_VERSION_TXT += support
 
 #######################################
 
@@ -78,9 +127,22 @@ cuda_DEVICE_OBJ = \
 ### CUDA compilation
 ###
 
+ifeq ($(CUDA),yes)
+$O/%.cuda-kernel.o: $(KERNEL_DIR)/%.cu $S/mesh_constants_cuda.h $(KERNEL_DIR)/kernel_proto.cu.h #$S/mesh_constants_gpu.h 
+	$(NVCC) -c $< -o $@ $(NVCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG) -include $(word 2,$^)
+
+$(cuda_specfem3D_DEVICE_OBJ): $(subst $(cuda_specfem3D_DEVICE_OBJ), ,$(gpu_specfem3D_OBJECTS)) $(cuda_kernels_OBJS)
+	${NVCCLINK} -o $@ $^
+endif
+
+#print-%:
+#	@echo '$*=$($*)'
+
 $O/%.cuda.o: $S/%.cu ${SETUP}/config.h $S/mesh_constants_cuda.h $S/prepare_constants_cuda.h
-	${NVCC} -c $< -o $@ $(NVCC_FLAGS)
+	${NVCC} -c $< -o $@ $(NVCC_FLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
 
-$O/%.cudacc.o: $S/%.c ${SETUP}/config.h
+$O/%.cuda.o: $S/%.c ${SETUP}/config.h $S/mesh_constants_cuda.h
+	$(NVCC) -c $< -o $@ $(NVCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
+
+$O/%.gpu_cc.o: $S/%.c ${SETUP}/config.h
 	${CC} -c $(CPPFLAGS) $(CFLAGS) $(MPI_INCLUDES) -o $@ $<
-

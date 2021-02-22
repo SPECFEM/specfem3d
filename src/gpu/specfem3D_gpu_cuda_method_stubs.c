@@ -5,10 +5,10 @@
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-!                        Princeton University, USA
-!                and CNRS / University of Marseille, France
+!                              CNRS, France
+!                       and Princeton University, USA
 !                 (there are currently many more authors!)
-! (c) Princeton University and CNRS / University of Marseille, July 2012
+!                           (c) October 2017
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ typedef realw field;
 
 
 //
-// src/cuda/assemble_MPI_scalar_cuda.cu
+// src/gpu/assemble_MPI_scalar_cuda.cu
 //
 
 void FC_FUNC_(transfer_boun_pot_from_device,
@@ -55,7 +55,7 @@ void FC_FUNC_(transfer_asmbl_pot_to_device,
 
 
 //
-// src/cuda/assemble_MPI_vector_cuda.cu
+// src/gpu/assemble_MPI_vector_cuda.cu
 //
 
 void FC_FUNC_(transfer_boun_accel_from_device,
@@ -107,7 +107,7 @@ void FC_FUNC_(sync_copy_from_device,
 
 
 //
-// src/cuda/check_fields_cuda.cu
+// src/gpu/check_fields_cuda.cu
 //
 
 void FC_FUNC_(output_free_device_memory,
@@ -156,7 +156,7 @@ void FC_FUNC_(check_error_vectors,
 
 
 //
-// src/cuda/compute_add_sources_acoustic_cuda.cu
+// src/gpu/compute_add_sources_acoustic_cuda.cu
 //
 
 void FC_FUNC_(compute_add_sources_ac_cuda,
@@ -179,7 +179,7 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
 
 
 //
-// src/cuda/compute_add_sources_viscoelastic_cuda.cu
+// src/gpu/compute_add_sources_viscoelastic_cuda.cu
 //
 
 void FC_FUNC_(compute_add_sources_el_cuda,
@@ -208,7 +208,7 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
 
 
 //
-// src/cuda/compute_coupling_cuda.cu
+// src/gpu/compute_coupling_cuda.cu
 //
 
 void FC_FUNC_(compute_coupling_ac_el_cuda,
@@ -229,7 +229,7 @@ void FC_FUNC_(compute_coupling_ocean_cuda,
 
 
 //
-// src/cuda/compute_forces_acoustic_cuda.cu
+// src/gpu/compute_forces_acoustic_cuda.cu
 //
 
 void FC_FUNC_(compute_forces_acoustic_cuda,
@@ -246,7 +246,7 @@ void FC_FUNC_(acoustic_enforce_free_surf_cuda,
 
 
 //
-// src/cuda/compute_forces_viscoelastic_cuda.cu
+// src/gpu/compute_forces_viscoelastic_cuda.cu
 //
 
 void FC_FUNC_(compute_forces_viscoelastic_cuda,
@@ -262,7 +262,7 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
 
 
 //
-// src/cuda/compute_kernels_cuda.cu
+// src/gpu/compute_kernels_cuda.cu
 //
 
 void FC_FUNC_(compute_kernels_elastic_cuda,
@@ -287,7 +287,7 @@ void FC_FUNC_(compute_kernels_hess_cuda,
 
 
 //
-// src/cuda/compute_stacey_acoustic_cuda.cu
+// src/gpu/compute_stacey_acoustic_cuda.cu
 //
 
 void FC_FUNC_(compute_stacey_acoustic_cuda,
@@ -303,7 +303,7 @@ void FC_FUNC_(compute_stacey_acoustic_undoatt_cuda,
 
 
 //
-// src/cuda/compute_stacey_viscoelastic_cuda.cu
+// src/gpu/compute_stacey_viscoelastic_cuda.cu
 //
 
 void FC_FUNC_(compute_stacey_viscoelastic_cuda,
@@ -319,7 +319,7 @@ void FC_FUNC_(compute_stacey_viscoelastic_undoatt_cuda,
 
 
 //
-// src/cuda/fault_solver_dynamics.cu
+// src/gpu/fault_solver_dynamics.cu
 //
 
 void FC_FUNC_(initialize_fault_solver,
@@ -430,7 +430,7 @@ void FC_FUNC_(fault_solver_gpu,
 
 
 //
-// src/cuda/helper_functions.cu
+// src/gpu/helper_functions.cu
 //
 
 void FC_FUNC_(pause_for_debug,
@@ -446,7 +446,7 @@ void FC_FUNC_(pause_for_debug,
 
 
 //
-// src/cuda/initialize_cuda.cu
+// src/gpu/initialize_cuda.cu
 //
 
 void FC_FUNC_(initialize_cuda_device,
@@ -457,7 +457,7 @@ void FC_FUNC_(initialize_cuda_device,
 
 
 //
-// src/cuda/noise_tomography_cuda.cu
+// src/gpu/noise_tomography_cuda.cu
 //
 
 void FC_FUNC_(make_displ_rand,MAKE_DISPL_RAND)(long* Mesh_pointer,realw* h_displ) {}
@@ -473,7 +473,7 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
 
 
 //
-// src/cuda/prepare_mesh_constants_cuda.cu
+// src/gpu/prepare_mesh_constants_cuda.cu
 //
 
 void FC_FUNC_(prepare_constants_device,
@@ -642,7 +642,7 @@ void FC_FUNC_(prepare_cleanup_device,
 
 
 //
-// src/cuda/smooth_cuda.cu
+// src/gpu/smooth_cuda.cu
 //
 
 void FC_FUNC_(prepare_gpu_smooth,
@@ -676,7 +676,7 @@ void FC_FUNC_(get_smooth,
 
 
 //
-// src/cuda/transfer_fields_cuda.cu
+// src/gpu/transfer_fields_cuda.cu
 //
 
 void FC_FUNC_(transfer_fields_el_to_device,
@@ -866,7 +866,7 @@ void FC_FUNC_(unregister_host_array,
 
 
 //
-// src/cuda/update_displacement_cuda.cu
+// src/gpu/update_displacement_cuda.cu
 //
 
 void FC_FUNC_(update_displacement_cuda,
@@ -904,7 +904,7 @@ void FC_FUNC_(kernel_3_acoustic_cuda,
 
 
 //
-// src/cuda/write_seismograms_cuda.cu
+// src/gpu/write_seismograms_cuda.cu
 //
 
 void FC_FUNC_(compute_seismograms_cuda,

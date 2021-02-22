@@ -25,7 +25,7 @@
  ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  !
  !=====================================================================
- */
+*/
 
 #include "mesh_constants_cuda.h"
 
@@ -35,51 +35,6 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void compute_add_sources_acoustic_kernel(field* potential_dot_dot_acoustic,
-                                                    int* d_ibool,
-                                                    realw* sourcearrays,
-                                                    field* stf_pre_compute,
-                                                    int myrank,
-                                                    int* islice_selected_source,
-                                                    int* ispec_selected_source,
-                                                    int* ispec_is_acoustic,
-                                                    realw* kappastore,
-                                                    int NSOURCES) {
-  int i = threadIdx.x;
-  int j = threadIdx.y;
-  int k = threadIdx.z;
-
-  int isource  = blockIdx.x + gridDim.x*blockIdx.y; // bx
-
-  int ispec,iglob;
-  field stf;
-  realw kappal;
-
-  if (isource < NSOURCES){
-
-    if (myrank == islice_selected_source[isource]) {
-
-      ispec = ispec_selected_source[isource]-1;
-
-      if (ispec_is_acoustic[ispec]) {
-
-        iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
-
-        stf = stf_pre_compute[isource];
-        kappal = kappastore[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)];
-
-        atomicAdd(&potential_dot_dot_acoustic[iglob],
-                  -sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 0,i,j,k)]*stf/kappal);
-
-        // debug: without atomic operation
-        //      potential_dot_dot_acoustic[iglob] +=
-        //              -sourcearrays[INDEX5(NSOURCES, 3, NGLLX,NGLLX,isource, 0, i,j,k)]*stf/kappal;
-      }
-    }
-  }
-}
-
-/* ----------------------------------------------------------------------------------------------- */
 
 // Converts source time function to the correct GPU precision, and adapts format for NB_RUNS_ON_ACOUSTIC_GPU option
 void get_stf_for_gpu(field* stf_pre_compute, double* h_stf_pre_compute, int * run_number_of_the_source, int NSOURCES) {
@@ -199,67 +154,6 @@ void FC_FUNC_(compute_add_sources_ac_s3_cuda,
 /* ----------------------------------------------------------------------------------------------- */
 
 // acoustic adjoint sources
-
-/* ----------------------------------------------------------------------------------------------- */
-
-__global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(field* potential_dot_dot_acoustic,
-                                                      int nrec,
-                                                      int it,
-                                                      int NSTEP_BETWEEN_ADJSRC,
-                                                      field* source_adjoint,
-                                                      realw* xir_store,
-                                                      realw* etar_store,
-                                                      realw* gammar_store,
-                                                      int* d_ibool,
-                                                      int* ispec_is_acoustic,
-                                                      int* ispec_selected_recloc,
-                                                      int nadj_rec_local,
-                                                      realw* kappastore) {
-
-  int irec_local = blockIdx.x + gridDim.x*blockIdx.y;
-
-  // because of grid shape, irec_local can be too big
-  if (irec_local < nadj_rec_local) {
-
-    int ispec = ispec_selected_recloc[irec_local]-1;
-    if (ispec_is_acoustic[ispec]){
-      int i = threadIdx.x;
-      int j = threadIdx.y;
-      int k = threadIdx.z;
-
-      int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
-
-      realw hxir    = xir_store[INDEX2(NGLLX,i,irec_local)];
-      realw hetar   = etar_store[INDEX2(NGLLX,j,irec_local)];
-      realw hgammar = gammar_store[INDEX2(NGLLX,k,irec_local)];
-
-      field source_adj = source_adjoint[INDEX3(NDIM,nadj_rec_local,0,irec_local,it)];
-      //realw kappal = kappastore[INDEX4(NGLLX,NGLLY,NGLLZ,i,j,k,ispec)];
-
-      //potential_dot_dot_acoustic[iglob] += adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,
-      //                                            pre_computed_irec_local_index[irec],
-      //                                            pre_computed_index,
-      //                                            0,
-      //                                            i,j,k)]/kappal;
-
-      // beware, for acoustic medium, a pressure source would be taking the negative
-      // and divide by Kappa of the fluid;
-      //
-      // note: we take the first component of the adj_sourcearrays
-
-      //realw stf = - source_adj * hxir * hetar * hgammar / kappal;
-
-      // VM VM : change the adjoint source to be consistent with CPU code
-      field stf = source_adj * hxir * hetar * hgammar;
-      atomicAdd(&potential_dot_dot_acoustic[iglob],stf);
-
-                //+adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,
-                //                         pre_computed_irec_local_index[irec],pre_computed_index-1,
-                //                         0,i,j,k)] // / kappal
-                //                         );
-    }
-  }
-}
 
 /* ----------------------------------------------------------------------------------------------- */
 

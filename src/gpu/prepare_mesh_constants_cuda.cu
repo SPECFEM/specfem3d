@@ -30,7 +30,10 @@
 #include "mesh_constants_cuda.h"
 #include "prepare_constants_cuda.h"
 
-/* ----------------------------------------------------------------------------------------------- */
+
+#ifdef USE_OLDER_CUDA4_GPU
+#pragma message ("\nCompiling with: USE_OLDER_CUDA4_GPU enabled\n")
+#endif
 
 #ifdef USE_OLDER_CUDA4_GPU
 #else

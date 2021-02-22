@@ -181,7 +181,7 @@ xmodel_update_SHARED_OBJECTS = \
 	$(EMPTY_MACRO)
 
 # cuda stubs
-xmodel_update_OBJECTS += $O/specfem3D_gpu_cuda_method_stubs.cudacc.o
+xmodel_update_OBJECTS += $(gpu_specfem3D_STUBS)
 
 
 # using ADIOS files

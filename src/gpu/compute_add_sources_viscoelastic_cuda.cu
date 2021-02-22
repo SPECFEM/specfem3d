@@ -35,47 +35,6 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void compute_add_sources_kernel(realw* accel,
-                                           int* d_ibool,
-                                           realw* sourcearrays,
-                                           field* stf_pre_compute,
-                                           int myrank,
-                                           int* islice_selected_source,
-                                           int* ispec_selected_source,
-                                           int* ispec_is_elastic,
-                                           int NSOURCES) {
-  int i = threadIdx.x;
-  int j = threadIdx.y;
-  int k = threadIdx.z;
-
-  int isource  = blockIdx.x + gridDim.x*blockIdx.y; // bx
-
-  int ispec,iglob;
-  field stf;
-
-  if (isource < NSOURCES) { // when NSOURCES > 65535, but mod(nspec_top,2) > 0, we end up with an extra block.
-
-    if (myrank == islice_selected_source[isource]) {
-
-      ispec = ispec_selected_source[isource]-1;
-
-      if (ispec_is_elastic[ispec]) {
-
-        stf = stf_pre_compute[isource];
-        iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
-
-        atomicAdd(&accel[iglob*3+0],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource,0,i,j,k)]*stf);
-        atomicAdd(&accel[iglob*3+1],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource,1,i,j,k)]*stf);
-        atomicAdd(&accel[iglob*3+2],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource,2,i,j,k)]*stf);
-      }
-    }
-  }
-
-}
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
 extern EXTERN_LANG
 void FC_FUNC_(compute_add_sources_el_cuda,
               COMPUTE_ADD_SOURCES_EL_CUDA)(long* Mesh_pointer,
@@ -168,28 +127,6 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void add_source_main_rec_noise_cuda_kernel(int* d_ibool,
-                                                      int* ispec_selected_rec,
-                                                      int irec_main_noise,
-                                                      realw* accel,
-                                                      realw* noise_sourcearray,
-                                                      int it) {
-  int tx = threadIdx.x;
-  int iglob = d_ibool[tx + NGLL3_PADDED*(ispec_selected_rec[irec_main_noise-1]-1)]-1;
-
-  // not sure if we need atomic operations but just in case...
-  // accel[3*iglob] += noise_sourcearray[3*tx + 3*125*it];
-  // accel[1+3*iglob] += noise_sourcearray[1+3*tx + 3*125*it];
-  // accel[2+3*iglob] += noise_sourcearray[2+3*tx + 3*125*it];
-
-  atomicAdd(&accel[iglob*3],  noise_sourcearray[0 + 3*tx + 3*NGLL3*it]);
-  atomicAdd(&accel[iglob*3+1],noise_sourcearray[1 + 3*tx + 3*NGLL3*it]);
-  atomicAdd(&accel[iglob*3+2],noise_sourcearray[2 + 3*tx + 3*NGLL3*it]);
-
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
 extern EXTERN_LANG
 void FC_FUNC_(add_source_main_rec_noise_cu,
               ADD_SOURCE_MAIN_REC_NOISE_CU)(long* Mesh_pointer,
@@ -222,48 +159,6 @@ TRACE("\tadd_source_main_rec_noise_cu");
 /* ----------------------------------------------------------------------------------------------- */
 
 // ADJOINT sources
-
-/* ----------------------------------------------------------------------------------------------- */
-
-__global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
-                                                      int nrec,
-                                                      int it,
-                                                      int NSTEP_BETWEEN_ADJSRC,
-                                                      field* source_adjoint,
-                                                      realw* xir_store,
-                                                      realw* etar_store,
-                                                      realw* gammar_store,
-                                                      int* d_ibool,
-                                                      int* ispec_is_elastic,
-                                                      int* ispec_selected_recloc,
-                                                      int nadj_rec_local) {
-
-  int irec_local = blockIdx.x + gridDim.x*blockIdx.y;
-
-  if (irec_local < nadj_rec_local) { // when nrec > 65535, but mod(nspec_top,2) > 0, we end up with an extra block.
-
-    int ispec = ispec_selected_recloc[irec_local]-1;
-
-    if (ispec_is_elastic[ispec]){
-      int i = threadIdx.x;
-      int j = threadIdx.y;
-      int k = threadIdx.z;
-      int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
-
-      realw hxir    = xir_store[INDEX2(NGLLX,i,irec_local)];
-      realw hetar   = etar_store[INDEX2(NGLLX,j,irec_local)];
-      realw hgammar = gammar_store[INDEX2(NGLLX,k,irec_local)];
-
-      realw lagrange =   hxir * hetar * hgammar ;
-
-      // atomic operations are absolutely necessary for correctness!
-      atomicAdd(&accel[0+3*iglob],source_adjoint[INDEX3(NDIM,nadj_rec_local,0,irec_local,it)]*lagrange);
-      atomicAdd(&accel[1+3*iglob],source_adjoint[INDEX3(NDIM,nadj_rec_local,1,irec_local,it)]*lagrange);
-      atomicAdd(&accel[2+3*iglob],source_adjoint[INDEX3(NDIM,nadj_rec_local,2,irec_local,it)]*lagrange);
-    } // ispec_is_elastic
-  }
-
-}
 
 /* ----------------------------------------------------------------------------------------------- */
 

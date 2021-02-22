@@ -43,7 +43,6 @@
                                   ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
 
   use constants
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NUMBER_OF_MATERIAL_PROPERTIES
 
   use meshfem3D_par, only: NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP
 

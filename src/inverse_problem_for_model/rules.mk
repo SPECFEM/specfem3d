@@ -277,45 +277,13 @@ inverse_problem_for_model_SHARED_OBJECTS += $(COND_OPENMP_OBJECTS)
 ###
 ### CUDA
 ###
-cuda_inverse_problem_for_model_OBJECTS = \
-	$O/assemble_MPI_scalar_cuda.cuda.o \
-	$O/assemble_MPI_vector_cuda.cuda.o \
-	$O/check_fields_cuda.cuda.o \
-	$O/compute_add_sources_acoustic_cuda.cuda.o \
-	$O/compute_add_sources_viscoelastic_cuda.cuda.o \
-	$O/compute_coupling_cuda.cuda.o \
-	$O/compute_forces_acoustic_cuda.cuda.o \
-	$O/compute_forces_viscoelastic_cuda.cuda.o \
-	$O/compute_kernels_cuda.cuda.o \
-	$O/compute_stacey_acoustic_cuda.cuda.o \
-	$O/compute_stacey_viscoelastic_cuda.cuda.o \
-	$O/helper_functions.cuda.o \
-	$O/initialize_cuda.cuda.o \
-	$O/noise_tomography_cuda.cuda.o \
-	$O/prepare_mesh_constants_cuda.cuda.o \
-	$O/save_and_compare_cpu_vs_gpu.cudacc.o \
-	$O/smooth_cuda.cuda.o \
-	$O/transfer_fields_cuda.cuda.o \
-	$O/update_displacement_cuda.cuda.o \
-	$O/write_seismograms_cuda.cuda.o \
-	$O/fault_solver_dynamics.cuda.o \
-	$(EMPTY_MACRO)
-
-cuda_inverse_problem_for_model_STUBS = \
-	$O/specfem3D_gpu_cuda_method_stubs.cudacc.o \
-	$(EMPTY_MACRO)
-
-cuda_inverse_problem_for_model_DEVICE_OBJ = \
-	$O/cuda_device_obj.o \
-	$(EMPTY_MACRO)
-
 ifeq ($(CUDA),yes)
-inverse_problem_for_model_OBJECTS += $(cuda_inverse_problem_for_model_OBJECTS)
+inverse_problem_for_model_OBJECTS += $(gpu_specfem3D_OBJECTS)
 ifeq ($(CUDA_PLUS),yes)
-inverse_problem_for_model_OBJECTS += $(cuda_inverse_problem_for_model_DEVICE_OBJ)
+inverse_problem_for_model_OBJECTS += $(gpu_specfem3D_DEVICE_OBJ)
 endif
 else
-inverse_problem_for_model_OBJECTS += $(cuda_inverse_problem_for_model_STUBS)
+inverse_problem_for_model_OBJECTS += $(gpu_specfem3D_STUBS)
 endif
 
 ###

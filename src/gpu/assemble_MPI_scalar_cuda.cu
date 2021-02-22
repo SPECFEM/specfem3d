@@ -35,36 +35,8 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// prepares a device array with with all inter-element edge-nodes -- this
-// is followed by a memcpy and MPI operations
-__global__ void prepare_boundary_potential_on_device(field* d_potential_dot_dot_acoustic,
-                                                     field* d_send_potential_dot_dot_buffer,
-                                                     const int num_interfaces_ext_mesh,
-                                                     const int max_nibool_interfaces_ext_mesh,
-                                                     const int* d_nibool_interfaces_ext_mesh,
-                                                     const int* d_ibool_interfaces_ext_mesh) {
-
-  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
-  int ientry,iglob;
-
-  for(int iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {
-    if (id<d_nibool_interfaces_ext_mesh[iinterface]) {
-
-      // entry in interface array
-      ientry = id + max_nibool_interfaces_ext_mesh*iinterface;
-      // global index in wavefield
-      iglob = d_ibool_interfaces_ext_mesh[ientry] - 1;
-
-      d_send_potential_dot_dot_buffer[ientry] = d_potential_dot_dot_acoustic[iglob];
-    }
-  }
-
-}
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
 // prepares and transfers the inter-element edge-nodes to the host to be MPI'd
+
 extern EXTERN_LANG
 void FC_FUNC_(transfer_boun_pot_from_device,
               TRANSFER_BOUN_POT_FROM_DEVICE)(long* Mesh_pointer,
@@ -135,44 +107,6 @@ TRACE("transfer_boun_pot_from_device");
 /* ----------------------------------------------------------------------------------------------- */
 
 // Assembly
-
-/* ----------------------------------------------------------------------------------------------- */
-
-
-__global__ void assemble_boundary_potential_on_device(field* d_potential_dot_dot_acoustic,
-                                                      field* d_send_potential_dot_dot_buffer,
-                                                      const int num_interfaces_ext_mesh,
-                                                      const int max_nibool_interfaces_ext_mesh,
-                                                      const int* d_nibool_interfaces_ext_mesh,
-                                                      const int* d_ibool_interfaces_ext_mesh) {
-
-  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
-  int ientry,iglob;
-
-  for( int iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {
-    if (id<d_nibool_interfaces_ext_mesh[iinterface]) {
-
-      // entry in interface array
-      ientry = id + max_nibool_interfaces_ext_mesh*iinterface;
-      // global index in wavefield
-      iglob = d_ibool_interfaces_ext_mesh[ientry] - 1;
-
-      // for testing atomic operations against not atomic operations (0.1ms vs. 0.04 ms)
-      // d_potential_dot_dot_acoustic[3*(d_ibool_interfaces_ext_mesh[id+max_nibool_interfaces_ext_mesh*iinterface]-1)] +=
-      // d_send_potential_dot_dot_buffer[3*(id + max_nibool_interfaces_ext_mesh*iinterface)];
-
-      atomicAdd(&d_potential_dot_dot_acoustic[iglob],d_send_potential_dot_dot_buffer[ientry]);
-    }
-  }
-  // ! This step is done via previous function transfer_and_assemble...
-  // ! do iinterface = 1, num_interfaces_ext_mesh
-  // !   do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-  // !     array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
-  // !          array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_vector_ext_mesh(:,ipoin,iinterface)
-  // !   enddo
-  // ! enddo
-}
-
 
 /* ----------------------------------------------------------------------------------------------- */
 

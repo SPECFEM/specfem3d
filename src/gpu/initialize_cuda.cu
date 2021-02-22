@@ -29,6 +29,29 @@
 
 #include "mesh_constants_cuda.h"
 
+// CUDA version output
+#ifdef USE_CUDA
+
+// macros for version output
+#define VALUE_TO_STRING(x) #x
+#define VALUE(x) VALUE_TO_STRING(x)
+#define VAR_NAME_VALUE(var) #var " = "  VALUE(var)
+
+#pragma message ("\n\nCompiling with: " VAR_NAME_VALUE(CUDA_VERSION) "\n")
+#if defined(__CUDA_ARCH__)
+#pragma message ("\n\nCompiling with: " VAR_NAME_VALUE(__CUDA_ARCH__) "\n")
+#endif
+
+// CUDA version >= 4.0 needed for cudaTextureType1D and cudaDeviceSynchronize()
+#if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
+#pragma message ("\n\nCompiling for CUDA version < 4.0\n")
+#endif
+
+#endif
+
+// gpu runtime flags
+int run_cuda = 0;
+
 /* ----------------------------------------------------------------------------------------------- */
 
 // GPU initialization
@@ -42,6 +65,9 @@ void FC_FUNC_(initialize_cuda_device,
 
   int device;
   int device_count;
+
+  // sets gpu runtime flag
+  run_cuda = 1;
 
   // Gets rank number of MPI process
   int myrank = *myrank_f;

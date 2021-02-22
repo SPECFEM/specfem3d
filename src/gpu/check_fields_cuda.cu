@@ -25,7 +25,7 @@
  ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  !
  !=====================================================================
- */
+*/
 
 #include "mesh_constants_cuda.h"
 
@@ -198,54 +198,6 @@ realw get_device_array_maximum_value(realw* array, int size){
 
 /* ----------------------------------------------------------------------------------------------- */
 
-
-__global__ void get_maximum_kernel(field* array, int size, realw* d_max){
-
-  /* simplest version: uses only 1 thread
-   realw max;
-   max = 0;
-   // finds maximum value in array
-   if (size > 0){
-   max = abs(array[0]);
-   for( int i=1; i < size; i++){
-   if (abs(array[i]) > max) max = abs(array[i]);
-   }
-   }
-   *d_max = max;
-   */
-
-  // reduction example:
-  __shared__ realw sdata[BLOCKSIZE_TRANSFER] ;
-
-  // load shared mem
-  unsigned int tid = threadIdx.x;
-  unsigned int bx = blockIdx.y*gridDim.x+blockIdx.x;
-  unsigned int i = tid + bx*blockDim.x;
-
-  // loads absolute values into shared memory
-  sdata[tid] = (i < size) ? fabs(array[i]) : 0.0 ;
-
-  __syncthreads();
-
-  // do reduction in shared mem
-  for(unsigned int s=blockDim.x/2; s>0; s>>=1)
-  {
-    if (tid < s){
-      // summation:
-      //sdata[tid] += sdata[tid + s];
-      // maximum:
-      if (sdata[tid] < sdata[tid + s]) sdata[tid] = sdata[tid + s];
-    }
-    __syncthreads();
-  }
-
-  // write result for this block to global mem
-  if (tid == 0) d_max[bx] = sdata[0];
-
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
 extern EXTERN_LANG
 void FC_FUNC_(get_norm_acoustic_from_device,
               GET_NORM_ACOUSTIC_FROM_DEVICE)(realw* norm,long* Mesh_pointer,int* sim_type) {
@@ -282,7 +234,7 @@ void FC_FUNC_(get_norm_acoustic_from_device,
    dim3 grid(1,1);
    dim3 threads(1,1,1);
 
-   get_maximum_kernel<<<grid,threads>>>(mp->d_potential_dot_dot_acoustic,
+   get_maximum_field_kernel<<<grid,threads>>>(mp->d_potential_dot_dot_acoustic,
    mp->NGLOB_AB,
    d_max);
    print_CUDA_error_if_any(cudaMemcpy(&max,d_max, sizeof(realw), cudaMemcpyDeviceToHost),222);
@@ -316,12 +268,12 @@ void FC_FUNC_(get_norm_acoustic_from_device,
 
 
   if (*sim_type == 1){
-    get_maximum_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,size,d_max);
+    get_maximum_field_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,size,d_max);
   }else if (*sim_type == 3){
-    get_maximum_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,size,d_max);
+    get_maximum_field_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,size,d_max);
   }
 
-  GPU_ERROR_CHECKING("kernel get_maximum_kernel");
+  GPU_ERROR_CHECKING("kernel get_maximum_field_kernel");
 
   // synchronizes
   //synchronize_cuda();
@@ -389,41 +341,6 @@ void FC_FUNC_(get_norm_acoustic_from_device,
 /* ----------------------------------------------------------------------------------------------- */
 
 // ELASTIC simulations
-
-/* ----------------------------------------------------------------------------------------------- */
-
-__global__ void get_maximum_vector_kernel(realw* array, int size, realw* d_max){
-
-  // reduction example:
-  __shared__ realw sdata[BLOCKSIZE_TRANSFER] ;
-
-  // load shared mem
-  unsigned int tid = threadIdx.x;
-  unsigned int bx = blockIdx.y*gridDim.x+blockIdx.x;
-  //unsigned int i = tid + bx*blockDim.x;
-  unsigned int i = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
-
-  // loads values into shared memory: assume array is a vector array
-  sdata[tid] = (i < size) ? (array[i*3]*array[i*3] + array[i*3+1]*array[i*3+1] + array[i*3+2]*array[i*3+2]) : 0.0 ;
-
-  __syncthreads();
-
-  // do reduction in shared mem
-  for(unsigned int s=blockDim.x/2; s>0; s>>=1)
-  {
-    if (tid < s){
-      // summation:
-      //sdata[tid] += sdata[tid + s];
-      // maximum:
-      if (sdata[tid] < sdata[tid + s]) sdata[tid] = sdata[tid + s];
-    }
-    __syncthreads();
-  }
-
-  // write result for this block to global mem
-  if (tid == 0) d_max[bx] = sdata[0];
-
-}
 
 /* ----------------------------------------------------------------------------------------------- */
 

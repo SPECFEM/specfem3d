@@ -160,33 +160,20 @@ xsmooth_sem_SHARED_OBJECTS = \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
 
-cuda_smooth_sem_STUBS = \
-	$O/specfem3D_gpu_cuda_method_stubs.cudacc.o \
-	$(EMPTY_MACRO)
-
-cuda_smooth_sem_OBJECTS = \
-	$O/check_fields_cuda.cuda.o \
-	$O/helper_functions.cuda.o \
-	$O/initialize_cuda.cuda.o \
-	$O/smooth_cuda.cuda.o \
-	$(EMPTY_MACRO)
-
-cuda_smooth_sem_DEVICE_OBJ = \
-	$O/cuda_device_smooth_obj.o \
-	$(EMPTY_MACRO)
-
+## GPU
 ifeq ($(CUDA),yes)
 ## cuda version
-xsmooth_sem_OBJECTS += $(cuda_smooth_sem_OBJECTS)
+xsmooth_sem_OBJECTS += $(gpu_specfem3D_OBJECTS)
 ifeq ($(CUDA_PLUS),yes)
-xsmooth_sem_OBJECTS += $(cuda_smooth_sem_DEVICE_OBJ)
+xsmooth_sem_OBJECTS += $(gpu_specfem3D_DEVICE_OBJ)
 endif
 ## libs
 xsmooth_sem_LIBS = $(MPILIBS) $(CUDA_LINK)
 INFO_CUDA_SEM="building xsmooth_sem with CUDA support"
+
 else
 ## non-cuda version
-xsmooth_sem_OBJECTS += $(cuda_smooth_sem_STUBS)
+xsmooth_sem_OBJECTS += $(gpu_specfem3D_STUBS)
 ## libs
 xsmooth_sem_LIBS = $(MPILIBS)
 INFO_CUDA_SEM="building xsmooth_sem without CUDA support"
@@ -224,10 +211,3 @@ $O/%.postprocess.o: $S/%.F90 ${SETUP}/constants_tomography.h $O/postprocess_par.
 
 $O/%.postprocess.o: $S/%.c ${SETUP}/config.h
 	${CC} -c $(CPPFLAGS) $(CFLAGS) $(MPI_INCLUDES) -o $@ $<
-
-###
-### CUDA
-###
-
-$(cuda_smooth_sem_DEVICE_OBJ): $(cuda_smooth_sem_OBJECTS)
-	${NVCCLINK} -o $(cuda_smooth_sem_DEVICE_OBJ) $(cuda_smooth_sem_OBJECTS)

@@ -25,7 +25,7 @@
  ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  !
  !=====================================================================
- */
+*/
 
 #include "mesh_constants_cuda.h"
 
@@ -35,38 +35,9 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// prepares a device array with with all inter-element edge-nodes -- this
-// is followed by a memcpy and MPI operations
-
-__global__ void prepare_boundary_accel_on_device(realw* d_accel, realw* d_send_accel_buffer,
-                                                 const int num_interfaces_ext_mesh,
-                                                 const int max_nibool_interfaces_ext_mesh,
-                                                 const int* d_nibool_interfaces_ext_mesh,
-                                                 const int* d_ibool_interfaces_ext_mesh) {
-
-  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
-  int ientry,iglob;
-
-  for( int iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {
-    if (id < d_nibool_interfaces_ext_mesh[iinterface]) {
-
-      // entry in interface array
-      ientry = id + max_nibool_interfaces_ext_mesh*iinterface;
-      // global index in wavefield
-      iglob = d_ibool_interfaces_ext_mesh[ientry] - 1;
-
-      d_send_accel_buffer[3*ientry] = d_accel[3*iglob];
-      d_send_accel_buffer[3*ientry + 1 ] = d_accel[3*iglob + 1];
-      d_send_accel_buffer[3*ientry + 2 ] = d_accel[3*iglob + 2];
-    }
-  }
-
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
 // prepares and transfers the inter-element edge-nodes to the host to be MPI'd
 // (elements on boundary)
+
 extern EXTERN_LANG
 void FC_FUNC_(transfer_boun_accel_from_device,
               TRANSFER_BOUN_ACCEL_FROM_DEVICE)(long* Mesh_pointer,
@@ -200,94 +171,8 @@ void FC_FUNC_(transfer_boundary_to_device_a,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void assemble_boundary_accel_on_device(realw* d_accel, realw* d_send_accel_buffer,
-                                                  const int num_interfaces_ext_mesh,
-                                                  const int max_nibool_interfaces_ext_mesh,
-                                                  const int* d_nibool_interfaces_ext_mesh,
-                                                  const int* d_ibool_interfaces_ext_mesh) {
-
-  //int bx = blockIdx.y*gridDim.x+blockIdx.x;
-  //int tx = threadIdx.x;
-  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
-
-  int ientry,iglob;
-
-  for( int iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {
-    if (id < d_nibool_interfaces_ext_mesh[iinterface]) {
-
-      // entry in interface array
-      ientry = id + max_nibool_interfaces_ext_mesh*iinterface;
-      // global index in wavefield
-      iglob = d_ibool_interfaces_ext_mesh[ientry] - 1;
-
-      // for testing atomic operations against not atomic operations (0.1ms vs. 0.04 ms)
-      // d_accel[3*(iglob)] += d_send_accel_buffer[3*(ientry)];
-      // d_accel[3*(iglob)+1] += d_send_accel_buffer[3*(ientry)+1];
-      // d_accel[3*(iglob)+2] += d_send_accel_buffer[3*(ientry)+2];
-
-      atomicAdd(&d_accel[3*iglob],d_send_accel_buffer[3*ientry]);
-      atomicAdd(&d_accel[3*iglob + 1],d_send_accel_buffer[3*ientry + 1]);
-      atomicAdd(&d_accel[3*iglob + 2],d_send_accel_buffer[3*ientry + 2]);
-    }
-  }
-  // ! This step is done via previous function transfer_and_assemble...
-  // ! do iinterface = 1, num_interfaces_ext_mesh
-  // !   do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-  // !     array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
-  // !          array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_vector_ext_mesh(:,ipoin,iinterface)
-  // !   enddo
-  // ! enddo
-}
-
-
-
-__global__ void synchronize_boundary_accel_on_device(realw* d_accel, realw* d_send_accel_buffer,
-                                                  const int num_interfaces_ext_mesh,
-                                                  const int max_nibool_interfaces_ext_mesh,
-                                                  const int* d_nibool_interfaces_ext_mesh,
-                                                  const int* d_ibool_interfaces_ext_mesh) {
-
-  //int bx = blockIdx.y*gridDim.x+blockIdx.x;
-  //int tx = threadIdx.x;
-  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
-
-  // printf("inside the synchronization!\n");
-
-  int ientry,iglob;
-
-  for( int iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {
-    if (id < d_nibool_interfaces_ext_mesh[iinterface]) {
-
-      // entry in interface array
-      ientry = id + max_nibool_interfaces_ext_mesh*iinterface;
-      // global index in wavefield
-      iglob = d_ibool_interfaces_ext_mesh[ientry] - 1;
-
-      // for testing atomic operations against not atomic operations (0.1ms vs. 0.04 ms)
-      // d_accel[3*(iglob)] += d_send_accel_buffer[3*(ientry)];
-      // d_accel[3*(iglob)+1] += d_send_accel_buffer[3*(ientry)+1];
-      // d_accel[3*(iglob)+2] += d_send_accel_buffer[3*(ientry)+2];
-        //    printf("\n1:%f,2:%f,max:%f\n",d_accel[3*iglob],d_send_accel_buffer[3*ientry],fmax(d_accel[3*iglob],d_send_accel_buffer[3*ientry]));
-
-
-      d_accel[3*iglob]  = fmax(d_accel[3*iglob],d_send_accel_buffer[3*ientry]);
-      d_accel[3*iglob+1]= fmax(d_accel[3*iglob + 1],d_send_accel_buffer[3*ientry + 1]);
-      d_accel[3*iglob+2]= fmax(d_accel[3*iglob + 2],d_send_accel_buffer[3*ientry + 2]);
-    }
-  }
-  // ! This step is done via previous function transfer_and_assemble...
-  // ! do iinterface = 1, num_interfaces_ext_mesh
-  // !   do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-  // !     array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
-  // !          array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_vector_ext_mesh(:,ipoin,iinterface)
-  // !   enddo
-  // ! enddo
-}
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
 // FORWARD_OR_ADJOINT == 1 for accel, and == 3 for b_accel
+
 extern EXTERN_LANG
 void FC_FUNC_(transfer_asmbl_accel_to_device,
               TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer,

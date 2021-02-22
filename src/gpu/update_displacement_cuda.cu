@@ -35,39 +35,6 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-
-__global__ void UpdateDispVeloc_kernel(realw* displ,
-                                       realw* veloc,
-                                       realw* accel,
-                                       int size,
-                                       realw deltat,
-                                       realw deltatsqover2,
-                                       realw deltatover2) {
-
-  // two dimensional array of blocks on grid where each block has one dimensional array of threads
-  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
-
-  realw acc = accel[id];
-  // because of block and grid sizing problems, there is a small
-  // amount of buffer at the end of the calculation
-  if (id < size) {
-    displ[id] = displ[id] + deltat*veloc[id] + deltatsqover2*acc;
-    veloc[id] = veloc[id] + deltatover2*acc;
-    accel[id] = 0.0f; // can do this using memset...not sure if faster,probably not
-  }
-
-// -----------------
-// total of: 6 FLOP per thread (without int id calculation at beginning)
-//
-//           8 * 4 BYTE = 32 DRAM accesses per thread
-//
-// arithmetic intensity: 6 FLOP / 32 BYTES ~ 0.19 FLOP/BYTE
-// -----------------
-// nvprof: 24599250 flops for 4099875 threads -> 6 FLOP per thread
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
 extern EXTERN_LANG
 void FC_FUNC_(update_displacement_cuda,
               UPDATE_DISPLACMENT_CUDA)(long* Mesh_pointer,
@@ -143,47 +110,6 @@ void FC_FUNC_(update_displacement_cuda,
 // acoustic wavefield
 
 // KERNEL 1
-/* ----------------------------------------------------------------------------------------------- */
-
-__global__ void UpdatePotential_kernel(field* potential_acoustic,
-                                       field* potential_dot_acoustic,
-                                       field* potential_dot_dot_acoustic,
-                                       int size,
-                                       realw deltat,
-                                       realw deltatsqover2,
-                                       realw deltatover2) {
-
-  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
-
-  // because of block and grid sizing problems, there is a small
-  // amount of buffer at the end of the calculation
-  if (id < size) {
-    field p_dot = potential_dot_acoustic[id];
-    field p_dot_dot = potential_dot_dot_acoustic[id];
-
-    potential_acoustic[id] += deltat*p_dot + deltatsqover2*p_dot_dot;
-
-    potential_dot_acoustic[id] = p_dot + deltatover2*p_dot_dot;
-
-    potential_dot_dot_acoustic[id] = Make_field(0.f);
-  }
-
-// -----------------
-// total of: 6 FLOP per thread (without id calculation)
-//
-//           8 * 4 BYTE = 32 DRAM accesses per thread
-//
-// arithmetic intensity: 6 FLOP / 32 BYTES ~ 0.19 FLOP/BYTE
-// -----------------
-//
-// nvprof: nvprof --metrics flops_sp ./xspecfem3D
-//          -> 8199750 FLOPS (Single) floating-point operations for 1366625 threads
-//                                    1366625 (NGLOB) -> 10677 * 128 active threads- 31 ghost threads
-//          -> 6 FLOP per thread
-
-
-}
-
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
@@ -265,85 +191,6 @@ void FC_FUNC_(update_displacement_ac_cuda,
 // elastic domains
 
 // KERNEL 3
-
-/* ----------------------------------------------------------------------------------------------- */
-
-__global__ void kernel_3_cuda_device(realw* veloc,
-                                     realw* accel,
-                                     int size,
-                                     realw deltatover2,
-                                     realw* rmassx,
-                                     realw* rmassy,
-                                     realw* rmassz) {
-
-  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
-
-  realw rx,ry,rz;
-  realw ax,ay,az;
-  // because of block and grid sizing problems, there is a small
-  // amount of buffer at the end of the calculation
-  if (id < size) {
-    rx = rmassx[id];
-    ry = rmassy[id];
-    rz = rmassz[id];
-    ax = accel[3*id  ]*rx;
-    ay = accel[3*id+1]*ry;
-    az = accel[3*id+2]*rz;
-
-    accel[3*id]   = ax;
-    accel[3*id+1] = ay;
-    accel[3*id+2] = az;
-
-    veloc[3*id]   += deltatover2*ax;
-    veloc[3*id+1] += deltatover2*ay;
-    veloc[3*id+2] += deltatover2*az;
-  }
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-__global__ void kernel_3_accel_cuda_device(realw* accel,
-                                           int size,
-                                           realw* rmassx,
-                                           realw* rmassy,
-                                           realw* rmassz) {
-
-  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
-
-  realw rx,ry,rz;
-  realw ax,ay,az;
-  // because of block and grid sizing problems, there is a small
-  // amount of buffer at the end of the calculation
-  if (id < size) {
-    rx = rmassx[id];
-    ry = rmassy[id];
-    rz = rmassz[id];
-    ax = accel[3*id  ]*rx;
-    ay = accel[3*id+1]*ry;
-    az = accel[3*id+2]*rz;
-    accel[3*id  ] = ax;
-    accel[3*id+1] = ay;
-    accel[3*id+2] = az;
-  }
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-__global__ void kernel_3_veloc_cuda_device(realw* veloc,
-                                           realw* accel,
-                                           int size,
-                                           realw deltatover2) {
-
-  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
-
-  // because of block and grid sizing problems, there is a small
-  // amount of buffer at the end of the calculation
-  if (id < size) {
-    veloc[3*id] = veloc[3*id] + deltatover2*accel[3*id];
-    veloc[3*id+1] = veloc[3*id+1] + deltatover2*accel[3*id+1];
-    veloc[3*id+2] = veloc[3*id+2] + deltatover2*accel[3*id+2];
-  }
-}
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -465,61 +312,6 @@ void FC_FUNC_(kernel_3_b_cuda,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-
-__global__ void kernel_3_acoustic_cuda_device(field* potential_dot_acoustic,
-                                                field* potential_dot_dot_acoustic,
-                                                field* b_potential_dot_acoustic,
-                                                field* b_potential_dot_dot_acoustic,
-                                                int simulation_type,
-                                                int size,
-                                                realw deltatover2,
-                                                realw b_deltatover2,
-                                                realw* rmass_acoustic) {
-
-  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
-
-  realw rmass;
-  field p_dot_dot;
-  // because of block and grid sizing problems, there is a small
-  // amount of buffer at the end of the calculation
-  if (id < size) {
-    rmass = rmass_acoustic[id];
-    // multiplies pressure with the inverse of the mass matrix
-    p_dot_dot = rmass*potential_dot_dot_acoustic[id];
-    potential_dot_dot_acoustic[id] = p_dot_dot;
-    potential_dot_acoustic[id] += deltatover2*p_dot_dot;
-    if (simulation_type==3) {
-      p_dot_dot = rmass*b_potential_dot_dot_acoustic[id];
-      b_potential_dot_dot_acoustic[id] = p_dot_dot;
-      b_potential_dot_acoustic[id] += b_deltatover2*p_dot_dot;
-    }
-  }
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-__global__ void kernel_3_acoustic_single_cuda_device(field* potential_dot_acoustic,
-                                                     field* potential_dot_dot_acoustic,
-                                                     int size,
-                                                     realw deltatover2,
-                                                     realw* rmass_acoustic) {
-
-  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
-
-  realw rmass;
-  field p_dot_dot;
-  // because of block and grid sizing problems, there is a small
-  // amount of buffer at the end of the calculation
-  if (id < size) {
-    rmass = rmass_acoustic[id];
-    // multiplies pressure with the inverse of the mass matrix
-    p_dot_dot = rmass*potential_dot_dot_acoustic[id];
-    potential_dot_dot_acoustic[id] = p_dot_dot;
-    potential_dot_acoustic[id] += deltatover2*p_dot_dot;
-  }
-}
-
-/* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
 void FC_FUNC_(kernel_3_acoustic_cuda,

@@ -1,31 +1,31 @@
 /*
- !=====================================================================
- !
- !               S p e c f e m 3 D  V e r s i o n  3 . 0
- !               ---------------------------------------
- !
- !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
- !                              CNRS, France
- !                       and Princeton University, USA
- !                 (there are currently many more authors!)
- !                           (c) October 2017
- !
- ! This program is free software; you can redistribute it and/or modify
- ! it under the terms of the GNU General Public License as published by
- ! the Free Software Foundation; either version 3 of the License, or
- ! (at your option) any later version.
- !
- ! This program is distributed in the hope that it will be useful,
- ! but WITHOUT ANY WARRANTY; without even the implied warranty of
- ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- ! GNU General Public License for more details.
- !
- ! You should have received a copy of the GNU General Public License along
- ! with this program; if not, write to the Free Software Foundation, Inc.,
- ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- !
- !=====================================================================
- */
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                              CNRS, France
+!                       and Princeton University, USA
+!                 (there are currently many more authors!)
+!                           (c) October 2017
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 3 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,7 +40,15 @@
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define LOCAL_PATH_Q "./OUTPUT_FILES/DATABASES_MPI/"
 
+/************************************************************************
 
+ helper functions for debugging
+
+ please uncomment if needed...
+
+ *************************************************************************/
+
+/*
 void save_to_max_surface_file_(float* maxval) {
   int rank;
   char filename[BUFSIZ];
@@ -55,8 +63,11 @@ void save_to_max_surface_file_(float* maxval) {
   fprintf(fp,"%e\n",*maxval);
   fclose(fp);
 }
+*/
 
+/* ----------------------------------------------------------------------------------------------- */
 
+/*
 void save_fvector_(float* vector, int* size, int* id, int* cpu_or_gpu) {
   FILE* fp;
   char filename[BUFSIZ];
@@ -70,9 +81,12 @@ void save_fvector_(float* vector, int* size, int* id, int* cpu_or_gpu) {
   printf("writing vector, vector[0]=%e\n",vector[0]);
   fwrite(vector, sizeof(float), *size, fp);
   fclose(fp);
-
 }
+*/
 
+/* ----------------------------------------------------------------------------------------------- */
+
+/*
 void save_ivector_(int* vector, int* size, int* id, int* cpu_or_gpu) {
   FILE* fp;
   char filename[BUFSIZ];
@@ -85,10 +99,12 @@ void save_ivector_(int* vector, int* size, int* id, int* cpu_or_gpu) {
   fp = fopen(filename, "wb");
   fwrite(vector, sizeof(int), *size, fp);
   fclose(fp);
-
 }
+*/
 
+/* ----------------------------------------------------------------------------------------------- */
 
+/*
 void get_max_from_surface_file_(int* nodes_per_iterationf,int* NSTEP) {
   int nodes_per_iteration = *nodes_per_iterationf;
   char filename[BUFSIZ];
@@ -128,9 +144,12 @@ void get_max_from_surface_file_(int* nodes_per_iterationf,int* NSTEP) {
   }
   printf("max_val=%e\n",max_val);
 }
+*/
 
+/* ----------------------------------------------------------------------------------------------- */
+
+/*
 void compare_two_vectors_exact_(int* sizef,float* vector1,float* vector2,int* num_errors) {
-
   int size = *sizef;
   int i;
   int error_count = 0;
@@ -146,9 +165,12 @@ void compare_two_vectors_exact_(int* sizef,float* vector1,float* vector2,int* nu
   printf("**** Error Count: %d ****\n",error_count);
   *num_errors = error_count;
 }
+*/
 
+/* ----------------------------------------------------------------------------------------------- */
+
+/*
 void compare_two_vectors_(int* sizef,float* vector1,float* vector2,int* num_errors) {
-
   int size = *sizef;
   int i;
   int error_count = 0;
@@ -163,21 +185,24 @@ void compare_two_vectors_(int* sizef,float* vector1,float* vector2,int* num_erro
       }
       }
     }
-    /* if (vector1[i] != vector2[i]) { */
-    /*   if (fabsf(vector1[i]-vector2[i]) > 1e-25) { */
-    /*  error_count++; */
-    /*  if (error_count<50) { */
-    /*    printf("err[%d]: %e != %e\n",i,vector1[i],vector2[i]); */
-    /*  } */
-    /*   } */
-    /* } */
+    // if (vector1[i] != vector2[i]) {
+    //   if (fabsf(vector1[i]-vector2[i]) > 1e-25) {
+    //  error_count++;
+    //  if (error_count<50) {
+    //    printf("err[%d]: %e != %e\n",i,vector1[i],vector2[i]);
+    //  }
+    //   }
+    // }
   }
   printf("**** Error Count: %d ****\n",error_count);
   *num_errors = error_count;
 }
+*/
 
+/* ----------------------------------------------------------------------------------------------- */
+
+/*
 void compare_surface_files_(int* bytes_per_iteration, int* number_of_iterations) {
-
   char* cpu_file = LOCAL_PATH_Q"/cpu_proc000001_surface_movie";
   char* gpu_file = LOCAL_PATH_Q"/cpu_v2_proc000001_surface_movie";
 
@@ -200,7 +225,7 @@ void compare_surface_files_(int* bytes_per_iteration, int* number_of_iterations)
     perror("gpu file error\n");
   }
 
-  /* pause_for_debug(); */
+  // pause_for_debug();
 
   float* gpu_vector = (float*) malloc(*bytes_per_iteration);
   float* cpu_vector = (float*) malloc(*bytes_per_iteration);
@@ -239,8 +264,11 @@ void compare_surface_files_(int* bytes_per_iteration, int* number_of_iterations)
   printf("End of Surface Compare\n");
   exit(1);
 }
+*/
 
+/* ----------------------------------------------------------------------------------------------- */
 
+/*
 void compare_fvector_(float* vector, int* size, int* id, int* cpu_or_gpu) {
   FILE* fp;
   char cmp_filename[BUFSIZ];
@@ -252,7 +280,7 @@ void compare_fvector_(float* vector, int* size, int* id, int* cpu_or_gpu) {
     sprintf(cmp_filename, "debug_output_cpu_%d.dat",*id);
   }
 // DK DK duplicated statement and not cast to void, commenting it out  fopen(cmp_filename, "rb");
-  /* read the values */
+  // read the values
   if ((fp=fopen(cmp_filename, "rb"))==NULL) {
     printf("Cannot open comparison file %s.\n",cmp_filename);
     exit(1);
@@ -274,17 +302,21 @@ void compare_fvector_(float* vector, int* size, int* id, int* cpu_or_gpu) {
         printf("ERROR[%d]: %f != %f\n",i,compare_vector[i], vector[i]);
       }
       error_count++;
-      /* if (compare_vector[i] > 1e-30) error_count++; */
+      // if (compare_vector[i] > 1e-30) error_count++;
     }
   }
   printf("%d Total Errors\n",error_count);
   printf("size:%d\n",*size);
-  /* for(i=0;i<30;i++) { */
-  /*   printf("val[%d]: %g != %g\n",i,compare_vector[i], vector[i]); */
-  /*   /\* printf("error_check[%d]= %g\n",abs(vector[i] - compare_vector[i])/vector[i]); *\/ */
-  /* } */
+  // for(i=0;i<30;i++) {
+  //   printf("val[%d]: %g != %g\n",i,compare_vector[i], vector[i]);
+  //   /\* printf("error_check[%d]= %g\n",abs(vector[i] - compare_vector[i])/vector[i]); *\/
+  // }
 }
+*/
 
+/* ----------------------------------------------------------------------------------------------- */
+
+/*
 void compare_ivector_(int* vector, int* size, int* id, int* cpu_or_gpu) {
   FILE* fp;
   char cmp_filename[BUFSIZ];
@@ -296,7 +328,7 @@ void compare_ivector_(int* vector, int* size, int* id, int* cpu_or_gpu) {
     sprintf(cmp_filename, "debug_output_cpu_%d.dat",*id);
   }
 // DK DK duplicated statement and not cast to void, commenting it out  fopen(cmp_filename, "rb");
-  /* read the values */
+  // read the values
   if ((fp=fopen(cmp_filename, "rb"))==NULL) {
     printf("Cannot open comparison file %s.\n",cmp_filename);
     exit(1);
@@ -320,3 +352,5 @@ void compare_ivector_(int* vector, int* size, int* id, int* cpu_or_gpu) {
   }
   printf("%d Total Errors\n",error_count);
 }
+*/
+
