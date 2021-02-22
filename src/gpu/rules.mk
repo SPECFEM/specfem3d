@@ -128,7 +128,7 @@ BUILD_VERSION_TXT += support
 ###
 
 ifeq ($(CUDA),yes)
-$O/%.cuda-kernel.o: $(KERNEL_DIR)/%.cu $S/mesh_constants_cuda.h $(KERNEL_DIR)/kernel_proto.cu.h #$S/mesh_constants_gpu.h 
+$O/%.cuda-kernel.o: $(KERNEL_DIR)/%.cu $S/mesh_constants_cuda.h $(KERNEL_DIR)/kernel_proto.cu.h #$S/mesh_constants_gpu.h
 	$(NVCC) -c $< -o $@ $(NVCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG) -include $(word 2,$^)
 
 $(cuda_specfem3D_DEVICE_OBJ): $(subst $(cuda_specfem3D_DEVICE_OBJ), ,$(gpu_specfem3D_OBJECTS)) $(cuda_kernels_OBJS)
