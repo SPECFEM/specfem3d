@@ -789,8 +789,9 @@ typedef struct mesh_ {
   // gravity
   realw* d_minus_deriv_gravity;
   realw* d_minus_g;
+
   // FAULT
-  int Kelvin_Voigt_damping;
+  int use_Kelvin_Voigt_damping;
   realw* d_Kelvin_Voigt_eta;
 
   // for option NB_RUNS_FOR_ACOUSTIC_GPU

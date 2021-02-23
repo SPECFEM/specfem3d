@@ -37,7 +37,6 @@
 
 module fault_solver_dynamic
 
-  use constants
   use fault_solver_common
 
   implicit none
@@ -101,7 +100,7 @@ contains
 
   real(kind=CUSTOM_REAL) :: dt
   integer :: iflt,ier,dummy_idfault
-  integer :: nbfaults
+  integer :: nbfaults,nbfaults_bin
   integer :: size_Kelvin_Voigt
   integer :: SIMULATION_TYPE
   character(len=MAX_STRING_LEN) :: filename
@@ -120,27 +119,31 @@ contains
   if (ier /= 0) then
     if (myrank == 0) write(IMAIN,*) '  no dynamic faults'
     close(IIN_PAR)
+    ! all done, we can return
     return
   endif
 
+  ! number of faults
   read(IIN_PAR,*) nbfaults
   if (nbfaults == 0) then
     !if (myrank == 0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
     return
   endif
 
+  ! checks if binary fault file was created
   filename = prname(1:len_trim(prname))//'fault_db.bin'
   open(unit=IIN_BIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
-    stop
+    call exit_MPI(myrank,'Error: fault file fault_db.bin not found')
   endif
-  ! WARNING TO DO: should be an MPI abort
 
   ! Reading etas of each fault
   do iflt = 1,nbfaults
     read(IIN_PAR,*) ! etas
   enddo
+
+  ! fault rupture type: 1 = dyn 2=kin
   read(IIN_PAR,*) SIMULATION_TYPE
 
   ! fault simulation type == 1 for dynamic rupture simulation
@@ -148,6 +151,7 @@ contains
   if (SIMULATION_TYPE /= 1) then
     close(IIN_BIN)
     close(IIN_PAR)
+    ! all done
     return
   endif
 
@@ -157,33 +161,62 @@ contains
     write(IMAIN,*) '  found ', nbfaults, ' fault(s) in file DATA/Par_file_faults'
   endif
 
+  ! sets dynamic rupture flag
   SIMULATION_TYPE_DYN = .true.
 
+  ! reads parameters:
+  !   NTOUT : Number of time steps
+  !   NTSNAP: time interation of snapshots
+  !   V_HEALING (-1 : Healing off)
+  !   V_RUPT
   read(IIN_PAR,*) NTOUT
   read(IIN_PAR,*) NSNAP
   read(IIN_PAR,*) V_HEALING
   read(IIN_PAR,*) V_RUPT
 
-  read(IIN_BIN) nbfaults ! should be the same as in IIN_PAR
+  ! from binary fault files
+  read(IIN_BIN) nbfaults_bin ! should be the same as in IIN_PAR
+
+  ! checks
+  if (nbfaults /= nbfaults_bin) then
+    print *,'Error: number of faults ',nbfaults,' in Par_file_faults should match number stored in fault_db.bin: ',nbfaults_bin
+    print *,'Please check setup and rerun simulation...'
+    call exit_MPI(myrank,'Error invalid number of faults in Par_file_faults')
+  endif
+
+  ! saves number of faults
   Nfaults = nbfaults
   allocate( faults(nbfaults) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1361')
   dt = real(DTglobal)
+
+  ! example line:
+  ! &RUPTURE_SWITCHES RATE_AND_STATE=.false.,TPV16=.false./
   read(IIN_PAR,nml=RUPTURE_SWITCHES,end=110,iostat=ier)
   if (ier /= 0) write(*,*) 'RUPTURE_SWITCHES not found in Par_file_faults'
-  do iflt=1,nbfaults
+
+  ! reads in fault parameters
+  do iflt = 1,nbfaults
+    ! example lines:
+    ! &BEGIN_FAULT /
+    ! &STRESS_TENSOR Sigma=0e0,0e0,0e0,0e0,0e0,0e0/
+    ! ..
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
     call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt,myrank)
   enddo
+
+  ! close files
   close(IIN_BIN)
   close(IIN_PAR)
 
+  ! reads Kelvin-Voigt parameters
   filename = prname(1:len_trim(prname))//'Kelvin_voigt_eta.bin'
   open(unit=IIN_BIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
-    stop
+    call exit_MPI(myrank,'Error opening file Kelvin_voigt_eta.bin')
   endif
+  ! reads in values
   read(IIN_BIN) size_Kelvin_Voigt
   if (size_Kelvin_Voigt > 0) then
     allocate(Kelvin_Voigt_eta(size_Kelvin_Voigt),stat=ier)
@@ -195,11 +228,10 @@ contains
   return
 
 100 if (myrank == 0) write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
-    stop
+    call exit_MPI(myrank,'Error: BEGIN_FAULT entry missing')
 
 110 if (myrank == 0) write(IMAIN,*) 'Fatal error: did not find RUPTURE_SWITCHES input block in file DATA/Par_file_faults. Abort.'
-    stop
-  ! WARNING TO DO: should be an MPI abort
+    call exit_MPI(myrank,'Error: RUPTURE_SWITCHES entry missing')
 
   end subroutine BC_DYNFLT_init
 
@@ -207,7 +239,7 @@ contains
 
   subroutine transfer_faultdata_GPU()
 
-  use specfem_par , only: Fault_pointer
+  use specfem_par, only: Fault_pointer
 
   implicit none
 
@@ -219,14 +251,17 @@ contains
   enddo
 
   do ifault = 1,Nfaults
-
     nspec = faults(ifault)%nspec
     nglob = faults(ifault)%nglob
 
-    call transfer_todevice_fault_data(Fault_pointer,ifault-1,nspec,nglob,faults(ifault)%D, &
-    faults(ifault)%T0,faults(ifault)%T,faults(ifault)%B,faults(ifault)%R,faults(ifault)%V, &
-    faults(ifault)%Z,faults(ifault)%invM1,faults(ifault)%invM2,faults(ifault)%ibulk1,faults(ifault)%ibulk2)
-
+    call transfer_todevice_fault_data(Fault_pointer,ifault-1, &
+                                      nspec,nglob, &
+                                      faults(ifault)%D, &
+                                      faults(ifault)%T0,faults(ifault)%T, &
+                                      faults(ifault)%B,faults(ifault)%R,faults(ifault)%V, &
+                                      faults(ifault)%Z, &
+                                      faults(ifault)%invM1,faults(ifault)%invM2, &
+                                      faults(ifault)%ibulk1,faults(ifault)%ibulk2)
   enddo
 
   end subroutine transfer_faultdata_GPU
@@ -235,6 +270,9 @@ contains
 
   subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 
+  use constants, only: PARALLEL_FAULT
+
+  implicit none
   type(bc_dynandkinflt_type), intent(inout) :: bc
   integer, intent(in)                 :: IIN_BIN,IIN_PAR,NT,iflt
   real(kind=CUSTOM_REAL), intent(in)  :: dt
@@ -478,6 +516,7 @@ contains
   subroutine init_2d_distribution(a,coord,iin,n)
 !JPA refactor: background value should be an argument
 
+  use constants, only: PI
   implicit none
 
   real(kind=CUSTOM_REAL), intent(inout) :: a(:)
@@ -499,19 +538,19 @@ contains
 
   if (n == 0) return
 
-  do i=1,n
+  do i = 1,n
     shapeval = ''
-    val  = 0e0_CUSTOM_REAL
-    valh = 0e0_CUSTOM_REAL
-    xc = 0e0_CUSTOM_REAL
-    yc = 0e0_CUSTOM_REAL
-    zc = 0e0_CUSTOM_REAL
-    r = 0e0_CUSTOM_REAL
-    l = 0e0_CUSTOM_REAL
-    lx = 0e0_CUSTOM_REAL
-    ly = 0e0_CUSTOM_REAL
-    lz = 0e0_CUSTOM_REAL
-    rc = 0e0_CUSTOM_REAL
+    val  = 0.0_CUSTOM_REAL
+    valh = 0.0_CUSTOM_REAL
+    xc = 0.0_CUSTOM_REAL
+    yc = 0.0_CUSTOM_REAL
+    zc = 0.0_CUSTOM_REAL
+    r = 0.0_CUSTOM_REAL
+    l = 0.0_CUSTOM_REAL
+    lx = 0.0_CUSTOM_REAL
+    ly = 0.0_CUSTOM_REAL
+    lz = 0.0_CUSTOM_REAL
+    rc = 0.0_CUSTOM_REAL
 
     read(iin,DIST2D)
 
@@ -525,7 +564,7 @@ contains
       where(r1 < r)
         b = exp(r1**2/(r1**2 - r**2) ) * val + valh
       elsewhere
-        b = 0._CUSTOM_REAL
+        b = 0.0_CUSTOM_REAL
       endwhere
 
     case ('ellipse')
@@ -533,60 +572,60 @@ contains
       b = heaviside( tmp1 ) * val
 
     case ('square')
-      tmp1 = (l/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
-      tmp2 = (l/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
-      tmp3 = (l/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
+      tmp1 = (l/2.0_CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
+      tmp2 = (l/2.0_CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
+      tmp3 = (l/2.0_CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
       b = heaviside( tmp1 ) * heaviside( tmp2 ) * heaviside( tmp3) * val
 
     case ('x-cylinder')
       tmp1 = r - sqrt((coord(2,:)-yc)**2 + (coord(3,:)-zc)**2)
-      tmp2 = (lz/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
+      tmp2 = (lz/2.0_CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
       b = heaviside( tmp1 ) * heaviside( tmp2 ) * val
 
 
     case ('y-cylinder')
       tmp1 = r - sqrt((coord(3,:)-zc)**2 + (coord(1,:)-xc)**2)
-      tmp2 = (lz/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
+      tmp2 = (lz/2.0_CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
       b = heaviside( tmp1 ) * heaviside( tmp2 ) * val
 
 
     case ('z-cylinder')
       tmp1 = r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2)
-      tmp2 = (lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
+      tmp2 = (lz/2.0_CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
       b = heaviside( tmp1 ) * heaviside( tmp2 ) * val
 
     case ('cylindertaper')
-      r1=sqrt(((coord(1,:)-xc)**2 + (coord(3,:)-zc)**2 ));
+      r1 = sqrt(((coord(1,:)-xc)**2 + (coord(3,:)-zc)**2 ));
       where(r1 < rc)
         where(r1 < r)
-         b=val;
+         b = val;
         elsewhere
-        b=0.5e0_CUSTOM_REAL*val*(1e0_CUSTOM_REAL+cos(PI*(r1-r)/(rc-r)))
+        b = 0.5_CUSTOM_REAL*val*(1.0_CUSTOM_REAL+cos(PI*(r1-r)/(rc-r)))
         endwhere
       elsewhere
-        b=0._CUSTOM_REAL
+        b = 0.0_CUSTOM_REAL
       endwhere
 
 
     case ('rectangle')
-      tmp1 = (lx/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
-      tmp2 = (ly/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
-      tmp3 = (lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
+      tmp1 = (lx/2.0_CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
+      tmp2 = (ly/2.0_CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
+      tmp3 = (lz/2.0_CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
       b = heaviside( tmp1 ) * heaviside( tmp2 ) * heaviside( tmp3 ) * val
 
     case ('rectangle-taper')
-      tmp1 = (lx/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
-      tmp2 = (ly/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
-      tmp3 = (lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
+      tmp1 = (lx/2.0_CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
+      tmp2 = (ly/2.0_CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
+      tmp3 = (lz/2.0_CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
       b = heaviside( tmp1 ) * heaviside( tmp2 ) * heaviside( tmp3 ) &
-          * (val + ( coord(3,:) - zc + lz/2._CUSTOM_REAL ) * (valh-val)/lz )
+          * (val + ( coord(3,:) - zc + lz/2.0_CUSTOM_REAL ) * (valh-val)/lz )
 
     case default
       stop 'bc_dynflt_3d::init_2d_distribution:: unknown shape'
     end select
 
    ! REPLACE the value inside the prescribed area
-    where (b /= 0e0_CUSTOM_REAL) a = b
+    where (b /= 0.0_CUSTOM_REAL) a = b
   enddo
 
   end subroutine init_2d_distribution
@@ -668,6 +707,7 @@ contains
 
   subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
 
+  use constants, only: PARALLEL_FAULT
   use specfem_par, only: it,NSTEP,myrank
 
   implicit none
@@ -689,7 +729,8 @@ contains
   integer :: i
   real(kind=CUSTOM_REAL) :: nuc_x, nuc_y, nuc_z, nuc_r, nuc_t0, nuc_v, dist, tw_r, coh_size
 
-  if (bc%nspec > 0) then !Surendra : for parallel faults
+  ! for parallel faults
+  if (bc%nspec > 0) then
 
     half_dt = 0.5_CUSTOM_REAL * bc%dt
     Vf_old = sqrt(bc%V(1,:)*bc%V(1,:) + bc%V(2,:)*bc%V(2,:))
@@ -783,30 +824,30 @@ contains
       ! Solve for shear stress
       tnew = min(tStick,strength)
 
-    else  ! Update rate and state friction:
+    else
+      ! Update rate and state friction:
       !JPA the solver below can be refactored into a loop with two passes
 
       ! first pass
       theta_old = bc%rsf%theta
       call rsf_update_state(Vf_old,bc%dt,bc%rsf)
-      do i=1,bc%nglob
+
+      do i = 1,bc%nglob
         Vf_new(i) = rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                            bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
-
       enddo
+
       ! second pass
       bc%rsf%theta = theta_old
       tmp_Vf(:) = 0.5_CUSTOM_REAL*(Vf_old(:) + Vf_new(:))
       call rsf_update_state(tmp_Vf,bc%dt,bc%rsf)
-      do i=1,bc%nglob
+
+      do i = 1,bc%nglob
         Vf_new(i) = rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                            bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
-
-
       enddo
 
       tnew = tStick - bc%Z*Vf_new
-
     endif
 
     tStick = max(tStick,1.0_CUSTOM_REAL) ! to avoid division by zero
@@ -836,6 +877,7 @@ contains
 
     ! Add boundary term B*T to M*a
     call add_BT(bc,MxA,T)
+
     !-- intermediate storage of outputs --
     Vf_new = sqrt(bc%V(1,:)*bc%V(1,:) + bc%V(2,:)*bc%V(2,:))
     if (.not. RATE_AND_STATE) then
@@ -850,6 +892,7 @@ contains
                       Vf_old, Vf_new, it*bc%dt,bc%dt)
 
     call store_dataT(bc%dataT,bc%D,bc%V,bc%T,it)
+
     if (RATE_AND_STATE) then
       if (bc%rsf%StateLaw == 1) then
         bc%dataT%dat(8,:,it) = log10(theta_new(bc%dataT%iglob))
@@ -861,7 +904,6 @@ contains
     !-- outputs --
     ! write dataT every NTOUT time step or at the end of simulation
     if (mod(it,NTOUT) == 0 .or. it == NSTEP) call SCEC_write_dataT(bc%dataT)
-
   endif
 
   ! write dataXZ every NSNAP time step
@@ -889,6 +931,7 @@ contains
 
   subroutine swf_init(f,mu,coord,IIN_PAR)
 
+  use constants, only: HUGEVAL
   implicit none
 
   type(swf_type), intent(out) :: f
@@ -917,12 +960,12 @@ contains
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1375')
 
   ! WARNING: if V_HEALING is negative we turn off healing
-  f%healing = (V_HEALING > 0e0_CUSTOM_REAL)
+  f%healing = (V_HEALING > 0.0_CUSTOM_REAL)
 
-  mus = 0.6e0_CUSTOM_REAL
-  mud = 0.1e0_CUSTOM_REAL
-  dc = 1e0_CUSTOM_REAL
-  C = 0._CUSTOM_REAL
+  mus = 0.6_CUSTOM_REAL
+  mud = 0.1_CUSTOM_REAL
+  dc = 1.0_CUSTOM_REAL
+  C = 0.0_CUSTOM_REAL
   T = HUGEVAL
 
   nmus = 0
@@ -944,7 +987,7 @@ contains
   call init_2d_distribution(f%C  ,coord,IIN_PAR,nC)
   call init_2d_distribution(f%T  ,coord,IIN_PAR,nForcedRup)
 
-  f%theta = 0e0_CUSTOM_REAL
+  f%theta = 0.0_CUSTOM_REAL
 
   mu = swf_mu(f)
 
@@ -964,13 +1007,13 @@ contains
   real(kind=CUSTOM_REAL) :: nuc_x, nuc_y, nuc_z, nuc_r, nuc_t0, nuc_v
   NAMELIST / TWF / nuc_x, nuc_y, nuc_z, nuc_r,nuc_t0,nuc_v
 
-  nuc_x  = 0.0e0_CUSTOM_REAL
-  nuc_y  = 0.0e0_CUSTOM_REAL
-  nuc_z  = 0.0e0_CUSTOM_REAL
+  nuc_x  = 0.0_CUSTOM_REAL
+  nuc_y  = 0.0_CUSTOM_REAL
+  nuc_z  = 0.0_CUSTOM_REAL
 
-  nuc_r  = 0.0e0_CUSTOM_REAL
-  nuc_t0 = 0.0e0_CUSTOM_REAL
-  nuc_v  = 0.0e0_CUSTOM_REAL
+  nuc_r  = 0.0_CUSTOM_REAL
+  nuc_t0 = 0.0_CUSTOM_REAL
+  nuc_v  = 0.0_CUSTOM_REAL
   read(IIN_PAR, nml=TWF,iostat=ier)
   if (ier /= 0) write(*,*) 'TWF not found in Par_file_faults.'
 
@@ -1003,7 +1046,7 @@ contains
     npoin = size(vold,2)
     do k=1,npoin
       vnorm = sqrt(vold(1,k)**2 + vold(2,k)**2)
-      if (vnorm < V_HEALING) f%theta(k) = 0e0_CUSTOM_REAL
+      if (vnorm < V_HEALING) f%theta(k) = 0.0_CUSTOM_REAL
     enddo
   endif
 
@@ -1018,7 +1061,7 @@ contains
   type(swf_type), intent(in) :: f
   real(kind=CUSTOM_REAL) :: mu(size(f%theta))
 
-  mu = f%mus -(f%mus-f%mud)* min(f%theta/f%dc, 1e0_CUSTOM_REAL)
+  mu = f%mus -(f%mus-f%mud)* min(f%theta/f%dc, 1.0_CUSTOM_REAL)
 
   end function swf_mu
 
@@ -1041,13 +1084,13 @@ contains
 
     if (associated(f)) then
       ! rate and state friction simulation
-      call transfer_todevice_rsf_data(Fault_pointer,faults(ifault)%nglob,ifault-1 &
-                                      ,f%V0,f%f0,f%V_init,f%a,f%b,f%L,f%theta,f%T,f%C,f%fw,f%Vw)
+      call transfer_todevice_rsf_data(Fault_pointer,faults(ifault)%nglob,ifault-1, &
+                                      f%V0,f%f0,f%V_init,f%a,f%b,f%L,f%theta,f%T,f%C,f%fw,f%Vw)
     ! ifault - 1 because in C language, array index start from 0
     else if (associated(g)) then
       ! slip weakening friction simulation
-      call transfer_todevice_swf_data(Fault_pointer,faults(ifault)%nglob,ifault-1 &
-                                      ,g%Dc,g%mus,g%mud,g%T,g%C,g%theta)
+      call transfer_todevice_swf_data(Fault_pointer,faults(ifault)%nglob,ifault-1, &
+                                      g%Dc,g%mus,g%mud,g%T,g%C,g%theta)
     endif
   enddo
 
@@ -1057,6 +1100,7 @@ contains
 
   subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
+  use constants, only: HUGEVAL,TWO,HALF,ONE
   implicit none
 
   type(rsf_type), intent(out) :: f
@@ -1074,7 +1118,8 @@ contains
   integer :: nglob,ier
   integer :: InputStateLaw = 1 ! By default using aging law
 
-  NAMELIST / RSF / V0,f0,a,b,L,V_init,theta_init,nV0,nf0,na,nb,nL,nV_init,ntheta_init,C,T,nC,nForcedRup,Vw,fw,nVw,nfw,InputStateLaw
+  NAMELIST / RSF / V0,f0,a,b,L,V_init,theta_init,nV0,nf0,na,nb,nL,nV_init,ntheta_init, &
+                   C,T,nC,nForcedRup,Vw,fw,nVw,nfw,InputStateLaw
   NAMELIST / ASP / Fload,nFload
 
   nglob = size(coord,2)
@@ -1104,29 +1149,29 @@ contains
   allocate( f%Vw(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1386')
 
-  V0 =1.e-6_CUSTOM_REAL
-  f0 =0.6_CUSTOM_REAL
-  a =0.0080_CUSTOM_REAL  !0.0080_CUSTOM_REAL
-  b =0.0040_CUSTOM_REAL  !0.0120_CUSTOM_REAL
-  L =0.0135_CUSTOM_REAL
-  V_init =1.e-12_CUSTOM_REAL
-  theta_init =1.084207680000000e+09_CUSTOM_REAL
+  V0 = 1.e-6_CUSTOM_REAL
+  f0 = 0.6_CUSTOM_REAL
+  a = 0.0080_CUSTOM_REAL  !0.0080_CUSTOM_REAL
+  b = 0.0040_CUSTOM_REAL  !0.0120_CUSTOM_REAL
+  L = 0.0135_CUSTOM_REAL
+  V_init = 1.e-12_CUSTOM_REAL
+  theta_init = 1.084207680000000e+09_CUSTOM_REAL
   C = 0._CUSTOM_REAL
   T = HUGEVAL
   fw = 0.2_CUSTOM_REAL
   Vw = 0.1_CUSTOM_REAL
 
-  nV0 =0
-  nf0 =0
-  na =0
-  nb =0
-  nL =0
-  nV_init =0
-  ntheta_init =0
+  nV0 = 0
+  nf0 = 0
+  na = 0
+  nb = 0
+  nL = 0
+  nV_init = 0
+  ntheta_init = 0
   nC = 0
   nForcedRup = 0
-  nfw =0
-  nVw =0
+  nfw = 0
+  nVw = 0
 
   read(IIN_PAR, nml=RSF)
 
@@ -1171,17 +1216,17 @@ contains
   if (TPV16) then
     if (f%stateLaw == 1) then
       f%theta = f%L/f%V0 &
-                * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a)) &
+                * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2 + T0(2,:)**2)/T0(3,:)/f%a)) &
                          - f%f0 - f%a*log(f%V_init/f%V0) ) &
                        / f%b )
     else
-      f%theta =  f%a * log(TWO*f%V0/f%V_init * sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a))
+      f%theta =  f%a * log(TWO*f%V0/f%V_init * sinh(-sqrt(T0(1,:)**2 + T0(2,:)**2)/T0(3,:)/f%a))
     endif
   endif
   ! WARNING : ad hoc for SCEC benchmark TPV10x
   allocate( nucFload(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1387')
-  Fload = 0.e0_CUSTOM_REAL
+  Fload = 0.0_CUSTOM_REAL
   nFload = 0
   read(IIN_PAR, nml=ASP)
   nucFload = Fload
@@ -1215,7 +1260,8 @@ contains
 
     open(unit=sIIN_NUC,file='../DATA/rsf_hete_input_file.txt',status='old',iostat=ier)
     read(sIIN_NUC,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
-    snum_cell_all=snum_cell_str*snum_cell_dip
+
+    snum_cell_all = snum_cell_str*snum_cell_dip
     write(*,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
 
     allocate( sloc_str(snum_cell_all) ,stat=ier)
@@ -1245,7 +1291,7 @@ contains
     allocate( sC(snum_cell_all) ,stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1400')
 
-    do ipar=1,snum_cell_all
+    do ipar = 1,snum_cell_all
       read(sIIN_NUC,*) sloc_str(ipar),sloc_dip(ipar),ssigma0(ipar),stau0_str(ipar),stau0_dip(ipar), &
                        sV0(ipar),sf0(ipar),sa(ipar),sb(ipar),sL(ipar), &
                        sV_init(ipar),stheta(ipar),sC(ipar)
@@ -1258,7 +1304,7 @@ contains
     write(*,*) 'minXall = ', minval(sloc_str(:)), 'minZall = ', minval(sloc_dip(:))
     write(*,*) 'maxXall = ', maxval(sloc_str(:)), 'maxZall = ', maxval(sloc_dip(:))
 
-    do si=1,nglob
+    do si = 1,nglob
 
       ! WARNING: nearest neighbor interpolation
       ipar = minloc( (sloc_str(:)-coord(1,si))**2 + (sloc_dip(:)-coord(3,si))**2 , 1)
@@ -1293,17 +1339,17 @@ contains
     real(kind=CUSTOM_REAL) :: b11,b12,b21,b22,B1,B2
     integer :: i !,nglob_bulk
 
-    W1=15000._CUSTOM_REAL
-    W2=7500._CUSTOM_REAL
-    w=3000._CUSTOM_REAL
-    hypo_z = -7500._CUSTOM_REAL
-    do i=1,nglob
-      x=coord(1,i)
-      z=coord(3,i)
-      c1=abs(x) < W1+w
-      c2=abs(x) > W1
-      c3=abs(z-hypo_z) < W2+w
-      c4=abs(z-hypo_z) > W2
+    W1 = 15000.0_CUSTOM_REAL
+    W2 = 7500.0_CUSTOM_REAL
+    w = 3000.0_CUSTOM_REAL
+    hypo_z = -7500.0_CUSTOM_REAL
+    do i = 1,nglob
+      x = coord(1,i)
+      z = coord(3,i)
+      c1 = abs(x) < W1+w
+      c2 = abs(x) > W1
+      c3 = abs(z-hypo_z) < W2+w
+      c4 = abs(z-hypo_z) > W2
       if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
 
         if (c1 .and. c2) then
@@ -1311,9 +1357,9 @@ contains
           b12 = w/(abs(x)-W1)
           B1 = HALF * (ONE + tanh(b11 + b12))
         else if (abs(x) <= W1) then
-          B1 = 1._CUSTOM_REAL
+          B1 = 1.0_CUSTOM_REAL
         else
-          B1 = 0._CUSTOM_REAL
+          B1 = 0.0_CUSTOM_REAL
         endif
 
         if (c3 .and. c4) then
@@ -1321,9 +1367,9 @@ contains
           b22 = w/(abs(z-hypo_z)-W2)
           B2 = HALF * (ONE + tanh(b21 + b22))
         else if (abs(z-hypo_z) <= W2) then
-          B2 = 1._CUSTOM_REAL
+          B2 = 1.0_CUSTOM_REAL
         else
-          B2 = 0._CUSTOM_REAL
+          B2 = 0.0_CUSTOM_REAL
         endif
 
         f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
@@ -1360,6 +1406,7 @@ contains
 !---------------------------------------------------------------------
   subroutine rsf_update_state(V,dt,f)
 
+  use constants, only: ONE,HALF,TWO
   implicit none
 
   real(kind=CUSTOM_REAL), dimension(:), intent(in) :: V
@@ -1382,7 +1429,7 @@ contains
   ! slip law : by default use strong rate-weakening
   else
 !    f%theta = f%L/V * (f%theta*V/f%L)**(exp(-vDtL))
-    where(V /= 0._CUSTOM_REAL)
+    where(V /= 0.0_CUSTOM_REAL)
       fLV = f%f0 - (f%b - f%a)*log(V/f%V0)
       f_ss = f%fw + (fLV - f%fw)/(ONE + (V/f%Vw)**8)**0.125
       xi_ss = f%a * log( TWO*f%V0/V * sinh(f_ss/f%a) )
@@ -1444,6 +1491,7 @@ contains
 
   subroutine init_dataXZ(dataXZ,bc)
 
+  use constants, only: PARALLEL_FAULT
   use specfem_par, only: NPROC,myrank
 
   implicit none
@@ -1623,7 +1671,7 @@ contains
 
   integer :: i
 
-  dataXZ%stg   = stg
+  dataXZ%stg = stg
 
   do i = 1,size(stg)
 
@@ -1777,7 +1825,7 @@ contains
     double precision, intent(in) :: x
     double precision, intent(in), dimension(n) :: cs
 
-    integer i, ni
+    integer :: i, ni
     double precision :: b0, b1, b2, twox
 
     if (n < 1) stop 'Math::csevl: number of terms <= 0'
@@ -1826,7 +1874,7 @@ contains
     if (nos < 1) stop 'Math::inits: number of terms <= 0'
 
     err = 0.d0
-    do ii=1,nos
+    do ii = 1,nos
       i = nos + 1 - ii
       err = err + abs(os(i))
       if (err > eta) exit
@@ -1845,6 +1893,7 @@ contains
 
   subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 
+  use constants, only: ONE,TWO
   implicit none
 
   real(kind=CUSTOM_REAL) :: tStick,Seff,Z,f0,V0,a,b,L,theta
@@ -1867,7 +1916,7 @@ contains
 
   implicit none
 
-  integer, parameter :: MAXIT=200
+  integer, parameter :: MAXIT = 200
   real(kind=CUSTOM_REAL) :: x1,x2,xacc
   integer :: j
   !real(kind=CUSTOM_REAL) :: df,dx,dxold,f,fh,fl,temp,xh,xl
@@ -1877,44 +1926,45 @@ contains
 
   call funcd(dble(x1),fl,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   call funcd(dble(x2),fh,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+
   if ((fl > 0 .and. fh > 0) .or. (fl < 0 .and. fh < 0) ) stop 'root must be bracketed in rtsafe'
   if (fl == 0.) then
-    rtsafe=x2
+    rtsafe = x2
     return
   else if (fh == 0.) then
-    rtsafe=x2
+    rtsafe = x2
     return
   else if (fl < 0) then
-    xl=x1
-    xh=x2
+    xl = x1
+    xh = x2
   else
-    xh=x1
-    xl=x2
+    xh = x1
+    xl = x2
   endif
 
-  rtsafe=0.5d0*(x1+x2)
-  dxold=abs(x2-x1)
-  dx=dxold
+  rtsafe = 0.5d0*(x1+x2)
+  dxold = abs(x2-x1)
+  dx = dxold
   call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-  do j=1,MAXIT
+  do j = 1,MAXIT
     if (((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f) > 0 .or. abs(2.*f) > abs(dxold*df)) then
-      dxold=dx
-      dx=0.5d0*(xh-xl)
-      rtsafe=xl+dx
+      dxold = dx
+      dx = 0.5d0*(xh-xl)
+      rtsafe = xl+dx
       if (xl == rtsafe) return
     else
-      dxold=dx
-      dx=f/df
-      temp=rtsafe
-      rtsafe=rtsafe-dx
+      dxold = dx
+      dx = f/df
+      temp = rtsafe
+      rtsafe = rtsafe-dx
       if (temp == rtsafe) return
     endif
     if (abs(dx) < xacc) return
     call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
     if (f < 0.) then
-      xl=rtsafe
+      xl = rtsafe
     else
-      xh=rtsafe
+      xh = rtsafe
     endif
   enddo
   stop 'rtsafe exceeding maximum iterations'
@@ -1926,6 +1976,7 @@ contains
 
   subroutine synchronize_GPU(it)
 
+  use constants, only: PARALLEL_FAULT
   use specfem_par, only: Fault_pointer,myrank
 
   implicit none

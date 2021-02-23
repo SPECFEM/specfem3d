@@ -735,7 +735,8 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
                         realw_const_p d_hprime_xx,
                         realw_const_p d_hprimewgll_xx,
                         realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
-                        realw_const_p d_kappav,realw_const_p d_muv,
+                        realw_const_p d_kappav,
+                        realw_const_p d_muv,
                         const int FORWARD_OR_ADJOINT){
 
 // elastic compute kernel without attenuation for isotropic elements
@@ -915,7 +916,6 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
 // + 0 BYTE
 
   // form dot product with test vector, symmetric form
-
   // 1. cut-plane xi
   __syncthreads();
   get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_xy,sigma_xz,sigma_xz,sigma_yy,sigma_yz,sigma_yz,sigma_zz,
@@ -1008,7 +1008,6 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
 //
 //   we can only achieve about: (hand-counts)   52% of the peak performance
 //                              (nvprof-counts) 22% of the peak performance -> 779.0 GFlop/s - measured: 647.3 GFlop/s
-
 
 } // kernel_2_noatt_iso_impl()
 
@@ -1546,32 +1545,32 @@ __launch_bounds__(NGLL3_PADDED,LAUNCH_MIN_BLOCKS)
 #endif
 // main kernel
 Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
-                        const int* d_ibool,
-                        const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
-                        const int d_iphase,
-                        const int* d_irregular_element_number,
-                        const int use_mesh_coloring_gpu,
-                        realw_p d_displ,
-                        realw_p d_accel,
-                        realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
-                        realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
-                        realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
-                        const realw xix_regular,const realw jacobian_regular,
-                        realw_const_p d_hprime_xx,
-                        realw_const_p d_hprimewgll_xx,
-                        realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
-                        realw_const_p d_kappav,realw_const_p d_muv,
-                        const int COMPUTE_AND_STORE_STRAIN,
-                        realw_p epsilondev_xx,realw_p epsilondev_yy,realw_p epsilondev_xy,
-                        realw_p epsilondev_xz,realw_p epsilondev_yz,
-                        realw_p epsilon_trace_over_3,
-                        const int SIMULATION_TYPE,
-                        const int gravity,
-                        realw_const_p d_minus_g,
-                        realw_const_p d_minus_deriv_gravity,
-                        realw_const_p d_rhostore,
-                        realw_const_p wgll_cube,
-                        const int FORWARD_OR_ADJOINT){
+                             const int* d_ibool,
+                             const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
+                             const int d_iphase,
+                             const int* d_irregular_element_number,
+                             const int use_mesh_coloring_gpu,
+                             realw_p d_displ,
+                             realw_p d_accel,
+                             realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
+                             realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
+                             realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
+                             const realw xix_regular,const realw jacobian_regular,
+                             realw_const_p d_hprime_xx,
+                             realw_const_p d_hprimewgll_xx,
+                             realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
+                             realw_const_p d_kappav,realw_const_p d_muv,
+                             const int COMPUTE_AND_STORE_STRAIN,
+                             realw_p epsilondev_xx,realw_p epsilondev_yy,realw_p epsilondev_xy,
+                             realw_p epsilondev_xz,realw_p epsilondev_yz,
+                             realw_p epsilon_trace_over_3,
+                             const int SIMULATION_TYPE,
+                             const int gravity,
+                             realw_const_p d_minus_g,
+                             realw_const_p d_minus_deriv_gravity,
+                             realw_const_p d_rhostore,
+                             realw_const_p wgll_cube,
+                             const int FORWARD_OR_ADJOINT){
 
 // elastic compute kernel without attenuation for isotropic elements
 //
@@ -3342,23 +3341,24 @@ __launch_bounds__(NGLL3_PADDED,LAUNCH_MIN_BLOCKS)
 #endif
 // main kernel
 Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
-                        const int* d_ibool,
-                        const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
-                        const int d_iphase,
-                        const int* d_irregular_element_number,
-                        realw* d_kelvin_voigt_eta,
-                        realw_p d_displ,
-                        realw_const_p d_veloc,
-                        realw_p d_accel,
-                        realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
-                        realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
-                        realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
-                        const realw xix_regular,const realw jacobian_regular,
-                        realw_const_p d_hprime_xx,
-                        realw_const_p d_hprimewgll_xx,
-                        realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
-                        realw_const_p d_kappav,realw_const_p d_muv,
-                        const int FORWARD_OR_ADJOINT){
+                                    const int* d_ibool,
+                                    const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
+                                    const int d_iphase,
+                                    const int* d_irregular_element_number,
+                                    realw* d_kelvin_voigt_eta,
+                                    realw_p d_displ,
+                                    realw_const_p d_veloc,
+                                    realw_p d_accel,
+                                    realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
+                                    realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
+                                    realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
+                                    const realw xix_regular,const realw jacobian_regular,
+                                    realw_const_p d_hprime_xx,
+                                    realw_const_p d_hprimewgll_xx,
+                                    realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
+                                    realw_const_p d_kappav,
+                                    realw_const_p d_muv,
+                                    const int FORWARD_OR_ADJOINT){
 
 // elastic compute kernel without attenuation for isotropic elements with kelvin voigt damping aroung the fault
 //
@@ -3369,10 +3369,12 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
 //  gravity                   = .false.
 //  use_mesh_coloring_gpu     = .false.
 //  COMPUTE_AND_STORE_STRAIN  = .false.
-//  mp -> Kelvin_Voigt_damping = .true.
+//  mp->use_Kelvin_Voigt_damping = .true.
 
   // block-id == number of local element id in phase_ispec array
   int bx = blockIdx.y*gridDim.x+blockIdx.x;
+  // checks if anything to do
+  if (bx >= nb_blocks_to_compute) return;
 
   // thread-id == GLL node id
   // note: use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
@@ -3380,8 +3382,14 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
   //       to avoid execution branching and the need of registers to store an active state variable,
   //       the thread ids are put in valid range
   int tx = threadIdx.x;
+  // limits thread ids to range [0,125-1]
+  if (tx >= NGLL3) tx = NGLL3 - 1;
 
-  int I,J,K;
+  // local index
+  int K = (tx/NGLL2);
+  int J = ((tx-K*NGLL2)/NGLLX);
+  int I = (tx-K*NGLL2-J*NGLLX);
+
   int iglob,offset;
   int working_element,ispec_irreg;
 
@@ -3406,41 +3414,6 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
   __shared__ realw sh_hprime_xx[NGLL2];
   __shared__ realw sh_hprimewgll_xx[NGLL2];
 
-// arithmetic intensity: ratio of number-of-arithmetic-operations / number-of-bytes-accessed-on-DRAM
-//
-// hand-counts on floating-point operations: counts addition/subtraction/multiplication/division
-//                                           no counts for operations on indices in for-loops (compiler will likely unrool loops)
-//
-//                                           counts accesses to global memory, but no shared memory or register loads/stores
-//                                           float has 4 bytes
-
-// counts:
-// 2 FLOP
-  // checks if anything to do
-  if (bx >= nb_blocks_to_compute) return;
-
-  // limits thread ids to range [0,125-1]
-  if (tx >= NGLL3) tx = NGLL3 - 1;
-
-// counts:
-// + 1 FLOP
-//
-// + 0 BYTE
-
-  // loads hprime's into shared memory
-  if (tx < NGLL2) {
-    // copy hprime from global memory to shared memory
-    load_shared_memory_hprime(&tx,d_hprime_xx,sh_hprime_xx);
-
-    // copy hprimewgll from global memory to shared memory
-    load_shared_memory_hprimewgll(&tx,d_hprimewgll_xx,sh_hprimewgll_xx);
-  }
-
-// counts:
-// + 0 FLOP
-//
-// 2 * 1 float * 25 threads = 200 BYTE
-
   // spectral-element id
   // iphase-1 and working_element-1 for Fortran->C array conventions
   working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)] - 1;
@@ -3450,18 +3423,17 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
   offset = working_element*NGLL3_PADDED + tx;
 
   // global index
-  iglob = d_ibool[offset] - 1 ;
+  iglob = d_ibool[offset] - 1;
+
   // fetch the value of kelvin_voigt eta
   kelvin_voigt_eta = d_kelvin_voigt_eta[bx] ;
 
-
-// counts:
-// + 7 FLOP
-//
-// + 2 float * 128 threads = 1024 BYTE
-
   // copy from global memory to shared memory
   // each thread writes one of the NGLL^3 = 125 data points
+  //
+  // note: this is the main difference to the kernel kernel_2_noatt_iso_impl()
+  //       where the damping eta is considered for: displ + eta * veloc
+  //
   if (threadIdx.x < NGLL3 ){
     // copy displacement from global memory to shared memory
     if (FORWARD_OR_ADJOINT == 3){
@@ -3471,29 +3443,16 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
     }
   }
 
-// counts:
-// + 5 FLOP
-//
-// + 3 float * 125 threads = 1500 BYTE
-
   kappal = d_kappav[offset];
   mul = d_muv[offset];
 
-// counts:
-// + 0 FLOP
-//
-// + 2 * 1 float * 128 threads = 1024 BYTE
-
-
-  // local index
-  K = (tx/NGLL2);
-  J = ((tx-K*NGLL2)/NGLLX);
-  I = (tx-K*NGLL2-J*NGLLX);
-
-// counts:
-// + 8 FLOP
-//
-// + 0 BYTE
+  // loads hprime's into shared memory
+  if (tx < NGLL2) {
+    // copy hprime from global memory to shared memory
+    load_shared_memory_hprime(&tx,d_hprime_xx,sh_hprime_xx);
+    // copy hprimewgll from global memory to shared memory
+    load_shared_memory_hprimewgll(&tx,d_hprimewgll_xx,sh_hprimewgll_xx);
+  }
 
   // synchronize all the threads (one thread for each of the NGLL grid points of the
   // current spectral element) because we need the whole element to be ready in order
@@ -3512,7 +3471,6 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
                           &duxdxl,&duxdyl,&duxdzl,&duydxl,&duydyl,&duydzl,&duzdxl,&duzdyl,&duzdzl,
                           d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
                           ispec_irreg,xix_regular,0);
-
 
   // precompute some sums to save CPU time
   duxdxl_plus_duydyl = duxdxl + duydyl;
@@ -3539,12 +3497,7 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
   sigma_xz = mul*duzdxl_plus_duxdzl;
   sigma_yz = mul*duzdyl_plus_duydzl;
 
-// counts:
-// + 22 FLOP
-//
-// + 0 BYTE
   // form dot product with test vector, symmetric form
-
   // 1. cut-plane xi
   __syncthreads();
   get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_xy,sigma_xz,sigma_xz,sigma_yy,sigma_yz,sigma_yz,sigma_zz,
@@ -3563,30 +3516,14 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
                   gammaxl,gammayl,gammazl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,3);
   sum_hprimewgll_gamma(I,J,K,&tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
 
-// counts:
-// + 3 * 3 * 6 FLOP = 54 FLOP
-// + 3 * 100 FLOP = 300 FLOP
-//
-// + 0 BYTE
-
   // gets double weights
   fac1 = d_wgllwgll_yz[K*NGLLX+J];
   fac2 = d_wgllwgll_xz[K*NGLLX+I];
   fac3 = d_wgllwgll_xy[J*NGLLX+I];
 
-// counts:
-// + 3 * 2 FLOP = 6 FLOP
-//
-// + 3 float * 128 threads = 1536 BYTE
-
   sum_terms1 = - (fac1*tempx1l + fac2*tempx2l + fac3*tempx3l);
   sum_terms2 = - (fac1*tempy1l + fac2*tempy2l + fac3*tempy3l);
   sum_terms3 = - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l);
-
-// counts:
-// + 3 * 6 FLOP = 18 FLOP
-//
-// + 0 BYTE
 
   // assembles acceleration array
   if (threadIdx.x < NGLL3) {

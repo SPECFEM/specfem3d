@@ -307,7 +307,7 @@
   ! Percy, Fault boundary term B*tau is added to the assembled forces
   !        which at this point are stored in the array 'accel'
   if (SIMULATION_TYPE_DYN .or. SIMULATION_TYPE_KIN) then
-
+    !debug
     if (.false.) then
       ! will remove later if GPU fault solver is fully tested
       ! transfers wavefields to the CPU
@@ -360,6 +360,15 @@
       call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank,it)
       ! output results every 500 steps
       if (mod(it,500) == 0 .and. it /= 0) call synchronize_GPU(it)
+
+      !debug
+      !! transfers wavefields to the CPU
+      !call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel, Mesh_pointer)
+      !! adds dynamic source
+      !if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
+      !if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
+      !! transfers acceleration back to GPU
+      !call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
     endif
   endif
 
@@ -391,6 +400,7 @@
     endif
   endif
 
+  ! PML
   ! impose Dirichlet conditions on the outer edges of the C-PML layers
   if (PML_CONDITIONS) then
     do iface = 1,num_abs_boundary_faces
@@ -450,6 +460,7 @@
     endif
   endif
 
+  ! PML
   if (PML_CONDITIONS) then
     if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
       if (nglob_interface_PML_elastic > 0) then

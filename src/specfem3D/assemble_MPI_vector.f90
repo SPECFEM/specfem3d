@@ -360,8 +360,8 @@
     do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
       iglob = ibool_interfaces_ext_mesh(ipoin,iinterface)
       mybuffer(:,ipoin,iinterface) = array_val(:,iglob)
-     ! set them to zero right away to avoid counting it more than once during assembly:
-     ! buffers of higher rank get zeros on nodes shared with current buffer
+      ! set them to zero right away to avoid counting it more than once during assembly:
+      ! buffers of higher rank get zeros on nodes shared with current buffer
       array_val(:,iglob) = 0._CUSTOM_REAL
     enddo
   enddo

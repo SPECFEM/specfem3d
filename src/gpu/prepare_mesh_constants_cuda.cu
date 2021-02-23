@@ -417,7 +417,8 @@ void FC_FUNC_(prepare_constants_device,
   // gravity flag initialization
   mp->gravity = 0;
   // Kelvin_voigt initialization
-  mp->Kelvin_Voigt_damping = 0;
+  mp->use_Kelvin_Voigt_damping = 0;
+
   // JC JC here we will need to add GPU support for the new C-PML routines
 
   GPU_ERROR_CHECKING("prepare_constants_device");
@@ -1395,9 +1396,14 @@ void FC_FUNC_(prepare_fields_gravity_device,
 // unused yet...
 
 /*
-extern EXTERN_LANG
+//extern EXTERN_LANG
 void FC_FUNC_(prepare_seismogram_fields,
-              PREPARE_SEISMOGRAM_FIELDS)(long* Mesh_pointer,int* nrec_local, double* nu_rec, double* hxir, double* hetar, double* hgammar) {
+              PREPARE_SEISMOGRAM_FIELDS)(long* Mesh_pointer,
+                                         int* nrec_local,
+                                         double* nu_rec,
+                                         double* hxir,
+                                         double* hetar,
+                                         double* hgammar) {
 
   TRACE("prepare_constants_device");
   Mesh* mp = (Mesh*)(*Mesh_pointer);
@@ -1436,18 +1442,21 @@ extern EXTERN_LANG
 void FC_FUNC_(prepare_fault_device,
               PREPARE_FAULT_DEVICE)(long* Mesh_pointer,
                                     int* KELVIN_VOIGT_DAMPING,
-//                            int* testtrue,
                                     realw* Kelvin_Voigt_eta) {
 
   TRACE("prepare_fault_device");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer);
-  mp -> Kelvin_Voigt_damping = *KELVIN_VOIGT_DAMPING ;
-  if (mp-> Kelvin_Voigt_damping ){
-//    if(*testtrue) printf("\ntesttrue!\n");
-//    if(! (*KELVIN_VOIGT_DAMPING)) printf("\nKV test pass!\n");
-//    printf("myrank = %d , size of damping = %6d, isAllocated? = %d\n",mp->myrank,sizeof(Kelvin_Voigt_eta),mp -> Kelvin_Voigt_damping);
-    copy_todevice_realw((void**)&mp->d_Kelvin_Voigt_eta,Kelvin_Voigt_eta,mp-> NSPEC_AB);
+
+  // uses Kelvin-Voigt damping if Kelvin_Voigt_eta array has been allocated
+  mp->use_Kelvin_Voigt_damping = *KELVIN_VOIGT_DAMPING;
+
+  //debug
+  //printf("debug: prepare_fault_device: myrank = %d , isAllocated = %d\n",mp->myrank,mp->use_Kelvin_Voigt_damping);
+
+  // allocates & copies damping array onto GPU
+  if (mp->use_Kelvin_Voigt_damping ){
+    copy_todevice_realw((void**)&mp->d_Kelvin_Voigt_eta,Kelvin_Voigt_eta,mp->NSPEC_AB);
   }
 }
 

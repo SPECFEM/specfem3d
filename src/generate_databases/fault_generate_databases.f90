@@ -59,12 +59,9 @@ module fault_generate_databases
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
   double precision, allocatable, save :: nodes_coords_open(:,:)
   integer, save :: nnodes_coords_open
+
   logical, save :: ANY_FAULT_IN_THIS_PROC = .false.
   logical, save :: ANY_FAULT = .false.
-
-  logical, parameter :: PARALLEL_FAULT = .true.
- ! NOTE: PARALLEL_FAULT has to be the same
- !       in fault_solver_common.f90, fault_generate_databases.f90 and fault_scotch.f90
 
   ! corners indices of reference cube faces
   integer,dimension(3,4),parameter :: iface1_corner_ijk = &
@@ -85,7 +82,7 @@ module fault_generate_databases
                  iface5_corner_ijk,iface6_corner_ijk /),(/3,4,6/))   ! all faces
 
   public :: fault_read_input, fault_setup, fault_save_arrays_test, fault_save_arrays, &
-            nodes_coords_open, nnodes_coords_open, ANY_FAULT_IN_THIS_PROC, ANY_FAULT, PARALLEL_FAULT
+            nodes_coords_open, nnodes_coords_open, ANY_FAULT_IN_THIS_PROC, ANY_FAULT
 
 contains
 
@@ -203,9 +200,10 @@ contains
 
   if (.not. ANY_FAULT_IN_THIS_PROC) return
 
-  do iflt=1,size(fault_db)
-
+  do iflt = 1,size(fault_db)
+    ! checks if anything to do on this fault
     if (fault_db(iflt)%nspec == 0) cycle
+
     !NOTE: the small fault opening in *_dummy does not affect this subroutine (see get_element_face_id)
     call setup_iface(fault_db(iflt),nnodes_ext_mesh,nodes_coords_ext_mesh,nspec,nglob,ibool)
 
@@ -319,11 +317,13 @@ contains
   integer :: ier
 
   if (fdb%eta > 0.0_CUSTOM_REAL) then
+    ! allocates damping parameter array
     if (.not. allocated(Kelvin_Voigt_eta)) then
       allocate(Kelvin_Voigt_eta(nspec),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 878')
       Kelvin_Voigt_eta(:) = 0.0_CUSTOM_REAL
     endif
+    ! sets non-zero damping on elements touching fault
     Kelvin_Voigt_eta(fdb%ispec1) = fdb%eta
     Kelvin_Voigt_eta(fdb%ispec2) = fdb%eta
   endif

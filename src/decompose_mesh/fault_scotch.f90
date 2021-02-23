@@ -29,6 +29,7 @@ module fault_scotch
 
   use constants, only: MAX_STRING_LEN, IN_DATA_FILES, NDIM
   use shared_parameters, only: NGNOD2D
+
   implicit none
 
   private
@@ -42,11 +43,8 @@ module fault_scotch
 
   type(fault_type), allocatable, save :: faults(:)
   double precision, dimension(:,:), allocatable, save :: nodes_coords_open
-  logical, save :: ANY_FAULT = .false.
 
-  logical, parameter :: PARALLEL_FAULT = .true.
- ! NOTE: PARALLEL_FAULT has to be the same
- !       in fault_solver_common.f90, fault_generate_databases.f90 and fault_scotch.f90
+  logical, save :: ANY_FAULT = .false.
 
   integer, parameter :: long = SELECTED_INT_KIND(18)
 
@@ -63,6 +61,7 @@ CONTAINS
 
   subroutine read_fault_files(localpath_name)
 
+  implicit none
   character(len=MAX_STRING_LEN), intent(in) :: localpath_name
   integer :: nbfaults, iflt, ier
 
@@ -95,6 +94,7 @@ CONTAINS
 
   subroutine read_single_fault_file(f,ifault,localpath_name)
 
+  implicit none
   type(fault_type), intent(inout) :: f
   character(len=MAX_STRING_LEN), intent(in) :: localpath_name
 
@@ -156,22 +156,24 @@ CONTAINS
 
 ! Saving nodes_coords to be used in the solver for ibool_fault_side1 and side2
 
-   subroutine save_nodes_coords(nodes_coords,nnodes)
+  subroutine save_nodes_coords(nodes_coords,nnodes)
 
-   integer, intent(in) :: nnodes
-   double precision, dimension(NDIM,nnodes), intent(in) :: nodes_coords
-   integer :: ier
+  implicit none
+  integer, intent(in) :: nnodes
+  double precision, dimension(NDIM,nnodes), intent(in) :: nodes_coords
+  integer :: ier
 
-   allocate(nodes_coords_open(NDIM,nnodes),stat=ier)
-   if (ier /= 0) call exit_MPI_without_rank('error allocating array 83')
-   nodes_coords_open(:,:) = nodes_coords(:,:)
+  allocate(nodes_coords_open(NDIM,nnodes),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 83')
+  nodes_coords_open(:,:) = nodes_coords(:,:)
 
-   end subroutine save_nodes_coords
+  end subroutine save_nodes_coords
 
 ! ---------------------------------------------------------------------------------------------------
 
   subroutine close_faults(nodes_coords,nnodes)
 
+  implicit none
   integer, intent(in) :: nnodes
   double precision, dimension(NDIM,nnodes), intent(inout) :: nodes_coords
 
@@ -199,6 +201,7 @@ CONTAINS
 
   subroutine close_fault_single(f,nodes_coords,nnodes)
 
+  implicit none
   type(fault_type), intent(in) :: f
   integer, intent(in)  :: nnodes
   double precision, dimension(NDIM,nnodes), intent(inout) :: nodes_coords
@@ -253,6 +256,7 @@ CONTAINS
 
   subroutine reorder_fault_elements(nodes_coords,nnodes)
 
+  implicit none
   integer, intent(in)  :: nnodes
   double precision,dimension(NDIM,nnodes), intent(in) :: nodes_coords
 
@@ -268,6 +272,7 @@ CONTAINS
 
   subroutine reorder_fault_elements_single(f,nodes_coords,nnodes)
 
+  implicit none
   type(fault_type), intent(inout) :: f
   integer, intent(in) :: nnodes
   double precision, dimension(NDIM,nnodes), intent(in) :: nodes_coords
@@ -312,6 +317,7 @@ CONTAINS
 
   subroutine lex_order(xyz_c,locval,nspec)
 
+  implicit none
   integer, intent(in) :: nspec
   integer, intent(out) :: locval(nspec)
   double precision, intent(in) :: xyz_c(3,nspec)
@@ -341,6 +347,9 @@ CONTAINS
 
   subroutine fault_repartition(nelmnts, nnodes, elmnts, nsize, nproc, part, esize, nodes_coords)
 
+  use constants, only: PARALLEL_FAULT
+
+  implicit none
   integer, intent(in) :: nelmnts,nsize
   integer, intent(in) :: nnodes, nproc, esize
   integer, dimension(0:esize*nelmnts-1), intent(in) :: elmnts
@@ -365,6 +374,7 @@ CONTAINS
 
   subroutine fault_repartition_not_parallel(nelmnts, nnodes, elmnts, nsize, nproc, part, esize)
 
+  implicit none
   integer, intent(in) :: nelmnts,nsize
   integer, intent(in) :: nnodes, nproc, esize
   integer, dimension(0:esize*nelmnts-1), intent(in) :: elmnts
@@ -458,6 +468,7 @@ CONTAINS
 
   subroutine fault_repartition_parallel(nelmnts, part, nodes_coords, nnodes, nproc)
 
+  implicit none
   integer, intent(in) :: nelmnts
   integer, dimension(0:nelmnts-1), intent(inout) :: part
   integer, intent(in) :: nnodes,nproc
@@ -517,6 +528,7 @@ CONTAINS
   subroutine write_fault_database(IIN_database, iproc, nelmnts, glob2loc_elmnts, &
                           glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes, part)
 
+  implicit none
   integer, intent(in)  :: IIN_database
   integer, intent(in)  :: iproc
   integer, intent(in) :: nelmnts

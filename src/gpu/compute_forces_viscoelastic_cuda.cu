@@ -238,7 +238,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
     }
   }else{
     // compute kernels without attenuation
-    if (ANISOTROPY ){
+    if (ANISOTROPY){
       TRACE("\tKernel_2: Kernel_2_noatt_ani_impl");
       // full anisotropy
       // forward wavefields -> FORWARD_OR_ADJOINT == 1
@@ -434,7 +434,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
           }
         }else{
           // without mesh coloring
-          if (COMPUTE_AND_STORE_STRAIN ){
+          if (COMPUTE_AND_STORE_STRAIN){
             TRACE("\tKernel_2: Kernel_2_noatt_iso_strain_impl");
             // stores strains
             // forward wavefields -> FORWARD_OR_ADJOINT == 1
@@ -488,9 +488,10 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                                      3); // 3 == backward
             }
           }else{
-            if (mp->Kelvin_Voigt_damping) {
+            // dynamic rupture simulation
+            if (mp->use_Kelvin_Voigt_damping) {
               TRACE("\tKernel_2: Kernel_2_noatt_iso_kelvinvoigt_impl");
-              // Kelvin_Voigt_damping == true means there is fault in this partition
+              // use_Kelvin_Voigt_damping == true means there is fault in this partition
               Kernel_2_noatt_iso_kelvinvoigt_impl<<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
                                                                                          d_ibool,
                                                                                          mp->d_phase_ispec_inner_elastic,

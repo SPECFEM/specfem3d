@@ -91,15 +91,6 @@ void FC_FUNC_(transfer_sync_accel_to_device,
                                               const int* ibool_interfaces_ext_mesh,
                                               const int* FORWARD_OR_ADJOINT) {}
 
-//void FC_FUNC_(assemble_accel_on_device,
-//              ASSEMBLE_ACCEL_on_DEVICE)(long* Mesh_pointer, realw* accel,
-//                                              realw* buffer_recv_vector_ext_mesh,
-//                                              int* num_interfaces_ext_mesh,
-//                                              int* max_nibool_interfaces_ext_mesh,
-//                                              int* nibool_interfaces_ext_mesh,
-//                                              int* ibool_interfaces_ext_mesh,
-//                                              int* FORWARD_OR_ADJOINT) {}
-
 void FC_FUNC_(sync_copy_from_device,
               SYNC_copy_FROM_DEVICE)(long* Mesh_pointer,
                                      int* iphase,
@@ -436,14 +427,6 @@ void FC_FUNC_(fault_solver_gpu,
 void FC_FUNC_(pause_for_debug,
               PAUSE_FOR_DEBUG)() {}
 
-//void FC_FUNC_(fortranflush,FORTRANFLUSH)(int* rank){}
-
-//void FC_FUNC_(fortranprint,FORTRANPRINT)(int* id) {}
-
-//void FC_FUNC_(fortranprintf,FORTRANPRINTF)(realw* val) {}
-
-//void FC_FUNC_(fortranprintd,FORTRANPRINTD)(double* val) {}
-
 
 //
 // src/gpu/initialize_cuda.cu
@@ -619,13 +602,9 @@ void FC_FUNC_(prepare_fields_gravity_device,
                                              int* ACOUSTIC_SIMULATION,
                                              realw* rhostore) {}
 
-void FC_FUNC_(prepare_seismogram_fields,
-              PREPARE_SEISMOGRAM_FIELDS)(long* Mesh_pointer,int* nrec_local, double* nu_rec, double* hxir, double* hetar, double* hgammar) {}
-
 void FC_FUNC_(prepare_fault_device,
               PREPARE_FAULT_DEVICE)(long* Mesh_pointer,
                                     int* KELVIN_VOIGT_DAMPING,
-//                            int* testtrue,
                                     realw* Kelvin_Voigt_eta) {}
 
 void FC_FUNC_(prepare_cleanup_device,

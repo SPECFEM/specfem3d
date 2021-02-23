@@ -487,11 +487,23 @@
   logical,parameter :: SCOTCH_P_REMAP = .true.
 
 !!-----------------------------------------------------------
+!!
 !! MPI debugging
+!!
 !!-----------------------------------------------------------
 
 ! debugging: without MPI assembly
   logical,parameter :: ASSEMBLE_MPI_OFF = .false.
+
+
+!!-----------------------------------------------------------
+!!
+!! Fault solver
+!!
+!!-----------------------------------------------------------
+
+! allows for parallelizing fault surfaces across different MPI slices
+  logical, parameter :: PARALLEL_FAULT = .true.
 
 
 !------------------------------------------------------

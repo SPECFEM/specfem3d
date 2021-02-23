@@ -29,7 +29,7 @@
 
 ! create the different regions of the mesh
 
-  use constants, only: myrank
+  use constants, only: myrank,PARALLEL_FAULT
 
   use generate_databases_par, only: nspec => NSPEC_AB,nglob => NGLOB_AB, &
       ibool,xstore,ystore,zstore, &
@@ -56,7 +56,7 @@
   use fault_generate_databases, only: fault_read_input,fault_setup, &
                           fault_save_arrays,fault_save_arrays_test, &
                           nnodes_coords_open,nodes_coords_open,ANY_FAULT_IN_THIS_PROC, &
-                          ANY_FAULT, PARALLEL_FAULT
+                          ANY_FAULT
 
   implicit none
 

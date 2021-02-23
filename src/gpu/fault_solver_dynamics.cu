@@ -44,6 +44,7 @@ void FC_FUNC_(initialize_fault_solver,
   // allocates fault parameter structure
   Fault_solver_dynamics *Fdyn = (Fault_solver_dynamics*) malloc(sizeof(Fault_solver_dynamics));
   if (Fdyn == NULL) exit_on_error("error allocating fault_solver pointer");
+
   *Fault_solver = (long) Fdyn;
 
   // initializes
@@ -160,20 +161,27 @@ void FC_FUNC_(transfer_todevice_fault_data,
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Fault* Flt = &(Fsolver->faults[*fault_index]);
+
   Flt->NSPEC_AB = *NSPEC_AB;
   Flt->NGLOB_AB = *NGLOB_AB;
+
   if (*NGLOB_AB > 0){
     copy_todevice_realw_test((void **)&(Flt->B),B,*NGLOB_AB);
     copy_todevice_realw_test((void **)&(Flt->R),R,(*NGLOB_AB)*9);
     copy_todevice_realw_test((void **)&(Flt->Z),Z,(*NGLOB_AB));
-    copy_todevice_realw_test((void **)&(Flt->T0),T0,(*NGLOB_AB)*3);
-    copy_todevice_int_test((void **)&(Flt->ibulk1),ibulk1,(*NGLOB_AB));
-    copy_todevice_int_test((void **)&(Flt->ibulk2),ibulk2,(*NGLOB_AB));
-    copy_todevice_realw_test((void **)&(Flt->V),V0,(*NGLOB_AB)*3);
+
     copy_todevice_realw_test((void **)&(Flt->D),D,(*NGLOB_AB)*3);
+    copy_todevice_realw_test((void **)&(Flt->V),V0,(*NGLOB_AB)*3);
+
+    copy_todevice_realw_test((void **)&(Flt->T0),T0,(*NGLOB_AB)*3);
+    copy_todevice_realw_test((void **)&(Flt->T),T,(*NGLOB_AB)*3);
+
     copy_todevice_realw_test((void **)&(Flt->invM1),invM1,*NGLOB_AB);
     copy_todevice_realw_test((void **)&(Flt->invM2),invM2,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Flt->T),T,(*NGLOB_AB)*3);
+
+    copy_todevice_int_test((void **)&(Flt->ibulk1),ibulk1,(*NGLOB_AB));
+    copy_todevice_int_test((void **)&(Flt->ibulk2),ibulk2,(*NGLOB_AB));
+
   }
 
   GPU_ERROR_CHECKING("transfer_todevice_fault_data");
@@ -195,6 +203,7 @@ void FC_FUNC_(transfer_tohost_fault_data,
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Fault* Flt = &(Fsolver->faults[*fault_index]);
+
   if (*NGLOB_AB > 0){
     copy_tohost_realw_test((void **)&(Flt->V),V,(*NGLOB_AB)*3);
     copy_tohost_realw_test((void **)&(Flt->D),D,(*NGLOB_AB)*3);
@@ -216,10 +225,14 @@ void FC_FUNC_(transfer_tohost_datat,
   TRACE("transfer_tohost_datat");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
-  Fault* fault_pointer = Fsolver->faults + *ifault;
-  if (fault_pointer->output_dataT->NRECORD > 0){
-    copy_tohost_realw_test((void **)&(fault_pointer->output_dataT->dataT),h_dataT + (*it -fault_pointer->output_dataT->NT) * fault_pointer->output_dataT->NRECORD*7
-      ,fault_pointer->output_dataT->NRECORD*7*fault_pointer->output_dataT->NT);
+  Fault* Flt = &(Fsolver->faults[*ifault]);
+
+  int recordlength = 7; //store 7 different quantities
+
+  if (Flt->output_dataT->NRECORD > 0){
+    copy_tohost_realw_test((void **)&(Flt->output_dataT->dataT),
+                           h_dataT + (*it - Flt->output_dataT->NT) * Flt->output_dataT->NRECORD * recordlength,
+                           Flt->output_dataT->NRECORD * recordlength * Flt->output_dataT->NT);
   }
 
   GPU_ERROR_CHECKING("transfer_tohost_datat");
@@ -248,6 +261,7 @@ void FC_FUNC_(transfer_todevice_rsf_data,
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Rsf_type* Rsf  = &((Fsolver->faults[*fault_index]).rsf);
+
   if (*NGLOB_AB > 0){
     copy_todevice_realw_test((void **)&(Rsf->V0),V0,*NGLOB_AB);
     copy_todevice_realw_test((void **)&(Rsf->f0),f0,*NGLOB_AB);
@@ -283,6 +297,7 @@ void FC_FUNC_(transfer_todevice_swf_data,
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Swf_type* Swf  = &((Fsolver->faults[*fault_index]).swf);
+
   if (*NGLOB_AB > 0){
     copy_todevice_realw_test((void **)&(Swf->Dc),Dc,*NGLOB_AB);
     copy_todevice_realw_test((void **)&(Swf->mus),mus,*NGLOB_AB);
@@ -318,6 +333,7 @@ void FC_FUNC_(transfer_tohost_rsf_data,
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Rsf_type* Rsf  = &((Fsolver->faults[*fault_index]).rsf);
+
   if (*NGLOB_AB > 0){
     copy_tohost_realw_test((void **)&(Rsf->V0),V0,*NGLOB_AB);
     copy_tohost_realw_test((void **)&(Rsf->f0),f0,*NGLOB_AB);
@@ -353,6 +369,7 @@ void FC_FUNC_(transfer_tohost_swf_data,
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Swf_type *Swf = &((Fsolver -> faults[*fault_index]).swf);
+
   if (*NGLOB_AB > 0){
     copy_tohost_realw_test((void **)&(Swf->Dc),Dc,*NGLOB_AB);
     copy_tohost_realw_test((void **)&(Swf->mus),mus,*NGLOB_AB);
@@ -378,14 +395,14 @@ void FC_FUNC_(fault_solver_gpu,
   TRACE("fault_solver_gpu");
 
   Mesh*  mp = (Mesh*)(*Mesh_pointer);
+
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
 
-  Fault* Flt = Fsolver->faults;
   int num_of_block;
   int num_of_block2;
 
   for(int ifault = 0; ifault < (Fsolver->Nbfaults); ifault++){
-    Flt = &(Fsolver->faults[ifault]);
+    Fault* Flt = &(Fsolver->faults[ifault]);
     Rsf_type* rsf = &(Flt->rsf);
     Swf_type* swf = &(Flt->swf);
 

@@ -106,11 +106,7 @@ module fault_solver_common
 
   end type bc_dynandkinflt_type
 
-  logical, parameter :: PARALLEL_FAULT = .true.
- ! NOTE: PARALLEL_FAULT has to be the same
- !       in fault_solver_common.f90, fault_generate_databases.f90 and fault_scotch.f90
-
-  public :: fault_type, PARALLEL_FAULT, &
+  public :: fault_type, &
             initialize_fault, get_jump, get_weighted_jump, rotate, add_BT, &
             dataT_type, init_dataT, store_dataT, SCEC_write_dataT
 
@@ -120,16 +116,22 @@ contains
 
   subroutine initialize_fault (bc,IIN_BIN)
 
-  use specfem_par
+  use constants, only: PARALLEL_FAULT,NDIM,NGLLSQUARE
+
+  use specfem_par, only: NPROC,DT,NGLOB_AB, &
+    num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+    nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+    my_neighbors_ext_mesh
+
   use specfem_par_elastic, only: rmassx
 
   implicit none
 !! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
   type(bc_dynandkinflt_type), intent(inout) :: bc
-  integer, intent(in)                 :: IIN_BIN
+  integer, intent(in) :: IIN_BIN
 
   real(kind=CUSTOM_REAL) :: tmp_vec(3,NGLOB_AB)
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable   :: jacobian2Dw
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: jacobian2Dw
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: nxyz
   integer, dimension(:,:), allocatable :: ibool1
@@ -172,13 +174,13 @@ contains
     read(IIN_BIN) bc%coord(2,:)
     read(IIN_BIN) bc%coord(3,:)
 
-    bc%dt = dt
+    bc%dt = DT
 
-    bc%B = 0e0_CUSTOM_REAL
+    bc%B = 0.0_CUSTOM_REAL
     allocate(nxyz(3,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2170')
-    nxyz = 0e0_CUSTOM_REAL
-    do e=1,bc%nspec
+    nxyz = 0.0_CUSTOM_REAL
+    do e = 1,bc%nspec
       do ij = 1,NGLLSQUARE
         k = ibool1(ij,e)
         nxyz(:,k) = nxyz(:,k) + normal(:,ij,e)
@@ -192,16 +194,16 @@ contains
 
   ! fault parallelization across multiple MPI processes
   if (PARALLEL_FAULT) then
-    tmp_vec = 0._CUSTOM_REAL
+    tmp_vec = 0.0_CUSTOM_REAL
     if (bc%nspec > 0) tmp_vec(1,bc%ibulk1) = bc%B
     ! assembles with other MPI processes
     call assemble_MPI_vector_blocking(NPROC,NGLOB_AB,tmp_vec, &
-                                     num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                     nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                     my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
     if (bc%nspec > 0) bc%B = tmp_vec(1,bc%ibulk1)
 
-    tmp_vec = 0._CUSTOM_REAL
+    tmp_vec = 0.0_CUSTOM_REAL
     if (bc%nspec > 0) tmp_vec(:,bc%ibulk1) = nxyz
     ! assembles with other MPI processes
     call assemble_MPI_vector_blocking(NPROC,NGLOB_AB,tmp_vec, &
@@ -224,7 +226,7 @@ contains
     !   Z = 1/( B1/M1 + B2/M2 ) / (0.5*dt)
     ! T_stick = Z*Vfree traction as if the fault was stuck (no displ discontinuity)
     ! NOTE: same Bi on both sides, see note above
-    bc%Z = 1.e0_CUSTOM_REAL/(0.5e0_CUSTOM_REAL*bc%dt * bc%B *( bc%invM1 + bc%invM2 ))
+    bc%Z = 1.0_CUSTOM_REAL/(0.5_CUSTOM_REAL * bc%dt * bc%B *( bc%invM1 + bc%invM2 ))
     ! WARNING: In non-split nodes at fault edges M is assembled across the fault.
     ! hence invM1+invM2=2/(M1+M2) instead of 1/M1+1/M2
     ! In a symmetric mesh (M1=M2) Z will be twice its intended value
@@ -244,7 +246,7 @@ contains
   integer :: k
 
  ! assume size(v) = [3,N]
-  do k=1,size(v,2)
+  do k = 1,size(v,2)
     norm = sqrt( v(1,k)*v(1,k) + v(2,k)*v(2,k) + v(3,k)*v(3,k) )
     v(:,k) = v(:,k) / norm
   enddo
@@ -270,11 +272,11 @@ contains
 
   s(1,:) =  n(2,:)   ! sx = ny
   s(2,:) = -n(1,:)   ! sy =-nx
-  s(3,:) = 0.e0_CUSTOM_REAL
+  s(3,:) = 0.0_CUSTOM_REAL
   ! set the along strike direction when the fault is a horizontal plane.
   where(abs(s(1,:))+abs(s(2,:)) < 1e-6)
-      s(1,:) = 1.0
-      s(2,:) = 0.0
+      s(1,:) = 1.0_CUSTOM_REAL
+      s(2,:) = 0.0_CUSTOM_REAL
   endwhere
   call normalize_3d_vector(s)
 
@@ -386,6 +388,7 @@ contains
 
   subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
 
+  use constants, only: PARALLEL_FAULT
   use specfem_par, only: NPROC,myrank
 
   implicit none
@@ -417,7 +420,7 @@ contains
     stop
   endif
   read(IIN,*) np
-  dataT%npoin =0
+  dataT%npoin = 0
   do i=1,np
     read(IIN,*) xtarget,ytarget,ztarget,tmpname,jflt
     if (jflt == iflt) dataT%npoin = dataT%npoin +1
@@ -437,7 +440,7 @@ contains
   open(IIN,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS',status='old',action='read')
   read(IIN,*) np
   k = 0
-  do i=1,np
+  do i = 1,np
     read(IIN,*) xtarget,ytarget,ztarget,tmpname,jflt
     if (jflt /= iflt) cycle
     k = k+1
@@ -445,7 +448,7 @@ contains
 
    ! search nearest node
     distkeep = huge(distkeep)
-    do iglob=1,nglob
+    do iglob = 1,nglob
       dist = sqrt( (coord(1,iglob)-xtarget)**2 &
                  + (coord(2,iglob)-ytarget)**2 &
                  + (coord(3,iglob)-ztarget)**2)
@@ -528,7 +531,7 @@ contains
     dataT%dt = DT
     allocate(dataT%dat(dataT%ndat,dataT%npoin,dataT%nt),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2182')
-    dataT%dat = 0e0_CUSTOM_REAL
+    dataT%dat = 0.0_CUSTOM_REAL
     allocate(dataT%longFieldNames(dataT%ndat),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2183')
     dataT%longFieldNames(1) = "horizontal right-lateral slip (m)"
@@ -581,7 +584,7 @@ contains
 !! DK DK use type() instead of class() for compatibility with some current compilers
   type(dataT_type), intent(in) :: dataT
 
-  integer   :: i,k,IOUT
+  integer :: i,k,IOUT
   character(len=10) :: my_fmt
 
   integer, dimension(8) :: time_values
@@ -605,7 +608,7 @@ contains
     write(IOUT,*) "# location=",trim(dataT%name(i))
     write(IOUT,*) "# Column #1 = Time (s)"
 
-    do k=1,dataT%ndat
+    do k = 1,dataT%ndat
       write(IOUT,1100) k+1,trim(dataT%longFieldNames(k))
     enddo
 
