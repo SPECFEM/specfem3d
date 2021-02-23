@@ -490,6 +490,18 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 
 }
 
+// note: in the past, we used templating to be able to call the same kernel_2 twice for both,
+//       forward and backward wavefields. that is, calling it by
+//          Kernel_2_acoustic_impl<1>
+//       and
+//          Kernel_2_acoustic_impl<3>
+//       the templating helped to use textures for forward/backward fields.
+//
+//       most of this has become obsolete, textures are hardly needed for speedup anymore
+//       and the Kernel_2 has become more and more specialized for different cases to
+//       reduce register pressure and increase occupancy for better performance.
+//       thus, in future we might re-evaluate and remove this template-feature.
+//
 // "forced" template instantiation
 // see: https://isocpp.org/wiki/faq/templates#separate-template-fn-defn-from-decl
 //      https://stackoverflow.com/questions/31705764/cuda-c-using-a-template-function-which-calls-a-template-kernel

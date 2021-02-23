@@ -27,6 +27,7 @@
 !=====================================================================
 */
 
+
 __global__ void assemble_boundary_potential_on_device(field* d_potential_dot_dot_acoustic,
                                                       field* d_send_potential_dot_dot_buffer,
                                                       const int num_interfaces_ext_mesh,

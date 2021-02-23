@@ -4,11 +4,11 @@
 !               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
 !
-!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-!                              CNRS, France
-!                       and Princeton University, USA
-!                 (there are currently many more authors!)
-!                           (c) October 2017
+!    Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                             CNRS, France
+!                      and Princeton University, USA
+!                (there are currently many more authors!)
+!                          (c) October 2017
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 !
 !=====================================================================
 */
+
 
 __global__ void get_maximum_field_kernel(field* array, int size, realw* d_max){
 
