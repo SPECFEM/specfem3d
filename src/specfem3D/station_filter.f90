@@ -103,6 +103,11 @@
             stutm_x >= LONGITUDE_MIN .and. stutm_x <= LONGITUDE_MAX) then
           nrec_filtered = nrec_filtered + 1
 
+          ! check station name length
+          if (len_trim(station_name) > 32) stop 'Station name length exceeds bounds of 32 characters'
+          ! check network name length
+          if (len_trim(network_name) > 10) stop 'Network name length exceeds bounds of 10 characters'
+
           ! with specific format
           ! fixing the format is needed for some compilers
           ! (say, cray Fortran would write same numbers as 2*1500.0 with write(..,*))
@@ -110,14 +115,15 @@
           ! we thus try to estimate a good format string based on the maximum value of the numbers to output
           if (max(abs(stlat),abs(stlon),abs(stele),abs(stbur)) >= 1.d9) then
             ! uses exponential numbers format
-            fmt_str = '(a10,1x,a10,4e24.10)'
+            fmt_str = '(a32,1x,a10,4e24.10)'
           else if (max(abs(stlat),abs(stlon),abs(stele),abs(stbur)) >= 1.d-1) then
             ! uses float numbers format
-            fmt_str = '(a10,1x,a10,4f24.12)'
+            fmt_str = '(a32,1x,a10,4f24.12)'
           else
             ! uses exponential numbers format
-            fmt_str = '(a10,1x,a10,4e24.10)'
+            fmt_str = '(a32,1x,a10,4e24.10)'
           endif
+
           write(IOUT,fmt_str) trim(station_name),trim(network_name),stlat,stlon,stele,stbur
 
         endif
