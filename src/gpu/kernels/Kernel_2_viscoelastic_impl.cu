@@ -285,7 +285,7 @@ __device__ __forceinline__ void compute_element_gravity(int tx,int working_eleme
 
 template<int FORWARD_OR_ADJOINT>
 __device__  __forceinline__ void load_shared_memory_displ(const int* tx, const int* iglob,
-                                                          realw_p d_displ,
+                                                          realw_const_p d_displ,
                                                           realw* sh_displx,
                                                           realw* sh_disply,
                                                           realw* sh_displz){
@@ -311,7 +311,7 @@ __device__  __forceinline__ void load_shared_memory_displ(const int* tx, const i
 
 template<int FORWARD_OR_ADJOINT>
 __device__  __forceinline__ void load_shared_memory_displ_visco(const int* tx, const int* iglob,
-                                                                realw_p d_displ,
+                                                                realw_const_p d_displ,
                                                                 realw_const_p d_veloc,
                                                                 realw visco,
                                                                 realw* sh_displx,
@@ -726,7 +726,7 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
                         const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
                         const int d_iphase,
                         const int* d_irregular_element_number,
-                        realw_p d_displ,
+                        realw_const_p d_displ,
                         realw_p d_accel,
                         realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
                         realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
@@ -1025,7 +1025,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
                               const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
                               const int d_iphase,
                               const int* d_irregular_element_number,
-                              realw_p d_displ,
+                              realw_const_p d_displ,
                               realw_p d_accel,
                               realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
                               realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
@@ -1237,7 +1237,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
                         const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
                         const int d_iphase,
                         const int use_mesh_coloring_gpu,
-                        realw_p d_displ,
+                        realw_const_p d_displ,
                         realw_p d_accel,
                         realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
                         realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
@@ -1550,7 +1550,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
                              const int d_iphase,
                              const int* d_irregular_element_number,
                              const int use_mesh_coloring_gpu,
-                             realw_p d_displ,
+                             realw_const_p d_displ,
                              realw_p d_accel,
                              realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
                              realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
@@ -1851,7 +1851,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
                         const int d_iphase,
                         const int* d_irregular_element_number,
                         const int use_mesh_coloring_gpu,
-                        realw_p d_displ,
+                        realw_const_p d_displ,
                         realw_p d_accel,
                         realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
                         realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
@@ -2214,7 +2214,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
                   const int* d_irregular_element_number,
                   const int use_mesh_coloring_gpu,
                   const realw d_deltat,
-                  realw_p d_displ,
+                  realw_const_p d_displ,
                   realw_const_p d_veloc,
                   realw_p d_accel,
                   realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
@@ -3346,7 +3346,7 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
                                     const int d_iphase,
                                     const int* d_irregular_element_number,
                                     realw* d_kelvin_voigt_eta,
-                                    realw_p d_displ,
+                                    realw_const_p d_displ,
                                     realw_const_p d_veloc,
                                     realw_p d_accel,
                                     realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
@@ -3398,7 +3398,7 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
   realw duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl;
   realw duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl;
   realw duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl;
-  realw kelvin_voigt_eta;
+  realw kelvin_voigt_etal;
   realw fac1,fac2,fac3;
   realw lambdal,mul,lambdalplus2mul,kappal;
   realw sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz;
@@ -3426,7 +3426,7 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
   iglob = d_ibool[offset] - 1;
 
   // fetch the value of kelvin_voigt eta
-  kelvin_voigt_eta = d_kelvin_voigt_eta[bx] ;
+  kelvin_voigt_etal = d_kelvin_voigt_eta[working_element] ;
 
   // copy from global memory to shared memory
   // each thread writes one of the NGLL^3 = 125 data points
@@ -3437,9 +3437,9 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
   if (threadIdx.x < NGLL3 ){
     // copy displacement from global memory to shared memory
     if (FORWARD_OR_ADJOINT == 3){
-      load_shared_memory_displ_visco<3>(&tx,&iglob,d_displ,d_veloc,kelvin_voigt_eta,sh_tempx,sh_tempy,sh_tempz);
+      load_shared_memory_displ_visco<3>(&tx,&iglob,d_displ,d_veloc,kelvin_voigt_etal,sh_tempx,sh_tempy,sh_tempz);
     } else {
-      load_shared_memory_displ_visco<1>(&tx,&iglob,d_displ,d_veloc,kelvin_voigt_eta,sh_tempx,sh_tempy,sh_tempz);
+      load_shared_memory_displ_visco<1>(&tx,&iglob,d_displ,d_veloc,kelvin_voigt_etal,sh_tempx,sh_tempy,sh_tempz);
     }
   }
 
