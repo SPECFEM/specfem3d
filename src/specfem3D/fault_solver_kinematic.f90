@@ -55,23 +55,20 @@ contains
 ! BC_KINFLT_init initializes kinematic faults
 !
 ! prname        fault database is read from file prname_fault_db.bin
-! Minv          inverse mass matrix
-! dt            global time step
-!
-  subroutine BC_KINFLT_init(prname,DTglobal,myrank)
 
-  use specfem_par, only: nt => NSTEP
+  subroutine BC_KINFLT_init(prname)
+
+  use specfem_par, only: nt => NSTEP, DTglobal => DT
+  use constants, only: myrank
 
   implicit none
 
   character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
-  double precision, intent(in) :: DTglobal
-  integer, intent(in) :: myrank
 
   ! local parameters
-  real(kind=CUSTOM_REAL) :: dt
+  real(kind=CUSTOM_REAL) :: dt_real
   integer :: iflt,ier,dummy_idfault
-  integer :: nbfaults
+  integer :: nbfaults,nbfaults_bin
   integer :: SIMULATION_TYPE
   character(len=MAX_STRING_LEN) :: filename
 
@@ -83,31 +80,40 @@ contains
 
   dummy_idfault = 0
 
+  ! note: all processes will open this file
   open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',iostat=ier)
+
+  ! checks if file exists
   if (ier /= 0) then
     if (myrank == 0) write(IMAIN,*) '  no kinematic faults'
     close(IIN_PAR)
+    ! all done
     return
   endif
 
+  ! number of faults
   read(IIN_PAR,*) nbfaults
   if (nbfaults == 0) then
     !if (myrank == 0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
+    ! nothing to do
     return
   endif
 
+  ! checks if binary fault file was created
   filename = prname(1:len_trim(prname))//'fault_db.bin'
   open(unit=IIN_BIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
-    stop
+    call exit_MPI(myrank,'Error: fault file fault_db.bin not found')
   endif
-  ! WARNING TO DO: should be an MPI abort
 
+  ! Reading etas of each fault
   ! Skip viscosity eta of each fault. Not used in kinematic simulations.
   do iflt = 1,nbfaults
     read(IIN_PAR,*) ! eta
   enddo
+
+  ! fault rupture type: 1 = dyn 2 = kin
   read(IIN_PAR,*) SIMULATION_TYPE
 
   ! fault simulation type == 2 for kinematic rupture simulation
@@ -115,6 +121,7 @@ contains
   if (SIMULATION_TYPE /= 2) then
     close(IIN_BIN)
     close(IIN_PAR)
+    ! all done
     return
   endif
 
@@ -124,20 +131,38 @@ contains
     write(IMAIN,*) '  found ', nbfaults, ' fault(s) in file DATA/Par_file_faults'
   endif
 
+  ! sets kinematic rupture flag
   SIMULATION_TYPE_KIN = .true.
 
+  ! reads parameters:
+  !   NTOUT : Number of time steps
+  !   NTSNAP: time interation of snapshots
+  !   V_HEALING (-1 : Healing off)
+  !   V_RUPT
   read(IIN_PAR,*) NTOUT
   read(IIN_PAR,*) NSNAP
   read(IIN_PAR,*) DUMMY
   read(IIN_PAR,*) DUMMY
 
-  read(IIN_BIN) nbfaults ! should be the same as in IIN_PAR
+  ! from binary fault file
+  read(IIN_BIN) nbfaults_bin ! should be the same as in IIN_PAR
+
+  ! checks
+  if (nbfaults /= nbfaults_bin) then
+    print *,'Error: number of faults ',nbfaults,' in Par_file_faults should match number stored in fault_db.bin: ',nbfaults_bin
+    print *,'Please check setup and rerun simulation...'
+    call exit_MPI(myrank,'Error invalid number of faults in Par_file_faults')
+  endif
+
   allocate( faults(nbfaults) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1993')
-  dt = real(DTglobal)
-  do iflt=1,nbfaults
+
+  dt_real = real(DTglobal)
+
+  ! reads in fault parameters
+  do iflt = 1,nbfaults
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
-    call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt)
+    call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt_real,nt,iflt)
   enddo
 
   close(IIN_BIN)
@@ -145,24 +170,21 @@ contains
 
   return
 
-100 if (myrank == 0) then
-      write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
-      stop
-      ! WARNING TO DO: should be an MPI abort
-    endif
+100 if (myrank == 0)write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
+    call exit_MPI(myrank,'Error: BEGIN_FAULT entry missing')
 
   end subroutine BC_KINFLT_init
 
 
 !---------------------------------------------------------------------
 
-  subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt)
+  subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt_real,NT,iflt)
 
   implicit none
 
   type(bc_dynandkinflt_type), intent(inout) :: bc
   integer, intent(in)                 :: IIN_BIN,IIN_PAR,NT,iflt
-  real(kind=CUSTOM_REAL), intent(in)  :: dt
+  real(kind=CUSTOM_REAL), intent(in)  :: dt_real
 
   real(kind=CUSTOM_REAL) :: kindt
 
@@ -203,7 +225,7 @@ contains
              bc%V(3,1))
   endif
 
-  call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,7,iflt)
+  call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt_real,7,iflt)
 
   call init_dataXZ(bc%dataXZ,bc)
 

@@ -33,8 +33,6 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
-  use fault_solver_dynamic, only: BC_DYNFLT_init
-  use fault_solver_kinematic, only: BC_KINFLT_init
 
   implicit none
 
@@ -60,10 +58,8 @@
   ! initializes arrays
   call prepare_wavefields()
 
-  ! Loading kinematic and dynamic fault solvers.
-  call BC_DYNFLT_init(prname,DT,myrank)
-
-  call BC_KINFLT_init(prname,DT,myrank)
+  ! initializes fault rupture arrays
+  call prepare_timerun_faults()
 
   ! prepares attenuation arrays
   call prepare_attenuation()
@@ -1220,3 +1216,33 @@
   call synchronize_all()
 
   end subroutine prepare_timerun_stacey
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_timerun_faults()
+
+  use specfem_par
+
+  use fault_solver_dynamic, only: BC_DYNFLT_init,SIMULATION_TYPE_DYN
+  use fault_solver_kinematic, only: BC_KINFLT_init,SIMULATION_TYPE_KIN
+
+  implicit none
+
+  ! initializes flag
+  FAULT_SIMULATION = .false.
+
+  ! initializes kinematic and dynamic fault solvers
+  ! dynamic rupture
+  call BC_DYNFLT_init(prname)
+
+  ! kinematic rupture
+  call BC_KINFLT_init(prname)
+
+  ! sets simulation flag
+  if (SIMULATION_TYPE_DYN .or. SIMULATION_TYPE_KIN) then
+    FAULT_SIMULATION = .true.
+  endif
+
+  end subroutine prepare_timerun_faults

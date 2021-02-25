@@ -33,13 +33,13 @@
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
-void FC_FUNC_(initialize_fault_solver,
-              INITIALIZE_FAULT_SOLVER)(long* Fault_solver,
-                                       int* num_of_faults,
-                                       realw* v_healing,
-                                       realw* v_rupt) {
+void FC_FUNC_(initialize_fault_solver_gpu,
+              INITIALIZE_FAULT_SOLVER_GPU)(long* Fault_solver,
+                                           int* num_of_faults,
+                                           realw* v_healing,
+                                           realw* v_rupt) {
 
-  TRACE("initialize_fault_solver");
+  TRACE("initialize_fault_solver_gpu");
 
   // allocates fault parameter structure
   Fault_solver_dynamics *Fdyn = (Fault_solver_dynamics*) malloc(sizeof(Fault_solver_dynamics));
@@ -58,13 +58,13 @@ void FC_FUNC_(initialize_fault_solver,
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
-void FC_FUNC_(initialize_fault_data,
-              INITIALIZE_FAULT_DATA)(long* Fault_solver,
-                                     int* iglob,
-                                     int* num_of_records,
-                                     int* nt,
-                                     int* ifault) {
-  TRACE("initialize_fault_data");
+void FC_FUNC_(initialize_fault_data_gpu,
+              INITIALIZE_FAULT_DATA_GPU)(long* Fault_solver,
+                                         int* iglob,
+                                         int* num_of_records,
+                                         int* nt,
+                                         int* ifault) {
+  TRACE("initialize_fault_data_gpu");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_solver);
 
@@ -88,7 +88,7 @@ void FC_FUNC_(initialize_fault_data,
   // stores structure pointers
   Fsolver->faults[*ifault].output_dataT = fault_data_recorder;
 
-  GPU_ERROR_CHECKING("initialize_fault_data");
+  GPU_ERROR_CHECKING("initialize_fault_data_gpu");
 }
 
 
@@ -141,23 +141,23 @@ void allocate_cuda_memory_test(void** d_array_addr_ptr,int size) {
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
-void FC_FUNC_(transfer_todevice_fault_data,
-              TRANSFER_TODEVICE_FAULT_DATA)(long* Fault_pointer,
-                                            int* fault_index,
-                                            int* NSPEC_AB,
-                                            int* NGLOB_AB,
-                                            realw* D,
-                                            realw* T0,
-                                            realw* T,
-                                            realw* B,
-                                            realw* R,
-                                            realw* V0,
-                                            realw* Z,
-                                            realw* invM1,
-                                            realw* invM2,
-                                            int* ibulk1,
-                                            int* ibulk2) {
-  TRACE("transfer_todevice_fault_data");
+void FC_FUNC_(transfer_fault_data_to_device,
+              TRANSFER_FAULT_DATA_TO_DEVICE)(long* Fault_pointer,
+                                             int* fault_index,
+                                             int* NSPEC_AB,
+                                             int* NGLOB_AB,
+                                             realw* D,
+                                             realw* T0,
+                                             realw* T,
+                                             realw* B,
+                                             realw* R,
+                                             realw* V0,
+                                             realw* Z,
+                                             realw* invM1,
+                                             realw* invM2,
+                                             int* ibulk1,
+                                             int* ibulk2) {
+  TRACE("transfer_fault_data_to_device");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Fault* Flt = &(Fsolver->faults[*fault_index]);
@@ -184,22 +184,22 @@ void FC_FUNC_(transfer_todevice_fault_data,
 
   }
 
-  GPU_ERROR_CHECKING("transfer_todevice_fault_data");
+  GPU_ERROR_CHECKING("transfer_fault_data_to_device");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
-void FC_FUNC_(transfer_tohost_fault_data,
-              TRANSFER_TOHOST_FAULT_DATA)(long* Fault_pointer,
-                                          int* fault_index,
-                                          int* NSPEC_AB,
-                                          int* NGLOB_AB,
-                                          realw* D,
-                                          realw* V,
-                                          realw* T) {
+void FC_FUNC_(transfer_fault_data_to_host,
+              TRANSFER_FAULT_DATA_TO_HOST)(long* Fault_pointer,
+                                           int* fault_index,
+                                           int* NSPEC_AB,
+                                           int* NGLOB_AB,
+                                           realw* D,
+                                           realw* V,
+                                           realw* T) {
 
-  TRACE("transfer_tohost_fault_data");
+  TRACE("transfer_fault_data_to_host");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Fault* Flt = &(Fsolver->faults[*fault_index]);
@@ -210,19 +210,19 @@ void FC_FUNC_(transfer_tohost_fault_data,
     copy_tohost_realw_test((void **)&(Flt->T),T,(*NGLOB_AB)*3);
   }
 
-  GPU_ERROR_CHECKING("transfer_tohost_fault_data");
+  GPU_ERROR_CHECKING("transfer_fault_data_to_host");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
-void FC_FUNC_(transfer_tohost_datat,
-              TRANSFER_TOHOST_DATAT)(long* Fault_pointer,
-                                     realw* h_dataT,
-                                     int* it,
-                                     int* ifault) {
+void FC_FUNC_(transfer_datat_to_host,
+              TRANSFER_DATAT_TO_HOST)(long* Fault_pointer,
+                                      realw* h_dataT,
+                                      int* it,
+                                      int* ifault) {
 
-  TRACE("transfer_tohost_datat");
+  TRACE("transfer_dataT_to_host");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Fault* Flt = &(Fsolver->faults[*ifault]);
@@ -235,14 +235,14 @@ void FC_FUNC_(transfer_tohost_datat,
                            Flt->output_dataT->NRECORD * recordlength * Flt->output_dataT->NT);
   }
 
-  GPU_ERROR_CHECKING("transfer_tohost_datat");
+  GPU_ERROR_CHECKING("transfer_dataT_to_host");
 }
 
 /*-------------------------------------------------------------------------------------------------*/
 
 extern EXTERN_LANG
-void FC_FUNC_(transfer_todevice_rsf_data,
-              TRANSFER_TODEVICE_RSF_DATA)(long* Fault_pointer,
+void FC_FUNC_(transfer_rsf_data_todevice,
+              TRANSFER_RSF_DATA_TODEVICE)(long* Fault_pointer,
                                           int *NGLOB_AB,
                                           int* fault_index,
                                           realw* V0,
@@ -257,7 +257,7 @@ void FC_FUNC_(transfer_todevice_rsf_data,
                                           realw* fw,
                                           realw* Vw) {
 
-  TRACE("transfer_todevice_rsf_data");
+  TRACE("transfer_rsf_data_todevice");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Rsf_type* Rsf  = &((Fsolver->faults[*fault_index]).rsf);
@@ -276,14 +276,14 @@ void FC_FUNC_(transfer_todevice_rsf_data,
     copy_todevice_realw_test((void **)&(Rsf->Vw),Vw,*NGLOB_AB);
   }
 
-  GPU_ERROR_CHECKING("transfer_todevice_rsf_data");
+  GPU_ERROR_CHECKING("transfer_rsf_data_todevice");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
-void FC_FUNC_(transfer_todevice_swf_data,
-              TRANSFER_TODEVICE_SWF_DATA)(long* Fault_pointer,
+void FC_FUNC_(transfer_swf_data_todevice,
+              TRANSFER_SWF_DATA_TODEVICE)(long* Fault_pointer,
                                           int *NGLOB_AB,
                                           int *fault_index,
                                           realw* Dc,
@@ -293,7 +293,7 @@ void FC_FUNC_(transfer_todevice_swf_data,
                                           realw* C,
                                           realw* theta) {
 
-  TRACE("transfer_todevice_swf_data");
+  TRACE("transfer_swf_data_todevice");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Swf_type* Swf  = &((Fsolver->faults[*fault_index]).swf);
@@ -307,14 +307,14 @@ void FC_FUNC_(transfer_todevice_swf_data,
     copy_todevice_realw_test((void **)&(Swf->theta),theta,*NGLOB_AB);
   }
 
-  GPU_ERROR_CHECKING("transfer_todevice_swf_data");
+  GPU_ERROR_CHECKING("transfer_swf_data_todevice");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
-void FC_FUNC_(transfer_tohost_rsf_data,
-              TRANSFER_TOHOST_RSF_DATA)(long* Fault_pointer,
+void FC_FUNC_(transfer_rsf_data_tohost,
+              TRANSFER_RSF_DATA_TOHOST)(long* Fault_pointer,
                                         int *NGLOB_AB,
                                         int *fault_index,
                                         realw* V0,
@@ -329,7 +329,7 @@ void FC_FUNC_(transfer_tohost_rsf_data,
                                         realw* fw,
                                         realw* Vw) {
 
-  TRACE("transfer_tohost_rsf_data");
+  TRACE("transfer_rsf_data_tohost");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Rsf_type* Rsf  = &((Fsolver->faults[*fault_index]).rsf);
@@ -348,14 +348,14 @@ void FC_FUNC_(transfer_tohost_rsf_data,
     copy_tohost_realw_test((void **)&(Rsf->Vw),Vw,*NGLOB_AB);
   }
 
-  GPU_ERROR_CHECKING("transfer_tohost_rsf_data");
+  GPU_ERROR_CHECKING("transfer_rsf_data_tohost");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
-void FC_FUNC_(transfer_tohost_swf_data,
-              TRANSFER_TOHOST_SWF_DATA)(long* Fault_pointer,
+void FC_FUNC_(transfer_swf_data_tohost,
+              TRANSFER_SWF_DATA_TOHOST)(long* Fault_pointer,
                                         int *NGLOB_AB,
                                         int *fault_index,
                                         realw* Dc,
@@ -365,7 +365,7 @@ void FC_FUNC_(transfer_tohost_swf_data,
                                         realw* C,
                                         realw* theta) {
 
-  TRACE("transfer_tohost_swf_data");
+  TRACE("transfer_swf_data_tohost");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Swf_type *Swf = &((Fsolver -> faults[*fault_index]).swf);
@@ -379,7 +379,7 @@ void FC_FUNC_(transfer_tohost_swf_data,
     copy_tohost_realw_test((void **)&(Swf->theta),theta,*NGLOB_AB);
   }
 
-  GPU_ERROR_CHECKING("transfer_tohost_swf_data");
+  GPU_ERROR_CHECKING("transfer_swf_data_tohost");
 }
 
 
@@ -398,81 +398,92 @@ void FC_FUNC_(fault_solver_gpu,
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
 
-  int num_of_block;
-  int num_of_block2;
-
   for(int ifault = 0; ifault < (Fsolver->Nbfaults); ifault++){
     Fault* Flt = &(Fsolver->faults[ifault]);
     Rsf_type* rsf = &(Flt->rsf);
     Swf_type* swf = &(Flt->swf);
 
-    if(Flt->NGLOB_AB > 0){
-      num_of_block = (int) (Flt->NGLOB_AB/128)+1;
-      num_of_block2 = (int) (Flt->output_dataT->NRECORD/128)+1;
+    int size = Flt->NGLOB_AB;
 
-      if (false){
-        // this is dirty implementation
-        compute_dynamic_fault_cuda<<<num_of_block,128>>>( mp->d_displ,
-                                                          mp->d_veloc,
-                                                          mp->d_accel,
-                                                          Flt->NGLOB_AB,
-                                                          Flt->invM1,
-                                                          Flt->invM2,
-                                                          Flt->B,
-                                                          Flt->Z,
-                                                          Flt->R,
-                                                          Flt->T0,
-                                                          Flt->T,
-                                                          rsf->C,   /**rate and state friction quantities*/
-                                                          rsf->a,
-                                                          rsf->b,
-                                                          rsf->L,
-                                                          rsf->f0,
-                                                          rsf->V0,
-                                                          rsf->V_init,
-                                                          rsf->theta,
-                                                          rsf->Vw,
-                                                          rsf->fw,
-                                                          Flt->V,
-                                                          Flt->D,
-                                                          Flt->ibulk1,
-                                                          Flt->ibulk2,
-                                                          *dt,
-                                                          *myrank);
-      }else{
-        compute_dynamic_fault_cuda_swf<<<num_of_block,128>>>( mp->d_displ,
-                                                              mp->d_veloc,
-                                                              mp->d_accel,
-                                                              Flt->NGLOB_AB,
-                                                              Flt->invM1,
-                                                              Flt->invM2,
-                                                              Flt->B,
-                                                              Flt->Z,
-                                                              Flt->R,
-                                                              Flt->T0,
-                                                              Flt->T,
-                                                              swf->Dc,
-                                                              swf->theta,
-                                                              swf->mus,
-                                                              swf->mud,
-                                                              swf->Coh,
-                                                              swf->T,
-                                                              Flt->V,
-                                                              Flt->D,
-                                                              Flt->ibulk1,
-                                                              Flt->ibulk2,
-                                                              *dt,
-                                                              *myrank);
+    if(size > 0){
+      int blocksize = 128;
+      int size_padded = ((int)ceil(((double)size)/((double)blocksize)))*blocksize;
 
-        store_dataT<<<num_of_block2,128>>>( Flt->output_dataT->dataT,
-                                            Flt->V,
-                                            Flt->D,
-                                            Flt->T,
-                                            Flt->output_dataT->iglob,
-                                            *it,
-                                            Flt->output_dataT->NRECORD,
-                                            Flt->output_dataT->NT);
+      int num_blocks_x, num_blocks_y;
+      get_blocks_xy(size_padded/blocksize,&num_blocks_x,&num_blocks_y);
+
+      dim3 grid(num_blocks_x,num_blocks_y);
+      dim3 threads(blocksize,1,1);
+
+      /*
+      // this is dirty implementation
+      // fault kernel for rate and state friction
+      compute_dynamic_fault_cuda_rsf<<<grid,threads>>>( mp->d_displ,
+                                                        mp->d_veloc,
+                                                        mp->d_accel,
+                                                        Flt->NGLOB_AB,
+                                                        Flt->invM1,
+                                                        Flt->invM2,
+                                                        Flt->B,
+                                                        Flt->Z,
+                                                        Flt->R,
+                                                        Flt->T0,
+                                                        Flt->T,
+                                                        rsf->C,   // rate and state friction quantities
+                                                        rsf->a,
+                                                        rsf->b,
+                                                        rsf->L,
+                                                        rsf->f0,
+                                                        rsf->V0,
+                                                        rsf->V_init,
+                                                        rsf->theta,
+                                                        rsf->Vw,
+                                                        rsf->fw,
+                                                        Flt->V,
+                                                        Flt->D,
+                                                        Flt->ibulk1,
+                                                        Flt->ibulk2,
+                                                        *dt,
+                                                        *myrank);
       }
+      */
+
+      // fault kernel for slip weakening friction
+      compute_dynamic_fault_cuda_swf<<<grid,threads>>>( mp->d_displ,
+                                                        mp->d_veloc,
+                                                        mp->d_accel,
+                                                        Flt->NGLOB_AB,
+                                                        Flt->invM1,
+                                                        Flt->invM2,
+                                                        Flt->B,
+                                                        Flt->Z,
+                                                        Flt->R,
+                                                        Flt->T0,
+                                                        Flt->T,
+                                                        swf->Dc,
+                                                        swf->theta,
+                                                        swf->mus,
+                                                        swf->mud,
+                                                        swf->Coh,
+                                                        swf->T,
+                                                        Flt->V,
+                                                        Flt->D,
+                                                        Flt->ibulk1,
+                                                        Flt->ibulk2,
+                                                        *dt,
+                                                        *myrank);
+
+      // fills output dataT array
+      int num_of_block2 = (int) (Flt->output_dataT->NRECORD/128)+1;
+
+      store_dataT<<<num_of_block2,128>>>( Flt->output_dataT->dataT,
+                                          Flt->V,
+                                          Flt->D,
+                                          Flt->T,
+                                          Flt->output_dataT->iglob,
+                                          *it,
+                                          Flt->output_dataT->NRECORD,
+                                          Flt->output_dataT->NT);
     }
   }
 

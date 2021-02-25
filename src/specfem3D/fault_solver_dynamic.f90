@@ -72,10 +72,15 @@ module fault_solver_dynamic
   logical, save :: RSF_HETE = .false.  !RSF_HETE for heterogeneous in rate and
   ! state simulation
 
+  ! Kelvin-Voigt damping
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
 
+  ! GPU output record length
+  integer, parameter :: NT_RECORD_LENGTH = 500
+
   public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, Kelvin_Voigt_eta, &
-            SIMULATION_TYPE_DYN, transfer_faultdata_GPU, rsf_GPU_init, synchronize_GPU
+            SIMULATION_TYPE_DYN, transfer_faultdata_GPU, rsf_GPU_init, &
+            NT_RECORD_LENGTH, fault_output_synchronize_GPU
 
 
 contains
@@ -84,21 +89,18 @@ contains
 ! BC_DYNFLT_init initializes dynamic faults
 !
 ! prname        fault database is read from file prname_fault_db.bin
-! Minv          inverse mass matrix
-! dt            global time step
-!
-  subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
-  use specfem_par, only: nt => NSTEP
-  use constants, only: IMAIN
+  subroutine BC_DYNFLT_init(prname)
+
+  use specfem_par, only: nt => NSTEP,DTglobal => DT
+  use constants, only: IMAIN,myrank
 
   implicit none
 
   character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
-  double precision, intent(in) :: DTglobal
-  integer, intent(in) :: myrank
 
-  real(kind=CUSTOM_REAL) :: dt
+  ! local parameters
+  real(kind=CUSTOM_REAL) :: dt_real
   integer :: iflt,ier,dummy_idfault
   integer :: nbfaults,nbfaults_bin
   integer :: size_Kelvin_Voigt
@@ -127,6 +129,7 @@ contains
   read(IIN_PAR,*) nbfaults
   if (nbfaults == 0) then
     !if (myrank == 0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
+    ! nothing to do
     return
   endif
 
@@ -143,7 +146,7 @@ contains
     read(IIN_PAR,*) ! etas
   enddo
 
-  ! fault rupture type: 1 = dyn 2=kin
+  ! fault rupture type: 1 = dyn 2 = kin
   read(IIN_PAR,*) SIMULATION_TYPE
 
   ! fault simulation type == 1 for dynamic rupture simulation
@@ -174,7 +177,7 @@ contains
   read(IIN_PAR,*) V_HEALING
   read(IIN_PAR,*) V_RUPT
 
-  ! from binary fault files
+  ! from binary fault file
   read(IIN_BIN) nbfaults_bin ! should be the same as in IIN_PAR
 
   ! checks
@@ -188,7 +191,8 @@ contains
   Nfaults = nbfaults
   allocate( faults(nbfaults) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1361')
-  dt = real(DTglobal)
+
+  dt_real = real(DTglobal)
 
   ! example line:
   ! &RUPTURE_SWITCHES RATE_AND_STATE=.false.,TPV16=.false./
@@ -202,7 +206,7 @@ contains
     ! &STRESS_TENSOR Sigma=0e0,0e0,0e0,0e0,0e0,0e0/
     ! ..
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
-    call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt,myrank)
+    call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt_real,nt,iflt,myrank)
   enddo
 
   ! close files
@@ -245,37 +249,42 @@ contains
 
   integer :: ifault,nspec,nglob
 
-  call initialize_fault_solver(Fault_pointer,Nfaults,V_HEALING,V_RUPT)
+  ! initialize fault solver on GPU
+  call initialize_fault_solver_gpu(Fault_pointer,Nfaults,V_HEALING,V_RUPT)
+
+  ! initializes each fault
   do ifault = 1,Nfaults
-    call initialize_fault_data(Fault_pointer,faults(ifault)%dataT%iglob, faults(ifault)%dataT%npoin, 500, ifault-1)
+    ! using a record length nt (500), which will be used also for outputting records
+    call initialize_fault_data_gpu(Fault_pointer,faults(ifault)%dataT%iglob, faults(ifault)%dataT%npoin, &
+                                   NT_RECORD_LENGTH, ifault-1)
   enddo
 
+  ! copies fault data fields to GPU
   do ifault = 1,Nfaults
     nspec = faults(ifault)%nspec
     nglob = faults(ifault)%nglob
-
-    call transfer_todevice_fault_data(Fault_pointer,ifault-1, &
-                                      nspec,nglob, &
-                                      faults(ifault)%D, &
-                                      faults(ifault)%T0,faults(ifault)%T, &
-                                      faults(ifault)%B,faults(ifault)%R,faults(ifault)%V, &
-                                      faults(ifault)%Z, &
-                                      faults(ifault)%invM1,faults(ifault)%invM2, &
-                                      faults(ifault)%ibulk1,faults(ifault)%ibulk2)
+    call transfer_fault_data_to_device(Fault_pointer,ifault-1, &
+                                       nspec,nglob, &
+                                       faults(ifault)%D, &
+                                       faults(ifault)%T0,faults(ifault)%T, &
+                                       faults(ifault)%B,faults(ifault)%R,faults(ifault)%V, &
+                                       faults(ifault)%Z, &
+                                       faults(ifault)%invM1,faults(ifault)%invM2, &
+                                       faults(ifault)%ibulk1,faults(ifault)%ibulk2)
   enddo
 
   end subroutine transfer_faultdata_GPU
 
 !---------------------------------------------------------------------
 
-  subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
+  subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt_real,NT,iflt,myrank)
 
   use constants, only: PARALLEL_FAULT
 
   implicit none
   type(bc_dynandkinflt_type), intent(inout) :: bc
   integer, intent(in)                 :: IIN_BIN,IIN_PAR,NT,iflt
-  real(kind=CUSTOM_REAL), intent(in)  :: dt
+  real(kind=CUSTOM_REAL), intent(in)  :: dt_real
   integer, intent(in) :: myrank
 
   real(kind=CUSTOM_REAL) :: S1,S2,S3,Sigma(6)
@@ -365,7 +374,7 @@ contains
 
   !bc%T=bc%T0
   if (RATE_AND_STATE) then
-    call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,8,iflt)
+    call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt_real,8,iflt)
 
     if (bc%dataT%npoin > 0) then
       bc%dataT%longFieldNames(8) = "log10 of state variable (log-seconds)"
@@ -376,7 +385,7 @@ contains
       endif
     endif
   else
-    call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,7,iflt)
+    call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt_real,7,iflt)
   endif
 
   call init_dataXZ(bc%dataXZ,bc)
@@ -513,7 +522,9 @@ contains
 
 !---------------------------------------------------------------------
 ! REPLACES the value of a fault parameter inside an area with prescribed shape
+
   subroutine init_2d_distribution(a,coord,iin,n)
+
 !JPA refactor: background value should be an argument
 
   use constants, only: PI
@@ -634,21 +645,25 @@ contains
 
 !init_fault_traction subroutine computes the traction on the fault plane
 !according to a uniform regional stress field.
+
   subroutine init_fault_traction(bc,Sigma)
 
   implicit none
   type(bc_dynandkinflt_type), intent(inout) :: bc
   real(kind=CUSTOM_REAL),dimension(6), intent(in) :: Sigma
   real(kind=CUSTOM_REAL),dimension(3,bc%nglob) :: Traction
+
   !sigma_xx => sigma(1)
   !sigma_yy => sigma(2)
   !sigma_zz => sigma(3)
   !sigma_xy => sigma(4)
   !sigma_yz => sigma(5)
   !sigma_xz => sigma(6) negative means compression
+
   Traction(1,:) = Sigma(1)*bc%R(3,1,:)+Sigma(4)*bc%R(3,2,:)+Sigma(6)*bc%R(3,3,:)
   Traction(2,:) = Sigma(4)*bc%R(3,1,:)+Sigma(2)*bc%R(3,2,:)+Sigma(5)*bc%R(3,3,:)
   Traction(3,:) = Sigma(6)*bc%R(3,1,:)+Sigma(5)*bc%R(3,2,:)+Sigma(3)*bc%R(3,3,:)
+
   Traction = rotate(bc,Traction,1)
   bc%T0 = bc%T0 + Traction
 
@@ -1084,12 +1099,12 @@ contains
 
     if (associated(f)) then
       ! rate and state friction simulation
-      call transfer_todevice_rsf_data(Fault_pointer,faults(ifault)%nglob,ifault-1, &
+      call transfer_rsf_data_todevice(Fault_pointer,faults(ifault)%nglob,ifault-1, &
                                       f%V0,f%f0,f%V_init,f%a,f%b,f%L,f%theta,f%T,f%C,f%fw,f%Vw)
     ! ifault - 1 because in C language, array index start from 0
     else if (associated(g)) then
       ! slip weakening friction simulation
-      call transfer_todevice_swf_data(Fault_pointer,faults(ifault)%nglob,ifault-1, &
+      call transfer_swf_data_todevice(Fault_pointer,faults(ifault)%nglob,ifault-1, &
                                       g%Dc,g%mus,g%mud,g%T,g%C,g%theta)
     endif
   enddo
@@ -1404,26 +1419,26 @@ contains
 !!$end function rsf_mu
 
 !---------------------------------------------------------------------
-  subroutine rsf_update_state(V,dt,f)
+  subroutine rsf_update_state(V,dt_real,f)
 
   use constants, only: ONE,HALF,TWO
   implicit none
 
   real(kind=CUSTOM_REAL), dimension(:), intent(in) :: V
   type(rsf_type), intent(inout) :: f
-  real(kind=CUSTOM_REAL), intent(in) :: dt
+  real(kind=CUSTOM_REAL), intent(in) :: dt_real
 
   real(kind=CUSTOM_REAL) :: vDtL(size(V))
   real(kind=CUSTOM_REAL) :: f_ss(size(V)),xi_ss(size(V)),fLV(size(V))
 
-  vDtL = V * dt / f%L
+  vDtL = V * dt_real / f%L
 
   ! ageing law
   if (f%StateLaw == 1) then
     where(vDtL > 1.e-5_CUSTOM_REAL)
       f%theta = f%theta * exp(-vDtL) + f%L/V * (ONE - exp(-vDtL))
     elsewhere
-      f%theta = f%theta * exp(-vDtL) + dt*( ONE - HALF*vDtL )
+      f%theta = f%theta * exp(-vDtL) + dt_real * ( ONE - HALF*vDtL )
     endwhere
 
   ! slip law : by default use strong rate-weakening
@@ -1661,13 +1676,13 @@ contains
 
 !---------------------------------------------------------------
 
-  subroutine store_dataXZ(dataXZ,stg,dold,dnew,dc,vold,vnew,timeval,dt)
+  subroutine store_dataXZ(dataXZ,stg,dold,dnew,dc,vold,vnew,timeval,dt_real)
 
   implicit none
 
   type(dataXZ_type), intent(inout) :: dataXZ
   real(kind=CUSTOM_REAL), dimension(:), intent(in) :: stg,dold,dnew,dc,vold,vnew
-  real(kind=CUSTOM_REAL), intent(in) :: timeval,dt
+  real(kind=CUSTOM_REAL), intent(in) :: timeval,dt_real
 
   integer :: i
 
@@ -1679,14 +1694,14 @@ contains
     ! with linear time interpolation
     if (dataXZ%tPZ(i) == 0e0_CUSTOM_REAL) then
       if (dold(i) <= dc(i) .and. dnew(i) >= dc(i)) then
-        dataXZ%tPZ(i) = timeval-dt*(dnew(i)-dc(i))/(dnew(i)-dold(i))
+        dataXZ%tPZ(i) = timeval - dt_real * (dnew(i)-dc(i))/(dnew(i)-dold(i))
       endif
     endif
 
     ! rupture time = first time when slip velocity = V_RUPT
     ! with linear time interpolation
     if (dataXZ%tRUP(i) == 0e0_CUSTOM_REAL) then
-      if (vold(i) <= V_RUPT .and. vnew(i) >= V_RUPT) dataXZ%tRUP(i)= timeval-dt*(vnew(i)-V_RUPT)/(vnew(i)-vold(i))
+      if (vold(i) <= V_RUPT .and. vnew(i) >= V_RUPT) dataXZ%tRUP(i)= timeval - dt_real * (vnew(i)-V_RUPT)/(vnew(i)-vold(i))
     endif
 
   enddo
@@ -1974,7 +1989,7 @@ contains
 
 !---------------------------------------------------------------------
 
-  subroutine synchronize_GPU(it)
+  subroutine fault_output_synchronize_GPU(it)
 
   use constants, only: PARALLEL_FAULT
   use specfem_par, only: Fault_pointer,myrank
@@ -1988,21 +2003,24 @@ contains
   type(bc_dynandkinflt_type) :: bc
 
   do ifault = 1,Nfaults
-
     bc = faults(ifault)
 
-    call transfer_tohost_fault_data(Fault_pointer,ifault-1,bc%nspec,bc%nglob,bc%D,bc%V,bc%T)
-    call transfer_tohost_datat(Fault_pointer, bc%dataT%dat, it, ifault - 1)
+    ! copies data back to CPU
+    call transfer_fault_data_to_host(Fault_pointer,ifault-1,bc%nspec,bc%nglob,bc%D,bc%V,bc%T)
+    ! copies dataT back to CPU
+    call transfer_dataT_to_host(Fault_pointer, bc%dataT%dat, it, ifault - 1)
 
+    ! gather data for whole fault
     if (PARALLEL_FAULT) then
       call gather_dataXZ(bc)
     endif
 
+    ! output data
     call SCEC_write_dataT(bc%dataT)
     if (myrank == 0) call write_dataXZ(bc%dataXZ_all,it,ifault)
   enddo
 
-  end subroutine synchronize_GPU
+  end subroutine fault_output_synchronize_GPU
 
 end module fault_solver_dynamic
 

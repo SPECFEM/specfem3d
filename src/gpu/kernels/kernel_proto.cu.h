@@ -504,17 +504,17 @@ __global__ void compute_coupling_ocean_cuda_kernel(realw* accel,
 // src/gpu/kernels/compute_dynamic_fault_cuda.cu
 //
 
-__global__  void compute_dynamic_fault_cuda_swf(realw* Displ, //this is a mesh vector
+__global__  void compute_dynamic_fault_cuda_swf(realw* Displ,   // this is a mesh vector
                                                 realw* Veloc,
                                                 realw* MxAccel,
                                                 int NGLOB_AB,
-                                                realw* invM1,  // this is a fault vector
+                                                realw* invM1,   // this is a fault vector
                                                 realw* invM2,
                                                 realw* B,
                                                 realw* Z,
                                                 realw* R,
                                                 realw* T0,
-                                                realw* T,     //for output
+                                                realw* T,       // for output
                                                 realw* Dc,
                                                 realw* theta,
                                                 realw* mus,
@@ -528,33 +528,33 @@ __global__  void compute_dynamic_fault_cuda_swf(realw* Displ, //this is a mesh v
                                                 realw dt,
                                                 int myrank) ;
 
-__global__  void compute_dynamic_fault_cuda(realw* Displ, /*mesh quantities*/
-                                            realw* Veloc,
-                                            realw* MxAccel,
-                                            int NGLOB_AB,
-                                            realw* invM1,  /* fault quantities*/
-                                            realw* invM2,
-                                            realw* B,
-                                            realw* Z,
-                                            realw* R,
-                                            realw* T0,
-                                            realw* T,
-                                            realw* Coh,
-                                            realw* a,
-                                            realw* b,
-                                            realw* L,
-                                            realw* f0,
-                                            realw* V0,    /*frictional quantities*/
-                                            realw* V_init,
-                                            realw* theta,
-                                            realw* Vw,
-                                            realw* fw,
-                                            realw* V_slip,
-                                            realw* D_slip,
-                                            int* ibulk1,
-                                            int* ibulk2,
-                                            realw dt,
-                                            int myrank) ;
+__global__  void compute_dynamic_fault_cuda_rsf(realw* Displ,   // mesh quantities
+                                                realw* Veloc,
+                                                realw* MxAccel,
+                                                int NGLOB_AB,
+                                                realw* invM1,   // fault quantities
+                                                realw* invM2,
+                                                realw* B,
+                                                realw* Z,
+                                                realw* R,
+                                                realw* T0,
+                                                realw* T,
+                                                realw* Coh,
+                                                realw* a,
+                                                realw* b,
+                                                realw* L,
+                                                realw* f0,
+                                                realw* V0,      // frictional quantities
+                                                realw* V_init,
+                                                realw* theta,
+                                                realw* Vw,
+                                                realw* fw,
+                                                realw* V_slip,
+                                                realw* D_slip,
+                                                int* ibulk1,
+                                                int* ibulk2,
+                                                realw dt,
+                                                int myrank) ;
 
 __global__ void store_dataT(realw* store_dataT,
                             realw* V_slip,

@@ -302,7 +302,7 @@ __device__ __forceinline__ void rotate(realw* R,
                                        realw* vrx,
                                        realw* vry,
                                        realw* vrz,
-                                       int tx,
+                                       int id,
                                        int isForward) {
   realw vx,vy,vz;
   vx = *vrx;
@@ -312,14 +312,14 @@ __device__ __forceinline__ void rotate(realw* R,
   if(isForward){
 // Percy, tangential direction Vt, equation 7 of Pablo's notes in agreement with SPECFEM3D
 // forward rotation
-    *vrx = vx*R[0+9*tx]+vy*R[3+9*tx]+vz*R[6+9*tx];  //vx
-    *vry = vx*R[1+9*tx]+vy*R[4+9*tx]+vz*R[7+9*tx];  //vy
-    *vrz = vx*R[2+9*tx]+vy*R[5+9*tx]+vz*R[8+9*tx];  //vz
+    *vrx = vx*R[0+9*id]+vy*R[3+9*id]+vz*R[6+9*id];  //vx
+    *vry = vx*R[1+9*id]+vy*R[4+9*id]+vz*R[7+9*id];  //vy
+    *vrz = vx*R[2+9*id]+vy*R[5+9*id]+vz*R[8+9*id];  //vz
   }else {
   // backward rotation
-    *vrx = vx*R[0+9*tx]+vy*R[1+9*tx]+vz*R[2+9*tx];  //vx
-    *vry = vx*R[3+9*tx]+vy*R[4+9*tx]+vz*R[5+9*tx];  //vy
-    *vrz = vx*R[6+9*tx]+vy*R[7+9*tx]+vz*R[8+9*tx];  //vz
+    *vrx = vx*R[0+9*id]+vy*R[1+9*id]+vz*R[2+9*id];  //vx
+    *vry = vx*R[3+9*id]+vy*R[4+9*id]+vz*R[5+9*id];  //vy
+    *vrz = vx*R[6+9*id]+vy*R[7+9*id]+vz*R[8+9*id];  //vz
   }
 }
 
@@ -343,17 +343,17 @@ __device__ __forceinline__ void get_weighted_jump(const realw* Vector,const real
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__  void compute_dynamic_fault_cuda_swf(realw* Displ, //this is a mesh vector
+__global__  void compute_dynamic_fault_cuda_swf(realw* Displ,   // this is a mesh vector
                                                 realw* Veloc,
                                                 realw* MxAccel,
                                                 int NGLOB_AB,
-                                                realw* invM1,  // this is a fault vector
+                                                realw* invM1,   // this is a fault vector
                                                 realw* invM2,
                                                 realw* B,
                                                 realw* Z,
                                                 realw* R,
                                                 realw* T0,
-                                                realw* T,     //for output
+                                                realw* T,       // for output
                                                 realw* Dc,
                                                 realw* theta,
                                                 realw* mus,
@@ -366,7 +366,8 @@ __global__  void compute_dynamic_fault_cuda_swf(realw* Displ, //this is a mesh v
                                                 int* ibulk2,
                                                 realw dt,
                                                 int myrank) {
-  int tx,iglob1,iglob2;
+
+  int iglob1,iglob2;
   realw Dx,Dy,Dz,Vx,Vy,Vz,Ax,Ay,Az;
   realw Tx,Ty,Tz,T0xl,T0yl,T0zl;
   realw Tstick;
@@ -377,120 +378,136 @@ __global__  void compute_dynamic_fault_cuda_swf(realw* Displ, //this is a mesh v
   realw thetaold;
   realw Tnew;
 
-  tx = blockDim.x * blockIdx.x + threadIdx.x;  /*calculate thread id*/
-  if(tx >= NGLOB_AB) return;
+  // calculate thread id
+  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
 
-  Zl = Z[tx];
+  // check if anything to do
+  if (id >= NGLOB_AB) return;
 
-  thetal = theta[tx];
-  mudl = mud[tx];
-  musl = mus[tx];
-  Dcl = Dc[tx];
-  Cohl = Coh[tx];
-  //RTl = RT[tx];
-  T0xl = T0[tx*3];
-  T0yl = T0[tx*3+1];
-  T0zl = T0[tx*3+2];
+  Zl = Z[id];
 
-  iglob1 = ibulk1[tx]-1;
-  iglob2 = ibulk2[tx]-1;
+  thetal = theta[id];
+  mudl = mud[id];
+  musl = mus[id];
+  Dcl = Dc[id];
+  Cohl = Coh[id];
+  //RTl = RT[id];
+
+  T0xl = T0[id*3];
+  T0yl = T0[id*3+1];
+  T0zl = T0[id*3+2];
+
+  iglob1 = ibulk1[id]-1;
+  iglob2 = ibulk2[id]-1;
 
   get_jump(Displ, &Dx, &Dy, &Dz, iglob1, iglob2);
   get_jump(Veloc, &Vx, &Vy, &Vz, iglob1, iglob2);
-  get_weighted_jump(MxAccel, invM1[tx], invM2[tx], &Ax, &Ay, &Az,iglob1,iglob2);
+  get_weighted_jump(MxAccel, invM1[id], invM2[id], &Ax, &Ay, &Az,iglob1,iglob2);
 
-  rotate(R,&Dx,&Dy,&Dz,tx,1);
-  rotate(R,&Vx,&Vy,&Vz,tx,1);
-  rotate(R,&Ax,&Ay,&Az,tx,1);
+  // rotate to fault frame
+  rotate(R,&Dx,&Dy,&Dz,id,1);
+  rotate(R,&Vx,&Vy,&Vz,id,1);
+  rotate(R,&Ax,&Ay,&Az,id,1);
 
+  // T_stick
   Tx = Zl*(Vx + 0.50*dt*Ax);
   Ty = Zl*(Vy + 0.50*dt*Ay);
   Tz = Zl*(Vz + 0.50*dt*Az);
 
-  /*rotate to fault frame*/
   Tx = Tx + T0xl;
   Ty = Ty + T0yl;
   Tz = Tz + T0zl;
 
   Tstick = sqrt(Tx * Tx + Ty * Ty);
 
+  // slip weakening friction
   thetaold = thetal;
 
-  thetal = update_state_swf(Dx,Dy,D_slip,tx,thetaold);
+  thetal = update_state_swf(Dx,Dy,D_slip,id,thetaold);
 
-  theta[tx] = thetal;
+  theta[id] = thetal;
 
   mul = swf_mu(Dcl,musl,mudl,thetal);
 
+  // update strength
   strength = -mul * (MIN(Tz,0.00)) + Cohl;
 
+  // solve for shear stress
   Tnew = MIN(Tstick,strength);
 
+  // to avoid division by zero
   Tstick = MAX(Tstick,1.0E0);
 
   Tx = Tnew * Tx/Tstick;
   Ty = Tnew * Ty/Tstick;
 
-  T[tx*3]   = Tx;
-  T[tx*3+1] = Ty;
-  T[tx*3+2] = Tz;
+  // save total traction
+  T[id*3]   = Tx;
+  T[id*3+1] = Ty;
+  T[id*3+2] = Tz;
 
   Tx = Tx - T0xl;
   Ty = Ty - T0yl;
   Tz = Tz - T0zl;
+
+  // update slip acceleration
   Ax = Ax - Tx/(Zl*0.5E0*dt);
   Ay = Ay - Ty/(Zl*0.5E0*dt);
   Az = Az - Tz/(Zl*0.5E0*dt);
 
-  D_slip[tx*3]   = Dx;
-  D_slip[tx*3+1] = Dy;
-  D_slip[tx*3+2] = Dz;
+  // Update slip and slip rate, in fault frame
+  D_slip[id*3]   = Dx;
+  D_slip[id*3+1] = Dy;
+  D_slip[id*3+2] = Dz;
 
-  V_slip[tx*3]   = Vx + 0.5E0*dt*Ax;
-  V_slip[tx*3+1] = Vy + 0.5E0*dt*Ay;
-  V_slip[tx*3+2] = Vz + 0.5E0*dt*Az;
-  rotate(R,&Tx,&Ty,&Tz,tx,0);
+  V_slip[id*3]   = Vx + 0.5E0*dt*Ax;
+  V_slip[id*3+1] = Vy + 0.5E0*dt*Ay;
+  V_slip[id*3+2] = Vz + 0.5E0*dt*Az;
 
-  MxAccel[3*iglob1] = MxAccel[3*iglob1] + B[tx]*Tx;
-  MxAccel[3*iglob2] = MxAccel[3*iglob2] - B[tx]*Tx;
+  // Rotate tractions back to (x,y,z) frame
+  rotate(R,&Tx,&Ty,&Tz,id,0);
 
-  MxAccel[3*iglob1+1] = MxAccel[3*iglob1+1] + B[tx]*Ty;
-  MxAccel[3*iglob2+1] = MxAccel[3*iglob2+1] - B[tx]*Ty;
+  // Add boundary term B*T to M*a
+  MxAccel[3*iglob1]   = MxAccel[3*iglob1]   + B[id]*Tx;
+  MxAccel[3*iglob1+1] = MxAccel[3*iglob1+1] + B[id]*Ty;
+  MxAccel[3*iglob1+2] = MxAccel[3*iglob1+2] + B[id]*Tz;
 
-  MxAccel[3*iglob1+2] = MxAccel[3*iglob1+2] + B[tx]*Tz;
-  MxAccel[3*iglob2+2] = MxAccel[3*iglob2+2] - B[tx]*Tz;
+  MxAccel[3*iglob2]   = MxAccel[3*iglob2]   - B[id]*Tx;
+  MxAccel[3*iglob2+1] = MxAccel[3*iglob2+1] - B[id]*Ty;
+  MxAccel[3*iglob2+2] = MxAccel[3*iglob2+2] - B[id]*Tz;
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__  void compute_dynamic_fault_cuda(realw* Displ, /*mesh quantities*/
-                                            realw* Veloc,
-                                            realw* MxAccel,
-                                            int NGLOB_AB,
-                                            realw* invM1,  /* fault quantities*/
-                                            realw* invM2,
-                                            realw* B,
-                                            realw* Z,
-                                            realw* R,
-                                            realw* T0,
-                                            realw* T,
-                                            realw* Coh,
-                                            realw* a,
-                                            realw* b,
-                                            realw* L,
-                                            realw* f0,
-                                            realw* V0,    /*frictional quantities*/
-                                            realw* V_init,
-                                            realw* theta,
-                                            realw* Vw,
-                                            realw* fw,
-                                            realw* V_slip,
-                                            realw* D_slip,
-                                            int* ibulk1,
-                                            int* ibulk2,
-                                            realw dt,
-                                            int myrank) {
-  int tx,iglob1,iglob2;
+__global__  void compute_dynamic_fault_cuda_rsf(realw* Displ,   // mesh quantities
+                                                realw* Veloc,
+                                                realw* MxAccel,
+                                                int NGLOB_AB,
+                                                realw* invM1,   // fault quantities
+                                                realw* invM2,
+                                                realw* B,
+                                                realw* Z,
+                                                realw* R,
+                                                realw* T0,
+                                                realw* T,
+                                                realw* Coh,
+                                                realw* a,
+                                                realw* b,
+                                                realw* L,
+                                                realw* f0,
+                                                realw* V0,      // frictional quantities
+                                                realw* V_init,
+                                                realw* theta,
+                                                realw* Vw,
+                                                realw* fw,
+                                                realw* V_slip,
+                                                realw* D_slip,
+                                                int* ibulk1,
+                                                int* ibulk2,
+                                                realw dt,
+                                                int myrank) {
+
+  int iglob1,iglob2;
   realw Dx,Dy,Dz,Vx,Vy,Vz,Ax,Ay,Az;
   realw Tx,Ty,Tz,T0xl,T0yl,T0zl;
   realw Tstick;
@@ -503,106 +520,125 @@ __global__  void compute_dynamic_fault_cuda(realw* Displ, /*mesh quantities*/
   realw Cohl;
   realw netTstick;
 
-  tx = blockDim.x * blockIdx.x + threadIdx.x;  /*calculate thread id*/
-  if(tx >= NGLOB_AB) return;
+  // calculate thread id
+  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
 
-  Vf_oldl = sqrt(V_slip[3*tx]*V_slip[3*tx]+V_slip[3*tx+1]*V_slip[3*tx+1]);
-  Zl = Z[tx];
-  al = a[tx];
-  bl = b[tx];
-  thetal = theta[tx];
-  f0l = f0[tx];
-  Ll = L[tx];
-  //Vwl = Vw[tx];
-  //fwl = fw[tx];
-  V0l = V0[tx];
-  //V_initl=V_init[tx];
-  Cohl = Coh[tx];
+  // check if anything to do
+  if(id >= NGLOB_AB) return;
 
-  T0xl = T0[tx*3];
-  T0yl = T0[tx*3+1];
-  T0zl = T0[tx*3+2];
+  Vf_oldl = sqrt(V_slip[3*id]*V_slip[3*id] + V_slip[3*id+1]*V_slip[3*id+1]);
 
-  iglob1 = ibulk1[tx]-1;
-  iglob2 = ibulk2[tx]-1;
+  Zl = Z[id];
+  al = a[id];
+  bl = b[id];
+  thetal = theta[id];
+  f0l = f0[id];
+  Ll = L[id];
+  //Vwl = Vw[id];
+  //fwl = fw[id];
+  V0l = V0[id];
+  //V_initl=V_init[id];
+  Cohl = Coh[id];
+
+  T0xl = T0[id*3];
+  T0yl = T0[id*3+1];
+  T0zl = T0[id*3+2];
+
+  iglob1 = ibulk1[id]-1;
+  iglob2 = ibulk2[id]-1;
 
   get_jump(Displ, &Dx, &Dy, &Dz, iglob1, iglob2);
   get_jump(Veloc, &Vx, &Vy, &Vz, iglob1, iglob2);
-  get_weighted_jump(MxAccel, invM1[tx], invM2[tx], &Ax, &Ay, &Az,iglob1,iglob2);
-  Ztmp = Z[tx];
+  get_weighted_jump(MxAccel, invM1[id], invM2[id], &Ax, &Ay, &Az,iglob1,iglob2);
 
-  rotate(R,&Dx,&Dy,&Dz,tx,1);
-  rotate(R,&Vx,&Vy,&Vz,tx,1);
-  rotate(R,&Ax,&Ay,&Az,tx,1);
+  Ztmp = Z[id];
 
+  // rotate to fault frame
+  rotate(R,&Dx,&Dy,&Dz,id,1);
+  rotate(R,&Vx,&Vy,&Vz,id,1);
+  rotate(R,&Ax,&Ay,&Az,id,1);
+
+  // T_stick
   Tx = Ztmp*(Vx + 0.50*dt*Ax);
   Ty = Ztmp*(Vy + 0.50*dt*Ay);
   Tz = Ztmp*(Vz + 0.50*dt*Az);
 
-  /*rotate back to fault frame*/
   Tx = Tx + T0xl;
   Ty = Ty + T0yl;
   Tz = Tz + T0zl;
 
   Tstick = sqrt(Tx * Tx + Ty * Ty);
 
-  netTstick = Tstick - Cohl; /** add cohesion into simulation*/
+  // add cohesion into simulation
+  netTstick = Tstick - Cohl;
+  // prevent Tstick from being negative
+  netTstick = MAX(netTstick, 0.0E0);
 
-  netTstick = MAX(netTstick, 0.0E0);  /** prevent Tstick from being negative */
-
+  // rate and state friction
   thetaold = thetal;
 
+  // first pass
   thetal = update_state_rsf(Ll ,thetaold , Vf_oldl, dt );
 
   Vf_newl = (realw)rtsafe(0.0E0, Vf_oldl+5.0E0, 1.0E-5, netTstick, -Tz, Zl, f0l, V0l, al, bl, Ll, thetal, 0.0, 1);
 
+  // second pass
   Vf_tmp = 0.5E0*(Vf_oldl + Vf_newl);
 
   thetal = update_state_rsf(Ll ,thetaold , Vf_tmp, dt );
 
-  theta[tx] = thetal;
+  theta[id] = thetal;
 
   Vf_newl = (realw)rtsafe(0.0E0, Vf_oldl+5.0E0, 1.0E-5, netTstick, -Tz, Zl, f0l, V0l, al, bl, Ll, thetal, 0.0, 1);
 
-  assert(Vf_newl > -1.0E-6);      /** Double precisio to single precision conversion may cause an error of about 1e-6*/
+  // Double precision to single precision conversion may cause an error of about 1e-6
+  assert(Vf_newl > -1.0E-6);
 
+  // prevent from being negative
   Vf_newl = MAX(Vf_newl,0.0E0);
 
+  // to avoid division by zero
   Tstick = MAX(Tstick,1.0E0);
 
   Tnew = Tstick - Zl*Vf_newl;
 
   Tx = Tnew * Tx/Tstick;
   Ty = Tnew * Ty/Tstick;
-  T[tx*3]   = Tx;
-  T[tx*3+1] = Ty;
-  T[tx*3+2] = Tz;
+
+  // save total traction
+  T[id*3]   = Tx;
+  T[id*3+1] = Ty;
+  T[id*3+2] = Tz;
 
   Tx = Tx - T0xl;
   Ty = Ty - T0yl;
   Tz = Tz - T0zl;
 
+  // update slip acceleration
   Ax = Ax - Tx/(Zl*0.5E0*dt);
   Ay = Ay - Ty/(Zl*0.5E0*dt);
   Az = Az - Tz/(Zl*0.5E0*dt);
 
-  D_slip[tx*3]   = Dx;
-  D_slip[tx*3+1] = Dy;
-  D_slip[tx*3+2] = Dz;
+  // Update slip and slip rate, in fault frame
+  D_slip[id*3]   = Dx;
+  D_slip[id*3+1] = Dy;
+  D_slip[id*3+2] = Dz;
 
-  V_slip[tx*3]   = Vx + 0.5E0*dt*Ax;
-  V_slip[tx*3+1] = Vy + 0.5E0*dt*Ay;
-  V_slip[tx*3+2] = Vz + 0.5E0*dt*Az;
-  rotate(R,&Tx,&Ty,&Tz,tx,0);
+  V_slip[id*3]   = Vx + 0.5E0*dt*Ax;
+  V_slip[id*3+1] = Vy + 0.5E0*dt*Ay;
+  V_slip[id*3+2] = Vz + 0.5E0*dt*Az;
 
-  MxAccel[3*iglob1] = MxAccel[3*iglob1] + B[tx]*Tx;
-  MxAccel[3*iglob2] = MxAccel[3*iglob2] - B[tx]*Tx;
+  // Rotate tractions back to (x,y,z) frame
+  rotate(R,&Tx,&Ty,&Tz,id,0);
 
-  MxAccel[3*iglob1+1] = MxAccel[3*iglob1+1] + B[tx]*Ty;
-  MxAccel[3*iglob2+1] = MxAccel[3*iglob2+1] - B[tx]*Ty;
+  // Add boundary term B*T to M*a
+  MxAccel[3*iglob1]   = MxAccel[3*iglob1]   + B[id]*Tx;
+  MxAccel[3*iglob1+1] = MxAccel[3*iglob1+1] + B[id]*Ty;
+  MxAccel[3*iglob1+2] = MxAccel[3*iglob1+2] + B[id]*Tz;
 
-  MxAccel[3*iglob1+2] = MxAccel[3*iglob1+2] + B[tx]*Tz;
-  MxAccel[3*iglob2+2] = MxAccel[3*iglob2+2] - B[tx]*Tz;
+  MxAccel[3*iglob2]   = MxAccel[3*iglob2]   - B[id]*Tx;
+  MxAccel[3*iglob2+1] = MxAccel[3*iglob2+1] - B[id]*Ty;
+  MxAccel[3*iglob2+2] = MxAccel[3*iglob2+2] - B[id]*Tz;
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -615,19 +651,23 @@ __global__ void store_dataT(realw* store_dataT,
                             int istep,
                             int n_record,
                             int nt) {
-  int tx = blockDim.x * blockIdx.x + threadIdx.x;  /*calculate thread id*/
-  if(tx >= n_record) return;
+
+
+  // calculate thread id
+  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
+
+  if(id >= n_record) return;
 
   int it = (istep - 1)%nt ;
-  int irec = iglob[tx];
+  int irec = iglob[id];
 
-  store_dataT[it*n_record*7 + tx*7 + 0] = D_slip[3*irec + 0];
-  store_dataT[it*n_record*7 + tx*7 + 1] = V_slip[3*irec + 0];
-  store_dataT[it*n_record*7 + tx*7 + 2] = T[3*irec + 0];
-  store_dataT[it*n_record*7 + tx*7 + 3] = -D_slip[3*irec + 1];
-  store_dataT[it*n_record*7 + tx*7 + 4] = -V_slip[3*irec + 1];
-  store_dataT[it*n_record*7 + tx*7 + 5] = -T[3*irec + 1];
-  store_dataT[it*n_record*7 + tx*7 + 6] = T[3*irec + 2];
+  store_dataT[it*n_record*7 + id*7 + 0] = D_slip[3*irec + 0];
+  store_dataT[it*n_record*7 + id*7 + 1] = V_slip[3*irec + 0];
+  store_dataT[it*n_record*7 + id*7 + 2] = T[3*irec + 0];
+  store_dataT[it*n_record*7 + id*7 + 3] = -D_slip[3*irec + 1];
+  store_dataT[it*n_record*7 + id*7 + 4] = -V_slip[3*irec + 1];
+  store_dataT[it*n_record*7 + id*7 + 5] = -T[3*irec + 1];
+  store_dataT[it*n_record*7 + id*7 + 6] = T[3*irec + 2];
 }
 
 
