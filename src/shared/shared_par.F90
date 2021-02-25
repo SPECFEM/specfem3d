@@ -202,6 +202,9 @@ end module constants
   logical :: ELASTIC_SIMULATION = .false.
   logical :: POROELASTIC_SIMULATION = .false.
 
+  ! fault rupture simulation
+  logical :: FAULT_SIMULATION = .false.
+
   end module shared_compute_parameters
 
 !

@@ -36,7 +36,7 @@
 
 ! assembles vector field in blocking way, only returns after values have been received and assembled
 
-  use constants
+  use constants, only: NDIM,CUSTOM_REAL,itag
 
   implicit none
 
@@ -145,7 +145,7 @@
 ! We assume that the interfaces are ordered by increasing rank of the neighbor.
 ! Uses blocking communication: only returns after values have been received and assembled
 
-  use constants
+  use constants, only: NDIM,CUSTOM_REAL,itag,myrank
 
   implicit none
 
@@ -249,7 +249,7 @@
 
 ! sends data
 
-  use constants
+  use constants, only: NDIM,CUSTOM_REAL,itag
 
   implicit none
 
@@ -306,6 +306,82 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine assemble_MPI_vector_async_recv(NPROC,NGLOB_AB,array_val, &
+                                            buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                            max_nibool_interfaces_ext_mesh, &
+                                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                            request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
+                                            my_neighbors_ext_mesh)
+
+! waits for send/receiver to be completed and assembles contributions
+
+  use constants, only: NDIM,CUSTOM_REAL
+  use specfem_par, only: FAULT_SIMULATION
+
+  implicit none
+
+  integer,intent(in) :: NPROC
+  integer,intent(in) :: NGLOB_AB
+
+  ! array to assemble
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: array_val
+
+  integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+
+  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
+    buffer_recv_vector_ext_mesh
+
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: my_neighbors_ext_mesh
+
+  ! local parameters
+  integer :: ipoin,iinterface,iglob
+
+  ! here we have to assemble all the contributions between partitions using MPI
+
+  ! assemble only if more than one partition
+  if (NPROC == 1) return
+
+  ! fault ruptures
+  if (FAULT_SIMULATION) then
+    ! receives MPI buffers with ordered assembly
+    call assemble_MPI_vector_async_w_ord(NPROC,NGLOB_AB,array_val, &
+                                         buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                         max_nibool_interfaces_ext_mesh, &
+                                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                         request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
+                                         my_neighbors_ext_mesh)
+    ! all done
+    return
+  endif
+
+  ! wait for communications completion (recv)
+  do iinterface = 1, num_interfaces_ext_mesh
+    call wait_req(request_recv_vector_ext_mesh(iinterface))
+  enddo
+
+  ! adding all neighbor contributions
+  do iinterface = 1, num_interfaces_ext_mesh
+    do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+      iglob = ibool_interfaces_ext_mesh(ipoin,iinterface)
+      array_val(:,iglob) = array_val(:,iglob) + buffer_recv_vector_ext_mesh(:,ipoin,iinterface)
+    enddo
+  enddo
+
+  ! wait for communications completion (send)
+  do iinterface = 1, num_interfaces_ext_mesh
+    call wait_req(request_send_vector_ext_mesh(iinterface))
+  enddo
+
+  end subroutine assemble_MPI_vector_async_recv
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine assemble_MPI_vector_async_w_ord(NPROC,NGLOB_AB,array_val, &
                                              buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
                                              max_nibool_interfaces_ext_mesh, &
@@ -325,7 +401,7 @@
 !
 ! October 2012 - Surendra Somala and Jean-Paul Ampuero - Caltech Seismolab
 
-  use constants
+  use constants, only: NDIM,CUSTOM_REAL,myrank
 
   implicit none
 
@@ -420,7 +496,7 @@
 
 ! sends data
 
-  use constants
+  use constants, only: NDIM,CUSTOM_REAL,itag
 
   implicit none
 
@@ -499,7 +575,7 @@
 
 ! waits for data to receive and assembles
 
-  use constants
+  use constants, only: NDIM,CUSTOM_REAL
 
   implicit none
 
@@ -566,7 +642,7 @@
                                          num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                                          request_recv_vector_ext_mesh)
 
-  use constants
+  use constants, only: NDIM,CUSTOM_REAL
 
   implicit none
 
@@ -625,7 +701,7 @@
 ! sends data
 ! note: array to assemble already filled into buffer_send_vector_ext_mesh array
 
-  use constants
+  use constants, only: NDIM,CUSTOM_REAL,itag
 
   implicit none
 
@@ -680,7 +756,7 @@
 
 ! waits for data to receive and assembles
 
-  use constants
+  use constants, only: NDIM,CUSTOM_REAL
 
   implicit none
 
@@ -757,7 +833,7 @@
 
 ! waits for data to receive and assembles
 
-  use constants
+  use constants, only: NDIM,CUSTOM_REAL
 
   implicit none
 
@@ -836,7 +912,7 @@
   ! sends data
   ! note: assembling data already filled into buffer_send_scalar_ext_mesh array
 
-  use constants
+  use constants, only: CUSTOM_REAL,itag
 
   implicit none
 
@@ -898,7 +974,7 @@
 
 ! waits for send/receiver to be completed and assembles contributions
 
-  use constants
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
