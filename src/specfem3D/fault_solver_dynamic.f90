@@ -79,7 +79,7 @@ module fault_solver_dynamic
   integer, parameter :: NT_RECORD_LENGTH = 500
 
   public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, Kelvin_Voigt_eta, &
-            SIMULATION_TYPE_DYN, transfer_faultdata_GPU, rsf_GPU_init, &
+            SIMULATION_TYPE_DYN, fault_transfer_data_GPU, fault_rsf_swf_init_GPU, &
             NT_RECORD_LENGTH, fault_output_synchronize_GPU
 
 
@@ -160,7 +160,7 @@ contains
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) 'incorporating dynamic rupture simulation'
+    write(IMAIN,*) '  incorporating dynamic rupture simulation'
     write(IMAIN,*) '  found ', nbfaults, ' fault(s) in file DATA/Par_file_faults'
   endif
 
@@ -229,6 +229,16 @@ contains
   endif
   close(IIN_BIN)
 
+  ! user output
+  if (myrank == 0) then
+    if (RATE_AND_STATE) then
+      write(IMAIN,*) '  using rate and state friction'
+    else
+      write(IMAIN,*) '  using slip weakening friction'
+    endif
+    call flush_IMAIN()
+  endif
+
   return
 
 100 if (myrank == 0) write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
@@ -241,7 +251,7 @@ contains
 
 !---------------------------------------------------------------------
 
-  subroutine transfer_faultdata_GPU()
+  subroutine fault_transfer_data_GPU()
 
   use specfem_par, only: Fault_pointer
 
@@ -250,12 +260,12 @@ contains
   integer :: ifault,nspec,nglob
 
   ! initialize fault solver on GPU
-  call initialize_fault_solver_gpu(Fault_pointer,Nfaults,V_HEALING,V_RUPT)
+  call initialize_fault_solver_gpu(Fault_pointer,Nfaults,V_HEALING,V_RUPT,RATE_AND_STATE)
 
   ! initializes each fault
   do ifault = 1,Nfaults
     ! using a record length nt (500), which will be used also for outputting records
-    call initialize_fault_data_gpu(Fault_pointer,faults(ifault)%dataT%iglob, faults(ifault)%dataT%npoin, &
+    call initialize_fault_data_gpu(Fault_pointer, faults(ifault)%dataT%iglob, faults(ifault)%dataT%npoin, &
                                    NT_RECORD_LENGTH, ifault-1)
   enddo
 
@@ -273,7 +283,7 @@ contains
                                        faults(ifault)%ibulk1,faults(ifault)%ibulk2)
   enddo
 
-  end subroutine transfer_faultdata_GPU
+  end subroutine fault_transfer_data_GPU
 
 !---------------------------------------------------------------------
 
@@ -344,23 +354,30 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1367')
 
     if (RATE_AND_STATE) then
+      ! rate and state friction
       allocate(bc%rsf,stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1368')
 
       call rsf_init(bc%rsf,bc%T0,bc%V,bc%Fload,bc%coord,IIN_PAR)
 
     else
+      ! slip weakening friction
       allocate(bc%swf,stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1369')
 
       call swf_init(bc%swf,bc%MU,bc%coord,IIN_PAR)
 
       if (TPV16) call TPV16_init() !WARNING: ad hoc, initializes T0 and swf
+
+      ! time weakening friction
       if (TWF) then
-        allocate(bc%twf)
+        allocate(bc%twf,stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating twf array')
+
         call twf_init(bc%twf,IIN_PAR)
       endif
     endif
+
 !! unused
 ! added by kangchen, this is specifically made for the Balochistan simulation
 !  call load_stress_tpv35()
@@ -374,6 +391,7 @@ contains
 
   !bc%T=bc%T0
   if (RATE_AND_STATE) then
+    ! rate and state friction
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt_real,8,iflt)
 
     if (bc%dataT%npoin > 0) then
@@ -385,6 +403,7 @@ contains
       endif
     endif
   else
+    ! slip weakening friction
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt_real,7,iflt)
   endif
 
@@ -1083,7 +1102,7 @@ contains
 
 !=====================================================================
 
-  subroutine rsf_GPU_init()
+  subroutine fault_rsf_swf_init_GPU()
 
   use specfem_par, only: Fault_pointer
 
@@ -1093,15 +1112,16 @@ contains
   type(swf_type),pointer :: g
   integer :: ifault
 
+  ! sets up fault arrays on gpu
   do ifault = 1,Nfaults
     f => faults(ifault)%rsf
     g => faults(ifault)%swf
 
     if (associated(f)) then
       ! rate and state friction simulation
+      ! (ifault - 1) because in C language, array index start from 0
       call transfer_rsf_data_todevice(Fault_pointer,faults(ifault)%nglob,ifault-1, &
                                       f%V0,f%f0,f%V_init,f%a,f%b,f%L,f%theta,f%T,f%C,f%fw,f%Vw)
-    ! ifault - 1 because in C language, array index start from 0
     else if (associated(g)) then
       ! slip weakening friction simulation
       call transfer_swf_data_todevice(Fault_pointer,faults(ifault)%nglob,ifault-1, &
@@ -1109,7 +1129,7 @@ contains
     endif
   enddo
 
-  end subroutine rsf_GPU_init
+  end subroutine fault_rsf_swf_init_GPU
 
 !---------------------------------------------------------------------
 

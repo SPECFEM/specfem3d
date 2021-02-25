@@ -37,7 +37,8 @@ void FC_FUNC_(initialize_fault_solver_gpu,
               INITIALIZE_FAULT_SOLVER_GPU)(long* Fault_solver,
                                            int* num_of_faults,
                                            realw* v_healing,
-                                           realw* v_rupt) {
+                                           realw* v_rupt,
+                                           int* RATE_AND_STATE_f) {
 
   TRACE("initialize_fault_solver_gpu");
 
@@ -53,6 +54,9 @@ void FC_FUNC_(initialize_fault_solver_gpu,
 
   Fdyn->v_healing = *v_healing;
   Fdyn->v_rupt = *v_rupt;
+
+  // flag for rate and state friction
+  Fdyn->RATE_AND_STATE = *RATE_AND_STATE_f; // 0 == false, 1 == true
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -262,6 +266,9 @@ void FC_FUNC_(transfer_rsf_data_todevice,
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Rsf_type* Rsf  = &((Fsolver->faults[*fault_index]).rsf);
 
+  // checks with rsf flag
+  if (! Fsolver->RATE_AND_STATE){ exit_on_error("Error with RSF setup, RATE_AND_STATE flag is off; please check fault setup and rerun\n");}
+
   if (*NGLOB_AB > 0){
     copy_todevice_realw_test((void **)&(Rsf->V0),V0,*NGLOB_AB);
     copy_todevice_realw_test((void **)&(Rsf->f0),f0,*NGLOB_AB);
@@ -297,6 +304,9 @@ void FC_FUNC_(transfer_swf_data_todevice,
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Swf_type* Swf  = &((Fsolver->faults[*fault_index]).swf);
+
+  // checks with rsf flag
+  if (Fsolver->RATE_AND_STATE){ exit_on_error("Error with SWF setup, RATE_AND_STATE flag is on; please check fault setup and rerun\n");}
 
   if (*NGLOB_AB > 0){
     copy_todevice_realw_test((void **)&(Swf->Dc),Dc,*NGLOB_AB);
@@ -400,6 +410,7 @@ void FC_FUNC_(fault_solver_gpu,
 
   for(int ifault = 0; ifault < (Fsolver->Nbfaults); ifault++){
     Fault* Flt = &(Fsolver->faults[ifault]);
+
     Rsf_type* rsf = &(Flt->rsf);
     Swf_type* swf = &(Flt->swf);
 
@@ -415,63 +426,62 @@ void FC_FUNC_(fault_solver_gpu,
       dim3 grid(num_blocks_x,num_blocks_y);
       dim3 threads(blocksize,1,1);
 
-      /*
-      // this is dirty implementation
-      // fault kernel for rate and state friction
-      compute_dynamic_fault_cuda_rsf<<<grid,threads>>>( mp->d_displ,
-                                                        mp->d_veloc,
-                                                        mp->d_accel,
-                                                        Flt->NGLOB_AB,
-                                                        Flt->invM1,
-                                                        Flt->invM2,
-                                                        Flt->B,
-                                                        Flt->Z,
-                                                        Flt->R,
-                                                        Flt->T0,
-                                                        Flt->T,
-                                                        rsf->C,   // rate and state friction quantities
-                                                        rsf->a,
-                                                        rsf->b,
-                                                        rsf->L,
-                                                        rsf->f0,
-                                                        rsf->V0,
-                                                        rsf->V_init,
-                                                        rsf->theta,
-                                                        rsf->Vw,
-                                                        rsf->fw,
-                                                        Flt->V,
-                                                        Flt->D,
-                                                        Flt->ibulk1,
-                                                        Flt->ibulk2,
-                                                        *dt,
-                                                        *myrank);
+      if (Fsolver->RATE_AND_STATE){
+        // this is dirty implementation
+        // fault kernel for rate and state friction
+        compute_dynamic_fault_cuda_rsf<<<grid,threads>>>( mp->d_displ,
+                                                          mp->d_veloc,
+                                                          mp->d_accel,
+                                                          Flt->NGLOB_AB,
+                                                          Flt->invM1,
+                                                          Flt->invM2,
+                                                          Flt->B,
+                                                          Flt->Z,
+                                                          Flt->R,
+                                                          Flt->T0,
+                                                          Flt->T,
+                                                          rsf->C,   // rate and state friction quantities
+                                                          rsf->a,
+                                                          rsf->b,
+                                                          rsf->L,
+                                                          rsf->f0,
+                                                          rsf->V0,
+                                                          rsf->V_init,
+                                                          rsf->theta,
+                                                          rsf->Vw,
+                                                          rsf->fw,
+                                                          Flt->V,
+                                                          Flt->D,
+                                                          Flt->ibulk1,
+                                                          Flt->ibulk2,
+                                                          *dt,
+                                                          *myrank);
+      } else {
+        // fault kernel for slip weakening friction
+        compute_dynamic_fault_cuda_swf<<<grid,threads>>>( mp->d_displ,
+                                                          mp->d_veloc,
+                                                          mp->d_accel,
+                                                          Flt->NGLOB_AB,
+                                                          Flt->invM1,
+                                                          Flt->invM2,
+                                                          Flt->B,
+                                                          Flt->Z,
+                                                          Flt->R,
+                                                          Flt->T0,
+                                                          Flt->T,
+                                                          swf->Dc,
+                                                          swf->theta,
+                                                          swf->mus,
+                                                          swf->mud,
+                                                          swf->Coh,
+                                                          swf->T,
+                                                          Flt->V,
+                                                          Flt->D,
+                                                          Flt->ibulk1,
+                                                          Flt->ibulk2,
+                                                          *dt,
+                                                          *myrank);
       }
-      */
-
-      // fault kernel for slip weakening friction
-      compute_dynamic_fault_cuda_swf<<<grid,threads>>>( mp->d_displ,
-                                                        mp->d_veloc,
-                                                        mp->d_accel,
-                                                        Flt->NGLOB_AB,
-                                                        Flt->invM1,
-                                                        Flt->invM2,
-                                                        Flt->B,
-                                                        Flt->Z,
-                                                        Flt->R,
-                                                        Flt->T0,
-                                                        Flt->T,
-                                                        swf->Dc,
-                                                        swf->theta,
-                                                        swf->mus,
-                                                        swf->mud,
-                                                        swf->Coh,
-                                                        swf->T,
-                                                        Flt->V,
-                                                        Flt->D,
-                                                        Flt->ibulk1,
-                                                        Flt->ibulk2,
-                                                        *dt,
-                                                        *myrank);
 
       // fills output dataT array
       int num_of_block2 = (int) (Flt->output_dataT->NRECORD/128)+1;

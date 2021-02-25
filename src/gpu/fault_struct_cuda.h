@@ -70,15 +70,18 @@ typedef struct fault_ {
   realw *T0, *T, *B, *V, *D;
   realw *R, *invM1, *invM2, *Z ;
   int *ibulk1,*ibulk2;
-  Swf_type swf;
-  Rsf_type rsf;
+
+  Swf_type swf; // slip weakening friction
+  Rsf_type rsf; // rate and state friction
 } Fault ;
 
 
 typedef struct fault_solver_dynamics_ {
   Fault* faults;
+
   realw v_healing;
   realw v_rupt;
+
   int NTOUT,NSNAP;
   int Nbfaults;
   int RATE_AND_STATE;

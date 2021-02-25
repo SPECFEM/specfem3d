@@ -34,7 +34,9 @@
   use specfem_par_poroelastic
   use specfem_par_noise
   use specfem_par_movie
-  use fault_solver_dynamic
+
+  use fault_solver_dynamic, only: SIMULATION_TYPE_DYN,Kelvin_Voigt_eta,fault_transfer_data_GPU,fault_rsf_swf_init_GPU
+  use fault_solver_kinematic, only: SIMULATION_TYPE_KIN
 
   implicit none
 
@@ -90,6 +92,11 @@
 
   ! prepares fields on GPU for acoustic simulations
   if (ACOUSTIC_SIMULATION) then
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) "  loading acoustic arrays"
+      call flush_IMAIN()
+    endif
 
     call prepare_fields_acoustic_device(Mesh_pointer, &
                                 rmass_acoustic,rhostore,kappastore, &
@@ -112,6 +119,12 @@
   ! prepares fields on GPU for elastic simulations
   ! add GPU support for the C-PML routines
   if (ELASTIC_SIMULATION) then
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) "  loading elastic arrays"
+      call flush_IMAIN()
+    endif
+
     call prepare_fields_elastic_device(Mesh_pointer, &
                                 rmassx,rmassy,rmassz, &
                                 rho_vp,rho_vs, &
@@ -160,11 +173,16 @@
 
   ! prepares fields on GPU for poroelastic simulations
   if (POROELASTIC_SIMULATION) then
-    stop 'todo poroelastic simulations on GPU'
+    stop 'Poroelastic simulations on GPU not implemented yet'
   endif
 
   ! prepares needed receiver array for adjoint runs
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) "  loading adjoint receiver arrays"
+      call flush_IMAIN()
+    endif
     call prepare_sim2_or_3_const_device(Mesh_pointer,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC, &
                                         hxir_adjstore,hetar_adjstore,hgammar_adjstore, &
                                         nrec,islice_selected_rec,ispec_selected_rec)
@@ -173,6 +191,11 @@
   ! prepares fields on GPU for noise simulations
   if (NOISE_TOMOGRAPHY > 0) then
     ! note: noise tomography is only supported for elastic domains so far.
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) "  loading noise arrays"
+      call flush_IMAIN()
+    endif
     ! copies noise  arrays to GPU
     call prepare_fields_noise_device(Mesh_pointer, &
                                 NSPEC_AB, NGLOB_AB, &
@@ -188,16 +211,41 @@
 
   ! prepares gravity arrays
   if (GRAVITY) then
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) "  loading gravity"
+      call flush_IMAIN()
+    endif
     call prepare_fields_gravity_device(Mesh_pointer,GRAVITY, &
-                                minus_deriv_gravity,minus_g,wgll_cube, &
-                                ACOUSTIC_SIMULATION,rhostore)
+                                       minus_deriv_gravity,minus_g,wgll_cube, &
+                                       ACOUSTIC_SIMULATION,rhostore)
   endif
 
-  ! prepares Kelvin-Voigt damping around the fault
-  if (SIMULATION_TYPE_DYN) then
-    call transfer_faultdata_GPU()
-    call prepare_fault_device(Mesh_pointer,allocated(Kelvin_Voigt_eta),Kelvin_Voigt_eta)
-    call rsf_GPU_init()
+  ! prepares fault rupture simulation
+  if (FAULT_SIMULATION) then
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) "  loading fault simulation"
+      call flush_IMAIN()
+    endif
+    ! dynamic rupture
+    if (SIMULATION_TYPE_DYN) then
+      ! user output
+      if (myrank == 0) then
+        write(IMAIN,*) "    dynamic rupture arrays"
+        call flush_IMAIN()
+      endif
+      ! initializes fault data on gpu
+      call fault_transfer_data_GPU()
+      ! sets up Kelvin-Voigt damping array
+      call prepare_fault_device(Mesh_pointer,allocated(Kelvin_Voigt_eta),Kelvin_Voigt_eta)
+      ! sets up friction law
+      call fault_rsf_swf_init_GPU()
+    endif
+    ! kinematic rupture
+    if (SIMULATION_TYPE_KIN) then
+      stop 'Kinematic rupture simulations on GPU not implemented yet'
+    endif
   endif
 
   ! synchronizes processes
@@ -250,6 +298,7 @@
   ! outputs usage for main process
   if (myrank == 0) then
     call get_free_device_memory(free_mb,used_mb,total_mb)
+    write(IMAIN,*)
     write(IMAIN,*) "GPU usage: free  =",free_mb," MB",nint(free_mb/total_mb*100.0),"%"
     write(IMAIN,*) "           used  =",used_mb," MB",nint(used_mb/total_mb*100.0),"%"
     write(IMAIN,*) "           total =",total_mb," MB",nint(total_mb/total_mb*100.0),"%"

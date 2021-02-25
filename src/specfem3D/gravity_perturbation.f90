@@ -75,26 +75,31 @@ contains
   integer, dimension(NGNOD) :: iaddx,iaddy,iaddz,iax,iay,iaz
   integer nstep_grav
 
+  ! opens gravity parameter file
   open(unit=IIN_G,file='../DATA/gravity_stations',status='old',iostat=ier)
+
+  ! checks if file exists
   if (ier /= 0) then
     ! user output
     if (myrank == 0) then
       write(IMAIN,*) '  no gravity simulation'
-      write(IMAIN,*)
+      call flush_IMAIN()
     endif
-
+    ! nothing to do
     return
   endif
 
+  ! sets gravity flag
   GRAVITY_SIMULATION = .true.
 
+  ! reads number of stations
   read(IIN_G,*) nstat,ntimgap
 
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) '  incorporating gravity simulation'
     write(IMAIN,*) '    gravity stations: ',nstat
-    write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   allocate(xstat(nstat),stat=ier)
@@ -126,8 +131,8 @@ contains
 
   call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
 
-     ! define coordinates of the control points of the element
-  do ia=1,NGNOD
+  ! define coordinates of the control points of the element
+  do ia = 1,NGNOD
 
     if (iaddx(ia) == 0) then
       iax(ia) = 1
@@ -161,7 +166,7 @@ contains
 
   enddo
 
-  do ispec=1,NSPEC_AB
+  do ispec = 1,NSPEC_AB
 
     rho_elem = rho_vs(:,:,:,ispec)*rho_vs(:,:,:,ispec)/mustore(:,:,:,ispec)
 

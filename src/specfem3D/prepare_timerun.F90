@@ -1230,6 +1230,12 @@
 
   implicit none
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "preparing fault simulation"
+    call flush_IMAIN()
+  endif
+
   ! initializes flag
   FAULT_SIMULATION = .false.
 
@@ -1242,7 +1248,19 @@
 
   ! sets simulation flag
   if (SIMULATION_TYPE_DYN .or. SIMULATION_TYPE_KIN) then
+    ! updates flag
     FAULT_SIMULATION = .true.
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) "  fault simulation turned on"
+      call flush_IMAIN()
+    endif
+  else
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) "  no fault simulation"
+      call flush_IMAIN()
+    endif
   endif
 
   end subroutine prepare_timerun_faults

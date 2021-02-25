@@ -73,7 +73,6 @@
   ! and that we can neglect the 3D model and use PREM every 100 m in all cases
   ! this is probably a rather reasonable assumption
   if (GRAVITY) then
-
     ! allocates gravity arrays
     allocate(minus_deriv_gravity(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2156')
@@ -120,12 +119,10 @@
     enddo
 
   else
-
     ! allocates dummy gravity arrays
     allocate( minus_deriv_gravity(0), minus_g(0), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2158')
     if (ier /= 0) stop 'error allocating gravity arrays'
-
   endif
 
   ! compute the gravity integrals if needed

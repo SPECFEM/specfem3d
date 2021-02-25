@@ -127,7 +127,7 @@ contains
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) 'incorporating kinematic rupture simulation'
+    write(IMAIN,*) '  incorporating kinematic rupture simulation'
     write(IMAIN,*) '  found ', nbfaults, ' fault(s) in file DATA/Par_file_faults'
   endif
 
@@ -168,6 +168,13 @@ contains
   close(IIN_BIN)
   close(IIN_PAR)
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  number of time steps                 = ',NTOUT
+    write(IMAIN,*) '  time interaction of snapshots NTSNAP = ',NSNAP
+    call flush_IMAIN()
+  endif
+
   return
 
 100 if (myrank == 0)write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
@@ -201,23 +208,25 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1995')
     allocate(bc%V(3,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1996')
-    bc%T = 0e0_CUSTOM_REAL
-    bc%D = 0e0_CUSTOM_REAL
-    bc%V = 0e0_CUSTOM_REAL
+
+    bc%T = 0.0_CUSTOM_REAL
+    bc%D = 0.0_CUSTOM_REAL
+    bc%V = 0.0_CUSTOM_REAL
 
     ! time interval between two loaded slip rates
     read(IIN_PAR,nml=KINPAR)
-    bc%kin_dt = kindt
 
-    bc%kin_it=0
+    bc%kin_dt = kindt
+    bc%kin_it = 0
+
     ! Always have in memory the slip-rate model at two times, t1 and t2,
     ! spatially interpolated in the spectral element grid
     allocate(bc%v_kin_t1(2,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1997')
     allocate(bc%v_kin_t2(2,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1998')
-    bc%v_kin_t1 = 0e0_CUSTOM_REAL
-    bc%v_kin_t2 = 0e0_CUSTOM_REAL
+    bc%v_kin_t1 = 0.0_CUSTOM_REAL
+    bc%v_kin_t2 = 0.0_CUSTOM_REAL
   else
     ! dummy allocations (for subroutine arguments)
     allocate(bc%T(3,1), &

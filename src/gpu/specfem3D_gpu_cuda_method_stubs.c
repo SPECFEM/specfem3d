@@ -317,7 +317,8 @@ void FC_FUNC_(initialize_fault_solver_gpu,
               INITIALIZE_FAULT_SOLVER_GPU)(long* Fault_solver,
                                            int* num_of_faults,
                                            realw* v_healing,
-                                           realw* v_rupt) {}
+                                           realw* v_rupt,
+                                           int* RATE_AND_STATE_f) {}
 
 void FC_FUNC_(initialize_fault_data_gpu,
               INITIALIZE_FAULT_DATA_GPU)(long* Fault_solver,
