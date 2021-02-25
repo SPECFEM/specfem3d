@@ -36,7 +36,7 @@ __global__ void kernel_3_acoustic_cuda_device(field* potential_dot_acoustic,
                                                 int size,
                                                 realw deltatover2,
                                                 realw b_deltatover2,
-                                                realw* rmass_acoustic) {
+                                                realw_const_p rmass_acoustic) {
 
   int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
 
@@ -64,20 +64,19 @@ __global__ void kernel_3_acoustic_single_cuda_device(field* potential_dot_acoust
                                                      field* potential_dot_dot_acoustic,
                                                      int size,
                                                      realw deltatover2,
-                                                     realw* rmass_acoustic) {
+                                                     realw_const_p rmass_acoustic) {
 
   int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
 
-  realw rmass;
-  field p_dot_dot;
   // because of block and grid sizing problems, there is a small
   // amount of buffer at the end of the calculation
   if (id < size) {
-    rmass = rmass_acoustic[id];
+    realw rmass = rmass_acoustic[id];
     // multiplies pressure with the inverse of the mass matrix
-    p_dot_dot = rmass*potential_dot_dot_acoustic[id];
+    field p_dot_dot = rmass * potential_dot_dot_acoustic[id];
+
     potential_dot_dot_acoustic[id] = p_dot_dot;
-    potential_dot_acoustic[id] += deltatover2*p_dot_dot;
+    potential_dot_acoustic[id] += deltatover2 * p_dot_dot;
   }
 }
 

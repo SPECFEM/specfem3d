@@ -28,8 +28,8 @@
 */
 
 
-__global__ void kernel_3_veloc_cuda_device(realw* veloc,
-                                           realw* accel,
+__global__ void kernel_3_veloc_cuda_device(realw_p veloc,
+                                           realw_p accel,
                                            int size,
                                            realw deltatover2) {
 
@@ -38,9 +38,9 @@ __global__ void kernel_3_veloc_cuda_device(realw* veloc,
   // because of block and grid sizing problems, there is a small
   // amount of buffer at the end of the calculation
   if (id < size) {
-    veloc[3*id] = veloc[3*id] + deltatover2*accel[3*id];
-    veloc[3*id+1] = veloc[3*id+1] + deltatover2*accel[3*id+1];
-    veloc[3*id+2] = veloc[3*id+2] + deltatover2*accel[3*id+2];
+    veloc[3*id]   = veloc[3*id]   + deltatover2 * accel[3*id];
+    veloc[3*id+1] = veloc[3*id+1] + deltatover2 * accel[3*id+1];
+    veloc[3*id+2] = veloc[3*id+2] + deltatover2 * accel[3*id+2];
   }
 }
 

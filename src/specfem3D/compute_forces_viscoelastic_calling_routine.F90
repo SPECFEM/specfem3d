@@ -349,7 +349,6 @@
       ! will remove later if GPU fault solver is fully tested
     endif
 
-
     if (.not. GPU_MODE) then
       ! on CPU
       if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
@@ -360,15 +359,6 @@
       call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank,it)
       ! output results every 500 steps
       if (mod(it,500) == 0 .and. it /= 0) call synchronize_GPU(it)
-
-      !debug
-      !! transfers wavefields to the CPU
-      !call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel, Mesh_pointer)
-      !! adds dynamic source
-      !if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
-      !if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
-      !! transfers acceleration back to GPU
-      !call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
     endif
   endif
 

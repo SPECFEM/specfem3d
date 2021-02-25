@@ -172,15 +172,15 @@
 ! setting the value to that of the processor with highest rank
 
   if (NPROC > 1) then
-
+    ! arrays for MPI halo exchange
     allocate(buffer_send_vector(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1989')
     if (ier /= 0) stop 'error allocating array buffer_send_vector'
     allocate(buffer_recv_vector(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1990')
     if (ier /= 0) stop 'error allocating array buffer_recv_vector'
-     allocate(request_send_vector(num_interfaces_ext_mesh),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1991')
+    allocate(request_send_vector(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1991')
     if (ier /= 0) stop 'error allocating array request_send_vector'
     allocate(request_recv_vector(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1992')

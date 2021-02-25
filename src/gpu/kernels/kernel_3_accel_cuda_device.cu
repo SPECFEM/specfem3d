@@ -28,28 +28,20 @@
 */
 
 
-__global__ void kernel_3_accel_cuda_device(realw* accel,
+__global__ void kernel_3_accel_cuda_device(realw_p accel,
                                            int size,
-                                           realw* rmassx,
-                                           realw* rmassy,
-                                           realw* rmassz) {
+                                           realw_const_p rmassx,
+                                           realw_const_p rmassy,
+                                           realw_const_p rmassz) {
 
   int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
 
-  realw rx,ry,rz;
-  realw ax,ay,az;
   // because of block and grid sizing problems, there is a small
   // amount of buffer at the end of the calculation
   if (id < size) {
-    rx = rmassx[id];
-    ry = rmassy[id];
-    rz = rmassz[id];
-    ax = accel[3*id  ]*rx;
-    ay = accel[3*id+1]*ry;
-    az = accel[3*id+2]*rz;
-    accel[3*id  ] = ax;
-    accel[3*id+1] = ay;
-    accel[3*id+2] = az;
+    accel[3*id  ] = accel[3*id  ] * rmassx[id];;
+    accel[3*id+1] = accel[3*id+1] * rmassy[id];
+    accel[3*id+2] = accel[3*id+2] * rmassz[id];
   }
 }
 

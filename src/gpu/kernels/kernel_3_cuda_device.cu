@@ -28,35 +28,30 @@
 */
 
 
-__global__ void kernel_3_cuda_device(realw* veloc,
-                                     realw* accel,
+__global__ void kernel_3_cuda_device(realw_p veloc,
+                                     realw_p accel,
                                      int size,
                                      realw deltatover2,
-                                     realw* rmassx,
-                                     realw* rmassy,
-                                     realw* rmassz) {
+                                     realw_const_p rmassx,
+                                     realw_const_p rmassy,
+                                     realw_const_p rmassz) {
 
   int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
 
-  realw rx,ry,rz;
-  realw ax,ay,az;
   // because of block and grid sizing problems, there is a small
   // amount of buffer at the end of the calculation
   if (id < size) {
-    rx = rmassx[id];
-    ry = rmassy[id];
-    rz = rmassz[id];
-    ax = accel[3*id  ]*rx;
-    ay = accel[3*id+1]*ry;
-    az = accel[3*id+2]*rz;
+    realw ax = accel[3*id  ] * rmassx[id];
+    realw ay = accel[3*id+1] * rmassy[id];
+    realw az = accel[3*id+2] * rmassz[id];
 
     accel[3*id]   = ax;
     accel[3*id+1] = ay;
     accel[3*id+2] = az;
 
-    veloc[3*id]   += deltatover2*ax;
-    veloc[3*id+1] += deltatover2*ay;
-    veloc[3*id+2] += deltatover2*az;
+    veloc[3*id]   += deltatover2 * ax;
+    veloc[3*id+1] += deltatover2 * ay;
+    veloc[3*id+2] += deltatover2 * az;
   }
 }
 
