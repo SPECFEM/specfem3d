@@ -505,6 +505,13 @@
 ! allows for parallelizing fault surfaces across different MPI slices
   logical, parameter :: PARALLEL_FAULT = .true.
 
+! to stabilize simulation:
+! synchronizes displ and veloc arrays across different MPI processes
+! (such that all process have the same values on the MPI halo points)
+  logical ,parameter :: FAULT_SYNCHRONIZE_DISPL_VELOC = .false.
+
+! synchronizes accel array across different MPI processes
+  logical ,parameter :: FAULT_SYNCHRONIZE_ACCEL = .false.
 
 !------------------------------------------------------
 !----------- do not modify anything below -------------

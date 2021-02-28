@@ -49,13 +49,6 @@
   double precision :: t_start,tCPU
   logical, parameter :: DO_TIMING = .false.
 
-  ! debug fault simulation
-  ! to stabilize simulation, synchronizes displ and veloc arrays across different MPI processes
-  ! (such that all process have the same values on the MPI halo points)
-  logical ,parameter :: FAULT_SYNCHRONIZE_DISPL_VELOC = .false.
-  ! synchronizes accel array across different MPI processes
-  logical ,parameter :: FAULT_SYNCHRONIZE_ACCEL = .false.
-
   ! GPU
   if (GPU_MODE) then
     ! checks if for kernel simulation with both, forward & backward fields
@@ -315,7 +308,7 @@
   ! which at this point are stored in the array 'accel'
   if (FAULT_SIMULATION) then
     ! makes sure all processes have same accel values on MPI boundary points
-    if (FAULT_SYNCHRONIZE_ACCEL) then
+    if (FAULT_SYNCHRONIZE_ACCEL .and. NPROC > 1) then
       ! note: the CPU version uses an "ordered" assembly stage, where the MPI buffer contributions are added
       !       in the same order on all processes. this should assure that accel is the same on all MPI boundary points.
       !
