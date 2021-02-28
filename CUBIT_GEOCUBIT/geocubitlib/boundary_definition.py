@@ -37,6 +37,11 @@ except:
 from utilities import list2str
 from utilities import get_cubit_version
 
+try:
+    set
+except NameError:
+    from sets import Set as set
+
 
 def map_boundary(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1, cpuy=1):
     """
@@ -176,9 +181,8 @@ def define_surf(iproc=0, cpuxmin=0, cpuxmax=1,
                           that correspond to z=zmin
     """
     from utilities import get_v_h_list
-    #
-    from sets import Set
 
+    #
     def product(*args, **kwds):
         # product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
         # product(range(2), repeat=3) --> 000 001 010 011 100 101 110 111
@@ -188,6 +192,7 @@ def define_surf(iproc=0, cpuxmin=0, cpuxmax=1,
         for pool in pools:
             result = [x + [y] for x in result for y in pool]
         return result
+
     absorbing_surf = []
     xmin = []
     xmax = []
@@ -256,12 +261,11 @@ def define_surf(iproc=0, cpuxmin=0, cpuxmax=1,
     for comb in combs:
         v1 = comb[0]
         v2 = comb[1]
-        c = Set(cubit.get_relatives("vertex", v1, "curve")) & Set(
-            cubit.get_relatives("vertex", v2, "curve"))
+        c = set(cubit.get_relatives("vertex", v1, "curve")) & set(cubit.get_relatives("vertex", v2, "curve"))
         if len(c) == 1:
             p = cubit.get_center_point("curve", list(c)[0])
             labelp.append(list(c)[0])
-    labelps = Set(labelp)
+    labelps = set(labelp)
     for c in labelps:
         p = cubit.get_center_point("curve", c)
         lp.append(p)
@@ -285,17 +289,17 @@ def define_surf(iproc=0, cpuxmin=0, cpuxmax=1,
     four_side = True
     if four_side:
         xmintmp, ymintmp, xmaxtmp, ymaxtmp = define_4side_lateral_surfaces()
-        xmin = list(Set(xmintmp) - Set(xmaxtmp))
-        xmax = list(Set(xmaxtmp) - Set(xmintmp))
-        ymin = list(Set(ymintmp) - Set(ymaxtmp))
-        ymax = list(Set(ymaxtmp) - Set(ymintmp))
+        xmin = list(set(xmintmp) - set(xmaxtmp))
+        xmax = list(set(xmaxtmp) - set(xmintmp))
+        ymin = list(set(ymintmp) - set(ymaxtmp))
+        ymax = list(set(ymaxtmp) - set(ymintmp))
         abs_xmintmp, abs_xmaxtmp, abs_ymintmp, abs_ymaxtmp = \
             lateral_boundary_are_absorbing(iproc, cpuxmin, cpuxmax, cpuymin,
                                            cpuymax, cpux, cpuy)
-        abs_xmin = list(Set(abs_xmintmp) - Set(abs_xmaxtmp))
-        abs_xmax = list(Set(abs_xmaxtmp) - Set(abs_xmintmp))
-        abs_ymin = list(Set(abs_ymintmp) - Set(abs_ymaxtmp))
-        abs_ymax = list(Set(abs_ymaxtmp) - Set(abs_ymintmp))
+        abs_xmin = list(set(abs_xmintmp) - set(abs_xmaxtmp))
+        abs_xmax = list(set(abs_xmaxtmp) - set(abs_xmintmp))
+        abs_ymin = list(set(abs_ymintmp) - set(abs_ymaxtmp))
+        abs_ymax = list(set(abs_ymaxtmp) - set(abs_ymintmp))
 
         print('lateral absorbing boundary:')
         print('  abs_xmin: ',abs_xmin,' abs_xmax: ',abs_xmax)
@@ -313,7 +317,6 @@ def define_block():
 
 def build_block(vol_list, name, id_0=1, top_surf=None, optionsea=False):
     #
-    from sets import Set
     if optionsea:
         sea = optionsea['sea']
         seaup = optionsea['seaup']
@@ -336,7 +339,7 @@ def build_block(vol_list, name, id_0=1, top_surf=None, optionsea=False):
         id_block = 0
     for v, n in zip(vol_list, name):
         id_block += 1
-        v_other = Set(vol_list) - Set([v])
+        v_other = set(vol_list) - set([v])
         if sea and v == vol_list[-1]:
             cubit.cmd('set duplicate block elements off')
             tsurf_string = " ".join(str(x) for x in top_surf)
@@ -532,7 +535,7 @@ def extract_bottom_curves(surf_xmin, surf_ymin, surf_xmax, surf_ymax):
     curve_ymin = []
     curve_xmax = []
     curve_ymax = []
-    from sets import Set
+
     # UPGRADE.... the sets module is deprecated after python 2.6
     for s in surf_xmin:
         lcs = cubit.get_relatives("surface", s, "curve")
@@ -550,10 +553,10 @@ def extract_bottom_curves(surf_xmin, surf_ymin, surf_xmax, surf_ymax):
         lcs = cubit.get_relatives("surface", s, "curve")
         for lc in lcs:
             curve_ymax.append(lc)
-    curve_xmin = list(Set(curve_xmin))
-    curve_ymin = list(Set(curve_ymin))
-    curve_xmax = list(Set(curve_xmax))
-    curve_ymax = list(Set(curve_ymax))
+    curve_xmin = list(set(curve_xmin))
+    curve_ymin = list(set(curve_ymin))
+    curve_xmax = list(set(curve_xmax))
+    curve_ymax = list(set(curve_ymax))
     curve_bottom_xmin = select_bottom_curve(curve_xmin)
     curve_bottom_ymin = select_bottom_curve(curve_ymin)
     curve_bottom_xmax = select_bottom_curve(curve_xmax)
@@ -702,9 +705,6 @@ def check_bc(iproc, xmin, xmax, ymin, ymax,
     #
     #
     #
-    from sets import Set
-    # to be UPGRADEd.... the sets module is deprecated after python 2.6
-
     cubit.cmd('set info off')
     cubit.cmd('set echo off')
     nodes_curve_ymax, orient_nodes_surf_ymax = get_ordered_node_surf(
@@ -715,10 +715,10 @@ def check_bc(iproc, xmin, xmax, ymin, ymax,
         surf_ymin, curve_bottom_ymin)
     nodes_curve_xmin, orient_nodes_surf_xmin = get_ordered_node_surf(
         surf_xmin, curve_bottom_xmin)
-    c_xminymin = Set(nodes_curve_xmin).intersection(nodes_curve_ymin)
-    c_xminymax = Set(nodes_curve_xmin).intersection(nodes_curve_ymax)
-    c_xmaxymin = Set(nodes_curve_xmax).intersection(nodes_curve_ymin)
-    c_xmaxymax = Set(nodes_curve_xmax).intersection(nodes_curve_ymax)
+    c_xminymin = set(nodes_curve_xmin).intersection(nodes_curve_ymin)
+    c_xminymax = set(nodes_curve_xmin).intersection(nodes_curve_ymax)
+    c_xmaxymin = set(nodes_curve_xmax).intersection(nodes_curve_ymin)
+    c_xmaxymax = set(nodes_curve_xmax).intersection(nodes_curve_ymax)
     cubit.cmd('set info on')
     cubit.cmd('set echo on')
 

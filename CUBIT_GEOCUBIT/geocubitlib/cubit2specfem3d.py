@@ -141,6 +141,10 @@ except:
 
 from utilities import get_cubit_version
 
+try:
+    set
+except NameError:
+    from sets import Set as set
 
 class mtools(object):
 
@@ -179,7 +183,7 @@ class mtools(object):
             cubit.cmd(command)
 
 
-class block_tools():
+class block_tools(object):
 
     def __int__(self):
         pass
@@ -349,7 +353,6 @@ class mesh_tools(block_tools):
             print('error: surface normal, dot=0', axb, normal, dot, p0, p1, p2)
 
     def mesh_analysis(self, frequency):
-        from sets import Set
         cubit.cmd('set info off')
         cubit.cmd('set echo off')
         cubit.cmd('set journal off')
@@ -381,7 +384,7 @@ class mesh_tools(block_tools):
                 for face in faces:
                     es = cubit.get_sub_elements("face", face, 1)
                     edges = edges + list(es)
-                edges = Set(edges)
+                edges = set(edges)
                 dtstore, edgedtstore, ratiostore, edgeratiostore =\
                     self.seismic_resolution(edges, velocity, bins_d,
                                             bins_u, sidelist)
@@ -405,7 +408,7 @@ class mesh_tools(block_tools):
         return self.ddt[0], self.dr[0]
 
 
-class mesh(object, mesh_tools):
+class mesh(mesh_tools):
 
     def __init__(self, hex27=False, cpml=False, cpml_size=False,
                  top_absorbing=False):
@@ -1025,24 +1028,25 @@ class mesh(object, mesh_tools):
             cubit.cmd(txt)
             txt = "group 'hzmax' add hex  with Z_coord > " + str(zmax)
             cubit.cmd(txt)
-            from sets import Set
+
             group1 = cubit.get_id_from_name("hxmin")
-            cpml_xmin = Set(list(cubit.get_group_hexes(group1)))
+            cpml_xmin = set(list(cubit.get_group_hexes(group1)))
             group1 = cubit.get_id_from_name("hymin")
-            cpml_ymin = Set(list(cubit.get_group_hexes(group1)))
+            cpml_ymin = set(list(cubit.get_group_hexes(group1)))
             group1 = cubit.get_id_from_name("hxmax")
-            cpml_xmax = Set(list(cubit.get_group_hexes(group1)))
+            cpml_xmax = set(list(cubit.get_group_hexes(group1)))
             group1 = cubit.get_id_from_name("hymax")
-            cpml_ymax = Set(list(cubit.get_group_hexes(group1)))
+            cpml_ymax = set(list(cubit.get_group_hexes(group1)))
             group1 = cubit.get_id_from_name("hzmin")
-            cpml_zmin = Set(list(cubit.get_group_hexes(group1)))
+            cpml_zmin = set(list(cubit.get_group_hexes(group1)))
             if self.top_absorbing:
                 group1 = cubit.get_id_from_name("hzmax")
-                cpml_zmax = Set(list(cubit.get_group_hexes(group1)))
+                cpml_zmax = set(list(cubit.get_group_hexes(group1)))
             else:
-                cpml_zmax = Set([])
+                cpml_zmax = set([])
             cpml_all = cpml_ymin | cpml_ymax | cpml_xmin | cpml_xmax | \
                 cpml_zmin | cpml_zmax
+
             cpml_x = cpml_all - cpml_zmin - cpml_ymin - cpml_ymax - cpml_zmax
             cpml_y = cpml_all - cpml_zmin - cpml_xmin - cpml_xmax - cpml_zmax
             cpml_xy = cpml_all - cpml_zmin - cpml_y - cpml_x - cpml_zmax
