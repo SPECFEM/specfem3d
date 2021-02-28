@@ -12,21 +12,45 @@ try:
 except:
     pass
 
+# gets version string
+cubit_version = cubit.get_version()
+print("version: ",cubit_version)
+
+# extracts major number
+v = cubit_version.split('.')
+cubit_version_major = int(v[0])
+print("major version number: ",cubit_version_major)
+
+#
+# GEOCUBIT
+#
+# adds path to geocubit (if not setup yet)
+sys.path.append('../../../CUBIT_GEOCUBIT/')
+
+# in case importing menu fails due to import utilities errors to find,
+# this will add the geocubitlib/ folder to the sys.path:
+import geocubitlib
+sys.path.append(geocubitlib.__path__[0])
+
+print("path: ")
+print(sys.path)
+print("")
+
 from geocubitlib import absorbing_boundary
 from geocubitlib import save_fault_nodes_elements
 from geocubitlib import cubit2specfem3d
 
 km = 1000
-z_surf=0*km
+z_surf = 0*km
 
 ####  initializing coordinates x,y,z
-x=[]     # fault
-y=[]
-z=[]
+x = []     # fault
+y = []
+z = []
 
-xbulk=[] # bulk
-ybulk=[]
-zbulk=[]
+xbulk = [] # bulk
+ybulk = []
+zbulk = []
 
 xbulk.append(-21*km)   #x1
 xbulk.append(21*km)    #x2
@@ -38,7 +62,7 @@ ybulk.append(-21*km)  #y2
 ybulk.append(21*km)   #y3
 ybulk.append(21*km)   #y4
 
-zbulk=[z_surf]*4
+zbulk = [z_surf]*4
 
 x.append(-9*km) #x5
 x.append(0*km)   #x6
@@ -50,10 +74,14 @@ y.append(0.1)    #y6
 y.append(0.0)       #y7
 y.append(-0.1)   #y8
 
+z = [z_surf]*4
 
-z=[z_surf]*4
+# current work directory
+cubit.cmd('pwd')
 
+# Creating the volumes
 cubit.cmd('reset')
+
 ####################  bulk ###########################################
 for i in range(len(xbulk)):
    vert="create vertex x "+str(xbulk[i])+" y "+str(ybulk[i])+" z "+str(zbulk[i])

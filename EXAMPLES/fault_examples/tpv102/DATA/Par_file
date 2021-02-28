@@ -23,7 +23,7 @@ UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
-NPROC                           = 192
+NPROC                           = 4
 
 # time step parameters
 NSTEP                           = 4800
@@ -162,7 +162,7 @@ HDUR_MOVIE                      = 0.0
 SAVE_MESH_FILES                 = .false.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
+LOCAL_PATH                      = DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 500
@@ -218,7 +218,7 @@ NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 # currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
 SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
 SAVE_SEISMOGRAMS_VELOCITY       = .true.
-SAVE_SEISMOGRAMS_ACCELERATION   = .true.
+SAVE_SEISMOGRAMS_ACCELERATION   = .false.
 SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic (i.e. fluid) elements only
 
 # save seismograms also when running the adjoint runs for an inverse problem

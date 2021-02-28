@@ -1,12 +1,13 @@
 SCEC benchmark
 
 This example is taken from the SCEC/USGS Spontaneous Rupture Code Verification Project:
-- TPV5, a planar vertical strike-slip fault
+- TPV102, a planar vertical strike-slip fault 
+  w/ rate-and-State friction, ageing law, half-space
 
 
 1. A default mesh is provided in MESH-default/ directory. 
   The script to generate this mesh using Cubit/Trelis can be run by:
-  > ./tpv5.py
+  > ./TPV102.py
 
 2. To run the simulation, type:
   > ./run_this_example.sh
@@ -17,6 +18,6 @@ Reference solutions are provided in REF_SEIS/ folder.
 For more details about the benchmark, see: 
   https://www.scec.org
   https://strike.scec.org/cvws/
-  https://strike.scec.org/cvws/tpv5docs.html
+  https://strike.scec.org/cvws/tpv101_102docs.html
 
 

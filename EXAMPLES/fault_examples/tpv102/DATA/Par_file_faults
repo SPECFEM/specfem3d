@@ -1,12 +1,13 @@
 1
 0.00051                 ! #tag #eta(damping) FAULT A
 1                       ! 1 = dyn 2=kin
-6000            ! NTOUT : Number of time steps
-200                                              ! NTSNAP: time interation of snapshots
--1e0                                            ! V_HEALING (-1 : Healing off)
-1e-3                                            ! V_RUPT
+6000                    ! NTOUT : Number of time steps
+200                     ! NTSNAP: time interation of snapshots
+-1e0                    ! V_HEALING (-1 : Healing off)
+1e-3                    ! V_RUPT
 
 &RUPTURE_SWITCHES RATE_AND_STATE=.true.,TPV16=.false.,TPV10X=.true.,RSF_HETE=.false./
+
 &BEGIN_FAULT /
 &STRESS_TENSOR Sigma=0e0,0e0,0e0,0e0,0e0,0e0/
 &INIT_STRESS S1=75.0e6,S2=0.0e0,S3=-120.0e6,n1=0,n2=0,n3=0 /
