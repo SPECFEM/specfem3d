@@ -58,19 +58,20 @@ module fault_solver_dynamic
   !Number of faults
   integer, save                :: Nfaults
 
+  ! dynamic rupture simulation
   logical, save :: SIMULATION_TYPE_DYN = .false.
 
-  logical, save :: TPV16 = .false.   !TPV16 for heterogeneous in slip weakening
-  ! simulation
-  logical, save :: TPV10X = .false.  !Boundary velocity strengthening layers for
-  ! TPV10X
-  ! time weakening
-  logical, save :: TWF = .false.   ! time weakening
+  logical, save :: TPV16 = .false.   ! TPV16 for heterogeneous in slip weakening
 
+  logical, save :: TPV10X = .false.  ! Boundary velocity strengthening layers for TPV10X benchmarks
+
+  ! time weakening
+  logical, save :: TWF = .false.
+
+  ! rate and state friction (otherwise slip weakening friction)
   logical, save :: RATE_AND_STATE = .false.
 
-  logical, save :: RSF_HETE = .false.  !RSF_HETE for heterogeneous in rate and
-  ! state simulation
+  logical, save :: RSF_HETE = .false.  !RSF_HETE for heterogeneous in rate and state simulation
 
   ! Kelvin-Voigt damping
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
@@ -169,7 +170,7 @@ contains
 
   ! reads parameters:
   !   NTOUT : Number of time steps
-  !   NTSNAP: time interation of snapshots
+  !   NTSNAP: time interaction of snapshots
   !   V_HEALING (-1 : Healing off)
   !   V_RUPT
   read(IIN_PAR,*) NTOUT
@@ -206,6 +207,8 @@ contains
     ! &STRESS_TENSOR Sigma=0e0,0e0,0e0,0e0,0e0,0e0/
     ! ..
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
+
+    ! initializes fault
     call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt_real,nt,iflt,myrank)
   enddo
 
@@ -258,29 +261,35 @@ contains
   implicit none
 
   integer :: ifault,nspec,nglob
+  type(bc_dynandkinflt_type) :: bc
 
   ! initialize fault solver on GPU
-  call initialize_fault_solver_gpu(Fault_pointer,Nfaults,V_HEALING,V_RUPT,RATE_AND_STATE)
+  call initialize_fault_solver_gpu(Fault_pointer, Nfaults, V_HEALING, V_RUPT, RATE_AND_STATE)
 
   ! initializes each fault
   do ifault = 1,Nfaults
+    bc = faults(ifault)
     ! using a record length nt (500), which will be used also for outputting records
-    call initialize_fault_data_gpu(Fault_pointer, faults(ifault)%dataT%iglob, faults(ifault)%dataT%npoin, &
-                                   NT_RECORD_LENGTH, ifault-1)
+    call initialize_fault_data_gpu(Fault_pointer, ifault-1, bc%dataT%iglob, bc%dataT%npoin, bc%dataT%ndat, NT_RECORD_LENGTH)
   enddo
 
   ! copies fault data fields to GPU
   do ifault = 1,Nfaults
-    nspec = faults(ifault)%nspec
-    nglob = faults(ifault)%nglob
-    call transfer_fault_data_to_device(Fault_pointer,ifault-1, &
-                                       nspec,nglob, &
-                                       faults(ifault)%D, &
-                                       faults(ifault)%T0,faults(ifault)%T, &
-                                       faults(ifault)%B,faults(ifault)%R,faults(ifault)%V, &
-                                       faults(ifault)%Z, &
-                                       faults(ifault)%invM1,faults(ifault)%invM2, &
-                                       faults(ifault)%ibulk1,faults(ifault)%ibulk2)
+    bc = faults(ifault)
+
+    nspec = bc%nspec
+    nglob = bc%nglob
+
+    ! copies arrays onto GPU
+    call transfer_fault_data_to_device(Fault_pointer, ifault-1, &
+                                       nspec, nglob, &
+                                       bc%D, &
+                                       bc%T0, bc%T, &
+                                       bc%B, bc%R, bc%V, &
+                                       bc%Z, &
+                                       bc%invM1, bc%invM2, &
+                                       bc%ibulk1, bc%ibulk2, &
+                                       bc%allow_opening)
   enddo
 
   end subroutine fault_transfer_data_GPU
@@ -298,7 +307,7 @@ contains
   integer, intent(in) :: myrank
 
   real(kind=CUSTOM_REAL) :: S1,S2,S3,Sigma(6)
-  integer :: n1,n2,n3,ier
+  integer :: n1,n2,n3,ier,recordlength
   logical :: LOAD_STRESSDROP = .false.
 
   NAMELIST / INIT_STRESS / S1,S2,S3,n1,n2,n3
@@ -313,19 +322,20 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1364')
     allocate(bc%V(3,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1365')
-    bc%T = 0e0_CUSTOM_REAL
-    bc%D = 0e0_CUSTOM_REAL
-    bc%V = 0e0_CUSTOM_REAL
+    bc%T(:,:) = 0.0_CUSTOM_REAL
+    bc%D(:,:) = 0.0_CUSTOM_REAL
+    bc%V(:,:) = 0.0_CUSTOM_REAL
 
     ! Set initial fault stresses
     allocate(bc%T0(3,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1366')
-    S1 = 0e0_CUSTOM_REAL
-    S2 = 0e0_CUSTOM_REAL
-    S3 = 0e0_CUSTOM_REAL
-    n1=0
-    n2=0
-    n3=0
+    bc%T0(:,:) = 0.0_CUSTOM_REAL
+    S1 = 0.0_CUSTOM_REAL
+    S2 = 0.0_CUSTOM_REAL
+    S3 = 0.0_CUSTOM_REAL
+    n1 = 0
+    n2 = 0
+    n3 = 0
     read(IIN_PAR, nml=STRESS_TENSOR)
     read(IIN_PAR, nml=INIT_STRESS)
     bc%T0(1,:) = S1
@@ -333,25 +343,28 @@ contains
     bc%T0(3,:) = S3
 
     if (LOAD_STRESSDROP) then
-        call make_frictional_stress
-        call load_stress_drop
+      call make_frictional_stress()
+      call load_stress_drop()
     endif
 
     call init_2d_distribution(bc%T0(1,:),bc%coord,IIN_PAR,n1)
     call init_2d_distribution(bc%T0(2,:),bc%coord,IIN_PAR,n2)
     call init_2d_distribution(bc%T0(3,:),bc%coord,IIN_PAR,n3)
+
     call init_fault_traction(bc,Sigma) !added the fault traction caused by a regional stress field
 
-    bc%T = bc%T0
+    ! sets initial stress
+    bc%T(:,:) = bc%T0(:,:)
 
     !WARNING : Quick and dirty free surface condition at z=0
-    !  do k=1,bc%nglob
+    !  do k = 1,bc%nglob
     !    if (abs(bc%zcoord(k)-0.e0_CUSTOM_REAL) <= SMALLVAL) bc%T0(2,k) = 0
     !  enddo
 
     ! Set friction parameters and initialize friction variables
     allocate(bc%MU(bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1367')
+    bc%MU(:) = 0.0_CUSTOM_REAL
 
     if (RATE_AND_STATE) then
       ! rate and state friction
@@ -389,22 +402,29 @@ contains
              bc%V(3,1))
   endif
 
-  !bc%T=bc%T0
+  ! output dataT structure
   if (RATE_AND_STATE) then
     ! rate and state friction
-    call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt_real,8,iflt)
+    recordlength = 8  ! number of quantities to store for each record
 
+    call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt_real,recordlength,iflt)
+
+    ! adds state output
     if (bc%dataT%npoin > 0) then
       bc%dataT%longFieldNames(8) = "log10 of state variable (log-seconds)"
       if (bc%rsf%StateLaw == 1) then
+        ! ageing law
         bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" log-theta"
       else
+        ! slip law
         bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" psi"
       endif
     endif
   else
     ! slip weakening friction
-    call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt_real,7,iflt)
+    recordlength = 7  ! number of quantities to store for each record
+
+    call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt_real,recordlength,iflt)
   endif
 
   call init_dataXZ(bc%dataXZ,bc)
@@ -422,7 +442,7 @@ contains
 
     !-----
 
-    subroutine TPV16_init
+    subroutine TPV16_init()
 
     implicit none
 
@@ -439,7 +459,7 @@ contains
     read(IIN_NUC,*) relz_num,sub_relz_num
     read(IIN_NUC,*) num_cell_str,num_cell_dip,siz_str,siz_dip
     read(IIN_NUC,*) hypo_cell_str,hypo_cell_dip,hypo_loc_str,hypo_loc_dip,rad_T_str,rad_T_dip
-    do ipar=1,bc%nglob
+    do ipar = 1,bc%nglob
       read(IIN_NUC,*) inp_nx(ipar),inp_nz(ipar),loc_str(ipar),loc_dip(ipar),sigma0(ipar),tau0_str(ipar),tau0_dip(ipar), &
            Rstress_str(ipar),Rstress_dip(ipar),static_fc(ipar),dyn_fc(ipar),swcd(ipar),cohes(ipar),tim_forcedRup(ipar)
     enddo
@@ -447,7 +467,7 @@ contains
 
     minX = minval(bc%coord(1,:))
 
-    do i=1,bc%nglob
+    do i = 1,bc%nglob
 
      ! WARNING: nearest neighbor interpolation
       ipar = minloc( (minX+loc_str(:)-bc%coord(1,i))**2 + (-loc_dip(:)-bc%coord(3,i))**2 , 1)
@@ -460,7 +480,7 @@ contains
       bc%swf%mus(i) = static_fc(ipar)
       bc%swf%mud(i) = dyn_fc(ipar)
       bc%swf%Dc(i) = swcd(ipar)
-      bc%swf%C(i) = cohes(ipar)
+      bc%swf%C(i) = cohes(ipar)  ! cohesion
       bc%swf%T(i) = tim_forcedRup(ipar)
 
     enddo
@@ -469,7 +489,7 @@ contains
 
     !-------
 
-    subroutine make_frictional_stress
+    subroutine make_frictional_stress()
 
     implicit none
 
@@ -485,7 +505,7 @@ contains
 
     !--------
 
-    subroutine load_stress_drop   !added by kangchen this is specially made for Balochistan Simulation
+    subroutine load_stress_drop()   !added by kangchen this is specially made for Balochistan Simulation
 
     use specfem_par, only: prname
 
@@ -542,22 +562,22 @@ contains
 !---------------------------------------------------------------------
 ! REPLACES the value of a fault parameter inside an area with prescribed shape
 
-  subroutine init_2d_distribution(a,coord,iin,n)
+  subroutine init_2d_distribution(array,coord,iin,n)
 
 !JPA refactor: background value should be an argument
 
   use constants, only: PI
   implicit none
 
-  real(kind=CUSTOM_REAL), intent(inout) :: a(:)
+  real(kind=CUSTOM_REAL), intent(inout) :: array(:)
   real(kind=CUSTOM_REAL), intent(in) :: coord(:,:)
   integer, intent(in) :: iin,n
 
-  real(kind=CUSTOM_REAL) :: b(size(a))
+  real(kind=CUSTOM_REAL) :: b(size(array))
   character(len=MAX_STRING_LEN) :: shapeval
   real(kind=CUSTOM_REAL) :: val,valh, xc, yc, zc, r, rc, l, lx,ly,lz
-  real(kind=CUSTOM_REAL) :: r1(size(a))
-  real(kind=CUSTOM_REAL) :: tmp1(size(a)),tmp2(size(a)),tmp3(size(a))
+  real(kind=CUSTOM_REAL) :: r1(size(array))
+  real(kind=CUSTOM_REAL) :: tmp1(size(array)),tmp2(size(array)),tmp3(size(array))
 
   integer :: i
   real(kind=CUSTOM_REAL) :: SMALLVAL
@@ -586,68 +606,65 @@ contains
 
     select case (shapeval)
     case ('circle')
-      tmp1 = r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2)
-      b = heaviside( tmp1 ) * val
+      tmp1(:) = r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2)
+      b(:) = heaviside( tmp1(:) ) * val
 
     case ('circle-exp')
-      r1 = sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2)
-      where(r1 < r)
-        b = exp(r1**2/(r1**2 - r**2) ) * val + valh
+      r1(:) = sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2)
+      where(r1(:) < r)
+        b(:) = exp(r1(:)**2/(r1(:)**2 - r**2) ) * val + valh
       elsewhere
-        b = 0.0_CUSTOM_REAL
+        b(:) = 0.0_CUSTOM_REAL
       endwhere
 
     case ('ellipse')
-      tmp1 = 1.0_CUSTOM_REAL - sqrt( (coord(1,:)-xc)**2/lx**2 + (coord(2,:)-yc)**2/ly**2 + (coord(3,:)-zc)**2/lz**2)
-      b = heaviside( tmp1 ) * val
+      tmp1(:) = 1.0_CUSTOM_REAL - sqrt( (coord(1,:)-xc)**2/lx**2 + (coord(2,:)-yc)**2/ly**2 + (coord(3,:)-zc)**2/lz**2)
+      b(:) = heaviside( tmp1(:) ) * val
 
     case ('square')
-      tmp1 = (l/2.0_CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
-      tmp2 = (l/2.0_CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
-      tmp3 = (l/2.0_CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
-      b = heaviside( tmp1 ) * heaviside( tmp2 ) * heaviside( tmp3) * val
+      tmp1(:) = (l/2.0_CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
+      tmp2(:) = (l/2.0_CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
+      tmp3(:) = (l/2.0_CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
+      b(:) = heaviside( tmp1(:) ) * heaviside( tmp2(:) ) * heaviside( tmp3(:) ) * val
 
     case ('x-cylinder')
-      tmp1 = r - sqrt((coord(2,:)-yc)**2 + (coord(3,:)-zc)**2)
-      tmp2 = (lz/2.0_CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
-      b = heaviside( tmp1 ) * heaviside( tmp2 ) * val
-
+      tmp1(:) = r - sqrt((coord(2,:)-yc)**2 + (coord(3,:)-zc)**2)
+      tmp2(:) = (lz/2.0_CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
+      b(:) = heaviside( tmp1(:) ) * heaviside( tmp2(:) ) * val
 
     case ('y-cylinder')
-      tmp1 = r - sqrt((coord(3,:)-zc)**2 + (coord(1,:)-xc)**2)
-      tmp2 = (lz/2.0_CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
-      b = heaviside( tmp1 ) * heaviside( tmp2 ) * val
-
+      tmp1(:) = r - sqrt((coord(3,:)-zc)**2 + (coord(1,:)-xc)**2)
+      tmp2(:) = (lz/2.0_CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
+      b(:) = heaviside( tmp1(:) ) * heaviside( tmp2(:) ) * val
 
     case ('z-cylinder')
-      tmp1 = r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2)
-      tmp2 = (lz/2.0_CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
-      b = heaviside( tmp1 ) * heaviside( tmp2 ) * val
+      tmp1(:) = r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2)
+      tmp2(:) = (lz/2.0_CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
+      b(:) = heaviside( tmp1(:) ) * heaviside( tmp2(:) ) * val
 
     case ('cylindertaper')
-      r1 = sqrt(((coord(1,:)-xc)**2 + (coord(3,:)-zc)**2 ));
-      where(r1 < rc)
-        where(r1 < r)
-         b = val;
+      r1(:) = sqrt(((coord(1,:)-xc)**2 + (coord(3,:)-zc)**2 ));
+      where(r1(:) < rc)
+        where(r1(:) < r)
+          b(:) = val;
         elsewhere
-        b = 0.5_CUSTOM_REAL*val*(1.0_CUSTOM_REAL+cos(PI*(r1-r)/(rc-r)))
+          b(:) = 0.5_CUSTOM_REAL*val*(1.0_CUSTOM_REAL+cos(PI*(r1(:)-r)/(rc-r)))
         endwhere
       elsewhere
-        b = 0.0_CUSTOM_REAL
+        b(:) = 0.0_CUSTOM_REAL
       endwhere
 
-
     case ('rectangle')
-      tmp1 = (lx/2.0_CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
-      tmp2 = (ly/2.0_CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
-      tmp3 = (lz/2.0_CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
-      b = heaviside( tmp1 ) * heaviside( tmp2 ) * heaviside( tmp3 ) * val
+      tmp1(:) = (lx/2.0_CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
+      tmp2(:) = (ly/2.0_CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
+      tmp3(:) = (lz/2.0_CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
+      b(:) = heaviside( tmp1(:) ) * heaviside( tmp2(:) ) * heaviside( tmp3(:) ) * val
 
     case ('rectangle-taper')
-      tmp1 = (lx/2.0_CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
-      tmp2 = (ly/2.0_CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
-      tmp3 = (lz/2.0_CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
-      b = heaviside( tmp1 ) * heaviside( tmp2 ) * heaviside( tmp3 ) &
+      tmp1(:) = (lx/2.0_CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
+      tmp2(:) = (ly/2.0_CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL
+      tmp3(:) = (lz/2.0_CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
+      b(:) = heaviside( tmp1(:) ) * heaviside( tmp2(:) ) * heaviside( tmp3(:) ) &
           * (val + ( coord(3,:) - zc + lz/2.0_CUSTOM_REAL ) * (valh-val)/lz )
 
     case default
@@ -655,7 +672,7 @@ contains
     end select
 
    ! REPLACE the value inside the prescribed area
-    where (b /= 0.0_CUSTOM_REAL) a = b
+    where (b(:) /= 0.0_CUSTOM_REAL) array(:) = b(:)
   enddo
 
   end subroutine init_2d_distribution
@@ -679,9 +696,9 @@ contains
   !sigma_yz => sigma(5)
   !sigma_xz => sigma(6) negative means compression
 
-  Traction(1,:) = Sigma(1)*bc%R(3,1,:)+Sigma(4)*bc%R(3,2,:)+Sigma(6)*bc%R(3,3,:)
-  Traction(2,:) = Sigma(4)*bc%R(3,1,:)+Sigma(2)*bc%R(3,2,:)+Sigma(5)*bc%R(3,3,:)
-  Traction(3,:) = Sigma(6)*bc%R(3,1,:)+Sigma(5)*bc%R(3,2,:)+Sigma(3)*bc%R(3,3,:)
+  Traction(1,:) = Sigma(1)*bc%R(3,1,:) + Sigma(4)*bc%R(3,2,:) + Sigma(6)*bc%R(3,3,:)
+  Traction(2,:) = Sigma(4)*bc%R(3,1,:) + Sigma(2)*bc%R(3,2,:) + Sigma(5)*bc%R(3,3,:)
+  Traction(3,:) = Sigma(6)*bc%R(3,1,:) + Sigma(5)*bc%R(3,2,:) + Sigma(3)*bc%R(3,3,:)
 
   Traction = rotate(bc,Traction,1)
   bc%T0 = bc%T0 + Traction
@@ -757,42 +774,43 @@ contains
 
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: T,dD,dV,dA
-  real(kind=CUSTOM_REAL), dimension(bc%nglob) :: strength,tStick,tnew, &
-    theta_old, theta_new, dc, Vf_old, Vf_new, TxExt, tmp_Vf
+  real(kind=CUSTOM_REAL), dimension(bc%nglob) :: Tstick,Tnew
+  real(kind=CUSTOM_REAL), dimension(bc%nglob) :: strength, theta_old, theta_new, dc
+  real(kind=CUSTOM_REAL), dimension(bc%nglob) :: Vf_old, Vf_new, TxExt, tmp_Vf
   real(kind=CUSTOM_REAL) :: half_dt,TLoad,DTau0,GLoad,timeval
-  integer :: i
+  integer :: i,ipoin,iglob
   real(kind=CUSTOM_REAL) :: nuc_x, nuc_y, nuc_z, nuc_r, nuc_t0, nuc_v, dist, tw_r, coh_size
 
   ! for parallel faults
   if (bc%nspec > 0) then
 
     half_dt = 0.5_CUSTOM_REAL * bc%dt
-    Vf_old = sqrt(bc%V(1,:)*bc%V(1,:) + bc%V(2,:)*bc%V(2,:))
+    Vf_old(:) = sqrt(bc%V(1,:)*bc%V(1,:) + bc%V(2,:)*bc%V(2,:))
 
     ! get predicted values
-    dD = get_jump(bc,D) ! dD_predictor
-    dV = get_jump(bc,V) ! dV_predictor
-    dA = get_weighted_jump(bc,MxA) ! dA_free
+    dD(:,:) = get_jump(bc,D) ! dD_predictor
+    dV(:,:) = get_jump(bc,V) ! dV_predictor
+    dA(:,:) = get_weighted_jump(bc,MxA) ! dA_free
 
     ! rotate to fault frame (tangent,normal)
     ! component 3 is normal to the fault
-    dD = rotate(bc,dD,1)
-    dV = rotate(bc,dV,1)
-    dA = rotate(bc,dA,1)
+    dD(:,:) = rotate(bc,dD,1)
+    dV(:,:) = rotate(bc,dV,1)
+    dA(:,:) = rotate(bc,dA,1)
 
     ! T_stick
-    T(1,:) = bc%Z * ( dV(1,:) + half_dt*dA(1,:) )
-    T(2,:) = bc%Z * ( dV(2,:) + half_dt*dA(2,:) )
-    T(3,:) = bc%Z * ( dV(3,:) + half_dt*dA(3,:) )
+    T(1,:) = bc%Z(:) * ( dV(1,:) + half_dt*dA(1,:) )
+    T(2,:) = bc%Z(:) * ( dV(2,:) + half_dt*dA(2,:) )
+    T(3,:) = bc%Z(:) * ( dV(3,:) + half_dt*dA(3,:) )
 
     !Warning : dirty particular free surface condition z = 0.
     !  where (bc%zcoord(:) > - SMALLVAL) T(2,:) = 0
-    ! do k=1,bc%nglob
+    ! do k = 1,bc%nglob
     !   if (abs(bc%zcoord(k)-0.e0_CUSTOM_REAL) < SMALLVAL) T(2,k) = 0.e0_CUSTOM_REAL
     ! enddo
 
     ! add initial stress
-    T = T + bc%T0
+    T(:,:) = T(:,:) + bc%T0(:,:)
 
     ! Solve for normal stress (negative is compressive)
     ! Opening implies free stress
@@ -801,7 +819,7 @@ contains
     ! smooth loading within nucleation patch
     !WARNING : ad hoc for SCEC benchmark TPV10x
     if (RATE_AND_STATE) then
-      TxExt = 0.0_CUSTOM_REAL
+      TxExt(:) = 0.0_CUSTOM_REAL
       TLoad = 1.0_CUSTOM_REAL
       DTau0 = 1.0_CUSTOM_REAL
       timeval = it*bc%dt !time will never be zero. it starts from 1
@@ -810,13 +828,15 @@ contains
       else
         GLoad = 1.0_CUSTOM_REAL
       endif
-      TxExt = DTau0 * bc%Fload * GLoad
-      T(1,:) = T(1,:) + TxExt
+      TxExt(:) = DTau0 * bc%Fload(:) * GLoad
+      T(1,:) = T(1,:) + TxExt(:)
     endif
 
-    tStick = sqrt( T(1,:)*T(1,:) + T(2,:)*T(2,:))
+    Tstick(:) = sqrt( T(1,:)*T(1,:) + T(2,:)*T(2,:))
 
-    if (.not. RATE_AND_STATE) then   ! Update slip weakening friction:
+    if (.not. RATE_AND_STATE) then
+      ! Update slip weakening friction
+
       ! Update slip state variable
       ! WARNING: during opening the friction state variable should not evolve
       theta_old = bc%swf%theta
@@ -834,7 +854,7 @@ contains
         nuc_r   = bc%twf%nuc_r
         nuc_t0  = bc%twf%nuc_t0
         nuc_v   = bc%twf%nuc_v
-        do i=1,bc%nglob
+        do i = 1,bc%nglob
             dist = ((bc%coord(1,i)-nuc_x)**2 + (bc%coord(2,i)-nuc_y)**2 + (bc%coord(3,i)-nuc_z)**2)**0.5
             if (dist <= nuc_r) then
                 tw_r     = timeval * nuc_v
@@ -849,65 +869,66 @@ contains
       endif
 
       if (TPV16) then
-        where (bc%swf%T <= it*bc%dt) bc%MU = bc%swf%mud
+        where (bc%swf%T(:) <= it*bc%dt) bc%MU(:) = bc%swf%mud(:)
       endif
 
       ! Update strength
-      strength = -bc%MU * min(T(3,:),0.0_CUSTOM_REAL) + bc%swf%C
+      strength(:) = -bc%MU(:) * min(T(3,:),0.0_CUSTOM_REAL) + bc%swf%C(:)
 
       ! Solve for shear stress
-      tnew = min(tStick,strength)
+      Tnew(:) = min(Tstick(:),strength(:))
 
     else
-      ! Update rate and state friction:
+      ! Update rate and state friction
       !JPA the solver below can be refactored into a loop with two passes
 
       ! first pass
-      theta_old = bc%rsf%theta
+      theta_old(:) = bc%rsf%theta(:)
       call rsf_update_state(Vf_old,bc%dt,bc%rsf)
 
       do i = 1,bc%nglob
-        Vf_new(i) = rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vf_new(i) = rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,Tstick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                            bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
 
       ! second pass
-      bc%rsf%theta = theta_old
+      bc%rsf%theta(:) = theta_old(:)
       tmp_Vf(:) = 0.5_CUSTOM_REAL*(Vf_old(:) + Vf_new(:))
       call rsf_update_state(tmp_Vf,bc%dt,bc%rsf)
 
       do i = 1,bc%nglob
-        Vf_new(i) = rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vf_new(i) = rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,Tstick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                            bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
 
-      tnew = tStick - bc%Z*Vf_new
+      Tnew(:) = Tstick(:) - bc%Z(:) * Vf_new(:)
     endif
 
-    tStick = max(tStick,1.0_CUSTOM_REAL) ! to avoid division by zero
-    T(1,:) = tnew * T(1,:)/tStick
-    T(2,:) = tnew * T(2,:)/tStick
+    Tstick(:) = max(Tstick(:),1.0_CUSTOM_REAL) ! to avoid division by zero
+
+    T(1,:) = Tnew(:) * T(1,:)/Tstick(:)
+    T(2,:) = Tnew(:) * T(2,:)/Tstick(:)
 
     ! Save total tractions
-    bc%T = T
+    bc%T(:,:) = T(:,:)
 
     ! Subtract initial stress
-    T = T - bc%T0
+    T(:,:) = T(:,:) - bc%T0(:,:)
 
-    if (RATE_AND_STATE) T(1,:) = T(1,:) - TxExt
+    if (RATE_AND_STATE) T(1,:) = T(1,:) - TxExt(:)
     !JPA: this eliminates the effect of TxExt on the equations of motion. Why is it needed?
 
     ! Update slip acceleration da=da_free-T/(0.5*dt*Z)
-    dA(1,:) = dA(1,:) - T(1,:)/(bc%Z*half_dt)
-    dA(2,:) = dA(2,:) - T(2,:)/(bc%Z*half_dt)
-    dA(3,:) = dA(3,:) - T(3,:)/(bc%Z*half_dt)
+    dA(1,:) = dA(1,:) - T(1,:)/(bc%Z(:) * half_dt)
+    dA(2,:) = dA(2,:) - T(2,:)/(bc%Z(:) * half_dt)
+    dA(3,:) = dA(3,:) - T(3,:)/(bc%Z(:) * half_dt)
 
     ! Update slip and slip rate, in fault frame
-    bc%D = dD
-    bc%V = dV + half_dt*dA
+    bc%D(:,:) = dD(:,:)
+    bc%V(:,:) = dV(:,:) + half_dt*dA(:,:)
 
     ! Rotate tractions back to (x,y,z) frame
-    T = rotate(bc,T,-1)
+    T(:,:) = rotate(bc,T,-1)
 
     ! Add boundary term B*T to M*a
     call add_BT(bc,MxA,T)
@@ -915,10 +936,10 @@ contains
     !-- intermediate storage of outputs --
     Vf_new = sqrt(bc%V(1,:)*bc%V(1,:) + bc%V(2,:)*bc%V(2,:))
     if (.not. RATE_AND_STATE) then
-      theta_new = bc%swf%theta
+      theta_new(:) = bc%swf%theta(:)
       dc = bc%swf%dc
     else
-      theta_new = bc%rsf%theta
+      theta_new(:) = bc%rsf%theta(:)
       dc = bc%rsf%L
     endif
 
@@ -928,11 +949,17 @@ contains
     call store_dataT(bc%dataT,bc%D,bc%V,bc%T,it)
 
     if (RATE_AND_STATE) then
-      if (bc%rsf%StateLaw == 1) then
-        bc%dataT%dat(8,:,it) = log10(theta_new(bc%dataT%iglob))
-      else
-        bc%dataT%dat(8,:,it) = theta_new(bc%dataT%iglob)
-      endif
+      ! adds storage of state
+      do ipoin = 1,bc%dataT%npoin
+        iglob = bc%dataT%iglob(ipoin)
+        if (bc%rsf%StateLaw == 1) then
+          ! ageing law
+          bc%dataT%dat(8,ipoin,it) = log10(theta_new(iglob))
+        else
+          ! slip law
+          bc%dataT%dat(8,ipoin,it) = theta_new(iglob)
+        endif
+      enddo
     endif
 
     !-- outputs --
@@ -988,7 +1015,7 @@ contains
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1372')
   allocate( f%theta(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1373')
-  allocate( f%C(nglob) ,stat=ier)
+  allocate( f%C(nglob) ,stat=ier) ! cohesion
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1374')
   allocate( f%T(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1375')
@@ -1010,18 +1037,19 @@ contains
 
   read(IIN_PAR, nml=SWF)
 
-  f%mus = mus
-  f%mud = mud
-  f%Dc  = dc
-  f%C   = C
-  f%T   = T
+  f%mus(:) = mus
+  f%mud(:) = mud
+  f%Dc(:)  = dc
+  f%C(:)   = C    ! cohesion
+  f%T(:)   = T
+
   call init_2d_distribution(f%mus,coord,IIN_PAR,nmus)
   call init_2d_distribution(f%mud,coord,IIN_PAR,nmud)
   call init_2d_distribution(f%Dc ,coord,IIN_PAR,ndc)
   call init_2d_distribution(f%C  ,coord,IIN_PAR,nC)
   call init_2d_distribution(f%T  ,coord,IIN_PAR,nForcedRup)
 
-  f%theta = 0.0_CUSTOM_REAL
+  f%theta(:) = 0.0_CUSTOM_REAL
 
   mu = swf_mu(f)
 
@@ -1048,6 +1076,7 @@ contains
   nuc_r  = 0.0_CUSTOM_REAL
   nuc_t0 = 0.0_CUSTOM_REAL
   nuc_v  = 0.0_CUSTOM_REAL
+
   read(IIN_PAR, nml=TWF,iostat=ier)
   if (ier /= 0) write(*,*) 'TWF not found in Par_file_faults.'
 
@@ -1074,11 +1103,11 @@ contains
   real(kind=CUSTOM_REAL) :: vnorm
   integer :: k,npoin
 
-  f%theta = f%theta + sqrt( (dold(1,:)-dnew(1,:))**2 + (dold(2,:)-dnew(2,:))**2)
+  f%theta(:) = f%theta(:) + sqrt( (dold(1,:)-dnew(1,:))**2 + (dold(2,:)-dnew(2,:))**2)
 
   if (f%healing) then
     npoin = size(vold,2)
-    do k=1,npoin
+    do k = 1,npoin
       vnorm = sqrt(vold(1,k)**2 + vold(2,k)**2)
       if (vnorm < V_HEALING) f%theta(k) = 0.0_CUSTOM_REAL
     enddo
@@ -1095,7 +1124,7 @@ contains
   type(swf_type), intent(in) :: f
   real(kind=CUSTOM_REAL) :: mu(size(f%theta))
 
-  mu = f%mus -(f%mus-f%mud)* min(f%theta/f%dc, 1.0_CUSTOM_REAL)
+  mu(:) = f%mus(:) -(f%mus(:)-f%mud(:))* min(f%theta(:)/f%dc(:), 1.0_CUSTOM_REAL)
 
   end function swf_mu
 
@@ -1108,23 +1137,27 @@ contains
 
   implicit none
 
+  type(bc_dynandkinflt_type) :: bc
   type(rsf_type),pointer :: f
   type(swf_type),pointer :: g
   integer :: ifault
 
   ! sets up fault arrays on gpu
   do ifault = 1,Nfaults
-    f => faults(ifault)%rsf
-    g => faults(ifault)%swf
+    bc = faults(ifault)
 
+    f => bc%rsf
+    g => bc%swf
+
+    ! checks if fault pointers have been created and allocated
     if (associated(f)) then
       ! rate and state friction simulation
       ! (ifault - 1) because in C language, array index start from 0
-      call transfer_rsf_data_todevice(Fault_pointer,faults(ifault)%nglob,ifault-1, &
-                                      f%V0,f%f0,f%V_init,f%a,f%b,f%L,f%theta,f%T,f%C,f%fw,f%Vw)
+      call transfer_rsf_data_todevice(Fault_pointer, ifault-1, bc%nglob, bc%Fload, &
+                                      f%V0,f%f0,f%V_init,f%a,f%b,f%L,f%theta,f%T,f%C,f%fw,f%Vw,f%StateLaw)
     else if (associated(g)) then
       ! slip weakening friction simulation
-      call transfer_swf_data_todevice(Fault_pointer,faults(ifault)%nglob,ifault-1, &
+      call transfer_swf_data_todevice(Fault_pointer, ifault-1, bc%nglob, &
                                       g%Dc,g%mus,g%mud,g%T,g%C,g%theta)
     endif
   enddo
@@ -1151,7 +1184,7 @@ contains
   integer :: nFload
 !  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: init_vel
   integer :: nglob,ier
-  integer :: InputStateLaw = 1 ! By default using aging law
+  integer :: InputStateLaw = 1 ! By default using aging law: 1=ageing law, 2=slip law
 
   NAMELIST / RSF / V0,f0,a,b,L,V_init,theta_init,nV0,nf0,na,nb,nL,nV_init,ntheta_init, &
                    C,T,nC,nForcedRup,Vw,fw,nVw,nfw,InputStateLaw
@@ -1175,7 +1208,7 @@ contains
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1381')
   allocate( f%theta(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1382')
-  allocate( f%C(nglob) ,stat=ier)
+  allocate( f%C(nglob) ,stat=ier) ! cohesion
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1383')
   allocate( f%T(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1384')
@@ -1210,17 +1243,17 @@ contains
 
   read(IIN_PAR, nml=RSF)
 
-  f%V0 = V0
-  f%f0 = f0
-  f%a = a
-  f%b = b
-  f%L = L
-  f%V_init = V_init
-  f%theta = theta_init
-  f%C  = C
-  f%T  = T
-  f%fw = fw
-  f%Vw = Vw
+  f%V0(:) = V0
+  f%f0(:) = f0
+  f%a(:) = a
+  f%b(:) = b
+  f%L(:) = L
+  f%V_init(:) = V_init
+  f%theta(:) = theta_init
+  f%C(:)  = C  ! cohesion
+  f%T(:)  = T
+  f%fw(:) = fw
+  f%Vw(:) = Vw
 
   call init_2d_distribution(f%V0,coord,IIN_PAR,nV0)
   call init_2d_distribution(f%f0,coord,IIN_PAR,nf0)
@@ -1250,28 +1283,35 @@ contains
   !          We should implement it as an option for the user
   if (TPV16) then
     if (f%stateLaw == 1) then
-      f%theta = f%L/f%V0 &
-                * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2 + T0(2,:)**2)/T0(3,:)/f%a)) &
-                         - f%f0 - f%a*log(f%V_init/f%V0) ) &
-                       / f%b )
+      ! ageing law
+      f%theta(:) = f%L(:) / f%V0(:) &
+                * exp( ( f%a(:) * log(TWO * sinh(-sqrt(T0(1,:)**2 + T0(2,:)**2)/T0(3,:)/f%a(:))) &
+                         - f%f0(:) - f%a(:) * log(f%V_init(:)/f%V0(:)) ) &
+                       / f%b(:) )
     else
-      f%theta =  f%a * log(TWO*f%V0/f%V_init * sinh(-sqrt(T0(1,:)**2 + T0(2,:)**2)/T0(3,:)/f%a))
+      ! slip law
+      f%theta(:) =  f%a(:) * log(TWO * f%V0(:) / f%V_init(:) * sinh(-sqrt(T0(1,:)**2 + T0(2,:)**2)/T0(3,:)/f%a(:)))
     endif
   endif
+
   ! WARNING : ad hoc for SCEC benchmark TPV10x
   allocate( nucFload(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1387')
+  nucFload(:) = 0.0_CUSTOM_REAL
+
   Fload = 0.0_CUSTOM_REAL
   nFload = 0
   read(IIN_PAR, nml=ASP)
-  nucFload = Fload
+
+  nucFload(:) = Fload
+
   call init_2d_distribution(nucFload,coord,IIN_PAR,nFload)
 
   ! WARNING: the line below is only valid for pure strike-slip faulting
-  V(1,:) = f%V_init
+  V(1,:) = f%V_init(:)
 
   if (TPV10X) then
-    call MakeTPV10XBoundaryRateStrengtheningLayer()
+    call make_TPV10X_BoundaryRateStrengtheningLayer()
   endif
 
   if (RSF_HETE) then
@@ -1332,6 +1372,7 @@ contains
                        sV_init(ipar),stheta(ipar),sC(ipar)
     enddo
     close(sIIN_NUC)
+
     minX = minval(coord(1,:))
     write(*,*) 'RSF_HETE nglob= ', nglob, 'num_cell_all= ', snum_cell_all
     write(*,*) 'minX = ', minval(coord(1,:)), 'minZ = ', minval(coord(3,:))
@@ -1363,7 +1404,8 @@ contains
 
     !--------
 
-    subroutine MakeTPV10XBoundaryRateStrengtheningLayer()
+    subroutine make_TPV10X_BoundaryRateStrengtheningLayer()
+
 ! adding a rate strengthening layer at the boundary of a fault for TPV10X
 ! see http://scecdata.usc.edu/cvws/download/uploadTPV103.pdf for more details
 
@@ -1419,7 +1461,7 @@ contains
       endif
     enddo
 
-    end subroutine MakeTPV10XBoundaryRateStrengtheningLayer
+    end subroutine make_TPV10X_BoundaryRateStrengtheningLayer
 
   end subroutine rsf_init
 
@@ -1451,26 +1493,26 @@ contains
   real(kind=CUSTOM_REAL) :: vDtL(size(V))
   real(kind=CUSTOM_REAL) :: f_ss(size(V)),xi_ss(size(V)),fLV(size(V))
 
-  vDtL = V * dt_real / f%L
+  vDtL(:) = V(:) * dt_real / f%L
 
-  ! ageing law
+  ! state update
   if (f%StateLaw == 1) then
-    where(vDtL > 1.e-5_CUSTOM_REAL)
-      f%theta = f%theta * exp(-vDtL) + f%L/V * (ONE - exp(-vDtL))
+    ! ageing law
+    where(vDtL(:) > 1.e-5_CUSTOM_REAL)
+      f%theta(:) = f%theta(:) * exp(-vDtL(:)) + f%L(:)/V(:) * (ONE - exp(-vDtL(:)))
     elsewhere
-      f%theta = f%theta * exp(-vDtL) + dt_real * ( ONE - HALF*vDtL )
+      f%theta(:) = f%theta(:) * exp(-vDtL(:)) + dt_real * ( ONE - HALF*vDtL(:) )
     endwhere
-
-  ! slip law : by default use strong rate-weakening
   else
-!    f%theta = f%L/V * (f%theta*V/f%L)**(exp(-vDtL))
-    where(V /= 0.0_CUSTOM_REAL)
-      fLV = f%f0 - (f%b - f%a)*log(V/f%V0)
-      f_ss = f%fw + (fLV - f%fw)/(ONE + (V/f%Vw)**8)**0.125
-      xi_ss = f%a * log( TWO*f%V0/V * sinh(f_ss/f%a) )
-      f%theta = xi_ss + (f%theta - xi_ss) * exp(-vDtL)
+    ! slip law : by default use strong rate-weakening
+    !f%theta = f%L/V * (f%theta*V/f%L)**(exp(-vDtL))
+    where(V(:) /= 0.0_CUSTOM_REAL)
+      fLV(:) = f%f0(:) - (f%b(:) - f%a(:))*log(V(:)/f%V0(:))
+      f_ss(:) = f%fw(:) + (fLV(:) - f%fw(:))/(ONE + (V(:)/f%Vw(:))**8)**0.125
+      xi_ss(:) = f%a(:) * log( TWO*f%V0(:)/V(:) * sinh(f_ss(:)/f%a(:)) )
+      f%theta(:) = xi_ss(:) + (f%theta(:) - xi_ss(:)) * exp(-vDtL(:))
     elsewhere
-      f%theta = f%theta
+      f%theta(:) = f%theta(:)
     endwhere
   endif
 
@@ -1926,28 +1968,34 @@ contains
 
 !---------------------------------------------------------------------
 
-  subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+  subroutine funcd(x,fn,df,Tstick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 
   use constants, only: ONE,TWO
   implicit none
 
-  real(kind=CUSTOM_REAL) :: tStick,Seff,Z,f0,V0,a,b,L,theta
-  double precision :: arg,fn,df,x
-  integer :: statelaw
+  real(kind=CUSTOM_REAL),intent(in) :: Tstick,Seff,Z,f0,V0,a,b,L,theta
+  double precision,intent(in) :: x
+  double precision,intent(out) :: fn,df
+  integer,intent(in) :: statelaw
+
+  ! local parameters
+  double precision :: arg
 
   if (statelaw == 1) then
+    ! ageing law
     arg = exp((f0+dble(b)*log(V0*theta/L))/a)/TWO/V0
   else
+    ! slip law
     arg = exp(theta/a)/TWO/V0
   endif
-  fn = tStick - Z*x - a*Seff*asinh_slatec(x*arg)
+  fn = Tstick - Z*x - a*Seff*asinh_slatec(x*arg)
   df = -Z - a*Seff/sqrt(ONE + (x*arg)**2)*arg
 
   end subroutine funcd
 
 !---------------------------------------------------------------------
 
-  function rtsafe(x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+  function rtsafe(x1,x2,xacc,Tstick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 
   implicit none
 
@@ -1956,20 +2004,20 @@ contains
   integer :: j
   !real(kind=CUSTOM_REAL) :: df,dx,dxold,f,fh,fl,temp,xh,xl
   double precision :: df,dx,dxold,f,fh,fl,temp,xh,xl,rtsafe
-  real(kind=CUSTOM_REAL) :: tStick,Seff,Z,f0,V0,a,b,L,theta
+  real(kind=CUSTOM_REAL) :: Tstick,Seff,Z,f0,V0,a,b,L,theta
   integer :: statelaw
 
-  call funcd(dble(x1),fl,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-  call funcd(dble(x2),fh,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+  call funcd(dble(x1),fl,df,Tstick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+  call funcd(dble(x2),fh,df,Tstick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 
-  if ((fl > 0 .and. fh > 0) .or. (fl < 0 .and. fh < 0) ) stop 'root must be bracketed in rtsafe'
-  if (fl == 0.) then
+  if ((fl > 0.d0 .and. fh > 0.d0) .or. (fl < 0.d0 .and. fh < 0.d0) ) stop 'root must be bracketed in rtsafe'
+  if (fl == 0.d0) then
     rtsafe = x2
     return
-  else if (fh == 0.) then
+  else if (fh == 0.d0) then
     rtsafe = x2
     return
-  else if (fl < 0) then
+  else if (fl < 0.d0) then
     xl = x1
     xh = x2
   else
@@ -1977,14 +2025,16 @@ contains
     xl = x2
   endif
 
-  rtsafe = 0.5d0*(x1+x2)
+  rtsafe = 0.5d0 * (x1+x2)
   dxold = abs(x2-x1)
   dx = dxold
-  call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+
+  call funcd(rtsafe,f,df,Tstick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+
   do j = 1,MAXIT
-    if (((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f) > 0 .or. abs(2.*f) > abs(dxold*df)) then
+    if (((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f) > 0.d0 .or. abs(2.d0 * f) > abs(dxold*df)) then
       dxold = dx
-      dx = 0.5d0*(xh-xl)
+      dx = 0.5d0 * (xh-xl)
       rtsafe = xl+dx
       if (xl == rtsafe) return
     else
@@ -1995,8 +2045,8 @@ contains
       if (temp == rtsafe) return
     endif
     if (abs(dx) < xacc) return
-    call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-    if (f < 0.) then
+    call funcd(rtsafe,f,df,Tstick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+    if (f < 0.d0) then
       xl = rtsafe
     else
       xh = rtsafe
@@ -2026,9 +2076,9 @@ contains
     bc = faults(ifault)
 
     ! copies data back to CPU
-    call transfer_fault_data_to_host(Fault_pointer,ifault-1,bc%nspec,bc%nglob,bc%D,bc%V,bc%T)
+    call transfer_fault_data_to_host(Fault_pointer, ifault-1, bc%nspec, bc%nglob, bc%D, bc%V, bc%T)
     ! copies dataT back to CPU
-    call transfer_dataT_to_host(Fault_pointer, bc%dataT%dat, it, ifault - 1)
+    call transfer_dataT_to_host(Fault_pointer, ifault-1, bc%dataT%dat, it)
 
     ! gather data for whole fault
     if (PARALLEL_FAULT) then

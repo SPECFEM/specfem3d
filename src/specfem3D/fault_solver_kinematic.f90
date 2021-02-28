@@ -209,9 +209,9 @@ contains
     allocate(bc%V(3,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1996')
 
-    bc%T = 0.0_CUSTOM_REAL
-    bc%D = 0.0_CUSTOM_REAL
-    bc%V = 0.0_CUSTOM_REAL
+    bc%T(:,:) = 0.0_CUSTOM_REAL
+    bc%D(:,:) = 0.0_CUSTOM_REAL
+    bc%V(:,:) = 0.0_CUSTOM_REAL
 
     ! time interval between two loaded slip rates
     read(IIN_PAR,nml=KINPAR)
@@ -225,8 +225,8 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1997')
     allocate(bc%v_kin_t2(2,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1998')
-    bc%v_kin_t1 = 0.0_CUSTOM_REAL
-    bc%v_kin_t2 = 0.0_CUSTOM_REAL
+    bc%v_kin_t1(:,:) = 0.0_CUSTOM_REAL
+    bc%v_kin_t2(:,:) = 0.0_CUSTOM_REAL
   else
     ! dummy allocations (for subroutine arguments)
     allocate(bc%T(3,1), &
