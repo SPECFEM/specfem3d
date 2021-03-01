@@ -38,25 +38,25 @@ void FC_FUNC_(initialize_fault_solver_gpu,
                                            int* num_of_faults,
                                            realw* v_healing,
                                            realw* v_rupt,
-                                           int* RATE_AND_STATE_f) {
+                                           int* RATE_AND_STATE) {
 
   TRACE("initialize_fault_solver_gpu");
 
   // allocates fault parameter structure
-  Fault_solver_dynamics *Fdyn = (Fault_solver_dynamics*) malloc(sizeof(Fault_solver_dynamics));
-  if (Fdyn == NULL) exit_on_error("error allocating fault_solver pointer");
+  Fault_solver_dynamics *Fsolver = (Fault_solver_dynamics*) malloc(sizeof(Fault_solver_dynamics));
+  if (Fsolver == NULL) exit_on_error("error allocating fault_solver pointer");
 
-  *Fault_solver = (long) Fdyn;
+  *Fault_solver = (long) Fsolver;
 
   // initializes
-  Fdyn->Nbfaults = *num_of_faults;
-  Fdyn->faults = (Fault*) malloc((*num_of_faults)*sizeof(Fault));
+  Fsolver->Nbfaults = *num_of_faults;
+  Fsolver->faults = (Fault*) malloc((*num_of_faults)*sizeof(Fault));
 
-  Fdyn->v_healing = *v_healing;
-  Fdyn->v_rupt = *v_rupt;
+  Fsolver->v_healing = *v_healing;
+  Fsolver->v_rupt = *v_rupt;
 
   // flag for rate and state friction
-  Fdyn->RATE_AND_STATE = *RATE_AND_STATE_f; // 0 == false, 1 == true
+  Fsolver->RATE_AND_STATE = *RATE_AND_STATE; // 0 == false, 1 == true
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -64,20 +64,31 @@ void FC_FUNC_(initialize_fault_solver_gpu,
 extern EXTERN_LANG
 void FC_FUNC_(initialize_fault_data_gpu,
               INITIALIZE_FAULT_DATA_GPU)(long* Fault_solver,
+                                         int* fault_index,
                                          int* iglob,
                                          int* num_of_records,
-                                         int* nt,
-                                         int* ifault) {
+                                         int* ndat,
+                                         int* nt) {
   TRACE("initialize_fault_data_gpu");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_solver);
 
   // fault data recorder
   Fault_data *fault_data_recorder = (Fault_data*) malloc(sizeof(Fault_data));
+
+  // initializes faults
   fault_data_recorder->NRECORD = *num_of_records;
   fault_data_recorder->NT = *nt;
 
-  int recordlength = 7; //store 7 different quantities
+  int recordlength = *ndat; // data stores for each record/point: default == 7 or when RATE_AND_STATE == 8
+  fault_data_recorder->recordlength = recordlength;
+
+  // checks
+  if (Fsolver->RATE_AND_STATE){
+    if (fault_data_recorder->recordlength != 8){exit_on_error("Error: invalid recordlength for fault_data_recorder, should be 8");}
+  }else{
+    if (fault_data_recorder->recordlength != 7){exit_on_error("Error: invalid recordlength for fault_data_recorder, should be 7");}
+  }
 
   // allocates arrays on GPU
   print_CUDA_error_if_any(cudaMalloc((void**)&(fault_data_recorder->iglob),
@@ -90,7 +101,7 @@ void FC_FUNC_(initialize_fault_data_gpu,
                                      recordlength*fault_data_recorder->NRECORD*fault_data_recorder->NT*sizeof(realw)),60003);
 
   // stores structure pointers
-  Fsolver->faults[*ifault].output_dataT = fault_data_recorder;
+  Fsolver->faults[*fault_index].output_dataT = fault_data_recorder;
 
   GPU_ERROR_CHECKING("initialize_fault_data_gpu");
 }
@@ -148,8 +159,8 @@ extern EXTERN_LANG
 void FC_FUNC_(transfer_fault_data_to_device,
               TRANSFER_FAULT_DATA_TO_DEVICE)(long* Fault_pointer,
                                              int* fault_index,
-                                             int* NSPEC_AB,
-                                             int* NGLOB_AB,
+                                             int* NSPEC_FLT,
+                                             int* NGLOB_FLT,
                                              realw* D,
                                              realw* T0,
                                              realw* T,
@@ -160,32 +171,38 @@ void FC_FUNC_(transfer_fault_data_to_device,
                                              realw* invM1,
                                              realw* invM2,
                                              int* ibulk1,
-                                             int* ibulk2) {
+                                             int* ibulk2,
+                                             int* allow_opening) {
   TRACE("transfer_fault_data_to_device");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Fault* Flt = &(Fsolver->faults[*fault_index]);
 
-  Flt->NSPEC_AB = *NSPEC_AB;
-  Flt->NGLOB_AB = *NGLOB_AB;
+  Flt->NSPEC_FLT = *NSPEC_FLT;
+  Flt->NGLOB_FLT = *NGLOB_FLT;
 
-  if (*NGLOB_AB > 0){
-    copy_todevice_realw_test((void **)&(Flt->B),B,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Flt->R),R,(*NGLOB_AB)*9);
-    copy_todevice_realw_test((void **)&(Flt->Z),Z,(*NGLOB_AB));
+  // default : do not allow opening (see setting in fault_solver_common.f90)
+  Flt->allow_opening = *allow_opening;
+  // checks
+  if (Flt->allow_opening){ exit_on_error("Fault opening not implemented yet on GPU\n"); }
 
-    copy_todevice_realw_test((void **)&(Flt->D),D,(*NGLOB_AB)*3);
-    copy_todevice_realw_test((void **)&(Flt->V),V0,(*NGLOB_AB)*3);
+  // copies data to GPU
+  if (*NGLOB_FLT > 0){
+    copy_todevice_realw_test((void **)&(Flt->B),B,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(Flt->R),R,(*NGLOB_FLT)*9);
+    copy_todevice_realw_test((void **)&(Flt->Z),Z,(*NGLOB_FLT));
 
-    copy_todevice_realw_test((void **)&(Flt->T0),T0,(*NGLOB_AB)*3);
-    copy_todevice_realw_test((void **)&(Flt->T),T,(*NGLOB_AB)*3);
+    copy_todevice_realw_test((void **)&(Flt->D),D,(*NGLOB_FLT)*3);
+    copy_todevice_realw_test((void **)&(Flt->V),V0,(*NGLOB_FLT)*3);
 
-    copy_todevice_realw_test((void **)&(Flt->invM1),invM1,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Flt->invM2),invM2,*NGLOB_AB);
+    copy_todevice_realw_test((void **)&(Flt->T0),T0,(*NGLOB_FLT)*3);
+    copy_todevice_realw_test((void **)&(Flt->T),T,(*NGLOB_FLT)*3);
 
-    copy_todevice_int_test((void **)&(Flt->ibulk1),ibulk1,(*NGLOB_AB));
-    copy_todevice_int_test((void **)&(Flt->ibulk2),ibulk2,(*NGLOB_AB));
+    copy_todevice_realw_test((void **)&(Flt->invM1),invM1,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(Flt->invM2),invM2,*NGLOB_FLT);
 
+    copy_todevice_int_test((void **)&(Flt->ibulk1),ibulk1,(*NGLOB_FLT));
+    copy_todevice_int_test((void **)&(Flt->ibulk2),ibulk2,(*NGLOB_FLT));
   }
 
   GPU_ERROR_CHECKING("transfer_fault_data_to_device");
@@ -197,8 +214,8 @@ extern EXTERN_LANG
 void FC_FUNC_(transfer_fault_data_to_host,
               TRANSFER_FAULT_DATA_TO_HOST)(long* Fault_pointer,
                                            int* fault_index,
-                                           int* NSPEC_AB,
-                                           int* NGLOB_AB,
+                                           int* NSPEC_FLT,
+                                           int* NGLOB_FLT,
                                            realw* D,
                                            realw* V,
                                            realw* T) {
@@ -208,10 +225,10 @@ void FC_FUNC_(transfer_fault_data_to_host,
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
   Fault* Flt = &(Fsolver->faults[*fault_index]);
 
-  if (*NGLOB_AB > 0){
-    copy_tohost_realw_test((void **)&(Flt->V),V,(*NGLOB_AB)*3);
-    copy_tohost_realw_test((void **)&(Flt->D),D,(*NGLOB_AB)*3);
-    copy_tohost_realw_test((void **)&(Flt->T),T,(*NGLOB_AB)*3);
+  if (*NGLOB_FLT > 0){
+    copy_tohost_realw_test((void **)&(Flt->V),V,(*NGLOB_FLT)*3);
+    copy_tohost_realw_test((void **)&(Flt->D),D,(*NGLOB_FLT)*3);
+    copy_tohost_realw_test((void **)&(Flt->T),T,(*NGLOB_FLT)*3);
   }
 
   GPU_ERROR_CHECKING("transfer_fault_data_to_host");
@@ -222,21 +239,22 @@ void FC_FUNC_(transfer_fault_data_to_host,
 extern EXTERN_LANG
 void FC_FUNC_(transfer_datat_to_host,
               TRANSFER_DATAT_TO_HOST)(long* Fault_pointer,
+                                      int* fault_index,
                                       realw* h_dataT,
-                                      int* it,
-                                      int* ifault) {
+                                      int* it) {
 
   TRACE("transfer_dataT_to_host");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
-  Fault* Flt = &(Fsolver->faults[*ifault]);
+  Fault* Flt = &(Fsolver->faults[*fault_index]);
 
-  int recordlength = 7; //store 7 different quantities
+  int recordlength = Flt->output_dataT->recordlength; // stores default == 7 different quantities or when RATE_AND_STATE == 8
 
   if (Flt->output_dataT->NRECORD > 0){
-    copy_tohost_realw_test((void **)&(Flt->output_dataT->dataT),
-                           h_dataT + (*it - Flt->output_dataT->NT) * Flt->output_dataT->NRECORD * recordlength,
-                           Flt->output_dataT->NRECORD * recordlength * Flt->output_dataT->NT);
+    int it_index = (*it - Flt->output_dataT->NT) * Flt->output_dataT->NRECORD * recordlength;
+    int size = Flt->output_dataT->NRECORD * recordlength * Flt->output_dataT->NT;
+
+    copy_tohost_realw_test((void **)&(Flt->output_dataT->dataT),&h_dataT[it_index],size);
   }
 
   GPU_ERROR_CHECKING("transfer_dataT_to_host");
@@ -247,8 +265,9 @@ void FC_FUNC_(transfer_datat_to_host,
 extern EXTERN_LANG
 void FC_FUNC_(transfer_rsf_data_todevice,
               TRANSFER_RSF_DATA_TODEVICE)(long* Fault_pointer,
-                                          int *NGLOB_AB,
                                           int* fault_index,
+                                          int *NGLOB_FLT,
+                                          realw* Fload,
                                           realw* V0,
                                           realw* f0,
                                           realw* V_init,
@@ -259,28 +278,34 @@ void FC_FUNC_(transfer_rsf_data_todevice,
                                           realw* T,
                                           realw* C,
                                           realw* fw,
-                                          realw* Vw) {
+                                          realw* Vw,
+                                          int* StateLaw) {
 
   TRACE("transfer_rsf_data_todevice");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
-  Rsf_type* Rsf  = &((Fsolver->faults[*fault_index]).rsf);
+  Rsf_type* rsf  = &((Fsolver->faults[*fault_index]).rsf);
 
   // checks with rsf flag
   if (! Fsolver->RATE_AND_STATE){ exit_on_error("Error with RSF setup, RATE_AND_STATE flag is off; please check fault setup and rerun\n");}
 
-  if (*NGLOB_AB > 0){
-    copy_todevice_realw_test((void **)&(Rsf->V0),V0,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Rsf->f0),f0,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Rsf->V_init),V_init,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Rsf->a),a,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Rsf->b),b,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Rsf->L),L,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Rsf->theta),theta,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Rsf->T),T,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Rsf->C),C,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Rsf->fw),fw,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Rsf->Vw),Vw,*NGLOB_AB);
+  // set StateLaw type: 1 == ageing law, 2 == slip law
+  rsf->StateLaw = *StateLaw;
+
+  // copies arrays onto GPU
+  if (*NGLOB_FLT > 0){
+    copy_todevice_realw_test((void **)&(rsf->V0),V0,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(rsf->f0),f0,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(rsf->V_init),V_init,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(rsf->a),a,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(rsf->b),b,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(rsf->L),L,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(rsf->theta),theta,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(rsf->T),T,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(rsf->Coh),C,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(rsf->fw),fw,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(rsf->Vw),Vw,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(rsf->Fload),Fload,*NGLOB_FLT);
   }
 
   GPU_ERROR_CHECKING("transfer_rsf_data_todevice");
@@ -291,8 +316,8 @@ void FC_FUNC_(transfer_rsf_data_todevice,
 extern EXTERN_LANG
 void FC_FUNC_(transfer_swf_data_todevice,
               TRANSFER_SWF_DATA_TODEVICE)(long* Fault_pointer,
-                                          int *NGLOB_AB,
                                           int *fault_index,
+                                          int *NGLOB_FLT,
                                           realw* Dc,
                                           realw* mus,
                                           realw* mud,
@@ -303,18 +328,18 @@ void FC_FUNC_(transfer_swf_data_todevice,
   TRACE("transfer_swf_data_todevice");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
-  Swf_type* Swf  = &((Fsolver->faults[*fault_index]).swf);
+  Swf_type* swf  = &((Fsolver->faults[*fault_index]).swf);
 
   // checks with rsf flag
   if (Fsolver->RATE_AND_STATE){ exit_on_error("Error with SWF setup, RATE_AND_STATE flag is on; please check fault setup and rerun\n");}
 
-  if (*NGLOB_AB > 0){
-    copy_todevice_realw_test((void **)&(Swf->Dc),Dc,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Swf->mus),mus,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Swf->mud),mud,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Swf->Coh),C,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Swf->T),T,*NGLOB_AB);
-    copy_todevice_realw_test((void **)&(Swf->theta),theta,*NGLOB_AB);
+  if (*NGLOB_FLT > 0){
+    copy_todevice_realw_test((void **)&(swf->Dc),Dc,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(swf->mus),mus,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(swf->mud),mud,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(swf->Coh),C,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(swf->T),T,*NGLOB_FLT);
+    copy_todevice_realw_test((void **)&(swf->theta),theta,*NGLOB_FLT);
   }
 
   GPU_ERROR_CHECKING("transfer_swf_data_todevice");
@@ -322,11 +347,13 @@ void FC_FUNC_(transfer_swf_data_todevice,
 
 /* ----------------------------------------------------------------------------------------------- */
 
+// not used yet...
+
 extern EXTERN_LANG
 void FC_FUNC_(transfer_rsf_data_tohost,
               TRANSFER_RSF_DATA_TOHOST)(long* Fault_pointer,
-                                        int *NGLOB_AB,
                                         int *fault_index,
+                                        int *NGLOB_FLT,
                                         realw* V0,
                                         realw* f0,
                                         realw* V_init,
@@ -342,20 +369,20 @@ void FC_FUNC_(transfer_rsf_data_tohost,
   TRACE("transfer_rsf_data_tohost");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
-  Rsf_type* Rsf  = &((Fsolver->faults[*fault_index]).rsf);
+  Rsf_type* rsf  = &((Fsolver->faults[*fault_index]).rsf);
 
-  if (*NGLOB_AB > 0){
-    copy_tohost_realw_test((void **)&(Rsf->V0),V0,*NGLOB_AB);
-    copy_tohost_realw_test((void **)&(Rsf->f0),f0,*NGLOB_AB);
-    copy_tohost_realw_test((void **)&(Rsf->V_init),V_init,*NGLOB_AB);
-    copy_tohost_realw_test((void **)&(Rsf->a),a,*NGLOB_AB);
-    copy_tohost_realw_test((void **)&(Rsf->b),b,*NGLOB_AB);
-    copy_tohost_realw_test((void **)&(Rsf->L),L,*NGLOB_AB);
-    copy_tohost_realw_test((void **)&(Rsf->theta),theta,*NGLOB_AB);
-    copy_tohost_realw_test((void **)&(Rsf->T),T,*NGLOB_AB);
-    copy_tohost_realw_test((void **)&(Rsf->C),C,*NGLOB_AB);
-    copy_tohost_realw_test((void **)&(Rsf->fw),fw,*NGLOB_AB);
-    copy_tohost_realw_test((void **)&(Rsf->Vw),Vw,*NGLOB_AB);
+  if (*NGLOB_FLT > 0){
+    copy_tohost_realw_test((void **)&(rsf->V0),V0,*NGLOB_FLT);
+    copy_tohost_realw_test((void **)&(rsf->f0),f0,*NGLOB_FLT);
+    copy_tohost_realw_test((void **)&(rsf->V_init),V_init,*NGLOB_FLT);
+    copy_tohost_realw_test((void **)&(rsf->a),a,*NGLOB_FLT);
+    copy_tohost_realw_test((void **)&(rsf->b),b,*NGLOB_FLT);
+    copy_tohost_realw_test((void **)&(rsf->L),L,*NGLOB_FLT);
+    copy_tohost_realw_test((void **)&(rsf->theta),theta,*NGLOB_FLT);
+    copy_tohost_realw_test((void **)&(rsf->T),T,*NGLOB_FLT);
+    copy_tohost_realw_test((void **)&(rsf->Coh),C,*NGLOB_FLT);
+    copy_tohost_realw_test((void **)&(rsf->fw),fw,*NGLOB_FLT);
+    copy_tohost_realw_test((void **)&(rsf->Vw),Vw,*NGLOB_FLT);
   }
 
   GPU_ERROR_CHECKING("transfer_rsf_data_tohost");
@@ -363,11 +390,13 @@ void FC_FUNC_(transfer_rsf_data_tohost,
 
 /* ----------------------------------------------------------------------------------------------- */
 
+// not used yet...
+
 extern EXTERN_LANG
 void FC_FUNC_(transfer_swf_data_tohost,
               TRANSFER_SWF_DATA_TOHOST)(long* Fault_pointer,
-                                        int *NGLOB_AB,
                                         int *fault_index,
+                                        int *NGLOB_FLT,
                                         realw* Dc,
                                         realw* mus,
                                         realw* mud,
@@ -378,15 +407,15 @@ void FC_FUNC_(transfer_swf_data_tohost,
   TRACE("transfer_swf_data_tohost");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
-  Swf_type *Swf = &((Fsolver -> faults[*fault_index]).swf);
+  Swf_type *swf = &((Fsolver -> faults[*fault_index]).swf);
 
-  if (*NGLOB_AB > 0){
-    copy_tohost_realw_test((void **)&(Swf->Dc),Dc,*NGLOB_AB);
-    copy_tohost_realw_test((void **)&(Swf->mus),mus,*NGLOB_AB);
-    copy_tohost_realw_test((void **)&(Swf->mud),mud,*NGLOB_AB);
-    copy_tohost_realw_test((void **)&(Swf->Coh),C,*NGLOB_AB);
-    copy_tohost_realw_test((void **)&(Swf->T),T,*NGLOB_AB);
-    copy_tohost_realw_test((void **)&(Swf->theta),theta,*NGLOB_AB);
+  if (*NGLOB_FLT > 0){
+    copy_tohost_realw_test((void **)&(swf->Dc),Dc,*NGLOB_FLT);
+    copy_tohost_realw_test((void **)&(swf->mus),mus,*NGLOB_FLT);
+    copy_tohost_realw_test((void **)&(swf->mud),mud,*NGLOB_FLT);
+    copy_tohost_realw_test((void **)&(swf->Coh),C,*NGLOB_FLT);
+    copy_tohost_realw_test((void **)&(swf->T),T,*NGLOB_FLT);
+    copy_tohost_realw_test((void **)&(swf->theta),theta,*NGLOB_FLT);
   }
 
   GPU_ERROR_CHECKING("transfer_swf_data_tohost");
@@ -400,7 +429,6 @@ void FC_FUNC_(fault_solver_gpu,
               FAULT_SOLVER_GPU)(long* Mesh_pointer,
                                 long* Fault_pointer,
                                 realw* dt,
-                                int* myrank,
                                 int* it) {
   TRACE("fault_solver_gpu");
 
@@ -414,7 +442,7 @@ void FC_FUNC_(fault_solver_gpu,
     Rsf_type* rsf = &(Flt->rsf);
     Swf_type* swf = &(Flt->swf);
 
-    int size = Flt->NGLOB_AB;
+    int size = Flt->NGLOB_FLT;
 
     if(size > 0){
       int blocksize = 128;
@@ -432,7 +460,7 @@ void FC_FUNC_(fault_solver_gpu,
         compute_dynamic_fault_cuda_rsf<<<grid,threads>>>( mp->d_displ,
                                                           mp->d_veloc,
                                                           mp->d_accel,
-                                                          Flt->NGLOB_AB,
+                                                          Flt->NGLOB_FLT,
                                                           Flt->invM1,
                                                           Flt->invM2,
                                                           Flt->B,
@@ -440,7 +468,7 @@ void FC_FUNC_(fault_solver_gpu,
                                                           Flt->R,
                                                           Flt->T0,
                                                           Flt->T,
-                                                          rsf->C,   // rate and state friction quantities
+                                                          rsf->Coh,       // rate and state friction quantities
                                                           rsf->a,
                                                           rsf->b,
                                                           rsf->L,
@@ -450,18 +478,20 @@ void FC_FUNC_(fault_solver_gpu,
                                                           rsf->theta,
                                                           rsf->Vw,
                                                           rsf->fw,
+                                                          rsf->Fload,
+                                                          rsf->StateLaw,
                                                           Flt->V,
                                                           Flt->D,
                                                           Flt->ibulk1,
                                                           Flt->ibulk2,
                                                           *dt,
-                                                          *myrank);
+                                                          *it);
       } else {
         // fault kernel for slip weakening friction
         compute_dynamic_fault_cuda_swf<<<grid,threads>>>( mp->d_displ,
                                                           mp->d_veloc,
                                                           mp->d_accel,
-                                                          Flt->NGLOB_AB,
+                                                          Flt->NGLOB_FLT,
                                                           Flt->invM1,
                                                           Flt->invM2,
                                                           Flt->B,
@@ -469,7 +499,7 @@ void FC_FUNC_(fault_solver_gpu,
                                                           Flt->R,
                                                           Flt->T0,
                                                           Flt->T,
-                                                          swf->Dc,
+                                                          swf->Dc,        // slip weakening friction quantities
                                                           swf->theta,
                                                           swf->mus,
                                                           swf->mud,
@@ -479,17 +509,28 @@ void FC_FUNC_(fault_solver_gpu,
                                                           Flt->D,
                                                           Flt->ibulk1,
                                                           Flt->ibulk2,
-                                                          *dt,
-                                                          *myrank);
+                                                          *dt);
       }
 
-      // fills output dataT array
+      // output dataT array
       int num_of_block2 = (int) (Flt->output_dataT->NRECORD/128)+1;
 
+      // case for rate and state friction
+      int StateLaw = 0;
+      realw* theta = NULL;
+      if (Fsolver->RATE_AND_STATE){
+        StateLaw = rsf->StateLaw;
+        theta = rsf->theta;
+      }
+
+      // fills dataT arrays on GPU
       store_dataT<<<num_of_block2,128>>>( Flt->output_dataT->dataT,
                                           Flt->V,
                                           Flt->D,
                                           Flt->T,
+                                          Fsolver->RATE_AND_STATE,
+                                          StateLaw,
+                                          theta,
                                           Flt->output_dataT->iglob,
                                           *it,
                                           Flt->output_dataT->NRECORD,

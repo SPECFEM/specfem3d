@@ -507,7 +507,7 @@ __global__ void compute_coupling_ocean_cuda_kernel(realw* accel,
 __global__  void compute_dynamic_fault_cuda_swf(realw* Displ,   // this is a mesh vector
                                                 realw* Veloc,
                                                 realw* MxAccel,
-                                                int NGLOB_AB,
+                                                int NGLOB_FLT,
                                                 realw* invM1,   // this is a fault vector
                                                 realw* invM2,
                                                 realw* B,
@@ -525,21 +525,20 @@ __global__  void compute_dynamic_fault_cuda_swf(realw* Displ,   // this is a mes
                                                 realw* D_slip,
                                                 int* ibulk1,
                                                 int* ibulk2,
-                                                realw dt,
-                                                int myrank) ;
+                                                realw dt) ;
 
 __global__  void compute_dynamic_fault_cuda_rsf(realw* Displ,   // mesh quantities
                                                 realw* Veloc,
                                                 realw* MxAccel,
-                                                int NGLOB_AB,
+                                                int NGLOB_FLT,
                                                 realw* invM1,   // fault quantities
                                                 realw* invM2,
                                                 realw* B,
                                                 realw* Z,
                                                 realw* R,
                                                 realw* T0,
-                                                realw* T,
-                                                realw* Coh,
+                                                realw* T,       // for output
+                                                realw* Coh,     // cohesion
                                                 realw* a,
                                                 realw* b,
                                                 realw* L,
@@ -549,17 +548,22 @@ __global__  void compute_dynamic_fault_cuda_rsf(realw* Displ,   // mesh quantiti
                                                 realw* theta,
                                                 realw* Vw,
                                                 realw* fw,
+                                                realw* Fload,
+                                                int StateLaw,
                                                 realw* V_slip,
                                                 realw* D_slip,
                                                 int* ibulk1,
                                                 int* ibulk2,
                                                 realw dt,
-                                                int myrank) ;
+                                                int it) ;
 
 __global__ void store_dataT(realw* store_dataT,
                             realw* V_slip,
                             realw* D_slip,
                             realw* T,
+                            int RATE_AND_STATE,
+                            int StateLaw,
+                            realw* theta,
                             int* iglob,
                             int istep,
                             int n_record,

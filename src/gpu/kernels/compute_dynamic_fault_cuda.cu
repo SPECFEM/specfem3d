@@ -35,40 +35,70 @@
 
 __device__ __forceinline__ double csevl(const double x,const double* cs,int n) {
 
+/*
+! April 1977 version.  W. Fullerton, C3, Los Alamos Scientific Lab.
+! Evaluate the n-term Chebyshev series cs at x.  Adapted from
+! R. Broucke, Algorithm 446, C.A.C.M., 16, 254 (1973).  Also see Fox
+! and Parker, Chebyshev polynomials in numerical analysis, Oxford Press, p.56.
+!
+! input arguments --
+! x      value at which the series is to be evaluated.
+! cs     array of n terms of a Chebyshev series.
+!        in evaluating cs, only half the first coefficient is summed.
+! n      number of terms in array cs.
+ */
+
   int i, ni ;
   double  b0, b1, b2, twox ,result;
 
-  if (n < 1) return -1.0;
-  if (n > 1000) return -1.0;
-  if (x < -1.1e0 || x > 1.1e0) return -1.0;
+  if (n < 1)   {assert(n < 1);    return -1.0; }  // 'Math::csevl: number of terms <= 0'
+  if (n > 1000){assert(n > 1000); return -1.0; } // 'Math::csevl: number of terms > 1000'
+  if (x < -1.1 || x > 1.1){ assert(x < -1.1 || x > 1.1); return -1.0; } // 'Math::csevl: x outside (-1,+1)'
 
-  b1 = 0.E0;
-  b0 = 0.E0;
-  twox = 2.E0 * x;
+  b1 = 0.0;
+  b0 = 0.0;
+  twox = 2.0 * x;
 
   for(i=1; i<=n; i++) {
       b2 = b1;
       b1 = b0;
-      ni = n  - i + 1;
-      b0 = twox*b1 - b2 + cs[ni-1];
+      ni = n + 1 - i;
+      b0 = twox * b1 - b2 + cs[ni-1];
   }
 
-  result = 0.5E0 * (b0 - b2);
+  result = 0.5 * (b0 - b2);
   return result;
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
 __device__ __forceinline__ int  inits(const double* os,int nos,double eta) {
+
+/*
+ ! April 1977 version.  W. Fullerton, C3, Los Alamos Scientific Lab.
+ !
+ ! Initialize the orthogonal series so that inits is the number of terms
+ ! needed to ensure that the error is no larger than eta. Ordinarily, eta
+ ! will be chosen to be one-tenth machine precision.
+ !
+ !             input arguments --
+ ! os     array of nos coefficients in an orthogonal series.
+ ! nos    number of coefficients in os.
+ ! eta    requested accuracy of series.
+*/
+
   int i, ii;
-  double   err;
+  double err;
 
-  if (nos < 1) return -1.0;
+  if (nos < 1){
+    assert(nos < 1);  // stop 'Math::inits: number of terms <= 0'
+    return -1.0;
+  }
 
-  err = 0.E0;
+  err = 0.0;
 
   for(ii=1; ii<=nos; ii++) {
-      i = nos  - ii + 1;
+      i = nos + 1 - ii;
       err = err + fabs(os[i-1]);
       if (err > eta) break;
   }
@@ -80,7 +110,16 @@ __device__ __forceinline__ int  inits(const double* os,int nos,double eta) {
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__device__ __forceinline__ double  asinh_slatec(realw x) {
+__device__ __forceinline__ double  asinh_slatec(double x) {
+
+  /*
+  ! asinh() function taken from Netlib
+  ! April 1977 edition.  W. Fullerton, C3, Los Alamos Scientific Lab.
+
+  ! taken from http://www.tddft.org/trac/octopus/browser/trunk/src/asinh.F90?rev=2
+
+  ! and modified by Dimitri Komatitsch in December 2012 for portability
+   */
 
   const double asnhcs[39]= {
       -.12820039911738186343372127359268E+0,  -.58811761189951767565211757138362E-1,
@@ -115,72 +154,91 @@ __device__ __forceinline__ double  asinh_slatec(realw x) {
 //
 
   int nterms = 0;
-  double  xmax = 0.E0, sqeps = 0.E0;
-  double asinh_slatec=0.0E0;
+  double xmax = 0.0, sqeps = 0.0;
+  double asinh_slatec = 0.0;
 
   // taken from http://people.sc.fsu.edu/~jburkardt/f_src/machine/machine.f90
   double d1mach_3 = 1.110223024625157E-016;
 
-  double  y;
+  double y;
 
   if (nterms == 0){
-      nterms = inits(asnhcs, 39, 0.1E0*d1mach_3);
-  //nterms = 39;
+      nterms = inits(asnhcs, 39, 0.1*d1mach_3);
       sqeps = sqrt(d1mach_3);
-      xmax = 1.E0/sqeps;
+      xmax = 1.0/sqeps;
   }
   y = fabs(x);
 
-  if (y <= 1.E0){
+  if (y <= 1.0){
       asinh_slatec = x;
-      if (y > sqeps) asinh_slatec = x*(1.E0 )+csevl(2.E0*x*x-1.E0, asnhcs, nterms);
+      if (y > sqeps) asinh_slatec = x + csevl(2.0 * x*x - 1.0, asnhcs, nterms);
       return asinh_slatec;
   }
-  if (y < xmax ) asinh_slatec = log(y + sqrt(y*y + 1.E0F));
+  if (y < xmax ) asinh_slatec = log(y + sqrt(y*y + 1.0));
   if (y >= xmax) asinh_slatec = aln2 + log(y);
-  asinh_slatec = x>0.0 ? fabs(asinh_slatec):-fabs(asinh_slatec);
+
+  asinh_slatec = x > 0.0 ? fabs(asinh_slatec) : -fabs(asinh_slatec);
 
   return asinh_slatec;
-  /*
-   April 1977 version.  W. Fullerton, C3, Los Alamos Scientific Lab.
-   Evaluate the n-term Chebyshev series cs at x.  Adapted from
-   R. Broucke, Algorithm 446, C.A.C.M., 16, 254 (1973).  Also see Fox
-   and Parker, Chebyshev polynomials in numerical analysis, Oxford Press, p.56.
-
-               input arguments --
-   x      value at which the series is to be evaluated.
-   cs     array of n terms of a Chebyshev series.
-          in evaluating cs, only half the first coefficient is summed.
-   n      number of terms in array cs.*/
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
 __device__ __forceinline__ void funcd(double x,double *fn,double *df,
-                                      realw tStick,realw Seff,
-                                      realw Z,realw f0,realw V0,
-                                      realw a,realw b,
-                                      realw L,realw theta,
-                                      realw cohesion,
+                                      realw Tstick_in,
+                                      realw Seff_in,
+                                      realw Z_in,
+                                      realw f0_in,
+                                      realw V0_in,
+                                      realw a_in,
+                                      realw b_in,
+                                      realw L_in,
+                                      realw theta_in,
+                                      realw cohesion_in,
                                       int statelaw) {
-  /*real(kind=CUSTOM_REAL) :: tStick,Seff,Z,f0,V0,a,b,L,theta
-  double precision :: arg,fn,df,x
-  integer :: statelaw*/
+
   double arg,xarg;
 
+  // converts calculations to double precision
+  // todo: using double precision calculation for now,
+  //       but might be okay to go with realw, i.e., float - to check...
+  double Tstick = (double) Tstick_in;
+  double Seff = (double) Seff_in;
+  double Z = (double) Z_in;
+  double f0 = (double) f0_in;
+  double V0 = (double) V0_in;
+  double a = (double) a_in;
+  double b = (double) b_in;
+  double L = (double) L_in;
+  double theta = (double) theta_in;
+  double cohesion = (double) cohesion_in;
+
   if (statelaw == 1){
-      arg = exp((f0+b*log(V0*theta/L))/a)/2.0/V0;
+    // ageing law
+    arg = (double) exp((f0+b*log(V0*theta/L))/a)/2.0/V0;
   }else{
-      arg = exp(theta/a)/2.0E0/V0;
+    // slip law
+    arg = (double) exp(theta/a)/2.0/V0;
   }
-  xarg = x*arg;
-  *fn = tStick - Z*x - a*Seff*asinh_slatec(xarg) - cohesion;
-  *df = -Z - a*Seff/sqrt(1.0E0 + pow((x*arg),2.0))*arg;
+  xarg = x * arg;
+
+  // traction Tau(x)
+
+  // using netlib's asinh_slatec() implementation
+  // (not sure why this explicit asinh function is used, seems to be slower...)
+  //*fn = Tstick - Z*x - a * Seff * asinh_slatec(xarg) - cohesion;
+  //
+  // using intrinsic <math.h> asinh() function
+  *fn = Tstick - Z*x - a * Seff * asinh(xarg) - cohesion;
+
+  // derivative of traction Tau'(x)
+  *df = -Z - a * Seff / sqrt(1.0 + xarg*xarg)*arg;
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-/*// April 1977 version.  W. Fullerton, C3, Los Alamos Scientific Lab.
+/*
+// April 1977 version.  W. Fullerton, C3, Los Alamos Scientific Lab.
 //
 // Initialize the orthogonal series so that inits is the number of terms
 // needed to ensure that the error is no larger than eta. Ordinarily, eta
@@ -189,87 +247,146 @@ will be chosen to be one-tenth machine precision.
 !             input arguments --
 ! os     array of nos coefficients in an orthogonal series.
 ! nos    number of coefficients in os.
-! eta    requested accuracy of series.*/
+! eta    requested accuracy of series.
+ */
 
-__device__ __forceinline__ double rtsafe(realw x1,realw x2,
-                                         realw xacc,
-                                         realw tStick,realw Seff,
+__device__ __forceinline__ double rtsafe(realw x1_in,
+                                         realw x2_in,
+                                         realw xacc_in,
+                                         realw Tstick,
+                                         realw Seff,
                                          realw Z, realw f0,realw V0,
                                          realw a,realw b,
-                                         realw L,realw theta,
+                                         realw L,
+                                         realw theta,
                                          realw cohesion,
                                          int statelaw) {
 
-  const int  MAXIT=200;
+  const int  MAXIT=200; // maximum number of iterations
   int j;
-  double   df,dx,dxold,f,fh,fl,temp,xh,xl,rtsafe;
+  double df,dx,dxold,f,fh,fl,temp,xh,xl,rtsafe;
 
-  funcd((double)x1,&fl,&df,tStick,Seff,Z,f0,V0,a,b,L,theta,cohesion,statelaw);
-  funcd((double)x2,&fh,&df,tStick,Seff,Z,f0,V0,a,b,L,theta,cohesion,statelaw);
+  double x1 = (double) x1_in;
+  double x2 = (double) x2_in;
+  double xacc = (double) xacc_in;
 
-  if ((fl>0. && fh>0.) || (fl<0. && fh<0.) ) return -1.0;
+  funcd(x1,&fl,&df,Tstick,Seff,Z,f0,V0,a,b,L,theta,cohesion,statelaw);
+  funcd(x2,&fh,&df,Tstick,Seff,Z,f0,V0,a,b,L,theta,cohesion,statelaw);
 
-  if (fl==0.){
-      rtsafe=x1;
-      return rtsafe;
-  } else if (fh==0.){
-      rtsafe=x2;
-      return rtsafe;
-  } else if (fl<0.){
-      xl=x1;
-      xh=x2;
-  } else{
-      xh=x1;
-      xl=x2;
+  if ((fl > 0.0 && fh > 0.0) || (fl < 0.0 && fh < 0.0) ) {
+    // case should not occur
+    assert((fl > 0.0 && fh > 0.0));
+    assert((fl < 0.0 && fh < 0.0));
+    rtsafe = -1.0;
+    assert(rtsafe == -1.0);
+    return rtsafe;
   }
 
-  rtsafe = 0.5E0*(x1+x2);
-  dxold = fabsf(x2-x1);
+  if (fl == 0.0){               // todo: comparison of float against zero, should add numerical tolerance
+      rtsafe = x1;              // todo check: return x2 or x1?
+      return rtsafe;
+  } else if (fh == 0.0){        // todo: comparison of float against zero, should add numerical tolerance
+      rtsafe = x2;
+      return rtsafe;
+  } else if (fl < 0.0){
+      xl = x1;
+      xh = x2;
+  } else{
+      xh = x1;
+      xl = x2;
+  }
+
+  rtsafe = 0.5 * (x1+x2);
+  dxold = fabs(x2-x1);
   dx = dxold;
 
-  funcd(rtsafe,&f,&df,tStick,Seff,Z,f0,V0,a,b,L,theta,cohesion,statelaw);
+  funcd(rtsafe,&f,&df,Tstick,Seff,Z,f0,V0,a,b,L,theta,cohesion,statelaw);
 
-  for(j=1; j<MAXIT; j++) {
-    if (((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f)>0 || fabsf(2.0F*f)>fabsf(dxold*df)){
-      dxold=dx;
-      dx=0.5E0*(xh-xl);
-      rtsafe=xl+dx;
-      if (xl==rtsafe) return rtsafe;
+  for(j=1; j<=MAXIT; j++) {
+    if (((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f) > 0.0 || fabs(2.0 * f) > fabs(dxold*df)){
+      dxold = dx;
+      dx = 0.5 * (xh-xl);
+      rtsafe = xl + dx;
+      if (xl == rtsafe) return rtsafe;    // todo: comparison of float against float, should add numerical tolerance
     }else{
-      dxold=dx;
-      dx=f/df;
-      temp=rtsafe;
-      rtsafe=rtsafe-dx;
-      if (temp==rtsafe) return rtsafe;
+      dxold = dx;
+      dx = f/df;
+      temp = rtsafe;
+      rtsafe = rtsafe - dx;
+      if (temp == rtsafe) return rtsafe;  // todo: comparison of float against float, should add numerical tolerance
     }
-    if (fabsf(dx)<xacc) return rtsafe;
-    funcd(rtsafe,&f,&df,tStick,Seff,Z,f0,V0,a,b,L,theta,cohesion,statelaw);
-    if (f<0.){
-      xl=rtsafe;
+
+    // check if solution within accuracy xacc
+    if (fabs(dx) < xacc) return rtsafe;
+
+    funcd(rtsafe,&f,&df,Tstick,Seff,Z,f0,V0,a,b,L,theta,cohesion,statelaw);
+
+    if (f < 0.0){
+      xl = rtsafe;
     } else {
-      xh=rtsafe;
+      xh = rtsafe;
     }
   }
-  return -2.0;
+
+  // case should not occur, might need higher number of iterations?
+  rtsafe = -2.0;
+  assert(rtsafe == -2.0);
+  return rtsafe;
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__device__ __forceinline__ realw update_state_rsf(realw Ll,
-                                                  realw theta,
-                                                  realw Vslip,
-                                                  realw dt){
-  double vDtL;
+__device__ __forceinline__ realw update_state_rsf(realw L_in,
+                                                  realw theta_in,
+                                                  realw Vslip_in,
+                                                  realw dt_in,
+                                                  realw f0_in,
+                                                  realw fw_in,
+                                                  realw a_in,
+                                                  realw b_in,
+                                                  realw V0_in,
+                                                  realw Vw_in,
+                                                  int StateLaw){
 
-  realw theta_r;
-  vDtL = Vslip*dt/Ll;
+  realw theta_ret;
 
-  if(vDtL > 1.0e-5){
-    theta_r = theta*exp(-vDtL) + Ll/Vslip*(1.0 - exp(-vDtL));
+  // converts calculations to double precision
+  // todo: using double precision calculation for now,
+  //       but might be okay to go with realw, i.e., float - to check...
+  double L = (double) L_in;
+  double theta = (double) theta_in;
+  double Vslip = (double) Vslip_in;
+  double dt = (double) dt_in;
+  double a = (double) a_in;
+  double b = (double) b_in;
+  double f0 = (double) f0_in;
+  double fw = (double) fw_in;
+  double V0 = (double) V0_in;
+  double Vw = (double) Vw_in;
+
+  double vDtL = Vslip * dt / L;
+
+  // state update
+  if (StateLaw == 1){
+    // ageing law
+    if (vDtL > 1.0e-5){
+      theta_ret = theta * exp(-vDtL) + L / Vslip * (1.0 - exp(-vDtL));
+    }else{
+      theta_ret = theta * exp(-vDtL) + dt * (1.0 - 0.5 * vDtL);
+    }
   }else{
-    theta_r = theta*exp(-vDtL) + dt*(1.0 - 0.5*vDtL);
+    // slip law
+    if (Vslip != 0.0){ // todo: comparison of float against zero, should add numerical tolerance
+      double fLV = f0 - (b - a) * log(Vslip/V0);
+      double x = 1.0 + pow(Vslip/Vw,8.0);
+      double f_ss = fw + (fLV - fw) / pow(x,0.125);
+      double xi_ss = a * log( 2.0 * V0/Vslip * sinh(f_ss/a) );
+      theta_ret = xi_ss + (theta - xi_ss) * exp(-vDtL);
+    }else{
+      theta_ret = theta;
+    }
   }
-  return theta_r;
+  return theta_ret;
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -279,9 +396,12 @@ __device__ __forceinline__ realw update_state_swf(realw  Dx,
                                                   realw* D_slip,
                                                   int index,
                                                   realw theta_old) {
-  realw theta_r;
-  theta_r = theta_old + sqrt((Dx-D_slip[index*3])*(Dx-D_slip[index*3])+(Dy-D_slip[index*3+1])*(Dy-D_slip[index*3+1]));
-  return theta_r;
+  realw theta_ret;
+
+  // fault state variable theta (magnitude of accumulated slip on fault)
+  theta_ret = theta_old + sqrt((Dx-D_slip[index*3])*(Dx-D_slip[index*3])+(Dy-D_slip[index*3+1])*(Dy-D_slip[index*3+1]));
+
+  return theta_ret;
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -291,8 +411,11 @@ __device__ __forceinline__ realw swf_mu(realw Dcl,
                                         realw mudl,
                                         realw thetal) {
   realw mul,tmp;
-  tmp = MIN(thetal/Dcl,1.00);
+
+  // slip weakening friction law
+  tmp = MIN(thetal/Dcl,1.0f);
   mul = musl - (musl - mudl)*tmp;
+
   return mul;
 }
 
@@ -310,13 +433,13 @@ __device__ __forceinline__ void rotate(realw* R,
   vz = *vrz;
 
   if(isForward){
-// Percy, tangential direction Vt, equation 7 of Pablo's notes in agreement with SPECFEM3D
-// forward rotation
-    *vrx = vx*R[0+9*id]+vy*R[3+9*id]+vz*R[6+9*id];  //vx
-    *vry = vx*R[1+9*id]+vy*R[4+9*id]+vz*R[7+9*id];  //vy
-    *vrz = vx*R[2+9*id]+vy*R[5+9*id]+vz*R[8+9*id];  //vz
+    // Percy, tangential direction Vt, equation 7 of Pablo's notes in agreement with SPECFEM3D
+    // forward rotation
+    *vrx = vx*R[0+9*id]+vy*R[3+9*id]+vz*R[6+9*id];  //vs strike
+    *vry = vx*R[1+9*id]+vy*R[4+9*id]+vz*R[7+9*id];  //vd dip
+    *vrz = vx*R[2+9*id]+vy*R[5+9*id]+vz*R[8+9*id];  //vn normal direction
   }else {
-  // backward rotation
+    // backward rotation
     *vrx = vx*R[0+9*id]+vy*R[1+9*id]+vz*R[2+9*id];  //vx
     *vry = vx*R[3+9*id]+vy*R[4+9*id]+vz*R[5+9*id];  //vy
     *vrz = vx*R[6+9*id]+vy*R[7+9*id]+vz*R[8+9*id];  //vz
@@ -326,18 +449,23 @@ __device__ __forceinline__ void rotate(realw* R,
 /* ----------------------------------------------------------------------------------------------- */
 
 __device__ __forceinline__ void get_jump(const realw* Vector,realw* Dx, realw* Dy, realw* Dz,int index1,int index2) {
-  *Dx = Vector[3*index2] - Vector[3*index1];
+
+  *Dx = Vector[3*index2]     - Vector[3*index1];
   *Dy = Vector[3*index2 + 1] - Vector[3*index1 + 1];
   *Dz = Vector[3*index2 + 2] - Vector[3*index1 + 2];
+
   return;
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__device__ __forceinline__ void get_weighted_jump(const realw* Vector,const realw Weigh1,const realw Weigh2, realw* Dx, realw* Dy, realw* Dz, int index1, int index2){
-  *Dx = Vector[3*index2] * Weigh2 - Vector[3*index1] * Weigh1;
-  *Dy = Vector[3*index2 + 1] * Weigh2 - Vector[3*index1 + 1] * Weigh1;
-  *Dz = Vector[3*index2 + 2] * Weigh2 - Vector[3*index1 + 2] * Weigh1;
+__device__ __forceinline__ void get_weighted_jump(const realw* Vector,const realw Weigh1,const realw Weigh2,
+                                                  realw* dAx, realw* dAy, realw* dAz, int index1, int index2){
+
+  *dAx = Vector[3*index2]     * Weigh2 - Vector[3*index1]     * Weigh1;
+  *dAy = Vector[3*index2 + 1] * Weigh2 - Vector[3*index1 + 1] * Weigh1;
+  *dAz = Vector[3*index2 + 2] * Weigh2 - Vector[3*index1 + 2] * Weigh1;
+
   return;
 }
 
@@ -346,7 +474,7 @@ __device__ __forceinline__ void get_weighted_jump(const realw* Vector,const real
 __global__  void compute_dynamic_fault_cuda_swf(realw* Displ,   // this is a mesh vector
                                                 realw* Veloc,
                                                 realw* MxAccel,
-                                                int NGLOB_AB,
+                                                int NGLOB_FLT,
                                                 realw* invM1,   // this is a fault vector
                                                 realw* invM2,
                                                 realw* B,
@@ -364,45 +492,47 @@ __global__  void compute_dynamic_fault_cuda_swf(realw* Displ,   // this is a mes
                                                 realw* D_slip,
                                                 int* ibulk1,
                                                 int* ibulk2,
-                                                realw dt,
-                                                int myrank) {
+                                                realw dt) {
 
   int iglob1,iglob2;
   realw Dx,Dy,Dz,Vx,Vy,Vz,Ax,Ay,Az;
-  realw Tx,Ty,Tz,T0xl,T0yl,T0zl;
+  realw Tx,Ty,Tz,T0x,T0y,T0z;
   realw Tstick;
   realw Zl,mudl,musl,Dcl,thetal,Cohl;
   //realw RTl;
   realw strength;
   realw mul;
-  realw thetaold;
+  realw theta_old;
   realw Tnew;
 
   // calculate thread id
   int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
 
   // check if anything to do
-  if (id >= NGLOB_AB) return;
+  if (id >= NGLOB_FLT) return;
 
+  // gets local values for iglob/id point on fault
   Zl = Z[id];
 
+  Dcl = Dc[id];
   thetal = theta[id];
   mudl = mud[id];
   musl = mus[id];
-  Dcl = Dc[id];
   Cohl = Coh[id];
   //RTl = RT[id];
 
-  T0xl = T0[id*3];
-  T0yl = T0[id*3+1];
-  T0zl = T0[id*3+2];
+  // initial stress
+  T0x = T0[id*3];
+  T0y = T0[id*3+1];
+  T0z = T0[id*3+2];
 
   iglob1 = ibulk1[id]-1;
   iglob2 = ibulk2[id]-1;
 
+  // get predicted values
   get_jump(Displ, &Dx, &Dy, &Dz, iglob1, iglob2);
   get_jump(Veloc, &Vx, &Vy, &Vz, iglob1, iglob2);
-  get_weighted_jump(MxAccel, invM1[id], invM2[id], &Ax, &Ay, &Az,iglob1,iglob2);
+  get_weighted_jump(MxAccel, invM1[id], invM2[id], &Ax, &Ay, &Az, iglob1, iglob2);
 
   // rotate to fault frame
   rotate(R,&Dx,&Dy,&Dz,id,1);
@@ -410,33 +540,36 @@ __global__  void compute_dynamic_fault_cuda_swf(realw* Displ,   // this is a mes
   rotate(R,&Ax,&Ay,&Az,id,1);
 
   // T_stick
-  Tx = Zl*(Vx + 0.50*dt*Ax);
-  Ty = Zl*(Vy + 0.50*dt*Ay);
-  Tz = Zl*(Vz + 0.50*dt*Az);
+  Tx = Zl*(Vx + 0.5f * dt * Ax);
+  Ty = Zl*(Vy + 0.5f * dt * Ay);
+  Tz = Zl*(Vz + 0.5f * dt * Az);
 
-  Tx = Tx + T0xl;
-  Ty = Ty + T0yl;
-  Tz = Tz + T0zl;
+  // add initial stress
+  Tx = Tx + T0x;
+  Ty = Ty + T0y;
+  Tz = Tz + T0z;
+
+  // Opening implies free stress
+  //if (bc%allow_opening) T(3,:) = min(T(3,:),0.0_CUSTOM_REAL)
 
   Tstick = sqrt(Tx * Tx + Ty * Ty);
 
   // slip weakening friction
-  thetaold = thetal;
-
-  thetal = update_state_swf(Dx,Dy,D_slip,id,thetaold);
-
-  theta[id] = thetal;
+  theta_old = thetal;
+  thetal = update_state_swf(Dx,Dy,D_slip,id,theta_old);
 
   mul = swf_mu(Dcl,musl,mudl,thetal);
 
+  theta[id] = thetal;
+
   // update strength
-  strength = -mul * (MIN(Tz,0.00)) + Cohl;
+  strength = -mul * (MIN(Tz,0.0f)) + Cohl;
 
   // solve for shear stress
   Tnew = MIN(Tstick,strength);
 
   // to avoid division by zero
-  Tstick = MAX(Tstick,1.0E0);
+  Tstick = MAX(Tstick,1.0f);
 
   Tx = Tnew * Tx/Tstick;
   Ty = Tnew * Ty/Tstick;
@@ -446,23 +579,24 @@ __global__  void compute_dynamic_fault_cuda_swf(realw* Displ,   // this is a mes
   T[id*3+1] = Ty;
   T[id*3+2] = Tz;
 
-  Tx = Tx - T0xl;
-  Ty = Ty - T0yl;
-  Tz = Tz - T0zl;
+  // subtract initial stress
+  Tx = Tx - T0x;
+  Ty = Ty - T0y;
+  Tz = Tz - T0z;
 
   // update slip acceleration
-  Ax = Ax - Tx/(Zl*0.5E0*dt);
-  Ay = Ay - Ty/(Zl*0.5E0*dt);
-  Az = Az - Tz/(Zl*0.5E0*dt);
+  Ax = Ax - Tx/(Zl * 0.5f * dt);
+  Ay = Ay - Ty/(Zl * 0.5f * dt);
+  Az = Az - Tz/(Zl * 0.5f * dt);
 
   // Update slip and slip rate, in fault frame
   D_slip[id*3]   = Dx;
   D_slip[id*3+1] = Dy;
-  D_slip[id*3+2] = Dz;
+  D_slip[id*3+2] = Dz; // unused, done for completeness
 
-  V_slip[id*3]   = Vx + 0.5E0*dt*Ax;
-  V_slip[id*3+1] = Vy + 0.5E0*dt*Ay;
-  V_slip[id*3+2] = Vz + 0.5E0*dt*Az;
+  V_slip[id*3]   = Vx + 0.5f * dt * Ax;
+  V_slip[id*3+1] = Vy + 0.5f * dt * Ay;
+  V_slip[id*3+2] = Vz + 0.5f * dt * Az; // unused, done for completeness
 
   // Rotate tractions back to (x,y,z) frame
   rotate(R,&Tx,&Ty,&Tz,id,0);
@@ -482,15 +616,15 @@ __global__  void compute_dynamic_fault_cuda_swf(realw* Displ,   // this is a mes
 __global__  void compute_dynamic_fault_cuda_rsf(realw* Displ,   // mesh quantities
                                                 realw* Veloc,
                                                 realw* MxAccel,
-                                                int NGLOB_AB,
+                                                int NGLOB_FLT,
                                                 realw* invM1,   // fault quantities
                                                 realw* invM2,
                                                 realw* B,
                                                 realw* Z,
                                                 realw* R,
                                                 realw* T0,
-                                                realw* T,
-                                                realw* Coh,
+                                                realw* T,       // for output
+                                                realw* Coh,     // cohesion
                                                 realw* a,
                                                 realw* b,
                                                 realw* L,
@@ -500,58 +634,65 @@ __global__  void compute_dynamic_fault_cuda_rsf(realw* Displ,   // mesh quantiti
                                                 realw* theta,
                                                 realw* Vw,
                                                 realw* fw,
+                                                realw* Fload,
+                                                int StateLaw,
                                                 realw* V_slip,
                                                 realw* D_slip,
                                                 int* ibulk1,
                                                 int* ibulk2,
                                                 realw dt,
-                                                int myrank) {
+                                                int it) {
 
   int iglob1,iglob2;
   realw Dx,Dy,Dz,Vx,Vy,Vz,Ax,Ay,Az;
-  realw Tx,Ty,Tz,T0xl,T0yl,T0zl;
+  realw Tx,Ty,Tz,T0x,T0y,T0z;
   realw Tstick;
-  realw Zl,al,bl,Ll,f0l,V0l,thetal;
-  //realw V_initl,Vwl,fwl;
-  realw thetaold;
+  realw Zl,al,bl,Ll,f0l,fwl,V0l,Vwl,thetal;
+  //realw V_initl;
+  realw theta_old;
   realw Vf_oldl,Vf_newl,Vf_tmp;
-  realw Ztmp;
   realw Tnew;
   realw Cohl;
   realw netTstick;
+  realw TxExt;
 
   // calculate thread id
   int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
 
   // check if anything to do
-  if(id >= NGLOB_AB) return;
+  if(id >= NGLOB_FLT) return;
+
+  // gets local values for iglob/id point on fault
+  Zl = Z[id];
+
+  al = a[id];
+  bl = b[id];
+  Ll = L[id];
+  thetal = theta[id];
+
+  f0l = f0[id];
+  fwl = fw[id];
+  V0l = V0[id];
+  Vwl = Vw[id];
+  //V_initl=V_init[id];
+
+  // note: CPU version doesn't implement cohesion, this is a modification for GPU-only version
+  Cohl = Coh[id];
 
   Vf_oldl = sqrt(V_slip[3*id]*V_slip[3*id] + V_slip[3*id+1]*V_slip[3*id+1]);
 
-  Zl = Z[id];
-  al = a[id];
-  bl = b[id];
-  thetal = theta[id];
-  f0l = f0[id];
-  Ll = L[id];
-  //Vwl = Vw[id];
-  //fwl = fw[id];
-  V0l = V0[id];
-  //V_initl=V_init[id];
-  Cohl = Coh[id];
-
-  T0xl = T0[id*3];
-  T0yl = T0[id*3+1];
-  T0zl = T0[id*3+2];
+  // initial stress
+  T0x = T0[id*3];
+  T0y = T0[id*3+1];
+  T0z = T0[id*3+2];
 
   iglob1 = ibulk1[id]-1;
   iglob2 = ibulk2[id]-1;
 
+  // get predicted values
   get_jump(Displ, &Dx, &Dy, &Dz, iglob1, iglob2);
   get_jump(Veloc, &Vx, &Vy, &Vz, iglob1, iglob2);
-  get_weighted_jump(MxAccel, invM1[id], invM2[id], &Ax, &Ay, &Az,iglob1,iglob2);
-
-  Ztmp = Z[id];
+  get_weighted_jump(MxAccel, invM1[id], invM2[id], &Ax, &Ay, &Az, iglob1, iglob2);
 
   // rotate to fault frame
   rotate(R,&Dx,&Dy,&Dz,id,1);
@@ -559,48 +700,88 @@ __global__  void compute_dynamic_fault_cuda_rsf(realw* Displ,   // mesh quantiti
   rotate(R,&Ax,&Ay,&Az,id,1);
 
   // T_stick
-  Tx = Ztmp*(Vx + 0.50*dt*Ax);
-  Ty = Ztmp*(Vy + 0.50*dt*Ay);
-  Tz = Ztmp*(Vz + 0.50*dt*Az);
+  Tx = Zl*(Vx + 0.5f * dt * Ax);
+  Ty = Zl*(Vy + 0.5f * dt * Ay);
+  Tz = Zl*(Vz + 0.5f * dt * Az);
 
-  Tx = Tx + T0xl;
-  Ty = Ty + T0yl;
-  Tz = Tz + T0zl;
+  // add initial stress
+  Tx = Tx + T0x;
+  Ty = Ty + T0y;
+  Tz = Tz + T0z;
+
+  // Opening implies free stress
+  //if (bc%allow_opening) T(3,:) = min(T(3,:),0.0_CUSTOM_REAL)
+
+  // smooth loading within nucleation patch
+  //WARNING : ad hoc for SCEC benchmark TPV10x
+  {
+    realw TLoad = 1.0f;
+    realw DTau0 = 1.0f;
+    realw GLoad = 1.0f;
+    realw timeval = it * dt; // time will never be zero. it starts from 1
+    if (timeval <= TLoad){
+      GLoad = exp( (timeval-TLoad)*(timeval-TLoad) / (timeval*(timeval - 2.0f * TLoad)) );
+    }
+    realw Floadl = Fload[id];
+    TxExt = DTau0 * Floadl * GLoad;
+    Tx = Tx + TxExt;
+  }
 
   Tstick = sqrt(Tx * Tx + Ty * Ty);
 
   // add cohesion into simulation
-  netTstick = Tstick - Cohl;
-  // prevent Tstick from being negative
-  netTstick = MAX(netTstick, 0.0E0);
+  if (1 == 0){
+    // GPU version modification
+    // adds cohesion
+    netTstick = Tstick - Cohl;
+    // prevent Tstick from being negative
+    netTstick = MAX(netTstick, 0.0E0);
+  }else{
+    // corresponds to CPU-version
+    netTstick = Tstick;
+  }
 
   // rate and state friction
-  thetaold = thetal;
 
+  // input for root finding
+  realw x1l = 0.0f;             // lower bound
+  realw x2l = Vf_oldl + 5.0f;   // upper bound for finding root
+  realw xaccl = 1.0E-5;         // numerical accuracy
+  realw loc_coh = 0.0f;         // no cohesion case
+
+  // the solver below can be refactored into a loop with two passes
   // first pass
-  thetal = update_state_rsf(Ll ,thetaold , Vf_oldl, dt );
+  theta_old = thetal;
+  thetal = update_state_rsf(Ll ,theta_old , Vf_oldl, dt, f0l, fwl, al, bl, V0l, Vwl, StateLaw);
 
-  Vf_newl = (realw)rtsafe(0.0E0, Vf_oldl+5.0E0, 1.0E-5, netTstick, -Tz, Zl, f0l, V0l, al, bl, Ll, thetal, 0.0, 1);
+  Vf_newl = (realw) rtsafe(x1l, x2l, xaccl, netTstick, -Tz, Zl, f0l, V0l, al, bl, Ll, thetal, loc_coh, StateLaw);
 
   // second pass
-  Vf_tmp = 0.5E0*(Vf_oldl + Vf_newl);
+  Vf_tmp = 0.5f * (Vf_oldl + Vf_newl);
+  thetal = update_state_rsf(Ll ,theta_old , Vf_tmp, dt, f0l, fwl, al, bl, V0l, Vwl, StateLaw);
 
-  thetal = update_state_rsf(Ll ,thetaold , Vf_tmp, dt );
+  Vf_newl = (realw) rtsafe(x1l, x2l, xaccl, netTstick, -Tz, Zl, f0l, V0l, al, bl, Ll, thetal, loc_coh, StateLaw);
 
+  // save state
   theta[id] = thetal;
 
-  Vf_newl = (realw)rtsafe(0.0E0, Vf_oldl+5.0E0, 1.0E-5, netTstick, -Tz, Zl, f0l, V0l, al, bl, Ll, thetal, 0.0, 1);
-
   // Double precision to single precision conversion may cause an error of about 1e-6
-  assert(Vf_newl > -1.0E-6);
+  //printf("debug: compute_dynamic_fault_cuda_rsf: thread id %i %i Vf_newl %f\n",id,NGLOB_FLT,Vf_newl);
+  //assert(Vf_newl > -1.0E-6);
 
-  // prevent from being negative
-  Vf_newl = MAX(Vf_newl,0.0E0);
+  // updates stress
+  if (1 == 0){
+    // GPU version modification
+    // prevent from being negative
+    Vf_newl = MAX(Vf_newl,0.0f);
+    Tnew = Tstick - Zl * Vf_newl;   // todo: check if Tstick or netTstick?
+  }else{
+    // corresponds to CPU-version
+    Tnew = Tstick - Zl * Vf_newl;
+  }
 
   // to avoid division by zero
-  Tstick = MAX(Tstick,1.0E0);
-
-  Tnew = Tstick - Zl*Vf_newl;
+  Tstick = MAX(Tstick,1.0f);
 
   Tx = Tnew * Tx/Tstick;
   Ty = Tnew * Ty/Tstick;
@@ -610,23 +791,27 @@ __global__  void compute_dynamic_fault_cuda_rsf(realw* Displ,   // mesh quantiti
   T[id*3+1] = Ty;
   T[id*3+2] = Tz;
 
-  Tx = Tx - T0xl;
-  Ty = Ty - T0yl;
-  Tz = Tz - T0zl;
+  // subtract initial stress
+  Tx = Tx - T0x;
+  Ty = Ty - T0y;
+  Tz = Tz - T0z;
+
+  Tx = Tx - TxExt;
+  //JPA: this eliminates the effect of TxExt on the equations of motion. Why is it needed?
 
   // update slip acceleration
-  Ax = Ax - Tx/(Zl*0.5E0*dt);
-  Ay = Ay - Ty/(Zl*0.5E0*dt);
-  Az = Az - Tz/(Zl*0.5E0*dt);
+  Ax = Ax - Tx/(Zl * 0.5f * dt);
+  Ay = Ay - Ty/(Zl * 0.5f * dt);
+  Az = Az - Tz/(Zl * 0.5f * dt);
 
   // Update slip and slip rate, in fault frame
   D_slip[id*3]   = Dx;
   D_slip[id*3+1] = Dy;
-  D_slip[id*3+2] = Dz;
+  D_slip[id*3+2] = Dz; // unused, done for completeness
 
-  V_slip[id*3]   = Vx + 0.5E0*dt*Ax;
-  V_slip[id*3+1] = Vy + 0.5E0*dt*Ay;
-  V_slip[id*3+2] = Vz + 0.5E0*dt*Az;
+  V_slip[id*3]   = Vx + 0.5f * dt * Ax;
+  V_slip[id*3+1] = Vy + 0.5f * dt * Ay;
+  V_slip[id*3+2] = Vz + 0.5f * dt * Az; // unused, done for completeness
 
   // Rotate tractions back to (x,y,z) frame
   rotate(R,&Tx,&Ty,&Tz,id,0);
@@ -647,27 +832,59 @@ __global__ void store_dataT(realw* store_dataT,
                             realw* V_slip,
                             realw* D_slip,
                             realw* T,
+                            int RATE_AND_STATE,
+                            int StateLaw,
+                            realw* theta,
                             int* iglob,
                             int istep,
                             int n_record,
                             int nt) {
 
+  // calculate thread record
+  int irec = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
 
-  // calculate thread id
-  int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
-
-  if(id >= n_record) return;
+  if(irec >= n_record) return;
 
   int it = (istep - 1)%nt ;
-  int irec = iglob[id];
+  int id = iglob[irec] - 1; // fortran to C array indexing -> iglob[irec]-1
 
-  store_dataT[it*n_record*7 + id*7 + 0] = D_slip[3*irec + 0];
-  store_dataT[it*n_record*7 + id*7 + 1] = V_slip[3*irec + 0];
-  store_dataT[it*n_record*7 + id*7 + 2] = T[3*irec + 0];
-  store_dataT[it*n_record*7 + id*7 + 3] = -D_slip[3*irec + 1];
-  store_dataT[it*n_record*7 + id*7 + 4] = -V_slip[3*irec + 1];
-  store_dataT[it*n_record*7 + id*7 + 5] = -T[3*irec + 1];
-  store_dataT[it*n_record*7 + id*7 + 6] = T[3*irec + 2];
+  int recordlength;
+  if (RATE_AND_STATE){
+    recordlength = 8;
+  }else{
+    recordlength = 7;
+  }
+
+  store_dataT[it*n_record*recordlength + irec*recordlength + 0] = D_slip[3*id];           // horizontal right-lateral slip (m)
+  store_dataT[it*n_record*recordlength + irec*recordlength + 1] = V_slip[3*id];           // horizontal right-lateral slip rate (m/s)
+  store_dataT[it*n_record*recordlength + irec*recordlength + 2] = T[3*id] / 1.0e6;        // horizontal right-lateral shear stress (MPa)
+
+  store_dataT[it*n_record*recordlength + irec*recordlength + 3] = -D_slip[3*id + 1];      // vertical up-dip slip (m)
+  store_dataT[it*n_record*recordlength + irec*recordlength + 4] = -V_slip[3*id + 1];      // vertical up-dip slip rate (m/s)
+  store_dataT[it*n_record*recordlength + irec*recordlength + 5] = -T[3*id + 1] / 1.0e6;   // vertical up-dip shear stress (MPa)
+
+  store_dataT[it*n_record*recordlength + irec*recordlength + 6] = T[3*id + 2] / 1.0e6;    // normal stress (MPa)
+
+  // for RATE_AND_STATE, last storage is be theta or log(theta)
+  //
+  //if (bc%rsf%StateLaw == 1) then
+  //  ! ageing law
+  //  bc%dataT%dat(8,ipoin,it) = log10(theta_new(iglob))
+  //else
+  //  ! slip law
+  //  bc%dataT%dat(8,ipoin,it) = theta_new(iglob)
+  //endif
+  if (RATE_AND_STATE){
+    realw theta_new;
+    if (StateLaw == 1){
+      // ageing law
+      theta_new = log(theta[id]);
+    }else{
+      // slip law
+      theta_new = theta[id];
+    }
+    store_dataT[it*n_record*recordlength + irec*recordlength + 7] = theta_new;    // log10 of state variable (log-seconds)
+  }
 }
 
 

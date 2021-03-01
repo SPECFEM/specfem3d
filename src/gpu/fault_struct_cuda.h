@@ -43,51 +43,64 @@
 typedef struct swf_type_{
   int kind;
   int healing ;
-  realw *Dc,*mus,*mud,*theta, *T, *Coh;
+  realw *Dc, *mus, *mud;
+  realw *theta, *T, *Coh;
 } Swf_type;
 
 
 typedef struct rsf_type_{
-  int StateLaw ; // By default using aging law
-  realw *V0,*f0,*L,*V_init,*a,*b,*theta,*T,*C,*fw,*Vw;
+  int StateLaw ; // By default using ageing law ! 1=ageing law, 2=slip law
+  realw *V0, *f0, *L, *V_init, *a, *b, *fw, *Vw, *Fload;
+  realw *theta, *T, *Coh;
 } Rsf_type;
 
 
 typedef struct fault_data_{
   int NRECORD;
   int NT;
-  int* iglob; //record the global index of the station
-  realw* dataT; //data pointer to the array
+  int recordlength;
+  int* iglob;       // record the global index of the station
+  realw* dataT;     // data pointer to the array
 } Fault_data;
 
 
 typedef struct fault_ {
-  // mesh resolution
-  int NSPEC_AB;
-  int NGLOB_AB;
+  // fault mesh resolution
+  int NSPEC_FLT;
+  int NGLOB_FLT;
 
   Fault_data* output_dataT;
+
   realw *T0, *T, *B, *V, *D;
   realw *R, *invM1, *invM2, *Z ;
   int *ibulk1,*ibulk2;
 
   Swf_type swf; // slip weakening friction
   Rsf_type rsf; // rate and state friction
+
+  int allow_opening;
 } Fault ;
 
 
 typedef struct fault_solver_dynamics_ {
+  // fault array
   Fault* faults;
 
+  // rupture parameters
   realw v_healing;
   realw v_rupt;
 
+  // output parameters
   int NTOUT,NSNAP;
+
+  // number of faults
   int Nbfaults;
+
+  // rate and state friction (0 == slip weakening friction, 1 == rate and state friction)
   int RATE_AND_STATE;
 } Fault_solver_dynamics;
 
-enum Simulationtype {
+enum Fault_Simulation_Type {
   Slipweakening     = 0,
   RateandstateAging = 1,
   RateandstateStron = 2

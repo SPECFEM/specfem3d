@@ -318,20 +318,21 @@ void FC_FUNC_(initialize_fault_solver_gpu,
                                            int* num_of_faults,
                                            realw* v_healing,
                                            realw* v_rupt,
-                                           int* RATE_AND_STATE_f) {}
+                                           int* RATE_AND_STATE) {}
 
 void FC_FUNC_(initialize_fault_data_gpu,
               INITIALIZE_FAULT_DATA_GPU)(long* Fault_solver,
+                                         int* fault_index,
                                          int* iglob,
                                          int* num_of_records,
-                                         int* nt,
-                                         int* ifault) {}
+                                         int* ndat,
+                                         int* nt) {}
 
 void FC_FUNC_(transfer_fault_data_to_device,
               TRANSFER_FAULT_DATA_TO_DEVICE)(long* Fault_pointer,
                                              int* fault_index,
-                                             int* NSPEC_AB,
-                                             int* NGLOB_AB,
+                                             int* NSPEC_FLT,
+                                             int* NGLOB_FLT,
                                              realw* D,
                                              realw* T0,
                                              realw* T,
@@ -342,27 +343,29 @@ void FC_FUNC_(transfer_fault_data_to_device,
                                              realw* invM1,
                                              realw* invM2,
                                              int* ibulk1,
-                                             int* ibulk2) {}
+                                             int* ibulk2,
+                                             int* allow_opening) {}
 
 void FC_FUNC_(transfer_fault_data_to_host,
               TRANSFER_FAULT_DATA_TO_HOST)(long* Fault_pointer,
                                            int* fault_index,
-                                           int* NSPEC_AB,
-                                           int* NGLOB_AB,
+                                           int* NSPEC_FLT,
+                                           int* NGLOB_FLT,
                                            realw* D,
                                            realw* V,
                                            realw* T) {}
 
 void FC_FUNC_(transfer_datat_to_host,
               TRANSFER_DATAT_TO_HOST)(long* Fault_pointer,
+                                      int* fault_index,
                                       realw* h_dataT,
-                                      int* it,
-                                      int* ifault) {}
+                                      int* it) {}
 
 void FC_FUNC_(transfer_rsf_data_todevice,
               TRANSFER_RSF_DATA_TODEVICE)(long* Fault_pointer,
-                                          int *NGLOB_AB,
                                           int* fault_index,
+                                          int *NGLOB_FLT,
+                                          realw* Fload,
                                           realw* V0,
                                           realw* f0,
                                           realw* V_init,
@@ -373,12 +376,13 @@ void FC_FUNC_(transfer_rsf_data_todevice,
                                           realw* T,
                                           realw* C,
                                           realw* fw,
-                                          realw* Vw) {}
+                                          realw* Vw,
+                                          int* StateLaw) {}
 
 void FC_FUNC_(transfer_swf_data_todevice,
               TRANSFER_SWF_DATA_TODEVICE)(long* Fault_pointer,
-                                          int *NGLOB_AB,
                                           int *fault_index,
+                                          int *NGLOB_FLT,
                                           realw* Dc,
                                           realw* mus,
                                           realw* mud,
@@ -388,8 +392,8 @@ void FC_FUNC_(transfer_swf_data_todevice,
 
 void FC_FUNC_(transfer_rsf_data_tohost,
               TRANSFER_RSF_DATA_TOHOST)(long* Fault_pointer,
-                                        int *NGLOB_AB,
                                         int *fault_index,
+                                        int *NGLOB_FLT,
                                         realw* V0,
                                         realw* f0,
                                         realw* V_init,
@@ -404,8 +408,8 @@ void FC_FUNC_(transfer_rsf_data_tohost,
 
 void FC_FUNC_(transfer_swf_data_tohost,
               TRANSFER_SWF_DATA_TOHOST)(long* Fault_pointer,
-                                        int *NGLOB_AB,
                                         int *fault_index,
+                                        int *NGLOB_FLT,
                                         realw* Dc,
                                         realw* mus,
                                         realw* mud,
@@ -417,7 +421,6 @@ void FC_FUNC_(fault_solver_gpu,
               FAULT_SOLVER_GPU)(long* Mesh_pointer,
                                 long* Fault_pointer,
                                 realw* dt,
-                                int* myrank,
                                 int* it) {}
 
 
