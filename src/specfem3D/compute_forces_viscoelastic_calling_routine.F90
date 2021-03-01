@@ -345,7 +345,7 @@
     else
       ! on GPU
       ! GPU fault solver
-      call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank,it)
+      call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,it)
       ! output results every 500 steps
       if (mod(it,NT_RECORD_LENGTH) == 0 .and. it /= 0) call fault_output_synchronize_GPU(it)
     endif
@@ -845,7 +845,7 @@
   ! which at this point are stored in the array 'accel'
   if (FAULT_SIMULATION) then
     ! GPU fault solver
-    call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank,it)
+    call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,it)
     ! output results every 500 steps
     if (mod(it,NT_RECORD_LENGTH) == 0 .and. it /= 0) call fault_output_synchronize_GPU(it)
   endif

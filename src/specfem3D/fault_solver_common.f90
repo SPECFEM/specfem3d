@@ -90,7 +90,7 @@ module fault_solver_common
 
   type, extends (fault_type) :: bc_dynandkinflt_type
     real(kind=CUSTOM_REAL), dimension(:,:), pointer :: T0 => null()
-    real(kind=CUSTOM_REAL), dimension(:),   pointer :: MU => null(), Fload => null()
+    real(kind=CUSTOM_REAL), dimension(:),   pointer :: mu => null(), Fload => null()
     integer, dimension(:),   pointer :: npoin_perproc => null(), poin_offset => null()
     type(dataT_type)        :: dataT
     type(dataXZ_type)       :: dataXZ,dataXZ_all
@@ -148,27 +148,37 @@ contains
     endif
 
     ! array allocations
+    ! fault points (upper surface)
     allocate(bc%ibulk1(bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2159')
+    ! fault points (lower surface)
     allocate(bc%ibulk2(bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2160')
+    ! rotation matrix (rotates from x/y/z <-> strike/dip/normal)
     allocate(bc%R(NDIM,NDIM,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2161')
+    ! fault point coordinates
     allocate(bc%coord(NDIM,(bc%nglob)),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2162')
+    ! inverse of mass matrix (upper surface)
     allocate(bc%invM1(bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2163')
+    ! inverse of mass matrix (lower surface)
     allocate(bc%invM2(bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2164')
+    ! fault boundary matrix
     allocate(bc%B(bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2165')
+    ! fault impedance
     allocate(bc%Z(bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2166')
-
+    ! fault element iglob
     allocate(ibool1(NGLLSQUARE,bc%nspec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2167')
+    ! fault element normal
     allocate(normal(NDIM,NGLLSQUARE,bc%nspec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2168')
+    ! fault element jacobian
     allocate(jacobian2Dw(NGLLSQUARE,bc%nspec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2169')
 
@@ -182,8 +192,9 @@ contains
     read(IIN_BIN) bc%coord(3,:)
 
     ! sets simulation time step size
-    bc%dt = DT
+    bc%dt = real(DT,kind=CUSTOM_REAL)
 
+    ! normal vector
     allocate(nxyz(NDIM,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2170')
 
@@ -204,7 +215,8 @@ contains
 
   ! fault parallelization across multiple MPI processes
   if (PARALLEL_FAULT) then
-    tmp_vec = 0.0_CUSTOM_REAL
+    ! assembles fault boundary matrix B
+    tmp_vec(:,:) = 0.0_CUSTOM_REAL
     if (bc%nspec > 0) tmp_vec(1,bc%ibulk1(:)) = bc%B(:)
 
     ! assembles with other MPI processes
@@ -215,7 +227,8 @@ contains
 
     if (bc%nspec > 0) bc%B(:) = tmp_vec(1,bc%ibulk1(:))
 
-    tmp_vec = 0.0_CUSTOM_REAL
+    ! assembles fault normal n
+    tmp_vec(:,:) = 0.0_CUSTOM_REAL
     if (bc%nspec > 0) tmp_vec(:,bc%ibulk1(:)) = nxyz(:,:)
 
     ! assembles with other MPI processes
@@ -224,24 +237,29 @@ contains
                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                                      my_neighbors_ext_mesh)
 
-    if (bc%nspec > 0) nxyz = tmp_vec(:,bc%ibulk1)
+    if (bc%nspec > 0) nxyz(:,:) = tmp_vec(:,bc%ibulk1(:))
   endif
 
   if (bc%nspec > 0) then
+    ! normalizes fault normal vector
     call normalize_3d_vector(nxyz)
-
+    ! sets up rotation matrix R
     call compute_R(bc%R,bc%nglob,nxyz)
 
+    ! inverse mass matrix
     !SURENDRA : WARNING! Assuming rmassx=rmassy=rmassz
     ! Needed in dA_Free = -K2*d2/M2 + K1*d1/M1
     bc%invM1(:) = rmassx(bc%ibulk1(:))
     bc%invM2(:) = rmassx(bc%ibulk2(:))
 
-    ! Fault impedance, Z in :  Trac = T_Stick - Z*dV
+    ! Fault impedance
+    !   Z in :  Trac = T_Stick - Z*dV
     !   Z = 1/( B1/M1 + B2/M2 ) / (0.5*dt)
     ! T_stick = Z*Vfree traction as if the fault was stuck (no displ discontinuity)
     ! NOTE: same Bi on both sides, see note above
+
     bc%Z(:) = 1.0_CUSTOM_REAL/(0.5_CUSTOM_REAL * bc%dt * bc%B(:) *( bc%invM1(:) + bc%invM2(:) ))
+
     ! WARNING: In non-split nodes at fault edges M is assembled across the fault.
     ! hence invM1+invM2=2/(M1+M2) instead of 1/M1+1/M2
     ! In a symmetric mesh (M1=M2) Z will be twice its intended value
@@ -262,8 +280,16 @@ contains
 
  ! assume size(v) = [3,N]
   do k = 1,size(v,2)
+    ! vector length
     norm = sqrt( v(1,k)*v(1,k) + v(2,k)*v(2,k) + v(3,k)*v(3,k) )
-    v(:,k) = v(:,k) / norm
+
+    ! normalizes vector
+    ! checks norm to avoid division by zero
+    if (norm > 1.e-24) then
+      v(:,k) = v(:,k) / norm
+    else
+      v(:,k) = 0.0_CUSTOM_REAL
+    endif
   enddo
 
   end subroutine normalize_3d_vector
@@ -285,27 +311,33 @@ contains
 
   real(kind=CUSTOM_REAL), dimension(3,nglob) :: s,d
 
+  ! strike direction
   s(1,:) =  n(2,:)   ! sx = ny
   s(2,:) = -n(1,:)   ! sy =-nx
   s(3,:) = 0.0_CUSTOM_REAL
+
   ! set the along strike direction when the fault is a horizontal plane.
   where(abs(s(1,:))+abs(s(2,:)) < 1e-6)
       s(1,:) = 1.0_CUSTOM_REAL
       s(2,:) = 0.0_CUSTOM_REAL
   endwhere
+
   call normalize_3d_vector(s)
 
-  d(1,:) = -s(2,:)*n(3,:) ! dx = -sy*nz
-  d(2,:) =  s(1,:)*n(3,:) ! dy = sx*nz
+  ! dip direction
+  d(1,:) = -s(2,:)*n(3,:)                 ! dx = -sy*nz
+  d(2,:) =  s(1,:)*n(3,:)                 ! dy = sx*nz
   d(3,:) =  s(2,:)*n(1,:) - s(1,:)*n(2,:) ! dz = sy*nx-ny*sx
+
   call normalize_3d_vector(d)
+
   ! dz is always dipwards (negative), because
   ! (nx*sy-ny*sx) = -(nx^2+ny^2)/sqrt(nx^2+ny^2)
   !               = -sqrt(nx^2+ny^2) < 0
 
-  R(1,:,:) = s
-  R(2,:,:) = d
-  R(3,:,:) = n
+  R(1,:,:) = s(:,:)  ! strike
+  R(2,:,:) = d(:,:)  ! dip
+  R(3,:,:) = n(:,:)  ! normal
 
   end subroutine compute_R
 
@@ -357,22 +389,21 @@ contains
   type(bc_dynandkinflt_type), intent(in) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: v(3,bc%nglob)
   integer, intent(in) :: fb
+
   real(kind=CUSTOM_REAL) :: vr(3,bc%nglob)
 
   ! Percy, tangential direction Vt, equation 7 of Pablo's notes in agreement with SPECFEM3D
 
-  ! forward rotation
   if (fb == 1) then
-    vr(1,:) = v(1,:)*bc%R(1,1,:)+v(2,:)*bc%R(1,2,:)+v(3,:)*bc%R(1,3,:) ! vs
-    vr(2,:) = v(1,:)*bc%R(2,1,:)+v(2,:)*bc%R(2,2,:)+v(3,:)*bc%R(2,3,:) ! vd
-    vr(3,:) = v(1,:)*bc%R(3,1,:)+v(2,:)*bc%R(3,2,:)+v(3,:)*bc%R(3,3,:) ! vn
-
-    !  backward rotation
+    ! forward rotation: (v * R)_i = v_j R_ij
+    vr(1,:) = v(1,:)*bc%R(1,1,:)+v(2,:)*bc%R(1,2,:)+v(3,:)*bc%R(1,3,:) ! vs  strike
+    vr(2,:) = v(1,:)*bc%R(2,1,:)+v(2,:)*bc%R(2,2,:)+v(3,:)*bc%R(2,3,:) ! vd  dip
+    vr(3,:) = v(1,:)*bc%R(3,1,:)+v(2,:)*bc%R(3,2,:)+v(3,:)*bc%R(3,3,:) ! vn  normal direction
   else
+    ! backward rotation: (v * R^T)_i = v_j R_ji
     vr(1,:) = v(1,:)*bc%R(1,1,:)+v(2,:)*bc%R(2,1,:)+v(3,:)*bc%R(3,1,:)  !vx
     vr(2,:) = v(1,:)*bc%R(1,2,:)+v(2,:)*bc%R(2,2,:)+v(3,:)*bc%R(3,2,:)  !vy
     vr(3,:) = v(1,:)*bc%R(1,3,:)+v(2,:)*bc%R(2,3,:)+v(3,:)*bc%R(3,3,:)  !vz
-
   endif
 
   end function rotate

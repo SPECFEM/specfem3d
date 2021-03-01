@@ -61,9 +61,11 @@ module fault_solver_dynamic
   ! dynamic rupture simulation
   logical, save :: SIMULATION_TYPE_DYN = .false.
 
-  logical, save :: TPV16 = .false.   ! TPV16 for heterogeneous in slip weakening
+  ! TPV16 for heterogeneous in slip weakening
+  logical, save :: TPV16 = .false.
 
-  logical, save :: TPV10X = .false.  ! Boundary velocity strengthening layers for TPV10X benchmarks
+  ! Boundary velocity strengthening layers for TPV10X benchmarks
+  logical, save :: TPV10X = .false.
 
   ! time weakening
   logical, save :: TWF = .false.
@@ -71,10 +73,14 @@ module fault_solver_dynamic
   ! rate and state friction (otherwise slip weakening friction)
   logical, save :: RATE_AND_STATE = .false.
 
-  logical, save :: RSF_HETE = .false.  !RSF_HETE for heterogeneous in rate and state simulation
+  ! RSF_HETE for heterogeneous in rate and state simulation
+  logical, save :: RSF_HETE = .false.
 
   ! Kelvin-Voigt damping
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
+
+  ! rate and state slip law
+  integer, parameter :: RSF_SLIP_LAW_TYPE = 1 ! default 1 == SCEC TPV103/104 benchmark slip law, 2 == slip law by Kaneko (2008)
 
   ! GPU output record length
   integer, parameter :: NT_RECORD_LENGTH = 500
@@ -277,6 +283,10 @@ contains
   do ifault = 1,Nfaults
     bc = faults(ifault)
 
+    ! checks features
+    if (TWF) stop 'Fault time-weakening not implemented yet on GPU'
+    if (TPV16) stop 'Fault TPV16 friction coefficients not implemented yet on GPU'
+
     nspec = bc%nspec
     nglob = bc%nglob
 
@@ -330,6 +340,7 @@ contains
     allocate(bc%T0(3,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1366')
     bc%T0(:,:) = 0.0_CUSTOM_REAL
+
     S1 = 0.0_CUSTOM_REAL
     S2 = 0.0_CUSTOM_REAL
     S3 = 0.0_CUSTOM_REAL
@@ -338,6 +349,8 @@ contains
     n3 = 0
     read(IIN_PAR, nml=STRESS_TENSOR)
     read(IIN_PAR, nml=INIT_STRESS)
+
+    ! initial fault stress
     bc%T0(1,:) = S1
     bc%T0(2,:) = S2
     bc%T0(3,:) = S3
@@ -351,7 +364,8 @@ contains
     call init_2d_distribution(bc%T0(2,:),bc%coord,IIN_PAR,n2)
     call init_2d_distribution(bc%T0(3,:),bc%coord,IIN_PAR,n3)
 
-    call init_fault_traction(bc,Sigma) !added the fault traction caused by a regional stress field
+    ! adds the fault traction caused by a regional stress field
+    call init_fault_traction(bc,Sigma)
 
     ! sets initial stress
     bc%T(:,:) = bc%T0(:,:)
@@ -362,9 +376,9 @@ contains
     !  enddo
 
     ! Set friction parameters and initialize friction variables
-    allocate(bc%MU(bc%nglob),stat=ier)
+    allocate(bc%mu(bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1367')
-    bc%MU(:) = 0.0_CUSTOM_REAL
+    bc%mu(:) = 0.0_CUSTOM_REAL
 
     if (RATE_AND_STATE) then
       ! rate and state friction
@@ -378,8 +392,9 @@ contains
       allocate(bc%swf,stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1369')
 
-      call swf_init(bc%swf,bc%MU,bc%coord,IIN_PAR)
+      call swf_init(bc%swf,bc%mu,bc%coord,IIN_PAR)
 
+      ! TPV16 benchmark
       if (TPV16) call TPV16_init() !WARNING: ad hoc, initializes T0 and swf
 
       ! time weakening friction
@@ -456,6 +471,12 @@ contains
     integer :: i
 
     open(unit=IIN_NUC,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'input_file.txt',status='old',iostat=ier)
+    if (ier /= 0) then
+      print *,'Error opening file ',IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'input_file.txt'
+      print *,'Please check setup for TPV16 example...'
+      stop 'Error opening file input_file.txt for TPV16'
+    endif
+
     read(IIN_NUC,*) relz_num,sub_relz_num
     read(IIN_NUC,*) num_cell_str,num_cell_dip,siz_str,siz_dip
     read(IIN_NUC,*) hypo_cell_str,hypo_cell_dip,hypo_loc_str,hypo_loc_dip,rad_T_str,rad_T_dip
@@ -468,20 +489,20 @@ contains
     minX = minval(bc%coord(1,:))
 
     do i = 1,bc%nglob
-
-     ! WARNING: nearest neighbor interpolation
+      ! WARNING: nearest neighbor interpolation
+      ! loc_dip is negative of Z-coord
       ipar = minloc( (minX+loc_str(:)-bc%coord(1,i))**2 + (-loc_dip(:)-bc%coord(3,i))**2 , 1)
-     !loc_dip is negative of Z-coord
 
+      ! initial stress
       bc%T0(3,i) = -sigma0(ipar)
       bc%T0(1,i) = tau0_str(ipar)
       bc%T0(2,i) = tau0_dip(ipar)
 
-      bc%swf%mus(i) = static_fc(ipar)
-      bc%swf%mud(i) = dyn_fc(ipar)
-      bc%swf%Dc(i) = swcd(ipar)
-      bc%swf%C(i) = cohes(ipar)  ! cohesion
-      bc%swf%T(i) = tim_forcedRup(ipar)
+      bc%swf%mus(i) = static_fc(ipar)   ! static friction coefficient
+      bc%swf%mud(i) = dyn_fc(ipar)      ! dynamic friction coefficient
+      bc%swf%Dc(i) = swcd(ipar)         ! critical slip distance
+      bc%swf%C(i) = cohes(ipar)         ! cohesion
+      bc%swf%T(i) = tim_forcedRup(ipar) ! (forced) rupture time
 
     enddo
 
@@ -494,12 +515,14 @@ contains
     implicit none
 
     real(kind=CUSTOM_REAL),dimension(bc%nglob) :: T1tmp, T2tmp
+
     !T1tmp=sign(abs(bc%T0(3,:)*0.3*abs(bc%T0(1,:))/sqrt(bc%T0(1,:)*bc%T0(1,:)+bc%T0(2,:)*bc%T0(2,:))),bc%T0(1,:))
     !T2tmp=sign(abs(bc%T0(3,:)*0.3*abs(bc%T0(2,:))/sqrt(bc%T0(1,:)*bc%T0(1,:)+bc%T0(2,:)*bc%T0(2,:))),bc%T0(2,:))
-    T1tmp = 0e0_CUSTOM_REAL
-    T2tmp = -bc%T0(3,:)*0.3
-    bc%T0(1,:)=T1tmp
-    bc%T0(2,:)=T2tmp
+
+    T1tmp = 0.0_CUSTOM_REAL
+    T2tmp = -bc%T0(3,:) * 0.3
+    bc%T0(1,:) = T1tmp
+    bc%T0(2,:) = T2tmp
 
     end subroutine make_frictional_stress
 
@@ -517,31 +540,41 @@ contains
     integer,parameter :: IIN_STR = 122 ! could also use e.g. standard IIN from constants.h
 
     filename = prname(1:len_trim(prname))//'fault_prestr.bin'
-    write(*,*) prname,bc%nglob
+
+    ! debug output
+    !print *,'loading stress drop:', trim(filename),bc%nglob
+
     open(unit=IIN_STR,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+    if (ier /= 0) then
+      print *,'Error opening file ',trim(filename)
+      print *,'Please check setup for loading stress drop...'
+      stop 'Error opening file fault_prestr.bin'
+    endif
+
     read(IIN_STR) T1tmp
     read(IIN_STR) T2tmp
     close(IIN_STR)
-    !   write(*,*) prname,bc%nglob,'successful'
 
-    bc%T0(1,:)=bc%T0(1,:)-T1tmp
-    bc%T0(2,:)=bc%T0(2,:)-T2tmp
+    !debug
+    ! print *,'debug: loading stress drop:',trim(filename),bc%nglob,'successful'
+
+    bc%T0(1,:) = bc%T0(1,:) - T1tmp
+    bc%T0(2,:) = bc%T0(2,:) - T2tmp
 
     end subroutine load_stress_drop
 
 !! unused
-! added by kangchen, this is specifically made for the Balochistan simulation
 !   subroutine load_stress_tpv35
-
+!
 !   use specfem_par, only: prname
-
+!
 !   implicit none
-
+!
 !   real(kind=CUSTOM_REAL),dimension(bc%nglob) :: stresstmp, mustmp
 !   character(len=70) :: filename
 !   integer :: ier
 !   integer,parameter :: IIN_STR = 122 ! could also use e.g. standard IIN from constants.h
-
+!
 !   filename = prname(1:len_trim(prname))//'tpv35_input.bin'
 !   write(*,*) prname,bc%nglob
 !   open(unit=IIN_STR,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
@@ -549,11 +582,11 @@ contains
 !   read(IIN_STR) mustmp
 !   close(IIN_STR)
 !   !   write(*,*) prname,bc%nglob,'successful'
-
+!
 !   bc%T0(1,:)=stresstmp
 !   bc%T(1,:) = stresstmp
 !   bc%swf%mus = mustmp
-
+!
 !   end subroutine load_stress_tpv35
 
 
@@ -602,6 +635,7 @@ contains
     lz = 0.0_CUSTOM_REAL
     rc = 0.0_CUSTOM_REAL
 
+    ! reads in nucleation distribution (shape, position,..)
     read(iin,DIST2D)
 
     select case (shapeval)
@@ -679,10 +713,10 @@ contains
 
 !---------------------------------------------------------------------
 
-!init_fault_traction subroutine computes the traction on the fault plane
-!according to a uniform regional stress field.
 
   subroutine init_fault_traction(bc,Sigma)
+
+! computes the traction on the fault plane according to a uniform regional stress field
 
   implicit none
   type(bc_dynandkinflt_type), intent(inout) :: bc
@@ -700,8 +734,11 @@ contains
   Traction(2,:) = Sigma(4)*bc%R(3,1,:) + Sigma(2)*bc%R(3,2,:) + Sigma(5)*bc%R(3,3,:)
   Traction(3,:) = Sigma(6)*bc%R(3,1,:) + Sigma(5)*bc%R(3,2,:) + Sigma(3)*bc%R(3,3,:)
 
-  Traction = rotate(bc,Traction,1)
-  bc%T0 = bc%T0 + Traction
+  ! rotates forward to fault plane orientation
+  Traction(:,:) = rotate(bc,Traction,1)
+
+  ! updates initial fault stress
+  bc%T0(:,:) = bc%T0(:,:) + Traction(:,:)
 
   end subroutine init_fault_traction
 
@@ -781,6 +818,23 @@ contains
   integer :: i,ipoin,iglob
   real(kind=CUSTOM_REAL) :: nuc_x, nuc_y, nuc_z, nuc_r, nuc_t0, nuc_v, dist, tw_r, coh_size
 
+! note: this implementation follows the description in:
+!       - rate and state friction:
+!          Kaneko, Y., N. Lapusta, J.-P. Ampuero (2008)
+!          Spectral element modeling of spontaneous earthquake rupture on rate and state faults: Effect of
+!          velocity-strengthening friction at shallow depths,
+!          JGR, 113, B09317, doi:10.1029/2007JB005553
+!
+!       - slip weakening friction:
+!          Galvez, P., J.-P. Ampuero, L.A. Dalguer, S.N. Somala, T. Nissen-Meyer (2014)
+!          Dynamic earthquake rupture modelled with an unstructured 3-D spectral element method applied to
+!          the 2011 M9 Tohoku earthquake,
+!          Geophys. J. Int., 198, 1222-1240.
+!
+!       More features have been added, including:
+!          fault opening, fault healing, time-weakening, smooth loading,
+!          and TPV16 benchmark specific friction handling
+
   ! for parallel faults
   if (bc%nspec > 0) then
 
@@ -798,7 +852,7 @@ contains
     dV(:,:) = rotate(bc,dV,1)
     dA(:,:) = rotate(bc,dA,1)
 
-    ! T_stick
+    ! T_stick "stick traction"
     T(1,:) = bc%Z(:) * ( dV(1,:) + half_dt*dA(1,:) )
     T(2,:) = bc%Z(:) * ( dV(2,:) + half_dt*dA(2,:) )
     T(3,:) = bc%Z(:) * ( dV(3,:) + half_dt*dA(3,:) )
@@ -819,31 +873,46 @@ contains
     ! smooth loading within nucleation patch
     !WARNING : ad hoc for SCEC benchmark TPV10x
     if (RATE_AND_STATE) then
+      ! see: Kaneko (2008), appendix B "Rupture Initiation Procedure"
       TxExt(:) = 0.0_CUSTOM_REAL
-      TLoad = 1.0_CUSTOM_REAL
-      DTau0 = 1.0_CUSTOM_REAL
-      timeval = it*bc%dt !time will never be zero. it starts from 1
+      TLoad = 1.0_CUSTOM_REAL   ! T_ini
+      DTau0 = 1.0_CUSTOM_REAL   ! \Delta \tau_0
+
+      ! time will never be zero. it starts from 1
+      timeval = it*bc%dt
+
+      ! function G(t)
+      ! see Kaneko (2008), equation (B3):
+      !   if 0 < t < T_ini
+      !     G(t) = exp( (t - T_ini)^2 / (t^2 - 2 t T_ini)
+      !   else
+      !     G(t) = 1
       if (timeval <= TLoad) then
         GLoad = exp( (timeval-TLoad)*(timeval-Tload) / (timeval*(timeval-2.0_CUSTOM_REAL*TLoad)) )
       else
         GLoad = 1.0_CUSTOM_REAL
       endif
+      ! Kaneko (2008), equation (B1): \Delta \tau = \Delta \tau_0 * F(x,z) * G(t)
+      ! the geometry and values of function F(x,z) have been pre-computed for a case specific nucleation patch
       TxExt(:) = DTau0 * bc%Fload(:) * GLoad
+
+      ! adds horizontal shear traction perturbation
       T(1,:) = T(1,:) + TxExt(:)
     endif
 
+    ! norm of shear fault traction
     Tstick(:) = sqrt( T(1,:)*T(1,:) + T(2,:)*T(2,:))
 
     if (.not. RATE_AND_STATE) then
-      ! Update slip weakening friction
+      ! slip weakening friction
 
-      ! Update slip state variable
+      ! update slip state variable
       ! WARNING: during opening the friction state variable should not evolve
-      theta_old = bc%swf%theta
+      theta_old(:) = bc%swf%theta(:)
       call swf_update_state(bc%D,dD,bc%V,bc%swf)
 
-      ! Update friction coeficient
-      bc%MU = swf_mu(bc%swf)
+      ! update friction coefficient (using slip weakening friction law)
+      bc%mu(:) = swf_mu(bc%swf)
 
       ! combined with time-weakening for nucleation
       if (TWF) then
@@ -860,27 +929,33 @@ contains
                 tw_r     = timeval * nuc_v
                 coh_size = nuc_t0  * nuc_v
                 if (dist <= tw_r - coh_size) then
-                    bc%MU(i) = min(bc%MU(i), bc%swf%mud(i))
+                    bc%mu(i) = min(bc%mu(i), bc%swf%mud(i))
                 else if (dist > tw_r - coh_size .and. dist <= tw_r ) then
-                    bc%MU(i) = min(bc%MU(i), bc%swf%mud(i) + (dist-(tw_r-coh_size))/coh_size*(bc%swf%mus(i)-bc%swf%mud(i)))
+                    bc%mu(i) = min(bc%mu(i), bc%swf%mud(i) + (dist-(tw_r-coh_size))/coh_size*(bc%swf%mus(i)-bc%swf%mud(i)))
                 endif
             endif
         enddo
       endif
 
+      ! TPV16 benchmark
       if (TPV16) then
-        where (bc%swf%T(:) <= it*bc%dt) bc%MU(:) = bc%swf%mud(:)
+        ! fixes friction coefficient to be dynamic friction coefficient when rupture time is over
+        where (bc%swf%T(:) <= it*bc%dt) bc%mu(:) = bc%swf%mud(:)
       endif
 
-      ! Update strength
-      strength(:) = -bc%MU(:) * min(T(3,:),0.0_CUSTOM_REAL) + bc%swf%C(:)
+      ! updates fault strength
+      strength(:) = -bc%mu(:) * min(T(3,:),0.0_CUSTOM_REAL) + bc%swf%C(:)
 
-      ! Solve for shear stress
+      ! solves for shear stress
       Tnew(:) = min(Tstick(:),strength(:))
 
     else
-      ! Update rate and state friction
+      ! rate and state friction
+
       !JPA the solver below can be refactored into a loop with two passes
+      !
+      ! see: Kaneko (2008), explanation of steps 4 and 6 in section 2.3,
+      !      and compare against the alternative first-order expansion given by equation (24)
 
       ! first pass
       theta_old(:) = bc%rsf%theta(:)
@@ -912,7 +987,7 @@ contains
     ! Save total tractions
     bc%T(:,:) = T(:,:)
 
-    ! Subtract initial stress
+    ! Subtract initial stress (to have relative stress on the fault)
     T(:,:) = T(:,:) - bc%T0(:,:)
 
     if (RATE_AND_STATE) T(1,:) = T(1,:) - TxExt(:)
@@ -937,10 +1012,10 @@ contains
     Vf_new = sqrt(bc%V(1,:)*bc%V(1,:) + bc%V(2,:)*bc%V(2,:))
     if (.not. RATE_AND_STATE) then
       theta_new(:) = bc%swf%theta(:)
-      dc = bc%swf%dc
+      dc(:) = bc%swf%Dc(:)
     else
       theta_new(:) = bc%rsf%theta(:)
-      dc = bc%rsf%L
+      dc(:) = bc%rsf%L(:)
     endif
 
     call store_dataXZ(bc%dataXZ, strength, theta_old, theta_new, dc, &
@@ -977,7 +1052,7 @@ contains
       if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
     endif
   endif
-
+  ! final output
   if (it == NSTEP) then
     if (.not. PARALLEL_FAULT) then
       call SCEC_Write_RuptureTime(bc%dataXZ,iflt)
@@ -1007,16 +1082,23 @@ contains
   NAMELIST / SWF / mus,mud,dc,nmus,nmud,ndc,C,T,nC,nForcedRup
 
   nglob = size(mu)
+
+  ! static friction coefficient
   allocate( f%mus(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1370')
+  ! dynamic friction coefficient
   allocate( f%mud(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1371')
+  ! critical slip distance (aka slip-weakening distance)
   allocate( f%Dc(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1372')
+  ! fault state variable theta (magnitude of accumulated slip on fault)
   allocate( f%theta(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1373')
-  allocate( f%C(nglob) ,stat=ier) ! cohesion
+  ! cohesion
+  allocate( f%C(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1374')
+  ! (forced) rupture time
   allocate( f%T(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1375')
 
@@ -1037,11 +1119,11 @@ contains
 
   read(IIN_PAR, nml=SWF)
 
-  f%mus(:) = mus
-  f%mud(:) = mud
-  f%Dc(:)  = dc
+  f%mus(:) = mus  ! static friction coefficient
+  f%mud(:) = mud  ! dynamic friction coefficient
+  f%Dc(:)  = dc   ! critical slip distance
   f%C(:)   = C    ! cohesion
-  f%T(:)   = T
+  f%T(:)   = T    ! (forced) rupture time
 
   call init_2d_distribution(f%mus,coord,IIN_PAR,nmus)
   call init_2d_distribution(f%mud,coord,IIN_PAR,nmud)
@@ -1051,7 +1133,7 @@ contains
 
   f%theta(:) = 0.0_CUSTOM_REAL
 
-  mu = swf_mu(f)
+  mu(:) = swf_mu(f)
 
   end subroutine swf_init
 
@@ -1103,12 +1185,16 @@ contains
   real(kind=CUSTOM_REAL) :: vnorm
   integer :: k,npoin
 
+  ! fault state variable theta (magnitude of accumulated slip on fault)
+  ! accumulates fault slip
   f%theta(:) = f%theta(:) + sqrt( (dold(1,:)-dnew(1,:))**2 + (dold(2,:)-dnew(2,:))**2)
 
+  ! fault healing
   if (f%healing) then
     npoin = size(vold,2)
     do k = 1,npoin
       vnorm = sqrt(vold(1,k)**2 + vold(2,k)**2)
+      ! velocity below "critical" healing velocity -> no more slip on fault, i.e., fault is "healing"
       if (vnorm < V_HEALING) f%theta(k) = 0.0_CUSTOM_REAL
     enddo
   endif
@@ -1124,7 +1210,11 @@ contains
   type(swf_type), intent(in) :: f
   real(kind=CUSTOM_REAL) :: mu(size(f%theta))
 
-  mu(:) = f%mus(:) -(f%mus(:)-f%mud(:))* min(f%theta(:)/f%dc(:), 1.0_CUSTOM_REAL)
+  ! slip weakening law
+  !
+  ! for example: Galvez, 2014, eq. (8)
+  !              also Ida, 1973; Palmer & Rice 1973; Andrews 1976; ..
+  mu(:) = f%mus(:) - (f%mus(:)-f%mud(:)) *  min(f%theta(:)/f%Dc(:), 1.0_CUSTOM_REAL)
 
   end function swf_mu
 
@@ -1152,11 +1242,21 @@ contains
     ! checks if fault pointers have been created and allocated
     if (associated(f)) then
       ! rate and state friction simulation
+
+      ! checks feature
+      if (RSF_SLIP_LAW_TYPE /= 1) stop 'Fault slip law from Kaneko (2008) not implemented yet'
+
+      ! copies arrays to GPU
       ! (ifault - 1) because in C language, array index start from 0
       call transfer_rsf_data_todevice(Fault_pointer, ifault-1, bc%nglob, bc%Fload, &
                                       f%V0,f%f0,f%V_init,f%a,f%b,f%L,f%theta,f%T,f%C,f%fw,f%Vw,f%StateLaw)
     else if (associated(g)) then
       ! slip weakening friction simulation
+
+      ! checks feature
+      if (g%healing) stop 'Fault healing for slip weakening friction not implemented yet on GPU'
+
+      ! copies arrays to GPU
       call transfer_swf_data_todevice(Fault_pointer, ifault-1, bc%nglob, &
                                       g%Dc,g%mus,g%mud,g%T,g%C,g%theta)
     endif
@@ -1192,28 +1292,40 @@ contains
 
   nglob = size(coord,2)
 
-  f%StateLaw = InputStateLaw
+  ! rate and state friction
+  f%StateLaw = InputStateLaw      ! state-variable evolution law: 1 == ageing law, 2 == slip law
 
+  ! reference slip velocity
   allocate( f%V0(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1376')
+  ! reference friction coefficient f0
   allocate( f%f0(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1377')
+  ! constitutive parameter a
   allocate( f%a(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1378')
+  ! constitutive parameter b
   allocate( f%b(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1379')
+  ! characteristic slip distance for state evolution
   allocate( f%L(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1380')
+  ! initial slip velocity (at time 0)
   allocate( f%V_init(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1381')
+  ! fault state variable theta
   allocate( f%theta(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1382')
-  allocate( f%C(nglob) ,stat=ier) ! cohesion
+  ! cohesion
+  allocate( f%C(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1383')
+  ! (forced) rupture time
   allocate( f%T(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1384')
+  ! SCEC slip friction law parameter: "weakening"(?) friction coefficient
   allocate( f%fw(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1385')
+  ! SCEC slip friction law parameter: "weakening"(?) slip rate
   allocate( f%Vw(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1386')
 
@@ -1224,7 +1336,7 @@ contains
   L = 0.0135_CUSTOM_REAL
   V_init = 1.e-12_CUSTOM_REAL
   theta_init = 1.084207680000000e+09_CUSTOM_REAL
-  C = 0._CUSTOM_REAL
+  C = 0.0_CUSTOM_REAL
   T = HUGEVAL
   fw = 0.2_CUSTOM_REAL
   Vw = 0.1_CUSTOM_REAL
@@ -1241,19 +1353,20 @@ contains
   nfw = 0
   nVw = 0
 
+  ! reads in rate and state friction parameters
   read(IIN_PAR, nml=RSF)
 
-  f%V0(:) = V0
-  f%f0(:) = f0
-  f%a(:) = a
-  f%b(:) = b
-  f%L(:) = L
-  f%V_init(:) = V_init
-  f%theta(:) = theta_init
-  f%C(:)  = C  ! cohesion
-  f%T(:)  = T
-  f%fw(:) = fw
-  f%Vw(:) = Vw
+  f%V0(:) = V0              ! reference slip velocity
+  f%f0(:) = f0              ! reference friction coefficient
+  f%a(:) = a                ! constitutive parameter a
+  f%b(:) = b                ! constitutive parameter a
+  f%L(:) = L                ! characteristic slip distance
+  f%V_init(:) = V_init      ! initial slip velocity
+  f%theta(:) = theta_init   ! initial state
+  f%C(:)  = C               ! cohesion
+  f%T(:)  = T               ! (forced) rupture time
+  f%fw(:) = fw              ! SCEC slip friction law parameter: "weakening"(?) friction coefficient
+  f%Vw(:) = Vw              ! SCEC slip friction law parameter: "weakening"(?) slip rate
 
   call init_2d_distribution(f%V0,coord,IIN_PAR,nV0)
   call init_2d_distribution(f%f0,coord,IIN_PAR,nf0)
@@ -1301,6 +1414,8 @@ contains
 
   Fload = 0.0_CUSTOM_REAL
   nFload = 0
+
+  ! reads in asperity parameters
   read(IIN_PAR, nml=ASP)
 
   nucFload(:) = Fload
@@ -1334,6 +1449,12 @@ contains
     integer :: si
 
     open(unit=sIIN_NUC,file='../DATA/rsf_hete_input_file.txt',status='old',iostat=ier)
+    if (ier /= 0) then
+      print *,'Error opening file ','../DATA/rsf_hete_input_file.txt'
+      print *,'Please check setup for RSF HETE...'
+      stop 'Error opening file rsf_hete_input_file.txt'
+    endif
+
     read(sIIN_NUC,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
 
     snum_cell_all = snum_cell_str*snum_cell_dip
@@ -1381,23 +1502,22 @@ contains
     write(*,*) 'maxXall = ', maxval(sloc_str(:)), 'maxZall = ', maxval(sloc_dip(:))
 
     do si = 1,nglob
-
       ! WARNING: nearest neighbor interpolation
       ipar = minloc( (sloc_str(:)-coord(1,si))**2 + (sloc_dip(:)-coord(3,si))**2 , 1)
       !loc_dip is negative of Z-coord
 
-      T0(3,si) = -ssigma0(ipar)
-      T0(1,si) = stau0_str(ipar)
-      T0(2,si) = stau0_dip(ipar)
+      T0(3,si) = -ssigma0(ipar)     ! normal stress
+      T0(1,si) = stau0_str(ipar)    ! shear stress strike-direction
+      T0(2,si) = stau0_dip(ipar)    ! shear stress dip-direction
 
-      f%V0(si) = sV0(ipar)
-      f%f0(si) = sf0(ipar)
-      f%a(si) = sa(ipar)
-      f%b(si) = sb(ipar)
-      f%L(si) = sL(ipar)
-      f%V_init(si) = sV_init(ipar)
-      f%theta(si) = stheta(ipar)
-      f%C(si) = sC(ipar)
+      f%V0(si) = sV0(ipar)          ! reference slip velocity
+      f%f0(si) = sf0(ipar)          ! reference frictional coefficient
+      f%a(si) = sa(ipar)            ! constitutive parameter a
+      f%b(si) = sb(ipar)            ! constitutive parameter a
+      f%L(si) = sL(ipar)            ! characteristic slip distance
+      f%V_init(si) = sV_init(ipar)  ! initial slip velocity
+      f%theta(si) = stheta(ipar)    ! initial state
+      f%C(si) = sC(ipar)            ! cohesion
     enddo
 
     end subroutine RSF_HETE_init
@@ -1416,46 +1536,64 @@ contains
     real(kind=CUSTOM_REAL) :: b11,b12,b21,b22,B1,B2
     integer :: i !,nglob_bulk
 
+    ! TPV10x description:
+    ! The central portion of the fault, -W < x < W, 0 < y < W , with W = 15 km,
+    ! is velocity-weakening. A transition layer of width w = 3 km in which the frictional
+    ! properties continuously change from velocity-weakening to velocity-strengthening
+    ! surrounds the central velocity-weakening region of the fault. Outside of the transition
+    ! region, the fault is velocity-strengthening.
+
     W1 = 15000.0_CUSTOM_REAL
     W2 = 7500.0_CUSTOM_REAL
     w = 3000.0_CUSTOM_REAL
     hypo_z = -7500.0_CUSTOM_REAL
+
     do i = 1,nglob
       x = coord(1,i)
       z = coord(3,i)
+
+      ! flags for boundary
       c1 = abs(x) < W1+w
       c2 = abs(x) > W1
       c3 = abs(z-hypo_z) < W2+w
       c4 = abs(z-hypo_z) > W2
-      if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
 
+      ! update frictional properties
+      if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
+        ! inside fault region
         if (c1 .and. c2) then
+          ! transition layer
           b11 = w/(abs(x)-W1-w)
           b12 = w/(abs(x)-W1)
           B1 = HALF * (ONE + tanh(b11 + b12))
         else if (abs(x) <= W1) then
+          ! central portion of fault
           B1 = 1.0_CUSTOM_REAL
         else
           B1 = 0.0_CUSTOM_REAL
         endif
 
         if (c3 .and. c4) then
+          ! transition layer
           b21 = w/(abs(z-hypo_z)-W2-w)
           b22 = w/(abs(z-hypo_z)-W2)
           B2 = HALF * (ONE + tanh(b21 + b22))
         else if (abs(z-hypo_z) <= W2) then
+          ! central portion of fault
           B2 = 1.0_CUSTOM_REAL
         else
           B2 = 0.0_CUSTOM_REAL
         endif
-
+        ! update slip-weakening
         f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
         f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
 
       else if (abs(x) <= W1 .and. abs(z-hypo_z) <= W2) then
+        ! central portion of fault
         f%a(i) = 0.008
         f%Vw(i) = 0.1_CUSTOM_REAL
       else
+        ! outside of fault
         f%a(i) = 0.016
         f%Vw(i) = 1.0_CUSTOM_REAL
       endif
@@ -1481,6 +1619,7 @@ contains
 !!$end function rsf_mu
 
 !---------------------------------------------------------------------
+
   subroutine rsf_update_state(V,dt_real,f)
 
   use constants, only: ONE,HALF,TWO
@@ -1491,29 +1630,112 @@ contains
   real(kind=CUSTOM_REAL), intent(in) :: dt_real
 
   real(kind=CUSTOM_REAL) :: vDtL(size(V))
-  real(kind=CUSTOM_REAL) :: f_ss(size(V)),xi_ss(size(V)),fLV(size(V))
+  real(kind=CUSTOM_REAL) :: f_ss(size(V)),theta_ss(size(V)),f_LV(size(V))
 
-  vDtL(:) = V(:) * dt_real / f%L
+  ! state variable evolution
+  !
+  ! see: Kaneko (2008), equation (19) for ageing law and equation (20) for slip law
+
+  ! common factor
+  vDtL(:) = V(:) * dt_real / f%L(:)
+
+  ! note: assumes that vDTL is strictly positive (>= 0), since V >= 0, dt > 0 and L > 0
+  if (any(vDtL(:) < 0.0_CUSTOM_REAL)) stop 'Invalid negative factor found in rate and state friction law'
 
   ! state update
   if (f%StateLaw == 1) then
     ! ageing law
+    ! see: Kaneko (2008), equation (19)
+    !      theta_n+1 = theta_n * exp( - V_n * dt / L) + L/V_n ( 1 - exp(- V_n * dt / L))
     where(vDtL(:) > 1.e-5_CUSTOM_REAL)
+      ! update theta_n+1
       f%theta(:) = f%theta(:) * exp(-vDtL(:)) + f%L(:)/V(:) * (ONE - exp(-vDtL(:)))
     elsewhere
+      ! faster computation for small values
+      !
+      ! note: Lapusta, N. and. Y. Liu (2009),
+      !       Three-dimensional boundary integral modeling of spontaneous earthquake sequences and aseismic slip,
+      !       JGR, 114, B09303, doi:10.1029/2008JB005934
+      !
+      !       in Appendix B and equation (B7) this case is used to avoid issues when V_n dt L becomes very small.
+      !       however, their update theta_n+1 uses the log(..) since instead of updating state variable theta directly,
+      !       they use the quantity \phi = log(V_0 theta / L) and a corresponding modified slip evolution law.
+      !
+      !       thus, we might not need this special case for small values and could use the exp(..) directly,
+      !       but it might be slightly faster to use the power series expansion here.
+      !
+      ! Power series for exponential function:
+      !   exp(x) = 1 + x + x**2/2 + x**3/6 ..
+      ! for small x, one can ignore the high-order terms and assume
+      !   exp(x) ~ 1 + x + x**2/2
+      ! thus,
+      !   1 - exp(- V_n * dt / L) = 1 - (1 - V_n * dt /L + 1/2 (V_n * dt /L)**2 ) = V_n * dt / L - 1/2 (V_n * dt /L)**2
+      ! and update becomes
+      !   theta_n+1 = theta_n * exp( - V_n * dt / L) + L/V_n ( V_n * dt / L  - 1/2 (V_n * dt /L)**2 )
+      !             = theta_n * exp( - V_n * dt / L) +  ( dt - 1/2 V_n * dt**2 / L )
+      !             = theta_n * exp( - V_n * dt / L) +  dt ( 1 - 1/2 V_n * dt / L )
       f%theta(:) = f%theta(:) * exp(-vDtL(:)) + dt_real * ( ONE - HALF*vDtL(:) )
     endwhere
+
   else
-    ! slip law : by default use strong rate-weakening
-    !f%theta = f%L/V * (f%theta*V/f%L)**(exp(-vDtL))
-    where(V(:) /= 0.0_CUSTOM_REAL)
-      fLV(:) = f%f0(:) - (f%b(:) - f%a(:))*log(V(:)/f%V0(:))
-      f_ss(:) = f%fw(:) + (fLV(:) - f%fw(:))/(ONE + (V(:)/f%Vw(:))**8)**0.125
-      xi_ss(:) = f%a(:) * log( TWO*f%V0(:)/V(:) * sinh(f_ss(:)/f%a(:)) )
-      f%theta(:) = xi_ss(:) + (f%theta(:) - xi_ss(:)) * exp(-vDtL(:))
-    elsewhere
-      f%theta(:) = f%theta(:)
-    endwhere
+    ! slip law
+    !
+    if (RSF_SLIP_LAW_TYPE == 1) then
+      ! default, strong rate-weakening:
+      !
+      ! we use a slip law as described by SCEC TPV103/104 benchmark
+      ! https://strike.scec.org/cvws/download/SCEC_validation_slip_law.pdf
+      !
+      ! friction coefficient f(V,theta) = a arcsinh[ V/(2 V_0) exp( theta/a ) ]
+      ! state evolution:
+      !      dtheta/dt = - V/L [ theta - theta_ss(V) ]              eq. (3)
+      !    and
+      !      theta_ss(V) = a ln( 2 V_0/V sinh(f_ss(V)/a) )          eq. (4)
+      !
+      ! with theta the state variable, theta_ss the steady-state value
+      ! and f_ss the steady-state friction coefficient.
+      !
+      ! the steady-state friction coefficient f_ss(V) follows the friction law:
+      !     f_ss(V) = f_w + [ f_LV(V) - f_w ]/[1 + (V/V_w)**8]**(1/8)             eq. (5)
+      !
+      ! with a low-velocity steady-state friction coefficient f_LV(V) as:
+      !     f_LV(V) = f_0 - (b - a) ln(V/V_0)                                     eq. (6)
+      !
+      ! using friction law parameters f_w a "weakening"(?) friction coefficient and V_w a "weakening"(?) slip rate
+
+      where(V(:) /= 0.0_CUSTOM_REAL)  ! todo: comparison of float against zero, should add numerical tolerance
+        ! low-velocity friction coefficient f_LV:
+        !     f_LV = f_0 - (b - a) ln( V_n / V_0 )
+        ! according to eq. (6)
+        f_LV(:) = f%f0(:) - (f%b(:) - f%a(:))*log(V(:)/f%V0(:))
+
+        ! steady-state friction:
+        !     f_ss = f_w + ( f_LV - f_w) / (1 + (V_n/V_w)^8 )^{1/8)
+        ! according to eq. (5)
+        f_ss(:) = f%fw(:) + (f_LV(:) - f%fw(:))/(ONE + (V(:)/f%Vw(:))**8)**0.125
+
+        ! steady-state state variable:
+        !   theta_ss = a ln( 2 V_0 / V_n * sinh( f_ss / a ) )
+        ! according to eq. (4) above
+        theta_ss(:) = f%a(:) * log( TWO*f%V0(:)/V(:) * sinh(f_ss(:)/f%a(:)) )
+
+        ! state variable update:
+        !   theta_n+1 = theta_ss + (theta_n - theta_ss ) exp(- V_n * dt / L )
+        !
+        f%theta(:) = theta_ss(:) + (f%theta(:) - theta_ss(:)) * exp(-vDtL(:))
+      elsewhere
+        f%theta(:) = f%theta(:)
+      endwhere
+    else
+      ! Kaneko (2008) slip law:
+      ! state evolution law
+      !     dtheta/dt = - V theta / L  ln(V theta/L)      slip law eq.(14)
+      !
+      ! uses equation (20) for time stepping:
+      !         theta_n+1 = L/V_n ( V_n * theta_n / L )^{ exp(- V_n * dt / L) }
+      !
+      f%theta(:) = f%L(:)/V(:) * (f%theta(:)*V(:)/f%L(:))**(exp(-vDtL(:)))
+    endif
   endif
 
   end subroutine rsf_update_state
@@ -1973,23 +2195,73 @@ contains
   use constants, only: ONE,TWO
   implicit none
 
-  real(kind=CUSTOM_REAL),intent(in) :: Tstick,Seff,Z,f0,V0,a,b,L,theta
   double precision,intent(in) :: x
   double precision,intent(out) :: fn,df
+
+  real(kind=CUSTOM_REAL),intent(in) :: Tstick,Seff,Z,f0,V0,a,b,L,theta
   integer,intent(in) :: statelaw
 
   ! local parameters
-  double precision :: arg
+  double precision :: arg,xarg
 
+  ! friction coefficient function
   if (statelaw == 1) then
     ! ageing law
     arg = exp((f0+dble(b)*log(V0*theta/L))/a)/TWO/V0
   else
     ! slip law
-    arg = exp(theta/a)/TWO/V0
+    if (RSF_SLIP_LAW_TYPE == 1) then
+      ! uses SCEC TPV103/104 slip law and modified friction coefficient function
+      arg = exp(theta/a)/TWO/V0
+    else
+      ! Kaneko (2008): same friction coefficient function as for ageing
+      !
+      ! note: ageing and slip law in principle refer to the state-variable evolution law.
+      !       here, we implement the rate and state friction function which is given by
+      !       eq.(12) in Kaneko (2008), but, making use of the "improved" regularized friction function given by eq.(15)
+      arg = exp((f0+dble(b)*log(V0*theta/L))/a)/TWO/V0
+    endif
   endif
-  fn = Tstick - Z*x - a*Seff*asinh_slatec(x*arg)
-  df = -Z - a*Seff/sqrt(ONE + (x*arg)**2)*arg
+  xarg = x * arg
+
+  ! shear strength
+  ! based on thermally activated creep model
+  !
+  ! ageing law:
+  !   see: Kaneko (2008), equation (15)
+  !     Tau = psi(V, theta)
+  !         = a sigma_eff arcsinh[ V/(2 V_0) exp( (f_0 + b ln(V_0 theta / L)) / a ) ]
+  !         = a sigma_eff arcsinh[ V  exp( (f_0 + b ln(V_0 theta / L)) / a ) / (2 V_0) ]  (1)
+  !
+  !   with sigma_eff the effective normal stress.
+  !
+  ! slip law:
+  !   we use a slip law as described by SCEC TPV103/104 benchmark
+  !   https://strike.scec.org/cvws/download/SCEC_validation_slip_law.pdf
+  !
+  !   shear strength of the fault
+  !     Tau = f(V,theta) sigma
+  !   the product between friction coefficient and normal stress,
+  !   and friction coefficient
+  !     f(V,theta) = a arcsinh[ V/(2 V_0) exp( theta/a ) ]
+  !                = a arcsinh[ V exp( theta/a ) / (2 V_0) ]                              (2)
+  !
+  ! for the implementation here, compare (1) and (2) to see about the differences.
+  ! Seff is the effective normal stress
+
+
+  ! traction, using fault strength function f(V), as function Tau(V) = sigma * f(V)
+  ! see: Kaneko (2008), eq. (21)
+  !
+  ! using netlib's asinh_slatec() implementation
+  ! (not sure why this explicit asinh function is used, seems to be slower...)
+  !fn = Tstick - Z*x - a * Seff * asinh_slatec(x*arg)
+  !
+  ! using instrinsic asinh() function
+  fn = Tstick - Z*x - a * Seff * asinh(xarg)
+
+  ! traction derivative Tau'(V)
+  df = -Z - a * Seff/sqrt(ONE + xarg*xarg) * arg
 
   end subroutine funcd
 
@@ -1997,24 +2269,33 @@ contains
 
   function rtsafe(x1,x2,xacc,Tstick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 
+! root finding by combination of bisection and Newton-Raphson algorithm
+! this routine is similar to the Numerical Recipes routine.
+
   implicit none
 
-  integer, parameter :: MAXIT = 200
-  real(kind=CUSTOM_REAL) :: x1,x2,xacc
+  real(kind=CUSTOM_REAL),intent(in) :: x1,x2,xacc
+  real(kind=CUSTOM_REAL),intent(in) :: Tstick,Seff,Z,f0,V0,a,b,L,theta
+  integer,intent(in) :: statelaw
+
+  double precision :: rtsafe
+
+  ! local parameters
   integer :: j
   !real(kind=CUSTOM_REAL) :: df,dx,dxold,f,fh,fl,temp,xh,xl
-  double precision :: df,dx,dxold,f,fh,fl,temp,xh,xl,rtsafe
-  real(kind=CUSTOM_REAL) :: Tstick,Seff,Z,f0,V0,a,b,L,theta
-  integer :: statelaw
+  double precision :: df,dx,dxold,f,fh,fl,temp,xh,xl
+  integer, parameter :: MAXIT = 200
 
   call funcd(dble(x1),fl,df,Tstick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   call funcd(dble(x2),fh,df,Tstick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 
   if ((fl > 0.d0 .and. fh > 0.d0) .or. (fl < 0.d0 .and. fh < 0.d0) ) stop 'root must be bracketed in rtsafe'
-  if (fl == 0.d0) then
-    rtsafe = x2
+
+  if (fl == 0.d0) then        ! todo: comparison of float against zero, should add numerical tolerance
+    rtsafe = x1               ! todo: note, original algorithm from Numerical Recipes returns x1 here, the lower bound.
+                              !       check if we should return x1 or x2, that is, x1 == 0 and x2 == Vf_old(i)+5.0_CUSTOM_REAL
     return
-  else if (fh == 0.d0) then
+  else if (fh == 0.d0) then   ! todo: comparison of float against zero, should add numerical tolerance
     rtsafe = x2
     return
   else if (fl < 0.d0) then
@@ -2035,24 +2316,31 @@ contains
     if (((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f) > 0.d0 .or. abs(2.d0 * f) > abs(dxold*df)) then
       dxold = dx
       dx = 0.5d0 * (xh-xl)
-      rtsafe = xl+dx
-      if (xl == rtsafe) return
+      rtsafe = xl + dx
+      if (xl == rtsafe) return    ! todo: comparison of float against float, should add numerical tolerance
     else
       dxold = dx
       dx = f/df
       temp = rtsafe
-      rtsafe = rtsafe-dx
-      if (temp == rtsafe) return
+      rtsafe = rtsafe - dx
+      if (temp == rtsafe) return  ! todo: comparison of float against float, should add numerical tolerance
     endif
+
+    ! check if solution within accuracy xacc
     if (abs(dx) < xacc) return
+
     call funcd(rtsafe,f,df,Tstick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+
     if (f < 0.d0) then
       xl = rtsafe
     else
       xh = rtsafe
     endif
   enddo
+
+  ! case should not occur, might need higher number of iterations?
   stop 'rtsafe exceeding maximum iterations'
+
   return
 
   end function rtsafe
