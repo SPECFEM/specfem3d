@@ -1225,19 +1225,20 @@
 
   use specfem_par
 
+  use fault_solver_common, only: fault_check_mesh_resolution,USE_KELVIN_VOIGT_DAMPING
   use fault_solver_dynamic, only: BC_DYNFLT_init,SIMULATION_TYPE_DYN
   use fault_solver_kinematic, only: BC_KINFLT_init,SIMULATION_TYPE_KIN
 
   implicit none
+
+  ! local parameters
+  logical :: FAULT_SIMULATION_all,SIMULATION_TYPE_DYN_all,SIMULATION_TYPE_KIN_all,USE_KELVIN_VOIGT_DAMPING_all
 
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) "preparing fault simulation"
     call flush_IMAIN()
   endif
-
-  ! initializes flag
-  FAULT_SIMULATION = .false.
 
   ! initializes kinematic and dynamic fault solvers
   ! dynamic rupture
@@ -1246,13 +1247,52 @@
   ! kinematic rupture
   call BC_KINFLT_init(prname)
 
-  ! sets simulation flag
+  ! checks simulation flag
   if (SIMULATION_TYPE_DYN .or. SIMULATION_TYPE_KIN) then
     ! updates flag
     FAULT_SIMULATION = .true.
+  else
+    FAULT_SIMULATION = .false.
+  endif
+
+  ! all processes will need to have FAULT_SIMULATION flag set if any flag is .true. somewhere
+  ! (needed for proper MPI assembly)
+  !
+  ! note: the flag USE_KELVING_VOIGT_DAMPING
+  !       can change from one process to another if a process has no fault in it.
+  !       thus, it is a local flag and deals only with its single MPI process.
+  !
+  !       the flags SIMULATION_TYPE_DYN, SIMULATION_TYPE_KIN
+  !       will be the same for all processes since all processes read in the Par_file_fault
+  !       and run the corresponding fault initialization routines.
+  !       we will however synchronize them just to be sure they are consistent, in case the initialization changes in future.
+  !
+  !       FAULT_SIMULATION will be an overall flag, which must be consistent for all MPI processes.
+  !       it will determine if we need to call fault routines and assembly stages.
+  call any_all_l( SIMULATION_TYPE_DYN, SIMULATION_TYPE_DYN_all )
+  SIMULATION_TYPE_DYN = SIMULATION_TYPE_DYN_all
+
+  call any_all_l( SIMULATION_TYPE_KIN, SIMULATION_TYPE_KIN_all )
+  SIMULATION_TYPE_KIN = SIMULATION_TYPE_KIN_all
+
+  call any_all_l( FAULT_SIMULATION, FAULT_SIMULATION_all )
+  FAULT_SIMULATION = FAULT_SIMULATION_all
+
+  ! just to check damping and see if any damping will be used, for user output
+  call any_all_l( USE_KELVIN_VOIGT_DAMPING, USE_KELVIN_VOIGT_DAMPING_all )
+
+  ! user output
+  if (FAULT_SIMULATION) then
     ! user output
     if (myrank == 0) then
-      write(IMAIN,*) "  fault simulation turned on"
+      write(IMAIN,*)
+      write(IMAIN,*) "  Fault simulation turned on:"
+      if (SIMULATION_TYPE_DYN) write(IMAIN,*) "    dynamic   rupture simulation"
+      if (SIMULATION_TYPE_KIN) write(IMAIN,*) "    kinematic rupture simulation"
+      if (USE_KELVIN_VOIGT_DAMPING_all) then
+        write(IMAIN,*) "    using Kelvin Voigt damping"
+      endif
+      write(IMAIN,*)
       call flush_IMAIN()
     endif
   else
@@ -1262,5 +1302,24 @@
       call flush_IMAIN()
     endif
   endif
+
+  ! user output of critical time step estimation
+  if (FAULT_SIMULATION) call fault_check_mesh_resolution()
+
+  ! simulation checks
+  if (SIMULATION_TYPE_DYN .and. SIMULATION_TYPE_KIN) &
+    stop 'Invalid rupture flags, cannot have dynamic and kinematic ruptures combined in a simulation yet'
+
+  if (SIMULATION_TYPE == 3) then
+    ! backward simulation support needs to be checked
+!    if (FAULT_SIMULATION) &
+!      stop 'Fault simulation in SIMULATION_TYPE == 3 not supported yet'
+    ! damping needs to be checked if doable for adjoint/kernel simulations
+!    if (USE_KELVIN_VOIGT_DAMPING_all) &
+!      stop 'Using Kelvin-Voigt damping in SIMULATION_TYPE == 3 not supported yet'
+  endif
+
+  ! synchonizes
+  call synchronize_all()
 
   end subroutine prepare_timerun_faults

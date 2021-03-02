@@ -29,12 +29,15 @@
 
   subroutine compute_forces_viscoelastic_calling()
 
+
   use specfem_par
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
   use pml_par
 
+  ! fault simulations
+  use constants, only: FAULT_SYNCHRONIZE_DISPL_VELOC,FAULT_SYNCHRONIZE_ACCEL
   use fault_solver_dynamic, only: bc_dynflt_set3d_all,SIMULATION_TYPE_DYN,fault_output_synchronize_GPU,NT_RECORD_LENGTH
   use fault_solver_kinematic, only: bc_kinflt_set_all,SIMULATION_TYPE_KIN
 
@@ -347,7 +350,7 @@
       ! GPU fault solver
       call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,it)
       ! output results every 500 steps
-      if (mod(it,NT_RECORD_LENGTH) == 0 .and. it /= 0) call fault_output_synchronize_GPU(it)
+      if ((mod(it,NT_RECORD_LENGTH) == 0 .or. it == it_end) .and. it /= 0) call fault_output_synchronize_GPU(it)
     endif
   endif
 
@@ -847,7 +850,7 @@
     ! GPU fault solver
     call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,it)
     ! output results every 500 steps
-    if (mod(it,NT_RECORD_LENGTH) == 0 .and. it /= 0) call fault_output_synchronize_GPU(it)
+    if ((mod(it,NT_RECORD_LENGTH) == 0 .or. it == it_end) .and. it /= 0) call fault_output_synchronize_GPU(it)
   endif
 
   ! multiplies with inverse of mass matrix (note: rmass has been inverted already)

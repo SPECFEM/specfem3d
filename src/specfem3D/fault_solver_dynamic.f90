@@ -43,8 +43,6 @@ module fault_solver_dynamic
 
   private
 
-  type(bc_dynandkinflt_type), allocatable, save :: faults(:)
-
   !slip velocity threshold for healing
   !WARNING: not very robust
   real(kind=CUSTOM_REAL), save :: V_HEALING
@@ -54,9 +52,6 @@ module fault_solver_dynamic
 
   !Number of time steps defined by the user : NTOUT
   integer, save                :: NTOUT,NSNAP
-
-  !Number of faults
-  integer, save                :: Nfaults
 
   ! dynamic rupture simulation
   logical, save :: SIMULATION_TYPE_DYN = .false.
@@ -76,18 +71,16 @@ module fault_solver_dynamic
   ! RSF_HETE for heterogeneous in rate and state simulation
   logical, save :: RSF_HETE = .false.
 
-  ! Kelvin-Voigt damping
-  real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
-
   ! rate and state slip law
   integer, parameter :: RSF_SLIP_LAW_TYPE = 1 ! default 1 == SCEC TPV103/104 benchmark slip law, 2 == slip law by Kaneko (2008)
 
   ! GPU output record length
   integer, parameter :: NT_RECORD_LENGTH = 500
 
-  public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, Kelvin_Voigt_eta, &
-            SIMULATION_TYPE_DYN, fault_transfer_data_GPU, fault_rsf_swf_init_GPU, &
-            NT_RECORD_LENGTH, fault_output_synchronize_GPU
+  public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, &
+            SIMULATION_TYPE_DYN, NT_RECORD_LENGTH, &
+            fault_transfer_data_GPU, fault_rsf_swf_init_GPU, fault_output_synchronize_GPU, &
+            fault_check_mesh_resolution
 
 
 contains
@@ -107,18 +100,25 @@ contains
   character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
 
   ! local parameters
+  type(bc_dynandkinflt_type),pointer :: bc
   real(kind=CUSTOM_REAL) :: dt_real
   integer :: iflt,ier,dummy_idfault
   integer :: nbfaults,nbfaults_bin
   integer :: size_Kelvin_Voigt
-  integer :: SIMULATION_TYPE
+  integer :: rupture_type
   character(len=MAX_STRING_LEN) :: filename
-  integer, parameter :: IIN_PAR =151
-  integer, parameter :: IIN_BIN =170
+  ! infos
+  integer :: fault_StateLaw,fault_StateLaw_all
+  logical :: fault_opening,fault_opening_all
+  logical :: fault_healing,fault_healing_all
+
+  integer, parameter :: IIN_PAR = 151
+  integer, parameter :: IIN_BIN = 170
 
   NAMELIST / RUPTURE_SWITCHES / RATE_AND_STATE , TPV16 , TPV10X , RSF_HETE, TWF
   NAMELIST / BEGIN_FAULT / dummy_idfault
 
+  ! initializes
   dummy_idfault = 0
 
   ! note: all processes will open this file
@@ -149,16 +149,17 @@ contains
   endif
 
   ! Reading etas of each fault
+  ! Skip reading viscosity eta of each fault, will be done with binary file
   do iflt = 1,nbfaults
     read(IIN_PAR,*) ! etas
   enddo
 
   ! fault rupture type: 1 = dyn 2 = kin
-  read(IIN_PAR,*) SIMULATION_TYPE
+  read(IIN_PAR,*) rupture_type
 
   ! fault simulation type == 1 for dynamic rupture simulation
   ! checks if anything to do
-  if (SIMULATION_TYPE /= 1) then
+  if (rupture_type /= 1) then
     close(IIN_BIN)
     close(IIN_PAR)
     ! all done
@@ -215,7 +216,8 @@ contains
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
 
     ! initializes fault
-    call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt_real,nt,iflt,myrank)
+    bc => faults(iflt)
+    call init_one_fault(bc,IIN_BIN,IIN_PAR,dt_real,nt,iflt,myrank)
   enddo
 
   ! close files
@@ -229,6 +231,7 @@ contains
     write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
     call exit_MPI(myrank,'Error opening file Kelvin_voigt_eta.bin')
   endif
+
   ! reads in values
   read(IIN_BIN) size_Kelvin_Voigt
   if (size_Kelvin_Voigt > 0) then
@@ -237,6 +240,12 @@ contains
     read(IIN_BIN) Kelvin_Voigt_eta
   endif
   close(IIN_BIN)
+  ! sets flag if this process has damping on fault elements
+  if (allocated(Kelvin_Voigt_eta)) then
+    USE_KELVIN_VOIGT_DAMPING = .true.
+  else
+    USE_KELVIN_VOIGT_DAMPING = .false.
+  endif
 
   ! user output
   if (myrank == 0) then
@@ -245,8 +254,57 @@ contains
     else
       write(IMAIN,*) '  using slip weakening friction'
     endif
+    write(IMAIN,*)
     call flush_IMAIN()
   endif
+
+  ! outputs more infos
+  do iflt = 1,nbfaults
+    ! gets fault info (collected from all processes)
+    bc => faults(iflt)
+    fault_opening = bc%allow_opening
+    fault_StateLaw = 0
+    fault_healing = .false.
+    if (bc%nspec > 0) then
+      if (RATE_AND_STATE) then
+        ! checks rate and state evolution law
+        if (associated(bc%rsf)) fault_StateLaw = bc%rsf%StateLaw
+      else
+        ! checks opening
+        if (associated(bc%swf)) fault_healing = bc%swf%healing
+      endif
+    endif
+    call max_all_i(fault_StateLaw,fault_StateLaw_all)
+    call any_all_l(fault_opening,fault_opening_all)
+    call any_all_l(fault_healing,fault_healing_all)
+
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,'(a,i2)') '   fault # ',iflt
+      if (RATE_AND_STATE) then
+        ! rate and state friction
+        if (fault_StateLaw_all == 1) then
+          write(IMAIN,*) '    State law = ',fault_StateLaw_all,'(ageing law)'
+        else
+          write(IMAIN,*) '    State law = ',fault_StateLaw_all,'(slip law)'
+        endif
+      else
+        ! slip weakening friction
+        if (fault_healing_all) then
+          write(IMAIN,*) '    allows for fault healing'
+        else
+          write(IMAIN,*) '    no fault healing'
+        endif
+      endif
+      ! opening
+      if (fault_opening_all) then
+        write(IMAIN,*) '    allows for fault opening'
+      else
+        write(IMAIN,*) '    no fault opening'
+      endif
+      call flush_IMAIN()
+    endif
+  enddo
 
   return
 
@@ -266,22 +324,23 @@ contains
 
   implicit none
 
+  ! local parameters
+  type(bc_dynandkinflt_type),pointer :: bc
   integer :: ifault,nspec,nglob
-  type(bc_dynandkinflt_type) :: bc
 
   ! initialize fault solver on GPU
   call initialize_fault_solver_gpu(Fault_pointer, Nfaults, V_HEALING, V_RUPT, RATE_AND_STATE)
 
   ! initializes each fault
   do ifault = 1,Nfaults
-    bc = faults(ifault)
+    bc => faults(ifault)
     ! using a record length nt (500), which will be used also for outputting records
     call initialize_fault_data_gpu(Fault_pointer, ifault-1, bc%dataT%iglob, bc%dataT%npoin, bc%dataT%ndat, NT_RECORD_LENGTH)
   enddo
 
   ! copies fault data fields to GPU
   do ifault = 1,Nfaults
-    bc = faults(ifault)
+    bc => faults(ifault)
 
     ! checks features
     if (TWF) stop 'Fault time-weakening not implemented yet on GPU'
@@ -323,8 +382,10 @@ contains
   NAMELIST / INIT_STRESS / S1,S2,S3,n1,n2,n3
   NAMELIST /STRESS_TENSOR / Sigma
 
+  ! reads in fault_db binary file and initializes fault arrays
   call initialize_fault(bc,IIN_BIN)
 
+  ! sets up initial fault state
   if (bc%nspec > 0) then
     allocate(bc%T(3,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1363')
@@ -542,7 +603,7 @@ contains
     filename = prname(1:len_trim(prname))//'fault_prestr.bin'
 
     ! debug output
-    !print *,'loading stress drop:', trim(filename),bc%nglob
+    !print *,'debug: loading stress drop:', trim(filename),bc%nglob
 
     open(unit=IIN_STR,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
@@ -779,14 +840,16 @@ contains
   real(kind=CUSTOM_REAL), dimension(:,:), intent(inout) :: F
 
   ! local parameters
-  integer :: i
+  integer :: iflt
 
   ! checks if anything to do
-  if (.not. allocated(faults)) return
+  if (Nfaults == 0) return
 
   ! loops over faults
-  do i = 1,size(faults)
-    call BC_DYNFLT_set3d(faults(i),F,V,D,i)
+  do iflt = 1,Nfaults
+    ! note: this routine should be called by all processes, regardless if they contain no fault elements,
+    !       for managing MPI calls and file outputs
+    call BC_DYNFLT_set3d(faults(iflt),F,V,D,iflt)
   enddo
 
   end subroutine bc_dynflt_set3d_all
@@ -1042,16 +1105,22 @@ contains
     if (mod(it,NTOUT) == 0 .or. it == NSTEP) call SCEC_write_dataT(bc%dataT)
   endif
 
+  ! note: this stage of the routine must be reached by all processes,
+  !       otherwise the MPI gather calls won't succeed and the run gets stuck.
+
   ! write dataXZ every NSNAP time step
   if (mod(it,NSNAP) == 0) then
     if (PARALLEL_FAULT) then
+      ! collects data from all processes
       call gather_dataXZ(bc)
+      ! main process writes output file
       if (myrank == 0) call write_dataXZ(bc%dataXZ_all,it,iflt)
     else
       ! fault in single slice
       if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
     endif
   endif
+
   ! final output
   if (it == NSTEP) then
     if (.not. PARALLEL_FAULT) then
@@ -1227,14 +1296,14 @@ contains
 
   implicit none
 
-  type(bc_dynandkinflt_type) :: bc
+  type(bc_dynandkinflt_type),pointer :: bc
   type(rsf_type),pointer :: f
   type(swf_type),pointer :: g
   integer :: ifault
 
   ! sets up fault arrays on gpu
   do ifault = 1,Nfaults
-    bc = faults(ifault)
+    bc => faults(ifault)
 
     f => bc%rsf
     g => bc%swf
@@ -1440,7 +1509,7 @@ contains
     subroutine RSF_HETE_init()
 
     integer :: ier, ipar
-    integer, parameter :: sIIN_NUC =271 ! WARNING: not safe, should look for an available unit
+    integer, parameter :: sIIN_NUC = 271 ! WARNING: not safe, should look for an available unit
     real(kind=CUSTOM_REAL),  allocatable :: sloc_str(:), &
          sloc_dip(:),ssigma0(:),stau0_str(:),stau0_dip(:),sV0(:), &
          sf0(:),sa(:),sb(:),sL(:),sV_init(:),stheta(:),sC(:)
@@ -1753,34 +1822,33 @@ contains
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: iflt
 
-  integer   :: i,IOUT
+  ! local parameters
+  integer :: i
   character(len=MAX_STRING_LEN) :: filename
-
   integer, dimension(8) :: time_values
+  integer, parameter :: IOUT_RUP = 121 !WARNING: not very robust. Could instead look for an available ID
 
   call date_and_time(VALUES=time_values)
 
   write(filename,'(a,I0)') trim(OUTPUT_FILES)//'/RuptureTime_Fault', iflt
 
-  IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
-
-  open(IOUT,file=trim(filename),status='replace')
-  write(IOUT,*) "# problem=TPV104"
-  write(IOUT,*) "# author=Surendra Nadh Somala"
-  write(IOUT,1000) time_values(2), time_values(3), time_values(1), time_values(5), time_values(6), time_values(7)
-  write(IOUT,*) "# code=SPECFEM3D_Cartesian (split nodes)"
-  write(IOUT,*) "# code_version=1.1"
-  write(IOUT,*) "# element_size=100 m  (*5 GLL nodes)"
-  write(IOUT,*) "# Column #1 = horizontal coordinate, distance along strike (m)"
-  write(IOUT,*) "# Column #2 = vertical coordinate, distance down-dip (m)"
-  write(IOUT,*) "# Column #3 = rupture time (s)"
-  write(IOUT,*) "# "
-  write(IOUT,*) "j k t"
+  open(IOUT_RUP,file=trim(filename),status='replace')
+  write(IOUT_RUP,*) "# problem=TPV104"
+  write(IOUT_RUP,*) "# author=Surendra Nadh Somala"
+  write(IOUT_RUP,1000) time_values(2), time_values(3), time_values(1), time_values(5), time_values(6), time_values(7)
+  write(IOUT_RUP,*) "# code=SPECFEM3D_Cartesian (split nodes)"
+  write(IOUT_RUP,*) "# code_version=1.1"
+  write(IOUT_RUP,*) "# element_size=100 m  (*5 GLL nodes)"
+  write(IOUT_RUP,*) "# Column #1 = horizontal coordinate, distance along strike (m)"
+  write(IOUT_RUP,*) "# Column #2 = vertical coordinate, distance down-dip (m)"
+  write(IOUT_RUP,*) "# Column #3 = rupture time (s)"
+  write(IOUT_RUP,*) "# "
+  write(IOUT_RUP,*) "j k t"
   do i = 1,size(dataXZ%tRUP)
-    write(IOUT,'(3(E15.7))') dataXZ%xcoord(i), -dataXZ%zcoord(i), dataXZ%tRUP(i)
+    write(IOUT_RUP,'(3(E15.7))') dataXZ%xcoord(i), -dataXZ%zcoord(i), dataXZ%tRUP(i)
   enddo
 
-  close(IOUT)
+  close(IOUT_RUP)
 
 1000 format ( ' # Date = ', i2.2, '/', i2.2, '/', i4.4, '; time = ',i2.2, ':', i2.2, ':', i2.2 )
 
@@ -1913,16 +1981,18 @@ contains
 
     allocate(bc%npoin_perproc(NPROC),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1418')
-    bc%npoin_perproc = 0
+    bc%npoin_perproc(:) = 0
     call gather_all_singlei(dataXZ%npoin,bc%npoin_perproc,NPROC)
 
     allocate(bc%poin_offset(NPROC),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1419')
-    bc%poin_offset(1) = 0
+    bc%poin_offset(:) = 0 ! starts with zero offset
+    ! starting with iproc 2, sums previous number of points as offset value
     do iproc = 2,NPROC
       bc%poin_offset(iproc) = sum(bc%npoin_perproc(1:iproc-1))
     enddo
 
+    ! gathers all point coordinates for fault on main process
     call gatherv_all_cr(dataXZ%xcoord,dataXZ%npoin,bc%dataXZ_all%xcoord,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
     call gatherv_all_cr(dataXZ%ycoord,dataXZ%npoin,bc%dataXZ_all%ycoord,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
     call gatherv_all_cr(dataXZ%zcoord,dataXZ%npoin,bc%dataXZ_all%zcoord,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
@@ -1944,6 +2014,7 @@ contains
 
   type(bc_dynandkinflt_type), intent(inout) :: bc
 
+  ! collects data from all processes onto main process arrays
   call gatherv_all_cr(bc%dataXZ%t1,bc%dataXZ%npoin,bc%dataXZ_all%t1,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
   call gatherv_all_cr(bc%dataXZ%t2,bc%dataXZ%npoin,bc%dataXZ_all%t2,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
   call gatherv_all_cr(bc%dataXZ%t3,bc%dataXZ%npoin,bc%dataXZ_all%t3,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
@@ -2006,27 +2077,35 @@ contains
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: itime,iflt
 
+  ! local parameters
+  integer :: ier
   character(len=MAX_STRING_LEN) :: filename
+  integer, parameter :: IOUT_SN = 121 !WARNING: not very robust. Could instead look for an available ID
 
   write(filename,"(a,I0,'_F',I0,'.bin')") trim(OUTPUT_FILES)//'/Snapshot',itime,iflt
 
-  open(unit=IOUT, file= trim(filename), status='replace', form='unformatted',action='write')
+  open(unit=IOUT_SN, file=trim(filename), status='replace', form='unformatted',action='write',iostat=ier)
+  if (ier /= 0) then
+    print *,'Error opening Snapshot file: ',trim(filename)
+    stop 'Error opening Snapshot file'
+  endif
 
-  write(IOUT) dataXZ%xcoord
-  write(IOUT) dataXZ%ycoord
-  write(IOUT) dataXZ%zcoord
-  write(IOUT) dataXZ%d1
-  write(IOUT) dataXZ%d2
-  write(IOUT) dataXZ%v1
-  write(IOUT) dataXZ%v2
-  write(IOUT) dataXZ%t1
-  write(IOUT) dataXZ%t2
-  write(IOUT) dataXZ%t3
-  write(IOUT) dataXZ%sta
-  write(IOUT) dataXZ%stg
-  write(IOUT) dataXZ%tRUP
-  write(IOUT) dataXZ%tPZ
-  close(IOUT)
+  write(IOUT_SN) dataXZ%xcoord
+  write(IOUT_SN) dataXZ%ycoord
+  write(IOUT_SN) dataXZ%zcoord
+  write(IOUT_SN) dataXZ%d1
+  write(IOUT_SN) dataXZ%d2
+  write(IOUT_SN) dataXZ%v1
+  write(IOUT_SN) dataXZ%v2
+  write(IOUT_SN) dataXZ%t1
+  write(IOUT_SN) dataXZ%t2
+  write(IOUT_SN) dataXZ%t3
+  write(IOUT_SN) dataXZ%sta
+  write(IOUT_SN) dataXZ%stg
+  write(IOUT_SN) dataXZ%tRUP
+  write(IOUT_SN) dataXZ%tPZ
+
+  close(IOUT_SN)
 
   end subroutine write_dataXZ
 
@@ -2357,14 +2436,15 @@ contains
   integer,intent(in) :: it
 
   ! local parameters
+  type(bc_dynandkinflt_type),pointer :: bc
   integer :: ifault
-  type(bc_dynandkinflt_type) :: bc
 
   do ifault = 1,Nfaults
-    bc = faults(ifault)
+    bc => faults(ifault)
 
     ! copies data back to CPU
     call transfer_fault_data_to_host(Fault_pointer, ifault-1, bc%nspec, bc%nglob, bc%D, bc%V, bc%T)
+
     ! copies dataT back to CPU
     call transfer_dataT_to_host(Fault_pointer, ifault-1, bc%dataT%dat, it)
 

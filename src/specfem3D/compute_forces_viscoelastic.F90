@@ -43,7 +43,7 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,ONE_THIRD,FOUR_THIRDS, &
     m1,m2
 
-  use fault_solver_dynamic, only: Kelvin_Voigt_eta
+  use fault_solver_common, only: Kelvin_Voigt_eta,USE_KELVIN_VOIGT_DAMPING
 
   use specfem_par, only: SAVE_MOHO_MESH,USE_LDDRK, &
                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
@@ -185,7 +185,9 @@
 !$OMP displ,veloc,accel, &
 !$OMP is_CPML,backward_simulation, &
 !$OMP xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
-!$OMP kappastore,mustore,Kelvin_Voigt_eta,deltat, &
+!$OMP kappastore,mustore, &
+!$OMP Kelvin_Voigt_eta,USE_KELVIN_VOIGT_DAMPING, &
+!$OMP deltat, &
 !$OMP c11store,c12store,c13store,c14store,c15store,c16store, &
 !$OMP c22store,c23store,c24store,c25store,c26store,c33store, &
 !$OMP c34store,c35store,c36store,c44store,c45store,c46store, &
@@ -244,10 +246,7 @@
     ! no PML elements from here on
 
     ! stores displacment values in local array
-
-    !ZN ZN Do we need a stop statement somewhere in case of
-    !ZN ZN SIMULATION_TYPE == 3 and allocated(Kelvin_Voigt_eta) = .true. ??
-    if (allocated(Kelvin_Voigt_eta)) then
+    if (USE_KELVIN_VOIGT_DAMPING) then
       ! Kelvin Voigt damping: artificial viscosity around dynamic faults
       eta = Kelvin_Voigt_eta(ispec)
       if (is_CPML(ispec) .and. eta /= 0._CUSTOM_REAL) stop 'you cannot put a fault inside a PML layer'
@@ -913,7 +912,7 @@
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ONE_THIRD,m1,m2
 
-  use fault_solver_dynamic, only: Kelvin_Voigt_eta
+  use fault_solver_common, only: Kelvin_Voigt_eta,USE_KELVIN_VOIGT_DAMPING
 
   use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                          NGLOB_AB, &
@@ -1061,7 +1060,7 @@
 !$OMP displ,veloc,accel, &
 !$OMP is_CPML,backward_simulation, &
 !$OMP xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-!$OMP Kelvin_Voigt_eta, &
+!$OMP Kelvin_Voigt_eta,USE_KELVIN_VOIGT_DAMPING, &
 !$OMP COMPUTE_AND_STORE_STRAIN,SIMULATION_TYPE, &
 !$OMP epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
 !$OMP spec_to_CPML,PML_displ_old,PML_displ_new, &
@@ -1132,7 +1131,7 @@
     ! stores displacement values in local array
 
     ! checks
-    if (allocated(Kelvin_Voigt_eta)) then
+    if (USE_KELVIN_VOIGT_DAMPING) then
       ! Kelvin Voigt damping: artificial viscosity around dynamic faults
       eta = Kelvin_Voigt_eta(ispec)
       if (is_CPML(ispec) .and. eta /= 0._CUSTOM_REAL) stop 'Error: you cannot put a fault inside a PML layer'

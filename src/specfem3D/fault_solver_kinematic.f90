@@ -32,15 +32,11 @@
 
 module fault_solver_kinematic
 
-!  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IMAIN,IOUT
-
   use fault_solver_common
 
   implicit none
 
   private
-
-  type(bc_dynandkinflt_type), allocatable, save :: faults(:)
 
   !Number of time steps defined by the user : NTOUT
   integer, save :: NTOUT,NSNAP
@@ -66,10 +62,12 @@ contains
   character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
 
   ! local parameters
+  type(bc_dynandkinflt_type),pointer :: bc
   real(kind=CUSTOM_REAL) :: dt_real
   integer :: iflt,ier,dummy_idfault
   integer :: nbfaults,nbfaults_bin
-  integer :: SIMULATION_TYPE
+  integer :: size_Kelvin_Voigt
+  integer :: rupture_type
   character(len=MAX_STRING_LEN) :: filename
 
   integer, parameter :: IIN_PAR = 151
@@ -78,6 +76,7 @@ contains
   real(kind=CUSTOM_REAL) :: DUMMY
   NAMELIST / BEGIN_FAULT / dummy_idfault
 
+  ! initializes
   dummy_idfault = 0
 
   ! note: all processes will open this file
@@ -108,17 +107,17 @@ contains
   endif
 
   ! Reading etas of each fault
-  ! Skip viscosity eta of each fault. Not used in kinematic simulations.
+  ! Skip reading viscosity eta of each fault, will be done with binary file
   do iflt = 1,nbfaults
     read(IIN_PAR,*) ! eta
   enddo
 
   ! fault rupture type: 1 = dyn 2 = kin
-  read(IIN_PAR,*) SIMULATION_TYPE
+  read(IIN_PAR,*) rupture_type
 
   ! fault simulation type == 2 for kinematic rupture simulation
   ! checks if anything to do
-  if (SIMULATION_TYPE /= 2) then
+  if (rupture_type /= 2) then
     close(IIN_BIN)
     close(IIN_PAR)
     ! all done
@@ -154,6 +153,8 @@ contains
     call exit_MPI(myrank,'Error invalid number of faults in Par_file_faults')
   endif
 
+  ! saves number of faults
+  Nfaults = nbfaults
   allocate( faults(nbfaults) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1993')
 
@@ -161,12 +162,42 @@ contains
 
   ! reads in fault parameters
   do iflt = 1,nbfaults
+    ! example lines:
+    ! &BEGIN_FAULT /
+    ! &STRESS_TENSOR Sigma=0e0,0e0,0e0,0e0,0e0,0e0/
+    ! ..
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
-    call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt_real,nt,iflt)
+    ! initializes fault
+    bc => faults(iflt)
+    call init_one_fault(bc,IIN_BIN,IIN_PAR,dt_real,nt,iflt)
   enddo
 
+  ! close files
   close(IIN_BIN)
   close(IIN_PAR)
+
+  ! reads Kelvin-Voigt parameters
+  filename = prname(1:len_trim(prname))//'Kelvin_voigt_eta.bin'
+  open(unit=IIN_BIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+  if (ier /= 0) then
+    write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
+    call exit_MPI(myrank,'Error opening file Kelvin_voigt_eta.bin')
+  endif
+
+  ! reads in values
+  read(IIN_BIN) size_Kelvin_Voigt
+  if (size_Kelvin_Voigt > 0) then
+    allocate(Kelvin_Voigt_eta(size_Kelvin_Voigt),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1362')
+    read(IIN_BIN) Kelvin_Voigt_eta
+  endif
+  close(IIN_BIN)
+  ! sets flag if this process has damping on fault elements
+  if (allocated(Kelvin_Voigt_eta)) then
+    USE_KELVIN_VOIGT_DAMPING = .true.
+  else
+    USE_KELVIN_VOIGT_DAMPING = .false.
+  endif
 
   ! user output
   if (myrank == 0) then
@@ -193,14 +224,16 @@ contains
   integer, intent(in)                 :: IIN_BIN,IIN_PAR,NT,iflt
   real(kind=CUSTOM_REAL), intent(in)  :: dt_real
 
+  ! local parameters
   real(kind=CUSTOM_REAL) :: kindt
-
-  integer :: ier
+  integer :: ier,recordlength
 
   NAMELIST / KINPAR / kindt
 
+  ! reads in fault_db binary file and initializes fault arrays
   call initialize_fault(bc,IIN_BIN)
 
+  ! sets up initial fault state
   if (bc%nspec > 0) then
     allocate(bc%T(3,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1994')
@@ -234,7 +267,9 @@ contains
              bc%V(3,1))
   endif
 
-  call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt_real,7,iflt)
+  ! output dataT structure
+  recordlength = 7  ! number of quantities to store for each record
+  call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt_real,recordlength,iflt)
 
   call init_dataXZ(bc%dataXZ,bc)
 
@@ -250,11 +285,17 @@ contains
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: Vel,Dis
   real(kind=CUSTOM_REAL), dimension(:,:), intent(inout) :: F
 
+  ! local parameters
   integer :: iflt
 
-  if (.not. allocated(faults)) return
-  do iflt=1,size(faults)
-    if (faults(iflt)%nspec > 0) call BC_KINFLT_set_single(faults(iflt),F,Vel,Dis,iflt)
+  ! checks if anything to do
+  if (Nfaults == 0) return
+
+  ! loops over faults
+  do iflt = 1,Nfaults
+    ! note: this routine should be called by all processes, regardless if they contain no fault elements,
+    !       for managing MPI calls and file outputs
+    call BC_KINFLT_set_single(faults(iflt),F,Vel,Dis,iflt)
   enddo
 
   end subroutine BC_KINFLT_set_all
@@ -346,7 +387,7 @@ contains
     dV_free(3,:) = dV(3,:) + half_dt*dA(3,:)
 
     ! T = Z*( dV_free - V) , V known apriori as input.
-    ! CONVENTION : T(ibulk1)=T=-T(ibulk2)
+    ! CONVENTION : T(ibulk1) = T = -T(ibulk2)
     T(1,:) = bc%Z * ( dV_free(1,:) - bc%V(1,:) )
     T(2,:) = bc%Z * ( dV_free(2,:) - bc%V(2,:) )
     T(3,:) = bc%Z * ( dV_free(3,:) )
@@ -414,29 +455,36 @@ contains
 
   subroutine write_dataXZ(dataXZ,itime,iflt)
 
-  use specfem_par, only: myrank
+  use specfem_par, only: myrank,OUTPUT_FILES
 
   implicit none
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: itime,iflt
 
-  character(len=70) :: filename
+  ! local parameters
+  integer :: ier
+  character(len=MAX_STRING_LEN) :: filename
+  integer, parameter :: IOUT_SN = 171
 
-  write(filename,"('../OUTPUT_FILES/Proc',I0,'Snapshot',I0,'_F',I0,'.bin')") myrank,itime,iflt
+  write(filename,"(a,'/Proc',I0,'Snapshot',I0,'_F',I0,'.bin')") trim(OUTPUT_FILES),myrank,itime,iflt
 
-  open(unit=IOUT, file= trim(filename), status='unknown', form='unformatted',action='write')
+  open(unit=IOUT_SN, file=trim(filename), status='unknown', form='unformatted',action='write',iostat=ier)
+  if (ier /= 0) then
+    print *,'Error opening Snapshot file: ',trim(filename)
+    stop 'Error opening Snapshot file'
+  endif
 
-  write(IOUT) dataXZ%xcoord
-  write(IOUT) dataXZ%ycoord
-  write(IOUT) dataXZ%zcoord
-  write(IOUT) dataXZ%d1
-  write(IOUT) dataXZ%d2
-  write(IOUT) dataXZ%v1
-  write(IOUT) dataXZ%v2
-  write(IOUT) dataXZ%t1
-  write(IOUT) dataXZ%t2
-  write(IOUT) dataXZ%t3
-  close(IOUT)
+  write(IOUT_SN) dataXZ%xcoord
+  write(IOUT_SN) dataXZ%ycoord
+  write(IOUT_SN) dataXZ%zcoord
+  write(IOUT_SN) dataXZ%d1
+  write(IOUT_SN) dataXZ%d2
+  write(IOUT_SN) dataXZ%v1
+  write(IOUT_SN) dataXZ%v2
+  write(IOUT_SN) dataXZ%t1
+  write(IOUT_SN) dataXZ%t2
+  write(IOUT_SN) dataXZ%t3
+  close(IOUT_SN)
 
   end subroutine write_dataXZ
 

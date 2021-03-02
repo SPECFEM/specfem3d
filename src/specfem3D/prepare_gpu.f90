@@ -35,7 +35,8 @@
   use specfem_par_noise
   use specfem_par_movie
 
-  use fault_solver_dynamic, only: SIMULATION_TYPE_DYN,Kelvin_Voigt_eta,fault_transfer_data_GPU,fault_rsf_swf_init_GPU
+  use fault_solver_common, only: Kelvin_Voigt_eta,USE_KELVIN_VOIGT_DAMPING,Kelvin_Voigt_eta
+  use fault_solver_dynamic, only: SIMULATION_TYPE_DYN,fault_transfer_data_GPU,fault_rsf_swf_init_GPU
   use fault_solver_kinematic, only: SIMULATION_TYPE_KIN
 
   implicit none
@@ -228,6 +229,7 @@
       write(IMAIN,*) "  loading fault simulation"
       call flush_IMAIN()
     endif
+
     ! dynamic rupture
     if (SIMULATION_TYPE_DYN) then
       ! user output
@@ -237,11 +239,16 @@
       endif
       ! initializes fault data on gpu
       call fault_transfer_data_GPU()
+
       ! sets up Kelvin-Voigt damping array
-      call prepare_fault_device(Mesh_pointer,allocated(Kelvin_Voigt_eta),Kelvin_Voigt_eta)
-      ! sets up friction law
+      if (USE_KELVIN_VOIGT_DAMPING) then
+        call prepare_fault_device(Mesh_pointer,USE_KELVIN_VOIGT_DAMPING,Kelvin_Voigt_eta)
+      endif
+
+      ! sets up friction law arrays
       call fault_rsf_swf_init_GPU()
     endif
+
     ! kinematic rupture
     if (SIMULATION_TYPE_KIN) then
       stop 'Kinematic rupture simulations on GPU not implemented yet'

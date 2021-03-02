@@ -135,7 +135,7 @@
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbors_ext_mesh)
 
-  use constants, only: CUSTOM_REAL,itag
+  use constants, only: itag
 
   implicit none
 

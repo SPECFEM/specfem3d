@@ -32,7 +32,7 @@
 
 module fault_solver_common
 
-  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IMAIN,IOUT,IN_DATA_FILES
+  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IMAIN,IN_DATA_FILES
 
   implicit none
 
@@ -42,7 +42,8 @@ module fault_solver_common
     real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: R => null()
     real(kind=CUSTOM_REAL), dimension(:),     pointer :: B => null(),invM1 => null(),invM2 => null(),Z => null()
     real(kind=CUSTOM_REAL) :: dt
-    integer, dimension(:), pointer :: ibulk1 => null(), ibulk2 => null()
+    integer, dimension(:), pointer :: ibulk1 => null(), ibulk2 => null()  ! global nodes id
+    integer, dimension(:), pointer :: ispec1 => null(), ispec2 => null()  ! fault elements id
   end type fault_type
 
   ! outputs(dyn) /inputs (kind) at selected times for all fault nodes:
@@ -82,6 +83,7 @@ module fault_solver_common
   type dataT_type
     integer :: npoin=0, ndat=0, nt=0
     real(kind=CUSTOM_REAL) :: dt
+    real(kind=CUSTOM_REAL) :: element_size
     integer, dimension(:), pointer :: iglob => null()   ! on-fault global index of output nodes
     real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: dat => null()
     character(len=MAX_STRING_LEN), dimension(:), pointer :: name => null(),longFieldNames => null()
@@ -103,12 +105,22 @@ module fault_solver_common
     real(kind=CUSTOM_REAL) :: kin_dt
     integer :: kin_it
     real(kind=CUSTOM_REAL), dimension(:,:), pointer :: v_kin_t1,v_kin_t2
-
   end type bc_dynandkinflt_type
+
+  ! fault array
+  type(bc_dynandkinflt_type),dimension(:), pointer :: faults => null()
+  ! Number of faults
+  integer, save                                    :: Nfaults = 0
+
+  ! Kelvin-Voigt damping
+  real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
+  logical :: USE_KELVIN_VOIGT_DAMPING = .false.
 
   public :: fault_type, &
             initialize_fault, get_jump, get_weighted_jump, rotate, add_BT, &
-            dataT_type, init_dataT, store_dataT, SCEC_write_dataT
+            dataT_type, init_dataT, store_dataT, SCEC_write_dataT, &
+            Kelvin_Voigt_eta, USE_KELVIN_VOIGT_DAMPING, &
+            fault_check_mesh_resolution
 
 contains
 
@@ -181,6 +193,12 @@ contains
     ! fault element jacobian
     allocate(jacobian2Dw(NGLLSQUARE,bc%nspec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2169')
+    ! fault elements ispec (touching upper surface)
+    allocate(bc%ispec1(bc%nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2170')
+    ! fault elements ispec (touching lower surface)
+    allocate(bc%ispec2(bc%nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2171')
 
     read(IIN_BIN) ibool1
     read(IIN_BIN) jacobian2Dw
@@ -190,6 +208,18 @@ contains
     read(IIN_BIN) bc%coord(1,:)
     read(IIN_BIN) bc%coord(2,:)
     read(IIN_BIN) bc%coord(3,:)
+
+    ! optional, checks if ispec arrays for elements on fault are saved
+    ! (older fault_db.bin files won't have these records)
+    read(IIN_BIN,iostat=ier) bc%ispec1
+    ! dummy value if not stored
+    if (ier /= 0) bc%ispec1(:) = 0
+
+    read(IIN_BIN,iostat=ier) bc%ispec2
+    ! dummy value if not stored
+    if (ier /= 0) bc%ispec2(:) = 0
+
+    ! done reading faults_db.bin file, no more records in read(IIN_BIN).. from here on
 
     ! sets simulation time step size
     bc%dt = real(DT,kind=CUSTOM_REAL)
@@ -461,6 +491,12 @@ contains
 
   IIN = 251 ! WARNING: not safe, should check that unit is not aleady opened
 
+  ! initializes dataT
+  dataT%ndat = ndat
+  dataT%nt = NT
+  dataT%dt = DT
+  dataT%element_size = 0.0
+
   ! count the number of output points on the current fault (#iflt)
   open(IIN,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS',status='old',action='read',iostat=ier)
   if (ier /= 0) then
@@ -481,7 +517,7 @@ contains
   enddo
   close(IIN)
 
-  ! checks if anything to do
+  ! checks if anything left to do
   if (dataT%npoin == 0) return
 
   ! allocates fault point arrays
@@ -605,10 +641,6 @@ contains
 
   !  3. initialize arrays
   if (dataT%npoin > 0) then
-    dataT%ndat = ndat
-    dataT%nt = NT
-    dataT%dt = DT
-
     allocate(dataT%dat(dataT%ndat,dataT%npoin,dataT%nt),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2182')
     dataT%dat(:,:,:) = 0.0_CUSTOM_REAL
@@ -659,54 +691,242 @@ contains
 
   subroutine SCEC_write_dataT(dataT)
 
+  use constants, only: NGLLX
   use specfem_par, only: OUTPUT_FILES
 
   implicit none
+
 !! DK DK use type() instead of class() for compatibility with some current compilers
   type(dataT_type), intent(in) :: dataT
 
   ! local parameters
-  integer :: ipoin,k
+  integer :: ipoin,k,elem_size
   character(len=10) :: my_fmt
+  character(len=24) :: my_fmt_size
   integer, dimension(8) :: time_values
-  integer, parameter :: IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
+  integer, parameter :: IOUT_SC = 121 !WARNING: not very robust. Could instead look for an available ID
 
   call date_and_time(VALUES=time_values)
+
+  ! element size in m
+  elem_size = int(dataT%element_size)
+  if (elem_size == 0) then
+    write(my_fmt_size,'(a,i1,a,i1,a)') '(a,i',1,',a,i',int(log10(1.0*NGLLX))+1,',a)'
+  else
+    write(my_fmt_size,'(a,i1,a,i1,a)') '(a,i',int(log10(1.0*elem_size))+1,',a,i',int(log10(1.0*NGLLX))+1,',a)'
+  endif
 
   write(my_fmt,'(a,i1,a)') '(',dataT%ndat+1,'(E15.7))'
 
   do ipoin = 1,dataT%npoin
-    open(IOUT,file=trim(OUTPUT_FILES)//trim(dataT%name(ipoin))//'.dat',status='replace')
+    open(IOUT_SC,file=trim(OUTPUT_FILES)//trim(dataT%name(ipoin))//'.dat',status='replace')
 
-    write(IOUT,*) "# problem=TPV104" ! WARNING: this should be a user input
-    write(IOUT,*) "# author=Surendra Nadh Somala" ! WARNING: this should be a user input
-    write(IOUT,1000) time_values(2), time_values(3), time_values(1), time_values(5), time_values(6), time_values(7)
-    write(IOUT,*) "# code=SPECFEM3D_Cartesian (split nodes)"
-    write(IOUT,*) "# code_version=1.1"
-    write(IOUT,*) "# element_size=100 m  (*5 GLL nodes)" ! WARNING: this should be a user input
-    write(IOUT,*) "# time_step=",dataT%dt
-    write(IOUT,*) "# location=",trim(dataT%name(ipoin))
-    write(IOUT,*) "# Column #1 = Time (s)"
+    write(IOUT_SC,'(a)') "# problem=TPV104" ! WARNING: this should be a user input
+    write(IOUT_SC,'(a)') "# author=Surendra Nadh Somala" ! WARNING: this should be a user input
+    write(IOUT_SC,1000) time_values(2), time_values(3), time_values(1), time_values(5), time_values(6), time_values(7)
+    write(IOUT_SC,'(a)') "# code=SPECFEM3D_Cartesian (split nodes)"
+    write(IOUT_SC,'(a)') "# code_version=1.1"
+    write(IOUT_SC,my_fmt_size) "# element_size=",elem_size," m  (w/ ",NGLLX," GLL nodes)"
+    write(IOUT_SC,'(a,E15.7)') "# time_step=",dataT%dt
+    write(IOUT_SC,'(a)') "# location=" // trim(dataT%name(ipoin))
+    write(IOUT_SC,'(a)') "# Column #1 = Time (s)"
 
     do k = 1,dataT%ndat
-      write(IOUT,1100) k+1,trim(dataT%longFieldNames(k))
+      write(IOUT_SC,1100) k+1,trim(dataT%longFieldNames(k))
     enddo
 
-    write(IOUT,*) "#"
-    write(IOUT,*) "# The line below lists the names of the data fields:"
-    write(IOUT,'(a256)') "# t " // trim(dataT%shortFieldNames)
-    write(IOUT,*) "#"
+    write(IOUT_SC,'(a)') "#"
+    write(IOUT_SC,'(a)') "# The line below lists the names of the data fields:"
+    write(IOUT_SC,'(a)') "# t " // trim(dataT%shortFieldNames)
+    write(IOUT_SC,'(a)') "#"
 
     do k = 1,dataT%nt
-      write(IOUT,my_fmt) k*dataT%dt, dataT%dat(:,ipoin,k)
+      write(IOUT_SC,my_fmt) k*dataT%dt, dataT%dat(:,ipoin,k)
     enddo
 
-    close(IOUT)
+    close(IOUT_SC)
   enddo
 
-1000 format ( ' # Date = ', i2.2, '/', i2.2, '/', i4.4, '; time = ',i2.2, ':', i2.2, ':', i2.2 )
-1100 format ( ' # Column #', i1, ' = ',a )
+1000 format ( '# Date = ', i2.2, '/', i2.2, '/', i4.4, '; time = ',i2.2, ':', i2.2, ':', i2.2 )
+1100 format ( '# Column #', i1, ' = ',a )
 
   end subroutine SCEC_write_dataT
+
+!---------------------------------------------------------------------
+
+  subroutine fault_check_mesh_resolution()
+
+  use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,CUSTOM_REAL,HUGEVAL,COURANT_SUGGESTED,myrank
+  use specfem_par, only: NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,kappastore,mustore,rhostore,DT
+  use specfem_par_elastic, only: ispec_is_elastic
+
+  implicit none
+
+  ! local parameters
+  type(bc_dynandkinflt_type),pointer :: bc
+  real(kind=CUSTOM_REAL) :: eta_max,eta_max_glob
+  real(kind=CUSTOM_REAL) :: h_fault,csp_max,DIM
+  real(kind=CUSTOM_REAL) :: dtc_fault,dtc_kv
+  integer :: NGLL,ispec,iside,elem,ifault
+  logical :: USE_KELVIN_VOIGT_DAMPING_all
+
+  ! elements info
+  real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax,vpmin_glob,vpmax_glob
+  real(kind=CUSTOM_REAL) :: poissonmin,poissonmax
+  real(kind=CUSTOM_REAL) :: elemsize_min,elemsize_max,elemsize_min_glob,elemsize_max_glob
+  real(kind=CUSTOM_REAL) :: avg_distance,dt_suggested
+  real(kind=CUSTOM_REAL) :: eta_suggested_min,eta_suggested_max
+  logical :: has_vs_zero
+
+  ! tabulated values of critical frequency (non-dimensional, 1D)
+  ! (taken from utils/critical_timestep.m)
+  real(kind=CUSTOM_REAL),dimension(19),parameter :: &
+    Omega_max = (/2.0000000e+00, 4.8989795e+00, 8.6203822e+00, 1.3540623e+01, 1.9797952e+01, 2.7378050e+01, &
+                  3.6256848e+01, 4.6421894e+01, 5.7867306e+01, 7.0590158e+01, 8.4588883e+01, 9.9862585e+01, &
+                  1.1641072e+02, 1.3423295e+02, 1.5332903e+02, 1.7369883e+02, 1.9534221e+02, 2.1825912e+02, &
+                  2.4244948e+02 /)
+
+  ! stability factor for leapfrog timescheme
+  real(kind=CUSTOM_REAL),parameter :: C = 2.0_CUSTOM_REAL
+
+  ! gets fault element size and maximum Vp velocity
+  vpmin_glob = HUGEVAL
+  vpmax_glob = -HUGEVAL
+
+  elemsize_min_glob = HUGEVAL
+  elemsize_max_glob = -HUGEVAL
+
+  ! loop over all faults
+  do ifault = 1,Nfaults
+    bc => faults(ifault)
+    ! loops over fault elements
+    do elem = 1,bc%nspec
+      ! loops over both sides of fault
+      do iside = 1,2
+        ! gets element id
+        if (iside == 1) then
+          ispec = bc%ispec1(elem)
+        else
+          ispec = bc%ispec2(elem)
+        endif
+
+        ! checks if valid entry
+        if (ispec < 1) cycle
+
+        ! checks if element is elastic
+        if (.not. ispec_is_elastic(ispec)) then
+          print *,'Error fault elements must be elastic: element ',ispec,' is in different acoustic/poroelastic domain'
+          print *,'Please check mesh setup for dynamic rupture simulation...'
+          stop 'Invalid fault element, elements in acoustic/poroelastic domains not supported yet'
+        endif
+
+        ! determines minimum/maximum velocities within this element
+        ! elastic/acoustic
+        call get_vpvs_minmax(vpmin,vpmax,vsmin,vsmax,poissonmin,poissonmax, &
+                             ispec,has_vs_zero, &
+                             NSPEC_AB,kappastore,mustore,rhostore)
+
+        ! min/max for whole cpu partition
+        vpmin_glob = min(vpmin_glob, vpmin)
+        vpmax_glob = max(vpmax_glob, vpmax)
+
+        ! computes minimum and maximum size of this grid cell
+        call get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
+                                 NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
+
+        elemsize_min_glob = min(elemsize_min_glob, elemsize_min)
+        elemsize_max_glob = max(elemsize_max_glob, elemsize_max)
+      enddo ! iside
+    enddo ! elem
+  enddo
+
+  ! main process gathers overall values
+  ! Vp velocity
+  vpmin = vpmin_glob
+  vpmax = vpmax_glob
+  call min_all_cr(vpmin,vpmin_glob)
+  call max_all_cr(vpmax,vpmax_glob)
+
+  ! element size
+  elemsize_min = elemsize_min_glob
+  elemsize_max = elemsize_max_glob
+  call min_all_cr(elemsize_min,elemsize_min_glob)
+  call max_all_cr(elemsize_max,elemsize_max_glob)
+
+  ! sets element size in dataT structure
+  ! broadcast to all processes
+  call bcast_all_singlecr(elemsize_max_glob)
+  ! all faults will have same element size set
+  do ifault = 1,Nfaults
+    bc => faults(ifault)
+    bc%dataT%element_size = elemsize_max_glob
+  enddo
+
+  ! gets maximum damping value set by Par_file_faults
+  if (USE_KELVIN_VOIGT_DAMPING) then
+    eta_max_glob = maxval(Kelvin_Voigt_eta(:))
+  else
+    eta_max_glob = 0.0_CUSTOM_REAL
+  endif
+  eta_max = eta_max_glob
+  call max_all_cr(eta_max,eta_max_glob)
+
+  ! check damping flag; see if any damping will be used, for user output
+  call any_all_l( USE_KELVIN_VOIGT_DAMPING, USE_KELVIN_VOIGT_DAMPING_all )
+
+  ! only main process has valid values
+  if (myrank == 0) then
+    ! average distance between GLL points within this element
+    avg_distance = elemsize_max_glob / ( NGLLX - 1)  ! since NGLLX = NGLLY = NGLLZ
+    ! rough estimate of time step
+    dt_suggested = COURANT_SUGGESTED * avg_distance / vpmax_glob
+
+    ! critical time step estimation
+    ! see: utils/critical_timestep.m
+    NGLL = max(NGLLX,NGLLY,NGLLZ)
+    ! checks
+    if (NGLL < 2 .or. NGLL > 20) stop 'Error critical time step estimation: NGLL must be from 2 to 20'
+
+    ! critical time step,
+    ! assumes a cube element
+    h_fault = elemsize_min_glob
+    csp_max = vpmax_glob
+    DIM = NDIM
+
+    ! critical time step (for fault elements)
+    dtc_fault = C * h_fault / csp_max / sqrt(DIM) / Omega_max(NGLL-1)
+
+    ! proposed eta value range (see manual about explanation) is between [0.1,0.3] * dt_c
+    ! (0.1 to 0.3)$\ensuremath{\times}\mathtt{dtc\_fault}$
+    eta_suggested_min = min(0.1 * dtc_fault,0.1 * dt_suggested)
+    eta_suggested_max = min(0.3 * dtc_fault,0.3 * dt_suggested)
+
+    ! critical time step with given Kelvin-Voigt damping
+    ! (see manual for explanation)
+    if (eta_max_glob > 0.0_CUSTOM_REAL) then
+      dtc_kv = eta_max_glob * (sqrt(1.0_CUSTOM_REAL + dtc_fault**2/eta_max_glob**2) - 1.0_CUSTOM_REAL)
+    else
+      dtc_kv = dtc_fault
+    endif
+
+    ! user output
+    write(IMAIN,*) "  Fault resolution info:"
+    write(IMAIN,*) "    Element size   min/max                      = ",elemsize_min_glob,"/",elemsize_max_glob
+    write(IMAIN,*) "    P velocity     min/max                      = ",vpmin_glob,"/",vpmax_glob
+    write(IMAIN,*) "    estimated maximum suggested time step       = ",dt_suggested
+    write(IMAIN,*) "    estimated critical time step                = ",dtc_fault
+    write(IMAIN,*) "    suggested eta value range min/max           = ",eta_suggested_min,"/",eta_suggested_max
+    if (USE_KELVIN_VOIGT_DAMPING_all) then
+      write(IMAIN,*) "    Kelvin Voigt eta(damping):"
+      write(IMAIN,*) "      maximum eta value                         = ",eta_max_glob
+      write(IMAIN,*) "      estimated critical time step (w/ damping) = ",dtc_kv
+    endif
+    write(IMAIN,*) "    current time step size                      = ",sngl(DT)
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
+  end subroutine fault_check_mesh_resolution
+
 
 end module fault_solver_common
