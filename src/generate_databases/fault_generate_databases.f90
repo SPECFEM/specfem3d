@@ -135,11 +135,12 @@ contains
     stop
   endif
 
-  do iflt=1,size(fault_db)
+  do iflt = 1,size(fault_db)
 
     read(IIN_PAR) nspec
     fault_db(iflt)%nspec  = nspec
 
+    ! check if anything to do
     if (nspec == 0) cycle
 
     ANY_FAULT_IN_THIS_PROC = .true.
@@ -153,10 +154,10 @@ contains
     allocate(fault_db(iflt)%inodes2(NGNOD2D,nspec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 872')
 
-    do i=1,nspec
+    do i = 1,nspec
       read(IIN_PAR) fault_db(iflt)%ispec1(i), fault_db(iflt)%inodes1(:,i)
     enddo
-    do i=1,nspec
+    do i = 1,nspec
       read(IIN_PAR) fault_db(iflt)%ispec2(i), fault_db(iflt)%inodes2(:,i)
     enddo
 
@@ -254,9 +255,9 @@ contains
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 874')
   allocate(fdb%iface2(fdb%nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 875')
-  do e=1,fdb%nspec
+  do e = 1,fdb%nspec
    ! side 1
-    do icorner=1,NGNOD2D
+    do icorner = 1,NGNOD2D
       xcoord(icorner) = nodes_coords_ext_mesh(1,fdb%inodes1(icorner,e))
       ycoord(icorner) = nodes_coords_ext_mesh(2,fdb%inodes1(icorner,e))
       zcoord(icorner) = nodes_coords_ext_mesh(3,fdb%inodes1(icorner,e))
@@ -266,7 +267,7 @@ contains
                             xstore_dummy,ystore_dummy,zstore_dummy, &
                             fdb%iface1(e))
    ! side 2
-    do icorner=1,NGNOD2D
+    do icorner = 1,NGNOD2D
       xcoord(icorner) = nodes_coords_ext_mesh(1,fdb%inodes2(icorner,e))
       ycoord(icorner) = nodes_coords_ext_mesh(2,fdb%inodes2(icorner,e))
       zcoord(icorner) = nodes_coords_ext_mesh(3,fdb%inodes2(icorner,e))
@@ -357,10 +358,10 @@ contains
   k = 0
   do e = 1,fdb%nspec
     ispec = fdb%ispec1(e)
-    do igll=1,NGLLSQUARE
-      ie=fdb%ijk1(1,igll,e)
-      je=fdb%ijk1(2,igll,e)
-      ke=fdb%ijk1(3,igll,e)
+    do igll = 1,NGLLSQUARE
+      ie = fdb%ijk1(1,igll,e)
+      je = fdb%ijk1(2,igll,e)
+      ke = fdb%ijk1(3,igll,e)
       k = k+1
       xp(k) = xstore(ie,je,ke,ispec)
       yp(k) = ystore(ie,je,ke,ispec)
@@ -380,10 +381,10 @@ contains
   k = 0
   do e = 1,fdb%nspec
     ispec = fdb%ispec2(e)
-    do igll=1,NGLLSQUARE
-      ie=fdb%ijk2(1,igll,e)
-      je=fdb%ijk2(2,igll,e)
-      ke=fdb%ijk2(3,igll,e)
+    do igll = 1,NGLLSQUARE
+      ie = fdb%ijk2(1,igll,e)
+      je = fdb%ijk2(2,igll,e)
+      ke = fdb%ijk2(3,igll,e)
       k = k+1
       xp(k) = xstore(ie,je,ke,ispec)
       yp(k) = ystore(ie,je,ke,ispec)
@@ -413,21 +414,19 @@ contains
   allocate( fdb%ibulk2(fdb%nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 882')
 
-  do e=1, fdb%nspec
-    do k=1, NGLLSQUARE
+  do e = 1, fdb%nspec
+    do k = 1, NGLLSQUARE
+      ie = fdb%ijk1(1,k,e)
+      je = fdb%ijk1(2,k,e)
+      ke = fdb%ijk1(3,k,e)
+      K1 = fdb%ibool1(k,e)
+      fdb%ibulk1(K1) = ibool(ie,je,ke,fdb%ispec1(e))
 
-      ie=fdb%ijk1(1,k,e)
-      je=fdb%ijk1(2,k,e)
-      ke=fdb%ijk1(3,k,e)
-      K1= fdb%ibool1(k,e)
-      fdb%ibulk1(K1)=ibool(ie,je,ke,fdb%ispec1(e))
-
-      ie=fdb%ijk2(1,k,e)
-      je=fdb%ijk2(2,k,e)
-      ke=fdb%ijk2(3,k,e)
-      K2= fdb%ibool2(k,e)
-      fdb%ibulk2(K2)=ibool(ie,je,ke,fdb%ispec2(e))
-
+      ie = fdb%ijk2(1,k,e)
+      je = fdb%ijk2(2,k,e)
+      ke = fdb%ijk2(3,k,e)
+      K2 = fdb%ibool2(k,e)
+      fdb%ibulk2(K2) = ibool(ie,je,ke,fdb%ispec2(e))
     enddo
   enddo
 
@@ -445,7 +444,7 @@ contains
 
   integer :: i,K1,K2
 
-  do i=1,fdb%nglob
+  do i = 1,fdb%nglob
     K1 = fdb%ibulk1(i)
     K2 = fdb%ibulk2(i)
     xstore_dummy(K1) = 0.5_CUSTOM_REAL*( xstore_dummy(K1) + xstore_dummy(K2) )
@@ -481,9 +480,9 @@ contains
   allocate( fdb%zcoordbulk2(fdb%nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 888')
 
-  do i=1, fdb%nglob
-      K1 =fdb%ibulk1(i)
-      K2 =fdb%ibulk2(i)
+  do i = 1, fdb%nglob
+      K1 = fdb%ibulk1(i)
+      K2 = fdb%ibulk2(i)
       fdb%xcoordbulk1(i) = xstore_dummy(K1)
       fdb%ycoordbulk1(i) = ystore_dummy(K1)
       fdb%zcoordbulk1(i) = zstore_dummy(K1)
@@ -594,14 +593,15 @@ contains
 
   if (.not. ANY_FAULT) return
 
-! saves mesh file proc***_fault_db.txt
+  ! saves mesh file proc***_fault_db.txt
   filename = prname(1:len_trim(prname))//'fault_db.txt'
+
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',iostat=ier)
   if (ier /= 0) stop 'error opening database proc######_external_mesh.bin'
 
   nbfaults = size(fault_db)
   write(IOUT,*) 'NBFAULTS = ',nbfaults
-  do iflt=1,nbfaults
+  do iflt = 1,nbfaults
     write(IOUT,*) 'BEGIN FAULT # ',iflt
     call save_one_fault_test(fault_db(iflt),IOUT)
     write(IOUT,*) 'END FAULT # ',iflt
@@ -626,7 +626,7 @@ contains
 
   write(IOUT,*) 'NSPEC NGLOB NGLL = ',f%nspec,f%nglob,NGLLX
   if (f%nspec == 0) return
-  do e=1,f%nspec
+  do e = 1,f%nspec
     write(IOUT,*) 'FLT_ELEM = ',e
     write(IOUT,*) 'ISPEC1 ISPEC2 = ',f%ispec1(e),f%ispec2(e)
     write(IOUT,fmt1) 'IBOOL1 = ',f%ibool1(:,e)
@@ -644,12 +644,12 @@ contains
   enddo
 
   write(IOUT,*) 'FLT_NODE IBULK1 IBULK2'
-  do k=1,f%nglob
+  do k = 1,f%nglob
     write(IOUT,*) k,f%ibulk1(k),f%ibulk2(k)
   enddo
 
   write(IOUT,*) 'FLT_NODE xcoordbulk ycoordbulk zcoordbulk'
-  do k=1,f%nglob
+  do k = 1,f%nglob
     write(IOUT,*) f%ibulk1(k),f%xcoordbulk1(k),f%ycoordbulk1(k),f%zcoordbulk1(k)
     write(IOUT,*) f%ibulk2(k),f%xcoordbulk2(k),f%ycoordbulk2(k),f%zcoordbulk2(k)
   enddo
@@ -672,42 +672,42 @@ contains
   character(len=MAX_STRING_LEN) :: filename
   integer :: size_Kelvin_Voigt
 
+  ! checks if any fault in this slice/process
   if (.not. ANY_FAULT) return
 
-! opening Kelvin_voig_eta.bin for each processor
-! if number of fault elements = 0 then the file is empty
+  ! opening Kelvin_voig_eta.bin for each processor
   filename = prname(1:len_trim(prname))//'Kelvin_voigt_eta.bin'
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',form='unformatted',iostat=ier)
   if (ier /= 0) then
     write(IMAIN,*) 'error opening file ',trim(filename)
-    stop
+    stop 'Error opening file Kelvin_voigt_eta.bin'
   endif
 
-! saves mesh file proc***_Kelvin_voigt_eta.bin
+  ! saves mesh file proc***_Kelvin_voigt_eta.bin
   if (allocated(Kelvin_Voigt_eta)) then
     size_Kelvin_Voigt = size(Kelvin_Voigt_eta)
   else
     size_Kelvin_Voigt = 0
   endif
   write(IOUT) size_Kelvin_Voigt
+  !if number of fault elements = 0 then the file is empty
   if (size_Kelvin_Voigt /= 0) write(IOUT) Kelvin_Voigt_eta
   close(IOUT)
 
-! saves mesh file proc***_fault_db.bin
+  ! saves mesh file proc***_fault_db.bin
   filename = prname(1:len_trim(prname))//'fault_db.bin'
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',form='unformatted',iostat=ier)
   if (ier /= 0) then
     write(IMAIN,*) 'error opening file ',trim(filename)
-    stop
+    stop 'Error opening file fault_db.bin'
   endif
 
   nbfaults = size(fault_db)
   write(IOUT) nbfaults
-  do iflt=1,nbfaults
+  do iflt = 1,nbfaults
     call save_one_fault_bin(fault_db(iflt),IOUT)
   enddo
   close(IOUT)
-
 
   end subroutine fault_save_arrays
 
@@ -719,8 +719,12 @@ contains
   type(fault_db_type), intent(in) :: f
   integer, intent(in) :: IOUT
 
+  ! number of fault elements and global nodes on fault
   write(IOUT) f%nspec,f%nglob
+
+  ! check if anything to do
   if (f%nspec == 0) return
+
   write(IOUT) f%ibool1
   write(IOUT) f%jacobian2Dw
   write(IOUT) f%normal
@@ -729,6 +733,10 @@ contains
   write(IOUT) f%xcoordbulk1
   write(IOUT) f%ycoordbulk1
   write(IOUT) f%zcoordbulk1
+
+  ! adds optional element arrays (for checking fault resolution and user output only)
+  write(IOUT) f%ispec1
+  write(IOUT) f%ispec2
 
   end subroutine save_one_fault_bin
 
