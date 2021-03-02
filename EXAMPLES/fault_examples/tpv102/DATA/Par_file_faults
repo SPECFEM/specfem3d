@@ -1,5 +1,5 @@
 1
-0.00051                 ! #tag #eta(damping) FAULT A
+0.005                   ! #tag #eta(damping) FAULT A (for original mesh resolution, use: 0.00051)
 1                       ! 1 = dyn 2=kin
 6000                    ! NTOUT : Number of time steps
 200                     ! NTSNAP: time interation of snapshots
