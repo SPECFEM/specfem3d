@@ -241,7 +241,7 @@ void FC_FUNC_(transfer_datat_to_host,
               TRANSFER_DATAT_TO_HOST)(long* Fault_pointer,
                                       int* fault_index,
                                       realw* h_dataT,
-                                      int* it) {
+                                      int* it_in) {
 
   TRACE("transfer_dataT_to_host");
 
@@ -249,11 +249,27 @@ void FC_FUNC_(transfer_datat_to_host,
   Fault* Flt = &(Fsolver->faults[*fault_index]);
 
   int recordlength = Flt->output_dataT->recordlength; // stores default == 7 different quantities or when RATE_AND_STATE == 8
+  int it = *it_in;
 
   if (Flt->output_dataT->NRECORD > 0){
-    int it_index = (*it - Flt->output_dataT->NT) * Flt->output_dataT->NRECORD * recordlength;
-    int size = Flt->output_dataT->NRECORD * recordlength * Flt->output_dataT->NT;
+    int it_index, size;
 
+    // determines dataT array length
+    int length_left = (it % Flt->output_dataT->NT);
+
+    if (length_left == 0){
+      // multiple of NT_RECORD_LENGTH == Flt->output_dataT->NT
+      // copies full dataT array
+      size = Flt->output_dataT->NRECORD * recordlength * Flt->output_dataT->NT;
+      it_index = (it - Flt->output_dataT->NT) * Flt->output_dataT->NRECORD * recordlength;
+    }else{
+      // output at last step, might not be a multiple of NT_RECORD_LENGTH
+      // need to copy only array of length_left
+      it_index = (it - length_left) * Flt->output_dataT->NRECORD * recordlength;
+      size = Flt->output_dataT->NRECORD * recordlength * length_left;
+    }
+
+    // copies dataT record to CPU
     copy_tohost_realw_test((void **)&(Flt->output_dataT->dataT),&h_dataT[it_index],size);
   }
 

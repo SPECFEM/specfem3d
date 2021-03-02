@@ -836,7 +836,7 @@ __global__ void store_dataT(realw* store_dataT,
                             int StateLaw,
                             realw* theta,
                             int* iglob,
-                            int istep,
+                            int it_step,
                             int n_record,
                             int nt) {
 
@@ -845,7 +845,7 @@ __global__ void store_dataT(realw* store_dataT,
 
   if(irec >= n_record) return;
 
-  int it = (istep - 1)%nt ;
+  int it = (it_step - 1)%nt ;
   int id = iglob[irec] - 1; // fortran to C array indexing -> iglob[irec]-1
 
   int recordlength;
@@ -878,7 +878,7 @@ __global__ void store_dataT(realw* store_dataT,
     realw theta_new;
     if (StateLaw == 1){
       // ageing law
-      theta_new = log(theta[id]);
+      theta_new = log10(theta[id]);
     }else{
       // slip law
       theta_new = theta[id];
