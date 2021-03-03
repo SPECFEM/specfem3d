@@ -125,6 +125,11 @@ AM_CONDITIONAL([COND_CUDA_PLUS],
 ### OPENMP
 ###
 
+AC_ARG_WITH([openmp],
+    [AS_HELP_STRING([--with-openmp],
+        [build OpenMP enabled version @<:@default=no@:>@])],
+    [want_omp="$withval"],
+    [want_omp=no])
 AC_ARG_ENABLE([openmp],
     [AS_HELP_STRING([--enable-openmp],
         [build OpenMP enabled version @<:@default=no@:>@])],
