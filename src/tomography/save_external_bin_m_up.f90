@@ -329,24 +329,24 @@
 
     ! mesh arrays used for example in combine_vol_data.f90
     !--- x coordinate
-    open(unit=27,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted')
-    write(27) xstore_dummy
-    close(27)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted')
+    write(IOUT) xstore_dummy
+    close(IOUT)
 
     !--- y coordinate
-    open(unit=27,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted')
-    write(27) ystore_dummy
-    close(27)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted')
+    write(IOUT) ystore_dummy
+    close(IOUT)
 
     !--- z coordinate
-    open(unit=27,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted')
-    write(27) zstore_dummy
-    close(27)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted')
+    write(IOUT) zstore_dummy
+    close(IOUT)
 
     ! ibool
-    open(unit=27,file=prname(1:len_trim(prname))//'ibool.bin',status='unknown',form='unformatted')
-    write(27) ibool
-    close(27)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'ibool.bin',status='unknown',form='unformatted')
+    write(IOUT) ibool
+    close(IOUT)
 
     allocate(v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1043')
@@ -361,9 +361,9 @@
     !endif
     v_tmp = 0.0
     where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
-    open(unit=27,file=prname(1:len_trim(prname))//'vp_new.bin',status='unknown',form='unformatted')
-    write(27) v_tmp
-    close(27)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'vp_new.bin',status='unknown',form='unformatted')
+    write(IOUT) v_tmp
+    close(IOUT)
 
     ! VTK file output
     ! vp values
@@ -382,9 +382,9 @@
     !endif
     v_tmp = 0.0
     where( rho_vs /= 0._CUSTOM_REAL )  v_tmp = mustore / rho_vs
-    open(unit=27,file=prname(1:len_trim(prname))//'vs_new.bin',status='unknown',form='unformatted')
-    write(27) v_tmp
-    close(27)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'vs_new.bin',status='unknown',form='unformatted')
+    write(IOUT) v_tmp
+    close(IOUT)
 
     ! VTK file output
     ! vs values
@@ -396,9 +396,9 @@
     ! outputs density model for check
     v_tmp = 0.0
     where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = rho_vp**2 / (FOUR_THIRDS * mustore + kappastore)
-    open(unit=27,file=prname(1:len_trim(prname))//'rho_new.bin',status='unknown',form='unformatted')
-    write(27) v_tmp
-    close(27)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'rho_new.bin',status='unknown',form='unformatted')
+    write(IOUT) v_tmp
+    close(IOUT)
 
     ! VTK file output
     ! density model

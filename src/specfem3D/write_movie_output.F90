@@ -541,10 +541,10 @@
       enddo
 
       write(outputname,"('/proc',i6.6,'_pressure_it',i6.6,'.bin')")myrank,it
-      open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+      open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
       if (ier /= 0) stop 'error opening file movie output pressure'
-      write(27) pressure_loc
-      close(27)
+      write(IOUT) pressure_loc
+      close(IOUT)
       deallocate(pressure_loc)
     endif
   endif ! acoustic
@@ -571,10 +571,10 @@
 
       ! writes out div and curl on global points
       write(outputname,"('/proc',i6.6,'_div_glob_it',i6.6,'.bin')") myrank,it
-      open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+      open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
       if (ier /= 0) stop 'error opening file div_glob'
-      write(27) div_glob
-      close(27)
+      write(IOUT) div_glob
+      close(IOUT)
     endif ! elastic
 
     ! saves full snapshot data to local disk
@@ -592,49 +592,49 @@
     ! div and curl on elemental level
     ! writes our divergence
     write(outputname,"('/proc',i6.6,'_div_it',i6.6,'.bin')") myrank,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'error opening file div_it'
-    write(27) div
-    close(27)
+    write(IOUT) div
+    close(IOUT)
 
     ! writes out curl
     write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compx,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'error opening file curl_x_it '
-    write(27) curl_x
-    close(27)
+    write(IOUT) curl_x
+    close(IOUT)
 
     write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compy,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'error opening file curl_y_it'
-    write(27) curl_y
-    close(27)
+    write(IOUT) curl_y
+    close(IOUT)
 
     write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compz,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'error opening file curl_z_it'
-    write(27) curl_z
-    close(27)
+    write(IOUT) curl_z
+    close(IOUT)
   endif
 
   ! velocity
   write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
-  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
   if (ier /= 0) stop 'error opening file movie output velocity x'
-  write(27) velocity_x
-  close(27)
+  write(IOUT) velocity_x
+  close(IOUT)
 
   write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compy,it
-  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
   if (ier /= 0) stop 'error opening file movie output velocity y'
-  write(27) velocity_y
-  close(27)
+  write(IOUT) velocity_y
+  close(IOUT)
 
   write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compz,it
-  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+  open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
   if (ier /= 0) stop 'error opening file movie output velocity z'
-  write(27) velocity_z
-  close(27)
+  write(IOUT) velocity_z
+  close(IOUT)
 
   end subroutine wmo_movie_volume_output
 

@@ -27,7 +27,7 @@
 
 module module_mesh
 
-  use constants, only: NDIM, MAX_STRING_LEN
+  use constants, only: NDIM,MAX_STRING_LEN,IIN_DB,IIN_DB2
   use shared_parameters, only: NGNOD,NGNOD2D,ATTENUATION,PML_CONDITIONS
   use fault_scotch
 
@@ -112,13 +112,13 @@ contains
     localpath_name='./MESH'
 
     ! reads node coordinates
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file', &
+    open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file', &
          status='old', form='formatted', iostat = ier)
     if (ier /= 0) then
        print *,'could not open file:',localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file'
        stop 'Error opening file nodes_coords_file'
     endif
-    read(98,*) nnodes_glob
+    read(IIN_DB,*) nnodes_glob
 
     if (nnodes_glob < 1) stop 'Error: nnodes_glob < 1'
     allocate(nodes_coords_glob(NDIM,nnodes_glob),stat=ier)
@@ -126,24 +126,24 @@ contains
     if (ier /= 0) stop 'Error allocating array nodes_coords'
     do inode = 1, nnodes_glob
        ! format: #id_node #x_coordinate #y_coordinate #z_coordinate
-       read(98,*) num_node, nodes_coords_glob(1,num_node), nodes_coords_glob(2,num_node), nodes_coords_glob(3,num_node)
+       read(IIN_DB,*) num_node, nodes_coords_glob(1,num_node), nodes_coords_glob(2,num_node), nodes_coords_glob(3,num_node)
 
        ! for parallel meshing
        if (mod(inode,100000) == 0) then
           write(27,'(2i10)') num_node/100000, nnodes_glob/100000
        endif
     enddo
-    close(98)
+    close(IIN_DB)
     write(27,*) 'total number of nodes: '
     write(27,*) '  nnodes = ', nnodes_glob
 
     ! reads mesh elements indexing
     !(CUBIT calls this the connectivity, guess in the sense that it connects with the points index in
     ! the global coordinate file "nodes_coords_file"; it doesn't tell you which point is connected with others)
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/mesh_file', &
+    open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/mesh_file', &
          status='old', form='formatted',iostat=ier)
     if (ier /= 0) stop 'Error opening mesh_file'
-    read(98,*) nspec_long
+    read(IIN_DB,*) nspec_long
 
     ! debug check size limit
     if (nspec_long > 2147483646) then
@@ -172,7 +172,7 @@ contains
        !          then top (positive z-direction) of element
        !             point 5 = (0,0,1), point 6 = (0,1,1), point 7 = (1,1,1), point 8 = (1,0,1)
 
-       read(98,*,iostat=ier) num_elmnt,(elmnts_glob(inode,num_elmnt), inode=1,NGNOD)
+       read(IIN_DB,*,iostat=ier) num_elmnt,(elmnts_glob(inode,num_elmnt), inode=1,NGNOD)
 
        if (ier /= 0) then
           print *,'Error while attempting to read ',NGNOD,'element data values from the mesh file'
@@ -188,12 +188,12 @@ contains
           write(27,'(2i10)') ispec/100000, nspec_glob/100000
        endif
     enddo
-    close(98)
+    close(IIN_DB)
     write(27,*) 'total number of spectral elements:'
     write(27,*) '  nspec = ', nspec_glob
 
     ! reads material associations
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/materials_file', &
+    open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/materials_file', &
          status='old', form='formatted',iostat=ier)
     if (ier /= 0) stop 'Error opening materials_file'
     allocate(mat(2,nspec_glob),stat=ier)
@@ -203,10 +203,10 @@ contains
     do ispec = 1, nspec_glob
        ! format: #id_element #flag
        ! note: be aware that elements may not be sorted in materials_file
-       read(98,*) num_mat,mat(1,num_mat)
+       read(IIN_DB,*) num_mat,mat(1,num_mat)
        if ((num_mat > nspec_glob) .or. (num_mat < 1)) stop "Error : Invalid materials_file"
     enddo
-    close(98)
+    close(IIN_DB)
 
     ! gets materials id associations
     allocate(num_material(1:nspec_glob),stat=ier)
@@ -236,7 +236,7 @@ contains
     ! cannot support more than 10 attributes
     count_def_mat = 0
     count_undef_mat = 0
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file', &
+    open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file', &
          status='old', form='formatted',iostat=ier)
     if (ier /= 0) stop 'Error opening nummaterial_velocity_file'
 
@@ -245,7 +245,7 @@ contains
     ier = 0
     do while (ier == 0)
        ! note: format #material_domain_id #material_id #...
-       read(98,'(A)',iostat=ier) line
+       read(IIN_DB,'(A)',iostat=ier) line
        if (ier /= 0) exit
 
        ! skip empty/comment lines
@@ -294,7 +294,7 @@ contains
     undef_mat_prop(:,:) = ''
 
     ! reads in defined material properties
-    rewind(98,iostat=ier)
+    rewind(IIN_DB,iostat=ier)
     if (ier /= 0) stop 'Error rewinding nummaterial_velocity_file'
 
     ! modif to read poro parameters, added if loop on idomain_id
@@ -311,7 +311,7 @@ contains
     !     kappas, kappaf, kappafr : solid, fluid and frame bulk moduli
     !     eta : fluid viscosity
     !     mufr : frame shear modulus
-    open(unit=97, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_poroelastic_file', &
+    open(unit=IIN_DB2, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_poroelastic_file', &
          status='old', form='formatted', iostat=ier)
     ! checks if we can use file
     if (ier /= 0) then
@@ -333,7 +333,7 @@ contains
        ! reads lines until it reaches a defined material
        num_mat = -1
        do while (num_mat < 0 .and. ier == 0)
-          read(98,'(A)',iostat=ier) line
+          read(IIN_DB,'(A)',iostat=ier) line
           if (ier /= 0) exit
 
           ! skip empty/comment lines
@@ -382,7 +382,7 @@ contains
                stop 'Error in nummaterial_velocity_file: poroelastic material requires nummaterial_poroelastic_file'
 
           ! reads poroelastic file line
-          read(97,'(A)',iostat=ier) line
+          read(IIN_DB2,'(A)',iostat=ier) line
           if (ier /= 0) stop 'Error reading line in nummaterial_poroelastic_file'
 
           read(line,*) rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
@@ -413,7 +413,7 @@ contains
     enddo
 
     ! back to the beginning of the file
-    rewind(98,iostat=ier)
+    rewind(IIN_DB,iostat=ier)
     if (ier /= 0) stop 'Error rewinding nummaterial_velocity_file'
 
     ! reads in undefined material properties
@@ -431,7 +431,7 @@ contains
        ! reads lines until it reaches a defined material
        num_mat = 1
        do while (num_mat >= 0 .and. ier == 0)
-          read(98,'(A)',iostat=ier) line
+          read(IIN_DB,'(A)',iostat=ier) line
           if (ier /= 0) exit
 
           ! skip empty/comment lines
@@ -515,8 +515,8 @@ contains
           !  stop "Error in nummaterial_velocity_file: invalid elastic definition for undefined material"
        endif
     enddo
-    if (use_poroelastic_file) close(97)
-    close(98)
+    if (use_poroelastic_file) close(IIN_DB2)
+    close(IIN_DB)
 
     do ispec=1,nspec_glob
        ! get material_id
@@ -544,7 +544,7 @@ contains
     enddo
 
     ! reads in absorbing boundary files
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmin', &
+    open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmin', &
          status='old', form='formatted',iostat=ier)
     ! if the file does not exist then define the number of Stacey elements as zero for this face;
     ! beware that these files can also be used to set Dirichlet boundary conditions on the outer edges of CPML
@@ -553,7 +553,7 @@ contains
     if (ier /= 0) then
        nspec2D_xmin = 0
     else
-       read(98,*) nspec2D_xmin
+       read(IIN_DB,*) nspec2D_xmin
     endif
 
     ! an array of size 0 is a valid object in Fortran 90, i.e. the array is then considered as allocated
@@ -575,19 +575,19 @@ contains
        !
        !          doesn't necessarily have to start on top-rear, then bottom-rear, bottom-front, and finally top-front i.e.:
        !          point 1 = (0,1,1), point 2 = (0,1,0), point 3 = (0,0,0), point 4 = (0,0,1)
-       read(98,*) ibelm_xmin(ispec2D), (nodes_ibelm_xmin(inode,ispec2D), inode=1,NGNOD2D)
+       read(IIN_DB,*) ibelm_xmin(ispec2D), (nodes_ibelm_xmin(inode,ispec2D), inode=1,NGNOD2D)
     enddo
-    close(98)
+    close(IIN_DB)
     write(27,*) 'absorbing boundaries:'
     write(27,*) '  nspec2D_xmin = ', nspec2D_xmin
 
     ! reads in absorbing boundary files
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmax', &
+    open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmax', &
          status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
        nspec2D_xmax = 0
     else
-       read(98,*) nspec2D_xmax
+       read(IIN_DB,*) nspec2D_xmax
     endif
     allocate(ibelm_xmax(nspec2D_xmax),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 125')
@@ -597,18 +597,18 @@ contains
     if (ier /= 0) stop 'Error allocating array nodes_ibelm_xmax'
     do ispec2D = 1,nspec2D_xmax
        ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
-      read(98,*) ibelm_xmax(ispec2D), (nodes_ibelm_xmax(inode,ispec2D), inode=1,NGNOD2D)
+      read(IIN_DB,*) ibelm_xmax(ispec2D), (nodes_ibelm_xmax(inode,ispec2D), inode=1,NGNOD2D)
     enddo
-    close(98)
+    close(IIN_DB)
     write(27,*) '  nspec2D_xmax = ', nspec2D_xmax
 
   ! reads in absorbing boundary files
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_ymin', &
+    open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_ymin', &
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
        nspec2D_ymin = 0
     else
-       read(98,*) nspec2D_ymin
+       read(IIN_DB,*) nspec2D_ymin
     endif
     allocate(ibelm_ymin(nspec2D_ymin),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 127')
@@ -618,18 +618,18 @@ contains
     if (ier /= 0) stop 'Error allocating array nodes_ibelm_ymin'
     do ispec2D = 1,nspec2D_ymin
        ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
-       read(98,*) ibelm_ymin(ispec2D), (nodes_ibelm_ymin(inode,ispec2D), inode=1,NGNOD2D)
+       read(IIN_DB,*) ibelm_ymin(ispec2D), (nodes_ibelm_ymin(inode,ispec2D), inode=1,NGNOD2D)
     enddo
-    close(98)
+    close(IIN_DB)
     write(27,*) '  nspec2D_ymin = ', nspec2D_ymin
 
     ! reads in absorbing boundary files
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_ymax', &
+    open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_ymax', &
          status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
        nspec2D_ymax = 0
     else
-       read(98,*) nspec2D_ymax
+       read(IIN_DB,*) nspec2D_ymax
     endif
     allocate(ibelm_ymax(nspec2D_ymax),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 129')
@@ -639,18 +639,18 @@ contains
     if (ier /= 0) stop 'Error allocating array nodes_ibelm_ymax'
     do ispec2D = 1,nspec2D_ymax
        ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
-       read(98,*) ibelm_ymax(ispec2D), (nodes_ibelm_ymax(inode,ispec2D), inode=1,NGNOD2D)
+       read(IIN_DB,*) ibelm_ymax(ispec2D), (nodes_ibelm_ymax(inode,ispec2D), inode=1,NGNOD2D)
     enddo
-    close(98)
+    close(IIN_DB)
     write(27,*) '  nspec2D_ymax = ', nspec2D_ymax
 
     ! reads in absorbing boundary files
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_bottom', &
+    open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_bottom', &
          status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
        nspec2D_bottom = 0
     else
-       read(98,*) nspec2D_bottom
+       read(IIN_DB,*) nspec2D_bottom
     endif
     allocate(ibelm_bottom(nspec2D_bottom),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 131')
@@ -660,18 +660,18 @@ contains
     if (ier /= 0) stop 'Error allocating array nodes_ibelm_bottom'
     do ispec2D = 1,nspec2D_bottom
        ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
-       read(98,*) ibelm_bottom(ispec2D), (nodes_ibelm_bottom(inode,ispec2D), inode=1,NGNOD2D)
+       read(IIN_DB,*) ibelm_bottom(ispec2D), (nodes_ibelm_bottom(inode,ispec2D), inode=1,NGNOD2D)
     enddo
-    close(98)
+    close(IIN_DB)
     write(27,*) '  nspec2D_bottom = ', nspec2D_bottom
 
     ! reads in free_surface boundary files
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_or_absorbing_surface_file_zmax', &
+    open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/free_or_absorbing_surface_file_zmax', &
          status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
        nspec2D_top = 0
     else
-       read(98,*) nspec2D_top
+       read(IIN_DB,*) nspec2D_top
     endif
     allocate(ibelm_top(nspec2D_top),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 133')
@@ -681,9 +681,9 @@ contains
     if (ier /= 0) stop 'Error allocating array nodes_ibelm_top'
     do ispec2D = 1,nspec2D_top
        ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
-       read(98,*) ibelm_top(ispec2D), (nodes_ibelm_top(inode,ispec2D), inode=1,NGNOD2D)
+       read(IIN_DB,*) ibelm_top(ispec2D), (nodes_ibelm_top(inode,ispec2D), inode=1,NGNOD2D)
     enddo
-    close(98)
+    close(IIN_DB)
     write(27,*) '  nspec2D_top = ', nspec2D_top
 
     ! an array of size 0 is a valid object in Fortran 90, i.e. the array is then considered as allocated
@@ -693,7 +693,7 @@ contains
     ! conditions for this mesh then the array is created nonetheless, but with a dummy size of 0
 
     ! reads in absorbing_cpml boundary file
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_cpml_file', &
+    open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_cpml_file', &
          status='old', form='formatted',iostat=ier)
     ! if the file does not exist but if there are PML_CONDITIONS then stop
     if (ier /= 0 .and. PML_CONDITIONS) &
@@ -702,7 +702,7 @@ contains
     if (ier /= 0 .or. .not. PML_CONDITIONS) then
        nspec_cpml = 0
     else
-       read(98,*) nspec_cpml
+       read(IIN_DB,*) nspec_cpml
     endif
 
     ! sanity check
@@ -729,9 +729,9 @@ contains
        ! #id_cpml_regions = 7 : XYZ_corner C-PML
        !
        ! format: #id_cpml_element #id_cpml_regions
-       read(98,*) cpml_to_spec(ispec_cpml), cpml_regions(ispec_cpml)
+       read(IIN_DB,*) cpml_to_spec(ispec_cpml), cpml_regions(ispec_cpml)
     enddo
-    close(98)
+    close(IIN_DB)
     if (nspec_cpml > 0) write(27,*)  '  nspec_cpml = ', nspec_cpml
 
     ! sets mask of C-PML elements for all elements in this partition
@@ -746,12 +746,12 @@ contains
     enddo
 
     ! reads in moho_surface boundary files (optional)
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/moho_surface_file', &
+    open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/moho_surface_file', &
          status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
        nspec2D_moho = 0
     else
-       read(98,*) nspec2D_moho
+       read(IIN_DB,*) nspec2D_moho
     endif
     allocate(ibelm_moho(nspec2D_moho),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 138')
@@ -761,9 +761,9 @@ contains
     if (ier /= 0) stop 'Error allocating array nodes_ibelm_moho'
     do ispec2D = 1,nspec2D_moho
        ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
-       read(98,*) ibelm_moho(ispec2D), (nodes_ibelm_moho(inode,ispec2D), inode=1,NGNOD2D)
+       read(IIN_DB,*) ibelm_moho(ispec2D), (nodes_ibelm_moho(inode,ispec2D), inode=1,NGNOD2D)
     enddo
-    close(98)
+    close(IIN_DB)
     if (nspec2D_moho > 0) write(27,*) '  nspec2D_moho = ', nspec2D_moho
 
     call read_fault_files(localpath_name)

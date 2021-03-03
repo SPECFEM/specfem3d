@@ -28,6 +28,8 @@
 
 module decompose_mesh_par
 
+  use constants, only: IIN_DB
+
   use shared_parameters
 
   use part_decompose_mesh, only: long,MAX_STRING_LEN,ACOUSTIC_LOAD,nfaces,NGNOD_EIGHT_CORNERS, &
@@ -120,7 +122,7 @@ module decompose_mesh_par
 ! poroelastic parameters read in a new file
   double precision :: rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
 
-  integer, parameter :: IIN_database = 15
+  integer, parameter :: IIN_database = IIN_DB
 
   ! LTS simulations
   ! element p-refinement values (like 1 2 4 8 ..; p == 1 being coarsest, p == 8 finer local time step dt/p )

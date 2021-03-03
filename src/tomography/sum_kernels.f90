@@ -129,7 +129,7 @@ program sum_kernels
 
   ! opens external mesh file
   write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_'//'external_mesh.bin'
-  open(unit=27,file=trim(prname_lp), &
+  open(unit=IIN,file=trim(prname_lp), &
           status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'Error: could not open database '
@@ -138,10 +138,10 @@ program sum_kernels
   endif
 
   ! gets number of elements and global points for this partition
-  read(27) NSPEC
-  read(27) NGLOB
+  read(IIN) NSPEC
+  read(IIN) NGLOB
 
-  close(27)
+  close(IIN)
 
   ! user output
   if (myrank == 0) then

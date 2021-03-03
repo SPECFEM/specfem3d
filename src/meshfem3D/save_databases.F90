@@ -32,7 +32,7 @@
                             ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
 
   use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
-    SAVE_MESH_AS_CUBIT,NDIM,IMAIN,myrank
+    SAVE_MESH_AS_CUBIT,NDIM,IMAIN,IIN_DB,myrank
 
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
@@ -81,7 +81,7 @@
   logical, dimension(8) ::  interfaces
   integer, dimension(8) ::  nspec_interface
 
-  integer, parameter :: IIN_database = 15
+  integer, parameter :: IIN_database = IIN_DB
 
   integer :: ndef,nundef
   integer :: mat_id,domain_id
@@ -585,7 +585,7 @@
                                              ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                                              nspec_CPML_total)
 
-  use constants, only: NDIM,IMAIN,myrank
+  use constants, only: NDIM,IMAIN,myrank,IIN_DB
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
   use shared_parameters, only: NGNOD
 
@@ -596,7 +596,7 @@
 
   implicit none
 
-  integer, parameter :: IIN_database = 15
+  integer, parameter :: IIN_database = IIN_DB
 
   ! number of spectral elements in each block
   integer, intent(in):: nspec

@@ -148,16 +148,16 @@ program combine_sem
 
   ! read mesh dimensions
   write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_'//'external_mesh.bin'
-  open(unit=27,file=trim(prname_lp), &
+  open(unit=IIN,file=trim(prname_lp), &
           status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'Error: could not open database '
     print *,'path: ',trim(prname_lp)
     stop 'Error reading external mesh file'
   endif
-  read(27) NSPEC
-  read(27) NGLOB
-  close(27)
+  read(IIN) NSPEC
+  read(IIN) NGLOB
+  close(IIN)
   call synchronize_all()
 
   ! sum kernels

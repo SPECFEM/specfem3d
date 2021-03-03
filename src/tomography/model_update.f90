@@ -510,18 +510,18 @@ program model_update
   total_model = 0.5 * ( model_vp**2 - 2.0*model_vs**2) / ( model_vp**2 - model_vs**2)
   fname = 'poisson'
   write(m_file,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,trim(REG)//trim(fname)//'.bin'
-  open(12,file=trim(m_file),form='unformatted')
-  write(12) total_model(:,:,:,1:nspec)
-  close(12)
+  open(IOUT,file=trim(m_file),form='unformatted')
+  write(IOUT) total_model(:,:,:,1:nspec)
+  close(IOUT)
 
   ! Poisson's ratio of new model
   total_model = 0.
   total_model = 0.5 * ( model_vp_new**2 - 2.0*model_vs_new**2) / ( model_vp_new**2 - model_vs_new**2)
   fname = 'poisson_new'
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'/proc',myrank,trim(REG)//trim(fname)//'.bin'
-  open(12,file=trim(m_file),form='unformatted')
-  write(12) total_model(:,:,:,1:nspec)
-  close(12)
+  open(IOUT,file=trim(m_file),form='unformatted')
+  write(IOUT) total_model(:,:,:,1:nspec)
+  close(IOUT)
 
 
   !---------------------------------------------------------------------------------------------
@@ -533,18 +533,18 @@ program model_update
   total_model = sqrt( model_vp**2 - (4.0/3.0)*model_vs**2)
   fname = 'vb'
   write(m_file,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,trim(REG)//trim(fname)//'.bin'
-  open(12,file=trim(m_file),form='unformatted')
-  write(12) total_model(:,:,:,1:nspec)
-  close(12)
+  open(IOUT,file=trim(m_file),form='unformatted')
+  write(IOUT) total_model(:,:,:,1:nspec)
+  close(IOUT)
 
   ! bulk wavespeed of new model
   total_model = 0.
   total_model = sqrt( model_vp_new**2 - (4.0/3.0)*model_vs_new**2)
   fname = 'vb_new'
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'/proc',myrank,trim(REG)//trim(fname)//'.bin'
-  open(12,file=trim(m_file),form='unformatted')
-  write(12) total_model(:,:,:,1:nspec)
-  close(12)
+  open(IOUT,file=trim(m_file),form='unformatted')
+  write(IOUT) total_model(:,:,:,1:nspec)
+  close(IOUT)
 
 !===================================================
 !===================================================
@@ -956,26 +956,26 @@ subroutine save_new_databases()
   if (ATTENUATION) then
     ! read the proc*attenuation.vtk for the old model in LOCAL_PATH and store qmu_attenuation_store
     write(m_file,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_attenuation.vtk'
-    open(12,file=trim(m_file),status='old',iostat=ier)
+    open(IIN,file=trim(m_file),status='old',iostat=ier)
     if (ier /= 0) then
       print *,'Error opening: ',trim(m_file)
       call exit_mpi(myrank,'Error file not found')
     endif
-    read(12,'(a)') string1 !text
-    read(12,'(a)') string2 !text
-    read(12,'(a)') string3 !text
-    read(12,'(a)') string4 !text
-    read(12,'(a,i12,a)') string5, idummy1, string6 !text
+    read(IIN,'(a)') string1 !text
+    read(IIN,'(a)') string2 !text
+    read(IIN,'(a)') string3 !text
+    read(IIN,'(a)') string4 !text
+    read(IIN,'(a,i12,a)') string5, idummy1, string6 !text
 
     allocate(dummy_g_1(NGLOB_AB),dummy_g_2(NGLOB_AB),dummy_g_3(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 964')
     if (ier /= 0) stop 'Error allocating array dummy etc.'
 
-    read(12,'(3e18.6)') dummy_g_1,dummy_g_2,dummy_g_3 !xstore,ystore,zstore for i=1,nglob
-    read(12,*) !blank line
+    read(IIN,'(3e18.6)') dummy_g_1,dummy_g_2,dummy_g_3 !xstore,ystore,zstore for i=1,nglob
+    read(IIN,*) !blank line
     deallocate(dummy_g_1,dummy_g_2,dummy_g_3)
 
-    read(12,'(a,i12,i12)') string7, idummy2, idummy3 !text
+    read(IIN,'(a,i12,i12)') string7, idummy2, idummy3 !text
 
     allocate(dummy_num(NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 965')
@@ -997,34 +997,34 @@ subroutine save_new_databases()
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 973')
     if (ier /= 0) stop 'Error allocating array dummy etc.'
 
-    read(12,'(9i12)') dummy_num,dummy_l_1,dummy_l_2,dummy_l_3,dummy_l_4, &
+    read(IIN,'(9i12)') dummy_num,dummy_l_1,dummy_l_2,dummy_l_3,dummy_l_4, &
                     dummy_l_5,dummy_l_6,dummy_l_7,dummy_l_8 !8,ibool-1 for ispec=1,nspec
-    read(12,*) !blank line
+    read(IIN,*) !blank line
 
     deallocate(dummy_num,dummy_l_1,dummy_l_2,dummy_l_3,dummy_l_4,dummy_l_5,dummy_l_6,dummy_l_7,dummy_l_8)
 
-    read(12,'(a,i12)') string8, idummy4 !text
+    read(IIN,'(a,i12)') string8, idummy4 !text
 
     allocate(dummy_num(NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 974')
     if (ier /= 0) stop 'Error allocating array dummy etc.'
 
-    read(12,*) dummy_num !12 for ispec=1,nspec
-    read(12,*) !blank line
+    read(IIN,*) dummy_num !12 for ispec=1,nspec
+    read(IIN,*) !blank line
 
     deallocate(dummy_num)
 
-    read(12,'(a,i12)') string9, idummy5 !text
-    read(12,'(a)') string10 !text
-    read(12,'(a)') string11 !text
+    read(IIN,'(a,i12)') string9, idummy5 !text
+    read(IIN,'(a)') string10 !text
+    read(IIN,'(a)') string11 !text
 
     allocate(flag_val(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 975')
     if (ier /= 0) stop 'Error allocating flag_val'
 
-    read(12,*) flag_val
-    read(12,*) !blank line
-    close(12)
+    read(IIN,*) flag_val
+    read(IIN,*) !blank line
+    close(IIN)
 
     allocate(mask_ibool(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 976')

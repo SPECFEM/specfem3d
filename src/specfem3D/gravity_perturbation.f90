@@ -34,12 +34,17 @@
 module gravity_perturbation
 
   use constants
+  ! note: instead of using
+  !         use constants,only: CUSTOM_REAL
+  !       leads to an internal compiler error for gfortran:
+  !         internal compiler error: in gfc_typenode_for_spec, at fortran/trans-types.c:1086
+  !       just use without the only-specifier seems to work.
 
   implicit none
 
   private
 
-  integer nstat,ntimgap,nstat_local
+  integer :: nstat,ntimgap,nstat_local
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstat,ystat,zstat
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accE,accN,accZ
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rho0_wm
@@ -54,26 +59,27 @@ contains
 
   subroutine gravity_init()
 
+  use constants, only: IMAIN,IIN_G,myrank,NGLLX,NGLLY,NGLLZ
+
   use specfem_par, only: NGLOB_AB, NSTEP, NSPEC_AB, mustore, &
        xstore, ystore, zstore, &
        xigll, yigll, zigll, &
        wxgll, wygll, wzgll, &
-       NGNOD, ibool, myrank, IMAIN
+       NGNOD, ibool
 
   use specfem_par_elastic, only: rho_vs
 
   implicit none
 
-  integer, parameter :: IIN_G = 367
-  integer ier
+  ! local parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ):: rho_elem
-  integer :: i,j,k,iglob,ispec,istat
   double precision :: Jac3D
   ! coordinates of the control points
-  double precision xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
-  integer ia
+  double precision :: xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
+  integer :: ia
   integer, dimension(NGNOD) :: iaddx,iaddy,iaddz,iax,iay,iaz
-  integer nstep_grav
+  integer :: nstep_grav
+  integer :: i,j,k,iglob,ispec,istat,ier
 
   ! opens gravity parameter file
   open(unit=IIN_G,file='../DATA/gravity_stations',status='old',iostat=ier)
@@ -108,7 +114,7 @@ contains
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2235')
   allocate(zstat(nstat),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2236')
-  do istat=1,nstat
+  do istat = 1,nstat
      read(IIN_G,*) xstat(istat),ystat(istat),zstat(istat)
   enddo
   close(IIN_G)
@@ -170,7 +176,7 @@ contains
 
     rho_elem = rho_vs(:,:,:,ispec)*rho_vs(:,:,:,ispec)/mustore(:,:,:,ispec)
 
-    do ia=1,NGNOD
+    do ia = 1,NGNOD
       iglob = ibool(iax(ia),iay(ia),iaz(ia),ispec)
       xelm(ia) = dble(xstore(iglob))
       yelm(ia) = dble(ystore(iglob))
@@ -197,27 +203,27 @@ contains
 
   subroutine recompute_jacobian_gravity(xelm,yelm,zelm,xi,eta,gamma,jacobian)
 
-  use constants
+  use constants, only: NDIM,ONE,ZERO
   use specfem_par, only: NGNOD
 
   implicit none
 
-  double precision x,y,z
-  double precision xi,eta,gamma,jacobian
+  double precision :: x,y,z
+  double precision :: xi,eta,gamma,jacobian
 
 ! coordinates of the control points
-  double precision xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
+  double precision :: xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
 
 ! 3D shape functions and their derivatives at receiver
-  double precision shape3D(NGNOD)
-  double precision dershape3D(NDIM,NGNOD)
+  double precision :: shape3D(NGNOD)
+  double precision :: dershape3D(NDIM,NGNOD)
 
-  double precision xxi,yxi,zxi
-  double precision xeta,yeta,zeta
-  double precision xgamma,ygamma,zgamma
-  double precision ra1,ra2,rb1,rb2,rc1,rc2
+  double precision :: xxi,yxi,zxi
+  double precision :: xeta,yeta,zeta
+  double precision :: xgamma,ygamma,zgamma
+  double precision :: ra1,ra2,rb1,rb2,rc1,rc2
 
-  integer ia
+  integer :: ia
 
 ! for 8-node element
   double precision, parameter :: ONE_EIGHTH = 0.125d0
@@ -234,14 +240,14 @@ contains
 
 !--- case of an 8-node 3D element (Dhatt-Touzot p. 115)
 
-  ra1 = one + xi
-  ra2 = one - xi
+  ra1 = ONE + xi
+  ra2 = ONE - xi
 
-  rb1 = one + eta
-  rb2 = one - eta
+  rb1 = ONE + eta
+  rb2 = ONE - eta
 
-  rc1 = one + gamma
-  rc2 = one - gamma
+  rc1 = ONE + gamma
+  rc2 = ONE - gamma
 
   shape3D(1) = ONE_EIGHTH*ra2*rb2*rc2
   shape3D(2) = ONE_EIGHTH*ra1*rb2*rc2
@@ -326,7 +332,9 @@ contains
 
   implicit none
 
-  real(kind=CUSTOM_REAL) :: G_const = 6.674e-11_CUSTOM_REAL
+  ! local parameters
+  real(kind=CUSTOM_REAL),parameter :: G_const = 6.674e-11_CUSTOM_REAL
+
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: accEdV,accNdV,accZdV
   real(kind=CUSTOM_REAL) :: E_local,N_local,Z_local,E_all,N_all,Z_all
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: Rg,dotP
@@ -366,7 +374,8 @@ contains
 
   subroutine gravity_output()
 
-  use specfem_par, only: myrank,NPROC,NSTEP,DT,OUTPUT_FILES
+  use constants, only: IOUT,OUTPUT_FILES,myrank
+  use specfem_par, only: NPROC,NSTEP,DT
 
   implicit none
 
@@ -376,7 +385,7 @@ contains
   nstep_grav = floor(dble(NSTEP)/dble(ntimgap))
   nstat_local = nint(dble(nstat)/dble(NPROC))
 
-  do istat=1,nstat
+  do istat = 1,nstat
     if (istat < myrank*nstat_local+1 .or. istat > (myrank+1)*nstat_local) cycle
     write(sisname,"(a,I0,a)") trim(OUTPUT_FILES)//'/stat', istat, '.grav'
     open(unit=IOUT,file=sisname,status='replace')
@@ -387,7 +396,7 @@ contains
   enddo
 
   if (myrank == 0) then ! left-over stations
-    do istat=NPROC*nstat_local,nstat
+    do istat = NPROC*nstat_local,nstat
       write(sisname,"(a,I0,a)") trim(OUTPUT_FILES)//'/stat', istat, '.grav'
       open(unit=IOUT,file=sisname,status='replace')
       do isample = 1,nstep_grav

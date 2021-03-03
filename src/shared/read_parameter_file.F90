@@ -1168,7 +1168,7 @@
 ! determines number of sources depending on number of lines in source file
 ! (only executed by main process)
 
-  use constants, only: IIN,IN_DATA_FILES,HUGEVAL,TINYVAL, &
+  use constants, only: IIN,IIN_PAR,IN_DATA_FILES,HUGEVAL,TINYVAL, &
     NLINES_PER_CMTSOLUTION_SOURCE,NLINES_PER_FORCESOLUTION_SOURCE
 
   use shared_parameters
@@ -1186,11 +1186,11 @@
   NSOURCES = 0
 
   ! checks if finite fault source
-  open(unit=IIN,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',iostat=ier)
+  open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',iostat=ier)
   if (ier == 0) then
     HAS_FINITE_FAULT_SOURCE = .true.
     !write(IMAIN,*) 'provides finite faults'
-    close(IIN)
+    close(IIN_PAR)
   else
     HAS_FINITE_FAULT_SOURCE = .false.
   endif

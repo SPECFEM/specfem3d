@@ -93,7 +93,7 @@ contains
   subroutine BC_DYNFLT_init(prname)
 
   use specfem_par, only: nt => NSTEP,DTglobal => DT
-  use constants, only: IMAIN,myrank
+  use constants, only: IMAIN,myrank,IIN_PAR,IIN_BIN
 
   implicit none
 
@@ -111,9 +111,6 @@ contains
   integer :: fault_StateLaw,fault_StateLaw_all
   logical :: fault_opening,fault_opening_all
   logical :: fault_healing,fault_healing_all
-
-  integer, parameter :: IIN_PAR = 151
-  integer, parameter :: IIN_BIN = 170
 
   NAMELIST / RUPTURE_SWITCHES / RATE_AND_STATE , TPV16 , TPV10X , RSF_HETE, TWF
   NAMELIST / BEGIN_FAULT / dummy_idfault
@@ -371,7 +368,8 @@ contains
 
   implicit none
   type(bc_dynandkinflt_type), intent(inout) :: bc
-  integer, intent(in)                 :: IIN_BIN,IIN_PAR,NT,iflt
+  integer, intent(in)                 :: IIN_BIN,IIN_PAR
+  integer, intent(in)                 :: NT,iflt
   real(kind=CUSTOM_REAL), intent(in)  :: dt_real
   integer, intent(in) :: myrank
 
@@ -520,16 +518,17 @@ contains
 
     subroutine TPV16_init()
 
+    use constants, only: IIN_FLT
+
     implicit none
 
-    integer :: ier, ipar
-    integer, parameter :: IIN_NUC =270 ! WARNING: not safe, should look for an available unit
+    integer :: i,ier, ipar
     real(kind=CUSTOM_REAL), dimension(bc%nglob) :: loc_str,loc_dip,sigma0,tau0_str,tau0_dip,Rstress_str,Rstress_dip,static_fc, &
          dyn_fc,swcd,cohes,tim_forcedRup
     integer, dimension(bc%nglob) :: inp_nx,inp_nz
     real(kind=CUSTOM_REAL) :: minX, siz_str,siz_dip, hypo_loc_str,hypo_loc_dip,rad_T_str,rad_T_dip
     integer :: relz_num,sub_relz_num, num_cell_str,num_cell_dip, hypo_cell_str,hypo_cell_dip
-    integer :: i
+    integer, parameter :: IIN_NUC = IIN_FLT
 
     open(unit=IIN_NUC,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'input_file.txt',status='old',iostat=ier)
     if (ier /= 0) then
@@ -591,6 +590,7 @@ contains
 
     subroutine load_stress_drop()   !added by kangchen this is specially made for Balochistan Simulation
 
+    use constants, only: IIN_FLT
     use specfem_par, only: prname
 
     implicit none
@@ -598,23 +598,22 @@ contains
     real(kind=CUSTOM_REAL),dimension(bc%nglob) :: T1tmp, T2tmp
     character(len=70) :: filename
     integer :: ier
-    integer,parameter :: IIN_STR = 122 ! could also use e.g. standard IIN from constants.h
 
     filename = prname(1:len_trim(prname))//'fault_prestr.bin'
 
     ! debug output
     !print *,'debug: loading stress drop:', trim(filename),bc%nglob
 
-    open(unit=IIN_STR,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+    open(unit=IIN_FLT,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
       print *,'Error opening file ',trim(filename)
       print *,'Please check setup for loading stress drop...'
       stop 'Error opening file fault_prestr.bin'
     endif
 
-    read(IIN_STR) T1tmp
-    read(IIN_STR) T2tmp
-    close(IIN_STR)
+    read(IIN_FLT) T1tmp
+    read(IIN_FLT) T2tmp
+    close(IIN_FLT)
 
     !debug
     ! print *,'debug: loading stress drop:',trim(filename),bc%nglob,'successful'
@@ -634,14 +633,13 @@ contains
 !   real(kind=CUSTOM_REAL),dimension(bc%nglob) :: stresstmp, mustmp
 !   character(len=70) :: filename
 !   integer :: ier
-!   integer,parameter :: IIN_STR = 122 ! could also use e.g. standard IIN from constants.h
 !
 !   filename = prname(1:len_trim(prname))//'tpv35_input.bin'
 !   write(*,*) prname,bc%nglob
-!   open(unit=IIN_STR,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-!   read(IIN_STR) stresstmp
-!   read(IIN_STR) mustmp
-!   close(IIN_STR)
+!   open(unit=IIN_FLT,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+!   read(IIN_FLT) stresstmp
+!   read(IIN_FLT) mustmp
+!   close(IIN_FLT)
 !   !   write(*,*) prname,bc%nglob,'successful'
 !
 !   bc%T0(1,:)=stresstmp
@@ -1508,23 +1506,28 @@ contains
 
     subroutine RSF_HETE_init()
 
-    integer :: ier, ipar
-    integer, parameter :: sIIN_NUC = 271 ! WARNING: not safe, should look for an available unit
+    use constants, only: IIN_FLT
+
+    implicit none
+
+    ! local parameters
+    integer :: si,ier, ipar
     real(kind=CUSTOM_REAL),  allocatable :: sloc_str(:), &
          sloc_dip(:),ssigma0(:),stau0_str(:),stau0_dip(:),sV0(:), &
          sf0(:),sa(:),sb(:),sL(:),sV_init(:),stheta(:),sC(:)
     real(kind=CUSTOM_REAL) :: minX, ssiz_str,ssiz_dip
     integer :: snum_cell_str,snum_cell_dip,snum_cell_all
-    integer :: si
 
-    open(unit=sIIN_NUC,file='../DATA/rsf_hete_input_file.txt',status='old',iostat=ier)
+    integer, parameter :: IIN_NUC = IIN_FLT
+
+    open(unit=IIN_NUC,file='../DATA/rsf_hete_input_file.txt',status='old',iostat=ier)
     if (ier /= 0) then
       print *,'Error opening file ','../DATA/rsf_hete_input_file.txt'
       print *,'Please check setup for RSF HETE...'
       stop 'Error opening file rsf_hete_input_file.txt'
     endif
 
-    read(sIIN_NUC,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
+    read(IIN_NUC,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
 
     snum_cell_all = snum_cell_str*snum_cell_dip
     write(*,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
@@ -1557,11 +1560,11 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1400')
 
     do ipar = 1,snum_cell_all
-      read(sIIN_NUC,*) sloc_str(ipar),sloc_dip(ipar),ssigma0(ipar),stau0_str(ipar),stau0_dip(ipar), &
-                       sV0(ipar),sf0(ipar),sa(ipar),sb(ipar),sL(ipar), &
-                       sV_init(ipar),stheta(ipar),sC(ipar)
+      read(IIN_NUC,*) sloc_str(ipar),sloc_dip(ipar),ssigma0(ipar),stau0_str(ipar),stau0_dip(ipar), &
+                      sV0(ipar),sf0(ipar),sa(ipar),sb(ipar),sL(ipar), &
+                      sV_init(ipar),stheta(ipar),sC(ipar)
     enddo
-    close(sIIN_NUC)
+    close(IIN_NUC)
 
     minX = minval(coord(1,:))
     write(*,*) 'RSF_HETE nglob= ', nglob, 'num_cell_all= ', snum_cell_all

@@ -81,7 +81,7 @@
 
 ! input, output and main MPI I/O files
 ! note: careful with these unit numbers, we mostly use units in the 40-50 range.
-!       cray Fortran e.g. reserves 0,5,6 (standard error,input,output units) and 100-102
+!       Cray Fortran e.g. reserves 0,5,6 (standard error,input,output units) and 100,101,102 (input,output,error unit)
   integer, parameter :: ISTANDARD_OUTPUT = 6
   integer, parameter :: IIN = 40,IOUT = 41
 
@@ -102,6 +102,12 @@
   integer, Parameter :: IO_STF = 51
 ! I/O for total energy calculation
   integer, parameter :: IOUT_ENERGY = 52
+! I/O for faults
+  integer, parameter :: IIN_PAR = 53, IIN_BIN = 54, IIN_FLT = 55
+! I/O for decompose
+  integer, parameter :: IIN_DB = 56, IIN_DB2 = 57
+! I/O for gravity
+  integer, parameter :: IIN_G = 58
 
 ! I/O number for absorbing boundary snapshots (opened in C for speed)
 ! Not a Fortran I/O unit! See write_c_binary.c for more information.

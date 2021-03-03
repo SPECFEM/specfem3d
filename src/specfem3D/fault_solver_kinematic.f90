@@ -55,7 +55,8 @@ contains
   subroutine BC_KINFLT_init(prname)
 
   use specfem_par, only: nt => NSTEP, DTglobal => DT
-  use constants, only: myrank
+
+  use constants, only: myrank,IIN_PAR,IIN_BIN
 
   implicit none
 
@@ -69,9 +70,6 @@ contains
   integer :: size_Kelvin_Voigt
   integer :: rupture_type
   character(len=MAX_STRING_LEN) :: filename
-
-  integer, parameter :: IIN_PAR = 151
-  integer, parameter :: IIN_BIN = 170
 
   real(kind=CUSTOM_REAL) :: DUMMY
   NAMELIST / BEGIN_FAULT / dummy_idfault
@@ -222,7 +220,8 @@ contains
   implicit none
 
   type(bc_dynandkinflt_type), intent(inout) :: bc
-  integer, intent(in)                 :: IIN_BIN,IIN_PAR,NT,iflt
+  integer, intent(in)                 :: IIN_BIN,IIN_PAR
+  integer, intent(in)                 :: NT,iflt
   real(kind=CUSTOM_REAL), intent(in)  :: dt_real
 
   ! local parameters
@@ -503,35 +502,36 @@ contains
 !   OUTPUT v : slip rate on receivers.
   subroutine load_vslip_snapshots(dataXZ,itime,iflt,myrank)
 
+  use constants, only: IIN_FLT
+
   implicit none
+
   integer, intent(in) :: itime,iflt
   type(dataXZ_type), intent(inout) :: dataXZ
   character(len=70) :: filename
-  integer :: IIN_BIN,ier,myrank
-
-  IIN_BIN = 101
+  integer :: ier,myrank
 
   write(filename,"('../INPUT_FILES/Proc',I0,'Snapshot',I0,'_F',I0,'.bin')") myrank,itime,iflt
   print *, trim(filename)
 
-  !open(unit=IIN_BIN, file= trim(filename), status='old', form='formatted', action='read',iostat=ier)
-  open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted', action='read',iostat=ier)
+  !open(unit=IIN_FLT, file= trim(filename), status='old', form='formatted', action='read',iostat=ier)
+  open(unit=IIN_FLT, file= trim(filename), status='old', form='unformatted', action='read',iostat=ier)
 
 !  COMPILERS WRITE BINARY OUTPUTS IN DIFFERENT FORMATS!
-  !open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted', action='read',iostat=ier)
+  !open(unit=IIN_FLT, file= trim(filename), status='old', form='unformatted', action='read',iostat=ier)
   !if ( ier /= 0 ) stop 'Snapshots have been found'
 
   if (ier == 0) then
-    !read(IIN_BIN,"(5F24.15)") dataXZ%xcoord,dataXZ%ycoord,dataXZ%zcoord,dataXZ%v1,dataXZ%v2
+    !read(IIN_FLT,"(5F24.15)") dataXZ%xcoord,dataXZ%ycoord,dataXZ%zcoord,dataXZ%v1,dataXZ%v2
     write(IMAIN,*) 'Load vslip file for kinematic rupture simulation!'
     !write(IMAIN,*)   max(abs(dataXZ
 
-    read(IIN_BIN)   dataXZ%xcoord
-    read(IIN_BIN)   dataXZ%ycoord
-    read(IIN_BIN)   dataXZ%zcoord
-    read(IIN_BIN)   dataXZ%v1
-    read(IIN_BIN)   dataXZ%v2
-    close(IIN_BIN)
+    read(IIN_FLT)   dataXZ%xcoord
+    read(IIN_FLT)   dataXZ%ycoord
+    read(IIN_FLT)   dataXZ%zcoord
+    read(IIN_FLT)   dataXZ%v1
+    read(IIN_FLT)   dataXZ%v2
+    close(IIN_FLT)
   else
     ! if file not found, set slip velocity to zero
     dataXZ%v1 = 0e0_CUSTOM_REAL

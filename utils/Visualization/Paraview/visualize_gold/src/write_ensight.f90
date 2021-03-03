@@ -34,26 +34,26 @@ character(len=80) :: file_head
 
 ! Write a Ensight Gold SOS file
 if (out_nslice > 1) then
-  open(unit=101, file=trim(out_path)// '/' // trim(out_head)//'.sos', status='replace', action='write', iostat=ios)
+  open(unit=121, file=trim(out_path)// '/' // trim(out_head)//'.sos', status='replace', action='write', iostat=ios)
 
-  write(101,'(a)')'FORMAT'
-  write(101,'(a,/)')'type:  master_server gold'
+  write(121,'(a)')'FORMAT'
+  write(121,'(a,/)')'type:  master_server gold'
 
-  write(101,'(a)')'SERVERS'
-  write(101,'(a,i2,/)')'number of servers:    ',out_nslice
+  write(121,'(a)')'SERVERS'
+  write(121,'(a,i2,/)')'number of servers:    ',out_nslice
 
   ! Loop over output slices
   do i_slice=1,out_nslice
-    write(101,'(a,i2)')'#Server ',i_slice
-    write(101,'(a)')'machine id: '//trim(server_name(i_slice))
-    write(101,'(a)')'executable: '//trim(server_exec(i_slice))
-    write(101,'(a)')'#login id: '
-    write(101,'(a)')'#data_path: '
+    write(121,'(a,i2)')'#Server ',i_slice
+    write(121,'(a)')'machine id: '//trim(server_name(i_slice))
+    write(121,'(a)')'executable: '//trim(server_exec(i_slice))
+    write(121,'(a)')'#login id: '
+    write(121,'(a)')'#data_path: '
     write(tmp_str,*)i_slice
     file_head=trim(out_head)//'_server'//trim(adjustl(tmp_str))
-    write(101,'(a,/)')'casefile: '//trim(file_head)//'.case'
+    write(121,'(a,/)')'casefile: '//trim(file_head)//'.case'
   enddo
-  close(101)
+  close(121)
 endif
 
 write(*,'(a)')'writing ensight gold files...'

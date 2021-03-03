@@ -27,7 +27,7 @@
 
 module module_database
 
-  use constants, only: NDIM
+  use constants, only: NDIM,IIN_DB2
   use shared_parameters, only: NGNOD, NGNOD2D, LOCAL_PATH, MSL => MAX_STRING_LEN
 
   integer                                     :: nE_loc
@@ -45,7 +45,7 @@ module module_database
   integer, dimension(:),  allocatable         :: nelmnts_by_node
   integer, dimension(:,:),allocatable         :: elmnts_by_node
 
-  integer, private, parameter                 :: IIN_database=49
+  integer, private, parameter                 :: IIN_database = IIN_DB2
   integer, private                            :: ier
   integer, private, dimension(:), allocatable :: node_loc
 
@@ -155,7 +155,7 @@ contains
 
     ! write material properties in my partition -----
     write(IIN_database)  count_def_mat,count_undef_mat
-    do i=1, count_def_mat
+    do i = 1, count_def_mat
        write(IIN_database) mat_prop(1:17,i)
     enddo
     do i = 1, count_undef_mat
@@ -199,7 +199,7 @@ contains
 
        ! writes number of C-PML elements in this partition
        nspec_cpml_local = 0
-       do i=1,nspec_cpml
+       do i = 1,nspec_cpml
           if (ipart(CPML_to_spec(i)) == myrank +1) then
              nspec_cpml_local = nspec_cpml_local + 1
           endif
@@ -208,7 +208,7 @@ contains
        write(IIN_database) nspec_cpml_local
 
        ! writes C-PML regions and C-PML spectral elements global indexing
-       do i=1,nspec_cpml
+       do i = 1,nspec_cpml
           ! #id_cpml_regions = 1 : X_surface C-PML
           ! #id_cpml_regions = 2 : Y_surface C-PML
           ! #id_cpml_regions = 3 : Z_surface C-PML
@@ -224,8 +224,8 @@ contains
        enddo
 
        ! writes mask of C-PML elements for all elements in this partition
-       ncp=0
-       do i=1,nE
+       ncp = 0
+       do i = 1,nE
           if (ipart(i) == myrank+1) then
              write(IIN_database) is_CPML(i)
              if (is_CPML(i)) ncp=ncp+1
@@ -236,15 +236,15 @@ contains
 
 
     ! write MPI interfaces  -----
-    npart=maxval(ipart(:))
+    npart = maxval(ipart(:))
     allocate(istored(npart),islice_neigh(npart),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 60')
     allocate(num_element_in_boundary_partition(npart),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 61')
-    istored(:)=0
-    islice_neigh(:)=0
-    num_element_in_boundary_partition(:)=0
-    nb_stored_slice=0
+    istored(:) = 0
+    islice_neigh(:) = 0
+    num_element_in_boundary_partition(:) = 0
+    nb_stored_slice = 0
     do iE = 1, nE  !! loop over all elements
        if (ipart(iE) == myrank+1) then  !! in my partition
           iE_loc = glob2loc_elmnt(iE)
@@ -270,8 +270,8 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 62')
     allocate(liste_comm_nodes(NGNOD2D), ie_bnd_stored(npart),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 63')
-    ie_bnd_stored(:)=0
-    my_interfaces_ext_mesh(:,:,:)=-99
+    ie_bnd_stored(:) = 0
+    my_interfaces_ext_mesh(:,:,:) = -99
     do iE = 1, nE  !! loop over all elements
        if (ipart(iE) == myrank+1) then !! in my partition
           iE_loc = glob2loc_elmnt(iE)
@@ -370,8 +370,8 @@ contains
     integer ::  i, nspec2D_loc, iE
 
     nspec2D_loc = 0
-    do i=1, nspec2D
-       iE=ibelm(i)
+    do i = 1, nspec2D
+       iE = ibelm(i)
        if (ipart(iE) == myrank +1) nspec2D_loc = nspec2D_loc + 1
     enddo
     write(IIN_database) iflag, nspec2D_loc
@@ -395,9 +395,9 @@ contains
 
     integer :: i,  iE, iE_loc, inode
 
-    do i=1, nspec2D
-       iE=ibelm(i)
-       iE_loc=glob2loc_elmnt(iE)
+    do i = 1, nspec2D
+       iE = ibelm(i)
+       iE_loc = glob2loc_elmnt(iE)
        do inode = 1, NGNOD2D
           node_loc(inode) = glob2loc_nodes(nodes_ibelm(inode, i))
        enddo

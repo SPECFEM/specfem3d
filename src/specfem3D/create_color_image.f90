@@ -601,7 +601,7 @@
 ! to display the snapshots : display image*.gif
 ! when compiling with Intel ifort, use " -assume byterecl " option to create binary PNM images
 
-  use constants, only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES,MAX_STRING_LEN
+  use constants, only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES,MAX_STRING_LEN,IOUT
 
   use image_PNM_par, only: BINARY_FILE,VP_BACKGROUND,POWER_DISPLAY_COLOR
 
@@ -626,14 +626,14 @@
   write(file_name,"(a,'/image',i7.7,'.pnm')") OUTPUT_FILES(1:len_trim(OUTPUT_FILES)),it
 
 ! first delete the file, just in case it was previously bigger
-  open(unit=27,file=file_name,status='unknown')
-  close(unit=27,status='delete')
+  open(unit=IOUT,file=file_name,status='unknown')
+  close(unit=IOUT,status='delete')
 
   if (BINARY_FILE) then
-    open(unit=27,file=file_name,status='unknown',access='direct',recl=1)
-    write(27,rec=1) 'P'
-    write(27,rec=2) '6' ! write P6 = binary PNM image format
-    write(27,rec=3) char(ascii_code_of_carriage_return)
+    open(unit=IOUT,file=file_name,status='unknown',access='direct',recl=1)
+    write(IOUT,rec=1) 'P'
+    write(IOUT,rec=2) '6' ! write P6 = binary PNM image format
+    write(IOUT,rec=3) char(ascii_code_of_carriage_return)
 
     ! compute and write horizontal size
     remainder = NX
@@ -652,12 +652,12 @@
 
     units = remainder
 
-    write(27,rec=4) char(tenthousands + ascii_code_of_zero)
-    write(27,rec=5) char(thousands + ascii_code_of_zero)
-    write(27,rec=6) char(hundreds + ascii_code_of_zero)
-    write(27,rec=7) char(tens + ascii_code_of_zero)
-    write(27,rec=8) char(units + ascii_code_of_zero)
-    write(27,rec=9) ' '
+    write(IOUT,rec=4) char(tenthousands + ascii_code_of_zero)
+    write(IOUT,rec=5) char(thousands + ascii_code_of_zero)
+    write(IOUT,rec=6) char(hundreds + ascii_code_of_zero)
+    write(IOUT,rec=7) char(tens + ascii_code_of_zero)
+    write(IOUT,rec=8) char(units + ascii_code_of_zero)
+    write(IOUT,rec=9) ' '
 
     ! compute and write vertical size
     remainder = NY
@@ -676,26 +676,26 @@
 
     units = remainder
 
-    write(27,rec=10) char(tenthousands + ascii_code_of_zero)
-    write(27,rec=11) char(thousands + ascii_code_of_zero)
-    write(27,rec=12) char(hundreds + ascii_code_of_zero)
-    write(27,rec=13) char(tens + ascii_code_of_zero)
-    write(27,rec=14) char(units + ascii_code_of_zero)
-    write(27,rec=15) char(ascii_code_of_carriage_return)
+    write(IOUT,rec=10) char(tenthousands + ascii_code_of_zero)
+    write(IOUT,rec=11) char(thousands + ascii_code_of_zero)
+    write(IOUT,rec=12) char(hundreds + ascii_code_of_zero)
+    write(IOUT,rec=13) char(tens + ascii_code_of_zero)
+    write(IOUT,rec=14) char(units + ascii_code_of_zero)
+    write(IOUT,rec=15) char(ascii_code_of_carriage_return)
 
     ! number of shades
-    write(27,rec=16) '2'
-    write(27,rec=17) '5'
-    write(27,rec=18) '5'
-    write(27,rec=19) char(ascii_code_of_carriage_return)
+    write(IOUT,rec=16) '2'
+    write(IOUT,rec=17) '5'
+    write(IOUT,rec=18) '5'
+    write(IOUT,rec=19) char(ascii_code_of_carriage_return)
 
     ! block of image data starts at sixteenth character
     current_rec = 20
   else
-    open(unit=27,file=file_name,status='unknown')
-    write(27,"('P3')") ! write P3 = ASCII PNM image format
-    write(27,*) NX,NY  ! write image size
-    write(27,*) '255'  ! number of shades
+    open(unit=IOUT,file=file_name,status='unknown')
+    write(IOUT,"('P3')") ! write P3 = ASCII PNM image format
+    write(IOUT,*) NX,NY  ! write image size
+    write(IOUT,*) '255'  ! number of shades
   endif
 
   ! compute maximum amplitude
@@ -779,22 +779,22 @@
       ! write color image
       if (BINARY_FILE) then
         ! first write red
-        write(27,rec=current_rec) char(R)
+        write(IOUT,rec=current_rec) char(R)
         current_rec = current_rec + 1
         ! then write green
-        write(27,rec=current_rec) char(G)
+        write(IOUT,rec=current_rec) char(G)
         current_rec = current_rec + 1
         ! then write blue
-        write(27,rec=current_rec) char(B)
+        write(IOUT,rec=current_rec) char(B)
         current_rec = current_rec + 1
       else
-        write(27,"(i3,' ',i3,' ',i3)") R,G,B
+        write(IOUT,"(i3,' ',i3,' ',i3)") R,G,B
       endif
     enddo
   enddo
 
   ! close the file
-  close(27)
+  close(IOUT)
 
   end subroutine write_PNM_data
 

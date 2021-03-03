@@ -89,13 +89,12 @@ contains
 !=================================================================================================================
   subroutine fault_read_input(prname)
 
-  use constants, only: MAX_STRING_LEN, IN_DATA_FILES,myrank
+  use constants, only: MAX_STRING_LEN, IN_DATA_FILES,myrank,IIN_PAR,IIN_BIN
 
   implicit none
   character(len=MAX_STRING_LEN), intent(in) :: prname
 
   integer :: nb,i,iflt,ier,nspec,dummy_node
-  integer, parameter :: IIN_PAR = 100
 
   ! read fault input file
   nb = 0
@@ -121,13 +120,13 @@ contains
 
   allocate(fault_db(nb),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 868')
-  do i=1,nb
+  do i = 1,nb
     read(IIN_PAR,*) fault_db(i)%eta
   enddo
   close(IIN_PAR)
 
   ! read fault database file
-  open(unit=IIN_PAR,file=prname(1:len_trim(prname))//'Database_fault', &
+  open(unit=IIN_BIN,file=prname(1:len_trim(prname))//'Database_fault', &
        status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     write(IMAIN,*) 'error opening file: ',prname(1:len_trim(prname))//'Database_fault'
@@ -137,7 +136,7 @@ contains
 
   do iflt = 1,size(fault_db)
 
-    read(IIN_PAR) nspec
+    read(IIN_BIN) nspec
     fault_db(iflt)%nspec  = nspec
 
     ! check if anything to do
@@ -155,31 +154,31 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 872')
 
     do i = 1,nspec
-      read(IIN_PAR) fault_db(iflt)%ispec1(i), fault_db(iflt)%inodes1(:,i)
+      read(IIN_BIN) fault_db(iflt)%ispec1(i), fault_db(iflt)%inodes1(:,i)
     enddo
     do i = 1,nspec
-      read(IIN_PAR) fault_db(iflt)%ispec2(i), fault_db(iflt)%inodes2(:,i)
+      read(IIN_BIN) fault_db(iflt)%ispec2(i), fault_db(iflt)%inodes2(:,i)
     enddo
 
    ! loading ispec1 ispec2 iface1 iface2 of fault elements.
 !    allocate(fault_db(iflt)%iface1(nspec))
 !    allocate(fault_db(iflt)%iface2(nspec))
 !    do i=1,fault_db(iflt)%nspec
-!      read(IIN_PAR,*) fault_db(iflt)%ispec1(i), fault_db(iflt)%ispec2(i), &
+!      read(IIN_BIN,*) fault_db(iflt)%ispec1(i), fault_db(iflt)%ispec2(i), &
 !                  fault_db(iflt)%iface1(i), fault_db(iflt)%iface2(i)
 !    enddo
 
   enddo
 
  ! read nodes coordinates of the original version of the mesh, in which faults are open
-  read(IIN_PAR) nnodes_coords_open
+  read(IIN_BIN) nnodes_coords_open
   allocate(nodes_coords_open(NDIM,nnodes_coords_open),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 873')
   do i = 1, nnodes_coords_open
-     read(IIN_PAR) dummy_node, nodes_coords_open(:,i)
+     read(IIN_BIN) dummy_node, nodes_coords_open(:,i)
   enddo
 
-  close(IIN_PAR)
+  close(IIN_BIN)
 
   end subroutine fault_read_input
 

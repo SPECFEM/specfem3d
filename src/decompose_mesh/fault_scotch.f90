@@ -61,28 +61,33 @@ CONTAINS
 
   subroutine read_fault_files(localpath_name)
 
+  use constants, only: IIN_PAR
+
   implicit none
+
   character(len=MAX_STRING_LEN), intent(in) :: localpath_name
+
+  ! local parameters
   integer :: nbfaults, iflt, ier
 
-  open(101,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',action='read',iostat=ier)
+  open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',action='read',iostat=ier)
   if (ier == 0) then
-    read(101,*) nbfaults
+    read(IIN_PAR,*) nbfaults
   else
     nbfaults = 0
     print *
     print *, 'Par_file_faults not found: assuming that there are no faults'
     print *
   endif
-  close(101)
+  close(IIN_PAR)
 
   ANY_FAULT = (nbfaults > 0)
   if (.not. ANY_FAULT)  return
 
   allocate(faults(nbfaults),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 78')
- ! NOTE: asumes that the fault ids follow a contiguous numbering, starting at 1, with unit increment
- !       The user must assign that numbering during mesh generation
+  ! NOTE: asumes that the fault ids follow a contiguous numbering, starting at 1, with unit increment
+  !       The user must assign that numbering during mesh generation
   do iflt = 1 , nbfaults
    call read_single_fault_file(faults(iflt),iflt,localpath_name)
   enddo
@@ -93,6 +98,8 @@ CONTAINS
 !---------------------------------------------------------------------------------------------------
 
   subroutine read_single_fault_file(f,ifault,localpath_name)
+
+  use constants, only: IIN_FLT
 
   implicit none
   type(fault_type), intent(inout) :: f
@@ -108,6 +115,7 @@ CONTAINS
 
   filename = localpath_name(1:len_trim(localpath_name))//'/fault_file_'//&
              NTchar(1:len_trim(NTchar))//'.dat'
+
   ! reads fault elements and nodes
  ! File format:
  ! Line 1:
@@ -116,14 +124,14 @@ CONTAINS
  !   #id_element #id_global_node1 .. #id_global_node4
  ! Then the same for side 2.
  ! Note: element ids start at 1, not 0 (see cubit2specfem3d.py)
-  open(unit=101, file=filename, status='old', form='formatted', iostat = ier)
+  open(unit=IIN_FLT, file=filename, status='old', form='formatted', iostat = ier)
   if (ier /= 0) then
     write(*,*) 'Fatal error: file '//filename//' not found'
     write(*,*) 'Abort'
     stop
   endif
 
-  read(101,*) nspec_side1,nspec_side2
+  read(IIN_FLT,*) nspec_side1,nspec_side2
   if (nspec_side1 /= nspec_side2) stop 'Number of fault nodes at do not match.'
   f%nspec = nspec_side1
   allocate(f%ispec1(f%nspec),stat=ier)
@@ -134,20 +142,22 @@ CONTAINS
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 81')
   allocate(f%inodes2(NGNOD2D,f%nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 82')
-  do e=1,f%nspec
-    read(101,*) f%ispec1(e),f%inodes1(:,e)
+
+  do e = 1,f%nspec
+    read(IIN_FLT,*) f%ispec1(e),f%inodes1(:,e)
   enddo
-  do e=1,f%nspec
-    read(101,*) f%ispec2(e),f%inodes2(:,e)
+  do e = 1,f%nspec
+    read(IIN_FLT,*) f%ispec2(e),f%inodes2(:,e)
   enddo
- ! If we ever figure out how to export "ifaces" from CUBIT:
+
+  ! If we ever figure out how to export "ifaces" from CUBIT:
   !allocate(f%iface1(f%nspec))
   !allocate(f%iface2(f%nspec))
   !do e=1,f%nspec
-  !  read(101,*) f%ispec1(e),f%ispec2(e),f%iface1(e),f%iface2(e)
+  !  read(IIN_FLT,*) f%ispec1(e),f%ispec2(e),f%iface1(e),f%iface2(e)
   !enddo
 
-  close(101)
+  close(IIN_FLT)
 
   end subroutine read_single_fault_file
 
@@ -213,7 +223,7 @@ CONTAINS
   logical :: found_it
 
   do i = 1,f%nspec
-    do k2=1,NGNOD2D
+    do k2 = 1,NGNOD2D
       iglob2 = f%inodes2(k2,i)
       found_it = .false.
       xyz_2(:) = nodes_coords(:,iglob2)
@@ -328,9 +338,9 @@ CONTAINS
   logical :: ifseg(nspec)
   double precision :: xtol
 
-  xp=xyz_c(1,:)
-  yp=xyz_c(2,:)
-  zp=xyz_c(3,:)
+  xp = xyz_c(1,:)
+  yp = xyz_c(2,:)
+  zp = xyz_c(3,:)
 
   ! define geometrical tolerance based upon typical size of the model
   xtol = 1.d-10 * maxval( maxval(xyz_c,2) - minval(xyz_c,2) )
@@ -529,8 +539,8 @@ CONTAINS
                           glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes, part)
 
   implicit none
-  integer, intent(in)  :: IIN_database
-  integer, intent(in)  :: iproc
+  integer, intent(in) :: IIN_database
+  integer, intent(in) :: iproc
   integer, intent(in) :: nelmnts
   integer, dimension(0:nelmnts-1), intent(in)  :: part
   integer, dimension(0:nelmnts-1), intent(in)  :: glob2loc_elmnts
@@ -542,7 +552,7 @@ CONTAINS
   integer  :: nspec_fault_1,nspec_fault_2
   integer :: loc_nodes(NGNOD2D),inodes(NGNOD2D)
 
-  do iflt=1,size(faults)
+  do iflt = 1,size(faults)
 
    ! get number of fault elements in this partition
     nspec_fault_1 = count( part(faults(iflt)%ispec1-1) == iproc )
@@ -561,7 +571,7 @@ CONTAINS
     if (nspec_fault_1 == 0) cycle
 
    ! export fault element data, side 1
-    do i=1,faults(iflt)%nspec
+    do i = 1,faults(iflt)%nspec
       e = faults(iflt)%ispec1(i)
       if (part(e-1) == iproc) then
         inodes = faults(iflt)%inodes1(:,i)
@@ -577,7 +587,7 @@ CONTAINS
     enddo
 
    ! export fault element data, side 2
-    do i=1,faults(iflt)%nspec
+    do i = 1,faults(iflt)%nspec
       e = faults(iflt)%ispec2(i)
       if (part(e-1) == iproc) then
         inodes = faults(iflt)%inodes2(:,i)
