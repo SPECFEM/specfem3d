@@ -513,7 +513,7 @@ contains
   do i = 1,np
     read(IIN,*) xtarget,ytarget,ztarget,tmpname,jflt
     ! only points on this fault
-    if (jflt == iflt) dataT%npoin = dataT%npoin +1
+    if (jflt == iflt) dataT%npoin = dataT%npoin + 1
   enddo
   close(IIN)
 
@@ -528,6 +528,11 @@ contains
   ! Surendra: for parallel fault
   allocate(dist_loc(dataT%npoin),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2173')
+
+  ! initializes arrays
+  dataT%iglob(:) = 0
+  dataT%name(:) = ''
+  dist_loc(:) = huge(distkeep)
 
   ! opens in fault stations
   open(IIN,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS',status='old',action='read',iostat=ier)
@@ -631,12 +636,18 @@ contains
     else
       ! no local points
       dataT%npoin = 0
-
-      deallocate(dataT%iglob)
-      deallocate(dataT%name)
     endif
+
     ! free temporary arrays
     deallocate(iproc,iglob_all,dist_all)
+  else
+    ! fault in single slice
+    ! no parallel fault means that all fault element are in a single process, that is, in rank 0 process
+    ! checks if this process has any fault points at all
+    if (nglob == 0) then
+      ! cannot have local station points
+      dataT%npoin = 0
+    endif
   endif
 
   !  3. initialize arrays
@@ -658,6 +669,9 @@ contains
   else
     ! dummy allocations (for subroutine arguments)
     allocate(dataT%dat(1,1,1))
+    ! frees other arrays, no need to keep
+    deallocate(dataT%iglob)
+    deallocate(dataT%name)
   endif
 
   end subroutine init_dataT
