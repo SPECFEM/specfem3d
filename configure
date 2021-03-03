@@ -2944,9 +2944,9 @@ fi
 
 # Check whether --with-openmp was given.
 if test "${with_openmp+set}" = set; then :
-  withval=$with_openmp; want_omp="$withval"
+  withval=$with_openmp; want_with_omp="$withval"
 else
-  want_omp=no
+  want_with_omp=no
 fi
 
 # Check whether --enable-openmp was given.
@@ -2956,7 +2956,7 @@ else
   want_omp=no
 fi
 
- if test x"$want_omp" != xno; then
+ if test x"$want_omp" != xno || test x"$want_with_omp" != xno; then
   COND_OMP_TRUE=
   COND_OMP_FALSE='#'
 else
@@ -8180,7 +8180,7 @@ fi
 ### OPENMP
 ###
 
-if test x"$want_omp" != xno; then :
+if test x"$want_omp" != xno || test x"$want_with_omp" != xno; then :
 
   $as_echo "## ------ ##
 ## OpenMP ##

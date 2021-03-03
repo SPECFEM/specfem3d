@@ -128,14 +128,14 @@ AM_CONDITIONAL([COND_CUDA_PLUS],
 AC_ARG_WITH([openmp],
     [AS_HELP_STRING([--with-openmp],
         [build OpenMP enabled version @<:@default=no@:>@])],
-    [want_omp="$withval"],
-    [want_omp=no])
+    [want_with_omp="$withval"],
+    [want_with_omp=no])
 AC_ARG_ENABLE([openmp],
     [AS_HELP_STRING([--enable-openmp],
         [build OpenMP enabled version @<:@default=no@:>@])],
     [want_omp="$enableval"],
     [want_omp=no])
-AM_CONDITIONAL([COND_OMP], [test x"$want_omp" != xno])
+AM_CONDITIONAL([COND_OMP], [test x"$want_omp" != xno || test x"$want_with_omp" != xno])
 
 ###
 ### VTK
@@ -478,7 +478,7 @@ AS_IF([test x"$want_cuda" != xno], [
 ### OPENMP
 ###
 
-AS_IF([test x"$want_omp" != xno], [
+AS_IF([test x"$want_omp" != xno || test x"$want_with_omp" != xno], [
   AS_BOX([OpenMP])
   AC_MSG_NOTICE([OpenMP compilation is enabled])
 
