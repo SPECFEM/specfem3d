@@ -15,6 +15,11 @@ This example is taken from the SCEC/USGS Spontaneous Rupture Code Verification P
 
 Reference solutions are provided in REF_SEIS/ folder. 
 
+Note that we use here as default setup a very coarse mesh resolution, with an element size of 4000m for testing purposes.
+Additionally, to avoid comparing traces with almost zero amplitudes, only "significant" records are provided in REF_SEIS/.
+
+For reproducing a SCEC benchmark, you would increase the mesh resolution in TPV102.jou accordingly.
+
 For more details about the benchmark, see: 
   https://www.scec.org
   https://strike.scec.org/cvws/
