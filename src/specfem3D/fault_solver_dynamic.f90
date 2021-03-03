@@ -1711,7 +1711,7 @@ contains
   ! common factor
   vDtL(:) = V(:) * dt_real / f%L(:)
 
-  ! note: assumes that vDTL is strictly positive (>= 0), since V >= 0, dt > 0 and L > 0
+  ! note: assumes that vDTL is strictly positive ( >= 0), since V >= 0, dt > 0 and L > 0
   if (any(vDtL(:) < 0.0_CUSTOM_REAL)) stop 'Invalid negative factor found in rate and state friction law'
 
   ! state update
@@ -2337,12 +2337,12 @@ contains
   !
   ! note: asinh() is only supported by Fortran 2008 standard and later.
   !       the SPECFEM code tries to support at least Fortran 2003 which has no standard for asinh().
-  !       GNU would support asinh() as extension feature, ARM fortran doesn't support asinh() yet.
+  !       GNU would support asinh() as extension feature, ARM Fortran doesn't support asinh() yet.
   !
   ! using instrinsic asinh() function (most compilers w/ Fortran 2008 implementations support - but not ARM...)
   !fn = Tstick - Z*x - a * Seff * asinh(xarg)
   !
-  ! to adhere to std2003 fortran, we could take this little workaround and use the definition with logarithms:
+  ! to adhere to std2003 Fortran, we could take this little workaround and use the definition with logarithms:
   !   asinh(x) = ln(x + sqrt(x**2 +1))
   ! where ln() is the natural logarithm:
   !fac_asinh = log(xarg + sqrt(xarg*xarg + 1))

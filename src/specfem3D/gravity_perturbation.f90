@@ -35,9 +35,9 @@ module gravity_perturbation
 
   use constants
   ! note: instead of using
-  !         use constants,only: CUSTOM_REAL
+  !         use constants, only: CUSTOM_REAL
   !       leads to an internal compiler error for gfortran:
-  !         internal compiler error: in gfc_typenode_for_spec, at fortran/trans-types.c:1086
+  !         internal compiler error: in gfc_typenode_for_spec, at Fortran/trans-types.c:1086
   !       just use without the only-specifier seems to work.
 
   implicit none
