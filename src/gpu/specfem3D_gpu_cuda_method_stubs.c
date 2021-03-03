@@ -359,7 +359,7 @@ void FC_FUNC_(transfer_datat_to_host,
               TRANSFER_DATAT_TO_HOST)(long* Fault_pointer,
                                       int* fault_index,
                                       realw* h_dataT,
-                                      int* it) {}
+                                      int* it_in) {}
 
 void FC_FUNC_(transfer_rsf_data_todevice,
               TRANSFER_RSF_DATA_TODEVICE)(long* Fault_pointer,
@@ -498,7 +498,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* nlength_seismogram,
                                         int* SAVE_SEISMOGRAMS_DISPLACEMENT,int* SAVE_SEISMOGRAMS_VELOCITY,
                                         int* SAVE_SEISMOGRAMS_ACCELERATION,int* SAVE_SEISMOGRAMS_PRESSURE,
-                                        int* h_NB_RUNS_ACOUSTIC_GPU) {}
+                                        int* h_NB_RUNS_ACOUSTIC_GPU,
+                                        int* FAULT_SIMULATION) {}
 
 void FC_FUNC_(prepare_fields_acoustic_device,
               PREPARE_FIELDS_ACOUSTIC_DEVICE)(long* Mesh_pointer,

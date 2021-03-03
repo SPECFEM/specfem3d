@@ -101,7 +101,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* nlength_seismogram,
                                         int* SAVE_SEISMOGRAMS_DISPLACEMENT,int* SAVE_SEISMOGRAMS_VELOCITY,
                                         int* SAVE_SEISMOGRAMS_ACCELERATION,int* SAVE_SEISMOGRAMS_PRESSURE,
-                                        int* h_NB_RUNS_ACOUSTIC_GPU) {
+                                        int* h_NB_RUNS_ACOUSTIC_GPU,
+                                        int* FAULT_SIMULATION) {
 
   TRACE("prepare_constants_device");
 
@@ -416,6 +417,9 @@ void FC_FUNC_(prepare_constants_device,
 
   // gravity flag initialization
   mp->gravity = 0;
+
+  // fault simulation
+  mp->fault_simulation = *FAULT_SIMULATION;
   // Kelvin_voigt initialization
   mp->use_Kelvin_Voigt_damping = 0;
 

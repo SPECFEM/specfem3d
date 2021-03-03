@@ -791,6 +791,7 @@ typedef struct mesh_ {
   realw* d_minus_g;
 
   // FAULT
+  int fault_simulation;
   int use_Kelvin_Voigt_damping;
   realw* d_Kelvin_Voigt_eta;
 

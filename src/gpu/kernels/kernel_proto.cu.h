@@ -565,7 +565,7 @@ __global__ void store_dataT(realw* store_dataT,
                             int StateLaw,
                             realw* theta,
                             int* iglob,
-                            int istep,
+                            int it_step,
                             int n_record,
                             int nt) ;
 

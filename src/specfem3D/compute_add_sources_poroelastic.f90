@@ -43,9 +43,12 @@
   use specfem_par_poroelastic, only: b_accels_poroelastic,b_accelw_poroelastic,accels_poroelastic,accelw_poroelastic, &
                                       rhoarraystore,phistore,tortstore,ispec_is_poroelastic
 
+  ! faults
+  use specfem_par, only: FAULT_SIMULATION
+
   implicit none
 
-! local parameters
+  ! local parameters
   real(kind=CUSTOM_REAL) :: stf_used,hlagrange
 
   double precision :: stf,time_source_dble
@@ -59,8 +62,10 @@
 
   character(len=MAX_STRING_LEN) :: adj_source_file
 
-! forward simulations
+  ! forward simulations
   if (SIMULATION_TYPE == 1) then
+    ! ignore CMT sources for fault rupture simulations
+    if (FAULT_SIMULATION) return
 
 ! openmp solver
 !$OMP PARALLEL if (NSOURCES > 100) &
@@ -184,7 +189,7 @@
 !                    and time (T-1) corresponds now to index (NSTEP -1) in the adjoint source array
 
 
-! adjoint simulations
+  ! adjoint simulations
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
 
     ! adds adjoint source in this partitions
@@ -268,8 +273,10 @@
 !           b_displ(it=1) corresponds to -t0 + (NSTEP-1)*DT.
 !           thus indexing is NSTEP - it , instead of NSTEP - it - 1
 
-! adjoint simulations
+  ! adjoint/backward simulations
   if (SIMULATION_TYPE == 3) then
+    ! ignore CMT sources for fault rupture simulations
+    if (FAULT_SIMULATION) return
 
     ! backward source reconstruction
     do isource = 1,NSOURCES

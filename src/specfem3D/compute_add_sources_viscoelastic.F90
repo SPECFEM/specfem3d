@@ -43,10 +43,15 @@
 
   use specfem_par_elastic, only: accel,ispec_is_elastic
 
+  ! noise
   use specfem_par_noise, only: noise_sourcearray,irec_main_noise, &
     normal_x_noise,normal_y_noise,normal_z_noise,mask_noise,noise_surface_movie
 
+  ! coupling
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
+
+  ! faults
+  use specfem_par, only: FAULT_SIMULATION
 
   implicit none
 
@@ -61,8 +66,8 @@
 
   character(len=MAX_STRING_LEN) :: adj_source_file
 
-! no source inside the mesh if we are coupling with DSM
-! because the source is precisely the wavefield coming from the DSM traction file
+  ! no source inside the mesh if we are coupling with DSM
+  ! because the source is precisely the wavefield coming from the DSM traction file
   if (COUPLE_WITH_INJECTION_TECHNIQUE .and. SIMULATION_TYPE == 1) return
 
   ! sets current initial time
@@ -79,6 +84,8 @@
 
   ! forward simulations
   if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
+    ! ignore CMT sources for fault rupture simulations
+    if (FAULT_SIMULATION) return
 
 ! openmp solver
 !$OMP PARALLEL if (NSOURCES > 100) &
@@ -282,18 +289,23 @@
 
   use specfem_par_elastic, only: b_accel,ispec_is_elastic
 
+  ! noise
   use specfem_par_noise, only: normal_x_noise,normal_y_noise,normal_z_noise, &
     mask_noise,noise_surface_movie
 
+  ! coupling
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
 
   ! undo_att
   use specfem_par, only: UNDO_ATTENUATION_AND_OR_PML,NSUBSET_ITERATIONS,NT_DUMP_ATTENUATION, &
                          iteration_on_subset,it_of_this_subset
 
+  ! faults
+  use specfem_par, only: FAULT_SIMULATION
+
   implicit none
 
-! local parameters
+  ! local parameters
   real(kind=CUSTOM_REAL) stf_used
 
   double precision :: stf,time_source_dble,time_t
@@ -301,9 +313,12 @@
 
   integer :: isource,iglob,i,j,k,ispec,it_tmp
 
-! no source inside the mesh if we are coupling with DSM
-! because the source is precisely the wavefield coming from the DSM traction file
+  ! no source inside the mesh if we are coupling with DSM
+  ! because the source is precisely the wavefield coming from the DSM traction file
   if (COUPLE_WITH_INJECTION_TECHNIQUE .and. SIMULATION_TYPE == 3) return
+
+  ! ignore CMT sources for fault rupture simulations
+  if (FAULT_SIMULATION) return
 
   ! checks if anything to do
   if (SIMULATION_TYPE /= 3) return
@@ -457,7 +472,11 @@
 
   use specfem_par_noise, only: irec_main_noise,noise_surface_movie
 
+  ! coupling
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
+
+  ! faults
+  use specfem_par, only: FAULT_SIMULATION
 
   implicit none
 
@@ -473,8 +492,8 @@
 
   character(len=MAX_STRING_LEN) :: adj_source_file
 
-! no source inside the mesh if we are coupling with DSM
-! because the source is precisely the wavefield coming from the DSM traction file
+  ! no source inside the mesh if we are coupling with DSM
+  ! because the source is precisely the wavefield coming from the DSM traction file
   if (COUPLE_WITH_INJECTION_TECHNIQUE .and. SIMULATION_TYPE == 1) return
 
   ! checks if anything to do
@@ -482,6 +501,8 @@
 
   ! forward simulations
   if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
+    ! ignore CMT sources for fault rupture simulations
+    if (FAULT_SIMULATION) return
 
     if (NSOURCES > 0) then
       ! sets current initial time
@@ -599,6 +620,8 @@
 
 ! adjoint simulations
   if (SIMULATION_TYPE == 3 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
+    ! ignore CMT sources for fault rupture simulations
+    if (FAULT_SIMULATION) return
 
     if (NSOURCES > 0) then
       do isource = 1,NSOURCES
@@ -680,11 +703,15 @@
                         NOISE_TOMOGRAPHY, &
                         Mesh_pointer,GPU_MODE
 
+  ! coupling
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
 
   ! undo_att
   use specfem_par, only: UNDO_ATTENUATION_AND_OR_PML,NSUBSET_ITERATIONS,NT_DUMP_ATTENUATION, &
                          iteration_on_subset,it_of_this_subset
+
+  ! faults
+  use specfem_par, only: FAULT_SIMULATION
 
   implicit none
 
@@ -696,9 +723,12 @@
 
   integer :: isource,it_tmp
 
-! no source inside the mesh if we are coupling with DSM
-! because the source is precisely the wavefield coming from the DSM traction file
+  ! no source inside the mesh if we are coupling with DSM
+  ! because the source is precisely the wavefield coming from the DSM traction file
   if (COUPLE_WITH_INJECTION_TECHNIQUE .and. SIMULATION_TYPE == 1) return
+
+  ! ignore CMT sources for fault rupture simulations
+  if (FAULT_SIMULATION) return
 
   ! checks if anything to do
   if (SIMULATION_TYPE /= 3) return

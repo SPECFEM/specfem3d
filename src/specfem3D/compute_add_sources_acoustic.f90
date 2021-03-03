@@ -42,6 +42,9 @@
 
   use specfem_par_acoustic, only: potential_dot_dot_acoustic,ispec_is_acoustic
 
+  ! faults
+  use specfem_par, only: FAULT_SIMULATION
+
   implicit none
 
 ! local parameters
@@ -69,6 +72,8 @@
 
 ! forward simulations
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
+    ! ignore pressure sources for fault rupture simulations
+    if (FAULT_SIMULATION) return
 
 ! openmp solver
 !$OMP PARALLEL if (NSOURCES > 100) &
@@ -242,6 +247,9 @@
 
   use specfem_par_acoustic, only: ispec_is_acoustic,b_potential_dot_dot_acoustic
 
+  ! faults
+  use specfem_par, only: FAULT_SIMULATION
+
   implicit none
 
 ! local parameters
@@ -251,6 +259,9 @@
   double precision, external :: get_stf_acoustic
 
   integer :: isource,iglob,ispec,i,j,k,it_tmp
+
+  ! ignore pressure sources for fault rupture simulations
+  if (FAULT_SIMULATION) return
 
   ! checks if anything to do
   if (SIMULATION_TYPE /= 3) return
@@ -388,9 +399,12 @@
                          INVERSE_FWI_FULL_PROBLEM,run_number_of_the_source, &
                          GPU_MODE
 
+  ! faults
+  use specfem_par, only: FAULT_SIMULATION
+
   implicit none
 
-! local parameters
+  ! local parameters
   logical :: ibool_read_adj_arrays
   integer :: it_sub_adj
 
@@ -409,6 +423,8 @@
 
   ! forward simulations
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
+    ! ignore pressure sources for fault rupture simulations
+    if (FAULT_SIMULATION) return
 
     if (NSOURCES > 0) then
       ! sets current initial time
@@ -535,6 +551,9 @@
   use specfem_par, only: UNDO_ATTENUATION_AND_OR_PML,NSUBSET_ITERATIONS,NT_DUMP_ATTENUATION, &
                          iteration_on_subset,it_of_this_subset
 
+  ! faults
+  use specfem_par, only: FAULT_SIMULATION
+
   implicit none
 
   ! local parameters
@@ -544,6 +563,9 @@
   double precision, dimension(NSOURCES) :: stf_pre_compute
 
   integer :: isource,it_tmp
+
+  ! ignore pressure sources for fault rupture simulations
+  if (FAULT_SIMULATION) return
 
   ! checks if anything to do
   if (SIMULATION_TYPE /= 3) return

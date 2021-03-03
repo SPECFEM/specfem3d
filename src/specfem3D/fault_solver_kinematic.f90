@@ -167,6 +167,7 @@ contains
     ! &STRESS_TENSOR Sigma=0e0,0e0,0e0,0e0,0e0,0e0/
     ! ..
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
+
     ! initializes fault
     bc => faults(iflt)
     call init_one_fault(bc,IIN_BIN,IIN_PAR,dt_real,nt,iflt)

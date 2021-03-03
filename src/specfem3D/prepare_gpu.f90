@@ -88,7 +88,8 @@
                                 nlength_seismogram, &
                                 SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY, &
                                 SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE, &
-                                NB_RUNS_ACOUSTIC_GPU)
+                                NB_RUNS_ACOUSTIC_GPU, &
+                                FAULT_SIMULATION)
 
 
   ! prepares fields on GPU for acoustic simulations
@@ -258,6 +259,13 @@
   ! synchronizes processes
   call synchronize_all()
 
+  ! transfer forward and backward fields to device with initial values
+  if (myrank == 0) then
+    write(IMAIN,*) "  transferring initial wavefield"
+    call flush_IMAIN()
+  endif
+  call synchronize_all()
+
   ! sends initial data to device
 
   ! puts acoustic initial fields onto GPU
@@ -327,6 +335,9 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+
+  use fault_solver_common, only: USE_KELVIN_VOIGT_DAMPING
+  use fault_solver_dynamic, only: SIMULATION_TYPE_DYN
 
   implicit none
 
@@ -481,6 +492,18 @@
   if (GRAVITY) then
     ! d_minus_deriv_gravity,d_minus_g
     memory_size = memory_size + 2.d0 * NGLOB_AB * dble(CUSTOM_REAL)
+  endif
+
+  if (FAULT_SIMULATION) then
+    if (SIMULATION_TYPE_DYN) then
+      ! arrays like Flt->B,R,Z,D,V,.. are not considered here yet.
+      ! they would need the number of fault points for each fault
+      ! memory_size = memory_size + 21.d0 * NGLOB_FLT * dble(CUSTOM_REAL)
+      if (USE_KELVIN_VOIGT_DAMPING) then
+        ! d_Kelvin_Voigt_eta
+        memory_size = memory_size + NSPEC_AB * dble(CUSTOM_REAL)
+      endif
+    endif
   endif
 
   ! poor estimate for kernel simulations...
