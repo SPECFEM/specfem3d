@@ -2284,7 +2284,7 @@ contains
   integer,intent(in) :: statelaw
 
   ! local parameters
-  double precision :: arg,xarg
+  double precision :: arg,xarg  !,fac_asinh
 
   ! friction coefficient function
   if (statelaw == 1) then
@@ -2335,12 +2335,23 @@ contains
   ! traction, using fault strength function f(V), as function Tau(V) = sigma * f(V)
   ! see: Kaneko (2008), eq. (21)
   !
-  ! using netlib's asinh_slatec() implementation
-  ! (not sure why this explicit asinh function is used, seems to be slower...)
-  !fn = Tstick - Z*x - a * Seff * asinh_slatec(x*arg)
+  ! note: asinh() is only supported by Fortran 2008 standard and later.
+  !       the SPECFEM code tries to support at least Fortran 2003 which has no standard for asinh().
+  !       GNU would support asinh() as extension feature, ARM fortran doesn't support asinh() yet.
   !
-  ! using instrinsic asinh() function
-  fn = Tstick - Z*x - a * Seff * asinh(xarg)
+  ! using instrinsic asinh() function (most compilers w/ Fortran 2008 implementations support - but not ARM...)
+  !fn = Tstick - Z*x - a * Seff * asinh(xarg)
+  !
+  ! to adhere to std2003 fortran, we could take this little workaround and use the definition with logarithms:
+  !   asinh(x) = ln(x + sqrt(x**2 +1))
+  ! where ln() is the natural logarithm:
+  !fac_asinh = log(xarg + sqrt(xarg*xarg + 1))
+  !fn = Tstick - Z*x - a * Seff * fac_asinh
+  !
+  ! using netlib's asinh_slatec() implementation
+  ! this explicit asinh-function can be used as there is no standard Fortran 2003 implicit function.
+  ! (seems slightly faster than the log-definition above...)
+  fn = Tstick - Z*x - a * Seff * asinh_slatec(xarg)
 
   ! traction derivative Tau'(V)
   df = -Z - a * Seff/sqrt(ONE + xarg*xarg) * arg
