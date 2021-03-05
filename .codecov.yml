@@ -1,4 +1,4 @@
 # custom codecov setting
 ignore:
   - external_libs/.*
-
+  - src/gpu/kernels/.*
