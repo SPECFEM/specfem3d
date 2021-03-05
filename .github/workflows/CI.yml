@@ -35,7 +35,8 @@ jobs:
       
     - name: make
       run: make -j2 all
-      
+
+    # check: fails due to MPI issue on virtual nodes
     - name: make tests
       run: make tests
 
@@ -69,6 +70,7 @@ jobs:
     - name: make
       run: make -j2 all
 
+    # check: fails due to MPI issue on virtual nodes
     - name: make tests
       run: make tests
 

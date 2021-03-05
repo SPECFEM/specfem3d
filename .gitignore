@@ -5,6 +5,7 @@ config.log
 config.status
 config.h
 /Makefile
+
 setup/config.fh
 setup/constants.h
 setup/constants_inverse_problem.h
@@ -19,6 +20,7 @@ src/decompose_mesh/*.mod
 src/generate_databases/*.mod
 src/meshfem3D/*.mod
 src/specfem3D/*.mod
+*__genmod.f90
 
 # documentation
 manual_SPECFEM3D_Cartesian.aux
