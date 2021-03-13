@@ -72,7 +72,7 @@ void exit_on_error(const char* info) {
 
 void exit_on_cuda_error(const char* kernel_name) {
   // sync and check to catch errors from previous async operations
-#if CUDA_VERSION < 4000
+#if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
   cudaThreadSynchronize();
 #else
   cudaDeviceSynchronize();
@@ -83,7 +83,7 @@ void exit_on_cuda_error(const char* kernel_name) {
     printf("Error after %s: %s\n", kernel_name, cudaGetErrorString(err));
 
     // releases previous contexts
-#if CUDA_VERSION < 4000
+#if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
     cudaThreadExit();
 #else
     cudaDeviceReset();
@@ -209,7 +209,7 @@ e.g., on titan enable environment CRAY_CUDA_MPS=1 to use a single GPU with multi
   //         "setting the device when a process is active is not allowed"
 
   // releases previous contexts
-#if CUDA_VERSION < 4000
+#if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
   cudaThreadExit();
 #else
   cudaDeviceReset();
@@ -446,7 +446,7 @@ e.g., on titan enable environment CRAY_CUDA_MPS=1 to use a single GPU with multi
     exit_on_cuda_error("cuda Malloc/Free test failed");
 
     // synchronizes GPU
-#if CUDA_VERSION < 4000
+#if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
     cudaThreadSynchronize();
 #else
     cudaDeviceSynchronize();
@@ -500,7 +500,7 @@ int main(int argc, char **argv)
   initialize_cuda_device(&myrank,&ndevices);
 
   // releases previous contexts
-#if CUDA_VERSION < 4000
+#if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
   cudaThreadExit();
 #else
   cudaDeviceReset();
