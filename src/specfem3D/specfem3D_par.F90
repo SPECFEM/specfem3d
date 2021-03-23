@@ -315,12 +315,15 @@ module specfem_par
   logical :: VTK_MODE = .false.
 #endif
 
-  ! hdf5
+!!!!!!!!!!!!!!!!!!!
+! hdf5
+!!!!!!!!!!!!!!!!!!
   ! mpi_req dump
   integer :: n_req_vol=0, n_req_surf=0
   integer, dimension(9) :: req_dump_vol
   integer, dimension(3) :: req_dump_surf
   integer :: pos_xdmf_surf=0
+  logical :: seismo_h5_initialized = .false. 
 !-----------------------------------------------------------------
 ! point search
 !-----------------------------------------------------------------

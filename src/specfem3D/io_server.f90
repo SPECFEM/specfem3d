@@ -438,7 +438,7 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc,nglob_par_proc_offset,
   call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
 
   ! get n_msg_vol_each_proc
-  call recv_i_inter(n_msg_vol_each_proc, 1, 0, io_tag_vol_nmsg)
+  call recv_i_inter((/n_msg_vol_each_proc/), 1, 0, io_tag_vol_nmsg)
 
   ! make an array of local2global relation of sending compute node ids
   allocate(id_proc_loc2glob(0:nproc_io-1))
@@ -974,7 +974,7 @@ subroutine surf_mov_init(nfaces_perproc, surface_offset)
   call recv_i_inter(surface_offset,NPROC,0,io_tag_surface_offset)
 
   ! get xyz coordinates
-  call recv_i_inter(size_surf_array, 1, 0, io_tag_surface_coord_len)
+  call recv_i_inter((/size_surf_array/), 1, 0, io_tag_surface_coord_len)
   !print *, "size surf array received: ", size_surf_array
   allocate(surf_x(size_surf_array),stat=ier)
   allocate(surf_y(size_surf_array),stat=ier)
@@ -1163,7 +1163,7 @@ subroutine get_receiver_info(islice_num_rec_local)
   call recv_dp_inter(t0, 1, 0, io_tag_seismo_tzero)
 
   do iproc = 0, NPROC-1
-    call recv_i_inter(nrec_local_temp, 1, iproc, io_tag_local_rec)
+    call recv_i_inter((/nrec_local_temp/), 1, iproc, io_tag_local_rec)
     islice_num_rec_local(iproc) = nrec_local_temp
   enddo
 
@@ -1430,10 +1430,10 @@ subroutine do_io_seismogram_init()
   fname_h5_seismo = trim(OUTPUT_FILES)//fname_h5_base
   ! initialze hdf5
   call h5_init(h5, fname_h5_seismo)
-
+ 
   ! create file
   call h5_create_file(h5)
-
+ 
   ! create time dataset it = 1 ~ NSTEP
   do i = 1, NSTEP
     if (SIMULATION_TYPE == 1) then ! forward simulation ! distinguish between single and double precision for reals
@@ -1445,11 +1445,10 @@ subroutine do_io_seismogram_init()
       time_array(i) = real( dble(NSTEP-i)*DT - t0 ,kind=CUSTOM_REAL)
     endif
   enddo
-
+  
   ! time array
   call h5_write_dataset_1d_d_no_group(h5, "time", time_array)
   call h5_close_dataset(h5)
-
 
   ! read out_list_stations.txt generated at locate_receivers.f90:431 here to write in the h5 file.
   open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'output_list_stations.txt', &

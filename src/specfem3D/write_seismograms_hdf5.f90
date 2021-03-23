@@ -233,39 +233,43 @@
     ! initialze hdf5
     call h5_init(h5, fname_h5_seismo)
 
-    if (it == NTSTEP_BETWEEN_OUTPUT_SEISMOS .and. myrank == 0) then
+    if ((seismo_h5_initialized .eqv. .false.) .and. (myrank == 0)) then
       call do_io_seismogram_init()
+      seismo_h5_initialized = .true.
     endif
-    call synchronize_all()
-    call h5_open_file_p(h5)
+    
+    if (myrank == 0) then
+      call h5_open_file(h5)
 
-    ! check if the array length to be written > total timestep
-    if (seismo_offset+NTSTEP_BETWEEN_OUTPUT_SEISMOS > NSTEP) then
-      t_upper = NSTEP - seismo_offset
-    else
-      t_upper = NTSTEP_BETWEEN_OUTPUT_SEISMOS
-    endif
+      ! check if the array length to be written > total timestep
+      if (seismo_offset < 0) seismo_offset = 0
+      if (seismo_offset+NTSTEP_BETWEEN_OUTPUT_SEISMOS > NSTEP) then
+        t_upper = NSTEP - seismo_offset
+      else
+        t_upper = NTSTEP_BETWEEN_OUTPUT_SEISMOS
+      endif
+  
+      ! writes out this seismogram
+      if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
+        component = 'disp'
+        call h5_write_dataset_3d_r_collect_hyperslab(h5, component, seismograms_d, (/0, 0, seismo_offset/), .false.)
+      endif
+      if (SAVE_SEISMOGRAMS_VELOCITY) then
+        component = 'velo'
+        call h5_write_dataset_3d_r_collect_hyperslab(h5, component, seismograms_v, (/0, 0, seismo_offset/), .false.)
+      endif
+      if (SAVE_SEISMOGRAMS_ACCELERATION) then
+        component = 'acce'
+        call h5_write_dataset_3d_r_collect_hyperslab(h5, component, seismograms_a, (/0, 0, seismo_offset/), .false.)
+      endif
+      if (SAVE_SEISMOGRAMS_PRESSURE) then
+        component = 'pres'
+        call h5_write_dataset_2d_r_collect_hyperslab(h5, component, seismograms_p(1,:,:), (/0, seismo_offset/), .false.)
+      endif
+  
+      call h5_close_file(h5)
 
-    ! writes out this seismogram
-    if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
-      component = 'disp'
-      call h5_write_dataset_3d_r_collect_hyperslab(h5, component, seismograms_d, (/0, 0, seismo_offset/), .false.)
     endif
-    if (SAVE_SEISMOGRAMS_VELOCITY) then
-      component = 'velo'
-      call h5_write_dataset_3d_r_collect_hyperslab(h5, component, seismograms_v, (/0, 0, seismo_offset/), .false.)
-    endif
-    if (SAVE_SEISMOGRAMS_ACCELERATION) then
-      component = 'acce'
-      call h5_write_dataset_3d_r_collect_hyperslab(h5, component, seismograms_a, (/0, 0, seismo_offset/), .false.)
-    endif
-    if (SAVE_SEISMOGRAMS_PRESSURE) then
-      component = 'pres'
-      call h5_write_dataset_2d_r_collect_hyperslab(h5, component, seismograms_p(1,:,:), (/0, seismo_offset/), .false.)
-    endif
-
-    call h5_close_file(h5)
-
   end subroutine write_seismo_no_ioserv
 
 !=====================================================================
