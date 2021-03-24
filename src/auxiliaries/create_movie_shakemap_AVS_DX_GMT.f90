@@ -685,7 +685,7 @@
 
         ! output list of points
         mask_point = .false.
-        do ispec=1,nspectot_AVS_max
+        do ispec = 1,nspectot_AVS_max
           ieoff = NGNOD2D_FOUR_CORNERS_AVS_DX*(ispec-1)
           ! four points for each element
           do ilocnum = 1,NGNOD2D_FOUR_CORNERS_AVS_DX

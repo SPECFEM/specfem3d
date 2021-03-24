@@ -136,6 +136,10 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1957')
   allocate(stbur(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1958')
+  stlat(:) = 0.d0
+  stlon(:) = 0.d0
+  stele(:) = 0.d0
+  stbur(:) = 0.d0
 
   ! reads STATIONS file
   call read_stations(rec_filename,nrec,station_name,network_name,stlat,stlon,stele,stbur)
@@ -178,6 +182,9 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1960')
   allocate(elevation(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1961')
+  stutm_x(:) = 0.d0
+  stutm_y(:) = 0.d0
+  elevation(:) = 0.d0
 
   allocate(x_target(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1962')
@@ -185,6 +192,9 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1963')
   allocate(z_target(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1964')
+  x_target(:) = 0.d0
+  y_target(:) = 0.d0
+  z_target(:) = 0.d0
 
   allocate(x_found(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1965')
@@ -192,12 +202,17 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1966')
   allocate(z_found(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1967')
+  x_found(:) = 0.d0
+  y_found(:) = 0.d0
+  z_found(:) = 0.d0
 
   allocate(final_distance(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1968')
   allocate(idomain(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1969')
   if (ier /= 0) stop 'Error allocating arrays for locating receivers'
+  final_distance(:) = HUGEVAL
+  idomain(:) = 0
 
   ! determines target point locations (need to locate z coordinate of all receivers)
   ! note: we first locate all the target positions in the mesh to reduces the need of MPI communication

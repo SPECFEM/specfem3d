@@ -142,6 +142,13 @@
            z_target(NSOURCES), &
            idomain(NSOURCES),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'Error allocating source arrays')
+  moment_tensor(:,:) = 0.d0
+  lat(:) = 0.d0; long(:) = 0.d0; depth(:) = 0.d0
+  x_found(:) = 0.d0; y_found(:) = 0.d0; z_found(:) = 0.d0
+  x_target(:) = 0.d0; y_target(:) = 0.d0; z_target(:) = 0.d0
+  elevation(:) = 0.d0
+  final_distance(:) = HUGEVAL
+  idomain(:) = 0
 
   ! clear the arrays
   Mxx(:) = 0.d0

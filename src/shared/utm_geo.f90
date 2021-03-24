@@ -144,10 +144,10 @@
   rx_save = rx4
   ry_save = ry4
 
-  e2=1.d0-(SEMI_MINOR_AXIS/SEMI_MAJOR_AXIS)**2
-  e4=e2*e2
-  e6=e2*e4
-  ep2=e2/(1.d0-e2)
+  e2 = 1.d0-(SEMI_MINOR_AXIS/SEMI_MAJOR_AXIS)**2
+  e4 = e2*e2
+  e6 = e2*e4
+  ep2 = e2/(1.d0-e2)
 
 !
 !---- Set Zone parameters
