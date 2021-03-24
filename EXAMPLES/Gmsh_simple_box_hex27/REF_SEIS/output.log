@@ -1,4 +1,4 @@
-running example: Wed Mar 25 10:29:24 CET 2020
+running example: Thu Mar 25 02:28:34 +03 2021
 
    setting up example...
 
@@ -53,6 +53,7 @@ running example: Wed Mar 25 10:29:24 CET 2020
    sup_neighbor     :           26
 
    mesh2dual: max_neighbor =           26
+
    written file: ./DATABASES_MPI/part_array.vtk
 
  element distribution:
@@ -86,4 +87,4 @@ running example: Wed Mar 25 10:29:24 CET 2020
 see results in directory: OUTPUT_FILES/
 
 done
-Wed Mar 25 10:29:31 CET 2020
+Thu Mar 25 02:28:39 +03 2021
