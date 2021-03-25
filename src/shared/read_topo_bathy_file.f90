@@ -245,6 +245,20 @@
     !  weighted mean at current point of topography elevation of the four closest nodes
     !  set distance to huge initial value
     distmin = HUGEVAL
+
+    ! for example: jselected = 2, iselected = 2
+    !     -> j = 2,3 ; i = 2,3
+    !
+    !     .     .       .
+    !     |     |       |
+    !     x --- x ----- x -- ..
+    !     |     |       |
+    !     |     |       |
+    !     x --- o ----- x -- ..
+    !     |     |(2,2)  |
+    !     x --- x ----- x -- ..
+    !
+    ! evaluates distances & elevation in 4 quads around selected point (iselected,jselected)
     do j = jselected,jselected+1
       do i = iselected,iselected+1
         ! distances to target
@@ -252,6 +266,11 @@
         inode = 0
         do jadjust = 0,1
           do iadjust = 0,1
+            ! for example: j = 2, i = 2
+            !   -> ijk_00 = 1 * NGLLY + 2  = 2 + 5
+            !   -> ijk_01 = 1 * NGLLY + 1  = 1 + 5
+            !   -> ijk_10 = 0 * NGLLY + 2  = 2
+            !   -> ijk_11 = 0 * NGLLY + 1  = 1
             ijk = (j-jadjust-1)*NGLLY + i - iadjust
 
             ispec = free_surface_ispec(iface_selected)
