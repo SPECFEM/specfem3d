@@ -26,8 +26,8 @@
 !=====================================================================
 
 !> Initializes the data structure for ASDF
-!! \param nrec_store The number of receivers on the local processor
-  subroutine init_asdf_data(nrec_store)
+!! \param nrec_local The number of receivers on the local processor
+  subroutine init_asdf_data(nrec_local)
 
   use specfem_par, only: myrank
 
@@ -35,39 +35,49 @@
 
   implicit none
   ! Parameters
-  integer,intent(in) :: nrec_store
+  integer,intent(in) :: nrec_local
 
   ! Variables
   integer :: total_seismos_local, ier
 
-  total_seismos_local = nrec_store * 3 ! 3 components
+  total_seismos_local = nrec_local * 3 ! 3 components
 
-  asdf_container%nrec_store = nrec_store
+  asdf_container%nrec_local = nrec_local
 
-  allocate(asdf_container%receiver_name_array(nrec_store),stat=ier)
+  allocate(asdf_container%receiver_name_array(nrec_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2008')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%network_array(nrec_store),stat=ier)
+  allocate(asdf_container%network_array(nrec_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2009')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
   allocate(asdf_container%component_array(total_seismos_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2010')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%receiver_lat(nrec_store),stat=ier)
+  allocate(asdf_container%receiver_lat(nrec_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2011')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%receiver_lo(nrec_store),stat=ier)
+  allocate(asdf_container%receiver_lo(nrec_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2012')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%receiver_el(nrec_store),stat=ier)
+  allocate(asdf_container%receiver_el(nrec_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2013')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate(asdf_container%receiver_dpt(nrec_store),stat=ier)
+  allocate(asdf_container%receiver_dpt(nrec_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2014')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
   allocate(asdf_container%records(total_seismos_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2015')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
+
+  ! initializes
+  asdf_container%receiver_name_array(:) = ""
+  asdf_container%network_array(:) = ""
+  asdf_container%component_array(:) = ""
+
+  asdf_container%receiver_lat(:) = 0.0
+  asdf_container%receiver_lo(:) = 0.0
+  asdf_container%receiver_el(:) = 0.0
+  asdf_container%receiver_dpt(:) = 0.0
 
   end subroutine init_asdf_data
 
@@ -86,7 +96,7 @@
   use constants, only: CUSTOM_REAL,NDIM,myrank,IIN_SU1
 
   use specfem_par, only: &
-    station_name,network_name,NSTEP,nrec,OUTPUT_FILES,NTSTEP_BETWEEN_OUTPUT_SEISMOS,subsamp_seismos,nlength_seismogram
+    station_name,network_name,NSTEP,nrec,OUTPUT_FILES,subsamp_seismos,nlength_seismogram !,NTSTEP_BETWEEN_OUTPUT_SEISMOS
 
   use asdf_data, only: asdf_container
 
@@ -142,6 +152,10 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2017')
   if (ier /= 0) call exit_MPI (myrank, 'Allocating ASDF container failed.')
 
+  ! initializes
+  asdf_container%records(i)%record(:) = 0.0
+
+  ! seismogram as real data
   asdf_container%records(i)%record(1:NSTEP/subsamp_seismos) = seismogram_tmp(1:NSTEP/subsamp_seismos)
 
   end subroutine store_asdf_data
@@ -157,12 +171,17 @@
 
   implicit none
 
-  !Variables
+  ! local Variables
   integer :: i
 
-  do i = 1, asdf_container%nrec_store * 3 ! 3 components
+  do i = 1, asdf_container%nrec_local * 3 ! 3 components
+    ! skips component if records was not allocated for this component
+    ! (valid entries must have non-empty component name)
+    if (len_trim(asdf_container%component_array(i)) == 0) cycle
+    ! free memory
     deallocate(asdf_container%records(i)%record)
   enddo
+
   deallocate(asdf_container%receiver_name_array)
   deallocate(asdf_container%network_array)
   deallocate(asdf_container%component_array)
@@ -177,8 +196,7 @@
 
 ! writes out seismograms in ASDF format
 
-  use constants, only: NDIM,itag,MAX_LENGTH_NETWORK_NAME,MAX_LENGTH_STATION_NAME, &
-    CUSTOM_REAL,IMAIN,myrank
+  use constants, only: NDIM,itag,MAX_LENGTH_NETWORK_NAME,MAX_LENGTH_STATION_NAME,IMAIN,myrank
 
   ! for ASDF
   use constants, only: ASDF_OUTPUT_PROVENANCE,ASDF_MAX_STRING_LENGTH, &
@@ -198,6 +216,7 @@
   character(len=ASDF_MAX_QUAKEML_LENGTH) :: quakeml
   character(len=ASDF_MAX_STATIONXML_LENGTH) :: stationxml
 
+  integer :: num_stations
   integer :: stationxml_length
   integer :: nsamples  ! constant, as in SPECFEM
   double precision :: sampling_rate
@@ -225,7 +244,7 @@
   integer(kind=8) :: stationxml_grp
 
   integer :: current_proc, sender, receiver
-  real (kind=CUSTOM_REAL), dimension(:,:), allocatable :: full_seismogram
+  real, dimension(:,:), allocatable :: one_seismogram
 
   !--- MPI variables
   integer :: mysize, comm
@@ -236,18 +255,12 @@
 
   !--- 'allgather' arrays. Variables that needs to be known by everyone in
   !    order to define ASDF groups and datasets or write them as attributes.
-  integer, dimension(1) :: num_stations
   integer, dimension(:), allocatable :: num_stations_gather
   integer :: max_num_stations_gather
-  character(len=MAX_LENGTH_STATION_NAME), dimension(:,:), allocatable :: &
-      station_names_gather
-  character(len=MAX_LENGTH_NETWORK_NAME), dimension(:,:), allocatable :: &
-      network_names_gather
-  character(len=3), dimension(:,:), allocatable :: &
-      component_names_gather
-  real, dimension(:,:), allocatable :: &
-      station_lats_gather, station_longs_gather, station_elevs_gather, &
-      station_depths_gather
+  character(len=MAX_LENGTH_STATION_NAME), dimension(:,:), allocatable :: station_names_gather
+  character(len=MAX_LENGTH_NETWORK_NAME), dimension(:,:), allocatable :: network_names_gather
+  character(len=3), dimension(:,:), allocatable :: component_names_gather
+  real, dimension(:,:), allocatable :: station_lats_gather, station_longs_gather, station_elevs_gather, station_depths_gather
   integer, dimension(:), allocatable :: displs, rcounts
 
   ! temporary name built from network, station and channel names.
@@ -269,7 +282,7 @@
   call world_duplicate(comm)
   call world_size(mysize)
 
-  num_stations(1) = asdf_container%nrec_store
+  num_stations = asdf_container%nrec_local
 
   sampling_rate = 1.0/(DT*subsamp_seismos)
 
@@ -295,18 +308,17 @@
     call ASDF_generate_sf_provenance_f(trim(start_time_string)//C_NULL_CHAR, &
                                        trim(end_time_string)//C_NULL_CHAR, cptr, len_prov)
     call c_f_pointer(cptr, fptr, [len_prov])
+
     allocate(provenance(len_prov+1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2018')
     provenance(1:len_prov) = fptr(1:len_prov)
     provenance(len_prov+1) = C_NULL_CHAR
   endif
 
-  allocate(networks_names(num_stations(1)), stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2019')
-  allocate(stations_names(num_stations(1)), stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2020')
-  allocate(component_names(num_stations(1)*3), stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2021')
+  allocate(networks_names(num_stations), &
+           stations_names(num_stations), &
+           component_names(num_stations*3), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating arrays 2019')
 
   !--------------------------------------------------------
   ! ASDF variables
@@ -314,7 +326,7 @@
   ! Find how many stations are managed by each allgatheress
   allocate(num_stations_gather(mysize),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2022')
-  call gather_all_all_i(num_stations(1), 1, num_stations_gather, 1, mysize)
+  call all_gather_all_i(num_stations, num_stations_gather, mysize)
 
   ! find the largest number of stations per allgatheress
   max_num_stations_gather = maxval(num_stations_gather)
@@ -340,14 +352,13 @@
   allocate(component_names_gather(max_num_stations_gather*3, mysize),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2031')
 
-
   ! This needs to be done because asdf_data is a pointer
-  do i = 1, num_stations(1)
+  do i = 1, num_stations
     write(networks_names(i), '(a)') asdf_container%network_array(i)
     write(stations_names(i), '(a)') asdf_container%receiver_name_array(i)
   enddo
 
-  do i = 1, num_stations(1)*3
+  do i = 1, num_stations*3
     write(component_names(i), '(a)') asdf_container%component_array(i)
   enddo
 
@@ -357,42 +368,42 @@
     rcounts(i) = num_stations_gather(i) * MAX_LENGTH_STATION_NAME
   enddo
 
-  call all_gatherv_all_ch(stations_names, &
-                          num_stations(1) * MAX_LENGTH_STATION_NAME, &
-                          station_names_gather, &
-                          rcounts, &
-                          displs, &
-                          max_num_stations_gather, &
-                          MAX_LENGTH_STATION_NAME, &
-                          mysize)
+  call all_gather_all_ch(stations_names, &
+                         num_stations * MAX_LENGTH_STATION_NAME, &
+                         station_names_gather, &
+                         rcounts, &
+                         displs, &
+                         max_num_stations_gather, &
+                         MAX_LENGTH_STATION_NAME, &
+                         mysize)
 
   do i = 1, mysize
     displs(i) = (i-1) * max_num_stations_gather * MAX_LENGTH_NETWORK_NAME
     rcounts(i) = num_stations_gather(i) * MAX_LENGTH_NETWORK_NAME
   enddo
 
-  call all_gatherv_all_ch(networks_names, &
-                          num_stations(1) * MAX_LENGTH_NETWORK_NAME, &
-                          network_names_gather, &
-                          rcounts, &
-                          displs, &
-                          max_num_stations_gather, &
-                          MAX_LENGTH_NETWORK_NAME, &
-                          mysize)
+  call all_gather_all_ch(networks_names, &
+                         num_stations * MAX_LENGTH_NETWORK_NAME, &
+                         network_names_gather, &
+                         rcounts, &
+                         displs, &
+                         max_num_stations_gather, &
+                         MAX_LENGTH_NETWORK_NAME, &
+                         mysize)
 
   do i = 1, mysize
     displs(i) = (i-1) * max_num_stations_gather * 3
     rcounts(i) = num_stations_gather(i) * 3
   enddo
 
-  call all_gatherv_all_ch(component_names, &
-                          num_stations(1)*3*3, &!*3*3, &
-                          component_names_gather, &
-                          rcounts*3, &
-                          displs*3, &
-                          max_num_stations_gather*3, &
-                          3, &
-                          mysize)
+  call all_gather_all_ch(component_names, &
+                         num_stations*3*3, &
+                         component_names_gather, &
+                         rcounts*3, &
+                         displs*3, &
+                         max_num_stations_gather*3, &
+                         3, &
+                         mysize)
 
   ! Now gather all the coordiante information for these stations
   do i = 1, mysize
@@ -400,34 +411,34 @@
     rcounts(i) = num_stations_gather(i)
   enddo
 
-  call gatherv_all_cr(asdf_container%receiver_lat, &
-                      num_stations(1), &
-                      station_lats_gather, &
-                      rcounts, &
-                      displs, &
-                      max_num_stations_gather, &
-                      mysize)
-  call gatherv_all_cr(asdf_container%receiver_lo, &
-                      num_stations(1), &
-                      station_longs_gather, &
-                      rcounts, &
-                      displs, &
-                      max_num_stations_gather, &
-                      mysize)
-  call gatherv_all_cr(asdf_container%receiver_el, &
-                      num_stations(1), &
-                      station_elevs_gather, &
-                      rcounts, &
-                      displs, &
-                      max_num_stations_gather, &
-                      mysize)
-  call gatherv_all_cr(asdf_container%receiver_dpt, &
-                      num_stations(1), &
-                      station_depths_gather, &
-                      rcounts, &
-                      displs, &
-                      max_num_stations_gather, &
-                      mysize)
+  call all_gather_all_r(asdf_container%receiver_lat, &
+                        num_stations, &
+                        station_lats_gather, &
+                        rcounts, &
+                        displs, &
+                        max_num_stations_gather, &
+                        mysize)
+  call all_gather_all_r(asdf_container%receiver_lo, &
+                        num_stations, &
+                        station_longs_gather, &
+                        rcounts, &
+                        displs, &
+                        max_num_stations_gather, &
+                        mysize)
+  call all_gather_all_r(asdf_container%receiver_el, &
+                        num_stations, &
+                        station_elevs_gather, &
+                        rcounts, &
+                        displs, &
+                        max_num_stations_gather, &
+                        mysize)
+  call all_gather_all_r(asdf_container%receiver_dpt, &
+                        num_stations, &
+                        station_depths_gather, &
+                        rcounts, &
+                        displs, &
+                        max_num_stations_gather, &
+                        mysize)
 
   deallocate(stations_names)
   deallocate(networks_names)
@@ -435,8 +446,9 @@
   deallocate(displs)
   deallocate(rcounts)
 
-  allocate(full_seismogram(NDIM,NSTEP/subsamp_seismos),stat=ier)
+  allocate(one_seismogram(NDIM,NSTEP/subsamp_seismos),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2032')
+  one_seismogram(:,:) = 0.0
 
   !--------------------------------------------------------
   ! write ASDF
@@ -516,7 +528,14 @@
           if (ier /= 0) call exit_MPI(myrank,'Error ASDF write station XML failed')
 
           ! waveforms
-          do  i = 1, 3 ! loop over each component
+          ! loop over each component
+          do  i = 1,NDIM
+            ! note: if only pressure is output, there is only a single valid component.
+            !       the other component_name entries will be empty (""), which will lead to an error
+            !       with the HDF5 output when two waveforms with the same name will be defined.
+            !       we therefore skip components with an empty ("") entry.
+            if (len_trim(component_names_gather(i+(3*(j-1)),k)) == 0) cycle
+
             ! Generate unique waveform name
             ! example: HT.LIT.S3.MXN__2008-01-06T05:14:19__2008-01-06T05:14:53
             write(waveform_name, '(a)') trim(network_names_gather(j,k)) // "." // &
@@ -572,10 +591,10 @@
       call ASDF_initialize_hdf5_f(ier);
       if (ier /= 0) call exit_MPI(myrank,'Error ASDF initialize hdf5 seismogram failed')
 
-      call ASDF_open_serial_f(trim(OUTPUT_FILES)//"/synthetic.h5" // C_NULL_CHAR, file_id)
+      call ASDF_open_serial_f(trim(OUTPUT_FILES)//"synthetic.h5" // C_NULL_CHAR, file_id)
       ! checks file identifier
       if (file_id == 0) then
-        print *,'Error: ASDF failed to open file',trim(OUTPUT_FILES) // "/synthetic.h5"
+        print *,'Error: ASDF failed to open file',trim(OUTPUT_FILES) // "synthetic.h5"
         call exit_MPI(myrank,'Error opening ASDF file for synthetics')
       endif
 
@@ -598,37 +617,42 @@
           if (myrank == 0) then
             do i = 1, NDIM
             !  write(*,*) j, l, l+i, size(asdf_container%records)
-              full_seismogram(i,:) = asdf_container%records(l+i)%record(1:NSTEP/subsamp_seismos)
+              one_seismogram(i,:) = asdf_container%records(l+i)%record(1:NSTEP/subsamp_seismos)
             enddo
           endif
 
         else
           ! current_proc is not main proc
           if (myrank == current_proc) then
-
-            !full_seismogram(:,:) = seismograms(:,j,:)
+            !one_seismogram(:,:) = seismograms(:,j,:)
             do i = 1, NDIM
-              full_seismogram(i,:) = asdf_container%records(l+i)%record(1:NSTEP/subsamp_seismos)
+              one_seismogram(i,:) = asdf_container%records(l+i)%record(1:NSTEP/subsamp_seismos)
             enddo
-
-            call sendv_cr(full_seismogram,NDIM*NSTEP/subsamp_seismos,receiver,itag)
+            ! send (real) data
+            call send_r(one_seismogram,NDIM*NSTEP/subsamp_seismos,receiver,itag)
 
           else if (myrank == 0) then
-
-            call recvv_cr(full_seismogram,NDIM*NSTEP/subsamp_seismos,sender,itag)
+            ! receive (real) data
+            call recv_r(one_seismogram,NDIM*NSTEP/subsamp_seismos,sender,itag)
 
           endif
         endif
 
         ! Now do the actual writing
         if (myrank == 0) then
-
           call ASDF_open_stations_group_f(waveforms_grp, &
                                           trim(network_names_gather(j, k)) // "." //      &
                                           trim(station_names_gather(j, k)) // C_NULL_CHAR, &
                                           station_grp)
 
-          do  i = 1, NDIM ! loop over each component
+          ! loop over each component
+          do  i = 1,NDIM
+            ! note: if only pressure is output, there is only a single valid component.
+            !       the other component_name entries will be empty (""), which will lead to an error
+            !       with the HDF5 output when two waveforms with the same name will be defined.
+            !       we therefore skip components with an empty ("") entry.
+            if (len_trim(component_names_gather(i+(3*(j-1)),k)) == 0) cycle
+
             ! Generate unique waveform name
             ! example: HT.LIT.S3.MXN__2008-01-06T05:14:19__2008-01-06T05:14:53
             write(waveform_name, '(a)') trim(network_names_gather(j,k)) // "." // &
@@ -640,8 +664,9 @@
                                       trim(waveform_name) // C_NULL_CHAR, &
                                       data_ids(i))
 
+            ! writes (float) data
             call ASDF_write_partial_waveform_f(data_ids(i), &
-                                               full_seismogram(i,1:NSTEP/subsamp_seismos), 0, NSTEP/subsamp_seismos, ier)
+                                               one_seismogram(i,1:NSTEP/subsamp_seismos), 0, NSTEP/subsamp_seismos, ier)
             if (ier /= 0) call exit_MPI(myrank,'Error ASDF write partial waveform failed')
 
             call ASDF_close_dataset_f(data_ids(i), ier)
@@ -682,10 +707,10 @@
     call ASDF_initialize_hdf5_f(ier);
     if (ier /= 0) call exit_MPI(myrank,'Error ASDF parallel initialize hdf5 failed')
 
-    call ASDF_open_f(trim(OUTPUT_FILES)//"/synthetic.h5" // C_NULL_CHAR, comm, file_id)
+    call ASDF_open_f(trim(OUTPUT_FILES)//"synthetic.h5" // C_NULL_CHAR, comm, file_id)
     ! checks file identifier
     if (file_id == 0) then
-      print *,'Error rank ',myrank,': ASDF failed to open file',trim(OUTPUT_FILES) // "/synthetic.h5"
+      print *,'Error rank ',myrank,': ASDF failed to open file',trim(OUTPUT_FILES) // "synthetic.h5"
       call exit_MPI(myrank,'Error opening ASDF file for synthetics')
     endif
 
@@ -698,9 +723,16 @@
                                         trim(station_names_gather(j, k)) // C_NULL_CHAR, &
                                         station_grp)
 
-        l = (j-1)*(NDIM) ! Index of current receiver in asdf_container%records
+        ! Index of current receiver in asdf_container%records
+        l = (j-1)*(NDIM)
 
-        do  i = 1, NDIM ! loop over each component
+        ! loop over each component
+        do i = 1,NDIM
+          ! note: if only pressure is output, there is only a single valid component.
+          !       the other component_name entries will be empty (""), which will lead to an error
+          !       with the HDF5 output when two waveforms with the same name will be defined.
+          !       we therefore skip components with an empty ("") entry.
+          if (len_trim(component_names_gather(i+(3*(j-1)),k)) == 0) cycle
 
           ! Generate unique waveform name
           ! example: HT.LIT.S3.MXN__2008-01-06T05:14:19__2008-01-06T05:14:53
@@ -713,13 +745,12 @@
                                     trim(waveform_name) // C_NULL_CHAR, data_ids(i))
 
           if (k == myrank+1) then
+            one_seismogram(i,:) = asdf_container%records(l+i)%record(1:NSTEP/subsamp_seismos)
 
-            full_seismogram(i,:) = asdf_container%records(l+i)%record(1:NSTEP/subsamp_seismos)
-
+            ! writes (float) data
             call ASDF_write_partial_waveform_f(data_ids(i), &
-                                               full_seismogram(i,1:NSTEP/subsamp_seismos), 0, NSTEP/subsamp_seismos, ier)
+                                               one_seismogram(i,1:NSTEP/subsamp_seismos), 0, NSTEP/subsamp_seismos, ier)
             if (ier /= 0) call exit_MPI(myrank,'Error ASDF parallel write partial waveform failed')
-
           endif
 
           call ASDF_close_dataset_f(data_ids(i), ier)
@@ -759,7 +790,7 @@
   deallocate(station_elevs_gather)
   deallocate(station_depths_gather)
   deallocate(num_stations_gather)
-  deallocate(full_seismogram)
+  deallocate(one_seismogram)
 
   ! all done
   call synchronize_all()
@@ -778,7 +809,7 @@
 
   use constants, only: ASDF_MAX_QUAKEML_LENGTH,ASDF_MAX_TIME_STRING_LENGTH
 
-  use specfem_par, only: hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz
+  use specfem_par, only: hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz,USE_FORCE_POINT_SOURCE,utm_x_source,utm_y_source
 
   implicit none
   character(len=ASDF_MAX_QUAKEML_LENGTH) :: quakemlstring
@@ -788,29 +819,89 @@
   character(len=13) :: pde_lat_str, pde_lon_str, pde_depth_str
   character(len=25) :: M0_str, mb_str, ms_str, Mw_str
   character(len=25) :: Mrr_str, Mtt_str, Mpp_str, Mrt_str, Mrp_str, Mtp_str
-  character(len=10) :: event_name = "20000000"
+  character(len=20) :: event_name,type_name_str,type_str
+
+  double precision :: M0,Mw,Mrr,Mtt,Mpp,Mrt,Mrp,Mtp,cmt_lat,cmt_lon,cmt_depth
+  double precision, external :: get_cmt_scalar_moment,get_cmt_moment_magnitude
+
+  ! setup
+  if (USE_FORCE_POINT_SOURCE) then
+    ! force
+    !(will need to find better infos, for now just artifical setup)
+    !
+    ! QuakeML:
+    ! event types allowed: earthquake, explosion, crash, other event, thunder, slide, meteorite, ..
+    ! event description types allowed: earthquake name, felt report, region name, ..
+    !
+    ! see: https://quake.ethz.ch/quakeml/docs/latest?action=AttachFile&do=get&target=QuakeML-BED.pdf
+    !
+    ! will use "controlled explosion" for force point source, sounds more exciting than "other event";
+    ! and "earthquake name" for description, however, in principle it would be something else.
+    type_str = "controlled explosion"  ! "force" doesn't work, unfortunately, "hammer" neither...
+    type_name_str = "earthquake name"  ! "force name" doesn't work, "active source name" neither...
+    event_name = "forcesolution1"
+    cmt_lat = 0.d0
+    cmt_lon = 0.d0
+    cmt_depth = 0.d0
+    Mrr = 1.d0
+    Mtt = 0.d0
+    Mpp = 0.d0
+    Mrt = 0.d0
+    Mrp = 0.d0
+    Mtp = 0.d0
+    M0 = 1.d0
+    Mw = 1.d0
+  else
+    ! moment tensor
+    type_str = "earthquake"
+    type_name_str = "earthquake name"
+    event_name = "cmtsolution1"
+    ! coordinate system convention: x points east, y points north, z points vertical up
+    cmt_lat = utm_y_source(1)
+    cmt_lon = utm_x_source(1)
+    cmt_depth = 0.d0    ! no info yet
+    ! coordinate system convention: r -> z, theta -> -y, phi -> x
+    !   Mrr =  Mzz
+    !   Mtt =  Myy
+    !   Mpp =  Mxx
+    !   Mrt = -Myz
+    !   Mrp =  Mxz
+    !   Mtp = -Mxy
+    Mrr = Myy(1)  !Mrr*1e-7
+    Mtt = Myy(1)  !Mtt*1e-7
+    Mpp = Mxx(1)  !Mpp*1e-7
+    Mrt = -Myz(1) !Mrt*1e-7
+    Mrp = Mxz(1)  !Mrp*1e-7
+    Mtp = -Mxy(1) !Mtp*1e-7
+    M0 = get_cmt_scalar_moment(Mxx(1),Myy(1),Mzz(1),Mxy(1),Mxz(1),Myz(1)) ! dyne-cm
+    M0 = M0 * 1e-7 ! dyn-cm to N-m conversion
+    Mw = get_cmt_moment_magnitude(Mxx(1),Myy(1),Mzz(1),Mxy(1),Mxz(1),Myz(1))
+  endif
 
   ! Convert the CMT values to strings for the QuakeML string
   pde_start_time_string = cmt_start_time_string
-  write(pde_lat_str, "(g12.5)") 12.3 !pde_lat
-  write(pde_lon_str, "(g12.5)") 112.9 !pde_lon
-  write(pde_depth_str, "(g12.5)") 0.0 !pde_depth*1000 ! km to m conversion
-  write(cmt_lat_str, "(g12.5)") 12.3 !cmt_lat
-  write(cmt_lon_str, "(g12.5)") 112.9 !cmt_lon
-  write(cmt_depth_str, "(g12.5)") 0.0 !cmt_depth*1000 ! km to m conversion
+
+  ! no infos yet stored for depth
+  write(pde_lat_str, "(g12.5)") cmt_lat     !pde_lat
+  write(pde_lon_str, "(g12.5)") cmt_lon     !pde_lon
+  write(pde_depth_str, "(g12.5)") cmt_depth !pde_depth*1000 ! km to m conversion
+  write(cmt_lat_str, "(g12.5)") cmt_lat     !cmt_lat
+  write(cmt_lon_str, "(g12.5)") cmt_lon     !cmt_lon
+  write(cmt_depth_str, "(g12.5)") cmt_depth !cmt_depth*1000 ! km to m conversion
 
   ! takes first source description
   write(hdur_str, "(g12.5)") hdur(1)
-  write(M0_str, "(g12.5)") 0.0!M0*1e-7 ! dyn-cm to N-m conversion
-  write(mb_str, "(g12.5)") 0.0!mb
-  write(ms_str, "(g12.5)") 0.0!ms
-  write(Mw_str, "(g12.5)") 0.0!Mw
-  write(Mrr_str, "(g12.5)") Mxx(1) !Mrr*1e-7
-  write(Mtt_str, "(g12.5)") Myy(1) !Mtt*1e-7
-  write(Mpp_str, "(g12.5)") Mzz(1) !Mpp*1e-7
-  write(Mrt_str, "(g12.5)") Mxy(1) !Mrt*1e-7
-  write(Mrp_str, "(g12.5)") Mxz(1) !Mrp*1e-7
-  write(Mtp_str, "(g12.5)") Myz(1) !Mtp*1e-7
+  write(M0_str, "(g12.5)") M0   !M0
+  write(mb_str, "(g12.5)") 0.0  !mb
+  write(ms_str, "(g12.5)") 0.0  !ms
+  write(Mw_str, "(g12.5)") Mw   !Mw
+
+  write(Mrr_str, "(g12.5)") Mrr
+  write(Mtt_str, "(g12.5)") Mtt
+  write(Mpp_str, "(g12.5)") Mpp
+  write(Mrt_str, "(g12.5)") Mrt
+  write(Mrp_str, "(g12.5)") Mrp
+  write(Mtp_str, "(g12.5)") Mtp
 
   ! header version
   quakemlstring = &
@@ -829,11 +920,11 @@
 
   ! event name
   quakemlstring = trim(quakemlstring) // &
-    '<type>earthquake</type>'// &
+    '<type>'//trim(type_str)//'</type>'// &
     '<typeCertainty>known</typeCertainty>'// &
     '<description>'// &
     '  <text>'//trim(event_name)//'</text>'// &
-    '  <type>earthquake name</type>'// &
+    '  <type>'//trim(type_name_str)//'</type>'// &
     '</description>'
 
   ! event origin
@@ -881,58 +972,58 @@
     '  <derivedOriginID>smi:local/origin#cmtorigin'//'</derivedOriginID>'//&
     '  <momentMagnitudeID>smi:local//magnitude#moment_mag'//'</momentMagnitudeID>'//&
     '  <scalarMoment>'//&
-    '    <value></value>'//&
+    '    <value>'//trim(M0_str)//'</value>'//&
     '  </scalarMoment>'//&
     '  <tensor>'//&
     '  <Mrr>'//&
-    '    <value></value>'//&
+    '    <value>'//trim(Mrr_str)//'</value>'//&
     '    <uncertainty>0</uncertainty>'//&
     '  </Mrr>'//&
     '  <Mtt>'//&
-    '    <value></value>'//&
+    '    <value>'//trim(Mtt_str)//'</value>'//&
     '    <uncertainty>0</uncertainty>'//&
     '  </Mtt>'//&
     '  <Mpp>'//&
-    '    <value></value>'//&
+    '    <value>'//trim(Mpp_str)//'</value>'//&
     '    <uncertainty>0</uncertainty>'//&
     '  </Mpp>'//&
     '  <Mrt>'//&
-    '    <value></value>'//&
+    '    <value>'//trim(Mrt_str)//'</value>'//&
     '    <uncertainty>0</uncertainty>'//&
     '  </Mrt>'//&
     '  <Mrp>'//&
-    '    <value></value>'//&
+    '    <value>'//trim(Mrp_str)//'</value>'//&
     '    <uncertainty>0</uncertainty>'//&
     '  </Mrp>'//&
     '  <Mtp>'//&
-    '    <value></value>'//&
+    '    <value>'//trim(Mtp_str)//'</value>'//&
     '    <uncertainty>0</uncertainty>'//&
     '  </Mtp>'//&
     '  </tensor>'//&
     '  <sourceTimeFunction>'//&
     '    <type>triangle</type>'//&
-    '    <duration></duration>'//&
+    '    <duration>'//trim(hdur_str)//'</duration>'//&
     '  </sourceTimeFunction>'//&
     '</momentTensor>'//&
     '</focalMechanism>'
 
   ! event magnitudes
   quakemlstring = trim(quakemlstring) // &
-    '<magnitude publicID="smi:local/magnitude#moment_mag">'//&
+    '<magnitude publicID="smi:local/'//trim(event_name)//'/magnitude#moment_mag">'//&
     '  <mag>'//&
-    '  <value></value>'//&
+    '    <value>'//trim(Mw_str)//'</value>'//&
     '  </mag>'//&
     '  <type>Mwc</type>'//&
     '</magnitude>'//&
-    '<magnitude publicID="smi:local/magnitude#mb">'//&
+    '<magnitude publicID="smi:local/'//trim(event_name)//'/magnitude#mb">'//&
     '  <mag>'//&
-    '  <value></value>'//&
+    '    <value>'//trim(mb_str)//'</value>'//&
     '  </mag>'//&
     '  <type>mb</type>'//&
     '</magnitude>'//&
-    '<magnitude publicID="smi:local/magnitude#MS">'//&
+    '<magnitude publicID="smi:local/'//trim(event_name)//'/magnitude#MS">'//&
     '  <mag>'//&
-    '  <value></value>'//&
+    '    <value>'//trim(ms_str)//'</value>'//&
     '  </mag>'//&
     '  <type>MS</type>'//&
     '</magnitude>'
@@ -942,6 +1033,10 @@
     '</event>'//&
     '</eventParameters>'//&
     '</q:quakeml>'
+
+  !debug
+  !print *,'debug: quakeML:'
+  !print *,'*****'//trim(quakemlstring)//'*****'
 
   end subroutine cmt_to_quakeml
 
@@ -999,11 +1094,15 @@
   write(minute, "(I2.2)") iatime(2)
 
   real_sec = iatime(1) + fraction_sec
-  write(str_second, "(I2.2, F0.4)") int(real_sec), real_sec-int(real_sec)
+  write(str_second, "(I2.2,F0.4)") int(real_sec), real_sec-int(real_sec)
 
   ! format example: 2018-01-31T16:40:02.8900
   time_string = trim(yr)//"-"//trim(mo)//"-"//trim(da)//"T"//&
                   trim(hr)//':'//trim(minute)//':'//trim(str_second)
+
+  !debug
+  !print *,'debug: time_string:',int(real_sec),real_sec-int(real_sec),'str_second***',str_second,'***',trim(str_second),'***'
+  !print *,'*****'//trim(time_string)//'*****'
 
   end subroutine convert_systime_to_string
 
@@ -1168,6 +1267,10 @@
     '</Station>'//&
     '</Network>'//&
     '</FDSNStationXML>'
+
+  !debug
+  !print *,'debug: station XML:'
+  !print *,'*****'//trim(stationxmlstring)//'*****'
 
   end subroutine station_to_stationxml
 
