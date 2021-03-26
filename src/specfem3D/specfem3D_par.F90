@@ -139,21 +139,29 @@ module specfem_par
 
   ! parameters for the source
   integer, dimension(:), allocatable :: islice_selected_source,ispec_selected_source
+
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sourcearray
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: sourcearrays
+
+  ! CMT moment tensors
   double precision, dimension(:), allocatable :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
+
   double precision, dimension(:,:,:), allocatable :: nu_source
   double precision, dimension(:), allocatable :: xi_source,eta_source,gamma_source
+
   double precision, dimension(:), allocatable :: tshift_src,hdur,hdur_Gaussian
   double precision, dimension(:), allocatable :: utm_x_source,utm_y_source
   double precision :: t0
+
   ! SAC time
   integer :: yr,mo,da,jda,ho,mi
   double precision :: sec
+
   ! source time function
   real(kind=CUSTOM_REAL) :: stf_used_total
   integer :: nsources_local
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: user_source_time_function
+
   ! source encoding
   ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)
   ! [ = sign(Myy) = sign(Mzz) since they have to be equal in the acoustic setting]

@@ -1178,7 +1178,7 @@
   character(len=MAX_STRING_LEN),intent(in) :: sources_filename
 
   ! local variables
-  integer :: icounter,isource,idummy,ier
+  integer :: icounter,isource,idummy,ier,nlines_per_source
   double precision :: hdur, minval_hdur
   character(len=MAX_STRING_LEN) :: dummystring
 
@@ -1217,15 +1217,24 @@
     enddo
     close(IIN)
 
-    if (.not. USE_EXTERNAL_SOURCE_FILE) then
-      if (mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0) &
-        stop 'Error total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
-      NSOURCES = icounter / NLINES_PER_FORCESOLUTION_SOURCE
-    else
+    ! number of lines for source description
+    if (USE_EXTERNAL_SOURCE_FILE) then
       !! VM VM in case of USE_EXTERNAL_SOURCE_FILE we have to read one additional line per source (the name of external source file)
-      NSOURCES = icounter / (NLINES_PER_FORCESOLUTION_SOURCE+1)
+      nlines_per_source = NLINES_PER_FORCESOLUTION_SOURCE + 1
+    else
+      nlines_per_source = NLINES_PER_FORCESOLUTION_SOURCE
     endif
 
+    ! checks lines are a multiple
+    if (mod(icounter,nlines_per_source) /= 0) then
+      print *,'Error: total number of lines in FORCESOLUTION file should be a multiple of ',nlines_per_source
+      stop 'Error total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
+    endif
+
+    ! number of sources in file
+    NSOURCES = icounter / nlines_per_source
+
+    ! checks if any
     if (NSOURCES < 1) stop 'Error need at least one source in FORCESOLUTION file'
 
   else
@@ -1248,15 +1257,25 @@
       if (ier == 0) icounter = icounter + 1
     enddo
     close(IIN)
-    if (.not. USE_EXTERNAL_SOURCE_FILE) then
-      NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
-      if (mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
-            stop 'Error total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
-    else
+
+    ! number of lines for source description
+    if (USE_EXTERNAL_SOURCE_FILE) then
       !! VM VM in case of USE_EXTERNAL_SOURCE_FILE we have to read one additional line per source (the name of external source file)
-      NSOURCES = icounter / (NLINES_PER_CMTSOLUTION_SOURCE+1)
+      nlines_per_source = NLINES_PER_CMTSOLUTION_SOURCE + 1
+    else
+      nlines_per_source = NLINES_PER_CMTSOLUTION_SOURCE
     endif
 
+    ! checks number of lines
+    if (mod(icounter,nlines_per_source) /= 0) then
+      print *,'Error: total number of lines in CMTSOLUTION file should be a multiple of ',nlines_per_source
+      stop 'Error total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
+    endif
+
+    ! number of sources in file
+    NSOURCES = icounter / nlines_per_source
+
+    ! checks if any
     if (NSOURCES < 1) stop 'Error need at least one source in CMTSOLUTION file'
 
     ! compute the minimum value of hdur in CMTSOLUTION file
@@ -1274,18 +1293,10 @@
       read(dummystring(15:len_trim(dummystring)),*) hdur
       minval_hdur = min(minval_hdur,hdur)
 
-      ! skip other information
-      if (.not. USE_EXTERNAL_SOURCE_FILE) then
-        do idummy = 1,9
-          read(IIN,"(a)") dummystring
-        enddo
-      else
-! we need to skip 10 lines instead of 9 when USE_EXTERNAL_SOURCE_FILE is .true.
-! because there is an extra line for source time function file name
-        do idummy = 1,10
-          read(IIN,"(a)") dummystring
-        enddo
-      endif
+      ! reads till the end of this source
+      do idummy = 5,nlines_per_source
+        read(IIN,"(a)") dummystring
+      enddo
 
     enddo
     close(IIN)

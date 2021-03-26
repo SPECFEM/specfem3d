@@ -135,6 +135,7 @@
       rlon4 = rx4
       rlat4 = ry4
     endif
+    ! all done
     return
   endif
 
