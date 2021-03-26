@@ -365,15 +365,13 @@
 
   subroutine gather_all_all_i(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
+  implicit none
 
+  integer :: sendcnt, recvcount, NPROC
+  integer, dimension(sendcnt) :: sendbuf
+  integer, dimension(recvcount,0:NPROC-1) :: recvbuf
 
-    implicit none
-
-    integer :: sendcnt, recvcount, NPROC
-    integer, dimension(sendcnt) :: sendbuf
-    integer, dimension(recvcount,0:NPROC-1) :: recvbuf
-
-    recvbuf(:,0) = sendbuf(:)
+  recvbuf(:,0) = sendbuf(:)
 
   end subroutine gather_all_all_i
 
@@ -455,7 +453,7 @@
 !----
 !
 
- subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
+  subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
 
   use constants, only: CUSTOM_REAL
 
@@ -474,6 +472,71 @@
   unused_i4 = recvoffset(1)
 
   end subroutine gatherv_all_cr
+
+!
+!----
+!
+
+  subroutine all_gather_all_i(sendbuf, recvbuf, NPROC)
+
+  implicit none
+
+  integer :: NPROC
+  integer :: sendbuf
+  integer, dimension(NPROC) :: recvbuf
+
+  recvbuf(1) = sendbuf
+
+  end subroutine all_gather_all_i
+
+!
+!----
+!
+
+  subroutine all_gather_all_r(sendbuf, sendcnt, recvbuf, recvcnt, recvoffset, dim1, NPROC)
+
+  implicit none
+
+  integer :: sendcnt, dim1, NPROC
+
+  real, dimension(sendcnt) :: sendbuf
+  real, dimension(dim1, NPROC) :: recvbuf
+
+  integer, dimension(NPROC) :: recvoffset, recvcnt
+
+  integer(kind=4) :: unused_i4
+
+  recvbuf(1:sendcnt,1) = sendbuf(:)
+
+  unused_i4 = recvcnt(1)
+  unused_i4 = recvoffset(1)
+
+  end subroutine all_gather_all_r
+
+!
+!----
+!
+
+  subroutine all_gather_all_ch(sendbuf, sendcnt, recvbuf, recvcnt, recvoffset, dim1, dim2, NPROC)
+
+  implicit none
+
+  integer :: sendcnt, dim1, dim2, NPROC
+
+  character(len=dim2), dimension(sendcnt) :: sendbuf
+  character(len=dim2), dimension(dim1, NPROC) :: recvbuf
+
+  integer, dimension(NPROC) :: recvoffset, recvcnt
+
+  integer(kind=4) :: unused_i4
+
+  recvbuf(1:sendcnt,1) = sendbuf(:)
+
+  unused_i4 = recvcnt(1)
+  unused_i4 = recvoffset(1)
+
+  end subroutine all_gather_all_ch
+
 
 !
 !----
@@ -951,6 +1014,28 @@
 
   end subroutine recvv_cr
 
+!
+!----
+!
+
+  subroutine recv_r(recvbuf, recvcount, dest, recvtag )
+
+  implicit none
+
+  integer :: dest,recvtag
+  integer :: recvcount
+  real,dimension(recvcount) :: recvbuf
+
+  integer(kind=4) :: unused_i4
+  real :: unused_r
+
+  stop 'recv_r not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = recvtag
+  unused_r = recvbuf(1)
+
+  end subroutine recv_r
+
 
 !
 !----
@@ -1013,6 +1098,27 @@
 
   end subroutine recv_i_t
 
+!
+!----
+!
+
+  subroutine send_r(sendbuf, sendcount, dest, sendtag)
+
+  implicit none
+
+  integer :: dest,sendtag
+  integer :: sendcount
+  real,dimension(sendcount):: sendbuf
+
+  integer(kind=4) :: unused_i4
+  real :: unused_r
+
+  stop 'send_i_t not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = sendtag
+  unused_r = sendbuf(1)
+
+  end subroutine send_r
 
 !
 !----

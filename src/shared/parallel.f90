@@ -1091,10 +1091,30 @@ end module my_mpi
 
   integer :: ier
 
-  call MPI_RECV(recvbuf,recvcount,MPI_INTEGER,dest,recvtag, &
-                my_local_mpi_comm_world,MPI_STATUS_IGNORE,ier)
+  call MPI_RECV(recvbuf,recvcount,MPI_INTEGER,dest,recvtag,my_local_mpi_comm_world,MPI_STATUS_IGNORE,ier)
 
   end subroutine recv_i
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine recv_r(recvbuf, recvcount, dest, recvtag )
+
+  use my_mpi
+
+  implicit none
+
+  integer :: dest,recvtag
+  integer :: recvcount
+  real,dimension(recvcount) :: recvbuf
+
+  integer :: ier
+
+  call MPI_RECV(recvbuf,recvcount,MPI_REAL,dest,recvtag,my_local_mpi_comm_world,MPI_STATUS_IGNORE,ier)
+
+  end subroutine recv_r
+
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1112,8 +1132,7 @@ end module my_mpi
 
   integer :: ier
 
-  call MPI_RECV(recvbuf,recvcount,MPI_DOUBLE_PRECISION,dest,recvtag, &
-                my_local_mpi_comm_world,MPI_STATUS_IGNORE,ier)
+  call MPI_RECV(recvbuf,recvcount,MPI_DOUBLE_PRECISION,dest,recvtag,my_local_mpi_comm_world,MPI_STATUS_IGNORE,ier)
 
   end subroutine recv_dp
 
@@ -1139,6 +1158,7 @@ end module my_mpi
                 my_local_mpi_comm_world,MPI_STATUS_IGNORE,ier)
 
   end subroutine recvv_cr
+
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1217,6 +1237,27 @@ end module my_mpi
                 my_local_mpi_comm_world,MPI_STATUS_IGNORE,ier)
 
   end subroutine recv_i_t
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine send_r(sendbuf, sendcount, dest, sendtag)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: dest,sendtag
+  integer :: sendcount
+  real,dimension(sendcount):: sendbuf
+
+  integer :: ier
+
+  call MPI_SEND(sendbuf,sendcount,MPI_REAL,dest,sendtag,my_local_mpi_comm_world,ier)
+
+  end subroutine send_r
+
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1490,11 +1531,62 @@ end module my_mpi
 
   end subroutine gatherv_all_cr
 
+
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine all_gatherv_all_ch(sendbuf, sendcnt, recvbuf, recvcnt, recvoffset, dim1, dim2, NPROC)
+  subroutine all_gather_all_i(sendbuf, recvbuf, NPROC)
+
+  use constants
+  use my_mpi
+
+  implicit none
+
+  integer :: NPROC
+  integer :: sendbuf
+  integer, dimension(NPROC) :: recvbuf
+
+  integer :: ier
+
+  call MPI_Allgather(sendbuf,1,MPI_INTEGER, &
+                     recvbuf,1,MPI_INTEGER, &
+                     my_local_mpi_comm_world,ier)
+
+  end subroutine all_gather_all_i
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine all_gather_all_r(sendbuf, sendcnt, recvbuf, recvcnt, recvoffset, dim1, NPROC)
+
+  use constants
+  use my_mpi
+
+  implicit none
+
+  integer :: sendcnt, dim1, NPROC
+
+  real, dimension(sendcnt) :: sendbuf
+  real, dimension(dim1, NPROC) :: recvbuf
+
+  integer, dimension(NPROC) :: recvoffset, recvcnt
+
+  integer :: ier
+
+  call MPI_Allgatherv(sendbuf,sendcnt,MPI_REAL, &
+                      recvbuf,recvcnt,recvoffset,MPI_REAL, &
+                      my_local_mpi_comm_world,ier)
+
+  end subroutine all_gather_all_r
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine all_gather_all_ch(sendbuf, sendcnt, recvbuf, recvcnt, recvoffset, dim1, dim2, NPROC)
 
   use constants
   use my_mpi
@@ -1503,7 +1595,7 @@ end module my_mpi
 
   integer :: sendcnt, dim1, dim2, NPROC
 
-  character(len=dim2), dimension(NPROC) :: sendbuf
+  character(len=dim2), dimension(sendcnt) :: sendbuf
   character(len=dim2), dimension(dim1, NPROC) :: recvbuf
 
   integer, dimension(NPROC) :: recvoffset, recvcnt
@@ -1511,10 +1603,10 @@ end module my_mpi
   integer :: ier
 
   call MPI_Allgatherv(sendbuf,sendcnt,MPI_CHARACTER, &
-                  recvbuf,recvcnt,recvoffset,MPI_CHARACTER, &
-                  my_local_mpi_comm_world,ier)
+                      recvbuf,recvcnt,recvoffset,MPI_CHARACTER, &
+                      my_local_mpi_comm_world,ier)
 
-  end subroutine all_gatherv_all_ch
+  end subroutine all_gather_all_ch
 
 
 ! not used yet...
