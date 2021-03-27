@@ -47,7 +47,7 @@
 
   ! local parameters
   integer :: ipoin
-  double precision :: z,distmin
+  double precision :: z,distmin,lon,lat
   double precision, dimension(:), allocatable :: elevation_distmin
   double precision, dimension(:,:), allocatable :: elevation_all,elevation_distmin_all
   real(kind=CUSTOM_REAL) :: xloc,yloc,loc_ele,loc_distmin
@@ -58,8 +58,12 @@
 
   ! determine x/y from lat/lon
   do ipoin = 1, npoints
+    ! point longitude/latitude
+    lon = plon(ipoin)
+    lat = plat(ipoin)
+
     ! convert station location to UTM
-    call utm_geo(plon(ipoin),plat(ipoin),utm_x(ipoin),utm_y(ipoin),ILONGLAT2UTM)
+    call utm_geo(lon,lat,utm_x(ipoin),utm_y(ipoin),ILONGLAT2UTM)
 
     ! target location of point
     x_target(ipoin) = utm_x(ipoin)
