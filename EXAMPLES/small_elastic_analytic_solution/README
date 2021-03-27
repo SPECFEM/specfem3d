@@ -1,0 +1,19 @@
+-------------------
+README
+-------------------
+
+Small elastic simulation to compare against an analytical solution (for test purposes).
+
+The (semi-)analytical solution is calculated according to Aki & Richards, eq. (4.32) and eq. (4.33)
+for a double-couple source. 
+
+Analytical solutions are created by the script analytical_solution_Aki.py and provided in REF_ANALYTICAL/ folder.
+Reference solutions created by SPECFEM are in REF_SEIS/ folder.
+
+To run the example simulation, use script:
+> ./run_this_example.sh
+
+Compare your seismograms in OUTPUT_FILES/ with the reference ones in directory REF_SEIS/
+The script ../utils/compare_seismogram_correlations.py can be used for running trace-by-trace comparisons.
+
+

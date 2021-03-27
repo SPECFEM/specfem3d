@@ -21,7 +21,7 @@
  Surface shape functions defined by NGNOD2D =            9  control nodes
  Beware! Curvature (i.e. HEX27 elements) is not handled by our internal mesher
 
- velocity model:   default 
+ velocity model:   default
 
 
  suppressing UTM projection
@@ -47,7 +47,7 @@
  defined materials    :            1
  undefined materials  :            0
  total number of spectral elements:         1000
- absorbing boundaries: 
+ absorbing boundaries:
    xmin,xmax :          100         100
    ymin,ymax :          100         100
    bottom,top:          100         100
@@ -61,14 +61,14 @@
 
  create regions:
 
-   ...allocating arrays 
+   ...allocating arrays
      NGLLX   =            5
      NGLLY   =            5
      NGLLZ   =            5
      NGNOD   =           27
      NGNOD2D =            9
 
-     main process setup: 
+     main process setup:
      nspec           =         1000
 
      separating regular/irregular element shapes
@@ -85,14 +85,14 @@
  File DATA/Par_file_faults not found: assuming that there are no faults
 
 
-   ...setting up jacobian 
+   ...setting up jacobian
 
    ...indexing global points
-      creating ibool indexing     : x min/max =    0.00000000     /   1000.00000    
+      creating ibool indexing     : x min/max =    0.00000000     /   1000.00000
       creating indirect addressing: nglob =        68921
       creating unique point locations
 
-   ...preparing MPI interfaces 
+   ...preparing MPI interfaces
       total MPI interface points:            0
       total assembled MPI interface points:           0
 
@@ -121,7 +121,7 @@
                90  % time remaining:   1.6815555742505232E-007 s
               100  % time remaining:   0.0000000000000000      s
 
-   ...detecting acoustic-elastic-poroelastic surfaces 
+   ...detecting acoustic-elastic-poroelastic surfaces
       total acoustic elements   :        1000
       total elastic elements    :           0
       total poroelastic elements:           0
@@ -131,18 +131,18 @@
        elastic - poroelastic coupling : total number of faces =            0
 
 
-   ...element inner/outer separation 
+   ...element inner/outer separation
       for overlapping of communications with calculations:
       percentage of   edge elements    0.00000000     %
       percentage of volume elements    100.000000     %
 
-   ...element mesh coloring 
+   ...element mesh coloring
       use coloring =  F
 
-   ...external binary models 
-      no external binary model used 
+   ...external binary models
+      no external binary model used
 
-   ...creating mass matrix 
+   ...creating mass matrix
 
    ...saving databases
       saving mesh files for AVS, OpenDX, Paraview
@@ -173,29 +173,29 @@
 
 
  ********
- Model: P   velocity min,max =    1480.00000       1480.00000    
- Model: S   velocity min,max =    0.00000000       0.00000000    
+ Model: P   velocity min,max =    1480.00000       1480.00000
+ Model: S   velocity min,max =    0.00000000       0.00000000
 
- Model: Poisson's ratio min,max =   0.500000000      0.500000000    
+ Model: Poisson's ratio min,max =   0.500000000      0.500000000
  ********
 
  *********************************************
  *** Verification of simulation parameters ***
  *********************************************
 
- *** Xmin and Xmax of the model =    0.00000000       1000.00000    
- *** Ymin and Ymax of the model =    0.00000000       1000.00000    
- *** Zmin and Zmax of the model =   -1000.00000       199.991913    
+ *** Xmin and Xmax of the model =    0.00000000       1000.00000
+ *** Ymin and Ymax of the model =    0.00000000       1000.00000
+ *** Zmin and Zmax of the model =   -1000.00000       199.991913
 
- *** Max GLL point distance =    44.1888428    
- *** Min GLL point distance =    8.62260818    
- *** Max/min ratio =    5.12476540    
+ *** Max GLL point distance =    44.1888428
+ *** Min GLL point distance =    8.62260818
+ *** Max/min ratio =    5.12476540
 
- *** Max element size =    134.999115    
- *** Min element size =    50.0000000    
- *** Max/min ratio =    2.69998240    
+ *** Max element size =    134.999115
+ *** Min element size =    50.0000000
+ *** Max/min ratio =    2.69998240
 
- *** Minimum period resolved =   0.114019521    
+ *** Minimum period resolved =   0.114019521
  *** Maximum suggested time step =    2.91304337E-03
 
  Elapsed time for checking mesh resolution in seconds =    1.3710000000000111E-003
@@ -209,25 +209,25 @@
    based on a series of Zener standard linear solids (SLS).
 
    Approximation is performed in the following frequency band:
-   Reference frequency requested by the user (Hz):   1.00000000      period (s):   1.00000000    
+   Reference frequency requested by the user (Hz):   1.00000000      period (s):   1.00000000
 
    The following values are computed automatically by the code
    based on the estimated maximum frequency resolution of your mesh
    and can thus vary from what you have requested.
 
-   Frequency band        min/max (Hz):  0.157538086       8.85901833    
-   Period band           min/max (s) :  0.112879328       6.34767103    
-   Logarithmic central frequency (Hz):   1.18136907      period (s):  0.846475542    
+   Frequency band        min/max (Hz):  0.157538086       8.85901833
+   Period band           min/max (s) :  0.112879328       6.34767103
+   Logarithmic central frequency (Hz):   1.18136907      period (s):  0.846475542
 
    Using full attenuation with both Q_kappa and Q_mu.
 
-   Q_mu min/max           :    1.00000002E+30   0.00000000    
-   Q_kappa min/max        :    1.00000002E+30   0.00000000    
+   Q_mu min/max           :    1.00000002E+30   0.00000000
+   Q_kappa min/max        :    1.00000002E+30   0.00000000
 
 
  mesh regions done
 
- min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is    0.0000000000000000          199.99190999999999     
+ min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is    0.0000000000000000          199.99190999999999
 
 
  Repartition of elements:
@@ -239,8 +239,8 @@
  total number of points in mesh slice 0:        68921
 
  total number of elements in entire mesh:         1000
- approximate total number of points in entire mesh (with duplicates on MPI edges):    68921.000000000000     
- approximate total number of DOFs in entire mesh (with duplicates on MPI edges):    206763.00000000000     
+ approximate total number of points in entire mesh (with duplicates on MPI edges):    68921.000000000000
+ approximate total number of DOFs in entire mesh (with duplicates on MPI edges):    206763.00000000000
 
  total number of time steps in the solver will be:         2000
 
@@ -249,7 +249,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =   0.85378500000000002     
+ Elapsed time for mesh generation and buffer creation in seconds =   0.85378500000000002
  End of mesh generation
 
  done

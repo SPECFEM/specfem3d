@@ -1,0 +1,13 @@
+ PDE 2021 1 1 1 10 0.0 0.0 0.0 1.0 1.0 1.0 calibration                        
+event name:     test   
+time shift:     0.0
+half duration:  2.0 
+latitude:       0.0 
+longitude:      0.0
+depth:          0.0
+Mrr:      0.0 
+Mtt:      0.0 
+Mpp:      0.0
+Mrt:      0.0 
+Mrp:      1.d23
+Mtp:      0.0 
