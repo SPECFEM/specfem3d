@@ -787,6 +787,18 @@
       ! ADIOS_FOR_UNDO_ATTENUATION = .false. ! not implemented yet
     endif
 
+    ! re-sets PML free surface flag
+    ! PML absorbing free surface must have also PML turned on
+    if (.not. PML_CONDITIONS) then
+      PML_INSTEAD_OF_FREE_SURFACE = .false.
+    endif
+
+    ! re-sets stacey free surface flag
+    ! stacey absorbing free surface must have also stacey turned on
+    if (.not. STACEY_ABSORBING_CONDITIONS) then
+      STACEY_INSTEAD_OF_FREE_SURFACE = .false.
+    endif
+
     ! checks parameter settings
     call check_simulation_parameters()
 
@@ -879,12 +891,6 @@
       stop 'Error ADIOS not yet supported by option BROADCAST_SAME_MESH_AND_MODEL'
   endif
 
-  ! stacey absorbing free surface must have also stacey turned on
-  if (STACEY_INSTEAD_OF_FREE_SURFACE) then
-    if (.not. STACEY_ABSORBING_CONDITIONS) &
-      stop 'STACEY_INSTEAD_OF_FREE_SURFACE must have also STACEY_ABSORBING_CONDITIONS turned on'
-  endif
-
   ! PML
   if (PML_CONDITIONS) then
 !! DK DK added this for now (March 2013)
@@ -922,7 +928,6 @@
   ! PARTITIONING_TYPE
   if (PARTITIONING_TYPE < 1 .or. PARTITIONING_TYPE > 4) &
     stop 'PARTITIONING_TYPE must be 1,2,3 or 4 (for SCOTCH, METIS, PATOH or ROW_PARTS partitioner)'
-
 
   ! Warnings
 
