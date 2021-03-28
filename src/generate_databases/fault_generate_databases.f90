@@ -621,7 +621,10 @@ contains
   character(15) :: fmt1,fmt2
 
   write(fmt1,'("(a,",I0,"(x,I7))")') NGLLSQUARE+1   ! fmt = (a,(NGLL^2+1)(x,I7))
-  write(fmt2,'("(a,",I0,"(x,F0.4))")') NGLLSQUARE+1   ! fmt = (a,(NGLL^2+1)(x,F0.16))
+
+  ! avoid zero-length specifier, leads to problems on different compilers
+  !!write(fmt2,'("(a,",I0,"(x,F0.4))")') NGLLSQUARE+1   ! fmt = (a,(NGLL^2+1)(x,F0.16))
+  write(fmt2,'("(a,",I0,"(x,F16.4))")') NGLLSQUARE+1
 
   write(IOUT,*) 'NSPEC NGLOB NGLL = ',f%nspec,f%nglob,NGLLX
   if (f%nspec == 0) return

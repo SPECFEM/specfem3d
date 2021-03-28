@@ -1063,7 +1063,7 @@
   character(len=2) :: mo, da, hr, minute
   character(len=15) :: str_second
   real :: real_sec
-  integer :: stime,iyr,imo,ida,ihr,imin,isec
+  integer :: stime,iyr,imo,ida,ihr,imin,isec,imillisec
 
   ! extract msec
   fraction_sec = time - int(time)
@@ -1094,14 +1094,20 @@
   write(minute, "(I2.2)") iatime(2)
 
   real_sec = iatime(1) + fraction_sec
-  write(str_second, "(I2.2,F0.4)") int(real_sec), real_sec-int(real_sec)
+  imillisec = int(real_sec * 10**3 - int(real_sec) * 10**3)
 
-  ! format example: 2018-01-31T16:40:02.8900
+  ! avoid zero-length specifier, leads to problems with different compilers
+  !!write(str_second, "(I2.2,F0.4)") int(real_sec), real_sec-int(real_sec)
+  ! for example: 2.891455 -> string 02.891
+  write(str_second, "(I2.2,'.',I3.3)") int(real_sec), imillisec
+
+  ! format example: 2018-01-31T16:40:02.89  - since ASDF_MAX_TIME_STRING_LENGTH is 22 characters
   time_string = trim(yr)//"-"//trim(mo)//"-"//trim(da)//"T"//&
                   trim(hr)//':'//trim(minute)//':'//trim(str_second)
 
   !debug
-  !print *,'debug: time_string:',int(real_sec),real_sec-int(real_sec),'str_second***',str_second,'***',trim(str_second),'***'
+  !print *,'debug: time_string:',real_sec,int(real_sec),real_sec-int(real_sec),imillisec, &
+  !        'str_second***',str_second,'***',trim(str_second),'***'
   !print *,'*****'//trim(time_string)//'*****'
 
   end subroutine convert_systime_to_string
