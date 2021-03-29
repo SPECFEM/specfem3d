@@ -661,8 +661,7 @@
                                         trim(start_time_string(1:19))//"__"//trim(end_time_string(1:19))//"__synthetic"
 
             call ASDF_open_waveform_f(station_grp, &
-                                      trim(waveform_name) // C_NULL_CHAR, &
-                                      data_ids(i))
+                                      trim(waveform_name) // C_NULL_CHAR, data_ids(i))
 
             ! writes (float) data
             call ASDF_write_partial_waveform_f(data_ids(i), &

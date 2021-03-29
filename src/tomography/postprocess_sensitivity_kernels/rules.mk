@@ -160,7 +160,9 @@ xsmooth_sem_SHARED_OBJECTS = \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
 
-## GPU
+###
+### GPU
+###
 ifeq ($(CUDA),yes)
 ## cuda version
 xsmooth_sem_OBJECTS += $(gpu_specfem3D_OBJECTS)
