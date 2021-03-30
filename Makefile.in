@@ -143,6 +143,9 @@ PART_LIBS  += $(PATOH_LIBS)
 @COND_CUDA_TRUE@CUDA = yes
 @COND_CUDA_FALSE@CUDA = no
 
+@COND_CUDA4_TRUE@CUDA4 = yes
+@COND_CUDA4_FALSE@CUDA4 = no
+
 @COND_CUDA5_TRUE@CUDA5 = yes
 @COND_CUDA5_FALSE@CUDA5 = no
 
@@ -183,16 +186,16 @@ CUDA_DEBUG = --cudart=shared
 ## GPU architecture
 ##
 # CUDA architecture / code version
-# Fermi: -gencode=arch=compute_10,code=sm_10 not supported
-# Tesla (default): -gencode=arch=compute_20,code=sm_20
-# Geforce GT 650m: -gencode=arch=compute_30,code=sm_30
-# Kepler (cuda5,K20) : -gencode=arch=compute_35,code=sm_35
-# Kepler (cuda6.5,K80): -gencode=arch=compute_37,code=sm_37
-# Maxwell (cuda7,K2200): -gencode=arch=compute_50,code=sm_50
-# Pascal (cuda8,P100): -gencode=arch=compute_60,code=sm_60
-# Volta (cuda9,V100): -gencode=arch=compute_70,code=sm_70
-# Turing (cuda10,T4): -gencode=arch=compute_75,code=sm_75
-# Ampere (cuda11,A100): -gencode=arch=compute_80,code=sm_80
+# Fermi   (not supported): -gencode=arch=compute_10,code=sm_10
+# Tesla   (Tesla C2050, GeForce GTX 480): -gencode=arch=compute_20,code=sm_20
+# Tesla   (cuda4, K10, Geforce GTX 650, GT 650m): -gencode=arch=compute_30,code=sm_30
+# Kepler  (cuda5, K20) : -gencode=arch=compute_35,code=sm_35
+# Kepler  (cuda6.5, K80): -gencode=arch=compute_37,code=sm_37
+# Maxwell (cuda6.5+/cuda7, Quadro K2200): -gencode=arch=compute_50,code=sm_50
+# Pascal  (cuda8,P100, GeForce GTX 1080, Titan): -gencode=arch=compute_60,code=sm_60
+# Volta   (cuda9, V100): -gencode=arch=compute_70,code=sm_70
+# Turing  (cuda10, T4, GeForce RTX 2080): -gencode=arch=compute_75,code=sm_75
+# Ampere  (cuda11, A100, GeForce RTX 3080): -gencode=arch=compute_80,code=sm_80
 
 GENCODE_20 = -gencode=arch=compute_20,code=\"sm_20,compute_20\"
 GENCODE_30 = -gencode=arch=compute_30,code=\"sm_30,compute_30\"
@@ -220,6 +223,8 @@ GENCODE_80 = -gencode=arch=compute_80,code=\"sm_80,compute_80\"
 # CUDA version 5.x
 @COND_CUDA_TRUE@@COND_CUDA5_TRUE@GENCODE = $(GENCODE_35) $(FC_DEFINE)GPU_DEVICE_K20
 # CUDA version 4.x
+@COND_CUDA_TRUE@@COND_CUDA4_TRUE@GENCODE = $(GENCODE_30)
+## old CUDA toolkit versions < 5
 @COND_CUDA_TRUE@@COND_CUDA_PLUS_FALSE@GENCODE = $(GENCODE_20)
 
 # CUDA flags and linking

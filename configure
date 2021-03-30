@@ -725,6 +725,8 @@ COND_CUDA6_FALSE
 COND_CUDA6_TRUE
 COND_CUDA5_FALSE
 COND_CUDA5_TRUE
+COND_CUDA4_FALSE
+COND_CUDA4_TRUE
 COND_CUDA_FALSE
 COND_CUDA_TRUE
 COND_VECTORIZATION_FALSE
@@ -2855,12 +2857,25 @@ else
   want_cuda=no
 fi
 
+
+# sets default: --with-cuda
+if test x"$want_cuda" = xyes; then
+    want_cuda=cuda4
+fi
  if test x"$want_cuda" != xno; then
   COND_CUDA_TRUE=
   COND_CUDA_FALSE='#'
 else
   COND_CUDA_TRUE='#'
   COND_CUDA_FALSE=
+fi
+
+ if test x"$want_cuda" = xcuda4; then
+  COND_CUDA4_TRUE=
+  COND_CUDA4_FALSE='#'
+else
+  COND_CUDA4_TRUE='#'
+  COND_CUDA4_FALSE=
 fi
 
  if test x"$want_cuda" = xcuda5; then
@@ -2921,7 +2936,8 @@ fi
 
 
 # cuda linking for cuda 5x and 6x and 7x and 8x and ..
- if test "$want_cuda" = cuda5 \
+ if test "$want_cuda" = cuda4 \
+     -o "$want_cuda" = cuda5 \
      -o "$want_cuda" = cuda6 \
      -o "$want_cuda" = cuda7 \
      -o "$want_cuda" = cuda8 \
@@ -10258,6 +10274,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_CUDA_TRUE}" && test -z "${COND_CUDA_FALSE}"; then
   as_fn_error $? "conditional \"COND_CUDA\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_CUDA4_TRUE}" && test -z "${COND_CUDA4_FALSE}"; then
+  as_fn_error $? "conditional \"COND_CUDA4\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_CUDA5_TRUE}" && test -z "${COND_CUDA5_FALSE}"; then
