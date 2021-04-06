@@ -181,13 +181,20 @@ def define_surf(iproc=0, cpuxmin=0, cpuxmax=1,
                           that correspond to z=zmin
     """
     from utilities import get_v_h_list
-
+    import sys
     #
     def product(*args, **kwds):
         # product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
         # product(range(2), repeat=3) --> 000 001 010 011 100 101 110 111
         # for compatibility with python2.5
-        pools = map(tuple, args) * kwds.get('repeat', 1)
+        if sys.version_info[0] == 2:
+            # map() compatibility: map() python 3 returns an iterable, while python 2 returns a list
+            list_tuple = map(tuple, args)
+        else:
+            list_tuple = list(map(tuple, args))
+        pools = list_tuple * kwds.get('repeat', 1)
+        # debug
+        #print("debug: boundary_definition pools = ",pools)  # pools = [(1, 2, 3, 4), (1, 2, 3, 4)]
         result = [[]]
         for pool in pools:
             result = [x + [y] for x in result for y in pool]
