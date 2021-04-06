@@ -30,42 +30,75 @@
 !------------------------------------------------------------------------------
 module adios_manager_mod
 
+  implicit none
+
+  ! MPI copies of communicator and rank
+  integer,public :: comm_adios
+  integer :: myrank_adios
+  integer :: sizeprocs_adios
+
+  ! adios read
+  character(len=*),parameter,public :: ADIOS_VERBOSITY = "verbose=1" ! lowest level: verbose=0,error_only=1, .., debug=4
+
 contains
 
 !==============================================================================
 !> Initialize ADIOS and setup the xml output file
-subroutine adios_setup()
+  subroutine adios_setup()
 
   use constants, only: ADIOS_BUFFER_SIZE_IN_MB
 
-  use adios_write_mod, only: adios_init
+#ifdef ADIOS_VERSION_OLD
+! ADIOS versions <= 1.9
+! adios_set_max_buffer_size not defined yet
+#else
+! ADIOS versions >= 1.10
+  use adios_write_mod, only: adios_set_max_buffer_size
+#endif
 
   implicit none
 
   ! local parameters
-  integer :: adios_err
-  integer :: comm
+  integer :: ier
 
-  call world_get_comm(comm)
+  ! gets MPI communicator for adios calls
+  call world_duplicate(comm_adios)
 
-  call adios_init_noxml (comm, adios_err)
+  ! gets rank from (duplicate) adios communicator
+  call world_rank_comm(myrank_adios,comm_adios)
+
+  ! number of MPI processes
+  call world_size_comm(sizeprocs_adios,comm_adios)
+
+  ! checks
+  if (sizeprocs_adios == 0) &
+    stop 'Error adios initialization got zero processes'
+
+  call adios_init_noxml (comm_adios, ier)
   ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
   !       e.g., version 1.5.0 returns 1 here
   !print *,'adios init return: ',adios_err
   !if (adios_err /= 0) stop 'Error setting up ADIOS: calling adios_init_noxml() routine failed'
 
-
-  call adios_allocate_buffer (ADIOS_BUFFER_SIZE_IN_MB, adios_err)
+! ask/check at configuration step for adios version 1.10 or higher?
+#ifdef ADIOS_VERSION_OLD
+  ! ADIOS versions <= 1.9
+  ! note: for newer versions ( >= 1.10), this will produce a warning might not be supported anymore
+  call adios_allocate_buffer(ADIOS_BUFFER_SIZE_IN_MB, ier)
   ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
   !       e.g., version 1.5.0 returns 1 if called first time, 0 if already called
-  !print *,'adios allocate buffer return: ',adios_err
-  !call check_adios_err(myrank,adios_err)
+  !print *,'adios allocate buffer return: ',ier
+  !call check_adios_err(ier,"Error allocate buffer")
+#else
+  ! ADIOS versions >= 1.10
+  call adios_set_max_buffer_size(ADIOS_BUFFER_SIZE_IN_MB)
+#endif
 
-end subroutine adios_setup
+  end subroutine adios_setup
 
 !==============================================================================
 !> Finalize ADIOS. Must be called once everything is written down.
-subroutine adios_cleanup()
+  subroutine adios_cleanup()
 
   use adios_write_mod, only: adios_finalize
 
@@ -73,14 +106,18 @@ subroutine adios_cleanup()
 
   ! local parameters
   integer :: myrank
-  integer :: adios_err
+  integer :: ier
 
+  ! synchronizes main local communicator
   call world_rank(myrank)
   call synchronize_all()
 
-  call adios_finalize (myrank, adios_err)
-  if (adios_err /= 0) stop 'Error cleaning up ADIOS: calling adios_finalize() routine failed'
+  ! synchronizes from comm_adios communicator
+  call synchronize_all_comm(comm_adios)
 
-end subroutine adios_cleanup
+  call adios_finalize (myrank_adios, ier)
+  if (ier /= 0) stop 'Error cleaning up ADIOS: calling adios_finalize() routine failed'
+
+  end subroutine adios_cleanup
 
 end module adios_manager_mod

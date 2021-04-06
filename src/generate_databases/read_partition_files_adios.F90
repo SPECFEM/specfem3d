@@ -27,22 +27,27 @@
 
 !==============================================================================
 !> Reads in Database.bp file
-subroutine read_partition_files_adios()
+  subroutine read_partition_files_adios()
 
   use generate_databases_par, only: MAX_STRING_LEN,LOCAL_PATH,IMAIN,myrank, &
     NDIM,NGLLX,NGNOD,NGNOD2D,NPROC,NSPEC_AB,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
     nspec2D_top_ext,nspec2D_bottom_ext,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-    nspec_cpml,nspec_cpml_tot, &
     nodes_coords_ext_mesh,mat_prop,undef_mat_prop,nundefMat_ext_mesh, &
     elmnts_ext_mesh,nelmnts_ext_mesh,mat_ext_mesh, &
+    nmat_ext_mesh,nnodes_ext_mesh, &
     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-    nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,nodes_ibelm_bottom,nodes_ibelm_top, &
-    num_interfaces_ext_mesh,my_neighbors_ext_mesh,my_interfaces_ext_mesh, &
+    nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,nodes_ibelm_bottom,nodes_ibelm_top
+
+  ! MPI interfaces
+  use generate_databases_par, only: num_interfaces_ext_mesh,my_neighbors_ext_mesh,my_interfaces_ext_mesh, &
     ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh, &
-    my_nelmnts_neighbors_ext_mesh,max_interface_size_ext_mesh, &
-    nmat_ext_mesh,nnodes_ext_mesh
+    my_nelmnts_neighbors_ext_mesh,max_interface_size_ext_mesh
+
+  ! CPML
+  use generate_databases_par, only: is_CPML,CPML_to_spec,CPML_regions,nspec_cpml,nspec_cpml_tot
 
   use adios_read_mod
+  use adios_manager_mod, only: comm_adios,ADIOS_VERBOSITY
 
   implicit none
 
@@ -54,17 +59,18 @@ subroutine read_partition_files_adios()
   integer(kind=8), pointer :: sel => null()
   integer(kind=8), dimension(1) :: start, count
 
-  integer :: local_dim_nodes_coords,    local_dim_matpropl, &
-             local_dim_material_index,  local_dim_elmnts_mesh, &
-             local_dim_ibelm_xmin,      local_dim_nodes_ibelm_xmin, &
-             local_dim_ibelm_xmax,      local_dim_nodes_ibelm_xmax, &
-             local_dim_ibelm_ymin,      local_dim_nodes_ibelm_ymin, &
-             local_dim_ibelm_ymax,      local_dim_nodes_ibelm_ymax, &
-             local_dim_ibelm_bottom,    local_dim_nodes_ibelm_bottom, &
-             local_dim_ibelm_top,       local_dim_nodes_ibelm_top, &
-             local_dim_neighbors_mesh, local_dim_num_elmnts_mesh, &
-             local_dim_interfaces_mesh
-
+  integer(kind=8) :: local_dim_nodes_coords,    local_dim_matpropl, &
+    local_dim_material_index,  local_dim_elmnts_mesh, &
+    local_dim_ibelm_xmin,      local_dim_nodes_ibelm_xmin, &
+    local_dim_ibelm_xmax,      local_dim_nodes_ibelm_xmax, &
+    local_dim_ibelm_ymin,      local_dim_nodes_ibelm_ymin, &
+    local_dim_ibelm_ymax,      local_dim_nodes_ibelm_ymax, &
+    local_dim_ibelm_bottom,    local_dim_nodes_ibelm_bottom, &
+    local_dim_ibelm_top,       local_dim_nodes_ibelm_top, &
+    local_dim_neighbors_mesh,  local_dim_num_elmnts_mesh, &
+    local_dim_interfaces_mesh
+  integer(kind=8) :: local_dim_cpml_to_spec,local_dim_cpml_regions,local_dim_is_cpml
+  integer(kind=8) :: local_dim
   integer :: comm
 
   !statistics
@@ -72,7 +78,7 @@ subroutine read_partition_files_adios()
   !integer :: num_xmin, num_xmax, num_ymin, num_ymax, num_top, num_bottom, num_spec, num_int
   integer,parameter :: NUNDEFMAT_MAX = 10
   character(len=6*NUNDEFMAT_MAX*MAX_STRING_LEN) :: undef_matpropl
-  integer :: icount,j,is,ie,local_dim
+  integer :: icount,j,is,ie
   integer :: ier
 
   undef_matpropl(:) = ''
@@ -83,10 +89,10 @@ subroutine read_partition_files_adios()
   !-------------------------------------'
   database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/Database.bp"
 
-  call world_get_comm(comm)
+  ! gets MPI communicator
+  comm = comm_adios
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
-                               "verbose=1", ier)
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, ADIOS_VERBOSITY, ier)
   call adios_read_open_file (handle, database_name, 0, comm, ier)
   if (ier /= 0) call abort_mpi()
 
@@ -122,6 +128,13 @@ subroutine read_partition_files_adios()
     call adios_schedule_read(handle, sel, "nb_interfaces", 0, 1, num_interfaces_ext_mesh, ier)
     call adios_schedule_read(handle, sel, "nspec_interfaces_max", 0, 1, max_interface_size_ext_mesh, ier)
   endif
+
+  ! CPML
+  ! reads number of C-PML elements in the global mesh
+  nspec_cpml_tot = 0
+  nspec_cpml = 0
+  call adios_schedule_read(handle, sel, "nspec_cpml_total", 0, 1, nspec_cpml_tot, ier)
+  call adios_schedule_read(handle, sel, "nspec_cpml", 0, 1, nspec_cpml, ier)
 
   ! Perform the read, so we can use the values.
   call adios_perform_reads(handle, ier)
@@ -159,10 +172,13 @@ subroutine read_partition_files_adios()
   allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 668')
   if (ier /= 0) stop 'error allocating array nodes_coords_ext_mesh'
+  nodes_coords_ext_mesh(:,:) = 0.d0
 
   allocate(mat_prop(17,nmat_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 669')
   if (ier /= 0) stop 'error allocating array mat_prop'
+  mat_prop(:,:) = 0.d0
+
   allocate(undef_mat_prop(6,nundefMat_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 670')
   if (ier /= 0) stop 'error allocating array undef_mat_prop'
@@ -173,53 +189,113 @@ subroutine read_partition_files_adios()
   allocate(mat_ext_mesh(2,nelmnts_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 672')
   if (ier /= 0) stop 'error allocating array mat_ext_mesh'
+  elmnts_ext_mesh(:,:) = 0; mat_ext_mesh(:,:) = 0
 
-  allocate(ibelm_xmin(nspec2D_xmin),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 673')
-  allocate(nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 674')
-  if (ier /= 0) stop 'error allocating array ibelm_xmin etc.'
-  allocate(ibelm_xmax(nspec2D_xmax),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 675')
-  allocate(nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 676')
-  if (ier /= 0) stop 'error allocating array ibelm_xmax etc.'
-  allocate(ibelm_ymin(nspec2D_ymin),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 677')
-  allocate(nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 678')
-  if (ier /= 0) stop 'error allocating array ibelm_ymin'
-  allocate(ibelm_ymax(nspec2D_ymax),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 679')
-  allocate(nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 680')
-  if (ier /= 0) stop 'error allocating array ibelm_ymax etc.'
-  allocate(ibelm_bottom(nspec2D_bottom_ext),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 681')
-  allocate(nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom_ext),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 682')
-  if (ier /= 0) stop 'error allocating array ibelm_bottom etc.'
-  allocate(ibelm_top(nspec2D_top_ext),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 683')
-  allocate(nodes_ibelm_top(NGNOD2D,nspec2D_top_ext),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 684')
-  if (ier /= 0) stop 'error allocating array ibelm_top etc.'
-  ! allocates interfaces
-  allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 685')
-  if (ier /= 0) stop 'error allocating array my_neighbors_ext_mesh'
-  allocate(my_nelmnts_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 686')
-  if (ier /= 0) stop 'error allocating array my_nelmnts_neighbors_ext_mesh'
-  allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 687')
-  if (ier /= 0) stop 'error allocating array my_interfaces_ext_mesh'
-  allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 688')
-  if (ier /= 0) stop 'error allocating array ibool_interfaces_ext_mesh'
-  allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 689')
-  if (ier /= 0) stop 'error allocating array nibool_interfaces_ext_mesh'
+  ! boundaries
+  if (nspec2D_xmin > 0) then
+    allocate(ibelm_xmin(nspec2D_xmin),nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 589')
+    if (ier /= 0) stop 'Error allocating array ibelm_xmin etc.'
+  else
+    allocate(ibelm_xmin(1),nodes_ibelm_xmin(1,1),stat=ier)
+    if (ier /= 0) stop 'Error allocating dummy array'
+  endif
+  ibelm_xmin(:) = 0; nodes_ibelm_xmin(:,:) = 0
+  if (nspec2D_xmax > 0) then
+    allocate(ibelm_xmax(nspec2D_xmax),nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 590')
+    if (ier /= 0) stop 'Error allocating array ibelm_xmax etc.'
+  else
+    allocate(ibelm_xmax(1),nodes_ibelm_xmax(1,1),stat=ier)
+    if (ier /= 0) stop 'Error allocating dummy array'
+  endif
+  ibelm_xmax(:) = 0; nodes_ibelm_xmax(:,:) = 0
+  if (nspec2D_ymin > 0) then
+    allocate(ibelm_ymin(nspec2D_ymin),nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 591')
+    if (ier /= 0) stop 'Error allocating array ibelm_ymin'
+  else
+    allocate(ibelm_ymin(1),nodes_ibelm_ymin(1,1),stat=ier)
+    if (ier /= 0) stop 'Error allocating dummy array'
+  endif
+  ibelm_ymin(:) = 0; nodes_ibelm_ymin(:,:) = 0
+  if (nspec2D_ymax > 0) then
+    allocate(ibelm_ymax(nspec2D_ymax),nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 592')
+    if (ier /= 0) stop 'Error allocating array ibelm_ymax etc.'
+  else
+    allocate(ibelm_ymax(1),nodes_ibelm_ymax(1,1),stat=ier)
+    if (ier /= 0) stop 'Error allocating dummy array'
+  endif
+  ibelm_ymax(:) = 0; nodes_ibelm_ymax(:,:) = 0
+  if (nspec2D_bottom_ext > 0) then
+    allocate(ibelm_bottom(nspec2D_bottom_ext),nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom_ext),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 593')
+    if (ier /= 0) stop 'Error allocating array ibelm_bottom etc.'
+  else
+    allocate(ibelm_bottom(1),nodes_ibelm_bottom(1,1),stat=ier)
+    if (ier /= 0) stop 'Error allocating dummy array'
+  endif
+  ibelm_bottom(:) = 0; nodes_ibelm_bottom(:,:) = 0
+  if (nspec2D_top_ext > 0) then
+    allocate(ibelm_top(nspec2D_top_ext),nodes_ibelm_top(NGNOD2D,nspec2D_top_ext),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 594')
+    if (ier /= 0) stop 'Error allocating array ibelm_top etc.'
+  else
+    allocate(ibelm_top(1),nodes_ibelm_top(1,1),stat=ier)
+    if (ier /= 0) stop 'Error allocating dummy array'
+  endif
+  ibelm_top(:) = 0; nodes_ibelm_top(:,:) = 0
+
+  ! MPI interfaces
+  if (num_interfaces_ext_mesh > 0) then
+    allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 685')
+    if (ier /= 0) stop 'error allocating array my_neighbors_ext_mesh'
+    allocate(my_nelmnts_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 686')
+    if (ier /= 0) stop 'error allocating array my_nelmnts_neighbors_ext_mesh'
+    allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 687')
+    if (ier /= 0) stop 'error allocating array my_interfaces_ext_mesh'
+    allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 688')
+    if (ier /= 0) stop 'error allocating array ibool_interfaces_ext_mesh'
+    allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 689')
+    if (ier /= 0) stop 'error allocating array nibool_interfaces_ext_mesh'
+  else
+    ! dummy allocations
+    allocate(my_neighbors_ext_mesh(1), &
+             my_nelmnts_neighbors_ext_mesh(1), &
+             my_interfaces_ext_mesh(1,1,1), &
+             ibool_interfaces_ext_mesh(1,1), &
+             nibool_interfaces_ext_mesh(1),stat=ier)
+    if (ier /= 0) stop 'Error allocating neighbors arrays'
+  endif
+  my_neighbors_ext_mesh(:) = -1; my_nelmnts_neighbors_ext_mesh(:) = 0
+  my_interfaces_ext_mesh(:,:,:) = 0; ibool_interfaces_ext_mesh(:,:) = 0; nibool_interfaces_ext_mesh(:) = 0
+
+  ! CPML
+  allocate(is_CPML(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 597')
+  if (ier /= 0) stop 'Error allocating array is_CPML'
+  is_CPML(:) = .false.
+
+  if (nspec_cpml > 0) then
+    ! reads C-PML regions and C-PML spectral elements global indexing
+    allocate(CPML_to_spec(nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 595')
+    if (ier /= 0) stop 'Error allocating array CPML_to_spec'
+    CPML_to_spec(:) = 0
+    allocate(CPML_regions(nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 596')
+    if (ier /= 0) stop 'Error allocating array CPML_regions'
+    CPML_regions(:) = 0
+  else
+    ! dummy allocations
+    allocate(CPML_to_spec(1),CPML_regions(1))
+  endif
 
   !------------------------.
   ! Get the 'chunks' sizes |
@@ -251,6 +327,12 @@ subroutine read_partition_files_adios()
     call adios_get_scalar(handle, "neighbors_mesh/local_dim", local_dim_neighbors_mesh, ier)
     call adios_get_scalar(handle, "num_elmnts_mesh/local_dim", local_dim_num_elmnts_mesh, ier)
     call adios_get_scalar(handle, "interfaces_mesh/local_dim", local_dim_interfaces_mesh, ier)
+  endif
+
+  if (nspec_cpml > 0) then
+    call adios_get_scalar(handle, "CPML_to_spec/local_dim", local_dim_cpml_to_spec, ier)
+    call adios_get_scalar(handle, "CPML_regions/local_dim", local_dim_cpml_regions, ier)
+    call adios_get_scalar(handle, "is_CPML/local_dim", local_dim_is_cpml, ier)
   endif
 
   !---------------------------.
@@ -396,6 +478,30 @@ subroutine read_partition_files_adios()
     call adios_schedule_read(handle, sel, "nodes_ibelm_top/array", 0, 1, nodes_ibelm_top, ier)
   endif
 
+  ! CPML
+  if (nspec_cpml > 0) then
+    start(1) = local_dim_cpml_to_spec * myrank
+    count(1) = nspec_cpml
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count)
+    call adios_schedule_read(handle, sel, "CPML_to_spec/array", 0, 1, CPML_to_spec, ier)
+
+    start(1) = local_dim_cpml_regions * myrank
+    count(1) = nspec_cpml
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count)
+    call adios_schedule_read(handle, sel, "CPML_regions/array", 0, 1, CPML_regions, ier)
+
+    start(1) = local_dim_is_cpml * myrank
+    count(1) = NSPEC_AB
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call adios_selection_boundingbox (sel , 1, start, count)
+    call adios_schedule_read(handle, sel, "is_CPML/array", 0, 1, is_CPML, ier)
+  endif
+
   ! MPI interfaces
   if (num_interfaces_ext_mesh > 0) then
     start(1) = local_dim_neighbors_mesh * myrank
@@ -425,10 +531,7 @@ subroutine read_partition_files_adios()
 
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
-
-  ! reads number of C-PML elements in the global mesh
-  nspec_cpml_tot = 0
-  nspec_cpml = 0
+  if (ier /= 0 ) stop 'Error adios read finalize'
 
   ! fills undef_mat_prop 2D array
   undef_mat_prop(:,:) = ''
@@ -441,6 +544,7 @@ subroutine read_partition_files_adios()
       enddo
     enddo
   endif
+
   ! debug
   !if (myrank == 1) print *,myrank,'undef_matpropl: ',trim(undef_matpropl)
   !do icount = 0,NPROC-1
@@ -455,7 +559,6 @@ subroutine read_partition_files_adios()
   !  call synchronize_all()
   !enddo
 
-  ! TODO CPML in meshfem w/ and w/o ADIOS
   ! TODO SAVE_MOHO_MESH w/ ADIOS (not in meshfem)
 
   !-----------------------------.

@@ -52,9 +52,9 @@
   double precision :: jacobian
   character(len=MAX_STRING_LEN) :: filename
 
-  do k=1,NGLLZ
-    do j=1,NGLLY
-      do i=1,NGLLX
+  do k = 1,NGLLZ
+    do j = 1,NGLLY
+      do i = 1,NGLLX
 
         xxi = ZERO
         xeta = ZERO
@@ -66,7 +66,7 @@
         zeta = ZERO
         zgamma = ZERO
 
-        do ia=1,NGNOD
+        do ia = 1,NGNOD
           xxi = xxi + dershape3D(1,ia,i,j,k)*xelm(ia)
           xeta = xeta + dershape3D(2,ia,i,j,k)*xelm(ia)
           xgamma = xgamma + dershape3D(3,ia,i,j,k)*xelm(ia)
@@ -112,7 +112,7 @@
         gammaz = (xxi*yeta-xeta*yxi) / jacobian
 
         ! compute and store the jacobian for the solver
-        jacobian = 1. / (xix*(etay*gammaz-etaz*gammay) &
+        jacobian = 1.d0 / (xix*(etay*gammaz-etaz*gammay) &
                         -xiy*(etax*gammaz-etaz*gammax) &
                         +xiz*(etax*gammay-etay*gammax))
 
@@ -153,15 +153,15 @@
   integer :: i,j,k,ia
   double precision :: xmesh,ymesh,zmesh
 
-  do k=1,NGLLZ
-    do j=1,NGLLY
-      do i=1,NGLLX
+  do k = 1,NGLLZ
+    do j = 1,NGLLY
+      do i = 1,NGLLX
 
         xmesh = ZERO
         ymesh = ZERO
         zmesh = ZERO
 
-        do ia=1,NGNOD
+        do ia = 1,NGNOD
           xmesh = xmesh + shape3D(ia,i,j,k)*xelm(ia)
           ymesh = ymesh + shape3D(ia,i,j,k)*yelm(ia)
           zmesh = zmesh + shape3D(ia,i,j,k)*zelm(ia)

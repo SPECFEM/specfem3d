@@ -169,7 +169,7 @@
 
   implicit none
 
-  double precision,intent(inout)  :: lon,lat,bury
+  double precision,intent(inout) :: lon,lat,bury
   double precision,intent(inout) :: utm_x,utm_y
   double precision,intent(inout) :: z_target,elevation
 

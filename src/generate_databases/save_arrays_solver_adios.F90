@@ -35,32 +35,29 @@
 
 ! for external mesh
 
-subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
-                                             APPROXIMATE_OCEAN_LOAD, &
-                                             ibool, num_interfaces_ext_mesh, &
-                                             my_neighbors_ext_mesh, &
-                                             nibool_interfaces_ext_mesh, &
-                                             max_interface_size_ext_mesh, &
-                                             ibool_interfaces_ext_mesh, &
-                                             SAVE_MESH_FILES,ANISOTROPY)
+  subroutine save_arrays_solver_ext_mesh_adios(nspec,ibool)
 
-  use generate_databases_par, only: &
-    nspec2D_xmin, nspec2D_xmax, &
-    nspec2D_ymin, nspec2D_ymax, &
+  use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE,IMAIN,ADIOS_TRANSPORT_METHOD,USE_MESH_COLORING_GPU
+
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
+    APPROXIMATE_OCEAN_LOAD, SAVE_MESH_FILES, ANISOTROPY
+
+  use generate_databases_par, only: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, &
     NSPEC2D_BOTTOM, NSPEC2D_TOP, &
-    ibelm_xmin, ibelm_xmax,ibelm_ymin, &
-    ibelm_ymax, ibelm_bottom, ibelm_top, &
+    ibelm_xmin, ibelm_xmax,ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
     SIMULATION_TYPE, SAVE_FORWARD, &
     mask_ibool_interior_domain, &
     STACEY_ABSORBING_CONDITIONS, &
-    LOCAL_PATH, myrank, sizeprocs, &
-    nspec_ab,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE,USE_MESH_COLORING_GPU, &
-    ADIOS_TRANSPORT_METHOD,nspec_irregular
+    LOCAL_PATH, myrank, sizeprocs
+
+  ! MPI interfaces
+  use generate_databases_par, only: num_interfaces_ext_mesh,my_neighbors_ext_mesh, &
+    nibool_interfaces_ext_mesh,max_interface_size_ext_mesh,ibool_interfaces_ext_mesh
 
   ! PML
-  use generate_databases_par, only: PML_CONDITIONS, &
-    nspec_cpml,CPML_width_x,CPML_width_y,CPML_width_z,CPML_to_spec, &
-    CPML_regions,is_CPML,nspec_cpml_tot, &
+  use generate_databases_par, only: PML_CONDITIONS, nspec_cpml, &
+    CPML_width_x,CPML_width_y,CPML_width_z, &
+    CPML_to_spec,CPML_regions,is_CPML,nspec_cpml_tot, &
     d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z, &
     alpha_store_x,alpha_store_y,alpha_store_z, &
     nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
@@ -70,26 +67,17 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   use generate_databases_par, only: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh, &
     nfaces_surface
 
-  use adios_helpers_mod
   use create_regions_mesh_ext_par
+  use create_regions_mesh_ext_par, only: nglob => nglob_dummy
+
+  use adios_helpers_mod
+  use adios_manager_mod, only: comm_adios
 
   implicit none
 
-  integer :: nspec,nglob
-  ! ocean load
-  logical :: APPROXIMATE_OCEAN_LOAD
+  integer,intent(in) :: nspec
   ! mesh coordinates
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  ! MPI interfaces
-  integer :: num_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
-  integer :: max_interface_size_ext_mesh
-  integer, dimension(NGLLX * NGLLX * max_interface_size_ext_mesh, &
-                     num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
-
-  logical :: SAVE_MESH_FILES
-  logical :: ANISOTROPY
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
   ! local parameters
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
@@ -102,11 +90,10 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   character(len=*), parameter :: group_name = "SPECFEM3D_EXTERNAL_MESH"
   integer(kind=8) :: group, handle
   integer(kind=8) :: groupsize, totalsize
-  integer :: local_dim
+  integer(kind=8) :: local_dim
 
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nglob_wmax, nspec_wmax, nspec_irreg_wmax, nspec_cpml_wmax, &
-             CPML_width_x_wmax, CPML_width_y_wmax, CPML_width_z_wmax, &
              nglob_interface_PML_acoustic_wmax, &
              nglob_interface_PML_elastic_wmax, num_abs_boundary_faces_wmax, &
              nspec2d_xmin_wmax, nspec2d_xmax_wmax, &
@@ -121,13 +108,24 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
              nspec_inner_poroelastic_wmax, nspec_outer_poroelastic_wmax, &
              num_phase_ispec_poroelastic_wmax, num_colors_outer_acoustic_wmax, &
              num_colors_inner_acoustic_wmax, num_colors_outer_elastic_wmax, &
-             num_colors_inner_elastic_wmax, nglob_dummy_wmax, &
-             nglob_ocean_wmax, nglob_xy_wmax, nspec_ab_wmax, nspec_aniso_wmax, &
+             num_colors_inner_elastic_wmax, &
+             nglob_ocean_wmax, nglob_xy_wmax, nspec_aniso_wmax, &
              max_nibool_interfaces_ext_mesh_wmax
 
   integer, parameter :: num_vars = 41
   integer, dimension(num_vars) :: max_global_values
   integer :: comm
+
+  ! initializes
+  output_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/external_mesh.bp"
+
+  ! user output
+  call synchronize_all()
+  if (myrank == 0) then
+    write(IMAIN,*) '     using ADIOS file format'
+    write(IMAIN,*) '     database file: ',trim(output_name)
+    call flush_IMAIN()
+  endif
 
   !---------------------------.
   ! Setup the values to write |
@@ -138,22 +136,30 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 837')
   if (ier /= 0) stop 'error allocating array'
+  ibool_interfaces_ext_mesh_dummy(:,:) = 0
+
   do i = 1, num_interfaces_ext_mesh
-     ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
+    ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
   enddo
 
   !-----------------------------------------------------------------.
   ! Get maximum value for each variable used to define a local_dim. |
   ! ADIOS write equally sized chunks for each processor.            |
   !-----------------------------------------------------------------'
+  ! note: ADIOS files need a regular/common buffer size to store each local array.
+  !       here we gather the maximum sizes of all local arrays to set the ADIOS array size,
+  !       but only store local arrays if they have non-zero array lengths.
+  !       -> careful when reading local arrays back in, check local_dim to get the overall buffer size of the arrays,
+  !          then only read local arrays for non-zero array lengths.
+  !
   ! Filling a temporary array to avoid doing allreduces for each var.
   max_global_values(1)  = nglob
   max_global_values(2)  = nspec
   max_global_values(3)  = max_nibool_interfaces_ext_mesh
   max_global_values(4)  = nspec_cpml
-  max_global_values(5)  = CPML_width_x
-  max_global_values(6)  = CPML_width_y
-  max_global_values(7)  = CPML_width_z
+  max_global_values(5)  = 0 ! dummy for future use
+  max_global_values(6)  = 0 ! dummy
+  max_global_values(7)  = 0 ! dummy
   max_global_values(8)  = nglob_interface_PML_acoustic
   max_global_values(9)  = nglob_interface_PML_elastic
   max_global_values(10) = num_abs_boundary_faces
@@ -182,12 +188,13 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   max_global_values(33) = num_colors_inner_acoustic
   max_global_values(34) = num_colors_outer_elastic
   max_global_values(35) = num_colors_inner_elastic
-  max_global_values(36) = nglob_dummy
+  max_global_values(36) = 0 ! dummy for future use
   max_global_values(37) = nglob_ocean
   max_global_values(38) = nglob_xy
-  max_global_values(39) = nspec_ab
+  max_global_values(39) = 0 ! dummy for future use
   max_global_values(40) = nspec_aniso
   max_global_values(41) = nspec_irregular
+
   ! calling wrapper instead to compile without mpi
   call max_allreduce_i(max_global_values,num_vars)
 
@@ -195,9 +202,9 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   nspec_wmax                          = max_global_values(2)
   max_nibool_interfaces_ext_mesh_wmax = max_global_values(3)
   nspec_cpml_wmax                     = max_global_values(4)
-  CPML_width_x_wmax                   = max_global_values(5)
-  CPML_width_y_wmax                   = max_global_values(6)
-  CPML_width_z_wmax                   = max_global_values(7)
+  ! idummy                            = max_global_values(5) ! for future use
+  ! idummy                            = max_global_values(6)
+  ! idummy                            = max_global_values(7)
   nglob_interface_PML_acoustic_wmax   = max_global_values(8)
   nglob_interface_PML_elastic_wmax    = max_global_values(9)
   num_abs_boundary_faces_wmax         = max_global_values(10)
@@ -226,10 +233,10 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   num_colors_inner_acoustic_wmax      = max_global_values(33)
   num_colors_outer_elastic_wmax       = max_global_values(34)
   num_colors_inner_elastic_wmax       = max_global_values(35)
-  nglob_dummy_wmax                    = max_global_values(36)
+  ! idummy                            = max_global_values(36) ! for future use
   nglob_ocean_wmax                    = max_global_values(37)
   nglob_xy_wmax                       = max_global_values(38)
-  nspec_ab_wmax                       = max_global_values(39)
+  ! idummy                            = max_global_values(39) ! for future use
   nspec_aniso_wmax                    = max_global_values(40)
   nspec_irreg_wmax                    = max_global_values(41)
 
@@ -237,146 +244,98 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   !-----------------------------------.
   ! Setup ADIOS for the current group |
   !-----------------------------------'
-  groupsize = 0
-  output_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/external_mesh.bp"
-  call adios_declare_group(group, group_name, '', 1, ier)
+  call adios_declare_group(group, group_name, '', 0, ier)
+  ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
+  !call check_adios_err(ier,"Error declare group")
+
   call adios_select_method(group, ADIOS_TRANSPORT_METHOD, '', '', ier)
+  ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
+  !call check_adios_err(ier,"Error select method")
 
   !------------------------.
   ! Define ADIOS Variables |
   !------------------------'
+  groupsize = 0
+
   call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec))
   call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nglob))
+
   call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec_irregular))
-
-  local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', STRINGIFY_VAR(ibool))
-
-  local_dim = nglob_dummy_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', "x_global", xstore_dummy)
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', "y_global", ystore_dummy)
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', "z_global", zstore_dummy)
-
-  local_dim = nspec_irreg_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', STRINGIFY_VAR(irregular_element_number))
-
   call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(xix_regular))
   call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(jacobian_regular))
 
-  local_dim = NGLLX * NGLLY * NGLLZ * nspec_irreg_wmax
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', STRINGIFY_VAR(xixstore))
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', STRINGIFY_VAR(xiystore))
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', STRINGIFY_VAR(xizstore))
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', STRINGIFY_VAR(etaxstore))
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', STRINGIFY_VAR(etaystore))
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', STRINGIFY_VAR(etazstore))
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', STRINGIFY_VAR(gammaxstore))
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', STRINGIFY_VAR(gammaystore))
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', STRINGIFY_VAR(gammazstore))
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', STRINGIFY_VAR(jacobianstore))
-
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', STRINGIFY_VAR(kappastore))
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', STRINGIFY_VAR(mustore))
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', STRINGIFY_VAR(rhostore))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(ibool))
+
+  local_dim = nglob_wmax
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "x_global", xstore_dummy)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "y_global", ystore_dummy)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "z_global", zstore_dummy)
 
   local_dim = nspec_wmax
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', &
-                                   STRINGIFY_VAR(ispec_is_acoustic))
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', &
-                                   STRINGIFY_VAR(ispec_is_elastic))
-  call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, '', &
-                                   STRINGIFY_VAR(ispec_is_poroelastic))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(irregular_element_number))
+
+  local_dim = NGLLX * NGLLY * NGLLZ * nspec_irreg_wmax
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(xixstore))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(xiystore))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(xizstore))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(etaxstore))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(etaystore))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(etazstore))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(gammaxstore))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(gammaystore))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(gammazstore))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(jacobianstore))
+
+  local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(kappastore))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(mustore))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(rhostore))
+
+  local_dim = nspec_wmax
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(ispec_is_acoustic))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(ispec_is_elastic))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(ispec_is_poroelastic))
 
   ! acoustic
   if (ACOUSTIC_SIMULATION) then
     local_dim = nglob_wmax
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(rmass_acoustic))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(rmass_acoustic))
   endif
 
   ! elastic
   if (ELASTIC_SIMULATION) then
     local_dim = nglob_wmax
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', STRINGIFY_VAR(rmass))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(rmass))
 
     if (APPROXIMATE_OCEAN_LOAD) then
       local_dim = nglob_ocean_wmax
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, '', &
-                                       STRINGIFY_VAR(rmass_ocean_load))
+      call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(rmass_ocean_load))
     endif
     !pll Stacey
     local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', STRINGIFY_VAR(rho_vp))
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', STRINGIFY_VAR(rho_vs))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(rho_vp))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(rho_vs))
   endif
 
   ! poroelastic
   if (POROELASTIC_SIMULATION) then
     local_dim = nglob_wmax
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(rmass_solid_poroelastic))
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(rmass_fluid_poroelastic))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(rmass_solid_poroelastic))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(rmass_fluid_poroelastic))
     local_dim = 2 * NGLLX * NGLLY * NGLLZ * nspec_wmax
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(rhoarraystore))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(rhoarraystore))
     local_dim = 3 * NGLLX * NGLLY * NGLLZ * nspec_wmax
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(kappaarraystore))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(kappaarraystore))
     local_dim = 6 * NGLLX * NGLLY * NGLLZ * nspec_wmax
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(permstore))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(permstore))
     local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(etastore))
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(tortstore))
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(phistore))
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(rho_vpI))
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(rho_vpII))
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(rho_vsI))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(etastore))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(tortstore))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(phistore))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(rho_vpI))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(rho_vpII))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(rho_vsI))
   endif
 
   ! C-PML absorbing boundary conditions
@@ -387,102 +346,64 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
     call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(CPML_width_z))
     if (nspec_cpml > 0) then
       local_dim = nspec_cpml_wmax
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, '', &
-                                       STRINGIFY_VAR(CPML_regions))
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, '', &
-                                       STRINGIFY_VAR(CPML_to_spec))
-      local_dim = nspec_ab_wmax
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, '', STRINGIFY_VAR(is_CPML))
+      call define_adios_global_array1D(group, groupsize,local_dim, '',STRINGIFY_VAR(CPML_regions))
+      call define_adios_global_array1D(group, groupsize,local_dim, '',STRINGIFY_VAR(CPML_to_spec))
+      local_dim = nspec_wmax
+      call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(is_CPML))
       local_dim = NGLLX * NGLLY * NGLLZ * nspec_cpml_wmax
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, '', STRINGIFY_VAR(d_store_x))
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, '', STRINGIFY_VAR(d_store_y))
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, '', STRINGIFY_VAR(d_store_z))
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, '', STRINGIFY_VAR(k_store_x))
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, '', STRINGIFY_VAR(k_store_y))
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, '', STRINGIFY_VAR(k_store_z))
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, '', &
-                                       STRINGIFY_VAR(alpha_store_x))
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, '', &
-                                       STRINGIFY_VAR(alpha_store_y))
-      call define_adios_global_array1D(group, groupsize, &
-                                       local_dim, '', &
-                                       STRINGIFY_VAR(alpha_store_z))
+      call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(d_store_x))
+      call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(d_store_y))
+      call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(d_store_z))
+      call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(k_store_x))
+      call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(k_store_y))
+      call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(k_store_z))
+      call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(alpha_store_x))
+      call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(alpha_store_y))
+      call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(alpha_store_z))
       ! -----------------------------------------------------------------------
       ! for adjoint tomography
       ! save the array stored the points on interface between PML and interior
       ! computational domain
       ! -----------------------------------------------------------------------
       if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
-        call define_adios_scalar(group, groupsize, '', &
-                                 STRINGIFY_VAR(nglob_interface_PML_acoustic))
-        call define_adios_scalar(group, groupsize, '', &
-                                 STRINGIFY_VAR(nglob_interface_PML_elastic))
+        call define_adios_scalar(group, groupsize, '',STRINGIFY_VAR(nglob_interface_PML_acoustic))
+        call define_adios_scalar(group, groupsize, '',STRINGIFY_VAR(nglob_interface_PML_elastic))
         if (nglob_interface_PML_acoustic > 0) then
           local_dim = nglob_interface_PML_acoustic_wmax
-          call define_adios_global_array1D(group, groupsize, &
-                                           local_dim, '', &
-                                  STRINGIFY_VAR(points_interface_PML_acoustic))
+          call define_adios_global_array1D(group, groupsize,local_dim, '', &
+                                           STRINGIFY_VAR(points_interface_PML_acoustic))
         endif
         if (nglob_interface_PML_elastic > 0) then
           local_dim = nglob_interface_PML_elastic_wmax
-          call define_adios_global_array1D(group, groupsize, &
-                                           local_dim, '', &
-                                  STRINGIFY_VAR(points_interface_PML_elastic))
+          call define_adios_global_array1D(group, groupsize,local_dim, '', &
+                                           STRINGIFY_VAR(points_interface_PML_elastic))
         endif
       endif
     endif
   endif
 
   ! absorbing boundary surface
-  call define_adios_scalar(group, groupsize, '', &
-                           STRINGIFY_VAR(num_abs_boundary_faces))
+  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(num_abs_boundary_faces))
   if (num_abs_boundary_faces > 0) then
     local_dim = num_abs_boundary_faces_wmax
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(abs_boundary_ispec))
+    call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(abs_boundary_ispec))
     local_dim = 3 * NGLLSQUARE * num_abs_boundary_faces_wmax
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(abs_boundary_ijk))
+    call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(abs_boundary_ijk))
     local_dim = NGLLSQUARE * num_abs_boundary_faces_wmax
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(abs_boundary_jacobian2Dw))
+    call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(abs_boundary_jacobian2Dw))
     local_dim = NDIM * NGLLSQUARE * num_abs_boundary_faces_wmax
-    call define_adios_global_array1D(group, groupsize, &
-                                     local_dim, '', &
-                                     STRINGIFY_VAR(abs_boundary_normal))
+    call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(abs_boundary_normal))
     if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
       ! store mass matrix contributions
       if (ELASTIC_SIMULATION) then
         local_dim = nglob_xy_wmax
-        call define_adios_global_array1D(group, groupsize, &
-                                         local_dim, '', &
-                                         STRINGIFY_VAR(rmassx))
-        call define_adios_global_array1D(group, groupsize, &
-                                         local_dim, '', &
-                                         STRINGIFY_VAR(rmassy))
-        call define_adios_global_array1D(group, groupsize, &
-                                         local_dim, '', &
-                                         STRINGIFY_VAR(rmassz))
+        call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(rmassx))
+        call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(rmassy))
+        call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(rmassz))
       endif
       if (ACOUSTIC_SIMULATION) then
         local_dim = nglob_xy_wmax
-        call define_adios_global_array1D(group, groupsize, &
-                                         local_dim, '', &
-                                         STRINGIFY_VAR(rmassz_acoustic))
+        call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(rmassz_acoustic))
       endif
     endif
   endif
@@ -493,443 +414,337 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec2d_ymax))
   call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec2d_bottom))
   call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec2d_top))
-
-  if (nspec2d_xmin /= 0) then
+  if (nspec2d_xmin > 0) then
     local_dim = nspec2d_xmin_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(ibelm_xmin))
+    call define_adios_global_array1D(group, groupsize, local_dim,'', STRINGIFY_VAR(ibelm_xmin))
   endif
-  if (nspec2d_xmax /= 0) then
+  if (nspec2d_xmax > 0) then
     local_dim = nspec2d_xmax_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(ibelm_xmax))
+    call define_adios_global_array1D(group, groupsize, local_dim,'', STRINGIFY_VAR(ibelm_xmax))
   endif
-  if (nspec2d_ymin /= 0) then
+  if (nspec2d_ymin > 0) then
     local_dim = nspec2d_ymin_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(ibelm_ymin))
+    call define_adios_global_array1D(group, groupsize, local_dim,'', STRINGIFY_VAR(ibelm_ymin))
   endif
-  if (nspec2d_ymax /= 0) then
+  if (nspec2d_ymax > 0) then
     local_dim = nspec2d_ymax_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(ibelm_ymax))
+    call define_adios_global_array1D(group, groupsize, local_dim,'', STRINGIFY_VAR(ibelm_ymax))
   endif
-  if (nspec2d_bottom /= 0) then
+  if (nspec2d_bottom > 0) then
     local_dim = nspec2d_bottom_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(ibelm_bottom))
+    call define_adios_global_array1D(group, groupsize, local_dim,'', STRINGIFY_VAR(ibelm_bottom))
   endif
-  if (nspec2d_top /= 0) then
+  if (nspec2d_top > 0) then
     local_dim = nspec2d_top_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(ibelm_top))
+    call define_adios_global_array1D(group, groupsize, local_dim,'', STRINGIFY_VAR(ibelm_top))
   endif
 
   ! free surface
-  call define_adios_scalar(group, groupsize, '', &
-                           STRINGIFY_VAR(num_free_surface_faces))
+  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(num_free_surface_faces))
   if (num_free_surface_faces > 0) then
     local_dim = num_free_surface_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(free_surface_ispec))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(free_surface_ispec))
     local_dim = 3 * NGLLSQUARE * num_free_surface_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(free_surface_ijk))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(free_surface_ijk))
     local_dim = NGLLSQUARE * num_free_surface_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', STRINGIFY_VAR(free_surface_jacobian2Dw))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(free_surface_jacobian2Dw))
     local_dim = NDIM * NGLLSQUARE * num_free_surface_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(free_surface_normal))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(free_surface_normal))
   endif
 
   ! acoustic-elastic coupling surface
-  call define_adios_scalar(group, groupsize, '', &
-                           STRINGIFY_VAR(num_coupling_ac_el_faces))
+  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(num_coupling_ac_el_faces))
   if (num_coupling_ac_el_faces > 0) then
     local_dim = num_coupling_ac_el_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(coupling_ac_el_ispec))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(coupling_ac_el_ispec))
     local_dim = 3 * NGLLSQUARE * num_coupling_ac_el_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(coupling_ac_el_ijk))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(coupling_ac_el_ijk))
     local_dim = NGLLSQUARE * num_coupling_ac_el_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, '', &
-                                     STRINGIFY_VAR(coupling_ac_el_jacobian2Dw))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(coupling_ac_el_jacobian2Dw))
     local_dim = NDIM * NGLLSQUARE * num_coupling_ac_el_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(coupling_ac_el_normal))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(coupling_ac_el_normal))
   endif
 
   ! acoustic-poroelastic coupling surface
-  call define_adios_scalar(group, groupsize, '', &
-                           STRINGIFY_VAR(num_coupling_ac_po_faces))
+  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(num_coupling_ac_po_faces))
   if (num_coupling_ac_po_faces > 0) then
     local_dim = num_coupling_ac_po_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(coupling_ac_po_ispec))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(coupling_ac_po_ispec))
     local_dim = 3 * NGLLSQUARE * num_coupling_ac_po_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(coupling_ac_po_ijk))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(coupling_ac_po_ijk))
     local_dim = NGLLSQUARE * num_coupling_ac_po_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                  '', STRINGIFY_VAR(coupling_ac_po_jacobian2Dw))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(coupling_ac_po_jacobian2Dw))
     local_dim = NDIM * NGLLSQUARE * num_coupling_ac_po_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(coupling_ac_po_normal))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(coupling_ac_po_normal))
   endif
 
   ! elastic-poroelastic coupling surface
-  call define_adios_scalar(group, groupsize, '', &
-                           STRINGIFY_VAR(num_coupling_el_po_faces))
+  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(num_coupling_el_po_faces))
   if (num_coupling_el_po_faces > 0) then
     local_dim = num_coupling_el_po_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(coupling_el_po_ispec))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(coupling_el_po_ispec))
     local_dim = num_coupling_el_po_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(coupling_po_el_ispec))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(coupling_po_el_ispec))
     local_dim = 3 * NGLLSQUARE * num_coupling_el_po_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(coupling_el_po_ijk))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(coupling_el_po_ijk))
     local_dim = 3 * NGLLSQUARE * num_coupling_el_po_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(coupling_po_el_ijk))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(coupling_po_el_ijk))
     local_dim = NGLLSQUARE * num_coupling_el_po_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                  '', STRINGIFY_VAR(coupling_el_po_jacobian2Dw))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(coupling_el_po_jacobian2Dw))
     local_dim = NDIM * NGLLSQUARE * num_coupling_el_po_faces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(coupling_el_po_normal))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(coupling_el_po_normal))
   endif
 
-  call define_adios_scalar(group, groupsize, '', &
-                           STRINGIFY_VAR(num_interfaces_ext_mesh))
+  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(num_interfaces_ext_mesh))
+  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(max_nibool_interfaces_ext_mesh))
   if (num_interfaces_ext_mesh > 0) then
-    call define_adios_scalar(group, groupsize, '', &
-                             STRINGIFY_VAR(max_nibool_interfaces_ext_mesh))
     local_dim = num_interfaces_ext_mesh_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(my_neighbors_ext_mesh))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                 '', STRINGIFY_VAR(nibool_interfaces_ext_mesh))
-    local_dim = max_nibool_interfaces_ext_mesh_wmax &
-              * num_interfaces_ext_mesh_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                             '', STRINGIFY_VAR(ibool_interfaces_ext_mesh_dummy))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(my_neighbors_ext_mesh))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(nibool_interfaces_ext_mesh))
+    local_dim = max_nibool_interfaces_ext_mesh_wmax * num_interfaces_ext_mesh_wmax
+    call define_adios_global_array1D(group, groupsize, local_dim, '', &
+                                     STRINGIFY_VAR(ibool_interfaces_ext_mesh_dummy))
   endif
 
   ! anisotropy
   if (ELASTIC_SIMULATION .and. ANISOTROPY) then
     local_dim = NGLLX * NGLLY * NGLLZ * nspec_aniso_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c11store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c12store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c13store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c14store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c15store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c16store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c22store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c23store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c24store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c25store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c26store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c33store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c34store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c35store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c36store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c44store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c45store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c46store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c55store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c56store))
-    call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(c66store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c11store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c12store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c13store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c14store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c15store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c16store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c22store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c23store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c24store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c25store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c26store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c33store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c34store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c35store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c36store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c44store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c45store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c46store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c55store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c56store))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(c66store))
   endif
 
   ! inner/outer elements
   local_dim = nspec_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', STRINGIFY_VAR(ispec_is_inner))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(ispec_is_inner))
 
   if (ACOUSTIC_SIMULATION) then
-    call define_adios_scalar(group, groupsize, '', &
-                             STRINGIFY_VAR(nspec_inner_acoustic))
-    call define_adios_scalar(group, groupsize, '', &
-                             STRINGIFY_VAR(nspec_outer_acoustic))
-    call define_adios_scalar(group, groupsize, '', &
-                             STRINGIFY_VAR(num_phase_ispec_acoustic))
+    call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec_inner_acoustic))
+    call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec_outer_acoustic))
+    call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(num_phase_ispec_acoustic))
     if (num_phase_ispec_acoustic > 0) then
       local_dim = num_phase_ispec_acoustic_wmax * 2
-      call define_adios_global_array1D(group, groupsize, local_dim, &
-                                 '', STRINGIFY_VAR(phase_ispec_inner_acoustic))
+      call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(phase_ispec_inner_acoustic))
     endif
   endif
 
   if (ELASTIC_SIMULATION) then
-    call define_adios_scalar(group, groupsize, '', &
-                             STRINGIFY_VAR(nspec_inner_elastic))
-    call define_adios_scalar(group, groupsize, '', &
-                             STRINGIFY_VAR(nspec_outer_elastic))
-    call define_adios_scalar(group, groupsize, '', &
-                             STRINGIFY_VAR(num_phase_ispec_elastic))
+    call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec_inner_elastic))
+    call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec_outer_elastic))
+    call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(num_phase_ispec_elastic))
     if (num_phase_ispec_elastic > 0) then
       local_dim = num_phase_ispec_elastic_wmax * 2
-      call define_adios_global_array1D(group, groupsize, local_dim, &
-                                 '', STRINGIFY_VAR(phase_ispec_inner_elastic))
+      call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(phase_ispec_inner_elastic))
     endif
   endif
 
   if (POROELASTIC_SIMULATION) then
-    call define_adios_scalar(group, groupsize, '', &
-                             STRINGIFY_VAR(nspec_inner_poroelastic))
-    call define_adios_scalar(group, groupsize, '', &
-                             STRINGIFY_VAR(nspec_outer_poroelastic))
-    call define_adios_scalar(group, groupsize, '', &
-                             STRINGIFY_VAR(num_phase_ispec_poroelastic))
+    call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec_inner_poroelastic))
+    call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec_outer_poroelastic))
+    call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(num_phase_ispec_poroelastic))
     if (num_phase_ispec_poroelastic > 0) then
       local_dim = num_phase_ispec_poroelastic_wmax * 2
-      call define_adios_global_array1D(group, groupsize, local_dim, &
-                              '', STRINGIFY_VAR(phase_ispec_inner_poroelastic))
+      call define_adios_global_array1D(group, groupsize, local_dim, '', &
+                                       STRINGIFY_VAR(phase_ispec_inner_poroelastic))
     endif
   endif
 
   ! mesh coloring
   if (USE_MESH_COLORING_GPU) then
     if (ACOUSTIC_SIMULATION) then
-      call define_adios_scalar(group, groupsize, '', &
-                               STRINGIFY_VAR(num_colors_outer_acoustic))
-      call define_adios_scalar(group, groupsize, '', &
-                               STRINGIFY_VAR(num_colors_inner_acoustic))
-      local_dim = num_colors_outer_acoustic_wmax &
-                + num_colors_inner_acoustic_wmax
-      call define_adios_global_array1D(group, groupsize, local_dim, &
-                              '', STRINGIFY_VAR(num_elem_colors_acoustic))
+      call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(num_colors_outer_acoustic))
+      call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(num_colors_inner_acoustic))
+      local_dim = num_colors_outer_acoustic_wmax + num_colors_inner_acoustic_wmax
+      call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(num_elem_colors_acoustic))
     endif
     if (ELASTIC_SIMULATION) then
-      call define_adios_scalar(group, groupsize, '', &
-                               STRINGIFY_VAR(num_colors_outer_elastic))
-      call define_adios_scalar(group, groupsize, '', &
-                               STRINGIFY_VAR(num_colors_inner_elastic))
-      local_dim = num_colors_outer_elastic_wmax &
-                + num_colors_inner_elastic_wmax
-      call define_adios_global_array1D(group, groupsize, local_dim, &
-                              '', STRINGIFY_VAR(num_elem_colors_elastic))
+      call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(num_colors_outer_elastic))
+      call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(num_colors_inner_elastic))
+      local_dim = num_colors_outer_elastic_wmax + num_colors_inner_elastic_wmax
+      call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(num_elem_colors_elastic))
     endif
   endif
 
   ! for mesh surface
   call define_adios_scalar(group, groupsize, '',STRINGIFY_VAR(nfaces_surface))
   local_dim = nspec_wmax
-  call define_adios_global_array1D(group, groupsize,local_dim, '', &
-                                   STRINGIFY_VAR(ispec_is_surface_external_mesh))
+  call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(ispec_is_surface_external_mesh))
   local_dim = nglob_wmax
-  call define_adios_global_array1D(group, groupsize,local_dim, '', &
-                                   STRINGIFY_VAR(iglob_is_surface_external_mesh))
+  call define_adios_global_array1D(group, groupsize,local_dim, '', STRINGIFY_VAR(iglob_is_surface_external_mesh))
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '     group        : ',trim(group_name)
+    write(IMAIN,*) '     group size   : ',sngl(groupsize / 1024.0 / 1024.0),'(MB)'
+    call flush_IMAIN()
+  endif
 
   !------------------------------------------------------------.
   ! Open an handler to the ADIOS file and setup the group size |
   !------------------------------------------------------------'
-  call world_get_comm(comm)
+  ! gets MPI communicator
+  comm = comm_adios
 
-  call adios_open(handle, group_name, output_name, "w", &
-                  comm, ier);
+  call adios_open(handle, group_name, output_name, "w", comm, ier)
+  call check_adios_err(myrank,ier)
+
   call adios_group_size (handle, groupsize, totalsize, ier)
+  call check_adios_err(myrank,ier)
 
   !------------------------------------------.
   ! Write previously defined ADIOS variables |
   !------------------------------------------'
   call adios_write(handle, STRINGIFY_VAR(nspec), ier)
+  call check_adios_err(myrank,ier)
   call adios_write(handle, STRINGIFY_VAR(nglob), ier)
+  call check_adios_err(myrank,ier)
+  call adios_write(handle, STRINGIFY_VAR(nspec_irregular), ier)
+  call check_adios_err(myrank,ier)
+
+  call adios_write(handle, STRINGIFY_VAR(xix_regular), ier)
+  call check_adios_err(myrank,ier)
+  call adios_write(handle, STRINGIFY_VAR(jacobian_regular), ier)
+  call check_adios_err(myrank,ier)
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ibool))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibool))
 
-  local_dim = nglob_dummy_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   "x_global", xstore_dummy)
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   "y_global", ystore_dummy)
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   "z_global", zstore_dummy)
-
-  ! this array is needed for acoustic simulations but also for elastic
-  ! simulations with CPML, thus we allocate it and read it in all cases
-  ! (whether the simulation is acoustic, elastic, or acoustic/elastic)
-  local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                   local_dim, STRINGIFY_VAR(xixstore))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                   local_dim, STRINGIFY_VAR(xiystore))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                   local_dim, STRINGIFY_VAR(xizstore))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                   local_dim, STRINGIFY_VAR(etaxstore))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                   local_dim, STRINGIFY_VAR(etaystore))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                   local_dim, STRINGIFY_VAR(etazstore))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                   local_dim, STRINGIFY_VAR(gammaxstore))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                   local_dim, STRINGIFY_VAR(gammaystore))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                   local_dim, STRINGIFY_VAR(gammazstore))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                   local_dim, STRINGIFY_VAR(jacobianstore))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                   local_dim, STRINGIFY_VAR(kappastore))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                   local_dim, STRINGIFY_VAR(mustore))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                   local_dim, STRINGIFY_VAR(rhostore))
+  local_dim = nglob_wmax
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "x_global", xstore_dummy)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "y_global", ystore_dummy)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "z_global", zstore_dummy)
 
   local_dim = nspec_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ispec_is_acoustic))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ispec_is_elastic))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ispec_is_poroelastic))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(irregular_element_number))
+
+  local_dim = NGLLX * NGLLY * NGLLZ * nspec_irreg_wmax
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(xixstore))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(xiystore))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(xizstore))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(etaxstore))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(etaystore))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(etazstore))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(gammaxstore))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(gammaystore))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(gammazstore))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(jacobianstore))
+
+  local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(kappastore))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(mustore))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rhostore))
+
+  local_dim = nspec_wmax
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ispec_is_acoustic))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ispec_is_elastic))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ispec_is_poroelastic))
 
   ! acoustic
   if (ACOUSTIC_SIMULATION) then
     local_dim = nglob_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(rmass_acoustic))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmass_acoustic))
   endif
 
   ! elastic
   if (ELASTIC_SIMULATION) then
     local_dim = nglob_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                     local_dim, STRINGIFY_VAR(rmass))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmass))
     if (APPROXIMATE_OCEAN_LOAD) then
       local_dim = nglob_ocean_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(rmass_ocean_load))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmass_ocean_load))
     endif
     !pll Stacey
     local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(rho_vp))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(rho_vs))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rho_vp))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rho_vs))
   endif
 
-! poroelastic
+  ! poroelastic
   if (POROELASTIC_SIMULATION) then
     local_dim = nglob_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(rmass_solid_poroelastic))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(rmass_fluid_poroelastic))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmass_solid_poroelastic))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmass_fluid_poroelastic))
 
     local_dim = 2 * NGLLX * NGLLY * NGLLZ * nspec_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(rhoarraystore))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rhoarraystore))
 
     local_dim = 3 * NGLLX * NGLLY * NGLLZ * nspec_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(kappaarraystore))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(kappaarraystore))
 
     local_dim = 6 * NGLLX * NGLLY * NGLLZ * nspec_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(permstore))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(permstore))
 
     local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(etastore))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(tortstore))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(phistore))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(rho_vpI))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(rho_vpII))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(rho_vsI))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(etastore))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(tortstore))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(phistore))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rho_vpI))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rho_vpII))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rho_vsI))
   endif
 
-! C-PML absorbing boundary conditions
+  ! C-PML absorbing boundary conditions
   if (PML_CONDITIONS) then
     call adios_write(handle, STRINGIFY_VAR(nspec_cpml), ier)
     call adios_write(handle, STRINGIFY_VAR(CPML_width_x), ier)
     call adios_write(handle, STRINGIFY_VAR(CPML_width_y), ier)
     call adios_write(handle, STRINGIFY_VAR(CPML_width_z), ier)
+    call check_adios_err(myrank,ier)
+
     if (nspec_cpml > 0) then
       local_dim = nspec_cpml_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(CPML_regions))
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(CPML_to_spec))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(CPML_regions))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(CPML_to_spec))
 
-      local_dim = nspec_ab_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(is_CPML))
+      local_dim = nspec_wmax
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(is_CPML))
 
       local_dim = NGLLX * NGLLY * NGLLZ * nspec_cpml_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(d_store_x))
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(d_store_y))
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(d_store_z))
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(k_store_x))
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(k_store_y))
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(k_store_z))
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(alpha_store_x))
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(alpha_store_y))
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(alpha_store_z))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(d_store_x))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(d_store_y))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(d_store_z))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(k_store_x))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(k_store_y))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(k_store_z))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(alpha_store_x))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(alpha_store_y))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(alpha_store_z))
       ! -----------------------------------------------------------------------
       ! for adjoint tomography
       ! save the array stored the points on interface between PML and interior
       ! computational domain
       ! -----------------------------------------------------------------------
       if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
-        call adios_write(handle, &
-                         STRINGIFY_VAR(nglob_interface_PML_acoustic), ier)
-        call adios_write(handle, &
-                         STRINGIFY_VAR(nglob_interface_PML_elastic), ier)
+        call adios_write(handle, STRINGIFY_VAR(nglob_interface_PML_acoustic), ier)
+        call adios_write(handle, STRINGIFY_VAR(nglob_interface_PML_elastic), ier)
+        call check_adios_err(myrank,ier)
         if (nglob_interface_PML_acoustic > 0) then
           local_dim = nglob_interface_PML_acoustic_wmax
-          call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                          local_dim, &
-                                  STRINGIFY_VAR(points_interface_PML_acoustic))
+          call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                           STRINGIFY_VAR(points_interface_PML_acoustic))
         endif
         if (nglob_interface_PML_elastic > 0) then
           local_dim = nglob_interface_PML_elastic_wmax
-          call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                           local_dim, &
-                                  STRINGIFY_VAR(points_interface_PML_elastic))
+          call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                           STRINGIFY_VAR(points_interface_PML_elastic))
         endif
       endif
     endif
@@ -937,63 +752,26 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
 
   ! absorbing boundary surface
   call adios_write(handle, STRINGIFY_VAR(num_abs_boundary_faces), ier)
-  if (PML_CONDITIONS) then
-    if (num_abs_boundary_faces > 0) then
-      local_dim = num_abs_boundary_faces_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                       local_dim, &
-                                       STRINGIFY_VAR(abs_boundary_ispec))
-      local_dim = 3 * NGLLSQUARE * num_abs_boundary_faces_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                       local_dim, &
-                                       STRINGIFY_VAR(abs_boundary_ijk))
-      local_dim = NGLLSQUARE * num_abs_boundary_faces_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                       local_dim, &
-                                       STRINGIFY_VAR(abs_boundary_jacobian2Dw))
-      local_dim = NDIM * NGLLSQUARE * num_abs_boundary_faces_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                       local_dim, &
-                                       STRINGIFY_VAR(abs_boundary_normal))
-    endif
-  else
-    if (num_abs_boundary_faces > 0) then
-      local_dim = num_abs_boundary_faces_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                       local_dim, &
-                                       STRINGIFY_VAR(abs_boundary_ispec))
-      local_dim = 3 * NGLLSQUARE * num_abs_boundary_faces_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                       local_dim, &
-                                       STRINGIFY_VAR(abs_boundary_ijk))
-      local_dim = NGLLSQUARE * num_abs_boundary_faces_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                       local_dim, &
-                                       STRINGIFY_VAR(abs_boundary_jacobian2Dw))
-      local_dim = NDIM * NGLLSQUARE * num_abs_boundary_faces_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                       local_dim, &
-                                       STRINGIFY_VAR(abs_boundary_normal))
-      if (STACEY_ABSORBING_CONDITIONS) then
-        ! store mass matrix contributions
-        if (ELASTIC_SIMULATION) then
-          local_dim = nglob_xy_wmax
-          call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                           local_dim, &
-                                           STRINGIFY_VAR(rmassx))
-          call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                           local_dim, &
-                                           STRINGIFY_VAR(rmassy))
-          call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                           local_dim, &
-                                           STRINGIFY_VAR(rmassz))
-        endif
-        if (ACOUSTIC_SIMULATION) then
-          local_dim = nglob_xy_wmax
-          call write_adios_global_1d_array(handle, myrank, sizeprocs, &
-                                           local_dim, &
-                                           STRINGIFY_VAR(rmassz_acoustic))
-        endif
+  if (num_abs_boundary_faces > 0) then
+    local_dim = num_abs_boundary_faces_wmax
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(abs_boundary_ispec))
+    local_dim = 3 * NGLLSQUARE * num_abs_boundary_faces_wmax
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(abs_boundary_ijk))
+    local_dim = NGLLSQUARE * num_abs_boundary_faces_wmax
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(abs_boundary_jacobian2Dw))
+    local_dim = NDIM * NGLLSQUARE * num_abs_boundary_faces_wmax
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(abs_boundary_normal))
+    if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
+      ! store mass matrix contributions
+      if (ELASTIC_SIMULATION) then
+        local_dim = nglob_xy_wmax
+        call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmassx))
+        call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmassy))
+        call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmassz))
+      endif
+      if (ACOUSTIC_SIMULATION) then
+        local_dim = nglob_xy_wmax
+        call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmassz_acoustic))
       endif
     endif
   endif
@@ -1004,186 +782,142 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   call adios_write(handle, STRINGIFY_VAR(nspec2d_ymax), ier)
   call adios_write(handle, STRINGIFY_VAR(nspec2d_bottom), ier)
   call adios_write(handle, STRINGIFY_VAR(nspec2d_top), ier)
+  call check_adios_err(myrank,ier)
 
-  if (nspec2d_xmin /= 0) then
-      local_dim = nspec2d_xmin_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(ibelm_xmin))
+  if (nspec2d_xmin > 0) then
+    local_dim = nspec2d_xmin_wmax
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibelm_xmin))
   endif
-  if (nspec2d_xmax /= 0) then
+  if (nspec2d_xmax > 0) then
     local_dim = nspec2d_xmax_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(ibelm_xmax))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibelm_xmax))
   endif
-  if (nspec2d_ymin /= 0) then
+  if (nspec2d_ymin > 0) then
     local_dim = nspec2d_ymin_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(ibelm_ymin))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibelm_ymin))
   endif
-  if (nspec2d_ymax /= 0) then
+  if (nspec2d_ymax > 0) then
     local_dim = nspec2d_ymax_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(ibelm_ymax))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibelm_ymax))
   endif
-  if (nspec2d_bottom /= 0) then
+  if (nspec2d_bottom > 0) then
     local_dim = nspec2d_bottom_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(ibelm_bottom))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibelm_bottom))
   endif
-  if (nspec2d_top /= 0) then
+  if (nspec2d_top > 0) then
     local_dim = nspec2d_top_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(ibelm_top))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibelm_top))
   endif
 
   ! free surface
   call adios_write(handle, STRINGIFY_VAR(num_free_surface_faces), ier)
   if (num_free_surface_faces > 0) then
     local_dim = num_free_surface_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(free_surface_ispec))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(free_surface_ispec))
     local_dim = 3 * NGLLSQUARE * num_free_surface_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(free_surface_ijk))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(free_surface_ijk))
     local_dim = NGLLSQUARE * num_free_surface_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(free_surface_jacobian2Dw))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(free_surface_jacobian2Dw))
     local_dim = NDIM * NGLLSQUARE * num_free_surface_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(free_surface_normal))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(free_surface_normal))
   endif
 
   ! acoustic-elastic coupling surface
   call adios_write(handle, STRINGIFY_VAR(num_coupling_ac_el_faces), ier)
   if (num_coupling_ac_el_faces > 0) then
     local_dim = num_coupling_ac_el_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(coupling_ac_el_ispec))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(coupling_ac_el_ispec))
     local_dim = 3 * NGLLSQUARE * num_coupling_ac_el_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(coupling_ac_el_ijk))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(coupling_ac_el_ijk))
     local_dim = NGLLSQUARE * num_coupling_ac_el_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                STRINGIFY_VAR(coupling_ac_el_jacobian2Dw))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(coupling_ac_el_jacobian2Dw))
     local_dim = NDIM * NGLLSQUARE * num_coupling_ac_el_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(coupling_ac_el_normal))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(coupling_ac_el_normal))
   endif
 
   ! acoustic-poroelastic coupling surface
   call adios_write(handle, STRINGIFY_VAR(num_coupling_ac_po_faces), ier)
   if (num_coupling_ac_po_faces > 0) then
     local_dim = num_coupling_ac_po_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(coupling_ac_po_ispec))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(coupling_ac_po_ispec))
     local_dim = 3 * NGLLSQUARE * num_coupling_ac_po_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(coupling_ac_po_ijk))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(coupling_ac_po_ijk))
     local_dim = NGLLSQUARE * num_coupling_ac_po_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                  STRINGIFY_VAR(coupling_ac_po_jacobian2Dw))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(coupling_ac_po_jacobian2Dw))
     local_dim = NDIM * NGLLSQUARE * num_coupling_ac_po_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(coupling_ac_po_normal))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(coupling_ac_po_normal))
   endif
 
   ! elastic-poroelastic coupling surface
   call adios_write(handle, STRINGIFY_VAR(num_coupling_el_po_faces), ier)
   if (num_coupling_el_po_faces > 0) then
     local_dim = num_coupling_el_po_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(coupling_el_po_ispec))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(coupling_el_po_ispec))
     local_dim = num_coupling_el_po_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(coupling_po_el_ispec))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(coupling_po_el_ispec))
     local_dim = 3 * NGLLSQUARE * num_coupling_el_po_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(coupling_el_po_ijk))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(coupling_el_po_ijk))
     local_dim = 3 * NGLLSQUARE * num_coupling_el_po_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(coupling_po_el_ijk))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(coupling_po_el_ijk))
     local_dim = NGLLSQUARE * num_coupling_el_po_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                  STRINGIFY_VAR(coupling_el_po_jacobian2Dw))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(coupling_el_po_jacobian2Dw))
     local_dim = NDIM * NGLLSQUARE * num_coupling_el_po_faces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(coupling_el_po_normal))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(coupling_el_po_normal))
   endif
 
   call adios_write(handle, STRINGIFY_VAR(num_interfaces_ext_mesh), ier)
+  call adios_write(handle, STRINGIFY_VAR(max_nibool_interfaces_ext_mesh), ier)
+  call check_adios_err(myrank,ier)
+
   if (num_interfaces_ext_mesh > 0) then
-    call adios_write(handle, STRINGIFY_VAR(max_nibool_interfaces_ext_mesh), ier)
     local_dim = num_interfaces_ext_mesh_wmax
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(my_neighbors_ext_mesh))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(nibool_interfaces_ext_mesh))
+    local_dim = max_nibool_interfaces_ext_mesh_wmax * num_interfaces_ext_mesh_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(my_neighbors_ext_mesh))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                 STRINGIFY_VAR(nibool_interfaces_ext_mesh))
-    local_dim = max_nibool_interfaces_ext_mesh_wmax &
-              * num_interfaces_ext_mesh_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                             STRINGIFY_VAR(ibool_interfaces_ext_mesh_dummy))
+                                     STRINGIFY_VAR(ibool_interfaces_ext_mesh_dummy))
   endif
 
 ! anisotropy
   if (ELASTIC_SIMULATION .and. ANISOTROPY) then
     local_dim = NGLLX * NGLLY * NGLLZ * nspec_aniso_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c11store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c12store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c13store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c14store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c15store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c16store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c22store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c23store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c24store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c25store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c26store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c33store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c34store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c35store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c36store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c44store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c45store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c46store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c55store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c56store))
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(c66store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c11store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c12store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c13store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c14store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c15store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c16store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c22store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c23store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c24store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c25store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c26store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c33store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c34store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c35store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c36store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c44store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c45store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c46store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c55store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c56store))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c66store))
   endif
 
   ! inner/outer elements
   local_dim = nspec_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ispec_is_inner))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ispec_is_inner))
 
   if (ACOUSTIC_SIMULATION) then
     call adios_write(handle, STRINGIFY_VAR(nspec_inner_acoustic), ier)
     call adios_write(handle, STRINGIFY_VAR(nspec_outer_acoustic), ier)
     call adios_write(handle, STRINGIFY_VAR(num_phase_ispec_acoustic), ier)
+    call check_adios_err(myrank,ier)
+
     if (num_phase_ispec_acoustic > 0) then
       local_dim = num_phase_ispec_acoustic_wmax * 2
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                 STRINGIFY_VAR(phase_ispec_inner_acoustic))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, &
+                                       local_dim, STRINGIFY_VAR(phase_ispec_inner_acoustic))
     endif
   endif
 
@@ -1191,10 +925,12 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
     call adios_write(handle, STRINGIFY_VAR(nspec_inner_elastic), ier)
     call adios_write(handle, STRINGIFY_VAR(nspec_outer_elastic), ier)
     call adios_write(handle, STRINGIFY_VAR(num_phase_ispec_elastic), ier)
+    call check_adios_err(myrank,ier)
+
     if (num_phase_ispec_elastic > 0) then
       local_dim = num_phase_ispec_elastic_wmax * 2
       call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                 STRINGIFY_VAR(phase_ispec_inner_elastic))
+                                       STRINGIFY_VAR(phase_ispec_inner_elastic))
     endif
   endif
 
@@ -1202,10 +938,12 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
     call adios_write(handle, STRINGIFY_VAR(nspec_inner_poroelastic), ier)
     call adios_write(handle, STRINGIFY_VAR(nspec_outer_poroelastic), ier)
     call adios_write(handle, STRINGIFY_VAR(num_phase_ispec_poroelastic), ier)
+    call check_adios_err(myrank,ier)
+
     if (num_phase_ispec_poroelastic > 0) then
       local_dim = num_phase_ispec_poroelastic_wmax * 2
       call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                              STRINGIFY_VAR(phase_ispec_inner_poroelastic))
+                                       STRINGIFY_VAR(phase_ispec_inner_poroelastic))
     endif
   endif
 
@@ -1214,40 +952,40 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
     if (ACOUSTIC_SIMULATION) then
       call adios_write(handle, STRINGIFY_VAR(num_colors_outer_acoustic), ier)
       call adios_write(handle, STRINGIFY_VAR(num_colors_inner_acoustic), ier)
-      local_dim = num_colors_outer_acoustic_wmax &
-                + num_colors_inner_acoustic_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                              STRINGIFY_VAR(num_elem_colors_acoustic))
+      local_dim = num_colors_outer_acoustic_wmax + num_colors_inner_acoustic_wmax
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(num_elem_colors_acoustic))
     endif
     if (ELASTIC_SIMULATION) then
       call adios_write(handle, STRINGIFY_VAR(num_colors_outer_elastic), ier)
       call adios_write(handle, STRINGIFY_VAR(num_colors_inner_elastic), ier)
-      local_dim = num_colors_outer_elastic_wmax &
-                + num_colors_inner_elastic_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                              STRINGIFY_VAR(num_elem_colors_elastic))
+      local_dim = num_colors_outer_elastic_wmax + num_colors_inner_elastic_wmax
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(num_elem_colors_elastic))
     endif
   endif
 
   ! mesh surface
   call adios_write(handle, STRINGIFY_VAR(nfaces_surface), ier)
+  call check_adios_err(myrank,ier)
+
   local_dim = nspec_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                 STRINGIFY_VAR(ispec_is_surface_external_mesh))
+                                   STRINGIFY_VAR(ispec_is_surface_external_mesh))
   local_dim = nglob_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                 STRINGIFY_VAR(iglob_is_surface_external_mesh))
+                                   STRINGIFY_VAR(iglob_is_surface_external_mesh))
 
   !----------------------------------.
   ! Perform the actual write to disk |
   !----------------------------------'
   call adios_set_path(handle, '', ier)
+  call check_adios_err(myrank,ier)
+
   call adios_close(handle, ier)
+  call check_adios_err(myrank,ier)
 
   ! stores arrays in binary files
   if (SAVE_MESH_FILES) then
-    call save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
-                                        nglob_wmax)
+    call save_arrays_solver_files_adios(nspec, nglob, ibool, nspec_wmax, nglob_wmax)
 
     ! debug: saves 1. MPI interface
     !if (num_interfaces_ext_mesh >= 1) then
@@ -1300,13 +1038,12 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
      endif
   endif
 
-end subroutine save_arrays_solver_ext_mesh_adios
+  end subroutine save_arrays_solver_ext_mesh_adios
 
 
 !------------------------------------------------------------------------------
 
-subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
-                                          nglob_wmax)
+  subroutine save_arrays_solver_files_adios(nspec, nglob, ibool, nspec_wmax, nglob_wmax)
 
   use generate_databases_par, only: myrank, LOCAL_PATH, &
     xstore, ystore, zstore, sizeprocs, &
@@ -1314,14 +1051,17 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
     FOUR_THIRDS,IMAIN
 
   use create_regions_mesh_ext_par
+
   use adios_helpers_mod
+  use adios_manager_mod, only: comm_adios
 
   implicit none
 
-  integer :: nspec, nglob
-  integer :: nspec_wmax, nglob_wmax
+  integer,intent(in) :: nspec, nglob
+  integer,intent(in) :: nspec_wmax, nglob_wmax
+
   ! mesh coordinates
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: vp_tmp, &
@@ -1332,10 +1072,9 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   character(len=MAX_STRING_LEN) :: output_name
   integer(kind=8) :: group, handle
   integer(kind=8) :: groupsize, totalsize
-  integer :: local_dim
+  integer(kind=8) :: local_dim
   character(len=*), parameter :: group_name_coords = "SPECFEM3D_MESH_COORDS"
   character(len=*), parameter :: group_name_values = "SPECFEM3D_MODEL_VALUES"
-
   integer :: comm
 
   if (myrank == 0) then
@@ -1344,15 +1083,21 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   endif
 
   ! gets MPI communicator
-  call world_get_comm(comm)
+  comm = comm_adios
 
   !-----------------------------------.
   ! Setup ADIOS for the current group |
   !-----------------------------------'
   groupsize = 0
   output_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/mesh_coordinates.bp"
-  call adios_declare_group(group, group_name_coords, '', 1, ier)
+
+  call adios_declare_group(group, group_name_coords, '', 0, ier)
+  ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
+  !call check_adios_err(ier,"Error declare group")
+
   call adios_select_method(group, ADIOS_TRANSPORT_METHOD, '', '', ier)
+  ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
+  !call check_adios_err(ier,"Error select method")
 
   !------------------------.
   ! Define ADIOS Variables |
@@ -1365,32 +1110,27 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nglob))
 
   local_dim = nglob_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', "x_global", xstore_dummy)
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', "y_global", ystore_dummy)
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', "z_global", zstore_dummy)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "x_global", xstore_dummy)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "y_global", ystore_dummy)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "z_global", zstore_dummy)
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', STRINGIFY_VAR(xstore))
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', STRINGIFY_VAR(ystore))
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', STRINGIFY_VAR(zstore))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(xstore))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(ystore))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(zstore))
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', STRINGIFY_VAR(ibool))
+  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(ibool))
 
   !------------------------------------------------------------.
   ! Open an handler to the ADIOS file and setup the group size |
   !------------------------------------------------------------'
 
-  call adios_open(handle, group_name_coords, output_name, "w", &
-                  comm, ier);
+  call adios_open(handle, group_name_coords, output_name, "w", comm, ier)
+  call check_adios_err(myrank,ier)
+
   call adios_group_size (handle, groupsize, totalsize, ier)
+  call check_adios_err(myrank,ier)
 
   !------------------------------------------.
   ! Write previously defined ADIOS variables |
@@ -1398,35 +1138,34 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   call adios_write(handle, STRINGIFY_VAR(ngllx), ier)
   call adios_write(handle, STRINGIFY_VAR(nglly), ier)
   call adios_write(handle, STRINGIFY_VAR(ngllz), ier)
+  call check_adios_err(myrank,ier)
 
   call adios_write(handle, STRINGIFY_VAR(nspec), ier)
   call adios_write(handle, STRINGIFY_VAR(nglob), ier)
+  call check_adios_err(myrank,ier)
 
   local_dim = nglob_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   "x_global", xstore_dummy)
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   "y_global", ystore_dummy)
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   "z_global", zstore_dummy)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "x_global", xstore_dummy)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "y_global", ystore_dummy)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "z_global", zstore_dummy)
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(xstore))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ystore))
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(zstore))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(xstore))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ystore))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(zstore))
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ibool))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibool))
 
   !----------------------------------.
   ! Perform the actual write to disk |
   !----------------------------------'
   call adios_set_path(handle, '', ier)
+  call check_adios_err(myrank,ier)
+
   call adios_close(handle, ier)
+  call check_adios_err(myrank,ier)
+
   !----------------------------------.
   ! Set up the model values to write |
   !----------------------------------'
@@ -1466,8 +1205,14 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   !-----------------------------------'
   groupsize = 0
   output_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/model_values.bp"
-  call adios_declare_group(group, group_name_values, '', 1, ier)
+
+  call adios_declare_group(group, group_name_values, '', 0, ier)
+  ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
+  !call check_adios_err(ier,"Error declare group")
+
   call adios_select_method(group, ADIOS_TRANSPORT_METHOD, '', '', ier)
+  ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
+  !call check_adios_err(ier,"Error select method")
 
   !------------------------.
   ! Define ADIOS Variables |
@@ -1482,25 +1227,22 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
 
   ! wave speeds and density
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', "vp", vp_tmp)
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', "vs", vs_tmp)
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', "rho", rho_tmp)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "vp", vp_tmp)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "vs", vs_tmp)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "rho", rho_tmp)
 
   ! attenuation
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', "qmu", qmu_attenuation_store)
-  call define_adios_global_array1D(group, groupsize, local_dim, &
-                                   '', "qkappa", qkappa_attenuation_store)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "qmu", qmu_attenuation_store)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "qkappa", qkappa_attenuation_store)
 
   !------------------------------------------------------------.
   ! Open an handler to the ADIOS file and setup the group size |
   !------------------------------------------------------------'
-  call adios_open(handle, group_name_values, output_name, "w", &
-                  comm, ier);
+  call adios_open(handle, group_name_values, output_name, "w", comm, ier)
+  call check_adios_err(myrank,ier)
+
   call adios_group_size (handle, groupsize, totalsize, ier)
+  call check_adios_err(myrank,ier)
 
   !------------------------------------------.
   ! Write previously defined ADIOS variables |
@@ -1508,33 +1250,33 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   call adios_write(handle, STRINGIFY_VAR(ngllx), ier)
   call adios_write(handle, STRINGIFY_VAR(nglly), ier)
   call adios_write(handle, STRINGIFY_VAR(ngllz), ier)
+  call check_adios_err(myrank,ier)
 
   call adios_write(handle, STRINGIFY_VAR(nspec), ier)
   call adios_write(handle, STRINGIFY_VAR(nglob), ier)
+  call check_adios_err(myrank,ier)
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
   ! wave speeds and density
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   "vp", vp_tmp)
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   "vs", vs_tmp)
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   "rho", rho_tmp)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "vp", vp_tmp)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "vs", vs_tmp)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "rho", rho_tmp)
 
   ! attenuation
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   "qmu", qmu_attenuation_store)
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   "qkappa", qkappa_attenuation_store)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "qmu", qmu_attenuation_store)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "qkappa", qkappa_attenuation_store)
 
   !----------------------------------.
   ! Perform the actual write to disk |
   !----------------------------------'
   call adios_set_path(handle, '', ier)
+  call check_adios_err(myrank,ier)
+
   call adios_close(handle, ier)
+  call check_adios_err(myrank,ier)
 
   deallocate(vp_tmp)
   deallocate(vs_tmp)
   deallocate(rho_tmp)
 
-end subroutine save_arrays_solver_files_adios
+  end subroutine save_arrays_solver_files_adios

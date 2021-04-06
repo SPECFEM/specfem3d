@@ -57,6 +57,25 @@
   subroutine synchronize_all()
   end subroutine synchronize_all
 
+
+!
+!----
+!
+
+  subroutine synchronize_all_comm(comm)
+
+  implicit none
+
+  integer,intent(in) :: comm
+
+  ! local parameters
+  integer :: idummy
+
+  ! synchronizes MPI processes
+  idummy = comm
+
+  end subroutine synchronize_all_comm
+
 !
 !----
 !
@@ -585,6 +604,25 @@
 !----
 !
 
+  subroutine world_size_comm(sizeval,comm)
+
+  implicit none
+
+  integer,intent(out) :: sizeval
+  integer,intent(in) :: comm
+
+  ! local parameters
+  integer :: idummy
+
+  sizeval = 1
+  idummy = comm
+
+  end subroutine world_size_comm
+
+!
+!----
+!
+
   subroutine world_rank(rank)
 
   implicit none
@@ -594,6 +632,26 @@
   rank = 0
 
   end subroutine world_rank
+
+
+!
+!----
+!
+
+  subroutine world_rank_comm(rank,comm)
+
+  implicit none
+
+  integer,intent(out) :: rank
+  integer,intent(in) :: comm
+
+  ! local parameters
+  integer :: idummy
+
+  rank = 0
+  idummy = comm
+
+  end subroutine world_rank_comm
 
 !
 !----

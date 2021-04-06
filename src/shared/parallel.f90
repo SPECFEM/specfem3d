@@ -204,12 +204,27 @@ end module my_mpi
 
   end subroutine synchronize_all
 
+
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-!  subroutine synchronize_all_comm(comm)
-!  end subroutine synchronize_all_comm
+  subroutine synchronize_all_comm(comm)
+
+  use my_mpi
+
+  implicit none
+
+  integer,intent(in) :: comm
+
+  ! local parameters
+  integer :: ier
+
+  ! synchronizes MPI processes
+  call MPI_BARRIER(comm,ier)
+  if (ier /= 0 ) stop 'Error synchronize MPI processes for specified communicator'
+
+  end subroutine synchronize_all_comm
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1673,6 +1688,27 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine world_size_comm(sizeval,comm)
+
+  use my_mpi
+
+  implicit none
+
+  integer,intent(out) :: sizeval
+  integer,intent(in) :: comm
+
+  ! local parameters
+  integer :: ier
+
+  call MPI_COMM_SIZE(comm,sizeval,ier)
+  if (ier /= 0 ) stop 'Error getting MPI world size'
+
+  end subroutine world_size_comm
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine world_rank(rank)
 
   use my_mpi
@@ -1688,6 +1724,28 @@ end module my_mpi
   if (ier /= 0 ) stop 'Error getting MPI rank'
 
   end subroutine world_rank
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine world_rank_comm(rank,comm)
+
+  use my_mpi
+
+  implicit none
+
+  integer,intent(out) :: rank
+  integer,intent(in) :: comm
+
+  ! local parameters
+  integer :: ier
+
+  call MPI_COMM_RANK(comm,rank,ier)
+  if (ier /= 0 ) stop 'Error getting MPI rank'
+
+  end subroutine world_rank_comm
+
 
 !
 !-------------------------------------------------------------------------------------------------

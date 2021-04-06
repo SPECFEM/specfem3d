@@ -33,13 +33,12 @@
 #include "config.fh"
 
 
-!==============================================================================
-subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
-                                nspec,nglob, &
-                                iMPIcut_xi,iMPIcut_eta, &
-                                nodes_coords,ispec_material_id, &
-                                nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-                                ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
+  subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
+                                  nspec,nglob, &
+                                  iMPIcut_xi,iMPIcut_eta, &
+                                  nodes_coords,ispec_material_id, &
+                                  nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                                  ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
 
   use constants, only: MAX_STRING_LEN, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
@@ -47,6 +46,8 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
     NGLLX,NGLLY,NGLLZ,NDIM,myrank
 
   use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+
+  use shared_parameters, only: NGNOD,NGNOD2D
 
   use meshfem3D_par, only: ibool, &
     addressing,NPROC_XI,NPROC_ETA,iproc_xi_current,iproc_eta_current, &
@@ -58,9 +59,9 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
     write_adios_global_1d_array,write_adios_global_string_1d_array, &
     define_adios_local_string_1d_array
 
-  use safe_alloc_mod, only: safe_alloc,safe_dealloc
+  use adios_manager_mod, only: comm_adios
 
-  use shared_parameters, only: NGNOD,NGNOD2D
+  use safe_alloc_mod, only: safe_alloc,safe_dealloc
 
   implicit none
 
@@ -118,7 +119,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   character(len=*), parameter :: group_name = "SPECFEM3D_DATABASES"
   integer(kind=8) :: group, handle
   integer(kind=8) :: groupsize, totalsize
-  integer :: local_dim
+  integer(kind=8) :: local_dim
 
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nglob_wmax, nspec_wmax, nmaterials_wmax, &
@@ -392,7 +393,8 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   ! MPI interfaces
   nb_interfaces = 0
   nspec_interfaces_max = 0
-  if (NPROC_XI >= 2 .or. NPROC_ETA >= 2) then
+
+  if (NPROC_XI > 1 .or. NPROC_ETA > 1) then
     nb_interfaces = 4
     interfaces(W:N) = .true.
     interfaces(NW:SW) = .false.
@@ -646,8 +648,14 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   !-----------------------------------'
   groupsize = 0
   output_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/Database.bp"
-  call adios_declare_group(group, group_name, '', 1, ier)
+
+  call adios_declare_group(group, group_name, '', 0, ier)
+  ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
+  !call check_adios_err(ier,"Error declare group")
+
   call adios_select_method(group, ADIOS_TRANSPORT_METHOD, '', '', ier)
+  ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
+  !call check_adios_err(ier,"Error select method")
 
   !------------------------.
   ! Define ADIOS Variables |
@@ -676,7 +684,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec2d_top))
 
   call define_adios_scalar(group, groupsize, '', "nspec_cpml_total",nspec_cpml_total)
-  if (nspec_cpml_total > 0) call define_adios_scalar(group, groupsize, '', "nspec_cpml",nspec_cpml)
+  call define_adios_scalar(group, groupsize, '', "nspec_cpml",nspec_cpml)
 
   call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nb_interfaces))
   call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec_interfaces_max))
@@ -748,7 +756,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   !------------------------------------------------------------.
   ! Open an handler to the ADIOS file and setup the group size |
   !------------------------------------------------------------'
-  call world_get_comm(comm)
+  comm = comm_adios
 
   call adios_open(handle, group_name, output_name, "w", comm, ier);
   call adios_group_size (handle, groupsize, totalsize, ier)
@@ -780,7 +788,7 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   call adios_write(handle, STRINGIFY_VAR(nspec2d_top), ier)
 
   call adios_write(handle, "nspec_cpml_total", nspec_cpml_total, ier)
-  if (nspec_CPML_total > 0) call adios_write(handle, "nspec_cpml", nspec_cpml, ier)
+  call adios_write(handle, "nspec_cpml", nspec_cpml, ier)
 
   call adios_write(handle, STRINGIFY_VAR(nb_interfaces), ier)
   call adios_write(handle, STRINGIFY_VAR(nspec_interfaces_max), ier)
@@ -788,14 +796,12 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   ! NOTE: Do not put any wmax variables, it will try to access
   !       too many values in the arrays.
   local_dim = NDIM * nglob
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   "nodes_coords", transpose(nodes_coords))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "nodes_coords", transpose(nodes_coords))
 
   ! materials
   if (ndef /= 0) then
     local_dim = 17 * ndef
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(matpropl))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(matpropl))
   endif
   if (nundef /= 0) then
     local_dim = 6 * nundef * MAX_STRING_LEN
@@ -808,82 +814,64 @@ subroutine save_databases_adios(LOCAL_PATH,sizeprocs, &
   endif
 
   local_dim = 2 * nspec
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(material_index))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(material_index))
   ! WARNING: the order is a little bit different than for Fortran output
   !          It should not matter, but it may.
   local_dim = NGNOD * nspec_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(elmnts_mesh))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(elmnts_mesh))
 
   ! model boundary surfaces
   local_dim = nspec2d_xmin_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ibelm_xmin))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibelm_xmin))
   local_dim = nspec2d_xmax_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ibelm_xmax))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibelm_xmax))
   local_dim = nspec2d_ymin_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ibelm_ymin))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibelm_ymin))
   local_dim = nspec2d_ymax_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ibelm_ymax))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibelm_ymax))
   local_dim = nspec2d_bottom_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ibelm_bottom))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibelm_bottom))
   local_dim = nspec2d_top_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                   STRINGIFY_VAR(ibelm_top))
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibelm_top))
 
   ! needs surface boundary points
   if (nspec2d_xmin > 0) then
     local_dim = NGNOD2D * nspec2d_xmin_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(nodes_ibelm_xmin))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(nodes_ibelm_xmin))
   endif
 
   if (nspec2d_xmax > 0) then
     local_dim = NGNOD2D * nspec2d_xmax_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(nodes_ibelm_xmax))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(nodes_ibelm_xmax))
   endif
 
   if (nspec2d_ymin > 0) then
     local_dim = NGNOD2D * nspec2d_ymin_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(nodes_ibelm_ymin))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(nodes_ibelm_ymin))
   endif
 
   if (nspec2d_ymax > 0) then
     local_dim = NGNOD2D * nspec2d_ymax_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(nodes_ibelm_ymax))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(nodes_ibelm_ymax))
   endif
 
   if (nspec2d_bottom > 0) then
     local_dim = NGNOD2D * nspec2d_bottom_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(nodes_ibelm_bottom))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(nodes_ibelm_bottom))
   endif
 
   if (nspec2d_top > 0) then
     local_dim = NGNOD2D * nspec2d_top_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(nodes_ibelm_top))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(nodes_ibelm_top))
   endif
 
   ! CPML
   if (nspec_CPML_total > 0) then
      local_dim = nspec_CPML
-     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(CPML_to_spec))
-     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(CPML_regions))
-
-     local_dim=nspec
-     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(is_CPML))
+     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(CPML_to_spec))
+     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(CPML_regions))
+     local_dim = nspec
+     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(is_CPML))
   endif
 
   ! MPI interfaces

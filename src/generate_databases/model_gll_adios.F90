@@ -37,6 +37,7 @@
 subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 
   use adios_read_mod
+  use adios_manager_mod, only: comm_adios,ADIOS_VERBOSITY
 
   use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN,ATTENUATION
 
@@ -81,10 +82,10 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   !-------------------------------------'
   database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) //"/model_values.bp"
 
-  call world_get_comm(comm)
+  ! gets MPI communicator
+  comm = comm_adios
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
-                               "verbose=1", ier)
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, ADIOS_VERBOSITY, ier)
   call adios_read_open_file (handle, database_name, 0, comm, ier)
   if (ier /= 0) call abort_mpi()
 
@@ -125,6 +126,7 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
+  if (ier /= 0 ) stop 'Error adios read finalize'
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!! in cases where density structure is not given

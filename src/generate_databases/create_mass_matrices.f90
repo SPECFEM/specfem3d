@@ -31,6 +31,8 @@
 
   use constants, only: NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
 
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION
+
   use create_regions_mesh_ext_par
 
   implicit none
@@ -307,7 +309,10 @@
 ! on Stacey edges for the crust_mantle and outer_core regions but not for the inner_core region
 ! thus the mass matrix must be replaced by three mass matrices including the "C" damping matrix
 
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION
+
   use generate_databases_par, only: DT,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,NGLLSQUARE
+
   use create_regions_mesh_ext_par
 
   implicit none

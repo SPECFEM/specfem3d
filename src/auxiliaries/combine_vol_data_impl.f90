@@ -38,12 +38,17 @@ end module combine_vtk_par
 !=============================================================================
 
 module combine_vol_data_mod
+
   implicit none
+
 contains
 
 !=============================================================================
+
 !> Print help message.
-subroutine print_usage()
+  subroutine print_usage()
+
+  implicit none
   print *, 'Usage: '
   print *, '   xcombine_data start_slice end_slice filename input_dir ' // &
            'output_dir high/low-resolution'
@@ -64,14 +69,16 @@ subroutine print_usage()
   print *
 
   stop ' Reenter command line options'
-end subroutine print_usage
 
+  end subroutine print_usage
 
 !=============================================================================
+
 !> Interpret command line arguments
-subroutine read_args(arg, MAX_NUM_NODES, node_list, num_node, &
-                    filename, indir, outdir, ires)
+  subroutine read_args(arg, MAX_NUM_NODES, node_list, num_node, filename, indir, outdir, ires)
+
   use constants, only: MAX_STRING_LEN
+
   implicit none
   ! Arguments
   character(len=*), intent(in) :: arg(:)
@@ -121,6 +128,6 @@ subroutine read_args(arg, MAX_NUM_NODES, node_list, num_node, &
     call print_usage()
   endif
 
-end subroutine read_args
+  end subroutine read_args
 
 end module combine_vol_data_mod

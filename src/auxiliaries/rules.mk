@@ -146,13 +146,11 @@ xcombine_vol_data_SHARED_OBJECTS = \
 ## ADIOS
 # conditional adios linking
 ifeq ($(ADIOS),yes)
-xcombine_vol_data_OBJECTS += \
-	$O/combine_vol_data_adios_impl.aux_adios.o
+xcombine_vol_data_OBJECTS += $O/combine_vol_data_adios_impl.aux_adios.o
+xcombine_vol_data_SHARED_OBJECTS += $O/adios_manager.shared_adios.o
 else
-xcombine_vol_data_OBJECTS += \
-	$O/combine_vol_data_adios_stubs.aux_noadios.o
-xcombine_vol_data_SHARED_OBJECTS += \
-	$O/adios_manager_stubs.shared_noadios.o
+xcombine_vol_data_OBJECTS += $O/combine_vol_data_adios_stubs.aux_noadios.o
+xcombine_vol_data_SHARED_OBJECTS += $O/adios_manager_stubs.shared_noadios.o
 endif
 
 auxiliaries_OBJECTS += $(xcombine_vol_data_OBJECTS)
@@ -178,11 +176,9 @@ xcombine_vol_data_vtk_OBJECTS = \
 
 # ADIOS
 ifeq ($(ADIOS),yes)
-xcombine_vol_data_vtk_OBJECTS += \
-	$O/combine_vol_data_adios_impl.aux_adios.o
+xcombine_vol_data_vtk_OBJECTS += $O/combine_vol_data_adios_impl.aux_adios.o
 else
-xcombine_vol_data_vtk_OBJECTS += \
-	$O/combine_vol_data_adios_stubs.aux_noadios.o
+xcombine_vol_data_vtk_OBJECTS += $O/combine_vol_data_adios_stubs.aux_noadios.o
 endif
 
 $E/xcombine_vol_data_vtk: $(xcombine_vol_data_vtk_OBJECTS) $(xcombine_vol_data_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
@@ -201,8 +197,7 @@ xcombine_vol_data_vtk_bin_OBJECTS = \
 	$O/vtk_writer.aux.o \
 	$(EMPTY_MACRO)
 
-xcombine_vol_data_vtk_bin_OBJECTS += \
-	$O/combine_vol_data_adios_stubs.aux_noadios.o
+xcombine_vol_data_vtk_bin_OBJECTS += $O/combine_vol_data_adios_stubs.aux_noadios.o
 
 $E/xcombine_vol_data_vtk_bin: $(xcombine_vol_data_vtk_bin_OBJECTS) $(xcombine_vol_data_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
@@ -245,8 +240,7 @@ xproject_and_combine_vol_data_on_regular_grid_OBJECTS = \
 	$O/vtk_writer.aux.o \
 	$(EMPTY_MACRO)
 
-xproject_and_combine_vol_data_on_regular_grid_OBJECTS += \
-	$O/combine_vol_data_adios_stubs.aux_noadios.o
+xproject_and_combine_vol_data_on_regular_grid_OBJECTS += $O/combine_vol_data_adios_stubs.aux_noadios.o
 
 $E/xproject_and_combine_vol_data_on_regular_grid: $(xproject_and_combine_vol_data_on_regular_grid_OBJECTS) $(xcombine_vol_data_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
@@ -334,6 +328,7 @@ $O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o
 
 $O/combine_vol_data_adios_stubs.aux_noadios.o: $O/adios_manager_stubs.shared_noadios.o
 ifeq ($(ADIOS),yes)
+$O/combine_vol_data_adios_impl.aux_adios.o: $O/adios_manager.shared_adios.o
 $O/combine_vol_data.aux.o: $O/combine_vol_data_adios_impl.aux_adios.o
 $O/adios_helpers.shared_adios.o: \
 	$O/adios_helpers_definitions.shared_adios_module.o \

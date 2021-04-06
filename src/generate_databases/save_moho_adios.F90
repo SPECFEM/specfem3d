@@ -35,10 +35,13 @@
 
 !==============================================================================
 !> Save Moho informtaion using ADIOS
-subroutine crm_save_moho_adios()
+  subroutine crm_save_moho_adios()
 
   use adios_helpers_mod
+  use adios_manager_mod, only: comm_adios
+
   use generate_databases_par, only: myrank, sizeprocs, LOCAL_PATH, NSPEC_AB,NDIM,NGLLSQUARE,ADIOS_TRANSPORT_METHOD
+
   use create_regions_mesh_ext_par
 
   implicit none
@@ -51,7 +54,7 @@ subroutine crm_save_moho_adios()
   character(len=*), parameter :: group_name = "SPECFEM3D_MOHO"
   integer(kind=8) :: group, handle
   integer(kind=8) :: groupsize, totalsize
-  integer :: local_dim
+  integer(kind=8) :: local_dim
 
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nspec_wmax, nspec2d_moho_wmax
@@ -62,7 +65,7 @@ subroutine crm_save_moho_adios()
   integer :: comm
 
   ! gets MPI communicator
-  call world_get_comm(comm)
+  comm = comm_adios
 
   !-----------------------------------------------------------------.
   ! Get maximum value for each variable used to define a local_dim. |
@@ -83,8 +86,14 @@ subroutine crm_save_moho_adios()
   !-----------------------------------'
   groupsize = 0
   output_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/moho.bp"
-  call adios_declare_group(group, group_name, '', 1, ier)
+
+  call adios_declare_group(group, group_name, '', 0, ier)
+  ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
+  !call check_adios_err(ier,"Error declare group")
+
   call adios_select_method(group, ADIOS_TRANSPORT_METHOD, '', '', ier)
+  ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
+  !call check_adios_err(ier,"Error select method")
 
   !------------------------.
   ! Define ADIOS Variables |
@@ -127,8 +136,7 @@ subroutine crm_save_moho_adios()
   !------------------------------------------------------------.
   ! Open an handler to the ADIOS file and setup the group size |
   !------------------------------------------------------------'
-  call adios_open(handle, group_name, output_name, "w", &
-                  comm, ier);
+  call adios_open(handle, group_name, output_name, "w",comm, ier)
   call adios_group_size (handle, groupsize, totalsize, ier)
 
   !------------------------------------------.
@@ -166,5 +174,6 @@ subroutine crm_save_moho_adios()
   !----------------------------------'
   call adios_set_path(handle, '', ier)
   call adios_close(handle, ier)
-end subroutine crm_save_moho_adios
+
+  end subroutine crm_save_moho_adios
 

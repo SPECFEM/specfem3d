@@ -154,8 +154,8 @@
         call utm_geo(maxlon,maxlat,LONGITUDE_MAX,LATITUDE_MAX,IUTM2LONGLAT)
         write(IMAIN,*) '    longitude min/max: ',minlon,maxlon
         write(IMAIN,*) '    latitude min/max : ',minlat,maxlat
-        write(IMAIN,*) '    UTM x min/max: ',LONGITUDE_MIN,LONGITUDE_MAX
-        write(IMAIN,*) '    UTM y min/max : ',LATITUDE_MIN,LATITUDE_MAX
+        write(IMAIN,*) '    UTM x min/max    : ',LONGITUDE_MIN,LONGITUDE_MAX
+        write(IMAIN,*) '    UTM y min/max    : ',LATITUDE_MIN,LATITUDE_MAX
       endif
 
       write(IMAIN,*)

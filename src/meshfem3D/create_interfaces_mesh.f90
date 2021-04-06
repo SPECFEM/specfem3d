@@ -158,7 +158,7 @@
     call flush_IMAIN()
   endif
 
-  SUPPRESS_UTM_PROJECTION_COPY=SUPPRESS_UTM_PROJECTION
+  SUPPRESS_UTM_PROJECTION_COPY = SUPPRESS_UTM_PROJECTION
 
   ! loop on all the layers
   ! note: number of layers and number of interfaces are equal

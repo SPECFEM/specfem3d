@@ -78,7 +78,7 @@
   integer :: sizeprocs
   character(len=MAX_STRING_LEN) :: var_name, value_file_name, mesh_file_name
   integer(kind=8) :: value_handle, mesh_handle
-  integer :: ibool_offset, x_global_offset
+  integer(kind=8) :: ibool_offset, x_global_offset
 #ifdef USE_VTK_INSTEAD_OF_MESH
   real :: val
 #endif
@@ -121,8 +121,9 @@
     HIGH_RESOLUTION_MESH = .true.
   endif
 
+  ! ADIOS
   if (ADIOS_FOR_MESH) then
-    call init_adios(value_file_name, mesh_file_name, value_handle, mesh_handle)
+      call init_adios(value_file_name, mesh_file_name, value_handle, mesh_handle)
   endif
 
   print *, 'Slice list: '
@@ -163,8 +164,7 @@
 
     ! gets number of elements and global points for this partition
     if (ADIOS_FOR_MESH) then
-      call read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, &
-                                   ibool_offset, x_global_offset)
+      call read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, ibool_offset, x_global_offset)
     else
       write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
       open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin', &
@@ -183,10 +183,8 @@
     if (ier /= 0) stop 'error allocating array xstore etc.'
 
     if (ADIOS_FOR_MESH) then
-      call read_ibool_adios_mesh(mesh_handle, ibool_offset, &
-                                 NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
-      call read_coordinates_adios_mesh(mesh_handle, x_global_offset, &
-                                       NGLOB_AB, xstore, ystore, zstore)
+      call read_ibool_adios_mesh(mesh_handle, ibool_offset, NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
+      call read_coordinates_adios_mesh(mesh_handle, x_global_offset, NGLOB_AB, xstore, ystore, zstore)
     else
       read(27) ibool
       read(27) xstore
@@ -286,8 +284,7 @@
     print *, 'Reading slice ', iproc
 
     if (ADIOS_FOR_MESH) then
-      call read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, &
-                                   ibool_offset, x_global_offset)
+      call read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, ibool_offset, x_global_offset)
     else
       write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
 
@@ -304,8 +301,7 @@
     if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1145')
 
     if (ADIOS_FOR_MESH) then
-      call read_ibool_adios_mesh(mesh_handle, ibool_offset, &
-                                 NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
+      call read_ibool_adios_mesh(mesh_handle, ibool_offset, NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
     else
       if (ier /= 0) stop 'error allocating array ibool'
       read(27) ibool
@@ -427,6 +423,9 @@
   logical,intent(in) :: HIGH_RESOLUTION_MESH
   character(len=MAX_STRING_LEN),intent(in) :: LOCAL_PATH
 
+  integer(kind=8), intent(in) :: mesh_handle
+  logical, intent(in) :: ADIOS_FOR_MESH
+
   ! local parameters
   integer, dimension(:,:,:,:),allocatable :: ibool
   logical, dimension(:),allocatable :: mask_ibool
@@ -436,9 +435,7 @@
   character(len=MAX_STRING_LEN) :: prname_lp
 
   ! Variables for ADIOS
-  integer(kind=8), intent(in) :: mesh_handle
-  logical, intent(in) :: ADIOS_FOR_MESH
-  integer :: ibool_offset, x_global_offset
+  integer(kind=8) :: ibool_offset, x_global_offset
 
   ! loops over all slices (process partitions)
   npp = 0
@@ -446,8 +443,7 @@
 
   do it = 1, num_node
     if (ADIOS_FOR_MESH) then
-      call read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, &
-                                   ibool_offset, x_global_offset)
+      call read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, ibool_offset, x_global_offset)
     else
       ! gets number of elements and points for this slice
       iproc = node_list(it)
@@ -471,8 +467,7 @@
       if (ier /= 0) stop 'error allocating array ibool'
 
       if (ADIOS_FOR_MESH) then
-        call read_ibool_adios_mesh(mesh_handle, ibool_offset, &
-                                   NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
+        call read_ibool_adios_mesh(mesh_handle, ibool_offset, NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
       else
         read(27) ibool
       endif

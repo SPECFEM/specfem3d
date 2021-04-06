@@ -29,6 +29,7 @@
   subroutine read_forward_arrays_adios()
 
   use adios_read_mod
+  use adios_manager_mod, only: comm_adios,ADIOS_VERBOSITY
 
   use pml_par
 
@@ -49,30 +50,15 @@
   integer(kind=8), pointer :: sel => null()
   integer(kind=8), dimension(1) :: start, count_ad
 
-  integer :: local_dim_potential_acoustic, &
-             local_dim_potential_dot_acoustic, &
-             local_dim_potential_dot_dot_acoustic, &
-             local_dim_displ, &
-             local_dim_veloc, &
-             local_dim_accel, &
-             local_dim_R_xx, &
-             local_dim_R_yy, &
-             local_dim_R_xy, &
-             local_dim_R_xz, &
-             local_dim_R_yz, &
-             local_dim_epsilondev_xx, &
-             local_dim_epsilondev_yy, &
-             local_dim_epsilondev_xy, &
-             local_dim_epsilondev_xz, &
-             local_dim_epsilondev_yz, &
-             local_dim_R_trace, &
-             local_dim_epsilondev_trace, &
-             local_dim_displs_poroelastic, &
-             local_dim_velocs_poroelastic, &
-             local_dim_accels_poroelastic, &
-             local_dim_displw_poroelastic, &
-             local_dim_velocw_poroelastic, &
-             local_dim_accelw_poroelastic
+  integer(kind=8) :: local_dim_potential_acoustic,local_dim_potential_dot_acoustic,local_dim_potential_dot_dot_acoustic, &
+    local_dim_displ,local_dim_veloc,local_dim_accel, &
+    local_dim_R_xx,local_dim_R_yy,local_dim_R_xy,local_dim_R_xz,local_dim_R_yz, &
+    local_dim_epsilondev_xx,local_dim_epsilondev_yy,local_dim_epsilondev_xy, &
+    local_dim_epsilondev_xz,local_dim_epsilondev_yz, &
+    local_dim_R_trace, &
+    local_dim_epsilondev_trace, &
+    local_dim_displs_poroelastic,local_dim_velocs_poroelastic,local_dim_accels_poroelastic, &
+    local_dim_displw_poroelastic,local_dim_velocw_poroelastic,local_dim_accelw_poroelastic
 
   integer :: comm
 
@@ -83,10 +69,10 @@
 
   database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/forward_arrays.bp"
 
-  call world_get_comm(comm)
+  ! gets MPI communicator
+  comm = comm_adios
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, &
-                               "verbose=1", ier)
+  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, ADIOS_VERBOSITY, ier)
   call adios_read_open_file (handle, database_name, 0, comm, ier)
   if (ier /= 0) call abort_mpi()
 
@@ -362,7 +348,9 @@
   !---------------------------------------------------------------'
   call adios_perform_reads(handle, ier)
   if (ier /= 0) call abort_mpi()
+
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
+  if (ier /= 0 ) stop 'Error adios read finalize'
 
   end subroutine read_forward_arrays_adios

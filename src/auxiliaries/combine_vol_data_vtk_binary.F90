@@ -281,8 +281,8 @@
 
 !=============================================================
 
-  subroutine cvd_count_totals_ext_mesh(num_node,node_list,LOCAL_PATH, &
-                          npp,nee,HIGH_RESOLUTION_MESH)
+  subroutine cvd_count_totals_ext_mesh(num_node,node_list,LOCAL_PATH,npp,nee,HIGH_RESOLUTION_MESH)
+
 ! counts total number of points and elements for external meshes in given slice list
 ! returns: total number of elements (nee) and number of points (npp)
 
@@ -395,12 +395,13 @@
 !=============================================================
 
 
-  subroutine cvd_write_corners(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat, &
-                               it,npp,numpoin,np,pts)
+  subroutine cvd_write_corners(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat,it,npp,numpoin,np,pts)
 
 ! writes out locations of spectral element corners only
+
   use constants
   use combine_vtk_par
+
   implicit none
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
@@ -549,12 +550,13 @@
 
 !=============================================================
 
-  subroutine cvd_write_GLL_points(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat, &
-                                  it,npp,numpoin,np,pts)
+  subroutine cvd_write_GLL_points(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat,it,npp,numpoin,np,pts)
 
 ! writes out locations of all GLL points of spectral elements
+
   use constants
   use combine_vtk_par
+
   implicit none
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
@@ -613,11 +615,11 @@
 
 ! writes out locations of spectral element corners only
 
-  subroutine cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool, &
-                                      np,ne,nelement,it,nee,numpoin,conn)
+  subroutine cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool,np,ne,nelement,it,nee,numpoin,conn)
 
   use constants
   use combine_vtk_par
+
   implicit none
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
@@ -727,12 +729,13 @@
 !=============================================================
 
 
-  subroutine cvd_write_GLL_elements(NSPEC_AB,NGLOB_AB,ibool, &
-                                    np,ne,nelement,it,nee,numpoin,conn)
+  subroutine cvd_write_GLL_elements(NSPEC_AB,NGLOB_AB,ibool,np,ne,nelement,it,nee,numpoin,conn)
 
 ! writes out indices of elements given by GLL points
+
   use constants
   use combine_vtk_par
+
   implicit none
 
   integer,intent(in):: NSPEC_AB,NGLOB_AB

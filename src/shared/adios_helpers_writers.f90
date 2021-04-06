@@ -160,35 +160,39 @@ contains
 
 !===============================================================================
 
-subroutine write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, path)
+  subroutine write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, path)
 
   implicit none
 
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: sizeprocs, local_dim, myrank
+  integer, intent(in) :: sizeprocs, myrank
+  integer(kind=8), intent(in) :: local_dim
   character(len=*), intent(in) :: path
 
   integer :: adios_err
-  integer :: offset
-  integer :: global_dim
+  integer(kind=8) :: offset
+  integer(kind=8) :: global_dim ! should be long for large cases.
+
+  ! checks if file handle valid
+  if (adios_handle == 0) stop 'Invalid ADIOS file handle in write_1D_global_array_adios_dims()'
 
   ! global dimension
-  global_dim = local_dim * sizeprocs
+  global_dim = local_dim * int(sizeprocs,kind=8)
 
   ! process offset
   ! note: assumes that myrank starts is within [0,sizeprocs-1]
-  offset = local_dim * myrank
+  offset = local_dim * int(myrank,kind=8)
 
-  call adios_write(adios_handle, path // "/local_dim", local_dim, adios_err)
+  call adios_write(adios_handle, trim(path) // "/local_dim", local_dim, adios_err)
   call check_adios_err(myrank,adios_err)
 
-  call adios_write(adios_handle, path // "/global_dim", global_dim, adios_err)
+  call adios_write(adios_handle, trim(path) // "/global_dim", global_dim, adios_err)
   call check_adios_err(myrank,adios_err)
 
-  call adios_write(adios_handle, path // "/offset", offset, adios_err)
+  call adios_write(adios_handle, trim(path) // "/offset", offset, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_1D_global_array_adios_dims
+  end subroutine write_1D_global_array_adios_dims
 
 
 !===============================================================================
@@ -203,23 +207,28 @@ end subroutine write_1D_global_array_adios_dims
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_real_1d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_real_1d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   real, dimension(:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_real_1d
+  end subroutine write_adios_global_1d_real_1d
 
 
 !===============================================================================
@@ -234,23 +243,28 @@ end subroutine write_adios_global_1d_real_1d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_real_2d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_real_2d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   real, dimension(:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_real_2d
+  end subroutine write_adios_global_1d_real_2d
 
 
 !===============================================================================
@@ -265,24 +279,29 @@ end subroutine write_adios_global_1d_real_2d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_real_3d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_real_3d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   real, dimension(:,:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
   !character(len=1024) :: msg
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_real_3d
+  end subroutine write_adios_global_1d_real_3d
 
 
 !===============================================================================
@@ -297,23 +316,28 @@ end subroutine write_adios_global_1d_real_3d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_real_4d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_real_4d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   real, dimension(:,:,:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_real_4d
+  end subroutine write_adios_global_1d_real_4d
 
 
 !===============================================================================
@@ -328,23 +352,28 @@ end subroutine write_adios_global_1d_real_4d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_real_5d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_real_5d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   real, dimension(:,:,:,:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_real_5d
+  end subroutine write_adios_global_1d_real_5d
 
 
 !===============================================================================
@@ -359,23 +388,28 @@ end subroutine write_adios_global_1d_real_5d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_double_1d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_double_1d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   real(kind=8), dimension(:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_double_1d
+  end subroutine write_adios_global_1d_double_1d
 
 
 !===============================================================================
@@ -390,23 +424,28 @@ end subroutine write_adios_global_1d_double_1d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_double_2d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_double_2d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   real(kind=8), dimension(:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_double_2d
+  end subroutine write_adios_global_1d_double_2d
 
 
 !===============================================================================
@@ -421,23 +460,28 @@ end subroutine write_adios_global_1d_double_2d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_double_3d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_double_3d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   real(kind=8), dimension(:,:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_double_3d
+  end subroutine write_adios_global_1d_double_3d
 
 
 !===============================================================================
@@ -452,23 +496,28 @@ end subroutine write_adios_global_1d_double_3d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_double_4d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_double_4d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   real(kind=8), dimension(:,:,:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_double_4d
+  end subroutine write_adios_global_1d_double_4d
 
 
 !===============================================================================
@@ -483,23 +532,28 @@ end subroutine write_adios_global_1d_double_4d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_double_5d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_double_5d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   real(kind=8), dimension(:,:,:,:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_double_5d
+  end subroutine write_adios_global_1d_double_5d
 
 
 !===============================================================================
@@ -514,23 +568,28 @@ end subroutine write_adios_global_1d_double_5d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_integer_1d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_integer_1d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   integer(kind=4), dimension(:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_integer_1d
+  end subroutine write_adios_global_1d_integer_1d
 
 
 !===============================================================================
@@ -545,23 +604,28 @@ end subroutine write_adios_global_1d_integer_1d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_integer_2d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_integer_2d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   integer(kind=4), dimension(:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_integer_2d
+  end subroutine write_adios_global_1d_integer_2d
 
 
 !===============================================================================
@@ -576,23 +640,28 @@ end subroutine write_adios_global_1d_integer_2d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_integer_3d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_integer_3d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   integer(kind=4), dimension(:,:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_integer_3d
+  end subroutine write_adios_global_1d_integer_3d
 
 
 !===============================================================================
@@ -607,24 +676,28 @@ end subroutine write_adios_global_1d_integer_3d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_integer_4d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_integer_4d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   integer(kind=4), dimension(:,:,:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
-  call write_1D_global_array_adios_dims(adios_handle, myrank, &
-      local_dim, sizeprocs, array_name)
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  ! adds local_dim/global_dim/offset infos
+  call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
+
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_integer_4d
+  end subroutine write_adios_global_1d_integer_4d
 
 
 !===============================================================================
@@ -639,23 +712,28 @@ end subroutine write_adios_global_1d_integer_4d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_integer_5d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_integer_5d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   integer(kind=4), dimension(:,:,:,:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_integer_5d
+  end subroutine write_adios_global_1d_integer_5d
 
 
 !===============================================================================
@@ -670,23 +748,28 @@ end subroutine write_adios_global_1d_integer_5d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_long_1d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_long_1d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   integer(kind=8), dimension(:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_long_1d
+  end subroutine write_adios_global_1d_long_1d
 
 
 !===============================================================================
@@ -701,23 +784,28 @@ end subroutine write_adios_global_1d_long_1d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_long_2d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_long_2d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   integer(kind=8), dimension(:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_long_2d
+  end subroutine write_adios_global_1d_long_2d
 
 
 !===============================================================================
@@ -732,23 +820,28 @@ end subroutine write_adios_global_1d_long_2d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_long_3d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_long_3d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   integer(kind=8), dimension(:,:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_long_3d
+  end subroutine write_adios_global_1d_long_3d
 
 
 !===============================================================================
@@ -763,23 +856,28 @@ end subroutine write_adios_global_1d_long_3d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_long_4d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_long_4d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   integer(kind=8), dimension(:,:,:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_long_4d
+  end subroutine write_adios_global_1d_long_4d
 
 
 !===============================================================================
@@ -794,23 +892,28 @@ end subroutine write_adios_global_1d_long_4d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_long_5d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_long_5d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   integer(kind=8), dimension(:,:,:,:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_long_5d
+  end subroutine write_adios_global_1d_long_5d
 
 
 !===============================================================================
@@ -825,23 +928,28 @@ end subroutine write_adios_global_1d_long_5d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_logical_1d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_logical_1d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   logical, dimension(:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_logical_1d
+  end subroutine write_adios_global_1d_logical_1d
 
 
 !===============================================================================
@@ -856,23 +964,28 @@ end subroutine write_adios_global_1d_logical_1d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_logical_2d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_logical_2d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   logical, dimension(:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_logical_2d
+  end subroutine write_adios_global_1d_logical_2d
 
 
 !===============================================================================
@@ -887,23 +1000,28 @@ end subroutine write_adios_global_1d_logical_2d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_logical_3d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_logical_3d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   logical, dimension(:,:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_logical_3d
+  end subroutine write_adios_global_1d_logical_3d
 
 
 !===============================================================================
@@ -918,23 +1036,28 @@ end subroutine write_adios_global_1d_logical_3d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_logical_4d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_logical_4d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   logical, dimension(:,:,:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_logical_4d
+  end subroutine write_adios_global_1d_logical_4d
 
 
 !===============================================================================
@@ -949,37 +1072,46 @@ end subroutine write_adios_global_1d_logical_4d
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_logical_5d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
+  subroutine write_adios_global_1d_logical_5d(adios_handle, myrank, sizeprocs, local_dim, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
   character(len=*) :: array_name
   logical, dimension(:,:,:,:,:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d'
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
 
-  call adios_write(adios_handle, array_name // "/array", array, adios_err)
+  call adios_write(adios_handle, trim(array_name) // "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_logical_5d
+  end subroutine write_adios_global_1d_logical_5d
 
 !===============================================================================
 
-subroutine write_1D_string_array_adios_dims(adios_handle, myrank, local_dim, global_dim, offset, sizeprocs, path)
+  subroutine write_1D_string_array_adios_dims(adios_handle, myrank, local_dim, global_dim, offset, sizeprocs, path)
 
   implicit none
 
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: sizeprocs, local_dim, myrank
-  integer, intent(in) :: global_dim, offset
+  integer, intent(in) :: sizeprocs, myrank
+  integer(kind=8), intent(in) :: local_dim
+  integer(kind=8), intent(in) :: global_dim, offset
   character(len=*), intent(in) :: path
 
   integer :: adios_err
   integer :: idummy
+
+  ! checks if file handle valid
+  if (adios_handle == 0) stop 'Invalid ADIOS file handle in write_1D_string_array_adios_dims()'
 
   call adios_write(adios_handle, trim(path)// "/local_dim",local_dim, adios_err)
   call check_adios_err(myrank,adios_err)
@@ -994,52 +1126,66 @@ subroutine write_1D_string_array_adios_dims(adios_handle, myrank, local_dim, glo
   idummy = myrank
   idummy = sizeprocs
 
-end subroutine write_1D_string_array_adios_dims
+  end subroutine write_1D_string_array_adios_dims
 
 !===============================================================================
 
 !string subroutine added
 
-subroutine write_adios_global_1d_string_1d(adios_handle, myrank, sizeprocs, local_dim, global_dim, offset, array_name, array)
+  subroutine write_adios_global_1d_string_1d(adios_handle, myrank, sizeprocs, local_dim, global_dim, offset, &
+                                             array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
-  integer, intent(in) :: global_dim, offset
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
+  integer(kind=8), intent(in) :: global_dim, offset
   character(len=*) :: array_name
   character(len=*), intent(in) :: array
   ! Variables
   integer :: adios_err
 
-  print *,"tag1: ",trim(array_name)," local_dim/global_dim/offset: ",local_dim,global_dim,offset
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d_string_1d()'
 
+  !debug
+  !print *,"tag1: ",trim(array_name)," local_dim/global_dim/offset: ",local_dim,global_dim,offset
+
+  ! adds local_dim/global_dim/offset infos
   call write_1D_string_array_adios_dims(adios_handle, myrank, local_dim, global_dim, offset, sizeprocs, array_name)
+
   !call write_1D_global_array_adios_dims(adios_handle, myrank, local_dim, sizeprocs, array_name)
-  print *,"tag2: ",trim(array)
+
+  !debug
+  !print *,"tag2: ",trim(array)
 
   call adios_write(adios_handle, trim(array_name)// "/array", array(1:local_dim), adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_string_1d
+  end subroutine write_adios_global_1d_string_1d
 
 !===============================================================================
 !
 ! with offset infos
 !
 !===============================================================================
-subroutine write_1D_global_array_adios_dims_offset(adios_handle, myrank, local_dim, global_dim, offset, sizeprocs, path)
+  subroutine write_1D_global_array_adios_dims_offset(adios_handle, myrank, local_dim, global_dim, offset, sizeprocs, path)
 
   implicit none
 
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: sizeprocs, local_dim, myrank
-  integer, intent(in) :: global_dim, offset
+  integer, intent(in) :: sizeprocs, myrank
+  integer(kind=8), intent(in) :: local_dim
+  integer(kind=8), intent(in) :: global_dim, offset
   character(len=*), intent(in) :: path
 
   ! local parameters
   integer :: adios_err
   integer :: idummy
+
+  ! checks if file handle valid
+  if (adios_handle == 0) stop 'Invalid ADIOS file handle in write_1D_string_array_adios_dims()'
 
   call adios_write(adios_handle, trim(path)// "/local_dim", local_dim, adios_err)
   call check_adios_err(myrank,adios_err)
@@ -1054,7 +1200,7 @@ subroutine write_1D_global_array_adios_dims_offset(adios_handle, myrank, local_d
   idummy = myrank
   idummy = sizeprocs
 
-end subroutine write_1D_global_array_adios_dims_offset
+  end subroutine write_1D_global_array_adios_dims_offset
 
 !===============================================================================
 !> Schedule an ADIOS single precision global 1D array for write
@@ -1068,26 +1214,30 @@ end subroutine write_1D_global_array_adios_dims_offset
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_real_1d_offset(adios_handle, myrank, sizeprocs, &
-                                                local_dim, global_dim, offset, array_name, array)
+  subroutine write_adios_global_1d_real_1d_offset(adios_handle, myrank, sizeprocs, &
+                                                  local_dim, global_dim, offset, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
-  integer, intent(in) :: global_dim, offset
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
+  integer(kind=8), intent(in) :: global_dim, offset
   character(len=*) :: array_name
   real, dimension(:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
-  call write_1D_global_array_adios_dims_offset(adios_handle, myrank, &
-                                               local_dim, global_dim, offset, sizeprocs, array_name)
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d_offset'
+
+  ! adds local_dim/global_dim/offset infos
+  call write_1D_global_array_adios_dims_offset(adios_handle, myrank,local_dim, global_dim, offset, sizeprocs, array_name)
 
   call adios_write(adios_handle, trim(array_name)// "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_real_1d_offset
+  end subroutine write_adios_global_1d_real_1d_offset
 
 
 !===============================================================================
@@ -1102,26 +1252,30 @@ end subroutine write_adios_global_1d_real_1d_offset
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_double_1d_offset(adios_handle, myrank, sizeprocs, &
-                                                  local_dim, global_dim, offset, array_name, array)
+  subroutine write_adios_global_1d_double_1d_offset(adios_handle, myrank, sizeprocs, &
+                                                    local_dim, global_dim, offset, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
-  integer, intent(in) :: global_dim, offset
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
+  integer(kind=8), intent(in) :: global_dim, offset
   character(len=*) :: array_name
   real(kind=8), dimension(:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
-  call write_1D_global_array_adios_dims_offset(adios_handle, myrank, &
-                                               local_dim, global_dim, offset, sizeprocs, array_name)
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d_offset'
+
+  ! adds local_dim/global_dim/offset infos
+  call write_1D_global_array_adios_dims_offset(adios_handle, myrank, local_dim, global_dim, offset, sizeprocs, array_name)
 
   call adios_write(adios_handle, trim(array_name)// "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_double_1d_offset
+  end subroutine write_adios_global_1d_double_1d_offset
 
 
 !===============================================================================
@@ -1136,26 +1290,30 @@ end subroutine write_adios_global_1d_double_1d_offset
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_integer_1d_offset(adios_handle, myrank, sizeprocs, &
-                                                   local_dim, global_dim, offset, array_name, array)
+  subroutine write_adios_global_1d_integer_1d_offset(adios_handle, myrank, sizeprocs, &
+                                                     local_dim, global_dim, offset, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
-  integer, intent(in) :: global_dim, offset
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
+  integer(kind=8), intent(in) :: global_dim, offset
   character(len=*) :: array_name
   integer(kind=4), dimension(:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
-  call write_1D_global_array_adios_dims_offset(adios_handle, myrank, &
-                                               local_dim, global_dim, offset, sizeprocs, array_name)
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d_offset'
+
+  ! adds local_dim/global_dim/offset infos
+  call write_1D_global_array_adios_dims_offset(adios_handle, myrank, local_dim, global_dim, offset, sizeprocs, array_name)
 
   call adios_write(adios_handle, trim(array_name)// "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_integer_1d_offset
+  end subroutine write_adios_global_1d_integer_1d_offset
 
 
 !===============================================================================
@@ -1170,26 +1328,30 @@ end subroutine write_adios_global_1d_integer_1d_offset
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_long_1d_offset(adios_handle, myrank, sizeprocs, &
-                                                local_dim, global_dim, offset, array_name, array)
+  subroutine write_adios_global_1d_long_1d_offset(adios_handle, myrank, sizeprocs, &
+                                                  local_dim, global_dim, offset, array_name, array)
 
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
-  integer, intent(in) :: global_dim, offset
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
+  integer(kind=8), intent(in) :: global_dim, offset
   character(len=*) :: array_name
   integer(kind=8), dimension(:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
-  call write_1D_global_array_adios_dims_offset(adios_handle, myrank, &
-                                               local_dim, global_dim, offset, sizeprocs, array_name)
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d_offset'
+
+  ! adds local_dim/global_dim/offset infos
+  call write_1D_global_array_adios_dims_offset(adios_handle, myrank, local_dim, global_dim, offset, sizeprocs, array_name)
 
   call adios_write(adios_handle, trim(array_name)// "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_long_1d_offset
+  end subroutine write_adios_global_1d_long_1d_offset
 
 
 !===============================================================================
@@ -1204,25 +1366,29 @@ end subroutine write_adios_global_1d_long_1d_offset
 !!             the variable
 !! \param array_name The array name in the ADIOS file.
 !! \param array The array to be written
-subroutine write_adios_global_1d_logical_1d_offset(adios_handle, myrank, sizeprocs, &
-                                                   local_dim, global_dim, offset, array_name, array)
+  subroutine write_adios_global_1d_logical_1d_offset(adios_handle, myrank, sizeprocs, &
+                                                     local_dim, global_dim, offset, array_name, array)
   implicit none
   ! Parameters
   integer(kind=8), intent(in) :: adios_handle
-  integer, intent(in) :: myrank, sizeprocs, local_dim
-  integer, intent(in) :: global_dim, offset
+  integer, intent(in) :: myrank, sizeprocs
+  integer(kind=8), intent(in) :: local_dim
+  integer(kind=8), intent(in) :: global_dim, offset
   character(len=*) :: array_name
   logical, dimension(:), intent(in) :: array
   ! Variables
   integer :: adios_err
 
-  call write_1D_global_array_adios_dims_offset(adios_handle, myrank, &
-                                              local_dim, global_dim, offset, sizeprocs, array_name)
+  ! checks name
+  if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d_offset'
+
+  ! adds local_dim/global_dim/offset infos
+  call write_1D_global_array_adios_dims_offset(adios_handle, myrank, local_dim, global_dim, offset, sizeprocs, array_name)
 
   call adios_write(adios_handle, trim(array_name)// "/array", array, adios_err)
   call check_adios_err(myrank,adios_err)
 
-end subroutine write_adios_global_1d_logical_1d_offset
+  end subroutine write_adios_global_1d_logical_1d_offset
 
 
 !===============================================================================
@@ -1232,9 +1398,12 @@ end subroutine write_adios_global_1d_logical_1d_offset
 !===============================================================================
 !> Get the ADIOS error message from an adios error number if there is an error.
 !! \param adios_err The error code considered.
-subroutine check_adios_err(myrank, adios_err)
+  subroutine check_adios_err(myrank, adios_err)
+
   use adios_read_mod
+
   implicit none
+
   integer, intent(in) :: myrank, adios_err
   character(len=1024) :: msg
 
@@ -1244,6 +1413,6 @@ subroutine check_adios_err(myrank, adios_err)
     stop 'adios error'
   endif
 
-end subroutine check_adios_err
+  end subroutine check_adios_err
 
 end module adios_helpers_writers_mod

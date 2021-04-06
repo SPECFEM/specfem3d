@@ -37,6 +37,8 @@
   subroutine save_forward_arrays_adios()
 
   use adios_helpers_mod
+  use adios_manager_mod, only: comm_adios
+
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
@@ -50,7 +52,7 @@
   character(len=*), parameter :: group_name = "SPECFEM3D_DATABASES"
   integer(kind=8) :: group, handle
   integer(kind=8) :: groupsize, totalsize
-  integer :: local_dim
+  integer(kind=8) :: local_dim
 
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nglob_wmax, NSPEC_ATTENUATION_wmax, &
@@ -83,8 +85,14 @@
   !-----------------------------------'
   groupsize = 0
   output_name = LOCAL_PATH(1:len_trim(LOCAL_PATH))// "/forward_arrays.bp"
-  call adios_declare_group(group, group_name, '', 1, ier)
+
+  call adios_declare_group(group, group_name, '', 0, ier)
+  ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
+  !call check_adios_err(ier,"Error declare group")
+
   call adios_select_method(group, ADIOS_TRANSPORT_METHOD, '', '', ier)
+  ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
+  !call check_adios_err(ier,"Error select method")
 
   !------------------------.
   ! Define ADIOS Variables |
@@ -164,10 +172,10 @@
   !------------------------------------------------------------.
   ! Open an handler to the ADIOS file and setup the group size |
   !------------------------------------------------------------'
-  call world_get_comm(comm)
+  ! get MPI communicator
+  comm = comm_adios
 
-  call adios_open(handle, group_name, output_name, "w", &
-                  comm, ier);
+  call adios_open(handle, group_name, output_name, "w", comm, ier)
   call adios_group_size (handle, groupsize, totalsize, ier)
 
   !------------------------------------------.

@@ -338,11 +338,15 @@ $O/iterate_time.spec.o: $O/gravity_perturbation.spec.o
 $O/prepare_gravity.spec.o: $O/gravity_perturbation.spec.o
 
 ## adios
+$O/specfem3D_adios_stubs.spec_noadios.o: $O/adios_manager_stubs.shared_noadios.o
+
 $O/initialize_simulation.spec.o: $(adios_specfem3D_PREOBJECTS)
 $O/save_kernels_adios.spec_adios.o: $(adios_specfem3D_PREOBJECTS)
 $O/save_forward_arrays_adios.spec_adios.o: $(adios_specfem3D_PREOBJECTS)
+$O/read_mesh_databases_adios.spec_adios.o: $(adios_specfem3D_PREOBJECTS)
+$O/read_forward_arrays_adios.spec_adios.o: $(adios_specfem3D_PREOBJECTS)
 $O/finalize_simulation.spec.o: $O/gravity_perturbation.spec.o $(adios_specfem3D_PREOBJECTS)
-$O/specfem3D_adios_stubs.spec_noadios.o: $O/adios_manager_stubs.shared_noadios.o
+
 $O/adios_helpers.shared_adios.o: \
 	$O/adios_helpers_definitions.shared_adios_module.o \
 	$O/adios_helpers_writers.shared_adios_module.o

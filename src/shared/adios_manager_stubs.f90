@@ -30,9 +30,17 @@
 !------------------------------------------------------------------------------
 module adios_manager_mod
 
+  implicit none
+
+  ! MPI copies of communicator and rank
+  integer :: comm_adios
+  integer,public :: myrank_adios
+  integer,public :: sizeprocs_adios
+
 contains
 
-subroutine no_adios_err()
+  subroutine no_adios_err()
+
   implicit none
 
   integer :: myrank
@@ -46,18 +54,23 @@ subroutine no_adios_err()
     print *, "----------------------------------------------------"
   endif
   call abort_mpi()
-end subroutine
+
+  end subroutine
 
 !==============================================================================
 !> Initialize ADIOS and setup the xml output file
-subroutine adios_setup()
+  subroutine adios_setup()
+
   call no_adios_err()
-end subroutine adios_setup
+
+  end subroutine adios_setup
 
 !==============================================================================
 !> Finalize ADIOS. Must be called once everything is written down.
-subroutine adios_cleanup()
+  subroutine adios_cleanup()
+
   call no_adios_err()
-end subroutine adios_cleanup
+
+  end subroutine adios_cleanup
 
 end module adios_manager_mod

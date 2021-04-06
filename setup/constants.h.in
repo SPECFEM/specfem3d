@@ -123,7 +123,7 @@
 !!
 !!-----------------------------------------------------------
   ! size of the ADIOS buffer to use
-  integer, parameter :: ADIOS_BUFFER_SIZE_IN_MB = 200
+  integer, parameter :: ADIOS_BUFFER_SIZE_IN_MB = 400
 
 ! ADIOS transport methods (see ADIOS manual for details)
 !! MPI (default)
