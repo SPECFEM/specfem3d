@@ -26,6 +26,49 @@
 !=====================================================================
 
 
+  subroutine read_mesh_for_init()
+
+! reads in the value of NSPEC_AB and NGLOB_AB
+
+  use constants, only: MAX_STRING_LEN,IIN,myrank,I_should_read_the_database
+
+  use specfem_par, only: prname,LOCAL_PATH, &
+    NSPEC_AB,NGLOB_AB,NSPEC_IRREGULAR
+
+  implicit none
+  ! Local variables
+  integer :: ier
+  character(len=MAX_STRING_LEN) :: database_name
+
+  ! sets file name
+  call create_name_database(prname,myrank,LOCAL_PATH)
+  database_name = prname(1:len_trim(prname))//'external_mesh.bin'
+
+  if (I_should_read_the_database) then
+    open(unit=IIN,file=trim(database_name),status='old',action='read',form='unformatted',iostat=ier)
+    if (ier /= 0) then
+      print *,'Error could not open database file: ',trim(database_name)
+      call exit_mpi(myrank,'Error opening database file')
+    endif
+  endif
+
+  if (I_should_read_the_database) then
+    read(IIN) NSPEC_AB
+    read(IIN) NGLOB_AB
+    read(IIN) NSPEC_IRREGULAR
+  endif
+  call bcast_all_i_for_database(NSPEC_AB, 1)
+  call bcast_all_i_for_database(NGLOB_AB, 1)
+  call bcast_all_i_for_database(NSPEC_IRREGULAR, 1)
+
+  if (I_should_read_the_database) close(IIN)
+
+  end subroutine read_mesh_for_init
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine read_mesh_databases()
 
   use pml_par
@@ -79,16 +122,16 @@
     read(IIN) xix_regular
     read(IIN) jacobian_regular
 
-    read(IIN) xix
-    read(IIN) xiy
-    read(IIN) xiz
-    read(IIN) etax
-    read(IIN) etay
-    read(IIN) etaz
-    read(IIN) gammax
-    read(IIN) gammay
-    read(IIN) gammaz
-    read(IIN) jacobian
+    read(IIN) xixstore
+    read(IIN) xiystore
+    read(IIN) xizstore
+    read(IIN) etaxstore
+    read(IIN) etaystore
+    read(IIN) etazstore
+    read(IIN) gammaxstore
+    read(IIN) gammaystore
+    read(IIN) gammazstore
+    read(IIN) jacobianstore
 
     read(IIN) kappastore
     read(IIN) mustore
@@ -110,16 +153,16 @@
   if (size(ystore) > 0) call bcast_all_cr_for_database(ystore(1), size(ystore))
   if (size(zstore) > 0) call bcast_all_cr_for_database(zstore(1), size(zstore))
 
-  call bcast_all_cr_for_database(xix(1,1,1,1), size(xix))
-  call bcast_all_cr_for_database(xiy(1,1,1,1), size(xiy))
-  call bcast_all_cr_for_database(xiz(1,1,1,1), size(xiz))
-  call bcast_all_cr_for_database(etax(1,1,1,1), size(etax))
-  call bcast_all_cr_for_database(etay(1,1,1,1), size(etay))
-  call bcast_all_cr_for_database(etaz(1,1,1,1), size(etaz))
-  call bcast_all_cr_for_database(gammax(1,1,1,1), size(gammax))
-  call bcast_all_cr_for_database(gammay(1,1,1,1), size(gammay))
-  call bcast_all_cr_for_database(gammaz(1,1,1,1), size(gammaz))
-  call bcast_all_cr_for_database(jacobian(1,1,1,1), size(jacobian))
+  call bcast_all_cr_for_database(xixstore(1,1,1,1), size(xixstore))
+  call bcast_all_cr_for_database(xiystore(1,1,1,1), size(xiystore))
+  call bcast_all_cr_for_database(xizstore(1,1,1,1), size(xizstore))
+  call bcast_all_cr_for_database(etaxstore(1,1,1,1), size(etaxstore))
+  call bcast_all_cr_for_database(etaystore(1,1,1,1), size(etaystore))
+  call bcast_all_cr_for_database(etazstore(1,1,1,1), size(etazstore))
+  call bcast_all_cr_for_database(gammaxstore(1,1,1,1), size(gammaxstore))
+  call bcast_all_cr_for_database(gammaystore(1,1,1,1), size(gammaystore))
+  call bcast_all_cr_for_database(gammazstore(1,1,1,1), size(gammazstore))
+  call bcast_all_cr_for_database(jacobianstore(1,1,1,1), size(jacobianstore))
 
   call bcast_all_cr_for_database(kappastore(1,1,1,1), size(kappastore))
   call bcast_all_cr_for_database(mustore(1,1,1,1), size(mustore))
@@ -1679,46 +1722,4 @@
   endif
 
   end subroutine read_mesh_databases_adjoint
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-
-  subroutine read_mesh_for_init()
-
-! reads in the value of NSPEC_AB and NGLOB_AB
-
-  use constants, only: MAX_STRING_LEN,myrank,I_should_read_the_database,IIN
-  use specfem_par, only: prname,NSPEC_AB,NSPEC_IRREGULAR,NGLOB_AB,LOCAL_PATH
-
-  implicit none
-  ! Local variables
-  integer :: ier
-  character(len=MAX_STRING_LEN) :: database_name
-
-  ! sets file name
-  call create_name_database(prname,myrank,LOCAL_PATH)
-  database_name = prname(1:len_trim(prname))//'external_mesh.bin'
-
-  if (I_should_read_the_database) then
-    open(unit=IIN,file=trim(database_name),status='old',action='read',form='unformatted',iostat=ier)
-    if (ier /= 0) then
-      print *,'Error could not open database file: ',trim(database_name)
-      call exit_mpi(myrank,'Error opening database file')
-    endif
-  endif
-
-  if (I_should_read_the_database) then
-    read(IIN) NSPEC_AB
-    read(IIN) NGLOB_AB
-    read(IIN) NSPEC_IRREGULAR
-  endif
-  call bcast_all_i_for_database(NSPEC_AB, 1)
-  call bcast_all_i_for_database(NGLOB_AB, 1)
-  call bcast_all_i_for_database(NSPEC_IRREGULAR, 1)
-
-  if (I_should_read_the_database) close(IIN)
-
-  end subroutine read_mesh_for_init
 

@@ -130,7 +130,7 @@
 
   ! xmin
   if (myrank == 0) then
-    write(IMAIN,*) '     boundary xmin',nspec2D_xmin
+    write(IMAIN,*) '     boundary xmin   :',nspec2D_xmin
     call flush_IMAIN()
   endif
 
@@ -205,7 +205,7 @@
 
   ! xmax
   if (myrank == 0) then
-    write(IMAIN,*) '     boundary xmax',nspec2D_xmax
+    write(IMAIN,*) '     boundary xmax   :',nspec2D_xmax
     call flush_IMAIN()
   endif
   ijk_face(:,:,:) = 0
@@ -272,7 +272,7 @@
 
   ! ymin
   if (myrank == 0) then
-    write(IMAIN,*) '     boundary ymin',nspec2D_ymin
+    write(IMAIN,*) '     boundary ymin   :',nspec2D_ymin
     call flush_IMAIN()
   endif
 
@@ -340,7 +340,7 @@
 
   ! ymax
   if (myrank == 0) then
-    write(IMAIN,*) '     boundary ymax',nspec2D_ymax
+    write(IMAIN,*) '     boundary ymax   :',nspec2D_ymax
     call flush_IMAIN()
   endif
 
@@ -408,7 +408,7 @@
 
   ! bottom
   if (myrank == 0) then
-    write(IMAIN,*) '     boundary bottom',NSPEC2D_BOTTOM
+    write(IMAIN,*) '     boundary bottom :',NSPEC2D_BOTTOM
     call flush_IMAIN()
   endif
 
@@ -494,7 +494,7 @@
 
   ! top
   if (myrank == 0) then
-    write(IMAIN,*) '     boundary top',NSPEC2D_TOP
+    write(IMAIN,*) '     boundary top    :',NSPEC2D_TOP
     call flush_IMAIN()
   endif
 
@@ -688,7 +688,7 @@
   if (myrank == 0) then
     write(IMAIN,*) '     absorbing boundary:'
     write(IMAIN,*) '     total number of free faces = ',itop
-    write(IMAIN,*) '     total number of faces = ',iabsval
+    write(IMAIN,*) '     total number of faces      = ',iabsval
     if ((PML_CONDITIONS .and. PML_INSTEAD_OF_FREE_SURFACE) .or. &
        (STACEY_ABSORBING_CONDITIONS .and. STACEY_INSTEAD_OF_FREE_SURFACE)) then
        write(IMAIN,*) '     absorbing boundary includes free surface (i.e., top surface converted from free to absorbing)'

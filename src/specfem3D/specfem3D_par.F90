@@ -54,7 +54,8 @@ module specfem_par
 
   ! derivatives (of mapping to reference element)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-    xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
+    xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore
+
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
     deriv_mapping
 
@@ -641,15 +642,6 @@ module specfem_par_movie
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: shakemap_ux_all
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: shakemap_uy_all
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: shakemap_uz_all
-
-  ! movie volume
-  real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
-
-  real(kind=CUSTOM_REAL) hp1,hp2,hp3
-
-  real(kind=CUSTOM_REAL) tempx1l,tempx2l,tempx3l
-  real(kind=CUSTOM_REAL) tempy1l,tempy2l,tempy3l
-  real(kind=CUSTOM_REAL) tempz1l,tempz2l,tempz3l
 
   ! for storing surface of external mesh
   integer,dimension(:),allocatable :: nfaces_perproc_surface

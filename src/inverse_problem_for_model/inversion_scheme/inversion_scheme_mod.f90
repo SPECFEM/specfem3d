@@ -319,7 +319,7 @@ contains
 
   subroutine Parallel_ComputeInnerProduct(vect1, vect2, Niv, qp)
 
-    use specfem_par, only: NSPEC_AB,  jacobian, wxgll, wygll, wzgll
+    use specfem_par, only: NSPEC_AB,  jacobianstore, wxgll, wygll, wzgll
 
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(in)    :: vect1, vect2
     real(kind=CUSTOM_REAL),                                    intent(inout) :: qp
@@ -357,7 +357,7 @@ contains
              do j=1,NGLLY
                 do i=1,NGLLX
                    weight = wxgll(i)*wygll(j)*wzgll(k)
-                   jacobianl = jacobian(i,j,k,ispec)
+                   jacobianl = jacobianstore(i,j,k,ispec)
                    qp_tmp = qp_tmp + jacobianl * weight * wks_1n(i,j,k,ispec,ipar) * wks_2n(i,j,k,ispec,ipar)
                    !qp = qp + jacobianl * weight * vect1(i,j,k,ispec,ipar) * vect2(i,j,k,ispec,ipar)
                 enddo
@@ -377,7 +377,7 @@ contains
 
    subroutine Parallel_ComputeL2normSquare(vect1 , Niv, qp)
 
-     use specfem_par, only: NSPEC_AB,  jacobian, wxgll, wygll, wzgll
+     use specfem_par, only: NSPEC_AB,  jacobianstore, wxgll, wygll, wzgll
 
      real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(in)    :: vect1
      real(kind=CUSTOM_REAL),                                    intent(inout) :: qp
@@ -405,7 +405,7 @@ contains
               do j=1,NGLLY
                  do i=1,NGLLX
                     weight = wxgll(i)*wygll(j)*wzgll(k)
-                    jacobianl = jacobian(i,j,k,ispec)
+                    jacobianl = jacobianstore(i,j,k,ispec)
                     qp_dp = qp_dp + jacobianl * weight * wks_1n(i,j,k,ispec,ipar) **2
                  enddo
               enddo

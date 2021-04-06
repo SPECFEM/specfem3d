@@ -33,8 +33,8 @@
 
   use constants
   use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
-  use generate_databases_par, only: PML_CONDITIONS,nspec_cpml,nspec_irregular
-  use create_regions_mesh_ext_par, only: NSPEC_ANISO,NSPEC_PORO
+  use generate_databases_par, only: PML_CONDITIONS,nspec_cpml
+  use create_regions_mesh_ext_par, only: NSPEC_ANISO,NSPEC_PORO,nspec_irregular
 
   implicit none
 

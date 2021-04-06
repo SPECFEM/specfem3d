@@ -128,7 +128,7 @@
   ! mesh
   deallocate(ibool)
   deallocate(irregular_element_number)
-  deallocate(xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian)
+  deallocate(xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore)
   deallocate(deriv_mapping)
   deallocate(xstore,ystore,zstore)
   deallocate(kappastore,mustore,rhostore)

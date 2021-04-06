@@ -627,7 +627,8 @@ subroutine get_external_mesh()
   use specfem_par, only: CUSTOM_REAL,NSPEC_AB,NGLOB_AB,NSPEC_IRREGULAR,NGLLX,NGLLY,NGLLZ, &
     model_speed_max,DT,myrank,IMAIN,ISTANDARD_OUTPUT
 
-  use specfem_par, only: ibool,xstore,ystore,zstore,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
+  use specfem_par, only: ibool,xstore,ystore,zstore, &
+    xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore, &
     kappastore,mustore,rhostore
 
   use specfem_par_elastic, only: ispec_is_elastic,min_resolved_period
@@ -650,46 +651,46 @@ subroutine get_external_mesh()
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 918')
 
   if (NSPEC_IRREGULAR > 0) then
-    allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(xixstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 919')
-    allocate(xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(xiystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 920')
-    allocate(xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(xizstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 921')
-    allocate(etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(etaxstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 922')
-    allocate(etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(etaystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 923')
-    allocate(etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(etazstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 924')
-    allocate(gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 925')
-    allocate(gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(gammaystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 926')
-    allocate(gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(gammazstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 927')
-    allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 928')
   else
-    allocate(xix(1,1,1,1),stat=ier)
+    allocate(xixstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 929')
-    allocate(xiy(1,1,1,1),stat=ier)
+    allocate(xiystore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 930')
-    allocate(xiz(1,1,1,1),stat=ier)
+    allocate(xizstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 931')
-    allocate(etax(1,1,1,1),stat=ier)
+    allocate(etaxstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 932')
-    allocate(etay(1,1,1,1),stat=ier)
+    allocate(etaystore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 933')
-    allocate(etaz(1,1,1,1),stat=ier)
+    allocate(etazstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 934')
-    allocate(gammax(1,1,1,1),stat=ier)
+    allocate(gammaxstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 935')
-    allocate(gammay(1,1,1,1),stat=ier)
+    allocate(gammaystore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 936')
-    allocate(gammaz(1,1,1,1),stat=ier)
+    allocate(gammazstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 937')
-    allocate(jacobian(1,1,1,1),stat=ier)
+    allocate(jacobianstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 938')
   endif
   if (ier /= 0) stop 'Error allocating arrays for databases'
@@ -811,7 +812,7 @@ subroutine save_new_databases()
   integer :: i,j,k,ispec
 
   ! calculate rmass
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: jacobianstore
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: jacobian_new
   double precision :: weight
   real(kind=CUSTOM_REAL) :: jacobianl
   ! mass matrices
@@ -857,10 +858,10 @@ subroutine save_new_databases()
   ! safety check
   if (NSPEC_IRREGULAR /= NSPEC_AB) stop 'Please check if model_update in save_new_databases() with NSPEC_AB /= NSPEC_IRREGULAR'
 
-  allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  allocate(jacobian_new(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 956')
-  jacobianstore = 0._CUSTOM_REAL
-  jacobianstore = jacobian
+  jacobian_new = 0._CUSTOM_REAL
+  jacobian_new = jacobianstore
 
   ! set up coordinates of the Gauss-Lobatto-Legendre points and calculate weights
   ! from constants.h GAUSSALPHA = 0.d0,GAUSSBETA = 0.d0
@@ -895,7 +896,7 @@ subroutine save_new_databases()
             iglob = ibool(i,j,k,ispec)
 
             weight = wxgll(i)*wygll(j)*wzgll(k)
-            jacobianl = jacobianstore(i,j,k,ispec)
+            jacobianl = jacobian_new(i,j,k,ispec)
 
             !debug
             !if (myrank == 0) then
@@ -1083,7 +1084,7 @@ subroutine save_new_databases()
                         ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
 
   deallocate(rhostore_new, kappastore_new, mustore_new, rho_vp_new, rho_vs_new)
-  deallocate(jacobianstore)
+  deallocate(jacobian_new)
   deallocate(rmass_old,rmass_new)
   deallocate(rmass_acoustic_new,rmass_solid_poroelastic_new,rmass_fluid_poroelastic_new)
   deallocate(qmu_attenuation_store,qkappa_attenuation_store)

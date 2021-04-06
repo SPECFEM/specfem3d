@@ -283,47 +283,47 @@ program smooth_sem
 
   if (NSPEC_IRREGULAR > 0) then
     ! allocate arrays for storing the databases
-    allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(xixstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 981')
-    allocate(xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(xiystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 982')
-    allocate(xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(xizstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 983')
-    allocate(etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(etaxstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 984')
-    allocate(etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(etaystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 985')
-    allocate(etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(etazstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 986')
-    allocate(gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 987')
-    allocate(gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(gammaystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 988')
-    allocate(gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(gammazstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 989')
-    allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 990')
    else
-       ! allocate arrays for storing the databases
-    allocate(xix(1,1,1,1),stat=ier)
+    ! allocate arrays for storing the databases
+    allocate(xixstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 991')
-    allocate(xiy(1,1,1,1),stat=ier)
+    allocate(xiystore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 992')
-    allocate(xiz(1,1,1,1),stat=ier)
+    allocate(xizstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 993')
-    allocate(etax(1,1,1,1),stat=ier)
+    allocate(etaxstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 994')
-    allocate(etay(1,1,1,1),stat=ier)
+    allocate(etaystore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 995')
-    allocate(etaz(1,1,1,1),stat=ier)
+    allocate(etazstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 996')
-    allocate(gammax(1,1,1,1),stat=ier)
+    allocate(gammaxstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 997')
-    allocate(gammay(1,1,1,1),stat=ier)
+    allocate(gammaystore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 998')
-    allocate(gammaz(1,1,1,1),stat=ier)
+    allocate(gammazstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 999')
-    allocate(jacobian(1,1,1,1),stat=ier)
+    allocate(jacobianstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1000')
   endif
   if (ier /= 0) stop 'Error allocating arrays for databases'
@@ -456,9 +456,9 @@ program smooth_sem
 
   ! frees memory
   deallocate(xstore,ystore,zstore)
-  deallocate(xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+  deallocate(xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore)
   deallocate(ibool,irregular_element_number)
-  deallocate(jacobian)
+  deallocate(jacobianstore)
 
   call synchronize_all()
 
@@ -648,14 +648,14 @@ program smooth_sem
 
     if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
       if (NSPEC_IRREGULAR_N > 0) then
-        allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR_N),stat=ier)
+        allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR_N),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 1025')
         if (ier /= 0) stop 'Error allocating array jacobian'
         allocate(dummy(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 1026')
         if (ier /= 0) stop 'Error allocating array dummy'
       else
-        allocate(jacobian(1,1,1,1),stat=ier)
+        allocate(jacobianstore(1,1,1,1),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 1027')
         if (ier /= 0) stop 'Error allocating array jacobian'
         allocate(dummy(1,1,1,1),stat=ier)
@@ -689,7 +689,7 @@ program smooth_sem
       read(IIN) dummy ! gammax
       read(IIN) dummy ! gammay
       read(IIN) dummy ! gammaz
-      read(IIN) jacobian
+      read(IIN) jacobianstore
     endif
 
     close(IIN)
@@ -756,7 +756,8 @@ program smooth_sem
     ! finds closest elements for smoothing
     !if (myrank==0) print *, '  start looping over elements and points for smoothing ...'
     if (USE_GPU) then
-      call compute_smooth(Container,jacobian,jacobian_regular,irregular_element_number,xx,yy,zz,dat,NSPEC_N,NSPEC_IRREGULAR_N)
+      call compute_smooth(Container,jacobianstore,jacobian_regular,irregular_element_number, &
+                          xx,yy,zz,dat,NSPEC_N,NSPEC_IRREGULAR_N)
     else
       ! loop over elements to be smoothed in the current slice
       do ispec = 1, NSPEC_AB
@@ -788,7 +789,7 @@ program smooth_sem
             do k=1,NGLLZ
               do j=1,NGLLY
                 do i=1,NGLLX
-                  if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
+                  if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
                   factor(i,j,k) = jacobianl * wgll_cube(i,j,k)
                 enddo
               enddo
@@ -833,7 +834,7 @@ program smooth_sem
 
     if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
       deallocate(irregular_element_number)
-      deallocate(jacobian)
+      deallocate(jacobianstore)
       deallocate(dummy)
     endif
 

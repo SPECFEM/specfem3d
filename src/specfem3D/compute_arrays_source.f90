@@ -31,7 +31,8 @@
                                        Mxx,Myy,Mzz,Mxy,Mxz,Myz)
 
   use constants
-  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,xix_regular,irregular_element_number
+  use specfem_par, only: xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore,xix_regular,irregular_element_number
 
   implicit none
 
@@ -80,15 +81,15 @@
 
         if (ispec_irreg /= 0) then
           !irregular element
-          xixd    = dble(xix(k,l,m,ispec_irreg))
-          xiyd    = dble(xiy(k,l,m,ispec_irreg))
-          xizd    = dble(xiz(k,l,m,ispec_irreg))
-          etaxd   = dble(etax(k,l,m,ispec_irreg))
-          etayd   = dble(etay(k,l,m,ispec_irreg))
-          etazd   = dble(etaz(k,l,m,ispec_irreg))
-          gammaxd = dble(gammax(k,l,m,ispec_irreg))
-          gammayd = dble(gammay(k,l,m,ispec_irreg))
-          gammazd = dble(gammaz(k,l,m,ispec_irreg))
+          xixd    = dble(xixstore(k,l,m,ispec_irreg))
+          xiyd    = dble(xiystore(k,l,m,ispec_irreg))
+          xizd    = dble(xizstore(k,l,m,ispec_irreg))
+          etaxd   = dble(etaxstore(k,l,m,ispec_irreg))
+          etayd   = dble(etaystore(k,l,m,ispec_irreg))
+          etazd   = dble(etazstore(k,l,m,ispec_irreg))
+          gammaxd = dble(gammaxstore(k,l,m,ispec_irreg))
+          gammayd = dble(gammaystore(k,l,m,ispec_irreg))
+          gammazd = dble(gammazstore(k,l,m,ispec_irreg))
 
           dxis_dx = dxis_dx + hlagrange * xixd
           dxis_dy = dxis_dy + hlagrange * xiyd
@@ -363,8 +364,9 @@
                                                        factor_source, comp_x,comp_y,comp_z, nu_source)
   use constants
 
-  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          irregular_element_number,xix_regular
+  use specfem_par, only: xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore, &
+                         irregular_element_number,xix_regular
 
   implicit none
 
@@ -415,15 +417,15 @@
 
         if (ispec_irreg /= 0) then
           !irregular element
-          xixd    = dble(xix(k,l,m,ispec_irreg))
-          xiyd    = dble(xiy(k,l,m,ispec_irreg))
-          xizd    = dble(xiz(k,l,m,ispec_irreg))
-          etaxd   = dble(etax(k,l,m,ispec_irreg))
-          etayd   = dble(etay(k,l,m,ispec_irreg))
-          etazd   = dble(etaz(k,l,m,ispec_irreg))
-          gammaxd = dble(gammax(k,l,m,ispec_irreg))
-          gammayd = dble(gammay(k,l,m,ispec_irreg))
-          gammazd = dble(gammaz(k,l,m,ispec_irreg))
+          xixd    = dble(xixstore(k,l,m,ispec_irreg))
+          xiyd    = dble(xiystore(k,l,m,ispec_irreg))
+          xizd    = dble(xizstore(k,l,m,ispec_irreg))
+          etaxd   = dble(etaxstore(k,l,m,ispec_irreg))
+          etayd   = dble(etaystore(k,l,m,ispec_irreg))
+          etazd   = dble(etazstore(k,l,m,ispec_irreg))
+          gammaxd = dble(gammaxstore(k,l,m,ispec_irreg))
+          gammayd = dble(gammaystore(k,l,m,ispec_irreg))
+          gammazd = dble(gammazstore(k,l,m,ispec_irreg))
 
           dxis_dx = dxis_dx + hlagrange * xixd
           dxis_dy = dxis_dy + hlagrange * xiyd

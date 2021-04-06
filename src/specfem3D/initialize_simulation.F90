@@ -155,9 +155,10 @@
   ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
   call create_name_database(prname,myrank,LOCAL_PATH)
 
-! read the value of NSPEC_AB and NGLOB_AB because we need it to define some array sizes below
+  ! read the value of NSPEC_AB, NGLOB_AB and NSPEC_IRREGULAR
+  ! (we need it to define some array sizes below)
   if (ADIOS_FOR_MESH) then
-    call read_mesh_for_init_ADIOS(NSPEC_AB, NGLOB_AB)
+    call read_mesh_for_init_ADIOS()
   else
     call read_mesh_for_init()
   endif
@@ -199,52 +200,51 @@
   ibool(:,:,:,:) = 0
 
   if (NSPEC_IRREGULAR > 0) then
-     allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     allocate(xixstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2390')
-     allocate(xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     allocate(xiystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2391')
-     allocate(xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     allocate(xizstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2392')
-     allocate(etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     allocate(etaxstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2393')
-     allocate(etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     allocate(etaystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2394')
-     allocate(etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     allocate(etazstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2395')
-     allocate(gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2396')
-     allocate(gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     allocate(gammaystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2397')
-     allocate(gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     allocate(gammazstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2398')
-     allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2399')
   else
-    allocate(xix(1,1,1,1),stat=ier)
+    allocate(xixstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2400')
-    allocate(xiy(1,1,1,1),stat=ier)
+    allocate(xiystore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2401')
-    allocate(xiz(1,1,1,1),stat=ier)
+    allocate(xizstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2402')
-    allocate(etax(1,1,1,1),stat=ier)
+    allocate(etaxstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2403')
-    allocate(etay(1,1,1,1),stat=ier)
+    allocate(etaystore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2404')
-    allocate(etaz(1,1,1,1),stat=ier)
+    allocate(etazstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2405')
-    allocate(gammax(1,1,1,1),stat=ier)
+    allocate(gammaxstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2406')
-    allocate(gammay(1,1,1,1),stat=ier)
+    allocate(gammaystore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2407')
-    allocate(gammaz(1,1,1,1),stat=ier)
+    allocate(gammazstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2408')
-    allocate(jacobian(1,1,1,1),stat=ier)
+    allocate(jacobianstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2409')
   endif
-  if (ier /= 0) stop 'error allocating arrays for databases'
-  xix(:,:,:,:) = 0.0; xiy(:,:,:,:) = 0.0; xiz(:,:,:,:) = 0.0
-  etax(:,:,:,:) = 0.0; etay(:,:,:,:) = 0.0; etaz(:,:,:,:) = 0.0
-  gammax(:,:,:,:) = 0.0; gammay(:,:,:,:) = 0.0; gammaz(:,:,:,:) = 0.0
+  xixstore(:,:,:,:) = 0.0_CUSTOM_REAL; xiystore(:,:,:,:) = 0.0_CUSTOM_REAL; xizstore(:,:,:,:) = 0.0_CUSTOM_REAL
+  etaxstore(:,:,:,:) = 0.0_CUSTOM_REAL; etaystore(:,:,:,:) = 0.0_CUSTOM_REAL; etazstore(:,:,:,:) = 0.0_CUSTOM_REAL
+  gammaxstore(:,:,:,:) = 0.0_CUSTOM_REAL; gammaystore(:,:,:,:) = 0.0_CUSTOM_REAL; gammazstore(:,:,:,:) = 0.0_CUSTOM_REAL
 
   ! mesh node locations
   allocate(xstore(NGLOB_AB),stat=ier)
@@ -254,7 +254,7 @@
   allocate(zstore(NGLOB_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2412')
   if (ier /= 0) stop 'error allocating arrays for mesh nodes'
-  xstore(:) = 0.0; ystore(:) = 0.0; zstore(:) = 0.0
+  xstore(:) = 0.0_CUSTOM_REAL; ystore(:) = 0.0_CUSTOM_REAL; zstore(:) = 0.0_CUSTOM_REAL
 
   ! material properties
   allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
@@ -264,7 +264,7 @@
   allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating rho array 2414')
   if (ier /= 0) stop 'error allocating arrays for material properties'
-  kappastore(:,:,:,:) = 0.0; mustore(:,:,:,:) = 0.0; rhostore(:,:,:,:) = 0.0
+  kappastore(:,:,:,:) = 0.0_CUSTOM_REAL; mustore(:,:,:,:) = 0.0_CUSTOM_REAL; rhostore(:,:,:,:) = 0.0_CUSTOM_REAL
 
   ! material flags
   allocate(ispec_is_acoustic(NSPEC_AB),stat=ier)

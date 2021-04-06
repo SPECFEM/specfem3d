@@ -85,15 +85,15 @@
 
             if (ispec_irreg /= 0) then !irregular element
               ! compute the Jacobian
-              xixpt    = xix(i,j,k,ispec_irreg)
-              xiypt    = xiy(i,j,k,ispec_irreg)
-              xizpt    = xiz(i,j,k,ispec_irreg)
-              etaxpt   = etax(i,j,k,ispec_irreg)
-              etaypt   = etay(i,j,k,ispec_irreg)
-              etazpt   = etaz(i,j,k,ispec_irreg)
-              gammaxpt = gammax(i,j,k,ispec_irreg)
-              gammaypt = gammay(i,j,k,ispec_irreg)
-              gammazpt = gammaz(i,j,k,ispec_irreg)
+              xixpt    = xixstore(i,j,k,ispec_irreg)
+              xiypt    = xiystore(i,j,k,ispec_irreg)
+              xizpt    = xizstore(i,j,k,ispec_irreg)
+              etaxpt   = etaxstore(i,j,k,ispec_irreg)
+              etaypt   = etaystore(i,j,k,ispec_irreg)
+              etazpt   = etazstore(i,j,k,ispec_irreg)
+              gammaxpt = gammaxstore(i,j,k,ispec_irreg)
+              gammaypt = gammaystore(i,j,k,ispec_irreg)
+              gammazpt = gammazstore(i,j,k,ispec_irreg)
 
               ! do this in double precision for accuracy
               jacobianpt = 1.d0 / dble(xixpt*(etaypt*gammazpt-etazpt*gammaypt) &

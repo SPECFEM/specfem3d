@@ -55,7 +55,8 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
 
-  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
+  use specfem_par, only: xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore,jacobianstore, &
                          kappastore,mustore,irregular_element_number, &
                          jacobian_regular,xix_regular
 
@@ -379,16 +380,16 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
 
         if (ispec_irreg /= 0) then
           ! irregular element
-          xixl = xix(i,j,k,ispec_irreg)
-          xiyl = xiy(i,j,k,ispec_irreg)
-          xizl = xiz(i,j,k,ispec_irreg)
-          etaxl = etax(i,j,k,ispec_irreg)
-          etayl = etay(i,j,k,ispec_irreg)
-          etazl = etaz(i,j,k,ispec_irreg)
-          gammaxl = gammax(i,j,k,ispec_irreg)
-          gammayl = gammay(i,j,k,ispec_irreg)
-          gammazl = gammaz(i,j,k,ispec_irreg)
-          jacobianl = jacobian(i,j,k,ispec_irreg)
+          xixl = xixstore(i,j,k,ispec_irreg)
+          xiyl = xiystore(i,j,k,ispec_irreg)
+          xizl = xizstore(i,j,k,ispec_irreg)
+          etaxl = etaxstore(i,j,k,ispec_irreg)
+          etayl = etaystore(i,j,k,ispec_irreg)
+          etazl = etazstore(i,j,k,ispec_irreg)
+          gammaxl = gammaxstore(i,j,k,ispec_irreg)
+          gammayl = gammaystore(i,j,k,ispec_irreg)
+          gammazl = gammazstore(i,j,k,ispec_irreg)
+          jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
           ! form dot product with test vector, non-symmetric form (which
           ! is useful in the case of PML)
@@ -444,7 +445,8 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
-  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
+  use specfem_par, only: xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore,jacobianstore, &
                          rhostore,irregular_element_number, &
                          jacobian_regular,xix_regular
 
@@ -618,16 +620,16 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
     do k=1,NGLLZ
       do j=1,NGLLY
         do i=1,NGLLX
-          xixl = xix(i,j,k,ispec_irreg)
-          xiyl = xiy(i,j,k,ispec_irreg)
-          xizl = xiz(i,j,k,ispec_irreg)
-          etaxl = etax(i,j,k,ispec_irreg)
-          etayl = etay(i,j,k,ispec_irreg)
-          etazl = etaz(i,j,k,ispec_irreg)
-          gammaxl = gammax(i,j,k,ispec_irreg)
-          gammayl = gammay(i,j,k,ispec_irreg)
-          gammazl = gammaz(i,j,k,ispec_irreg)
-          jacobianl = jacobian(i,j,k,ispec_irreg)
+          xixl = xixstore(i,j,k,ispec_irreg)
+          xiyl = xiystore(i,j,k,ispec_irreg)
+          xizl = xizstore(i,j,k,ispec_irreg)
+          etaxl = etaxstore(i,j,k,ispec_irreg)
+          etayl = etaystore(i,j,k,ispec_irreg)
+          etazl = etazstore(i,j,k,ispec_irreg)
+          gammaxl = gammaxstore(i,j,k,ispec_irreg)
+          gammayl = gammaystore(i,j,k,ispec_irreg)
+          gammazl = gammazstore(i,j,k,ispec_irreg)
+          jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
           rho_invl_jacob = jacobianl / rhostore(i,j,k,ispec)
 

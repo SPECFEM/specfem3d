@@ -38,7 +38,7 @@
 
   use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
 
-  use specfem_par, only: NGLOB_AB,wgll_cube,jacobian,ibool,rhostore,irregular_element_number,jacobian_regular
+  use specfem_par, only: NGLOB_AB,wgll_cube,jacobianstore,ibool,rhostore,irregular_element_number,jacobian_regular
 
   use pml_par, only: CPML_regions,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z, &
                      alpha_store_x, alpha_store_y, alpha_store_z, &
@@ -130,7 +130,7 @@
 
         iglob = ibool(i,j,k,ispec)
         rhol = rhostore(i,j,k,ispec)
-        if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
+        if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
         wgllcube = wgll_cube(i,j,k)
 
         ! updates PML acceleration
@@ -177,7 +177,7 @@
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
-  use specfem_par, only: NGLOB_AB,wgll_cube,jacobian,ibool,kappastore,irregular_element_number,jacobian_regular
+  use specfem_par, only: NGLOB_AB,wgll_cube,jacobianstore,ibool,kappastore,irregular_element_number,jacobian_regular
 
   use pml_par, only: CPML_regions,NSPEC_CPML,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z, &
                      alpha_store_x, alpha_store_y, alpha_store_z, &
@@ -262,7 +262,7 @@
 
         iglob = ibool(i,j,k,ispec)
         wgllcube = wgll_cube(i,j,k)
-        if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
+        if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
         kappal_inv = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
 
         ! updates PML potential

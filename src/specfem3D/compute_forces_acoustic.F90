@@ -44,12 +44,13 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,m1,m2
 
   use specfem_par, only: NGLOB_AB, &
-                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                         xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore,jacobianstore, &
                          hprime_xx,hprime_xxT, &
                          hprimewgll_xx,hprimewgll_xxT, &
                          hprime_yy,hprime_zz, &
                          hprimewgll_yy,hprimewgll_zz, &
-                         rhostore,jacobian,ibool, &
+                         rhostore,ibool, &
                          irregular_element_number,xix_regular,jacobian_regular
 
   use specfem_par, only: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
@@ -119,7 +120,7 @@
 !$OMP irregular_element_number,jacobian_regular,xix_regular, &
 !$OMP potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
 !$OMP is_CPML,backward_simulation, &
-!$OMP xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian,rhostore &
+!$OMP xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore,rhostore &
 !$OMP ) &
 !$OMP PRIVATE( &
 !$OMP ispec_p,ispec,ispec_irreg,i,j,k,iglob, &
@@ -229,16 +230,16 @@
 
         ! get derivatives of ux, uy and uz with respect to x, y and z
         ! single arrays make it difficult for hardware pre-fetching...
-        xixl = xix(INDEX_IJK,ispec_irreg)
-        xiyl = xiy(INDEX_IJK,ispec_irreg)
-        xizl = xiz(INDEX_IJK,ispec_irreg)
-        etaxl = etax(INDEX_IJK,ispec_irreg)
-        etayl = etay(INDEX_IJK,ispec_irreg)
-        etazl = etaz(INDEX_IJK,ispec_irreg)
-        gammaxl = gammax(INDEX_IJK,ispec_irreg)
-        gammayl = gammay(INDEX_IJK,ispec_irreg)
-        gammazl = gammaz(INDEX_IJK,ispec_irreg)
-        jacobianl = jacobian(INDEX_IJK,ispec_irreg)
+        xixl = xixstore(INDEX_IJK,ispec_irreg)
+        xiyl = xiystore(INDEX_IJK,ispec_irreg)
+        xizl = xizstore(INDEX_IJK,ispec_irreg)
+        etaxl = etaxstore(INDEX_IJK,ispec_irreg)
+        etayl = etaystore(INDEX_IJK,ispec_irreg)
+        etazl = etazstore(INDEX_IJK,ispec_irreg)
+        gammaxl = gammaxstore(INDEX_IJK,ispec_irreg)
+        gammayl = gammaystore(INDEX_IJK,ispec_irreg)
+        gammazl = gammazstore(INDEX_IJK,ispec_irreg)
+        jacobianl = jacobianstore(INDEX_IJK,ispec_irreg)
         ! using fused array instead
         !xixl = deriv_mapping(1,INDEX_IJK,ispec_irreg)
         !xiyl = deriv_mapping(2,INDEX_IJK,ispec_irreg)
@@ -378,7 +379,8 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,m1,m2
 
   use specfem_par, only: NGLOB_AB, &
-                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                         xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore, &
                          hprime_xx,hprime_xxT, &
                          hprimewgll_xx,hprimewgll_xxT, &
                          hprime_yy,hprime_zz, &
@@ -473,7 +475,7 @@
 !$OMP PML_potential_acoustic_old,PML_potential_acoustic_new, &
 !$OMP rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl,rmemory_potential_acoustic, &
 !$OMP spec_to_CPML,is_CPML,backward_simulation, &
-!$OMP xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz &
+!$OMP xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore &
 !$OMP ) &
 !$OMP PRIVATE( &
 !$OMP ispec_p,ispec,ispec_irreg,ispec_CPML,i,j,k,iglob, &
@@ -620,15 +622,15 @@
       DO_LOOP_IJK
         ! get derivatives of ux, uy and uz with respect to x, y and z
         ! single arrays make it difficult for hardware pre-fetching...
-        xixl = xix(INDEX_IJK,ispec_irreg)
-        xiyl = xiy(INDEX_IJK,ispec_irreg)
-        xizl = xiz(INDEX_IJK,ispec_irreg)
-        etaxl = etax(INDEX_IJK,ispec_irreg)
-        etayl = etay(INDEX_IJK,ispec_irreg)
-        etazl = etaz(INDEX_IJK,ispec_irreg)
-        gammaxl = gammax(INDEX_IJK,ispec_irreg)
-        gammayl = gammay(INDEX_IJK,ispec_irreg)
-        gammazl = gammaz(INDEX_IJK,ispec_irreg)
+        xixl = xixstore(INDEX_IJK,ispec_irreg)
+        xiyl = xiystore(INDEX_IJK,ispec_irreg)
+        xizl = xizstore(INDEX_IJK,ispec_irreg)
+        etaxl = etaxstore(INDEX_IJK,ispec_irreg)
+        etayl = etaystore(INDEX_IJK,ispec_irreg)
+        etazl = etazstore(INDEX_IJK,ispec_irreg)
+        gammaxl = gammaxstore(INDEX_IJK,ispec_irreg)
+        gammayl = gammaystore(INDEX_IJK,ispec_irreg)
+        gammazl = gammazstore(INDEX_IJK,ispec_irreg)
         ! using fused array
         !xixl = deriv_mapping(1,INDEX_IJK,ispec_irreg)
         !xiyl = deriv_mapping(2,INDEX_IJK,ispec_irreg)
@@ -641,7 +643,7 @@
         !gammazl = deriv_mapping(9,INDEX_IJK,ispec_irreg)
 
         ! following is not needed, will be computed later in pml_compute_memory_variables_acoustic() routine...
-        !jacobianl = jacobian(INDEX_IJK,ispec_irreg)
+        !jacobianl = jacobianstore(INDEX_IJK,ispec_irreg)
         !! reciprocal of density
         !rho_invl = 1.0_CUSTOM_REAL / rhostore(INDEX_IJK,ispec)
         !! derivatives of potential

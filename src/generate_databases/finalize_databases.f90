@@ -26,13 +26,20 @@
 !=====================================================================
 !
 
-  subroutine finalize_databases
+  subroutine finalize_databases()
 
 ! checks user input parameters
 
   use generate_databases_par
+  use create_regions_mesh_ext_par, only: nspec_irregular
 
   implicit none
+
+  ! local parameters
+  integer :: nspec_total
+  ! this can overflow if more than 2 Gigapoints in the whole mesh, thus replaced with double precision version
+  integer(kind=8) :: nglob_total
+  double precision :: nglob_total_db
 
   ! timing
   double precision, external :: wtime
@@ -41,8 +48,8 @@
   call sum_all_i(NSPEC_AB,nspec_total)
 
 ! this can overflow if more than 2 Gigapoints in the whole mesh, thus replaced with double precision version
-! call sum_all_i(NGLOB_AB,nglob_total)
-  call sum_all_dp(dble(NGLOB_AB),nglob_total)
+  call sum_all_dp(dble(NGLOB_AB),nglob_total_db)
+  nglob_total = int(nglob_total_db,kind=8)
 
   call synchronize_all()
   if (myrank == 0) then
@@ -51,8 +58,8 @@
     write(IMAIN,*) '-----------------------'
     write(IMAIN,*)
     write(IMAIN,*) 'total number of elements in mesh slice 0: ',NSPEC_AB
-    write(IMAIN,*) 'total number of   regular elements in mesh slice 0: ',NSPEC_AB - NSPEC_IRREGULAR
-    write(IMAIN,*) 'total number of irregular elements in mesh slice 0: ',NSPEC_IRREGULAR
+    write(IMAIN,*) 'total number of   regular elements in mesh slice 0: ',NSPEC_AB - nspec_irregular
+    write(IMAIN,*) 'total number of irregular elements in mesh slice 0: ',nspec_irregular
     write(IMAIN,*) 'total number of points in mesh slice 0: ',NGLOB_AB
     write(IMAIN,*)
     write(IMAIN,*) 'total number of elements in entire mesh: ',nspec_total

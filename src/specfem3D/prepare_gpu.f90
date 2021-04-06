@@ -62,7 +62,9 @@
   ! add GPU support for the C-PML routines
   call prepare_constants_device(Mesh_pointer, &
                                 NGLLX, NSPEC_AB, NGLOB_AB, NSPEC_IRREGULAR,irregular_element_number, &
-                                xix, xiy, xiz, etax,etay,etaz, gammax, gammay, gammaz, &
+                                xixstore,xiystore,xizstore, &
+                                etaxstore,etaystore,etazstore, &
+                                gammaxstore,gammaystore,gammazstore, &
                                 xix_regular,jacobian_regular,ibool, &
                                 num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh, &
                                 nibool_interfaces_ext_mesh, ibool_interfaces_ext_mesh, &

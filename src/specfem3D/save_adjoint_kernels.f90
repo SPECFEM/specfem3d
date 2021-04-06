@@ -209,7 +209,7 @@
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX
-          if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
+          if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
           weights_kernel(i,j,k,ispec) = wxgll(i) * wygll(j) * wzgll(k) * jacobianl
         enddo ! i
       enddo ! j

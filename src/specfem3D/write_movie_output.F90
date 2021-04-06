@@ -651,8 +651,9 @@
   use constants
 
   use specfem_par, only: NSPEC_AB,NGLOB_AB,ibool,hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,irregular_element_number, &
-                          xix_regular
+    xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+    gammaxstore,gammaystore,gammazstore,irregular_element_number, &
+    xix_regular
 
   implicit none
 
@@ -763,15 +764,15 @@
 
           if (ispec_irreg /= 0) then ! irregular element
             ! get derivatives of ux, uy and uz with respect to x, y and z
-            xixl = xix(i,j,k,ispec_irreg)
-            xiyl = xiy(i,j,k,ispec_irreg)
-            xizl = xiz(i,j,k,ispec_irreg)
-            etaxl = etax(i,j,k,ispec_irreg)
-            etayl = etay(i,j,k,ispec_irreg)
-            etazl = etaz(i,j,k,ispec_irreg)
-            gammaxl = gammax(i,j,k,ispec_irreg)
-            gammayl = gammay(i,j,k,ispec_irreg)
-            gammazl = gammaz(i,j,k,ispec_irreg)
+            xixl = xixstore(i,j,k,ispec_irreg)
+            xiyl = xiystore(i,j,k,ispec_irreg)
+            xizl = xizstore(i,j,k,ispec_irreg)
+            etaxl = etaxstore(i,j,k,ispec_irreg)
+            etayl = etaystore(i,j,k,ispec_irreg)
+            etazl = etazstore(i,j,k,ispec_irreg)
+            gammaxl = gammaxstore(i,j,k,ispec_irreg)
+            gammayl = gammaystore(i,j,k,ispec_irreg)
+            gammazl = gammazstore(i,j,k,ispec_irreg)
 
             dvxdxl(i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
             dvxdyl(i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l

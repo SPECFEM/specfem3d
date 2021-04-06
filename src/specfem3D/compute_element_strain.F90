@@ -32,7 +32,7 @@
   use constants, only: NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,ONE_THIRD
 
   use specfem_par, only: ibool, hprime_xx, hprime_yy, hprime_zz, &
-    xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, &
+    xixstore, xiystore, xizstore, etaxstore, etaystore, etazstore, gammaxstore, gammaystore, gammazstore, &
     irregular_element_number, xix_regular
 
   implicit none
@@ -106,15 +106,15 @@
         ! get derivatives of ux, uy and uz with respect to x, y and z
         if (ispec_irreg /= 0) then
           ! irregular element
-          xixl = xix(i,j,k,ispec)
-          xiyl = xiy(i,j,k,ispec)
-          xizl = xiz(i,j,k,ispec)
-          etaxl = etax(i,j,k,ispec)
-          etayl = etay(i,j,k,ispec)
-          etazl = etaz(i,j,k,ispec)
-          gammaxl = gammax(i,j,k,ispec)
-          gammayl = gammay(i,j,k,ispec)
-          gammazl = gammaz(i,j,k,ispec)
+          xixl = xixstore(i,j,k,ispec)
+          xiyl = xiystore(i,j,k,ispec)
+          xizl = xizstore(i,j,k,ispec)
+          etaxl = etaxstore(i,j,k,ispec)
+          etayl = etaystore(i,j,k,ispec)
+          etazl = etazstore(i,j,k,ispec)
+          gammaxl = gammaxstore(i,j,k,ispec)
+          gammayl = gammaystore(i,j,k,ispec)
+          gammazl = gammazstore(i,j,k,ispec)
 
           duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
           duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l

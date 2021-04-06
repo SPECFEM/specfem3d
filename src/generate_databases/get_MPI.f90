@@ -25,41 +25,28 @@
 !
 !=====================================================================
 
-  subroutine get_MPI_interface(nglob,nspec,ibool, &
-                               nelmnts_ext_mesh,elmnts_ext_mesh, &
-                               my_nelmnts_neighbors_ext_mesh, my_interfaces_ext_mesh, &
-                               ibool_interfaces_ext_mesh, &
-                               nibool_interfaces_ext_mesh, &
-                               num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-                               my_neighbors_ext_mesh)
+  subroutine get_MPI_interface(nglob,nspec,ibool)
 
 ! sets up the MPI interface for communication between partitions
   use constants, only: myrank,NGLLX,NGLLY,NGLLZ,SMALLVAL_TOL,IMAIN
+
   use generate_databases_par, only: NGNOD,NPROC
+
+  ! MPI interfaces
+  use generate_databases_par, only: num_interfaces_ext_mesh,my_neighbors_ext_mesh, &
+    nibool_interfaces_ext_mesh,max_interface_size_ext_mesh,ibool_interfaces_ext_mesh
+
+  ! external mesh, element indexing
+  use generate_databases_par, only: nelmnts_ext_mesh,elmnts_ext_mesh, &
+    my_nelmnts_neighbors_ext_mesh, my_interfaces_ext_mesh
+
   use create_regions_mesh_ext_par
 
   implicit none
 
   integer,intent(in) :: nglob,nspec
-
-! global indexing
+  ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
-
-! external mesh, element indexing
-  integer :: nelmnts_ext_mesh
-  integer, dimension(NGNOD,nelmnts_ext_mesh) :: elmnts_ext_mesh
-
-  integer :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
-
-  integer, dimension(num_interfaces_ext_mesh) :: my_nelmnts_neighbors_ext_mesh
-  integer, dimension(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: &
-    my_interfaces_ext_mesh
-
-  integer, dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
-
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
-  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: &
-    ibool_interfaces_ext_mesh
 
   !local parameters
   double precision, dimension(:), allocatable :: xp,yp,zp
@@ -85,7 +72,7 @@
   ! (defined by my_interfaces_ext_mesh) between different partitions
   ! and stores them in ibool_interfaces_ext_mesh & nibool_interfaces_ext_mesh
   ! (number of total points)
-  call prepare_assemble_MPI( nelmnts_ext_mesh,elmnts_ext_mesh, &
+  call prepare_assemble_MPI(nelmnts_ext_mesh,elmnts_ext_mesh, &
                             ibool,nglob, &
                             num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
                             my_nelmnts_neighbors_ext_mesh, my_interfaces_ext_mesh, &
@@ -193,7 +180,7 @@
   allocate(ibool_interfaces_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 899')
   if (ier /= 0) stop 'error allocating array ibool_interfaces_dummy'
-
+  ibool_interfaces_dummy(:,:) = 0
   countval = 0
   do iinterface = 1, num_interfaces_ext_mesh
      ibool_interfaces_dummy(:,iinterface) = &

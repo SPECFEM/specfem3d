@@ -34,8 +34,9 @@
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
 
-  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,xix_regular, &
-                          irregular_element_number
+  use specfem_par, only: xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore,xix_regular, &
+                         irregular_element_number
 
   implicit none
 
@@ -109,15 +110,15 @@
         if (ispec_irreg /= 0) then
           !irregular element
 
-          xixl = xix(i,j,k,ispec_irreg)
-          xiyl = xiy(i,j,k,ispec_irreg)
-          xizl = xiz(i,j,k,ispec_irreg)
-          etaxl = etax(i,j,k,ispec_irreg)
-          etayl = etay(i,j,k,ispec_irreg)
-          etazl = etaz(i,j,k,ispec_irreg)
-          gammaxl = gammax(i,j,k,ispec_irreg)
-          gammayl = gammay(i,j,k,ispec_irreg)
-          gammazl = gammaz(i,j,k,ispec_irreg)
+          xixl = xixstore(i,j,k,ispec_irreg)
+          xiyl = xiystore(i,j,k,ispec_irreg)
+          xizl = xizstore(i,j,k,ispec_irreg)
+          etaxl = etaxstore(i,j,k,ispec_irreg)
+          etayl = etaystore(i,j,k,ispec_irreg)
+          etazl = etazstore(i,j,k,ispec_irreg)
+          gammaxl = gammaxstore(i,j,k,ispec_irreg)
+          gammayl = gammaystore(i,j,k,ispec_irreg)
+          gammazl = gammazstore(i,j,k,ispec_irreg)
 
           duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
           duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
@@ -190,15 +191,15 @@
 
         if (ispec_irreg /= 0) then
           !irregular element
-          xix_s = xix_s + xix(i,j,k,ispec_irreg)*hlagrange
-          xiy_s = xiy_s + xiy(i,j,k,ispec_irreg)*hlagrange
-          xiz_s = xiz_s + xiz(i,j,k,ispec_irreg)*hlagrange
-          etax_s = etax_s + etax(i,j,k,ispec_irreg)*hlagrange
-          etay_s = etay_s + etay(i,j,k,ispec_irreg)*hlagrange
-          etaz_s = etaz_s + etaz(i,j,k,ispec_irreg)*hlagrange
-          gammax_s = gammax_s + gammax(i,j,k,ispec_irreg)*hlagrange
-          gammay_s = gammay_s + gammay(i,j,k,ispec_irreg)*hlagrange
-          gammaz_s = gammaz_s + gammaz(i,j,k,ispec_irreg)*hlagrange
+          xix_s = xix_s + xixstore(i,j,k,ispec_irreg)*hlagrange
+          xiy_s = xiy_s + xiystore(i,j,k,ispec_irreg)*hlagrange
+          xiz_s = xiz_s + xizstore(i,j,k,ispec_irreg)*hlagrange
+          etax_s = etax_s + etaxstore(i,j,k,ispec_irreg)*hlagrange
+          etay_s = etay_s + etaystore(i,j,k,ispec_irreg)*hlagrange
+          etaz_s = etaz_s + etazstore(i,j,k,ispec_irreg)*hlagrange
+          gammax_s = gammax_s + gammaxstore(i,j,k,ispec_irreg)*hlagrange
+          gammay_s = gammay_s + gammaystore(i,j,k,ispec_irreg)*hlagrange
+          gammaz_s = gammaz_s + gammazstore(i,j,k,ispec_irreg)*hlagrange
         else
           !regular element
           xix_s = xix_s + xix_regular*hlagrange

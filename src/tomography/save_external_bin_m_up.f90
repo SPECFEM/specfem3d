@@ -58,8 +58,11 @@
 
   use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
 
-  use specfem_par, only: NSPEC_IRREGULAR,ispec_is_inner,ATTENUATION,xix,xiy,xiz, &
-            etax,etay,etaz,gammax,gammay,gammaz,jacobian,irregular_element_number,xix_regular,jacobian_regular
+  use specfem_par, only: NSPEC_IRREGULAR,ispec_is_inner,ATTENUATION, &
+            xixstore,xiystore,xizstore, &
+            etaxstore,etaystore,etazstore, &
+            gammaxstore,gammaystore,gammazstore,jacobianstore, &
+            irregular_element_number,xix_regular,jacobian_regular
 
   use specfem_par_elastic, only: rmassx,rmassy,rmassz, &
     nspec_inner_elastic,nspec_outer_elastic,num_phase_ispec_elastic,phase_ispec_inner_elastic, &
@@ -163,16 +166,16 @@
   write(IOUT) xix_regular
   write(IOUT) jacobian_regular
 
-  write(IOUT) xix
-  write(IOUT) xiy
-  write(IOUT) xiz
-  write(IOUT) etax
-  write(IOUT) etay
-  write(IOUT) etaz
-  write(IOUT) gammax
-  write(IOUT) gammay
-  write(IOUT) gammaz
-  write(IOUT) jacobian
+  write(IOUT) xixstore
+  write(IOUT) xiystore
+  write(IOUT) xizstore
+  write(IOUT) etaxstore
+  write(IOUT) etaystore
+  write(IOUT) etazstore
+  write(IOUT) gammaxstore
+  write(IOUT) gammaystore
+  write(IOUT) gammazstore
+  write(IOUT) jacobianstore
 
   write(IOUT) kappastore
   write(IOUT) mustore

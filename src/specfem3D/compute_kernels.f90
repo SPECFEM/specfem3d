@@ -582,7 +582,7 @@
   use specfem_par, only: ngllx, nglly, ngllz, ibool, &
     hprime_xx, hprime_yy, hprime_zz, &
     hprime_xxT, hprime_yyT, hprime_zzT, &
-    xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, CUSTOM_REAL, &
+    xixstore, xiystore, xizstore, etaxstore, etaystore, etazstore, gammaxstore, gammaystore, gammazstore, CUSTOM_REAL, &
     nspec_ab, nglob_ab, ndim, deltat, irregular_element_number, xix_regular
 
   use specfem_par_elastic, only: ispec_is_elastic, rho_kl, cijkl_kl
@@ -868,15 +868,15 @@
               ! irregular element
 
               !*** Get local derivatives of ref square coord wrt Cartesian ones (jacobian)
-              dxil_dxl  = xix(i,j,k,ispec_irreg)
-              dxil_dyl  = xiy(i,j,k,ispec_irreg)
-              dxil_dzl  = xiz(i,j,k,ispec_irreg)
-              detal_dxl = etax(i,j,k,ispec_irreg)
-              detal_dyl = etay(i,j,k,ispec_irreg)
-              detal_dzl = etaz(i,j,k,ispec_irreg)
-              dgaml_dxl = gammax(i,j,k,ispec_irreg)
-              dgaml_dyl = gammay(i,j,k,ispec_irreg)
-              dgaml_dzl = gammaz(i,j,k,ispec_irreg)
+              dxil_dxl  = xixstore(i,j,k,ispec_irreg)
+              dxil_dyl  = xiystore(i,j,k,ispec_irreg)
+              dxil_dzl  = xizstore(i,j,k,ispec_irreg)
+              detal_dxl = etaxstore(i,j,k,ispec_irreg)
+              detal_dyl = etaystore(i,j,k,ispec_irreg)
+              detal_dzl = etazstore(i,j,k,ispec_irreg)
+              dgaml_dxl = gammaxstore(i,j,k,ispec_irreg)
+              dgaml_dyl = gammaystore(i,j,k,ispec_irreg)
+              dgaml_dzl = gammazstore(i,j,k,ispec_irreg)
 
               !*** Strain
               !* Normal state normal strain

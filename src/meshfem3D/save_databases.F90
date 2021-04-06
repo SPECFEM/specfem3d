@@ -143,7 +143,7 @@
 
   ! opens database file
   open(unit=IIN_database,file=prname(1:len_trim(prname))//'Database', &
-        status='unknown',action='write',form='unformatted',iostat=ier)
+       status='unknown',action='write',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'Error opening Database file: ',prname(1:len_trim(prname))//'Database'
     stop 'error opening Database file'
@@ -387,12 +387,14 @@
   call synchronize_all()
 
   write(IIN_database) nspec_CPML_total
+
   if (nspec_CPML_total > 0) then
      write(IIN_database) nspec_CPML
-     do ispec_CPML=1,nspec_CPML
+
+     do ispec_CPML = 1,nspec_CPML
         write(IIN_database) CPML_to_spec(ispec_CPML), CPML_regions(ispec_CPML)
      enddo
-     do ispec=1,nspec
+     do ispec = 1,nspec
         write(IIN_database) is_CPML(ispec)
      enddo
   endif
@@ -400,7 +402,7 @@
   ! MPI Interfaces
   !
   ! note: check with routine write_interfaces_database() to produce identical output
-  if (NPROC_XI >= 2 .or. NPROC_ETA >= 2) then
+  if (NPROC_XI > 1 .or. NPROC_ETA > 1) then
     ! determines number of MPI interfaces for each slice
     nb_interfaces = 4
     interfaces(W:N) = .true.
@@ -535,12 +537,6 @@
         endif
       enddo
     endif
-
-  else
-
-    ! only one slice, no MPI interfaces
-    write(IIN_database) 0,0
-
   endif
 
   close(IIN_database)

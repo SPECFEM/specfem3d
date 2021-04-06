@@ -27,16 +27,24 @@
 
 ! for external mesh
 
-  subroutine save_arrays_solver_ext_mesh(nspec,nglob,APPROXIMATE_OCEAN_LOAD,ibool, &
-                    num_interfaces_ext_mesh,my_neighbors_ext_mesh,nibool_interfaces_ext_mesh, &
-                    max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
-                    SAVE_MESH_FILES,ANISOTROPY)
+  subroutine save_arrays_solver_ext_mesh(nspec,ibool)
 
-  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IOUT, &
+  use constants, only: NGLLX,NGLLY,NGLLZ,IMAIN,IOUT,myrank
+
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
+    APPROXIMATE_OCEAN_LOAD, SAVE_MESH_FILES, ANISOTROPY
+
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
+
+  use generate_databases_par, only: &
     nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
     SIMULATION_TYPE,SAVE_FORWARD,mask_ibool_interior_domain, &
     STACEY_ABSORBING_CONDITIONS,USE_MESH_COLORING_GPU
+
+  ! MPI interfaces
+  use generate_databases_par, only: num_interfaces_ext_mesh,my_neighbors_ext_mesh, &
+    nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh
 
   ! PML
   use generate_databases_par, only: PML_CONDITIONS, &
@@ -49,28 +57,16 @@
 
   ! mesh surface
   use generate_databases_par, only: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh, &
-    nfaces_surface,nspec_irregular
+    nfaces_surface
 
   use create_regions_mesh_ext_par
-
-  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
+  use create_regions_mesh_ext_par, only: nglob => nglob_dummy
 
   implicit none
 
-  integer,intent(in) :: nspec,nglob
-  ! ocean load
-  logical,intent(in) :: APPROXIMATE_OCEAN_LOAD
+  integer,intent(in) :: nspec
   ! mesh coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
-  ! MPI interfaces
-  integer,intent(in) :: num_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh),intent(in) :: my_neighbors_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
-  integer,intent(in) :: max_interface_size_ext_mesh
-  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
-
-  logical,intent(in) :: SAVE_MESH_FILES
-  logical,intent(in) :: ANISOTROPY
 
   ! local parameters
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
@@ -79,8 +75,17 @@
   integer :: ier,i
   character(len=MAX_STRING_LEN) :: filename
 
-  ! saves mesh file proc***_external_mesh.bin
+  ! database file name
   filename = prname(1:len_trim(prname))//'external_mesh.bin'
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '     using binary file format'
+    write(IMAIN,*) '     database file (for rank 0): ',trim(filename)
+    call flush_IMAIN()
+  endif
+
+  ! saves mesh file proc***_external_mesh.bin
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',form='unformatted',iostat=ier)
   if (ier /= 0) stop 'error opening database proc######_external_mesh.bin'
 
@@ -339,7 +344,7 @@
   close(IOUT)
 
   ! stores arrays in binary files
-  if (SAVE_MESH_FILES) call save_arrays_solver_files(nspec,nglob,ibool)
+  if (SAVE_MESH_FILES) call save_arrays_solver_files(nspec,ibool)
 
   ! if SAVE_MESH_FILES is true then the files have already been saved, no need to save them again
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
@@ -389,24 +394,26 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine save_arrays_solver_files(nspec,nglob,ibool)
+  subroutine save_arrays_solver_files(nspec,ibool)
 
 ! outputs binary files for single mesh parameters (for example vp, vs, rho, ..)
 
-  use constants, only: IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC
+  use constants, only: IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
+    NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS,CUSTOM_REAL, &
+    myrank
 
-  use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
+    NPROC
 
   ! MPI interfaces
   use generate_databases_par, only: nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,num_interfaces_ext_mesh
 
   use create_regions_mesh_ext_par
-
-  use shared_parameters, only: NPROC
+  use create_regions_mesh_ext_par, only: nglob => nglob_dummy
 
   implicit none
 
-  integer,intent(in) :: nspec,nglob
+  integer,intent(in) :: nspec
   ! mesh coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 

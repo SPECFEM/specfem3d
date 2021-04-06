@@ -3093,7 +3093,10 @@ contains
 
   subroutine compute_first_derivatives_lagrange(Df, field_to_derivate)
 
-    use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx, irregular_element_number, &
+    use specfem_par, only: xixstore, xiystore, xizstore, &
+                           etaxstore, etaystore, etazstore, &
+                           gammaxstore, gammaystore, gammazstore, &
+                           hprime_xx, irregular_element_number, &
                            xix_regular
 
     implicit none
@@ -3145,15 +3148,15 @@ contains
                 enddo
                 if (ispec_irreg /= 0) then
                   !irregular element
-                  xixl = xix(i,j,k,ispec_irreg)
-                  xiyl = xiy(i,j,k,ispec_irreg)
-                  xizl = xiz(i,j,k,ispec_irreg)
-                  etaxl = etax(i,j,k,ispec_irreg)
-                  etayl = etay(i,j,k,ispec_irreg)
-                  etazl = etaz(i,j,k,ispec_irreg)
-                  gammaxl = gammax(i,j,k,ispec_irreg)
-                  gammayl = gammay(i,j,k,ispec_irreg)
-                  gammazl = gammaz(i,j,k,ispec_irreg)
+                  xixl = xixstore(i,j,k,ispec_irreg)
+                  xiyl = xiystore(i,j,k,ispec_irreg)
+                  xizl = xizstore(i,j,k,ispec_irreg)
+                  etaxl = etaxstore(i,j,k,ispec_irreg)
+                  etayl = etaystore(i,j,k,ispec_irreg)
+                  etazl = etazstore(i,j,k,ispec_irreg)
+                  gammaxl = gammaxstore(i,j,k,ispec_irreg)
+                  gammayl = gammaystore(i,j,k,ispec_irreg)
+                  gammazl = gammazstore(i,j,k,ispec_irreg)
 
                   Df(1,i,j,k,ispec) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
                   Df(2,i,j,k,ispec) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
@@ -3183,7 +3186,8 @@ contains
 
   subroutine compute_laplac_lagrange(Lapf, field_to_derivate)
 
-    use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx, irregular_element_number, &
+    use specfem_par, only: xixstore, xiystore, xizstore, etaxstore, etaystore, etazstore, &
+                           gammaxstore, gammaystore, gammazstore, hprime_xx, irregular_element_number, &
                            xix_regular
 
 
@@ -3246,15 +3250,15 @@ contains
 
                 if (ispec_irreg /= 0) then
                   !irregular element
-                  xixl = xix(i,j,k,ispec_irreg)
-                  xiyl = xiy(i,j,k,ispec_irreg)
-                  xizl = xiz(i,j,k,ispec_irreg)
-                  etaxl = etax(i,j,k,ispec_irreg)
-                  etayl = etay(i,j,k,ispec_irreg)
-                  etazl = etaz(i,j,k,ispec_irreg)
-                  gammaxl = gammax(i,j,k,ispec_irreg)
-                  gammayl = gammay(i,j,k,ispec_irreg)
-                  gammazl = gammaz(i,j,k,ispec_irreg)
+                  xixl = xixstore(i,j,k,ispec_irreg)
+                  xiyl = xiystore(i,j,k,ispec_irreg)
+                  xizl = xizstore(i,j,k,ispec_irreg)
+                  etaxl = etaxstore(i,j,k,ispec_irreg)
+                  etayl = etaystore(i,j,k,ispec_irreg)
+                  etazl = etazstore(i,j,k,ispec_irreg)
+                  gammaxl = gammaxstore(i,j,k,ispec_irreg)
+                  gammayl = gammaystore(i,j,k,ispec_irreg)
+                  gammazl = gammazstore(i,j,k,ispec_irreg)
 
                   dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
                   dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
@@ -3309,15 +3313,15 @@ contains
                 enddo
                 if (ispec_irreg /= 0) then
                   !irregular element
-                  xixl = xix(i,j,k,ispec_irreg)
-                  xiyl = xiy(i,j,k,ispec_irreg)
-                  xizl = xiz(i,j,k,ispec_irreg)
-                  etaxl = etax(i,j,k,ispec_irreg)
-                  etayl = etay(i,j,k,ispec_irreg)
-                  etazl = etaz(i,j,k,ispec_irreg)
-                  gammaxl = gammax(i,j,k,ispec_irreg)
-                  gammayl = gammay(i,j,k,ispec_irreg)
-                  gammazl = gammaz(i,j,k,ispec_irreg)
+                  xixl = xixstore(i,j,k,ispec_irreg)
+                  xiyl = xiystore(i,j,k,ispec_irreg)
+                  xizl = xizstore(i,j,k,ispec_irreg)
+                  etaxl = etaxstore(i,j,k,ispec_irreg)
+                  etayl = etaystore(i,j,k,ispec_irreg)
+                  etazl = etazstore(i,j,k,ispec_irreg)
+                  gammaxl = gammaxstore(i,j,k,ispec_irreg)
+                  gammayl = gammaystore(i,j,k,ispec_irreg)
+                  gammazl = gammazstore(i,j,k,ispec_irreg)
 
                   dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
                   !dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
@@ -3374,15 +3378,15 @@ contains
 
                 if (ispec_irreg /= 0) then
                   !irregular element
-                  xixl = xix(i,j,k,ispec_irreg)
-                  xiyl = xiy(i,j,k,ispec_irreg)
-                  xizl = xiz(i,j,k,ispec_irreg)
-                  etaxl = etax(i,j,k,ispec_irreg)
-                  etayl = etay(i,j,k,ispec_irreg)
-                  etazl = etaz(i,j,k,ispec_irreg)
-                  gammaxl = gammax(i,j,k,ispec_irreg)
-                  gammayl = gammay(i,j,k,ispec_irreg)
-                  gammazl = gammaz(i,j,k,ispec_irreg)
+                  xixl = xixstore(i,j,k,ispec_irreg)
+                  xiyl = xiystore(i,j,k,ispec_irreg)
+                  xizl = xizstore(i,j,k,ispec_irreg)
+                  etaxl = etaxstore(i,j,k,ispec_irreg)
+                  etayl = etaystore(i,j,k,ispec_irreg)
+                  etazl = etazstore(i,j,k,ispec_irreg)
+                  gammaxl = gammaxstore(i,j,k,ispec_irreg)
+                  gammayl = gammaystore(i,j,k,ispec_irreg)
+                  gammazl = gammazstore(i,j,k,ispec_irreg)
 
                   !dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
                   dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
@@ -3434,15 +3438,15 @@ contains
                 enddo
                 if (ispec_irreg /= 0) then
                   !irregular element
-                  xixl = xix(i,j,k,ispec_irreg)
-                  xiyl = xiy(i,j,k,ispec_irreg)
-                  xizl = xiz(i,j,k,ispec_irreg)
-                  etaxl = etax(i,j,k,ispec_irreg)
-                  etayl = etay(i,j,k,ispec_irreg)
-                  etazl = etaz(i,j,k,ispec_irreg)
-                  gammaxl = gammax(i,j,k,ispec_irreg)
-                  gammayl = gammay(i,j,k,ispec_irreg)
-                  gammazl = gammaz(i,j,k,ispec_irreg)
+                  xixl = xixstore(i,j,k,ispec_irreg)
+                  xiyl = xiystore(i,j,k,ispec_irreg)
+                  xizl = xizstore(i,j,k,ispec_irreg)
+                  etaxl = etaxstore(i,j,k,ispec_irreg)
+                  etayl = etaystore(i,j,k,ispec_irreg)
+                  etazl = etazstore(i,j,k,ispec_irreg)
+                  gammaxl = gammaxstore(i,j,k,ispec_irreg)
+                  gammayl = gammaystore(i,j,k,ispec_irreg)
+                  gammazl = gammazstore(i,j,k,ispec_irreg)
 
                   !dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
                   !dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
@@ -3501,15 +3505,15 @@ contains
 !!$
 !!$                enddo
 !!$
-!!$                xixl = xix(i,j,k,ispec)
-!!$                xiyl = xiy(i,j,k,ispec)
-!!$                xizl = xiz(i,j,k,ispec)
-!!$                etaxl = etax(i,j,k,ispec)
-!!$                etayl = etay(i,j,k,ispec)
-!!$                etazl = etaz(i,j,k,ispec)
-!!$                gammaxl = gammax(i,j,k,ispec)
-!!$                gammayl = gammay(i,j,k,ispec)
-!!$                gammazl = gammaz(i,j,k,ispec)
+!!$                xixl = xixstore(i,j,k,ispec)
+!!$                xiyl = xiystore(i,j,k,ispec)
+!!$                xizl = xizstore(i,j,k,ispec)
+!!$                etaxl = etaxstore(i,j,k,ispec)
+!!$                etayl = etaystore(i,j,k,ispec)
+!!$                etazl = etazstore(i,j,k,ispec)
+!!$                gammaxl = gammaxstore(i,j,k,ispec)
+!!$                gammayl = gammaystore(i,j,k,ispec)
+!!$                gammazl = gammazstore(i,j,k,ispec)
 !!$
 !!$                dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l  ! df/dx
 !!$                dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l  ! df/dy
@@ -3545,15 +3549,15 @@ contains
 !!$
 !!$                enddo
 !!$
-!!$                xixl = xix(i,j,k,ispec)
-!!$                xiyl = xiy(i,j,k,ispec)
-!!$                xizl = xiz(i,j,k,ispec)
-!!$                etaxl = etax(i,j,k,ispec)
-!!$                etayl = etay(i,j,k,ispec)
-!!$                etazl = etaz(i,j,k,ispec)
-!!$                gammaxl = gammax(i,j,k,ispec)
-!!$                gammayl = gammay(i,j,k,ispec)
-!!$                gammazl = gammaz(i,j,k,ispec)
+!!$                xixl = xixstore(i,j,k,ispec)
+!!$                xiyl = xiystore(i,j,k,ispec)
+!!$                xizl = xizstore(i,j,k,ispec)
+!!$                etaxl = etaxstore(i,j,k,ispec)
+!!$                etayl = etaystore(i,j,k,ispec)
+!!$                etazl = etazstore(i,j,k,ispec)
+!!$                gammaxl = gammaxstore(i,j,k,ispec)
+!!$                gammayl = gammaystore(i,j,k,ispec)
+!!$                gammazl = gammazstore(i,j,k,ispec)
 !!$
 !!$                dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
 !!$                !dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
@@ -3589,15 +3593,15 @@ contains
 !!$
 !!$                enddo
 !!$
-!!$                xixl = xix(i,j,k,ispec)
-!!$                xiyl = xiy(i,j,k,ispec)
-!!$                xizl = xiz(i,j,k,ispec)
-!!$                etaxl = etax(i,j,k,ispec)
-!!$                etayl = etay(i,j,k,ispec)
-!!$                etazl = etaz(i,j,k,ispec)
-!!$                gammaxl = gammax(i,j,k,ispec)
-!!$                gammayl = gammay(i,j,k,ispec)
-!!$                gammazl = gammaz(i,j,k,ispec)
+!!$                xixl = xixstore(i,j,k,ispec)
+!!$                xiyl = xiystore(i,j,k,ispec)
+!!$                xizl = xizstore(i,j,k,ispec)
+!!$                etaxl = etaxstore(i,j,k,ispec)
+!!$                etayl = etaystore(i,j,k,ispec)
+!!$                etazl = etazstore(i,j,k,ispec)
+!!$                gammaxl = gammaxstore(i,j,k,ispec)
+!!$                gammayl = gammaystore(i,j,k,ispec)
+!!$                gammazl = gammazstore(i,j,k,ispec)
 !!$
 !!$               ! dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
 !!$                dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
@@ -3633,15 +3637,15 @@ contains
 !!$
 !!$                enddo
 !!$
-!!$                xixl = xix(i,j,k,ispec)
-!!$                xiyl = xiy(i,j,k,ispec)
-!!$                xizl = xiz(i,j,k,ispec)
-!!$                etaxl = etax(i,j,k,ispec)
-!!$                etayl = etay(i,j,k,ispec)
-!!$                etazl = etaz(i,j,k,ispec)
-!!$                gammaxl = gammax(i,j,k,ispec)
-!!$                gammayl = gammay(i,j,k,ispec)
-!!$                gammazl = gammaz(i,j,k,ispec)
+!!$                xixl = xixstore(i,j,k,ispec)
+!!$                xiyl = xiystore(i,j,k,ispec)
+!!$                xizl = xizstore(i,j,k,ispec)
+!!$                etaxl = etaxstore(i,j,k,ispec)
+!!$                etayl = etaystore(i,j,k,ispec)
+!!$                etazl = etazstore(i,j,k,ispec)
+!!$                gammaxl = gammaxstore(i,j,k,ispec)
+!!$                gammayl = gammaystore(i,j,k,ispec)
+!!$                gammazl = gammazstore(i,j,k,ispec)
 !!$
 !!$               ! dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
 !!$               ! dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
@@ -3795,15 +3799,15 @@ contains
 !!$
 !!$                enddo
 !!$
-!!$                xixl = xix(i,j,k,ispec)
-!!$                xiyl = xiy(i,j,k,ispec)
-!!$                xizl = xiz(i,j,k,ispec)
-!!$                etaxl = etax(i,j,k,ispec)
-!!$                etayl = etay(i,j,k,ispec)
-!!$                etazl = etaz(i,j,k,ispec)
-!!$                gammaxl = gammax(i,j,k,ispec)
-!!$                gammayl = gammay(i,j,k,ispec)
-!!$                gammazl = gammaz(i,j,k,ispec)
+!!$                xixl = xixstore(i,j,k,ispec)
+!!$                xiyl = xiystore(i,j,k,ispec)
+!!$                xizl = xizstore(i,j,k,ispec)
+!!$                etaxl = etaxstore(i,j,k,ispec)
+!!$                etayl = etaystore(i,j,k,ispec)
+!!$                etazl = etazstore(i,j,k,ispec)
+!!$                gammaxl = gammaxstore(i,j,k,ispec)
+!!$                gammayl = gammaystore(i,j,k,ispec)
+!!$                gammazl = gammazstore(i,j,k,ispec)
 !!$
 !!$                dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l  ! df/dx
 !!$                dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l  ! df/dy
@@ -3840,15 +3844,15 @@ contains
 !!$
 !!$                enddo
 !!$
-!!$                xixl = xix(i,j,k,ispec)
-!!$                xiyl = xiy(i,j,k,ispec)
-!!$                xizl = xiz(i,j,k,ispec)
-!!$                etaxl = etax(i,j,k,ispec)
-!!$                etayl = etay(i,j,k,ispec)
-!!$                etazl = etaz(i,j,k,ispec)
-!!$                gammaxl = gammax(i,j,k,ispec)
-!!$                gammayl = gammay(i,j,k,ispec)
-!!$                gammazl = gammaz(i,j,k,ispec)
+!!$                xixl = xixstore(i,j,k,ispec)
+!!$                xiyl = xiystore(i,j,k,ispec)
+!!$                xizl = xizstore(i,j,k,ispec)
+!!$                etaxl = etaxstore(i,j,k,ispec)
+!!$                etayl = etaystore(i,j,k,ispec)
+!!$                etazl = etazstore(i,j,k,ispec)
+!!$                gammaxl = gammaxstore(i,j,k,ispec)
+!!$                gammayl = gammaystore(i,j,k,ispec)
+!!$                gammazl = gammazstore(i,j,k,ispec)
 !!$
 !!$                dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
 !!$                LapF(iglob) = dF(1,i,j,k)
@@ -3881,15 +3885,15 @@ contains
 !!$
 !!$                enddo
 !!$
-!!$                xixl = xix(i,j,k,ispec)
-!!$                xiyl = xiy(i,j,k,ispec)
-!!$                xizl = xiz(i,j,k,ispec)
-!!$                etaxl = etax(i,j,k,ispec)
-!!$                etayl = etay(i,j,k,ispec)
-!!$                etazl = etaz(i,j,k,ispec)
-!!$                gammaxl = gammax(i,j,k,ispec)
-!!$                gammayl = gammay(i,j,k,ispec)
-!!$                gammazl = gammaz(i,j,k,ispec)
+!!$                xixl = xixstore(i,j,k,ispec)
+!!$                xiyl = xiystore(i,j,k,ispec)
+!!$                xizl = xizstore(i,j,k,ispec)
+!!$                etaxl = etaxstore(i,j,k,ispec)
+!!$                etayl = etaystore(i,j,k,ispec)
+!!$                etazl = etazstore(i,j,k,ispec)
+!!$                gammaxl = gammaxstore(i,j,k,ispec)
+!!$                gammayl = gammaystore(i,j,k,ispec)
+!!$                gammazl = gammazstore(i,j,k,ispec)
 !!$
 !!$
 !!$                dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
@@ -3923,15 +3927,15 @@ contains
 !!$
 !!$                enddo
 !!$
-!!$                xixl = xix(i,j,k,ispec)
-!!$                xiyl = xiy(i,j,k,ispec)
-!!$                xizl = xiz(i,j,k,ispec)
-!!$                etaxl = etax(i,j,k,ispec)
-!!$                etayl = etay(i,j,k,ispec)
-!!$                etazl = etaz(i,j,k,ispec)
-!!$                gammaxl = gammax(i,j,k,ispec)
-!!$                gammayl = gammay(i,j,k,ispec)
-!!$                gammazl = gammaz(i,j,k,ispec)
+!!$                xixl = xixstore(i,j,k,ispec)
+!!$                xiyl = xiystore(i,j,k,ispec)
+!!$                xizl = xizstore(i,j,k,ispec)
+!!$                etaxl = etaxstore(i,j,k,ispec)
+!!$                etayl = etaystore(i,j,k,ispec)
+!!$                etazl = etazstore(i,j,k,ispec)
+!!$                gammaxl = gammaxstore(i,j,k,ispec)
+!!$                gammayl = gammaystore(i,j,k,ispec)
+!!$                gammazl = gammazstore(i,j,k,ispec)
 !!$
 !!$                dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
 !!$                LapF(iglob) = LapF(iglob) + dF(3,i,j,k)
@@ -4536,8 +4540,9 @@ contains
 
   subroutine compute_derivative_with_lagrange_polynomials(derivative_of_field, field_to_derivate)
 
-  use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx, irregular_element_number, &
-                          xix_regular
+  use specfem_par, only: xixstore, xiystore, xizstore, etaxstore, etaystore, etazstore, &
+                         gammaxstore, gammaystore, gammazstore, hprime_xx, irregular_element_number, &
+                         xix_regular
 
   implicit none
   !! size (NDIM,NGLLX, NGLLY, NGLLZ, NSPEC_AB)
@@ -4591,15 +4596,15 @@ contains
 
           if (ispec_irreg /= 0) then
             !irregular element
-            xixl = xix(i,j,k,ispec_irreg)
-            xiyl = xiy(i,j,k,ispec_irreg)
-            xizl = xiz(i,j,k,ispec_irreg)
-            etaxl = etax(i,j,k,ispec_irreg)
-            etayl = etay(i,j,k,ispec_irreg)
-            etazl = etaz(i,j,k,ispec_irreg)
-            gammaxl = gammax(i,j,k,ispec_irreg)
-            gammayl = gammay(i,j,k,ispec_irreg)
-            gammazl = gammaz(i,j,k,ispec_irreg)
+            xixl = xixstore(i,j,k,ispec_irreg)
+            xiyl = xiystore(i,j,k,ispec_irreg)
+            xizl = xizstore(i,j,k,ispec_irreg)
+            etaxl = etaxstore(i,j,k,ispec_irreg)
+            etayl = etaystore(i,j,k,ispec_irreg)
+            etazl = etazstore(i,j,k,ispec_irreg)
+            gammaxl = gammaxstore(i,j,k,ispec_irreg)
+            gammayl = gammaystore(i,j,k,ispec_irreg)
+            gammazl = gammazstore(i,j,k,ispec_irreg)
 
             dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
             dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
@@ -4635,7 +4640,8 @@ contains
 
   subroutine compute_2nd_derivative_with_lagrange_polynomials(derivative_of_field, field_to_derivate)
 
-   use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx,irregular_element_number, &
+   use specfem_par, only: xixstore, xiystore, xizstore, etaxstore, etaystore, etazstore, &
+                          gammaxstore, gammaystore, gammazstore, hprime_xx, irregular_element_number, &
                           xix_regular
 
    implicit none
@@ -4709,15 +4715,15 @@ contains
                enddo
                if (ispec_irreg /= 0) then !irregular element
 
-                 xixl = xix(i,j,k,ispec_irreg)
-                 xiyl = xiy(i,j,k,ispec_irreg)
-                 xizl = xiz(i,j,k,ispec_irreg)
-                 etaxl = etax(i,j,k,ispec_irreg)
-                 etayl = etay(i,j,k,ispec_irreg)
-                 etazl = etaz(i,j,k,ispec_irreg)
-                 gammaxl = gammax(i,j,k,ispec_irreg)
-                 gammayl = gammay(i,j,k,ispec_irreg)
-                 gammazl = gammaz(i,j,k,ispec_irreg)
+                 xixl = xixstore(i,j,k,ispec_irreg)
+                 xiyl = xiystore(i,j,k,ispec_irreg)
+                 xizl = xizstore(i,j,k,ispec_irreg)
+                 etaxl = etaxstore(i,j,k,ispec_irreg)
+                 etayl = etaystore(i,j,k,ispec_irreg)
+                 etazl = etazstore(i,j,k,ispec_irreg)
+                 gammaxl = gammaxstore(i,j,k,ispec_irreg)
+                 gammayl = gammaystore(i,j,k,ispec_irreg)
+                 gammazl = gammazstore(i,j,k,ispec_irreg)
 
                  dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
                  dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l

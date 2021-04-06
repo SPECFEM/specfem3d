@@ -37,6 +37,26 @@
 
   integer :: ier
 
+  ! flag for any movie simulation
+  if (MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. MOVIE_VOLUME .or. PNM_IMAGE) then
+    MOVIE_SIMULATION = .true.
+  else
+    MOVIE_SIMULATION = .false.
+  endif
+
+  ! user output
+  if (MOVIE_SIMULATION) then
+    if (myrank == 0) then
+      write(IMAIN,*) 'movie simulation:'
+      if (CREATE_SHAKEMAP) write(IMAIN,*) '  shakemap output'
+      if (MOVIE_SURFACE)   write(IMAIN,*) '  surface movie'
+      if (MOVIE_VOLUME)    write(IMAIN,*) '  volume movie'
+      if (PNM_IMAGE)       write(IMAIN,*) '  PNM image output'
+    endif
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
   ! note: surface points/elements in ispec_is_surface_external_mesh, iglob_is_surface_external_mesh and number
   !       of faces in nfaces_surface have been detected in xgenerate_databases and stored in database.
   !       it will be used for receiver detection, movie files and shakemaps
@@ -70,6 +90,14 @@
 
   ! stores wavefields for whole volume
   if (MOVIE_VOLUME) then
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) 'volume movies:'
+      write(IMAIN,*) '  number of steps between frames = ',NTSTEP_BETWEEN_FRAMES
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+
     ! temporary fields for output
     allocate(velocity_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1731')
@@ -102,6 +130,14 @@
 
   ! initializes cross-section gif image
   if (PNM_IMAGE) then
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) 'PNM image output:'
+      write(IMAIN,*) '  number of steps between frames = ',NTSTEP_BETWEEN_FRAMES
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+
     call write_PNM_initialize()
   endif
 

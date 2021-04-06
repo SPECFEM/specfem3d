@@ -29,6 +29,8 @@
 
   use constants, only: myrank,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,TWO,IMAIN
 
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION
+
   use generate_databases_par, only: IMODEL, &
     IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL, &
     IMODEL_COUPLED, &

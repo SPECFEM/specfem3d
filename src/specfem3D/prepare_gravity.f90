@@ -222,15 +222,15 @@
           ! computes the Jacobian
           if (ispec_irreg /= 0) then
             ! irregular element
-            xixl = xix(i,j,k,ispec_irreg)
-            xiyl = xiy(i,j,k,ispec_irreg)
-            xizl = xiz(i,j,k,ispec_irreg)
-            etaxl = etax(i,j,k,ispec_irreg)
-            etayl = etay(i,j,k,ispec_irreg)
-            etazl = etaz(i,j,k,ispec_irreg)
-            gammaxl = gammax(i,j,k,ispec_irreg)
-            gammayl = gammay(i,j,k,ispec_irreg)
-            gammazl = gammaz(i,j,k,ispec_irreg)
+            xixl = xixstore(i,j,k,ispec_irreg)
+            xiyl = xiystore(i,j,k,ispec_irreg)
+            xizl = xizstore(i,j,k,ispec_irreg)
+            etaxl = etaxstore(i,j,k,ispec_irreg)
+            etayl = etaystore(i,j,k,ispec_irreg)
+            etazl = etazstore(i,j,k,ispec_irreg)
+            gammaxl = gammaxstore(i,j,k,ispec_irreg)
+            gammayl = gammaystore(i,j,k,ispec_irreg)
+            gammazl = gammazstore(i,j,k,ispec_irreg)
             ! do this in double precision for accuracy
             jacobianl = 1.d0 / dble(xixl*(etayl*gammazl-etazl*gammayl) &
                           - xiyl*(etaxl*gammazl-etazl*gammaxl) &

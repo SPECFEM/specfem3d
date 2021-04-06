@@ -233,6 +233,7 @@
     allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 615')
     if (ier /= 0) stop 'error allocating array itopo_bathy'
+    itopo_bathy(:,:) = 0
 
     call read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO)
 
@@ -248,7 +249,7 @@
     allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 616')
     if (ier /= 0) stop 'error allocating dummy array itopo_bathy'
-
+    itopo_bathy(:,:) = 0
   endif
 
   end subroutine read_topography

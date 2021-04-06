@@ -25,30 +25,29 @@
 !
 !=====================================================================
 
-  subroutine get_coupling_surfaces(nspec,ibool,NPROC, &
-                                   nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                   num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-                                   my_neighbors_ext_mesh)
+  subroutine get_coupling_surfaces(nspec,ibool)
 
 ! determines coupling surface for acoustic-elastic domains
 ! based on ispec_is_acoustic, ispec_is_elastic and ispec_is_poroelastic arrays
 
   use constants, only: myrank,NGLLX,NGLLY,NGLLZ,IMAIN
+
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
+    NPROC
+
+  ! MPI interfaces
+  use generate_databases_par, only: num_interfaces_ext_mesh,my_neighbors_ext_mesh, &
+    nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh
+
   use create_regions_mesh_ext_par
 
   implicit none
 
-! number of spectral elements in each block
-  integer,intent(in) :: nspec,NPROC
+  ! number of spectral elements in each block
+  integer,intent(in) :: nspec
 
-! arrays with the mesh
+  ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
-
-! MPI communication
-  integer,intent(in) :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh),intent(in) :: my_neighbors_ext_mesh
-  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
 
   ! local parameters
   integer, dimension(:), allocatable :: elastic_flag,acoustic_flag,poroelastic_flag

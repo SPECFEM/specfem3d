@@ -30,6 +30,9 @@
 ! sets up mesh coloring and permutes elements
 
   use constants, only: myrank,NGLLX,NGLLY,NGLLZ,IMAIN,USE_MESH_COLORING_GPU
+
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION
+
   use create_regions_mesh_ext_par
 
   implicit none
@@ -413,7 +416,9 @@
 
   subroutine setup_permutation(myrank,nspec,nglob,ibool,ANISOTROPY,perm,SAVE_MESH_FILES)
 
-  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN,nspec_irregular, &
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION
+
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN, &
     PML_CONDITIONS,is_CPML,CPML_to_spec,NSPEC_CPML,ATTENUATION
 
   use create_regions_mesh_ext_par
