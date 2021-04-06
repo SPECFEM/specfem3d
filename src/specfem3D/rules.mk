@@ -244,14 +244,8 @@ asdf_specfem3D_OBJECTS = \
         $O/read_adjoint_sources_ASDF.spec.o \
         $(EMPTY_MACRO)
 
-asdf_specfem3D_SHARED_OBJECTS = \
-        $O/asdf_manager.shared_asdf.o \
-        $(EMPTY_MACRO)
-
-asdf_specfem3D_SHARED_STUBS = \
-        $O/asdf_method_stubs.cc.o \
-        $O/asdf_manager_stubs.shared_asdf.o \
-        $(EMPTY_MACRO)
+asdf_specfem3D_SHARED_OBJECTS = $(asdf_shared_OBJECTS)
+asdf_specfem3D_SHARED_STUBS = $(asdf_shared_STUBS)
 
 # conditional asdf linking
 ifeq ($(ASDF),yes)

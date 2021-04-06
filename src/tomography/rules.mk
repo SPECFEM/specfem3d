@@ -214,10 +214,7 @@ endif
 ### ASDF
 ###
 
-asdf_specfem3D_SHARED_STUBS = \
-        $O/asdf_method_stubs.cc.o \
-        $O/asdf_manager_stubs.shared_asdf.o \
-        $(EMPTY_MACRO)
+asdf_specfem3D_SHARED_STUBS = $(asdf_shared_STUBS)
 
 # conditional asdf linking
 xmodel_update_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_STUBS)

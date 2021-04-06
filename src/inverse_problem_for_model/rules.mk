@@ -202,7 +202,6 @@ inverse_problem_for_model_OBJECTS += \
 
 
 inverse_problem_for_model_SHARED_OBJECTS = \
-	$O/asdf_method_stubs.cc.o \
 	$O/shared_par.shared_module.o \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
@@ -310,6 +309,18 @@ adios_inverse_problem_for_model_STUBS = \
 adios_inverse_problem_for_model_PRESTUBS = \
 	$O/adios_manager_stubs.shared_noadios.o
 
+
+# conditional asdf linking
+ifeq ($(ASDF),yes)
+INVERSE_LINK_FLAGS += $(ASDF_LIBS)
+inverse_problem_for_model_OBJECTS += $(asdf_specfem3D_OBJECTS)
+inverse_problem_for_model_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_OBJECTS)
+else
+inverse_problem_for_model_OBJECTS += $(asdf_specfem3D_STUBS)
+inverse_problem_for_model_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_STUBS)
+endif
+
+
 # conditional adios linking
 ifeq ($(ADIOS),no)
 adios_inverse_problem_for_model_OBJECTS = $(adios_inverse_problem_for_model_STUBS)
@@ -318,17 +329,6 @@ endif
 inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_OBJECTS)
 inverse_problem_for_model_SHARED_OBJECTS += $(adios_inverse_problem_for_model_PREOBJECTS)
 
-asdf_inverse_problem_for_model_STUBS = \
-	$O/asdf_method_stubs.cc.o
-
-asdf_inverse_problem_for_model_PRESTUBS = \
-	$O/asdf_manager_stubs.shared_asdf.o
-
-ifeq ($(ASDF),no)
-asdf_inverse_problem_for_model_PREOBJECTS = $(asdf_inverse_problem_for_model_PRESTUBS)
-endif
-inverse_problem_for_model_OBJECTS += $(asdf_inverse_problem_for_model_OBJECTS)
-inverse_problem_for_model_SHARED_OBJECTS += $(asdf_inverse_problem_for_model_PREOBJECTS)
 
 ifeq ($(VTK),yes)
 inverse_problem_for_model_OBJECTS += \
@@ -356,7 +356,7 @@ ${E}/xinverse_problem_for_model: $(inverse_problem_for_model_OBJECTS) $(inverse_
 	@echo ""
 	@echo $(INFO_CUDA_INVERSE_PROBLEM)
 	@echo ""
-	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK)
+	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK) $(INVERSE_LINK_FLAGS)
 	@echo ""
 
 else
@@ -366,7 +366,7 @@ ${E}/xinverse_problem_for_model: $(inverse_problem_for_model_OBJECTS) $(inverse_
 	@echo ""
 	@echo "building xinverse_problem_for_model"
 	@echo ""
-	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS)
+	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS) $(INVERSE_LINK_FLAGS)
 	@echo ""
 
 endif
