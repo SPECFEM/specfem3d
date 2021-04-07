@@ -38,7 +38,7 @@
   integer :: num_xmin,num_xmax,num_ymin,num_ymax,num_top,num_bottom,num
   integer :: num_cpml
   integer :: num_moho
-  integer :: i,j
+  integer :: i,j,inode,imat,ispec,ie,dummy_node,dummy_elmnt,ier
 
   ! read databases about external mesh simulation
   call create_name_database(prname,myrank,LOCAL_PATH)

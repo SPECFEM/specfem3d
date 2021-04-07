@@ -46,7 +46,7 @@
   character(len=*) :: rec_filename
 
   ! receivers
-  integer :: nrec
+  integer,intent(in) :: nrec
   integer, dimension(nrec),intent(out) :: islice_selected_rec,ispec_selected_rec
   double precision, dimension(nrec),intent(out) :: xi_receiver,eta_receiver,gamma_receiver
   character(len=MAX_LENGTH_STATION_NAME), dimension(nrec),intent(out) :: station_name

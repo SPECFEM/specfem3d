@@ -60,7 +60,7 @@
   double precision, dimension(:,:,:,:), allocatable :: xstore,ystore,zstore
 
   ! proc numbers for MPI
-  integer :: sizeprocs,ier
+  integer :: sizeprocs
 
   integer :: NX_TOPO,NY_TOPO
   integer, dimension(:,:), allocatable :: itopo_bathy
@@ -82,14 +82,11 @@
   ! for Databases of external meshes
   double precision, dimension(:,:), allocatable :: nodes_coords_ext_mesh
 
-  integer :: dummy_node
-  integer :: dummy_elmnt
-
-  integer :: ispec, inode, num_interface,ie,imat,iface,icorner
+  integer :: num_interface
   integer :: nnodes_ext_mesh, nelmnts_ext_mesh
-  integer  :: num_interfaces_ext_mesh
-  integer  :: max_interface_size_ext_mesh
-  integer  :: nmat_ext_mesh, nundefMat_ext_mesh
+  integer :: num_interfaces_ext_mesh
+  integer :: max_interface_size_ext_mesh
+  integer :: nmat_ext_mesh, nundefMat_ext_mesh
   integer, dimension(:), allocatable  :: my_neighbors_ext_mesh
   integer, dimension(:), allocatable  :: my_nelmnts_neighbors_ext_mesh
 

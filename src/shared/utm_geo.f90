@@ -113,10 +113,10 @@
 
 ! Note that the UTM grids are actually Mercators which
 ! employ the standard UTM scale factor 0.9996 and set the Easting Origin to 500,000.
-  double precision, parameter :: scfa=0.9996d0
-  double precision, parameter :: north=0.d0, east=500000.d0
+  double precision, parameter :: scfa = 0.9996d0
+  double precision, parameter :: north = 0.d0, east = 500000.d0
 
-  double precision, parameter :: DEGREES_TO_RADIANS=PI/180.d0, RADIANS_TO_DEGREES=180.d0/PI
+  double precision, parameter :: DEGREES_TO_RADIANS = PI/180.d0, RADIANS_TO_DEGREES = 180.d0/PI
 
 ! local variables
   integer :: zone

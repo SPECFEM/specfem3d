@@ -255,7 +255,7 @@
             yloc = ystore_dummy(iglobnum)
 
             call get_topo_bathy_elevation(xloc,yloc,loc_elevation, &
-                                        itopo_bathy,NX_TOPO,NY_TOPO)
+                                          itopo_bathy,NX_TOPO,NY_TOPO)
 
             elevation = dble(loc_elevation)
 

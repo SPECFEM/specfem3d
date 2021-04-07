@@ -28,11 +28,11 @@
 
 module decompose_mesh_par
 
-  use constants, only: IIN_DB
+  use constants, only: IIN_DB,MAX_STRING_LEN,NGNOD_EIGHT_CORNERS
 
   use shared_parameters
 
-  use part_decompose_mesh, only: long,MAX_STRING_LEN,ACOUSTIC_LOAD,nfaces,NGNOD_EIGHT_CORNERS, &
+  use part_decompose_mesh, only: ACOUSTIC_LOAD, &
     write_interfaces_database,write_moho_surface_database,write_glob2loc_nodes_database, &
     write_material_props_database,write_boundaries_database, &
     write_partition_database,write_cpml_database, &
@@ -89,14 +89,12 @@ module decompose_mesh_par
   integer :: num_elmnt, num_node, num_mat
 
   ! boundaries
-  integer :: ispec2D
   integer :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom, nspec2D_top
   integer, dimension(:), allocatable :: ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top
   integer, dimension(:,:), allocatable :: nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin
   integer, dimension(:,:), allocatable :: nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
 
   ! C-PML absorbing boundary conditions
-  integer :: ispec_CPML
   integer :: nspec_cpml
   integer, dimension(:), allocatable :: CPML_to_spec, CPML_regions
   logical, dimension(:), allocatable :: is_CPML

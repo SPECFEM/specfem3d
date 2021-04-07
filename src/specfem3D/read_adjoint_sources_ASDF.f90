@@ -28,7 +28,7 @@
 
   subroutine read_adjoint_sources_ASDF(adj_source_name, adj_source, index_start, index_end)
 
-  use specfem_par, only: NDIM,CUSTOM_REAL, myrank, current_asdf_handle
+  use specfem_par, only: CUSTOM_REAL, myrank, current_asdf_handle
   use iso_c_binding, only: C_NULL_CHAR
 
   implicit none

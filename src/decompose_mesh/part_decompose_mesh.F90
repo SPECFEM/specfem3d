@@ -31,14 +31,8 @@ module part_decompose_mesh
 
   implicit none
 
-! useful kind types for short integer (4 bytes) and long integers (8 bytes)
-  integer, parameter :: short = 4, long = 8
-
-! number of faces per element.
-  integer, parameter  :: nfaces = 6
-
-! acoustic-elastic-poroelastic as well as CPML load balancing:
-! we define here the relative cost of all types of spectral elements used in the code.
+  ! acoustic-elastic-poroelastic as well as CPML load balancing:
+  ! we define here the relative cost of all types of spectral elements used in the code.
 !! DK DK since loads can only be integer numbers in domain decomposition packages
 !! DK DK for internal reasons (integer arithmetic produces no roundoff), to take
 !! DK DK into account decimal values here we multiply all values by 10, since only ratios between loads matter
@@ -540,11 +534,11 @@ contains
   integer, intent(in)  :: nnodes, iproc, num_phase
   integer, intent(inout)  :: npgeo
 
-  double precision, dimension(NDIM,nnodes)  :: nodes_coords
+  double precision, dimension(NDIM,nnodes),intent(in)  :: nodes_coords
   integer, dimension(:), pointer  :: glob2loc_nodes_nparts
   integer, dimension(:), pointer  :: glob2loc_nodes_parts
   integer, dimension(:), pointer  :: glob2loc_nodes
-
+  ! local parameters
   integer  :: i, j
 
   if (num_phase == 1) then
@@ -562,8 +556,7 @@ contains
     do i = 0, nnodes-1
       do j = glob2loc_nodes_nparts(i), glob2loc_nodes_nparts(i+1)-1
         if (glob2loc_nodes_parts(j) == iproc) then
-          write(IIN_database) glob2loc_nodes(j)+1, nodes_coords(1,i+1), &
-                              nodes_coords(2,i+1), nodes_coords(3,i+1)
+          write(IIN_database) glob2loc_nodes(j)+1, nodes_coords(1,i+1), nodes_coords(2,i+1), nodes_coords(3,i+1)
         endif
       enddo
     enddo
@@ -581,8 +574,9 @@ contains
   implicit none
   integer, intent(in)  :: IIN_database
   integer, intent(in)  :: count_def_mat,count_undef_mat
-  double precision, dimension(17,count_def_mat)  :: mat_prop
-  character(len=MAX_STRING_LEN), dimension(6,count_undef_mat) :: undef_mat_prop
+  double precision, dimension(17,count_def_mat),intent(in)  :: mat_prop
+  character(len=MAX_STRING_LEN), dimension(6,count_undef_mat),intent(in) :: undef_mat_prop
+  ! local parameters
   integer  :: i
 
   write(IIN_database)  count_def_mat,count_undef_mat
@@ -663,7 +657,7 @@ contains
 
   ! counts number of elements for boundary at xmin, xmax, ymin, ymax, bottom, top in this partition
   loc_nspec2D_xmin = 0
-  do i=1,nspec2D_xmin
+  do i = 1,nspec2D_xmin
      if (part(ibelm_xmin(i)) == iproc) then
         loc_nspec2D_xmin = loc_nspec2D_xmin + 1
      endif
@@ -671,7 +665,7 @@ contains
   write(IIN_database) 1, loc_nspec2D_xmin
 
   loc_nspec2D_xmax = 0
-  do i=1,nspec2D_xmax
+  do i = 1,nspec2D_xmax
      if (part(ibelm_xmax(i)) == iproc) then
         loc_nspec2D_xmax = loc_nspec2D_xmax + 1
      endif
@@ -679,7 +673,7 @@ contains
   write(IIN_database) 2, loc_nspec2D_xmax
 
   loc_nspec2D_ymin = 0
-  do i=1,nspec2D_ymin
+  do i = 1,nspec2D_ymin
      if (part(ibelm_ymin(i)) == iproc) then
         loc_nspec2D_ymin = loc_nspec2D_ymin + 1
      endif
@@ -687,7 +681,7 @@ contains
   write(IIN_database) 3, loc_nspec2D_ymin
 
   loc_nspec2D_ymax = 0
-  do i=1,nspec2D_ymax
+  do i = 1,nspec2D_ymax
      if (part(ibelm_ymax(i)) == iproc) then
         loc_nspec2D_ymax = loc_nspec2D_ymax + 1
      endif
@@ -695,7 +689,7 @@ contains
   write(IIN_database) 4, loc_nspec2D_ymax
 
   loc_nspec2D_bottom = 0
-  do i=1,nspec2D_bottom
+  do i = 1,nspec2D_bottom
      if (part(ibelm_bottom(i)) == iproc) then
         loc_nspec2D_bottom = loc_nspec2D_bottom + 1
      endif
@@ -703,7 +697,7 @@ contains
   write(IIN_database) 5, loc_nspec2D_bottom
 
   loc_nspec2D_top = 0
-  do i=1,nspec2D_top
+  do i = 1,nspec2D_top
      if (part(ibelm_top(i)) == iproc) then
         loc_nspec2D_top = loc_nspec2D_top + 1
      endif
@@ -715,7 +709,7 @@ contains
   !          (this is assigned by CUBIT, if this changes the following indexing must be changed as well)
   !          while glob2loc_elmnts(.) is shifted from 0 to nspec-1  thus
   !          we need to have the arg of glob2loc_elmnts start at 0, and thus we use glob2loc_nodes(ibelm_** -1)
-  do i=1,nspec2D_xmin
+  do i = 1,nspec2D_xmin
      if (part(ibelm_xmin(i)) == iproc) then
         do inode = 1,NGNOD2D
         do j = glob2loc_nodes_nparts(nodes_ibelm_xmin(inode,i)-1), &
@@ -729,7 +723,7 @@ contains
      endif
   enddo
 
-  do i=1,nspec2D_xmax
+  do i = 1,nspec2D_xmax
      if (part(ibelm_xmax(i)) == iproc) then
         do inode = 1,NGNOD2D
         do j = glob2loc_nodes_nparts(nodes_ibelm_xmax(inode,i)-1), &
@@ -743,7 +737,7 @@ contains
      endif
   enddo
 
-  do i=1,nspec2D_ymin
+  do i = 1,nspec2D_ymin
      if (part(ibelm_ymin(i)) == iproc) then
         do inode = 1,NGNOD2D
         do j = glob2loc_nodes_nparts(nodes_ibelm_ymin(inode,i)-1), &
@@ -757,7 +751,7 @@ contains
      endif
   enddo
 
-  do i=1,nspec2D_ymax
+  do i = 1,nspec2D_ymax
      if (part(ibelm_ymax(i)) == iproc) then
         do inode = 1,NGNOD2D
         do j = glob2loc_nodes_nparts(nodes_ibelm_ymax(inode,i)-1), &
@@ -771,7 +765,7 @@ contains
      endif
   enddo
 
-  do i=1,nspec2D_bottom
+  do i = 1,nspec2D_bottom
      if (part(ibelm_bottom(i)) == iproc) then
         do inode = 1,NGNOD2D
         do j = glob2loc_nodes_nparts(nodes_ibelm_bottom(inode,i)-1), &
@@ -785,7 +779,7 @@ contains
      endif
   enddo
 
-  do i=1,nspec2D_top
+  do i = 1,nspec2D_top
      if (part(ibelm_top(i)) == iproc) then
         do inode = 1,NGNOD2D
         do j = glob2loc_nodes_nparts(nodes_ibelm_top(inode,i)-1), &
@@ -832,7 +826,7 @@ contains
   if (nspec_cpml > 0) then
      ! writes number of C-PML elements in this partition
      nspec_cpml_local = 0
-     do i=1,nspec_cpml
+     do i = 1,nspec_cpml
         if (part(CPML_to_spec(i)) == iproc) then
            nspec_cpml_local = nspec_cpml_local + 1
         endif
@@ -841,7 +835,7 @@ contains
      write(IIN_database) nspec_cpml_local
 
      ! writes C-PML regions and C-PML spectral elements global indexing
-     do i=1,nspec_cpml
+     do i = 1,nspec_cpml
         ! #id_cpml_regions = 1 : X_surface C-PML
         ! #id_cpml_regions = 2 : Y_surface C-PML
         ! #id_cpml_regions = 3 : Z_surface C-PML
@@ -857,7 +851,7 @@ contains
      enddo
 
      ! writes mask of C-PML elements for all elements in this partition
-     do i=1,nspec
+     do i = 1,nspec
         if (part(i) == iproc) then
            write(IIN_database) is_CPML(i)
         endif
@@ -1505,7 +1499,7 @@ contains
 
     ! loops over all element corners
     counter = 0
-    do i=0,NGNOD_EIGHT_CORNERS-1
+    do i= 0,NGNOD_EIGHT_CORNERS-1
       ! note: assumes that node indices in elmnts array are in the range from 0 to nodes-1
       inode = elmnts(el*NGNOD+i)
       if (node_is_moho(inode)) counter = counter + 1

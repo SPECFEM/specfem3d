@@ -32,18 +32,18 @@
 !
 ! note: this routine will be called by serial decompose mesher.
 
-  use decompose_mesh_par
-
   use constants, only: NDIM,IIN_DB
+
+  use decompose_mesh_par
 
   implicit none
 
   character(len=MAX_STRING_LEN) :: line
   logical :: use_poroelastic_file
-  integer(long) :: nspec_long
+  integer(kind=8) :: nspec_long
   integer :: inode,idummy
   logical :: file_found
-  integer :: ispec,ier
+  integer :: ispec,ispec2D,ispec_CPML,ier
 
   ! user output
   print *, 'reading mesh files in: ',trim(localpath_name)
@@ -182,7 +182,7 @@
   print *, 'total number of spectral elements:'
   print *, '  nspec = ', nspec
 
-! reads material associations
+  ! reads material associations
   open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/materials_file', &
         status='old', form='formatted',iostat=ier)
   if (ier /= 0) stop 'Error opening materials_file'
@@ -532,12 +532,12 @@
   if (use_poroelastic_file) close(97)
   close(IIN_DB)
 
-  do ispec=1,nspec
+  do ispec = 1,nspec
     ! get material_id
     num_mat = mat(1,ispec)
     if (num_mat < 0) then
       ! finds undefined material property
-      do imat=1,count_undef_mat
+      do imat = 1,count_undef_mat
         if (-imat == num_mat) then
           ! interface
           if (trim(undef_mat_prop(2,imat)) == 'interface') then
@@ -557,13 +557,13 @@
     endif
   enddo
 
-! reads in absorbing boundary files
+  ! reads in absorbing boundary files
   open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmin', &
         status='old', form='formatted',iostat=ier)
-! if the file does not exist then define the number of Stacey elements as zero for this face;
-! beware that these files can also be used to set Dirichlet boundary conditions on the outer edges of CPML
-! absorbing layers for elastic elements, not only for Stacey; thus these files may exist and be non-empty
-! even when STACEY_ABSORBING_CONDITIONS is false
+  ! if the file does not exist then define the number of Stacey elements as zero for this face;
+  ! beware that these files can also be used to set Dirichlet boundary conditions on the outer edges of CPML
+  ! absorbing layers for elastic elements, not only for Stacey; thus these files may exist and be non-empty
+  ! even when STACEY_ABSORBING_CONDITIONS is false
   if (ier /= 0) then
     nspec2D_xmin = 0
     print *, '  no absorbing_surface_file_xmin file found'
@@ -576,6 +576,7 @@
 ! even when full range and pointer checking is used in the compiler options;
 ! thus here the idea is that if some of the absorbing files do not exist because there are no absorbing
 ! conditions for this mesh then the array is created nonetheless, but with a dummy size of 0
+
   allocate(ibelm_xmin(nspec2D_xmin),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 90')
   if (ier /= 0) stop 'Error allocating array ibelm_xmin'
@@ -596,7 +597,7 @@
   print *, 'absorbing boundaries:'
   print *, '  nspec2D_xmin = ', nspec2D_xmin
 
-! reads in absorbing boundary files
+  ! reads in absorbing boundary files
   open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmax', &
         status='old', form='formatted',iostat=ier)
   if (ier /= 0) then
@@ -618,7 +619,7 @@
   close(IIN_DB)
   print *, '  nspec2D_xmax = ', nspec2D_xmax
 
-! reads in absorbing boundary files
+  ! reads in absorbing boundary files
   open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_ymin', &
         status='old', form='formatted',iostat=ier)
   if (ier /= 0) then
@@ -640,7 +641,7 @@
   close(IIN_DB)
   print *, '  nspec2D_ymin = ', nspec2D_ymin
 
-! reads in absorbing boundary files
+  ! reads in absorbing boundary files
   open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_ymax', &
         status='old', form='formatted',iostat=ier)
   if (ier /= 0) then
@@ -662,7 +663,7 @@
   close(IIN_DB)
   print *, '  nspec2D_ymax = ', nspec2D_ymax
 
-! reads in absorbing boundary files
+  ! reads in absorbing boundary files
   open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_bottom', &
         status='old', form='formatted',iostat=ier)
   if (ier /= 0) then
@@ -684,8 +685,7 @@
   close(IIN_DB)
   print *, '  nspec2D_bottom = ', nspec2D_bottom
 
-! reads in free_surface boundary files
-
+  ! reads in free_surface boundary files
   ! checks old (now obsolete) naming formats to avoid mistakenly using obsolete files
   open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/free_surface_file', &
       status='old', form='formatted',iostat=ier)
@@ -743,13 +743,13 @@
 ! thus here the idea is that if some of the absorbing files do not exist because there are no absorbing
 ! conditions for this mesh then the array is created nonetheless, but with a dummy size of 0
 
-! reads in absorbing_cpml boundary file
+  ! reads in absorbing_cpml boundary file
   open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_cpml_file', &
        status='old', form='formatted',iostat=ier)
-! if the file does not exist but if there are PML_CONDITIONS then stop
+  ! if the file does not exist but if there are PML_CONDITIONS then stop
   if (ier /= 0 .and. PML_CONDITIONS) &
       stop 'Error: PML_CONDITIONS is set to true but file absorbing_cpml_file does not exist'
-! if the file does not exist or if there are no PML_CONDITIONS then define the number of CPML elements as zero
+  ! if the file does not exist or if there are no PML_CONDITIONS then define the number of CPML elements as zero
   ! note: in case there is a cpml file, we will read it in and let the user decide when running an actual simulation
   !       if he wants to use cpml elements or not... otherwise he will need to re-run the whole meshing part when
   !       switching PML_CONDITIONS
@@ -760,7 +760,7 @@
      read(IIN_DB,*) nspec_cpml
   endif
 
-! sanity check
+  ! sanity check
   if (PML_CONDITIONS .and. nspec_cpml <= 0) &
       stop 'Error: PML_CONDITIONS is set to true but nspec_cpml <= 0 in file absorbing_cpml_file'
 
@@ -772,7 +772,7 @@
   allocate(CPML_regions(nspec_cpml),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 103')
   if (ier /= 0) stop 'Error allocating array CPML_regions'
-  do ispec_CPML=1,nspec_cpml
+  do ispec_CPML = 1,nspec_cpml
      ! elements are stored with #id_cpml_regions increasing order:
      !
      ! #id_cpml_regions = 1 : X_surface C-PML
@@ -800,7 +800,7 @@
      endif
   enddo
 
-! reads in moho_surface boundary files (optional)
+  ! reads in moho_surface boundary files (optional)
   open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/moho_surface_file', &
         status='old', form='formatted',iostat=ier)
   if (ier /= 0) then

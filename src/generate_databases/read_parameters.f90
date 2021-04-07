@@ -33,13 +33,14 @@
 
   implicit none
 
+  ! local parameters
   logical :: BROADCAST_AFTER_READ
 
-! reads Par_file
+  ! reads Par_file
   BROADCAST_AFTER_READ = .true.
   call read_parameter_file(BROADCAST_AFTER_READ)
 
-! check that the code is running with the requested nb of processes
+  ! check that the code is running with the requested nb of processes
   if (sizeprocs /= NPROC) then
     if (myrank == 0) then
       write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
@@ -56,14 +57,14 @@
     call exit_MPI(myrank,'wrong number of MPI processes')
   endif
 
-! there would be a problem with absorbing boundaries for different NGLLX,NGLLY,NGLLZ values
-! just to be sure for now..
+  ! there would be a problem with absorbing boundaries for different NGLLX,NGLLY,NGLLZ values
+  ! just to be sure for now..
   if (STACEY_ABSORBING_CONDITIONS) then
     if (NGLLX /= NGLLY .and. NGLLY /= NGLLZ) &
       call exit_MPI(myrank,'must have NGLLX = NGLLY = NGLLZ for external meshes')
   endif
 
-! info about external mesh simulation
+  ! info about external mesh simulation
   if (myrank == 0) then
     write(IMAIN,*) 'This is process ',myrank
     write(IMAIN,*) 'There are ',sizeprocs,' MPI processes'
@@ -81,7 +82,7 @@
     write(IMAIN,*) 'Beware! Curvature (i.e. HEX27 elements) is not handled by our internal mesher'
     write(IMAIN,*)
 
-! check that the constants.h file is correct
+    ! check that the constants.h file is correct
     if (NGNOD /= 8 .and. NGNOD /= 27) then
        stop 'elements should have 8 or 27 control nodes, please modify NGNOD in Par_file'
     endif
@@ -118,7 +119,7 @@
     write(IMAIN,*)
   endif
 
-! check that reals are either 4 or 8 bytes
+  ! check that reals are either 4 or 8 bytes
   if (CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) &
     call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
 
@@ -208,7 +209,7 @@
     call flush_IMAIN()
   endif
 
-! makes sure processes are synchronized
+  ! makes sure processes are synchronized
   call synchronize_all()
 
   end subroutine read_parameters
@@ -222,7 +223,11 @@
 ! reads in topography files
 
   use generate_databases_par
+
   implicit none
+
+  ! local parameters
+  integer :: ier
 
   if (APPROXIMATE_OCEAN_LOAD .and. TOPOGRAPHY) then
 

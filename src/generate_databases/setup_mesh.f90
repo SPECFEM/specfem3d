@@ -35,6 +35,9 @@
 
   implicit none
 
+  ! local parameters
+  integer :: iface,icorner,inode,ier
+
   ! compute maximum number of points
   npointot = NSPEC_AB * NGLLX * NGLLY * NGLLZ
 

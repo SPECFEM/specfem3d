@@ -39,6 +39,9 @@
   integer, dimension(:), allocatable :: used_nodes_elmnts
   integer :: max_neighbor,inode,ispec,id,ier
 
+  ! number of faces per element.
+  integer, parameter  :: nfaces = 6
+
   ! allocate temporary array
   allocate(used_nodes_elmnts(nnodes),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 107')

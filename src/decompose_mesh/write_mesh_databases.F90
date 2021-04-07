@@ -90,6 +90,7 @@
 
     ! writes out spectral element indices
     write(IIN_database) nspec_local
+
     call write_partition_database(IIN_database, ipart, nspec_local, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 2)
@@ -152,6 +153,7 @@
                                   glob2loc_nodes, part)
         !write(16,*) nnodes_loc
         write(16) nnodes_loc
+
         call write_glob2loc_nodes_database(16, ipart, nnodes_loc, nodes_coords_open, &
                                 glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                 glob2loc_nodes, nnodes, 2)

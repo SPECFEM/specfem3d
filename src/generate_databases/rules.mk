@@ -214,6 +214,8 @@ $O/create_regions_mesh.gen.o: $O/fault_generate_databases.gen.o
 $O/generate_databases.gen.o: $(adios_generate_databases_PREOBJECTS)
 $O/save_arrays_solver_adios.gen_adios.o: $(adios_generate_databases_PREOBJECTS)
 $O/save_moho_adios.gen_adios.o: $(adios_generate_databases_PREOBJECTS)
+$O/model_gll_adios.gen_adios.o: $(adios_generate_databases_PREOBJECTS)
+$O/read_partition_files_adios.gen_adios.o: $(adios_generate_databases_PREOBJECTS)
 
 ifeq ($(ADIOS),no)
 $O/get_model.gen.o: $O/generate_databases_adios_stubs.gen_noadios.o
