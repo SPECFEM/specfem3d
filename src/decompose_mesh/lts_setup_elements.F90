@@ -511,7 +511,7 @@
   ! calculates the min/max velocity value of the specified element (ispec) for acoustic / elastic domains
   use constants, only: CUSTOM_REAL
 
-  use decompose_mesh_par, only: LTS_MODE,idomain_id,mat,mat_prop
+  use decompose_mesh_par, only: LTS_MODE,mat,mat_prop
 
   implicit none
 
@@ -519,7 +519,7 @@
   integer,intent(in) :: ispec
 
   ! local parameters
-  integer :: num_mat
+  integer :: num_mat,idomain_id
 
   ! get material_id for this element
   num_mat = mat(1,ispec)

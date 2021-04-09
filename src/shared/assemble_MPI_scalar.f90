@@ -75,7 +75,9 @@
     allocate(request_recv_scalar(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1193')
     if (ier /= 0) stop 'error allocating array request_recv_scalar'
-
+    buffer_send_scalar(:,:) = 0.0_CUSTOM_REAL; buffer_recv_scalar(:,:) = 0.00_CUSTOM_REAL
+    request_send_scalar(:) = 0; request_recv_scalar(:) = 0
+    
     ! partition border copy into the buffer
     do iinterface = 1, num_interfaces_ext_mesh
       do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
@@ -131,9 +133,9 @@
 !
 
   subroutine assemble_MPI_scalar_i_blocking(NPROC,NGLOB_AB,array_val, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                            my_neighbors_ext_mesh)
 
   use constants, only: itag
 
@@ -230,11 +232,11 @@
 !
 
   subroutine assemble_MPI_scalar_async_send(NPROC,NGLOB_AB,array_val, &
-                        buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh, &
-                        request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
+                                            buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
+                                            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                            my_neighbors_ext_mesh, &
+                                            request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
 
 ! non-blocking MPI send
 
@@ -254,7 +256,7 @@
 
   integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh,my_neighbors_ext_mesh
   integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh),intent(in) :: request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
 
   ! local parameters
   integer :: ipoin,iinterface

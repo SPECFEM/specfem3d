@@ -289,7 +289,7 @@
         call write_seismograms()
 
         ! outputs movie files
-        call write_movie_output()
+        if (MOVIE_SIMULATION) call write_movie_output()
 
         ! first step of noise tomography, i.e., save a surface movie at every time step
         ! modified from the subroutine 'write_movie_surface'

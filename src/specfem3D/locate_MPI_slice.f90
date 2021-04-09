@@ -135,7 +135,8 @@
 !------------------------------------------------------------------------------------------
 !
 
-  subroutine locate_MPI_slice_and_bcast_to_all_single(x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found, &
+  subroutine locate_MPI_slice_and_bcast_to_all_single(x_to_locate, y_to_locate, z_to_locate, &
+                                                      x_found, y_found, z_found, &
                                                       xi, eta, gamma, ispec_selected, islice_selected, &
                                                       distance_from_target, domain, nu)
 
@@ -183,20 +184,20 @@
   allocate(ispec_selected_all(1,0:NPROC-1),domain_all(1,0:NPROC-1),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1790')
 
-  distance_from_target = dsqrt( (x_to_locate - x_found)**2&
-                               +(y_to_locate - y_found)**2&
+  distance_from_target = dsqrt( (x_to_locate - x_found)**2 &
+                               +(y_to_locate - y_found)**2 &
                                +(z_to_locate - z_found)**2)
 
   !! it's just to avoid compiler error
-  distance_from_target_dummy(1)=distance_from_target
-  xi_dummy(1)=xi
-  eta_dummy(1)=eta
-  gamma_dummy(1)=gamma
-  ispec_selected_dummy(1)=ispec_selected
-  x_found_dummy(1)=x_found
-  y_found_dummy(1)=y_found
-  z_found_dummy(1)=z_found
-  domain_dummy(1)=domain
+  distance_from_target_dummy(1) = distance_from_target
+  xi_dummy(1) = xi
+  eta_dummy(1) = eta
+  gamma_dummy(1) = gamma
+  ispec_selected_dummy(1) = ispec_selected
+  x_found_dummy(1) = x_found
+  y_found_dummy(1) = y_found
+  z_found_dummy(1) = z_found
+  domain_dummy(1) = domain
 
   ! gather all on myrank=0
   call gather_all_dp(distance_from_target_dummy, 1, distance_from_target_all, 1, NPROC)
@@ -248,16 +249,16 @@
   call bcast_all_dp(z_found_dummy,1)
 
   !! it was just to avoid compler error
-  islice_selected=islice_selected_dummy(1)
-  domain=domain_dummy(1)
-  ispec_selected=ispec_selected_dummy(1)
-  xi=xi_dummy(1)
-  eta=eta_dummy(1)
-  gamma=gamma_dummy(1)
-  x_found=x_found_dummy(1)
-  y_found=y_found_dummy(1)
-  z_found=z_found_dummy(1)
-  distance_from_target=distance_from_target_dummy(1)
+  islice_selected = islice_selected_dummy(1)
+  domain = domain_dummy(1)
+  ispec_selected = ispec_selected_dummy(1)
+  xi = xi_dummy(1)
+  eta = eta_dummy(1)
+  gamma = gamma_dummy(1)
+  x_found = x_found_dummy(1)
+  y_found = y_found_dummy(1)
+  z_found = z_found_dummy(1)
+  distance_from_target = distance_from_target_dummy(1)
 
   deallocate(distance_from_target_all, xi_all, eta_all, gamma_all, x_found_all, y_found_all, z_found_all, nu_all)
   deallocate(ispec_selected_all,domain_all)

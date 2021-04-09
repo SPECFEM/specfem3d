@@ -77,8 +77,7 @@ module decompose_mesh_par
   integer, dimension(:), pointer  :: tab_size_interfaces, tab_interfaces
   integer, dimension(:), allocatable  :: my_interfaces
   integer, dimension(:), allocatable  :: my_nb_interfaces
-  integer ::  ninterfaces
-  integer :: my_ninterface
+  integer :: ninterfaces
 
   integer :: nsize           ! max number of elements that contain the same node
   integer :: nb_edges
@@ -114,11 +113,6 @@ module decompose_mesh_par
 ! default mesh file directory
   character(len=MAX_STRING_LEN) :: localpath_name
   character(len=MAX_STRING_LEN) :: outputpath_name
-
-  integer :: aniso_flag,idomain_id
-  double precision :: vp,vs,rho,qkappa,qmu
-! poroelastic parameters read in a new file
-  double precision :: rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
 
   integer, parameter :: IIN_database = IIN_DB
 

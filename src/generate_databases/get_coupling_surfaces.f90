@@ -124,6 +124,7 @@
   allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 693')
   if (ier /= 0) stop 'error allocating array ibool_interfaces_ext_mesh_dummy'
+  ibool_interfaces_ext_mesh_dummy(:,:) = 0
 
   do i = 1, num_interfaces_ext_mesh
      ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
@@ -328,9 +329,9 @@
               do i=1,NGLLX
                 ! directs normals such that they point outwards of element
                 call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
-                                            ibool,nspec,nglob_dummy, &
-                                            xstore_dummy,ystore_dummy,zstore_dummy, &
-                                            normal_face(:,i,j) )
+                                             ibool,nspec,nglob_dummy, &
+                                             xstore_dummy,ystore_dummy,zstore_dummy, &
+                                             normal_face(:,i,j) )
                 ! makes sure that it always points away from acoustic element,
                 ! otherwise switch direction
                 ! note: this should not happen, since we only loop over acoustic elements
@@ -674,8 +675,8 @@
 
         ! takes indices of corners of reference face
         call get_element_corners(ispec,iface_ref,xcoord,ycoord,zcoord,iglob_corners_ref, &
-                                ibool,nspec,nglob_dummy,xstore_dummy,ystore_dummy,zstore_dummy, &
-                                iface_all_corner_ijk)
+                                 ibool,nspec,nglob_dummy,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                 iface_all_corner_ijk)
 
         ! checks if face has elastic side
         if (elastic_flag(iglob_corners_ref(1)) >= 1 .and. &
@@ -699,9 +700,9 @@
             do i = 1,NGLLX
               ! directs normals such that they point outwards of poroelastic element
               call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
-                                          ibool,nspec,nglob_dummy, &
-                                          xstore_dummy,ystore_dummy,zstore_dummy, &
-                                          normal_face(:,i,j) )
+                                           ibool,nspec,nglob_dummy, &
+                                           xstore_dummy,ystore_dummy,zstore_dummy, &
+                                           normal_face(:,i,j) )
             enddo
           enddo
 

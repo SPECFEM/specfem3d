@@ -174,13 +174,15 @@
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: zstore_dummy
   integer :: nglob_dummy
 
-! *********************************************************************************
-! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
+  ! ******
+  ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
+  ! not used so far...
+
   ! material properties at global points for the elastic case
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rhostore_dummy
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: kappastore_dummy
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: mustore_dummy
-! *********************************************************************************
+  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: rhostore_dummy
+  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: kappastore_dummy
+  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: mustore_dummy
+  ! ******
 
   ! Gauss-Lobatto-Legendre points and weights of integration
   double precision, dimension(:), allocatable :: xigll,yigll,zigll,wxgll,wygll,wzgll
@@ -264,8 +266,8 @@
   integer :: num_coupling_el_po_faces
 
   ! Moho mesh
-  real(CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_top
-  real(CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_bot
+  real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_top
+  real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_bot
   integer,dimension(:,:,:),allocatable :: ijk_moho_top, ijk_moho_bot
   integer,dimension(:),allocatable :: ibelm_moho_top, ibelm_moho_bot
   integer :: NSPEC2D_MOHO

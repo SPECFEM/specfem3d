@@ -38,12 +38,18 @@
 
   implicit none
 
-  character(len=MAX_STRING_LEN) :: line
-  logical :: use_poroelastic_file
+  ! local parameters
+  integer :: aniso_flag,idomain_id
+  double precision :: vp,vs,rho,qkappa,qmu
+  ! poroelastic parameters read in a new file
+  double precision :: rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
   integer(kind=8) :: nspec_long
   integer :: inode,idummy
-  logical :: file_found
   integer :: ispec,ispec2D,ispec_CPML,ier
+
+  character(len=MAX_STRING_LEN) :: line
+  logical :: use_poroelastic_file
+  logical :: file_found
 
   ! user output
   print *, 'reading mesh files in: ',trim(localpath_name)
@@ -70,13 +76,13 @@
   allocate(nodes_coords(NDIM,nnodes),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 85')
   if (ier /= 0) stop 'Error allocating array nodes_coords'
+  nodes_coords(:,:) = 0.0d0
   do inode = 1, nnodes
     ! format: #id_node #x_coordinate #y_coordinate #z_coordinate
     read(IIN_DB,*) num_node, nodes_coords(1,num_node), nodes_coords(2,num_node), nodes_coords(3,num_node)
 
     ! bounds check
     if (num_node > nnodes .or. num_node < 1)  stop "Error : Invalid nodes_coords_file"
-
   enddo
   close(IIN_DB)
   print *, 'total number of nodes: '
@@ -106,6 +112,7 @@
   allocate(elmnts(NGNOD,nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 86')
   if (ier /= 0) stop 'Error allocating array elmnts'
+  elmnts(:,:) = 0
   do ispec = 1, nspec
     ! format: # element_id  #id_node1 ... #id_node8
     !      or # element_id  #id_node1 ... #id_node27
@@ -190,8 +197,8 @@
   allocate(mat(2,nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 87')
   if (ier /= 0) stop 'Error allocating array mat'
-
   mat(:,:) = 0
+
   do ispec = 1, nspec
     ! format: #id_element #flag
     ! note: be aware that elements may not be sorted in materials_file
@@ -344,8 +351,8 @@
 
     ! sanity check: Q factor cannot be equal to zero, thus convert to 9999 to indicate no attenuation
     ! if users have used 0 to indicate that instead
-    if (qkappa <= 0.000001) qkappa = 9999.
-    if (qmu <= 0.000001) qmu = 9999.
+    if (qkappa <= 0.000001) qkappa = 9999.d0
+    if (qmu <= 0.000001) qmu = 9999.d0
 
     ! checks material_id bounds
     if (num_mat < 1 .or. num_mat > count_def_mat) &
@@ -577,12 +584,19 @@
 ! thus here the idea is that if some of the absorbing files do not exist because there are no absorbing
 ! conditions for this mesh then the array is created nonetheless, but with a dummy size of 0
 
-  allocate(ibelm_xmin(nspec2D_xmin),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 90')
-  if (ier /= 0) stop 'Error allocating array ibelm_xmin'
-  allocate(nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 91')
-  if (ier /= 0) stop 'Error allocating array nodes_ibelm_xmin'
+  if (nspec2D_xmin > 0) then
+    allocate(ibelm_xmin(nspec2D_xmin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 90')
+    if (ier /= 0) stop 'Error allocating array ibelm_xmin'
+    allocate(nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 91')
+    if (ier /= 0) stop 'Error allocating array nodes_ibelm_xmin'
+  else
+    ! dummy allocation
+    allocate(ibelm_xmin(1),nodes_ibelm_xmin(1,1))
+  endif
+  ibelm_xmin(:) = 0; nodes_ibelm_xmin(:,:) = 0
+
   do ispec2D = 1,nspec2D_xmin
     ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
     ! note: ordering for CUBIT seems such that the normal of the face points outward of the element the face belongs to;
@@ -606,12 +620,20 @@
   else
     read(IIN_DB,*) nspec2D_xmax
   endif
-  allocate(ibelm_xmax(nspec2D_xmax),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 92')
-  if (ier /= 0) stop 'Error allocating array ibelm_xmax'
-  allocate(nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 93')
-  if (ier /= 0) stop 'Error allocating array nodes_ibelm_xmax'
+
+  if (nspec2D_xmax > 0) then
+    allocate(ibelm_xmax(nspec2D_xmax),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 92')
+    if (ier /= 0) stop 'Error allocating array ibelm_xmax'
+    allocate(nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 93')
+    if (ier /= 0) stop 'Error allocating array nodes_ibelm_xmax'
+  else
+    ! dummy allocation
+    allocate(ibelm_xmax(1),nodes_ibelm_xmax(1,1))
+  endif
+  ibelm_xmax(:) = 0; nodes_ibelm_xmax(:,:) = 0
+
   do ispec2D = 1,nspec2D_xmax
     ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
     read(IIN_DB,*) ibelm_xmax(ispec2D), (nodes_ibelm_xmax(inode,ispec2D), inode=1,NGNOD2D)
@@ -628,12 +650,20 @@
   else
     read(IIN_DB,*) nspec2D_ymin
   endif
-  allocate(ibelm_ymin(nspec2D_ymin),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 94')
-  if (ier /= 0) stop 'Error allocating array ibelm_ymin'
-  allocate(nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 95')
-  if (ier /= 0) stop 'Error allocating array nodes_ibelm_ymin'
+
+  if (nspec2D_ymin > 0) then
+    allocate(ibelm_ymin(nspec2D_ymin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 94')
+    if (ier /= 0) stop 'Error allocating array ibelm_ymin'
+    allocate(nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 95')
+    if (ier /= 0) stop 'Error allocating array nodes_ibelm_ymin'
+  else
+    ! dummy allocation
+    allocate(ibelm_ymin(1),nodes_ibelm_ymin(1,1))
+  endif
+  ibelm_ymin(:) = 0; nodes_ibelm_ymin(:,:) = 0
+
   do ispec2D = 1,nspec2D_ymin
     ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
     read(IIN_DB,*) ibelm_ymin(ispec2D), (nodes_ibelm_ymin(inode,ispec2D), inode=1,NGNOD2D)
@@ -650,12 +680,20 @@
   else
     read(IIN_DB,*) nspec2D_ymax
   endif
-  allocate(ibelm_ymax(nspec2D_ymax),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 96')
-  if (ier /= 0) stop 'Error allocating array ibelm_ymax'
-  allocate(nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 97')
-  if (ier /= 0) stop 'Error allocating array nodes_ibelm_ymax'
+
+  if (nspec2D_ymax > 0) then
+    allocate(ibelm_ymax(nspec2D_ymax),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 96')
+    if (ier /= 0) stop 'Error allocating array ibelm_ymax'
+    allocate(nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 97')
+    if (ier /= 0) stop 'Error allocating array nodes_ibelm_ymax'
+  else
+    ! dummy allocation
+    allocate(ibelm_ymax(1),nodes_ibelm_ymax(1,1))
+  endif
+  ibelm_ymax(:) = 0; nodes_ibelm_ymax(:,:) = 0
+
   do ispec2D = 1,nspec2D_ymax
     ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
     read(IIN_DB,*) ibelm_ymax(ispec2D), (nodes_ibelm_ymax(inode,ispec2D), inode=1,NGNOD2D)
@@ -672,12 +710,20 @@
   else
     read(IIN_DB,*) nspec2D_bottom
   endif
-  allocate(ibelm_bottom(nspec2D_bottom),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 98')
-  if (ier /= 0) stop 'Error allocating array ibelm_bottom'
-  allocate(nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 99')
-  if (ier /= 0) stop 'Error allocating array nodes_ibelm_bottom'
+
+  if (nspec2D_bottom > 0) then
+    allocate(ibelm_bottom(nspec2D_bottom),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 98')
+    if (ier /= 0) stop 'Error allocating array ibelm_bottom'
+    allocate(nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 99')
+    if (ier /= 0) stop 'Error allocating array nodes_ibelm_bottom'
+  else
+    ! dummy allocation
+    allocate(ibelm_bottom(1),nodes_ibelm_bottom(1,1))
+  endif
+  ibelm_bottom(:) = 0; nodes_ibelm_bottom(:,:) = 0
+
   do ispec2D = 1,nspec2D_bottom
     ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
     read(IIN_DB,*) ibelm_bottom(ispec2D), (nodes_ibelm_bottom(inode,ispec2D), inode=1,NGNOD2D)
@@ -724,12 +770,20 @@
   else
     read(IIN_DB,*) nspec2D_top
   endif
-  allocate(ibelm_top(nspec2D_top),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 100')
-  if (ier /= 0) stop 'Error allocating array ibelm_top'
-  allocate(nodes_ibelm_top(NGNOD2D,nspec2D_top),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 101')
-  if (ier /= 0) stop 'Error allocating array nodes_ibelm_top'
+
+  if (nspec2D_top > 0) then
+    allocate(ibelm_top(nspec2D_top),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 100')
+    if (ier /= 0) stop 'Error allocating array ibelm_top'
+    allocate(nodes_ibelm_top(NGNOD2D,nspec2D_top),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 101')
+    if (ier /= 0) stop 'Error allocating array nodes_ibelm_top'
+  else
+    ! dummy allocation
+    allocate(ibelm_top(1),nodes_ibelm_top(1,1))
+  endif
+  ibelm_top(:) = 0; nodes_ibelm_top(:,:) = 0
+
   do ispec2D = 1,nspec2D_top
     ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
     read(IIN_DB,*) ibelm_top(ispec2D), (nodes_ibelm_top(inode,ispec2D), inode=1,NGNOD2D)
@@ -757,7 +811,7 @@
     nspec_cpml = 0
     print *, '  no absorbing_cpml_file file found'
   else
-     read(IIN_DB,*) nspec_cpml
+    read(IIN_DB,*) nspec_cpml
   endif
 
   ! sanity check
@@ -765,13 +819,20 @@
       stop 'Error: PML_CONDITIONS is set to true but nspec_cpml <= 0 in file absorbing_cpml_file'
 
   ! C-PML spectral elements global indexing
-  allocate(CPML_to_spec(nspec_cpml),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 102')
-  if (ier /= 0) stop 'Error allocating array CPML_to_spec'
-  ! C-PML regions (see below)
-  allocate(CPML_regions(nspec_cpml),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 103')
-  if (ier /= 0) stop 'Error allocating array CPML_regions'
+  if (nspec_cpml > 0) then
+    allocate(CPML_to_spec(nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 102')
+    if (ier /= 0) stop 'Error allocating array CPML_to_spec'
+    ! C-PML regions (see below)
+    allocate(CPML_regions(nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 103')
+    if (ier /= 0) stop 'Error allocating array CPML_regions'
+  else
+    ! dummy allocation
+    allocate(CPML_to_spec(1),CPML_regions(1))
+  endif
+  CPML_to_spec(:) = 0; CPML_regions(:) = 0
+
   do ispec_CPML = 1,nspec_cpml
      ! elements are stored with #id_cpml_regions increasing order:
      !
@@ -794,6 +855,7 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 104')
   if (ier /= 0) stop 'Error allocating array is_CPML'
   is_CPML(:) = .false.
+
   do ispec_CPML = 1,nspec_cpml
      if ((CPML_regions(ispec_CPML) >= 1) .and. (CPML_regions(ispec_CPML) <= 7)) then
         is_CPML(CPML_to_spec(ispec_CPML)) = .true.

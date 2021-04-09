@@ -43,32 +43,32 @@
 
   implicit none
 
-! global indexing
-  integer :: NPROC,nglob,nspec
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec):: ibool
+  ! global indexing
+  integer,intent(in) :: NPROC,nglob,nspec
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-! surface
-  logical, dimension(nspec) :: ispec_is_surface
-  logical, dimension(nglob) :: iglob_is_surface
-  integer :: nfaces_surface
+  ! surface
+  logical, dimension(nspec),intent(inout) :: ispec_is_surface
+  logical, dimension(nglob),intent(inout) :: iglob_is_surface
+  integer,intent(inout) :: nfaces_surface
 
-! MPI partitions
-  integer :: num_interfaces_ext_mesh
-  integer :: max_nibool_interfaces_ext_mesh
-  integer,dimension(num_interfaces_ext_mesh):: nibool_interfaces_ext_mesh
-  integer,dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh):: ibool_interfaces_ext_mesh
-  integer,dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
+  ! MPI partitions
+  integer,intent(in) :: num_interfaces_ext_mesh
+  integer,intent(in) :: max_nibool_interfaces_ext_mesh
+  integer,dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
+  integer,dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
+  integer,dimension(num_interfaces_ext_mesh),intent(in) :: my_neighbors_ext_mesh
 
-!local parameters
+  ! local parameters
   integer, dimension(:), allocatable :: valence
   integer :: ispec,i,j,k,iglob,ier
 
-! detecting surface points/elements (based on valence check on NGLL points) for external mesh
+  ! detecting surface points/elements (based on valence check on NGLL points) for external mesh
   allocate(valence(nglob),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1223')
   if (ier /= 0) stop 'error allocate valence array'
 
-! initialize surface indices
+  ! initialize surface indices
   ispec_is_surface(:) = .false.
   iglob_is_surface(:) = .false.
   valence(:) = 0
@@ -90,11 +90,11 @@
 
   ! adds contributions from different partitions to valence
   call assemble_MPI_scalar_i_blocking(NPROC,nglob,valence, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
 
-! determines spectral elements containing surface points
+  ! determines spectral elements containing surface points
   do ispec = 1, nspec
 
     ! loops over GLL points not on edges or corners
@@ -108,8 +108,8 @@
             if (valence(iglob) == 1) then
               ! sets surface flags for element and global points
               call ds_set_surface_flags(nspec,ispec_is_surface, &
-                                  nglob,iglob_is_surface, &
-                                  i,j,k,ispec,ibool)
+                                        nglob,iglob_is_surface, &
+                                        i,j,k,ispec,ibool)
             endif
 
           endif
@@ -123,7 +123,7 @@
   if ((NGLLX <= 2) .or. (NGLLY <= 2) .or. (NGLLZ <= 2)) &
     stop 'Error: invalid NGLL number for surface detection, must be > 2'
 
-! counts faces for movies and shakemaps
+  ! counts faces for movies and shakemaps
   nfaces_surface = 0
   do ispec = 1, nspec
     ! takes an inner point of the surface, assuming assuming (2,2,*) is not a corner, i.e., NGLLX > 2, NGLLY > 2
@@ -170,13 +170,13 @@
   implicit none
 
   ! global indexing
-  integer :: nglob,nspec
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec):: ibool
-  integer :: i,j,k,ispec
+  integer,intent(in) :: nglob,nspec
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
+  integer,intent(in) :: i,j,k,ispec
 
   !   surface flags
-  logical, dimension(nspec) :: ispec_is_surface
-  logical, dimension(nglob) :: iglob_is_surface
+  logical, dimension(nspec),intent(inout) :: ispec_is_surface
+  logical, dimension(nglob),intent(inout) :: iglob_is_surface
 
   ! local parameters
   integer :: kk,jj,ii
@@ -237,29 +237,29 @@
 
   implicit none
 
-! global indexing
-  integer :: NPROC,nglob,nspec
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec):: ibool
+  ! global indexing
+  integer,intent(in) :: NPROC,nglob,nspec
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-! surface
-  logical, dimension(nspec) :: ispec_is_surface_cross_section
-  logical, dimension(nglob) :: iglob_is_surface_cross_section
-  integer :: nfaces_surface
+  ! surface
+  logical, dimension(nspec),intent(inout) :: ispec_is_surface_cross_section
+  logical, dimension(nglob),intent(inout) :: iglob_is_surface_cross_section
+  integer,intent(inout) :: nfaces_surface
 
-! MPI partitions
-  integer :: num_interfaces_ext_mesh
-  integer :: max_nibool_interfaces_ext_mesh
-  integer,dimension(num_interfaces_ext_mesh):: nibool_interfaces_ext_mesh
-  integer,dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh):: ibool_interfaces_ext_mesh
-  integer,dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
+  ! MPI partitions
+  integer,intent(in) :: num_interfaces_ext_mesh
+  integer,intent(in) :: max_nibool_interfaces_ext_mesh
+  integer,dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
+  integer,dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
+  integer,dimension(num_interfaces_ext_mesh),intent(in) :: my_neighbors_ext_mesh
 
-! specified x,y,z - coordinates
-  real(kind=CUSTOM_REAL):: x_section,y_section,z_section
+  ! specified x,y,z - coordinates
+  real(kind=CUSTOM_REAL),intent(in) :: x_section,y_section,z_section
 
-! mesh global point coordinates
-  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
+  ! mesh global point coordinates
+  real(kind=CUSTOM_REAL), dimension(nglob),intent(in) :: xstore,ystore,zstore
 
-!local parameters
+  ! local parameters
   real(kind=CUSTOM_REAL),dimension(6) :: midpoint_faces_x,midpoint_faces_y, &
                                          midpoint_faces_z
   real(kind=CUSTOM_REAL),dimension(6) :: midpoint_dist_x,midpoint_dist_y,midpoint_dist_z
@@ -291,24 +291,24 @@
   integer,dimension(3,6),parameter :: iface_midpoint_ijk = &
              reshape( (/ 1,3,3, NGLLX,3,3, 3,1,3, 3,NGLLY,3, 3,3,1, 3,3,NGLLZ  /),(/3,6/))   ! top
 
-! detecting surface points/elements (based on valence check on NGLL points) for external mesh
+  ! detecting surface points/elements (based on valence check on NGLL points) for external mesh
   allocate(valence(nglob),ispec_has_points(nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1224')
   if (ier /= 0) stop 'error allocate valence array'
 
-! an estimation of the minimum distance between global points (for an element width)
+  ! an estimation of the minimum distance between global points (for an element width)
   min_dist = minval( (xstore(ibool(1,3,3,:)) - xstore(ibool(NGLLX,3,3,:)))**2 &
                   + (ystore(ibool(1,3,3,:)) - ystore(ibool(NGLLX,3,3,:)))**2 &
                   + (zstore(ibool(1,3,3,:)) - zstore(ibool(NGLLX,3,3,:)))**2)
   min_dist = sqrt(min_dist)
 
-! initialize surface indices
+  ! initialize surface indices
   ispec_is_surface_cross_section(:) = .false.
   iglob_is_surface_cross_section(:) = .false.
   nfaces_surface  = 0
   valence(:) = 0
 
-! sets valence value to one corresponding to process rank  for points on cross-sections
+  ! sets valence value to one corresponding to process rank  for points on cross-sections
   do ispec = 1, nspec
     do k = 1, NGLLZ
       do j = 1, NGLLY
@@ -338,15 +338,15 @@
     enddo
   enddo
 
-! adds contributions from different partitions to valence
+  ! adds contributions from different partitions to valence
   call assemble_MPI_scalar_i_blocking(NPROC,nglob,valence, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
 
 
-! determines spectral elements containing surface points
-! (only counts element outer faces, no planes inside element)
+  ! determines spectral elements containing surface points
+  ! (only counts element outer faces, no planes inside element)
   ispec_has_points(:) = .false.
   countval = 0
   do ispec = 1, nspec
@@ -373,9 +373,9 @@
             if (valence(iglob) == myrank+1 .or. valence(iglob) > 2*(myrank+1)) then
               ! sets surface flags for cross section
               call ds_set_cross_section_flags(nspec,ispec_is_surface_cross_section, &
-                                            nglob,iglob_is_surface_cross_section, &
-                                            i,j,k,ispec,ibool, &
-                                            valence,countval)
+                                              nglob,iglob_is_surface_cross_section, &
+                                              i,j,k,ispec,ibool, &
+                                              valence,countval)
             endif
 
           endif
@@ -385,7 +385,7 @@
 
   enddo ! nspec
 
-! tries to find closest face if points are inside
+  ! tries to find closest face if points are inside
   do ispec = 1,nspec
 
     ! in case element has still unresolved points in interior,
@@ -429,8 +429,8 @@
         ! gets face normal
         normal(:) = 0._CUSTOM_REAL
         call get_element_face_normal(ispec,iface,xcoord_face,ycoord_face,zcoord_face, &
-                                    ibool,nspec,nglob,xstore,ystore,zstore, &
-                                    normal)
+                                     ibool,nspec,nglob,xstore,ystore,zstore, &
+                                     normal)
 
         ! distance to cross-section planes
         midpoint_dist_x(iface) = abs(midpoint_faces_x(iface) - x_section)
@@ -448,9 +448,9 @@
           if (abs(normal(1)) > 0.6) then
             ! sets surfaces flags
             call ds_set_plane_flags(iface,ispec, &
-                                  nspec,ispec_is_surface_cross_section, &
-                                  nglob,iglob_is_surface_cross_section, &
-                                  ibool,valence)
+                                    nspec,ispec_is_surface_cross_section, &
+                                    nglob,iglob_is_surface_cross_section, &
+                                    ibool,valence)
           endif
         endif
 
@@ -464,9 +464,9 @@
           if (abs(normal(2)) > 0.6) then
             ! sets surfaces flags
             call ds_set_plane_flags(iface,ispec, &
-                                  nspec,ispec_is_surface_cross_section, &
-                                  nglob,iglob_is_surface_cross_section, &
-                                  ibool,valence)
+                                    nspec,ispec_is_surface_cross_section, &
+                                    nglob,iglob_is_surface_cross_section, &
+                                    ibool,valence)
           endif
         endif
 
@@ -480,9 +480,9 @@
           if (abs(normal(3)) > 0.6) then
             ! sets surfaces flags
             call ds_set_plane_flags(iface,ispec, &
-                                  nspec,ispec_is_surface_cross_section, &
-                                  nglob,iglob_is_surface_cross_section, &
-                                  ibool,valence)
+                                    nspec,ispec_is_surface_cross_section, &
+                                    nglob,iglob_is_surface_cross_section, &
+                                    ibool,valence)
           endif
         endif
 
@@ -491,7 +491,7 @@
     endif
   enddo
 
-! counts faces for external-mesh movies and shakemaps
+  ! counts faces for external-mesh movies and shakemaps
   nfaces_surface = 0
   do ispec = 1, nspec
     if (ispec_is_surface_cross_section(ispec)) then
@@ -541,15 +541,16 @@
   implicit none
 
   ! global indexing
-  integer :: nglob,nspec
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec):: ibool
-  integer :: i,j,k,ispec,countval
+  integer,intent(in) :: nglob,nspec
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
+  integer,intent(in) :: i,j,k,ispec
 
-  integer, dimension(nglob) :: valence
+  integer,intent(inout) :: countval
+  integer, dimension(nglob),intent(inout) :: valence
 
   !   surface flags
-  logical, dimension(nspec) :: ispec_is_surface
-  logical, dimension(nglob) :: iglob_is_surface
+  logical, dimension(nspec),intent(inout) :: ispec_is_surface
+  logical, dimension(nglob),intent(inout) :: iglob_is_surface
 
   ! local parameters
   integer :: kk,jj,ii
@@ -618,17 +619,17 @@
 
   implicit none
 
-  integer :: iface,ispec
+  integer,intent(in) :: iface,ispec
 
   ! global indexing
-  integer :: nglob,nspec
+  integer,intent(in) :: nglob,nspec
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec):: ibool
-  integer, dimension(nglob) :: valence
+  integer, dimension(nglob),intent(inout) :: valence
 
   !   surface flags
-  logical, dimension(nspec) :: ispec_is_surface
-  logical, dimension(nglob) :: iglob_is_surface
+  logical, dimension(nspec),intent(inout) :: ispec_is_surface
+  logical, dimension(nglob),intent(inout) :: iglob_is_surface
 
 
   ! local parameters
@@ -657,13 +658,13 @@
 !
 
   subroutine detect_surface_PNM_image(NPROC,nglob,nspec,ibool, &
-                            ispec_is_image_surface, &
-                            iglob_is_image_surface, &
-                            num_iglob_image_surface, &
-                            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                            nibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
-                            ibool_interfaces_ext_mesh, &
-                            xstore,ystore,zstore,myrank)
+                                      ispec_is_image_surface, &
+                                      iglob_is_image_surface, &
+                                      num_iglob_image_surface, &
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
+                                      ibool_interfaces_ext_mesh, &
+                                      xstore,ystore,zstore,myrank)
 
 ! this returns points on a cross-section surface through model
 !
@@ -675,50 +676,50 @@
 
   implicit none
 
-! global indexing
-  integer :: NPROC,nglob,nspec,myrank
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec):: ibool
+  ! global indexing
+  integer,intent(in) :: NPROC,nglob,nspec,myrank
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-! surface
-  logical, dimension(nspec) :: ispec_is_image_surface
-  logical, dimension(nglob) :: iglob_is_image_surface
-  integer :: num_iglob_image_surface
+  ! surface
+  logical, dimension(nspec),intent(inout) :: ispec_is_image_surface
+  logical, dimension(nglob),intent(inout) :: iglob_is_image_surface
+  integer,intent(inout) :: num_iglob_image_surface
 
-! MPI partitions
-  integer :: num_interfaces_ext_mesh
-  integer :: max_nibool_interfaces_ext_mesh
-  integer,dimension(num_interfaces_ext_mesh):: nibool_interfaces_ext_mesh
-  integer,dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh):: ibool_interfaces_ext_mesh
-  integer,dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
+  ! MPI partitions
+  integer,intent(in) :: num_interfaces_ext_mesh
+  integer,intent(in) :: max_nibool_interfaces_ext_mesh
+  integer,dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
+  integer,dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
+  integer,dimension(num_interfaces_ext_mesh),intent(in) :: my_neighbors_ext_mesh
 
-! mesh global point coordinates
-  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
+  ! mesh global point coordinates
+  real(kind=CUSTOM_REAL), dimension(nglob),intent(in) :: xstore,ystore,zstore
 
-!local parameters
+  ! local parameters
   real(kind=CUSTOM_REAL) :: min_dist,distance
   integer, dimension(:), allocatable :: valence
   integer :: ispec,i,j,k,iglob,ier,countval
   real(kind=CUSTOM_REAL),parameter :: TOLERANCE_DISTANCE = 0.9
 
-! detecting surface points/elements (based on valence check on NGLL points) for external mesh
+  ! detecting surface points/elements (based on valence check on NGLL points) for external mesh
   allocate(valence(nglob),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1225')
   if (ier /= 0) stop 'error allocate valence array'
 
-! initialize surface indices
+  ! initialize surface indices
   ispec_is_image_surface(:) = .false.
   iglob_is_image_surface(:) = .false.
   valence(:) = 0
   num_iglob_image_surface = 0
 
-! an estimation of the minimum distance between global points
+  ! an estimation of the minimum distance between global points
   min_dist = minval( (xstore(ibool(1,1,1,:)) - xstore(ibool(2,1,1,:)))**2 &
                    + (ystore(ibool(1,1,1,:)) - ystore(ibool(2,1,1,:)))**2 &
                    + (zstore(ibool(1,1,1,:)) - zstore(ibool(2,1,1,:)))**2)
   min_dist = sqrt(min_dist)
   distance = TOLERANCE_DISTANCE*min_dist
 
-! sets valence value to one corresponding to process rank  for points on cross-sections
+  ! sets valence value to one corresponding to process rank  for points on cross-sections
   do ispec = 1, nspec
     do k = 1, NGLLZ
       do j = 1, NGLLY
@@ -737,14 +738,14 @@
     enddo
   enddo
 
-! adds contributions from different partitions to valence
+  ! adds contributions from different partitions to valence
   call assemble_MPI_scalar_i_blocking(NPROC,nglob,valence, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh)
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
 
 
-! determines spectral elements containing points on surface
+  ! determines spectral elements containing points on surface
   countval = 0
   do ispec = 1, nspec
     ! loops over GLL points not on edges or corners, but inside faces

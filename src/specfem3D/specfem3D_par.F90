@@ -265,6 +265,7 @@ module specfem_par
   ! for detecting surface receivers and source in case of external mesh
   logical, dimension(:), allocatable :: iglob_is_surface_external_mesh
   logical, dimension(:), allocatable :: ispec_is_surface_external_mesh
+  integer :: nfaces_surface
 
   ! MPI partition surfaces
   logical, dimension(:), allocatable :: ispec_is_inner
@@ -289,8 +290,8 @@ module specfem_par
   logical :: SAVE_STACEY
 
   ! Moho mesh
-  real(CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_top
-  real(CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_bot
+  real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_top
+  real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_bot
   integer,dimension(:,:,:),allocatable :: ijk_moho_top, ijk_moho_bot
   integer,dimension(:),allocatable :: ibelm_moho_top, ibelm_moho_bot
   integer :: NSPEC_BOUN,NSPEC2D_MOHO
@@ -364,9 +365,8 @@ module specfem_par_elastic
   ! memory variables and standard linear solids for attenuation
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common,factor_common_kappa
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tau_sigma
+  real(kind=CUSTOM_REAL), dimension(N_SLS) :: alphaval,betaval,gammaval
   real(kind=CUSTOM_REAL) :: min_resolved_period
-  real(kind=CUSTOM_REAL), dimension(N_SLS) :: &
-    alphaval,betaval,gammaval
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: R_trace,R_xx,R_yy,R_xy,R_xz,R_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
@@ -413,10 +413,8 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_displ, b_veloc, b_accel
 
   ! backward attenuation arrays
-  real(kind=CUSTOM_REAL), dimension(N_SLS) :: &
-    b_alphaval, b_betaval, b_gammaval
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
-    b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz
+  real(kind=CUSTOM_REAL), dimension(N_SLS) :: b_alphaval, b_betaval, b_gammaval
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
     b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: b_epsilon_trace_over_3
@@ -431,8 +429,7 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_kl, hess_rho_kl, hess_mu_kl, hess_kappa_kl
 
   ! topographic (Moho) kernel
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:),allocatable :: &
-    dsdx_top, dsdx_bot, b_dsdx_top, b_dsdx_bot
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:),allocatable :: dsdx_top, dsdx_bot, b_dsdx_top, b_dsdx_bot
   real(kind=CUSTOM_REAL), dimension(:,:),allocatable :: moho_kl
   integer, dimension(:), allocatable :: ispec2D_moho_top,ispec2D_moho_bot
 
@@ -648,7 +645,7 @@ module specfem_par_movie
   integer,dimension(:),allocatable :: faces_surface_offset
   integer,dimension(:,:),allocatable :: faces_surface_ibool
   integer,dimension(:),allocatable :: faces_surface_ispec
-  integer :: nfaces_surface,nfaces_surface_points
+  integer :: nfaces_surface_points
   integer :: nfaces_surface_glob_ext_mesh,nfaces_surface_glob_points
 
   ! movie parameters

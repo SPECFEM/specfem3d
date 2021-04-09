@@ -299,6 +299,7 @@ contains
   allocate(glob2loc_elmnts(0:nspec-1),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 40')
   if (ier /= 0) stop 'error allocating array glob2loc_elmnts'
+  glob2loc_elmnts(:) = 0
 
   ! initializes number of local elements per partition
   do num_part = 0, nparts-1
@@ -414,8 +415,8 @@ contains
                                nparts, NGNOD)
 
   implicit none
-  integer, intent(in)  :: nspec
-  integer, intent(in)  :: NGNOD
+  integer, intent(in) :: nspec
+  integer, intent(in) :: NGNOD
   integer, intent(in) :: sup_neighbor
   integer, dimension(0:nspec-1), intent(in)  :: part
   integer, dimension(0:NGNOD*nspec-1), intent(in)  :: elmnts
@@ -427,8 +428,7 @@ contains
   integer, intent(in)  :: nparts
 
   ! local parameters
-  integer :: num_part, num_part_bis, el, el_adj, num_interface, num_edge, ncommon_nodes, &
-       num_node, num_node_bis
+  integer :: num_part, num_part_bis, el, el_adj, num_interface, num_edge, ncommon_nodes, num_node, num_node_bis
   integer :: i, j
   integer :: ier
 
@@ -896,40 +896,35 @@ contains
   integer, dimension(0:NGNOD-1)  :: loc_nodes
 
   if (num_phase == 1) then
-     ! counts number of spectral elements in this partition
-     nspec_local = 0
-     do i = 0, nspec-1
-        if (part(i) == iproc) then
-           nspec_local = nspec_local + 1
-        endif
-     enddo
-
+    ! counts number of spectral elements in this partition
+    nspec_local = 0
+    do i = 0, nspec-1
+      if (part(i) == iproc) then
+        nspec_local = nspec_local + 1
+      endif
+    enddo
   else
-     ! writes out element corner indices
-     do i = 0, nspec-1
-        if (part(i) == iproc) then
+    ! writes out element corner indices
+    do i = 0, nspec-1
+      if (part(i) == iproc) then
+        do j = 0, NGNOD-1
+          do k = glob2loc_nodes_nparts(elmnts(i*NGNOD+j)), glob2loc_nodes_nparts(elmnts(i*NGNOD+j)+1)-1
+            if (glob2loc_nodes_parts(k) == iproc) then
+              loc_nodes(j) = glob2loc_nodes(k)
+            endif
+          enddo
+        enddo
 
-           do j = 0, NGNOD-1
-              do k = glob2loc_nodes_nparts(elmnts(i*NGNOD+j)), glob2loc_nodes_nparts(elmnts(i*NGNOD+j)+1)-1
+        ! format:
+        ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id8
+        ! or
+        ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id27
+        write(IIN_database) glob2loc_elmnts(i)+1,num_modele(1,i+1),num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
 
-                 if (glob2loc_nodes_parts(k) == iproc) then
-                    loc_nodes(j) = glob2loc_nodes(k)
-                 endif
-              enddo
-
-           enddo
-
-           ! format:
-           ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id8
-           ! or
-           ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id27
-           write(IIN_database) glob2loc_elmnts(i)+1,num_modele(1,i+1),num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
-
-           ! writes out to file Numglob2loc_elmn.txt
-           if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) write(124,*) i+1,glob2loc_elmnts(i)+1,iproc
-
-        endif
-     enddo
+        ! writes out to file Numglob2loc_elmn.txt
+        if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) write(124,*) i+1,glob2loc_elmnts(i)+1,iproc
+      endif
+    enddo
   endif
 
   end subroutine write_partition_database
@@ -967,120 +962,127 @@ contains
 
   integer  :: count_faces
 
+  ! initializes counter
   num_interface = 0
 
   if (num_phase == 1) then
     ! counts number of interfaces to neighboring partitions
-    my_interfaces(:) = 0
-    my_nb_interfaces(:) = 0
-
-    ! double loops over all partitions
-    do i = 0, nparts-1
-      do j = i+1, nparts-1
-        ! only counts if specified partition (iproc) appears and interface elements increment
-        if ((tab_size_interfaces(num_interface) < tab_size_interfaces(num_interface+1)) .and. &
-            (i == iproc .or. j == iproc)) then
-          ! sets flag
-          my_interfaces(num_interface) = 1
-          ! sets number of elements on interface
-          my_nb_interfaces(num_interface) = tab_size_interfaces(num_interface+1) &
-                                          - tab_size_interfaces(num_interface)
-        endif
-        num_interface = num_interface + 1
+    if (ninterfaces > 0) then
+      my_interfaces(:) = 0
+      my_nb_interfaces(:) = 0
+      ! double loops over all partitions
+      do i = 0, nparts-1
+        do j = i+1, nparts-1
+          ! only counts if specified partition (iproc) appears and interface elements increment
+          if ((tab_size_interfaces(num_interface) < tab_size_interfaces(num_interface+1)) .and. &
+              (i == iproc .or. j == iproc)) then
+            ! sets flag
+            my_interfaces(num_interface) = 1
+            ! sets number of elements on interface
+            my_nb_interfaces(num_interface) = tab_size_interfaces(num_interface+1) &
+                                            - tab_size_interfaces(num_interface)
+          endif
+          num_interface = num_interface + 1
+        enddo
       enddo
-    enddo
-    my_ninterface = sum(my_interfaces(:))
-
+      my_ninterface = sum(my_interfaces(:))
+    endif
   else
     ! writes out MPI interface elements
-    do i = 0, nparts-1
-      do j = i+1, nparts-1
-        if (my_interfaces(num_interface) == 1) then
-          if (i == iproc) then
-            write(IIN_database) j, my_nb_interfaces(num_interface)
-          else
-            write(IIN_database) i, my_nb_interfaces(num_interface)
-          endif
-
-          count_faces = 0
-          do k = tab_size_interfaces(num_interface), tab_size_interfaces(num_interface+1)-1
+    if (ninterfaces > 0) then
+      do i = 0, nparts-1
+        do j = i+1, nparts-1
+          if (my_interfaces(num_interface) == 1) then
             if (i == iproc) then
-              local_elmnt = glob2loc_elmnts(tab_interfaces(k*7+0))+1
+              ! format: #process_interface_id  #number_of_elements_on_interface
+              write(IIN_database) j, my_nb_interfaces(num_interface)
             else
-              local_elmnt = glob2loc_elmnts(tab_interfaces(k*7+1))+1
+              ! format: #process_interface_id  #number_of_elements_on_interface
+              write(IIN_database) i, my_nb_interfaces(num_interface)
             endif
 
-            select case (tab_interfaces(k*7+2))
-            case (1)
-              ! single point element
-              do l = glob2loc_nodes_nparts(tab_interfaces(k*7+3)), &
-                     glob2loc_nodes_nparts(tab_interfaces(k*7+3)+1)-1
-                if (glob2loc_nodes_parts(l) == iproc) then
-                  local_nodes(1) = glob2loc_nodes(l)+1
-                endif
-              enddo
-              write(IIN_database) local_elmnt, tab_interfaces(k*7+2), &
-                                  local_nodes(1), -1, -1, -1
+            count_faces = 0
+            do k = tab_size_interfaces(num_interface), tab_size_interfaces(num_interface+1)-1
+              if (i == iproc) then
+                local_elmnt = glob2loc_elmnts(tab_interfaces(k*7+0))+1
+              else
+                local_elmnt = glob2loc_elmnts(tab_interfaces(k*7+1))+1
+              endif
 
-            case (2)
-              ! edge element
-              do l = glob2loc_nodes_nparts(tab_interfaces(k*7+3)), &
-                     glob2loc_nodes_nparts(tab_interfaces(k*7+3)+1)-1
-                if (glob2loc_nodes_parts(l) == iproc) then
-                  local_nodes(1) = glob2loc_nodes(l)+1
-                endif
-              enddo
-              do l = glob2loc_nodes_nparts(tab_interfaces(k*7+4)), &
-                     glob2loc_nodes_nparts(tab_interfaces(k*7+4)+1)-1
-                if (glob2loc_nodes_parts(l) == iproc) then
-                  local_nodes(2) = glob2loc_nodes(l)+1
-                endif
-              enddo
-              write(IIN_database) local_elmnt, tab_interfaces(k*7+2), &
-                                  local_nodes(1), local_nodes(2), -1, -1
+              select case (tab_interfaces(k*7+2))
+              case (1)
+                ! single point element
+                do l = glob2loc_nodes_nparts(tab_interfaces(k*7+3)), &
+                       glob2loc_nodes_nparts(tab_interfaces(k*7+3)+1)-1
+                  if (glob2loc_nodes_parts(l) == iproc) then
+                    local_nodes(1) = glob2loc_nodes(l)+1
+                  endif
+                enddo
+                ! format: #(1)spectral_element_id  #(2)interface_type  #(3)node_id1  #(4)node_id2 #(5).. #(6)..
+                write(IIN_database) local_elmnt, tab_interfaces(k*7+2), &
+                                    local_nodes(1), -1, -1, -1
 
-            case (4)
-              ! face element
-              count_faces = count_faces + 1
-              do l = glob2loc_nodes_nparts(tab_interfaces(k*7+3)), &
-                     glob2loc_nodes_nparts(tab_interfaces(k*7+3)+1)-1
-                if (glob2loc_nodes_parts(l) == iproc) then
-                  local_nodes(1) = glob2loc_nodes(l)+1
-                endif
-              enddo
-              do l = glob2loc_nodes_nparts(tab_interfaces(k*7+4)), &
-                     glob2loc_nodes_nparts(tab_interfaces(k*7+4)+1)-1
-                if (glob2loc_nodes_parts(l) == iproc) then
-                  local_nodes(2) = glob2loc_nodes(l)+1
-                endif
-              enddo
-              do l = glob2loc_nodes_nparts(tab_interfaces(k*7+5)), &
-                     glob2loc_nodes_nparts(tab_interfaces(k*7+5)+1)-1
-                if (glob2loc_nodes_parts(l) == iproc) then
-                  local_nodes(3) = glob2loc_nodes(l)+1
-                endif
-              enddo
-              do l = glob2loc_nodes_nparts(tab_interfaces(k*7+6)), &
-                     glob2loc_nodes_nparts(tab_interfaces(k*7+6)+1)-1
-                if (glob2loc_nodes_parts(l) == iproc) then
-                  local_nodes(4) = glob2loc_nodes(l)+1
-                endif
-              enddo
-              write(IIN_database) local_elmnt, tab_interfaces(k*7+2), &
-                                  local_nodes(1), local_nodes(2),local_nodes(3), local_nodes(4)
+              case (2)
+                ! edge element
+                do l = glob2loc_nodes_nparts(tab_interfaces(k*7+3)), &
+                       glob2loc_nodes_nparts(tab_interfaces(k*7+3)+1)-1
+                  if (glob2loc_nodes_parts(l) == iproc) then
+                    local_nodes(1) = glob2loc_nodes(l)+1
+                  endif
+                enddo
+                do l = glob2loc_nodes_nparts(tab_interfaces(k*7+4)), &
+                       glob2loc_nodes_nparts(tab_interfaces(k*7+4)+1)-1
+                  if (glob2loc_nodes_parts(l) == iproc) then
+                    local_nodes(2) = glob2loc_nodes(l)+1
+                  endif
+                enddo
+                ! format: #(1)spectral_element_id  #(2)interface_type  #(3)node_id1  #(4)node_id2 #(5).. #(6)..
+                write(IIN_database) local_elmnt, tab_interfaces(k*7+2), &
+                                    local_nodes(1), local_nodes(2), -1, -1
 
-            case default
-              print *, "fatal error in write_interfaces_database:", tab_interfaces(k*7+2), iproc
-              stop "fatal error in write_interfaces_database"
-            end select
-          enddo
+              case (4)
+                ! face element
+                count_faces = count_faces + 1
+                do l = glob2loc_nodes_nparts(tab_interfaces(k*7+3)), &
+                       glob2loc_nodes_nparts(tab_interfaces(k*7+3)+1)-1
+                  if (glob2loc_nodes_parts(l) == iproc) then
+                    local_nodes(1) = glob2loc_nodes(l)+1
+                  endif
+                enddo
+                do l = glob2loc_nodes_nparts(tab_interfaces(k*7+4)), &
+                       glob2loc_nodes_nparts(tab_interfaces(k*7+4)+1)-1
+                  if (glob2loc_nodes_parts(l) == iproc) then
+                    local_nodes(2) = glob2loc_nodes(l)+1
+                  endif
+                enddo
+                do l = glob2loc_nodes_nparts(tab_interfaces(k*7+5)), &
+                       glob2loc_nodes_nparts(tab_interfaces(k*7+5)+1)-1
+                  if (glob2loc_nodes_parts(l) == iproc) then
+                    local_nodes(3) = glob2loc_nodes(l)+1
+                  endif
+                enddo
+                do l = glob2loc_nodes_nparts(tab_interfaces(k*7+6)), &
+                       glob2loc_nodes_nparts(tab_interfaces(k*7+6)+1)-1
+                  if (glob2loc_nodes_parts(l) == iproc) then
+                    local_nodes(4) = glob2loc_nodes(l)+1
+                  endif
+                enddo
+                ! format: #(1)spectral_element_id  #(2)interface_type  #(3)node_id1  #(4)node_id2 #(5).. #(6)..
+                write(IIN_database) local_elmnt, tab_interfaces(k*7+2), &
+                                    local_nodes(1), local_nodes(2),local_nodes(3), local_nodes(4)
 
-        endif
+              case default
+                print *, "fatal error in write_interfaces_database:", tab_interfaces(k*7+2), iproc
+                stop "fatal error in write_interfaces_database"
+              end select
+            enddo
 
-        num_interface = num_interface + 1
+          endif
+
+          num_interface = num_interface + 1
+        enddo
       enddo
-    enddo
-
+    endif
   endif
 
   end subroutine write_interfaces_database

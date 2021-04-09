@@ -76,8 +76,9 @@
   allocate(nodes_elmnts(1:nsize*nnodes),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 111')
   if (ier /= 0) stop 'Error allocating array nodes_elmnts'
-
- ! user output
+  xadj(:) = 0; adjncy(:) = 0; nnodes_elmnts(:) = 0; nodes_elmnts(:) = 0
+  
+  ! user output
   print *,'partitioning:'
   print *,'  number of partitions requested = ',nparts
   print *
@@ -268,9 +269,9 @@
   ! MPI interfaces
   ! acoustic/elastic/poroelastic boundaries will be split into different MPI partitions
   call build_interfaces(nspec, sup_neighbor, part, elmnts, &
-                           xadj, adjncy, tab_interfaces, &
-                           tab_size_interfaces, ninterfaces, &
-                           nparts, NGNOD)
+                        xadj, adjncy, tab_interfaces, &
+                        tab_size_interfaces, ninterfaces, &
+                        nparts, NGNOD)
 
   ! obsolete: from when we wanted acoustic/elastic boundaries NOT to be separated into different MPI partitions
   ! call build_interfaces_no_ac_el_sep(nspec, sup_neighbor, part, elmnts, &
