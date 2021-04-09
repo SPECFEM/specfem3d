@@ -77,7 +77,7 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 111')
   if (ier /= 0) stop 'Error allocating array nodes_elmnts'
   xadj(:) = 0; adjncy(:) = 0; nnodes_elmnts(:) = 0; nodes_elmnts(:) = 0
-  
+
   ! user output
   print *,'partitioning:'
   print *,'  number of partitions requested = ',nparts

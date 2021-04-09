@@ -932,18 +932,21 @@
   if (ier /= 0) stop 'error allocating array coupling_el_po_normal etc.'
 
   ! MPI interfaces
-  allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1914')
-  allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1915')
-  if (ier /= 0) stop 'error allocating array my_neighbors_ext_mesh etc.'
   if (num_interfaces_ext_mesh > 0) then
+    allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1914')
+    allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1915')
+    if (ier /= 0) stop 'error allocating array my_neighbors_ext_mesh etc.'
     allocate(ibool_interfaces_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1916')
     if (ier /= 0) stop 'error allocating array ibool_interfaces_ext_mesh'
   else
+    ! no interfaces
     max_nibool_interfaces_ext_mesh = 0
-    allocate(ibool_interfaces_ext_mesh(0,0),stat=ier)
+    allocate(my_neighbors_ext_mesh(1),nibool_interfaces_ext_mesh(1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1915')
+    allocate(ibool_interfaces_ext_mesh(1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1917')
   endif
 

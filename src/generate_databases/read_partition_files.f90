@@ -344,13 +344,8 @@
   call synchronize_all()
 
   ! MPI interfaces (between different partitions)
-  if (NPROC > 1) then
-    ! format: #number_of_MPI_interfaces  #maximum_number_of_elements_on_each_interface
-    read(IIN) num_interfaces_ext_mesh, max_interface_size_ext_mesh
-  else
-    num_interfaces_ext_mesh = 0
-    max_interface_size_ext_mesh = 0
-  endif
+  ! format: #number_of_MPI_interfaces  #maximum_number_of_elements_on_each_interface
+  read(IIN) num_interfaces_ext_mesh, max_interface_size_ext_mesh
 
   ! allocates interfaces
   if (num_interfaces_ext_mesh > 0) then
@@ -379,7 +374,7 @@
     if (ier /= 0) stop 'Error allocating neighbors arrays'
   endif
   my_neighbors_ext_mesh(:) = -1; my_nelmnts_neighbors_ext_mesh(:) = 0
-  my_interfaces_ext_mesh(:,:,:) = 0; ibool_interfaces_ext_mesh(:,:) = 0; nibool_interfaces_ext_mesh(:) = 0
+  my_interfaces_ext_mesh(:,:,:) = -1; ibool_interfaces_ext_mesh(:,:) = 0; nibool_interfaces_ext_mesh(:) = 0
 
   ! loops over MPI interfaces with other partitions
   do num_interface = 1, num_interfaces_ext_mesh
@@ -391,7 +386,7 @@
 
     ! loops over interface elements
     do ie = 1, my_nelmnts_neighbors_ext_mesh(num_interface)
-      ! format: #(1)spectral_element_id  #(2)interface_type  #(3)node_id1  #(4)node_id2 #(5)...
+      ! format: #(1)spectral_element_id  #(2)interface_type  #(3)node_id1  #(4)node_id2 #(5).. #(6)..
       !
       ! interface types:
       !     1  -  corner point only

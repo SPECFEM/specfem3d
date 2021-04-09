@@ -456,13 +456,16 @@
 
     nspec_interfaces_max = maxval(nspec_interface)
 
+    ! format: #number_of_MPI_interfaces  #maximum_number_of_elements_on_each_interface
     write(IIN_database) nb_interfaces,nspec_interfaces_max
 
     ! face elements
     if (interfaces(W)) then
+      ! format: #process_interface_id  #number_of_elements_on_interface
       write(IIN_database) addressing(iproc_xi_current-1,iproc_eta_current),nspec_interface(W)
       do ispec = 1,nspec
         if (iMPIcut_xi(1,ispec)) then
+          ! format: #(1)spectral_element_id  #(2)interface_type  #(3)node_id1  #(4)node_id2 #(5).. #(6)..
           ! note: face outputs 4 corner points
           write(IIN_database) ispec,4,ibool(1,1,1,ispec),ibool(1,NGLLY_M,1,ispec), &
                                       ibool(1,1,NGLLZ_M,ispec),ibool(1,NGLLY_M,NGLLZ_M,ispec)
@@ -471,9 +474,11 @@
     endif
 
     if (interfaces(E)) then
+      ! format: #process_interface_id  #number_of_elements_on_interface
       write(IIN_database) addressing(iproc_xi_current+1,iproc_eta_current),nspec_interface(E)
       do ispec = 1,nspec
         if (iMPIcut_xi(2,ispec)) then
+          ! format: #(1)spectral_element_id  #(2)interface_type  #(3)node_id1  #(4)node_id2 #(5).. #(6)..
           write(IIN_database) ispec,4,ibool(NGLLX_M,1,1,ispec),ibool(NGLLX_M,NGLLY_M,1,ispec), &
                                       ibool(NGLLX_M,1,NGLLZ_M,ispec),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
         endif
@@ -481,9 +486,11 @@
     endif
 
     if (interfaces(S)) then
+      ! format: #process_interface_id  #number_of_elements_on_interface
       write(IIN_database) addressing(iproc_xi_current,iproc_eta_current-1),nspec_interface(S)
       do ispec = 1,nspec
         if (iMPIcut_eta(1,ispec)) then
+          ! format: #(1)spectral_element_id  #(2)interface_type  #(3)node_id1  #(4)node_id2 #(5).. #(6)..
           write(IIN_database) ispec,4,ibool(1,1,1,ispec),ibool(NGLLX_M,1,1,ispec), &
                                       ibool(1,1,NGLLZ_M,ispec),ibool(NGLLX_M,1,NGLLZ_M,ispec)
         endif
@@ -491,9 +498,11 @@
     endif
 
     if (interfaces(N)) then
+      ! format: #process_interface_id  #number_of_elements_on_interface
       write(IIN_database) addressing(iproc_xi_current,iproc_eta_current+1),nspec_interface(N)
       do ispec = 1,nspec
         if (iMPIcut_eta(2,ispec)) then
+          ! format: #(1)spectral_element_id  #(2)interface_type  #(3)node_id1  #(4)node_id2 #(5).. #(6)..
           write(IIN_database) ispec,4,ibool(NGLLX_M,NGLLY_M,1,ispec),ibool(1,NGLLY_M,1,ispec), &
                                       ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec),ibool(1,NGLLY_M,NGLLZ_M,ispec)
         endif
@@ -502,41 +511,55 @@
 
     ! edge elements
     if (interfaces(NW)) then
+      ! format: #process_interface_id  #number_of_elements_on_interface
       write(IIN_database) addressing(iproc_xi_current-1,iproc_eta_current+1),nspec_interface(NW)
       do ispec = 1,nspec
         if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
           ! note: edge elements output 2 corners and 2 dummy values
+          ! format: #(1)spectral_element_id  #(2)interface_type  #(3)node_id1  #(4)node_id2 #(5).. #(6)..
           write(IIN_database) ispec,2,ibool(1,NGLLY_M,1,ispec),ibool(1,NGLLY_M,NGLLZ_M,ispec),-1,-1
         endif
       enddo
     endif
 
     if (interfaces(NE)) then
+      ! format: #process_interface_id  #number_of_elements_on_interface
       write(IIN_database) addressing(iproc_xi_current+1,iproc_eta_current+1),nspec_interface(NE)
       do ispec = 1,nspec
         if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
+          ! format: #(1)spectral_element_id  #(2)interface_type  #(3)node_id1  #(4)node_id2 #(5).. #(6)..
           write(IIN_database) ispec,2,ibool(NGLLX_M,NGLLY_M,1,ispec),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ispec),-1,-1
         endif
       enddo
     endif
 
     if (interfaces(SE)) then
+      ! format: #process_interface_id  #number_of_elements_on_interface
       write(IIN_database) addressing(iproc_xi_current+1,iproc_eta_current-1),nspec_interface(SE)
       do ispec = 1,nspec
         if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
+          ! format: #(1)spectral_element_id  #(2)interface_type  #(3)node_id1  #(4)node_id2 #(5).. #(6)..
           write(IIN_database) ispec,2,ibool(NGLLX_M,1,1,ispec),ibool(NGLLX_M,1,NGLLZ_M,ispec),-1,-1
         endif
       enddo
     endif
 
     if (interfaces(SW)) then
+      ! format: #process_interface_id  #number_of_elements_on_interface
       write(IIN_database) addressing(iproc_xi_current-1,iproc_eta_current-1),nspec_interface(SW)
       do ispec = 1,nspec
         if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
+          ! format: #(1)spectral_element_id  #(2)interface_type  #(3)node_id1  #(4)node_id2 #(5).. #(6)..
           write(IIN_database) ispec,2,ibool(1,1,1,ispec),ibool(1,1,NGLLZ_M,ispec),-1,-1
         endif
       enddo
     endif
+  else
+    ! single process execution, no MPI boundaries
+    nb_interfaces = 0
+    nspec_interfaces_max = 0
+    ! format: #number_of_MPI_interfaces  #maximum_number_of_elements_on_each_interface
+    write(IIN_database) nb_interfaces,nspec_interfaces_max
   endif
 
   close(IIN_database)

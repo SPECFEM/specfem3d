@@ -151,8 +151,8 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                            ibool,nspec,nglob_dummy, &
-                            xstore_dummy,ystore_dummy,zstore_dummy,iface)
+                             ibool,nspec,nglob_dummy, &
+                             xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
@@ -172,9 +172,9 @@
       do i=1,NGLLX
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob_dummy, &
-                                      xstore_dummy,ystore_dummy,zstore_dummy, &
-                                      lnormal )
+                                     ibool,nspec,nglob_dummy, &
+                                     xstore_dummy,ystore_dummy,zstore_dummy, &
+                                     lnormal )
         normal_face(:,i,j) = lnormal(:)
 
         if ( COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM ) &
@@ -225,8 +225,8 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                              ibool,nspec,nglob_dummy, &
-                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
+                             ibool,nspec,nglob_dummy, &
+                             xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
@@ -246,9 +246,9 @@
       do i=1,NGLLX
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob_dummy, &
-                                      xstore_dummy,ystore_dummy,zstore_dummy, &
-                                      lnormal )
+                                     ibool,nspec,nglob_dummy, &
+                                     xstore_dummy,ystore_dummy,zstore_dummy, &
+                                     lnormal )
         normal_face(:,i,j) = lnormal(:)
       enddo
     enddo
@@ -293,8 +293,8 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                              ibool,nspec,nglob_dummy, &
-                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
+                             ibool,nspec,nglob_dummy, &
+                             xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
@@ -314,9 +314,9 @@
       do i=1,NGLLY
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob_dummy, &
-                                      xstore_dummy,ystore_dummy,zstore_dummy, &
-                                      lnormal )
+                                     ibool,nspec,nglob_dummy, &
+                                     xstore_dummy,ystore_dummy,zstore_dummy, &
+                                     lnormal )
         normal_face(:,i,j) = lnormal(:)
       enddo
     enddo
@@ -361,8 +361,8 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                              ibool,nspec,nglob_dummy, &
-                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
+                             ibool,nspec,nglob_dummy, &
+                             xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
@@ -382,9 +382,9 @@
       do i=1,NGLLY
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob_dummy, &
-                                      xstore_dummy,ystore_dummy,zstore_dummy, &
-                                      lnormal )
+                                     ibool,nspec,nglob_dummy, &
+                                     xstore_dummy,ystore_dummy,zstore_dummy, &
+                                     lnormal )
         normal_face(:,i,j) = lnormal(:)
       enddo
     enddo
@@ -429,8 +429,8 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                              ibool,nspec,nglob_dummy, &
-                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
+                             ibool,nspec,nglob_dummy, &
+                             xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
@@ -450,9 +450,9 @@
       do i=1,NGLLX
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob_dummy, &
-                                      xstore_dummy,ystore_dummy,zstore_dummy, &
-                                      lnormal )
+                                     ibool,nspec,nglob_dummy, &
+                                     xstore_dummy,ystore_dummy,zstore_dummy, &
+                                     lnormal )
         normal_face(:,i,j) = lnormal(:)
       enddo
     enddo
@@ -516,8 +516,8 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                              ibool,nspec,nglob_dummy, &
-                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
+                             ibool,nspec,nglob_dummy, &
+                             xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
@@ -537,9 +537,9 @@
       do i=1,NGLLX
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob_dummy, &
-                                      xstore_dummy,ystore_dummy,zstore_dummy, &
-                                      lnormal )
+                                     ibool,nspec,nglob_dummy, &
+                                     xstore_dummy,ystore_dummy,zstore_dummy, &
+                                     lnormal )
         normal_face(:,i,j) = lnormal(:)
       enddo
     enddo

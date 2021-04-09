@@ -72,7 +72,7 @@
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
   integer :: max_nibool_interfaces_ext_mesh
 
-  integer :: ier,i
+  integer :: ier,i,itest
   character(len=MAX_STRING_LEN) :: filename
 
   ! database file name
@@ -121,27 +121,31 @@
   write(IOUT) ispec_is_elastic
   write(IOUT) ispec_is_poroelastic
 
-! acoustic
+  ! stamp for checking i/o
+  itest = 9999
+  write(IOUT) itest
+
+  ! acoustic
   if (ACOUSTIC_SIMULATION) then
     write(IOUT) rmass_acoustic
   endif
 
-! this array is needed for acoustic simulations but also for elastic simulations with CPML,
-! thus we allocate it and read it in all cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
+  ! this array is needed for acoustic simulations but also for elastic simulations with CPML,
+  ! thus we allocate it and read it in all cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
   write(IOUT) rhostore
 
-! elastic
+  ! elastic
   if (ELASTIC_SIMULATION) then
     write(IOUT) rmass
     if (APPROXIMATE_OCEAN_LOAD) then
       write(IOUT) rmass_ocean_load
     endif
-    !pll Stacey
+    ! Stacey
     write(IOUT) rho_vp
     write(IOUT) rho_vs
   endif
 
-! poroelastic
+  ! poroelastic
   if (POROELASTIC_SIMULATION) then
     write(IOUT) rmass_solid_poroelastic
     write(IOUT) rmass_fluid_poroelastic
@@ -156,7 +160,7 @@
     write(IOUT) rho_vsI
   endif
 
-! C-PML absorbing boundary conditions
+  ! C-PML absorbing boundary conditions
   if (PML_CONDITIONS) then
     write(IOUT) nspec_cpml
     write(IOUT) CPML_width_x
@@ -189,7 +193,7 @@
     endif
   endif
 
-! absorbing boundary surface
+  ! absorbing boundary surface
   write(IOUT) num_abs_boundary_faces
   if (num_abs_boundary_faces > 0) then
     write(IOUT) abs_boundary_ispec
@@ -209,20 +213,26 @@
     endif
   endif
 
+  ! stamp for checking i/o so far
+  itest = 9998
+  write(IOUT) itest
+
+  ! boundaries
   write(IOUT) nspec2D_xmin
   write(IOUT) nspec2D_xmax
   write(IOUT) nspec2D_ymin
   write(IOUT) nspec2D_ymax
   write(IOUT) NSPEC2D_BOTTOM
   write(IOUT) NSPEC2D_TOP
-  write(IOUT) ibelm_xmin
-  write(IOUT) ibelm_xmax
-  write(IOUT) ibelm_ymin
-  write(IOUT) ibelm_ymax
-  write(IOUT) ibelm_bottom
-  write(IOUT) ibelm_top
 
-! free surface
+  if (nspec2D_xmin > 0) write(IOUT) ibelm_xmin
+  if (nspec2D_xmax > 0) write(IOUT) ibelm_xmax
+  if (nspec2D_ymin > 0) write(IOUT) ibelm_ymin
+  if (nspec2D_ymax > 0) write(IOUT) ibelm_ymax
+  if (nspec2D_bottom > 0) write(IOUT) ibelm_bottom
+  if (nspec2D_top > 0) write(IOUT) ibelm_top
+
+  ! free surface
   write(IOUT) num_free_surface_faces
   if (num_free_surface_faces > 0) then
     write(IOUT) free_surface_ispec
@@ -231,7 +241,7 @@
     write(IOUT) free_surface_normal
   endif
 
-! acoustic-elastic coupling surface
+  ! acoustic-elastic coupling surface
   write(IOUT) num_coupling_ac_el_faces
   if (num_coupling_ac_el_faces > 0) then
     write(IOUT) coupling_ac_el_ispec
@@ -240,7 +250,7 @@
     write(IOUT) coupling_ac_el_normal
   endif
 
-! acoustic-poroelastic coupling surface
+  ! acoustic-poroelastic coupling surface
   write(IOUT) num_coupling_ac_po_faces
   if (num_coupling_ac_po_faces > 0) then
     write(IOUT) coupling_ac_po_ispec
@@ -249,7 +259,7 @@
     write(IOUT) coupling_ac_po_normal
   endif
 
-! elastic-poroelastic coupling surface
+  ! elastic-poroelastic coupling surface
   write(IOUT) num_coupling_el_po_faces
   if (num_coupling_el_po_faces > 0) then
     write(IOUT) coupling_el_po_ispec
@@ -260,25 +270,38 @@
     write(IOUT) coupling_el_po_normal
   endif
 
-  !MPI interfaces
-  max_nibool_interfaces_ext_mesh = maxval(nibool_interfaces_ext_mesh(:))
+  ! stamp for checking i/o
+  itest = 9997
+  write(IOUT) itest
 
-  allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 650')
-  if (ier /= 0) stop 'error allocating array'
-  do i = 1, num_interfaces_ext_mesh
-     ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
-  enddo
-
-  write(IOUT) num_interfaces_ext_mesh
+  ! MPI interfaces
   if (num_interfaces_ext_mesh > 0) then
-    write(IOUT) max_nibool_interfaces_ext_mesh
+    max_nibool_interfaces_ext_mesh = maxval(nibool_interfaces_ext_mesh(:))
+  else
+    max_nibool_interfaces_ext_mesh = 0
+  endif
+  write(IOUT) num_interfaces_ext_mesh
+  write(IOUT) max_nibool_interfaces_ext_mesh
+
+  if (num_interfaces_ext_mesh > 0) then
+    allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 650')
+    if (ier /= 0) stop 'error allocating array'
+    ibool_interfaces_ext_mesh_dummy(:,:) = 0
+    do i = 1, num_interfaces_ext_mesh
+       ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
+    enddo
     write(IOUT) my_neighbors_ext_mesh
     write(IOUT) nibool_interfaces_ext_mesh
     write(IOUT) ibool_interfaces_ext_mesh_dummy
   endif
 
-! anisotropy
+  ! stamp for checking i/o
+  itest = 9996
+  write(IOUT) itest
+
+  ! material properties
+  ! anisotropy
   if (ELASTIC_SIMULATION .and. ANISOTROPY) then
     write(IOUT) c11store
     write(IOUT) c12store
@@ -303,7 +326,7 @@
     write(IOUT) c66store
   endif
 
-! inner/outer elements
+  ! inner/outer elements
   write(IOUT) ispec_is_inner
 
   if (ACOUSTIC_SIMULATION) then
@@ -341,6 +364,10 @@
   write(IOUT) ispec_is_surface_external_mesh
   write(IOUT) iglob_is_surface_external_mesh
 
+  ! stamp for checking i/o
+  itest = 9995
+  write(IOUT) itest
+
   close(IOUT)
 
   ! stores arrays in binary files
@@ -352,8 +379,10 @@
   endif
 
   ! cleanup
-  deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier)
-  if (ier /= 0) stop 'error deallocating array ibool_interfaces_ext_mesh_dummy'
+  if (allocated(ibool_interfaces_ext_mesh_dummy)) then
+    deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier)
+    if (ier /= 0) stop 'error deallocating array ibool_interfaces_ext_mesh_dummy'
+  endif
 
   ! PML
   deallocate(is_CPML,stat=ier); if (ier /= 0) stop 'error deallocating array is_CPML'

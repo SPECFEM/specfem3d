@@ -547,7 +547,7 @@
       ! sort the list based upon coordinates to get rid of multiples
       print *,'sorting list of points'
       call get_global(npointot,xp,yp,zp,iglob,locval,ifseg,nglob, &
-           dble(minval(store_val_x(:))),dble(maxval(store_val_x(:))))
+                      dble(minval(store_val_x(:))),dble(maxval(store_val_x(:))))
 
       ! print total number of points found
       print *

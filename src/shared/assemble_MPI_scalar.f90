@@ -77,7 +77,7 @@
     if (ier /= 0) stop 'error allocating array request_recv_scalar'
     buffer_send_scalar(:,:) = 0.0_CUSTOM_REAL; buffer_recv_scalar(:,:) = 0.00_CUSTOM_REAL
     request_send_scalar(:) = 0; request_recv_scalar(:) = 0
-    
+
     ! partition border copy into the buffer
     do iinterface = 1, num_interfaces_ext_mesh
       do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)

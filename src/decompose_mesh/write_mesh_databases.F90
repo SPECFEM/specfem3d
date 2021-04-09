@@ -36,17 +36,30 @@
 
   ! local parameters
   integer :: ier
+  integer :: my_ninterface,max_interface_size
 
-  allocate(my_interfaces(0:ninterfaces-1),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 115')
-  if (ier /= 0) stop 'Error allocating array my_interfaces'
-  allocate(my_nb_interfaces(0:ninterfaces-1),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 116')
-  if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
+  ! initializes
+  my_ninterface = 0
+  max_interface_size = 0
+
+  ! allocates MPI interfaces
+  if (ninterfaces > 0) then
+    allocate(my_interfaces(0:ninterfaces-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 115')
+    if (ier /= 0) stop 'Error allocating array my_interfaces'
+    allocate(my_nb_interfaces(0:ninterfaces-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 116')
+    if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
+  else
+    ! dummy allocation
+    allocate(my_interfaces(1),my_nb_interfaces(1))
+  endif
+  my_interfaces(:) = 0; my_nb_interfaces(:) = 0
 
   ! user output
   print *, 'partitions: '
-  print *, '  num = ',nparts
+  print *, '  num         = ',nparts
+  print *, '  ninterfaces = ',ninterfaces
   print *
 
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) open(124,file='Numglob2loc_elmn.txt')
@@ -116,12 +129,16 @@
                                    glob2loc_nodes, 1, nparts)
 
     ! writes out MPI interfaces elements
-    !print *,' my interfaces:',my_ninterface,maxval(my_nb_interfaces)
     if (my_ninterface == 0) then
-      write(IIN_database) my_ninterface, 0       ! avoids problem with maxval for empty array my_nb_interfaces
+      max_interface_size = 0
     else
-      write(IIN_database) my_ninterface, maxval(my_nb_interfaces)
+      max_interface_size = maxval(my_nb_interfaces)
     endif
+    ! user output
+    print *,'  partition ',ipart,'has number of MPI interfaces: ',my_ninterface,'maximum size',max_interface_size
+
+    ! format: #number_of_MPI_interfaces  #maximum_number_of_elements_on_each_interface
+    write(IIN_database) my_ninterface, max_interface_size
 
     call write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
                                    my_ninterface, my_interfaces, my_nb_interfaces, &
@@ -155,8 +172,8 @@
         write(16) nnodes_loc
 
         call write_glob2loc_nodes_database(16, ipart, nnodes_loc, nodes_coords_open, &
-                                glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-                                glob2loc_nodes, nnodes, 2)
+                                           glob2loc_nodes_nparts, glob2loc_nodes_parts, &
+                                           glob2loc_nodes, nnodes, 2)
         close(16)
      endif
 
@@ -171,7 +188,9 @@
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) close(124)
 
   ! user output
+  print *
   print *, 'Databases files in directory: ',outputpath_name(1:len_trim(outputpath_name))
+  print *
 
   end subroutine write_mesh_databases
 

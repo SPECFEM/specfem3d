@@ -72,7 +72,7 @@
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: test_flag_cr
   integer, dimension(:,:), allocatable :: ibool_interfaces_dummy
 
-  ! we will use double precision locations to find/sort mpi points
+  ! we will use double precision locations to find/sort MPI points
   if (num_interfaces_ext_mesh > 0) then
     ! allocates arrays
     allocate(xstore_dummy_db(nglob),ystore_dummy_db(nglob),zstore_dummy_db(nglob),stat=ier)
@@ -126,7 +126,7 @@
   if (myrank == 0) then
     write(IMAIN,*) '     number of interfaces        : ',num_interfaces_ext_mesh
     if (num_interfaces_ext_mesh > 0) then
-      write(IMAIN,*) '     creating mpi indexing       : x min/max = ',sngl(x_min_all),'/',sngl(x_max_all)
+      write(IMAIN,*) '     creating MPI indexing       : x min/max = ',sngl(x_min_all),'/',sngl(x_max_all)
       write(IMAIN,*) '                                   tolerance = ',SMALLVALTOL
     endif
     write(IMAIN,*)

@@ -783,7 +783,7 @@
 
   ! acoustic potentials
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: &
-        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
+    potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
 
   logical, intent(in) :: backward_simulation
 
