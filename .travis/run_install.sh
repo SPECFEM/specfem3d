@@ -52,6 +52,9 @@ if [ "$CUDA" == "true" ]; then
   wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
   sudo dpkg -i ${INSTALLER}
 
+  # ubuntu16.04 version package needs key
+  sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub
+
   # update
   echo "Updating libraries"
   sudo apt-get update -qq
