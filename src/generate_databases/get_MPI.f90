@@ -39,7 +39,7 @@
   ! external mesh, element indexing
   use generate_databases_par, only: nelmnts_ext_mesh,elmnts_ext_mesh, &
     my_nelmnts_neighbors_ext_mesh, my_interfaces_ext_mesh, &
-    nodes_coords_ext_mesh,xstore,ystore,zstore
+    nodes_coords_ext_mesh
 
   use create_regions_mesh_ext_par
 
@@ -49,10 +49,8 @@
   ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-  !local parameters
+  ! local parameters
   double precision, dimension(:), allocatable :: xp,yp,zp
-
-  double precision,dimension(:),allocatable :: xstore_dummy_db,ystore_dummy_db,zstore_dummy_db
   double precision :: x_min,x_max,x_min_all,x_max_all
   double precision :: SMALLVALTOL
 
@@ -71,34 +69,6 @@
   integer,dimension(:),allocatable :: test_flag_i
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: test_flag_cr
   integer, dimension(:,:), allocatable :: ibool_interfaces_dummy
-
-  ! we will use double precision locations to find/sort MPI points
-  if (num_interfaces_ext_mesh > 0) then
-    ! allocates arrays
-    allocate(xstore_dummy_db(nglob),ystore_dummy_db(nglob),zstore_dummy_db(nglob),stat=ier)
-    if (ier /= 0) stop 'Error allocating xstore_**_db arrays'
-    xstore_dummy_db(:) = 0.d0; ystore_dummy_db(:) = 0.d0; zstore_dummy_db(:) = 0.d0
-    ! gets locations from (original) double precision store
-    do ispec = 1, nspec
-      do k = 1, NGLLZ
-        do j = 1, NGLLY
-          do i = 1, NGLLX
-            iglob = ibool(i,j,k,ispec)
-            if (iglob <= 0 .or. iglob > nglob) then
-              print *,'Error: rank ',myrank,'has invalid iglob index',iglob,'at i/j/k/ispec',i,j,k,ispec
-              stop 'Invalid iglob index'
-            endif
-            xstore_dummy_db(iglob) = xstore(i,j,k,ispec)
-            ystore_dummy_db(iglob) = ystore(i,j,k,ispec)
-            zstore_dummy_db(iglob) = zstore(i,j,k,ispec)
-          enddo
-        enddo
-      enddo
-    enddo
-  else
-    ! dummy allocation
-    allocate(xstore_dummy_db(1),ystore_dummy_db(1),zstore_dummy_db(1))
-  endif
 
   ! define sort geometrical tolerance based upon typical size of the model
   ! (compare with get_global() which uses same tolerance)
@@ -121,7 +91,7 @@
 
   ! define geometrical tolerance based upon typical size of the model
   ! (needs to decrease by a factor 0.1 to fix travis check TESTID=2)
-  SMALLVALTOL = 0.1 * SMALLVAL_TOL * dabs(x_max_all - x_min_all)
+  SMALLVALTOL = SMALLVAL_TOL * dabs(x_max_all - x_min_all)
 
   ! user output
   if (myrank == 0) then
@@ -180,9 +150,10 @@
     ! gets x,y,z coordinates of global points on MPI interface
     do ilocnum = 1, num_interface_points
       iglob = ibool_interfaces_ext_mesh(ilocnum,iinterface)
-      xp(ilocnum) = xstore_dummy_db(iglob)
-      yp(ilocnum) = ystore_dummy_db(iglob)
-      zp(ilocnum) = zstore_dummy_db(iglob)
+      ! we will use double precision locations to find/sort MPI points
+      xp(ilocnum) = dble(xstore_dummy(iglob))
+      yp(ilocnum) = dble(ystore_dummy(iglob))
+      zp(ilocnum) = dble(zstore_dummy(iglob))
     enddo
 
     ! sorts (lexicographically?) ibool_interfaces_ext_mesh and updates value
@@ -215,9 +186,6 @@
     deallocate(reorder_interface_ext_mesh)
     deallocate(ninseg_ext_mesh)
   enddo
-
-  ! frees temporary arrays
-  deallocate(xstore_dummy_db,ystore_dummy_db,zstore_dummy_db)
 
   ! outputs total number of MPI interface points
   call sum_all_i(num_points2,ilocnum)

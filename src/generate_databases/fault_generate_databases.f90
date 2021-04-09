@@ -43,20 +43,23 @@ module fault_generate_databases
 
   type fault_db_type
     private
-    integer :: nspec=0,nglob=0
+    real(kind=CUSTOM_REAL), dimension(:), pointer :: xcoordbulk1,ycoordbulk1,zcoordbulk1, &
+                                                     xcoordbulk2,ycoordbulk2,zcoordbulk2
+    real(kind=CUSTOM_REAL), dimension(:,:), pointer:: jacobian2Dw
+    real(kind=CUSTOM_REAL), dimension(:,:,:), pointer:: normal
     real(kind=CUSTOM_REAL) :: eta
     integer, dimension(:), pointer:: ispec1, ispec2, ibulk1, ibulk2, iface1, iface2
-    real(kind=CUSTOM_REAL), dimension(:), pointer :: xcoordbulk1,ycoordbulk1,zcoordbulk1,xcoordbulk2,ycoordbulk2,zcoordbulk2
     integer, dimension(:,:), allocatable :: ibool1, ibool2
     integer, dimension(:,:), pointer :: inodes1, inodes2
     integer, dimension(:,:,:), pointer :: ijk1, ijk2
-    real(kind=CUSTOM_REAL), dimension(:,:), pointer:: jacobian2Dw
-    real(kind=CUSTOM_REAL), dimension(:,:,:), pointer:: normal
+    integer :: nspec = 0, nglob = 0
   end type fault_db_type
 
   type(fault_db_type), allocatable, save :: fault_db(:)
   ! fault_db(i) is the database of the i-th fault in the mesh
+
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
+
   double precision, allocatable, save :: nodes_coords_open(:,:)
   integer, save :: nnodes_coords_open
 
@@ -87,6 +90,7 @@ module fault_generate_databases
 contains
 
 !=================================================================================================================
+
   subroutine fault_read_input(prname)
 
   use constants, only: MAX_STRING_LEN, IN_DATA_FILES,myrank,IIN_PAR,IIN_BIN
@@ -196,8 +200,10 @@ contains
   integer, intent(in) :: nnodes_ext_mesh
   double precision, dimension(NDIM,nnodes_ext_mesh),intent(in) :: nodes_coords_ext_mesh
 
+  ! local parameters
   integer :: iflt
 
+  ! only partitions with a fault need to setup
   if (.not. ANY_FAULT_IN_THIS_PROC) return
 
   do iflt = 1,size(fault_db)
@@ -226,7 +232,6 @@ contains
     call save_fault_xyzcoord_ibulk(fault_db(iflt))
 
     call setup_normal_jacobian(fault_db(iflt),ibool,nspec,nglob)
-
   enddo
 
   end subroutine fault_setup
@@ -242,11 +247,13 @@ contains
 
   use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy
 
+  implicit none
   type(fault_db_type), intent(inout) :: fdb
   integer, intent(in) :: nnodes_ext_mesh,nspec,nglob
   double precision, dimension(NDIM,nnodes_ext_mesh), intent(in) :: nodes_coords_ext_mesh
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
+  ! local parameters
   real(kind=CUSTOM_REAL), dimension(NGNOD2D) :: xcoord,ycoord,zcoord
   integer :: icorner,e,ier
 
@@ -255,26 +262,26 @@ contains
   allocate(fdb%iface2(fdb%nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 875')
   do e = 1,fdb%nspec
-   ! side 1
+    ! side 1
     do icorner = 1,NGNOD2D
       xcoord(icorner) = nodes_coords_ext_mesh(1,fdb%inodes1(icorner,e))
       ycoord(icorner) = nodes_coords_ext_mesh(2,fdb%inodes1(icorner,e))
       zcoord(icorner) = nodes_coords_ext_mesh(3,fdb%inodes1(icorner,e))
     enddo
     call get_element_face_id(fdb%ispec1(e),xcoord,ycoord,zcoord, &
-                            ibool,nspec,nglob, &
-                            xstore_dummy,ystore_dummy,zstore_dummy, &
-                            fdb%iface1(e))
-   ! side 2
+                             ibool,nspec,nglob, &
+                             xstore_dummy,ystore_dummy,zstore_dummy, &
+                             fdb%iface1(e))
+    ! side 2
     do icorner = 1,NGNOD2D
       xcoord(icorner) = nodes_coords_ext_mesh(1,fdb%inodes2(icorner,e))
       ycoord(icorner) = nodes_coords_ext_mesh(2,fdb%inodes2(icorner,e))
       zcoord(icorner) = nodes_coords_ext_mesh(3,fdb%inodes2(icorner,e))
     enddo
     call get_element_face_id(fdb%ispec2(e),xcoord,ycoord,zcoord, &
-                            ibool,nspec,nglob, &
-                            xstore_dummy,ystore_dummy,zstore_dummy, &
-                            fdb%iface2(e))
+                             ibool,nspec,nglob, &
+                             xstore_dummy,ystore_dummy,zstore_dummy, &
+                             fdb%iface2(e))
   enddo
 
   end subroutine setup_iface
@@ -283,8 +290,10 @@ contains
 
   subroutine setup_ijk(fdb)
 
+  implicit none
   type(fault_db_type), intent(inout) :: fdb
 
+  ! local parameters
   integer :: e,i,j,igll,ier
   integer :: ijk_face1(3,NGLLX,NGLLY), ijk_face2(3,NGLLX,NGLLY)
 
@@ -293,15 +302,15 @@ contains
   allocate(fdb%ijk2(3,NGLLX*NGLLY,fdb%nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 877')
 
-  do e=1,fdb%nspec
+  do e = 1,fdb%nspec
     call get_element_face_gll_indices(fdb%iface1(e),ijk_face1,NGLLX,NGLLY)
     call get_element_face_gll_indices(fdb%iface2(e),ijk_face2,NGLLX,NGLLY)
     igll = 0
-    do j=1,NGLLY
-      do i=1,NGLLX
+    do j = 1,NGLLY
+      do i = 1,NGLLX
         igll = igll + 1
-        fdb%ijk1(:,igll,e)=ijk_face1(:,i,j)
-        fdb%ijk2(:,igll,e)=ijk_face2(:,i,j)
+        fdb%ijk1(:,igll,e) = ijk_face1(:,i,j)
+        fdb%ijk2(:,igll,e) = ijk_face2(:,i,j)
       enddo
     enddo
   enddo
@@ -312,8 +321,11 @@ contains
 
   subroutine setup_Kelvin_Voigt_eta(fdb,nspec)
 
+  implicit none
   type(fault_db_type), intent(in) :: fdb
   integer, intent(in) :: nspec ! number of spectral elements in each block
+
+  ! local parameters
   integer :: ier
 
   if (fdb%eta > 0.0_CUSTOM_REAL) then
@@ -346,14 +358,39 @@ contains
   integer, intent(in) :: nspec,npointot
   double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec), intent(in) :: xstore,ystore,zstore
 
-  double precision :: xp(npointot),yp(npointot),zp(npointot),xmin,xmax
-  integer :: locval(npointot)
-  logical :: ifseg(npointot)
+  ! local parameters
+  double precision,dimension(npointot) :: xp,yp,zp
+  double precision :: xmin,xmax
+  integer,dimension(npointot) :: locval
+  logical,dimension(npointot) :: ifseg
   integer :: ispec,k,igll,ie,je,ke,e,ier
 
+  ! define sort geometrical tolerance based upon typical size of the model
+  ! (compare with get_global() which uses same tolerance)
+  !
+  ! note: the tolerance value is important to adapt according to the mesh dimensions
+  !       having the tolerance too small, e.g., for double precision runs, will lead to numerical artifacts
+  !       when different partitions have slightly different node positions due to numerical round-offs.
+  !       we adapt the tolerance to the dimensions of the mesh (using the x-direction as a typical dimension value),
+  !       to avoid round-off problems for other kind of meshes
+  !       (e.g., UTM meshes have often dimensions in ~ 10 km, local meshes for engineering ~ 1 m, ultrasonic ~ 1mm range).
+  !
+  !       one way to avoid this mesh size dependence would be to normalize the coordinates as done in the global version.
+  !       again, that would need a typical dimension of the mesh geometry used. to check for the future...
+  !
+  ! min/max values in x-direction
   xmin = minval(nodes_coords_ext_mesh(1,:))
   xmax = maxval(nodes_coords_ext_mesh(1,:))
 
+  ! careful: here, do not call collective MPI commands like:
+  !             call min_all_all_dp(x_min,x_min_all)
+  !             call max_all_all_dp(x_max,x_max_all)
+  !          since this will only be executed for processes/slices containing fault elements,
+  !          collectives could stall execution.
+
+  xp(:) = 0.d0
+  yp(:) = 0.d0
+  zp(:) = 0.d0
   k = 0
   do e = 1,fdb%nspec
     ispec = fdb%ispec1(e)
@@ -370,6 +407,7 @@ contains
 
   allocate( fdb%ibool1(NGLLSQUARE,fdb%nspec) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 879')
+  fdb%ibool1(:,:) = 0
 
   call get_global(npointot,xp,yp,zp,fdb%ibool1,locval,ifseg,fdb%nglob,xmin,xmax)
 
@@ -393,6 +431,7 @@ contains
 
   allocate( fdb%ibool2(NGLLSQUARE,fdb%nspec) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 880')
+  fdb%ibool2(:,:) = 0
 
   call get_global(npointot,xp,yp,zp,fdb%ibool2,locval,ifseg,fdb%nglob,xmin,xmax)
 
@@ -403,15 +442,20 @@ contains
 
   subroutine setup_ibulks(fdb,ibool,nspec)
 
+  implicit none
   type(fault_db_type), intent(inout) :: fdb
   integer, intent(in) :: nspec, ibool(NGLLX,NGLLY,NGLLZ,nspec)
 
+  ! local parameters
   integer :: e,k, K1, K2, ie,je,ke,ier
 
   allocate( fdb%ibulk1(fdb%nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 881')
+  fdb%ibulk1(:) = 0
+
   allocate( fdb%ibulk2(fdb%nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 882')
+  fdb%ibulk2(:) = 0
 
   do e = 1, fdb%nspec
     do k = 1, NGLLSQUARE
@@ -439,18 +483,31 @@ contains
 
   use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy
 
+  implicit none
   type(fault_db_type), intent(inout) :: fdb
 
+  ! local parameters
+  double precision :: x1,x2,y1,y2,z1,z2
   integer :: i,K1,K2
 
   do i = 1,fdb%nglob
     K1 = fdb%ibulk1(i)
     K2 = fdb%ibulk2(i)
-    xstore_dummy(K1) = 0.5_CUSTOM_REAL*( xstore_dummy(K1) + xstore_dummy(K2) )
+
+    x1 = dble(xstore_dummy(K1))
+    x2 = dble(xstore_dummy(K2))
+
+    y1 = dble(ystore_dummy(K1))
+    y2 = dble(ystore_dummy(K2))
+
+    z1 = dble(zstore_dummy(K1))
+    z2 = dble(zstore_dummy(K2))
+
+    xstore_dummy(K1) = real(0.5d0 *(x1 + x2),kind=CUSTOM_REAL)
     xstore_dummy(K2) = xstore_dummy(K1)
-    ystore_dummy(K1) = 0.5_CUSTOM_REAL*( ystore_dummy(K1) + ystore_dummy(K2) )
+    ystore_dummy(K1) = real(0.5d0 *(y1 + y2),kind=CUSTOM_REAL)
     ystore_dummy(K2) = ystore_dummy(K1)
-    zstore_dummy(K1) = 0.5_CUSTOM_REAL*( zstore_dummy(K1) + zstore_dummy(K2) )
+    zstore_dummy(K1) = real(0.5d0 *(z1 + z2),kind=CUSTOM_REAL)
     zstore_dummy(K2) = zstore_dummy(K1)
   enddo
 
@@ -462,8 +519,10 @@ contains
 
   use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy
 
+  implicit none
   type(fault_db_type), intent(inout) :: fdb
 
+  ! local parameters
   integer :: K1, K2, i, ier
 
   allocate( fdb%xcoordbulk1(fdb%nglob) ,stat=ier)
@@ -478,6 +537,8 @@ contains
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 887')
   allocate( fdb%zcoordbulk2(fdb%nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 888')
+  fdb%xcoordbulk1(:) = 0.0_CUSTOM_REAL; fdb%ycoordbulk1(:) = 0.0_CUSTOM_REAL; fdb%zcoordbulk1(:) = 0.0_CUSTOM_REAL
+  fdb%xcoordbulk2(:) = 0.0_CUSTOM_REAL; fdb%ycoordbulk2(:) = 0.0_CUSTOM_REAL; fdb%zcoordbulk2(:) = 0.0_CUSTOM_REAL
 
   do i = 1, fdb%nglob
       K1 = fdb%ibulk1(i)
@@ -520,10 +581,12 @@ contains
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 889')
   allocate(fdb%jacobian2Dw(NGLLSQUARE,fdb%nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 890')
+  fdb%normal(:,:,:) = 0.0_CUSTOM_REAL
+  fdb%jacobian2Dw(:,:) = 0.0_CUSTOM_REAL
 
-  do ispec_flt=1,fdb%nspec
+  do ispec_flt = 1,fdb%nspec
 
-    iface_ref= fdb%iface1(ispec_flt)
+    iface_ref = fdb%iface1(ispec_flt)
     ispec = fdb%ispec1(ispec_flt)
 
     ! takes indices of corners of reference face
@@ -549,8 +612,8 @@ contains
                                     ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
     ! normal convention: points away from domain1, reference element.
-    do j=1,NGLLY
-      do i=1,NGLLX
+    do j = 1,NGLLY
+      do i = 1,NGLLX
         ! directs normals such that they point outwards of element
         call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
                                      ibool,nspec,nglob, &
@@ -561,8 +624,8 @@ contains
 
     ! stores informations about this face
     igll = 0
-    do j=1,NGLLY
-      do i=1,NGLLX
+    do j = 1,NGLLY
+      do i = 1,NGLLX
         ! adds all GLL points on that face
         igll = igll + 1
         ! stores weighted jacobian and normals
@@ -741,8 +804,5 @@ contains
   write(IOUT) f%ispec2
 
   end subroutine save_one_fault_bin
-
-!------------------------------------------------
-
 
 end module fault_generate_databases
