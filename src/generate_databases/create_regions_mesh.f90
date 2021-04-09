@@ -1008,7 +1008,7 @@
 
   integer :: ieoff,ilocnum,ier
   integer :: i,j,k,ispec,iglobnum
-  double precision :: x_min,x_max
+  double precision :: x_min,x_max,x_min_all,x_max_all
 
 ! allocate memory for arrays
   allocate(locval(npointot),stat=ier)
@@ -1032,7 +1032,7 @@
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
   zp = 0.d0
 
-! creates temporary global point arrays
+  ! creates temporary global point arrays
   do ispec = 1,nspec
     ieoff = NGLLX * NGLLY * NGLLZ * (ispec-1)
     ilocnum = 0
@@ -1051,15 +1051,17 @@
   ! min/max values in x-direction
   x_min = minval(nodes_coords_ext_mesh(1,:))
   x_max = maxval(nodes_coords_ext_mesh(1,:))
+  call min_all_all_dp(x_min,x_min_all)
+  call max_all_all_dp(x_max,x_max_all)
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '     creating ibool indexing     : x min/max = ',sngl(x_min),'/',sngl(x_max)
+    write(IMAIN,*) '     creating ibool indexing     : x min/max = ',sngl(x_min_all),'/',sngl(x_max_all)
     call flush_IMAIN()
   endif
 
-! gets ibool indexing from local (GLL points) to global points
-  call get_global(npointot,xp,yp,zp,ibool,locval,ifseg,nglob,x_min,x_max)
+  ! gets ibool indexing from local (GLL points) to global points
+  call get_global(npointot,xp,yp,zp,ibool,locval,ifseg,nglob,x_min_all,x_max_all)
 
   ! user output
   if (myrank == 0) then
@@ -1067,10 +1069,10 @@
     call flush_IMAIN()
   endif
 
-! we can create a new indirect addressing to reduce cache misses
+  ! we can create a new indirect addressing to reduce cache misses
   call get_global_indirect_addressing(nspec,nglob,ibool)
 
-! cleanup
+  ! cleanup
   deallocate(xp,stat=ier); if (ier /= 0) stop 'error in deallocate'
   deallocate(yp,stat=ier); if (ier /= 0) stop 'error in deallocate'
   deallocate(zp,stat=ier); if (ier /= 0) stop 'error in deallocate'
@@ -1083,32 +1085,32 @@
     call flush_IMAIN()
   endif
 
-! unique global point locations
+  ! unique global point locations
   nglob_dummy = nglob
   allocate(xstore_dummy(nglob_dummy),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 813')
-  xstore_dummy(:) = 0.d0
+  xstore_dummy(:) = 0._CUSTOM_REAL
 
   allocate(ystore_dummy(nglob_dummy),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 814')
-  ystore_dummy(:) = 0.d0
+  ystore_dummy(:) = 0._CUSTOM_REAL
 
   allocate(zstore_dummy(nglob_dummy),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 815')
   if (ier /= 0) stop 'error in allocate'
-  zstore_dummy(:) = 0.d0
+  zstore_dummy(:) = 0._CUSTOM_REAL
 
   do ispec = 1, nspec
-     do k = 1, NGLLZ
-        do j = 1, NGLLY
-           do i = 1, NGLLX
-              iglobnum = ibool(i,j,k,ispec)
-              xstore_dummy(iglobnum) = xstore(i,j,k,ispec)
-              ystore_dummy(iglobnum) = ystore(i,j,k,ispec)
-              zstore_dummy(iglobnum) = zstore(i,j,k,ispec)
-           enddo
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          iglobnum = ibool(i,j,k,ispec)
+          xstore_dummy(iglobnum) = real(xstore(i,j,k,ispec),kind=CUSTOM_REAL)
+          ystore_dummy(iglobnum) = real(ystore(i,j,k,ispec),kind=CUSTOM_REAL)
+          zstore_dummy(iglobnum) = real(zstore(i,j,k,ispec),kind=CUSTOM_REAL)
         enddo
-     enddo
+      enddo
+    enddo
   enddo
 
   end subroutine crm_ext_setup_indexing
@@ -1202,9 +1204,9 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                            ibool,nspec,nglob_dummy, &
-                            xstore_dummy,ystore_dummy,zstore_dummy, &
-                            iface)
+                             ibool,nspec,nglob_dummy, &
+                             xstore_dummy,ystore_dummy,zstore_dummy, &
+                             iface)
 
     ! ijk indices of GLL points for face id
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
@@ -1218,19 +1220,19 @@
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
-    do j=1,NGLLY
-      do i=1,NGLLX
+    do j = 1,NGLLY
+      do i = 1,NGLLX
           call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob_dummy, &
-                                      xstore_dummy,ystore_dummy,zstore_dummy, &
-                                      normal_face(:,i,j) )
+                                       ibool,nspec,nglob_dummy, &
+                                       xstore_dummy,ystore_dummy,zstore_dummy, &
+                                       normal_face(:,i,j))
       enddo
     enddo
 
     ! stores information on global points on moho surface
     igll = 0
-    do j=1,NGLLY
-      do i=1,NGLLX
+    do j = 1,NGLLY
+      do i = 1,NGLLX
         iglob = ibool(ijk_face(1,i,j),ijk_face(2,i,j),ijk_face(3,i,j),ispec)
         ! sets flag
         iglob_is_surface(iglob) = ispec2D
@@ -1310,12 +1312,12 @@
 
         ! normal convention: points away from element
         ! switch normal direction if necessary
-        do j=1,NGLLZ
-          do i=1,NGLLX
+        do j = 1,NGLLZ
+          do i = 1,NGLLX
             call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob_dummy, &
-                                      xstore_dummy,ystore_dummy,zstore_dummy, &
-                                      normal_face(:,i,j) )
+                                         ibool,nspec,nglob_dummy, &
+                                         xstore_dummy,ystore_dummy,zstore_dummy, &
+                                         normal_face(:,i,j) )
           enddo
         enddo
 
@@ -1328,9 +1330,9 @@
 
         ! determines whether normal points into element or not (top/bottom distinction)
         call get_element_face_normal_idirect(ispec,iface,xcoord,ycoord,zcoord, &
-                              ibool,nspec,nglob_dummy, &
-                              xstore_dummy,ystore_dummy,zstore_dummy, &
-                              normal,idirect )
+                                             ibool,nspec,nglob_dummy, &
+                                             xstore_dummy,ystore_dummy,zstore_dummy, &
+                                             normal,idirect)
 
         ! takes moho surface element id given by id on midpoint
         ispec2D = iglob_is_surface(iglob_midpoint)
@@ -1531,8 +1533,8 @@
   if (SAVE_MESH_FILES .and. DEBUG) then
     filename = prname(1:len_trim(prname))//'ispec_is_inner'
     call write_VTK_data_elem_l(nspec,nglob_dummy, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                        ispec_is_inner,filename)
+                               xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                               ispec_is_inner,filename)
   endif
 
 
@@ -1710,6 +1712,7 @@
   allocate(iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 835')
   if (ier /= 0) stop 'error allocating array'
+  ispec_is_surface_external_mesh(:) = .false.; iglob_is_surface_external_mesh(:) = .false.
   nfaces_surface = 0
 
   ! collects MPI interfaces for detection
@@ -1717,8 +1720,9 @@
   allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 836')
   if (ier /= 0) stop 'error allocating array'
+  ibool_interfaces_ext_mesh_dummy(:,:) = 0
 
-  do i = 1, num_interfaces_ext_mesh
+  do i = 1,num_interfaces_ext_mesh
      ibool_interfaces_ext_mesh_dummy(:,:) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,:)
   enddo
   call synchronize_all()
