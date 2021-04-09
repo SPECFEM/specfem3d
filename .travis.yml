@@ -4,7 +4,7 @@
 #       this is using C as a base and installs gfortran in the test environment
 
 language: c
-dist: trusty
+dist: xenial
 sudo: required
 
 os: linux
