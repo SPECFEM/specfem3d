@@ -120,7 +120,8 @@
   call max_all_all_dp(x_max,x_max_all)
 
   ! define geometrical tolerance based upon typical size of the model
-  SMALLVALTOL = SMALLVAL_TOL * dabs(x_max_all - x_min_all)
+  ! (needs to decrease by a factor 0.1 to fix travis check TESTID=2)
+  SMALLVALTOL = 0.1 * SMALLVAL_TOL * dabs(x_max_all - x_min_all)
 
   ! user output
   if (myrank == 0) then

@@ -28,7 +28,7 @@ if [ "$CUDA" == "true" ]; then
   ## distribution trusty: from ubuntu 14.04
   #UBUNTU_VERSION=ubuntu1404
   ## distribution xenial: from ubuntu 16.04
-  UBUNTU_VERSION=ubuntu1602
+  UBUNTU_VERSION=ubuntu1604
 
   # CUDA_VERSION - specifies CUDA toolkit version
   ## trusty
@@ -38,6 +38,7 @@ if [ "$CUDA" == "true" ]; then
 
   echo "Installing CUDA library"
   echo "CUDA version: ${CUDA_VERSION}"
+  echo "UBUNTU version: ${UBUNTU_VERSION}"
 
   # note: travis could stall and time out here
   #       one could try to add: travis_retry sudo dpgk -i ..
@@ -57,6 +58,7 @@ if [ "$CUDA" == "true" ]; then
   dpkg -l | grep cuda
   export CUDA_APT=${CUDA_VERSION:0:3}
   export CUDA_APT=${CUDA_APT/./-}
+  echo "CUDA: ${CUDA_APT}"
 
   # installs packages
   # CUDA_PACKAGES="cuda-drivers cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}";
@@ -77,6 +79,12 @@ fi
 echo "export PATH=${PATH}" > $HOME/.tmprc
 echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $HOME/.tmprc
 echo "export CUDA_HOME=${CUDA_HOME}" >> $HOME/.tmprc
+
+# to avoid mpi issues on travis
+# see: https://github.com/open-mpi/ompi/issues/1393#issuecomment-187980473
+#      https://github.com/open-mpi/ompi/issues/4948
+echo "export export OMPI_MCA_btl_vader_single_copy_mechanism=none" >> $HOME/.tmprc
+echo "export export OMPI_MCA_btl=^openib" >> $HOME/.tmprc
 
 echo "exports:"
 export
