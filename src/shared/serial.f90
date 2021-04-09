@@ -84,7 +84,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   integer, dimension(countval) :: buffer
   integer(kind=4) :: unused_i4
 
@@ -102,7 +102,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   real(kind=CUSTOM_REAL), dimension(countval) :: buffer
   real(kind=CUSTOM_REAL) :: unused_cr
 
@@ -135,7 +135,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   double precision, dimension(countval) :: buffer
   double precision :: unused_dp
 
@@ -166,7 +166,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   real, dimension(countval) :: buffer
   real :: unused_r
 
@@ -199,7 +199,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
@@ -220,7 +220,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
@@ -244,7 +244,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
@@ -266,7 +266,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
@@ -283,25 +283,26 @@
 !
 !----
 !
-
-  subroutine bcast_all_r_for_database(buffer, countval)
-
-  implicit none
-
-  integer countval
-  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
-  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
-  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
-  real :: buffer
-  integer(kind=4) :: unused_i4
-  real :: unused_r
-
-  unused_i4 = countval
-
-  unused_r = buffer
-
-  end subroutine bcast_all_r_for_database
-
+! unused so far...
+!
+!  subroutine bcast_all_r_for_database(buffer, countval)
+!
+!  implicit none
+!
+!  integer countval
+!  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
+!  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
+!  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
+!  real :: buffer
+!  integer(kind=4) :: unused_i4
+!  real :: unused_r
+!
+!  unused_i4 = countval
+!
+!  unused_r = buffer
+!
+!  end subroutine bcast_all_r_for_database
+!
 !
 !-------------------------------------------------------------------------------------------------
 !
@@ -354,7 +355,7 @@
 
   implicit none
 
-  integer sendcnt, recvcount, NPROC
+  integer :: sendcnt, recvcount, NPROC
   integer, dimension(sendcnt) :: sendbuf
   integer, dimension(recvcount,0:NPROC-1) :: recvbuf
 
@@ -370,7 +371,7 @@
 
   implicit none
 
-  integer NPROC
+  integer :: NPROC
   integer :: sendbuf
   integer, dimension(0:NPROC-1) :: recvbuf
 
@@ -402,7 +403,7 @@
 
   implicit none
 
-  integer sendcnt, recvcount, NPROC
+  integer :: sendcnt, recvcount, NPROC
   double precision, dimension(sendcnt) :: sendbuf
   double precision, dimension(recvcount,0:NPROC-1) :: recvbuf
 
@@ -420,7 +421,7 @@
 
   implicit none
 
-  integer sendcnt, recvcount, NPROC
+  integer :: sendcnt, recvcount, NPROC
   real(kind=CUSTOM_REAL), dimension(sendcnt) :: sendbuf
   real(kind=CUSTOM_REAL), dimension(recvcount,0:NPROC-1) :: recvbuf
 
@@ -438,7 +439,7 @@
 
   implicit none
 
-  integer  NPROC,counts
+  integer :: NPROC,counts
   real(kind=CUSTOM_REAL), dimension(counts) :: sendbuf
   real(kind=CUSTOM_REAL), dimension(counts,0:NPROC-1) :: recvbuf
 
@@ -478,7 +479,7 @@
 
   implicit none
 
-  integer sendcnt,recvcounttot,NPROC
+  integer :: sendcnt,recvcounttot,NPROC
   integer, dimension(NPROC) :: recvcount,recvoffset
   real(kind=CUSTOM_REAL), dimension(sendcnt) :: sendbuf
   real(kind=CUSTOM_REAL), dimension(recvcounttot) :: recvbuf
@@ -594,7 +595,7 @@
 
   implicit none
 
-  integer size
+  integer :: size
 
   size = 1
 
@@ -627,7 +628,7 @@
 
   implicit none
 
-  integer rank
+  integer :: rank
 
   rank = 0
 
@@ -661,7 +662,7 @@
 
   implicit none
 
-  double precision sendbuf, recvbuf
+  double precision :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -675,7 +676,7 @@
 
   implicit none
 
-  double precision sendbuf, recvbuf
+  double precision :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -691,7 +692,7 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  real(kind=CUSTOM_REAL) :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -708,7 +709,7 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  real(kind=CUSTOM_REAL) :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -724,11 +725,26 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  real(kind=CUSTOM_REAL) :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
   end subroutine min_all_all_cr
+
+
+!
+!----
+!
+
+  subroutine min_all_all_dp(sendbuf, recvbuf)
+
+  implicit none
+
+  double precision :: sendbuf, recvbuf
+
+  recvbuf = sendbuf
+
+  end subroutine min_all_all_dp
 
 !
 !----
@@ -770,7 +786,7 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  real(kind=CUSTOM_REAL) :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -798,7 +814,7 @@
   subroutine min_all_i(sendbuf, recvbuf)
 
   implicit none
-  integer:: sendbuf, recvbuf
+  integer :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -827,7 +843,7 @@
 
   implicit none
 
-  double precision sendbuf, recvbuf
+  double precision :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -843,7 +859,7 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  real(kind=CUSTOM_REAL) :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -889,7 +905,7 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  real(kind=CUSTOM_REAL) :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -903,7 +919,7 @@
 
   implicit none
 
-  integer sendbuf, recvbuf
+  integer :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -917,7 +933,7 @@
 
   implicit none
 
-  integer sendbuf, recvbuf
+  integer :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -931,7 +947,7 @@
 
   implicit none
 
-  logical sendbuf, recvbuf
+  logical :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -947,7 +963,7 @@
 
   implicit none
 
-  integer sendcount, dest, sendtag, req
+  integer :: sendcount, dest, sendtag, req
   real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
 
   integer(kind=4) :: unused_i4
@@ -971,7 +987,7 @@
 
   implicit none
 
-  integer recvcount, dest, recvtag, req
+  integer :: recvcount, dest, recvtag, req
   real(kind=CUSTOM_REAL), dimension(recvcount) :: recvbuf
 
   integer(kind=4) :: unused_i4
@@ -993,7 +1009,7 @@
 
   implicit none
 
-  integer sendcount, dest, sendtag, req
+  integer :: sendcount, dest, sendtag, req
   integer, dimension(sendcount) :: sendbuf
 
   integer(kind=4) :: unused_i4
@@ -1014,7 +1030,7 @@
 
   implicit none
 
-  integer recvcount, dest, recvtag, req
+  integer :: recvcount, dest, recvtag, req
   integer, dimension(recvcount) :: recvbuf
 
   integer(kind=4) :: unused_i4
@@ -1036,8 +1052,8 @@
 
   implicit none
 
-  integer dest,recvtag
-  integer recvcount
+  integer :: dest,recvtag
+  integer :: recvcount
   integer,dimension(recvcount):: recvbuf
 
   integer(kind=4) :: unused_i4
@@ -1059,7 +1075,7 @@
 
   implicit none
 
-  integer recvcount,dest,recvtag
+  integer :: recvcount,dest,recvtag
   real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
 
   integer(kind=4) :: unused_i4
@@ -1103,8 +1119,8 @@
 
   implicit none
 
-  integer dest,sendtag
-  integer sendcount
+  integer :: dest,sendtag
+  integer :: sendcount
   integer, dimension(sendcount) :: sendbuf
 
   integer(kind=4) :: unused_i4
@@ -1217,8 +1233,8 @@
 
   implicit none
 
-  integer dest,sendtag
-  integer sendcount
+  integer :: dest,sendtag
+  integer :: sendcount
   double precision,dimension(sendcount):: sendbuf
 
   integer(kind=4) :: unused_i4
@@ -1237,9 +1253,9 @@
 
   implicit none
 
-  integer dest,recvtag
-  integer recvcount
-  double precision,dimension(recvcount):: recvbuf
+  integer :: dest,recvtag
+  integer :: recvcount
+  double precision,dimension(recvcount) :: recvbuf
 
   integer(kind=4) :: unused_i4
   double precision :: unused_dp
@@ -1261,7 +1277,7 @@
 
   implicit none
 
-  integer sendcount,dest,sendtag
+  integer :: sendcount,dest,sendtag
   real(kind=CUSTOM_REAL),dimension(sendcount) :: sendbuf
 
   integer(kind=4) :: unused_i4
@@ -1345,14 +1361,12 @@
 
   subroutine bcast_all_l_array(buffer, countval)
 
+  implicit none
+  integer  :: countval
+  logical, dimension(countval) :: buffer
+  logical :: unused_l
 
-    implicit none
-    integer    :: countval
-    logical, dimension(countval) :: buffer
-    logical :: unused_l
-
-    unused_l = buffer(1)
-
+  unused_l = buffer(1)
 
   end subroutine bcast_all_l_array
 

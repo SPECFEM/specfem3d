@@ -290,6 +290,9 @@ end module my_mpi
 
   integer :: ier
 
+  ! checks if anything to do
+  if (countval == 0) return
+
   call MPI_BCAST(buffer,countval,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
 
   end subroutine bcast_all_i
@@ -348,6 +351,9 @@ end module my_mpi
 
   integer :: ier
 
+  ! checks if anything to do
+  if (countval == 0) return
+
   call MPI_BCAST(buffer,countval,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
 
   end subroutine bcast_all_cr
@@ -388,6 +394,9 @@ end module my_mpi
 
   integer :: ier
 
+  ! checks if anything to do
+  if (countval == 0) return
+
   call MPI_BCAST(buffer,countval,MPI_REAL,0,my_local_mpi_comm_world,ier)
 
   end subroutine bcast_all_r
@@ -406,6 +415,9 @@ end module my_mpi
   double precision, dimension(countval) :: buffer
 
   integer :: ier
+
+  ! checks if anything to do
+  if (countval == 0) return
 
   call MPI_BCAST(buffer,countval,MPI_DOUBLE_PRECISION,0,my_local_mpi_comm_world,ier)
 
@@ -435,17 +447,20 @@ end module my_mpi
 
   subroutine bcast_all_ch_array(buffer,countval,STRING_LEN)
 
-    use my_mpi
+  use my_mpi
 
-    implicit none
+  implicit none
 
-    integer :: countval, STRING_LEN
+  integer :: countval, STRING_LEN
 
-    character(len=STRING_LEN), dimension(countval) :: buffer
+  character(len=STRING_LEN), dimension(countval) :: buffer
 
-    integer :: ier
+  integer :: ier
 
-    call MPI_BCAST(buffer,STRING_LEN*countval,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+  ! checks if anything to do
+  if (countval == 0) return
+
+  call MPI_BCAST(buffer,STRING_LEN*countval,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
 
   end subroutine bcast_all_ch_array
 
@@ -455,13 +470,18 @@ end module my_mpi
 
   subroutine bcast_all_l_array(buffer, countval)
 
-    use my_mpi
-    implicit none
-    integer    :: countval
-    logical, dimension(countval) :: buffer
-    integer :: ier
+  use my_mpi
 
-    call MPI_BCAST(buffer,countval,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+  implicit none
+
+  integer :: countval
+  logical, dimension(countval) :: buffer
+  integer :: ier
+
+  ! checks if anything to do
+  if (countval == 0) return
+
+  call MPI_BCAST(buffer,countval,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
 
   end subroutine bcast_all_l_array
 
@@ -495,14 +515,16 @@ end module my_mpi
 
   implicit none
 
-  integer countval
+  integer :: countval
   ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
   integer :: buffer
 
-  integer ier
+  integer :: ier
 
+  ! checks if anything to do
+  if (countval == 0) return
   if (.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
 
   call MPI_BCAST(buffer,countval,MPI_INTEGER,0,my_local_mpi_comm_for_bcast,ier)
@@ -520,17 +542,19 @@ end module my_mpi
 
   implicit none
 
-  integer countval
+  integer :: countval
   ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
   logical :: buffer
 
-  integer ier
+  integer :: ier
 
+  ! checks if anything to do
+  if (countval == 0) return
   if (.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
 
-  call MPI_BCAST(buffer,countval,MPI_INTEGER,0,my_local_mpi_comm_for_bcast,ier)
+  call MPI_BCAST(buffer,countval,MPI_LOGICAL,0,my_local_mpi_comm_for_bcast,ier)
 
   end subroutine bcast_all_l_for_database
 
@@ -548,14 +572,16 @@ end module my_mpi
 
   include "precision.h"
 
-  integer countval
+  integer :: countval
   ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
   real(kind=CUSTOM_REAL) :: buffer
 
-  integer ier
+  integer :: ier
 
+  ! checks if anything to do
+  if (countval == 0) return
   if (.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
 
   call MPI_BCAST(buffer,countval,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_for_bcast,ier)
@@ -573,14 +599,16 @@ end module my_mpi
 
   implicit none
 
-  integer countval
+  integer :: countval
   ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
   double precision :: buffer
 
-  integer ier
+  integer :: ier
 
+  ! checks if anything to do
+  if (countval == 0) return
   if (.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
 
   call MPI_BCAST(buffer,countval,MPI_DOUBLE_PRECISION,0,my_local_mpi_comm_for_bcast,ier)
@@ -590,28 +618,31 @@ end module my_mpi
 !
 !-------------------------------------------------------------------------------------------------
 !
-
-  subroutine bcast_all_r_for_database(buffer, countval)
-
-  use my_mpi
-  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
-
-  implicit none
-
-  integer countval
-  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
-  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
-  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
-  real :: buffer
-
-  integer ier
-
-  if (.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
-
-  call MPI_BCAST(buffer,countval,MPI_REAL,0,my_local_mpi_comm_for_bcast,ier)
-
-  end subroutine bcast_all_r_for_database
-
+! unused so far...
+!
+!  subroutine bcast_all_r_for_database(buffer, countval)
+!
+!  use my_mpi
+!  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+!
+!  implicit none
+!
+!  integer :: countval
+!  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
+!  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
+!  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
+!  real :: buffer
+!
+!  integer :: ier
+!
+!  ! checks if anything to do
+!  if (countval == 0) return
+!  if (.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
+!
+!  call MPI_BCAST(buffer,countval,MPI_REAL,0,my_local_mpi_comm_for_bcast,ier)
+!
+!  end subroutine bcast_all_r_for_database
+!
 !-------------------------------------------------------------------------------------------------
 !
 ! MPI math helper
@@ -624,8 +655,8 @@ end module my_mpi
 
   implicit none
 
-  integer:: sendbuf, recvbuf
-  integer ier
+  integer :: sendbuf, recvbuf
+  integer :: ier
 
   call MPI_REDUCE(sendbuf,recvbuf,1,MPI_INTEGER,MPI_MIN,0,my_local_mpi_comm_world,ier)
 
@@ -664,6 +695,9 @@ end module my_mpi
   ! local parameters
   integer :: ier
   integer,dimension(countval) :: send
+
+  ! checks if anything to do
+  if (countval == 0) return
 
   ! seems not to be supported on all kind of MPI implementations...
   !! DK DK: yes, I confirm, using MPI_IN_PLACE is tricky
@@ -711,12 +745,29 @@ end module my_mpi
 
   include "precision.h"
 
-  real(kind=CUSTOM_REAL):: sendbuf, recvbuf
+  real(kind=CUSTOM_REAL) :: sendbuf, recvbuf
   integer :: ier
 
   call MPI_ALLREDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE,MPI_MIN,my_local_mpi_comm_world,ier)
 
   end subroutine min_all_all_cr
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine min_all_all_dp(sendbuf, recvbuf)
+
+  use my_mpi
+
+  implicit none
+
+  double precision :: sendbuf, recvbuf
+  integer :: ier
+
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION,MPI_MIN,my_local_mpi_comm_world,ier)
+
+  end subroutine min_all_all_dp
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -758,8 +809,8 @@ end module my_mpi
 
   include "precision.h"
 
-  real(kind=CUSTOM_REAL):: sendbuf, recvbuf
-  integer ier
+  real(kind=CUSTOM_REAL) :: sendbuf, recvbuf
+  integer :: ier
 
   call MPI_ALLREDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE,MPI_MAX,my_local_mpi_comm_world,ier)
 
@@ -775,8 +826,8 @@ end module my_mpi
 
   implicit none
 
-  double precision sendbuf, recvbuf
-  integer ier
+  double precision :: sendbuf, recvbuf
+  integer :: ier
 
   call MPI_REDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION,MPI_MIN,0,my_local_mpi_comm_world,ier)
 
@@ -792,8 +843,8 @@ end module my_mpi
 
   implicit none
 
-  double precision sendbuf, recvbuf
-  integer ier
+  double precision :: sendbuf, recvbuf
+  integer :: ier
 
   call MPI_REDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION,MPI_MAX,0,my_local_mpi_comm_world,ier)
 
@@ -810,7 +861,7 @@ end module my_mpi
   implicit none
 
   double precision :: sendbuf, recvbuf
-  integer ier
+  integer :: ier
 
   call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION,MPI_MAX,my_local_mpi_comm_world,ier)
 
@@ -827,7 +878,7 @@ end module my_mpi
   implicit none
 
   double precision, dimension(2) :: sendbuf,recvbuf
-  integer ier
+  integer :: ier
 
   call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_2DOUBLE_PRECISION,MPI_MAXLOC,my_local_mpi_comm_world,ier)
 
@@ -919,8 +970,8 @@ end module my_mpi
 
   include "precision.h"
 
-  real(kind=CUSTOM_REAL) sendbuf, recvbuf
-  integer ier
+  real(kind=CUSTOM_REAL) :: sendbuf, recvbuf
+  integer :: ier
 
   call MPI_ALLREDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE,MPI_SUM,my_local_mpi_comm_world,ier)
 
@@ -958,6 +1009,9 @@ end module my_mpi
   double precision, dimension(nx) :: sendbuf, recvbuf
   integer :: ier
 
+  ! checks if anything to do
+  if (nx == 0) return
+
   call MPI_REDUCE(sendbuf,recvbuf,nx,MPI_DOUBLE_PRECISION,MPI_SUM,0,my_local_mpi_comm_world,ier)
 
   end subroutine sum_all_1Darray_dp
@@ -976,6 +1030,9 @@ end module my_mpi
   integer :: nx
   logical, dimension(nx) :: sendbuf, recvbuf
   integer :: ier
+
+  ! checks if anything to do
+  if (nx == 0) return
 
   call MPI_REDUCE(sendbuf,recvbuf,nx,MPI_LOGICAL,MPI_LOR,0,my_local_mpi_comm_world,ier)
 
@@ -1169,8 +1226,7 @@ end module my_mpi
 
   integer :: ier
 
-  call MPI_RECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag, &
-                my_local_mpi_comm_world,MPI_STATUS_IGNORE,ier)
+  call MPI_RECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag,my_local_mpi_comm_world,MPI_STATUS_IGNORE,ier)
 
   end subroutine recvv_cr
 
@@ -1248,8 +1304,7 @@ end module my_mpi
   integer :: tag = 100
   integer, dimension(recvcount) :: recvbuf
 
-  call MPI_RECV(recvbuf,recvcount,MPI_INTEGER,source,tag, &
-                my_local_mpi_comm_world,MPI_STATUS_IGNORE,ier)
+  call MPI_RECV(recvbuf,recvcount,MPI_INTEGER,source,tag,my_local_mpi_comm_world,MPI_STATUS_IGNORE,ier)
 
   end subroutine recv_i_t
 
@@ -1265,7 +1320,7 @@ end module my_mpi
 
   integer :: dest,sendtag
   integer :: sendcount
-  real,dimension(sendcount):: sendbuf
+  real,dimension(sendcount) :: sendbuf
 
   integer :: ier
 
@@ -1287,7 +1342,7 @@ end module my_mpi
 
   integer :: dest,sendtag
   integer :: sendcount
-  double precision,dimension(sendcount):: sendbuf
+  double precision,dimension(sendcount) :: sendbuf
 
   integer :: ier
 
@@ -1308,9 +1363,9 @@ end module my_mpi
 
   include "precision.h"
 
-  integer sendcount,dest,sendtag
+  integer :: sendcount,dest,sendtag
   real(kind=CUSTOM_REAL),dimension(sendcount) :: sendbuf
-  integer ier
+  integer :: ier
 
   call MPI_SEND(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag,my_local_mpi_comm_world,ier)
 
@@ -1487,11 +1542,11 @@ end module my_mpi
 
   include "precision.h"
 
-  integer NPROC,counts
+  integer :: NPROC,counts
   real(kind=CUSTOM_REAL), dimension(counts) :: sendbuf
   real(kind=CUSTOM_REAL), dimension(counts,0:NPROC-1) :: recvbuf
 
-  integer ier
+  integer :: ier
 
   call MPI_ALLGATHER(sendbuf,counts,CUSTOM_MPI_TYPE,recvbuf,counts,CUSTOM_MPI_TYPE,my_local_mpi_comm_world,ier)
 
