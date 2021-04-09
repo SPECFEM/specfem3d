@@ -27,7 +27,7 @@
 
 ! routine for saving vtk file holding integer flag on each spectral element
 
-! note: due to some compilers output, we usually put formatting specifiers here (e.g., (3e18.6)).
+! note: due to some compilers output, we usually put formatting specifiers here (e.g., (3e20.12)).
 !
 !       example: some compilers tend to output a line like:
 !                   -1500.  -1500.   1312.5
@@ -37,7 +37,7 @@
 !                this will corrupt the VTK files and become unreadable.
 !                thus, by putting
 !
-!                   write(IOUT_VTK,'(3e18.6)') ..
+!                   write(IOUT_VTK,'(3e20.12)') ..
 !
 !                the lines becomes fine again. unfortunately, we need to assume a "good" number range
 !                for this. since we could have SPECFEM simulations for microscales on micrometer up to
@@ -79,7 +79,7 @@
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i=1,nglob
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e20.12)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
   write(IOUT_VTK,*) ''
 
@@ -147,7 +147,7 @@
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i=1,nglob
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e20.12)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
   write(IOUT_VTK,*) ''
 
@@ -225,7 +225,7 @@
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i=1,nglob
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e20.12)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
   write(IOUT_VTK,*) ''
 
@@ -320,7 +320,7 @@
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i=1,nglob
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e20.12)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
   write(IOUT_VTK,*) ''
 
@@ -418,7 +418,7 @@
       stop 'error vtk points file'
     endif
 
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(iglob),ystore_dummy(iglob),zstore_dummy(iglob)
+    write(IOUT_VTK,'(3e20.12)') xstore_dummy(iglob),ystore_dummy(iglob),zstore_dummy(iglob)
   enddo
   write(IOUT_VTK,*) ''
   close(IOUT_VTK)
@@ -581,7 +581,7 @@
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i=1,nglob
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e20.12)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
   write(IOUT_VTK,*) ''
 
@@ -650,7 +650,7 @@
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i = 1,nglob
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e20.12)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
   write(IOUT_VTK,*) ''
 
@@ -910,7 +910,7 @@
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i = 1,nglob
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e20.12)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
   write(IOUT_VTK,*) ""
 
