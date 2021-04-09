@@ -66,19 +66,25 @@
 
     ! sort within each segment
     ioff = 1
-    do iseg = 1,nseg
-      if (j == 1) then
-        ! sort on X
+    if (j == 1) then
+      ! sort on X
+      do iseg = 1,nseg
         call heap_sort_multi(ninseg(iseg), x(ioff), y(ioff), z(ioff), ibool(ioff), locval(ioff))
-      else if (j == 2) then
-        ! then sort on Y for a sublist of given constant X
+        ioff = ioff + ninseg(iseg)
+      enddo
+    else if (j == 2) then
+      ! then sort on Y for a sublist of given constant X
+      do iseg = 1,nseg
         call heap_sort_multi(ninseg(iseg), y(ioff), x(ioff), z(ioff), ibool(ioff), locval(ioff))
-      else
-        ! then sort on Z for a sublist of given constant X and Y
+        ioff = ioff + ninseg(iseg)
+      enddo
+    else
+      ! then sort on Z for a sublist of given constant X and Y
+      do iseg = 1,nseg
         call heap_sort_multi(ninseg(iseg), z(ioff), x(ioff), y(ioff), ibool(ioff), locval(ioff))
-      endif
-      ioff = ioff + ninseg(iseg)
-    enddo
+        ioff = ioff + ninseg(iseg)
+      enddo
+    endif
 
     ! check for jumps in current coordinate
     ! define a tolerance, normalized radius is 1., so let's use a small value

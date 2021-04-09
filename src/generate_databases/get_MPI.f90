@@ -196,8 +196,12 @@
     num_points1 = num_points1 + num_interface_points
     num_points2 = num_points2 + nibool_interfaces_ext_mesh_true
     if (num_points1 /= num_points2) then
-      write(*,*) 'error sorting MPI interface points:',myrank
-      write(*,*) '   interface:',iinterface,num_points1,num_points2
+      print *,'Error: sorting MPI interface points:',myrank
+      print *,'   interface:',iinterface,num_points1,num_points2
+      print *,'   interface points: x min/max',minval(xp(:)),maxval(xp(:))
+      print *,'                     y min/max',minval(yp(:)),maxval(yp(:))
+      print *,'                     z min/max',minval(zp(:)),maxval(zp(:))
+      print *,'   sort tolerance = ',SMALLVALTOL,'/ mesh dimensions = ',dabs(x_max_all - x_min_all)
       call exit_mpi(myrank,'error sorting MPI interface')
     endif
 
