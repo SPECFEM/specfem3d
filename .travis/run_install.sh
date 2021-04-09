@@ -23,28 +23,41 @@ ${CC} --version
 
 # installs the CUDA toolkit
 if [ "$CUDA" == "true" ]; then
+  ## distribution precise: from ubuntu 12.04
+  #UBUNTU_VERSION=ubuntu1204
+  ## distribution trusty: from ubuntu 14.04
+  #UBUNTU_VERSION=ubuntu1404
+  ## distribution xenial: from ubuntu 16.04
+  UBUNTU_VERSION=ubuntu1602
+
+  # CUDA_VERSION - specifies CUDA toolkit version
+  ## trusty
+  #CUDA_VERSION=6.5-14
+  ## xenial
+  CUDA_VERSION=9.2.148-1
+
   echo "Installing CUDA library"
   echo "CUDA version: ${CUDA_VERSION}"
+
   # note: travis could stall and time out here
   #       one could try to add: travis_retry sudo dpgk -i ..
   #       https://docs.travis-ci.com/user/common-build-problems/#travis_retry
   #
   # remove old nvidia-cuda packages
   #sudo apt-get remove nvidia-cuda-* ;
+
   # gets packages
-  ## distribution precise: from ubuntu 12.04
-  #UBUNTU_VERSION=ubuntu1204
-  ## distribution trusty: from ubuntu 14.04
-  UBUNTU_VERSION=ubuntu1404
   INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA_VERSION}_amd64.deb
   wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
   sudo dpkg -i ${INSTALLER}
+
   # update
   echo "Updating libraries"
   sudo apt-get update -qq
   dpkg -l | grep cuda
   export CUDA_APT=${CUDA_VERSION:0:3}
   export CUDA_APT=${CUDA_APT/./-}
+
   # installs packages
   # CUDA_PACKAGES="cuda-drivers cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}";
   CUDA_PACKAGES="cuda-drivers cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT}"

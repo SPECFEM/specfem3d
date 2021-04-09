@@ -24,8 +24,7 @@ env:
     #   TESTDIR      - test directory id
     #   TESTFLAGS    - flags used for configuration
     #   TESTCOV      - determines whether or not (0/1) code coverage flags are used
-    #   CUDA         - flag for compilation with CUDA
-    #   CUDA_VERSION - specifies CUDA toolkit version
+    #   CUDA         - flag for compilation with CUDA    
 
     # code coverage: mpi, using code coverage flags
     - TESTID=1 TESTCOV=1 TESTDIR=1 TESTFLAGS="--with-mpi" CUDA=false
@@ -79,10 +78,10 @@ env:
     - TESTID=17 TESTCOV=0 TESTDIR=13 TESTFLAGS="--with-mpi" CUDA=false
 
     # elastic example, hex27, compilation w/ CUDA and MPI
-    - TESTID=18 TESTCOV=0 TESTDIR=14 TESTFLAGS="--with-cuda=cuda5 --with-mpi" CUDA=true CUDA_VERSION=6.5-14
+    - TESTID=18 TESTCOV=0 TESTDIR=14 TESTFLAGS="--with-cuda=cuda5 --with-mpi" CUDA=true
 
     # acoustic example, compilation w/ CUDA
-    - TESTID=19 TESTCOV=0 TESTDIR=15 TESTFLAGS="--with-cuda=cuda5 --without-mpi" CUDA=true CUDA_VERSION=6.5-14
+    - TESTID=19 TESTCOV=0 TESTDIR=15 TESTFLAGS="--with-cuda=cuda5 --without-mpi" CUDA=true
 
     # fault example tpv5
     - TESTID=20 TESTCOV=0 TESTDIR=16 TESTFLAGS="--with-mpi" CUDA=false
