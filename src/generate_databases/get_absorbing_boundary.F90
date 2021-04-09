@@ -48,51 +48,50 @@
 
   implicit none
 
-! number of spectral elements in each block
+  ! number of spectral elements in each block
   integer,intent(in) :: nspec
 
-! arrays with the mesh
+  ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-! data from the external mesh
-  integer :: nnodes_ext_mesh
-  double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
+  ! data from the external mesh
+  integer,intent(in) :: nnodes_ext_mesh
+  double precision, dimension(NDIM,nnodes_ext_mesh),intent(in) :: nodes_coords_ext_mesh
 
-! absorbing boundaries (as defined in CUBIT)
-  integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP
+  ! absorbing boundaries (as defined in CUBIT)
+  integer,intent(in)  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP
   ! element indices containing a boundary
-  integer, dimension(nspec2D_xmin)  :: ibelm_xmin
-  integer, dimension(nspec2D_xmax)  :: ibelm_xmax
-  integer, dimension(nspec2D_ymin)  :: ibelm_ymin
-  integer, dimension(nspec2D_ymax)  :: ibelm_ymax
-  integer, dimension(NSPEC2D_BOTTOM)  :: ibelm_bottom
-  integer, dimension(NSPEC2D_TOP)  :: ibelm_top
+  integer, dimension(nspec2D_xmin),intent(in) :: ibelm_xmin
+  integer, dimension(nspec2D_xmax),intent(in) :: ibelm_xmax
+  integer, dimension(nspec2D_ymin),intent(in) :: ibelm_ymin
+  integer, dimension(nspec2D_ymax),intent(in) :: ibelm_ymax
+  integer, dimension(NSPEC2D_BOTTOM),intent(in) :: ibelm_bottom
+  integer, dimension(NSPEC2D_TOP),intent(in) :: ibelm_top
 
   ! corner node indices of boundary faces coming from CUBIT
-  integer, dimension(NGNOD2D,nspec2D_xmin)  :: nodes_ibelm_xmin
-  integer, dimension(NGNOD2D,nspec2D_xmax)  :: nodes_ibelm_xmax
-  integer, dimension(NGNOD2D,nspec2D_ymin)  :: nodes_ibelm_ymin
-  integer, dimension(NGNOD2D,nspec2D_ymax)  :: nodes_ibelm_ymax
-  integer, dimension(NGNOD2D,NSPEC2D_BOTTOM)  :: nodes_ibelm_bottom
-  integer, dimension(NGNOD2D,NSPEC2D_TOP)  :: nodes_ibelm_top
+  integer, dimension(NGNOD2D,nspec2D_xmin),intent(in) :: nodes_ibelm_xmin
+  integer, dimension(NGNOD2D,nspec2D_xmax),intent(in) :: nodes_ibelm_xmax
+  integer, dimension(NGNOD2D,nspec2D_ymin),intent(in) :: nodes_ibelm_ymin
+  integer, dimension(NGNOD2D,nspec2D_ymax),intent(in) :: nodes_ibelm_ymax
+  integer, dimension(NGNOD2D,NSPEC2D_BOTTOM),intent(in) :: nodes_ibelm_bottom
+  integer, dimension(NGNOD2D,NSPEC2D_TOP),intent(in) :: nodes_ibelm_top
 
-! local parameters
+  ! local parameters
   ! (assumes NGLLX=NGLLY=NGLLZ)
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: jacobian2Dw_face
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY) :: normal_face
   real(kind=CUSTOM_REAL), dimension(NDIM) :: lnormal
 
-  integer:: ijk_face(3,NGLLX,NGLLY)
+  integer :: ijk_face(3,NGLLX,NGLLY)
 
   ! face corner locations
   real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
-  integer  :: ispec,ispec2D,icorner,itop,iabsval,iface,igll,i,j,igllfree,ifree
+  integer :: ispec,ispec2D,icorner,itop,iabsval,iface,igll,i,j,igllfree,ifree
 
   !! CD CD
   !! additional local parameters For coupling with DSM
   integer :: ier
-
-  logical, dimension(:,:),allocatable :: iboun   ! pll
+  logical, dimension(:,:),allocatable :: iboun
 
   ! corner locations for faces
   real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: xcoord_iboun,ycoord_iboun,zcoord_iboun
@@ -100,7 +99,6 @@
 
   ! sets flag in array iboun for elements with an absorbing boundary faces
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
-
     ! allocate temporary flag array
     allocate(iboun(6,nspec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 900')
@@ -111,20 +109,19 @@
     allocate(zcoord_iboun(NGNOD2D,6,nspec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 903')
     if (ier /= 0) stop 'not enough memory to allocate arrays'
-
     iboun(:,:) = .false.
+    xcoord_iboun(:,:,:) = 0.0_CUSTOM_REAL; ycoord_iboun(:,:,:) = 0.0_CUSTOM_REAL; zcoord_iboun(:,:,:) = 0.0_CUSTOM_REAL
 
     if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then
        write(namefile,'(a17,i6.6,a4)') 'xmin_gll_for_dsm_',myrank,'.txt'
        open(123,file=namefile)
        write(123,*) nspec2D_xmin
     endif
-
   endif
-  !! CD CD
 
   ! abs face counter
   iabsval = 0
+
   ! free surface face counter
   ifree = 0
 
@@ -137,6 +134,7 @@
   ijk_face(:,:,:) = 0
   normal_face(:,:,:) = 0.0_CUSTOM_REAL
   jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
+
   do ispec2D = 1, nspec2D_xmin
     ! sets element
     ispec = ibelm_xmin(ispec2D)
@@ -154,9 +152,11 @@
                              ibool,nspec,nglob_dummy, &
                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+      iboun(iface,ispec) = .true.
+    endif
 
-    ! ijk indices of GLL points for face id
+    ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
 
     ! weighted jacobian and normal
@@ -168,8 +168,8 @@
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
-    do j=1,NGLLZ
-      do i=1,NGLLX
+    do j = 1,NGLLZ
+      do i = 1,NGLLX
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
                                      ibool,nspec,nglob_dummy, &
@@ -177,40 +177,51 @@
                                      lnormal )
         normal_face(:,i,j) = lnormal(:)
 
-        if ( COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM ) &
-              write(123,'(i10,3f20.10)') ispec, xstore_dummy(ibool(i,j,1,ispec)), ystore_dummy(ibool(i,j,1,ispec)), &
-                                                    zstore_dummy(ibool(i,j,1,ispec))
-
+        ! writes out xmin boundary point locations
+        if ( COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM ) then
+          write(123,'(i10,3f20.10)') ispec, xstore_dummy(ibool(i,j,1,ispec)), ystore_dummy(ibool(i,j,1,ispec)), &
+                                            zstore_dummy(ibool(i,j,1,ispec))
+        endif
       enddo
     enddo
 
     ! sets face infos
     iabsval = iabsval + 1
+
+    ! checks counter
+    if (iabsval > num_abs_boundary_faces) then
+      print *,'Error xmin: rank',myrank,'has invalid iabsval counter ',iabsval,'out of ',num_abs_boundary_faces
+      stop 'Invalid iabsval counter'
+    endif
+
     abs_boundary_ispec(iabsval) = ispec
 
     ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
-    do j=1,NGLLZ
-      do i=1,NGLLX
+    do j = 1,NGLLZ
+      do i = 1,NGLLX
         igll = igll+1
         abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
         abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
         abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
       enddo
     enddo
-
   enddo ! nspec2D_xmin
 
-  if ( COUPLE_WITH_INJECTION_TECHNIQUE .and. (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) ) close(123)
+  if ( COUPLE_WITH_INJECTION_TECHNIQUE .and. (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) ) then
+    close(123)
+  endif
 
   ! xmax
   if (myrank == 0) then
     write(IMAIN,*) '     boundary xmax   :',nspec2D_xmax
     call flush_IMAIN()
   endif
+
   ijk_face(:,:,:) = 0
   normal_face(:,:,:) = 0.0_CUSTOM_REAL
   jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
+
   do ispec2D = 1, nspec2D_xmax
     ! sets element
     ispec = ibelm_xmax(ispec2D)
@@ -228,7 +239,9 @@
                              ibool,nspec,nglob_dummy, &
                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+      iboun(iface,ispec) = .true.
+    endif
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
@@ -242,8 +255,8 @@
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
-    do j=1,NGLLZ
-      do i=1,NGLLX
+    do j = 1,NGLLZ
+      do i = 1,NGLLX
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
                                      ibool,nspec,nglob_dummy, &
@@ -255,19 +268,25 @@
 
     ! sets face infos
     iabsval = iabsval + 1
+
+    ! checks counter
+    if (iabsval > num_abs_boundary_faces) then
+      print *,'Error xmax: rank',myrank,'has invalid iabsval counter ',iabsval,'out of ',num_abs_boundary_faces
+      stop 'Invalid iabsval counter'
+    endif
+
     abs_boundary_ispec(iabsval) = ispec
 
     ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
-    do j=1,NGLLZ
-      do i=1,NGLLX
+    do j = 1,NGLLZ
+      do i = 1,NGLLX
         igll = igll+1
         abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
         abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
         abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
       enddo
     enddo
-
   enddo
 
   ! ymin
@@ -279,6 +298,7 @@
   ijk_face(:,:,:) = 0
   normal_face(:,:,:) = 0.0_CUSTOM_REAL
   jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
+
   do ispec2D = 1, nspec2D_ymin
     ! sets element
     ispec = ibelm_ymin(ispec2D)
@@ -296,7 +316,9 @@
                              ibool,nspec,nglob_dummy, &
                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+      iboun(iface,ispec) = .true.
+    endif
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
@@ -310,8 +332,8 @@
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
-    do j=1,NGLLZ
-      do i=1,NGLLY
+    do j = 1,NGLLZ
+      do i = 1,NGLLY
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
                                      ibool,nspec,nglob_dummy, &
@@ -323,19 +345,25 @@
 
     ! sets face infos
     iabsval = iabsval + 1
+
+    ! checks counter
+    if (iabsval > num_abs_boundary_faces) then
+      print *,'Error ymin: rank',myrank,'has invalid iabsval counter ',iabsval,'out of ',num_abs_boundary_faces
+      stop 'Invalid iabsval counter'
+    endif
+
     abs_boundary_ispec(iabsval) = ispec
 
     ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
-    do j=1,NGLLZ
-      do i=1,NGLLY
+    do j = 1,NGLLZ
+      do i = 1,NGLLY
         igll = igll+1
         abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
         abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
         abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
       enddo
     enddo
-
   enddo
 
   ! ymax
@@ -347,6 +375,7 @@
   ijk_face(:,:,:) = 0
   normal_face(:,:,:) = 0.0_CUSTOM_REAL
   jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
+
   do ispec2D = 1, nspec2D_ymax
     ! sets element
     ispec = ibelm_ymax(ispec2D)
@@ -364,7 +393,9 @@
                              ibool,nspec,nglob_dummy, &
                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+      iboun(iface,ispec) = .true.
+    endif
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
@@ -378,8 +409,8 @@
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
-    do j=1,NGLLZ
-      do i=1,NGLLY
+    do j = 1,NGLLZ
+      do i = 1,NGLLY
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
                                      ibool,nspec,nglob_dummy, &
@@ -391,19 +422,25 @@
 
     ! sets face infos
     iabsval = iabsval + 1
+
+    ! checks counter
+    if (iabsval > num_abs_boundary_faces) then
+      print *,'Error ymax: rank',myrank,'has invalid iabsval counter ',iabsval,'out of ',num_abs_boundary_faces
+      stop 'Invalid iabsval counter'
+    endif
+
     abs_boundary_ispec(iabsval) = ispec
 
     ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
-    do j=1,NGLLY
-      do i=1,NGLLX
+    do j = 1,NGLLY
+      do i = 1,NGLLX
         igll = igll+1
         abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
         abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
         abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
       enddo
     enddo
-
   enddo
 
   ! bottom
@@ -415,6 +452,7 @@
   ijk_face(:,:,:) = 0
   normal_face(:,:,:) = 0.0_CUSTOM_REAL
   jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
+
   do ispec2D = 1, NSPEC2D_BOTTOM
     ! sets element
     ispec = ibelm_bottom(ispec2D)
@@ -432,7 +470,9 @@
                              ibool,nspec,nglob_dummy, &
                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+      iboun(iface,ispec) = .true.
+    endif
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
@@ -446,8 +486,8 @@
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
-    do j=1,NGLLY
-      do i=1,NGLLX
+    do j = 1,NGLLY
+      do i = 1,NGLLX
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
                                      ibool,nspec,nglob_dummy, &
@@ -457,16 +497,24 @@
       enddo
     enddo
 
-    if (BOTTOM_FREE_SURFACE) then ! use bottom free surface instead of absorbing Stacey condition
+    ! use bottom free surface instead of absorbing Stacey condition
+    if (BOTTOM_FREE_SURFACE) then
        ! stores free surface
        ! sets face infos
        ifree = ifree + 1
+
+       ! checks counter
+       if (ifree > num_free_surface_faces) then
+         print *,'Error bottom: rank',myrank,'has invalid ifree counter ',ifree,'out of ',num_free_surface_faces
+         stop 'Invalid ifree counter'
+       endif
+
        free_surface_ispec(ifree) = ispec
 
        ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
        igllfree = 0
-       do j=1,NGLLY
-          do i=1,NGLLX
+       do j = 1,NGLLY
+          do i = 1,NGLLX
              igllfree = igllfree+1
              free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
              free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
@@ -476,12 +524,19 @@
     else
        ! sets face infos
        iabsval = iabsval + 1
+
+       ! checks counter
+       if (iabsval > num_abs_boundary_faces) then
+         print *,'Error bottom: rank',myrank,'has invalid iabsval counter ',iabsval,'out of ',num_abs_boundary_faces
+         stop 'Invalid iabsval counter'
+       endif
+
        abs_boundary_ispec(iabsval) = ispec
 
        ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
        igll = 0
-       do j=1,NGLLY
-          do i=1,NGLLX
+       do j = 1,NGLLY
+          do i = 1,NGLLX
              igll = igll+1
              abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
              abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
@@ -489,8 +544,7 @@
           enddo
        enddo
     endif
-
-  enddo
+  enddo   ! NSPEC2D_BOTTOM
 
   ! top
   if (myrank == 0) then
@@ -519,7 +573,9 @@
                              ibool,nspec,nglob_dummy, &
                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+      iboun(iface,ispec) = .true.
+    endif
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
@@ -533,8 +589,8 @@
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
-    do j=1,NGLLY
-      do i=1,NGLLX
+    do j = 1,NGLLY
+      do i = 1,NGLLX
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
                                      ibool,nspec,nglob_dummy, &
@@ -546,111 +602,148 @@
 
     ! stores surface infos
     if (STACEY_ABSORBING_CONDITIONS) then
-       if (.not. STACEY_INSTEAD_OF_FREE_SURFACE) then
+      if (.not. STACEY_INSTEAD_OF_FREE_SURFACE) then
+        ! stores free surface
+        ! sets face infos
+        ifree = ifree + 1
 
-          ! stores free surface
+        ! checks counter
+        if (ifree > num_free_surface_faces) then
+          print *,'Error top: rank',myrank,'has invalid ifree counter ',ifree,'out of ',num_free_surface_faces
+          stop 'Invalid ifree counter'
+        endif
+
+        free_surface_ispec(ifree) = ispec
+
+        ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
+        igllfree = 0
+        do j = 1,NGLLY
+          do i = 1,NGLLX
+            igllfree = igllfree+1
+            free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
+            free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
+            free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
+          enddo
+        enddo
+      else
+        if (.not. BOTTOM_FREE_SURFACE) then
+          ! stores free surface and adds it also to absorbing boundaries
           ! sets face infos
           ifree = ifree + 1
+
+          ! checks counter
+          if (ifree > num_free_surface_faces) then
+            print *,'Error top: rank',myrank,'has invalid ifree counter ',ifree,'out of ',num_free_surface_faces
+            stop 'Invalid ifree counter'
+          endif
+
           free_surface_ispec(ifree) = ispec
 
           ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
           igllfree = 0
-          do j=1,NGLLY
-             do i=1,NGLLX
-                igllfree = igllfree+1
-                free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
-                free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
-                free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
-             enddo
+          do j = 1,NGLLY
+            do i = 1,NGLLX
+              igllfree = igllfree+1
+              free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
+              free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
+              free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
+            enddo
           enddo
+        endif
 
+        ! adds face infos to absorbing boundary surface
+        iabsval = iabsval + 1
 
-       else
+        ! checks counter
+        if (iabsval > num_abs_boundary_faces) then
+          print *,'Error top: rank',myrank,'has invalid iabsval counter ',iabsval,'out of ',num_abs_boundary_faces
+          stop 'Invalid iabsval counter'
+        endif
 
-          if (.not. BOTTOM_FREE_SURFACE) then
-         ! stores free surface and adds it also to absorbing boundaries
-         ! sets face infos
-         ifree = ifree + 1
-         free_surface_ispec(ifree) = ispec
+        abs_boundary_ispec(iabsval) = ispec
 
-         ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
-         igllfree = 0
-         do j=1,NGLLY
-           do i=1,NGLLX
-             igllfree = igllfree+1
-             free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
-             free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
-             free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
-           enddo
-         enddo
-         endif
-         ! adds face infos to absorbing boundary surface
-         iabsval = iabsval + 1
-         abs_boundary_ispec(iabsval) = ispec
-
-         ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
-         igll = 0
-         do j=1,NGLLY
-           do i=1,NGLLX
-             igll = igll+1
-             abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
-             abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
-             abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
-           enddo
-         enddo
-       endif
+        ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
+        igll = 0
+        do j = 1,NGLLY
+          do i = 1,NGLLX
+            igll = igll+1
+            abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+            abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+            abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+          enddo
+        enddo
+      endif
 
     else if (PML_CONDITIONS) then
-       if (.not. PML_INSTEAD_OF_FREE_SURFACE) then
-         ! stores free surface
-         ! sets face infos
-         ifree = ifree + 1
-         free_surface_ispec(ifree) = ispec
+      if (.not. PML_INSTEAD_OF_FREE_SURFACE) then
+        ! stores free surface
+        ! sets face infos
+        ifree = ifree + 1
 
-         ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
-         igllfree = 0
-         do j=1,NGLLY
-           do i=1,NGLLX
-             igllfree = igllfree+1
-             free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
-             free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
-             free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
-           enddo
-         enddo
+        ! checks counter
+        if (ifree > num_free_surface_faces) then
+          print *,'Error top: rank',myrank,'has invalid ifree counter ',ifree,'out of ',num_free_surface_faces
+          stop 'Invalid ifree counter'
+        endif
 
-       else
+        free_surface_ispec(ifree) = ispec
 
-         ! stores free surface and adds it also to absorbing boundaries
-         ! sets face infos
-         ifree = ifree + 1
-         free_surface_ispec(ifree) = ispec
+        ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
+        igllfree = 0
+        do j = 1,NGLLY
+          do i = 1,NGLLX
+            igllfree = igllfree+1
+            free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
+            free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
+            free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
+          enddo
+        enddo
+      else
+        ! stores free surface and adds it also to absorbing boundaries
+        ! sets face infos
+        ifree = ifree + 1
 
-         ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
-         igllfree = 0
-         do j=1,NGLLY
-           do i=1,NGLLX
-             igllfree = igllfree+1
-             free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
-             free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
-             free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
-           enddo
-         enddo
+        ! checks counter
+        if (ifree > num_free_surface_faces) then
+          print *,'Error top: rank',myrank,'has invalid ifree counter ',ifree,'out of ',num_free_surface_faces
+          stop 'Invalid ifree counter'
+        endif
 
-         ! adds face infos to absorbing boundary surface
-         iabsval = iabsval + 1
-         abs_boundary_ispec(iabsval) = ispec
+        free_surface_ispec(ifree) = ispec
 
-         ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
-         igll = 0
-         do j=1,NGLLY
-           do i=1,NGLLX
-             igll = igll+1
-             abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
-             abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
-             abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
-           enddo
-         enddo
-       endif
+        ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
+        igllfree = 0
+        do j = 1,NGLLY
+          do i = 1,NGLLX
+            igllfree = igllfree+1
+            free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
+            free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
+            free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
+          enddo
+        enddo
+
+        ! adds face infos to absorbing boundary surface
+        iabsval = iabsval + 1
+
+        ! checks counter
+        if (iabsval > num_abs_boundary_faces) then
+          print *,'Error top: rank',myrank,'has invalid iabsval counter ',iabsval,'out of ',num_abs_boundary_faces
+          stop 'Invalid iabsval counter'
+        endif
+
+        abs_boundary_ispec(iabsval) = ispec
+
+        ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
+        igll = 0
+        do j = 1,NGLLY
+          do i = 1,NGLLX
+            igll = igll+1
+            abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+            abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+            abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+          enddo
+        enddo
+      endif
 
     else
       ! stores free surface
@@ -660,17 +753,16 @@
 
       ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
       igllfree = 0
-      do j=1,NGLLY
-       do i=1,NGLLX
-         igllfree = igllfree+1
-         free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
-         free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
-         free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
-       enddo
+      do j = 1,NGLLY
+        do i = 1,NGLLX
+          igllfree = igllfree+1
+          free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
+          free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
+          free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
+        enddo
       enddo
     endif
-
-  enddo
+  enddo   ! NSPEC2D_TOP
 
   ! checks counters
   if (ifree /= num_free_surface_faces) then
@@ -693,9 +785,10 @@
        (STACEY_ABSORBING_CONDITIONS .and. STACEY_INSTEAD_OF_FREE_SURFACE)) then
        write(IMAIN,*) '     absorbing boundary includes free surface (i.e., top surface converted from free to absorbing)'
     endif
-! when users set PML_CONDITIONS and PML_INSTEAD_OF_FREE_SURFACE to be .true. they should also
-! provide a non-empty free_or_absorbing_surface_file_zmax file, since we need it to determine ibelm_top(),
-! which is the outer boundary of top CPML or Stacey layer.
+
+    ! when users set PML_CONDITIONS and PML_INSTEAD_OF_FREE_SURFACE to be .true. they should also
+    ! provide a non-empty free_or_absorbing_surface_file_zmax file, since we need it to determine ibelm_top(),
+    ! which is the outer boundary of top CPML or Stacey layer.
     if (((PML_CONDITIONS .and. PML_INSTEAD_OF_FREE_SURFACE) .or. &
          (STACEY_ABSORBING_CONDITIONS .and. STACEY_INSTEAD_OF_FREE_SURFACE)) .and. itop == 0) then
        print *,'the free_or_absorbing_surface_file_zmax contains no absorbing element, but Zmax absorption is turned on'

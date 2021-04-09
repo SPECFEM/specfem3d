@@ -46,7 +46,7 @@
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
   ! global point locations
-  real(kind=CUSTOM_REAL),intent(in) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
+  real(kind=CUSTOM_REAL),dimension(nglob),intent(in) :: xstore_dummy,ystore_dummy,zstore_dummy
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: xcoord_face,ycoord_face,zcoord_face
@@ -169,19 +169,19 @@
 
   implicit none
 
-  integer :: iface !,nspec,nglob
+  integer,intent(in) :: iface !,nspec,nglob
 
-! GLL point indices i,j,k for face, format corresponds to ijk_face(1,*) = i, ijk_face(2,*) = j, ijk_face(3,*) = k
-  integer :: NGLLA,NGLLB
-  integer,dimension(3,NGLLA,NGLLB) :: ijk_face
+  ! GLL point indices i,j,k for face, format corresponds to ijk_face(1,*) = i, ijk_face(2,*) = j, ijk_face(3,*) = k
+  integer,intent(in) :: NGLLA,NGLLB
+  integer,dimension(3,NGLLA,NGLLB),intent(inout) :: ijk_face
 
   integer :: i,j,k
   integer :: ngll,i_gll,j_gll,k_gll
 
-! sets i,j,k indices of GLL points on boundary face
+  ! sets i,j,k indices of GLL points on boundary face
   ngll = 0
-  select case (iface)
 
+  select case (iface)
   ! reference xmin face
   case (1)
     if (NGLLA /= NGLLY .or. NGLLB /= NGLLZ) stop 'error absorbing face 1 indexing'
@@ -271,7 +271,7 @@
     stop 'error element face ngll'
   endif
 
-end subroutine get_element_face_gll_indices
+  end subroutine get_element_face_gll_indices
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -288,9 +288,9 @@ end subroutine get_element_face_gll_indices
 
   implicit none
 
-  integer :: ispec,iface,nspec,nglob
+  integer,intent(in) :: ispec,iface,nspec,nglob
 
-! face corner locations
+  ! face corner locations
 !! DK DK Oct 2012: in principle we should use NGNOD2D instead of NGNOD2D_FOUR_CORNERS when
 !! DK DK Oct 2012: computing the normal in the case of HEX27 elements, to be more precise;
 !! DK DK Oct 2012: but the code below would be a bit difficult to modify therefore we keep
@@ -299,18 +299,18 @@ end subroutine get_element_face_gll_indices
 !! DK DK Oct 2012: code is still exact even for HEX27, but if there is bathymetry for instance
 !! DK DK Oct 2012: along a curved fluid-solid interface then the code below is not as precise
 !! DK DK Oct 2012: as it should for HEX27.
-  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS),intent(in) :: xcoord,ycoord,zcoord
 
-! index array
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  ! index array
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-! global point locations
-  real(kind=CUSTOM_REAL),dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+  ! global point locations
+  real(kind=CUSTOM_REAL),dimension(nglob),intent(in) :: xstore_dummy,ystore_dummy,zstore_dummy
 
-! face normal
-  real(kind=CUSTOM_REAL),dimension(NDIM) :: normal
+  ! face normal
+  real(kind=CUSTOM_REAL),dimension(NDIM),intent(inout) :: normal
 
-! local parameters
+  ! local parameters
   real(kind=CUSTOM_REAL) :: face_n(NDIM),tmp,v_tmp(NDIM)
   integer :: iglob
 
@@ -328,7 +328,7 @@ end subroutine get_element_face_gll_indices
   endif
   face_n(:) = face_n(:)/tmp
 
-! checks that this normal direction is outwards of element:
+  ! checks that this normal direction is outwards of element:
   ! takes additional corner out of face plane and determines scalar product (dot product) to normal
   iglob = 0
   select case (iface)
@@ -347,6 +347,7 @@ end subroutine get_element_face_gll_indices
   case default
     call exit_mpi(0,'error get element face iface value')
   end select
+
   ! vector from corner 1 to this opposite one
   v_tmp(1) = xstore_dummy(iglob) - xcoord(1)
   v_tmp(2) = ystore_dummy(iglob) - ycoord(1)
@@ -355,7 +356,8 @@ end subroutine get_element_face_gll_indices
   ! scalar product (dot product)
   tmp = v_tmp(1)*face_n(1) + v_tmp(2)*face_n(2) + v_tmp(3)*face_n(3)
 
-  ! makes sure normal points outwards, that is points away from this additional corner and scalar product (dot product) is negative
+  ! makes sure normal points outwards, that is points away from this additional corner
+  ! and scalar product (dot product) is negative
   if (tmp > 0.0_CUSTOM_REAL) then
     face_n(:) = - face_n(:)
   endif
@@ -395,9 +397,9 @@ end subroutine get_element_face_gll_indices
 
   implicit none
 
-  integer :: ispec,iface,nspec,nglob
+  integer,intent(in) :: ispec,iface,nspec,nglob
 
-! face corner locations
+  ! face corner locations
 !! DK DK Oct 2012: in principle we should use NGNOD2D instead of NGNOD2D_FOUR_CORNERS when
 !! DK DK Oct 2012: computing the normal in the case of HEX27 elements, to be more precise;
 !! DK DK Oct 2012: but the code below would be a bit difficult to modify therefore we keep
@@ -406,21 +408,21 @@ end subroutine get_element_face_gll_indices
 !! DK DK Oct 2012: code is still exact even for HEX27, but if there is bathymetry for instance
 !! DK DK Oct 2012: along a curved fluid-solid interface then the code below is not as precise
 !! DK DK Oct 2012: as it should for HEX27.
-  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS),intent(in) :: xcoord,ycoord,zcoord
 
-! index array
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  ! index array
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-! global point locations
-  real(kind=CUSTOM_REAL) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
+  ! global point locations
+  real(kind=CUSTOM_REAL),dimension(nglob),intent(in) :: xstore_dummy,ystore_dummy,zstore_dummy
 
-! face normal
-  real(kind=CUSTOM_REAL),dimension(NDIM) :: normal
+  ! face normal
+  real(kind=CUSTOM_REAL),dimension(NDIM),intent(inout) :: normal
 
-! direction type
+  ! direction type
   integer, intent(out) :: idirect
 
-! local parameters
+!  local parameters
   real(kind=CUSTOM_REAL) :: face_n(3),tmp,v_tmp(3)
   integer :: iglob
 
@@ -457,6 +459,7 @@ end subroutine get_element_face_gll_indices
   case default
     call exit_mpi(0,'error get element face iface value')
   end select
+
   ! vector from corner 1 to this opposite one
   v_tmp(1) = xstore_dummy(iglob) - xcoord(1)
   v_tmp(2) = ystore_dummy(iglob) - ycoord(1)
@@ -477,7 +480,7 @@ end subroutine get_element_face_gll_indices
     return
   endif
 
-! otherwise determines orientation of normal
+  ! otherwise determines orientation of normal
   tmp = face_n(1)*normal(1) + face_n(2)*normal(2) + face_n(3)*normal(3)
   if (tmp < 0.0) then
     ! points into element
@@ -505,13 +508,13 @@ end subroutine get_element_face_gll_indices
   integer,intent(in) :: nspec,nglob
 
   ! face corner locations
-  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS),intent(out) :: xcoord,ycoord,zcoord
-  integer,dimension(NGNOD2D_FOUR_CORNERS),intent(out):: iglob_corners_ref
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS),intent(inout) :: xcoord,ycoord,zcoord
+  integer,dimension(NGNOD2D_FOUR_CORNERS),intent(inout):: iglob_corners_ref
 
   ! index array
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
   ! global point locations
-  real(kind=CUSTOM_REAL) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
+  real(kind=CUSTOM_REAL),dimension(nglob),intent(in) :: xstore_dummy,ystore_dummy,zstore_dummy
 
   ! assumes NGNOD2D_FOUR_CORNERS == 4
 !! DK DK Oct 2012: in principle we should use NGNOD2D instead of NGNOD2D_FOUR_CORNERS when
@@ -522,7 +525,7 @@ end subroutine get_element_face_gll_indices
 !! DK DK Oct 2012: code is still exact even for HEX27, but if there is bathymetry for instance
 !! DK DK Oct 2012: along a curved fluid-solid interface then the code below is not as precise
 !! DK DK Oct 2012: as it should for HEX27.
-  integer,dimension(3,4,6) :: iface_all_corner_ijk
+  integer,dimension(3,4,6),intent(in) :: iface_all_corner_ijk
 
   ! local parameters
   integer :: icorner,i,j,k
