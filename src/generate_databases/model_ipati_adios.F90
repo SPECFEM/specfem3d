@@ -39,7 +39,7 @@ contains
 !
 !------------------------------------------------------------------------------
 
-subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
+  subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
 
   use adios_read_mod
   use create_regions_mesh_ext_par
@@ -79,8 +79,7 @@ subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 574')
   if (ier /= 0) stop 'error allocating array vs_read'
 
-  call read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, &
-                               rho_read, vp_read)
+  call read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, rho_read, vp_read)
 
   ! scaling
   vs_read = vp_read * SCALING_FACTOR
@@ -95,13 +94,13 @@ subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
   ! free memory
   deallocate( rho_read,vp_read,vs_read)
 
-end subroutine model_ipati_adios
+  end subroutine model_ipati_adios
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
+  subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
 
   use create_regions_mesh_ext_par
   implicit none
@@ -140,8 +139,7 @@ subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 577')
   if (ier /= 0) stop 'error allocating array vs_read'
 
-  call read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, &
-                               rho_read, vp_read)
+  call read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, rho_read, vp_read)
 
   ! scaling
   vs_read = vp_read * SCALING_FACTOR
@@ -164,14 +162,13 @@ subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
   ! free memory
   deallocate( rho_read,vp_read,vs_read)
 
-end subroutine model_ipati_water_adios
+  end subroutine model_ipati_water_adios
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
-                                    rho_read, vp_read)
+  subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, rho_read, vp_read)
 
   use adios_read_mod
   use adios_manager_mod, only: comm_adios,ADIOS_VERBOSITY
@@ -228,6 +225,6 @@ subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
   if (ier /= 0 ) stop 'Error adios read finalize'
 
-end subroutine read_model_vp_rho_adios
+  end subroutine read_model_vp_rho_adios
 
 end module model_ipati_adios_mod

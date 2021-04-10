@@ -38,37 +38,49 @@
 ! subroutines from read_mesh_databases_adios.F90 |
 !------------------------------------------------'
 
-subroutine read_mesh_for_init_ADIOS(nspec, nglob)
+  subroutine read_mesh_for_init_ADIOS()
+
   use adios_manager_mod
 
   implicit none
-  integer, intent(inout) :: nspec, nglob
-
-  integer(kind=4) :: unused_i4
-
-  unused_i4 = nspec
-  unused_i4 = nglob
 
   call no_adios_err()
-end subroutine read_mesh_for_init_ADIOS
 
-subroutine read_mesh_databases_adios()
+  end subroutine read_mesh_for_init_ADIOS
+
+!
+!--------------
+!
+
+  subroutine read_mesh_databases_adios()
+
+  use adios_manager_mod
+  
+  implicit none
+
+  call no_adios_err()
+
+  end subroutine read_mesh_databases_adios
+
+!
+!--------------
+!
+
+  subroutine read_mesh_databases_moho_adios()
+
   use adios_manager_mod
 
-  call no_adios_err()
-end subroutine read_mesh_databases_adios
-
-subroutine read_mesh_databases_moho_adios()
-  use adios_manager_mod
+  implicit none
 
   call no_adios_err()
-end subroutine read_mesh_databases_moho_adios
+
+  end subroutine read_mesh_databases_moho_adios
 
 !-----------------------------------------.
 ! subroutines from save_kernels_adios.F90 |
 !-----------------------------------------'
 
-subroutine define_kernel_adios_variables(handle)
+  subroutine define_kernel_adios_variables(handle)
 
   use adios_manager_mod
 
@@ -80,23 +92,14 @@ subroutine define_kernel_adios_variables(handle)
   unused_i8 = handle
 
   call no_adios_err()
-end subroutine define_kernel_adios_variables
 
-subroutine perform_write_adios_kernels(handle)
+  end subroutine define_kernel_adios_variables
 
-  use adios_manager_mod
+!
+!--------------
+!
 
-  implicit none
-  integer(kind=8), intent(in) :: handle
-
-  integer(kind=8) :: unused_i8
-
-  unused_i8 = handle
-
-  call no_adios_err()
-end subroutine
-
-subroutine save_kernels_acoustic_adios(handle)
+  subroutine perform_write_adios_kernels(handle)
 
   use adios_manager_mod
 
@@ -108,11 +111,35 @@ subroutine save_kernels_acoustic_adios(handle)
   unused_i8 = handle
 
   call no_adios_err()
-end subroutine
 
-subroutine save_kernels_elastic_adios(handle, alphav_kl, alphah_kl, &
-                                      betav_kl, betah_kl, eta_kl, &
-                                      rhop_kl, alpha_kl, beta_kl)
+  end subroutine
+
+!
+!--------------
+!
+
+  subroutine save_kernels_acoustic_adios(handle)
+
+  use adios_manager_mod
+
+  implicit none
+  integer(kind=8), intent(in) :: handle
+
+  integer(kind=8) :: unused_i8
+
+  unused_i8 = handle
+
+  call no_adios_err()
+
+  end subroutine
+
+!
+!--------------
+!
+
+  subroutine save_kernels_elastic_adios(handle, alphav_kl, alphah_kl, &
+                                        betav_kl, betah_kl, eta_kl, &
+                                        rhop_kl, alpha_kl, beta_kl)
 
   use specfem_par
   use adios_manager_mod
@@ -137,23 +164,14 @@ subroutine save_kernels_elastic_adios(handle, alphav_kl, alphah_kl, &
   unused_cr = beta_kl(1,1,1,1)
 
   call no_adios_err()
-end subroutine
 
-subroutine save_kernels_poroelastic_adios(handle)
+  end subroutine
 
-  use adios_manager_mod
+!
+!--------------
+!
 
-  implicit none
-  integer(kind=8), intent(in) :: handle
-
-  integer(kind=8) :: unused_i8
-
-  unused_i8 = handle
-
-  call no_adios_err()
-end subroutine save_kernels_poroelastic_adios
-
-subroutine save_kernels_Hessian_adios(handle)
+  subroutine save_kernels_poroelastic_adios(handle)
 
   use adios_manager_mod
 
@@ -165,25 +183,53 @@ subroutine save_kernels_Hessian_adios(handle)
   unused_i8 = handle
 
   call no_adios_err()
-end subroutine save_kernels_Hessian_adios
+
+  end subroutine save_kernels_poroelastic_adios
+
+!
+!--------------
+!
+
+  subroutine save_kernels_Hessian_adios(handle)
+
+  use adios_manager_mod
+
+  implicit none
+  integer(kind=8), intent(in) :: handle
+
+  integer(kind=8) :: unused_i8
+
+  unused_i8 = handle
+
+  call no_adios_err()
+
+  end subroutine save_kernels_Hessian_adios
 
 !------------------------------------------------.
 ! subroutines from save_forward_arrays_adios.F90 |
 !------------------------------------------------'
 
-subroutine save_forward_arrays_adios()
+  subroutine save_forward_arrays_adios()
+
   use adios_manager_mod
 
+  implicit none
+
   call no_adios_err()
-end subroutine save_forward_arrays_adios
+
+  end subroutine save_forward_arrays_adios
 
 !------------------------------------------------.
 ! subroutines from read_forward_arrays_adios.F90 |
 !------------------------------------------------'
 
-subroutine read_forward_arrays_adios()
+  subroutine read_forward_arrays_adios()
+
   use adios_manager_mod
 
+  implicit none
+
   call no_adios_err()
-end subroutine read_forward_arrays_adios
+
+  end subroutine read_forward_arrays_adios
 

@@ -38,7 +38,7 @@
 ! subroutines from model_gll_adios.F90 |
 !--------------------------------------'
 
-subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
+  subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 
   use constants, only: MAX_STRING_LEN
   use adios_manager_mod
@@ -55,16 +55,21 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   unused_i4 = len_trim(LOCAL_PATH)
 
   call no_adios_err()
-end subroutine
+
+  end subroutine
 
 !----------------------------------------.
 ! subroutines from model_ipati_adios.F90 |
 !----------------------------------------'
 
 module model_ipati_adios_mod
+
+  implicit none
+
 contains
 
-subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
+  subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
+
   use constants, only: MAX_STRING_LEN
   use adios_manager_mod
 
@@ -80,9 +85,15 @@ subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
   unused_i4 = len_trim(LOCAL_PATH)
 
   call no_adios_err()
-end subroutine model_ipati_adios
 
-subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
+  end subroutine model_ipati_adios
+
+!
+!-----------
+!
+
+  subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
+
   use constants, only: MAX_STRING_LEN
   use adios_manager_mod
 
@@ -98,10 +109,15 @@ subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
   unused_i4 = len_trim(LOCAL_PATH)
 
   call no_adios_err()
-end subroutine model_ipati_water_adios
 
-subroutine read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, &
-                                   rho_read, vp_read)
+  end subroutine model_ipati_water_adios
+
+!
+!-----------
+!
+
+  subroutine read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, rho_read, vp_read)
+
   use constants, only: MAX_STRING_LEN
   use adios_manager_mod
 
@@ -121,7 +137,8 @@ subroutine read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, &
   unused_r = rho_read(1,1,1,1)
 
   call no_adios_err()
-end subroutine read_model_vp_rho_adios
+
+  end subroutine read_model_vp_rho_adios
 
 end module model_ipati_adios_mod
 
@@ -129,60 +146,46 @@ end module model_ipati_adios_mod
 ! subroutines from read_partition_files_adios.F90 |
 !-------------------------------------------------'
 
-subroutine read_partition_files_adios()
+  subroutine read_partition_files_adios()
+
   use adios_manager_mod
 
+  implicit none
+
   call no_adios_err()
-end subroutine read_partition_files_adios
+
+  end subroutine read_partition_files_adios
 
 !-----------------------------------------------.
 ! subroutines from save_arrays_solver_adios.F90 |
 !-----------------------------------------------'
 
-subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
-                                             APPROXIMATE_OCEAN_LOAD, &
-                                             ibool, num_interfaces_ext_mesh, &
-                                             my_neighbors_ext_mesh, &
-                                             nibool_interfaces_ext_mesh, &
-                                             max_interface_size_ext_mesh, &
-                                             ibool_interfaces_ext_mesh, &
-                                             SAVE_MESH_FILES,ANISOTROPY)
+  subroutine save_arrays_solver_ext_mesh_adios(nspec, ibool)
 
   use adios_manager_mod
 
   implicit none
-  integer :: nspec,nglob
-  logical :: APPROXIMATE_OCEAN_LOAD
+  integer :: nspec
   integer, dimension(1,1,1,nspec) :: ibool
-  integer :: num_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
-  integer :: max_interface_size_ext_mesh
-  integer, dimension(1,max_interface_size_ext_mesh) :: ibool_interfaces_ext_mesh
-  logical :: SAVE_MESH_FILES
-  logical :: ANISOTROPY
 
   integer(kind=4) :: unused_i4
-  logical :: unused_l
 
-  unused_i4 = nglob
-  unused_l  = APPROXIMATE_OCEAN_LOAD
   unused_i4 = ibool(1,1,1,1)
-  unused_i4 = my_neighbors_ext_mesh(1)
-  unused_i4 = nibool_interfaces_ext_mesh(1)
-  unused_i4 = ibool_interfaces_ext_mesh(1,1)
-  unused_l  = SAVE_MESH_FILES
-  unused_l  = ANISOTROPY
 
   call no_adios_err()
-end subroutine
+
+  end subroutine
 
 !--------------------------------------.
 ! subroutines from save_moho_adios.F90 |
 !--------------------------------------'
 
-subroutine crm_save_moho_adios()
+  subroutine crm_save_moho_adios()
+
   use adios_manager_mod
 
+  implicit none
+
   call no_adios_err()
-end subroutine crm_save_moho_adios
+
+  end subroutine crm_save_moho_adios
