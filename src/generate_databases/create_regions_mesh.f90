@@ -732,7 +732,7 @@
   endif
 
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
-  if (num_abs_boundary_faces > 0) then
+  if (num_free_surface_faces > 0) then
     allocate(free_surface_ispec(num_free_surface_faces),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 780')
     allocate(free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces),stat=ier)

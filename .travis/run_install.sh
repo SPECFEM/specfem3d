@@ -65,7 +65,7 @@ if [ "$CUDA" == "true" ]; then
 
   # installs packages
   # CUDA_PACKAGES="cuda-drivers cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}";
-  CUDA_PACKAGES="cuda-drivers cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT}"
+  CUDA_PACKAGES="cuda-drivers cuda-compiler-${CUDA_APT} cuda-cudart-dev-${CUDA_APT}"
   echo "Installing ${CUDA_PACKAGES}"
   sudo apt-get install -y ${CUDA_PACKAGES}
   sudo apt-get clean
