@@ -84,7 +84,7 @@ int main(int argc, char* const argv[]) {
   // first HIP call
   //
   // explicit initialization
-  // not necessary, most HIP APIs implicitly initialize the HIP runtime)
+  // (not necessary, most HIP APIs implicitly initialize the HIP runtime)
   //hipError_t status = hipInit(0);
   //if (status != hipSuccess) exit_on_error("HIP initialization failed\n");
   //

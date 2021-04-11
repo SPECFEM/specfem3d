@@ -543,7 +543,7 @@
   endif
 
   ! initializes GPU and outputs info to files for all processes
-  call initialize_cuda_device(num_device,ncuda_devices)
+  call initialize_gpu_device(num_device,ncuda_devices)
 
   ! collects min/max of local devices found for statistics
   call synchronize_all()

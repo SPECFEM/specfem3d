@@ -96,11 +96,35 @@ void gpuCopy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size){
 #endif
 }
 
-
+/* ----------------------------------------------------------------------------------------------- */
+// GPU reset
 /* ----------------------------------------------------------------------------------------------- */
 
-// GPU synchronization
+void gpuReset() {
+  // releases previous contexts
 
+  // cuda version
+#ifdef USE_CUDA
+  if (run_cuda) {
+#if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
+    cudaThreadExit();
+#else
+    cudaDeviceReset();
+#endif
+  }
+#endif
+
+  // hip version
+#ifdef USE_HIP
+  if (run_hip) {
+    hipDeviceReset();
+  }
+#endif
+}
+
+
+/* ----------------------------------------------------------------------------------------------- */
+// GPU synchronization
 /* ----------------------------------------------------------------------------------------------- */
 
 void gpuSynchronize() {

@@ -204,7 +204,7 @@ program smooth_sem
   call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
   kernel_name = kernel_names(1)
 
-  if (USE_GPU) call initialize_cuda_device(myrank,ncuda_devices)
+  if (USE_GPU) call initialize_gpu_device(myrank,ncuda_devices)
 
   if (nker > 1) then
     if (myrank == 0) then

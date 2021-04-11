@@ -433,12 +433,12 @@ void FC_FUNC_(pause_for_debug,
 
 
 //
-// src/gpu/initialize_cuda.cu
+// src/gpu/initialize_gpu.cu
 //
 
-void FC_FUNC_(initialize_cuda_device,
-              INITIALIZE_CUDA_DEVICE)(int* myrank_f,int* ncuda_devices) {
- fprintf(stderr,"ERROR: GPU_MODE enabled without GPU/CUDA Support. To enable GPU support, reconfigure with --with-cuda flag.\n");
+void FC_FUNC_(initialize_gpu_device,
+              INITIALIZE_GPU_DEVICE)(int* myrank_f,int* ncuda_devices) {
+ fprintf(stderr,"ERROR: GPU_MODE enabled without GPU/CUDA/HIP Support. To enable GPU support, reconfigure with --with-cuda or --with-hip flag.\n");
  exit(1);
 }
 
