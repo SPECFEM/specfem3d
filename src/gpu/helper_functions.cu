@@ -40,53 +40,92 @@
 /* ----------------------------------------------------------------------------------------------- */
 
 // copies integer array from CPU host to GPU device
-void copy_todevice_int(void** d_array_addr_ptr,int* h_array,int size){
-  TRACE("  copy_todevice_int");
+void gpuCopy_todevice_int(void** d_array_addr_ptr,int* h_array,int size){
+  TRACE("gpuCopy_todevice_int");
 
-  // allocates memory on GPU
-  //
-  // note: cudaMalloc uses a double-pointer, such that it can return an error code in case it fails
-  //          we thus pass the address to the pointer above (as void double-pointer) to have it
-  //          pointing to the correct pointer of the array here
-  print_CUDA_error_if_any(cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int)),12001);
+#ifdef USE_CUDA
+  if (run_cuda) {
+    // allocates memory on GPU
+    //
+    // note: cudaMalloc uses a double-pointer, such that it can return an error code in case it fails
+    //          we thus pass the address to the pointer above (as void double-pointer) to have it
+    //          pointing to the correct pointer of the array here
+    print_CUDA_error_if_any(cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int)),12001);
 
-  // copies values onto GPU
-  //
-  // note: cudaMemcpy uses the pointer to the array, we thus re-cast the value of
-  //          the double-pointer above to have the correct pointer to the array
-  print_CUDA_error_if_any(cudaMemcpy((int*) *d_array_addr_ptr,h_array,size*sizeof(int),cudaMemcpyHostToDevice),12002);
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-// copies integer array from CPU host to GPU device
-void copy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size){
-  TRACE("  copy_todevice_realw");
-
-  // allocates memory on GPU
-  print_CUDA_error_if_any(cudaMalloc((void**)d_array_addr_ptr,size*sizeof(realw)),22001);
-
-  // copies values onto GPU
-  print_CUDA_error_if_any(cudaMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(realw),cudaMemcpyHostToDevice),22002);
-}
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
-// CUDA synchronization
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void synchronize_cuda() {
-#if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
-    cudaThreadSynchronize();
-#else
-    cudaDeviceSynchronize();
+    // copies values onto GPU
+    //
+    // note: cudaMemcpy uses the pointer to the array, we thus re-cast the value of
+    //          the double-pointer above to have the correct pointer to the array
+    print_CUDA_error_if_any(cudaMemcpy((int*) *d_array_addr_ptr,h_array,size*sizeof(int),cudaMemcpyHostToDevice),12002);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip) {
+    // allocates memory on GPU
+    print_HIP_error_if_any(hipMalloc((void**)d_array_addr_ptr,size*sizeof(int)),12001);
+    // copies values onto GPU
+    int *tmp_ptr = (int*) *d_array_addr_ptr;
+    print_HIP_error_if_any(hipMemcpy( (void*) tmp_ptr, (void*) h_array,size*sizeof(int), hipMemcpyHostToDevice),12002);
+  }
 #endif
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
+// copies integer array from CPU host to GPU device
+void gpuCopy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size){
+  TRACE("gpuCopy_todevice_realw");
+
+#ifdef USE_CUDA
+  if (run_cuda) {
+    // allocates memory on GPU
+    print_CUDA_error_if_any(cudaMalloc((void**)d_array_addr_ptr,size*sizeof(realw)),22001);
+
+    // copies values onto GPU
+    print_CUDA_error_if_any(cudaMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(realw),cudaMemcpyHostToDevice),22002);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip) {
+    // allocates memory on GPU
+    print_HIP_error_if_any(hipMalloc((void**)d_array_addr_ptr,size*sizeof(realw)),22001);
+
+    // copies values onto GPU
+    print_HIP_error_if_any(hipMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(realw),hipMemcpyHostToDevice),22002);
+  }
+#endif
+}
+
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// GPU synchronization
+
+/* ----------------------------------------------------------------------------------------------- */
+
+void gpuSynchronize() {
+  // synchronizes device
+
+  // cuda version
+#ifdef USE_CUDA
+  if (run_cuda) {
+#if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
+    cudaThreadSynchronize();
+#else
+    cudaDeviceSynchronize();
+#endif
+  }
+#endif
+
+  // hip version
+#ifdef USE_HIP
+  hipDeviceSynchronize();
+#endif
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+#ifdef USE_CUDA
 void print_CUDA_error_if_any(cudaError_t err, int num) {
   if (cudaSuccess != err)
   {
@@ -116,44 +155,109 @@ void print_CUDA_error_if_any(cudaError_t err, int num) {
     exit(EXIT_FAILURE);
   }
 }
+#endif
 
+#ifdef USE_HIP
+void print_HIP_error_if_any(hipError_t err, int num) {
+  if (hipSuccess != err)
+  {
+    printf("\nHIP error !!!!! <%s> !!!!! \nat HIP call error code: # %d\n",hipGetErrorString(err),num);
+    fflush(stdout);
+
+    // outputs error file
+    FILE* fp;
+    int myrank;
+    char filename[BUFSIZ];
+#ifdef WITH_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+#else
+    myrank = 0;
+#endif
+    sprintf(filename,OUTPUT_FILES"/error_message_%06d.txt",myrank);
+    fp = fopen(filename,"a+");
+    if (fp != NULL){
+      fprintf(fp,"\nHIP error !!!!! <%s> !!!!! \nat HIP call error code: # %d\n",hipGetErrorString(err),num);
+      fclose(fp);
+    }
+
+    // stops program
+#ifdef WITH_MPI
+    MPI_Abort(MPI_COMM_WORLD,1);
+#endif
+    exit(EXIT_FAILURE);
+  }
+}
+#endif
 /* ----------------------------------------------------------------------------------------------- */
 
 // Timing helper functions
 
 /* ----------------------------------------------------------------------------------------------- */
 
-void start_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop){
+void start_timing_gpu(gpu_event* start,gpu_event* stop){
+
+#ifdef USE_CUDA
   // creates & starts event
   cudaEventCreate(start);
   cudaEventCreate(stop);
   cudaEventRecord( *start, 0 );
+#endif
+#ifdef USE_HIP
+  // creates & starts event
+  hipEventCreate(start);
+  hipEventCreate(stop);
+  hipEventRecord( *start, 0);
+#endif
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str){
+void stop_timing_gpu(gpu_event* start,gpu_event* stop, const char* info_str){
   realw time;
+
+#ifdef USE_CUDA
   // stops events
   cudaEventRecord( *stop, 0 );
   cudaEventSynchronize( *stop );
   cudaEventElapsedTime( &time, *start, *stop );
   cudaEventDestroy( *start );
   cudaEventDestroy( *stop );
+#endif
+#ifdef USE_HIP
+  // stops events
+  hipEventRecord( *stop, 0);
+  hipEventSynchronize( *stop );
+  hipEventElapsedTime( &time, *start, *stop );
+  hipEventDestroy( *start );
+  hipEventDestroy( *stop );
+#endif
+
   // user output
   printf("%s: Execution Time = %f ms\n",info_str,time);
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str, realw* t){
+void stop_timing_gpu(gpu_event* start,gpu_event* stop, const char* info_str, realw* t){
   realw time;
+
+#ifdef USE_CUDA
   // stops events
   cudaEventRecord( *stop, 0);
   cudaEventSynchronize( *stop );
   cudaEventElapsedTime( &time, *start, *stop );
   cudaEventDestroy( *start );
   cudaEventDestroy( *stop );
+#endif
+#ifdef USE_HIP
+  // stops events
+  hipEventRecord( *stop, 0);
+  hipEventSynchronize( *stop );
+  hipEventElapsedTime( &time, *start, *stop );
+  hipEventDestroy( *start );
+  hipEventDestroy( *stop );
+#endif
+
   // user output
   printf("%s: Execution Time = %f ms\n",info_str,time);
 
@@ -164,15 +268,31 @@ void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str
 
 /* ----------------------------------------------------------------------------------------------- */
 
-void exit_on_cuda_error(const char* kernel_name) {
+void exit_on_gpu_error(const char* kernel_name) {
   //check to catch errors from previous operations
+  int error = 0;
+  const char *strerr = NULL;
 
   // synchronizes GPU
-  synchronize_cuda();
+  gpuSynchronize();
 
-  cudaError_t err = cudaGetLastError();
-  if (err != cudaSuccess){
-    fprintf(stderr,"GPU Error: after %s: %s\n", kernel_name, cudaGetErrorString(err));
+#ifdef USE_CUDA
+  if (run_cuda) {
+    cudaError_t err = cudaGetLastError();
+    error = err != cudaSuccess;
+    strerr = cudaGetErrorString(err);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip) {
+    hipError_t err = hipGetLastError();
+    error = err != hipSuccess;
+    strerr = hipGetErrorString(err);
+  }
+#endif
+
+  if (error){
+    fprintf(stderr,"GPU Error: after %s: %s\n", kernel_name, strerr);
 
     //debugging
     //pause_for_debugger(0);
@@ -189,7 +309,7 @@ void exit_on_cuda_error(const char* kernel_name) {
     sprintf(filename,OUTPUT_FILES"/error_message_%06d.txt",myrank);
     fp = fopen(filename,"a+");
     if (fp != NULL){
-      fprintf(fp,"GPU Error: after %s: %s\n", kernel_name, cudaGetErrorString(err));
+      fprintf(fp,"GPU Error: after %s: %s\n", kernel_name, strerr);
       fclose(fp);
     }
 

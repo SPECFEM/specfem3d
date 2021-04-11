@@ -107,7 +107,7 @@ void FC_FUNC_(initialize_cuda_device,
   // Gets number of GPU devices
   device_count = 0;
   cudaGetDeviceCount(&device_count);
-  // Do not check if command failed with `exit_on_cuda_error` since it calls cudaDevice()/ThreadSynchronize():
+  // Do not check if command failed with `exit_on_gpu_error` since it calls cudaDevice()/ThreadSynchronize():
   // If multiple MPI tasks access multiple GPUs per node, they will try to synchronize
   // GPU 0 and depending on the order of the calls, an error will be raised
   // when setting the device number. If MPS is enabled, some GPUs will silently not be used.
@@ -158,7 +158,7 @@ void FC_FUNC_(initialize_cuda_device,
     if (myrank == 0) printf("setting cuda devices with id = %d for all processes by -DCUDA_DEVICE_ID\n\n",device);
 
     cudaSetDevice( device );
-    exit_on_cuda_error("cudaSetDevice has invalid device");
+    exit_on_gpu_error("cudaSetDevice has invalid device");
 
     // double check that device was  properly selected
     cudaGetDevice(&device);
@@ -173,7 +173,7 @@ void FC_FUNC_(initialize_cuda_device,
     device = myrank % device_count;
 
     cudaSetDevice( device );
-    exit_on_cuda_error("cudaSetDevice has invalid device");
+    exit_on_gpu_error("cudaSetDevice has invalid device");
 
     // double check that device was  properly selected
     cudaGetDevice(&device);

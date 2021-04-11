@@ -66,10 +66,10 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   // note: for computational efficienty, the FORWARD_OR_ADJOINT variable here can have a special case (== 0)
   //       to combine forward and backward wavefield in the same kernel call
 
-  // Cuda timing
-  cudaEvent_t start, stop;
+  // kernel timing
+  gpu_event start, stop;
   if (CUDA_TIMING ){
-    start_timing_cuda(&start,&stop);
+    start_timing_gpu(&start,&stop);
   }
   int nb_field = mp->simulation_type == 3 ? 2 : 1 ;
 
@@ -141,7 +141,7 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   // Cuda timing
   if (CUDA_TIMING ){
     realw flops,time;
-    stop_timing_cuda(&start,&stop,"Kernel_2_acoustic_impl",&time);
+    stop_timing_gpu(&start,&stop,"Kernel_2_acoustic_impl",&time);
     // time in seconds
     time = time / 1000.;
     // performance

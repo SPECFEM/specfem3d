@@ -75,9 +75,9 @@ void FC_FUNC_(update_displacement_cuda,
     accel = mp->d_b_accel;
   }
 
-  // Cuda timing
-  cudaEvent_t start,stop;
-  if (CUDA_TIMING_UPDATE ) start_timing_cuda(&start,&stop);
+  // kernel timing
+  gpu_event start,stop;
+  if (CUDA_TIMING_UPDATE ) start_timing_gpu(&start,&stop);
 
   // debug
   //realw max_d,max_v,max_a;
@@ -93,7 +93,7 @@ void FC_FUNC_(update_displacement_cuda,
   // Cuda timing
   if (CUDA_TIMING_UPDATE ){
     realw flops,time;
-    stop_timing_cuda(&start,&stop,"UpdateDispVeloc_kernel",&time);
+    stop_timing_gpu(&start,&stop,"UpdateDispVeloc_kernel",&time);
     // time in seconds
     time = time / 1000.;
     // performance: 6 FLOPS per thread
@@ -157,9 +157,9 @@ void FC_FUNC_(update_displacement_ac_cuda,
     potential_dot_dot = mp->d_b_potential_dot_dot_acoustic;
   }
 
-  // Cuda timing
-  cudaEvent_t start,stop;
-  if (CUDA_TIMING_UPDATE ) start_timing_cuda(&start,&stop);
+  // kernel timing
+  gpu_event start,stop;
+  if (CUDA_TIMING_UPDATE ) start_timing_gpu(&start,&stop);
 
   UpdatePotential_kernel<<<grid,threads,0,mp->compute_stream>>>(potential,
                                                                 potential_dot,
@@ -169,7 +169,7 @@ void FC_FUNC_(update_displacement_ac_cuda,
   // Cuda timing
   if (CUDA_TIMING_UPDATE ){
     realw flops,time;
-    stop_timing_cuda(&start,&stop,"UpdatePotential_kernel",&time);
+    stop_timing_gpu(&start,&stop,"UpdatePotential_kernel",&time);
     // time in seconds
     time = time / 1000.;
     // performance

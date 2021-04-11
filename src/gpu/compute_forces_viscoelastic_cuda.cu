@@ -90,10 +90,10 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
-  // Cuda timing
-  cudaEvent_t start,stop;
+  // kernel timing
+  gpu_event start,stop;
   if (CUDA_TIMING ){
-    start_timing_cuda(&start,&stop);
+    start_timing_gpu(&start,&stop);
   }
 
   // defines local parameters for forward/adjoint function calls
@@ -563,19 +563,19 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
   // Cuda timing
   if (CUDA_TIMING ){
     if (ATTENUATION ){
-      stop_timing_cuda(&start,&stop,"Kernel_2_att_impl");
+      stop_timing_gpu(&start,&stop,"Kernel_2_att_impl");
     }else{
       if (ANISOTROPY ){
-        stop_timing_cuda(&start,&stop,"Kernel_2_noatt_ani_impl");
+        stop_timing_gpu(&start,&stop,"Kernel_2_noatt_ani_impl");
       }else{
         if (mp->gravity ){
-          stop_timing_cuda(&start,&stop,"Kernel_2_noatt_iso_grav_impl");
+          stop_timing_gpu(&start,&stop,"Kernel_2_noatt_iso_grav_impl");
         }else{
           if (COMPUTE_AND_STORE_STRAIN ){
-            stop_timing_cuda(&start,&stop,"Kernel_2_noatt_iso_strain_impl");
+            stop_timing_gpu(&start,&stop,"Kernel_2_noatt_iso_strain_impl");
           }else{
             realw time;
-            stop_timing_cuda(&start,&stop,"Kernel_2_noatt_iso_impl",&time);
+            stop_timing_gpu(&start,&stop,"Kernel_2_noatt_iso_impl",&time);
             // time in seconds
             time = time / 1000.;
             // performance

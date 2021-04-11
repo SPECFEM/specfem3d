@@ -83,7 +83,7 @@ TRACE("transfer_boun_pot_from_device");
     //GPU_ERROR_CHECKING("after prepare_boundary_potential_on_device");
 
     // synchronizes
-    //synchronize_cuda();
+    //gpuSynchronize();
     // explicitly waits until previous compute stream finishes
     // (cudaMemcpy implicitly synchronizes all other cuda operations)
     cudaStreamSynchronize(mp->compute_stream);
@@ -122,7 +122,7 @@ TRACE("transfer_asmbl_pot_to_device");
 
   // Cuda timing
   //cudaEvent_t start, stop;
-  //start_timing_cuda(&start,&stop);
+  //start_timing_gpu(&start,&stop);
 
   // checks if anything to do
   if (mp->size_mpi_buffer_potential > 0){
@@ -151,7 +151,7 @@ TRACE("transfer_asmbl_pot_to_device");
     }
 
     // synchronizes
-    synchronize_cuda();
+    gpuSynchronize();
 
     // copies buffer onto GPU
     print_CUDA_error_if_any(cudaMemcpy(d_send_buffer, buffer_recv_scalar_ext_mesh,
@@ -165,8 +165,8 @@ TRACE("transfer_asmbl_pot_to_device");
                                                                                  mp->d_nibool_interfaces_ext_mesh,
                                                                                  mp->d_ibool_interfaces_ext_mesh);
   }
-  // Cuda timing
-  //stop_timing_cuda(&start,&stop,"assemble_boundary_potential_on_device");
+  // kernel timing
+  //stop_timing_gpu(&start,&stop,"assemble_boundary_potential_on_device");
 
   GPU_ERROR_CHECKING("transfer_asmbl_pot_to_device");
 }

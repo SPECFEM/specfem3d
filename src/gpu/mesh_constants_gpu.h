@@ -58,6 +58,10 @@
 #include <cuda_runtime.h>
 #endif
 
+#ifdef USE_HIP
+#include <hip/hip_runtime.h>
+#endif
+
 // type of "working" variables: see also CUSTOM_REAL in constants.h
 //
 // double precision temporary variables leads to 10% performance decrease
@@ -111,7 +115,7 @@ typedef double realw;
 // (note: this synchronizes many calls, thus e.g. no asynchronuous memcpy possible)
 #define ENABLE_VERY_SLOW_ERROR_CHECKING 0
 #if ENABLE_VERY_SLOW_ERROR_CHECKING == 1
-#define GPU_ERROR_CHECKING(x) exit_on_cuda_error(x);
+#define GPU_ERROR_CHECKING(x) exit_on_gpu_error(x);
 #else
 #define GPU_ERROR_CHECKING(x)
 #endif
@@ -170,12 +174,12 @@ typedef double realw;
 //#define USE_TEXTURES_CONSTANTS
 
 #ifdef USE_CUDA
-// CUDA version >= 4.0 needed for cudaTextureType1D and cudaDeviceSynchronize()
-#if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
-#undef USE_TEXTURES_FIELDS
-#undef USE_TEXTURES_CONSTANTS
-#endif
-#endif
+  // CUDA version >= 4.0 needed for cudaTextureType1D and cudaDeviceSynchronize()
+  #if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
+    #undef USE_TEXTURES_FIELDS
+    #undef USE_TEXTURES_CONSTANTS
+  #endif
+#endif // USE_CUDA
 
 #ifdef USE_TEXTURES_FIELDS
 #pragma message ("\nCompiling with: USE_TEXTURES_FIELDS enabled\n")
@@ -266,7 +270,7 @@ typedef double realw;
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// cuda kernel block size for updating displacements/potential (newmark time scheme)
+// gpu kernel block size for updating displacements/potential (newmark time scheme)
 // current hardware: 128 is slightly faster than 256 ( ~ 4%)
 #define BLOCKSIZE_KERNEL1 128
 #define BLOCKSIZE_KERNEL3 128
@@ -317,7 +321,12 @@ typedef double realw;
 typedef float realw;
 
 // textures
+#ifdef USE_CUDA
 typedef texture<float, cudaTextureType1D, cudaReadModeElementType> realw_texture;
+#endif
+#ifdef USE_HIP
+typedef texture<float, hipTextureType1D, hipReadModeElementType> realw_texture;
+#endif
 
 // pointer declarations
 // restricted pointers: can improve performance on Kepler ~ 10%
@@ -336,6 +345,7 @@ typedef realw* __restrict__ realw_p;
 
 // wrapper for global memory load function
 // usage:  val = get_global_cr( &A[index] );
+#ifdef USE_CUDA
 #if __CUDA_ARCH__ >= 350
 // Device has ldg
 __device__ __forceinline__ realw get_global_cr(realw_const_p ptr) { return __ldg(ptr); }
@@ -343,7 +353,7 @@ __device__ __forceinline__ realw get_global_cr(realw_const_p ptr) { return __ldg
 //Device does not, fall back.
 __device__ __forceinline__ realw get_global_cr(realw_const_p ptr) { return (*ptr); }
 #endif
-
+#endif  // USE_CUDA
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -430,10 +440,11 @@ typedef field* __restrict__ field_p;
 /* ----------------------------------------------------------------------------------------------- */
 
 #ifdef USE_CUDA
-
 // cuda header files
 //#include "mesh_constants_cuda.h"
 #include "kernel_proto.cu.h"
+
+void print_CUDA_error_if_any(cudaError_t err, int num);
 
 // prototype definitions to include in *.cu files
 __device__ void compute_gradient_kernel(int ijk,
@@ -449,35 +460,16 @@ __device__ void compute_gradient_kernel(int ijk,
 
 #endif
 
+#ifdef USE_HIP
+// hip header files
+//#include "mesh_constants_hip.h"  // not used yet...
+
+void print_HIP_error_if_any(hipError_t err, int num);
+
+#endif
+
 extern int run_cuda;
-
-/* ----------------------------------------------------------------------------------------------- */
-
-// utility functions
-
-/* ----------------------------------------------------------------------------------------------- */
-
-// defined in check_fields_cuda.cu
-double get_time_val();
-void get_free_memory(double* free_db, double* used_db, double* total_db);
-void print_CUDA_error_if_any(cudaError_t err, int num);
-void pause_for_debugger(int pause);
-
-void exit_on_cuda_error(const char* kernel_name);
-void exit_on_error(const char* info);
-
-void synchronize_cuda();
-void synchronize_mpi();
-
-void start_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop);
-void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str);
-void stop_timing_cuda(cudaEvent_t* start,cudaEvent_t* stop, const char* info_str,realw* t);
-
-realw get_device_array_maximum_value(realw* array,int size);
-
-// defined in helper_functions.cu
-void copy_todevice_int(void** d_array_addr_ptr,int* h_array,int size);
-void copy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size);
+extern int run_hip;
 
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -559,9 +551,16 @@ typedef struct mesh_ {
   int* d_ibool_interfaces_ext_mesh;
 
   // overlapped memcpy streams
+#ifdef USE_CUDA
   cudaStream_t compute_stream;
   cudaStream_t copy_stream;
   //cudaStream_t b_copy_stream;
+#endif
+#ifdef USE_HIP
+  hipStream_t compute_stream;
+  hipStream_t copy_stream;
+  //hipStream_t b_copy_stream;
+#endif
 
   // sources
   int nsources_local;
@@ -799,6 +798,40 @@ typedef struct mesh_ {
   int* run_number_of_the_source;
 
 } Mesh;
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// utility functions
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// defined in helper_functions_gpu.c
+void gpuCopy_todevice_int(void** d_array_addr_ptr,int* h_array,int size);
+void gpuCopy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size);
+
+void gpuSynchronize ();
+
+void exit_on_gpu_error(const char* kernel_name);
+void exit_on_error(const char* info);
+
+void synchronize_mpi();
+double get_time_val();
+void pause_for_debugger(int pause);
+
+// defined in check_fields_cuda.cu
+void get_free_memory(double* free_db, double* used_db, double* total_db);
+realw get_device_array_maximum_value(realw* array,int size);
+
+// event timing
+#ifdef USE_CUDA
+typedef cudaEvent_t gpu_event;
+#endif
+#ifdef USE_HIP
+typedef hipEvent_t gpu_event;
+#endif
+void start_timing_gpu(gpu_event* start,gpu_event* stop);
+void stop_timing_gpu(gpu_event* start,gpu_event* stop, const char* info_str);
+void stop_timing_gpu(gpu_event* start,gpu_event* stop, const char* info_str,realw* t);
 
 
 /* ----------------------------------------------------------------------------------------------- */

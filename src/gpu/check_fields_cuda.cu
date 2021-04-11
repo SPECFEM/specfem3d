@@ -175,7 +175,7 @@ realw get_device_array_maximum_value(realw* array, int size){
 
     // explicitly wait for cuda kernels to finish
     // (cudaMemcpy implicitly synchronizes all other cuda operations)
-    synchronize_cuda();
+    gpuSynchronize();
 
     h_array = (realw*)calloc(size,sizeof(realw));
     print_CUDA_error_if_any(cudaMemcpy(h_array,array,sizeof(realw)*size,cudaMemcpyDeviceToHost),33001);
@@ -276,7 +276,7 @@ void FC_FUNC_(get_norm_acoustic_from_device,
   GPU_ERROR_CHECKING("kernel get_maximum_field_kernel");
 
   // synchronizes
-  //synchronize_cuda();
+  //gpuSynchronize();
   // explicitly waits for stream to finish
   // (cudaMemcpy implicitly synchronizes all other cuda operations)
   cudaStreamSynchronize(mp->compute_stream);
@@ -393,7 +393,7 @@ void FC_FUNC_(get_norm_elastic_from_device,
   GPU_ERROR_CHECKING("kernel get_norm_elastic_from_device");
 
   // synchronizes
-  //synchronize_cuda();
+  //gpuSynchronize();
   // explicitly waits for stream to finish
   // (cudaMemcpy implicitly synchronizes all other cuda operations)
   cudaStreamSynchronize(mp->compute_stream);

@@ -73,8 +73,8 @@ TRACE("\ttransfer_boun_accel_from_device");
     }
 
     // Cuda timing
-    //cudaEvent_t start, stop;
-    //start_timing_cuda(&start,&stop);
+    //gpu_event start, stop;
+    //start_timing_gpu(&start,&stop);
 
     // fills mpi boundary buffer
     prepare_boundary_accel_on_device<<<grid,threads,0,mp->compute_stream>>>(d_accel,d_send_buffer,
@@ -83,7 +83,7 @@ TRACE("\ttransfer_boun_accel_from_device");
                                                                             mp->d_nibool_interfaces_ext_mesh,
                                                                             mp->d_ibool_interfaces_ext_mesh);
     // synchronizes
-    //synchronize_cuda();
+    //gpuSynchronize();
     // explicitly waits until previous compute stream finishes
     // (cudaMemcpy implicitly synchronizes all other cuda operations)
     cudaStreamSynchronize(mp->compute_stream);
@@ -92,9 +92,9 @@ TRACE("\ttransfer_boun_accel_from_device");
     print_CUDA_error_if_any(cudaMemcpy(send_accel_buffer,d_send_buffer,
                             mp->size_mpi_buffer*sizeof(realw),cudaMemcpyDeviceToHost),97001);
 
-    // Cuda timing
+    // kernel timing
     // finish timing of kernel+memcpy
-    //stop_timing_cuda(&start,&stop,"prepare_boundary_accel_on_device");
+    //stop_timing_gpu(&start,&stop,"prepare_boundary_accel_on_device");
   }
 
   GPU_ERROR_CHECKING("transfer_boun_accel_from_device");
@@ -130,7 +130,7 @@ void FC_FUNC_(transfer_boundary_from_device_a,
                                                                             mp->d_nibool_interfaces_ext_mesh,
                                                                             mp->d_ibool_interfaces_ext_mesh);
     // waits until kernel is finished before starting async memcpy
-    //synchronize_cuda();
+    //gpuSynchronize();
     // waits until previous compute stream finishes
     cudaStreamSynchronize(mp->compute_stream);
 
@@ -196,7 +196,7 @@ TRACE("\ttransfer_asmbl_accel_to_device");
     else if (*FORWARD_OR_ADJOINT == 3){
       // explicitly synchronizes
       // (cudaMemcpy implicitly synchronizes all other cuda operations)
-      synchronize_cuda();
+      gpuSynchronize();
 
       print_CUDA_error_if_any(cudaMemcpy(mp->d_b_send_accel_buffer, buffer_recv_vector_ext_mesh,
                               mp->size_mpi_buffer*sizeof(realw),cudaMemcpyHostToDevice),97001);
@@ -283,7 +283,7 @@ TRACE("\ttransfer_sync_accel_to_device");
     else if (*FORWARD_OR_ADJOINT == 3){
       // explicitly synchronizes
       // (cudaMemcpy implicitly synchronizes all other cuda operations)
-      synchronize_cuda();
+      gpuSynchronize();
 
       print_CUDA_error_if_any(cudaMemcpy(mp->d_b_send_accel_buffer, buffer_recv_vector_ext_mesh,
                               mp->size_mpi_buffer*sizeof(realw),cudaMemcpyHostToDevice),97001);
@@ -402,7 +402,7 @@ void FC_FUNC_(sync_copy_from_device,
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
 
   // Wait until async-memcpy of outer elements is finished and start MPI.
-  if (*iphase != 2){ exit_on_cuda_error("sync_copy_from_device must be called for iphase == 2"); }
+  if (*iphase != 2){ exit_on_gpu_error("sync_copy_from_device must be called for iphase == 2"); }
 
   if (mp->size_mpi_buffer > 0){
     // waits for asynchronous copy to finish
