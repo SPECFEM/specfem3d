@@ -27,7 +27,7 @@
  !=====================================================================
  */
 
-#include "mesh_constants_cuda.h"
+#include "mesh_constants_gpu.h"
 
 // CUDA version output
 #ifdef USE_CUDA
@@ -289,7 +289,7 @@ void FC_FUNC_(initialize_cuda_device,
 
   // checks kernel optimization setting
 #ifdef USE_LAUNCH_BOUNDS
-  // see: mesh_constants_cuda.h
+  // see: mesh_constants_gpu.h
   // performance statistics: main kernel Kernel_2_**_impl():
   //       shared memory per block = 6200    for Kepler: total = 49152 -> limits active blocks to 7
   //       registers per thread    = 72                                   (limited by LAUNCH_MIN_BLOCKS 7)

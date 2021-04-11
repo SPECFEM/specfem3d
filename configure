@@ -630,6 +630,14 @@ VTK_INCLUDES
 VTK_MAJOR
 OMP_LIB
 OMP_FCFLAGS
+HIP_LIBS
+HIP_LDFLAGS
+HIP_CPPFLAGS
+HIPCC_PROG
+HIP_LIB
+HIP_INC
+HIP_FLAGS
+HIPCC
 CUDA_LIBS
 CUDA_LDFLAGS
 CUDA_CPPFLAGS
@@ -709,6 +717,8 @@ COND_VTK_FALSE
 COND_VTK_TRUE
 COND_OMP_FALSE
 COND_OMP_TRUE
+COND_HIP_FALSE
+COND_HIP_TRUE
 COND_CUDA_PLUS_FALSE
 COND_CUDA_PLUS_TRUE
 COND_CUDA11_FALSE
@@ -791,6 +801,7 @@ enable_debug
 with_mpi
 enable_vectorization
 with_cuda
+with_hip
 with_openmp
 enable_openmp
 enable_vtk
@@ -838,6 +849,10 @@ NVCC
 CUDA_FLAGS
 CUDA_INC
 CUDA_LIB
+HIPCC
+HIP_FLAGS
+HIP_INC
+HIP_LIB
 OMP_FCFLAGS
 OMP_LIB'
 
@@ -1466,6 +1481,7 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-mpi              build parallel version [default=yes]
   --with-cuda             build CUDA GPU enabled version [default=no]
+  --with-hip              build HIP GPU enabled version [default=no]
   --with-openmp           build OpenMP enabled version [default=no]
   --with-adios            build ADIOS enabled version [default=no]
   --with-adios2           build ADIOS enabled version [default=no]
@@ -1529,6 +1545,10 @@ Some influential environment variables:
   CUDA_FLAGS  CUDA compiler flags
   CUDA_INC    Location of CUDA include files
   CUDA_LIB    Location of CUDA library libcudart
+  HIPCC       AMD HIP compiler command
+  HIP_FLAGS   HIP compiler flags
+  HIP_INC     Location of HIP include files
+  HIP_LIB     Location of HIP library libhip_hcc
   OMP_FCFLAGS OpenMP Fortran compiler flags
   OMP_LIB     Location of extra OpenMP libraries
 
@@ -2846,9 +2866,10 @@ fi
 
 
 ###
-### CUDA
+### GPU version
 ###
 
+## CUDA
 
 # Check whether --with-cuda was given.
 if test "${with_cuda+set}" = set; then :
@@ -2950,6 +2971,24 @@ fi
 else
   COND_CUDA_PLUS_TRUE='#'
   COND_CUDA_PLUS_FALSE=
+fi
+
+
+## HIP
+
+# Check whether --with-hip was given.
+if test "${with_hip+set}" = set; then :
+  withval=$with_hip; want_hip="$withval"
+else
+  want_hip=no
+fi
+
+ if test x"$want_hip" != xno; then
+  COND_HIP_TRUE=
+  COND_HIP_FALSE='#'
+else
+  COND_HIP_TRUE='#'
+  COND_HIP_FALSE=
 fi
 
 
@@ -7919,6 +7958,7 @@ CONFIGURE_FLAGS="FC=$FC FCFLAGS=$FCFLAGS"
 ### GPU
 ###
 
+## CUDA
 if test x"$want_cuda" != xno; then :
 
     $as_echo "## ---- ##
@@ -8191,6 +8231,292 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 
 fi
+
+## HIP
+if test x"$want_hip" != xno; then :
+
+    $as_echo "## --- ##
+## HIP ##
+## --- ##"
+    # environment variables
+
+
+
+
+
+    # tests HIPCC variable
+    if test x"$HIPCC" = x; then :
+
+        HIPCC=hipcc
+
+fi
+
+    # Check for compiler
+    # checks if program in path
+    # Extract the first word of "$HIPCC", so it can be a program name with args.
+set dummy $HIPCC; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_HIPCC_PROG+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $HIPCC_PROG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_HIPCC_PROG="$HIPCC_PROG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_HIPCC_PROG="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+HIPCC_PROG=$ac_cv_path_HIPCC_PROG
+if test -n "$HIPCC_PROG"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $HIPCC_PROG" >&5
+$as_echo "$HIPCC_PROG" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+    if test -z "$HIPCC_PROG" ; then
+        as_fn_error $? "cannot find '$HIPCC' program, please check your PATH." "$LINENO" 5
+    fi
+
+    # sets default HIP path
+    #HIP_PATH=/opt/rocm
+    #AS_IF([test x"$HIP_INC" = x],[
+    #    HIP_INC="$HIP_PATH/include"
+    #])
+    #AS_IF([test x"$HIP_LIB" = x],[
+    #    HIP_LIB="$HIP_PATH/lib"
+    #])
+
+    # checks platform
+    HIPCONFIG="$HIP_PATH/bin/hipconfig"
+    GPU_PLATFORM=`$HIPCONFIG --platform`
+    if test x"$GPU_PLATFORM" = xnvcc; then :
+
+        { $as_echo "$as_me:${as_lineno-$LINENO}: HIP PLATFORM NVCC detected." >&5
+$as_echo "$as_me: HIP PLATFORM NVCC detected." >&6;}
+        FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_NVCC__"
+
+fi
+    if test x"$GPU_PLATFORM" = xhcc; then :
+
+        { $as_echo "$as_me:${as_lineno-$LINENO}: HIP PLATFORM HCC detected." >&5
+$as_echo "$as_me: HIP PLATFORM HCC detected." >&6;}
+        FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_HCC__"
+
+fi
+    # compiler might require a platform selection flag
+    if [ "$HIP_FLAGS" != *"HIP_PLATFORM"* ]; then
+      # adds PLATFORM flag
+      HIP_FLAGS="${HIP_FLAGS} ${FLAG_PLATFORM}"
+    fi
+
+    # for compilation errors like:
+    #   /usr/bin/ld: obj/assemble_MPI_scalar_gpu.hip.o: relocation R_X86_64_32 against `.rodata.str1.1' can not be used
+    #      when making a PIE object; recompile with -fPIC
+    # try to add
+    #   HIP_FLAGS="-fPIC"
+    # or
+    #   HIP_FLAGS="-fno-gpu-rdc"
+
+    # test lib & include
+    if test x"$HIP_LIB" != x; then :
+
+        HIP_LDFLAGS="-L$HIP_LIB"
+
+fi
+    if test x"$HIP_INC" != x; then :
+
+        HIP_CPPFLAGS="-I$HIP_INC"
+
+fi
+    HIP_LIBS="-lamdhip64"
+
+    # checks header file
+    ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+    CFLAGS_save="$CFLAGS"
+    LDFLAGS_save="$LDFLAGS"
+    LIBS_save="$LIBS"
+
+    # uses hipcc compiler
+    CFLAGS="$HIP_FLAGS"
+    if test "x$HIP_INC" != "x"; then
+      HIP_CPPFLAGS="-I$HIP_INC"
+      CFLAGS="$CFLAGS $HIP_CPPFLAGS"
+    fi
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for hip/hip_runtime.h" >&5
+$as_echo_n "checking for hip/hip_runtime.h... " >&6; }
+    ac_compile='$HIPCC -c $CFLAGS conftest.$ac_ext >&5'
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+        #include <hip/hip_runtime.h>
+#ifdef FC_DUMMY_MAIN
+#ifndef FC_DUMMY_MAIN_EQ_F77
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int FC_DUMMY_MAIN() { return 1; }
+#endif
+#endif
+int
+main ()
+{
+void* ptr = 0;
+  ;
+  return 0;
+}
+
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+else
+
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+        as_fn_error $? "HIP runtime header not found; try setting HIP_INC." "$LINENO" 5
+
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+    # checks for HIP library
+    if test "x$HIP_LIB" != "x"; then
+      HIP_LDFLAGS="-L$HIP_LIB"
+      LDFLAGS="$HIP_LDFLAGS $LDFLAGS"
+    fi
+    HIP_LIBS="-lamdhip64"
+    LIBS="$HIP_LIBS $LIBS"
+
+    # runs compilation test with hipcc
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking hipcc compilation with hipMalloc in -lamdhip64" >&5
+$as_echo_n "checking hipcc compilation with hipMalloc in -lamdhip64... " >&6; }
+    ac_compile='$HIPCC -c $CFLAGS conftest.$ac_ext >&5'
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+      #include <hip/hip_runtime.h>
+#ifdef FC_DUMMY_MAIN
+#ifndef FC_DUMMY_MAIN_EQ_F77
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int FC_DUMMY_MAIN() { return 1; }
+#endif
+#endif
+int
+main ()
+{
+void* ptr = 0;hipMalloc(&ptr, 1);
+  ;
+  return 0;
+}
+
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+else
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+      as_fn_error $? "HIP library function with hipcc compilation failed; try setting HIP_INC." "$LINENO" 5
+
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+    # runs linking test with hipcc
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking hipcc linking with hipMalloc in -lamdhip64" >&5
+$as_echo_n "checking hipcc linking with hipMalloc in -lamdhip64... " >&6; }
+    ac_link='$HIPCC -o conftest$ac_exeext $CFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+
+#include <stdio.h>
+#include <hip/hip_runtime.h>
+#ifdef FC_DUMMY_MAIN
+#ifndef FC_DUMMY_MAIN_EQ_F77
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int FC_DUMMY_MAIN() { return 1; }
+#endif
+#endif
+int
+main ()
+{
+void* ptr = 0;hipMalloc(&ptr, 1);
+  ;
+  return 0;
+}
+
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+else
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+      as_fn_error $? "HIP library linking with HIP failed; try setting HIP_LIB." "$LINENO" 5
+
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+    #HIP_HEADER_H="hip/hip_runtime.h"
+    #AC_CHECK_HEADER([${HIP_HEADER_H}], [], [
+    #    AC_MSG_ERROR([HIP header not found; try setting HIP_INC.])
+    #])
+
+    CFLAGS="$CFLAGS_save"
+    LDFLAGS="$LDFLAGS_save"
+    LIBS="$LIBS_save"
+    ac_ext=${ac_fc_srcext-f}
+ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
+ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_fc_compiler_gnu
+
+
+    # export flags
+
+
+
+
+fi
+
 
 ###
 ### OPENMP
@@ -10310,6 +10636,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_CUDA_PLUS_TRUE}" && test -z "${COND_CUDA_PLUS_FALSE}"; then
   as_fn_error $? "conditional \"COND_CUDA_PLUS\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_HIP_TRUE}" && test -z "${COND_HIP_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_OMP_TRUE}" && test -z "${COND_OMP_FALSE}"; then

@@ -274,16 +274,10 @@ inverse_problem_for_model_SHARED_OBJECTS += $(COND_MPI_OBJECTS)
 inverse_problem_for_model_SHARED_OBJECTS += $(COND_OPENMP_OBJECTS)
 
 ###
-### CUDA
+### GPU
 ###
-ifeq ($(CUDA),yes)
-inverse_problem_for_model_OBJECTS += $(gpu_specfem3D_OBJECTS)
-ifeq ($(CUDA_PLUS),yes)
-inverse_problem_for_model_OBJECTS += $(gpu_specfem3D_DEVICE_OBJ)
-endif
-else
-inverse_problem_for_model_OBJECTS += $(gpu_specfem3D_STUBS)
-endif
+
+inverse_problem_for_model_SHARED_OBJECTS += $(gpu_OBJECTS)
 
 ###
 ### ADIOS

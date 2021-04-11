@@ -30,7 +30,7 @@
 #ifndef SMOOTH_CUDA_H
 #define SMOOTH_CUDA_H
 
-#include "mesh_constants_cuda.h"
+#include "mesh_constants_gpu.h"
 
 
 // smoothing data structure

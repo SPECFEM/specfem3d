@@ -163,21 +163,15 @@ xsmooth_sem_SHARED_OBJECTS = \
 ###
 ### GPU
 ###
-ifeq ($(CUDA),yes)
-## cuda version
-xsmooth_sem_OBJECTS += $(gpu_specfem3D_OBJECTS)
-ifeq ($(CUDA_PLUS),yes)
-xsmooth_sem_OBJECTS += $(gpu_specfem3D_DEVICE_OBJ)
-endif
-## libs
-xsmooth_sem_LIBS = $(MPILIBS) $(CUDA_LINK)
-INFO_CUDA_SEM="building xsmooth_sem with CUDA support"
 
-else
-## non-cuda version
-xsmooth_sem_OBJECTS += $(gpu_specfem3D_STUBS)
-## libs
 xsmooth_sem_LIBS = $(MPILIBS)
+xsmooth_sem_OBJECTS += $(gpu_OBJECTS)
+
+## cuda
+ifeq ($(CUDA),yes)
+xsmooth_sem_LIBS += $(CUDA_LINK)
+INFO_CUDA_SEM="building xsmooth_sem with CUDA support"
+else
 INFO_CUDA_SEM="building xsmooth_sem without CUDA support"
 endif
 
