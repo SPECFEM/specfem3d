@@ -468,6 +468,19 @@ void print_HIP_error_if_any(hipError_t err, int num);
 
 #endif
 
+
+// definitions
+#ifdef USE_CUDA
+typedef cudaEvent_t gpu_event;
+typedef cudaStream_t gpu_stream;
+#endif
+#ifdef USE_HIP
+typedef hipEvent_t gpu_event;
+typedef hipStream_t gpu_stream;
+#endif
+
+
+// runtime flags
 extern int run_cuda;
 extern int run_hip;
 
@@ -551,16 +564,9 @@ typedef struct mesh_ {
   int* d_ibool_interfaces_ext_mesh;
 
   // overlapped memcpy streams
-#ifdef USE_CUDA
-  cudaStream_t compute_stream;
-  cudaStream_t copy_stream;
-  //cudaStream_t b_copy_stream;
-#endif
-#ifdef USE_HIP
-  hipStream_t compute_stream;
-  hipStream_t copy_stream;
-  //hipStream_t b_copy_stream;
-#endif
+  gpu_stream compute_stream;
+  gpu_stream copy_stream;
+  //gpu_stream b_copy_stream;
 
   // sources
   int nsources_local;
@@ -812,6 +818,7 @@ void gpuFree (void *d_ptr);
 
 void gpuReset();
 void gpuSynchronize();
+void gpuStreamSynchronize(gpu_stream stream);
 
 void exit_on_gpu_error(const char* kernel_name);
 void exit_on_error(const char* info);
@@ -825,12 +832,6 @@ void get_free_memory(double* free_db, double* used_db, double* total_db);
 realw get_device_array_maximum_value(realw* array,int size);
 
 // event timing
-#ifdef USE_CUDA
-typedef cudaEvent_t gpu_event;
-#endif
-#ifdef USE_HIP
-typedef hipEvent_t gpu_event;
-#endif
 void start_timing_gpu(gpu_event* start,gpu_event* stop);
 void stop_timing_gpu(gpu_event* start,gpu_event* stop, const char* info_str);
 void stop_timing_gpu(gpu_event* start,gpu_event* stop, const char* info_str,realw* t);
