@@ -166,6 +166,19 @@ void gpuSynchronize() {
 
 /* ----------------------------------------------------------------------------------------------- */
 
+void gpuStreamSynchronize(gpu_stream stream) {
+  // synchronizes stream
+
+#ifdef USE_CUDA
+      if (run_cuda){ cudaStreamSynchronize(stream); }
+#endif
+#ifdef USE_HIP
+      if (run_hip){ hipStreamSynchronize(stream); }
+#endif
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
 #ifdef USE_CUDA
 void print_CUDA_error_if_any(cudaError_t err, int num) {
   if (cudaSuccess != err)
