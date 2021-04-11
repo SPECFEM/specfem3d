@@ -72,9 +72,28 @@ ifeq ($(CUDA),yes)
 
   # defines $(cuda_kernels_OBJS)
   include $(KERNEL_DIR)/kernel_cuda.mk
+endif
 
-	# replaces .o endings with .cuda.o for Cuda object files
-	gpu_specfem3D_OBJECTS:=$(subst .o,.cuda.o,${gpu_specfem3D_OBJECTS})
+ifdef NO_GPU
+gpu_OBJECTS = $(gpu_specfem3D_STUBS)
+else
+gpu_OBJECTS = $(gpu_specfem3D_OBJECTS)
+endif
+
+
+#######################################
+
+# substitutes object endings to assign corresponding compilation rule
+ifeq ($(HAS_GPU),yes)
+	# CUDA kernels only
+	ifeq ($(CUDA),yes)
+		gpu_specfem3D_OBJECTS:=$(subst .o,.cuda.o,${gpu_specfem3D_OBJECTS})
+	endif
+
+	# HIP kernels only
+	ifeq ($(HIP), yes)
+		gpu_specfem3D_OBJECTS:=$(subst .o,.hip.o,${gpu_specfem3D_OBJECTS})
+	endif
 endif
 
 gpu_specfem3D_OBJECTS += $(cuda_specfem3D_DEVICE_OBJ) $(cuda_kernels_OBJS)
@@ -83,11 +102,11 @@ gpu_specfem3D_OBJECTS += $(cuda_specfem3D_DEVICE_OBJ) $(cuda_kernels_OBJS)
 ### variables
 ###
 
-NVCC_CFLAGS := ${NVCC_FLAGS} -x cu
-
 BUILD_VERSION_TXT := with
 SELECTOR_CFLAG :=
 
+## CUDA compilation
+NVCC_CFLAGS := ${NVCC_FLAGS} -x cu
 ifeq ($(CUDA),yes)
   BUILD_VERSION_TXT += Cuda
   SELECTOR_CFLAG += $(FC_DEFINE)USE_CUDA
@@ -115,6 +134,22 @@ ifeq ($(CUDA),yes)
   endif
 endif
 
+## HIP compilation
+HIPCC_CFLAGS := ${HIP_CFLAGS} -x hip
+ifeq ($(HIP), yes)
+  BUILD_VERSION_TXT += HIP
+  SELECTOR_CFLAG += $(FC_DEFINE)USE_HIP
+  ifneq ($(strip $(HIP_GPU_FLAGS)),)
+    SELECTOR_CFLAG += -DHIP_GPU_CFLAGS="$(HIP_GPU_FLAGS)"
+  endif
+
+  # todo: compile hip with nvcc
+  #ifeq ($(CUDA),yes)
+  #  CUDA_LINK += $(HIP_LINK)
+  #  NVCC_CFLAGS += $(HIP_CPU_FLAGS)
+  #endif
+endif
+
 BUILD_VERSION_TXT += support
 
 #######################################
@@ -127,22 +162,34 @@ BUILD_VERSION_TXT += support
 ### CUDA compilation
 ###
 
+# source kernel files
 ifeq ($(CUDA),yes)
-$O/%.cuda-kernel.o: $(KERNEL_DIR)/%.cu $S/mesh_constants_cuda.h $(KERNEL_DIR)/kernel_proto.cu.h #$S/mesh_constants_gpu.h
+$O/%.cuda-kernel.o: $(KERNEL_DIR)/%.cu $S/mesh_constants_gpu.h $(KERNEL_DIR)/kernel_proto.cu.h #$S/mesh_constants_cuda.h
 	$(NVCC) -c $< -o $@ $(NVCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG) -include $(word 2,$^)
 
 $(cuda_specfem3D_DEVICE_OBJ): $(subst $(cuda_specfem3D_DEVICE_OBJ), ,$(gpu_specfem3D_OBJECTS)) $(cuda_kernels_OBJS)
 	${NVCCLINK} -o $@ $^
 endif
 
-#print-%:
-#	@echo '$*=$($*)'
+ifeq ($(HIP),yes)
+$O/%.hip-kernel.o: $(BOAST_DIR)/%.cpp $S/mesh_constants_gpu.h #$S/mesh_constants_hip.h
+	$(HIPCC) -c $< -o $@ $(HIP_CFLAGS) -I${SETUP} -I$(BOAST_DIR) $(SELECTOR_CFLAG) -include $(word 2,$^)
+endif
 
-$O/%.cuda.o: $S/%.cu ${SETUP}/config.h $S/mesh_constants_cuda.h $S/prepare_constants_cuda.h
+
+# source files in src/gpu/
+$O/%.cuda.o: $S/%.cu ${SETUP}/config.h $S/mesh_constants_gpu.h $S/prepare_constants_cuda.h
 	${NVCC} -c $< -o $@ $(NVCC_FLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
 
-$O/%.cuda.o: $S/%.c ${SETUP}/config.h $S/mesh_constants_cuda.h
+$O/%.cuda.o: $S/%.c ${SETUP}/config.h $S/mesh_constants_gpu.h
 	$(NVCC) -c $< -o $@ $(NVCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
 
+$O/%.hip.o: $S/%.c ${SETUP}/config.h $S/mesh_constants_gpu.h  #$S/mesh_constants_hip.h
+	${HIPCC} -c $< -o $@ $(HIPCC_CFLAGS) -I${SETUP} -I$(BOAST_DIR) $(SELECTOR_CFLAG)
+
+# C version
 $O/%.gpu_cc.o: $S/%.c ${SETUP}/config.h
 	${CC} -c $(CPPFLAGS) $(CFLAGS) $(MPI_INCLUDES) -o $@ $<
+
+print-%:
+	@echo '$*=$($*)'

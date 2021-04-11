@@ -93,9 +93,10 @@ fi
 AM_CONDITIONAL([COND_VECTORIZATION], [test x"$want_vec" != xno])
 
 ###
-### CUDA
+### GPU version
 ###
 
+## CUDA
 AC_ARG_WITH([cuda],
     [AS_HELP_STRING([--with-cuda],
         [build CUDA GPU enabled version @<:@default=no@:>@])],
@@ -127,6 +128,13 @@ AM_CONDITIONAL([COND_CUDA_PLUS],
      -o "$want_cuda" = cuda10 \
      -o "$want_cuda" = cuda11 \]
 )
+
+## HIP
+AC_ARG_WITH([hip],
+ [AS_HELP_STRING([--with-hip], [build HIP GPU enabled version @<:@default=no@:>@])],
+    [want_hip="$withval"],
+    [want_hip=no])
+AM_CONDITIONAL([COND_HIP], [test x"$want_hip" != xno])
 
 ###
 ### OPENMP
@@ -476,10 +484,151 @@ AC_SUBST([CONFIGURE_FLAGS])
 ### GPU
 ###
 
+## CUDA
 AS_IF([test x"$want_cuda" != xno], [
     AS_BOX([CUDA])
     CIT_CUDA_CONFIG
 ])
+
+## HIP
+AS_IF([test x"$want_hip" != xno], [
+    AS_BOX([HIP])
+    # environment variables
+    AC_ARG_VAR(HIPCC, [AMD HIP compiler command])
+    AC_ARG_VAR(HIP_FLAGS, [HIP compiler flags])
+    AC_ARG_VAR(HIP_INC, [Location of HIP include files])
+    AC_ARG_VAR(HIP_LIB, [Location of HIP library libhip_hcc])
+
+    # tests HIPCC variable
+    AS_IF([test x"$HIPCC" = x],[
+        HIPCC=hipcc
+    ])
+
+    # Check for compiler
+    # checks if program in path
+    AC_PATH_PROG(HIPCC_PROG, $HIPCC)
+    if test -z "$HIPCC_PROG" ; then
+        AC_MSG_ERROR([cannot find '$HIPCC' program, please check your PATH.])
+    fi
+
+    # sets default HIP path
+    #HIP_PATH=/opt/rocm
+    #AS_IF([test x"$HIP_INC" = x],[
+    #    HIP_INC="$HIP_PATH/include"
+    #])
+    #AS_IF([test x"$HIP_LIB" = x],[
+    #    HIP_LIB="$HIP_PATH/lib"
+    #])
+
+    # checks platform
+    HIPCONFIG="$HIP_PATH/bin/hipconfig"
+    GPU_PLATFORM=`$HIPCONFIG --platform`
+    AS_IF([test x"$GPU_PLATFORM" = xnvcc], [
+        AC_MSG_NOTICE([HIP PLATFORM NVCC detected.])
+        FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_NVCC__"
+    ])
+    AS_IF([test x"$GPU_PLATFORM" = xhcc], [
+        AC_MSG_NOTICE([HIP PLATFORM HCC detected.])
+        FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_HCC__"
+    ])
+    # compiler might require a platform selection flag
+    if [[ "$HIP_FLAGS" != *"HIP_PLATFORM"* ]]; then
+      # adds PLATFORM flag
+      HIP_FLAGS="${HIP_FLAGS} ${FLAG_PLATFORM}"
+    fi
+
+    # for compilation errors like:
+    #   /usr/bin/ld: obj/assemble_MPI_scalar_gpu.hip.o: relocation R_X86_64_32 against `.rodata.str1.1' can not be used
+    #      when making a PIE object; recompile with -fPIC
+    # try to add
+    #   HIP_FLAGS="-fPIC"
+    # or
+    #   HIP_FLAGS="-fno-gpu-rdc"
+
+    # test lib & include
+    AS_IF([test x"$HIP_LIB" != x],[
+        HIP_LDFLAGS="-L$HIP_LIB"
+    ])
+    AS_IF([test x"$HIP_INC" != x],[
+        HIP_CPPFLAGS="-I$HIP_INC"
+    ])
+    HIP_LIBS="-lamdhip64"
+
+    # checks header file
+    AC_LANG_PUSH(C)
+    AC_REQUIRE_CPP
+    CFLAGS_save="$CFLAGS"
+    LDFLAGS_save="$LDFLAGS"
+    LIBS_save="$LIBS"
+
+    # uses hipcc compiler
+    CFLAGS="$HIP_FLAGS"
+    if test "x$HIP_INC" != "x"; then
+      HIP_CPPFLAGS="-I$HIP_INC"
+      CFLAGS="$CFLAGS $HIP_CPPFLAGS"
+    fi
+
+    AC_MSG_CHECKING([for hip/hip_runtime.h])
+    ac_compile='$HIPCC -c $CFLAGS conftest.$ac_ext >&5'
+    AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([[#include <hip/hip_runtime.h>]],[[void* ptr = 0;]])
+    ], [
+        AC_MSG_RESULT(yes)
+    ], [
+        AC_MSG_RESULT(no)
+        AC_MSG_ERROR([HIP runtime header not found; try setting HIP_INC.])
+    ])
+
+    # checks for HIP library
+    if test "x$HIP_LIB" != "x"; then
+      HIP_LDFLAGS="-L$HIP_LIB"
+      LDFLAGS="$HIP_LDFLAGS $LDFLAGS"
+    fi
+    HIP_LIBS="-lamdhip64"
+    LIBS="$HIP_LIBS $LIBS"
+
+    # runs compilation test with hipcc
+    AC_MSG_CHECKING([hipcc compilation with hipMalloc in -lamdhip64])
+    ac_compile='$HIPCC -c $CFLAGS conftest.$ac_ext >&5'
+    AC_COMPILE_IFELSE([
+      AC_LANG_PROGRAM([[#include <hip/hip_runtime.h>]],[[void* ptr = 0;hipMalloc(&ptr, 1);]])
+    ], [
+      AC_MSG_RESULT(yes)
+    ], [
+      AC_MSG_RESULT(no)
+      AC_MSG_ERROR([HIP library function with hipcc compilation failed; try setting HIP_INC.])
+    ])
+
+    # runs linking test with hipcc
+    AC_MSG_CHECKING([hipcc linking with hipMalloc in -lamdhip64])
+    ac_link='$HIPCC -o conftest$ac_exeext $CFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+    AC_LINK_IFELSE([
+      AC_LANG_PROGRAM([[
+#include <stdio.h>
+#include <hip/hip_runtime.h>]],[[void* ptr = 0;hipMalloc(&ptr, 1);]])
+    ],[
+      AC_MSG_RESULT(yes)
+    ],[
+      AC_MSG_RESULT(no)
+      AC_MSG_ERROR([HIP library linking with HIP failed; try setting HIP_LIB.])
+    ])
+
+    #HIP_HEADER_H="hip/hip_runtime.h"
+    #AC_CHECK_HEADER([${HIP_HEADER_H}], [], [
+    #    AC_MSG_ERROR([HIP header not found; try setting HIP_INC.])
+    #])
+
+    CFLAGS="$CFLAGS_save"
+    LDFLAGS="$LDFLAGS_save"
+    LIBS="$LIBS_save"
+    AC_LANG_POP(C)
+
+    # export flags
+    AC_SUBST([HIP_CPPFLAGS])
+    AC_SUBST([HIP_LDFLAGS])
+    AC_SUBST([HIP_LIBS])
+])
+
 
 ###
 ### OPENMP

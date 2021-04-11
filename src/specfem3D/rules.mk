@@ -194,14 +194,8 @@ specfem3D_SHARED_OBJECTS += $(COND_MPI_OBJECTS)
 ###
 ### GPU
 ###
-ifeq ($(CUDA),yes)
-specfem3D_OBJECTS += $(gpu_specfem3D_OBJECTS)
-ifeq ($(CUDA_PLUS),yes)
-specfem3D_OBJECTS += $(gpu_specfem3D_DEVICE_OBJ)
-endif
-else
-specfem3D_OBJECTS += $(gpu_specfem3D_STUBS)
-endif
+
+specfem3D_SHARED_OBJECTS += $(gpu_OBJECTS)
 
 ###
 ### ADIOS

@@ -40,8 +40,8 @@
   thus, rather use: if (var ) {...}  for testing if true instead of if (var == 1){...} (alternative: one could use if (var != 0){...}
 */
 
-#ifndef MESH_CONSTANTS_CUDA_H
-#define MESH_CONSTANTS_CUDA_H
+#ifndef MESH_CONSTANTS_GPU_H
+#define MESH_CONSTANTS_GPU_H
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -847,4 +847,4 @@ static inline void get_blocks_xy(int num_blocks, int* num_blocks_x, int* num_blo
 }
 
 
-#endif  // MESH_CONSTANTS_CUDA_H
+#endif  // MESH_CONSTANTS_GPU_H

@@ -134,6 +134,7 @@ PART_LIBS  += $(PATOH_LIBS)
 ####
 #### GPU
 #### with configure: ./configure --with-cuda=cuda5 CUDA_FLAGS=.. CUDA_LIB=.. CUDA_INC=.. MPI_INC=.. ..
+#### with configure: ./configure --with-hip HIP_FLAGS=.. HIP_LIB=.. HIP_INC=.. MPI_INC=.. ..
 ####
 #######################################
 
@@ -239,6 +240,33 @@ GENCODE_80 = -gencode=arch=compute_80,code=\"sm_80,compute_80\"
 @COND_CUDA_FALSE@NVCC_FLAGS = $(MPI_INCLUDES) $(COND_MPI_CPPFLAGS)
 @COND_CUDA_FALSE@NVCCLINK = $(NVCC) $(NVCC_FLAGS)
 
+##
+## HIP
+##
+@COND_HIP_TRUE@HIP = yes
+@COND_HIP_FALSE@HIP = no
+
+HIP_FLAGS = @HIP_FLAGS@
+HIP_INC = @HIP_CPPFLAGS@ $(MPI_INCLUDES)
+
+@COND_HIP_TRUE@HIPCC = @HIPCC@
+@COND_HIP_FALSE@HIPCC = @CC@
+
+@COND_HIP_TRUE@HIP_CFLAGS = $(HIP_FLAGS) $(HIP_INC)
+@COND_HIP_TRUE@HIP_LINK = @HIP_LDFLAGS@ @HIP_LIBS@
+
+@COND_HIP_FALSE@HIP_CFLAGS =
+@COND_HIP_FALSE@HIP_LINK =
+
+# checks if any GPU flag set
+ifeq ($(CUDA), no)
+	ifeq ($(HIP), no)
+		NO_GPU = yes
+	endif
+endif
+ifneq ($(NO_GPU), yes)
+  HAS_GPU = yes
+endif
 
 #######################################
 ####

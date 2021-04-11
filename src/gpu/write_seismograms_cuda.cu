@@ -27,7 +27,7 @@
  !=====================================================================
 */
 
-#include "mesh_constants_cuda.h"
+#include "mesh_constants_gpu.h"
 
 
 extern EXTERN_LANG
