@@ -809,7 +809,8 @@ typedef struct mesh_ {
 void gpuCopy_todevice_int(void** d_array_addr_ptr,int* h_array,int size);
 void gpuCopy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size);
 
-void gpuSynchronize ();
+void gpuReset();
+void gpuSynchronize();
 
 void exit_on_gpu_error(const char* kernel_name);
 void exit_on_error(const char* info);

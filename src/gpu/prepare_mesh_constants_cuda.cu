@@ -1721,6 +1721,9 @@ TRACE("prepare_cleanup_device");
     if (*NOISE_TOMOGRAPHY == 3) cudaFree(mp->d_sigma_kl);
   }
 
+  // releases previous contexts
+  gpuReset();
+
   // mesh pointer - not needed anymore
   free(mp);
 }
