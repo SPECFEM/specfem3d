@@ -41,13 +41,27 @@ void get_free_memory(double* free_db, double* used_db, double* total_db) {
   TRACE("get_free_memory");
 
   // gets memory usage in byte
-  size_t free_byte ;
-  size_t total_byte ;
-  cudaError_t cuda_status = cudaMemGetInfo( &free_byte, &total_byte ) ;
-  if (cudaSuccess != cuda_status){
-    printf("Error: cudaMemGetInfo fails, %s \n", cudaGetErrorString(cuda_status) );
-    exit(EXIT_FAILURE);
+  size_t free_byte = 0;
+  size_t total_byte = 0;
+
+#ifdef USE_CUDA
+  if (run_cuda){
+    cudaError_t status = cudaMemGetInfo( &free_byte, &total_byte ) ;
+    if (cudaSuccess != status){
+      printf("Error: cudaMemGetInfo fails, %s \n", cudaGetErrorString(status) );
+      exit(EXIT_FAILURE);
+    }
   }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipError_t status = hipMemGetInfo( &free_byte, &total_byte ) ;
+    if (hipSuccess != status){
+      printf("Error: hipMemGetInfo fails, %s \n", hipGetErrorString(status) );
+      exit(EXIT_FAILURE);
+    }
+  }
+#endif
 
   *free_db = (double)free_byte ;
   *total_db = (double)total_byte ;
@@ -178,7 +192,17 @@ realw get_device_array_maximum_value(realw* array, int size){
     gpuSynchronize();
 
     h_array = (realw*)calloc(size,sizeof(realw));
-    print_CUDA_error_if_any(cudaMemcpy(h_array,array,sizeof(realw)*size,cudaMemcpyDeviceToHost),33001);
+
+#ifdef USE_CUDA
+    if (run_cuda){
+      print_CUDA_error_if_any(cudaMemcpy(h_array,array,sizeof(realw)*size,cudaMemcpyDeviceToHost),33001);
+    }
+#endif
+#ifdef USE_HIP
+    if (run_hip){
+      print_HIP_error_if_any(hipMemcpy(h_array,array,sizeof(realw)*size,hipMemcpyDeviceToHost),33001);
+    }
+#endif
 
     // finds maximum value in array
     max = h_array[0];
@@ -261,28 +285,49 @@ void FC_FUNC_(get_norm_acoustic_from_device,
   // on host (allocates & initializes to zero)
   h_max = (realw*) calloc(num_blocks_x*num_blocks_y,sizeof(realw));
 
-  // allocates memory on device
-  print_CUDA_error_if_any(cudaMalloc((void**)&d_max,num_blocks_x*num_blocks_y*sizeof(realw)),78001);
-  // initializes values to zero
-  print_CUDA_error_if_any(cudaMemset(d_max,0,num_blocks_x*num_blocks_y*sizeof(realw)),77002);
+#ifdef USE_CUDA
+  if (run_cuda){
+    // allocates memory on device
+    print_CUDA_error_if_any(cudaMalloc((void**)&d_max,num_blocks_x*num_blocks_y*sizeof(realw)),78001);
+    // initializes values to zero
+    print_CUDA_error_if_any(cudaMemset(d_max,0,num_blocks_x*num_blocks_y*sizeof(realw)),77002);
 
+    if (*sim_type == 1){
+      get_maximum_field_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,size,d_max);
+    }else if (*sim_type == 3){
+      get_maximum_field_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,size,d_max);
+    }
+    GPU_ERROR_CHECKING("kernel get_maximum_field_kernel");
 
-  if (*sim_type == 1){
-    get_maximum_field_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,size,d_max);
-  }else if (*sim_type == 3){
-    get_maximum_field_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,size,d_max);
+    // synchronizes
+    //gpuSynchronize();
+    // explicitly waits for stream to finish
+    // (cudaMemcpy implicitly synchronizes all other cuda operations)
+    cudaStreamSynchronize(mp->compute_stream);
+
+    print_CUDA_error_if_any(cudaMemcpy(h_max,d_max,num_blocks_x*num_blocks_y*sizeof(realw),cudaMemcpyDeviceToHost),222);
   }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    // allocates memory on device
+    print_HIP_error_if_any(hipMalloc((void**)&d_max,num_blocks_x*num_blocks_y*sizeof(realw)),78001);
+    // initializes values to zero
+    print_HIP_error_if_any(hipMemset(d_max,0,num_blocks_x*num_blocks_y*sizeof(realw)),77002);
 
-  GPU_ERROR_CHECKING("kernel get_maximum_field_kernel");
+    if (*sim_type == 1){
+      hipLaunchKernelGGL(get_maximum_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream, mp->d_potential_dot_dot_acoustic,size,d_max);
+    }else if (*sim_type == 3){
+      hipLaunchKernelGGL(get_maximum_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream, mp->d_b_potential_dot_dot_acoustic,size,d_max);
+    }
+    GPU_ERROR_CHECKING("kernel get_maximum_field_kernel");
 
-  // synchronizes
-  //gpuSynchronize();
-  // explicitly waits for stream to finish
-  // (cudaMemcpy implicitly synchronizes all other cuda operations)
-  cudaStreamSynchronize(mp->compute_stream);
+    // explicitly waits for stream to finish
+    hipStreamSynchronize(mp->compute_stream);
 
-  print_CUDA_error_if_any(cudaMemcpy(h_max,d_max,num_blocks_x*num_blocks_y*sizeof(realw),
-                                     cudaMemcpyDeviceToHost),222);
+    print_HIP_error_if_any(hipMemcpy(h_max,d_max,num_blocks_x*num_blocks_y*sizeof(realw),hipMemcpyDeviceToHost),222);
+  }
+#endif
 
   // determines max for all blocks
   max = h_max[0];
@@ -290,7 +335,7 @@ void FC_FUNC_(get_norm_acoustic_from_device,
     if (max < h_max[i]) max = h_max[i];
   }
 
-  cudaFree(d_max);
+  gpuFree(d_max);
   free(h_max);
 
   /* way 3: doesn't work properly...
@@ -376,31 +421,59 @@ void FC_FUNC_(get_norm_elastic_from_device,
   // on host (allocates & initializes to zero)
   h_max = (realw*) calloc(num_blocks_x*num_blocks_y,sizeof(realw));
 
-  // allocates memory on device
-  print_CUDA_error_if_any(cudaMalloc((void**)&d_max,num_blocks_x*num_blocks_y*sizeof(realw)),77001);
-  // initializes values to zero
-  print_CUDA_error_if_any(cudaMemset(d_max,0,num_blocks_x*num_blocks_y*sizeof(realw)),77002);
+#ifdef USE_CUDA
+  if (run_cuda){
+    // allocates memory on device
+    print_CUDA_error_if_any(cudaMalloc((void**)&d_max,num_blocks_x*num_blocks_y*sizeof(realw)),77001);
+    // initializes values to zero
+    print_CUDA_error_if_any(cudaMemset(d_max,0,num_blocks_x*num_blocks_y*sizeof(realw)),77002);
 
-  if (*type == 1){
-    get_maximum_vector_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_displ,size,d_max);
-  }else if (*type == 3){
-    get_maximum_vector_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_displ,size,d_max);
+    if (*type == 1){
+      get_maximum_vector_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_displ,size,d_max);
+    }else if (*type == 3){
+      get_maximum_vector_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_displ,size,d_max);
+    }
+
+    //double end_time = get_time_val();
+    //printf("Elapsed time: %e\n",end_time-start_time);
+
+    GPU_ERROR_CHECKING("kernel get_norm_elastic_from_device");
+
+    // synchronizes
+    //gpuSynchronize();
+    // explicitly waits for stream to finish
+    // (cudaMemcpy implicitly synchronizes all other cuda operations)
+    cudaStreamSynchronize(mp->compute_stream);
+
+    // copies reduction array back to CPU
+    print_CUDA_error_if_any(cudaMemcpy(h_max,d_max,num_blocks_x*num_blocks_y*sizeof(realw),cudaMemcpyDeviceToHost),222);
   }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    // allocates memory on device
+    print_HIP_error_if_any(hipMalloc((void**)&d_max,num_blocks_x*num_blocks_y*sizeof(realw)),77001);
+    // initializes values to zero
+    print_HIP_error_if_any(hipMemset(d_max,0,num_blocks_x*num_blocks_y*sizeof(realw)),77002);
 
-  //double end_time = get_time_val();
-  //printf("Elapsed time: %e\n",end_time-start_time);
+    if (*type == 1){
+      hipLaunchKernelGGL(get_maximum_vector_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream, mp->d_displ,size,d_max);
+    }else if (*type == 3){
+      hipLaunchKernelGGL(get_maximum_vector_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream, mp->d_b_displ,size,d_max);
+    }
 
-  GPU_ERROR_CHECKING("kernel get_norm_elastic_from_device");
+    //double end_time = get_time();
+    //printf("Elapsed time: %e\n",end_time-start_time);
 
-  // synchronizes
-  //gpuSynchronize();
-  // explicitly waits for stream to finish
-  // (cudaMemcpy implicitly synchronizes all other cuda operations)
-  cudaStreamSynchronize(mp->compute_stream);
+    GPU_ERROR_CHECKING("kernel get_norm_elastic_from_device");
 
-  // copies reduction array back to CPU
-  print_CUDA_error_if_any(cudaMemcpy(h_max,d_max,num_blocks_x*num_blocks_y*sizeof(realw),
-                                     cudaMemcpyDeviceToHost),222);
+    // explicitly waits for stream to finish
+    hipStreamSynchronize(mp->compute_stream);
+
+    // copies reduction array back to CPU
+    print_HIP_error_if_any(hipMemcpy(h_max,d_max,num_blocks_x*num_blocks_y*sizeof(realw),hipMemcpyDeviceToHost),222);
+  }
+#endif
 
   // determines max for all blocks
   max = h_max[0];
@@ -419,7 +492,7 @@ void FC_FUNC_(get_norm_elastic_from_device,
   // debug
   //printf("rank % d - type: %d norm: %f \n",mp->myrank,*type,res);
 
-  cudaFree(d_max);
+  gpuFree(d_max);
   free(h_max);
 
   //double end_time = get_time_val();

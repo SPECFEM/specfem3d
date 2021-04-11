@@ -41,6 +41,7 @@
 
 // copies integer array from CPU host to GPU device
 void gpuCopy_todevice_int(void** d_array_addr_ptr,int* h_array,int size){
+
   TRACE("gpuCopy_todevice_int");
 
 #ifdef USE_CUDA
@@ -74,6 +75,7 @@ void gpuCopy_todevice_int(void** d_array_addr_ptr,int* h_array,int size){
 
 // copies integer array from CPU host to GPU device
 void gpuCopy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size){
+
   TRACE("gpuCopy_todevice_realw");
 
 #ifdef USE_CUDA
@@ -93,6 +95,21 @@ void gpuCopy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size){
     // copies values onto GPU
     print_HIP_error_if_any(hipMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(realw),hipMemcpyHostToDevice),22002);
   }
+#endif
+}
+
+/*----------------------------------------------------------------------------------------------- */
+
+void gpuFree (void *d_ptr) {
+
+  TRACE ("gpuFree");
+
+  // frees memory on GPU
+#ifdef USE_CUDA
+  if (run_cuda) { cudaFree(d_ptr); }
+#endif
+#ifdef USE_HIP
+  if (run_hip) { hipFree(d_ptr); }
 #endif
 }
 
