@@ -593,7 +593,7 @@
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) '     group        : ',trim(group_name)
-    write(IMAIN,*) '     group size   : ',sngl(groupsize / 1024.0 / 1024.0),'(MB)'
+    write(IMAIN,*) '     group size   : ',sngl(groupsize / 1024.d0 / 1024.d0),'(MB)'
     call flush_IMAIN()
   endif
 
