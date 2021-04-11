@@ -172,13 +172,13 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // checks
-  if (*nadj_rec_local != mp->nadj_rec_local) exit_on_cuda_error("add_sources_ac_sim_type_2_or_3: nadj_rec_local not equal\n");
+  if (*nadj_rec_local != mp->nadj_rec_local) exit_on_gpu_error("add_sources_ac_sim_type_2_or_3: nadj_rec_local not equal\n");
 
   // note: for acoustic simulations with fused wavefields, NB_RUNS_ACOUSTIC_GPU > 1
   //       and thus the number of adjoint sources might become different in future
   //       todo: not implemented yet for adjoint/kernel simulation
   //if (*nadj_rec_local/NB_RUNS_ACOUSTIC_GPU != mp->nadj_rec_local)
-  //  exit_on_cuda_error("add_sources_ac_sim_type_2_or_3: nadj_rec_local not equal\n");
+  //  exit_on_gpu_error("add_sources_ac_sim_type_2_or_3: nadj_rec_local not equal\n");
 
   // checks if anything to do
   if (mp->nadj_rec_local == 0) return;

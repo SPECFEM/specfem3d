@@ -56,10 +56,10 @@ void FC_FUNC_(prepare_gpu_smooth,
   Smooth_data* sp = (Smooth_data*) malloc( sizeof(Smooth_data) );
   *Container = (long)sp;
 
-  copy_todevice_realw((void**)&sp->x_me,xstore_me, NGLL3*(*nspec_me));
-  copy_todevice_realw((void**)&sp->y_me,ystore_me, NGLL3*(*nspec_me));
-  copy_todevice_realw((void**)&sp->z_me,zstore_me, NGLL3*(*nspec_me));
-  copy_todevice_realw((void**)&sp->wgll_cube,wgll_cube, NGLL3);
+  gpuCopy_todevice_realw((void**)&sp->x_me,xstore_me, NGLL3*(*nspec_me));
+  gpuCopy_todevice_realw((void**)&sp->y_me,ystore_me, NGLL3*(*nspec_me));
+  gpuCopy_todevice_realw((void**)&sp->z_me,zstore_me, NGLL3*(*nspec_me));
+  gpuCopy_todevice_realw((void**)&sp->wgll_cube,wgll_cube, NGLL3);
 
   sp->sigma_h2_inv= *sigma_h2_inv;
   sp->sigma_v2_inv= *sigma_v2_inv;
@@ -101,22 +101,22 @@ void FC_FUNC_(compute_smooth,
 
   Smooth_data * sp = (Smooth_data*)*smooth_pointer;
 
-  copy_todevice_realw((void**)&x_other,xstore_other,NGLL3*(*nspec_other));
-  copy_todevice_realw((void**)&y_other,ystore_other,NGLL3*(*nspec_other));
-  copy_todevice_realw((void**)&z_other,zstore_other,NGLL3*(*nspec_other));
+  gpuCopy_todevice_realw((void**)&x_other,xstore_other,NGLL3*(*nspec_other));
+  gpuCopy_todevice_realw((void**)&y_other,ystore_other,NGLL3*(*nspec_other));
+  gpuCopy_todevice_realw((void**)&z_other,zstore_other,NGLL3*(*nspec_other));
 
   if (*nspec_irregular_other > 0){
-    copy_todevice_realw((void**)&d_jacobian,jacobian,NGLL3*(*nspec_irregular_other));
+    gpuCopy_todevice_realw((void**)&d_jacobian,jacobian,NGLL3*(*nspec_irregular_other));
   } else {
-    copy_todevice_realw((void**)&d_jacobian,jacobian,1);
+    gpuCopy_todevice_realw((void**)&d_jacobian,jacobian,1);
   }
-  copy_todevice_int((void**)&d_irregular_element_number,irregular_element_number,(*nspec_other));
+  gpuCopy_todevice_int((void**)&d_irregular_element_number,irregular_element_number,(*nspec_other));
 
   dim3 grid(sp->nspec_me,1);
   dim3 threads(NGLL3,1,1);
 
   for (int i=0;i<sp->nker;i++){
-    copy_todevice_realw((void**)&d_data_other,&data_other[NGLL3*(*nspec_other)*i],NGLL3*(*nspec_other));
+    gpuCopy_todevice_realw((void**)&d_data_other,&data_other[NGLL3*(*nspec_other)*i],NGLL3*(*nspec_other));
 
     process_smooth<<<grid,threads>>>(sp->x_me,
                                      sp->y_me,
@@ -140,7 +140,8 @@ void FC_FUNC_(compute_smooth,
                                      sp->wgll_cube);
     cudaFree(d_data_other);
   }
-  synchronize_cuda();
+  gpuSynchronize();
+
   cudaFree(x_other);
   cudaFree(y_other);
   cudaFree(z_other);

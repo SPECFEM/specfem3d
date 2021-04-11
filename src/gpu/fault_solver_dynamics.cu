@@ -110,12 +110,17 @@ void FC_FUNC_(initialize_fault_data_gpu,
 /* ----------------------------------------------------------------------------------------------- */
 
 // copies realw array from CPU host to GPU device
-void copy_todevice_realw_test(void** d_array_addr_ptr,realw* h_array,int size) {
+void gpuCopy_todevice_realw_test(void** d_array_addr_ptr,realw* h_array,int size) {
 
+#ifdef USE_CUDA
   // allocates memory on GPU
   cudaMalloc((void**)d_array_addr_ptr,size*sizeof(realw));
   // copies values onto GPU
   cudaMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(realw),cudaMemcpyHostToDevice);
+#endif
+#ifdef USE_HIP
+daniel todo copy...
+#endif
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -129,12 +134,17 @@ void copy_tohost_realw_test(void** d_array_addr_ptr,realw* h_array,int size) {
 /* ----------------------------------------------------------------------------------------------- */
 
 // copies integer array from CPU host to GPU device
-void copy_todevice_int_test(void** d_array_addr_ptr,int* h_array,int size) {
+void gpuCopy_todevice_int_test(void** d_array_addr_ptr,int* h_array,int size) {
 
+#ifdef USE_CUDA
   // allocates memory on GPU
   cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int));
   // copies values onto GPU
   cudaMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(int),cudaMemcpyHostToDevice);
+#endif
+#ifdef USE_HIP
+daniel todo hipcopy...
+#endif
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -188,21 +198,21 @@ void FC_FUNC_(transfer_fault_data_to_device,
 
   // copies data to GPU
   if (*NGLOB_FLT > 0){
-    copy_todevice_realw_test((void **)&(Flt->B),B,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(Flt->R),R,(*NGLOB_FLT)*9);
-    copy_todevice_realw_test((void **)&(Flt->Z),Z,(*NGLOB_FLT));
+    gpuCopy_todevice_realw_test((void **)&(Flt->B),B,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(Flt->R),R,(*NGLOB_FLT)*9);
+    gpuCopy_todevice_realw_test((void **)&(Flt->Z),Z,(*NGLOB_FLT));
 
-    copy_todevice_realw_test((void **)&(Flt->D),D,(*NGLOB_FLT)*3);
-    copy_todevice_realw_test((void **)&(Flt->V),V0,(*NGLOB_FLT)*3);
+    gpuCopy_todevice_realw_test((void **)&(Flt->D),D,(*NGLOB_FLT)*3);
+    gpuCopy_todevice_realw_test((void **)&(Flt->V),V0,(*NGLOB_FLT)*3);
 
-    copy_todevice_realw_test((void **)&(Flt->T0),T0,(*NGLOB_FLT)*3);
-    copy_todevice_realw_test((void **)&(Flt->T),T,(*NGLOB_FLT)*3);
+    gpuCopy_todevice_realw_test((void **)&(Flt->T0),T0,(*NGLOB_FLT)*3);
+    gpuCopy_todevice_realw_test((void **)&(Flt->T),T,(*NGLOB_FLT)*3);
 
-    copy_todevice_realw_test((void **)&(Flt->invM1),invM1,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(Flt->invM2),invM2,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(Flt->invM1),invM1,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(Flt->invM2),invM2,*NGLOB_FLT);
 
-    copy_todevice_int_test((void **)&(Flt->ibulk1),ibulk1,(*NGLOB_FLT));
-    copy_todevice_int_test((void **)&(Flt->ibulk2),ibulk2,(*NGLOB_FLT));
+    gpuCopy_todevice_int_test((void **)&(Flt->ibulk1),ibulk1,(*NGLOB_FLT));
+    gpuCopy_todevice_int_test((void **)&(Flt->ibulk2),ibulk2,(*NGLOB_FLT));
   }
 
   GPU_ERROR_CHECKING("transfer_fault_data_to_device");
@@ -310,18 +320,18 @@ void FC_FUNC_(transfer_rsf_data_todevice,
 
   // copies arrays onto GPU
   if (*NGLOB_FLT > 0){
-    copy_todevice_realw_test((void **)&(rsf->V0),V0,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(rsf->f0),f0,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(rsf->V_init),V_init,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(rsf->a),a,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(rsf->b),b,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(rsf->L),L,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(rsf->theta),theta,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(rsf->T),T,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(rsf->Coh),C,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(rsf->fw),fw,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(rsf->Vw),Vw,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(rsf->Fload),Fload,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(rsf->V0),V0,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(rsf->f0),f0,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(rsf->V_init),V_init,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(rsf->a),a,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(rsf->b),b,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(rsf->L),L,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(rsf->theta),theta,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(rsf->T),T,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(rsf->Coh),C,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(rsf->fw),fw,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(rsf->Vw),Vw,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(rsf->Fload),Fload,*NGLOB_FLT);
   }
 
   GPU_ERROR_CHECKING("transfer_rsf_data_todevice");
@@ -350,12 +360,12 @@ void FC_FUNC_(transfer_swf_data_todevice,
   if (Fsolver->RATE_AND_STATE){ exit_on_error("Error with SWF setup, RATE_AND_STATE flag is on; please check fault setup and rerun\n");}
 
   if (*NGLOB_FLT > 0){
-    copy_todevice_realw_test((void **)&(swf->Dc),Dc,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(swf->mus),mus,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(swf->mud),mud,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(swf->Coh),C,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(swf->T),T,*NGLOB_FLT);
-    copy_todevice_realw_test((void **)&(swf->theta),theta,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(swf->Dc),Dc,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(swf->mus),mus,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(swf->mud),mud,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(swf->Coh),C,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(swf->T),T,*NGLOB_FLT);
+    gpuCopy_todevice_realw_test((void **)&(swf->theta),theta,*NGLOB_FLT);
   }
 
   GPU_ERROR_CHECKING("transfer_swf_data_todevice");
