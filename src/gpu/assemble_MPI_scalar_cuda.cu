@@ -81,18 +81,6 @@ void FC_FUNC_(transfer_boun_pot_from_device,
                                                                                   mp->max_nibool_interfaces_ext_mesh,
                                                                                   mp->d_nibool_interfaces_ext_mesh,
                                                                                   mp->d_ibool_interfaces_ext_mesh);
-
-      //GPU_ERROR_CHECKING("after prepare_boundary_potential_on_device");
-
-      // synchronizes
-      //gpuSynchronize();
-      // explicitly waits until previous compute stream finishes
-      // (cudaMemcpy implicitly synchronizes all other cuda operations)
-      cudaStreamSynchronize(mp->compute_stream);
-
-      // copies buffer to CPU
-      print_CUDA_error_if_any(cudaMemcpy(send_potential_dot_dot_buffer,d_send_buffer,
-                                         mp->size_mpi_buffer_potential*sizeof(field),cudaMemcpyDeviceToHost),98000);
     }
 #endif
 #ifdef USE_HIP
@@ -105,15 +93,19 @@ void FC_FUNC_(transfer_boun_pot_from_device,
                                                                mp->max_nibool_interfaces_ext_mesh,
                                                                mp->d_nibool_interfaces_ext_mesh,
                                                                mp->d_ibool_interfaces_ext_mesh);
-
-      // explicitly waits until previous compute stream finishes
-      hipStreamSynchronize(mp->compute_stream);
-
-      // copies buffer to CPU
-      print_HIP_error_if_any(hipMemcpy(send_potential_dot_dot_buffer,d_send_buffer,
-                                       mp->size_mpi_buffer_potential*sizeof(field),hipMemcpyDeviceToHost),98000);
     }
 #endif
+
+    //GPU_ERROR_CHECKING("after prepare_boundary_potential_on_device");
+
+    // synchronizes
+    //gpuSynchronize();
+    // explicitly waits until previous compute stream finishes
+    // (cudaMemcpy implicitly synchronizes all other cuda operations)
+    gpuStreamSynchronize(mp->compute_stream);
+
+    // copies buffer to CPU
+    gpuMemcpy_tohost_field(send_potential_dot_dot_buffer,d_send_buffer,mp->size_mpi_buffer_potential);
   }
 
   // finish timing of kernel+memcpy
@@ -175,13 +167,12 @@ void FC_FUNC_(transfer_asmbl_pot_to_device,
     // synchronizes
     gpuSynchronize();
 
+    // copies buffer onto GPU
+    gpuMemcpy_todevice_field(d_send_buffer, buffer_recv_scalar_ext_mesh,mp->size_mpi_buffer_potential);
+
+    // assembles field
 #ifdef USE_CUDA
     if (run_cuda){
-      // copies buffer onto GPU
-      print_CUDA_error_if_any(cudaMemcpy(d_send_buffer, buffer_recv_scalar_ext_mesh,
-                                         mp->size_mpi_buffer_potential*sizeof(field), cudaMemcpyHostToDevice),98010);
-
-      // assembles field
       assemble_boundary_potential_on_device<<<grid,threads,0,mp->compute_stream>>>(d_potential_dot_dot,
                                                                                    d_send_buffer,
                                                                                    mp->num_interfaces_ext_mesh,
@@ -192,11 +183,6 @@ void FC_FUNC_(transfer_asmbl_pot_to_device,
 #endif
 #ifdef USE_HIP
     if (run_hip){
-      // copies buffer onto GPU
-      print_HIP_error_if_any(hipMemcpy(d_send_buffer, buffer_recv_scalar_ext_mesh,
-                                       mp->size_mpi_buffer_potential*sizeof(field), hipMemcpyHostToDevice),98010);
-
-      // assembles field
       hipLaunchKernelGGL(assemble_boundary_potential_on_device, dim3(grid), dim3(threads), 0, mp->compute_stream,
                                                                 d_potential_dot_dot,
                                                                 d_send_buffer,

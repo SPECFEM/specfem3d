@@ -87,16 +87,35 @@ void FC_FUNC_(compute_coupling_ac_el_cuda,
   }
 
   // launches GPU kernel
-  compute_coupling_acoustic_el_kernel<<<grid,threads>>>(displ,
-                                                        potential_dot_dot,
-                                                        num_coupling_ac_el_faces,
-                                                        mp->d_coupling_ac_el_ispec,
-                                                        mp->d_coupling_ac_el_ijk,
-                                                        mp->d_coupling_ac_el_normal,
-                                                        mp->d_coupling_ac_el_jacobian2Dw,
-                                                        mp->d_ibool,
-                                                        mp->simulation_type,
-                                                        backward_simulation);
+#ifdef USE_CUDA
+  if (run_cuda){
+    compute_coupling_acoustic_el_kernel<<<grid,threads>>>(displ,
+                                                          potential_dot_dot,
+                                                          num_coupling_ac_el_faces,
+                                                          mp->d_coupling_ac_el_ispec,
+                                                          mp->d_coupling_ac_el_ijk,
+                                                          mp->d_coupling_ac_el_normal,
+                                                          mp->d_coupling_ac_el_jacobian2Dw,
+                                                          mp->d_ibool,
+                                                          mp->simulation_type,
+                                                          backward_simulation);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(compute_coupling_acoustic_el_kernel, dim3(grid), dim3(threads), 0, 0,
+                                                            displ,
+                                                            potential_dot_dot,
+                                                            num_coupling_ac_el_faces,
+                                                            mp->d_coupling_ac_el_ispec,
+                                                            mp->d_coupling_ac_el_ijk,
+                                                            mp->d_coupling_ac_el_normal,
+                                                            mp->d_coupling_ac_el_jacobian2Dw,
+                                                            mp->d_ibool,
+                                                            mp->simulation_type,
+                                                            backward_simulation);
+  }
+#endif
 
   //double end_time = get_time_val();
   //printf("Elapsed time: %e\n",end_time-start_time);
@@ -163,20 +182,44 @@ void FC_FUNC_(compute_coupling_el_ac_cuda,
 
 
   // launches GPU kernel
-  compute_coupling_elastic_ac_kernel<<<grid,threads>>>(potential_dot_dot,
-                                                       accel,
-                                                       num_coupling_ac_el_faces,
-                                                       mp->d_coupling_ac_el_ispec,
-                                                       mp->d_coupling_ac_el_ijk,
-                                                       mp->d_coupling_ac_el_normal,
-                                                       mp->d_coupling_ac_el_jacobian2Dw,
-                                                       mp->d_ibool,
-                                                       mp->gravity,
-                                                       mp->d_minus_g,
-                                                       mp->d_rhostore,
-                                                       displ,
-                                                       mp->simulation_type,
-                                                       backward_simulation);
+#ifdef USE_CUDA
+  if (run_cuda){
+    compute_coupling_elastic_ac_kernel<<<grid,threads>>>(potential_dot_dot,
+                                                         accel,
+                                                         num_coupling_ac_el_faces,
+                                                         mp->d_coupling_ac_el_ispec,
+                                                         mp->d_coupling_ac_el_ijk,
+                                                         mp->d_coupling_ac_el_normal,
+                                                         mp->d_coupling_ac_el_jacobian2Dw,
+                                                         mp->d_ibool,
+                                                         mp->gravity,
+                                                         mp->d_minus_g,
+                                                         mp->d_rhostore,
+                                                         displ,
+                                                         mp->simulation_type,
+                                                         backward_simulation);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(compute_coupling_elastic_ac_kernel, dim3(grid), dim3(threads), 0, 0,
+                                                           potential_dot_dot,
+                                                           accel,
+                                                           num_coupling_ac_el_faces,
+                                                           mp->d_coupling_ac_el_ispec,
+                                                           mp->d_coupling_ac_el_ijk,
+                                                           mp->d_coupling_ac_el_normal,
+                                                           mp->d_coupling_ac_el_jacobian2Dw,
+                                                           mp->d_ibool,
+                                                           mp->gravity,
+                                                           mp->d_minus_g,
+                                                           mp->d_rhostore,
+                                                           displ,
+                                                           mp->simulation_type,
+                                                           backward_simulation);
+  }
+#endif
+
   //double end_time = get_time_val();
   //printf("Elapsed time: %e\n",end_time-start_time);
 
@@ -225,11 +268,12 @@ void FC_FUNC_(compute_coupling_ocean_cuda,
   }
 
   // initializes temporary array to zero
-  print_CUDA_error_if_any(cudaMemset(mp->d_updated_dof_ocean_load,0,
-                                     sizeof(int)*mp->NGLOB_AB),88501);
+  gpuMemset_int(mp->d_updated_dof_ocean_load,0,mp->NGLOB_AB);
 
   GPU_ERROR_CHECKING("before kernel compute_coupling_ocean_cuda");
 
+#ifdef USE_CUDA
+  if (run_cuda){
   compute_coupling_ocean_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(accel,
                                                                             mp->d_rmassx,mp->d_rmassy,mp->d_rmassz,
                                                                             mp->d_rmass_ocean_load,
@@ -239,6 +283,22 @@ void FC_FUNC_(compute_coupling_ocean_cuda,
                                                                             mp->d_free_surface_normal,
                                                                             mp->d_ibool,
                                                                             mp->d_updated_dof_ocean_load);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(compute_coupling_ocean_cuda_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                           accel,
+                                                           mp->d_rmassx,mp->d_rmassy,mp->d_rmassz,
+                                                           mp->d_rmass_ocean_load,
+                                                           mp->num_free_surface_faces,
+                                                           mp->d_free_surface_ispec,
+                                                           mp->d_free_surface_ijk,
+                                                           mp->d_free_surface_normal,
+                                                           mp->d_ibool,
+                                                           mp->d_updated_dof_ocean_load);
+  }
+#endif
 
   GPU_ERROR_CHECKING("compute_coupling_ocean_cuda");
 }

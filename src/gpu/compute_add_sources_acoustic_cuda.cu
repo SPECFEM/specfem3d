@@ -79,8 +79,8 @@ void FC_FUNC_(compute_add_sources_ac_cuda,
   get_stf_for_gpu(stf_pre_compute,h_stf_pre_compute,run_number_of_the_source,NSOURCES);
 
   // copies pre-computed source time factors onto GPU
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,stf_pre_compute,
-                                     NSOURCES*sizeof(field),cudaMemcpyHostToDevice),1877);
+  gpuMemcpy_todevice_field(mp->d_stf_pre_compute,stf_pre_compute,NSOURCES);
+
   free(stf_pre_compute);
 
   int num_blocks_x, num_blocks_y;
@@ -89,17 +89,35 @@ void FC_FUNC_(compute_add_sources_ac_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(NGLLX,NGLLY,NGLLZ);
 
-  compute_add_sources_acoustic_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
-                                                                              mp->d_ibool,
-                                                                              mp->d_sourcearrays,
-                                                                              mp->d_stf_pre_compute,
-                                                                              mp->myrank,
-                                                                              mp->d_islice_selected_source,
-                                                                              mp->d_ispec_selected_source,
-                                                                              mp->d_ispec_is_acoustic,
-                                                                              mp->d_kappastore,
-                                                                              NSOURCES);
-
+#ifdef USE_CUDA
+  if (run_cuda){
+    compute_add_sources_acoustic_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
+                                                                                mp->d_ibool,
+                                                                                mp->d_sourcearrays,
+                                                                                mp->d_stf_pre_compute,
+                                                                                mp->myrank,
+                                                                                mp->d_islice_selected_source,
+                                                                                mp->d_ispec_selected_source,
+                                                                                mp->d_ispec_is_acoustic,
+                                                                                mp->d_kappastore,
+                                                                                NSOURCES);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(compute_add_sources_acoustic_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                            mp->d_potential_dot_dot_acoustic,
+                                                            mp->d_ibool,
+                                                            mp->d_sourcearrays,
+                                                            mp->d_stf_pre_compute,
+                                                            mp->myrank,
+                                                            mp->d_islice_selected_source,
+                                                            mp->d_ispec_selected_source,
+                                                            mp->d_ispec_is_acoustic,
+                                                            mp->d_kappastore,
+                                                            NSOURCES);
+  }
+#endif
 
   GPU_ERROR_CHECKING("compute_add_sources_ac_cuda");
 }
@@ -125,8 +143,7 @@ void FC_FUNC_(compute_add_sources_ac_s3_cuda,
   get_stf_for_gpu(stf_pre_compute,h_stf_pre_compute,run_number_of_the_source,NSOURCES);
 
   // copies source time factors onto GPU
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,stf_pre_compute,
-                                     NSOURCES*sizeof(field),cudaMemcpyHostToDevice),55);
+  gpuMemcpy_todevice_field(mp->d_stf_pre_compute,stf_pre_compute,NSOURCES);
 
   free(stf_pre_compute);
 
@@ -136,16 +153,35 @@ void FC_FUNC_(compute_add_sources_ac_s3_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(NGLLX,NGLLY,NGLLZ);
 
-  compute_add_sources_acoustic_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,
-                                                                              mp->d_ibool,
-                                                                              mp->d_sourcearrays,
-                                                                              mp->d_stf_pre_compute,
-                                                                              mp->myrank,
-                                                                              mp->d_islice_selected_source,
-                                                                              mp->d_ispec_selected_source,
-                                                                              mp->d_ispec_is_acoustic,
-                                                                              mp->d_kappastore,
-                                                                              NSOURCES);
+#ifdef USE_CUDA
+  if (run_cuda){
+    compute_add_sources_acoustic_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,
+                                                                                mp->d_ibool,
+                                                                                mp->d_sourcearrays,
+                                                                                mp->d_stf_pre_compute,
+                                                                                mp->myrank,
+                                                                                mp->d_islice_selected_source,
+                                                                                mp->d_ispec_selected_source,
+                                                                                mp->d_ispec_is_acoustic,
+                                                                                mp->d_kappastore,
+                                                                                NSOURCES);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(compute_add_sources_acoustic_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                            mp->d_b_potential_dot_dot_acoustic,
+                                                            mp->d_ibool,
+                                                            mp->d_sourcearrays,
+                                                            mp->d_stf_pre_compute,
+                                                            mp->myrank,
+                                                            mp->d_islice_selected_source,
+                                                            mp->d_ispec_selected_source,
+                                                            mp->d_ispec_is_acoustic,
+                                                            mp->d_kappastore,
+                                                            NSOURCES);
+  }
+#endif
 
   GPU_ERROR_CHECKING("compute_add_sources_ac_s3_cuda");
 }
@@ -193,23 +229,41 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
 
   // copies extracted array values onto GPU
   if ( (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC==0){
-    print_CUDA_error_if_any(cudaMemcpy(mp->d_source_adjoint,h_source_adjoint,
-                                       mp->nadj_rec_local*NDIM*sizeof(field)*(*NTSTEP_BETWEEN_READ_ADJSRC),cudaMemcpyHostToDevice),99099);
+    gpuMemcpy_todevice_field(mp->d_source_adjoint,h_source_adjoint,mp->nadj_rec_local*NDIM*(*NTSTEP_BETWEEN_READ_ADJSRC));
   }
 
   // launches cuda kernel for acoustic adjoint sources
-  add_sources_ac_SIM_TYPE_2_OR_3_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
-                                                                                *nrec,it_index,*NTSTEP_BETWEEN_READ_ADJSRC,
-                                                                                mp->d_source_adjoint,
-                                                                                mp->d_hxir_adj,
-                                                                                mp->d_hetar_adj,
-                                                                                mp->d_hgammar_adj,
-                                                                                mp->d_ibool,
-                                                                                mp->d_ispec_is_acoustic,
-                                                                                mp->d_ispec_selected_adjrec_loc,
-                                                                                mp->nadj_rec_local,
-                                                                                mp->d_kappastore);
-
+#ifdef USE_CUDA
+  if (run_cuda){
+    add_sources_ac_SIM_TYPE_2_OR_3_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
+                                                                                  *nrec,it_index,*NTSTEP_BETWEEN_READ_ADJSRC,
+                                                                                  mp->d_source_adjoint,
+                                                                                  mp->d_hxir_adj,
+                                                                                  mp->d_hetar_adj,
+                                                                                  mp->d_hgammar_adj,
+                                                                                  mp->d_ibool,
+                                                                                  mp->d_ispec_is_acoustic,
+                                                                                  mp->d_ispec_selected_adjrec_loc,
+                                                                                  mp->nadj_rec_local,
+                                                                                  mp->d_kappastore);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(add_sources_ac_SIM_TYPE_2_OR_3_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                              mp->d_potential_dot_dot_acoustic,
+                                                              *nrec,it_index,*NTSTEP_BETWEEN_READ_ADJSRC,
+                                                              mp->d_source_adjoint,
+                                                              mp->d_hxir_adj,
+                                                              mp->d_hetar_adj,
+                                                              mp->d_hgammar_adj,
+                                                              mp->d_ibool,
+                                                              mp->d_ispec_is_acoustic,
+                                                              mp->d_ispec_selected_adjrec_loc,
+                                                              mp->nadj_rec_local,
+                                                              mp->d_kappastore);
+  }
+#endif
 
   GPU_ERROR_CHECKING("add_sources_acoustic_SIM_TYPE_2_OR_3_kernel");
 }

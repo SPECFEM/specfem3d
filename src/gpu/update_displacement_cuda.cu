@@ -87,8 +87,19 @@ void FC_FUNC_(update_displacement_cuda,
   //printf("rank %d - max displ: %f veloc: %f accel: %f\n",mp->myrank,max_d,max_v,max_a);
 
   //launch kernel
-  UpdateDispVeloc_kernel<<<grid,threads,0,mp->compute_stream>>>(displ,veloc,accel,
-                                                                size,deltat,deltatsqover2,deltatover2);
+#ifdef USE_CUDA
+  if (run_cuda){
+    UpdateDispVeloc_kernel<<<grid,threads,0,mp->compute_stream>>>(displ,veloc,accel,
+                                                                  size,deltat,deltatsqover2,deltatover2);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(UpdateDispVeloc_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                               displ,veloc,accel,
+                                               size,deltat,deltatsqover2,deltatover2);
+  }
+#endif
 
   // Cuda timing
   if (CUDA_TIMING_UPDATE ){
@@ -161,10 +172,23 @@ void FC_FUNC_(update_displacement_ac_cuda,
   gpu_event start,stop;
   if (CUDA_TIMING_UPDATE ) start_timing_gpu(&start,&stop);
 
-  UpdatePotential_kernel<<<grid,threads,0,mp->compute_stream>>>(potential,
-                                                                potential_dot,
-                                                                potential_dot_dot,
-                                                                size,deltat,deltatsqover2,deltatover2);
+#ifdef USE_CUDA
+  if (run_cuda){
+    UpdatePotential_kernel<<<grid,threads,0,mp->compute_stream>>>(potential,
+                                                                  potential_dot,
+                                                                  potential_dot_dot,
+                                                                  size,deltat,deltatsqover2,deltatover2);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(UpdatePotential_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                               potential,
+                                               potential_dot,
+                                               potential_dot_dot,
+                                               size,deltat,deltatsqover2,deltatover2);
+  }
+#endif
 
   // Cuda timing
   if (CUDA_TIMING_UPDATE ){
@@ -239,18 +263,48 @@ void FC_FUNC_(kernel_3_a_cuda,
   // check whether we can update accel and veloc, or only accel at this point
   if (*APPROXIMATE_OCEAN_LOAD == 0){
    // updates both, accel and veloc
-   kernel_3_cuda_device<<< grid, threads,0,mp->compute_stream>>>(veloc,
-                                                                 accel,
-                                                                 size,
-                                                                 deltatover2,
-                                                                 mp->d_rmassx,mp->d_rmassy,mp->d_rmassz);
+#ifdef USE_CUDA
+   if (run_cuda){
+     kernel_3_cuda_device<<< grid, threads,0,mp->compute_stream>>>(veloc,
+                                                                   accel,
+                                                                   size,
+                                                                   deltatover2,
+                                                                   mp->d_rmassx,mp->d_rmassy,mp->d_rmassz);
+    }
+#endif
+#ifdef USE_HIP
+    if (run_hip){
+      hipLaunchKernelGGL(kernel_3_cuda_device, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                               veloc,
+                                               accel,
+                                               size,
+                                               deltatover2,
+                                               mp->d_rmassx,mp->d_rmassy,mp->d_rmassz);
+    }
+#endif
+
   }else{
    // updates only accel
-   kernel_3_accel_cuda_device<<< grid, threads,0,mp->compute_stream>>>(accel,
-                                                                       size,
-                                                                       mp->d_rmassx,
-                                                                       mp->d_rmassy,
-                                                                       mp->d_rmassz);
+   #ifdef USE_CUDA
+   if (run_cuda){
+     kernel_3_accel_cuda_device<<< grid, threads,0,mp->compute_stream>>>(accel,
+                                                                         size,
+                                                                         mp->d_rmassx,
+                                                                         mp->d_rmassy,
+                                                                         mp->d_rmassz);
+    }
+#endif
+#ifdef USE_HIP
+    if (run_hip){
+      hipLaunchKernelGGL(kernel_3_accel_cuda_device, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                     accel,
+                                                     size,
+                                                     mp->d_rmassx,
+                                                     mp->d_rmassy,
+                                                     mp->d_rmassz);
+    }
+#endif
+
   }
 
   //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);
@@ -295,9 +349,21 @@ void FC_FUNC_(kernel_3_b_cuda,
   }
 
   // updates only veloc at this point
-  kernel_3_veloc_cuda_device<<< grid, threads,0,mp->compute_stream>>>(veloc,
-                                                                      accel,
-                                                                      size,deltatover2);
+#ifdef USE_CUDA
+  if (run_cuda){
+    kernel_3_veloc_cuda_device<<< grid, threads,0,mp->compute_stream>>>(veloc,
+                                                                        accel,
+                                                                        size,deltatover2);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(kernel_3_veloc_cuda_device, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                   veloc,
+                                                   accel,
+                                                   size,deltatover2);
+  }
+#endif
 
   //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);
   GPU_ERROR_CHECKING("after kernel 3 b");
@@ -358,22 +424,55 @@ void FC_FUNC_(kernel_3_acoustic_cuda,
   // update kernel
   if (FORWARD_OR_ADJOINT == 0){
     // This kernel treats both forward and adjoint wavefield within the same call, to increase performance
-    kernel_3_acoustic_cuda_device<<< grid, threads>>>(mp->d_potential_dot_acoustic,
-                                                      mp->d_potential_dot_dot_acoustic,
-                                                      mp->d_b_potential_dot_acoustic,
-                                                      mp->d_b_potential_dot_dot_acoustic,
-                                                      mp->simulation_type,
-                                                      size,
-                                                      deltaover2,
-                                                      b_deltaover2,
-                                                      mp->d_rmass_acoustic);
+#ifdef USE_CUDA
+    if (run_cuda){
+      kernel_3_acoustic_cuda_device<<< grid, threads>>>(mp->d_potential_dot_acoustic,
+                                                        mp->d_potential_dot_dot_acoustic,
+                                                        mp->d_b_potential_dot_acoustic,
+                                                        mp->d_b_potential_dot_dot_acoustic,
+                                                        mp->simulation_type,
+                                                        size,
+                                                        deltaover2,
+                                                        b_deltaover2,
+                                                        mp->d_rmass_acoustic);
+    }
+#endif
+#ifdef USE_HIP
+    if (run_hip){
+      hipLaunchKernelGGL(kernel_3_acoustic_cuda_device, dim3(grid), dim3(threads), 0, 0,
+                                                        mp->d_potential_dot_acoustic,
+                                                        mp->d_potential_dot_dot_acoustic,
+                                                        mp->d_b_potential_dot_acoustic,
+                                                        mp->d_b_potential_dot_dot_acoustic,
+                                                        mp->simulation_type,
+                                                        size,
+                                                        deltaover2,
+                                                        b_deltaover2,
+                                                        mp->d_rmass_acoustic);
+    }
+#endif
+
   }else{
     // single field kernel
-    kernel_3_acoustic_single_cuda_device<<< grid, threads>>>(potential_dot,
-                                                             potential_dot_dot,
-                                                             size,
-                                                             deltaover2,
-                                                             mp->d_rmass_acoustic);
+#ifdef USE_CUDA
+    if (run_cuda){
+      kernel_3_acoustic_single_cuda_device<<< grid, threads>>>(potential_dot,
+                                                               potential_dot_dot,
+                                                               size,
+                                                               deltaover2,
+                                                               mp->d_rmass_acoustic);
+    }
+#endif
+#ifdef USE_HIP
+    if (run_hip){
+      hipLaunchKernelGGL(kernel_3_acoustic_single_cuda_device, dim3(grid), dim3(threads), 0, 0,
+                                                               potential_dot,
+                                                               potential_dot_dot,
+                                                               size,
+                                                               deltaover2,
+                                                               mp->d_rmass_acoustic);
+    }
+#endif
   }
 
   //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);

@@ -119,7 +119,9 @@ void FC_FUNC_(compute_seismograms_cuda,
   // elastic wavefield
   // acoustic wavefield
   if (*ELASTIC_SIMULATION){
-    if (mp->save_seismograms_d)
+    if (mp->save_seismograms_d){
+#ifdef USE_CUDA
+      if (run_cuda){
         compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
                                                                                  displ,
                                                                                  mp->d_ibool,
@@ -128,9 +130,26 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                  mp->d_nu_rec,
                                                                                  mp->d_ispec_selected_rec_loc,
                                                                                  seismo_current);
+      }
+#endif
+#ifdef USE_HIP
+      if (run_hip){
+        hipLaunchKernelGGL(compute_elastic_seismogram_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                                 mp->nrec_local,
+                                                                 displ,
+                                                                 mp->d_ibool,
+                                                                 mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                 mp->d_seismograms_d,
+                                                                 mp->d_nu_rec,
+                                                                 mp->d_ispec_selected_rec_loc,
+                                                                 seismo_current);
+      }
+#endif
+    }
 
-
-    if (mp->save_seismograms_v)
+    if (mp->save_seismograms_v){
+#ifdef USE_CUDA
+      if (run_cuda){
         compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
                                                                                  veloc,
                                                                                  mp->d_ibool,
@@ -139,8 +158,26 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                  mp->d_nu_rec,
                                                                                  mp->d_ispec_selected_rec_loc,
                                                                                  seismo_current);
+      }
+#endif
+#ifdef USE_HIP
+      if (run_hip){
+        hipLaunchKernelGGL(compute_elastic_seismogram_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                              mp->nrec_local,
+                                                              veloc,
+                                                              mp->d_ibool,
+                                                              mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                              mp->d_seismograms_v,
+                                                              mp->d_nu_rec,
+                                                              mp->d_ispec_selected_rec_loc,
+                                                              seismo_current);
+      }
+#endif
+    }
 
-    if (mp->save_seismograms_a)
+    if (mp->save_seismograms_a){
+#ifdef USE_CUDA
+      if (run_cuda){
         compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
                                                                                  accel,
                                                                                  mp->d_ibool,
@@ -149,12 +186,30 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                  mp->d_nu_rec,
                                                                                  mp->d_ispec_selected_rec_loc,
                                                                                  seismo_current);
+      }
+#endif
+#ifdef USE_HIP
+      if (run_hip){
+        hipLaunchKernelGGL(compute_elastic_seismogram_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                              mp->nrec_local,
+                                                              accel,
+                                                              mp->d_ibool,
+                                                              mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                              mp->d_seismograms_a,
+                                                              mp->d_nu_rec,
+                                                              mp->d_ispec_selected_rec_loc,
+                                                              seismo_current);
+      }
+#endif
+    }
+  } // elastic
 
-  }
   // acoustic wavefield
   if (*ACOUSTIC_SIMULATION){
     if (mp->save_seismograms_p){
-        if (*USE_TRICK_FOR_BETTER_PRESSURE){
+      if (*USE_TRICK_FOR_BETTER_PRESSURE){
+#ifdef USE_CUDA
+        if (run_cuda){
           compute_acoustic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
                                                                                     potential_acoustic,
                                                                                     mp->d_ibool,
@@ -162,7 +217,23 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                     mp->d_seismograms_p,
                                                                                     mp->d_ispec_selected_rec_loc,
                                                                                     seismo_current);
-        }else{
+        }
+#endif
+#ifdef USE_HIP
+        if (run_hip){
+          hipLaunchKernelGGL(compute_acoustic_seismogram_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                                 mp->nrec_local,
+                                                                 potential_acoustic,
+                                                                 mp->d_ibool,
+                                                                 mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                 mp->d_seismograms_p,
+                                                                 mp->d_ispec_selected_rec_loc,
+                                                                 seismo_current);
+        }
+#endif
+      }else{
+#ifdef USE_CUDA
+        if (run_cuda){
           compute_acoustic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
                                                                                     potential_dot_dot_acoustic,
                                                                                     mp->d_ibool,
@@ -171,64 +242,154 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                     mp->d_ispec_selected_rec_loc,
                                                                                     seismo_current);
         }
+#endif
+#ifdef USE_HIP
+        if (run_hip){
+          hipLaunchKernelGGL(compute_acoustic_seismogram_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                                 mp->nrec_local,
+                                                                 potential_dot_dot_acoustic,
+                                                                 mp->d_ibool,
+                                                                 mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                 mp->d_seismograms_p,
+                                                                 mp->d_ispec_selected_rec_loc,
+                                                                 seismo_current);
+        }
+#endif
+      }
     }
 
 // VM VM add computation of vectorial field in fluids ----------------------------------------------------------------
-    if (mp->save_seismograms_d)
-      compute_acoustic_vectorial_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
-                                                                                          mp->d_ispec_is_acoustic,
-                                                                                          potential_acoustic,
-                                                                                          mp->d_seismograms_d,
-                                                                                          mp->d_rhostore,
-                                                                                          mp->d_ibool,
-                                                                                          mp->d_irregular_element_number,
-                                                                                          mp->d_hxir,mp->d_hetar,mp->d_hgammar,
-                                                                                          mp->d_xix,mp->d_xiy,mp->d_xiz,
-                                                                                          mp->d_etax,mp->d_etay,mp->d_etaz,
-                                                                                          mp->d_gammax,mp->d_gammay,mp->d_gammaz,
-                                                                                          mp->xix_regular,
-                                                                                          mp->d_hprime_xx,
-                                                                                          mp->d_nu_rec,
-                                                                                          mp->d_ispec_selected_rec_loc,
-                                                                                          seismo_current);
+    if (mp->save_seismograms_d){
+#ifdef USE_CUDA
+      if (run_cuda){
+        compute_acoustic_vectorial_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
+                                                                                            mp->d_ispec_is_acoustic,
+                                                                                            potential_acoustic,
+                                                                                            mp->d_seismograms_d,
+                                                                                            mp->d_rhostore,
+                                                                                            mp->d_ibool,
+                                                                                            mp->d_irregular_element_number,
+                                                                                            mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                                            mp->d_xix,mp->d_xiy,mp->d_xiz,
+                                                                                            mp->d_etax,mp->d_etay,mp->d_etaz,
+                                                                                            mp->d_gammax,mp->d_gammay,mp->d_gammaz,
+                                                                                            mp->xix_regular,
+                                                                                            mp->d_hprime_xx,
+                                                                                            mp->d_nu_rec,
+                                                                                            mp->d_ispec_selected_rec_loc,
+                                                                                            seismo_current);
+      }
+#endif
+#ifdef USE_HIP
+      if (run_hip){
+        hipLaunchKernelGGL(compute_acoustic_vectorial_seismogram_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                                         mp->nrec_local,
+                                                                         mp->d_ispec_is_acoustic,
+                                                                         potential_acoustic,
+                                                                         mp->d_seismograms_d,
+                                                                         mp->d_rhostore,
+                                                                         mp->d_ibool,
+                                                                         mp->d_irregular_element_number,
+                                                                         mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                         mp->d_xix,mp->d_xiy,mp->d_xiz,
+                                                                         mp->d_etax,mp->d_etay,mp->d_etaz,
+                                                                         mp->d_gammax,mp->d_gammay,mp->d_gammaz,
+                                                                         mp->xix_regular,
+                                                                         mp->d_hprime_xx,
+                                                                         mp->d_nu_rec,
+                                                                         mp->d_ispec_selected_rec_loc,
+                                                                         seismo_current);
+      }
+#endif
+    }
 
+    if (mp->save_seismograms_v){
+#ifdef USE_CUDA
+      if (run_cuda){
+        compute_acoustic_vectorial_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
+                                                                                            mp->d_ispec_is_acoustic,
+                                                                                            potential_dot_acoustic,
+                                                                                            mp->d_seismograms_v,
+                                                                                            mp->d_rhostore,
+                                                                                            mp->d_ibool,
+                                                                                            mp->d_irregular_element_number,
+                                                                                            mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                                            mp->d_xix,mp->d_xiy,mp->d_xiz,
+                                                                                            mp->d_etax,mp->d_etay,mp->d_etaz,
+                                                                                            mp->d_gammax,mp->d_gammay,mp->d_gammaz,
+                                                                                            mp->xix_regular,
+                                                                                            mp->d_hprime_xx,
+                                                                                            mp->d_nu_rec,
+                                                                                            mp->d_ispec_selected_rec_loc,
+                                                                                            seismo_current);
+      }
+#endif
+#ifdef USE_HIP
+      if (run_hip){
+        hipLaunchKernelGGL(compute_acoustic_vectorial_seismogram_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                                         mp->nrec_local,
+                                                                         mp->d_ispec_is_acoustic,
+                                                                         potential_dot_acoustic,
+                                                                         mp->d_seismograms_v,
+                                                                         mp->d_rhostore,
+                                                                         mp->d_ibool,
+                                                                         mp->d_irregular_element_number,
+                                                                         mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                         mp->d_xix,mp->d_xiy,mp->d_xiz,
+                                                                         mp->d_etax,mp->d_etay,mp->d_etaz,
+                                                                         mp->d_gammax,mp->d_gammay,mp->d_gammaz,
+                                                                         mp->xix_regular,
+                                                                         mp->d_hprime_xx,
+                                                                         mp->d_nu_rec,
+                                                                         mp->d_ispec_selected_rec_loc,
+                                                                         seismo_current);
+      }
+#endif
+    }
 
-    if (mp->save_seismograms_v)
-      compute_acoustic_vectorial_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
-                                                                                          mp->d_ispec_is_acoustic,
-                                                                                          potential_dot_acoustic,
-                                                                                          mp->d_seismograms_v,
-                                                                                          mp->d_rhostore,
-                                                                                          mp->d_ibool,
-                                                                                          mp->d_irregular_element_number,
-                                                                                          mp->d_hxir,mp->d_hetar,mp->d_hgammar,
-                                                                                          mp->d_xix,mp->d_xiy,mp->d_xiz,
-                                                                                          mp->d_etax,mp->d_etay,mp->d_etaz,
-                                                                                          mp->d_gammax,mp->d_gammay,mp->d_gammaz,
-                                                                                          mp->xix_regular,
-                                                                                          mp->d_hprime_xx,
-                                                                                          mp->d_nu_rec,
-                                                                                          mp->d_ispec_selected_rec_loc,
-                                                                                          seismo_current);
-
-
-    if (mp->save_seismograms_a)
-      compute_acoustic_vectorial_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
-                                                                                          mp->d_ispec_is_acoustic,
-                                                                                          potential_dot_dot_acoustic,
-                                                                                          mp->d_seismograms_a,
-                                                                                          mp->d_rhostore,
-                                                                                          mp->d_ibool,
-                                                                                          mp->d_irregular_element_number,
-                                                                                          mp->d_hxir,mp->d_hetar,mp->d_hgammar,
-                                                                                          mp->d_xix,mp->d_xiy,mp->d_xiz,
-                                                                                          mp->d_etax,mp->d_etay,mp->d_etaz,
-                                                                                          mp->d_gammax,mp->d_gammay,mp->d_gammaz,
-                                                                                          mp->xix_regular,
-                                                                                          mp->d_hprime_xx,
-                                                                                          mp->d_nu_rec,
-                                                                                          mp->d_ispec_selected_rec_loc,
-                                                                                          seismo_current);
+    if (mp->save_seismograms_a){
+#ifdef USE_CUDA
+      if (run_cuda){
+        compute_acoustic_vectorial_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
+                                                                                            mp->d_ispec_is_acoustic,
+                                                                                            potential_dot_dot_acoustic,
+                                                                                            mp->d_seismograms_a,
+                                                                                            mp->d_rhostore,
+                                                                                            mp->d_ibool,
+                                                                                            mp->d_irregular_element_number,
+                                                                                            mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                                            mp->d_xix,mp->d_xiy,mp->d_xiz,
+                                                                                            mp->d_etax,mp->d_etay,mp->d_etaz,
+                                                                                            mp->d_gammax,mp->d_gammay,mp->d_gammaz,
+                                                                                            mp->xix_regular,
+                                                                                            mp->d_hprime_xx,
+                                                                                            mp->d_nu_rec,
+                                                                                            mp->d_ispec_selected_rec_loc,
+                                                                                            seismo_current);
+      }
+#endif
+#ifdef USE_HIP
+      if (run_hip){
+        hipLaunchKernelGGL(compute_acoustic_vectorial_seismogram_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                                         mp->nrec_local,
+                                                                         mp->d_ispec_is_acoustic,
+                                                                         potential_dot_dot_acoustic,
+                                                                         mp->d_seismograms_a,
+                                                                         mp->d_rhostore,
+                                                                         mp->d_ibool,
+                                                                         mp->d_irregular_element_number,
+                                                                         mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                         mp->d_xix,mp->d_xiy,mp->d_xiz,
+                                                                         mp->d_etax,mp->d_etay,mp->d_etaz,
+                                                                         mp->d_gammax,mp->d_gammay,mp->d_gammaz,
+                                                                         mp->xix_regular,
+                                                                         mp->d_hprime_xx,
+                                                                         mp->d_nu_rec,
+                                                                         mp->d_ispec_selected_rec_loc,
+                                                                         seismo_current);
+      }
+#endif
+    }
   } // ACOUSTIC_SIMULATION
 
   // note: due to subsampling, the last time step it == it_end might not be reached,
@@ -246,14 +407,11 @@ void FC_FUNC_(compute_seismograms_cuda,
 
     // (cudaMemcpy implicitly synchronizes all other cuda operations)
     if (mp->save_seismograms_d)
-      print_CUDA_error_if_any(cudaMemcpy(seismograms_d,mp->d_seismograms_d,
-                                         NDIM * size * sizeof(realw),cudaMemcpyDeviceToHost),72001);
+      gpuMemcpy_tohost_realw(seismograms_d,mp->d_seismograms_d,NDIM * size);
     if (mp->save_seismograms_v)
-      print_CUDA_error_if_any(cudaMemcpy(seismograms_v,mp->d_seismograms_v,
-                                         NDIM * size * sizeof(realw),cudaMemcpyDeviceToHost),72002);
+      gpuMemcpy_tohost_realw(seismograms_v,mp->d_seismograms_v,NDIM * size);
     if (mp->save_seismograms_a)
-      print_CUDA_error_if_any(cudaMemcpy(seismograms_a,mp->d_seismograms_a,
-                                         NDIM * size * sizeof(realw),cudaMemcpyDeviceToHost),72003);
+      gpuMemcpy_tohost_realw(seismograms_a,mp->d_seismograms_a,NDIM * size);
 
     // EB EB Temporary solution : in the future we will also declare host pressure seismograms as
     //                            (1,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
@@ -266,8 +424,7 @@ void FC_FUNC_(compute_seismograms_cuda,
       //          (NB_RUNS_ACOUSTIC_GPU,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS) to
       //          to (NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
       realw *seismo_temp = (realw*) malloc(size * NB_RUNS_ACOUSTIC_GPU * sizeof(realw));
-      print_CUDA_error_if_any(cudaMemcpy(seismo_temp,mp->d_seismograms_p,
-                                         size * NB_RUNS_ACOUSTIC_GPU * sizeof(realw),cudaMemcpyDeviceToHost),72004);
+      gpuMemcpy_tohost_realw(seismo_temp,mp->d_seismograms_p,size * NB_RUNS_ACOUSTIC_GPU);
 
       for (int j = 0; j < nlength_seismogram; j++){
         for (int i_recloc = 0; i_recloc < mp->nrec_local; i_recloc++){

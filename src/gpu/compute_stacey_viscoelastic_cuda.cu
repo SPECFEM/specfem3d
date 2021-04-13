@@ -50,7 +50,7 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
   // checks if anything to do
   if (mp->d_num_abs_boundary_faces == 0) return;
 
-  int iphase    = *iphasef;
+  int iphase = *iphasef;
 
   // only add these contributions in first pass
   if (iphase != 1) return;
@@ -78,38 +78,78 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
   if (mp->simulation_type == 3 && FORWARD_OR_ADJOINT != 1){
     // copies array to GPU
     // reading is done in fortran routine
-    print_CUDA_error_if_any(cudaMemcpy(mp->d_b_absorb_field,b_absorb_field,
-                                       mp->d_b_reclen_field,cudaMemcpyHostToDevice),7700);
+//daniel todo: reclen includes sizeof(realw)
+    gpuMemcpy_todevice_realw(mp->d_b_absorb_field,b_absorb_field,mp->d_b_reclen_field/sizeof(realw));
   }
 
   GPU_ERROR_CHECKING("between cudamemcpy and compute_stacey_elastic_kernel");
 
   if (FORWARD_OR_ADJOINT == 0){
     // combined forward/backward fields
-    compute_stacey_elastic_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_veloc,
-                                                                         mp->d_accel,
-                                                                         mp->d_abs_boundary_ispec,
-                                                                         mp->d_abs_boundary_ijk,
-                                                                         mp->d_abs_boundary_normal,
-                                                                         mp->d_abs_boundary_jacobian2Dw,
-                                                                         mp->d_ibool,
-                                                                         mp->d_rho_vp,
-                                                                         mp->d_rho_vs,
-                                                                         mp->d_ispec_is_elastic,
-                                                                         mp->simulation_type,
-                                                                         mp->save_forward,
-                                                                         mp->d_num_abs_boundary_faces,
-                                                                         mp->d_b_absorb_field);
+#ifdef USE_CUDA
+    if (run_cuda){
+      compute_stacey_elastic_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_veloc,
+                                                                           mp->d_accel,
+                                                                           mp->d_abs_boundary_ispec,
+                                                                           mp->d_abs_boundary_ijk,
+                                                                           mp->d_abs_boundary_normal,
+                                                                           mp->d_abs_boundary_jacobian2Dw,
+                                                                           mp->d_ibool,
+                                                                           mp->d_rho_vp,
+                                                                           mp->d_rho_vs,
+                                                                           mp->d_ispec_is_elastic,
+                                                                           mp->simulation_type,
+                                                                           mp->save_forward,
+                                                                           mp->d_num_abs_boundary_faces,
+                                                                           mp->d_b_absorb_field);
+    }
+#endif
+#ifdef USE_HIP
+    if (run_hip){
+      hipLaunchKernelGGL(compute_stacey_elastic_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                        mp->d_veloc,
+                                                        mp->d_accel,
+                                                        mp->d_abs_boundary_ispec,
+                                                        mp->d_abs_boundary_ijk,
+                                                        mp->d_abs_boundary_normal,
+                                                        mp->d_abs_boundary_jacobian2Dw,
+                                                        mp->d_ibool,
+                                                        mp->d_rho_vp,
+                                                        mp->d_rho_vs,
+                                                        mp->d_ispec_is_elastic,
+                                                        mp->simulation_type,
+                                                        mp->save_forward,
+                                                        mp->d_num_abs_boundary_faces,
+                                                        mp->d_b_absorb_field);
+    }
+#endif
 
     // adjoint simulations
     if (mp->simulation_type == 3){
-      compute_stacey_elastic_sim3_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_abs_boundary_ispec,
-                                                                                mp->d_abs_boundary_ijk,
-                                                                                mp->d_ibool,
-                                                                                mp->d_ispec_is_elastic,
-                                                                                mp->d_num_abs_boundary_faces,
-                                                                                mp->d_b_accel,
-                                                                                mp->d_b_absorb_field);
+#ifdef USE_CUDA
+      if (run_cuda){
+        compute_stacey_elastic_sim3_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_abs_boundary_ispec,
+                                                                                  mp->d_abs_boundary_ijk,
+                                                                                  mp->d_ibool,
+                                                                                  mp->d_ispec_is_elastic,
+                                                                                  mp->d_num_abs_boundary_faces,
+                                                                                  mp->d_b_accel,
+                                                                                  mp->d_b_absorb_field);
+      }
+#endif
+#ifdef USE_HIP
+      if (run_hip){
+        hipLaunchKernelGGL(compute_stacey_elastic_sim3_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                               mp->d_abs_boundary_ispec,
+                                                               mp->d_abs_boundary_ijk,
+                                                               mp->d_ibool,
+                                                               mp->d_ispec_is_elastic,
+                                                               mp->d_num_abs_boundary_faces,
+                                                               mp->d_b_accel,
+                                                               mp->d_b_absorb_field);
+      }
+#endif
+
     }
   }else{
     // sets gpu arrays
@@ -123,21 +163,45 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
       accel = mp->d_b_accel;
     }
     // single forward or backward fields
-    compute_stacey_elastic_single_kernel<<<grid,threads,0,mp->compute_stream>>>(veloc,
-                                                                                accel,
-                                                                                mp->d_abs_boundary_ispec,
-                                                                                mp->d_abs_boundary_ijk,
-                                                                                mp->d_abs_boundary_normal,
-                                                                                mp->d_abs_boundary_jacobian2Dw,
-                                                                                mp->d_ibool,
-                                                                                mp->d_rho_vp,
-                                                                                mp->d_rho_vs,
-                                                                                mp->d_ispec_is_elastic,
-                                                                                FORWARD_OR_ADJOINT,
-                                                                                mp->simulation_type,
-                                                                                mp->save_forward,
-                                                                                mp->d_num_abs_boundary_faces,
-                                                                                mp->d_b_absorb_field);
+#ifdef USE_CUDA
+    if (run_cuda){
+      compute_stacey_elastic_single_kernel<<<grid,threads,0,mp->compute_stream>>>(veloc,
+                                                                                  accel,
+                                                                                  mp->d_abs_boundary_ispec,
+                                                                                  mp->d_abs_boundary_ijk,
+                                                                                  mp->d_abs_boundary_normal,
+                                                                                  mp->d_abs_boundary_jacobian2Dw,
+                                                                                  mp->d_ibool,
+                                                                                  mp->d_rho_vp,
+                                                                                  mp->d_rho_vs,
+                                                                                  mp->d_ispec_is_elastic,
+                                                                                  FORWARD_OR_ADJOINT,
+                                                                                  mp->simulation_type,
+                                                                                  mp->save_forward,
+                                                                                  mp->d_num_abs_boundary_faces,
+                                                                                  mp->d_b_absorb_field);
+    }
+#endif
+#ifdef USE_HIP
+    if (run_hip){
+      hipLaunchKernelGGL(compute_stacey_elastic_single_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                               veloc,
+                                                               accel,
+                                                               mp->d_abs_boundary_ispec,
+                                                               mp->d_abs_boundary_ijk,
+                                                               mp->d_abs_boundary_normal,
+                                                               mp->d_abs_boundary_jacobian2Dw,
+                                                               mp->d_ibool,
+                                                               mp->d_rho_vp,
+                                                               mp->d_rho_vs,
+                                                               mp->d_ispec_is_elastic,
+                                                               FORWARD_OR_ADJOINT,
+                                                               mp->simulation_type,
+                                                               mp->save_forward,
+                                                               mp->d_num_abs_boundary_faces,
+                                                               mp->d_b_absorb_field);
+    }
+#endif
   }
 
   GPU_ERROR_CHECKING("compute_stacey_elastic_kernel");
@@ -145,11 +209,11 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
   if (mp->simulation_type == 1 && mp->save_forward) {
     // explicitly wait until compute stream is done
     // (cudaMemcpy implicitly synchronizes all other cuda operations)
-    cudaStreamSynchronize(mp->compute_stream);
+    gpuStreamSynchronize(mp->compute_stream);
 
     // copies absorb_field values to CPU
-    print_CUDA_error_if_any(cudaMemcpy(b_absorb_field,mp->d_b_absorb_field,
-                                       mp->d_b_reclen_field,cudaMemcpyDeviceToHost),7701);
+//daniel todo: reclen includes sizeof(realw)
+    gpuMemcpy_tohost_realw(b_absorb_field,mp->d_b_absorb_field,mp->d_b_reclen_field/sizeof(realw));
     // writing is done in fortran routine
   }
 
@@ -206,17 +270,37 @@ void FC_FUNC_(compute_stacey_viscoelastic_undoatt_cuda,
   }
 
   // undoatt: single forward or backward fields
-  compute_stacey_elastic_undoatt_kernel<<<grid,threads,0,mp->compute_stream>>>(veloc,
-                                                                               accel,
-                                                                               mp->d_abs_boundary_ispec,
-                                                                               mp->d_abs_boundary_ijk,
-                                                                               mp->d_abs_boundary_normal,
-                                                                               mp->d_abs_boundary_jacobian2Dw,
-                                                                               mp->d_ibool,
-                                                                               mp->d_rho_vp,
-                                                                               mp->d_rho_vs,
-                                                                               mp->d_ispec_is_elastic,
-                                                                               mp->d_num_abs_boundary_faces);
+#ifdef USE_CUDA
+  if (run_cuda){
+    compute_stacey_elastic_undoatt_kernel<<<grid,threads,0,mp->compute_stream>>>(veloc,
+                                                                                 accel,
+                                                                                 mp->d_abs_boundary_ispec,
+                                                                                 mp->d_abs_boundary_ijk,
+                                                                                 mp->d_abs_boundary_normal,
+                                                                                 mp->d_abs_boundary_jacobian2Dw,
+                                                                                 mp->d_ibool,
+                                                                                 mp->d_rho_vp,
+                                                                                 mp->d_rho_vs,
+                                                                                 mp->d_ispec_is_elastic,
+                                                                                 mp->d_num_abs_boundary_faces);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(compute_stacey_elastic_undoatt_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                              veloc,
+                                                              accel,
+                                                              mp->d_abs_boundary_ispec,
+                                                              mp->d_abs_boundary_ijk,
+                                                              mp->d_abs_boundary_normal,
+                                                              mp->d_abs_boundary_jacobian2Dw,
+                                                              mp->d_ibool,
+                                                              mp->d_rho_vp,
+                                                              mp->d_rho_vs,
+                                                              mp->d_ispec_is_elastic,
+                                                              mp->d_num_abs_boundary_faces);
+  }
+#endif
 
   GPU_ERROR_CHECKING("after compute_stacey_elastic_undoatt_kernel");
 }

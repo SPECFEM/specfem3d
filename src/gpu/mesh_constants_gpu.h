@@ -62,6 +62,10 @@
 #include <hip/hip_runtime.h>
 #endif
 
+#ifdef WITH_MPI
+#include <mpi.h>
+#endif
+
 // type of "working" variables: see also CUSTOM_REAL in constants.h
 //
 // double precision temporary variables leads to 10% performance decrease
@@ -345,7 +349,6 @@ typedef realw* __restrict__ realw_p;
 
 // wrapper for global memory load function
 // usage:  val = get_global_cr( &A[index] );
-#ifdef USE_CUDA
 #if __CUDA_ARCH__ >= 350
 // Device has ldg
 __device__ __forceinline__ realw get_global_cr(realw_const_p ptr) { return __ldg(ptr); }
@@ -353,7 +356,7 @@ __device__ __forceinline__ realw get_global_cr(realw_const_p ptr) { return __ldg
 //Device does not, fall back.
 __device__ __forceinline__ realw get_global_cr(realw_const_p ptr) { return (*ptr); }
 #endif
-#endif  // USE_CUDA
+
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -434,17 +437,52 @@ inline __host__ __device__ realw realw_(field b){ return b.x; }
 //texture are not compatible for the moment with floatN data
 #undef USE_TEXTURES_FIELDS
 #endif
+
 typedef const field* __restrict__ field_const_p;
 typedef field* __restrict__ field_p;
 
 /* ----------------------------------------------------------------------------------------------- */
 
+// CUDA specifics
+
 #ifdef USE_CUDA
+// definitions
+typedef cudaEvent_t gpu_event;
+typedef cudaStream_t gpu_stream;
+
 // cuda header files
 //#include "mesh_constants_cuda.h"
 #include "kernel_proto.cu.h"
 
-void print_CUDA_error_if_any(cudaError_t err, int num);
+static inline void print_CUDA_error_if_any(cudaError_t err, int num) {
+  if (cudaSuccess != err)
+  {
+    printf("\nCUDA error !!!!! <%s> !!!!! \nat CUDA call error code: # %d\n",cudaGetErrorString(err),num);
+    fflush(stdout);
+
+    // outputs error file
+    FILE* fp;
+    int myrank;
+    char filename[BUFSIZ];
+#ifdef WITH_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+#else
+    myrank = 0;
+#endif
+    sprintf(filename,OUTPUT_FILES"/error_message_%06d.txt",myrank);
+    fp = fopen(filename,"a+");
+    if (fp != NULL){
+      fprintf(fp,"\nCUDA error !!!!! <%s> !!!!! \nat CUDA call error code: # %d\n",cudaGetErrorString(err),num);
+      fclose(fp);
+    }
+
+    // stops program
+#ifdef WITH_MPI
+    MPI_Abort(MPI_COMM_WORLD,1);
+#endif
+    exit(EXIT_FAILURE);
+  }
+}
 
 // prototype definitions to include in *.cu files
 __device__ void compute_gradient_kernel(int ijk,
@@ -458,27 +496,64 @@ __device__ void compute_gradient_kernel(int ijk,
                                         realw rhol,realw xix_regular,
                                         int gravity);
 
-#endif
+#endif  // USE_CUDA
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// HIP specifics
 
 #ifdef USE_HIP
-// hip header files
-//#include "mesh_constants_hip.h"  // not used yet...
-
-void print_HIP_error_if_any(hipError_t err, int num);
-
-#endif
-
-
 // definitions
-#ifdef USE_CUDA
-typedef cudaEvent_t gpu_event;
-typedef cudaStream_t gpu_stream;
-#endif
-#ifdef USE_HIP
 typedef hipEvent_t gpu_event;
 typedef hipStream_t gpu_stream;
-#endif
 
+// hip header files
+//#include "mesh_constants_hip.h"  // not used yet...
+#include "kernel_proto.cu.h"
+
+static inline void print_HIP_error_if_any(hipError_t err, int num) {
+  if (hipSuccess != err)
+  {
+    printf("\nHIP error !!!!! <%s> !!!!! \nat HIP call error code: # %d\n",hipGetErrorString(err),num);
+    fflush(stdout);
+
+    // outputs error file
+    FILE* fp;
+    int myrank;
+    char filename[BUFSIZ];
+#ifdef WITH_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+#else
+    myrank = 0;
+#endif
+    sprintf(filename,OUTPUT_FILES"/error_message_%06d.txt",myrank);
+    fp = fopen(filename,"a+");
+    if (fp != NULL){
+      fprintf(fp,"\nHIP error !!!!! <%s> !!!!! \nat HIP call error code: # %d\n",hipGetErrorString(err),num);
+      fclose(fp);
+    }
+
+    // stops program
+#ifdef WITH_MPI
+    MPI_Abort(MPI_COMM_WORLD,1);
+#endif
+    exit(EXIT_FAILURE);
+  }
+}
+
+// prototype definitions to include in *.cpp (i.e., included *.cu) files
+__device__ void compute_gradient_kernel(int ijk,
+                                        int ispec,int ispec_irreg,
+                                        field* scalar_field,
+                                        field* vector_field_loc,
+                                        realw* d_hprime_xx,
+                                        realw* d_xix,realw* d_xiy,realw* d_xiz,
+                                        realw* d_etax,realw* d_etay,realw* d_etaz,
+                                        realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+                                        realw rhol,realw xix_regular,
+                                        int gravity);
+
+#endif  // USE_HIP
 
 // runtime flags
 extern int run_cuda;
@@ -546,13 +621,13 @@ typedef struct mesh_ {
   // A buffer for mpi-send/recv, which is duplicated in fortran but is
   // allocated with pinned memory to facilitate asynchronus device <->
   // host memory transfers
-  float* h_send_accel_buffer;
-  float* h_send_b_accel_buffer;
+  realw* h_send_accel_buffer;
+  realw* h_send_b_accel_buffer;
 
-  float* send_buffer;
-  float* h_recv_accel_buffer;
-  float* h_recv_b_accel_buffer;
-  float* recv_buffer;
+  //realw* send_buffer;
+  realw* h_recv_accel_buffer;
+  realw* h_recv_b_accel_buffer;
+  realw* recv_buffer;
 
   int size_mpi_buffer;
   int size_mpi_buffer_potential;
@@ -818,6 +893,8 @@ void gpuFree (void *d_ptr);
 
 void gpuReset();
 void gpuSynchronize();
+
+void gpuStreamCreate(gpu_stream* stream_ptr);
 void gpuStreamSynchronize(gpu_stream stream);
 
 void exit_on_gpu_error(const char* kernel_name);
@@ -879,6 +956,295 @@ static inline void get_blocks_xy(int num_blocks, int* num_blocks_x, int* num_blo
          BALANCE_WORK_GROUP_UNITS,num_blocks,*num_blocks_x,*num_blocks_y);
 #endif
 
+#endif
+}
+
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// wrapper functions
+
+/* ----------------------------------------------------------------------------------------------- */
+
+
+static inline void gpuMemcpy_todevice_realw(realw* d_array,realw *h_array,const size_t size){
+  // copies array onto GPU
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMemcpy(d_array,h_array,size*sizeof(realw),cudaMemcpyHostToDevice),1801);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMemcpy(d_array,h_array,size*sizeof(realw),hipMemcpyHostToDevice),1801);
+  }
+#endif
+}
+
+static inline void gpuMemcpy_todevice_field(field* d_array,field *h_array,const size_t size){
+  // copies array onto GPU
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMemcpy(d_array,h_array,size*sizeof(field),cudaMemcpyHostToDevice),1802);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMemcpy(d_array,h_array,size*sizeof(field),hipMemcpyHostToDevice),1802);
+  }
+#endif
+}
+
+static inline void gpuMemcpy_todevice_int(int* d_array,int *h_array,const size_t size){
+  // copies array onto GPU
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMemcpy(d_array,h_array,size*sizeof(int),cudaMemcpyHostToDevice),1803);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMemcpy(d_array,h_array,size*sizeof(int),hipMemcpyHostToDevice),1803);
+  }
+#endif
+}
+
+
+/* ----------------------------------------------------------------------------------------------- */
+
+
+static inline void gpuMemcpy2D_todevice_realw(realw* d_array,const size_t d_size,
+                                              realw* h_array,const size_t h_size,
+                                              const size_t h_width,const size_t h_height){
+  // copies array onto GPU
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMemcpy2D(d_array,d_size*sizeof(realw),h_array,h_size*sizeof(realw),h_width*sizeof(realw),h_height,
+                                         cudaMemcpyHostToDevice),1901);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMemcpy2D(d_array,d_size*sizeof(realw),h_array,h_size*sizeof(realw),h_width*sizeof(realw),h_height,
+                                       hipMemcpyHostToDevice),1901);
+  }
+#endif
+}
+
+static inline void gpuMemcpy2D_todevice_int(int* d_array,const size_t d_size,
+                                            int* h_array,const size_t h_size,
+                                            const size_t h_width,const size_t h_height){
+  // copies array onto GPU
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMemcpy2D(d_array,d_size*sizeof(int),h_array,h_size*sizeof(int),h_width*sizeof(int),h_height,
+                                         cudaMemcpyHostToDevice),1902);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMemcpy2D(d_array,d_size*sizeof(int),h_array,h_size*sizeof(int),h_width*sizeof(int),h_height,
+                                       hipMemcpyHostToDevice),1902);
+  }
+#endif
+}
+
+
+/* ----------------------------------------------------------------------------------------------- */
+
+
+static inline void gpuMemcpy_tohost_realw(realw* h_array,realw *d_array,const size_t size){
+  // copies array to CPU
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMemcpy(h_array,d_array,size*sizeof(realw),cudaMemcpyDeviceToHost),2001);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMemcpy(h_array,d_array,size*sizeof(realw),hipMemcpyDeviceToHost),2001);
+  }
+#endif
+}
+
+static inline void gpuMemcpy_tohost_field(field *h_array,field* d_array,const size_t size){
+  // copies array to CPU
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMemcpy(h_array,d_array,size*sizeof(field),cudaMemcpyDeviceToHost),2002);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMemcpy(h_array,d_array,size*sizeof(field),hipMemcpyDeviceToHost),2002);
+  }
+#endif
+}
+
+/* unused so far...
+static inline void gpuMemcpy_tohost_int(int* h_array,int *d_array,const size_t size){
+  // copies array to CPU
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMemcpy(h_array,d_array,size*sizeof(int),cudaMemcpyDeviceToHost),2003);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMemcpy(h_array,d_array,size*sizeof(int),hipMemcpyDeviceToHost),2003);
+  }
+#endif
+}
+*/
+
+/* ----------------------------------------------------------------------------------------------- */
+
+
+static inline void gpuMemcpyAsync_todevice_realw(realw* d_array,realw *h_array,const size_t size, gpu_stream stream){
+  // asynchronuous copy of array onto GPU
+#ifdef USE_CUDA
+  if (run_cuda){
+    cudaMemcpyAsync(d_array,h_array,size*sizeof(realw),cudaMemcpyHostToDevice,stream);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipMemcpyAsync(d_array,h_array,size*sizeof(realw),hipMemcpyHostToDevice,stream);
+  }
+#endif
+}
+
+
+static inline void gpuMemcpyAsync_tohost_realw(realw* h_array,realw *d_array,const size_t size, gpu_stream stream){
+  // asynchronuous copy of array to CPU
+#ifdef USE_CUDA
+  if (run_cuda){
+    cudaMemcpyAsync(h_array,d_array,size*sizeof(realw),cudaMemcpyDeviceToHost,stream);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipMemcpyAsync(h_array,d_array,size*sizeof(realw),hipMemcpyDeviceToHost,stream);
+  }
+#endif
+}
+
+
+
+/* ----------------------------------------------------------------------------------------------- */
+
+
+static inline void gpuMemset_int(int* d_array,int value,const size_t size){
+  // sets value for array on device
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMemset(d_array,value,size*sizeof(int)),2301);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMemset(d_array,value,size*sizeof(int)),2301);
+  }
+#endif
+}
+
+static inline void gpuMemset_realw(realw* d_array,int value,const size_t size){
+  // sets value for array on device
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMemset(d_array,value,size*sizeof(realw)),2302);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMemset(d_array,value,size*sizeof(realw)),2302);
+  }
+#endif
+}
+
+
+/* ----------------------------------------------------------------------------------------------- */
+
+
+static inline void gpuMalloc_int(void** d_array_addr_ptr,const size_t size){
+  // allocates array on device
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int)),2401);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMalloc((void**)d_array_addr_ptr,size*sizeof(int)),2401);
+  }
+#endif
+}
+
+
+static inline void gpuMalloc_realw(void** d_array_addr_ptr,const size_t size){
+  // allocates array on device
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMalloc((void**)d_array_addr_ptr,size*sizeof(realw)),2402);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMalloc((void**)d_array_addr_ptr,size*sizeof(realw)),2402);
+  }
+#endif
+}
+
+static inline void gpuMalloc_field(void** d_array_addr_ptr,const size_t size){
+  // allocates array on device
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMalloc((void**)d_array_addr_ptr,size*sizeof(field)),2403);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMalloc((void**)d_array_addr_ptr,size*sizeof(field)),2403);
+  }
+#endif
+}
+
+static inline void gpuMallocHost_realw(void** h_array_addr_ptr,const size_t size){
+  // allocates array on device
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMallocHost((void**)h_array_addr_ptr,size*sizeof(realw)),2404);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipHostMalloc((void**)h_array_addr_ptr,size*sizeof(realw)),2404);
+  }
+#endif
+}
+
+
+
+/* ----------------------------------------------------------------------------------------------- */
+
+
+static inline void gpuFree(realw* d_array){
+  // allocates array on device
+#ifdef USE_CUDA
+  if (run_cuda){ cudaFree(d_array); }
+#endif
+#ifdef USE_HIP
+  if (run_hip){ hipFree(d_array); }
+#endif
+}
+
+static inline void gpuFree(int* d_array){
+  // allocates array on device
+#ifdef USE_CUDA
+  if (run_cuda){ cudaFree(d_array); }
+#endif
+#ifdef USE_HIP
+  if (run_hip){ hipFree(d_array); }
 #endif
 }
 
