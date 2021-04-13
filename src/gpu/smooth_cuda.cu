@@ -68,11 +68,11 @@ void FC_FUNC_(prepare_gpu_smooth,
   sp->nspec_me =  *nspec_me;
   sp->nker = *nker;
 
-  print_CUDA_error_if_any(cudaMalloc((void**)&sp->data_smooth,NGLL3*(*nspec_me)*(*nker)*sizeof(realw)),2000);
-  print_CUDA_error_if_any(cudaMemset(sp->data_smooth,0,NGLL3*(*nspec_me)*(*nker)*sizeof(realw)),2001);
+  gpuMalloc_realw((void**)&sp->data_smooth,NGLL3*(*nspec_me)*(*nker));
+  gpuMemset_realw(sp->data_smooth,0,NGLL3*(*nspec_me)*(*nker));
 
-  print_CUDA_error_if_any(cudaMalloc((void**)&sp->normalisation,NGLL3*(*nspec_me)*sizeof(realw)),2002);
-  print_CUDA_error_if_any(cudaMemset(sp->normalisation,0,NGLL3*(*nspec_me)*sizeof(realw)),2003);
+  gpuMalloc_realw((void**)&sp->normalisation,NGLL3*(*nspec_me));
+  gpuMemset_realw(sp->normalisation,0,NGLL3*(*nspec_me));
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -118,35 +118,65 @@ void FC_FUNC_(compute_smooth,
   for (int i=0;i<sp->nker;i++){
     gpuCopy_todevice_realw((void**)&d_data_other,&data_other[NGLL3*(*nspec_other)*i],NGLL3*(*nspec_other));
 
-    process_smooth<<<grid,threads>>>(sp->x_me,
-                                     sp->y_me,
-                                     sp->z_me,
-                                     x_other,
-                                     y_other,
-                                     z_other,
-                                     d_data_other,
-                                     sp->sigma_h2_inv,
-                                     sp->sigma_v2_inv,
-                                     i,
-                                     sp->nspec_me,
-                                     *nspec_other,
-                                     sp->v_criterion,
-                                     sp->h_criterion,
-                                     d_jacobian,
-                                     d_irregular_element_number,
-                                     *jacobian_regular,
-                                     sp->data_smooth,
-                                     sp->normalisation,
-                                     sp->wgll_cube);
-    cudaFree(d_data_other);
+#ifdef USE_CUDA
+    if (run_cuda){
+      process_smooth<<<grid,threads>>>(sp->x_me,
+                                       sp->y_me,
+                                       sp->z_me,
+                                       x_other,
+                                       y_other,
+                                       z_other,
+                                       d_data_other,
+                                       sp->sigma_h2_inv,
+                                       sp->sigma_v2_inv,
+                                       i,
+                                       sp->nspec_me,
+                                       *nspec_other,
+                                       sp->v_criterion,
+                                       sp->h_criterion,
+                                       d_jacobian,
+                                       d_irregular_element_number,
+                                       *jacobian_regular,
+                                       sp->data_smooth,
+                                       sp->normalisation,
+                                       sp->wgll_cube);
+    }
+#endif
+#ifdef USE_HIP
+    if (run_hip){
+      hipLaunchKernelGGL(process_smooth, dim3(grid), dim3(threads), 0, 0,
+                                         sp->x_me,
+                                         sp->y_me,
+                                         sp->z_me,
+                                         x_other,
+                                         y_other,
+                                         z_other,
+                                         d_data_other,
+                                         sp->sigma_h2_inv,
+                                         sp->sigma_v2_inv,
+                                         i,
+                                         sp->nspec_me,
+                                         *nspec_other,
+                                         sp->v_criterion,
+                                         sp->h_criterion,
+                                         d_jacobian,
+                                         d_irregular_element_number,
+                                         *jacobian_regular,
+                                         sp->data_smooth,
+                                         sp->normalisation,
+                                         sp->wgll_cube);
+    }
+#endif
+
+    gpuFree(d_data_other);
   }
   gpuSynchronize();
 
-  cudaFree(x_other);
-  cudaFree(y_other);
-  cudaFree(z_other);
-  cudaFree(d_jacobian);
-  cudaFree(d_irregular_element_number);
+  gpuFree(x_other);
+  gpuFree(y_other);
+  gpuFree(z_other);
+  gpuFree(d_jacobian);
+  gpuFree(d_irregular_element_number);
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -163,17 +193,27 @@ void FC_FUNC_(get_smooth,
   dim3 grid(sp->nspec_me,1);
   dim3 threads(NGLL3,1,1);
 
-  normalize_data<<<grid,threads>>>(sp->data_smooth,sp->normalisation,sp->nker,sp->nspec_me);
+#ifdef USE_CUDA
+  if (run_cuda){
+    normalize_data<<<grid,threads>>>(sp->data_smooth,sp->normalisation,sp->nker,sp->nspec_me);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(normalize_data, dim3(grid), dim3(threads), 0, 0,
+                                       sp->data_smooth,sp->normalisation,sp->nker,sp->nspec_me);
+  }
+#endif
 
-  print_CUDA_error_if_any(cudaMemcpy(data_smooth, sp->data_smooth,
-                                       NGLL3*sp->nspec_me*sizeof(int)*sp->nker, cudaMemcpyDeviceToHost),98010);
+  gpuMemcpy_tohost_realw(data_smooth, sp->data_smooth,NGLL3*sp->nspec_me*sp->nker);
 
-  cudaFree(sp->x_me);
-  cudaFree(sp->y_me);
-  cudaFree(sp->z_me);
-  cudaFree(sp->data_smooth);
-  cudaFree(sp->wgll_cube);
-  cudaFree(sp->normalisation);
+  gpuFree(sp->x_me);
+  gpuFree(sp->y_me);
+  gpuFree(sp->z_me);
+  gpuFree(sp->data_smooth);
+  gpuFree(sp->wgll_cube);
+  gpuFree(sp->normalisation);
+
   free(sp);
 }
 

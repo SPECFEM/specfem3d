@@ -29,10 +29,6 @@
 
 #include "mesh_constants_gpu.h"
 
-#ifdef WITH_MPI
-#include <mpi.h>
-#endif
-
 /* ----------------------------------------------------------------------------------------------- */
 
 // Helper functions
@@ -133,9 +129,7 @@ void gpuReset() {
 
   // hip version
 #ifdef USE_HIP
-  if (run_hip) {
-    hipDeviceReset();
-  }
+  if (run_hip) { hipDeviceReset(); }
 #endif
 }
 
@@ -160,11 +154,23 @@ void gpuSynchronize() {
 
   // hip version
 #ifdef USE_HIP
-  hipDeviceSynchronize();
+  if (run_hip){ hipDeviceSynchronize(); }
 #endif
 }
 
 /* ----------------------------------------------------------------------------------------------- */
+
+void gpuStreamCreate(gpu_stream* stream_ptr) {
+  // synchronizes stream
+
+#ifdef USE_CUDA
+      if (run_cuda){ cudaStreamCreate(stream_ptr); }
+#endif
+#ifdef USE_HIP
+      if (run_hip){ hipStreamCreate(stream_ptr); }
+#endif
+}
+
 
 void gpuStreamSynchronize(gpu_stream stream) {
   // synchronizes stream
@@ -177,71 +183,7 @@ void gpuStreamSynchronize(gpu_stream stream) {
 #endif
 }
 
-/* ----------------------------------------------------------------------------------------------- */
 
-#ifdef USE_CUDA
-void print_CUDA_error_if_any(cudaError_t err, int num) {
-  if (cudaSuccess != err)
-  {
-    printf("\nCUDA error !!!!! <%s> !!!!! \nat CUDA call error code: # %d\n",cudaGetErrorString(err),num);
-    fflush(stdout);
-
-    // outputs error file
-    FILE* fp;
-    int myrank;
-    char filename[BUFSIZ];
-#ifdef WITH_MPI
-    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-#else
-    myrank = 0;
-#endif
-    sprintf(filename,OUTPUT_FILES"/error_message_%06d.txt",myrank);
-    fp = fopen(filename,"a+");
-    if (fp != NULL){
-      fprintf(fp,"\nCUDA error !!!!! <%s> !!!!! \nat CUDA call error code: # %d\n",cudaGetErrorString(err),num);
-      fclose(fp);
-    }
-
-    // stops program
-#ifdef WITH_MPI
-    MPI_Abort(MPI_COMM_WORLD,1);
-#endif
-    exit(EXIT_FAILURE);
-  }
-}
-#endif
-
-#ifdef USE_HIP
-void print_HIP_error_if_any(hipError_t err, int num) {
-  if (hipSuccess != err)
-  {
-    printf("\nHIP error !!!!! <%s> !!!!! \nat HIP call error code: # %d\n",hipGetErrorString(err),num);
-    fflush(stdout);
-
-    // outputs error file
-    FILE* fp;
-    int myrank;
-    char filename[BUFSIZ];
-#ifdef WITH_MPI
-    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-#else
-    myrank = 0;
-#endif
-    sprintf(filename,OUTPUT_FILES"/error_message_%06d.txt",myrank);
-    fp = fopen(filename,"a+");
-    if (fp != NULL){
-      fprintf(fp,"\nHIP error !!!!! <%s> !!!!! \nat HIP call error code: # %d\n",hipGetErrorString(err),num);
-      fclose(fp);
-    }
-
-    // stops program
-#ifdef WITH_MPI
-    MPI_Abort(MPI_COMM_WORLD,1);
-#endif
-    exit(EXIT_FAILURE);
-  }
-}
-#endif
 /* ----------------------------------------------------------------------------------------------- */
 
 // Timing helper functions

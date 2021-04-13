@@ -55,8 +55,8 @@ void FC_FUNC_(compute_add_sources_el_cuda,
   stf_pre_compute = (realw*) malloc(NSOURCES * sizeof(realw));
   for (int i_source=0;i_source < NSOURCES;i_source++) stf_pre_compute[i_source] = (realw)h_stf_pre_compute[i_source];
 
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,stf_pre_compute,
-                                     NSOURCES*sizeof(realw),cudaMemcpyHostToDevice),18);
+  gpuMemcpy_todevice_realw(mp->d_stf_pre_compute,stf_pre_compute,NSOURCES);
+
   free(stf_pre_compute);
 
   GPU_ERROR_CHECKING("compute_add_sources_el_cuda copy");
@@ -67,13 +67,29 @@ void FC_FUNC_(compute_add_sources_el_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(NGLLX,NGLLY,NGLLZ);
 
-  compute_add_sources_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel,mp->d_ibool,
-                                                                    mp->d_sourcearrays,
-                                                                    mp->d_stf_pre_compute,
-                                                                    mp->myrank,
-                                                                    mp->d_islice_selected_source,mp->d_ispec_selected_source,
-                                                                    mp->d_ispec_is_elastic,
-                                                                    NSOURCES);
+#ifdef USE_CUDA
+  if (run_cuda){
+    compute_add_sources_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel,mp->d_ibool,
+                                                                      mp->d_sourcearrays,
+                                                                      mp->d_stf_pre_compute,
+                                                                      mp->myrank,
+                                                                      mp->d_islice_selected_source,mp->d_ispec_selected_source,
+                                                                      mp->d_ispec_is_elastic,
+                                                                      NSOURCES);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(compute_add_sources_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                   mp->d_accel,mp->d_ibool,
+                                                   mp->d_sourcearrays,
+                                                   mp->d_stf_pre_compute,
+                                                   mp->myrank,
+                                                   mp->d_islice_selected_source,mp->d_ispec_selected_source,
+                                                   mp->d_ispec_is_elastic,
+                                                   NSOURCES);
+  }
+#endif
 
   GPU_ERROR_CHECKING("compute_add_sources_el_cuda");
 }
@@ -98,8 +114,8 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
   stf_pre_compute = (realw*) malloc(NSOURCES * sizeof(realw));
   for (int i_source=0;i_source < NSOURCES;i_source++) stf_pre_compute[i_source] = (realw)h_stf_pre_compute[i_source];
 
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,stf_pre_compute,
-                                     NSOURCES*sizeof(realw),cudaMemcpyHostToDevice),18);
+  gpuMemcpy_todevice_realw(mp->d_stf_pre_compute,stf_pre_compute,NSOURCES);
+
   free(stf_pre_compute);
 
   GPU_ERROR_CHECKING("compute_add_sources_el_s3_cuda copy");
@@ -110,13 +126,29 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(NGLLX,NGLLY,NGLLZ);
 
-  compute_add_sources_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_accel,mp->d_ibool,
-                                                                    mp->d_sourcearrays,
-                                                                    mp->d_stf_pre_compute,
-                                                                    mp->myrank,
-                                                                    mp->d_islice_selected_source,mp->d_ispec_selected_source,
-                                                                    mp->d_ispec_is_elastic,
-                                                                    NSOURCES);
+#ifdef USE_CUDA
+  if (run_cuda){
+    compute_add_sources_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_accel,mp->d_ibool,
+                                                                      mp->d_sourcearrays,
+                                                                      mp->d_stf_pre_compute,
+                                                                      mp->myrank,
+                                                                      mp->d_islice_selected_source,mp->d_ispec_selected_source,
+                                                                      mp->d_ispec_is_elastic,
+                                                                      NSOURCES);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(compute_add_sources_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                   mp->d_accel,mp->d_ibool,
+                                                   mp->d_sourcearrays,
+                                                   mp->d_stf_pre_compute,
+                                                   mp->myrank,
+                                                   mp->d_islice_selected_source,mp->d_ispec_selected_source,
+                                                   mp->d_ispec_is_elastic,
+                                                   NSOURCES);
+  }
+#endif
 
   GPU_ERROR_CHECKING("compute_add_sources_el_s3_cuda");
 }
@@ -145,12 +177,28 @@ TRACE("\tadd_source_main_rec_noise_cu");
   dim3 threads(NGLL3,1,1);
 
   if (mp->myrank == islice_selected_rec[irec_main_noise-1]) {
-    add_source_main_rec_noise_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_ibool,
-                                                                                 mp->d_ispec_selected_rec,
-                                                                                 irec_main_noise,
-                                                                                 mp->d_accel,
-                                                                                 mp->d_noise_sourcearray,
-                                                                                 it);
+
+#ifdef USE_CUDA
+    if (run_cuda){
+      add_source_main_rec_noise_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_ibool,
+                                                                                   mp->d_ispec_selected_rec,
+                                                                                   irec_main_noise,
+                                                                                   mp->d_accel,
+                                                                                   mp->d_noise_sourcearray,
+                                                                                   it);
+    }
+#endif
+#ifdef USE_HIP
+    if (run_hip){
+      hipLaunchKernelGGL(add_source_main_rec_noise_cuda_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                                mp->d_ibool,
+                                                                mp->d_ispec_selected_rec,
+                                                                irec_main_noise,
+                                                                mp->d_accel,
+                                                                mp->d_noise_sourcearray,
+                                                                it);
+    }
+#endif
 
   GPU_ERROR_CHECKING("add_source_main_rec_noise_cuda_kernel");
   }
@@ -191,20 +239,38 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
 
   // copies extracted array values onto GPU
   if ( (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC==0){
-    print_CUDA_error_if_any(cudaMemcpy(mp->d_source_adjoint,h_source_adjoint,
-                                       mp->nadj_rec_local*NDIM*sizeof(realw)*(*NTSTEP_BETWEEN_READ_ADJSRC),cudaMemcpyHostToDevice),99099);
+    gpuMemcpy_todevice_realw(mp->d_source_adjoint,h_source_adjoint,mp->nadj_rec_local*NDIM*(*NTSTEP_BETWEEN_READ_ADJSRC));
   }
 
-  add_sources_el_SIM_TYPE_2_OR_3_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel,
-                                                                               *nrec,it_index,*NTSTEP_BETWEEN_READ_ADJSRC,
-                                                                               mp->d_source_adjoint,
-                                                                               mp->d_hxir_adj,
-                                                                               mp->d_hetar_adj,
-                                                                               mp->d_hgammar_adj,
-                                                                               mp->d_ibool,
-                                                                               mp->d_ispec_is_elastic,
-                                                                               mp->d_ispec_selected_adjrec_loc,
-                                                                               mp->nadj_rec_local);
+#ifdef USE_CUDA
+  if (run_cuda){
+    add_sources_el_SIM_TYPE_2_OR_3_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel,
+                                                                                 *nrec,it_index,*NTSTEP_BETWEEN_READ_ADJSRC,
+                                                                                 mp->d_source_adjoint,
+                                                                                 mp->d_hxir_adj,
+                                                                                 mp->d_hetar_adj,
+                                                                                 mp->d_hgammar_adj,
+                                                                                 mp->d_ibool,
+                                                                                 mp->d_ispec_is_elastic,
+                                                                                 mp->d_ispec_selected_adjrec_loc,
+                                                                                 mp->nadj_rec_local);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(add_sources_el_SIM_TYPE_2_OR_3_kernel, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                              mp->d_accel,
+                                                              *nrec,it_index,*NTSTEP_BETWEEN_READ_ADJSRC,
+                                                              mp->d_source_adjoint,
+                                                              mp->d_hxir_adj,
+                                                              mp->d_hetar_adj,
+                                                              mp->d_hgammar_adj,
+                                                              mp->d_ibool,
+                                                              mp->d_ispec_is_elastic,
+                                                              mp->d_ispec_selected_rec_loc,
+                                                              mp->nadj_rec_local);
+  }
+#endif
 
   GPU_ERROR_CHECKING("add_sources_SIM_TYPE_2_OR_3_kernel");
 }

@@ -42,7 +42,7 @@ TRACE("make_displ_rand");
   for(int i=0;i<mp->NGLOB_AB*3;i++) {
     h_displ[i] = rand();
   }
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_displ,h_displ,mp->NGLOB_AB*3*sizeof(realw),cudaMemcpyHostToDevice),44001);
+  gpuMemcpy_todevice_realw(mp->d_displ,h_displ,mp->NGLOB_AB*3);
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -62,15 +62,29 @@ TRACE("transfer_surface_to_host");
   dim3 grid(num_blocks_x,num_blocks_y,1);
   dim3 threads(NGLL2,1,1);
 
-  transfer_surface_to_host_kernel<<<grid,threads>>>(mp->d_free_surface_ispec,
-                                                    mp->d_free_surface_ijk,
-                                                    mp->num_free_surface_faces,
-                                                    mp->d_ibool,
-                                                    mp->d_displ,
-                                                    mp->d_noise_surface_movie);
+#ifdef USE_CUDA
+  if (run_cuda){
+    transfer_surface_to_host_kernel<<<grid,threads>>>(mp->d_free_surface_ispec,
+                                                      mp->d_free_surface_ijk,
+                                                      mp->num_free_surface_faces,
+                                                      mp->d_ibool,
+                                                      mp->d_displ,
+                                                      mp->d_noise_surface_movie);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(transfer_surface_to_host_kernel, dim3(grid), dim3(threads), 0, 0,
+                                                        mp->d_free_surface_ispec,
+                                                        mp->d_free_surface_ijk,
+                                                        mp->num_free_surface_faces,
+                                                        mp->d_ibool,
+                                                        mp->d_displ,
+                                                        mp->d_noise_surface_movie);
+  }
+#endif
 
-  print_CUDA_error_if_any(cudaMemcpy(h_noise_surface_movie,mp->d_noise_surface_movie,
-                                     3*NGLL2*(mp->num_free_surface_faces)*sizeof(realw),cudaMemcpyDeviceToHost),44002);
+  gpuMemcpy_tohost_realw(h_noise_surface_movie,mp->d_noise_surface_movie,3*NGLL2*(mp->num_free_surface_faces));
 
   GPU_ERROR_CHECKING("transfer_surface_to_host");
 }
@@ -90,8 +104,7 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
   int NOISE_TOMOGRAPHY = *NOISE_TOMOGRAPHYf;
 
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_noise_surface_movie,h_noise_surface_movie,
-                                     3*NGLL2*(mp->num_free_surface_faces)*sizeof(realw),cudaMemcpyHostToDevice),44003);
+  gpuMemcpy_todevice_realw(mp->d_noise_surface_movie,h_noise_surface_movie,3*NGLL2*(mp->num_free_surface_faces));
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(mp->num_free_surface_faces,&num_blocks_x,&num_blocks_y);
@@ -101,31 +114,73 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
 
   if (NOISE_TOMOGRAPHY == 2) {
     // add surface source to forward field
-    noise_read_add_surface_movie_cuda_kernel<<<grid,threads>>>(mp->d_accel,
-                                                               mp->d_ibool,
-                                                               mp->d_free_surface_ispec,
-                                                               mp->d_free_surface_ijk,
-                                                               mp->num_free_surface_faces,
-                                                               mp->d_noise_surface_movie,
-                                                               mp->d_normal_x_noise,
-                                                               mp->d_normal_y_noise,
-                                                               mp->d_normal_z_noise,
-                                                               mp->d_mask_noise,
-                                                               mp->d_free_surface_jacobian2Dw);
+#ifdef USE_CUDA
+    if (run_cuda){
+      noise_read_add_surface_movie_cuda_kernel<<<grid,threads>>>(mp->d_accel,
+                                                                 mp->d_ibool,
+                                                                 mp->d_free_surface_ispec,
+                                                                 mp->d_free_surface_ijk,
+                                                                 mp->num_free_surface_faces,
+                                                                 mp->d_noise_surface_movie,
+                                                                 mp->d_normal_x_noise,
+                                                                 mp->d_normal_y_noise,
+                                                                 mp->d_normal_z_noise,
+                                                                 mp->d_mask_noise,
+                                                                 mp->d_free_surface_jacobian2Dw);
+    }
+#endif
+#ifdef USE_HIP
+    if (run_hip){
+      hipLaunchKernelGGL(noise_read_add_surface_movie_cuda_kernel, dim3(grid), dim3(threads), 0, 0,
+                                                                   mp->d_accel,
+                                                                   mp->d_ibool,
+                                                                   mp->d_free_surface_ispec,
+                                                                   mp->d_free_surface_ijk,
+                                                                   mp->num_free_surface_faces,
+                                                                   mp->d_noise_surface_movie,
+                                                                   mp->d_normal_x_noise,
+                                                                   mp->d_normal_y_noise,
+                                                                   mp->d_normal_z_noise,
+                                                                   mp->d_mask_noise,
+                                                                   mp->d_free_surface_jacobian2Dw);
+    }
+#endif
+
   }
   else if (NOISE_TOMOGRAPHY == 3) {
     // add surface source to adjoint (backward) field
-    noise_read_add_surface_movie_cuda_kernel<<<grid,threads>>>(mp->d_b_accel,
-                                                               mp->d_ibool,
-                                                               mp->d_free_surface_ispec,
-                                                               mp->d_free_surface_ijk,
-                                                               mp->num_free_surface_faces,
-                                                               mp->d_noise_surface_movie,
-                                                               mp->d_normal_x_noise,
-                                                               mp->d_normal_y_noise,
-                                                               mp->d_normal_z_noise,
-                                                               mp->d_mask_noise,
-                                                               mp->d_free_surface_jacobian2Dw);
+#ifdef USE_CUDA
+    if (run_cuda){
+      noise_read_add_surface_movie_cuda_kernel<<<grid,threads>>>(mp->d_b_accel,
+                                                                 mp->d_ibool,
+                                                                 mp->d_free_surface_ispec,
+                                                                 mp->d_free_surface_ijk,
+                                                                 mp->num_free_surface_faces,
+                                                                 mp->d_noise_surface_movie,
+                                                                 mp->d_normal_x_noise,
+                                                                 mp->d_normal_y_noise,
+                                                                 mp->d_normal_z_noise,
+                                                                 mp->d_mask_noise,
+                                                                 mp->d_free_surface_jacobian2Dw);
+    }
+#endif
+#ifdef USE_HIP
+    if (run_hip){
+      hipLaunchKernelGGL(noise_read_add_surface_movie_cuda_kernel, dim3(grid), dim3(threads), 0, 0,
+                                                                   mp->d_b_accel,
+                                                                   mp->d_ibool,
+                                                                   mp->d_free_surface_ispec,
+                                                                   mp->d_free_surface_ijk,
+                                                                   mp->num_free_surface_faces,
+                                                                   mp->d_noise_surface_movie,
+                                                                   mp->d_normal_x_noise,
+                                                                   mp->d_normal_y_noise,
+                                                                   mp->d_normal_z_noise,
+                                                                   mp->d_mask_noise,
+                                                                   mp->d_free_surface_jacobian2Dw);
+    }
+#endif
+
   }
 
   GPU_ERROR_CHECKING("noise_read_add_surface_movie_cuda_kernel");

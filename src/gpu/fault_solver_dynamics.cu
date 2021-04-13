@@ -91,14 +91,9 @@ void FC_FUNC_(initialize_fault_data_gpu,
   }
 
   // allocates arrays on GPU
-  print_CUDA_error_if_any(cudaMalloc((void**)&(fault_data_recorder->iglob),
-                                     fault_data_recorder->NRECORD*sizeof(int)),60001);
+  gpuCopy_todevice_int((void**)&(fault_data_recorder->iglob),iglob,fault_data_recorder->NRECORD);
 
-  print_CUDA_error_if_any(cudaMemcpy(fault_data_recorder->iglob, iglob,
-                                     fault_data_recorder->NRECORD*sizeof(int), cudaMemcpyHostToDevice),60002);
-
-  print_CUDA_error_if_any(cudaMalloc((void**)&(fault_data_recorder->dataT),
-                                     recordlength*fault_data_recorder->NRECORD*fault_data_recorder->NT*sizeof(realw)),60003);
+  gpuMalloc_realw((void**)&(fault_data_recorder->dataT),recordlength*fault_data_recorder->NRECORD*fault_data_recorder->NT);
 
   // stores structure pointers
   Fsolver->faults[*fault_index].output_dataT = fault_data_recorder;
@@ -106,62 +101,6 @@ void FC_FUNC_(initialize_fault_data_gpu,
   GPU_ERROR_CHECKING("initialize_fault_data_gpu");
 }
 
-
-/* ----------------------------------------------------------------------------------------------- */
-
-// copies realw array from CPU host to GPU device
-void gpuCopy_todevice_realw_test(void** d_array_addr_ptr,realw* h_array,int size) {
-
-#ifdef USE_CUDA
-  // allocates memory on GPU
-  cudaMalloc((void**)d_array_addr_ptr,size*sizeof(realw));
-  // copies values onto GPU
-  cudaMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(realw),cudaMemcpyHostToDevice);
-#endif
-#ifdef USE_HIP
-daniel todo copy...
-#endif
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void copy_tohost_realw_test(void** d_array_addr_ptr,realw* h_array,int size) {
-
-  // copies values onto GPU
-  cudaMemcpy(h_array, (realw*) *d_array_addr_ptr,size*sizeof(realw),cudaMemcpyDeviceToHost);
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-// copies integer array from CPU host to GPU device
-void gpuCopy_todevice_int_test(void** d_array_addr_ptr,int* h_array,int size) {
-
-#ifdef USE_CUDA
-  // allocates memory on GPU
-  cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int));
-  // copies values onto GPU
-  cudaMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(int),cudaMemcpyHostToDevice);
-#endif
-#ifdef USE_HIP
-daniel todo hipcopy...
-#endif
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void copy_tohost_int_test(void** d_array_addr_ptr,int* h_array,int size) {
-
-  // allocates memory on GPU
-  cudaMemcpy(h_array,(realw*) *d_array_addr_ptr,size*sizeof(int),cudaMemcpyDeviceToHost);
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void allocate_cuda_memory_test(void** d_array_addr_ptr,int size) {
-
-  // allocates memory on GPU
-  cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int));
-}
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -198,21 +137,21 @@ void FC_FUNC_(transfer_fault_data_to_device,
 
   // copies data to GPU
   if (*NGLOB_FLT > 0){
-    gpuCopy_todevice_realw_test((void **)&(Flt->B),B,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(Flt->R),R,(*NGLOB_FLT)*9);
-    gpuCopy_todevice_realw_test((void **)&(Flt->Z),Z,(*NGLOB_FLT));
+    gpuCopy_todevice_realw((void **)&(Flt->B),B,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(Flt->R),R,(*NGLOB_FLT)*9);
+    gpuCopy_todevice_realw((void **)&(Flt->Z),Z,(*NGLOB_FLT));
 
-    gpuCopy_todevice_realw_test((void **)&(Flt->D),D,(*NGLOB_FLT)*3);
-    gpuCopy_todevice_realw_test((void **)&(Flt->V),V0,(*NGLOB_FLT)*3);
+    gpuCopy_todevice_realw((void **)&(Flt->D),D,(*NGLOB_FLT)*3);
+    gpuCopy_todevice_realw((void **)&(Flt->V),V0,(*NGLOB_FLT)*3);
 
-    gpuCopy_todevice_realw_test((void **)&(Flt->T0),T0,(*NGLOB_FLT)*3);
-    gpuCopy_todevice_realw_test((void **)&(Flt->T),T,(*NGLOB_FLT)*3);
+    gpuCopy_todevice_realw((void **)&(Flt->T0),T0,(*NGLOB_FLT)*3);
+    gpuCopy_todevice_realw((void **)&(Flt->T),T,(*NGLOB_FLT)*3);
 
-    gpuCopy_todevice_realw_test((void **)&(Flt->invM1),invM1,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(Flt->invM2),invM2,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(Flt->invM1),invM1,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(Flt->invM2),invM2,*NGLOB_FLT);
 
-    gpuCopy_todevice_int_test((void **)&(Flt->ibulk1),ibulk1,(*NGLOB_FLT));
-    gpuCopy_todevice_int_test((void **)&(Flt->ibulk2),ibulk2,(*NGLOB_FLT));
+    gpuCopy_todevice_int((void **)&(Flt->ibulk1),ibulk1,(*NGLOB_FLT));
+    gpuCopy_todevice_int((void **)&(Flt->ibulk2),ibulk2,(*NGLOB_FLT));
   }
 
   GPU_ERROR_CHECKING("transfer_fault_data_to_device");
@@ -236,9 +175,9 @@ void FC_FUNC_(transfer_fault_data_to_host,
   Fault* Flt = &(Fsolver->faults[*fault_index]);
 
   if (*NGLOB_FLT > 0){
-    copy_tohost_realw_test((void **)&(Flt->V),V,(*NGLOB_FLT)*3);
-    copy_tohost_realw_test((void **)&(Flt->D),D,(*NGLOB_FLT)*3);
-    copy_tohost_realw_test((void **)&(Flt->T),T,(*NGLOB_FLT)*3);
+    gpuMemcpy_tohost_realw(Flt->V,V,(*NGLOB_FLT)*3);
+    gpuMemcpy_tohost_realw(Flt->D,D,(*NGLOB_FLT)*3);
+    gpuMemcpy_tohost_realw(Flt->T,T,(*NGLOB_FLT)*3);
   }
 
   GPU_ERROR_CHECKING("transfer_fault_data_to_host");
@@ -280,7 +219,7 @@ void FC_FUNC_(transfer_datat_to_host,
     }
 
     // copies dataT record to CPU
-    copy_tohost_realw_test((void **)&(Flt->output_dataT->dataT),&h_dataT[it_index],size);
+    gpuMemcpy_tohost_realw(Flt->output_dataT->dataT,&h_dataT[it_index],size);
   }
 
   GPU_ERROR_CHECKING("transfer_dataT_to_host");
@@ -320,18 +259,18 @@ void FC_FUNC_(transfer_rsf_data_todevice,
 
   // copies arrays onto GPU
   if (*NGLOB_FLT > 0){
-    gpuCopy_todevice_realw_test((void **)&(rsf->V0),V0,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(rsf->f0),f0,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(rsf->V_init),V_init,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(rsf->a),a,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(rsf->b),b,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(rsf->L),L,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(rsf->theta),theta,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(rsf->T),T,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(rsf->Coh),C,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(rsf->fw),fw,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(rsf->Vw),Vw,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(rsf->Fload),Fload,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(rsf->V0),V0,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(rsf->f0),f0,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(rsf->V_init),V_init,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(rsf->a),a,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(rsf->b),b,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(rsf->L),L,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(rsf->theta),theta,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(rsf->T),T,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(rsf->Coh),C,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(rsf->fw),fw,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(rsf->Vw),Vw,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(rsf->Fload),Fload,*NGLOB_FLT);
   }
 
   GPU_ERROR_CHECKING("transfer_rsf_data_todevice");
@@ -360,12 +299,12 @@ void FC_FUNC_(transfer_swf_data_todevice,
   if (Fsolver->RATE_AND_STATE){ exit_on_error("Error with SWF setup, RATE_AND_STATE flag is on; please check fault setup and rerun\n");}
 
   if (*NGLOB_FLT > 0){
-    gpuCopy_todevice_realw_test((void **)&(swf->Dc),Dc,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(swf->mus),mus,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(swf->mud),mud,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(swf->Coh),C,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(swf->T),T,*NGLOB_FLT);
-    gpuCopy_todevice_realw_test((void **)&(swf->theta),theta,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(swf->Dc),Dc,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(swf->mus),mus,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(swf->mud),mud,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(swf->Coh),C,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(swf->T),T,*NGLOB_FLT);
+    gpuCopy_todevice_realw((void **)&(swf->theta),theta,*NGLOB_FLT);
   }
 
   GPU_ERROR_CHECKING("transfer_swf_data_todevice");
@@ -398,17 +337,17 @@ void FC_FUNC_(transfer_rsf_data_tohost,
   Rsf_type* rsf  = &((Fsolver->faults[*fault_index]).rsf);
 
   if (*NGLOB_FLT > 0){
-    copy_tohost_realw_test((void **)&(rsf->V0),V0,*NGLOB_FLT);
-    copy_tohost_realw_test((void **)&(rsf->f0),f0,*NGLOB_FLT);
-    copy_tohost_realw_test((void **)&(rsf->V_init),V_init,*NGLOB_FLT);
-    copy_tohost_realw_test((void **)&(rsf->a),a,*NGLOB_FLT);
-    copy_tohost_realw_test((void **)&(rsf->b),b,*NGLOB_FLT);
-    copy_tohost_realw_test((void **)&(rsf->L),L,*NGLOB_FLT);
-    copy_tohost_realw_test((void **)&(rsf->theta),theta,*NGLOB_FLT);
-    copy_tohost_realw_test((void **)&(rsf->T),T,*NGLOB_FLT);
-    copy_tohost_realw_test((void **)&(rsf->Coh),C,*NGLOB_FLT);
-    copy_tohost_realw_test((void **)&(rsf->fw),fw,*NGLOB_FLT);
-    copy_tohost_realw_test((void **)&(rsf->Vw),Vw,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(rsf->V0,V0,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(rsf->f0,f0,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(rsf->V_init,V_init,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(rsf->a,a,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(rsf->b,b,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(rsf->L,L,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(rsf->theta,theta,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(rsf->T,T,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(rsf->Coh,C,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(rsf->fw,fw,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(rsf->Vw,Vw,*NGLOB_FLT);
   }
 
   GPU_ERROR_CHECKING("transfer_rsf_data_tohost");
@@ -436,12 +375,12 @@ void FC_FUNC_(transfer_swf_data_tohost,
   Swf_type *swf = &((Fsolver -> faults[*fault_index]).swf);
 
   if (*NGLOB_FLT > 0){
-    copy_tohost_realw_test((void **)&(swf->Dc),Dc,*NGLOB_FLT);
-    copy_tohost_realw_test((void **)&(swf->mus),mus,*NGLOB_FLT);
-    copy_tohost_realw_test((void **)&(swf->mud),mud,*NGLOB_FLT);
-    copy_tohost_realw_test((void **)&(swf->Coh),C,*NGLOB_FLT);
-    copy_tohost_realw_test((void **)&(swf->T),T,*NGLOB_FLT);
-    copy_tohost_realw_test((void **)&(swf->theta),theta,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(swf->Dc,Dc,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(swf->mus,mus,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(swf->mud,mud,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(swf->Coh,C,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(swf->T,T,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(swf->theta,theta,*NGLOB_FLT);
   }
 
   GPU_ERROR_CHECKING("transfer_swf_data_tohost");
@@ -483,59 +422,130 @@ void FC_FUNC_(fault_solver_gpu,
       if (Fsolver->RATE_AND_STATE){
         // this is dirty implementation
         // fault kernel for rate and state friction
-        compute_dynamic_fault_cuda_rsf<<<grid,threads>>>( mp->d_displ,
-                                                          mp->d_veloc,
-                                                          mp->d_accel,
-                                                          Flt->NGLOB_FLT,
-                                                          Flt->invM1,
-                                                          Flt->invM2,
-                                                          Flt->B,
-                                                          Flt->Z,
-                                                          Flt->R,
-                                                          Flt->T0,
-                                                          Flt->T,
-                                                          rsf->Coh,       // rate and state friction quantities
-                                                          rsf->a,
-                                                          rsf->b,
-                                                          rsf->L,
-                                                          rsf->f0,
-                                                          rsf->V0,
-                                                          rsf->V_init,
-                                                          rsf->theta,
-                                                          rsf->Vw,
-                                                          rsf->fw,
-                                                          rsf->Fload,
-                                                          rsf->StateLaw,
-                                                          Flt->V,
-                                                          Flt->D,
-                                                          Flt->ibulk1,
-                                                          Flt->ibulk2,
-                                                          *dt,
-                                                          *it);
+#ifdef USE_CUDA
+        if (run_cuda){
+          compute_dynamic_fault_cuda_rsf<<<grid,threads>>>( mp->d_displ,
+                                                            mp->d_veloc,
+                                                            mp->d_accel,
+                                                            Flt->NGLOB_FLT,
+                                                            Flt->invM1,
+                                                            Flt->invM2,
+                                                            Flt->B,
+                                                            Flt->Z,
+                                                            Flt->R,
+                                                            Flt->T0,
+                                                            Flt->T,
+                                                            rsf->Coh,       // rate and state friction quantities
+                                                            rsf->a,
+                                                            rsf->b,
+                                                            rsf->L,
+                                                            rsf->f0,
+                                                            rsf->V0,
+                                                            rsf->V_init,
+                                                            rsf->theta,
+                                                            rsf->Vw,
+                                                            rsf->fw,
+                                                            rsf->Fload,
+                                                            rsf->StateLaw,
+                                                            Flt->V,
+                                                            Flt->D,
+                                                            Flt->ibulk1,
+                                                            Flt->ibulk2,
+                                                            *dt,
+                                                            *it);
+        }
+#endif
+#ifdef USE_HIP
+        if (run_hip){
+          hipLaunchKernelGGL(compute_dynamic_fault_cuda_rsf, dim3(grid), dim3(threads), 0, 0,
+                                                             mp->d_displ,
+                                                             mp->d_veloc,
+                                                             mp->d_accel,
+                                                             Flt->NGLOB_FLT,
+                                                             Flt->invM1,
+                                                             Flt->invM2,
+                                                             Flt->B,
+                                                             Flt->Z,
+                                                             Flt->R,
+                                                             Flt->T0,
+                                                             Flt->T,
+                                                             rsf->Coh,       // rate and state friction quantities
+                                                             rsf->a,
+                                                             rsf->b,
+                                                             rsf->L,
+                                                             rsf->f0,
+                                                             rsf->V0,
+                                                             rsf->V_init,
+                                                             rsf->theta,
+                                                             rsf->Vw,
+                                                             rsf->fw,
+                                                             rsf->Fload,
+                                                             rsf->StateLaw,
+                                                             Flt->V,
+                                                             Flt->D,
+                                                             Flt->ibulk1,
+                                                             Flt->ibulk2,
+                                                             *dt,
+                                                             *it);
+        }
+#endif
+
       } else {
         // fault kernel for slip weakening friction
-        compute_dynamic_fault_cuda_swf<<<grid,threads>>>( mp->d_displ,
-                                                          mp->d_veloc,
-                                                          mp->d_accel,
-                                                          Flt->NGLOB_FLT,
-                                                          Flt->invM1,
-                                                          Flt->invM2,
-                                                          Flt->B,
-                                                          Flt->Z,
-                                                          Flt->R,
-                                                          Flt->T0,
-                                                          Flt->T,
-                                                          swf->Dc,        // slip weakening friction quantities
-                                                          swf->theta,
-                                                          swf->mus,
-                                                          swf->mud,
-                                                          swf->Coh,
-                                                          swf->T,
-                                                          Flt->V,
-                                                          Flt->D,
-                                                          Flt->ibulk1,
-                                                          Flt->ibulk2,
-                                                          *dt);
+#ifdef USE_CUDA
+        if (run_cuda){
+          compute_dynamic_fault_cuda_swf<<<grid,threads>>>( mp->d_displ,
+                                                            mp->d_veloc,
+                                                            mp->d_accel,
+                                                            Flt->NGLOB_FLT,
+                                                            Flt->invM1,
+                                                            Flt->invM2,
+                                                            Flt->B,
+                                                            Flt->Z,
+                                                            Flt->R,
+                                                            Flt->T0,
+                                                            Flt->T,
+                                                            swf->Dc,        // slip weakening friction quantities
+                                                            swf->theta,
+                                                            swf->mus,
+                                                            swf->mud,
+                                                            swf->Coh,
+                                                            swf->T,
+                                                            Flt->V,
+                                                            Flt->D,
+                                                            Flt->ibulk1,
+                                                            Flt->ibulk2,
+                                                            *dt);
+        }
+#endif
+#ifdef USE_HIP
+        if (run_hip){
+          hipLaunchKernelGGL(compute_dynamic_fault_cuda_swf, dim3(grid), dim3(threads), 0, 0,
+                                                             mp->d_displ,
+                                                             mp->d_veloc,
+                                                             mp->d_accel,
+                                                             Flt->NGLOB_FLT,
+                                                             Flt->invM1,
+                                                             Flt->invM2,
+                                                             Flt->B,
+                                                             Flt->Z,
+                                                             Flt->R,
+                                                             Flt->T0,
+                                                             Flt->T,
+                                                             swf->Dc,        // slip weakening friction quantities
+                                                             swf->theta,
+                                                             swf->mus,
+                                                             swf->mud,
+                                                             swf->Coh,
+                                                             swf->T,
+                                                             Flt->V,
+                                                             Flt->D,
+                                                             Flt->ibulk1,
+                                                             Flt->ibulk2,
+                                                             *dt);
+        }
+#endif
+
       }
 
       // output dataT array
@@ -550,17 +560,38 @@ void FC_FUNC_(fault_solver_gpu,
       }
 
       // fills dataT arrays on GPU
-      store_dataT<<<num_of_block2,128>>>( Flt->output_dataT->dataT,
-                                          Flt->V,
-                                          Flt->D,
-                                          Flt->T,
-                                          Fsolver->RATE_AND_STATE,
-                                          StateLaw,
-                                          theta,
-                                          Flt->output_dataT->iglob,
-                                          *it,
-                                          Flt->output_dataT->NRECORD,
-                                          Flt->output_dataT->NT);
+#ifdef USE_CUDA
+      if (run_cuda){
+        store_dataT<<<num_of_block2,128>>>( Flt->output_dataT->dataT,
+                                            Flt->V,
+                                            Flt->D,
+                                            Flt->T,
+                                            Fsolver->RATE_AND_STATE,
+                                            StateLaw,
+                                            theta,
+                                            Flt->output_dataT->iglob,
+                                            *it,
+                                            Flt->output_dataT->NRECORD,
+                                            Flt->output_dataT->NT);
+      }
+#endif
+#ifdef USE_HIP
+      if (run_hip){
+        hipLaunchKernelGGL(store_dataT, dim3(num_of_block2), dim3(128), 0, 0,
+                                        Flt->output_dataT->dataT,
+                                        Flt->V,
+                                        Flt->D,
+                                        Flt->T,
+                                        Fsolver->RATE_AND_STATE,
+                                        StateLaw,
+                                        theta,
+                                        Flt->output_dataT->iglob,
+                                        *it,
+                                        Flt->output_dataT->NRECORD,
+                                        Flt->output_dataT->NT);
+      }
+#endif
+
     }
   }
 

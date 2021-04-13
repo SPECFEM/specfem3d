@@ -32,14 +32,15 @@
 
 typedef float realw;  // type of "working" variables
 
-
-// CUDA version >= 5.0 needed for new symbol addressing and texture binding
-#if CUDA_VERSION < 5000
-  #ifndef USE_OLDER_CUDA4_GPU
-    #define USE_OLDER_CUDA4_GPU
+#ifdef USE_CUDA
+  // CUDA version >= 5.0 needed for new symbol addressing and texture binding
+  #if CUDA_VERSION < 5000
+    #ifndef USE_OLDER_CUDA4_GPU
+      #define USE_OLDER_CUDA4_GPU
+    #endif
+  #else
+    #undef USE_OLDER_CUDA4_GPU
   #endif
-#else
-  #undef USE_OLDER_CUDA4_GPU
 #endif
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -68,6 +69,7 @@ typedef float realw;  // type of "working" variables
 
  */
 
+#ifdef USE_CUDA
 // cuda constant arrays
 //
 // note: we use definition __device__ to use global memory rather than constant memory registers
@@ -86,11 +88,44 @@ __device__ realw d_wgllwgll_xz[NGLL2];
 __device__ realw d_wgllwgll_yz[NGLL2];
 
 __device__ realw d_wgll_cube[NGLL3]; // needed only for gravity case
+#endif
 
+#ifdef USE_HIP
+// HIP constant arrays
+__device__ __constant__ realw d_hprime_xx[NGLL2];
+//__device__ __constant__ realw d_hprime_yy[NGLL2]; // only needed if NGLLX != NGLLY != NGLLZ
+//__device__ __constant__ realw d_hprime_zz[NGLL2]; // only needed if NGLLX != NGLLY != NGLLZ
+
+__device__ __constant__ realw d_hprimewgll_xx[NGLL2];
+//__device__ __constant__ realw d_hprimewgll_yy[NGLL2]; // only needed if NGLLX != NGLLY != NGLLZ
+//__device__ __constant__ realw d_hprimewgll_zz[NGLL2]; // only needed if NGLLX != NGLLY != NGLLZ
+
+__device__ __constant__ realw d_wgllwgll_xy[NGLL2];
+__device__ __constant__ realw d_wgllwgll_xz[NGLL2];
+__device__ __constant__ realw d_wgllwgll_yz[NGLL2];
+
+__device__ __constant__ realw d_wgll_cube[NGLL3]; // needed only for gravity case
+
+// Adding dummy kernel is to fool compiler optimizer.
+// If not added dummy kernel, optimizer will delete constant variables,
+// because they have not used in any of the kernel.
+__global__ void dummy_kernel(){
+        d_hprime_xx[0]=1;
+//      d_hprime_yy[0]=1;
+//      d_hprime_zz[0]=1;
+        d_hprimewgll_xx[0]=1;
+//      d_hprimewgll_yy[0]=1;
+//      d_hprimewgll_zz[0]=1;
+        d_wgllwgll_xy[0]=1;
+        d_wgllwgll_xz[0]=1;
+        d_wgllwgll_yz[0]=1;
+}
+#endif
 
 void setConst_hprime_xx(realw* array,Mesh* mp)
 {
-
+  // cuda version
+#ifdef USE_CUDA
   cudaError_t err = cudaMemcpyToSymbol(d_hprime_xx, array, NGLL2*sizeof(realw));
   if (err != cudaSuccess)
   {
@@ -108,6 +143,23 @@ void setConst_hprime_xx(realw* array,Mesh* mp)
     fprintf(stderr, "Error with d_hprime_xx: %s\n", cudaGetErrorString(err));
     exit(1);
   }
+#endif
+
+  // hip version
+#ifdef USE_HIP
+  hipError_t err = hipMemcpyToSymbol(HIP_SYMBOL(d_hprime_xx), array, NGLL2*sizeof(realw));
+  if (err != hipSuccess)
+  {
+    fprintf(stderr, "Error in setConst_hprime_xx: %s\n", hipGetErrorString(err));
+    exit(1);
+  }
+
+  err = hipGetSymbolAddress((void**)&(mp->d_hprime_xx), HIP_SYMBOL(d_hprime_xx));
+  if (err != hipSuccess) {
+    fprintf(stderr, "Error with d_hprime_xx: %s\n", hipGetErrorString(err));
+    exit(1);
+  }
+#endif
 }
 
 // void setConst_hprime_yy(realw* array,Mesh* mp)
@@ -149,9 +201,11 @@ void setConst_hprime_xx(realw* array,Mesh* mp)
 
 void setConst_hprimewgll_xx(realw* array,Mesh* mp)
 {
+
+  // cuda version
+#ifdef USE_CUDA
   cudaError_t err = cudaMemcpyToSymbol(d_hprimewgll_xx, array, NGLL2*sizeof(realw));
-  if (err != cudaSuccess)
-  {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error in setConst_hprimewgll_xx: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -165,6 +219,21 @@ void setConst_hprimewgll_xx(realw* array,Mesh* mp)
     fprintf(stderr, "Error with d_hprimewgll_xx: %s\n", cudaGetErrorString(err));
     exit(1);
   }
+#endif
+
+  // hip version
+#ifdef USE_HIP
+  hipError_t err = hipMemcpyToSymbol(HIP_SYMBOL(d_hprimewgll_xx), array, NGLL2*sizeof(realw));
+  if (err != hipSuccess) {
+    fprintf(stderr, "Error in setConst_hprimewgll_xx: %s\n", hipGetErrorString(err));
+    exit(1);
+  }
+  err = hipGetSymbolAddress((void**)&(mp->d_hprimewgll_xx), HIP_SYMBOL(d_hprimewgll_xx));
+  if (err != hipSuccess) {
+    fprintf(stderr, "Error with d_hprimewgll_xx: %s\n", hipGetErrorString(err));
+    exit(1);
+  }
+#endif
 }
 
 /*
@@ -207,9 +276,11 @@ void setConst_hprimewgll_zz(realw* array,Mesh* mp)
 
 void setConst_wgllwgll_xy(realw* array,Mesh* mp)
 {
+
+  // cuda version
+#ifdef USE_CUDA
   cudaError_t err = cudaMemcpyToSymbol(d_wgllwgll_xy, array, NGLL2*sizeof(realw));
-  if (err != cudaSuccess)
-  {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error in setConst_wgllwgll_xy: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -223,14 +294,31 @@ void setConst_wgllwgll_xy(realw* array,Mesh* mp)
     fprintf(stderr, "Error with d_wgllwgll_xy: %s\n", cudaGetErrorString(err));
     exit(1);
   }
+#endif
 
+  // hip version
+#ifdef USE_HIP
+  hipError_t err = hipMemcpyToSymbol(HIP_SYMBOL(d_wgllwgll_xy), array, NGLL2*sizeof(realw));
+  if (err != hipSuccess) {
+    fprintf(stderr, "Error in setConst_wgllwgll_xy: %s\n", hipGetErrorString(err));
+    exit(1);
+  }
+  //mp->d_wgllwgll_xy = d_wgllwgll_xy;
+  err = hipGetSymbolAddress((void**)&(mp->d_wgllwgll_xy), HIP_SYMBOL(d_wgllwgll_xy));
+  if (err != hipSuccess) {
+    fprintf(stderr, "Error with d_wgllwgll_xy: %s\n", hipGetErrorString(err));
+    exit(1);
+  }
+#endif
 }
 
 void setConst_wgllwgll_xz(realw* array,Mesh* mp)
 {
+
+  // cuda version
+#ifdef USE_CUDA
   cudaError_t err = cudaMemcpyToSymbol(d_wgllwgll_xz, array, NGLL2*sizeof(realw));
-  if (err != cudaSuccess)
-  {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error in  setConst_wgllwgll_xz: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -244,14 +332,31 @@ void setConst_wgllwgll_xz(realw* array,Mesh* mp)
     fprintf(stderr, "Error with d_wgllwgll_xz: %s\n", cudaGetErrorString(err));
     exit(1);
   }
+#endif
 
+  // hip version
+#ifdef USE_HIP
+  hipError_t err = hipMemcpyToSymbol(HIP_SYMBOL(d_wgllwgll_xz), array, NGLL2*sizeof(realw));
+  if (err != hipSuccess) {
+    fprintf(stderr, "Error in  setConst_wgllwgll_xz: %s\n", hipGetErrorString(err));
+    exit(1);
+  }
+  //mp->d_wgllwgll_xz = d_wgllwgll_xz;
+  err = hipGetSymbolAddress((void**)&(mp->d_wgllwgll_xz), HIP_SYMBOL(d_wgllwgll_xz));
+  if (err != hipSuccess) {
+    fprintf(stderr, "Error with d_wgllwgll_xz: %s\n", hipGetErrorString(err));
+    exit(1);
+  }
+#endif
 }
 
 void setConst_wgllwgll_yz(realw* array,Mesh* mp)
 {
+
+  // cuda version
+#ifdef USE_CUDA
   cudaError_t err = cudaMemcpyToSymbol(d_wgllwgll_yz, array, NGLL2*sizeof(realw));
-  if (err != cudaSuccess)
-  {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error in setConst_wgllwgll_yz: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -265,14 +370,31 @@ void setConst_wgllwgll_yz(realw* array,Mesh* mp)
     fprintf(stderr, "Error with d_wgllwgll_yz: %s\n", cudaGetErrorString(err));
     exit(1);
   }
+#endif
 
+  // hip version
+#ifdef USE_HIP
+  hipError_t err = hipMemcpyToSymbol(HIP_SYMBOL(d_wgllwgll_yz), array, NGLL2*sizeof(realw));
+  if (err != hipSuccess) {
+    fprintf(stderr, "Error in setConst_wgllwgll_yz: %s\n", hipGetErrorString(err));
+    exit(1);
+  }
+  //mp->d_wgllwgll_yz = d_wgllwgll_yz;
+  err = hipGetSymbolAddress((void**)&(mp->d_wgllwgll_yz), HIP_SYMBOL(d_wgllwgll_yz));
+  if (err != hipSuccess) {
+    fprintf(stderr, "Error with d_wgllwgll_yz: %s\n", hipGetErrorString(err));
+    exit(1);
+  }
+#endif
 }
 
 void setConst_wgll_cube(realw* array,Mesh* mp)
 {
+
+  // cuda version
+#ifdef USE_CUDA
   cudaError_t err = cudaMemcpyToSymbol(d_wgll_cube, array, NGLL3*sizeof(realw));
-  if (err != cudaSuccess)
-  {
+  if (err != cudaSuccess) {
     fprintf(stderr, "Error in setConst_wgll_cube: %s\n", cudaGetErrorString(err));
     exit(1);
   }
@@ -286,7 +408,22 @@ void setConst_wgll_cube(realw* array,Mesh* mp)
     fprintf(stderr, "Error with d_wgll_cube: %s\n", cudaGetErrorString(err));
     exit(1);
   }
+#endif
 
+  // hip version
+#ifdef USE_HIP
+  hipError_t err = hipMemcpyToSymbol(HIP_SYMBOL(d_wgll_cube), array, NGLL3*sizeof(realw));
+  if (err != hipSuccess) {
+    fprintf(stderr, "Error in setConst_wgll_cube: %s\n", hipGetErrorString(err));
+    exit(1);
+  }
+  //mp->d_wgll_cube = d_wgll_cube;
+  err = hipGetSymbolAddress((void**)&(mp->d_wgll_cube), HIP_SYMBOL(d_wgll_cube));
+  if (err != hipSuccess) {
+    fprintf(stderr, "Error with d_wgll_cube: %s\n", hipGetErrorString(err));
+    exit(1);
+  }
+#endif
 }
 
 #endif
