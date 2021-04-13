@@ -174,7 +174,7 @@ BUILD_VERSION_TXT += support
 
 # source kernel files
 ifeq ($(CUDA),yes)
-$O/%.cuda-kernel.o: $(KERNEL_DIR)/%.cu $S/mesh_constants_gpu.h $(KERNEL_DIR)/kernel_proto.cu.h #$S/mesh_constants_cuda.h
+$O/%.cuda-kernel.o: $(KERNEL_DIR)/%.cu $S/mesh_constants_gpu.h $(KERNEL_DIR)/kernel_proto.cu.h $S/mesh_constants_cuda.h
 	$(NVCC) -c $< -o $@ $(NVCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG) -include $(word 2,$^)
 
 $(cuda_specfem3D_DEVICE_OBJ): $(subst $(cuda_specfem3D_DEVICE_OBJ), ,$(gpu_specfem3D_OBJECTS)) $(cuda_kernels_OBJS)
@@ -182,22 +182,23 @@ $(cuda_specfem3D_DEVICE_OBJ): $(subst $(cuda_specfem3D_DEVICE_OBJ), ,$(gpu_specf
 endif
 
 ifeq ($(HIP),yes)
-$O/%.hip-kernel.o: $(KERNEL_DIR)/%.cpp $S/mesh_constants_gpu.h $(KERNEL_DIR)/kernel_proto.cu.h #$S/mesh_constants_hip.h
+$O/%.hip-kernel.o: $(KERNEL_DIR)/%.cpp $S/mesh_constants_gpu.h $(KERNEL_DIR)/kernel_proto.cu.h $S/mesh_constants_hip.h
 	$(HIPCC) -c $< -o $@ $(HIP_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG) -include $(word 2,$^)
 endif
 
 
 # source files in src/gpu/
-$O/%.cuda.o: $S/%.cu ${SETUP}/config.h $S/mesh_constants_gpu.h $S/prepare_constants_cuda.h
+$O/%.cuda.o: $S/%.cu ${SETUP}/config.h $S/mesh_constants_gpu.h $S/mesh_constants_cuda.h $S/prepare_constants_cuda.h
 	${NVCC} -c $< -o $@ $(NVCC_FLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
 
-$O/%.cuda.o: $S/%.c ${SETUP}/config.h $S/mesh_constants_gpu.h
+$O/%.cuda.o: $S/%.c ${SETUP}/config.h $S/mesh_constants_gpu.h $S/mesh_constants_cuda.h
 	$(NVCC) -c $< -o $@ $(NVCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
 
-$O/%.hip.o: $S/%.c ${SETUP}/config.h $S/mesh_constants_gpu.h  #$S/mesh_constants_hip.h
+
+$O/%.hip.o: $S/%.cu ${SETUP}/config.h $S/mesh_constants_gpu.h  $S/mesh_constants_hip.h $S/prepare_constants_cuda.h
 	${HIPCC} -c $< -o $@ $(HIPCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
 
-$O/%.hip.o: $S/%.cu ${SETUP}/config.h $S/mesh_constants_gpu.h  #$S/mesh_constants_hip.h
+$O/%.hip.o: $S/%.c ${SETUP}/config.h $S/mesh_constants_gpu.h  $S/mesh_constants_hip.h
 	${HIPCC} -c $< -o $@ $(HIPCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
 
 
