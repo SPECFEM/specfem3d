@@ -135,6 +135,10 @@ AC_ARG_WITH([hip],
     [want_hip="$withval"],
     [want_hip=no])
 AM_CONDITIONAL([COND_HIP], [test x"$want_hip" != xno])
+AM_CONDITIONAL([COND_HIP_MI8], [test x"$want_hip" = xMI8])
+AM_CONDITIONAL([COND_HIP_MI25], [test x"$want_hip" = xMI25])
+AM_CONDITIONAL([COND_HIP_MI50], [test x"$want_hip" = xMI50])
+AM_CONDITIONAL([COND_HIP_MI100], [test x"$want_hip" = xMI100])
 
 ###
 ### OPENMP
@@ -520,32 +524,46 @@ AS_IF([test x"$want_hip" != xno], [
         HIP_PATH=`$HIPCONFIG_PROG --path`
     ])
     AC_MSG_NOTICE([hipconfig program: $HIPCONFIG_PROG])
-    AC_MSG_NOTICE([hip path: $HIP_PATH])
+    AC_MSG_NOTICE([HIP path: $HIP_PATH])
 
     #AS_IF([test x"$HIP_INC" = x],[
-    #    HIP_INC="$HIP_PATH/include"
+    #    HIP_INC="${HIP_PATH}/include"
     #])
-    #AS_IF([test x"$HIP_LIB" = x],[
-    #    HIP_LIB="$HIP_PATH/lib"
-    #])
+
+    # adds default HIP library
+    AS_IF([test x"$HIP_LIB" = x -a x"${HIP_PATH}" != x],[
+        HIP_LIB="${HIP_PATH}/lib"
+        AC_MSG_NOTICE([adding default HIP library path: ${HIP_LIB}])
+    ])
 
     # checks platform
     if test x"$HIPCONFIG_PROG" != x ; then
       GPU_PLATFORM=`$HIPCONFIG_PROG --platform`
-      AS_IF([test x"$GPU_PLATFORM" = xnvcc], [
-          AC_MSG_NOTICE([HIP PLATFORM NVCC detected.])
+      AS_IF([test x"$GPU_PLATFORM" = xnvidia], [
+          AC_MSG_NOTICE([HIP PLATFORM NVIDIA detected.])
+          HIP_PLATFORM=nvcc
           FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_NVCC__"
       ])
-      AS_IF([test x"$GPU_PLATFORM" = xhcc], [
-          AC_MSG_NOTICE([HIP PLATFORM HCC detected.])
+
+      AS_IF([test x"$GPU_PLATFORM" = xamd], [
+          AC_MSG_NOTICE([HIP PLATFORM AMD detected.])
+          HIP_PLATFORM=hcc
           FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_HCC__"
       ])
       # compiler might require a platform selection flag
-      if [[ "$HIP_FLAGS" != *"HIP_PLATFORM"* ]]; then
-        # adds PLATFORM flag
-        HIP_FLAGS="${HIP_FLAGS} ${FLAG_PLATFORM}"
-      fi
+      case "${HIP_FLAGS}" in
+        *HIP_PLATFORM*) AC_MSG_NOTICE([hip flags contain platform specifier: ${HIP_FLAGS}]) ;;
+        *) AC_MSG_NOTICE([adding flag for platform specifier ${FLAG_PLATFORM}]);
+           HIP_FLAGS="${HIP_FLAGS} ${FLAG_PLATFORM}"
+           AC_MSG_NOTICE([HIP_FLAGS: ${HIP_FLAGS}]) ;;
+      esac
     fi
+    # sets default platform to AMD if not set
+    AS_IF([test x"$GPU_PLATFORM" = x],[
+      GPU_PLATFORM=amd
+    ])
+    AM_CONDITIONAL([COND_HIP_PLATFORM_AMD], [test x"$GPU_PLATFORM" = xamd])
+    AM_CONDITIONAL([COND_HIP_PLATFORM_NVIDIA], [test x"$GPU_PLATFORM" = xnvidia])
 
     # for compilation errors like:
     #   /usr/bin/ld: obj/assemble_MPI_scalar_gpu.hip.o: relocation R_X86_64_32 against `.rodata.str1.1' can not be used
@@ -554,6 +572,11 @@ AS_IF([test x"$want_hip" != xno], [
     #   HIP_FLAGS="-fPIC"
     # or
     #   HIP_FLAGS="-fno-gpu-rdc"
+    # compiler might require a -fPIC flag
+    case "${HIP_FLAGS}" in
+      *fPIC*) AC_MSG_NOTICE([HIP flags contain position independent code flag -fPIC: ${HIP_FLAGS}]);;
+      *) AC_MSG_NOTICE([consider adding compilation flag for position independent code: HIP_FLAGS="-fPIC"]);;
+    esac
 
     # test lib & include
     AS_IF([test x"$HIP_LIB" != x],[

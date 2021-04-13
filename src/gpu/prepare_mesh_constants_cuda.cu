@@ -517,6 +517,7 @@ void FC_FUNC_(prepare_fields_acoustic_device,
     if (mp->simulation_type == 3 || ( mp->simulation_type == 1 && mp->save_forward )){
       // note: b_reclen_potential is record length in bytes ( CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces )
       mp->d_b_reclen_potential = *b_reclen_potential;
+
       //daniel todo: reclen includes sizeof(realw)
       gpuMalloc_realw((void**)&mp->d_b_absorb_potential,mp->d_b_reclen_potential/sizeof(realw));
       gpuMemcpy_todevice_realw(mp->d_b_absorb_potential,b_absorb_potential,mp->d_b_reclen_potential/sizeof(realw));
@@ -730,15 +731,18 @@ void FC_FUNC_(prepare_fields_elastic_device,
 
     // send buffer
     gpuMallocHost_realw((void**)&(mp->h_send_accel_buffer),mp->size_mpi_buffer);
-    //mp->send_buffer = (float*)malloc((mp->size_mpi_buffer)*sizeof(float));
+
+    // unused so far..
+    //mp->send_buffer = (realw*)malloc((mp->size_mpi_buffer)*sizeof(realw));
     // extra buffer for adjoint, not needed so far..., can use the same buffer for both forward/adjoint mpi exchanges
     //gpuMallocHost_realw((void**)&(mp->h_send_b_accel_buffer),mp->size_mpi_buffer);
-    //mp->b_send_buffer = (float*)malloc((size_mpi_buffer)*sizeof(float));
+    //mp->b_send_buffer = (realw*)malloc((size_mpi_buffer)*sizeof(realw));
 
     // receive buffer
     gpuMallocHost_realw((void**)&(mp->h_recv_accel_buffer),mp->size_mpi_buffer);
 
-    mp->recv_buffer = (realw*)malloc((mp->size_mpi_buffer)*sizeof(realw));
+    // unused so far..
+    //mp->recv_buffer = (realw*) malloc((mp->size_mpi_buffer)*sizeof(realw));
 
     // non-pinned buffer
     gpuMalloc_realw((void**)&(mp->d_send_accel_buffer),mp->size_mpi_buffer);
