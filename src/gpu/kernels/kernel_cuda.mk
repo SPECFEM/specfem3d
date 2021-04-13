@@ -13,7 +13,6 @@ cuda_kernels_OBJS := \
 	$O/compute_dynamic_fault_cuda.cuda-kernel.o \
 	$O/compute_elastic_seismogram_kernel.cuda-kernel.o \
 	$O/compute_element_strain_cudakernel.cuda-kernel.o \
-	$O/compute_gradient_kernel.cuda-kernel.o \
 	$O/compute_kernels_acoustic_kernel.cuda-kernel.o \
 	$O/compute_kernels_ani_cudakernel.cuda-kernel.o \
 	$O/compute_kernels_cudakernel.cuda-kernel.o \

@@ -27,6 +27,9 @@
 !=====================================================================
 */
 
+// includes device function compute_gradient_kernel()
+#include "compute_gradient_kernel.h"
+
 
 __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
                                                 int* d_ibool,

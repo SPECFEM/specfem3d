@@ -28,6 +28,6 @@
 */
 
 // includes device function compute_gradient_kernel()
-#include "compute_gradient_kernel.cu"
+#include "compute_gradient_kernel.h"
 
 #include "compute_kernels_hess_ac_cudakernel.cu"

@@ -604,11 +604,6 @@ __global__ void compute_element_strain_cudakernel(int* ispec_is_elastic,
 
 
 //
-// src/gpu/kernels/compute_gradient_kernel.cu
-//
-
-
-//
 // src/gpu/kernels/compute_kernels_acoustic_kernel.cu
 //
 

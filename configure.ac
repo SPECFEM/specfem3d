@@ -562,8 +562,6 @@ AS_IF([test x"$want_hip" != xno], [
     AS_IF([test x"$GPU_PLATFORM" = x],[
       GPU_PLATFORM=amd
     ])
-    AM_CONDITIONAL([COND_HIP_PLATFORM_AMD], [test x"$GPU_PLATFORM" = xamd])
-    AM_CONDITIONAL([COND_HIP_PLATFORM_NVIDIA], [test x"$GPU_PLATFORM" = xnvidia])
 
     # for compilation errors like:
     #   /usr/bin/ld: obj/assemble_MPI_scalar_gpu.hip.o: relocation R_X86_64_32 against `.rodata.str1.1' can not be used
@@ -661,6 +659,8 @@ AS_IF([test x"$want_hip" != xno], [
     AC_SUBST([HIP_LDFLAGS])
     AC_SUBST([HIP_LIBS])
 ])
+AM_CONDITIONAL([COND_HIP_PLATFORM_AMD], [test x"$GPU_PLATFORM" = xamd])
+AM_CONDITIONAL([COND_HIP_PLATFORM_NVIDIA], [test x"$GPU_PLATFORM" = xnvidia])
 
 
 ###
