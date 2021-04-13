@@ -512,7 +512,16 @@ AS_IF([test x"$want_hip" != xno], [
     fi
 
     # sets default HIP path
-    #HIP_PATH=/opt/rocm
+    AC_PATH_PROG(HIPCONFIG_PROG, hipconfig)
+    AS_IF([test x"$HIPCONFIG_PROG" = x],[
+      AC_PATH_PROG(HIPCONFIG_PROG, hipconfig, path=/opt/rocm/bin)
+    ])
+    AS_IF([test x"$HIPCONFIG_PROG" != x],[
+        HIP_PATH=`$HIPCONFIG_PROG --path`
+    ])
+    AC_MSG_NOTICE([hipconfig program: $HIPCONFIG_PROG])
+    AC_MSG_NOTICE([hip path: $HIP_PATH])
+
     #AS_IF([test x"$HIP_INC" = x],[
     #    HIP_INC="$HIP_PATH/include"
     #])
@@ -521,20 +530,21 @@ AS_IF([test x"$want_hip" != xno], [
     #])
 
     # checks platform
-    HIPCONFIG="$HIP_PATH/bin/hipconfig"
-    GPU_PLATFORM=`$HIPCONFIG --platform`
-    AS_IF([test x"$GPU_PLATFORM" = xnvcc], [
-        AC_MSG_NOTICE([HIP PLATFORM NVCC detected.])
-        FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_NVCC__"
-    ])
-    AS_IF([test x"$GPU_PLATFORM" = xhcc], [
-        AC_MSG_NOTICE([HIP PLATFORM HCC detected.])
-        FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_HCC__"
-    ])
-    # compiler might require a platform selection flag
-    if [[ "$HIP_FLAGS" != *"HIP_PLATFORM"* ]]; then
-      # adds PLATFORM flag
-      HIP_FLAGS="${HIP_FLAGS} ${FLAG_PLATFORM}"
+    if test x"$HIPCONFIG_PROG" != x ; then
+      GPU_PLATFORM=`$HIPCONFIG_PROG --platform`
+      AS_IF([test x"$GPU_PLATFORM" = xnvcc], [
+          AC_MSG_NOTICE([HIP PLATFORM NVCC detected.])
+          FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_NVCC__"
+      ])
+      AS_IF([test x"$GPU_PLATFORM" = xhcc], [
+          AC_MSG_NOTICE([HIP PLATFORM HCC detected.])
+          FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_HCC__"
+      ])
+      # compiler might require a platform selection flag
+      if [[ "$HIP_FLAGS" != *"HIP_PLATFORM"* ]]; then
+        # adds PLATFORM flag
+        HIP_FLAGS="${HIP_FLAGS} ${FLAG_PLATFORM}"
+      fi
     fi
 
     # for compilation errors like:

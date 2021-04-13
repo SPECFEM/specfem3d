@@ -272,21 +272,14 @@ endif
 #### rules for executables
 ####
 
-ifeq ($(CUDA),yes)
-## cuda version
-ifeq ($(CUDA_PLUS),yes)
-## cuda 5x & 6x version
-INFO_CUDA_SPECFEM="building xspecfem3D $(BUILD_VERSION_TXT)"
-else
-## cuda 4 version
-INFO_CUDA_SPECFEM="building xspecfem3D $(BUILD_VERSION_TXT)"
-endif
+ifeq ($(HAS_GPU),yes)
+INFO_GPU_SPECFEM="building xspecfem3D $(BUILD_VERSION_TXT)"
 
 ${E}/xspecfem3D: $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS)
 	@echo ""
-	@echo $(INFO_CUDA_SPECFEM)
+	@echo $(INFO_GPU_SPECFEM)
 	@echo ""
-	${FCLINK} -o ${E}/xspecfem3D $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK) $(VTKLIBS) $(SPECFEM_LINK_FLAGS)
+	${FCLINK} -o ${E}/xspecfem3D $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS) $(MPILIBS) $(GPU_LINK) $(VTKLIBS) $(SPECFEM_LINK_FLAGS)
 	@echo ""
 
 else
