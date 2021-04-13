@@ -257,7 +257,19 @@ GENCODE_AMD_MI25 = --amdgpu-target=gfx900
 GENCODE_AMD_MI50 = --amdgpu-target=gfx906
 GENCODE_AMD_MI100 = --amdgpu-target=gfx908
 
-@COND_HIP_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI50) $(GENCODE_AMD_MI100)
+# default targets
+# AMD default MI50 & MI100
+@COND_HIP_TRUE@@COND_HIP_PLATFORM_AMD_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI50) $(GENCODE_AMD_MI100)
+@COND_HIP_TRUE@@COND_HIP_PLATFORM_AMD_TRUE@HIP_CFLAG_ENDING = -x hip
+# NVIDIA default Tesla
+@COND_HIP_TRUE@@COND_HIP_PLATFORM_NVIDIA_TRUE@GENCODE_HIP = $(GENCODE_30)
+@COND_HIP_TRUE@@COND_HIP_PLATFORM_AMD_TRUE@HIP_CFLAG_ENDING = -x cu
+
+# specific targets
+@COND_HIP_TRUE@@COND_HIP_MI8_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI8)    # --with-hip=MI8 ..
+@COND_HIP_TRUE@@COND_HIP_MI25_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI25)   # --with-hip=MI25 ..
+@COND_HIP_TRUE@@COND_HIP_MI50_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI50)   # --with-hip=MI50 ..
+@COND_HIP_TRUE@@COND_HIP_MI100_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI100)  # --with-hip=MI100 ..
 
 HIP_FLAGS = @HIP_FLAGS@
 HIP_INC = @HIP_CPPFLAGS@ $(MPI_INCLUDES)
@@ -279,7 +291,7 @@ HIP_INC = @HIP_CPPFLAGS@ $(MPI_INCLUDES)
 #SET_MPI_LIB = ${MPI_LIB_PATH} $(shell echo ${MPI_LIBS} | sed -e 's/\b\([a-z]\+\)[ ,\n]\1/\1/g'|sed 's/[^ ]* */-l&/g')
 #FCLINK = $(HIPCC) $(SET_MPI_LIB)
 ## mpich
-#mpif90 -link_info
+# from: mpif90 -link_info
 #FCLINK = $(HIPCC) -L/usr/lib/x86_64-linux-gnu -lmpichfort -lmpich -lgfortran -lm -shared-libgcc
 
 # checks if any GPU flag set

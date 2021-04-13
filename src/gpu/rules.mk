@@ -144,7 +144,7 @@ ifeq ($(CUDA),yes)
 endif
 
 ## HIP compilation
-HIPCC_CFLAGS := ${HIP_CFLAGS} -x hip
+HIPCC_CFLAGS := ${HIP_CFLAGS} ${HIP_CFLAG_ENDING}  # adding either -x hip or -x cu depending on platform
 ifeq ($(HIP), yes)
   BUILD_VERSION_TXT += HIP
   SELECTOR_CFLAG += $(FC_DEFINE)USE_HIP

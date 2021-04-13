@@ -625,9 +625,10 @@ typedef struct mesh_ {
   realw* h_send_b_accel_buffer;
 
   //realw* send_buffer;
+  //realw* recv_buffer;
+  
   realw* h_recv_accel_buffer;
   realw* h_recv_b_accel_buffer;
-  realw* recv_buffer;
 
   int size_mpi_buffer;
   int size_mpi_buffer_potential;

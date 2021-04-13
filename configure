@@ -633,6 +633,10 @@ OMP_FCFLAGS
 HIP_LIBS
 HIP_LDFLAGS
 HIP_CPPFLAGS
+COND_HIP_PLATFORM_NVIDIA_FALSE
+COND_HIP_PLATFORM_NVIDIA_TRUE
+COND_HIP_PLATFORM_AMD_FALSE
+COND_HIP_PLATFORM_AMD_TRUE
 HIPCONFIG_PROG
 HIPCC_PROG
 HIP_LIB
@@ -718,6 +722,14 @@ COND_VTK_FALSE
 COND_VTK_TRUE
 COND_OMP_FALSE
 COND_OMP_TRUE
+COND_HIP_MI100_FALSE
+COND_HIP_MI100_TRUE
+COND_HIP_MI50_FALSE
+COND_HIP_MI50_TRUE
+COND_HIP_MI25_FALSE
+COND_HIP_MI25_TRUE
+COND_HIP_MI8_FALSE
+COND_HIP_MI8_TRUE
 COND_HIP_FALSE
 COND_HIP_TRUE
 COND_CUDA_PLUS_FALSE
@@ -2990,6 +3002,38 @@ fi
 else
   COND_HIP_TRUE='#'
   COND_HIP_FALSE=
+fi
+
+ if test x"$want_hip" = xMI8; then
+  COND_HIP_MI8_TRUE=
+  COND_HIP_MI8_FALSE='#'
+else
+  COND_HIP_MI8_TRUE='#'
+  COND_HIP_MI8_FALSE=
+fi
+
+ if test x"$want_hip" = xMI25; then
+  COND_HIP_MI25_TRUE=
+  COND_HIP_MI25_FALSE='#'
+else
+  COND_HIP_MI25_TRUE='#'
+  COND_HIP_MI25_FALSE=
+fi
+
+ if test x"$want_hip" = xMI50; then
+  COND_HIP_MI50_TRUE=
+  COND_HIP_MI50_FALSE='#'
+else
+  COND_HIP_MI50_TRUE='#'
+  COND_HIP_MI50_FALSE=
+fi
+
+ if test x"$want_hip" = xMI100; then
+  COND_HIP_MI100_TRUE=
+  COND_HIP_MI100_FALSE='#'
+else
+  COND_HIP_MI100_TRUE='#'
+  COND_HIP_MI100_FALSE=
 fi
 
 
@@ -8391,39 +8435,75 @@ fi
 fi
     { $as_echo "$as_me:${as_lineno-$LINENO}: hipconfig program: $HIPCONFIG_PROG" >&5
 $as_echo "$as_me: hipconfig program: $HIPCONFIG_PROG" >&6;}
-    { $as_echo "$as_me:${as_lineno-$LINENO}: hip path: $HIP_PATH" >&5
-$as_echo "$as_me: hip path: $HIP_PATH" >&6;}
+    { $as_echo "$as_me:${as_lineno-$LINENO}: HIP path: $HIP_PATH" >&5
+$as_echo "$as_me: HIP path: $HIP_PATH" >&6;}
 
     #AS_IF([test x"$HIP_INC" = x],[
-    #    HIP_INC="$HIP_PATH/include"
+    #    HIP_INC="${HIP_PATH}/include"
     #])
-    #AS_IF([test x"$HIP_LIB" = x],[
-    #    HIP_LIB="$HIP_PATH/lib"
-    #])
+
+    # adds default HIP library
+    if test x"$HIP_LIB" = x -a x"${HIP_PATH}" != x; then :
+
+        HIP_LIB="${HIP_PATH}/lib"
+        { $as_echo "$as_me:${as_lineno-$LINENO}: adding default HIP library path: ${HIP_LIB}" >&5
+$as_echo "$as_me: adding default HIP library path: ${HIP_LIB}" >&6;}
+
+fi
 
     # checks platform
     if test x"$HIPCONFIG_PROG" != x ; then
       GPU_PLATFORM=`$HIPCONFIG_PROG --platform`
-      if test x"$GPU_PLATFORM" = xnvcc; then :
+      if test x"$GPU_PLATFORM" = xnvidia; then :
 
-          { $as_echo "$as_me:${as_lineno-$LINENO}: HIP PLATFORM NVCC detected." >&5
-$as_echo "$as_me: HIP PLATFORM NVCC detected." >&6;}
+          { $as_echo "$as_me:${as_lineno-$LINENO}: HIP PLATFORM NVIDIA detected." >&5
+$as_echo "$as_me: HIP PLATFORM NVIDIA detected." >&6;}
+          HIP_PLATFORM=nvcc
           FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_NVCC__"
 
 fi
-      if test x"$GPU_PLATFORM" = xhcc; then :
 
-          { $as_echo "$as_me:${as_lineno-$LINENO}: HIP PLATFORM HCC detected." >&5
-$as_echo "$as_me: HIP PLATFORM HCC detected." >&6;}
+      if test x"$GPU_PLATFORM" = xamd; then :
+
+          { $as_echo "$as_me:${as_lineno-$LINENO}: HIP PLATFORM AMD detected." >&5
+$as_echo "$as_me: HIP PLATFORM AMD detected." >&6;}
+          HIP_PLATFORM=hcc
           FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_HCC__"
 
 fi
       # compiler might require a platform selection flag
-      if [ "$HIP_FLAGS" != *"HIP_PLATFORM"* ]; then
-        # adds PLATFORM flag
-        HIP_FLAGS="${HIP_FLAGS} ${FLAG_PLATFORM}"
-      fi
+      case "${HIP_FLAGS}" in
+        *HIP_PLATFORM*) { $as_echo "$as_me:${as_lineno-$LINENO}: hip flags contain platform specifier: ${HIP_FLAGS}" >&5
+$as_echo "$as_me: hip flags contain platform specifier: ${HIP_FLAGS}" >&6;} ;;
+        *) { $as_echo "$as_me:${as_lineno-$LINENO}: adding flag for platform specifier ${FLAG_PLATFORM}" >&5
+$as_echo "$as_me: adding flag for platform specifier ${FLAG_PLATFORM}" >&6;};
+           HIP_FLAGS="${HIP_FLAGS} ${FLAG_PLATFORM}"
+           { $as_echo "$as_me:${as_lineno-$LINENO}: HIP_FLAGS: ${HIP_FLAGS}" >&5
+$as_echo "$as_me: HIP_FLAGS: ${HIP_FLAGS}" >&6;} ;;
+      esac
     fi
+    # sets default platform to AMD if not set
+    if test x"$GPU_PLATFORM" = x; then :
+
+      GPU_PLATFORM=amd
+
+fi
+     if test x"$GPU_PLATFORM" = xamd; then
+  COND_HIP_PLATFORM_AMD_TRUE=
+  COND_HIP_PLATFORM_AMD_FALSE='#'
+else
+  COND_HIP_PLATFORM_AMD_TRUE='#'
+  COND_HIP_PLATFORM_AMD_FALSE=
+fi
+
+     if test x"$GPU_PLATFORM" = xnvidia; then
+  COND_HIP_PLATFORM_NVIDIA_TRUE=
+  COND_HIP_PLATFORM_NVIDIA_FALSE='#'
+else
+  COND_HIP_PLATFORM_NVIDIA_TRUE='#'
+  COND_HIP_PLATFORM_NVIDIA_FALSE=
+fi
+
 
     # for compilation errors like:
     #   /usr/bin/ld: obj/assemble_MPI_scalar_gpu.hip.o: relocation R_X86_64_32 against `.rodata.str1.1' can not be used
@@ -8432,6 +8512,13 @@ fi
     #   HIP_FLAGS="-fPIC"
     # or
     #   HIP_FLAGS="-fno-gpu-rdc"
+    # compiler might require a -fPIC flag
+    case "${HIP_FLAGS}" in
+      *fPIC*) { $as_echo "$as_me:${as_lineno-$LINENO}: HIP flags contain position independent code flag -fPIC: ${HIP_FLAGS}" >&5
+$as_echo "$as_me: HIP flags contain position independent code flag -fPIC: ${HIP_FLAGS}" >&6;};;
+      *) { $as_echo "$as_me:${as_lineno-$LINENO}: consider adding compilation flag for position independent code: HIP_FLAGS=\"-fPIC\"" >&5
+$as_echo "$as_me: consider adding compilation flag for position independent code: HIP_FLAGS=\"-fPIC\"" >&6;};;
+    esac
 
     # test lib & include
     if test x"$HIP_LIB" != x; then :
@@ -10738,6 +10825,22 @@ if test -z "${COND_HIP_TRUE}" && test -z "${COND_HIP_FALSE}"; then
   as_fn_error $? "conditional \"COND_HIP\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
+if test -z "${COND_HIP_MI8_TRUE}" && test -z "${COND_HIP_MI8_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP_MI8\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_HIP_MI25_TRUE}" && test -z "${COND_HIP_MI25_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP_MI25\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_HIP_MI50_TRUE}" && test -z "${COND_HIP_MI50_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP_MI50\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_HIP_MI100_TRUE}" && test -z "${COND_HIP_MI100_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP_MI100\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
 if test -z "${COND_OMP_TRUE}" && test -z "${COND_OMP_FALSE}"; then
   as_fn_error $? "conditional \"COND_OMP\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
@@ -10768,6 +10871,14 @@ esac
 case $FC_MODOUT in #(
   *\ ) FC_MODOUT=$FC_MODOUT'${ac_empty}' ;;
 esac
+if test -z "${COND_HIP_PLATFORM_AMD_TRUE}" && test -z "${COND_HIP_PLATFORM_AMD_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP_PLATFORM_AMD\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_HIP_PLATFORM_NVIDIA_TRUE}" && test -z "${COND_HIP_PLATFORM_NVIDIA_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP_PLATFORM_NVIDIA\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
 
 : "${CONFIG_STATUS=./config.status}"
 ac_write_fail=0
