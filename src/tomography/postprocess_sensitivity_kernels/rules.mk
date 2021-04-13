@@ -168,19 +168,17 @@ xsmooth_sem_LIBS = $(MPILIBS)
 xsmooth_sem_OBJECTS += $(gpu_OBJECTS)
 
 ## cuda
-ifeq ($(CUDA),yes)
-xsmooth_sem_LIBS += $(CUDA_LINK)
-INFO_CUDA_SEM="building xsmooth_sem with CUDA support"
-else
-INFO_CUDA_SEM="building xsmooth_sem without CUDA support"
+ifeq ($(HAS_GPU),yes)
+xsmooth_sem_LIBS += $(GPU_LINK)
 endif
+INFO_SMOOTH="building xsmooth_sem $(BUILD_VERSION_TXT)"
 
 # extra dependencies
 $O/smooth_sem.postprocess.o: $O/specfem3D_par.spec_module.o $O/postprocess_par.postprocess_module.o
 
 ${E}/xsmooth_sem: $(xsmooth_sem_OBJECTS) $(xsmooth_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
-	@echo $(INFO_CUDA_SEM)
+	@echo $(INFO_SMOOTH)
 	@echo ""
 	${FCLINK} -o $@ $+ $(xsmooth_sem_LIBS)
 	@echo ""

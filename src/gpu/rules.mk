@@ -74,6 +74,14 @@ ifeq ($(CUDA),yes)
   include $(KERNEL_DIR)/kernel_cuda.mk
 endif
 
+ifeq ($(HIP),yes)
+  # defines $(cuda_kernels_OBJS)
+  include $(KERNEL_DIR)/kernel_cuda.mk
+  # renames endings
+  cuda_kernels_OBJS:=$(subst .cuda-kernel.o,.hip-kernel.o,${cuda_kernels_OBJS})
+endif
+
+
 ifdef NO_GPU
 gpu_OBJECTS = $(gpu_specfem3D_STUBS)
 else
@@ -110,6 +118,7 @@ NVCC_CFLAGS := ${NVCC_FLAGS} -x cu
 ifeq ($(CUDA),yes)
   BUILD_VERSION_TXT += Cuda
   SELECTOR_CFLAG += $(FC_DEFINE)USE_CUDA
+	GPU_LINK = $(CUDA_LINK)
 
   ifeq ($(CUDA5),yes)
     BUILD_VERSION_TXT += (v5)
@@ -142,10 +151,11 @@ ifeq ($(HIP), yes)
   ifneq ($(strip $(HIP_GPU_FLAGS)),)
     SELECTOR_CFLAG += -DHIP_GPU_CFLAGS="$(HIP_GPU_FLAGS)"
   endif
+	GPU_LINK = $(HIP_LINK)
 
   # todo: compile hip with nvcc
   #ifeq ($(CUDA),yes)
-  #  CUDA_LINK += $(HIP_LINK)
+  #  GPU_LINK += $(HIP_LINK)
   #  NVCC_CFLAGS += $(HIP_CPU_FLAGS)
   #endif
 endif
@@ -172,8 +182,8 @@ $(cuda_specfem3D_DEVICE_OBJ): $(subst $(cuda_specfem3D_DEVICE_OBJ), ,$(gpu_specf
 endif
 
 ifeq ($(HIP),yes)
-$O/%.hip-kernel.o: $(BOAST_DIR)/%.cpp $S/mesh_constants_gpu.h #$S/mesh_constants_hip.h
-	$(HIPCC) -c $< -o $@ $(HIP_CFLAGS) -I${SETUP} -I$(BOAST_DIR) $(SELECTOR_CFLAG) -include $(word 2,$^)
+$O/%.hip-kernel.o: $(KERNEL_DIR)/%.cpp $S/mesh_constants_gpu.h $(KERNEL_DIR)/kernel_proto.cu.h #$S/mesh_constants_hip.h
+	$(HIPCC) -c $< -o $@ $(HIP_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG) -include $(word 2,$^)
 endif
 
 
@@ -185,7 +195,11 @@ $O/%.cuda.o: $S/%.c ${SETUP}/config.h $S/mesh_constants_gpu.h
 	$(NVCC) -c $< -o $@ $(NVCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
 
 $O/%.hip.o: $S/%.c ${SETUP}/config.h $S/mesh_constants_gpu.h  #$S/mesh_constants_hip.h
-	${HIPCC} -c $< -o $@ $(HIPCC_CFLAGS) -I${SETUP} -I$(BOAST_DIR) $(SELECTOR_CFLAG)
+	${HIPCC} -c $< -o $@ $(HIPCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
+
+$O/%.hip.o: $S/%.cu ${SETUP}/config.h $S/mesh_constants_gpu.h  #$S/mesh_constants_hip.h
+	${HIPCC} -c $< -o $@ $(HIPCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
+
 
 # C version
 $O/%.gpu_cc.o: $S/%.c ${SETUP}/config.h

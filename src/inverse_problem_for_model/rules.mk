@@ -336,21 +336,14 @@ endif
 #### rules for executables
 ####
 
-ifeq ($(CUDA),yes)
-## cuda version
-ifeq ($(CUDA_PLUS),yes)
-## cuda 5x & 6x version
-INFO_CUDA_INVERSE_PROBLEM="building xinverse_problem_for_model with CUDA support"
-else
-## cuda 4 version
-INFO_CUDA_INVERSE_PROBLEM="building xinverse_problem_for_model with CUDA 4 support"
-endif
+ifeq ($(HAS_GPU),yes)
+INFO_GPU_INVERSE_PROBLEM="building xinverse_problem_for_model $(BUILD_VERSION_TXT)"
 
 ${E}/xinverse_problem_for_model: $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS)
 	@echo ""
-	@echo $(INFO_CUDA_INVERSE_PROBLEM)
+	@echo $(INFO_GPU_INVERSE_PROBLEM)
 	@echo ""
-	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK) $(INVERSE_LINK_FLAGS)
+	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS) $(GPU_LINK) $(INVERSE_LINK_FLAGS)
 	@echo ""
 
 else

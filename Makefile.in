@@ -246,17 +246,41 @@ GENCODE_80 = -gencode=arch=compute_80,code=\"sm_80,compute_80\"
 @COND_HIP_TRUE@HIP = yes
 @COND_HIP_FALSE@HIP = no
 
+# GPU architecture / code version
+# see: https://llvm.org/docs/AMDGPUUsage.html
+# Radeon Instinct MI8:   --amdgpu-target=gfx803
+# Radeon Instinct MI25:	 --amdgpu-target=gfx900
+# Radeon Instinct MI50:  --amdgpu-target=gfx906
+# Radeon Instinct MI100: --amdgpu-target=gfx908
+GENCODE_AMD_MI8 = --amdgpu-target=gfx803
+GENCODE_AMD_MI25 = --amdgpu-target=gfx900
+GENCODE_AMD_MI50 = --amdgpu-target=gfx906
+GENCODE_AMD_MI100 = --amdgpu-target=gfx908
+
+@COND_HIP_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI50) $(GENCODE_AMD_MI100)
+
 HIP_FLAGS = @HIP_FLAGS@
 HIP_INC = @HIP_CPPFLAGS@ $(MPI_INCLUDES)
 
 @COND_HIP_TRUE@HIPCC = @HIPCC@
 @COND_HIP_FALSE@HIPCC = @CC@
 
-@COND_HIP_TRUE@HIP_CFLAGS = $(HIP_FLAGS) $(HIP_INC)
+@COND_HIP_TRUE@HIP_CFLAGS = $(HIP_FLAGS) $(HIP_INC) $(GENCODE_HIP)
 @COND_HIP_TRUE@HIP_LINK = @HIP_LDFLAGS@ @HIP_LIBS@
 
 @COND_HIP_FALSE@HIP_CFLAGS =
 @COND_HIP_FALSE@HIP_LINK =
+
+## linking with hipcc instead of mpif90
+## openMPI
+#MPI_LIB_PATH = -L$(shell ${MPIFC} --showme:libdirs)
+#MPI_LIBS += $(shell ${MPIFC} --showme:libs)
+#MPI_LIBS += $(shell mpicxx --showme:libs)
+#SET_MPI_LIB = ${MPI_LIB_PATH} $(shell echo ${MPI_LIBS} | sed -e 's/\b\([a-z]\+\)[ ,\n]\1/\1/g'|sed 's/[^ ]* */-l&/g')
+#FCLINK = $(HIPCC) $(SET_MPI_LIB)
+## mpich
+#mpif90 -link_info
+#FCLINK = $(HIPCC) -L/usr/lib/x86_64-linux-gnu -lmpichfort -lmpich -lgfortran -lm -shared-libgcc
 
 # checks if any GPU flag set
 ifeq ($(CUDA), no)
