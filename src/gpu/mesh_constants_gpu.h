@@ -968,7 +968,7 @@ static inline void get_blocks_xy(int num_blocks, int* num_blocks_x, int* num_blo
 /* ----------------------------------------------------------------------------------------------- */
 
 
-static inline void gpuMemcpy_todevice_realw(realw* d_array,realw *h_array,const size_t size){
+static inline void gpuMemcpy_todevice_realw(realw* d_array,realw* h_array,const size_t size){
   // copies array onto GPU
 #ifdef USE_CUDA
   if (run_cuda){
@@ -982,7 +982,7 @@ static inline void gpuMemcpy_todevice_realw(realw* d_array,realw *h_array,const 
 #endif
 }
 
-static inline void gpuMemcpy_todevice_field(field* d_array,field *h_array,const size_t size){
+static inline void gpuMemcpy_todevice_field(field* d_array,field* h_array,const size_t size){
   // copies array onto GPU
 #ifdef USE_CUDA
   if (run_cuda){
@@ -996,7 +996,7 @@ static inline void gpuMemcpy_todevice_field(field* d_array,field *h_array,const 
 #endif
 }
 
-static inline void gpuMemcpy_todevice_int(int* d_array,int *h_array,const size_t size){
+static inline void gpuMemcpy_todevice_int(int* d_array,int* h_array,const size_t size){
   // copies array onto GPU
 #ifdef USE_CUDA
   if (run_cuda){
@@ -1054,7 +1054,7 @@ static inline void gpuMemcpy2D_todevice_int(int* d_array,const size_t d_size,
 /* ----------------------------------------------------------------------------------------------- */
 
 
-static inline void gpuMemcpy_tohost_realw(realw* h_array,realw *d_array,const size_t size){
+static inline void gpuMemcpy_tohost_realw(realw* h_array,realw* d_array,const size_t size){
   // copies array to CPU
 #ifdef USE_CUDA
   if (run_cuda){
@@ -1068,7 +1068,7 @@ static inline void gpuMemcpy_tohost_realw(realw* h_array,realw *d_array,const si
 #endif
 }
 
-static inline void gpuMemcpy_tohost_field(field *h_array,field* d_array,const size_t size){
+static inline void gpuMemcpy_tohost_field(field* h_array,field* d_array,const size_t size){
   // copies array to CPU
 #ifdef USE_CUDA
   if (run_cuda){
@@ -1083,7 +1083,7 @@ static inline void gpuMemcpy_tohost_field(field *h_array,field* d_array,const si
 }
 
 /* unused so far...
-static inline void gpuMemcpy_tohost_int(int* h_array,int *d_array,const size_t size){
+static inline void gpuMemcpy_tohost_int(int* h_array,int* d_array,const size_t size){
   // copies array to CPU
 #ifdef USE_CUDA
   if (run_cuda){
@@ -1101,7 +1101,7 @@ static inline void gpuMemcpy_tohost_int(int* h_array,int *d_array,const size_t s
 /* ----------------------------------------------------------------------------------------------- */
 
 
-static inline void gpuMemcpyAsync_todevice_realw(realw* d_array,realw *h_array,const size_t size, gpu_stream stream){
+static inline void gpuMemcpyAsync_todevice_realw(realw* d_array,realw* h_array,const size_t size, gpu_stream stream){
   // asynchronuous copy of array onto GPU
 #ifdef USE_CUDA
   if (run_cuda){
@@ -1116,7 +1116,7 @@ static inline void gpuMemcpyAsync_todevice_realw(realw* d_array,realw *h_array,c
 }
 
 
-static inline void gpuMemcpyAsync_tohost_realw(realw* h_array,realw *d_array,const size_t size, gpu_stream stream){
+static inline void gpuMemcpyAsync_tohost_realw(realw* h_array,realw* d_array,const size_t size, gpu_stream stream){
   // asynchronuous copy of array to CPU
 #ifdef USE_CUDA
   if (run_cuda){

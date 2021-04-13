@@ -175,9 +175,9 @@ void FC_FUNC_(transfer_fault_data_to_host,
   Fault* Flt = &(Fsolver->faults[*fault_index]);
 
   if (*NGLOB_FLT > 0){
-    gpuMemcpy_tohost_realw(Flt->V,V,(*NGLOB_FLT)*3);
-    gpuMemcpy_tohost_realw(Flt->D,D,(*NGLOB_FLT)*3);
-    gpuMemcpy_tohost_realw(Flt->T,T,(*NGLOB_FLT)*3);
+    gpuMemcpy_tohost_realw(V,Flt->V,(*NGLOB_FLT)*3);
+    gpuMemcpy_tohost_realw(D,Flt->D,(*NGLOB_FLT)*3);
+    gpuMemcpy_tohost_realw(T,Flt->T,(*NGLOB_FLT)*3);
   }
 
   GPU_ERROR_CHECKING("transfer_fault_data_to_host");
@@ -219,7 +219,7 @@ void FC_FUNC_(transfer_datat_to_host,
     }
 
     // copies dataT record to CPU
-    gpuMemcpy_tohost_realw(Flt->output_dataT->dataT,&h_dataT[it_index],size);
+    gpuMemcpy_tohost_realw(&h_dataT[it_index],Flt->output_dataT->dataT,size);
   }
 
   GPU_ERROR_CHECKING("transfer_dataT_to_host");
@@ -337,17 +337,17 @@ void FC_FUNC_(transfer_rsf_data_tohost,
   Rsf_type* rsf  = &((Fsolver->faults[*fault_index]).rsf);
 
   if (*NGLOB_FLT > 0){
-    gpuMemcpy_tohost_realw(rsf->V0,V0,*NGLOB_FLT);
-    gpuMemcpy_tohost_realw(rsf->f0,f0,*NGLOB_FLT);
-    gpuMemcpy_tohost_realw(rsf->V_init,V_init,*NGLOB_FLT);
-    gpuMemcpy_tohost_realw(rsf->a,a,*NGLOB_FLT);
-    gpuMemcpy_tohost_realw(rsf->b,b,*NGLOB_FLT);
-    gpuMemcpy_tohost_realw(rsf->L,L,*NGLOB_FLT);
-    gpuMemcpy_tohost_realw(rsf->theta,theta,*NGLOB_FLT);
-    gpuMemcpy_tohost_realw(rsf->T,T,*NGLOB_FLT);
-    gpuMemcpy_tohost_realw(rsf->Coh,C,*NGLOB_FLT);
-    gpuMemcpy_tohost_realw(rsf->fw,fw,*NGLOB_FLT);
-    gpuMemcpy_tohost_realw(rsf->Vw,Vw,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(V0,rsf->V0,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(f0,rsf->f0,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(V_init,rsf->V_init,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(a,rsf->a,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(b,rsf->b,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(L,rsf->L,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(theta,rsf->theta,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(T,rsf->T,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(C,rsf->Coh,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(fw,rsf->fw,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(Vw,rsf->Vw,*NGLOB_FLT);
   }
 
   GPU_ERROR_CHECKING("transfer_rsf_data_tohost");
@@ -375,12 +375,12 @@ void FC_FUNC_(transfer_swf_data_tohost,
   Swf_type *swf = &((Fsolver -> faults[*fault_index]).swf);
 
   if (*NGLOB_FLT > 0){
-    gpuMemcpy_tohost_realw(swf->Dc,Dc,*NGLOB_FLT);
-    gpuMemcpy_tohost_realw(swf->mus,mus,*NGLOB_FLT);
-    gpuMemcpy_tohost_realw(swf->mud,mud,*NGLOB_FLT);
-    gpuMemcpy_tohost_realw(swf->Coh,C,*NGLOB_FLT);
-    gpuMemcpy_tohost_realw(swf->T,T,*NGLOB_FLT);
-    gpuMemcpy_tohost_realw(swf->theta,theta,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(Dc,swf->Dc,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(mus,swf->mus,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(mud,swf->mud,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(C,swf->Coh,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(T,swf->T,*NGLOB_FLT);
+    gpuMemcpy_tohost_realw(theta,swf->theta,*NGLOB_FLT);
   }
 
   GPU_ERROR_CHECKING("transfer_swf_data_tohost");
