@@ -110,15 +110,15 @@ __device__ __constant__ realw d_wgll_cube[NGLL3]; // needed only for gravity cas
 // If not added dummy kernel, optimizer will delete constant variables,
 // because they have not used in any of the kernel.
 __global__ void dummy_kernel(){
-        d_hprime_xx[0]=1;
-//      d_hprime_yy[0]=1;
-//      d_hprime_zz[0]=1;
-        d_hprimewgll_xx[0]=1;
-//      d_hprimewgll_yy[0]=1;
-//      d_hprimewgll_zz[0]=1;
-        d_wgllwgll_xy[0]=1;
-        d_wgllwgll_xz[0]=1;
-        d_wgllwgll_yz[0]=1;
+  d_hprime_xx[0]=1;
+  //d_hprime_yy[0]=1;
+  //d_hprime_zz[0]=1;
+  d_hprimewgll_xx[0]=1;
+  //d_hprimewgll_yy[0]=1;
+  //d_hprimewgll_zz[0]=1;
+  d_wgllwgll_xy[0]=1;
+  d_wgllwgll_xz[0]=1;
+  d_wgllwgll_yz[0]=1;
 }
 #endif
 
