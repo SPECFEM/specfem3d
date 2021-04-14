@@ -1164,15 +1164,17 @@
 
   ! MPI communications
   if (ACOUSTIC_SIMULATION) then
-    allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1560')
-    allocate(buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    allocate(buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1561')
+
     allocate(request_send_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1562')
     allocate(request_recv_scalar_ext_mesh(num_interfaces_ext_mesh), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1563')
     if (ier /= 0) stop 'Error allocating array buffer_send_scalar_ext_mesh,.. for acoustic simulations'
+
     buffer_send_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL; buffer_recv_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL
     request_send_scalar_ext_mesh(:) = 0; request_recv_scalar_ext_mesh(:) = 0
   endif
@@ -1182,11 +1184,13 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1564')
     allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1565')
+
     allocate(request_send_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1566')
     allocate(request_recv_vector_ext_mesh(num_interfaces_ext_mesh), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1567')
     if (ier /= 0) stop 'Error allocating array buffer_send_vector_ext_mesh,.. for elastic simulations'
+
     buffer_send_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL
     request_send_vector_ext_mesh(:) = 0; request_recv_vector_ext_mesh(:) = 0
   endif
@@ -1200,6 +1204,7 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1570')
     allocate(buffer_recv_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1571')
+
     allocate(request_send_vector_ext_mesh_s(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1572')
     allocate(request_recv_vector_ext_mesh_s(num_interfaces_ext_mesh),stat=ier)
@@ -1209,6 +1214,7 @@
     allocate(request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1575')
     if (ier /= 0) stop 'Error allocating array buffer_send_vector_ext_mesh_s,.. for poroelastic simulations'
+
     buffer_send_vector_ext_mesh_s(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh_s(:,:,:) = 0.0_CUSTOM_REAL
     buffer_send_vector_ext_mesh_w(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh_w(:,:,:) = 0.0_CUSTOM_REAL
     request_send_vector_ext_mesh_s(:) = 0; request_recv_vector_ext_mesh_s(:) = 0
@@ -1512,7 +1518,6 @@
 
   ! allocates adjoint arrays for acoustic simulations
   if (ACOUSTIC_SIMULATION .and. SIMULATION_TYPE == 3) then
-
     ! backward potentials
     ! NB_RUNS_ACOUSTIC_GPU is set to 1 by default in constants.h
     allocate(b_potential_acoustic(NGLOB_ADJOINT*NB_RUNS_ACOUSTIC_GPU),stat=ier)
@@ -1559,9 +1564,9 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1640')
     allocate(b_request_recv_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1641')
-    allocate(b_buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    allocate(b_buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1642')
-    allocate(b_buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    allocate(b_buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1643')
     if (ier /= 0) stop 'Error allocating array b_request_send_scalar_ext_mesh'
 

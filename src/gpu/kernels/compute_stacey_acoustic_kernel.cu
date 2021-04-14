@@ -51,7 +51,7 @@ __global__ void compute_stacey_acoustic_kernel(field* potential_dot_acoustic,
   int i,j,k,iglob,ispec;
   realw rhol,kappal,cpl;
   realw jacobianw;
-  field vel;
+  field vel,absorbl;
 
   // don't compute points outside NGLLSQUARE==NGLL2==25
   // way 2: no further check needed since blocksize = 25
@@ -91,15 +91,19 @@ __global__ void compute_stacey_acoustic_kernel(field* potential_dot_acoustic,
       jacobianw = abs_boundary_jacobian2Dw[INDEX2(NGLL2,igll,iface)];
 
       // Sommerfeld condition
-      atomicAdd(&potential_dot_dot_acoustic[iglob],-vel*jacobianw/cpl);
+      absorbl = vel * jacobianw / cpl;
+
+      atomicAdd(&potential_dot_dot_acoustic[iglob],-absorbl);
 
       // adjoint simulations
       if (SIMULATION_TYPE == 3){
         // Sommerfeld condition
-        atomicAdd(&b_potential_dot_dot_acoustic[iglob],-b_absorb_potential[INDEX2(NGLL2,igll,iface)]);
+        absorbl = b_absorb_potential[INDEX2(NGLL2,igll,iface)];
+        atomicAdd(&b_potential_dot_dot_acoustic[iglob],-absorbl);
+
       }else if (SIMULATION_TYPE == 1 && SAVE_FORWARD ){
         // saves boundary values
-        b_absorb_potential[INDEX2(NGLL2,igll,iface)] = vel*jacobianw/cpl;
+        b_absorb_potential[INDEX2(NGLL2,igll,iface)] = absorbl;
       }
     }
 //  }
@@ -130,7 +134,7 @@ __global__ void compute_stacey_acoustic_single_kernel(field* potential_dot_acous
   int i,j,k,iglob,ispec;
   realw rhol,kappal,cpl;
   realw jacobianw;
-  field vel;
+  field vel,absorbl;
 
   // don't compute points outside NGLLSQUARE==NGLL2==25
   // way 2: no further check needed since blocksize = 25
@@ -152,7 +156,9 @@ __global__ void compute_stacey_acoustic_single_kernel(field* potential_dot_acous
       // adjoint simulations
       if (FORWARD_OR_ADJOINT == 3){
         // Sommerfeld condition
-        atomicAdd(&potential_dot_dot_acoustic[iglob],-b_absorb_potential[INDEX2(NGLL2,igll,iface)]);
+        absorbl = b_absorb_potential[INDEX2(NGLL2,igll,iface)];
+        atomicAdd(&potential_dot_dot_acoustic[iglob],-absorbl);
+
       }else{
         // determines bulk sound speed
         rhol = rhostore[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)];
@@ -174,11 +180,13 @@ __global__ void compute_stacey_acoustic_single_kernel(field* potential_dot_acous
         jacobianw = abs_boundary_jacobian2Dw[INDEX2(NGLL2,igll,iface)];
 
         // Sommerfeld condition
-        atomicAdd(&potential_dot_dot_acoustic[iglob],-vel*jacobianw/cpl);
+        absorbl = vel * jacobianw / cpl;
+
+        atomicAdd(&potential_dot_dot_acoustic[iglob],-absorbl);
 
         if (SIMULATION_TYPE == 1 && SAVE_FORWARD){
           // saves boundary values
-          b_absorb_potential[INDEX2(NGLL2,igll,iface)] = vel*jacobianw/cpl;
+          b_absorb_potential[INDEX2(NGLL2,igll,iface)] = absorbl;
         }
       }
     }
@@ -205,7 +213,7 @@ __global__ void compute_stacey_acoustic_undoatt_kernel( field* potential_dot_aco
   int i,j,k,iglob,ispec;
   realw rhol,kappal,cpl;
   realw jacobianw;
-  field vel;
+  field vel,absorbl;
 
   // don't compute points outside NGLLSQUARE==NGLL2==25
   // way 2: no further check needed since blocksize = 25
@@ -244,7 +252,9 @@ __global__ void compute_stacey_acoustic_undoatt_kernel( field* potential_dot_aco
       jacobianw = abs_boundary_jacobian2Dw[INDEX2(NGLL2,igll,iface)];
 
       // Sommerfeld condition
-      atomicAdd(&potential_dot_dot_acoustic[iglob],-vel*jacobianw/cpl);
+      absorbl = vel * jacobianw / cpl;
+
+      atomicAdd(&potential_dot_dot_acoustic[iglob],-absorbl);
     }
   }
 }

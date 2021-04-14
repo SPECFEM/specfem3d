@@ -78,8 +78,7 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
   if (mp->simulation_type == 3 && FORWARD_OR_ADJOINT != 1){
     // copies array to GPU
     // reading is done in fortran routine
-//daniel todo: reclen includes sizeof(realw)
-    gpuMemcpy_todevice_realw(mp->d_b_absorb_field,b_absorb_field,mp->d_b_reclen_field/sizeof(realw));
+    gpuMemcpy_todevice_void((void*)mp->d_b_absorb_field,(void*)b_absorb_field,mp->d_b_reclen_field);
   }
 
   GPU_ERROR_CHECKING("between cudamemcpy and compute_stacey_elastic_kernel");
@@ -212,8 +211,7 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
     gpuStreamSynchronize(mp->compute_stream);
 
     // copies absorb_field values to CPU
-//daniel todo: reclen includes sizeof(realw)
-    gpuMemcpy_tohost_realw(b_absorb_field,mp->d_b_absorb_field,mp->d_b_reclen_field/sizeof(realw));
+    gpuMemcpy_tohost_void((void*)b_absorb_field,(void*)mp->d_b_absorb_field,mp->d_b_reclen_field);
     // writing is done in fortran routine
   }
 

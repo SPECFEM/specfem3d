@@ -51,11 +51,16 @@ void FC_FUNC_(compute_add_sources_el_cuda,
   int NSOURCES = *h_NSOURCES;
 
   // convert to GPU precision
-  realw* stf_pre_compute;
-  stf_pre_compute = (realw*) malloc(NSOURCES * sizeof(realw));
-  for (int i_source=0;i_source < NSOURCES;i_source++) stf_pre_compute[i_source] = (realw)h_stf_pre_compute[i_source];
+  realw* stf_pre_compute = (realw*) malloc(NSOURCES * sizeof(realw));
+  for (int i_source=0;i_source < NSOURCES;i_source++) stf_pre_compute[i_source] = (realw) h_stf_pre_compute[i_source];
 
-  gpuMemcpy_todevice_realw(mp->d_stf_pre_compute,stf_pre_compute,NSOURCES);
+  // note: d_stf_pre_compute has field type, as it is used also for acoustic simulations.
+  //       to use this also for elastic simulations, one would need to do:
+  //          field* stf_pre_compute = (field*) malloc(NSOURCES * sizeof(field));
+  //          get_stf_for_gpu(stf_pre_compute,h_stf_pre_compute,run_number_of_the_source,NSOURCES);
+  //       however, NB_RUNS_ACOUSTIC_GPU > 1 is not supported by elastic sources, thus field declaration is realw by default.
+  //       to avoid compilation issues we use the copy function for (void*) and exact byte size.
+  gpuMemcpy_todevice_void((void*)mp->d_stf_pre_compute,(void*)stf_pre_compute,NSOURCES*sizeof(realw));
 
   free(stf_pre_compute);
 
@@ -110,11 +115,16 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
   int NSOURCES = *h_NSOURCES;
 
   // convert to GPU precision
-  realw* stf_pre_compute;
-  stf_pre_compute = (realw*) malloc(NSOURCES * sizeof(realw));
-  for (int i_source=0;i_source < NSOURCES;i_source++) stf_pre_compute[i_source] = (realw)h_stf_pre_compute[i_source];
+  realw* stf_pre_compute = (realw*) malloc(NSOURCES * sizeof(realw));
+  for (int i_source=0;i_source < NSOURCES;i_source++) stf_pre_compute[i_source] = (realw) h_stf_pre_compute[i_source];
 
-  gpuMemcpy_todevice_realw(mp->d_stf_pre_compute,stf_pre_compute,NSOURCES);
+  // note: d_stf_pre_compute has field type, as it is used also for acoustic simulations.
+  //       to use this also for elastic simulations, one would need to do:
+  //          field* stf_pre_compute = (field*) malloc(NSOURCES * sizeof(field));
+  //          get_stf_for_gpu(stf_pre_compute,h_stf_pre_compute,run_number_of_the_source,NSOURCES);
+  //       however, NB_RUNS_ACOUSTIC_GPU > 1 is not supported by elastic sources, thus field declaration is realw by default.
+  //       to avoid compilation issues we use the copy function for (void*) and exact byte size.
+  gpuMemcpy_todevice_void((void*)mp->d_stf_pre_compute,(void*)stf_pre_compute,NSOURCES*sizeof(realw));
 
   free(stf_pre_compute);
 
@@ -239,7 +249,15 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
 
   // copies extracted array values onto GPU
   if ( (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC==0){
-    gpuMemcpy_todevice_realw(mp->d_source_adjoint,h_source_adjoint,mp->nadj_rec_local*NDIM*(*NTSTEP_BETWEEN_READ_ADJSRC));
+    // note: field declaration is only equal to realw if NB_RUNS_ACOUSTIC_GPU == 1.
+    //       for any other setting of NB_RUNS_ACOUSTIC_GPU, the compilation would fail for
+    //          gpuMemcpy_todevice_field(mp->d_source_adjoint,h_source_adjoint,mp->nadj_rec_local*NDIM*(*NTSTEP_BETWEEN_READ_ADJSRC));
+    //       since the host array is still defined as realw. in that case, we will need to construct a field array first.
+    //       however, the case with NB_RUNS_ACOUSTIC_GPU > 1 is not fully implemented yet for adjoint/kernels simulations and elastic cases,
+    //       and on the todo for future ...
+    // copies adjoint source array onto GPU using (void*) as variable and actual byte size to avoid compilation errors
+    gpuMemcpy_todevice_void((void*)mp->d_source_adjoint,(void*)h_source_adjoint,
+                             mp->nadj_rec_local*NDIM*(*NTSTEP_BETWEEN_READ_ADJSRC)*sizeof(realw));
   }
 
 #ifdef USE_CUDA

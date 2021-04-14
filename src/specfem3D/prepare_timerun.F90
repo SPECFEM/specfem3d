@@ -1091,7 +1091,7 @@
     ! acoustic domains
     if (ACOUSTIC_SIMULATION) then
       ! allocates wavefield
-      allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces * NB_RUNS_ACOUSTIC_GPU),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2144')
       if (ier /= 0) stop 'error allocating array b_absorb_potential'
 
@@ -1182,24 +1182,25 @@
 
   else
     ! no STACEY_ABSORBING_CONDITIONS
-    ! needs dummy array
     b_num_abs_boundary_faces = 0
+
+    ! dummy arrays
     if (ELASTIC_SIMULATION) then
-      allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      allocate(b_absorb_field(1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2151')
       if (ier /= 0) stop 'error allocating array b_absorb_field'
     endif
 
     if (ACOUSTIC_SIMULATION) then
-      allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      allocate(b_absorb_potential(1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2152')
       if (ier /= 0) stop 'error allocating array b_absorb_potential'
     endif
 
     if (POROELASTIC_SIMULATION) then
-      allocate(b_absorb_fields(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      allocate(b_absorb_fields(1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2153')
-      allocate(b_absorb_fieldw(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      allocate(b_absorb_fieldw(1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2154')
       if (ier /= 0) stop 'error allocating array b_absorb_fields and b_absorb_fieldw'
     endif

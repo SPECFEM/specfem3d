@@ -424,7 +424,7 @@ void FC_FUNC_(compute_seismograms_cuda,
       //          (NB_RUNS_ACOUSTIC_GPU,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS) to
       //          to (NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
       realw *seismo_temp = (realw*) malloc(size * NB_RUNS_ACOUSTIC_GPU * sizeof(realw));
-      gpuMemcpy_tohost_realw(seismo_temp,mp->d_seismograms_p,size * NB_RUNS_ACOUSTIC_GPU);
+      gpuMemcpy_tohost_void((void*)seismo_temp,(void*)mp->d_seismograms_p,size * NB_RUNS_ACOUSTIC_GPU * sizeof(realw));
 
       for (int j = 0; j < nlength_seismogram; j++){
         for (int i_recloc = 0; i_recloc < mp->nrec_local; i_recloc++){

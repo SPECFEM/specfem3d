@@ -46,15 +46,16 @@ void get_stf_for_gpu(field* stf_pre_compute, double* h_stf_pre_compute, int * ru
   //Converts source time function to the field format. The stf value is saved only into its corresponding run. For other runs, a zero will be added
 
   for (int i_source=0;i_source < NSOURCES;i_source++){
-    for (int i_run=0;i_run < NB_RUNS_ACOUSTIC_GPU;i_run++)
+    for (int i_run=0;i_run < NB_RUNS_ACOUSTIC_GPU;i_run++){
       if (run_number_of_the_source[i_source] == i_run){
         realw_to_field[i_run]= (realw)h_stf_pre_compute[i_source];
       }
       else{
         realw_to_field[i_run] = 0.0f;
       }
-      //function Make_field is overloaded to convert array of realw into field structure
-      stf_pre_compute[i_source] = Make_field(realw_to_field);
+    }
+    //function Make_field is overloaded to convert array of realw into field structure
+    stf_pre_compute[i_source] = Make_field(realw_to_field);
   }
 }
 
@@ -213,6 +214,7 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
   // note: for acoustic simulations with fused wavefields, NB_RUNS_ACOUSTIC_GPU > 1
   //       and thus the number of adjoint sources might become different in future
   //       todo: not implemented yet for adjoint/kernel simulation
+  //
   //if (*nadj_rec_local/NB_RUNS_ACOUSTIC_GPU != mp->nadj_rec_local)
   //  exit_on_gpu_error("add_sources_ac_sim_type_2_or_3: nadj_rec_local not equal\n");
 
@@ -229,7 +231,54 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
 
   // copies extracted array values onto GPU
   if ( (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC==0){
-    gpuMemcpy_todevice_field(mp->d_source_adjoint,h_source_adjoint,mp->nadj_rec_local*NDIM*(*NTSTEP_BETWEEN_READ_ADJSRC));
+    // note: field declaration is only equal to realw if NB_RUNS_ACOUSTIC_GPU == 1.
+    //       for any other setting of NB_RUNS_ACOUSTIC_GPU, the compilation would fail for
+    //          gpuMemcpy_todevice_field(mp->d_source_adjoint,h_source_adjoint,mp->nadj_rec_local*NDIM*(*NTSTEP_BETWEEN_READ_ADJSRC));
+    //       since the host array is still defined as realw. in that case, we will need to construct a field array first.
+    //       however, the case with NB_RUNS_ACOUSTIC_GPU > 1 is not fully implemented yet for adjoint/kernels simulations,
+    //       and on the todo for future ...
+    if (NB_RUNS_ACOUSTIC_GPU == 1){
+      // default case
+      // copies adjoint source array onto GPU using (void*) as variable and actual byte size to avoid compilation errors
+      gpuMemcpy_todevice_void((void*)mp->d_source_adjoint,(void*)h_source_adjoint,
+                               mp->nadj_rec_local*NDIM*(*NTSTEP_BETWEEN_READ_ADJSRC)*sizeof(field));
+    }else{
+      // NB_RUNS_ACOUSTIC_GPU > 1 requires to construct a field array
+      //
+      // allocates field array for copy
+      int size = mp->nadj_rec_local * NDIM * (*NTSTEP_BETWEEN_READ_ADJSRC);
+
+      field* tmp_source_adjoint = (field*) malloc(size * sizeof(field));
+
+      // NB_RUNS_ACOUSTIC not implemented yet fully for kernel runs...
+      // function needs argument: int* run_number_of_the_receiver
+      // dummy
+      const int run_number = 0;
+
+      // Conversion to GPU precision
+      // Converts adjont source to the field format.
+      realw realw_to_field[NB_RUNS_ACOUSTIC_GPU];
+      field field_val;
+
+      for (int i=0; i < size ;i++){
+        for (int i_run=0; i_run < NB_RUNS_ACOUSTIC_GPU;i_run++){
+          if (i_run == run_number){
+            realw_to_field[i_run] = (realw) h_source_adjoint[i];
+          }
+          else{
+            realw_to_field[i_run] = 0.0f;
+          }
+        }
+        //function Make_field is overloaded to convert array of realw into field structure
+        field_val = Make_field(realw_to_field);
+        tmp_source_adjoint[i] = field_val;
+      }
+      // copies adjoint source array onto GPU
+      gpuMemcpy_todevice_field(mp->d_source_adjoint,tmp_source_adjoint,mp->nadj_rec_local*NDIM*(*NTSTEP_BETWEEN_READ_ADJSRC));
+
+      // frees temporary array
+      free(tmp_source_adjoint);
+    }
   }
 
   // launches cuda kernel for acoustic adjoint sources

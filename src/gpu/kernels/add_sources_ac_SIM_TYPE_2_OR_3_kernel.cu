@@ -59,9 +59,12 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(field* potential_dot_dot_a
       realw hetar   = etar_store[INDEX2(NGLLX,j,irec_local)];
       realw hgammar = gammar_store[INDEX2(NGLLX,k,irec_local)];
 
+      // note: we take the first component of the adj_sourcearrays
       field source_adj = source_adjoint[INDEX3(NDIM,nadj_rec_local,0,irec_local,it)];
-      //realw kappal = kappastore[INDEX4(NGLLX,NGLLY,NGLLZ,i,j,k,ispec)];
 
+
+      //realw kappal = kappastore[INDEX4(NGLLX,NGLLY,NGLLZ,i,j,k,ispec)];
+      //
       //potential_dot_dot_acoustic[iglob] += adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,
       //                                            pre_computed_irec_local_index[irec],
       //                                            pre_computed_index,
@@ -70,13 +73,12 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(field* potential_dot_dot_a
 
       // beware, for acoustic medium, a pressure source would be taking the negative
       // and divide by Kappa of the fluid;
-      //
-      // note: we take the first component of the adj_sourcearrays
 
       //realw stf = - source_adj * hxir * hetar * hgammar / kappal;
 
       // VM VM : change the adjoint source to be consistent with CPU code
       field stf = source_adj * hxir * hetar * hgammar;
+
       atomicAdd(&potential_dot_dot_acoustic[iglob],stf);
 
                 //+adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,

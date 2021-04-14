@@ -176,8 +176,11 @@ contains
 
  ! read nodes coordinates of the original version of the mesh, in which faults are open
   read(IIN_BIN) nnodes_coords_open
+
   allocate(nodes_coords_open(NDIM,nnodes_coords_open),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 873')
+  nodes_coords_open(:,:) = 0.d0
+
   do i = 1, nnodes_coords_open
      read(IIN_BIN) dummy_node, nodes_coords_open(:,i)
   enddo

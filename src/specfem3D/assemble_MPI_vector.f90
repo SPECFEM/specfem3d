@@ -912,15 +912,15 @@
   ! sends data
   ! note: assembling data already filled into buffer_send_scalar_ext_mesh array
 
-  use constants, only: CUSTOM_REAL,itag
+  use constants, only: CUSTOM_REAL,NB_RUNS_ACOUSTIC_GPU,itag
 
   implicit none
 
   integer,intent(in) :: NPROC
   integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
 
-  real(kind=CUSTOM_REAL), dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
-       buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),intent(inout) :: &
+    buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh
 
   integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh,my_neighbors_ext_mesh
   integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
@@ -943,14 +943,14 @@
       !          **array**(1,iinterface)
 
       ! non-blocking synchronous send request
-      call isend_cr(buffer_send_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
-                    nibool_interfaces_ext_mesh(iinterface), &
+      call isend_cr(buffer_send_scalar_ext_mesh(1,iinterface), &
+                    nibool_interfaces_ext_mesh(iinterface)*NB_RUNS_ACOUSTIC_GPU, &
                     my_neighbors_ext_mesh(iinterface), &
                     itag, &
                     request_send_scalar_ext_mesh(iinterface))
       ! receive request
-      call irecv_cr(buffer_recv_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
-                    nibool_interfaces_ext_mesh(iinterface), &
+      call irecv_cr(buffer_recv_scalar_ext_mesh(1,iinterface), &
+                    nibool_interfaces_ext_mesh(iinterface)*NB_RUNS_ACOUSTIC_GPU, &
                     my_neighbors_ext_mesh(iinterface), &
                     itag, &
                     request_recv_scalar_ext_mesh(iinterface))
@@ -974,7 +974,7 @@
 
 ! waits for send/receiver to be completed and assembles contributions
 
-  use constants, only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL,NB_RUNS_ACOUSTIC_GPU
 
   implicit none
 
@@ -987,7 +987,7 @@
   ! array to assemble
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: array_val
 
-  real(kind=CUSTOM_REAL), dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
+  real(kind=CUSTOM_REAL), dimension(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),intent(inout) :: &
        buffer_recv_scalar_ext_mesh
 
 ! integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh

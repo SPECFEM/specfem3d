@@ -846,14 +846,14 @@
   implicit none
 
 ! number of spectral elements in each block
-  integer :: nspec
+  integer,intent(in) :: nspec
 
-  double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
+  double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(inout) :: xstore,ystore,zstore
 
 ! data from the external mesh
-  integer :: nnodes_ext_mesh,nelmnts_ext_mesh
-  double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
-  integer, dimension(NGNOD,nelmnts_ext_mesh) :: elmnts_ext_mesh
+  integer,intent(in) :: nnodes_ext_mesh,nelmnts_ext_mesh
+  double precision, dimension(NDIM,nnodes_ext_mesh),intent(in) :: nodes_coords_ext_mesh
+  integer, dimension(NGNOD,nelmnts_ext_mesh),intent(in) :: elmnts_ext_mesh
 
 ! local parameters
   integer :: ispec,ia,ispec_irreg
@@ -867,7 +867,7 @@
   logical, parameter :: DEBUG_ELEMENT = .false.
   character(len=MAX_STRING_LEN) :: filename
 
-! point locations
+  ! point locations
   xstore(:,:,:,:) = 0.d0
   ystore(:,:,:,:) = 0.d0
   zstore(:,:,:,:) = 0.d0

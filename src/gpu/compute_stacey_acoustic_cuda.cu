@@ -79,8 +79,7 @@ void FC_FUNC_(compute_stacey_acoustic_cuda,
   //  adjoint simulations: reads in absorbing boundary
   if (mp->simulation_type == 3 && FORWARD_OR_ADJOINT != 1){
     // copies array to GPU
-//daniel todo: reclen includes sizeof(realw)
-    gpuMemcpy_todevice_realw(mp->d_b_absorb_potential,h_b_absorb_potential,mp->d_b_reclen_potential/sizeof(realw));
+    gpuMemcpy_todevice_void((void*)mp->d_b_absorb_potential,(void*)h_b_absorb_potential,mp->d_b_reclen_potential);
   }
 
   if (FORWARD_OR_ADJOINT == 0){
@@ -184,8 +183,7 @@ void FC_FUNC_(compute_stacey_acoustic_cuda,
   if (mp->simulation_type == 1 && mp->save_forward){
     // (cudaMemcpy implicitly synchronizes all other cuda operations)
     // copies array to CPU
-//daniel todo: reclen includes sizeof(realw)
-    gpuMemcpy_tohost_realw(h_b_absorb_potential,mp->d_b_absorb_potential,mp->d_b_reclen_potential/sizeof(realw));
+    gpuMemcpy_tohost_void((void*)h_b_absorb_potential,(void*)mp->d_b_absorb_potential,mp->d_b_reclen_potential);
   }
 
   GPU_ERROR_CHECKING("compute_stacey_acoustic_kernel");

@@ -1590,39 +1590,64 @@
   !endif
 
   ! MPI communications
-  allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1928')
-  allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1929')
-  allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1930')
-  allocate(buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1931')
-  allocate(request_send_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1932')
-  allocate(request_recv_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1933')
-  allocate(request_send_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1934')
-  allocate(request_recv_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1935')
-  allocate(buffer_send_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1936')
-  allocate(buffer_recv_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1937')
-  allocate(buffer_send_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1938')
-  allocate(buffer_recv_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1939')
-  allocate(request_send_vector_ext_mesh_s(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1940')
-  allocate(request_recv_vector_ext_mesh_s(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1941')
-  allocate(request_send_vector_ext_mesh_w(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1942')
-  allocate(request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1943')
-  if (ier /= 0) stop 'error allocating array buffer_send_vector_ext_mesh etc.'
+  ! acoustic wavefield buffers
+  if (ACOUSTIC_SIMULATION) then
+    allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1930')
+    allocate(buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1931')
+
+    allocate(request_send_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1934')
+    allocate(request_recv_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1935')
+
+    buffer_send_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL; buffer_recv_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL
+    request_send_scalar_ext_mesh(:) = 0; request_recv_scalar_ext_mesh(:) = 0
+  endif
+
+  ! elastic wavefield buffers
+  if (ELASTIC_SIMULATION) then
+    allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1928')
+    allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1929')
+
+    allocate(request_send_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1932')
+    allocate(request_recv_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1933')
+
+    buffer_send_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL
+    request_send_vector_ext_mesh(:) = 0; request_recv_vector_ext_mesh(:) = 0
+  endif
+
+  ! poroelastic wavefield buffers
+  if (POROELASTIC_SIMULATION) then
+    allocate(buffer_send_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1936')
+    allocate(buffer_recv_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1937')
+    allocate(buffer_send_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1938')
+    allocate(buffer_recv_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1939')
+
+    allocate(request_send_vector_ext_mesh_s(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1940')
+    allocate(request_recv_vector_ext_mesh_s(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1941')
+    allocate(request_send_vector_ext_mesh_w(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1942')
+    allocate(request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1943')
+    if (ier /= 0) stop 'error allocating array buffer_send_vector_ext_mesh etc.'
+
+    buffer_send_vector_ext_mesh_s(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh_s(:,:,:) = 0.0_CUSTOM_REAL
+    buffer_send_vector_ext_mesh_w(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh_w(:,:,:) = 0.0_CUSTOM_REAL
+    request_send_vector_ext_mesh_s(:) = 0; request_recv_vector_ext_mesh_s(:) = 0
+    request_send_vector_ext_mesh_w(:) = 0; request_recv_vector_ext_mesh_w(:) = 0
+  endif
 
   ! user output
   if (myrank == 0) then

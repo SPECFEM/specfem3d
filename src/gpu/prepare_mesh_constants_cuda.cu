@@ -518,9 +518,10 @@ void FC_FUNC_(prepare_fields_acoustic_device,
       // note: b_reclen_potential is record length in bytes ( CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces )
       mp->d_b_reclen_potential = *b_reclen_potential;
 
-      //daniel todo: reclen includes sizeof(realw)
+      // note: reclen includes sizeof(realw), thus for gpuMalloc_realw the size needs to be divided
       gpuMalloc_realw((void**)&mp->d_b_absorb_potential,mp->d_b_reclen_potential/sizeof(realw));
-      gpuMemcpy_todevice_realw(mp->d_b_absorb_potential,b_absorb_potential,mp->d_b_reclen_potential/sizeof(realw));
+      // note: for copying with gpuMemcpy_**_void the actualy byte size is used, thus no need to divide here by sizeof(realw)
+      gpuMemcpy_todevice_void((void*)mp->d_b_absorb_potential,(void*)b_absorb_potential,mp->d_b_reclen_potential);
     }
   }
 
@@ -791,10 +792,10 @@ void FC_FUNC_(prepare_fields_elastic_device,
       // debug
       //printf("prepare_fields_elastic_device: rank %d - absorbing boundary i/o %d\n",mp->myrank,mp->d_b_reclen_field);
 
-      //daniel todo: reclen includes sizeof(realw)
+      // note: reclen includes sizeof(realw), thus for gpuMalloc_realw the size needs to be divided
       gpuMalloc_realw((void**)&mp->d_b_absorb_field,mp->d_b_reclen_field/sizeof(realw));
-      gpuMemcpy_todevice_realw(mp->d_b_absorb_field,b_absorb_field,mp->d_b_reclen_field/sizeof(realw));
-
+      // note: for copying with gpuMemcpy_**_void the actualy byte size is used, thus no need to divide here by sizeof(realw)
+      gpuMemcpy_todevice_void((void*)mp->d_b_absorb_field,(void*)b_absorb_field,mp->d_b_reclen_field);
     }
   }
   int size_padded = NGLL3_PADDED*mp->NSPEC_AB;

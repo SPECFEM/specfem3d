@@ -80,6 +80,20 @@ static inline void gpuMemcpy_todevice_int(int* d_array,int* h_array,const size_t
 #endif
 }
 
+static inline void gpuMemcpy_todevice_void(void* d_array,void* h_array,const size_t byte_size){
+  // copies array onto GPU
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMemcpy(d_array,h_array,byte_size,cudaMemcpyHostToDevice),1803);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMemcpy(d_array,h_array,byte_size,hipMemcpyHostToDevice),1803);
+  }
+#endif
+}
+
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -167,6 +181,20 @@ static inline void gpuMemcpy_tohost_int(int* h_array,int* d_array,const size_t s
 #endif
 }
 */
+
+static inline void gpuMemcpy_tohost_void(void* h_array,void* d_array,const size_t byte_size){
+  // copies array onto GPU
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMemcpy(h_array,d_array,byte_size,cudaMemcpyDeviceToHost),2004);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMemcpy(h_array,d_array,byte_size,hipMemcpyDeviceToHost),2004);
+  }
+#endif
+}
 
 /* ----------------------------------------------------------------------------------------------- */
 
