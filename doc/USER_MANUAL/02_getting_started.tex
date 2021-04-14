@@ -102,62 +102,65 @@ will bundle the version provided with the source code for compilation.
 The path to an existing SCOTCH installation can to be set explicitly
 with the option \texttt{-{}-with-scotch-dir}. Just as an example:
 \begin{verbatim}
-./configure FC=ifort MPIFC=mpif90 --with-scotch-dir=/opt/scotch
+  ./configure FC=ifort MPIFC=mpif90 --with-scotch-dir=/opt/scotch
 \end{verbatim}
 \noindent
 If you use the Intel ifort compiler to compile the code, we recommend
 that you use the Intel icc C compiler to compile Scotch, i.e., use:
 \begin{verbatim}
-./configure CC=icc FC=ifort MPIFC=mpif90
+  ./configure CC=icc FC=ifort MPIFC=mpif90
 \end{verbatim}
 
-When compiling for GPU cards i.e. using CUDA, you can use:
-
-\texttt{./configure --with-cuda}
-
-for CUDA version 4, or
-
-\texttt{./configure --with-cuda=cuda5}
-
-for CUDA version 5, or
-
-\texttt{./configure --with-cuda=cuda6}
-
-for CUDA version 6, or
-
-\texttt{./configure --with-cuda=cuda8}
-
-for CUDA version 8.
-
+\noindent
+When compiling for GPU cards, you can use CUDA with:
+\begin{verbatim}
+  ./configure --with-cuda ..
+\end{verbatim}
+or
+\begin{verbatim}
+  ./configure --with-cuda=cuda4 ..
+\end{verbatim}
+where for example \texttt{cuda4,cuda5,cuda6,cuda7,..} specifies the target GPU architecture of your card,
+(e.g., with CUDA 4 this refers to Tesla K10 cards), rather than the installed version of the CUDA toolkit.
 Before CUDA version 5, one version supported basically one new architecture and needed a different kind of compilation.
 Since version 5, the compilation has stayed the same, but newer versions supported newer architectures.
 However at the moment, we still have one version linked to one specific architecture:
+\begin{verbatim}
+- CUDA 4 for Tesla,   cards like K10, Geforce GTX 650, ..
+- CUDA 5 for Kepler,  like K20
+- CUDA 6 for Kepler,  like K80
+- CUDA 7 for Maxwell, like Quadro K2200
+- CUDA 8 for Pascal,  like P100
+- CUDA 9 for Volta,   like V100
+- CUDA 10 for Turing, like GeForce RTX 2080
+- CUDA 11 for Ampere, like A100
+\end{verbatim}
+So even if you have the new CUDA toolkit version 11, but you want to run on say a K20 GPU, then you would still configure with:
+\begin{verbatim}
+  ./configure --with-cuda=cuda5
+\end{verbatim}
+The compilation with the cuda5 setting chooses then the right architecture (\texttt{-gencode=arch=compute\_35,code=sm\_35} for K20 cards).
 
-- CUDA 4 for Fermi,
-- CUDA 5 for Tesla K20
-- CUDA 6 for Tesla K80
-- CUDA 8 for Pascal P100.
+The same applies to compilation for AMD cards with HIP:
+\begin{verbatim}
+  ./configure --with-hip ..
+\end{verbatim}
+or
+\begin{verbatim}
+  ./configure --with-hip=MI8 ..
+\end{verbatim}
+where for example \texttt{MI8,MI25,MI50,MI100,..} specifies the target GPU architecture of your card.\\
 
-So even if you have the new CUDA toolkit version 8, but you want to run on say a K20 GPU, then you would still configure with:
 
-\texttt{./configure --with-cuda=cuda5}
-
-The compilation should work and the cuda5 setting chooses the right architecture (-gencode=arch=compute\_35,code=sm\_35 for K20 cards).
-
-So, type
-
-\texttt{./configure --with-cuda=cuda8}
-
-for Pascal P100 boards.
 
 When compiling the SCOTCH source code, if you get a message such as: "ld: cannot find -lz",
 the Zlib compression development library is probably missing on your machine and you will need to install it or ask your system administrator to
-do so. On Linux machines the package is often called "zlib1g-dev" or similar. (thus "sudo apt-get install zlib1g-dev" would install it)
+do so. On Linux machines the package is often called "zlib1g-dev" or similar. (thus "sudo apt-get install zlib1g-dev" would install it)\\
 
 To compile a serial version of the code for small meshes that fits
 on one compute node and can therefore be run serially, run \texttt{configure}
 with the \texttt{-{}-without-mpi} option to suppress all calls to
-MPI.
+MPI.\\
 
 A summary of the most important configuration variables follows.
 \begin{description}

@@ -26,7 +26,9 @@ creating a tiny opening of the fault (Figure \ref{fig:examples.splitnodes},
 should not be too small especially in single precision simulations
 (For example, if your fault is at $y=y_0$ plane, then the opening distance
 should be at least $10^{-6}y_0$ since single precision can ensure precision
-within only 7 digits). Note that only the interior
+within only 7 digits; furthermore, to properly recognize split nodes, the dimension
+of the mesh also affect numerical roundoffs, and therefore the split nodes
+should also be at least \texttt{10.d-10 * (Xmax-Xmin)} apart). Note that only the interior
 of the fault must be opened, its edges must remain closed (except
 the edge on the free surface). The fault is automatically closed later
 by SPECFEM3D.\\
