@@ -39,16 +39,17 @@
   integer :: nspec_total
   ! this can overflow if more than 2 Gigapoints in the whole mesh, thus replaced with double precision version
   integer(kind=8) :: nglob_total
-  double precision :: nglob_total_db
+  double precision :: nglob_local,nglob_total_db
 
   ! timing
   double precision, external :: wtime
 
-! print number of points and elements in the mesh
+  ! print number of points and elements in the mesh
   call sum_all_i(NSPEC_AB,nspec_total)
 
-! this can overflow if more than 2 Gigapoints in the whole mesh, thus replaced with double precision version
-  call sum_all_dp(dble(NGLOB_AB),nglob_total_db)
+  ! this can overflow if more than 2 Gigapoints in the whole mesh, thus replaced with double precision version
+  nglob_local = dble(NGLOB_AB)
+  call sum_all_dp(nglob_local,nglob_total_db)
   nglob_total = int(nglob_total_db,kind=8)
 
   call synchronize_all()
@@ -63,12 +64,8 @@
     write(IMAIN,*) 'total number of points in mesh slice 0: ',NGLOB_AB
     write(IMAIN,*)
     write(IMAIN,*) 'total number of elements in entire mesh: ',nspec_total
-! the float() statement below are for the case of more than 2 Gigapoints per mesh, in which
-! case and integer(kind=4) counter would overflow and display an incorrect negative value;
-! converting it to float fixes the problem (but then prints some extra decimals equal to zero).
-! Another option would be to declare the sum as integer(kind=8) and then print it.
     write(IMAIN,*) 'approximate total number of points in entire mesh (with duplicates on MPI edges): ',nglob_total
-    write(IMAIN,*) 'approximate total number of DOFs in entire mesh (with duplicates on MPI edges): ',nglob_total*dble(NDIM)
+    write(IMAIN,*) 'approximate total number of DOFs in entire mesh (with duplicates on MPI edges): ',nglob_total*NDIM
     write(IMAIN,*)
     write(IMAIN,*) 'total number of time steps in the solver will be: ',NSTEP
     write(IMAIN,*)
