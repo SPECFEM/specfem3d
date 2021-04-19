@@ -63,13 +63,13 @@
   num_coupling_el_po_faces = 0
 
   ! sets flags for acoustic / elastic / poroelastic on global points
-  allocate(acoustic_flag(nglob_dummy),stat=ier)
+  allocate(acoustic_flag(nglob_unique),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 690')
   if (ier /= 0) stop 'error allocating array acoustic_flag'
-  allocate(elastic_flag(nglob_dummy),stat=ier)
+  allocate(elastic_flag(nglob_unique),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 691')
   if (ier /= 0) stop 'error allocating array elastic_flag'
-  allocate(poroelastic_flag(nglob_dummy),stat=ier)
+  allocate(poroelastic_flag(nglob_unique),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 692')
   if (ier /= 0) stop 'error allocating array poroelastic_flag'
 
@@ -132,7 +132,7 @@
 
   ! sums acoustic flags
   if (ACOUSTIC_SIMULATION) then
-    call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,acoustic_flag, &
+    call assemble_MPI_scalar_i_blocking(NPROC,nglob_unique,acoustic_flag, &
                                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy, &
                                         my_neighbors_ext_mesh)
@@ -140,7 +140,7 @@
 
   ! sums elastic flags
   if (ELASTIC_SIMULATION) then
-    call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,elastic_flag, &
+    call assemble_MPI_scalar_i_blocking(NPROC,nglob_unique,elastic_flag, &
                                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy, &
                                         my_neighbors_ext_mesh)
@@ -148,7 +148,7 @@
 
   ! sums poroelastic flags
   if (POROELASTIC_SIMULATION) then
-    call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,poroelastic_flag, &
+    call assemble_MPI_scalar_i_blocking(NPROC,nglob_unique,poroelastic_flag, &
                                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy, &
                                         my_neighbors_ext_mesh)
@@ -210,7 +210,7 @@
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-  integer,dimension(nglob_dummy),intent(in) :: elastic_flag
+  integer,dimension(nglob_unique),intent(in) :: elastic_flag
 
 ! local parameters
   ! (assumes NGLLX=NGLLY=NGLLZ)
@@ -267,7 +267,7 @@
   tmp_normal(:,:,:) = 0.0
   tmp_jacobian2Dw(:,:) = 0.0
 
-  allocate(mask_ibool(nglob_dummy),stat=ier)
+  allocate(mask_ibool(nglob_unique),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'error allocating array 698')
   if (ier /= 0) stop 'error allocating array mask_ibool'
   mask_ibool(:) = .false.
@@ -291,7 +291,7 @@
 
         ! takes indices of corners of reference face
         call get_element_corners(ispec,iface_ref,xcoord,ycoord,zcoord,iglob_corners_ref, &
-                                 ibool,nspec,nglob_dummy,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                 ibool,nspec,nglob_unique,xstore_unique,ystore_unique,zstore_unique, &
                                  iface_all_corner_ijk)
 
         ! checks if face is has an elastic side
@@ -318,7 +318,7 @@
 
             ! gets face GLL 2Djacobian, weighted from element face
             call get_jacobian_boundary_face(nspec, &
-                                            xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                            xstore_unique,ystore_unique,zstore_unique,ibool,nglob_unique, &
                                             dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                             wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                             ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
@@ -329,8 +329,8 @@
               do i=1,NGLLX
                 ! directs normals such that they point outwards of element
                 call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
-                                             ibool,nspec,nglob_dummy, &
-                                             xstore_dummy,ystore_dummy,zstore_dummy, &
+                                             ibool,nspec,nglob_unique, &
+                                             xstore_unique,ystore_unique,zstore_unique, &
                                              normal_face(:,i,j) )
                 ! makes sure that it always points away from acoustic element,
                 ! otherwise switch direction
@@ -425,7 +425,7 @@
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-  integer,dimension(nglob_dummy),intent(in) :: acoustic_flag
+  integer,dimension(nglob_unique),intent(in) :: acoustic_flag
 
 ! local parameters
   ! (assumes NGLLX=NGLLY=NGLLZ)
@@ -490,7 +490,7 @@
 
         ! takes indices of corners of reference face
         call get_element_corners(ispec,iface_ref,xcoord,ycoord,zcoord,iglob_corners_ref, &
-                                 ibool,nspec,nglob_dummy,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                 ibool,nspec,nglob_unique,xstore_unique,ystore_unique,zstore_unique, &
                                  iface_all_corner_ijk)
 
         ! checks if face has acoustic side
@@ -504,7 +504,7 @@
 
           ! gets face GLL 2Djacobian, weighted from element face
           call get_jacobian_boundary_face(nspec, &
-                                          xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                          xstore_unique,ystore_unique,zstore_unique,ibool,nglob_unique, &
                                           dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                           wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                           ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
@@ -515,8 +515,8 @@
             do i = 1,NGLLX
               ! directs normals such that they point outwards of element
               call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
-                                           ibool,nspec,nglob_dummy, &
-                                           xstore_dummy,ystore_dummy,zstore_dummy, &
+                                           ibool,nspec,nglob_unique, &
+                                           xstore_unique,ystore_unique,zstore_unique, &
                                            normal_face(:,i,j) )
               ! reverse the sign, we know we are in a poroelastic element
               ! thus, pointing outwards of acoustic element
@@ -594,7 +594,7 @@
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
-  integer,dimension(nglob_dummy),intent(in) :: elastic_flag
+  integer,dimension(nglob_unique),intent(in) :: elastic_flag
 
 ! local parameters
   ! (assumes NGLLX=NGLLY=NGLLZ)
@@ -675,7 +675,7 @@
 
         ! takes indices of corners of reference face
         call get_element_corners(ispec,iface_ref,xcoord,ycoord,zcoord,iglob_corners_ref, &
-                                 ibool,nspec,nglob_dummy,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                 ibool,nspec,nglob_unique,xstore_unique,ystore_unique,zstore_unique, &
                                  iface_all_corner_ijk)
 
         ! checks if face has elastic side
@@ -689,7 +689,7 @@
 
           ! gets face GLL 2Djacobian, weighted from element face
           call get_jacobian_boundary_face(nspec, &
-                                          xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                          xstore_unique,ystore_unique,zstore_unique,ibool,nglob_unique, &
                                           dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                           wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                           ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
@@ -700,8 +700,8 @@
             do i = 1,NGLLX
               ! directs normals such that they point outwards of poroelastic element
               call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
-                                           ibool,nspec,nglob_dummy, &
-                                           xstore_dummy,ystore_dummy,zstore_dummy, &
+                                           ibool,nspec,nglob_unique, &
+                                           xstore_unique,ystore_unique,zstore_unique, &
                                            normal_face(:,i,j) )
             enddo
           enddo

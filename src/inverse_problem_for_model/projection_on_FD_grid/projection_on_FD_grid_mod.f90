@@ -193,11 +193,11 @@ contains
     ! get mesh properties (mandatory before calling locate_point_in_mesh_simple)
     call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
     call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-         x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
-         elemsize_min_glob,elemsize_max_glob, &
-         distance_min_glob,distance_max_glob)
+                              x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
+                              elemsize_min_glob,elemsize_max_glob, &
+                              distance_min_glob,distance_max_glob)
 
-    nb_fd_point_loc=0
+    nb_fd_point_loc = 0
 
     allocate(point_already_found(nx_fd_proj, ny_fd_proj, nz_fd_proj),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 144')
@@ -208,7 +208,7 @@ contains
     allocate(gamma_in_fd(nx_fd_proj, ny_fd_proj, nz_fd_proj),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 147')
 
-    point_already_found(:,:,:)=0
+    point_already_found(:,:,:) = 0
 
     !! loop over elements
     do ispec = 1, NSPEC_AB

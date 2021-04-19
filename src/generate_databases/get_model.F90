@@ -123,9 +123,9 @@
       if ((NGLLX == 5) .and. (NGLLY == 5) .and. (NGLLZ == 5)) then
         ! gets xyz coordinates of GLL point
         iglob = ibool(3,3,3,1)
-        xmesh = xstore_dummy(iglob)
-        ymesh = ystore_dummy(iglob)
-        zmesh = zstore_dummy(iglob)
+        xmesh = xstore_unique(iglob)
+        ymesh = ystore_unique(iglob)
+        zmesh = zstore_unique(iglob)
         call model_coupled_FindLayer(xmesh,ymesh,zmesh)
       else
         stop 'bad number of GLL points for coupling with an external code'
@@ -143,9 +143,9 @@
     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
       if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) then
         iglob = ibool(3,3,3,ispec)
-        xmesh = xstore_dummy(iglob)
-        ymesh = ystore_dummy(iglob)
-        zmesh = zstore_dummy(iglob)
+        xmesh = xstore_unique(iglob)
+        ymesh = ystore_unique(iglob)
+        zmesh = zstore_unique(iglob)
         call model_coupled_FindLayer(xmesh,ymesh,zmesh)
       endif
     endif
@@ -203,9 +203,9 @@
 
           ! gets xyz coordinates of GLL point
           iglob = ibool(i,j,k,ispec)
-          xmesh = xstore_dummy(iglob)
-          ymesh = ystore_dummy(iglob)
-          zmesh = zstore_dummy(iglob)
+          xmesh = xstore_unique(iglob)
+          ymesh = ystore_unique(iglob)
+          zmesh = zstore_unique(iglob)
 
           !! VM VM for coupling with DSM
           !! find the layer in which the middle of the element is located

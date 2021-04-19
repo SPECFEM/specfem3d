@@ -45,7 +45,7 @@
 !                maybe we find a better way in future...
 
   subroutine write_VTK_data_elem_i(nspec,nglob, &
-                                   xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                                   xstore,ystore,zstore,ibool, &
                                    elem_flag,prname_file)
 
   use constants, only: MAX_STRING_LEN,IOUT_VTK,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
@@ -56,7 +56,7 @@
 
   ! global coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
 
   ! element flag array
   integer, dimension(nspec) :: elem_flag
@@ -79,7 +79,7 @@
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i=1,nglob
-    write(IOUT_VTK,'(3e20.12)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e20.12)') xstore(i),ystore(i),zstore(i)
   enddo
   write(IOUT_VTK,*) ''
 
@@ -115,7 +115,7 @@
 ! routine for saving vtk file holding logical flag on each spectral element
 
   subroutine write_VTK_data_elem_l(nspec,nglob, &
-                                   xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                                   xstore,ystore,zstore,ibool, &
                                    elem_flag,prname_file)
 
   use constants, only: MAX_STRING_LEN,IOUT_VTK,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
@@ -126,7 +126,7 @@
 
 ! global coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
 
 ! element flag array
   logical, dimension(nspec) :: elem_flag
@@ -147,7 +147,7 @@
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i=1,nglob
-    write(IOUT_VTK,'(3e20.12)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e20.12)') xstore(i),ystore(i),zstore(i)
   enddo
   write(IOUT_VTK,*) ''
 
@@ -188,7 +188,7 @@
 ! external mesh routine for saving vtk files for CUSTOM_REAL values on all GLL points
 
   subroutine write_VTK_data_gll_cr(nspec,nglob, &
-                                   xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                                   xstore,ystore,zstore,ibool, &
                                    gll_data,prname_file)
 
   use constants, only: MAX_STRING_LEN,IOUT_VTK,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
@@ -199,7 +199,7 @@
 
 ! global coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
 
 ! GLL data values array
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: gll_data
@@ -225,7 +225,7 @@
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i=1,nglob
-    write(IOUT_VTK,'(3e20.12)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e20.12)') xstore(i),ystore(i),zstore(i)
   enddo
   write(IOUT_VTK,*) ''
 
@@ -283,7 +283,7 @@
 ! external mesh routine for saving vtk files for integer values on all GLL points
 
   subroutine write_VTK_data_gll_i(nspec,nglob, &
-                                  xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                                  xstore,ystore,zstore,ibool, &
                                   gll_data,prname_file)
 
   use constants, only: MAX_STRING_LEN,IOUT_VTK,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
@@ -294,7 +294,7 @@
 
 ! global coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
 
 ! GLL data values array
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: gll_data
@@ -320,7 +320,7 @@
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i=1,nglob
-    write(IOUT_VTK,'(3e20.12)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e20.12)') xstore(i),ystore(i),zstore(i)
   enddo
   write(IOUT_VTK,*) ''
 
@@ -376,7 +376,7 @@
 ! external mesh routine for saving vtk files for points locations
 
   subroutine write_VTK_data_points(nglob, &
-                                   xstore_dummy,ystore_dummy,zstore_dummy, &
+                                   xstore,ystore,zstore, &
                                    points_globalindices,num_points_globalindices, &
                                    prname_file)
 
@@ -387,7 +387,7 @@
   integer :: nglob
 
 ! global coordinates
-  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
 
 ! GLL data values array
   integer :: num_points_globalindices
@@ -418,7 +418,7 @@
       stop 'error vtk points file'
     endif
 
-    write(IOUT_VTK,'(3e20.12)') xstore_dummy(iglob),ystore_dummy(iglob),zstore_dummy(iglob)
+    write(IOUT_VTK,'(3e20.12)') xstore(iglob),ystore(iglob),zstore(iglob)
   enddo
   write(IOUT_VTK,*) ''
   close(IOUT_VTK)
@@ -549,7 +549,7 @@
 ! external mesh routine for saving vtk files for points locations
 
   subroutine write_VTK_data_elem_vectors(nspec,nglob, &
-                                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                                         xstore,ystore,zstore,ibool, &
                                          elem_vector,prname_file)
 
   use constants, only: MAX_STRING_LEN,IOUT_VTK,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
@@ -560,7 +560,7 @@
 
   ! global coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
 
   ! element flag array
   real(kind=CUSTOM_REAL), dimension(3,nspec) :: elem_vector
@@ -581,7 +581,7 @@
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i=1,nglob
-    write(IOUT_VTK,'(3e20.12)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e20.12)') xstore(i),ystore(i),zstore(i)
   enddo
   write(IOUT_VTK,*) ''
 
@@ -615,7 +615,7 @@
 !
 
   subroutine write_VTK_data_elem_cr(nspec,nglob, &
-                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                                    xstore,ystore,zstore,ibool, &
                                     elem_data,prname_file)
 
   use constants, only: CUSTOM_REAL,MAX_STRING_LEN,NGLLX,NGLLY,NGLLZ,IOUT_VTK
@@ -626,7 +626,7 @@
 
   ! global coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
 
   ! element flag array
   real(kind=CUSTOM_REAL), dimension(nspec) :: elem_data
@@ -650,7 +650,7 @@
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i = 1,nglob
-    write(IOUT_VTK,'(3e20.12)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e20.12)') xstore(i),ystore(i),zstore(i)
   enddo
   write(IOUT_VTK,*) ''
 
@@ -685,7 +685,7 @@
 !
 
   subroutine write_VTU_data_elem_cr_binary(nspec,nglob, &
-                                           xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                                           xstore,ystore,zstore,ibool, &
                                            elem_data,prname_file)
 
 ! saves vtu files in binary format, for CUSTOM_REAL values on all spectral elements
@@ -698,7 +698,7 @@
 
   ! global coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
-  real(kind=CUSTOM_REAL), dimension(nglob),intent(in) :: xstore_dummy,ystore_dummy,zstore_dummy
+  real(kind=CUSTOM_REAL), dimension(nglob),intent(in) :: xstore,ystore,zstore
 
   ! element data values array
   real(kind=CUSTOM_REAL), dimension(nspec),intent(in) :: elem_data
@@ -832,7 +832,7 @@
   len_bytes = 3 * nglob * SIZE_REAL
   write(IOUT_VTK) len_bytes
   do i = 1,nglob
-    write(IOUT_VTK) real(xstore_dummy(i),kind=4),real(ystore_dummy(i),kind=4),real(zstore_dummy(i),kind=4)
+    write(IOUT_VTK) real(xstore(i),kind=4),real(ystore(i),kind=4),real(zstore(i),kind=4)
   enddo
   ! cells
   ! connectivity
@@ -877,7 +877,7 @@
 !
 
   subroutine write_VTK_data_ngnod_elem_i(nspec,nglob,NGNOD, &
-                                         xstore_dummy,ystore_dummy,zstore_dummy,elmnts, &
+                                         xstore_db,ystore_db,zstore_db,elmnts, &
                                          elem_flag,filename)
 
   use constants, only: IOUT_VTK,MAX_STRING_LEN
@@ -888,7 +888,7 @@
 
   ! global coordinates
   integer, dimension(NGNOD,nspec) :: elmnts
-  double precision, dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+  double precision, dimension(nglob) :: xstore_db,ystore_db,zstore_db
 
   ! element flag array
   integer, dimension(nspec) :: elem_flag
@@ -910,7 +910,7 @@
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i = 1,nglob
-    write(IOUT_VTK,'(3e20.12)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e20.12)') xstore_db(i),ystore_db(i),zstore_db(i)
   enddo
   write(IOUT_VTK,*) ""
 
@@ -946,7 +946,7 @@
 !
 !------------------------------------------------------------------------------------
 
-  subroutine write_VTK_data_elem_cr_meshfem(nspec,nglob,x_dummy,y_dummy,z_dummy,ibool, &
+  subroutine write_VTK_data_elem_cr_meshfem(nspec,nglob,xstore_db,ystore_db,zstore_db,ibool, &
                                             elem_data,filename)
 
 ! special routine for meshfem3D with simpler mesh arrays
@@ -959,7 +959,7 @@
 
   ! global coordinates
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC) :: ibool
-  double precision, dimension(nglob) :: x_dummy,y_dummy,z_dummy
+  double precision, dimension(nglob) :: xstore_db,ystore_db,zstore_db
 
   ! element flag array
   real(kind=CUSTOM_REAL), dimension(nspec) :: elem_data
@@ -977,7 +977,7 @@
   write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i = 1,nglob
-    write(IOUT_VTK,*) sngl(x_dummy(i)),sngl(y_dummy(i)),sngl(z_dummy(i))
+    write(IOUT_VTK,*) sngl(xstore_db(i)),sngl(ystore_db(i)),sngl(zstore_db(i))
   enddo
   write(IOUT_VTK,*) ''
 

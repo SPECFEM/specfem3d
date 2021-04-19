@@ -37,7 +37,7 @@
                                     rmass,rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
                                     APPROXIMATE_OCEAN_LOAD,rmass_ocean_load,NGLOB_OCEAN, &
                                     ibool, &
-                                    xstore_dummy,ystore_dummy,zstore_dummy, &
+                                    xstore,ystore,zstore, &
                                     abs_boundary_normal,abs_boundary_jacobian2Dw, &
                                     abs_boundary_ijk,abs_boundary_ispec, &
                                     num_abs_boundary_faces, &
@@ -97,7 +97,7 @@
 
 ! mesh coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
 
 ! absorbing boundary surface
   integer :: num_abs_boundary_faces
@@ -158,9 +158,9 @@
 
   write(IOUT) ibool
 
-  write(IOUT) xstore_dummy
-  write(IOUT) ystore_dummy
-  write(IOUT) zstore_dummy
+  write(IOUT) xstore
+  write(IOUT) ystore
+  write(IOUT) zstore
 
   write(IOUT) irregular_element_number
   write(IOUT) xix_regular
@@ -333,17 +333,17 @@
     ! mesh arrays used for example in combine_vol_data.f90
     !--- x coordinate
     open(unit=IOUT,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted')
-    write(IOUT) xstore_dummy
+    write(IOUT) xstore
     close(IOUT)
 
     !--- y coordinate
     open(unit=IOUT,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted')
-    write(IOUT) ystore_dummy
+    write(IOUT) ystore
     close(IOUT)
 
     !--- z coordinate
     open(unit=IOUT,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted')
-    write(IOUT) zstore_dummy
+    write(IOUT) zstore
     close(IOUT)
 
     ! ibool
@@ -372,7 +372,7 @@
     ! vp values
     filename = prname(1:len_trim(prname))//'vp_new'
     call write_VTK_data_gll_cr(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        xstore,ystore,zstore,ibool, &
                         v_tmp,filename)
 
 
@@ -393,7 +393,7 @@
     ! vs values
     filename = prname(1:len_trim(prname))//'vs_new'
     call write_VTK_data_gll_cr(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        xstore,ystore,zstore,ibool, &
                         v_tmp,filename)
 
     ! outputs density model for check
@@ -407,7 +407,7 @@
     ! density model
     filename = prname(1:len_trim(prname))//'rho_new'
     call write_VTK_data_gll_cr(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        xstore,ystore,zstore,ibool, &
                         v_tmp,filename)
 
 
@@ -416,7 +416,7 @@
       ! saves attenuation flag assigned on each GLL point into a vtk file
       filename = prname(1:len_trim(prname))//'attenuation'
       call write_VTK_data_gll_cr(nspec,nglob, &
-                          xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                          xstore,ystore,zstore,ibool, &
                           qmu_attenuation_store,filename)
     endif
 
@@ -439,7 +439,7 @@
       enddo
       filename = prname(1:len_trim(prname))//'coupling_acoustic_elastic'
       call write_VTK_data_points(nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy, &
+                        xstore,ystore,zstore, &
                         iglob_tmp,NGLLSQUARE*num_coupling_ac_el_faces, &
                         filename)
 
@@ -457,7 +457,7 @@
       enddo
       filename = prname(1:len_trim(prname))//'acoustic_elastic_flag'
       call write_VTK_data_elem_i(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        xstore,ystore,zstore,ibool, &
                         v_tmp_i,filename)
     endif
 
@@ -465,7 +465,7 @@
     !    if (num_interfaces_ext_mesh >= 1) then
     !      filename = prname(1:len_trim(prname))//'MPI_1_points'
     !      call write_VTK_data_points(nglob, &
-    !                        xstore_dummy,ystore_dummy,zstore_dummy, &
+    !                        xstore,ystore,zstore, &
     !                        ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
     !                        nibool_interfaces_ext_mesh(1), &
     !                        filename)

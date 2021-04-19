@@ -245,7 +245,7 @@
   if (SAVE_MESH_FILES .and. DEBUG) then
     filename = prname(1:len_trim(prname))//'color_'//str_domain(idomain)
     call write_VTK_data_elem_i(nspec,nglob, &
-                              xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                              xstore_unique,ystore_unique,zstore_unique,ibool, &
                               color,filename)
   endif
 
@@ -403,7 +403,7 @@
   ! debug: outputs permutation array as vtk file
   if (DEBUG) then
     filename = prname(1:len_trim(prname))//'perm_'//str_domain(idomain)
-    call write_VTK_data_elem_i(nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy,ibool,perm,filename)
+    call write_VTK_data_elem_i(nspec,nglob,xstore_unique,ystore_unique,zstore_unique,ibool,perm,filename)
   endif
 
   deallocate(num_of_elems_in_this_color)
@@ -573,7 +573,7 @@
   if (SAVE_MESH_FILES .and. DEBUG) then
     filename = prname(1:len_trim(prname))//'perm_global'
     call write_VTK_data_elem_i(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        xstore_unique,ystore_unique,zstore_unique,ibool, &
                         temp_perm_global,filename)
   endif
 

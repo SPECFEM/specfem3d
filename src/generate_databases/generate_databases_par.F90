@@ -72,7 +72,10 @@
   double precision :: max_memory_size,max_memory_size_request
 
   ! this for all the regions
-  integer :: NSPEC_AB,NGLOB_AB
+  ! number of elements
+  integer :: NSPEC_AB
+  ! number of (unique) global nodes
+  integer :: NGLOB_AB
 
   integer :: NSPEC2D_BOTTOM,NSPEC2D_TOP
 
@@ -169,19 +172,20 @@
   implicit none
 
   ! global point coordinates
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_dummy
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: ystore_dummy
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: zstore_dummy
-  integer :: nglob_dummy
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_unique
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: ystore_unique
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: zstore_unique
+  ! number of unique global points
+  integer :: nglob_unique
 
   ! ******
   ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
   ! not used so far...
 
   ! material properties at global points for the elastic case
-  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: rhostore_dummy
-  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: kappastore_dummy
-  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: mustore_dummy
+  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: rhostore_unique
+  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: kappastore_unique
+  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: mustore_unique
   ! ******
 
   ! Gauss-Lobatto-Legendre points and weights of integration

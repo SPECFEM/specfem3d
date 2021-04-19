@@ -238,12 +238,12 @@ contains
 
     !! get dimension of mesh
     call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB, &
-         ibool,xstore,ystore,zstore, &
-         inversion_param%xmin,inversion_param%xmax, &
-         inversion_param%ymin,inversion_param%ymax, &
-         inversion_param%zmin,inversion_param%zmax, &
-         elemsize_min_glob,elemsize_max_glob, &
-         distance_min_glob,distance_max_glob)
+                              ibool,xstore,ystore,zstore, &
+                              inversion_param%xmin,inversion_param%xmax, &
+                              inversion_param%ymin,inversion_param%ymax, &
+                              inversion_param%zmin,inversion_param%zmax, &
+                              elemsize_min_glob,elemsize_max_glob, &
+                              distance_min_glob,distance_max_glob)
 
     !!-------------------------------------------------------------------------------------------------------------------------
 

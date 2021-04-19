@@ -131,12 +131,12 @@
                                   nodes_coords_ext_mesh,nnodes_ext_mesh, &
                                   elmnts_ext_mesh,nelmnts_ext_mesh)
     endif
-    ! at this point (xyz)store_dummy are still open
+    ! at this point (xyz)store_unique are still open
     if (.not. PARALLEL_FAULT) then
       call fault_setup(ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
                        xstore,ystore,zstore,nspec,nglob)
     endif
-    ! this closes (xyz)store_dummy
+    ! this closes (xyz)store_unique
   endif
 
 
@@ -147,15 +147,15 @@
     write(IMAIN,*) '  ...preparing MPI interfaces '
     call flush_IMAIN()
   endif
-  call get_MPI_interface(nglob_dummy,nspec,ibool)
+  call get_MPI_interface(nglob_unique,nspec,ibool)
 
   ! setting up parallel fault
   if (PARALLEL_FAULT .and. ANY_FAULT) then
     call synchronize_all()
-    !at this point (xyz)store_dummy are still open
+    !at this point (xyz)store_unique are still open
     call fault_setup(ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
                      xstore,ystore,zstore,nspec,nglob)
-   ! this closes (xyz)store_dummy
+   ! this closes (xyz)store_unique
   endif
 
   ! sets up absorbing/free surface boundaries
@@ -247,7 +247,7 @@
       write(IMAIN,*) '  ...creating C-PML damping profiles '
       call flush_IMAIN()
     endif
-    call pml_set_local_dampingcoeff(xstore_dummy,ystore_dummy,zstore_dummy)
+    call pml_set_local_dampingcoeff(xstore_unique,ystore_unique,zstore_unique)
   endif
 
   ! creates mass matrix
@@ -257,7 +257,7 @@
     write(IMAIN,*) '  ...creating mass matrix '
     call flush_IMAIN()
   endif
-  call create_mass_matrices(nglob_dummy,nspec,ibool,PML_CONDITIONS,STACEY_ABSORBING_CONDITIONS)
+  call create_mass_matrices(nglob_unique,nspec,ibool,PML_CONDITIONS,STACEY_ABSORBING_CONDITIONS)
 
   ! saves the binary mesh files
   call synchronize_all()
@@ -301,7 +301,7 @@
   call synchronize_all()
 
   ! computes the approximate amount of memory needed to run the solver
-  call memory_eval(nspec,nglob_dummy,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh, &
+  call memory_eval(nspec,nglob_unique,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh, &
                    APPROXIMATE_OCEAN_LOAD,memory_size)
 
   call max_all_dp(memory_size, max_memory_size)
@@ -313,8 +313,8 @@
     write(IMAIN,*) '  ...checking mesh resolution'
     call flush_IMAIN()
   endif
-  call check_mesh_resolution(nspec,nglob_dummy, &
-                             ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
+  call check_mesh_resolution(nspec,nglob_unique, &
+                             ibool,xstore_unique,ystore_unique,zstore_unique, &
                              ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
                              kappastore,mustore,rhostore, &
                              phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
@@ -346,7 +346,7 @@
   deallocate(rho_vpI,rho_vpII,rho_vsI)
   deallocate(rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore)
 
-  if (.not. SAVE_MOHO_MESH) deallocate(xstore_dummy,ystore_dummy,zstore_dummy)
+  if (.not. SAVE_MOHO_MESH) deallocate(xstore_unique,ystore_unique,zstore_unique)
 
   if (ACOUSTIC_SIMULATION) deallocate(rmass_acoustic)
   if (ELASTIC_SIMULATION) deallocate(rmass)
@@ -1086,28 +1086,30 @@
   endif
 
   ! unique global point locations
-  nglob_dummy = nglob
-  allocate(xstore_dummy(nglob_dummy),stat=ier)
+  nglob_unique = nglob              ! note: nglob => NGLOB_AB
+
+  ! coordinates for global points
+  allocate(xstore_unique(nglob_unique),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 813')
-  xstore_dummy(:) = 0._CUSTOM_REAL
+  xstore_unique(:) = 0._CUSTOM_REAL
 
-  allocate(ystore_dummy(nglob_dummy),stat=ier)
+  allocate(ystore_unique(nglob_unique),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 814')
-  ystore_dummy(:) = 0._CUSTOM_REAL
+  ystore_unique(:) = 0._CUSTOM_REAL
 
-  allocate(zstore_dummy(nglob_dummy),stat=ier)
+  allocate(zstore_unique(nglob_unique),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 815')
   if (ier /= 0) stop 'error in allocate'
-  zstore_dummy(:) = 0._CUSTOM_REAL
+  zstore_unique(:) = 0._CUSTOM_REAL
 
   do ispec = 1, nspec
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX
           iglobnum = ibool(i,j,k,ispec)
-          xstore_dummy(iglobnum) = real(xstore(i,j,k,ispec),kind=CUSTOM_REAL)
-          ystore_dummy(iglobnum) = real(ystore(i,j,k,ispec),kind=CUSTOM_REAL)
-          zstore_dummy(iglobnum) = real(zstore(i,j,k,ispec),kind=CUSTOM_REAL)
+          xstore_unique(iglobnum) = real(xstore(i,j,k,ispec),kind=CUSTOM_REAL)
+          ystore_unique(iglobnum) = real(ystore(i,j,k,ispec),kind=CUSTOM_REAL)
+          zstore_unique(iglobnum) = real(zstore(i,j,k,ispec),kind=CUSTOM_REAL)
         enddo
       enddo
     enddo
@@ -1177,9 +1179,9 @@
              reshape( (/ 1,2,2, NGLLX,2,2, 2,1,2, 2,NGLLY,2, 2,2,1, 2,2,NGLLZ  /),(/3,6/))   ! top
 
   ! temporary arrays for passing information
-  allocate(iglob_is_surface(nglob_dummy),stat=ier)
+  allocate(iglob_is_surface(nglob_unique),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 816')
-  allocate(iglob_normals(NDIM,nglob_dummy),stat=ier)
+  allocate(iglob_normals(NDIM,nglob_unique),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 817')
   if (ier /= 0) stop 'error allocating array iglob_is_surface'
 
@@ -1204,8 +1206,8 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                             ibool,nspec,nglob_dummy, &
-                             xstore_dummy,ystore_dummy,zstore_dummy, &
+                             ibool,nspec,nglob_unique, &
+                             xstore_unique,ystore_unique,zstore_unique, &
                              iface)
 
     ! ijk indices of GLL points for face id
@@ -1213,7 +1215,7 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(nspec, &
-                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    xstore_unique,ystore_unique,zstore_unique,ibool,nglob_unique, &
                                     dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                     ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
@@ -1223,8 +1225,8 @@
     do j = 1,NGLLY
       do i = 1,NGLLX
           call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                       ibool,nspec,nglob_dummy, &
-                                       xstore_dummy,ystore_dummy,zstore_dummy, &
+                                       ibool,nspec,nglob_unique, &
+                                       xstore_unique,ystore_unique,zstore_unique, &
                                        normal_face(:,i,j))
       enddo
     enddo
@@ -1290,9 +1292,9 @@
           counter = counter+1
 
           ! reference corner coordinates
-          xcoord(icorner) = xstore_dummy(iglob)
-          ycoord(icorner) = ystore_dummy(iglob)
-          zcoord(icorner) = zstore_dummy(iglob)
+          xcoord(icorner) = xstore_unique(iglob)
+          ycoord(icorner) = ystore_unique(iglob)
+          zcoord(icorner) = zstore_unique(iglob)
         endif
       enddo
 
@@ -1305,7 +1307,7 @@
         ! re-computes face infos
         ! weighted jacobian and normal
         call get_jacobian_boundary_face(nspec, &
-                                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                        xstore_unique,ystore_unique,zstore_unique,ibool,nglob_unique, &
                                         dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                         ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
@@ -1315,8 +1317,8 @@
         do j = 1,NGLLZ
           do i = 1,NGLLX
             call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                         ibool,nspec,nglob_dummy, &
-                                         xstore_dummy,ystore_dummy,zstore_dummy, &
+                                         ibool,nspec,nglob_unique, &
+                                         xstore_unique,ystore_unique,zstore_unique, &
                                          normal_face(:,i,j) )
           enddo
         enddo
@@ -1330,8 +1332,8 @@
 
         ! determines whether normal points into element or not (top/bottom distinction)
         call get_element_face_normal_idirect(ispec,iface,xcoord,ycoord,zcoord, &
-                                             ibool,nspec,nglob_dummy, &
-                                             xstore_dummy,ystore_dummy,zstore_dummy, &
+                                             ibool,nspec,nglob_unique, &
+                                             xstore_unique,ystore_unique,zstore_unique, &
                                              normal,idirect)
 
         ! takes moho surface element id given by id on midpoint
@@ -1501,7 +1503,7 @@
   if (ier /= 0) stop 'error allocating array ispec_is_inner'
 
   ! temporary array
-  allocate(iglob_is_inner(nglob_dummy),stat=ier)
+  allocate(iglob_is_inner(nglob_unique),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 827')
   if (ier /= 0) stop 'error allocating temporary array  iglob_is_inner'
 
@@ -1532,8 +1534,8 @@
 
   if (SAVE_MESH_FILES .and. DEBUG) then
     filename = prname(1:len_trim(prname))//'ispec_is_inner'
-    call write_VTK_data_elem_l(nspec,nglob_dummy, &
-                               xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+    call write_VTK_data_elem_l(nspec,nglob_unique, &
+                               xstore_unique,ystore_unique,zstore_unique,ibool, &
                                ispec_is_inner,filename)
   endif
 

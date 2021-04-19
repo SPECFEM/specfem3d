@@ -149,8 +149,8 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                             ibool,nspec,nglob_dummy, &
-                             xstore_dummy,ystore_dummy,zstore_dummy,iface)
+                             ibool,nspec,nglob_unique, &
+                             xstore_unique,ystore_unique,zstore_unique,iface)
 
     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
       iboun(iface,ispec) = .true.
@@ -161,7 +161,7 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(nspec, &
-                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    xstore_unique,ystore_unique,zstore_unique,ibool,nglob_unique, &
                                     dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                     ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
@@ -172,15 +172,15 @@
       do i = 1,NGLLX
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                     ibool,nspec,nglob_dummy, &
-                                     xstore_dummy,ystore_dummy,zstore_dummy, &
+                                     ibool,nspec,nglob_unique, &
+                                     xstore_unique,ystore_unique,zstore_unique, &
                                      lnormal )
         normal_face(:,i,j) = lnormal(:)
 
         ! writes out xmin boundary point locations
         if ( COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM ) then
-          write(123,'(i10,3f20.10)') ispec, xstore_dummy(ibool(i,j,1,ispec)), ystore_dummy(ibool(i,j,1,ispec)), &
-                                            zstore_dummy(ibool(i,j,1,ispec))
+          write(123,'(i10,3f20.10)') ispec, xstore_unique(ibool(i,j,1,ispec)), ystore_unique(ibool(i,j,1,ispec)), &
+                                            zstore_unique(ibool(i,j,1,ispec))
         endif
       enddo
     enddo
@@ -236,8 +236,8 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                             ibool,nspec,nglob_dummy, &
-                             xstore_dummy,ystore_dummy,zstore_dummy,iface)
+                             ibool,nspec,nglob_unique, &
+                             xstore_unique,ystore_unique,zstore_unique,iface)
 
     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
       iboun(iface,ispec) = .true.
@@ -248,7 +248,7 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(nspec, &
-                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    xstore_unique,ystore_unique,zstore_unique,ibool,nglob_unique, &
                                     dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                     ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
@@ -259,8 +259,8 @@
       do i = 1,NGLLX
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                     ibool,nspec,nglob_dummy, &
-                                     xstore_dummy,ystore_dummy,zstore_dummy, &
+                                     ibool,nspec,nglob_unique, &
+                                     xstore_unique,ystore_unique,zstore_unique, &
                                      lnormal )
         normal_face(:,i,j) = lnormal(:)
       enddo
@@ -313,8 +313,8 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                             ibool,nspec,nglob_dummy, &
-                             xstore_dummy,ystore_dummy,zstore_dummy,iface)
+                             ibool,nspec,nglob_unique, &
+                             xstore_unique,ystore_unique,zstore_unique,iface)
 
     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
       iboun(iface,ispec) = .true.
@@ -325,7 +325,7 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(nspec, &
-                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    xstore_unique,ystore_unique,zstore_unique,ibool,nglob_unique, &
                                     dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                     ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
@@ -336,8 +336,8 @@
       do i = 1,NGLLY
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                     ibool,nspec,nglob_dummy, &
-                                     xstore_dummy,ystore_dummy,zstore_dummy, &
+                                     ibool,nspec,nglob_unique, &
+                                     xstore_unique,ystore_unique,zstore_unique, &
                                      lnormal )
         normal_face(:,i,j) = lnormal(:)
       enddo
@@ -390,8 +390,8 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                             ibool,nspec,nglob_dummy, &
-                             xstore_dummy,ystore_dummy,zstore_dummy,iface)
+                             ibool,nspec,nglob_unique, &
+                             xstore_unique,ystore_unique,zstore_unique,iface)
 
     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
       iboun(iface,ispec) = .true.
@@ -402,7 +402,7 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(nspec, &
-                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    xstore_unique,ystore_unique,zstore_unique,ibool,nglob_unique, &
                                     dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                     ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
@@ -413,8 +413,8 @@
       do i = 1,NGLLY
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                     ibool,nspec,nglob_dummy, &
-                                     xstore_dummy,ystore_dummy,zstore_dummy, &
+                                     ibool,nspec,nglob_unique, &
+                                     xstore_unique,ystore_unique,zstore_unique, &
                                      lnormal )
         normal_face(:,i,j) = lnormal(:)
       enddo
@@ -467,8 +467,8 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                             ibool,nspec,nglob_dummy, &
-                             xstore_dummy,ystore_dummy,zstore_dummy,iface)
+                             ibool,nspec,nglob_unique, &
+                             xstore_unique,ystore_unique,zstore_unique,iface)
 
     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
       iboun(iface,ispec) = .true.
@@ -479,7 +479,7 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(nspec, &
-                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    xstore_unique,ystore_unique,zstore_unique,ibool,nglob_unique, &
                                     dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                     ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
@@ -490,8 +490,8 @@
       do i = 1,NGLLX
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                     ibool,nspec,nglob_dummy, &
-                                     xstore_dummy,ystore_dummy,zstore_dummy, &
+                                     ibool,nspec,nglob_unique, &
+                                     xstore_unique,ystore_unique,zstore_unique, &
                                      lnormal )
         normal_face(:,i,j) = lnormal(:)
       enddo
@@ -570,8 +570,8 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                             ibool,nspec,nglob_dummy, &
-                             xstore_dummy,ystore_dummy,zstore_dummy,iface)
+                             ibool,nspec,nglob_unique, &
+                             xstore_unique,ystore_unique,zstore_unique,iface)
 
     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
       iboun(iface,ispec) = .true.
@@ -582,7 +582,7 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(nspec, &
-                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+                                    xstore_unique,ystore_unique,zstore_unique,ibool,nglob_unique, &
                                     dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                     ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
@@ -593,8 +593,8 @@
       do i = 1,NGLLX
         lnormal(:) = normal_face(:,i,j)
         call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                     ibool,nspec,nglob_dummy, &
-                                     xstore_dummy,ystore_dummy,zstore_dummy, &
+                                     ibool,nspec,nglob_unique, &
+                                     xstore_unique,ystore_unique,zstore_unique, &
                                      lnormal )
         normal_face(:,i,j) = lnormal(:)
       enddo

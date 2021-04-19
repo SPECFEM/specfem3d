@@ -60,7 +60,6 @@
     nfaces_surface
 
   use create_regions_mesh_ext_par
-  use create_regions_mesh_ext_par, only: nglob => nglob_dummy
 
   implicit none
 
@@ -71,9 +70,13 @@
   ! local parameters
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
   integer :: max_nibool_interfaces_ext_mesh
+  integer :: nglob
 
   integer :: ier,i,itest
   character(len=MAX_STRING_LEN) :: filename
+
+  ! number of unique global nodes
+  nglob = nglob_unique
 
   ! database file name
   filename = prname(1:len_trim(prname))//'external_mesh.bin'
@@ -95,9 +98,9 @@
 
   write(IOUT) ibool
 
-  write(IOUT) xstore_dummy
-  write(IOUT) ystore_dummy
-  write(IOUT) zstore_dummy
+  write(IOUT) xstore_unique
+  write(IOUT) ystore_unique
+  write(IOUT) zstore_unique
 
   write(IOUT) irregular_element_number
   write(IOUT) xix_regular
@@ -438,7 +441,6 @@
   use generate_databases_par, only: nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,num_interfaces_ext_mesh
 
   use create_regions_mesh_ext_par
-  use create_regions_mesh_ext_par, only: nglob => nglob_dummy
 
   implicit none
 
@@ -470,19 +472,19 @@
   !--- x coordinate
   open(unit=IOUT,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted',iostat=ier)
   if (ier /= 0) stop 'error opening file x.bin'
-  write(IOUT) xstore_dummy
+  write(IOUT) xstore_unique
   close(IOUT)
 
   !--- y coordinate
   open(unit=IOUT,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted',iostat=ier)
   if (ier /= 0) stop 'error opening file y.bin'
-  write(IOUT) ystore_dummy
+  write(IOUT) ystore_unique
   close(IOUT)
 
   !--- z coordinate
   open(unit=IOUT,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted',iostat=ier)
   if (ier /= 0) stop 'error opening file z.bin'
-  write(IOUT) zstore_dummy
+  write(IOUT) zstore_unique
   close(IOUT)
 
   ! ibool
@@ -511,8 +513,8 @@
 
   ! vp values - VTK file output
   filename = prname(1:len_trim(prname))//'vp'
-  call write_VTK_data_gll_cr(nspec,nglob, &
-                             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+  call write_VTK_data_gll_cr(nspec,nglob_unique, &
+                             xstore_unique,ystore_unique,zstore_unique,ibool, &
                              v_tmp,filename)
 
 
@@ -532,8 +534,8 @@
 
   ! vs values - VTK file output
   filename = prname(1:len_trim(prname))//'vs'
-  call write_VTK_data_gll_cr(nspec,nglob, &
-                             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+  call write_VTK_data_gll_cr(nspec,nglob_unique, &
+                             xstore_unique,ystore_unique,zstore_unique,ibool, &
                              v_tmp,filename)
 
   ! outputs density model for check
@@ -553,8 +555,8 @@
 
   ! shear attenuation - VTK file output
   filename = prname(1:len_trim(prname))//'qmu'
-  call write_VTK_data_gll_cr(nspec,nglob, &
-                             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+  call write_VTK_data_gll_cr(nspec,nglob_unique, &
+                             xstore_unique,ystore_unique,zstore_unique,ibool, &
                              qmu_attenuation_store,filename)
 
   ! bulk attenuation Qkappa
@@ -565,8 +567,8 @@
 
   ! bulk attenuation - VTK file output
   filename = prname(1:len_trim(prname))//'qkappa'
-  call write_VTK_data_gll_cr(nspec,nglob, &
-                             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+  call write_VTK_data_gll_cr(nspec,nglob_unique, &
+                             xstore_unique,ystore_unique,zstore_unique,ibool, &
                              qkappa_attenuation_store,filename)
 
   ! frees temporary array
@@ -599,8 +601,8 @@
         enddo
       enddo
       filename = prname(1:len_trim(prname))//'free_surface'
-      call write_VTK_data_points(nglob, &
-                                 xstore_dummy,ystore_dummy,zstore_dummy, &
+      call write_VTK_data_points(nglob_unique, &
+                                 xstore_unique,ystore_unique,zstore_unique, &
                                  iglob_tmp,NGLLSQUARE*num_free_surface_faces, &
                                  filename)
 
@@ -626,7 +628,7 @@
         enddo
       enddo
       filename = prname(1:len_trim(prname))//'coupling_acoustic_elastic'
-      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
+      call write_VTK_data_points(nglob_unique,xstore_unique,ystore_unique,zstore_unique, &
                                  iglob_tmp,num_points,filename)
       deallocate(iglob_tmp)
     endif !if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION )
@@ -650,7 +652,7 @@
         enddo
       enddo
       filename = prname(1:len_trim(prname))//'coupling_acoustic_poroelastic'
-      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
+      call write_VTK_data_points(nglob_unique,xstore_unique,ystore_unique,zstore_unique, &
                                  iglob_tmp,num_points,filename)
       deallocate(iglob_tmp)
     endif !if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION )
@@ -674,7 +676,7 @@
         enddo
       enddo
       filename = prname(1:len_trim(prname))//'coupling_elastic_poroelastic'
-      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
+      call write_VTK_data_points(nglob_unique,xstore_unique,ystore_unique,zstore_unique, &
                                  iglob_tmp,num_points,filename)
       deallocate(iglob_tmp)
     endif !if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION
@@ -699,7 +701,7 @@
         endif
       enddo
       filename = prname(1:len_trim(prname))//'acoustic_elastic_poroelastic_flag'
-      call write_VTK_data_elem_i(nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+      call write_VTK_data_elem_i(nspec,nglob_unique,xstore_unique,ystore_unique,zstore_unique,ibool, &
                                  v_tmp_i,filename)
       deallocate(v_tmp_i)
     endif
@@ -721,7 +723,7 @@
       enddo
 
       filename = prname(1:len_trim(prname))//'MPI_points'
-      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
+      call write_VTK_data_points(nglob_unique,xstore_unique,ystore_unique,zstore_unique, &
                                  iglob_tmp,num_points,filename)
       deallocate(iglob_tmp)
     endif ! NPROC > 1
@@ -798,7 +800,7 @@
            ny = abs_boundary_normal(2,igll,iface)
            nz = abs_boundary_normal(3,igll,iface)
 
-           write(IOUT,'(6f25.10)') xstore_dummy(iglob), ystore_dummy(iglob), zstore_dummy(iglob), nx, ny, nz
+           write(IOUT,'(6f25.10)') xstore_unique(iglob), ystore_unique(iglob), zstore_unique(iglob), nx, ny, nz
 
         enddo
      endif

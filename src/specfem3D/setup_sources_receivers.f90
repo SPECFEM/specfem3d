@@ -91,6 +91,7 @@
   ! prepares midpoints coordinates
   allocate(xyz_midpoints(NDIM,NSPEC_AB),stat=ier)
   if (ier /= 0 ) call exit_MPI(myrank,'Error allocating array xyz_midpoints')
+  xyz_midpoints(:,:) = 0.d0
 
   ! store x/y/z coordinates of center point
   do ispec = 1,NSPEC_AB
@@ -103,6 +104,8 @@
   ! define (i,j,k) indices of the control/anchor points
   allocate(anchor_iax(NGNOD),anchor_iay(NGNOD),anchor_iaz(NGNOD),stat=ier)
   if (ier /= 0 ) call exit_MPI(myrank,'Error allocating array anchor_i**')
+  anchor_iax(:) = 0; anchor_iay(:) = 0; anchor_iaz(:) = 0
+
   call hex_nodes_anchor_ijk_NGLL(NGNOD,anchor_iax,anchor_iay,anchor_iaz,NGLLX,NGLLY,NGLLZ)
 
   ! builds search tree
@@ -1755,6 +1758,7 @@
   allocate(kdtree_nodes_location(NDIM,kdtree_num_nodes),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2096')
   if (ier /= 0) stop 'Error allocating kdtree_nodes_location arrays'
+
   allocate(kdtree_nodes_index(kdtree_num_nodes),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2097')
   if (ier /= 0) stop 'Error allocating kdtree_nodes_index arrays'

@@ -213,7 +213,7 @@ contains
     ! checks if anything to do on this fault
     if (fault_db(iflt)%nspec == 0) cycle
 
-    !NOTE: the small fault opening in *_dummy does not affect this subroutine (see get_element_face_id)
+    !NOTE: the small fault opening in *_unique does not affect this subroutine (see get_element_face_id)
     call setup_iface(fault_db(iflt),nnodes_ext_mesh,nodes_coords_ext_mesh,nspec,nglob,ibool)
 
     ! saving GLL indices for each fault face, needed for ibulks
@@ -227,7 +227,7 @@ contains
     !          from global indices on the fault to global indices on the bulk
     call setup_ibulks(fault_db(iflt),ibool,nspec)
 
-    ! close the fault in (xyz)store_dummy
+    ! close the fault in (xyz)store_unique
     call close_fault(fault_db(iflt))
 
     call setup_Kelvin_Voigt_eta(fault_db(iflt),nspec)
@@ -248,7 +248,7 @@ contains
 
   subroutine setup_iface(fdb,nnodes_ext_mesh,nodes_coords_ext_mesh,nspec,nglob,ibool)
 
-  use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy
+  use create_regions_mesh_ext_par, only: xstore_unique,ystore_unique,zstore_unique
 
   implicit none
   type(fault_db_type), intent(inout) :: fdb
@@ -273,7 +273,7 @@ contains
     enddo
     call get_element_face_id(fdb%ispec1(e),xcoord,ycoord,zcoord, &
                              ibool,nspec,nglob, &
-                             xstore_dummy,ystore_dummy,zstore_dummy, &
+                             xstore_unique,ystore_unique,zstore_unique, &
                              fdb%iface1(e))
     ! side 2
     do icorner = 1,NGNOD2D
@@ -283,7 +283,7 @@ contains
     enddo
     call get_element_face_id(fdb%ispec2(e),xcoord,ycoord,zcoord, &
                              ibool,nspec,nglob, &
-                             xstore_dummy,ystore_dummy,zstore_dummy, &
+                             xstore_unique,ystore_unique,zstore_unique, &
                              fdb%iface2(e))
   enddo
 
@@ -479,12 +479,12 @@ contains
   end subroutine setup_ibulks
 
 !=============================================================================================================
-! We only close *store_dummy.  *store is close already in create_regions_mesh.f90
-! Fortunately only *store_dummy is needed to compute jacobians and normals
+! We only close *store_unique.  *store is close already in create_regions_mesh.f90
+! Fortunately only *store_unique is needed to compute jacobians and normals
 
   subroutine close_fault(fdb)
 
-  use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy
+  use create_regions_mesh_ext_par, only: xstore_unique,ystore_unique,zstore_unique
 
   implicit none
   type(fault_db_type), intent(inout) :: fdb
@@ -497,21 +497,21 @@ contains
     K1 = fdb%ibulk1(i)
     K2 = fdb%ibulk2(i)
 
-    x1 = dble(xstore_dummy(K1))
-    x2 = dble(xstore_dummy(K2))
+    x1 = dble(xstore_unique(K1))
+    x2 = dble(xstore_unique(K2))
 
-    y1 = dble(ystore_dummy(K1))
-    y2 = dble(ystore_dummy(K2))
+    y1 = dble(ystore_unique(K1))
+    y2 = dble(ystore_unique(K2))
 
-    z1 = dble(zstore_dummy(K1))
-    z2 = dble(zstore_dummy(K2))
+    z1 = dble(zstore_unique(K1))
+    z2 = dble(zstore_unique(K2))
 
-    xstore_dummy(K1) = real(0.5d0 *(x1 + x2),kind=CUSTOM_REAL)
-    xstore_dummy(K2) = xstore_dummy(K1)
-    ystore_dummy(K1) = real(0.5d0 *(y1 + y2),kind=CUSTOM_REAL)
-    ystore_dummy(K2) = ystore_dummy(K1)
-    zstore_dummy(K1) = real(0.5d0 *(z1 + z2),kind=CUSTOM_REAL)
-    zstore_dummy(K2) = zstore_dummy(K1)
+    xstore_unique(K1) = real(0.5d0 *(x1 + x2),kind=CUSTOM_REAL)
+    xstore_unique(K2) = xstore_unique(K1)
+    ystore_unique(K1) = real(0.5d0 *(y1 + y2),kind=CUSTOM_REAL)
+    ystore_unique(K2) = ystore_unique(K1)
+    zstore_unique(K1) = real(0.5d0 *(z1 + z2),kind=CUSTOM_REAL)
+    zstore_unique(K2) = zstore_unique(K1)
   enddo
 
   end subroutine close_fault
@@ -520,7 +520,7 @@ contains
 
   subroutine save_fault_xyzcoord_ibulk(fdb)
 
-  use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy
+  use create_regions_mesh_ext_par, only: xstore_unique,ystore_unique,zstore_unique
 
   implicit none
   type(fault_db_type), intent(inout) :: fdb
@@ -546,13 +546,13 @@ contains
   do i = 1, fdb%nglob
       K1 = fdb%ibulk1(i)
       K2 = fdb%ibulk2(i)
-      fdb%xcoordbulk1(i) = xstore_dummy(K1)
-      fdb%ycoordbulk1(i) = ystore_dummy(K1)
-      fdb%zcoordbulk1(i) = zstore_dummy(K1)
+      fdb%xcoordbulk1(i) = xstore_unique(K1)
+      fdb%ycoordbulk1(i) = ystore_unique(K1)
+      fdb%zcoordbulk1(i) = zstore_unique(K1)
 
-      fdb%xcoordbulk2(i) = xstore_dummy(K2)
-      fdb%ycoordbulk2(i) = ystore_dummy(K2)
-      fdb%zcoordbulk2(i) = zstore_dummy(K2)
+      fdb%xcoordbulk2(i) = xstore_unique(K2)
+      fdb%ycoordbulk2(i) = ystore_unique(K2)
+      fdb%zcoordbulk2(i) = zstore_unique(K2)
   enddo
 
   end subroutine save_fault_xyzcoord_ibulk
@@ -562,7 +562,7 @@ contains
 
   subroutine setup_normal_jacobian(fdb,ibool,nspec,nglob)
 
-  use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy, &
+  use create_regions_mesh_ext_par, only: xstore_unique,ystore_unique,zstore_unique, &
                                          dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
 
@@ -602,14 +602,14 @@ contains
       iglob_corners_ref(icorner) = ibool(i,j,k,ispec)
 
       ! reference corner coordinates
-      xcoord(icorner) = xstore_dummy(iglob_corners_ref(icorner))
-      ycoord(icorner) = ystore_dummy(iglob_corners_ref(icorner))
-      zcoord(icorner) = zstore_dummy(iglob_corners_ref(icorner))
+      xcoord(icorner) = xstore_unique(iglob_corners_ref(icorner))
+      ycoord(icorner) = ystore_unique(iglob_corners_ref(icorner))
+      zcoord(icorner) = zstore_unique(iglob_corners_ref(icorner))
     enddo
 
     ! gets face GLL 2Djacobian, weighted from element face
     call get_jacobian_boundary_face(nspec, &
-                                    xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
+                                    xstore_unique,ystore_unique,zstore_unique,ibool,nglob, &
                                     dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                     ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
@@ -620,7 +620,7 @@ contains
         ! directs normals such that they point outwards of element
         call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
                                      ibool,nspec,nglob, &
-                                     xstore_dummy,ystore_dummy,zstore_dummy, &
+                                     xstore_unique,ystore_unique,zstore_unique, &
                                      normal_face(:,i,j) )
       enddo
     enddo

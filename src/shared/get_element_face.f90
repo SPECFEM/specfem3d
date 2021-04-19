@@ -27,7 +27,7 @@
 
   subroutine get_element_face_id(ispec,xcoord,ycoord,zcoord, &
                                  ibool,nspec,nglob, &
-                                 xstore_dummy,ystore_dummy,zstore_dummy, &
+                                 xstore_unique,ystore_unique,zstore_unique, &
                                  iface_id )
 
 ! returns iface_id of face in reference element, determined by corner locations xcoord/ycoord/zcoord;
@@ -46,7 +46,7 @@
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
   ! global point locations
-  real(kind=CUSTOM_REAL),dimension(nglob),intent(in) :: xstore_dummy,ystore_dummy,zstore_dummy
+  real(kind=CUSTOM_REAL),dimension(nglob),intent(in) :: xstore_unique,ystore_unique,zstore_unique
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: xcoord_face,ycoord_face,zcoord_face
@@ -109,9 +109,9 @@
 
       ! coordinates
       iglob = ibool(i,j,k,ispec)
-      xcoord_face = xstore_dummy(iglob)
-      ycoord_face = ystore_dummy(iglob)
-      zcoord_face = zstore_dummy(iglob)
+      xcoord_face = xstore_unique(iglob)
+      ycoord_face = ystore_unique(iglob)
+      zcoord_face = zstore_unique(iglob)
 
       ! face midpoint coordinates
       midpoint_faces(1,ifa) =  midpoint_faces(1,ifa) + xcoord_face * avg_factor
@@ -143,7 +143,7 @@
       j = iface_all_corner_ijk(2,icorner,iloc(1))
       k = iface_all_corner_ijk(3,icorner,iloc(1))
       iglob = ibool(i,j,k,ispec)
-      print *,'error corner:',icorner,'xyz:',xstore_dummy(iglob),ystore_dummy(iglob),zstore_dummy(iglob)
+      print *,'error corner:',icorner,'xyz:',xstore_unique(iglob),ystore_unique(iglob),zstore_unique(iglob)
     enddo
     ! target
     do icorner = 1,NGNOD2D_FOUR_CORNERS
@@ -279,7 +279,7 @@
 
   subroutine get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
                                 ibool,nspec,nglob, &
-                                xstore_dummy,ystore_dummy,zstore_dummy, &
+                                xstore_unique,ystore_unique,zstore_unique, &
                                 normal)
 
 ! only changes direction of normal to point outwards of element
@@ -305,7 +305,7 @@
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
   ! global point locations
-  real(kind=CUSTOM_REAL),dimension(nglob),intent(in) :: xstore_dummy,ystore_dummy,zstore_dummy
+  real(kind=CUSTOM_REAL),dimension(nglob),intent(in) :: xstore_unique,ystore_unique,zstore_unique
 
   ! face normal
   real(kind=CUSTOM_REAL),dimension(NDIM),intent(inout) :: normal
@@ -349,9 +349,9 @@
   end select
 
   ! vector from corner 1 to this opposite one
-  v_tmp(1) = xstore_dummy(iglob) - xcoord(1)
-  v_tmp(2) = ystore_dummy(iglob) - ycoord(1)
-  v_tmp(3) = zstore_dummy(iglob) - zcoord(1)
+  v_tmp(1) = xstore_unique(iglob) - xcoord(1)
+  v_tmp(2) = ystore_unique(iglob) - ycoord(1)
+  v_tmp(3) = zstore_unique(iglob) - zcoord(1)
 
   ! scalar product (dot product)
   tmp = v_tmp(1)*face_n(1) + v_tmp(2)*face_n(2) + v_tmp(3)*face_n(3)
@@ -386,7 +386,7 @@
 
   subroutine get_element_face_normal_idirect(ispec,iface,xcoord,ycoord,zcoord, &
                                              ibool,nspec,nglob, &
-                                             xstore_dummy,ystore_dummy,zstore_dummy, &
+                                             xstore_unique,ystore_unique,zstore_unique, &
                                              normal,idirect)
 
 ! returns direction of normal:
@@ -414,7 +414,7 @@
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
   ! global point locations
-  real(kind=CUSTOM_REAL),dimension(nglob),intent(in) :: xstore_dummy,ystore_dummy,zstore_dummy
+  real(kind=CUSTOM_REAL),dimension(nglob),intent(in) :: xstore_unique,ystore_unique,zstore_unique
 
   ! face normal
   real(kind=CUSTOM_REAL),dimension(NDIM),intent(inout) :: normal
@@ -461,9 +461,9 @@
   end select
 
   ! vector from corner 1 to this opposite one
-  v_tmp(1) = xstore_dummy(iglob) - xcoord(1)
-  v_tmp(2) = ystore_dummy(iglob) - ycoord(1)
-  v_tmp(3) = zstore_dummy(iglob) - zcoord(1)
+  v_tmp(1) = xstore_unique(iglob) - xcoord(1)
+  v_tmp(2) = ystore_unique(iglob) - ycoord(1)
+  v_tmp(3) = zstore_unique(iglob) - zcoord(1)
 
   ! scalar product (dot product)
   tmp = v_tmp(1)*face_n(1) + v_tmp(2)*face_n(2) + v_tmp(3)*face_n(3)
@@ -497,7 +497,7 @@
 !
 
   subroutine get_element_corners(ispec,iface_ref,xcoord,ycoord,zcoord,iglob_corners_ref, &
-                                 ibool,nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                 ibool,nspec,nglob,xstore_unique,ystore_unique,zstore_unique, &
                                  iface_all_corner_ijk)
 
   use constants, only: NGNOD2D_FOUR_CORNERS,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
@@ -514,7 +514,7 @@
   ! index array
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
   ! global point locations
-  real(kind=CUSTOM_REAL),dimension(nglob),intent(in) :: xstore_dummy,ystore_dummy,zstore_dummy
+  real(kind=CUSTOM_REAL),dimension(nglob),intent(in) :: xstore_unique,ystore_unique,zstore_unique
 
   ! assumes NGNOD2D_FOUR_CORNERS == 4
 !! DK DK Oct 2012: in principle we should use NGNOD2D instead of NGNOD2D_FOUR_CORNERS when
@@ -540,9 +540,9 @@
     iglob_corners_ref(icorner) = ibool(i,j,k,ispec)
 
     ! reference corner coordinates
-    xcoord(icorner) = xstore_dummy(iglob_corners_ref(icorner))
-    ycoord(icorner) = ystore_dummy(iglob_corners_ref(icorner))
-    zcoord(icorner) = zstore_dummy(iglob_corners_ref(icorner))
+    xcoord(icorner) = xstore_unique(iglob_corners_ref(icorner))
+    ycoord(icorner) = ystore_unique(iglob_corners_ref(icorner))
+    zcoord(icorner) = zstore_unique(iglob_corners_ref(icorner))
   enddo
 
   end subroutine get_element_corners

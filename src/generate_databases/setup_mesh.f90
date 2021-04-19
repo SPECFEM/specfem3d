@@ -41,7 +41,7 @@
   ! compute maximum number of points
   npointot = NSPEC_AB * NGLLX * NGLLY * NGLLZ
 
-! use dynamic allocation to allocate memory for arrays
+  ! use dynamic allocation to allocate memory for arrays
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 605')
   if (ier /= 0) stop 'error allocating array ibool'
@@ -63,16 +63,16 @@
 
   max_memory_size = max_memory_size_request
 
-! make sure everybody is synchronized
+  ! make sure everybody is synchronized
   call synchronize_all()
 
-! main working routine to create all the regions of the mesh
+  ! main working routine to create all the regions of the mesh
   if (myrank == 0) then
     write(IMAIN,*) 'create regions:'
   endif
   call create_regions_mesh()
 
-! print min and max of topography included
+  ! print min and max of topography included
   min_elevation = HUGEVAL
   max_elevation = -HUGEVAL
   do iface = 1,nspec2D_top_ext
@@ -87,7 +87,7 @@
      enddo
   enddo
 
-! compute the maximum of the maxima for all the slices using an MPI reduction
+  ! compute the maximum of the maxima for all the slices using an MPI reduction
   call min_all_dp(min_elevation,min_elevation_all)
   call max_all_dp(max_elevation,max_elevation_all)
 
@@ -106,13 +106,22 @@
     call flush_IMAIN()
   endif
 
-! clean-up
+  ! clean-up
   deallocate(xstore,ystore,zstore)
   deallocate(ibool)
   deallocate(ispec_is_surface_external_mesh)
   deallocate(iglob_is_surface_external_mesh)
 
-! make sure everybody is synchronized
+  ! make sure everybody is synchronized
+  call synchronize_all()
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) 'done mesh setup'
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
   call synchronize_all()
 
   end subroutine setup_mesh

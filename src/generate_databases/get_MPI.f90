@@ -151,9 +151,9 @@
     do ilocnum = 1, num_interface_points
       iglob = ibool_interfaces_ext_mesh(ilocnum,iinterface)
       ! we will use double precision locations to find/sort MPI points
-      xp(ilocnum) = dble(xstore_dummy(iglob))
-      yp(ilocnum) = dble(ystore_dummy(iglob))
-      zp(ilocnum) = dble(zstore_dummy(iglob))
+      xp(ilocnum) = dble(xstore_unique(iglob))
+      yp(ilocnum) = dble(ystore_unique(iglob))
+      zp(ilocnum) = dble(zstore_unique(iglob))
     enddo
 
     ! sorts (lexicographically?) ibool_interfaces_ext_mesh and updates value

@@ -251,8 +251,8 @@
           if (TOPOGRAPHY) then
 
             ! takes elevation from topography file
-            xloc = xstore_dummy(iglobnum)
-            yloc = ystore_dummy(iglobnum)
+            xloc = xstore_unique(iglobnum)
+            yloc = ystore_unique(iglobnum)
 
             call get_topo_bathy_elevation(xloc,yloc,loc_elevation, &
                                           itopo_bathy,NX_TOPO,NY_TOPO)
@@ -262,7 +262,7 @@
           else
 
             ! takes elevation from z-coordinate of mesh point
-            elevation = zstore_dummy(iglobnum)
+            elevation = zstore_unique(iglobnum)
 
           endif
 

@@ -2373,29 +2373,27 @@ contains
        enddo
     enddo
 
-
     field_wksp(:,:) = field_wksp(:,:) /  valence(:,:)
 
     valence(:,:) = 1.
 
     !! 2/ compute average values of field_to_derivate at the edge of MPI slices -------------------
     call assemble_MPI_vector_blocking(NPROC,NGLOB_AB,valence, &
-         num_interfaces_ext_mesh_sp,max_nibool_interfaces_ext_mesh_sp, &
-         nibool_interfaces_ext_mesh_sp,ibool_interfaces_ext_mesh_sp, &
-         my_neighbors_ext_mesh_sp)
+                                      num_interfaces_ext_mesh_sp,max_nibool_interfaces_ext_mesh_sp, &
+                                      nibool_interfaces_ext_mesh_sp,ibool_interfaces_ext_mesh_sp, &
+                                      my_neighbors_ext_mesh_sp)
 
     call assemble_MPI_vector_blocking(NPROC,NGLOB_AB,field_wksp, &
-         num_interfaces_ext_mesh_sp,max_nibool_interfaces_ext_mesh_sp, &
-         nibool_interfaces_ext_mesh_sp,ibool_interfaces_ext_mesh_sp, &
-         my_neighbors_ext_mesh_sp)
+                                      num_interfaces_ext_mesh_sp,max_nibool_interfaces_ext_mesh_sp, &
+                                      nibool_interfaces_ext_mesh_sp,ibool_interfaces_ext_mesh_sp, &
+                                      my_neighbors_ext_mesh_sp)
 
     field_wksp(:,:) = field_wksp(:,:) /  valence(:,:)
 
-
-    do ispec=1, NSPEC_AB
-       do k=1,NGLLZ
-          do j=1,NGLLY
-             do i=1,NGLLX
+    do ispec = 1, NSPEC_AB
+       do k = 1,NGLLZ
+          do j = 1,NGLLY
+             do i = 1,NGLLX
                 iglob = ibool(i,j,k,ispec)
 
                 field(1,i,j,k,ispec) = field_wksp(1,iglob)
@@ -4065,25 +4063,24 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 200')
     allocate(field_to_send(NGLOB_AB), field_overlap(indx_recv(NPROC)), result_df(nline),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 201')
-    valence(:,:)=1.
+    valence(:,:) = 1.
     field_to_derivate(:,:) = field_input(:,:)
 
     !! 1/ compute average values of field_to_derivate at the edge of MPI slices -------------------
     call assemble_MPI_vector_blocking(NPROC,NGLOB_AB,valence, &
-         num_interfaces_ext_mesh_sp,max_nibool_interfaces_ext_mesh_sp, &
-         nibool_interfaces_ext_mesh_sp,ibool_interfaces_ext_mesh_sp, &
-         my_neighbors_ext_mesh_sp)
+                                      num_interfaces_ext_mesh_sp,max_nibool_interfaces_ext_mesh_sp, &
+                                      nibool_interfaces_ext_mesh_sp,ibool_interfaces_ext_mesh_sp, &
+                                      my_neighbors_ext_mesh_sp)
 
     call assemble_MPI_vector_blocking(NPROC,NGLOB_AB,field_to_derivate, &
-         num_interfaces_ext_mesh_sp,max_nibool_interfaces_ext_mesh_sp, &
-         nibool_interfaces_ext_mesh_sp,ibool_interfaces_ext_mesh_sp, &
-         my_neighbors_ext_mesh_sp)
+                                      num_interfaces_ext_mesh_sp,max_nibool_interfaces_ext_mesh_sp, &
+                                      nibool_interfaces_ext_mesh_sp,ibool_interfaces_ext_mesh_sp, &
+                                      my_neighbors_ext_mesh_sp)
 
     !! divide by valence
     field_to_derivate(:,:) = field_to_derivate(:,:) / valence(:,:)
 
-
-    do idim=1, NDIM
+    do idim = 1, NDIM
        !! 2/ communicate overlap of MPI slices
        field_to_send(:)=field_to_derivate(idim,:)
        call send_recv_blocking(field_to_send, field_overlap)
@@ -4149,7 +4146,7 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 203')
     allocate(field_to_send(NGLOB_AB), field_overlap(indx_recv(NPROC)), result_df(nline),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 204')
-    valence(:,:)=1.
+    valence(:,:) = 1.
 
     !! need to duplicate in order to use the already build subroutine from sepcfem package : assembel_MPI..
     field_to_derivate(1,:) = field_input(:)
@@ -4158,14 +4155,14 @@ contains
 
     !! 1/ compute average values of field_to_derivate at the edge of MPI slices -------------------
     call assemble_MPI_vector_blocking(NPROC,NGLOB_AB,valence, &
-         num_interfaces_ext_mesh_sp,max_nibool_interfaces_ext_mesh_sp, &
-         nibool_interfaces_ext_mesh_sp,ibool_interfaces_ext_mesh_sp, &
-         my_neighbors_ext_mesh_sp)
+                                      num_interfaces_ext_mesh_sp,max_nibool_interfaces_ext_mesh_sp, &
+                                      nibool_interfaces_ext_mesh_sp,ibool_interfaces_ext_mesh_sp, &
+                                      my_neighbors_ext_mesh_sp)
 
     call assemble_MPI_vector_blocking(NPROC,NGLOB_AB,field_to_derivate, &
-         num_interfaces_ext_mesh_sp,max_nibool_interfaces_ext_mesh_sp, &
-         nibool_interfaces_ext_mesh_sp,ibool_interfaces_ext_mesh_sp, &
-         my_neighbors_ext_mesh_sp)
+                                      num_interfaces_ext_mesh_sp,max_nibool_interfaces_ext_mesh_sp, &
+                                      nibool_interfaces_ext_mesh_sp,ibool_interfaces_ext_mesh_sp, &
+                                      my_neighbors_ext_mesh_sp)
 
     !! divide by valence
     field_to_derivate(1,:) = field_to_derivate(1,:) / valence(1,:)

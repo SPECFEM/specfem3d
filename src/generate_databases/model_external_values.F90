@@ -132,8 +132,8 @@
 
   use generate_databases_par, only: nspec => NSPEC_AB,ibool,HUGEVAL,TINYVAL,IDOMAIN_ELASTIC,CUSTOM_REAL
 
-  use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy, &
-    num_free_surface_faces,free_surface_ijk,free_surface_ispec,nglob_dummy
+  use create_regions_mesh_ext_par, only: xstore_unique,ystore_unique,zstore_unique, &
+    num_free_surface_faces,free_surface_ijk,free_surface_ispec,nglob_unique
 
   implicit none
 
@@ -177,26 +177,26 @@
   ! gets element midpoint location (if needed)
   idummy = ispec
   !iglob = ibool(MIDX,MIDY,MIDZ,ispec)
-  !mid_x = xstore_dummy(iglob)
-  !mid_y = ystore_dummy(iglob)
-  !mid_z = zstore_dummy(iglob)
+  !mid_x = xstore_unique(iglob)
+  !mid_y = ystore_unique(iglob)
+  !mid_z = zstore_unique(iglob)
 
   ! note: z coordinate will be negative below surface
   !          convention is z-axis points up
 
   ! model dimensions
-  xmin = 0._CUSTOM_REAL ! minval(xstore_dummy)
-  xmax = 134000._CUSTOM_REAL ! maxval(xstore_dummy)
-  ymin = 0._CUSTOM_REAL  !minval(ystore_dummy)
-  ymax = 134000._CUSTOM_REAL ! maxval(ystore_dummy)
-  zmin = 0._CUSTOM_REAL ! minval(zstore_dummy)
-  zmax = 60000._CUSTOM_REAL ! maxval(zstore_dummy)
+  xmin = 0._CUSTOM_REAL ! minval(xstore_unique)
+  xmax = 134000._CUSTOM_REAL ! maxval(xstore_unique)
+  ymin = 0._CUSTOM_REAL  !minval(ystore_unique)
+  ymax = 134000._CUSTOM_REAL ! maxval(ystore_unique)
+  zmin = 0._CUSTOM_REAL ! minval(zstore_unique)
+  zmax = 60000._CUSTOM_REAL ! maxval(zstore_unique)
   x_target = x
   y_target = y
 
   ! get approximate topography elevation at target coordinates from free surface
   call get_topo_elevation_free_closest(x_target,y_target,elevation,distmin, &
-                                       nspec,nglob_dummy,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                       nspec,nglob_unique,ibool,xstore_unique,ystore_unique,zstore_unique, &
                                        num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
   ! depth in Z-direction

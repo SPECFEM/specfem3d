@@ -68,7 +68,6 @@
     nfaces_surface
 
   use create_regions_mesh_ext_par
-  use create_regions_mesh_ext_par, only: nglob => nglob_dummy
 
   use adios_helpers_mod
   use adios_manager_mod, only: comm_adios
@@ -84,6 +83,7 @@
   integer :: max_nibool_interfaces_ext_mesh
 
   integer :: ier,i
+  integer :: nglob
 
   !--- Local parameters for ADIOS ---
   character(len=MAX_STRING_LEN) :: output_name
@@ -115,6 +115,9 @@
   integer, parameter :: num_vars = 41
   integer, dimension(num_vars) :: max_global_values
   integer :: comm
+
+  ! number of unique global nodes
+  nglob = nglob_unique
 
   ! initializes
   output_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/external_mesh.bp"
@@ -268,9 +271,9 @@
   call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(ibool))
 
   local_dim = nglob_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', "x_global", xstore_dummy)
-  call define_adios_global_array1D(group, groupsize, local_dim, '', "y_global", ystore_dummy)
-  call define_adios_global_array1D(group, groupsize, local_dim, '', "z_global", zstore_dummy)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "x_global", xstore_unique)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "y_global", ystore_unique)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "z_global", zstore_unique)
 
   local_dim = nspec_wmax
   call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(irregular_element_number))
@@ -628,9 +631,9 @@
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibool))
 
   local_dim = nglob_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "x_global", xstore_dummy)
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "y_global", ystore_dummy)
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "z_global", zstore_dummy)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "x_global", xstore_unique)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "y_global", ystore_unique)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "z_global", zstore_unique)
 
   local_dim = nspec_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(irregular_element_number))
@@ -991,7 +994,7 @@
     !if (num_interfaces_ext_mesh >= 1) then
     !  filename = prname(1:len_trim(prname))//'MPI_1_points'
     !  call write_VTK_data_points(nglob, &
-    !                    xstore_dummy,ystore_dummy,zstore_dummy, &
+    !                    xstore_unique,ystore_unique,zstore_unique, &
     !                    ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
     !                    nibool_interfaces_ext_mesh(1), &
     !                    filename)
@@ -1110,9 +1113,9 @@
   call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nglob))
 
   local_dim = nglob_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', "x_global", xstore_dummy)
-  call define_adios_global_array1D(group, groupsize, local_dim, '', "y_global", ystore_dummy)
-  call define_adios_global_array1D(group, groupsize, local_dim, '', "z_global", zstore_dummy)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "x_global", xstore_unique)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "y_global", ystore_unique)
+  call define_adios_global_array1D(group, groupsize, local_dim, '', "z_global", zstore_unique)
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
   call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(xstore))
@@ -1145,9 +1148,9 @@
   call check_adios_err(myrank,ier)
 
   local_dim = nglob_wmax
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "x_global", xstore_dummy)
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "y_global", ystore_dummy)
-  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "z_global", zstore_dummy)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "x_global", xstore_unique)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "y_global", ystore_unique)
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, "z_global", zstore_unique)
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(xstore))

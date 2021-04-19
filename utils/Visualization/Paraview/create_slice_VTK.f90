@@ -186,8 +186,8 @@
 !
 
   subroutine write_VTK_data_gll_cr(nspec,nglob, &
-            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-            gll_data,prname_file)
+                                   xstore,ystore,zstore,ibool, &
+                                   gll_data,prname_file)
 
 ! external mesh routine for saving vtk files for CUSTOM_REAL values on all GLL points
 
@@ -199,7 +199,7 @@
 
 ! global coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
 
 ! GLL data values array
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: gll_data
@@ -223,28 +223,28 @@
   write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nspec*8, ' float'
   do ispec=1,nspec
     i = ibool(1,1,1,ispec)
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore(i),ystore(i),zstore(i)
 
     i = ibool(NGLLX,1,1,ispec)
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore(i),ystore(i),zstore(i)
 
     i = ibool(NGLLX,NGLLY,1,ispec)
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore(i),ystore(i),zstore(i)
 
     i = ibool(1,NGLLY,1,ispec)
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore(i),ystore(i),zstore(i)
 
     i = ibool(1,1,NGLLZ,ispec)
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore(i),ystore(i),zstore(i)
 
     i = ibool(NGLLX,1,NGLLZ,ispec)
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore(i),ystore(i),zstore(i)
 
     i = ibool(NGLLX,NGLLY,NGLLZ,ispec)
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore(i),ystore(i),zstore(i)
 
     i = ibool(1,NGLLY,NGLLZ,ispec)
-    write(IOUT_VTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOUT_VTK,'(3e18.6)') xstore(i),ystore(i),zstore(i)
   enddo
   write(IOUT_VTK,*) ''
 
