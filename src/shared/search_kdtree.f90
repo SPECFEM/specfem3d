@@ -131,6 +131,7 @@ contains
   ! returns:
   !   creates internal tree representation
   !
+  use constants, only: myrank
 
   implicit none
 
@@ -179,6 +180,7 @@ contains
     !write(IMAIN,*) '  box boundaries   : x min/max = ',minval(points_data(1,:)),maxval(points_data(1,:))
     !write(IMAIN,*) '                     y min/max = ',minval(points_data(2,:)),maxval(points_data(2,:))
     !write(IMAIN,*) '                     z min/max = ',minval(points_data(3,:)),maxval(points_data(3,:))
+    call flush_IMAIN()
   endif
 
   ! theoretical number of node for totally balanced tree
@@ -193,12 +195,14 @@ contains
   if (be_verbose) then
     write(IMAIN,*) '  theoretical   number of nodes: ',numnodes
     write(IMAIN,*) '               tree memory size: ',( numnodes * 32 )/1024./1024.,'MB'
+    call flush_IMAIN()
   endif
 
   ! local ordering
   allocate(points_index(kdtree_num_nodes),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1226')
   if (ier /= 0) stop 'Error allocating array points_index'
+  points_index(:) = 0
 
   ! initial point ordering
   do i = 1,npoints
@@ -227,8 +231,8 @@ contains
     call cpu_time(ct_end)
     write(IMAIN,*) '  creation timing : ',ct_end - ct_start, '(s)'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
-
 
   ! debugging
   if (DEBUG) then
@@ -239,7 +243,7 @@ contains
     endif
 
     ! test search
-    print *,'search tree:'
+    print *,'search tree: rank ',myrank
     xyz_target(1) = 0.13261298835277557
     xyz_target(2) = -8.4083788096904755E-002
     xyz_target(3) = 0.97641450166702271
@@ -649,7 +653,18 @@ contains
   integer :: i,ier,idim
   integer :: iloc,ilower,iupper
   integer :: l,u
-  integer,dimension(:),allocatable :: workindex
+
+  ! note: compiling with intel ifort version 18.0.1/19.1.0 and optimizations like -xHost -O2 or -xHost -O3 flags
+  !       can lead to issues with the deallocate(workindex) statement below:
+  !         *** Error in `./bin/xspecfem3D': double free or corruption (!prev): 0x00000000024f1610 ***
+  !
+  !       this might be due to a more aggressive optimization which leads to a change of the instruction set
+  !       and the memory being free twice.
+  !       a way to avoid this is by removing -xHost from FLAGS_CHECK = .. in Makefile
+  !       or to use a pointer array instead of an allocatable array
+  !
+  ! integer,dimension(:),allocatable :: workindex
+  integer,dimension(:),pointer :: workindex
 
   ! checks if anything to sort
   if (ibound_lower > ibound_upper) then
@@ -737,6 +752,7 @@ contains
   allocate(workindex(ibound_upper - ibound_lower + 1),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1228')
   if (ier /= 0) stop 'Error allocating workindex array'
+  workindex(:) = 0
 
   ! sorts point indices
   ! to have all points with value < cut_value on left side, all others to the right
@@ -761,6 +777,15 @@ contains
 
   ! replaces index range with new sorting order
   points_index(ibound_lower:ibound_upper) = workindex(:)
+
+  ! note: compiling with intel ifort version 18.0.1/19.1.0 and optimizations like -xHost -O2 or -xHost -O3 flags
+  !       can lead to issues with the deallocate(workindex) statement below:
+  !         *** Error in `./bin/xspecfem3D': double free or corruption (!prev): 0x00000000024f1610 ***
+  !
+  !       this might be due to a more aggressive optimization which leads to a change of the instruction set
+  !       and the memory being free twice.
+  !       a way to avoid this is by removing -xHost from FLAGS_CHECK = .. in Makefile
+  !       or to use a pointer array instead of an allocatable array
 
   ! frees temporary array
   deallocate(workindex)
@@ -1352,6 +1377,5 @@ contains
   dist_h = (r1 * theta)*(r1 * theta)
 
   end subroutine get_distance_ellip
-
 
 end module
