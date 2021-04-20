@@ -911,10 +911,6 @@
   if (SIMULATION_TYPE == 3 .and. ATTENUATION .and. .not. UNDO_ATTENUATION_AND_OR_PML) &
     stop 'For SIMULATION_TYPE == 3 and attenuation, simulations need flag UNDO_ATTENUATION_AND_OR_PML set to .true.'
 
-  ! external STF
-  if (USE_EXTERNAL_SOURCE_FILE .and. GPU_MODE) &
-    stop 'USE_EXTERNAL_SOURCE_FILE in GPU_MODE simulation not supported yet'
-
   ! local time stepping (still in experimental implementation phase...)
   if (LTS_MODE) then
     if (USE_LDDRK) &
