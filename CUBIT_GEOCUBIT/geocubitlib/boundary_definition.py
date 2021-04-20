@@ -71,7 +71,7 @@ def map_boundary(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1, cpuy=1):
     return xmin, xmax, ymin, ymax, listfull
 
 
-def define_4side_lateral_surfaces():
+def define_4side_lateral_surfaces(tres = 0.0003, tol = 0.000001):
     list_vol = cubit.parse_cubit_list("volume", "all")
     surf_xmin = []
     surf_ymin = []
@@ -93,20 +93,15 @@ def define_4side_lateral_surfaces():
         surf_vertical = []
         xsurf = []
         ysurf = []
-        tres = 0.3
         lsurf = cubit.get_relatives("volume", id_vol, "surface")
         for k in lsurf:
             normal = cubit.get_surface_normal(k)
-            #debug
-            #print("#debug: define_4side_lateral_surfaces volume: ",id_vol," surface: ",k,"normal",normal)
-
-            # checks if normal is horizontal (almost 0, i.e., +/- 0.3)
+            # checks if normal is horizontal (almost 0, i.e., +/- tres)
             if normal[2] >= -1 * tres and normal[2] <= tres:
                 # checks if surface is on minimum/maximum side of the whole model
                 center_point = cubit.get_center_point("surface", k)
                 # note: for models with smaller volumes inscribed, we want only the outermost surfaces
                 #       as absorbing ones
-                tol = 0.001
                 #sbox = cubit.get_bounding_box('surface', k)
                 # xmin of surface box relative to total box xmin
                 if (abs(center_point[0] - xmin_box) / abs(xmax_box - xmin_box) <= tol) or \
@@ -225,9 +220,9 @@ def define_surf(iproc=0, cpuxmin=0, cpuxmax=1,
 
     list_surf = cubit.parse_cubit_list("surface", "all")
 
-    absorbing_surface_distance_tolerance = 0.001
-    topographic_surface_distance_tolerance = 0.1
-    topographic_surface_normal_tolerance = 0.4
+    absorbing_surface_distance_tolerance = 0.000001
+    topographic_surface_distance_tolerance = 0.0001
+    topographic_surface_normal_tolerance = 0.0004
 
     lv = []
     for k in list_surf:
@@ -257,7 +252,7 @@ def define_surf(iproc=0, cpuxmin=0, cpuxmax=1,
                     # valence 3 is a corner, 4 is a vertex between 2 volumes,
                     # > 4 is a vertex not in the boundaries
                     lv.append(v)
-        elif dzmin <= 0.001 and zn < -1 + topographic_surface_normal_tolerance:
+        elif dzmin <= 0.00001 and zn < -1 + topographic_surface_normal_tolerance:
             bottom_surf.append(k)
     if len(top_surf) == 0:
         # assuming that one topo surface need to be selected
