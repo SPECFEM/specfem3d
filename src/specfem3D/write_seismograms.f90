@@ -853,7 +853,7 @@
   use specfem_par, only: seismograms_eps, &
     number_receiver_global,nrec_local,DT,NSTEP,t0, &
     seismo_offset,subsamp_seismos, &
-    GPU_MODE
+    GPU_MODE,SUPPRESS_UTM_PROJECTION
 
   implicit none
 
@@ -892,24 +892,81 @@
     ! get global number of that receiver
     irec = number_receiver_global(irec_local)
 
+    ! reference frame convention:
+    !   SPECFEM reference frame convention: x = East, y = North, z = Up
+    !
+    !   UTM convention: uses convention for N/E/Z
+    !                   ‘longitude’ parameters simply refer to the x axis
+    !                   ‘latitude’  parameters simply refer to the y axis
+    !
+    ! SPECFEM3D Cartesian uses the traditional orientation code E/N/Z (East-West, North-South, Vertical)
+    ! for three components when a UTM projection is used.
+    !
+    ! If the UTM conversion is suppressed, i.e. the flag SUPPRESS_UTM_PROJECTION is set to .true.,
+    ! then the three components are labelled X/Y/Z according to the Cartesian reference frame.
+    !
+    !
+    ! strain "seismogram":
+    !   seismograms_eps(:,:) = eps_s(:,:)
+    ! with
+    !   symmetric strain tensor: eps_s(1,1) = eps_xx
+    !                            eps_s(2,2) = eps_yy
+    !                            eps_s(3,3) = eps_zz
+    !                            eps_s(1,2) = eps_xy
+    !                            eps_s(1,3) = eps_xz
+    !                            eps_s(2,3) = eps_yz
     do idimval = 1,NDIM
       do jdimval = idimval,NDIM
 
         ! strain channel name
-        if (idimval == 1 .and. jdimval == 1) then
-          chn = 'SNN'
-        else if (idimval == 1 .and. jdimval == 2) then
-          chn = 'SEN'
-        else if (idimval == 1 .and. jdimval == 3) then
-          chn = 'SEZ'
-        else if (idimval == 2 .and. jdimval == 2) then
-          chn = 'SEE'
-        else if (idimval == 2 .and. jdimval == 3) then
-          chn = 'SNZ'
-        else if (idimval == 3 .and. jdimval == 3) then
-          chn = 'SZZ'
+        if (SUPPRESS_UTM_PROJECTION) then
+          ! no UTM
+          ! uses Cartesian X/Y/Z direction to denote channel
+          if (idimval == 1 .and. jdimval == 1) then
+            ! eps(1,1) = eps_xx
+            chn = 'SXX'
+          else if (idimval == 1 .and. jdimval == 2) then
+            ! eps(2,1) = eps_yx = eps_xy
+            chn = 'SXY'
+          else if (idimval == 1 .and. jdimval == 3) then
+            ! eps(3,1) = eps_zx = eps_xz
+            chn = 'SXZ'
+          else if (idimval == 2 .and. jdimval == 2) then
+            ! eps(2,2) = eps_yy
+            chn = 'SYY'
+          else if (idimval == 2 .and. jdimval == 3) then
+            ! eps(3,2) = eps_zy = eps_yz
+            chn = 'SYZ'
+          else if (idimval == 3 .and. jdimval == 3) then
+            ! eps(3,3) = eps_zz
+            chn = 'SZZ'
+          else
+            call exit_MPI(myrank,'incorrect channel value')
+          endif
         else
-          call exit_MPI(myrank,'incorrect channel value')
+          ! UTM conversion
+          ! uses convention for N/E/Z to denote channel
+          if (idimval == 1 .and. jdimval == 1) then
+            ! eps(1,1) = eps_xx
+            chn = 'SEE'
+          else if (idimval == 1 .and. jdimval == 2) then
+            ! eps(2,1) = eps_yx = eps_xy
+            chn = 'SEN'
+          else if (idimval == 1 .and. jdimval == 3) then
+            ! eps(3,1) = eps_zx = eps_xz
+            chn = 'SEZ'
+          else if (idimval == 2 .and. jdimval == 2) then
+            ! eps(2,2) = eps_yy
+            chn = 'SNN'
+          else if (idimval == 2 .and. jdimval == 3) then
+            ! eps(3,2) = eps_zy = eps_yz
+            chn = 'SNZ'
+          else if (idimval == 3 .and. jdimval == 3) then
+            ! eps(3,3) = eps_zz
+            chn = 'SZZ'
+          else
+            call exit_MPI(myrank,'incorrect channel value')
+          endif
         endif
 
         ! create the name of the seismogram file for each slice
@@ -960,9 +1017,21 @@
   sampling_rate = DT
   call band_instrument_code(sampling_rate,bic)
 
+  ! reference frame convention:
+  !   SPECFEM reference frame convention: x = East, y = North, z = Up
+  !
+  !   UTM convention: uses convention for N/E/Z
+  !                   ‘longitude’ parameters simply refer to the x axis
+  !                   ‘latitude’  parameters simply refer to the y axis
+  !
+  ! SPECFEM3D Cartesian uses the traditional orientation code E/N/Z (East-West, North-South, Vertical)
+  ! for three components when a UTM projection is used.
+  !
+  ! If the UTM conversion is suppressed, i.e. the flag SUPPRESS_UTM_PROJECTION is set to .true.,
+  ! then the three components are labelled X/Y/Z according to the Cartesian reference frame.
+
   ! sets channel name
   if (SUPPRESS_UTM_PROJECTION) then
-
     ! no UTM, pure Cartesian reference
     ! uses Cartesian X/Y/Z direction to denote channel
     select case (iorientation)
@@ -979,7 +1048,6 @@
     end select
 
   else
-
     ! UTM conversion
     ! uses convention for N/E/Z to denote channel
     select case (iorientation)

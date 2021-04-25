@@ -106,15 +106,15 @@
         ! get derivatives of ux, uy and uz with respect to x, y and z
         if (ispec_irreg /= 0) then
           ! irregular element
-          xixl = xixstore(i,j,k,ispec)
-          xiyl = xiystore(i,j,k,ispec)
-          xizl = xizstore(i,j,k,ispec)
-          etaxl = etaxstore(i,j,k,ispec)
-          etayl = etaystore(i,j,k,ispec)
-          etazl = etazstore(i,j,k,ispec)
-          gammaxl = gammaxstore(i,j,k,ispec)
-          gammayl = gammaystore(i,j,k,ispec)
-          gammazl = gammazstore(i,j,k,ispec)
+          xixl = xixstore(i,j,k,ispec_irreg)
+          xiyl = xiystore(i,j,k,ispec_irreg)
+          xizl = xizstore(i,j,k,ispec_irreg)
+          etaxl = etaxstore(i,j,k,ispec_irreg)
+          etayl = etaystore(i,j,k,ispec_irreg)
+          etazl = etazstore(i,j,k,ispec_irreg)
+          gammaxl = gammaxstore(i,j,k,ispec_irreg)
+          gammayl = gammaystore(i,j,k,ispec_irreg)
+          gammazl = gammazstore(i,j,k,ispec_irreg)
 
           duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
           duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l

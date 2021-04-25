@@ -262,7 +262,7 @@
       print *, 'Error reading Mrr in source ',isource
       stop 'Error reading Mrr in station in CMTSOLUTION file'
     endif
-    read(string(5:len_trim(string)),*) moment_tensor(1,isource)
+    read(string(5:len_trim(string)),*) moment_tensor(1,isource)   ! Mrr
 
     ! read Mtt
     read(IIN,"(a)",iostat=ier) string
@@ -270,7 +270,7 @@
       print *, 'Error reading Mtt in source ',isource
       stop 'Error reading Mtt in station in CMTSOLUTION file'
     endif
-    read(string(5:len_trim(string)),*) moment_tensor(2,isource)
+    read(string(5:len_trim(string)),*) moment_tensor(2,isource)   ! Mtt
 
     ! read Mpp
     read(IIN,"(a)",iostat=ier) string
@@ -278,7 +278,7 @@
       print *, 'Error reading Mpp in source ',isource
       stop 'Error reading Mpp in station in CMTSOLUTION file'
     endif
-    read(string(5:len_trim(string)),*) moment_tensor(3,isource)
+    read(string(5:len_trim(string)),*) moment_tensor(3,isource)   ! Mpp
 
     ! read Mrt
     read(IIN,"(a)",iostat=ier) string
@@ -286,7 +286,7 @@
       print *, 'Error reading Mrt in source ',isource
       stop 'Error reading Mrt in station in CMTSOLUTION file'
     endif
-    read(string(5:len_trim(string)),*) moment_tensor(4,isource)
+    read(string(5:len_trim(string)),*) moment_tensor(4,isource)   ! Mrt
 
     ! read Mrp
     read(IIN,"(a)",iostat=ier) string
@@ -294,7 +294,7 @@
       print *, 'Error reading Mrp in source ',isource
       stop 'Error reading Mrp in station in CMTSOLUTION file'
     endif
-    read(string(5:len_trim(string)),*) moment_tensor(5,isource)
+    read(string(5:len_trim(string)),*) moment_tensor(5,isource)   ! Mrp
 
     ! read Mtp
     read(IIN,"(a)",iostat=ier) string
@@ -302,7 +302,7 @@
       print *, 'Error reading Mtp in source ',isource
       stop 'Error reading Mtp in station in CMTSOLUTION file'
     endif
-    read(string(5:len_trim(string)),*) moment_tensor(6,isource)
+    read(string(5:len_trim(string)),*) moment_tensor(6,isource)   ! Mtp
 
     ! checks half-duration
     ! null half-duration indicates a Heaviside

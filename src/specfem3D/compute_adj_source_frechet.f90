@@ -41,23 +41,23 @@
   implicit none
 
   ! input
-  integer :: ispec
-  real(kind=CUSTOM_REAL) :: displ_s(NDIM,NGLLX,NGLLY,NGLLZ)
-  double precision :: Mxx, Myy, Mzz, Mxy, Mxz, Myz
+  integer,intent(in) :: ispec
+  real(kind=CUSTOM_REAL),intent(in) :: displ_s(NDIM,NGLLX,NGLLY,NGLLZ)
+  double precision,intent(in) :: Mxx, Myy, Mzz, Mxy, Mxz, Myz
   ! output
-  real(kind=CUSTOM_REAL) :: eps_s(NDIM,NDIM), eps_m_s(NDIM)
+  real(kind=CUSTOM_REAL),intent(inout) :: eps_s(NDIM,NDIM), eps_m_s(NDIM)
 
   ! receiver Lagrange interpolators
   double precision,dimension(NGLLX),intent(in) :: hxir
   double precision,dimension(NGLLY),intent(in) :: hetar
   double precision,dimension(NGLLZ),intent(in) :: hgammar
-  double precision :: hpxir(NGLLX),hpetar(NGLLY),hpgammar(NGLLZ)
+  double precision,intent(in) :: hpxir(NGLLX),hpetar(NGLLY),hpgammar(NGLLZ)
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy
-  real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX),intent(in) :: hprime_xx
+  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY),intent(in) :: hprime_yy
+  real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ),intent(in) :: hprime_zz
 
-! local variables
+  ! local variables
   real(kind=CUSTOM_REAL) :: tempx1l,tempx2l,tempx3l, tempy1l,tempy2l,tempy3l, &
              tempz1l,tempz2l,tempz3l, hp1, hp2, hp3, &
              xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl, &
@@ -68,11 +68,11 @@
   real(kind=CUSTOM_REAL) :: eps(NDIM,NDIM), eps_array(NDIM,NDIM,NGLLX,NGLLY,NGLLZ), &
              eps_m_array(NGLLX,NGLLY,NGLLZ)
 
-  integer i,j,k,l,ispec_irreg
+  integer :: i,j,k,l,ispec_irreg
 
   ispec_irreg = irregular_element_number(ispec)
 
-! first compute the strain at all the GLL points of the source element
+  ! first compute the strain at all the GLL points of the source element
   do k = 1, NGLLZ
     do j = 1, NGLLY
       do i = 1, NGLLX
@@ -89,7 +89,7 @@
         tempz2l = 0._CUSTOM_REAL
         tempz3l = 0._CUSTOM_REAL
 
-        do l=1,NGLLX
+        do l = 1,NGLLX    ! assumes NGLLX == NGLLY == NGLLZ
           hp1 = hprime_xx(i,l)
           tempx1l = tempx1l + displ_s(1,l,j,k)*hp1
           tempy1l = tempy1l + displ_s(2,l,j,k)*hp1
@@ -106,10 +106,9 @@
           tempz3l = tempz3l + displ_s(3,i,j,l)*hp3
         enddo
 
-! dudx
+        ! derivatives (dudx,..)
         if (ispec_irreg /= 0) then
           !irregular element
-
           xixl = xixstore(i,j,k,ispec_irreg)
           xiyl = xiystore(i,j,k,ispec_irreg)
           xizl = xizstore(i,j,k,ispec_irreg)
@@ -134,7 +133,6 @@
 
         else
           !regular element
-
           duxdxl = xix_regular*tempx1l
           duxdyl = xix_regular*tempx2l
           duxdzl = xix_regular*tempx3l
@@ -149,32 +147,35 @@
 
         endif
 
-! strain eps_jk
-        eps(1,1) = duxdxl
-        eps(1,2) = (duxdyl + duydxl) / 2
-        eps(1,3) = (duxdzl + duzdxl) / 2
-        eps(2,2) = duydyl
-        eps(2,3) = (duydzl + duzdyl) / 2
-        eps(3,3) = duzdzl
-        eps(2,1) = eps(1,2)
-        eps(3,1) = eps(1,3)
-        eps(3,2) = eps(2,3)
+        ! symmetric definition of strain: epsilon = 1/2 ( grad(u) + grad(u)^T)
+
+        ! strain eps_jk
+        eps(1,1) = duxdxl                     ! eps_xx = duxdx
+        eps(1,2) = (duxdyl + duydxl) / 2      ! eps_xy = 1/2 (duxdy + duydz)
+        eps(1,3) = (duxdzl + duzdxl) / 2      ! eps_xz = 1/2 (duxdz + duzdx)
+        eps(2,2) = duydyl                     ! eps_yy = duydy
+        eps(2,3) = (duydzl + duzdyl) / 2      ! eps_yz = 1/2 (duydz + duzdy)
+        eps(3,3) = duzdzl                     ! eps_zz = duzdz
+        eps(2,1) = eps(1,2)                   ! symmetry: eps_yx = eps_xy
+        eps(3,1) = eps(1,3)                   ! symmetry: eps_zx = eps_xz
+        eps(3,2) = eps(2,3)                   ! symmetry: eps_zy = eps_yz
 
         eps_array(:,:,i,j,k) = eps(:,:)
 
-! Mjk eps_jk
+        ! Mjk eps_jk
         eps_m_array(i,j,k) = Mxx * eps(1,1) + Myy * eps(2,2) + Mzz * eps(3,3) + &
-                   2 * (Mxy * eps(1,2) + Mxz * eps(1,3) + Myz * eps(2,3))
+                        2 * (Mxy * eps(1,2) + Mxz * eps(1,3) + Myz * eps(2,3))
 
       enddo
     enddo
   enddo
 
   ! interpolate the strain eps_s(:,:) from eps_array(:,:,i,j,k)
-  eps_s = 0.
-  xix_s = 0.;  xiy_s = 0.;  xiz_s = 0.
-  etax_s = 0.; etay_s = 0.; etaz_s = 0.
-  gammax_s = 0.; gammay_s = 0.; gammaz_s = 0.
+  eps_s(:,:) = 0.0_CUSTOM_REAL
+
+  xix_s = 0.0_CUSTOM_REAL; xiy_s = 0.0_CUSTOM_REAL; xiz_s = 0.0_CUSTOM_REAL
+  etax_s = 0.0_CUSTOM_REAL; etay_s = 0.0_CUSTOM_REAL; etaz_s = 0.0_CUSTOM_REAL
+  gammax_s = 0.0_CUSTOM_REAL; gammay_s = 0.0_CUSTOM_REAL; gammaz_s = 0.0_CUSTOM_REAL
 
   do k = 1,NGLLZ
     do j = 1,NGLLY
@@ -211,29 +212,23 @@
     enddo
   enddo
 
-! for completion purpose, not used in specfem3D.f90
+  ! for completion purpose, not used in specfem3D.f90
   eps_s(2,1) = eps_s(1,2)
   eps_s(3,1) = eps_s(1,3)
   eps_s(3,2) = eps_s(2,3)
 
-! compute the gradient of M_jk * eps_jk, and then interpolate it
-
-  eps_m_s = 0._CUSTOM_REAL
+  ! compute the gradient of M_jk * eps_jk, and then interpolate it
+  eps_m_s(:) = 0._CUSTOM_REAL
   do k = 1,NGLLZ
     do j = 1,NGLLY
       do i = 1,NGLLX
+        hlagrange_xi    = hpxir(i) * hetar(j)  * hgammar(k)
+        hlagrange_eta   = hxir(i)  * hpetar(j) * hgammar(k)
+        hlagrange_gamma = hxir(i)  * hetar(j)  * hpgammar(k)
 
-        hlagrange_xi = hpxir(i)*hetar(j)*hgammar(k)
-        hlagrange_eta = hxir(i)*hpetar(j)*hgammar(k)
-        hlagrange_gamma = hxir(i)*hetar(j)*hpgammar(k)
-
-        eps_m_s(1) = eps_m_s(1) +  eps_m_array(i,j,k) * (hlagrange_xi * xix_s &
-                   + hlagrange_eta * etax_s + hlagrange_gamma * gammax_s)
-        eps_m_s(2) = eps_m_s(2) +  eps_m_array(i,j,k) * (hlagrange_xi * xiy_s &
-                   + hlagrange_eta * etay_s + hlagrange_gamma * gammay_s)
-        eps_m_s(3) = eps_m_s(3) +  eps_m_array(i,j,k) * (hlagrange_xi * xiz_s &
-                   + hlagrange_eta * etaz_s + hlagrange_gamma * gammaz_s)
-
+        eps_m_s(1) = eps_m_s(1) + eps_m_array(i,j,k)*(hlagrange_xi * xix_s + hlagrange_eta * etax_s + hlagrange_gamma * gammax_s)
+        eps_m_s(2) = eps_m_s(2) + eps_m_array(i,j,k)*(hlagrange_xi * xiy_s + hlagrange_eta * etay_s + hlagrange_gamma * gammay_s)
+        eps_m_s(3) = eps_m_s(3) + eps_m_array(i,j,k)*(hlagrange_xi * xiz_s + hlagrange_eta * etaz_s + hlagrange_gamma * gammaz_s)
       enddo
     enddo
   enddo

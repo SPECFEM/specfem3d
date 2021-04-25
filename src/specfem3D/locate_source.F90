@@ -231,23 +231,28 @@
   !debug
   !print *,'source elevations:',elevation
 
+  ! reference frame convertion:
+  !   Harvard CMT convention: r is up, t is south, and p is east
+  !                           (x = South, y = East, z = Up)
   !
-  ! r -> z, theta -> -y, phi -> x
+  !   SPECFEM reference frame convention: x = East, y = North, z = Up
   !
-  !  Mrr =  Mzz
-  !  Mtt =  Myy
-  !  Mpp =  Mxx
-  !  Mrt = -Myz
-  !  Mrp =  Mxz
-  !  Mtp = -Mxy
+  !   to convert from CMT to SPECFEM: r -> z, theta -> -y, phi -> x
+  !
+  ! moment_tensor(1,:) = Mrr =  Mzz
+  ! moment_tensor(2,:) = Mtt =  Myy
+  ! moment_tensor(3,:) = Mpp =  Mxx
+  ! moment_tensor(4,:) = Mrt = -Myz
+  ! moment_tensor(5,:) = Mrp =  Mxz
+  ! moment_tensor(6,:) = Mtp = -Mxy
 
   ! get the moment tensor
-  Mzz(:) = + moment_tensor(1,:)
-  Mxx(:) = + moment_tensor(3,:)
-  Myy(:) = + moment_tensor(2,:)
-  Mxz(:) = + moment_tensor(5,:)
-  Myz(:) = - moment_tensor(4,:)
-  Mxy(:) = - moment_tensor(6,:)
+  Mzz(:) = + moment_tensor(1,:) ! Mrr
+  Mxx(:) = + moment_tensor(3,:) ! Mpp
+  Myy(:) = + moment_tensor(2,:) ! Mtt
+  Mxz(:) = + moment_tensor(5,:) ! Mrp
+  Myz(:) = - moment_tensor(4,:) ! - Mrt
+  Mxy(:) = - moment_tensor(6,:) ! - Mtp
 
   ! loop on all the sources
   do isources_already_done = 0, NSOURCES, NSOURCES_SUBSET_MAX
