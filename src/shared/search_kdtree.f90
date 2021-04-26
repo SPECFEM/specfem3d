@@ -640,7 +640,7 @@ contains
   double precision, dimension(3,npoints), intent(in) :: points_data
   integer,dimension(npoints), intent(inout) :: points_index
 
-  type (kdtree_node), pointer, intent(inout) :: node
+  type (kdtree_node), pointer :: node    ! pointers in standard Fortran90 cannot have intent(..) attribute
 
   integer,intent(in) :: depth
   integer,intent(in) :: ibound_lower,ibound_upper
@@ -740,6 +740,26 @@ contains
       !node%cut_max = max
     endif
   enddo
+  ! default dimension
+  if (idim < 1) then
+    ! in case we have two identical points:
+    !   ibound_lower < ibound_upper but min == max value,
+    ! thus zero range and idim,cut_value not set yet
+
+    ! debug
+    !print *,'create_kdtree: ',ibound_lower,ibound_upper
+    !print *,'create_kdtree: data 1 min/max ', &
+    !minval(points_data(1,points_index(ibound_lower:ibound_upper))),maxval(points_data(1,points_index(ibound_lower:ibound_upper)))
+    !print *,'create_kdtree: data 2 min/max ', &
+    !minval(points_data(2,points_index(ibound_lower:ibound_upper))),maxval(points_data(2,points_index(ibound_lower:ibound_upper)))
+    !print *,'create_kdtree: data 3 min/max ', &
+    !minval(points_data(3,points_index(ibound_lower:ibound_upper))),maxval(points_data(3,points_index(ibound_lower:ibound_upper)))
+
+    ! default
+    idim = 1
+    cut_value = 0.d0
+  endif
+  ! sets node values
   node%idim = idim
   node%cut_value = cut_value
 
@@ -760,6 +780,9 @@ contains
   iupper = 0
   do i = ibound_lower,ibound_upper
     iloc = points_index(i)
+    ! checks index
+    if (iloc < 1) stop 'Error invalid iloc index in create_kdtree() routine'
+    ! sorts tree
     if (points_data(idim,iloc) < cut_value) then
       ilower = ilower + 1
       workindex(ilower) = iloc
@@ -770,6 +793,15 @@ contains
   enddo
   !debug
   !print *,'  ilower/iupper:',ilower,iupper
+
+  ! identical points: split first left, second right to balance tree
+   if (ilower == 0) then
+     ilower = 1
+     iupper = (ibound_upper - ibound_lower)
+   else if (iupper == 0) then
+     ilower = (ibound_upper - ibound_lower)
+     iupper = 1
+   endif
 
   ! checks if we catched all
   if (ilower + iupper /= ibound_upper - ibound_lower + 1 ) stop 'Error sorting data points invalid'
@@ -826,7 +858,7 @@ contains
   double precision, dimension(3,npoints),intent(in) :: points_data
   integer,dimension(npoints), intent(in) :: points_index
 
-  type (kdtree_node), pointer,intent(inout) :: node
+  type (kdtree_node), pointer :: node  ! pointers in standard Fortran90 cannot have intent(..) attribute
 
   integer, intent(inout) :: numnodes
 
@@ -925,7 +957,7 @@ contains
   integer, intent(in) :: npoints
   double precision, dimension(3,npoints), intent(in) :: points_data
 
-  type (kdtree_node), pointer, intent(inout) :: node
+  type (kdtree_node), pointer :: node  ! pointers in standard Fortran90 cannot have intent(..) attribute
 
   double precision, dimension(3), intent(in) :: xyz_target
 
@@ -1048,7 +1080,7 @@ contains
   integer, intent(in) :: npoints
   double precision, dimension(3,npoints), intent(in) :: points_data
 
-  type (kdtree_node), pointer, intent(inout) :: node
+  type (kdtree_node), pointer :: node   ! pointers in standard Fortran90 cannot have intent(..) attribute
 
   double precision,dimension(3), intent(in) :: xyz_target
 
@@ -1178,7 +1210,7 @@ contains
   integer, intent(in) :: npoints
   double precision, dimension(3,npoints), intent(in) :: points_data
 
-  type (kdtree_node), pointer, intent(inout) :: node
+  type (kdtree_node), pointer :: node    ! pointers in standard Fortran90 cannot have intent(..) attribute
 
   double precision, dimension(3), intent(in) :: xyz_target
 
