@@ -28,23 +28,21 @@
 
   subroutine compute_seismograms()
 
-  use constants, only: myrank,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO
 
   use specfem_par, only: SIMULATION_TYPE,NGLOB_AB,NSPEC_AB,ibool,NGLOB_ADJOINT, &
-    deltat,DT,t0,NSTEP,it, &
-    seismo_current,seismo_offset,subsamp_seismos, &
+    seismo_current, &
     ispec_selected_source,ispec_selected_rec, &
-    hxir_store,hetar_store,hgammar_store,number_receiver_global,nrec_local, &
-    nu_source,nu_rec,Mxx,Myy,Mzz,Mxy,Mxz,Myz,tshift_src,hdur_Gaussian, &
-    hprime_xx,hprime_yy,hprime_zz, &
-    hpxir_store,hpetar_store,hpgammar_store,seismograms_eps, &
-    Mxx_der,Myy_der,Mzz_der,Mxy_der,Mxz_der,Myz_der,sloc_der, &
+    number_receiver_global,nrec_local, &
+    nu_source,nu_rec, &
+    hxir_store,hetar_store,hgammar_store, &
     USE_TRICK_FOR_BETTER_PRESSURE, &
     SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE
 
   ! seismograms
   use specfem_par, only: seismograms_d,seismograms_v,seismograms_a,seismograms_p
 
+  ! wavefields
   use specfem_par_acoustic, only: ispec_is_acoustic,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
     b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic
   use specfem_par_elastic, only: ispec_is_elastic,displ,veloc,accel, &
@@ -55,26 +53,20 @@
 
   ! local parameters
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element,accel_element
+
   ! interpolated wavefield values
   double precision :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd
-
-  integer :: irec_local,irec,idx
-  integer :: iglob,ispec,i,j,k
-
-  ! adjoint locals
-  real(kind=CUSTOM_REAL),dimension(NDIM,NDIM):: eps_s
-  real(kind=CUSTOM_REAL),dimension(NDIM):: eps_m_s
-  real(kind=CUSTOM_REAL):: stf_deltat
-  double precision :: stf
   double precision,dimension(NDIM,NDIM) :: rotation_seismo
+
   ! receiver Lagrange interpolators
   double precision,dimension(NGLLX) :: hxir
   double precision,dimension(NGLLY) :: hetar
   double precision,dimension(NGLLZ) :: hgammar
-  double precision :: hpxir(NGLLX),hpetar(NGLLY),hpgammar(NGLLZ)
 
-  double precision, external :: comp_source_time_function
+  integer :: irec_local,irec
+  integer :: ispec
 
+  ! loops over local receivers
   do irec_local = 1,nrec_local
 
     ! initializes wavefield values
@@ -123,7 +115,7 @@
         call compute_interpolated_dva_viscoelast(displ,veloc,accel,NGLOB_AB, &
                                                  ispec,NSPEC_AB,ibool, &
                                                  hxir,hetar,hgammar, &
-                                                 dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+                                                 dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
       endif ! elastic
 
       ! acoustic wave field
@@ -151,7 +143,7 @@
         call compute_interpolated_dva_viscoelast(displs_poroelastic,velocs_poroelastic,accels_poroelastic,NGLOB_AB, &
                                                  ispec,NSPEC_AB,ibool, &
                                                  hxir,hetar,hgammar, &
-                                                 dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+                                                 dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
       endif ! poroelastic
 
     case (3)
@@ -164,7 +156,7 @@
         call compute_interpolated_dva_viscoelast(b_displ,b_veloc,b_accel,NGLOB_ADJOINT, &
                                                  ispec,NSPEC_AB,ibool, &
                                                  hxir,hetar,hgammar, &
-                                                 dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+                                                 dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
       endif ! elastic
 
       ! acoustic wave field
@@ -187,48 +179,6 @@
       endif ! acoustic
 
     end select ! SIMULATION_TYPE
-
-    ! additional calculations for pure adjoint simulations
-    ! computes derivatives of source parameters
-    if (SIMULATION_TYPE == 2) then
-
-      ! elastic wave field
-      if (ispec_is_elastic(ispec)) then
-        ! stores elements displacement field
-        do k = 1,NGLLZ
-          do j = 1,NGLLY
-            do i = 1,NGLLX
-              iglob = ibool(i,j,k,ispec)
-              displ_element(:,i,j,k) = displ(:,iglob)
-            enddo
-          enddo
-        enddo
-
-        ! gets derivatives of local receiver interpolators
-        hpxir(:) = hpxir_store(:,irec_local)
-        hpetar(:) = hpetar_store(:,irec_local)
-        hpgammar(:) = hpgammar_store(:,irec_local)
-
-        ! computes the integrated derivatives of source parameters (M_jk and X_s)
-        call compute_adj_source_frechet(ispec,displ_element,Mxx(irec),Myy(irec),Mzz(irec), &
-                                        Mxy(irec),Mxz(irec),Myz(irec),eps_s,eps_m_s, &
-                                        hxir,hetar,hgammar,hpxir,hpetar,hpgammar, &
-                                        hprime_xx,hprime_yy,hprime_zz)
-
-        stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(irec),hdur_Gaussian(irec))
-
-        stf_deltat = real(stf * deltat * subsamp_seismos,kind=CUSTOM_REAL)
-
-        Mxx_der(irec_local) = Mxx_der(irec_local) + eps_s(1,1) * stf_deltat
-        Myy_der(irec_local) = Myy_der(irec_local) + eps_s(2,2) * stf_deltat
-        Mzz_der(irec_local) = Mzz_der(irec_local) + eps_s(3,3) * stf_deltat
-        Mxy_der(irec_local) = Mxy_der(irec_local) + 2 * eps_s(1,2) * stf_deltat
-        Mxz_der(irec_local) = Mxz_der(irec_local) + 2 * eps_s(1,3) * stf_deltat
-        Myz_der(irec_local) = Myz_der(irec_local) + 2 * eps_s(2,3) * stf_deltat
-
-        sloc_der(:,irec_local) = sloc_der(:,irec_local) + eps_m_s(:) * stf_deltat
-      endif ! elastic
-    endif
 
     if (SIMULATION_TYPE == 2) then
       ! adjoint simulations
@@ -254,18 +204,152 @@
                                                       + rotation_seismo(:,3)*azd,kind=CUSTOM_REAL)
 
     ! only one scalar in the case of pressure
-    if (SAVE_SEISMOGRAMS_PRESSURE) seismograms_p(1,irec_local,seismo_current) = real(pd,kind=CUSTOM_REAL)
-
-    ! adjoint simulations
-    if (SIMULATION_TYPE == 2) then
-      ! current index in seismogram_eps
-      idx = seismo_offset + seismo_current
-      ! checks bounds
-      if (idx < 1 .or. idx > NSTEP/subsamp_seismos) call exit_mpi(myrank,'Error: seismograms_eps has wrong current index')
-      ! stores strain value
-      seismograms_eps(:,:,irec_local,idx) = eps_s(:,:)
-    endif
+    if (SAVE_SEISMOGRAMS_PRESSURE) &
+      seismograms_p(1,irec_local,seismo_current) = real(pd,kind=CUSTOM_REAL)
 
   enddo ! nrec_local
 
   end subroutine compute_seismograms
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine compute_seismograms_strain_adjoint()
+
+  use constants, only: myrank,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
+
+  use specfem_par, only: SIMULATION_TYPE,NGLOB_AB,ibool, &
+    deltat,DT,t0,NSTEP,it, &
+    seismo_current,seismo_offset,subsamp_seismos, &
+    ispec_selected_source, &
+    number_receiver_global,nrec_local, &
+    Mxx,Myy,Mzz,Mxy,Mxz,Myz,tshift_src,hdur_Gaussian, &
+    hprime_xx,hprime_yy,hprime_zz, &
+    hxir_store,hetar_store,hgammar_store, &
+    hpxir_store,hpetar_store,hpgammar_store, &
+    ELASTIC_SIMULATION
+
+  use specfem_par, only: GPU_MODE, Mesh_pointer
+
+  ! strain "seismogram" and source derivatives (adjoint simulations)
+  use specfem_par, only: seismograms_eps, &
+    Mxx_der,Myy_der,Mzz_der,Mxy_der,Mxz_der,Myz_der,sloc_der
+
+  ! wavefield
+  use specfem_par_elastic, only: ispec_is_elastic,displ
+
+  implicit none
+
+  ! local parameters
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element
+
+  integer :: irec_local,irec,idx
+  integer :: iglob,ispec,i,j,k
+
+  ! adjoint locals
+  real(kind=CUSTOM_REAL),dimension(NDIM,NDIM):: eps_s
+  real(kind=CUSTOM_REAL),dimension(NDIM):: eps_m_s
+  real(kind=CUSTOM_REAL):: stf_deltat
+  double precision :: stf
+  ! receiver Lagrange interpolators
+  double precision,dimension(NGLLX) :: hxir
+  double precision,dimension(NGLLY) :: hetar
+  double precision,dimension(NGLLZ) :: hgammar
+  double precision :: hpxir(NGLLX),hpetar(NGLLY),hpgammar(NGLLZ)
+
+  double precision, external :: comp_source_time_function
+
+  ! checks if anything to do
+  if (SIMULATION_TYPE /= 2) return
+  if (.not. ELASTIC_SIMULATION) return
+
+  ! for strain seismograms
+  ! strain seismograms are not implemented yet on GPU, thus transfers wavefield to CPU and computes it here
+  ! transfers displacement to the CPU
+  if (GPU_MODE) call transfer_displ_from_device(NDIM*NGLOB_AB, displ, Mesh_pointer)
+
+  ! adjoint strain seismogram
+  ! current index in seismogram_eps
+  idx = seismo_offset + seismo_current
+
+  ! checks bounds
+  if (idx < 1 .or. idx > NSTEP/subsamp_seismos) call exit_mpi(myrank,'Error: seismograms_eps has wrong current index')
+
+  ! loops over local receivers
+  do irec_local = 1,nrec_local
+    ! gets global number of that receiver
+    irec = number_receiver_global(irec_local)
+
+    ! spectral element in which the receiver is located
+    ! adjoint "receivers" are located at CMT source positions
+    ! note: we take here xi_source,.. when FASTER_RECEIVERS_POINTS_ONLY is set
+    ispec = ispec_selected_source(irec)
+
+    ! additional calculations for pure adjoint simulations
+    ! computes derivatives of source parameters
+
+    ! elastic wave field
+    if (ispec_is_elastic(ispec)) then
+      ! stores elements displacement field
+      do k = 1,NGLLZ
+        do j = 1,NGLLY
+          do i = 1,NGLLX
+            iglob = ibool(i,j,k,ispec)
+            displ_element(:,i,j,k) = displ(:,iglob)
+          enddo
+        enddo
+      enddo
+
+      ! gets local receiver interpolators
+      ! (1-D Lagrange interpolators)
+      hxir(:) = hxir_store(:,irec_local)
+      hetar(:) = hetar_store(:,irec_local)
+      hgammar(:) = hgammar_store(:,irec_local)
+
+      ! gets derivatives of local receiver interpolators
+      hpxir(:) = hpxir_store(:,irec_local)
+      hpetar(:) = hpetar_store(:,irec_local)
+      hpgammar(:) = hpgammar_store(:,irec_local)
+
+      ! computes the integrated derivatives of source parameters (M_jk and X_s)
+      call compute_adj_source_frechet(ispec,displ_element, &
+                                      Mxx(irec),Myy(irec),Mzz(irec), &
+                                      Mxy(irec),Mxz(irec),Myz(irec), &
+                                      eps_s,eps_m_s, &
+                                      hxir,hetar,hgammar,hpxir,hpetar,hpgammar, &
+                                      hprime_xx,hprime_yy,hprime_zz)
+
+      ! stores strain value
+      seismograms_eps(:,:,irec_local,idx) = eps_s(:,:)
+
+      ! source time function value
+      stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(irec),hdur_Gaussian(irec))
+
+      stf_deltat = real(stf * deltat * subsamp_seismos,kind=CUSTOM_REAL)
+
+      ! integrated moment tensor derivatives
+      Mxx_der(irec_local) = Mxx_der(irec_local) + eps_s(1,1) * stf_deltat
+      Myy_der(irec_local) = Myy_der(irec_local) + eps_s(2,2) * stf_deltat
+      Mzz_der(irec_local) = Mzz_der(irec_local) + eps_s(3,3) * stf_deltat
+      Mxy_der(irec_local) = Mxy_der(irec_local) + 2 * eps_s(1,2) * stf_deltat
+      Mxz_der(irec_local) = Mxz_der(irec_local) + 2 * eps_s(1,3) * stf_deltat
+      Myz_der(irec_local) = Myz_der(irec_local) + 2 * eps_s(2,3) * stf_deltat
+
+      ! source location derivative
+      sloc_der(:,irec_local) = sloc_der(:,irec_local) + eps_m_s(:) * stf_deltat
+
+    endif ! elastic
+
+  enddo ! nrec_local
+
+  end subroutine compute_seismograms_strain_adjoint
+
+
+
+
+
+
+
+
+

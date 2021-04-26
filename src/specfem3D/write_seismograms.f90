@@ -76,6 +76,7 @@
 
     ! gets seismogram values
     if (do_save_seismograms .and. nrec_local > 0) then
+      ! seismograms displ/veloc/accel/pressure
       if (GPU_MODE) then
         ! on GPU
         ! gets resulting array values onto CPU
@@ -86,6 +87,9 @@
         ! on CPU
         call compute_seismograms()
       endif
+
+      ! strain "seismograms" (only for adjoint simulations)
+      if (SIMULATION_TYPE == 2) call compute_seismograms_strain_adjoint()
     endif
 
   endif ! subsamp_seismos
@@ -125,6 +129,8 @@
             call write_adj_seismograms_to_file(3)
           if (SAVE_SEISMOGRAMS_PRESSURE) &
             call write_adj_seismograms_to_file(4)
+          ! seismograms (strain)
+          if (it == it_end) call write_adj_seismograms2_to_file()
           ! updates adjoint time counter
           it_adj_written = it
         end select
@@ -852,13 +858,13 @@
 
   use specfem_par, only: seismograms_eps, &
     number_receiver_global,nrec_local,DT,NSTEP,t0, &
-    seismo_offset,subsamp_seismos, &
-    GPU_MODE,SUPPRESS_UTM_PROJECTION
+    seismo_offset,seismo_current,subsamp_seismos, &
+    SUPPRESS_UTM_PROJECTION
 
   implicit none
 
   ! local parameters
-  integer :: irec,irec_local
+  integer :: irec,irec_local,total_length
   integer :: idimval,jdimval,isample
   real(kind=CUSTOM_REAL) :: time_t
 
@@ -866,24 +872,16 @@
   character(len=1) :: component
   character(len=MAX_STRING_LEN) :: sisname
 
-  ! todo: strain seismograms are not implemented yet for GPU simulations
-  if (GPU_MODE) then
-    ! user info
-    if (myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'Note: For GPU simulations, adjoint strain seismograms NT.S****.SNN.semd,.. are not implemented yet.'
-      write(IMAIN,*) '      Please set GPU_MODE to .false. to compute and output strains as well.'
-      write(IMAIN,*)
-    endif
-    return
-  endif
-
+  ! using an ending .semd also for strain seismograms (since strain is derived from displacement)
   component = 'd'
+
+  ! full length of strain seismogram (routine will be called at the very end of the time stepping)
+  total_length = seismo_offset + seismo_current
 
   ! this write routine here is called at the very end, thus seismo_offset should be equal to NSTEP/subsamp_seismos
   ! checks
-  if (seismo_offset /= NSTEP/subsamp_seismos) then
-    print *,'Error: writing strain seismograms has wrong index lengths ',seismo_offset,'should be ',NSTEP/subsamp_seismos
+  if (total_length /= NSTEP/subsamp_seismos) then
+    print *,'Error: writing strain seismograms has wrong index lengths ',total_length,'should be ',NSTEP/subsamp_seismos
     call exit_MPI(myrank,'Error writing strain seismograms, has wrong index length')
   endif
 
@@ -982,7 +980,7 @@
 
         ! make sure we never write more than the maximum number of time steps
         ! subtract half duration of the source to make sure travel time is correct
-        do isample = 1,seismo_offset
+        do isample = 1,total_length
           ! time
           ! distinguish between single and double precision for reals
           time_t = real(dble(isample-1)*DT*subsamp_seismos - t0,kind=CUSTOM_REAL)

@@ -50,8 +50,6 @@
   ! seismograms and source parameter gradients for (pure type=2) adjoint simulation runs
   if (SIMULATION_TYPE == 2) then
     if (nrec_local > 0) then
-      ! seismograms (strain)
-      call write_adj_seismograms2_to_file()
       ! source gradients  (for sources in elastic domains)
       call save_kernels_source_derivatives()
     endif

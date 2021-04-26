@@ -130,7 +130,6 @@
           duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
           duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
           duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
-
         else
           !regular element
           duxdxl = xix_regular*tempx1l
@@ -144,7 +143,6 @@
           duzdxl = xix_regular*tempz1l
           duzdyl = xix_regular*tempz2l
           duzdzl = xix_regular*tempz3l
-
         endif
 
         ! symmetric definition of strain: epsilon = 1/2 ( grad(u) + grad(u)^T)
