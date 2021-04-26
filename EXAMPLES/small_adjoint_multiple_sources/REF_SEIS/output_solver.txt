@@ -25,7 +25,7 @@
 
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
- velocity model:   default
+ velocity model:   default 
 
  Reading mesh databases...
    reads binary mesh files: proc***_external_mesh.bin
@@ -60,35 +60,35 @@
 
 
  ********
- Model: P   velocity min,max =    4100.00000       5800.00000
- Model: S   velocity min,max =    2400.00000       3350.00000
+ Model: P   velocity min,max =    4100.00000       5800.00000    
+ Model: S   velocity min,max =    2400.00000       3350.00000    
 
- Model: Poisson's ratio min,max =   0.239366516      0.249693319
+ Model: Poisson's ratio min,max =   0.239366516      0.249693319    
  ********
 
  *********************************************
  *** Verification of simulation parameters ***
  *********************************************
 
- *** Xmin and Xmax of the model =    0.00000000       30000.0000
- *** Ymin and Ymax of the model =    0.00000000       25000.0000
- *** Zmin and Zmax of the model =   -6000.00000       0.00000000
+ *** Xmin and Xmax of the model =    0.00000000       30000.0000    
+ *** Ymin and Ymax of the model =    0.00000000       25000.0000    
+ *** Zmin and Zmax of the model =   -6000.00000       0.00000000    
 
- *** Max GLL point distance =    204.580078
- *** Min GLL point distance =    89.9335938
- *** Max/min ratio =    2.27479053
+ *** Max GLL point distance =    204.580078    
+ *** Min GLL point distance =    89.9335938    
+ *** Max/min ratio =    2.27479053    
 
- *** Max element size =    625.000000
- *** Min element size =    520.832031
- *** Max/min ratio =    1.20000303
+ *** Max element size =    625.000000    
+ *** Min element size =    520.832031    
+ *** Max/min ratio =    1.20000303    
 
- *** Minimum period resolved =   0.325520813
+ *** Minimum period resolved =   0.325520813    
  *** Maximum suggested time step =    7.75289582E-03
 
  *** for DT :    8.0000000000000002E-003
- *** Max stability for wave velocities =   0.515936255
+ *** Max stability for wave velocities =   0.515936255    
 
- Elapsed time for checking mesh resolution in seconds =    6.3759999999999997E-003
+ Elapsed time for checking mesh resolution in seconds =    7.9629999999999996E-003
  saving VTK files for Courant number and minimum period
 
 
@@ -104,7 +104,7 @@
    actual        number of nodes:        11519
                 tree memory size:   0.351531982     MB
    maximum depth   :           14
-   creation timing :    2.07400322E-03 (s)
+   creation timing :    2.37098336E-03 (s)
 
 
  sources:           7
@@ -123,10 +123,10 @@
                   in element         5582
                   in elastic domain
 
-   using moment tensor source:
+   using moment tensor source: 
      xi coordinate of source in that element:    1.7599999999999973E-002
-     eta coordinate of source in that element:   0.39263950920061519
-     gamma coordinate of source in that element:    1.0000000000000000
+     eta coordinate of source in that element:   0.39263950920061519     
+     gamma coordinate of source in that element:    1.0000000000000000     
 
    source time function:
      using Ricker source time function
@@ -135,24 +135,24 @@
 
    magnitude of the source:
         scalar moment M0 =    12247448.713915890       dyne-cm
-     moment magnitude Mw =   -5.9746360562465766
+     moment magnitude Mw =   -5.9746360562465766     
 
    original (requested) position of the source:
 
-             latitude:    8696.0000000000000
-            longitude:    8443.0000000000000
+             latitude:    8696.0000000000000     
+            longitude:    8443.0000000000000     
 
-                x:    8443.0000000000000
-                y:    8696.0000000000000
+                x:    8443.0000000000000     
+                y:    8696.0000000000000     
             depth:    0.0000000000000000       km
-   topo elevation:    0.0000000000000000
+   topo elevation:    0.0000000000000000     
 
    position of the source that will be used:
 
-                x:    8443.0000000000000
-                y:    8696.0000000000000
+                x:    8443.0000000000000     
+                y:    8696.0000000000000     
             depth:    0.0000000000000000       km
-                z:    0.0000000000000000
+                z:    0.0000000000000000     
 
    error in location of the source:    0.00000000      m
 
@@ -163,10 +163,10 @@
                   in element         5006
                   in elastic domain
 
-   using moment tensor source:
+   using moment tensor source: 
      xi coordinate of source in that element:    1.7600000000000022E-002
-     eta coordinate of source in that element:   0.39263950920061547
-     gamma coordinate of source in that element:  -0.33333333333333320
+     eta coordinate of source in that element:   0.39263950920061547     
+     gamma coordinate of source in that element:  -0.33333333333333320     
 
    source time function:
      using Ricker source time function
@@ -175,24 +175,24 @@
 
    magnitude of the source:
         scalar moment M0 =    12247448.713915890       dyne-cm
-     moment magnitude Mw =   -5.9746360562465766
+     moment magnitude Mw =   -5.9746360562465766     
 
    original (requested) position of the source:
 
-             latitude:    8696.0000000000000
-            longitude:    8443.0000000000000
+             latitude:    8696.0000000000000     
+            longitude:    8443.0000000000000     
 
-                x:    8443.0000000000000
-                y:    8696.0000000000000
+                x:    8443.0000000000000     
+                y:    8696.0000000000000     
             depth:    1.0000000000000000       km
-   topo elevation:    0.0000000000000000
+   topo elevation:    0.0000000000000000     
 
    position of the source that will be used:
 
-                x:    8443.0000000000000
-                y:    8696.0000000000000
+                x:    8443.0000000000000     
+                y:    8696.0000000000000     
             depth:    1.0000000000000000       km
-                z:   -1000.0000000000000
+                z:   -1000.0000000000000     
 
    error in location of the source:    0.00000000      m
 
@@ -203,10 +203,10 @@
                   in element         3854
                   in elastic domain
 
-   using moment tensor source:
+   using moment tensor source: 
      xi coordinate of source in that element:    1.7599999999999973E-002
-     eta coordinate of source in that element:   0.39263950920061513
-     gamma coordinate of source in that element:   0.33333333333333298
+     eta coordinate of source in that element:   0.39263950920061513     
+     gamma coordinate of source in that element:   0.33333333333333298     
 
    source time function:
      using Ricker source time function
@@ -215,24 +215,24 @@
 
    magnitude of the source:
         scalar moment M0 =    12247448.713915890       dyne-cm
-     moment magnitude Mw =   -5.9746360562465766
+     moment magnitude Mw =   -5.9746360562465766     
 
    original (requested) position of the source:
 
-             latitude:    8696.0000000000000
-            longitude:    8443.0000000000000
+             latitude:    8696.0000000000000     
+            longitude:    8443.0000000000000     
 
-                x:    8443.0000000000000
-                y:    8696.0000000000000
+                x:    8443.0000000000000     
+                y:    8696.0000000000000     
             depth:    2.0000000000000000       km
-   topo elevation:    0.0000000000000000
+   topo elevation:    0.0000000000000000     
 
    position of the source that will be used:
 
-                x:    8443.0000000000000
-                y:    8696.0000000000000
+                x:    8443.0000000000000     
+                y:    8696.0000000000000     
             depth:    2.0000000000000000       km
-                z:   -2000.0000000000000
+                z:   -2000.0000000000000     
 
    error in location of the source:    0.00000000      m
 
@@ -243,10 +243,10 @@
                   in element         2702
                   in elastic domain
 
-   using moment tensor source:
+   using moment tensor source: 
      xi coordinate of source in that element:    1.7599999999999973E-002
-     eta coordinate of source in that element:   0.39263950920061519
-     gamma coordinate of source in that element:    1.0000000000000000
+     eta coordinate of source in that element:   0.39263950920061519     
+     gamma coordinate of source in that element:    1.0000000000000000     
 
    source time function:
      using Ricker source time function
@@ -255,24 +255,24 @@
 
    magnitude of the source:
         scalar moment M0 =    12247448.713915890       dyne-cm
-     moment magnitude Mw =   -5.9746360562465766
+     moment magnitude Mw =   -5.9746360562465766     
 
    original (requested) position of the source:
 
-             latitude:    8696.0000000000000
-            longitude:    8443.0000000000000
+             latitude:    8696.0000000000000     
+            longitude:    8443.0000000000000     
 
-                x:    8443.0000000000000
-                y:    8696.0000000000000
+                x:    8443.0000000000000     
+                y:    8696.0000000000000     
             depth:    3.0000000000000000       km
-   topo elevation:    0.0000000000000000
+   topo elevation:    0.0000000000000000     
 
    position of the source that will be used:
 
-                x:    8443.0000000000000
-                y:    8696.0000000000000
+                x:    8443.0000000000000     
+                y:    8696.0000000000000     
             depth:    3.0000000000000000       km
-                z:   -3000.0000000000000
+                z:   -3000.0000000000000     
 
    error in location of the source:    0.00000000      m
 
@@ -283,10 +283,10 @@
                   in element         2126
                   in elastic domain
 
-   using moment tensor source:
+   using moment tensor source: 
      xi coordinate of source in that element:    1.7600000000000022E-002
-     eta coordinate of source in that element:   0.39263950920061541
-     gamma coordinate of source in that element:  -0.33333333333333459
+     eta coordinate of source in that element:   0.39263950920061541     
+     gamma coordinate of source in that element:  -0.33333333333333459     
 
    source time function:
      using Ricker source time function
@@ -295,24 +295,24 @@
 
    magnitude of the source:
         scalar moment M0 =    12247448.713915890       dyne-cm
-     moment magnitude Mw =   -5.9746360562465766
+     moment magnitude Mw =   -5.9746360562465766     
 
    original (requested) position of the source:
 
-             latitude:    8696.0000000000000
-            longitude:    8443.0000000000000
+             latitude:    8696.0000000000000     
+            longitude:    8443.0000000000000     
 
-                x:    8443.0000000000000
-                y:    8696.0000000000000
+                x:    8443.0000000000000     
+                y:    8696.0000000000000     
             depth:    4.0000000000000000       km
-   topo elevation:    0.0000000000000000
+   topo elevation:    0.0000000000000000     
 
    position of the source that will be used:
 
-                x:    8443.0000000000000
-                y:    8696.0000000000000
+                x:    8443.0000000000000     
+                y:    8696.0000000000000     
             depth:    4.0000000000000009       km
-                z:   -4000.0000000000009
+                z:   -4000.0000000000009     
 
    error in location of the source:    9.09494702E-13  m
 
@@ -323,10 +323,10 @@
                   in element          974
                   in elastic domain
 
-   using moment tensor source:
+   using moment tensor source: 
      xi coordinate of source in that element:    1.7599999999999973E-002
-     eta coordinate of source in that element:   0.39263950920061513
-     gamma coordinate of source in that element:   0.33333333333333476
+     eta coordinate of source in that element:   0.39263950920061513     
+     gamma coordinate of source in that element:   0.33333333333333476     
 
    source time function:
      using Ricker source time function
@@ -335,24 +335,24 @@
 
    magnitude of the source:
         scalar moment M0 =    12247448.713915890       dyne-cm
-     moment magnitude Mw =   -5.9746360562465766
+     moment magnitude Mw =   -5.9746360562465766     
 
    original (requested) position of the source:
 
-             latitude:    8696.0000000000000
-            longitude:    8443.0000000000000
+             latitude:    8696.0000000000000     
+            longitude:    8443.0000000000000     
 
-                x:    8443.0000000000000
-                y:    8696.0000000000018
+                x:    8443.0000000000000     
+                y:    8696.0000000000018     
             depth:    5.0000000000000000       km
-   topo elevation:    0.0000000000000000
+   topo elevation:    0.0000000000000000     
 
    position of the source that will be used:
 
-                x:    8443.0000000000000
-                y:    8696.0000000000018
+                x:    8443.0000000000000     
+                y:    8696.0000000000018     
             depth:    5.0000000000000000       km
-                z:   -5000.0000000000000
+                z:   -5000.0000000000000     
 
    error in location of the source:    1.81898940E-12  m
 
@@ -363,10 +363,10 @@
                   in element          398
                   in elastic domain
 
-   using moment tensor source:
+   using moment tensor source: 
      xi coordinate of source in that element:    1.7600000000000022E-002
-     eta coordinate of source in that element:   0.39263950920060847
-     gamma coordinate of source in that element:  -0.33333333333333165
+     eta coordinate of source in that element:   0.39263950920060847     
+     gamma coordinate of source in that element:  -0.33333333333333165     
 
    source time function:
      using Ricker source time function
@@ -375,24 +375,24 @@
 
    magnitude of the source:
         scalar moment M0 =    12247448.713915890       dyne-cm
-     moment magnitude Mw =   -5.9746360562465766
+     moment magnitude Mw =   -5.9746360562465766     
 
    original (requested) position of the source:
 
-             latitude:    8696.0000000000000
-            longitude:    8443.0000000000000
+             latitude:    8696.0000000000000     
+            longitude:    8443.0000000000000     
 
-                x:    8443.0000000000000
-                y:    8696.0000000000000
+                x:    8443.0000000000000     
+                y:    8696.0000000000000     
             depth:    5.7999999999999998       km
-   topo elevation:    0.0000000000000000
+   topo elevation:    0.0000000000000000     
 
    position of the source that will be used:
 
-                x:    8443.0000000000000
-                y:    8696.0000000000000
+                x:    8443.0000000000000     
+                y:    8696.0000000000000     
             depth:    5.7999999999999980       km
-                z:   -5799.9999999999982
+                z:   -5799.9999999999982     
 
    error in location of the source:    1.81898940E-12  m
 
@@ -406,7 +406,7 @@
  maximum error in location of the sources:    1.81898940E-12  m
 
 
- Elapsed time for detection of sources in seconds =    2.0350000000000090E-003
+ Elapsed time for detection of sources in seconds =    2.7030000000000109E-003
 
  End of source detection - done
 
@@ -429,35 +429,35 @@
 
 
  station #            1     EX    GRO1S
-      original latitude:    8696.00000
-      original longitude:    8443.00000
-      original x:    8443.00000
-      original y:    8696.00000
+      original latitude:    8696.00000    
+      original longitude:    8443.00000    
+      original x:    8443.00000    
+      original y:    8696.00000    
       original depth:    0.00000000      m
-      horizontal distance:    0.00000000
-      target x, y, z:    8443.00000       8696.00000       0.00000000
+      horizontal distance:    0.00000000    
+      target x, y, z:    8443.00000       8696.00000       0.00000000    
       closest estimate found:    0.00000000      m away
 
       receiver located in slice            0
                        in element         5582
                        in elastic domain
-      at coordinates:
+      at coordinates: 
       xi    =    1.7599999999999973E-002
-      eta   =   0.39263950920061519
-      gamma =    1.0000000000000000
-      rotation matrix:
-      nu1 =    1.00000000       0.00000000       0.00000000
-      nu2 =    0.00000000       1.00000000       0.00000000
-      nu3 =    0.00000000       0.00000000       1.00000000
-      x:    8443.0000000000000
-      y:    8696.0000000000000
+      eta   =   0.39263950920061519     
+      gamma =    1.0000000000000000     
+      rotation matrix: 
+      nu1 =    1.00000000       0.00000000       0.00000000    
+      nu2 =    0.00000000       1.00000000       0.00000000    
+      nu3 =    0.00000000       0.00000000       1.00000000    
+      x:    8443.0000000000000     
+      y:    8696.0000000000000     
       depth:    0.0000000000000000       m
-      z:    0.0000000000000000
+      z:    0.0000000000000000     
 
 
  maximum error in location of all the receivers:    0.00000000      m
 
- Elapsed time for receiver detection in seconds =    6.8370000000000930E-003
+ Elapsed time for receiver detection in seconds =    8.9409999999999767E-003
 
  End of receiver detection - done
 
@@ -502,29 +502,30 @@
  preparing mass matrices
  preparing constants
  preparing wavefields
+ preparing fault simulation
    no dynamic faults
    no kinematic faults
+   no fault simulation
  preparing gravity
    no gravity simulation
-
  preparing Stacey absorbing boundaries
  preparing adjoint fields
  preparing optimized arrays
    number of regular shaped elements  :            0
    number of irregular shaped elements:         5760
    fused array done
-   bandwidth test (STREAM TRIAD):
+   bandwidth test (STREAM TRIAD): 
       memory accesses =    13.2443275     MB
-      timing  min/max =    1.23199995E-03 s /    1.73999998E-03 s
-      timing      avg =    1.44000002E-03 s
-      bandwidth       =    8.98188400     GB/s
+      timing  min/max =    1.49599998E-03 s /    1.99500006E-03 s
+      timing      avg =    1.67779997E-03 s
+      bandwidth       =    7.70885324     GB/s
       with force_vectorization:
-      timing  min/max =    1.25900004E-03 s /    1.35899999E-03 s
-      timing      avg =    1.28570001E-03 s
-      bandwidth       =    10.0598221     GB/s
+      timing  min/max =    1.28900004E-03 s /    1.72700000E-03 s
+      timing      avg =    1.40039995E-03 s
+      bandwidth       =    9.23587132     GB/s
 
 
- Elapsed time for preparing timerun in seconds =    6.9111999999999951E-002
+ Elapsed time for preparing timerun in seconds =    6.5086000000000033E-002
 
  ************
   time loop
@@ -542,18 +543,18 @@
 
  Time step #            5
  Time:  -0.208000004      seconds
- Elapsed time in seconds =   0.18904399999999999
+ Elapsed time in seconds =   0.21394099999999994     
  Elapsed time in hh:mm:ss =      0 h 00 m 00 s
- Mean elapsed time per time step in seconds =    3.78087983E-02
+ Mean elapsed time per time step in seconds =    4.27882001E-02
  Max norm displacement vector U in all slices (m) =    1.94722578E-16
  Time steps done =            5  out of          500
  Time steps remaining =          495
- Estimated remaining time in seconds =    18.7153568
- Estimated remaining time in hh:mm:ss =      0 h 00 m 18 s
- Estimated total run time in seconds =    18.9043999
- Estimated total run time in hh:mm:ss =      0 h 00 m 18 s
+ Estimated remaining time in seconds =    21.1801586    
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 21 s
+ Estimated total run time in seconds =    21.3941002    
+ Estimated total run time in hh:mm:ss =      0 h 00 m 21 s
  We have done    1.00000000     % of that
- The run will finish approximately on (in local time): Thu Sep 24, 2020 12:44
+ The run will finish approximately on (in local time): Mon Apr 26, 2021 10:14
  ************************************************************
  **** BEWARE: the above time estimates are not very reliable
  **** because fewer than 100 iterations have been performed
@@ -561,85 +562,85 @@
 
  Time step #          100
  Time:   0.551999986      seconds
- Elapsed time in seconds =    5.1344979999999998
- Elapsed time in hh:mm:ss =      0 h 00 m 05 s
- Mean elapsed time per time step in seconds =    5.13449796E-02
- Max norm displacement vector U in all slices (m) =    3.71283382E-15
+ Elapsed time in seconds =    4.8205130000000000     
+ Elapsed time in hh:mm:ss =      0 h 00 m 04 s
+ Mean elapsed time per time step in seconds =    4.82051298E-02
+ Max norm displacement vector U in all slices (m) =    3.71283425E-15
  Time steps done =          100  out of          500
  Time steps remaining =          400
- Estimated remaining time in seconds =    20.5379925
- Estimated remaining time in hh:mm:ss =      0 h 00 m 20 s
- Estimated total run time in seconds =    25.6724892
- Estimated total run time in hh:mm:ss =      0 h 00 m 25 s
+ Estimated remaining time in seconds =    19.2820511    
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 19 s
+ Estimated total run time in seconds =    24.1025658    
+ Estimated total run time in hh:mm:ss =      0 h 00 m 24 s
  We have done    20.0000000     % of that
- The run will finish approximately on (in local time): Thu Sep 24, 2020 12:44
+ The run will finish approximately on (in local time): Mon Apr 26, 2021 10:14
 
  Time step #          200
  Time:    1.35200000      seconds
- Elapsed time in seconds =    10.424530000000001
+ Elapsed time in seconds =    10.022310999999998     
  Elapsed time in hh:mm:ss =      0 h 00 m 10 s
- Mean elapsed time per time step in seconds =    5.21226488E-02
- Max norm displacement vector U in all slices (m) =    2.08720247E-15
+ Mean elapsed time per time step in seconds =    5.01115546E-02
+ Max norm displacement vector U in all slices (m) =    2.08720205E-15
  Time steps done =          200  out of          500
  Time steps remaining =          300
- Estimated remaining time in seconds =    15.6367950
+ Estimated remaining time in seconds =    15.0334663    
  Estimated remaining time in hh:mm:ss =      0 h 00 m 15 s
- Estimated total run time in seconds =    26.0613251
- Estimated total run time in hh:mm:ss =      0 h 00 m 26 s
+ Estimated total run time in seconds =    25.0557766    
+ Estimated total run time in hh:mm:ss =      0 h 00 m 25 s
  We have done    40.0000000     % of that
- The run will finish approximately on (in local time): Thu Sep 24, 2020 12:44
+ The run will finish approximately on (in local time): Mon Apr 26, 2021 10:14
 
  Time step #          300
  Time:    2.15199995      seconds
- Elapsed time in seconds =    15.961428000000002
+ Elapsed time in seconds =    15.335498999999999     
  Elapsed time in hh:mm:ss =      0 h 00 m 15 s
- Mean elapsed time per time step in seconds =    5.32047600E-02
- Max norm displacement vector U in all slices (m) =    1.67043018E-15
+ Mean elapsed time per time step in seconds =    5.11183292E-02
+ Max norm displacement vector U in all slices (m) =    1.67042986E-15
  Time steps done =          300  out of          500
  Time steps remaining =          200
- Estimated remaining time in seconds =    10.6409521
+ Estimated remaining time in seconds =    10.2236662    
  Estimated remaining time in hh:mm:ss =      0 h 00 m 10 s
- Estimated total run time in seconds =    26.6023808
- Estimated total run time in hh:mm:ss =      0 h 00 m 26 s
+ Estimated total run time in seconds =    25.5591640    
+ Estimated total run time in hh:mm:ss =      0 h 00 m 25 s
  We have done    60.0000000     % of that
- The run will finish approximately on (in local time): Thu Sep 24, 2020 12:44
+ The run will finish approximately on (in local time): Mon Apr 26, 2021 10:14
 
  Time step #          400
  Time:    2.95199990      seconds
- Elapsed time in seconds =    21.537383999999999
- Elapsed time in hh:mm:ss =      0 h 00 m 21 s
- Mean elapsed time per time step in seconds =    5.38434610E-02
+ Elapsed time in seconds =    20.803642000000000     
+ Elapsed time in hh:mm:ss =      0 h 00 m 20 s
+ Mean elapsed time per time step in seconds =    5.20091057E-02
  Max norm displacement vector U in all slices (m) =    1.37444267E-15
  Time steps done =          400  out of          500
  Time steps remaining =          100
- Estimated remaining time in seconds =    5.38434601
+ Estimated remaining time in seconds =    5.20091057    
  Estimated remaining time in hh:mm:ss =      0 h 00 m 05 s
- Estimated total run time in seconds =    26.9217300
+ Estimated total run time in seconds =    26.0045528    
  Estimated total run time in hh:mm:ss =      0 h 00 m 26 s
  We have done    80.0000000     % of that
- The run will finish approximately on (in local time): Thu Sep 24, 2020 12:44
+ The run will finish approximately on (in local time): Mon Apr 26, 2021 10:14
 
  Time step #          500
  Time:    3.75200009      seconds
- Elapsed time in seconds =    27.245065000000000
- Elapsed time in hh:mm:ss =      0 h 00 m 27 s
- Mean elapsed time per time step in seconds =    5.44901304E-02
- Max norm displacement vector U in all slices (m) =    1.19551501E-15
+ Elapsed time in seconds =    26.348107000000002     
+ Elapsed time in hh:mm:ss =      0 h 00 m 26 s
+ Mean elapsed time per time step in seconds =    5.26962131E-02
+ Max norm displacement vector U in all slices (m) =    1.19551480E-15
  Time steps done =          500  out of          500
  Time steps remaining =            0
- Estimated remaining time in seconds =    0.00000000
+ Estimated remaining time in seconds =    0.00000000    
  Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
- Estimated total run time in seconds =    27.2450657
- Estimated total run time in hh:mm:ss =      0 h 00 m 27 s
+ Estimated total run time in seconds =    26.3481064    
+ Estimated total run time in hh:mm:ss =      0 h 00 m 26 s
  We have done    100.000000     % of that
 
 
  Total number of time steps done:          500
- Writing the seismograms in parallel took    2.40969993E-02  seconds
+ Writing the seismograms in parallel took    7.59299994E-02  seconds
 
  Time loop finished. Timing info:
- Total elapsed time in seconds =    27.326449000000000
- Total elapsed time in hh:mm:ss =      0 h 00 m 27 s
+ Total elapsed time in seconds =    26.479069000000003     
+ Total elapsed time in hh:mm:ss =      0 h 00 m 26 s
 
  End of the simulation
 
