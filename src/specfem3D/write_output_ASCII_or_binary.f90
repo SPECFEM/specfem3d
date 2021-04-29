@@ -54,6 +54,7 @@
 
   ! local parameter
   integer :: isample,ier,it_current
+  double precision :: time_t_db
   real(kind=CUSTOM_REAL) :: value,time_t
 
   real, dimension(1:seismo_current) :: tr
@@ -112,17 +113,21 @@
     if (SIMULATION_TYPE == 1) then
       ! forward simulation
       ! distinguish between single and double precision for reals
-      time_t = real( dble(it_current-1)*DT*subsamp_seismos - t0 ,kind=CUSTOM_REAL)
+      time_t_db = dble( (it_current-1) * subsamp_seismos) * DT - t0
     else if (SIMULATION_TYPE == 3) then
       ! adjoint simulation: backward/reconstructed wavefields
       ! distinguish between single and double precision for reals
       ! note: compare time_t with time used for source term
-      time_t = real( dble(NSTEP)*DT - dble(it_current)*DT*subsamp_seismos - t0 ,kind=CUSTOM_REAL)
+      time_t_db = dble(NSTEP - it_current * subsamp_seismos) * DT - t0
     endif
+
+    ! converts time to custom_real for output
+    time_t = real(time_t_db,kind=CUSTOM_REAL)
 
     if (USE_BINARY_FOR_SEISMOGRAMS) then
       ! binary format case
       if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+        ! outputs CUSTOM_REAL values
         write(IOUT) time_t,value
       else
         tr(isample) = value
