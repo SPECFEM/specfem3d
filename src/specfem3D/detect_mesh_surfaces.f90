@@ -52,9 +52,9 @@
       if (MOVIE_SURFACE)   write(IMAIN,*) '  surface movie'
       if (MOVIE_VOLUME)    write(IMAIN,*) '  volume movie'
       if (PNM_IMAGE)       write(IMAIN,*) '  PNM image output'
+      write(IMAIN,*)
+      call flush_IMAIN()
     endif
-    write(IMAIN,*)
-    call flush_IMAIN()
   endif
 
   ! note: surface points/elements in ispec_is_surface_external_mesh, iglob_is_surface_external_mesh and number

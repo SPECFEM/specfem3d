@@ -83,6 +83,7 @@
                                 SIMULATION_TYPE, &
                                 USE_MESH_COLORING_GPU, &
                                 nspec_acoustic,nspec_elastic, &
+                                ispec_is_acoustic,ispec_is_elastic, &
                                 myrank,SAVE_FORWARD, &
                                 hxir_store,hetar_store,hgammar_store, &
                                 nu_rec,nu_source, &
@@ -105,7 +106,6 @@
     call prepare_fields_acoustic_device(Mesh_pointer, &
                                 rmass_acoustic,rhostore,kappastore, &
                                 num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
-                                ispec_is_acoustic, &
                                 NOISE_TOMOGRAPHY,num_free_surface_faces, &
                                 free_surface_ispec,free_surface_ijk, &
                                 b_reclen_potential,b_absorb_potential, &
@@ -134,7 +134,6 @@
                                 rho_vp,rho_vs, &
                                 kappastore, mustore, &
                                 num_phase_ispec_elastic,phase_ispec_inner_elastic, &
-                                ispec_is_elastic, &
                                 b_absorb_field,b_reclen_field, &
                                 COMPUTE_AND_STORE_STRAIN, &
                                 epsilondev_xx,epsilondev_yy,epsilondev_xy, &
@@ -287,24 +286,25 @@
       call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
   endif
 
-  ! warning
-  if (myrank == 0) then
-    if (SAVE_SEISMOGRAMS_DISPLACEMENT .or. SAVE_SEISMOGRAMS_VELOCITY .or. SAVE_SEISMOGRAMS_ACCELERATION) then
-      ! warnings
-      if (.not. ELASTIC_SIMULATION) &
-        print *, "Warning: Wrong type of seismogram for a pure fluid simulation, use pressure in seismotype"
-      if (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) &
-        print *, "Warning: Coupled elastic/fluid simulation has only valid displacement seismograms &
-                &in elastic domain for GPU simulation"
-    endif
-    if (SAVE_SEISMOGRAMS_PRESSURE) then
-      if (.not. ACOUSTIC_SIMULATION) &
-        print *, "Warning: Wrong type of seismogram for a pure elastic simulation, use displ veloc or accel in seismotype"
-      if (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) &
-        print *, "Warning: Coupled elastic/fluid simulation has only valid pressure seismograms &
-                 &in fluid domain for GPU simulation"
-    endif
-  endif
+  ! warnings
+  ! obsolete...
+  !if (myrank == 0) then
+  !  if (SAVE_SEISMOGRAMS_DISPLACEMENT .or. SAVE_SEISMOGRAMS_VELOCITY .or. SAVE_SEISMOGRAMS_ACCELERATION) then
+  !    ! warnings
+  !    if (.not. ELASTIC_SIMULATION) &
+  !      print *, "Warning: Wrong type of seismogram for a pure fluid simulation, use pressure in seismotype"
+  !    if (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) &
+  !      print *, "Warning: Coupled elastic/fluid simulation has only valid displacement seismograms &
+  !              &in elastic domain for GPU simulation"
+  !  endif
+  !  if (SAVE_SEISMOGRAMS_PRESSURE) then
+  !    if (.not. ACOUSTIC_SIMULATION) &
+  !      print *, "Warning: Wrong type of seismogram for a pure elastic simulation, use displ veloc or accel in seismotype"
+  !    if (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) &
+  !      print *, "Warning: Coupled elastic/fluid simulation has only valid pressure seismograms &
+  !               &in fluid domain for GPU simulation"
+  !  endif
+  !endif
 
   ! synchronizes processes
   call synchronize_all()
@@ -361,6 +361,10 @@
   ! d_ibool_interfaces_ext_mesh
   memory_size = memory_size + num_interfaces_ext_mesh * max_nibool_interfaces_ext_mesh * dble(SIZE_INTEGER)
   ! ispec_is_inner
+  memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
+  ! d_ispec_is_acoustic
+  memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
+  ! d_ispec_is_elastic
   memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
 
   if (STACEY_ABSORBING_CONDITIONS) then
@@ -420,8 +424,6 @@
     memory_size = memory_size + NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
     ! d_phase_ispec_inner_acoustic
     memory_size = memory_size + 2.d0 * num_phase_ispec_acoustic * dble(SIZE_INTEGER)
-    ! d_ispec_is_acoustic
-    memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
   endif
 
   ! elastic simulations
@@ -432,8 +434,6 @@
     memory_size = memory_size + 3.d0 * num_interfaces_ext_mesh * max_nibool_interfaces_ext_mesh * dble(CUSTOM_REAL)
     ! d_rmassx,..
     memory_size = memory_size + 3.d0 * NGLOB_AB * dble(CUSTOM_REAL)
-    ! d_ispec_is_elastic
-    memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
     ! d_phase_ispec_inner_elastic
     memory_size = memory_size + 2.d0 * num_phase_ispec_elastic * dble(SIZE_INTEGER)
 

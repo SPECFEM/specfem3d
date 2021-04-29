@@ -194,7 +194,7 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 
   // local padded index
   offset = working_element*NGLL3_PADDED + tx;
-  ispec_irreg = d_irregular_element_number[working_element] -1;
+  ispec_irreg = d_irregular_element_number[working_element] - 1;
   // global index
   iglob = d_ibool[offset] - 1;
 
@@ -623,7 +623,7 @@ Kernel_2_acoustic_single_impl(const int nb_blocks_to_compute,
 
   // local padded index
   offset = working_element*NGLL3_PADDED + tx;
-  ispec_irreg = d_irregular_element_number[working_element] -1;
+  ispec_irreg = d_irregular_element_number[working_element] - 1;
   // global index
   iglob = d_ibool[offset] - 1;
 

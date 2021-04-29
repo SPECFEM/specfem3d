@@ -106,7 +106,7 @@ __global__ void compute_element_strain_cudakernel(int* ispec_is_elastic,
         tempz3l = tempz3l + sh_tempz[l * NGLL2 + J * NGLLX + I] * fac3;
       }
 
-      int ispec_irreg = d_irregular_element_number[ispec]-1;
+      int ispec_irreg = d_irregular_element_number[ispec] - 1;
       if (ispec_irreg >= 0){
         int offset = ispec_irreg*NGLL3_PADDED + ijk;
         xixl = d_xix[offset];

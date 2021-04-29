@@ -45,10 +45,10 @@ void get_stf_for_gpu(field* stf_pre_compute, double* h_stf_pre_compute, int * ru
   //Conversion to GPU precision
   //Converts source time function to the field format. The stf value is saved only into its corresponding run. For other runs, a zero will be added
 
-  for (int i_source=0;i_source < NSOURCES;i_source++){
-    for (int i_run=0;i_run < NB_RUNS_ACOUSTIC_GPU;i_run++){
+  for (int i_source=0; i_source < NSOURCES; i_source++){
+    for (int i_run=0; i_run < NB_RUNS_ACOUSTIC_GPU; i_run++){
       if (run_number_of_the_source[i_source] == i_run){
-        realw_to_field[i_run]= (realw)h_stf_pre_compute[i_source];
+        realw_to_field[i_run] = (realw) h_stf_pre_compute[i_source];
       }
       else{
         realw_to_field[i_run] = 0.0f;

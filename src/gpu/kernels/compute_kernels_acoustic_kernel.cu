@@ -55,10 +55,12 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
   int ijk = threadIdx.x;
 
   // local and global indices
+  int iglob;
+
   int ijk_ispec = ijk + NGLL3*ispec;
   int ijk_ispec_padded = ijk + NGLL3_PADDED*ispec;
-  int iglob;
-  int ispec_irreg = d_irregular_element_number[ispec]-1;
+
+  int ispec_irreg = d_irregular_element_number[ispec] - 1;
 
   // shared memory between all threads within this block
   __shared__ field scalar_field_displ[NGLL3];

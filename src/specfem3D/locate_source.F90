@@ -586,7 +586,11 @@
           write(IMAIN,*) '   and '
           write(IMAIN,*) '      Mrt = Mrp = Mtp = zero'
           write(IMAIN,*)
-          call exit_mpi(myrank,'error acoustic source')
+          ! stop
+          print *,'Error: invalid acoustic source, must have: Mrr == Mtt == Mpp and Mrt == Mrp == Mtp == zero'
+          print *,'       current Mrr = ',Mzz(isource),' Mtt = ',Myy(isource),' Mpp = ',Mxx(isource)
+          print *,'               Mrt = ',-Myz(isource),' Mrp = ',Mxz(isource),' Mtp = ',-Mxy(isource)
+          call exit_mpi(myrank,'Invalid acoustic source')
         endif
       endif
 

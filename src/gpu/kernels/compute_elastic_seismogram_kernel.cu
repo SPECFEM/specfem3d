@@ -27,14 +27,27 @@
 !=====================================================================
 */
 
+// includes device function compute_gradient_kernel()
+#include "compute_gradient_kernel.h"
+
 
 __global__ void compute_elastic_seismogram_kernel(int nrec_local,
-                                                  realw* field,
+                                                  realw* displ,
+                                                  field* potential,
                                                   int* d_ibool,
                                                   realw* hxir_store, realw* hetar_store, realw* hgammar_store,
                                                   realw* seismograms,
                                                   realw* nu_rec,
                                                   int* ispec_selected_rec_loc,
+                                                  int* ispec_is_elastic,
+                                                  int* ispec_is_acoustic,
+                                                  realw* rhostore,
+                                                  realw* d_hprime_xx,
+                                                  realw* d_xix,realw* d_xiy,realw* d_xiz,
+                                                  realw* d_etax,realw* d_etay,realw* d_etaz,
+                                                  realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+                                                  int* d_irregular_element_number,
+                                                  realw xix_regular,
                                                   int it){
 
   int irec_local = blockIdx.x + blockIdx.y*gridDim.x;
@@ -49,29 +62,77 @@ __global__ void compute_elastic_seismogram_kernel(int nrec_local,
   __shared__ realw sh_dyd[NGLL3_PADDED];
   __shared__ realw sh_dzd[NGLL3_PADDED];
 
-  if (irec_local < nrec_local) {
+  __shared__ field scalar_field[NGLL3];
 
+  if (irec_local < nrec_local) {
+    // initializes
+    sh_dxd[tx] = 0.0f;
+    sh_dyd[tx] = 0.0f;
+    sh_dzd[tx] = 0.0f;
+
+    // receiver element
     int ispec = ispec_selected_rec_loc[irec_local] - 1;
 
-    sh_dxd[tx] = 0;
-    sh_dyd[tx] = 0;
-    sh_dzd[tx] = 0;
+    // elastic domains
+    if (ispec_is_elastic[ispec]) {
+      if (tx < NGLL3) {
+        realw hxir = hxir_store[INDEX2(NGLLX,I,irec_local)];
+        realw hetar = hetar_store[INDEX2(NGLLX,J,irec_local)];
+        realw hgammar = hgammar_store[INDEX2(NGLLX,K,irec_local)];
 
-    if (tx < NGLL3) {
-      realw hxir = hxir_store[INDEX2(NGLLX,I,irec_local)];
-      realw hetar = hetar_store[INDEX2(NGLLX,J,irec_local)];
-      realw hgammar = hgammar_store[INDEX2(NGLLX,K,irec_local)];
+        realw hlagrange = hxir * hetar * hgammar;
+        int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,I,J,K,ispec)] - 1;
 
-      realw hlagrange = hxir * hetar * hgammar;
-      int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,I,J,K,ispec)]-1;
+        sh_dxd[tx] = hlagrange * displ[NDIM*iglob];
+        sh_dyd[tx] = hlagrange * displ[NDIM*iglob+1];
+        sh_dzd[tx] = hlagrange * displ[NDIM*iglob+2];
 
-      sh_dxd[tx] = hlagrange * field[0 + NDIM*iglob];
-      sh_dyd[tx] = hlagrange * field[1 + NDIM*iglob];
-      sh_dzd[tx] = hlagrange * field[2 + NDIM*iglob];
-
-      //debug
-      //if (tx == 0) printf("thread %d %d %d - %f %f %f\n",ispec,iglob,irec_local,hlagrange,field[0 + 2*iglob],field[1 + 2*iglob]);
+        //debug
+        //if (tx == 0) printf("thread %d %d %d - %f %f %f\n",ispec,iglob,irec_local,hlagrange,displ[0 + 2*iglob],displ[1 + 2*iglob]);
+      }
     }
+
+    // acoustic domains
+    if (ispec_is_acoustic[ispec]) {
+      // loads scalar into shared memory
+      if (tx < NGLL3) {
+        int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,I,J,K,ispec)] - 1;
+        scalar_field[tx] = potential[iglob];
+      }
+
+      // synchronizes threads
+      __syncthreads();
+
+      if (tx < NGLL3) {
+        // compute gradient of potential to calculate vector if acoustic element
+        // we then need to divide by density because the potential is a potential of (density * displacement)
+        int offset = INDEX4_PADDED(NGLLX,NGLLX,NGLLX,I,J,K,ispec);
+
+        realw rhol = rhostore[offset];
+
+        // gradient vector
+        field vec_elem[3];
+        const int gravity = 0; // not used yet
+        int ispec_irreg = d_irregular_element_number[ispec] - 1;
+
+        compute_gradient_kernel(tx,ispec,ispec_irreg,scalar_field,vec_elem,
+                                d_hprime_xx,
+                                d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
+                                rhol,xix_regular,gravity);
+
+        realw hxir = hxir_store[INDEX2(NGLLX,I,irec_local)];
+        realw hetar = hetar_store[INDEX2(NGLLX,J,irec_local)];
+        realw hgammar = hgammar_store[INDEX2(NGLLX,K,irec_local)];
+
+        realw hlagrange = hxir * hetar * hgammar;
+
+        sh_dxd[tx] = hlagrange * realw_(vec_elem[0]);  // realw_(..) quick fix to convert field to realw
+        sh_dyd[tx] = hlagrange * realw_(vec_elem[1]);
+        sh_dzd[tx] = hlagrange * realw_(vec_elem[2]);
+      }
+    }
+
+    // synchronizes threads
     __syncthreads();
 
     // reduction
@@ -84,6 +145,8 @@ __global__ void compute_elastic_seismogram_kernel(int nrec_local,
 
     int idx = INDEX3(NDIM,nrec_local,0,irec_local,it);
 
+    // component rotation
+    // seismograms_d(:,irec_local,seismo_current) = rotation_seismo(:,1)*dxd + rotation_seismo(:,2)*dyd + rotation_seismo(:,3)*dzd
     if (tx == 0) {
       seismograms[0+idx] = nu_rec[0+NDIM*(0+NDIM*irec_local)]*sh_dxd[0]
                          + nu_rec[0+NDIM*(1+NDIM*irec_local)]*sh_dyd[0]

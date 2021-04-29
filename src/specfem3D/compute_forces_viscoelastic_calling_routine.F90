@@ -126,7 +126,7 @@
       call compute_forces_viscoelastic_cuda(Mesh_pointer, iphase, deltat, &
                                             nspec_outer_elastic, &
                                             nspec_inner_elastic, &
-                                            COMPUTE_AND_STORE_STRAIN,ATTENUATION,ANISOTROPY,1) ! 1 == forward
+                                            COMPUTE_AND_STORE_STRAIN,ATTENUATION,1) ! 1 == forward
     endif
 
     ! debug timing
@@ -519,7 +519,7 @@
       call compute_forces_viscoelastic_cuda(Mesh_pointer, iphase, b_deltat, &
                                             nspec_outer_elastic, &
                                             nspec_inner_elastic, &
-                                            COMPUTE_AND_STORE_STRAIN,ATTENUATION,ANISOTROPY,3) ! 3 == backward
+                                            COMPUTE_AND_STORE_STRAIN,ATTENUATION,3) ! 3 == backward
     endif
 
     ! computes additional contributions
@@ -734,7 +734,7 @@
     call compute_forces_viscoelastic_cuda(Mesh_pointer, iphase, deltat, &
                                           nspec_outer_elastic, &
                                           nspec_inner_elastic, &
-                                          COMPUTE_AND_STORE_STRAIN,ATTENUATION,ANISOTROPY,0) ! 0 == both
+                                          COMPUTE_AND_STORE_STRAIN,ATTENUATION,0) ! 0 == both
 
     ! while inner elements compute "Kernel_2", we wait for MPI to
     ! finish and transfer the boundary terms to the device asynchronously

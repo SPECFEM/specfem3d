@@ -712,7 +712,7 @@
     enddo
   endif
 
-! check that the sum of the number of receivers in each slice is nrec
+  ! check that the sum of the number of receivers in each slice is nrec
   call sum_all_i(nrec_local,nrec_tot_found)
   if (myrank == 0) then
     if (nrec_tot_found /= nrec_simulation) then
@@ -721,7 +721,7 @@
   endif
   call synchronize_all()
 
-! checks if acoustic receiver is exactly on the free surface because pressure is zero there
+  ! checks if acoustic receiver is exactly on the free surface because pressure is zero there
   call setup_receivers_check_acoustic()
 
   end subroutine setup_receivers
@@ -742,7 +742,7 @@
   integer :: irec,ixmin,ixmax,iymin,iymax,izmin,izmax,iface,ispec
   logical :: is_on,is_on_all
 
-! outputs a warning in case the receiver is lying on the free surface
+  ! outputs a warning in case the receiver is lying on the free surface
   do irec = 1,nrec
 
     ! checks if receiver is close to face
@@ -1149,6 +1149,8 @@
   subroutine setup_receivers_precompute_intp()
 
   use specfem_par
+  use specfem_par_elastic, only: ispec_is_elastic
+
   implicit none
 
   ! local parameters
@@ -1162,8 +1164,9 @@
   double precision,dimension(NGLLZ) :: hgammar
   double precision :: hpxir(NGLLX), hpetar(NGLLY),hpgammar(NGLLZ)
 
-  integer :: i,j,k
+  integer :: i,j,k,ispec
   real(kind=CUSTOM_REAL) :: hxi,heta,hgamma
+  logical :: has_receiver_in_elastic_domain
 
   ! note: for adjoint simulations (SIMULATION_TYPE == 2),
   !         nrec_local     - is set to the number of sources (CMTSOLUTIONs), which act as "receiver" locations
@@ -1556,6 +1559,33 @@
       endif
       call init_asdf_data(nrec_store)
       call synchronize_all()
+    endif
+  endif
+
+  ! seismogram check
+  if (SAVE_SEISMOGRAMS_PRESSURE .and. ELASTIC_SIMULATION .and. ATTENUATION) then
+    ! pressure output for receivers in elastic domains is only calculated based on non-attenuation stresses
+    has_receiver_in_elastic_domain = .false.
+    do irec_local = 1,nrec_local
+      ! gets global number of that receiver
+      irec = number_receiver_global(irec_local)
+      ! spectral element in which the receiver is located
+      if (SIMULATION_TYPE == 2) then
+        ! adjoint "receivers" are located at CMT source positions
+        ! note: we take here xi_source,.. when FASTER_RECEIVERS_POINTS_ONLY is set
+        ispec = ispec_selected_source(irec)
+      else
+        ! receiver located at station positions
+        ispec = ispec_selected_rec(irec)
+      endif
+      if (ispec_is_elastic(ispec)) then
+        has_receiver_in_elastic_domain = .true.
+        exit
+      endif
+    enddo
+    ! warning
+    if (has_receiver_in_elastic_domain) then
+      print *, "Warning: Pressure seismogram output for receivers in elastic domains is valid only for non-attenuation case"
     endif
   endif
 

@@ -94,6 +94,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* SIMULATION_TYPE,
                                         int* USE_MESH_COLORING_GPU_f,
                                         int* nspec_acoustic,int* nspec_elastic,
+                                        int* ispec_is_acoustic,
+                                        int* ispec_is_elastic,
                                         int* h_myrank,
                                         int* SAVE_FORWARD,
                                         realw* h_xir,realw* h_etar, realw* h_gammar,
@@ -317,9 +319,9 @@ void FC_FUNC_(prepare_constants_device,
       // forward/kernel simulations: receiver positions at STATIONS locations
       //                             nu_rec,.. are for actual receiver locations
       //                             seismograms are taken at these receiver locations (specified by STATIONS)
-      for (int i=0;i < (*nrec); i++){
-        if (mp->myrank == h_islice_selected_rec[i]){
-          for (int j = 0; j < 9; j++) h_nu_rec[j + NDIM * NDIM * irec_loc] = (realw)nu_rec[j + NDIM * NDIM * i];
+      for (int irec=0; irec < (*nrec); irec++){
+        if (mp->myrank == h_islice_selected_rec[irec]){
+          for (int j = 0; j < 9; j++) h_nu_rec[j + NDIM * NDIM * irec_loc] = (realw)nu_rec[j + NDIM * NDIM * irec];
           irec_loc = irec_loc + 1;
         }
       }
@@ -327,17 +329,17 @@ void FC_FUNC_(prepare_constants_device,
       // "pure" adjoint simulation: "adjoint receivers" are located at CMTSOLUTION source locations
       //                            nu_source,.. are for "adjoint receivers" locations
       //                            seismograms are taken at the "adjoint receivers" location (specified by CMTSOLUTION)
-      for(int i=0; i < (*NSOURCES); i++) {
-        if (mp->myrank == h_islice_selected_source[i]){
-          for (int j = 0; j < 9; j++) h_nu_rec[j + NDIM * NDIM * irec_loc] = (realw)nu_source[j + NDIM * NDIM * i];
-          irec_loc = irec_loc+1;
+      for(int irec=0; irec < (*NSOURCES); irec++) {
+        if (mp->myrank == h_islice_selected_source[irec]){
+          for (int j = 0; j < 9; j++) h_nu_rec[j + NDIM * NDIM * irec_loc] = (realw)nu_source[j + NDIM * NDIM * irec];
+          irec_loc = irec_loc + 1;
         }
       }
     }
     // checks
     if (irec_loc != mp->nrec_local) exit_on_error("prepare_constants_device: nrec_local not equal for d_nu_rec\n");
     // allocates on device
-    gpuCopy_todevice_realw((void**)&mp->d_nu_rec,h_nu_rec,NDIM * NDIM * (*nrec_local));
+    gpuCopy_todevice_realw((void**)&mp->d_nu_rec,h_nu_rec,NDIM * NDIM * mp->nrec_local);
     free(h_nu_rec);
 
     // stores only local receiver array
@@ -387,6 +389,10 @@ void FC_FUNC_(prepare_constants_device,
   mp->nspec_acoustic = *nspec_acoustic;
   mp->nspec_elastic = *nspec_elastic;
 
+  // element flags (always needed for seismogram routines)
+  gpuCopy_todevice_int((void**)&mp->d_ispec_is_acoustic,ispec_is_acoustic,mp->NSPEC_AB);
+  gpuCopy_todevice_int((void**)&mp->d_ispec_is_elastic,ispec_is_elastic,mp->NSPEC_AB);
+
   // gravity flag initialization
   mp->gravity = 0;
 
@@ -412,7 +418,6 @@ void FC_FUNC_(prepare_fields_acoustic_device,
               PREPARE_FIELDS_ACOUSTIC_DEVICE)(long* Mesh_pointer,
                                               realw* rmass_acoustic, realw* rhostore, realw* kappastore,
                                               int* num_phase_ispec_acoustic, int* phase_ispec_inner_acoustic,
-                                              int* ispec_is_acoustic,
                                               int* NOISE_TOMOGRAPHY,
                                               int* num_free_surface_faces,
                                               int* free_surface_ispec,
@@ -499,7 +504,6 @@ void FC_FUNC_(prepare_fields_acoustic_device,
   mp->num_phase_ispec_acoustic = *num_phase_ispec_acoustic;
   gpuCopy_todevice_int((void**)&mp->d_phase_ispec_inner_acoustic,phase_ispec_inner_acoustic,
                        2*mp->num_phase_ispec_acoustic);
-  gpuCopy_todevice_int((void**)&mp->d_ispec_is_acoustic,ispec_is_acoustic,mp->NSPEC_AB);
 
   // free surface
   if (*NOISE_TOMOGRAPHY == 0){
@@ -637,7 +641,6 @@ void FC_FUNC_(prepare_fields_elastic_device,
                                              realw* h_kappav, realw* h_muv,
                                              int* num_phase_ispec_elastic,
                                              int* phase_ispec_inner_elastic,
-                                             int* ispec_is_elastic,
                                              realw* b_absorb_field, int* b_reclen_field,
                                              int* COMPUTE_AND_STORE_STRAIN,
                                              realw* epsilondev_xx,realw* epsilondev_yy,realw* epsilondev_xy,
@@ -762,9 +765,6 @@ void FC_FUNC_(prepare_fields_elastic_device,
   gpuCopy_todevice_realw((void**)&mp->d_rmassy,rmassy,mp->NGLOB_AB);
   gpuCopy_todevice_realw((void**)&mp->d_rmassz,rmassz,mp->NGLOB_AB);
 
-  // element indices
-  gpuCopy_todevice_int((void**)&mp->d_ispec_is_elastic,ispec_is_elastic,mp->NSPEC_AB);
-
   // phase elements
   mp->num_phase_ispec_elastic = *num_phase_ispec_elastic;
 
@@ -849,7 +849,8 @@ void FC_FUNC_(prepare_fields_elastic_device,
   }
 
   // anisotropy
-  if (*ANISOTROPY ){
+  mp->ANISOTROPY = *ANISOTROPY;
+  if (mp->ANISOTROPY){
     // debug
     //printf("prepare_fields_elastic_device: rank %d - attenuation setup\n",mp->myrank);
     //synchronize_mpi();
@@ -1410,7 +1411,6 @@ void FC_FUNC_(prepare_cleanup_device,
                                       int* NOISE_TOMOGRAPHY,
                                       int* COMPUTE_AND_STORE_STRAIN,
                                       int* ATTENUATION,
-                                      int* ANISOTROPY,
                                       int* APPROXIMATE_OCEAN_LOAD,
                                       int* APPROXIMATE_HESS_KL) {
 
@@ -1450,6 +1450,9 @@ TRACE("prepare_cleanup_device");
   // global indexing
   gpuFree(mp->d_ispec_is_inner);
   gpuFree(mp->d_ibool);
+  // element flags
+  gpuFree(mp->d_ispec_is_acoustic);
+  gpuFree(mp->d_ispec_is_elastic);
 
   // sources
   if (mp->simulation_type == 1  || mp->simulation_type == 3){
@@ -1484,15 +1487,11 @@ TRACE("prepare_cleanup_device");
     gpuFree(mp->d_rhostore);
     gpuFree(mp->d_kappastore);
     gpuFree(mp->d_phase_ispec_inner_acoustic);
-    gpuFree(mp->d_ispec_is_acoustic);
-
     if (*NOISE_TOMOGRAPHY == 0){
       gpuFree(mp->d_free_surface_ispec);
       gpuFree(mp->d_free_surface_ijk);
     }
-
     if (*ABSORBING_CONDITIONS) gpuFree(mp->d_b_absorb_potential);
-
     if (mp->simulation_type == 3) {
       gpuFree(mp->d_b_potential_acoustic);
       gpuFree(mp->d_b_potential_dot_acoustic);
@@ -1505,7 +1504,6 @@ TRACE("prepare_cleanup_device");
         gpuFree(mp->d_hess_kappa_ac_kl);
       }
     }
-
   } // ACOUSTIC_SIMULATION
 
   // ELASTIC arrays
@@ -1513,28 +1511,20 @@ TRACE("prepare_cleanup_device");
     gpuFree(mp->d_displ);
     gpuFree(mp->d_veloc);
     gpuFree(mp->d_accel);
-
     gpuFree(mp->d_send_accel_buffer);
     if (mp->simulation_type == 3) gpuFree(mp->d_b_send_accel_buffer);
-
     gpuFree(mp->d_rmassx);
     gpuFree(mp->d_rmassy);
     gpuFree(mp->d_rmassz);
-
     gpuFree(mp->d_phase_ispec_inner_elastic);
-    gpuFree(mp->d_ispec_is_elastic);
-
     if (*ABSORBING_CONDITIONS && mp->d_num_abs_boundary_faces > 0){
       gpuFree(mp->d_rho_vp);
       gpuFree(mp->d_rho_vs);
-
       if (mp->simulation_type == 3 || ( mp->simulation_type == 1 && mp->save_forward ))
           gpuFree(mp->d_b_absorb_field);
     }
-
     gpuFree(mp->d_kappav);
     gpuFree(mp->d_muv);
-
     if (mp->simulation_type == 3) {
       gpuFree(mp->d_b_displ);
       gpuFree(mp->d_b_veloc);
@@ -1553,7 +1543,6 @@ TRACE("prepare_cleanup_device");
         gpuFree(mp->d_hess_mu_el_kl);
       }
     }
-
     if (*COMPUTE_AND_STORE_STRAIN ){
       gpuFree(mp->d_epsilondev_xx);
       gpuFree(mp->d_epsilondev_yy);
@@ -1572,7 +1561,6 @@ TRACE("prepare_cleanup_device");
         gpuFree(mp->d_b_epsilondev_trace);
       }
     }
-
     if (*ATTENUATION ){
       gpuFree(mp->d_factor_common);
       gpuFree(mp->d_factor_common_kappa);
@@ -1597,8 +1585,7 @@ TRACE("prepare_cleanup_device");
         gpuFree(mp->d_b_gammaval);
       }
     }
-
-    if (*ANISOTROPY ){
+    if (mp->ANISOTROPY){
       gpuFree(mp->d_c11store);
       gpuFree(mp->d_c12store);
       gpuFree(mp->d_c13store);
@@ -1621,7 +1608,6 @@ TRACE("prepare_cleanup_device");
       gpuFree(mp->d_c56store);
       gpuFree(mp->d_c66store);
     }
-
     if (*APPROXIMATE_OCEAN_LOAD ){
       if (mp->num_free_surface_faces > 0){
         gpuFree(mp->d_rmass_ocean_load);

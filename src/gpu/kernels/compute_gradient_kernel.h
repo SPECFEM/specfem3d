@@ -33,21 +33,20 @@
 // needed in compute_kernels_acoustic_kernel.cu and compute_kernels_hess_ac_cudakernel.cu
 
 __device__ __forceinline__ void compute_gradient_kernel(int ijk,
-                                        int ispec,int ispec_irreg,
-                                        field* scalar_field,
-                                        field* vector_field_loc,
-                                        realw* d_hprime_xx,
-                                        realw* d_xix,realw* d_xiy,realw* d_xiz,
-                                        realw* d_etax,realw* d_etay,realw* d_etaz,
-                                        realw* d_gammax,realw* d_gammay,realw* d_gammaz,
-                                        realw rhol,realw xix_regular,
-                                        int gravity) {
+                                                        int ispec,int ispec_irreg,
+                                                        field* scalar_field,
+                                                        field* vector_field_loc,
+                                                        realw* d_hprime_xx,
+                                                        realw* d_xix,realw* d_xiy,realw* d_xiz,
+                                                        realw* d_etax,realw* d_etay,realw* d_etaz,
+                                                        realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+                                                        realw rhol,realw xix_regular,
+                                                        int gravity) {
 
   field temp1l,temp2l,temp3l;
   realw hp1,hp2,hp3;
   realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl;
   realw rho_invl;
-  int l,offset,offset1,offset2,offset3;
 
   int K = (ijk/NGLL2);
   int J = ((ijk-K*NGLL2)/NGLLX);
@@ -55,33 +54,28 @@ __device__ __forceinline__ void compute_gradient_kernel(int ijk,
 
   // derivative along x
   temp1l = Make_field(0.f);
-  for( l=0; l<NGLLX;l++){
+  for(int l=0; l<NGLLX; l++){
     hp1 = d_hprime_xx[l*NGLLX+I];
-    offset1 = K*NGLL2+J*NGLLX+l;
-    temp1l += scalar_field[offset1]*hp1;
+    temp1l += scalar_field[K*NGLL2+J*NGLLX+l]*hp1;
   }
 
   // derivative along y
   temp2l = Make_field(0.f);
-  for( l=0; l<NGLLX;l++){
+  for(int l=0; l<NGLLX; l++){
     // assumes hprime_xx == hprime_yy
     hp2 = d_hprime_xx[l*NGLLX+J];
-    offset2 = K*NGLL2+l*NGLLX+I;
-    temp2l += scalar_field[offset2]*hp2;
+    temp2l += scalar_field[K*NGLL2+l*NGLLX+I]*hp2;
   }
 
   // derivative along z
   temp3l = Make_field(0.f);
-  for( l=0; l<NGLLX;l++){
+  for(int l=0; l<NGLLX; l++){
     // assumes hprime_xx == hprime_zz
     hp3 = d_hprime_xx[l*NGLLX+K];
-    offset3 = l*NGLL2+J*NGLLX+I;
-    temp3l += scalar_field[offset3]*hp3;
+    temp3l += scalar_field[l*NGLL2+J*NGLLX+I]*hp3;
   }
 
-  offset = ispec_irreg*NGLL3_PADDED + ijk;
-
-  if (gravity ){
+  if (gravity){
     // daniel: TODO - check gravity case here
     rho_invl = 1.0f / rhol;
   }else{
@@ -89,6 +83,7 @@ __device__ __forceinline__ void compute_gradient_kernel(int ijk,
   }
 
   if (ispec_irreg >= 0){
+    int offset = ispec_irreg * NGLL3_PADDED + ijk;
     xixl = d_xix[offset];
     xiyl = d_xiy[offset];
     xizl = d_xiz[offset];
@@ -99,18 +94,17 @@ __device__ __forceinline__ void compute_gradient_kernel(int ijk,
     gammayl = d_gammay[offset];
     gammazl = d_gammaz[offset];
 
-  // derivatives of acoustic scalar potential field on GLL points
-  vector_field_loc[0] = (temp1l*xixl + temp2l*etaxl + temp3l*gammaxl) * rho_invl;
-  vector_field_loc[1] = (temp1l*xiyl + temp2l*etayl + temp3l*gammayl) * rho_invl;
-  vector_field_loc[2] = (temp1l*xizl + temp2l*etazl + temp3l*gammazl) * rho_invl;
-  }
-  else{
-  // derivatives of acoustic scalar potential field on GLL points
-  vector_field_loc[0] = temp1l * xix_regular * rho_invl;
-  vector_field_loc[1] = temp2l * xix_regular * rho_invl;
-  vector_field_loc[2] = temp3l * xix_regular * rho_invl;
-  }
+    // derivatives of acoustic scalar potential field on GLL points
+    vector_field_loc[0] = (temp1l*xixl + temp2l*etaxl + temp3l*gammaxl) * rho_invl;
+    vector_field_loc[1] = (temp1l*xiyl + temp2l*etayl + temp3l*gammayl) * rho_invl;
+    vector_field_loc[2] = (temp1l*xizl + temp2l*etazl + temp3l*gammazl) * rho_invl;
 
+  }else{
+    // derivatives of acoustic scalar potential field on GLL points
+    vector_field_loc[0] = temp1l * xix_regular * rho_invl;
+    vector_field_loc[1] = temp2l * xix_regular * rho_invl;
+    vector_field_loc[2] = temp3l * xix_regular * rho_invl;
+  }
 }
 
 

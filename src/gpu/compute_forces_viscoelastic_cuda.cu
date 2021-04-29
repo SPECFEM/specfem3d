@@ -38,7 +38,6 @@
 void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
               const int COMPUTE_AND_STORE_STRAIN,
               const int ATTENUATION,
-              const int ANISOTROPY,
               int* d_ibool,
               realw* d_xix,realw* d_xiy,realw* d_xiz,
               realw* d_etax,realw* d_etay,realw* d_etaz,
@@ -179,7 +178,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                 d_factor_common_kappa,
                                                                 R_trace,d_epsilondev_trace,
                                                                 alphaval,betaval,gammaval,
-                                                                ANISOTROPY,
+                                                                mp->ANISOTROPY,
                                                                 d_c11store,d_c12store,d_c13store,
                                                                 d_c14store,d_c15store,d_c16store,
                                                                 d_c22store,d_c23store,d_c24store,
@@ -225,7 +224,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                             d_factor_common_kappa,
                                             R_trace,d_epsilondev_trace,
                                             alphaval,betaval,gammaval,
-                                            ANISOTROPY,
+                                            mp->ANISOTROPY,
                                             d_c11store,d_c12store,d_c13store,
                                             d_c14store,d_c15store,d_c16store,
                                             d_c22store,d_c23store,d_c24store,
@@ -273,7 +272,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                  d_factor_common_kappa,
                                                                  d_b_R_trace,d_b_epsilondev_trace,
                                                                  mp->d_b_alphaval,mp->d_b_betaval,mp->d_b_gammaval,
-                                                                 ANISOTROPY,
+                                                                 mp->ANISOTROPY,
                                                                  d_c11store,d_c12store,d_c13store,
                                                                  d_c14store,d_c15store,d_c16store,
                                                                  d_c22store,d_c23store,d_c24store,
@@ -319,7 +318,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                               d_factor_common_kappa,
                                               d_b_R_trace,d_b_epsilondev_trace,
                                               mp->d_b_alphaval,mp->d_b_betaval,mp->d_b_gammaval,
-                                              ANISOTROPY,
+                                              mp->ANISOTROPY,
                                               d_c11store,d_c12store,d_c13store,
                                               d_c14store,d_c15store,d_c16store,
                                               d_c22store,d_c23store,d_c24store,
@@ -339,7 +338,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
     }
   }else{
     // compute kernels without attenuation
-    if (ANISOTROPY){
+    if (mp->ANISOTROPY){
       TRACE("\tKernel_2: Kernel_2_noatt_ani_impl");
       // full anisotropy
       // forward wavefields -> FORWARD_OR_ADJOINT == 1
@@ -366,7 +365,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                         epsilondev_xz,epsilondev_yz,
                                                                         epsilon_trace_over_3,
                                                                         mp->simulation_type,
-                                                                        ANISOTROPY,
+                                                                        mp->ANISOTROPY,
                                                                         d_c11store,d_c12store,d_c13store,
                                                                         d_c14store,d_c15store,d_c16store,
                                                                         d_c22store,d_c23store,d_c24store,
@@ -406,7 +405,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                     epsilondev_xz,epsilondev_yz,
                                                     epsilon_trace_over_3,
                                                     mp->simulation_type,
-                                                    ANISOTROPY,
+                                                    mp->ANISOTROPY,
                                                     d_c11store,d_c12store,d_c13store,
                                                     d_c14store,d_c15store,d_c16store,
                                                     d_c22store,d_c23store,d_c24store,
@@ -449,7 +448,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                            d_b_epsilondev_xz,d_b_epsilondev_yz,
                                                                            d_b_epsilon_trace_over_3,
                                                                            mp->simulation_type,
-                                                                           ANISOTROPY,
+                                                                           mp->ANISOTROPY,
                                                                            d_c11store,d_c12store,d_c13store,
                                                                            d_c14store,d_c15store,d_c16store,
                                                                            d_c22store,d_c23store,d_c24store,
@@ -489,7 +488,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                       d_b_epsilondev_xz,d_b_epsilondev_yz,
                                                       d_b_epsilon_trace_over_3,
                                                       mp->simulation_type,
-                                                      ANISOTROPY,
+                                                      mp->ANISOTROPY,
                                                       d_c11store,d_c12store,d_c13store,
                                                       d_c14store,d_c15store,d_c16store,
                                                       d_c22store,d_c23store,d_c24store,
@@ -1022,17 +1021,17 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
   } // ATTENUATION
 
   // Cuda timing
-  if (CUDA_TIMING ){
-    if (ATTENUATION ){
+  if (CUDA_TIMING){
+    if (ATTENUATION){
       stop_timing_gpu(&start,&stop,"Kernel_2_att_impl");
     }else{
-      if (ANISOTROPY ){
+      if (mp->ANISOTROPY){
         stop_timing_gpu(&start,&stop,"Kernel_2_noatt_ani_impl");
       }else{
-        if (mp->gravity ){
+        if (mp->gravity){
           stop_timing_gpu(&start,&stop,"Kernel_2_noatt_iso_grav_impl");
         }else{
-          if (COMPUTE_AND_STORE_STRAIN ){
+          if (COMPUTE_AND_STORE_STRAIN){
             stop_timing_gpu(&start,&stop,"Kernel_2_noatt_iso_strain_impl");
           }else{
             realw time;
@@ -1065,7 +1064,6 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
                                                 int* nspec_inner_elastic,
                                                 int* COMPUTE_AND_STORE_STRAIN,
                                                 int* ATTENUATION,
-                                                int* ANISOTROPY,
                                                 int* FORWARD_OR_ADJOINT_f) {
 
   TRACE("\tcompute_forces_viscoelastic_cuda");
@@ -1129,7 +1127,7 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
 
       Kernel_2(nb_blocks_to_compute,mp,*iphase,*deltat,
                *COMPUTE_AND_STORE_STRAIN,
-               *ATTENUATION,*ANISOTROPY,
+               *ATTENUATION,
                mp->d_ibool + offset,
                mp->d_xix + offset,mp->d_xiy + offset,mp->d_xiz + offset,
                mp->d_etax + offset,mp->d_etay + offset,mp->d_etaz + offset,
@@ -1178,7 +1176,7 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
     // no mesh coloring: uses atomic updates
     Kernel_2(num_elements,mp,*iphase,*deltat,
              *COMPUTE_AND_STORE_STRAIN,
-             *ATTENUATION,*ANISOTROPY,
+             *ATTENUATION,
              mp->d_ibool,
              mp->d_xix,mp->d_xiy,mp->d_xiz,
              mp->d_etax,mp->d_etay,mp->d_etaz,

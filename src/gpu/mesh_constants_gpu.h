@@ -593,6 +593,7 @@ typedef struct mesh_ {
   realw* d_epsilon_trace_over_3;
 
   // anisotropy
+  int ANISOTROPY;
   realw* d_c11store;
   realw* d_c12store;
   realw* d_c13store;
