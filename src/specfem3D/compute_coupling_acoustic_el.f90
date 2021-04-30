@@ -46,29 +46,29 @@
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
 
-! displacement and pressure
+  ! displacement and pressure
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(in) :: displ
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: potential_dot_dot_acoustic
   integer,intent(in) :: SIMULATION_TYPE
   logical,intent(in) :: backward_simulation
 
-! global indexing
+  ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
-! acoustic-elastic coupling surface
+  ! acoustic-elastic coupling surface
   integer,intent(in) :: num_coupling_ac_el_faces
   real(kind=CUSTOM_REAL),intent(in) :: coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces)
   real(kind=CUSTOM_REAL),intent(in) :: coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces)
   integer,intent(in) :: coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces)
   integer,intent(in) :: coupling_ac_el_ispec(num_coupling_ac_el_faces)
 
-! communication overlap
+  ! communication overlap
   integer,intent(in) :: iphase
 
-! CPML
+  ! CPML
   logical,intent(in) :: PML_CONDITIONS
 
-! local parameters
+  ! local parameters
   real(kind=CUSTOM_REAL) :: displ_x,displ_y,displ_z,displ_n
   real(kind=CUSTOM_REAL) :: nx,ny,nz,jacobianw
   integer :: iface,igll,ispec,iglob,ispec_CPML,i,j,k
@@ -78,7 +78,7 @@
   ! checks if anything to do
   if (num_coupling_ac_el_faces == 0) return
 
-! loops on all coupling faces
+  ! loops on all coupling faces
   do iface = 1,num_coupling_ac_el_faces
 
     ! gets corresponding elements

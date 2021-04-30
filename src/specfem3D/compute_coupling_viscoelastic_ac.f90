@@ -48,38 +48,38 @@
   integer,intent(in) :: NSPEC_AB,NGLOB_AB,SIMULATION_TYPE
   logical,intent(in) :: backward_simulation
 
-! displacement and pressure
+  ! displacement and pressure
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: accel
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: potential_dot_dot_acoustic,potential_dot_acoustic,potential_acoustic
 
-! global indexing
+  ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
-! acoustic-elastic coupling surface
+  ! acoustic-elastic coupling surface
   integer,intent(in) :: num_coupling_ac_el_faces
   real(kind=CUSTOM_REAL),intent(in) :: coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces)
   real(kind=CUSTOM_REAL),intent(in) :: coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces)
   integer,intent(in) :: coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces)
   integer,intent(in) :: coupling_ac_el_ispec(num_coupling_ac_el_faces)
 
-! communication overlap
+  ! communication overlap
   integer,intent(in) :: iphase
 
-! local parameters
+  ! local parameters
   real(kind=CUSTOM_REAL) :: pressure_x,pressure_y,pressure_z
   real(kind=CUSTOM_REAL) :: nx,ny,nz,jacobianw
 
   integer :: iface,igll,ispec,iglob
   integer :: i,j,k
 
-! CPML
+  ! CPML
   integer :: ispec_CPML
   logical :: PML_CONDITIONS
 
   ! only add these contributions in first pass
   if (iphase /= 1) return
 
-! loops on all coupling faces
+  ! loops on all coupling faces
   do iface = 1,num_coupling_ac_el_faces
 
     ! gets corresponding spectral element
