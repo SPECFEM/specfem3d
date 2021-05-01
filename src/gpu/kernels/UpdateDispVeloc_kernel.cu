@@ -39,12 +39,14 @@ __global__ void UpdateDispVeloc_kernel(realw* displ,
   // two dimensional array of blocks on grid where each block has one dimensional array of threads
   int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
 
-  realw acc = accel[id];
   // because of block and grid sizing problems, there is a small
   // amount of buffer at the end of the calculation
   if (id < size) {
-    displ[id] = displ[id] + deltat*veloc[id] + deltatsqover2*acc;
-    veloc[id] = veloc[id] + deltatover2*acc;
+    realw acc = accel[id];
+    realw vel = veloc[id];
+
+    displ[id] = displ[id] + deltat*vel + deltatsqover2*acc;
+    veloc[id] = vel + deltatover2*acc;
     accel[id] = 0.0f; // can do this using memset...not sure if faster,probably not
   }
 
