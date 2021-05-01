@@ -722,6 +722,20 @@ COND_VTK_FALSE
 COND_VTK_TRUE
 COND_OMP_FALSE
 COND_OMP_TRUE
+COND_HIP_CUDA11_FALSE
+COND_HIP_CUDA11_TRUE
+COND_HIP_CUDA10_FALSE
+COND_HIP_CUDA10_TRUE
+COND_HIP_CUDA9_FALSE
+COND_HIP_CUDA9_TRUE
+COND_HIP_CUDA8_FALSE
+COND_HIP_CUDA8_TRUE
+COND_HIP_CUDA7_FALSE
+COND_HIP_CUDA7_TRUE
+COND_HIP_CUDA6_FALSE
+COND_HIP_CUDA6_TRUE
+COND_HIP_CUDA5_FALSE
+COND_HIP_CUDA5_TRUE
 COND_HIP_MI100_FALSE
 COND_HIP_MI100_TRUE
 COND_HIP_MI50_FALSE
@@ -3034,6 +3048,62 @@ fi
 else
   COND_HIP_MI100_TRUE='#'
   COND_HIP_MI100_FALSE=
+fi
+
+ if test x"$want_hip" = xcuda5; then
+  COND_HIP_CUDA5_TRUE=
+  COND_HIP_CUDA5_FALSE='#'
+else
+  COND_HIP_CUDA5_TRUE='#'
+  COND_HIP_CUDA5_FALSE=
+fi
+
+ if test x"$want_hip" = xcuda6; then
+  COND_HIP_CUDA6_TRUE=
+  COND_HIP_CUDA6_FALSE='#'
+else
+  COND_HIP_CUDA6_TRUE='#'
+  COND_HIP_CUDA6_FALSE=
+fi
+
+ if test x"$want_hip" = xcuda7; then
+  COND_HIP_CUDA7_TRUE=
+  COND_HIP_CUDA7_FALSE='#'
+else
+  COND_HIP_CUDA7_TRUE='#'
+  COND_HIP_CUDA7_FALSE=
+fi
+
+ if test x"$want_hip" = xcuda8; then
+  COND_HIP_CUDA8_TRUE=
+  COND_HIP_CUDA8_FALSE='#'
+else
+  COND_HIP_CUDA8_TRUE='#'
+  COND_HIP_CUDA8_FALSE=
+fi
+
+ if test x"$want_hip" = xcuda9; then
+  COND_HIP_CUDA9_TRUE=
+  COND_HIP_CUDA9_FALSE='#'
+else
+  COND_HIP_CUDA9_TRUE='#'
+  COND_HIP_CUDA9_FALSE=
+fi
+
+ if test x"$want_hip" = xcuda10; then
+  COND_HIP_CUDA10_TRUE=
+  COND_HIP_CUDA10_FALSE='#'
+else
+  COND_HIP_CUDA10_TRUE='#'
+  COND_HIP_CUDA10_FALSE=
+fi
+
+ if test x"$want_hip" = xcuda11; then
+  COND_HIP_CUDA11_TRUE=
+  COND_HIP_CUDA11_FALSE='#'
+else
+  COND_HIP_CUDA11_TRUE='#'
+  COND_HIP_CUDA11_FALSE=
 fi
 
 
@@ -10839,6 +10909,34 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_HIP_MI100_TRUE}" && test -z "${COND_HIP_MI100_FALSE}"; then
   as_fn_error $? "conditional \"COND_HIP_MI100\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_HIP_CUDA5_TRUE}" && test -z "${COND_HIP_CUDA5_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP_CUDA5\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_HIP_CUDA6_TRUE}" && test -z "${COND_HIP_CUDA6_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP_CUDA6\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_HIP_CUDA7_TRUE}" && test -z "${COND_HIP_CUDA7_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP_CUDA7\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_HIP_CUDA8_TRUE}" && test -z "${COND_HIP_CUDA8_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP_CUDA8\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_HIP_CUDA9_TRUE}" && test -z "${COND_HIP_CUDA9_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP_CUDA9\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_HIP_CUDA10_TRUE}" && test -z "${COND_HIP_CUDA10_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP_CUDA10\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_HIP_CUDA11_TRUE}" && test -z "${COND_HIP_CUDA11_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP_CUDA11\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_OMP_TRUE}" && test -z "${COND_OMP_FALSE}"; then
