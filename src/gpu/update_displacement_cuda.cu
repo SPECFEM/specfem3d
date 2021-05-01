@@ -43,7 +43,7 @@ void FC_FUNC_(update_displacement_cuda,
                                           realw* deltatsqover2_F,
                                           int* FORWARD_OR_ADJOINT) {
 
-  TRACE("\tupdate_displacement_cuda");
+  TRACE("update_displacement_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
 
@@ -130,7 +130,7 @@ void FC_FUNC_(update_displacement_ac_cuda,
                                            realw* deltatover2_F,
                                            realw* deltatsqover2_F,
                                            int* FORWARD_OR_ADJOINT) {
-  TRACE("\tupdate_displacement_ac_cuda");
+  TRACE("update_displacement_ac_cuda");
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
 
   // safety check
@@ -226,7 +226,7 @@ void FC_FUNC_(kernel_3_a_cuda,
                                int* APPROXIMATE_OCEAN_LOAD,
                                int* FORWARD_OR_ADJOINT) {
 
-  TRACE("\tkernel_3_a_cuda");
+  TRACE("kernel_3_a_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
 
@@ -319,7 +319,7 @@ void FC_FUNC_(kernel_3_b_cuda,
                                realw* deltatover2_F,
                                realw* b_deltatover2_F,
                                int* FORWARD_OR_ADJOINT) {
-  TRACE("\tkernel_3_b_cuda");
+  TRACE("kernel_3_b_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
 

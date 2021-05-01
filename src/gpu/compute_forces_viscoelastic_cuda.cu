@@ -68,7 +68,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
               realw* d_rhostore,
               const int FORWARD_OR_ADJOINT){
 
-  TRACE("\tKernel_2");
+  TRACE("Kernel_2");
 
   GPU_ERROR_CHECKING("before kernel Kernel 2");
 
@@ -1066,7 +1066,7 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
                                                 int* ATTENUATION,
                                                 int* FORWARD_OR_ADJOINT_f) {
 
-  TRACE("\tcompute_forces_viscoelastic_cuda");
+  TRACE("compute_forces_viscoelastic_cuda");
   // EPIK_TRACER("compute_forces_viscoelastic_cuda");
   //printf("Running compute_forces\n");
   //double start_time = get_time_val();

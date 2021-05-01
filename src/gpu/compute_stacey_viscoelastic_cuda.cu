@@ -42,7 +42,7 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
                                                 realw* b_absorb_field,
                                                 int* FORWARD_OR_ADJOINT_f) {
 
-  TRACE("\tcompute_stacey_viscoelastic_cuda");
+  TRACE("compute_stacey_viscoelastic_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
   int FORWARD_OR_ADJOINT = *FORWARD_OR_ADJOINT_f;
@@ -226,7 +226,7 @@ void FC_FUNC_(compute_stacey_viscoelastic_undoatt_cuda,
                                                         int* iphasef,
                                                         int* FORWARD_OR_ADJOINT_f) {
 
-  TRACE("\tcompute_stacey_viscoelastic_undoatt_cuda");
+  TRACE("compute_stacey_viscoelastic_undoatt_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
   int FORWARD_OR_ADJOINT = *FORWARD_OR_ADJOINT_f;

@@ -159,6 +159,7 @@ void FC_FUNC_(compute_coupling_el_ac_cuda,
   field* potential_dot_dot;
   realw *accel,*displ;
   int backward_simulation;
+
   if (*FORWARD_OR_ADJOINT == 1) {
     // forward fields
     backward_simulation = 0;
@@ -237,7 +238,7 @@ void FC_FUNC_(compute_coupling_ocean_cuda,
               COMPUTE_COUPLING_OCEAN_CUDA)(long* Mesh_pointer,
                                            int* FORWARD_OR_ADJOINT) {
 
-  TRACE("\tcompute_coupling_ocean_cuda");
+  TRACE("compute_coupling_ocean_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 

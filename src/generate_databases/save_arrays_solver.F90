@@ -729,6 +729,19 @@
     endif ! NPROC > 1
   endif  !if (SAVE_MESH_FILES_ADDITIONAL)
 
+  !debug
+  ! saves ispec number
+  !allocate(v_tmp_i(nspec),stat=ier)
+  !if (ier /= 0) call exit_MPI_without_rank('error allocating array 656')
+  !if (ier /= 0) stop 'error allocating array v_tmp_i'
+  !do i = 1,nspec
+  !  v_tmp_i(i) = i
+  !enddo
+  !filename = prname(1:len_trim(prname))//'ispec_number'
+  !call write_VTK_data_elem_i(nspec,nglob_unique,xstore_unique,ystore_unique,zstore_unique,ibool, &
+  !                           v_tmp_i,filename)
+  !deallocate(v_tmp_i)
+
   end subroutine save_arrays_solver_files
 
 !

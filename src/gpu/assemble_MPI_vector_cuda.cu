@@ -43,7 +43,7 @@ void FC_FUNC_(transfer_boun_accel_from_device,
               TRANSFER_BOUN_ACCEL_FROM_DEVICE)(long* Mesh_pointer,
                                                realw* send_accel_buffer,
                                                const int* FORWARD_OR_ADJOINT){
-TRACE("\ttransfer_boun_accel_from_device");
+TRACE("transfer_boun_accel_from_device");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
@@ -123,7 +123,7 @@ void FC_FUNC_(transfer_boundary_from_device_a,
 
 // asynchronous transfer from device to host
 
-  TRACE("\ttransfer_boundary_from_device_a");
+  TRACE("transfer_boundary_from_device_a");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
 
@@ -210,7 +210,7 @@ void FC_FUNC_(transfer_asmbl_accel_to_device,
                                               const int* nibool_interfaces_ext_mesh,
                                               const int* ibool_interfaces_ext_mesh,
                                               const int* FORWARD_OR_ADJOINT) {
-TRACE("\ttransfer_asmbl_accel_to_device");
+TRACE("transfer_asmbl_accel_to_device");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
@@ -310,7 +310,7 @@ void FC_FUNC_(transfer_sync_accel_to_device,
                                               const int* nibool_interfaces_ext_mesh,
                                               const int* ibool_interfaces_ext_mesh,
                                               const int* FORWARD_OR_ADJOINT) {
-TRACE("\ttransfer_sync_accel_to_device");
+TRACE("transfer_sync_accel_to_device");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 

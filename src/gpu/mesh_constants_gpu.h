@@ -780,7 +780,7 @@ static inline void get_blocks_xy(int num_blocks, int* num_blocks_x, int* num_blo
   }
 
 #if DEBUG == 1
-  printf("work group - total %d has group size x = %d / y = %d\n",
+  printf("\twork group - total %d has group size x = %d / y = %d\n",
          num_blocks,*num_blocks_x,*num_blocks_y);
 #endif
 
@@ -794,7 +794,7 @@ static inline void get_blocks_xy(int num_blocks, int* num_blocks_x, int* num_blo
   }
 
 #if DEBUG == 1
-  printf("balancing work group with limit size %d - total %d has group size x = %d / y = %d\n",
+  printf("\tbalancing work group with limit size %d - total %d has group size x = %d / y = %d\n",
          BALANCE_WORK_GROUP_UNITS,num_blocks,*num_blocks_x,*num_blocks_y);
 #endif
 

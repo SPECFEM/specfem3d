@@ -39,7 +39,7 @@ __global__ void kernel_3_accel_cuda_device(realw_p accel,
   // because of block and grid sizing problems, there is a small
   // amount of buffer at the end of the calculation
   if (id < size) {
-    accel[3*id  ] = accel[3*id  ] * rmassx[id];;
+    accel[3*id  ] = accel[3*id  ] * rmassx[id];
     accel[3*id+1] = accel[3*id+1] * rmassy[id];
     accel[3*id+2] = accel[3*id+2] * rmassz[id];
   }

@@ -41,7 +41,7 @@ void FC_FUNC_(compute_add_sources_el_cuda,
                                            double* h_stf_pre_compute,
                                            int* h_NSOURCES) {
 
-  TRACE("\tcompute_add_sources_el_cuda");
+  TRACE("compute_add_sources_el_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
@@ -107,7 +107,7 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
                                               double* h_stf_pre_compute,
                                               int* h_NSOURCES) {
 
-  TRACE("\tcompute_add_sources_el_s3_cuda");
+  TRACE("compute_add_sources_el_s3_cuda");
   // EPIK_TRACER("compute_add_sources_el_s3_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
@@ -176,7 +176,7 @@ void FC_FUNC_(add_source_main_rec_noise_cu,
                                             int* irec_main_noise_f,
                                             int* islice_selected_rec) {
 
-TRACE("\tadd_source_main_rec_noise_cu");
+TRACE("add_source_main_rec_noise_cu");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
@@ -229,7 +229,7 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
                                               int* NTSTEP_BETWEEN_READ_ADJSRC,
                                               int* it) {
 
-  TRACE("\tadd_sources_el_sim_type_2_or_3");
+  TRACE("add_sources_el_sim_type_2_or_3");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 

@@ -377,7 +377,7 @@ void FC_FUNC_(get_norm_elastic_from_device,
                                             long* Mesh_pointer,
                                             int* type) {
 
-  TRACE("\tget_norm_elastic_from_device");
+  TRACE("get_norm_elastic_from_device");
   //double start_time = get_time_val();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
