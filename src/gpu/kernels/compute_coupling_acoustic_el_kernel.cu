@@ -68,7 +68,7 @@ __global__ void compute_coupling_acoustic_el_kernel(realw* displ,
     displ_z = displ[iglob*3+2] ; // (3,iglob)
 
     // adjoint wavefield case
-    if (simulation_type /= 1 && backward_simulation == 0){
+    if (simulation_type != 1 && backward_simulation == 0){
       // handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
       // adjoint definition: \partial_t^2 \bfs^\dagger = - \frac{1}{\rho} \bfnabla\phi^\dagger
       displ_x = - displ_x;

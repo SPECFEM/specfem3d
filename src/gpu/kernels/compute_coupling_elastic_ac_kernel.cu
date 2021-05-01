@@ -103,7 +103,7 @@ __global__ void compute_coupling_elastic_ac_kernel(field* potential_dot_dot_acou
       pressure = - potential_dot_dot_acoustic[iglob];
     }
 
-    if (simulation_type /= 1 && backward_simulation == 0){
+    if (simulation_type != 1 && backward_simulation == 0){
       // handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
       // adjoint definition: pressure^\dagger = potential^\dagger
       pressure = - pressure;
