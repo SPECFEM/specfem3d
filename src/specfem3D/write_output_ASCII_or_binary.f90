@@ -121,7 +121,7 @@
       time_t_db = dble(NSTEP - it_current * subsamp_seismos) * DT - t0
     endif
 
-    ! converts time to custom_real for output
+    ! converts time to CUSTOM_REAL for output
     time_t = real(time_t_db,kind=CUSTOM_REAL)
 
     if (USE_BINARY_FOR_SEISMOGRAMS) then

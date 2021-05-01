@@ -3,7 +3,7 @@
 # converts between UTM and lon/lat coordinates
 #
 # usage example:
-# convert from lon/lat to UTM: (zone 31) 
+# convert from lon/lat to UTM: (zone 31)
 #   > ./convert_utm2geo.py 2.6 51.5 31 2
 # convert from UTM x/y to lon/lat:
 #   > ./convert_utm2geo.py 472234.9543355125 5705505.016786354 31 1

@@ -46,7 +46,7 @@
  defined materials    :            2
  undefined materials  :            0
  total number of spectral elements:         9600
- absorbing boundaries: 
+ absorbing boundaries:
    xmin,xmax :          200         200
    ymin,ymax :         2400        2400
    bottom,top:          192         192
@@ -60,14 +60,14 @@
 
  create regions:
 
-   ...allocating arrays 
+   ...allocating arrays
      NGLLX   =            5
      NGLLY   =            5
      NGLLZ   =            5
      NGNOD   =            8
      NGNOD2D =            4
 
-     main process setup: 
+     main process setup:
      nspec           =         3200
 
      separating regular/irregular element shapes
@@ -84,16 +84,16 @@
  File DATA/Par_file_faults not found: assuming that there are no faults
 
 
-   ...setting up jacobian 
+   ...setting up jacobian
 
    ...indexing global points
-      creating ibool indexing     : x min/max =    0.00000000     /   10000.0000    
+      creating ibool indexing     : x min/max =    0.00000000     /   10000.0000
       creating indirect addressing: nglob =       222105
       creating unique point locations
 
-   ...preparing MPI interfaces 
+   ...preparing MPI interfaces
       number of interfaces        :            1
-      creating MPI indexing       : x min/max =    0.00000000     /   10000.0000    
+      creating MPI indexing       : x min/max =    0.00000000     /   10000.0000
                                     tolerance =    9.9999999999999995E-007
 
       total MPI interface points:        13668
@@ -125,7 +125,7 @@
                90  % time remaining:   5.2642145371919441E-008 s
               100  % time remaining:   0.0000000000000000      s
 
-   ...detecting acoustic-elastic-poroelastic surfaces 
+   ...detecting acoustic-elastic-poroelastic surfaces
       total acoustic elements   :         384
       total elastic elements    :        9216
       total poroelastic elements:           0
@@ -135,18 +135,18 @@
        elastic - poroelastic coupling : total number of faces =            0
 
 
-   ...element inner/outer separation 
+   ...element inner/outer separation
       for overlapping of communications with calculations:
       percentage of   edge elements    6.25000000     %
       percentage of volume elements    93.7500000     %
 
-   ...element mesh coloring 
+   ...element mesh coloring
       use coloring =  F
 
-   ...external binary models 
+   ...external binary models
       using SEP model from directory: ./sep_model
 
-   ...creating mass matrix 
+   ...creating mass matrix
 
    ...saving databases
       using binary file format
@@ -179,29 +179,29 @@
 
 
  ********
- Model: P   velocity min,max =    1499.99988       4500.00000    
- Model: S   velocity min,max =    0.00000000       2590.00000    
+ Model: P   velocity min,max =    1499.99988       4500.00000
+ Model: S   velocity min,max =    0.00000000       2590.00000
 
- Model: Poisson's ratio min,max =   0.250554323      0.500000000    
+ Model: Poisson's ratio min,max =   0.250554323      0.500000000
  ********
 
  *********************************************
  *** Verification of simulation parameters ***
  *********************************************
 
- *** Xmin and Xmax of the model =    0.00000000       10000.0000    
- *** Ymin and Ymax of the model =    1600.00000       2400.00000    
- *** Zmin and Zmax of the model =   -5000.00000       0.00000000    
+ *** Xmin and Xmax of the model =    0.00000000       10000.0000
+ *** Ymin and Ymax of the model =    1600.00000       2400.00000
+ *** Zmin and Zmax of the model =   -5000.00000       0.00000000
 
- *** Max GLL point distance =    81.8317108    
- *** Min GLL point distance =    16.1879883    
- *** Max/min ratio =    5.05508852    
+ *** Max GLL point distance =    81.8317108
+ *** Min GLL point distance =    16.1879883
+ *** Max/min ratio =    5.05508852
 
- *** Max element size =    250.000000    
- *** Min element size =    93.7500000    
- *** Max/min ratio =    2.66666675    
+ *** Max element size =    250.000000
+ *** Min element size =    93.7500000
+ *** Max/min ratio =    2.66666675
 
- *** Minimum period resolved =   0.226449981    
+ *** Minimum period resolved =   0.226449981
  *** Maximum suggested time step =    1.79866538E-03
 
  Elapsed time for checking mesh resolution in seconds =    3.9490000000004244E-003
@@ -210,7 +210,7 @@
 
  mesh regions done
 
- min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is    0.0000000000000000          0.0000000000000000     
+ min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is    0.0000000000000000          0.0000000000000000
 
 
  done mesh setup
@@ -235,7 +235,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    4.5278070000000001     
+ Elapsed time for mesh generation and buffer creation in seconds =    4.5278070000000001
  End of mesh generation
 
  done

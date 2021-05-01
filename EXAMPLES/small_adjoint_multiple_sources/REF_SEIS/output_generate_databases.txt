@@ -21,7 +21,7 @@
  Surface shape functions defined by NGNOD2D =            4  control nodes
  Beware! Curvature (i.e. HEX27 elements) is not handled by our internal mesher
 
- velocity model:   default 
+ velocity model:   default
 
 
  suppressing UTM projection
@@ -46,7 +46,7 @@
  defined materials    :            2
  undefined materials  :            0
  total number of spectral elements:        23040
- absorbing boundaries: 
+ absorbing boundaries:
    xmin,xmax :          480         480
    ymin,ymax :          480         480
    bottom,top:         2304        2304
@@ -60,14 +60,14 @@
 
  create regions:
 
-   ...allocating arrays 
+   ...allocating arrays
      NGLLX   =            5
      NGLLY   =            5
      NGLLZ   =            5
      NGNOD   =            8
      NGNOD2D =            4
 
-     main process setup: 
+     main process setup:
      nspec           =         5760
 
      separating regular/irregular element shapes
@@ -84,16 +84,16 @@
  File DATA/Par_file_faults not found: assuming that there are no faults
 
 
-   ...setting up jacobian 
+   ...setting up jacobian
 
    ...indexing global points
-      creating ibool indexing     : x min/max =    0.00000000     /   30000.0000    
+      creating ibool indexing     : x min/max =    0.00000000     /   30000.0000
       creating indirect addressing: nglob =       385769
       creating unique point locations
 
-   ...preparing MPI interfaces 
+   ...preparing MPI interfaces
       number of interfaces        :            3
-      creating MPI indexing       : x min/max =    0.00000000     /   30000.0000    
+      creating MPI indexing       : x min/max =    0.00000000     /   30000.0000
                                     tolerance =    3.0000000000000001E-006
 
       total MPI interface points:        31980
@@ -124,7 +124,7 @@
                90  % time remaining:   2.9842423744952404E-008 s
               100  % time remaining:   0.0000000000000000      s
 
-   ...detecting acoustic-elastic-poroelastic surfaces 
+   ...detecting acoustic-elastic-poroelastic surfaces
       total acoustic elements   :           0
       total elastic elements    :       23040
       total poroelastic elements:           0
@@ -134,18 +134,18 @@
        elastic - poroelastic coupling : total number of faces =            0
 
 
-   ...element inner/outer separation 
+   ...element inner/outer separation
       for overlapping of communications with calculations:
       percentage of   edge elements    8.15972137     %
       percentage of volume elements    91.8402786     %
 
-   ...element mesh coloring 
+   ...element mesh coloring
       use coloring =  F
 
-   ...external binary models 
-      no external binary model used 
+   ...external binary models
+      no external binary model used
 
-   ...creating mass matrix 
+   ...creating mass matrix
 
    ...saving databases
       using binary file format
@@ -178,29 +178,29 @@
 
 
  ********
- Model: P   velocity min,max =    4100.00000       5800.00000    
- Model: S   velocity min,max =    2400.00000       3350.00000    
+ Model: P   velocity min,max =    4100.00000       5800.00000
+ Model: S   velocity min,max =    2400.00000       3350.00000
 
- Model: Poisson's ratio min,max =   0.239366516      0.249693319    
+ Model: Poisson's ratio min,max =   0.239366516      0.249693319
  ********
 
  *********************************************
  *** Verification of simulation parameters ***
  *********************************************
 
- *** Xmin and Xmax of the model =    0.00000000       30000.0000    
- *** Ymin and Ymax of the model =    0.00000000       25000.0000    
- *** Zmin and Zmax of the model =   -6000.00000       0.00000000    
+ *** Xmin and Xmax of the model =    0.00000000       30000.0000
+ *** Ymin and Ymax of the model =    0.00000000       25000.0000
+ *** Zmin and Zmax of the model =   -6000.00000       0.00000000
 
- *** Max GLL point distance =    204.580078    
- *** Min GLL point distance =    89.9335938    
- *** Max/min ratio =    2.27479053    
+ *** Max GLL point distance =    204.580078
+ *** Min GLL point distance =    89.9335938
+ *** Max/min ratio =    2.27479053
 
- *** Max element size =    625.000000    
- *** Min element size =    520.832031    
- *** Max/min ratio =    1.20000303    
+ *** Max element size =    625.000000
+ *** Min element size =    520.832031
+ *** Max/min ratio =    1.20000303
 
- *** Minimum period resolved =   0.325520813    
+ *** Minimum period resolved =   0.325520813
  *** Maximum suggested time step =    7.75289582E-03
 
  Elapsed time for checking mesh resolution in seconds =    1.0793000000000497E-002
@@ -209,7 +209,7 @@
 
  mesh regions done
 
- min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is    0.0000000000000000          0.0000000000000000     
+ min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is    0.0000000000000000          0.0000000000000000
 
 
  done mesh setup
@@ -234,7 +234,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    6.6023550000000002     
+ Elapsed time for mesh generation and buffer creation in seconds =    6.6023550000000002
  End of mesh generation
 
  done

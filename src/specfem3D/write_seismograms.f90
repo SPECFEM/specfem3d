@@ -894,8 +894,8 @@
     !   SPECFEM reference frame convention: x = East, y = North, z = Up
     !
     !   UTM convention: uses convention for N/E/Z
-    !                   ‘longitude’ parameters simply refer to the x axis
-    !                   ‘latitude’  parameters simply refer to the y axis
+    !                   'longitude' parameters simply refer to the x axis
+    !                   'latitude'  parameters simply refer to the y axis
     !
     ! SPECFEM3D Cartesian uses the traditional orientation code E/N/Z (East-West, North-South, Vertical)
     ! for three components when a UTM projection is used.
@@ -1019,8 +1019,8 @@
   !   SPECFEM reference frame convention: x = East, y = North, z = Up
   !
   !   UTM convention: uses convention for N/E/Z
-  !                   ‘longitude’ parameters simply refer to the x axis
-  !                   ‘latitude’  parameters simply refer to the y axis
+  !                   'longitude' parameters simply refer to the x axis
+  !                   'latitude'  parameters simply refer to the y axis
   !
   ! SPECFEM3D Cartesian uses the traditional orientation code E/N/Z (East-West, North-South, Vertical)
   ! for three components when a UTM projection is used.
