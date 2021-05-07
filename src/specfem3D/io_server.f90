@@ -419,6 +419,8 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc,nglob_par_proc_offset,
   integer :: node_id_off, node_id_off_inter
   integer :: nelms_factor = (NGLLX-1)*(NGLLY-1)*(NGLLZ-1) ! divide one spectral element to
   ! small rectangles for visualization purpose
+  integer, dimension(1)                             :: tmp_1d_arr 
+
 
   ! make output file
   character(len=64) :: group_name
@@ -438,7 +440,8 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc,nglob_par_proc_offset,
   call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
 
   ! get n_msg_vol_each_proc
-  call recv_i_inter((/n_msg_vol_each_proc/), 1, 0, io_tag_vol_nmsg)
+  call recv_i_inter(tmp_1d_arr, 1, 0, io_tag_vol_nmsg)
+  n_msg_vol_each_proc = tmp_1d_arr(1)
 
   ! make an array of local2global relation of sending compute node ids
   allocate(id_proc_loc2glob(0:nproc_io-1))
@@ -956,6 +959,7 @@ subroutine surf_mov_init(nfaces_perproc, surface_offset)
   integer                                           :: len_array_aug
   character(len=64)                                 :: dset_name
   character(len=64)                                 :: group_name
+  integer, dimension(1)                             :: tmp_1d_arr 
 
   type(h5io) :: h5
   h5 = h5io()
@@ -974,7 +978,8 @@ subroutine surf_mov_init(nfaces_perproc, surface_offset)
   call recv_i_inter(surface_offset,NPROC,0,io_tag_surface_offset)
 
   ! get xyz coordinates
-  call recv_i_inter((/size_surf_array/), 1, 0, io_tag_surface_coord_len)
+  call recv_i_inter(tmp_1d_arr, 1, 0, io_tag_surface_coord_len)
+  size_surf_array = tmp_1d_arr(1)
   !print *, "size surf array received: ", size_surf_array
   allocate(surf_x(size_surf_array),stat=ier)
   allocate(surf_y(size_surf_array),stat=ier)
@@ -1152,7 +1157,8 @@ subroutine get_receiver_info(islice_num_rec_local)
 
   implicit none
 
-  integer                      :: ier, iproc, nrec_local_temp
+  integer                      :: ier, iproc
+  integer, dimension(1)        :: nrec_local_temp
   integer, dimension(1)        :: nrec_temp
   integer,dimension(0:NPROC-1) :: islice_num_rec_local
 
@@ -1163,8 +1169,8 @@ subroutine get_receiver_info(islice_num_rec_local)
   call recv_dp_inter(t0, 1, 0, io_tag_seismo_tzero)
 
   do iproc = 0, NPROC-1
-    call recv_i_inter((/nrec_local_temp/), 1, iproc, io_tag_local_rec)
-    islice_num_rec_local(iproc) = nrec_local_temp
+    call recv_i_inter(nrec_local_temp, 1, iproc, io_tag_local_rec)
+    islice_num_rec_local(iproc) = nrec_local_temp(1)
   enddo
 
 end subroutine get_receiver_info
@@ -1922,6 +1928,7 @@ subroutine pass_info_to_io()
       ! send size of store_val
       call send_i_inter((/size(store_val_x_all)/), 1, 0, io_tag_surface_coord_len)
       ! send store_val_x/y/z_all
+ 
       call sendv_cr_inter(store_val_x_all,size(store_val_x_all), 0, io_tag_surface_x)
       call sendv_cr_inter(store_val_y_all,size(store_val_y_all), 0, io_tag_surface_y)
       call sendv_cr_inter(store_val_z_all,size(store_val_z_all), 0, io_tag_surface_z)

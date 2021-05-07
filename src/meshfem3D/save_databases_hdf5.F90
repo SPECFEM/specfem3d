@@ -368,6 +368,8 @@
     call h5_create_dataset_gen(h5, dset_name, (/sum(offset_nelems(:))/),1,1)
     dset_name = "nspec_cpml_globloc"
     call h5_create_dataset_gen(h5, dset_name, (/2*NPROC/),1,1)
+    dset_name = "my_ninterface_and_max"
+    call h5_create_dataset_gen(h5, dset_name,(/NPROC*2/), 1, 1)
 
     call h5_close_file(h5)
 
@@ -699,8 +701,6 @@
       call h5_create_dataset_gen(h5, dset_name,(/2, sum(offset_nb_interfaces(:))/), 2, 1)
       dset_name = "my_interfaces"
       call h5_create_dataset_gen(h5, dset_name,(/6, sum(offset_n_elms_interface(:))/), 2, 1)
-      dset_name = "my_ninterface_and_max"
-      call h5_create_dataset_gen(h5, dset_name,(/NPROC*2/), 1, 1)
       call h5_close_file(h5)
     endif
 
@@ -861,6 +861,25 @@
 
     ! only one slice, no MPI interfaces
     num_interface_and_max = (/0, 0/)
+
+    ! prepare dummy offset arrays for
+    ! offset_nb_interfaces
+    ! offset_n_elms_interface
+    call gather_all_all_singlei(0,offset_nb_interfaces,NPROC)
+    call gather_all_all_singlei(0,offset_n_elms_interface,NPROC)
+
+    call h5_close_file_p(h5)
+
+    if (myrank == 0) then
+      call h5_open_file(h5) 
+      dset_name = "offset_n_elms_interface"
+      call h5_write_dataset_1d_i_no_group(h5, dset_name, offset_n_elms_interface)
+      dset_name = "offset_nb_interfaces"
+      call h5_write_dataset_1d_i_no_group(h5, dset_name, offset_nb_interfaces)
+      call h5_close_file(h5)      
+    endif
+
+    call h5_open_file_p_collect(h5)
 
   endif
 
