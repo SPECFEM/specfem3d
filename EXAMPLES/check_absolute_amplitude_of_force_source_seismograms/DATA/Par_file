@@ -75,12 +75,12 @@ SEP_MODEL_DIRECTORY             = ./DATA/my_SEP_model/
 # parameters describing the model
 APPROXIMATE_OCEAN_LOAD          = .false.
 TOPOGRAPHY                      = .false.
-ATTENUATION                     = .false.
+ATTENUATION                     = .true.
 ANISOTROPY                      = .false.
 GRAVITY                         = .false.
 
 # in case of attenuation, reference frequency in Hz at which the velocity values in the velocity model are given (unused otherwise)
-ATTENUATION_f0_REFERENCE        = 18.d0
+ATTENUATION_f0_REFERENCE        = 140.0 
 
 # attenuation period range over which we try to mimic a constant Q factor
 MIN_ATTENUATION_PERIOD          = 999999998.d0
@@ -162,7 +162,7 @@ HDUR_MOVIE                      = 0.0
 SAVE_MESH_FILES                 = .false.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
+LOCAL_PATH                      = ./DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 500

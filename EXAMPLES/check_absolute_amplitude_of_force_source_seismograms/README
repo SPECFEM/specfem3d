@@ -1,0 +1,31 @@
+------------------------------
+README
+------------------------------
+
+Example with analytic solution 
+
+Uses a single point force at (0,0,0) and a receiver at (500,500,500)
+and computes the (visco-)elastic fullspace solution with a Ricker source wavelet.
+
+To compile analytic code:
+  > gfortran analytical_solution_viscoelastic_3D_Carcione_and_Komatitsch_correct_with_1_over_L.f90
+
+  in source code file, select flag TURN_ATTENUATION_OFF = .true. or .false. accordingly 
+  to compute solution for purely elastic or viscoelastic case.
+
+  then run 
+  > ./a.out 
+  to generate the analytic solutions Ux_time_analytical_solution_elastic.dat/Uy_../Uz_..
+
+
+To run the example simulation, use script:
+> ./run_this_example.sh
+
+Compare your seismograms in OUTPUT_FILES/ with the reference ones in directory REF_SEIS/
+The script ../utils/compare_seismogram_correlations.py can be used for running trace-by-trace comparisons.
+
+
+
+
+
+

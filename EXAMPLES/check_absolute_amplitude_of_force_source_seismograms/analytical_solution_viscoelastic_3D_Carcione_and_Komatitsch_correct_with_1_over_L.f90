@@ -21,7 +21,7 @@
 !! DK DK Dimitri Komatitsch, CNRS Marseille, France, April 2017: added the elastic reference calculation.
 
 ! compute the non-viscoacoustic case as a reference if needed, i.e. turn attenuation off
-  logical, parameter :: TURN_ATTENUATION_OFF = .true.
+  logical, parameter :: TURN_ATTENUATION_OFF = .false.
 
 ! to see how small the contribution of the near-field term is,
 ! here the user can ask not to include it, to then compare with the full result obtained with this flag set to false
@@ -126,6 +126,14 @@
 !  QKappa = 9000
 !  QMu = 10
 !
+!  note: Vp,Vs above are the unrelaxed velocities, i.e., for a high reference frequency.
+!        to have Vp,Vs at a 18 Hz reference, you would need to use:
+!           Vp(f0_ref) = 3153.76765
+!           Vs(f0_ref) = 2060.94275
+!
+!        the reference frequency for Vp,Vs (3297.849,2222.536) listed above seems to fit best with f0_ref = 140 Hz, not 18 Hz.
+!        the f0 = 18 Hz is for the Ricker source wavelet.
+!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ! We use Kappa_ref and Mu_ref to compute the case without attenuation
@@ -142,14 +150,36 @@
   double precision, parameter :: Kappa_unrelaxed =  Kappa_ref
 
 ! tau constants mimicking constant QKappa and KMu
+  ! Qmu = 10
   tau_epsilon_mu    = (/ 0.281966668348107  ,  3.607809663879573E-002 , 5.638875613224542E-003/)
   tau_sigma_mu      = (/ 0.186873539567019  ,  2.491998701168405E-002 , 3.323133676931235E-003/)
+  ! Qkappa = 9000
   tau_epsilon_kappa = (/ 0.186973292921151  ,  2.492998179955646E-002 , 3.324907855424433E-003/)
   tau_sigma_kappa   = (/ 0.186873539567019  ,  2.491998701168405E-002 , 3.323133676931235E-003/)
+
+  ! or see EXAMPLES/attenuation/viscoelastic:
+  ! Qmu = 20
+  !tau_epsilon_mu    = (/ 0.233016592750913d0  ,    2.994444382282767d-002, 4.283862487455020d-003 /)
+  !tau_sigma_mu      = (/ 0.186873539567019d0  ,    2.491998701168405d-002, 3.323133676931235d-003 /)
+  ! Qkappa = 10
+  !tau_epsilon_kappa = (/ 0.281966668348107d0  ,  3.607809663879578d-002 , 5.638875613224546d-003/)
+  !tau_sigma_kappa   = (/ 0.186873539567019d0  ,  2.491998701168405d-002 , 3.323133676931235d-003/)
 
 ! Eq (32) of Jeroen's note, eq (2.199) of Carcione's book from 2014, third edition
   Kappa_relaxed = (Kappa_unrelaxed /(sum(tau_epsilon_kappa(:)/tau_sigma_kappa(:))/Lnu))
   Mu_relaxed    = (Mu_unrelaxed    /(sum(tau_epsilon_mu(:)/tau_sigma_mu(:))/Lnu))
+
+  ! user output
+  Vs_omega = sqrt( Mu_unrelaxed / rho)
+  Vp_omega = sqrt( Kappa_unrelaxed / rho + (4.d0/3)* real(Vs_omega*Vs_omega) )
+  !print *,'Mu / Kappa unrelaxed: ',Mu_unrelaxed,'/',Kappa_unrelaxed
+  print *,'Vs / Vp    unrelaxed: ',real(Vs_omega),'/',real(Vp_omega)
+
+  Vs_omega = cdsqrt( Mu_relaxed / rho)
+  Vp_omega = cdsqrt( Kappa_relaxed / rho + (4.d0/3)*Vs_omega*Vs_omega )
+  !print *,'Mu / Kappa relaxed  : ',real(Mu_relaxed),'/',real(Kappa_relaxed)
+  print *,'Vs / Vp    relaxed  : ',real(Vs_omega),'/',real(Vp_omega)
+
 
 ! position of the receiver
   x(1) = +500.
@@ -249,6 +279,12 @@
 
   Vs_omega = cdsqrt( Mu_omega / rho)
   Vp_omega = cdsqrt( Kappa_omega / rho + (4.d0/3)*Vs_omega*Vs_omega )
+
+  if (ifreq == 0 .or. ifreq == nfreq .or. abs(freq-f0) < deltafreq ) then
+    print *,'freq / omega    : ',freq,'/',omega
+    !print *,'Mu / Kappa omega: ',real(Mu_omega),'/',real(Kappa_omega)
+    print *,'Vs / Vp    omega: ',real(Vs_omega),'/',real(Vp_omega)
+  endif
 
 !! DK DK print the velocity if we want to display the curve of how velocity varies with frequency
 !! DK DK for instance to compute the unrelaxed velocity in the Zener model
