@@ -107,6 +107,9 @@ __device__ __forceinline__ void compute_element_att_stress(int tx,int working_el
     r_yz_sum += R_yz_loc[i_sls];
   }
 
+  // in case no bulk attenuation is desired:
+  //r_trace_kappa_sum = 0.0f;
+
   *sigma_xx = *sigma_xx - r_xx_sum - r_trace_kappa_sum;//Rxx_loc[i_sls];
   *sigma_yy = *sigma_yy - r_yy_sum - r_trace_kappa_sum;//Ryy_loc[i_sls];
   *sigma_zz = *sigma_zz + r_xx_sum + r_yy_sum - r_trace_kappa_sum;//Rxx_loc[i_sls] + Ryy_loc[i_sls];
@@ -171,11 +174,11 @@ __device__  __forceinline__ void compute_element_att_memory(int tx,int working_e
     gammaval_loc = gammaval[i_sls];
 
     // bulk attenuation
-    factor_loc = kappal*get_global_cr( &factor_common_kappa[offset] ); // kappastore(i,j,k,ispec)* factor_common_kappa(i_sls,i,j,k,ispec)
+    factor_loc = kappal * get_global_cr( &factor_common_kappa[offset] ); // kappastore(i,j,k,ispec)* factor_common_kappa(i_sls,i,j,k,ispec)
     R_trace[offset] = alphaval_loc * R_trace_loc[i_sls] + factor_loc * (betaval_loc * Sn + gammaval_loc * epsilondev_trace_loc);
 
     // shear attenuation
-    factor_loc = mul*get_global_cr( &factor_common[offset] ); //mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
+    factor_loc = mul * get_global_cr( &factor_common[offset] ); //mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
     R_xx[offset] = alphaval_loc * R_xx_loc[i_sls] + factor_loc * (betaval_loc * Sn_xx + gammaval_loc * epsilondev_xx_loc);
     R_yy[offset] = alphaval_loc * R_yy_loc[i_sls] + factor_loc * (betaval_loc * Sn_yy + gammaval_loc * epsilondev_yy_loc);
     R_xy[offset] = alphaval_loc * R_xy_loc[i_sls] + factor_loc * (betaval_loc * Sn_xy + gammaval_loc * epsilondev_xy_loc);

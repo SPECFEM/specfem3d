@@ -104,12 +104,17 @@ end module constants
   character(len=MAX_STRING_LEN) :: TOMOGRAPHY_PATH
 
   ! attenuation
+  ! reference frequency of seismic model
+  double precision :: ATTENUATION_f0_REFERENCE
+  ! Olsen attenuation (scaling from Vs)
   logical :: USE_OLSEN_ATTENUATION
-  double precision :: OLSEN_ATTENUATION_RATIO,ATTENUATION_f0_REFERENCE
-
+  double precision :: OLSEN_ATTENUATION_RATIO
+  ! automatic frequency band selection
+  logical :: COMPUTE_FREQ_BAND_AUTOMATIC
   ! attenuation period range over which we try to mimic a constant Q factor
   double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
-  logical :: COMPUTE_FREQ_BAND_AUTOMATIC
+  ! logarithmic center frequency (center of attenuation band)
+  double precision :: ATT_F_C_SOURCE
 
   ! absorbing boundaries
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE

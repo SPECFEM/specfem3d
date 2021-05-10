@@ -191,7 +191,7 @@
     CUSTOM_REAL,MAX_STRING_LEN,HUGEVAL,IMAIN, &
     ATTENUATION_COMP_MAXIMUM
 
-  use shared_parameters, only: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD,COMPUTE_FREQ_BAND_AUTOMATIC
+  use shared_parameters, only: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD,COMPUTE_FREQ_BAND_AUTOMATIC,ATT_F_C_SOURCE
 
   implicit none
 
@@ -258,11 +258,19 @@
   factor_common_kappa(:,:,:,:,:) = 1._CUSTOM_REAL
   scale_factor_kappa(:,:,:,:) = 1._CUSTOM_REAL
 
+  f_c_source = 0.d0
+
   ! gets stress relaxation times tau_sigma, i.e.
   ! precalculates tau_sigma depending on period band (constant for all Q_mu), and
   ! determines central frequency f_c_source of attenuation period band
   call get_attenuation_constants(min_resolved_period,tau_sigma_dble, &
                                  f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
+
+  ! checks
+  if (f_c_source <= 0.d0) call exit_MPI(myrank,'Error: invalid attenuation center frequency, cannot be zero or negative')
+
+  ! stores center frequency as shared parameter
+  ATT_F_C_SOURCE = f_c_source
 
   ! user output
   if (myrank == 0) then
@@ -284,7 +292,7 @@
     write(IMAIN,*)
     write(IMAIN,*) "  Frequency band        min/max (Hz):",sngl(1.0/MAX_ATTENUATION_PERIOD),sngl(1.0/MIN_ATTENUATION_PERIOD)
     write(IMAIN,*) "  Period band           min/max (s) :",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
-    write(IMAIN,*) "  Logarithmic central frequency (Hz):",sngl(f_c_source)," period (s):",sngl(1.0/f_c_source)
+    write(IMAIN,*) "  Logarithmic central frequency (Hz):",sngl(ATT_F_C_SOURCE)," period (s):",sngl(1.0/ATT_F_C_SOURCE)
     write(IMAIN,*)
     write(IMAIN,*) "  Using full attenuation with both Q_kappa and Q_mu."
 
@@ -374,7 +382,7 @@
           ! gets beta, on_minus_sum_beta and factor_scale
           ! based on calculation of strain relaxation times tau_eps
           call get_attenuation_factors(Q_mu,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD, &
-                                       f_c_source,tau_sigma_dble, &
+                                       ATT_F_C_SOURCE,tau_sigma_dble, &
                                        beta_dble,one_minus_sum_beta_dble,factor_scale_dble, &
                                        Q_kappa,beta_dble_kappa,one_minus_sum_beta_dble_kappa,factor_scale_dble_kappa, &
                                        ATTENUATION_f0_REFERENCE)
@@ -490,10 +498,10 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL) :: min_resolved_period
-  double precision, dimension(N_SLS) :: tau_sigma
-  double precision :: f_c_source
-  double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
+  real(kind=CUSTOM_REAL),intent(in) :: min_resolved_period
+  double precision, dimension(N_SLS),intent(inout) :: tau_sigma
+  double precision,intent(inout) :: f_c_source
+  double precision,intent(inout) :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
 
   ! local parameters
   real(kind=CUSTOM_REAL)  :: min_period
@@ -538,7 +546,7 @@
   implicit none
 
   double precision,intent(in) :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD,ATTENUATION_f0_REFERENCE
-  double precision :: f_c_source,Q_mu,Q_kappa
+  double precision,intent(in) :: f_c_source,Q_mu,Q_kappa
   double precision, dimension(N_SLS) :: tau_sigma
   double precision, dimension(N_SLS) :: beta,beta_kappa
   double precision :: one_minus_sum_beta,one_minus_sum_beta_kappa
@@ -669,7 +677,7 @@
     print *,"  factor scale_mu = ",factor_scale_mu," factor scale_mu0 = ",factor_scale_mu0
     print *,"  Q value = ", Q_val, " central frequency = ",f_c_source
     print *,"  ATTENUATION_f0_REFERENCE = ",ATTENUATION_f0_REFERENCE
-    print *,"  please check your reference frequency ATTENUATION_f0_REFERENCE in constants.h"
+    print *,"  please check your reference frequency ATTENUATION_f0_REFERENCE"
     call exit_MPI(myrank,'unreliable correction factor in attenuation model')
   endif
 

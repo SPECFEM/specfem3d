@@ -444,11 +444,29 @@
           write(IMAIN,*)
         else
           ! STF details
-          if (USE_RICKER_TIME_FUNCTION) then
-            write(IMAIN,*) '    using Ricker source time function'
+          if (USE_FORCE_POINT_SOURCE) then
+            ! force sources
+            if (USE_RICKER_TIME_FUNCTION) then
+              write(IMAIN,*) '    using Ricker source time function'
+            else
+              ! acoustic/elastic/.. domain by default uses a Gaussian STF
+              write(IMAIN,*) '    using Gaussian source time function'
+            endif
           else
-            write(IMAIN,*) '    using Gaussian source time function'
+            ! CMT sources
+            if (USE_RICKER_TIME_FUNCTION) then
+              write(IMAIN,*) '    using Ricker source time function'
+            else
+              if (idomain(isource) == IDOMAIN_ACOUSTIC .or. idomain(isource) == IDOMAIN_POROELASTIC) then
+                ! acoustic/poroelastic domain by default uses a Gaussian STF
+                write(IMAIN,*) '    using Gaussian source time function'
+              else
+                ! elastic domain by default uses a Heaviside STF
+                write(IMAIN,*) '    using Heaviside source time function'
+              endif
+            endif
           endif
+          ! acoustic pressure trick
           if (idomain(isource) == IDOMAIN_ACOUSTIC) then
             if (USE_TRICK_FOR_BETTER_PRESSURE) then
               write(IMAIN,*) '    using trick for better pressure (second derivatives)'
