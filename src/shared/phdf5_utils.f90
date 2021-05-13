@@ -144,8 +144,8 @@ contains
         character(len=*), intent(in) :: dataset_name
         integer :: io_mode
         call h5pget_mpio_actual_io_mode_f(plist_id,io_mode,error)
-        if (io_mode == H5D_MPIO_NO_COLLECTIVE_F) print*, &
-            "collective read/write not possible for dataset: ", dataset_name
+        !if (io_mode == H5D_MPIO_NO_COLLECTIVE_F) print*, &
+        !    "collective read/write not possible for dataset: ", dataset_name
 
     end subroutine h5_check_collective
 
