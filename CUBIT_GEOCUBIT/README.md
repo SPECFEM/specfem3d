@@ -75,7 +75,7 @@ It is possible that GEOCUBIT continues to work for CUBIT 15+ but it is not suppo
 
 ## Configuration:
 
-On Linux/Unix system: in order to have the possibility to import the cubit libray included in Trelis in a **python script** you should set up the path for CUBIT/Trelis
+On Linux/Unix system: in order to have the possibility to import the cubit libray included in Cubit in a **python script** you should set up the path for Cubit
 
 ```
 export CUBITDIR=$CUBITHOME
@@ -101,14 +101,14 @@ export PATH=$PATH:[YourGeocubitDir]
 On MacOSX 10.10, Trelis points the system version of python2.7 (/Library/Python/2.7/site-packages)
 so the version of python required is `/usr/bin/python2.7`
 
-You could install GEOCUBIT with administrator privilege (for running script in the python tab of the Trelis GUI)
+You could install GEOCUBIT with administrator privilege (for running script in the python tab of the Cubit GUI)
 
 `/usr/bin/python2.7 setup.py install --install-lib=/Library/Python/2.7/site-packages/`
 
 and in addition if you want to run meshing scripts in python (outside of the GUI)   
 
 ```
-export CUBITDIR=$CUBITHOME #for example /Applications/Trelis-16.0.app
+export CUBITDIR=$CUBITHOME
 export PYTHONPATH=$CUBITDIR/contents/MacOS:$PYTHONPATH
 export CUBITLIB=$CUBITDIR/contents/MacOS
 export DYLD_LIBRARY_PATH=$CUBITDIR/contents/MacOS:${DYLD_LIBRARY_PATH}
