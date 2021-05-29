@@ -769,9 +769,16 @@
   if (ier /= 0) stop 'Error allocating array abs_boundary_ispec etc.'
 
 
-  call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_abs_boundary_faces",offset_num_abs_boundary_faces, (/0/), if_col)
+  if (I_should_read_the_database) then
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_abs_boundary_faces",offset_num_abs_boundary_faces, (/0/), if_col)
+  endif
+  call bcast_all_i_for_database(offset_num_abs_boundary_faces, size(offset_num_abs_boundary_faces))
+
   if (sum(offset_num_abs_boundary_faces) > 0) then
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nglob_xy",offset_nglob_xy, (/0/), if_col)
+    if (I_should_read_the_database) then
+      call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nglob_xy",offset_nglob_xy, (/0/), if_col)
+    endif
+    call bcast_all_i_for_database(offset_nglob_xy, size(offset_nglob_xy))
 
     if (I_should_read_the_database) then
       dsetname = "abs_boundary_ispec"
@@ -911,7 +918,12 @@
   allocate(free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1531')
   if (ier /= 0) stop 'Error allocating arrays free_surface_ispec etc.'
-  call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_free_surface_faces",offset_num_free_surface_faces, (/0/), if_col)
+ 
+  if (I_should_read_the_database) then
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_free_surface_faces",offset_num_free_surface_faces, (/0/), if_col)
+  endif
+  call bcast_all_i_for_database(offset_num_free_surface_faces, size(offset_num_free_surface_faces))
+ 
   if (sum(offset_num_free_surface_faces) > 0) then
     if (I_should_read_the_database) then
       dsetname = "free_surface_ispec"
@@ -953,7 +965,12 @@
   allocate(coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1535')
   if (ier /= 0) stop 'Error allocating array coupling_ac_el_normal etc.'
-  call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_coupling_ac_el_faces",offset_num_coupling_ac_el_faces,(/0/),if_col)
+  
+  if (I_should_read_the_database) then
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_coupling_ac_el_faces",offset_num_coupling_ac_el_faces,(/0/),if_col)
+  endif
+  call bcast_all_i_for_database(offset_num_coupling_ac_el_faces, size(offset_num_coupling_ac_el_faces))
+ 
   if (sum(offset_num_coupling_ac_el_faces) > 0) then
     if (I_should_read_the_database) then
       dsetname = "coupling_ac_el_ispec"
@@ -995,7 +1012,12 @@
   allocate(coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1539')
   if (ier /= 0) stop 'Error allocating array coupling_ac_po_normal etc.'
-  call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_coupling_ac_po_faces",offset_num_coupling_ac_po_faces, (/0/), if_col)
+ 
+  if (I_should_read_the_database) then
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_coupling_ac_po_faces",offset_num_coupling_ac_po_faces, (/0/), if_col)
+  endif
+  call bcast_all_cr_for_database(offset_num_coupling_ac_po_faces,size(offset_num_coupling_ac_po_faces))
+ 
   if (sum(offset_num_coupling_ac_po_faces) > 0) then
     if (I_should_read_the_database) then
       dsetname = "coupling_ac_po_ispec"
@@ -1042,7 +1064,11 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1545')
   if (ier /= 0) stop 'Error allocating array coupling_el_po_normal etc.'
 
-  call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_coupling_el_po_faces",offset_num_coupling_el_po_faces, (/0/), if_col)
+  if (I_should_read_the_database) then
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_coupling_el_po_faces",offset_num_coupling_el_po_faces, (/0/), if_col)    
+  endif
+  call bcast_all_i_for_database(offset_num_coupling_el_po_faces,size(offset_num_coupling_el_po_faces))
+
   if (sum(offset_num_coupling_el_po_faces) > 0) then
     if (I_should_read_the_database) then
       dsetname = "coupling_el_po_ispec"
@@ -1089,7 +1115,12 @@
   allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1547')
   if (ier /= 0) stop 'Error allocating array my_neighbors_ext_mesh etc.'
-  call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_interfaces_ext_mesh",offset_num_interfaces_ext_mesh, (/0/), if_col)
+  
+  if (I_should_read_the_database) then
+    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_interfaces_ext_mesh",offset_num_interfaces_ext_mesh, (/0/), if_col)
+  endif
+  call bcast_all_i_for_database(offset_num_interfaces_ext_mesh,size(offset_num_interfaces_ext_mesh))
+
   if (sum(offset_num_interfaces_ext_mesh) > 0) then
     if (I_should_read_the_database) then
       dsetname = "max_nibool_interfaces_ext_mesh"
@@ -1245,7 +1276,12 @@
     allocate( phase_ispec_inner_elastic(num_phase_ispec_elastic,2),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1552')
     if (ier /= 0) stop 'Error allocating array phase_ispec_inner_elastic'
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_phase_ispec_elastic",offset_num_phase_ispec_elastic, (/0/), if_col)
+    
+    if (I_should_read_the_database) then
+      call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_phase_ispec_elastic",offset_num_phase_ispec_elastic, (/0/), if_col)     
+    endif
+    call bcast_all_i_for_database(offset_num_phase_ispec_elastic,size(offset_num_phase_ispec_elastic))
+
     if (sum(offset_num_phase_ispec_elastic) > 0) then
       if (I_should_read_the_database) then
          dsetname = "phase_ispec_inner_elastic"
@@ -1274,8 +1310,11 @@
     allocate( phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1553')
     if (ier /= 0) stop 'Error allocating array phase_ispec_inner_poroelastic'
-    call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_phase_ispec_poroelastic",&
-            offset_num_phase_ispec_poroelastic, (/0/), if_col)
+    if (I_should_read_the_database) then
+      call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_phase_ispec_poroelastic",&
+            offset_num_phase_ispec_poroelastic, (/0/), if_col)      
+    endif
+    call bcast_all_i_for_database(offset_num_phase_ispec_poroelastic,size(offset_num_phase_ispec_poroelastic))
     if (sum(offset_num_phase_ispec_poroelastic) > 0) then
       if (I_should_read_the_database) then
         dsetname = "phase_ispec_inner_poroelastic"
