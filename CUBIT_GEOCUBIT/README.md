@@ -30,8 +30,6 @@ Nevertheless, it is always possible that I miss something.
 I think it is a pain and, in the future, I would like to maintain the
 compatibility only for version 15+.
 
-Moreover, my access to cubit is sadly ended
-and I will drop soon also the support for it (sadly).
 
 =========================================
 
