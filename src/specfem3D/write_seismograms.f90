@@ -541,7 +541,7 @@
         ! ASCII output
         ! create one large file instead of one small file per station to avoid file system overload
         if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
-          write(sisname,'(A)') '/all_seismograms'
+          write(sisname,'(A)') '/all_seismograms_'//component//'_main'
           if (USE_BINARY_FOR_SEISMOGRAMS) then
             if (seismo_offset == 0) then
               open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='unknown', &
