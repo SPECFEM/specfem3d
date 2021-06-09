@@ -76,7 +76,7 @@ THICKNESS_OF_Z_PML              = 0.001d0
 #-----------------------------------------------------------
 
 # number of materials
-NMATERIALS                      = 5 
+NMATERIALS                      = 5
 # define the different materials in the model as:
 # #material_id  #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id
 #     Q_Kappa          : Q_Kappa attenuation quality factor

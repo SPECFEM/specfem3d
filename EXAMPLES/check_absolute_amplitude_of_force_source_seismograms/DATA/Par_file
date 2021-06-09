@@ -80,7 +80,7 @@ ANISOTROPY                      = .false.
 GRAVITY                         = .false.
 
 # in case of attenuation, reference frequency in Hz at which the velocity values in the velocity model are given (unused otherwise)
-ATTENUATION_f0_REFERENCE        = 140.0 
+ATTENUATION_f0_REFERENCE        = 140.0
 
 # attenuation period range over which we try to mimic a constant Q factor
 MIN_ATTENUATION_PERIOD          = 999999998.d0

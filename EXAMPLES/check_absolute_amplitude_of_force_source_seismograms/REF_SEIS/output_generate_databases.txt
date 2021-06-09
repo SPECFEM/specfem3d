@@ -21,7 +21,7 @@
  Surface shape functions defined by NGNOD2D =            4  control nodes
  Beware! Curvature (i.e. HEX27 elements) is not handled by our internal mesher
 
- velocity model:   default 
+ velocity model:   default
 
 
  suppressing UTM projection
@@ -47,7 +47,7 @@
  defined materials    :            5
  undefined materials  :            0
  total number of spectral elements:       512000
- absorbing boundaries: 
+ absorbing boundaries:
    xmin,xmax :         6400        6400
    ymin,ymax :         6400        6400
    bottom,top:         6400        6400
@@ -61,14 +61,14 @@
 
  create regions:
 
-   ...allocating arrays 
+   ...allocating arrays
      NGLLX   =            5
      NGLLY   =            5
      NGLLZ   =            5
      NGNOD   =            8
      NGNOD2D =            4
 
-     main process setup: 
+     main process setup:
      nspec           =        64000
 
      separating regular/irregular element shapes
@@ -85,16 +85,16 @@
  File DATA/Par_file_faults not found: assuming that there are no faults
 
 
-   ...setting up jacobian 
+   ...setting up jacobian
 
    ...indexing global points
-      creating ibool indexing     : x min/max =   -1500.00000     /   1500.00000    
+      creating ibool indexing     : x min/max =   -1500.00000     /   1500.00000
       creating indirect addressing: nglob =      4186161
       creating unique point locations
 
-   ...preparing MPI interfaces 
+   ...preparing MPI interfaces
       number of interfaces        :            3
-      creating MPI indexing       : x min/max =   -1500.00000     /   1500.00000    
+      creating MPI indexing       : x min/max =   -1500.00000     /   1500.00000
                                     tolerance =    2.9999999999999999E-007
 
       total MPI interface points:       832032
@@ -125,7 +125,7 @@
                90  % time remaining:   3.5853733500262459E-009 s
               100  % time remaining:   0.0000000000000000      s
 
-   ...detecting acoustic-elastic-poroelastic surfaces 
+   ...detecting acoustic-elastic-poroelastic surfaces
       total acoustic elements   :           0
       total elastic elements    :      512000
       total poroelastic elements:           0
@@ -135,18 +135,18 @@
        elastic - poroelastic coupling : total number of faces =            0
 
 
-   ...element inner/outer separation 
+   ...element inner/outer separation
       for overlapping of communications with calculations:
       percentage of   edge elements    7.37500000     %
       percentage of volume elements    92.6250000     %
 
-   ...element mesh coloring 
+   ...element mesh coloring
       use coloring =  F
 
-   ...external binary models 
-      no external binary model used 
+   ...external binary models
+      no external binary model used
 
-   ...creating mass matrix 
+   ...creating mass matrix
 
    ...saving databases
       using binary file format
@@ -177,8 +177,8 @@
 
 
  ********
- Model: P   velocity min,max =    3297.84912       3297.84912    
- Model: S   velocity min,max =    2222.53589       2222.53589    
+ Model: P   velocity min,max =    3297.84912       3297.84912
+ Model: S   velocity min,max =    2222.53589       2222.53589
 
  Model: Poisson's ratio min,max =    8.39330330E-02   8.39330330E-02
  ********
@@ -187,17 +187,17 @@
  *** Verification of simulation parameters ***
  *********************************************
 
- *** Xmin and Xmax of the model =   -1500.00000       1500.00000    
- *** Ymin and Ymax of the model =   -1500.00000       1500.00000    
- *** Zmin and Zmax of the model =   -1500.00000       1500.00000    
+ *** Xmin and Xmax of the model =   -1500.00000       1500.00000
+ *** Ymin and Ymax of the model =   -1500.00000       1500.00000
+ *** Zmin and Zmax of the model =   -1500.00000       1500.00000
 
- *** Max GLL point distance =    12.2747803    
- *** Min GLL point distance =    6.47521973    
- *** Max/min ratio =    1.89565468    
+ *** Max GLL point distance =    12.2747803
+ *** Min GLL point distance =    6.47521973
+ *** Max/min ratio =    1.89565468
 
- *** Max element size =    37.5000000    
- *** Min element size =    37.5000000    
- *** Max/min ratio =    1.00000000    
+ *** Max element size =    37.5000000
+ *** Min element size =    37.5000000
+ *** Max/min ratio =    1.00000000
 
  *** Minimum period resolved =    2.10907720E-02
  *** Maximum suggested time step =    9.81733785E-04
@@ -217,19 +217,19 @@
    based on the estimated maximum frequency resolution of your mesh
    and can thus vary from what you have requested.
 
-   Frequency band        min/max (Hz):  0.851671875       47.8930321    
-   Period band           min/max (s) :   2.08798647E-02   1.17416108    
-   Logarithmic central frequency (Hz):   6.38663816      period (s):  0.156576902    
+   Frequency band        min/max (Hz):  0.851671875       47.8930321
+   Period band           min/max (s) :   2.08798647E-02   1.17416108
+   Logarithmic central frequency (Hz):   6.38663816      period (s):  0.156576902
 
    Using full attenuation with both Q_kappa and Q_mu.
 
-   Q_mu min/max           :    10.0000000       10.0000000    
-   Q_kappa min/max        :    9999.00000       9999.00000    
+   Q_mu min/max           :    10.0000000       10.0000000
+   Q_kappa min/max        :    9999.00000       9999.00000
 
 
  mesh regions done
 
- min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is    1499.9999999999998          1500.0000000000002     
+ min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is    1499.9999999999998          1500.0000000000002
 
 
  done mesh setup
@@ -254,7 +254,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    12.367564916610718     
+ Elapsed time for mesh generation and buffer creation in seconds =    12.367564916610718
  End of mesh generation
 
  done
