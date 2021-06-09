@@ -15,16 +15,21 @@ jobs:
         os: [ubuntu-latest,ubuntu-16.04]
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
     - name: Install packages
       run: |
         sudo apt update
         sudo apt install -yq --no-install-recommends gfortran g++ openmpi-bin libopenmpi-dev
-        echo "compiler versions:" ${FC} ${MPIFC} ${CC}
+        echo ""
+        echo "compiler versions:"
+        echo "gcc --version"
         gcc --version
+        echo "gfortran --version"
         gfortran --version
+        echo "mpif90 --version"
         mpif90 --version
+        echo ""
         export TERM=xterm
         echo "exports:"
         export
@@ -45,17 +50,22 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
     - name: Install dependencies
       run: |
         brew cleanup
         brew reinstall gcc  # need gfortran (symlink to gfortran-10)
         brew install hwloc openmpi
-        echo "compiler versions:" ${FC} ${MPIFC} ${CC}
+        echo ""
+        echo "compiler versions:"
+        echo "gcc --version"
         gcc --version
+        echo "gfortran --version"
         gfortran --version
+        echo "mpif90  --version"
         mpif90 --version
+        echo ""
         export TERM=xterm
         echo "exports:"
         export
@@ -74,3 +84,63 @@ jobs:
     - name: make tests
       run: make tests
 
+  linuxCheck-Intel:
+    name: Test Intel on ubuntu-20.04
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Cache Intel oneapi packages
+      id: cache-intel-oneapi
+      uses: actions/cache@v2
+      with:
+        path: /opt/intel/oneapi
+        key: install-${{ runner.os }}-all
+
+    - name: Install packages
+      if: steps.cache-intel-oneapi.outputs.cache-hit != 'true'
+      run: |
+        wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        echo ""
+        sudo echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        sudo apt-get update
+        echo ""
+        echo "packages intel oneapi:"
+        sudo apt-get install -y intel-oneapi-compiler-fortran intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-mpi intel-oneapi-mpi-devel
+        echo ""
+        source /opt/intel/oneapi/setvars.sh
+        echo ""
+        echo "compiler versions:"
+        echo "icc --version"
+        icc --version
+        echo "ifort --version"
+        ifort --version
+        echo "mpiifort --version"
+        mpiifort --version
+        echo "mpif90 --version"
+        mpif90 --version
+        echo ""
+        export TERM=xterm
+        echo "exports:"
+        export
+        echo ""
+        which ifort
+        which icc
+        which mpiifort
+        echo ""
+        printenv >> $GITHUB_ENV
+        echo "CXX=icpc" >> $GITHUB_ENV
+        echo "CC=icc" >> $GITHUB_ENV
+        echo "FC=ifort" >> $GITHUB_ENV
+        echo ""
+
+    - name: configure
+      run: ./configure FC=ifort CC=icc MPIF90=mpiifort
+
+    - name: make
+      run: make -j2 all
+
+    - name: make tests
+      run: make tests
