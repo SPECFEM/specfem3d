@@ -41,7 +41,6 @@ jobs:
     - name: make
       run: make -j2 all
 
-    # check: fails due to MPI issue on virtual nodes
     - name: make tests
       run: make tests
 
@@ -80,7 +79,6 @@ jobs:
     - name: make
       run: make -j2 all
 
-    # check: fails due to MPI issue on virtual nodes
     - name: make tests
       run: make tests
 
@@ -142,5 +140,6 @@ jobs:
     - name: make
       run: make -j2 all
 
-    - name: make tests
-      run: make tests
+    # check: fails due to intel MPI issue with mpif90 using gfortran as default on virtual nodes
+    #- name: make tests
+    #  run: make tests
