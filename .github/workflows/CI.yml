@@ -107,6 +107,9 @@ jobs:
         echo ""
         echo "packages intel oneapi:"
         sudo apt-get install -y intel-oneapi-compiler-fortran intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-mpi intel-oneapi-mpi-devel
+
+    - name: compiler infos
+      run: |
         echo ""
         source /opt/intel/oneapi/setvars.sh
         echo ""
@@ -135,10 +138,20 @@ jobs:
         echo ""
 
     - name: configure
-      run: ./configure FC=ifort CC=icc MPIF90=mpiifort
+      run: ./configure FC=ifort CC=icc
 
     - name: make
-      run: make -j2 all
+      run: |
+        make -j2 all
+        make -j2 all --always-make
+
+    - name: configure parallel
+      run: ./configure --with-mpi FC=ifort CC=icc MPIFC=mpiifort MPI_INC="${I_MPI_ROOT}/include"
+
+    - name: make parallel
+      run: |
+        make -j2 all
+        make -j2 all --always-make
 
     # check: fails due to intel MPI issue with mpif90 using gfortran as default on virtual nodes
     #- name: make tests
