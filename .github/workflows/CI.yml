@@ -137,10 +137,10 @@ jobs:
         echo "FC=ifort" >> $GITHUB_ENV
         echo ""
 
-    - name: configure
-      run: ./configure FC=ifort CC=icc
+    - name: configure serial
+      run: ./configure --without-mpi FC=ifort CC=icc
 
-    - name: make
+    - name: make serial
       run: |
         make -j2 all
         make -j2 all --always-make
