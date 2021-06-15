@@ -144,7 +144,7 @@ ifeq ($(CUDA),yes)
 endif
 
 ## HIP compilation
-HIPCC_CFLAGS := ${HIP_CFLAGS} ${HIP_CFLAG_ENDING}  # adding -x hip depending on platform
+HIPCC_CFLAGS := ${HIP_CFLAGS}      # ${HIP_CFLAG_ENDING} adds -x hip depending on platform
 ifeq ($(HIP), yes)
   BUILD_VERSION_TXT += HIP
   SELECTOR_CFLAG += $(FC_DEFINE)USE_HIP
@@ -196,10 +196,10 @@ $O/%.cuda.o: $S/%.c ${SETUP}/config.h $S/mesh_constants_gpu.h $S/mesh_constants_
 
 
 $O/%.hip.o: $S/%.cu ${SETUP}/config.h $S/mesh_constants_gpu.h  $S/mesh_constants_hip.h $S/prepare_constants_cuda.h
-	${HIPCC} -c $< -o $@ $(HIPCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
+	${HIPCC} ${HIP_CFLAG_ENDING} -c $< -o $@ $(HIPCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
 
 $O/%.hip.o: $S/%.c ${SETUP}/config.h $S/mesh_constants_gpu.h  $S/mesh_constants_hip.h
-	${HIPCC} -c $< -o $@ $(HIPCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
+	${HIPCC} ${HIP_CFLAG_ENDING} -c $< -o $@ $(HIPCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
 
 
 # C version

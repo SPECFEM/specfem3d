@@ -144,6 +144,7 @@ jobs:
       run: |
         make -j2 all
         make -j2 all --always-make
+        make clean
 
     - name: configure parallel
       run: ./configure --with-mpi FC=ifort CC=icc MPIFC=mpiifort MPI_INC="${I_MPI_ROOT}/include"
@@ -152,6 +153,7 @@ jobs:
       run: |
         make -j2 all
         make -j2 all --always-make
+        make clean
 
     # check: fails due to intel MPI issue with mpif90 using gfortran as default on virtual nodes
     #- name: make tests
