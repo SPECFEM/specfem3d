@@ -125,7 +125,8 @@ else
   sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
   # shortens output interval to avoid timeouts
   sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 50:" DATA/Par_file
-  #
+
+  # more specific directory setups
   # acoustic examples
   if [ "$TESTDIR" == "2" ]; then
     sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
@@ -135,7 +136,25 @@ else
     sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
     sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 20:" DATA/Par_file
   fi
-  #
+  # tpv5 example
+  if [ "$TESTDIR" == "16" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 400:" DATA/Par_file
+  fi
+  # socal examples
+  if [ "$TESTDIR" == "17" ]; then
+    sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
+  fi
+  # SEP example
+  if [ "$TESTDIR" == "19" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 800:" DATA/Par_file
+  fi
+  # small_adjoint example
+  if [ "$TESTDIR" == "26" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
+  fi
+
+  # more specific test setups
   # simple mesh example
   if [ "$TESTID" == "8" ]; then
     sed -i "s:^NSTEP .*:NSTEP    = 400:" DATA/Par_file
@@ -166,12 +185,6 @@ else
     sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
     sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
   fi
-  #
-  # socal examples
-  if [ "$TESTDIR" == "17" ]; then
-    sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
-    sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
-  fi
   # socal example w/ 1d_socal
   if [ "$TESTID" == "22" ]; then
     sed -i "s:^MODEL .*:MODEL    = 1d_socal:" DATA/Par_file
@@ -191,10 +204,6 @@ else
   # cavity example
   if [ "$TESTID" == "25" ]; then
     sed -i "s:^NSTEP .*:NSTEP    = 2000:" DATA/Par_file
-  fi
-  # SEP example
-  if [ "$TESTID" == "26" ]; then
-    sed -i "s:^NSTEP .*:NSTEP    = 600:" DATA/Par_file
   fi
   # coupled with FK
   if [ "$TESTID" == "27" ]; then

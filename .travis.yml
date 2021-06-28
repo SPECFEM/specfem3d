@@ -4,11 +4,18 @@
 #       this is using C as a base and installs gfortran in the test environment
 
 language: c
-dist: xenial
-sudo: required
-
+dist: bionic
 os: linux
+
+arch:
+  - ppc64le  # IBM Power
+#  - amd64    # travis default
+#  - arm64    # ARM
+
 compiler: gcc
+
+# deprecated
+#sudo: required
 
 env:
   global:
@@ -130,6 +137,16 @@ env:
 
     # waterlayered_poroelastic example
     - TESTID=35 TESTCOV=0 TESTDIR=28 TESTFLAGS="--enable-vectorization --with-mpi" CUDA=false
+
+
+# additional ARM tests
+jobs:
+  include:
+  - arch: arm64
+    env: TESTID=5 TESTCOV=0 TESTDIR=1 TESTFLAGS="" CUDA=false
+  - arch: arm64
+    env: TESTID=6 TESTCOV=0 TESTDIR=2 TESTFLAGS="" CUDA=false
+
 
 before_install:
   # informations on git
