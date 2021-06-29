@@ -119,6 +119,7 @@ if [ "$CUDA" == "true" ]; then
   export PATH=${CUDA_HOME}/bin:${PATH}
   echo ""
   nvcc --version
+  echo ""
 else
   export CUDA_HOME=""
 fi
@@ -134,6 +135,7 @@ echo "export CUDA_HOME=${CUDA_HOME}" >> $HOME/.tmprc
 echo "export export OMPI_MCA_btl_vader_single_copy_mechanism=none" >> $HOME/.tmprc
 echo "export export OMPI_MCA_btl=^openib" >> $HOME/.tmprc
 
+echo ""
 echo "exports:"
 export
 echo ""

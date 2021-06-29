@@ -34,109 +34,109 @@ env:
     #   CUDA         - flag for compilation with CUDA    
 
     # code coverage: mpi, using code coverage flags
-    - TESTID=1 TESTCOV=1 TESTDIR=1 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=1 TESTCOV=1 TESTDIR=1 TESTFLAGS="--with-mpi" CUDA=false
 
     # code coverage: mpi, using code coverage flags, additional tests
-    - TESTID=2 TESTCOV=1 TESTDIR=2 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=2 TESTCOV=1 TESTDIR=2 TESTFLAGS="--with-mpi" CUDA=false
 
     # code coverage: serial/no mpi, using code coverage flags
-    - TESTID=3 TESTCOV=1 TESTDIR=5 TESTFLAGS="--without-mpi" CUDA=false
+    #- TESTID=3 TESTCOV=1 TESTDIR=5 TESTFLAGS="--without-mpi" CUDA=false
 
     # default test with make tests
-    - TESTID=4 TESTCOV=0 TESTDIR=0 TESTFLAGS="" CUDA=false
+    #- TESTID=4 TESTCOV=0 TESTDIR=0 TESTFLAGS="" CUDA=false
 
     # default example (elastic)
-    - TESTID=5 TESTCOV=0 TESTDIR=1 TESTFLAGS="" CUDA=false
+    #- TESTID=5 TESTCOV=0 TESTDIR=1 TESTFLAGS="" CUDA=false
 
     # example 2 (acoustic)
-    - TESTID=6 TESTCOV=0 TESTDIR=2 TESTFLAGS="" CUDA=false
+    #- TESTID=6 TESTCOV=0 TESTDIR=2 TESTFLAGS="" CUDA=false
 
     # example 3 (poroelastic)
-    - TESTID=7 TESTCOV=0 TESTDIR=3 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=7 TESTCOV=0 TESTDIR=3 TESTFLAGS="--with-mpi" CUDA=false
 
     # example 4 (internal mesher)
-    - TESTID=8 TESTCOV=0 TESTDIR=4 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=8 TESTCOV=0 TESTDIR=4 TESTFLAGS="--with-mpi" CUDA=false
 
     # serial example (acoustic)
-    - TESTID=9 TESTCOV=0 TESTDIR=5 TESTFLAGS="--without-mpi" CUDA=false
+    #- TESTID=9 TESTCOV=0 TESTDIR=5 TESTFLAGS="--without-mpi" CUDA=false
 
     # debug & double precision (acoustic)
-    - TESTID=10 TESTCOV=0 TESTDIR=6 TESTFLAGS="--enable-double-precision --enable-debug" CUDA=false
+    #- TESTID=10 TESTCOV=0 TESTDIR=6 TESTFLAGS="--enable-double-precision --enable-debug" CUDA=false
 
     # debug with bounds-check (elastic)
-    - TESTID=11 TESTCOV=0 TESTDIR=7 TESTFLAGS="--enable-debug" CUDA=false
+    #- TESTID=11 TESTCOV=0 TESTDIR=7 TESTFLAGS="--enable-debug" CUDA=false
 
     # PML example (acoustic)
-    - TESTID=12 TESTCOV=0 TESTDIR=8 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=12 TESTCOV=0 TESTDIR=8 TESTFLAGS="--with-mpi" CUDA=false
 
     # PML example (elastic)
-    - TESTID=13 TESTCOV=0 TESTDIR=9 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=13 TESTCOV=0 TESTDIR=9 TESTFLAGS="--with-mpi" CUDA=false
 
     # noise example
-    - TESTID=14 TESTCOV=0 TESTDIR=10 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=14 TESTCOV=0 TESTDIR=10 TESTFLAGS="--with-mpi" CUDA=false
 
     # tomographic model example
-    - TESTID=15 TESTCOV=0 TESTDIR=11 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=15 TESTCOV=0 TESTDIR=11 TESTFLAGS="--with-mpi" CUDA=false
 
     # acoustic kernel example
-    - TESTID=16 TESTCOV=0 TESTDIR=12 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=16 TESTCOV=0 TESTDIR=12 TESTFLAGS="--with-mpi" CUDA=false
 
     # waterlayered example
-    - TESTID=17 TESTCOV=0 TESTDIR=13 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=17 TESTCOV=0 TESTDIR=13 TESTFLAGS="--with-mpi" CUDA=false
 
     # elastic example, hex27, compilation w/ CUDA and MPI
-    - TESTID=18 TESTCOV=0 TESTDIR=14 TESTFLAGS="--with-cuda=cuda5 --with-mpi" CUDA=true
+    #- TESTID=18 TESTCOV=0 TESTDIR=14 TESTFLAGS="--with-cuda=cuda5 --with-mpi" CUDA=true
 
     # acoustic example, compilation w/ CUDA
-    - TESTID=19 TESTCOV=0 TESTDIR=15 TESTFLAGS="--with-cuda=cuda5 --without-mpi" CUDA=true
+    #- TESTID=19 TESTCOV=0 TESTDIR=15 TESTFLAGS="--with-cuda=cuda5 --without-mpi" CUDA=true
 
     # fault example tpv5
     - TESTID=20 TESTCOV=0 TESTDIR=16 TESTFLAGS="--with-mpi" CUDA=false
 
     # socal example
-    - TESTID=21 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=21 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
 
     # socal example w/ 1d_socal
-    - TESTID=22 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=22 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
 
     # socal example w/ 1d_prem
-    - TESTID=23 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=23 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
 
     # socal example w/ 1d_cascadia
-    - TESTID=24 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=24 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
 
     # cavity example
-    - TESTID=25 TESTCOV=0 TESTDIR=18 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=25 TESTCOV=0 TESTDIR=18 TESTFLAGS="--with-mpi" CUDA=false
 
     # SEP example
     - TESTID=26 TESTCOV=0 TESTDIR=19 TESTFLAGS="--with-mpi" CUDA=false
 
     # couple with FK
-    - TESTID=27 TESTCOV=0 TESTDIR=20 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=27 TESTCOV=0 TESTDIR=20 TESTFLAGS="--with-mpi" CUDA=false
 
     # layered model w/ point force, NGLL = 6
-    - TESTID=28 TESTCOV=0 TESTDIR=21 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=28 TESTCOV=0 TESTDIR=21 TESTFLAGS="--with-mpi" CUDA=false
 
     # elastic halfspace, no absorbing
-    - TESTID=29 TESTCOV=0 TESTDIR=22 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=29 TESTCOV=0 TESTDIR=22 TESTFLAGS="--with-mpi" CUDA=false
 
     # gmsh example w/ LDDRK
-    - TESTID=30 TESTCOV=0 TESTDIR=23 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=30 TESTCOV=0 TESTDIR=23 TESTFLAGS="--with-mpi" CUDA=false
 
     # example with openmp
-    - TESTID=31 TESTCOV=0 TESTDIR=24 TESTFLAGS="--enable-vectorization --enable-openmp" CUDA=false
+    #- TESTID=31 TESTCOV=0 TESTDIR=24 TESTFLAGS="--enable-vectorization --enable-openmp" CUDA=false
 
     # regular element mesh
-    - TESTID=32 TESTCOV=0 TESTDIR=25 TESTFLAGS="--enable-vectorization" CUDA=false
+    #- TESTID=32 TESTCOV=0 TESTDIR=25 TESTFLAGS="--enable-vectorization" CUDA=false
 
     # adjoint simulation
-    - TESTID=33 TESTCOV=0 TESTDIR=26 TESTFLAGS="--with-mpi" CUDA=false
+    #- TESTID=33 TESTCOV=0 TESTDIR=26 TESTFLAGS="--with-mpi" CUDA=false
 
     # gmsh example w/ hex27
-    - TESTID=34 TESTCOV=0 TESTDIR=27 TESTFLAGS="--without-mpi" CUDA=false
+    #- TESTID=34 TESTCOV=0 TESTDIR=27 TESTFLAGS="--without-mpi" CUDA=false
 
     # waterlayered_poroelastic example
-    - TESTID=35 TESTCOV=0 TESTDIR=28 TESTFLAGS="--enable-vectorization --with-mpi" CUDA=false
+    #- TESTID=35 TESTCOV=0 TESTDIR=28 TESTFLAGS="--enable-vectorization --with-mpi" CUDA=false
 
 
 # additional ARM tests
