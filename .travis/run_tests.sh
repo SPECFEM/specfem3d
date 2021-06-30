@@ -138,7 +138,7 @@ else
   fi
   # tpv5 example
   if [ "$TESTDIR" == "16" ]; then
-    sed -i "s:^NSTEP .*:NSTEP    = 3000:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 2500:" DATA/Par_file
   fi
   # socal examples
   if [ "$TESTDIR" == "17" ]; then

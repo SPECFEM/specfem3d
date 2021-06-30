@@ -120,6 +120,25 @@ if [ "$CUDA" == "true" ]; then
   echo ""
   nvcc --version
   echo ""
+
+  ## OpenCL additionals
+  if [ "$OPENCL" == "true" ]; then
+    echo "OpenCL installation"
+    #echo "dpkg toolkit:"
+    #dpkg -l | grep toolkit
+    #echo ""
+    #echo "dpkg opencl:"
+    #dpkg -l | grep opencl
+    #echo ""
+    #echo "apt-cache opencl:"
+    #apt-cache search opencl
+    # possible packages for OpenCL:
+    #sudo apt-get install -y --no-install-recommends cuda-toolkit-${CUDA_APT}
+    #sudo apt-get install opencl-headers
+    # for ppc64 architecture: to be able to compile/link OpenCL version
+    sudo apt-get install nvidia-opencl-dev
+    echo ""
+  fi
 else
   export CUDA_HOME=""
 fi
