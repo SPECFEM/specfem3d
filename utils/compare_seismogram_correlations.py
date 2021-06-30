@@ -247,11 +247,11 @@ def plot_correlations(out_dir,ref_dir):
             err = norm(ref-syn)
 
         #debug
-        #print('norm syn = %e norm ref = %e' % (norm(syn),fac_norm))
+        #print('syn_file: %s\nref_file: %s\nnorm syn = %e\nnorm ref = %e' % (syn_file,ref_file,norm(syn),norm(ref)))
 
         # correlation test
         # total length
-        if fac_norm > 0.0:
+        if norm(ref) > 0.0 and norm(syn) > 0.0:
             corr_mat = np.corrcoef(ref, syn)
         else:
             if norm(ref-syn) > 0.0:
