@@ -160,6 +160,55 @@ before_install:
     echo "request: Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"
     echo "commit : Commit($TRAVIS_COMMIT) Range($TRAVIS_COMMIT_RANGE)"
 
+  # checks file changes
+  - |
+    echo "check file changes"
+    if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then
+      # Push
+      echo "Push request:"
+      COMMIT_RANGE="$(echo ${TRAVIS_COMMIT_RANGE} | cut -d '.' -f 1,4 --output-delimiter '..')"
+      #DIFF="$(git diff --name-only ${COMMIT_RANGE} --)"
+      DIFF=$(git diff --name-only ${TRAVIS_COMMIT_RANGE})
+    else
+      # PR build
+      echo "Pull request:"
+      DIFF=$(git diff --name-only ${TRAVIS_BRANCH}..HEAD --)
+    fi
+    echo "$DIFF"
+    # Escape newlines (replace \n with %0A)
+    NEWDIFF=($( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' ))
+    echo "$NEWDIFF"
+    DIFF=$NEWDIFF
+    RUN_CHECKS=0
+    # Loop by lines
+    while read path; do
+      # Set $directory to substring before /
+      directory="$( echo $path | cut -d'/' -f1 -s )"
+      echo "file: $path  - directory: $directory"
+      if [ -z "$directory" ]; then
+        # root directory
+        RUN_CHECKS=1
+      elif [ "$directory" == src ]; then
+        # src/ directory
+        RUN_CHECKS=1
+      elif [ "$directory" == setup ]; then
+        # setup/ directory
+        RUN_CHECKS=1
+      elif [ "$directory" == EXAMPLES ]; then
+        # EXAMPLES/ directory
+        RUN_CHECKS=1
+      elif [ "$directory" == tests ]; then
+        # tests/ directory
+        RUN_CHECKS=1
+      elif [ "$directory" == .travis ]; then
+        # .travis/ directory
+        RUN_CHECKS=1
+      fi
+    done <<< "$DIFF"
+    echo
+    echo "run checks: ${RUN_CHECKS}"
+    if [[ ${RUN_CHECKS} -eq 0 ]]; then echo "nothing to check, exiting..."; exit 1; fi
+
   # recommended for MPI projects to unset CC: see https://docs.travis-ci.com/user/languages/c
   #- test -n $CC && unset CC
 

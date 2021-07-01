@@ -151,8 +151,8 @@ echo "export CUDA_HOME=${CUDA_HOME}" >> $HOME/.tmprc
 # to avoid mpi issues on travis
 # see: https://github.com/open-mpi/ompi/issues/1393#issuecomment-187980473
 #      https://github.com/open-mpi/ompi/issues/4948
-echo "export export OMPI_MCA_btl_vader_single_copy_mechanism=none" >> $HOME/.tmprc
-echo "export export OMPI_MCA_btl=^openib" >> $HOME/.tmprc
+echo "export OMPI_MCA_btl_vader_single_copy_mechanism=none" >> $HOME/.tmprc
+echo "export OMPI_MCA_btl=^openib" >> $HOME/.tmprc
 
 echo ""
 echo "exports:"

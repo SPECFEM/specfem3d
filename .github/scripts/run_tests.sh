@@ -5,10 +5,16 @@
 
 WORKDIR=`pwd`
 
-TESTDIR=${{ env.TESTDIR }}
-TESTFLAGS=${{ env.TESTFLAGS }}
-
 dir=${TESTDIR}
+
+echo
+echo "home: $HOME"
+echo
+cat $HOME/.openmpi/mca-params.conf
+echo
+
+# getting updated environment (CUDA_HOME, PATH, ..)
+if [ -f $HOME/.tmprc ]; then source $HOME/.tmprc; fi
 
 # info
 echo $WORKDIR
@@ -55,9 +61,19 @@ cd $dir
 
 # default setup
 # limit time steps for testing
-sed -i "s:^NSTEP .*:NSTEP    = 400:" DATA/Par_file
+sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
 # shortens output interval to avoid timeouts
 sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 50:" DATA/Par_file
+
+# limit time steps for specific examples
+# simple mesh example
+if [ "$TESTDIR" == "EXAMPLES/meshfem3D_examples/simple_model/" ]; then
+  sed -i "s:^NSTEP .*:NSTEP    = 400:" DATA/Par_file
+fi
+# tpv5 example
+if [ "$TESTDIR" == "EXAMPLES/fault_examples/tpv5/" ]; then
+  sed -i "s:^NSTEP .*:NSTEP    = 2500:" DATA/Par_file
+fi
 
 # default script
 ./run_this_example.sh
