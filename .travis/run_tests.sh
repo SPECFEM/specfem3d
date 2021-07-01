@@ -136,6 +136,10 @@ else
     sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
     sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 20:" DATA/Par_file
   fi
+  # waterlayered_halfspace example
+  if [ "$TESTDIR" == "13" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 600:" DATA/Par_file
+  fi
   # tpv5 example
   if [ "$TESTDIR" == "16" ]; then
     sed -i "s:^NSTEP .*:NSTEP    = 2500:" DATA/Par_file
@@ -147,7 +151,7 @@ else
   fi
   # SEP example
   if [ "$TESTDIR" == "19" ]; then
-    sed -i "s:^NSTEP .*:NSTEP    = 2000:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
   fi
   # small_adjoint example
   if [ "$TESTDIR" == "26" ]; then
