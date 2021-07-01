@@ -3,46 +3,64 @@
 # runs compilation tests on Linux Ubuntu and Mac platforms
 name: CI
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
-  linuxCheck:
-    name: Test on ${{ matrix.os }}    
-    runs-on: ${{ matrix.os }}
-    
-    strategy:
-      matrix:
-        os: [ubuntu-latest,ubuntu-16.04]
+  changesCheck:
+    name: Check file changes
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install packages
+    - name: Check for changes
+      id: diff
       run: |
-        sudo apt update
-        sudo apt install -yq --no-install-recommends gfortran g++ openmpi-bin libopenmpi-dev
-        echo ""
-        echo "compiler versions:"
-        echo "gcc --version"
-        gcc --version
-        echo "gfortran --version"
-        gfortran --version
-        echo "mpif90 --version"
-        mpif90 --version
-        echo ""
-        export TERM=xterm
-        echo "exports:"
-        export
-        echo ""
+        if [ $GITHUB_BASE_REF ]; then
+          # Pull Request
+          git fetch origin $GITHUB_BASE_REF --depth=1
+          export DIFF=$( git diff --name-only origin/$GITHUB_BASE_REF $GITHUB_SHA )
+          echo "Diff between origin/$GITHUB_BASE_REF and $GITHUB_SHA"
+        else
+          # Push
+          git fetch origin ${{ github.event.before }} --depth=1
+          export DIFF=$( git diff --name-only ${{ github.event.before }} $GITHUB_SHA )
+          echo "Diff between ${{ github.event.before }} and $GITHUB_SHA"
+        fi
+        echo "$DIFF"
+        # Escape newlines (replace \n with %0A)
+        echo "::set-output name=diff::$( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' )"
 
-    - name: configure
-      run: ./configure
-      
-    - name: make
-      run: make -j2 all
+    - run: echo "${{ steps.diff.outputs.diff }}"
 
-    - name: make tests
-      run: make tests
+    - name: Check files
+      run: |
+        RUN_CHECKS=0
+        DIFF="${{ steps.diff.outputs.diff }}"
+        # Loop by lines
+        while read path; do
+          # Set $directory to substring before /
+          directory="$( echo $path | cut -d'/' -f1 -s )"
+          echo "file: $path  - directory: $directory"
+          if [ -z "$directory" ]; then
+            # root directory
+            RUN_CHECKS=1
+          elif [ "$directory" == src ]; then
+            # src/ directory
+            RUN_CHECKS=1
+          elif [ "$directory" == setup ]; then
+            # setup/ directory
+            RUN_CHECKS=1
+          elif [ "$directory" == EXAMPLES ]; then
+            # EXAMPLES/ directory
+            RUN_CHECKS=1
+          elif [ "$directory" == tests ]; then
+            # EXAMPLES/ directory
+            RUN_CHECKS=1
+          fi
+        done <<< "$DIFF"
+        echo
+        echo "run checks: ${RUN_CHECKS}"
 
   macosCheck:
     name: Test on Mac
@@ -81,6 +99,31 @@ jobs:
 
     - name: make tests
       run: make tests
+
+  linuxCheck:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest,ubuntu-16.04]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: configure
+      run: ./configure
+
+    - name: make
+      run: make -j2 all
+
+    - name: make tests
+      run: make tests
+
 
   linuxCheck-Intel:
     name: Test Intel on ubuntu-20.04
@@ -137,10 +180,27 @@ jobs:
         echo "FC=ifort" >> $GITHUB_ENV
         echo ""
 
+    - name: configure serial debug
+      run: ./configure --enable-debug --without-mpi FC=ifort CC=icc
+
+    - name: make serial debug
+      run: |
+        make -j2 all
+        make -j2 all --always-make
+        make clean
+
     - name: configure serial
       run: ./configure --without-mpi FC=ifort CC=icc
 
     - name: make serial
+      run: |
+        make -j2 all
+        make clean
+
+    - name: configure parallel debug
+      run: ./configure --enable-debug --with-mpi FC=ifort CC=icc MPIFC=mpiifort MPI_INC="${I_MPI_ROOT}/include"
+
+    - name: make parallel debug
       run: |
         make -j2 all
         make -j2 all --always-make
@@ -152,9 +212,28 @@ jobs:
     - name: make parallel
       run: |
         make -j2 all
-        make -j2 all --always-make
         make clean
 
     # check: fails due to intel MPI issue with mpif90 using gfortran as default on virtual nodes
     #- name: make tests
     #  run: make tests
+
+  linuxTest_1:
+    name: Test run example 1
+    runs-on: ubuntu-latest
+    needs: [linuxCheck,linuxCheck-Intel]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/regional_Greece_small/
+        TESTFLAGS: --with-mpi --enable-vectorization
+
+      run: ./.github/scripts/run_tests.sh
+      shell: bash

@@ -83,7 +83,7 @@ else
     ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TESTFLAGS}
   fi
 fi
-if [[ $? -ne 0 ]]; then exit 1; fi
+if [[ $? -ne 0 ]]; then echo "configuration failed:"; cat config.log; echo ""; echo "exiting..."; exit 1; fi
 
 # we output to console
 sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
