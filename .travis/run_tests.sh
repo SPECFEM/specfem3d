@@ -3,6 +3,16 @@
 # getting updated environment (CUDA_HOME, PATH, ..)
 if [ -f $HOME/.tmprc ]; then source $HOME/.tmprc; fi
 
+# checks if anything to do
+echo "run checks: $RUN_CHECKS"
+if [ "$RUN_CHECKS" == "0" ]; then
+  echo "  no run checks required, exiting..."
+  exit 0
+else
+  echo "  run checks required, start testing..."
+fi
+echo
+
 ###########################################################
 # setup
 ###########################################################
@@ -59,7 +69,7 @@ my_test(){
   ln -s $WORKDIR/utils/compare_seismogram_correlations.py
   ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/
   if [[ $? -ne 0 ]]; then exit 1; fi
-  ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/ | grep min/max | cut -d \| -f 3 | awk '{print "correlation:",$1; if ($1 < 0.9 ){print $1,"failed"; exit 1;}else{ print $1,"good"; exit 0;}}'
+  ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/ | grep min/max | cut -d \| -f 3 | awk '{print "correlation:",$1; if ($1 < 0.999 ){print $1,"failed"; exit 1;}else{ print $1,"good"; exit 0;}}'
   if [[ $? -ne 0 ]]; then exit 1; fi
   rm -rf OUTPUT_FILES/
 }
@@ -142,7 +152,7 @@ else
   fi
   # tpv5 example
   if [ "$TESTDIR" == "16" ]; then
-    sed -i "s:^NSTEP .*:NSTEP    = 2500:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 1500:" DATA/Par_file
   fi
   # socal examples
   if [ "$TESTDIR" == "17" ]; then
@@ -161,7 +171,7 @@ else
   # more specific test setups
   # simple mesh example
   if [ "$TESTID" == "8" ]; then
-    sed -i "s:^NSTEP .*:NSTEP    = 400:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 800:" DATA/Par_file
   fi
   # debug+double precision example (acoustic)
   if [ "$TESTID" == "10" ]; then
@@ -187,7 +197,7 @@ else
   # acoustic example w/ CUDA compilation
   if [ "$TESTID" == "19" ]; then
     sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
-    sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
   fi
   # socal example w/ 1d_socal
   if [ "$TESTID" == "22" ]; then
@@ -252,11 +262,22 @@ else
   fi
   if [[ $? -ne 0 ]]; then exit 1; fi
 
+  # simulation done
+  echo
+  echo "simulation done: `pwd`"
+  echo `date`
+  echo
+
   # seismogram comparison
   if [ "$TESTCOV" == "0" ] && [ ! "$TESTID" == "11" ]; then
     my_test
   fi
+
   cd $WORKDIR
+  echo
+  echo "all good"
+  echo `date`
+  echo
 fi
 if [[ $? -ne 0 ]]; then exit 1; fi
 echo -en 'travis_fold:end:tests\\r'

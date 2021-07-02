@@ -115,7 +115,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest,ubuntu-16.04]
+        os: [ubuntu-latest,ubuntu-18.04]
 
     steps:
     - uses: actions/checkout@v2
@@ -283,3 +283,24 @@ jobs:
 
       run: ./.github/scripts/run_tests.sh
       shell: bash
+
+  linuxTest_3:
+    name: Test run example 3
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/layered_halfspace/
+        TESTFLAGS: --with-mpi
+
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+

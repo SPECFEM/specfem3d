@@ -42,8 +42,8 @@ env:
     # code coverage: serial/no mpi, using code coverage flags
     - TESTID=3 TESTCOV=1 TESTDIR=5 TESTFLAGS="--without-mpi" CUDA=false
 
-    # default test with make tests
-    - TESTID=4 TESTCOV=0 TESTDIR=0 TESTFLAGS="" CUDA=false
+    # default test with make tests -- offline, checked on github
+    #- TESTID=4 TESTCOV=0 TESTDIR=0 TESTFLAGS="" CUDA=false
 
     # default example (elastic)
     - TESTID=5 TESTCOV=0 TESTDIR=1 TESTFLAGS="" CUDA=false
@@ -54,8 +54,8 @@ env:
     # example 3 (poroelastic)
     - TESTID=7 TESTCOV=0 TESTDIR=3 TESTFLAGS="--with-mpi" CUDA=false
 
-    # example 4 (internal mesher)
-    - TESTID=8 TESTCOV=0 TESTDIR=4 TESTFLAGS="--with-mpi" CUDA=false
+    # example 4 (simple model, internal mesher) -- offline, checked on github
+    #- TESTID=8 TESTCOV=0 TESTDIR=4 TESTFLAGS="--with-mpi" CUDA=false
 
     # serial example (acoustic)
     - TESTID=9 TESTCOV=0 TESTDIR=5 TESTFLAGS="--without-mpi" CUDA=false
@@ -90,8 +90,8 @@ env:
     # acoustic example, compilation w/ CUDA
     - TESTID=19 TESTCOV=0 TESTDIR=15 TESTFLAGS="--with-cuda=cuda5 --without-mpi" CUDA=true
 
-    # fault example tpv5
-    - TESTID=20 TESTCOV=0 TESTDIR=16 TESTFLAGS="--with-mpi" CUDA=false
+    # fault example tpv5 -- offline, checked on github
+    #- TESTID=20 TESTCOV=0 TESTDIR=16 TESTFLAGS="--with-mpi" CUDA=false
 
     # socal example
     - TESTID=21 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
@@ -114,8 +114,8 @@ env:
     # couple with FK
     - TESTID=27 TESTCOV=0 TESTDIR=20 TESTFLAGS="--with-mpi" CUDA=false
 
-    # layered model w/ point force, NGLL = 6
-    - TESTID=28 TESTCOV=0 TESTDIR=21 TESTFLAGS="--with-mpi" CUDA=false
+    # layered model w/ point force, NGLL = 6 -- offline, checked on github
+    #- TESTID=28 TESTCOV=0 TESTDIR=21 TESTFLAGS="--with-mpi" CUDA=false
 
     # elastic halfspace, no absorbing
     - TESTID=29 TESTCOV=0 TESTDIR=22 TESTFLAGS="--with-mpi" CUDA=false
@@ -176,9 +176,9 @@ before_install:
     fi
     echo "$DIFF"
     # Escape newlines (replace \n with %0A)
-    NEWDIFF=($( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' ))
-    echo "$NEWDIFF"
-    DIFF=$NEWDIFF
+    #NEWDIFF=($( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' ))
+    #echo "$NEWDIFF"
+    #DIFF=$NEWDIFF
     RUN_CHECKS=0
     # Loop by lines
     while read path; do
@@ -207,7 +207,9 @@ before_install:
     done <<< "$DIFF"
     echo
     echo "run checks: ${RUN_CHECKS}"
-    if [[ ${RUN_CHECKS} -eq 0 ]]; then echo "nothing to check, exiting..."; exit 1; fi
+    echo
+    export RUN_CHECKS=${RUN_CHECKS}
+    #abort: if [[ ${RUN_CHECKS} -eq 0 ]]; then echo "nothing to check, exiting..."; exit 1; fi
 
   # recommended for MPI projects to unset CC: see https://docs.travis-ci.com/user/languages/c
   #- test -n $CC && unset CC

@@ -99,8 +99,8 @@ echo "export OMPI_MCA_rmaps_base_inherit=1" >> $HOME/.tmprc
 #echo "export OMPI_MCA_btl_vader_single_copy_mechanism=none" >> $HOME/.tmprc
 #echo "export OMPI_MCA_btl=^openib" >> $HOME/.tmprc
 
-# exports
-export TERM=xterm
+# exports for xterm output (for make tests)
+echo "TERM=xterm" >> $GITHUB_ENV
 
 echo
 echo "exports:"
