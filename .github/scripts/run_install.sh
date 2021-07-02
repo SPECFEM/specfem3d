@@ -60,36 +60,49 @@ echo
 #
 echo "MPI environment:"
 echo "mpif90 on path: $(which mpif90)"
-echo "ompi_info on path: $(which ompi_info)"
-echo
-echo "ompi_info:"
-ompi_info
-echo
-echo "ompi_info all:"
-ompi_info --all
-echo
-echo "ompi_info param all:"
-ompi_info --param all
-echo
-echo "ompi_info param_files:"
-ompi_info --param param_files
 echo
 
-#export OMPI_MCA_orte_default_hostfile
+## gets MPI setting
+#echo "ompi_info on path: $(which ompi_info)"
+#echo "ompi_info:"
+#ompi_info
+#echo
+#echo "ompi_info all:"
+#ompi_info --all
+#echo
+#echo "ompi_info param all:"
+#ompi_info --param all all --level 9
+#echo
+## allow for more MPI processes than cores (2-core VM nodes)
+# 1. option: oversubscribe
+#echo "home: $HOME"
 # mca param_files points to: /home/runner/.openmpi/mca-params.conf
-echo "home: $HOME"
-mkdir -p $HOME/.openmpi
-echo "localhost slots=8" >> $HOME/.openmpi/mca-params.conf
-echo
-#echo "OMPI_MCA_param_files=$HOME/.openmpi/mca-params.conf" >> $GITHUB_ENV
-#echo "OMPI_MCA_orte_set_default_slots=8" >> $GITHUB_ENV
-#
+#mkdir -p $HOME/.openmpi
+#echo "rmaps_base_oversubscribe = 1" >> $HOME/.openmpi/mca-params.conf
+#echo "rmaps_base_inherit = 1" >> $HOME/.openmpi/mca-params.conf
+# 2. option: increase number of slots
+#echo "orte_set_default_slots = 8">> $HOME/.openmpi/mca-params.conf
+#echo "orte_default_hostfile = $HOME/.openmpi/openmpi-default-hostfile" >> $HOME/.openmpi/mca-params.conf
+#echo "localhost slots=8" >> $HOME/.openmpi/openmpi-default-hostfile
+#or: export OMPI_MCA_orte_default_hostfile=$HOME/.openmpi/openmpi-default-hostfile
+
+# storing updated environment parameters for following bash-script
+echo "export PATH=${PATH}" > $HOME/.tmprc
+echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $HOME/.tmprc
+echo "export CUDA_HOME=${CUDA_HOME}" >> $HOME/.tmprc
+
+## avoid MPI number of slots issue
+echo "export OMPI_MCA_rmaps_base_oversubscribe=1" >> $HOME/.tmprc
+echo "export OMPI_MCA_rmaps_base_inherit=1" >> $HOME/.tmprc
+
+## avoid MPI warnings when running in container
 #echo "export OMPI_MCA_btl_vader_single_copy_mechanism=none" >> $HOME/.tmprc
 #echo "export OMPI_MCA_btl=^openib" >> $HOME/.tmprc
 
-
 # exports
 export TERM=xterm
+
+echo
 echo "exports:"
 export
 echo 
