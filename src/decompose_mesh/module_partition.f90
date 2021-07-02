@@ -94,7 +94,7 @@ contains
     ref_point(3) = zmin
     write(27,*)
     WRITE(27,*) ' xmin, ymin, zmin ', xmin, ymin, zmin
-    write(27,*) ' sizes, nspec, nnodes ',  nspec, nnodes
+    write(27,*) ' nspec, nnodes ',  nspec, nnodes
     allocate(elmnts_center(3,nE),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 68')
     write(27,*)
@@ -183,6 +183,73 @@ contains
 
   end subroutine partition_mesh
 
+
+  !--------------------------------------------
+  ! Geometry mesh decomposition
+  !---------------------------------------------
+
+  !
+  !  decomposition is made only using a distance criterion from
+  !  a given face of a computational box domain
+  !
+
+  subroutine partition_mesh_distance(elmnts, nodes_coords, nspec, nnodes, npart_1, npart_2, npart_3)
+
+    implicit none
+
+    ! input mesh
+    integer,                                     intent(in) :: nspec, nnodes
+    double precision,    dimension(NDIM,nnodes),    intent(in) :: nodes_coords
+    integer,             dimension(NGNOD,nspec), intent(in) :: elmnts
+
+    ! partition
+    integer,                                     intent(in) :: npart_1, npart_2, npart_3
+
+    ! local
+    double precision                                        :: xmin, xmax, ymin,ymax, zmin, zmax
+    double precision                                        :: x_bin, y_bin, z_bin
+    double precision,    dimension(3)                       :: ref_point
+    double precision,    dimension(:,:), allocatable        :: elmnts_center
+    integer    :: p1, p2, p3, iE, ier
+
+    nE = nspec
+    allocate(ipart(nE),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 67')
+    ipart(:) = -1
+
+    xmin = minval(nodes_coords(1,:))
+    xmax = maxval(nodes_coords(1,:))
+    ymin = minval(nodes_coords(2,:))
+    ymax = maxval(nodes_coords(2,:))
+    zmin = minval(nodes_coords(3,:))
+    zmax = maxval(nodes_coords(3,:))
+
+    ref_point(1) = xmin
+    ref_point(2) = ymin
+    ref_point(3) = zmin
+    write(27,*)
+    WRITE(27,*) ' xmin, ymin, zmin ', xmin, ymin, zmin
+    write(27,*) ' nspec, nnodes ',  nspec, nnodes
+    allocate(elmnts_center(3,nE),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 68')
+    write(27,*)
+    call compute_elmnts_center(elmnts_center, elmnts, nodes_coords, nspec, nnodes)
+
+
+    x_bin = (xmax - xmin)/npart_1
+    y_bin = (ymax - ymin)/npart_2
+    z_bin = (zmax - zmin)/npart_3
+    do iE=1, nE
+       p1 = floor((elmnts_center(1,iE)-xmin)/x_bin) + 1
+       p2 = floor((elmnts_center(2,iE)-ymin)/y_bin) + 1
+       p3 = floor((elmnts_center(3,iE)-zmin)/z_bin) + 1
+       ipart(iE) = p1 + npart_1*(p2-1) + npart_1*npart_2*(p3-1)
+    enddo
+
+    deallocate(elmnts_center)
+
+end subroutine partition_mesh_distance
+
   !---------
   ! compute partition in one direction
   !---------
@@ -218,7 +285,7 @@ contains
     if (nE_tmp <= 0) stop 'Error: cannot use an array that has been declared with a size of zero'
     load_by_part = floor(sum_load_tmp(nE_tmp) / real(npart_tmp,8)) + 1
 
-    write(27,*) ' Load value by partition  ', Load_by_part
+    write(27,*) ' Load value by partition  ', Load_by_part, sum_load_tmp(nE_tmp), real(npart_tmp,8)
 
     do i = 1,nE_tmp
        k = iperm_tmp(i)
@@ -337,6 +404,7 @@ contains
        elmnts_center(2,iE) = elmnts_center(2,iE) / real(NGNOD,8)
        elmnts_center(3,iE) = elmnts_center(3,iE) / real(NGNOD,8)
     enddo
+
 
   end subroutine compute_elmnts_center
 
