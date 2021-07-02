@@ -55,7 +55,7 @@ module fault_scotch
                               ! but smaller than the smallest element size
 
   public :: read_fault_files, fault_repartition, close_faults, write_fault_database, &
-            save_nodes_coords, nodes_coords_open, ANY_FAULT
+            write_fault_database_mpi, save_nodes_coords, nodes_coords_open, ANY_FAULT, bcast_faults_mpi
 
 CONTAINS
 
@@ -550,6 +550,108 @@ CONTAINS
   enddo
 
   end subroutine write_fault_database
+
+
+! ---------------------------------------------------------------------------------------------------
+! Below functions are only used for the mpi version
+! ---------------------------------------------------------------------------------------------------
+
+  subroutine write_fault_database_mpi(IIN_database, myrank, nE, glob2loc_elmnt, ipart, &
+             nnodes, glob2loc_nodes, NGNOD2D, nnodes_loc, nodes_coords)
+  integer, intent(in)  :: IIN_database
+  integer, intent(in)  :: myrank
+  integer, intent(in)  :: nE, nnodes, NGNOD2D
+  integer, dimension(nE), intent(in)  :: ipart
+  integer, dimension(nE), intent(in)  :: glob2loc_elmnt
+  integer, dimension(nnodes), intent(in) :: glob2loc_nodes
+
+  integer, intent(in)  :: nnodes_loc
+  double precision, dimension(NDIM,nnodes), intent(in)  :: nodes_coords
+
+  integer :: iflt, i, inode
+  integer :: iE, iE_loc
+  integer :: nspec_fault_1,nspec_fault_2
+  integer :: inodes(NGNOD2D), node_loc(NGNOD2D)
+
+        do iflt=1,size(faults)
+             ! get number of fault elements in this partition
+            nspec_fault_1 = count( ipart(faults(iflt)%ispec1) == myrank + 1)
+            nspec_fault_2 = count( ipart(faults(iflt)%ispec2) == myrank + 1)
+        
+            if (nspec_fault_1 /= nspec_fault_2) then
+              print *, 'Fault # ',iflt,', proc # ',myrank
+              print *, '  ispec1 : ', nspec_fault_1
+              print *, '  ispec2 : ', nspec_fault_2
+              print *, 'Fatal error: Number of fault elements do not coincide. Abort.'
+              stop
+            endif
+            write(IIN_database) nspec_fault_1
+        
+           ! if no fault element in this partition, move to next fault
+            if (nspec_fault_1 == 0) cycle
+
+            do i=1, faults(iflt)%nspec
+               iE = faults(iflt)%ispec1(i)
+               if (ipart(iE) /= myrank +1) cycle
+               iE_loc=glob2loc_elmnt(iE)
+
+               inodes = faults(iflt)%inodes1(:,i)
+               do inode = 1, NGNOD2D
+                  node_loc(inode) = glob2loc_nodes(inodes(inode))
+               enddo
+               write(IIN_database) iE_loc, node_loc(1:NGNOD2D)
+            enddo
+
+            do i=1, faults(iflt)%nspec
+               iE = faults(iflt)%ispec2(i)
+               if (ipart(iE) /= myrank +1) cycle
+               iE_loc=glob2loc_elmnt(iE)
+
+               inodes = faults(iflt)%inodes2(:,i)
+               do inode = 1, NGNOD2D
+                  node_loc(inode) = glob2loc_nodes(inodes(inode))
+               enddo
+               write(IIN_database) iE_loc, node_loc(1:NGNOD2D)
+            enddo
+        enddo
+        
+  end subroutine write_fault_database_mpi
+
+
+  subroutine bcast_faults_mpi(myrank)
+
+  integer, intent(in)  :: myrank
+  integer :: nbfaults  , iflt, ier, nspec
+  
+  if(myrank == 0)  then
+      nbfaults = size(faults)
+  endif
+  call bcast_all_singlei(nbfaults) 
+  if(myrank /= 0 ) then
+      allocate(faults(nbfaults),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 78')
+  endif
+
+  do iflt = 1 , nbfaults
+     call bcast_all_singlei(faults(iflt)%nspec)
+     nspec = faults(iflt)%nspec
+     if(myrank /= 0 ) then
+        allocate(faults(iflt)%ispec1(nspec),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 78')
+        allocate(faults(iflt)%ispec2(nspec),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 78')
+        allocate(faults(iflt)%inodes1(NGNOD2D,nspec),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 78')
+        allocate(faults(iflt)%inodes2(NGNOD2D,nspec),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 78')
+     endif
+     call bcast_all_i(faults(iflt)%ispec1,  nspec)
+     call bcast_all_i(faults(iflt)%ispec2,  nspec)
+     call bcast_all_i(faults(iflt)%inodes1, nspec*NGNOD2D)
+     call bcast_all_i(faults(iflt)%inodes2, nspec*NGNOD2D)
+  enddo
+
+  end subroutine bcast_faults_mpi
 
 end module fault_scotch
 

@@ -29,6 +29,7 @@ module module_database
 
   use constants, only: NDIM
   use shared_parameters, only: NGNOD, NGNOD2D, LOCAL_PATH, MSL => MAX_STRING_LEN
+  use fault_scotch
 
   integer                                     :: nE_loc
   integer, dimension(:),  allocatable         :: loc2glob_elmnt
@@ -76,8 +77,8 @@ contains
 ! write database for xgenerate_database
 !
 !----------------------------------
-
-  subroutine write_database(myrank, ipart, elmnts, nodes_coords, elmnts_glob,  num_modele,  mat_prop, &
+  subroutine write_database(myrank, ipart, elmnts, nodes_coords, nodes_coords_open_loc,&
+           iboundary, nspec_part_boundaries, elmnts_part_boundaries,  num_modele,  mat_prop, &
        undef_mat_prop, count_def_mat, count_undef_mat, ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, &
        ibelm_bottom, ibelm_top, nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, nodes_ibelm_ymax, &
        nodes_ibelm_bottom, nodes_ibelm_top, cpml_to_spec, cpml_regions, is_cpml, ibelm_moho, nodes_ibelm_moho, &
@@ -88,14 +89,15 @@ contains
 
     integer,                                              intent(in)  :: myrank
     integer,                                              intent(in)  :: nnodes, nE
+    integer,                                              intent(in)  :: nspec_part_boundaries
     integer,                                              intent(in)  :: count_def_mat
     integer,                                              intent(in)  :: count_undef_mat
     integer,                                              intent(in)  :: nspec2D_xmin, nspec2D_xmax
     integer,                                              intent(in)  :: nspec2D_ymin, nspec2D_ymax
     integer,                                              intent(in)  :: nspec2D_bottom, nspec2D_top
     integer,                                              intent(in)  :: nspec_cpml, nspec2D_moho
-    integer,            dimension(nE),                    intent(in)  :: ipart
-    integer,            dimension(NGNOD,nE),              intent(in)  :: elmnts_glob
+    integer,            dimension(nE),                    intent(in)  :: ipart, iboundary
+    integer,   dimension(NGNOD,nspec_part_boundaries),    intent(in)  :: elmnts_part_boundaries
     integer,            dimension(NGNOD,nE_loc),          intent(in)  :: elmnts
     integer,            dimension(2,nE),                  intent(in)  :: num_modele
     integer,            dimension(nspec2D_xmin),          intent(in)  :: ibelm_xmin
@@ -116,11 +118,12 @@ contains
     double precision,   dimension(17,count_def_mat),      intent(in)  :: mat_prop
     character(len=MSL), dimension(6,count_undef_mat),     intent(in)  :: undef_mat_prop
     double precision,   dimension(NDIM,nnodes),           intent(in)  :: nodes_coords
+    double precision,   dimension(NDIM,nnodes),           intent(in)  :: nodes_coords_open_loc
     logical,            dimension(nE),                    intent(in)  :: is_cpml
 
-    character(len=20)                                                 :: prname
+    character(len=26)                                                 :: prname
     integer                                                           :: i1, i2, in1, in2
-    integer                                                           :: inode, i, k
+    integer                                                           :: inode, i, k, iB
     integer                                                           :: islice, kE
     integer                                                           :: iE, iE_loc, iE_n
     integer                                                           :: nspec_cpml_local
@@ -284,7 +287,8 @@ contains
                 do i1 = 1, NGNOD                    !! loop over edges on my element
                    in1 = elmnts(i1,iE_loc)
                    do i2 = 1, NGNOD                 !! loop over edges on my neighbor element
-                      in2 = elmnts_glob(i2,iE_n)    !! pb on utilise elmnts_glob
+                      iB  = iboundary(iE_n)
+                      in2 = elmnts_part_boundaries(i2,iB)
                       if (in1 == in2 ) then         !! it's common edge
                          k = k + 1
                          liste_comm_nodes(k) = glob2loc_nodes(in1)  !! store it in local numbering
@@ -349,6 +353,33 @@ contains
        enddo
     endif
     close(IIN_database)
+
+     ! write fault database 
+     call bcast_all_singlel(ANY_FAULT)
+     if (ANY_FAULT) then
+        write(prname, "(i6.6,'_Database_fault')") myrank
+        open(unit=16,file=LOCAL_PATH(1:len_trim(LOCAL_PATH))//'/proc'//prname,&
+             status='unknown', action='write', form='unformatted', iostat = ier)
+        if (ier /= 0) then
+          print *,'Error file open:',LOCAL_PATH(1:len_trim(LOCAL_PATH))//'/proc'//prname
+          print *
+          print *,'check if path exists:',LOCAL_PATH(1:len_trim(LOCAL_PATH))
+          stop
+        endif
+
+        call bcast_faults_mpi(myrank)
+ 
+        call write_fault_database_mpi(16, myrank, nE, glob2loc_elmnt, ipart,&
+                         size(glob2loc_nodes), glob2loc_nodes, NGNOD2D, nnodes_loc, nodes_coords)
+
+!    The local locations need to be saved in Database_fault files.
+        write(16) nnodes_loc
+        do inode = 1, nnodes_loc
+           k = inode !loc2glob_nodes(inode)
+           write(16) inode,nodes_coords_open_loc(1,k),nodes_coords_open_loc(2,k),nodes_coords_open_loc(3,k)
+        enddo
+        close(16)
+     endif
 
   end subroutine write_database
 

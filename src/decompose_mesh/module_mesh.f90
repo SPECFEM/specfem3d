@@ -36,9 +36,14 @@ module module_mesh
   integer,               dimension(:,:),        allocatable  :: elmnts, elmnts_glob
   integer,               dimension(:,:),        allocatable  :: mat
 
+  integer                                                    :: nspec_part_boundaries
+  integer,               dimension(:,:),        allocatable  :: elmnts_part_boundaries
+  integer,               dimension(:),          allocatable  :: iboundary
+
   ! vertices
   integer                                                    :: nnodes, nnodes_glob
   double precision,      dimension(:,:),         allocatable :: nodes_coords, nodes_coords_glob
+  double precision,      dimension(:,:),         allocatable :: nodes_coords_open_loc
 
   ! boundaries
   integer                                                    :: ispec2D
@@ -767,9 +772,10 @@ contains
     if (nspec2D_moho > 0) write(27,*) '  nspec2D_moho = ', nspec2D_moho
 
     call read_fault_files(localpath_name)
+
     if (ANY_FAULT) then
-       call save_nodes_coords(nodes_coords,nnodes)
-       call close_faults(nodes_coords,nnodes)
+       call save_nodes_coords(nodes_coords_glob,nnodes_glob)
+       call close_faults(nodes_coords_glob,nnodes_glob)
     endif
 
   end subroutine read_mesh_files
