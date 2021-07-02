@@ -17,7 +17,7 @@ sudo apt-get install -yq --no-install-recommends gfortran g++ openmpi-bin libope
 
 # checks exit code
 if [[ $? -ne 0 ]]; then exit 1; fi
-echo 
+echo
 
 # python script needs numpy
 #sudo apt-get install -qq python-numpy # not working, likely installed on older python version
@@ -47,7 +47,7 @@ echo "gfortran --version"
 gfortran --version
 echo "mpif90 --version"
 mpif90 --version
-echo 
+echo
 
 # MPI
 # github actions uses for Linux virtual machines a 2-core CPU environment
@@ -105,5 +105,5 @@ echo "TERM=xterm" >> $GITHUB_ENV
 echo
 echo "exports:"
 export
-echo 
+echo
 

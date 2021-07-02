@@ -91,7 +91,9 @@ jobs:
         echo "mpif90  --version"
         mpif90 --version
         echo ""
-        export TERM=xterm
+        # exports for xterm output (for make tests)
+        echo "TERM=xterm" >> $GITHUB_ENV
+        echo ""
         echo "exports:"
         export
         echo ""
@@ -102,8 +104,9 @@ jobs:
         echo "modifying external_libs/scotch/src/Makefile.inc"
         cp -v external_libs/scotch/src/Make.inc/Makefile.inc.i686_mac_darwin8 external_libs/scotch/src/Makefile.inc
 
-    - name: make
-      run: make -j2 all
+    # skipping - compilation check done as well in make tests
+    #- name: make
+    #  run: make -j2 all
 
     - name: make tests
       run: make tests
@@ -226,7 +229,7 @@ jobs:
     #  run: make tests
 
   linuxTest_0:
-    name: Test run example 0
+    name: Test run example 0 - make tests
     runs-on: ubuntu-latest
     needs: [linuxCheck]
 
@@ -245,7 +248,7 @@ jobs:
 
 
   linuxTest_1:
-    name: Test run example 1
+    name: Test run example 1 - meshfem3D simple model
     runs-on: ubuntu-latest
     needs: [linuxCheck]
 
@@ -254,18 +257,22 @@ jobs:
 
     - name: Install packages
       run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi  # --enable-vectorization
+      run: ./.github/scripts/run_build.sh
       shell: bash
 
     - name: Run test
       env:
         TESTDIR: EXAMPLES/meshfem3D_examples/simple_model/
-        TESTFLAGS: --with-mpi  # --enable-vectorization
-
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
   linuxTest_2:
-    name: Test run example 2
+    name: Test run example 2 - fault tpv5
     runs-on: ubuntu-latest
     needs: [linuxCheck]
 
@@ -274,18 +281,22 @@ jobs:
 
     - name: Install packages
       run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
       shell: bash
 
     - name: Run test
       env:
         TESTDIR: EXAMPLES/fault_examples/tpv5/
-        TESTFLAGS: --with-mpi
-
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
   linuxTest_3:
-    name: Test run example 3
+    name: Test run example 3 - layered halfspace
     runs-on: ubuntu-latest
     needs: [linuxCheck]
 
@@ -296,11 +307,358 @@ jobs:
       run: ./.github/scripts/run_install.sh
       shell: bash
 
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+        TESTNGLL: 6
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
     - name: Run test
       env:
         TESTDIR: EXAMPLES/layered_halfspace/
-        TESTFLAGS: --with-mpi
-
       run: ./.github/scripts/run_tests.sh
       shell: bash
+
+  linuxTest_4:
+    name: Test run example 4 - small adjoint
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/small_adjoint_multiple_sources/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_5:
+    name: Test run example 5 - socal1D
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/meshfem3D_examples/socal1D/
+        TESTID: 0
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_6:
+    name: Test run example 6 - socal1D 1d_socal
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/meshfem3D_examples/socal1D/
+        TESTID: 1
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_7:
+    name: Test run example 7 - socal1D 1d_prem
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/meshfem3D_examples/socal1D/
+        TESTID: 2
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+
+  linuxTest_8:
+    name: Test run example 8 - socal1D 1d_cascadia
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/meshfem3D_examples/socal1D/
+        TESTID: 3
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_9:
+    name: Test run example 9 - coupling FK
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/small_example_coupling_FK_specfem/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_10:
+    name: Test run example 10 - homogeneous halfspace
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_11:
+    name: Test run example 11 - poroelastic
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/homogeneous_poroelastic/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_12:
+    name: Test run example 12 - PML elastic
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_13:
+    name: Test run example 13 - PML acoustic
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_14:
+    name: Test run example 14 - waterlayered halfspace
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/waterlayered_halfspace/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_15:
+    name: Test run example 15 - tomographic model
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/tomographic_model/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_16:
+    name: Test run example 16 - cavity
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/meshfem3D_examples/cavity/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_17:
+    name: Test run example 17 - sep bathymetry
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/meshfem3D_examples/sep_bathymetry/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
 

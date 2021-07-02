@@ -11,12 +11,11 @@ dir=${TESTDIR}
 
 # info
 echo "work directory: $WORKDIR"
+echo `date`
 echo
 echo "**********************************************************"
 echo
-echo "configuration test: TESTDIR=${TESTDIR} TESTFLAGS=${TESTFLAGS}"
-echo
-echo "    test directory: $dir"
+echo "test directory: $dir"
 echo
 echo "**********************************************************"
 echo
@@ -32,29 +31,7 @@ my_test(){
   rm -rf OUTPUT_FILES/
 }
 
-# configuration
-echo "configuration: default"
-./configure FC=gfortran MPIFC=mpif90 CC=gcc ${TESTFLAGS}
-if [[ $? -ne 0 ]]; then echo "configuration failed:"; cat config.log; echo ""; echo "exiting..."; exit 1; fi
-
-# we output to console
-sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
-
-# layered example w/ NGLL = 6
-if [ "$TESTDIR" == "EXAMPLES/layered_halfspace/" ]; then
-  sed -i "s:NGLLX =.*:NGLLX = 6:" setup/constants.h
-fi
-
-# compilation
-echo
-echo "compilation:"
-make clean; make -j2 all
-if [[ $? -ne 0 ]]; then exit 1; fi
-
 # test example
-echo
-echo "test directory: $dir"
-echo
 cd $dir
 
 # default setup
@@ -76,6 +53,58 @@ fi
 if [ "$TESTDIR" == "EXAMPLES/layered_halfspace/" ]; then
   sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
 fi
+# small adjoint example
+if [ "$TESTDIR" == "EXAMPLES/small_adjoint_multiple_sources/" ]; then
+  # full length
+  sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
+fi
+# socal examples
+if [ "$TESTDIR" == "EXAMPLES/meshfem3D_examples/socal1D/" ]; then
+  # full length
+  sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
+  # model setup
+  if [ "$TESTID" == "1" ]; then
+    # 1D_socal
+    sed -i "s:^MODEL .*:MODEL    = 1d_socal:" DATA/Par_file
+    rm -f REF_SEIS; ln -s REF_SEIS.1d_socal REF_SEIS
+  elif [ "$TESTID" == "2" ]; then
+    # 1D_prem
+    sed -i "s:^MODEL .*:MODEL    = 1d_prem:" DATA/Par_file
+    rm -f REF_SEIS; ln -s REF_SEIS.1d_prem REF_SEIS
+  elif [ "$TESTID" == "3" ]; then
+    # 1D_cascadia
+    sed -i "s:^MODEL .*:MODEL    = 1d_cascadia:" DATA/Par_file
+    rm -f REF_SEIS; ln -s REF_SEIS.1d_cascadia REF_SEIS
+  else
+    # default
+    continue
+  fi
+fi
+# coupling FK
+if [ "$TESTDIR" == "EXAMPLES/small_example_coupling_FK_specfem/" ]; then
+  sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
+fi
+# elastic halfspace, no absorbing
+if [ "$TESTDIR" == "EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/" ]; then
+  sed -i "s:^NSTEP .*:NSTEP    = 600:" DATA/Par_file
+fi
+# waterlayered_halfspace example
+if [ "$TESTDIR" == "EXAMPLES/waterlayered_halfspace/" ]; then
+  sed -i "s:^NSTEP .*:NSTEP    = 600:" DATA/Par_file
+fi
+# tomographic model
+if [ "$TESTDIR" == "EXAMPLES/tomographic_model/" ]; then
+  sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
+fi
+# cavity example
+if [ "$TESTDIR" == "EXAMPLES/meshfem3D_examples/cavity/" ]; then
+  sed -i "s:^NSTEP .*:NSTEP    = 2000:" DATA/Par_file
+fi
+# SEP example
+if [ "$TESTDIR" == "EXAMPLES/meshfem3D_examples/sep_bathymetry/" ]; then
+  sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
+fi
+
 
 # default script
 ./run_this_example.sh

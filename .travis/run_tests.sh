@@ -53,10 +53,11 @@ esac
 # info
 echo $TRAVIS_BUILD_DIR
 echo $WORKDIR
+echo `date`
 echo
 echo "**********************************************************"
 echo
-echo "configuration test: TESTID=${TESTID} TESTDIR=${TESTDIR} TESTCOV=${TESTCOV} TESTFLAGS=${TESTFLAGS}"
+echo "run test: TESTID=${TESTID} TESTDIR=${TESTDIR} TESTCOV=${TESTCOV} "
 echo
 echo "    test directory: $dir"
 echo
@@ -74,53 +75,20 @@ my_test(){
   rm -rf OUTPUT_FILES/
 }
 
-###########################################################
-# configuration & compilation
-###########################################################
-# configuration
-echo 'Configure...' && echo -en 'travis_fold:start:configure\\r'
-echo "configuration:"
-
-if [ "$TESTCOV" == "1" ]; then
-  echo "configuration: for coverage"
-  ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TESTFLAGS} FLAGS_CHECK="-fprofile-arcs -ftest-coverage -O0" CFLAGS="-coverage -O0"
-else
-  if [ "$CUDA" == "true" ]; then
-    echo "configuration: for cuda"
-    ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TESTFLAGS} CUDA_LIB="${CUDA_HOME}/lib64" CUDA_INC="${CUDA_HOME}/include" CUDA_FLAGS="-Xcompiler -Wall,-Wno-unused-function,-Wno-unused-const-variable,-Wfatal-errors -g -G"
-  else
-    echo "configuration: default"
-    ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TESTFLAGS}
-  fi
-fi
-if [[ $? -ne 0 ]]; then echo "configuration failed:"; cat config.log; echo ""; echo "exiting..."; exit 1; fi
-
-# we output to console
-sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
-
-# layered example w/ NGLL = 6
-if [ "$TESTID" == "28" ]; then
-  sed -i "s:NGLLX =.*:NGLLX = 6:" setup/constants.h
-fi
-
-echo -en 'travis_fold:end:configure\\r'
-
-# compilation
-echo 'Build...' && echo -en 'travis_fold:start:build\\r'
-echo "compilation:"
-make clean; make -j2 all
-if [[ $? -ne 0 ]]; then exit 1; fi
-echo -en 'travis_fold:end:build\\r'
 
 ###########################################################
 # test examples
 ###########################################################
+
 # testing internal mesher example (short & quick for all configuration)
 echo 'Tests...' && echo -en 'travis_fold:start:tests\\r'
+
 # runs test
 echo "test directory: $dir"
 echo
+
 cd $dir
+
 if [ "$TESTID" == "4" ]; then
   # runs default tests
   make tests
@@ -152,7 +120,7 @@ else
   fi
   # tpv5 example
   if [ "$TESTDIR" == "16" ]; then
-    sed -i "s:^NSTEP .*:NSTEP    = 1500:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 1200:" DATA/Par_file
   fi
   # socal examples
   if [ "$TESTDIR" == "17" ]; then
@@ -221,7 +189,7 @@ else
   fi
   # coupled with FK
   if [ "$TESTID" == "27" ]; then
-    sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
   fi
   # elastic, no absorbing
   if [ "$TESTID" == "29" ]; then
@@ -252,6 +220,7 @@ else
   if [ "$TESTID" == "16" ]; then
     # kernel script
     ./run_this_example_kernel.sh
+    if [[ $? -ne 0 ]]; then exit 1; fi
 
     # reverse order of seismogram output for comparison
     mv OUTPUT_FILES/DB.X20.MXP.semp tmp
@@ -272,21 +241,25 @@ else
   if [ "$TESTCOV" == "0" ] && [ ! "$TESTID" == "11" ]; then
     my_test
   fi
-
-  cd $WORKDIR
-  echo
-  echo "all good"
-  echo `date`
-  echo
 fi
-if [[ $? -ne 0 ]]; then exit 1; fi
-echo -en 'travis_fold:end:tests\\r'
 
+# checks
+if [[ $? -ne 0 ]]; then exit 1; fi
+
+# simulation done
+echo
+echo "test done: `pwd`"
+echo `date`
+echo
+
+echo -en 'travis_fold:end:tests\\r'
+echo
 
 # code coverage: https://codecov.io/gh/geodynamics/specfem3d/
 # additional runs for coverage
 #
 # note: log becomes too long, trying to fold each test output
+cd $WORKDIR
 
 ##
 ## homogeneous halfspace examples
@@ -793,5 +766,7 @@ fi
 echo -en 'travis_fold:end:coverage.Gmsh-hex27\\r'
 
 # done
-echo "done `pwd`"
+echo "all done"
+echo `date`
+echo
 
