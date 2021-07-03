@@ -808,11 +808,11 @@
       if (ELASTIC_SIMULATION) then
         if (I_should_read_the_database) then
           dsetname = "rmassx"
-          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassx, (/sum(offset_nglob_xy(0:myrank-1))/),if_col)
+          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassx(1:offset_nglob_xy(myrank)), (/sum(offset_nglob_xy(0:myrank-1))/),if_col)
           dsetname = "rmassy"
-          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassy, (/sum(offset_nglob_xy(0:myrank-1))/),if_col)
+          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassy(1:offset_nglob_xy(myrank)), (/sum(offset_nglob_xy(0:myrank-1))/),if_col)
           dsetname = "rmassz"
-          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassz, (/sum(offset_nglob_xy(0:myrank-1))/),if_col)
+          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassz(1:offset_nglob_xy(myrank)), (/sum(offset_nglob_xy(0:myrank-1))/),if_col)
         endif
         if (size(rmassx) > 0) call bcast_all_cr_for_database(rmassx(1), size(rmassx))
         if (size(rmassy) > 0) call bcast_all_cr_for_database(rmassy(1), size(rmassy))
@@ -821,7 +821,7 @@
       if (ACOUSTIC_SIMULATION) then
         if (I_should_read_the_database) then
           dsetname = "rmassz_acoustic"
-          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassz_acoustic, (/sum(offset_nglob_xy(0:myrank-1))/),if_col)
+          call h5_read_dataset_1d_r_collect_hyperslab(h5, dsetname, rmassz_acoustic(1:offset_nglob_xy(myrank)), (/sum(offset_nglob_xy(0:myrank-1))/),if_col)
         endif
         if (size(rmassz_acoustic) > 0) call bcast_all_cr_for_database(rmassz_acoustic(1), size(rmassz_acoustic))
       endif
