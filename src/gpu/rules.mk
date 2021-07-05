@@ -118,7 +118,7 @@ NVCC_CFLAGS := ${NVCC_FLAGS} -x cu
 ifeq ($(CUDA),yes)
   BUILD_VERSION_TXT += Cuda
   SELECTOR_CFLAG += $(FC_DEFINE)USE_CUDA
-	GPU_LINK = $(CUDA_LINK)
+  GPU_LINK = $(CUDA_LINK)
 
   ifeq ($(CUDA5),yes)
     BUILD_VERSION_TXT += (v5)
@@ -144,14 +144,14 @@ ifeq ($(CUDA),yes)
 endif
 
 ## HIP compilation
-HIPCC_CFLAGS := ${HIP_CFLAGS} ${HIP_CFLAG_ENDING}  # adding -x hip depending on platform
+HIPCC_CFLAGS := ${HIP_CFLAGS}      # ${HIP_CFLAG_ENDING} adds -x hip depending on platform
 ifeq ($(HIP), yes)
   BUILD_VERSION_TXT += HIP
   SELECTOR_CFLAG += $(FC_DEFINE)USE_HIP
   ifneq ($(strip $(HIP_GPU_FLAGS)),)
     SELECTOR_CFLAG += -DHIP_GPU_CFLAGS="$(HIP_GPU_FLAGS)"
   endif
-	GPU_LINK = $(HIP_LINK)
+  GPU_LINK = $(HIP_LINK)
 
   # todo: compile hip with nvcc
   #ifeq ($(CUDA),yes)
@@ -174,7 +174,7 @@ BUILD_VERSION_TXT += support
 
 # source kernel files
 ifeq ($(CUDA),yes)
-$O/%.cuda-kernel.o: $(KERNEL_DIR)/%.cu $S/mesh_constants_gpu.h $(KERNEL_DIR)/kernel_proto.cu.h $S/mesh_constants_cuda.h
+$O/%.cuda-kernel.o: $(KERNEL_DIR)/%.cu $S/mesh_constants_gpu.h $S/mesh_constants_cuda.h $(KERNEL_DIR)/kernel_proto.cu.h
 	$(NVCC) -c $< -o $@ $(NVCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG) -include $(word 2,$^)
 
 $(cuda_specfem3D_DEVICE_OBJ): $(subst $(cuda_specfem3D_DEVICE_OBJ), ,$(gpu_specfem3D_OBJECTS)) $(cuda_kernels_OBJS)
@@ -182,7 +182,7 @@ $(cuda_specfem3D_DEVICE_OBJ): $(subst $(cuda_specfem3D_DEVICE_OBJ), ,$(gpu_specf
 endif
 
 ifeq ($(HIP),yes)
-$O/%.hip-kernel.o: $(KERNEL_DIR)/%.cpp $S/mesh_constants_gpu.h $(KERNEL_DIR)/kernel_proto.cu.h $S/mesh_constants_hip.h
+$O/%.hip-kernel.o: $(KERNEL_DIR)/%.cpp $S/mesh_constants_gpu.h $S/mesh_constants_hip.h $(KERNEL_DIR)/kernel_proto.cu.h
 	$(HIPCC) -c $< -o $@ $(HIP_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG) -include $(word 2,$^)
 endif
 
@@ -196,10 +196,10 @@ $O/%.cuda.o: $S/%.c ${SETUP}/config.h $S/mesh_constants_gpu.h $S/mesh_constants_
 
 
 $O/%.hip.o: $S/%.cu ${SETUP}/config.h $S/mesh_constants_gpu.h  $S/mesh_constants_hip.h $S/prepare_constants_cuda.h
-	${HIPCC} -c $< -o $@ $(HIPCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
+	${HIPCC} ${HIP_CFLAG_ENDING} -c $< -o $@ $(HIPCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
 
 $O/%.hip.o: $S/%.c ${SETUP}/config.h $S/mesh_constants_gpu.h  $S/mesh_constants_hip.h
-	${HIPCC} -c $< -o $@ $(HIPCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
+	${HIPCC} ${HIP_CFLAG_ENDING} -c $< -o $@ $(HIPCC_CFLAGS) -I${SETUP} -I$(KERNEL_DIR) $(SELECTOR_CFLAG)
 
 
 # C version

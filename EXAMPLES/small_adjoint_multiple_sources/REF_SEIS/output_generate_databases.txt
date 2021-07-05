@@ -113,15 +113,15 @@
    ...setting up mesh surface
 
    ...determining velocity model
-               10  % time remaining:   2.6909722422715384E-007 s
-               20  % time remaining:   2.3507426872674860E-007 s
-               30  % time remaining:   2.0575327641927292E-007 s
-               40  % time remaining:   1.7707429240726939E-007 s
-               50  % time remaining:   1.4878713459620490E-007 s
-               60  % time remaining:   1.1925314711061223E-007 s
-               70  % time remaining:   8.9246966958853645E-008 s
-               80  % time remaining:   5.9658474836851376E-008 s
-               90  % time remaining:   2.9842423744952404E-008 s
+               10  % time remaining:   3.3761936015434797E-007 s
+               20  % time remaining:   3.0871431557170600E-007 s
+               30  % time remaining:   2.7501285620383007E-007 s
+               40  % time remaining:   2.3758951999934660E-007 s
+               50  % time remaining:   1.9470365692905013E-007 s
+               60  % time remaining:   1.5373022297035268E-007 s
+               70  % time remaining:   1.1591642534403950E-007 s
+               80  % time remaining:   7.7166522565676176E-008 s
+               90  % time remaining:   3.8402081113986241E-008 s
               100  % time remaining:   0.0000000000000000      s
 
    ...detecting acoustic-elastic-poroelastic surfaces
@@ -203,7 +203,7 @@
  *** Minimum period resolved =   0.325520813
  *** Maximum suggested time step =    7.75289582E-03
 
- Elapsed time for checking mesh resolution in seconds =    1.0793000000000497E-002
+ Elapsed time for checking mesh resolution in seconds =    8.6729999999999308E-003
  saving VTK files for Courant number and minimum period
 
 
@@ -227,14 +227,14 @@
  approximate total number of points in entire mesh (with duplicates on MPI edges):               1543076
  approximate total number of DOFs in entire mesh (with duplicates on MPI edges):               4629228
 
- total number of time steps in the solver will be:          500
+ total number of time steps in the solver will be:         1000
 
  using single precision for the calculations
 
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    6.6023550000000002
+ Elapsed time for mesh generation and buffer creation in seconds =    8.4606429999999992
  End of mesh generation
 
  done

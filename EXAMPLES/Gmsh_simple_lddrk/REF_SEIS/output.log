@@ -1,4 +1,4 @@
-running example: Mon Jul  6 18:01:15 CEST 2020
+running example: Fri Jul  2 14:19:06 CEST 2021
 
    setting up example...
 
@@ -54,6 +54,7 @@ running example: Mon Jul  6 18:01:15 CEST 2020
 
    mesh2dual: max_neighbor =           26
 
+
  partitioning type:            1
    running SCOTCH partitioning
 
@@ -83,9 +84,16 @@ running example: Mon Jul  6 18:01:15 CEST 2020
                        (0% being totally balanced, 100% being unbalanced)
 
  partitions: 
-   num =            4
+   num         =            4
+   ninterfaces =            6
+
+   partition            0 has number of MPI interfaces:            3 maximum size         140
+   partition            1 has number of MPI interfaces:            3 maximum size         140
+   partition            2 has number of MPI interfaces:            3 maximum size         140
+   partition            3 has number of MPI interfaces:            3 maximum size         140
 
  Databases files in directory: ./OUTPUT_FILES/DATABASES_MPI
+
 
  finished successfully
 
@@ -99,4 +107,5 @@ running example: Mon Jul  6 18:01:15 CEST 2020
 see results in directory: OUTPUT_FILES/
 
 done
-Mon Jul 6 18:02:07 CEST 2020
+Fri Jul 2 14:20:03 CEST 2021
+
