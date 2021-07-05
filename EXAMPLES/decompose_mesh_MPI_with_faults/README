@@ -1,0 +1,22 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+This example creates a homogeneous halfspace model, using the parallel decomposer.
+It runs by default on 8 MPI processes.
+
+step-by-step tutorial:
+
+1. go to this example directory:
+
+     > cd EXAMPLES/decompose_mesh_MPI/
+
+
+2. run simulation:
+    
+   - run script:
+     > ./run_this_example.sh
+
+
+Compare your seismograms in OUTPUT_FILES/ with the reference ones in directory REF_SEIS/
+
