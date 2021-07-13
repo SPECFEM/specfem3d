@@ -4,11 +4,18 @@
 #       this is using C as a base and installs gfortran in the test environment
 
 language: c
-dist: xenial
-sudo: required
-
+dist: bionic
 os: linux
+
+arch:
+  - ppc64le  # IBM Power
+#  - amd64    # travis default
+#  - arm64    # ARM
+
 compiler: gcc
+
+# deprecated
+#sudo: required
 
 env:
   global:
@@ -35,8 +42,8 @@ env:
     # code coverage: serial/no mpi, using code coverage flags
     - TESTID=3 TESTCOV=1 TESTDIR=5 TESTFLAGS="--without-mpi" CUDA=false
 
-    # default test with make tests
-    - TESTID=4 TESTCOV=0 TESTDIR=0 TESTFLAGS="" CUDA=false
+    # default test with make tests -- offline, checked on github
+    #- TESTID=4 TESTCOV=0 TESTDIR=0 TESTFLAGS="" CUDA=false
 
     # default example (elastic)
     - TESTID=5 TESTCOV=0 TESTDIR=1 TESTFLAGS="" CUDA=false
@@ -44,11 +51,11 @@ env:
     # example 2 (acoustic)
     - TESTID=6 TESTCOV=0 TESTDIR=2 TESTFLAGS="" CUDA=false
 
-    # example 3 (poroelastic)
-    - TESTID=7 TESTCOV=0 TESTDIR=3 TESTFLAGS="--with-mpi" CUDA=false
+    # example 3 (poroelastic) -- offline, checked on github
+    #- TESTID=7 TESTCOV=0 TESTDIR=3 TESTFLAGS="--with-mpi" CUDA=false
 
-    # example 4 (internal mesher)
-    - TESTID=8 TESTCOV=0 TESTDIR=4 TESTFLAGS="--with-mpi" CUDA=false
+    # example 4 (simple model, internal mesher) -- offline, checked on github
+    #- TESTID=8 TESTCOV=0 TESTDIR=4 TESTFLAGS="--with-mpi" CUDA=false
 
     # serial example (acoustic)
     - TESTID=9 TESTCOV=0 TESTDIR=5 TESTFLAGS="--without-mpi" CUDA=false
@@ -59,23 +66,23 @@ env:
     # debug with bounds-check (elastic)
     - TESTID=11 TESTCOV=0 TESTDIR=7 TESTFLAGS="--enable-debug" CUDA=false
 
-    # PML example (acoustic)
-    - TESTID=12 TESTCOV=0 TESTDIR=8 TESTFLAGS="--with-mpi" CUDA=false
+    # PML example (acoustic) -- offline, checked on github
+    #- TESTID=12 TESTCOV=0 TESTDIR=8 TESTFLAGS="--with-mpi" CUDA=false
 
-    # PML example (elastic)
-    - TESTID=13 TESTCOV=0 TESTDIR=9 TESTFLAGS="--with-mpi" CUDA=false
+    # PML example (elastic) -- offline, checked on github
+    #- TESTID=13 TESTCOV=0 TESTDIR=9 TESTFLAGS="--with-mpi" CUDA=false
 
     # noise example
     - TESTID=14 TESTCOV=0 TESTDIR=10 TESTFLAGS="--with-mpi" CUDA=false
 
-    # tomographic model example
-    - TESTID=15 TESTCOV=0 TESTDIR=11 TESTFLAGS="--with-mpi" CUDA=false
+    # tomographic model example -- offline, checked on github
+    #- TESTID=15 TESTCOV=0 TESTDIR=11 TESTFLAGS="--with-mpi" CUDA=false
 
     # acoustic kernel example
     - TESTID=16 TESTCOV=0 TESTDIR=12 TESTFLAGS="--with-mpi" CUDA=false
 
-    # waterlayered example
-    - TESTID=17 TESTCOV=0 TESTDIR=13 TESTFLAGS="--with-mpi" CUDA=false
+    # waterlayered example -- offline, checked on github
+    #- TESTID=17 TESTCOV=0 TESTDIR=13 TESTFLAGS="--with-mpi" CUDA=false
 
     # elastic example, hex27, compilation w/ CUDA and MPI
     - TESTID=18 TESTCOV=0 TESTDIR=14 TESTFLAGS="--with-cuda=cuda5 --with-mpi" CUDA=true
@@ -83,35 +90,35 @@ env:
     # acoustic example, compilation w/ CUDA
     - TESTID=19 TESTCOV=0 TESTDIR=15 TESTFLAGS="--with-cuda=cuda5 --without-mpi" CUDA=true
 
-    # fault example tpv5
-    - TESTID=20 TESTCOV=0 TESTDIR=16 TESTFLAGS="--with-mpi" CUDA=false
+    # fault example tpv5 -- offline, checked on github
+    #- TESTID=20 TESTCOV=0 TESTDIR=16 TESTFLAGS="--with-mpi" CUDA=false
 
-    # socal example
-    - TESTID=21 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
+    # socal example -- offline, checked on github
+    #- TESTID=21 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
 
-    # socal example w/ 1d_socal
-    - TESTID=22 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
+    # socal example w/ 1d_socal -- offline, checked on github
+    #- TESTID=22 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
 
-    # socal example w/ 1d_prem
-    - TESTID=23 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
+    # socal example w/ 1d_prem -- offline, checked on github
+    #- TESTID=23 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
 
-    # socal example w/ 1d_cascadia
-    - TESTID=24 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
+    # socal example w/ 1d_cascadia -- offline, checked on github
+    #- TESTID=24 TESTCOV=0 TESTDIR=17 TESTFLAGS="--with-mpi" CUDA=false
 
-    # cavity example
-    - TESTID=25 TESTCOV=0 TESTDIR=18 TESTFLAGS="--with-mpi" CUDA=false
+    # cavity example -- offline, checked on github
+    #- TESTID=25 TESTCOV=0 TESTDIR=18 TESTFLAGS="--with-mpi" CUDA=false
 
-    # SEP example
-    - TESTID=26 TESTCOV=0 TESTDIR=19 TESTFLAGS="--with-mpi" CUDA=false
+    # SEP example -- offline, checked on github
+    #- TESTID=26 TESTCOV=0 TESTDIR=19 TESTFLAGS="--with-mpi" CUDA=false
 
-    # couple with FK
-    - TESTID=27 TESTCOV=0 TESTDIR=20 TESTFLAGS="--with-mpi" CUDA=false
+    # couple with FK -- offline, checked on github
+    #- TESTID=27 TESTCOV=0 TESTDIR=20 TESTFLAGS="--with-mpi" CUDA=false
 
-    # layered model w/ point force, NGLL = 6
-    - TESTID=28 TESTCOV=0 TESTDIR=21 TESTFLAGS="--with-mpi" CUDA=false
+    # layered model w/ point force, NGLL = 6 -- offline, checked on github
+    #- TESTID=28 TESTCOV=0 TESTDIR=21 TESTFLAGS="--with-mpi" CUDA=false
 
-    # elastic halfspace, no absorbing
-    - TESTID=29 TESTCOV=0 TESTDIR=22 TESTFLAGS="--with-mpi" CUDA=false
+    # elastic halfspace, no absorbing -- offline, checked on github
+    #- TESTID=29 TESTCOV=0 TESTDIR=22 TESTFLAGS="--with-mpi" CUDA=false
 
     # gmsh example w/ LDDRK
     - TESTID=30 TESTCOV=0 TESTDIR=23 TESTFLAGS="--with-mpi" CUDA=false
@@ -122,14 +129,24 @@ env:
     # regular element mesh
     - TESTID=32 TESTCOV=0 TESTDIR=25 TESTFLAGS="--enable-vectorization" CUDA=false
 
-    # adjoint simulation
-    - TESTID=33 TESTCOV=0 TESTDIR=26 TESTFLAGS="--with-mpi" CUDA=false
+    # adjoint simulation -- offline, checked on github
+    #- TESTID=33 TESTCOV=0 TESTDIR=26 TESTFLAGS="--with-mpi" CUDA=false
 
     # gmsh example w/ hex27
     - TESTID=34 TESTCOV=0 TESTDIR=27 TESTFLAGS="--without-mpi" CUDA=false
 
     # waterlayered_poroelastic example
     - TESTID=35 TESTCOV=0 TESTDIR=28 TESTFLAGS="--enable-vectorization --with-mpi" CUDA=false
+
+
+# additional ARM tests
+jobs:
+  include:
+  - arch: arm64
+    env: TESTID=5 TESTCOV=0 TESTDIR=1 TESTFLAGS="" CUDA=false
+  - arch: arm64
+    env: TESTID=6 TESTCOV=0 TESTDIR=2 TESTFLAGS="" CUDA=false
+
 
 before_install:
   # informations on git
@@ -143,6 +160,57 @@ before_install:
     echo "request: Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"
     echo "commit : Commit($TRAVIS_COMMIT) Range($TRAVIS_COMMIT_RANGE)"
 
+  # checks file changes
+  - |
+    echo "check file changes"
+    if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then
+      # Push
+      echo "Push request:"
+      COMMIT_RANGE="$(echo ${TRAVIS_COMMIT_RANGE} | cut -d '.' -f 1,4 --output-delimiter '..')"
+      #DIFF="$(git diff --name-only ${COMMIT_RANGE} --)"
+      DIFF=$(git diff --name-only ${TRAVIS_COMMIT_RANGE})
+    else
+      # PR build
+      echo "Pull request:"
+      DIFF=$(git diff --name-only ${TRAVIS_BRANCH}..HEAD --)
+    fi
+    echo "$DIFF"
+    # Escape newlines (replace \n with %0A)
+    #NEWDIFF=($( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' ))
+    #echo "$NEWDIFF"
+    #DIFF=$NEWDIFF
+    RUN_CHECKS=0
+    # Loop by lines
+    while read path; do
+      # Set $directory to substring before /
+      directory="$( echo $path | cut -d'/' -f1 -s )"
+      echo "file: $path  - directory: $directory"
+      if [ -z "$directory" ]; then
+        # root directory
+        RUN_CHECKS=1
+      elif [ "$directory" == src ]; then
+        # src/ directory
+        RUN_CHECKS=1
+      elif [ "$directory" == setup ]; then
+        # setup/ directory
+        RUN_CHECKS=1
+      elif [ "$directory" == EXAMPLES ]; then
+        # EXAMPLES/ directory
+        RUN_CHECKS=1
+      elif [ "$directory" == tests ]; then
+        # tests/ directory
+        RUN_CHECKS=1
+      elif [ "$directory" == .travis ]; then
+        # .travis/ directory
+        RUN_CHECKS=1
+      fi
+    done <<< "$DIFF"
+    echo
+    echo "run checks: ${RUN_CHECKS}"
+    echo
+    export RUN_CHECKS=${RUN_CHECKS}
+    #abort: if [[ ${RUN_CHECKS} -eq 0 ]]; then echo "nothing to check, exiting..."; exit 1; fi
+
   # recommended for MPI projects to unset CC: see https://docs.travis-ci.com/user/languages/c
   #- test -n $CC && unset CC
 
@@ -155,10 +223,14 @@ before_install:
 
 
 install:
+  # installs compilers
   - bash .travis/run_install.sh
 
-
 script:
+  # builds executables
+  - bash .travis/run_build.sh
+
+  # runs test examples
   - bash .travis/run_tests.sh
 
 

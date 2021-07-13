@@ -68,7 +68,7 @@
      NGNOD   =            8
      NGNOD2D =            4
 
-     master process setup:
+     main process setup:
      nspec           =           80
 
      separating regular/irregular element shapes
@@ -88,37 +88,41 @@
    ...setting up jacobian
 
    ...indexing global points
-     creating ibool indexing     : x min/max =    0.00000000     /   4999.72900
-     creating indirect addressing: nglob =         6137
-     creating unique point locations
+      creating ibool indexing     : x min/max =    0.00000000     /   10000.0000
+      creating indirect addressing: nglob =         6137
+      creating unique point locations
 
    ...preparing MPI interfaces
+      number of interfaces        :            3
+      creating MPI indexing       : x min/max =    0.00000000     /   10000.0000
+                                    tolerance =    9.9999999999999995E-007
+
       total MPI interface points:         3196
       total assembled MPI interface points:        3060
 
    ...setting up absorbing boundaries
-      boundary xmin          20
-      boundary xmax           0
-      boundary ymin          16
-      boundary ymax           0
-      boundary bottom          20
-      boundary top          20
+      boundary xmin   :          20
+      boundary xmax   :           0
+      boundary ymin   :          16
+      boundary ymax   :           0
+      boundary bottom :          20
+      boundary top    :          20
       absorbing boundary:
       total number of free faces =           80
-      total number of faces =          224
+      total number of faces      =          224
 
    ...setting up mesh surface
 
    ...determining velocity model
-               10  % time remaining:   2.2359374999999918E-005 s
-               20  % time remaining:   2.0000000000000052E-005 s
-               30  % time remaining:   1.7135416083037786E-005 s
-               40  % time remaining:   1.4554687500000082E-005 s
-               50  % time remaining:   1.2171875000000030E-005 s
-               60  % time remaining:   9.7604169575497551E-006 s
-               70  % time remaining:   7.2790179294533873E-006 s
-               80  % time remaining:   4.8281250000000039E-006 s
-               90  % time remaining:   2.4236111291684236E-006 s
+               10  % time remaining:   5.7234374999999668E-005 s
+               20  % time remaining:   3.5499999999999941E-005 s
+               30  % time remaining:   2.6687499091029041E-005 s
+               40  % time remaining:   2.0601562499999949E-005 s
+               50  % time remaining:   1.6046875000000002E-005 s
+               60  % time remaining:   1.2260417032055530E-005 s
+               70  % time remaining:   8.8727679452858847E-006 s
+               80  % time remaining:   5.7460937500000003E-006 s
+               90  % time remaining:   2.8229166876990391E-006 s
               100  % time remaining:   0.0000000000000000      s
 
    ...detecting acoustic-elastic-poroelastic surfaces
@@ -145,6 +149,8 @@
    ...creating mass matrix
 
    ...saving databases
+      using binary file format
+      database file (for rank 0): ./OUTPUT_FILES/DATABASES_MPI/proc000000_external_mesh.bin
       saving mesh files for AVS, OpenDX, Paraview
       saving additonal mesh files with surface/coupling points
 
@@ -198,7 +204,7 @@
  *** Minimum period resolved =    1.94638002
  *** Maximum suggested time step =    7.41521548E-03
 
- Elapsed time for checking mesh resolution in seconds =    1.7300000000000648E-004
+ Elapsed time for checking mesh resolution in seconds =    6.3300000000002243E-004
  saving VTK files for Courant number and minimum period
 
 
@@ -230,6 +236,9 @@
  min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is   -190.30737600000000          190.34635299999999
 
 
+ done mesh setup
+
+
  Repartition of elements:
  -----------------------
 
@@ -239,8 +248,8 @@
  total number of points in mesh slice 0:         6137
 
  total number of elements in entire mesh:          320
- approximate total number of points in entire mesh (with duplicates on MPI edges):    24548.000000000000
- approximate total number of DOFs in entire mesh (with duplicates on MPI edges):    73644.000000000000
+ approximate total number of points in entire mesh (with duplicates on MPI edges):                 24548
+ approximate total number of DOFs in entire mesh (with duplicates on MPI edges):                 73644
 
  total number of time steps in the solver will be:         4000
 
@@ -249,7 +258,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =   0.15235499999999999
+ Elapsed time for mesh generation and buffer creation in seconds =   0.14972199999999999
  End of mesh generation
 
  done

@@ -3,6 +3,16 @@
 # getting updated environment (CUDA_HOME, PATH, ..)
 if [ -f $HOME/.tmprc ]; then source $HOME/.tmprc; fi
 
+# checks if anything to do
+echo "run checks: $RUN_CHECKS"
+if [ "$RUN_CHECKS" == "0" ]; then
+  echo "  no run checks required, exiting..."
+  exit 0
+else
+  echo "  run checks required, start testing..."
+fi
+echo
+
 ###########################################################
 # setup
 ###########################################################
@@ -43,10 +53,11 @@ esac
 # info
 echo $TRAVIS_BUILD_DIR
 echo $WORKDIR
+echo `date`
 echo
 echo "**********************************************************"
 echo
-echo "configuration test: TESTID=${TESTID} TESTDIR=${TESTDIR} TESTCOV=${TESTCOV} TESTFLAGS=${TESTFLAGS}"
+echo "run test: TESTID=${TESTID} TESTDIR=${TESTDIR} TESTCOV=${TESTCOV} "
 echo
 echo "    test directory: $dir"
 echo
@@ -59,58 +70,25 @@ my_test(){
   ln -s $WORKDIR/utils/compare_seismogram_correlations.py
   ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/
   if [[ $? -ne 0 ]]; then exit 1; fi
-  ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/ | grep min/max | cut -d \| -f 3 | awk '{print "correlation:",$1; if ($1 < 0.9 ){print $1,"failed"; exit 1;}else{ print $1,"good"; exit 0;}}'
+  ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/ | grep min/max | cut -d \| -f 3 | awk '{print "correlation:",$1; if ($1 < 0.999 ){print $1,"failed"; exit 1;}else{ print $1,"good"; exit 0;}}'
   if [[ $? -ne 0 ]]; then exit 1; fi
   rm -rf OUTPUT_FILES/
 }
 
-###########################################################
-# configuration & compilation
-###########################################################
-# configuration
-echo 'Configure...' && echo -en 'travis_fold:start:configure\\r'
-echo "configuration:"
-
-if [ "$TESTCOV" == "1" ]; then
-  echo "configuration: for coverage"
-  ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TESTFLAGS} FLAGS_CHECK="-fprofile-arcs -ftest-coverage -O0" CFLAGS="-coverage -O0"
-else
-  if [ "$CUDA" == "true" ]; then
-    echo "configuration: for cuda"
-    ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TESTFLAGS} CUDA_LIB="${CUDA_HOME}/lib64" CUDA_INC="${CUDA_HOME}/include" CUDA_FLAGS="-Xcompiler -Wall,-Wno-unused-function,-Wno-unused-const-variable,-Wfatal-errors -g -G"
-  else
-    echo "configuration: default"
-    ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TESTFLAGS}
-  fi
-fi
-if [[ $? -ne 0 ]]; then exit 1; fi
-
-# we output to console
-sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
-
-# layered example w/ NGLL = 6
-if [ "$TESTID" == "28" ]; then
-  sed -i "s:NGLLX =.*:NGLLX = 6:" setup/constants.h
-fi
-
-echo -en 'travis_fold:end:configure\\r'
-
-# compilation
-echo 'Build...' && echo -en 'travis_fold:start:build\\r'
-echo "compilation:"
-make clean; make -j2 all
-if [[ $? -ne 0 ]]; then exit 1; fi
-echo -en 'travis_fold:end:build\\r'
 
 ###########################################################
 # test examples
 ###########################################################
+
 # testing internal mesher example (short & quick for all configuration)
 echo 'Tests...' && echo -en 'travis_fold:start:tests\\r'
+
 # runs test
 echo "test directory: $dir"
 echo
+
 cd $dir
+
 if [ "$TESTID" == "4" ]; then
   # runs default tests
   make tests
@@ -125,7 +103,8 @@ else
   sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
   # shortens output interval to avoid timeouts
   sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 50:" DATA/Par_file
-  #
+
+  # more specific directory setups
   # acoustic examples
   if [ "$TESTDIR" == "2" ]; then
     sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
@@ -135,10 +114,32 @@ else
     sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
     sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 20:" DATA/Par_file
   fi
-  #
+  # waterlayered_halfspace example
+  if [ "$TESTDIR" == "13" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 600:" DATA/Par_file
+  fi
+  # tpv5 example
+  if [ "$TESTDIR" == "16" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 1200:" DATA/Par_file
+  fi
+  # socal examples
+  if [ "$TESTDIR" == "17" ]; then
+    sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
+  fi
+  # SEP example
+  if [ "$TESTDIR" == "19" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
+  fi
+  # small_adjoint example
+  if [ "$TESTDIR" == "26" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
+  fi
+
+  # more specific test setups
   # simple mesh example
   if [ "$TESTID" == "8" ]; then
-    sed -i "s:^NSTEP .*:NSTEP    = 400:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 800:" DATA/Par_file
   fi
   # debug+double precision example (acoustic)
   if [ "$TESTID" == "10" ]; then
@@ -164,13 +165,7 @@ else
   # acoustic example w/ CUDA compilation
   if [ "$TESTID" == "19" ]; then
     sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
-    sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
-  fi
-  #
-  # socal examples
-  if [ "$TESTDIR" == "17" ]; then
-    sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
-    sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
   fi
   # socal example w/ 1d_socal
   if [ "$TESTID" == "22" ]; then
@@ -192,13 +187,9 @@ else
   if [ "$TESTID" == "25" ]; then
     sed -i "s:^NSTEP .*:NSTEP    = 2000:" DATA/Par_file
   fi
-  # SEP example
-  if [ "$TESTID" == "26" ]; then
-    sed -i "s:^NSTEP .*:NSTEP    = 600:" DATA/Par_file
-  fi
   # coupled with FK
   if [ "$TESTID" == "27" ]; then
-    sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
   fi
   # elastic, no absorbing
   if [ "$TESTID" == "29" ]; then
@@ -229,6 +220,7 @@ else
   if [ "$TESTID" == "16" ]; then
     # kernel script
     ./run_this_example_kernel.sh
+    if [[ $? -ne 0 ]]; then exit 1; fi
 
     # reverse order of seismogram output for comparison
     mv OUTPUT_FILES/DB.X20.MXP.semp tmp
@@ -239,20 +231,35 @@ else
   fi
   if [[ $? -ne 0 ]]; then exit 1; fi
 
+  # simulation done
+  echo
+  echo "simulation done: `pwd`"
+  echo `date`
+  echo
+
   # seismogram comparison
   if [ "$TESTCOV" == "0" ] && [ ! "$TESTID" == "11" ]; then
     my_test
   fi
-  cd $WORKDIR
 fi
-if [[ $? -ne 0 ]]; then exit 1; fi
-echo -en 'travis_fold:end:tests\\r'
 
+# checks
+if [[ $? -ne 0 ]]; then exit 1; fi
+
+# simulation done
+echo
+echo "test done: `pwd`"
+echo `date`
+echo
+
+echo -en 'travis_fold:end:tests\\r'
+echo
 
 # code coverage: https://codecov.io/gh/geodynamics/specfem3d/
 # additional runs for coverage
 #
 # note: log becomes too long, trying to fold each test output
+cd $WORKDIR
 
 ##
 ## homogeneous halfspace examples
@@ -759,5 +766,7 @@ fi
 echo -en 'travis_fold:end:coverage.Gmsh-hex27\\r'
 
 # done
-echo "done `pwd`"
+echo "all done"
+echo `date`
+echo
 

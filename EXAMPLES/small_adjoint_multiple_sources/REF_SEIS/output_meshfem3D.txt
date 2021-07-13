@@ -250,7 +250,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =   0.18683500000000000
+ Elapsed time for mesh generation and buffer creation in seconds =   0.15040100000000001
  End of mesh generation
 
  done

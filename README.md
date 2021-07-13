@@ -20,12 +20,15 @@ available in the
 
 ## Development
 
-[![Build Status](https://travis-ci.org/geodynamics/specfem3d.svg?branch=devel)](https://travis-ci.org/geodynamics/specfem3d)
+[![Actions Status](https://github.com/geodynamics/specfem3d/workflows/CI/badge.svg)](https://github.com/geodynamics/specfem3d/actions)
+[![Build Status](https://travis-ci.com/geodynamics/specfem3d.svg?branch=devel)](https://travis-ci.com/geodynamics/specfem3d)
 [![codecov](https://codecov.io/gh/geodynamics/specfem3d/branch/devel/graph/badge.svg)](https://codecov.io/gh/geodynamics/specfem3d)
 [![Documentation Status](https://readthedocs.org/projects/specfem3d/badge/?version=latest)](https://specfem3d.readthedocs.io/en/latest/?badge=latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 
-* Travis tests: [travis-ci specfem3d](https://travis-ci.org/geodynamics/specfem3d/builds)
+* Actions tests: [github actions specfem3d](https://github.com/geodynamics/specfem3d/actions)
+
+* Travis tests: [travis-ci specfem3d](https://travis-ci.com/geodynamics/specfem3d/builds)
 
 
 Development is hosted on GitHub in the

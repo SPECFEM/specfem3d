@@ -26,7 +26,7 @@ SUPPRESS_UTM_PROJECTION         = .true.
 NPROC                           = 4
 
 # time step parameters
-NSTEP                           = 500
+NSTEP                           = 1000
 DT                              = 0.008
 
 # set to true to use local-time stepping (LTS)

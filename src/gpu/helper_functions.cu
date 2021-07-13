@@ -161,25 +161,23 @@ void gpuSynchronize() {
 /* ----------------------------------------------------------------------------------------------- */
 
 void gpuStreamCreate(gpu_stream* stream_ptr) {
-  // synchronizes stream
-
+  // creates stream
 #ifdef USE_CUDA
-      if (run_cuda){ cudaStreamCreate(stream_ptr); }
+  if (run_cuda){ cudaStreamCreate(stream_ptr); }
 #endif
 #ifdef USE_HIP
-      if (run_hip){ hipStreamCreate(stream_ptr); }
+  if (run_hip){ hipStreamCreate(stream_ptr); }
 #endif
 }
 
 
 void gpuStreamSynchronize(gpu_stream stream) {
   // synchronizes stream
-
 #ifdef USE_CUDA
-      if (run_cuda){ cudaStreamSynchronize(stream); }
+  if (run_cuda){ cudaStreamSynchronize(stream); }
 #endif
 #ifdef USE_HIP
-      if (run_hip){ hipStreamSynchronize(stream); }
+  if (run_hip){ hipStreamSynchronize(stream); }
 #endif
 }
 
