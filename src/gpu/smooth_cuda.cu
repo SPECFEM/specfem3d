@@ -61,9 +61,9 @@ void FC_FUNC_(prepare_smooth_gpu,
   // sets fortran pointer
   *Container = (long)sp;
 
-  gpuCopy_todevice_realw((void**)&sp->x_me,xstore_me, NGLL3*(*nspec_me));
-  gpuCopy_todevice_realw((void**)&sp->y_me,ystore_me, NGLL3*(*nspec_me));
-  gpuCopy_todevice_realw((void**)&sp->z_me,zstore_me, NGLL3*(*nspec_me));
+  gpuCreateCopy_todevice_realw((void**)&sp->x_me,xstore_me, NGLL3*(*nspec_me));
+  gpuCreateCopy_todevice_realw((void**)&sp->y_me,ystore_me, NGLL3*(*nspec_me));
+  gpuCreateCopy_todevice_realw((void**)&sp->z_me,zstore_me, NGLL3*(*nspec_me));
 
   // sets variable values
   realw sigma_h2_inv = 1.0f / (*sigma_h2);
@@ -117,11 +117,11 @@ void FC_FUNC_(compute_smooth_gpu,
   realw * d_data_other;
   realw * d_integ_factor;
 
-  gpuCopy_todevice_realw((void**)&x_other,xstore_other,NGLL3 * nspec_other);
-  gpuCopy_todevice_realw((void**)&y_other,ystore_other,NGLL3 * nspec_other);
-  gpuCopy_todevice_realw((void**)&z_other,zstore_other,NGLL3 * nspec_other);
+  gpuCreateCopy_todevice_realw((void**)&x_other,xstore_other,NGLL3 * nspec_other);
+  gpuCreateCopy_todevice_realw((void**)&y_other,ystore_other,NGLL3 * nspec_other);
+  gpuCreateCopy_todevice_realw((void**)&z_other,zstore_other,NGLL3 * nspec_other);
 
-  gpuCopy_todevice_realw((void**)&d_integ_factor,integ_factor,NGLL3 * nspec_other);
+  gpuCreateCopy_todevice_realw((void**)&d_integ_factor,integ_factor,NGLL3 * nspec_other);
 
   //dim3 grid(sp->nspec_me,1);
   //dim3 threads(NGLL3,1,1);
@@ -137,7 +137,7 @@ void FC_FUNC_(compute_smooth_gpu,
     realw * data_p = &data_other[NGLL3 * nspec_other * iker];
 
     // copy single kernel
-    gpuCopy_todevice_realw((void**)&d_data_other,data_p,NGLL3 * nspec_other);
+    gpuCreateCopy_todevice_realw((void**)&d_data_other,data_p,NGLL3 * nspec_other);
 
 #ifdef USE_CUDA
     if (run_cuda){

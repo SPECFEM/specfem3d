@@ -178,7 +178,7 @@ void FC_FUNC_(prepare_constants_device,
   }
   #endif
 
-  gpuCopy_todevice_int((void**)&mp->d_irregular_element_number,h_irregular_element_number,mp->NSPEC_AB);
+  gpuCreateCopy_todevice_int((void**)&mp->d_irregular_element_number,h_irregular_element_number,mp->NSPEC_AB);
   mp->xix_regular = *xix_regular;
   mp->jacobian_regular = *jacobian_regular;
 
@@ -237,8 +237,8 @@ void FC_FUNC_(prepare_constants_device,
   mp->num_interfaces_ext_mesh = *num_interfaces_ext_mesh;
   mp->max_nibool_interfaces_ext_mesh = *max_nibool_interfaces_ext_mesh;
   if (mp->num_interfaces_ext_mesh > 0){
-    gpuCopy_todevice_int((void**)&mp->d_nibool_interfaces_ext_mesh,h_nibool_interfaces_ext_mesh,mp->num_interfaces_ext_mesh);
-    gpuCopy_todevice_int((void**)&mp->d_ibool_interfaces_ext_mesh,h_ibool_interfaces_ext_mesh,
+    gpuCreateCopy_todevice_int((void**)&mp->d_nibool_interfaces_ext_mesh,h_nibool_interfaces_ext_mesh,mp->num_interfaces_ext_mesh);
+    gpuCreateCopy_todevice_int((void**)&mp->d_ibool_interfaces_ext_mesh,h_ibool_interfaces_ext_mesh,
                          (mp->num_interfaces_ext_mesh)*(mp->max_nibool_interfaces_ext_mesh));
   }
 
@@ -251,28 +251,28 @@ void FC_FUNC_(prepare_constants_device,
   }
 
   // inner elements
-  gpuCopy_todevice_int((void**)&mp->d_ispec_is_inner,h_ispec_is_inner,mp->NSPEC_AB);
+  gpuCreateCopy_todevice_int((void**)&mp->d_ispec_is_inner,h_ispec_is_inner,mp->NSPEC_AB);
 
   // absorbing boundaries
   mp->d_num_abs_boundary_faces = *h_num_abs_boundary_faces;
   if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
-    gpuCopy_todevice_int((void**)&mp->d_abs_boundary_ispec,h_abs_boundary_ispec,mp->d_num_abs_boundary_faces);
-    gpuCopy_todevice_int((void**)&mp->d_abs_boundary_ijk,h_abs_boundary_ijk,3*NGLL2*(mp->d_num_abs_boundary_faces));
-    gpuCopy_todevice_realw((void**)&mp->d_abs_boundary_normal,h_abs_boundary_normal,NDIM*NGLL2*(mp->d_num_abs_boundary_faces));
-    gpuCopy_todevice_realw((void**)&mp->d_abs_boundary_jacobian2Dw,h_abs_boundary_jacobian2Dw,NGLL2*(mp->d_num_abs_boundary_faces));
+    gpuCreateCopy_todevice_int((void**)&mp->d_abs_boundary_ispec,h_abs_boundary_ispec,mp->d_num_abs_boundary_faces);
+    gpuCreateCopy_todevice_int((void**)&mp->d_abs_boundary_ijk,h_abs_boundary_ijk,3*NGLL2*(mp->d_num_abs_boundary_faces));
+    gpuCreateCopy_todevice_realw((void**)&mp->d_abs_boundary_normal,h_abs_boundary_normal,NDIM*NGLL2*(mp->d_num_abs_boundary_faces));
+    gpuCreateCopy_todevice_realw((void**)&mp->d_abs_boundary_jacobian2Dw,h_abs_boundary_jacobian2Dw,NGLL2*(mp->d_num_abs_boundary_faces));
   }
 
   // sources
   mp->nsources_local = *nsources_local_f;
   if (mp->simulation_type == 1  || mp->simulation_type == 3){
     // not needed in case of pure adjoint simulations (SIMULATION_TYPE == 2)
-    gpuCopy_todevice_realw((void**)&mp->d_sourcearrays,h_sourcearrays,(*NSOURCES)*NDIM*NGLL3);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_sourcearrays,h_sourcearrays,(*NSOURCES)*NDIM*NGLL3);
 
     // buffer for source time function values
     gpuMalloc_field((void**)&mp->d_stf_pre_compute,(*NSOURCES));
   }
-  gpuCopy_todevice_int((void**)&mp->d_islice_selected_source,h_islice_selected_source,(*NSOURCES));
-  gpuCopy_todevice_int((void**)&mp->d_ispec_selected_source,h_ispec_selected_source,(*NSOURCES));
+  gpuCreateCopy_todevice_int((void**)&mp->d_islice_selected_source,h_islice_selected_source,(*NSOURCES));
+  gpuCreateCopy_todevice_int((void**)&mp->d_ispec_selected_source,h_ispec_selected_source,(*NSOURCES));
 
   // seismogram outputs
   mp->save_seismograms_d = *SAVE_SEISMOGRAMS_DISPLACEMENT;
@@ -295,9 +295,9 @@ void FC_FUNC_(prepare_constants_device,
   //         hxir,.. arrays are interpolators for: - receiver locations (STATIONS) in case SIMULATION_TYPE == 1 or 3,
   //                                               - "adjoint receiver" locations (CMTSOLUTIONs) in case SIMULATION_TYPE == 2
   if (mp->nrec_local > 0){
-    gpuCopy_todevice_realw((void**)&mp->d_hxir,h_xir,NGLLX*mp->nrec_local);
-    gpuCopy_todevice_realw((void**)&mp->d_hetar,h_etar,NGLLY*mp->nrec_local);
-    gpuCopy_todevice_realw((void**)&mp->d_hgammar,h_gammar,NGLLZ*mp->nrec_local);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_hxir,h_xir,NGLLX*mp->nrec_local);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_hetar,h_etar,NGLLY*mp->nrec_local);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_hgammar,h_gammar,NGLLZ*mp->nrec_local);
 
     // seismograms
     int size =  (*nlength_seismogram) * (*nrec_local);
@@ -339,7 +339,7 @@ void FC_FUNC_(prepare_constants_device,
     // checks
     if (irec_loc != mp->nrec_local) exit_on_error("prepare_constants_device: nrec_local not equal for d_nu_rec\n");
     // allocates on device
-    gpuCopy_todevice_realw((void**)&mp->d_nu_rec,h_nu_rec,NDIM * NDIM * mp->nrec_local);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_nu_rec,h_nu_rec,NDIM * NDIM * mp->nrec_local);
     free(h_nu_rec);
 
     // stores only local receiver array
@@ -370,10 +370,10 @@ void FC_FUNC_(prepare_constants_device,
     // checks
     if (irec_loc != mp->nrec_local) exit_on_error("prepare_constants_device: nrec_local not equal for d_ispec_selected_rec_loc\n");
     // allocates on device
-    gpuCopy_todevice_int((void**)&mp->d_ispec_selected_rec_loc,ispec_selected_rec_loc,mp->nrec_local);
+    gpuCreateCopy_todevice_int((void**)&mp->d_ispec_selected_rec_loc,ispec_selected_rec_loc,mp->nrec_local);
     free(ispec_selected_rec_loc);
   }
-  gpuCopy_todevice_int((void**)&mp->d_ispec_selected_rec,h_ispec_selected_rec,(*nrec));
+  gpuCreateCopy_todevice_int((void**)&mp->d_ispec_selected_rec,h_ispec_selected_rec,(*nrec));
 
 #ifdef USE_MESH_COLORING_GPUX
   mp->use_mesh_coloring_gpu = 1;
@@ -390,8 +390,8 @@ void FC_FUNC_(prepare_constants_device,
   mp->nspec_elastic = *nspec_elastic;
 
   // element flags (always needed for seismogram routines)
-  gpuCopy_todevice_int((void**)&mp->d_ispec_is_acoustic,ispec_is_acoustic,mp->NSPEC_AB);
-  gpuCopy_todevice_int((void**)&mp->d_ispec_is_elastic,ispec_is_elastic,mp->NSPEC_AB);
+  gpuCreateCopy_todevice_int((void**)&mp->d_ispec_is_acoustic,ispec_is_acoustic,mp->NSPEC_AB);
+  gpuCreateCopy_todevice_int((void**)&mp->d_ispec_is_elastic,ispec_is_elastic,mp->NSPEC_AB);
 
   // gravity flag initialization
   mp->gravity = 0;
@@ -480,7 +480,7 @@ void FC_FUNC_(prepare_fields_acoustic_device,
   }
 
   // mass matrix
-  gpuCopy_todevice_realw((void**)&mp->d_rmass_acoustic,rmass_acoustic,mp->NGLOB_AB);
+  gpuCreateCopy_todevice_realw((void**)&mp->d_rmass_acoustic,rmass_acoustic,mp->NGLOB_AB);
 
   // density
   // padded array
@@ -498,11 +498,11 @@ void FC_FUNC_(prepare_fields_acoustic_device,
   gpuMemcpy2D_todevice_realw(mp->d_rhostore, NGLL3_PADDED, rhostore, NGLL3, NGLL3, mp->NSPEC_AB);
 
   // non-padded array
-  gpuCopy_todevice_realw((void**)&mp->d_kappastore,kappastore,NGLL3*mp->NSPEC_AB);
+  gpuCreateCopy_todevice_realw((void**)&mp->d_kappastore,kappastore,NGLL3*mp->NSPEC_AB);
 
   // phase elements
   mp->num_phase_ispec_acoustic = *num_phase_ispec_acoustic;
-  gpuCopy_todevice_int((void**)&mp->d_phase_ispec_inner_acoustic,phase_ispec_inner_acoustic,
+  gpuCreateCopy_todevice_int((void**)&mp->d_phase_ispec_inner_acoustic,phase_ispec_inner_acoustic,
                        2*mp->num_phase_ispec_acoustic);
 
   // free surface
@@ -510,8 +510,8 @@ void FC_FUNC_(prepare_fields_acoustic_device,
     // allocate surface arrays
     mp->num_free_surface_faces = *num_free_surface_faces;
     if (mp->num_free_surface_faces > 0){
-      gpuCopy_todevice_int((void**)&mp->d_free_surface_ispec,free_surface_ispec,mp->num_free_surface_faces);
-      gpuCopy_todevice_int((void**)&mp->d_free_surface_ijk,free_surface_ijk,3*NGLL2*mp->num_free_surface_faces);
+      gpuCreateCopy_todevice_int((void**)&mp->d_free_surface_ispec,free_surface_ispec,mp->num_free_surface_faces);
+      gpuCreateCopy_todevice_int((void**)&mp->d_free_surface_ijk,free_surface_ijk,3*NGLL2*mp->num_free_surface_faces);
     }
   }
 
@@ -531,10 +531,10 @@ void FC_FUNC_(prepare_fields_acoustic_device,
 
   // coupling with elastic parts
   if (*ELASTIC_SIMULATION && *num_coupling_ac_el_faces > 0){
-    gpuCopy_todevice_int((void**)&mp->d_coupling_ac_el_ispec,coupling_ac_el_ispec,(*num_coupling_ac_el_faces));
-    gpuCopy_todevice_int((void**)&mp->d_coupling_ac_el_ijk,coupling_ac_el_ijk,3*NGLL2*(*num_coupling_ac_el_faces));
-    gpuCopy_todevice_realw((void**)&mp->d_coupling_ac_el_normal,coupling_ac_el_normal,3*NGLL2*(*num_coupling_ac_el_faces));
-    gpuCopy_todevice_realw((void**)&mp->d_coupling_ac_el_jacobian2Dw,coupling_ac_el_jacobian2Dw,NGLL2*(*num_coupling_ac_el_faces));
+    gpuCreateCopy_todevice_int((void**)&mp->d_coupling_ac_el_ispec,coupling_ac_el_ispec,(*num_coupling_ac_el_faces));
+    gpuCreateCopy_todevice_int((void**)&mp->d_coupling_ac_el_ijk,coupling_ac_el_ijk,3*NGLL2*(*num_coupling_ac_el_faces));
+    gpuCreateCopy_todevice_realw((void**)&mp->d_coupling_ac_el_normal,coupling_ac_el_normal,3*NGLL2*(*num_coupling_ac_el_faces));
+    gpuCreateCopy_todevice_realw((void**)&mp->d_coupling_ac_el_jacobian2Dw,coupling_ac_el_jacobian2Dw,NGLL2*(*num_coupling_ac_el_faces));
   }
 
   // mesh coloring
@@ -761,14 +761,14 @@ void FC_FUNC_(prepare_fields_elastic_device,
   //synchronize_mpi();
 
   // mass matrix
-  gpuCopy_todevice_realw((void**)&mp->d_rmassx,rmassx,mp->NGLOB_AB);
-  gpuCopy_todevice_realw((void**)&mp->d_rmassy,rmassy,mp->NGLOB_AB);
-  gpuCopy_todevice_realw((void**)&mp->d_rmassz,rmassz,mp->NGLOB_AB);
+  gpuCreateCopy_todevice_realw((void**)&mp->d_rmassx,rmassx,mp->NGLOB_AB);
+  gpuCreateCopy_todevice_realw((void**)&mp->d_rmassy,rmassy,mp->NGLOB_AB);
+  gpuCreateCopy_todevice_realw((void**)&mp->d_rmassz,rmassz,mp->NGLOB_AB);
 
   // phase elements
   mp->num_phase_ispec_elastic = *num_phase_ispec_elastic;
 
-  gpuCopy_todevice_int((void**)&mp->d_phase_ispec_inner_elastic,phase_ispec_inner_elastic,2*mp->num_phase_ispec_elastic);
+  gpuCreateCopy_todevice_int((void**)&mp->d_phase_ispec_inner_elastic,phase_ispec_inner_elastic,2*mp->num_phase_ispec_elastic);
 
   // debug
   //synchronize_mpi();
@@ -781,8 +781,8 @@ void FC_FUNC_(prepare_fields_elastic_device,
 
     // non-padded arrays
     // rho_vp, rho_vs non-padded; they are needed for stacey boundary condition
-    gpuCopy_todevice_realw((void**)&mp->d_rho_vp,rho_vp,NGLL3*mp->NSPEC_AB);
-    gpuCopy_todevice_realw((void**)&mp->d_rho_vs,rho_vs,NGLL3*mp->NSPEC_AB);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_rho_vp,rho_vp,NGLL3*mp->NSPEC_AB);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_rho_vs,rho_vs,NGLL3*mp->NSPEC_AB);
 
     // absorb_field array used for file i/o
     if (mp->simulation_type == 3 || ( mp->simulation_type == 1 && mp->save_forward )){
@@ -815,12 +815,12 @@ void FC_FUNC_(prepare_fields_elastic_device,
 
     // strains
     size = NGLL3 * mp->NSPEC_AB; // note: non-aligned; if align, check memcpy below and indexing
-    gpuCopy_todevice_realw((void**)&mp->d_epsilondev_xx,epsilondev_xx,size);
-    gpuCopy_todevice_realw((void**)&mp->d_epsilondev_yy,epsilondev_yy,size);
-    gpuCopy_todevice_realw((void**)&mp->d_epsilondev_xy,epsilondev_xy,size);
-    gpuCopy_todevice_realw((void**)&mp->d_epsilondev_xz,epsilondev_xz,size);
-    gpuCopy_todevice_realw((void**)&mp->d_epsilondev_yz,epsilondev_yz,size);
-    gpuCopy_todevice_realw((void**)&mp->d_epsilondev_trace,epsilondev_trace,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_epsilondev_xx,epsilondev_xx,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_epsilondev_yy,epsilondev_yy,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_epsilondev_xy,epsilondev_xy,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_epsilondev_xz,epsilondev_xz,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_epsilondev_yz,epsilondev_yz,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_epsilondev_trace,epsilondev_trace,size);
   }
 
   // attenuation memory variables
@@ -831,21 +831,21 @@ void FC_FUNC_(prepare_fields_elastic_device,
 
     // memory arrays
     size = *R_size;
-    gpuCopy_todevice_realw((void**)&mp->d_R_xx,R_xx,size);
-    gpuCopy_todevice_realw((void**)&mp->d_R_yy,R_yy,size);
-    gpuCopy_todevice_realw((void**)&mp->d_R_xy,R_xy,size);
-    gpuCopy_todevice_realw((void**)&mp->d_R_xz,R_xz,size);
-    gpuCopy_todevice_realw((void**)&mp->d_R_yz,R_yz,size);
-    gpuCopy_todevice_realw((void**)&mp->d_R_trace,R_trace,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_R_xx,R_xx,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_R_yy,R_yy,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_R_xy,R_xy,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_R_xz,R_xz,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_R_yz,R_yz,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_R_trace,R_trace,size);
 
     // attenuation factors
-    gpuCopy_todevice_realw((void**)&mp->d_factor_common,factor_common,N_SLS*NGLL3*mp->NSPEC_AB);
-    gpuCopy_todevice_realw((void**)&mp->d_factor_common_kappa,factor_common_kappa,N_SLS*NGLL3*mp->NSPEC_AB);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_factor_common,factor_common,N_SLS*NGLL3*mp->NSPEC_AB);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_factor_common_kappa,factor_common_kappa,N_SLS*NGLL3*mp->NSPEC_AB);
 
     // alpha,beta,gamma factors
-    gpuCopy_todevice_realw((void**)&mp->d_alphaval,alphaval,N_SLS);
-    gpuCopy_todevice_realw((void**)&mp->d_betaval,betaval,N_SLS);
-    gpuCopy_todevice_realw((void**)&mp->d_gammaval,gammaval,N_SLS);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_alphaval,alphaval,N_SLS);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_betaval,betaval,N_SLS);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_gammaval,gammaval,N_SLS);
   }
 
   // anisotropy
@@ -942,15 +942,15 @@ void FC_FUNC_(prepare_fields_elastic_device,
     mp->num_free_surface_faces = *num_free_surface_faces;
     if (mp->num_free_surface_faces > 0){
       // mass matrix
-      gpuCopy_todevice_realw((void**)&mp->d_rmass_ocean_load,rmass_ocean_load,mp->NGLOB_AB);
+      gpuCreateCopy_todevice_realw((void**)&mp->d_rmass_ocean_load,rmass_ocean_load,mp->NGLOB_AB);
       // surface normal
-      gpuCopy_todevice_realw((void**)&mp->d_free_surface_normal,free_surface_normal,3*NGLL2*(mp->num_free_surface_faces));
+      gpuCreateCopy_todevice_realw((void**)&mp->d_free_surface_normal,free_surface_normal,3*NGLL2*(mp->num_free_surface_faces));
       // temporary global array: used to synchronize updates on global accel array
       gpuMalloc_int((void**)&(mp->d_updated_dof_ocean_load),mp->NGLOB_AB);
 
       if (*NOISE_TOMOGRAPHY == 0 && *ACOUSTIC_SIMULATION == 0){
-        gpuCopy_todevice_int((void**)&mp->d_free_surface_ispec,free_surface_ispec,mp->num_free_surface_faces);
-        gpuCopy_todevice_int((void**)&mp->d_free_surface_ijk,free_surface_ijk,
+        gpuCreateCopy_todevice_int((void**)&mp->d_free_surface_ispec,free_surface_ispec,mp->num_free_surface_faces);
+        gpuCreateCopy_todevice_int((void**)&mp->d_free_surface_ijk,free_surface_ijk,
                              3*NGLL2*mp->num_free_surface_faces);
       }
     }
@@ -1086,18 +1086,18 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
     size = NGLL3 * mp->NSPEC_AB; // note: non-aligned; if align, check memcpy below and indexing
 
     // solid pressure
-    gpuCopy_todevice_realw((void**)&mp->d_epsilon_trace_over_3,epsilon_trace_over_3,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_epsilon_trace_over_3,epsilon_trace_over_3,size);
 
     // backward solid pressure
-    gpuCopy_todevice_realw((void**)&mp->d_b_epsilon_trace_over_3,b_epsilon_trace_over_3,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilon_trace_over_3,b_epsilon_trace_over_3,size);
 
     // prepares backward strains
-    gpuCopy_todevice_realw((void**)&mp->d_b_epsilondev_xx,b_epsilondev_xx,size);
-    gpuCopy_todevice_realw((void**)&mp->d_b_epsilondev_yy,b_epsilondev_yy,size);
-    gpuCopy_todevice_realw((void**)&mp->d_b_epsilondev_xy,b_epsilondev_xy,size);
-    gpuCopy_todevice_realw((void**)&mp->d_b_epsilondev_xz,b_epsilondev_xz,size);
-    gpuCopy_todevice_realw((void**)&mp->d_b_epsilondev_yz,b_epsilondev_yz,size);
-    gpuCopy_todevice_realw((void**)&mp->d_b_epsilondev_trace,b_epsilondev_trace,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_xx,b_epsilondev_xx,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_yy,b_epsilondev_yy,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_xy,b_epsilondev_xy,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_xz,b_epsilondev_xz,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_yz,b_epsilondev_yz,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_trace,b_epsilondev_trace,size);
   }
 
   // attenuation memory variables
@@ -1108,17 +1108,17 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
 
     size = *R_size;
 
-    gpuCopy_todevice_realw((void**)&mp->d_b_R_xx,b_R_xx,size);
-    gpuCopy_todevice_realw((void**)&mp->d_b_R_yy,b_R_yy,size);
-    gpuCopy_todevice_realw((void**)&mp->d_b_R_xy,b_R_xy,size);
-    gpuCopy_todevice_realw((void**)&mp->d_b_R_xz,b_R_xz,size);
-    gpuCopy_todevice_realw((void**)&mp->d_b_R_yz,b_R_yz,size);
-    gpuCopy_todevice_realw((void**)&mp->d_b_R_trace,b_R_trace,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_R_xx,b_R_xx,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_R_yy,b_R_yy,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_R_xy,b_R_xy,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_R_xz,b_R_xz,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_R_yz,b_R_yz,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_R_trace,b_R_trace,size);
 
     // alpha,beta,gamma factors for backward fields
-    gpuCopy_todevice_realw((void**)&mp->d_b_alphaval,b_alphaval,N_SLS);
-    gpuCopy_todevice_realw((void**)&mp->d_b_betaval,b_betaval,N_SLS);
-    gpuCopy_todevice_realw((void**)&mp->d_b_gammaval,b_gammaval,N_SLS);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_alphaval,b_alphaval,N_SLS);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_betaval,b_betaval,N_SLS);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_b_gammaval,b_gammaval,N_SLS);
   }
 
   // approximate hessian kernel
@@ -1182,9 +1182,9 @@ void FC_FUNC_(prepare_sim2_or_3_const_device,
       // hxir for "adjoint receivers" are at CMT locations (needed for seismograms),
       // hxir_adj for "adjoint sources" are at receiver STATIONS locations (needed to add adjoint sources)
       // sets local adjoint source positions
-      gpuCopy_todevice_realw((void**)&mp->d_hxir_adj,hxir_adjstore,NGLLX*mp->nadj_rec_local);
-      gpuCopy_todevice_realw((void**)&mp->d_hetar_adj,hetar_adjstore,NGLLX*mp->nadj_rec_local);
-      gpuCopy_todevice_realw((void**)&mp->d_hgammar_adj,hgammar_adjstore,NGLLX*mp->nadj_rec_local);
+      gpuCreateCopy_todevice_realw((void**)&mp->d_hxir_adj,hxir_adjstore,NGLLX*mp->nadj_rec_local);
+      gpuCreateCopy_todevice_realw((void**)&mp->d_hetar_adj,hetar_adjstore,NGLLX*mp->nadj_rec_local);
+      gpuCreateCopy_todevice_realw((void**)&mp->d_hgammar_adj,hgammar_adjstore,NGLLX*mp->nadj_rec_local);
 
       // stores only local "adjoint sources" array
       int *ispec_selected_adjrec_loc;
@@ -1199,7 +1199,7 @@ void FC_FUNC_(prepare_sim2_or_3_const_device,
       // checks
       if (iadjrec_loc != mp->nadj_rec_local) exit_on_error("prepare_sim2_or_3_const_device: nadj_rec_local not equal\n");
       // allocates on GPU
-      gpuCopy_todevice_int((void**)&mp->d_ispec_selected_adjrec_loc,ispec_selected_adjrec_loc,mp->nadj_rec_local);
+      gpuCreateCopy_todevice_int((void**)&mp->d_ispec_selected_adjrec_loc,ispec_selected_adjrec_loc,mp->nadj_rec_local);
       free(ispec_selected_adjrec_loc);
 
     }else{
@@ -1244,26 +1244,26 @@ void FC_FUNC_(prepare_fields_noise_device,
   // free surface
   mp->num_free_surface_faces = *num_free_surface_faces;
 
-  gpuCopy_todevice_int((void**)&mp->d_free_surface_ispec,free_surface_ispec,mp->num_free_surface_faces);
-  gpuCopy_todevice_int((void**)&mp->d_free_surface_ijk,free_surface_ijk,NDIM*NGLL2*mp->num_free_surface_faces);
+  gpuCreateCopy_todevice_int((void**)&mp->d_free_surface_ispec,free_surface_ispec,mp->num_free_surface_faces);
+  gpuCreateCopy_todevice_int((void**)&mp->d_free_surface_ijk,free_surface_ijk,NDIM*NGLL2*mp->num_free_surface_faces);
 
   // alloc storage for the surface buffer to be copied
   gpuMalloc_realw((void**) &mp->d_noise_surface_movie,NDIM*NGLL2*mp->num_free_surface_faces);
 
   // prepares noise source array
   if (*NOISE_TOMOGRAPHY == 1){
-    gpuCopy_todevice_realw((void**)&mp->d_noise_sourcearray,noise_sourcearray,NDIM*NGLL3*(*NSTEP));
+    gpuCreateCopy_todevice_realw((void**)&mp->d_noise_sourcearray,noise_sourcearray,NDIM*NGLL3*(*NSTEP));
   }
 
   // prepares noise directions
   if (*NOISE_TOMOGRAPHY > 1){
     int nface_size = NGLL2*(*num_free_surface_faces);
     // allocates memory on GPU
-    gpuCopy_todevice_realw((void**)&mp->d_normal_x_noise,normal_x_noise,nface_size);
-    gpuCopy_todevice_realw((void**)&mp->d_normal_y_noise,normal_y_noise,nface_size);
-    gpuCopy_todevice_realw((void**)&mp->d_normal_z_noise,normal_z_noise,nface_size);
-    gpuCopy_todevice_realw((void**)&mp->d_mask_noise,mask_noise,nface_size);
-    gpuCopy_todevice_realw((void**)&mp->d_free_surface_jacobian2Dw,free_surface_jacobian2Dw,nface_size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_normal_x_noise,normal_x_noise,nface_size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_normal_y_noise,normal_y_noise,nface_size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_normal_z_noise,normal_z_noise,nface_size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_mask_noise,mask_noise,nface_size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_free_surface_jacobian2Dw,free_surface_jacobian2Dw,nface_size);
   }
 
   // prepares noise strength kernel
@@ -1302,8 +1302,8 @@ void FC_FUNC_(prepare_fields_gravity_device,
   mp->gravity = *GRAVITY;
   if (mp->gravity ){
 
-    gpuCopy_todevice_realw((void**)&mp->d_minus_deriv_gravity,minus_deriv_gravity,mp->NGLOB_AB);
-    gpuCopy_todevice_realw((void**)&mp->d_minus_g,minus_g,mp->NGLOB_AB);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_minus_deriv_gravity,minus_deriv_gravity,mp->NGLOB_AB);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_minus_g,minus_g,mp->NGLOB_AB);
 
     if (*ACOUSTIC_SIMULATION == 0){
       // density
@@ -1391,7 +1391,7 @@ void FC_FUNC_(prepare_fault_device,
 
   // allocates & copies damping array onto GPU
   if (mp->use_Kelvin_Voigt_damping ){
-    gpuCopy_todevice_realw((void**)&mp->d_Kelvin_Voigt_eta,Kelvin_Voigt_eta,mp->NSPEC_AB);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_Kelvin_Voigt_eta,Kelvin_Voigt_eta,mp->NSPEC_AB);
   }
 }
 
