@@ -87,7 +87,7 @@ program smooth_sem
   integer :: icounter,num_slices
   integer :: iproc,ncuda_devices
 
-  ! GPU 
+  ! GPU
   integer(kind=8) :: Container
 
   integer,parameter :: MAX_NODE_LIST = 300
@@ -1120,7 +1120,7 @@ contains
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: dist_h_sq,dist_v_sq
-  real(kind=CUSTOM_REAL) :: val,val_gaussian
+  real(kind=CUSTOM_REAL) :: val,val_Gaussian
   real(kind=CUSTOM_REAL) :: x1,y1,z1
 #ifdef FORCE_VECTORIZATION
   integer :: ijk
@@ -1148,13 +1148,13 @@ contains
     ! limits to single precision
     if (val < - 86.0_CUSTOM_REAL) then
       ! smaller than numerical precision: exp(-86) < 1.e-37
-      val_gaussian = 0.0_CUSTOM_REAL
+      val_Gaussian = 0.0_CUSTOM_REAL
     else
-      val_gaussian = exp(val)
+      val_Gaussian = exp(val)
     endif
 
     ! stores values in element array
-    exp_val(INDEX_IJK) = val_gaussian
+    exp_val(INDEX_IJK) = val_Gaussian
 
   ENDDO_LOOP_IJK
 
