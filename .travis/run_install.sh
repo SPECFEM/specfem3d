@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# checks if anything to do
+echo "run checks: $RUN_CHECKS"
+if [ "$RUN_CHECKS" == "0" ]; then
+  echo "  no run checks required, exiting..."
+  exit 0
+else
+  echo "  run checks required, start installing..."
+fi
+echo
+
 # fortran/openMPI compiler
 sudo apt-get install -y gfortran libgomp1 openmpi-bin libopenmpi-dev
 echo

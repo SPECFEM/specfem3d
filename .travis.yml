@@ -167,8 +167,8 @@ before_install:
       # Push
       echo "Push request:"
       COMMIT_RANGE="$(echo ${TRAVIS_COMMIT_RANGE} | cut -d '.' -f 1,4 --output-delimiter '..')"
-      #DIFF="$(git diff --name-only ${COMMIT_RANGE} --)"
-      DIFF=$(git diff --name-only ${TRAVIS_COMMIT_RANGE})
+      DIFF="$(git diff --name-only ${COMMIT_RANGE} --)"
+      #DIFF=$(git diff --name-only ${TRAVIS_COMMIT_RANGE})
     else
       # PR build
       echo "Pull request:"
