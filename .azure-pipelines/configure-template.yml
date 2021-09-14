@@ -1,0 +1,82 @@
+#
+# runs configuration
+#
+
+parameters:
+- name: TESTFLAGS
+  type: string
+  default: ''
+- name: CUDA
+  type: boolean
+  default: false
+- name: BUILD
+  type: boolean
+  default: false
+
+steps:
+- script: |
+    echo ""
+    echo "configuration: default - TESTFLAGS=${{ parameters.TESTFLAGS }}"
+    echo ""
+    echo "compiler versions:"
+    echo "gcc --version"
+    gcc --version
+    echo "gfortran --version"
+    gfortran --version
+    echo "mpif90 --version"
+    mpif90 --version
+    echo ""
+    # configuration
+    ./configure FC=gfortran MPIFC=mpif90 CC=gcc ${{ parameters.TESTFLAGS }}
+    if [[ $? -ne 0 ]]; then echo "configuration failed:"; cat config.log; echo ""; echo "exiting..."; exit 1; fi
+    # we output to console
+    sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
+    if [[ $? -ne 0 ]]; then exit 1; fi
+
+  condition: eq('${{ parameters.CUDA }}', false)
+  displayName: 'Run Configure Default'
+
+- script: |
+    # getting updated environment (CUDA_HOME, PATH, ..)
+    if [ -f $HOME/.tmprc ]; then source $HOME/.tmprc; fi
+    echo ""
+    echo "configuration: CUDA    - TESTFLAGS=${{ parameters.TESTFLAGS }} CUDA_HOME=${CUDA_HOME}"
+    echo ""
+    echo "compiler versions:"
+    echo "gcc --version"
+    gcc --version
+    echo "gfortran --version"
+    gfortran --version
+    echo "nvcc --version"
+    nvcc --version
+    echo ""
+    # configuration
+    ./configure FC=gfortran MPIFC=mpif90 CC=gcc ${{ parameters.TESTFLAGS }} CUDA_LIB="${CUDA_HOME}/lib64" CUDA_INC="${CUDA_HOME}/include" CUDA_FLAGS="-Xcompiler -Wall,-Wno-unused-function,-Wno-unused-const-variable,-Wfatal-errors -g -G"
+    if [[ $? -ne 0 ]]; then echo "configuration failed:"; cat config.log; echo ""; echo "exiting..."; exit 1; fi
+    # we output to console
+    sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
+    if [[ $? -ne 0 ]]; then exit 1; fi
+
+  condition: eq('${{ parameters.CUDA }}', true)
+  displayName: 'Run Configure CUDA'
+
+- script: |
+    # getting updated environment (CUDA_HOME, PATH, ..)
+    if [ -f $HOME/.tmprc ]; then source $HOME/.tmprc; fi
+    echo ""
+    echo "compilation:"
+    echo ""
+    make clean
+    if [[ $? -ne 0 ]]; then exit 1; fi
+    echo
+    echo "gcc --version"
+    gcc --version
+    echo "gfortran --version"
+    gfortran --version
+    echo "mpif90 --version"
+    mpif90 --version
+    echo ""
+    make -j2 all
+
+  condition: ${{ parameters.BUILD }}
+  displayName: 'Run Make'
