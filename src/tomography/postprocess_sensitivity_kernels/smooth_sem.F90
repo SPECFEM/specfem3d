@@ -249,6 +249,10 @@ program smooth_sem
   endif
   call synchronize_all()
 
+  ! open main output file, only written to by process 0
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
+    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_smooth_sem.txt',status='unknown')
+
   ! reads the parameter file
   BROADCAST_AFTER_READ = .true.
   call read_parameter_file(BROADCAST_AFTER_READ)
@@ -1092,6 +1096,9 @@ program smooth_sem
 
   ! user output
   if (myrank == 0) print *, 'all done'
+
+  ! open main output file, only written to by process 0
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
 
   ! stop all the processes and exit
   call finalize_mpi()
