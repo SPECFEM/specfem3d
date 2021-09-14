@@ -91,9 +91,12 @@ echo "export PATH=${PATH}" > $HOME/.tmprc
 echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $HOME/.tmprc
 echo "export CUDA_HOME=${CUDA_HOME}" >> $HOME/.tmprc
 
-## avoid MPI number of slots issue
-echo "export OMPI_MCA_rmaps_base_oversubscribe=1" >> $HOME/.tmprc
-echo "export OMPI_MCA_rmaps_base_inherit=1" >> $HOME/.tmprc
+## avoids MPI issue with number of slots
+#echo "export OMPI_MCA_rmaps_base_oversubscribe=1" >> $HOME/.tmprc
+#echo "export OMPI_MCA_rmaps_base_inherit=1" >> $HOME/.tmprc
+# uses github environment to store (for subsequent steps)
+echo "OMPI_MCA_rmaps_base_oversubscribe=1" >> $GITHUB_ENV
+echo "OMPI_MCA_rmaps_base_inherit=1" >> $GITHUB_ENV
 
 ## avoid MPI warnings when running in container
 #echo "export OMPI_MCA_btl_vader_single_copy_mechanism=none" >> $HOME/.tmprc

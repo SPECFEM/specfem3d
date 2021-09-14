@@ -19,6 +19,16 @@ echo
 echo "**********************************************************"
 echo
 
+# compiler infos
+echo "compiler versions:"
+echo "gcc --version"
+gcc --version
+echo "gfortran --version"
+gfortran --version
+echo "mpif90 --version"
+mpif90 --version
+echo
+
 
 # configuration
 echo
