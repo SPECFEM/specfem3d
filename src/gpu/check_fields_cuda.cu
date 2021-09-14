@@ -279,7 +279,7 @@ void FC_FUNC_(get_norm_acoustic_from_device,
   // allocates memory on device
   gpuMalloc_realw((void**)&d_max,num_blocks_x*num_blocks_y);
   // initializes values to zero
-  gpuMemset_realw(d_max,0,num_blocks_x*num_blocks_y);
+  gpuMemset_realw(d_max,num_blocks_x*num_blocks_y,0);
 
 #ifdef USE_CUDA
   if (run_cuda){
@@ -406,7 +406,7 @@ void FC_FUNC_(get_norm_elastic_from_device,
   // allocates memory on device
   gpuMalloc_realw((void**)&d_max,num_blocks_x*num_blocks_y);
   // initializes values to zero
-  gpuMemset_realw(d_max,0,num_blocks_x*num_blocks_y);
+  gpuMemset_realw(d_max,num_blocks_x*num_blocks_y,0);
 
 #ifdef USE_CUDA
   if (run_cuda){

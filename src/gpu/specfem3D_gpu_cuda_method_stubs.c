@@ -627,34 +627,30 @@ void FC_FUNC_(prepare_cleanup_device,
 // src/gpu/smooth_cuda.cu
 //
 
-void FC_FUNC_(prepare_gpu_smooth,
-              PREPARE_GPU_SMOOTH)(long * Container,
+void FC_FUNC_(prepare_smooth_gpu,
+              PREPARE_SMOOTH_GPU)(long * Container,
                                   realw * xstore_me,
                                   realw * ystore_me,
                                   realw * zstore_me,
-                                  realw * sigma_h2_inv,
-                                  realw * sigma_v2_inv,
-                                  realw * h_criterion,
-                                  realw * v_criterion,
+                                  realw * sigma_h2,
+                                  realw * sigma_v2,
+                                  realw * sigma_h3,
+                                  realw * sigma_v3,
                                   int * nspec_me,
-                                  int * nker,
-                                  realw * wgll_cube){}
+                                  int * nker){}
 
-void FC_FUNC_(compute_smooth,
-              COMPUTE_SMOOTH)(long * smooth_pointer,
-                              realw * jacobian,
-                              realw * jacobian_regular,
-                              int * irregular_element_number,
-                              realw * xstore_other,
-                              realw * ystore_other,
-                              realw * zstore_other,
-                              realw * data_other,
-                              const int * nspec_other,
-                              const int * nspec_irregular_other){}
+void FC_FUNC_(compute_smooth_gpu,
+              COMPUTE_SMOOTH_GPU)(long * smooth_pointer,
+                                  realw * data_other,
+                                  realw * integ_factor,
+                                  realw * xstore_other,
+                                  realw * ystore_other,
+                                  realw * zstore_other,
+                                  const int * nspec_other_f){}
 
-void FC_FUNC_(get_smooth,
-              GET_SMOOTH)(long * smooth_pointer,
-                          realw * data_smooth) {}
+void FC_FUNC_(get_smooth_gpu,
+              GET_SMOOTH_gpu)(long * smooth_pointer,
+                              realw * data_smooth) {}
 
 
 //

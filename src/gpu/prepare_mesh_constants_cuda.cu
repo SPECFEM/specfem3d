@@ -443,9 +443,9 @@ void FC_FUNC_(prepare_fields_acoustic_device,
   gpuMalloc_field((void**)&(mp->d_potential_dot_acoustic),size);
   gpuMalloc_field((void**)&(mp->d_potential_dot_dot_acoustic),size);
   // initializes values to zero
-  //gpuMemset_field(mp->d_potential_acoustic,0,size);
-  //gpuMemset_field(mp->d_potential_dot_acoustic,0,size);
-  //gpuMemset_field(mp->d_potential_dot_dot_acoustic,0,size);
+  //gpuMemset_field(mp->d_potential_acoustic,size,0);
+  //gpuMemset_field(mp->d_potential_dot_acoustic,size,0);
+  //gpuMemset_field(mp->d_potential_dot_dot_acoustic,size,0);
 
   #ifdef USE_TEXTURES_FIELDS
   {
@@ -568,9 +568,9 @@ void FC_FUNC_(prepare_fields_acoustic_adj_dev,
   gpuMalloc_field((void**)&(mp->d_b_potential_dot_acoustic),size);
   gpuMalloc_field((void**)&(mp->d_b_potential_dot_dot_acoustic),size);
   // initializes values to zero
-  //gpuMemset_field(mp->d_b_potential_acoustic,0,size);
-  //gpuMemset_field(mp->d_b_potential_dot_acoustic,0,size);
-  //gpuMemset_field(mp->d_b_potential_dot_dot_acoustic,0,size);
+  //gpuMemset_field(mp->d_b_potential_acoustic,size,0);
+  //gpuMemset_field(mp->d_b_potential_dot_acoustic,size,0);
+  //gpuMemset_field(mp->d_b_potential_dot_dot_acoustic,size,0);
 
   #ifdef USE_TEXTURES_FIELDS
   {
@@ -603,8 +603,8 @@ void FC_FUNC_(prepare_fields_acoustic_adj_dev,
   gpuMalloc_realw((void**)&(mp->d_rho_ac_kl),size);
   gpuMalloc_realw((void**)&(mp->d_kappa_ac_kl),size);
   // initializes kernel values to zero
-  gpuMemset_realw(mp->d_rho_ac_kl,0,size);
-  gpuMemset_realw(mp->d_kappa_ac_kl,0,size);
+  gpuMemset_realw(mp->d_rho_ac_kl,size,0);
+  gpuMemset_realw(mp->d_kappa_ac_kl,size,0);
 
   // preconditioner
   if (*APPROXIMATE_HESS_KL ){
@@ -613,9 +613,9 @@ void FC_FUNC_(prepare_fields_acoustic_adj_dev,
     gpuMalloc_realw((void**)&(mp->d_hess_kappa_ac_kl),size);
 
     // initializes with zeros
-    gpuMemset_realw(mp->d_hess_ac_kl,0,size);
-    gpuMemset_realw(mp->d_hess_rho_ac_kl,0,size);
-    gpuMemset_realw(mp->d_hess_kappa_ac_kl,0,size);
+    gpuMemset_realw(mp->d_hess_ac_kl,size,0);
+    gpuMemset_realw(mp->d_hess_rho_ac_kl,size,0);
+    gpuMemset_realw(mp->d_hess_kappa_ac_kl,size,0);
   }
 
   // mpi buffer
@@ -687,9 +687,9 @@ void FC_FUNC_(prepare_fields_elastic_device,
   gpuMalloc_realw((void**)&(mp->d_veloc),size);
   gpuMalloc_realw((void**)&(mp->d_accel),size);
   // initializes values to zero
-  //gpuMemset_realw(mp->d_displ,0,size);
-  //gpuMemset_realw(mp->d_veloc,0,size);
-  //gpuMemset_realw(mp->d_accel,0,size);
+  //gpuMemset_realw(mp->d_displ,size,0);
+  //gpuMemset_realw(mp->d_veloc,size,0);
+  //gpuMemset_realw(mp->d_accel,size,0);
 
   #ifdef USE_TEXTURES_FIELDS
   {
@@ -1011,9 +1011,9 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
   gpuMalloc_realw((void**)&(mp->d_b_veloc),size);
   gpuMalloc_realw((void**)&(mp->d_b_accel),size);
   // initializes values to zero
-  //gpuMemset_realw(mp->d_b_displ,0,size);
-  //gpuMemset_realw(mp->d_b_veloc,0,size);
-  //gpuMemset_realw(mp->d_b_accel,0,size);
+  //gpuMemset_realw(mp->d_b_displ,size,0);
+  //gpuMemset_realw(mp->d_b_veloc,size,0);
+  //gpuMemset_realw(mp->d_b_accel,size,0);
 
   #ifdef USE_TEXTURES_FIELDS
   {
@@ -1061,19 +1061,19 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
   // density kernel
   gpuMalloc_realw((void**)&(mp->d_rho_kl),size);
   // initializes kernel values to zero
-  gpuMemset_realw(mp->d_rho_kl,0,size);
+  gpuMemset_realw(mp->d_rho_kl,size,0);
 
   if (mp->anisotropic_kl ){
     // anisotropic kernels
     gpuMalloc_realw((void**)&(mp->d_cijkl_kl),21*size);
-    gpuMemset_realw(mp->d_cijkl_kl,0,21*size);
+    gpuMemset_realw(mp->d_cijkl_kl,21*size,0);
 
   }else{
     // isotropic kernels
     gpuMalloc_realw((void**)&(mp->d_mu_kl),size);
     gpuMalloc_realw((void**)&(mp->d_kappa_kl),size);
-    gpuMemset_realw(mp->d_mu_kl,0,size);
-    gpuMemset_realw(mp->d_kappa_kl,0,size);
+    gpuMemset_realw(mp->d_mu_kl,size,0);
+    gpuMemset_realw(mp->d_kappa_kl,size,0);
   }
 
   // strains used for attenuation and kernel simulations
@@ -1129,16 +1129,16 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
 
     size = NGLL3 * mp->NSPEC_AB; // note: non-aligned; if align, check memcpy below and indexing
     gpuMalloc_realw((void**)&(mp->d_hess_el_kl),size);
-    gpuMemset_realw(mp->d_hess_el_kl,0,size);
+    gpuMemset_realw(mp->d_hess_el_kl,size,0);
 
     gpuMalloc_realw((void**)&(mp->d_hess_rho_el_kl),size);
-    gpuMemset_realw(mp->d_hess_rho_el_kl,0,size);
+    gpuMemset_realw(mp->d_hess_rho_el_kl,size,0);
 
     gpuMalloc_realw((void**)&(mp->d_hess_kappa_el_kl),size);
-    gpuMemset_realw(mp->d_hess_kappa_el_kl,0,size);
+    gpuMemset_realw(mp->d_hess_kappa_el_kl,size,0);
 
     gpuMalloc_realw((void**)&(mp->d_hess_mu_el_kl),size);
-    gpuMemset_realw(mp->d_hess_mu_el_kl,0,size);
+    gpuMemset_realw(mp->d_hess_mu_el_kl,size,0);
   }
 
   // debug
@@ -1270,7 +1270,7 @@ void FC_FUNC_(prepare_fields_noise_device,
   if (*NOISE_TOMOGRAPHY == 3){
     gpuMalloc_realw((void**)&(mp->d_sigma_kl),NGLL3*(mp->NSPEC_AB));
     // initializes kernel values to zero
-    gpuMemset_realw(mp->d_sigma_kl,0,NGLL3*mp->NSPEC_AB);
+    gpuMemset_realw(mp->d_sigma_kl,NGLL3*mp->NSPEC_AB,0);
   }
 
   //printf("jacobian_size = %d\n",25*(*num_free_surface_faces));

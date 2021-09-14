@@ -41,7 +41,6 @@ typedef struct Smooth_data_ {
 
   realw * data_smooth;
   realw * normalisation;
-  realw * wgll_cube;
 
   realw sigma_h2_inv;
   realw sigma_v2_inv;

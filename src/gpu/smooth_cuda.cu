@@ -38,85 +38,106 @@
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
-void FC_FUNC_(prepare_gpu_smooth,
-              PREPARE_GPU_SMOOTH)(long * Container,
+void FC_FUNC_(prepare_smooth_gpu,
+              PREPARE_SMOOTH_GPU)(long * Container,
                                   realw * xstore_me,
                                   realw * ystore_me,
                                   realw * zstore_me,
-                                  realw * sigma_h2_inv,
-                                  realw * sigma_v2_inv,
-                                  realw * h_criterion,
-                                  realw * v_criterion,
+                                  realw * sigma_h2,
+                                  realw * sigma_v2,
+                                  realw * sigma_h3,
+                                  realw * sigma_v3,
                                   int * nspec_me,
-                                  int * nker,
-                                  realw * wgll_cube){
+                                  int * nker){
 
-  TRACE("prepare_gpu_smooth");
+  TRACE("prepare_smooth_gpu");
 
+  // allocates structure
   Smooth_data* sp = (Smooth_data*) malloc( sizeof(Smooth_data) );
+
+  // checks pointer
+  if (! sp) exit_on_error ("Error allocating smooth data pointer");
+
+  // sets fortran pointer
   *Container = (long)sp;
 
   gpuCopy_todevice_realw((void**)&sp->x_me,xstore_me, NGLL3*(*nspec_me));
   gpuCopy_todevice_realw((void**)&sp->y_me,ystore_me, NGLL3*(*nspec_me));
   gpuCopy_todevice_realw((void**)&sp->z_me,zstore_me, NGLL3*(*nspec_me));
-  gpuCopy_todevice_realw((void**)&sp->wgll_cube,wgll_cube, NGLL3);
 
-  sp->sigma_h2_inv= *sigma_h2_inv;
-  sp->sigma_v2_inv= *sigma_v2_inv;
-  sp->h_criterion = *h_criterion;
-  sp->v_criterion = *v_criterion;
+  // sets variable values
+  realw sigma_h2_inv = 1.0f / (*sigma_h2);
+  realw sigma_v2_inv = 1.0f / (*sigma_v2);
+
+  realw sigma_h3_sq = (*sigma_h3) * (*sigma_h3);  // squared
+  realw sigma_v3_sq = (*sigma_v3) * (*sigma_v3);
+
+  sp->sigma_h2_inv = sigma_h2_inv;
+  sp->sigma_v2_inv = sigma_v2_inv;
+
+  sp->h_criterion = sigma_h3_sq;
+  sp->v_criterion = sigma_v3_sq;
+
   sp->nspec_me =  *nspec_me;
   sp->nker = *nker;
 
+  // smoothed kernel
   gpuMalloc_realw((void**)&sp->data_smooth,NGLL3*(*nspec_me)*(*nker));
-  gpuMemset_realw(sp->data_smooth,0,NGLL3*(*nspec_me)*(*nker));
+  gpuMemset_realw(sp->data_smooth,NGLL3*(*nspec_me)*(*nker),0);
 
+  // normalization factor
   gpuMalloc_realw((void**)&sp->normalisation,NGLL3*(*nspec_me));
-  gpuMemset_realw(sp->normalisation,0,NGLL3*(*nspec_me));
+  gpuMemset_realw(sp->normalisation,NGLL3*(*nspec_me),0);
+
+  GPU_ERROR_CHECKING ("prepare_smooth_gpu");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
-void FC_FUNC_(compute_smooth,
-              COMPUTE_SMOOTH)(long * smooth_pointer,
-                              realw * jacobian,
-                              realw * jacobian_regular,
-                              int * irregular_element_number,
-                              realw * xstore_other,
-                              realw * ystore_other,
-                              realw * zstore_other,
-                              realw * data_other,
-                              const int * nspec_other,
-                              const int * nspec_irregular_other){
+void FC_FUNC_(compute_smooth_gpu,
+              COMPUTE_SMOOTH_GPU)(long * smooth_pointer,
+                                  realw * data_other,
+                                  realw * integ_factor,
+                                  realw * xstore_other,
+                                  realw * ystore_other,
+                                  realw * zstore_other,
+                                  const int * nspec_other_f){
 
-  TRACE("compute_smooth");
+  TRACE("compute_smooth_gpu");
+
+  Smooth_data * sp = (Smooth_data*) *smooth_pointer;
+
+  int nspec_other = *nspec_other_f;
 
   realw * x_other;
   realw * y_other;
   realw * z_other;
+
   realw * d_data_other;
-  realw * d_jacobian;
-  int * d_irregular_element_number;
+  realw * d_integ_factor;
 
-  Smooth_data * sp = (Smooth_data*)*smooth_pointer;
+  gpuCopy_todevice_realw((void**)&x_other,xstore_other,NGLL3 * nspec_other);
+  gpuCopy_todevice_realw((void**)&y_other,ystore_other,NGLL3 * nspec_other);
+  gpuCopy_todevice_realw((void**)&z_other,zstore_other,NGLL3 * nspec_other);
 
-  gpuCopy_todevice_realw((void**)&x_other,xstore_other,NGLL3*(*nspec_other));
-  gpuCopy_todevice_realw((void**)&y_other,ystore_other,NGLL3*(*nspec_other));
-  gpuCopy_todevice_realw((void**)&z_other,zstore_other,NGLL3*(*nspec_other));
+  gpuCopy_todevice_realw((void**)&d_integ_factor,integ_factor,NGLL3 * nspec_other);
 
-  if (*nspec_irregular_other > 0){
-    gpuCopy_todevice_realw((void**)&d_jacobian,jacobian,NGLL3*(*nspec_irregular_other));
-  } else {
-    gpuCopy_todevice_realw((void**)&d_jacobian,jacobian,1);
-  }
-  gpuCopy_todevice_int((void**)&d_irregular_element_number,irregular_element_number,(*nspec_other));
+  //dim3 grid(sp->nspec_me,1);
+  //dim3 threads(NGLL3,1,1);
 
-  dim3 grid(sp->nspec_me,1);
+  int num_blocks_x, num_blocks_y;
+  get_blocks_xy (sp->nspec_me, &num_blocks_x, &num_blocks_y);
+
+  dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(NGLL3,1,1);
 
-  for (int i=0;i<sp->nker;i++){
-    gpuCopy_todevice_realw((void**)&d_data_other,&data_other[NGLL3*(*nspec_other)*i],NGLL3*(*nspec_other));
+  for (int iker=0; iker < sp->nker; iker++){
+    // pointer to corresponding kernel section
+    realw * data_p = &data_other[NGLL3 * nspec_other * iker];
+
+    // copy single kernel
+    gpuCopy_todevice_realw((void**)&d_data_other,data_p,NGLL3 * nspec_other);
 
 #ifdef USE_CUDA
     if (run_cuda){
@@ -129,17 +150,14 @@ void FC_FUNC_(compute_smooth,
                                        d_data_other,
                                        sp->sigma_h2_inv,
                                        sp->sigma_v2_inv,
-                                       i,
+                                       iker,
                                        sp->nspec_me,
-                                       *nspec_other,
+                                       nspec_other,
                                        sp->v_criterion,
                                        sp->h_criterion,
-                                       d_jacobian,
-                                       d_irregular_element_number,
-                                       *jacobian_regular,
+                                       d_integ_factor,
                                        sp->data_smooth,
-                                       sp->normalisation,
-                                       sp->wgll_cube);
+                                       sp->normalisation);
     }
 #endif
 #ifdef USE_HIP
@@ -154,17 +172,14 @@ void FC_FUNC_(compute_smooth,
                                          d_data_other,
                                          sp->sigma_h2_inv,
                                          sp->sigma_v2_inv,
-                                         i,
+                                         iker,
                                          sp->nspec_me,
-                                         *nspec_other,
+                                         nspec_other,
                                          sp->v_criterion,
                                          sp->h_criterion,
-                                         d_jacobian,
-                                         d_irregular_element_number,
-                                         *jacobian_regular,
+                                         d_integ_factor,
                                          sp->data_smooth,
-                                         sp->normalisation,
-                                         sp->wgll_cube);
+                                         sp->normalisation);
     }
 #endif
 
@@ -175,45 +190,59 @@ void FC_FUNC_(compute_smooth,
   gpuFree(x_other);
   gpuFree(y_other);
   gpuFree(z_other);
-  gpuFree(d_jacobian);
-  gpuFree(d_irregular_element_number);
+  gpuFree(d_integ_factor);
+
+  GPU_ERROR_CHECKING ("compute_smooth_gpu");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
-void FC_FUNC_(get_smooth,
-              GET_SMOOTH)(long * smooth_pointer,
-                          realw * data_smooth) {
+void FC_FUNC_(get_smooth_gpu,
+              GET_SMOOTH_gpu)(long * smooth_pointer,
+                              realw * data_smooth) {
 
-  TRACE("get_smooth");
+  TRACE("get_smooth_gpu");
 
-  Smooth_data * sp = (Smooth_data*)*smooth_pointer;
+  Smooth_data * sp = (Smooth_data*) *smooth_pointer;
 
-  dim3 grid(sp->nspec_me,1);
+  //dim3 grid(sp->nspec_me,1);
+  //dim3 threads(NGLL3,1,1);
+
+  int num_blocks_x, num_blocks_y;
+  get_blocks_xy (sp->nspec_me, &num_blocks_x, &num_blocks_y);
+
+  dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(NGLL3,1,1);
 
 #ifdef USE_CUDA
   if (run_cuda){
-    normalize_data<<<grid,threads>>>(sp->data_smooth,sp->normalisation,sp->nker,sp->nspec_me);
+    normalize_data<<<grid,threads>>>(sp->data_smooth,
+                                     sp->normalisation,
+                                     sp->nker,
+                                     sp->nspec_me);
   }
 #endif
 #ifdef USE_HIP
   if (run_hip){
     hipLaunchKernelGGL(normalize_data, dim3(grid), dim3(threads), 0, 0,
-                                       sp->data_smooth,sp->normalisation,sp->nker,sp->nspec_me);
+                                       sp->data_smooth,
+                                       sp->normalisation,
+                                       sp->nker,
+                                       sp->nspec_me);
   }
 #endif
 
-  gpuMemcpy_tohost_realw(data_smooth, sp->data_smooth,NGLL3*sp->nspec_me*sp->nker);
+  gpuMemcpy_tohost_realw(data_smooth, sp->data_smooth, NGLL3 * sp->nspec_me * sp->nker);
 
   gpuFree(sp->x_me);
   gpuFree(sp->y_me);
   gpuFree(sp->z_me);
   gpuFree(sp->data_smooth);
-  gpuFree(sp->wgll_cube);
   gpuFree(sp->normalisation);
 
   free(sp);
+
+  GPU_ERROR_CHECKING ("get_smooth_gpu");
 }
 

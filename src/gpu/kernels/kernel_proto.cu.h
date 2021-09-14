@@ -993,19 +993,26 @@ __global__ void prepare_boundary_potential_on_device(field* d_potential_dot_dot_
 // src/gpu/kernels/process_smooth.cu
 //
 
-__global__ void process_smooth(realw_const_p xstore_me,realw_const_p ystore_me,realw_const_p zstore_me,
-                               realw_const_p xstore_other,realw_const_p ystore_other,realw_const_p zstore_other,
+__global__ void process_smooth(realw_const_p xstore_me,
+                               realw_const_p ystore_me,
+                               realw_const_p zstore_me,
+                               realw_const_p xstore_other,
+                               realw_const_p ystore_other,
+                               realw_const_p zstore_other,
                                realw_const_p data_other,
                                const realw sigma_h2_inv, const realw sigma_v2_inv,
-                               const int iker, const int nspec_me, const int nspec_other,
+                               const int iker,
+                               const int nspec_me,
+                               const int nspec_other,
                                const realw v_criterion, const realw h_criterion,
-                               realw_const_p jacobian,
-                               const int * irregular_element_number,realw jacobian_regular,
-                               realw_p sum_data_smooth,
-                               realw_p normalisation,
-                               realw_const_p wgll_cube);
+                               realw_const_p integ_factor,
+                               realw_p data_smooth,
+                               realw_p normalisation);
 
-__global__ void normalize_data(realw_p data_smooth, realw_const_p normalisation,int nker, int nspec_me);
+__global__ void normalize_data(realw_p data_smooth,
+                               realw_const_p normalisation,
+                               int nker,
+                               int nspec_me);
 
 
 //

@@ -269,7 +269,7 @@ void FC_FUNC_(compute_coupling_ocean_cuda,
   }
 
   // initializes temporary array to zero
-  gpuMemset_int(mp->d_updated_dof_ocean_load,0,mp->NGLOB_AB);
+  gpuMemset_int(mp->d_updated_dof_ocean_load,mp->NGLOB_AB,0);
 
   GPU_ERROR_CHECKING("before kernel compute_coupling_ocean_cuda");
 
