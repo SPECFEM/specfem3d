@@ -97,8 +97,9 @@ to the desired half-duration.
 
 \item The zero time of the simulation corresponds to the center of the triangle/Gaussian,
 or the centroid time of the earthquake. The start time of the simulation
-is $t=-1.5*\texttt{half duration}$ (the 1.5 is to make sure the moment
-rate function is very close to zero when starting the simulation).
+is $t=-2.0*\texttt{half duration}$ (the 2.0 factor is to make sure the moment
+rate function is very close to zero when starting the simulation. This avoids spurious high-frequency oscillations.
+Also, for acoustic simulations using a Gaussian STF this is set to a factor 3.0, while Ricker source time functions use a factor 1.2).
 To convert to absolute time $t_{\mathrm{abs}}$, set
 %
 \begin{lyxcode}
