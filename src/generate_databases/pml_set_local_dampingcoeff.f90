@@ -1426,18 +1426,23 @@
       enddo
     enddo
   enddo
+
   distance_min = sqrt(distance_min)
   call min_all_all_cr(distance_min,distance_min_glob)
   if (myrank == 0) then
     if (distance_min_glob <= 0.0_CUSTOM_REAL) call exit_mpi(myrank,"error: GLL points minimum distance")
   endif
+
   min_distance_between_CPML_parameter = ALPHA_MAX_PML_x * distance_min_glob / &
                                         max(CPML_width_x,CPML_width_y,CPML_width_z) / 8._CUSTOM_REAL
+
   call min_all_all_cr(min_distance_between_CPML_parameter,min_distance_between_CPML_parameter_glob)
   min_distance_between_CPML_parameter = min_distance_between_CPML_parameter_glob
+
   const_for_separation_two = min_distance_between_CPML_parameter * 2._CUSTOM_REAL
   const_for_separation_four = min_distance_between_CPML_parameter * 4._CUSTOM_REAL
-  min_distance_between_CPML_parameter = min_distance_between_CPML_parameter
+
+  !min_distance_between_CPML_parameter = min_distance_between_CPML_parameter
 
 ! for robust parameter separation of PML damping parameter
 

@@ -699,6 +699,7 @@
           alpha_y = alpha_store_y(i,j,k,ispec_CPML)
           alpha_z = alpha_store_z(i,j,k,ispec_CPML)
 
+          ! gets recursive convolution coefficients
           ! alpha coefficients
           call compute_convolution_coef(alpha_x, coef0_1, coef1_1, coef2_1)
           call compute_convolution_coef(alpha_y, coef0_2, coef1_2, coef2_2)
@@ -716,6 +717,7 @@
           convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML) = coef1_3
           convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML) = coef2_3
 
+          ! gets recursive convolution coefficients
           ! beta coefficients
           beta_x = alpha_x + d_x / kappa_x
           beta_y = alpha_y + d_y / kappa_y
@@ -753,18 +755,15 @@
 
     use constants, only: CUSTOM_REAL
     use specfem_par, only: deltat
-    use pml_par, only: min_distance_between_CPML_parameter
+    use pml_par, only: FIRST_ORDER_CONVOLUTION,min_distance_between_CPML_parameter
 
     implicit none
 
     real(kind=CUSTOM_REAL),intent(in) :: bb
     real(kind=CUSTOM_REAL),intent(out) :: coef0, coef1, coef2
 
-    ! local parameters
-    logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
-
-    real(kind=CUSTOM_REAL) :: bbpow2,bbpow3,c0,c1
-    real(kind=CUSTOM_REAL) :: prod1,prod1_half
+    real(kind=CUSTOM_REAL) :: bbpow2,bbpow3,c0
+    real(kind=CUSTOM_REAL) :: temp
 
     ! permanent factors (avoids divisions which are computationally expensive)
     ! note: compilers precompute these constant factors (thus division in these statemenets are still fine)
@@ -772,9 +771,11 @@
     real(kind=CUSTOM_REAL),parameter :: ONE_OVER_48 = 1._CUSTOM_REAL / 48._CUSTOM_REAL
     !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_128 = 0.0078125_CUSTOM_REAL
     real(kind=CUSTOM_REAL),parameter :: ONE_OVER_384 = 1._CUSTOM_REAL / 384._CUSTOM_REAL
+
     real(kind=CUSTOM_REAL),parameter :: FACTOR_A = 3._CUSTOM_REAL / 8._CUSTOM_REAL
     real(kind=CUSTOM_REAL),parameter :: FACTOR_B = 7._CUSTOM_REAL / 48._CUSTOM_REAL
     real(kind=CUSTOM_REAL),parameter :: FACTOR_C = 5._CUSTOM_REAL / 128._CUSTOM_REAL
+
     ! unused
     !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_12 = 1._CUSTOM_REAL / 12._CUSTOM_REAL
     !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_24 = 1._CUSTOM_REAL / 24._CUSTOM_REAL
@@ -783,21 +784,30 @@
     !real(kind=CUSTOM_REAL),parameter :: SEVEN_OVER_3840 = 7._CUSTOM_REAL / 3840._CUSTOM_REAL
     !real(kind=CUSTOM_REAL),parameter :: FIVE_OVER_11520 = 5._CUSTOM_REAL/11520._CUSTOM_REAL
 
+    ! recursive convolution coefficients
+    !
+    ! see Xie et al. (2014), second-order recursive scheme given by eq. (60)
+    !                        and also appendix D, eq. (D6a) and (D6b) for p = 0
+    !
+    ! coefficients needed for the recursive scheme are:
+    !    coef0 = exp(-b delta_t)
+    !          = exp(- 1/2 b delta_t) * exp(- 1/2 b delta_t)
+    !
+    !    coef1 = 1/b (1 - exp( - 1/2 b delta_t)                             -> see also factor xi_0^(n+1) in eq. D6b
+    !
+    !    coef2 = 1/b (1 - exp( - 1/2 b delta_t) exp(- 1/2 b delta_t)
+    !          = coef1 * exp(- 1/2 b delta_t)                               -> see also factor xi_0^n in eq. D6a
+    !
     ! helper variables
-    ! (writing out powers can help for speed, that is bb * bb is usually faster than bb**2)
-    bbpow2 = bb * bb
-    bbpow3 = bbpow2 * bb
-
-    prod1 = bb * deltat
-    prod1_half = prod1 * 0.5_CUSTOM_REAL
+    temp = exp(- 0.5_CUSTOM_REAL * bb * deltat)
 
     ! calculates coefficients
     !
     ! note: exponentials are expensive functions
-    c0 = exp(-prod1)
+    !c0 = exp(-a)
     !
     ! cheap exponential (up to 5 terms exp(x) = 1 + x *( 1 + x/2 * (1 + x/3 * (1 + x/4 * (1 + x/5 * ..))))
-    !x0 = -prod1
+    !x0 = -a
     !c0 = 1.0 + x0 * (1.0 + 0.5 * x0 * (1.0  + 0.333333333333_CUSTOM_REAL * x0 * (1.0 + 0.25 * x0 * (1.0 + 0.2 * x0))))
 
     !  real function my_exp(n, x) result(f)
@@ -809,28 +819,35 @@
     !  end function
 
     ! determines coefficients
-    coef0 = c0
+    coef0 = temp*temp
 
     if (abs(bb) >= min_distance_between_CPML_parameter) then
       if (FIRST_ORDER_CONVOLUTION) then
-        coef1 = (1._CUSTOM_REAL - c0 ) / bb
+        ! first-order scheme
+        coef1 = (1._CUSTOM_REAL - coef0) / bb
         coef2 = 0._CUSTOM_REAL
       else
+        ! second-order convolution scheme
         ! calculates coefficients
-        c1 = exp(-prod1_half)
         !
         ! cheap exponential (up to 5 terms exp(x) = 1 + x *( 1 + x/2 * (1 + x/3 * (1 + x/4 * (1 + x/5 * ..))))
-        !x1 = -prod1_half
-        !c1 = 1.0 + x1 * (1.0 + 0.5 * x1 * (1.0  + 0.333333333333_CUSTOM_REAL * x1 * (1.0 + 0.25 * x1 * (1.0 + 0.2 * x1))))
+        !x1 = - 0.5 * bb * deltat
+        !temp = 1.0 + x1 * (1.0 + 0.5 * x1 * (1.0  + 0.333333333333_CUSTOM_REAL * x1 * (1.0 + 0.25 * x1 * (1.0 + 0.2 * x1))))
 
-        coef1 = (1._CUSTOM_REAL - c1 ) / bb
-        coef2 = (1._CUSTOM_REAL - c1 ) * c1 / bb
+        coef1 = (1._CUSTOM_REAL - temp) / bb
+        coef2 = coef1 * temp
       endif
     else
+      ! approximation for small beta values
       if (FIRST_ORDER_CONVOLUTION) then
         coef1 = deltat
         coef2 = 0._CUSTOM_REAL
       else
+        ! Taylor expansion to third-order
+        ! (writing out powers can help for speed, that is bb * bb is usually faster than bb**2)
+        bbpow2 = bb * bb
+        bbpow3 = bbpow2 * bb
+
         coef1 = deltat_half + &
                 (- ONE_OVER_8 * deltatpow2 * bb + ONE_OVER_48 * deltatpow3 * bbpow2 - ONE_OVER_384 * deltatpow4 * bbpow3)
         coef2 = deltat_half + &
