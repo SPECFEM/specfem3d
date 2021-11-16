@@ -91,6 +91,16 @@ jobs:
         echo "mpif90  --version"
         mpif90 --version
         echo ""
+        ## avoids sed -i '' issue on MacOS, using gnu sed to have the same sed command lines as in linux
+        brew install gnu-sed
+        echo "PATH=/usr/local/opt/gnu-sed/libexec/gnubin:$PATH" >> $GITHUB_ENV
+        ## OpenMP
+        echo "OMP_NUM_THREADS=2" >> $GITHUB_ENV
+        ## avoids MPI issue with number of slots
+        echo "OMPI_MCA_rmaps_base_oversubscribe=1" >> $GITHUB_ENV
+        echo "OMPI_MCA_rmaps_base_inherit=1" >> $GITHUB_ENV
+        ## avoids MPI issue when running in MacOS
+        echo "OMPI_MCA_btl=self,tcp" >> $GITHUB_ENV
         # exports for xterm output (for make tests)
         echo "TERM=xterm" >> $GITHUB_ENV
         echo ""

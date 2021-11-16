@@ -123,7 +123,7 @@ write(*,*) "partition"
   ! 3/ Heuristic mesh partition
   if (myrank == 0) then
      write(27,*) ' DECOMPOSING MESH '
-     if(ANY_FAULT) then
+     if (ANY_FAULT) then
        ! If the mesh contains faults, the partition is only based on the distance, rather
        ! than the computational load.
        ! The output of this function is ipart (allocated inside the function)
@@ -152,7 +152,7 @@ write(*,*) "send to all"
   call prepare_database(myrank, elmnts, nspec)
 
 write(*,*) "write database"
-  ! In earlier version, the array elmnts_glob was too big to broadcast. 
+  ! In earlier version, the array elmnts_glob was too big to broadcast.
   ! It is currently replaced by iboundary, nspec_part_boundaries and elmnts_part_boundaries
   call write_database(myrank, ipart, elmnts, nodes_coords, nodes_coords_open_loc, &
        iboundary, nspec_part_boundaries, elmnts_part_boundaries, mat, mat_prop, undef_mat_prop, &
@@ -349,7 +349,7 @@ end program xdecompose_mesh_mpi
   if (ier /= 0) call exit_MPI_without_rank('Error allocating array 7')
   allocate(nodes_coords(NDIM,nnodes),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('Error allocating array 8')
-  if(ANY_FAULT) then
+  if (ANY_FAULT) then
      allocate(nodes_coords_open_loc(NDIM,nnodes),stat=ier)
      if (ier /= 0) call exit_MPI_without_rank('Error allocating array 8 bis')
   endif
@@ -371,7 +371,7 @@ end program xdecompose_mesh_mpi
               glob2loc_nodes(inode) = inode_loc
               loc2glob_nodes(inode_loc) = inode
               nodes_coords(:,inode_loc) = nodes_coords_glob(:,inode)
-              if(ANY_FAULT) nodes_coords_open_loc(:,inode_loc) = nodes_coords_open(:,inode)
+              if (ANY_FAULT) nodes_coords_open_loc(:,inode_loc) = nodes_coords_open(:,inode)
               not_stored=.false.
            endif
         enddo
@@ -389,7 +389,7 @@ end program xdecompose_mesh_mpi
         if (ier /= 0) call exit_MPI_without_rank('Error allocating array 12')
         allocate(dp_buffer_to_send(3,nnodes_in_partition(irank+1)),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('Error allocating array 13')
-        if(ANY_FAULT) then
+        if (ANY_FAULT) then
            allocate(dp_buffer_to_send_open(3,nnodes_in_partition(irank+1)),stat=ier)
            if (ier /= 0) call exit_MPI_without_rank('Error allocating array 13 bis')
         endif
@@ -405,7 +405,7 @@ end program xdecompose_mesh_mpi
                  buffer_to_send2(inode_loc) = inode
                  buffer_to_send3(inode) = inode_loc
                  dp_buffer_to_send(:,inode_loc) = nodes_coords_glob(:,inode)
-                 if(ANY_FAULT) dp_buffer_to_send_open(:,inode_loc) = nodes_coords_open(:,inode)
+                 if (ANY_FAULT) dp_buffer_to_send_open(:,inode_loc) = nodes_coords_open(:,inode)
                  not_stored=.false.
               endif
            enddo
@@ -417,14 +417,14 @@ end program xdecompose_mesh_mpi
         call send_i(buffer_to_send2, nnodes_in_partition(irank+1), irank, irank + 9977)
         call send_i(buffer_to_send3, nnodes_glob, irank, irank + 9967)
         call send_dp(dp_buffer_to_send, 3*nnodes_in_partition(irank+1), irank, irank + 9998)
-        if(ANY_FAULT) call send_dp(dp_buffer_to_send_open,3*nnodes_in_partition(irank+1),irank,irank+9999)
+        if (ANY_FAULT) call send_dp(dp_buffer_to_send_open,3*nnodes_in_partition(irank+1),irank,irank+9999)
 
         deallocate(buffer_to_send)
         deallocate(buffer_to_send1)
         deallocate(buffer_to_send2)
         deallocate(buffer_to_send3)
         deallocate(dp_buffer_to_send)
-        if(ANY_FAULT) deallocate(dp_buffer_to_send_open)
+        if (ANY_FAULT) deallocate(dp_buffer_to_send_open)
      enddo
   else
      call recv_i(elmnts_by_node, max_elmnts_by_node*nnodes, 0, myrank  + 9997)
@@ -432,7 +432,7 @@ end program xdecompose_mesh_mpi
      call recv_i(loc2glob_nodes, nnodes, 0, myrank  + 9977)
      call recv_i(glob2loc_nodes, nnodes_glob, 0, myrank  + 9967)
      call recv_dp(nodes_coords, NDIM*nnodes, 0, myrank + 9998)
-     if(ANY_FAULT) call recv_dp(nodes_coords_open_loc, NDIM*nnodes, 0, myrank + 9999)
+     if (ANY_FAULT) call recv_dp(nodes_coords_open_loc, NDIM*nnodes, 0, myrank + 9999)
   endif
 
 
@@ -511,7 +511,7 @@ end program xdecompose_mesh_mpi
          ivertex = elmnts_glob(inode,iE)
          do j = 1, nelmnts_by_node_glob(ivertex) !! loop on all ivertex connected elements
             kE = elmnts_by_node_glob(j, ivertex)
-            if(ipart(iE) /= ipart(kE) .and. not_stored) then
+            if (ipart(iE) /= ipart(kE) .and. not_stored) then
                 i = i + 1
                 iboundary(iE)=i
                 not_stored=.false.
@@ -519,14 +519,14 @@ end program xdecompose_mesh_mpi
          enddo
       enddo
     enddo
-  
-    nspec_part_boundaries = count(iboundary>0)
+
+    nspec_part_boundaries = count(iboundary > 0)
 
     allocate(elmnts_part_boundaries(NGNOD, nspec_part_boundaries),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('Error allocating array 18')
 
     do iE = 1, nE  !! loop over all elements
-       if(iboundary(iE)>0) then
+       if (iboundary(iE) > 0) then
           elmnts_part_boundaries(:,iboundary(iE)) = elmnts_glob(:,iE)
        endif
     enddo

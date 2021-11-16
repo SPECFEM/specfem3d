@@ -77,7 +77,7 @@ contains
 ! write database for xgenerate_database
 !
 !----------------------------------
-  subroutine write_database(myrank, ipart, elmnts, nodes_coords, nodes_coords_open_loc,&
+  subroutine write_database(myrank, ipart, elmnts, nodes_coords, nodes_coords_open_loc, &
            iboundary, nspec_part_boundaries, elmnts_part_boundaries,  num_modele,  mat_prop, &
        undef_mat_prop, count_def_mat, count_undef_mat, ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, &
        ibelm_bottom, ibelm_top, nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, nodes_ibelm_ymax, &
@@ -354,11 +354,11 @@ contains
     endif
     close(IIN_database)
 
-     ! write fault database 
+     ! write fault database
      call bcast_all_singlel(ANY_FAULT)
      if (ANY_FAULT) then
         write(prname, "(i6.6,'_Database_fault')") myrank
-        open(unit=16,file=LOCAL_PATH(1:len_trim(LOCAL_PATH))//'/proc'//prname,&
+        open(unit=16,file=LOCAL_PATH(1:len_trim(LOCAL_PATH))//'/proc'//prname, &
              status='unknown', action='write', form='unformatted', iostat = ier)
         if (ier /= 0) then
           print *,'Error file open:',LOCAL_PATH(1:len_trim(LOCAL_PATH))//'/proc'//prname
@@ -368,8 +368,8 @@ contains
         endif
 
         call bcast_faults_mpi(myrank)
- 
-        call write_fault_database_mpi(16, myrank, nE, glob2loc_elmnt, ipart,&
+
+        call write_fault_database_mpi(16, myrank, nE, glob2loc_elmnt, ipart, &
                          size(glob2loc_nodes), glob2loc_nodes, NGNOD2D, nnodes_loc, nodes_coords)
 
 !    The local locations need to be saved in Database_fault files.

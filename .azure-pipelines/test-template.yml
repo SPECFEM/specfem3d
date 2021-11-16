@@ -1,0 +1,52 @@
+#
+# template to run test
+#
+
+parameters:
+- name: workingDirectory
+  type: string
+  default: ''
+
+steps:
+- script: |
+    # getting updated environment (CUDA_HOME, PATH, ..)
+    if [ -f $HOME/.tmprc ]; then source $HOME/.tmprc; fi
+    WORKDIR=`pwd`
+    # test example
+    dir=${{ parameters.workingDirectory }}
+    echo "work directory: $WORKDIR"
+    echo "test directory: $dir"
+    echo ""
+    cd $dir
+
+    # limit number of time steps
+    sed -i "s:^NSTEP .*:NSTEP    = 800:" DATA/Par_file
+    # shortens output interval to avoid timeouts
+    sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 50:" DATA/Par_file
+
+    # default script
+    ./run_this_example.sh
+
+    # checks script return code
+    if [[ $? -ne 0 ]]; then
+      echo "run failed, exiting..."
+      # cleanup
+      rm -rf OUTPUT_FILES* DATABASES_MPI*
+      exit 1
+    fi
+
+    # checks output
+    echo "testing seismograms:"
+    echo "workdir: $WORKDIR"
+    echo "current dir: `pwd`"
+    echo
+    ln -s $WORKDIR/utils/compare_seismogram_correlations.py
+    ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/
+    if [[ $? -ne 0 ]]; then exit 1; fi
+    ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/ | grep min/max | cut -d \| -f 3 | awk '{print "correlation:",$1; if ($1 < 0.999 ){print $1,"failed"; exit 1;}else{ print $1,"good"; exit 0;}}'
+    if [[ $? -ne 0 ]]; then exit 1; fi
+    rm -rf OUTPUT_FILES/
+
+  displayName: 'Run Test - ${{ parameters.workingDirectory }}'
+
+

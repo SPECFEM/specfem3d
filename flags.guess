@@ -9,7 +9,7 @@
 # if you want to compile with OpenMP, add this to the flags listed below, depending on the compiler you use:
 #
 #   -fopenmp for GNU gfortran
-#   -openmp for Intel ifort
+#   -qopenmp for Intel ifort
 #   -mp for Portland pgfortran
 #   -qsmp=omp for IBM xlf
 
@@ -92,7 +92,7 @@ case $my_FC in
         #
         # warnings about external function calls can be suppressed by "-warn all,noexternal" for version > 2018
         # optimization report: "-vec-report0" is old and will be replaced by "-qopt-report0 -qopt-report-phase=vec" for v >=15.0
-        DEF_FFLAGS="-xHost -fpe0 -ftz -assume buffered_io -assume byterecl -align sequence -std03 -diag-disable 6477 -implicitnone -gen-interfaces -warn all" # -mcmodel=medium -shared-intel
+        DEF_FFLAGS="-xHost -fpe0 -ftz -assume buffered_io -assume byterecl -align sequence -std08 -diag-disable 6477 -implicitnone -gen-interfaces -warn all" # -mcmodel=medium -shared-intel
         OPT_FFLAGS="-O3 -check nobounds"
         DEBUG_FFLAGS="-check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv"
         # option "-openmp" is soon deprecated and replaced by "-qopenmp" for versions > 17.x
@@ -108,9 +108,9 @@ case $my_FC in
 # with some versions of gfortran/gcc you make get errors about unused functions when compiling with the options below;
 # if so, either change -Wunused to -Wunused -Werror=no-unused-function, or remove -Wunused, or remove -Werror
 #
-        DEF_FFLAGS="-std=f2003 -fimplicit-none -frange-check -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow -Wunused -Werror" # -mcmodel=medium
+        DEF_FFLAGS="-std=f2003 -fimplicit-none -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow -Wunused" # -mcmodel=medium
         OPT_FFLAGS="-O3 -finline-functions"
-        DEBUG_FFLAGS="-g -O0 -ggdb -fbacktrace -fbounds-check"
+        DEBUG_FFLAGS="-g -O0 -ggdb -fbacktrace -fbounds-check -frange-check -Werror"
         # useful to track loss of accuracy because of automatic double to single precision conversion:  -Wconversion  (this may generate many warnings...)
         OMP_FFLAGS="-fopenmp"
         ;;
@@ -206,7 +206,7 @@ case $my_FC in
         # other compilers. There is a small decrease in performance, but generally
         # it is small or negligible compared to other issues like slow I/O.
         #
-        DEF_FFLAGS="-qassert=contig -qhot -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -qzerosize -g -qsuppress=1518-234 -qsuppress=1518-317 -qsuppress=1518-318 -qsuppress=1500-036 -qsuppress=1515-009"
+        DEF_FFLAGS="-qassert=contig -qhot -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2008std -qzerosize -g -qsuppress=1518-234 -qsuppress=1518-317 -qsuppress=1518-318 -qsuppress=1500-036 -qsuppress=1515-009"
         OPT_FFLAGS="-O4 -qstrict"
         # Options -qreport -qsource -qlist create a *.lst file containing detailed information about vectorization.
         DEBUG_FFLAGS="-g -O0 -C -qddim -qfullpath -qflttrap=overflow:zerodivide:invalid:enable -qfloat=nans -qinitauto=7FBFFFFF"

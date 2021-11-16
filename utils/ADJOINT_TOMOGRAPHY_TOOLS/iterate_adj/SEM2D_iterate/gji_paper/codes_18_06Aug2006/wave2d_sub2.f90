@@ -697,7 +697,8 @@ contains
      f1 = (1. - e2/4. - 3.*e4/64. - 5.*e6/256)*rlat
      f2 = 3.*e2/8. + 3.*e4/32. + 45.*e6/1024.
      f2 = f2*sin(2.*rlat)
-     f3 = 15.*e4/256.*45.*e6/1024.  ! note: original used here contains an error, formula should be corrected to .. + 45.0*e6/1024.
+     f3 = 15.*e4/256. * 45.*e6/1024.  ! note: original used here contains an error, formula should be corrected to .. + 45.0*e6/1024.
+     !f3 = 15.*e4/256. + 45.*e6/1024.  ! correct version
      f3 = f3*sin(4.*rlat)
      f4 = 35.*e6/3072.
      f4 = f4*sin(6.*rlat)
@@ -773,6 +774,7 @@ contains
         f1 = rn1*tan(rlat1) / r1
         f2 = d**2 / 2.
         f3 = 5.*3.*t1 + 10.*c1 - 4.*c1**2 - 9.*ep2 ! note: original contains an error, should be 5. + 3.t1 .. instead of 5. * ..
+        !f3 = 5. + 3.*t1 + 10.*c1 - 4.*c1**2 - 9.*ep2 ! correct version
         f3 = f3*d**2*d**2 / 24.
         f4 = 61. + 90.*t1 + 298.*c1 + 45.*t1**2. - 252.*ep2 - 3.*c1**2
         f4 = f4*(d**2)**3 / 720.
