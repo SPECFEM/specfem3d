@@ -1144,9 +1144,9 @@ contains
 
   integer :: nglob,ier
   real(kind=CUSTOM_REAL) :: mus,mud,dc,C,T
-  integer :: nmus,nmud,ndc,nC,nForcedRup
+  integer :: nmus,nmud,ndc,nC,nForcedRup,weakening_kind
 
-  NAMELIST / SWF / mus,mud,dc,nmus,nmud,ndc,C,T,nC,nForcedRup
+  NAMELIST / SWF / mus,mud,dc,nmus,nmud,ndc,C,T,nC,nForcedRup,weakening_kind
 
   nglob = size(mu)
 
@@ -1183,6 +1183,7 @@ contains
   ndc  = 0
   nC = 0
   nForcedRup = 0
+  weakening_kind = 1
 
   read(IIN_PAR, nml=SWF)
 
@@ -1191,6 +1192,7 @@ contains
   f%Dc(:)  = dc   ! critical slip distance
   f%C(:)   = C    ! cohesion
   f%T(:)   = T    ! (forced) rupture time
+  f%kind   = weakening_kind
 
   call init_2d_distribution(f%mus,coord,IIN_PAR,nmus)
   call init_2d_distribution(f%mud,coord,IIN_PAR,nmud)
@@ -1277,11 +1279,16 @@ contains
   type(swf_type), intent(in) :: f
   real(kind=CUSTOM_REAL) :: mu(size(f%theta))
 
+  if(f%kind==1) then
   ! slip weakening law
   !
   ! for example: Galvez, 2014, eq. (8)
   !              also Ida, 1973; Palmer & Rice 1973; Andrews 1976; ..
-  mu(:) = f%mus(:) - (f%mus(:)-f%mud(:)) *  min(f%theta(:)/f%Dc(:), 1.0_CUSTOM_REAL)
+      mu(:) = f%mus(:) - (f%mus(:)-f%mud(:)) * min(f%theta(:)/f%Dc(:), 1.0_CUSTOM_REAL)
+  else
+  !-- exponential slip weakening:
+      mu(:) = f%mud(:) - (f%mud(:)-f%mus(:)) * exp(-f%theta(:)/f%Dc(:))
+  endif
 
   end function swf_mu
 
