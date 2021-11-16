@@ -762,7 +762,7 @@
     real(kind=CUSTOM_REAL),intent(in) :: bb
     real(kind=CUSTOM_REAL),intent(out) :: coef0, coef1, coef2
 
-    real(kind=CUSTOM_REAL) :: bbpow2,bbpow3,c0
+    real(kind=CUSTOM_REAL) :: bbpow2,bbpow3 !,c0
     real(kind=CUSTOM_REAL) :: temp
 
     ! permanent factors (avoids divisions which are computationally expensive)

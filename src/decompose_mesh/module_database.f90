@@ -370,7 +370,7 @@ contains
         call bcast_faults_mpi(myrank)
 
         call write_fault_database_mpi(16, myrank, nE, glob2loc_elmnt, ipart, &
-                         size(glob2loc_nodes), glob2loc_nodes, NGNOD2D, nnodes_loc, nodes_coords)
+                                      size(glob2loc_nodes), glob2loc_nodes, NGNOD2D)
 
 !    The local locations need to be saved in Database_fault files.
         write(16) nnodes_loc
