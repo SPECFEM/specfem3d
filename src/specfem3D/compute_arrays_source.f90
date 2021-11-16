@@ -215,21 +215,21 @@
   character(len=MAX_STRING_LEN) :: filename
 
   ! gets channel names
-  do icomp=1,NDIM
+  do icomp = 1,NDIM
     call write_channel_name(icomp,comp(icomp))
   enddo
 
   ! range of the block we need to read
   it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) )
-  it_start = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC + 1
-  it_end   = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
+  it_start   = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC + 1
+  it_end     = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
+
   adj_src(:,:) = 0._CUSTOM_REAL
-  itime=0
+  itime = 0
 
   if (READ_ADJSRC_ASDF) then
     ! ASDF format
-    do icomp = 1, NDIM ! 3 components
-
+    do icomp = 1,NDIM ! 3 components
       filename = trim(adj_source_file) // '_' // comp(icomp)
 
       ! would skip read and set source artificially to zero if out of bounds,
@@ -240,17 +240,15 @@
       endif
 
       call read_adjoint_sources_ASDF(filename, adj_source_asdf, it_start, it_end)
-
       adj_src(icomp,:) = real(adj_source_asdf(:))
-
     enddo
 
   else
     ! ASCII format
     ! loops over components
     do icomp = 1, NDIM
-
       filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/../SEM/'//trim(adj_source_file)//'.'//comp(icomp)//'.adj'
+
       open(unit=IIN,file=trim(filename),status='old',action='read',iostat = ier)
       ! cycles to next file (this might be more error prone)
       !if (ier /= 0) cycle

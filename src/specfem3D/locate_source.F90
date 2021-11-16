@@ -28,51 +28,35 @@
 !----  locate_source finds the correct position of the source
 !----
 
-  subroutine locate_source(filename,tshift_src,min_tshift_src_original,utm_x_source,utm_y_source, &
-                           hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
-                           islice_selected_source,ispec_selected_source, &
-                           factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
-                           xi_source,eta_source,gamma_source,nu_source,user_source_time_function)
+  subroutine locate_source()
 
   use constants
 
   use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
       UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,USE_SOURCES_RECEIVERS_Z, &
-      NSTEP_STF,NSOURCES_STF,USE_EXTERNAL_SOURCE_FILE, &
+      USE_EXTERNAL_SOURCE_FILE, &
       USE_TRICK_FOR_BETTER_PRESSURE,COUPLE_WITH_INJECTION_TECHNIQUE, &
       myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,DT, &
       NSOURCES
+
+  ! sources arrays
+  use specfem_par, only: Mxx,Myy,Mzz,Mxy,Mxz,Myz,hdur, &
+    tshift_src,utm_x_source,utm_y_source, &
+    factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
+    xi_source,eta_source,gamma_source,nu_source, &
+    ispec_selected_source,islice_selected_source
 
   ! PML
   use pml_par, only: is_CPML
 
   implicit none
 
-  character(len=MAX_STRING_LEN), intent(in) :: filename
-  double precision,dimension(NSOURCES),intent(inout) :: tshift_src
-  double precision,intent(inout) :: min_tshift_src_original
-  double precision, dimension(NSOURCES),intent(inout) :: utm_x_source,utm_y_source
-
-  ! CMTS
-  double precision, dimension(NSOURCES),intent(inout) :: hdur
-  double precision, dimension(NSOURCES),intent(inout) :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
-
-  integer, dimension(NSOURCES), intent(inout) :: islice_selected_source,ispec_selected_source
-
-  ! force
-  double precision, dimension(NSOURCES) :: factor_force_source
-  double precision, dimension(NSOURCES) :: comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP
-
-  double precision, dimension(NSOURCES),intent(inout) :: xi_source,eta_source,gamma_source
-  double precision, dimension(NDIM,NDIM,NSOURCES),intent(out) :: nu_source
-  real(kind=CUSTOM_REAL), dimension(NSTEP_STF,NSOURCES_STF) :: user_source_time_function
-
   ! local parameters
   ! sources
   integer :: isource
   double precision :: f0,t0_ricker
   ! CMTs
-  double precision, dimension(:), allocatable :: lat,long,depth
+  double precision, dimension(:), allocatable :: lat,lon,depth
   double precision, dimension(:,:), allocatable ::  moment_tensor
   ! positioning
   double precision, dimension(:), allocatable :: x_found,y_found,z_found
@@ -122,15 +106,13 @@
     write(IMAIN,*) ' locating sources'
     write(IMAIN,*) '********************'
     write(IMAIN,*)
-    write(IMAIN,'(1x,a,a,a)') 'reading source information from ', trim(filename), ' file'
-    write(IMAIN,*)
     call flush_IMAIN()
   endif
 
   ! allocates temporary arrays
   allocate(moment_tensor(6,NSOURCES), &
            lat(NSOURCES), &
-           long(NSOURCES), &
+           lon(NSOURCES), &
            depth(NSOURCES), &
            x_found(NSOURCES), &
            y_found(NSOURCES), &
@@ -143,7 +125,7 @@
            idomain(NSOURCES),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'Error allocating source arrays')
   moment_tensor(:,:) = 0.d0
-  lat(:) = 0.d0; long(:) = 0.d0; depth(:) = 0.d0
+  lat(:) = 0.d0; lon(:) = 0.d0; depth(:) = 0.d0
   x_found(:) = 0.d0; y_found(:) = 0.d0; z_found(:) = 0.d0
   x_target(:) = 0.d0; y_target(:) = 0.d0; z_target(:) = 0.d0
   elevation(:) = 0.d0
@@ -159,38 +141,7 @@
   Myz(:) = 0.d0
 
   ! read all the sources
-  if (USE_FORCE_POINT_SOURCE) then
-    ! point forces
-    if (myrank == 0) then
-      ! only main process reads in FORCESOLUTION file
-      call get_force(filename,tshift_src,hdur,lat,long,depth,NSOURCES,min_tshift_src_original,factor_force_source, &
-                     comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
-                     user_source_time_function)
-    endif
-    ! broadcasts specific point force infos
-    call bcast_all_dp(factor_force_source,NSOURCES)
-    call bcast_all_dp(comp_dir_vect_source_E,NSOURCES)
-    call bcast_all_dp(comp_dir_vect_source_N,NSOURCES)
-    call bcast_all_dp(comp_dir_vect_source_Z_UP,NSOURCES)
-  else
-    ! CMT moment tensors
-    if (myrank == 0) then
-      ! only main process reads in CMTSOLUTION file
-      call get_cmt(filename,tshift_src,hdur,lat,long,depth,moment_tensor, &
-                   DT,NSOURCES,min_tshift_src_original,user_source_time_function)
-    endif
-    ! broadcasts specific moment tensor infos
-    call bcast_all_dp(moment_tensor,6*NSOURCES)
-  endif
-
-  ! broadcasts general source information read on the main to the nodes
-  call bcast_all_dp(tshift_src,NSOURCES)
-  call bcast_all_dp(hdur,NSOURCES)
-  call bcast_all_dp(lat,NSOURCES)
-  call bcast_all_dp(long,NSOURCES)
-  call bcast_all_dp(depth,NSOURCES)
-  call bcast_all_singledp(min_tshift_src_original)
-  call bcast_all_cr(user_source_time_function,NSOURCES_STF*NSTEP_STF)
+  call read_source_locations(lat,lon,depth,moment_tensor)
 
   ! compute typical size of elements
   ! gets mesh dimensions
@@ -226,7 +177,7 @@
       depth(isource) = depth(isource)*1000.0d0
     enddo
   endif
-  call get_elevation_and_z_coordinate_all(NSOURCES,long,lat,depth,utm_x_source,utm_y_source,elevation, &
+  call get_elevation_and_z_coordinate_all(NSOURCES,lon,lat,depth,utm_x_source,utm_y_source,elevation, &
                                           x_target,y_target,z_target)
   !debug
   !print *,'source elevations:',elevation
@@ -304,12 +255,12 @@
     ! main process locates best location in all slices
     call locate_MPI_slice(nsources_subset_current_size,isources_already_done, &
                           ispec_selected_source_subset, &
-                          x_found_subset, y_found_subset, z_found_subset, &
+                          x_found_subset,y_found_subset,z_found_subset, &
                           xi_source_subset,eta_source_subset,gamma_source_subset, &
                           idomain_subset,nu_subset,final_distance_subset, &
-                          NSOURCES,ispec_selected_source, islice_selected_source, &
+                          NSOURCES,ispec_selected_source,islice_selected_source, &
                           x_found,y_found,z_found, &
-                          xi_source, eta_source, gamma_source, &
+                          xi_source,eta_source,gamma_source, &
                           idomain,nu_source,final_distance)
 
   enddo ! end of loop on all the sources
@@ -536,7 +487,7 @@
         write(IMAIN,*) '  original (requested) position of the source:'
         write(IMAIN,*)
         write(IMAIN,*) '            latitude: ',lat(isource)
-        write(IMAIN,*) '           longitude: ',long(isource)
+        write(IMAIN,*) '           longitude: ',lon(isource)
         write(IMAIN,*)
         if (SUPPRESS_UTM_PROJECTION) then
           write(IMAIN,*) '               x: ',utm_x_source(isource)
@@ -651,10 +602,127 @@
   endif
 
   ! frees temporary arrays
-  deallocate(moment_tensor,lat,long,depth)
+  deallocate(moment_tensor,lat,lon,depth)
   deallocate(x_found,y_found,z_found,elevation,final_distance)
   deallocate(x_target,y_target,z_target,idomain)
   deallocate(is_CPML_source,is_CPML_source_all)
 
   end subroutine locate_source
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine read_source_locations(lat,lon,depth,moment_tensor)
+
+  use specfem_par
+
+  implicit none
+
+  ! (uses these as explicit routine arguments to avoid compiler warnings)
+  double precision, dimension(NSOURCES),intent(out) :: lat,lon,depth
+  double precision, dimension(6,NSOURCES),intent(out) :: moment_tensor
+
+  ! local parameters
+  ! event time
+  integer :: yr,jda,mo,da,ho,mi
+  double precision :: sec
+  character(len=MAX_STRING_LEN) :: SOURCE_FILE,filename
+  character(len=MAX_STRING_LEN) :: path_to_add
+
+  ! initializes
+  lat(:) = 0.d0
+  lon(:) = 0.d0
+  depth(:) = 0.d0
+  moment_tensor(:,:) = 0.d0
+
+  tshift_src(:) = 0.d0
+  hdur(:) = 0.d0
+  min_tshift_src_original = 0.d0
+  user_source_time_function(:,:) = 0.0_CUSTOM_REAL
+
+  ! determines source file name
+  if (USE_FORCE_POINT_SOURCE) then
+    SOURCE_FILE = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FORCESOLUTION'
+  else
+    SOURCE_FILE = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'CMTSOLUTION'
+  endif
+
+  ! see if we are running several independent runs in parallel
+  ! if so, add the right directory for that run
+  ! (group numbers start at zero, but directory names start at run0001, thus we add one)
+  ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+    SOURCE_FILE = path_to_add(1:len_trim(path_to_add))//SOURCE_FILE(1:len_trim(SOURCE_FILE))
+  endif
+
+  ! set filename to read sources from
+  filename = trim(SOURCE_FILE)
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,'(1x,a,a,a)') 'reading source information from ', trim(filename), ' file'
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
+  ! reads in source descriptions
+  if (USE_FORCE_POINT_SOURCE) then
+    ! point forces
+    if (myrank == 0) then
+      ! only main process reads in FORCESOLUTION file
+      call get_force(filename,tshift_src,hdur, &
+                     lat,lon,depth,NSOURCES, &
+                     min_tshift_src_original,factor_force_source, &
+                     comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
+                     user_source_time_function)
+    endif
+    ! broadcasts specific point force infos
+    call bcast_all_dp(factor_force_source,NSOURCES)
+    call bcast_all_dp(comp_dir_vect_source_E,NSOURCES)
+    call bcast_all_dp(comp_dir_vect_source_N,NSOURCES)
+    call bcast_all_dp(comp_dir_vect_source_Z_UP,NSOURCES)
+  else
+    ! CMT moment tensors
+    if (myrank == 0) then
+      ! only main process reads in CMTSOLUTION file
+      call get_cmt(filename,yr,jda,mo,da,ho,mi,sec, &
+                   tshift_src,hdur, &
+                   lat,lon,depth,moment_tensor, &
+                   DT,NSOURCES,min_tshift_src_original,user_source_time_function)
+
+      ! stores infos for ASDF/SAC files
+      yr_PDE = yr     ! year
+      jda_PDE = jda   ! day of the year
+      ho_PDE = ho     ! hour
+      mi_PDE = mi     ! minute
+      sec_PDE = sec   ! second
+    endif
+    ! broadcasts specific moment tensor infos
+    call bcast_all_dp(moment_tensor,6*NSOURCES)
+  endif
+
+  ! broadcasts general source information read on the main to the nodes
+  call bcast_all_dp(tshift_src,NSOURCES)
+  call bcast_all_dp(hdur,NSOURCES)
+  call bcast_all_dp(lat,NSOURCES)
+  call bcast_all_dp(lon,NSOURCES)
+  call bcast_all_dp(depth,NSOURCES)
+  call bcast_all_singledp(min_tshift_src_original)
+
+  ! external STF
+  if (USE_EXTERNAL_SOURCE_FILE) then
+    call bcast_all_cr(user_source_time_function,NSOURCES_STF*NSTEP_STF)
+  endif
+
+  ! ASDF/SAC (SAC not supported yet, for future...)
+  if (ASDF_FORMAT) then
+    call bcast_all_singlei(yr_PDE)
+    call bcast_all_singlei(jda_PDE)
+    call bcast_all_singlei(ho_PDE)
+    call bcast_all_singlei(mi_PDE)
+    call bcast_all_singledp(sec_PDE)
+  endif
+
+  end subroutine read_source_locations

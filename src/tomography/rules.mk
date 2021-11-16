@@ -214,10 +214,13 @@ endif
 ### ASDF
 ###
 
-asdf_specfem3D_SHARED_STUBS = $(asdf_shared_STUBS)
-
 # conditional asdf linking
+ifeq ($(ASDF),yes)
+INVERSE_LINK_FLAGS += $(ASDF_LIBS)
+xmodel_update_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_OBJECTS)
+else
 xmodel_update_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_STUBS)
+endif
 
 # extra dependencies
 $O/model_update.tomo.o: $O/specfem3D_par.spec_module.o $O/tomography_par.tomo_module.o

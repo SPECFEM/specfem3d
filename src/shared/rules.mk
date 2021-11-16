@@ -35,7 +35,6 @@ shared_TARGETS = \
 	$(shared_OBJECTS) \
 	$(EMPTY_MACRO)
 
-
 shared_OBJECTS = \
 	$O/shared_par.shared_module.o \
 	$O/assemble_MPI_scalar.shared.o \
@@ -138,7 +137,7 @@ asdf_shared_OBJECTS = \
 asdf_shared_STUBS = \
 	$O/asdf_method_stubs.cc.o \
 	$O/asdf_manager_stubs.shared_asdf.o \
-        $(EMPTY_MACRO)
+	$(EMPTY_MACRO)
 
 ifeq ($(ASDF),yes)
 shared_OBJECTS += $(asdf_shared_OBJECTS)
