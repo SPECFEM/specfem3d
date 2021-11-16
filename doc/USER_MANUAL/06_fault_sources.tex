@@ -250,7 +250,7 @@ RATE\_AND\_STATE ,TPV16 ,HETE\_RSF ,TPV10X ,TWF
 followed by (n1+n2+n3) \&\textbf{DIST2D} blocks
 
 
-\&\textbf{SWF} mus, mud, dc {[}, nmus, nmud, ndc{]} /
+\&\textbf{SWF} mus, mud, dc {[}, nmus, nmud, ndc{]} (weakening_kind=1 for linear (default); weakening_kind=2 for exponential)/
 
 \&\textbf{TWF} nuc\_x, nuc\_y, nuc\_z, nuc\_r, nuc\_t0, nuc\_v /
 
@@ -321,6 +321,7 @@ of the fault:
 \item [{ndc}] = number of heterogeneous items for critical slip-weakening
 distance {[}default is 0{]}
 \item [{nC}] = number of heterogeneous items for cohesion
+\item [{weakening_kind}] = 1 for linear slip-weakening law (default); 2 for exponential slip-weakening law: $$\mu_d + (\mu_s-\mu_d) \exp(-\frac{u}{d_c})$$
 \end{description}
 
 \item [{\&\textbf{TWF}}] input block sets the time-weakening friction parameters
