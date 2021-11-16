@@ -321,7 +321,8 @@ of the fault:
 \item [{ndc}] = number of heterogeneous items for critical slip-weakening
 distance {[}default is 0{]}
 \item [{nC}] = number of heterogeneous items for cohesion
-\item [{weakening_kind}] = 1 for linear slip-weakening law (default); 2 for exponential slip-weakening law: $$\mu_d + (\mu_s-\mu_d) \exp(-\frac{u}{d_c})$$
+\item [{weakening_kind}] = 1 for linear slip-weakening law (default); 2 for exponential slip-weakening law:
+                            $$\mu = \mu_d + (\mu_s-\mu_d) exp(-\frac{u}{d_c}) $$
 \end{description}
 
 \item [{\&\textbf{TWF}}] input block sets the time-weakening friction parameters
