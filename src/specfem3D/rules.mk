@@ -234,9 +234,9 @@ specfem3D_SHARED_OBJECTS += $(adios_specfem3D_PREOBJECTS)
 ###
 
 asdf_specfem3D_OBJECTS = \
-        $O/write_output_ASDF.spec.o \
-        $O/read_adjoint_sources_ASDF.spec.o \
-        $(EMPTY_MACRO)
+	$O/write_output_ASDF.spec.o \
+	$O/read_adjoint_sources_ASDF.spec.o \
+	$(EMPTY_MACRO)
 
 asdf_specfem3D_SHARED_OBJECTS = $(asdf_shared_OBJECTS)
 asdf_specfem3D_SHARED_STUBS = $(asdf_shared_STUBS)

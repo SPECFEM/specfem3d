@@ -221,7 +221,7 @@
 
   use specfem_par, only: SIMULATION_TYPE,NGLOB_AB,ibool, &
     deltat,DT,t0,NSTEP,it, &
-    seismo_current,seismo_offset,subsamp_seismos, &
+    seismo_current,seismo_offset,NTSTEP_BETWEEN_OUTPUT_SAMPLE, &
     ispec_selected_source, &
     number_receiver_global,nrec_local, &
     Mxx,Myy,Mzz,Mxy,Mxz,Myz,tshift_src,hdur_Gaussian, &
@@ -274,7 +274,8 @@
   idx = seismo_offset + seismo_current
 
   ! checks bounds
-  if (idx < 1 .or. idx > NSTEP/subsamp_seismos) call exit_mpi(myrank,'Error: seismograms_eps has wrong current index')
+  if (idx < 1 .or. idx > NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE) &
+    call exit_mpi(myrank,'Error: seismograms_eps has wrong current index')
 
   ! loops over local receivers
   do irec_local = 1,nrec_local
@@ -326,7 +327,7 @@
       ! source time function value
       stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(irec),hdur_Gaussian(irec))
 
-      stf_deltat = real(stf * deltat * subsamp_seismos,kind=CUSTOM_REAL)
+      stf_deltat = real(stf * deltat * NTSTEP_BETWEEN_OUTPUT_SAMPLE,kind=CUSTOM_REAL)
 
       ! integrated moment tensor derivatives
       Mxx_der(irec_local) = Mxx_der(irec_local) + eps_s(1,1) * stf_deltat

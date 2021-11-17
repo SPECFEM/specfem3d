@@ -410,13 +410,13 @@ source file in directory \texttt{src/check\_mesh\_quality\_CUBIT\_Abaqus/}.
 Then, in the main directory, type
 {\small
 \begin{verbatim}
-make xcheck_mesh_quality
+  make xcheck_mesh_quality
 \end{verbatim}
 }
 and use
 {\small
 \begin{verbatim}
-./bin/xcheck_mesh_quality
+  ./bin/xcheck_mesh_quality
 \end{verbatim}
 }
 to generate an %not supported: AVS output file (\texttt{\small AVS\_meshquality.inp} in AVS UCD format) or
@@ -486,10 +486,11 @@ scaling up to 150,000 processor cores in shown for instance in
 \end{figure}
 
 
+\noindent
 When you are ready to compile, in the main directory type
 {\small
 \begin{verbatim}
-make xdecompose_mesh
+  make xdecompose_mesh
 \end{verbatim}
 }
 \noindent
@@ -530,8 +531,9 @@ the program.
 
 In case you successfully ran the configuration script, you are also
 ready to compile the internal mesher. This is an alternative to CUBIT
-for the mesh generation of relatively simple models.
-%
+for the mesh generation of relatively simple models.\\
+
+
 \begin{figure}[htbp]
 \begin{centering}
 \includegraphics[scale=0.5]{figures/socal_map_mpi.pdf}
@@ -548,22 +550,24 @@ of elements. In this example we use $5^{2}=25$ processors. }
 In the main directory, type
 {\small
 \begin{verbatim}
-make xmeshfem3D
+  make xmeshfem3D
 \end{verbatim}
 }
 \noindent
 If all paths and flags have been set correctly, the mesher should
 now compile and produce the executable \texttt{bin/xmeshfem3D}. Please
 note that \texttt{xmeshfem3D} must be called directly from the main
-directory, as most of the binaries of the package.
+directory, as most of the binaries of the package.\\
+
 
 Input for the mesh generation program is provided through the parameter
 file \texttt{Mesh\_Par\_file}, which resides in the subdirectory \texttt{DATA/meshfem3D\_files/}.
-(to see how to use it, see the EXAMPLES specific to the internal mesher in directory \texttt{EXAMPLES/meshfem3D\_examples/}.
+(To see how to use it, see the EXAMPLES specific to the internal mesher in directory \texttt{EXAMPLES/meshfem3D\_examples/}.)
 Before running the mesher, a number of parameters need to be set in
 the \texttt{Mesh\_Par\_file}. This requires a basic understanding
 of how the SEM is implemented, and we encourage you to read \citet{KoVi98,KoTr99}
-and \citet{KoLiTrSuStSh04}.
+and \citet{KoLiTrSuStSh04}.\\
+
 
 The mesher and the solver use UTM coordinates internally, therefore
 you need to define the zone number for the UTM projection (e.g., zone
@@ -573,8 +577,12 @@ round them off to define a square mesh in UTM coordinates. When running
 benchmarks on rectangular models, turn the UTM projection off by using
 the flag \texttt{\small SUPPRESS\_UTM\_PROJECTION},
 in which case all `longitude' parameters simply refer to the $x$~axis, and
-all `latitude' parameters simply refer to the $y$~axis. To run the
-mesher for a global simulation, the following parameters need to be
+all `latitude' parameters simply refer to the $y$~axis.\\
+
+
+\noindent
+To run the
+internal mesher for a regional simulation, the following parameters need to be
 set in the \texttt{\small Mesh\_Par\_file}:
 %
 \begin{description}
@@ -734,44 +742,53 @@ At the end of this file, you simply need to set the number of spectral
 elements in the vertical direction for each layer. We provide a few
 models in the {\texttt{EXAMPLES/}} directory.\\
 
-
-Finally, depending on your system, you might need to provide a file
-that tells MPI what compute nodes to use for the simulations. The
-file must have a number of entries (one entry per line) at least equal
-to the number of processors needed for the run. A sample file is provided
-in the file \texttt{mymachines}. This file is not used by the mesher
-or solver, but is required by the \texttt{go\_mesher} and \texttt{go\_solver}
-default job submission scripts. See Chapter~\ref{cha:Scheduler}
-for information about running the code on a system with a scheduler,
-e.g., LSF.
-
 Now that you have set the appropriate parameters in the \texttt{Mesh\_Par\_file}
-and have compiled the mesher, you are ready to launch it! This is
-most easily accomplished based upon the \texttt{go\_mesher} script.
+and have compiled the mesher, you are ready to run it!
+\footnote{
+Depending on your system, please check how to run executables with MPI.
+To run the mesher on your cluster, we provide some example scripts for you to modify accordingly in \texttt{utils/Cluster/}.
+For some installations, you might need to provide a file
+that tells MPI what compute nodes to use for the simulations. In this case, the
+file must have a number of entries (one entry per line) at least equal
+to the number of processors needed for the run.
+A sample file name is \texttt{mymachines}. This file is not used by the mesher
+or solver, but is required by the \texttt{go\_mesher***} and \texttt{go\_solver**}
+default job submission scripts provided in directory \texttt{utils/Cluster/}.
+To run the mesher, it is most easily accomplished based upon the \texttt{go\_mesher***} script.
 When you run on a PC cluster, the script assumes that the nodes are
 named n001, n002, etc. If this is not the case, change the \texttt{tr
 -d `n'} line in the script. You may also need to edit the last command
 at the end of the script that invokes the \texttt{mpirun} command.
-See Chapter~\ref{cha:Scheduler} for information about running the
-code on a system with a scheduler, e.g., LSF.
-
-Mesher output is provided in the \texttt{OUTPUT\_FILES} directory
+See Chapter~\ref{cha:Scheduler}
+for information about running the code on a system with a scheduler,
+e.g., LSF.
+}
+Mesher output is provided in the \texttt{OUTPUT\_FILES/} directory
 in \texttt{output\_mesher.txt}; this file provides lots of details
-about the mesh that was generated. Please note that the mesher suggests
+about the mesh that was generated.\\
+
+
+Please note that the mesher suggests
 a time step \texttt{DT} to run the solver with. The mesher output
 file also contains a table about the quality of the mesh to indicate
 possible problems with the distortions of elements. Alternatively,
 output can be directed to the screen instead by uncommenting a line
 in \texttt{constants.h}:
+{\small
 \begin{verbatim}
 ! uncomment this to write messages to the screen
 ! integer, parameter :: IMAIN = ISTANDARD_OUTPUT
-\end{verbatim}
+\end{verbatim}}
+
+
 To control the quality of the mesh, check the standard output (either
-on the screen or in the \texttt{OUTPUT\_FILES} directory in \texttt{output\_mesher.txt})
+on the screen or in the \texttt{OUTPUT\_FILES/} directory in \texttt{output\_mesher.txt})
 and analyze the skewness histogram of mesh elements to make sure no
 element has a skewness above approximately 0.75, otherwise the mesh
 is of poor quality (and if even a single element has a skewness value
 above 0.80, then you must definitely improve the mesh). To draw the
-skewness histogram on the screen, type \texttt{gnuplot plot\_mesh\_quality\_histogram.gnu}.
+skewness histogram on the screen, you could type
+{\small \begin{verbatim}
+  gnuplot plot_mesh_quality_histogram.gnu
+\end{verbatim}}
 

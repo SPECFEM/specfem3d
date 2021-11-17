@@ -489,11 +489,20 @@
       write(*,*)
     endif
 
-    call read_value_integer(subsamp_seismos, 'subsamp_seismos', ier)
+    !deprecated: call read_value_integer(subsamp_seismos, 'subsamp_seismos', ier)
+    call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SAMPLE, 'NTSTEP_BETWEEN_OUTPUT_SAMPLE', ier)
     if (ier /= 0) then
-      some_parameters_missing_from_Par_file = .true.
-      write(*,'(a)') 'subsamp_seismos                 = 1'
-      write(*,*)
+      ! old version
+      call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SAMPLE, 'subsamp_seismos', ier)
+      if (ier == 0) then
+        ! deprecation warning
+        write(*,'(a)') 'Warning: Deprecated parameter subsamp_seismos found in Par_file.'
+        write(*,'(a)') '         Please use parameter NTSTEP_BETWEEN_OUTPUT_SAMPLE in future...'
+      else
+        some_parameters_missing_from_Par_file = .true.
+        write(*,'(a)') 'NTSTEP_BETWEEN_OUTPUT_SAMPLE    = 1'
+        write(*,*)
+      endif
     endif
 
     call read_value_logical(USE_BINARY_FOR_SEISMOGRAMS, 'USE_BINARY_FOR_SEISMOGRAMS', ier)
@@ -863,8 +872,8 @@
    stop 'Error: at least one of SAVE_SEISMOGRAMS_DISPLACEMENT SAVE_SEISMOGRAMS_VELOCITY SAVE_SEISMOGRAMS_ACCELERATION &
              &SAVE_SEISMOGRAMS_PRESSURE must be true'
 
-  if (subsamp_seismos < 1) &
-    stop 'Error: subsamp_seismos must be >= 1'
+  if (NTSTEP_BETWEEN_OUTPUT_SAMPLE < 1) &
+    stop 'Error: NTSTEP_BETWEEN_OUTPUT_SAMPLE must be >= 1'
 
   ! this could be implemented in the future if needed,
   ! see comments in the source code around the USE_TRICK_FOR_BETTER_PRESSURE
@@ -1017,21 +1026,21 @@
     !SAVE_DISPLACEMENT = .true.         ! (not necessary) stores displacement (flag not necessary, but to avoid confusion)
   endif
 
-  ! make sure NSTEP is a multiple of subsamp_seismos
+  ! make sure NSTEP is a multiple of NTSTEP_BETWEEN_OUTPUT_SAMPLE
   ! if not, increase it a little bit, to the next multiple
-  if (mod(NSTEP,subsamp_seismos) /= 0) then
+  if (mod(NSTEP,NTSTEP_BETWEEN_OUTPUT_SAMPLE) /= 0) then
     if (NOISE_TOMOGRAPHY /= 0) then
       if (myrank == 0) then
-        print *,'Noise simulation: Invalid number of NSTEP = ',NSTEP
-        print *,'Must be a multiple of subsamp_seismos = ',subsamp_seismos
+        print *,'Noise simulation: Invalid number of NSTEP          = ',NSTEP
+        print *,'Must be a multiple of NTSTEP_BETWEEN_OUTPUT_SAMPLE = ',NTSTEP_BETWEEN_OUTPUT_SAMPLE
       endif
-      stop 'Error: NSTEP must be a multiple of subsamp_seismos'
+      stop 'Error: NSTEP must be a multiple of NTSTEP_BETWEEN_OUTPUT_SAMPLE'
     else
-      NSTEP = (NSTEP/subsamp_seismos + 1)*subsamp_seismos
+      NSTEP = (NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE + 1)*NTSTEP_BETWEEN_OUTPUT_SAMPLE
       ! user output
       if (myrank == 0) then
         print *
-        print *,'NSTEP is not a multiple of subsamp_seismos'
+        print *,'NSTEP is not a multiple of NTSTEP_BETWEEN_OUTPUT_SAMPLE'
         print *,'thus increasing it automatically to the next multiple, which is ',NSTEP
         print *
       endif
@@ -1041,13 +1050,13 @@
   ! output seismograms at least once at the end of the simulation
   NTSTEP_BETWEEN_OUTPUT_SEISMOS = min(NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
 
-  ! make sure NSTEP_BETWEEN_OUTPUT_SEISMOS is a multiple of subsamp_seismos
-  if (mod(NTSTEP_BETWEEN_OUTPUT_SEISMOS,subsamp_seismos) /= 0) then
+  ! make sure NSTEP_BETWEEN_OUTPUT_SEISMOS is a multiple of NTSTEP_BETWEEN_OUTPUT_SAMPLE
+  if (mod(NTSTEP_BETWEEN_OUTPUT_SEISMOS,NTSTEP_BETWEEN_OUTPUT_SAMPLE) /= 0) then
     if (myrank == 0) then
-      print *,'Invalid number of NTSTEP_BETWEEN_OUTPUT_SEISMOS = ',NTSTEP_BETWEEN_OUTPUT_SEISMOS
-      print *,'Must be a multiple of subsamp_seismos = ',subsamp_seismos
+      print *,'Invalid number of NTSTEP_BETWEEN_OUTPUT_SEISMOS    = ',NTSTEP_BETWEEN_OUTPUT_SEISMOS
+      print *,'Must be a multiple of NTSTEP_BETWEEN_OUTPUT_SAMPLE = ',NTSTEP_BETWEEN_OUTPUT_SAMPLE
     endif
-    stop 'Error: NTSTEP_BETWEEN_OUTPUT_SEISMOS must be a multiple of subsamp_seismos'
+    stop 'Error: NTSTEP_BETWEEN_OUTPUT_SEISMOS must be a multiple of NTSTEP_BETWEEN_OUTPUT_SAMPLE'
   endif
 
   ! the default value of NTSTEP_BETWEEN_READ_ADJSRC (0) is to read the whole trace at the same time
@@ -1407,7 +1416,7 @@
   call bcast_all_singlel(SAVE_SEISMOGRAMS_ACCELERATION)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_PRESSURE)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)
-  call bcast_all_singlei(subsamp_seismos)
+  call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_SAMPLE)
   call bcast_all_singlel(USE_BINARY_FOR_SEISMOGRAMS)
   call bcast_all_singlel(SU_FORMAT)
   call bcast_all_singlel(ASDF_FORMAT)

@@ -50,9 +50,9 @@ mkdir -p SEM
 rm -rf SEM/*
 mkdir -p SEM/dat SEM/syn
 
-mkdir -p models
-rm -rf models/*
-mkdir -p models/initial_model models/target_model
+mkdir -p MODELS
+rm -rf MODELS/*
+mkdir -p MODELS/initial_model MODELS/target_model
 
 cd $ROOT/
 cp -v ./setup/constants.h ./setup/constants.h_backup
@@ -122,9 +122,9 @@ cp -rp OUTPUT_FILES OUTPUT_FILES.dat.forward
 mv -v OUTPUT_FILES/*SU SEM/dat/
 
 # target model
-cp -v OUTPUT_FILES/DATABASES_MPI/*rho.bin models/target_model/
-cp -v OUTPUT_FILES/DATABASES_MPI/*vp.bin  models/target_model/
-cp -v OUTPUT_FILES/DATABASES_MPI/*vs.bin  models/target_model/
+cp -v OUTPUT_FILES/DATABASES_MPI/*rho.bin MODELS/target_model/
+cp -v OUTPUT_FILES/DATABASES_MPI/*vp.bin  MODELS/target_model/
+cp -v OUTPUT_FILES/DATABASES_MPI/*vs.bin  MODELS/target_model/
 
 ########################### syn ########################################
 echo
@@ -155,9 +155,9 @@ rm -rf OUTPUT_FILES.syn.forward
 cp -rp OUTPUT_FILES OUTPUT_FILES.syn.forward
 
 mv -v OUTPUT_FILES/*SU SEM/syn/
-cp -v OUTPUT_FILES/DATABASES_MPI/*rho.bin models/initial_model/
-cp -v OUTPUT_FILES/DATABASES_MPI/*vp.bin  models/initial_model/
-cp -v OUTPUT_FILES/DATABASES_MPI/*vs.bin  models/initial_model/
+cp -v OUTPUT_FILES/DATABASES_MPI/*rho.bin MODELS/initial_model/
+cp -v OUTPUT_FILES/DATABASES_MPI/*vp.bin  MODELS/initial_model/
+cp -v OUTPUT_FILES/DATABASES_MPI/*vs.bin  MODELS/initial_model/
 
 ########################### adj sources ################################
 echo

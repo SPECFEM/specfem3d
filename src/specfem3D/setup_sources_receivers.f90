@@ -132,6 +132,7 @@
   ! subsets used to save adjoint sources must not be larger than the whole time series,
   ! otherwise we waste memory
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
+    ! limits length
     if (NTSTEP_BETWEEN_READ_ADJSRC > NSTEP) NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
   endif
 
@@ -1087,7 +1088,6 @@
     endif
 
     ! initializes adjoint sources
-
     allocate(source_adjoint(NDIM,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2073')
     if (ier /= 0) stop 'error allocating array source_adjoint'

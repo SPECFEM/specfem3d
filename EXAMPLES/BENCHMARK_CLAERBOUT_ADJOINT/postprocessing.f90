@@ -133,12 +133,12 @@ program random_model
     ! rho
     allocate(rho(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'Error allocating array rho'
     allocate(rho0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'Error allocating array rho0'
-    filename = 'models/target_model/'//trim(prname)//'rho.bin'
+    filename = 'MODELS/target_model/'//trim(prname)//'rho.bin'
     open(unit=IOUT,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'Error opening file rho.bin target_model'
     read(IOUT) rho
     close(IOUT)
-    filename = 'models/initial_model/'//trim(prname)//'rho.bin'
+    filename = 'MODELS/initial_model/'//trim(prname)//'rho.bin'
     open(unit=IOUT,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'Error opening file rho.bin initial_model'
     read(IOUT) rho0
@@ -147,12 +147,12 @@ program random_model
     ! vp
     allocate(vp(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'Error allocating array vp'
     allocate(vp0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'Error allocating array vp0'
-    filename = 'models/target_model/'//trim(prname)//'vp.bin'
+    filename = 'MODELS/target_model/'//trim(prname)//'vp.bin'
     open(unit=IOUT,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'Error opening file vp.bin target_model'
     read(IOUT) vp
     close(IOUT)
-    filename = 'models/initial_model/'//trim(prname)//'vp.bin'
+    filename = 'MODELS/initial_model/'//trim(prname)//'vp.bin'
     open(unit=IOUT,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'Error opening file vp.bin initial_model'
     read(IOUT) vp0
@@ -166,12 +166,12 @@ program random_model
       vs = 0.0
       vs0 = 0.0
     else
-      filename = 'models/target_model/'//trim(prname)//'vs.bin'
+      filename = 'MODELS/target_model/'//trim(prname)//'vs.bin'
       open(unit=IOUT,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
       if (ier /= 0) stop 'Error opening file vs.bin target_model'
       read(IOUT) vs
       close(IOUT)
-      filename = 'models/initial_model/'//trim(prname)//'vs.bin'
+      filename = 'MODELS/initial_model/'//trim(prname)//'vs.bin'
       open(unit=IOUT,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
       if (ier /= 0) stop 'Error opening file vs.bin initial_model'
       read(IOUT) vs0
