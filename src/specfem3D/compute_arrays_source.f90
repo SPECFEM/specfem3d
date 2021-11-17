@@ -201,12 +201,12 @@
 
   implicit none
 
-! input
-  integer irec_local
-  character(len=*) adj_source_file
+  ! input
+  integer :: irec_local
+  character(len=*) :: adj_source_file
 
-! local
-  integer icomp, itime, ier, it_start, it_end, it_sub_adj
+  ! local
+  integer :: icomp, itime, ier, it_start, it_end, it_sub_adj
   real(kind=CUSTOM_REAL), dimension(NDIM,NTSTEP_BETWEEN_READ_ADJSRC) :: adj_src
   real(kind=CUSTOM_REAL), dimension(NSTEP) :: adj_source_asdf
   double precision :: junk
@@ -240,7 +240,9 @@
       endif
 
       call read_adjoint_sources_ASDF(filename, adj_source_asdf, it_start, it_end)
-      adj_src(icomp,:) = real(adj_source_asdf(:))
+
+      ! stores source array
+      adj_src(icomp,:) = adj_source_asdf(:)
     enddo
 
   else
@@ -263,6 +265,7 @@
           call exit_MPI(myrank, &
             'file '//trim(filename)//' has wrong length, please check with your simulation duration (1111)')
       enddo
+
       !! read the block we need
       do itime = it_start, it_end
         read(IIN,*,iostat=ier) junk, source_adjoint(icomp,irec_local,itime-it_start+1)
@@ -272,6 +275,7 @@
           call exit_MPI(myrank, &
             'file '//trim(filename)//' has wrong length, please check with your simulation duration (2222)')
       enddo
+
       close(IIN)
 
     enddo

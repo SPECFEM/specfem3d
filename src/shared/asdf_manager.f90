@@ -64,6 +64,15 @@ subroutine asdf_setup(file_id, path_to_add, simul_run_flag)
 
   call ASDF_open_read_only_f(filename, comm, file_id)
 
+  ! checks file id
+  if (file_id < 0) then
+    ! negative file id indicates an opening error
+    print *,'Error opening ASDF file   : ',trim(filename)
+    print *,'       got invalid file id: ',file_id
+    print *,'Please check if the file exists...'
+    stop 'Error opening ASDF file'
+  endif
+
 end subroutine asdf_setup
 
 !==============================================================================

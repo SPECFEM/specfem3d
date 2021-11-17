@@ -594,6 +594,13 @@
   character(len=MAX_STRING_LEN) :: rec_filename,filtered_rec_filename
   character(len=MAX_STRING_LEN) :: path_to_add
 
+  ! adjoint sources/receivers
+  integer :: icomp,itime,nadj_files_found,nadj_files_found_tot
+  real(kind=CUSTOM_REAL) :: junk
+  character(len=3),dimension(NDIM) :: comp
+  character(len=MAX_STRING_LEN) :: filename
+  character(len=MAX_STRING_LEN) :: adj_source_file
+
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
@@ -706,6 +713,110 @@
   ! checks if acoustic receiver is exactly on the free surface because pressure is zero there
   call setup_receivers_check_acoustic()
 
+  ! counter for adjoint receiver stations in local slice, used to allocate adjoint source arrays
+  nadj_rec_local = 0
+
+  ! counts receivers for adjoint simulations
+  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
+    ! ADJOINT simulations
+    ! gets number of local adjoint sources, i.e. located in this slice (nadj_rec_local)
+    if (.not. SU_FORMAT) then
+      ! prepares channel names
+      do icomp = 1,NDIM
+        call write_channel_name(icomp,comp(icomp))
+      enddo
+
+      ! temporary counter to check if any files are found at all
+      nadj_files_found = 0
+
+      do irec = 1,nrec
+        ! adjoint receiver station
+        if (myrank == islice_selected_rec(irec)) then
+          ! checks that the source slice number is okay
+          if (islice_selected_rec(irec) < 0 .or. islice_selected_rec(irec) > NPROC-1) &
+            call exit_MPI(myrank,'something is wrong with the source slice number in adjoint simulation')
+
+          ! updates counter
+          nadj_rec_local = nadj_rec_local + 1
+
+          ! checks **net**.**sta**.**MX**.adj files for correct number of time steps
+          if (READ_ADJSRC_ASDF) then
+            ! ASDF format
+            call check_adjoint_sources_asdf(irec,nadj_files_found)
+          else
+            ! ASCII format
+            adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
+
+            ! loops over file components E/N/Z
+            do icomp = 1,NDIM
+              filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))// &
+                       '/../SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
+              open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ier)
+              if (ier == 0) then
+                ! checks length of file
+                itime = 0
+                do while (ier == 0)
+                  read(IIN,*,iostat=ier) junk,junk
+                  if (ier == 0) itime = itime + 1
+                enddo
+
+                ! checks length
+                if (itime /= NSTEP) then
+                  print *,'adjoint source error: ',trim(filename),' has length',itime,' but should be',NSTEP
+                  call exit_MPI(myrank, &
+                    'file '//trim(filename)//' has wrong length, please check your adjoint sources and your simulation duration')
+                endif
+
+                ! updates counter for found files
+                nadj_files_found = nadj_files_found + 1
+              endif
+              ! closes file
+              close(IIN)
+            enddo
+          endif
+        endif
+      enddo
+
+    else
+      ! SU_FORMAT file
+      ! adjoint sources given in single SU_FORMAT file;
+      ! skip counting, because only one file per component per proc in SU_FORMAT
+      nadj_rec_local = nrec_local
+      nadj_files_found = nrec_local
+    endif !if (.not. SU_FORMAT)
+
+    ! checks if any adjoint source files found at all
+    call sum_all_i(nadj_files_found,nadj_files_found_tot)
+    if (myrank == 0) then
+      ! user output
+      write(IMAIN,*)
+      write(IMAIN,*) '    ',nadj_files_found_tot,' adjoint component trace files found in all slices'
+      call flush_IMAIN()
+
+      ! main process checks if any adjoint files found
+      if (nadj_files_found_tot == 0) then
+        print *,'Error no adjoint traces found: ',nadj_files_found_tot
+        print *,'in directory : ',OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/../SEM/'
+        if (.not. SU_FORMAT .and. .not. READ_ADJSRC_ASDF) then
+          print *,'with endings : ', '**.'//comp(1)//'.adj',' ','**.'//comp(2)//'.adj',' ','**.'//comp(3)//'.adj'
+        endif
+        print *
+        call exit_MPI(myrank,'no adjoint traces found, please check adjoint sources in directory SEM/')
+      endif
+    endif
+
+    ! initializes adjoint sources
+    allocate(source_adjoint(NDIM,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2073')
+    if (ier /= 0) stop 'error allocating array source_adjoint'
+    source_adjoint(:,:,:) = 0.0_CUSTOM_REAL
+
+    ! note:
+    ! computes adjoint sources in chunks/blocks during time iterations.
+    ! we moved it to compute_add_sources_viscoelastic.f90 & compute_add_sources_acoustic.f90,
+    ! because we may need to read in adjoint sources block by block
+  endif
+
   end subroutine setup_receivers
 
 
@@ -810,17 +921,8 @@
 
   implicit none
 
+  integer :: isource,ispec,ier
   real(kind=CUSTOM_REAL) :: factor_source
-  real(kind=CUSTOM_REAL) :: junk
-
-  integer :: isource,ispec
-  integer :: irec
-  integer :: icomp,itime,nadj_files_found,nadj_files_found_tot,ier
-
-  character(len=3),dimension(NDIM) :: comp
-  character(len=MAX_STRING_LEN) :: filename
-  character(len=MAX_STRING_LEN) :: adj_source_file
-
   double precision, dimension(NGLLX) :: hxis,hpxis
   double precision, dimension(NGLLY) :: hetas,hpetas
   double precision, dimension(NGLLZ) :: hgammas,hpgammas
@@ -872,11 +974,11 @@
       ! initializes
       sourcearray(:,:,:,:) = ZERO
 
-      !   check that the source slice number is okay
+      ! check that the source slice number is okay
       if (islice_selected_source(isource) < 0 .or. islice_selected_source(isource) > NPROC-1) &
         call exit_MPI(myrank,'something is wrong with the source slice number')
 
-      !   compute source arrays in source slice
+      ! compute source arrays in source slice
       if (myrank == islice_selected_source(isource)) then
 
         ispec = ispec_selected_source(isource)
@@ -994,109 +1096,6 @@
     allocate(sourcearrays(1,1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2072')
     if (ier /= 0) stop 'error allocating dummy sourcearrays'
-  endif
-
-  ! ADJOINT simulations
-  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
-    ! counts local receivers which become adjoint sources
-    nadj_rec_local = 0
-
-    ! gets number of local adjoint sources, i.e. located in this slice (nadj_rec_local)
-    if (.not. SU_FORMAT) then
-      ! prepares channel names
-      do icomp = 1,NDIM
-        call write_channel_name(icomp,comp(icomp))
-      enddo
-
-      ! temporary counter to check if any files are found at all
-      nadj_files_found = 0
-
-      do irec = 1,nrec
-        ! adjoint receiver station
-        if (myrank == islice_selected_rec(irec)) then
-          ! checks that the source slice number is okay
-          if (islice_selected_rec(irec) < 0 .or. islice_selected_rec(irec) > NPROC-1) &
-            call exit_MPI(myrank,'something is wrong with the source slice number in adjoint simulation')
-
-          ! updates counter
-          nadj_rec_local = nadj_rec_local + 1
-
-          ! checks **net**.**sta**.**MX**.adj files for correct number of time steps
-          if (READ_ADJSRC_ASDF) then
-            ! ASDF format
-            call check_adjoint_sources_asdf(irec,nadj_files_found)
-          else
-            ! ASCII format
-            adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
-
-            ! loops over file components E/N/Z
-            do icomp = 1,NDIM
-              filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))// &
-                       '/../SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
-              open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ier)
-              if (ier == 0) then
-                ! checks length of file
-                itime = 0
-                do while (ier == 0)
-                  read(IIN,*,iostat=ier) junk,junk
-                  if (ier == 0) itime = itime + 1
-                enddo
-
-                ! checks length
-                if (itime /= NSTEP) then
-                  print *,'adjoint source error: ',trim(filename),' has length',itime,' but should be',NSTEP
-                  call exit_MPI(myrank, &
-                    'file '//trim(filename)//' has wrong length, please check your adjoint sources and your simulation duration')
-                endif
-
-                ! updates counter for found files
-                nadj_files_found = nadj_files_found + 1
-              endif
-              ! closes file
-              close(IIN)
-            enddo
-          endif
-        endif
-      enddo
-
-    else
-      ! SU_FORMAT file
-      ! adjoint sources given in single SU_FORMAT file;
-      ! skip counting, because only one file per component per proc in SU_FORMAT
-      nadj_rec_local = nrec_local
-      nadj_files_found = nrec_local
-    endif !if (.not. SU_FORMAT)
-
-    ! checks if any adjoint source files found at all
-    call sum_all_i(nadj_files_found,nadj_files_found_tot)
-    if (myrank == 0) then
-      ! user output
-      write(IMAIN,*)
-      write(IMAIN,*) '    ',nadj_files_found_tot,' adjoint component trace files found in all slices'
-      call flush_IMAIN()
-
-      ! main process checks if any adjoint files found
-      if (nadj_files_found_tot == 0) then
-        print *,'Error no adjoint traces found: ',nadj_files_found_tot
-        print *,'in directory : ',OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/../SEM/'
-        if (.not. SU_FORMAT) then
-          print *,'with endings : ', '**.'//comp(1)//'.adj',' ','**.'//comp(2)//'.adj',' ','**.'//comp(3)//'.adj'
-        endif
-        print *
-        call exit_MPI(myrank,'no adjoint traces found, please check adjoint sources in directory SEM/')
-      endif
-    endif
-
-    ! initializes adjoint sources
-    allocate(source_adjoint(NDIM,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2073')
-    if (ier /= 0) stop 'error allocating array source_adjoint'
-    source_adjoint(:,:,:) = 0.0_CUSTOM_REAL
-
-    ! note:
-    ! computes adjoint sources in chunks/blocks during time iterations.
-    ! we moved it to compute_add_sources_viscoelastic.f90 & compute_add_sources_acoustic.f90,
-    ! because we may need to read in adjoint sources block by block
   endif
 
   ! user info
