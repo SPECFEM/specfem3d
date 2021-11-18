@@ -133,8 +133,7 @@
 
   subroutine read_stations_SU_from_previous_run(is_done_stations)
 
-  use constants, only: NDIM,IOUT_SU, &
-    MAX_LENGTH_STATION_NAME,MAX_LENGTH_NETWORK_NAME,IMAIN,OUTPUT_FILES,MAX_STRING_LEN
+  use constants, only: NDIM,IOUT_SU,IMAIN,OUTPUT_FILES,MAX_STRING_LEN
 
   use specfem_par, only: myrank, &
     nrec,station_name,network_name, &
@@ -219,7 +218,7 @@
   subroutine write_stations_SU_for_next_run(x_found,y_found,z_found)
 
 
-  use constants, only: NDIM,IOUT_SU,OUTPUT_FILES,MAX_STRING_LEN
+  use constants, only: IOUT_SU,OUTPUT_FILES,MAX_STRING_LEN
 
   use specfem_par, only: nrec,islice_selected_rec,ispec_selected_rec, &
                          xi_receiver,eta_receiver,gamma_receiver,nu_rec

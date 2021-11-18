@@ -918,7 +918,7 @@
 
   subroutine write_adj_seismograms2_to_file()
 
-  use constants, only: myrank,IMAIN,CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
+  use constants, only: myrank,CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
 
   use specfem_par, only: seismograms_eps, &
     number_receiver_global,nrec_local,DT,NSTEP,t0, &
