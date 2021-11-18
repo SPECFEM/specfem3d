@@ -1279,7 +1279,7 @@ contains
   type(swf_type), intent(in) :: f
   real(kind=CUSTOM_REAL) :: mu(size(f%theta))
 
-  if(f%kind==1) then
+  if (f%kind == 1) then
   ! slip weakening law
   !
   ! for example: Galvez, 2014, eq. (8)
