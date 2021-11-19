@@ -177,7 +177,7 @@
 
   ! allocate arrays for source
   allocate(islice_selected_source(NSOURCES), &
-           ispec_selected_source(NSOURCES),&
+           ispec_selected_source(NSOURCES), &
            Mxx(NSOURCES), &
            Myy(NSOURCES), &
            Mzz(NSOURCES), &
@@ -188,7 +188,7 @@
            eta_source(NSOURCES), &
            gamma_source(NSOURCES), &
            tshift_src(NSOURCES), &
-           hdur(NSOURCES),  &
+           hdur(NSOURCES), &
            hdur_Gaussian(NSOURCES), &
            utm_x_source(NSOURCES), &
            utm_y_source(NSOURCES), &
