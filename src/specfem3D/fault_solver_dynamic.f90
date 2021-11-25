@@ -666,15 +666,16 @@ contains
   integer, intent(in) :: iin,n
 
   real(kind=CUSTOM_REAL) :: b(size(array))
-  character(len=MAX_STRING_LEN) :: shapeval
+  character(len=MAX_STRING_LEN) :: shapeval, filename
   real(kind=CUSTOM_REAL) :: val,valh, xc, yc, zc, r, rc, l, lx,ly,lz
   real(kind=CUSTOM_REAL) :: r1(size(array))
   real(kind=CUSTOM_REAL) :: tmp1(size(array)),tmp2(size(array)),tmp3(size(array))
 
-  integer :: i
-  real(kind=CUSTOM_REAL) :: SMALLVAL
+  integer                :: i, ipar, jpar,  num_lines
+  real(kind=CUSTOM_REAL) :: SMALLVAL, dist, temp
+  real(kind=CUSTOM_REAL), allocatable :: xyzv(:,:) ! data from the input file
 
-  NAMELIST / DIST2D / shapeval, val,valh, xc, yc, zc, r, rc, l, lx,ly,lz
+  NAMELIST / DIST2D / shapeval, val,valh, xc, yc, zc, r, rc, l, lx,ly,lz,filename
 
   SMALLVAL = 1.e-10_CUSTOM_REAL
 
@@ -682,6 +683,7 @@ contains
 
   do i = 1,n
     shapeval = ''
+    filename = ''
     val  = 0.0_CUSTOM_REAL
     valh = 0.0_CUSTOM_REAL
     xc = 0.0_CUSTOM_REAL
@@ -760,6 +762,24 @@ contains
       b(:) = heaviside( tmp1(:) ) * heaviside( tmp2(:) ) * heaviside( tmp3(:) ) &
           * (val + ( coord(3,:) - zc + lz/2.0_CUSTOM_REAL ) * (valh-val)/lz )
 
+     case ('read-from-file')
+        if (filename == "") then
+           stop 'read-from-file option is chosen, but filename is empty.'
+        endif
+        call read_para_file(xyzv,filename)
+        num_lines = size(xyzv(1,:))
+        ! find the nearest point
+        do ipar=1,size(b)
+           temp = huge(temp)
+           do jpar=1,num_lines
+              dist=sqrt((coord(1,ipar)-xyzv(1,jpar))**2+(coord(2,ipar)-xyzv(2,jpar))**2+(coord(3,ipar)-xyzv(3,jpar))**2)
+              if(dist<temp) then
+                 b(ipar) = xyzv(4,jpar) 
+                 temp    = dist
+              endif
+           enddo
+        enddo
+
     case default
       stop 'bc_dynflt_3d::init_2d_distribution:: unknown shape'
     end select
@@ -769,6 +789,30 @@ contains
   enddo
 
   end subroutine init_2d_distribution
+
+
+!--------------
+
+  subroutine read_para_file(xyzv,filename)
+  implicit none
+
+  real(kind=CUSTOM_REAL), allocatable, intent(inout) :: xyzv(:,:) ! data read from the input file
+  character(len=MAX_STRING_LEN), intent(in)          :: filename
+  integer   :: num_lines, i, ier
+  integer   :: IIN_2D = 300
+
+
+  open(unit=IIN_2D,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//trim(filename),status='old',iostat=ier)
+
+  read(IIN_2D,*) num_lines
+  allocate(xyzv(4,num_lines))
+  do i=1,num_lines
+     read(IIN_2D,*) xyzv(1,i),xyzv(2,i),xyzv(3,i),xyzv(4,i)
+  enddo
+  close(IIN_2D)
+
+  end subroutine read_para_file
+
 
 !---------------------------------------------------------------------
 
