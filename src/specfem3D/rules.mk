@@ -134,6 +134,7 @@ specfem3D_OBJECTS = \
 
 specfem3D_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/adios_manager.shared_adios_module.o \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
@@ -210,7 +211,6 @@ adios_specfem3D_OBJECTS= \
 	$O/save_kernels_adios.spec_adios.o
 
 adios_specfem3D_PREOBJECTS = \
-	$O/adios_manager.shared_adios.o \
 	$O/adios_helpers_definitions.shared_adios_module.o \
 	$O/adios_helpers_writers.shared_adios_module.o \
 	$O/adios_helpers.shared_adios.o
@@ -218,13 +218,10 @@ adios_specfem3D_PREOBJECTS = \
 adios_specfem3D_STUBS = \
 	$O/specfem3D_adios_stubs.spec_noadios.o
 
-adios_specfem3D_PRESTUBS = \
-	$O/adios_manager_stubs.shared_noadios.o
-
 # conditional adios linking
 ifeq ($(ADIOS),no)
 adios_specfem3D_OBJECTS = $(adios_specfem3D_STUBS)
-adios_specfem3D_PREOBJECTS = $(adios_specfem3D_PRESTUBS)
+adios_specfem3D_PREOBJECTS = $(EMPTY_MACRO)
 endif
 specfem3D_OBJECTS += $(adios_specfem3D_OBJECTS)
 specfem3D_SHARED_OBJECTS += $(adios_specfem3D_PREOBJECTS)
@@ -319,18 +316,15 @@ $O/iterate_time.spec.o: $O/gravity_perturbation.spec.o
 $O/prepare_gravity.spec.o: $O/gravity_perturbation.spec.o
 
 ## adios
-$O/specfem3D_adios_stubs.spec_noadios.o: $O/adios_manager_stubs.shared_noadios.o
+$O/specfem3D_adios_stubs.spec_noadios.o: $O/adios_manager.shared_adios_module.o
 
-$O/initialize_simulation.spec.o: $(adios_specfem3D_PREOBJECTS)
-$O/save_kernels_adios.spec_adios.o: $(adios_specfem3D_PREOBJECTS)
-$O/save_forward_arrays_adios.spec_adios.o: $(adios_specfem3D_PREOBJECTS)
-$O/read_mesh_databases_adios.spec_adios.o: $(adios_specfem3D_PREOBJECTS)
-$O/read_forward_arrays_adios.spec_adios.o: $(adios_specfem3D_PREOBJECTS)
-$O/finalize_simulation.spec.o: $O/gravity_perturbation.spec.o $(adios_specfem3D_PREOBJECTS)
+$O/initialize_simulation.spec.o: $O/adios_manager.shared_adios_module.o $(adios_specfem3D_PREOBJECTS)
+$O/save_kernels_adios.spec_adios.o: $O/adios_manager.shared_adios_module.o $(adios_specfem3D_PREOBJECTS)
+$O/save_forward_arrays_adios.spec_adios.o: $O/adios_manager.shared_adios_module.o $(adios_specfem3D_PREOBJECTS)
+$O/read_mesh_databases_adios.spec_adios.o: $O/adios_manager.shared_adios_module.o $(adios_specfem3D_PREOBJECTS)
+$O/read_forward_arrays_adios.spec_adios.o: $O/adios_manager.shared_adios_module.o $(adios_specfem3D_PREOBJECTS)
+$O/finalize_simulation.spec.o: $O/gravity_perturbation.spec.o $O/adios_manager.shared_adios_module.o $(adios_specfem3D_PREOBJECTS)
 
-$O/adios_helpers.shared_adios.o: \
-	$O/adios_helpers_definitions.shared_adios_module.o \
-	$O/adios_helpers_writers.shared_adios_module.o
 
 ## ASDF compilation
 $O/write_output_ASDF.spec.o: $O/asdf_data.spec_module.o

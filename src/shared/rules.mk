@@ -37,6 +37,7 @@ shared_TARGETS = \
 
 shared_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/adios_manager.shared_adios_module.o \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
@@ -75,6 +76,7 @@ shared_OBJECTS = \
 
 shared_MODULES = \
 	$(FC_MODDIR)/constants.$(FC_MODEXT) \
+	$(FC_MODDIR)/adios_manager_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/kdtree_search.$(FC_MODEXT) \
 	$(FC_MODDIR)/safe_alloc_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/shared_input_parameters.$(FC_MODEXT) \
@@ -100,31 +102,23 @@ adios_shared_OBJECTS = \
 	$O/adios_helpers_definitions.shared_adios_module.o \
 	$O/adios_helpers_writers.shared_adios_module.o \
 	$O/adios_helpers.shared_adios.o \
-	$O/adios_manager.shared_adios.o \
 	$(EMPTY_MACRO)
 
 adios_shared_MODULES = \
 	$(FC_MODDIR)/adios_helpers_definitions_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/adios_helpers_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/adios_helpers_writers_mod.$(FC_MODEXT) \
-	$(FC_MODDIR)/adios_manager_mod.$(FC_MODEXT) \
-	$(EMPTY_MACRO)
-
-adios_shared_STUB_OBJECTS = \
-	$O/adios_manager_stubs.shared_noadios.o \
-	$(EMPTY_MACRO)
-
-adios_shared_STUB_MODULES = \
-	$(FC_MODDIR)/adios_manager_mod.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 ifeq ($(ADIOS),yes)
 shared_OBJECTS += $(adios_shared_OBJECTS)
 shared_MODULES += $(adios_shared_MODULES)
-else
-shared_OBJECTS += $(adios_shared_STUB_OBJECTS)
-shared_MODULES += $(adios_shared_STUB_MODULES)
 endif
+
+## dependencies
+$O/adios_helpers.shared_adios.o: \
+	$O/adios_helpers_definitions.shared_adios_module.o \
+	$O/adios_helpers_writers.shared_adios_module.o
 
 ###
 ### ASDF
@@ -178,7 +172,10 @@ $O/%.sharedmpi.o: $S/%.F90 ${SETUP}/constants.h $O/shared_par.shared_module.o
 ## adios
 ##
 
-$O/%.shared_adios_module.o: $S/%.f90
+$O/%.shared_adios_module.o: $S/%.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.shared_adios_module.o: $S/%.F90 ${SETUP}/constants.h $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.shared_adios.o: $S/%.f90 $O/adios_helpers_writers.shared_adios_module.o $O/adios_helpers_definitions.shared_adios_module.o $O/shared_par.shared_module.o

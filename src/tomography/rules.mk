@@ -168,6 +168,7 @@ xmodel_update_SHARED_OBJECTS = \
 	$O/initialize_simulation.spec.o \
 	$O/read_mesh_databases.spec.o \
 	$O/shared_par.shared_module.o \
+	$O/adios_manager.shared_adios_module.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
@@ -190,7 +191,6 @@ adios_model_update_OBJECTS= \
 	$O/read_forward_arrays_adios.spec_adios.o
 
 adios_model_update_SHARED_OBJECTS = \
-	$O/adios_manager.shared_adios.o \
 	$O/adios_helpers_definitions.shared_adios_module.o \
 	$O/adios_helpers_writers.shared_adios_module.o \
 	$O/adios_helpers.shared_adios.o
@@ -198,16 +198,12 @@ adios_model_update_SHARED_OBJECTS = \
 adios_model_update_STUBS = \
 	$O/specfem3D_adios_stubs.spec_noadios.o
 
-adios_model_update_SHARED_STUBS = \
-	$O/adios_manager_stubs.shared_noadios.o
-
 # conditional adios linking
 ifeq ($(ADIOS),yes)
 xmodel_update_OBJECTS += $(adios_model_update_OBJECTS)
 xmodel_update_SHARED_OBJECTS += $(adios_model_update_SHARED_OBJECTS)
 else
 xmodel_update_OBJECTS += $(adios_model_update_STUBS)
-xmodel_update_SHARED_OBJECTS += $(adios_model_update_SHARED_STUBS)
 endif
 
 ###
@@ -244,6 +240,7 @@ xsum_kernels_OBJECTS = \
 
 xsum_kernels_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \

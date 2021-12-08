@@ -92,6 +92,7 @@ generate_databases_MODULES = \
 generate_databases_SHARED_OBJECTS = \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/shared_par.shared_module.o \
+	$O/adios_manager.shared_adios_module.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
@@ -121,18 +122,15 @@ generate_databases_SHARED_OBJECTS = \
 
 # MPI stuffs
 ifeq ($(MPI),no)
-mpi_generate_databases_OBJECTS= \
-	$O/model_sep_nompi.gen.o
+mpi_generate_databases_OBJECTS= $O/model_sep_nompi.gen.o
 else
-mpi_generate_databases_OBJECTS= \
-	$O/model_sep.mpi_gen.o
+mpi_generate_databases_OBJECTS= $O/model_sep.mpi_gen.o
 endif
 generate_databases_OBJECTS += $(mpi_generate_databases_OBJECTS)
 
 # using ADIOS files
 
 adios_generate_databases_PREOBJECTS= \
-	$O/adios_manager.shared_adios.o \
 	$O/adios_helpers_definitions.shared_adios_module.o \
 	$O/adios_helpers_writers.shared_adios_module.o \
 	$O/adios_helpers.shared_adios.o
@@ -144,16 +142,13 @@ adios_generate_databases_OBJECTS= \
 	$O/model_gll_adios.gen_adios.o \
 	$O/model_ipati_adios.gen_adios.o
 
-adios_generate_databases_PRESTUBS = \
-	$O/adios_manager_stubs.shared_noadios.o
-
 adios_generate_databases_STUBS = \
 	$O/generate_databases_adios_stubs.gen_noadios.o
 
 # conditional adios linking
 ifeq ($(ADIOS),no)
 adios_generate_databases_OBJECTS = $(adios_generate_databases_STUBS)
-adios_generate_databases_PREOBJECTS = $(adios_generate_databases_PRESTUBS)
+adios_generate_databases_PREOBJECTS = $(EMPTY_MACRO)
 endif
 generate_databases_OBJECTS += $(adios_generate_databases_OBJECTS)
 generate_databases_SHARED_OBJECTS += $(adios_generate_databases_PREOBJECTS)
@@ -211,11 +206,11 @@ endif
 $O/create_regions_mesh.gen.o: $O/fault_generate_databases.gen.o
 
 ## adios
-$O/generate_databases.gen.o: $(adios_generate_databases_PREOBJECTS)
-$O/save_arrays_solver_adios.gen_adios.o: $(adios_generate_databases_PREOBJECTS)
-$O/save_moho_adios.gen_adios.o: $(adios_generate_databases_PREOBJECTS)
-$O/model_gll_adios.gen_adios.o: $(adios_generate_databases_PREOBJECTS)
-$O/read_partition_files_adios.gen_adios.o: $(adios_generate_databases_PREOBJECTS)
+$O/generate_databases.gen.o: $O/adios_manager.shared_adios_module.o $(adios_generate_databases_PREOBJECTS)
+$O/save_arrays_solver_adios.gen_adios.o: $O/adios_manager.shared_adios_module.o $(adios_generate_databases_PREOBJECTS)
+$O/save_moho_adios.gen_adios.o: $O/adios_manager.shared_adios_module.o $(adios_generate_databases_PREOBJECTS)
+$O/model_gll_adios.gen_adios.o: $O/adios_manager.shared_adios_module.o $(adios_generate_databases_PREOBJECTS)
+$O/read_partition_files_adios.gen_adios.o: $O/adios_manager.shared_adios_module.o $(adios_generate_databases_PREOBJECTS)
 
 ifeq ($(ADIOS),no)
 $O/get_model.gen.o: $O/generate_databases_adios_stubs.gen_noadios.o
@@ -223,12 +218,7 @@ else
 $O/get_model.gen.o: $O/model_ipati_adios.gen_adios.o
 endif
 
-$O/generate_databases_adios_stubs.gen_noadios.o: $(adios_generate_databases_PRESTUBS)
-
-$O/adios_helpers.shared_adios.o: \
-	$O/adios_helpers_definitions.shared_adios_module.o \
-	$O/adios_helpers_writers.shared_adios_module.o
-
+$O/generate_databases_adios_stubs.gen_noadios.o: $O/adios_manager.shared_adios_module.o
 
 
 #######################################

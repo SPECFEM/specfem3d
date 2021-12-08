@@ -25,10 +25,6 @@
 #
 #=====================================================================
 
-# I make this Makefile serial for now because I do not know how to write a clean rules.mk here with all the right dependencies
-# If someone knows how to do that then please do it (in this rules.mk file only; all the others in other directories are already OK)
-#.NOTPARALLEL:
-
 ## compilation directories
 S := ${S_TOP}/src/inverse_problem_for_model
 $(inverse_problem_for_model_OBJECTS): S = ${S_TOP}/src/inverse_problem_for_model
@@ -203,6 +199,7 @@ inverse_problem_for_model_OBJECTS += \
 
 inverse_problem_for_model_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/adios_manager.shared_adios_module.o \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
@@ -292,7 +289,6 @@ adios_inverse_problem_for_model_OBJECTS= \
 	$O/save_kernels_adios.spec_adios.o
 
 adios_inverse_problem_for_model_PREOBJECTS = \
-	$O/adios_manager.shared_adios.o \
 	$O/adios_helpers_definitions.shared_adios_module.o \
 	$O/adios_helpers_writers.shared_adios_module.o \
 	$O/adios_helpers.shared_adios.o
@@ -300,9 +296,13 @@ adios_inverse_problem_for_model_PREOBJECTS = \
 adios_inverse_problem_for_model_STUBS = \
 	$O/specfem3D_adios_stubs.spec_noadios.o
 
-adios_inverse_problem_for_model_PRESTUBS = \
-	$O/adios_manager_stubs.shared_noadios.o
-
+# conditional adios linking
+ifeq ($(ADIOS),no)
+adios_inverse_problem_for_model_OBJECTS = $(adios_inverse_problem_for_model_STUBS)
+adios_inverse_problem_for_model_PREOBJECTS = $(EMPTY_MACRO)
+endif
+inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_OBJECTS)
+inverse_problem_for_model_SHARED_OBJECTS += $(adios_inverse_problem_for_model_PREOBJECTS)
 
 # conditional asdf linking
 ifeq ($(ASDF),yes)
@@ -314,16 +314,7 @@ inverse_problem_for_model_OBJECTS += $(asdf_specfem3D_STUBS)
 inverse_problem_for_model_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_STUBS)
 endif
 
-
-# conditional adios linking
-ifeq ($(ADIOS),no)
-adios_inverse_problem_for_model_OBJECTS = $(adios_inverse_problem_for_model_STUBS)
-adios_inverse_problem_for_model_PREOBJECTS = $(adios_inverse_problem_for_model_PRESTUBS)
-endif
-inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_OBJECTS)
-inverse_problem_for_model_SHARED_OBJECTS += $(adios_inverse_problem_for_model_PREOBJECTS)
-
-
+# vtk
 ifeq ($(VTK),yes)
 inverse_problem_for_model_OBJECTS += \
 	$O/vtk_window_stubs.visualcc.o \
@@ -412,6 +403,8 @@ $O/inverse_problem_main.inv.o: \
 	$O/projection_on_FD_grid_mod.inv_projection.o \
 	$O/specfem_interface_mod.inv_specfem_interface.o \
 	$O/fwi_iteration_mod.inv_inversion.o
+
+$O/parallel_for_inverse_problem.invmpi.o: $(COND_MPI_OBJECTS)
 
 ####
 #### rule to build each .o file

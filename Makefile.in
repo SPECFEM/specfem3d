@@ -370,6 +370,25 @@ endif
 
 #######################################
 ####
+#### ADIOS2
+#### with configure: ./configure --with-adios2 ADIOS2_CONFIG=..
+####
+#######################################
+
+@COND_ADIOS2_TRUE@ADIOS2 = yes
+@COND_ADIOS2_FALSE@ADIOS2 = no
+
+@COND_ADIOS2_TRUE@ADIOS2_DEF = $(FC_DEFINE)USE_ADIOS2
+@COND_ADIOS2_FALSE@ADIOS2_DEF =
+
+@COND_ADIOS_TRUE@ADIOS2_INC = @ADIOS2_FCFLAGS@ $(ADIOS2_DEF)
+@COND_ADIOS_TRUE@ADIOS2_LINK = @ADIOS2_LIBS@
+
+@COND_ADIOS_TRUE@FCFLAGS_f90 += $(ADIOS2_INC)
+@COND_ADIOS_TRUE@MPILIBS += $(ADIOS2_LINK)
+
+#######################################
+####
 #### ASDF
 #### with configure: ./configure --with-asdf ASDF_LIBS=..
 ####
@@ -432,9 +451,9 @@ DEFAULT = \
 	xspecfem3D \
 	$(EMPTY_MACRO)
 
+# targets requiring MPI
 ifeq ($(MPI),yes)
-DEFAULT += xdecompose_mesh_mpi
-DEFAULT += xinverse_problem_for_model
+DEFAULT += xdecompose_mesh_mpi xinverse_problem_for_model
 SUBDIRS += inverse_problem_for_model
 endif
 
@@ -488,18 +507,20 @@ help:
 	@echo "    xmeshfem3D"
 	@echo "    xgenerate_databases"
 	@echo "    xspecfem3D"
-	@echo "    xinverse_problem_for_model"
 	@echo ""
 	@echo "defaults:"
 	@echo "    xdecompose_mesh"
+ifeq ($(MPI),yes)
+	@echo "    xdecompose_mesh_mpi"
+endif
 	@echo "    xmeshfem3D"
 	@echo "    xgenerate_databases"
 	@echo "    xspecfem3D"
-	@echo "    xinverse_problem_for_model"
+ifeq ($(MPI),yes)
 	@echo ""
-	@echo "    xcombine_surf_data"
-	@echo "    xcombine_vol_data"
-	@echo "    xcombine_vol_data_vtk"
+	@echo "    xinverse_problem_for_model"
+endif
+	@echo ""
 	@echo "    xconvolve_source_timefunction"
 	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
 	@echo ""
@@ -511,9 +532,21 @@ help:
 	@echo "    xcombine_surf_data"
 	@echo "    xcombine_vol_data"
 	@echo "    xcombine_vol_data_vtk"
+	@echo "    xcombine_vol_data_vtu"
+ifeq ($(ADIOS), yes)
+	@echo "    xcombine_vol_data_adios"
+	@echo "    xcombine_vol_data_vtk_adios"
+	@echo "    xcombine_vol_data_vtu_adios"
+endif
+	@echo ""
 	@echo "    xconvolve_source_timefunction"
 	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
 	@echo ""
+ifeq ($(MPI),yes)
+	@echo "    xproject_and_combine_vol_data_on_regular_grid"
+	@echo ""
+endif
+
 	@echo "- check mesh executables: [make check_mesh]"
 	@echo "    xcheck_mesh_quality"
 	@echo "    xconvert_skewness_to_angle"

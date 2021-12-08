@@ -76,6 +76,7 @@ meshfem3D_MODULES = \
 meshfem3D_SHARED_OBJECTS = \
 	$O/create_name_database.shared.o \
 	$O/shared_par.shared_module.o \
+	$O/adios_manager.shared_adios_module.o \
 	$O/exit_mpi.shared.o \
 	$O/get_global.shared.o \
 	$O/get_shape3D.shared.o \
@@ -94,7 +95,6 @@ meshfem3D_SHARED_OBJECTS = \
 
 # using ADIOS files
 adios_meshfem3D_PREOBJECTS= \
-	$O/adios_manager.shared_adios.o \
 	$O/adios_helpers_definitions.shared_adios_module.o \
 	$O/adios_helpers_writers.shared_adios_module.o \
 	$O/adios_helpers.shared_adios.o
@@ -102,16 +102,13 @@ adios_meshfem3D_PREOBJECTS= \
 adios_meshfem3D_OBJECTS= \
 	$O/save_databases_adios.mesh_adios.o
 
-adios_meshfem3D_PRESTUBS = \
-	$O/adios_manager_stubs.shared_noadios.o
-
 adios_meshfem3D_STUBS = \
 	$O/meshfem3D_adios_stubs.mesh_noadios.o
 
 # conditional adios linking
 ifeq ($(ADIOS),no)
 adios_meshfem3D_OBJECTS = $(adios_meshfem3D_STUBS)
-adios_meshfem3D_PREOBJECTS = $(adios_meshfem3D_PRESTUBS)
+adios_meshfem3D_PREOBJECTS = $(EMPTY_MACRO)
 endif
 meshfem3D_OBJECTS += $(adios_meshfem3D_OBJECTS)
 meshfem3D_SHARED_OBJECTS += $(adios_meshfem3D_PREOBJECTS)
@@ -155,15 +152,9 @@ $O/meshfem3D.mesh.o: $O/chunk_earth_mesh_mod.mesh.o
 $O/determine_cavity.mesh.o: $O/create_meshfem_mesh.mesh.o
 
 ## adios
-$O/meshfem3D_adios_stubs.mesh_noadios.o: $O/shared_par.shared_module.o $O/adios_manager_stubs.shared_noadios.o
-
-$O/save_databases_adios.mesh_adios.o: $O/safe_alloc_mod.shared.o $(adios_meshfem3D_PREOBJECTS)
-$O/create_meshfem_mesh.mesh.o: $(adios_meshfem3D_PREOBJECTS)
-
-$O/adios_helpers.shared_adios.o: \
-	$O/adios_helpers_definitions.shared_adios_module.o \
-	$O/adios_helpers_writers.shared_adios_module.o
-
+$O/meshfem3D_adios_stubs.mesh_noadios.o: $O/shared_par.shared_module.o $O/adios_manager.shared_adios_module.o
+$O/save_databases_adios.mesh_adios.o: $O/safe_alloc_mod.shared.o $O/adios_manager.shared_adios_module.o $(adios_meshfem3D_PREOBJECTS)
+$O/create_meshfem_mesh.mesh.o: $O/adios_manager.shared_adios_module.o $(adios_meshfem3D_PREOBJECTS)
 
 ####
 #### rule to build each .o file below
