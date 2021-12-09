@@ -26,7 +26,7 @@ SUPPRESS_UTM_PROJECTION         = .true.
 NPROC                           = 4
 
 # time step parameters
-NSTEP                           = 4000
+NSTEP                           = 500
 DT                              = 0.003
 
 # set to true to use local-time stepping (LTS)
@@ -119,7 +119,7 @@ f0_FOR_PML                      = 12.7
 STACEY_ABSORBING_CONDITIONS     = .true.
 
 # absorbing top surface (defined in mesh as 'free_surface_file')
-STACEY_INSTEAD_OF_FREE_SURFACE  = .false.
+STACEY_INSTEAD_OF_FREE_SURFACE  = .true.
 
 # When STACEY_ABSORBING_CONDITIONS is set to .true. :
 # absorbing conditions are defined in xmin, xmax, ymin, ymax and zmin
@@ -155,7 +155,7 @@ MOVIE_TYPE                      = 1
 MOVIE_VOLUME                    = .false.
 SAVE_DISPLACEMENT               = .false.
 USE_HIGHRES_FOR_MOVIES          = .false.
-NTSTEP_BETWEEN_FRAMES           = 200
+NTSTEP_BETWEEN_FRAMES           = 50
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
