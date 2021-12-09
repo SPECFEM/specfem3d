@@ -400,9 +400,9 @@
     ! approximative Hessian for preconditioning kernels
     if (APPROXIMATE_HESS_KL) then
       if (ELASTIC_SIMULATION) &
-           call transfer_kernels_hess_el_tohost(Mesh_pointer,hess_kl,hess_rho_kl,hess_kappa_kl,hess_mu_kl,NSPEC_AB)
+        call transfer_kernels_hess_el_tohost(Mesh_pointer,hess_kl,hess_rho_kl,hess_kappa_kl,hess_mu_kl,NSPEC_AB)
       if (ACOUSTIC_SIMULATION) &
-           call transfer_kernels_hess_ac_tohost(Mesh_pointer,hess_ac_kl, hess_rho_ac_kl,hess_kappa_ac_kl,NSPEC_AB)
+        call transfer_kernels_hess_ac_tohost(Mesh_pointer,hess_ac_kl,hess_rho_ac_kl,hess_kappa_ac_kl,NSPEC_AB)
     endif
 
   endif

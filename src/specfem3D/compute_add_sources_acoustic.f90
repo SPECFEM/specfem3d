@@ -54,7 +54,7 @@
   double precision,external :: get_stf_acoustic
 
   integer :: isource,iglob,ispec,i,j,k
-  integer :: irec_local,irec,it_sub_adj
+  integer :: irec_local,irec,it_sub_adj,it_index
 
   character(len=MAX_STRING_LEN) :: adj_source_file
 
@@ -117,7 +117,7 @@
                 iglob = ibool(i,j,k,ispec)
 !$OMP ATOMIC
                 potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                        - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
+                                                  - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
               enddo
             enddo
           enddo
@@ -210,14 +210,25 @@
 
                   hlagrange = hxir_adjstore(i,irec_local) * hetar_adjstore(j,irec_local) * hgammar_adjstore(k,irec_local)
 
+                  ! time step index
+                  it_index = NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)
+
                   ! beware, for acoustic medium, a pressure source would be taking the negative
                   ! and divide by Kappa of the fluid;
                   ! this would have to be done when constructing the adjoint source.
                   !
                   ! note: we take the first component of the adj_sourcearrays
                   !          the idea is to have e.g. a pressure source, where all 3 components would be the same
+                  !
+                  ! adjoint source of Peter et al. (A8):
+                  !   f^adj = - sum_i \partial_t^2 (p^syn - p^obs)(T-t) \delta(x - x_i)
+                  ! note that using the adjoint source derived from the optimization problem, there is no 1/kappa term applied
+                  ! to the adjoint source. the negative sign also is part of the construction of the adjoint source.
+                  !
+                  ! since we don't know which formulation of adjoint source is used for the input,
+                  ! we add the adjoint source as is, without 1/kappa factor, and with a positive sign.
                   potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                    + source_adjoint(1,irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * hlagrange
+                                                    + source_adjoint(1,irec_local,it_index) * hlagrange
                 enddo
               enddo
             enddo
@@ -371,7 +382,7 @@
               ! note: acoustic source for pressure gets divided by kappa
               iglob = ibool(i,j,k,ispec)
               b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
-                      - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
+                                                  - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
             enddo
           enddo
         enddo

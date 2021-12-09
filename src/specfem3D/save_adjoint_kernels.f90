@@ -64,21 +64,15 @@
       !
       ! see other FIXME below (same than see one)
 !! DK DK: sorry, we cannot afford to break the code; too many people use it; I thus put CUSTOM_REAL back
-      real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-          alphav_kl,alphah_kl,betav_kl,betah_kl, &
-          eta_kl, rhop_kl, alpha_kl, beta_kl
+      real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: alphav_kl,alphah_kl,betav_kl,betah_kl, &
+                                                                 eta_kl, rhop_kl, alpha_kl, beta_kl
     end subroutine save_kernels_elastic
   end interface
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: alphav_kl, &
-                                                            alphah_kl, &
-                                                            betav_kl, &
-                                                            betah_kl, &
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: alphav_kl,alphah_kl, &
+                                                            betav_kl,betah_kl, &
                                                             eta_kl
-
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: rhop_kl, &
-                                                            alpha_kl, &
-                                                            beta_kl
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: rhop_kl,alpha_kl,beta_kl
 
   integer(kind=8) :: adios_handle
   integer :: ier
@@ -97,40 +91,27 @@
     ! allocates temporary transversely isotropic kernels
     if (ANISOTROPIC_KL) then
       if (SAVE_TRANSVERSE_KL) then
-        allocate(alphav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2243')
-        allocate(alphah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2244')
-        allocate(betav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2245')
-        allocate(betah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2246')
-        allocate(eta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+        allocate(alphav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+                 alphah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+                 betav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+                 betah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+                 eta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 2247')
         if (ier /= 0) stop 'error allocating arrays alphav_kl,...'
 
         ! derived kernels
-        ! vp kernel
-        allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2248')
-        if (ier /= 0) stop 'error allocating array alpha_kl'
-        ! vs kernel
-        allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+        ! vp,vs kernel
+        allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+                 beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 2249')
-        if (ier /= 0) stop 'error allocating array beta_kl'
+        if (ier /= 0) stop 'error allocating array alpha_kl,beta_kl'
       endif
     else
       ! derived kernels
-      ! vp kernel
-      allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2250')
-      if (ier /= 0) stop 'error allocating array alpha_kl'
-      ! vs kernel
-      allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2251')
-      if (ier /= 0) stop 'error allocating array beta_kl'
-      ! density prime kernel
-      allocate(rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      ! vp,vs,density prime kernel
+      allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+               beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+               rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2252')
       if (ier /= 0) stop 'error allocating array rhop_kl'
     endif
@@ -202,6 +183,7 @@
   allocate(weights_kernel(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2253')
   if (ier /= 0) stop 'error allocating array weights_kernel'
+  weights_kernel(:,:,:,:) = 0.0_CUSTOM_REAL
 
   do ispec = 1, NSPEC_AB
     ispec_irreg = irregular_element_number(ispec)
@@ -232,7 +214,7 @@
 
 !> Save acoustic related kernels
 
-subroutine save_kernels_acoustic(adios_handle)
+  subroutine save_kernels_acoustic(adios_handle)
 
   use specfem_par
   use specfem_par_acoustic
@@ -243,29 +225,75 @@ subroutine save_kernels_acoustic(adios_handle)
 
   ! local parameters
   integer:: ispec,i,j,k,ier
+  real(kind=CUSTOM_REAL) :: kappa_invl,rho_invl
 
-  ! finalizes calculation of rhop, beta, alpha kernels
+  ! note: from Luo et al. (2013), kernels are given for absolute perturbations d(1/rho) and d(1/kappa)
+  !       and only change from Peter et al. (2011) for acoustic kernels:
+  !         K_kappa = - int_0^T [ phi^adj \partial_t^2 phi ] dt     see (A-27)
+  !         K_rho   = - int_0^T [ grad(phi^adj) * grad(phi) ] dt        (A-28)
+  !
+  !       since we output relative perturbation kernels for elastic domains, we make here also use of the variation
+  !         d(1/rho) = - 1/rho^2 d(rho) = - 1/rho d(rho)/rho = - 1/rho dln(rho)
+  !
+  !       to obtain relative kernels, we start from eq. (A-24)
+  !         dChi = int_V [ d(1/kappa) K_kappa + d(1/rho) K_rho ] d^3x (+ elastic kernels)
+  !              = int_V [ (-1/kappa K_kappa) dln(kappa) + (- 1/rho K_rho) dln(rho)
+  !
+  !       and see that relative perturbation kernels are given by
+  !          \tilde{K}_kappa = - 1/kappa K_kappa
+  !                          = + 1/kappa int_0^T [ phi^adj \partial_t^2 phi ] dt
+  !                          = + 1/kappa int_0^T [ \partial_t^2 phi^adj phi ] dt              (equivalent)
+  !
+  !          \tilde{K}_rho   = - 1/rho   K_rho
+  !                          = + 1/rho   int_0^T [ grad(phi^adj) * grad(phi) ] dt
+
+  ! finalizes calculation of acoustic kernels
   do ispec = 1, NSPEC_AB
-
     ! acoustic simulations
     if (ispec_is_acoustic(ispec)) then
-
       do k = 1, NGLLZ
         do j = 1, NGLLY
           do i = 1, NGLLX
+            ! note: the contributions for acoustic kernels have been all kept positive.
+            !       we add here the minus sign which is in front of the kernel definitions for K_rho and K_kappa,
+            !       but together with the material factors for relative kernel definitions (dlnrho and dlnkappa)
+            !       this becomes positive again with 1/rho and 1/kappa factors
+            rho_invl = 1._CUSTOM_REAL / rhostore(i,j,k,ispec)
+            kappa_invl = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
+
+            ! primary kernels
+            ! relative kernel definitions (for dlnrho and dlnkappa perturbations):
+            !   \tilde{K}_rho = - 1/rho K_rho
+            !                 = - 1/rho { - int_0^T [ grad(phi^adj) * grad(phi) ] dt }
+            !                 = 1/rho int_0^T [ grad(phi^adj) * grad(phi) ] dt
+            rho_ac_kl(i,j,k,ispec) = rho_invl * rho_ac_kl(i,j,k,ispec)
+            !   \tilde{K}_kappa = - 1/kappa K_kappa
+            !                   = - 1/kappa { - int_0^T [ phi^adj \partial_t^2 phi ] dt }
+            !                   = 1/kappa int_0^T [ phi^adj \partial_t^2 phi ] dt
+            kappa_ac_kl(i,j,k,ispec) = kappa_invl * kappa_ac_kl(i,j,k,ispec)
+
+            ! secondary, derived kernels
             ! rho prime kernel
             rhop_ac_kl(i,j,k,ispec) = rho_ac_kl(i,j,k,ispec) + kappa_ac_kl(i,j,k,ispec)
-
             ! vp kernel
             alpha_ac_kl(i,j,k,ispec) = 2._CUSTOM_REAL *  kappa_ac_kl(i,j,k,ispec)
-
           enddo
         enddo
       enddo
-
     endif ! acoustic
-
   enddo
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) 'Acoustic kernels:'
+    write(IMAIN,*) '  maximum value of rho kernel       = ',maxval(rho_ac_kl)
+    write(IMAIN,*) '  maximum value of kappa kernel     = ',maxval(kappa_ac_kl)
+    write(IMAIN,*)
+    write(IMAIN,*) '  maximum value of rho prime kernel = ',maxval(rhop_ac_kl)
+    write(IMAIN,*) '  maximum value of alpha kernel     = ',maxval(alpha_ac_kl)
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
 
   if (ADIOS_FOR_KERNELS) then
     call save_kernels_acoustic_adios(adios_handle)
@@ -305,8 +333,10 @@ subroutine save_kernels_acoustic(adios_handle)
                                 betav_kl, betah_kl, eta_kl, &
                                 rhop_kl, alpha_kl, beta_kl)
 
-  use specfem_par, only: CUSTOM_REAL,NSPEC_AB,ibool,mustore,kappastore,ANISOTROPIC_KL,SAVE_TRANSVERSE_KL,FOUR_THIRDS, &
-                         ADIOS_FOR_KERNELS,IOUT,prname,SAVE_MOHO_MESH
+  use specfem_par, only: CUSTOM_REAL,NSPEC_AB,ibool,mustore,kappastore, &
+                         ANISOTROPIC_KL,SAVE_TRANSVERSE_KL,FOUR_THIRDS, &
+                         ADIOS_FOR_KERNELS,IOUT,prname,SAVE_MOHO_MESH, &
+                         myrank,IMAIN
   use specfem_par_elastic
 
   implicit none
@@ -341,7 +371,6 @@ subroutine save_kernels_acoustic(adios_handle)
   real(kind=CUSTOM_REAL) :: A,N,C,L,F,eta
   real(kind=CUSTOM_REAL), dimension(21) :: cijkl_kl_local
   real(kind=CUSTOM_REAL), dimension(5) :: an_kl
-
 
   ! finalizes calculation of rhop, beta, alpha kernels
   do ispec = 1, NSPEC_AB
@@ -454,6 +483,39 @@ subroutine save_kernels_acoustic(adios_handle)
     endif ! elastic
 
   enddo
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) 'Elastic kernels:'
+    write(IMAIN,*) '  maximum value of rho  kernel      = ',maxval(rho_kl)
+    if (ANISOTROPIC_KL) then
+      if (SAVE_TRANSVERSE_KL) then
+        ! tranverse isotropic
+        write(IMAIN,*) '  maximum value of alphav kernel     = ',maxval(alphav_kl)
+        write(IMAIN,*) '  maximum value of alphah kernel     = ',maxval(alphah_kl)
+        write(IMAIN,*) '  maximum value of betav kernel      = ',maxval(betav_kl)
+        write(IMAIN,*) '  maximum value of betah kernel      = ',maxval(betah_kl)
+        write(IMAIN,*) '  maximum value of eta kernel        = ',maxval(eta_kl)
+      else
+        ! fully anisotropic
+        write(IMAIN,*) '  maximum value of cijkl kernel     = ',maxval(-cijkl_kl)
+      endif
+    else
+      ! isotropic
+      write(IMAIN,*) '  maximum value of kappa kernel     = ',maxval(kappa_kl)
+      write(IMAIN,*) '  maximum value of mu kernel        = ',maxval(mu_kl)
+      write(IMAIN,*)
+      write(IMAIN,*) '  maximum value of rho prime kernel = ',maxval(rhop_kl)
+      write(IMAIN,*) '  maximum value of alpha kernel     = ',maxval(alpha_kl)
+      write(IMAIN,*) '  maximum value of beta kernel      = ',maxval(beta_kl)
+    endif
+    if (SAVE_MOHO_MESH) then
+      write(IMAIN,*) '  maximum value of moho kernel      = ',maxval(moho_kl)
+    endif
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
 
   if (ADIOS_FOR_KERNELS) then
     call save_kernels_elastic_adios(adios_handle, alphav_kl, alphah_kl, &

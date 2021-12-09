@@ -75,12 +75,12 @@ __device__ __forceinline__ void compute_gradient_kernel(int ijk,
     temp3l += scalar_field[l*NGLL2+J*NGLLX+I]*hp3;
   }
 
-  if (gravity){
-    // daniel: TODO - check gravity case here
+  //if (gravity){
+  //  // daniel: TODO - check gravity case here
+  //  rho_invl = 1.0f / rhol;
+  //}else{
     rho_invl = 1.0f / rhol;
-  }else{
-    rho_invl = 1.0f / rhol;
-  }
+  //}
 
   if (ispec_irreg >= 0){
     int offset = ispec_irreg * NGLL3_PADDED + ijk;

@@ -863,32 +863,29 @@ contains
   endif
 
   if (GPU_MODE .and. SIMULATION_TYPE == 3) then
+    if (ACOUSTIC_SIMULATION) then
+      rho_ac_kl_GPU(:,:,:,:) = rho_ac_kl_GPU(:,:,:,:) + rho_ac_kl(:,:,:,:)
+      kappa_ac_kl_GPU(:,:,:,:) = kappa_ac_kl_GPU(:,:,:,:) + kappa_ac_kl(:,:,:,:)
+      if (APPROXIMATE_HESS_KL) then
+        hess_rho_ac_kl_GPU(:,:,:,:) = hess_rho_ac_kl_GPU(:,:,:,:) + hess_rho_ac_kl(:,:,:,:)
+        hess_kappa_ac_kl_GPU(:,:,:,:) = hess_kappa_ac_kl_GPU(:,:,:,:) + hess_kappa_ac_kl(:,:,:,:)
+      endif
+    endif
 
-     if (ACOUSTIC_SIMULATION) then
-        rho_ac_kl_GPU(:,:,:,:)=rho_ac_kl_GPU(:,:,:,:)+rho_ac_kl(:,:,:,:)
-        kappa_ac_kl_GPU(:,:,:,:)=kappa_ac_kl_GPU(:,:,:,:)+kappa_ac_kl(:,:,:,:)
+    if (ELASTIC_SIMULATION) then
+      rho_kl_GPU(:,:,:,:) = rho_kl_GPU(:,:,:,:) + rho_kl(:,:,:,:)
+      if (ANISOTROPIC_KL) then
+        cijkl_kl_GPU(:,:,:,:,:) = cijkl_kl_GPU(:,:,:,:,:) + cijkl_kl(:,:,:,:,:)
+      else
+        kappa_kl_GPU(:,:,:,:) = kappa_kl_GPU(:,:,:,:) + kappa_kl(:,:,:,:)
+        mu_kl_GPU(:,:,:,:) = mu_kl_GPU(:,:,:,:) + mu_kl(:,:,:,:)
         if (APPROXIMATE_HESS_KL) then
-           hess_rho_ac_kl_GPU(:,:,:,:)=hess_rho_ac_kl_GPU(:,:,:,:)+hess_rho_ac_kl(:,:,:,:)
-           hess_kappa_ac_kl_GPU(:,:,:,:)=hess_kappa_ac_kl_GPU(:,:,:,:)+hess_kappa_ac_kl(:,:,:,:)
+          hess_rho_kl_GPU(:,:,:,:) = hess_rho_kl_GPU(:,:,:,:) + hess_rho_kl(:,:,:,:)
+          hess_kappa_kl_GPU(:,:,:,:) = hess_kappa_kl_GPU(:,:,:,:) + hess_kappa_kl(:,:,:,:)
+          hess_mu_kl_GPU(:,:,:,:) = hess_mu_kl_GPU(:,:,:,:) + hess_mu_kl(:,:,:,:)
         endif
-     endif
-
-     if (ELASTIC_SIMULATION) then
-        rho_kl_GPU(:,:,:,:)=rho_kl_GPU(:,:,:,:)+rho_kl(:,:,:,:)
-        if (ANISOTROPIC_KL) then
-           cijkl_kl_GPU(:,:,:,:,:)=cijkl_kl_GPU(:,:,:,:,:)+cijkl_kl(:,:,:,:,:)
-        else
-           kappa_kl_GPU(:,:,:,:)=kappa_kl_GPU(:,:,:,:)+kappa_kl(:,:,:,:)
-           mu_kl_GPU(:,:,:,:)= mu_kl_GPU(:,:,:,:)+ mu_kl(:,:,:,:)
-           if (APPROXIMATE_HESS_KL) then
-              hess_rho_kl_GPU(:,:,:,:)=hess_rho_kl_GPU(:,:,:,:)+hess_rho_kl(:,:,:,:)
-              hess_kappa_kl_GPU(:,:,:,:)=hess_kappa_kl_GPU(:,:,:,:)+hess_kappa_kl(:,:,:,:)
-              hess_mu_kl_GPU(:,:,:,:)= hess_mu_kl_GPU(:,:,:,:)+ hess_mu_kl(:,:,:,:)
-           endif
-        endif
-
-     endif
-
+      endif
+    endif
   endif
 
   end subroutine FinalizeSpecfemForOneRun
@@ -912,64 +909,54 @@ contains
 
   ! acoustic domain
   if (ACOUSTIC_SIMULATION) then
-     rho_ac_kl(:,:,:,:)=0._CUSTOM_REAL
-     kappa_ac_kl(:,:,:,:)=0._CUSTOM_REAL
-
-     if (GPU_MODE) then
-        rho_ac_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
-        kappa_ac_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
-     endif
-
+    rho_ac_kl(:,:,:,:) = 0._CUSTOM_REAL
+    kappa_ac_kl(:,:,:,:) = 0._CUSTOM_REAL
+    if (GPU_MODE) then
+      rho_ac_kl_GPU(:,:,:,:) = 0._CUSTOM_REAL
+      kappa_ac_kl_GPU(:,:,:,:) = 0._CUSTOM_REAL
+    endif
   endif
 
   ! elastic domain
   if (ELASTIC_SIMULATION) then
+    rho_kl(:,:,:,:) = 0._CUSTOM_REAL
+    if (GPU_MODE) rho_kl_GPU(:,:,:,:) = 0._CUSTOM_REAL
 
-     rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
-     if (GPU_MODE)  rho_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
+    if (ANISOTROPIC_KL) then
+      cijkl_kl(:,:,:,:,:) = 0._CUSTOM_REAL
+      if (GPU_MODE) cijkl_kl_GPU(:,:,:,:,:) = 0._CUSTOM_REAL
+    else
+      mu_kl(:,:,:,:) = 0._CUSTOM_REAL
+      kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
+      if (GPU_MODE) then
+        kappa_kl_GPU(:,:,:,:) = 0._CUSTOM_REAL
+        mu_kl_GPU(:,:,:,:) = 0._CUSTOM_REAL
+      endif
+    endif
 
-     if (ANISOTROPIC_KL) then
-        cijkl_kl(:,:,:,:,:) = 0._CUSTOM_REAL
-        if (GPU_MODE) cijkl_kl_GPU(:,:,:,:,:)=0._CUSTOM_REAL
-     else
-        mu_kl(:,:,:,:)    = 0._CUSTOM_REAL
-        kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
-
+    if (APPROXIMATE_HESS_KL) then
+      if (ELASTIC_SIMULATION) then
+        hess_kl(:,:,:,:) = 0._CUSTOM_REAL
+        hess_kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
+        hess_mu_kl(:,:,:,:) = 0._CUSTOM_REAL
+        hess_rho_kl(:,:,:,:) = 0._CUSTOM_REAL
         if (GPU_MODE) then
-           kappa_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
-           mu_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
+          hess_kappa_kl_GPU(:,:,:,:) = 0._CUSTOM_REAL
+          hess_mu_kl_GPU(:,:,:,:) = 0._CUSTOM_REAL
+          hess_rho_kl_GPU(:,:,:,:) = 0._CUSTOM_REAL
         endif
+      endif
 
-     endif
-
-     if (APPROXIMATE_HESS_KL) then
-        if (ELASTIC_SIMULATION) then
-
-           hess_kl(:,:,:,:)   = 0._CUSTOM_REAL
-           hess_kappa_kl(:,:,:,:)   = 0._CUSTOM_REAL
-           hess_mu_kl(:,:,:,:)   = 0._CUSTOM_REAL
-           hess_rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
-
-           if (GPU_MODE) then
-              hess_kappa_kl_GPU(:,:,:,:)   = 0._CUSTOM_REAL
-              hess_mu_kl_GPU(:,:,:,:)   = 0._CUSTOM_REAL
-              hess_rho_kl_GPU(:,:,:,:)   = 0._CUSTOM_REAL
-           endif
-
+      if (ACOUSTIC_SIMULATION) then
+        hess_ac_kl(:,:,:,:) = 0._CUSTOM_REAL
+        hess_kappa_ac_kl(:,:,:,:) = 0._CUSTOM_REAL
+        hess_rho_ac_kl(:,:,:,:) = 0._CUSTOM_REAL
+        if (GPU_MODE) then
+          hess_rho_ac_kl_GPU(:,:,:,:) = 0._CUSTOM_REAL
+          hess_kappa_ac_kl_GPU(:,:,:,:) = 0._CUSTOM_REAL
         endif
-        if (ACOUSTIC_SIMULATION) then
-
-           hess_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
-           hess_kappa_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
-           hess_rho_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
-
-           if (GPU_MODE) then
-               hess_rho_ac_kl_GPU(:,:,:,:)   = 0._CUSTOM_REAL
-               hess_kappa_ac_kl_GPU(:,:,:,:)   = 0._CUSTOM_REAL
-           endif
-
-        endif
-     endif
+      endif
+    endif
 
   endif
 
@@ -1212,8 +1199,8 @@ contains
      if (ACOUSTIC_SIMULATION) then
         allocate(rho_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB), kappa_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 533')
-        rho_ac_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
-        kappa_ac_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
+        rho_ac_kl_GPU(:,:,:,:) = 0._CUSTOM_REAL
+        kappa_ac_kl_GPU(:,:,:,:) = 0._CUSTOM_REAL
         if (APPROXIMATE_HESS_KL) then
            allocate(hess_rho_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),hess_kappa_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
            if (ier /= 0) call exit_MPI_without_rank('error allocating array 534')
@@ -1261,30 +1248,27 @@ contains
   implicit none
 
   if (ACOUSTIC_SIMULATION) then
-     rho_ac_kl(:,:,:,:)=rho_ac_kl_GPU(:,:,:,:)
-     kappa_ac_kl(:,:,:,:)=kappa_ac_kl_GPU(:,:,:,:)
-     if (APPROXIMATE_HESS_KL) then
-        hess_rho_ac_kl(:,:,:,:)=hess_rho_ac_kl_GPU(:,:,:,:)
-        hess_kappa_ac_kl(:,:,:,:)=hess_kappa_ac_kl_GPU(:,:,:,:)
-     endif
+    rho_ac_kl(:,:,:,:) = rho_ac_kl_GPU(:,:,:,:)
+    kappa_ac_kl(:,:,:,:) = kappa_ac_kl_GPU(:,:,:,:)
+    if (APPROXIMATE_HESS_KL) then
+      hess_rho_ac_kl(:,:,:,:) = hess_rho_ac_kl_GPU(:,:,:,:)
+      hess_kappa_ac_kl(:,:,:,:) = hess_kappa_ac_kl_GPU(:,:,:,:)
+    endif
   endif
 
   if (ELASTIC_SIMULATION) then
-
-     rho_kl(:,:,:,:)=rho_kl_GPU(:,:,:,:)
-
-     if (ANISOTROPIC_KL) then
-        cijkl_kl(:,:,:,:,:)=cijkl_kl_GPU(:,:,:,:,:)
-     else
-        kappa_kl(:,:,:,:)=kappa_kl_GPU(:,:,:,:)
-        mu_kl(:,:,:,:)=mu_kl_GPU(:,:,:,:)
-        if (APPROXIMATE_HESS_KL) then
-           hess_rho_kl(:,:,:,:)=hess_rho_kl_GPU(:,:,:,:)
-           hess_kappa_kl(:,:,:,:)=hess_kappa_kl_GPU(:,:,:,:)
-           hess_mu_kl(:,:,:,:)=hess_mu_kl_GPU(:,:,:,:)
-        endif
-     endif
-
+    rho_kl(:,:,:,:) = rho_kl_GPU(:,:,:,:)
+    if (ANISOTROPIC_KL) then
+      cijkl_kl(:,:,:,:,:) = cijkl_kl_GPU(:,:,:,:,:)
+    else
+      kappa_kl(:,:,:,:) = kappa_kl_GPU(:,:,:,:)
+      mu_kl(:,:,:,:) = mu_kl_GPU(:,:,:,:)
+      if (APPROXIMATE_HESS_KL) then
+        hess_rho_kl(:,:,:,:) = hess_rho_kl_GPU(:,:,:,:)
+        hess_kappa_kl(:,:,:,:) = hess_kappa_kl_GPU(:,:,:,:)
+        hess_mu_kl(:,:,:,:) = hess_mu_kl_GPU(:,:,:,:)
+      endif
+    endif
   endif
 
   end subroutine TransfertKernelFromGPUArrays

@@ -74,6 +74,7 @@
   use specfem_par_noise
 
   implicit none
+
   ! local parameters
   integer :: i,j,k,ispec,iglob
   real(kind=CUSTOM_REAL), dimension(21) :: prod
@@ -124,6 +125,9 @@
         ! elastic domains
         if (ispec_is_elastic(ispec)) then
 
+          ! note: we keep the kernel contributions here positive. a minus sign to the kernels will be added
+          !       at the very end, when saving the kernels in save_adjoint_kernels.f90.
+
           do k = 1, NGLLZ
             do j = 1, NGLLY
               do i = 1, NGLLX
@@ -145,7 +149,7 @@
 
                 ! density kernel
                 rho_kl(i,j,k,ispec) =  rho_kl(i,j,k,ispec) &
-                    + deltat * dot_product(accel(:,iglob), b_displ(:,iglob))
+                                    + deltat * dot_product(accel(:,iglob), b_displ(:,iglob))
 
                 ! For anisotropic kernels
                 if (ANISOTROPIC_KL) then
@@ -173,9 +177,9 @@
 
                   mu_kl(i,j,k,ispec) =  mu_kl(i,j,k,ispec) &
                        + deltat * (epsilondev_loc(1)*b_epsilondev_loc(1) + epsilondev_loc(2)*b_epsilondev_loc(2) &
-                       + (epsilondev_loc(1)+epsilondev_loc(2)) * (b_epsilondev_loc(1)+b_epsilondev_loc(2)) &
-                       + 2 * (epsilondev_loc(3)*b_epsilondev_loc(3) + epsilondev_loc(4)*b_epsilondev_loc(4) + &
-                       epsilondev_loc(5)*b_epsilondev_loc(5)) )
+                                + (epsilondev_loc(1)+epsilondev_loc(2)) * (b_epsilondev_loc(1)+b_epsilondev_loc(2)) &
+                                + 2 * (epsilondev_loc(3)*b_epsilondev_loc(3) + epsilondev_loc(4)*b_epsilondev_loc(4) + &
+                                       epsilondev_loc(5)*b_epsilondev_loc(5)) )
 
                   ! kernel for bulk modulus, see e.g. Tromp et al. (2005), equation (18)
                   ! note: multiplication with kappa(x) will be done after the time loop
@@ -230,9 +234,10 @@
   use specfem_par_acoustic
 
   implicit none
+
   ! local parameters
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: b_displ_elm,accel_elm
-  real(kind=CUSTOM_REAL) :: kappal,rhol
+  real(kind=CUSTOM_REAL) :: rhol
   integer :: i,j,k,ispec,iglob
 
   ! safety check
@@ -247,7 +252,7 @@
   !   is accurate at second order and thus contains significantly less numerical noise."
   ! however, for kernels expressions, we need both b_potential_acoustic and b_potential_dot_dot_acoustic as defined
   ! from the original acoustic potential definition.
-  if (USE_TRICK_FOR_BETTER_PRESSURE) stop 'for acoustic kernels, please set USE_TRICK_FOR_BETTER_PRESSURE to .false.'
+  if (USE_TRICK_FOR_BETTER_PRESSURE) stop 'For acoustic kernels, please set USE_TRICK_FOR_BETTER_PRESSURE to .false.'
 
   ! updates acoustic kernels
   if (.not. GPU_MODE) then
@@ -260,7 +265,7 @@
         ! backward fields: displacement vector
         call compute_gradient_in_acoustic(ispec,b_potential_acoustic,b_displ_elm)
         ! adjoint fields: acceleration vector
-        ! new expression (\partial_t^2\bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger)
+        ! new expression (\partial_t^2 \bfs^\dagger = - \frac{1}{\rho} \bfnabla \phi^\dagger)
         call compute_gradient_in_acoustic(ispec,potential_acoustic,accel_elm)
 
         do k = 1, NGLLZ
@@ -268,20 +273,57 @@
             do i = 1, NGLLX
               iglob = ibool(i,j,k,ispec)
 
+              ! note: from Luo et al. (2013), kernels are given for absolute perturbations d(1/rho) and d(1/kappa)
+              !       and only change from Peter et al. (2011) for acoustic kernels:
+              !         K_kappa = - int_0^T [ phi^adj \partial_t^2 phi ] dt     see (A-27)
+              !         K_rho   = - int_0^T [ grad(phi^adj) * grad(phi) ] dt        (A-28)
+              !
+              !       since we output relative perturbation kernels for elastic domains, we make here also use of the variation
+              !         d(1/rho) = - 1/rho^2 d(rho) = - 1/rho d(rho)/rho = - 1/rho dln(rho)
+              !
+              !       to obtain relative kernels, we start from eq. (A-24)
+              !         dChi = int_V [ d(1/kappa) K_kappa + d(1/rho) K_rho ] d^3x (+ elastic kernels)
+              !              = int_V [ (-1/kappa K_kappa) dln(kappa) + (- 1/rho K_rho) dln(rho)
+              !
+              !       and see that relative perturbation kernels are given by
+              !          \tilde{K}_kappa = - 1/kappa K_kappa
+              !                          = + 1/kappa int_0^T [ phi^adj \partial_t^2 phi ] dt
+              !                          = + 1/kappa int_0^T [ \partial_t^2 phi^adj phi ] dt              (equivalent)
+              !
+              !          \tilde{K}_rho   = - 1/rho   K_rho
+              !                          = + 1/rho   int_0^T [ grad(phi^adj) * grad(phi) ] dt
+              !                          = + rho     int_0^T [ 1/rho grad(phi^adj) * 1/rho grad(phi) ] dt   (equivalent)
+
+              ! note: we keep the kernel contributions here positive. a minus sign to the kernels will be added
+              !       at the very end, when saving the kernels in save_adjoint_kernels.f90.
+              !
+
               ! new expression
-              ! density kernel
+
+              ! note: the gradients grad(..) above will have a 1/rho factor added in routine compute_gradient_in_acoustic()
+              !       that is, b_displ_elm = 1/rho grad(phi)
+              !       and      accel_elm   = 1/rho grad(phi^adj)
+              !
+              !       however, here we want to compute the contributions for the absolute kernel
+              !         K_rho   = - int_0^T [ grad(phi^adj) * grad(phi) ] dt        (A-28)
+              !       and thus we multiply the b_displ_elm and accel_elm by rho again to have the time step contribution
+              !         b_displ_elem * accel_elm = {rho [1/rho grad(phi)]} * {rho [1/rho grad(phi^adj)]}
+              !                                  = grad(phi) * grad(phi^adj) and times dt
               rhol = rhostore(i,j,k,ispec)
+              accel_elm(:,i,j,k) = rhol * accel_elm(:,i,j,k)
+              b_displ_elm(:,i,j,k) = rhol * b_displ_elm(:,i,j,k)
+
+              ! density kernel
+              ! (multiplication with final -1/rho(x) factor for relative kernels will be done after the time loop)
               rho_ac_kl(i,j,k,ispec) =  rho_ac_kl(i,j,k,ispec) &
-                        + deltat * rhol * (accel_elm(1,i,j,k) * b_displ_elm(1,i,j,k) &
-                                         + accel_elm(2,i,j,k) * b_displ_elm(2,i,j,k) &
-                                         + accel_elm(3,i,j,k) * b_displ_elm(3,i,j,k))
+                                     + deltat * (accel_elm(1,i,j,k) * b_displ_elm(1,i,j,k) &
+                                               + accel_elm(2,i,j,k) * b_displ_elm(2,i,j,k) &
+                                               + accel_elm(3,i,j,k) * b_displ_elm(3,i,j,k))
 
               ! bulk modulus kernel
-              kappal = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
+              ! (multiplication with 1/kappa(x) factor will be done after the time loop)
               kappa_ac_kl(i,j,k,ispec) = kappa_ac_kl(i,j,k,ispec) &
-                                    + deltat * kappal  &
-                                    * potential_acoustic(iglob) &
-                                    * b_potential_dot_dot_acoustic(iglob)
+                                       + deltat * potential_acoustic(iglob) * b_potential_dot_dot_acoustic(iglob)
 
             enddo
           enddo
@@ -309,6 +351,7 @@
   use specfem_par_poroelastic
 
   implicit none
+
   ! local parameters
   integer :: i,j,k,ispec,iglob
   real(kind=CUSTOM_REAL), dimension(5) :: epsilonsdev_loc,b_epsilonsdev_loc
@@ -453,15 +496,15 @@
 
               rhol = rhostore(i,j,k,ispec)
               hess_rho_ac_kl(i,j,k,ispec) =  hess_rho_ac_kl(i,j,k,ispec) &
-                        + deltat * rhol * (b_veloc_elm(1,i,j,k) * b_veloc_elm(1,i,j,k) &
-                                         + b_veloc_elm(2,i,j,k) * b_veloc_elm(2,i,j,k) &
-                                         + b_veloc_elm(3,i,j,k) * b_veloc_elm(3,i,j,k))
+                                          + deltat * rhol * (b_veloc_elm(1,i,j,k) * b_veloc_elm(1,i,j,k) &
+                                                           + b_veloc_elm(2,i,j,k) * b_veloc_elm(2,i,j,k) &
+                                                           + b_veloc_elm(3,i,j,k) * b_veloc_elm(3,i,j,k))
 
               kappal = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
               hess_kappa_ac_kl(i,j,k,ispec) = hess_kappa_ac_kl(i,j,k,ispec) &
-                                    + deltat * kappal  &
-                                    * b_potential_dot_acoustic(iglob) &
-                                    * b_potential_dot_acoustic(iglob)
+                                            + deltat * kappal  &
+                                            * b_potential_dot_acoustic(iglob) &
+                                            * b_potential_dot_acoustic(iglob)
 
             enddo
           enddo
@@ -485,17 +528,17 @@
               ! approximates Hessian
               ! term with adjoint acceleration and backward/reconstructed acceleration
               hess_kl(i,j,k,ispec) =  hess_kl(i,j,k,ispec) &
-                 + deltat * dot_product(accel(:,iglob), b_accel(:,iglob))
+                                   + deltat * dot_product(accel(:,iglob), b_accel(:,iglob))
 
               !! preconditionning kernels (Shin et al 2001)
               hess_rho_kl(i,j,k,ispec) =  hess_rho_kl(i,j,k,ispec) &
-                  + deltat * dot_product(b_veloc(:,iglob), b_veloc(:,iglob))
+                                       + deltat * dot_product(b_veloc(:,iglob), b_veloc(:,iglob))
 
               hess_mu_kl(i,j,k,ispec) = hess_mu_kl(i,j,k,ispec) &
-                   + deltat * (b_epsilondev_loc(1)*b_epsilondev_loc(1) + b_epsilondev_loc(2)*b_epsilondev_loc(2) &
-                   + (b_epsilondev_loc(1)+b_epsilondev_loc(2)) * (b_epsilondev_loc(1)+b_epsilondev_loc(2)) &
-                   + 2 * (b_epsilondev_loc(3)*b_epsilondev_loc(3) + b_epsilondev_loc(4)*b_epsilondev_loc(4) + &
-                   b_epsilondev_loc(5)*b_epsilondev_loc(5)) )
+                          + deltat * (b_epsilondev_loc(1)*b_epsilondev_loc(1) + b_epsilondev_loc(2)*b_epsilondev_loc(2) &
+                                   + (b_epsilondev_loc(1)+b_epsilondev_loc(2)) * (b_epsilondev_loc(1)+b_epsilondev_loc(2)) &
+                                   + 2 * (b_epsilondev_loc(3)*b_epsilondev_loc(3) + b_epsilondev_loc(4)*b_epsilondev_loc(4) + &
+                                          b_epsilondev_loc(5)*b_epsilondev_loc(5)) )
 
               hess_kappa_kl(i,j,k,ispec) = hess_kappa_kl(i,j,k,ispec) + deltat * (9 * b_eps_trace_l * b_eps_trace_l)
 
@@ -545,29 +588,29 @@
 
   ! Building of the local matrix of the strain tensor
   ! for the adjoint field and the regular backward field
-  eps(1:2)=epsdev(1:2)+eps_trace_over_3           !eps11 et eps22
-  eps(3)=-(eps(1)+eps(2))+3*eps_trace_over_3     !eps33
-  eps(4)=epsdev(5)                                !eps23
-  eps(5)=epsdev(4)                                !eps13
-  eps(6)=epsdev(3)                                !eps12
+  eps(1:2) = epsdev(1:2)+eps_trace_over_3           !eps11 et eps22
+  eps(3) = -(eps(1)+eps(2))+3*eps_trace_over_3     !eps33
+  eps(4) = epsdev(5)                                !eps23
+  eps(5) = epsdev(4)                                !eps13
+  eps(6) = epsdev(3)                                !eps12
 
-  b_eps(1:2)=b_epsdev(1:2)+b_eps_trace_over_3
-  b_eps(3)=-(b_eps(1)+b_eps(2))+3*b_eps_trace_over_3
-  b_eps(4)=b_epsdev(5)
-  b_eps(5)=b_epsdev(4)
-  b_eps(6)=b_epsdev(3)
+  b_eps(1:2) = b_epsdev(1:2)+b_eps_trace_over_3
+  b_eps(3) = -(b_eps(1)+b_eps(2))+3*b_eps_trace_over_3
+  b_eps(4) = b_epsdev(5)
+  b_eps(5) = b_epsdev(4)
+  b_eps(6) = b_epsdev(3)
 
   ! Computing the 21 strain products without assuming eps(i)*b_eps(j) = eps(j)*b_eps(i)
-  p=1
-  do i=1,6
-    do j=i,6
-      prod(p)=eps(i)*b_eps(j)
+  p = 1
+  do i = 1,6
+    do j = i,6
+      prod(p) = eps(i)*b_eps(j)
       if (j > i) then
-        prod(p)=prod(p)+eps(j)*b_eps(i)
-        if (j > 3 .and. i < 4) prod(p)=prod(p)*2
+        prod(p) = prod(p)+eps(j)*b_eps(i)
+        if (j > 3 .and. i < 4) prod(p) = prod(p)*2
       endif
-      if (i > 3) prod(p)=prod(p)*4
-      p=p+1
+      if (i > 3) prod(p) = prod(p)*4
+      p = p+1
     enddo
   enddo
 

@@ -554,6 +554,7 @@
     write(IMAIN,*) 'Time loop finished. Timing info:'
     write(IMAIN,*) 'Total elapsed time in seconds = ',tCPU
     write(IMAIN,"(' Total elapsed time in hh:mm:ss = ',i6,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
+    write(IMAIN,*)
     call flush_IMAIN()
   endif
 
