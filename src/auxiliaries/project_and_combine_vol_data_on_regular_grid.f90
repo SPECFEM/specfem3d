@@ -51,7 +51,6 @@
   character(len=MAX_STRING_LEN) :: prname, prname_lp, data_filename
   character(len=MAX_STRING_LEN*2) :: local_data_file
   logical :: BROADCAST_AFTER_READ
-  integer :: myrank
   integer :: sizeprocs, NSPEC_IRREGULAR
 
   type(profd)  :: projection_fd

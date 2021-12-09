@@ -31,6 +31,9 @@ module combine_vol_data_adios_mod
 
   implicit none
 
+  ! file handles
+  integer(kind=8) :: value_handle, mesh_handle
+
 contains
 
 !=============================================================================
@@ -132,14 +135,13 @@ contains
 !=============================================================================
 
 !> Open ADIOS value and mesh files, read mode
-  subroutine init_adios(value_file_name, mesh_file_name, value_handle, mesh_handle)
+  subroutine init_adios(value_file_name, mesh_file_name)
 
   use adios_manager_mod, only: adios_setup,comm_adios,ADIOS_VERBOSITY
 
   implicit none
   ! Parameters
   character(len=*), intent(in) :: value_file_name, mesh_file_name
-  integer(kind=8), intent(out) :: value_handle, mesh_handle
   ! Variables
   integer :: ier
   integer :: comm
@@ -166,12 +168,10 @@ contains
 !=============================================================================
 
 !> Open ADIOS value and mesh files, read mode
-  subroutine clean_adios(value_handle, mesh_handle)
+  subroutine clean_adios()
 
   use adios_manager_mod, only: adios_cleanup
   implicit none
-  ! Parameters
-  integer(kind=8), intent(in) :: value_handle, mesh_handle
   ! Variables
   integer :: ier
 
@@ -188,12 +188,11 @@ contains
 
 !=============================================================================
 
-  subroutine read_scalars_adios_mesh(mesh_handle, iproc, NGLOB_AB, NSPEC_AB, ibool_offset, x_global_offset)
+  subroutine read_scalars_adios_mesh(iproc, NGLOB_AB, NSPEC_AB, ibool_offset, x_global_offset)
 
   implicit none
 
   ! Parameters
-  integer(kind=8), intent(in) :: mesh_handle
   integer, intent(in) :: iproc
   integer, intent(out) :: NGLOB_AB, NSPEC_AB
   integer(kind=8) :: ibool_offset, x_global_offset
@@ -214,11 +213,11 @@ contains
 
 !=============================================================================
 
-  subroutine read_ibool_adios_mesh(mesh_handle, ibool_offset, NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
+  subroutine read_ibool_adios_mesh(ibool_offset, NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
 
   implicit none
   ! Parameters
-  integer(kind=8), intent(in) :: mesh_handle,ibool_offset
+  integer(kind=8), intent(in) :: ibool_offset
   integer, intent(in) :: NGLLX, NGLLY, NGLLZ, NSPEC_AB
   integer, dimension(:,:,:,:), intent(inout) :: ibool
   ! Variables
@@ -239,13 +238,13 @@ contains
 
 !=============================================================================
 
-  subroutine read_coordinates_adios_mesh(mesh_handle, x_global_offset, NGLOB_AB, xstore, ystore, zstore)
+  subroutine read_coordinates_adios_mesh(x_global_offset, NGLOB_AB, xstore, ystore, zstore)
 
   use constants, only: CUSTOM_REAL
 
   implicit none
   ! Parameters
-  integer(kind=8), intent(in) :: mesh_handle,x_global_offset
+  integer(kind=8), intent(in) :: x_global_offset
   integer, intent(in) :: NGLOB_AB
   real(kind=CUSTOM_REAL),dimension(:), intent(inout) :: xstore, ystore, zstore
   ! Variables
@@ -267,16 +266,16 @@ contains
 
 !=============================================================================
 
-  subroutine read_double_values_adios(value_handle, var_name, ibool_offset, NSPEC_AB, dat)
+  subroutine read_values_adios(var_name, ibool_offset, NSPEC_AB, data)
 
-  use constants, only: NGLLX,NGLLY,NGLLZ
+  use constants, only: NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
 
   implicit none
   ! Parameters
-  integer(kind=8), intent(in) :: value_handle,ibool_offset
+  integer(kind=8), intent(in) :: ibool_offset
   character(len=*), intent(in) :: var_name
   integer, intent(in) :: NSPEC_AB
-  double precision, dimension(:,:,:,:), intent(inout) :: dat
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), intent(inout) :: data
   ! Variables
   integer(kind=8), dimension(1) :: start, count_ad
   integer(kind=8) :: sel
@@ -285,38 +284,11 @@ contains
   start(1) = ibool_offset
   count_ad(1) = NGLLX * NGLLY * NGLLZ * NSPEC_AB
   call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(value_handle, sel, trim(var_name) // "/array", 0, 1, dat, ier)
+  call adios_schedule_read(value_handle, sel, trim(var_name) // "/array", 0, 1, data, ier)
 
   call adios_perform_reads(value_handle, ier)
   if (ier /= 0) call abort_mpi()
 
-  end subroutine read_double_values_adios
-
-!=============================================================================
-
-  subroutine read_float_values_adios(value_handle, var_name, ibool_offset, NSPEC_AB, dat)
-
-  use constants, only: NGLLX,NGLLY,NGLLZ
-
-  implicit none
-  ! Parameters
-  integer(kind=8), intent(in) :: value_handle,ibool_offset
-  character(len=*), intent(in) :: var_name
-  integer, intent(in) :: NSPEC_AB
-  real, dimension(:,:,:,:), intent(inout) :: dat
-  ! Variables
-  integer(kind=8), dimension(1) :: start, count_ad
-  integer(kind=8) :: sel
-  integer :: ier
-
-  start(1) = ibool_offset
-  count_ad(1) = NGLLX * NGLLY * NGLLZ * NSPEC_AB
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(value_handle, sel, trim(var_name) // "/array", 0, 1, dat, ier)
-
-  call adios_perform_reads(value_handle, ier)
-  if (ier /= 0) call abort_mpi()
-
-  end subroutine read_float_values_adios
+  end subroutine read_values_adios
 
 end module combine_vol_data_adios_mod

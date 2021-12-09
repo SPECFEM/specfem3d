@@ -900,6 +900,20 @@
       stop 'Error ADIOS not yet supported by option BROADCAST_SAME_MESH_AND_MODEL'
   endif
 
+#if !defined(USE_ADIOS)
+  if (ADIOS_ENABLED) then
+    print *
+    print *,'**************'
+    print *,'**************'
+    print *,'ADIOS is enabled in parameter file but the code was not compiled with ADIOS support.'
+    print *,'See --with-adios configure options.'
+    print *,'**************'
+    print *,'**************'
+    print *
+    stop 'an error occurred while reading the parameter file: ADIOS is enabled but code not built with ADIOS'
+  endif
+#endif
+
   ! PML
   if (PML_CONDITIONS) then
 !! DK DK added this for now (March 2013)

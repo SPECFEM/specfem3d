@@ -79,7 +79,7 @@ end module my_mpi
 
   integer :: myrank,ier
 
-! initialize the MPI communicator and start the NPROCTOT MPI processes.
+  ! initialize the MPI communicator and start the NPROCTOT MPI processes.
   call MPI_INIT(ier)
   if (ier /= 0 ) stop 'Error initializing MPI'
 
@@ -102,7 +102,7 @@ end module my_mpi
   call bcast_all_singlei(NUMBER_OF_SIMULTANEOUS_RUNS)
   call bcast_all_singlel(BROADCAST_SAME_MESH_AND_MODEL)
 
-! create sub-communicators if needed, if running more than one earthquake from the same job
+  ! create sub-communicators if needed, if running more than one earthquake from the same job
   call world_split()
 
   end subroutine init_mpi
@@ -182,7 +182,7 @@ end module my_mpi
 
   ! note: MPI_ABORT does not return, it makes the program exit with an error code of 30
   call MPI_ABORT(MPI_COMM_WORLD,30,ier)
-  stop 'error, program ended in exit_MPI'
+  stop 'error, program ended in abort_mpi'
 
   end subroutine abort_mpi
 

@@ -30,7 +30,7 @@
 !----
 
   subroutine abort_mpi()
-  stop 'error, program ended in exit_MPI'
+  stop 'error, program ended by abort'
   end subroutine abort_mpi
 
 !

@@ -27,8 +27,16 @@
 
 module combine_vtk_par
 
+    use constants, only: CUSTOM_REAL
+
     ! global point data
-    real,dimension(:),allocatable :: total_dat
+    real(kind=CUSTOM_REAL),dimension(:),allocatable :: total_dat
+
+    ! positions
+    real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: total_dat_xyz
+
+    ! connectivity
+    integer,dimension(:,:),allocatable :: total_dat_con
 
     ! maximum number of slices
     integer,parameter :: MAX_NUM_NODES = 600
@@ -108,7 +116,7 @@ contains
     enddo
     close(20)
     filename = arg(2)
-    indir= arg(3)
+    indir = arg(3)
     outdir = arg(4)
     read(arg(5),*) ires
   else if (command_argument_count() == 6) then

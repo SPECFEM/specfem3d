@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-  program combine_vol_data
+  program combine_vol_data_vtk_binary
 
 ! puts the output of SPECFEM3D into '***.mesh' format,
 ! which can be converted via mesh2vtu into ParaView format.
@@ -42,7 +42,12 @@
   use shared_parameters
 
   use combine_vol_data_mod
-  use combine_vol_data_adios_mod
+
+  ! ADIOS
+#ifdef USE_ADIOS_INSTEAD_OF_MESH
+  ! not supported yet with adios
+  !use combine_vol_data_adios_mod
+#endif
 
   use combine_vtk_par
   implicit none
@@ -71,7 +76,7 @@
   character(len=MAX_STRING_LEN) :: prname, prname_lp
   character(len=MAX_STRING_LEN*2) :: mesh_file,local_data_file
   logical :: HIGH_RESOLUTION_MESH,BROADCAST_AFTER_READ
-  integer :: ires,myrank
+  integer :: ires
   integer :: sizeprocs
 
   ! MPI initialization
@@ -270,13 +275,13 @@
   celltype=12
 
   call write_unstructured_mesh(mesh_file,len_trim(mesh_file), 1, npp, pts, nee, celltype, conn, &
-                             filename,len_trim(filename),total_dat)
+                               filename,len_trim(filename),total_dat)
 
   call finalize_mpi()
 
   print *, 'Done writing '//trim(mesh_file)
 
-  end program combine_vol_data
+  end program combine_vol_data_vtk_binary
 
 
 !=============================================================
@@ -289,7 +294,12 @@
   use constants
 
   use combine_vtk_par
-  use combine_vol_data_adios_mod
+
+  ! ADIOS
+#ifdef USE_ADIOS_INSTEAD_OF_MESH
+  ! not supported yet with adios
+  !use combine_vol_data_adios_mod
+#endif
 
   implicit none
 
