@@ -2,7 +2,7 @@
 README
 --------------------------------------------------
 
-Acoustic benchmark
+Acoustic-elastic coupled benchmark
 
 This test can be done on your workstation, as long as you have 4 CPU cores available.
 it should be done within 5 minutes. 
@@ -20,4 +20,4 @@ you will be given information at the very end:
  relative error =  ?
 
 Check "relative error", it must be small enough (~0.1 should be OK).
-If the test fails, PURE ACOUSTIC kernel calculation is problematic.
+If the test fails, ACOUSTIC-ELASTIC kernel calculation is problematic.

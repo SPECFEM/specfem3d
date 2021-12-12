@@ -5,7 +5,7 @@ README
 Elastic benchmark
 
 This test can be done on your workstation, as long as you have 4 CPUs available.
-it should be done within 15 minutes. 
+it should be done within 5 minutes. 
 
 
 To run this test, simply use (after ./configure):
@@ -19,5 +19,5 @@ You will be given information at the very end:
  MODELSPACE     = ?
  relative error = ?
 
-Check "relative error", it must be small enough (~0.001 should be OK).
+Check "relative error", it must be small enough (~0.1 should be OK).
 If the test fails, PURE ELASTIC kernel calculation is problematic.

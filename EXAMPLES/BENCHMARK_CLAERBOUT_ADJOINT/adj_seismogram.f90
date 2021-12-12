@@ -22,7 +22,7 @@ program adj_seismogram
 
   ! input parameters
   if (iargc() /= 4) &
-    stop 'Usage: ./xadj NSTEP DT NPROC type[acoustic/elastic]'
+    stop 'Usage: ./xadj NSTEP DT NPROC type[acoustic/elastic/acoustic-elastic]'
 
   call get_command_argument(1, arg); read(arg,*,iostat=ier)    NSTEP;   if (ier /= 0) stop 'Error reading NSTEP'
   call get_command_argument(2, arg); read(arg,*,iostat=ier)       DT;   if (ier /= 0) stop 'Error reading DT'
@@ -37,9 +37,11 @@ program adj_seismogram
     SIM_TYPE = 1
   else if (trim(str_type) == "elastic") then
     SIM_TYPE = 2
+  else if (trim(str_type) == "acoustic-elastic") then
+    SIM_TYPE = 3
   else
-    print *,'Error: invalid type '//trim(str_type)//' must be: acoustic or elastic'
-    stop 'Invalid type, must be: acoustic or elastic'
+    print *,'Error: invalid type '//trim(str_type)//' must be: acoustic, elastic or acoustic-elastic'
+    stop 'Invalid type, must be: acoustic, elastic or acoustic-elastic'
   endif
 
   ! user output
@@ -47,7 +49,7 @@ program adj_seismogram
   print *,'  NSTEP = ',NSTEP
   print *,'  DT    = ',DT
   print *,'  NPROC = ',NPROC
-  print *,'  type  = ',SIM_TYPE,'(acoustic == 1 / elastic == 2)'
+  print *,'  type  = ',SIM_TYPE,'(acoustic == 1 / elastic == 2 / acoustic-elastic == 3)'
   print *
 
   allocate(syn(NSTEP),dat(NSTEP),adj(NSTEP),stat=ier)
@@ -55,7 +57,7 @@ program adj_seismogram
   syn(:) = 0.0; dat(:) = 0.0; adj(:) = 0.0
 
   ! for derivative in acoustic case
-  if (SIM_TYPE == 1) then
+  if (SIM_TYPE == 1 .or. SIM_TYPE == 3) then
     print *,"  creating adjoint sources for pressure (taking second-derivative of pressure differences)..."
     print *
     allocate(adj_new(NSTEP),stat=ier)
@@ -89,8 +91,8 @@ program adj_seismogram
 
     ! components
     select case(SIM_TYPE)
-    case (1)
-      ! acoustic
+    case (1,3)
+      ! acoustic / acoustic-elastic (w/ receivers in acoustic domain)
       comp_total = 1 ! single trace
     case (2)
       ! elastic
@@ -104,8 +106,8 @@ program adj_seismogram
 
     do icomp = 1,comp_total
 
-      if (SIM_TYPE == 1) then
-        ! acoustic
+      if (SIM_TYPE == 1 .or. SIM_TYPE == 3) then
+        ! acoustic / acoustic-elastic
         ! pressure-component
         filename_in  = trim(procname)//"_p_SU"  ! from acceleration
         filename_out = trim(procname)//"_p_SU"  ! adjoint trace assumes _p_SU name for acoustic simulations
@@ -154,8 +156,7 @@ program adj_seismogram
         stop 'Error opening file .adj'
       endif
 
-
-
+      ! statistics
       diff_max_all = -1.e20
 
       irec = 1
@@ -176,7 +177,7 @@ program adj_seismogram
         adj(:) = syn(:) - dat(:)
 
         ! acoustic adjoint source
-        if (SIM_TYPE == 1) then
+        if (SIM_TYPE == 1 .or. SIM_TYPE == 3) then
           ! for acoustic FWI, L2 adjoint source is the second derivative of pressure difference
           ! (e.g., see Peter et al. 2011, GJI, eq. (A8))
           !
@@ -246,7 +247,7 @@ program adj_seismogram
       ! user output
       print *,'  receivers ',irec-1
       print *,'  adjoint sources written to: ',"SEM/"//trim(filename_out)//".adj"
-      if (SIM_TYPE == 1) then
+      if (SIM_TYPE == 1 .or. SIM_TYPE == 3) then
         print *,'  maximum amplitude |f^adj| = |-\partial_t^2(p_syn-p_obs)| = ',diff_max_all
       else
         print *,'  maximum waveform difference (syn - dat) = ',diff_max_all

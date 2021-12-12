@@ -4,6 +4,7 @@ program random_model
 
   integer,parameter :: NGLLX = 5,NGLLY = 5,NGLLZ = 5
   integer,parameter :: IOUT = 20
+  integer,parameter :: CUSTOM_REAL = 4
 
   ! data space misfit: compares either seismograms or adjoint sources
   logical,parameter :: use_data_traces = .true.     ! .true. == seismogram misfits, .false. == adjoint sources
@@ -19,13 +20,14 @@ program random_model
   character(len=512) :: prname,arg,procname,str_type,name
   character(len=512) :: filename,filename_dat,filename_syn
 
-  real(kind=4),dimension(:,:,:,:),allocatable :: vp,vs,rho,weights
-  real(kind=4),dimension(:,:,:,:),allocatable :: vp0,vs0,rho0
-  real(kind=4),dimension(:,:,:,:),allocatable :: krhop,kalpha,kbeta
-  real(kind=4),dimension(:,:,:,:),allocatable :: dlnrho,dlnvp,dlnvs
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: vp,vs,rho,weights
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: vp0,vs0,rho0
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: krhop,kalpha,kbeta,ktmp
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: dlnrho,dlnvp,dlnvs
+
   real(kind=4) :: r4head(60)
 
-  real(kind=4),dimension(:), allocatable :: dat,syn,adj,diff
+  real(kind=CUSTOM_REAL),dimension(:), allocatable :: dat,syn,adj,diff
 
   !! input parameters
   if (iargc() /= 4) &
@@ -41,16 +43,18 @@ program random_model
     SIM_TYPE = 1
   else if (trim(str_type) == "elastic") then
     SIM_TYPE = 2
+  else if (trim(str_type) == "acoustic-elastic") then
+    SIM_TYPE = 3
   else
-    print *,'Error: Invalid type '//trim(str_type)//' must be: acoustic or elastic'
-    stop 'Invalid type, must be: acoustic or elastic'
+    print *,'Error: Invalid type '//trim(str_type)//' must be: acoustic, elastic or acoustic-elastic'
+    stop 'Invalid type, must be: acoustic, elastic or acoustic-elastic'
   endif
 
   print *,'postprocessing:'
   print *,'  NSTEP = ',NSTEP
   print *,'  DT    = ',DT
   print *,'  NPROC = ',NPROC
-  print *,'  type  = ',SIM_TYPE,'(acoustic == 1 / elastic == 2)'
+  print *,'  type  = ',SIM_TYPE,'(acoustic == 1 / elastic == 2 / acoustic-elastic == 3)'
   print *
 
   MODELSPACE = 0.d0
@@ -99,9 +103,17 @@ program random_model
     read(IOUT) weights
     close(IOUT)
 
+    ! temporary kernel to combine both acoustic and elastic ones for coupled acoustic-elastic case
+    if (SIM_TYPE == 3) then
+      allocate(ktmp(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'error allocating array ktmp'
+      ktmp(:,:,:,:) = 0.0_CUSTOM_REAL
+    endif
+
     ! kernels
     ! K_rho_prime
     allocate(krhop(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'error allocating array krhop'
+    krhop(:,:,:,:) = 0.0_CUSTOM_REAL
+
     if (SIM_TYPE == 1) then
       filename = 'OUTPUT_FILES/DATABASES_MPI/'//trim(prname)//'rhop_acoustic_kernel.bin'
     else
@@ -112,8 +124,24 @@ program random_model
     read(IOUT) krhop
     close(IOUT)
 
+    ! coupled acoustic-elastic
+    if (SIM_TYPE == 3) then
+      ! adds contribution from acoustic kernel (elastic done above)
+      ktmp(:,:,:,:) = 0.0_CUSTOM_REAL
+
+      filename = 'OUTPUT_FILES/DATABASES_MPI/'//trim(prname)//'rhop_acoustic_kernel.bin'
+      open(unit=IOUT,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'Error opening file rhop_acoustic_kernel.bin'
+      read(IOUT) ktmp
+      close(IOUT)
+      ! combined elastic & acoustic
+      krhop = krhop + ktmp
+    endif
+
     ! K_alpha
     allocate(kalpha(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'error allocating array kalpha'
+    kalpha(:,:,:,:) = 0.0_CUSTOM_REAL
+
     if (SIM_TYPE == 1) then
       filename = 'OUTPUT_FILES/DATABASES_MPI/'//trim(prname)//'alpha_acoustic_kernel.bin'
     else
@@ -124,13 +152,29 @@ program random_model
     read(IOUT) kalpha
     close(IOUT)
 
+    ! coupled acoustic-elastic
+    if (SIM_TYPE == 3) then
+      ! adds contribution from acoustic kernel (elastic done above)
+      ktmp(:,:,:,:) = 0.0_CUSTOM_REAL
+
+      filename = 'OUTPUT_FILES/DATABASES_MPI/'//trim(prname)//'alpha_acoustic_kernel.bin'
+      open(unit=IOUT,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'Error opening file rhop_acoustic_kernel.bin'
+      read(IOUT) ktmp
+      close(IOUT)
+      ! combined elastic & acoustic
+      kalpha = kalpha + ktmp
+    endif
+
     ! K_beta, zero shear for acoustic simulation
     allocate(kbeta(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'error allocating array kbeta'
+    kbeta(:,:,:,:) = 0.0_CUSTOM_REAL
+
     if (SIM_TYPE == 1) then
       ! acoustic, no shear kernel
       kbeta = 0.0
     else
-      ! elastic
+      ! elastic or acoustic-elastic (w/ elastic elements in slice)
       filename = 'OUTPUT_FILES/DATABASES_MPI/'//trim(prname)//'beta_kernel.bin'
       open(unit=IOUT,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
       if (ier /= 0) stop 'Error opening file beta_kernel.bin'
@@ -144,8 +188,11 @@ program random_model
     print *
 
     ! rho
-    allocate(rho(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'Error allocating array rho'
-    allocate(rho0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'Error allocating array rho0'
+    allocate(rho(NGLLX,NGLLY,NGLLZ,nspec), &
+             rho0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+    if ( ier /= 0 ) stop 'Error allocating array rho,rho0'
+    rho(:,:,:,:) = 0.0_CUSTOM_REAL; rho0(:,:,:,:) = 0.0_CUSTOM_REAL
+
     filename = 'MODELS/target_model/'//trim(prname)//'rho.bin'
     open(unit=IOUT,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'Error opening file rho.bin target_model'
@@ -158,8 +205,11 @@ program random_model
     close(IOUT)
 
     ! vp
-    allocate(vp(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'Error allocating array vp'
-    allocate(vp0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'Error allocating array vp0'
+    allocate(vp(NGLLX,NGLLY,NGLLZ,nspec), &
+             vp0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+    if ( ier /= 0 ) stop 'Error allocating array vp,vp0'
+    vp(:,:,:,:) = 0.0_CUSTOM_REAL; vp0(:,:,:,:) = 0.0_CUSTOM_REAL
+
     filename = 'MODELS/target_model/'//trim(prname)//'vp.bin'
     open(unit=IOUT,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'Error opening file vp.bin target_model'
@@ -172,12 +222,14 @@ program random_model
     close(IOUT)
 
     ! vs
-    allocate(vs(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'Error allocating array vs'
-    allocate(vs0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'Error allocating array vs0'
+    allocate(vs(NGLLX,NGLLY,NGLLZ,nspec), &
+             vs0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+    if ( ier /= 0 ) stop 'Error allocating array vs,vs0'
+    vs(:,:,:,:) = 0.0_CUSTOM_REAL; vs0(:,:,:,:) = 0.0_CUSTOM_REAL
+
     if (SIM_TYPE == 1) then
       ! acoustic, zero shear velocity
-      vs = 0.0
-      vs0 = 0.0
+      ! nothing to read in
     else
       filename = 'MODELS/target_model/'//trim(prname)//'vs.bin'
       open(unit=IOUT,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
@@ -193,16 +245,26 @@ program random_model
 
     ! relative perturbations
     allocate(dlnrho(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'Error allocating array dlnrho'
-    dlnrho = (rho - rho0) / rho0
+    dlnrho(:,:,:,:) = 0.0_CUSTOM_REAL
+
+    ! relative perturbation
+    where(rho0(:,:,:,:) /= 0.0_CUSTOM_REAL) dlnrho = (rho - rho0) / rho0
 
     allocate(dlnvp(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'Error allocating array dlnvp'
-    dlnvp = (vp - vp0) / vp0
+    dlnvp(:,:,:,:) = 0.0_CUSTOM_REAL
+
+    ! relative perturbation
+    where(vp0(:,:,:,:) /= 0.0_CUSTOM_REAL) dlnvp = (vp - vp0) / vp0
 
     allocate(dlnvs(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'Error allocating array dlnvs'
+    dlnvs(:,:,:,:) = 0.0_CUSTOM_REAL
+
     if (SIM_TYPE == 1) then
-      dlnvs = 0.0
+      ! acoustic
+      ! no shear pertubations
     else
-      dlnvs = (vs - vs0) / vs0
+      ! relative perturbation
+      where(vs0(:,:,:,:) /= 0.0_CUSTOM_REAL) dlnvs = (vs - vs0) / vs0
     endif
 
     print *,'  relative model perturbation (rho - rhop)/rho0 : min/max = ',minval(dlnrho),maxval(dlnrho)
@@ -211,19 +273,18 @@ program random_model
       print *,'  relative model perturbation (vs - vs0)/vs0    : min/max = ',minval(dlnvs),maxval(dlnvs)
     print *
 
-
     ! F dm = S(m+dm) - S(m)
     ! note: original statement
     !       we backpropogate syn-dat (see adj_seismogram.f90) => we have to add a minus sign in front of kernels
     if (SIM_TYPE == 1) then
-      ! acoustic
+      ! acoustic (no shear contribution)
       MS_rhol = sum(weights * (-krhop) * dlnrho)
       MS_vpl  = sum(weights * (-kalpha) * dlnvp)
       MS_l = MS_rhol + MS_vpl
       print *,'  model space contribution = ',MS_l,' with Mrho = ',MS_rhol,' Mvp = ',MS_vpl
 
     else
-      ! elastic
+      ! elastic or acoustic-elastic (w/ elastic elements in slice)
       MS_rhol = sum(weights * (-krhop) * dlnrho)
       MS_vpl  = sum(weights * (-kalpha) * dlnvp)
       MS_vsl  = sum(weights * (-kbeta) * dlnvs)
@@ -241,8 +302,8 @@ program random_model
     write(procname,"(i4)") myrank
     procname = adjustl(procname)
 
-    if (SIM_TYPE == 1) then
-      ! acoustic
+    if (SIM_TYPE == 1 .or. SIM_TYPE == 3) then
+      ! acoustic or acoustic-elastic (w/ receivers in acoustic domain)
       comp_total = 1  ! only p-comp adjoint trace
     else
       ! elastic
@@ -251,8 +312,8 @@ program random_model
 
     do icomp = 1,comp_total
 
-      if (SIM_TYPE == 1) then
-        ! acoustic
+      if (SIM_TYPE == 1 .or. SIM_TYPE == 3) then
+        ! acoustic or acoustic-elastic
         name = trim(procname)//"_p_SU"  ! pressure adjoint source
       else
         ! elastic
@@ -355,9 +416,11 @@ program random_model
 
     enddo ! icomp
 
+    ! free arrays
     deallocate(rho,rho0,vp,vp0,vs,vs0)
     deallocate(dlnrho,dlnvp,dlnvs)
     deallocate(weights,krhop,kalpha,kbeta)
+    if (SIM_TYPE == 3) deallocate(ktmp)
 
   enddo ! NPROC
 

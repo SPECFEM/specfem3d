@@ -1,0 +1,13 @@
+PDE  1999 01 01 00 00 00.00  67000 67000 -25000 4.2 4.2 hom_explosion
+event name:       hom_explosion
+time shift:       0.0
+half duration:    0.1
+latorUTM:        820.0
+longorUTM:      1320.0
+depth:           0.720
+Mrr:       1.000000e+18
+Mtt:       1.000000e+18
+Mpp:       1.000000e+18
+Mrt:       0.0
+Mrp:       0.0
+Mtp:       0.0
