@@ -912,7 +912,6 @@
     sloc_der = 0._CUSTOM_REAL
   endif
 
-
   ! initializes adjoint kernels and reconstructed/backward wavefields
   if (SIMULATION_TYPE == 3) then
     ! elastic domain

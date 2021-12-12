@@ -67,6 +67,7 @@
   integer :: nspec_wmax, ier
   integer, parameter :: num_vars = 1
   integer, dimension(num_vars) :: max_global_values
+
   ! Type inference for define_adios_global_array1D. Avoid additional args.
   real(kind=CUSTOM_REAL), dimension(1,1,1,1) :: dummy_kernel
 

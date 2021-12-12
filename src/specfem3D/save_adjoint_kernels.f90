@@ -98,6 +98,9 @@
                  eta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 2247')
         if (ier /= 0) stop 'error allocating arrays alphav_kl,...'
+        alphav_kl(:,:,:,:) = 0.0_CUSTOM_REAL; alphah_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+        betav_kl(:,:,:,:) = 0.0_CUSTOM_REAL; betah_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+        eta_kl(:,:,:,:) = 0.0_CUSTOM_REAL
 
         ! derived kernels
         ! vp,vs kernel
@@ -105,6 +108,7 @@
                  beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 2249')
         if (ier /= 0) stop 'error allocating array alpha_kl,beta_kl'
+        alpha_kl(:,:,:,:) = 0.0_CUSTOM_REAL; beta_kl(:,:,:,:) = 0.0_CUSTOM_REAL
       endif
     else
       ! derived kernels
@@ -114,6 +118,8 @@
                rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2252')
       if (ier /= 0) stop 'error allocating array rhop_kl'
+      alpha_kl(:,:,:,:) = 0.0_CUSTOM_REAL; beta_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+      rhop_kl(:,:,:,:) = 0.0_CUSTOM_REAL
     endif
 
     call save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
