@@ -83,8 +83,8 @@ NMATERIALS                      = 5
 #     Q_mu             : Q_mu attenuation quality factor
 #     anisotropy_flag  : 0 = no anisotropy / 1,2,... check the implementation in file aniso_model.f90
 #     domain_id        : 1 = acoustic / 2 = elastic
-1  2000.0  3297.849  2222.536  9999.   10.  0  2      # Vp,Vs (for viscoelastic comparison use 140 Hz as f0 reference frequency)
-2  1000.0  1550.0       0.0    9999. 9999.  0  1      # acoustic inclusions
+1  2000.0  3297.849  2222.536  9999.   10.  0  2   # Vp,Vs (for viscoelastic comparison use 140 Hz as f0 reference frequency)
+2  1000.0  1550.0       0.0    9999. 9999.  0  1   # acoustic inclusions
 3  1000.0  1530.0       0.0    9999. 9999.  0  1
 4  1000.0  1510.0       0.0    9999. 9999.  0  1
 5  1000.0  1480.0       0.0    9999. 9999.  0  1

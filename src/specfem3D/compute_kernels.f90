@@ -183,7 +183,7 @@
 
                   ! kernel for bulk modulus, see e.g. Tromp et al. (2005), equation (18)
                   ! note: multiplication with kappa(x) will be done after the time loop
-                  kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) + deltat * (9 * eps_trace_l * b_eps_trace_l)
+                  kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) + deltat * (9.0_CUSTOM_REAL * eps_trace_l * b_eps_trace_l)
                 endif
               enddo
             enddo
@@ -540,7 +540,8 @@
                                    + 2 * (b_epsilondev_loc(3)*b_epsilondev_loc(3) + b_epsilondev_loc(4)*b_epsilondev_loc(4) + &
                                           b_epsilondev_loc(5)*b_epsilondev_loc(5)) )
 
-              hess_kappa_kl(i,j,k,ispec) = hess_kappa_kl(i,j,k,ispec) + deltat * (9 * b_eps_trace_l * b_eps_trace_l)
+              hess_kappa_kl(i,j,k,ispec) = hess_kappa_kl(i,j,k,ispec) &
+                                         + deltat * (9.0_CUSTOM_REAL * b_eps_trace_l * b_eps_trace_l)
 
             enddo
           enddo

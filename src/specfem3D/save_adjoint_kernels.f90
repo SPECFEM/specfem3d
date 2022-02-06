@@ -395,6 +395,7 @@
             kappal = kappastore(i,j,k,ispec)
 
             if (ANISOTROPIC_KL) then
+              ! anisotropic kernels
               if (SAVE_TRANSVERSE_KL) then
                 cijkl_kl_local(:) = - cijkl_kl(:,i,j,k,ispec)
 
@@ -446,14 +447,12 @@
                 eta_kl(i,j,k,ispec) = F * an_kl(5)
 
                 ! to check: isotropic kernels from transverse isotropic ones
-                alpha_kl(i,j,k,ispec) = alphav_kl(i,j,k,ispec) &
-                                                  + alphah_kl(i,j,k,ispec)
-                beta_kl(i,j,k,ispec) = betav_kl(i,j,k,ispec) &
-                                                  + betah_kl(i,j,k,ispec)
+                alpha_kl(i,j,k,ispec) = alphav_kl(i,j,k,ispec) + alphah_kl(i,j,k,ispec)
+                beta_kl(i,j,k,ispec) = betav_kl(i,j,k,ispec) + betah_kl(i,j,k,ispec)
+
               endif ! SAVE_TRANSVERSE_KL
 
             else
-
               ! isotropic kernels
 
               ! isotropic adjoint kernels (see e.g. Tromp et al. 2005)
@@ -463,7 +462,7 @@
               rho_kl(i,j,k,ispec) = - rhol * rho_kl(i,j,k,ispec)
 
               ! shear modulus kernel
-              mu_kl(i,j,k,ispec) = - 2._CUSTOM_REAL * mul * mu_kl(i,j,k,ispec)
+              mu_kl(i,j,k,ispec) = - 2.0_CUSTOM_REAL * mul * mu_kl(i,j,k,ispec)
 
               ! bulk modulus kernel
               kappa_kl(i,j,k,ispec) = - kappal * kappa_kl(i,j,k,ispec)
@@ -473,13 +472,12 @@
               rhop_kl(i,j,k,ispec) = rho_kl(i,j,k,ispec) + kappa_kl(i,j,k,ispec) + mu_kl(i,j,k,ispec)
 
               ! vs kernel
-              beta_kl(i,j,k,ispec) = 2._CUSTOM_REAL * (mu_kl(i,j,k,ispec) &
-                    - 4._CUSTOM_REAL * mul / (3._CUSTOM_REAL * kappal) * kappa_kl(i,j,k,ispec))
+              beta_kl(i,j,k,ispec) = &
+                2.0_CUSTOM_REAL * ( mu_kl(i,j,k,ispec) - FOUR_THIRDS * mul / kappal * kappa_kl(i,j,k,ispec) )
 
               ! vp kernel
-              alpha_kl(i,j,k,ispec) = 2._CUSTOM_REAL * (1._CUSTOM_REAL &
-                    + 4._CUSTOM_REAL * mul / (3._CUSTOM_REAL * kappal) ) * kappa_kl(i,j,k,ispec)
-
+              alpha_kl(i,j,k,ispec) = &
+                2.0_CUSTOM_REAL * ( 1.0_CUSTOM_REAL + FOUR_THIRDS * mul / kappal ) * kappa_kl(i,j,k,ispec)
             endif
 
           enddo
@@ -564,7 +562,7 @@
         !          but absolute perturbations (delta m_i = m_i - m_0).
         ! Kappa and mu are for absolute perturbations, can be used to check with purely isotropic versions.
         open(unit=IOUT,file=trim(prname)//'rho_kernel.bin',status='unknown',form='unformatted',action='write')
-        write(IOUT)  - rho_kl
+        write(IOUT) - rho_kl
         close(IOUT)
         open(unit=IOUT,file=trim(prname)//'cijkl_kernel.bin',status='unknown',form='unformatted',action='write')
         write(IOUT) - cijkl_kl
