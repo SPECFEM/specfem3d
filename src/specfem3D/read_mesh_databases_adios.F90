@@ -704,7 +704,7 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1841')
     if (ier /= 0) stop 'error allocating array epsilon_trace_over_3'
     epsilon_trace_over_3(:,:,:,:) = 0.0_CUSTOM_REAL
-    
+
     ! needed for attenuation
     allocate(factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1842')

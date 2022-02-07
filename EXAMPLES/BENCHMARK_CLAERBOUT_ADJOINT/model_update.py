@@ -360,7 +360,7 @@ def model_update(NPROC,SIM_TYPE,percent,param):
         # stores perturbed model files
         print("  storing new files...")
         prname = IN_DATA_FILES + "proc{:06d}_".format(myrank)
-        
+
         # rho
         filename = prname + "rho_new.bin"
         hf.write_binary_file_custom_real_array(filename,rhostore)
