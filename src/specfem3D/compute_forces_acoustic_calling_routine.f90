@@ -81,7 +81,9 @@
   ! GPU
   if (GPU_MODE) then
     ! checks if for kernel simulation with both, forward & backward fields
-    if (SIMULATION_TYPE == 3 .and. .not. UNDO_ATTENUATION_AND_OR_PML) then
+    if (SIMULATION_TYPE == 3 &
+        .and. .not. UNDO_ATTENUATION_AND_OR_PML &
+        .and. .not. (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION)) then
       ! runs with the additionally optimized GPU routine
       ! (combines forward/backward fields in main compute_kernel_acoustic)
       call compute_forces_acoustic_GPU_calling()
@@ -412,7 +414,9 @@
   ! GPU
   if (GPU_MODE) then
     ! checks if for kernel simulation with both, forward & backward fields
-    if (SIMULATION_TYPE == 3 .and. .not. UNDO_ATTENUATION_AND_OR_PML) then
+    if (SIMULATION_TYPE == 3 &
+        .and. .not. UNDO_ATTENUATION_AND_OR_PML &
+        .and. .not. (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION)) then
       ! runs with the additionally optimized GPU routine
       ! (combines forward/backward fields in main compute_kernel_acoustic)
       ! all done in compute_forces_acoustic_GPU_calling()
