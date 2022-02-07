@@ -58,7 +58,8 @@
   real,dimension(:,:,:,:),allocatable :: data_sp
 
   ! mesh coordinates
-  real(kind=CUSTOM_REAL),dimension(:),allocatable :: xstore, ystore, zstore, pts
+  real(kind=CUSTOM_REAL),dimension(:),allocatable :: xstore, ystore, zstore
+  real,dimension(:),allocatable :: pts
   integer, dimension(:,:,:,:),allocatable :: ibool
 
   integer :: NSPEC_AB, NGLOB_AB, NSPEC_IRREGULAR
@@ -193,10 +194,12 @@
     ! writes point coordinates and scalar value to mesh file
     if (.not. HIGH_RESOLUTION_MESH) then
       ! writes out element corners only
-      call cvd_write_corners(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,data_sp,it,npp,numpoin,np,pts)
+      call cvd_write_corners_binary(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,data_sp, &
+                                    it,npp,numpoin,np,pts)
     else
       ! high resolution, all GLL points
-      call cvd_write_GLL_points(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,data_sp,it,npp,numpoin,np,pts)
+      call cvd_write_GLL_points_binary(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,data_sp, &
+                                       it,npp,numpoin,np,pts)
     endif
 
     print *,'  points:',np,numpoin
@@ -246,12 +249,12 @@
     ! writes out element corner indices
     if (.not. HIGH_RESOLUTION_MESH) then
       ! spectral elements
-      call cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool, &
-                                    np,ne,nelement,it,nee,numpoin,conn)
+      call cvd_write_corner_elements_binary(NSPEC_AB,NGLOB_AB,ibool, &
+                                            np,ne,nelement,it,nee,numpoin,conn)
     else
       ! subdivided spectral elements
-      call cvd_write_GLL_elements(NSPEC_AB,NGLOB_AB,ibool, &
-                                np,ne,nelement,it,nee,numpoin,conn)
+      call cvd_write_GLL_elements_binary(NSPEC_AB,NGLOB_AB,ibool, &
+                                         np,ne,nelement,it,nee,numpoin,conn)
     endif
 
     print *,'  elements:',ne,nelement
@@ -405,7 +408,8 @@
 !=============================================================
 
 
-  subroutine cvd_write_corners(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat,it,npp,numpoin,np,pts)
+  subroutine cvd_write_corners_binary(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat, &
+                                      it,npp,numpoin,np,pts)
 
 ! writes out locations of spectral element corners only
 
@@ -418,9 +422,10 @@
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: xstore, ystore, zstore
   real,dimension(NGLLY,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: dat
-  integer:: it
-  integer :: npp,numpoin,np
-  real,dimension(3*npp),intent(out) :: pts
+  integer,intent(in):: it
+  integer,intent(in) :: npp,np
+  integer,intent(inout) :: numpoin
+  real,dimension(3*npp),intent(inout) :: pts
 
   ! local parameters
   logical,dimension(:),allocatable :: mask_ibool
@@ -457,12 +462,10 @@
       x = xstore(iglob1)
       y = ystore(iglob1)
       z = zstore(iglob1)
-            pts(3*(np+numpoin-1)+1) = x
-            pts(3*(np+numpoin-1)+2) = y
-            pts(3*(np+numpoin-1)+3) = z
-
+      pts(3*(np+numpoin-1)+1) = x
+      pts(3*(np+numpoin-1)+2) = y
+      pts(3*(np+numpoin-1)+3) = z
       total_dat(np+numpoin) = dat(1,1,1,ispec)
-
       mask_ibool(iglob1) = .true.
     endif
     if (.not. mask_ibool(iglob2)) then
@@ -470,11 +473,10 @@
       x = xstore(iglob2)
       y = ystore(iglob2)
       z = zstore(iglob2)
-            pts(3*(np+numpoin-1)+1) = x
-            pts(3*(np+numpoin-1)+2) = y
-            pts(3*(np+numpoin-1)+3) = z
+      pts(3*(np+numpoin-1)+1) = x
+      pts(3*(np+numpoin-1)+2) = y
+      pts(3*(np+numpoin-1)+3) = z
       total_dat(np+numpoin) = dat(NGLLX,1,1,ispec)
-
       mask_ibool(iglob2) = .true.
     endif
     if (.not. mask_ibool(iglob3)) then
@@ -482,12 +484,10 @@
       x = xstore(iglob3)
       y = ystore(iglob3)
       z = zstore(iglob3)
-            pts(3*(np+numpoin-1)+1) = x
-            pts(3*(np+numpoin-1)+2) = y
-            pts(3*(np+numpoin-1)+3) = z
-
+      pts(3*(np+numpoin-1)+1) = x
+      pts(3*(np+numpoin-1)+2) = y
+      pts(3*(np+numpoin-1)+3) = z
       total_dat(np+numpoin) = dat(NGLLX,NGLLY,1,ispec)
-
       mask_ibool(iglob3) = .true.
     endif
     if (.not. mask_ibool(iglob4)) then
@@ -495,12 +495,10 @@
       x = xstore(iglob4)
       y = ystore(iglob4)
       z = zstore(iglob4)
-            pts(3*(np+numpoin-1)+1) = x
-            pts(3*(np+numpoin-1)+2) = y
-            pts(3*(np+numpoin-1)+3) = z
-
+      pts(3*(np+numpoin-1)+1) = x
+      pts(3*(np+numpoin-1)+2) = y
+      pts(3*(np+numpoin-1)+3) = z
       total_dat(np+numpoin) = dat(1,NGLLY,1,ispec)
-
       mask_ibool(iglob4) = .true.
     endif
     if (.not. mask_ibool(iglob5)) then
@@ -508,12 +506,10 @@
       x = xstore(iglob5)
       y = ystore(iglob5)
       z = zstore(iglob5)
-            pts(3*(np+numpoin-1)+1) = x
-            pts(3*(np+numpoin-1)+2) = y
-            pts(3*(np+numpoin-1)+3) = z
-
+      pts(3*(np+numpoin-1)+1) = x
+      pts(3*(np+numpoin-1)+2) = y
+      pts(3*(np+numpoin-1)+3) = z
       total_dat(np+numpoin) = dat(1,1,NGLLZ,ispec)
-
       mask_ibool(iglob5) = .true.
     endif
     if (.not. mask_ibool(iglob6)) then
@@ -521,12 +517,10 @@
       x = xstore(iglob6)
       y = ystore(iglob6)
       z = zstore(iglob6)
-            pts(3*(np+numpoin-1)+1) = x
-            pts(3*(np+numpoin-1)+2) = y
-            pts(3*(np+numpoin-1)+3) = z
-
+      pts(3*(np+numpoin-1)+1) = x
+      pts(3*(np+numpoin-1)+2) = y
+      pts(3*(np+numpoin-1)+3) = z
       total_dat(np+numpoin) = dat(NGLLX,1,NGLLZ,ispec)
-
       mask_ibool(iglob6) = .true.
     endif
     if (.not. mask_ibool(iglob7)) then
@@ -534,33 +528,30 @@
       x = xstore(iglob7)
       y = ystore(iglob7)
       z = zstore(iglob7)
-            pts(3*(np+numpoin-1)+1) = x
-            pts(3*(np+numpoin-1)+2) = y
-            pts(3*(np+numpoin-1)+3) = z
-
+      pts(3*(np+numpoin-1)+1) = x
+      pts(3*(np+numpoin-1)+2) = y
+      pts(3*(np+numpoin-1)+3) = z
       total_dat(np+numpoin) = dat(NGLLX,NGLLY,NGLLZ,ispec)
-
       mask_ibool(iglob7) = .true.
     endif
     if (.not. mask_ibool(iglob8)) then
       numpoin = numpoin + 1
       x = xstore(iglob8)
       y = ystore(iglob8)
-            pts(3*(np+numpoin-1)+1) = x
-            pts(3*(np+numpoin-1)+2) = y
-            pts(3*(np+numpoin-1)+3) = z
-
+      pts(3*(np+numpoin-1)+1) = x
+      pts(3*(np+numpoin-1)+2) = y
+      pts(3*(np+numpoin-1)+3) = z
       total_dat(np+numpoin) = dat(1,NGLLY,NGLLZ,ispec)
-
       mask_ibool(iglob8) = .true.
     endif
   enddo ! ispec
 
-  end subroutine cvd_write_corners
+  end subroutine cvd_write_corners_binary
 
 !=============================================================
 
-  subroutine cvd_write_GLL_points(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat,it,npp,numpoin,np,pts)
+  subroutine cvd_write_GLL_points_binary(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat, &
+                                         it,npp,numpoin,np,pts)
 
 ! writes out locations of all GLL points of spectral elements
 
@@ -573,8 +564,9 @@
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: xstore, ystore, zstore
   real,dimension(NGLLY,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: dat
-  integer:: it,npp,numpoin,np
-  real,dimension(3*npp),intent(out) :: pts
+  integer,intent(in) :: it,npp,np
+  integer,intent(inout) :: numpoin
+  real,dimension(3*npp),intent(inout) :: pts
 
   ! local parameters
   logical,dimension(:),allocatable :: mask_ibool
@@ -609,9 +601,7 @@
             pts(3*(np+numpoin-1)+1) = x
             pts(3*(np+numpoin-1)+2) = y
             pts(3*(np+numpoin-1)+3) = z
-
             total_dat(np+numpoin) = dat(i,j,k,ispec)
-
             mask_ibool(iglob) = .true.
           endif
         enddo ! i
@@ -619,13 +609,14 @@
     enddo ! k
   enddo !ispec
 
-  end subroutine cvd_write_GLL_points
+  end subroutine cvd_write_GLL_points_binary
 
 !=============================================================
 
 ! writes out locations of spectral element corners only
 
-  subroutine cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool,np,ne,nelement,it,nee,numpoin,conn)
+  subroutine cvd_write_corner_elements_binary(NSPEC_AB,NGLOB_AB,ibool, &
+                                              np,ne,nelement,it,nee,numpoin,conn)
 
   use constants
   use combine_vtk_par
@@ -634,8 +625,9 @@
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
-  integer:: it,nee,np,nelement,numpoin,ne
-  integer,dimension(8,nee) :: conn
+  integer,intent(in) :: it,nee,ne
+  integer,intent(inout) :: np,nelement,numpoin
+  integer,dimension(8,nee),intent(inout) :: conn
 
   ! local parameters
   logical,dimension(:),allocatable :: mask_ibool
@@ -733,13 +725,14 @@
   ! updates points written
   np = np + numpoin
 
-  end subroutine cvd_write_corner_elements
+  end subroutine cvd_write_corner_elements_binary
 
 
 !=============================================================
 
 
-  subroutine cvd_write_GLL_elements(NSPEC_AB,NGLOB_AB,ibool,np,ne,nelement,it,nee,numpoin,conn)
+  subroutine cvd_write_GLL_elements_binary(NSPEC_AB,NGLOB_AB,ibool, &
+                                           np,ne,nelement,it,nee,numpoin,conn)
 
 ! writes out indices of elements given by GLL points
 
@@ -750,8 +743,9 @@
 
   integer,intent(in):: NSPEC_AB,NGLOB_AB
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
-  integer:: it,nee,np,numpoin,nelement,ne
-  integer,dimension(8,nee) :: conn
+  integer,intent(in) :: it,nee,ne
+  integer,intent(inout) :: np,numpoin,nelement
+  integer,dimension(8,nee),intent(inout) :: conn
 
   ! local parameters
   logical,dimension(:),allocatable :: mask_ibool
@@ -822,5 +816,5 @@
   ! updates points written
   np = np + numpoin
 
-  end subroutine cvd_write_GLL_elements
+  end subroutine cvd_write_GLL_elements_binary
 
