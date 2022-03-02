@@ -371,8 +371,8 @@ GPU_MODE                        = .false.
 
 # ADIOS Options for I/Os
 ADIOS_ENABLED                   = .false.
-ADIOS_FOR_DATABASES             = .false.
-ADIOS_FOR_MESH                  = .false.
-ADIOS_FOR_FORWARD_ARRAYS        = .false.
-ADIOS_FOR_KERNELS               = .false.
+ADIOS_FOR_DATABASES             = .true.
+ADIOS_FOR_MESH                  = .true.
+ADIOS_FOR_FORWARD_ARRAYS        = .true.
+ADIOS_FOR_KERNELS               = .true.
 
