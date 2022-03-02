@@ -180,7 +180,7 @@ module adios_helpers_definitions_mod
   character(len=128) :: myadios_comp_operator
 #elif defined(USE_ADIOS2)
   ! for undo_att snapshots compression - compression operator
-  type(adios2_operator) :: myadios_comp_operator
+  type(adios2_operator), save :: myadios_comp_operator        ! see note about save attribute in adios_manager.F90
 #endif
 
 contains

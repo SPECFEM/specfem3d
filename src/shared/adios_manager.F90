@@ -132,20 +132,27 @@ module manager_adios
   logical, public :: is_initialized_fwd_group
 
 #elif defined(USE_ADIOS2)
+  ! note: we're using save attribute to be able to compile with a flag like -std=f2003
+  !       without it, a compilation error with gfortran (v7.5.0) would occur:
+  !       ..
+  !         Error: Fortran 2008: Implied SAVE for module variable ‘myadios2_obj’ at (1), needed due to the default initialization
+  !       ..
+  !       this seems to be needed only for type(..) variables.
+  !
   ! adios2 main object
-  type(adios2_adios), public:: myadios2_obj
+  type(adios2_adios), public, save :: myadios2_obj
   ! default file handle for read/write
-  type(adios2_engine), public :: myadios_file
+  type(adios2_engine), public, save :: myadios_file
   ! IO group
-  type(adios2_io), public :: myadios_group
+  type(adios2_io), public, save :: myadios_group
 
   ! additional file handle for read/write value file
-  type(adios2_engine), public :: myadios_val_file
-  type(adios2_io), public :: myadios_val_group
+  type(adios2_engine), public, save :: myadios_val_file
+  type(adios2_io), public, save :: myadios_val_group
 
   ! for undo_att
-  type(adios2_io), public :: myadios_fwd_group
-  type(adios2_engine), public:: myadios_fwd_file
+  type(adios2_io), public, save :: myadios_fwd_group
+  type(adios2_engine), public, save :: myadios_fwd_file
   logical, public :: is_initialized_fwd_group
 
   ! debugging mode
