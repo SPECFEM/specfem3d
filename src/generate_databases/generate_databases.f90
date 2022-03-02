@@ -29,7 +29,7 @@
 
   program xgenerate_databases
 
-  use adios_manager_mod
+  use manager_adios
   use generate_databases_par
 
   implicit none
@@ -242,7 +242,7 @@
 
   ! Initialize ADIOS I/O
   if (ADIOS_ENABLED) then
-    call adios_setup()
+    call initialize_adios()
   endif
 
   ! reads Databases files
@@ -259,7 +259,7 @@
   call finalize_databases()
 
   if (ADIOS_ENABLED) then
-    call adios_cleanup()
+    call finalize_adios()
   endif
 
   ! MPI finish

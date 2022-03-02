@@ -27,12 +27,10 @@
 
 module combine_vol_data_adios_mod
 
-  use adios_read_mod
+  use adios_helpers_mod
+  use manager_adios
 
   implicit none
-
-  ! file handles
-  integer(kind=8) :: value_handle, mesh_handle
 
 contains
 
@@ -44,22 +42,21 @@ contains
   implicit none
 
   print *, 'Usage: '
-  print *, '   xcombine_data start_slice end_slice varname var_file ' // &
-           'mesh_file output_dir high/low-resolution'
+  print *, '   xcombine_data start_slice end_slice varname var_file mesh_file output_dir high/low-resolution'
   print *, '   or '
-  print *, '   xcombine_data slice_list varname var_file mesh_file ' // &
-           'output_dir high/low-resolution'
+  print *, '   xcombine_data slice_list varname var_file mesh_file output_dir high/low-resolution'
   print *
-  print *, '* possible varnames are '
-  print *, '   rho_vp, rho_vs, kappastore, mustore, alpha_kernel, etc'
-  print *
-  print *, '   that are stored in the local directory as ' // &
-           'real(kind=CUSTOM_REAL) varname(NGLLX,NGLLY,NGLLZ,NSPEC_AB)  '
-  print *, '   in var_file.bp'
-  print *
-  print *, '* mesh_files are used to link variable to the topology'
-  print *, '* output_dir indicates where var_name.vtk will be written'
-  print *, '* give 0 for low resolution and 1 for high resolution'
+  print *, ' with'
+  print *, '   start_slice/end_slice - start/end range of slice numbers to combine'
+  print *, '   slice_list            - text file containing slice numbers to combine (or use name "all" for all slices)'
+  print *, '   varname      - possible varnames are: '
+  print *, '                    rho, vp, vs, kappastore, mustore, alpha_kernel, etc.'
+  print *, '   var_file     - datafile that holds array, as real(kind=CUSTOM_REAL):: varname(NGLLX,NGLLY,NGLLZ,NSPEC),'
+  print *, '                  (e.g. OUTPUT_FILES/kernels.bp)'
+  print *, '   mesh_file    - are used to link variable to the topology (e.g. DATABASES_MPI/solver_data.bp)'
+  print *, '   output_dir   - indicates where var_name.vtk will be written'
+  print *, '   high/low res - give 0 for low resolution and 1 for high resolution'
+
   print *
 
   stop ' Reenter command line options'
@@ -71,9 +68,9 @@ contains
 !> Interpret command line arguments
   subroutine read_args_adios(arg, MAX_NUM_NODES, node_list, num_node, &
                              var_name, value_file_name, mesh_file_name, &
-                             outdir, ires)
+                             outdir, ires, NPROCTOT)
 
-  use constants, only: MAX_STRING_LEN
+  use constants, only: IIN,MAX_STRING_LEN
 
   implicit none
   ! Arguments
@@ -82,37 +79,57 @@ contains
   integer, intent(out) :: node_list(:)
   integer, intent(out) :: num_node, ires
   character(len=*), intent(out) :: var_name, value_file_name, mesh_file_name, outdir
+  integer, intent(in) :: NPROCTOT
 
   ! Variables
-  character(len=MAX_STRING_LEN) :: sline
-  integer :: it, iproc, proc1, proc2, ier, njunk
+  character(len=MAX_STRING_LEN) :: sline,slice_list_name
+  integer :: i, it, iproc, proc1, proc2, ier, njunk
 
   if (command_argument_count() == 6) then
-    num_node = 0
-    open(unit = 20, file = trim(arg(1)), status = 'unknown',iostat = ier)
-    if (ier /= 0) then
-      print *,'Error opening ',trim(arg(1))
-      stop
-    endif
-    do while (1 == 1)
-      read(20,'(a)',iostat=ier) sline
-      if (ier /= 0) exit
-      read(sline,*,iostat=ier) njunk
-      if (ier /= 0) exit
-      num_node = num_node + 1
-      if (num_node > MAX_NUM_NODES) &
-          stop 'error number of slices exceeds MAX_NUM_NODES...'
-      node_list(num_node) = njunk
-    enddo
-    close(20)
+    slice_list_name = arg(1)
     var_name = arg(2)
     value_file_name = arg(3)
     mesh_file_name = arg(4)
     outdir = arg(5)
     read(arg(6),*) ires
+    ! gets slice list
+    if (trim(slice_list_name) == 'all' .or. trim(slice_list_name) == '-1') then
+      ! combines all slices
+      num_node = 0
+      do i = 0,NPROCTOT-1
+        num_node = num_node + 1
+        if (num_node > MAX_NUM_NODES ) stop 'Error number of slices exceeds MAX_NUM_NODES...'
+        node_list(num_node) = i
+      enddo
+    else
+      ! reads in slices files
+      open(unit = IIN, file = trim(slice_list_name), status = 'unknown',iostat = ier)
+      if (ier /= 0) then
+        print *,'Error opening slice file ',trim(slice_list_name)
+        stop
+      endif
+      num_node = 0
+      do while (1 == 1)
+        read(IIN,'(a)',iostat=ier) sline
+        if (ier /= 0) exit
+        read(sline,*,iostat=ier) njunk
+        if (ier /= 0) exit
+        num_node = num_node + 1
+        if (num_node > MAX_NUM_NODES) &
+            stop 'error number of slices exceeds MAX_NUM_NODES...'
+        node_list(num_node) = njunk
+      enddo
+      close(IIN)
+    endif
   else if (command_argument_count() == 7) then
     read(arg(1),*) proc1
     read(arg(2),*) proc2
+    var_name = arg(3)
+    value_file_name= arg(4)
+    mesh_file_name = arg(5)
+    outdir = arg(6)
+    read(arg(7),*) ires
+    ! sets slice range
     do iproc = proc1, proc2
       it = iproc - proc1 + 1
       if (it > MAX_NUM_NODES) &
@@ -120,11 +137,6 @@ contains
       node_list(it) = iproc
     enddo
     num_node = proc2 - proc1 + 1
-    var_name = arg(3)
-    value_file_name= arg(4)
-    mesh_file_name = arg(5)
-    outdir = arg(6)
-    read(arg(7),*) ires
   else
     call print_usage_adios()
   endif
@@ -137,30 +149,22 @@ contains
 !> Open ADIOS value and mesh files, read mode
   subroutine init_adios(value_file_name, mesh_file_name)
 
-  use adios_manager_mod, only: adios_setup,comm_adios,ADIOS_VERBOSITY
-
   implicit none
   ! Parameters
   character(len=*), intent(in) :: value_file_name, mesh_file_name
-  ! Variables
-  integer :: ier
-  integer :: comm
 
   ! initializes adios
-  call adios_setup()
+  call initialize_adios()
 
-  ! gets MPI communicator
-  comm = comm_adios
-
-  call adios_read_init_method(ADIOS_READ_METHOD_BP, comm, ADIOS_VERBOSITY, ier)
-
+  ! initializes read method and opens mesh file (using default handle)
   print *,'ADIOS opening mesh file: ',trim(mesh_file_name)
-  call adios_read_open_file(mesh_handle, trim(mesh_file_name), 0, comm, ier)
-  if (ier /= 0) call abort_mpi()
+  call init_adios_group(myadios_group,"MeshReader")
+  call open_file_adios_read_and_init_method(myadios_file,myadios_group,mesh_file_name)
 
+  ! opens second adios file for reading data values
   print *,'ADIOS opening data file: ',trim(value_file_name)
-  call adios_read_open_file(value_handle, trim(value_file_name), 0, comm, ier)
-  if (ier /= 0) call abort_mpi()
+  call init_adios_group(myadios_val_group,"ValReader")
+  call open_file_adios_read(myadios_val_file,myadios_val_group,value_file_name)
 
   end subroutine init_adios
 
@@ -170,124 +174,134 @@ contains
 !> Open ADIOS value and mesh files, read mode
   subroutine clean_adios()
 
-  use adios_manager_mod, only: adios_cleanup
   implicit none
-  ! Variables
-  integer :: ier
 
-  call adios_read_close(mesh_handle,ier)
-  call adios_read_close(value_handle,ier)
+  ! closes file with data values
+  call close_file_adios_read(myadios_val_file)
 
-  call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
-  if (ier /= 0 ) stop 'Error adios read finalize'
+  ! closes default file and finalizes read method
+  call close_file_adios_read_and_finalize_method(myadios_file)
 
-  ! finalize adios
-  call adios_cleanup()
+  ! finalizes adios
+  call finalize_adios()
 
   end subroutine clean_adios
 
 !=============================================================================
 
-  subroutine read_scalars_adios_mesh(iproc, NGLOB_AB, NSPEC_AB, ibool_offset, x_global_offset)
+  subroutine read_scalars_adios_mesh(iproc, NGLOB_AB, NSPEC_AB)
 
   implicit none
 
   ! Parameters
   integer, intent(in) :: iproc
   integer, intent(out) :: NGLOB_AB, NSPEC_AB
-  integer(kind=8) :: ibool_offset, x_global_offset
-  ! Variables
-  integer(kind=8) :: sel
-  integer :: ier
 
-  call adios_selection_writeblock(sel, iproc)
-  call adios_schedule_read(mesh_handle, sel, "nglob", 0, 1, NGLOB_AB, ier)
-  call adios_schedule_read(mesh_handle, sel, "nspec", 0, 1, NSPEC_AB, ier)
-  call adios_schedule_read(mesh_handle, sel, "ibool/offset", 0, 1, ibool_offset, ier)
-  call adios_schedule_read(mesh_handle, sel, "x_global/offset", 0, 1, x_global_offset, ier)
-
-  call adios_perform_reads(mesh_handle, ier)
-  if (ier /= 0) call abort_mpi()
+  ! reads nglob & nspec
+  ! the following adios calls allow to have different nglob/nspec values for different processes (iproc)
+  call read_adios_scalar(myadios_file,myadios_group,iproc,"nglob",NGLOB_AB)
+  call read_adios_scalar(myadios_file,myadios_group,iproc,"nspec",NSPEC_AB)
 
   end subroutine read_scalars_adios_mesh
 
 !=============================================================================
 
-  subroutine read_ibool_adios_mesh(ibool_offset, NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
+  subroutine read_ibool_adios_mesh(iproc, NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
 
   implicit none
   ! Parameters
-  integer(kind=8), intent(in) :: ibool_offset
-  integer, intent(in) :: NGLLX, NGLLY, NGLLZ, NSPEC_AB
+  integer, intent(in) :: iproc, NGLLX, NGLLY, NGLLZ, NSPEC_AB
   integer, dimension(:,:,:,:), intent(inout) :: ibool
   ! Variables
-  integer(kind=8), dimension(1) :: start, count_ad
+  integer(kind=8), dimension(1) :: start, count
   integer(kind=8) :: sel
-  integer :: ier
+  integer(kind=8) :: offset_ibool
 
-  start(1) = ibool_offset
-  count_ad(1) = NGLLX * NGLLY * NGLLZ * NSPEC_AB
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(mesh_handle, sel, "ibool/array", 0, 1, ibool, ier)
+  call read_adios_scalar(myadios_file,myadios_group,iproc,"ibool/offset",offset_ibool)
 
-  call adios_perform_reads(mesh_handle, ier)
-  if (ier /= 0) call abort_mpi()
+  start(1) = offset_ibool
+  count(1) = NGLLX * NGLLY * NGLLZ * NSPEC_AB
+  call set_selection_boundingbox(sel, start, count)
+
+  call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "ibool/array", ibool)
+
+  ! perform reading
+  call read_adios_perform(myadios_file)
+
+  call delete_adios_selection(sel)
 
   end subroutine read_ibool_adios_mesh
 
 
 !=============================================================================
 
-  subroutine read_coordinates_adios_mesh(x_global_offset, NGLOB_AB, xstore, ystore, zstore)
+  subroutine read_coordinates_adios_mesh(iproc, NGLOB_AB, xstore, ystore, zstore)
 
   use constants, only: CUSTOM_REAL
 
   implicit none
   ! Parameters
-  integer(kind=8), intent(in) :: x_global_offset
-  integer, intent(in) :: NGLOB_AB
+  integer, intent(in) :: iproc, NGLOB_AB
   real(kind=CUSTOM_REAL),dimension(:), intent(inout) :: xstore, ystore, zstore
   ! Variables
-  integer(kind=8), dimension(1) :: start, count_ad
+  integer(kind=8), dimension(1) :: start, count
   integer(kind=8) :: sel
-  integer :: ier
+  integer(kind=8) :: offset_coord
 
-  start(1) = x_global_offset
-  count_ad(1) = NGLOB_AB
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(mesh_handle, sel, "x_global/array", 0, 1, xstore, ier)
-  call adios_schedule_read(mesh_handle, sel, "y_global/array", 0, 1, ystore, ier)
-  call adios_schedule_read(mesh_handle, sel, "z_global/array", 0, 1, zstore, ier)
+  call read_adios_scalar(myadios_file,myadios_group,iproc,"x_global/offset",offset_coord)
 
-  call adios_perform_reads(mesh_handle, ier)
-  if (ier /= 0) call abort_mpi()
+  start(1) = offset_coord
+  count(1) = NGLOB_AB
+  call set_selection_boundingbox(sel, start, count)
+
+  call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "x_global/array", xstore)
+  call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "y_global/array", ystore)
+  call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "z_global/array", zstore)
+
+  ! perform reading
+  call read_adios_perform(myadios_file)
+
+  call delete_adios_selection(sel)
 
   end subroutine read_coordinates_adios_mesh
 
 !=============================================================================
 
-  subroutine read_values_adios(var_name, ibool_offset, NSPEC_AB, data)
+  subroutine read_values_adios(var_name, iproc, NSPEC_AB, data)
 
   use constants, only: NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
 
   implicit none
   ! Parameters
-  integer(kind=8), intent(in) :: ibool_offset
   character(len=*), intent(in) :: var_name
-  integer, intent(in) :: NSPEC_AB
+  integer, intent(in) :: iproc, NSPEC_AB
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), intent(inout) :: data
   ! Variables
-  integer(kind=8), dimension(1) :: start, count_ad
+  integer(kind=8), dimension(1) :: start, count
   integer(kind=8) :: sel
-  integer :: ier
+  integer(kind=8) :: offset
 
-  start(1) = ibool_offset
-  count_ad(1) = NGLLX * NGLLY * NGLLZ * NSPEC_AB
-  call adios_selection_boundingbox (sel , 1, start, count_ad)
-  call adios_schedule_read(value_handle, sel, trim(var_name) // "/array", 0, 1, data, ier)
+  ! gets data values
+  if (.true.) then
+    ! default
+    ! assumes GLL type array size (NGLLX,NGLLY,NGLLZ,nspec)
+    call read_adios_array(myadios_val_file,myadios_val_group,iproc,NSPEC_AB,trim(var_name),data)
+  else
+    ! reads in data offset
+    call read_adios_scalar(myadios_val_file,myadios_val_group,iproc,trim(var_name) // "/offset",offset)
 
-  call adios_perform_reads(value_handle, ier)
-  if (ier /= 0) call abort_mpi()
+    ! reads in data array
+    start(1) = offset
+    count(1) = NGLLX * NGLLY * NGLLZ * NSPEC_AB
+    call set_selection_boundingbox(sel , start, count)
+
+    call read_adios_schedule_array(myadios_val_file, myadios_val_group, sel, start, count, trim(var_name) // "/array", data)
+
+    ! perform reading
+    call read_adios_perform(myadios_val_file)
+
+    call delete_adios_selection(sel)
+  endif
 
   end subroutine read_values_adios
 

@@ -46,13 +46,12 @@
   ! CPML
   use generate_databases_par, only: is_CPML,CPML_to_spec,CPML_regions,nspec_cpml,nspec_cpml_tot
 
-  use adios_read_mod
-  use adios_manager_mod, only: comm_adios,ADIOS_VERBOSITY
+  use adios_helpers_mod
+  use manager_adios
 
   implicit none
 
   character(len=MAX_STRING_LEN) :: database_name
-  integer(kind=8) :: handle
 
   integer(kind=8), dimension(256),target :: selections
   integer :: sel_num
@@ -71,7 +70,6 @@
     local_dim_interfaces_mesh
   integer(kind=8) :: local_dim_cpml_to_spec,local_dim_cpml_regions,local_dim_is_cpml
   integer(kind=8) :: local_dim
-  integer :: comm
 
   !statistics
   integer :: num
@@ -87,37 +85,42 @@
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
   !-------------------------------------'
-  database_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/Database.bp"
+  database_name = get_adios_filename(trim(LOCAL_PATH) // "/Database")
 
-  ! gets MPI communicator
-  comm = comm_adios
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  reading database file: ',trim(database_name)
+#if defined(USE_ADIOS)
+    write(IMAIN,*) '  using ADIOS1 file format'
+#elif defined(USE_ADIOS2)
+    write(IMAIN,*) '  using ADIOS2 file format'
+#endif
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
 
-  call adios_read_init_method (ADIOS_READ_METHOD_BP, comm, ADIOS_VERBOSITY, ier)
-  call adios_read_open_file (handle, database_name, 0, comm, ier)
-  if (ier /= 0) call abort_mpi()
+  ! setup the ADIOS library to read the file
+  call open_file_adios_read_and_init_method(myadios_file,myadios_group,database_name)
 
   !------------------------------------------------------------------.
   ! Get scalar values. Might be differents for different processors. |
   ! Hence the selection writeblock.                                  |
   !------------------------------------------------------------------'
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_writeblock(sel, myrank)
-  call adios_schedule_read(handle, sel, "nglob", 0, 1, nnodes_ext_mesh, ier)
-  call adios_schedule_read(handle, sel, "nspec", 0, 1, nelmnts_ext_mesh, ier)
+  call read_adios_scalar(myadios_file, myadios_group, myrank, "nglob", nnodes_ext_mesh)
+  call read_adios_scalar(myadios_file, myadios_group, myrank, "nspec", nelmnts_ext_mesh)
 
   ! read physical properties of the materials
   ! added poroelastic properties and filled with 0 the last 10 entries
   ! for elastic/acoustic
-  call adios_schedule_read(handle, sel, "nmaterials", 0, 1, nmat_ext_mesh, ier)
-  call adios_schedule_read(handle, sel, "nundef_materials", 0, 1, nundefMat_ext_mesh, ier)
+  call read_adios_scalar(myadios_file, myadios_group, myrank, "nmaterials", nmat_ext_mesh)
+  call read_adios_scalar(myadios_file, myadios_group, myrank, "nundef_materials", nundefMat_ext_mesh)
 
-  call adios_schedule_read(handle, sel, "nspec2d_xmin", 0, 1, nspec2D_xmin, ier)
-  call adios_schedule_read(handle, sel, "nspec2d_xmax", 0, 1, nspec2D_xmax, ier)
-  call adios_schedule_read(handle, sel, "nspec2d_ymin", 0, 1, nspec2D_ymin, ier)
-  call adios_schedule_read(handle, sel, "nspec2d_ymax", 0, 1, nspec2D_ymax, ier)
-  call adios_schedule_read(handle, sel, "nspec2d_bottom", 0, 1, nspec2D_bottom_ext, ier)
-  call adios_schedule_read(handle, sel, "nspec2d_top", 0, 1, nspec2D_top_ext, ier)
+  call read_adios_scalar(myadios_file, myadios_group, myrank, "nspec2d_xmin", nspec2D_xmin)
+  call read_adios_scalar(myadios_file, myadios_group, myrank, "nspec2d_xmax", nspec2D_xmax)
+  call read_adios_scalar(myadios_file, myadios_group, myrank, "nspec2d_ymin", nspec2D_ymin)
+  call read_adios_scalar(myadios_file, myadios_group, myrank, "nspec2d_ymax", nspec2D_ymax)
+  call read_adios_scalar(myadios_file, myadios_group, myrank, "nspec2d_bottom", nspec2D_bottom_ext)
+  call read_adios_scalar(myadios_file, myadios_group, myrank, "nspec2d_top", nspec2D_top_ext)
 
   ! MPI interfaces between different partitions
   num_interfaces_ext_mesh = 0
@@ -125,20 +128,16 @@
   if (NPROC > 1) then
     ! format: #number_of_MPI_interfaces
     !         #maximum_number_of_elements_on_each_interface
-    call adios_schedule_read(handle, sel, "nb_interfaces", 0, 1, num_interfaces_ext_mesh, ier)
-    call adios_schedule_read(handle, sel, "nspec_interfaces_max", 0, 1, max_interface_size_ext_mesh, ier)
+    call read_adios_scalar(myadios_file, myadios_group, myrank, "nb_interfaces", num_interfaces_ext_mesh)
+    call read_adios_scalar(myadios_file, myadios_group, myrank, "nspec_interfaces_max", max_interface_size_ext_mesh)
   endif
 
   ! CPML
   ! reads number of C-PML elements in the global mesh
   nspec_cpml_tot = 0
   nspec_cpml = 0
-  call adios_schedule_read(handle, sel, "nspec_cpml_total", 0, 1, nspec_cpml_tot, ier)
-  call adios_schedule_read(handle, sel, "nspec_cpml", 0, 1, nspec_cpml, ier)
-
-  ! Perform the read, so we can use the values.
-  call adios_perform_reads(handle, ier)
-  if (ier /= 0) call abort_mpi()
+  call read_adios_scalar(myadios_file, myadios_group, myrank, "nspec_cpml_total", nspec_cpml_tot)
+  call read_adios_scalar(myadios_file, myadios_group, myrank, "nspec_cpml", nspec_cpml)
 
   ! sets nspec parameters
   NSPEC_AB = nelmnts_ext_mesh
@@ -300,39 +299,39 @@
   !------------------------.
   ! Get the 'chunks' sizes |
   !------------------------'
-  call adios_get_scalar(handle, "nodes_coords/local_dim", local_dim_nodes_coords, ier)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "nodes_coords", local_dim_nodes_coords)
 
   if (nmat_ext_mesh /= 0) then
-    call adios_get_scalar(handle, "matpropl/local_dim", local_dim_matpropl, ier)
+    call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "matpropl", local_dim_matpropl)
   endif
 
-  call adios_get_scalar(handle, "material_index/local_dim", local_dim_material_index, ier)
-  call adios_get_scalar(handle, "elmnts_mesh/local_dim", local_dim_elmnts_mesh, ier)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "material_index", local_dim_material_index)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "elmnts_mesh", local_dim_elmnts_mesh)
 
-  call adios_get_scalar(handle, "ibelm_xmin/local_dim", local_dim_ibelm_xmin, ier)
-  call adios_get_scalar(handle, "ibelm_xmax/local_dim", local_dim_ibelm_xmax, ier)
-  call adios_get_scalar(handle, "ibelm_ymin/local_dim", local_dim_ibelm_ymin, ier)
-  call adios_get_scalar(handle, "ibelm_ymax/local_dim", local_dim_ibelm_ymax, ier)
-  call adios_get_scalar(handle, "ibelm_bottom/local_dim", local_dim_ibelm_bottom, ier)
-  call adios_get_scalar(handle, "ibelm_top/local_dim", local_dim_ibelm_top, ier)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "ibelm_xmin", local_dim_ibelm_xmin)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "ibelm_xmax", local_dim_ibelm_xmax)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "ibelm_ymin", local_dim_ibelm_ymin)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "ibelm_ymax", local_dim_ibelm_ymax)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "ibelm_bottom", local_dim_ibelm_bottom)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "ibelm_top", local_dim_ibelm_top)
 
-  call adios_get_scalar(handle, "nodes_ibelm_xmin/local_dim", local_dim_nodes_ibelm_xmin, ier)
-  call adios_get_scalar(handle, "nodes_ibelm_xmax/local_dim", local_dim_nodes_ibelm_xmax, ier)
-  call adios_get_scalar(handle, "nodes_ibelm_ymin/local_dim", local_dim_nodes_ibelm_ymin, ier)
-  call adios_get_scalar(handle, "nodes_ibelm_ymax/local_dim", local_dim_nodes_ibelm_ymax, ier)
-  call adios_get_scalar(handle, "nodes_ibelm_bottom/local_dim", local_dim_nodes_ibelm_bottom, ier)
-  call adios_get_scalar(handle, "nodes_ibelm_top/local_dim", local_dim_nodes_ibelm_top, ier)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "nodes_ibelm_xmin", local_dim_nodes_ibelm_xmin)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "nodes_ibelm_xmax", local_dim_nodes_ibelm_xmax)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "nodes_ibelm_ymin", local_dim_nodes_ibelm_ymin)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "nodes_ibelm_ymax", local_dim_nodes_ibelm_ymax)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "nodes_ibelm_bottom", local_dim_nodes_ibelm_bottom)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "nodes_ibelm_top", local_dim_nodes_ibelm_top)
 
   if (num_interfaces_ext_mesh > 0) then
-    call adios_get_scalar(handle, "neighbors_mesh/local_dim", local_dim_neighbors_mesh, ier)
-    call adios_get_scalar(handle, "num_elmnts_mesh/local_dim", local_dim_num_elmnts_mesh, ier)
-    call adios_get_scalar(handle, "interfaces_mesh/local_dim", local_dim_interfaces_mesh, ier)
+    call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "neighbors_mesh", local_dim_neighbors_mesh)
+    call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "num_elmnts_mesh", local_dim_num_elmnts_mesh)
+    call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "interfaces_mesh", local_dim_interfaces_mesh)
   endif
 
   if (nspec_cpml > 0) then
-    call adios_get_scalar(handle, "CPML_to_spec/local_dim", local_dim_cpml_to_spec, ier)
-    call adios_get_scalar(handle, "CPML_regions/local_dim", local_dim_cpml_regions, ier)
-    call adios_get_scalar(handle, "is_CPML/local_dim", local_dim_is_cpml, ier)
+    call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "CPML_to_spec", local_dim_cpml_to_spec)
+    call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "CPML_regions", local_dim_cpml_regions)
+    call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "is_CPML", local_dim_is_cpml)
   endif
 
   !---------------------------.
@@ -342,18 +341,18 @@
   count(1) = NDIM * nnodes_ext_mesh
   sel_num = sel_num+1
   sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count)
-  ! Remember: "nodes_coords" has been transposed in meshfem3D
-  call adios_schedule_read(handle, sel, "nodes_coords/array", 0, 1, nodes_coords_ext_mesh, ier)
+  call set_selection_boundingbox(sel, start, count)
+  ! Remember: "nodes_coords" has been transposed in meshfem3D - from (nglob,NDIM) to (NDIM,nglob)
+  call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "nodes_coords/array", nodes_coords_ext_mesh)
 
   if (nmat_ext_mesh /= 0) then
     start(1) = local_dim_matpropl * myrank
     count(1) = 17 * nmat_ext_mesh
     sel_num = sel_num+1
     sel => selections(sel_num)
-    call adios_selection_boundingbox (sel , 1, start, count)
+    call set_selection_boundingbox(sel, start, count)
     ! Remember: "matpropl" has been transposed in meshfem3D
-    call adios_schedule_read(handle, sel, "matpropl/array", 0, 1, mat_prop, ier)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "matpropl/array", mat_prop)
   endif
 
   if (nundefMat_ext_mesh /= 0) then
@@ -363,65 +362,80 @@
     local_dim = 6 * nundefMat_ext_mesh * MAX_STRING_LEN
     sel_num = sel_num+1
     sel => selections(sel_num)
-    call adios_selection_writeblock(sel, myrank)
-    call adios_schedule_read(handle, sel, "undef_mat_prop", 0, 1, undef_matpropl(1:local_dim), ier)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "undef_mat_prop", undef_matpropl(1:local_dim))
   endif
 
+  ! perform reading
+  call read_adios_perform(myadios_file)
+
+  ! materials
   start(1) = local_dim_material_index * myrank
   count(1) = 2 * nelmnts_ext_mesh
   sel_num = sel_num+1
   sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count)
-  call adios_schedule_read(handle, sel, "material_index/array", 0, 1, mat_ext_mesh, ier)
+  call set_selection_boundingbox(sel, start, count)
+  call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "material_index/array", mat_ext_mesh)
 
   start(1) = local_dim_elmnts_mesh * myrank
   count(1) = NGNOD * nelmnts_ext_mesh
   sel_num = sel_num+1
   sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count)
-  call adios_schedule_read(handle, sel, "elmnts_mesh/array", 0, 1, elmnts_ext_mesh, ier)
+  call set_selection_boundingbox(sel, start, count)
+  call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "elmnts_mesh/array", elmnts_ext_mesh)
 
-  start(1) = local_dim_ibelm_xmin * myrank
-  count(1) = nspec2D_xmin
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count)
-  call adios_schedule_read(handle, sel, "ibelm_xmin/array", 0, 1, ibelm_xmin, ier)
+  ! perform reading
+  call read_adios_perform(myadios_file)
 
-  start(1) = local_dim_ibelm_xmax * myrank
-  count(1) = nspec2D_xmax
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count)
-  call adios_schedule_read(handle, sel, "ibelm_xmax/array", 0, 1, ibelm_xmax, ier)
-
-  start(1) = local_dim_ibelm_ymin * myrank
-  count(1) = nspec2D_ymin
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count)
-  call adios_schedule_read(handle, sel, "ibelm_ymin/array", 0, 1, ibelm_ymin, ier)
-
-  start(1) = local_dim_ibelm_ymax * myrank
-  count(1) = nspec2D_ymax
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count)
-  call adios_schedule_read(handle, sel, "ibelm_ymax/array", 0, 1, ibelm_ymax, ier)
-
-  start(1) = local_dim_ibelm_bottom * myrank
-  count(1) = nspec2D_bottom_ext
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count)
-  call adios_schedule_read(handle, sel, "ibelm_bottom/array", 0, 1, ibelm_bottom, ier)
-
-  start(1) = local_dim_ibelm_top * myrank
-  count(1) = nspec2D_top_ext
-  sel_num = sel_num+1
-  sel => selections(sel_num)
-  call adios_selection_boundingbox (sel , 1, start, count)
-  call adios_schedule_read(handle, sel, "ibelm_top/array", 0, 1, ibelm_top, ier)
+  ! boundary surfaces
+  if (nspec2d_xmin > 0) then
+    start(1) = local_dim_ibelm_xmin * myrank
+    count(1) = nspec2D_xmin
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "ibelm_xmin/array", ibelm_xmin)
+  endif
+  if (nspec2d_xmax > 0) then
+    start(1) = local_dim_ibelm_xmax * myrank
+    count(1) = nspec2D_xmax
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "ibelm_xmax/array", ibelm_xmax)
+  endif
+  if (nspec2d_ymin > 0) then
+    start(1) = local_dim_ibelm_ymin * myrank
+    count(1) = nspec2D_ymin
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "ibelm_ymin/array", ibelm_ymin)
+  endif
+  if (nspec2d_ymax > 0) then
+    start(1) = local_dim_ibelm_ymax * myrank
+    count(1) = nspec2D_ymax
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "ibelm_ymax/array", ibelm_ymax)
+  endif
+  if (nspec2D_bottom_ext > 0) then
+    start(1) = local_dim_ibelm_bottom * myrank
+    count(1) = nspec2D_bottom_ext
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "ibelm_bottom/array", ibelm_bottom)
+  endif
+  if (nspec2D_top_ext > 0) then
+    start(1) = local_dim_ibelm_top * myrank
+    count(1) = nspec2D_top_ext
+    sel_num = sel_num+1
+    sel => selections(sel_num)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "ibelm_top/array", ibelm_top)
+  endif
 
   ! needs surface boundary points
   if (nspec2d_xmin > 0) then
@@ -429,8 +443,8 @@
     count(1) = nspec2D_xmin * NGNOD2D
     sel_num = sel_num+1
     sel => selections(sel_num)
-    call adios_selection_boundingbox (sel , 1, start, count)
-    call adios_schedule_read(handle, sel, "nodes_ibelm_xmin/array", 0, 1, nodes_ibelm_xmin, ier)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "nodes_ibelm_xmin/array", nodes_ibelm_xmin)
   endif
 
   if (nspec2d_xmax > 0) then
@@ -438,8 +452,8 @@
     count(1) = nspec2D_xmax * NGNOD2D
     sel_num = sel_num+1
     sel => selections(sel_num)
-    call adios_selection_boundingbox (sel , 1, start, count)
-    call adios_schedule_read(handle, sel, "nodes_ibelm_xmax/array", 0, 1, nodes_ibelm_xmax, ier)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "nodes_ibelm_xmax/array", nodes_ibelm_xmax)
   endif
 
   if (nspec2d_ymin > 0) then
@@ -447,8 +461,8 @@
     count(1) = nspec2D_ymin * NGNOD2D
     sel_num = sel_num+1
     sel => selections(sel_num)
-    call adios_selection_boundingbox (sel , 1, start, count)
-    call adios_schedule_read(handle, sel, "nodes_ibelm_ymin/array", 0, 1, nodes_ibelm_ymin, ier)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "nodes_ibelm_ymin/array", nodes_ibelm_ymin)
   endif
 
   if (nspec2d_ymax > 0) then
@@ -456,8 +470,8 @@
     count(1) = nspec2D_ymax * NGNOD2D
     sel_num = sel_num+1
     sel => selections(sel_num)
-    call adios_selection_boundingbox (sel , 1, start, count)
-    call adios_schedule_read(handle, sel, "nodes_ibelm_ymax/array", 0, 1, nodes_ibelm_ymax, ier)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "nodes_ibelm_ymax/array", nodes_ibelm_ymax)
   endif
 
   if (nspec2d_bottom > 0) then
@@ -465,8 +479,8 @@
     count(1) = nspec2D_bottom_ext * NGNOD2D
     sel_num = sel_num+1
     sel => selections(sel_num)
-    call adios_selection_boundingbox (sel , 1, start, count)
-    call adios_schedule_read(handle, sel, "nodes_ibelm_bottom/array", 0, 1, nodes_ibelm_bottom, ier)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "nodes_ibelm_bottom/array", nodes_ibelm_bottom)
   endif
 
   if (nspec2d_top > 0) then
@@ -474,9 +488,12 @@
     count(1) = nspec2D_top_ext * NGNOD2D
     sel_num = sel_num+1
     sel => selections(sel_num)
-    call adios_selection_boundingbox (sel , 1, start, count)
-    call adios_schedule_read(handle, sel, "nodes_ibelm_top/array", 0, 1, nodes_ibelm_top, ier)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "nodes_ibelm_top/array", nodes_ibelm_top)
   endif
+
+  ! perform reading
+  call read_adios_perform(myadios_file)
 
   ! CPML
   if (nspec_cpml > 0) then
@@ -484,23 +501,26 @@
     count(1) = nspec_cpml
     sel_num = sel_num+1
     sel => selections(sel_num)
-    call adios_selection_boundingbox (sel , 1, start, count)
-    call adios_schedule_read(handle, sel, "CPML_to_spec/array", 0, 1, CPML_to_spec, ier)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "CPML_to_spec/array", CPML_to_spec)
 
     start(1) = local_dim_cpml_regions * myrank
     count(1) = nspec_cpml
     sel_num = sel_num+1
     sel => selections(sel_num)
-    call adios_selection_boundingbox (sel , 1, start, count)
-    call adios_schedule_read(handle, sel, "CPML_regions/array", 0, 1, CPML_regions, ier)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "CPML_regions/array", CPML_regions)
 
     start(1) = local_dim_is_cpml * myrank
     count(1) = NSPEC_AB
     sel_num = sel_num+1
     sel => selections(sel_num)
-    call adios_selection_boundingbox (sel , 1, start, count)
-    call adios_schedule_read(handle, sel, "is_CPML/array", 0, 1, is_CPML, ier)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "is_CPML/array", is_CPML)
   endif
+
+  ! perform reading
+  call read_adios_perform(myadios_file)
 
   ! MPI interfaces
   if (num_interfaces_ext_mesh > 0) then
@@ -508,30 +528,32 @@
     count(1) = num_interfaces_ext_mesh
     sel_num = sel_num+1
     sel => selections(sel_num)
-    call adios_selection_boundingbox (sel , 1, start, count)
-    call adios_schedule_read(handle, sel, "neighbors_mesh/array", 0, 1, my_neighbors_ext_mesh, ier)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, &
+                                   "neighbors_mesh/array", my_neighbors_ext_mesh)
 
     start(1) = local_dim_num_elmnts_mesh * myrank
     count(1) = num_interfaces_ext_mesh
     sel_num = sel_num+1
     sel => selections(sel_num)
-    call adios_selection_boundingbox (sel , 1, start, count)
-    call adios_schedule_read(handle, sel, "num_elmnts_mesh/array", 0, 1, my_nelmnts_neighbors_ext_mesh, ier)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, &
+                                   "num_elmnts_mesh/array", my_nelmnts_neighbors_ext_mesh)
 
     start(1) = local_dim_interfaces_mesh * myrank
     count(1) = 6 * num_interfaces_ext_mesh * max_interface_size_ext_mesh
     sel_num = sel_num+1
     sel => selections(sel_num)
-    call adios_selection_boundingbox (sel , 1, start, count)
-    call adios_schedule_read(handle, sel, "interfaces_mesh/array", 0, 1, my_interfaces_ext_mesh, ier)
+    call set_selection_boundingbox(sel, start, count)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, &
+                                   "interfaces_mesh/array", my_interfaces_ext_mesh)
   endif
 
-  call adios_perform_reads(handle, ier)
-  if (ier /= 0) call abort_mpi()
+  ! perform final reading
+  call read_adios_perform(myadios_file)
 
-  call adios_read_close(handle,ier)
-  call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
-  if (ier /= 0 ) stop 'Error adios read finalize'
+  ! closes default file and finalizes read method
+  call close_file_adios_read_and_finalize_method(myadios_file)
 
   ! fills undef_mat_prop 2D array
   undef_mat_prop(:,:) = ''

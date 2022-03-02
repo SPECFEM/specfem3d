@@ -133,44 +133,47 @@
     endif
   endif
 
-  ! current subset iteration
-  iteration_on_subset_tmp = iteration_on_subset
+  if (ADIOS_FOR_UNDO_ATTENUATION) then
+    call save_forward_arrays_undoatt_adios()
+  else
+    ! current subset iteration
+    iteration_on_subset_tmp = iteration_on_subset
 
-  ! saves frame of the forward simulation
+    ! saves frame of the forward simulation
+    write(outputname,'(a,i6.6,a,i6.6,a)') 'proc',myrank,'_save_frame_at',iteration_on_subset_tmp,'.bin'
+    outputname = trim(LOCAL_PATH)//'/'//trim(outputname)
 
-  write(outputname,'(a,i6.6,a,i6.6,a)') 'proc',myrank,'_save_frame_at',iteration_on_subset_tmp,'.bin'
-  outputname = trim(LOCAL_PATH)//'/'//trim(outputname)
+    ! outputs to file
+    open(unit=IOUT,file=trim(outputname),status='unknown',form='unformatted',action='write',iostat=ier)
+    if (ier /= 0 ) call exit_MPI(myrank,'Error opening file proc***_save_frame_at** for writing')
 
-  ! outputs to file
-  open(unit=IOUT,file=trim(outputname),status='unknown',form='unformatted',action='write',iostat=ier)
-  if (ier /= 0 ) call exit_MPI(myrank,'Error opening file proc***_save_frame_at** for writing')
-
-  if (ACOUSTIC_SIMULATION) then
-    write(IOUT) potential_acoustic
-    write(IOUT) potential_dot_acoustic
-    write(IOUT) potential_dot_dot_acoustic
-  endif
-
-  if (ELASTIC_SIMULATION) then
-    write(IOUT) displ
-    write(IOUT) veloc
-    write(IOUT) accel
-    if (ATTENUATION) then
-      write(IOUT) R_trace
-      write(IOUT) R_xx
-      write(IOUT) R_yy
-      write(IOUT) R_xy
-      write(IOUT) R_xz
-      write(IOUT) R_yz
-      write(IOUT) epsilondev_trace
-      write(IOUT) epsilondev_xx
-      write(IOUT) epsilondev_yy
-      write(IOUT) epsilondev_xy
-      write(IOUT) epsilondev_xz
-      write(IOUT) epsilondev_yz
+    if (ACOUSTIC_SIMULATION) then
+      write(IOUT) potential_acoustic
+      write(IOUT) potential_dot_acoustic
+      write(IOUT) potential_dot_dot_acoustic
     endif
-  endif
 
-  close(IOUT)
+    if (ELASTIC_SIMULATION) then
+      write(IOUT) displ
+      write(IOUT) veloc
+      write(IOUT) accel
+      if (ATTENUATION) then
+        write(IOUT) R_trace
+        write(IOUT) R_xx
+        write(IOUT) R_yy
+        write(IOUT) R_xy
+        write(IOUT) R_xz
+        write(IOUT) R_yz
+        write(IOUT) epsilondev_trace
+        write(IOUT) epsilondev_xx
+        write(IOUT) epsilondev_yy
+        write(IOUT) epsilondev_xy
+        write(IOUT) epsilondev_xz
+        write(IOUT) epsilondev_yz
+      endif
+    endif
+
+    close(IOUT)
+  endif
 
   end subroutine save_forward_arrays_undoatt

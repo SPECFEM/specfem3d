@@ -102,7 +102,7 @@
     call get_command_argument(i,arg(i))
   enddo
 
-  call read_args(arg, MAX_NUM_NODES, node_list, num_node, filename, indir, outdir, ires)
+  call read_args(arg, MAX_NUM_NODES, node_list, num_node, filename, indir, outdir, ires, NPROC)
 
   if (ires == 0) then
     HIGH_RESOLUTION_MESH = .false.

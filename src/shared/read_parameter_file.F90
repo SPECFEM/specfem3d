@@ -718,16 +718,14 @@
     endif
 
     !> Read ADIOS related flags from the Par_file
-    !! \param ADIOS_ENABLED Main flag to decide if ADIOS is used. If setted to
-    !!                      false no other parameter is taken into account.
-    !! \param ADIOS_FOR_DATABASES Flag to indicate if the databases are written
-    !!                            and read with the help of ADIOS.
-    !! \param ADIOS_FOR_MESH flag to indicate if the mesh (generate database) is
-    !!                       written using ADIOS.
-    !! \param ADIOS_FOR_FORWARD_ARRAYS flag to indicate if the solver forward arrays
-    !!                                 are written using ADIOS.
-    !! \param ADIOS_FOR_KERNELS flag to indicate if the kernels are saved using
-    !!                          adios
+    !! \param ADIOS_ENABLED Main flag to decide if ADIOS is used.
+    !!                      If set to .false., no other parameter is taken into account.
+    !! \param ADIOS_FOR_DATABASES        - Flag to indicate if the databases are written and read with the help of ADIOS.
+    !! \param ADIOS_FOR_MESH             - Flag to indicate if the mesh (generate database) is written using ADIOS.
+    !! \param ADIOS_FOR_FORWARD_ARRAYS   - Flag to indicate if the solver forward arrays are written using ADIOS.
+    !! \param ADIOS_FOR_KERNELS          - Flag to indicate if the kernels are saved using adios
+    !! \param ADIOS_FOR_UNDO_ATTENUATION - Flag for saving undo_att snapshot wavefields using adios
+    !!
     !! \author MPBL
     call read_value_logical(ADIOS_ENABLED, 'ADIOS_ENABLED', ier)
     if (ier /= 0) then
@@ -764,6 +762,15 @@
       write(*,*)
     endif
 
+    ! daniel todo: not fully implemented yet - turning it off by default. needs Par_file modification
+    ADIOS_FOR_UNDO_ATTENUATION = .false.
+    !call read_value_logical(ADIOS_FOR_UNDO_ATTENUATION, 'ADIOS_FOR_UNDO_ATTENUATION', ier)
+    !if (ier /= 0) then
+    !  some_parameters_missing_from_Par_file = .true.
+    !  write(*,'(a)') 'ADIOS_FOR_UNDO_ATTENUATION      = .false.'
+    !  write(*,*)
+    !endif
+
     ! closes parameter file
     call close_parameter_file()
 
@@ -793,7 +800,7 @@
       ADIOS_FOR_MESH = .false.
       ADIOS_FOR_FORWARD_ARRAYS = .false.
       ADIOS_FOR_KERNELS = .false.
-      ! ADIOS_FOR_UNDO_ATTENUATION = .false. ! not implemented yet
+      ADIOS_FOR_UNDO_ATTENUATION = .false.
     endif
 
     ! re-sets PML free surface flag
@@ -900,7 +907,7 @@
       stop 'Error ADIOS not yet supported by option BROADCAST_SAME_MESH_AND_MODEL'
   endif
 
-#if !defined(USE_ADIOS)
+#if !defined(USE_ADIOS) && !defined(USE_ADIOS2)
   if (ADIOS_ENABLED) then
     print *
     print *,'**************'
@@ -1475,6 +1482,7 @@
   call bcast_all_singlel(ADIOS_FOR_MESH)
   call bcast_all_singlel(ADIOS_FOR_FORWARD_ARRAYS)
   call bcast_all_singlel(ADIOS_FOR_KERNELS)
+  call bcast_all_singlel(ADIOS_FOR_UNDO_ATTENUATION)
 
   ! broadcast all parameters computed from others
   call bcast_all_singlei(IMODEL)

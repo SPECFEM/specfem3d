@@ -93,7 +93,6 @@
   ! Variables to read ADIOS files
   integer :: sizeprocs
   character(len=MAX_STRING_LEN) :: var_name, value_file_name, mesh_file_name
-  integer(kind=8) :: ibool_offset, x_global_offset
 #else
   integer :: NSPEC_IRREGULAR
   character(len=MAX_STRING_LEN) :: prname,prname_lp
@@ -143,11 +142,11 @@
   ! input
   call read_args_adios(arg, MAX_NUM_NODES, node_list, num_node, &
                        var_name, value_file_name, mesh_file_name, &
-                       outdir, ires)
+                       outdir, ires, NPROC)
   filename = var_name
 #else
   ! default
-  call read_args(arg, MAX_NUM_NODES, node_list, num_node, filename, indir, outdir, ires)
+  call read_args(arg, MAX_NUM_NODES, node_list, num_node, filename, indir, outdir, ires, NPROC)
 #endif
 
   ! resolution
@@ -247,7 +246,7 @@
 #ifdef USE_ADIOS_INSTEAD_OF_MESH
     ! ADIOS
     ! reads mesh nglob & nspec
-    call read_scalars_adios_mesh(iproc, NGLOB_AB, NSPEC_AB, ibool_offset, x_global_offset)
+    call read_scalars_adios_mesh(iproc, NGLOB_AB, NSPEC_AB)
 #else
     ! default binary
     write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
@@ -268,8 +267,8 @@
 
 #ifdef USE_ADIOS_INSTEAD_OF_MESH
     ! ADIOS
-    call read_ibool_adios_mesh(ibool_offset, NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
-    call read_coordinates_adios_mesh(x_global_offset, NGLOB_AB, xstore, ystore, zstore)
+    call read_ibool_adios_mesh(iproc, NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
+    call read_coordinates_adios_mesh(iproc, NGLOB_AB, xstore, ystore, zstore)
 #else
     ! default binary
     read(27) ibool
@@ -287,7 +286,7 @@
     ! reads in kernel/data values
 #ifdef USE_ADIOS_INSTEAD_OF_MESH
     ! ADIOS
-    call read_values_adios(var_name, ibool_offset, NSPEC_AB, data)
+    call read_values_adios(var_name, iproc, NSPEC_AB, data)
     local_data_file = trim(var_name)
 #else
     ! default binary data file
@@ -358,7 +357,7 @@
 
 #ifdef USE_ADIOS_INSTEAD_OF_MESH
     ! ADIOS
-    call read_scalars_adios_mesh(iproc, NGLOB_AB, NSPEC_AB, ibool_offset, x_global_offset)
+    call read_scalars_adios_mesh(iproc, NGLOB_AB, NSPEC_AB)
 #else
     ! default binary
     write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
@@ -376,7 +375,7 @@
 
 #ifdef USE_ADIOS_INSTEAD_OF_MESH
     ! ADIOS
-    call read_ibool_adios_mesh(ibool_offset, NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
+    call read_ibool_adios_mesh(iproc, NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
 #else
     ! default binary
     if (ier /= 0) stop 'error allocating array ibool'
@@ -504,7 +503,6 @@
 
 #ifdef USE_ADIOS_INSTEAD_OF_MESH
   ! Variables for ADIOS
-  integer(kind=8) :: ibool_offset, x_global_offset
 #else
   integer :: NSPEC_IRREGULAR
   character(len=MAX_STRING_LEN) :: prname_lp
@@ -516,13 +514,16 @@
 
   do it = 1, num_node
 
+    iproc = node_list(it)
+
 #ifdef USE_ADIOS_INSTEAD_OF_MESH
     ! ADIOS
-    call read_scalars_adios_mesh(iproc, NGLOB_AB, NSPEC_AB, ibool_offset, x_global_offset)
+    call read_scalars_adios_mesh(iproc, NGLOB_AB, NSPEC_AB)
+    ! to avoid compiler warning
+    ier = len_trim(LOCAL_PATH)
 #else
     ! default
     ! gets number of elements and points for this slice
-    iproc = node_list(it)
     write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
     open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin', &
           status='old',action='read',form='unformatted',iostat=ier)
@@ -543,7 +544,7 @@
       if (ier /= 0) stop 'error allocating array ibool'
 #ifdef USE_ADIOS_INSTEAD_OF_MESH
       ! ADIOS
-      call read_ibool_adios_mesh(ibool_offset, NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
+      call read_ibool_adios_mesh(iproc, NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
 #else
       read(27) ibool
 #endif

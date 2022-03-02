@@ -49,13 +49,12 @@
   implicit none
 
   interface
-    subroutine save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
+    subroutine save_kernels_elastic(alphav_kl, alphah_kl, &
                                     betav_kl, betah_kl, eta_kl, &
                                     rhop_kl, alpha_kl, beta_kl)
 
       use constants, only: CUSTOM_REAL
 
-      integer(kind=8) :: adios_handle
       ! FIXME
       ! Break the CUSTOM_REAL stuff.
       ! put all this file in a module so interface is implicit
@@ -74,16 +73,15 @@
                                                             eta_kl
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: rhop_kl,alpha_kl,beta_kl
 
-  integer(kind=8) :: adios_handle
   integer :: ier
 
   if (ADIOS_FOR_KERNELS) then
-    call define_kernel_adios_variables(adios_handle)
+    call define_kernel_adios_variables()
   endif
 
   ! acoustic domains
   if (ACOUSTIC_SIMULATION) then
-    call save_kernels_acoustic(adios_handle)
+    call save_kernels_acoustic()
   endif
 
   ! elastic domains
@@ -122,13 +120,13 @@
       rhop_kl(:,:,:,:) = 0.0_CUSTOM_REAL
     endif
 
-    call save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
+    call save_kernels_elastic(alphav_kl, alphah_kl, &
                               betav_kl, betah_kl, eta_kl, &
                               rhop_kl, alpha_kl, beta_kl)
   endif
 
   if (POROELASTIC_SIMULATION) then
-    call save_kernels_poroelastic(adios_handle)
+    call save_kernels_poroelastic()
   endif
 
   ! save weights for volume integration,
@@ -144,11 +142,11 @@
 
   ! for preconditioner
   if (APPROXIMATE_HESS_KL) then
-    call save_kernels_Hessian(adios_handle)
+    call save_kernels_Hessian()
   endif
 
   if (ADIOS_FOR_KERNELS) then
-    call perform_write_adios_kernels(adios_handle)
+    call perform_write_adios_kernels()
   endif
 
   if (ELASTIC_SIMULATION) then
@@ -220,14 +218,12 @@
 
 !> Save acoustic related kernels
 
-  subroutine save_kernels_acoustic(adios_handle)
+  subroutine save_kernels_acoustic()
 
   use specfem_par
   use specfem_par_acoustic
 
   implicit none
-
-  integer(kind=8) :: adios_handle
 
   ! local parameters
   integer:: ispec,i,j,k,ier
@@ -302,7 +298,7 @@
   endif
 
   if (ADIOS_FOR_KERNELS) then
-    call save_kernels_acoustic_adios(adios_handle)
+    call save_kernels_acoustic_adios()
   else
     ! save kernels to binary files
     open(unit=IOUT,file=prname(1:len_trim(prname))//'rho_acoustic_kernel.bin',status='unknown',form='unformatted',iostat=ier)
@@ -335,9 +331,9 @@
 
 !> Save elastic related kernels
 
-  subroutine save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
-                                betav_kl, betah_kl, eta_kl, &
-                                rhop_kl, alpha_kl, beta_kl)
+  subroutine save_kernels_elastic(alphav_kl, alphah_kl, &
+                                  betav_kl, betah_kl, eta_kl, &
+                                  rhop_kl, alpha_kl, beta_kl)
 
   use specfem_par, only: CUSTOM_REAL,NSPEC_AB,ibool,mustore,kappastore, &
                          ANISOTROPIC_KL,SAVE_TRANSVERSE_KL,FOUR_THIRDS, &
@@ -348,13 +344,12 @@
   implicit none
 
   interface
-    subroutine save_kernels_elastic_adios(adios_handle, alphav_kl, alphah_kl, &
+    subroutine save_kernels_elastic_adios(alphav_kl, alphah_kl, &
                                           betav_kl, betah_kl, eta_kl, &
                                           rhop_kl, alpha_kl, beta_kl)
 
       use constants, only: CUSTOM_REAL
 
-      integer(kind=8), intent(in) :: adios_handle
       ! FIXME
       ! see other FIXME above.
 !! DK DK: sorry, we cannot afford to break the code; too many people use it; I thus put CUSTOM_REAL back
@@ -364,7 +359,6 @@
     end subroutine save_kernels_elastic_adios
   end interface
 
-  integer(kind=8) :: adios_handle
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
     alphav_kl,alphah_kl,betav_kl,betah_kl, &
     eta_kl, rhop_kl, alpha_kl, beta_kl
@@ -522,9 +516,9 @@
 
 
   if (ADIOS_FOR_KERNELS) then
-    call save_kernels_elastic_adios(adios_handle, alphav_kl, alphah_kl, &
-                                      betav_kl, betah_kl, eta_kl, &
-                                      rhop_kl, alpha_kl, beta_kl)
+    call save_kernels_elastic_adios(alphav_kl, alphah_kl, &
+                                    betav_kl, betah_kl, eta_kl, &
+                                    rhop_kl, alpha_kl, beta_kl)
   else
     if (ANISOTROPIC_KL) then
 
@@ -620,14 +614,12 @@
 
   !> Save poroelastic related kernels
 
-  subroutine save_kernels_poroelastic(adios_handle)
+  subroutine save_kernels_poroelastic()
 
   use specfem_par
   use specfem_par_poroelastic
 
   implicit none
-
-  integer(kind=8) :: adios_handle
 
   ! local parameters
   integer:: ispec,i,j,k,ier
@@ -858,7 +850,7 @@
 
   ! save kernels to binary files
   if (ADIOS_FOR_KERNELS) then
-    call save_kernels_poroelastic_adios(adios_handle)
+    call save_kernels_poroelastic_adios()
   else
     ! primary kernels
     open(unit=IOUT,file=prname(1:len_trim(prname))//'rhot_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
@@ -964,15 +956,13 @@
 
 !> Save Hessians
 
-  subroutine save_kernels_Hessian(adios_handle)
+  subroutine save_kernels_Hessian()
 
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
 
   implicit none
-
-  integer(kind=8) :: adios_handle
 
   integer :: ier
 
@@ -989,7 +979,7 @@
   endif
 
   if (ADIOS_FOR_KERNELS) then
-    call save_kernels_Hessian_adios(adios_handle)
+    call save_kernels_Hessian_adios()
   else
     ! acoustic domains
     if (ACOUSTIC_SIMULATION) then

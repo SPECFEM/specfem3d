@@ -28,7 +28,7 @@
 
   subroutine finalize_simulation()
 
-  use adios_manager_mod
+  use manager_adios
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
@@ -134,7 +134,7 @@
 
   ! ADIOS file i/o
   if (ADIOS_ENABLED) then
-    call adios_cleanup()
+    call finalize_adios()
   endif
 
   ! asdf finalizes

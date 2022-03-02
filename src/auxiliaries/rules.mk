@@ -100,6 +100,10 @@ ifeq ($(ADIOS),yes)
 auxiliaries_TARGETS += $(adios_auxiliaries_TARGETS)
 auxiliaries_OBJECTS += $(adios_auxiliaries_OBJECTS)
 auxiliaries_MODULES += $(adios_auxiliaries_MODULES)
+else ifeq ($(ADIOS2),yes)
+auxiliaries_TARGETS += $(adios_auxiliaries_TARGETS)
+auxiliaries_OBJECTS += $(adios_auxiliaries_OBJECTS)
+auxiliaries_MODULES += $(adios_auxiliaries_MODULES)
 endif
 
 
@@ -188,7 +192,6 @@ xcombine_vol_data_OBJECTS = \
 
 xcombine_vol_data_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
-	$O/adios_manager.shared_adios_module.o \
 	$O/exit_mpi.shared.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
@@ -220,7 +223,15 @@ xcombine_vol_data_adios_OBJECTS = \
 	$O/combine_vol_data_adios_impl.auxadios.o \
 	$(EMPTY_MACRO)
 
-xcombine_vol_data_adios_SHARED_OBJECTS = $(xcombine_vol_data_SHARED_OBJECTS)
+xcombine_vol_data_adios_SHARED_OBJECTS = $(xcombine_vol_data_SHARED_OBJECTS) \
+	$O/adios_helpers_addons.shared_adios_cc.o \
+	$O/adios_helpers_definitions.shared_adios.o \
+	$O/adios_helpers_readers.shared_adios.o \
+	$O/adios_helpers_writers.shared_adios.o \
+	$O/adios_helpers.shared_adios.o \
+	$O/adios_manager.shared_adios_module.o \
+	$(EMPTY_MACRO)
+
 
 ${E}/xcombine_vol_data_adios: $(xcombine_vol_data_adios_OBJECTS) $(xcombine_vol_data_adios_SHARED_OBJECTS)
 	@echo ""
@@ -231,7 +242,7 @@ ${E}/xcombine_vol_data_adios: $(xcombine_vol_data_adios_OBJECTS) $(xcombine_vol_
 
 ### additional dependencies
 $O/combine_vol_data.auxadios.o: $O/combine_vol_data_impl.aux.o $O/combine_vol_data_adios_impl.auxadios.o
-$O/combine_vol_data_adios_impl.auxadios.o: $O/adios_manager.shared_adios_module.o
+$O/combine_vol_data_adios_impl.auxadios.o: $O/adios_manager.shared_adios_module.o $O/adios_helpers.shared_adios.o
 
 #######################################
 
@@ -262,7 +273,7 @@ xcombine_vol_data_vtk_adios_OBJECTS = \
 	$O/combine_vol_data_adios_impl.auxadios.o \
 	$(EMPTY_MACRO)
 
-xcombine_vol_data_vtk_adios_SHARED_OBJECTS = $(xcombine_vol_data_SHARED_OBJECTS)
+xcombine_vol_data_vtk_adios_SHARED_OBJECTS = $(xcombine_vol_data_adios_SHARED_OBJECTS)
 
 $E/xcombine_vol_data_vtk_adios: $(xcombine_vol_data_vtk_adios_OBJECTS) $(xcombine_vol_data_vtk_adios_SHARED_OBJECTS)
 	@echo ""
@@ -304,7 +315,7 @@ xcombine_vol_data_vtu_adios_OBJECTS = \
 	$O/combine_vol_data_adios_impl.auxadios.o \
 	$(EMPTY_MACRO)
 
-xcombine_vol_data_vtu_adios_SHARED_OBJECTS = $(xcombine_vol_data_SHARED_OBJECTS)
+xcombine_vol_data_vtu_adios_SHARED_OBJECTS = $(xcombine_vol_data_adios_SHARED_OBJECTS)
 
 $E/xcombine_vol_data_vtu_adios: $(xcombine_vol_data_vtu_adios_OBJECTS) $(xcombine_vol_data_vtu_adios_SHARED_OBJECTS)
 	@echo ""

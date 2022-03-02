@@ -772,8 +772,6 @@
 
   use create_regions_mesh_ext_par
 
-  use model_ipati_adios_mod, only: model_ipati_adios,model_ipati_water_adios
-
   use model_sep_mod, only: model_sep
 
   implicit none

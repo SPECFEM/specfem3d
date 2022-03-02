@@ -401,7 +401,7 @@
   integer, dimension(NGNOD,nelmnts_ext_mesh) :: elmnts_ext_mesh
 
   ! local parameters
-  integer :: ier,ispec,ia,i,j,k
+  integer :: ier,ispec,iglob,ia,i,j,k
   logical :: any_regular_elem
   double precision :: cube_edge_size_squared
   real, dimension(NGNOD) :: xelm_real,yelm_real,zelm_real
@@ -595,9 +595,15 @@
     do ispec = 1, nspec
       ! gets element corner positions
       do ia = 1,NGNOD
-        xelm_real(ia) = real(nodes_coords_ext_mesh(1,elmnts_ext_mesh(ia,ispec)))
-        yelm_real(ia) = real(nodes_coords_ext_mesh(2,elmnts_ext_mesh(ia,ispec)))
-        zelm_real(ia) = real(nodes_coords_ext_mesh(3,elmnts_ext_mesh(ia,ispec)))
+        iglob = elmnts_ext_mesh(ia,ispec)
+        ! checks index
+        if (iglob <= 0 .or. iglob > nnodes_ext_mesh) then
+          print *,'Error invalid iglob index ',iglob,' for nodes_coords_ext_mesh array with nnodes_ext_mesh = ',nnodes_ext_mesh
+          stop 'Error invalid iglob index in elmnts_ext_mesh array'
+        endif
+        xelm_real(ia) = nodes_coords_ext_mesh(1,iglob)
+        yelm_real(ia) = nodes_coords_ext_mesh(2,iglob)
+        zelm_real(ia) = nodes_coords_ext_mesh(3,iglob)
       enddo
       ! checks if element is regular (is a cube)
       call check_element_regularity(xelm_real,yelm_real,zelm_real,any_regular_elem,cube_edge_size_squared, &
@@ -856,7 +862,7 @@
   integer, dimension(NGNOD,nelmnts_ext_mesh),intent(in) :: elmnts_ext_mesh
 
 ! local parameters
-  integer :: ispec,ia,ispec_irreg
+  integer :: ispec,iglob,ia,ispec_irreg
   logical :: any_regular_elem
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: xix_reg,xiy_reg,xiz_reg,etax_reg,etay_reg,etaz_reg, &
                                                           gammax_reg,gammay_reg,gammaz_reg,jacobian_reg
@@ -876,9 +882,10 @@
 
   do ispec = 1, nspec
     do ia = 1,NGNOD
-      xelm(ia) = nodes_coords_ext_mesh(1,elmnts_ext_mesh(ia,ispec))
-      yelm(ia) = nodes_coords_ext_mesh(2,elmnts_ext_mesh(ia,ispec))
-      zelm(ia) = nodes_coords_ext_mesh(3,elmnts_ext_mesh(ia,ispec))
+      iglob = elmnts_ext_mesh(ia,ispec)
+      xelm(ia) = nodes_coords_ext_mesh(1,iglob)
+      yelm(ia) = nodes_coords_ext_mesh(2,iglob)
+      zelm(ia) = nodes_coords_ext_mesh(3,iglob)
     enddo
 
     ! CUBIT should provide a mesh ordering such that the 3D jacobian is defined
@@ -932,9 +939,10 @@
 
     ! gets corner positions of regular element
     do ia = 1,NGNOD
-      xelm(ia) = nodes_coords_ext_mesh(1,elmnts_ext_mesh(ia,ispec))
-      yelm(ia) = nodes_coords_ext_mesh(2,elmnts_ext_mesh(ia,ispec))
-      zelm(ia) = nodes_coords_ext_mesh(3,elmnts_ext_mesh(ia,ispec))
+      iglob = elmnts_ext_mesh(ia,ispec)
+      xelm(ia) = nodes_coords_ext_mesh(1,iglob)
+      yelm(ia) = nodes_coords_ext_mesh(2,iglob)
+      zelm(ia) = nodes_coords_ext_mesh(3,iglob)
     enddo
 
     ! jacobian and derivatives of mapping
@@ -1199,9 +1207,10 @@
     ! (note: uses point locations rather than point indices to find the element face,
     !            because the indices refer no more to the newly indexed ibool array )
     do icorner = 1,NGNOD2D_FOUR_CORNERS
-      xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_moho(icorner,ispec2D))
-      ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_moho(icorner,ispec2D))
-      zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_moho(icorner,ispec2D))
+      iglob = nodes_ibelm_moho(icorner,ispec2D)
+      xcoord(icorner) = nodes_coords_ext_mesh(1,iglob)
+      ycoord(icorner) = nodes_coords_ext_mesh(2,iglob)
+      zcoord(icorner) = nodes_coords_ext_mesh(3,iglob)
     enddo
 
     ! sets face id of reference element associated with this face

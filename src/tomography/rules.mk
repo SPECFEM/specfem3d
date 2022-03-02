@@ -188,18 +188,26 @@ xmodel_update_OBJECTS += $(gpu_specfem3D_STUBS)
 # using ADIOS files
 adios_model_update_OBJECTS= \
 	$O/read_mesh_databases_adios.spec_adios.o \
-	$O/read_forward_arrays_adios.spec_adios.o
+	$O/read_forward_arrays_adios.spec_adios.o \
+	$(EMPTY_MACRO)
 
 adios_model_update_SHARED_OBJECTS = \
-	$O/adios_helpers_definitions.shared_adios_module.o \
-	$O/adios_helpers_writers.shared_adios_module.o \
-	$O/adios_helpers.shared_adios.o
+	$O/adios_helpers_addons.shared_adios_cc.o \
+	$O/adios_helpers_definitions.shared_adios.o \
+	$O/adios_helpers_readers.shared_adios.o \
+	$O/adios_helpers_writers.shared_adios.o \
+	$O/adios_helpers.shared_adios.o \
+	$(EMPTY_MACRO)
 
 adios_model_update_STUBS = \
-	$O/specfem3D_adios_stubs.spec_noadios.o
+	$O/adios_method_stubs.cc.o \
+	$(EMPTY_MACRO)
 
 # conditional adios linking
 ifeq ($(ADIOS),yes)
+xmodel_update_OBJECTS += $(adios_model_update_OBJECTS)
+xmodel_update_SHARED_OBJECTS += $(adios_model_update_SHARED_OBJECTS)
+else ifeq ($(ADIOS2),yes)
 xmodel_update_OBJECTS += $(adios_model_update_OBJECTS)
 xmodel_update_SHARED_OBJECTS += $(adios_model_update_SHARED_OBJECTS)
 else

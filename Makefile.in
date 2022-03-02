@@ -362,11 +362,8 @@ endif
 @COND_ADIOS_TRUE@ADIOS_DEF = $(FC_DEFINE)USE_ADIOS
 @COND_ADIOS_FALSE@ADIOS_DEF =
 
-@COND_ADIOS_TRUE@ADIOS_INC = @ADIOS_FCFLAGS@ $(ADIOS_DEF)
-@COND_ADIOS_TRUE@ADIOS_LINK = @ADIOS_LIBS@
-
-@COND_ADIOS_TRUE@FCFLAGS_f90 += $(ADIOS_INC)
-@COND_ADIOS_TRUE@MPILIBS += $(ADIOS_LINK)
+@COND_ADIOS_TRUE@FCFLAGS_f90 += @ADIOS_FCFLAGS@ $(ADIOS_DEF)
+@COND_ADIOS_TRUE@MPILIBS += @ADIOS_LIBS@
 
 #######################################
 ####
@@ -381,11 +378,14 @@ endif
 @COND_ADIOS2_TRUE@ADIOS2_DEF = $(FC_DEFINE)USE_ADIOS2
 @COND_ADIOS2_FALSE@ADIOS2_DEF =
 
-@COND_ADIOS_TRUE@ADIOS2_INC = @ADIOS2_FCFLAGS@ $(ADIOS2_DEF)
-@COND_ADIOS_TRUE@ADIOS2_LINK = @ADIOS2_LIBS@
+@COND_ADIOS2_TRUE@FCFLAGS_f90 += @ADIOS2_FCFLAGS@ $(ADIOS2_DEF)
+@COND_ADIOS2_TRUE@MPILIBS += @ADIOS2_LIBS@
 
-@COND_ADIOS_TRUE@FCFLAGS_f90 += $(ADIOS2_INC)
-@COND_ADIOS_TRUE@MPILIBS += $(ADIOS2_LINK)
+@COND_ADIOS2_TRUE@CPPFLAGS += @ADIOS2_CFLAGS@
+@COND_ADIOS2_TRUE@MPILIBS += @ADIOS2_CLIBS@
+
+@COND_ADIOS2_TRUE@MPICC = @MPICC@
+@COND_ADIOS2_FALSE@MPICC = $(CC)
 
 #######################################
 ####
@@ -470,12 +470,16 @@ clean:
 	-rm -f $(foreach dir, $(CLEAN), $($(dir)_OBJECTS) $($(dir)_MODULES) $($(dir)_SHARED_OBJECTS) $($(dir)_TARGETS))
 	-rm -f ${E}/*__genmod.*
 	-rm -f ${O}/*__genmod.*
+	-rm -f ${O}/*.smod
+	-rm -f ${O}/*.lst
 else
 clean:
 	@echo "cleaning all"
 	-rm -f $(foreach dir, $(SUBDIRS), $($(dir)_OBJECTS) $($(dir)_MODULES) $($(dir)_TARGETS))
 	-rm -f ${E}/*__genmod.*
 	-rm -f ${O}/*__genmod.*
+	-rm -f ${O}/*.smod
+	-rm -f ${O}/*.lst
 endif
 
 realclean: clean
@@ -534,6 +538,11 @@ endif
 	@echo "    xcombine_vol_data_vtk"
 	@echo "    xcombine_vol_data_vtu"
 ifeq ($(ADIOS), yes)
+	@echo "    xcombine_vol_data_adios"
+	@echo "    xcombine_vol_data_vtk_adios"
+	@echo "    xcombine_vol_data_vtu_adios"
+endif
+ifeq ($(ADIOS2), yes)
 	@echo "    xcombine_vol_data_adios"
 	@echo "    xcombine_vol_data_vtk_adios"
 	@echo "    xcombine_vol_data_vtu_adios"

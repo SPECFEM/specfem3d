@@ -33,6 +33,7 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
+
   use gravity_perturbation, only: gravity_timeseries, GRAVITY_SIMULATION
 
   implicit none

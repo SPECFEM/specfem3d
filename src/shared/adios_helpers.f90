@@ -26,7 +26,7 @@
 !=====================================================================
 
 
-!===============================================================================
+!-------------------------------------------------------------------------------
 !> Helpers to set up adios features.
 !! * Error checking
 !! * Scalar definition
@@ -34,9 +34,11 @@
 !!
 !! \author MPBL
 !-------------------------------------------------------------------------------
+
 module adios_helpers_mod
 
   use adios_helpers_definitions_mod
+  use adios_helpers_readers_mod
   use adios_helpers_writers_mod
 
   implicit none
@@ -53,21 +55,34 @@ module adios_helpers_mod
   public :: define_adios_global_string_1d_array
   public :: define_adios_local_string_1d_array
   public :: define_adios_global_array1D
+  public :: define_adios_compression
+
+  ! from adios_helpers_readers_mod
+  public :: read_adios_array
+  public :: read_adios_array_gll_check
+  public :: read_adios_scalar
+  public :: read_adios_scalar_local_dim
+  public :: read_adios_perform
+  public :: read_adios_begin_step
+  public :: read_adios_end_step
+  public :: read_adios_schedule_array
 
   ! from adios_helpers_writers_mod
   public :: write_adios_global_real_1d_array
   public :: write_adios_global_double_1d_array
   public :: write_adios_global_integer_1d_array
   public :: write_adios_global_long_1d_array
-  public :: write_adios_global_logical_1d_array
   public :: write_adios_global_string_1d_array
   public :: write_adios_global_1d_array
+  public :: write_adios_global_logical_1d_array
 
+  public :: write_adios_array_gll
+  public :: write_adios_scalar
+  public :: write_adios_perform
+  public :: write_adios_begin_step
+  public :: write_adios_end_step
+
+  ! not used yet...
   public :: write_adios_global_1d_array_offset
-  public :: write_adios_global_real_1d_array_offset
-  public :: write_adios_global_integer_1d_array_offset
-
-  ! new from adios_helpers_writers_mod
-  public :: check_adios_err
 
 end module adios_helpers_mod

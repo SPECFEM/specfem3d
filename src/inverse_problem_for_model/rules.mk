@@ -286,23 +286,32 @@ adios_inverse_problem_for_model_OBJECTS= \
 	$O/read_mesh_databases_adios.spec_adios.o \
 	$O/save_forward_arrays_adios.spec_adios.o \
 	$O/read_forward_arrays_adios.spec_adios.o \
-	$O/save_kernels_adios.spec_adios.o
+	$O/save_kernels_adios.spec_adios.o \
+	$(EMPTY_MACRO)
 
 adios_inverse_problem_for_model_PREOBJECTS = \
-	$O/adios_helpers_definitions.shared_adios_module.o \
-	$O/adios_helpers_writers.shared_adios_module.o \
-	$O/adios_helpers.shared_adios.o
+	$O/adios_helpers_addons.shared_adios_cc.o \
+	$O/adios_helpers_definitions.shared_adios.o \
+	$O/adios_helpers_readers.shared_adios.o \
+	$O/adios_helpers_writers.shared_adios.o \
+	$O/adios_helpers.shared_adios.o \
+	$(EMPTY_MACRO)
 
 adios_inverse_problem_for_model_STUBS = \
-	$O/specfem3D_adios_stubs.spec_noadios.o
+	$O/adios_method_stubs.cc.o \
+	$(EMPTY_MACRO)
 
 # conditional adios linking
-ifeq ($(ADIOS),no)
-adios_inverse_problem_for_model_OBJECTS = $(adios_inverse_problem_for_model_STUBS)
-adios_inverse_problem_for_model_PREOBJECTS = $(EMPTY_MACRO)
-endif
+ifeq ($(ADIOS),yes)
 inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_OBJECTS)
 inverse_problem_for_model_SHARED_OBJECTS += $(adios_inverse_problem_for_model_PREOBJECTS)
+else ifeq ($(ADIOS2),yes)
+inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_OBJECTS)
+inverse_problem_for_model_SHARED_OBJECTS += $(adios_inverse_problem_for_model_PREOBJECTS)
+else
+inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_STUBS)
+endif
+
 
 # conditional asdf linking
 ifeq ($(ASDF),yes)

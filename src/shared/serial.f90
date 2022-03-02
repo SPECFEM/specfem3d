@@ -1309,6 +1309,21 @@
 !----
 !
 
+  logical function is_valid_comm(comm)
+
+  implicit none
+
+  integer, intent(in) :: comm
+
+  ! tests if communicator is valid
+  is_valid_comm = .false.
+
+  end function is_valid_comm
+
+!
+!----
+!
+
   subroutine world_get_comm(comm)
 
   implicit none
@@ -1318,6 +1333,35 @@
   comm = 0
 
   end subroutine world_get_comm
+
+!
+!----
+!
+
+  subroutine world_get_comm_self(comm)
+
+  implicit none
+
+  integer,intent(out) :: comm
+
+  comm = 0
+
+  end subroutine world_get_comm_self
+
+
+!
+!----
+!
+
+  subroutine world_comm_free(comm)
+
+  implicit none
+
+  integer,intent(inout) :: comm
+
+  comm = 0
+
+  end subroutine world_comm_free
 
 !
 !----

@@ -28,7 +28,7 @@
 
   subroutine initialize_simulation()
 
-  use adios_manager_mod
+  use manager_adios
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
@@ -144,8 +144,9 @@
     simul_run_flag = .false.
   endif
 
+  ! initializes ADIOS
   if (ADIOS_ENABLED) then
-    call adios_setup()
+    call initialize_adios()
   endif
 
   if ((SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) .and. READ_ADJSRC_ASDF) then

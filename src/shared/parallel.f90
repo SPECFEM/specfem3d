@@ -272,6 +272,26 @@ end module my_mpi
 
   end subroutine wait_req
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  logical function is_valid_comm(comm)
+
+  use my_mpi
+
+  implicit none
+
+  integer, intent(in) :: comm
+
+  ! tests if communicator is valid
+  if (comm == MPI_COMM_NULL) then
+    is_valid_comm = .false.
+  else
+    is_valid_comm = .true.
+  endif
+
+  end function is_valid_comm
 
 !-------------------------------------------------------------------------------------------------
 !
@@ -1840,8 +1860,38 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
-!  subroutine world_get_comm_self(comm)
-!  end subroutine world_get_comm_self
+  subroutine world_get_comm_self(comm)
+
+  use my_mpi
+
+  implicit none
+
+  integer,intent(out) :: comm
+
+  comm = MPI_COMM_SELF
+
+  end subroutine world_get_comm_self
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine world_comm_free(comm)
+
+  use my_mpi
+
+  implicit none
+
+  integer,intent(inout) :: comm
+
+  ! local parameters
+  integer :: ier
+
+  call MPI_Comm_free(comm,ier)
+  if (ier /= 0 ) stop 'Error freeing MPI communicator'
+
+  end subroutine world_comm_free
 
 !
 !-------------------------------------------------------------------------------------------------

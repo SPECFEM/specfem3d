@@ -93,17 +93,18 @@
     close(IIN)
   endif
 
+  ! transfers fields onto GPU
   if (GPU_MODE) then
     if (ACOUSTIC_SIMULATION) then
-      ! transfers fields onto GPU
+      ! transfers acoustic fields onto GPU
       call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
                                           b_potential_dot_acoustic, &
                                           b_potential_dot_dot_acoustic, &
                                           Mesh_pointer)
     endif
-    ! elastic wavefields
+
     if (ELASTIC_SIMULATION) then
-      ! puts elastic wavefield to GPU
+      ! transfers elastic wavefields to GPU
       call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
       ! memory variables if attenuation
       if (ATTENUATION) then
@@ -116,6 +117,10 @@
                                              size(b_epsilondev_xx))
       endif
     endif
+
+    ! saftey check
+    if (POROELASTIC_SIMULATION) &
+      call exit_MPI(myrank,'Poroelastic simulation not supported yet in read_forward_arrays() for GPU transfers')
   endif
 
   end subroutine read_forward_arrays
@@ -141,60 +146,71 @@
   integer :: ier
   character(len=MAX_STRING_LEN) :: outputname
 
-  ! saftey check
-  if (POROELASTIC_SIMULATION) &
-    call exit_MPI(myrank,'Poroelastic simulation not supported yet in read_forward_arrays_undoatt()')
-
   ! current subset iteration
   iteration_on_subset_tmp = NSUBSET_ITERATIONS - iteration_on_subset + 1
 
-  ! reads in saved wavefield
-  write(outputname,'(a,i6.6,a,i6.6,a)') 'proc',myrank,'_save_frame_at',iteration_on_subset_tmp,'.bin'
-  outputname = trim(LOCAL_PATH)//'/'//outputname(1:len_trim(outputname))
+  if (ADIOS_FOR_UNDO_ATTENUATION) then
+    call read_forward_arrays_undoatt_adios(iteration_on_subset_tmp)
+  else
+    ! reads in saved wavefield
+    write(outputname,'(a,i6.6,a,i6.6,a)') 'proc',myrank,'_save_frame_at',iteration_on_subset_tmp,'.bin'
+    outputname = trim(LOCAL_PATH)//'/'//outputname(1:len_trim(outputname))
 
-  ! opens corresponding snapshot file for reading
-  open(unit=IIN,file=trim(outputname),status='old',action='read',form='unformatted',iostat=ier)
-  if (ier /= 0 ) call exit_MPI(myrank,'Error opening file proc***_save_frame_at** for reading')
+    ! opens corresponding snapshot file for reading
+    open(unit=IIN,file=trim(outputname),status='old',action='read',form='unformatted',iostat=ier)
+    if (ier /= 0 ) call exit_MPI(myrank,'Error opening file proc***_save_frame_at** for reading')
 
-  if (ACOUSTIC_SIMULATION) then
-    read(IIN) b_potential_acoustic
-    read(IIN) b_potential_dot_acoustic
-    read(IIN) b_potential_dot_dot_acoustic
-  endif
-
-  if (ELASTIC_SIMULATION) then
-    read(IIN) b_displ
-    read(IIN) b_veloc
-    read(IIN) b_accel
-    if (ATTENUATION) then
-      read(IIN) b_R_trace
-      read(IIN) b_R_xx
-      read(IIN) b_R_yy
-      read(IIN) b_R_xy
-      read(IIN) b_R_xz
-      read(IIN) b_R_yz
-      read(IIN) b_epsilondev_trace
-      read(IIN) b_epsilondev_xx
-      read(IIN) b_epsilondev_yy
-      read(IIN) b_epsilondev_xy
-      read(IIN) b_epsilondev_xz
-      read(IIN) b_epsilondev_yz
+    if (ACOUSTIC_SIMULATION) then
+      read(IIN) b_potential_acoustic
+      read(IIN) b_potential_dot_acoustic
+      read(IIN) b_potential_dot_dot_acoustic
     endif
+
+    if (ELASTIC_SIMULATION) then
+      read(IIN) b_displ
+      read(IIN) b_veloc
+      read(IIN) b_accel
+      if (ATTENUATION) then
+        read(IIN) b_R_trace
+        read(IIN) b_R_xx
+        read(IIN) b_R_yy
+        read(IIN) b_R_xy
+        read(IIN) b_R_xz
+        read(IIN) b_R_yz
+        read(IIN) b_epsilondev_trace
+        read(IIN) b_epsilondev_xx
+        read(IIN) b_epsilondev_yy
+        read(IIN) b_epsilondev_xy
+        read(IIN) b_epsilondev_xz
+        read(IIN) b_epsilondev_yz
+      endif
+    endif
+
+    ! poroelastic wavefields
+    if (POROELASTIC_SIMULATION) then
+      read(IIN) b_displs_poroelastic
+      read(IIN) b_velocs_poroelastic
+      read(IIN) b_accels_poroelastic
+      read(IIN) b_displw_poroelastic
+      read(IIN) b_velocw_poroelastic
+      read(IIN) b_accelw_poroelastic
+    endif
+
+    close(IIN)
   endif
 
-  close(IIN)
-
+  ! transfers fields onto GPU
   if (GPU_MODE) then
     if (ACOUSTIC_SIMULATION) then
-      ! transfers fields onto GPU
+      ! transfers acoustic fields
       call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
                                           b_potential_dot_acoustic, &
                                           b_potential_dot_dot_acoustic, &
                                           Mesh_pointer)
     endif
-    ! elastic wavefields
+
     if (ELASTIC_SIMULATION) then
-      ! puts elastic wavefield to GPU
+      ! transfers elastic wavefield to GPU
       call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
       ! memory variables if attenuation
       if (ATTENUATION) then
@@ -207,6 +223,10 @@
                                              size(b_epsilondev_xx))
       endif
     endif
+
+    ! saftey check
+    if (POROELASTIC_SIMULATION) &
+      call exit_MPI(myrank,'Poroelastic simulation not supported yet in read_forward_arrays_undoatt() for GPU transfers')
   endif
 
   end subroutine read_forward_arrays_undoatt

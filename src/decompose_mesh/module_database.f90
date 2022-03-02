@@ -78,12 +78,16 @@ contains
 !
 !----------------------------------
   subroutine write_database(myrank, ipart, elmnts, nodes_coords, nodes_coords_open_loc, &
-           iboundary, nspec_part_boundaries, elmnts_part_boundaries,  num_modele,  mat_prop, &
-       undef_mat_prop, count_def_mat, count_undef_mat, ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, &
-       ibelm_bottom, ibelm_top, nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, nodes_ibelm_ymax, &
-       nodes_ibelm_bottom, nodes_ibelm_top, cpml_to_spec, cpml_regions, is_cpml, ibelm_moho, nodes_ibelm_moho, &
-       nE, nnodes, nspec2D_xmin, nspec2D_xmax,nspec2D_ymin, &
-       nspec2D_ymax, nspec2D_bottom, nspec2D_top, nspec_cpml, nspec2D_moho)
+                            iboundary, nspec_part_boundaries, elmnts_part_boundaries,  num_modele,  mat_prop, &
+                            undef_mat_prop, count_def_mat, count_undef_mat, &
+                            ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, &
+                            ibelm_bottom, ibelm_top, &
+                            nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, nodes_ibelm_ymax, &
+                            nodes_ibelm_bottom, nodes_ibelm_top, &
+                            cpml_to_spec, cpml_regions, is_cpml, &
+                            ibelm_moho, nodes_ibelm_moho, &
+                            nE, nnodes, nspec2D_xmin, nspec2D_xmax,nspec2D_ymin, &
+                            nspec2D_ymax, nspec2D_bottom, nspec2D_top, nspec_cpml, nspec2D_moho)
 
     implicit none
 

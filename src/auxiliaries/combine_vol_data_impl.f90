@@ -57,23 +57,33 @@ contains
   subroutine print_usage()
 
   implicit none
+
+
+  print *, '   filesname      - possible varnames are: '
+  print *, '                    rho, vp, vs, kappastore, mustore, alpha_kernel, etc.'
+  print *, '   var_file     - datafile that holds array, as real(kind=CUSTOM_REAL):: varname(NGLLX,NGLLY,NGLLZ,NSPEC),'
+  print *, '                  (e.g. OUTPUT_FILES/kernels.bp)'
+  print *, '   mesh_file    - are used to link variable to the topology (e.g. DATABASES_MPI/solver_data.bp)'
+  print *, '   output_dir   - indicates where var_name.vtk will be written'
+  print *, '   high/low res - give 0 for low resolution and 1 for high resolution'
+
+
   print *, 'Usage: '
-  print *, '   xcombine_data start_slice end_slice filename input_dir ' // &
-           'output_dir high/low-resolution'
+  print *, '   xcombine_vol_data start_slice end_slice filename input_dir output_dir high/low-resolution'
   print *, '    or '
-  print *, '   xcombine_data slice_list filename input_dir output_dir ' // &
-           'high/low-resolution'
+  print *, '   xcombine_vol_data slice_list filename input_dir output_dir high/low-resolution'
   print *
-  print *, ' possible filenames are '
-  print *, '   rho_vp, rho_vs, kappastore, mustore, alpha_kernel, etc'
-  print *
-  print *, '   that are stored in the local directory as ' // &
+  print *, ' with'
+  print *, '   start_slice/end_slice - start/end range of slice numbers to combine'
+  print *, '   slice_list            - text file containing slice numbers to combine (or use name "all" for all slices)'
+  print *, '   filename              - root file name of files proc***_filename.bin ("vp", "vsh", "alpha_kernel",..)'
+  print *, '                           possible filenames are: '
+  print *, '                             rho_vp, rho_vs, kappastore, mustore, alpha_kernel, etc'
+  print *, '                           that are stored in the local directory as ' // &
            'real(kind=CUSTOM_REAL) filename(NGLLX,NGLLY,NGLLZ,NSPEC_AB)  '
-  print *, '   in filename.bin'
-  print *
-  print *, ' files have been collected in input_dir, ' // &
-           'output mesh file goes to output_dir '
-  print *, ' give 0 for low resolution and 1 for high resolution'
+  print *, '   input_dir            - directory containing mesh topology (e.g. DATABASES_MPI/)'
+  print *, '   output_dir           - directory for output files (e.g. OUTPUT_FILES/)'
+  print *, '   high/low-resolution  - give 0 for low resolution and 1 for high resolution'
   print *
 
   stop ' Reenter command line options'
@@ -83,7 +93,7 @@ contains
 !=============================================================================
 
 !> Interpret command line arguments
-  subroutine read_args(arg, MAX_NUM_NODES, node_list, num_node, filename, indir, outdir, ires)
+  subroutine read_args(arg, MAX_NUM_NODES, node_list, num_node, filename, indir, outdir, ires, NPROCTOT)
 
   use constants, only: MAX_STRING_LEN
 
@@ -94,44 +104,60 @@ contains
   integer, intent(out) :: node_list(:)
   integer, intent(out) :: num_node, ires
   character(len=*), intent(out) :: filename, indir, outdir
+  integer, intent(in) :: NPROCTOT
+
   ! Variables
-  character(len=MAX_STRING_LEN) :: sline
-  integer :: it, iproc, proc1, proc2, ier, njunk
+  character(len=MAX_STRING_LEN) :: sline,slice_list_name
+  integer :: i, it, iproc, proc1, proc2, ier, njunk
 
   if (command_argument_count() == 5) then
-    num_node = 0
-    open(unit = 20, file = trim(arg(1)), status = 'unknown',iostat = ier)
-    if (ier /= 0) then
-      print *,'Error opening ',trim(arg(1))
-      stop
-    endif
-    do while (1 == 1)
-      read(20,'(a)',iostat=ier) sline
-      if (ier /= 0) exit
-      read(sline,*,iostat=ier) njunk
-      if (ier /= 0) exit
-      num_node = num_node + 1
-      if (num_node > MAX_NUM_NODES) stop 'error number of slices exceeds MAX_NUM_NODES...'
-      node_list(num_node) = njunk
-    enddo
-    close(20)
+    slice_list_name = arg(1)
     filename = arg(2)
     indir = arg(3)
     outdir = arg(4)
     read(arg(5),*) ires
+    ! gets slices
+    if (trim(slice_list_name) == 'all' .or. trim(slice_list_name) == '-1') then
+      ! combines all slices
+      num_node = 0
+      do i = 0,NPROCTOT-1
+        num_node = num_node + 1
+        if (num_node > MAX_NUM_NODES ) stop 'Error number of slices exceeds MAX_NUM_NODES...'
+        node_list(num_node) = i
+      enddo
+    else
+      ! reads in slices files
+      num_node = 0
+      open(unit = 20, file = trim(slice_list_name), status = 'unknown',iostat = ier)
+      if (ier /= 0) then
+        print *,'Error opening slice file ',trim(slice_list_name)
+        stop
+      endif
+      do while (1 == 1)
+        read(20,'(a)',iostat=ier) sline
+        if (ier /= 0) exit
+        read(sline,*,iostat=ier) njunk
+        if (ier /= 0) exit
+        num_node = num_node + 1
+        if (num_node > MAX_NUM_NODES) stop 'error number of slices exceeds MAX_NUM_NODES...'
+        node_list(num_node) = njunk
+      enddo
+      close(20)
+    endif
   else if (command_argument_count() == 6) then
     read(arg(1),*) proc1
     read(arg(2),*) proc2
+    filename = arg(3)
+    indir = arg(4)
+    outdir = arg(5)
+    read(arg(6),*) ires
+    ! sets slice range
     do iproc = proc1, proc2
       it = iproc - proc1 + 1
       if (it > MAX_NUM_NODES) stop 'error number of slices exceeds MAX_NUM_NODES...'
       node_list(it) = iproc
     enddo
     num_node = proc2 - proc1 + 1
-    filename = arg(3)
-    indir = arg(4)
-    outdir = arg(5)
-    read(arg(6),*) ires
   else
     call print_usage()
   endif
