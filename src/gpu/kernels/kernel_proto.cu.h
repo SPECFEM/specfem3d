@@ -573,7 +573,7 @@ __global__  void compute_dynamic_fault_cuda_rsf(realw* Displ,   // mesh quantiti
                                                 realw dt,
                                                 int it) ;
 
-__global__ void store_dataT(realw* store_dataT,
+__global__ void store_dataT(realw* dataT,
                             realw* V_slip,
                             realw* D_slip,
                             realw* T,
