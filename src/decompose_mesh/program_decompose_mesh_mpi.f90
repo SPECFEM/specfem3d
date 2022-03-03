@@ -58,8 +58,15 @@ program xdecompose_mesh_mpi
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-write(*,*) sizeprocs,myrank
-write(*,*) "read Par_file"
+  ! output
+  if (myrank == 0) then
+    write(*,*)
+    write(*,*) "xdecompose_mesh_mpi"
+    write(*,*)
+    !write(*,*) sizeprocs,myrank
+    write(*,*) "read Par_file"
+  endif
+
   ! 1/ read Par_file
   call read_parameter_file(BROADCAST_AFTER_READ)
 
@@ -97,8 +104,12 @@ write(*,*) "read Par_file"
   call bcast_all_singlei(npartX)
   call bcast_all_singlei(npartY)
   call bcast_all_singlei(npartZ)
-write(*,*) sizeprocs,npartX,npartY,npartZ
-  if (sizeprocs /= npartX * npartY * npartZ) stop 'Error: nparts **MUST BE** equal to npartX * npartY * npartZ'
+
+  ! checks
+  if (sizeprocs /= npartX * npartY * npartZ) then
+    write(*,*) 'Error invalid paritioning/sizeprocs: ',sizeprocs,npartX,npartY,npartZ
+    stop 'Error: nparts **MUST BE** equal to npartX * npartY * npartZ'
+  endif
 
   ! file output
   if (myrank == 0) then
@@ -110,7 +121,10 @@ write(*,*) sizeprocs,npartX,npartY,npartZ
     write(27,*) '*********************************************************************'
     write(27,*)
     write(27,*) ' READING MESH FILES '
-write(*,*) "read mesh files"
+
+    !output
+    write(*,*) "read mesh files"
+
     call read_mesh_files()
     write(27,*) ' COMPUTE COMPUTATIONAL LOAD of EACH ELEMENT'
     call compute_load_elemnts()
@@ -118,8 +132,9 @@ write(*,*) "read mesh files"
     write(27,*) npartX, npartY, npartZ
   endif
 
+  ! output
+  if (myrank == 0) write(*,*) "partition"
 
-write(*,*) "partition"
   ! 3/ Heuristic mesh partition
   if (myrank == 0) then
      write(27,*) ' DECOMPOSING MESH '
@@ -143,7 +158,9 @@ write(*,*) "partition"
 
   call bcast_all_i(ipart, nspec_glob)
 
-write(*,*) "send to all"
+  ! output
+  if (myrank == 0) write(*,*) "send to all"
+
   call send_partition_mesh_to_all(myrank, ipart, npartX*npartY*npartZ)
 
   call send_mesh_to_all(myrank)
@@ -151,16 +168,22 @@ write(*,*) "send to all"
   ! 4/ write partitioned mesh in one file per proc
   call prepare_database(myrank, elmnts, nspec)
 
-write(*,*) "write database"
+  ! output
+  if (myrank == 0) write(*,*) "write database"
+
   ! In earlier version, the array elmnts_glob was too big to broadcast.
   ! It is currently replaced by iboundary, nspec_part_boundaries and elmnts_part_boundaries
   call write_database(myrank, ipart, elmnts, nodes_coords, nodes_coords_open_loc, &
-       iboundary, nspec_part_boundaries, elmnts_part_boundaries, mat, mat_prop, undef_mat_prop, &
-       count_def_mat, count_undef_mat, ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, &
-       ibelm_bottom, ibelm_top, nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, nodes_ibelm_ymax, &
-       nodes_ibelm_bottom, nodes_ibelm_top, cpml_to_spec, cpml_regions, is_CPML, ibelm_moho, nodes_ibelm_moho, &
-       nspec_glob, nnodes, nspec2D_xmin, nspec2D_xmax,nspec2D_ymin, &
-       nspec2D_ymax, nspec2D_bottom, nspec2D_top, nspec_cpml, nspec2D_moho)
+                      iboundary, nspec_part_boundaries, elmnts_part_boundaries, mat, mat_prop, undef_mat_prop, &
+                      count_def_mat, count_undef_mat, &
+                      ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, &
+                      ibelm_bottom, ibelm_top, &
+                      nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, nodes_ibelm_ymax, &
+                      nodes_ibelm_bottom, nodes_ibelm_top, &
+                      cpml_to_spec, cpml_regions, is_CPML, &
+                      ibelm_moho, nodes_ibelm_moho, &
+                      nspec_glob, nnodes, nspec2D_xmin, nspec2D_xmax,nspec2D_ymin, &
+                      nspec2D_ymax, nspec2D_bottom, nspec2D_top, nspec_cpml, nspec2D_moho)
 
   if (myrank == 0) then
     write(27,*) ' END OF MESH DECOMPOSER'

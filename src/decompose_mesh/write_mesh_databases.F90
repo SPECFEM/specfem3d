@@ -79,11 +79,12 @@
       stop 'Error file open Database'
     endif
 
-    ! gets number of nodes
+    ! gets number of local nodes nnodes_loc in this partition
     call write_glob2loc_nodes_database(IIN_database, ipart, nnodes_loc, nodes_coords, &
                                        glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                        glob2loc_nodes, nnodes, 1)
 
+    ! gets number of local elements nspec_local in this parition
     call write_partition_database(IIN_database, ipart, nspec_local, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 1)
@@ -94,6 +95,7 @@
     ! writes out node coordinate locations
     write(IIN_database) nnodes_loc
 
+    ! writes out coordinates nodes_coords for local nodes
     call write_glob2loc_nodes_database(IIN_database, ipart, nnodes_loc, nodes_coords, &
                                        glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                        glob2loc_nodes, nnodes, 2)
@@ -152,40 +154,53 @@
                                      nspec2D_moho, ibelm_moho, nodes_ibelm_moho, NGNOD2D)
 
     close(IIN_database)
-
-
-     ! write fault database
-     if (ANY_FAULT) then
-        write(prname, "(i6.6,'_Database_fault')") ipart
-        open(unit=16,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname, &
-             status='replace', action='write', form='unformatted', iostat = ier)
-        if (ier /= 0) then
-          print *,'Error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
-          print *
-          print *,'check if path exists:',outputpath_name(1:len_trim(outputpath_name))
-          stop
-        endif
-        call write_fault_database(16, ipart, nspec, &
-                                  glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-                                  glob2loc_nodes, part)
-        !write(16,*) nnodes_loc
-        write(16) nnodes_loc
-
-        call write_glob2loc_nodes_database(16, ipart, nnodes_loc, nodes_coords_open, &
-                                           glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-                                           glob2loc_nodes, nnodes, 2)
-        close(16)
-     endif
-
-
   enddo
+
+  if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) close(124)
+
+  ! writes fault database
+  if (ANY_FAULT) then
+    do ipart = 0, nparts-1
+      ! opens file
+      write(prname, "(i6.6,'_Database_fault')") ipart
+
+      open(unit=16,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname, &
+           status='replace', action='write', form='unformatted', iostat = ier)
+      if (ier /= 0) then
+        print *,'Error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
+        print *
+        print *,'check if path exists:',outputpath_name(1:len_trim(outputpath_name))
+        stop
+      endif
+
+      ! writes out fault element indices
+      call write_fault_database(16, ipart, nspec, &
+                                glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
+                                glob2loc_nodes, part)
+
+      ! gets number of local nodes nnodes_loc in this partition
+      call write_glob2loc_nodes_database(16, ipart, nnodes_loc, nodes_coords_open, &
+                                         glob2loc_nodes_nparts, glob2loc_nodes_parts, &
+                                         glob2loc_nodes, nnodes, 1)
+
+      ! ascii file format
+      !write(16,*) nnodes_loc
+      ! binary file format
+      write(16) nnodes_loc
+
+      ! writes out coordinates nodes_coords_open of local nodes
+      ! note that we output here the "open" split node positions for the fault nodal points
+      call write_glob2loc_nodes_database(16, ipart, nnodes_loc, nodes_coords_open, &
+                                         glob2loc_nodes_nparts, glob2loc_nodes_parts, &
+                                         glob2loc_nodes, nnodes, 2)
+      close(16)
+    enddo
+  endif
 
   ! cleanup
   deallocate(CPML_to_spec,stat=ier); if (ier /= 0) stop 'Error deallocating array CPML_to_spec'
   deallocate(CPML_regions,stat=ier); if (ier /= 0) stop 'Error deallocating array CPML_regions'
   deallocate(is_CPML,stat=ier); if (ier /= 0) stop 'Error deallocating array is_CPML'
-
-  if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) close(124)
 
   ! user output
   print *

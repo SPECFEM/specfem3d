@@ -608,4 +608,4 @@
   !endif
   !call synchronize_all()
 
-end subroutine read_partition_files_adios
+  end subroutine read_partition_files_adios

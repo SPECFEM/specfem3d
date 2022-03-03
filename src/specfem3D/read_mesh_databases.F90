@@ -1574,7 +1574,7 @@
 
     ! Moho kernel
     if (SAVE_MOHO_MESH) then
-      allocate( moho_kl(NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
+      allocate(moho_kl(NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1623')
       if (ier /= 0) stop 'Error allocating array moho_kl'
       moho_kl(:,:) = 0.0_CUSTOM_REAL

@@ -542,7 +542,7 @@ contains
   integer  :: i, j
 
   if (num_phase == 1) then
-  ! counts number of points in partition
+    ! counts number of points in partition
     npgeo = 0
     do i = 0, nnodes-1
       do j = glob2loc_nodes_nparts(i), glob2loc_nodes_nparts(i+1)-1
@@ -552,7 +552,7 @@ contains
       enddo
     enddo
   else
-  ! writes out point coordinates
+    ! writes out point coordinates
     do i = 0, nnodes-1
       do j = glob2loc_nodes_nparts(i), glob2loc_nodes_nparts(i+1)-1
         if (glob2loc_nodes_parts(j) == iproc) then
