@@ -205,6 +205,9 @@
     call flush_IMAIN()
   endif
 
+  ! initiate new group
+  call init_adios_group(myadios_group,"ModelIPATIReader")
+
   ! setup the ADIOS library to read the file
   call open_file_adios_read_and_init_method(myadios_file,myadios_group,database_name)
 
@@ -224,5 +227,6 @@
 
   ! closes default file and finalizes read method
   call close_file_adios_read_and_finalize_method(myadios_file)
+  call delete_adios_group(myadios_group,"ModelIPATIReader")
 
   end subroutine read_model_vp_rho_adios

@@ -926,7 +926,7 @@
                                      STRINGIFY_VAR(ibool_interfaces_ext_mesh_dummy))
   endif
 
-! anisotropy
+  ! anisotropy
   if (ELASTIC_SIMULATION .and. ANISOTROPY) then
     local_dim = NGLLX * NGLLY * NGLLZ * nspec_aniso_wmax
     call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c11store))
@@ -1027,6 +1027,7 @@
 
   ! closes file
   call close_file_adios(myadios_file)
+  call delete_adios_group(myadios_group,group_name)
 
   ! stores arrays in binary files
   if (SAVE_MESH_FILES) then
@@ -1209,6 +1210,7 @@
 
   ! closes file
   call close_file_adios(myadios_file)
+  call delete_adios_group(myadios_group,group_name_coords)
 
   !----------------------------------.
   ! Set up the model values to write |
@@ -1324,6 +1326,7 @@
 
   ! closes file
   call close_file_adios(myadios_file)
+  call delete_adios_group(myadios_val_group,group_name_values)
 
   deallocate(vp_tmp)
   deallocate(vs_tmp)

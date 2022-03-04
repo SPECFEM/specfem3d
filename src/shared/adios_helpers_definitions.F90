@@ -286,7 +286,7 @@ end subroutine define_adios_scalar_double
 
 !===============================================================================
 !> Define an ADIOS scalar single precision variable and autoincrement
-!! the adios group size by (8).
+!! the adios group size by (4).
 !! \param adios_group The adios group where the variables belongs
 !! \param group_size_inc The inout adios group size to increment
 !!                       with the size of the variable

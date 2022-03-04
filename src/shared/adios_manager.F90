@@ -1403,7 +1403,7 @@ contains
   integer :: ier
   logical :: result
 
-  TRACE_ADIOS_L2('delete_adios_group')
+  TRACE_ADIOS_ARG('delete_adios_group: group '//trim(group_name)//' - rank ',myrank_adios)
 
 #if defined(USE_ADIOS)
   ! ADIOS 1

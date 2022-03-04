@@ -44,6 +44,9 @@
   !-------------------------------------'
   database_name = get_adios_filename(trim(LOCAL_PATH) // "/external_mesh")
 
+  ! initiate new group
+  call init_adios_group(myadios_group,"SolverReaderInit")
+
   ! setup the ADIOS library to read the file
   call open_file_adios_read_and_init_method(myadios_file,myadios_group,database_name)
 
@@ -59,8 +62,9 @@
   !--------------------------------------------'
   call read_adios_perform(myadios_file)
 
-  ! closes default file and finalizes read method
+  ! closes adios file & cleans/removes group object
   call close_file_adios_read_and_finalize_method(myadios_file)
+  call delete_adios_group(myadios_group,"SolverReaderInit")
 
   end subroutine read_mesh_for_init_ADIOS
 
@@ -162,6 +166,9 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
+
+  ! initiate new group
+  call init_adios_group(myadios_group,"SolverReader")
 
   ! setup the ADIOS library to read the file
   call open_file_adios_read_and_init_method(myadios_file,myadios_group,database_name)
@@ -1675,6 +1682,7 @@
 
   ! closes default file and finalizes read method
   call close_file_adios_read_and_finalize_method(myadios_file)
+  call delete_adios_group(myadios_group,"SolverReader")
 
   !call read_mesh_databases2()
   !call check_mesh_database()
@@ -1814,6 +1822,9 @@
       call flush_IMAIN()
     endif
 
+    ! initiate new group
+    call init_adios_group(myadios_group,"SolverReaderMoho")
+
     ! setup the ADIOS library to read the file
     call open_file_adios_read_and_init_method(myadios_file,myadios_group,database_name)
 
@@ -1936,6 +1947,7 @@
 
     ! closes default file and finalizes read method
     call close_file_adios_read_and_finalize_method(myadios_file)
+    call delete_adios_group(myadios_group,"SolverReaderMoho")
   else
     ! dummy
     NSPEC2D_MOHO = 1
