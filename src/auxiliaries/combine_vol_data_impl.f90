@@ -58,16 +58,6 @@ contains
 
   implicit none
 
-
-  print *, '   filesname      - possible varnames are: '
-  print *, '                    rho, vp, vs, kappastore, mustore, alpha_kernel, etc.'
-  print *, '   var_file     - datafile that holds array, as real(kind=CUSTOM_REAL):: varname(NGLLX,NGLLY,NGLLZ,NSPEC),'
-  print *, '                  (e.g. OUTPUT_FILES/kernels.bp)'
-  print *, '   mesh_file    - are used to link variable to the topology (e.g. DATABASES_MPI/solver_data.bp)'
-  print *, '   output_dir   - indicates where var_name.vtk will be written'
-  print *, '   high/low res - give 0 for low resolution and 1 for high resolution'
-
-
   print *, 'Usage: '
   print *, '   xcombine_vol_data start_slice end_slice filename input_dir output_dir high/low-resolution'
   print *, '    or '

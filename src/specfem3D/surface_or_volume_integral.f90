@@ -31,7 +31,8 @@
   use constants
 
   use specfem_par
-
+  use specfem_par_coupling, only: f_integrand_KH
+  
   implicit none
 
   ! local parameters
@@ -193,7 +194,8 @@
 
   use constants
 
-  use specfem_par
+  use specfem_par, only: it, num_abs_boundary_faces
+  use specfem_par_coupling
 
   use shared_parameters
 
@@ -258,7 +260,8 @@
 
   use constants
 
-  use specfem_par, only: it, Displ_axisem_time, RECIPROCITY_AND_KH_INTEGRAL, IIN_displ_axisem
+  use specfem_par, only: it, IIN_displ_axisem, RECIPROCITY_AND_KH_INTEGRAL
+  use specfem_par_coupling, only: Displ_axisem_time
 
   implicit none
 
@@ -282,7 +285,8 @@
 
   use constants
 
-  use specfem_par, only: it, Displ_specfem_time, RECIPROCITY_AND_KH_INTEGRAL, num_abs_boundary_faces
+  use specfem_par, only: it, num_abs_boundary_faces, RECIPROCITY_AND_KH_INTEGRAL
+  use specfem_par_coupling, only: Displ_specfem_time
 
   implicit none
 
@@ -313,7 +317,8 @@
 
   use constants
 
-  use specfem_par, only: it, Tract_specfem_time, RECIPROCITY_AND_KH_INTEGRAL, num_abs_boundary_faces
+  use specfem_par, only: it, num_abs_boundary_faces, RECIPROCITY_AND_KH_INTEGRAL
+  use specfem_par_coupling, only: Tract_specfem_time
 
   implicit none
 

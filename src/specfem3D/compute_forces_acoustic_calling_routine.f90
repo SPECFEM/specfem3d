@@ -53,7 +53,7 @@
 
   subroutine compute_forces_acoustic_forward_calling()
 
-! acoustic domains for forward or adjoint simulations (SIMULATION_TYPE == 1 or 2 )
+! acoustic domains for forward or adjoint wavefields
 
   use specfem_par
   use specfem_par_acoustic
@@ -145,7 +145,7 @@
         else
           ! on GPU
           call compute_stacey_acoustic_GPU(iphase,num_abs_boundary_faces, &
-                                           SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                           NSTEP,it, &
                                            b_reclen_potential,b_absorb_potential, &
                                            b_num_abs_boundary_faces,Mesh_pointer,1) ! 1 == forward
         endif
@@ -474,7 +474,7 @@
         else
           ! on GPU
           call compute_stacey_acoustic_GPU(iphase,num_abs_boundary_faces, &
-                                           SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                           NSTEP,it, &
                                            b_reclen_potential,b_absorb_potential, &
                                            b_num_abs_boundary_faces,Mesh_pointer,3) ! 3 == backward
         endif
@@ -649,7 +649,7 @@
       ! Stacey absorbing boundary conditions
       if (STACEY_ABSORBING_CONDITIONS) then
          call compute_stacey_acoustic_GPU(iphase,num_abs_boundary_faces, &
-                                          SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                          NSTEP,it, &
                                           b_reclen_potential,b_absorb_potential, &
                                           b_num_abs_boundary_faces,Mesh_pointer,0) ! 0 == both
       endif

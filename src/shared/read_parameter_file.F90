@@ -680,15 +680,21 @@
          INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_AXISEM .and. &
          INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) stop 'Error incorrect value of INJECTION_TECHNIQUE_TYPE read'
 
-      if ( (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM ) .and. &
-           (.not. MESH_A_CHUNK_OF_THE_EARTH) ) stop 'Error, coupling with DSM only works with a Earth chunk mesh'
+      if ( (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM ) .and. (.not. MESH_A_CHUNK_OF_THE_EARTH) ) &
+        stop 'Error, coupling with DSM only works with a Earth chunk mesh'
 
       if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. MESH_A_CHUNK_OF_THE_EARTH) &
-           stop 'Error: coupling with F-K is for models with a flat surface (Earth flattening), &
+        stop 'Error: coupling with F-K is for models with a flat surface (Earth flattening), &
                        &thus turn MESH_A_CHUNK_OF_THE_EARTH off'
 
       if ((INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_AXISEM) .and. RECIPROCITY_AND_KH_INTEGRAL) &
-           stop 'Error: the use of RECIPROCITY_AND_KH_INTEGRAL is only available for coupling with AxiSEM for now'
+        stop 'Error: the use of RECIPROCITY_AND_KH_INTEGRAL is only available for coupling with AxiSEM for now'
+
+      if (STACEY_ABSORBING_CONDITIONS .eqv. .false.) &
+        stop 'Error: COUPLE_WITH_INJECTION_TECHNIQUE requires to set STACEY_ABSORBING_CONDITIONS to have an effect'
+
+      if (UNDO_ATTENUATION_AND_OR_PML .and. SIMULATION_TYPE == 3) &
+          stop 'Error: COUPLE_WITH_INJECTION_TECHNIQUE together with UNDO_ATT or PML simulations not implemented yet'
     endif
 
     !-------------------------------------------------------

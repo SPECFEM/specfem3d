@@ -1028,6 +1028,7 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+  use specfem_par_coupling
 
   implicit none
 
@@ -1036,10 +1037,10 @@
   integer(kind=8) :: filesize
 
   ! initializes
-  SAVE_STACEY = .false.
+  SAVE_STACEY = .false.    ! flag to indicate if we need to read/write boundary contributions from disk
 
-! stacey absorbing fields will be reconstructed for adjoint simulations
-! using snapshot files of wavefields
+  ! stacey absorbing fields will be reconstructed for adjoint simulations
+  ! using snapshot files of wavefields
   if (STACEY_ABSORBING_CONDITIONS) then
 
     if (myrank == 0) then
@@ -1052,7 +1053,7 @@
       ! not needed for undo_attenuation scheme
       SAVE_STACEY = .false.
     else
-      ! used for simulation type 1 and 3
+      ! save in simulation type 1 with save_forward set, read back in simulation type 3
       if (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD)) then
         SAVE_STACEY = .true.
       else
@@ -1070,9 +1071,15 @@
     ! elastic domains
     if (ELASTIC_SIMULATION) then
       ! allocates wavefield
-      allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2143')
-      if (ier /= 0) stop 'error allocating array b_absorb_field'
+      if (b_num_abs_boundary_faces > 0) then
+        allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2143')
+        if (ier /= 0) stop 'error allocating array b_absorb_field'
+      else
+        ! dummy
+        allocate(b_absorb_field(1,1,1))
+      endif
+      b_absorb_field(:,:,:) = 0.0_CUSTOM_REAL
 
       if (num_abs_boundary_faces > 0 .and. SAVE_STACEY) then
         ! size of single record
@@ -1102,14 +1109,36 @@
                               filesize)
         endif
       endif
+
+      if (COUPLE_WITH_INJECTION_TECHNIQUE) then
+        ! boundary contribution to save together with absorbing boundary array b_absorb_field
+        ! for reconstructing backward wavefields in kernel simulations
+        if (b_num_abs_boundary_faces > 0 .and. SIMULATION_TYPE == 1) then
+          ! only needed for forward simulation to store boundary contributions
+          allocate(b_boundary_injection_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 2198')
+          if (ier /= 0) stop 'error allocating array b_boundary_injection_field'
+        else
+          ! dummy
+          allocate(b_boundary_injection_field(1,1,1))
+        endif
+        b_boundary_injection_field(:,:,:) = 0.0_CUSTOM_REAL
+      endif
+
     endif
 
     ! acoustic domains
     if (ACOUSTIC_SIMULATION) then
       ! allocates wavefield
-      allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces * NB_RUNS_ACOUSTIC_GPU),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2144')
-      if (ier /= 0) stop 'error allocating array b_absorb_potential'
+      if (b_num_abs_boundary_faces > 0) then
+        allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces * NB_RUNS_ACOUSTIC_GPU),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2144')
+        if (ier /= 0) stop 'error allocating array b_absorb_potential'
+      else
+        ! dummy
+        allocate(b_absorb_potential(1,1))
+      endif
+      b_absorb_potential(:,:) = 0.0_CUSTOM_REAL
 
       if (num_abs_boundary_faces > 0 .and. SAVE_STACEY) then
         ! size of single record
@@ -1153,11 +1182,19 @@
     ! poroelastic domains
     if (POROELASTIC_SIMULATION) then
       ! allocates wavefields for solid and fluid phases
-      allocate(b_absorb_fields(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2145')
-      allocate(b_absorb_fieldw(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2146')
-      if (ier /= 0) stop 'error allocating array b_absorb_fields and b_absorb_fieldw'
+      if (b_num_abs_boundary_faces > 0) then
+        allocate(b_absorb_fields(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2145')
+        allocate(b_absorb_fieldw(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2146')
+        if (ier /= 0) stop 'error allocating array b_absorb_fields and b_absorb_fieldw'
+      else
+        ! dummy
+        allocate(b_absorb_fields(1,1,1))
+        allocate(b_absorb_fieldw(1,1,1))
+      endif
+      b_absorb_fields(:,:,:) = 0.0_CUSTOM_REAL
+      b_absorb_fieldw(:,:,:) = 0.0_CUSTOM_REAL
 
       if (num_abs_boundary_faces > 0 .and. SAVE_STACEY) then
         ! size of single record

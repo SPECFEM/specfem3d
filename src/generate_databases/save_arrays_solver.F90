@@ -390,34 +390,34 @@
   ! PML
   deallocate(is_CPML,stat=ier); if (ier /= 0) stop 'error deallocating array is_CPML'
   if (nspec_cpml_tot > 0) then
-     deallocate(CPML_to_spec,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_to_spec'
-     deallocate(CPML_regions,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_regions'
+    deallocate(CPML_to_spec,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_to_spec'
+    deallocate(CPML_regions,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_regions'
   endif
 
   if (PML_CONDITIONS) then
-     deallocate(d_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_x'
-     deallocate(d_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_y'
-     deallocate(d_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_z'
-     deallocate(k_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_x'
-     deallocate(k_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_y'
-     deallocate(k_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_z'
-     deallocate(alpha_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_x'
-     deallocate(alpha_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_y'
-     deallocate(alpha_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_z'
-     if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
-       deallocate(mask_ibool_interior_domain,stat=ier)
-       if (ier /= 0) stop 'error deallocating array mask_ibool_interior_domain'
+    deallocate(d_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_x'
+    deallocate(d_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_y'
+    deallocate(d_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_z'
+    deallocate(k_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_x'
+    deallocate(k_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_y'
+    deallocate(k_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_z'
+    deallocate(alpha_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_x'
+    deallocate(alpha_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_y'
+    deallocate(alpha_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_z'
+    if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
+      deallocate(mask_ibool_interior_domain,stat=ier)
+      if (ier /= 0) stop 'error deallocating array mask_ibool_interior_domain'
 
-       if (nglob_interface_PML_acoustic > 0) then
-         deallocate(points_interface_PML_acoustic,stat=ier)
-         if (ier /= 0) stop 'error deallocating array points_interface_PML_acoustic'
-       endif
+      if (nglob_interface_PML_acoustic > 0) then
+        deallocate(points_interface_PML_acoustic,stat=ier)
+        if (ier /= 0) stop 'error deallocating array points_interface_PML_acoustic'
+      endif
 
-       if (nglob_interface_PML_elastic > 0) then
-         deallocate(points_interface_PML_elastic,stat=ier)
-         if (ier /= 0) stop 'error deallocating array points_interface_PML_elastic'
-       endif
-     endif
+      if (nglob_interface_PML_elastic > 0) then
+        deallocate(points_interface_PML_elastic,stat=ier)
+        if (ier /= 0) stop 'error deallocating array points_interface_PML_elastic'
+      endif
+    endif
   endif
 
   end subroutine save_arrays_solver_ext_mesh

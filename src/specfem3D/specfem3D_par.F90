@@ -95,20 +95,6 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
 
   !-----------------------------------------------------------------
-  ! coupling
-  !-----------------------------------------------------------------
-
-  ! for couple with external code : DSM and AxiSEM (added by VM) for the moment
-  integer :: it_dsm, it_fk
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary, Tract_dsm_boundary
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: Veloc_axisem, Tract_axisem
-
-  !! CD CD added this for RECIPROCITY_AND_KH_INTEGRAL
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: Displ_axisem_time, Tract_axisem_time
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: Displ_specfem_time, Tract_specfem_time
-
-
-  !-----------------------------------------------------------------
   ! time scheme
   !-----------------------------------------------------------------
 
@@ -314,14 +300,12 @@ module specfem_par
   ! gravity
   !-----------------------------------------------------------------
 
-
   ! gravity
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: minus_deriv_gravity,minus_g
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgll_cube
 
   ! for surface or volume integral on whole domain
   double precision, dimension(:), allocatable   :: integral_vol, integral_boun
-  double precision, dimension(:,:), allocatable :: f_integrand_KH
 
   ! for gravity integrals
   double precision, dimension(NTOTAL_OBSERVATION) :: x_observation,y_observation,z_observation, &
@@ -687,7 +671,25 @@ module specfem_par_coupling
 
   implicit none
 
-! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
+  !-----------------------------------------------------------------
+  ! coupling
+  !-----------------------------------------------------------------
+
+  ! for couple with external code : DSM and AxiSEM (added by VM) for the moment
+  integer :: it_dsm, it_fk
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary, Tract_dsm_boundary
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: Veloc_axisem, Tract_axisem
+
+  ! boundary injection wavefield parts for saving together with b_absorb_field
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_boundary_injection_field
+
+  !! CD CD added this for RECIPROCITY_AND_KH_INTEGRAL
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: Displ_axisem_time, Tract_axisem_time
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: Displ_specfem_time, Tract_specfem_time
+
+  double precision, dimension(:,:), allocatable :: f_integrand_KH
+
+  ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
 
   ! FK elastic
   integer :: npt,nlayer,kpsv
