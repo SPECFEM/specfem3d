@@ -275,7 +275,7 @@
 ! Big storage version of coupling with DSM (will always set to .false. after the light storage version will be validated)
   logical, parameter :: old_DSM_coupling_from_Vadim = .true.
 
-! First run to store on boundaries for using reciprocty calculate Kirchoff-Helmholtz integral
+! First run to store on boundaries for using reciprocity calculate Kirchoff-Helmholtz integral
   logical, parameter :: SAVE_RUN_BOUN_FOR_KH_INTEGRAL = .false.
 
 ! for subroutine compute_vol_or_surf_integral_on_whole_domain
