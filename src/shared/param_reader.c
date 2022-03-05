@@ -55,7 +55,12 @@
  ..
 */
 
+// strndup is non-standard C function
+// to avoid warning when compiling with -std=c99 flag
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #include "config.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -67,6 +72,7 @@
 #define LINE_MAX 255
 #endif
 
+/*===============================================================*/
 /*
  * Mac OS X's gcc does not support strnlen and strndup.
  * So we define them here conditionally, to avoid duplicate definitions
@@ -116,11 +122,15 @@ FC_FUNC_(param_open,PARAM_OPEN)(char * filename, int * length, int * ierr)
   *ierr = 0;
 }
 
+/* ----------------------------------------------------------------------------- */
+
 void
 FC_FUNC_(param_close,PARAM_CLOSE)()
 {
   fclose(fid);
 }
+
+/* ----------------------------------------------------------------------------- */
 
 void
 FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char * name, int * name_len, int * ierr)
@@ -176,6 +186,7 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
     regfree(&compiled_pattern);
     return;
   }
+
   // Read every line in the file.
   while (fgets(line, LINE_MAX, fid) != NULL) {
     // Get rid of the ending newline.
@@ -208,6 +219,7 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
     }
     free(keyword);
     regfree(&compiled_pattern);
+
     // If it matches, extract the value from the line.
     value = strndup(line+parameter[2].rm_so, parameter[2].rm_eo-parameter[2].rm_so);
 
@@ -220,16 +232,18 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
 
     strncpy(string_read, value, value_len);
 
-
     //debug
     //printf("param_reader: len = %d max = %d value = ***%s*** string = ***%s***\n",value_len,*string_read_len,value,string_read);
 
     free(value);
     free(namecopy);
+
     *ierr = 0;
     return;
   }
-  // If no keyword matches, set the error flag
+
+  // If no keyword matches, print out error and die.
+  //printf("No match in parameter file for keyword '%s'\n", namecopy);
   free(namecopy);
   regfree(&compiled_pattern);
   *ierr = 1;
