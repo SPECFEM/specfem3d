@@ -94,6 +94,7 @@
     write(IMAIN,*) "Reading mesh databases..."
     write(IMAIN,*) "  reads binary mesh files: proc***_external_mesh.bin"
     write(IMAIN,*) "  from directory         : ",trim(LOCAL_PATH)
+    write(IMAIN,*)
     call flush_IMAIN()
   endif
 
@@ -184,13 +185,28 @@
 
   ! all processes will have acoustic_simulation set if any flag is .true.
   call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
-  call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
+  call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
   ! number of acoustic elements in this partition
   nspec_acoustic = count(ispec_is_acoustic(:))
   ! number of elastic elements in this partition
   nspec_elastic = count(ispec_is_elastic(:))
+  ! number of elastic elements in this partition
+  nspec_poroelastic = count(ispec_is_poroelastic(:))
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  simulation w/ acoustic    domain: ',ACOUSTIC_SIMULATION
+    write(IMAIN,*) '  simulation w/ elastic     domain: ',ELASTIC_SIMULATION
+    write(IMAIN,*) '  simulation w/ poroelastic domain: ',POROELASTIC_SIMULATION
+    write(IMAIN,*)
+    write(IMAIN,*) '  slice 0 has:'
+    write(IMAIN,*) '  number of elements acoustic   :',nspec_acoustic
+    write(IMAIN,*) '  number of elements elastic    :',nspec_elastic
+    write(IMAIN,*) '  number of elements poroelastic:',nspec_poroelastic
+    call flush_IMAIN()
+  endif
 
   ! acoustic
   if (ACOUSTIC_SIMULATION) then

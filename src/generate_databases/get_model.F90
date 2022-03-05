@@ -299,8 +299,6 @@
           ! Stacey, a completer par la suite
           rho_vp(i,j,k,ispec) = rho*vp
           rho_vs(i,j,k,ispec) = rho*vs
-          !
-          !end pll
 
           ! poroelastic material store
           ! solid properties
@@ -564,7 +562,7 @@
   ! selects chosen velocity model
   select case (IMODEL)
 
-  case (IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP)
+  case (IMODEL_DEFAULT, IMODEL_GLL, IMODEL_IPATI, IMODEL_IPATI_WATER, IMODEL_SEP)
     ! material values determined by mesh properties
     call model_default(mat_prop,nmat_ext_mesh, &
                        undef_mat_prop,nundefMat_ext_mesh, &
@@ -576,14 +574,89 @@
                        phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
                        c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66)
 
-! *********************************************************************************
-! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
-! for smoothing the boundary portions of the model
+  case (IMODEL_1D_PREM)
+    ! 1D model profile from PREM
+    call model_1D_prem_iso(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,qkappa_atten)
 
-    !! VM VM this seems to be an hardcoded model we should remove it
-    if (COUPLE_WITH_INJECTION_TECHNIQUE) then
-      if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. SMOOTH_THE_MODEL_EDGES_FOR_FK) then
+  case (IMODEL_1D_PREM_PB)
+    ! 1D model profile from PREM modified by Piero
+    imaterial_PB = abs(imaterial_id)
+    call model_1D_PREM_routine_PB(xmesh,ymesh,zmesh,rho,vp,vs,imaterial_PB)
 
+    ! sets acoustic/elastic domain as given in materials properties
+    iundef = - imaterial_id    ! iundef must be positive
+    read(undef_mat_prop(6,iundef),*) idomain_id
+
+  case (IMODEL_1D_CASCADIA)
+    ! 1D model profile for Cascadia region
+    call model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,qkappa_atten)
+
+  case (IMODEL_1D_SOCAL)
+    ! 1D model profile for Southern California
+    call model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,qkappa_atten)
+
+  case (IMODEL_SALTON_TROUGH)
+    ! gets model values from tomography file
+    call model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,qkappa_atten)
+
+  case (IMODEL_TOMO)
+    ! gets model values from tomography file
+    call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten, &
+                          c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
+                          imaterial_id,has_tomo_value)
+
+    ! in case no tomography value defined for this region, fall back to defaults
+    if (.not. has_tomo_value) then
+      print *,'Error: tomography value not defined for model material id ',imaterial_id
+      print *,'Please check if Par_file setting MODEL = tomo is applicable, or try using MODEL = default ...'
+      stop 'Error tomo model not found for material'
+    endif
+
+  case (IMODEL_USER_EXTERNAL)
+    ! Florian Schumacher, Germany, June 2015
+    ! FS FS: added call to model_default here, before calling model_external_values in order to
+    !        be able to superimpose a model onto the default one:
+
+    ! material values determined by mesh properties
+    call model_default(mat_prop,nmat_ext_mesh, &
+                       undef_mat_prop,nundefMat_ext_mesh, &
+                       imaterial_id,imaterial_def, &
+                       xmesh,ymesh,zmesh,rho,vp,vs, &
+                       iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
+                       rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
+                       phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
+                       c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66)
+
+    ! user model from external routine
+    ! adds/gets velocity model as specified in model_external_values.f90
+    call model_external_values(xmesh,ymesh,zmesh,ispec,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id)
+
+  case (IMODEL_COUPLED)
+    ! user model for coupling with injection method
+    ! adds/gets velocity model as specified in model_coupled.f90
+    call model_coupled_values(xmesh,ymesh,zmesh,rho,vp,vs)
+
+  case default
+    stop 'Error model not implemented yet'
+  end select
+
+  ! adds anisotropic default model
+  if (IMODEL /= IMODEL_TOMO .and. ANISOTROPY) then
+    call model_aniso(iflag_aniso,rho,vp,vs, &
+                     c11,c12,c13,c14,c15,c16, &
+                     c22,c23,c24,c25,c26,c33, &
+                     c34,c35,c36,c44,c45,c46,c55,c56,c66)
+  endif
+
+  ! *********************************************************************************
+  ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
+  ! for smoothing the boundary portions of the model
+  if (COUPLE_WITH_INJECTION_TECHNIQUE) then
+    if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. SMOOTH_THE_MODEL_EDGES_FOR_FK) then
+      ! only applies to a default/gll model with specific layering
+      ! includes user specifics, we might consider defining this as a separate model
+      if (IMODEL == IMODEL_DEFAULT .or. IMODEL == IMODEL_GLL) then
+        !! VM VM this seems to be an hardcoded model we should remove it
         if (.not. SMOOTH_THE_MOHO_ONLY_FOR_FK) then
           ratio = 1.0
           ! fast anomaly
@@ -660,85 +733,10 @@
             endif
           endif
         endif
-
-      endif ! of if (SMOOTH_THE_MODEL_EDGES_FOR_FK) then
+      endif
     endif
-
-! *********************************************************************************
-
-  case (IMODEL_1D_PREM)
-    ! 1D model profile from PREM
-    call model_1D_prem_iso(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,qkappa_atten)
-
-  case (IMODEL_1D_PREM_PB)
-    ! 1D model profile from PREM modified by Piero
-    imaterial_PB = abs(imaterial_id)
-    call model_1D_PREM_routine_PB(xmesh,ymesh,zmesh,rho,vp,vs,imaterial_PB)
-
-    ! sets acoustic/elastic domain as given in materials properties
-    iundef = - imaterial_id    ! iundef must be positive
-    read(undef_mat_prop(6,iundef),*) idomain_id
-
-  case (IMODEL_1D_CASCADIA)
-    ! 1D model profile for Cascadia region
-    call model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,qkappa_atten)
-
-  case (IMODEL_1D_SOCAL)
-    ! 1D model profile for Southern California
-    call model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,qkappa_atten)
-
-  case (IMODEL_SALTON_TROUGH)
-    ! gets model values from tomography file
-    call model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,qkappa_atten)
-
-  case (IMODEL_TOMO)
-    ! gets model values from tomography file
-    call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten, &
-                          c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
-                          imaterial_id,has_tomo_value)
-
-    ! in case no tomography value defined for this region, fall back to defaults
-    if (.not. has_tomo_value) then
-      print *,'Error: tomography value not defined for model material id ',imaterial_id
-      print *,'Please check if Par_file setting MODEL = tomo is applicable, or try using MODEL = default ...'
-      stop 'Error tomo model not found for material'
-    endif
-
-  case (IMODEL_USER_EXTERNAL)
-    ! Florian Schumacher, Germany, June 2015
-    ! FS FS: added call to model_default here, before calling model_external_values in order to
-    !        be able to superimpose a model onto the default one:
-
-    ! material values determined by mesh properties
-    call model_default(mat_prop,nmat_ext_mesh, &
-                       undef_mat_prop,nundefMat_ext_mesh, &
-                       imaterial_id,imaterial_def, &
-                       xmesh,ymesh,zmesh,rho,vp,vs, &
-                       iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
-                       rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
-                       phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
-                       c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66)
-
-    ! user model from external routine
-    ! adds/gets velocity model as specified in model_external_values.f90
-    call model_external_values(xmesh,ymesh,zmesh,ispec,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id)
-
-  case (IMODEL_COUPLED)
-    ! user model for coupling with injection method
-    ! adds/gets velocity model as specified in model_coupled.f90
-    call model_coupled_values(xmesh,ymesh,zmesh,rho,vp,vs)
-
-  case default
-    stop 'Error model not implemented yet'
-  end select
-
-  ! adds anisotropic default model
-  if (IMODEL /= IMODEL_TOMO .and. ANISOTROPY) then
-    call model_aniso(iflag_aniso,rho,vp,vs, &
-                     c11,c12,c13,c14,c15,c16, &
-                     c22,c23,c24,c25,c26,c33, &
-                     c34,c35,c36,c44,c45,c46,c55,c56,c66)
   endif
+  ! *********************************************************************************
 
   ! for pure acoustic simulations (a way of avoiding re-mesh, re-partition etc.)
   ! can be used to compare elastic & acoustic reflections in exploration seismology

@@ -331,6 +331,9 @@
   call synchronize_all()
 
   ! cleanup
+  call pml_cleanup_arrays()
+
+  ! model arrays
   deallocate(xixstore,xiystore,xizstore, &
              etaxstore,etaystore,etazstore, &
              gammaxstore,gammaystore,gammazstore,jacobianstore)
@@ -410,17 +413,6 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
-
-  ! attenuation
-  allocate(qkappa_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 724')
-  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-  qkappa_attenuation_store(:,:,:,:) = 9999.9_CUSTOM_REAL
-
-  allocate(qmu_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 725')
-  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-  qmu_attenuation_store(:,:,:,:) = 9999.9_CUSTOM_REAL
 
   ! create the name for the database of the current slide and region
   call create_name_database(prname,myrank,LOCAL_PATH)
@@ -523,6 +515,17 @@
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
   rhostore(:,:,:,:) = 0.0_CUSTOM_REAL; kappastore(:,:,:,:) = 0.0_CUSTOM_REAL; mustore(:,:,:,:) = 0.0_CUSTOM_REAL
 
+  ! attenuation
+  allocate(qkappa_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 724')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  qkappa_attenuation_store(:,:,:,:) = 9999.9_CUSTOM_REAL
+
+  allocate(qmu_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 725')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  qmu_attenuation_store(:,:,:,:) = 9999.9_CUSTOM_REAL
+
   ! Stacey
   allocate(rho_vp(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 741')
@@ -561,6 +564,11 @@
   allocate(permstore(6,NGLLX,NGLLY,NGLLZ,NSPEC_PORO), stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 754')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  rhoarraystore(:,:,:,:,:) = 0.0_CUSTOM_REAL; kappaarraystore(:,:,:,:,:) = 0.0_CUSTOM_REAL
+  etastore(:,:,:,:) = 0.0_CUSTOM_REAL; tortstore(:,:,:,:) = 0.0_CUSTOM_REAL
+  phistore(:,:,:,:) = 0.0_CUSTOM_REAL; rho_vpI(:,:,:,:) = 0.0_CUSTOM_REAL
+  rho_vpII(:,:,:,:) = 0.0_CUSTOM_REAL; rho_vsI(:,:,:,:) = 0.0_CUSTOM_REAL
+  permstore(:,:,:,:,:) = 0.0_CUSTOM_REAL
 
   ! mesh arrays
   ! get the number of regular and irregular elements
@@ -1249,9 +1257,8 @@
   allocate(ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 823')
   if (ier /= 0) stop 'error allocating ibelm_moho_bot'
-
-  ibelm_moho_bot = 0
-  ibelm_moho_top = 0
+  ibelm_moho_bot(:) = 0
+  ibelm_moho_top(:) = 0
 
   ! element flags
   allocate(is_moho_top(nspec),stat=ier)
@@ -1259,8 +1266,8 @@
   allocate(is_moho_bot(nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 825')
   if (ier /= 0) stop 'error allocating is_moho_top'
-  is_moho_top = .false.
-  is_moho_bot = .false.
+  is_moho_top(:) = .false.
+  is_moho_bot(:) = .false.
 
   ! finds spectral elements with moho surface
   imoho_top = 0
@@ -1498,6 +1505,7 @@
   ! initialize flags
   ispec_is_inner(:) = .true.
   iglob_is_inner(:) = .true.
+
   do iinterface = 1, num_interfaces_ext_mesh
     do i = 1, nibool_interfaces_ext_mesh(iinterface)
       iglob = ibool_interfaces_ext_mesh(i,iinterface)
@@ -1518,7 +1526,7 @@
   enddo
 
   ! frees temporary array
-  deallocate( iglob_is_inner )
+  deallocate(iglob_is_inner)
 
   if (SAVE_MESH_FILES .and. DEBUG) then
     filename = prname(1:len_trim(prname))//'ispec_is_inner'

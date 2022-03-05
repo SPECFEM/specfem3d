@@ -411,11 +411,12 @@ module specfem_par_elastic
   integer, dimension(:,:), allocatable :: phase_ispec_inner_elastic
   integer :: num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic
 
+  integer :: nspec_elastic
+  integer :: iglob_check_elastic
+
   ! mesh coloring
   integer :: num_colors_outer_elastic,num_colors_inner_elastic
   integer, dimension(:), allocatable :: num_elem_colors_elastic
-  integer :: nspec_elastic
-  integer :: iglob_check_elastic
 
   ! ADJOINT elastic
 
@@ -502,11 +503,12 @@ module specfem_par_acoustic
   integer, dimension(:,:), allocatable :: phase_ispec_inner_acoustic
   integer :: num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic
 
+  integer :: nspec_acoustic
+  integer :: iglob_check_acoustic
+
   ! mesh coloring
   integer :: num_colors_outer_acoustic,num_colors_inner_acoustic
   integer, dimension(:), allocatable :: num_elem_colors_acoustic
-  integer :: nspec_acoustic
-  integer :: iglob_check_acoustic
 
   ! ADJOINT acoustic
 
@@ -577,9 +579,11 @@ module specfem_par_poroelastic
   logical, dimension(:), allocatable :: ispec_is_poroelastic
   integer, dimension(:,:), allocatable :: phase_ispec_inner_poroelastic
   integer :: num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic
+
+  integer :: nspec_poroelastic
   integer :: iglob_check_poroelastic
 
-! ADJOINT poroelastic
+  ! ADJOINT poroelastic
 
   ! (backward/reconstructed) wavefields
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_accels_poroelastic,b_velocs_poroelastic,b_displs_poroelastic

@@ -224,6 +224,21 @@
   nspec_acoustic = count(ispec_is_acoustic(:))
   ! number of elastic elements in this partition
   nspec_elastic = count(ispec_is_elastic(:))
+  ! number of elastic elements in this partition
+  nspec_poroelastic = count(ispec_is_poroelastic(:))
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  simulation w/ acoustic    domain: ',ACOUSTIC_SIMULATION
+    write(IMAIN,*) '  simulation w/ elastic     domain: ',ELASTIC_SIMULATION
+    write(IMAIN,*) '  simulation w/ poroelastic domain: ',POROELASTIC_SIMULATION
+    write(IMAIN,*)
+    write(IMAIN,*) '  slice 0 has:'
+    write(IMAIN,*) '  number of elements acoustic   :',nspec_acoustic
+    write(IMAIN,*) '  number of elements elastic    :',nspec_elastic
+    write(IMAIN,*) '  number of elements poroelastic:',nspec_poroelastic
+    call flush_IMAIN()
+  endif
 
   ! checks simulation types are valid
   if ((.not. ACOUSTIC_SIMULATION) .and. &
