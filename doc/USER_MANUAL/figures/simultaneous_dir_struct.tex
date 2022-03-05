@@ -1,0 +1,67 @@
+\documentclass{standalone}
+
+\usepackage{amsmath}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.3}
+
+% Latex generated graphics
+\usepackage{tikz}
+
+% tikz libraries
+\usetikzlibrary{trees}
+
+%\usetikzlibrary{positioning}
+%\usetikzlibrary{shapes}
+%\usetikzlibrary{calc}
+%\usetikzlibrary{backgrounds}
+%\usetikzlibrary{fit}
+%\usetikzlibrary{patterns}
+
+%\tikzset{timed/.style=dashed}
+
+\begin{document}
+
+\tikzstyle{every node}=[draw=black,thick,anchor=west]
+\tikzstyle{selected}=[draw=red,fill=red!10]
+\tikzstyle{optional}=[dashed,fill=gray!50]
+\tikzstyle{missing}=[draw=white]
+
+\begin{tikzpicture}[%
+  grow via three points={one child at (0.5,-0.7) and
+  two children at (0.5,-0.7) and (0.5,-1.4)},
+  edge from parent path={(\tikzparentnode.south) |- (\tikzchildnode.west)}]
+  \node {EXAMPLE\_ROOT\_DIR}
+    child { node {bin}}
+    child { node {DATA}}
+    child { node {DATABASES\_MPI}}
+    child { node {OUTPUT\_FILES}}
+    child { node [selected] {run0001}
+      child { node {DATA}}
+      child { node {DATABASES\_MPI}}
+      child { node {OUTPUT\_FILES}}
+      child { node [optional] {SEM}}
+    }
+    child [missing] {}
+    child [missing] {}
+    child [missing] {}
+    child [missing] {}
+    child { node [selected] {run0002}
+      child { node {DATA}}
+      child { node {DATABASES\_MPI}}
+      child { node {OUTPUT\_FILES}}
+      child { node [optional] {SEM}}
+    }
+    child [missing] {}
+    child [missing] {}
+    child [missing] {}
+    child [missing] {}
+    child { node [selected] {run....}
+      child { node {DATA}}
+      child { node {DATABASES\_MPI}}
+      child { node {OUTPUT\_FILES}}
+      child { node [optional] {SEM}}
+    };
+\end{tikzpicture}
+
+\end{document}
+
