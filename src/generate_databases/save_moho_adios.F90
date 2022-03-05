@@ -64,13 +64,13 @@
   ! ADIOS write equally sized chunks for each processor.            |
   !-----------------------------------------------------------------'
   ! Filling a temporary array to avoid doing allreduces for each var.
-  max_global_values(1) = nspec_ab
+  max_global_values(1) = NSPEC_AB
   max_global_values(2) = nspec2d_moho
 
   ! calling wrapper instead to compile without mpi
   call max_allreduce_i(max_global_values,num_vars)
 
-  nspec_wmax        = max_global_values(1)
+  NSPEC_wmax        = max_global_values(1)
   nspec2d_moho_wmax = max_global_values(2)
 
   !-----------------------------------.
@@ -124,7 +124,7 @@
                                    local_dim, '', &
                                    STRINGIFY_VAR(normal_moho_bot))
 
-  local_dim = nspec_wmax
+  local_dim = NSPEC_wmax
   call define_adios_global_array1D(myadios_group, group_size_inc, &
                                    local_dim, '', &
                                    STRINGIFY_VAR(is_moho_top))
@@ -165,7 +165,7 @@
   call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, &
                                    local_dim, STRINGIFY_VAR(normal_moho_bot))
 
-  local_dim = nspec_wmax
+  local_dim = NSPEC_wmax
   call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, &
                                    local_dim, STRINGIFY_VAR(is_moho_top))
   call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, &

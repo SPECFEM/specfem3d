@@ -54,7 +54,7 @@
   integer(kind=8) :: local_dim
 
   !--- Variables to allreduce - wmax stands for world_max
-  integer :: nglob_wmax, NSPEC_ATTENUATION_wmax, NSPEC_STRAIN_wmax, N_SLS_wmax
+  integer :: NGLOB_wmax, NSPEC_ATTENUATION_wmax, NSPEC_STRAIN_wmax, N_SLS_wmax
   integer, parameter :: num_vars = 4
   integer, dimension(num_vars) :: max_global_values
 
@@ -70,7 +70,7 @@
 
   call max_allreduce_i(max_global_values,num_vars)
 
-  nglob_wmax                   = max_global_values(1)
+  NGLOB_wmax                   = max_global_values(1)
   NSPEC_ATTENUATION_wmax       = max_global_values(2)
   NSPEC_STRAIN_wmax            = max_global_values(3)
   N_SLS_wmax                   = max_global_values(4)
@@ -99,7 +99,7 @@
 
   ! acoustic wavefields
   if (ACOUSTIC_SIMULATION) then
-    local_dim = nglob_wmax
+    local_dim = NGLOB_wmax
     call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
                                      STRINGIFY_VAR(potential_acoustic))
     call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
@@ -110,7 +110,7 @@
 
   ! elastic wavefields
   if (ELASTIC_SIMULATION) then
-    local_dim = NDIM * nglob_wmax
+    local_dim = NDIM * NGLOB_wmax
     call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
                                      STRINGIFY_VAR(displ))
     call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
@@ -150,7 +150,7 @@
 
   ! poroelastic wavefields
   if (POROELASTIC_SIMULATION) then
-    local_dim = NDIM * nglob_wmax
+    local_dim = NDIM * NGLOB_wmax
     call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
                                      STRINGIFY_VAR(displs_poroelastic))
     call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
@@ -188,7 +188,7 @@
   call write_adios_scalar(myadios_fwd_file,myadios_fwd_group, STRINGIFY_VAR(N_SLS))
 
   if (ACOUSTIC_SIMULATION) then
-    local_dim = nglob_wmax
+    local_dim = NGLOB_wmax
     call write_adios_global_1d_array(myadios_fwd_file,myadios_fwd_group, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(potential_acoustic))
     call write_adios_global_1d_array(myadios_fwd_file,myadios_fwd_group, myrank, sizeprocs, local_dim, &
@@ -197,7 +197,7 @@
                                      STRINGIFY_VAR(potential_dot_dot_acoustic))
   endif
   if (ELASTIC_SIMULATION) then
-    local_dim = NDIM * nglob_wmax
+    local_dim = NDIM * NGLOB_wmax
     call write_adios_global_1d_array(myadios_fwd_file,myadios_fwd_group, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(displ))
     call write_adios_global_1d_array(myadios_fwd_file,myadios_fwd_group, myrank, sizeprocs, local_dim, &
@@ -235,7 +235,7 @@
     endif
   endif
   if (POROELASTIC_SIMULATION) then
-    local_dim = NDIM * nglob_wmax
+    local_dim = NDIM * NGLOB_wmax
     call write_adios_global_1d_array(myadios_fwd_file,myadios_fwd_group, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(displs_poroelastic))
     call write_adios_global_1d_array(myadios_fwd_file,myadios_fwd_group, myrank, sizeprocs, local_dim, &
@@ -291,7 +291,7 @@
   logical :: do_open_file,do_close_file,do_init_group
 
   !--- Variables to allreduce - wmax stands for world_max
-  integer,save :: nglob_wmax, NSPEC_ATTENUATION_wmax, NSPEC_STRAIN_wmax, N_SLS_wmax
+  integer,save :: NGLOB_wmax, NSPEC_ATTENUATION_wmax, NSPEC_STRAIN_wmax, N_SLS_wmax
   integer, parameter :: num_vars = 4
   integer, dimension(num_vars) :: max_global_values
 
@@ -312,7 +312,7 @@
 
     call max_allreduce_i(max_global_values,num_vars)
 
-    nglob_wmax                   = max_global_values(1)
+    NGLOB_wmax                   = max_global_values(1)
     NSPEC_ATTENUATION_wmax       = max_global_values(2)
     NSPEC_STRAIN_wmax            = max_global_values(3)
     N_SLS_wmax                   = max_global_values(4)
@@ -386,7 +386,7 @@
       ! wavefields (displ/veloc/accel) for all domains
       ! acoustic wavefields
       if (ACOUSTIC_SIMULATION) then
-        local_dim = nglob_wmax
+        local_dim = NGLOB_wmax
         call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
                                          STRINGIFY_VAR(potential_acoustic))
         call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
@@ -397,7 +397,7 @@
 
       ! elastic wavefields
       if (ELASTIC_SIMULATION) then
-        local_dim = NDIM * nglob_wmax
+        local_dim = NDIM * NGLOB_wmax
         call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
                                          STRINGIFY_VAR(displ))
         call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
@@ -437,7 +437,7 @@
 
       ! poroelastic wavefields
       if (POROELASTIC_SIMULATION) then
-        local_dim = NDIM * nglob_wmax
+        local_dim = NDIM * NGLOB_wmax
         call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
                                          STRINGIFY_VAR(displs_poroelastic))
         call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
@@ -492,7 +492,7 @@
 
   ! write the previously defined variable to the ADIOS file
   if (ACOUSTIC_SIMULATION) then
-    local_dim = nglob_wmax
+    local_dim = NGLOB_wmax
     call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(potential_acoustic))
     call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
@@ -501,7 +501,7 @@
                                      STRINGIFY_VAR(potential_dot_dot_acoustic))
   endif
   if (ELASTIC_SIMULATION) then
-    local_dim = NDIM * nglob_wmax
+    local_dim = NDIM * NGLOB_wmax
     call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(displ))
     call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
@@ -539,7 +539,7 @@
     endif
   endif
   if (POROELASTIC_SIMULATION) then
-    local_dim = NDIM * nglob_wmax
+    local_dim = NDIM * NGLOB_wmax
     call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(displs_poroelastic))
     call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &

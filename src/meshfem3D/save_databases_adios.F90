@@ -811,7 +811,14 @@
 
   ! NOTE: Do not put any wmax variables, it will try to access too many values in the arrays.
   !       use actual array size instead for writing.
-  local_dim = NDIM * nglob
+  !local_dim = NDIM * nglob
+  !
+  ! this should not matter here for the xmeshfem3D mesher, as it partitions with equal size for all processes.
+  !print *,'debug: ',myrank,' nglob ',nglob,nglob_wmax
+  ! thus using nglob_max should be okay and preferred, as the local_dim will set local_dim/global_dim/offset infos in ADIOS file.
+  ! retrieving array data will use those local_dim values to calculate offsets for different rank slices.
+  local_dim = NDIM * nglob_wmax
+
   call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, &
                                    "nodes_coords", nodes_coords_ext_mesh)
   ! materials

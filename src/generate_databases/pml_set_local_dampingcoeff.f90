@@ -2037,8 +2037,6 @@
                                     K_store_x,K_store_y,K_store_z, &
                                     alpha_store_x,alpha_store_y,alpha_store_z, &
                                     is_CPML, CPML_to_spec, CPML_regions, nspec_cpml_tot, &
-                                    CPML_width_x,CPML_width_y,CPML_width_z, &
-                                    min_distance_between_CPML_parameter, &
                                     mask_ibool_interior_domain, &
                                     nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
                                     nglob_interface_PML_elastic,points_interface_PML_elastic
