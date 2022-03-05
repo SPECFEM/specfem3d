@@ -27,7 +27,7 @@
 
 ! for external mesh
 
-  subroutine save_arrays_solver_ext_mesh(nspec,ibool)
+  subroutine save_arrays_solver_ext_mesh()
 
   use constants, only: NGLLX,NGLLY,NGLLZ,IMAIN,IOUT,myrank
 
@@ -35,6 +35,9 @@
     APPROXIMATE_OCEAN_LOAD, SAVE_MESH_FILES, ANISOTROPY
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
+
+  ! global indices
+  use generate_databases_par, only: nspec => NSPEC_AB, ibool
 
   use generate_databases_par, only: &
     nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
@@ -63,15 +66,10 @@
 
   implicit none
 
-  integer,intent(in) :: nspec
-  ! mesh coordinates
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
-
   ! local parameters
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
   integer :: max_nibool_interfaces_ext_mesh
   integer :: nglob
-
   integer :: ier,i,itest
   character(len=MAX_STRING_LEN) :: filename
 
@@ -374,12 +372,17 @@
   close(IOUT)
 
   ! stores arrays in binary files
-  if (SAVE_MESH_FILES) call save_arrays_solver_files(nspec,ibool)
+  if (SAVE_MESH_FILES) then
+    call save_arrays_solver_files()
+  endif
 
   ! if SAVE_MESH_FILES is true then the files have already been saved, no need to save them again
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
-    call save_arrays_solver_injection_boundary(nspec,ibool)
+    call save_arrays_solver_injection_boundary()
   endif
+
+  ! synchronizes processes
+  call synchronize_all()
 
   ! cleanup
   if (allocated(ibool_interfaces_ext_mesh_dummy)) then
@@ -426,7 +429,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine save_arrays_solver_files(nspec,ibool)
+  subroutine save_arrays_solver_files()
 
 ! outputs binary files for single mesh parameters (for example vp, vs, rho, ..)
 
@@ -437,16 +440,15 @@
   use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
     NPROC
 
+  ! global indices
+  use generate_databases_par, only: nspec => NSPEC_AB, ibool
+
   ! MPI interfaces
   use generate_databases_par, only: nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,num_interfaces_ext_mesh
 
   use create_regions_mesh_ext_par
 
   implicit none
-
-  integer,intent(in) :: nspec
-  ! mesh coordinates
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: v_tmp
@@ -748,19 +750,18 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine save_arrays_solver_injection_boundary(nspec,ibool)
+  subroutine save_arrays_solver_injection_boundary()
 
-  use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT
-
-  use create_regions_mesh_ext_par
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
 
-  implicit none
+  ! global indices
+  use generate_databases_par, only: ibool
 
-  integer,intent(in) :: nspec
-  ! mesh coordinates
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
+  use create_regions_mesh_ext_par
+
+  implicit none
 
   ! local parameters
   integer :: ier,i,j,k

@@ -25,32 +25,25 @@
 !
 !=====================================================================
 
-  subroutine create_mass_matrices(nglob,nspec,ibool,PML_CONDITIONS,STACEY_ABSORBING_CONDITIONS)
+  subroutine create_mass_matrices(nglob)
 
 ! returns precomputed mass matrix in rmass array
 
   use constants, only: NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
 
-  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
+    PML_CONDITIONS, STACEY_ABSORBING_CONDITIONS
+
+  ! global indices
+  use generate_databases_par, only: nspec => NSPEC_AB, ibool
 
   use create_regions_mesh_ext_par
 
   implicit none
 
-! number of spectral elements in each block
-  integer :: nspec
-  integer :: nglob
+  integer,intent(in) :: nglob
 
-! arrays with the mesh global indices
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-
-! C-PML flag
-  logical :: PML_CONDITIONS
-
-! Stacey boundary condition flag
-  logical :: STACEY_ABSORBING_CONDITIONS
-
-! local parameters
+  ! local parameters
   double precision :: weight
   real(kind=CUSTOM_REAL) :: jacobianl
   integer :: ispec,ispec_irreg,i,j,k,iglob,ier
@@ -66,7 +59,7 @@
 
     ! returns elastic mass matrix
     if (PML_CONDITIONS) then
-      call create_mass_matrices_pml_elastic(nspec,ibool)
+      call create_mass_matrices_pml_elastic()
     else
       do ispec = 1,nspec
         if (ispec_is_elastic(ispec)) then
@@ -100,7 +93,7 @@
 
     ! returns acoustic mass matrix
     if (PML_CONDITIONS) then
-      call create_mass_matrices_pml_acoustic(nspec,ibool)
+      call create_mass_matrices_pml_acoustic()
     else
       do ispec = 1,nspec
         if (ispec_is_acoustic(ispec)) then
@@ -173,10 +166,10 @@
   endif
 
   ! Stacey absorbing conditions (adds C*deltat/2 contribution to the mass matrices on Stacey edges)
-  if (STACEY_ABSORBING_CONDITIONS) call create_mass_matrices_Stacey(nglob,nspec,ibool)
+  if (STACEY_ABSORBING_CONDITIONS) call create_mass_matrices_Stacey(nglob)
 
   ! ocean load mass matrix
-  call create_mass_matrices_ocean_load(nglob,nspec,ibool)
+  call create_mass_matrices_ocean_load(nglob)
 
   end subroutine create_mass_matrices
 
@@ -184,26 +177,25 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine create_mass_matrices_ocean_load(nglob,nspec,ibool)
+  subroutine create_mass_matrices_ocean_load(nglob)
 
 ! returns precomputed mass matrix in rmass array
 
-  use generate_databases_par, only: &
-    APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY, &
-    NX_TOPO,NY_TOPO,itopo_bathy,myrank, &
-    NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,NGLLSQUARE,IMAIN, &
+  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,NGLLSQUARE,IMAIN, &
     MINIMUM_THICKNESS_3D_OCEANS,RHO_APPROXIMATE_OCEAN_LOAD
+
+  use shared_parameters, only: APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY
+
+  use generate_databases_par, only: NX_TOPO,NY_TOPO,itopo_bathy
+
+  ! global indices
+  use generate_databases_par, only: ibool
 
   use create_regions_mesh_ext_par
 
   implicit none
 
-  ! number of spectral elements in each block
-  integer :: nspec
-  integer :: nglob
-
-  ! arrays with the mesh global indices
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer,intent(in) :: nglob
 
   ! local parameters
   double precision :: weight
@@ -303,23 +295,24 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine create_mass_matrices_Stacey(nglob,nspec,ibool)
+  subroutine create_mass_matrices_Stacey(nglob)
 
 ! in the case of Stacey boundary conditions, add C*deltat/2 contribution to the mass matrix
 ! on Stacey edges for the crust_mantle and outer_core regions but not for the inner_core region
 ! thus the mass matrix must be replaced by three mass matrices including the "C" damping matrix
 
-  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION
+  use constants, only: NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,NGLLSQUARE
 
-  use generate_databases_par, only: DT,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,NGLLSQUARE
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, DT
+
+  ! global indices
+  use generate_databases_par, only: ibool
 
   use create_regions_mesh_ext_par
 
   implicit none
 
-  integer :: nglob
-  integer :: nspec
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer,intent(in) :: nglob
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: jacobianw
@@ -426,9 +419,15 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine create_mass_matrices_pml_elastic(nspec,ibool)
+  subroutine create_mass_matrices_pml_elastic()
 
-  use generate_databases_par, only: DT,is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
+  use shared_parameters, only: DT
+
+  ! global indices
+  use generate_databases_par, only: nspec => NSPEC_AB, ibool
+
+  ! PML
+  use generate_databases_par, only: is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
     K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec, &
     NGLLX,NGLLY,NGLLZ,CUSTOM_REAL, &
     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
@@ -438,9 +437,6 @@
                                          irregular_element_number,jacobian_regular
 
   implicit none
-
-  integer, intent(in) :: nspec
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec), intent(in) :: ibool
 
   ! local parameters
   double precision :: weight
@@ -648,9 +644,15 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine create_mass_matrices_pml_acoustic(nspec,ibool)
+  subroutine create_mass_matrices_pml_acoustic()
 
-  use generate_databases_par, only: DT,is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
+  use shared_parameters, only: DT
+
+  ! global indices
+  use generate_databases_par, only: nspec => NSPEC_AB, ibool
+
+  ! PML
+  use generate_databases_par, only: is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
     K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec, &
     NGLLX,NGLLY,NGLLZ,CUSTOM_REAL, &
     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
@@ -660,9 +662,6 @@
                                          irregular_element_number,jacobian_regular
 
   implicit none
-
-  integer, intent(in) :: nspec
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec), intent(in) :: ibool
 
   ! local parameters
   double precision :: weight
