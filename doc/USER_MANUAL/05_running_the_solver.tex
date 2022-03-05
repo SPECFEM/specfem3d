@@ -369,6 +369,9 @@ file. There is no need to rerun the \texttt{xgenerate\_databases}
 executable. Of course it is best to include as many stations as possible,
 since this does not add to the cost of the simulation.
 
+
+\section{Note on the simultaneous simulation of several earthquakes}
+
 We have also added the ability to run several calculations (several earthquakes)
 in an embarrassingly-parallel fashion from within the same run;
 this can be useful when using a very large supercomputer to compute
@@ -376,17 +379,54 @@ many earthquakes in a catalog, in which case it can be better from
 a batch job submission point of view to start fewer and much larger jobs,
 each of them computing several earthquakes in parallel.
 To turn that option on, set parameter \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS}
-to a value greater than 1 in file setup/constants.h.in before
-configuring and compiling the code.
+to a value greater than 1 in file \texttt{DATA/Par\_file}.
+
+
 When that option is on, of course the number of processor cores used to start
 the code in the batch system must be a multiple of \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS},
 all the individual runs must use the same number of processor cores,
 which as usual is \texttt{NPROC} in the input file \texttt{DATA/Par\_file},
 and thus the total number of processor cores to request from the batch system
 should be \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS $\times$ NPROC}.
-All the runs to perform must be placed in directories called \texttt{run0001}, \texttt{run0002}, \texttt{run0003} and so on (with exactly four digits)
-and you must create a link from the root directory of the code
-to the first copy of the executable programs by typing \texttt{ln -s run0001/bin bin}.
+
+
+\begin{figure}[H]
+\begin{centering}
+\includegraphics[width=2.2in]{figures/simultaneous_dir_struct.pdf}
+\par\end{centering}
+%
+\caption{
+Directory structure when simulating several earthquakes at once.
+To improve readability, only directories have been drawn.}
+\label{fig:simultaneous_dir_struct}
+\end{figure}
+
+Figure~\ref{fig:simultaneous_dir_struct} shows what the directory structure
+should looks like when simulating multiple earthquakes at ones.
+All the runs to perform must be placed in directories called \texttt{run0001}, \texttt{run0002}, \texttt{run0003} and so on (with exactly four digits).
+
+\begin{itemize}
+\item The simulation is launched within the root directory \texttt{EXAMPLE\_ROOT\_DIR}\\
+(usually \texttt{mpirun -np N ./bin/xspecfem3D}).
+\item \texttt{DATA} should contain the \texttt{Par\_file} parameter file with
+\texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS} as explained in Chapter~\ref{cha:Creating-Distributed-Databases}.
+\item \texttt{DATABASES\_MPI} and {OUTPUT\_FILES} directory may contain the mesher output but they
+are not required as they are superseded by the ones in the \texttt{runXXX} directories.
+\item \texttt{runXXXX} directories must be created beforehand. There should be be as many as
+\texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS} and the numbering should be contiguous, starting from \texttt{0001}.
+They all should have \texttt{DATA},
+\texttt{DATABASES\_MPI} and \texttt{OUTPUT\_FILES} directories. Additionally a \texttt{SEM} directory
+containing adjoint sources have to be created to perform adjoint simulations.
+\item \texttt{runXXXX/DATA} directories must all contain a \texttt{CMTSOLUTION} file,
+a \texttt{STATIONS} file along with an eventual \texttt{STATIONS\_ADJOINT} file.
+\item If \texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL} is set to \texttt{.true.} in \texttt{DATA/Par\_file},
+only \texttt{run0001/OUTPUT\_FILES} and \texttt{run0001/DATABASES\_MPI} directories need to contain the files
+outputted by the mesher.
+\item If \texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL} is set to \texttt{.false.} in \texttt{DATA/Par\_file},
+every \texttt{runXXXX/OUTPUT\_FILES} and \texttt{runXXXX/DATABASES\_MPI} directories need to contain the files
+outputted by the mesher. Note that while the meshes might have been created from different models and
+parameter sets, they should have been created using the same number of MPI processes.
+\end{itemize}
 
 
 \section{Note on the viscoelastic model used}
