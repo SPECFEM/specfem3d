@@ -60,57 +60,6 @@ module manager_adios
   logical, public :: is_adios_version1
   logical, public :: is_adios_version2
 
-  ! for undo_att snapshots
-  ! use only one file for all steps or a single file per iteration step
-  logical, parameter, public :: ADIOS_SAVE_ALL_SNAPSHOTS_IN_ONE_FILE = .true.
-
-  ! type selection to use compression operation before saving undo_att forward snapshot arrays
-  ! compression algorithm: 0 == none / 1 == ZFP compression / 2 == SZ compression (needs to be supported by ADIOS2 library)
-  integer, parameter, public :: ADIOS_COMPRESSION_ALGORITHM = 0     ! (default none)
-
-  ! ZFP compression
-  ! mode options: see https://zfp.readthedocs.io/en/release0.5.5/modes.html
-  ! parameters: 'rate'      w/ value '8'    - fixed-rate mode: choose values between ~8-20, higher for better accuracy
-  !             'accuracy'  w/ value '0.01' - fixed-accuracy mode: choose smaller value for better accuracy
-  !             'precision' w/ value '10'   - fixed-precision mode: choose between ~10-50, higher for better accuracy
-  !                                           (https://www.osti.gov/pages/servlets/purl/1572236)
-  !
-  ! test setup: global simulation (s362ani model), NEX=160, ADIOS 2.5.0
-  !             duration 30 min, 9 snapshot files (w/ estimated total size 117.6 GB)
-  ! - {'rate','8'} leads to a rather constant compression by using (8+1)-bit representation for 4 32-bit floats
-  !     compression rate factor: ~3.98x (123474736 Bytes / 30998320 Bytes ~ 118 GB / 30GB)
-  !                              betav_kl_crust_mantle total norm of difference :   2.6486799E-22
-  ! - {'rate','12'} has better accuracy (leading to small wavefield perturbations)
-  !     compression rate factor: ~2.65x (123474736 Bytes / 46423124 Bytes ~ 118 GB / 45GB)
-  !                              betav_kl_crust_mantle total norm of difference :   4.3890730E-24
-  ! - {'precision','10'} leads to a more variable compression for wavefields depending on their dynamic range
-  !     compression rate factor: ~4.05x (123474736 Bytes / 30460388 Bytes ~ 118 GB / 30 GB)
-  !                              betav_kl_crust_mantle total norm of difference :   5.3706092E-24
-  ! - {'precision','12'} has better accuracy (leading to small wavefield perturbations)
-  !     compression rate factor: ~3.43x (123474736 Bytes / 35972672 Bytes ~ 118 GB / 35GB)
-  !                              betav_kl_crust_mantle total norm of difference :   1.9846376E-25
-  ! - {'precision','20'} has good accuracy (almost identical reconstructed waveforms)
-  !     compression rate factor: ~2.12x (123474736 Bytes / 58020080 Bytes ~ 118 GB / 56 GB)
-  !                              betav_kl_crust_mantle total norm of difference :   2.5939579E-30
-  !
-  ! performance overhead for compressing/decompressing is negligible in all cases
-  ! (a few seconds, compared to minutes for the total simulaton)
-  !
-  ! a default setting of {'precision','12'} seems a good compromise between accuracy and compression rate
-  character(len=*), parameter, public :: ADIOS_COMPRESSION_MODE = 'precision'     ! 'precision','rate'
-  character(len=*), parameter, public :: ADIOS_COMPRESSION_MODE_VALUE = '12'      ! '8','12,'20'
-
-  ! SZ compression
-  ! parameters: 'accuracy', value '0.0000000001' = 1.e-10
-  !             leaving empty '','' chooses automatic setting? to check...
-  !character(len=*), parameter, public :: ADIOS_COMPRESSION_MODE = ''
-  !character(len=*), parameter, public :: ADIOS_COMPRESSION_MODE_VALUE = ''
-
-  ! LZ4 compression (lossless)
-  ! parameters: level 'lvl=9' and 'threshold=4096' 4K-bytes
-  !character(len=*), parameter, public :: ADIOS_COMPRESSION_MODE = 'lvl'
-  !character(len=*), parameter, public :: ADIOS_COMPRESSION_MODE_VALUE = '9,threshold=4096'
-
   ! compression flag
   logical, public :: use_adios_compression
 
