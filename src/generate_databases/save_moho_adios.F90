@@ -56,22 +56,13 @@
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nspec_wmax, nspec2d_moho_wmax
 
-  integer, parameter :: num_vars = 2
-  integer, dimension(num_vars) :: max_global_values
-
   !-----------------------------------------------------------------.
   ! Get maximum value for each variable used to define a local_dim. |
   ! ADIOS write equally sized chunks for each processor.            |
   !-----------------------------------------------------------------'
-  ! Filling a temporary array to avoid doing allreduces for each var.
-  max_global_values(1) = NSPEC_AB
-  max_global_values(2) = nspec2d_moho
-
-  ! calling wrapper instead to compile without mpi
-  call max_allreduce_i(max_global_values,num_vars)
-
-  NSPEC_wmax        = max_global_values(1)
-  nspec2d_moho_wmax = max_global_values(2)
+  ! determines maximum values for nspec over all partition slices
+  call max_allreduce_singlei(NSPEC_AB,NSPEC_wmax)
+  call max_allreduce_singlei(nspec2d_moho,nspec2d_moho_wmax)
 
   !-----------------------------------.
   ! Setup ADIOS for the current group |

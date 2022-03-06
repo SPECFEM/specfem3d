@@ -996,7 +996,7 @@ contains
 
   ! We set the transport method to 'MPI'. This seems to be the correct choice
   ! for now. We might want to move this to the constant.h file later on.
-  call adios_select_method(adios_group, ADIOS_TRANSPORT_METHOD, '', '', ier)
+  call adios_select_method(adios_group, ADIOS_TRANSPORT_METHOD, ADIOS_METHOD_PARAMS, '', ier)
   ! note: return codes for this function have been fixed for ADIOS versions >= 1.6
   call check_adios_err(ier,"Error select method")
 

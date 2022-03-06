@@ -780,6 +780,21 @@
 !----
 !
 
+  subroutine max_allreduce_singlei(val,recvval)
+
+  implicit none
+
+  integer,intent(in) :: val
+  integer,intent(out) :: recvval
+
+  recvval = val
+
+  end subroutine max_allreduce_singlei
+
+!
+!----
+!
+
   subroutine max_all_all_cr(sendbuf, recvbuf)
 
   use constants, only: CUSTOM_REAL

@@ -363,6 +363,8 @@
     if (nundefMat_ext_mesh > NUNDEFMAT_MAX) stop 'Error number of undefined materials exceeds maximum NUNDEFMAT_MAX'
     ! note: arrays not working yet for strings, uses "local" variable
     local_dim = 6 * nundefMat_ext_mesh * MAX_STRING_LEN
+    start(1) = local_dim * myrank
+    count(1) = local_dim
     sel_num = sel_num+1
     sel => selections(sel_num)
     call set_selection_boundingbox(sel, start, count)

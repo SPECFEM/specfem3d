@@ -18,15 +18,19 @@
   character(len=*) :: array_name
   ! Variables
   integer :: adios_err
+  integer(kind=8) :: array_size
 
   TRACE_ADIOS_L2_ARG('write_adios_global_1d adios_helpers_writers_1d_generic_offset: ',trim(array_name))
 
   ! checks name
   if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in adios_helpers_writers_1d_generic_offset'
 
+  ! gets array size
+  array_size = size(array,kind=8)
+
   ! adds local_dim/global_dim/offset infos
   call write_1D_global_array_adios_dims_offset(adios_handle, adios_group, myrank, &
-                                               local_dim, global_dim, offset, sizeprocs, array_name)
+                                               local_dim, global_dim, offset, sizeprocs, array_name, array_size)
 
 #if defined(USE_ADIOS)
   ! ADIOS 1

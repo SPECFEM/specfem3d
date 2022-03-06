@@ -57,11 +57,9 @@
 
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nspec_wmax
-  integer, parameter :: num_vars = 1
-  integer, dimension(num_vars) :: max_global_values
 
-  ! Type inference for define_adios_global_array1D. Avoid additional args.
-  real(kind=CUSTOM_REAL), dimension(1,1,1,1) :: dummy_kernel
+  ! Type inference for define_adios_global_array1D. Avoid additional args. (requires actual size of kernel arrays)
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: dummy_kernel
 
   ! initializes
   output_name = get_adios_filename(trim(LOCAL_PATH) // "/kernels")
@@ -73,9 +71,7 @@
   call init_adios_group(myadios_group,group_name)
 
   ! determines maximum values for nspec over all partition slices
-  max_global_values(1) = NSPEC_AB
-  call max_allreduce_i(max_global_values,num_vars)
-  nspec_wmax = max_global_values(1)
+  call max_allreduce_singlei(NSPEC_AB,nspec_wmax)
 
   ! defines variable entries
   call define_adios_scalar(myadios_group, group_size_inc, '', "nspec", NSPEC_AB)
@@ -221,9 +217,13 @@
   ! Parameters
   ! local parameters
   integer(kind=8) :: local_dim
+  !--- Variables to allreduce - wmax stands for world_max
+  integer :: nspec_wmax
 
-  ! note: for ADIOS, we might still need the global maximum value of nspec in case partition slices have different sizes
-  local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_AB
+  ! determines maximum values for nspec over all partition slices
+  call max_allreduce_singlei(NSPEC_AB,nspec_wmax)
+
+  local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
 
   call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rho_ac_kl))
   call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(kappa_ac_kl))
@@ -249,14 +249,18 @@
   ! Parameters
   ! local parameters
   integer(kind=8) :: local_dim
+  !--- Variables to allreduce - wmax stands for world_max
+  integer :: nspec_wmax
 
   ! Transverse isotropic paramters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
     alphav_kl,alphah_kl,betav_kl,betah_kl, &
     eta_kl, rhop_kl, alpha_kl, beta_kl
 
-  ! note: for ADIOS, we might still need the global maximum value of nspec in case partition slices have different sizes
-  local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_AB
+  ! determines maximum values for nspec over all partition slices
+  call max_allreduce_singlei(NSPEC_AB,nspec_wmax)
+
+  local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
 
   if (ANISOTROPIC_KL) then
     ! outputs transverse isotropic kernels only
@@ -308,9 +312,13 @@
   ! Parameters
   ! local parameters
   integer(kind=8) :: local_dim
+  !--- Variables to allreduce - wmax stands for world_max
+  integer :: nspec_wmax
 
-  ! note: for ADIOS, we might still need the global maximum value of nspec in case partition slices have different sizes
-  local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_AB
+  ! determines maximum values for nspec over all partition slices
+  call max_allreduce_singlei(NSPEC_AB,nspec_wmax)
+
+  local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
 
   ! primary kernels
   call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rhot_kl))
@@ -357,9 +365,13 @@
 
   ! Parameters
   integer(kind=8) :: local_dim
+  !--- Variables to allreduce - wmax stands for world_max
+  integer :: nspec_wmax
 
-  ! note: for ADIOS, we might still need the global maximum value of nspec in case partition slices have different sizes
-  local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_AB
+  ! determines maximum values for nspec over all partition slices
+  call max_allreduce_singlei(NSPEC_AB,nspec_wmax)
+
+  local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
 
   ! acoustic domains
   if (ACOUSTIC_SIMULATION) then

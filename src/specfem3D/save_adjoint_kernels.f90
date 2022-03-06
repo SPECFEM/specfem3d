@@ -228,6 +228,7 @@
   ! local parameters
   integer:: ispec,i,j,k,ier
   real(kind=CUSTOM_REAL) :: kappa_invl,rho_invl
+  real(kind=CUSTOM_REAL) :: rho_ac_max,rhop_ac_max,kappa_ac_max,alpha_ac_max
 
   ! note: from Luo et al. (2013), kernels are given for absolute perturbations d(1/rho) and d(1/kappa)
   !       and only change from Peter et al. (2011) for acoustic kernels:
@@ -285,14 +286,20 @@
     endif ! acoustic
   enddo
 
+  ! overall min/max value
+  call max_all_cr(maxval(rho_ac_kl),rho_ac_max)
+  call max_all_cr(maxval(rhop_ac_kl),rhop_ac_max)
+  call max_all_cr(maxval(kappa_ac_kl),kappa_ac_max)
+  call max_all_cr(maxval(alpha_ac_kl),alpha_ac_max)
+
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) 'Acoustic kernels:'
-    write(IMAIN,*) '  maximum value of rho kernel       = ',maxval(rho_ac_kl)
-    write(IMAIN,*) '  maximum value of kappa kernel     = ',maxval(kappa_ac_kl)
+    write(IMAIN,*) '  maximum value of rho kernel       = ',rho_ac_max
+    write(IMAIN,*) '  maximum value of kappa kernel     = ',kappa_ac_max
     write(IMAIN,*)
-    write(IMAIN,*) '  maximum value of rho prime kernel = ',maxval(rhop_ac_kl)
-    write(IMAIN,*) '  maximum value of alpha kernel     = ',maxval(alpha_ac_kl)
+    write(IMAIN,*) '  maximum value of rho prime kernel = ',rhop_ac_max
+    write(IMAIN,*) '  maximum value of alpha kernel     = ',alpha_ac_max
     write(IMAIN,*)
     call flush_IMAIN()
   endif
@@ -371,6 +378,10 @@
   real(kind=CUSTOM_REAL) :: A,N,C,L,F,eta
   real(kind=CUSTOM_REAL), dimension(21) :: cijkl_kl_local
   real(kind=CUSTOM_REAL), dimension(5) :: an_kl
+
+  ! stats
+  real(kind=CUSTOM_REAL) :: rho_max,rhop_max,kappa_max,mu_max,alpha_max,beta_max,moho_max
+  real(kind=CUSTOM_REAL) :: alphav_max,alphah_max,betav_max,betah_max,eta_max,cijkl_max
 
   ! finalizes calculation of rhop, beta, alpha kernels
   do ispec = 1, NSPEC_AB
@@ -482,33 +493,56 @@
 
   enddo
 
+  ! overall min/max value
+  call max_all_cr(maxval(rho_kl),rho_max)
+  if (ANISOTROPIC_KL) then
+    if (SAVE_TRANSVERSE_KL) then
+      call max_all_cr(maxval(alphav_kl),alphav_max)
+      call max_all_cr(maxval(alphah_kl),alphah_max)
+      call max_all_cr(maxval(betav_kl),betav_max)
+      call max_all_cr(maxval(betah_kl),betah_max)
+      call max_all_cr(maxval(eta_kl),eta_max)
+    else
+      call max_all_cr(maxval(-cijkl_kl),cijkl_max)
+    endif
+  else
+    call max_all_cr(maxval(rhop_kl),rhop_max)
+    call max_all_cr(maxval(kappa_kl),kappa_max)
+    call max_all_cr(maxval(mu_kl),mu_max)
+    call max_all_cr(maxval(alpha_kl),alpha_max)
+    call max_all_cr(maxval(beta_kl),beta_max)
+  endif
+  if (SAVE_MOHO_MESH) then
+    call max_all_cr(maxval(moho_kl),moho_max)
+  endif
+
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) 'Elastic kernels:'
-    write(IMAIN,*) '  maximum value of rho  kernel      = ',maxval(rho_kl)
+    write(IMAIN,*) '  maximum value of rho  kernel      = ',rho_max
     if (ANISOTROPIC_KL) then
       if (SAVE_TRANSVERSE_KL) then
         ! tranverse isotropic
-        write(IMAIN,*) '  maximum value of alphav kernel     = ',maxval(alphav_kl)
-        write(IMAIN,*) '  maximum value of alphah kernel     = ',maxval(alphah_kl)
-        write(IMAIN,*) '  maximum value of betav kernel      = ',maxval(betav_kl)
-        write(IMAIN,*) '  maximum value of betah kernel      = ',maxval(betah_kl)
-        write(IMAIN,*) '  maximum value of eta kernel        = ',maxval(eta_kl)
+        write(IMAIN,*) '  maximum value of alphav kernel     = ',alphav_max
+        write(IMAIN,*) '  maximum value of alphah kernel     = ',alphah_max
+        write(IMAIN,*) '  maximum value of betav kernel      = ',betav_max
+        write(IMAIN,*) '  maximum value of betah kernel      = ',betah_max
+        write(IMAIN,*) '  maximum value of eta kernel        = ',eta_max
       else
         ! fully anisotropic
-        write(IMAIN,*) '  maximum value of cijkl kernel     = ',maxval(-cijkl_kl)
+        write(IMAIN,*) '  maximum value of cijkl kernel     = ',cijkl_max
       endif
     else
       ! isotropic
-      write(IMAIN,*) '  maximum value of kappa kernel     = ',maxval(kappa_kl)
-      write(IMAIN,*) '  maximum value of mu kernel        = ',maxval(mu_kl)
+      write(IMAIN,*) '  maximum value of kappa kernel     = ',kappa_max
+      write(IMAIN,*) '  maximum value of mu kernel        = ',mu_max
       write(IMAIN,*)
-      write(IMAIN,*) '  maximum value of rho prime kernel = ',maxval(rhop_kl)
-      write(IMAIN,*) '  maximum value of alpha kernel     = ',maxval(alpha_kl)
-      write(IMAIN,*) '  maximum value of beta kernel      = ',maxval(beta_kl)
+      write(IMAIN,*) '  maximum value of rho prime kernel = ',rhop_max
+      write(IMAIN,*) '  maximum value of alpha kernel     = ',alpha_max
+      write(IMAIN,*) '  maximum value of beta kernel      = ',beta_max
     endif
     if (SAVE_MOHO_MESH) then
-      write(IMAIN,*) '  maximum value of moho kernel      = ',maxval(moho_kl)
+      write(IMAIN,*) '  maximum value of moho kernel      = ',moho_max
     endif
     write(IMAIN,*)
     call flush_IMAIN()

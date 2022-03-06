@@ -539,7 +539,7 @@ contains
 !
 !===============================================================================
 
-  subroutine write_1D_global_array_adios_dims(adios_handle, adios_group, myrank, local_dim, sizeprocs, path)
+  subroutine write_1D_global_array_adios_dims(adios_handle, adios_group, myrank, local_dim, sizeprocs, path, array_size)
 
   implicit none
 
@@ -554,6 +554,7 @@ contains
   integer, intent(in) :: sizeprocs, myrank
   integer(kind=8), intent(in) :: local_dim
   character(len=*), intent(in) :: path
+  integer(kind=8), intent(in) :: array_size
 
   integer :: adios_err
   integer(kind=8) :: offset
@@ -578,6 +579,9 @@ contains
 
   call adios_write(adios_handle, trim(path) // "/offset", offset, adios_err)
   call check_adios_err(adios_err,"Error writing "//trim(path) // "/offset")
+
+  call adios_write(adios_handle, trim(path) // "/size", array_size, adios_err)
+  call check_adios_err(adios_err,"Error writing "//trim(path) // "/size")
 
   ! to avoid compiler warning
   offset = adios_group
@@ -621,6 +625,14 @@ contains
 
   call adios2_put(adios_handle, v, offset, adios_err)
   call check_adios_err(adios_err,"Error adios could not write parameter: "//trim(path) // "/offset")
+
+  ! size
+  call adios2_inquire_variable(v, adios_group, trim(path) // "/size", adios_err)
+  call check_adios_err(adios_err,"Error adios2 write global dims: inquire variable "//trim(path) // "/size"//" failed")
+  if (.not. v%valid) stop 'Error adios2 variable invalid'
+
+  call adios2_put(adios_handle, v, array_size, adios_err)
+  call check_adios_err(adios_err,"Error adios could not write parameter: "//trim(path) // "/size")
 
   ! sync write
   call adios2_perform_puts(adios_handle, adios_err)
@@ -1145,6 +1157,7 @@ contains
   character(len=*) :: array_name
   ! Variables
   integer :: adios_err
+  integer(kind=8) :: array_size
 
   TRACE_ADIOS_L2_ARG('write_adios_global_1d_logical_1d: ',trim(array_name))
 
@@ -1155,8 +1168,11 @@ contains
   ! checks name
   if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in adios_helpers_writers_1d_generic'
 
+  ! gets array size
+  array_size = size(array,kind=8)
+
   ! adds local_dim/global_dim/offset infos
-  call write_1D_global_array_adios_dims(adios_handle, adios_group, myrank, local_dim, sizeprocs, array_name)
+  call write_1D_global_array_adios_dims(adios_handle, adios_group, myrank, local_dim, sizeprocs, array_name, array_size)
 
 #if defined(USE_ADIOS)
   ! ADIOS 1
@@ -1278,7 +1294,8 @@ contains
 
 !===============================================================================
 
-  subroutine write_1D_string_array_adios_dims(adios_handle, adios_group, myrank, local_dim, global_dim, offset, sizeprocs, path)
+  subroutine write_1D_string_array_adios_dims(adios_handle, adios_group, myrank, local_dim, global_dim, offset, sizeprocs, &
+                                              path, array_size)
 
   implicit none
 
@@ -1295,6 +1312,7 @@ contains
   integer(kind=8), intent(in) :: local_dim
   integer(kind=8), intent(in) :: global_dim, offset
   character(len=*), intent(in) :: path
+  integer(kind=8), intent(in) :: array_size
 
   integer :: adios_err
   integer :: idummy
@@ -1311,6 +1329,9 @@ contains
 
   call adios_write(adios_handle, trim(path)// "/offset", offset, adios_err)
   call check_adios_err(adios_err,"Error writing "//trim(path) // "/offset")
+
+  call adios_write(adios_handle, trim(path)// "/size", array_size, adios_err)
+  call check_adios_err(adios_err,"Error writing "//trim(path) // "/size")
 
   ! to avoid compiler warning
   idummy = adios_group
@@ -1343,6 +1364,14 @@ contains
 
   call adios2_put(adios_handle, v, offset, adios_err)
   call check_adios_err(adios_err,"Error adios could not write parameter: "//trim(path) // "/offset")
+
+  ! size
+  call adios2_inquire_variable(v, adios_group, trim(path) // "/size", adios_err)
+  call check_adios_err(adios_err,"Error adios2 write string dims: inquire variable "//trim(path) // "/size"//" failed")
+  if (.not. v%valid) stop 'Error adios2 variable invalid'
+
+  call adios2_put(adios_handle, v, array_size, adios_err)
+  call check_adios_err(adios_err,"Error adios could not write parameter: "//trim(path) // "/size")
 
   ! sync write
   call adios2_perform_puts(adios_handle, adios_err)
@@ -1381,6 +1410,7 @@ contains
   character(len=*), intent(in) :: array
   ! Variables
   integer :: adios_err
+  integer(kind=8) :: array_size
 
   TRACE_ADIOS_L2_ARG('write_adios_global_1d_string_1d: ',trim(array_name))
 
@@ -1391,8 +1421,12 @@ contains
   ! checks name
   if (len_trim(array_name) == 0) stop 'Error: array_name has zero length in write_adios_global_1d_string_1d()'
 
+  ! gets size
+  array_size = len(array)
+
   ! adds local_dim/global_dim/offset infos
-  call write_1D_string_array_adios_dims(adios_handle, adios_group, myrank, local_dim, global_dim, offset, sizeprocs, array_name)
+  call write_1D_string_array_adios_dims(adios_handle, adios_group, myrank, local_dim, global_dim, offset, sizeprocs, &
+                                        array_name, array_size)
 
 #if defined(USE_ADIOS)
   ! ADIOS 1
@@ -1423,7 +1457,7 @@ contains
 !
 !===============================================================================
   subroutine write_1D_global_array_adios_dims_offset(adios_handle, adios_group, myrank, &
-                                                     local_dim, global_dim, offset, sizeprocs, path)
+                                                     local_dim, global_dim, offset, sizeprocs, path, array_size)
 
   implicit none
 
@@ -1439,6 +1473,7 @@ contains
   integer(kind=8), intent(in) :: local_dim
   integer(kind=8), intent(in) :: global_dim, offset
   character(len=*), intent(in) :: path
+  integer(kind=8), intent(in) :: array_size
 
   ! local parameters
   integer :: adios_err
@@ -1456,6 +1491,9 @@ contains
 
   call adios_write(adios_handle, trim(path)// "/offset", offset, adios_err)
   call check_adios_err(adios_err,"Error writing "//trim(path) // "/offset")
+
+  call adios_write(adios_handle, trim(path)// "/size", array_size, adios_err)
+  call check_adios_err(adios_err,"Error writing "//trim(path) // "/size")
 
   ! to avoid compiler warning
   idummy = adios_group
@@ -1488,6 +1526,14 @@ contains
 
   call adios2_put(adios_handle, v, offset, adios_err)
   call check_adios_err(adios_err,"Error adios could not write parameter: "//trim(path) // "/offset")
+
+  ! size
+  call adios2_inquire_variable(v, adios_group, trim(path) // "/size", adios_err)
+  call check_adios_err(adios_err,"Error adios2 write dims offset: inquire variable "//trim(path) // "/size"//" failed")
+  if (.not. v%valid) stop 'Error adios2 variable invalid'
+
+  call adios2_put(adios_handle, v, array_size, adios_err)
+  call check_adios_err(adios_err,"Error adios could not write parameter: "//trim(path) // "/size")
 
   ! sync write
   call adios2_perform_puts(adios_handle, adios_err)

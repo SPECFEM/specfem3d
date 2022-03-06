@@ -859,14 +859,14 @@ end module user_noise_distribution
   real(kind=CUSTOM_REAL), dimension(NDIM,nglob),intent(in) :: displ
   real(kind=CUSTOM_REAL), dimension(nmovie_points),intent(in) :: normal_x_noise,normal_y_noise,normal_z_noise
 
+  integer,intent(in) :: num_free_surface_faces
+  integer, dimension(num_free_surface_faces),intent(in) :: free_surface_ispec
+  integer, dimension(3,NGLLSQUARE,num_free_surface_faces),intent(in) :: free_surface_ijk
+
   ! note: at the moment, we still use file i/o to read back noise_surface_movie array - consider buffering in future...
   !       here, the array is passed as an argument to allow for such a buffering method in future,
   !       but it is not used at the moment, and the array is locally read in from file i/o when needed.
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLSQUARE,num_free_surface_faces) :: noise_surface_movie
-
-  integer,intent(in) :: num_free_surface_faces
-  integer, dimension(num_free_surface_faces),intent(in) :: free_surface_ispec
-  integer, dimension(3,NGLLSQUARE,num_free_surface_faces),intent(in) :: free_surface_ijk
 
   ! output parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(inout) :: sigma_kl

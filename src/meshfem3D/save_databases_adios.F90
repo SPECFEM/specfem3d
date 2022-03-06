@@ -121,8 +121,9 @@
              nspec2d_xmin_wmax, nspec2d_xmax_wmax, &
              nspec2d_ymin_wmax, nspec2d_ymax_wmax, &
              nspec2d_bottom_wmax, nspec2d_top_wmax, &
-             nb_interfaces_wmax, nspec_interfaces_max_wmax
-  integer, parameter :: num_vars = 11
+             nb_interfaces_wmax, nspec_interfaces_max_wmax, &
+             nspec_CPML_wmax
+  integer, parameter :: num_vars = 12
   integer, dimension(num_vars) :: max_global_values
 
   !--- Temporary arrays for writes
@@ -633,6 +634,7 @@
   max_global_values(9) = nspec2d_top
   max_global_values(10) = nb_interfaces
   max_global_values(11) = nspec_interfaces_max
+  max_global_values(12) = nspec_CPML
 
   call max_allreduce_i(max_global_values,num_vars)
 
@@ -647,6 +649,7 @@
   nspec2d_top_wmax    = max_global_values(9)
   nb_interfaces_wmax  = max_global_values(10)
   nspec_interfaces_max_wmax = max_global_values(11)
+  nspec_CPML_wmax     = max_global_values(12)
 
   !-----------------------------------.
   ! Setup ADIOS for the current group |
@@ -752,10 +755,10 @@
   call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', STRINGIFY_VAR(nodes_ibelm_top))
 
   if (nspec_CPML_total > 0) then
-     local_dim = nspec_CPML
+     local_dim = nspec_CPML_wmax
      call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', STRINGIFY_VAR(CPML_to_spec))
      call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', STRINGIFY_VAR(CPML_regions))
-     local_dim = nspec
+     local_dim = nspec_wmax
      call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', STRINGIFY_VAR(is_CPML))
   endif
 
@@ -809,14 +812,8 @@
   call write_adios_scalar(myadios_file, myadios_group, STRINGIFY_VAR(nb_interfaces))
   call write_adios_scalar(myadios_file, myadios_group, STRINGIFY_VAR(nspec_interfaces_max))
 
-  ! NOTE: Do not put any wmax variables, it will try to access too many values in the arrays.
-  !       use actual array size instead for writing.
-  !local_dim = NDIM * nglob
-  !
-  ! this should not matter here for the xmeshfem3D mesher, as it partitions with equal size for all processes.
-  !print *,'debug: ',myrank,' nglob ',nglob,nglob_wmax
-  ! thus using nglob_max should be okay and preferred, as the local_dim will set local_dim/global_dim/offset infos in ADIOS file.
-  ! retrieving array data will use those local_dim values to calculate offsets for different rank slices.
+  ! note: we take *_wmax values for local_dim, which will be used to set local_dim/global_dim/offset infos in ADIOS file.
+  !       retrieving array data will use those local_dim values to calculate offsets for different rank slices.
   local_dim = NDIM * nglob_wmax
 
   call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, &
@@ -839,7 +836,7 @@
 
   endif
 
-  local_dim = 2 * nspec
+  local_dim = 2 * nspec_wmax
   call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(material_index))
 
   ! WARNING: the order is a little bit different than for Fortran output
@@ -907,10 +904,10 @@
 
   ! CPML
   if (nspec_CPML_total > 0) then
-     local_dim = nspec_CPML
+     local_dim = nspec_CPML_wmax
      call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(CPML_to_spec))
      call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(CPML_regions))
-     local_dim = nspec
+     local_dim = nspec_wmax
      call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(is_CPML))
   endif
 

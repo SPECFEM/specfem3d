@@ -78,7 +78,6 @@
 
   ! local parameters
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
-  integer, dimension(:,:,:,:), allocatable :: ibool_copy
   integer :: max_nibool_interfaces_ext_mesh
   integer :: ier,i
   integer :: nglob
@@ -244,21 +243,6 @@
   nspec_aniso_wmax                    = max_global_values(40)
   nspec_irreg_wmax                    = max_global_values(41)
 
-  ! note: for some reasons, writing out ibool directly with ADIOS2 leads to randomly occurring segmentation errors:
-  !           Segmentation fault - invalid memory reference.
-  !       sometimes in the write_adios_perform() routine at the end when the arrays are actually written out,
-  !       or in a follow-up write_adios_global_1d_array(..) call like for mustore (?).
-  !       here, we allocate a temporary ibool copy array for writing out ibool, this seems to resolve the problem.
-  !       it though still appears randomly, re-runing the simulation can help.
-  !
-  ! todo: not sure why ADIOS2 has this hickup with ibool, maybe some array size mismatch between fortran and C,
-  !       like we use int4 for logicals, or some other issue...
-  !       please check with future versions.
-  allocate(ibool_copy(NGLLX,NGLLY,NGLLZ,nspec_wmax),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 101')
-  if (ier /= 0) stop 'error allocating array ibool_copy'
-  ibool_copy(:,:,:,1:nspec) = ibool(:,:,:,:)
-
   ! save arrays for the solver to run.
   !-----------------------------------.
   ! Setup ADIOS for the current group |
@@ -279,7 +263,7 @@
   call define_adios_scalar(myadios_group, group_size_inc, '', STRINGIFY_VAR(jacobian_regular))
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-  call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "ibool", ibool_copy)
+  call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', STRINGIFY_VAR(ibool))
 
   local_dim = nglob_wmax
   call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "x_global", xstore_unique)
@@ -658,7 +642,7 @@
   !
   ! we thus use nspec_wmax here rather than nspec
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-  call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, "ibool", ibool_copy)
+  call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibool))
 
   local_dim = nglob_wmax
   call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, "x_global", xstore_unique)
@@ -1051,7 +1035,6 @@
   call synchronize_all()
 
   ! cleanup
-  deallocate(ibool_copy)
   deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier)
   if (ier /= 0) stop 'error deallocating array ibool_interfaces_ext_mesh_dummy'
 
@@ -1100,8 +1083,6 @@
 
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: vp_tmp, vs_tmp, rho_tmp
-  double precision, dimension(:,:,:,:), allocatable :: xstore_tmp, ystore_tmp, zstore_tmp
-  integer, dimension(:,:,:,:), allocatable :: ibool_copy
   integer :: ier
 
   !--- Local parameters for ADIOS ---
@@ -1117,23 +1098,6 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
-
-  ! work-around for ibool, see above routine for more.
-  allocate(ibool_copy(NGLLX,NGLLY,NGLLZ,nspec_wmax),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 101')
-  if (ier /= 0) stop 'error allocating array ibool_copy'
-  ibool_copy(:,:,:,1:nspec) = ibool(:,:,:,:)
-
-  ! work-around for xstore,.. similar to ibool work-around
-  ! still seeing some randomly occurring memory errors though... heap/stack size problem when writing arrays in ADIOS?
-  allocate(xstore_tmp(NGLLX,NGLLY,NGLLZ,nspec_wmax), &
-           ystore_tmp(NGLLX,NGLLY,NGLLZ,nspec_wmax), &
-           zstore_tmp(NGLLX,NGLLY,NGLLZ,nspec_wmax),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 202')
-  if (ier /= 0) stop 'error allocating array xstore_tmp,..'
-  xstore_tmp(:,:,:,1:nspec) = xstore(:,:,:,:)
-  ystore_tmp(:,:,:,1:nspec) = ystore(:,:,:,:)
-  zstore_tmp(:,:,:,1:nspec) = zstore(:,:,:,:)
 
   !-----------------------------------.
   ! Setup ADIOS for the current group |
@@ -1172,12 +1136,12 @@
   call define_adios_global_array1D(myadios_val_group, group_size_inc, local_dim, '', "z_global", zstore_unique)
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-  call define_adios_global_array1D(myadios_val_group, group_size_inc, local_dim, '', "xstore", xstore_tmp)
-  call define_adios_global_array1D(myadios_val_group, group_size_inc, local_dim, '', "ystore", ystore_tmp)
-  call define_adios_global_array1D(myadios_val_group, group_size_inc, local_dim, '', "zstore", zstore_tmp)
+  call define_adios_global_array1D(myadios_val_group, group_size_inc, local_dim, '', STRINGIFY_VAR(xstore))
+  call define_adios_global_array1D(myadios_val_group, group_size_inc, local_dim, '', STRINGIFY_VAR(ystore))
+  call define_adios_global_array1D(myadios_val_group, group_size_inc, local_dim, '', STRINGIFY_VAR(zstore))
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-  call define_adios_global_array1D(myadios_val_group, group_size_inc, local_dim, '', "ibool", ibool_copy)
+  call define_adios_global_array1D(myadios_val_group, group_size_inc, local_dim, '', STRINGIFY_VAR(ibool))
 
   !------------------------------------------------------------.
   ! Open an handler to the ADIOS file and setup the group size |
@@ -1204,12 +1168,12 @@
   call write_adios_global_1d_array(myadios_val_file, myadios_val_group, myrank, sizeprocs, local_dim, "z_global", zstore_unique)
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-  call write_adios_global_1d_array(myadios_val_file, myadios_val_group, myrank, sizeprocs, local_dim, "xstore", xstore_tmp)
-  call write_adios_global_1d_array(myadios_val_file, myadios_val_group, myrank, sizeprocs, local_dim, "ystore", ystore_tmp)
-  call write_adios_global_1d_array(myadios_val_file, myadios_val_group, myrank, sizeprocs, local_dim, "zstore", zstore_tmp)
+  call write_adios_global_1d_array(myadios_val_file, myadios_val_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(xstore))
+  call write_adios_global_1d_array(myadios_val_file, myadios_val_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ystore))
+  call write_adios_global_1d_array(myadios_val_file, myadios_val_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(zstore))
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-  call write_adios_global_1d_array(myadios_val_file, myadios_val_group, myrank, sizeprocs, local_dim, "ibool", ibool_copy)
+  call write_adios_global_1d_array(myadios_val_file, myadios_val_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ibool))
 
   !----------------------------------.
   ! Perform the actual write to disk |
@@ -1340,8 +1304,6 @@
   call synchronize_all()
 
   ! frees arrays
-  deallocate(ibool_copy)
-  deallocate(xstore_tmp,ystore_tmp,zstore_tmp)
   deallocate(vp_tmp)
   deallocate(vs_tmp)
   deallocate(rho_tmp)

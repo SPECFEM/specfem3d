@@ -39,7 +39,6 @@
 
 module adios_helpers_definitions_mod
 
-  !use manager_adios
 #if defined(USE_ADIOS)
   use adios_write_mod, only: adios_define_var, &
                              adios_long, adios_integer, adios_double, adios_real, adios_byte, adios_string
@@ -52,14 +51,15 @@ module adios_helpers_definitions_mod
   use manager_adios, only: sizeprocs_adios,myrank_adios
 #endif
 
-  ! compression
-  use manager_adios, only: ADIOS_COMPRESSION_ALGORITHM,ADIOS_COMPRESSION_MODE,ADIOS_COMPRESSION_MODE_VALUE, &
-                           use_adios_compression
 #if defined(USE_ADIOS)
   use adios_write_mod, only: adios_set_transform
 #elif defined(USE_ADIOS2)
   use manager_adios, only: myadios2_obj
 #endif
+
+  ! compression
+  use manager_adios, only: use_adios_compression
+  use constants, only: ADIOS_COMPRESSION_ALGORITHM,ADIOS_COMPRESSION_MODE,ADIOS_COMPRESSION_MODE_VALUE
 
   implicit none
 
@@ -678,6 +678,12 @@ subroutine define_adios_global_dims_1d(adios_group, group_size_inc, array_name, 
   call define_adios_scalar(adios_group, group_size_inc, trim(array_name), "global_dim", local_dim)
   call define_adios_scalar(adios_group, group_size_inc, trim(array_name), "offset", local_dim)
 
+  ! additional scalar to specify actual array size, especially needed for ADIOS1 when arrays have variable sizes across ranks.
+  ! note: in ADIOS2, the local_dim array is a separate info from the actual array, so we could only store local_dim there
+  !       and use the actual array size dimension in the adios2_define_var() call below.
+  !       in ADIOS1, the adios_define_var() call needs a local array size specifier, for which we now use array/size.
+  call define_adios_scalar(adios_group, group_size_inc, trim(array_name), "size", local_dim)
+
 end subroutine define_adios_global_dims_1d
 
 
@@ -689,7 +695,7 @@ end subroutine define_adios_global_dims_1d
 !! \param array_name The variable to be defined. This is actually the path for
 !!                   ADIOS. The values are stored in array_name/array
 !! \param local_dim The local dimension of the array.
-  subroutine define_adios_global_1d_generic_real(adios_group, group_size_inc, array_name, local_dim)
+  subroutine define_adios_global_1d_generic_real(adios_group, group_size_inc, array_name, local_dim, array_size)
 
   implicit none
   ! Parameters
@@ -701,6 +707,7 @@ end subroutine define_adios_global_dims_1d
   character(len=*), intent(in) :: array_name
   integer(kind=8),  intent(in) :: local_dim
   integer(kind=8),  intent(inout) :: group_size_inc
+  integer(kind=8),  intent(in) :: array_size
   ! Variables
 #if defined(USE_ADIOS)
   integer(kind=8) :: var_id
@@ -723,10 +730,20 @@ end subroutine define_adios_global_dims_1d
 
 #if defined(USE_ADIOS)
   ! ADIOS 1
+  ! we specify the actual size of the array in array_name/size which differs to array_name/local_dim for cases
+  ! where ranks have different slice sizes.
+  ! we will still use local_dim to calculate memory offsets for different ranks when reading arrays.
   call adios_define_var(adios_group, "array", trim(array_name), adios_real, &
-                        trim(array_name) // "/local_dim", &
+                        trim(array_name) // "/size", &
                         trim(array_name) // "/global_dim", &
                         trim(array_name) // "/offset", var_id)
+
+  ! old: assumes all ranks will have same array sizes
+  !call adios_define_var(adios_group, "array", trim(array_name), adios_real, &
+  !                      trim(array_name) // "/local_dim", &
+  !                      trim(array_name) // "/global_dim", &
+  !                      trim(array_name) // "/offset", var_id)
+
   ! compression
   if (use_adios_compression) then
     ! adds compression transform
@@ -734,12 +751,15 @@ end subroutine define_adios_global_dims_1d
     call check_adios_err(ier,"Error adios compression: set transform for variable "//trim(array_name)//" failed")
   endif
 
+  ! to avoid compiler warning
+  ier = array_size
+
 #elif defined(USE_ADIOS2)
   ! ADIOS 2
   ! note: variable parameter v will not be stored globally, instead will be retrieved by _inquire** function again
-  ldim(1) = local_dim
-  gdim(:) = int(sizeprocs_adios,kind=8) * ldim(:)
-  offs(:) = int(myrank_adios,kind=8) * ldim(:)
+  ldim(1) = array_size   ! instead of local_dim, we assign the actual size of the array to write out
+  gdim(1) = int(sizeprocs_adios,kind=8) * local_dim
+  offs(1) = int(myrank_adios,kind=8) * local_dim
 
   full_name = trim(array_name) // '/array'
 
@@ -903,7 +923,7 @@ end subroutine define_adios_global_dims_1d
 !! \param array_name The variable to be defined. This is actually the path for
 !!                   ADIOS. The values are stored in array_name/array
 !! \param local_dim The local dimension of the array.
-  subroutine define_adios_global_1d_generic_double(adios_group, group_size_inc, array_name, local_dim)
+  subroutine define_adios_global_1d_generic_double(adios_group, group_size_inc, array_name, local_dim, array_size)
 
   implicit none
   ! Parameters
@@ -915,6 +935,7 @@ end subroutine define_adios_global_dims_1d
   character(len=*), intent(in) :: array_name
   integer(kind=8),  intent(in) :: local_dim
   integer(kind=8),  intent(inout) :: group_size_inc
+  integer(kind=8),  intent(in) :: array_size
   ! Variables
 #if defined(USE_ADIOS)
   integer(kind=8) :: var_id
@@ -937,10 +958,20 @@ end subroutine define_adios_global_dims_1d
 
 #if defined(USE_ADIOS)
   ! ADIOS 1
+  ! we specify the actual size of the array in array_name/size which differs to array_name/local_dim for cases
+  ! where ranks have different slice sizes.
+  ! we will still use local_dim to calculate memory offsets for different ranks when reading arrays.
   call adios_define_var(adios_group, "array", trim(array_name), adios_double, &
-                        trim(array_name) // "/local_dim", &
+                        trim(array_name) // "/size", &
                         trim(array_name) // "/global_dim", &
                         trim(array_name) // "/offset", var_id)
+
+  ! old: assumes all ranks will have same array sizes
+  !call adios_define_var(adios_group, "array", trim(array_name), adios_double, &
+  !                      trim(array_name) // "/local_dim", &
+  !                      trim(array_name) // "/global_dim", &
+  !                      trim(array_name) // "/offset", var_id)
+
   ! compression
   if (use_adios_compression) then
     ! adds compression transform
@@ -948,12 +979,15 @@ end subroutine define_adios_global_dims_1d
     call check_adios_err(ier,"Error adios compression: set transform for variable "//trim(array_name)//" failed")
   endif
 
+  ! to avoid compiler warning
+  ier = array_size
+
 #elif defined(USE_ADIOS2)
   ! ADIOS 2
   ! note: variable parameter v will not be stored globally, instead will be retrieved by _inquire** function again
-  ldim(1) = local_dim
-  gdim(:) = int(sizeprocs_adios,kind=8) * ldim(:)
-  offs(:) = int(myrank_adios,kind=8) * ldim(:)
+  ldim(1) = array_size   ! instead of local_dim, we assign the actual size of the array to write out
+  gdim(1) = int(sizeprocs_adios,kind=8) * local_dim
+  offs(1) = int(myrank_adios,kind=8) * local_dim
 
   full_name = trim(array_name) // '/array'
 
@@ -1117,7 +1151,7 @@ end subroutine define_adios_global_1d_double_4d
 !! \param array_name The variable to be defined. This is actually the path for
 !!                   ADIOS. The values are stored in array_name/array
 !! \param local_dim The local dimension of the array.
-  subroutine define_adios_global_1d_generic_int(adios_group, group_size_inc, array_name, local_dim)
+  subroutine define_adios_global_1d_generic_int(adios_group, group_size_inc, array_name, local_dim, array_size)
 
   implicit none
   ! Parameters
@@ -1129,6 +1163,7 @@ end subroutine define_adios_global_1d_double_4d
   character(len=*), intent(in) :: array_name
   integer(kind=8),  intent(in) :: local_dim
   integer(kind=8),  intent(inout) :: group_size_inc
+  integer(kind=8),  intent(in) :: array_size
   ! Variables
 #if defined(USE_ADIOS)
   integer(kind=8) :: var_id
@@ -1138,8 +1173,8 @@ end subroutine define_adios_global_1d_double_4d
   integer(kind=8), dimension(1) :: offs  ! Starting offset in global array
   type(adios2_variable) :: v
   character(len=256) :: full_name
-  integer :: ier
 #endif
+  integer :: ier
 
   TRACE_ADIOS_L2_ARG('define_adios_global_1d_generic_int: ',trim(array_name))
 
@@ -1149,17 +1184,29 @@ end subroutine define_adios_global_1d_double_4d
 
 #if defined(USE_ADIOS)
   ! ADIOS 1
+  ! we specify the actual size of the array in array_name/size which differs to array_name/local_dim for cases
+  ! where ranks have different slice sizes.
+  ! we will still use local_dim to calculate memory offsets for different ranks when reading arrays.
   call adios_define_var(adios_group, "array", trim(array_name), adios_integer, &
-                        trim(array_name) // "/local_dim", &
+                        trim(array_name) // "/size", &
                         trim(array_name) // "/global_dim", &
                         trim(array_name) // "/offset", var_id)
+
+  ! old: assumes all ranks will have same array sizes
+  !call adios_define_var(adios_group, "array", trim(array_name), adios_integer, &
+  !                      trim(array_name) // "/local_dim", &
+  !                      trim(array_name) // "/global_dim", &
+  !                      trim(array_name) // "/offset", var_id)
+
+  ! to avoid compiler warning
+  ier = array_size
 
 #elif defined(USE_ADIOS2)
   ! ADIOS 2
   ! note: variable will not be stored globally, instead will be retrieved by _inquire** function again
-  ldim(1) = local_dim
-  gdim(:) = int(sizeprocs_adios,kind=8) * ldim(:)
-  offs(:) = int(myrank_adios,kind=8) * ldim(:)
+  ldim(1) = array_size   ! instead of local_dim, we assign the actual size of the array to write out
+  gdim(1) = int(sizeprocs_adios,kind=8) * local_dim
+  offs(1) = int(myrank_adios,kind=8) * local_dim
 
   full_name = trim(array_name) // "/array"
 
@@ -1314,7 +1361,7 @@ end subroutine define_adios_global_1d_double_4d
 !! \param array_name The variable to be defined. This is actually the path for
 !!                   ADIOS. The values are stored in array_name/array
 !! \param local_dim The local dimension of the array.
-  subroutine define_adios_global_1d_generic_long(adios_group, group_size_inc, array_name, local_dim)
+  subroutine define_adios_global_1d_generic_long(adios_group, group_size_inc, array_name, local_dim, array_size)
 
   implicit none
   ! Parameters
@@ -1326,6 +1373,7 @@ end subroutine define_adios_global_1d_double_4d
   character(len=*), intent(in) :: array_name
   integer(kind=8),  intent(in) :: local_dim
   integer(kind=8),  intent(inout) :: group_size_inc
+  integer(kind=8),  intent(in) :: array_size
   ! Variables
 #if defined(USE_ADIOS)
   integer(kind=8) :: var_id
@@ -1335,8 +1383,8 @@ end subroutine define_adios_global_1d_double_4d
   integer(kind=8), dimension(1) :: offs  ! Starting offset in global array
   type(adios2_variable) :: v
   character(len=256) :: full_name
-  integer :: ier
 #endif
+  integer :: ier
 
   TRACE_ADIOS_L2_ARG('define_adios_global_1d_generic_long: ',trim(array_name))
 
@@ -1346,17 +1394,28 @@ end subroutine define_adios_global_1d_double_4d
 
 #if defined(USE_ADIOS)
   ! ADIOS 1
+  ! we specify the actual size of the array in array_name/size which differs to array_name/local_dim for cases
+  ! where ranks have different slice sizes.
+  ! we will still use local_dim to calculate memory offsets for different ranks when reading arrays.
   call adios_define_var(adios_group, "array", trim(array_name), adios_long, &
-                        trim(array_name) // "/local_dim", &
+                        trim(array_name) // "/size", &
                         trim(array_name) // "/global_dim", &
                         trim(array_name) // "/offset", var_id)
 
+  ! old: assumes all ranks will have same array sizes
+  !call adios_define_var(adios_group, "array", trim(array_name), adios_long, &
+  !                      trim(array_name) // "/local_dim", &
+  !                      trim(array_name) // "/global_dim", &
+  !                      trim(array_name) // "/offset", var_id)
+
+  ! to avoid compiler warning
+  ier = array_size
 #elif defined(USE_ADIOS2)
   ! ADIOS 2
   ! note: variable will not be stored globally, instead will be retrieved by _inquire** function again
-  ldim(1) = local_dim
-  gdim(:) = int(sizeprocs_adios,kind=8) * ldim(:)
-  offs(:) = int(myrank_adios,kind=8) * ldim(:)
+  ldim(1) = array_size   ! instead of local_dim, we assign the actual size of the array to write out
+  gdim(1) = int(sizeprocs_adios,kind=8) * local_dim
+  offs(1) = int(myrank_adios,kind=8) * local_dim
 
   full_name = trim(array_name) // '/array'
 
@@ -1510,7 +1569,7 @@ end subroutine define_adios_global_1d_double_4d
 !! \param array_name The variable to be defined. This is actually the path for
 !!                   ADIOS. The values are stored in array_name/array
 !! \param local_dim The local dimension of the array.
-subroutine define_adios_global_1d_generic_logical(adios_group, group_size_inc, array_name, local_dim)
+subroutine define_adios_global_1d_generic_logical(adios_group, group_size_inc, array_name, local_dim, array_size)
 
   implicit none
   ! Parameters
@@ -1522,6 +1581,7 @@ subroutine define_adios_global_1d_generic_logical(adios_group, group_size_inc, a
   character(len=*), intent(in) :: array_name
   integer(kind=8),  intent(in) :: local_dim
   integer(kind=8),  intent(inout) :: group_size_inc
+  integer(kind=8),  intent(in) :: array_size
   ! Variables
 #if defined(USE_ADIOS)
   integer(kind=8) :: var_id
@@ -1531,8 +1591,8 @@ subroutine define_adios_global_1d_generic_logical(adios_group, group_size_inc, a
   integer(kind=8), dimension(1) :: offs  ! Starting offset in global array
   type(adios2_variable) :: v
   character(len=256) :: full_name
-  integer :: ier
 #endif
+  integer :: ier
 
   TRACE_ADIOS_L2_ARG('define_adios_global_1d_generic_logical: ',trim(array_name))
 
@@ -1546,10 +1606,23 @@ subroutine define_adios_global_1d_generic_logical(adios_group, group_size_inc, a
   ! represented, beyond requiring that LOGICAL variables of default kind
   ! have the same storage size as default INTEGER and REAL variables.
   ! Hence the 'adios_integer' (2) data type to store logical values
+
+  ! we specify the actual size of the array in array_name/size which differs to array_name/local_dim for cases
+  ! where ranks have different slice sizes.
+  ! we will still use local_dim to calculate memory offsets for different ranks when reading arrays.
   call adios_define_var(adios_group, "array", trim(array_name), adios_integer, &
-                        trim(array_name) // "/local_dim", &
+                        trim(array_name) // "/size", &
                         trim(array_name) // "/global_dim", &
                         trim(array_name) // "/offset", var_id)
+
+  ! old: assumes all ranks will have same array sizes
+  !call adios_define_var(adios_group, "array", trim(array_name), adios_integer, &
+  !                      trim(array_name) // "/local_dim", &
+  !                      trim(array_name) // "/global_dim", &
+  !                      trim(array_name) // "/offset", var_id)
+
+  ! to avoid compiler warning
+  ier = array_size
 
 #elif defined(USE_ADIOS2)
   ! ADIOS 2
@@ -1557,9 +1630,9 @@ subroutine define_adios_global_1d_generic_logical(adios_group, group_size_inc, a
   !
   !       also, adios2 has no adios2_get()/adios2_put() routine for logicals.
   !       we need to use integer array instead for storing/reading.
-  ldim(1) = local_dim
-  gdim(:) = int(sizeprocs_adios,kind=8) * ldim(:)
-  offs(:) = int(myrank_adios,kind=8) * ldim(:)
+  ldim(1) = array_size   ! instead of local_dim, we assign the actual size of the array to write out
+  gdim(1) = int(sizeprocs_adios,kind=8) * local_dim
+  offs(1) = int(myrank_adios,kind=8) * local_dim
 
   full_name = trim(array_name) // '/array'
 
@@ -1708,7 +1781,7 @@ end subroutine define_adios_global_1d_generic_logical
 !===============================================================================
 
 !string added
-subroutine define_adios_global_1d_string_generic(adios_group, group_size_inc, array_name, local_dim)
+subroutine define_adios_global_1d_string_generic(adios_group, group_size_inc, array_name, local_dim, array_size)
 
   implicit none
   ! Parameters
@@ -1720,6 +1793,7 @@ subroutine define_adios_global_1d_string_generic(adios_group, group_size_inc, ar
   character(len=*), intent(in) :: array_name
   integer(kind=8),  intent(in) :: local_dim
   integer(kind=8),  intent(inout) :: group_size_inc
+  integer(kind=8),  intent(in) :: array_size
   ! Variables
 #if defined(USE_ADIOS)
   integer(kind=8) :: var_id
@@ -1729,8 +1803,8 @@ subroutine define_adios_global_1d_string_generic(adios_group, group_size_inc, ar
   integer(kind=8), dimension(1) :: offs  ! Starting offset in global array
   type(adios2_variable) :: v
   character(len=256) :: full_name
-  integer :: ier
 #endif
+  integer :: ier
 
   TRACE_ADIOS_L2_ARG('define_adios_global_1d_string_generic: ',trim(array_name))
 
@@ -1740,10 +1814,22 @@ subroutine define_adios_global_1d_string_generic(adios_group, group_size_inc, ar
 
 #if defined(USE_ADIOS)
   ! ADIOS 1
+  ! we specify the actual size of the array in array_name/size which differs to array_name/local_dim for cases
+  ! where ranks have different slice sizes.
+  ! we will still use local_dim to calculate memory offsets for different ranks when reading arrays.
   call adios_define_var(adios_group, "array", trim(array_name), adios_string, &
-                        trim(array_name) // "/local_dim", &
+                        trim(array_name) // "/size", &
                         trim(array_name) // "/global_dim", &
                         trim(array_name) // "/offset", var_id)
+
+  ! old: assumes all ranks will have same array sizes
+  !call adios_define_var(adios_group, "array", trim(array_name), adios_string, &
+  !                      trim(array_name) // "/local_dim", &
+  !                      trim(array_name) // "/global_dim", &
+  !                      trim(array_name) // "/offset", var_id)
+
+  ! to avoid compiler warning
+  ier = array_size
 
 #elif defined(USE_ADIOS2)
   ! ADIOS 2
@@ -1753,9 +1839,9 @@ subroutine define_adios_global_1d_string_generic(adios_group, group_size_inc, ar
   !       but specify the corresponding sub-array dimension for each process using the dims
 
   ! local array dimensions
-  ldim(1) = local_dim
-  gdim(:) = int(sizeprocs_adios,kind=8) * ldim(:)
-  offs(:) = int(myrank_adios,kind=8) * ldim(:)
+  ldim(1) = array_size
+  gdim(:) = int(sizeprocs_adios,kind=8) * local_dim
+  offs(:) = int(myrank_adios,kind=8) * local_dim
 
   full_name = trim(array_name) // '/array'
 
@@ -1788,8 +1874,8 @@ subroutine define_adios_global_1d_string_1d(adios_group, group_size_inc, local_d
   integer(kind=8),  intent(inout) :: group_size_inc
   character(len=*), intent(in) :: var
   ! Local vars
-  integer :: idummy
   character(len=256) :: full_name
+  integer(kind=8) :: array_size
 
   TRACE_ADIOS_L2_ARG('define_adios_global_1d_string_1d: ',trim(array_name))
 
@@ -1806,10 +1892,10 @@ subroutine define_adios_global_1d_string_1d(adios_group, group_size_inc, local_d
   ! debug
   !print *,"full name", trim(full_name),"local_dim:",local_dim
 
-  call define_adios_global_1d_string_generic(adios_group, group_size_inc, full_name, local_dim)
+  ! size
+  array_size = len(var)
 
-  ! to avoid compiler warnings
-  idummy = len(var)
+  call define_adios_global_1d_string_generic(adios_group, group_size_inc, full_name, local_dim, array_size)
 
 end subroutine define_adios_global_1d_string_1d
 

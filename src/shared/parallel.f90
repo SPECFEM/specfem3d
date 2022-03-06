@@ -736,6 +736,27 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine max_allreduce_singlei(val,recvval)
+
+  use my_mpi
+
+  implicit none
+
+  integer,intent(in) :: val
+  integer,intent(out) :: recvval
+
+  ! local parameters
+  integer :: ier
+
+  call MPI_ALLREDUCE(val, recvval, 1, MPI_INTEGER, MPI_MAX, my_local_mpi_comm_world, ier)
+  if (ier /= 0) stop 'Allreduce to get single max value failed.'
+
+  end subroutine max_allreduce_singlei
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine min_all_cr(sendbuf, recvbuf)
 
   use my_mpi
