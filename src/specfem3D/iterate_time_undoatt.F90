@@ -41,6 +41,8 @@
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_potential_acoustic_buffer,b_potential_dot_dot_acoustic_buffer
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_displ_elastic_buffer,b_veloc_elastic_buffer,b_accel_elastic_buffer
+
+  ! note: at the moment, we still use file i/o to read back noise_surface_movie array - consider buffering in future...
   !real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: b_noise_surface_movie_buffer
 
   double precision :: sizeval
@@ -118,6 +120,7 @@
       endif
       ! noise kernel for source strength (sigma_kernel) needs buffer for reconstructed noise_surface_movie array,
       ! otherwise we need file i/o which will considerably slow down performance
+      ! note: at the moment, we still use file i/o to read back noise_surface_movie array - consider buffering in future...
       !if (NOISE_TOMOGRAPHY == 3) then
       !  allocate(b_noise_surface_movie_buffer(NDIM,NGLLX,NGLLY,NSPEC_TOP,NT_DUMP_ATTENUATION),stat=ier)
       !  if (ier /= 0 ) call exit_MPI(myrank,'Error allocating b_noise_surface_movie_buffer')
@@ -188,17 +191,14 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
+  call synchronize_all()
 
   ! create an empty file to monitor the start of the simulation
   if (myrank == 0) then
     open(unit=IOUT,file=trim(OUTPUT_FILES)//'/starttimeloop.txt',status='unknown',action='write')
-    write(IOUT,*) 'hello, starting time loop'
+    write(IOUT,*) 'hello, starting time loop in iterate_time_undoatt() routine'
     close(IOUT)
   endif
-
-  ! *********************************************************
-  ! ************* MAIN LOOP OVER THE TIME STEPS *************
-  ! *********************************************************
 
   ! time loop increments begin/end
   it_begin = 1
@@ -213,6 +213,10 @@
 
   ! get MPI starting
   time_start = wtime()
+
+  ! *********************************************************
+  ! ************* MAIN LOOP OVER THE TIME STEPS *************
+  ! *********************************************************
 
   ! loops over time subsets
   do iteration_on_subset = 1, NSUBSET_ITERATIONS
@@ -398,6 +402,7 @@
         endif
 
         ! for noise kernel
+        ! note: at the moment, we still use file i/o to read back noise_surface_movie array - consider buffering in future...
         !if (NOISE_TOMOGRAPHY == 3) then
         !  b_noise_surface_movie_buffer(:,:,:,:,it_of_this_subset) = noise_surface_movie(:,:,:,:)
         !endif
@@ -416,6 +421,8 @@
         ! reads backward/reconstructed wavefield from buffers
         ! note: uses wavefield at corresponding time (NSTEP - it + 1 ), i.e. we have now time-reversed wavefields
 
+        it = it + 1
+
         ! only the displacement needs to be stored in memory buffers in order to compute the sensitivity kernels,
         ! not the memory variables R_ij, because the sensitivity kernel calculations only involve the displacement
         ! and the strain, not the stress, and the strain can be recomputed on the fly by computing the gradient
@@ -431,6 +438,7 @@
             b_accel(:,:) = b_accel_elastic_buffer(:,:,it_subset_end-it_of_this_subset+1)
           endif
           ! for noise kernel
+          ! note: at the moment, we still use file i/o to read back noise_surface_movie array - consider buffering in future...
           !if (NOISE_TOMOGRAPHY == 3) then
           !  noise_surface_movie(:,:,:,:) = b_noise_surface_movie_buffer(:,:,:,:,it_subset_end-it_of_this_subset+1)
           !endif
@@ -451,8 +459,6 @@
             endif
           endif
         endif
-
-        it = it + 1
 
         ! simulation status output and stability check
         if (mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == it_begin + 4 .or. it == it_end) then
@@ -511,14 +517,8 @@
     endif
   endif
 
-  ! user output
-  call it_print_elapsed_time()
-
-  ! safety check of last time loop increment
-  if (it /= it_end) then
-    print *,'Error time increments: it_end = ',it_end,' and last it = ',it,' do not match!'
-    call exit_MPI(myrank,'Error invalid time increment ending')
-  endif
+  ! user output of runtime
+  call print_elapsed_time()
 
   !! CD CD added this
   if (RECIPROCITY_AND_KH_INTEGRAL) then
@@ -545,8 +545,10 @@
   endif
 #endif
 
-  ! cleanup GPU arrays
-  if (GPU_MODE) call it_cleanup_GPU()
+  ! safety check of last time loop increment
+  if (it /= it_end) then
+    print *,'Error time increments: it_end = ',it_end,' and last it = ',it,' do not match!'
+    call exit_MPI(myrank,'Error invalid time increment ending')
+  endif
 
   end subroutine iterate_time_undoatt
-

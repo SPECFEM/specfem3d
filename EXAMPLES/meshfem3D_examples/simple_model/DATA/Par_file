@@ -375,4 +375,5 @@ ADIOS_FOR_DATABASES             = .true.
 ADIOS_FOR_MESH                  = .true.
 ADIOS_FOR_FORWARD_ARRAYS        = .true.
 ADIOS_FOR_KERNELS               = .true.
+ADIOS_FOR_UNDO_ATTENUATION      = .false.
 

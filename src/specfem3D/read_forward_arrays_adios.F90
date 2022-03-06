@@ -377,11 +377,11 @@
   ! selections array
   sel_num = 0
 
-  ! iterations here go down from N to 1, but ADIOS files has steps 0..N-1
-  step = iteration_on_subset_tmp - 1
-
   ! file handling
   if (ADIOS_SAVE_ALL_SNAPSHOTS_IN_ONE_FILE) then
+    ! iterations here go down from N to 1, but ADIOS files has steps 0..N-1
+    step = iteration_on_subset_tmp - 1
+
     ! single file for all steps
     do_open_file = .false.
     do_close_file = .false.
@@ -395,7 +395,11 @@
     if (.not. is_initialized_fwd_group) do_open_file = .true.
     ! close at last step (step counting down from N-1 to 0)
     if (step == 0) do_close_file = .true.
+
   else
+    ! single ADIOS files for each subset with step 0 entry
+    step = 0
+
     ! for each step a single file
     do_open_file = .true.
     do_close_file = .true.
@@ -432,8 +436,9 @@
   !
   ! checks if correct snapshot number of wavefields
   call read_adios_scalar(myadios_fwd_file,myadios_fwd_group,myrank,"iteration",t_tmp,step)
-  if (t_tmp /= step + 1) then
-    print *,'Error: invalid iteration step found in reading undoatt arrays: found ',t_tmp,' instead of ',step+1
+  ! checks step and iteration number
+  if (t_tmp /= iteration_on_subset_tmp) then
+    print *,'Error: invalid iteration step found in reading undoatt arrays: found ',t_tmp,' instead of ',iteration_on_subset_tmp
     call exit_mpi(myrank,'Invalid iteration step read in read_forward_arrays_undoatt_adios() routine')
   endif
 
@@ -474,11 +479,11 @@
     call set_selection_boundingbox(sel, start, count)
 
     call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                   "potential_acoustic/array", b_potential_acoustic)
+                                   "potential_acoustic/array", b_potential_acoustic, step)
     call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                   "potential_dot_acoustic/array", b_potential_dot_acoustic)
+                                   "potential_dot_acoustic/array", b_potential_dot_acoustic, step)
     call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                   "potential_dot_dot_acoustic/array", b_potential_dot_dot_acoustic)
+                                   "potential_dot_dot_acoustic/array", b_potential_dot_dot_acoustic, step)
   endif
 
   ! elastic wavefield
@@ -489,9 +494,9 @@
     sel => selections(sel_num)
     call set_selection_boundingbox(sel, start, count)
 
-    call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "displ/array", b_displ)
-    call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "veloc/array", b_veloc)
-    call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "accel/array", b_accel)
+    call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "displ/array", b_displ, step)
+    call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "veloc/array", b_veloc, step)
+    call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "accel/array", b_accel, step)
 
     ! memory variables if attenuation
     if (ATTENUATION) then
@@ -501,12 +506,12 @@
       sel => selections(sel_num)
       call set_selection_boundingbox(sel, start, count)
 
-      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "R_xx/array", b_R_xx)
-      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "R_yy/array", b_R_yy)
-      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "R_xy/array", b_R_xy)
-      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "R_xz/array", b_R_xz)
-      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "R_yz/array", b_R_yz)
-      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "R_trace/array", b_R_trace)
+      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "R_xx/array", b_R_xx, step)
+      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "R_yy/array", b_R_yy, step)
+      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "R_xy/array", b_R_xy, step)
+      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "R_xz/array", b_R_xz, step)
+      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "R_yz/array", b_R_yz, step)
+      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "R_trace/array", b_R_trace, step)
 
       start(1) = local_dim_epsilondev_xx * myrank
       count(1) = NGLLX * NGLLY * NGLLZ * NSPEC_STRAIN_ONLY
@@ -515,17 +520,17 @@
       call set_selection_boundingbox(sel, start, count)
 
       call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                     "epsilondev_xx/array", b_epsilondev_xx)
+                                     "epsilondev_xx/array", b_epsilondev_xx, step)
       call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                     "epsilondev_yy/array", b_epsilondev_yy)
+                                     "epsilondev_yy/array", b_epsilondev_yy, step)
       call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                     "epsilondev_xy/array", b_epsilondev_xy)
+                                     "epsilondev_xy/array", b_epsilondev_xy, step)
       call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                     "epsilondev_xz/array", b_epsilondev_xz)
+                                     "epsilondev_xz/array", b_epsilondev_xz, step)
       call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                     "epsilondev_yz/array", b_epsilondev_yz)
+                                     "epsilondev_yz/array", b_epsilondev_yz, step)
       call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                     "epsilondev_trace/array", b_epsilondev_trace)
+                                     "epsilondev_trace/array", b_epsilondev_trace, step)
     endif
   endif
 
@@ -538,17 +543,17 @@
     call set_selection_boundingbox(sel, start, count)
 
     call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                   "displs_poroelastic/array", b_displs_poroelastic)
+                                   "displs_poroelastic/array", b_displs_poroelastic, step)
     call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                   "velocs_poroelastic/array", b_velocs_poroelastic)
+                                   "velocs_poroelastic/array", b_velocs_poroelastic, step)
     call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                   "accels_poroelastic/array", b_accels_poroelastic)
+                                   "accels_poroelastic/array", b_accels_poroelastic, step)
     call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                   "displw_poroelastic/array", b_displw_poroelastic)
+                                   "displw_poroelastic/array", b_displw_poroelastic, step)
     call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                   "velocw_poroelastic/array", b_velocw_poroelastic)
+                                   "velocw_poroelastic/array", b_velocw_poroelastic, step)
     call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                   "accelw_poroelastic/array", b_accelw_poroelastic)
+                                   "accelw_poroelastic/array", b_accelw_poroelastic, step)
   endif
 
   ! perform actual reading

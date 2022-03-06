@@ -767,14 +767,12 @@
       write(*,*)
     endif
 
-    ! daniel todo: not fully implemented yet - turning it off by default. needs Par_file modification
-    ADIOS_FOR_UNDO_ATTENUATION = .false.
-    !call read_value_logical(ADIOS_FOR_UNDO_ATTENUATION, 'ADIOS_FOR_UNDO_ATTENUATION', ier)
-    !if (ier /= 0) then
-    !  some_parameters_missing_from_Par_file = .true.
-    !  write(*,'(a)') 'ADIOS_FOR_UNDO_ATTENUATION      = .false.'
-    !  write(*,*)
-    !endif
+    call read_value_logical(ADIOS_FOR_UNDO_ATTENUATION, 'ADIOS_FOR_UNDO_ATTENUATION', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'ADIOS_FOR_UNDO_ATTENUATION      = .false.'
+      write(*,*)
+    endif
 
     ! closes parameter file
     call close_parameter_file()

@@ -66,6 +66,56 @@
     endif
   endif
 
+  ! ADIOS file i/o
+  if (ADIOS_ENABLED) then
+    call finalize_adios()
+  endif
+
+  ! asdf finalizes
+  if ((SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) .and. READ_ADJSRC_ASDF) then
+    call asdf_cleanup()
+  endif
+
+  ! synchronize all
+  call synchronize_all()
+
+  ! frees dynamically allocated memory
+  call finalize_simulation_cleanup()
+
+  ! close the main output file
+  if (myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) 'End of the simulation'
+    write(IMAIN,*)
+    call flush_IMAIN()
+    close(IMAIN)
+  endif
+
+  ! synchronize all the processes to make sure everybody has finished
+  call synchronize_all()
+
+  end subroutine finalize_simulation
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine finalize_simulation_cleanup()
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+
+  implicit none
+
+  ! from here on, no gpu data is needed anymore
+  ! frees allocated memory on GPU
+  if (GPU_MODE) call prepare_cleanup_device(Mesh_pointer,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION, &
+                                            STACEY_ABSORBING_CONDITIONS,NOISE_TOMOGRAPHY,COMPUTE_AND_STORE_STRAIN, &
+                                            ATTENUATION,APPROXIMATE_OCEAN_LOAD, &
+                                            APPROXIMATE_HESS_KL)
+
   ! C-PML absorbing boundary conditions deallocates C_PML arrays
   if (PML_CONDITIONS) call pml_cleanup()
 
@@ -132,25 +182,4 @@
   deallocate(kappastore,mustore,rhostore)
   deallocate(ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
 
-  ! ADIOS file i/o
-  if (ADIOS_ENABLED) then
-    call finalize_adios()
-  endif
-
-  ! asdf finalizes
-  if ((SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) .and. READ_ADJSRC_ASDF) then
-    call asdf_cleanup()
-  endif
-
-  ! close the main output file
-  if (myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'End of the simulation'
-    write(IMAIN,*)
-    close(IMAIN)
-  endif
-
-  ! synchronize all the processes to make sure everybody has finished
-  call synchronize_all()
-
-  end subroutine finalize_simulation
+  end subroutine finalize_simulation_cleanup

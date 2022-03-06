@@ -301,7 +301,8 @@
   ! close the huge file that contains a dump of all the time steps to disk
   if (EXACT_UNDOING_TO_DISK) close(IFILE_FOR_EXACT_UNDOING)
 
-  call it_print_elapsed_time()
+  ! user output of runtime
+  call print_elapsed_time()
 
   !! CD CD added this
   if (RECIPROCITY_AND_KH_INTEGRAL) then
@@ -327,9 +328,6 @@
     endif
   endif
 #endif
-
-  ! cleanup GPU arrays
-  if (GPU_MODE) call it_cleanup_GPU()
 
   end subroutine iterate_time
 
@@ -408,23 +406,3 @@
 
   end subroutine it_transfer_from_GPU
 
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine it_cleanup_GPU()
-
-  use specfem_par
-  use specfem_par_elastic
-  use specfem_par_acoustic
-
-  implicit none
-
-  ! from here on, no gpu data is needed anymore
-  ! frees allocated memory on GPU
-  call prepare_cleanup_device(Mesh_pointer,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION, &
-                              STACEY_ABSORBING_CONDITIONS,NOISE_TOMOGRAPHY,COMPUTE_AND_STORE_STRAIN, &
-                              ATTENUATION,APPROXIMATE_OCEAN_LOAD, &
-                              APPROXIMATE_HESS_KL)
-
-  end subroutine it_cleanup_GPU

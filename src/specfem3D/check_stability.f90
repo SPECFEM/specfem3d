@@ -529,7 +529,7 @@
 !
 
 
-  subroutine it_print_elapsed_time()
+  subroutine print_elapsed_time()
 
   use specfem_par
   use specfem_par_elastic
@@ -558,5 +558,5 @@
     call flush_IMAIN()
   endif
 
-  end subroutine it_print_elapsed_time
+  end subroutine print_elapsed_time
 
