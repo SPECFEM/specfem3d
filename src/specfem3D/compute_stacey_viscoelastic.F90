@@ -95,7 +95,7 @@
                                                 ibool,iphase, &
                                                 abs_boundary_normal,abs_boundary_jacobian2Dw, &
                                                 abs_boundary_ijk,abs_boundary_ispec, &
-                                                num_abs_boundary_faces,veloc,rho_vp,rho_vs, &
+                                                num_abs_boundary_faces,rho_vp,rho_vs, &
                                                 ispec_is_elastic, &
                                                 it)
   endif ! COUPLE_WITH_INJECTION_TECHNIQUE
@@ -413,7 +413,7 @@
   use specfem_par, only: NSPEC_AB,NGLOB_AB,ibool, &
                          abs_boundary_normal,abs_boundary_jacobian2Dw, &
                          abs_boundary_ijk,abs_boundary_ispec
-  use specfem_par_elastic, only: veloc,accel,rho_vp,rho_vs,ispec_is_elastic
+  use specfem_par_elastic, only: accel,rho_vp,rho_vs,ispec_is_elastic
   ! boundary injection wavefield parts for saving together with b_absorb_field
   use specfem_par_coupling, only: b_boundary_injection_field
 
@@ -448,8 +448,7 @@
     !       until the full injection contribution will be implemented on the GPU side as CUDA kernels.
     !       this is slowing down the simulation a bit.
     !
-    ! transfers displacement & acceleration to the CPU
-    call transfer_veloc_from_device(NDIM*NGLOB_AB,veloc, Mesh_pointer)
+    ! transfers acceleration to the CPU
     call transfer_accel_from_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
 
     ! adds boundary contribution from injected wavefield
@@ -457,7 +456,7 @@
                                                 ibool,iphase, &
                                                 abs_boundary_normal,abs_boundary_jacobian2Dw, &
                                                 abs_boundary_ijk,abs_boundary_ispec, &
-                                                num_abs_boundary_faces,veloc,rho_vp,rho_vs, &
+                                                num_abs_boundary_faces,rho_vp,rho_vs, &
                                                 ispec_is_elastic, &
                                                 it)
 
@@ -515,7 +514,7 @@
                                                     ibool,iphase, &
                                                     abs_boundary_normal,abs_boundary_jacobian2Dw, &
                                                     abs_boundary_ijk,abs_boundary_ispec, &
-                                                    num_abs_boundary_faces,veloc,rho_vp,rho_vs, &
+                                                    num_abs_boundary_faces,rho_vp,rho_vs, &
                                                     ispec_is_elastic, &
                                                     it)
 
@@ -546,7 +545,6 @@
   integer,intent(in) :: iphase
 
   ! Stacey conditions
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(in) :: veloc
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: rho_vp,rho_vs
 
   logical, dimension(NSPEC_AB),intent(in) :: ispec_is_elastic
