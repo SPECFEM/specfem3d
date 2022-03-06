@@ -84,7 +84,7 @@ module manager_adios
   ! note: we're using save attribute to be able to compile with a flag like -std=f2003
   !       without it, a compilation error with gfortran (v7.5.0) would occur:
   !       ..
-  !         Error: Fortran 2008: Implied SAVE for module variable ‘myadios2_obj’ at (1), needed due to the default initialization
+  !         Error: Fortran 2008: Implied SAVE for module variable 'myadios2_obj' at (1), needed due to the default initialization
   !       ..
   !       this seems to be needed only for type(..) variables.
   !

@@ -319,7 +319,7 @@ contains
   subroutine fault_transfer_data_GPU()
 
   use specfem_par, only: Fault_pointer
-  use constants,only: myrank,IMAIN
+  use constants, only: myrank,IMAIN
 
   implicit none
 

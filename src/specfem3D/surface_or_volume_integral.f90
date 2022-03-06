@@ -32,7 +32,7 @@
 
   use specfem_par
   use specfem_par_coupling, only: f_integrand_KH
-  
+
   implicit none
 
   ! local parameters
