@@ -963,7 +963,7 @@ contains
 ! as the data was written from
 
 #if defined(USE_ADIOS)
-  use constants, only: ADIOS_TRANSPORT_METHOD
+  use constants, only: ADIOS_TRANSPORT_METHOD,ADIOS_METHOD_PARAMS
 #elif defined(USE_ADIOS2)
   use constants, only: ADIOS2_ENGINE_DEFAULT,ADIOS2_ENGINE_PARAMS_DEFAULT
 #endif
