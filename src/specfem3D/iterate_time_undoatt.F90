@@ -85,6 +85,43 @@
       write(IMAIN,*) '  wavefield snapshots at every NT_DUMP_ATTENUATION = ',NT_DUMP_ATTENUATION
       write(IMAIN,*)
       call flush_IMAIN()
+
+      ! file size per snapshot for save/read routines
+      write(IMAIN,*) '  estimated snapshot file storage:'
+      ! see fields stored in save_forward_arrays_undoatt() routine in file save_forward_arrays.f90
+      sizeval = 0.d0
+      if (ACOUSTIC_SIMULATION) then
+        ! potential + potential_dot + potential_dot_dot
+        sizeval = sizeval + 3.d0 * dble(NGLOB_AB) * dble(CUSTOM_REAL)
+      endif
+      if (ELASTIC_SIMULATION) then
+        ! displ + veloc + accel
+        sizeval = 3.d0 * dble(NDIM) * dble(NGLOB_AB) * dble(CUSTOM_REAL)
+        if (ATTENUATION) then
+          ! R_xx + R_yy + R_xy + R_xz + R_yz + R_trace
+          sizeval = sizeval + 6.d0 * dble(NGLLX*NGLLY*NGLLZ*N_SLS) * dble(NSPEC_ATTENUATION_AB) * dble(CUSTOM_REAL)
+          ! epsilondev_xx + epsilondev_yy + epsilondev_xy + epsilondev_xz + epsilondev_yz + epsilondev_trace
+          sizeval = sizeval + 6.d0 * dble(NGLLX*NGLLY*NGLLZ) * dble(NSPEC_STRAIN_ONLY) * dble(CUSTOM_REAL)
+        endif
+      endif
+      if (POROELASTIC_SIMULATION) then
+        ! displs + velocs + accels + displw + velocw + accelw
+        sizeval = 6.d0 * dble(NDIM) * dble(NGLOB_AB) * dble(CUSTOM_REAL)
+      endif
+      ! in MB
+      sizeval = sizeval / 1024.d0 / 1024.d0
+      write(IMAIN,*) '  size of single time snapshot subset per slice         = ', sngl(sizeval),'MB'
+      ! for all processes
+      sizeval = sizeval * dble(NPROC)
+      write(IMAIN,*) '  size of single time snapshot subset for all processes = ', sngl(sizeval),'MB'
+      write(IMAIN,*) '                                                        = ', sngl(sizeval/1024.d0),'GB'
+      write(IMAIN,*)
+      ! for all processes and all subsets
+      sizeval = sizeval * dble(NSUBSET_ITERATIONS)
+      write(IMAIN,*) '  total size of all time snapshots subsets              = ', sngl(sizeval),'MB'
+      write(IMAIN,*) '                                                        = ', sngl(sizeval/1024.d0),'GB'
+      write(IMAIN,*)
+      call flush_IMAIN()
     endif
   endif
 
@@ -94,29 +131,36 @@
     if (myrank == 0) then
       if (ACOUSTIC_SIMULATION) then
         ! buffer(NGLOB_AB,NT_DUMP_ATTENUATION) in MB
-        sizeval = 2.0 * dble(NGLOB_AB) * dble(NT_DUMP_ATTENUATION) * dble(CUSTOM_REAL) / 1024.d0 / 1024.d0
+        sizeval = 2.d0 * dble(NGLOB_AB) * dble(NT_DUMP_ATTENUATION) * dble(CUSTOM_REAL) / 1024.d0 / 1024.d0
         write(IMAIN,*) '  size of acoustic wavefield buffer per slice      = ', sngl(sizeval),'MB'
       endif
       if (ELASTIC_SIMULATION) then
         ! buffer(3,NGLOB_AB,NT_DUMP_ATTENUATION) in MB
         sizeval = dble(NDIM) * dble(NGLOB_AB) * dble(NT_DUMP_ATTENUATION) * dble(CUSTOM_REAL) / 1024.d0 / 1024.d0
-        if (APPROXIMATE_HESS_KL) sizeval = 2 * sizeval
+        if (APPROXIMATE_HESS_KL) sizeval = 3.d0 * sizeval
         write(IMAIN,*) '  size of elastic wavefield buffer per slice       = ', sngl(sizeval),'MB'
       endif
+      write(IMAIN,*)
+      call flush_IMAIN()
     endif
     ! buffer arrays
     if (ACOUSTIC_SIMULATION) then
       allocate(b_potential_acoustic_buffer(NGLOB_AB,NT_DUMP_ATTENUATION), &
                b_potential_dot_dot_acoustic_buffer(NGLOB_AB,NT_DUMP_ATTENUATION),stat=ier)
       if (ier /= 0 ) call exit_MPI(myrank,'error allocating b_potential_acoustic arrays')
+      b_potential_acoustic_buffer(:,:) = 0.0_CUSTOM_REAL
+      b_potential_dot_dot_acoustic_buffer(:,:) = 0.0_CUSTOM_REAL
     endif
     if (ELASTIC_SIMULATION) then
       allocate(b_displ_elastic_buffer(NDIM,NGLOB_AB,NT_DUMP_ATTENUATION),stat=ier)
       if (ier /= 0 ) call exit_MPI(myrank,'error allocating b_displ_elastic')
+      b_displ_elastic_buffer(:,:,:) = 0.0_CUSTOM_REAL
       if (APPROXIMATE_HESS_KL) then
         allocate(b_veloc_elastic_buffer(NDIM,NGLOB_AB,NT_DUMP_ATTENUATION), &
                  b_accel_elastic_buffer(NDIM,NGLOB_AB,NT_DUMP_ATTENUATION),stat=ier)
         if (ier /= 0 ) call exit_MPI(myrank,'error allocating b_accel_elastic arrays')
+        b_veloc_elastic_buffer(:,:,:) = 0.0_CUSTOM_REAL
+        b_accel_elastic_buffer(:,:,:) = 0.0_CUSTOM_REAL
       endif
       ! noise kernel for source strength (sigma_kernel) needs buffer for reconstructed noise_surface_movie array,
       ! otherwise we need file i/o which will considerably slow down performance
