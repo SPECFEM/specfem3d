@@ -358,8 +358,6 @@ void FC_FUNC_(transfer_fields_att_from_device,
   GPU_ERROR_CHECKING("after transfer_fields_att_from_device");
 }
 
-// JC JC here we will need to add GPU support for the new C-PML routines
-
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG

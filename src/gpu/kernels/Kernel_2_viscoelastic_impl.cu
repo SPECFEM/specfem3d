@@ -137,8 +137,7 @@ __device__  __forceinline__ void compute_element_att_memory(int tx,int working_e
                                                             realw kappal,
                                                             realw_const_p factor_common_kappa,
                                                             realw_p R_trace,realw* R_trace_loc,
-                                                            realw_p epsilondev_trace,realw epsilondev_trace_loc
-                                                            ){
+                                                            realw_p epsilondev_trace,realw epsilondev_trace_loc){
 
   int ijk_ispec;
   int offset;
@@ -2219,13 +2218,14 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
                   realw_const_p d_kappav,realw_const_p d_muv,
                   realw_p epsilondev_xx,realw_p epsilondev_yy,realw_p epsilondev_xy,
                   realw_p epsilondev_xz,realw_p epsilondev_yz,
+                  realw_p epsilondev_trace,
                   realw_p epsilon_trace_over_3,
                   const int SIMULATION_TYPE,
                   const int NSPEC,
                   realw_const_p factor_common,
                   realw_p R_xx,realw_p R_yy,realw_p R_xy,realw_p R_xz,realw_p R_yz,
+                  realw_p R_trace,
                   realw_const_p factor_common_kappa,
-                  realw_p R_trace,realw_p epsilondev_trace,
                   realw_const_p alphaval,realw_const_p betaval,realw_const_p gammaval,
                   const int ANISOTROPY,
                   realw_const_p d_c11store,realw_const_p d_c12store,realw_const_p d_c13store,
