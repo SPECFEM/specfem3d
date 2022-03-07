@@ -1157,16 +1157,16 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   if (COMPUTE_AND_STORE_STRAIN) {
     // save deviatoric strain for Runge-Kutta scheme
     if (threadIdx.x < NGLL3) {
-      realw templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
       // local storage: stresses at this current time step
+      realw templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
+      // kernel simulations
+      if (SIMULATION_TYPE == 3){ epsilon_trace_over_3[tx + working_element*NGLL3] = templ; }
       // fortran: epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
       epsilondev_xx[tx + working_element*NGLL3] = duxdxl - templ; // epsilondev_xx_loc;
       epsilondev_yy[tx + working_element*NGLL3] = duydyl - templ; // epsilondev_yy_loc;
       epsilondev_xy[tx + working_element*NGLL3] = 0.5f * duxdyl_plus_duydxl; // epsilondev_xy_loc;
       epsilondev_xz[tx + working_element*NGLL3] = 0.5f * duzdxl_plus_duxdzl; // epsilondev_xz_loc;
       epsilondev_yz[tx + working_element*NGLL3] = 0.5f * duzdyl_plus_duydzl; //epsilondev_yz_loc;
-      // kernel simulations
-      if (SIMULATION_TYPE == 3){ epsilon_trace_over_3[tx + working_element*NGLL3] = templ; }
     } // threadIdx.x
   }
 
@@ -1404,16 +1404,16 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
   if (COMPUTE_AND_STORE_STRAIN) {
     // save deviatoric strain for Runge-Kutta scheme
     if (threadIdx.x < NGLL3) {
-      realw templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
       // local storage: stresses at this current time step
+      realw templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
+      // kernel simulations
+      if (SIMULATION_TYPE == 3){ epsilon_trace_over_3[tx + working_element*NGLL3] = templ; }
       // fortran: epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
       epsilondev_xx[tx + working_element*NGLL3] = duxdxl - templ; // epsilondev_xx_loc;
       epsilondev_yy[tx + working_element*NGLL3] = duydyl - templ; // epsilondev_yy_loc;
       epsilondev_xy[tx + working_element*NGLL3] = 0.5f * duxdyl_plus_duydxl; // epsilondev_xy_loc;
       epsilondev_xz[tx + working_element*NGLL3] = 0.5f * duzdxl_plus_duxdzl; // epsilondev_xz_loc;
       epsilondev_yz[tx + working_element*NGLL3] = 0.5f * duzdyl_plus_duydzl; //epsilondev_yz_loc;
-      // kernel simulations
-      if (SIMULATION_TYPE == 3){ epsilon_trace_over_3[tx + working_element*NGLL3] = templ; }
     } // threadIdx.x
   }
 
@@ -1702,16 +1702,16 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
   if (COMPUTE_AND_STORE_STRAIN) {
     // save deviatoric strain for Runge-Kutta scheme
     if (threadIdx.x < NGLL3) {
-      realw templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
       // local storage: stresses at this current time step
+      realw templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
+      // kernel simulations
+      if (SIMULATION_TYPE == 3){ epsilon_trace_over_3[tx + working_element*NGLL3] = templ; }
       // fortran: epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
       epsilondev_xx[tx + working_element*NGLL3] = duxdxl - templ; // epsilondev_xx_loc;
       epsilondev_yy[tx + working_element*NGLL3] = duydyl - templ; // epsilondev_yy_loc;
       epsilondev_xy[tx + working_element*NGLL3] = 0.5f * duxdyl_plus_duydxl; // epsilondev_xy_loc;
       epsilondev_xz[tx + working_element*NGLL3] = 0.5f * duzdxl_plus_duxdzl; // epsilondev_xz_loc;
       epsilondev_yz[tx + working_element*NGLL3] = 0.5f * duzdyl_plus_duydzl; //epsilondev_yz_loc;
-      // kernel simulations
-      if (SIMULATION_TYPE == 3){ epsilon_trace_over_3[tx + working_element*NGLL3] = templ; }
     } // threadIdx.x
   }
 
@@ -1921,10 +1921,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
 
   realw fac1,fac2,fac3;
   realw lambdal,mul,lambdalplus2mul,kappal;
-
   realw sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz;
-  realw epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc;
-
   realw c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66;
   realw sum_terms1,sum_terms2,sum_terms3;
 
@@ -2010,17 +2007,19 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
 
   // computes deviatoric strain for kernel calculations
   if (COMPUTE_AND_STORE_STRAIN) {
-    realw templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
-    // local storage: stresses at this current time step
-    epsilondev_xx_loc = duxdxl - templ;
-    epsilondev_yy_loc = duydyl - templ;
-    epsilondev_xy_loc = 0.5f * duxdyl_plus_duydxl;
-    epsilondev_xz_loc = 0.5f * duzdxl_plus_duxdzl;
-    epsilondev_yz_loc = 0.5f * duzdyl_plus_duydzl;
-
-    if (SIMULATION_TYPE == 3){
-      if (threadIdx.x < NGLL3) { epsilon_trace_over_3[tx + working_element*NGLL3] = templ; }
-    }
+    // save deviatoric strain
+    if (threadIdx.x < NGLL3) {
+      // local storage: stresses at this current time step
+      realw templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
+      // kernel simulations
+      if (SIMULATION_TYPE == 3){ epsilon_trace_over_3[tx + working_element*NGLL3] = templ; }
+      // fortran: epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
+      epsilondev_xx[tx + working_element*NGLL3] = duxdxl - templ; // epsilondev_xx_loc;
+      epsilondev_yy[tx + working_element*NGLL3] = duydyl - templ; // epsilondev_yy_loc;
+      epsilondev_xy[tx + working_element*NGLL3] = 0.5f * duxdyl_plus_duydxl; // epsilondev_xy_loc;
+      epsilondev_xz[tx + working_element*NGLL3] = 0.5f * duzdxl_plus_duxdzl; // epsilondev_xz_loc;
+      epsilondev_yz[tx + working_element*NGLL3] = 0.5f * duzdyl_plus_duydzl; //epsilondev_yz_loc;
+    } // threadIdx.x
   }
 
   // full anisotropic case, stress calculations
@@ -2182,16 +2181,6 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
     } // if (use_mesh_coloring_gpu)
 
 #endif // MESH_COLORING
-
-    // save deviatoric strain for Runge-Kutta scheme
-    if (COMPUTE_AND_STORE_STRAIN ){
-      // fortran: epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
-      epsilondev_xx[tx + working_element*NGLL3] = epsilondev_xx_loc;
-      epsilondev_yy[tx + working_element*NGLL3] = epsilondev_yy_loc;
-      epsilondev_xy[tx + working_element*NGLL3] = epsilondev_xy_loc;
-      epsilondev_xz[tx + working_element*NGLL3] = epsilondev_xz_loc;
-      epsilondev_yz[tx + working_element*NGLL3] = epsilondev_yz_loc;
-    }
 
   } // threadIdx.x
 
@@ -2393,17 +2382,18 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 
   // attenuation
   // computes deviatoric strain attenuation and/or for kernel calculations
-  templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
   // local storage: stresses at this current time step
+  epsilondev_trace_loc = duxdxl + duydyl + duzdzl;
+  templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
+  // kernel simulations
+  if (SIMULATION_TYPE == 3){
+    if (threadIdx.x < NGLL3) { epsilon_trace_over_3[tx + working_element*NGLL3] = templ; }
+  }
   epsilondev_xx_loc = duxdxl - templ;
   epsilondev_yy_loc = duydyl - templ;
   epsilondev_xy_loc = 0.5f * (duxdyl + duydxl);
   epsilondev_xz_loc = 0.5f * (duzdxl + duxdzl);
   epsilondev_yz_loc = 0.5f * (duzdyl + duydzl);
-  epsilondev_trace_loc = duxdxl + duydyl + duzdzl;
-  if (SIMULATION_TYPE == 3){
-    if (threadIdx.x < NGLL3) { epsilon_trace_over_3[tx + working_element*NGLL3] = templ; }
-  }
 
   // computes the spatial derivatives duxdxl ... depending on the regularity of the element
   get_spatial_derivatives(&xixl,&xiyl,&xizl,&etaxl,&etayl,&etazl,

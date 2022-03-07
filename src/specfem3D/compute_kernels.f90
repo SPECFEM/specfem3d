@@ -80,7 +80,7 @@
   real(kind=CUSTOM_REAL), dimension(21) :: prod
   real(kind=CUSTOM_REAL), dimension(5) :: epsilondev_loc,b_epsilondev_loc
   real(kind=CUSTOM_REAL), dimension(5,NGLLX,NGLLY,NGLLZ) :: b_epsilondev_loc_matrix
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: b_epsilondev_trace_over_3_loc_matrix
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: b_epsilon_trace_over_3_loc_matrix
   real(kind=CUSTOM_REAL) :: b_eps_trace_l,eps_trace_l
 
   if (ANISOTROPIC_VELOCITY_KL) then
@@ -101,15 +101,15 @@
 
       ! current strain field
       if (UNDO_ATTENUATION_AND_OR_PML) then
+        ! simulations with UNDO_ATTENUATION save as much memory as possible;
+        ! backward/reconstructed wavefield strain will be re-computed locally here
         do ispec = 1, NSPEC_AB
           ! elastic domains only
           if (ispec_is_elastic(ispec)) then
-            ! simulations with UNDO_ATTENUATION save as much memory as possible;
-            ! backward/reconstructed wavefield strain will be re-computed locally here
-            call compute_element_strain(ispec,NGLOB_AB,b_displ,b_epsilondev_loc_matrix,b_epsilondev_trace_over_3_loc_matrix)
-
-            ! backward/reconstructed strain arrays
-            b_epsilon_trace_over_3(:,:,:,ispec) = b_epsilondev_trace_over_3_loc_matrix(:,:,:)
+            ! computes backward/reconstructed wavefield strain
+            call compute_element_strain(ispec,NGLOB_AB,b_displ,b_epsilondev_loc_matrix,b_epsilon_trace_over_3_loc_matrix)
+            ! saves into backward/reconstructed strain arrays
+            b_epsilon_trace_over_3(:,:,:,ispec) = b_epsilon_trace_over_3_loc_matrix(:,:,:)
             b_epsilondev_xx(:,:,:,ispec) = b_epsilondev_loc_matrix(1,:,:,:)
             b_epsilondev_yy(:,:,:,ispec) = b_epsilondev_loc_matrix(2,:,:,:)
             b_epsilondev_xy(:,:,:,ispec) = b_epsilondev_loc_matrix(3,:,:,:)
@@ -193,7 +193,7 @@
       enddo
     else
       ! updates kernels on GPU
-      call compute_kernels_elastic_cuda(Mesh_pointer,deltat,UNDO_ATTENUATION_AND_OR_PML)
+      call compute_kernels_elastic_cuda(Mesh_pointer,deltat)
     endif
 
   endif ! anisotropic_velociy_kl
