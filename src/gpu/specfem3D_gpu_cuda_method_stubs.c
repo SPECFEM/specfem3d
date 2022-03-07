@@ -257,8 +257,7 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
 
 void FC_FUNC_(compute_kernels_elastic_cuda,
               COMPUTE_KERNELS_ELASTIC_CUDA)(long* Mesh_pointer,
-                                            realw* deltat_f,
-                                            int* undo_attenuation) {}
+                                            realw* deltat_f) {}
 
 void FC_FUNC_(compute_kernels_strgth_noise_cu,
               COMPUTE_KERNELS_STRGTH_NOISE_CU)(long* Mesh_pointer,
@@ -309,6 +308,15 @@ void FC_FUNC_(compute_stacey_viscoelastic_undoatt_cuda,
 
 
 //
+// src/gpu/compute_strain_cuda.cu
+//
+
+void FC_FUNC_(compute_strain_cuda,
+              COMPUTE_strain_CUDA)(long* Mesh_pointer,
+                                   int* FORWARD_OR_ADJOINT) {}
+
+
+//
 // src/gpu/fault_solver_dynamics.cu
 //
 
@@ -325,7 +333,7 @@ void FC_FUNC_(initialize_fault_data_gpu,
                                          int* iglob,
                                          int* num_of_records,
                                          int* ndat,
-                                         int* nt) {}
+                                         int* NT_RECORD_LENGTH) {}
 
 void FC_FUNC_(transfer_fault_data_to_device,
               TRANSFER_FAULT_DATA_TO_DEVICE)(long* Fault_pointer,
@@ -500,7 +508,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* SAVE_SEISMOGRAMS_DISPLACEMENT,int* SAVE_SEISMOGRAMS_VELOCITY,
                                         int* SAVE_SEISMOGRAMS_ACCELERATION,int* SAVE_SEISMOGRAMS_PRESSURE,
                                         int* h_NB_RUNS_ACOUSTIC_GPU,
-                                        int* FAULT_SIMULATION) {}
+                                        int* FAULT_SIMULATION,
+                                        int* UNDO_ATTENUATION_AND_OR_PML) {}
 
 void FC_FUNC_(prepare_fields_acoustic_device,
               PREPARE_FIELDS_ACOUSTIC_DEVICE)(long* Mesh_pointer,
@@ -523,7 +532,7 @@ void FC_FUNC_(prepare_fields_acoustic_device,
 
 void FC_FUNC_(prepare_fields_acoustic_adj_dev,
               PREPARE_FIELDS_ACOUSTIC_ADJ_DEV)(long* Mesh_pointer,
-                                              int* APPROXIMATE_HESS_KL) {}
+                                               int* APPROXIMATE_HESS_KL) {}
 
 void FC_FUNC_(prepare_fields_elastic_device,
               PREPARE_FIELDS_ELASTIC_DEVICE)(long* Mesh_pointer,
@@ -566,12 +575,10 @@ void FC_FUNC_(prepare_fields_elastic_device,
 void FC_FUNC_(prepare_fields_elastic_adj_dev,
               PREPARE_FIELDS_ELASTIC_ADJ_DEV)(long* Mesh_pointer,
                                              int* size_f,
-                                             int* COMPUTE_AND_STORE_STRAIN,
                                              realw* epsilon_trace_over_3,
                                              realw* b_epsilondev_xx,realw* b_epsilondev_yy,realw* b_epsilondev_xy,
                                              realw* b_epsilondev_xz,realw* b_epsilondev_yz,
                                              realw* b_epsilon_trace_over_3,
-                                             int* ATTENUATION,
                                              int* R_size,
                                              realw* b_R_xx,realw* b_R_yy,realw* b_R_xy,realw* b_R_xz,realw* b_R_yz,
                                              realw* b_R_trace,realw* b_epsilondev_trace,
@@ -615,12 +622,7 @@ void FC_FUNC_(prepare_cleanup_device,
               PREPARE_CLEANUP_DEVICE)(long* Mesh_pointer,
                                       int* ACOUSTIC_SIMULATION,
                                       int* ELASTIC_SIMULATION,
-                                      int* ABSORBING_CONDITIONS,
-                                      int* NOISE_TOMOGRAPHY,
-                                      int* COMPUTE_AND_STORE_STRAIN,
-                                      int* ATTENUATION,
-                                      int* APPROXIMATE_OCEAN_LOAD,
-                                      int* APPROXIMATE_HESS_KL) {}
+                                      int* NOISE_TOMOGRAPHY) {}
 
 
 //

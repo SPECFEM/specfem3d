@@ -111,10 +111,7 @@
 
   ! from here on, no gpu data is needed anymore
   ! frees allocated memory on GPU
-  if (GPU_MODE) call prepare_cleanup_device(Mesh_pointer,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION, &
-                                            STACEY_ABSORBING_CONDITIONS,NOISE_TOMOGRAPHY,COMPUTE_AND_STORE_STRAIN, &
-                                            ATTENUATION,APPROXIMATE_OCEAN_LOAD, &
-                                            APPROXIMATE_HESS_KL)
+  if (GPU_MODE) call prepare_cleanup_device(Mesh_pointer,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,NOISE_TOMOGRAPHY)
 
   ! C-PML absorbing boundary conditions deallocates C_PML arrays
   if (PML_CONDITIONS) call pml_cleanup()

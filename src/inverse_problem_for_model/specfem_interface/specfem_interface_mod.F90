@@ -1013,10 +1013,7 @@ contains
   call prepare_timerun()          !! absord boundary are opened here
 
   !! we need to clean the GPU memory because we will change arrays
-  if (GPU_MODE)  call prepare_cleanup_device(Mesh_pointer,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION, &
-                                             STACEY_ABSORBING_CONDITIONS,NOISE_TOMOGRAPHY,COMPUTE_AND_STORE_STRAIN, &
-                                             ATTENUATION,ANISOTROPY,APPROXIMATE_OCEAN_LOAD, &
-                                             APPROXIMATE_HESS_KL)
+  if (GPU_MODE)  call prepare_cleanup_device(Mesh_pointer,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,NOISE_TOMOGRAPHY)
 
   !!--------------------------------------------------------------------
   !! this is specific prepare_timerun version for FWI (subroutine defined below)

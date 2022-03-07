@@ -105,7 +105,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* SAVE_SEISMOGRAMS_DISPLACEMENT,int* SAVE_SEISMOGRAMS_VELOCITY,
                                         int* SAVE_SEISMOGRAMS_ACCELERATION,int* SAVE_SEISMOGRAMS_PRESSURE,
                                         int* h_NB_RUNS_ACOUSTIC_GPU,
-                                        int* FAULT_SIMULATION) {
+                                        int* FAULT_SIMULATION,
+                                        int* UNDO_ATTENUATION_AND_OR_PML) {
 
   TRACE("prepare_constants_device");
 
@@ -122,10 +123,11 @@ void FC_FUNC_(prepare_constants_device,
   mp->NSPEC_IRREGULAR = *NSPEC_IRREGULAR;
   mp->NGLOB_AB = *NGLOB_AB;
 
-  // constants
+  // simulation flags
   mp->simulation_type = *SIMULATION_TYPE;
-  mp->absorbing_conditions = *ABSORBING_CONDITIONS;
+  mp->absorbing_conditions = *ABSORBING_CONDITIONS;  // STACEY_ABSORBING_CONDITIONS
   mp->save_forward = *SAVE_FORWARD;
+  mp->undo_attenuation = *UNDO_ATTENUATION_AND_OR_PML;
 
   // checks setup
 // DK DK August 2018: adding this test, following a suggestion by Etienne Bachmann
@@ -553,7 +555,7 @@ void FC_FUNC_(prepare_fields_acoustic_device,
 extern EXTERN_LANG
 void FC_FUNC_(prepare_fields_acoustic_adj_dev,
               PREPARE_FIELDS_ACOUSTIC_ADJ_DEV)(long* Mesh_pointer,
-                                              int* APPROXIMATE_HESS_KL) {
+                                               int* APPROXIMATE_HESS_KL) {
 
   TRACE("prepare_fields_acoustic_adj_dev");
 
@@ -607,7 +609,8 @@ void FC_FUNC_(prepare_fields_acoustic_adj_dev,
   gpuMemset_realw(mp->d_kappa_ac_kl,size,0);
 
   // preconditioner
-  if (*APPROXIMATE_HESS_KL ){
+  mp->approximate_hess_kl = *APPROXIMATE_HESS_KL;
+  if (mp->approximate_hess_kl){
     gpuMalloc_realw((void**)&(mp->d_hess_ac_kl),size);
     gpuMalloc_realw((void**)&(mp->d_hess_rho_ac_kl),size);
     gpuMalloc_realw((void**)&(mp->d_hess_kappa_ac_kl),size);
@@ -808,7 +811,8 @@ void FC_FUNC_(prepare_fields_elastic_device,
   //synchronize_mpi();
 
   // strains used for attenuation and kernel simulations
-  if (*COMPUTE_AND_STORE_STRAIN ){
+  mp->compute_and_store_strain = *COMPUTE_AND_STORE_STRAIN;
+  if (mp->compute_and_store_strain){
     // debug
     //printf("prepare_fields_elastic_device: rank %d - strain setup\n",mp->myrank);
     //synchronize_mpi();
@@ -824,7 +828,8 @@ void FC_FUNC_(prepare_fields_elastic_device,
   }
 
   // attenuation memory variables
-  if (*ATTENUATION ){
+  mp->attenuation = *ATTENUATION;
+  if (mp->attenuation){
     // debug
     //printf("prepare_fields_elastic_device: rank %d - attenuation setup\n",mp->myrank);
     //synchronize_mpi();
@@ -933,7 +938,8 @@ void FC_FUNC_(prepare_fields_elastic_device,
   }
 
   // ocean load approximation
-  if (*APPROXIMATE_OCEAN_LOAD ){
+  mp->approximate_ocean_load = *APPROXIMATE_OCEAN_LOAD;
+  if (mp->approximate_ocean_load){
     // debug
     //printf("prepare_fields_elastic_device: rank %d - ocean load setup\n",mp->myrank);
     //synchronize_mpi();
@@ -978,12 +984,10 @@ extern EXTERN_LANG
 void FC_FUNC_(prepare_fields_elastic_adj_dev,
               PREPARE_FIELDS_ELASTIC_ADJ_DEV)(long* Mesh_pointer,
                                              int* size_f,
-                                             int* COMPUTE_AND_STORE_STRAIN,
                                              realw* epsilon_trace_over_3,
                                              realw* b_epsilondev_xx,realw* b_epsilondev_yy,realw* b_epsilondev_xy,
                                              realw* b_epsilondev_xz,realw* b_epsilondev_yz,
                                              realw* b_epsilon_trace_over_3,
-                                             int* ATTENUATION,
                                              int* R_size,
                                              realw* b_R_xx,realw* b_R_yy,realw* b_R_xy,realw* b_R_xz,realw* b_R_yz,
                                              realw* b_R_trace,realw* b_epsilondev_trace,
@@ -1077,7 +1081,7 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
   }
 
   // strains used for attenuation and kernel simulations
-  if (*COMPUTE_AND_STORE_STRAIN ){
+  if (mp->compute_and_store_strain){
     // strains
     // debug
     //printf("prepare_fields_elastic_adj_dev: rank %d - strains\n",mp->myrank);
@@ -1088,20 +1092,22 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
     // solid pressure
     gpuCreateCopy_todevice_realw((void**)&mp->d_epsilon_trace_over_3,epsilon_trace_over_3,size);
 
-    // backward solid pressure
-    gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilon_trace_over_3,b_epsilon_trace_over_3,size);
-
-    // prepares backward strains
-    gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_xx,b_epsilondev_xx,size);
-    gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_yy,b_epsilondev_yy,size);
-    gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_xy,b_epsilondev_xy,size);
-    gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_xz,b_epsilondev_xz,size);
-    gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_yz,b_epsilondev_yz,size);
-    gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_trace,b_epsilondev_trace,size);
+    // kernel simulations
+    if (mp->simulation_type == 3){
+      // backward solid pressure
+      gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilon_trace_over_3,b_epsilon_trace_over_3,size);
+      // prepares backward strains
+      gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_xx,b_epsilondev_xx,size);
+      gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_yy,b_epsilondev_yy,size);
+      gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_xy,b_epsilondev_xy,size);
+      gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_xz,b_epsilondev_xz,size);
+      gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_yz,b_epsilondev_yz,size);
+      gpuCreateCopy_todevice_realw((void**)&mp->d_b_epsilondev_trace,b_epsilondev_trace,size);
+    }
   }
 
   // attenuation memory variables
-  if (*ATTENUATION ){
+  if (mp->attenuation){
     // debug
     //printf("prepare_fields_elastic_adj_dev: rank %d - attenuation\n",mp->myrank);
     //synchronize_mpi();
@@ -1122,7 +1128,8 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
   }
 
   // approximate hessian kernel
-  if (*APPROXIMATE_HESS_KL ){
+  mp->approximate_hess_kl = *APPROXIMATE_HESS_KL;
+  if (mp->approximate_hess_kl){
     // debug
     //printf("prepare_fields_elastic_adj_dev: rank %d - hessian kernel\n",mp->myrank);
     //synchronize_mpi();
@@ -1407,12 +1414,7 @@ void FC_FUNC_(prepare_cleanup_device,
               PREPARE_CLEANUP_DEVICE)(long* Mesh_pointer,
                                       int* ACOUSTIC_SIMULATION,
                                       int* ELASTIC_SIMULATION,
-                                      int* ABSORBING_CONDITIONS,
-                                      int* NOISE_TOMOGRAPHY,
-                                      int* COMPUTE_AND_STORE_STRAIN,
-                                      int* ATTENUATION,
-                                      int* APPROXIMATE_OCEAN_LOAD,
-                                      int* APPROXIMATE_HESS_KL) {
+                                      int* NOISE_TOMOGRAPHY) {
 
 TRACE("prepare_cleanup_device");
 
@@ -1434,7 +1436,7 @@ TRACE("prepare_cleanup_device");
   gpuFree(mp->d_gammaz);
 
   // absorbing boundaries
-  if (*ABSORBING_CONDITIONS && mp->d_num_abs_boundary_faces > 0){
+  if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
     gpuFree(mp->d_abs_boundary_ispec);
     gpuFree(mp->d_abs_boundary_ijk);
     gpuFree(mp->d_abs_boundary_normal);
@@ -1491,14 +1493,14 @@ TRACE("prepare_cleanup_device");
       gpuFree(mp->d_free_surface_ispec);
       gpuFree(mp->d_free_surface_ijk);
     }
-    if (*ABSORBING_CONDITIONS) gpuFree(mp->d_b_absorb_potential);
+    if (mp->absorbing_conditions) gpuFree(mp->d_b_absorb_potential);
     if (mp->simulation_type == 3) {
       gpuFree(mp->d_b_potential_acoustic);
       gpuFree(mp->d_b_potential_dot_acoustic);
       gpuFree(mp->d_b_potential_dot_dot_acoustic);
       gpuFree(mp->d_rho_ac_kl);
       gpuFree(mp->d_kappa_ac_kl);
-      if (*APPROXIMATE_HESS_KL) {
+      if (mp->approximate_hess_kl) {
         gpuFree(mp->d_hess_ac_kl);
         gpuFree(mp->d_hess_rho_ac_kl);
         gpuFree(mp->d_hess_kappa_ac_kl);
@@ -1517,7 +1519,7 @@ TRACE("prepare_cleanup_device");
     gpuFree(mp->d_rmassy);
     gpuFree(mp->d_rmassz);
     gpuFree(mp->d_phase_ispec_inner_elastic);
-    if (*ABSORBING_CONDITIONS && mp->d_num_abs_boundary_faces > 0){
+    if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
       gpuFree(mp->d_rho_vp);
       gpuFree(mp->d_rho_vs);
       if (mp->simulation_type == 3 || ( mp->simulation_type == 1 && mp->save_forward ))
@@ -1536,14 +1538,14 @@ TRACE("prepare_cleanup_device");
         gpuFree(mp->d_mu_kl);
         gpuFree(mp->d_kappa_kl);
       }
-      if (*APPROXIMATE_HESS_KL) {
+      if (mp->approximate_hess_kl) {
         gpuFree(mp->d_hess_el_kl);
         gpuFree(mp->d_hess_rho_el_kl);
         gpuFree(mp->d_hess_kappa_el_kl);
         gpuFree(mp->d_hess_mu_el_kl);
       }
     }
-    if (*COMPUTE_AND_STORE_STRAIN ){
+    if (mp->compute_and_store_strain){
       gpuFree(mp->d_epsilondev_xx);
       gpuFree(mp->d_epsilondev_yy);
       gpuFree(mp->d_epsilondev_xy);
@@ -1561,7 +1563,7 @@ TRACE("prepare_cleanup_device");
         gpuFree(mp->d_b_epsilondev_trace);
       }
     }
-    if (*ATTENUATION ){
+    if (mp->attenuation){
       gpuFree(mp->d_factor_common);
       gpuFree(mp->d_factor_common_kappa);
       gpuFree(mp->d_alphaval);
@@ -1608,7 +1610,7 @@ TRACE("prepare_cleanup_device");
       gpuFree(mp->d_c56store);
       gpuFree(mp->d_c66store);
     }
-    if (*APPROXIMATE_OCEAN_LOAD ){
+    if (mp->approximate_ocean_load){
       if (mp->num_free_surface_faces > 0){
         gpuFree(mp->d_rmass_ocean_load);
         gpuFree(mp->d_free_surface_normal);
