@@ -46,6 +46,8 @@
   !real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: b_noise_surface_movie_buffer
 
   double precision :: sizeval
+  integer :: NGLOB_wmax,NSPEC_ATTENUATION_wmax
+
   integer :: it_temp,seismo_current_temp,ier
 
   ! timing
@@ -79,6 +81,11 @@
 
   ! user output
   if (SAVE_FORWARD .or. SIMULATION_TYPE == 3) then
+    ! estimates file diskspace requirement based on maximum array size of all partitions
+    call max_all_i(NGLOB_AB,NGLOB_wmax)
+    call max_all_i(NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_wmax)
+
+    ! user output
     if (myrank == 0) then
       write(IMAIN,*) 'undoing attenuation:'
       write(IMAIN,*) '  total number of time subsets                     = ',NSUBSET_ITERATIONS
@@ -92,26 +99,24 @@
       sizeval = 0.d0
       if (ACOUSTIC_SIMULATION) then
         ! potential + potential_dot + potential_dot_dot
-        sizeval = sizeval + 3.d0 * dble(NGLOB_AB) * dble(CUSTOM_REAL)
+        sizeval = sizeval + 3.d0 * dble(NGLOB_wmax) * dble(CUSTOM_REAL)
       endif
       if (ELASTIC_SIMULATION) then
         ! displ + veloc + accel
-        sizeval = 3.d0 * dble(NDIM) * dble(NGLOB_AB) * dble(CUSTOM_REAL)
+        sizeval = 3.d0 * dble(NDIM) * dble(NGLOB_wmax) * dble(CUSTOM_REAL)
         if (ATTENUATION) then
           ! R_xx + R_yy + R_xy + R_xz + R_yz + R_trace
-          sizeval = sizeval + 6.d0 * dble(NGLLX*NGLLY*NGLLZ*N_SLS) * dble(NSPEC_ATTENUATION_AB) * dble(CUSTOM_REAL)
-          ! epsilondev_xx + epsilondev_yy + epsilondev_xy + epsilondev_xz + epsilondev_yz + epsilondev_trace
-          sizeval = sizeval + 6.d0 * dble(NGLLX*NGLLY*NGLLZ) * dble(NSPEC_STRAIN_ONLY) * dble(CUSTOM_REAL)
+          sizeval = sizeval + 6.d0 * dble(NGLLX*NGLLY*NGLLZ*N_SLS) * dble(NSPEC_ATTENUATION_wmax) * dble(CUSTOM_REAL)
         endif
       endif
       if (POROELASTIC_SIMULATION) then
         ! displs + velocs + accels + displw + velocw + accelw
-        sizeval = 6.d0 * dble(NDIM) * dble(NGLOB_AB) * dble(CUSTOM_REAL)
+        sizeval = 6.d0 * dble(NDIM) * dble(NGLOB_wmax) * dble(CUSTOM_REAL)
       endif
       ! in MB
       sizeval = sizeval / 1024.d0 / 1024.d0
       write(IMAIN,*) '  size of single time snapshot subset per slice         = ', sngl(sizeval),'MB'
-      ! for all processes
+      ! for all processes (approximately, assumes all processes have same number of elements/points)
       sizeval = sizeval * dble(NPROC)
       write(IMAIN,*) '  size of single time snapshot subset for all processes = ', sngl(sizeval),'MB'
       write(IMAIN,*) '                                                        = ', sngl(sizeval/1024.d0),'GB'
@@ -143,7 +148,8 @@
       write(IMAIN,*)
       call flush_IMAIN()
     endif
-    ! buffer arrays
+
+    ! allocates buffer arrays
     if (ACOUSTIC_SIMULATION) then
       allocate(b_potential_acoustic_buffer(NGLOB_AB,NT_DUMP_ATTENUATION), &
                b_potential_dot_dot_acoustic_buffer(NGLOB_AB,NT_DUMP_ATTENUATION),stat=ier)
@@ -277,7 +283,7 @@
       ! note: after reading the restart files of displacement back from disk, recompute the strain from displacement;
       !       this is better than storing the strain to disk as well, which would drastically increase I/O volume
       ! computes strain based on current backward/reconstructed wavefield
-      !if (COMPUTE_AND_STORE_STRAIN) call compute_strain_att_backward()   ! for future use to reduce file sizes...
+      if (COMPUTE_AND_STORE_STRAIN) call compute_strain_att_backward()
     endif
 
     ! time loop within this iteration subset
@@ -457,7 +463,7 @@
       seismo_current = seismo_current_temp
 
       ! computes strain based on current adjoint wavefield
-      !if (COMPUTE_AND_STORE_STRAIN) call compute_strain_att()  ! for future use to reduce file sizes...
+      if (COMPUTE_AND_STORE_STRAIN) call compute_strain_att()
 
       ! adjoint wavefield simulation
       do it_of_this_subset = 1, it_subset_end

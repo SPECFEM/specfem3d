@@ -359,12 +359,13 @@
     if (ELASTIC_SIMULATION) then
       call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel,Mesh_pointer)
 
-      if (ATTENUATION) &
-        call transfer_fields_att_from_device(Mesh_pointer, &
-                                             R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
-                                             epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
-                                             R_trace,epsilondev_trace, &
-                                             size(epsilondev_xx))
+      if (ATTENUATION) then
+        call transfer_rmemory_from_device(Mesh_pointer,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                                          R_trace,size(R_xx))
+        call transfer_strain_from_device(Mesh_pointer,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+                                         epsilondev_trace,size(epsilondev_xx))
+
+      endif
     endif
 
   else if (SIMULATION_TYPE == 3) then

@@ -359,7 +359,7 @@
   character(len=MAX_STRING_LEN) :: file_name,group_name
   ! ADIOS variables
   integer(kind=8), dimension(1) :: start, count
-  integer(kind=8) :: local_dim_potential_acoustic,local_dim_displ,local_dim_R_xx,local_dim_epsilondev_xx, &
+  integer(kind=8) :: local_dim_potential_acoustic,local_dim_displ,local_dim_R_xx, &
                      local_dim_displs_poroelastic
 
   ! shorten the name of iteration variable and make it integer*8
@@ -460,8 +460,6 @@
     if (ATTENUATION) then
       call read_adios_scalar_local_dim(myadios_fwd_file, myadios_fwd_group, myrank, &
                                        "R_xx", local_dim_R_xx)
-      call read_adios_scalar_local_dim(myadios_fwd_file, myadios_fwd_group, myrank, &
-                                       "epsilondev_xx", local_dim_epsilondev_xx)
     endif
   endif
   if (POROELASTIC_SIMULATION) then
@@ -513,24 +511,25 @@
       call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "R_yz/array", b_R_yz, step)
       call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, "R_trace/array", b_R_trace, step)
 
-      start(1) = local_dim_epsilondev_xx * myrank
-      count(1) = NGLLX * NGLLY * NGLLZ * NSPEC_STRAIN_ONLY
-      sel_num = sel_num+1
-      sel => selections(sel_num)
-      call set_selection_boundingbox(sel, start, count)
-
-      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                     "epsilondev_xx/array", b_epsilondev_xx, step)
-      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                     "epsilondev_yy/array", b_epsilondev_yy, step)
-      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                     "epsilondev_xy/array", b_epsilondev_xy, step)
-      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                     "epsilondev_xz/array", b_epsilondev_xz, step)
-      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                     "epsilondev_yz/array", b_epsilondev_yz, step)
-      call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
-                                     "epsilondev_trace/array", b_epsilondev_trace, step)
+      ! strain not needed anymore, to save file diskspace - will be re-constructed based on b_displ...
+      !start(1) = local_dim_epsilondev_xx * myrank
+      !count(1) = NGLLX * NGLLY * NGLLZ * NSPEC_STRAIN_ONLY
+      !sel_num = sel_num+1
+      !sel => selections(sel_num)
+      !call set_selection_boundingbox(sel, start, count)
+      !
+      !call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
+      !                               "epsilondev_xx/array", b_epsilondev_xx, step)
+      !call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
+      !                               "epsilondev_yy/array", b_epsilondev_yy, step)
+      !call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
+      !                               "epsilondev_xy/array", b_epsilondev_xy, step)
+      !call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
+      !                               "epsilondev_xz/array", b_epsilondev_xz, step)
+      !call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
+      !                               "epsilondev_yz/array", b_epsilondev_yz, step)
+      !call read_adios_schedule_array(myadios_fwd_file, myadios_fwd_group, sel, start, count, &
+      !                               "epsilondev_trace/array", b_epsilondev_trace, step)
     endif
   endif
 

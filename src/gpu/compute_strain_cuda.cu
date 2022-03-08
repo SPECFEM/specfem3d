@@ -51,7 +51,7 @@ void FC_FUNC_(compute_strain_cuda,
     exit_on_error("Error invalid FORWARD_OR_ADJOINT in compute_strain_cuda() routine");
   }
   // only for kernel runs (needs epsilon_trace_over_3 arrays allocated)
-  if (mp->simulation_type /= 3) exit_on_error("Error invalid SIMULATION_TYPE in compute_strain_cuda() routine");
+  if (mp->simulation_type != 3) exit_on_error("Error invalid SIMULATION_TYPE in compute_strain_cuda() routine");
 
   // checks flag
   if (! mp->undo_attenuation) exit_on_error("Error invalid UNDO_ATTENUATION flag in compute_strain_cuda() routine");

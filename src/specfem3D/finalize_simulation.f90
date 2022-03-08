@@ -38,6 +38,16 @@
 
   implicit none
 
+  ! synchronize all processes, waits until all processes have written their seismograms
+  call synchronize_all()
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) 'finalizing simulation'
+    call flush_IMAIN()
+  endif
+  call synchronize_all()
+
   ! write gravity perturbations
   if (GRAVITY_SIMULATION) call gravity_output()
 

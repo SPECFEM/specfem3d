@@ -711,24 +711,32 @@ void FC_FUNC_(transfer_displ_from_device,
 void FC_FUNC_(transfer_displ_to_device,
               TRANSFER_DISPL_TO_DEVICE)(int* size, realw* displ, long* Mesh_pointer) {}
 
-void FC_FUNC_(transfer_b_fields_att_to_device,
-              TRANSFER_B_FIELDS_ATT_TO_DEVICE)(long* Mesh_pointer,
-                                               realw* b_R_xx,realw* b_R_yy,realw* b_R_xy,
-                                               realw* b_R_xz,realw* b_R_yz,
-                                               int* size_R,
-                                               realw* b_epsilondev_xx,realw* b_epsilondev_yy,realw* b_epsilondev_xy,
-                                               realw* b_epsilondev_xz,realw* b_epsilondev_yz,
-                                               realw* b_R_trace,realw* b_epsilondev_trace,
-                                               int* size_epsilondev) {}
+void FC_FUNC_(transfer_b_rmemory_to_device,
+              TRANSFER_B_RMEMORY_TO_DEVICE)(long* Mesh_pointer,
+                                            realw* b_R_xx,realw* b_R_yy,realw* b_R_xy,
+                                            realw* b_R_xz,realw* b_R_yz,
+                                            realw* b_R_trace,
+                                            int* size_R) {}
 
-void FC_FUNC_(transfer_fields_att_from_device,
-              TRANSFER_FIELDS_ATT_FROM_DEVICE)(long* Mesh_pointer,
-                                               realw* R_xx,realw* R_yy,realw* R_xy,realw* R_xz,realw* R_yz,
-                                               int* size_R,
-                                               realw* epsilondev_xx,realw* epsilondev_yy,realw* epsilondev_xy,
-                                               realw* epsilondev_xz,realw* epsilondev_yz,
-                                               realw* R_trace,realw* epsilondev_trace,
-                                               int* size_epsilondev) {}
+void FC_FUNC_(transfer_b_strain_to_device,
+              TRANSFER_B_strain_TO_DEVICE)(long* Mesh_pointer,
+                                           realw* b_epsilondev_xx,realw* b_epsilondev_yy,realw* b_epsilondev_xy,
+                                           realw* b_epsilondev_xz,realw* b_epsilondev_yz,
+                                           realw* b_epsilondev_trace,
+                                           int* size_epsilondev) {}
+
+void FC_FUNC_(transfer_rmemory_from_device,
+              TRANSFER_RMEMORY_FROM_DEVICE)(long* Mesh_pointer,
+                                            realw* R_xx,realw* R_yy,realw* R_xy,realw* R_xz,realw* R_yz,
+                                            realw* R_trace,
+                                            int* size_R) {}
+
+void FC_FUNC_(transfer_strain_from_device,
+              TRANSFER_STRAIN_FROM_DEVICE)(long* Mesh_pointer,
+                                           realw* epsilondev_xx,realw* epsilondev_yy,realw* epsilondev_xy,
+                                           realw* epsilondev_xz,realw* epsilondev_yz,
+                                           realw* epsilondev_trace,
+                                           int* size_epsilondev) {}
 
 void FC_FUNC_(transfer_kernels_el_to_host,
               TRANSFER_KERNELS_EL_TO_HOST)(long* Mesh_pointer,

@@ -50,10 +50,10 @@ contains
   print *, '   start_slice/end_slice - start/end range of slice numbers to combine'
   print *, '   slice_list            - text file containing slice numbers to combine (or use name "all" for all slices)'
   print *, '   varname      - possible varnames are: '
-  print *, '                    rho, vp, vs, kappastore, mustore, alpha_kernel, etc.'
+  print *, '                    rho, vp, vs, kappastore, mustore, alpha_kl, etc.'
   print *, '   var_file     - datafile that holds array, as real(kind=CUSTOM_REAL):: varname(NGLLX,NGLLY,NGLLZ,NSPEC),'
   print *, '                  (e.g. OUTPUT_FILES/kernels.bp)'
-  print *, '   mesh_file    - are used to link variable to the topology (e.g. DATABASES_MPI/solver_data.bp)'
+  print *, '   mesh_file    - are used to link variable to the topology (e.g. DATABASES_MPI/external_mesh.bp)'
   print *, '   output_dir   - indicates where var_name.vtk will be written'
   print *, '   high/low res - give 0 for low resolution and 1 for high resolution'
 

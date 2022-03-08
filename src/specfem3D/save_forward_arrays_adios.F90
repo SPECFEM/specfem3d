@@ -291,9 +291,7 @@
   logical :: do_open_file,do_close_file,do_init_group
 
   !--- Variables to allreduce - wmax stands for world_max
-  integer,save :: NGLOB_wmax, NSPEC_ATTENUATION_wmax, NSPEC_STRAIN_wmax, N_SLS_wmax
-  integer, parameter :: num_vars = 4
-  integer, dimension(num_vars) :: max_global_values
+  integer,save :: NGLOB_wmax, NSPEC_ATTENUATION_wmax, N_SLS_wmax
 
   ! current subset iteration
   iteration_on_subset_tmp = iteration_on_subset
@@ -305,17 +303,9 @@
   ! only need to do this once for the first iteration and save the max values
   if (iteration_on_subset_tmp == 1) then
     ! Filling a temporary array to avoid doing allreduces for each var.
-    max_global_values(1) = NGLOB_AB
-    max_global_values(2) = NSPEC_ATTENUATION_AB
-    max_global_values(3) = NSPEC_STRAIN_ONLY
-    max_global_values(4) = N_SLS
-
-    call max_allreduce_i(max_global_values,num_vars)
-
-    NGLOB_wmax                   = max_global_values(1)
-    NSPEC_ATTENUATION_wmax       = max_global_values(2)
-    NSPEC_STRAIN_wmax            = max_global_values(3)
-    N_SLS_wmax                   = max_global_values(4)
+    call max_allreduce_singlei(NGLOB_AB,NGLOB_wmax)
+    call max_allreduce_singlei(NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_wmax)
+    call max_allreduce_singlei(N_SLS,N_SLS_wmax)        ! probably not needed, N_SLS will be the same for all partitions
   endif
 
   ! file handling
@@ -419,19 +409,20 @@
           call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, "", &
                                            STRINGIFY_VAR(R_trace))
 
-          local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_STRAIN_wmax
-          call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
-                                           STRINGIFY_VAR(epsilondev_xx))
-          call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
-                                           STRINGIFY_VAR(epsilondev_yy))
-          call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
-                                           STRINGIFY_VAR(epsilondev_xy))
-          call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
-                                           STRINGIFY_VAR(epsilondev_xz))
-          call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
-                                           STRINGIFY_VAR(epsilondev_yz))
-          call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, "", &
-                                           STRINGIFY_VAR(epsilondev_trace))
+          ! strain not needed anymore, to save file diskspace - will be re-constructed based on b_displ...
+          !local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_STRAIN_wmax
+          !call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
+          !                                 STRINGIFY_VAR(epsilondev_xx))
+          !call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
+          !                                 STRINGIFY_VAR(epsilondev_yy))
+          !call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
+          !                                 STRINGIFY_VAR(epsilondev_xy))
+          !call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
+          !                                 STRINGIFY_VAR(epsilondev_xz))
+          !call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, '', &
+          !                                 STRINGIFY_VAR(epsilondev_yz))
+          !call define_adios_global_array1D(myadios_fwd_group, group_size_inc, local_dim, "", &
+          !                                 STRINGIFY_VAR(epsilondev_trace))
         endif
       endif
 
@@ -523,19 +514,20 @@
       call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
                                        STRINGIFY_VAR(R_trace))
 
-      local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_STRAIN_wmax
-      call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(epsilondev_xx))
-      call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(epsilondev_yy))
-      call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(epsilondev_xy))
-      call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(epsilondev_xz))
-      call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(epsilondev_yz))
-      call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(epsilondev_trace))
+      ! strain not needed anymore, to save file diskspace - will be re-constructed based on b_displ...
+      !local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_STRAIN_wmax
+      !call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
+      !                                 STRINGIFY_VAR(epsilondev_xx))
+      !call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
+      !                                 STRINGIFY_VAR(epsilondev_yy))
+      !call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
+      !                                 STRINGIFY_VAR(epsilondev_xy))
+      !call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
+      !                                 STRINGIFY_VAR(epsilondev_xz))
+      !call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
+      !                                 STRINGIFY_VAR(epsilondev_yz))
+      !call write_adios_global_1d_array(myadios_fwd_file, myadios_fwd_group, myrank, sizeprocs, local_dim, &
+      !                                 STRINGIFY_VAR(epsilondev_trace))
     endif
   endif
   if (POROELASTIC_SIMULATION) then

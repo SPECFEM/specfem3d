@@ -192,9 +192,9 @@
         call compute_element_strain(ispec,NGLOB_AB,displ,epsilondev_loc,epsilon_trace_over_3_loc)
 
         ! backward/reconstructed strain arrays
-        epsilon_trace_over_3(:,:,:,ispec) = epsilon_trace_over_3_loc(:,:,:)
-        epsilondev_trace(:,:,:,ispec) = 3.0_CUSTOM_REAL * epsilon_trace_over_3_loc(:,:,:)
-        epsilondev_xx(:,:,:,ispec) = epsilondev_loc(1,:,:,:)
+        epsilon_trace_over_3(:,:,:,ispec) = epsilon_trace_over_3_loc(:,:,:)                ! needed for kernels
+        epsilondev_trace(:,:,:,ispec) = 3.0_CUSTOM_REAL * epsilon_trace_over_3_loc(:,:,:)  ! needed for bulk attenuation
+        epsilondev_xx(:,:,:,ispec) = epsilondev_loc(1,:,:,:)                               ! needed for shear attenuation
         epsilondev_yy(:,:,:,ispec) = epsilondev_loc(2,:,:,:)
         epsilondev_xy(:,:,:,ispec) = epsilondev_loc(3,:,:,:)
         epsilondev_xz(:,:,:,ispec) = epsilondev_loc(4,:,:,:)
@@ -232,9 +232,9 @@
         call compute_element_strain(ispec,NGLOB_AB,b_displ,b_epsilondev_loc,b_epsilon_trace_over_3_loc)
 
         ! backward/reconstructed strain arrays
-        b_epsilon_trace_over_3(:,:,:,ispec) = b_epsilon_trace_over_3_loc(:,:,:)
-        b_epsilondev_trace(:,:,:,ispec) = 3.0_CUSTOM_REAL * b_epsilon_trace_over_3_loc(:,:,:)
-        b_epsilondev_xx(:,:,:,ispec) = b_epsilondev_loc(1,:,:,:)
+        b_epsilon_trace_over_3(:,:,:,ispec) = b_epsilon_trace_over_3_loc(:,:,:)                ! needed for kernels
+        b_epsilondev_trace(:,:,:,ispec) = 3.0_CUSTOM_REAL * b_epsilon_trace_over_3_loc(:,:,:)  ! needed for bulk attenuation
+        b_epsilondev_xx(:,:,:,ispec) = b_epsilondev_loc(1,:,:,:)                               ! needed for shear attenuation
         b_epsilondev_yy(:,:,:,ispec) = b_epsilondev_loc(2,:,:,:)
         b_epsilondev_xy(:,:,:,ispec) = b_epsilondev_loc(3,:,:,:)
         b_epsilondev_xz(:,:,:,ispec) = b_epsilondev_loc(4,:,:,:)

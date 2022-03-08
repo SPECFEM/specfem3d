@@ -378,9 +378,21 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: alphaval,betaval,gammaval
   real(kind=CUSTOM_REAL) :: min_resolved_period
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: R_trace,R_xx,R_yy,R_xy,R_xz,R_yz
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-    epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
+  ! memory variables for shear attenuation
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: R_xx,R_yy,R_xy,R_xz,R_yz
+  ! memory variables for bulk attenuation
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: R_trace
+  ! strain for shear attenuation
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: epsilondev_xx,epsilondev_yy, &
+    epsilondev_xy,epsilondev_xz,epsilondev_yz
+  ! strain for bulk attenuation
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: epsilondev_trace
+
+  ! for kernels
+  ! note: epsilondev_trace and epsilon_trace_over_3 are both storing the strain trace, but differ by the factor 1/3.
+  !       while epsilondev_trace is needed for bulk attenuation scheme, epsilon_trace_over_3 is for kernel calculations.
+  !       todo: in future, we could likely just allocate one of these to save memory
+  !             and apply the 1/3 factor where needed...
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: epsilon_trace_over_3
 
   ! displacement, velocity, acceleration
@@ -425,9 +437,13 @@ module specfem_par_elastic
 
   ! backward attenuation arrays
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: b_alphaval, b_betaval, b_gammaval
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-    b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz
+
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: b_R_trace
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: b_epsilondev_xx,b_epsilondev_yy, &
+    b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: b_epsilondev_trace
+
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: b_epsilon_trace_over_3
 
   ! adjoint kernels

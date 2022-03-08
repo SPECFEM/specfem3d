@@ -106,15 +106,15 @@
     if (ELASTIC_SIMULATION) then
       ! transfers elastic wavefields to GPU
       call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
-      ! memory variables if attenuation
+      ! memory & strain variables for attenuation
       if (ATTENUATION) then
-        call transfer_b_fields_att_to_device(Mesh_pointer, &
-                                             b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                                             size(b_R_xx), &
-                                             b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
-                                             b_epsilondev_xz,b_epsilondev_yz, &
-                                             b_R_trace,b_epsilondev_trace, &
-                                             size(b_epsilondev_xx))
+        call transfer_b_rmemory_to_device(Mesh_pointer, &
+                                          b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                                          b_R_trace,size(b_R_xx))
+        call transfer_b_strain_to_device(Mesh_pointer, &
+                                         b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                                         b_epsilondev_xz,b_epsilondev_yz, &
+                                         b_epsilondev_trace,size(b_epsilondev_xx))
       endif
     endif
 
@@ -177,12 +177,13 @@
         read(IIN) b_R_xy
         read(IIN) b_R_xz
         read(IIN) b_R_yz
-        read(IIN) b_epsilondev_trace
-        read(IIN) b_epsilondev_xx
-        read(IIN) b_epsilondev_yy
-        read(IIN) b_epsilondev_xy
-        read(IIN) b_epsilondev_xz
-        read(IIN) b_epsilondev_yz
+        ! strain not needed anymore, to save file diskspace - will be re-constructed based on b_displ...
+        !read(IIN) b_epsilondev_trace
+        !read(IIN) b_epsilondev_xx
+        !read(IIN) b_epsilondev_yy
+        !read(IIN) b_epsilondev_xy
+        !read(IIN) b_epsilondev_xz
+        !read(IIN) b_epsilondev_yz
       endif
     endif
 
@@ -214,13 +215,9 @@
       call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
       ! memory variables if attenuation
       if (ATTENUATION) then
-        call transfer_b_fields_att_to_device(Mesh_pointer, &
-                                             b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                                             size(b_R_xx), &
-                                             b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
-                                             b_epsilondev_xz,b_epsilondev_yz, &
-                                             b_R_trace,b_epsilondev_trace, &
-                                             size(b_epsilondev_xx))
+        call transfer_b_rmemory_to_device(Mesh_pointer, &
+                                          b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                                          b_R_trace,size(b_R_xx))
       endif
     endif
 
