@@ -29,7 +29,7 @@
 
   subroutine save_arrays_solver_ext_mesh()
 
-  use constants, only: NGLLX,NGLLY,NGLLZ,IMAIN,IOUT,myrank
+  use constants, only: IMAIN,IOUT,myrank
 
   use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
     APPROXIMATE_OCEAN_LOAD, SAVE_MESH_FILES, ANISOTROPY
@@ -719,7 +719,7 @@
 
   subroutine save_arrays_solver_injection_boundary()
 
-  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT
+  use constants, only: myrank,NGLLSQUARE,IMAIN,IOUT
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
 

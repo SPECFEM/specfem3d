@@ -181,7 +181,7 @@
 
 ! returns precomputed mass matrix in rmass array
 
-  use constants, only: myrank,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,NGLLSQUARE,IMAIN, &
+  use constants, only: myrank,CUSTOM_REAL,NGLLSQUARE,IMAIN, &
     MINIMUM_THICKNESS_3D_OCEANS,RHO_APPROXIMATE_OCEAN_LOAD
 
   use shared_parameters, only: APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY
@@ -301,7 +301,7 @@
 ! on Stacey edges for the crust_mantle and outer_core regions but not for the inner_core region
 ! thus the mass matrix must be replaced by three mass matrices including the "C" damping matrix
 
-  use constants, only: NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,NGLLSQUARE
+  use constants, only: CUSTOM_REAL,NGLLSQUARE
 
   use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, DT
 

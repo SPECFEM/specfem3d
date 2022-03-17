@@ -642,9 +642,9 @@ module specfem_par_movie
 
   implicit none
 
-  ! to save full 3D snapshot of velocity (movie volume
+  ! to save full 3D snapshot of velocity (movie volume)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: div, curl_x, curl_y, curl_z
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: velocity_x,velocity_y,velocity_z
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: wavefield_x,wavefield_y,wavefield_z
 
   ! surface point locations
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x

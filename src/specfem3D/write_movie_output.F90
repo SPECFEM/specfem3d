@@ -489,7 +489,7 @@
 
   ! local parameters
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: pressure_loc
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: veloc_element
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: vec_element
   ! divergence and curl only in the global nodes
   real(kind=CUSTOM_REAL),dimension(:),allocatable:: div_glob
   integer,dimension(:),allocatable :: valence
@@ -511,21 +511,32 @@
   call write_channel_name(3,channel)
   compz(1:1) = channel(3:3) ! Z
 
-  ! saves velocity here to avoid static offset on displacement for movies
-  velocity_x(:,:,:,:) = 0._CUSTOM_REAL
-  velocity_y(:,:,:,:) = 0._CUSTOM_REAL
-  velocity_z(:,:,:,:) = 0._CUSTOM_REAL
+  ! note: we use either displacement or velocity, depending on the Par_file setting of SAVE_DISPLACEMENT,
+  !       and store them into the arrays wavefield_x/y/z - the naming of the arrays could be better...
+  !
+  ! saves wavefield here
+  ! note: displacement will show static offset on displacement field for movies,
+  !       thus better to have velocity visualized for movies
+  wavefield_x(:,:,:,:) = 0._CUSTOM_REAL
+  wavefield_y(:,:,:,:) = 0._CUSTOM_REAL
+  wavefield_z(:,:,:,:) = 0._CUSTOM_REAL
 
   if (ACOUSTIC_SIMULATION) then
-    ! uses velocity_x,.. as temporary arrays to store velocity on all GLL points
+    ! uses wavefield_x,.. as temporary arrays to store velocity/displacement on all GLL points
     do ispec = 1,NSPEC_AB
       ! only acoustic elements
       if (.not. ispec_is_acoustic(ispec)) cycle
-      ! calculates velocity
-      call compute_gradient_in_acoustic(ispec,potential_dot_acoustic,veloc_element)
-      velocity_x(:,:,:,ispec) = veloc_element(1,:,:,:)
-      velocity_y(:,:,:,ispec) = veloc_element(2,:,:,:)
-      velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)
+
+      if (SAVE_DISPLACEMENT) then
+        ! calculates displacement
+        call compute_gradient_in_acoustic(ispec,potential_acoustic,vec_element)
+      else
+        ! calculates velocity
+        call compute_gradient_in_acoustic(ispec,potential_dot_acoustic,vec_element)
+      endif
+      wavefield_x(:,:,:,ispec) = vec_element(1,:,:,:)
+      wavefield_y(:,:,:,ispec) = vec_element(2,:,:,:)
+      wavefield_z(:,:,:,ispec) = vec_element(3,:,:,:)
     enddo
 
     ! outputs pressure field for purely acoustic simulations
@@ -562,13 +573,21 @@
 
     ! saves full snapshot data to local disk
     if (ELASTIC_SIMULATION) then
-      ! calculates divergence and curl of velocity field
-      call wmo_movie_div_curl(veloc, &
-                              div_glob,valence, &
-                              div,curl_x,curl_y,curl_z, &
-                              velocity_x,velocity_y,velocity_z, &
-                              ispec_is_elastic)
-
+      if (SAVE_DISPLACEMENT) then
+        ! calculates divergence and curl of displacement field
+        call wmo_movie_div_curl(displ, &
+                                div_glob,valence, &
+                                div,curl_x,curl_y,curl_z, &
+                                wavefield_x,wavefield_y,wavefield_z, &
+                                ispec_is_elastic)
+      else
+        ! calculates divergence and curl of velocity field
+        call wmo_movie_div_curl(veloc, &
+                                div_glob,valence, &
+                                div,curl_x,curl_y,curl_z, &
+                                wavefield_x,wavefield_y,wavefield_z, &
+                                ispec_is_elastic)
+      endif
       ! writes out div and curl on global points
       write(outputname,"('/proc',i6.6,'_div_glob_it',i6.6,'.bin')") myrank,it
       open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
@@ -579,12 +598,21 @@
 
     ! saves full snapshot data to local disk
     if (POROELASTIC_SIMULATION) then
-      ! calculates divergence and curl of velocity field
-      call wmo_movie_div_curl(velocs_poroelastic, &
-                              div_glob,valence, &
-                              div,curl_x,curl_y,curl_z, &
-                              velocity_x,velocity_y,velocity_z, &
-                              ispec_is_poroelastic)
+      if (SAVE_DISPLACEMENT) then
+        ! calculates divergence and curl of displacement field
+        call wmo_movie_div_curl(displs_poroelastic, &
+                                div_glob,valence, &
+                                div,curl_x,curl_y,curl_z, &
+                                wavefield_x,wavefield_y,wavefield_z, &
+                                ispec_is_poroelastic)
+      else
+        ! calculates divergence and curl of velocity field
+        call wmo_movie_div_curl(velocs_poroelastic, &
+                                div_glob,valence, &
+                                div,curl_x,curl_y,curl_z, &
+                                wavefield_x,wavefield_y,wavefield_z, &
+                                ispec_is_poroelastic)
+      endif
     endif ! poroelastic
 
     deallocate(div_glob,valence)
@@ -617,24 +645,45 @@
     close(IOUT)
   endif
 
-  ! velocity
-  write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
-  open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-  if (ier /= 0) stop 'error opening file movie output velocity x'
-  write(IOUT) velocity_x
-  close(IOUT)
+  if (SAVE_DISPLACEMENT) then
+    ! displacement field
+    write(outputname,"('/proc',i6.6,'_displ_',a1,'_it',i6.6,'.bin')") myrank,compx,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file movie output displ x'
+    write(IOUT) wavefield_x
+    close(IOUT)
 
-  write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compy,it
-  open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-  if (ier /= 0) stop 'error opening file movie output velocity y'
-  write(IOUT) velocity_y
-  close(IOUT)
+    write(outputname,"('/proc',i6.6,'_displ_',a1,'_it',i6.6,'.bin')") myrank,compy,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file movie output displ y'
+    write(IOUT) wavefield_y
+    close(IOUT)
 
-  write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compz,it
-  open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-  if (ier /= 0) stop 'error opening file movie output velocity z'
-  write(IOUT) velocity_z
-  close(IOUT)
+    write(outputname,"('/proc',i6.6,'_displ_',a1,'_it',i6.6,'.bin')") myrank,compz,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file movie output displ z'
+    write(IOUT) wavefield_z
+    close(IOUT)
+  else
+    ! velocity
+    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file movie output velocity x'
+    write(IOUT) wavefield_x
+    close(IOUT)
+
+    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compy,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file movie output velocity y'
+    write(IOUT) wavefield_y
+    close(IOUT)
+
+    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compz,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file movie output velocity z'
+    write(IOUT) wavefield_z
+    close(IOUT)
+  endif
 
   end subroutine wmo_movie_volume_output
 
@@ -643,10 +692,10 @@
   subroutine wmo_movie_div_curl(veloc, &
                                 div_glob,valence, &
                                 div,curl_x,curl_y,curl_z, &
-                                velocity_x,velocity_y,velocity_z, &
+                                wavefield_x,wavefield_y,wavefield_z, &
                                 ispec_is)
 
-! calculates div, curl and velocity
+! calculates div, curl and wavefield
 
   use constants
 
@@ -666,7 +715,7 @@
   integer,dimension(NGLOB_AB),intent(out) :: valence
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(out) :: div, curl_x, curl_y, curl_z
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(inout) :: velocity_x,velocity_y,velocity_z
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(inout) :: wavefield_x,wavefield_y,wavefield_z
   logical,dimension(NSPEC_AB),intent(in) :: ispec_is
 
   ! local parameters
@@ -818,11 +867,11 @@
           curl_y(i,j,k,ispec) = dvxdzl(i,j,k) - dvzdxl(i,j,k)
           curl_z(i,j,k,ispec) = dvydxl(i,j,k) - dvxdyl(i,j,k)
 
-          ! velocity field
+          ! velocity or displacement field
           iglob = ibool(i,j,k,ispec)
-          velocity_x(i,j,k,ispec) = veloc_element(1,i,j,k)
-          velocity_y(i,j,k,ispec) = veloc_element(2,i,j,k)
-          velocity_z(i,j,k,ispec) = veloc_element(3,i,j,k)
+          wavefield_x(i,j,k,ispec) = veloc_element(1,i,j,k)
+          wavefield_y(i,j,k,ispec) = veloc_element(2,i,j,k)
+          wavefield_z(i,j,k,ispec) = veloc_element(3,i,j,k)
 
           valence(iglob) = valence(iglob)+1
           div_glob(iglob) = div_glob(iglob) + div(i,j,k,ispec)
