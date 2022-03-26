@@ -420,35 +420,7 @@ xgenerate\_database input.
 There are quite a few more parameters to change the default setup of your runs. Please check the comments in the \texttt{Par\_file} directly for further explanations.\\
 
 
-The present version of SPECFEM can handle fully saturated porous simulations.
-(Christina Morency implemented Biot's equation.
-However, the code cannot calculate partially saturated cases in its state.
-Christina Morency is presently working on a dual porosity, dual permeability formulation, type Pride and Berryman, for an other project, but it will not be available for some time.)
-The way we prescribe material property for porous material in SPECFEM3D is as follow.
-We use a file \texttt{nummaterial\_poroelastic\_file}, which is located in the directory \texttt{MESH/}. The line format is as follow:
-{\small \begin{verbatim}
-  rhos rhof phi c kxx kxy kxz kyy kyz kzz Ks Kf Kfr etaf mufr
-\end{verbatim}}
-\begin{description}
-\item where\\
-\texttt{rho\_s} = solid density,\\
-\texttt{rho\_f} = fluid density,\\
-\texttt{phi} = porosity,\\
-\texttt{tort} = tortuosity,\\
-\texttt{kxx} = xx component of permeability tensor,\\
-\texttt{kxy} = xy,yx components of permeability tensor,\\
-\texttt{kyy} = yy component of permeability tensor,\\
-\texttt{kxz} = xz,zx components of permeability tensor,\\
-\texttt{kzz} = zz component of permeability tensor,\\
-\texttt{kappa\_s} = solid bulk modulus,\\
-\texttt{kappa\_f} = fluid bulk modulus,\\
-\texttt{kappa\_fr} = frame bulk modulus,\\
-\texttt{eta\_f} = fluid viscosity,\\
-\texttt{mu\_fr} = frame shear modulus.\\
-\end{description}
-Using an external mesh (for instance coming from CUBIT/TRELIS), poroelastic materials have the ID number 3, while 1 is acoustic and 2 is elastic (see the example in the package: EXAMPLES/homogeneous\_poroelastic).\\
-
-
+\subsection{PML absorbing boundary layers}
 
 If you use PML, the mesh elements that belong to the PML layers can
 be acoustic or elastic, but not viscoelastic nor poroelastic. Then,

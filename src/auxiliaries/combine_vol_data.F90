@@ -421,6 +421,9 @@
   if (filename(1:13) == 'velocity_X_it' .or. filename(1:13) == 'velocity_Y_it' .or. filename(1:13) == 'velocity_Z_it') then
     data_array_name = trim(filename(1:10)) ! "velocity_X",..
   endif
+  if (filename(1:10) == 'displ_X_it' .or. filename(1:10) == 'displ_Y_it' .or. filename(1:10) == 'displ_Z_it') then
+    data_array_name = trim(filename(1:10)) ! "displ_X",..
+  endif
   if (filename(1:6) == 'div_it') then
     data_array_name = trim(filename(1:3)) ! "div"
   endif
