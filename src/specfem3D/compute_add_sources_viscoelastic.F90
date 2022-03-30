@@ -313,15 +313,15 @@
 
   integer :: isource,iglob,i,j,k,ispec,it_tmp
 
-  ! no source inside the mesh if we are coupling with DSM
-  ! because the source is precisely the wavefield coming from the DSM traction file
-  if (COUPLE_WITH_INJECTION_TECHNIQUE .and. SIMULATION_TYPE == 3) return
+  ! checks if anything to do
+  if (SIMULATION_TYPE /= 3) return
 
   ! ignore CMT sources for fault rupture simulations
   if (FAULT_SIMULATION) return
 
-  ! checks if anything to do
-  if (SIMULATION_TYPE /= 3) return
+  ! no source inside the mesh if we are coupling with DSM
+  ! because the source is precisely the wavefield coming from the DSM traction file
+  if (COUPLE_WITH_INJECTION_TECHNIQUE) return
 
   ! iteration step
   if (UNDO_ATTENUATION_AND_OR_PML) then
@@ -492,12 +492,12 @@
 
   character(len=MAX_STRING_LEN) :: adj_source_file
 
+  ! checks if anything to do
+  if (.not. GPU_MODE) return
+
   ! no source inside the mesh if we are coupling with DSM
   ! because the source is precisely the wavefield coming from the DSM traction file
   if (COUPLE_WITH_INJECTION_TECHNIQUE .and. SIMULATION_TYPE == 1) return
-
-  ! checks if anything to do
-  if (.not. GPU_MODE) return
 
   ! forward simulations
   if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
@@ -564,7 +564,7 @@
 !       adjoint source traces which start at -t0 and end at time (NSTEP-1)*DT - t0
 !       for step it=1: (NSTEP -it + 1)*DT - t0 for backward wavefields corresponds to time T
 
-! adjoint simulations
+  ! adjoint simulations
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
     ! adds adjoint source in this partitions
     if (nadj_rec_local > 0) then
@@ -618,10 +618,14 @@
 !           b_displ(it=1) corresponds to -t0 + (NSTEP-1)*DT.
 !           thus indexing is NSTEP - it , instead of NSTEP - it - 1
 
-! adjoint simulations
+  ! adjoint/backward wavefield
   if (SIMULATION_TYPE == 3 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
     ! ignore CMT sources for fault rupture simulations
     if (FAULT_SIMULATION) return
+
+    ! no source inside the mesh if we are coupling with DSM
+    ! nothing left to do, can exit routine...
+    if (COUPLE_WITH_INJECTION_TECHNIQUE) return
 
     if (NSOURCES > 0) then
       do isource = 1,NSOURCES
@@ -723,16 +727,16 @@
 
   integer :: isource,it_tmp
 
-  ! no source inside the mesh if we are coupling with DSM
-  ! because the source is precisely the wavefield coming from the DSM traction file
-  if (COUPLE_WITH_INJECTION_TECHNIQUE .and. SIMULATION_TYPE == 1) return
+  ! checks if anything to do
+  if (SIMULATION_TYPE /= 3) return
+  if (.not. GPU_MODE) return
 
   ! ignore CMT sources for fault rupture simulations
   if (FAULT_SIMULATION) return
 
-  ! checks if anything to do
-  if (SIMULATION_TYPE /= 3) return
-  if (.not. GPU_MODE) return
+  ! no source inside the mesh if we are coupling with DSM
+  ! because the source is precisely the wavefield coming from the DSM traction file
+  if (COUPLE_WITH_INJECTION_TECHNIQUE) return
 
   ! iteration step
   if (UNDO_ATTENUATION_AND_OR_PML) then

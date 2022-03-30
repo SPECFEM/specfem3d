@@ -26,21 +26,16 @@
 !=====================================================================
 
 
-  subroutine read_stations(rec_filename,nrec,station_name,network_name,stlat,stlon,stele,stbur)
+  subroutine read_stations(rec_filename)
 
   use constants, only: MAX_LENGTH_STATION_NAME,MAX_LENGTH_NETWORK_NAME,IIN,MAX_STRING_LEN
 
-  use specfem_par, only: myrank
+  use specfem_par, only: myrank,nrec,station_name,network_name,stlat,stlon,stele,stbur
 
   implicit none
 
   ! input receiver file name
   character(len=*),intent(in) :: rec_filename
-
-  integer,intent(in) :: nrec
-  character(len=MAX_LENGTH_STATION_NAME), dimension(nrec),intent(out) :: station_name
-  character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec),intent(out) :: network_name
-  double precision, dimension(nrec),intent(out) :: stlat,stlon,stele,stbur
 
   ! local parameters
   integer :: i,irec,ier
@@ -109,6 +104,15 @@
       endif
 
     enddo
+
+    ! user output
+    if (maxval(station_duplet) > 0) then
+      print *,'Warning: found ',maxval(station_duplet),' station duplets (having same network & station names)'
+      print *,'Please check your STATIONS file entries to avoid confusions...'
+      print *
+    endif
+
+    ! free temporary array
     deallocate(station_duplet)
 
   endif
@@ -127,25 +131,17 @@
 !-------------------------------------------------------------------------------------------
 !
 
-  subroutine read_stations_SU_from_previous_run(nrec,station_name,network_name, &
-                                                islice_selected_rec,ispec_selected_rec, &
-                                                xi_receiver,eta_receiver,gamma_receiver, &
-                                                nu_rec,is_done_stations)
+  subroutine read_stations_SU_from_previous_run(is_done_stations)
 
-  use constants, only: NDIM,IOUT_SU, &
-    MAX_LENGTH_STATION_NAME,MAX_LENGTH_NETWORK_NAME,IMAIN,OUTPUT_FILES,MAX_STRING_LEN
+  use constants, only: NDIM,IOUT_SU,IMAIN,OUTPUT_FILES,MAX_STRING_LEN
 
-  use specfem_par, only: myrank
+  use specfem_par, only: myrank, &
+    nrec,station_name,network_name, &
+    islice_selected_rec,ispec_selected_rec, &
+    xi_receiver,eta_receiver,gamma_receiver, &
+    nu_rec
 
   implicit none
-
-  integer,intent(in) :: nrec
-  character(len=MAX_LENGTH_STATION_NAME), dimension(nrec),intent(in) :: station_name
-  character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec),intent(in) :: network_name
-
-  integer, dimension(nrec),intent(out) :: islice_selected_rec,ispec_selected_rec
-  double precision, dimension(nrec),intent(out) :: xi_receiver,eta_receiver,gamma_receiver
-  double precision, dimension(NDIM,NDIM,nrec),intent(out) :: nu_rec
 
   logical, intent(out) :: is_done_stations
 
@@ -219,20 +215,16 @@
 !-------------------------------------------------------------------------------------------
 !
 
-  subroutine write_stations_SU_for_next_run(nrec,islice_selected_rec,ispec_selected_rec, &
-                                            xi_receiver,eta_receiver,gamma_receiver, &
-                                            x_found,y_found,z_found,nu_rec)
+  subroutine write_stations_SU_for_next_run(x_found,y_found,z_found)
 
 
-  use constants, only: NDIM,IOUT_SU,OUTPUT_FILES,MAX_STRING_LEN
+  use constants, only: IOUT_SU,OUTPUT_FILES,MAX_STRING_LEN
 
+  use specfem_par, only: nrec,islice_selected_rec,ispec_selected_rec, &
+                         xi_receiver,eta_receiver,gamma_receiver,nu_rec
   implicit none
 
-  integer,intent(in) :: nrec
-  integer, dimension(nrec),intent(in) :: islice_selected_rec,ispec_selected_rec
-  double precision, dimension(nrec),intent(in) :: xi_receiver,eta_receiver,gamma_receiver
   double precision, dimension(nrec),intent(in) :: x_found,y_found,z_found
-  double precision, dimension(NDIM,NDIM,nrec),intent(in) :: nu_rec
 
   ! local parameters
   integer :: ier

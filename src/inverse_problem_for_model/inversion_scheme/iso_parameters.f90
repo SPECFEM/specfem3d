@@ -228,18 +228,17 @@ contains
       integer                                                       :: ispec
 
       !! finalize specfem kernels
-      rho_kl(:,:,:,  ispec) = -rho_kl(:,:,:, ispec)
-      mu_kl(:,:,:,ispec) = -2. *  mu_kl(:,:,:,ispec)
-      kappa_kl(:,:,:,ispec) = -kappa_kl(:,:,:,ispec)
+      rho_kl(:,:,:,ispec) = - rho_kl(:,:,:, ispec)
+      mu_kl(:,:,:,ispec) = - 2. *  mu_kl(:,:,:,ispec)
+      kappa_kl(:,:,:,ispec) = - kappa_kl(:,:,:,ispec)
 
+      Grho(:,:,:) =  rho_kl(:,:,:,ispec) + &
+                     vs(:,:,:)**2 * mu_kl(:,:,:,ispec) + &
+                    (vp(:,:,:)**2 - (4./3.)*vs(:,:,:)**2) * kappa_kl(:,:,:, ispec)
 
-      Grho(:,:,:) =  rho_kl(:,:,:,ispec) +&
-           vs(:,:,:)**2 * mu_kl(:,:,:,ispec) + &
-           (vp(:,:,:)**2 - (4./3.)*vs(:,:,:)**2) * kappa_kl(:,:,:, ispec)
+      Gvp(:,:,:) = 2. * rho(:,:,:) * vp(:,:,:) * kappa_kl(:,:,:, ispec)
 
-      Gvp(:,:,:) = 2.*rho(:,:,:)*vp(:,:,:)*kappa_kl(:,:,:, ispec)
-
-      Gvs(:,:,:) = (-8./3.) * rho(:,:,:) * vs(:,:,:) * kappa_kl(:,:,:,ispec) +&
+      Gvs(:,:,:) = (-8./3.) * rho(:,:,:) * vs(:,:,:) * kappa_kl(:,:,:,ispec) + &
                    2.*rho(:,:,:)*vs(:,:,:)*mu_kl(:,:,:,ispec)
 
 
@@ -265,7 +264,7 @@ contains
       !! gradient in Thomsen
       gradi_iso(:,:,:,:) = 0._CUSTOM_REAL
       call grad_lame_2_iso_ac(ispec, model_iso(:,:,:,1), model_iso(:,:,:,2), &
-                         gradi_iso(:,:,:,1), gradi_iso(:,:,:,2))
+                              gradi_iso(:,:,:,1), gradi_iso(:,:,:,2))
 
       !! We need to get just the inveter parameter and put them in right place
       gradient(:,:,:, :) = 0._CUSTOM_REAL
@@ -356,12 +355,19 @@ contains
       real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: Grho, Gvp
       integer                                                       :: ispec
 
-      !! put specfem kernel in **not** log
-      rho_ac_kl(:,:,:,ispec) =  rho_ac_kl(:,:,:,ispec) / rhostore(:,:,:,ispec)
-      kappa_ac_kl(:,:,:,ispec) = kappa_ac_kl(:,:,:,ispec) / kappastore(:,:,:,ispec)
+      !! put specfem kernel in **not** log (absolute kernels, rather than relative ones)
+      !
+      ! note: rho_ac_kl(:,:,:,ispec) contributions are still positive and without material factors up to this point.
+      !       only in save_adjoint_kernels.f90 they would be added.
+      !       thus, no need to divide by rhostore(:,:,:,ispec) or kappastore(:,:,:,ispec), but need to add minus sign
 
-      Grho(:,:,:) = rho_ac_kl(:,:,:,ispec) + kappa_ac_kl(:,:,:,ispec)*vp(:,:,:)**2
-      Gvp(:,:,:) = 2._CUSTOM_REAL * kappa_ac_kl(:,:,:,ispec)*rho(:,:,:)*vp(:,:,:)
+      !! finalize specfem kernel need to multiply by -1
+      rho_ac_kl(:,:,:,ispec) = - rho_ac_kl(:,:,:,ispec)
+      kappa_ac_kl(:,:,:,ispec) = - kappa_ac_kl(:,:,:,ispec)
+
+      ! gradients
+      Grho(:,:,:) = rho_ac_kl(:,:,:,ispec) + kappa_ac_kl(:,:,:,ispec) * vp(:,:,:)**2
+      Gvp(:,:,:) = 2._CUSTOM_REAL * kappa_ac_kl(:,:,:,ispec) * rho(:,:,:) * vp(:,:,:)
 
     end subroutine grad_lame_2_iso_ac
 

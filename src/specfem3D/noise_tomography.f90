@@ -863,13 +863,17 @@ end module user_noise_distribution
   integer, dimension(num_free_surface_faces),intent(in) :: free_surface_ispec
   integer, dimension(3,NGLLSQUARE,num_free_surface_faces),intent(in) :: free_surface_ijk
 
+  ! note: at the moment, we still use file i/o to read back noise_surface_movie array - consider buffering in future...
+  !       here, the array is passed as an argument to allow for such a buffering method in future,
+  !       but it is not used at the moment, and the array is locally read in from file i/o when needed.
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLSQUARE,num_free_surface_faces) :: noise_surface_movie
+
   ! output parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(inout) :: sigma_kl
 
   ! local parameters
   integer :: i,j,k,ispec,iglob,ipoin,iface,igll
   real(kind=CUSTOM_REAL) :: eta
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLSQUARE,num_free_surface_faces) :: noise_surface_movie
 
   ! GPU_MODE parameters
   integer(kind=8) :: Mesh_pointer

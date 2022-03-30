@@ -102,7 +102,7 @@ def read_Par_file_sections(parameters,file,verbose=False):
 
     for line in f:
         dataline = line.strip()
-        #print("line: ",dataline)
+        #print("debug: dataline = ",dataline)
 
         if dataline:
             # line with some data
@@ -113,6 +113,8 @@ def read_Par_file_sections(parameters,file,verbose=False):
             else:
                 # parameter line (eventually with comment appended)
                 # for example: SIMULATION_TYPE                 = 1  # or 2 # or 3
+                par_string = ""
+                app_string = ""
 
                 # separates parameter from appended comment(s)
                 index_app = dataline.find('#')
@@ -147,11 +149,16 @@ def read_Par_file_sections(parameters,file,verbose=False):
                         # check number of items
                         # for example 7-entries:
                         # #NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
-                        # 1              128            1               128             1          5       14
-                        # for example 8-entries:
-                        # #material_id  #rho  #vp  #vs  #Q  #anisotropy_flag #domain_id #(optional) Q_kappa
-                        # 1  2120  2325  1360 35.0  0  2 5000
-                        if len(dataitems) == 7 or len(dataitems) == 8:
+                        # 1              128          1               128           1         5        14
+                        # for example 8-entries: (default line)
+                        # #material_id  #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id
+                        # 1             2120  2325 1360 9999.0    35.0   0                 2
+                        # for example 17-entries: (poroelastic line)
+                        # #material_id #rho_s #rho_f #phi #tort #kxx #kxy #kxz #kyy #kyz #kzz #kappa_s #kappa_f #kappa_fr #eta #mu_fr #domain_id
+                        # 2            2500   1020   0.4  2.0   1d-11 0.0 0.0  1d-11 0.0 1d-11 16.0554d9 2.295d9 10.0d9   0.0  9.63342d9 3
+                        #debug
+                        #print("debug: dataitems ",dataitems,"length: ",len(dataitems))
+                        if len(dataitems) == 7 or len(dataitems) == 8 or len(dataitems) == 17:
                             # this is a data format line
                             wrong_format = False
                 if wrong_format:
@@ -178,7 +185,7 @@ def read_Par_file_sections(parameters,file,verbose=False):
                     value = par_string
 
                 # appended comment
-                if index_app > 0:
+                if len(app_string) > 0:
                     appendix = app_string
                 else:
                     appendix = ''
@@ -312,7 +319,10 @@ def write_template_file(parameters,tmp_file,verbose=False):
                 f.write( "%s = %s\n" % (name.ljust(max_name_length),value) )
         else:
             # Mesh_Par_file data line
-            f.write( "%s\n" % value )
+            if appendix:
+                f.write( "%s   %s\n" % (value,appendix) )
+            else:
+                f.write( "%s\n" % value )
 
     f.write( "\n" )
     f.close()
@@ -451,7 +461,7 @@ def check_and_update_Par_file(my_parameters,file):
     nmissing_parameters = 0
     #print("  searching missing parameters...")
     for name in main_parameters.keys():
-        if (not "MESH_PAR_FILE_DATA" in name):
+        if not "MESH_PAR_FILE_DATA" in name:
             # checks if missing
             if not name in my_parameters.keys():
                 print("  misses parameter: ",name)
@@ -463,7 +473,7 @@ def check_and_update_Par_file(my_parameters,file):
     # updates comments
     nold_comments = 0
     for name in main_parameters.keys():
-        if (not "MESH_PAR_FILE_DATA" in name):
+        if not "MESH_PAR_FILE_DATA" in name:
             # checks we have this parameter
             if not name in my_parameters.keys():
                 print("Error comparing main with current file format parameter",name)

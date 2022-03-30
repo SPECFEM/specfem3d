@@ -25,11 +25,12 @@
 !
 !=====================================================================
 
-  subroutine get_cmt(CMTSOLUTION,tshift_cmt,hdur,lat,long,depth,moment_tensor, &
-                     DT,NSOURCES,min_tshift_cmt_original,user_source_time_function)
+  subroutine get_cmt(CMTSOLUTION,yr,jda,mo,da,ho,mi,sec, &
+                     tshift_src,hdur,lat,long,depth,moment_tensor, &
+                     DT,NSOURCES,min_tshift_src_original,user_source_time_function)
 
   use constants, only: IIN,MAX_STRING_LEN,CUSTOM_REAL
-  use shared_parameters, only: USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF
+  use shared_parameters, only: USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF,NOISE_TOMOGRAPHY
 
   implicit none
 
@@ -39,17 +40,21 @@
   integer, intent(in) :: NSOURCES
   double precision, intent(in) :: DT
 
-  double precision, intent(out) :: min_tshift_cmt_original
-  double precision, dimension(NSOURCES), intent(out) :: tshift_cmt,hdur,lat,long,depth
+  ! PDE time info (from first header line)
+  integer, intent(out) :: yr,jda,ho,mi,mo,da
+  double precision, intent(out) :: sec
+
+  double precision, dimension(NSOURCES), intent(out) :: tshift_src,hdur,lat,long,depth
   double precision, dimension(6,NSOURCES), intent(out) :: moment_tensor
+  double precision, intent(out) :: min_tshift_src_original
+
   !! VM VM use NSTEP_STF, NSOURCES_STF which are always right:
   !! in case of USE_EXTERNAL_SOURCE_FILE, they are equal to NSTEP,NSOURCES
   !! when .not. USE_EXTERNAL_SOURCE_FILE they are equal to 1,1.
   real(kind=CUSTOM_REAL), dimension(NSTEP_STF, NSOURCES_STF), intent(out) :: user_source_time_function
 
   ! local variables below
-  integer :: mo,da,julian_day,isource,yr,jda,ho,mi
-  double precision :: sec
+  integer :: julian_day,isource
   integer :: i,itype,istart,iend,ier
   double precision :: t_shift(NSOURCES)
   character(len=256) :: string
@@ -60,9 +65,13 @@
   long(:) = 0.d0
   depth(:) = 0.d0
   t_shift(:) = 0.d0
-  tshift_cmt(:) = 0.d0
+  tshift_src(:) = 0.d0
   hdur(:) = 0.d0
   moment_tensor(:,:) = 0.d0
+
+  ! origin time
+  yr = 0; da = 0
+  ho = -1; mi = -1; sec = -1.d0
 
 !
 !---- read hypocenter info
@@ -73,15 +82,8 @@
     stop 'Error opening CMTSOLUTION file'
   endif
 
-! read source number isource
+  ! read source number isource
   do isource = 1,NSOURCES
-
-    ! initializes
-    yr = 0
-    da = 0
-    ho = -1
-    mi = -1
-    sec = -1.d0
 
     ! gets header line
     read(IIN,"(a256)",iostat=ier) string
@@ -151,31 +153,33 @@
       !print *,itype,'line ----',string(istart:iend),'----'
 
       ! reads in event time information
-      select case (itype)
-      case (1)
-        ! year (as integer value)
-        read(string(istart:iend),*) yr
-      case (2)
-        ! month (as integer value)
-        read(string(istart:iend),*) mo
-      case (3)
-        ! day (as integer value)
-        read(string(istart:iend),*) da
-      case (4)
-        ! hour (as integer value)
-        read(string(istart:iend),*) ho
-      case (5)
-        ! minutes (as integer value)
-        read(string(istart:iend),*) mi
-      case (6)
-        ! seconds (as float value)
-        read(string(istart:iend),*) sec
-      end select
+      ! in case of multiple sources, time refers to the first entry only
+      if (isource == 1) then
+        select case (itype)
+        case (1)
+          ! year (as integer value)
+          read(string(istart:iend),*) yr
+        case (2)
+          ! month (as integer value)
+          read(string(istart:iend),*) mo
+        case (3)
+          ! day (as integer value)
+          read(string(istart:iend),*) da
+        case (4)
+          ! hour (as integer value)
+          read(string(istart:iend),*) ho
+        case (5)
+          ! minutes (as integer value)
+          read(string(istart:iend),*) mi
+        case (6)
+          ! seconds (as float value)
+          read(string(istart:iend),*) sec
+        end select
+      endif
 
       ! advances string
       istart = iend + 1
     enddo
-
 
     ! checks time information
     if (yr <= 0 .or. yr > 3000) then
@@ -204,7 +208,7 @@
     endif
 
     ! gets julian day number
-    jda=julian_day(yr,mo,da)
+    jda = julian_day(yr,mo,da)
 
     ! ignore line with event name
     read(IIN,"(a)",iostat=ier) string
@@ -219,7 +223,6 @@
       print *, 'Error reading time shift in source ',isource
       stop 'Error reading time shift in station in CMTSOLUTION file'
     endif
-    !read(string(12:len_trim(string)),*) tshift_cmt(isource)
     read(string(12:len_trim(string)),*) t_shift(isource)
 
     ! read half duration
@@ -307,7 +310,7 @@
     ! checks half-duration
     ! null half-duration indicates a Heaviside
     ! replace with very short error function
-    if (hdur(isource) < 5. * DT) hdur(isource) = 5. * DT
+    if (hdur(isource) < 5.d0 * DT) hdur(isource) = 5.d0 * DT
 
     ! reads USER EXTERNAL SOURCE if needed
     if (USE_EXTERNAL_SOURCE_FILE) then
@@ -323,13 +326,21 @@
 
   close(IIN)
 
-  ! Sets tshift_cmt to zero to initiate the simulation!
+  ! noise simulations don't use the CMTSOLUTION source but a noise-spectrum source defined in S_squared
+  if (NOISE_TOMOGRAPHY /= 0) hdur(:) = 0.d0
+
+  ! If we're using external stf, don't worry about hdur.
+  if (USE_EXTERNAL_SOURCE_FILE) then
+    hdur(:) = 0.d0
+  endif
+
+  ! Sets tshift_src to zero to initiate the simulation!
   if (NSOURCES == 1) then
-      tshift_cmt = 0.d0
-      min_tshift_cmt_original = t_shift(1)
+    min_tshift_src_original = t_shift(1)
+    tshift_src(1) = 0.d0
   else
-      tshift_cmt(1:NSOURCES) = t_shift(1:NSOURCES)-minval(t_shift)
-      min_tshift_cmt_original = minval(t_shift)
+    min_tshift_src_original = minval(t_shift)
+    tshift_src(1:NSOURCES) = t_shift(1:NSOURCES) - min_tshift_src_original
   endif
 
   ! scales the moment tensor to Newton.m
@@ -393,6 +404,7 @@
   implicit none
 
   double precision, intent(in) :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
+
   ! local parameters
   double precision :: scalar_moment,scaleM
 
@@ -412,7 +424,7 @@
   !   Mrr,Mtt,Mpp,Mrt,Mrp,Mtp
   !
   ! euclidean (or Frobenius) norm of a matrix: M0**2 = sum( Mij**2)
-  scalar_moment = Mxx**2 + Myy**2 + Mzz**2 + 2.d0 * Mxy**2 + 2.d0 * Mxz**2 + 2.d0 * Myz**2
+  scalar_moment = Mxx**2 + Myy**2 + Mzz**2 + 2.d0 * ( Mxy**2 + Mxz**2 + Myz**2 )
 
   ! adds 1/2 to be coherent with double couple or point sources
   scalar_moment = dsqrt(0.5d0*scalar_moment)
@@ -486,41 +498,3 @@
   get_cmt_moment_magnitude = Mw
 
   end function
-
-! ------------------------------------------------------------------
-
-  integer function julian_day(yr,mo,da)
-
-  implicit none
-
-  integer yr,mo,da
-
-  integer mon(12)
-  integer, external :: lpyr
-  data mon /0,31,59,90,120,151,181,212,243,273,304,334/
-
-  julian_day = da + mon(mo)
-  if (mo > 2) julian_day = julian_day + lpyr(yr)
-
-  end function julian_day
-
-! ------------------------------------------------------------------
-
-  integer function lpyr(yr)
-
-  implicit none
-
-  integer yr
-!
-!---- returns 1 if leap year
-!
-  lpyr=0
-  if (mod(yr,400) == 0) then
-    lpyr=1
-  else if (mod(yr,4) == 0) then
-    lpyr=1
-    if (mod(yr,100) == 0) lpyr=0
-  endif
-
-  end function lpyr
-

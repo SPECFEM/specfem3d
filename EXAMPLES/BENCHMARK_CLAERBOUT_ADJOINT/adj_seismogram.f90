@@ -8,7 +8,7 @@ program adj_seismogram
   integer :: NSTEP,NPROC,SIM_TYPE
   double precision :: DT
 
-  real(kind=4),dimension(:),allocatable :: syn,dat
+  real(kind=4),dimension(:),allocatable :: syn,dat,adj
   real(kind=4) :: r4head(60)
   !integer(kind=4) :: header4(1)
   !integer(kind=2) :: header2(2)
@@ -16,9 +16,13 @@ program adj_seismogram
   real(kind=4) :: diff_max,diff_max_all
   character(len=512) :: filename_in,filename_out,procname,arg,str_type
 
+  ! derivative
+  real(kind=4),dimension(:),allocatable :: adj_new
+  double precision :: fac,val
+
   ! input parameters
   if (iargc() /= 4) &
-    stop 'Usage: ./xadj NSTEP DT NPROC type[acoustic/elastic]'
+    stop 'Usage: ./xadj NSTEP DT NPROC type[acoustic/elastic/acoustic-elastic]'
 
   call get_command_argument(1, arg); read(arg,*,iostat=ier)    NSTEP;   if (ier /= 0) stop 'Error reading NSTEP'
   call get_command_argument(2, arg); read(arg,*,iostat=ier)       DT;   if (ier /= 0) stop 'Error reading DT'
@@ -33,9 +37,11 @@ program adj_seismogram
     SIM_TYPE = 1
   else if (trim(str_type) == "elastic") then
     SIM_TYPE = 2
+  else if (trim(str_type) == "acoustic-elastic") then
+    SIM_TYPE = 3
   else
-    print *,'Error: invalid type '//trim(str_type)//' must be: acoustic or elastic'
-    stop 'Invalid type, must be: acoustic or elastic'
+    print *,'Error: invalid type '//trim(str_type)//' must be: acoustic, elastic or acoustic-elastic'
+    stop 'Invalid type, must be: acoustic, elastic or acoustic-elastic'
   endif
 
   ! user output
@@ -43,11 +49,21 @@ program adj_seismogram
   print *,'  NSTEP = ',NSTEP
   print *,'  DT    = ',DT
   print *,'  NPROC = ',NPROC
-  print *,'  type  = ',SIM_TYPE,'(acoustic == 1 / elastic == 2)'
+  print *,'  type  = ',SIM_TYPE,'(acoustic == 1 / elastic == 2 / acoustic-elastic == 3)'
   print *
 
-  allocate(syn(NSTEP),dat(NSTEP),stat=ier)
-  if (ier /= 0) stop 'Error allocating syn,dat arrays'
+  allocate(syn(NSTEP),dat(NSTEP),adj(NSTEP),stat=ier)
+  if (ier /= 0) stop 'Error allocating syn,dat,adj arrays'
+  syn(:) = 0.0; dat(:) = 0.0; adj(:) = 0.0
+
+  ! for derivative in acoustic case
+  if (SIM_TYPE == 1 .or. SIM_TYPE == 3) then
+    print *,"  creating adjoint sources for pressure (taking second-derivative of pressure differences)..."
+    print *
+    allocate(adj_new(NSTEP),stat=ier)
+    if (ier /= 0) stop 'Error allocating adj_new arrays'
+    adj_new(:) = 0.0
+  endif
 
   do myrank = 0,NPROC - 1
 
@@ -75,8 +91,8 @@ program adj_seismogram
 
     ! components
     select case(SIM_TYPE)
-    case (1)
-      ! acoustic
+    case (1,3)
+      ! acoustic / acoustic-elastic (w/ receivers in acoustic domain)
       comp_total = 1 ! single trace
     case (2)
       ! elastic
@@ -90,8 +106,8 @@ program adj_seismogram
 
     do icomp = 1,comp_total
 
-      if (SIM_TYPE == 1) then
-        ! acoustic
+      if (SIM_TYPE == 1 .or. SIM_TYPE == 3) then
+        ! acoustic / acoustic-elastic
         ! pressure-component
         filename_in  = trim(procname)//"_p_SU"  ! from acceleration
         filename_out = trim(procname)//"_p_SU"  ! adjoint trace assumes _p_SU name for acoustic simulations
@@ -115,17 +131,18 @@ program adj_seismogram
         end select
       endif
 
-      if (myrank == 0) then
-        print *,'  input syn : ',"SEM/syn/"//trim(filename_in)
-        print *,'  input data: ',"SEM/dat/"//trim(filename_in)
-      endif
-
       open(111,file="SEM/syn/"//trim(filename_in), &
                 status='old',access='direct',action='read',recl=240+4*NSTEP,iostat=ier)
       if (ier /= 0) then
-        print *,'Error opening file syn: '//"SEM/syn/"//trim(filename_in)
-        stop 'Error opening file syn'
+        !print *,'Error opening file syn: '//"SEM/syn/"//trim(filename_in)
+        !stop 'Error opening file syn'
+        ! skip if rank has no receivers
+        cycle
       endif
+
+      print *,'  input syn : ',"SEM/syn/" // trim(filename_in)
+      print *,'  input data: ',"SEM/dat/" // trim(filename_in)
+
       open(112,file="SEM/dat/"//trim(filename_in), &
                 status='old',access='direct',action='read',recl=240+4*NSTEP,iostat=ier)
       if (ier /= 0) then
@@ -139,12 +156,14 @@ program adj_seismogram
         stop 'Error opening file .adj'
       endif
 
+      ! statistics
       diff_max_all = -1.e20
 
       irec = 1
       do while(ier == 0)
         syn(:) = 0.0
         dat(:) = 0.0
+        adj(:) = 0.0
 
         ! syn
         read(111,rec=irec,iostat=ier) r4head,syn
@@ -154,14 +173,55 @@ program adj_seismogram
         read(112,rec=irec,iostat=ier) r4head,dat
         if (ier /= 0) exit
 
-        ! adjoint: (s - d)
-        write(113,rec=irec,iostat=ier) r4head,syn-dat
+        ! adjoint source: (s - d)
+        adj(:) = syn(:) - dat(:)
+
+        ! acoustic adjoint source
+        if (SIM_TYPE == 1 .or. SIM_TYPE == 3) then
+          ! for acoustic FWI, L2 adjoint source is the second derivative of pressure difference
+          ! (e.g., see Peter et al. 2011, GJI, eq. (A8))
+          !
+          ! assuming a pressure output for syn and dat, the adjoint source expression is given by (A8) in Peter et al. (2011)
+          ! note the negative sign in the definition.
+          ! the adjoint source for pressure is: f^adj = - \partial_t^2 ( p_syn - p_obs )
+          !
+          ! takes second-derivative using central-difference scheme
+          adj_new(:) = 0.0
+
+          ! takes second-order derivative
+
+          ! central finite difference (2nd-order scheme)
+          !fac = 1.0 / DT**2
+          !do i = 2,NSTEP-1
+          !  ! central finite difference 2nd-order
+          !  val = ( adj(i+1) - 2.d0 * adj(i) + adj(i-1) ) * fac
+          !  ! adding negative sign
+          !  adj_new(i) = - val
+          !enddo
+
+          ! central finite difference (4th-order scheme)
+          ! (leads to slightly smoother derivative)
+          fac = 1.0 / DT**2
+          do i = 3,NSTEP-2
+            ! central finite difference 4th-order
+            val = ( - 1.d0/12.d0 * adj(i+2) + 4.d0/3.d0 * adj(i+1) - 5.d0/2.d0 * adj(i) &
+                    + 4.d0/3.d0 * adj(i-1) - 1.d0/12.d0 * adj(i-2) ) * fac
+            ! adding negative sign
+            adj_new(i) = - val
+          enddo
+
+          ! sets as new adjoint source trace
+          adj(:) = adj_new(:)
+        endif
+
+        write(113,rec=irec,iostat=ier) r4head,adj
         if (ier /= 0) exit
 
         ! statistics
-        diff_max = maxval(abs(syn-dat))
+        diff_max = maxval(abs(adj))
         if (diff_max > diff_max_all ) diff_max_all = diff_max
 
+        !debug
         !daniel: outputs ascii trace
         if ( myrank == 0 .and. irec == 196 ) then
           open(221,file="SEM/syn/"//trim(filename_in)//".ascii",status='unknown')
@@ -176,7 +236,7 @@ program adj_seismogram
           close(222)
           open(223,file="SEM/"//trim(filename_out)//".adj.ascii",status='unknown')
           do i=1,NSTEP
-            write(223,*) i,syn(i)-dat(i)
+            write(223,*) i,adj(i)
           enddo
           close(223)
         endif
@@ -185,9 +245,13 @@ program adj_seismogram
       enddo
 
       ! user output
-      print *,'  receivers ',irec
+      print *,'  receivers ',irec-1
       print *,'  adjoint sources written to: ',"SEM/"//trim(filename_out)//".adj"
-      print *,'  maximum waveform difference (syn - dat) = ',diff_max_all
+      if (SIM_TYPE == 1 .or. SIM_TYPE == 3) then
+        print *,'  maximum amplitude |f^adj| = |-\partial_t^2(p_syn-p_obs)| = ',diff_max_all
+      else
+        print *,'  maximum waveform difference (syn - dat) = ',diff_max_all
+      endif
       print *
 
       close(111)

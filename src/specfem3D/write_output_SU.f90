@@ -29,13 +29,7 @@
 
 ! writes out seismograms in SU (Seismic Unix) format
 
-  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IMAIN,NDIM,NB_RUNS_ACOUSTIC_GPU,OUTPUT_FILES, &
-    IIN_SU1,IIN_SU2,IIN_SU3
-
-  use specfem_par, only: myrank,NSTEP,subsamp_seismos,nlength_seismogram, &
-    seismo_offset,seismo_current, &
-    nrec,nrec_local,number_receiver_global, &
-    WRITE_SEISMOGRAMS_BY_MAIN,station_name,network_name
+  use specfem_par
 
   implicit none
 
@@ -49,6 +43,10 @@
 
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
   double precision :: x_found_source,y_found_source,z_found_source
+
+  character(len=MAX_LENGTH_STATION_NAME) :: dummy_station_name
+  character(len=MAX_LENGTH_NETWORK_NAME) :: dummy_network_name
+
   real :: dx
 
   ! arrays for Seismic Unix header
@@ -81,12 +79,13 @@
   allocate(x_found(nrec),y_found(nrec),z_found(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2189')
   if (ier /= 0) stop 'error allocating arrays x_found y_found z_found'
+  x_found(:) = 0.d0; y_found(:) = 0.d0; z_found(:) = 0.d0
 
   ! reads in station locations from output_list file
   open(unit=IIN_SU1,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='old',iostat=ier)
   if (ier /= 0) stop 'error opening output_list_stations.txt file'
   do irec = 1,nrec
-   read(IIN_SU1,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
+    read(IIN_SU1,*) dummy_station_name,dummy_network_name,x_found(irec),y_found(irec),z_found(irec)
   enddo
   close(IIN_SU1)
 
@@ -193,7 +192,7 @@
                                x_found(irec),y_found(irec),z_found(irec),x_found_source,y_found_source,z_found_source)
       ! writes section header
       ! position in bytes
-      ioffset = 4*(irec_local-1)*(60+NSTEP/subsamp_seismos) + 1
+      ioffset = 4*(irec_local-1)*(60+NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE) + 1
       select case (istore)
       case (1,2,3)
         write(IIN_SU1,pos=ioffset) header1,header2,header3,header4
@@ -206,7 +205,7 @@
 
     ! writes seismos
     ! position in bytes
-    ioffset = 4*(irec_local-1)*(60+NSTEP/subsamp_seismos) + 4 * 60 + 4 * seismo_offset + 1
+    ioffset = 4*(irec_local-1)*(60+NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE) + 4 * 60 + 4 * seismo_offset + 1
 
     select case (istore)
     case (1,2,3)
@@ -238,7 +237,7 @@
   subroutine determine_SU_header(irec,dx,header1,header2,header3,header4, &
                                  x_found,y_found,z_found,x_found_source,y_found_source,z_found_source)
 
-  use specfem_par, only: nrec,NSTEP,DT,subsamp_seismos
+  use specfem_par, only: nrec,NSTEP,DT,NTSTEP_BETWEEN_OUTPUT_SAMPLE
 
   implicit none
 
@@ -279,19 +278,20 @@
 
   ! time steps
   header2(1) = 0  ! dummy
-  if (NSTEP/subsamp_seismos < 32768) then
-    header2(2) = int(NSTEP/subsamp_seismos, kind=2)
+  if (NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE < 32768) then
+    header2(2) = int(NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE, kind=2)
   else
     print *,"!!! BEWARE !!! Two many samples for SU format ! The .su file created won't be usable"
     header2(2) = -9999
   endif
 
   ! time increment
-  sampling_deltat = DT * subsamp_seismos
+  sampling_deltat = DT * NTSTEP_BETWEEN_OUTPUT_SAMPLE
 
   ! INTEGER(kind=2) values range from -32,768 to 32,767
   !debug
-  !print *,'debug: SU header ',NSTEP/subsamp_seismos,NINT(sampling_deltat*1.0d6),NINT(sampling_deltat*1.0d3),NINT(sampling_deltat)
+  !print *,'debug: SU header ',NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE,NINT(sampling_deltat*1.0d6), &
+  !                            NINT(sampling_deltat*1.0d3),NINT(sampling_deltat)
   !print *,'debug: SU header ',NINT(sampling_deltat*1.0d6,kind=2),NINT(sampling_deltat*1.0d3,kind=2),NINT(sampling_deltat,kind=2)
 
   ! adapts time step info

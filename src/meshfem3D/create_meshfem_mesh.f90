@@ -77,7 +77,7 @@ end module create_meshfem_par
 
   use create_meshfem_par
 
-  use adios_manager_mod, only: adios_setup,adios_cleanup
+  use manager_adios, only: initialize_adios,finalize_adios
 
   implicit none
 
@@ -105,7 +105,7 @@ end module create_meshfem_par
 
   !--- Initialize ADIOS and setup the buffer size
   if (ADIOS_ENABLED) then
-    call adios_setup()
+    call initialize_adios()
   endif
 
   ! create the name for the database of the current slide and region
@@ -178,7 +178,7 @@ end module create_meshfem_par
 
   !--- Clean ADIOS. Make sure everything is already written
   if (ADIOS_ENABLED) then
-    call adios_cleanup()
+    call finalize_adios()
   endif
 
   ! frees memory

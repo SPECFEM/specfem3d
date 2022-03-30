@@ -55,7 +55,9 @@
   ! GPU
   if (GPU_MODE) then
     ! checks if for kernel simulation with both, forward & backward fields
-    if (SIMULATION_TYPE == 3 .and. .not. UNDO_ATTENUATION_AND_OR_PML) then
+    if (SIMULATION_TYPE == 3 &
+        .and. .not. UNDO_ATTENUATION_AND_OR_PML &
+        .and. .not. (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION)) then
       ! runs with the additionally optimized GPU routine
       ! (combines forward/backward fields in main compute_kernel_acoustic)
       call compute_forces_viscoelastic_GPU_calling()
@@ -173,7 +175,7 @@
         else
           ! on GPU
           call compute_stacey_viscoelastic_GPU(iphase,num_abs_boundary_faces, &
-                                               SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                               NSTEP,it, &
                                                b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
                                                Mesh_pointer,1) ! 1 == forward
         endif
@@ -479,7 +481,9 @@
   ! GPU
   if (GPU_MODE) then
     ! checks if for kernel simulation with both, forward & backward fields
-    if (SIMULATION_TYPE == 3 .and. .not. UNDO_ATTENUATION_AND_OR_PML) then
+    if (SIMULATION_TYPE == 3 &
+        .and. .not. UNDO_ATTENUATION_AND_OR_PML &
+        .and. .not. (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION)) then
       ! runs with the additionally optimized GPU routine
       ! (combines forward/backward fields in main compute_kernel_acoustic)
       ! all done in compute_forces_acoustic_GPU_calling()
@@ -547,7 +551,7 @@
         else
           ! on GPU
           call compute_stacey_viscoelastic_GPU(iphase,num_abs_boundary_faces, &
-                                               SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                               NSTEP,it, &
                                                b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
                                                Mesh_pointer,3) ! 3 == backward
         endif
@@ -762,7 +766,7 @@
       ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
       if (STACEY_ABSORBING_CONDITIONS) then
         call compute_stacey_viscoelastic_GPU(iphase,num_abs_boundary_faces, &
-                                             SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                             NSTEP,it, &
                                              b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
                                              Mesh_pointer,0)
       endif

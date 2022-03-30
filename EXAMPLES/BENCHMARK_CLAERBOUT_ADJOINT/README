@@ -4,11 +4,14 @@ README
 
 This directory holds the following kernel benchmarks:
 
-- ACOUSTIC: to test purely acoustic kernels (K_rho & K_alpha)
-- ELASTIC : to test purely elastic kernels (K_rho, K_alpha & K_beta)
+- ACOUSTIC         - to test purely acoustic kernels (K_rho & K_alpha)
+- ELASTIC          - to test purely elastic kernels (K_rho, K_alpha & K_beta)
+- ACOUSTIC_ELASTIC - to test coupled acoustic-elastic kernels 
 
-To run the example, change directory to ACOUSTIC/ or ELASTIC/ and run script:
+To run the example, change directory to ACOUSTIC/, ELASTIC/ or ACOUSTIC_ELASTIC/ and run script:
 > ./run_inhomogeneous.bash
+or for a more detailed test:
+> ./run_this_example_kernel.bash
 
 Note that for the Claerbout's approximation:  F dm = S(m+dm) - S(m)
 the perturbation dm should be small to be valid.

@@ -30,7 +30,7 @@
 !----
 
   subroutine abort_mpi()
-  stop 'error, program ended in exit_MPI'
+  stop 'error, program ended by abort'
   end subroutine abort_mpi
 
 !
@@ -780,6 +780,21 @@
 !----
 !
 
+  subroutine max_allreduce_singlei(val,recvval)
+
+  implicit none
+
+  integer,intent(in) :: val
+  integer,intent(out) :: recvval
+
+  recvval = val
+
+  end subroutine max_allreduce_singlei
+
+!
+!----
+!
+
   subroutine max_all_all_cr(sendbuf, recvbuf)
 
   use constants, only: CUSTOM_REAL
@@ -1309,6 +1324,21 @@
 !----
 !
 
+  logical function is_valid_comm(comm)
+
+  implicit none
+
+  integer, intent(in) :: comm
+
+  ! tests if communicator is valid
+  is_valid_comm = .false.
+
+  end function is_valid_comm
+
+!
+!----
+!
+
   subroutine world_get_comm(comm)
 
   implicit none
@@ -1318,6 +1348,35 @@
   comm = 0
 
   end subroutine world_get_comm
+
+!
+!----
+!
+
+  subroutine world_get_comm_self(comm)
+
+  implicit none
+
+  integer,intent(out) :: comm
+
+  comm = 0
+
+  end subroutine world_get_comm_self
+
+
+!
+!----
+!
+
+  subroutine world_comm_free(comm)
+
+  implicit none
+
+  integer,intent(inout) :: comm
+
+  comm = 0
+
+  end subroutine world_comm_free
 
 !
 !----

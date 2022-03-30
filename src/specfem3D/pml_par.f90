@@ -131,4 +131,7 @@ module pml_par
   integer :: b_reclen_PML_field,b_reclen_PML_potential
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_PML_field,b_PML_potential
 
+  ! convolution coefficients
+  logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
+
 end module pml_par

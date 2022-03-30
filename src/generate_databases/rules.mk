@@ -81,8 +81,8 @@ generate_databases_MODULES = \
 	$(FC_MODDIR)/external_model.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_generate_databases.$(FC_MODEXT) \
 	$(FC_MODDIR)/generate_databases_par.$(FC_MODEXT) \
+	$(FC_MODDIR)/manager_adios.$(FC_MODEXT) \
 	$(FC_MODDIR)/model_coupled_par.$(FC_MODEXT) \
-	$(FC_MODDIR)/model_ipati_adios_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/model_sep_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/model_tomography_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/salton_trough_par.$(FC_MODEXT) \
@@ -92,6 +92,7 @@ generate_databases_MODULES = \
 generate_databases_SHARED_OBJECTS = \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/shared_par.shared_module.o \
+	$O/adios_manager.shared_adios_module.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
@@ -121,50 +122,49 @@ generate_databases_SHARED_OBJECTS = \
 
 # MPI stuffs
 ifeq ($(MPI),no)
-mpi_generate_databases_OBJECTS= \
-	$O/model_sep_nompi.gen.o
+mpi_generate_databases_OBJECTS = $O/model_sep_nompi.gen.o
 else
-mpi_generate_databases_OBJECTS= \
-	$O/model_sep.mpi_gen.o
+mpi_generate_databases_OBJECTS = $O/model_sep.mpi_gen.o
 endif
 generate_databases_OBJECTS += $(mpi_generate_databases_OBJECTS)
 
 # using ADIOS files
 
-adios_generate_databases_PREOBJECTS= \
-	$O/adios_manager.shared_adios.o \
-	$O/adios_helpers_definitions.shared_adios_module.o \
-	$O/adios_helpers_writers.shared_adios_module.o \
-	$O/adios_helpers.shared_adios.o
+adios_generate_databases_PREOBJECTS = \
+	$O/adios_helpers_addons.shared_adios_cc.o \
+	$O/adios_helpers_definitions.shared_adios.o \
+	$O/adios_helpers_readers.shared_adios.o \
+	$O/adios_helpers_writers.shared_adios.o \
+	$O/adios_helpers.shared_adios.o \
+	$(EMPTY_MACRO)
 
-adios_generate_databases_OBJECTS= \
+adios_generate_databases_OBJECTS = \
 	$O/read_partition_files_adios.gen_adios.o \
 	$O/save_arrays_solver_adios.gen_adios.o \
 	$O/save_moho_adios.gen_adios.o \
 	$O/model_gll_adios.gen_adios.o \
-	$O/model_ipati_adios.gen_adios.o
-
-adios_generate_databases_PRESTUBS = \
-	$O/adios_manager_stubs.shared_noadios.o
+	$O/model_ipati_adios.gen_adios.o \
+	$(EMPTY_MACRO)
 
 adios_generate_databases_STUBS = \
-	$O/generate_databases_adios_stubs.gen_noadios.o
+	$O/adios_method_stubs.cc.o \
+	$(EMPTY_MACRO)
 
 # conditional adios linking
-ifeq ($(ADIOS),no)
-adios_generate_databases_OBJECTS = $(adios_generate_databases_STUBS)
-adios_generate_databases_PREOBJECTS = $(adios_generate_databases_PRESTUBS)
-endif
+ifeq ($(ADIOS),yes)
 generate_databases_OBJECTS += $(adios_generate_databases_OBJECTS)
 generate_databases_SHARED_OBJECTS += $(adios_generate_databases_PREOBJECTS)
-
+else ifeq ($(ADIOS2),yes)
+generate_databases_OBJECTS += $(adios_generate_databases_OBJECTS)
+generate_databases_SHARED_OBJECTS += $(adios_generate_databases_PREOBJECTS)
+else
+generate_databases_SHARED_OBJECTS += $(adios_generate_databases_STUBS)
+endif
 
 # objects for the pure Fortran version
 XGENERATE_DATABASES_OBJECTS = \
 	$(generate_databases_OBJECTS) $(generate_databases_SHARED_OBJECTS) \
 	$(COND_MPI_OBJECTS)
-
-
 
 
 #######################################
@@ -211,25 +211,7 @@ endif
 $O/create_regions_mesh.gen.o: $O/fault_generate_databases.gen.o
 
 ## adios
-$O/generate_databases.gen.o: $(adios_generate_databases_PREOBJECTS)
-$O/save_arrays_solver_adios.gen_adios.o: $(adios_generate_databases_PREOBJECTS)
-$O/save_moho_adios.gen_adios.o: $(adios_generate_databases_PREOBJECTS)
-$O/model_gll_adios.gen_adios.o: $(adios_generate_databases_PREOBJECTS)
-$O/read_partition_files_adios.gen_adios.o: $(adios_generate_databases_PREOBJECTS)
-
-ifeq ($(ADIOS),no)
-$O/get_model.gen.o: $O/generate_databases_adios_stubs.gen_noadios.o
-else
-$O/get_model.gen.o: $O/model_ipati_adios.gen_adios.o
-endif
-
-$O/generate_databases_adios_stubs.gen_noadios.o: $(adios_generate_databases_PRESTUBS)
-
-$O/adios_helpers.shared_adios.o: \
-	$O/adios_helpers_definitions.shared_adios_module.o \
-	$O/adios_helpers_writers.shared_adios_module.o
-
-
+$O/generate_databases.gen.o: $O/adios_manager.shared_adios_module.o
 
 #######################################
 
@@ -259,10 +241,10 @@ $O/%.genc.o: $S/%.c
 ### ADIOS compilation
 ###
 
-$O/%.gen_adios.o: $S/%.F90 $O/shared_par.shared_module.o $O/generate_databases_par.gen_mod.o
+$O/%.gen_adios.o: $S/%.F90 $O/shared_par.shared_module.o $O/generate_databases_par.gen_mod.o $O/adios_helpers.shared_adios.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.gen_adios.o: $S/%.f90 $O/shared_par.shared_module.o $O/generate_databases_par.gen_mod.o
+$O/%.gen_adios.o: $S/%.f90 $O/shared_par.shared_module.o $O/generate_databases_par.gen_mod.o $O/adios_helpers.shared_adios.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.gen_noadios.o: $S/%.F90

@@ -164,17 +164,16 @@ contains
       read(IIN_BIN) fault_db(iflt)%ispec2(i), fault_db(iflt)%inodes2(:,i)
     enddo
 
-   ! loading ispec1 ispec2 iface1 iface2 of fault elements.
-!    allocate(fault_db(iflt)%iface1(nspec))
-!    allocate(fault_db(iflt)%iface2(nspec))
-!    do i=1,fault_db(iflt)%nspec
-!      read(IIN_BIN,*) fault_db(iflt)%ispec1(i), fault_db(iflt)%ispec2(i), &
-!                  fault_db(iflt)%iface1(i), fault_db(iflt)%iface2(i)
-!    enddo
-
+    ! loading ispec1 ispec2 iface1 iface2 of fault elements.
+    !allocate(fault_db(iflt)%iface1(nspec))
+    !allocate(fault_db(iflt)%iface2(nspec))
+    !do i=1,fault_db(iflt)%nspec
+    !  read(IIN_BIN,*) fault_db(iflt)%ispec1(i), fault_db(iflt)%ispec2(i), &
+    !                  fault_db(iflt)%iface1(i), fault_db(iflt)%iface2(i)
+    !enddo
   enddo
 
- ! read nodes coordinates of the original version of the mesh, in which faults are open
+  ! read nodes coordinates of the original version of the mesh, in which faults are open
   read(IIN_BIN) nnodes_coords_open
 
   allocate(nodes_coords_open(NDIM,nnodes_coords_open),stat=ier)
@@ -182,7 +181,7 @@ contains
   nodes_coords_open(:,:) = 0.d0
 
   do i = 1, nnodes_coords_open
-     read(IIN_BIN) dummy_node, nodes_coords_open(:,i)
+    read(IIN_BIN) dummy_node, nodes_coords_open(:,i)
   enddo
 
   close(IIN_BIN)

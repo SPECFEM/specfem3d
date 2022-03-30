@@ -54,6 +54,7 @@
   real(kind=CUSTOM_REAL) :: tempx1l,tempx2l,tempx3l
   real(kind=CUSTOM_REAL) :: tempy1l,tempy2l,tempy3l
   real(kind=CUSTOM_REAL) :: tempz1l,tempz2l,tempz3l
+  real(kind=CUSTOM_REAL) :: templ
 
   real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
@@ -151,9 +152,10 @@
         duzdyl_plus_duydzl = duzdyl + duydzl
 
         ! compute deviatoric strain
-        eps_trace_over_3_loc(i,j,k) = ONE_THIRD * (duxdxl + duydyl + duzdzl)
-        epsilondev_loc(1,i,j,k) = duxdxl - eps_trace_over_3_loc(i,j,k)
-        epsilondev_loc(2,i,j,k) = duydyl - eps_trace_over_3_loc(i,j,k)
+        templ = ONE_THIRD * (duxdxl + duydyl + duzdzl)
+        eps_trace_over_3_loc(i,j,k) = templ
+        epsilondev_loc(1,i,j,k) = duxdxl - templ
+        epsilondev_loc(2,i,j,k) = duydyl - templ
         epsilondev_loc(3,i,j,k) = 0.5_CUSTOM_REAL * duxdyl_plus_duydxl
         epsilondev_loc(4,i,j,k) = 0.5_CUSTOM_REAL * duzdxl_plus_duxdzl
         epsilondev_loc(5,i,j,k) = 0.5_CUSTOM_REAL * duzdyl_plus_duydzl
@@ -162,3 +164,89 @@
   enddo ! NGLLZ
 
   end subroutine compute_element_strain
+
+!-------------------------------------------------------------------------------------------------
+!
+! compute the strain in elastic domains
+!
+!-------------------------------------------------------------------------------------------------
+
+  subroutine compute_strain_att()
+
+  use specfem_par
+  use specfem_par_elastic
+
+  implicit none
+
+  ! local parameters
+  real(kind=CUSTOM_REAL), dimension(5,NGLLX,NGLLY,NGLLZ) :: epsilondev_loc
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilon_trace_over_3_loc
+  integer :: ispec
+
+  ! computes strain based on forward wavefield displ
+  if (.not. GPU_MODE) then
+    do ispec = 1, NSPEC_AB
+      ! elastic elements
+      if (ispec_is_elastic(ispec)) then
+        ! strain for ispec element
+        call compute_element_strain(ispec,NGLOB_AB,displ,epsilondev_loc,epsilon_trace_over_3_loc)
+
+        ! backward/reconstructed strain arrays
+        epsilon_trace_over_3(:,:,:,ispec) = epsilon_trace_over_3_loc(:,:,:)                ! needed for kernels
+        epsilondev_trace(:,:,:,ispec) = 3.0_CUSTOM_REAL * epsilon_trace_over_3_loc(:,:,:)  ! needed for bulk attenuation
+        epsilondev_xx(:,:,:,ispec) = epsilondev_loc(1,:,:,:)                               ! needed for shear attenuation
+        epsilondev_yy(:,:,:,ispec) = epsilondev_loc(2,:,:,:)
+        epsilondev_xy(:,:,:,ispec) = epsilondev_loc(3,:,:,:)
+        epsilondev_xz(:,:,:,ispec) = epsilondev_loc(4,:,:,:)
+        epsilondev_yz(:,:,:,ispec) = epsilondev_loc(5,:,:,:)
+      endif
+    enddo
+  else
+    ! calculates strains on GPU
+    call compute_strain_cuda(Mesh_pointer,1)
+  endif
+
+  end subroutine compute_strain_att
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine compute_strain_att_backward()
+
+  use specfem_par
+  use specfem_par_elastic
+
+  implicit none
+
+  ! local parameters
+  real(kind=CUSTOM_REAL), dimension(5,NGLLX,NGLLY,NGLLZ) :: b_epsilondev_loc
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: b_epsilon_trace_over_3_loc
+  integer :: ispec
+
+  ! computes strain based on backward/reconstructed wavefield b_displ
+  if (.not. GPU_MODE) then
+    do ispec = 1, NSPEC_AB
+      if (ispec_is_elastic(ispec)) then
+        ! backward/reconstructed wavefield strain will be re-computed locally here
+        call compute_element_strain(ispec,NGLOB_AB,b_displ,b_epsilondev_loc,b_epsilon_trace_over_3_loc)
+
+        ! backward/reconstructed strain arrays
+        b_epsilon_trace_over_3(:,:,:,ispec) = b_epsilon_trace_over_3_loc(:,:,:)                ! needed for kernels
+        b_epsilondev_trace(:,:,:,ispec) = 3.0_CUSTOM_REAL * b_epsilon_trace_over_3_loc(:,:,:)  ! needed for bulk attenuation
+        b_epsilondev_xx(:,:,:,ispec) = b_epsilondev_loc(1,:,:,:)                               ! needed for shear attenuation
+        b_epsilondev_yy(:,:,:,ispec) = b_epsilondev_loc(2,:,:,:)
+        b_epsilondev_xy(:,:,:,ispec) = b_epsilondev_loc(3,:,:,:)
+        b_epsilondev_xz(:,:,:,ispec) = b_epsilondev_loc(4,:,:,:)
+        b_epsilondev_yz(:,:,:,ispec) = b_epsilondev_loc(5,:,:,:)
+      endif
+    enddo
+  else
+    ! calculates strains on GPU
+    call compute_strain_cuda(Mesh_pointer,3)
+  endif
+
+  end subroutine compute_strain_att_backward
+
+
+

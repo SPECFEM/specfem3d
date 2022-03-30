@@ -50,9 +50,9 @@ mkdir -p SEM
 rm -rf SEM/*
 mkdir -p SEM/dat SEM/syn
 
-mkdir -p models
-rm -rf models/*
-mkdir -p models/initial_model models/target_model
+mkdir -p MODELS
+rm -rf MODELS/*
+mkdir -p MODELS/initial_model MODELS/target_model
 
 cd $ROOT/
 cp -v ./setup/constants.h ./setup/constants.h_backup
@@ -62,7 +62,7 @@ echo
 echo "compiling binaries..."
 echo
 
-make -j4 >& $currentdir/make.log
+make -j4 all >& $currentdir/make.log
 # checks exit code
 if [[ $? -ne 0 ]]; then exit 1; fi
 
@@ -75,6 +75,7 @@ rm -f ./*
 ln -s ../$ROOT/bin/xmeshfem3D
 ln -s ../$ROOT/bin/xgenerate_databases
 ln -s ../$ROOT/bin/xspecfem3D
+ln -s ../$ROOT/bin/xcombine_vol_data_vtk
 cd ../
 
 fi # do_setup
@@ -116,15 +117,20 @@ $MPIRUN ./bin/xspecfem3D
 if [[ $? -ne 0 ]]; then exit 1; fi
 
 # backup copy
+echo
+echo "backup output: OUTPUT_FILES.dat.forward"
 rm -rf OUTPUT_FILES.dat.forward
 cp -rp OUTPUT_FILES OUTPUT_FILES.dat.forward
 
+echo "backup traces: SEM/dat"
 mv -v OUTPUT_FILES/*SU SEM/dat/
 
 # target model
-cp -v OUTPUT_FILES/DATABASES_MPI/*rho.bin models/target_model/
-cp -v OUTPUT_FILES/DATABASES_MPI/*vp.bin  models/target_model/
-cp -v OUTPUT_FILES/DATABASES_MPI/*vs.bin  models/target_model/
+echo
+echo "backup model : MODELS/target_model"
+cp -v OUTPUT_FILES/DATABASES_MPI/*rho.bin MODELS/target_model/
+cp -v OUTPUT_FILES/DATABASES_MPI/*vp.bin  MODELS/target_model/
+cp -v OUTPUT_FILES/DATABASES_MPI/*vs.bin  MODELS/target_model/
 
 ########################### syn ########################################
 echo
@@ -150,14 +156,21 @@ $MPIRUN ./bin/xspecfem3D
 # checks exit code
 if [[ $? -ne 0 ]]; then exit 1; fi
 
-#daniel
+# backup
+echo
+echo "backup output: OUTPUT_FILES.syn.forward"
 rm -rf OUTPUT_FILES.syn.forward
 cp -rp OUTPUT_FILES OUTPUT_FILES.syn.forward
 
+echo "backup traces: SEM/syn"
 mv -v OUTPUT_FILES/*SU SEM/syn/
-cp -v OUTPUT_FILES/DATABASES_MPI/*rho.bin models/initial_model/
-cp -v OUTPUT_FILES/DATABASES_MPI/*vp.bin  models/initial_model/
-cp -v OUTPUT_FILES/DATABASES_MPI/*vs.bin  models/initial_model/
+
+# initial model
+echo
+echo "backup model : MODELS/initial"
+cp -v OUTPUT_FILES/DATABASES_MPI/*rho.bin MODELS/initial_model/
+cp -v OUTPUT_FILES/DATABASES_MPI/*vp.bin  MODELS/initial_model/
+cp -v OUTPUT_FILES/DATABASES_MPI/*vs.bin  MODELS/initial_model/
 
 ########################### adj sources ################################
 echo
@@ -179,6 +192,8 @@ $MPIRUN ./bin/xspecfem3D
 if [[ $? -ne 0 ]]; then exit 1; fi
 
 # backup
+echo
+echo "backup output: OUTPUT_FILES.syn.adjoint"
 rm -rf OUTPUT_FILES.syn.adjoint
 cp -rp OUTPUT_FILES OUTPUT_FILES.syn.adjoint
 

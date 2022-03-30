@@ -828,7 +828,7 @@ __global__  void compute_dynamic_fault_cuda_rsf(realw* Displ,   // mesh quantiti
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void store_dataT(realw* store_dataT,
+__global__ void store_dataT(realw* dataT,
                             realw* V_slip,
                             realw* D_slip,
                             realw* T,
@@ -855,15 +855,15 @@ __global__ void store_dataT(realw* store_dataT,
     recordlength = 7;
   }
 
-  store_dataT[it*n_record*recordlength + irec*recordlength + 0] = D_slip[3*id];           // horizontal right-lateral slip (m)
-  store_dataT[it*n_record*recordlength + irec*recordlength + 1] = V_slip[3*id];           // horizontal right-lateral slip rate (m/s)
-  store_dataT[it*n_record*recordlength + irec*recordlength + 2] = T[3*id] / 1.0e6;        // horizontal right-lateral shear stress (MPa)
+  dataT[it*n_record*recordlength + irec*recordlength + 0] = D_slip[3*id];           // horizontal right-lateral slip (m)
+  dataT[it*n_record*recordlength + irec*recordlength + 1] = V_slip[3*id];           // horizontal right-lateral slip rate (m/s)
+  dataT[it*n_record*recordlength + irec*recordlength + 2] = T[3*id] / 1.0e6;        // horizontal right-lateral shear stress (MPa)
 
-  store_dataT[it*n_record*recordlength + irec*recordlength + 3] = -D_slip[3*id + 1];      // vertical up-dip slip (m)
-  store_dataT[it*n_record*recordlength + irec*recordlength + 4] = -V_slip[3*id + 1];      // vertical up-dip slip rate (m/s)
-  store_dataT[it*n_record*recordlength + irec*recordlength + 5] = -T[3*id + 1] / 1.0e6;   // vertical up-dip shear stress (MPa)
+  dataT[it*n_record*recordlength + irec*recordlength + 3] = D_slip[3*id + 1];      // vertical up-dip slip (m)
+  dataT[it*n_record*recordlength + irec*recordlength + 4] = V_slip[3*id + 1];      // vertical up-dip slip rate (m/s)
+  dataT[it*n_record*recordlength + irec*recordlength + 5] = T[3*id + 1] / 1.0e6;   // vertical up-dip shear stress (MPa)
 
-  store_dataT[it*n_record*recordlength + irec*recordlength + 6] = T[3*id + 2] / 1.0e6;    // normal stress (MPa)
+  dataT[it*n_record*recordlength + irec*recordlength + 6] = T[3*id + 2] / 1.0e6;    // normal stress (MPa)
 
   // for RATE_AND_STATE, last storage is be theta or log(theta)
   //
@@ -883,7 +883,7 @@ __global__ void store_dataT(realw* store_dataT,
       // slip law
       theta_new = theta[id];
     }
-    store_dataT[it*n_record*recordlength + irec*recordlength + 7] = theta_new;    // log10 of state variable (log-seconds)
+    dataT[it*n_record*recordlength + irec*recordlength + 7] = theta_new;    // log10 of state variable (log-seconds)
   }
 }
 

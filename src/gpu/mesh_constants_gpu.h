@@ -417,13 +417,20 @@ typedef struct mesh_ {
   // mpi process
   int myrank;
 
-  // constants
+  // simulation flags
   int simulation_type;
   int save_forward;
-  int use_mesh_coloring_gpu;
+
   int absorbing_conditions;
   int gravity;
+  int approximate_ocean_load;
+  int attenuation;
 
+  int undo_attenuation;
+  int compute_and_store_strain;
+
+  int approximate_hess_kl;
+  int use_mesh_coloring_gpu;
 
   // ------------------------------------------------------------------ //
   // GLL points & weights
