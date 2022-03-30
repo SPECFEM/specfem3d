@@ -797,8 +797,8 @@ contains
            temp = huge(temp)
            do jpar=1,num_lines
               dist=sqrt((coord(1,ipar)-xyzv(1,jpar))**2+(coord(2,ipar)-xyzv(2,jpar))**2+(coord(3,ipar)-xyzv(3,jpar))**2)
-              if(dist<temp) then
-                 b(ipar) = xyzv(4,jpar) 
+              if (dist < temp) then
+                 b(ipar) = xyzv(4,jpar)
                  temp    = dist
               endif
            enddo
