@@ -1,0 +1,130 @@
+This code is used for creating a 3D mesh (Box or semi-sphere models, see schematic diagram and jpg files in the work directory) for Specfem3D.
+
+The Box model creates four blocks by cutting a long cube with free surface, fault and several planes. The free surface and fault could be planar or curved surface, by setting Interface and Topography as False or True in ./create_box_mesh.py. Blocks 2 and 4 are the seismogenic layer, bounded by upper and lower seismogenic planes. Please setup the parameters of seismogenic layer, Upper_cutoff and Lower_cutoff, in the script create_box_mesh.py. If Upper_cutoff is a value larger than or equal 0, then the fault cuts through the free surface (i.e., block 1 is removed). The horizontal boundaries of the box domain is aligned with latitude and longitude.
+
+The semi-sphere model creates three blocks. We firstly cut a cylinder with free surface and fault interface. The semi-sphere is created by cutting a sphere with the free surfce, then subtract block 1 and 2 from the semi-sphere to obtain block 3. Finally we merge all blocks together. Block 1 and 2 have a finite seismogenic layer and the fault can cut through this seismogenic layer at any orientation. Please setup Lower_cutoff of seismogenic layer in the script create_semisphere_mesh.py.
+  
+      ~~~\/\/\/\/\~~~/\/\/\/\/~~~~ 
+     /                           /|
+    /      Free surface         / |
+   /                           / /|
+   ~~~\/\/\/\/\~~~/\/\/\/\/~~~/ / |
+  |         1                 |/  |
+   ---------------------------/   |
+  |            /              |   |
+  |           /Fault          |  /|
+  |    2      \         4     | / |
+  |          /                |/  |
+   ---------/-----------------/  / 
+  |                           | /  
+  |            3              |/   
+   ---------------------------/  
+  
+            Box model
+  
+  ~~~~~~~\/\/\/\~~~/\~~~~~/\/\/\/~~~~~~~~
+  *              |    /  |              *
+  *              |1 /    |              *
+   *             |  / 2  |             *
+     *           |/      |           *
+       *         --------         *
+         *                      *
+           *          3       *
+              *            *
+                  *******
+
+            Semi-sphere model            
+                
+
+Huihui Weng, Postdoc in Geoazur UCA, contact me by weng@geoazur.unice.fr or qfkq7850@mail.ustc.edu.cn. Oct. 31 2018
+Added semi-sphere model and revised the bugs in the box model. Dec. 7 2018
+Make the fault can cut through the free surface in the box model. Dec. 17 2018
+Thank Jean-Paul Ampuero for his helpful suggestion.
+
+
+Software and package requirements:
+  CUBIT (or Trelis)
+  GEOCUBIT (a package provided in the Specfem3D code in the directory: specfem3d-master/CUBIT_GEOCUBIT/)
+  Python and Python packages: numpy and scipy
+  GMT (No need if both free surface and fault are planar. For GMT 5+ you need to add "gmt" in all the GMT commands in the scripts: ./Surface/create_surface_data.sh and ./Interface/create_interface_data.sh)
+
+It is better to set up the path of CUBIT and GEOCUBIT from ~/.bashrc or ~/.bash_profile. In this case, you can import these two Python packages easily.
+Commands for testing the necessary python packages:
+  > python
+  Python 2.7.13 (default, Jan 03 2017, 17:41:54) [GCC] on linux2
+  Type "help", "copyright", "credits" or "license" for more information.
+  >>> import numpy
+  >>> import scipy
+  >>> import cubit
+  >>> import geocubitlib
+If not, you need to provide the lib path in the scripts ./create_box_mesh.py and ./python_scripts/playback_jou.py by the line: sys.path.append('PATH to LIBS').
+
+
+
+Step-by-step procedure
+
+1. Do you need curved free surface or fault? 
+If yes, please set up the ranges and reference point of the model in geographical coordinates in ./Parameters_for_curved_surfaces.sh. Note that the range of the longitude and latitude shall be larger than the actual model range. It is a good choice to set the epicenter as the reference point, i.e., the original point in Cartesian coordinates.
+
+For creating a curved free surface, you need to setup 4 parameters in ./Parameters_for_curved_surfaces.sh:
+Sur_GRD_data     Use a grid-format data or a xyz-format data
+Sur_input_data   Path of the data
+Sur_inc          Increase the sample interval by multiplying the interval of grid-format data by the factor Sur_inc, otherwise it need a long time for CUBIT to create a .sat file.
+Sur_sigma        It is the parameter (sigma) of gaussian_filter in Python. Larger values mean stronger smoothing. The guidelines for gaussian_filter in Python: https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.gaussian_filter.html
+
+For creating a curved fault, you need to setup 5 parameters in ./Parameters_for_curved_surfaces.sh:
+Int_GRD_data     Use a grid-format data or a xyz-format data
+Int_input_data   Path of the data
+Int_inc          Increase the sample interval by multiplying the interval of grid-format data by the factor Sur_inc, otherwise it need a long time for CUBIT to create a .sat file.
+Int_sigma        It is the parameter (sigma) of gaussian_filter in Python. Larger values mean stronger smoothing. The guidelines for gaussian_filter in Python: https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.gaussian_filter.html
+Int_sample_inc   The sample interval for the xyz-format data. This parameters depends on the slip model (for example Yue Han's model). For other slip model, one needs to change the text in ./Interface/create_interface_data.sh 
+
+There is a low resolution global topography data in ./Surface/data. The global topography data can be downloaded from NOAA https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO1/data/ice_surface/grid_registered/netcdf/ . Put the downloaded data "ETOPO1_Ice_g_gmt4.grd.gz" in the directory ./Surface/data and unzip it by the command "gunzip -k ./Surface/data/ETOPO1_Ice_g_gmt4.grd.gz" (or using other ways to unzip a ~.gz file). The downloaded data file is large (377MB), which contains the global topography data. If you need a higher or lower resolution topograhpy data, please put it in ./Surface/data and set up its path to the new data in ./Parameters_for_curved_surfaces.sh. 
+
+The fault interface data can be downloaded from USGS https://earthquake.usgs.gov/data/slab/models.php. Put the downloaded data in the directory ./Interface/data
+
+Run the scripts ./Surface/create_surface_data.sh and ./Interface/create_interface_data.sh to create the .sat files (CUBIT-format file) by typing:
+   cd ./Surface
+   sh create_surface_data.sh
+   cd ..
+   cd ./Interface
+   sh create_interface_data.sh
+   cd ..
+You can check the quality of mesh by the created *.jou script (CUBIT script) in ./Surface/CUBIT_jou/ and ./Interface/CUBIT_jou/ under the GUI of CUBIT (for debug). It is recommanded to change different sample interval and smooth factor to create a lot surface for later usage. The created free surface and fault are saved as *.sat in ../output/
+In the directories ./Surface/ps and ./Interface/ps, you can check the effect of smoothing from the GMT figures. 
+
+
+2. If you need to use curved free surface and fault, set Interface = True or Topography = True, then provide the created file by
+Int_name       = work_dir + "/output/interface_sigma_3_inc_6.sat"
+Top_name       = work_dir + "/output/surface_sigma_0_inc_8.sat"
+
+For planar free surface, set Topography = False
+For planar fault, set Interface = False, and you need to set the strike, dip and depth of the fault. Firstly, the python script creates a Zplane, then rotates about Y axis with angle Dip, rotates about Z axis with angle Strike, and finally moves along Z direction with distance Dep
+For example:
+Strike         = 90
+Dip            = 60
+Dep            = -10
+
+Set up other parameters in the first section of create_box_mesh.py and create_semisphere_mesh.py (there are comments), such as dimension of model, materials properties, mesh scheme, mesh size, and output name. 
+
+For mesh scheme, you need to set up the grid size, mesh scheme (thex or map), element type, or mesh refinement. Note that we cannot use "map" mesh scheme for semi-sphere model.
+grid_size      = 1
+mesh_scheme   = "thex"
+#mesh_scheme    = "map"
+element_type   = "HEX8"
+#element_type  = "HEX27"
+fault_refine_numsplit = 0
+fault_refine_depth    = 5
+
+
+
+3. Run the script for the box model by type
+   python create_box_mesh.py
+   and for the semi-sphere model by type
+   python create_semisphere_mesh.py
+The created files are seved in the directory ./output/model_name
+
+If you have any question or comment, please feel free to contact me.
+
+
+
