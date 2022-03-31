@@ -832,10 +832,6 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
   real(kind=CUSTOM_REAL) :: A_0, A_1, A_2, A_3, A_4
   real(kind=CUSTOM_REAL) :: kappa_x,kappa_y,kappa_z,d_x,d_y,d_z,alpha_x,alpha_y,alpha_z
 
-  logical :: FIRST_ORDER_CONVOLUTION
-
-  FIRST_ORDER_CONVOLUTION = .false.
-
   CPML_region_local = CPML_regions(ispec_CPML)
   kappa_x = k_store_x(i,j,k,ispec_CPML)
   kappa_y = k_store_y(i,j,k,ispec_CPML)
@@ -956,8 +952,6 @@ subroutine lijk_parameter_computation(kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,ka
 
   integer :: CPML_X_ONLY_TEMP,CPML_Y_ONLY_TEMP,CPML_Z_ONLY_TEMP, &
              CPML_XY_ONLY_TEMP,CPML_XZ_ONLY_TEMP,CPML_YZ_ONLY_TEMP
-
-  !logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
 
   select case (index_ijk)
   case (123)
@@ -1332,8 +1326,6 @@ subroutine lxy_interface_parameter_computation(kappa_x,d_x,alpha_x,kappa_y,d_y,a
 
   integer :: CPML_X_ONLY_TEMP,CPML_Y_ONLY_TEMP,CPML_Z_ONLY_TEMP, &
              CPML_XY_ONLY_TEMP,CPML_XZ_ONLY_TEMP,CPML_YZ_ONLY_TEMP
-
-  !logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
 
   select case(index_ijk)
   case (12)

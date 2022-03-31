@@ -42,19 +42,27 @@
   npointot = NSPEC_AB * NGLLX * NGLLY * NGLLZ
 
   ! use dynamic allocation to allocate memory for arrays
+  ! local to global indices array
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 605')
   if (ier /= 0) stop 'error allocating array ibool'
+  ibool(:,:,:,:) = 0
+
+  ! node coordinates defined on local level
   allocate(xstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 606')
   if (ier /= 0) stop 'error allocating array xstore'
+  xstore(:,:,:,:) = 0.d0
   allocate(ystore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 607')
   if (ier /= 0) stop 'error allocating array ystore'
+  ystore(:,:,:,:) = 0.d0
   allocate(zstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 608')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  zstore(:,:,:,:) = 0.d0
 
+  ! estimates memory requirement
   call memory_eval_mesher(NSPEC_AB,npointot,nnodes_ext_mesh, &
                           nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
                           max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
@@ -106,14 +114,14 @@
     call flush_IMAIN()
   endif
 
+  ! make sure everybody is synchronized
+  call synchronize_all()
+
   ! clean-up
   deallocate(xstore,ystore,zstore)
   deallocate(ibool)
   deallocate(ispec_is_surface_external_mesh)
   deallocate(iglob_is_surface_external_mesh)
-
-  ! make sure everybody is synchronized
-  call synchronize_all()
 
   ! user output
   if (myrank == 0) then

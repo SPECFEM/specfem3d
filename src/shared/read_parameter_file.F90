@@ -27,8 +27,7 @@
 
   subroutine read_parameter_file(BROADCAST_AFTER_READ)
 
-  use constants, only: &
-    myrank, &
+  use constants, only: myrank, &
     INJECTION_TECHNIQUE_IS_AXISEM,INJECTION_TECHNIQUE_IS_DSM,INJECTION_TECHNIQUE_IS_FK
 
   use shared_parameters
@@ -489,11 +488,20 @@
       write(*,*)
     endif
 
-    call read_value_integer(subsamp_seismos, 'subsamp_seismos', ier)
+    !deprecated: call read_value_integer(subsamp_seismos, 'subsamp_seismos', ier)
+    call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SAMPLE, 'NTSTEP_BETWEEN_OUTPUT_SAMPLE', ier)
     if (ier /= 0) then
-      some_parameters_missing_from_Par_file = .true.
-      write(*,'(a)') 'subsamp_seismos                 = 1'
-      write(*,*)
+      ! old version
+      call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SAMPLE, 'subsamp_seismos', ier)
+      if (ier == 0) then
+        ! deprecation warning
+        write(*,'(a)') 'Warning: Deprecated parameter subsamp_seismos found in Par_file.'
+        write(*,'(a)') '         Please use parameter NTSTEP_BETWEEN_OUTPUT_SAMPLE in future...'
+      else
+        some_parameters_missing_from_Par_file = .true.
+        write(*,'(a)') 'NTSTEP_BETWEEN_OUTPUT_SAMPLE    = 1'
+        write(*,*)
+      endif
     endif
 
     call read_value_logical(USE_BINARY_FOR_SEISMOGRAMS, 'USE_BINARY_FOR_SEISMOGRAMS', ier)
@@ -671,15 +679,21 @@
          INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_AXISEM .and. &
          INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) stop 'Error incorrect value of INJECTION_TECHNIQUE_TYPE read'
 
-      if ( (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM ) .and. &
-           (.not. MESH_A_CHUNK_OF_THE_EARTH) ) stop 'Error, coupling with DSM only works with a Earth chunk mesh'
+      if ( (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM ) .and. (.not. MESH_A_CHUNK_OF_THE_EARTH) ) &
+        stop 'Error, coupling with DSM only works with a Earth chunk mesh'
 
       if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. MESH_A_CHUNK_OF_THE_EARTH) &
-           stop 'Error: coupling with F-K is for models with a flat surface (Earth flattening), &
+        stop 'Error: coupling with F-K is for models with a flat surface (Earth flattening), &
                        &thus turn MESH_A_CHUNK_OF_THE_EARTH off'
 
       if ((INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_AXISEM) .and. RECIPROCITY_AND_KH_INTEGRAL) &
-           stop 'Error: the use of RECIPROCITY_AND_KH_INTEGRAL is only available for coupling with AxiSEM for now'
+        stop 'Error: the use of RECIPROCITY_AND_KH_INTEGRAL is only available for coupling with AxiSEM for now'
+
+      if (STACEY_ABSORBING_CONDITIONS .eqv. .false.) &
+        stop 'Error: COUPLE_WITH_INJECTION_TECHNIQUE requires to set STACEY_ABSORBING_CONDITIONS to have an effect'
+
+      if (UNDO_ATTENUATION_AND_OR_PML .and. SIMULATION_TYPE == 3) &
+          stop 'Error: COUPLE_WITH_INJECTION_TECHNIQUE together with UNDO_ATT or PML simulations not implemented yet'
     endif
 
     !-------------------------------------------------------
@@ -709,16 +723,14 @@
     endif
 
     !> Read ADIOS related flags from the Par_file
-    !! \param ADIOS_ENABLED Main flag to decide if ADIOS is used. If setted to
-    !!                      false no other parameter is taken into account.
-    !! \param ADIOS_FOR_DATABASES Flag to indicate if the databases are written
-    !!                            and read with the help of ADIOS.
-    !! \param ADIOS_FOR_MESH flag to indicate if the mesh (generate database) is
-    !!                       written using ADIOS.
-    !! \param ADIOS_FOR_FORWARD_ARRAYS flag to indicate if the solver forward arrays
-    !!                                 are written using ADIOS.
-    !! \param ADIOS_FOR_KERNELS flag to indicate if the kernels are saved using
-    !!                          adios
+    !! \param ADIOS_ENABLED Main flag to decide if ADIOS is used.
+    !!                      If set to .false., no other parameter is taken into account.
+    !! \param ADIOS_FOR_DATABASES        - Flag to indicate if the databases are written and read with the help of ADIOS.
+    !! \param ADIOS_FOR_MESH             - Flag to indicate if the mesh (generate database) is written using ADIOS.
+    !! \param ADIOS_FOR_FORWARD_ARRAYS   - Flag to indicate if the solver forward arrays are written using ADIOS.
+    !! \param ADIOS_FOR_KERNELS          - Flag to indicate if the kernels are saved using adios
+    !! \param ADIOS_FOR_UNDO_ATTENUATION - Flag for saving undo_att snapshot wavefields using adios
+    !!
     !! \author MPBL
     call read_value_logical(ADIOS_ENABLED, 'ADIOS_ENABLED', ier)
     if (ier /= 0) then
@@ -755,6 +767,13 @@
       write(*,*)
     endif
 
+    call read_value_logical(ADIOS_FOR_UNDO_ATTENUATION, 'ADIOS_FOR_UNDO_ATTENUATION', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'ADIOS_FOR_UNDO_ATTENUATION      = .false.'
+      write(*,*)
+    endif
+
     ! closes parameter file
     call close_parameter_file()
 
@@ -784,7 +803,7 @@
       ADIOS_FOR_MESH = .false.
       ADIOS_FOR_FORWARD_ARRAYS = .false.
       ADIOS_FOR_KERNELS = .false.
-      ! ADIOS_FOR_UNDO_ATTENUATION = .false. ! not implemented yet
+      ADIOS_FOR_UNDO_ATTENUATION = .false.
     endif
 
     ! re-sets PML free surface flag
@@ -863,8 +882,8 @@
    stop 'Error: at least one of SAVE_SEISMOGRAMS_DISPLACEMENT SAVE_SEISMOGRAMS_VELOCITY SAVE_SEISMOGRAMS_ACCELERATION &
              &SAVE_SEISMOGRAMS_PRESSURE must be true'
 
-  if (subsamp_seismos < 1) &
-    stop 'Error: subsamp_seismos must be >= 1'
+  if (NTSTEP_BETWEEN_OUTPUT_SAMPLE < 1) &
+    stop 'Error: NTSTEP_BETWEEN_OUTPUT_SAMPLE must be >= 1'
 
   ! this could be implemented in the future if needed,
   ! see comments in the source code around the USE_TRICK_FOR_BETTER_PRESSURE
@@ -890,6 +909,20 @@
     if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL) &
       stop 'Error ADIOS not yet supported by option BROADCAST_SAME_MESH_AND_MODEL'
   endif
+
+#if !defined(USE_ADIOS) && !defined(USE_ADIOS2)
+  if (ADIOS_ENABLED) then
+    print *
+    print *,'**************'
+    print *,'**************'
+    print *,'ADIOS is enabled in parameter file but the code was not compiled with ADIOS support.'
+    print *,'See --with-adios configure options.'
+    print *,'**************'
+    print *,'**************'
+    print *
+    stop 'an error occurred while reading the parameter file: ADIOS is enabled but code not built with ADIOS'
+  endif
+#endif
 
   ! PML
   if (PML_CONDITIONS) then
@@ -1017,21 +1050,21 @@
     !SAVE_DISPLACEMENT = .true.         ! (not necessary) stores displacement (flag not necessary, but to avoid confusion)
   endif
 
-  ! make sure NSTEP is a multiple of subsamp_seismos
+  ! make sure NSTEP is a multiple of NTSTEP_BETWEEN_OUTPUT_SAMPLE
   ! if not, increase it a little bit, to the next multiple
-  if (mod(NSTEP,subsamp_seismos) /= 0) then
+  if (mod(NSTEP,NTSTEP_BETWEEN_OUTPUT_SAMPLE) /= 0) then
     if (NOISE_TOMOGRAPHY /= 0) then
       if (myrank == 0) then
-        print *,'Noise simulation: Invalid number of NSTEP = ',NSTEP
-        print *,'Must be a multiple of subsamp_seismos = ',subsamp_seismos
+        print *,'Noise simulation: Invalid number of NSTEP          = ',NSTEP
+        print *,'Must be a multiple of NTSTEP_BETWEEN_OUTPUT_SAMPLE = ',NTSTEP_BETWEEN_OUTPUT_SAMPLE
       endif
-      stop 'Error: NSTEP must be a multiple of subsamp_seismos'
+      stop 'Error: NSTEP must be a multiple of NTSTEP_BETWEEN_OUTPUT_SAMPLE'
     else
-      NSTEP = (NSTEP/subsamp_seismos + 1)*subsamp_seismos
+      NSTEP = (NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE + 1)*NTSTEP_BETWEEN_OUTPUT_SAMPLE
       ! user output
       if (myrank == 0) then
         print *
-        print *,'NSTEP is not a multiple of subsamp_seismos'
+        print *,'NSTEP is not a multiple of NTSTEP_BETWEEN_OUTPUT_SAMPLE'
         print *,'thus increasing it automatically to the next multiple, which is ',NSTEP
         print *
       endif
@@ -1041,13 +1074,13 @@
   ! output seismograms at least once at the end of the simulation
   NTSTEP_BETWEEN_OUTPUT_SEISMOS = min(NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
 
-  ! make sure NSTEP_BETWEEN_OUTPUT_SEISMOS is a multiple of subsamp_seismos
-  if (mod(NTSTEP_BETWEEN_OUTPUT_SEISMOS,subsamp_seismos) /= 0) then
+  ! make sure NSTEP_BETWEEN_OUTPUT_SEISMOS is a multiple of NTSTEP_BETWEEN_OUTPUT_SAMPLE
+  if (mod(NTSTEP_BETWEEN_OUTPUT_SEISMOS,NTSTEP_BETWEEN_OUTPUT_SAMPLE) /= 0) then
     if (myrank == 0) then
-      print *,'Invalid number of NTSTEP_BETWEEN_OUTPUT_SEISMOS = ',NTSTEP_BETWEEN_OUTPUT_SEISMOS
-      print *,'Must be a multiple of subsamp_seismos = ',subsamp_seismos
+      print *,'Invalid number of NTSTEP_BETWEEN_OUTPUT_SEISMOS    = ',NTSTEP_BETWEEN_OUTPUT_SEISMOS
+      print *,'Must be a multiple of NTSTEP_BETWEEN_OUTPUT_SAMPLE = ',NTSTEP_BETWEEN_OUTPUT_SAMPLE
     endif
-    stop 'Error: NTSTEP_BETWEEN_OUTPUT_SEISMOS must be a multiple of subsamp_seismos'
+    stop 'Error: NTSTEP_BETWEEN_OUTPUT_SEISMOS must be a multiple of NTSTEP_BETWEEN_OUTPUT_SAMPLE'
   endif
 
   ! the default value of NTSTEP_BETWEEN_READ_ADJSRC (0) is to read the whole trace at the same time
@@ -1170,7 +1203,7 @@
 ! (only executed by main process)
 
   use constants, only: IIN,IIN_PAR,IN_DATA_FILES,HUGEVAL,TINYVAL, &
-    NLINES_PER_CMTSOLUTION_SOURCE,NLINES_PER_FORCESOLUTION_SOURCE
+    NLINES_PER_CMTSOLUTION_SOURCE,NLINES_PER_FORCESOLUTION_SOURCE,mygroup
 
   use shared_parameters
 
@@ -1181,13 +1214,24 @@
   ! local variables
   integer :: icounter,isource,idummy,ier,nlines_per_source
   double precision :: hdur, minval_hdur
-  character(len=MAX_STRING_LEN) :: dummystring
+  character(len=MAX_STRING_LEN) :: fault_filename,dummystring
+  character(len=MAX_STRING_LEN) :: path_to_add
 
   ! initializes
   NSOURCES = 0
 
   ! checks if finite fault source
-  open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',iostat=ier)
+  fault_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults'
+  ! see if we are running several independent runs in parallel
+  ! if so, add the right directory for that run
+  ! (group numbers start at zero, but directory names start at run0001, thus we add one)
+  ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+    fault_filename = path_to_add(1:len_trim(path_to_add))//fault_filename(1:len_trim(fault_filename))
+  endif
+
+  open(unit=IIN_PAR,file=trim(fault_filename),status='old',iostat=ier)
   if (ier == 0) then
     HAS_FINITE_FAULT_SOURCE = .true.
     !write(IMAIN,*) 'provides finite faults'
@@ -1407,7 +1451,7 @@
   call bcast_all_singlel(SAVE_SEISMOGRAMS_ACCELERATION)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_PRESSURE)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)
-  call bcast_all_singlei(subsamp_seismos)
+  call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_SAMPLE)
   call bcast_all_singlel(USE_BINARY_FOR_SEISMOGRAMS)
   call bcast_all_singlel(SU_FORMAT)
   call bcast_all_singlel(ASDF_FORMAT)
@@ -1452,6 +1496,7 @@
   call bcast_all_singlel(ADIOS_FOR_MESH)
   call bcast_all_singlel(ADIOS_FOR_FORWARD_ARRAYS)
   call bcast_all_singlel(ADIOS_FOR_KERNELS)
+  call bcast_all_singlel(ADIOS_FOR_UNDO_ATTENUATION)
 
   ! broadcast all parameters computed from others
   call bcast_all_singlei(IMODEL)

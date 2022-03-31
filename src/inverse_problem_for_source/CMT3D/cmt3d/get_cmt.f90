@@ -1,7 +1,7 @@
 ! read cmt file
 
 subroutine get_cmt(cmt_file,yr,mo,jda,ho,mi,sec, &
-     t_cmt,hdur,elat,elon,depth,moment_tensor)
+                   t_cmt,hdur,elat,elon,depth,moment_tensor)
 
   implicit none
 

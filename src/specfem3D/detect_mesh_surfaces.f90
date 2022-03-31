@@ -93,22 +93,27 @@
     ! user output
     if (myrank == 0) then
       write(IMAIN,*) 'volume movies:'
+      if (SAVE_DISPLACEMENT) then
+        write(IMAIN,*) '  saving: particle displacements'
+      else
+        write(IMAIN,*) '  saving: particle velocities'
+      endif
       write(IMAIN,*) '  number of steps between frames = ',NTSTEP_BETWEEN_FRAMES
       write(IMAIN,*)
       call flush_IMAIN()
     endif
 
     ! temporary fields for output
-    allocate(velocity_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    allocate(wavefield_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1731')
-    allocate(velocity_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    allocate(wavefield_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1732')
-    allocate(velocity_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    allocate(wavefield_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1733')
-    if (ier /= 0) stop 'error allocating array movie velocity_x etc.'
-    velocity_x(:,:,:,:) = 0._CUSTOM_REAL
-    velocity_y(:,:,:,:) = 0._CUSTOM_REAL
-    velocity_z(:,:,:,:) = 0._CUSTOM_REAL
+    if (ier /= 0) stop 'error allocating array movie wavefield_x etc.'
+    wavefield_x(:,:,:,:) = 0._CUSTOM_REAL
+    wavefield_y(:,:,:,:) = 0._CUSTOM_REAL
+    wavefield_z(:,:,:,:) = 0._CUSTOM_REAL
 
     ! elastic/poroelastic only
     if (ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then

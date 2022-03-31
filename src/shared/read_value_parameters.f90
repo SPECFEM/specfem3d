@@ -111,8 +111,8 @@
 
   filename_main = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file'
 
-! also see if we are running several independent runs in parallel
-! to do so, add the right directory for that run for the main process only here
+  ! also see if we are running several independent runs in parallel
+  ! to do so, add the right directory for that run for the main process only here
   filename_run0001 = 'run0001/'//filename_main(1:len_trim(filename_main))
 
   call param_open(filename_main, len(filename_main), ier)
@@ -134,22 +134,19 @@
   if (exists_main_Par_file .and. exists_run0001_Par_file) then
     print *
     print *,'Cannot have both DATA/Par_file and run0001/DATA/Par_file present, please remove one of them.'
-    print *
-    print *,'In case you want to run simultaneous runs with: NUMBER_OF_SIMULTANEOUS_RUNS > 1 '
-    print *,'make sure to remove DATA/Par_file and only have run0***/DATA/Par_file available'
-    print *
     stop 'Error: two different copies of the Par_file'
   endif
 
   call param_open(filename_main, len(filename_main), ier)
   if (ier /= 0) then
+    ! checks second option with Par_file in run0001/DATA/
     call param_open(filename_run0001, len(filename_run0001), ier)
     if (ier /= 0) then
       print *
-      print *,'opening file failed, please check your file path and run-directory.'
-      print *,'checked: ',trim(filename_main)
-      print *,'         ',trim(filename_run0001)
-      stop 'error opening Par_file'
+      print *,'Opening file failed, please check your file path and run-directory.'
+      print *,'checked first: ',trim(filename_main)
+      print *,'     and then: ',trim(filename_run0001)
+      stop 'Error opening Par_file'
     endif
   endif
 
@@ -159,30 +156,35 @@
 
   subroutine open_parameter_file(ier)
 
-  use constants, only: MAX_STRING_LEN,IN_DATA_FILES,mygroup
-  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS
+  use constants, only: MAX_STRING_LEN,IN_DATA_FILES
 
   implicit none
 
   integer :: ier
-  character(len=MAX_STRING_LEN) :: filename,path_to_add
+  character(len=MAX_STRING_LEN) :: filename_main,filename_run0001
 
-  filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file'
-! see if we are running several independent runs in parallel
-! if so, add the right directory for that run
-! (group numbers start at zero, but directory names start at run0001, thus we add one)
-! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
-    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-    filename = path_to_add(1:len_trim(path_to_add))//filename(1:len_trim(filename))
-  endif
+  filename_main = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file'
 
-  call param_open(filename, len(filename), ier)
+  ! note: for simultaneous runs, we require only a single Par_file in the main root directory DATA/Par_file
+  !       that is, no other files in the run directories are needed, like run0001/DATA/Par_file, run0001/DATA/Par_file, etc.
+  !       this avoids potential problems if different Par_files would have different settings (e.g., NPROC, MODEL, ..).
+
+  ! to be gentle, we also allow for a setup where the main Par_file is put into run0001/DATA/
+  ! in case we are running several independent runs in parallel
+  ! to do so, add the right directory for that run for the main process only here
+  filename_run0001 = 'run0001/'//filename_main(1:len_trim(filename_main))
+
+  call param_open(filename_main, len(filename_main), ier)
   if (ier /= 0) then
-    print *
-    print *,'opening file failed: ',trim(filename)
-    print *,'Please check your file path and run-directory.'
-    stop 'Error opening Par_file'
+    ! checks second option with Par_file in run0001/DATA/
+    call param_open(filename_run0001, len(filename_run0001), ier)
+    if (ier /= 0) then
+      print *
+      print *,'Opening file failed, please check your file path and run-directory.'
+      print *,'checked first: ',trim(filename_main)
+      print *,'     and then: ',trim(filename_run0001)
+      stop 'Error opening Par_file'
+    endif
   endif
 
   end subroutine open_parameter_file

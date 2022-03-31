@@ -30,10 +30,11 @@
 
 __global__ void compute_element_strain_cudakernel(int* ispec_is_elastic,
                                                   int* d_ibool,
-                                                  realw* b_displ,
-                                                  realw* b_epsilondev_xx,realw* b_epsilondev_yy,realw* b_epsilondev_xy,
-                                                  realw* b_epsilondev_xz,realw* b_epsilondev_yz,
-                                                  realw* b_epsilon_trace_over_3,
+                                                  realw* displ,
+                                                  realw* epsilondev_xx,realw* epsilondev_yy,realw* epsilondev_xy,
+                                                  realw* epsilondev_xz,realw* epsilondev_yz,
+                                                  realw* epsilondev_trace,
+                                                  realw* epsilon_trace_over_3,
                                                   realw* d_xix,realw* d_xiy,realw* d_xiz,
                                                   realw* d_etax,realw* d_etay,realw* d_etaz,
                                                   realw* d_gammax,realw* d_gammay,realw* d_gammaz,
@@ -70,9 +71,9 @@ __global__ void compute_element_strain_cudakernel(int* ispec_is_elastic,
       int iglob = d_ibool[ijk + NGLL3_PADDED*ispec] - 1;
 
       if (ijk < NGLL3){
-        sh_tempx[ijk] = b_displ[iglob*3];
-        sh_tempy[ijk] = b_displ[iglob*3+1];
-        sh_tempz[ijk] = b_displ[iglob*3+2];
+        sh_tempx[ijk] = displ[iglob*3];
+        sh_tempy[ijk] = displ[iglob*3+1];
+        sh_tempz[ijk] = displ[iglob*3+2];
       }
       // synchronizes threads
       __syncthreads();
@@ -147,13 +148,16 @@ __global__ void compute_element_strain_cudakernel(int* ispec_is_elastic,
       }
 
       // stores strains
+      epsilondev_trace[ijk_ispec] = (duxdxl + duydyl + duzdzl);
+
       templ = (duxdxl + duydyl + duzdzl) * (0.3333333333333333f);
-      b_epsilondev_xx[ijk_ispec] = duxdxl - templ;
-      b_epsilondev_yy[ijk_ispec] = duydyl - templ;
-      b_epsilondev_xy[ijk_ispec] = (duxdyl + duydxl) * (0.5f);
-      b_epsilondev_xz[ijk_ispec] = (duzdxl + duxdzl) * (0.5f);
-      b_epsilondev_yz[ijk_ispec] = (duzdyl + duydzl) * (0.5f);
-      b_epsilon_trace_over_3[ijk_ispec] = templ;
+      epsilon_trace_over_3[ijk_ispec] = templ;
+
+      epsilondev_xx[ijk_ispec] = duxdxl - templ;
+      epsilondev_yy[ijk_ispec] = duydyl - templ;
+      epsilondev_xy[ijk_ispec] = (duxdyl + duydxl) * (0.5f);
+      epsilondev_xz[ijk_ispec] = (duzdxl + duxdzl) * (0.5f);
+      epsilondev_yz[ijk_ispec] = (duzdyl + duydzl) * (0.5f);
     }
   }
 }

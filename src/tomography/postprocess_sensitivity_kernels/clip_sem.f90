@@ -153,7 +153,7 @@ program clip_sem
   call synchronize_all()
 
   allocate(sem_array(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 977')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 977')
 
   ! clip kernels
   do iker=1,nker
@@ -207,24 +207,4 @@ program clip_sem
   call finalize_mpi()
 
 end program clip_sem
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-! version without rank number printed in the error message
-
-  subroutine my_local_exit_MPI_without_rank(error_msg)
-
-  implicit none
-
-  character(len=*) error_msg
-
-! write error message to screen
-  write(*,*) error_msg(1:len(error_msg))
-  write(*,*) 'Error detected, aborting MPI...'
-
-  stop 'Fatal error'
-
-  end subroutine my_local_exit_MPI_without_rank
 

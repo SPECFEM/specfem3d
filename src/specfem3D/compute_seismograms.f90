@@ -47,7 +47,8 @@
     b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic
   use specfem_par_elastic, only: ispec_is_elastic,displ,veloc,accel, &
     b_displ,b_veloc,b_accel
-  use specfem_par_poroelastic, only: ispec_is_poroelastic,displs_poroelastic,velocs_poroelastic,accels_poroelastic
+  use specfem_par_poroelastic, only: ispec_is_poroelastic,displs_poroelastic,velocs_poroelastic,accels_poroelastic, &
+    b_displs_poroelastic,b_velocs_poroelastic,b_accels_poroelastic
 
   implicit none
 
@@ -65,6 +66,11 @@
 
   integer :: irec_local,irec
   integer :: ispec
+
+  ! flag to indicate that traces for kernel runs are taken from adjoint wavefields instead of backward/reconstructed wavefields;
+  ! useful for debugging.
+  ! default (.false.) is to output backward/reconstructed wavefield
+  logical, parameter :: OUTPUT_ADJOINT_WAVEFIELD = .false.
 
   ! loops over local receivers
   do irec_local = 1,nrec_local
@@ -152,31 +158,75 @@
 
       ! elastic wave field
       if (ispec_is_elastic(ispec)) then
-        ! backward field: interpolates displ/veloc/accel at receiver locations
-        call compute_interpolated_dva_viscoelast(b_displ,b_veloc,b_accel,NGLOB_ADJOINT, &
-                                                 ispec,NSPEC_AB,ibool, &
-                                                 hxir,hetar,hgammar, &
-                                                 dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
+        if (OUTPUT_ADJOINT_WAVEFIELD) then
+          ! adjoint field: interpolates displ/veloc/accel at receiver locations
+          call compute_interpolated_dva_viscoelast(displ,veloc,accel,NGLOB_ADJOINT, &
+                                                   ispec,NSPEC_AB,ibool, &
+                                                   hxir,hetar,hgammar, &
+                                                   dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
+        else
+          ! backward field: interpolates displ/veloc/accel at receiver locations
+          call compute_interpolated_dva_viscoelast(b_displ,b_veloc,b_accel,NGLOB_ADJOINT, &
+                                                   ispec,NSPEC_AB,ibool, &
+                                                   hxir,hetar,hgammar, &
+                                                   dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
+        endif
       endif ! elastic
 
       ! acoustic wave field
       if (ispec_is_acoustic(ispec)) then
-        ! backward field: displacement vector
-        call compute_gradient_in_acoustic(ispec,b_potential_acoustic,displ_element)
+        if (OUTPUT_ADJOINT_WAVEFIELD) then
+          ! adjoint field: displacement vector
+          call compute_gradient_in_acoustic(ispec,potential_acoustic,displ_element)
 
-        ! backward field: velocity vector
-        call compute_gradient_in_acoustic(ispec,b_potential_dot_acoustic,veloc_element)
+          ! adjoint field: velocity vector
+          call compute_gradient_in_acoustic(ispec,potential_dot_acoustic,veloc_element)
 
-        ! backward field: acceleration vector
-        call compute_gradient_in_acoustic(ispec,b_potential_dot_dot_acoustic,accel_element)
+          ! adjoint field: acceleration vector
+          call compute_gradient_in_acoustic(ispec,potential_dot_dot_acoustic,accel_element)
 
-        ! backward field: interpolates displ/veloc/accel/pressure at receiver locations
-        call compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
-                                             b_potential_dot_dot_acoustic,b_potential_acoustic,NGLOB_ADJOINT, &
-                                             ispec,NSPEC_AB,ibool, &
-                                             hxir,hetar,hgammar, &
-                                             dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd,USE_TRICK_FOR_BETTER_PRESSURE)
+          ! adjoint field: interpolates displ/veloc/accel/pressure at receiver locations
+          call compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
+                                               potential_dot_dot_acoustic,potential_acoustic,NGLOB_ADJOINT, &
+                                               ispec,NSPEC_AB,ibool, &
+                                               hxir,hetar,hgammar, &
+                                               dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd,USE_TRICK_FOR_BETTER_PRESSURE)
+        else
+          ! backward field: displacement vector
+          call compute_gradient_in_acoustic(ispec,b_potential_acoustic,displ_element)
+
+          ! backward field: velocity vector
+          call compute_gradient_in_acoustic(ispec,b_potential_dot_acoustic,veloc_element)
+
+          ! backward field: acceleration vector
+          call compute_gradient_in_acoustic(ispec,b_potential_dot_dot_acoustic,accel_element)
+
+          ! backward field: interpolates displ/veloc/accel/pressure at receiver locations
+          call compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
+                                               b_potential_dot_dot_acoustic,b_potential_acoustic,NGLOB_ADJOINT, &
+                                               ispec,NSPEC_AB,ibool, &
+                                               hxir,hetar,hgammar, &
+                                               dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd,USE_TRICK_FOR_BETTER_PRESSURE)
+        endif
       endif ! acoustic
+
+      ! poroelastic wavefield
+      if (ispec_is_poroelastic(ispec)) then
+        ! outputs wavefield from solid phase: displs/velocs/accels
+        if (OUTPUT_ADJOINT_WAVEFIELD) then
+          ! adjoint field: interpolates displ/veloc/accel at receiver locations
+          call compute_interpolated_dva_viscoelast(displs_poroelastic,velocs_poroelastic,accels_poroelastic,NGLOB_ADJOINT, &
+                                                   ispec,NSPEC_AB,ibool, &
+                                                   hxir,hetar,hgammar, &
+                                                   dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
+        else
+          ! backward field: interpolates displ/veloc/accel at receiver locations
+          call compute_interpolated_dva_viscoelast(b_displs_poroelastic,b_velocs_poroelastic,b_accels_poroelastic,NGLOB_ADJOINT, &
+                                                   ispec,NSPEC_AB,ibool, &
+                                                   hxir,hetar,hgammar, &
+                                                   dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd)
+        endif
+      endif
 
     end select ! SIMULATION_TYPE
 
@@ -221,7 +271,7 @@
 
   use specfem_par, only: SIMULATION_TYPE,NGLOB_AB,ibool, &
     deltat,DT,t0,NSTEP,it, &
-    seismo_current,seismo_offset,subsamp_seismos, &
+    seismo_current,seismo_offset,NTSTEP_BETWEEN_OUTPUT_SAMPLE, &
     ispec_selected_source, &
     number_receiver_global,nrec_local, &
     Mxx,Myy,Mzz,Mxy,Mxz,Myz,tshift_src,hdur_Gaussian, &
@@ -274,7 +324,8 @@
   idx = seismo_offset + seismo_current
 
   ! checks bounds
-  if (idx < 1 .or. idx > NSTEP/subsamp_seismos) call exit_mpi(myrank,'Error: seismograms_eps has wrong current index')
+  if (idx < 1 .or. idx > NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE) &
+    call exit_mpi(myrank,'Error: seismograms_eps has wrong current index')
 
   ! loops over local receivers
   do irec_local = 1,nrec_local
@@ -326,7 +377,7 @@
       ! source time function value
       stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(irec),hdur_Gaussian(irec))
 
-      stf_deltat = real(stf * deltat * subsamp_seismos,kind=CUSTOM_REAL)
+      stf_deltat = real(stf * deltat * NTSTEP_BETWEEN_OUTPUT_SAMPLE,kind=CUSTOM_REAL)
 
       ! integrated moment tensor derivatives
       Mxx_der(irec_local) = Mxx_der(irec_local) + eps_s(1,1) * stf_deltat

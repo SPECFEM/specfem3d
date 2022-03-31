@@ -511,6 +511,8 @@ contains
   ! counts fault points on specified fault
   dataT%npoin = 0
   do i = 1,np
+    ! format : #x  #y  #z  #name  #fault_id
+    ! example: -4500.0  0.0  0.0  faultst-045dp000 1
     read(IIN,*) xtarget,ytarget,ztarget,tmpname,jflt
     ! only points on this fault
     if (jflt == iflt) dataT%npoin = dataT%npoin + 1
@@ -547,6 +549,8 @@ contains
   ! reads in fault point positions
   k = 0
   do i = 1,np
+    ! format : #x  #y  #z  #name  #fault_id
+    ! example: -4500.0  0.0  0.0  faultst-045dp000 1
     read(IIN,*) xtarget,ytarget,ztarget,tmpname,jflt
 
     ! only points on this fault

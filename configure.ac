@@ -148,20 +148,22 @@ AM_CONDITIONAL([COND_HIP_CUDA10], [test x"$want_hip" = xcuda10])
 AM_CONDITIONAL([COND_HIP_CUDA11], [test x"$want_hip" = xcuda11])
 
 ###
-### OPENMP
+### OpenMP
 ###
 
 AC_ARG_WITH([openmp],
     [AS_HELP_STRING([--with-openmp],
         [build OpenMP enabled version @<:@default=no@:>@])],
-    [want_with_omp="$withval"],
-    [want_with_omp=no])
+    [with_omp="$withval"],
+    [with_omp=no])
 AC_ARG_ENABLE([openmp],
     [AS_HELP_STRING([--enable-openmp],
         [build OpenMP enabled version @<:@default=no@:>@])],
-    [want_omp="$enableval"],
-    [want_omp=no])
-AM_CONDITIONAL([COND_OMP], [test x"$want_omp" != xno || test x"$want_with_omp" != xno])
+    [enable_omp="$enableval"],
+    [enable_omp=no])
+AS_IF([test x"$enable_omp" != xno || test x"$with_omp" != xno],
+    [want_omp=yes],[want_omp=no])
+AM_CONDITIONAL([COND_OMP], [test x"$want_omp" != xno])
 
 ###
 ### VTK
@@ -671,10 +673,10 @@ AM_CONDITIONAL([COND_HIP_PLATFORM_NVIDIA], [test x"$GPU_PLATFORM" = xnvidia])
 
 
 ###
-### OPENMP
+### OpenMP
 ###
 
-AS_IF([test x"$want_omp" != xno || test x"$want_with_omp" != xno], [
+AS_IF([test x"$want_omp" != xno], [
   AS_BOX([OpenMP])
   AC_MSG_NOTICE([OpenMP compilation is enabled])
 
@@ -765,6 +767,7 @@ AH_BOTTOM([
 /* map fails when output files are > 4GB, which is often the case for GPU simulations */
 #undef USE_MAP_FUNCTION
 ])
+
 
 dnl FYI, this is not a "result", but AS_ECHO is not available in 2.61, and it
 dnl basically works like a portable echo.

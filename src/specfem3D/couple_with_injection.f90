@@ -57,6 +57,7 @@
   subroutine couple_with_injection_setup()
 
   use specfem_par
+  use specfem_par_coupling
 
   implicit none
 
@@ -326,32 +327,32 @@
         allocate(VX_t(npt,  -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 2210')
         if (ier /= 0) stop 'error while allocating VX_t'
-        VX_t(:,:)=0._CUSTOM_REAL
+        VX_t(:,:) = 0._CUSTOM_REAL
 
         allocate(VY_t(npt,  -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 2211')
         if (ier /= 0) stop 'error while allocating VY_t'
-        VY_t(:,:)=0._CUSTOM_REAL
+        VY_t(:,:) = 0._CUSTOM_REAL
 
         allocate(VZ_t(npt,  -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 2212')
         if (ier /= 0) stop 'error while allocating VZ_t'
-        VZ_t(:,:)=0._CUSTOM_REAL
+        VZ_t(:,:) = 0._CUSTOM_REAL
 
         allocate(TX_t(npt,  -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 2213')
         if (ier /= 0) stop 'error while allocating TX_t'
-        TX_t(:,:)=0._CUSTOM_REAL
+        TX_t(:,:) = 0._CUSTOM_REAL
 
         allocate(TY_t(npt,  -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 2214')
         if (ier /= 0) stop 'error while allocating TY_t'
-        TY_t(:,:)=0._CUSTOM_REAL
+        TY_t(:,:) = 0._CUSTOM_REAL
 
         allocate(TZ_t(npt, -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 2215')
         if (ier /= 0) stop 'error while allocating TZ_t'
-        TZ_t(:,:)=0._CUSTOM_REAL
+        TZ_t(:,:) = 0._CUSTOM_REAL
 
         call FK3D(NSPEC_AB, ibool, abs_boundary_ijk, abs_boundary_normal, &
                   abs_boundary_ispec, num_abs_boundary_faces, ispec_is_elastic, &
@@ -456,7 +457,7 @@
   ! local parameters
   integer :: ispec,iglob,i,j,k,iface,igll,ier
 
-  ! absorbs absorbing-boundary surface using Stacey condition (Clayton and Enquist)
+  ! absorbs absorbing-boundary surface using Stacey condition (Clayton and Engquist)
   if (npt > 0) then
      allocate(xx(npt),yy(npt),zz(npt),xi1(npt),xim(npt),bdlambdamu(npt),nmx(npt),nmy(npt),nmz(npt),stat=ier)
      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2216')
@@ -548,7 +549,7 @@
   complex(kind=CUSTOM_CMPLX)                                 :: C_3,stf_coeff,a,b,c,d,delta_mat,N_mat(4,4),dx_f,dz_f,txz_f,tzz_f
   real(kind=CUSTOM_REAL)                                     :: epsil,dt_fk
   real(kind=CUSTOM_REAL)                                     :: sigma_rr,sigma_rt,sigma_rz,sigma_tt,sigma_tz,sigma_zz
-  real(kind=CUSTOM_REAL)                                     ::  Txx_tmp, Txy_tmp, Txz_tmp, Tyy_tmp, Tyz_tmp, Tzz_tmp
+  real(kind=CUSTOM_REAL)                                     :: Txx_tmp, Txy_tmp, Txz_tmp, Tyy_tmp, Tyz_tmp, Tzz_tmp
   real(kind=CUSTOM_REAL)                                     :: df,om,tdelay,eta_p,eta_s,fmax,C_1
   integer                                                    :: npow,npts2,nf,nf2,nn,ii,ip,i,j,nvar,lpts
   integer                                                    :: npoints2
@@ -560,13 +561,12 @@
 !! DK DK Aug 2016: this should be moved to the calling program and precomputed once and for all
   real(kind=CUSTOM_REAL) :: mpow(30)
 
-
   epsil = 1.0e-7
   comp_stress = .true.
   nvar = 5
   pout = .false.
 
-  fmax = 1/(2*dt)    ! Nyquist frequency of specfem time serie
+  fmax = 1.0_CUSTOM_REAL/(2.0_CUSTOM_REAL * dt)    ! Nyquist frequency of specfem time serie
 
   !! new way to do time domain resampling
   df    = df_fk
@@ -575,23 +575,24 @@
   npts2 = nf                 ! number of samples in time serie
 
   !! VM VM recompute new values for new way to do
-  npow = ceiling(log(npts2*1.)/log(2.))
+  npow = ceiling(log(npts2*1.0)/log(2.0))
   npts2 = 2**npow
   NPOW_FOR_FFT = npow
 
-  dt_fk = 1./(df*(npts2-1))
+  dt_fk = 1.0_CUSTOM_REAL/(df*(npts2-1))
 
   !! number of points for resmpled vector
   npoints2 = NP_RESAMP*(npts2-1)+1
 
+  ! user output
   if (myrank == 0) then
      write(IMAIN,*)
      write(IMAIN,*) 'Entering the FK synthetics program:'
      write(IMAIN,*) '  Number of points used for FFT            = ', npts2
-     write(IMAIN,*) '  Number of samples stored for FK solution = ',  NF_FOR_STORING
+     write(IMAIN,*) '  Number of samples stored for FK solution = ', NF_FOR_STORING
      write(IMAIN,*) '  Total time length used for FK            = ', t0+(npts2-1)*dt_fk
      write(IMAIN,*) '  FK time step       = ', dt_fk
-     write(IMAIN,*) '  FK frequency step  = ' , df
+     write(IMAIN,*) '  FK frequency step  = ', df
      write(IMAIN,*) '  power of 2 for FFT = ', npow
      call flush_IMAIN()
   endif
@@ -603,7 +604,7 @@
 
   allocate(fvec(nf2),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2218')
-  fvec = 0.
+  fvec = 0.0_CUSTOM_REAL
   do ii = 1, nf2
     fvec(ii)=(ii-1)*df
   enddo
@@ -635,9 +636,9 @@
   NPTS_STORED = npts2
   NPTS_INTERP = npoints2
 
-  tmp_t1(:) = 0.
-  tmp_t2(:) = 0.
-  tmp_t3(:) = 0.
+  tmp_t1(:) = 0.0_CUSTOM_REAL
+  tmp_t2(:) = 0.0_CUSTOM_REAL
+  tmp_t3(:) = 0.0_CUSTOM_REAL
 
   tmp_f1(:) = (0.,0.)
   tmp_f2(:) = (0.,0.)
@@ -653,7 +654,7 @@
 
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) 'starting from ',nn,' points before time 0'
+    write(IMAIN,*) '  starting from ',nn,' points before time 0'
     call flush_IMAIN()
   endif
 
@@ -664,19 +665,19 @@
      C_3 = cmplx(0,1.)*p*al(nlayer)  ! amp. of incoming P in the bot. layer
      eta_p = sqrt(1./al(nlayer)**2-p**2) ! vertical slowness for lower layer
 
-     if (myrank == 0) write(IMAIN,*) 'Incoming P : C_3,  p, eta = ', C_3, p, eta_p
+     if (myrank == 0) write(IMAIN,*) '  Incoming P : C_3,  p, eta = ', C_3, p, eta_p
 
      N_mat(:,:) =(0.0,0.0)
 
      ! find out the wave coefficients in the bottom layer for all freqs -------------------------------
      do ii = 1, nf2
-        om=2*pi*fvec(ii)
+        om = 2*pi*fvec(ii)
         ! propagation matrix
         call compute_N_rayleigh(al,be,mu,H,nlayer,om,p,sum(H(1:nlayer-1)),N_mat) !total-thickness=sum(h)
-        a=N_mat(3,2); b=N_mat(3,4); c=N_mat(4,2); d=N_mat(4,4)
-        delta_mat=a*d-b*c
-        coeff(1,ii)=-(d*N_mat(3,3)-b*N_mat(4,3))/delta_mat*C_3
-        coeff(2,ii)=-(-c*N_mat(3,3)+a*N_mat(4,3))/delta_mat*C_3
+        a = N_mat(3,2); b = N_mat(3,4); c = N_mat(4,2); d = N_mat(4,4)
+        delta_mat = a*d-b*c
+        coeff(1,ii) = -(d*N_mat(3,3)-b*N_mat(4,3))/delta_mat*C_3
+        coeff(2,ii) = -(-c*N_mat(3,3)+a*N_mat(4,3))/delta_mat*C_3
      enddo
 
      ! loop over all data points -------------------------------------------------
@@ -687,24 +688,24 @@
 
         do ii = 1, nf2
 
-           om=2*pi*fvec(ii)               !! pulsation
-           stf_coeff=exp(-(om*tg/2)**2)   !! apodization window
-           stf_coeff=stf_coeff*exp(cmplx(0,-1)*om*tdelay)
+           om = 2*pi*fvec(ii)               !! pulsation
+           stf_coeff = exp(-(om*tg/2)**2)   !! apodization window
+           stf_coeff = stf_coeff*exp(cmplx(0,-1)*om*tdelay)
 
            !! zz(ip) is the height of point with respect to the lower layer
            call compute_N_rayleigh(al,be,mu,H,nlayer,om,p,zz(ip),N_mat)
 
-           dx_f=N_mat(1,2)*coeff(1,ii)+N_mat(1,4)*coeff(2,ii)+N_mat(1,3)*C_3  ! y_1
-           dz_f=N_mat(2,2)*coeff(1,ii)+N_mat(2,4)*coeff(2,ii)+N_mat(2,3)*C_3  ! y_3
-           field_f(ii,1)=stf_coeff*dx_f*cmplx(0,-1)*cmplx(0,om)               ! (i om)u_x
-           field_f(ii,2)=stf_coeff*dz_f*cmplx(0,om)                           ! (i om)u_z
+           dx_f = N_mat(1,2)*coeff(1,ii)+N_mat(1,4)*coeff(2,ii)+N_mat(1,3)*C_3  ! y_1
+           dz_f = N_mat(2,2)*coeff(1,ii)+N_mat(2,4)*coeff(2,ii)+N_mat(2,3)*C_3  ! y_3
+           field_f(ii,1) = stf_coeff*dx_f*cmplx(0,-1)*cmplx(0,om)               ! (i om)u_x
+           field_f(ii,2) = stf_coeff*dz_f*cmplx(0,om)                           ! (i om)u_z
 
            if (comp_stress) then
-              txz_f=N_mat(3,2)*coeff(1,ii)+N_mat(3,4)*coeff(2,ii)+N_mat(3,3)*C_3 ! tilde{y}_4
-              tzz_f=N_mat(4,2)*coeff(1,ii)+N_mat(4,4)*coeff(2,ii)+N_mat(4,3)*C_3 ! tilde{y}_6
-              field_f(ii,3)=stf_coeff*om*p*(xi1(ip)*tzz_f-4*xim(ip)*dx_f) ! T_xx
-              field_f(ii,4)=stf_coeff*om*p*txz_f*cmplx(0,-1)              ! T_xz
-              field_f(ii,5)=stf_coeff*om*p*tzz_f                          ! T_zz
+              txz_f = N_mat(3,2)*coeff(1,ii)+N_mat(3,4)*coeff(2,ii)+N_mat(3,3)*C_3 ! tilde{y}_4
+              tzz_f = N_mat(4,2)*coeff(1,ii)+N_mat(4,4)*coeff(2,ii)+N_mat(4,3)*C_3 ! tilde{y}_6
+              field_f(ii,3) = stf_coeff*om*p*(xi1(ip)*tzz_f-4*xim(ip)*dx_f) ! T_xx
+              field_f(ii,4) = stf_coeff*om*p*txz_f*cmplx(0,-1)              ! T_xz
+              field_f(ii,5) = stf_coeff*om*p*tzz_f                          ! T_zz
            endif
 
         enddo
@@ -715,35 +716,35 @@
         enddo
 
         !! inverse fast fourier transform
-        field=0.
+        field = 0.
         do j = 1, nvar
            call FFTinv(npow,field_f(:,j),zign_neg,dt,field(:,j),mpow)
            ! wrap around to start from t0: here one has to be careful if t0/dt is not
            ! exactly an integer, assume nn > 0
            if (nn > 0) then
-              dtmp(1:nn)=field(npts2-nn+1:npts2,j)
-              field(nn+1:npts2,j)=field(1:npts2-nn,j)
-              field(1:nn,j)=dtmp(1:nn)
+              dtmp(1:nn) = field(npts2-nn+1:npts2,j)
+              field(nn+1:npts2,j) = field(1:npts2-nn,j)
+              field(1:nn,j) = dtmp(1:nn)
            else if (nn < 0) then
-              dtmp(1:nn)=field(1:nn,j)
-              field(1:npts-nn,j)=field(nn+1:npts,j)
-              field(npts-nn+1:npts,j)=dtmp(1:nn)
+              dtmp(1:nn) = field(1:nn,j)
+              field(1:npts-nn,j) = field(nn+1:npts,j)
+              field(npts-nn+1:npts,j) = dtmp(1:nn)
            endif
         enddo
 
 
         !! store undersampled version of velocity  FK solution
-        tmp_t1(:)=field(:,1)*cos(phi)
+        tmp_t1(:) = field(:,1)*cos(phi)
         call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        vx_t(ip,1:NF_FOR_STORING)=tmp_t2(1:NF_FOR_STORING)
+        vx_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
-        tmp_t1(:)=field(:,1)*sin(phi)
+        tmp_t1(:) = field(:,1)*sin(phi)
         call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        vy_t(ip,1:NF_FOR_STORING)=tmp_t2(1:NF_FOR_STORING)
+        vy_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
-        tmp_t1(:)=field(:,2)
+        tmp_t1(:) = field(:,2)
         call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        vz_t(ip,1:NF_FOR_STORING)=tmp_t2(1:NF_FOR_STORING)
+        vz_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
         !! compute traction
         do lpts = 1, NF_FOR_STORING
@@ -770,17 +771,17 @@
         enddo
 
         !! store undersamped version of tractions FK solution
-        tmp_t1(1:NF_FOR_STORING)=Tx_t(ip,1:NF_FOR_STORING)
+        tmp_t1(1:NF_FOR_STORING) = Tx_t(ip,1:NF_FOR_STORING)
         call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        Tx_t(ip,1:NF_FOR_STORING)=tmp_t2(1:NF_FOR_STORING)
+        Tx_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
-        tmp_t1(1:NF_FOR_STORING)=Ty_t(ip,1:NF_FOR_STORING)
+        tmp_t1(1:NF_FOR_STORING) = Ty_t(ip,1:NF_FOR_STORING)
         call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        Ty_t(ip,1:NF_FOR_STORING)=tmp_t2(1:NF_FOR_STORING)
+        Ty_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
-        tmp_t1(1:NF_FOR_STORING)=Tz_t(ip,1:NF_FOR_STORING)
+        tmp_t1(1:NF_FOR_STORING) = Tz_t(ip,1:NF_FOR_STORING)
         call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        Tz_t(ip,1:NF_FOR_STORING)=tmp_t2(1:NF_FOR_STORING)
+        Tz_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
         ! user output
         if (myrank == 0 .and. np > 1000) then
@@ -795,50 +796,50 @@
      ! SV-wave
 
      ! for C_2= sin(inc) (u=[cos(inc), sin(inc)])
-     C_1= p*be(nlayer)  ! amp. of incoming S in the bot. layer
-     eta_s=sqrt(1./be(nlayer)**2-p**2) ! vertical slowness for lower layer
+     C_1 = p*be(nlayer)  ! amp. of incoming S in the bot. layer
+     eta_s = sqrt(1./be(nlayer)**2-p**2) ! vertical slowness for lower layer
 
-     if (myrank == 0) write(IMAIN,*) 'Incoming S :  C_1,  p, eta = ', C_1, p, eta_s
+     if (myrank == 0) write(IMAIN,*) '  Incoming S :  C_1,  p, eta = ', C_1, p, eta_s
 
-     N_mat(:,:) =(0.0,0.0)
+     N_mat(:,:) = (0.0,0.0)
 
      ! find out the wave coefficients in the bottom layer for all freqs
      do ii = 1, nf2
-        om=2*pi*fvec(ii)
+        om = 2*pi*fvec(ii)
         ! propagation matrix
         !if (ii == nf2) pout = .true.
         call compute_N_rayleigh(al,be,mu,H,nlayer,om,p,sum(H(1:nlayer-1)),N_mat) !total-thickness=sum(h)
-        a=N_mat(3,2); b=N_mat(3,4); c=N_mat(4,2); d=N_mat(4,4)
-        delta_mat=a*d-b*c
-        coeff(1,ii)=-(d*N_mat(3,1)-b*N_mat(4,1))/delta_mat*C_1
-        coeff(2,ii)=-(-c*N_mat(3,1)+a*N_mat(4,1))/delta_mat*C_1
+        a = N_mat(3,2); b = N_mat(3,4); c = N_mat(4,2); d = N_mat(4,4)
+        delta_mat = a*d-b*c
+        coeff(1,ii) = -(d*N_mat(3,1)-b*N_mat(4,1))/delta_mat*C_1
+        coeff(2,ii) = -(-c*N_mat(3,1)+a*N_mat(4,1))/delta_mat*C_1
      enddo
 
      ! loop over all data points
      do ip = 1, np  ! maybe this can be run faster by shifting t for diff. x of fixed z
 
-        field_f=0.
-        tdelay=p*(xx(ip)-x0)*cos(phi)+p*(yy(ip)-y0)*sin(phi)+eta_s*(0-z0)
+        field_f = 0.
+        tdelay = p*(xx(ip)-x0)*cos(phi)+p*(yy(ip)-y0)*sin(phi)+eta_s*(0-z0)
 
         do ii = 1, nf2
 
-           om=2*pi*fvec(ii)
-           stf_coeff=exp(-(om*tg/2)**2)*exp(cmplx(0,-1)*om*tdelay)
+           om = 2*pi*fvec(ii)
+           stf_coeff = exp(-(om*tg/2)**2)*exp(cmplx(0,-1)*om*tdelay)
 
            ! z is the height of position with respect to the lowest layer interface.
            call compute_N_rayleigh(al,be,mu,H,nlayer,om,p,zz(ip),N_mat)
 
-           dx_f=N_mat(1,2)*coeff(1,ii)+N_mat(1,4)*coeff(2,ii)+N_mat(1,1)*C_1  ! y_1
-           dz_f=N_mat(2,2)*coeff(1,ii)+N_mat(2,4)*coeff(2,ii)+N_mat(2,1)*C_1  ! y_3
-           field_f(ii,1)=stf_coeff*dx_f*cmplx(0,-1)*cmplx(0,om)  ! (i om)u_x(1.20)
-           field_f(ii,2)=stf_coeff*dz_f*cmplx(0,om)              ! (i om)u_z
+           dx_f = N_mat(1,2)*coeff(1,ii)+N_mat(1,4)*coeff(2,ii)+N_mat(1,1)*C_1  ! y_1
+           dz_f = N_mat(2,2)*coeff(1,ii)+N_mat(2,4)*coeff(2,ii)+N_mat(2,1)*C_1  ! y_3
+           field_f(ii,1) = stf_coeff*dx_f*cmplx(0,-1)*cmplx(0,om)  ! (i om)u_x(1.20)
+           field_f(ii,2) = stf_coeff*dz_f*cmplx(0,om)              ! (i om)u_z
 
            if (comp_stress) then
-              txz_f=N_mat(3,2)*coeff(1,ii)+N_mat(3,4)*coeff(2,ii)+N_mat(3,1)*C_1 ! tilde{y}_4
-              tzz_f=N_mat(4,2)*coeff(1,ii)+N_mat(4,4)*coeff(2,ii)+N_mat(4,1)*C_1 ! tilde{y}_6
-              field_f(ii,3)=stf_coeff*om*p*(xi1(ip)*tzz_f-4*xim(ip)*dx_f) !T_xx
-              field_f(ii,4)=stf_coeff*om*p*txz_f*cmplx(0,-1) ! T_xz
-              field_f(ii,5)=stf_coeff*om*p*tzz_f  ! T_zz
+              txz_f = N_mat(3,2)*coeff(1,ii)+N_mat(3,4)*coeff(2,ii)+N_mat(3,1)*C_1 ! tilde{y}_4
+              tzz_f = N_mat(4,2)*coeff(1,ii)+N_mat(4,4)*coeff(2,ii)+N_mat(4,1)*C_1 ! tilde{y}_6
+              field_f(ii,3) = stf_coeff*om*p*(xi1(ip)*tzz_f-4*xim(ip)*dx_f) !T_xx
+              field_f(ii,4) = stf_coeff*om*p*txz_f*cmplx(0,-1) ! T_xz
+              field_f(ii,5) = stf_coeff*om*p*tzz_f  ! T_zz
            endif
 
         enddo
@@ -848,34 +849,34 @@
            field_f(nf+2-ii,:) = conjg(field_f(ii,:))
         enddo
 
-        field=0.
+        field = 0.
         do j = 1, nvar
            call FFTinv(npow,field_f(:,j),zign_neg,dt,field(:,j),mpow)
            ! wrap around to start from t0: here one has to be careful if t0/dt is not
            ! exactly an integer, assume nn > 0
            if (nn > 0) then
-              dtmp(1:nn)=field(npts2-nn+1:npts2,j)
-              field(nn+1:npts2,j)=field(1:npts2-nn,j)
-              field(1:nn,j)=dtmp(1:nn)
+              dtmp(1:nn) = field(npts2-nn+1:npts2,j)
+              field(nn+1:npts2,j) = field(1:npts2-nn,j)
+              field(1:nn,j) = dtmp(1:nn)
            else if (nn < 0) then
-              dtmp(1:nn)=field(1:nn,j)
-              field(1:npts-nn,j)=field(nn+1:npts,j)
-              field(npts-nn+1:npts,j)=dtmp(1:nn)
+              dtmp(1:nn) = field(1:nn,j)
+              field(1:npts-nn,j) = field(nn+1:npts,j)
+              field(npts-nn+1:npts,j) = dtmp(1:nn)
            endif
         enddo
 
         !! store undersampled version of velocity  FK solution
-        tmp_t1(:)=field(:,1)*cos(phi)
+        tmp_t1(:) = field(:,1)*cos(phi)
         call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        vx_t(ip,1:NF_FOR_STORING)=tmp_t2(1:NF_FOR_STORING)
+        vx_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
-        tmp_t1(:)=field(:,1)*sin(phi)
+        tmp_t1(:) = field(:,1)*sin(phi)
         call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        vy_t(ip,1:NF_FOR_STORING)=tmp_t2(1:NF_FOR_STORING)
+        vy_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
-        tmp_t1(:)=field(:,2)
+        tmp_t1(:) = field(:,2)
         call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        vz_t(ip,1:NF_FOR_STORING)=tmp_t2(1:NF_FOR_STORING)
+        vz_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
         !! compute traction
         do lpts = 1, NF_FOR_STORING
@@ -902,17 +903,17 @@
         enddo
 
         !! store undersamped version of tractions FK solution
-        tmp_t1(1:NF_FOR_STORING)=Tx_t(ip,1:NF_FOR_STORING)
+        tmp_t1(1:NF_FOR_STORING) = Tx_t(ip,1:NF_FOR_STORING)
         call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        Tx_t(ip,1:NF_FOR_STORING)=tmp_t2(1:NF_FOR_STORING)
+        Tx_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
-        tmp_t1(1:NF_FOR_STORING)=Ty_t(ip,1:NF_FOR_STORING)
+        tmp_t1(1:NF_FOR_STORING) = Ty_t(ip,1:NF_FOR_STORING)
         call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        Ty_t(ip,1:NF_FOR_STORING)=tmp_t2(1:NF_FOR_STORING)
+        Ty_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
-        tmp_t1(1:NF_FOR_STORING)=Tz_t(ip,1:NF_FOR_STORING)
+        tmp_t1(1:NF_FOR_STORING) = Tz_t(ip,1:NF_FOR_STORING)
         call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        Tz_t(ip,1:NF_FOR_STORING)=tmp_t2(1:NF_FOR_STORING)
+        Tz_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
      enddo
   endif
@@ -922,7 +923,7 @@
 
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) " FK computing passed "
+    write(IMAIN,*) "  FK computing passed "
     write(IMAIN,*)
     call flush_IMAIN()
   endif

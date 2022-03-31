@@ -11,6 +11,9 @@ setup/constants.h
 setup/constants_inverse_problem.h
 setup/constants_tomography.h
 setup/precision.h
+setup/version.fh
+
+external_libs/scotch_5.1.12b/src/libscotch/y.output
 
 # Build time
 bin/

@@ -20,7 +20,7 @@ specific model parameters.}
 In the main directory, type
 {\small
 \begin{verbatim}
-make xgenerate_databases
+  make xgenerate_databases
 \end{verbatim}
 }
 \noindent
@@ -29,12 +29,14 @@ Input for the program is provided through the main parameter file
 Please note that \texttt{xgenerate\_databases} must be called directly
 from the main directory, as most of the binaries of the package.
 
-
+\newpage
 \section{Main parameter file \texttt{Par\_file}}\label{cha:Main-Parameter}
 
 Before running \texttt{xgenerate\_databases}, a number of parameters
 need to be set in the main parameter \texttt{Par\_file} located in
-the subdirectory \texttt{DATA}:
+the subdirectory \texttt{DATA}:\\
+
+\noindent {\bf $\bullet$ Simulation setup}
 \begin{description}
 \item [{\texttt{SIMULATION\_TYPE}}] is set to 1 for forward simulations,
 2 for adjoint simulations (see Section \ref{sec:Adjoint-simulation-finite})
@@ -63,6 +65,11 @@ for the solver, i.e., you may change this parameter after running
 is not used at the time of generating the distributed databases but
 is required for the solver. Please see also Section~\ref{sec:Choosing-the-Time-Step}
 for further details.
+\end{description}
+
+\vspace{1cm}
+\noindent {\bf $\bullet$ Mesh setup}
+\begin{description}
 \item [{\texttt{NGNOD}}] The number of nodes for 2D and 3D shape functions
 for hexahedra. We use either 8-node mesh elements (bricks) or 27-node
 elements. If you use the internal mesher, the only option is 8-node
@@ -174,6 +181,11 @@ want to use the attenuation model that scaled from the S-wave speed
 model using Olsen's empirical relation (see \citet{OlDaBr03}).
 \item [{\texttt{OLSEN\_ATTENUATION\_RATIO}}] Determines the Olsen's constant
 in Olsen's empirical relation (see \citet{OlDaBr03}).
+\end{description}
+
+\vspace{1cm}
+\noindent {\bf $\bullet$ Absorbing boundary conditions setup}
+\begin{description}
 \item [{\texttt{PML\_CONDITIONS}}] Set to \texttt{.true.} to turn on C-PML
 boundary conditions for a regional simulation. Both fluids and elastic solids are supported.
 \item [{\texttt{PML\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.}
@@ -187,7 +199,7 @@ absorbing conditions can become unstable.}
 If you plan to use a Dirac source, then use the dominant frequency of the source wavelet
 with which you plan to convolve your seismograms later on in post-processing.
 \item [{\texttt{STACEY\_ABSORBING\_CONDITIONS}}] Set to \texttt{.true.}
-to turn on Clayton-Enquist absorbing boundary conditions (see \citet{KoTr99}).
+to turn on Clayton-Engquist absorbing boundary conditions (see \citet{KoTr99}).
 In almost all cases it is much better to use CPML absorbing layers
 (see the options above) and leave this flag to \texttt{.false.}.
 \item [{\texttt{STACEY\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.}
@@ -198,6 +210,11 @@ When STACEY\_ABSORBING\_CONDITIONS is set to .true. :
 absorbing conditions are defined in xmin, xmax, ymin, ymax and zmin
 this option BOTTOM\_FREE\_SURFACE can be set to .true. to
 make zmin free surface instead of absorbing condition.
+\end{description}
+
+\vspace{1cm}
+\noindent {\bf $\bullet$ Visualization setup}
+\begin{description}
 \item [{\texttt{CREATE\_SHAKEMAP}}] Set this flag to \texttt{.true.} to
 create a ShakeMap\textregistered{}, i.e., a peak ground velocity map
 of the maximum absolute value of the two horizontal components of
@@ -261,13 +278,11 @@ to avoid writing output text files too often. This feature is not
 used at the time of meshing. One can set this parameter to a larger
 value than the number of time steps to avoid writing output during
 the run.
-\item [{\texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS}}] This parameter specifies
-the interval at which synthetic seismograms are written in the \texttt{LOCAL\_PATH}
-directory. If a run crashes, you may still find usable (but shorter
-than requested) seismograms in this directory. On a fast machine set
-\texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS} to a relatively high value
-to avoid writing to the seismograms too often. This feature is only
-relevant for the solver.
+\end{description}
+
+\vspace{1cm}
+\noindent {\bf $\bullet$ Sources setup}
+\begin{description}
 \item [{\texttt{USE\_FORCE\_POINT\_SOURCE}}] Turn this flag on to use a
 (tilted) \texttt{FORCESOLUTION} force point source instead of a \texttt{CMTSOLUTION}
 moment-tensor source. When the force source does not fall exactly
@@ -318,6 +333,19 @@ Any other source-time function may then be obtained by convolution.
 information about the source time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
 This feature is only relevant for the solver.
 %
+\end{description}
+
+\vspace{1cm}
+\noindent {\bf $\bullet$ Additionals}
+\begin{description}
+\item [{\texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS}}] This parameter specifies
+the interval at which synthetic seismograms are written in the \texttt{LOCAL\_PATH}
+directory. If a run crashes, you may still find usable (but shorter
+than requested) seismograms in this directory. On a fast machine set
+\texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS} to a relatively high value
+to avoid writing to the seismograms too often. This feature is only
+relevant for the solver.
+
 \item [{\texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS}}] adds the ability to run several calculations (several earthquakes)
 in an embarrassingly-parallel fashion from within the same run;
 this can be useful when using a very large supercomputer to compute
@@ -364,9 +392,9 @@ In that case there is no need to duplicate the mesh and model file database (the
 directories) in each of the run0001, run0002,... directories, it is sufficient to have one in run0001
 and the code will broadcast it to the others).
 
-\item [{\texttt{USE\_FAILSAFE\_MECHANISM}}] if one or a few of these simultaneous runs fail,
-kill all the runs or let the others finish using a fail-safe mechanism
-(in most cases, should be set to true).
+%\item [{\texttt{USE\_FAILSAFE\_MECHANISM}}] if one or a few of these simultaneous runs fail,
+%kill all the runs or let the others finish using a fail-safe mechanism
+%(in most cases, should be set to true).
 
 TODO / future work to do: currently the \texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL}
 option assumes to have the (main) mesh files in \texttt{run0001/DATABASES\_MPI} or
@@ -388,37 +416,11 @@ xgenerate\_database input.
 \item [\texttt{ADIOS\_FOR\_MESH}]  Turn this flag on to use ADIOS for generated databases.
 \item [\texttt{ADIOS\_FOR\_FORWARD\_ARRAYS}] Turn this flag on to read and write forward arrays using ADIOS.
 \item [\texttt{ADIOS\_FOR\_KERNELS}] Turn this flag on to produce ADIOS kernels that can later be visualized with the ADIOS version of combine\_vol\_data.
-
 \end{description}
-
-The present version of SPECFEM can handle fully saturated porous simulations, Christina Morency implemented Biot equation.
-But the code cannot calculate partially saturated cases in its state.
-Christina Morency is presently working on a dual porosity, dual permeability formulation, type Pride and Berryman, for an other project, but it will not be available for some time.\\
-
-The way we prescribe material property for porous material in SPECFEM3D is as follow:
-We use a file name "nummaterial\_poroelastic\_file", which is located in the directory \texttt{MESH/}, the format is as follow:
-\begin{verbatim}
- rhos rhof phi c kxx kxy kxz kyy kyz kzz Ks Kf Kfr etaf mufr
-\end{verbatim}
-where\\
-\texttt{rho\_s} = solid density,\\
-\texttt{rho\_f} = fluid density,\\
-\texttt{phi} = porosity,\\
-\texttt{tort} = tortuosity,\\
-\texttt{kxx} = xx component of permeability tensor,\\
-\texttt{kxy} = xy,yx components of permeability tensor,\\
-\texttt{kyy} = yy component of permeability tensor,\\
-\texttt{kxz} = xz,zx components of permeability tensor,\\
-\texttt{kzz} = zz component of permeability tensor,\\
-\texttt{kappa\_s} = solid bulk modulus,\\
-\texttt{kappa\_f} = fluid bulk modulus,\\
-\texttt{kappa\_fr} = frame bulk modulus,\\
-\texttt{eta\_f} = fluid viscosity,\\
-\texttt{mu\_fr} = frame shear modulus.\\
-
-Using an external mesh (for instance coming from CUBIT/TRELIS), poroelastic materials have the ID number 3, while 1 is acoustic and 2 is elastic (see the example in the package: EXAMPLES/homogeneous\_poroelastic).
+There are quite a few more parameters to change the default setup of your runs. Please check the comments in the \texttt{Par\_file} directly for further explanations.\\
 
 
+\subsection{PML absorbing boundary layers}
 
 If you use PML, the mesh elements that belong to the PML layers can
 be acoustic or elastic, but not viscoelastic nor poroelastic. Then,
@@ -446,10 +448,8 @@ you should be careful because mathematically a PML cannot handle heterogeneities
 along the normal to the PML edge inside the PML layer. This comes
 from the fact that the damping profile that is defined assumes a constant
 velocity and density model along the normal direction.
-
 Thus, you need to modify your velocity and density model in order
 for it to be 1D inside the PML, as shown in Figure~\ref{fig:modify_external_velocity_model_to_use_PML}.
-
 This applies to the bottom layer as well; there you should make sure
 that your model is 1D and thus constant along the vertical direction.
 

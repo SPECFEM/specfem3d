@@ -290,18 +290,19 @@ void FC_FUNC_(transfer_displ_to_device,
 
 // attenuation fields
 
-extern EXTERN_LANG
-void FC_FUNC_(transfer_b_fields_att_to_device,
-              TRANSFER_B_FIELDS_ATT_TO_DEVICE)(long* Mesh_pointer,
-                                               realw* b_R_xx,realw* b_R_yy,realw* b_R_xy,
-                                               realw* b_R_xz,realw* b_R_yz,
-                                               int* size_R,
-                                               realw* b_epsilondev_xx,realw* b_epsilondev_yy,realw* b_epsilondev_xy,
-                                               realw* b_epsilondev_xz,realw* b_epsilondev_yz,
-                                               realw* b_R_trace,realw* b_epsilondev_trace,
-                                               int* size_epsilondev) {
+/* ----------------------------------------------------------------------------------------------- */
 
-  TRACE("transfer_b_fields_att_to_device");
+// backward/reconstructed wavefields
+
+extern EXTERN_LANG
+void FC_FUNC_(transfer_b_rmemory_to_device,
+              TRANSFER_B_RMEMORY_TO_DEVICE)(long* Mesh_pointer,
+                                            realw* b_R_xx,realw* b_R_yy,realw* b_R_xy,
+                                            realw* b_R_xz,realw* b_R_yz,
+                                            realw* b_R_trace,
+                                            int* size_R) {
+
+  TRACE("transfer_b_rmemory_to_device");
 
   //get mesh pointer out of fortran integer container
   Mesh* mp = (Mesh*)(*Mesh_pointer);
@@ -313,6 +314,24 @@ void FC_FUNC_(transfer_b_fields_att_to_device,
   gpuMemcpy_todevice_realw(mp->d_b_R_yz,b_R_yz,*size_R);
   gpuMemcpy_todevice_realw(mp->d_b_R_trace,b_R_trace,*size_R);
 
+  GPU_ERROR_CHECKING("after transfer_b_rmemory_to_device");
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
+void FC_FUNC_(transfer_b_strain_to_device,
+              TRANSFER_B_strain_TO_DEVICE)(long* Mesh_pointer,
+                                           realw* b_epsilondev_xx,realw* b_epsilondev_yy,realw* b_epsilondev_xy,
+                                           realw* b_epsilondev_xz,realw* b_epsilondev_yz,
+                                           realw* b_epsilondev_trace,
+                                           int* size_epsilondev) {
+
+  TRACE("transfer_b_strain_to_device");
+
+  //get mesh pointer out of fortran integer container
+  Mesh* mp = (Mesh*)(*Mesh_pointer);
+
   gpuMemcpy_todevice_realw(mp->d_b_epsilondev_xx,b_epsilondev_xx,*size_epsilondev);
   gpuMemcpy_todevice_realw(mp->d_b_epsilondev_yy,b_epsilondev_yy,*size_epsilondev);
   gpuMemcpy_todevice_realw(mp->d_b_epsilondev_xy,b_epsilondev_xy,*size_epsilondev);
@@ -320,23 +339,20 @@ void FC_FUNC_(transfer_b_fields_att_to_device,
   gpuMemcpy_todevice_realw(mp->d_b_epsilondev_yz,b_epsilondev_yz,*size_epsilondev);
   gpuMemcpy_todevice_realw(mp->d_b_epsilondev_trace,b_epsilondev_trace,*size_epsilondev);
 
-  GPU_ERROR_CHECKING("after transfer_b_fields_att_to_device");
+  GPU_ERROR_CHECKING("after transfer_b_strain_to_device");
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// attenuation fields
+// forward/adjoint wavefields
 
 extern EXTERN_LANG
-void FC_FUNC_(transfer_fields_att_from_device,
-              TRANSFER_FIELDS_ATT_FROM_DEVICE)(long* Mesh_pointer,
-                                               realw* R_xx,realw* R_yy,realw* R_xy,realw* R_xz,realw* R_yz,
-                                               int* size_R,
-                                               realw* epsilondev_xx,realw* epsilondev_yy,realw* epsilondev_xy,
-                                               realw* epsilondev_xz,realw* epsilondev_yz,
-                                               realw* R_trace,realw* epsilondev_trace,
-                                               int* size_epsilondev) {
-  TRACE("transfer_fields_att_from_device");
+void FC_FUNC_(transfer_rmemory_from_device,
+              TRANSFER_RMEMORY_FROM_DEVICE)(long* Mesh_pointer,
+                                            realw* R_xx,realw* R_yy,realw* R_xy,realw* R_xz,realw* R_yz,
+                                            realw* R_trace,
+                                            int* size_R) {
+  TRACE("transfer_rmemory_from_device");
 
   //get mesh pointer out of fortran integer container
   Mesh* mp = (Mesh*)(*Mesh_pointer);
@@ -348,6 +364,23 @@ void FC_FUNC_(transfer_fields_att_from_device,
   gpuMemcpy_tohost_realw(R_yz,mp->d_R_yz,*size_R);
   gpuMemcpy_tohost_realw(R_trace,mp->d_R_trace,*size_R);
 
+  GPU_ERROR_CHECKING("after transfer_rmemory_from_device");
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
+void FC_FUNC_(transfer_strain_from_device,
+              TRANSFER_STRAIN_FROM_DEVICE)(long* Mesh_pointer,
+                                           realw* epsilondev_xx,realw* epsilondev_yy,realw* epsilondev_xy,
+                                           realw* epsilondev_xz,realw* epsilondev_yz,
+                                           realw* epsilondev_trace,
+                                           int* size_epsilondev) {
+  TRACE("transfer_strain_from_device");
+
+  //get mesh pointer out of fortran integer container
+  Mesh* mp = (Mesh*)(*Mesh_pointer);
+
   gpuMemcpy_tohost_realw(epsilondev_xx,mp->d_epsilondev_xx,*size_epsilondev);
   gpuMemcpy_tohost_realw(epsilondev_yy,mp->d_epsilondev_yy,*size_epsilondev);
   gpuMemcpy_tohost_realw(epsilondev_xy,mp->d_epsilondev_xy,*size_epsilondev);
@@ -355,10 +388,12 @@ void FC_FUNC_(transfer_fields_att_from_device,
   gpuMemcpy_tohost_realw(epsilondev_yz,mp->d_epsilondev_yz,*size_epsilondev);
   gpuMemcpy_tohost_realw(epsilondev_trace,mp->d_epsilondev_trace,*size_epsilondev);
 
-  GPU_ERROR_CHECKING("after transfer_fields_att_from_device");
+  GPU_ERROR_CHECKING("after transfer_strain_from_device");
 }
 
-// JC JC here we will need to add GPU support for the new C-PML routines
+/* ----------------------------------------------------------------------------------------------- */
+
+// kernels
 
 /* ----------------------------------------------------------------------------------------------- */
 

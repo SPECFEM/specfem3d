@@ -80,18 +80,17 @@ mesh elements \citep{OlSe11}.\\
 
 The SPECFEM3D Cartesian software package relies on the SCOTCH library
 to partition meshes created with CUBIT. METIS \citep{KaKu98a,KaKu98c,KaKu98b}
-can also be used instead of SCOTCH if you prefer, by editing file
-src/decompose\_mesh/decompose\_mesh.F90 and uncommenting the flag
-USE\_METIS\_INSTEAD\_OF\_SCOTCH. You will also then need to install
+can also be used instead of SCOTCH if you prefer, by changing the parameter
+\texttt{PARTITIONING\_TYPE} in the \texttt{Par\_file}. You will also then need to install
 and compile Metis version 4.0 (do {*}NOT{*} install Metis version
-5.0, which has incompatible function calls) and edit \texttt{src/decompose\_mesh/Makefile.in}
+5.0, which has incompatible function calls) and edit \texttt{Makefile.in}
 and uncomment the METIS link flag in that file before running \texttt{configure}.\\
 
 
 The SCOTCH library \citep{PeRo96} provides efficient static mapping,
 graph and mesh partitioning routines. SCOTCH is a free software package
 developed by Fran\c{c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux,
-France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}.
+France, downloadable from the web page \url{https://gitlab.inria.fr/scotch/scotch}.
 In case no SCOTCH libraries can be found on the system, the configuration
 will bundle the version provided with the source code for compilation.
 The path to an existing SCOTCH installation can to be set explicitly
@@ -124,8 +123,8 @@ limit to the size of the Unix stack.\\
 
 Beware that some cluster systems that run a recent version may not run and\slash compile an older version of the code. \\
 
-When using dynamic fault in parallel with the developer version, we suggest you to set the configuration parameters 
-of {\texttt{FAULT_DISPL_VELOC}} and {\texttt{FAULT_SYNCHRONIZE_ACCEL}} as {\texttt{.true.}}.\\
+When using dynamic fault in parallel with the developer version, we suggest you to set the configuration parameters
+of \texttt{FAULT\_DISPL\_VELOC} and \texttt{FAULT\_SYNCHRONIZE\_ACCEL} as \texttt{.true.}.\\
 
 %-----------------------------------------------------------------------------------------------------------------------------------%
 \section{Using the GPU version of the code}

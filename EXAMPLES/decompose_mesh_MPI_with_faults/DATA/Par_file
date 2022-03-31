@@ -23,11 +23,18 @@ UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
-NPROC = 8
+NPROC                           = 8
 
 # time step parameters
-NSTEP = 50
-DT = 0.014d0
+NSTEP                           = 50
+DT                              = 0.014d0
+
+# set to true to use local-time stepping (LTS)
+LTS_MODE                        = .false.
+
+# Partitioning algorithm for decompose_mesh
+# choose partitioner: 1==SCOTCH (default), 2==METIS, 3==PATOH, 4==ROWS_PART
+PARTITIONING_TYPE               = 1
 
 #-----------------------------------------------------------
 #
@@ -94,13 +101,13 @@ OLSEN_ATTENUATION_RATIO         = 0.05
 # C-PML boundary conditions for a regional simulation
 # (if set to .false., and STACEY_ABSORBING_CONDITIONS is also set to .false., you get a free surface instead
 # in the case of elastic or viscoelastic mesh elements, and a rigid surface in the case of acoustic (fluid) elements
-PML_CONDITIONS = .false.
+PML_CONDITIONS                  = .false.
 
 # C-PML top surface
-PML_INSTEAD_OF_FREE_SURFACE = .false.
+PML_INSTEAD_OF_FREE_SURFACE     = .false.
 
 # C-PML dominant frequency
-f0_FOR_PML = 0.555
+f0_FOR_PML                      = 0.555
 
 # parameters used to rotate C-PML boundary conditions by a given angle (not completed yet)
 # ROTATE_PML_ACTIVATE           = .false.
@@ -109,10 +116,10 @@ f0_FOR_PML = 0.555
 # absorbing boundary conditions for a regional simulation
 # (if set to .false., and PML_CONDITIONS is also set to .false., you get a free surface instead
 # in the case of elastic or viscoelastic mesh elements, and a rigid surface in the case of acoustic (fluid) elements
-STACEY_ABSORBING_CONDITIONS = .true.
+STACEY_ABSORBING_CONDITIONS     = .true.
 
 # absorbing top surface (defined in mesh as 'free_surface_file')
-STACEY_INSTEAD_OF_FREE_SURFACE = .true.
+STACEY_INSTEAD_OF_FREE_SURFACE  = .true.
 
 # When STACEY_ABSORBING_CONDITIONS is set to .true. :
 # absorbing conditions are defined in xmin, xmax, ymin, ymax and zmin
@@ -145,14 +152,14 @@ NT_DUMP_ATTENUATION             = 500
 CREATE_SHAKEMAP                 = .false.
 MOVIE_SURFACE                   = .false.
 MOVIE_TYPE                      = 1
-MOVIE_VOLUME = .false.
+MOVIE_VOLUME                    = .false.
 SAVE_DISPLACEMENT               = .false.
 USE_HIGHRES_FOR_MOVIES          = .false.
-NTSTEP_BETWEEN_FRAMES = 1000
+NTSTEP_BETWEEN_FRAMES           = 1000
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
-SAVE_MESH_FILES = .false.
+SAVE_MESH_FILES                 = .false.
 
 # path to store the local database file on each node
 LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
@@ -198,6 +205,11 @@ USE_EXTERNAL_SOURCE_FILE        = .false.
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .false.
 
+# source encoding
+# (for acoustic simulations only for now) determines source encoding factor +/-1 depending on sign of moment tensor
+# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
+USE_SOURCE_ENCODING             = .false.
+
 #-----------------------------------------------------------
 #
 # Seismograms
@@ -206,6 +218,10 @@ PRINT_SOURCE_TIME_FUNCTION      = .false.
 
 # interval in time steps for writing of seismograms
 NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
+
+# set to n to reduce the sampling rate of output seismograms by a factor of n
+# defaults to 1, which means no down-sampling
+NTSTEP_BETWEEN_OUTPUT_SAMPLE    = 1
 
 # decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
 # currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
@@ -227,8 +243,8 @@ SU_FORMAT                       = .false.
 # output seismograms in ASDF (requires asdf-library)
 ASDF_FORMAT                     = .false.
 
-# decide if master process writes all the seismograms or if all processes do it in parallel
-WRITE_SEISMOGRAMS_BY_MASTER     = .false.
+# decide if main process writes all the seismograms or if all processes do it in parallel
+WRITE_SEISMOGRAMS_BY_MAIN       = .false.
 
 # save all seismograms in one large combined file instead of one file per seismogram
 # to avoid overloading shared non-local file systems such as LUSTRE or GPFS for instance
@@ -242,16 +258,6 @@ SAVE_ALL_SEISMOS_IN_ONE_FILE    = .false.
 # thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
 # is accurate at second order and thus contains significantly less numerical noise.
 USE_TRICK_FOR_BETTER_PRESSURE   = .false.
-
-#-----------------------------------------------------------
-#
-# Source encoding
-#
-#-----------------------------------------------------------
-
-# (for acoustic simulations only for now) determines source encoding factor +/-1 depending on sign of moment tensor
-# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
-USE_SOURCE_ENCODING             = .false.
 
 #-----------------------------------------------------------
 #
@@ -272,10 +278,10 @@ NTSTEP_BETWEEN_OUTPUT_ENERGY    = 10
 #-----------------------------------------------------------
 
 # interval in time steps for reading adjoint traces
-# 0 = read the whole adjoint sources at the same time
+# 0 = read the whole adjoint sources at start time
 NTSTEP_BETWEEN_READ_ADJSRC      = 0
 
-# read adjoint sources in ASDF (requires asdf-library)
+# read adjoint sources using ASDF (requires asdf-library)
 READ_ADJSRC_ASDF                = .false.
 
 # this parameter must be set to .true. to compute anisotropic kernels
@@ -369,12 +375,5 @@ ADIOS_FOR_DATABASES             = .false.
 ADIOS_FOR_MESH                  = .false.
 ADIOS_FOR_FORWARD_ARRAYS        = .false.
 ADIOS_FOR_KERNELS               = .false.
+ADIOS_FOR_UNDO_ATTENUATION      = .false.
 
-
-LTS_MODE                        = .false.
-
-PARTITIONING_TYPE               = 1
-
-subsamp_seismos                 = 1
-
-WRITE_SEISMOGRAMS_BY_MAIN     = .false.

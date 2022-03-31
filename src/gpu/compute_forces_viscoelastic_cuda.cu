@@ -91,14 +91,12 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
 
   // kernel timing
   gpu_event start,stop;
-  if (CUDA_TIMING ){
-    start_timing_gpu(&start,&stop);
-  }
+  if (CUDA_TIMING){ start_timing_gpu(&start,&stop); }
 
   // defines local parameters for forward/adjoint function calls
   realw *displ,*veloc,*accel;
   realw *epsilondev_xx,*epsilondev_yy,*epsilondev_xy,*epsilondev_xz,*epsilondev_yz;
-  realw *epsilon_trace_over_3;
+  realw *epsilondev_trace,*epsilon_trace_over_3;
   realw *R_xx,*R_yy,*R_xy,*R_xz,*R_yz,*R_trace;
   realw *alphaval,*betaval,*gammaval;
 
@@ -112,6 +110,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
     epsilondev_xy = d_epsilondev_xy;
     epsilondev_xz = d_epsilondev_xz;
     epsilondev_yz = d_epsilondev_yz;
+    epsilondev_trace = d_epsilondev_trace;
     epsilon_trace_over_3 = d_epsilon_trace_over_3;
     R_xx = d_R_xx;
     R_yy = d_R_yy;
@@ -132,6 +131,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
     epsilondev_xy = d_b_epsilondev_xy;
     epsilondev_xz = d_b_epsilondev_xz;
     epsilondev_yz = d_b_epsilondev_yz;
+    epsilondev_trace = d_b_epsilondev_trace;
     epsilon_trace_over_3 = d_b_epsilon_trace_over_3;
     R_xx = d_b_R_xx;
     R_yy = d_b_R_yy;
@@ -170,13 +170,14 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                 d_kappav, d_muv,
                                                                 epsilondev_xx,epsilondev_yy,epsilondev_xy,
                                                                 epsilondev_xz,epsilondev_yz,
+                                                                epsilondev_trace,
                                                                 epsilon_trace_over_3,
                                                                 mp->simulation_type,
                                                                 mp->NSPEC_AB,
                                                                 d_factor_common,
                                                                 R_xx,R_yy,R_xy,R_xz,R_yz,
+                                                                R_trace,
                                                                 d_factor_common_kappa,
-                                                                R_trace,d_epsilondev_trace,
                                                                 alphaval,betaval,gammaval,
                                                                 mp->ANISOTROPY,
                                                                 d_c11store,d_c12store,d_c13store,
@@ -216,13 +217,14 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                             d_kappav, d_muv,
                                             epsilondev_xx,epsilondev_yy,epsilondev_xy,
                                             epsilondev_xz,epsilondev_yz,
+                                            epsilondev_trace,
                                             epsilon_trace_over_3,
                                             mp->simulation_type,
                                             mp->NSPEC_AB,
                                             d_factor_common,
                                             R_xx,R_yy,R_xy,R_xz,R_yz,
+                                            R_trace,
                                             d_factor_common_kappa,
-                                            R_trace,d_epsilondev_trace,
                                             alphaval,betaval,gammaval,
                                             mp->ANISOTROPY,
                                             d_c11store,d_c12store,d_c13store,
@@ -264,13 +266,14 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                  d_kappav, d_muv,
                                                                  d_b_epsilondev_xx,d_b_epsilondev_yy,d_b_epsilondev_xy,
                                                                  d_b_epsilondev_xz,d_b_epsilondev_yz,
+                                                                 d_b_epsilondev_trace,
                                                                  d_b_epsilon_trace_over_3,
                                                                  mp->simulation_type,
                                                                  mp->NSPEC_AB,
                                                                  d_factor_common,
                                                                  d_b_R_xx,d_b_R_yy,d_b_R_xy,d_b_R_xz,d_b_R_yz,
+                                                                 d_b_R_trace,
                                                                  d_factor_common_kappa,
-                                                                 d_b_R_trace,d_b_epsilondev_trace,
                                                                  mp->d_b_alphaval,mp->d_b_betaval,mp->d_b_gammaval,
                                                                  mp->ANISOTROPY,
                                                                  d_c11store,d_c12store,d_c13store,
@@ -310,13 +313,14 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                               d_kappav, d_muv,
                                               d_b_epsilondev_xx,d_b_epsilondev_yy,d_b_epsilondev_xy,
                                               d_b_epsilondev_xz,d_b_epsilondev_yz,
+                                              d_b_epsilondev_trace,
                                               d_b_epsilon_trace_over_3,
                                               mp->simulation_type,
                                               mp->NSPEC_AB,
                                               d_factor_common,
                                               d_b_R_xx,d_b_R_yy,d_b_R_xy,d_b_R_xz,d_b_R_yz,
+                                              d_b_R_trace,
                                               d_factor_common_kappa,
-                                              d_b_R_trace,d_b_epsilondev_trace,
                                               mp->d_b_alphaval,mp->d_b_betaval,mp->d_b_gammaval,
                                               mp->ANISOTROPY,
                                               d_c11store,d_c12store,d_c13store,

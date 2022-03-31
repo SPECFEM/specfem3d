@@ -68,7 +68,7 @@ void FC_FUNC_(initialize_fault_data_gpu,
                                          int* iglob,
                                          int* num_of_records,
                                          int* ndat,
-                                         int* nt) {
+                                         int* NT_RECORD_LENGTH) {
   TRACE("initialize_fault_data_gpu");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_solver);
@@ -77,8 +77,8 @@ void FC_FUNC_(initialize_fault_data_gpu,
   Fault_data *fault_data_recorder = (Fault_data*) malloc(sizeof(Fault_data));
 
   // initializes faults
-  fault_data_recorder->NRECORD = *num_of_records;
-  fault_data_recorder->NT = *nt;
+  fault_data_recorder->NRECORD = *num_of_records;  // number of points npoin
+  fault_data_recorder->NT = *NT_RECORD_LENGTH;     // NT_RECORD_LENGTH : set in fault_solver_dynamic.f90
 
   int recordlength = *ndat; // data stores for each record/point: default == 7 or when RATE_AND_STATE == 8
   fault_data_recorder->recordlength = recordlength;

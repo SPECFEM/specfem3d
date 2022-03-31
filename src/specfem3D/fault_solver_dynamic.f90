@@ -75,7 +75,8 @@ module fault_solver_dynamic
   integer, parameter :: RSF_SLIP_LAW_TYPE = 1 ! default 1 == SCEC TPV103/104 benchmark slip law, 2 == slip law by Kaneko (2008)
 
   ! GPU output record length
-  integer, parameter :: NT_RECORD_LENGTH = 500
+  integer, save :: NT_RECORD_LENGTH = 500     ! default 500, i.e., every 500 time step synchronizes dataT%dat records.
+                                              ! will adapt in case needed to NSNAP number of time steps for snapshots
 
   public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, &
             SIMULATION_TYPE_DYN, NT_RECORD_LENGTH, &
@@ -318,12 +319,35 @@ contains
   subroutine fault_transfer_data_GPU()
 
   use specfem_par, only: Fault_pointer
+  use constants, only: myrank,IMAIN
 
   implicit none
 
   ! local parameters
   type(bc_dynandkinflt_type),pointer :: bc
   integer :: ifault,nspec,nglob
+
+  ! adapts NT_RECORD_LENGTH to match snapshot outputs
+  !
+  ! note: NT_RECORD_LENGTH determines how often dataT records will be transferred from GPU back to CPU
+  !       this should match also the NSNAP number of time steps NSNAP for wavefield snapshots and/or
+  !       NTOUT for number of time steps between outputting records.
+  ! trying to adapt to whatever is shortest
+  if (NTOUT < NT_RECORD_LENGTH) NT_RECORD_LENGTH = NTOUT
+  if (NSNAP < NT_RECORD_LENGTH) NT_RECORD_LENGTH = NSNAP
+  ! let's match snapshots for outputting them if possible.
+  ! then, the full records will be output at the end of the simulation.
+  if (mod(NSNAP,NT_RECORD_LENGTH) /= 0) NT_RECORD_LENGTH = NSNAP
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "    fault transfers between CPU-GPU:"
+    write(IMAIN,*) "      number of time steps for record outputs NTOUT  = ",NTOUT
+    write(IMAIN,*) "      number of time steps for snapshots      NTSNAP = ",NSNAP
+    write(IMAIN,*) "      using NT_RECORD_LENGTH = ",NT_RECORD_LENGTH," for synchronizing dataT array"
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
 
   ! initialize fault solver on GPU
   call initialize_fault_solver_gpu(Fault_pointer, Nfaults, V_HEALING, V_RUPT, RATE_AND_STATE)
@@ -773,8 +797,8 @@ contains
            temp = huge(temp)
            do jpar=1,num_lines
               dist=sqrt((coord(1,ipar)-xyzv(1,jpar))**2+(coord(2,ipar)-xyzv(2,jpar))**2+(coord(3,ipar)-xyzv(3,jpar))**2)
-              if(dist<temp) then
-                 b(ipar) = xyzv(4,jpar) 
+              if (dist < temp) then
+                 b(ipar) = xyzv(4,jpar)
                  temp    = dist
               endif
            enddo
@@ -1323,7 +1347,7 @@ contains
   type(swf_type), intent(in) :: f
   real(kind=CUSTOM_REAL) :: mu(size(f%theta))
 
-  if(f%kind==1) then
+  if (f%kind == 1) then
   ! slip weakening law
   !
   ! for example: Galvez, 2014, eq. (8)
@@ -2494,7 +2518,7 @@ contains
   subroutine fault_output_synchronize_GPU(it)
 
   use constants, only: PARALLEL_FAULT
-  use specfem_par, only: Fault_pointer,myrank
+  use specfem_par, only: Fault_pointer,myrank,NSTEP
 
   implicit none
 
@@ -2519,8 +2543,21 @@ contains
     endif
 
     ! output data
-    call SCEC_write_dataT(bc%dataT)
-    if (myrank == 0) call write_dataXZ(bc%dataXZ_all,it,ifault)
+    ! write dataT every NTOUT time steps or at the end of simulation
+    if (mod(it,NTOUT) == 0 .or. it == NSTEP) call SCEC_write_dataT(bc%dataT)
+
+    ! write dataXZ every NSNAP time steps
+    if (mod(it,NSNAP) == 0) then
+      if (PARALLEL_FAULT) then
+        ! collects data from all processes
+        call gather_dataXZ(bc)
+        ! main process writes output file
+        if (myrank == 0) call write_dataXZ(bc%dataXZ_all,it,ifault)
+      else
+        ! fault in single slice
+        if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,ifault)
+      endif
+    endif
   enddo
 
   end subroutine fault_output_synchronize_GPU

@@ -25,7 +25,7 @@ program cmt3d_flexwin
   ! read cmt file
   print *, 'Reading cmtsolution parameters ...'
   call get_cmt(cmt_file,yr,mo,jda,ho,mi,sec,t_cmt,hdur,elat,elon,depth, &
-       moment_tensor)
+               moment_tensor)
   ! assign pars to an array
   do i = 1, NPARMAX
      if (i <= NM) then

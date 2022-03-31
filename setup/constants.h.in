@@ -119,45 +119,14 @@
 
 !!-----------------------------------------------------------
 !!
-!! ADIOS Related values
-!!
-!!-----------------------------------------------------------
-  ! size of the ADIOS buffer to use
-  integer, parameter :: ADIOS_BUFFER_SIZE_IN_MB = 400
-
-! ADIOS transport methods (see ADIOS manual for details)
-!! MPI (default)
-  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = 'MPI'
-  character(len=*), parameter :: ADIOS_METHOD_PARAMS =  ''
-! or
-!! POSIX
-!  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = "POSIX"
-!  character(len=*), parameter :: ADIOS_METHOD_PARAMS =  ''
-! or
-!! MPI_AGGREGATE
-!  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = "MPI_AGGREGATE"
-!  character(len=*), parameter :: ADIOS_METHOD_PARAMS =  "num_aggregators=64,num_ost=672"
-! or
-!! MPI_LUSTRE
-!  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = "MPI_LUSTRE"
-!  character(len=*), parameter :: ADIOS_METHOD_PARAMS =  "stripe_count=16,stripe_size=4194304,block_size=4194304"
-
-!!-----------------------------------------------------------
-!!
-!! ASDF parameters
+!! directory structure
 !!
 !!-----------------------------------------------------------
 
-! stores specfem provenance string in ASDF file
-  logical, parameter :: ASDF_OUTPUT_PROVENANCE = .false.
-
-! ASDF string lengths
-  integer, parameter :: ASDF_MAX_STRING_LENGTH = 1024
-  integer, parameter :: ASDF_MAX_QUAKEML_LENGTH = 8096
-  integer, parameter :: ASDF_MAX_STATIONXML_LENGTH = 16182
-  integer, parameter :: ASDF_MAX_PARFILE_LENGTH = 20000
-  integer, parameter :: ASDF_MAX_CONSTANTS_LENGTH = 45000
-  integer, parameter :: ASDF_MAX_TIME_STRING_LENGTH = 22
+! paths for inputs and outputs files
+  character(len=*), parameter :: IN_DATA_FILES = './DATA/'
+  character(len=*), parameter :: MF_IN_DATA_FILES = './DATA/meshfem3D_files/'
+  character(len=*), parameter :: OUTPUT_FILES_BASE = './OUTPUT_FILES/'
 
 !!-----------------------------------------------------------
 !!
@@ -306,7 +275,7 @@
 ! Big storage version of coupling with DSM (will always set to .false. after the light storage version will be validated)
   logical, parameter :: old_DSM_coupling_from_Vadim = .true.
 
-! First run to store on boundaries for using reciprocty calculate Kirchoff-Helmholtz integral
+! First run to store on boundaries for using reciprocity calculate Kirchoff-Helmholtz integral
   logical, parameter :: SAVE_RUN_BOUN_FOR_KH_INTEGRAL = .false.
 
 ! for subroutine compute_vol_or_surf_integral_on_whole_domain
@@ -321,18 +290,187 @@
 ! todo: we could put this parameter into the Mesh_Par_file
   logical, parameter :: SAVE_MESH_AS_CUBIT = .false.
 
+!!-----------------------------------------------------------
+!!
+!! mesh optimization
+!!
+!!-----------------------------------------------------------
+
+! empirical choice for distorted elements to estimate time step and period resolved:
+! Courant number for time step estimate
+  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5
+
+! number of points per minimum wavelength for minimum period estimate
+  real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
+
+! separates regular/irregular shaped elements
+  logical, parameter :: DO_IRREGULAR_ELEMENT_SEPARATION = .true.
+
+! mesh partitioning algorithms, choices for PARTITIONING_TYPE
+! SCOTCH is original to program
+  integer, parameter :: SCOTCH = 1
+! METIS is another popular alternative currently in development
+  integer, parameter :: METIS = 2
+! PATOH is mostly used for LTS. It balances the p-levels across partitions as well as balancing total elements.
+  integer, parameter :: PATOH = 3
+! simple row partitioning
+  integer, parameter :: ROWS_PART = 4
+
+! face detection distance tolerance (relative to coordinate range)
+  double precision, parameter :: TOLERANCE_FACE_DETECTION = 1.d-4
 
 !!-----------------------------------------------------------
 !!
-!! directory structure
+!! GPU optimization
+!!
+!!-----------------------------------------------------------
+! added these parameters for the GPU version of the solver
+
+! mesh coloring
+! add mesh coloring for the GPU + MPI implementation
+! this is needed on NVIDIA hardware up to FERMI boards, included.
+! Starting on KEPLER boards you can leave it off because on KEPLER hardware
+! or higher atomic reduction operations have become as fast as resorting to mesh coloring.
+  logical, parameter :: USE_MESH_COLORING_GPU = .false.
+  integer, parameter :: MAX_NUMBER_OF_COLORS = 1000
+! enhanced coloring:
+! using Droux algorithm
+! try several times with one more color before giving up
+  logical, parameter :: USE_DROUX_OPTIMIZATION = .false.
+  integer, parameter :: MAX_NB_TRIES_OF_DROUX_1993 = 15
+! using balancing algorithm
+! postprocess the colors to balance them if Droux (1993) algorithm is not used
+  logical, parameter :: BALANCE_COLORS_SIMPLE_ALGO = .false.
+
+!!-----------------------------------------------------------
+!!
+!! ADIOS Related values
 !!
 !!-----------------------------------------------------------
 
-! paths for inputs and outputs files
-  character(len=*), parameter :: IN_DATA_FILES = './DATA/'
-  character(len=*), parameter :: MF_IN_DATA_FILES = './DATA/meshfem3D_files/'
-  character(len=*), parameter :: OUTPUT_FILES_BASE = './OUTPUT_FILES/'
+! for undo_att snapshots
+! use only one file for all steps or a single file per iteration step
+  logical, parameter :: ADIOS_SAVE_ALL_SNAPSHOTS_IN_ONE_FILE = .true.
 
+! type selection to use compression operation before saving undo_att forward snapshot arrays
+! compression algorithm: 0 == none / 1 == ZFP compression / 2 == SZ compression (needs to be supported by ADIOS2 library)
+  integer, parameter :: ADIOS_COMPRESSION_ALGORITHM = 0     ! (default none)
+
+!! ZFP compression
+! mode options: see https://zfp.readthedocs.io/en/release0.5.5/modes.html
+! parameters: 'rate'      w/ value '8'    - fixed-rate mode: choose values between ~8-20, higher for better accuracy
+!             'accuracy'  w/ value '0.01' - fixed-accuracy mode: choose smaller value for better accuracy
+!             'precision' w/ value '10'   - fixed-precision mode: choose between ~10-50, higher for better accuracy
+!                                           (https://www.osti.gov/pages/servlets/purl/1572236)
+!
+! test setup: global simulation (s362ani model), NEX=160, ADIOS 2.5.0
+!             duration 30 min, 9 snapshot files (w/ estimated total size 117.6 GB)
+! - {'rate','8'} leads to a rather constant compression by using (8+1)-bit representation for 4 32-bit floats
+!     compression rate factor: ~3.98x (123474736 Bytes / 30998320 Bytes ~ 118 GB / 30GB)
+!                              betav_kl_crust_mantle total norm of difference :   2.6486799E-22
+! - {'rate','12'} has better accuracy (leading to small wavefield perturbations)
+!     compression rate factor: ~2.65x (123474736 Bytes / 46423124 Bytes ~ 118 GB / 45GB)
+!                              betav_kl_crust_mantle total norm of difference :   4.3890730E-24
+! - {'precision','10'} leads to a more variable compression for wavefields depending on their dynamic range
+!     compression rate factor: ~4.05x (123474736 Bytes / 30460388 Bytes ~ 118 GB / 30 GB)
+!                              betav_kl_crust_mantle total norm of difference :   5.3706092E-24
+! - {'precision','12'} has better accuracy (leading to small wavefield perturbations)
+!     compression rate factor: ~3.43x (123474736 Bytes / 35972672 Bytes ~ 118 GB / 35GB)
+!                              betav_kl_crust_mantle total norm of difference :   1.9846376E-25
+! - {'precision','20'} has good accuracy (almost identical reconstructed waveforms)
+!     compression rate factor: ~2.12x (123474736 Bytes / 58020080 Bytes ~ 118 GB / 56 GB)
+!                              betav_kl_crust_mantle total norm of difference :   2.5939579E-30
+!
+! performance overhead for compressing/decompressing is negligible in all cases
+! (a few seconds, compared to minutes for the total simulaton)
+!
+! a default setting of {'precision','12'} seems a good compromise between accuracy and compression rate
+  character(len=*), parameter :: ADIOS_COMPRESSION_MODE = 'precision'     ! 'precision','rate'
+  character(len=*), parameter :: ADIOS_COMPRESSION_MODE_VALUE = '12'      ! '8','12,'20'
+
+!! SZ compression
+! parameters: 'accuracy', value '0.0000000001' = 1.e-10
+!             leaving empty '','' chooses automatic setting? to check...
+  !character(len=*), parameter :: ADIOS_COMPRESSION_MODE = ''
+  !character(len=*), parameter :: ADIOS_COMPRESSION_MODE_VALUE = ''
+
+!! LZ4 compression (lossless)
+! parameters: level 'lvl=9' and 'threshold=4096' 4K-bytes
+  !character(len=*), parameter :: ADIOS_COMPRESSION_MODE = 'lvl'
+  !character(len=*), parameter :: ADIOS_COMPRESSION_MODE_VALUE = '9,threshold=4096'
+
+! size of the ADIOS buffer to use
+  integer, parameter :: ADIOS_BUFFER_SIZE_IN_MB = 400
+
+! ADIOS transport methods (see ADIOS manual for details)
+!! MPI (default)
+  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = "MPI"
+  character(len=*), parameter :: ADIOS_METHOD_PARAMS =  ''
+
+! ADIOS transport methods for undo save_frame** data files
+!! MPI (default)
+  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD_UNDO_ATT = "MPI"
+  character(len=*), parameter :: ADIOS_METHOD_PARAMS_UNDO_ATT =  ''
+! or
+!! POSIX
+!  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD_UNDO_ATT = "POSIX"
+!  character(len=*), parameter :: ADIOS_METHOD_PARAMS_UNDO_ATT =  ''
+! or
+!! MPI_AGGREGATE
+!  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD_UNDO_ATT = "MPI_AGGREGATE"
+!  character(len=*), parameter :: ADIOS_METHOD_PARAMS_UNDO_ATT =  "num_aggregators=64,num_ost=672"
+! or
+!! MPI_LUSTRE
+!  character(len=*), parameter :: ADIOS_TRANSPORT_METHOD_UNDO_ATT = "MPI_LUSTRE"
+!  character(len=*), parameter :: ADIOS_METHOD_PARAMS_UNDO_ATT =  "stripe_count=16,stripe_size=4194304,block_size=4194304"
+
+!!-----------------------------------------------------------
+!!
+!! ADIOS2 Related values
+!!
+!!-----------------------------------------------------------
+
+! ADIOS2 engines
+!! note on native engine types:
+!!  - "MPI" is not supported yet by adios2 version (current 2.6.0), check out in future.
+!!  - "HDF5" doesn't support file appending yet, which is needed at the moment.
+!!  - "BPfile" doesn't support file appending yet, which is needed at the moment.
+!!  - "BP3" would allow for backward compatibility to ADIOS 1.x, but doesn't support file appending yet.
+!!  - "BP4" is the new adios2 format with enhanced capabilities.
+!! we will use "BP4" by default.
+!!
+!! BP4
+!! format details: https://adios2.readthedocs.io/en/latest/engines/engines.html#bp4
+!!
+!! note: parameter SubStreams=64 for larger runs with NPROCS > 64 creates problems when reading scalar values (in appended mode),
+!!       try to avoid it for now as default parameter.
+!!       for undo_att, it seems to work however and can be used in ADIOS2_ENGINE_PARAMS_UNDO_ATT setting.
+!!
+!!       in future adios2 versions, re-evalute if parameters could be "SubStreams=64,MaxBufferSize=800Mb" for larger runs
+  character(len=*), parameter :: ADIOS2_ENGINE_DEFAULT = "BP4"
+  character(len=*), parameter :: ADIOS2_ENGINE_PARAMS_DEFAULT = "" ! add "MaxBufferSize=800Mb" for larger runs
+
+  character(len=*), parameter :: ADIOS2_ENGINE_UNDO_ATT = "BP4"
+  character(len=*), parameter :: ADIOS2_ENGINE_PARAMS_UNDO_ATT = "" ! add "SubStreams=64,MaxBufferSize=800Mb" for larger runs
+
+
+!!-----------------------------------------------------------
+!!
+!! ASDF parameters
+!!
+!!-----------------------------------------------------------
+
+! keeps track of everything
+! stores specfem provenance string in ASDF file
+  logical, parameter :: ASDF_OUTPUT_PROVENANCE = .false.
+
+! ASDF string lengths
+  integer, parameter :: ASDF_MAX_STRING_LENGTH = 1024
+  integer, parameter :: ASDF_MAX_QUAKEML_LENGTH = 8096
+  integer, parameter :: ASDF_MAX_STATIONXML_LENGTH = 16182
+  integer, parameter :: ASDF_MAX_PARFILE_LENGTH = 20000
+  integer, parameter :: ASDF_MAX_CONSTANTS_LENGTH = 45000
+  integer, parameter :: ASDF_MAX_TIME_STRING_LENGTH = 22
 
 !!-----------------------------------------------------------
 !!
@@ -390,53 +528,6 @@
 
 !!-----------------------------------------------------------
 !!
-!! mesh optimization
-!!
-!!-----------------------------------------------------------
-
-! empirical choice for distorted elements to estimate time step and period resolved:
-! Courant number for time step estimate
-  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5
-
-! number of points per minimum wavelength for minimum period estimate
-  real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
-
-! separates regular/irregular shaped elements
-  logical, parameter :: DO_IRREGULAR_ELEMENT_SEPARATION = .true.
-
-! mesh partitioning algorithms, choices for PARTITIONING_TYPE
-  ! SCOTCH is original to program
-  integer, parameter :: SCOTCH = 1
-  ! METIS is another popular alternative currently in development
-  integer, parameter :: METIS = 2
-  ! PATOH is mostly used for LTS. It balances the p-levels across partitions as well as balancing total elements.
-  integer, parameter :: PATOH = 3
-  ! simple row partitioning
-  integer, parameter :: ROWS_PART = 4
-
-! GPU coloring
-! add mesh coloring for the GPU + MPI implementation
-! this is needed on NVIDIA hardware up to FERMI boards, included.
-! Starting on KEPLER boards you can leave it off because on KEPLER hardware
-! or higher atomic reduction operations have become as fast as resorting to mesh coloring.
-  logical, parameter :: USE_MESH_COLORING_GPU = .false.
-  integer, parameter :: MAX_NUMBER_OF_COLORS = 1000
-
-! enhanced coloring:
-!
-! using Droux algorithm
-! try several times with one more color before giving up
-  logical, parameter :: USE_DROUX_OPTIMIZATION = .false.
-  integer, parameter :: MAX_NB_TRIES_OF_DROUX_1993 = 15
-!
-! postprocess the colors to balance them if Droux (1993) algorithm is not used
-  logical, parameter :: BALANCE_COLORS_SIMPLE_ALGO = .false.
-
-! face detection distance tolerance (relative to coordinate range)
-  double precision, parameter :: TOLERANCE_FACE_DETECTION = 1.d-4
-
-!!-----------------------------------------------------------
-!!
 !! in-situ visualization (using VTK)
 !!
 !!-----------------------------------------------------------
@@ -486,21 +577,11 @@
   integer,parameter :: P_LEVEL_PARTIAL_SUBSET_MINIMUM = 200
 
 ! partitioning for Local time stepping
-  ! tries to partition mesh such that p-levels are confined to an island (for METIS/PATOH)
+! tries to partition mesh such that p-levels are confined to an island (for METIS/PATOH)
   logical,parameter :: PLEVEL_ISLAND = .false.
 
-  ! reorganize the partitions to try to optimize communication costs (for SCOTCH only)
+! reorganize the partitions to try to optimize communication costs (for SCOTCH only)
   logical,parameter :: SCOTCH_P_REMAP = .true.
-
-!!-----------------------------------------------------------
-!!
-!! MPI debugging
-!!
-!!-----------------------------------------------------------
-
-! debugging: without MPI assembly
-  logical,parameter :: ASSEMBLE_MPI_OFF = .false.
-
 
 !!-----------------------------------------------------------
 !!
@@ -519,10 +600,22 @@
 ! synchronizes accel array across different MPI processes
   logical ,parameter :: FAULT_SYNCHRONIZE_ACCEL = .false.
 
+!!-----------------------------------------------------------
+!!
+!! MPI debugging
+!!
+!!-----------------------------------------------------------
+
+! debugging: without MPI assembly
+  logical,parameter :: ASSEMBLE_MPI_OFF = .false.
+
+
 !------------------------------------------------------
 !----------- do not modify anything below -------------
 !------------------------------------------------------
 
+! on some processors (e.g. some Intel chips) it is necessary to suppress underflows
+! by using a small initial field instead of zero
 !! DK DK August 2018: on modern processors this does not happen any more,
 !! DK DK August 2018: and thus no need to purposely lose accuracy to avoid underflows; thus turning it off by default
   logical, parameter :: FIX_UNDERFLOW_PROBLEM = .false. ! .true.
@@ -731,13 +824,20 @@
 !! for LDDRK high-order time scheme
 !!
 !!-----------------------------------------------------------
-! see reference:
-! Berland J., Ch. Bogey, Ch. Bailly, 2006.
-! Low-dissipation and low-dispersion fourth-order Runge-Kutta algorithm
-! Computers & Fluids 35 (2006) 1459-1463
 
+! Low-dissipation and low-dispersion fourth-order Runge-Kutta algorithm
+!
+! reference:
+! J. Berland, C. Bogey, and C. Bailly.
+! Low-dissipation and low-dispersion fourth-order Runge-Kutta algorithm.
+! Computers and Fluids, 35:1459-1463, 2006
+!
+! see: http://www.sciencedirect.com/science/article/pii/S0045793005000575?np=y
+
+! number of stages
   integer, parameter :: NSTAGE_LDDRK = 6
 
+! coefficients from Table 1, Berland et al. (2006)
   real(kind=CUSTOM_REAL), dimension(NSTAGE_LDDRK), parameter :: ALPHA_LDDRK = &
     (/0.0_CUSTOM_REAL,-0.737101392796_CUSTOM_REAL, -1.634740794341_CUSTOM_REAL, &
       -0.744739003780_CUSTOM_REAL,-1.469897351522_CUSTOM_REAL,-2.813971388035_CUSTOM_REAL/)

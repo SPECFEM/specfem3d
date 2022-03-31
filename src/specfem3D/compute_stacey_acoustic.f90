@@ -36,7 +36,7 @@
                                              b_absorb_potential,b_num_abs_boundary_faces)
 
   use constants
-  use specfem_par, only: SAVE_STACEY
+  use specfem_par, only: SAVE_STACEY,SIMULATION_TYPE
 
   implicit none
 
@@ -105,7 +105,7 @@
         potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - absorbl
 
         ! adjoint simulations
-        if (SAVE_STACEY) then
+        if (SAVE_STACEY .and. SIMULATION_TYPE == 1) then
           b_absorb_potential(igll,iface) = absorbl
         endif !adjoint
 
@@ -113,8 +113,8 @@
     endif ! ispec_is_acoustic
   enddo ! num_abs_boundary_faces
 
-  ! adjoint simulations: stores absorbed wavefield part
-  if (SAVE_STACEY) then
+  ! for kernel simulations: stores absorbed wavefield part
+  if (SAVE_STACEY .and. SIMULATION_TYPE == 1) then
     ! writes out absorbing boundary value
     call write_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,it)
   endif
@@ -288,13 +288,14 @@
 ! for acoustic solver on GPU
 
   subroutine compute_stacey_acoustic_GPU(iphase,num_abs_boundary_faces, &
-                                         SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                         NSTEP,it, &
                                          b_reclen_potential,b_absorb_potential, &
                                          b_num_abs_boundary_faces,Mesh_pointer, &
                                          FORWARD_OR_ADJOINT)
 
   use constants
-  use specfem_par, only: UNDO_ATTENUATION_AND_OR_PML
+  use specfem_par, only: SIMULATION_TYPE,SAVE_FORWARD,UNDO_ATTENUATION_AND_OR_PML
+
   implicit none
 
 ! potentials
@@ -306,11 +307,9 @@
   integer,intent(in) :: num_abs_boundary_faces
 
 ! adjoint simulations
-  integer, intent(in) :: SIMULATION_TYPE
   integer, intent(in) :: NSTEP,it
   integer, intent(in) :: b_num_abs_boundary_faces,b_reclen_potential
   real(kind=CUSTOM_REAL),dimension(NGLLSQUARE,b_num_abs_boundary_faces), intent(inout) :: b_absorb_potential
-  logical, intent(in) :: SAVE_FORWARD
 
   ! GPU_MODE variables
   integer(kind=8), intent(in) :: Mesh_pointer
@@ -337,7 +336,7 @@
     ! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)
     call compute_stacey_acoustic_cuda(Mesh_pointer,iphase,b_absorb_potential,FORWARD_OR_ADJOINT)
 
-    ! adjoint simulations: stores absorbed wavefield part
+    ! for kernel simulations: stores absorbed wavefield part
     if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
       ! writes out absorbing boundary value
       call write_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,it)

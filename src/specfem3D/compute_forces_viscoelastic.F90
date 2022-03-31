@@ -246,7 +246,7 @@
 
     ! no PML elements from here on
 
-    ! stores displacment values in local array
+    ! stores displacement values in local array
     if (USE_KELVIN_VOIGT_DAMPING) then
       ! Kelvin Voigt damping: artificial viscosity around dynamic faults
       eta = Kelvin_Voigt_eta(ispec)
@@ -510,9 +510,9 @@
             duzdyl_plus_duydzl_att = duzdyl_att + duydzl_att
 
             ! compute deviatoric strain
+            epsilondev_trace_loc(INDEX_IJK) = (duxdxl_att + duydyl_att + duzdzl_att)
             templ = ONE_THIRD * (duxdxl_att + duydyl_att + duzdzl_att)
             if (SIMULATION_TYPE == 3) epsilon_trace_over_3(INDEX_IJK,ispec) = templ
-            epsilondev_trace_loc(INDEX_IJK) = 3._CUSTOM_REAL * templ
             epsilondev_xx_loc(INDEX_IJK) = duxdxl_att - templ
             epsilondev_yy_loc(INDEX_IJK) = duydyl_att - templ
             epsilondev_xy_loc(INDEX_IJK) = 0.5_CUSTOM_REAL * duxdyl_plus_duydxl_att
@@ -524,9 +524,9 @@
         ! non-attenuation case
         DO_LOOP_IJK
           ! computes deviatoric strain attenuation and/or for kernel calculations
+          epsilondev_trace_loc(INDEX_IJK) = (duxdxl(INDEX_IJK) + duydyl(INDEX_IJK) + duzdzl(INDEX_IJK))
           templ = ONE_THIRD * (duxdxl(INDEX_IJK) + duydyl(INDEX_IJK) + duzdzl(INDEX_IJK))
           if (SIMULATION_TYPE == 3) epsilon_trace_over_3(INDEX_IJK,ispec) = templ
-          epsilondev_trace_loc(INDEX_IJK) = 3._CUSTOM_REAL * templ
           epsilondev_xx_loc(INDEX_IJK) = duxdxl(INDEX_IJK) - templ
           epsilondev_yy_loc(INDEX_IJK) = duydyl(INDEX_IJK) - templ
           epsilondev_xy_loc(INDEX_IJK) = 0.5_CUSTOM_REAL * (duxdyl(INDEX_IJK) + duydxl(INDEX_IJK))
@@ -789,6 +789,7 @@
     ! save deviatoric strain for Runge-Kutta scheme
     if (COMPUTE_AND_STORE_STRAIN) then
       if (ATTENUATION .and. .not. is_CPML(ispec)) epsilondev_trace(:,:,:,ispec) = epsilondev_trace_loc(:,:,:)
+      ! already stored epsilon_trace_over_3(:,:,:,ispec) above for SIMULATION_TYPE == 3
       epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
       epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
       epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
@@ -954,7 +955,7 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),intent(inout) :: &
     epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
 
-  real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),intent(out) :: epsilon_trace_over_3
+  real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),intent(inout) :: epsilon_trace_over_3
 
   integer,intent(in) :: iphase
 

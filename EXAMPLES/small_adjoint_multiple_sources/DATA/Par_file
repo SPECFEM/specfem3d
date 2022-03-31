@@ -205,6 +205,11 @@ USE_EXTERNAL_SOURCE_FILE        = .false.
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .false.
 
+# source encoding
+# (for acoustic simulations only for now) determines source encoding factor +/-1 depending on sign of moment tensor
+# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
+USE_SOURCE_ENCODING             = .false.
+
 #-----------------------------------------------------------
 #
 # Seismograms
@@ -213,6 +218,10 @@ PRINT_SOURCE_TIME_FUNCTION      = .false.
 
 # interval in time steps for writing of seismograms
 NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
+
+# set to n to reduce the sampling rate of output seismograms by a factor of n
+# defaults to 1, which means no down-sampling
+NTSTEP_BETWEEN_OUTPUT_SAMPLE    = 1
 
 # decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
 # currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
@@ -224,9 +233,6 @@ SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic 
 # save seismograms also when running the adjoint runs for an inverse problem
 # (usually they are unused and not very meaningful, leave this off in almost all cases)
 SAVE_SEISMOGRAMS_IN_ADJOINT_RUN = .false.
-
-# subsampling of the seismograms to create smaller files (but less accurately sampled in time)
-subsamp_seismos                 = 1
 
 # save seismograms in binary or ASCII format (binary is smaller but may not be portable between machines)
 USE_BINARY_FOR_SEISMOGRAMS      = .false.
@@ -255,16 +261,6 @@ USE_TRICK_FOR_BETTER_PRESSURE   = .false.
 
 #-----------------------------------------------------------
 #
-# Source encoding
-#
-#-----------------------------------------------------------
-
-# (for acoustic simulations only for now) determines source encoding factor +/-1 depending on sign of moment tensor
-# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
-USE_SOURCE_ENCODING             = .false.
-
-#-----------------------------------------------------------
-#
 # Energy calculation
 #
 #-----------------------------------------------------------
@@ -282,7 +278,7 @@ NTSTEP_BETWEEN_OUTPUT_ENERGY    = 1000
 #-----------------------------------------------------------
 
 # interval in time steps for reading adjoint traces
-# 0 = read the whole adjoint sources at the same time
+# 0 = read the whole adjoint sources at start time
 NTSTEP_BETWEEN_READ_ADJSRC      = 0
 
 # read adjoint sources using ASDF (requires asdf-library)
@@ -379,4 +375,5 @@ ADIOS_FOR_DATABASES             = .false.
 ADIOS_FOR_MESH                  = .false.
 ADIOS_FOR_FORWARD_ARRAYS        = .false.
 ADIOS_FOR_KERNELS               = .false.
+ADIOS_FOR_UNDO_ATTENUATION      = .false.
 
