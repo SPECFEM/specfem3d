@@ -57,8 +57,7 @@
   double precision, dimension(NGLLX,NGLLY,NGLLZ) :: wgll_cube
 
   real(kind=CUSTOM_REAL) :: jacobianl
-  integer :: iglob
-  integer :: i,j,k,ier,ival,ispec,ispec_irreg,NSPEC_IRREGULAR,s1_jac,s2_jac,s3_jac,s4_jac
+  integer :: ival,ispec_irreg,NSPEC_IRREGULAR,s1_jac,s2_jac,s3_jac,s4_jac
   character(len=MAX_STRING_LEN) :: m_file
 
 ! reads NSPEC_IRREGULAR
