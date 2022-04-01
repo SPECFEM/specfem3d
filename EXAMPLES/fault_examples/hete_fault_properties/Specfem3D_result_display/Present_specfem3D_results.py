@@ -59,7 +59,7 @@ for name in file_list:
         time_list.append(int(name.split('Snapshot')[1].split('_')[0]))
 num_data   = len(time_list)
 time_list  = np.asarray(sorted(time_list))
-print("") 
+print("")
 print( "The model name is:", Model_name)
 print( "The model has", num_data, "data files.")
 print( "The time list is:", time_list)
@@ -115,9 +115,9 @@ for ii in range(num_data):
     Data.append(FSEM3D_snapshot(name))
 
 # Create the grid arrays of nodes
-X    = Data[0].X   
+X    = Data[0].X
 Y    = Data[0].Y
-Z    = Data[0].Z   
+Z    = Data[0].Z
 # if it is a vertical fault (along X or Y axis)
 if((np.min(X) == np.max(X) or np.min(Y)==np.max(Y)) and display_horizontally):
     print( "Warning: it is a vertical fault along X or Y axis, the fault will be displayed vertically!!!")
@@ -172,8 +172,8 @@ for x in range(fault_dims[0]):
             vr[x,y] = np.nan
             continue
         # Calculate the gradient of rupture time
-        delta_x = (Init_t0[x+1,y+1]-Init_t0[x-1,y+1]+Init_t0[x+1,y-1]-Init_t0[x-1,y-1]) / 4.0 / ((grid_size*X_gradient[x,y])**2 + grid_size**2)**0.5 
-        delta_y = (Init_t0[x+1,y+1]-Init_t0[x+1,y-1]+Init_t0[x-1,y+1]-Init_t0[x-1,y-1]) / 4.0 / ((grid_size*Y_gradient[x,y])**2 + grid_size**2)**0.5 
+        delta_x = (Init_t0[x+1,y+1]-Init_t0[x-1,y+1]+Init_t0[x+1,y-1]-Init_t0[x-1,y-1]) / 4.0 / ((grid_size*X_gradient[x,y])**2 + grid_size**2)**0.5
+        delta_y = (Init_t0[x+1,y+1]-Init_t0[x+1,y-1]+Init_t0[x-1,y+1]-Init_t0[x-1,y-1]) / 4.0 / ((grid_size*Y_gradient[x,y])**2 + grid_size**2)**0.5
         # Calculate rupture speed and direction
         if (np.abs(delta_x)<1e-6 and np.abs(delta_x)<1e-6):
             vr[x,y] = np.nan
@@ -184,15 +184,15 @@ for x in range(fault_dims[0]):
 
 
 # Final slip
-Final_slip_str = Data[len(Data)-1].Dx 
+Final_slip_str = Data[len(Data)-1].Dx
 Final_slip_dip = Data[len(Data)-1].Dz
 Final_slip     = (Final_slip_str**2 + Final_slip_dip**2)**0.5
 Slip_grid      = griddata(X_Y[:,0:2], Final_slip, (grid_x,grid_y), method='linear')
 
 
 # Stress drop
-Stress_drop_str = Data[0].Tx/1e6 - Data[len(Data)-1].Tx/1e6 
-Stress_drop_dip = Data[0].Ty/1e6 - Data[len(Data)-1].Ty/1e6 
+Stress_drop_str = Data[0].Tx/1e6 - Data[len(Data)-1].Tx/1e6
+Stress_drop_dip = Data[0].Ty/1e6 - Data[len(Data)-1].Ty/1e6
 Stress_drop_nor = Data[len(Data)-1].Tz/1e6
 str_grid        = griddata(X_Y[:,0:2], Stress_drop_str, (grid_x,grid_y), method='linear')
 dip_grid        = griddata(X_Y[:,0:2], Stress_drop_dip, (grid_x,grid_y), method='linear')

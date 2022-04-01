@@ -1,6 +1,6 @@
 import sys
 # Please set up the path for CUBIT (or Trelis)
-# Instead, you could set up the path from ~/.bashrc 
+# Instead, you could set up the path from ~/.bashrc
 sys.path.append('/opt/linux64/Trelis-14.0/bin/')
 
 import cubit

@@ -32,7 +32,7 @@ $Run_python ../python_scripts/Smooth_slab.py -p  temp_file/topo.xyz  $Sur_sigma 
 #####################################
 dimension=`$Run_python  ../python_scripts/Dimension.py -p  temp_file/${Subxyz}`
 echo "Topography data dimension:" $dimension
-$Run_python ../python_scripts/slab_interface_netsurf.py -p  temp_file/${Subxyz} ${dimension}   CUBIT_jou/surface_sigma_${Sur_sigma}_inc_${Sur_inc}.jou  ../output/surface_sigma_${Sur_sigma}_inc_${Sur_inc}.sat 
+$Run_python ../python_scripts/slab_interface_netsurf.py -p  temp_file/${Subxyz} ${dimension}   CUBIT_jou/surface_sigma_${Sur_sigma}_inc_${Sur_inc}.jou  ../output/surface_sigma_${Sur_sigma}_inc_${Sur_inc}.sat
 
 #####################################
 #####   Create sat file        ######

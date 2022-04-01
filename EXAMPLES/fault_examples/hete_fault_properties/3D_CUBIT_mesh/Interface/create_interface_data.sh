@@ -35,7 +35,7 @@ $Run_python  ../python_scripts/Smooth_slab.py -p temp_file/output.xyz  ${Int_sig
 #####################################
 dimension=`$Run_python ../python_scripts/Dimension.py -p  temp_file/${Subxyz}`
 echo "Interface data dimension:" $dimension
-$Run_python ../python_scripts/slab_interface_netsurf.py -p  temp_file/${Subxyz} ${dimension}   CUBIT_jou/slab_interface_netsurf_sigma_${Int_sigma}_inc_${Int_inc}.jou  ../output/interface_sigma_${Int_sigma}_inc_${Int_inc}.sat 
+$Run_python ../python_scripts/slab_interface_netsurf.py -p  temp_file/${Subxyz} ${dimension}   CUBIT_jou/slab_interface_netsurf_sigma_${Int_sigma}_inc_${Int_inc}.jou  ../output/interface_sigma_${Int_sigma}_inc_${Int_inc}.sat
 
 #####################################
 #####   Create sat file        ######

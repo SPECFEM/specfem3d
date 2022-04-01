@@ -42,7 +42,7 @@ R_cylinder     =  10
 work_dir       = os.getcwd()
 # If Interface is False, then use planar fault (given by the strike, dip, and dep). Otherwise run the scripts in ./Interface and give the path of the created interface (in the directory ./output)
 # If Topography is False, then use planar surface. Otherwise run the scripts in ./Surface and give the path of the created planarsur (in the directory ./output)
-Interface      = True 
+Interface      = True
 Topography     = True
 Int_name       = work_dir + "/output/interface_sigma_1_inc_12.sat"
 Top_name       = work_dir + "/output/surface_sigma_1_inc_12.sat"
@@ -51,7 +51,7 @@ Dip            = 70
 # Indicating the vertical location of one reference point on fault, i.e., (0.0, 0.0, Dep)
 Dep            = -5.7
 
-# Uniform material properties. 
+# Uniform material properties.
 vp  = 5770     # P wave speed (m/s)
 vs  = 3330     # S wave speed (m/s)
 rho = 2705     # density (g/m^3)
@@ -61,7 +61,7 @@ Q   = 13
 # fine_size is for the inner cylinder and coarse_size for the outside semisphere
 fine_size        = 4
 coarse_size      = 8
-# The mesh scheme: thex  
+# The mesh scheme: thex
 #  Thex: firstly create a tetrahedral unstructured mesh, then convert into a hexahedral mesh (reduce the grid size by hal). This mesh scheme have good flexibility for curved geometries.
 #  Noted that the final mesh is hexahedral mesh
 mesh_scheme    = "thex"
@@ -112,7 +112,7 @@ elif(Interface and not Topography):
 else:
     output_mesh    = mesh_name + "_semisphere_planarfault" + "_strike_" + str(Strike) + "_dip_" + str(Dip) + "_depth_" + str(Dep) + "_planarsur"
 
-# Add the info of mesh scheme 
+# Add the info of mesh scheme
 output_mesh = output_mesh + "_" + str(fine_size) + "_" + str(coarse_size) + "_" + element_type
 
 # Vertical length of cylinder
@@ -249,7 +249,7 @@ j.write("# End of file\n")
 j.close()
 
 if(DEBUG):
-   exit() 
+   exit()
 
 # ==================================================
 #        Read the CUBIT journal and playback it.
@@ -276,7 +276,7 @@ Ad = [cubit.get_id_from_name("fault2")]
 # I define the original sphere surface as spheresurf. After webcut, CUBIT renames the new-cutted surface by adding @A, @B ...
 SpheresurfID = [cubit.get_id_from_name("spheresurf@A")]
 # Find the surface ID for the free surface
-freesur_tolerance = 3e3 
+freesur_tolerance = 3e3
 FreesurfID = []
 list_surf=cubit.parse_cubit_list("surface","all")
 for k in list_surf:
@@ -301,7 +301,7 @@ cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
 for i in range(Vol_num):
     cubit.cmd('block {0}  name "elastic {0}" '.format(i+1))        # material region
     cubit.cmd('block {0} attribute count {1}'.format(i+1,6))
-    cubit.cmd('block {0} attribute index 1 1'.format(i+1))    
+    cubit.cmd('block {0} attribute index 1 1'.format(i+1))
     cubit.cmd('block {0} attribute index 2 {1}'.format(i+1,vp))    # vp
     cubit.cmd('block {0} attribute index 3 {1}'.format(i+1,vs))    # vs
     cubit.cmd('block {0} attribute index 4 {1}'.format(i+1,rho))   # rho

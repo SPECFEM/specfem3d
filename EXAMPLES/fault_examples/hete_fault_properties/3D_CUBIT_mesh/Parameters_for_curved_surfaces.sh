@@ -37,7 +37,7 @@ Int_sample_inc=0.007
 
 
 
-### Don't need to change 
+### Don't need to change
 Earth_radius="6371.0"
 Lon_scale=`gawk 'BEGIN{print cos('"$Lat_ref"'/180.0*3.1415926)*3.1415926*'"$Earth_radius"'/180.0}'`
 Lat_scale=`gawk 'BEGIN{print 3.1415926*'"$Earth_radius"'/180.0}'`
