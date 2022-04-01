@@ -22,4 +22,11 @@
        &DIST2D shapeval='read-from-file', filename='initial_stress.dat' /
 
 #  Run the model
-   sh run_this_example.sh
+   First, install SPECFEM3D, then run this example:
+       sh run_this_example.sh
+
+
+#  Present the simulations results
+   The output of simulations can be post-processed by the scripts Specfem3D_result_display
+      git clone git@github.com:Huihuiweng/Specfem3D_result_display.git
+      

@@ -234,7 +234,7 @@ j.write("volume all smooth scheme condition number beta 2.0 cpu 4\n" + \
 j.write("set unmerge Duplicate_mesh on\n")
 j.write("unmerge surface fault1 only\n")
 j.write("surface {idF2} name 'fault2'\n")
-j.write("unmerge curve in surface fault1\n")
+#j.write("unmerge curve in surface fault1\n")
 
 j.write("# ----------------------------------------------------------------------\n" + \
             "# Seperate nodes on fault.\n" + \

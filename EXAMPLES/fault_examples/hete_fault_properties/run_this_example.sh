@@ -16,9 +16,9 @@ rm -rf OUTPUT_FILES/*
 mkdir -p bin
 cd bin/
 rm -f *
-ln -s ../../../bin/xdecompose_mesh
-ln -s ../../../bin/xgenerate_databases
-ln -s ../../../bin/xspecfem3D
+ln -s ../../../../bin/xdecompose_mesh
+ln -s ../../../../bin/xgenerate_databases
+ln -s ../../../../bin/xspecfem3D
 cd ../
 
 # stores setup

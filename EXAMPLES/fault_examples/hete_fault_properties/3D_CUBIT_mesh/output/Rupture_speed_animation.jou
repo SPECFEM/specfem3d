@@ -1,0 +1,93 @@
+# Journal file formatting, etc.
+# ----------------------------------------------------------------------
+# Set units to SI.
+# ----------------------------------------------------------------------
+${Units('si')}
+# Reset geometry.
+# ----------------------------------------------------------------------
+reset
+# ----------------------------------------------------------------------
+# Create block
+# ----------------------------------------------------------------------
+${blockLength= 40.000000 *km}
+${blockWidth = 30.000000 *km}
+${blockHeight= 2000.000000 *km}
+brick x {blockLength} y {blockWidth} z {blockHeight}
+${idVol1=Id('volume')}
+# ----------------------------------------------------------------------
+# Move block
+# ----------------------------------------------------------------------
+${moveX= 0.000000 *km}
+${moveY= 0.000000 *km}
+${moveZ= 0.000000 *km}
+volume {idVol1} move x {moveX} y {moveY} z {moveZ}
+# ----------------------------------------------------------------------
+# Create planar interface.
+# ----------------------------------------------------------------------
+create planar surface zplane
+${idInt=Id('surface')}
+rotate surface {idInt} about Y angle 90.000000
+rotate surface {idInt} about Z angle -90.000000
+surface {idInt} move z {0.000000}
+# ----------------------------------------------------------------------
+# Create planar free surface.
+# ----------------------------------------------------------------------
+create planar surface zplane
+${idSur=Id('surface')}
+# ----------------------------------------------------------------------
+# Create bottom surface.
+# ----------------------------------------------------------------------
+create planar surface zplane offset {-20.000000 *km}
+${idBot=Id('surface')}
+# ----------------------------------------------------------------------
+# Webcut 1 block to 5 blocks.
+# ----------------------------------------------------------------------
+webcut volume {idVol1} with sheet surface {idSur}
+${idVol2=Id('volume')}
+webcut volume {idVol2} with plane Zplane offset {-3.000000 *km}
+${idVol3=Id('volume')}
+webcut volume {idVol3} with plane Zplane offset {-15.000000 *km}
+${idVol4=Id('volume')}
+webcut volume {idVol4} with sheet surface {idBot}
+${idVol5=Id('volume')}
+webcut volume {idVol3} with plane surface {idInt}
+${idVol6=Id('volume')}
+find surface overlap volume {idVol3} {idVol6}
+${idF1=GroupMemberId('surf_overlap','surface',0)}
+${idF2=GroupMemberId('surf_overlap','surface',1)}
+surface {idF1} name 'fault1'
+# ----------------------------------------------------------------------
+# Delete unused blocks and surfaces.
+# ----------------------------------------------------------------------
+delete surface all
+delete volume {idVol1} {idVol5} 
+# ----------------------------------------------------------------------
+# imprint and merge.
+# ----------------------------------------------------------------------
+imprint all
+merge all
+# ----------------------------------------------------------------------
+# Generate the mesh.
+# ----------------------------------------------------------------------
+volume all scheme map
+volume all size {1.000000*km}
+mesh volume {idVol3} {idVol6}
+mesh volume all
+# ----------------------------------------------------------------------
+# Smooth mesh to improve quality.
+# ----------------------------------------------------------------------
+volume all smooth scheme condition number beta 2.0 cpu 4
+smooth volume all
+set unmerge Duplicate_mesh on
+unmerge surface fault1 only
+surface {idF2} name 'fault2'
+# ----------------------------------------------------------------------
+# Seperate nodes on fault.
+# ----------------------------------------------------------------------
+set node constraint off
+node in surface fault1 move normal to surface fault1 distance {-0.01*m}
+node in surface fault2 move normal to surface fault2 distance {-0.01*m}
+compress all
+set node constraint on
+draw volume all
+# End of file
