@@ -43,6 +43,81 @@
   integer :: iglob
   integer :: i,j,k,ispec,ier
 
+  ! jacobian
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: jacobian
+  real(kind=CUSTOM_REAL) :: jacobian_regular
+  integer, dimension(:), allocatable :: irregular_element_number
+  real(kind=CUSTOM_REAL) :: volumel
+
+  ! Gauss-Lobatto-Legendre points of integration and weights
+  double precision, dimension(NGLLX) :: xigll, wxgll
+  double precision, dimension(NGLLY) :: yigll, wygll
+  double precision, dimension(NGLLZ) :: zigll, wzgll
+  ! array with all the weights in the cube
+  double precision, dimension(NGLLX,NGLLY,NGLLZ) :: wgll_cube
+
+  real(kind=CUSTOM_REAL) :: jacobianl
+  integer :: iglob
+  integer :: i,j,k,ier,ival,ispec,ispec_irreg,NSPEC_IRREGULAR,s1_jac,s2_jac,s3_jac,s4_jac
+  character(len=MAX_STRING_LEN) :: m_file
+
+! reads NSPEC_IRREGULAR
+  write(m_file,'(a,i6.6,a)') 'topo/proc',myrank,trim(REG)//'external_mesh.bin'
+  open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
+  if (ier /= 0) then
+    print *,'Error opening: ',trim(m_file)
+    call exit_mpi(myrank,'file not found')
+  endif
+
+  read(IIN) ival !nspec
+  if (ival /= nspec) call exit_mpi(myrank,'Error invalid nspec value in external_mesh.bin')
+  read(IIN) ival !nglob
+  if (ival /= nglob) call exit_mpi(myrank,'Error invalid nspec value in external_mesh.bin')
+
+  read(IIN) NSPEC_IRREGULAR
+  close(IIN)
+
+  !allocations
+  if (NSPEC_IRREGULAR > 0) then
+    allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1064')
+    s1_jac = NGLLX
+    s2_jac = NGLLY
+    s3_jac = NGLLZ
+    s4_jac = NSPEC_IRREGULAR
+  else
+    allocate(jacobian(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1065')
+    s1_jac = 1
+    s2_jac = 1
+    s3_jac = 1
+    s4_jac = 1
+  endif
+  if (ier /= 0) then
+    print *,'Error allocating array jacobian'
+    call exit_mpi(myrank,'error allocation jacobian')
+  endif
+
+  allocate(irregular_element_number(NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1066')
+
+
+  ! GLL points
+  wgll_cube = 0.0
+  call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
+  call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
+  call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
+  do k=1,NGLLZ
+    do j=1,NGLLY
+      do i=1,NGLLX
+        wgll_cube(i,j,k) = wxgll(i)*wygll(j)*wzgll(k)
+      enddo
+    enddo
+  enddo
+
+  ! builds jacobian
+  call compute_jacobian(jacobian,irregular_element_number,jacobian_regular,s1_jac,s2_jac,s3_jac,s4_jac)
+
   ! allocate arrays for storing gradient
   ! isotropic arrays
   allocate(model_dbulk(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
@@ -63,18 +138,32 @@
 
   ! gradient in negative direction for steepest descent
   do ispec = 1, NSPEC
+    ispec_irreg = irregular_element_number(ispec)
+    if (ispec_irreg == 0) jacobianl = jacobian_regular
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX
+            iglob = ibool(i,j,k,ispec)
+            if (iglob == 0) then
+              print *,'iglob zero',i,j,k,ispec
+              print *
+              print *,'ibool:',ispec
+              print *,ibool(:,:,:,ispec)
+              print *
+              call exit_MPI(myrank,'Error ibool')
+            endif
+            if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
+            ! volume associated with GLL point
+            volumel = jacobianl * wgll_cube(i,j,k)
 
             ! for bulk
-            model_dbulk(i,j,k,ispec) = - kernel_bulk(i,j,k,ispec)
+            model_dbulk(i,j,k,ispec) = - kernel_bulk(i,j,k,ispec) * volumel
 
             ! for shear
-            model_dbeta(i,j,k,ispec) = - kernel_beta(i,j,k,ispec)
+            model_dbeta(i,j,k,ispec) = - kernel_beta(i,j,k,ispec) * volumel
 
             ! for rho
-            model_drho(i,j,k,ispec) = - kernel_rho(i,j,k,ispec)
+            model_drho(i,j,k,ispec) = - kernel_rho(i,j,k,ispec) * volumel
 
             ! determines maximum kernel beta value within given radius
             if (USE_DEPTH_RANGE_MAXIMUM) then
@@ -229,6 +318,10 @@
     write(IOUT,'(6e24.12)') min_beta,max_beta,min_bulk,max_bulk,min_rho,max_rho
     close(IOUT)
   endif
+
+  ! frees memory
+  deallocate(jacobian)
+  deallocate(irregular_element_number)
 
   end subroutine get_sd_direction_iso
 

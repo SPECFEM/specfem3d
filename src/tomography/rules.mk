@@ -152,6 +152,7 @@ ${E}/xadd_model_iso: $(xadd_model_iso_OBJECTS) $(xadd_model_SHARED_OBJECTS) $(CO
 ##
 xmodel_update_OBJECTS = \
 	$O/tomography_par.tomo_module.o \
+	$O/compute_kernel_integral.tomo.o \
 	$O/get_sd_direction.tomo.o \
 	$O/model_update.tomo.o \
 	$O/read_kernels.tomo.o \
