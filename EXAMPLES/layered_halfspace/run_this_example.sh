@@ -17,6 +17,12 @@ if [[ $NGLLX -ne 6 ]]; then
   echo ""
 fi
 
+# checks if executables were compiled and available
+if [ ! -e ../../bin/xspecfem3D ]; then
+  echo "Please compile first all binaries in the root directory, before running this example..."; echo
+  exit 1
+fi
+
 # cleans output files
 mkdir -p OUTPUT_FILES
 rm -rf OUTPUT_FILES/*
