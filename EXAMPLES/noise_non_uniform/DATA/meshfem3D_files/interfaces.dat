@@ -1,0 +1,24 @@
+# number of interfaces
+2
+#
+# We describe each interface below, structured as a 2D-grid, with several parameters : 
+# number of points along XI and ETA, minimal XI ETA coordinates 
+# and spacing between points which must be constant.
+# Then the records contain the Z coordinates of the NXI x NETA points.
+#
+# SUPPRESS_UTM_PROJECTION  NXI  NETA LONG_MIN   LAT_MIN    SPACING_XI SPACING_ETA
+#
+# 
+.false. 2 2 -106.82 21.82 6.29 -5.26
+ptopo.xyz.2.dat
+
+# topography
+.false. 629 526 -106.82 21.82 0.009996000000001004 -0.010005483800000547
+ptopo.xyz.1.dat
+
+#
+# for each layer, we give the number of spectral elements in the vertical direction
+#
+5
+# -5km to topography
+2 
