@@ -227,6 +227,95 @@ end module user_noise_distribution
 ! =============================================================================================================
 !
 
+! evcano: read noise distribution and direction from disk
+
+  subroutine read_noise_distribution_direction(nmovie_points,normal_x_noise,normal_y_noise,normal_z_noise,mask_noise)
+
+  use constants, only: myrank,CUSTOM_REAL,MAX_STRING_LEN,IMAIN,IIN_NOISE,OUTPUT_FILES
+
+  use specfem_par, only: prname,LOCAL_PATH
+
+  implicit none
+
+  ! input parameters
+  integer,intent(in) :: nmovie_points
+
+  ! output parameters
+  real(kind=CUSTOM_REAL), dimension(nmovie_points),intent(inout) :: normal_x_noise,normal_y_noise,normal_z_noise,mask_noise
+
+  ! local parameters
+  integer :: ier,use_external_noise_distribution
+  character(len=MAX_STRING_LEN) :: fname
+
+  ! check if external noise distribution should be used
+  fname = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/use_external_noise_distribution'
+  open(unit=IIN_NOISE,file=trim(fname),status='old',action='read',iostat=ier)
+  if (ier /= 0) then
+    if (myrank == 0) then
+      write(IMAIN,*) 'file '//trim(fname)//' not found, using noise distribution defined in noise_tomography.f90'
+    endif
+    ! finish subroutine
+    return
+  else
+    read(IIN_NOISE,*) use_external_noise_distribution
+    close(IIN_NOISE)
+    if (use_external_noise_distribution == 0) then
+      if (myrank == 0) then
+        write(IMAIN,*) 'using noise distribution defined in noise_tomography.f90'
+      endif
+      ! finish subroutine
+      return
+    endif
+  endif
+
+  ! set file name prefix
+  call create_name_database(prname,myrank,LOCAL_PATH)
+
+  ! read noise distribution
+  if (myrank == 0) then
+    write(IMAIN,*) "reading noise distribution"
+    call flush_IMAIN
+  endif
+
+  fname = prname(1:len_trim(prname))//'mask_noise.bin'
+  open(unit=IIN_NOISE,file=trim(fname),status='old',action='read',form='unformatted',iostat=ier)
+  if (ier /= 0) call exit_mpi(myrank,'error reading noise distribution')
+  read(IIN_NOISE) mask_noise
+  close(IIN_NOISE)
+
+  ! read noise directions
+  if (myrank == 0) then
+    write(IMAIN,*) "reading noise directions"
+    call flush_IMAIN
+  endif
+
+  ! x direction
+  fname = prname(1:len_trim(prname))//'normal_x_noise.bin'
+  open(unit=IIN_NOISE,file=trim(fname),status='old',action='read',form='unformatted',iostat=ier)
+  if (ier /= 0) call exit_mpi(myrank,'error reading noise direction x')
+  read(IIN_NOISE) normal_x_noise
+  close(IIN_NOISE)
+
+  ! y direction
+  fname = prname(1:len_trim(prname))//'normal_y_noise.bin'
+  open(unit=IIN_NOISE,file=trim(fname),status='old',action='read',form='unformatted',iostat=ier)
+  if (ier /= 0) call exit_mpi(myrank,'error reading noise direction y')
+  read(IIN_NOISE) normal_y_noise
+  close(IIN_NOISE)
+
+  ! z direction
+  fname = prname(1:len_trim(prname))//'normal_z_noise.bin'
+  open(unit=IIN_NOISE,file=trim(fname),status='old',action='read',form='unformatted',iostat=ier)
+  if (ier /= 0) call exit_mpi(myrank,'error reading noise direction z')
+  read(IIN_NOISE) normal_z_noise
+  close(IIN_NOISE)
+
+  end subroutine read_noise_distribution_direction
+
+!
+!-----------------------------------------------------------------------------------------------
+!
+
 ! read parameters
   subroutine read_parameters_noise(nrec,NSTEP,nmovie_points, &
                                    islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu_rec, &
