@@ -129,7 +129,23 @@ steps:
       #sudo apt-get remove nvidia-cuda-* ;
 
       # package needs key
-      sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/7fa2af80.pub
+      # old:
+      #sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/7fa2af80.pub
+      # new:
+      # (preferred) w/ new keyring package:
+      # see https://forums.developer.nvidia.com/t/notice-cuda-linux-repository-key-rotation/212772
+      # doesn't work yet, produces error:
+      #   E:Conflicting values set for option Signed-By regarding source
+      # remove outdated key:
+      #sudo rm -f /etc/apt/sources.list.d/cuda.list
+      #sudo rm -f /etc/apt/sources.list.d/nvidia-ml.list
+      #sudo apt-key del 7fa2af80
+      # for ubuntu1804/ppc64el ../$distro/$arch/.. becomes ../${UBUNTU_VERSION}/${CUDA_OS}/..
+      #wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/cuda-keyring_1.0-1_all.deb
+      #sudo dpkg -i cuda-keyring_1.0-1_all.deb
+      #
+      # manually add new key:
+      sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/3bf863cc.pub
       echo
 
       # gets repo
