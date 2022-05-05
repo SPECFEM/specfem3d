@@ -302,39 +302,15 @@ program smooth_sem
     print *
   endif
 
+  ! checks
+  if (sigma_h < 1.e-9) stop 'Error sigma_h zero, must non-zero'
+  if (sigma_v < 1.e-9) stop 'Error sigma_v zero, must non-zero'
+
   ! GPU
   if (USE_GPU) call initialize_gpu_device(myrank,ncuda_devices)
 
   ! synchronizes
   call synchronize_all()
-
-  ! check smoothing radii
-  sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for Gaussian distribution with standard variance sigma
-  sigma_v2 = 2.0 * sigma_v ** 2
-
-  if (sigma_h2 < 1.e-18) stop 'Error sigma_h2 zero, must non-zero'
-  if (sigma_v2 < 1.e-18) stop 'Error sigma_v2 zero, must non-zero'
-
-  ! adds margin to search radius
-  element_size = max(sigma_h,sigma_v) * 0.5
-
-  ! search radius
-  sigma_h3 = 3.0  * sigma_h + element_size
-  sigma_v3 = 3.0  * sigma_v + element_size
-
-  ! helper variables
-  sigma_h2_inv = 1.0_CUSTOM_REAL / sigma_h2
-  sigma_v2_inv = 1.0_CUSTOM_REAL / sigma_v2
-
-  sigma_h3_sq = sigma_h3 * sigma_h3
-  sigma_v3_sq = sigma_v3 * sigma_v3
-
-  ! theoretic normal value
-  ! (see integral over -inf to +inf of exp[- x*x/(2*sigma) ] = sigma * sqrt(2*pi) )
-  ! note: smoothing is using a Gaussian (ellipsoid for sigma_h /= sigma_v),
-  norm_h = real(2.0*PI*sigma_h**2,kind=CUSTOM_REAL)
-  norm_v = real(sqrt(2.0*PI) * sigma_v,kind=CUSTOM_REAL)
-  norm   = norm_h * norm_v
 
   ! mesh slice
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),irregular_element_number(NSPEC_AB),stat=ier)
@@ -497,6 +473,41 @@ program smooth_sem
   dim_x = abs(x_max_ref - x_min_ref)
   dim_y = abs(y_max_ref - y_min_ref)
   dim_z = abs(z_max_ref - z_min_ref)
+
+  ! check smoothing radii
+  sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for Gaussian distribution with standard variance sigma
+  sigma_v2 = 2.0 * sigma_v ** 2
+
+  if (sigma_h2 < 1.e-18) stop 'Error sigma_h2 zero, must non-zero'
+  if (sigma_v2 < 1.e-18) stop 'Error sigma_v2 zero, must non-zero'
+
+  ! adds margin to search radius
+  element_size = max(sigma_h,sigma_v) * 0.5
+
+  ! adds minimum element size to capture neighboring elements when smoothing with very small sigma values
+  ! we thus smooth among (several) elements, thus jumps at discontinuities will get averaged
+  ! (the factor 1.8 is just to capture diagonal elements as well where centers would be a factor sqrt(2) away for regular elements)
+  if (element_size < 1.8 * elemsize_max_glob) then
+    element_size = element_size + 1.8 * elemsize_max_glob
+  endif
+
+  ! search radius
+  sigma_h3 = 3.0  * sigma_h + element_size
+  sigma_v3 = 3.0  * sigma_v + element_size
+
+  ! helper variables
+  sigma_h2_inv = 1.0_CUSTOM_REAL / sigma_h2
+  sigma_v2_inv = 1.0_CUSTOM_REAL / sigma_v2
+
+  sigma_h3_sq = sigma_h3 * sigma_h3
+  sigma_v3_sq = sigma_v3 * sigma_v3
+
+  ! theoretic normal value
+  ! (see integral over -inf to +inf of exp[- x*x/(2*sigma) ] = sigma * sqrt(2*pi) )
+  ! note: smoothing is using a Gaussian (ellipsoid for sigma_h /= sigma_v),
+  norm_h = real(2.0*PI*sigma_h**2,kind=CUSTOM_REAL)
+  norm_v = real(sqrt(2.0*PI) * sigma_v,kind=CUSTOM_REAL)
+  norm   = norm_h * norm_v
 
   ! user output
   if (myrank == 0) then
