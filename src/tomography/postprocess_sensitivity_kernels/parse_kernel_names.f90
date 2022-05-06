@@ -125,6 +125,9 @@ subroutine strtok (source_string, delimiter, token)
 
   ! sets first index ibegin to beginning of (next) token
   do while (.true.)
+    ! checks bounds
+    if (ibegin > MAX_STRING_LEN) exit
+
     if ( (ibegin <= isource_len) .and. (index(delimiter,saved_string(ibegin:ibegin)) /= 0)) then
       ! delimiter is encountered, starts with next index (next token)
       ibegin = ibegin + 1
@@ -143,6 +146,9 @@ subroutine strtok (source_string, delimiter, token)
   ifinish = ibegin
 
   do while (.true.)
+    ! checks bounds
+    if (ifinish > MAX_STRING_LEN) exit
+
     if ((ifinish <= isource_len) .and. (index(delimiter,saved_string(ifinish:ifinish)) == 0)) then
       ! delimiter is not encountered yet, increases finish index
       ifinish = ifinish + 1

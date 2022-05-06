@@ -69,10 +69,30 @@ program smooth_sem
     phistore,tortstore,rhoarraystore
   use specfem_par_movie
 
+  use kdtree_search
+
   implicit none
 
-  integer, parameter :: NGLL3 = NGLLX * NGLLY * NGLLZ
+  !-------------------------------------------------------------
+  ! USER PARAMETERS
+
+  ! input arguments
   integer, parameter :: NARGS = 6
+
+  ! brute-force search for neighboring elements, if set to .false. a kd-tree search will be used
+  logical,parameter :: DO_BRUTE_FORCE_SEARCH = .false.
+
+  ! kd-tree search uses either a spherical or ellipsoid search
+  logical,parameter :: DO_SEARCH_ELLIP = .true.
+
+  ! debugging
+  logical, parameter :: DEBUG = .false.
+  ! debug (boundary) point
+  integer ,parameter :: tmp_ispec_dbg = 5128
+
+  !-------------------------------------------------------------
+
+  integer, parameter :: NGLL3 = NGLLX * NGLLY * NGLLZ
 
   ! kernel data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),allocatable :: kernel,kernel_smooth
@@ -157,6 +177,19 @@ program smooth_sem
   ! GPU
   double precision :: memory_size
 
+  ! search elements
+  integer :: ielem,num_elem_local,num_elem_local_max
+  integer, dimension(:), allocatable :: nsearch_elements
+
+  ! tree nodes search
+  double precision,dimension(3) :: xyz_target
+  double precision :: r_search,r_search_dist_v,r_search_dist_h
+  logical :: use_kdtree_search
+
+  ! debugging
+  integer, dimension(:),allocatable :: ispec_flag
+  character(len=MAX_STRING_LEN) :: filename
+
   ! timing
   integer :: ihours,iminutes,iseconds,int_tCPU
   double precision :: time_start_all
@@ -239,6 +272,11 @@ program smooth_sem
   else
     USE_GPU = .false.
   endif
+
+  ! sets flag to use kdtree
+  use_kdtree_search = (.not. DO_BRUTE_FORCE_SEARCH) .and. (.not. USE_GPU)
+
+  call synchronize_all()
 
   call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
   if (nker > MAX_KERNEL_NAMES) stop 'number of kernel_names exceeds MAX_KERNEL_NAMES'
@@ -448,7 +486,7 @@ program smooth_sem
   cx0(:) = 0.0_CUSTOM_REAL; cy0(:) = 0.0_CUSTOM_REAL; cz0(:) = 0.0_CUSTOM_REAL
 
   ! sets element center location
-  do ispec = 1, nspec_AB
+  do ispec = 1, NSPEC_AB
 
     DO_LOOP_IJK
       iglob = ibool(INDEX_IJK,ispec)
@@ -494,6 +532,15 @@ program smooth_sem
   ! search radius
   sigma_h3 = 3.0  * sigma_h + element_size
   sigma_v3 = 3.0  * sigma_v + element_size
+
+  if (use_kdtree_search) then
+    ! kd-tree search uses a slightly larger constant search radius
+    r_search = max( 1.1d0 * sigma_h3, 1.1d0 * sigma_v3 )
+    r_search_dist_v = sigma_v3
+    r_search_dist_h = sigma_h3
+  else
+    r_search = 0.d0
+  endif
 
   ! helper variables
   sigma_h2_inv = 1.0_CUSTOM_REAL / sigma_h2
@@ -673,15 +720,47 @@ program smooth_sem
     enddo
   endif
 
-  ! loops over slices
-  ! each process reads in his own neighbor slices and Gaussian filters the values
-  allocate(tk(NGLLX,NGLLY,NGLLZ,NSPEC_AB,nker), &
-           bk(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1022')
-  if (ier /= 0) stop 'Error allocating array tk and bk'
+  ! element search
+  allocate(nsearch_elements(NSPEC_AB),stat=ier)
+  if (ier /= 0) stop 'Error allocating nsearch_elements array'
+  nsearch_elements(:) = 0
 
-  tk(:,:,:,:,:) = 0.0_CUSTOM_REAL
-  bk(:,:,:,:) = 0.0_CUSTOM_REAL
+  if (use_kdtree_search) then
+    ! search by kd-tree
+    ! user output
+    if (myrank == 0) then
+      print *
+      print *,'using kd-tree search:'
+      if (DO_SEARCH_ELLIP) then
+        print *,'  search radius horizontal: ',sngl(r_search_dist_h)
+        print *,'  search radius vertical  : ',sngl(r_search_dist_v)
+      else
+        print *,'  search sphere radius: ',sngl(r_search)
+      endif
+      print *
+    endif
+
+    ! pre-allocates arrays
+    allocate(kdtree_nodes_location(NDIM,NSPEC_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating kdtree_nodes_location arrays'
+    allocate(kdtree_nodes_index(NSPEC_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating kdtree_nodes_index arrays'
+    kdtree_nodes_location(:,:) = 0.0; kdtree_nodes_index(:) = 0
+
+    ! tree verbosity
+    if (myrank == 0) call kdtree_set_verbose()
+
+  else
+    ! brute-force search
+    ! user output
+    if (myrank == 0) then
+      print *
+      print *,'using brute-force search:'
+      print *,'  search radius horizontal: ',sngl(sigma_h3)
+      print *,'  search radius vertical  : ',sngl(sigma_v3)
+      print *
+    endif
+  endif
 
   ! GPU setup
   if (USE_GPU) then
@@ -704,6 +783,16 @@ program smooth_sem
     ! copies arrays onto GPU
     call prepare_smooth_gpu(Container,xx0,yy0,zz0,sigma_h2,sigma_v2,sigma_h3,sigma_v3,NSPEC_AB,nker)
   endif
+
+  ! loops over slices
+  ! each process reads in his own neighbor slices and Gaussian filters the values
+  allocate(tk(NGLLX,NGLLY,NGLLZ,NSPEC_AB,nker), &
+           bk(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1022')
+  if (ier /= 0) stop 'Error allocating array tk and bk'
+
+  tk(:,:,:,:,:) = 0.0_CUSTOM_REAL
+  bk(:,:,:,:) = 0.0_CUSTOM_REAL
 
   ! synchronizes all processes
   call synchronize_all()
@@ -886,6 +975,148 @@ program smooth_sem
     enddo
     if (myrank == 0) print *
 
+    ! kdtree search setup
+    if (use_kdtree_search) then
+      ! search by kd-tree
+
+      ! set number of tree nodes
+      kdtree_num_nodes = NSPEC_N
+
+      ! checks
+      if (kdtree_num_nodes <= 0) stop 'Error number of kd-tree nodes is zero, please check NSPEC_N'
+
+      ! allocates tree arrays
+      if (allocated(kdtree_nodes_index) .and. NSPEC_N /= size(kdtree_nodes_index)) then
+        ! re-allocate w/ different size
+        deallocate(kdtree_nodes_index,kdtree_nodes_location)
+        ! allocates
+        allocate(kdtree_nodes_location(NDIM,kdtree_num_nodes),stat=ier)
+        if (ier /= 0) stop 'Error allocating kdtree_nodes_location arrays'
+        allocate(kdtree_nodes_index(kdtree_num_nodes),stat=ier)
+        if (ier /= 0) stop 'Error allocating kdtree_nodes_index arrays'
+      endif
+
+      ! prepares search arrays, each element takes its midpoint for tree search
+      kdtree_nodes_index(:) = 0
+      kdtree_nodes_location(:,:) = 0.0
+
+      ! fills kd-tree arrays
+      do ispec2 = 1,NSPEC_N
+        ! adds node index ( index points to same ispec for all internal GLL points)
+        kdtree_nodes_index(ispec2) = ispec2
+
+        ! adds node location
+        kdtree_nodes_location(1,ispec2) = cx(ispec2)
+        kdtree_nodes_location(2,ispec2) = cy(ispec2)
+        kdtree_nodes_location(3,ispec2) = cz(ispec2)
+      enddo
+
+      ! creates kd-tree for searching
+      call kdtree_setup()
+
+      ! pre-determines number of search elements
+      ! gets search range
+      num_elem_local_max = 0
+      do ispec = 1, NSPEC_AB
+        ! element center position
+        center_x0 = cx0(ispec)
+        center_y0 = cy0(ispec)
+        center_z0 = cz0(ispec)
+
+        ! initializes
+        num_elem_local = 0
+        xyz_target(1) = center_x0
+        xyz_target(2) = center_y0
+        xyz_target(3) = center_z0
+
+        ! counts nearest neighbors
+        if (DO_SEARCH_ELLIP) then
+          ! (within ellipsoid)
+          call kdtree_count_nearest_n_neighbors_ellip(xyz_target,r_search_dist_v,r_search_dist_h,num_elem_local)
+        else
+          ! (within search sphere)
+          call kdtree_count_nearest_n_neighbors(xyz_target,r_search,num_elem_local)
+        endif
+
+        ! checks that at least a single element was choosen
+        if (iproc == myrank) then
+          if (num_elem_local < 1) stop 'Error no local search element found'
+        endif
+
+        ! debug output
+        if (DEBUG) then
+          if (myrank == 0) then
+            ! user info
+            if (ispec < 10) then
+              print *,'  total number of search elements: ',num_elem_local,'ispec',ispec
+            endif
+          endif
+        endif
+
+        ! sets n-search number of nodes
+        nsearch_elements(ispec) = num_elem_local
+
+        ! maximum
+        if (num_elem_local_max < num_elem_local) num_elem_local_max = num_elem_local
+      enddo
+
+      ! user output
+      if (myrank == 0) then
+        print *,'  maximum number of local search elements: ',num_elem_local_max
+        print *
+      endif
+
+      ! allocates search array
+      allocate(kdtree_search_index(num_elem_local_max),stat=ier)
+      if (ier /= 0) stop 'Error allocating array kdtree_search_index'
+      kdtree_search_index(:) = 0
+
+      ! debug output
+      if (DEBUG) then
+        if (myrank == 0) then
+          ! file output
+          ! outputs search elements with integer flags
+          allocate(ispec_flag(NSPEC_AB))
+          ispec_flag(:) = 0
+
+          ! debug element (tmp_ispec_dbg)
+          num_elem_local = nsearch_elements(tmp_ispec_dbg)
+          xyz_target(1) = cx0(ispec)
+          xyz_target(2) = cy0(ispec)
+          xyz_target(3) = cz0(ispec)
+
+          ! finds closest point in target chunk
+          kdtree_search_index(:) = 0
+          if (DO_SEARCH_ELLIP) then
+            ! (within ellipsoid)
+            call kdtree_get_nearest_n_neighbors_ellip(xyz_target,r_search_dist_v,r_search_dist_h,num_elem_local)
+          else
+            ! (within search sphere)
+            call kdtree_get_nearest_n_neighbors(xyz_target,r_search,num_elem_local)
+          endif
+
+          ! sets flags
+          do ielem = 1,num_elem_local
+            i = kdtree_search_index(ielem)
+            ispec_flag(i) = ielem
+          enddo
+
+          ! writes out vtk file for debugging
+          write(filename,'(a,i4.4,a,i6.6)') trim(LOCAL_PATH)//'/search_elem',tmp_ispec_dbg,'_proc',iproc
+          call write_VTK_data_elem_i(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore, &
+                                     ibool,ispec_flag,filename)
+
+          print *,'file written: ',trim(filename)//'.vtk'
+          deallocate(ispec_flag)
+        endif
+      endif
+    else
+      ! brute-force search
+      ! always loop over whole mesh slice
+      nsearch_elements(:) = NSPEC_N
+    endif
+
+
     ! smooth
     if (USE_GPU) then
       call compute_smooth_gpu(Container,kernel,integ_factor,xx,yy,zz,NSPEC_N)
@@ -898,8 +1129,39 @@ program smooth_sem
         center_y0 = cy0(ispec)
         center_z0 = cz0(ispec)
 
+        ! search range
+        num_elem_local = nsearch_elements(ispec)
+
+        ! sets number of elements to loop over
+        if (use_kdtree_search) then
+          ! sets search array
+          if (num_elem_local > 0) then
+            ! sets n-search number of nodes
+            kdtree_search_num_nodes = num_elem_local
+            ! finds closest point in target chunk
+            xyz_target(1) = center_x0
+            xyz_target(2) = center_y0
+            xyz_target(3) = center_z0
+            if (DO_SEARCH_ELLIP) then
+              ! (within ellipsoid)
+              call kdtree_get_nearest_n_neighbors_ellip(xyz_target,r_search_dist_v,r_search_dist_h,num_elem_local)
+            else
+              ! (within search sphere)
+              call kdtree_get_nearest_n_neighbors(xyz_target,r_search,num_elem_local)
+            endif
+          endif
+        endif
+
         ! --- only double loop over the elements in the search radius ---
-        do ispec2 = 1, NSPEC_N
+        do ielem = 1, num_elem_local
+          ! search element
+          if (use_kdtree_search) then
+            ! kd-tree search elements
+            ispec2 = kdtree_search_index(ielem)
+          else
+            ! brute-force search
+            ispec2 = ielem
+          endif
 
           ! search element center position
           center_x = cx(ispec2)
@@ -962,7 +1224,7 @@ program smooth_sem
 
           ENDDO_LOOP_IJK
 
-        enddo ! ispec2
+        enddo ! ielem
       enddo ! ispec
 
     endif ! GPU_MODE
@@ -973,9 +1235,22 @@ program smooth_sem
     deallocate(xx,yy,zz)
     deallocate(cx,cy,cz)
 
+    ! deletes search tree nodes
+    if (use_kdtree_search) then
+      ! frees search index array
+      deallocate(kdtree_search_index)
+      call kdtree_delete()
+    endif
+
     if (myrank == 0) print *
 
   enddo ! iproc
+
+  ! frees memory
+  if (use_kdtree_search) then
+    deallocate(kdtree_nodes_location)
+    deallocate(kdtree_nodes_index)
+  endif
 
   ! user output
   if (myrank == 0) then
