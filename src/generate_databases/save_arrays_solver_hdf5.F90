@@ -161,13 +161,14 @@
   call h5_init(h5, filename)
   call h5_set_mpi_info(h5, comm, info, myrank, NPROC)
 
-  call get_connectivity_for_movie(nspec, ibool, spec_elm_conn_xdmf)
-
   !
   ! prepare offset arrays
   !
   call gather_all_all_singlei(nglob,offset_nglob,NPROC) ! n globs in each proc
   call gather_all_all_singlei(nspec,offset_nspec,NPROC) ! n spec in each proc
+
+  call get_connectivity_for_movie(nspec, ibool, spec_elm_conn_xdmf, sum(offset_nglob(0:myrank-1)))
+
   call gather_all_all_singlei(nspec_irregular,offset_nspec_irregular,NPROC) ! n spec in each proc
   if(APPROXIMATE_OCEAN_LOAD) call gather_all_all_singlei(NGLOB_OCEAN,offset_nglob_ocean,NPROC)
   if(POROELASTIC_SIMULATION) call gather_all_all_singlei(NSPEC_PORO,offset_nspecporo,NPROC)
@@ -1415,13 +1416,14 @@
   end subroutine save_arrays_solver_ext_mesh_h5
 
 
-  subroutine get_connectivity_for_movie(nspec,ibool,elm_conn)
+  subroutine get_connectivity_for_movie(nspec,ibool,elm_conn,o)
     use generate_databases_par, only: NGLLX,NGLLY,NGLLZ
 
     implicit none
 
     integer, intent(in)                                          :: nspec
     integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in)       :: ibool
+    integer, intent(in) :: o ! node id offset (starting global element id of each proc)
     integer, dimension(9,nspec*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)), intent(inout) :: elm_conn
 
     integer :: ispec,ii,iglob,icub,jcub,kcub,cell_type=9, dp=2
@@ -1435,14 +1437,14 @@
           do kcub=0,NGLLZ-2
             ii = 1+(ispec-1)*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1) + (icub*(NGLLY-1)*(NGLLZ-1)+jcub*(NGLLZ-1)+kcub)
             elm_conn(1, ii)  = cell_type
-            elm_conn(2, ii)  = ibool(icub+1,jcub+1,kcub+1,ispec)-1 ! node id starts 0 in xdmf rule
-            elm_conn(3, ii)  = ibool(icub+2,jcub+1,kcub+1,ispec)-1
-            elm_conn(4, ii)  = ibool(icub+2,jcub+2,kcub+1,ispec)-1
-            elm_conn(5, ii)  = ibool(icub+1,jcub+2,kcub+1,ispec)-1
-            elm_conn(6, ii)  = ibool(icub+1,jcub+1,kcub+2,ispec)-1
-            elm_conn(7, ii)  = ibool(icub+2,jcub+1,kcub+2,ispec)-1
-            elm_conn(8, ii)  = ibool(icub+2,jcub+2,kcub+2,ispec)-1
-            elm_conn(9, ii)  = ibool(icub+1,jcub+2,kcub+2,ispec)-1
+            elm_conn(2, ii)  = ibool(icub+1,jcub+1,kcub+1,ispec)-1+o ! node id starts 0 in xdmf rule
+            elm_conn(3, ii)  = ibool(icub+2,jcub+1,kcub+1,ispec)-1+o
+            elm_conn(4, ii)  = ibool(icub+2,jcub+2,kcub+1,ispec)-1+o
+            elm_conn(5, ii)  = ibool(icub+1,jcub+2,kcub+1,ispec)-1+o
+            elm_conn(6, ii)  = ibool(icub+1,jcub+1,kcub+2,ispec)-1+o
+            elm_conn(7, ii)  = ibool(icub+2,jcub+1,kcub+2,ispec)-1+o
+            elm_conn(8, ii)  = ibool(icub+2,jcub+2,kcub+2,ispec)-1+o
+            elm_conn(9, ii)  = ibool(icub+1,jcub+2,kcub+2,ispec)-1+o
           enddo
         enddo
       enddo

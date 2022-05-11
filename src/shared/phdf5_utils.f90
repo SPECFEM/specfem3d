@@ -3451,6 +3451,7 @@ contains
         integer, dimension(0:NPROC-1)                   :: nelms, nnodes
         character(len=20)                               :: proc_str,type_str,nelm,nnode
         integer                                         :: iproc
+
         ! gather number of elements in each proc
         call gather_all_singlei(NSPEC_AB, nelms, NPROC)
         ! count and gather the number of controle nodes in each proc
@@ -3461,9 +3462,9 @@ contains
             ! writeout xdmf file for surface movie
             fname_xdmf_checkmesh = trim(OUTPUT_FILES)//"/checkmesh.xmf"
 
-            open(unit=xdmf_vol, file=fname_xdmf_checkmesh)
+            open(unit=xdmf_vol, file=fname_xdmf_checkmesh, recl=512)
 
-            ! definition of topology and geometry
+           ! definition of topology and geometry
             ! refer only control nodes (8 or 27) as a coarse output
             ! data array need to be extracted from full data array on gll points
             write(xdmf_vol,'(a)') '<?xml version="1.0" ?>'
@@ -3471,25 +3472,21 @@ contains
             write(xdmf_vol,*) '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="3.0">'
             write(xdmf_vol,*) '<Domain>'
             write(xdmf_vol,*) '    <!-- mesh info -->'
-            write(xdmf_vol,*) '    <Grid Name="mesh" GridType="Collection"  CollectionType="Spatial">'
-            ! loop for writing information of mesh partitions
-            do iproc=0,NPROC-1
-                nelm  = i2c(nelms(iproc))
-                nnode = i2c(nnodes(iproc))
-                write(proc_str, "(i6.6)") iproc
+            !write(xdmf_vol,*) '    <Grid Name="mesh" GridType="Collection"  CollectionType="Spatial">'
+                nelm  = i2c(sum(nelms(:)))
+                nnode = i2c(sum(nnodes(:)))
 
-                write(xdmf_vol,*) '<Grid Name="mesh_'//trim(proc_str)//'">'
+                write(xdmf_vol,*) '<Grid Name="mesh">'
                 write(xdmf_vol,*) '<Topology TopologyType="Mixed" NumberOfElements="'//trim(nelm)//'">'
                 write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Int" Precision="4" Dimensions="'&
                                        //trim(nelm)//' '//trim(i2c(8+1))//'">'
-                write(xdmf_vol,*) '       ./DATABASES_MPI/Database.h5:/proc_'&
-                                       //trim(proc_str)//'/elm_conn_xdmf'
+                write(xdmf_vol,*) '       ./DATABASES_MPI/Database.h5:/elm_conn_xdmf'
                 write(xdmf_vol,*) '    </DataItem>'
                 write(xdmf_vol,*) '</Topology>'
                 write(xdmf_vol,*) '<Geometry GeometryType="XYZ">'
                 write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nnode)//' 3">'
-                write(xdmf_vol,*) '       ./DATABASES_MPI/Database.h5:/proc_'//trim(proc_str)//'/nodes_coords'
+                write(xdmf_vol,*) '       ./DATABASES_MPI/Database.h5:/nodes_coords'
                 write(xdmf_vol,*) '    </DataItem>'
                 write(xdmf_vol,*) '</Geometry>'
 
@@ -3497,8 +3494,7 @@ contains
                 write(xdmf_vol, *)  '    <Attribute Name="'//trim(type_str)//'" AttributeType="Scalar" Center="Cell">'
                 write(xdmf_vol, *)  '        <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nelm)//'">'
-                write(xdmf_vol, *)  '            ./DATABASES_MPI/external_mesh.h5:/proc_'&
-                                                 //trim(proc_str)//'/'//trim(type_str)
+                write(xdmf_vol, *)  '            ./DATABASES_MPI/external_mesh.h5:/'//trim(type_str)
                 write(xdmf_vol, *)  '        </DataItem>'
                 write(xdmf_vol, *)  '    </Attribute>'
 
@@ -3506,15 +3502,13 @@ contains
                 write(xdmf_vol, *)  '    <Attribute Name="'//trim(type_str)//'" AttributeType="Scalar" Center="Cell">'
                 write(xdmf_vol, *)  '        <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nelm)//'">'
-                write(xdmf_vol, *)  '            ./DATABASES_MPI/external_mesh.h5:/proc_'&
-                                                 //trim(proc_str)//'/'//trim(type_str)
+                write(xdmf_vol, *)  '            ./DATABASES_MPI/external_mesh.h5:/'//trim(type_str)
                 write(xdmf_vol, *)  '        </DataItem>'
                 write(xdmf_vol, *)  '    </Attribute>'
 
                 write(xdmf_vol,*) '</Grid>'
-            enddo
 
-            write(xdmf_vol,*) '</Grid>'
+            !write(xdmf_vol,*) '</Grid>'
             write(xdmf_vol,*) '</Domain>'
             write(xdmf_vol,*) '</Xdmf>'
 
