@@ -446,6 +446,9 @@ program smooth_sem
                             elemsize_min_glob,elemsize_max_glob, &
                             distance_min_glob,distance_max_glob)
 
+  ! broadcast max element size to all processes
+  call bcast_all_singlecr(elemsize_max_glob)
+
   ! outputs infos
   if (myrank == 0) then
     print *,'mesh dimensions:'
@@ -522,11 +525,12 @@ program smooth_sem
   ! adds margin to search radius
   element_size = max(sigma_h,sigma_v) * 0.5
 
-  ! adds minimum element size to capture neighboring elements when smoothing with very small sigma values
-  ! we thus smooth among (several) elements, thus jumps at discontinuities will get averaged
-  ! (the factor 1.8 is just to capture diagonal elements as well where centers would be a factor sqrt(2) away for regular elements)
-  if (element_size < 1.8 * elemsize_max_glob) then
-    element_size = element_size + 1.8 * elemsize_max_glob
+  ! determines element size/search radius on all processes
+  ! element size should capture neighboring elements when smoothing with very small sigma values
+  ! to smooth among (several) elements (jumps at discontinuities will get averaged).
+  ! the factor sqrt(3) is just to capture diagonal elements as well.
+  if (element_size < sqrt(3.0)*elemsize_max_glob) then
+    element_size = sqrt(3.0)*elemsize_max_glob
   endif
 
   ! search radius
@@ -756,8 +760,8 @@ program smooth_sem
     if (myrank == 0) then
       print *
       print *,'using brute-force search:'
-      print *,'  search radius horizontal: ',sngl(sigma_h3)
-      print *,'  search radius vertical  : ',sngl(sigma_v3)
+      print *,'  search radius horizontal: ',sigma_h3
+      print *,'  search radius vertical  : ',sigma_v3
       print *
     endif
   endif
