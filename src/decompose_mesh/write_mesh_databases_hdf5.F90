@@ -98,7 +98,7 @@
     ! gets number of elements
      call write_partition_database_h5(gname_proc, h5, ipart, nspec, elmnts, &
                                 glob2loc_elmnts, glob2loc_nodes_nparts, &
-                                glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 1, offset_nelems)
+                                glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 1, offset_nelems, offset_nnodes)
 
     ! gets number absorbing/free-surface boundaries
     call write_boundaries_database_h5(gname_proc, h5, ipart, nspec, &
@@ -188,7 +188,7 @@
      !write(IIN_database) nspec_local
      call write_partition_database_h5(gname_proc, h5, ipart, nspec, elmnts, &
                                 glob2loc_elmnts, glob2loc_nodes_nparts, &
-                                glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 2, offset_nelems)
+                                glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 2, offset_nelems, offset_nnodes)
 
      ! writes out absorbing/free-surface boundaries
      call write_boundaries_database_h5(gname_proc, h5, ipart, nspec, &

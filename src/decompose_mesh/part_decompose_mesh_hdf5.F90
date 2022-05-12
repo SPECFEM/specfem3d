@@ -571,7 +571,8 @@ contains
   subroutine write_partition_database_h5(gname_proc, h5, iproc, nspec, elmnts, &
                                       glob2loc_elmnts, glob2loc_nodes_nparts, &
                                       glob2loc_nodes_parts, glob2loc_nodes, &
-                                      part, num_modele, NGNOD, num_phase, offset_nelems)
+                                      part, num_modele, NGNOD, num_phase, offset_nelems, &
+                                      offset_nnodes)
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
 
@@ -587,6 +588,7 @@ contains
   integer, intent(in)                  :: NGNOD
   integer, dimension(0:NGNOD*nspec-1)  :: elmnts
   integer, dimension(0:), intent(inout) :: offset_nelems           ! number of elements in each partition
+  integer, dimension(0:), intent(inout) :: offset_nnodes
 
   integer, dimension(:), pointer :: glob2loc_elmnts
   integer, dimension(:), pointer :: glob2loc_nodes_nparts
@@ -613,6 +615,8 @@ contains
   ! for ispec_local
   integer, dimension(:), allocatable :: ispec_local
 
+  integer :: o = 0
+
   if (num_phase == 1) then
     ! counts number of spectral elements in this partition
     nspec_local = 0
@@ -631,6 +635,9 @@ contains
     allocate(elm_conn_xdmf(1+8, offset_nelems(iproc))) ! 1 additional col for cell type id
     allocate(mat_mesh(2, offset_nelems(iproc)))
     allocate(ispec_local(offset_nelems(iproc)))
+
+    ! node id offset
+    o = sum(offset_nnodes(0:iproc-1))
 
     ! prepare a temporal array to be recorded in hdf5
     ! element corner indices
@@ -655,26 +662,26 @@ contains
         ! elm_conn_xdmf
         if (NGNOD == 8) then
           elm_conn_xdmf(1,count) = 9 ! cell type id xdmf
-          elm_conn_xdmf(2,count) = loc_nodes(0)!+1 elm id starts 0
-          elm_conn_xdmf(3,count) = loc_nodes(1)
-          elm_conn_xdmf(4,count) = loc_nodes(2)
-          elm_conn_xdmf(5,count) = loc_nodes(3)
-          elm_conn_xdmf(6,count) = loc_nodes(4)
-          elm_conn_xdmf(7,count) = loc_nodes(5)
-          elm_conn_xdmf(8,count) = loc_nodes(6)
-          elm_conn_xdmf(9,count) = loc_nodes(7)
+          elm_conn_xdmf(2,count) = loc_nodes(0)+o!+1 elm id starts 0
+          elm_conn_xdmf(3,count) = loc_nodes(1)+o
+          elm_conn_xdmf(4,count) = loc_nodes(2)+o
+          elm_conn_xdmf(5,count) = loc_nodes(3)+o
+          elm_conn_xdmf(6,count) = loc_nodes(4)+o
+          elm_conn_xdmf(7,count) = loc_nodes(5)+o
+          elm_conn_xdmf(8,count) = loc_nodes(6)+o
+          elm_conn_xdmf(9,count) = loc_nodes(7)+o
         else ! NGNOD = 27
          ! NGNOD = 27 array will not be used, only the 8 corner nodes
          ! are necessary for checkmesh visualization
           elm_conn_xdmf(1,count)  = 9 !50 ! cell type id xdmf
-          elm_conn_xdmf(2,count)  = loc_nodes(0)
-          elm_conn_xdmf(3,count)  = loc_nodes(1)
-          elm_conn_xdmf(4,count)  = loc_nodes(2)
-          elm_conn_xdmf(5,count)  = loc_nodes(3)
-          elm_conn_xdmf(6,count)  = loc_nodes(4)
-          elm_conn_xdmf(7,count)  = loc_nodes(5)
-          elm_conn_xdmf(8,count)  = loc_nodes(6)
-          elm_conn_xdmf(9,count)  = loc_nodes(7)
+          elm_conn_xdmf(2,count)  = loc_nodes(0)+o
+          elm_conn_xdmf(3,count)  = loc_nodes(1)+o
+          elm_conn_xdmf(4,count)  = loc_nodes(2)+o
+          elm_conn_xdmf(5,count)  = loc_nodes(3)+o
+          elm_conn_xdmf(6,count)  = loc_nodes(4)+o
+          elm_conn_xdmf(7,count)  = loc_nodes(5)+o
+          elm_conn_xdmf(8,count)  = loc_nodes(6)+o
+          elm_conn_xdmf(9,count)  = loc_nodes(7)+o
 !          elm_conn_xdmf(10,count) = loc_nodes(8)
 !          elm_conn_xdmf(11,count) = loc_nodes(9)
 !          elm_conn_xdmf(12,count) = loc_nodes(10)
