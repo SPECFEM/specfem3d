@@ -88,7 +88,7 @@ You can also output shakemaps independant of the \texttt{MOVIE\_SURFACE} flag. S
 \texttt{\small CREATE\_SHAKEMAP} to \texttt{\small .true.}.
 For shakemaps, both the parameters \texttt{\small MOVIE\_TYPE} and \texttt{\small USE\_HIGHRES\_FOR\_MOVIES} affect the output. The following setting has an additional affect:
 \begin{itemize}
-\item \texttt{\small MOVIE\_TYPE}: if set to $1$, the horizontal peak-ground values of displacement/velocity/acceleration are output. if set to $2$, the maximum length of the particle displacement/velocity/acceleration vector is output. Please be aware that these peak-ground values can differ from each other.
+\item \texttt{\small MOVIE\_TYPE}: if set to $1$, the horizontal peak-ground values of displacement/velocity/acceleration are output; if set to $2$, the maximum length of the particle displacement/velocity/acceleration vector is output; if set to $3$, the geometric mean of horizontal peak-ground values of displacement/velocity/acceleration are output. Please be aware that these peak-ground values can differ from each other.
 \end{itemize}
 
 The movie and shakemap output files are in a custom binary format, but there is

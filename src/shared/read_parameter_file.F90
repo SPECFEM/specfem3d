@@ -958,6 +958,10 @@
   if (PARTITIONING_TYPE < 1 .or. PARTITIONING_TYPE > 4) &
     stop 'PARTITIONING_TYPE must be 1,2,3 or 4 (for SCOTCH, METIS, PATOH or ROW_PARTS partitioner)'
 
+  ! shakemap
+  if (CREATE_SHAKEMAP .and. (MOVIE_TYPE < 1 .or. MOVIE_TYPE > 3)) &
+    stop 'MOVIE_TYPE value must be 1, 2 or 3 for CREATE_SHAKEMAP simulations'
+
   ! Warnings
 
   ! ADIOS is very useful for very large simulations (say using 2000 MPI tasks or more)

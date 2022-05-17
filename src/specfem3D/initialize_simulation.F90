@@ -378,8 +378,8 @@
   endif
 
   ! checks the MOVIE_TYPE parameter
-  if (MOVIE_TYPE /= 1 .and. MOVIE_TYPE /= 2) then
-    stop 'error: MOVIE_TYPE must be either 1 or 2! Please modify Par_file and recompile solver'
+  if (MOVIE_TYPE < 1 .or. MOVIE_TYPE > 3) then
+    stop 'error: MOVIE_TYPE must be either 1, 2 or 3! Please modify Par_file and recompile solver'
   endif
 
   ! check that the code has been compiled with the right values
