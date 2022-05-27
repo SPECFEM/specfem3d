@@ -11,6 +11,7 @@ module phdf5_utils ! class-like module
     private
     public :: h5io, h5_init, h5_destructor, &
         h5_check_collective, &
+        h5_check_arr_dim, &
         h5_create_file, h5_open_file, h5_close_file, &
         h5_create_group, h5_open_group, h5_close_group, &
         h5_create_subgroup, h5_open_subgroup, h5_open_or_create_group, h5_close_subgroup, &
@@ -148,6 +149,23 @@ contains
         !    "collective read/write not possible for dataset: ", dataset_name
 
     end subroutine h5_check_collective
+
+
+    subroutine h5_check_arr_dim(this, dim)
+        type(h5io), intent(in) :: this
+        integer(kind=HSIZE_T), dimension(:), intent(in) :: dim
+        integer :: i
+
+        ! if one of the dimension is 0, cancel space_id and file_id
+        ! loop all elements in dim
+        do i = 1, size(dim)
+            if (dim(i) == 0) then
+                call h5sselect_none_f(mem_dspace_id, error)
+                call h5sselect_none_f(file_dspace_id, error)
+            endif
+        enddo
+
+    end subroutine h5_check_arr_dim
 
 
     subroutine h5_create_file(this)
@@ -606,6 +624,8 @@ contains
         integer                           :: rank = 2
         integer(HSIZE_T), dimension(2)    :: dim
         dim = shape(data)
+
+        print*, 'h5_write_dataset_2d_c: ', dataset_name, dim
 
         call h5screate_simple_f(rank, dim, dspace_id, error)
         if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ', dataset_name
@@ -1372,6 +1392,7 @@ contains
         integer, dimension(:), intent(in)                           :: offset_in
         integer(HSSIZE_T), dimension(1)                             :: offset ! the position where the datablock is inserted
         logical                                                     :: if_collect
+        type(c_ptr)                                                 :: data_ptr
 
         dim = shape(data)
         offset = offset_in ! convert data type
@@ -1389,9 +1410,16 @@ contains
 
         call h5_create_dataset_prop_list(this,if_collect)
 
+        call h5_check_arr_dim(this, dim)
+
         ! write array using fortran pointer
-        call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
+        !call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
+        !                file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
+        ! use F2003 API
+        data_ptr = c_loc(data(1))
+        call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, data_ptr, error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
+
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 
         call h5_close_prop_list(this,dataset_name)
@@ -2648,8 +2676,12 @@ contains
 
         call h5_create_dataset_prop_list(this,if_collect)
 
+        call h5_check_arr_dim(this, dim)
         ! write array using fortran pointer
-        call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
+        !call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
+        !                file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
+        ! use F2003 API
+        call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, c_loc(data(1)), error, &
                         file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
         if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
 

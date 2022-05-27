@@ -130,6 +130,7 @@ contains
   integer, intent(in)  :: count_def_mat,count_undef_mat ! stored as attributions
   double precision, dimension(17,count_def_mat)  :: mat_prop ! stored as a dataset
   character(len=MAX_STRING_LEN), dimension(6,count_undef_mat) :: undef_mat_prop ! stored as a
+  character(len=MAX_STRING_LEN), dimension(6,1) :: undef_mat_prop_dummy ! dummy
 
   ! for attribute count_def_mat and count_undef_mat
   character(len=13)              :: m_aname = "count_def_mat"
@@ -159,7 +160,11 @@ contains
   call h5_close_dataset(h5)
 
   ! create a dataset for undef_mat_prop
-  call h5_write_dataset_2d_c(h5, udsetname, undef_mat_prop)
+  if (count_undef_mat > 0) then
+     call h5_write_dataset_2d_c(h5, udsetname, undef_mat_prop)
+  else
+     call h5_write_dataset_2d_c(h5, udsetname, undef_mat_prop_dummy)
+  endif
   call h5_add_attribute_i(h5, u_aname, (/count_undef_mat/))
   call h5_close_dataset(h5)
 
