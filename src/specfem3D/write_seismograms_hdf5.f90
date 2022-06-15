@@ -117,7 +117,7 @@
             call write_seismo_no_ioserv(seismograms_v,2)
           if (SAVE_SEISMOGRAMS_ACCELERATION) &
             call write_seismo_no_ioserv(seismograms_a,3)
-          if (SAVE_SEISMOGRAMS_PRESSURE) & 
+          if (SAVE_SEISMOGRAMS_PRESSURE) &
             call write_seismo_no_ioserv(seismograms_p,4)
         endif
       case (2)
@@ -251,7 +251,7 @@
 
     ! initialze hdf5
     call h5_init(h5, fname_h5_seismo)
- 
+
     if ((seismo_h5_initialized .eqv. .false.) .and. (myrank == 0)) then
       call do_io_seismogram_init()
       seismo_h5_initialized = .true.
@@ -322,7 +322,7 @@
       deallocate(islice_num_rec_local)
 
       if (total_seismos /= nrec) call exit_MPI(myrank,'incorrect total number of receivers saved')
-    
+
     else
 
       if (nrec_local > 0) then
@@ -335,7 +335,7 @@
           irec = number_receiver_global(irec_local)
           tmp_irec(1) = irec
           call send_i(tmp_irec,1,receiver,itag)
-  
+
           ! sends seismogram of that receiver
           one_seismogram(:,:) = seismograms(:,irec_local,:)
           call sendv_cr(one_seismogram,NDIM*NSTEP,receiver,itag)
@@ -351,16 +351,16 @@
       else
         t_upper = NTSTEP_BETWEEN_OUTPUT_SEISMOS
       endif
-      
+
       ! writes out this seismogram
       call h5_open_file(h5)
-  
+
       !call write_one_seismogram(one_seismogram,irec,component,istore)
       if (istore == 1) then
         component = 'disp'
         call h5_write_dataset_3d_r_collect_hyperslab(h5, component, &
              seismograms_all_rec(:,:,1:t_upper), (/0, 0, seismo_offset/), .false.)
-                
+
       else if (istore == 2) then
         component = 'velo'
         call h5_write_dataset_3d_r_collect_hyperslab(h5, component, &
@@ -372,19 +372,19 @@
       else if (istore == 4) then
         component = 'pres'
         call h5_write_dataset_2d_r_collect_hyperslab(h5, component, &
-             seismograms_all_rec(1,:,1:t_upper), (/0, 0, seismo_offset/), .false.)
+             seismograms_all_rec(1,:,1:t_upper), (/0, seismo_offset/), .false.)
       else
         call exit_MPI(myrank,'wrong component to save for seismograms')
       endif
-  
+
       call h5_close_file(h5)
-  
-      deallocate(seismograms_all_rec)        
+
+      deallocate(seismograms_all_rec)
     endif ! myrank == 0
     deallocate(one_seismogram)
 
   end subroutine write_seismo_no_ioserv
-  
+
 !=====================================================================
 
 ! write adjoint seismograms (displacement) to text files
