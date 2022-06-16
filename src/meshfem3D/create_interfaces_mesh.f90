@@ -27,7 +27,7 @@
 
   subroutine create_interfaces_mesh()
 
-  use meshfem3D_par, only: myrank,INTERFACES_FILE, &
+  use meshfem_par, only: myrank,INTERFACES_FILE, &
     number_of_interfaces, &
     SUPPRESS_UTM_PROJECTION, &
     UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
@@ -456,7 +456,7 @@
 
   subroutine get_interfaces_mesh_count()
 
-  use meshfem3D_par, only: INTERFACES_FILE, &
+  use meshfem_par, only: INTERFACES_FILE, &
     number_of_interfaces,max_npx_interface,max_npy_interface, &
     number_of_layers,ner_layer
 

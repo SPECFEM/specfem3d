@@ -44,11 +44,11 @@
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
     NGLLX,NGLLY,NGLLZ,NDIM,myrank
 
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+  use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   use shared_parameters, only: NGNOD,NGNOD2D
 
-  use meshfem3D_par, only: ibool, &
+  use meshfem_par, only: ibool, &
     addressing,NPROC_XI,NPROC_ETA,iproc_xi_current,iproc_eta_current, &
     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
     NMATERIALS,material_properties, &

@@ -403,7 +403,8 @@ end module user_noise_distribution
   endif
 
   ! compute source arrays for "ensemble forward source", which is source of "ensemble forward wavefield"
-  if (myrank == islice_selected_rec(irec_main_noise) .or. myrank == 0) then ! myrank == 0 is used for output only
+  if (myrank == islice_selected_rec(irec_main_noise) .or. myrank == 0) then
+    ! myrank == 0 is used for output only
     call compute_arrays_source_noise(xi_receiver(irec_main_noise), &
                                      eta_receiver(irec_main_noise), &
                                      gamma_receiver(irec_main_noise), &
@@ -593,6 +594,8 @@ end module user_noise_distribution
   double precision :: hpxir(NGLLX), hpetar(NGLLY),hpgammar(NGLLZ)
 
   character(len=MAX_STRING_LEN) :: filename
+
+  ! reads in noise source
 
   ! main receiver component direction, \nu_main
   filename = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/nu_main'

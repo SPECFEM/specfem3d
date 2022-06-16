@@ -31,7 +31,7 @@
   subroutine define_superbrick(x_superbrick,y_superbrick,z_superbrick,ibool_superbrick,iboun_sb)
 
   use constants
-  use constants_meshfem3D, only: NGLOB_DOUBLING_SUPERBRICK,NSPEC_DOUBLING_SUPERBRICK
+  use constants_meshfem, only: NGLOB_DOUBLING_SUPERBRICK,NSPEC_DOUBLING_SUPERBRICK
 
   implicit none
 
@@ -660,7 +660,7 @@
   subroutine define_superbrick_one_layer(x_superbrick,y_superbrick,z_superbrick,ibool_superbrick,iboun_sb)
 
   use constants
-  use constants_meshfem3D, only: NGLOB_DOUBLING_SUPERBRICK,NSPEC_DOUBLING_SUPERBRICK
+  use constants_meshfem, only: NGLOB_DOUBLING_SUPERBRICK,NSPEC_DOUBLING_SUPERBRICK
 
   implicit none
 
@@ -1207,7 +1207,7 @@
   subroutine define_basic_doubling_brick(x_superbrick,y_superbrick,z_superbrick,ibool_superbrick,iboun_sb,case_num)
 
   use constants
-  use constants_meshfem3D, only: NGLOB_DOUBLING_SUPERBRICK,NSPEC_DOUBLING_SUPERBRICK
+  use constants_meshfem, only: NGLOB_DOUBLING_SUPERBRICK,NSPEC_DOUBLING_SUPERBRICK
 
   implicit none
 

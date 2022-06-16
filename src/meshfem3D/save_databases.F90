@@ -34,11 +34,11 @@
   use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
     SAVE_MESH_AS_CUBIT,NDIM,IMAIN,IIN_DB,myrank
 
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+  use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,NGNOD,NGNOD2D
 
-  use meshfem3D_par, only: ibool,xstore,ystore,zstore, &
+  use meshfem_par, only: ibool,xstore,ystore,zstore, &
     addressing,NPROC_XI,NPROC_ETA,iproc_xi_current,iproc_eta_current, &
     prname, &
     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
@@ -605,10 +605,10 @@
                                              nspec_CPML_total)
 
   use constants, only: NDIM,IMAIN,myrank,IIN_DB
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+  use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M
   use shared_parameters, only: NGNOD
 
-  use meshfem3D_par, only: ibool, &
+  use meshfem_par, only: ibool, &
     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
     NMATERIALS,material_properties, &
     nspec_CPML,CPML_to_spec,CPML_regions
@@ -866,11 +866,11 @@
 
   use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, ZERO, IMAIN, myrank, &
     INJECTION_TECHNIQUE_IS_AXISEM
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+  use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   use shared_parameters, only: NGNOD,COUPLE_WITH_INJECTION_TECHNIQUE,INJECTION_TECHNIQUE_TYPE
 
-  use meshfem3D_par, only: NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP
+  use meshfem_par, only: NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP
 
   implicit none
 

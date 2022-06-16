@@ -387,7 +387,7 @@
   integer :: iglob,iglob_pml
 
   do iglob_pml = 1, nglob_interface_PML_acoustic
-    iglob = points_interface_PML_acoustic(iglob)
+    iglob = points_interface_PML_acoustic(iglob_pml)
     b_PML_potential(1,iglob_pml) = potential_acoustic(iglob)
     b_PML_potential(2,iglob_pml) = potential_dot_acoustic(iglob)
     b_PML_potential(3,iglob_pml) = potential_dot_dot_acoustic(iglob)
