@@ -723,11 +723,11 @@ module specfem_par_coupling
   real(kind=CUSTOM_REAL) :: Z_REF_for_FK
 
   ! source
-  real(kind=CUSTOM_REAL) :: p,xx0,yy0,zz0,ff0,tg,tt0,tmax_fk,df_fk
+  real(kind=CUSTOM_REAL) :: xx0,yy0,zz0,ff0,tt0,tmax_fk
   real(kind=CUSTOM_REAL) :: phi_FK,theta_FK
 
   ! model
-  real(kind=CUSTOM_REAL),dimension(:),allocatable :: al_FK,be_FK,mu_FK,h_FK,tmp_for_interp
+  real(kind=CUSTOM_REAL),dimension(:),allocatable :: alpha_FK,beta_FK,mu_FK,h_FK
   complex(kind=8), dimension(:,:), allocatable :: VX_f, VY_f, VZ_f, TX_f, TY_f, TZ_f
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: VX_t, VY_t, VZ_t, TX_t, TY_t, TZ_t
 
