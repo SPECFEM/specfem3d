@@ -233,7 +233,7 @@
     integer :: istore
     real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
     real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable    :: seismograms_all_rec
-
+    real(kind=CUSTOM_REAL), dimension(nrec,NSTEP)    :: tmp_seis_pre
 
     ! parameters for master collects seismograms
     real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: one_seismogram
@@ -371,8 +371,11 @@
              seismograms_all_rec(:,:,1:t_upper), (/0, 0, seismo_offset/), .false.)
       else if (istore == 4) then
         component = 'pres'
+        !allocate(tmp_seis_pres(sum(islice_num_rec_local(:)),NSTEP),stat=ier) ! slicing is not working for this h5 function
+        tmp_seis_pre = seismograms_all_rec(1,:,1:t_upper)
         call h5_write_dataset_2d_r_collect_hyperslab(h5, component, &
-             seismograms_all_rec(1,:,1:t_upper), (/0, seismo_offset/), .false.)
+             tmp_seis_pre, (/0, seismo_offset/), .false.)
+        !deallocate(tmp_seis_pres)
       else
         call exit_MPI(myrank,'wrong component to save for seismograms')
       endif

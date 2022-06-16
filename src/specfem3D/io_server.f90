@@ -6,15 +6,15 @@ module io_server
 
 
   logical :: NtoM = .true. ! if this option set .false. SPECFEM3D takes N-to-1
-                           ! I/O strategy i.e. volume data will be out to 
+                           ! I/O strategy i.e. volume data will be out to
                            ! one single .h5 file. This gives the output files
                            ! great simplicity however I/O performance will be
-                           ! degredated for collective h5 I/O. 
+                           ! degredated for collective h5 I/O.
   logical :: if_collect_server = .false. ! need to be set .false. for NtoM = .true.
 
   integer :: nglob_all_server, nspec_all_server !  total number of elements and nodes for all procs
   integer :: nglob_this_io, nelm_this_io ! number of nodes and elements in this IO group
- 
+
   integer :: n_msg_seismo_each_proc=1,n_seismo_type=0
   integer :: n_procs_with_rec
   integer :: n_msg_surf_each_proc=3,surf_offset
@@ -431,7 +431,7 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc,nglob_par_proc_offset,
   integer :: node_id_off, node_id_off_inter
   integer :: nelms_factor = (NGLLX-1)*(NGLLY-1)*(NGLLZ-1) ! divide one spectral element to
   ! small rectangles for visualization purpose
-  integer, dimension(1)                             :: tmp_1d_arr 
+  integer, dimension(1)                             :: tmp_1d_arr
 
 
   ! make output file
@@ -569,7 +569,7 @@ subroutine movie_volume_init(nelm_par_proc,nglob_par_proc,nglob_par_proc_offset,
   ! write mesh database in movie_volue.h5
   group_name = "mesh"
 
-  ! write mesh info. of each IO server into each movie_volume_*.h5 file 
+  ! write mesh info. of each IO server into each movie_volume_*.h5 file
   if (NtoM) then
 
     ! create a hdf5 file
@@ -1076,7 +1076,7 @@ subroutine surf_mov_init(nfaces_perproc, surface_offset)
   integer                                           :: len_array_aug
   character(len=64)                                 :: dset_name
   character(len=64)                                 :: group_name
-  integer, dimension(1)                             :: tmp_1d_arr 
+  integer, dimension(1)                             :: tmp_1d_arr
 
   type(h5io) :: h5
   h5 = h5io()
@@ -1553,10 +1553,10 @@ subroutine do_io_seismogram_init()
   fname_h5_seismo = trim(OUTPUT_FILES)//fname_h5_base
   ! initialze hdf5
   call h5_init(h5, fname_h5_seismo)
- 
+
   ! create file
   call h5_create_file(h5)
- 
+
   ! create time dataset it = 1 ~ NSTEP
   do i = 1, NSTEP
     if (SIMULATION_TYPE == 1) then ! forward simulation ! distinguish between single and double precision for reals
@@ -1568,7 +1568,7 @@ subroutine do_io_seismogram_init()
       time_array(i) = real( dble(NSTEP-i)*DT - t0 ,kind=CUSTOM_REAL)
     endif
   enddo
-  
+
   ! time array
   call h5_write_dataset_1d_d_no_group(h5, "time", time_array)
   call h5_close_dataset(h5)
@@ -2024,16 +2024,16 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
   write(xdmf_vol,*) '<Domain>'
   write(xdmf_vol,*) '    <!-- mesh info -->'
   write(xdmf_vol,*) '    <Grid Name="mesh" GridType="Collection"  CollectionType="Spatial">'
-  
+
   ! loop for writing information of mesh partitions
   do iproc=0,NIONOD-1
- 
+
     ! loop for writing information of mesh partitions
     nelm=i2c(nelm_par_io_offset(iproc)*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1))
     nglo=i2c(nglob_par_io_offset(iproc))
     write(proc_str, "(i6.6)") iproc
- 
-    write(xdmf_vol,*) '<Grid Name="mesh_'//trim(proc_str)//'">'    
+
+    write(xdmf_vol,*) '<Grid Name="mesh_'//trim(proc_str)//'">'
     write(xdmf_vol,*) '<Topology TopologyType="Mixed" NumberOfElements="'//trim(nelm)//'">'
     write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Int" Precision="4" Dimensions="'&
                            //trim(nelm)//' 9">'
@@ -2053,15 +2053,15 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
     write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume_'//trim(proc_str)//'.h5:/mesh/z'
     write(xdmf_vol,*) '    </DataItem>'
-    write(xdmf_vol,*) '</Geometry>'      
+    write(xdmf_vol,*) '</Geometry>'
     write(xdmf_vol,*) '</Grid>'
-  
+
 
   enddo ! loop for writing mesh info
   write(xdmf_vol,*) '</Grid>'
 
 
-  ! write the data by 
+  ! write the data by
   ! loop for iteration
   !   loop for IONODES
 
@@ -2077,13 +2077,13 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
 
     do iproc=0, NIONOD-1
       write(proc_str, "(i6.6)") iproc
-      nglo=i2c(nglob_par_io_offset(iproc))   
-    
+      nglo=i2c(nglob_par_io_offset(iproc))
+
       write(xdmf_vol, *)  '<Grid Name="data_'//trim(proc_str)//'" Type="Uniform">'
       write(xdmf_vol, *)  '    <Topology Reference="/Xdmf/Domain/Grid[@Name=''mesh'']/Grid[@Name=''mesh_'&
                                         //trim(proc_str)//''']/Topology" />'
       write(xdmf_vol, *)  '    <Geometry Reference="/Xdmf/Domain/Grid[@Name=''mesh'']/Grid[@Name=''mesh_'&
-                                        //trim(proc_str)//''']/Geometry" />'    
+                                        //trim(proc_str)//''']/Geometry" />'
 
       if (pressure_io) then
         write(xdmf_vol,*) '  <Attribute Name="pressure" AttributeType="Scalar" Center="Node">'
@@ -2093,7 +2093,7 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
         write(xdmf_vol,*) '    </DataItem>'
         write(xdmf_vol,*) '  </Attribute>'
       endif
-      
+
       if (divglob_io) then
         write(xdmf_vol,*) '  <Attribute Name="div_glob" AttributeType="Scalar" Center="Node">'
         write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
@@ -2102,7 +2102,7 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
         write(xdmf_vol,*) '    </DataItem>'
         write(xdmf_vol,*) '  </Attribute>'
       endif
-      
+
       if (div_io) then
         write(xdmf_vol,*) '  <Attribute Name="div" AttributeType="Scalar" Center="Node">'
         write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
@@ -2111,7 +2111,7 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
         write(xdmf_vol,*) '    </DataItem>'
         write(xdmf_vol,*) '  </Attribute>'
       endif
-      
+
       if (veloc_io) then
         write(xdmf_vol,*) '  <Attribute Name="velo_x" AttributeType="Scalar" Center="Node">'
         write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
@@ -2132,7 +2132,7 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
         write(xdmf_vol,*) '    </DataItem>'
         write(xdmf_vol,*) '  </Attribute>'
       endif
-      
+
       if (curl_io) then
         write(xdmf_vol,*) '  <Attribute Name="curl_x" AttributeType="Scalar" Center="Node">'
         write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
@@ -2153,11 +2153,11 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
         write(xdmf_vol,*) '    </DataItem>'
         write(xdmf_vol,*) '  </Attribute>'
       endif
-      
+
       write(xdmf_vol,*) '</Grid>'
 
     enddo  ! loop proc
-  
+
     write(xdmf_vol,*) '</Grid>'
 
   enddo ! loop time
@@ -2167,7 +2167,7 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
   write(xdmf_vol,*) '</Xdmf>'
 
   close(xdmf_vol)
-  
+
 end subroutine write_xdmf_vol_mton
 
 
@@ -2224,7 +2224,7 @@ subroutine pass_info_to_io()
       ! send size of store_val
       call send_i_inter((/size(store_val_x_all)/), 1, 0, io_tag_surface_coord_len)
       ! send store_val_x/y/z_all
- 
+
       call sendv_cr_inter(store_val_x_all,size(store_val_x_all), 0, io_tag_surface_x)
       call sendv_cr_inter(store_val_y_all,size(store_val_y_all), 0, io_tag_surface_y)
       call sendv_cr_inter(store_val_z_all,size(store_val_z_all), 0, io_tag_surface_z)
