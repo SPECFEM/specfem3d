@@ -201,6 +201,8 @@
   real(kind=CUSTOM_REAL) :: Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box, Zmax_box
   real(kind=CUSTOM_REAL) :: ray_p,Tg,DF_FK
 
+  real(kind=CUSTOM_REAL), parameter :: TOL_ZERO_TAKEOFF = 1.e-14
+
 !  initial setup for future FK3D calculations
 
   if (COUPLE_WITH_INJECTION_TECHNIQUE .and. SIMULATION_TYPE == 1) then
@@ -299,7 +301,7 @@
 
       ! note: vertical incident (theta==0 -> p==0) is not handled.
       !       here, it limits ray parameter p to a very small value to handle the calculations
-      if (abs(ray_p) < 1.e-14) ray_p = sign(1.e-14,ray_p)
+      if (abs(ray_p) < TOL_ZERO_TAKEOFF) ray_p = sign(TOL_ZERO_TAKEOFF,ray_p)
 
       Tg  = 1.d0 / ff0
 
