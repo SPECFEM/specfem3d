@@ -63,10 +63,10 @@ end module create_meshfem_par
 ! create the different regions of the mesh
 
   use constants, only: IMAIN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,myrank
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+  use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M
   use shared_parameters, only: NGNOD,NGNOD2D
 
-  use meshfem3D_par, only: NSPEC_AB,NGLOB_AB, &
+  use meshfem_par, only: NSPEC_AB,NGLOB_AB, &
     ibool,xstore,ystore,zstore,nspec, &
     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
     NMATERIALS,material_properties, &
@@ -198,9 +198,9 @@ end module create_meshfem_par
   subroutine cmm_allocate_arrays()
 
   use constants, only: IMAIN,myrank
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+  use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
-  use meshfem3D_par, only: NSPEC_AB,nspec,ibool, &
+  use meshfem_par, only: NSPEC_AB,nspec,ibool, &
     xstore,ystore,zstore, &
     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP
 
@@ -281,11 +281,11 @@ end module create_meshfem_par
   use constants, only: CUSTOM_REAL,IMAIN,NGNOD_EIGHT_CORNERS,HUGEVAL,myrank, &
     GAUSSALPHA,GAUSSBETA,NDIM
 
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M, &
+  use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M, &
     NGLOB_DOUBLING_SUPERBRICK,NSPEC_DOUBLING_SUPERBRICK, &
     IFLAG_BASEMENT_TOPO,IFLAG_ONE_LAYER_TOPOGRAPHY
 
-  use meshfem3D_par, only: xstore,ystore,zstore, &
+  use meshfem_par, only: xstore,ystore,zstore, &
     xgrid,ygrid,zgrid, &
     UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
     NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -684,9 +684,9 @@ end module create_meshfem_par
   subroutine cmm_create_addressing(nglob)
 
   use constants, only: NDIM,IMAIN,MAX_STRING_LEN,myrank
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NGLLCUBE_M
+  use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M,NGLLCUBE_M
 
-  use meshfem3D_par, only: prname,ibool,xstore,ystore,zstore, &
+  use meshfem_par, only: prname,ibool,xstore,ystore,zstore, &
     UTM_X_MIN,UTM_X_MAX,NGLOB_AB,nspec
 
   use create_meshfem_par

@@ -126,7 +126,7 @@ contains
              !! ---------------------------------------------------------------------------------------------------------------
              !! compute adjoint source according to cost L2 function
              call compute_elastic_adjoint_source_displacement(irec_local, ievent, current_iter, &
-                  acqui_simu, cost_function, inversion_param)
+                                                              acqui_simu, cost_function, inversion_param)
 
           endif
        endif
@@ -181,8 +181,8 @@ contains
 !----------------------------------------------------------------------------------------------------------------------------------
   subroutine deallocate_adjoint_source_working_arrays()
     deallocate(residuals, raw_residuals, fil_residuals,  filfil_residuals, w_tap, signal, residuals_for_cost, &
-         elastic_adjoint_source, &
-         elastic_misfit, data_trace_to_use, wkstmp)
+               elastic_adjoint_source, &
+               elastic_misfit, data_trace_to_use, wkstmp)
   end subroutine deallocate_adjoint_source_working_arrays
 
 !----------------------------------------------------------------------------------------------------------------------------------
@@ -241,7 +241,7 @@ contains
     integer,                                     intent(in)    :: ievent, irec_local, current_iter
     type(acqui),  dimension(:), allocatable,     intent(inout) :: acqui_simu
     real(kind=CUSTOM_REAL),                      intent(inout) :: cost_function
-    integer                                                    :: icomp, idim, irec_glob !, icomp_tmp
+    integer                                                    :: icomp, irec_glob
     real(kind=CUSTOM_REAL), dimension(:), allocatable          :: wavelet, filfil_residuals_tmp, tmpl
     real(kind=CUSTOM_REAL), dimension(:,:), allocatable        :: trace_cal_1, trace_cal_2
     real(kind=CUSTOM_REAL), dimension(:,:), allocatable        :: trace_obs_1, trace_obs_2
@@ -293,14 +293,14 @@ contains
        azi0 = acqui_simu(ievent)%Origin_chunk_azi
        irec_glob = acqui_simu(ievent)%number_receiver_global(irec_local)
 
-       do idim = 1, ndim
+       do icomp = 1, NDIM
 
           ! Get data
-          trace_cal_1(idim,:) = seismograms_d(idim,irec_local,:)
-          trace_cal_2(idim,:) = seismograms_d(idim,irec_local,:)
+          trace_cal_1(icomp,:) = seismograms_d(icomp,irec_local,:)
+          trace_cal_2(icomp,:) = seismograms_d(icomp,irec_local,:)
 
-          trace_obs_1(idim,:) = acqui_simu(ievent)%data_traces(irec_local,:,idim)
-          trace_obs_2(idim,:) = acqui_simu(ievent)%data_traces(irec_local,:,idim)
+          trace_obs_1(icomp,:) = acqui_simu(ievent)%data_traces(irec_local,:,icomp)
+          trace_obs_2(icomp,:) = acqui_simu(ievent)%data_traces(irec_local,:,icomp)
 
           ! Convolve synthetic data with wavelet
           if (inversion_param%convolution_by_wavelet) then
@@ -309,8 +309,8 @@ contains
                if (ier /= 0) call exit_MPI_without_rank('error allocating array 294')
              endif
              wavelet = acqui_simu(ievent)%user_source_time_function(1,:)
-             call myconvolution(trace_cal_2(idim,:),wavelet,nstep_data,nstep_data,tmpl,0)
-             trace_cal_1(idim,:) = tmpl * dt_data
+             call myconvolution(trace_cal_2(icomp,:),wavelet,nstep_data,nstep_data,tmpl,0)
+             trace_cal_1(icomp,:) = tmpl(:) * dt_data
           endif
 
        enddo
@@ -326,13 +326,13 @@ contains
           ! Data rotation required to pass in mesh system (zen -> xyz)
           call define_mesh_rotation_matrix(lat0,lon0,azi0)
           call rotate_comp_mesh2glob(trace_cal_2(1,:), trace_cal_2(2,:), trace_cal_2(3,:), &
-               acqui_simu(ievent)%read_station_position(1,irec_glob), &
-               acqui_simu(ievent)%read_station_position(2,irec_glob), &
-               nstep_data, 1, trace_cal_1(3,:), trace_cal_1(2,:), trace_cal_1(1,:))
+                                     acqui_simu(ievent)%read_station_position(1,irec_glob), &
+                                     acqui_simu(ievent)%read_station_position(2,irec_glob), &
+                                     nstep_data, 1, trace_cal_1(3,:), trace_cal_1(2,:), trace_cal_1(1,:))
           call rotate_comp_mesh2glob(trace_obs_2(1,:), trace_obs_2(2,:), trace_obs_2(3,:), &
-               acqui_simu(ievent)%read_station_position(1,irec_glob), &
-               acqui_simu(ievent)%read_station_position(2,irec_glob), &
-               nstep_data, 1, trace_obs_1(3,:), trace_obs_1(2,:), trace_obs_1(1,:))
+                                     acqui_simu(ievent)%read_station_position(1,irec_glob), &
+                                     acqui_simu(ievent)%read_station_position(2,irec_glob), &
+                                     nstep_data, 1, trace_obs_1(3,:), trace_obs_1(2,:), trace_obs_1(1,:))
        case('rtz')
           trace_cal_2 = trace_cal_1
           trace_obs_2 = trace_obs_1
@@ -341,22 +341,22 @@ contains
           ! Data rotation required to pass in mesh system (zen -> xyz)
           call define_mesh_rotation_matrix(lat0,lon0,azi0)
           call rotate_comp_mesh2glob(trace_cal_2(1,:), trace_cal_2(2,:), trace_cal_2(3,:), &
-               acqui_simu(ievent)%read_station_position(1,irec_glob), &
-               acqui_simu(ievent)%read_station_position(2,irec_glob), &
-               nstep_data, 1, trace_cal_1(3,:), trace_cal_1(2,:), trace_cal_1(1,:))
+                                     acqui_simu(ievent)%read_station_position(1,irec_glob), &
+                                     acqui_simu(ievent)%read_station_position(2,irec_glob), &
+                                     nstep_data, 1, trace_cal_1(3,:), trace_cal_1(2,:), trace_cal_1(1,:))
           call rotate_comp_mesh2glob(trace_obs_2(1,:), trace_obs_2(2,:), trace_obs_2(3,:), &
-               acqui_simu(ievent)%read_station_position(1,irec_glob), &
-               acqui_simu(ievent)%read_station_position(2,irec_glob), &
-               nstep_data, 1, trace_obs_1(3,:), trace_obs_1(2,:), trace_obs_1(1,:))
+                                     acqui_simu(ievent)%read_station_position(1,irec_glob), &
+                                     acqui_simu(ievent)%read_station_position(2,irec_glob), &
+                                     nstep_data, 1, trace_obs_1(3,:), trace_obs_1(2,:), trace_obs_1(1,:))
 
           trace_cal_2 = trace_cal_1
           trace_obs_2 = trace_obs_1
           call rotate_ZNE_to_ZRT(trace_cal_2(3,:), trace_cal_2(2,:), trace_cal_2(1,:), &
-               trace_cal_1(3,:), trace_cal_1(1,:), trace_cal_1(2,:), &
-               1,nstep_data,acqui_simu(ievent)%baz(irec_glob))
+                                 trace_cal_1(3,:), trace_cal_1(1,:), trace_cal_1(2,:), &
+                                 1,nstep_data,acqui_simu(ievent)%baz(irec_glob))
           call rotate_ZNE_to_ZRT(trace_obs_2(3,:), trace_obs_2(2,:), trace_obs_2(1,:), &
-               trace_obs_1(3,:), trace_obs_1(1,:), trace_obs_1(2,:), &
-               1,nstep_data,acqui_simu(ievent)%baz(irec_glob))
+                                 trace_obs_1(3,:), trace_obs_1(1,:), trace_obs_1(2,:), &
+                                 1,nstep_data,acqui_simu(ievent)%baz(irec_glob))
        case('qtl')
           trace_cal_2 = trace_cal_1
           trace_obs_2 = trace_obs_1
@@ -367,25 +367,25 @@ contains
        end select
 
        ! Finally compute residuals, filter and cross-correlate
-       do idim = 1, ndim
+       do icomp = 1, NDIM
 
           ! Resiudal
-          raw_residuals(:) =  trace_cal_1(idim,:) - trace_obs_1(idim,:)
+          raw_residuals(:) =  trace_cal_1(icomp,:) - trace_obs_1(icomp,:)
 
           ! Filter
-          fil_residuals(:)=0._CUSTOM_REAL
-          filfil_residuals(:)=0._CUSTOM_REAL
-          fl=acqui_simu(ievent)%freqcy_to_invert(idim,1,irec_local)
-          fh=acqui_simu(ievent)%freqcy_to_invert(idim,2,irec_local)
+          fil_residuals(:) = 0._CUSTOM_REAL
+          filfil_residuals(:) = 0._CUSTOM_REAL
+          fl = acqui_simu(ievent)%freqcy_to_invert(icomp,1,irec_local)
+          fh = acqui_simu(ievent)%freqcy_to_invert(icomp,2,irec_local)
           call bwfilt (raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
           call bwfilt (fil_residuals, filfil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
 
           ! Apply weighting
-          fil_residuals(:) = fil_residuals(:) * acqui_simu(ievent)%weight_trace(idim,irec_glob,:)
-          filfil_residuals(:) = filfil_residuals(:) * acqui_simu(ievent)%weight_trace(idim,irec_glob,:)**2
+          fil_residuals(:) = fil_residuals(:) * acqui_simu(ievent)%weight_trace(icomp,irec_glob,:)
+          filfil_residuals(:) = filfil_residuals(:) * acqui_simu(ievent)%weight_trace(icomp,irec_glob,:)**2
 
           !! compute cost function value
-          cost_value=sum(fil_residuals(:)**2) * 0.5 * dt_data
+          cost_value = sum(fil_residuals(:)**2) * 0.5 * dt_data
           cost_function = cost_function + cost_value
 
           ! Finally cross-correlate residuals with wavelet
@@ -396,7 +396,7 @@ contains
              endif
              filfil_residuals_tmp(:) = filfil_residuals(:)
              call mycorrelation(filfil_residuals_tmp,wavelet,nstep_data,nstep_data,tmpl,0)
-             filfil_residuals = tmpl * dt_data
+             filfil_residuals(:) = tmpl(:) * dt_data
           endif
 
           !! store the adjoint source
@@ -413,20 +413,20 @@ contains
              !! get data ------------------------
              if (use_band_pass_filter) then
                 !! filter the data
-                fil_residuals(:)=0._CUSTOM_REAL
-                fl=acqui_simu(ievent)%fl_event(current_ifrq)
-                fh=acqui_simu(ievent)%fh_event(current_ifrq)
+                fil_residuals(:) = 0._CUSTOM_REAL
+                fl = acqui_simu(ievent)%fl_event(current_ifrq)
+                fh = acqui_simu(ievent)%fh_event(current_ifrq)
 
-                wkstmp(:)= acqui_simu(ievent)%data_traces(irec_local,:,icomp)
+                wkstmp(:) = acqui_simu(ievent)%data_traces(irec_local,:,icomp)
                 call bwfilt(wkstmp, data_trace_to_use, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
 
                 if (VERBOSE_MODE .or. DEBUG_MODE) then
                    !! save filtered data
-                   acqui_simu(ievent)%synt_traces(icomp, irec_local,:)=  data_trace_to_use(:)
+                   acqui_simu(ievent)%synt_traces(icomp, irec_local,:) = data_trace_to_use(:)
                 endif
 
              else
-                data_trace_to_use(:)=acqui_simu(ievent)%data_traces(irec_local,:,icomp)
+                data_trace_to_use(:) = acqui_simu(ievent)%data_traces(irec_local,:,icomp)
              endif
 
              !! define energy renormalisation
@@ -435,17 +435,17 @@ contains
 !!$                   acqui_simu(ievent)%weight_trace(icomp,irec_local)=100._CUSTOM_REAL / &
 !!$                        ((sum( acqui_simu(ievent)%synt_traces(irec_local,:,icomp_tmp) )**2) *0.5*dt_data)
 !!$                enddo
-                window_lenght =  nstep_data * dt_data
-                acqui_simu(ievent)%weight_trace(icomp,irec_local,1)=1._CUSTOM_REAL/prior_data_std/&
-                     sqrt(nb_traces_tot)/sqrt(window_lenght)
+                window_lenght = nstep_data * dt_data
+                acqui_simu(ievent)%weight_trace(icomp,irec_local,1) = 1._CUSTOM_REAL/prior_data_std/&
+                                                                      sqrt(nb_traces_tot)/sqrt(window_lenght)
              endif
 
              !! compute residuals residuals
-             residuals(:)= (seismograms_d(icomp,irec_local,:) - data_trace_to_use(:))*&
-                  acqui_simu(ievent)%weight_trace(icomp,irec_local,1)
+             residuals(:) = (seismograms_d(icomp,irec_local,:) - data_trace_to_use(:))*&
+                             acqui_simu(ievent)%weight_trace(icomp,irec_local,1)
 
              !! compute cost
-             cost_value=sum(residuals(:)**2) * 0.5 * dt_data
+             cost_value = sum(residuals(:)**2) * 0.5 * dt_data
              cost_function = cost_function + cost_value
 
              !! compute raw standard deviation
@@ -453,8 +453,8 @@ contains
              nb_data_std = nb_data_std + size(residuals(:))
 
              ! store adjoint source
-             acqui_simu(ievent)%adjoint_sources(icomp,irec_local,:)=residuals(:)*w_tap(:)*&
-                  acqui_simu(ievent)%weight_trace(icomp,irec_local,1)
+             acqui_simu(ievent)%adjoint_sources(icomp,irec_local,:) = residuals(:)*w_tap(:)*&
+                                                                      acqui_simu(ievent)%weight_trace(icomp,irec_local,1)
 
           enddo
 
@@ -579,9 +579,9 @@ subroutine get_elastic_adj_src(sout,ir)
 
   real(kind=CUSTOM_REAL) , dimension(:,:,:),allocatable     :: sout
   integer                    :: i, ic, ir
-  do i=1, NSTEP_DATA
-     do ic=1,3
-        sout(ic,ir,i)=elastic_adjoint_source(ic,NSTEP_DATA-i+1)
+  do i = 1, NSTEP_DATA
+     do ic = 1,3
+        sout(ic,ir,i) = elastic_adjoint_source(ic,NSTEP_DATA-i+1)
      enddo
   enddo
 end subroutine get_elastic_adj_src

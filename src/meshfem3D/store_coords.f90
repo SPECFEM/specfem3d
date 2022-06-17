@@ -28,7 +28,7 @@
   subroutine store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec,shape3D)
 
   use constants, only: NGNOD_EIGHT_CORNERS
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+  use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M
   use shared_parameters, only: NGNOD
 
   implicit none
@@ -265,7 +265,7 @@
 
   subroutine calc_coords_mesh(x_elem,y_elem,z_elem,offset_x,offset_y,offset_z,shape3D)
 
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+  use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M
   use shared_parameters, only: NGNOD
 
   implicit none

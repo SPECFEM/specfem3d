@@ -30,7 +30,7 @@
 
   program xmeshfem3D
 
-  use meshfem3D_par
+  use meshfem_par
   use chunk_earth_mod
 
   implicit none

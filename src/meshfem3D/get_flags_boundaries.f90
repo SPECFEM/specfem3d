@@ -32,7 +32,7 @@
                                   UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,NEX_XI,NEX_ETA)
 
   use constants
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,IFLAG_ONE_LAYER_TOPOGRAPHY
+  use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M,IFLAG_ONE_LAYER_TOPOGRAPHY
 
   implicit none
 

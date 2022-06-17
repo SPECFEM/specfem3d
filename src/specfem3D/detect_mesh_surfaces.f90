@@ -79,7 +79,7 @@
   endif
 
   ! takes number of faces for top, free surface only
-  if (MOVIE_TYPE == 1 .or. (NOISE_TOMOGRAPHY /= 0)) then
+  if (MOVIE_TYPE == 1 .or. MOVIE_TYPE == 3 .or. (NOISE_TOMOGRAPHY /= 0)) then
     nfaces_surface = num_free_surface_faces
   endif
 

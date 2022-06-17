@@ -67,9 +67,9 @@ meshfem3D_OBJECTS = \
 	$(EMPTY_MACRO)
 
 meshfem3D_MODULES = \
-	$(FC_MODDIR)/constants_meshfem3d.$(FC_MODEXT) \
+	$(FC_MODDIR)/constants_meshfem.$(FC_MODEXT) \
 	$(FC_MODDIR)/manager_adios.$(FC_MODEXT) \
-	$(FC_MODDIR)/meshfem3d_par.$(FC_MODEXT) \
+	$(FC_MODDIR)/meshfem_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/chunk_earth_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/create_meshfem_par.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
