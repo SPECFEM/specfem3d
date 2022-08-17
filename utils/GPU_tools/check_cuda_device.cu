@@ -70,9 +70,9 @@ void exit_on_error(const char* info) {
 
 /* ----------------------------------------------------------------------------------------------- */
 
-void exit_on_cuda_error(const char* kernel_name) {
+void exit_on_gpu_error(const char* kernel_name) {
   // sync and check to catch errors from previous async operations
-#if CUDA_VERSION < 4000
+#if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
   cudaThreadSynchronize();
 #else
   cudaDeviceSynchronize();
@@ -83,7 +83,7 @@ void exit_on_cuda_error(const char* kernel_name) {
     printf("Error after %s: %s\n", kernel_name, cudaGetErrorString(err));
 
     // releases previous contexts
-#if CUDA_VERSION < 4000
+#if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
     cudaThreadExit();
 #else
     cudaDeviceReset();
@@ -157,7 +157,7 @@ void initialize_cuda_device(int* myrank_f,int* ncuda_devices) {
   // Gets number of GPU devices
   device_count = 0;
   cudaGetDeviceCount(&device_count);
-  // Do not check if command failed with `exit_on_cuda_error` since it calls cudaDevice()/ThreadSynchronize():
+  // Do not check if command failed with `exit_on_gpu_error` since it calls cudaDevice()/ThreadSynchronize():
   // If multiple MPI tasks access multiple GPUs per node, they will try to synchronize
   // GPU 0 and depending on the order of the calls, an error will be raised
   // when setting the device number. If MPS is enabled, some GPUs will silently not be used.
@@ -209,7 +209,7 @@ e.g., on titan enable environment CRAY_CUDA_MPS=1 to use a single GPU with multi
   //         "setting the device when a process is active is not allowed"
 
   // releases previous contexts
-#if CUDA_VERSION < 4000
+#if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
   cudaThreadExit();
 #else
   cudaDeviceReset();
@@ -293,7 +293,7 @@ e.g., on titan enable environment CRAY_CUDA_MPS=1 to use a single GPU with multi
 #endif
 
     // double check
-    exit_on_cuda_error("cudaSetDevice has invalid device");
+    exit_on_gpu_error("cudaSetDevice has invalid device");
 
 #ifdef WITH_MPI
     // check
@@ -339,7 +339,7 @@ e.g., on titan enable environment CRAY_CUDA_MPS=1 to use a single GPU with multi
     struct cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp,device);
 
-    exit_on_cuda_error("cudaGetDeviceProperties failed");
+    exit_on_gpu_error("cudaGetDeviceProperties failed");
 
     // exit if the machine has no CUDA-enabled device
     if (deviceProp.major == 9999 && deviceProp.minor == 9999){
@@ -443,10 +443,10 @@ e.g., on titan enable environment CRAY_CUDA_MPS=1 to use a single GPU with multi
     }
 
     // double check
-    exit_on_cuda_error("cuda Malloc/Free test failed");
+    exit_on_gpu_error("cuda Malloc/Free test failed");
 
     // synchronizes GPU
-#if CUDA_VERSION < 4000
+#if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
     cudaThreadSynchronize();
 #else
     cudaDeviceSynchronize();
@@ -500,7 +500,7 @@ int main(int argc, char **argv)
   initialize_cuda_device(&myrank,&ndevices);
 
   // releases previous contexts
-#if CUDA_VERSION < 4000
+#if CUDA_VERSION < 4000 || (defined (__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ < 4))
   cudaThreadExit();
 #else
   cudaDeviceReset();

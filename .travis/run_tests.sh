@@ -3,6 +3,16 @@
 # getting updated environment (CUDA_HOME, PATH, ..)
 if [ -f $HOME/.tmprc ]; then source $HOME/.tmprc; fi
 
+# checks if anything to do
+echo "run checks: $RUN_CHECKS"
+if [ "$RUN_CHECKS" == "0" ]; then
+  echo "  no run checks required, exiting..."
+  exit 0
+else
+  echo "  run checks required, start testing..."
+fi
+echo
+
 ###########################################################
 # setup
 ###########################################################
@@ -41,12 +51,13 @@ case "$TESTDIR" in
 esac
 
 # info
-echo $TRAVIS_BUILD_DIR
+#echo $TRAVIS_BUILD_DIR
 echo $WORKDIR
+echo `date`
 echo
 echo "**********************************************************"
 echo
-echo "configuration test: TESTID=${TESTID} TESTDIR=${TESTDIR} TESTCOV=${TESTCOV} TESTFLAGS=${TESTFLAGS}"
+echo "run test: TESTID=${TESTID} TESTDIR=${TESTDIR} TESTCOV=${TESTCOV} "
 echo
 echo "    test directory: $dir"
 echo
@@ -59,58 +70,25 @@ my_test(){
   ln -s $WORKDIR/utils/compare_seismogram_correlations.py
   ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/
   if [[ $? -ne 0 ]]; then exit 1; fi
-  ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/ | grep min/max | cut -d \| -f 3 | awk '{print "correlation:",$1; if ($1 < 0.9 ){print $1,"failed"; exit 1;}else{ print $1,"good"; exit 0;}}'
+  ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/ | grep min/max | cut -d \| -f 3 | awk '{print "correlation:",$1; if ($1 < 0.999 ){print $1,"failed"; exit 1;}else{ print $1,"good"; exit 0;}}'
   if [[ $? -ne 0 ]]; then exit 1; fi
   rm -rf OUTPUT_FILES/
 }
 
-###########################################################
-# configuration & compilation
-###########################################################
-# configuration
-echo 'Configure...' && echo -en 'travis_fold:start:configure\\r'
-echo "configuration:"
-
-if [ "$TESTCOV" == "1" ]; then
-  echo "configuration: for coverage"
-  ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TESTFLAGS} FLAGS_CHECK="-fprofile-arcs -ftest-coverage -O0" CFLAGS="-coverage -O0"
-else
-  if [ "$CUDA" == "true" ]; then
-    echo "configuration: for cuda"
-    ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TESTFLAGS} CUDA_LIB="${CUDA_HOME}/lib64" CUDA_INC="${CUDA_HOME}/include" CUDA_FLAGS="-Xcompiler -Wall,-Wno-unused-function,-Wno-unused-const-variable,-Wfatal-errors -g -G"
-  else
-    echo "configuration: default"
-    ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TESTFLAGS}
-  fi
-fi
-if [[ $? -ne 0 ]]; then exit 1; fi
-
-# we output to console
-sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
-
-# layered example w/ NGLL = 6
-if [ "$TESTID" == "28" ]; then
-  sed -i "s:NGLLX =.*:NGLLX = 6:" setup/constants.h
-fi
-
-echo -en 'travis_fold:end:configure\\r'
-
-# compilation
-echo 'Build...' && echo -en 'travis_fold:start:build\\r'
-echo "compilation:"
-make clean; make -j2 all
-if [[ $? -ne 0 ]]; then exit 1; fi
-echo -en 'travis_fold:end:build\\r'
 
 ###########################################################
 # test examples
 ###########################################################
+
 # testing internal mesher example (short & quick for all configuration)
 echo 'Tests...' && echo -en 'travis_fold:start:tests\\r'
+
 # runs test
 echo "test directory: $dir"
 echo
+
 cd $dir
+
 if [ "$TESTID" == "4" ]; then
   # runs default tests
   make tests
@@ -125,7 +103,8 @@ else
   sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
   # shortens output interval to avoid timeouts
   sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 50:" DATA/Par_file
-  #
+
+  # more specific directory setups
   # acoustic examples
   if [ "$TESTDIR" == "2" ]; then
     sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
@@ -135,10 +114,32 @@ else
     sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
     sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 20:" DATA/Par_file
   fi
-  #
+  # waterlayered_halfspace example
+  if [ "$TESTDIR" == "13" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 600:" DATA/Par_file
+  fi
+  # tpv5 example
+  if [ "$TESTDIR" == "16" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 1200:" DATA/Par_file
+  fi
+  # socal examples
+  if [ "$TESTDIR" == "17" ]; then
+    sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
+  fi
+  # SEP example
+  if [ "$TESTDIR" == "19" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
+  fi
+  # small_adjoint example
+  if [ "$TESTDIR" == "26" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
+  fi
+
+  # more specific test setups
   # simple mesh example
   if [ "$TESTID" == "8" ]; then
-    sed -i "s:^NSTEP .*:NSTEP    = 400:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 800:" DATA/Par_file
   fi
   # debug+double precision example (acoustic)
   if [ "$TESTID" == "10" ]; then
@@ -164,13 +165,7 @@ else
   # acoustic example w/ CUDA compilation
   if [ "$TESTID" == "19" ]; then
     sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
-    sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
-  fi
-  #
-  # socal examples
-  if [ "$TESTDIR" == "17" ]; then
-    sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
-    sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
   fi
   # socal example w/ 1d_socal
   if [ "$TESTID" == "22" ]; then
@@ -192,13 +187,9 @@ else
   if [ "$TESTID" == "25" ]; then
     sed -i "s:^NSTEP .*:NSTEP    = 2000:" DATA/Par_file
   fi
-  # SEP example
-  if [ "$TESTID" == "26" ]; then
-    sed -i "s:^NSTEP .*:NSTEP    = 600:" DATA/Par_file
-  fi
   # coupled with FK
   if [ "$TESTID" == "27" ]; then
-    sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
+    sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
   fi
   # elastic, no absorbing
   if [ "$TESTID" == "29" ]; then
@@ -229,6 +220,7 @@ else
   if [ "$TESTID" == "16" ]; then
     # kernel script
     ./run_this_example_kernel.sh
+    if [[ $? -ne 0 ]]; then exit 1; fi
 
     # reverse order of seismogram output for comparison
     mv OUTPUT_FILES/DB.X20.MXP.semp tmp
@@ -239,20 +231,35 @@ else
   fi
   if [[ $? -ne 0 ]]; then exit 1; fi
 
+  # simulation done
+  echo
+  echo "simulation done: `pwd`"
+  echo `date`
+  echo
+
   # seismogram comparison
   if [ "$TESTCOV" == "0" ] && [ ! "$TESTID" == "11" ]; then
     my_test
   fi
-  cd $WORKDIR
 fi
-if [[ $? -ne 0 ]]; then exit 1; fi
-echo -en 'travis_fold:end:tests\\r'
 
+# checks
+if [[ $? -ne 0 ]]; then exit 1; fi
+
+# simulation done
+echo
+echo "test done: `pwd`"
+echo `date`
+echo
+
+echo -en 'travis_fold:end:tests\\r'
+echo
 
 # code coverage: https://codecov.io/gh/geodynamics/specfem3d/
 # additional runs for coverage
 #
 # note: log becomes too long, trying to fold each test output
+cd $WORKDIR
 
 ##
 ## homogeneous halfspace examples
@@ -262,6 +269,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ##
   ## testing homogeneous halfspace
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/"
+  echo
   cd EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -275,6 +285,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ##
   ## testing hex27 example
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/homogeneous_halfspace_HEX27_elastic_no_absorbing/"
+  echo
   cd EXAMPLES/homogeneous_halfspace_HEX27_elastic_no_absorbing/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -288,6 +301,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ##
   ## testing poroelastic
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/homogeneous_poroelastic/"
+  echo
   cd EXAMPLES/homogeneous_poroelastic/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -302,6 +318,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ##
   ## testing acoustic kernel simulation
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/homogeneous_acoustic/"
+  echo
   cd EXAMPLES/homogeneous_acoustic/
   cp -v DATA/Par_file DATA/Par_file.org
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
@@ -334,6 +353,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ##
   ## testing PML acoustic
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/"
+  echo
   cd EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -347,6 +369,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ##
   ## testing PML elastic
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/"
+  echo
   cd EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -363,6 +388,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ##
   ## testing noise
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/noise_tomography/"
+  echo
   cd EXAMPLES/noise_tomography/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   sed -i '10,$ d' NOISE_TOMOGRAPHY/S_squared  # truncates file, deletes all lines from line 10 till end
@@ -380,6 +408,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ##
   ## testing tomographic model
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/tomographic_model/"
+  echo
   cd EXAMPLES/tomographic_model/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -394,6 +425,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ##
   ## testing layered halfspace
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/layered_halfspace/"
+  echo
   cd EXAMPLES/layered_halfspace/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -407,6 +441,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ##
   ## testing waterlayered serial
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/waterlayered_halfspace/"
+  echo
   cd EXAMPLES/waterlayered_halfspace/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -424,6 +461,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ##
   ## testing simple model
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/meshfem3D_examples/simple_model/"
+  echo
   cd EXAMPLES/meshfem3D_examples/simple_model/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -438,6 +478,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ##
   ## testing socal example
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/meshfem3D_examples/socal1D/"
+  echo
   cd EXAMPLES/meshfem3D_examples/socal1D/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -451,6 +494,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ##
   ## testing socal example
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/meshfem3D_examples/socal1D/"
+  echo
   cd EXAMPLES/meshfem3D_examples/socal1D/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   sed -i "s:^MODEL .*:MODEL    = 1d_socal:" DATA/Par_file
@@ -466,6 +512,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ##
   ## testing socal example
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/meshfem3D_examples/socal1D/"
+  echo
   cd EXAMPLES/meshfem3D_examples/socal1D/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   sed -i "s:^MODEL .*:MODEL    = 1d_prem:" DATA/Par_file
@@ -481,6 +530,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ##
   ## testing socal example
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/meshfem3D_examples/socal1D/"
+  echo
   cd EXAMPLES/meshfem3D_examples/socal1D/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   sed -i "s:^MODEL .*:MODEL    = 1d_cascadia:" DATA/Par_file
@@ -496,6 +548,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ##
   ## testing cavity example
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/meshfem3D_examples/cavity/"
+  echo
   cd EXAMPLES/meshfem3D_examples/cavity/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -509,6 +564,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ##
   ## testing SEP model
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/meshfem3D_examples/sep_bathymetry/"
+  echo
   cd EXAMPLES/meshfem3D_examples/sep_bathymetry/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -523,6 +581,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ##
   ## testing fault example
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/fault_examples/tpv5/"
+  echo
   cd EXAMPLES/fault_examples/tpv5/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -536,6 +597,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ##
   ## testing coupling FK
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/small_example_coupling_FK_specfem/"
+  echo
   cd EXAMPLES/small_example_coupling_FK_specfem/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -549,6 +613,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ##
   ## testing Gmsh example
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/Gmsh_simple_lddrk/"
+  echo
   cd EXAMPLES/Gmsh_simple_lddrk/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -562,6 +629,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ##
   ## testing decompose_mesh_MPI example
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/decompose_mesh_MPI/"
+  echo
   cd EXAMPLES/decompose_mesh_MPI/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -575,6 +645,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ##
   ## testing regular elements example
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/meshfem3D_examples/regular_element_mesh/"
+  echo
   cd EXAMPLES/meshfem3D_examples/regular_element_mesh/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -588,6 +661,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ##
   ## testing regular elements example
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/small_adjoint_multiple_sources/"
+  echo
   cd EXAMPLES/small_adjoint_multiple_sources/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -601,6 +677,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ##
   ## testing regular elements example
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/waterlayered_poroelastic/"
+  echo
   cd EXAMPLES/waterlayered_poroelastic/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -618,6 +697,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "3" ]; then
   ##
   ## testing elastic serial
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/homogeneous_halfspace/"
+  echo
   cd EXAMPLES/homogeneous_halfspace/
   cp -v DATA/Par_file DATA/Par_file.org
   sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
@@ -649,6 +731,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "3" ]; then
   ##
   ## testing simple model serial
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/meshfem3D_examples/simple_model"
+  echo
   cd EXAMPLES/meshfem3D_examples/simple_model
   cp -v DATA/Par_file DATA/Par_file.org
   sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
@@ -669,6 +754,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "3" ]; then
   ##
   ## testing Gmsh-hex27 example
   ##
+  echo "##################################################################"
+  echo "EXAMPLES/Gmsh_simple_box_hex27/"
+  echo
   cd EXAMPLES/Gmsh_simple_box_hex27/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
@@ -678,5 +766,7 @@ fi
 echo -en 'travis_fold:end:coverage.Gmsh-hex27\\r'
 
 # done
-echo "done `pwd`"
+echo "all done"
+echo `date`
+echo
 

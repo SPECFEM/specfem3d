@@ -47,6 +47,8 @@
 !! x being the variable name inside the code.
 #ifdef __INTEL_COMPILER
 #define STRINGIFY_VAR(a) #a, a
+#elif __PGI
+#define STRINGIFY_VAR(a) #a, a
 #else
 #define STRINGIFY_VAR(a) "a", a
 #endif
@@ -58,6 +60,25 @@
 #define STRINGIFY_VAR_TYPE(t,a) #a, t%a
 #else
 #define STRINGIFY_VAR_TYPE(t,a) "a", t%a
+#endif
+
+! for debugging
+#define DEBUG_ADIOS 0
+#if DEBUG_ADIOS == 1   /* low-level tracing */
+#define TRACE_ADIOS(x) print *,'***debug ADIOS: ',x,' ***'
+#define TRACE_ADIOS_ARG(x,y) print *,'***debug ADIOS: ',x,y,' ***'
+#define TRACE_ADIOS_L2(x)
+#define TRACE_ADIOS_L2_ARG(x,y)
+#elif DEBUG_ADIOS == 2  /* high-level tracing */
+#define TRACE_ADIOS(x) print *,'***debug ADIOS: ',x,' ***'
+#define TRACE_ADIOS_ARG(x,y) print *,'***debug ADIOS: ',x,y,' ***'
+#define TRACE_ADIOS_L2(x) print *,'***debug ADIOS: ',x,' ***'
+#define TRACE_ADIOS_L2_ARG(x,y) print *,'***debug ADIOS: ',x,y,' ***'
+#else
+#define TRACE_ADIOS(x)
+#define TRACE_ADIOS_ARG(x,y)
+#define TRACE_ADIOS_L2(x)
+#define TRACE_ADIOS_L2_ARG(x,y)
 #endif
 
 !-----------------------------------------------------------------------

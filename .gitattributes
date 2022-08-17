@@ -6,3 +6,4 @@
 *.semp binary
 *.adj binary
 *.ascii binary
+*.bin binary

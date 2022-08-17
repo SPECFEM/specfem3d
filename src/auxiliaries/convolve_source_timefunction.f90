@@ -56,7 +56,7 @@
 
 ! allocate arrays
   allocate(timeval(nlines),sem(nlines),sem_fil(nlines),stat=ier)
-  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1181')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1181')
 
 ! read the input seismogram
   do i = 1,nlines
@@ -133,24 +133,4 @@
   enddo
 
   end program convolve_source_time_function
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-! version without rank number printed in the error message
-
-  subroutine my_local_exit_MPI_without_rank(error_msg)
-
-  implicit none
-
-  character(len=*) error_msg
-
-! write error message to screen
-  write(*,*) error_msg(1:len(error_msg))
-  write(*,*) 'Error detected, aborting MPI...'
-
-  stop 'Fatal error'
-
-  end subroutine my_local_exit_MPI_without_rank
 

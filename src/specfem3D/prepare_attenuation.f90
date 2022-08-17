@@ -52,6 +52,14 @@
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) "preparing attenuation"
+    write(IMAIN,*) "  The code uses a constant Q quality factor, but approximated"
+    write(IMAIN,*) "  based on a series of Zener standard linear solids (SLS)."
+    write(IMAIN,*) "  Approximation is performed in the following frequency band:"
+    write(IMAIN,*)
+    write(IMAIN,*) "  number of SLS bodies: ",N_SLS
+    write(IMAIN,*)
+    write(IMAIN,*) "  Reference frequency of anelastic model (Hz): ",sngl(ATTENUATION_f0_REFERENCE)
+    write(IMAIN,*) "                                   period (s): ",sngl(1.0/ATTENUATION_f0_REFERENCE)
     call flush_IMAIN()
   endif
 
@@ -112,6 +120,12 @@
   ! determines central frequency f_c_source of attenuation period band
   call get_attenuation_constants(min_resolved_period,tau_sigma_dble, &
                                  f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
+
+  ! checks
+  if (f_c_source <= 0.d0) call exit_MPI(myrank,'Error: invalid attenuation center frequency, cannot be zero or negative')
+
+  ! stores center frequency as shared parameter
+  ATT_F_C_SOURCE = f_c_source
 
   ! determines alphaval,betaval,gammaval for runge-kutta scheme
   tau_sigma(:) = real(tau_sigma_dble(:),kind=CUSTOM_REAL)
@@ -205,7 +219,13 @@
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) "  attenuation period range min/max: ",MIN_ATTENUATION_PERIOD,'/',MAX_ATTENUATION_PERIOD,' (s)'
+    write(IMAIN,*) "  Attenuation frequency band min/max (Hz):",sngl(1.0/MAX_ATTENUATION_PERIOD), &
+                                                            '/',sngl(1.0/MIN_ATTENUATION_PERIOD)
+    write(IMAIN,*) "              period band    min/max (s) :",sngl(MIN_ATTENUATION_PERIOD), &
+                                                            '/',sngl(MAX_ATTENUATION_PERIOD)
+    write(IMAIN,*) "  Logarithmic center frequency (Hz):",sngl(ATT_F_C_SOURCE)
+    write(IMAIN,*) "                     period     (s):",sngl(1.0/ATT_F_C_SOURCE)
+    write(IMAIN,*)
     call flush_IMAIN()
   endif
 

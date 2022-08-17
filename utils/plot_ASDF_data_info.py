@@ -1,10 +1,28 @@
 #!/usr/bin/env python
 #
+# reads in an ASDF-format file and outputs infos about content and checks validity
 # see: http://seismicdata.github.io/pyasdf/tutorial.html
 #
 from __future__ import print_function
+
 import sys
-import pyasdf
+
+try:
+    import pyasdf
+except:
+    print("Error importing pyasdf, check if pyasdf module is installed")
+    print("")
+    # python version
+    print("python version:")
+    print(sys.version)
+    print("")
+    # import module paths
+    print("module paths:")
+    for path in sys.path:
+        print(path)
+    print("")
+    sys.exit(1)
+
 
 def plot_ASDF_data_info(file,show_plot):
     print("")
@@ -65,9 +83,9 @@ def plot_ASDF_data_info(file,show_plot):
 
 
 def usage():
-    print("usage: ./read_asdf_data_info.py filename[e.g. synthetics.h5] [show]")
+    print("usage: ./plot_ASDF_data_info.py filename[e.g. synthetic.h5] [show]")
     print(" with")
-    print("   filename - e.g. synthetics.h5")
+    print("   filename - e.g. OUTPUT_FILES/synthetic.h5")
     print("   show   - (optional) plot waveforms")
     sys.exit(1)
 

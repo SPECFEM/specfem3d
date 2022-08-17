@@ -30,7 +30,7 @@
                                  nspec,nglob,prname,nodes_coords,ibool,ispec_material_id)
 
   use constants
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+  use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   implicit none
 

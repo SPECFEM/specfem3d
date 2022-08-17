@@ -29,12 +29,16 @@
 
   subroutine compute_forces_viscoelastic_calling()
 
+
   use specfem_par
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
   use pml_par
-  use fault_solver_dynamic, only: bc_dynflt_set3d_all,SIMULATION_TYPE_DYN,synchronize_GPU
+
+  ! fault simulations
+  use constants, only: FAULT_SYNCHRONIZE_DISPL_VELOC,FAULT_SYNCHRONIZE_ACCEL
+  use fault_solver_dynamic, only: bc_dynflt_set3d_all,SIMULATION_TYPE_DYN,fault_output_synchronize_GPU,NT_RECORD_LENGTH
   use fault_solver_kinematic, only: bc_kinflt_set_all,SIMULATION_TYPE_KIN
 
   implicit none
@@ -51,7 +55,9 @@
   ! GPU
   if (GPU_MODE) then
     ! checks if for kernel simulation with both, forward & backward fields
-    if (SIMULATION_TYPE == 3 .and. .not. UNDO_ATTENUATION_AND_OR_PML) then
+    if (SIMULATION_TYPE == 3 &
+        .and. .not. UNDO_ATTENUATION_AND_OR_PML &
+        .and. .not. (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION)) then
       ! runs with the additionally optimized GPU routine
       ! (combines forward/backward fields in main compute_kernel_acoustic)
       call compute_forces_viscoelastic_GPU_calling()
@@ -69,16 +75,15 @@
   ! kbai added the following two synchronizations to ensure that the displacement and velocity values
   ! at nodes on MPI interfaces stay equal on all processors that share the node.
   ! Do this only for dynamic rupture simulations
-  if (SIMULATION_TYPE_DYN) then
+  if (FAULT_SIMULATION) then
     ! only needed for parallel simulations
-    if (NPROC > 1) then
+    if (FAULT_SYNCHRONIZE_DISPL_VELOC .and. SIMULATION_TYPE_DYN .and. NPROC > 1) then
       ! GPU needs to transfer fields to CPU first - todo: in future, limit this to the MPI boundary buffers only
       if (GPU_MODE) then
         ! transfers displacement & velocity to the CPU
         call transfer_displ_from_device(NDIM*NGLOB_AB, displ, Mesh_pointer)
         call transfer_veloc_from_device(NDIM*NGLOB_AB, veloc, Mesh_pointer)
       endif
-
       ! displacement
       call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,displ, &
                                                num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -89,7 +94,6 @@
                                                num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                                                nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                                                my_neighbors_ext_mesh)
-
       ! GPU: copies "corrected" wavefields from CPU to GPU
       if (GPU_MODE) then
         ! transfers displacement & velocity back to the GPU
@@ -124,7 +128,7 @@
       call compute_forces_viscoelastic_cuda(Mesh_pointer, iphase, deltat, &
                                             nspec_outer_elastic, &
                                             nspec_inner_elastic, &
-                                            COMPUTE_AND_STORE_STRAIN,ATTENUATION,ANISOTROPY,1) ! 1 == forward
+                                            COMPUTE_AND_STORE_STRAIN,ATTENUATION,1) ! 1 == forward
     endif
 
     ! debug timing
@@ -171,7 +175,7 @@
         else
           ! on GPU
           call compute_stacey_viscoelastic_GPU(iphase,num_abs_boundary_faces, &
-                                               SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                               NSTEP,it, &
                                                b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
                                                Mesh_pointer,1) ! 1 == forward
         endif
@@ -285,12 +289,13 @@
       ! waits for send/receive requests to be completed and assembles values
       if (.not. GPU_MODE) then
         ! on CPU
-        call assemble_MPI_vector_async_w_ord(NPROC,NGLOB_AB,accel, &
-                                             buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
-                                             max_nibool_interfaces_ext_mesh, &
-                                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                             request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
-                                             my_neighbors_ext_mesh)
+        ! receives MPI buffers
+        call assemble_MPI_vector_async_recv(NPROC,NGLOB_AB,accel, &
+                                            buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                            max_nibool_interfaces_ext_mesh, &
+                                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                            request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
+                                            my_neighbors_ext_mesh)
       else
         ! on GPU
         ! waits for send/receive requests to be completed and assembles values
@@ -304,62 +309,50 @@
     endif
   enddo
 
-  ! Percy, Fault boundary term B*tau is added to the assembled forces
-  !        which at this point are stored in the array 'accel'
-  if (SIMULATION_TYPE_DYN .or. SIMULATION_TYPE_KIN) then
-
-    if (.false.) then
-      ! will remove later if GPU fault solver is fully tested
-      ! transfers wavefields to the CPU
-      call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel, Mesh_pointer)
-
-      ! adds dynamic source
-      if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
-      if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
-      ! GPU fault solver
-      !call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank,it)
-
-      !call transfer_boundary_from_device_a(Mesh_pointer,nspec_outer_elastic)
-      ! transfer data from mp->d_boundary to mp->h_boundary
-      !call sync_copy_from_device(Mesh_pointer,2,buffer_send_vector_ext_mesh)
-      ! transfer data from mp->h_boundary to send_buffer
-      !call assemble_MPI_vector_send_cuda(NPROC, &
-      !              buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
-      !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-      !              nibool_interfaces_ext_mesh, &
-      !              my_neighbors_ext_mesh, &
-      !              request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
-
-      ! transfers MPI buffers onto GPU
-      !call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
-      !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-      !              request_recv_vector_ext_mesh)
-      ! waits for send/receive requests to be completed and assembles values
-      !call synchronize_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel, Mesh_pointer, &
-      !                  buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
-      !                  max_nibool_interfaces_ext_mesh, &
-      !                  nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-      !                  request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
-      !                  1)
-
-      !if (mod(it,500) == 0 .and. it /= 0) call synchronize_GPU(it)  ! output results every 500 steps
-
-      ! transfers acceleration back to GPU
-      ! call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
-      ! will remove later if GPU fault solver is fully tested
+  ! Fault boundary term B*tau is added to the assembled forces
+  ! which at this point are stored in the array 'accel'
+  if (FAULT_SIMULATION) then
+    ! makes sure all processes have same accel values on MPI boundary points
+    if (FAULT_SYNCHRONIZE_ACCEL .and. NPROC > 1) then
+      ! note: the CPU version uses an "ordered" assembly stage, where the MPI buffer contributions are added
+      !       in the same order on all processes. this should assure that accel is the same on all MPI boundary points.
+      !
+      !       the GPU version doesn't ensure this ordered assembly. thus, one might have to enforce the same values
+      !       on the boundary points with this following setup.
+      !
+      ! using the fault_examples/tpv5 as a test, this is not needed for accuracy.
+      ! however, this should to be tested further with more cases...
+      !
+      ! GPU needs to transfer fields to CPU first - todo: in future, limit this to the MPI boundary buffers only
+      if (GPU_MODE) then
+        ! transfers to the CPU
+        call transfer_accel_from_device(NDIM*NGLOB_AB, accel, Mesh_pointer)
+      endif
+      ! acceleration
+      call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,accel, &
+                                               num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                               nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                               my_neighbors_ext_mesh)
+      ! GPU: copies "corrected" wavefields from CPU to GPU
+      if (GPU_MODE) then
+        ! transfers back to the GPU
+        call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
+      endif
     endif
 
-
+    ! computes fault force contribution
     if (.not. GPU_MODE) then
       ! on CPU
+      ! dynamic rupture
       if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
+      ! kinematic rupture
       if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
     else
       ! on GPU
       ! GPU fault solver
-      call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank,it)
+      call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,it)
       ! output results every 500 steps
-      if (mod(it,500) == 0 .and. it /= 0) call synchronize_GPU(it)
+      if ((mod(it,NT_RECORD_LENGTH) == 0 .or. it == it_end) .and. it /= 0) call fault_output_synchronize_GPU(it)
     endif
   endif
 
@@ -391,6 +384,7 @@
     endif
   endif
 
+  ! PML
   ! impose Dirichlet conditions on the outer edges of the C-PML layers
   if (PML_CONDITIONS) then
     do iface = 1,num_abs_boundary_faces
@@ -450,6 +444,7 @@
     endif
   endif
 
+  ! PML
   if (PML_CONDITIONS) then
     if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
       if (nglob_interface_PML_elastic > 0) then
@@ -473,8 +468,6 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
-  use fault_solver_dynamic, only: SIMULATION_TYPE_DYN
-  use fault_solver_kinematic, only: SIMULATION_TYPE_KIN
 
   implicit none
 
@@ -488,7 +481,9 @@
   ! GPU
   if (GPU_MODE) then
     ! checks if for kernel simulation with both, forward & backward fields
-    if (SIMULATION_TYPE == 3 .and. .not. UNDO_ATTENUATION_AND_OR_PML) then
+    if (SIMULATION_TYPE == 3 &
+        .and. .not. UNDO_ATTENUATION_AND_OR_PML &
+        .and. .not. (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION)) then
       ! runs with the additionally optimized GPU routine
       ! (combines forward/backward fields in main compute_kernel_acoustic)
       ! all done in compute_forces_acoustic_GPU_calling()
@@ -503,8 +498,8 @@
   if (GPU_MODE .and. PML_CONDITIONS) call exit_MPI(myrank,'PML conditions not yet implemented on GPUs')
 
   ! check
-  if (SIMULATION_TYPE_DYN .or. SIMULATION_TYPE_KIN) then
-    stop 'SIMULATION_TYPE_DYN and SIMULATION_TYPE_KIN for backward simulation routine not implemented yet'
+  if (FAULT_SIMULATION) then
+    stop 'FAULT_SIMULATION (of TYPE_DYN and TYPE_KIN) for backward simulation routine not implemented yet'
   endif
 
   ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
@@ -528,7 +523,7 @@
       call compute_forces_viscoelastic_cuda(Mesh_pointer, iphase, b_deltat, &
                                             nspec_outer_elastic, &
                                             nspec_inner_elastic, &
-                                            COMPUTE_AND_STORE_STRAIN,ATTENUATION,ANISOTROPY,3) ! 3 == backward
+                                            COMPUTE_AND_STORE_STRAIN,ATTENUATION,3) ! 3 == backward
     endif
 
     ! computes additional contributions
@@ -556,7 +551,7 @@
         else
           ! on GPU
           call compute_stacey_viscoelastic_GPU(iphase,num_abs_boundary_faces, &
-                                               SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                               NSTEP,it, &
                                                b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
                                                Mesh_pointer,3) ! 3 == backward
         endif
@@ -633,12 +628,12 @@
       if (.not. GPU_MODE) then
         ! on CPU
         ! adjoint simulations
-        call assemble_MPI_vector_async_w_ord(NPROC,NGLOB_ADJOINT,b_accel, &
-                                             b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
-                                             max_nibool_interfaces_ext_mesh, &
-                                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                             b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh, &
-                                             my_neighbors_ext_mesh)
+        call assemble_MPI_vector_async_recv(NPROC,NGLOB_ADJOINT,b_accel, &
+                                            b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                            max_nibool_interfaces_ext_mesh, &
+                                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                            b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh, &
+                                            my_neighbors_ext_mesh)
       else
         ! on GPU
         call assemble_MPI_vector_write_cuda(NPROC,NGLOB_AB,b_accel, Mesh_pointer, &
@@ -724,8 +719,9 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use pml_par
-  use fault_solver_dynamic, only: bc_dynflt_set3d_all,SIMULATION_TYPE_DYN,synchronize_GPU
-  use fault_solver_kinematic, only: bc_kinflt_set_all,SIMULATION_TYPE_KIN
+
+  use fault_solver_dynamic, only: bc_dynflt_set3d_all,fault_output_synchronize_GPU,NT_RECORD_LENGTH
+  use fault_solver_kinematic, only: bc_kinflt_set_all
 
   implicit none
 
@@ -742,7 +738,7 @@
     call compute_forces_viscoelastic_cuda(Mesh_pointer, iphase, deltat, &
                                           nspec_outer_elastic, &
                                           nspec_inner_elastic, &
-                                          COMPUTE_AND_STORE_STRAIN,ATTENUATION,ANISOTROPY,0) ! 0 == both
+                                          COMPUTE_AND_STORE_STRAIN,ATTENUATION,0) ! 0 == both
 
     ! while inner elements compute "Kernel_2", we wait for MPI to
     ! finish and transfer the boundary terms to the device asynchronously
@@ -770,7 +766,7 @@
       ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
       if (STACEY_ABSORBING_CONDITIONS) then
         call compute_stacey_viscoelastic_GPU(iphase,num_abs_boundary_faces, &
-                                             SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                             NSTEP,it, &
                                              b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
                                              Mesh_pointer,0)
       endif
@@ -852,47 +848,13 @@
 
   enddo
 
-  !Percy , Fault boundary term B*tau is added to the assembled forces
-  !        which at this point are stored in the array 'accel'
-  if (SIMULATION_TYPE_DYN .or. SIMULATION_TYPE_KIN) then
-    ! transfers wavefields to the CPU
-    ! call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel, Mesh_pointer)
-    ! will remove later if GPU fault solver is fully tested
-
-    ! adds dynamic source
-    ! if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
-    ! if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
+  ! Fault boundary term B*tau is added to the assembled forces
+  ! which at this point are stored in the array 'accel'
+  if (FAULT_SIMULATION) then
     ! GPU fault solver
-    call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank,it)
-
-    !call transfer_boundary_from_device_a(Mesh_pointer,nspec_outer_elastic)
-    ! transfer data from mp->d_boundary to mp->h_boundary
-    !call sync_copy_from_device(Mesh_pointer,2,buffer_send_vector_ext_mesh)
-    ! transfer data from mp->h_boundary to send_buffer
-    !call assemble_MPI_vector_send_cuda(NPROC, &
-    !              buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
-    !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-    !              nibool_interfaces_ext_mesh, &
-    !              my_neighbors_ext_mesh, &
-    !              request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
-
-    ! transfers MPI buffers onto GPU
-    !call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
-    !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-    !              request_recv_vector_ext_mesh)
-    ! waits for send/receive requests to be completed and assembles values
-    !call synchronize_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel, Mesh_pointer, &
-    !                  buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
-    !                  max_nibool_interfaces_ext_mesh, &
-    !                  nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-    !                  request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
-    !                  1)
-
-    if (mod(it,500) == 0 .and. it /= 0) call synchronize_GPU(it)  ! output results every 500 steps
-
-    ! transfers acceleration back to GPU
-    ! call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
-    ! will remove later if GPU fault solver is fully tested
+    call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,it)
+    ! output results every 500 steps
+    if ((mod(it,NT_RECORD_LENGTH) == 0 .or. it == it_end) .and. it /= 0) call fault_output_synchronize_GPU(it)
   endif
 
   ! multiplies with inverse of mass matrix (note: rmass has been inverted already)

@@ -37,15 +37,15 @@ program xdecompose_mesh
   logical :: BROADCAST_AFTER_READ
   character(len=MAX_STRING_LEN) :: arg(3)
 
-! user output
+  ! user output
   print *
   print *,'**********************'
   print *,'Serial mesh decomposer'
   print *,'**********************'
   print *
 
-! check usage
-  do i=1,3
+  ! check usage
+  do i = 1,3
     call get_command_argument(i,arg(i))
     if (i <= 3 .and. trim(arg(i)) == '') then
       print *, 'Usage: ./xdecompose_mesh  nparts  input_directory output_directory'
@@ -70,21 +70,23 @@ program xdecompose_mesh
 
   ! checks adios parameters
   if (ADIOS_FOR_DATABASES) then
+    ! note: this decomposer runs as a single, serial process.
+    !       writing out ADIOS files would require a parallel section, for each process - not clear yet how to do that...
     print *, 'Error: ADIOS_FOR_DATABASES set to .true. in Par_file'
     print *, 'ADIOS format for databases stored by xdecompose_mesh not implemented yet, please check your Par_file settings...'
     stop 'Error ADIOS_FOR_DATABASES setting; Reenter command line'
   endif
 
-! reads in (CUBIT) mesh files: mesh_file,nodes_coord_file, ...
+  ! reads in (CUBIT) mesh files: mesh_file,nodes_coord_file, ...
   call read_mesh_files()
 
-! checks valence of nodes
+  ! checks valence of nodes
   call check_valence()
 
-! sets up elements for local time stepping
+  ! sets up elements for local time stepping
   call lts_setup_elements()
 
-! partitions mesh (using scotch, metis, or patoh partitioners via constants.h)
+  ! partitions mesh (using scotch, metis, or patoh partitioners via constants.h)
   call decompose_mesh()
 
 ! writes out database files
@@ -95,7 +97,7 @@ program xdecompose_mesh
     call write_mesh_databases()
   endif
 
-! user output
+  ! user output
   print *
   print *,'finished successfully'
   print *

@@ -26,6 +26,49 @@
 !=====================================================================
 
 
+  subroutine read_mesh_for_init()
+
+! reads in the value of NSPEC_AB and NGLOB_AB
+
+  use constants, only: MAX_STRING_LEN,IIN,myrank,I_should_read_the_database
+
+  use specfem_par, only: prname,LOCAL_PATH, &
+    NSPEC_AB,NGLOB_AB,NSPEC_IRREGULAR
+
+  implicit none
+  ! Local variables
+  integer :: ier
+  character(len=MAX_STRING_LEN) :: database_name
+
+  ! sets file name
+  call create_name_database(prname,myrank,LOCAL_PATH)
+  database_name = prname(1:len_trim(prname))//'external_mesh.bin'
+
+  if (I_should_read_the_database) then
+    open(unit=IIN,file=trim(database_name),status='old',action='read',form='unformatted',iostat=ier)
+    if (ier /= 0) then
+      print *,'Error could not open database file: ',trim(database_name)
+      call exit_mpi(myrank,'Error opening database file')
+    endif
+  endif
+
+  if (I_should_read_the_database) then
+    read(IIN) NSPEC_AB
+    read(IIN) NGLOB_AB
+    read(IIN) NSPEC_IRREGULAR
+  endif
+  call bcast_all_i_for_database(NSPEC_AB, 1)
+  call bcast_all_i_for_database(NGLOB_AB, 1)
+  call bcast_all_i_for_database(NSPEC_IRREGULAR, 1)
+
+  if (I_should_read_the_database) close(IIN)
+
+  end subroutine read_mesh_for_init
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine read_mesh_databases()
 
   use pml_par
@@ -37,14 +80,21 @@
   use specfem_par_movie
 
   implicit none
-  integer :: ier
+
+  ! local parameters
+  integer :: ier,itest
   character(len=MAX_STRING_LEN) :: database_name
+
+  ! debugging
+  integer :: i
+  logical, parameter :: DEBUG_MPI_ARRAYS = .false.
 
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) "Reading mesh databases..."
     write(IMAIN,*) "  reads binary mesh files: proc***_external_mesh.bin"
     write(IMAIN,*) "  from directory         : ",trim(LOCAL_PATH)
+    write(IMAIN,*)
     call flush_IMAIN()
   endif
 
@@ -56,8 +106,7 @@
 
 ! info about external mesh simulation
   if (I_should_read_the_database) then
-    open(unit=27,file=trim(database_name),status='old', &
-       action='read',form='unformatted',iostat=ier)
+    open(unit=IIN,file=trim(database_name),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
       print *,'Error could not open database file: ',trim(database_name)
       call exit_mpi(myrank,'Error opening database file')
@@ -65,37 +114,43 @@
   endif
 
   if (I_should_read_the_database) then
-    read(27) NSPEC_AB
-    read(27) NGLOB_AB
-    read(27) NSPEC_IRREGULAR
+    read(IIN) NSPEC_AB
+    read(IIN) NGLOB_AB
+    read(IIN) NSPEC_IRREGULAR
 
-    read(27) ibool
+    read(IIN) ibool
 
-    read(27) xstore
-    read(27) ystore
-    read(27) zstore
+    read(IIN) xstore
+    read(IIN) ystore
+    read(IIN) zstore
 
-    read(27) irregular_element_number
-    read(27) xix_regular
-    read(27) jacobian_regular
+    read(IIN) irregular_element_number
+    read(IIN) xix_regular
+    read(IIN) jacobian_regular
 
-    read(27) xix
-    read(27) xiy
-    read(27) xiz
-    read(27) etax
-    read(27) etay
-    read(27) etaz
-    read(27) gammax
-    read(27) gammay
-    read(27) gammaz
-    read(27) jacobian
+    read(IIN) xixstore
+    read(IIN) xiystore
+    read(IIN) xizstore
+    read(IIN) etaxstore
+    read(IIN) etaystore
+    read(IIN) etazstore
+    read(IIN) gammaxstore
+    read(IIN) gammaystore
+    read(IIN) gammazstore
+    read(IIN) jacobianstore
 
-    read(27) kappastore
-    read(27) mustore
+    read(IIN) kappastore
+    read(IIN) mustore
 
-    read(27) ispec_is_acoustic
-    read(27) ispec_is_elastic
-    read(27) ispec_is_poroelastic
+    read(IIN) ispec_is_acoustic
+    read(IIN) ispec_is_elastic
+    read(IIN) ispec_is_poroelastic
+  endif
+
+  ! checks i/o so far
+  if (I_should_read_the_database) then
+    read(IIN) itest
+    if (itest /= 9999) stop 'Error database read at position 1'
   endif
 
   call bcast_all_i_for_database(NSPEC_AB, 1)
@@ -106,40 +161,52 @@
   call bcast_all_cr_for_database(xix_regular, 1)
   call bcast_all_cr_for_database(jacobian_regular, 1)
 
-  if (size(xstore) > 0) call bcast_all_cr_for_database(xstore(1), size(xstore))
-  if (size(ystore) > 0) call bcast_all_cr_for_database(ystore(1), size(ystore))
-  if (size(zstore) > 0) call bcast_all_cr_for_database(zstore(1), size(zstore))
+  call bcast_all_cr_for_database(xstore(1), size(xstore))
+  call bcast_all_cr_for_database(ystore(1), size(ystore))
+  call bcast_all_cr_for_database(zstore(1), size(zstore))
 
-  call bcast_all_cr_for_database(xix(1,1,1,1), size(xix))
-  call bcast_all_cr_for_database(xiy(1,1,1,1), size(xiy))
-  call bcast_all_cr_for_database(xiz(1,1,1,1), size(xiz))
-  call bcast_all_cr_for_database(etax(1,1,1,1), size(etax))
-  call bcast_all_cr_for_database(etay(1,1,1,1), size(etay))
-  call bcast_all_cr_for_database(etaz(1,1,1,1), size(etaz))
-  call bcast_all_cr_for_database(gammax(1,1,1,1), size(gammax))
-  call bcast_all_cr_for_database(gammay(1,1,1,1), size(gammay))
-  call bcast_all_cr_for_database(gammaz(1,1,1,1), size(gammaz))
-  call bcast_all_cr_for_database(jacobian(1,1,1,1), size(jacobian))
+  call bcast_all_cr_for_database(xixstore(1,1,1,1), size(xixstore))
+  call bcast_all_cr_for_database(xiystore(1,1,1,1), size(xiystore))
+  call bcast_all_cr_for_database(xizstore(1,1,1,1), size(xizstore))
+  call bcast_all_cr_for_database(etaxstore(1,1,1,1), size(etaxstore))
+  call bcast_all_cr_for_database(etaystore(1,1,1,1), size(etaystore))
+  call bcast_all_cr_for_database(etazstore(1,1,1,1), size(etazstore))
+  call bcast_all_cr_for_database(gammaxstore(1,1,1,1), size(gammaxstore))
+  call bcast_all_cr_for_database(gammaystore(1,1,1,1), size(gammaystore))
+  call bcast_all_cr_for_database(gammazstore(1,1,1,1), size(gammazstore))
+  call bcast_all_cr_for_database(jacobianstore(1,1,1,1), size(jacobianstore))
 
   call bcast_all_cr_for_database(kappastore(1,1,1,1), size(kappastore))
   call bcast_all_cr_for_database(mustore(1,1,1,1), size(mustore))
 
-  if (size(ispec_is_acoustic) > 0) &
-    call bcast_all_l_for_database(ispec_is_acoustic(1), size(ispec_is_acoustic))
-  if (size(ispec_is_elastic) > 0) &
-    call bcast_all_l_for_database(ispec_is_elastic(1), size(ispec_is_elastic))
-  if (size(ispec_is_poroelastic) > 0) &
-    call bcast_all_l_for_database(ispec_is_poroelastic(1), size(ispec_is_poroelastic))
+  call bcast_all_l_for_database(ispec_is_acoustic(1), size(ispec_is_acoustic))
+  call bcast_all_l_for_database(ispec_is_elastic(1), size(ispec_is_elastic))
+  call bcast_all_l_for_database(ispec_is_poroelastic(1), size(ispec_is_poroelastic))
 
   ! all processes will have acoustic_simulation set if any flag is .true.
   call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
-  call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
+  call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
   ! number of acoustic elements in this partition
   nspec_acoustic = count(ispec_is_acoustic(:))
   ! number of elastic elements in this partition
   nspec_elastic = count(ispec_is_elastic(:))
+  ! number of elastic elements in this partition
+  nspec_poroelastic = count(ispec_is_poroelastic(:))
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  simulation w/ acoustic    domain: ',ACOUSTIC_SIMULATION
+    write(IMAIN,*) '  simulation w/ elastic     domain: ',ELASTIC_SIMULATION
+    write(IMAIN,*) '  simulation w/ poroelastic domain: ',POROELASTIC_SIMULATION
+    write(IMAIN,*)
+    write(IMAIN,*) '  slice 0 has:'
+    write(IMAIN,*) '  number of elements acoustic   :',nspec_acoustic
+    write(IMAIN,*) '  number of elements elastic    :',nspec_elastic
+    write(IMAIN,*) '  number of elements poroelastic:',nspec_poroelastic
+    call flush_IMAIN()
+  endif
 
   ! acoustic
   if (ACOUSTIC_SIMULATION) then
@@ -154,28 +221,35 @@
     allocate(potential_dot_dot_acoustic(NGLOB_AB*NB_RUNS_ACOUSTIC_GPU),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1422')
     if (ier /= 0) stop 'Error allocating array potential_dot_dot_acoustic'
+    potential_acoustic(:) = 0.0_CUSTOM_REAL; potential_dot_acoustic(:) = 0.0_CUSTOM_REAL
+    potential_dot_dot_acoustic(:) = 0.0_CUSTOM_REAL
+
     !if (SIMULATION_TYPE /= 1) then
     !  allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier) ! not used yet
     !  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1423')
     !  if (ier /= 0) stop 'Error allocating array potential_acoustic_adj_coupling'
+    !  potential_acoustic_adj_coupling(:) = 0.0_CUSTOM_REAL
     !endif
+
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1424')
     if (ier /= 0) stop 'Error allocating array rmass_acoustic'
-    if (I_should_read_the_database) read(27) rmass_acoustic
-    if (size(rmass_acoustic) > 0) call bcast_all_cr_for_database(rmass_acoustic(1), size(rmass_acoustic))
+    rmass_acoustic(:) = 0.0_CUSTOM_REAL
+
+    if (I_should_read_the_database) read(IIN) rmass_acoustic
+    call bcast_all_cr_for_database(rmass_acoustic(1), size(rmass_acoustic))
 
     ! initializes mass matrix contribution
     allocate(rmassz_acoustic(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1425')
     if (ier /= 0) stop 'Error allocating array rmassz_acoustic'
-    rmassz_acoustic(:) = 0._CUSTOM_REAL
+    rmassz_acoustic(:) = 0.0_CUSTOM_REAL
   endif
 
 ! rho array is needed for acoustic simulations but also for elastic simulations with CPML,
 ! read it in all cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
-  if (I_should_read_the_database) read(27) rhostore
+  if (I_should_read_the_database) read(IIN) rhostore
   call bcast_all_cr_for_database(rhostore(1,1,1,1), size(rhostore))
 
   ! elastic simulation
@@ -194,17 +268,21 @@
     allocate(accel(NDIM,NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1429')
     if (ier /= 0) stop 'Error allocating array accel'
+    displ(:,:) = 0.0_CUSTOM_REAL; veloc(:,:) = 0.0_CUSTOM_REAL; accel(:,:) = 0.0_CUSTOM_REAL
+
     if (SIMULATION_TYPE /= 1) then
       allocate(accel_adj_coupling(NDIM,NGLOB_AB),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1430')
       if (ier /= 0) stop 'Error allocating array accel_adj_coupling'
+      accel_adj_coupling(:,:) = 0.0_CUSTOM_REAL
     endif
 
     ! allocates mass matrix
     allocate(rmass(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1431')
-
     if (ier /= 0) stop 'Error allocating array rmass'
+    rmass(:) = 0.0_CUSTOM_REAL
+
     ! initializes mass matrix contributions
     allocate(rmassx(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1432')
@@ -223,6 +301,8 @@
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1436')
     if (ier /= 0) stop 'Error allocating array rho_vs'
+    rho_vp(:,:,:,:) = 0.0_CUSTOM_REAL; rho_vs(:,:,:,:) = 0.0_CUSTOM_REAL
+
     allocate(c11store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1437')
     allocate(c12store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
@@ -266,6 +346,13 @@
     allocate(c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1457')
     if (ier /= 0) stop 'Error allocating array c11store etc.'
+    c11store(:,:,:,:) = 0.0_CUSTOM_REAL; c12store(:,:,:,:) = 0.0_CUSTOM_REAL; c13store(:,:,:,:) = 0.0_CUSTOM_REAL
+    c14store(:,:,:,:) = 0.0_CUSTOM_REAL; c15store(:,:,:,:) = 0.0_CUSTOM_REAL; c16store(:,:,:,:) = 0.0_CUSTOM_REAL
+    c22store(:,:,:,:) = 0.0_CUSTOM_REAL; c23store(:,:,:,:) = 0.0_CUSTOM_REAL; c24store(:,:,:,:) = 0.0_CUSTOM_REAL
+    c25store(:,:,:,:) = 0.0_CUSTOM_REAL; c26store(:,:,:,:) = 0.0_CUSTOM_REAL; c33store(:,:,:,:) = 0.0_CUSTOM_REAL
+    c34store(:,:,:,:) = 0.0_CUSTOM_REAL; c35store(:,:,:,:) = 0.0_CUSTOM_REAL; c36store(:,:,:,:) = 0.0_CUSTOM_REAL
+    c44store(:,:,:,:) = 0.0_CUSTOM_REAL; c45store(:,:,:,:) = 0.0_CUSTOM_REAL; c46store(:,:,:,:) = 0.0_CUSTOM_REAL
+    c55store(:,:,:,:) = 0.0_CUSTOM_REAL; c56store(:,:,:,:) = 0.0_CUSTOM_REAL; c66store(:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! note: currently, they need to be defined, as they are used in some subroutine arguments
     allocate(R_xx(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
@@ -279,6 +366,8 @@
     allocate(R_yz(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1462')
     if (ier /= 0) stop 'Error allocating array R_xx etc.'
+    R_xx(:,:,:,:,:) = 0.0_CUSTOM_REAL; R_yy(:,:,:,:,:) = 0.0_CUSTOM_REAL; R_xy(:,:,:,:,:) = 0.0_CUSTOM_REAL
+    R_xz(:,:,:,:,:) = 0.0_CUSTOM_REAL; R_yz(:,:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! needed for attenuation and/or kernel computations
     allocate(epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
@@ -294,37 +383,48 @@
     allocate(epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1468')
     if (ier /= 0) stop 'Error allocating array epsilondev_xx etc.'
+    epsilondev_xx(:,:,:,:) = 0.0_CUSTOM_REAL; epsilondev_yy(:,:,:,:) = 0.0_CUSTOM_REAL
+    epsilondev_xy(:,:,:,:) = 0.0_CUSTOM_REAL; epsilondev_xz(:,:,:,:) = 0.0_CUSTOM_REAL
+    epsilondev_yz(:,:,:,:) = 0.0_CUSTOM_REAL; epsilondev_trace(:,:,:,:) = 0.0_CUSTOM_REAL
 
     allocate(R_trace(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1469')
     if (ier /= 0) stop 'Error allocating array R_trace etc.'
+    R_trace(:,:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! note: needed for some subroutine arguments
     allocate(epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1470')
     if (ier /= 0) stop 'Error allocating array epsilon_trace_over_3'
+    epsilon_trace_over_3(:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! needed for attenuation
     allocate(factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1471')
     if (ier /= 0) stop 'Error allocating array factor_common etc.'
+    factor_common(:,:,:,:,:) = 0.0_CUSTOM_REAL
 
     allocate(factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1472')
     if (ier /= 0) stop 'Error allocating array factor_common_kappa etc.'
+    factor_common_kappa(:,:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! reads mass matrices
-    if (I_should_read_the_database) read(27,iostat=ier) rmass
+    if (I_should_read_the_database) then
+      read(IIN,iostat=ier) rmass
+      if (ier /= 0) stop 'Error reading in array rmass'
+    endif
     call bcast_all_cr_for_database(rmass(1), size(rmass))
-    if (ier /= 0) stop 'Error reading in array rmass'
 
     if (APPROXIMATE_OCEAN_LOAD) then
       ! ocean mass matrix
       allocate(rmass_ocean_load(NGLOB_AB),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1473')
       if (ier /= 0) stop 'Error allocating array rmass_ocean_load'
-      if (I_should_read_the_database) read(27) rmass_ocean_load
-      if (size(rmass_ocean_load) > 0) call bcast_all_cr_for_database(rmass_ocean_load(1), size(rmass_ocean_load))
+      rmass_ocean_load(:) = 0.0_CUSTOM_REAL
+
+      if (I_should_read_the_database) read(IIN) rmass_ocean_load
+      call bcast_all_cr_for_database(rmass_ocean_load(1), size(rmass_ocean_load))
     else
       ! dummy allocation
       allocate(rmass_ocean_load(1),stat=ier)
@@ -333,12 +433,17 @@
     endif
 
     !pll material parameters for stacey conditions
-    if (I_should_read_the_database) read(27,iostat=ier) rho_vp
-    if (size(rho_vp) > 0) call bcast_all_cr_for_database(rho_vp(1,1,1,1), size(rho_vp))
-    if (ier /= 0) stop 'Error reading in array rho_vp'
-    if (I_should_read_the_database) read(27,iostat=ier) rho_vs
-    if (size(rho_vs) > 0) call bcast_all_cr_for_database(rho_vs(1,1,1,1), size(rho_vs))
-    if (ier /= 0) stop 'Error reading in array rho_vs'
+    if (I_should_read_the_database) then
+      read(IIN,iostat=ier) rho_vp
+      if (ier /= 0) stop 'Error reading in array rho_vp'
+    endif
+    call bcast_all_cr_for_database(rho_vp(1,1,1,1), size(rho_vp))
+
+    if (I_should_read_the_database) then
+      read(IIN,iostat=ier) rho_vs
+      if (ier /= 0) stop 'Error reading in array rho_vs'
+    endif
+    call bcast_all_cr_for_database(rho_vs(1,1,1,1), size(rho_vs))
 
   else
     ! no elastic attenuation & anisotropy
@@ -373,6 +478,10 @@
     allocate(accelw_poroelastic(NDIM,NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1480')
     if (ier /= 0) stop 'Error allocating array accelw_poroelastic'
+    displs_poroelastic(:,:) = 0.0_CUSTOM_REAL; velocs_poroelastic(:,:) = 0.0_CUSTOM_REAL
+    accels_poroelastic(:,:) = 0.0_CUSTOM_REAL
+    displw_poroelastic(:,:) = 0.0_CUSTOM_REAL; velocw_poroelastic(:,:) = 0.0_CUSTOM_REAL
+    accelw_poroelastic(:,:) = 0.0_CUSTOM_REAL
 
     allocate(rmass_solid_poroelastic(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1481')
@@ -380,6 +489,7 @@
     allocate(rmass_fluid_poroelastic(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1482')
     if (ier /= 0) stop 'Error allocating array rmass_fluid_poroelastic'
+    rmass_solid_poroelastic(:) = 0.0_CUSTOM_REAL; rmass_fluid_poroelastic(:) = 0.0_CUSTOM_REAL
 
     allocate(rhoarraystore(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1483')
@@ -400,6 +510,11 @@
     allocate(rho_vsI(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1491')
     if (ier /= 0) stop 'Error allocating array poroelastic properties'
+    rhoarraystore(:,:,:,:,:) = 0.0_CUSTOM_REAL; kappaarraystore(:,:,:,:,:) = 0.0_CUSTOM_REAL
+    etastore(:,:,:,:) = 0.0_CUSTOM_REAL; tortstore(:,:,:,:) = 0.0_CUSTOM_REAL
+    phistore(:,:,:,:) = 0.0_CUSTOM_REAL; permstore(:,:,:,:,:) = 0.0_CUSTOM_REAL
+    rho_vpI(:,:,:,:) = 0.0_CUSTOM_REAL; rho_vpII(:,:,:,:) = 0.0_CUSTOM_REAL
+    rho_vsI(:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! needed for kernel computations
     allocate(epsilonsdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
@@ -423,48 +538,44 @@
     allocate(epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1501')
     if (ier /= 0) stop 'Error allocating array epsilonsdev_xx etc.'
+    epsilonsdev_xx(:,:,:,:) = 0.0_CUSTOM_REAL; epsilonsdev_yy(:,:,:,:) = 0.0_CUSTOM_REAL
+    epsilonsdev_xy(:,:,:,:) = 0.0_CUSTOM_REAL; epsilonsdev_xz(:,:,:,:) = 0.0_CUSTOM_REAL
+    epsilonsdev_yz(:,:,:,:) = 0.0_CUSTOM_REAL
+    epsilonwdev_xx(:,:,:,:) = 0.0_CUSTOM_REAL; epsilonwdev_yy(:,:,:,:) = 0.0_CUSTOM_REAL
+    epsilonwdev_xy(:,:,:,:) = 0.0_CUSTOM_REAL; epsilonwdev_xz(:,:,:,:) = 0.0_CUSTOM_REAL
+    epsilonwdev_yz(:,:,:,:) = 0.0_CUSTOM_REAL
 
     allocate(epsilons_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1502')
     allocate(epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1503')
     if (ier /= 0) stop 'Error allocating array epsilons_trace_over_3 etc.'
+    epsilons_trace_over_3(:,:,:,:) = 0.0_CUSTOM_REAL; epsilonw_trace_over_3(:,:,:,:) = 0.0_CUSTOM_REAL
 
     if (I_should_read_the_database) then
-      read(27) rmass_solid_poroelastic
-      read(27) rmass_fluid_poroelastic
-      read(27) rhoarraystore
-      read(27) kappaarraystore
-      read(27) etastore
-      read(27) tortstore
-      read(27) permstore
-      read(27) phistore
-      read(27) rho_vpI
-      read(27) rho_vpII
-      read(27) rho_vsI
+      read(IIN) rmass_solid_poroelastic
+      read(IIN) rmass_fluid_poroelastic
+      read(IIN) rhoarraystore
+      read(IIN) kappaarraystore
+      read(IIN) etastore
+      read(IIN) tortstore
+      read(IIN) permstore
+      read(IIN) phistore
+      read(IIN) rho_vpI
+      read(IIN) rho_vpII
+      read(IIN) rho_vsI
     endif
-    if (size(rmass_solid_poroelastic) > 0) &
-      call bcast_all_cr_for_database(rmass_solid_poroelastic(1), size(rmass_solid_poroelastic))
-    if (size(rmass_fluid_poroelastic) > 0) &
-      call bcast_all_cr_for_database(rmass_fluid_poroelastic(1), size(rmass_fluid_poroelastic))
-    if (size(rhoarraystore) > 0) &
-      call bcast_all_cr_for_database(rhoarraystore(1,1,1,1,1), size(rhoarraystore))
-    if (size(kappaarraystore) > 0) &
-      call bcast_all_cr_for_database(kappaarraystore(1,1,1,1,1), size(kappaarraystore))
-    if (size(etastore) > 0) &
-      call bcast_all_cr_for_database(etastore(1,1,1,1), size(etastore))
-    if (size(tortstore) > 0) &
-      call bcast_all_cr_for_database(tortstore(1,1,1,1), size(tortstore))
-    if (size(permstore) > 0) &
-      call bcast_all_cr_for_database(permstore(1,1,1,1,1), size(permstore))
-    if (size(phistore) > 0) &
-      call bcast_all_cr_for_database(phistore(1,1,1,1), size(phistore))
-    if (size(rho_vpI) > 0) &
-      call bcast_all_cr_for_database(rho_vpI(1,1,1,1), size(rho_vpI))
-    if (size(rho_vpII) > 0) &
-      call bcast_all_cr_for_database(rho_vpII(1,1,1,1), size(rho_vpII))
-    if (size(rho_vsI) > 0) &
-      call bcast_all_cr_for_database(rho_vsI(1,1,1,1), size(rho_vsI))
+    call bcast_all_cr_for_database(rmass_solid_poroelastic(1), size(rmass_solid_poroelastic))
+    call bcast_all_cr_for_database(rmass_fluid_poroelastic(1), size(rmass_fluid_poroelastic))
+    call bcast_all_cr_for_database(rhoarraystore(1,1,1,1,1), size(rhoarraystore))
+    call bcast_all_cr_for_database(kappaarraystore(1,1,1,1,1), size(kappaarraystore))
+    call bcast_all_cr_for_database(etastore(1,1,1,1), size(etastore))
+    call bcast_all_cr_for_database(tortstore(1,1,1,1), size(tortstore))
+    call bcast_all_cr_for_database(permstore(1,1,1,1,1), size(permstore))
+    call bcast_all_cr_for_database(phistore(1,1,1,1), size(phistore))
+    call bcast_all_cr_for_database(rho_vpI(1,1,1,1), size(rho_vpI))
+    call bcast_all_cr_for_database(rho_vpII(1,1,1,1), size(rho_vpII))
+    call bcast_all_cr_for_database(rho_vsI(1,1,1,1), size(rho_vsI))
   else
     ! dummy allocations (needed for subroutine arguments)
     allocate(rhoarraystore(2,1,1,1,1), &
@@ -482,7 +593,7 @@
   if ((.not. ACOUSTIC_SIMULATION) .and. &
       (.not. ELASTIC_SIMULATION) .and. &
       (.not. POROELASTIC_SIMULATION)) then
-    if (I_should_read_the_database) close(27)
+    if (I_should_read_the_database) close(IIN)
     call exit_mpi(myrank,'Error no simulation type defined')
   endif
 
@@ -498,11 +609,11 @@
 
   if (PML_CONDITIONS) then
     if (I_should_read_the_database) then
-      read(27) NSPEC_CPML
-      read(27) CPML_width_x
-      read(27) CPML_width_y
-      read(27) CPML_width_z
-      read(27) min_distance_between_CPML_parameter
+      read(IIN) NSPEC_CPML
+      read(IIN) CPML_width_x
+      read(IIN) CPML_width_y
+      read(IIN) CPML_width_z
+      read(IIN) min_distance_between_CPML_parameter
     endif
     call bcast_all_i_for_database(NSPEC_CPML, 1)
     call bcast_all_cr_for_database(CPML_width_x, 1)
@@ -517,6 +628,7 @@
       allocate(CPML_to_spec(NSPEC_CPML),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1506')
       if (ier /= 0) stop 'Error allocating array CPML_to_spec'
+      CPML_regions(:) = 0; CPML_to_spec(:) = 0
 
       allocate(d_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1507')
@@ -545,61 +657,70 @@
       allocate(alpha_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1515')
       if (ier /= 0) stop 'Error allocating array alpha_store'
+      d_store_x(:,:,:,:) = 0.0_CUSTOM_REAL; d_store_y(:,:,:,:) = 0.0_CUSTOM_REAL; d_store_z(:,:,:,:) = 0.0_CUSTOM_REAL
+      K_store_x(:,:,:,:) = 0.0_CUSTOM_REAL; K_store_y(:,:,:,:) = 0.0_CUSTOM_REAL; K_store_z(:,:,:,:) = 0.0_CUSTOM_REAL
+      alpha_store_x(:,:,:,:) = 0.0_CUSTOM_REAL
+      alpha_store_y(:,:,:,:) = 0.0_CUSTOM_REAL
+      alpha_store_z(:,:,:,:) = 0.0_CUSTOM_REAL
 
       if (I_should_read_the_database) then
-        read(27) CPML_regions
-        read(27) CPML_to_spec
-        read(27) is_CPML
-        read(27) d_store_x
-        read(27) d_store_y
-        read(27) d_store_z
-        read(27) k_store_x
-        read(27) k_store_y
-        read(27) k_store_z
-        read(27) alpha_store_x
-        read(27) alpha_store_y
-        read(27) alpha_store_z
+        read(IIN) CPML_regions
+        read(IIN) CPML_to_spec
+        read(IIN) is_CPML
+        read(IIN) d_store_x
+        read(IIN) d_store_y
+        read(IIN) d_store_z
+        read(IIN) k_store_x
+        read(IIN) k_store_y
+        read(IIN) k_store_z
+        read(IIN) alpha_store_x
+        read(IIN) alpha_store_y
+        read(IIN) alpha_store_z
       endif
-      if (size(CPML_regions) > 0) call bcast_all_i_for_database(CPML_regions(1), size(CPML_regions))
-      if (size(CPML_to_spec) > 0) call bcast_all_i_for_database(CPML_to_spec(1), size(CPML_to_spec))
-      if (size(is_CPML) > 0) call bcast_all_l_for_database(is_CPML(1), size(is_CPML))
-      if (size(d_store_x) > 0) call bcast_all_cr_for_database(d_store_x(1,1,1,1), size(d_store_x))
-      if (size(d_store_y) > 0) call bcast_all_cr_for_database(d_store_y(1,1,1,1), size(d_store_y))
-      if (size(d_store_z) > 0) call bcast_all_cr_for_database(d_store_z(1,1,1,1), size(d_store_z))
-      if (size(k_store_x) > 0) call bcast_all_cr_for_database(k_store_x(1,1,1,1), size(k_store_x))
-      if (size(k_store_y) > 0) call bcast_all_cr_for_database(k_store_y(1,1,1,1), size(k_store_y))
-      if (size(k_store_z) > 0) call bcast_all_cr_for_database(k_store_z(1,1,1,1), size(k_store_z))
-      if (size(alpha_store_x) > 0) call bcast_all_cr_for_database(alpha_store_x(1,1,1,1), size(alpha_store_x))
-      if (size(alpha_store_y) > 0) call bcast_all_cr_for_database(alpha_store_y(1,1,1,1), size(alpha_store_y))
-      if (size(alpha_store_z) > 0) call bcast_all_cr_for_database(alpha_store_z(1,1,1,1), size(alpha_store_z))
+      call bcast_all_i_for_database(CPML_regions(1), size(CPML_regions))
+      call bcast_all_i_for_database(CPML_to_spec(1), size(CPML_to_spec))
+      call bcast_all_l_for_database(is_CPML(1), size(is_CPML))
+      call bcast_all_cr_for_database(d_store_x(1,1,1,1), size(d_store_x))
+      call bcast_all_cr_for_database(d_store_y(1,1,1,1), size(d_store_y))
+      call bcast_all_cr_for_database(d_store_z(1,1,1,1), size(d_store_z))
+      call bcast_all_cr_for_database(k_store_x(1,1,1,1), size(k_store_x))
+      call bcast_all_cr_for_database(k_store_y(1,1,1,1), size(k_store_y))
+      call bcast_all_cr_for_database(k_store_z(1,1,1,1), size(k_store_z))
+      call bcast_all_cr_for_database(alpha_store_x(1,1,1,1), size(alpha_store_x))
+      call bcast_all_cr_for_database(alpha_store_y(1,1,1,1), size(alpha_store_y))
+      call bcast_all_cr_for_database(alpha_store_z(1,1,1,1), size(alpha_store_z))
 
       if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
-        if (I_should_read_the_database) read(27) nglob_interface_PML_acoustic
+        if (I_should_read_the_database) read(IIN) nglob_interface_PML_acoustic
         call bcast_all_i_for_database(nglob_interface_PML_acoustic, 1)
-        if (I_should_read_the_database) read(27) nglob_interface_PML_elastic
+
+        if (I_should_read_the_database) read(IIN) nglob_interface_PML_elastic
         call bcast_all_i_for_database(nglob_interface_PML_elastic, 1)
+
         if (nglob_interface_PML_acoustic > 0) then
           allocate(points_interface_PML_acoustic(nglob_interface_PML_acoustic),stat=ier)
           if (ier /= 0) call exit_MPI_without_rank('error allocating array 1516')
           if (ier /= 0) stop 'Error allocating array points_interface_PML_acoustic'
-          if (I_should_read_the_database) read(27) points_interface_PML_acoustic
-          if (size(points_interface_PML_acoustic) > 0) &
-            call bcast_all_i_for_database(points_interface_PML_acoustic(1), size(points_interface_PML_acoustic))
+          points_interface_PML_acoustic(:) = 0
+
+          if (I_should_read_the_database) read(IIN) points_interface_PML_acoustic
+          call bcast_all_i_for_database(points_interface_PML_acoustic(1), size(points_interface_PML_acoustic))
         endif
         if (nglob_interface_PML_elastic > 0) then
           allocate(points_interface_PML_elastic(nglob_interface_PML_elastic),stat=ier)
           if (ier /= 0) call exit_MPI_without_rank('error allocating array 1517')
           if (ier /= 0) stop 'Error allocating array points_interface_PML_elastic'
-          if (I_should_read_the_database) read(27) points_interface_PML_elastic
-          if (size(points_interface_PML_elastic) > 0) &
-            call bcast_all_i_for_database(points_interface_PML_elastic(1), size(points_interface_PML_elastic))
+          points_interface_PML_elastic(:) = 0
+
+          if (I_should_read_the_database) read(IIN) points_interface_PML_elastic
+          call bcast_all_i_for_database(points_interface_PML_elastic(1), size(points_interface_PML_elastic))
         endif
       endif
     endif
   endif
 
   ! absorbing boundary surface
-  if (I_should_read_the_database) read(27) num_abs_boundary_faces
+  if (I_should_read_the_database) read(IIN) num_abs_boundary_faces
   call bcast_all_i_for_database(num_abs_boundary_faces, 1)
 
   ! checks
@@ -616,49 +737,54 @@
   allocate(abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1521')
   if (ier /= 0) stop 'Error allocating array abs_boundary_ispec etc.'
+  abs_boundary_ispec(:) = 0; abs_boundary_ijk(:,:,:) = 0
+  abs_boundary_jacobian2Dw(:,:) = 0.0_CUSTOM_REAL; abs_boundary_normal(:,:,:) = 0.0_CUSTOM_REAL
 
   if (num_abs_boundary_faces > 0) then
     if (I_should_read_the_database) then
-      read(27) abs_boundary_ispec
-      read(27) abs_boundary_ijk
-      read(27) abs_boundary_jacobian2Dw
-      read(27) abs_boundary_normal
+      read(IIN) abs_boundary_ispec
+      read(IIN) abs_boundary_ijk
+      read(IIN) abs_boundary_jacobian2Dw
+      read(IIN) abs_boundary_normal
     endif
-    if (size(abs_boundary_ispec) > 0) &
-      call bcast_all_i_for_database(abs_boundary_ispec(1), size(abs_boundary_ispec))
-    if (size(abs_boundary_ijk) > 0) &
-      call bcast_all_i_for_database(abs_boundary_ijk(1,1,1), size(abs_boundary_ijk))
-    if (size(abs_boundary_jacobian2Dw) > 0) &
-      call bcast_all_cr_for_database(abs_boundary_jacobian2Dw(1,1), size(abs_boundary_jacobian2Dw))
-    if (size(abs_boundary_normal) > 0) &
-      call bcast_all_cr_for_database(abs_boundary_normal(1,1,1), size(abs_boundary_normal))
+    call bcast_all_i_for_database(abs_boundary_ispec(1), size(abs_boundary_ispec))
+    call bcast_all_i_for_database(abs_boundary_ijk(1,1,1), size(abs_boundary_ijk))
+    call bcast_all_cr_for_database(abs_boundary_jacobian2Dw(1,1), size(abs_boundary_jacobian2Dw))
+    call bcast_all_cr_for_database(abs_boundary_normal(1,1,1), size(abs_boundary_normal))
 
     if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
       ! store mass matrix contributions
       if (ELASTIC_SIMULATION) then
         if (I_should_read_the_database) then
-          read(27) rmassx
-          read(27) rmassy
-          read(27) rmassz
+          read(IIN) rmassx
+          read(IIN) rmassy
+          read(IIN) rmassz
         endif
-        if (size(rmassx) > 0) call bcast_all_cr_for_database(rmassx(1), size(rmassx))
-        if (size(rmassy) > 0) call bcast_all_cr_for_database(rmassy(1), size(rmassy))
-        if (size(rmassz) > 0) call bcast_all_cr_for_database(rmassz(1), size(rmassz))
+        call bcast_all_cr_for_database(rmassx(1), size(rmassx))
+        call bcast_all_cr_for_database(rmassy(1), size(rmassy))
+        call bcast_all_cr_for_database(rmassz(1), size(rmassz))
       endif
       if (ACOUSTIC_SIMULATION) then
-        if (I_should_read_the_database) read(27) rmassz_acoustic
-        if (size(rmassz_acoustic) > 0) call bcast_all_cr_for_database(rmassz_acoustic(1), size(rmassz_acoustic))
+        if (I_should_read_the_database) read(IIN) rmassz_acoustic
+        call bcast_all_cr_for_database(rmassz_acoustic(1), size(rmassz_acoustic))
       endif
     endif
   endif
 
+  ! checks i/o so far
   if (I_should_read_the_database) then
-    read(27) nspec2D_xmin
-    read(27) nspec2D_xmax
-    read(27) nspec2D_ymin
-    read(27) nspec2D_ymax
-    read(27) NSPEC2D_BOTTOM
-    read(27) NSPEC2D_TOP
+    read(IIN) itest
+    if (itest /= 9998) stop 'Error database read at position 2'
+  endif
+
+  ! boundaries
+  if (I_should_read_the_database) then
+    read(IIN) nspec2D_xmin
+    read(IIN) nspec2D_xmax
+    read(IIN) nspec2D_ymin
+    read(IIN) nspec2D_ymax
+    read(IIN) NSPEC2D_BOTTOM
+    read(IIN) NSPEC2D_TOP
   endif
   call bcast_all_i_for_database(nspec2D_xmin, 1)
   call bcast_all_i_for_database(nspec2D_xmax, 1)
@@ -680,24 +806,29 @@
   allocate(ibelm_top(NSPEC2D_TOP),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1527')
   if (ier /= 0) stop 'Error allocating arrays ibelm_xmin,ibelm_xmax etc.'
+  ibelm_xmin(:) = 0; ibelm_xmax(:) = 0
+  ibelm_ymin(:) = 0; ibelm_ymax(:) = 0
+  ibelm_bottom(:) = 0; ibelm_top(:) = 0
+
   if (I_should_read_the_database) then
-    read(27) ibelm_xmin
-    read(27) ibelm_xmax
-    read(27) ibelm_ymin
-    read(27) ibelm_ymax
-    read(27) ibelm_bottom
-    read(27) ibelm_top
+    if (nspec2D_xmin > 0) read(IIN) ibelm_xmin
+    if (nspec2D_xmax > 0) read(IIN) ibelm_xmax
+    if (nspec2D_ymin > 0) read(IIN) ibelm_ymin
+    if (nspec2D_ymax > 0) read(IIN) ibelm_ymax
+    if (nspec2D_bottom > 0) read(IIN) ibelm_bottom
+    if (nspec2D_top > 0) read(IIN) ibelm_top
   endif
-  if (size(ibelm_xmin) > 0) call bcast_all_i_for_database(ibelm_xmin(1), size(ibelm_xmin))
-  if (size(ibelm_xmax) > 0) call bcast_all_i_for_database(ibelm_xmax(1), size(ibelm_xmax))
-  if (size(ibelm_ymin) > 0) call bcast_all_i_for_database(ibelm_ymin(1), size(ibelm_ymin))
-  if (size(ibelm_ymax) > 0) call bcast_all_i_for_database(ibelm_ymax(1), size(ibelm_ymax))
-  if (size(ibelm_bottom) > 0) call bcast_all_i_for_database(ibelm_bottom(1), size(ibelm_bottom))
-  if (size(ibelm_top) > 0) call bcast_all_i_for_database(ibelm_top(1), size(ibelm_top))
+  if (nspec2D_xmin > 0) call bcast_all_i_for_database(ibelm_xmin(1), size(ibelm_xmin))
+  if (nspec2D_xmax > 0) call bcast_all_i_for_database(ibelm_xmax(1), size(ibelm_xmax))
+  if (nspec2D_ymin > 0) call bcast_all_i_for_database(ibelm_ymin(1), size(ibelm_ymin))
+  if (nspec2D_ymax > 0) call bcast_all_i_for_database(ibelm_ymax(1), size(ibelm_ymax))
+  if (nspec2D_bottom > 0) call bcast_all_i_for_database(ibelm_bottom(1), size(ibelm_bottom))
+  if (nspec2D_top > 0) call bcast_all_i_for_database(ibelm_top(1), size(ibelm_top))
 
   ! free surface
-  if (I_should_read_the_database) read(27) num_free_surface_faces
+  if (I_should_read_the_database) read(IIN) num_free_surface_faces
   call bcast_all_i_for_database(num_free_surface_faces, 1)
+
   allocate(free_surface_ispec(num_free_surface_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1528')
   allocate(free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces),stat=ier)
@@ -707,26 +838,26 @@
   allocate(free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1531')
   if (ier /= 0) stop 'Error allocating arrays free_surface_ispec etc.'
+  free_surface_ispec(:) = 0; free_surface_ijk(:,:,:) = 0
+  free_surface_jacobian2Dw(:,:) = 0.0_CUSTOM_REAL; free_surface_normal(:,:,:) = 0.0_CUSTOM_REAL
+
   if (num_free_surface_faces > 0) then
     if (I_should_read_the_database) then
-      read(27) free_surface_ispec
-      read(27) free_surface_ijk
-      read(27) free_surface_jacobian2Dw
-      read(27) free_surface_normal
+      read(IIN) free_surface_ispec
+      read(IIN) free_surface_ijk
+      read(IIN) free_surface_jacobian2Dw
+      read(IIN) free_surface_normal
     endif
-    if (size(free_surface_ispec) > 0) &
-      call bcast_all_i_for_database(free_surface_ispec(1), size(free_surface_ispec))
-    if (size(free_surface_ijk) > 0) &
-      call bcast_all_i_for_database(free_surface_ijk(1,1,1), size(free_surface_ijk))
-    if (size(free_surface_jacobian2Dw) > 0) &
-      call bcast_all_cr_for_database(free_surface_jacobian2Dw(1,1), size(free_surface_jacobian2Dw))
-    if (size(free_surface_normal) > 0) &
-      call bcast_all_cr_for_database(free_surface_normal(1,1,1), size(free_surface_normal))
+    call bcast_all_i_for_database(free_surface_ispec(1), size(free_surface_ispec))
+    call bcast_all_i_for_database(free_surface_ijk(1,1,1), size(free_surface_ijk))
+    call bcast_all_cr_for_database(free_surface_jacobian2Dw(1,1), size(free_surface_jacobian2Dw))
+    call bcast_all_cr_for_database(free_surface_normal(1,1,1), size(free_surface_normal))
   endif
 
   ! acoustic-elastic coupling surface
-  if (I_should_read_the_database) read(27) num_coupling_ac_el_faces
+  if (I_should_read_the_database) read(IIN) num_coupling_ac_el_faces
   call bcast_all_i_for_database(num_coupling_ac_el_faces, 1)
+
   allocate(coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1532')
   allocate(coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
@@ -736,26 +867,26 @@
   allocate(coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1535')
   if (ier /= 0) stop 'Error allocating array coupling_ac_el_normal etc.'
+  coupling_ac_el_ispec(:) = 0; coupling_ac_el_ijk(:,:,:) = 0
+  coupling_ac_el_normal(:,:,:) = 0.0_CUSTOM_REAL; coupling_ac_el_jacobian2Dw(:,:) = 0.0_CUSTOM_REAL
+
   if (num_coupling_ac_el_faces > 0) then
     if (I_should_read_the_database) then
-      read(27) coupling_ac_el_ispec
-      read(27) coupling_ac_el_ijk
-      read(27) coupling_ac_el_jacobian2Dw
-      read(27) coupling_ac_el_normal
+      read(IIN) coupling_ac_el_ispec
+      read(IIN) coupling_ac_el_ijk
+      read(IIN) coupling_ac_el_jacobian2Dw
+      read(IIN) coupling_ac_el_normal
     endif
-    if (size(coupling_ac_el_ispec) > 0) &
-      call bcast_all_i_for_database(coupling_ac_el_ispec(1), size(coupling_ac_el_ispec))
-    if (size(coupling_ac_el_ijk) > 0) &
-      call bcast_all_i_for_database(coupling_ac_el_ijk(1,1,1), size(coupling_ac_el_ijk))
-    if (size(coupling_ac_el_jacobian2Dw) > 0) &
-      call bcast_all_cr_for_database(coupling_ac_el_jacobian2Dw(1,1), size(coupling_ac_el_jacobian2Dw))
-    if (size(coupling_ac_el_normal) > 0) &
-      call bcast_all_cr_for_database(coupling_ac_el_normal(1,1,1), size(coupling_ac_el_normal))
+    call bcast_all_i_for_database(coupling_ac_el_ispec(1), size(coupling_ac_el_ispec))
+    call bcast_all_i_for_database(coupling_ac_el_ijk(1,1,1), size(coupling_ac_el_ijk))
+    call bcast_all_cr_for_database(coupling_ac_el_jacobian2Dw(1,1), size(coupling_ac_el_jacobian2Dw))
+    call bcast_all_cr_for_database(coupling_ac_el_normal(1,1,1), size(coupling_ac_el_normal))
   endif
 
   ! acoustic-poroelastic coupling surface
-  if (I_should_read_the_database) read(27) num_coupling_ac_po_faces
+  if (I_should_read_the_database) read(IIN) num_coupling_ac_po_faces
   call bcast_all_i_for_database(num_coupling_ac_po_faces, 1)
+
   allocate(coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1536')
   allocate(coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces),stat=ier)
@@ -765,26 +896,26 @@
   allocate(coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1539')
   if (ier /= 0) stop 'Error allocating array coupling_ac_po_normal etc.'
+  coupling_ac_po_ispec(:) = 0; coupling_ac_po_ijk(:,:,:) = 0
+  coupling_ac_po_normal(:,:,:) = 0.0_CUSTOM_REAL; coupling_ac_po_jacobian2Dw(:,:) = 0.0_CUSTOM_REAL
+
   if (num_coupling_ac_po_faces > 0) then
     if (I_should_read_the_database) then
-      read(27) coupling_ac_po_ispec
-      read(27) coupling_ac_po_ijk
-      read(27) coupling_ac_po_jacobian2Dw
-      read(27) coupling_ac_po_normal
+      read(IIN) coupling_ac_po_ispec
+      read(IIN) coupling_ac_po_ijk
+      read(IIN) coupling_ac_po_jacobian2Dw
+      read(IIN) coupling_ac_po_normal
     endif
-    if (size(coupling_ac_po_ispec) > 0) &
-      call bcast_all_i_for_database(coupling_ac_po_ispec(1), size(coupling_ac_po_ispec))
-    if (size(coupling_ac_po_ijk) > 0) &
-      call bcast_all_i_for_database(coupling_ac_po_ijk(1,1,1), size(coupling_ac_po_ijk))
-    if (size(coupling_ac_po_jacobian2Dw) > 0) &
-      call bcast_all_cr_for_database(coupling_ac_po_jacobian2Dw(1,1), size(coupling_ac_po_jacobian2Dw))
-    if (size(coupling_ac_po_normal) > 0) &
-      call bcast_all_cr_for_database(coupling_ac_po_normal(1,1,1), size(coupling_ac_po_normal))
+    call bcast_all_i_for_database(coupling_ac_po_ispec(1), size(coupling_ac_po_ispec))
+    call bcast_all_i_for_database(coupling_ac_po_ijk(1,1,1), size(coupling_ac_po_ijk))
+    call bcast_all_cr_for_database(coupling_ac_po_jacobian2Dw(1,1), size(coupling_ac_po_jacobian2Dw))
+    call bcast_all_cr_for_database(coupling_ac_po_normal(1,1,1), size(coupling_ac_po_normal))
   endif
 
   ! elastic-poroelastic coupling surface
-  if (I_should_read_the_database) read(27) num_coupling_el_po_faces
+  if (I_should_read_the_database) read(IIN) num_coupling_el_po_faces
   call bcast_all_i_for_database(num_coupling_el_po_faces, 1)
+
   allocate(coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1540')
   allocate(coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
@@ -798,200 +929,229 @@
   allocate(coupling_po_el_ispec(num_coupling_el_po_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1545')
   if (ier /= 0) stop 'Error allocating array coupling_el_po_normal etc.'
+  coupling_el_po_ispec(:) = 0; coupling_el_po_ijk(:,:,:) = 0
+  coupling_po_el_ispec(:) = 0; coupling_po_el_ijk(:,:,:) = 0
+  coupling_el_po_normal(:,:,:) = 0.0_CUSTOM_REAL; coupling_el_po_jacobian2Dw(:,:) = 0.0_CUSTOM_REAL
+
   if (num_coupling_el_po_faces > 0) then
     if (I_should_read_the_database) then
-      read(27) coupling_el_po_ispec
-      read(27) coupling_po_el_ispec
-      read(27) coupling_el_po_ijk
-      read(27) coupling_po_el_ijk
-      read(27) coupling_el_po_jacobian2Dw
-      read(27) coupling_el_po_normal
+      read(IIN) coupling_el_po_ispec
+      read(IIN) coupling_po_el_ispec
+      read(IIN) coupling_el_po_ijk
+      read(IIN) coupling_po_el_ijk
+      read(IIN) coupling_el_po_jacobian2Dw
+      read(IIN) coupling_el_po_normal
     endif
-    if (size(coupling_el_po_ispec) > 0) &
-      call bcast_all_i_for_database(coupling_el_po_ispec(1), size(coupling_el_po_ispec))
-    if (size(coupling_po_el_ispec) > 0) &
-      call bcast_all_i_for_database(coupling_po_el_ispec(1), size(coupling_po_el_ispec))
-    if (size(coupling_el_po_ijk) > 0) &
-      call bcast_all_i_for_database(coupling_el_po_ijk(1,1,1), size(coupling_el_po_ijk))
-    if (size(coupling_po_el_ijk) > 0) &
-      call bcast_all_i_for_database(coupling_po_el_ijk(1,1,1), size(coupling_po_el_ijk))
-    if (size(coupling_el_po_jacobian2Dw) > 0) &
-      call bcast_all_cr_for_database(coupling_el_po_jacobian2Dw(1,1), size(coupling_el_po_jacobian2Dw))
-    if (size(coupling_el_po_normal) > 0) &
-      call bcast_all_cr_for_database(coupling_el_po_normal(1,1,1), size(coupling_el_po_normal))
+    call bcast_all_i_for_database(coupling_el_po_ispec(1), size(coupling_el_po_ispec))
+    call bcast_all_i_for_database(coupling_po_el_ispec(1), size(coupling_po_el_ispec))
+    call bcast_all_i_for_database(coupling_el_po_ijk(1,1,1), size(coupling_el_po_ijk))
+    call bcast_all_i_for_database(coupling_po_el_ijk(1,1,1), size(coupling_po_el_ijk))
+    call bcast_all_cr_for_database(coupling_el_po_jacobian2Dw(1,1), size(coupling_el_po_jacobian2Dw))
+    call bcast_all_cr_for_database(coupling_el_po_normal(1,1,1), size(coupling_el_po_normal))
+  endif
+
+  ! checks i/o so far
+  if (I_should_read_the_database) then
+    read(IIN) itest
+    if (itest /= 9997) stop 'Error database read at position 3'
   endif
 
   ! MPI interfaces
-  if (I_should_read_the_database) read(27) num_interfaces_ext_mesh
+  if (I_should_read_the_database) read(IIN) num_interfaces_ext_mesh
   call bcast_all_i_for_database(num_interfaces_ext_mesh, 1)
-  allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1546')
-  allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1547')
-  if (ier /= 0) stop 'Error allocating array my_neighbors_ext_mesh etc.'
+
+  if (I_should_read_the_database) read(IIN) max_nibool_interfaces_ext_mesh
+  call bcast_all_i_for_database(max_nibool_interfaces_ext_mesh, 1)
+
   if (num_interfaces_ext_mesh > 0) then
-    if (I_should_read_the_database) read(27) max_nibool_interfaces_ext_mesh
-    call bcast_all_i_for_database(max_nibool_interfaces_ext_mesh, 1)
+    ! reads interface infos
+    allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1546')
+    allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1547')
+    if (ier /= 0) stop 'Error allocating array my_neighbors_ext_mesh etc.'
+    my_neighbors_ext_mesh(:) = -1; nibool_interfaces_ext_mesh(:) = 0
+
     allocate(ibool_interfaces_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1548')
     if (ier /= 0) stop 'Error allocating array ibool_interfaces_ext_mesh'
+    ibool_interfaces_ext_mesh(:,:) = 0
+
     if (I_should_read_the_database) then
-      read(27) my_neighbors_ext_mesh
-      read(27) nibool_interfaces_ext_mesh
-      read(27) ibool_interfaces_ext_mesh
+      read(IIN) my_neighbors_ext_mesh
+      read(IIN) nibool_interfaces_ext_mesh
+      read(IIN) ibool_interfaces_ext_mesh
     endif
-    if (size(my_neighbors_ext_mesh) > 0) &
-      call bcast_all_i_for_database(my_neighbors_ext_mesh(1), size(my_neighbors_ext_mesh))
-    if (size(nibool_interfaces_ext_mesh) > 0) &
-      call bcast_all_i_for_database(nibool_interfaces_ext_mesh(1), size(nibool_interfaces_ext_mesh))
-    if (size(ibool_interfaces_ext_mesh) > 0) &
-      call bcast_all_i_for_database(ibool_interfaces_ext_mesh(1,1), size(ibool_interfaces_ext_mesh))
+    call bcast_all_i_for_database(my_neighbors_ext_mesh(1), size(my_neighbors_ext_mesh))
+    call bcast_all_i_for_database(nibool_interfaces_ext_mesh(1), size(nibool_interfaces_ext_mesh))
+    call bcast_all_i_for_database(ibool_interfaces_ext_mesh(1,1), size(ibool_interfaces_ext_mesh))
   else
+    ! no interfaces
     max_nibool_interfaces_ext_mesh = 0
-    allocate(ibool_interfaces_ext_mesh(0,0),stat=ier)
+    ! dummy allocations
+    allocate(my_neighbors_ext_mesh(1),nibool_interfaces_ext_mesh(1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1546')
+    my_neighbors_ext_mesh(:) = -1; nibool_interfaces_ext_mesh(:) = 0
+    allocate(ibool_interfaces_ext_mesh(1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1549')
+    ibool_interfaces_ext_mesh(:,:) = 0
   endif
 
+  ! checks i/o so far
+  if (I_should_read_the_database) then
+    read(IIN) itest
+    if (itest /= 9996) stop 'Error database read at position 3'
+  endif
+
+  ! material properties
   if (ELASTIC_SIMULATION .and. ANISOTROPY) then
     if (I_should_read_the_database) then
-      read(27) c11store
-      read(27) c12store
-      read(27) c13store
-      read(27) c14store
-      read(27) c15store
-      read(27) c16store
-      read(27) c22store
-      read(27) c23store
-      read(27) c24store
-      read(27) c25store
-      read(27) c26store
-      read(27) c33store
-      read(27) c34store
-      read(27) c35store
-      read(27) c36store
-      read(27) c44store
-      read(27) c45store
-      read(27) c46store
-      read(27) c55store
-      read(27) c56store
-      read(27) c66store
+      read(IIN) c11store
+      read(IIN) c12store
+      read(IIN) c13store
+      read(IIN) c14store
+      read(IIN) c15store
+      read(IIN) c16store
+      read(IIN) c22store
+      read(IIN) c23store
+      read(IIN) c24store
+      read(IIN) c25store
+      read(IIN) c26store
+      read(IIN) c33store
+      read(IIN) c34store
+      read(IIN) c35store
+      read(IIN) c36store
+      read(IIN) c44store
+      read(IIN) c45store
+      read(IIN) c46store
+      read(IIN) c55store
+      read(IIN) c56store
+      read(IIN) c66store
     endif
-    if (size(c11store) > 0) call bcast_all_cr_for_database(c11store(1,1,1,1), size(c11store))
-    if (size(c12store) > 0) call bcast_all_cr_for_database(c12store(1,1,1,1), size(c12store))
-    if (size(c13store) > 0) call bcast_all_cr_for_database(c13store(1,1,1,1), size(c13store))
-    if (size(c14store) > 0) call bcast_all_cr_for_database(c14store(1,1,1,1), size(c14store))
-    if (size(c15store) > 0) call bcast_all_cr_for_database(c15store(1,1,1,1), size(c15store))
-    if (size(c16store) > 0) call bcast_all_cr_for_database(c16store(1,1,1,1), size(c16store))
-    if (size(c22store) > 0) call bcast_all_cr_for_database(c22store(1,1,1,1), size(c22store))
-    if (size(c23store) > 0) call bcast_all_cr_for_database(c23store(1,1,1,1), size(c23store))
-    if (size(c24store) > 0) call bcast_all_cr_for_database(c24store(1,1,1,1), size(c24store))
-    if (size(c25store) > 0) call bcast_all_cr_for_database(c25store(1,1,1,1), size(c25store))
-    if (size(c26store) > 0) call bcast_all_cr_for_database(c26store(1,1,1,1), size(c26store))
-    if (size(c33store) > 0) call bcast_all_cr_for_database(c33store(1,1,1,1), size(c33store))
-    if (size(c34store) > 0) call bcast_all_cr_for_database(c34store(1,1,1,1), size(c34store))
-    if (size(c35store) > 0) call bcast_all_cr_for_database(c35store(1,1,1,1), size(c35store))
-    if (size(c36store) > 0) call bcast_all_cr_for_database(c36store(1,1,1,1), size(c36store))
-    if (size(c44store) > 0) call bcast_all_cr_for_database(c44store(1,1,1,1), size(c44store))
-    if (size(c45store) > 0) call bcast_all_cr_for_database(c45store(1,1,1,1), size(c45store))
-    if (size(c46store) > 0) call bcast_all_cr_for_database(c46store(1,1,1,1), size(c46store))
-    if (size(c55store) > 0) call bcast_all_cr_for_database(c55store(1,1,1,1), size(c55store))
-    if (size(c56store) > 0) call bcast_all_cr_for_database(c56store(1,1,1,1), size(c56store))
-    if (size(c66store) > 0) call bcast_all_cr_for_database(c66store(1,1,1,1), size(c66store))
+    call bcast_all_cr_for_database(c11store(1,1,1,1), size(c11store))
+    call bcast_all_cr_for_database(c12store(1,1,1,1), size(c12store))
+    call bcast_all_cr_for_database(c13store(1,1,1,1), size(c13store))
+    call bcast_all_cr_for_database(c14store(1,1,1,1), size(c14store))
+    call bcast_all_cr_for_database(c15store(1,1,1,1), size(c15store))
+    call bcast_all_cr_for_database(c16store(1,1,1,1), size(c16store))
+    call bcast_all_cr_for_database(c22store(1,1,1,1), size(c22store))
+    call bcast_all_cr_for_database(c23store(1,1,1,1), size(c23store))
+    call bcast_all_cr_for_database(c24store(1,1,1,1), size(c24store))
+    call bcast_all_cr_for_database(c25store(1,1,1,1), size(c25store))
+    call bcast_all_cr_for_database(c26store(1,1,1,1), size(c26store))
+    call bcast_all_cr_for_database(c33store(1,1,1,1), size(c33store))
+    call bcast_all_cr_for_database(c34store(1,1,1,1), size(c34store))
+    call bcast_all_cr_for_database(c35store(1,1,1,1), size(c35store))
+    call bcast_all_cr_for_database(c36store(1,1,1,1), size(c36store))
+    call bcast_all_cr_for_database(c44store(1,1,1,1), size(c44store))
+    call bcast_all_cr_for_database(c45store(1,1,1,1), size(c45store))
+    call bcast_all_cr_for_database(c46store(1,1,1,1), size(c46store))
+    call bcast_all_cr_for_database(c55store(1,1,1,1), size(c55store))
+    call bcast_all_cr_for_database(c56store(1,1,1,1), size(c56store))
+    call bcast_all_cr_for_database(c66store(1,1,1,1), size(c66store))
   endif
 
   ! inner / outer elements
   allocate(ispec_is_inner(NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1550')
   if (ier /= 0) stop 'Error allocating array ispec_is_inner'
-  if (I_should_read_the_database) read(27) ispec_is_inner
-  if (size(ispec_is_inner) > 0) call bcast_all_l_for_database(ispec_is_inner(1), size(ispec_is_inner))
+  ispec_is_inner(:) = .false.
+
+  if (I_should_read_the_database) read(IIN) ispec_is_inner
+  call bcast_all_l_for_database(ispec_is_inner(1), size(ispec_is_inner))
 
   if (ACOUSTIC_SIMULATION) then
     if (I_should_read_the_database) then
-      read(27) nspec_inner_acoustic,nspec_outer_acoustic
-      read(27) num_phase_ispec_acoustic
+      read(IIN) nspec_inner_acoustic,nspec_outer_acoustic
+      read(IIN) num_phase_ispec_acoustic
     endif
     call bcast_all_i_for_database(nspec_inner_acoustic, 1)
     call bcast_all_i_for_database(nspec_outer_acoustic, 1)
     call bcast_all_i_for_database(num_phase_ispec_acoustic, 1)
     if (num_phase_ispec_acoustic < 0) stop 'Error acoustic simulation: num_phase_ispec_acoustic is < zero'
+
     allocate( phase_ispec_inner_acoustic(num_phase_ispec_acoustic,2),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1551')
     if (ier /= 0) stop 'Error allocating array phase_ispec_inner_acoustic'
+    phase_ispec_inner_acoustic(:,:) = 0
+
     if (num_phase_ispec_acoustic > 0) then
-      if (I_should_read_the_database) read(27) phase_ispec_inner_acoustic
-      if (size(phase_ispec_inner_acoustic) > 0) &
-            call bcast_all_i_for_database(phase_ispec_inner_acoustic(1,1), size(phase_ispec_inner_acoustic))
+      if (I_should_read_the_database) read(IIN) phase_ispec_inner_acoustic
+      call bcast_all_i_for_database(phase_ispec_inner_acoustic(1,1), size(phase_ispec_inner_acoustic))
     endif
   endif
 
   if (ELASTIC_SIMULATION) then
     if (I_should_read_the_database) then
-      read(27) nspec_inner_elastic,nspec_outer_elastic
-      read(27) num_phase_ispec_elastic
+      read(IIN) nspec_inner_elastic,nspec_outer_elastic
+      read(IIN) num_phase_ispec_elastic
     endif
     call bcast_all_i_for_database(nspec_inner_elastic, 1)
     call bcast_all_i_for_database(nspec_outer_elastic, 1)
     call bcast_all_i_for_database(num_phase_ispec_elastic, 1)
     if (num_phase_ispec_elastic < 0) stop 'Error elastic simulation: num_phase_ispec_elastic is < zero'
+
     allocate( phase_ispec_inner_elastic(num_phase_ispec_elastic,2),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1552')
     if (ier /= 0) stop 'Error allocating array phase_ispec_inner_elastic'
+    phase_ispec_inner_elastic(:,:) = 0
+
     if (num_phase_ispec_elastic > 0) then
-      if (I_should_read_the_database) read(27) phase_ispec_inner_elastic
-      if (size(phase_ispec_inner_elastic) > 0) &
-        call bcast_all_i_for_database(phase_ispec_inner_elastic(1,1), size(phase_ispec_inner_elastic))
+      if (I_should_read_the_database) read(IIN) phase_ispec_inner_elastic
+      call bcast_all_i_for_database(phase_ispec_inner_elastic(1,1), size(phase_ispec_inner_elastic))
     endif
   endif
 
   if (POROELASTIC_SIMULATION) then
     if (I_should_read_the_database) then
-      read(27) nspec_inner_poroelastic,nspec_outer_poroelastic
-      read(27) num_phase_ispec_poroelastic
+      read(IIN) nspec_inner_poroelastic,nspec_outer_poroelastic
+      read(IIN) num_phase_ispec_poroelastic
     endif
     call bcast_all_i_for_database(nspec_inner_poroelastic, 1)
     call bcast_all_i_for_database(nspec_outer_poroelastic, 1)
     call bcast_all_i_for_database(num_phase_ispec_poroelastic, 1)
     if (num_phase_ispec_poroelastic < 0) stop 'Error poroelastic simulation: num_phase_ispec_poroelastic is < zero'
+
     allocate( phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1553')
     if (ier /= 0) stop 'Error allocating array phase_ispec_inner_poroelastic'
+    phase_ispec_inner_poroelastic(:,:) = 0
+
     if (num_phase_ispec_poroelastic > 0) then
-      if (I_should_read_the_database) read(27) phase_ispec_inner_poroelastic
-      if (size(phase_ispec_inner_poroelastic) > 0) &
-        call bcast_all_i_for_database(phase_ispec_inner_poroelastic(1,1), size(phase_ispec_inner_poroelastic))
+      if (I_should_read_the_database) read(IIN) phase_ispec_inner_poroelastic
+      call bcast_all_i_for_database(phase_ispec_inner_poroelastic(1,1), size(phase_ispec_inner_poroelastic))
     endif
   endif
 
-! mesh coloring for GPUs
+  ! mesh coloring for GPUs
   if (USE_MESH_COLORING_GPU) then
     ! acoustic domain colors
     if (ACOUSTIC_SIMULATION) then
-      if (I_should_read_the_database) read(27) num_colors_outer_acoustic,num_colors_inner_acoustic
+      if (I_should_read_the_database) read(IIN) num_colors_outer_acoustic,num_colors_inner_acoustic
       call bcast_all_i_for_database(num_colors_outer_acoustic, 1)
       call bcast_all_i_for_database(num_colors_inner_acoustic, 1)
 
       allocate(num_elem_colors_acoustic(num_colors_outer_acoustic + num_colors_inner_acoustic),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1554')
       if (ier /= 0) stop 'Error allocating num_elem_colors_acoustic array'
+      num_elem_colors_acoustic(:) = 0
 
-      if (I_should_read_the_database) read(27) num_elem_colors_acoustic
-      if (size(num_elem_colors_acoustic) > 0) &
-        call bcast_all_i_for_database(num_elem_colors_acoustic(1), size(num_elem_colors_acoustic))
+      if (I_should_read_the_database) read(IIN) num_elem_colors_acoustic
+      call bcast_all_i_for_database(num_elem_colors_acoustic(1), size(num_elem_colors_acoustic))
     endif
     ! elastic domain colors
     if (ELASTIC_SIMULATION) then
-      if (I_should_read_the_database) read(27) num_colors_outer_elastic,num_colors_inner_elastic
+      if (I_should_read_the_database) read(IIN) num_colors_outer_elastic,num_colors_inner_elastic
       call bcast_all_i_for_database(num_colors_outer_elastic, 1)
       call bcast_all_i_for_database(num_colors_inner_elastic, 1)
 
       allocate(num_elem_colors_elastic(num_colors_outer_elastic + num_colors_inner_elastic),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1555')
       if (ier /= 0) stop 'Error allocating num_elem_colors_elastic array'
+      num_elem_colors_elastic(:) = 0
 
-      if (I_should_read_the_database) read(27) num_elem_colors_elastic
-      if (size(num_elem_colors_elastic) > 0) &
-        call bcast_all_i_for_database(num_elem_colors_elastic(1), size(num_elem_colors_elastic))
+      if (I_should_read_the_database) read(IIN) num_elem_colors_elastic
+      call bcast_all_i_for_database(num_elem_colors_elastic(1), size(num_elem_colors_elastic))
     endif
   else
     ! allocates dummy arrays
@@ -1017,45 +1177,100 @@
   allocate(iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1559')
   if (ier /= 0) stop 'error allocating array for mesh surface'
+  ispec_is_surface_external_mesh(:) = .false.; iglob_is_surface_external_mesh(:) = .false.
+
   ! determines model surface
   ! returns surface points/elements in ispec_is_surface_external_mesh / iglob_is_surface_external_mesh
   ! and number of faces in nfaces_surface
   ! used for receiver detection, movie files and shakemaps
   if (I_should_read_the_database) then
-    read(27) nfaces_surface
-    read(27) ispec_is_surface_external_mesh
-    read(27) iglob_is_surface_external_mesh
+    read(IIN) nfaces_surface
+    read(IIN) ispec_is_surface_external_mesh
+    read(IIN) iglob_is_surface_external_mesh
   endif
   call bcast_all_i_for_database(nfaces_surface, 1)
   call bcast_all_l_for_database(ispec_is_surface_external_mesh(1), size(ispec_is_surface_external_mesh))
   call bcast_all_l_for_database(iglob_is_surface_external_mesh(1), size(iglob_is_surface_external_mesh))
 
+  ! checks i/o so far
+  if (I_should_read_the_database) then
+    read(IIN) itest
+    if (itest /= 9995) stop 'Error database read at position 4 (end)'
+  endif
+
   ! done reading database
-  if (I_should_read_the_database) close(27)
+  if (I_should_read_the_database) close(IIN)
+
+  ! checks MPI interface arrays
+  if (NPROC > 1) then
+    ! checks if valid neighbors array
+    if (any(my_neighbors_ext_mesh(:) < 0) .or. any(my_neighbors_ext_mesh(:) >= NPROC)) then
+      print *,'Error: rank ',myrank,'has invalid MPI interface my_neighbors: ',my_neighbors_ext_mesh(:)
+      stop 'Invalid MPI interface my_neighbors'
+    endif
+    ! checks if valid nibool_interfaces array
+    if (any(nibool_interfaces_ext_mesh(:) <= 0) .or. any(nibool_interfaces_ext_mesh(:) >= NGLOB_AB)) then
+      print *,'Error: rank ',myrank,'has invalid MPI interface nibool_interfaces: ',nibool_interfaces_ext_mesh(:)
+      stop 'Invalid MPI interface nibool_interfaces'
+    endif
+    ! checks if valid ibool entries
+    do itest = 1,num_interfaces_ext_mesh
+      if (any(ibool_interfaces_ext_mesh(1:nibool_interfaces_ext_mesh(itest),itest) <= 0) .or. &
+          any(ibool_interfaces_ext_mesh(1:nibool_interfaces_ext_mesh(itest),itest) > NGLOB_AB)) then
+        print *,'Error: rank ',myrank,'has invalid ibool_interfaces at interface ',itest, &
+                'entries: ', ibool_interfaces_ext_mesh(1:nibool_interfaces_ext_mesh(itest),itest)
+        stop 'Invalid MPI interface ibool_interfaces'
+      endif
+    enddo
+  endif
+
+  ! debugging
+  if (DEBUG_MPI_ARRAYS) then
+    ! outputs ibool values for points on MPI interfaces
+    open(unit=80,file=trim(prname)//'tmp_mpi_ibool.dat')
+    write(80,*) '# number of interfaces',num_interfaces_ext_mesh
+    write(80,*) '# neighbors',my_neighbors_ext_mesh(:)
+    do itest = 1,num_interfaces_ext_mesh
+      write(80,*) '# interface',itest,'number of points',nibool_interfaces_ext_mesh(itest)
+      do i = 1,nibool_interfaces_ext_mesh(itest)
+        write(80,*) ibool_interfaces_ext_mesh(i,itest)
+      enddo
+    enddo
+    close(80)
+    print *,'debug: written: ',trim(prname)//'tmp_mpi_ibool.dat'
+  endif
 
   ! MPI communications
   if (ACOUSTIC_SIMULATION) then
-    allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1560')
-    allocate(buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    allocate(buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1561')
+    buffer_send_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL; buffer_recv_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL
+
     allocate(request_send_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1562')
     allocate(request_recv_scalar_ext_mesh(num_interfaces_ext_mesh), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1563')
     if (ier /= 0) stop 'Error allocating array buffer_send_scalar_ext_mesh,.. for acoustic simulations'
+    request_send_scalar_ext_mesh(:) = 0; request_recv_scalar_ext_mesh(:) = 0
   endif
+
   if (ELASTIC_SIMULATION) then
     allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1564')
     allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1565')
+    buffer_send_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL
+
     allocate(request_send_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1566')
     allocate(request_recv_vector_ext_mesh(num_interfaces_ext_mesh), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1567')
     if (ier /= 0) stop 'Error allocating array buffer_send_vector_ext_mesh,.. for elastic simulations'
+    request_send_vector_ext_mesh(:) = 0; request_recv_vector_ext_mesh(:) = 0
   endif
+
   if (POROELASTIC_SIMULATION) then
     allocate(buffer_send_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1568')
@@ -1065,6 +1280,9 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1570')
     allocate(buffer_recv_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1571')
+    buffer_send_vector_ext_mesh_s(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh_s(:,:,:) = 0.0_CUSTOM_REAL
+    buffer_send_vector_ext_mesh_w(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh_w(:,:,:) = 0.0_CUSTOM_REAL
+
     allocate(request_send_vector_ext_mesh_s(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1572')
     allocate(request_recv_vector_ext_mesh_s(num_interfaces_ext_mesh),stat=ier)
@@ -1074,6 +1292,8 @@
     allocate(request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1575')
     if (ier /= 0) stop 'Error allocating array buffer_send_vector_ext_mesh_s,.. for poroelastic simulations'
+    request_send_vector_ext_mesh_s(:) = 0; request_recv_vector_ext_mesh_s(:) = 0
+    request_send_vector_ext_mesh_w(:) = 0; request_recv_vector_ext_mesh_w(:) = 0
   endif
 
   ! user output
@@ -1104,12 +1324,13 @@
   allocate( is_moho_top(NSPEC_BOUN),is_moho_bot(NSPEC_BOUN),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1576')
   if (ier /= 0) stop 'Error allocating array is_moho_top etc.'
+  is_moho_top(:) = .false.; is_moho_bot(:) = .false.
 
   ! checks if anything to do
   if (ELASTIC_SIMULATION .and. SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
     ! boundary elements
     if (I_should_read_the_database) then
-      open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='old', &
+      open(unit=IIN,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='old', &
          action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
         print *,'Error could not open ibelm_moho file: ',prname(1:len_trim(prname))//'ibelm_moho.bin'
@@ -1117,7 +1338,7 @@
       endif
     endif
 
-    if (I_should_read_the_database) read(27) NSPEC2D_MOHO
+    if (I_should_read_the_database) read(IIN) NSPEC2D_MOHO
     call bcast_all_i_for_database(NSPEC2D_MOHO, 1)
 
     ! allocates arrays for moho mesh
@@ -1136,21 +1357,21 @@
     if (ier /= 0) stop 'Error allocating array ibelm_moho_bot etc.'
 
     if (I_should_read_the_database) then
-      read(27) ibelm_moho_top
-      read(27) ibelm_moho_bot
-      read(27) ijk_moho_top
-      read(27) ijk_moho_bot
+      read(IIN) ibelm_moho_top
+      read(IIN) ibelm_moho_bot
+      read(IIN) ijk_moho_top
+      read(IIN) ijk_moho_bot
     endif
-    if (size(ibelm_moho_top) > 0) call bcast_all_i_for_database(ibelm_moho_top(1), size(ibelm_moho_top))
-    if (size(ibelm_moho_bot) > 0) call bcast_all_i_for_database(ibelm_moho_bot(1), size(ibelm_moho_bot))
-    if (size(ijk_moho_top) > 0) call bcast_all_i_for_database(ijk_moho_top(1,1,1), size(ijk_moho_top))
-    if (size(ijk_moho_bot) > 0) call bcast_all_i_for_database(ijk_moho_bot(1,1,1), size(ijk_moho_bot))
+    call bcast_all_i_for_database(ibelm_moho_top(1), size(ibelm_moho_top))
+    call bcast_all_i_for_database(ibelm_moho_bot(1), size(ibelm_moho_bot))
+    call bcast_all_i_for_database(ijk_moho_top(1,1,1), size(ijk_moho_top))
+    call bcast_all_i_for_database(ijk_moho_bot(1,1,1), size(ijk_moho_bot))
 
-    if (I_should_read_the_database) close(27)
+    if (I_should_read_the_database) close(IIN)
 
     ! normals
     if (I_should_read_the_database) then
-      open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='old', &
+      open(unit=IIN,file=prname(1:len_trim(prname))//'normal_moho.bin',status='old', &
          action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
         print *,'Error could not open normal_moho file: ',prname(1:len_trim(prname))//'normal_moho.bin'
@@ -1159,16 +1380,17 @@
     endif
 
     if (I_should_read_the_database) then
-      read(27) normal_moho_top
-      read(27) normal_moho_bot
+      read(IIN) normal_moho_top
+      read(IIN) normal_moho_bot
     endif
-    if (size(normal_moho_top) > 0) call bcast_all_cr_for_database(normal_moho_top(1,1,1), size(normal_moho_top))
-    if (size(normal_moho_bot) > 0) call bcast_all_cr_for_database(normal_moho_bot(1,1,1), size(normal_moho_bot))
-    if (I_should_read_the_database) close(27)
+    call bcast_all_cr_for_database(normal_moho_top(1,1,1), size(normal_moho_top))
+    call bcast_all_cr_for_database(normal_moho_bot(1,1,1), size(normal_moho_bot))
+
+    if (I_should_read_the_database) close(IIN)
 
     ! flags
     if (I_should_read_the_database) then
-      open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='old', &
+      open(unit=IIN,file=prname(1:len_trim(prname))//'is_moho.bin',status='old', &
          action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
         print *,'Error could not open is_moho file: ',prname(1:len_trim(prname))//'is_moho.bin'
@@ -1177,13 +1399,13 @@
     endif
 
     if (I_should_read_the_database) then
-      read(27) is_moho_top
-      read(27) is_moho_bot
+      read(IIN) is_moho_top
+      read(IIN) is_moho_bot
     endif
-    if (size(is_moho_top) > 0) call bcast_all_l_for_database(is_moho_top(1), size(is_moho_top))
-    if (size(is_moho_bot) > 0) call bcast_all_l_for_database(is_moho_bot(1), size(is_moho_bot))
+    call bcast_all_l_for_database(is_moho_top(1), size(is_moho_top))
+    call bcast_all_l_for_database(is_moho_bot(1), size(is_moho_bot))
 
-    if (I_should_read_the_database) close(27)
+    if (I_should_read_the_database) close(IIN)
 
   else
     ! dummy
@@ -1237,6 +1459,7 @@
     allocate(b_accel(NDIM,NGLOB_ADJOINT),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1589')
     if (ier /= 0) stop 'Error allocating array b_accel'
+    b_displ(:,:) = 0.0_CUSTOM_REAL; b_veloc(:,:) = 0.0_CUSTOM_REAL; b_accel(:,:) = 0.0_CUSTOM_REAL
 
     ! adjoint kernels
 
@@ -1245,6 +1468,7 @@
     allocate(rho_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1590')
     if (ier /= 0) stop 'Error allocating array rho_kl'
+    rho_kl(:,:,:,:) = 0.0_CUSTOM_REAL
 
     if (ANISOTROPIC_KL) then
       ! anisotropic kernels
@@ -1269,12 +1493,14 @@
       allocate(cijkl_kl(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1596')
     endif
+    cijkl_kl(:,:,:,:,:) = 0.0_CUSTOM_REAL; mu_kl(:,:,:,:) = 0.0_CUSTOM_REAL; kappa_kl(:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! noise source strength kernel
     if (NOISE_TOMOGRAPHY == 3) then
       allocate(sigma_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1597')
       if (ier /= 0) stop 'Error allocating array sigma_kl'
+      sigma_kl(:,:,:,:) = 0.0_CUSTOM_REAL
     endif
 
     ! preconditioner
@@ -1298,9 +1524,10 @@
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1604')
       allocate(hess_kappa_kl(0,0,0,0),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1605')
-
       if (ier /= 0) stop 'Error allocating dummy array hess_kl'
     endif
+    hess_kl(:,:,:,:) = 0.0_CUSTOM_REAL; hess_rho_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+    hess_kappa_kl(:,:,:,:) = 0.0_CUSTOM_REAL; hess_mu_kl(:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! MPI handling
     allocate(b_request_send_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
@@ -1312,6 +1539,8 @@
     allocate(b_buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1609')
     if (ier /= 0) stop 'Error allocating array b_request_send_vector_ext_mesh etc.'
+    b_request_send_vector_ext_mesh(:) = 0; b_request_recv_vector_ext_mesh(:) = 0
+    b_buffer_send_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL; b_buffer_recv_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL
 
     ! allocates attenuation solids
     allocate(b_R_xx(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
@@ -1325,6 +1554,9 @@
     allocate(b_R_yz(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1614')
     if (ier /= 0) stop 'Error allocating array b_R_xx etc.'
+    b_R_xx(:,:,:,:,:) = 0.0_CUSTOM_REAL; b_R_yy(:,:,:,:,:) = 0.0_CUSTOM_REAL
+    b_R_xy(:,:,:,:,:) = 0.0_CUSTOM_REAL; b_R_xz(:,:,:,:,:) = 0.0_CUSTOM_REAL
+    b_R_yz(:,:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! note: these arrays are needed for attenuation and/or kernel computations
     allocate(b_epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
@@ -1340,21 +1572,28 @@
     allocate(b_epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1620')
     if (ier /= 0) stop 'Error allocating array b_epsilondev_xx etc.'
+    b_epsilondev_xx(:,:,:,:) = 0.0_CUSTOM_REAL; b_epsilondev_yy(:,:,:,:) = 0.0_CUSTOM_REAL
+    b_epsilondev_xy(:,:,:,:) = 0.0_CUSTOM_REAL; b_epsilondev_xz(:,:,:,:) = 0.0_CUSTOM_REAL
+    b_epsilondev_yz(:,:,:,:) = 0.0_CUSTOM_REAL; b_epsilondev_trace(:,:,:,:) = 0.0_CUSTOM_REAL
+
     ! needed for kernel computations
     allocate(b_epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1621')
     if (ier /= 0) stop 'Error allocating array b_epsilon_trace_over_3'
+    b_epsilon_trace_over_3(:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! allocates attenuation solids for considering kappa
     allocate(b_R_trace(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1622')
     if (ier /= 0) stop 'Error allocating array b_R_trace etc.'
+    b_R_trace(:,:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! Moho kernel
     if (SAVE_MOHO_MESH) then
-      allocate( moho_kl(NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
+      allocate(moho_kl(NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1623')
       if (ier /= 0) stop 'Error allocating array moho_kl'
+      moho_kl(:,:) = 0.0_CUSTOM_REAL
     endif
   else
     ! dummy allocation
@@ -1371,7 +1610,6 @@
 
   ! allocates adjoint arrays for acoustic simulations
   if (ACOUSTIC_SIMULATION .and. SIMULATION_TYPE == 3) then
-
     ! backward potentials
     ! NB_RUNS_ACOUSTIC_GPU is set to 1 by default in constants.h
     allocate(b_potential_acoustic(NGLOB_ADJOINT*NB_RUNS_ACOUSTIC_GPU),stat=ier)
@@ -1381,6 +1619,8 @@
     allocate(b_potential_dot_dot_acoustic(NGLOB_ADJOINT*NB_RUNS_ACOUSTIC_GPU),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1629')
     if (ier /= 0) stop 'Error allocating array b_potential_acoustic etc.'
+    b_potential_acoustic(:) = 0.0_CUSTOM_REAL; b_potential_dot_acoustic(:) = 0.0_CUSTOM_REAL
+    b_potential_dot_dot_acoustic(:) = 0.0_CUSTOM_REAL
 
     ! kernels
     allocate(rho_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
@@ -1392,6 +1632,8 @@
     allocate(alpha_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1633')
     if (ier /= 0) stop 'Error allocating array rho_ac_kl etc.'
+    rho_ac_kl(:,:,:,:) = 0.0_CUSTOM_REAL; rhop_ac_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+    kappa_ac_kl(:,:,:,:) = 0.0_CUSTOM_REAL; alpha_ac_kl(:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! preconditioner
     if (APPROXIMATE_HESS_KL) then
@@ -1412,20 +1654,24 @@
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1639')
       if (ier /= 0) stop 'Error allocating dummy array hess_ac_kl'
     endif
+    hess_ac_kl(:,:,:,:) = 0.0_CUSTOM_REAL; hess_rho_ac_kl(:,:,:,:) = 0.0_CUSTOM_REAL;
+    hess_kappa_ac_kl(:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! MPI handling
     allocate(b_request_send_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1640')
     allocate(b_request_recv_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1641')
-    allocate(b_buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    allocate(b_buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1642')
-    allocate(b_buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    allocate(b_buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1643')
     if (ier /= 0) stop 'Error allocating array b_request_send_scalar_ext_mesh'
+    b_request_send_scalar_ext_mesh(:) = 0; b_request_recv_scalar_ext_mesh(:) = 0
+    b_buffer_send_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL; b_buffer_recv_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL
 
   else
-
+    ! dummy arrays (needed for routine arguments)
     ! backward potentials
     allocate(b_potential_acoustic(1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1644')
@@ -1480,6 +1726,10 @@
     allocate(b_accelw_poroelastic(NDIM,NGLOB_ADJOINT),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1660')
     if (ier /= 0) stop 'Error allocating array b_accelw_poroelastic'
+    b_displs_poroelastic(:,:) = 0.0_CUSTOM_REAL; b_velocs_poroelastic(:,:) = 0.0_CUSTOM_REAL
+    b_accels_poroelastic(:,:) = 0.0_CUSTOM_REAL
+    b_displw_poroelastic(:,:) = 0.0_CUSTOM_REAL; b_velocw_poroelastic(:,:) = 0.0_CUSTOM_REAL
+    b_accelw_poroelastic(:,:) = 0.0_CUSTOM_REAL
 
     ! adjoint kernels
 
@@ -1503,6 +1753,10 @@
     allocate(M_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1668')
     if (ier /= 0) stop 'Error allocating array B_kl etc.'
+    rhot_kl(:,:,:,:) = 0.0_CUSTOM_REAL; rhof_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+    sm_kl(:,:,:,:) = 0.0_CUSTOM_REAL; eta_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+    mufr_kl(:,:,:,:) = 0.0_CUSTOM_REAL; B_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+    C_kl(:,:,:,:) = 0.0_CUSTOM_REAL; M_kl(:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! density, isotropic kernels
     allocate(rhob_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
@@ -1522,6 +1776,10 @@
     allocate(Mb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1675')
     if (ier /= 0) stop 'Error allocating array Bb_kl etc.'
+    rhob_kl(:,:,:,:) = 0.0_CUSTOM_REAL; rhofb_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+    phi_kl(:,:,:,:) = 0.0_CUSTOM_REAL; mufrb_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+    Bb_kl(:,:,:,:) = 0.0_CUSTOM_REAL; Cb_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+    Mb_kl(:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! wavespeed, isotropic kernels
     allocate(rhobb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
@@ -1541,6 +1799,10 @@
     allocate(cpII_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1682')
     if (ier /= 0) stop 'Error allocating array cpI_kl etc.'
+    rhobb_kl(:,:,:,:) = 0.0_CUSTOM_REAL; rhofbb_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+    phib_kl(:,:,:,:) = 0.0_CUSTOM_REAL; ratio_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+    cs_kl(:,:,:,:) = 0.0_CUSTOM_REAL; cpI_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+    cpII_kl(:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! MPI handling
     allocate(b_request_send_vector_ext_meshs(num_interfaces_ext_mesh),stat=ier)
@@ -1552,6 +1814,8 @@
     allocate(b_buffer_recv_vector_ext_meshs(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1686')
     if (ier /= 0) stop 'Error allocating array b_request_send_vector_ext_meshs etc.'
+    b_request_send_vector_ext_meshs(:) = 0; b_request_recv_vector_ext_meshs(:) = 0
+    b_buffer_send_vector_ext_meshs(:,:,:) = 0.0_CUSTOM_REAL; b_buffer_recv_vector_ext_meshs(:,:,:) = 0.0_CUSTOM_REAL
 
     allocate(b_request_send_vector_ext_meshw(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1687')
@@ -1562,6 +1826,8 @@
     allocate(b_buffer_recv_vector_ext_meshw(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1690')
     if (ier /= 0) stop 'Error allocating array b_request_send_vector_ext_meshw etc.'
+    b_request_send_vector_ext_meshw(:) = 0; b_request_recv_vector_ext_meshw(:) = 0
+    b_buffer_send_vector_ext_meshw(:,:,:) = 0.0_CUSTOM_REAL; b_buffer_recv_vector_ext_meshw(:,:,:) = 0.0_CUSTOM_REAL
 
     ! arrays needed for kernel computations
     allocate(b_epsilonsdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
@@ -1585,15 +1851,22 @@
     allocate(b_epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1700')
     if (ier /= 0) stop 'Error allocating array b_epsilonsdev_xx etc.'
+    b_epsilonsdev_xx(:,:,:,:) = 0.0_CUSTOM_REAL; b_epsilonsdev_yy(:,:,:,:) = 0.0_CUSTOM_REAL
+    b_epsilonsdev_xy(:,:,:,:) = 0.0_CUSTOM_REAL; b_epsilonsdev_xz(:,:,:,:) = 0.0_CUSTOM_REAL
+    b_epsilonsdev_yz(:,:,:,:) = 0.0_CUSTOM_REAL
+    b_epsilonwdev_xx(:,:,:,:) = 0.0_CUSTOM_REAL; b_epsilonwdev_yy(:,:,:,:) = 0.0_CUSTOM_REAL
+    b_epsilonwdev_xy(:,:,:,:) = 0.0_CUSTOM_REAL; b_epsilonwdev_xz(:,:,:,:) = 0.0_CUSTOM_REAL
+    b_epsilonwdev_yz(:,:,:,:) = 0.0_CUSTOM_REAL
 
     allocate(b_epsilons_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1701')
     allocate(b_epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1702')
     if (ier /= 0) stop 'Error allocating array b_epsilons_trace_over_3 etc.'
+    b_epsilons_trace_over_3(:,:,:,:) = 0.0_CUSTOM_REAL; b_epsilonw_trace_over_3(:,:,:,:) = 0.0_CUSTOM_REAL
 
-  else ! dummy arrays
-
+  else
+    ! dummy arrays
     ! backward displacement,velocity,acceleration for the solid (s) & fluid (w)
     ! phases
     allocate(b_displs_poroelastic(1,1),stat=ier)
@@ -1679,46 +1952,4 @@
   endif
 
   end subroutine read_mesh_databases_adjoint
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-
-  subroutine read_mesh_for_init()
-
-! reads in the value of NSPEC_AB and NGLOB_AB
-
-  use constants, only: MAX_STRING_LEN,myrank,I_should_read_the_database,IIN
-  use specfem_par, only: prname,NSPEC_AB,NSPEC_IRREGULAR,NGLOB_AB,LOCAL_PATH
-
-  implicit none
-  ! Local variables
-  integer :: ier
-  character(len=MAX_STRING_LEN) :: database_name
-
-  ! sets file name
-  call create_name_database(prname,myrank,LOCAL_PATH)
-  database_name = prname(1:len_trim(prname))//'external_mesh.bin'
-
-  if (I_should_read_the_database) then
-    open(unit=IIN,file=trim(database_name),status='old',action='read',form='unformatted',iostat=ier)
-    if (ier /= 0) then
-      print *,'Error could not open database file: ',trim(database_name)
-      call exit_mpi(myrank,'Error opening database file')
-    endif
-  endif
-
-  if (I_should_read_the_database) then
-    read(IIN) NSPEC_AB
-    read(IIN) NGLOB_AB
-    read(IIN) NSPEC_IRREGULAR
-  endif
-  call bcast_all_i_for_database(NSPEC_AB, 1)
-  call bcast_all_i_for_database(NGLOB_AB, 1)
-  call bcast_all_i_for_database(NSPEC_IRREGULAR, 1)
-
-  if (I_should_read_the_database) close(IIN)
-
-  end subroutine read_mesh_for_init
 

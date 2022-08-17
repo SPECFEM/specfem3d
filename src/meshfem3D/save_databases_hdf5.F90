@@ -25,22 +25,28 @@
 !
 !=====================================================================
 
-  subroutine save_databases_hdf5(prname,nspec,nglob,iproc_xi,iproc_eta, &
-                            NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta, &
+  subroutine save_databases_hdf5(prname,nspec,nglob, &
+                            iMPIcut_xi,iMPIcut_eta, &
                             ibool,nodes_coords,ispec_material_id, &
-                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                            NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
+                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                             ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-                            NMATERIALS,material_properties, &
-                            nspec_CPML,CPML_to_spec,CPML_regions,is_CPML, &
                             xstore, ystore, zstore)
 
+
   use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC,SAVE_MESH_AS_CUBIT,NDIM,CUSTOM_REAL
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M,NUMBER_OF_MATERIAL_PROPERTIES
+  use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M,NUMBER_OF_MATERIAL_PROPERTIES
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,NGNOD,NGNOD2D,LOCAL_PATH
 
-  use meshfem3d_par, only: NPROC, myrank
+  use meshfem_par, only: NPROC, myrank, &
+    NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+    NMATERIALS,material_properties, &
+    nspec_CPML,is_CPML,CPML_to_spec,CPML_regions, &
+    addressing, &
+    iproc_xi_current,iproc_eta_current, &
+    NPROC_XI,NPROC_ETA
+
+
 
   use phdf5_utils
   use my_mpi
@@ -57,10 +63,10 @@
   ! MPI Cartesian topology
   ! E for East (= XI_MIN), W for West (= XI_MAX), S for South (= ETA_MIN), N for North (= ETA_MAX)
   integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
-  integer iproc, iproc_xi,iproc_eta
-  integer NPROC_XI,NPROC_ETA
+  integer iproc
+  !integer NPROC_XI,NPROC_ETA
   logical iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec)
-  integer addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
+  !integer addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
 
   ! arrays with the mesh
   integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
@@ -72,7 +78,6 @@
   integer ispec_material_id(nspec)
 
   ! boundary parameters locator
-  integer NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
   integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
   integer ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),ibelm_xmax(NSPEC2DMAX_XMIN_XMAX)
   integer ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),ibelm_ymax(NSPEC2DMAX_YMIN_YMAX)
@@ -80,17 +85,12 @@
   integer ibelm_top(NSPEC2D_TOP)
 
   ! material properties
-  integer :: NMATERIALS
   ! first dimension  : material_id
   ! second dimension : #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
-  double precision , dimension(NMATERIALS,NUMBER_OF_MATERIAL_PROPERTIES) :: material_properties
   double precision , dimension(17,NMATERIALS) :: mat_prop
 
 
   ! CPML
-  integer, intent(in) :: nspec_CPML
-  integer, dimension(nspec_CPML), intent(in) :: CPML_to_spec,CPML_regions
-  logical, dimension(nspec), intent(in) :: is_CPML
   integer :: nspec_CPML_total,ispec_CPML
 
   integer :: i,ispec,iglob,ier
@@ -108,7 +108,6 @@
   integer :: ndef,nundef
   integer :: mat_id,domain_id
   ! there was a potential bug here if nspec is big
-  !integer,dimension(2,nspec) :: material_index
   integer,dimension(:,:),allocatable            :: material_index
   character(len=MAX_STRING_LEN), dimension(6,1) :: undef_mat_prop
 
@@ -622,19 +621,19 @@
     interfaces(NW:SW) = .false.
 
     ! slices at model boundaries
-    if (iproc_xi == 0) then
+    if (iproc_xi_current == 0) then
       nb_interfaces =  nb_interfaces -1
       interfaces(W) = .false.
     endif
-    if (iproc_xi == NPROC_XI-1) then
+    if (iproc_xi_current == NPROC_XI-1) then
       nb_interfaces =  nb_interfaces -1
       interfaces(E) = .false.
     endif
-    if (iproc_eta == 0) then
+    if (iproc_eta_current == 0) then
       nb_interfaces =  nb_interfaces -1
       interfaces(S) = .false.
     endif
-    if (iproc_eta == NPROC_ETA-1) then
+    if (iproc_eta_current == NPROC_ETA-1) then
       nb_interfaces =  nb_interfaces -1
       interfaces(N) = .false.
     endif
@@ -712,7 +711,7 @@
     count2 = 1
 
     if (interfaces(W)) then
-      num_neighbors_elmnts(1,count1) = addressing(iproc_xi-1,iproc_eta)
+      num_neighbors_elmnts(1,count1) = addressing(iproc_xi_current-1,iproc_eta_current)
       num_neighbors_elmnts(2,count1) = nspec_interface(W)
       count1 = count1+1
       do ispec = 1,nspec
@@ -729,7 +728,7 @@
     endif
 
     if (interfaces(E)) then
-      num_neighbors_elmnts(1,count1) = addressing(iproc_xi+1,iproc_eta)
+      num_neighbors_elmnts(1,count1) = addressing(iproc_xi_current+1,iproc_eta_current)
       num_neighbors_elmnts(2,count1) = nspec_interface(E)
       count1 = count1 + 1
       do ispec = 1,nspec
@@ -746,7 +745,7 @@
     endif
 
     if (interfaces(S)) then
-      num_neighbors_elmnts(1,count1) = addressing(iproc_xi,iproc_eta-1)
+      num_neighbors_elmnts(1,count1) = addressing(iproc_xi_current,iproc_eta_current-1)
       num_neighbors_elmnts(2,count1) = nspec_interface(S)
       count1 = count1 + 1
       do ispec = 1,nspec
@@ -763,7 +762,7 @@
     endif
 
     if (interfaces(N)) then
-      num_neighbors_elmnts(1,count1) = addressing(iproc_xi,iproc_eta+1)
+      num_neighbors_elmnts(1,count1) = addressing(iproc_xi_current,iproc_eta_current+1)
       num_neighbors_elmnts(2,count1) = nspec_interface(N)
       count1 = count1 + 1
       do ispec = 1,nspec
@@ -780,7 +779,7 @@
     endif
 
     if (interfaces(NW)) then
-      num_neighbors_elmnts(1,count1) = addressing(iproc_xi-1,iproc_eta+1)
+      num_neighbors_elmnts(1,count1) = addressing(iproc_xi_current-1,iproc_eta_current+1)
       num_neighbors_elmnts(2,count1) = nspec_interface(NW)
       count1 = count1 + 1
       do ispec = 1,nspec
@@ -797,7 +796,7 @@
     endif
 
     if (interfaces(NE)) then
-      num_neighbors_elmnts(1,count1) = addressing(iproc_xi+1,iproc_eta+1)
+      num_neighbors_elmnts(1,count1) = addressing(iproc_xi_current+1,iproc_eta_current+1)
       num_neighbors_elmnts(2,count1) = nspec_interface(NE)
       count1 = count1 + 1
       do ispec = 1,nspec
@@ -814,7 +813,7 @@
     endif
 
     if (interfaces(SE)) then
-      num_neighbors_elmnts(1,count1) = addressing(iproc_xi+1,iproc_eta-1)
+      num_neighbors_elmnts(1,count1) = addressing(iproc_xi_current+1,iproc_eta_current-1)
       num_neighbors_elmnts(2,count1) = nspec_interface(SE)
       count1 = count1 + 1
       do ispec = 1,nspec
@@ -831,7 +830,7 @@
     endif
 
     if (interfaces(SW)) then
-      num_neighbors_elmnts(1,count1) = addressing(iproc_xi-1,iproc_eta-1)
+      num_neighbors_elmnts(1,count1) = addressing(iproc_xi_current-1,iproc_eta_current-1)
       num_neighbors_elmnts(2,count1) = nspec_interface(SW)
       count1 = count1 + 1
       do ispec = 1,nspec
@@ -871,12 +870,12 @@
     call h5_close_file_p(h5)
 
     if (myrank == 0) then
-      call h5_open_file(h5) 
+      call h5_open_file(h5)
       dset_name = "offset_n_elms_interface"
       call h5_write_dataset_1d_i_no_group(h5, dset_name, offset_n_elms_interface)
       dset_name = "offset_nb_interfaces"
       call h5_write_dataset_1d_i_no_group(h5, dset_name, offset_nb_interfaces)
-      call h5_close_file(h5)      
+      call h5_close_file(h5)
     endif
 
     call h5_open_file_p_collect(h5)

@@ -37,7 +37,9 @@
 
   subroutine model_gll(myrank,nspec,LOCAL_PATH)
 
-  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN,MAX_STRING_LEN,ATTENUATION
+  use constants, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN,MAX_STRING_LEN,IIN
+
+  use generate_databases_par, only: ATTENUATION
 
   use create_regions_mesh_ext_par, only: rhostore,kappastore,mustore,rho_vp,rho_vs,qkappa_attenuation_store,qmu_attenuation_store
 
@@ -72,14 +74,14 @@
   if (myrank == 0) write(IMAIN,*) '     reading in: rho.bin'
 
   filename = prname_lp(1:len_trim(prname_lp))//'rho.bin'
-  open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+  open(unit=IIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'error opening file: ',trim(filename)
     stop 'error reading rho.bin file'
   endif
 
-  read(28) rho_read
-  close(28)
+  read(IIN) rho_read
+  close(IIN)
 
   ! vp
   allocate(vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
@@ -90,14 +92,14 @@
   if (myrank == 0) write(IMAIN,*) '     reading in: vp.bin'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vp.bin'
-  open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+  open(unit=IIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'error opening file: ',trim(filename)
     stop 'error reading vp.bin file'
   endif
 
-  read(28) vp_read
-  close(28)
+  read(IIN) vp_read
+  close(IIN)
 
   ! vs
   allocate(vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
@@ -108,14 +110,14 @@
   if (myrank == 0) write(IMAIN,*) '     reading in: vs.bin'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vs.bin'
-  open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+  open(unit=IIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'error opening file: ',trim(filename)
     stop 'error reading vs.bin file'
   endif
 
-  read(28) vs_read
-  close(28)
+  read(IIN) vs_read
+  close(IIN)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!! in cases where density structure is not given
@@ -161,28 +163,28 @@
     if (myrank == 0) write(IMAIN,*) '     reading in: qmu.bin'
 
     filename = prname_lp(1:len_trim(prname_lp))//'qmu.bin'
-    open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+    open(unit=IIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
       print *,'Error opening file: ',trim(filename)
       stop 'Error reading qmu.bin file'
     endif
 
-    read(28) qmu_attenuation_store
-    close(28)
+    read(IIN) qmu_attenuation_store
+    close(IIN)
 
     ! bulk attenuation
     ! user output
     if (myrank == 0) write(IMAIN,*) '     reading in: qkappa.bin'
 
     filename = prname_lp(1:len_trim(prname_lp))//'qkappa.bin'
-    open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+    open(unit=IIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
       print *,'error opening file: ',trim(filename)
       stop 'error reading qkappa.bin file'
     endif
 
-    read(28) qkappa_attenuation_store
-    close(28)
+    read(IIN) qkappa_attenuation_store
+    close(IIN)
   endif
 
   ! free memory

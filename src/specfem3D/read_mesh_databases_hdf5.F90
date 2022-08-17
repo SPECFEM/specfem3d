@@ -151,11 +151,11 @@
     call h5_read_dataset_scalar_i_collect_hyperslab(h5, dsetname, NSPEC_IRREGULAR, (/myrank/),if_col)
     dsetname = "ibool"
     call h5_read_dataset_4d_i_collect_hyperslab(h5, dsetname, ibool, (/0,0,0,sum(offset_nglob(0:myrank-1))/), if_col)
-    dsetname = "xstore_dummy"
+    dsetname = "xstore_unique"
     call h5_read_dataset_1d_r_collect_hyperslab(h5,dsetname,xstore,(/sum(offset_nglob(0:myrank-1))/),if_col)
-    dsetname = "ystore_dummy"
+    dsetname = "ystore_unique"
     call h5_read_dataset_1d_r_collect_hyperslab(h5,dsetname,ystore,(/sum(offset_nglob(0:myrank-1))/),if_col)
-    dsetname = "zstore_dummy"
+    dsetname = "zstore_unique"
     call h5_read_dataset_1d_r_collect_hyperslab(h5,dsetname,zstore,(/sum(offset_nglob(0:myrank-1))/),if_col)
     dsetname = "irregular_element_number"
     call h5_read_dataset_1d_i_collect_hyperslab(h5,dsetname,irregular_element_number,(/sum(offset_nspec(0:myrank-1))/),if_col)
@@ -164,25 +164,25 @@
     dsetname = "jacobian_regular"
     call h5_read_dataset_scalar_r_collect_hyperslab(h5,dsetname,jacobian_regular,(/myrank/),if_col)
     dsetname = "xixstore"
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,xix,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,xixstore,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "xiystore"
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,xiy,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,xiystore,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "xizstore"
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,xiz,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,xizstore,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "etaxstore"
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,etax,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,etaxstore,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "etaystore"
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,etay,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,etaystore,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "etazstore"
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,etaz,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,etazstore,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "gammaxstore"
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,gammax,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,gammaxstore,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "gammaystore"
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,gammay,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,gammaystore,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "gammazstore"
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,gammaz,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,gammazstore,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "jacobianstore"
-    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,jacobian,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
+    call h5_read_dataset_4d_r_collect_hyperslab(h5,dsetname,jacobianstore,(/0,0,0,sum(offset_nspec_irregular(0:myrank-1))/),if_col)
     dsetname = "ispec_is_acoustic"
     call h5_read_dataset_1d_l_collect_hyperslab(h5, dsetname, ispec_is_acoustic, (/sum(offset_nspec(0:myrank-1))/),if_col)
     dsetname = "ispec_is_elastic"
@@ -207,16 +207,16 @@
   if (size(ystore) > 0) call bcast_all_cr_for_database(ystore(1), size(ystore))
   if (size(zstore) > 0) call bcast_all_cr_for_database(zstore(1), size(zstore))
 
-  call bcast_all_cr_for_database(xix(1,1,1,1), size(xix))
-  call bcast_all_cr_for_database(xiy(1,1,1,1), size(xiy))
-  call bcast_all_cr_for_database(xiz(1,1,1,1), size(xiz))
-  call bcast_all_cr_for_database(etax(1,1,1,1), size(etax))
-  call bcast_all_cr_for_database(etay(1,1,1,1), size(etay))
-  call bcast_all_cr_for_database(etaz(1,1,1,1), size(etaz))
-  call bcast_all_cr_for_database(gammax(1,1,1,1), size(gammax))
-  call bcast_all_cr_for_database(gammay(1,1,1,1), size(gammay))
-  call bcast_all_cr_for_database(gammaz(1,1,1,1), size(gammaz))
-  call bcast_all_cr_for_database(jacobian(1,1,1,1), size(jacobian))
+  call bcast_all_cr_for_database(xixstore(1,1,1,1), size(xixstore))
+  call bcast_all_cr_for_database(xiystore(1,1,1,1), size(xiystore))
+  call bcast_all_cr_for_database(xizstore(1,1,1,1), size(xizstore))
+  call bcast_all_cr_for_database(etaxstore(1,1,1,1), size(etaxstore))
+  call bcast_all_cr_for_database(etaystore(1,1,1,1), size(etaystore))
+  call bcast_all_cr_for_database(etazstore(1,1,1,1), size(etazstore))
+  call bcast_all_cr_for_database(gammaxstore(1,1,1,1), size(gammaxstore))
+  call bcast_all_cr_for_database(gammaystore(1,1,1,1), size(gammaystore))
+  call bcast_all_cr_for_database(gammazstore(1,1,1,1), size(gammazstore))
+  call bcast_all_cr_for_database(jacobianstore(1,1,1,1), size(jacobianstore))
 
   call bcast_all_cr_for_database(kappastore(1,1,1,1), size(kappastore))
   call bcast_all_cr_for_database(mustore(1,1,1,1), size(mustore))
@@ -772,13 +772,13 @@
   if (I_should_read_the_database) then
     call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_abs_boundary_faces",offset_num_abs_boundary_faces, (/0/), if_col)
   endif
-  call bcast_all_i_for_database(offset_num_abs_boundary_faces, size(offset_num_abs_boundary_faces))
+  call bcast_all_i_array_for_database(offset_num_abs_boundary_faces, size(offset_num_abs_boundary_faces))
 
   if (sum(offset_num_abs_boundary_faces) > 0) then
     if (I_should_read_the_database) then
       call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_nglob_xy",offset_nglob_xy, (/0/), if_col)
     endif
-    call bcast_all_i_for_database(offset_nglob_xy, size(offset_nglob_xy))
+    call bcast_all_i_array_for_database(offset_nglob_xy, size(offset_nglob_xy))
 
     if (I_should_read_the_database) then
       dsetname = "abs_boundary_ispec"
@@ -926,7 +926,7 @@
   if (I_should_read_the_database) then
     call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_free_surface_faces",offset_num_free_surface_faces, (/0/), if_col)
   endif
-  call bcast_all_i_for_database(offset_num_free_surface_faces, size(offset_num_free_surface_faces))
+  call bcast_all_i_array_for_database(offset_num_free_surface_faces, size(offset_num_free_surface_faces))
 
   if (sum(offset_num_free_surface_faces) > 0) then
     if (I_should_read_the_database) then
@@ -973,7 +973,7 @@
   if (I_should_read_the_database) then
     call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_coupling_ac_el_faces",offset_num_coupling_ac_el_faces,(/0/),if_col)
   endif
-  call bcast_all_i_for_database(offset_num_coupling_ac_el_faces, size(offset_num_coupling_ac_el_faces))
+  call bcast_all_i_array_for_database(offset_num_coupling_ac_el_faces, size(offset_num_coupling_ac_el_faces))
 
   if (sum(offset_num_coupling_ac_el_faces) > 0) then
     if (I_should_read_the_database) then
@@ -1020,7 +1020,7 @@
   if (I_should_read_the_database) then
     call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_coupling_ac_po_faces",offset_num_coupling_ac_po_faces, (/0/), if_col)
   endif
-  call bcast_all_cr_for_database(offset_num_coupling_ac_po_faces,size(offset_num_coupling_ac_po_faces))
+  call bcast_all_i_array_for_database(offset_num_coupling_ac_po_faces,size(offset_num_coupling_ac_po_faces))
 
   if (sum(offset_num_coupling_ac_po_faces) > 0) then
     if (I_should_read_the_database) then
@@ -1071,7 +1071,7 @@
   if (I_should_read_the_database) then
     call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_coupling_el_po_faces",offset_num_coupling_el_po_faces, (/0/), if_col)
   endif
-  call bcast_all_i_for_database(offset_num_coupling_el_po_faces,size(offset_num_coupling_el_po_faces))
+  call bcast_all_i_array_for_database(offset_num_coupling_el_po_faces,size(offset_num_coupling_el_po_faces))
 
   if (sum(offset_num_coupling_el_po_faces) > 0) then
     if (I_should_read_the_database) then
@@ -1123,7 +1123,7 @@
   if (I_should_read_the_database) then
     call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_interfaces_ext_mesh",offset_num_interfaces_ext_mesh, (/0/), if_col)
   endif
-  call bcast_all_i_for_database(offset_num_interfaces_ext_mesh,size(offset_num_interfaces_ext_mesh))
+  call bcast_all_i_array_for_database(offset_num_interfaces_ext_mesh,size(offset_num_interfaces_ext_mesh))
 
   if (sum(offset_num_interfaces_ext_mesh) > 0) then
     if (I_should_read_the_database) then
@@ -1284,7 +1284,7 @@
     if (I_should_read_the_database) then
       call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_phase_ispec_elastic",offset_num_phase_ispec_elastic, (/0/), if_col)
     endif
-    call bcast_all_i_for_database(offset_num_phase_ispec_elastic,size(offset_num_phase_ispec_elastic))
+    call bcast_all_i_array_for_database(offset_num_phase_ispec_elastic,size(offset_num_phase_ispec_elastic))
 
     if (sum(offset_num_phase_ispec_elastic) > 0) then
       if (I_should_read_the_database) then
@@ -1318,7 +1318,7 @@
       call h5_read_dataset_1d_i_collect_hyperslab(h5,"offset_num_phase_ispec_poroelastic",&
             offset_num_phase_ispec_poroelastic, (/0/), if_col)
     endif
-    call bcast_all_i_for_database(offset_num_phase_ispec_poroelastic,size(offset_num_phase_ispec_poroelastic))
+    call bcast_all_i_array_for_database(offset_num_phase_ispec_poroelastic,size(offset_num_phase_ispec_poroelastic))
     if (sum(offset_num_phase_ispec_poroelastic) > 0) then
       if (I_should_read_the_database) then
         dsetname = "phase_ispec_inner_poroelastic"

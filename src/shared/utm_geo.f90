@@ -41,6 +41,33 @@
 ! use iway = ILONGLAT2UTM for long/lat to UTM, IUTM2LONGLAT for UTM to lat/long
 ! a list of UTM zones of the world is available at www.dmap.co.uk/utmworld.htm
 
+
+! original publication:
+! Snyder, J.P., Map projections - a working manual, USGS professional paper 1395, 1987
+! https://doi.org/10.3133/pp1395
+!
+! (Universal) Transverse Mercator projection - formulas for the ellipsoid (pages 61-63) are implemented
+!
+! note: the original version of this utm_geo(..) routine contained 2 errors in the formula
+!       in factor M (rm) when converting from long/lat to UTM, and
+!       in factor f3 for computing latitude (lat) when converting from UTM to long/lat.
+!
+!       mistakes size in original routine:
+!         from UTM x/y to lon/lat and converted back again:
+!           477415.5             5712313.5            ->  2.6741959317615298        51.561449486527074  (zone 31)
+!           477415.50000327773   5712320.9415952200 <-  2.6741959317615298        51.561449486527074
+!         has maximum UTM error ~ 7.44 m
+!
+!      corrected version:
+!           477415.5             5712313.5            ->  2.6741959317615298        51.561449479910003  (zone 31)
+!           477415.49999999994   5712313.5002520066 <-  2.6741959317615298        51.561449479910003
+!         has maximum UTM error ~ 0.00025 m
+!
+!      error introduced in converting lon/lat to UTM:
+!           2.6741959317615298        51.561449486527074 -> 477415.50000327773   5712320.9415952200  ! wrong formula
+!                                                           477415.50579994149   5712313.6646418981  ! corrected
+
+
   subroutine utm_geo(rlon4,rlat4,rx4,ry4,iway)
 
 !
@@ -113,10 +140,10 @@
 
 ! Note that the UTM grids are actually Mercators which
 ! employ the standard UTM scale factor 0.9996 and set the Easting Origin to 500,000.
-  double precision, parameter :: scfa=0.9996d0
-  double precision, parameter :: north=0.d0, east=500000.d0
+  double precision, parameter :: scfa = 0.9996d0
+  double precision, parameter :: north = 0.d0, east = 500000.d0
 
-  double precision, parameter :: DEGREES_TO_RADIANS=PI/180.d0, RADIANS_TO_DEGREES=180.d0/PI
+  double precision, parameter :: DEGREES_TO_RADIANS = PI/180.d0, RADIANS_TO_DEGREES = 180.d0/PI
 
 ! local variables
   integer :: zone
@@ -135,19 +162,21 @@
       rlon4 = rx4
       rlat4 = ry4
     endif
+    ! all done
     return
   endif
 
-! save original parameters
+  ! save original parameters
   rlon_save = rlon4
   rlat_save = rlat4
   rx_save = rx4
   ry_save = ry4
 
-  e2=1.d0-(SEMI_MINOR_AXIS/SEMI_MAJOR_AXIS)**2
-  e4=e2*e2
-  e6=e2*e4
-  ep2=e2/(1.d0-e2)
+  ! defines parameters of reference ellipsoid
+  e2 = 1.d0 - (SEMI_MINOR_AXIS/SEMI_MAJOR_AXIS)**2
+  e4 = e2*e2
+  e6 = e2*e4
+  ep2 = e2 / (1.d0-e2)
 
 !
 !---- Set Zone parameters
@@ -156,8 +185,10 @@
   lsouth = .false.
   if (UTM_PROJECTION_ZONE < 0) lsouth = .true.
   zone = abs(UTM_PROJECTION_ZONE)
-  cm = zone*6.0d0 - 183.d0
-  cmr = cm*DEGREES_TO_RADIANS
+
+  ! set central meridian for this zone
+  cm = zone * 6.0d0 - 183.d0
+  cmr = cm * DEGREES_TO_RADIANS
 
   if (iway == IUTM2LONGLAT) then
     xx = rx4
@@ -179,36 +210,53 @@
     delam = dlon - cm
     if (delam < -180.d0) delam = delam + 360.d0
     if (delam > 180.d0) delam = delam - 360.d0
+
     delam = delam*DEGREES_TO_RADIANS
 
+    ! Snyder, J.P., Map projections - a working manual, USGS professional paper 1395, 1987
+    ! https://doi.org/10.3133/pp1395
+    !
+    ! (Universal) Transverse Mercator projection
+    !
+    ! page 61, eq. 3-21 for M
     f1 = (1.d0 - e2/4.d0 - 3.d0*e4/64.d0 - 5.d0*e6/256d0)*rlat
     f2 = 3.d0*e2/8.d0 + 3.d0*e4/32.d0 + 45.d0*e6/1024.d0
-    f2 = f2*sin(2.d0*rlat)
-    f3 = 15.d0*e4/256.d0*45.d0*e6/1024.d0
-    f3 = f3*sin(4.d0*rlat)
+    f2 = f2 * sin(2.d0*rlat)
+    ! corrected: using .. + 45 e6 / 1024 instead of .. * 45 e6 / 1024
+    !!wrong: f3 = 15.0 * e4 / 256.0 * 45.0 * e6 /1024.0
+    f3 = 15.d0*e4/256.d0 + 45.d0*e6/1024.d0
+    f3 = f3 * sin(4.d0*rlat)
     f4 = 35.d0*e6/3072.d0
-    f4 = f4*sin(6.d0*rlat)
+    f4 = f4 * sin(6.d0*rlat)
     rm = SEMI_MAJOR_AXIS*(f1 - f2 + f3 - f4)
+
     if (dlat == 90.d0 .or. dlat == -90.d0) then
       xx = 0.d0
       yy = scfa*rm
     else
+      ! page 61, eq. 4-20
       rn = SEMI_MAJOR_AXIS/sqrt(1.d0 - e2*sin(rlat)**2)
+      ! page 61, eq. 8-13
       t = tan(rlat)**2
+      ! page 61, eq. 8-14
       c = ep2*cos(rlat)**2
       a = cos(rlat)*delam
 
-      f1 = (1.d0 - t + c)*a**3/6.d0
+      ! page 61, eq. 8-9 for x
+      f1 = (1.d0 - t + c) * a**3 / 6.d0
       f2 = 5.d0 - 18.d0*t + t**2 + 72.d0*c - 58.d0*ep2
-      f2 = f2*a**5/120.d0
-      xx = scfa*rn*(a + f1 + f2)
-      f1 = a**2/2.d0
-      f2 = 5.d0 - t + 9.d0*c + 4.d0*c**2
-      f2 = f2*a**4/24.d0
+      f2 = f2 * a**5 / 120.d0
+      xx = scfa * rn * (a + f1 + f2)
+
+      ! page 61, eq. 8-10 for y
+      f1 = a**2 / 2.d0
+      f2 = 5.d0 - t + 9.d0*c + 4.d0 * c**2
+      f2 = f2 * a**4 / 24.d0
       f3 = 61.d0 - 58.d0*t + t**2 + 600.d0*c - 330.d0*ep2
-      f3 = f3*a**6/720.d0
-      yy = scfa*(rm + rn*tan(rlat)*(f1 + f2 + f3))
+      f3 = f3 * a**6 / 720.d0
+      yy = scfa * (rm + rn * tan(rlat) * (f1 + f2 + f3))
     endif
+
     xx = xx + east
     yy = yy + north
 
@@ -219,20 +267,31 @@
 
     xx = xx - east
     yy = yy - north
+
+    ! Snyder, J.P., Map projections - a working manual, USGS professional paper 1395, 1987
+    ! https://doi.org/10.3133/pp1395
+    !
+    ! (Universal) Transverse Mercator projection
+    ! inverse formulas
+    !
+    ! page 63, eq. 3-24 for e_1
     e1 = sqrt(1.d0 - e2)
     e1 = (1.d0 - e1)/(1.d0 + e1)
     rm = yy/scfa
+    ! page 63, eq. 7-19 for mu
     u = 1.d0 - e2/4.d0 - 3.d0*e4/64.d0 - 5.d0*e6/256.d0
     u = rm/(SEMI_MAJOR_AXIS*u)
 
-    f1 = 3.d0*e1/2.d0 - 27.d0*e1**3.d0/32.d0
-    f1 = f1*sin(2.d0*u)
-    f2 = 21.d0*e1**2/16.d0 - 55.d0*e1**4/32.d0
-    f2 = f2*sin(4.d0*u)
-    f3 = 151.d0*e1**3.d0/96.d0
-    f3 = f3*sin(6.d0*u)
+    ! page 63, eq. 3-26 for phi_1
+    f1 = 3.d0 * e1/2.d0 - 27.d0 * e1**3 / 32.d0
+    f1 = f1 * sin(2.d0*u)
+    f2 = 21.d0 * e1**2 / 16.d0 - 55.d0 * e1**4 / 32.d0
+    f2 = f2 * sin(4.d0*u)
+    f3 = 151.d0 * e1**3 / 96.d0
+    f3 = f3 * sin(6.d0*u)
     rlat1 = u + f1 + f2 + f3
-    dlat1 = rlat1*RADIANS_TO_DEGREES
+    dlat1 = rlat1 * RADIANS_TO_DEGREES
+
     if (dlat1 >= 90.d0 .or. dlat1 <= -90.d0) then
       dlat1 = dmin1(dlat1,90.d0)
       dlat1 = dmax1(dlat1,-90.d0)
@@ -245,21 +304,26 @@
       r1 = SEMI_MAJOR_AXIS*(1.d0 - e2)/sqrt(f1**3)
       d = xx/(rn1*scfa)
 
-      f1 = rn1*tan(rlat1)/r1
-      f2 = d**2/2.d0
-      f3 = 5.d0*3.d0*t1 + 10.d0*c1 - 4.d0*c1**2 - 9.d0*ep2
-      f3 = f3*d**2*d**2/24.d0
+      ! page 63, eq. 8-17 for phi
+      f1 = rn1 * tan(rlat1)/r1
+      f2 = d**2 / 2.d0
+      ! corrected: factor 5 + 3 T1 + .. instead of 5 * 3 T1 ..
+      !!wrong: f3 = 5.d0*3.d0*t1 + 10.d0*c1 - 4.d0*c1**2 - 9.d0*ep2
+      f3 = 5.d0 + 3.d0*t1 + 10.d0*c1 - 4.d0*c1**2 - 9.d0*ep2
+      f3 = f3 * d**4 / 24.d0
       f4 = 61.d0 + 90.d0*t1 + 298.d0*c1 + 45.d0*t1**2 - 252.d0*ep2 - 3.d0*c1**2
-      f4 = f4*(d**2)**3.d0/720.d0
+      f4 = f4 * d**6 / 720.d0
       rlat = rlat1 - f1*(f2 - f3 + f4)
-      dlat = rlat*RADIANS_TO_DEGREES
+      dlat = rlat * RADIANS_TO_DEGREES
 
+      ! page 63, eq. 8-18 for lambda
       f1 = 1.d0 + 2.d0*t1 + c1
-      f1 = f1*d**2*d/6.d0
+      f1 = f1 * d**3 / 6.d0
       f2 = 5.d0 - 2.d0*c1 + 28.d0*t1 - 3.d0*c1**2 + 8.d0*ep2 + 24.d0*t1**2
-      f2 = f2*(d**2)**2*d/120.d0
+      f2 = f2 * d**5 / 120.d0
       rlon = cmr + (d - f1 + f2)/cos(rlat1)
-      dlon = rlon*RADIANS_TO_DEGREES
+      dlon = rlon * RADIANS_TO_DEGREES
+
       if (dlon < -180.d0) dlon = dlon + 360.d0
       if (dlon > 180.d0) dlon = dlon - 360.d0
     endif

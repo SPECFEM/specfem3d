@@ -132,13 +132,20 @@ PART_LIBS  += $(PATOH_LIBS)
 
 #######################################
 ####
-#### CUDA
+#### GPU
 #### with configure: ./configure --with-cuda=cuda5 CUDA_FLAGS=.. CUDA_LIB=.. CUDA_INC=.. MPI_INC=.. ..
+#### with configure: ./configure --with-hip HIP_FLAGS=.. HIP_LIB=.. HIP_INC=.. MPI_INC=.. ..
 ####
 #######################################
 
+##
+## CUDA
+##
 @COND_CUDA_TRUE@CUDA = yes
 @COND_CUDA_FALSE@CUDA = no
+
+@COND_CUDA4_TRUE@CUDA4 = yes
+@COND_CUDA4_FALSE@CUDA4 = no
 
 @COND_CUDA5_TRUE@CUDA5 = yes
 @COND_CUDA5_FALSE@CUDA5 = no
@@ -158,6 +165,9 @@ PART_LIBS  += $(PATOH_LIBS)
 @COND_CUDA10_TRUE@CUDA10 = yes
 @COND_CUDA10_FALSE@CUDA10 = no
 
+@COND_CUDA11_TRUE@CUDA11 = yes
+@COND_CUDA11_FALSE@CUDA11 = no
+
 # CUDA compilation with linking
 @COND_CUDA_PLUS_TRUE@CUDA_PLUS = yes
 @COND_CUDA_PLUS_FALSE@CUDA_PLUS = no
@@ -168,6 +178,7 @@ PART_LIBS  += $(PATOH_LIBS)
 CUDA_FLAGS = @CUDA_FLAGS@
 CUDA_INC = @CUDA_CPPFLAGS@ -I${SETUP}
 CUDA_LINK = @CUDA_LDFLAGS@ @CUDA_LIBS@ -lstdc++
+CUDA_DEBUG = --cudart=shared
 
 @COND_CUDA_TRUE@NVCC = nvcc
 @COND_CUDA_FALSE@NVCC = @CC@
@@ -176,14 +187,17 @@ CUDA_LINK = @CUDA_LDFLAGS@ @CUDA_LIBS@ -lstdc++
 ## GPU architecture
 ##
 # CUDA architecture / code version
-# Fermi: -gencode=arch=compute_10,code=sm_10 not supported
-# Tesla (default): -gencode=arch=compute_20,code=sm_20
-# Geforce GT 650m: -gencode=arch=compute_30,code=sm_30
-# Kepler (cuda5,K20) : -gencode=arch=compute_35,code=sm_35
-# Kepler (cuda6.5,K80): -gencode=arch=compute_37,code=sm_37
-# Maxwell (cuda7,K2200): -gencode=arch=compute_50,code=sm_50
-# Pascal (cuda8,P100): -gencode=arch=compute_60,code=sm_60
-# Volta (cuda9,V100): -gencode=arch=compute_70,code=sm_70
+# Fermi   (not supported): -gencode=arch=compute_10,code=sm_10
+# Tesla   (Tesla C2050, GeForce GTX 480): -gencode=arch=compute_20,code=sm_20
+# Tesla   (cuda4, K10, Geforce GTX 650, GT 650m): -gencode=arch=compute_30,code=sm_30
+# Kepler  (cuda5, K20) : -gencode=arch=compute_35,code=sm_35
+# Kepler  (cuda6.5, K80): -gencode=arch=compute_37,code=sm_37
+# Maxwell (cuda6.5+/cuda7, Quadro K2200): -gencode=arch=compute_50,code=sm_50
+# Pascal  (cuda8,P100, GeForce GTX 1080, Titan): -gencode=arch=compute_60,code=sm_60
+# Volta   (cuda9, V100): -gencode=arch=compute_70,code=sm_70
+# Turing  (cuda10, T4, GeForce RTX 2080): -gencode=arch=compute_75,code=sm_75
+# Ampere  (cuda11, A100, GeForce RTX 3080): -gencode=arch=compute_80,code=sm_80
+
 GENCODE_20 = -gencode=arch=compute_20,code=\"sm_20,compute_20\"
 GENCODE_30 = -gencode=arch=compute_30,code=\"sm_30,compute_30\"
 GENCODE_35 = -gencode=arch=compute_35,code=\"sm_35,compute_35\"
@@ -193,8 +207,11 @@ GENCODE_52 = -gencode=arch=compute_52,code=\"sm_52,compute_52\"
 GENCODE_60 = -gencode=arch=compute_60,code=\"sm_60,compute_60\"
 GENCODE_70 = -gencode=arch=compute_70,code=\"sm_70,compute_70\"
 GENCODE_75 = -gencode=arch=compute_75,code=\"sm_75,compute_75\"
+GENCODE_80 = -gencode=arch=compute_80,code=\"sm_80,compute_80\"
 
 # cuda preprocessor flag
+# CUDA version 11.0
+@COND_CUDA_TRUE@@COND_CUDA11_TRUE@GENCODE = $(GENCODE_80) $(FC_DEFINE)GPU_DEVICE_Ampere
 # CUDA version 10.0
 @COND_CUDA_TRUE@@COND_CUDA10_TRUE@GENCODE = $(GENCODE_75) $(FC_DEFINE)GPU_DEVICE_Turing
 # CUDA version 9.0
@@ -208,20 +225,92 @@ GENCODE_75 = -gencode=arch=compute_75,code=\"sm_75,compute_75\"
 # CUDA version 5.x
 @COND_CUDA_TRUE@@COND_CUDA5_TRUE@GENCODE = $(GENCODE_35) $(FC_DEFINE)GPU_DEVICE_K20
 # CUDA version 4.x
+@COND_CUDA_TRUE@@COND_CUDA4_TRUE@GENCODE = $(GENCODE_30)
+## old CUDA toolkit versions < 5
 @COND_CUDA_TRUE@@COND_CUDA_PLUS_FALSE@GENCODE = $(GENCODE_20)
 
 # CUDA flags and linking
-@COND_CUDA_TRUE@NVCC_FLAGS_BASE = $(CUDA_FLAGS) $(CUDA_INC) $(MPI_INCLUDES) $(COND_MPI_CPPFLAGS)
-@COND_CUDA_TRUE@@COND_CUDA_PLUS_TRUE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -dc -DCUDA $(GENCODE)
-@COND_CUDA_TRUE@@COND_CUDA_PLUS_FALSE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -DCUDA -DUSE_OLDER_CUDA4_GPU $(GENCODE)
+@COND_CUDA_TRUE@NVCC_FLAGS_BASE = $(CUDA_FLAGS) $(CUDA_INC) $(CUDA_DEBUG) $(MPI_INCLUDES) $(COND_MPI_CPPFLAGS)
+@COND_CUDA_TRUE@@COND_CUDA_PLUS_TRUE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -dc $(GENCODE)
+@COND_CUDA_TRUE@@COND_CUDA_PLUS_FALSE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -DUSE_OLDER_CUDA4_GPU $(GENCODE)
 
-@COND_CUDA_TRUE@@COND_CUDA_PLUS_TRUE@NVCCLINK_BASE = $(NVCC) $(CUDA_FLAGS) $(CUDA_INC) $(MPI_INCLUDES) $(COND_MPI_CPPFLAGS) -DCUDA
+@COND_CUDA_TRUE@@COND_CUDA_PLUS_TRUE@NVCCLINK_BASE = $(NVCC) $(CUDA_FLAGS) $(CUDA_INC) $(MPI_INCLUDES) $(COND_MPI_CPPFLAGS)
 @COND_CUDA_TRUE@@COND_CUDA_PLUS_TRUE@NVCCLINK = $(NVCCLINK_BASE) -dlink $(GENCODE)
 @COND_CUDA_TRUE@@COND_CUDA_PLUS_FALSE@NVCCLINK = $(NVCCLINK_BASE) -DUSE_OLDER_CUDA4_GPU $(GENCODE)
 
 @COND_CUDA_FALSE@NVCC_FLAGS = $(MPI_INCLUDES) $(COND_MPI_CPPFLAGS)
 @COND_CUDA_FALSE@NVCCLINK = $(NVCC) $(NVCC_FLAGS)
 
+##
+## HIP
+##
+@COND_HIP_TRUE@HIP = yes
+@COND_HIP_FALSE@HIP = no
+
+# GPU architecture / code version
+# see: https://llvm.org/docs/AMDGPUUsage.html
+# Radeon Instinct MI8:   --amdgpu-target=gfx803
+# Radeon Instinct MI25:	 --amdgpu-target=gfx900
+# Radeon Instinct MI50:  --amdgpu-target=gfx906
+# Radeon Instinct MI100: --amdgpu-target=gfx908
+GENCODE_AMD_MI8 = --amdgpu-target=gfx803
+GENCODE_AMD_MI25 = --amdgpu-target=gfx900
+GENCODE_AMD_MI50 = --amdgpu-target=gfx906
+GENCODE_AMD_MI100 = --amdgpu-target=gfx908
+
+# default targets
+# AMD default MI50 & MI100
+@COND_HIP_TRUE@@COND_HIP_PLATFORM_AMD_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI50) $(GENCODE_AMD_MI100)
+@COND_HIP_TRUE@@COND_HIP_PLATFORM_AMD_TRUE@HIP_CFLAG_ENDING = -x hip
+# NVIDIA default Tesla
+@COND_HIP_TRUE@@COND_HIP_PLATFORM_NVIDIA_TRUE@GENCODE_HIP = $(GENCODE_30)
+@COND_HIP_TRUE@@COND_HIP_PLATFORM_NVIDIA_TRUE@HIP_CFLAG_ENDING =      # no need for ending
+
+# specific targets
+@COND_HIP_TRUE@@COND_HIP_MI8_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI8)      # --with-hip=MI8 ..
+@COND_HIP_TRUE@@COND_HIP_MI25_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI25)    # --with-hip=MI25 ..
+@COND_HIP_TRUE@@COND_HIP_MI50_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI50)    # --with-hip=MI50 ..
+@COND_HIP_TRUE@@COND_HIP_MI100_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI100)  # --with-hip=MI100 ..
+@COND_HIP_TRUE@@COND_HIP_CUDA5_TRUE@GENCODE_HIP = $(GENCODE_35)         # --with-hip=cuda5 ..
+@COND_HIP_TRUE@@COND_HIP_CUDA6_TRUE@GENCODE_HIP = $(GENCODE_37)         # --with-hip=cuda6 ..
+@COND_HIP_TRUE@@COND_HIP_CUDA7_TRUE@GENCODE_HIP = $(GENCODE_50)         # --with-hip=cuda7 ..
+@COND_HIP_TRUE@@COND_HIP_CUDA8_TRUE@GENCODE_HIP = $(GENCODE_60)         # --with-hip=cuda8 ..
+@COND_HIP_TRUE@@COND_HIP_CUDA9_TRUE@GENCODE_HIP = $(GENCODE_70)         # --with-hip=cuda9 ..
+@COND_HIP_TRUE@@COND_HIP_CUDA10_TRUE@GENCODE_HIP = $(GENCODE_75)         # --with-hip=cuda10 ..
+@COND_HIP_TRUE@@COND_HIP_CUDA11_TRUE@GENCODE_HIP = $(GENCODE_80)         # --with-hip=cuda11 ..
+
+HIP_FLAGS = @HIP_FLAGS@
+HIP_INC = @HIP_CPPFLAGS@ $(MPI_INCLUDES)
+
+@COND_HIP_TRUE@HIPCC = @HIPCC@
+@COND_HIP_FALSE@HIPCC = @CC@
+
+@COND_HIP_TRUE@HIP_CFLAGS = $(HIP_FLAGS) $(HIP_INC) $(GENCODE_HIP)
+@COND_HIP_TRUE@HIP_LINK = @HIP_LDFLAGS@ @HIP_LIBS@
+
+@COND_HIP_FALSE@HIP_CFLAGS =
+@COND_HIP_FALSE@HIP_LINK =
+
+## linking with hipcc instead of mpif90
+## openMPI
+#MPI_LIB_PATH = -L$(shell ${MPIFC} --showme:libdirs)
+#MPI_LIBS += $(shell ${MPIFC} --showme:libs)
+#MPI_LIBS += $(shell mpicxx --showme:libs)
+#SET_MPI_LIB = ${MPI_LIB_PATH} $(shell echo ${MPI_LIBS} | sed -e 's/\b\([a-z]\+\)[ ,\n]\1/\1/g'|sed 's/[^ ]* */-l&/g')
+#FCLINK = $(HIPCC) $(SET_MPI_LIB)
+## mpich
+# from: mpif90 -link_info
+#FCLINK = $(HIPCC) -L/usr/lib/x86_64-linux-gnu -lmpichfort -lmpich -lgfortran -lm -shared-libgcc
+
+# checks if any GPU flag set
+ifeq ($(CUDA), no)
+	ifeq ($(HIP), no)
+		NO_GPU = yes
+	endif
+endif
+ifneq ($(NO_GPU), yes)
+  HAS_GPU = yes
+endif
 
 #######################################
 ####
@@ -271,11 +360,33 @@ endif
 @COND_ADIOS_TRUE@ADIOS = yes
 @COND_ADIOS_FALSE@ADIOS = no
 
-ADIOS_INC = @ADIOS_FCFLAGS@
-ADIOS_LINK = @ADIOS_LIBS@
+@COND_ADIOS_TRUE@ADIOS_DEF = $(FC_DEFINE)USE_ADIOS
+@COND_ADIOS_FALSE@ADIOS_DEF =
 
-FCFLAGS_f90 += $(ADIOS_INC)
-MPILIBS += $(ADIOS_LINK)
+@COND_ADIOS_TRUE@FCFLAGS_f90 += @ADIOS_FCFLAGS@ $(ADIOS_DEF)
+@COND_ADIOS_TRUE@MPILIBS += @ADIOS_LIBS@
+
+#######################################
+####
+#### ADIOS2
+#### with configure: ./configure --with-adios2 ADIOS2_CONFIG=..
+####
+#######################################
+
+@COND_ADIOS2_TRUE@ADIOS2 = yes
+@COND_ADIOS2_FALSE@ADIOS2 = no
+
+@COND_ADIOS2_TRUE@ADIOS2_DEF = $(FC_DEFINE)USE_ADIOS2
+@COND_ADIOS2_FALSE@ADIOS2_DEF =
+
+@COND_ADIOS2_TRUE@FCFLAGS_f90 += @ADIOS2_FCFLAGS@ $(ADIOS2_DEF)
+@COND_ADIOS2_TRUE@MPILIBS += @ADIOS2_LIBS@
+
+@COND_ADIOS2_TRUE@CPPFLAGS += @ADIOS2_CFLAGS@
+@COND_ADIOS2_TRUE@MPILIBS += @ADIOS2_CLIBS@
+
+@COND_ADIOS2_TRUE@MPICC = @MPICC@
+@COND_ADIOS2_FALSE@MPICC = $(CC)
 
 #######################################
 ####
@@ -334,9 +445,9 @@ OUTPUT = $B/OUTPUT_FILES
 SUBDIRS = \
 	auxiliaries \
 	check_mesh_quality \
-	cuda \
 	decompose_mesh \
 	generate_databases \
+	gpu \
 	meshfem3D \
 	shared \
 	specfem3D \
@@ -352,9 +463,9 @@ DEFAULT = \
 	xspecfem3D \
 	$(EMPTY_MACRO)
 
+# targets requiring MPI
 ifeq ($(MPI),yes)
-DEFAULT += xdecompose_mesh_mpi
-DEFAULT += xinverse_problem_for_model
+DEFAULT += xdecompose_mesh_mpi xinverse_problem_for_model
 SUBDIRS += inverse_problem_for_model
 endif
 
@@ -371,12 +482,16 @@ clean:
 	-rm -f $(foreach dir, $(CLEAN), $($(dir)_OBJECTS) $($(dir)_MODULES) $($(dir)_SHARED_OBJECTS) $($(dir)_TARGETS))
 	-rm -f ${E}/*__genmod.*
 	-rm -f ${O}/*__genmod.*
+	-rm -f ${O}/*.smod
+	-rm -f ${O}/*.lst
 else
 clean:
 	@echo "cleaning all"
 	-rm -f $(foreach dir, $(SUBDIRS), $($(dir)_OBJECTS) $($(dir)_MODULES) $($(dir)_TARGETS))
 	-rm -f ${E}/*__genmod.*
 	-rm -f ${O}/*__genmod.*
+	-rm -f ${O}/*.smod
+	-rm -f ${O}/*.lst
 endif
 
 realclean: clean
@@ -408,18 +523,20 @@ help:
 	@echo "    xmeshfem3D"
 	@echo "    xgenerate_databases"
 	@echo "    xspecfem3D"
-	@echo "    xinverse_problem_for_model"
 	@echo ""
 	@echo "defaults:"
 	@echo "    xdecompose_mesh"
+ifeq ($(MPI),yes)
+	@echo "    xdecompose_mesh_mpi"
+endif
 	@echo "    xmeshfem3D"
 	@echo "    xgenerate_databases"
 	@echo "    xspecfem3D"
-	@echo "    xinverse_problem_for_model"
+ifeq ($(MPI),yes)
 	@echo ""
-	@echo "    xcombine_surf_data"
-	@echo "    xcombine_vol_data"
-	@echo "    xcombine_vol_data_vtk"
+	@echo "    xinverse_problem_for_model"
+endif
+	@echo ""
 	@echo "    xconvolve_source_timefunction"
 	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
 	@echo ""
@@ -431,9 +548,26 @@ help:
 	@echo "    xcombine_surf_data"
 	@echo "    xcombine_vol_data"
 	@echo "    xcombine_vol_data_vtk"
+	@echo "    xcombine_vol_data_vtu"
+ifeq ($(ADIOS), yes)
+	@echo "    xcombine_vol_data_adios"
+	@echo "    xcombine_vol_data_vtk_adios"
+	@echo "    xcombine_vol_data_vtu_adios"
+endif
+ifeq ($(ADIOS2), yes)
+	@echo "    xcombine_vol_data_adios"
+	@echo "    xcombine_vol_data_vtk_adios"
+	@echo "    xcombine_vol_data_vtu_adios"
+endif
+	@echo ""
 	@echo "    xconvolve_source_timefunction"
 	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
 	@echo ""
+ifeq ($(MPI),yes)
+	@echo "    xproject_and_combine_vol_data_on_regular_grid"
+	@echo ""
+endif
+
 	@echo "- check mesh executables: [make check_mesh]"
 	@echo "    xcheck_mesh_quality"
 	@echo "    xconvert_skewness_to_angle"

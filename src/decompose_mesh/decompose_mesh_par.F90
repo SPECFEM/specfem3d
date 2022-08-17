@@ -28,9 +28,11 @@
 
 module decompose_mesh_par
 
+  use constants, only: IIN_DB,MAX_STRING_LEN,NGNOD_EIGHT_CORNERS
+
   use shared_parameters
 
-  use part_decompose_mesh, only: long,MAX_STRING_LEN,ACOUSTIC_LOAD,nfaces,NGNOD_EIGHT_CORNERS, &
+  use part_decompose_mesh, only: ACOUSTIC_LOAD, &
     write_interfaces_database,write_moho_surface_database,write_glob2loc_nodes_database, &
     write_material_props_database,write_boundaries_database, &
     write_partition_database,write_cpml_database, &
@@ -80,8 +82,7 @@ module decompose_mesh_par
   integer, dimension(:), pointer  :: tab_size_interfaces, tab_interfaces
   integer, dimension(:), allocatable  :: my_interfaces
   integer, dimension(:), allocatable  :: my_nb_interfaces
-  integer ::  ninterfaces
-  integer :: my_ninterface
+  integer :: ninterfaces
 
   integer :: nsize           ! max number of elements that contain the same node
   integer :: nb_edges
@@ -92,14 +93,12 @@ module decompose_mesh_par
   integer :: num_elmnt, num_node, num_mat
 
   ! boundaries
-  integer :: ispec2D
   integer :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom, nspec2D_top
   integer, dimension(:), allocatable :: ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top
   integer, dimension(:,:), allocatable :: nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin
   integer, dimension(:,:), allocatable :: nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
 
   ! C-PML absorbing boundary conditions
-  integer :: ispec_CPML
   integer :: nspec_cpml
   integer, dimension(:), allocatable :: CPML_to_spec, CPML_regions
   logical, dimension(:), allocatable :: is_CPML
@@ -120,12 +119,7 @@ module decompose_mesh_par
   character(len=MAX_STRING_LEN) :: localpath_name
   character(len=MAX_STRING_LEN) :: outputpath_name
 
-  integer :: aniso_flag,idomain_id
-  double precision :: vp,vs,rho,qkappa,qmu
-! poroelastic parameters read in a new file
-  double precision :: rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
-
-  integer, parameter :: IIN_database = 15
+  integer, parameter :: IIN_database = IIN_DB
 
   ! LTS simulations
   ! element p-refinement values (like 1 2 4 8 ..; p == 1 being coarsest, p == 8 finer local time step dt/p )

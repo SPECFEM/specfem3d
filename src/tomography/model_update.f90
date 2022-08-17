@@ -510,18 +510,18 @@ program model_update
   total_model = 0.5 * ( model_vp**2 - 2.0*model_vs**2) / ( model_vp**2 - model_vs**2)
   fname = 'poisson'
   write(m_file,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,trim(REG)//trim(fname)//'.bin'
-  open(12,file=trim(m_file),form='unformatted')
-  write(12) total_model(:,:,:,1:nspec)
-  close(12)
+  open(IOUT,file=trim(m_file),form='unformatted')
+  write(IOUT) total_model(:,:,:,1:nspec)
+  close(IOUT)
 
   ! Poisson's ratio of new model
   total_model = 0.
   total_model = 0.5 * ( model_vp_new**2 - 2.0*model_vs_new**2) / ( model_vp_new**2 - model_vs_new**2)
   fname = 'poisson_new'
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'/proc',myrank,trim(REG)//trim(fname)//'.bin'
-  open(12,file=trim(m_file),form='unformatted')
-  write(12) total_model(:,:,:,1:nspec)
-  close(12)
+  open(IOUT,file=trim(m_file),form='unformatted')
+  write(IOUT) total_model(:,:,:,1:nspec)
+  close(IOUT)
 
 
   !---------------------------------------------------------------------------------------------
@@ -533,18 +533,18 @@ program model_update
   total_model = sqrt( model_vp**2 - (4.0/3.0)*model_vs**2)
   fname = 'vb'
   write(m_file,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,trim(REG)//trim(fname)//'.bin'
-  open(12,file=trim(m_file),form='unformatted')
-  write(12) total_model(:,:,:,1:nspec)
-  close(12)
+  open(IOUT,file=trim(m_file),form='unformatted')
+  write(IOUT) total_model(:,:,:,1:nspec)
+  close(IOUT)
 
   ! bulk wavespeed of new model
   total_model = 0.
   total_model = sqrt( model_vp_new**2 - (4.0/3.0)*model_vs_new**2)
   fname = 'vb_new'
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'/proc',myrank,trim(REG)//trim(fname)//'.bin'
-  open(12,file=trim(m_file),form='unformatted')
-  write(12) total_model(:,:,:,1:nspec)
-  close(12)
+  open(IOUT,file=trim(m_file),form='unformatted')
+  write(IOUT) total_model(:,:,:,1:nspec)
+  close(IOUT)
 
 !===================================================
 !===================================================
@@ -627,7 +627,8 @@ subroutine get_external_mesh()
   use specfem_par, only: CUSTOM_REAL,NSPEC_AB,NGLOB_AB,NSPEC_IRREGULAR,NGLLX,NGLLY,NGLLZ, &
     model_speed_max,DT,myrank,IMAIN,ISTANDARD_OUTPUT
 
-  use specfem_par, only: ibool,xstore,ystore,zstore,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
+  use specfem_par, only: ibool,xstore,ystore,zstore, &
+    xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore, &
     kappastore,mustore,rhostore
 
   use specfem_par_elastic, only: ispec_is_elastic,min_resolved_period
@@ -650,46 +651,46 @@ subroutine get_external_mesh()
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 918')
 
   if (NSPEC_IRREGULAR > 0) then
-    allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(xixstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 919')
-    allocate(xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(xiystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 920')
-    allocate(xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(xizstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 921')
-    allocate(etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(etaxstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 922')
-    allocate(etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(etaystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 923')
-    allocate(etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(etazstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 924')
-    allocate(gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 925')
-    allocate(gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(gammaystore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 926')
-    allocate(gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(gammazstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 927')
-    allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 928')
   else
-    allocate(xix(1,1,1,1),stat=ier)
+    allocate(xixstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 929')
-    allocate(xiy(1,1,1,1),stat=ier)
+    allocate(xiystore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 930')
-    allocate(xiz(1,1,1,1),stat=ier)
+    allocate(xizstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 931')
-    allocate(etax(1,1,1,1),stat=ier)
+    allocate(etaxstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 932')
-    allocate(etay(1,1,1,1),stat=ier)
+    allocate(etaystore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 933')
-    allocate(etaz(1,1,1,1),stat=ier)
+    allocate(etazstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 934')
-    allocate(gammax(1,1,1,1),stat=ier)
+    allocate(gammaxstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 935')
-    allocate(gammay(1,1,1,1),stat=ier)
+    allocate(gammaystore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 936')
-    allocate(gammaz(1,1,1,1),stat=ier)
+    allocate(gammazstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 937')
-    allocate(jacobian(1,1,1,1),stat=ier)
+    allocate(jacobianstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 938')
   endif
   if (ier /= 0) stop 'Error allocating arrays for databases'
@@ -811,7 +812,7 @@ subroutine save_new_databases()
   integer :: i,j,k,ispec
 
   ! calculate rmass
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: jacobianstore
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: jacobian_new
   double precision :: weight
   real(kind=CUSTOM_REAL) :: jacobianl
   ! mass matrices
@@ -857,10 +858,10 @@ subroutine save_new_databases()
   ! safety check
   if (NSPEC_IRREGULAR /= NSPEC_AB) stop 'Please check if model_update in save_new_databases() with NSPEC_AB /= NSPEC_IRREGULAR'
 
-  allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  allocate(jacobian_new(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 956')
-  jacobianstore = 0._CUSTOM_REAL
-  jacobianstore = jacobian
+  jacobian_new = 0._CUSTOM_REAL
+  jacobian_new = jacobianstore
 
   ! set up coordinates of the Gauss-Lobatto-Legendre points and calculate weights
   ! from constants.h GAUSSALPHA = 0.d0,GAUSSBETA = 0.d0
@@ -895,7 +896,7 @@ subroutine save_new_databases()
             iglob = ibool(i,j,k,ispec)
 
             weight = wxgll(i)*wygll(j)*wzgll(k)
-            jacobianl = jacobianstore(i,j,k,ispec)
+            jacobianl = jacobian_new(i,j,k,ispec)
 
             !debug
             !if (myrank == 0) then
@@ -956,26 +957,26 @@ subroutine save_new_databases()
   if (ATTENUATION) then
     ! read the proc*attenuation.vtk for the old model in LOCAL_PATH and store qmu_attenuation_store
     write(m_file,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_attenuation.vtk'
-    open(12,file=trim(m_file),status='old',iostat=ier)
+    open(IIN,file=trim(m_file),status='old',iostat=ier)
     if (ier /= 0) then
       print *,'Error opening: ',trim(m_file)
       call exit_mpi(myrank,'Error file not found')
     endif
-    read(12,'(a)') string1 !text
-    read(12,'(a)') string2 !text
-    read(12,'(a)') string3 !text
-    read(12,'(a)') string4 !text
-    read(12,'(a,i12,a)') string5, idummy1, string6 !text
+    read(IIN,'(a)') string1 !text
+    read(IIN,'(a)') string2 !text
+    read(IIN,'(a)') string3 !text
+    read(IIN,'(a)') string4 !text
+    read(IIN,'(a,i12,a)') string5, idummy1, string6 !text
 
     allocate(dummy_g_1(NGLOB_AB),dummy_g_2(NGLOB_AB),dummy_g_3(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 964')
     if (ier /= 0) stop 'Error allocating array dummy etc.'
 
-    read(12,'(3e18.6)') dummy_g_1,dummy_g_2,dummy_g_3 !xstore,ystore,zstore for i=1,nglob
-    read(12,*) !blank line
+    read(IIN,'(3e18.6)') dummy_g_1,dummy_g_2,dummy_g_3 !xstore,ystore,zstore for i=1,nglob
+    read(IIN,*) !blank line
     deallocate(dummy_g_1,dummy_g_2,dummy_g_3)
 
-    read(12,'(a,i12,i12)') string7, idummy2, idummy3 !text
+    read(IIN,'(a,i12,i12)') string7, idummy2, idummy3 !text
 
     allocate(dummy_num(NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 965')
@@ -997,34 +998,34 @@ subroutine save_new_databases()
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 973')
     if (ier /= 0) stop 'Error allocating array dummy etc.'
 
-    read(12,'(9i12)') dummy_num,dummy_l_1,dummy_l_2,dummy_l_3,dummy_l_4, &
+    read(IIN,'(9i12)') dummy_num,dummy_l_1,dummy_l_2,dummy_l_3,dummy_l_4, &
                     dummy_l_5,dummy_l_6,dummy_l_7,dummy_l_8 !8,ibool-1 for ispec=1,nspec
-    read(12,*) !blank line
+    read(IIN,*) !blank line
 
     deallocate(dummy_num,dummy_l_1,dummy_l_2,dummy_l_3,dummy_l_4,dummy_l_5,dummy_l_6,dummy_l_7,dummy_l_8)
 
-    read(12,'(a,i12)') string8, idummy4 !text
+    read(IIN,'(a,i12)') string8, idummy4 !text
 
     allocate(dummy_num(NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 974')
     if (ier /= 0) stop 'Error allocating array dummy etc.'
 
-    read(12,*) dummy_num !12 for ispec=1,nspec
-    read(12,*) !blank line
+    read(IIN,*) dummy_num !12 for ispec=1,nspec
+    read(IIN,*) !blank line
 
     deallocate(dummy_num)
 
-    read(12,'(a,i12)') string9, idummy5 !text
-    read(12,'(a)') string10 !text
-    read(12,'(a)') string11 !text
+    read(IIN,'(a,i12)') string9, idummy5 !text
+    read(IIN,'(a)') string10 !text
+    read(IIN,'(a)') string11 !text
 
     allocate(flag_val(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 975')
     if (ier /= 0) stop 'Error allocating flag_val'
 
-    read(12,*) flag_val
-    read(12,*) !blank line
-    close(12)
+    read(IIN,*) flag_val
+    read(IIN,*) !blank line
+    close(IIN)
 
     allocate(mask_ibool(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 976')
@@ -1083,7 +1084,7 @@ subroutine save_new_databases()
                         ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
 
   deallocate(rhostore_new, kappastore_new, mustore_new, rho_vp_new, rho_vs_new)
-  deallocate(jacobianstore)
+  deallocate(jacobian_new)
   deallocate(rmass_old,rmass_new)
   deallocate(rmass_acoustic_new,rmass_solid_poroelastic_new,rmass_fluid_poroelastic_new)
   deallocate(qmu_attenuation_store,qkappa_attenuation_store)

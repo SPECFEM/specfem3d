@@ -53,11 +53,11 @@
   logical,                               intent(in)     :: POINT_CAN_BE_BURIED
   real(kind=CUSTOM_REAL),                intent(in)     :: elemsize_max_glob
 
-  double precision,                      intent(out)    :: x_found,  y_found,  z_found
-  double precision,                      intent(out)    :: xi_found, eta_found, gamma_found
-  integer,                               intent(out)    :: ispec_selected, domain
-  double precision, dimension(NDIM,NDIM),intent(out)    :: nu_point
-  double precision,                      intent(out)    :: final_distance_squared
+  double precision,                      intent(inout)    :: x_found,  y_found,  z_found
+  double precision,                      intent(inout)    :: xi_found, eta_found, gamma_found
+  integer,                               intent(inout)    :: ispec_selected, domain
+  double precision, dimension(NDIM,NDIM),intent(inout)    :: nu_point
+  double precision,                      intent(inout)    :: final_distance_squared
 
   ! locals
   integer :: ispec, iglob, i, j, k
@@ -105,6 +105,11 @@
   ix_initial_guess = 1
   iy_initial_guess = 1
   iz_initial_guess = 1
+
+  ! puts initial xi/eta/gamma outside of element
+  xi_found = 2.d0
+  eta_found = 2.d0
+  gamma_found = 2.d0
 
   ! set distance to huge initial value
   distmin_squared = HUGEVAL
@@ -501,9 +506,28 @@
     ! compute final distance squared between asked and found
     final_distance_squared_this_element = (x_target-x)*(x_target-x) + (y_target-y)*(y_target-y) + (z_target-z)*(z_target-z)
 
+    ! flag to determine if taking new position
+    is_better_location = .false.
+
+    ! if we found a close point
+    if (final_distance_squared_this_element < 1.d-10) then
+      ! checks if position within element
+      if (abs(xi) <= 1.d0 .and. abs(eta) <= 1.d0 .and. abs(gamma) <= 1.d0) then
+        ! takes position if old position has xi/eta/gamma outside of element
+        if (abs(xi_found) > 1.d0 .or. abs(eta_found) > 1.d0 .or. abs(gamma_found) > 1.d0) then
+          ! old position is out of element, new inside an element; let's take the new one
+          is_better_location = .true.
+        endif
+        ! takes position if old position is in acoustic element and new one in elastic one
+        ! prefers having station in elastic elements over acoustic at interfaces
+        if (ispec_is_acoustic(ispec_selected) .and. ispec_is_elastic(ispec)) then
+          is_better_location = .true.
+        endif
+      endif
+    endif
+
     ! if we have found an element that gives a shorter distance
     if (final_distance_squared_this_element < final_distance_squared) then
-
       ! check if location is better in case almost similar distances
       ! since we allow xi/eta/gamma to go a bit outside of the element range [-1.01,1.01],
       ! we keep the element where xi/eta/gamma is still within element
@@ -524,23 +548,23 @@
           endif
         endif
       endif
+    endif
 
-      ! store information about the point found
-      if (is_better_location) then
-        ! note: xi/eta/gamma will be in range [-1,1]
-        ispec_selected = ispec
+    ! store information about the point found
+    if (is_better_location) then
+      ! note: xi/eta/gamma will be in range [-1,1]
+      ispec_selected = ispec
 
-        xi_found = xi
-        eta_found = eta
-        gamma_found = gamma
+      xi_found = xi
+      eta_found = eta
+      gamma_found = gamma
 
-        x_found = x
-        y_found = y
-        z_found = z
+      x_found = x
+      y_found = y
+      z_found = z
 
-        !   store final distance squared between asked and found
-        final_distance_squared = final_distance_squared_this_element
-      endif
+      !   store final distance squared between asked and found
+      final_distance_squared = final_distance_squared_this_element
     endif
 
 !! DK DK dec 2017
@@ -587,11 +611,16 @@
   ! coordinates of the control points of the surface element
   double precision :: xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
 
-  double precision :: dx,dy,dz,dx_min,dy_min,dz_min,d_min_sq
+  double precision :: dx,dy,dz,dx_min,dy_min,dz_min,d_sq,d_min_sq
   double precision :: dxi,deta,dgamma
   double precision :: xix,xiy,xiz
   double precision :: etax,etay,etaz
   double precision :: gammax,gammay,gammaz
+
+  ! initializes
+  x = 0.d0
+  y = 0.d0
+  z = 0.d0
 
   ! define coordinates of the control points of the element
   do ia = 1,NGNOD
@@ -626,9 +655,12 @@
     !debug
     !print *,'  iter ',iter_loop,'dx',sngl(dx),sngl(dx_min),'dy',sngl(dy),sngl(dy_min),'dz',sngl(dz),sngl(dz_min),d_min_sq
 
+    ! distance squared
+    d_sq = dx*dx + dy*dy + dz*dz
+
     ! compute increments
-    if ((dx**2 + dy**2 + dz**2) < d_min_sq) then
-      d_min_sq = dx**2 + dy**2 + dz**2
+    if (d_sq < d_min_sq) then
+      d_min_sq = d_sq
       dx_min = dx
       dy_min = dy
       dz_min = dz
@@ -644,7 +676,7 @@
     endif
 
     ! decreases step length if step is large
-    if ((dxi**2 + deta**2 + dgamma**2) > 1.0d0) then
+    if ((dxi*dxi + deta*deta + dgamma*dgamma) > 1.0d0) then
       dxi = dxi * 0.33333333333d0
       deta = deta * 0.33333333333d0
       dgamma = dgamma * 0.33333333333d0

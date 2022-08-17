@@ -39,7 +39,7 @@
   !! VM VM use NSTEP_STF, NSOURCES_STF which are always OK:
   !! in case of USE_EXTERNAL_SOURCE_FILE, they are equal to NSTEP,NSOURCES
   !! when .not. USE_EXTERNAL_SOURCE_FILE they are equal to 1,1.
-  real(kind=CUSTOM_REAL), dimension(NSTEP_STF, NSOURCES_STF), intent(out) :: user_source_time_function
+  real(kind=CUSTOM_REAL), dimension(NSTEP_STF, NSOURCES_STF), intent(inout) :: user_source_time_function
 
   character(len=MAX_STRING_LEN),intent(in) :: external_source_time_function_filename
 

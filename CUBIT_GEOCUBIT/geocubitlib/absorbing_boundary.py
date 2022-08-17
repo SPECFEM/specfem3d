@@ -11,6 +11,10 @@
 #    absorbing_surf_bottom is the list of the absorbing boundary surfaces that correspond to z=zmin
 from __future__ import print_function
 
+try:
+    set
+except NameError:
+    from sets import Set as set
 
 class abs_surface:
    def __init__(self,xmin,xmax,ymin,ymax):
@@ -188,7 +192,6 @@ def define_top_bottom_absorbing_surf(zmin_box,zmax_box):
 
 
 def build_block(vol_list,name):
-    from sets import Set
     try:
         cubit.cmd('comment')
     except:
@@ -207,7 +210,7 @@ def build_block(vol_list,name):
     #print("# build block: ",block_list,"vol",vol_list,"id_block",id_block)
     for v,n in zip(vol_list,name):
         id_block += 1
-        v_other = Set(vol_list) - Set([v])
+        v_other = set(vol_list) - set([v])
         command = 'block '+str(id_block)+' hex in vol '+str(v)
         command = command.replace("["," ").replace("]"," ")
         #print("# build block: ",command)

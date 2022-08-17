@@ -34,6 +34,10 @@ except:
         print("error importing cubit, check if cubit is installed")
         pass
 
+try:
+    set
+except NameError:
+    from sets import Set as set
 
 def mesh(filename=None):
     """create the mesh"""
@@ -76,7 +80,6 @@ def mesh_layercake_regularmap(filename=None):
     # numpy = start.start_numpy()
     cfg = start.start_cfg(filename=filename)
     # from math import sqrt
-    from sets import Set
 
     version_cubit = get_cubit_version()
 
@@ -288,7 +291,7 @@ def mesh_layercake_regularmap(filename=None):
     if cfg.coarsening_top_layer:
         cubitcommand = 'del mesh vol ' + str(vol[-1].ID) + ' propagate'
         cubit.cmd(cubitcommand)
-        s1 = Set(list_curve_vertical)
+        s1 = set(list_curve_vertical)
         command = "group 'list_curve_tmp' add curve " + \
             "in vol " + str(vol[-1].ID)
         cubit.cmd(command)
@@ -296,7 +299,7 @@ def mesh_layercake_regularmap(filename=None):
         list_curve_tmp = cubit.get_group_curves(group)
         command = "delete group " + str(group)
         cubit.cmd(command)
-        s2 = Set(list_curve_tmp)
+        s2 = set(list_curve_tmp)
         lc = list(s1 & s2)
         #
         cubitcommand = 'curve ' + \

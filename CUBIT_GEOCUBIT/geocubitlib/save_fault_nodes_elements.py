@@ -86,7 +86,7 @@ def save_elements_nodes(name,quads_fault_u,quads_fault_d):
     for h in list_hex:
         faces = cubit.get_sub_elements('hex',h,2)
         for f in faces:
-            if dic_quads_fault_d.has_key(f):
+            if f in dic_quads_fault_d.keys():
                 cubit.silent_cmd('group "nf" add Node in face '+str(f))
 
         group1 = cubit.get_id_from_name("nf")
@@ -118,7 +118,7 @@ def save_elements_nodes(name,quads_fault_u,quads_fault_d):
     for h in list_hex:
         faces = cubit.get_sub_elements('hex',h,2)
         for f in faces:
-            if dic_quads_fault_u.has_key(f):
+            if f in dic_quads_fault_u.keys():
                 cubit.silent_cmd('group "nf" add Node in face '+str(f))
 
         group1 = cubit.get_id_from_name("nf")

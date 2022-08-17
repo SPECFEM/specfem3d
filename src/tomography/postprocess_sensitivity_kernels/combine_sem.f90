@@ -148,16 +148,16 @@ program combine_sem
 
   ! read mesh dimensions
   write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_'//'external_mesh.bin'
-  open(unit=27,file=trim(prname_lp), &
+  open(unit=IIN,file=trim(prname_lp), &
           status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'Error: could not open database '
     print *,'path: ',trim(prname_lp)
     stop 'Error reading external mesh file'
   endif
-  read(27) NSPEC
-  read(27) NGLOB
-  close(27)
+  read(IIN) NSPEC
+  read(IIN) NGLOB
+  close(IIN)
   call synchronize_all()
 
   ! sum kernels
@@ -199,9 +199,9 @@ subroutine combine_sem_array(kernel_name,kernel_paths,output_dir,npath)
   integer :: iker,ier
 
   allocate(array(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 978')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 978')
   allocate(sum_arrays(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 979')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 979')
   if (ier /= 0) stop 'Error allocating array'
 
  ! loop over kernel paths
@@ -251,24 +251,4 @@ subroutine combine_sem_array(kernel_name,kernel_paths,output_dir,npath)
   deallocate(array,sum_arrays)
 
 end subroutine combine_sem_array
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-! version without rank number printed in the error message
-
-  subroutine my_local_exit_MPI_without_rank(error_msg)
-
-  implicit none
-
-  character(len=*) error_msg
-
-! write error message to screen
-  write(*,*) error_msg(1:len(error_msg))
-  write(*,*) 'Error detected, aborting MPI...'
-
-  stop 'Fatal error'
-
-  end subroutine my_local_exit_MPI_without_rank
 

@@ -36,7 +36,7 @@
 ! sparse matrix reordering algorithms developed within the SCOTCH project.
 !
 ! http://www.labri.fr/perso/pelegrin/scotch/
-! https://gforge.inria.fr/projects/scotch/
+! https://gitlab.inria.fr/scotch/scotch
 !
 ! reference:
 ! F. Pellegrini and J. Roman,
@@ -424,7 +424,7 @@ end module scotch_par
   implicit none
   integer, dimension(nspec) :: part
 
-  integer current_partition
+  integer :: current_partition
   logical, dimension(:), allocatable :: partition_available
   integer, dimension(:), allocatable :: part_remap, part_remap_inverse
   integer :: ipart, unused_count, best_choice, ilevel

@@ -44,12 +44,13 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,m1,m2
 
   use specfem_par, only: NGLOB_AB, &
-                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                         xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore,jacobianstore, &
                          hprime_xx,hprime_xxT, &
                          hprimewgll_xx,hprimewgll_xxT, &
                          hprime_yy,hprime_zz, &
                          hprimewgll_yy,hprimewgll_zz, &
-                         rhostore,jacobian,ibool, &
+                         rhostore,ibool, &
                          irregular_element_number,xix_regular,jacobian_regular
 
   use specfem_par, only: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
@@ -119,7 +120,7 @@
 !$OMP irregular_element_number,jacobian_regular,xix_regular, &
 !$OMP potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
 !$OMP is_CPML,backward_simulation, &
-!$OMP xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian,rhostore &
+!$OMP xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore,rhostore &
 !$OMP ) &
 !$OMP PRIVATE( &
 !$OMP ispec_p,ispec,ispec_irreg,i,j,k,iglob, &
@@ -229,16 +230,16 @@
 
         ! get derivatives of ux, uy and uz with respect to x, y and z
         ! single arrays make it difficult for hardware pre-fetching...
-        xixl = xix(INDEX_IJK,ispec_irreg)
-        xiyl = xiy(INDEX_IJK,ispec_irreg)
-        xizl = xiz(INDEX_IJK,ispec_irreg)
-        etaxl = etax(INDEX_IJK,ispec_irreg)
-        etayl = etay(INDEX_IJK,ispec_irreg)
-        etazl = etaz(INDEX_IJK,ispec_irreg)
-        gammaxl = gammax(INDEX_IJK,ispec_irreg)
-        gammayl = gammay(INDEX_IJK,ispec_irreg)
-        gammazl = gammaz(INDEX_IJK,ispec_irreg)
-        jacobianl = jacobian(INDEX_IJK,ispec_irreg)
+        xixl = xixstore(INDEX_IJK,ispec_irreg)
+        xiyl = xiystore(INDEX_IJK,ispec_irreg)
+        xizl = xizstore(INDEX_IJK,ispec_irreg)
+        etaxl = etaxstore(INDEX_IJK,ispec_irreg)
+        etayl = etaystore(INDEX_IJK,ispec_irreg)
+        etazl = etazstore(INDEX_IJK,ispec_irreg)
+        gammaxl = gammaxstore(INDEX_IJK,ispec_irreg)
+        gammayl = gammaystore(INDEX_IJK,ispec_irreg)
+        gammazl = gammazstore(INDEX_IJK,ispec_irreg)
+        jacobianl = jacobianstore(INDEX_IJK,ispec_irreg)
         ! using fused array instead
         !xixl = deriv_mapping(1,INDEX_IJK,ispec_irreg)
         !xiyl = deriv_mapping(2,INDEX_IJK,ispec_irreg)
@@ -359,6 +360,345 @@
                                      backward_simulation)
   endif
 
+  contains
+
+!--------------------------------------------------------------------------------------------
+!
+! matrix-matrix multiplications
+!
+! subroutines adapted from Deville, Fischer and Mund, High-order methods
+! for incompressible fluid flow, Cambridge University Press (2002),
+! pages 386 and 389 and Figure 8.3.1
+!
+!--------------------------------------------------------------------------------------------
+!
+! note: the matrix-matrix multiplications are used for very small matrices (5 x 5 x 5 elements);
+!       thus, calling external optimized libraries for these multiplications is in general slower
+!
+! please leave the routines here to help compilers inline the code
+
+  subroutine mxm5_single(A,n1,B,C,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm5_single
+! cray
+!DIR$ INLINEALWAYS mxm5_single
+
+! two-dimensional arrays (25,5)/(5,25)
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(5,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+!DIR$ IVDEP
+!DIR$ SIMD
+    do i = 1,n1
+      C(i,j) =  A(i,1) * B(1,j) &
+              + A(i,2) * B(2,j) &
+              + A(i,3) * B(3,j) &
+              + A(i,4) * B(4,j) &
+              + A(i,5) * B(5,j)
+    enddo
+  enddo
+
+  end subroutine mxm5_single
+
+  !-------------
+
+  subroutine mxm6_single(A,n1,B,C,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm6_single
+! cray
+!DIR$ INLINEALWAYS mxm6_single
+
+! two-dimensional arrays (36,6)/(6,36)
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,6),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(6,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+!DIR$ IVDEP
+!DIR$ SIMD
+    do i = 1,n1
+      C(i,j) =  A(i,1) * B(1,j) &
+              + A(i,2) * B(2,j) &
+              + A(i,3) * B(3,j) &
+              + A(i,4) * B(4,j) &
+              + A(i,5) * B(5,j) &
+              + A(i,6) * B(6,j)
+    enddo
+  enddo
+
+  end subroutine mxm6_single
+
+  !-------------
+
+  subroutine mxm7_single(A,n1,B,C,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm7_single
+! cray
+!DIR$ INLINEALWAYS mxm7_single
+
+! two-dimensional arrays (49,7)/(7,49)
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,7),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(7,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+!DIR$ IVDEP
+!DIR$ SIMD
+    do i = 1,n1
+      C(i,j) =  A(i,1) * B(1,j) &
+              + A(i,2) * B(2,j) &
+              + A(i,3) * B(3,j) &
+              + A(i,4) * B(4,j) &
+              + A(i,5) * B(5,j) &
+              + A(i,6) * B(6,j) &
+              + A(i,7) * B(7,j)
+    enddo
+  enddo
+
+  end subroutine mxm7_single
+
+  !-------------
+
+  subroutine mxm8_single(A,n1,B,C,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm8_single
+! cray
+!DIR$ INLINEALWAYS mxm8_single
+
+! two-dimensional arrays (64,8)/(8,64)
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,8),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(8,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+!DIR$ IVDEP
+!DIR$ SIMD
+    do i = 1,n1
+      C(i,j) =  A(i,1) * B(1,j) &
+              + A(i,2) * B(2,j) &
+              + A(i,3) * B(3,j) &
+              + A(i,4) * B(4,j) &
+              + A(i,5) * B(5,j) &
+              + A(i,6) * B(6,j) &
+              + A(i,7) * B(7,j) &
+              + A(i,8) * B(8,j)
+    enddo
+  enddo
+
+  end subroutine mxm8_single
+
+!--------------------------------------------------------------------------------------------
+
+  subroutine mxm5_3dmat_single(A,n1,B,n2,C,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm5_3dmat_single
+! cray
+!DIR$ INLINEALWAYS mxm5_3dmat_single
+
+! three-dimensional arrays (5,5,5) for A and C
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5,n3),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(5,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+!DIR$ IVDEP
+!DIR$ SIMD
+      do i = 1,n1
+        C(i,j,k) =  A(i,1,k) * B(1,j) &
+                  + A(i,2,k) * B(2,j) &
+                  + A(i,3,k) * B(3,j) &
+                  + A(i,4,k) * B(4,j) &
+                  + A(i,5,k) * B(5,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm5_3dmat_single
+
+  !-------------
+
+  subroutine mxm6_3dmat_single(A,n1,B,n2,C,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm6_3dmat_single
+! cray
+!DIR$ INLINEALWAYS mxm6_3dmat_single
+
+! three-dimensional arrays (6,6,6) for A and C
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,6,n3),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(6,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+!DIR$ IVDEP
+!DIR$ SIMD
+      do i = 1,n1
+        C(i,j,k) =  A(i,1,k) * B(1,j) &
+                  + A(i,2,k) * B(2,j) &
+                  + A(i,3,k) * B(3,j) &
+                  + A(i,4,k) * B(4,j) &
+                  + A(i,5,k) * B(5,j) &
+                  + A(i,6,k) * B(6,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm6_3dmat_single
+
+  !-------------
+
+  subroutine mxm7_3dmat_single(A,n1,B,n2,C,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm7_3dmat_single
+! cray
+!DIR$ INLINEALWAYS mxm7_3dmat_single
+
+! three-dimensional arrays (7,7,7) for A and C
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,7,n3),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(7,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+!DIR$ IVDEP
+!DIR$ SIMD
+      do i = 1,n1
+        C(i,j,k) =  A(i,1,k) * B(1,j) &
+                  + A(i,2,k) * B(2,j) &
+                  + A(i,3,k) * B(3,j) &
+                  + A(i,4,k) * B(4,j) &
+                  + A(i,5,k) * B(5,j) &
+                  + A(i,6,k) * B(6,j) &
+                  + A(i,7,k) * B(7,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm7_3dmat_single
+
+  !-------------
+
+  subroutine mxm8_3dmat_single(A,n1,B,n2,C,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm8_3dmat_single
+! cray
+!DIR$ INLINEALWAYS mxm8_3dmat_single
+
+! three-dimensional arrays (8,8,8) for A and C
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,8,n3),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(8,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+!DIR$ IVDEP
+!DIR$ SIMD
+      do i = 1,n1
+        C(i,j,k) =  A(i,1,k) * B(1,j) &
+                  + A(i,2,k) * B(2,j) &
+                  + A(i,3,k) * B(3,j) &
+                  + A(i,4,k) * B(4,j) &
+                  + A(i,5,k) * B(5,j) &
+                  + A(i,6,k) * B(6,j) &
+                  + A(i,7,k) * B(7,j) &
+                  + A(i,8,k) * B(8,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm8_3dmat_single
+
   end subroutine compute_forces_acoustic
 
 
@@ -378,7 +718,8 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,m1,m2
 
   use specfem_par, only: NGLOB_AB, &
-                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                         xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore, &
                          hprime_xx,hprime_xxT, &
                          hprimewgll_xx,hprimewgll_xxT, &
                          hprime_yy,hprime_zz, &
@@ -473,7 +814,7 @@
 !$OMP PML_potential_acoustic_old,PML_potential_acoustic_new, &
 !$OMP rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl,rmemory_potential_acoustic, &
 !$OMP spec_to_CPML,is_CPML,backward_simulation, &
-!$OMP xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz &
+!$OMP xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore &
 !$OMP ) &
 !$OMP PRIVATE( &
 !$OMP ispec_p,ispec,ispec_irreg,ispec_CPML,i,j,k,iglob, &
@@ -620,15 +961,15 @@
       DO_LOOP_IJK
         ! get derivatives of ux, uy and uz with respect to x, y and z
         ! single arrays make it difficult for hardware pre-fetching...
-        xixl = xix(INDEX_IJK,ispec_irreg)
-        xiyl = xiy(INDEX_IJK,ispec_irreg)
-        xizl = xiz(INDEX_IJK,ispec_irreg)
-        etaxl = etax(INDEX_IJK,ispec_irreg)
-        etayl = etay(INDEX_IJK,ispec_irreg)
-        etazl = etaz(INDEX_IJK,ispec_irreg)
-        gammaxl = gammax(INDEX_IJK,ispec_irreg)
-        gammayl = gammay(INDEX_IJK,ispec_irreg)
-        gammazl = gammaz(INDEX_IJK,ispec_irreg)
+        xixl = xixstore(INDEX_IJK,ispec_irreg)
+        xiyl = xiystore(INDEX_IJK,ispec_irreg)
+        xizl = xizstore(INDEX_IJK,ispec_irreg)
+        etaxl = etaxstore(INDEX_IJK,ispec_irreg)
+        etayl = etaystore(INDEX_IJK,ispec_irreg)
+        etazl = etazstore(INDEX_IJK,ispec_irreg)
+        gammaxl = gammaxstore(INDEX_IJK,ispec_irreg)
+        gammayl = gammaystore(INDEX_IJK,ispec_irreg)
+        gammazl = gammazstore(INDEX_IJK,ispec_irreg)
         ! using fused array
         !xixl = deriv_mapping(1,INDEX_IJK,ispec_irreg)
         !xiyl = deriv_mapping(2,INDEX_IJK,ispec_irreg)
@@ -641,7 +982,7 @@
         !gammazl = deriv_mapping(9,INDEX_IJK,ispec_irreg)
 
         ! following is not needed, will be computed later in pml_compute_memory_variables_acoustic() routine...
-        !jacobianl = jacobian(INDEX_IJK,ispec_irreg)
+        !jacobianl = jacobianstore(INDEX_IJK,ispec_irreg)
         !! reciprocal of density
         !rho_invl = 1.0_CUSTOM_REAL / rhostore(INDEX_IJK,ispec)
         !! derivatives of potential
@@ -817,10 +1158,7 @@
 !$OMP ENDDO
 !$OMP END PARALLEL
 
-  end subroutine compute_forces_acoustic_PML
-
-
-
+  contains
 
 !--------------------------------------------------------------------------------------------
 !
@@ -838,6 +1176,11 @@
 ! please leave the routines here to help compilers inline the code
 
   subroutine mxm5_single(A,n1,B,C,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm5_single
+! cray
+!DIR$ INLINEALWAYS mxm5_single
 
 ! two-dimensional arrays (25,5)/(5,25)
 
@@ -872,6 +1215,11 @@
 
   subroutine mxm6_single(A,n1,B,C,n3)
 
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm6_single
+! cray
+!DIR$ INLINEALWAYS mxm6_single
+
 ! two-dimensional arrays (36,6)/(6,36)
 
   use constants, only: CUSTOM_REAL
@@ -905,6 +1253,11 @@
   !-------------
 
   subroutine mxm7_single(A,n1,B,C,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm7_single
+! cray
+!DIR$ INLINEALWAYS mxm7_single
 
 ! two-dimensional arrays (49,7)/(7,49)
 
@@ -941,6 +1294,11 @@
 
   subroutine mxm8_single(A,n1,B,C,n3)
 
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm8_single
+! cray
+!DIR$ INLINEALWAYS mxm8_single
+
 ! two-dimensional arrays (64,8)/(8,64)
 
   use constants, only: CUSTOM_REAL
@@ -975,7 +1333,451 @@
 
 !--------------------------------------------------------------------------------------------
 
+  subroutine mxm5_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm5_3comp_singleA
+! cray
+!DIR$ INLINEALWAYS mxm5_3comp_singleA
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (25,5)/(5,25), same A matrix for all 3 component arrays
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(5,n3),intent(in) :: B1,B2,B3
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+!DIR$ IVDEP
+!DIR$ SIMD
+    do i = 1,n1
+      C1(i,j) =  A(i,1) * B1(1,j) &
+               + A(i,2) * B1(2,j) &
+               + A(i,3) * B1(3,j) &
+               + A(i,4) * B1(4,j) &
+               + A(i,5) * B1(5,j)
+
+      C2(i,j) =  A(i,1) * B2(1,j) &
+               + A(i,2) * B2(2,j) &
+               + A(i,3) * B2(3,j) &
+               + A(i,4) * B2(4,j) &
+               + A(i,5) * B2(5,j)
+
+      C3(i,j) =  A(i,1) * B3(1,j) &
+               + A(i,2) * B3(2,j) &
+               + A(i,3) * B3(3,j) &
+               + A(i,4) * B3(4,j) &
+               + A(i,5) * B3(5,j)
+    enddo
+  enddo
+
+  end subroutine mxm5_3comp_singleA
+
+  !-------------
+
+  subroutine mxm6_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm6_3comp_singleA
+! cray
+!DIR$ INLINEALWAYS mxm6_3comp_singleA
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (36,6)/(6,36), same A matrix for all 3 component arrays
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,6),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(6,n3),intent(in) :: B1,B2,B3
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+!DIR$ IVDEP
+!DIR$ SIMD
+    do i = 1,n1
+      C1(i,j) =  A(i,1) * B1(1,j) &
+               + A(i,2) * B1(2,j) &
+               + A(i,3) * B1(3,j) &
+               + A(i,4) * B1(4,j) &
+               + A(i,5) * B1(5,j) &
+               + A(i,6) * B1(6,j)
+
+      C2(i,j) =  A(i,1) * B2(1,j) &
+               + A(i,2) * B2(2,j) &
+               + A(i,3) * B2(3,j) &
+               + A(i,4) * B2(4,j) &
+               + A(i,5) * B2(5,j) &
+               + A(i,6) * B2(6,j)
+
+      C3(i,j) =  A(i,1) * B3(1,j) &
+               + A(i,2) * B3(2,j) &
+               + A(i,3) * B3(3,j) &
+               + A(i,4) * B3(4,j) &
+               + A(i,5) * B3(5,j) &
+               + A(i,6) * B3(6,j)
+    enddo
+  enddo
+
+  end subroutine mxm6_3comp_singleA
+
+  !-------------
+
+  subroutine mxm7_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm7_3comp_singleA
+! cray
+!DIR$ INLINEALWAYS mxm7_3comp_singleA
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (49,7)/(7,49), same A matrix for all 3 component arrays
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,7),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(7,n3),intent(in) :: B1,B2,B3
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+!DIR$ IVDEP
+!DIR$ SIMD
+    do i = 1,n1
+      C1(i,j) =  A(i,1) * B1(1,j) &
+               + A(i,2) * B1(2,j) &
+               + A(i,3) * B1(3,j) &
+               + A(i,4) * B1(4,j) &
+               + A(i,5) * B1(5,j) &
+               + A(i,6) * B1(6,j) &
+               + A(i,7) * B1(7,j)
+
+      C2(i,j) =  A(i,1) * B2(1,j) &
+               + A(i,2) * B2(2,j) &
+               + A(i,3) * B2(3,j) &
+               + A(i,4) * B2(4,j) &
+               + A(i,5) * B2(5,j) &
+               + A(i,6) * B2(6,j) &
+               + A(i,7) * B2(7,j)
+
+      C3(i,j) =  A(i,1) * B3(1,j) &
+               + A(i,2) * B3(2,j) &
+               + A(i,3) * B3(3,j) &
+               + A(i,4) * B3(4,j) &
+               + A(i,5) * B3(5,j) &
+               + A(i,6) * B3(6,j) &
+               + A(i,7) * B3(7,j)
+    enddo
+  enddo
+
+  end subroutine mxm7_3comp_singleA
+
+  !-------------
+
+  subroutine mxm8_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm8_3comp_singleA
+! cray
+!DIR$ INLINEALWAYS mxm8_3comp_singleA
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (64,8)/(8,64), same A matrix for all 3 component arrays
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,8),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(8,n3),intent(in) :: B1,B2,B3
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+!DIR$ IVDEP
+!DIR$ SIMD
+    do i = 1,n1
+      C1(i,j) =  A(i,1) * B1(1,j) &
+               + A(i,2) * B1(2,j) &
+               + A(i,3) * B1(3,j) &
+               + A(i,4) * B1(4,j) &
+               + A(i,5) * B1(5,j) &
+               + A(i,6) * B1(6,j) &
+               + A(i,7) * B1(7,j) &
+               + A(i,8) * B1(8,j)
+
+      C2(i,j) =  A(i,1) * B2(1,j) &
+               + A(i,2) * B2(2,j) &
+               + A(i,3) * B2(3,j) &
+               + A(i,4) * B2(4,j) &
+               + A(i,5) * B2(5,j) &
+               + A(i,6) * B2(6,j) &
+               + A(i,7) * B2(7,j) &
+               + A(i,8) * B2(8,j)
+
+      C3(i,j) =  A(i,1) * B3(1,j) &
+               + A(i,2) * B3(2,j) &
+               + A(i,3) * B3(3,j) &
+               + A(i,4) * B3(4,j) &
+               + A(i,5) * B3(5,j) &
+               + A(i,6) * B3(6,j) &
+               + A(i,7) * B3(7,j) &
+               + A(i,8) * B3(8,j)
+    enddo
+  enddo
+
+  end subroutine mxm8_3comp_singleA
+
+
+
+!--------------------------------------------------------------------------------------------
+
+  subroutine mxm5_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm5_3comp_singleB
+! cray
+!DIR$ INLINEALWAYS mxm5_3comp_singleB
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (25,5)/(5,25), same B matrix for all 3 component arrays
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(5,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+!DIR$ IVDEP
+!DIR$ SIMD
+    do i = 1,n1
+      C1(i,j) =  A1(i,1) * B(1,j) &
+               + A1(i,2) * B(2,j) &
+               + A1(i,3) * B(3,j) &
+               + A1(i,4) * B(4,j) &
+               + A1(i,5) * B(5,j)
+
+      C2(i,j) =  A2(i,1) * B(1,j) &
+               + A2(i,2) * B(2,j) &
+               + A2(i,3) * B(3,j) &
+               + A2(i,4) * B(4,j) &
+               + A2(i,5) * B(5,j)
+
+      C3(i,j) =  A3(i,1) * B(1,j) &
+               + A3(i,2) * B(2,j) &
+               + A3(i,3) * B(3,j) &
+               + A3(i,4) * B(4,j) &
+               + A3(i,5) * B(5,j)
+    enddo
+  enddo
+
+  end subroutine mxm5_3comp_singleB
+
+  !-------------
+
+  subroutine mxm6_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm6_3comp_singleB
+! cray
+!DIR$ INLINEALWAYS mxm6_3comp_singleB
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (36,6)/(6,36), same B matrix for all 3 component arrays
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,6),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(6,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+!DIR$ IVDEP
+!DIR$ SIMD
+    do i = 1,n1
+      C1(i,j) =  A1(i,1) * B(1,j) &
+               + A1(i,2) * B(2,j) &
+               + A1(i,3) * B(3,j) &
+               + A1(i,4) * B(4,j) &
+               + A1(i,5) * B(5,j) &
+               + A1(i,6) * B(6,j)
+
+      C2(i,j) =  A2(i,1) * B(1,j) &
+               + A2(i,2) * B(2,j) &
+               + A2(i,3) * B(3,j) &
+               + A2(i,4) * B(4,j) &
+               + A2(i,5) * B(5,j) &
+               + A2(i,6) * B(6,j)
+
+      C3(i,j) =  A3(i,1) * B(1,j) &
+               + A3(i,2) * B(2,j) &
+               + A3(i,3) * B(3,j) &
+               + A3(i,4) * B(4,j) &
+               + A3(i,5) * B(5,j) &
+               + A3(i,6) * B(6,j)
+    enddo
+  enddo
+
+  end subroutine mxm6_3comp_singleB
+
+  !-------------
+
+  subroutine mxm7_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm6_3comp_singleB
+! cray
+!DIR$ INLINEALWAYS mxm6_3comp_singleB
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (49,7)/(7,49), same B matrix for all 3 component arrays
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,7),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(7,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+!DIR$ IVDEP
+!DIR$ SIMD
+    do i = 1,n1
+      C1(i,j) =  A1(i,1) * B(1,j) &
+               + A1(i,2) * B(2,j) &
+               + A1(i,3) * B(3,j) &
+               + A1(i,4) * B(4,j) &
+               + A1(i,5) * B(5,j) &
+               + A1(i,6) * B(6,j) &
+               + A1(i,7) * B(7,j)
+
+      C2(i,j) =  A2(i,1) * B(1,j) &
+               + A2(i,2) * B(2,j) &
+               + A2(i,3) * B(3,j) &
+               + A2(i,4) * B(4,j) &
+               + A2(i,5) * B(5,j) &
+               + A2(i,6) * B(6,j) &
+               + A2(i,7) * B(7,j)
+
+      C3(i,j) =  A3(i,1) * B(1,j) &
+               + A3(i,2) * B(2,j) &
+               + A3(i,3) * B(3,j) &
+               + A3(i,4) * B(4,j) &
+               + A3(i,5) * B(5,j) &
+               + A3(i,6) * B(6,j) &
+               + A3(i,7) * B(7,j)
+    enddo
+  enddo
+
+  end subroutine mxm7_3comp_singleB
+
+  !-------------
+
+  subroutine mxm8_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm6_3comp_singleB
+! cray
+!DIR$ INLINEALWAYS mxm6_3comp_singleB
+
+! 3 different arrays for x/y/z-components, 2-dimensional arrays (64,8)/(8,64), same B matrix for all 3 component arrays
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,8),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(8,n3),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+!DIR$ IVDEP
+!DIR$ SIMD
+    do i = 1,n1
+      C1(i,j) =  A1(i,1) * B(1,j) &
+               + A1(i,2) * B(2,j) &
+               + A1(i,3) * B(3,j) &
+               + A1(i,4) * B(4,j) &
+               + A1(i,5) * B(5,j) &
+               + A1(i,6) * B(6,j) &
+               + A1(i,7) * B(7,j) &
+               + A1(i,8) * B(8,j)
+
+      C2(i,j) =  A2(i,1) * B(1,j) &
+               + A2(i,2) * B(2,j) &
+               + A2(i,3) * B(3,j) &
+               + A2(i,4) * B(4,j) &
+               + A2(i,5) * B(5,j) &
+               + A2(i,6) * B(6,j) &
+               + A2(i,7) * B(7,j) &
+               + A2(i,8) * B(8,j)
+
+      C3(i,j) =  A3(i,1) * B(1,j) &
+               + A3(i,2) * B(2,j) &
+               + A3(i,3) * B(3,j) &
+               + A3(i,4) * B(4,j) &
+               + A3(i,5) * B(5,j) &
+               + A3(i,6) * B(6,j) &
+               + A3(i,7) * B(7,j) &
+               + A3(i,8) * B(8,j)
+    enddo
+  enddo
+
+  end subroutine mxm8_3comp_singleB
+
+
+!--------------------------------------------------------------------------------------------
+
   subroutine mxm5_3dmat_single(A,n1,B,n2,C,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm5_3dmat_single
+! cray
+!DIR$ INLINEALWAYS mxm5_3dmat_single
 
 ! three-dimensional arrays (5,5,5) for A and C
 
@@ -1012,6 +1814,11 @@
 
   subroutine mxm6_3dmat_single(A,n1,B,n2,C,n3)
 
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm6_3dmat_single
+! cray
+!DIR$ INLINEALWAYS mxm6_3dmat_single
+
 ! three-dimensional arrays (6,6,6) for A and C
 
   use constants, only: CUSTOM_REAL
@@ -1047,6 +1854,11 @@
   !-------------
 
   subroutine mxm7_3dmat_single(A,n1,B,n2,C,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm7_3dmat_single
+! cray
+!DIR$ INLINEALWAYS mxm7_3dmat_single
 
 ! three-dimensional arrays (7,7,7) for A and C
 
@@ -1085,6 +1897,11 @@
 
   subroutine mxm8_3dmat_single(A,n1,B,n2,C,n3)
 
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm8_3dmat_single
+! cray
+!DIR$ INLINEALWAYS mxm8_3dmat_single
+
 ! three-dimensional arrays (8,8,8) for A and C
 
   use constants, only: CUSTOM_REAL
@@ -1118,4 +1935,233 @@
   enddo
 
   end subroutine mxm8_3dmat_single
+
+
+!--------------------------------------------------------------------------------------------
+
+  subroutine mxm5_3comp_3dmat_single(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
+
+! we can force inlining (Intel compiler)
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm5_3comp_3dmat_single
+! cray
+!DIR$ INLINEALWAYS mxm5_3comp_3dmat_single
+
+! 3 different arrays for x/y/z-components, 3-dimensional arrays (5,5,5), same B matrix for all 3 component arrays
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5,n3),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(5,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+!DIR$ IVDEP
+!DIR$ SIMD
+      do i = 1,n1
+        C1(i,j,k) =  A1(i,1,k) * B(1,j) &
+                   + A1(i,2,k) * B(2,j) &
+                   + A1(i,3,k) * B(3,j) &
+                   + A1(i,4,k) * B(4,j) &
+                   + A1(i,5,k) * B(5,j)
+
+        C2(i,j,k) =  A2(i,1,k) * B(1,j) &
+                   + A2(i,2,k) * B(2,j) &
+                   + A2(i,3,k) * B(3,j) &
+                   + A2(i,4,k) * B(4,j) &
+                   + A2(i,5,k) * B(5,j)
+
+        C3(i,j,k) =  A3(i,1,k) * B(1,j) &
+                   + A3(i,2,k) * B(2,j) &
+                   + A3(i,3,k) * B(3,j) &
+                   + A3(i,4,k) * B(4,j) &
+                   + A3(i,5,k) * B(5,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm5_3comp_3dmat_single
+
+  !-------------
+
+  subroutine mxm6_3comp_3dmat_single(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
+
+  ! we can force inlining (Intel compiler)
+  !DIR$ ATTRIBUTES FORCEINLINE :: mxm6_3comp_3dmat_single
+  ! cray
+  !DIR$ INLINEALWAYS mxm6_3comp_3dmat_single
+
+  ! 3 different arrays for x/y/z-components, 3-dimensional arrays (6,6,6), same B matrix for all 3 component arrays
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,6,n3),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(6,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+  !DIR$ IVDEP
+  !DIR$ SIMD
+      do i = 1,n1
+        C1(i,j,k) =  A1(i,1,k) * B(1,j) &
+                   + A1(i,2,k) * B(2,j) &
+                   + A1(i,3,k) * B(3,j) &
+                   + A1(i,4,k) * B(4,j) &
+                   + A1(i,5,k) * B(5,j) &
+                   + A1(i,6,k) * B(6,j)
+
+        C2(i,j,k) =  A2(i,1,k) * B(1,j) &
+                   + A2(i,2,k) * B(2,j) &
+                   + A2(i,3,k) * B(3,j) &
+                   + A2(i,4,k) * B(4,j) &
+                   + A2(i,5,k) * B(5,j) &
+                   + A2(i,6,k) * B(6,j)
+
+        C3(i,j,k) =  A3(i,1,k) * B(1,j) &
+                   + A3(i,2,k) * B(2,j) &
+                   + A3(i,3,k) * B(3,j) &
+                   + A3(i,4,k) * B(4,j) &
+                   + A3(i,5,k) * B(5,j) &
+                   + A3(i,6,k) * B(6,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm6_3comp_3dmat_single
+
+  !-------------
+
+  subroutine mxm7_3comp_3dmat_single(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
+
+  ! we can force inlining (Intel compiler)
+  !DIR$ ATTRIBUTES FORCEINLINE :: mxm7_3comp_3dmat_single
+  ! cray
+  !DIR$ INLINEALWAYS mxm7_3comp_3dmat_single
+
+  ! 3 different arrays for x/y/z-components, 3-dimensional arrays (7,7,7), same B matrix for all 3 component arrays
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,7,n3),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(7,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+  !DIR$ IVDEP
+  !DIR$ SIMD
+      do i = 1,n1
+        C1(i,j,k) =  A1(i,1,k) * B(1,j) &
+                   + A1(i,2,k) * B(2,j) &
+                   + A1(i,3,k) * B(3,j) &
+                   + A1(i,4,k) * B(4,j) &
+                   + A1(i,5,k) * B(5,j) &
+                   + A1(i,6,k) * B(6,j) &
+                   + A1(i,7,k) * B(7,j)
+
+        C2(i,j,k) =  A2(i,1,k) * B(1,j) &
+                   + A2(i,2,k) * B(2,j) &
+                   + A2(i,3,k) * B(3,j) &
+                   + A2(i,4,k) * B(4,j) &
+                   + A2(i,5,k) * B(5,j) &
+                   + A2(i,6,k) * B(6,j) &
+                   + A2(i,7,k) * B(7,j)
+
+        C3(i,j,k) =  A3(i,1,k) * B(1,j) &
+                   + A3(i,2,k) * B(2,j) &
+                   + A3(i,3,k) * B(3,j) &
+                   + A3(i,4,k) * B(4,j) &
+                   + A3(i,5,k) * B(5,j) &
+                   + A3(i,6,k) * B(6,j) &
+                   + A3(i,7,k) * B(7,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm7_3comp_3dmat_single
+
+  !-------------
+
+  subroutine mxm8_3comp_3dmat_single(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
+
+  ! we can force inlining (Intel compiler)
+  !DIR$ ATTRIBUTES FORCEINLINE :: mxm8_3comp_3dmat_single
+  ! cray
+  !DIR$ INLINEALWAYS mxm8_3comp_3dmat_single
+
+  ! 3 different arrays for x/y/z-components, 3-dimensional arrays (8,8,8), same B matrix for all 3 component arrays
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,8,n3),intent(in) :: A1,A2,A3
+  real(kind=CUSTOM_REAL),dimension(8,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C1,C2,C3
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+  !DIR$ IVDEP
+  !DIR$ SIMD
+      do i = 1,n1
+        C1(i,j,k) =  A1(i,1,k) * B(1,j) &
+                   + A1(i,2,k) * B(2,j) &
+                   + A1(i,3,k) * B(3,j) &
+                   + A1(i,4,k) * B(4,j) &
+                   + A1(i,5,k) * B(5,j) &
+                   + A1(i,6,k) * B(6,j) &
+                   + A1(i,7,k) * B(7,j) &
+                   + A1(i,8,k) * B(8,j)
+
+        C2(i,j,k) =  A2(i,1,k) * B(1,j) &
+                   + A2(i,2,k) * B(2,j) &
+                   + A2(i,3,k) * B(3,j) &
+                   + A2(i,4,k) * B(4,j) &
+                   + A2(i,5,k) * B(5,j) &
+                   + A2(i,6,k) * B(6,j) &
+                   + A2(i,7,k) * B(7,j) &
+                   + A2(i,8,k) * B(8,j)
+
+        C3(i,j,k) =  A3(i,1,k) * B(1,j) &
+                   + A3(i,2,k) * B(2,j) &
+                   + A3(i,3,k) * B(3,j) &
+                   + A3(i,4,k) * B(4,j) &
+                   + A3(i,5,k) * B(5,j) &
+                   + A3(i,6,k) * B(6,j) &
+                   + A3(i,7,k) * B(7,j) &
+                   + A3(i,8,k) * B(8,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm8_3comp_3dmat_single
+
+  end subroutine compute_forces_acoustic_PML
 

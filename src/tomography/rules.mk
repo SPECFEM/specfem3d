@@ -168,6 +168,7 @@ xmodel_update_SHARED_OBJECTS = \
 	$O/initialize_simulation.spec.o \
 	$O/read_mesh_databases.spec.o \
 	$O/shared_par.shared_module.o \
+	$O/adios_manager.shared_adios_module.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
@@ -181,46 +182,49 @@ xmodel_update_SHARED_OBJECTS = \
 	$(EMPTY_MACRO)
 
 # cuda stubs
-xmodel_update_OBJECTS += $O/specfem3D_gpu_cuda_method_stubs.cudacc.o
+xmodel_update_OBJECTS += $(gpu_specfem3D_STUBS)
 
 
 # using ADIOS files
 adios_model_update_OBJECTS= \
 	$O/read_mesh_databases_adios.spec_adios.o \
-	$O/read_forward_arrays_adios.spec_adios.o
+	$O/read_forward_arrays_adios.spec_adios.o \
+	$(EMPTY_MACRO)
 
 adios_model_update_SHARED_OBJECTS = \
-	$O/adios_manager.shared_adios.o \
-	$O/adios_helpers_definitions.shared_adios_module.o \
-	$O/adios_helpers_writers.shared_adios_module.o \
-	$O/adios_helpers.shared_adios.o
+	$O/adios_helpers_addons.shared_adios_cc.o \
+	$O/adios_helpers_definitions.shared_adios.o \
+	$O/adios_helpers_readers.shared_adios.o \
+	$O/adios_helpers_writers.shared_adios.o \
+	$O/adios_helpers.shared_adios.o \
+	$(EMPTY_MACRO)
 
 adios_model_update_STUBS = \
-	$O/specfem3D_adios_stubs.spec_noadios.o
-
-adios_model_update_SHARED_STUBS = \
-	$O/adios_manager_stubs.shared_noadios.o
+	$O/adios_method_stubs.cc.o \
+	$(EMPTY_MACRO)
 
 # conditional adios linking
 ifeq ($(ADIOS),yes)
 xmodel_update_OBJECTS += $(adios_model_update_OBJECTS)
 xmodel_update_SHARED_OBJECTS += $(adios_model_update_SHARED_OBJECTS)
+else ifeq ($(ADIOS2),yes)
+xmodel_update_OBJECTS += $(adios_model_update_OBJECTS)
+xmodel_update_SHARED_OBJECTS += $(adios_model_update_SHARED_OBJECTS)
 else
 xmodel_update_OBJECTS += $(adios_model_update_STUBS)
-xmodel_update_SHARED_OBJECTS += $(adios_model_update_SHARED_STUBS)
 endif
 
 ###
 ### ASDF
 ###
 
-asdf_specfem3D_SHARED_STUBS = \
-        $O/asdf_method_stubs.cc.o \
-        $O/asdf_manager_stubs.shared_asdf.o \
-        $(EMPTY_MACRO)
-
 # conditional asdf linking
+ifeq ($(ASDF),yes)
+INVERSE_LINK_FLAGS += $(ASDF_LIBS)
+xmodel_update_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_OBJECTS)
+else
 xmodel_update_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_STUBS)
+endif
 
 # extra dependencies
 $O/model_update.tomo.o: $O/specfem3D_par.spec_module.o $O/tomography_par.tomo_module.o
@@ -244,6 +248,7 @@ xsum_kernels_OBJECTS = \
 
 xsum_kernels_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \

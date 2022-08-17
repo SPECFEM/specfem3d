@@ -76,16 +76,14 @@ THICKNESS_OF_Z_PML              = 12.3d0
 #-----------------------------------------------------------
 
 # number of materials
-NMATERIALS                      = 3
+NMATERIALS                      = 1
 # define the different materials in the model as:
 # #material_id  #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id
 #     Q_Kappa          : Q_Kappa attenuation quality factor
 #     Q_mu             : Q_mu attenuation quality factor
 #     anisotropy_flag  : 0 = no anisotropy / 1,2,... check the implementation in file aniso_model.f90
 #     domain_id        : 1 = acoustic / 2 = elastic / 3 = poroelastic
-1  2000  2000  1500  9999. 9999.  0  2
-2  2000  2000  0     9999. 9999.  0  1
-3  2000  2000  0.001 9999. 9999.  0  2
+1  1800.0  2000.0   0.0   9999. 9999.  0  1
 
 #-----------------------------------------------------------
 #
@@ -97,5 +95,5 @@ NMATERIALS                      = 3
 NREGIONS                        = 1
 # define the different regions of the model as :
 #NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
-1              32           1               32            1         16       2
+1              32           1               32            1         16       1
 

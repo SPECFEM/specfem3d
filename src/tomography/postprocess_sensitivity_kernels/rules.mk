@@ -99,6 +99,7 @@ xclip_sem_OBJECTS = \
 
 xclip_sem_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
@@ -123,6 +124,7 @@ xcombine_sem_OBJECTS = \
 
 xcombine_sem_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
@@ -154,50 +156,33 @@ xsmooth_sem_SHARED_OBJECTS = \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/gll_library.shared.o \
+	$O/heap_sort.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
+	$O/search_kdtree.shared.o \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
 
-cuda_smooth_sem_STUBS = \
-	$O/specfem3D_gpu_cuda_method_stubs.cudacc.o \
-	$(EMPTY_MACRO)
+###
+### GPU
+###
 
-cuda_smooth_sem_OBJECTS = \
-	$O/check_fields_cuda.cuda.o \
-	$O/helper_functions.cuda.o \
-	$O/initialize_cuda.cuda.o \
-	$O/smooth_cuda.cuda.o \
-	$(EMPTY_MACRO)
-
-cuda_smooth_sem_DEVICE_OBJ = \
-	$O/cuda_device_smooth_obj.o \
-	$(EMPTY_MACRO)
-
-ifeq ($(CUDA),yes)
-## cuda version
-xsmooth_sem_OBJECTS += $(cuda_smooth_sem_OBJECTS)
-ifeq ($(CUDA_PLUS),yes)
-xsmooth_sem_OBJECTS += $(cuda_smooth_sem_DEVICE_OBJ)
-endif
-## libs
-xsmooth_sem_LIBS = $(MPILIBS) $(CUDA_LINK)
-INFO_CUDA_SEM="building xsmooth_sem with CUDA support"
-else
-## non-cuda version
-xsmooth_sem_OBJECTS += $(cuda_smooth_sem_STUBS)
-## libs
 xsmooth_sem_LIBS = $(MPILIBS)
-INFO_CUDA_SEM="building xsmooth_sem without CUDA support"
+xsmooth_sem_OBJECTS += $(gpu_OBJECTS)
+
+## cuda
+ifeq ($(HAS_GPU),yes)
+xsmooth_sem_LIBS += $(GPU_LINK)
 endif
+INFO_SMOOTH="building xsmooth_sem $(BUILD_VERSION_TXT)"
 
 # extra dependencies
 $O/smooth_sem.postprocess.o: $O/specfem3D_par.spec_module.o $O/postprocess_par.postprocess_module.o
 
 ${E}/xsmooth_sem: $(xsmooth_sem_OBJECTS) $(xsmooth_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
-	@echo $(INFO_CUDA_SEM)
+	@echo $(INFO_SMOOTH)
 	@echo ""
 	${FCLINK} -o $@ $+ $(xsmooth_sem_LIBS)
 	@echo ""
@@ -224,10 +209,3 @@ $O/%.postprocess.o: $S/%.F90 ${SETUP}/constants_tomography.h $O/postprocess_par.
 
 $O/%.postprocess.o: $S/%.c ${SETUP}/config.h
 	${CC} -c $(CPPFLAGS) $(CFLAGS) $(MPI_INCLUDES) -o $@ $<
-
-###
-### CUDA
-###
-
-$(cuda_smooth_sem_DEVICE_OBJ): $(cuda_smooth_sem_OBJECTS)
-	${NVCCLINK} -o $(cuda_smooth_sem_DEVICE_OBJ) $(cuda_smooth_sem_OBJECTS)

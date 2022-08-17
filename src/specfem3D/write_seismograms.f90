@@ -50,7 +50,7 @@
   endif
 
   ! checks subsampling recurrence
-  if (mod(it-1,subsamp_seismos) == 0) then
+  if (mod(it-1,NTSTEP_BETWEEN_OUTPUT_SAMPLE) == 0) then
 
     ! update position in seismograms
     seismo_current = seismo_current + 1
@@ -76,6 +76,7 @@
 
     ! gets seismogram values
     if (do_save_seismograms .and. nrec_local > 0) then
+      ! seismograms displ/veloc/accel/pressure
       if (GPU_MODE) then
         ! on GPU
         ! gets resulting array values onto CPU
@@ -86,9 +87,12 @@
         ! on CPU
         call compute_seismograms()
       endif
+
+      ! strain "seismograms" (only for adjoint simulations)
+      if (SIMULATION_TYPE == 2) call compute_seismograms_strain_adjoint()
     endif
 
-  endif ! subsamp_seismos
+  endif ! NTSTEP_BETWEEN_OUTPUT_SAMPLE
 
   ! write the current or final seismograms
   if (mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == it_end) then
@@ -99,6 +103,8 @@
       write_time_begin = wtime()
 
       ! checks if anything to do
+      ! note: ASDF uses parallel hdf5 that defines the MPI communicator group that the solver is
+      !       run with. this means every processor in the group is needed for write_seismograms
       if (nrec_local > 0 .or. (WRITE_SEISMOGRAMS_BY_MAIN .and. myrank == 0) .or. ASDF_FORMAT) then
 
         ! writes out seismogram files
@@ -125,10 +131,13 @@
             call write_adj_seismograms_to_file(3)
           if (SAVE_SEISMOGRAMS_PRESSURE) &
             call write_adj_seismograms_to_file(4)
+          ! seismograms (strain)
+          if (it == it_end) call write_adj_seismograms2_to_file()
           ! updates adjoint time counter
           it_adj_written = it
         end select
       endif
+
       ! synchronizes processes (waits for all processes to finish writing)
       call synchronize_all()
 
@@ -219,6 +228,78 @@
   if (SU_FORMAT .and. ASDF_FORMAT) &
     stop 'Please choose either SU_FORMAT or ASDF_FORMAT, both outputs together are not implemented yet...'
 
+  ! allocates single trace array
+  allocate(one_seismogram(NDIM,nlength_seismogram),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2420')
+  if (ier /= 0) stop 'error while allocating one temporary seismogram'
+  one_seismogram(:,:) = 0._CUSTOM_REAL
+
+  ! writes out ASDF container to the file
+  if (ASDF_FORMAT) then
+    ! The writing of seismograms by the main proc is handled within write_asdf()
+    ! stores local seismograms
+    do irec_local = 1,nrec_local * NB_RUNS_ACOUSTIC_GPU
+      ! init trace
+      one_seismogram(:,:) = 0._CUSTOM_REAL
+
+      ! sets trace
+      select case (istore)
+      case (1)
+        ! displacement
+        do i = 1,seismo_current
+          one_seismogram(:,i) = seismograms_d(:,irec_local,i)
+        enddo
+      case (2)
+        ! velocity
+        do i = 1,seismo_current
+          one_seismogram(:,i) = seismograms_v(:,irec_local,i)
+        enddo
+      case (3)
+        ! acceleration
+        do i = 1,seismo_current
+          one_seismogram(:,i) = seismograms_a(:,irec_local,i)
+        enddo
+      case (4)
+        ! pressure
+        do i = 1,seismo_current
+          one_seismogram(1,i) = seismograms_p(1,irec_local,i) ! single component
+        enddo
+      end select
+
+      ! get global number of that receiver
+      if (NB_RUNS_ACOUSTIC_GPU == 1) then
+        irec = number_receiver_global(irec_local)
+      else
+        ! NB_RUNS_ACOUSTIC_GPU > 1
+        ! if irec_local is a multiple of nrec then mod(irec_local,nrec) == 0 and
+        ! the array access at number_receiver_global would be invalid;
+        ! for those cases we want irec associated to irec_local == nrec_store
+        if (mod(irec_local,nrec_local) == 0) then
+          irec = number_receiver_global(nrec_local)
+        else
+          irec = number_receiver_global(mod(irec_local,nrec_local))
+        endif
+      endif
+
+      ! stores this seismogram
+      ! note: ASDF data structure is given in module
+      !       stores all traces into ASDF container in case
+      call write_one_seismogram(one_seismogram,irec_local,irec,component,istore)
+    enddo
+
+    ! writes ASDF file output
+    call write_asdf()
+
+    call synchronize_all()
+
+    ! deallocate the container
+    call close_asdf_data()
+
+    ! nothing left to do (outputs only single ASDF seismogram file)
+    deallocate(one_seismogram)
+    return
+  endif
+
   ! set number of traces in full seismogram array
   if (WRITE_SEISMOGRAMS_BY_MAIN) then
     ! main process collects all traces
@@ -233,12 +314,6 @@
     ! each process outputs its local traces
     nrec_store = nrec_local * NB_RUNS_ACOUSTIC_GPU
   endif
-
-  ! allocates single trace array
-  allocate(one_seismogram(NDIM,nlength_seismogram),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2420')
-  if (ier /= 0) stop 'error while allocating one temporary seismogram'
-  one_seismogram(:,:) = 0._CUSTOM_REAL
 
   ! allocates array for all seismograms
   allocate(all_seismograms(NDIM,nlength_seismogram,nrec_store),stat=ier)
@@ -450,23 +525,98 @@
     enddo
   endif ! WRITE_SEISMOGRAMS_BY_MAIN
 
-  ! writes out seismograms
-  if (.not. WRITE_SEISMOGRAMS_BY_MAIN) then
-    ! all processes write their local seismograms themselves
-    !
-    ! file output
-    if (SU_FORMAT) then
+  ! SU format
+  if (SU_FORMAT) then
+    ! writes out seismograms
+    if (.not. WRITE_SEISMOGRAMS_BY_MAIN) then
+      ! all processes write their local seismograms themselves
       ! SU_format
       ! write ONE binary file for all receivers (nrec_local) within one proc
       ! SU format, with 240-byte-header for each trace
       call write_output_SU(all_seismograms,nrec_store,istore)
     else
+      ! main process writes all seismograms
+      !
+      ! only written out by main process - WRITE_SEISMOGRAMS_BY_MAIN
+      if (myrank == 0) then
+        ! SU_format
+        ! write ONE binary file for all receivers (nrec) within this main proc
+        ! SU format, with 240-byte-header for each trace
+        call write_output_SU(all_seismograms,nrec_store,istore)
+      endif
+    endif
+
+    ! nothing left to do (outputs only SU seismogram files)
+    deallocate(one_seismogram)
+    deallocate(all_seismograms)
+    return
+  endif
+
+  ! ASCII/Binary file output
+  ! writes out seismograms
+  if (.not. WRITE_SEISMOGRAMS_BY_MAIN) then
+    ! all processes write their local seismograms themselves
+    !
+    ! ASCII output
+    if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+      ! note: saving in a single file while using multiple outputs when NTSTEP_BETWEEN_OUTPUT_SEISMOS is less than NSTEP
+      !       will shuffle the entries and give unordered results. thus for now, we will only allow this when writing out
+      !       the full arrays.
+      write(sisname,'(A,I5.5)') '/all_seismograms_'//component//'_node_',myrank
+      if (USE_BINARY_FOR_SEISMOGRAMS) then
+        if (seismo_offset == 0) then
+          open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='unknown', &
+               form='unformatted',action='write')
+        else
+          open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='old',position='append', &
+               form='unformatted',action='write')
+        endif
+      else
+        if (seismo_offset == 0) then
+          open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='unknown', &
+               form='formatted',action='write')
+        else
+          open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='old',position='append', &
+               form='formatted',action='write')
+        endif
+      endif
+    endif
+
+    ! writes one file per single trace
+    ! loop on all the local receivers
+    do irec_local = 1,nrec_local * NB_RUNS_ACOUSTIC_GPU
+      ! get global number of that receiver
+      if (NB_RUNS_ACOUSTIC_GPU == 1) then
+        irec = number_receiver_global(irec_local)
+      else
+        ! NB_RUNS_ACOUSTIC_GPU > 1
+        ! if irec_local is a multiple of nrec then mod(irec_local,nrec) == 0 and
+        ! the array access at number_receiver_global would be invalid;
+        ! for those cases we want irec associated to irec_local == nrec_store
+        if (mod(irec_local,nrec_local) == 0) then
+          irec = number_receiver_global(nrec_local)
+        else
+          irec = number_receiver_global(mod(irec_local,nrec_local))
+        endif
+      endif
+
+      ! writes out this seismogram
+      one_seismogram(:,:) = all_seismograms(:,:,irec_local)
+      call write_one_seismogram(one_seismogram,irec_local,irec,component,istore)
+    enddo ! nrec_local
+
+    ! create one large file instead of one small file per station to avoid file system overload
+    if (SAVE_ALL_SEISMOS_IN_ONE_FILE) close(IOUT)
+
+  else
+    ! main process writes all seismograms
+    !
+    ! only written out by main process - WRITE_SEISMOGRAMS_BY_MAIN
+    if (myrank == 0) then
       ! ASCII output
+      ! create one large file instead of one small file per station to avoid file system overload
       if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
-        ! note: saving in a single file while using multiple outputs when NTSTEP_BETWEEN_OUTPUT_SEISMOS is less than NSTEP
-        !       will shuffle the entries and give unordered results. thus for now, we will only allow this when writing out
-        !       the full arrays.
-        write(sisname,'(A,I5.5)') '/all_seismograms_'//component//'_node_',myrank
+        write(sisname,'(A)') '/all_seismograms_'//component//'_main'
         if (USE_BINARY_FOR_SEISMOGRAMS) then
           if (seismo_offset == 0) then
             open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='unknown', &
@@ -487,115 +637,35 @@
       endif
 
       ! writes one file per single trace
-      ! loop on all the local receivers
-      do irec_local = 1,nrec_local * NB_RUNS_ACOUSTIC_GPU
+      ! loop on all the receivers
+      do irec_local = 1,nrec_store
         ! get global number of that receiver
         if (NB_RUNS_ACOUSTIC_GPU == 1) then
-          irec = number_receiver_global(irec_local)
+          irec = irec_local
         else
           ! NB_RUNS_ACOUSTIC_GPU > 1
-          ! if irec_local is a multiple of nrec then mod(irec_local,nrec) == 0 and
-          ! the array access at number_receiver_global would be invalid;
-          ! for those cases we want irec associated to irec_local == nrec_store
-          if (mod(irec_local,nrec_local) == 0) then
-            irec = number_receiver_global(nrec_local)
+          if (mod(irec_local,nrec) == 0) then
+            irec = nrec
           else
-            irec = number_receiver_global(mod(irec_local,nrec_local))
+            irec = mod(irec_local,nrec)
           endif
         endif
+
+        ! single seismogram
+        one_seismogram(:,:) = all_seismograms(:,:,irec_local)
 
         ! writes out this seismogram
-        one_seismogram(:,:) = all_seismograms(:,:,irec_local)
         call write_one_seismogram(one_seismogram,irec_local,irec,component,istore)
-      enddo ! nrec_local
+      enddo
 
-      ! writes out ASDF container to the file
-      if (ASDF_FORMAT) then
-        call write_asdf()
-        ! deallocate the container
-        call close_asdf_data()
-      endif
-
-      ! create one large file instead of one small file per station to avoid file system overload
-      if (SAVE_ALL_SEISMOS_IN_ONE_FILE) close(IOUT)
-    endif
-
-  else
-    ! main process writes all seismograms
-    !
-    ! only written out by main process - WRITE_SEISMOGRAMS_BY_MAIN
-    if (myrank == 0) then
-      ! file output
-      if (SU_FORMAT) then
-        ! SU_format
-        ! write ONE binary file for all receivers (nrec) within this main proc
-        ! SU format, with 240-byte-header for each trace
-        call write_output_SU(all_seismograms,nrec_store,istore)
-      else
-        ! ASCII output
-        ! create one large file instead of one small file per station to avoid file system overload
-        if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
-          write(sisname,'(A)') '/all_seismograms'
-          if (USE_BINARY_FOR_SEISMOGRAMS) then
-            if (seismo_offset == 0) then
-              open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='unknown', &
-                   form='unformatted',action='write')
-            else
-              open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='old',position='append', &
-                   form='unformatted',action='write')
-            endif
-          else
-            if (seismo_offset == 0) then
-              open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='unknown', &
-                   form='formatted',action='write')
-            else
-              open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='old',position='append', &
-                   form='formatted',action='write')
-            endif
-          endif
-        endif
-
-        ! writes one file per single trace
-        ! loop on all the receivers
-        do irec_local = 1,nrec_store
-          ! get global number of that receiver
-          if (NB_RUNS_ACOUSTIC_GPU == 1) then
-            irec = irec_local
-          else
-            ! NB_RUNS_ACOUSTIC_GPU > 1
-            if (mod(irec_local,nrec) == 0) then
-              irec = nrec
-            else
-              irec = mod(irec_local,nrec)
-            endif
-          endif
-
-          ! single seismogram
-          one_seismogram(:,:) = all_seismograms(:,:,irec_local)
-
-          ! writes out this seismogram
-          call write_one_seismogram(one_seismogram,irec_local,irec,component,istore)
-        enddo
-      endif ! SU_FORMAT
-
+      ! user output
       write(IMAIN,*) 'Component: .sem'//component
       write(IMAIN,*) '  total number of receivers saved is ',nrec
       write(IMAIN,*)
 
       ! create one large file instead of one small file per station to avoid file system overload
       if (SAVE_ALL_SEISMOS_IN_ONE_FILE) close(IOUT)
-
     endif ! myrank
-
-    ! ASDF output
-    if (ASDF_FORMAT) then
-      ! ASDF format
-      ! writes out ASDF container to the file
-      call write_asdf()
-      call synchronize_all()
-      call close_asdf_data()
-    endif
-
   endif ! WRITE_SEISMOGRAMS_BY_MAIN
 
   deallocate(one_seismogram)
@@ -695,7 +765,7 @@
   use specfem_par, only: myrank,number_receiver_global,nrec_local,DT, &
     WRITE_SEISMOGRAMS_BY_MAIN,SU_FORMAT,ASDF_FORMAT, &
     t0,seismo_offset,seismo_current, &
-    it_adj_written,subsamp_seismos,nlength_seismogram
+    it_adj_written,NTSTEP_BETWEEN_OUTPUT_SAMPLE,nlength_seismogram
 
   ! seismograms
   use specfem_par, only: seismograms_d,seismograms_v,seismograms_a,seismograms_p
@@ -826,7 +896,7 @@
         do isample = 1,seismo_current
           ! current time
           ! subtract half duration of the source to make sure travel time is correct
-          time = dble(isample-1)*DT*subsamp_seismos + dble(it_adj_written)*DT - t0
+          time = dble(isample-1)*DT*NTSTEP_BETWEEN_OUTPUT_SAMPLE + dble(it_adj_written)*DT - t0
 
           ! distinguish between single and double precision for reals
           write(IOUT,*) real(time,kind=CUSTOM_REAL),' ',all_seismograms(iorientation,isample,irec_local)
@@ -848,17 +918,17 @@
 
   subroutine write_adj_seismograms2_to_file()
 
-  use constants, only: myrank,IMAIN,CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
+  use constants, only: myrank,CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
 
   use specfem_par, only: seismograms_eps, &
     number_receiver_global,nrec_local,DT,NSTEP,t0, &
-    seismo_offset,subsamp_seismos, &
-    GPU_MODE
+    seismo_offset,seismo_current,NTSTEP_BETWEEN_OUTPUT_SAMPLE, &
+    SUPPRESS_UTM_PROJECTION
 
   implicit none
 
   ! local parameters
-  integer :: irec,irec_local
+  integer :: irec,irec_local,total_length
   integer :: idimval,jdimval,isample
   real(kind=CUSTOM_REAL) :: time_t
 
@@ -866,24 +936,17 @@
   character(len=1) :: component
   character(len=MAX_STRING_LEN) :: sisname
 
-  ! todo: strain seismograms are not implemented yet for GPU simulations
-  if (GPU_MODE) then
-    ! user info
-    if (myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'Note: For GPU simulations, adjoint strain seismograms NT.S****.SNN.semd,.. are not implemented yet.'
-      write(IMAIN,*) '      Please set GPU_MODE to .false. to compute and output strains as well.'
-      write(IMAIN,*)
-    endif
-    return
-  endif
-
+  ! using an ending .semd also for strain seismograms (since strain is derived from displacement)
   component = 'd'
 
-  ! this write routine here is called at the very end, thus seismo_offset should be equal to NSTEP/subsamp_seismos
+  ! full length of strain seismogram (routine will be called at the very end of the time stepping)
+  total_length = seismo_offset + seismo_current
+
+  ! this write routine here is called at the very end, thus seismo_offset should be equal to NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE
   ! checks
-  if (seismo_offset /= NSTEP/subsamp_seismos) then
-    print *,'Error: writing strain seismograms has wrong index lengths ',seismo_offset,'should be ',NSTEP/subsamp_seismos
+  if (total_length /= NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE) then
+    print *,'Error: writing strain seismograms has wrong index lengths ',total_length, &
+            'should be ',NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE
     call exit_MPI(myrank,'Error writing strain seismograms, has wrong index length')
   endif
 
@@ -892,24 +955,81 @@
     ! get global number of that receiver
     irec = number_receiver_global(irec_local)
 
+    ! reference frame convention:
+    !   SPECFEM reference frame convention: x = East, y = North, z = Up
+    !
+    !   UTM convention: uses convention for N/E/Z
+    !                   'longitude' parameters simply refer to the x axis
+    !                   'latitude'  parameters simply refer to the y axis
+    !
+    ! SPECFEM3D Cartesian uses the traditional orientation code E/N/Z (East-West, North-South, Vertical)
+    ! for three components when a UTM projection is used.
+    !
+    ! If the UTM conversion is suppressed, i.e. the flag SUPPRESS_UTM_PROJECTION is set to .true.,
+    ! then the three components are labelled X/Y/Z according to the Cartesian reference frame.
+    !
+    !
+    ! strain "seismogram":
+    !   seismograms_eps(:,:) = eps_s(:,:)
+    ! with
+    !   symmetric strain tensor: eps_s(1,1) = eps_xx
+    !                            eps_s(2,2) = eps_yy
+    !                            eps_s(3,3) = eps_zz
+    !                            eps_s(1,2) = eps_xy
+    !                            eps_s(1,3) = eps_xz
+    !                            eps_s(2,3) = eps_yz
     do idimval = 1,NDIM
       do jdimval = idimval,NDIM
 
         ! strain channel name
-        if (idimval == 1 .and. jdimval == 1) then
-          chn = 'SNN'
-        else if (idimval == 1 .and. jdimval == 2) then
-          chn = 'SEN'
-        else if (idimval == 1 .and. jdimval == 3) then
-          chn = 'SEZ'
-        else if (idimval == 2 .and. jdimval == 2) then
-          chn = 'SEE'
-        else if (idimval == 2 .and. jdimval == 3) then
-          chn = 'SNZ'
-        else if (idimval == 3 .and. jdimval == 3) then
-          chn = 'SZZ'
+        if (SUPPRESS_UTM_PROJECTION) then
+          ! no UTM
+          ! uses Cartesian X/Y/Z direction to denote channel
+          if (idimval == 1 .and. jdimval == 1) then
+            ! eps(1,1) = eps_xx
+            chn = 'SXX'
+          else if (idimval == 1 .and. jdimval == 2) then
+            ! eps(2,1) = eps_yx = eps_xy
+            chn = 'SXY'
+          else if (idimval == 1 .and. jdimval == 3) then
+            ! eps(3,1) = eps_zx = eps_xz
+            chn = 'SXZ'
+          else if (idimval == 2 .and. jdimval == 2) then
+            ! eps(2,2) = eps_yy
+            chn = 'SYY'
+          else if (idimval == 2 .and. jdimval == 3) then
+            ! eps(3,2) = eps_zy = eps_yz
+            chn = 'SYZ'
+          else if (idimval == 3 .and. jdimval == 3) then
+            ! eps(3,3) = eps_zz
+            chn = 'SZZ'
+          else
+            call exit_MPI(myrank,'incorrect channel value')
+          endif
         else
-          call exit_MPI(myrank,'incorrect channel value')
+          ! UTM conversion
+          ! uses convention for N/E/Z to denote channel
+          if (idimval == 1 .and. jdimval == 1) then
+            ! eps(1,1) = eps_xx
+            chn = 'SEE'
+          else if (idimval == 1 .and. jdimval == 2) then
+            ! eps(2,1) = eps_yx = eps_xy
+            chn = 'SEN'
+          else if (idimval == 1 .and. jdimval == 3) then
+            ! eps(3,1) = eps_zx = eps_xz
+            chn = 'SEZ'
+          else if (idimval == 2 .and. jdimval == 2) then
+            ! eps(2,2) = eps_yy
+            chn = 'SNN'
+          else if (idimval == 2 .and. jdimval == 3) then
+            ! eps(3,2) = eps_zy = eps_yz
+            chn = 'SNZ'
+          else if (idimval == 3 .and. jdimval == 3) then
+            ! eps(3,3) = eps_zz
+            chn = 'SZZ'
+          else
+            call exit_MPI(myrank,'incorrect channel value')
+          endif
         endif
 
         ! create the name of the seismogram file for each slice
@@ -925,10 +1045,10 @@
 
         ! make sure we never write more than the maximum number of time steps
         ! subtract half duration of the source to make sure travel time is correct
-        do isample = 1,seismo_offset
+        do isample = 1,total_length
           ! time
           ! distinguish between single and double precision for reals
-          time_t = real(dble(isample-1)*DT*subsamp_seismos - t0,kind=CUSTOM_REAL)
+          time_t = real(dble(isample-1)*DT*NTSTEP_BETWEEN_OUTPUT_SAMPLE - t0,kind=CUSTOM_REAL)
           ! output
           write(IOUT,*) time_t,' ',seismograms_eps(jdimval,idimval,irec_local,isample)
         enddo
@@ -960,9 +1080,21 @@
   sampling_rate = DT
   call band_instrument_code(sampling_rate,bic)
 
+  ! reference frame convention:
+  !   SPECFEM reference frame convention: x = East, y = North, z = Up
+  !
+  !   UTM convention: uses convention for N/E/Z
+  !                   'longitude' parameters simply refer to the x axis
+  !                   'latitude'  parameters simply refer to the y axis
+  !
+  ! SPECFEM3D Cartesian uses the traditional orientation code E/N/Z (East-West, North-South, Vertical)
+  ! for three components when a UTM projection is used.
+  !
+  ! If the UTM conversion is suppressed, i.e. the flag SUPPRESS_UTM_PROJECTION is set to .true.,
+  ! then the three components are labelled X/Y/Z according to the Cartesian reference frame.
+
   ! sets channel name
   if (SUPPRESS_UTM_PROJECTION) then
-
     ! no UTM, pure Cartesian reference
     ! uses Cartesian X/Y/Z direction to denote channel
     select case (iorientation)
@@ -979,7 +1111,6 @@
     end select
 
   else
-
     ! UTM conversion
     ! uses convention for N/E/Z to denote channel
     select case (iorientation)

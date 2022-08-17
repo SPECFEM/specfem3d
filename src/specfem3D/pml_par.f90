@@ -53,7 +53,7 @@ module pml_par
   logical, dimension(:), allocatable :: is_CPML
 
   ! thickness of C-PML layers
-  real(CUSTOM_REAL) :: CPML_width_x,CPML_width_y,CPML_width_z
+  real(kind=CUSTOM_REAL) :: CPML_width_x,CPML_width_y,CPML_width_z
 
   ! C-PML damping profile arrays
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: d_store_x, d_store_y, d_store_z
@@ -130,5 +130,8 @@ module pml_par
 
   integer :: b_reclen_PML_field,b_reclen_PML_potential
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_PML_field,b_PML_potential
+
+  ! convolution coefficients
+  logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
 
 end module pml_par

@@ -12,7 +12,7 @@ AC_PREREQ(2.61)
 AC_INIT([Specfem3D], [3.0.0], [see the wiki], [Specfem3D])
 AC_CONFIG_SRCDIR([src/specfem3D/specfem3D.F90])
 
-AC_CONFIG_HEADER([setup/config.h])
+AC_CONFIG_HEADERS([setup/config.h])
 
 AC_CONFIG_MACRO_DIR([m4])
 m4_include(m4/cit_backports.m4)
@@ -93,40 +93,76 @@ fi
 AM_CONDITIONAL([COND_VECTORIZATION], [test x"$want_vec" != xno])
 
 ###
-### CUDA
+### GPU version
 ###
 
+## CUDA
 AC_ARG_WITH([cuda],
     [AS_HELP_STRING([--with-cuda],
         [build CUDA GPU enabled version @<:@default=no@:>@])],
     [want_cuda="$withval"],
     [want_cuda=no])
+
+# sets default: --with-cuda
+if test x"$want_cuda" = xyes; then
+    want_cuda=cuda4
+fi
 AM_CONDITIONAL([COND_CUDA], [test x"$want_cuda" != xno])
+AM_CONDITIONAL([COND_CUDA4], [test x"$want_cuda" = xcuda4])
 AM_CONDITIONAL([COND_CUDA5], [test x"$want_cuda" = xcuda5])
 AM_CONDITIONAL([COND_CUDA6], [test x"$want_cuda" = xcuda6])
 AM_CONDITIONAL([COND_CUDA7], [test x"$want_cuda" = xcuda7])
 AM_CONDITIONAL([COND_CUDA8], [test x"$want_cuda" = xcuda8])
 AM_CONDITIONAL([COND_CUDA9], [test x"$want_cuda" = xcuda9])
 AM_CONDITIONAL([COND_CUDA10], [test x"$want_cuda" = xcuda10])
+AM_CONDITIONAL([COND_CUDA11], [test x"$want_cuda" = xcuda11])
+
 # cuda linking for cuda 5x and 6x and 7x and 8x and ..
 AM_CONDITIONAL([COND_CUDA_PLUS],
-  [test "$want_cuda" = cuda5 \
+  [test "$want_cuda" = cuda4 \
+     -o "$want_cuda" = cuda5 \
      -o "$want_cuda" = cuda6 \
      -o "$want_cuda" = cuda7 \
      -o "$want_cuda" = cuda8 \
      -o "$want_cuda" = cuda9 \
-     -o "$want_cuda" = cuda10 \]
+     -o "$want_cuda" = cuda10 \
+     -o "$want_cuda" = cuda11 \]
 )
 
+## HIP
+AC_ARG_WITH([hip],
+ [AS_HELP_STRING([--with-hip], [build HIP GPU enabled version @<:@default=no@:>@])],
+    [want_hip="$withval"],
+    [want_hip=no])
+AM_CONDITIONAL([COND_HIP], [test x"$want_hip" != xno])
+AM_CONDITIONAL([COND_HIP_MI8], [test x"$want_hip" = xMI8])
+AM_CONDITIONAL([COND_HIP_MI25], [test x"$want_hip" = xMI25])
+AM_CONDITIONAL([COND_HIP_MI50], [test x"$want_hip" = xMI50])
+AM_CONDITIONAL([COND_HIP_MI100], [test x"$want_hip" = xMI100])
+AM_CONDITIONAL([COND_HIP_CUDA5], [test x"$want_hip" = xcuda5])
+AM_CONDITIONAL([COND_HIP_CUDA6], [test x"$want_hip" = xcuda6])
+AM_CONDITIONAL([COND_HIP_CUDA7], [test x"$want_hip" = xcuda7])
+AM_CONDITIONAL([COND_HIP_CUDA8], [test x"$want_hip" = xcuda8])
+AM_CONDITIONAL([COND_HIP_CUDA9], [test x"$want_hip" = xcuda9])
+AM_CONDITIONAL([COND_HIP_CUDA10], [test x"$want_hip" = xcuda10])
+AM_CONDITIONAL([COND_HIP_CUDA11], [test x"$want_hip" = xcuda11])
+
 ###
-### OPENMP
+### OpenMP
 ###
 
+AC_ARG_WITH([openmp],
+    [AS_HELP_STRING([--with-openmp],
+        [build OpenMP enabled version @<:@default=no@:>@])],
+    [with_omp="$withval"],
+    [with_omp=no])
 AC_ARG_ENABLE([openmp],
     [AS_HELP_STRING([--enable-openmp],
         [build OpenMP enabled version @<:@default=no@:>@])],
-    [want_omp="$enableval"],
-    [want_omp=no])
+    [enable_omp="$enableval"],
+    [enable_omp=no])
+AS_IF([test x"$enable_omp" != xno || test x"$with_omp" != xno],
+    [want_omp=yes],[want_omp=no])
 AM_CONDITIONAL([COND_OMP], [test x"$want_omp" != xno])
 
 ###
@@ -152,11 +188,22 @@ AC_ARG_WITH([adios],
 AM_CONDITIONAL([COND_ADIOS], [test x"$want_adios" != xno])
 
 ###
+### ADIOS2
+###
+
+AC_ARG_WITH([adios2],
+    [AS_HELP_STRING([--with-adios2],
+        [build ADIOS enabled version @<:@default=no@:>@])],
+    [want_adios2="$withval"],
+    [want_adios2=no])
+AM_CONDITIONAL([COND_ADIOS2], [test x"$want_adios2" != xno])
+
+###
 ### ASDF
 ###
 
 AC_ARG_WITH([asdf],
-    [AC_HELP_STRING([--with-asdf],
+    [AS_HELP_STRING([--with-asdf],
         [build ASDF enabled version @<:@default=no@:>@])],
     [want_asdf="$withval"],
     [want_asdf=no])
@@ -416,6 +463,33 @@ AS_IF([test x"$want_adios" != xno], [
 ])
 
 ###
+### ADIOS2
+###
+
+AS_IF([test x"$want_adios2" != xno], [
+    AS_BOX([ADIOS2])
+    if test "$want_mpi" != yes; then
+        AC_MSG_ERROR([Cannot compile with ADIOS2 without MPI.])
+    fi
+
+    # for fortran compilation
+    CIT_ADIOS2_CONFIG
+
+    # for C file compilation
+    AC_MSG_CHECKING([for ADIOS2 C flags and libs])
+    AS_IF([test x"$ADIOS2_CONFIG" != x], [
+      ADIOS2_CFLAGS=`$ADIOS2_CONFIG --c-flags`
+      ADIOS2_CLIBS=`$ADIOS2_CONFIG --c-libs`
+      AC_MSG_RESULT(done)
+    ],[AC_MSG_RESULT(no adios2_config)])
+    AC_SUBST([ADIOS2_CFLAGS])
+    AC_SUBST([ADIOS2_CLIBS])
+
+    # in case adios2 c file compilation needs mpi
+    AC_SUBST([MPICC])
+])
+
+###
 ### ASDF
 ###
 
@@ -432,16 +506,186 @@ CONFIGURE_FLAGS="FC=$FC FCFLAGS=$FCFLAGS"
 AC_SUBST([CONFIGURE_FLAGS])
 
 ###
-### CUDA
+### GPU
 ###
 
+## CUDA
 AS_IF([test x"$want_cuda" != xno], [
     AS_BOX([CUDA])
     CIT_CUDA_CONFIG
 ])
 
+## HIP
+AS_IF([test x"$want_hip" != xno], [
+    AS_BOX([HIP])
+    # environment variables
+    AC_ARG_VAR(HIPCC, [AMD HIP compiler command])
+    AC_ARG_VAR(HIP_FLAGS, [HIP compiler flags])
+    AC_ARG_VAR(HIP_INC, [Location of HIP include files])
+    AC_ARG_VAR(HIP_LIB, [Location of HIP library libhip_hcc])
+
+    # tests HIPCC variable
+    AS_IF([test x"$HIPCC" = x],[
+        HIPCC=hipcc
+    ])
+
+    # Check for compiler
+    # checks if program in path
+    AC_PATH_PROG(HIPCC_PROG, $HIPCC)
+    if test -z "$HIPCC_PROG" ; then
+        AC_MSG_ERROR([cannot find '$HIPCC' program, please check your PATH.])
+    fi
+
+    # sets default HIP path
+    AC_PATH_PROG(HIPCONFIG_PROG, hipconfig)
+    AS_IF([test x"$HIPCONFIG_PROG" = x],[
+      AC_PATH_PROG(HIPCONFIG_PROG, hipconfig, path=/opt/rocm/bin)
+    ])
+    AS_IF([test x"$HIPCONFIG_PROG" != x],[
+        HIP_PATH=`$HIPCONFIG_PROG --path`
+    ])
+    AC_MSG_NOTICE([hipconfig program: $HIPCONFIG_PROG])
+    AC_MSG_NOTICE([HIP path: $HIP_PATH])
+
+    #AS_IF([test x"$HIP_INC" = x],[
+    #    HIP_INC="${HIP_PATH}/include"
+    #])
+
+    # adds default HIP library
+    AS_IF([test x"$HIP_LIB" = x -a x"${HIP_PATH}" != x],[
+        HIP_LIB="${HIP_PATH}/lib"
+        AC_MSG_NOTICE([adding default HIP library path: ${HIP_LIB}])
+    ])
+
+    # checks platform
+    if test x"$HIPCONFIG_PROG" != x ; then
+      GPU_PLATFORM=`$HIPCONFIG_PROG --platform`
+      AS_IF([test x"$GPU_PLATFORM" = xnvidia], [
+          AC_MSG_NOTICE([HIP PLATFORM NVIDIA detected.])
+          HIP_PLATFORM=nvcc
+          FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_NVCC__"
+      ])
+
+      AS_IF([test x"$GPU_PLATFORM" = xamd], [
+          AC_MSG_NOTICE([HIP PLATFORM AMD detected.])
+          HIP_PLATFORM=hcc
+          FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_HCC__"
+      ])
+      # compiler might require a platform selection flag
+      case "${HIP_FLAGS}" in
+        *HIP_PLATFORM*) AC_MSG_NOTICE([hip flags contain platform specifier: ${HIP_FLAGS}]) ;;
+        *) AC_MSG_NOTICE([adding flag for platform specifier ${FLAG_PLATFORM}]);
+           HIP_FLAGS="${HIP_FLAGS} ${FLAG_PLATFORM}"
+           AC_MSG_NOTICE([HIP_FLAGS: ${HIP_FLAGS}]) ;;
+      esac
+    fi
+    # sets default platform to AMD if not set
+    AS_IF([test x"$GPU_PLATFORM" = x],[
+      GPU_PLATFORM=amd
+    ])
+
+    # for compilation errors like:
+    #   /usr/bin/ld: obj/assemble_MPI_scalar_gpu.hip.o: relocation R_X86_64_32 against `.rodata.str1.1' can not be used
+    #      when making a PIE object; recompile with -fPIC
+    # try to add
+    #   HIP_FLAGS="-fPIC"
+    # or
+    #   HIP_FLAGS="-fno-gpu-rdc"
+    # compiler might require a -fPIC flag
+    case "${HIP_FLAGS}" in
+      *fPIC*) AC_MSG_NOTICE([HIP flags contain position independent code flag -fPIC: ${HIP_FLAGS}]);;
+      *) AC_MSG_NOTICE([consider adding compilation flag for position independent code: HIP_FLAGS="-fPIC"]);;
+    esac
+
+    # test lib & include
+    AS_IF([test x"$HIP_LIB" != x],[
+        HIP_LDFLAGS="-L$HIP_LIB"
+    ])
+    AS_IF([test x"$HIP_INC" != x],[
+        HIP_CPPFLAGS="-I$HIP_INC"
+    ])
+    HIP_LIBS="-lamdhip64"
+
+    # checks header file
+    AC_LANG_PUSH(C)
+    AC_REQUIRE_CPP
+    CFLAGS_save="$CFLAGS"
+    LDFLAGS_save="$LDFLAGS"
+    LIBS_save="$LIBS"
+
+    # uses hipcc compiler
+    CFLAGS="$HIP_FLAGS"
+    if test "x$HIP_INC" != "x"; then
+      HIP_CPPFLAGS="-I$HIP_INC"
+      CFLAGS="$CFLAGS $HIP_CPPFLAGS"
+    fi
+
+    AC_MSG_CHECKING([for hip/hip_runtime.h])
+    ac_compile='$HIPCC -c $CFLAGS conftest.$ac_ext >&5'
+    AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([[#include <hip/hip_runtime.h>]],[[void* ptr = 0;]])
+    ], [
+        AC_MSG_RESULT(yes)
+    ], [
+        AC_MSG_RESULT(no)
+        AC_MSG_ERROR([HIP runtime header not found; try setting HIP_INC.])
+    ])
+
+    # checks for HIP library
+    if test "x$HIP_LIB" != "x"; then
+      HIP_LDFLAGS="-L$HIP_LIB"
+      LDFLAGS="$HIP_LDFLAGS $LDFLAGS"
+    fi
+    HIP_LIBS="-lamdhip64"
+    LIBS="$HIP_LIBS $LIBS"
+
+    # runs compilation test with hipcc
+    AC_MSG_CHECKING([hipcc compilation with hipMalloc in -lamdhip64])
+    ac_compile='$HIPCC -c $CFLAGS conftest.$ac_ext >&5'
+    AC_COMPILE_IFELSE([
+      AC_LANG_PROGRAM([[#include <hip/hip_runtime.h>]],[[void* ptr = 0;hipMalloc(&ptr, 1);]])
+    ], [
+      AC_MSG_RESULT(yes)
+    ], [
+      AC_MSG_RESULT(no)
+      AC_MSG_ERROR([HIP library function with hipcc compilation failed; try setting HIP_INC.])
+    ])
+
+    # runs linking test with hipcc
+    AC_MSG_CHECKING([hipcc linking with hipMalloc in -lamdhip64])
+    ac_link='$HIPCC -o conftest$ac_exeext $CFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+    AC_LINK_IFELSE([
+      AC_LANG_PROGRAM([[
+#include <stdio.h>
+#include <hip/hip_runtime.h>]],[[void* ptr = 0;hipMalloc(&ptr, 1);]])
+    ],[
+      AC_MSG_RESULT(yes)
+    ],[
+      AC_MSG_RESULT(no)
+      AC_MSG_ERROR([HIP library linking with HIP failed; try setting HIP_LIB.])
+    ])
+
+    #HIP_HEADER_H="hip/hip_runtime.h"
+    #AC_CHECK_HEADER([${HIP_HEADER_H}], [], [
+    #    AC_MSG_ERROR([HIP header not found; try setting HIP_INC.])
+    #])
+
+    CFLAGS="$CFLAGS_save"
+    LDFLAGS="$LDFLAGS_save"
+    LIBS="$LIBS_save"
+    AC_LANG_POP(C)
+
+    # export flags
+    AC_SUBST([HIP_CPPFLAGS])
+    AC_SUBST([HIP_LDFLAGS])
+    AC_SUBST([HIP_LIBS])
+])
+AM_CONDITIONAL([COND_HIP_PLATFORM_AMD], [test x"$GPU_PLATFORM" = xamd])
+AM_CONDITIONAL([COND_HIP_PLATFORM_NVIDIA], [test x"$GPU_PLATFORM" = xnvidia])
+
+
 ###
-### OPENMP
+### OpenMP
 ###
 
 AS_IF([test x"$want_omp" != xno], [
@@ -553,6 +797,7 @@ AH_BOTTOM([
 /* map fails when output files are > 4GB, which is often the case for GPU simulations */
 #undef USE_MAP_FUNCTION
 ])
+
 
 dnl FYI, this is not a "result", but AS_ECHO is not available in 2.61, and it
 dnl basically works like a portable echo.

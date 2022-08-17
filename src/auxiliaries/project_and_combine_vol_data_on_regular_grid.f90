@@ -43,15 +43,12 @@
   integer, parameter :: NARGS = 3
 
   ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  double precision,dimension(:,:,:,:),allocatable :: data_dp
-  ! real array for data
-  real,dimension(:,:,:,:),allocatable :: data_sp
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: data
   integer :: i, ier
   character(len=MAX_STRING_LEN) :: arg(9), indir, outdir
   character(len=MAX_STRING_LEN) :: prname, prname_lp, data_filename
   character(len=MAX_STRING_LEN*2) :: local_data_file
   logical :: BROADCAST_AFTER_READ
-  integer :: myrank
   integer :: sizeprocs, NSPEC_IRREGULAR
 
   type(profd)  :: projection_fd
@@ -86,9 +83,8 @@
   enddo
 
   data_filename = arg(1)
-  indir= arg(2)
+  indir = arg(2)
   outdir = arg(3)
-
 
   ! Get dimensions of current model, stored in proc******_external_mesh.bin
   write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_'
@@ -96,6 +92,7 @@
        status='old',action='read',form='unformatted',iostat=ier)
   read(27) NSPEC_AB
   read(27) NGLOB_AB
+
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1102')
   if (ier /= 0) stop 'error allocating array ibool'
@@ -114,7 +111,9 @@
   call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
   call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
   call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
+
   call compute_interpolation_coeff_FD_SEM(projection_fd, myrank)
+
   allocate(model_on_FD_grid(projection_fd%nx, projection_fd%ny, projection_fd%nz),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1104')
 
@@ -123,42 +122,25 @@
   endif
 
   ! Get data to project
-  allocate(data_sp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1105')
-  if (ier /= 0) stop 'error allocating single precision data array'
-   if (CUSTOM_REAL == SIZE_DOUBLE) then
-    allocate(data_dp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1106')
-    if (ier /= 0) stop 'error allocating double precision data array'
-  endif
+  allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1106')
+  if (ier /= 0) stop 'error allocating double precision data array'
 
   ! data file
   write(prname,'(a,i6.6,a)') trim(indir)//'proc',myrank,'_'
   local_data_file = trim(prname) // trim(data_filename) // '.bin'
-  open(unit = 28,file = trim(local_data_file),status='old', &
-        action='read',form ='unformatted',iostat=ier)
+  open(unit = 28,file = trim(local_data_file),status='old',action='read',form ='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'Error opening ',trim(local_data_file)
     stop
   endif
 
-  ! Read either SP or DP floating point numbers.
-  if (CUSTOM_REAL == SIZE_DOUBLE) then
-    read(28) data_dp
-  else
-    read(28) data_sp
-  endif
+  ! Read (either SP or DP) floating point numbers.
+  read(28) data
   close(28)
 
-
-  ! uses conversion to real values
-  if (CUSTOM_REAL == SIZE_DOUBLE) then
-    data_sp(:,:,:,:) = sngl(data_dp(:,:,:,:))
-    deallocate(data_dp)
-  endif
-
   ! put data from SEM mesh to a regular grid
-  call Project_model_SEM2FD_grid(data_sp, model_on_FD_grid, projection_fd, myrank)
+  call Project_model_SEM2FD_grid(data, model_on_FD_grid, projection_fd, myrank)
 
   ! Write output on a Fortran binary file
   if (myrank == 0) then

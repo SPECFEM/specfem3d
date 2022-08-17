@@ -100,6 +100,10 @@
                                num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
                                ispec_is_acoustic)
 
+    ! read noise distribution and direction
+    call read_noise_distribution_direction(NGLLSQUARE*num_free_surface_faces, &
+                                           normal_x_noise,normal_y_noise,normal_z_noise,mask_noise)
+
     ! checks flags for noise simulation
     call check_parameters_noise(NOISE_TOMOGRAPHY,SIMULATION_TYPE,SAVE_FORWARD, &
                                 LOCAL_PATH,num_free_surface_faces,NSTEP)

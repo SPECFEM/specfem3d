@@ -35,8 +35,9 @@
 
   subroutine model_ipati(myrank,nspec,LOCAL_PATH)
 
-  use generate_databases_par, only: IMAIN,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
+  use constants, only: IMAIN,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IIN
   use create_regions_mesh_ext_par
+
   implicit none
 
   integer, intent(in) :: myrank,nspec
@@ -70,14 +71,14 @@
   if (ier /= 0) stop 'error allocating array rho_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'rho.bin'
-  open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+  open(unit=IIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'error opening file: ',trim(filename)
     stop 'error reading rho.bin file'
   endif
 
-  read(28) rho_read
-  close(28)
+  read(IIN) rho_read
+  close(IIN)
 
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
@@ -85,14 +86,14 @@
   if (ier /= 0) stop 'error allocating array vp_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vp.bin'
-  open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+  open(unit=IIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'error opening file: ',trim(filename)
     stop 'error reading vp.bin file'
   endif
 
-  read(28) vp_read
-  close(28)
+  read(IIN) vp_read
+  close(IIN)
 
   ! vs scaled from vp
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
@@ -120,8 +121,9 @@
 
   subroutine model_ipati_water(myrank,nspec,LOCAL_PATH)
 
-  use generate_databases_par, only: IMAIN,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
+  use constants, only: IMAIN,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IIN
   use create_regions_mesh_ext_par
+
   implicit none
 
   integer, intent(in) :: myrank,nspec
@@ -155,14 +157,14 @@
   if (ier /= 0) stop 'error allocating array rho_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'rho.bin'
-  open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+  open(unit=IIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'error opening file: ',trim(filename)
     stop 'error reading rho.bin file'
   endif
 
-  read(28) rho_read
-  close(28)
+  read(IIN) rho_read
+  close(IIN)
 
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
@@ -170,14 +172,14 @@
   if (ier /= 0) stop 'error allocating array vp_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vp.bin'
-  open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+  open(unit=IIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'error opening file: ',trim(filename)
     stop 'error reading vp.bin file'
   endif
 
-  read(28) vp_read
-  close(28)
+  read(IIN) vp_read
+  close(IIN)
 
   ! vs scaled from vp
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)

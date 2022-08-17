@@ -37,9 +37,9 @@
 
 
   subroutine model_aniso(iflag_aniso,rho,vp,vs, &
-                        c11,c12,c13,c14,c15,c16, &
-                        c22,c23,c24,c25,c26,c33, &
-                        c34,c35,c36,c44,c45,c46,c55,c56,c66)
+                         c11,c12,c13,c14,c15,c16, &
+                         c22,c23,c24,c25,c26,c33, &
+                         c34,c35,c36,c44,c45,c46,c55,c56,c66)
 
   use constants, only: CUSTOM_REAL,IANISOTROPY_MODEL1,IANISOTROPY_MODEL2
 
@@ -83,19 +83,19 @@
 !------------------------------------------------------------------------------
 
   !integer idoubling
-  integer iflag_aniso
+  integer,intent(in) :: iflag_aniso
 
   !real(kind=CUSTOM_REAL) zmesh
-  real(kind=CUSTOM_REAL) rho,vp,vs
-  real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36, &
-                   c44,c45,c46,c55,c56,c66
+  real(kind=CUSTOM_REAL),intent(in) :: rho,vp,vs
+  real(kind=CUSTOM_REAL),intent(inout) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36, &
+                                          c44,c45,c46,c55,c56,c66
 
 ! local parameters
-  real(kind=CUSTOM_REAL) vpv,vph,vsv,vsh,eta_aniso
-  real(kind=CUSTOM_REAL) aa,cc,nn,ll,ff
-  real(kind=CUSTOM_REAL) A,C,F,AL,AN,Bc,Bs,Gc,Gs,Hc,Hs,Ec,Es,C1p,C1sv,C1sh,C3,S1p,S1sv,S1sh,S3
-  real(kind=CUSTOM_REAL) d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26,d33,d34,d35,d36, &
-                   d44,d45,d46,d55,d56,d66
+  real(kind=CUSTOM_REAL) :: vpv,vph,vsv,vsh,eta_aniso
+  real(kind=CUSTOM_REAL) :: aa,cc,nn,ll,ff
+  real(kind=CUSTOM_REAL) :: A,C,F,AL,AN,Bc,Bs,Gc,Gs,Hc,Hs,Ec,Es,C1p,C1sv,C1sh,C3,S1p,S1sv,S1sh,S3
+  real(kind=CUSTOM_REAL) :: d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26,d33,d34,d35,d36, &
+                            d44,d45,d46,d55,d56,d66
 
 ! assumes vp,vs given in m/s, rho in kg/m**3
   vph = vp

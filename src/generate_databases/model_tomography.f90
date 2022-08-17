@@ -38,6 +38,7 @@
   module model_tomography_par
 
   use constants, only: CUSTOM_REAL,IMODEL_TOMO
+  use generate_databases_par, only: IMODEL,ANISOTROPY
 
   implicit none
 
@@ -56,6 +57,7 @@
   ! models parameter records
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: vp_tomography,vs_tomography,rho_tomography,z_tomography
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: qp_tomography,qs_tomography
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: c_tomography
 
   ! models entries
   integer, dimension(:), allocatable :: NX,NY,NZ
@@ -129,7 +131,7 @@
 
   use constants, only: MAX_STRING_LEN,IIN,IMAIN
 
-  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh,IMODEL
+  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh
 
   use model_tomography_par
 
@@ -231,13 +233,20 @@
     ! checks number of entries of first data line
     call tomo_get_number_of_tokens(string_read,ntokens)
     !print *,'tomography file: number of tokens on first data line: ',ntokens,' line: ',trim(string_read)
-    if (ntokens /= 6 .and. ntokens /= 8) then
+    if (ntokens /= 6 .and. ntokens /= 8 .and. ntokens /= 25 .and. ntokens /= 27) then
       print *,'Error reading tomography file, data line has wrong number of entries: ',trim(string_read)
       stop 'Error reading tomography file'
     endif
 
+    if (ANISOTROPY .and. IMODEL == IMODEL_TOMO) then
+      if (ntokens == 6 .or. ntokens == 8) then
+        print *,'Error reading tomography file, data line has wrong number of entries: ',trim(string_read)
+        stop 'Error reading tomography file'
+      endif
+    endif
+
     ! determines data format
-    if (ntokens == 8) then
+    if (ntokens == 8 .or. ntokens == 27) then
       has_q_values = .true.
     else
       has_q_values = .false.
@@ -288,10 +297,18 @@
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
 
   ! allocate models parameter records
-  allocate(vp_tomography(NFILES_TOMO,nrecord_max),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 856')
-  allocate(vs_tomography(NFILES_TOMO,nrecord_max),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 857')
+  ! only allocate anisotropy arrays if needed
+  if (ANISOTROPY .and. IMODEL == IMODEL_TOMO) then
+    allocate(c_tomography(NFILES_TOMO,nrecord_max,21),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 904X')
+    if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo anisotropy arrays')
+  else
+    allocate(vp_tomography(NFILES_TOMO,nrecord_max),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 856')
+    allocate(vs_tomography(NFILES_TOMO,nrecord_max),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 857')
+  endif
+
   allocate(rho_tomography(NFILES_TOMO,nrecord_max),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 858')
   allocate(z_tomography(NFILES_TOMO,nrecord_max),stat=ier)
@@ -342,10 +359,12 @@ end subroutine init_tomography_files
   subroutine read_model_tomography()
 
 ! read Vp Vs and rho from extracted text file
+! also read Qp Qs if needed
+! also read c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66 if needed
 
   use constants, only: MAX_STRING_LEN,IIN,IMAIN
 
-  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh,IMODEL
+  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh
 
   use model_tomography_par
 
@@ -354,6 +373,8 @@ end subroutine init_tomography_files
   ! local parameters
   real(kind=CUSTOM_REAL) :: x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
   real(kind=CUSTOM_REAL) :: qp_tomo,qs_tomo
+  real(kind=CUSTOM_REAL) :: c11_tomo,c12_tomo,c13_tomo,c14_tomo,c15_tomo,c16_tomo,c22_tomo,c23_tomo,c24_tomo,c25_tomo,c26_tomo, &
+                            c33_tomo,c34_tomo,c35_tomo,c36_tomo,c44_tomo,c45_tomo,c46_tomo,c55_tomo,c56_tomo,c66_tomo
   integer :: irecord,ier,iundef,imat
   character(len=MAX_STRING_LEN*2) :: tomo_filename
   character(len=MAX_STRING_LEN) :: filename
@@ -445,68 +466,209 @@ end subroutine init_tomography_files
     ! determines data format
     has_q_values = tomo_has_q_values(imat)
 
-    ! user output
-    if (myrank_tomo == 0) then
-      if (has_q_values) then
-        write(IMAIN,*) '     data format: #x #y #z #vp #vs #density #Q_p #Q_s'
-      else
-        write(IMAIN,*) '     data format: #x #y #z #vp #vs #density'
+    if (ANISOTROPY .and. IMODEL == IMODEL_TOMO) then
+      ! user output
+      if (myrank_tomo == 0) then
+        if (has_q_values) then
+          write(IMAIN,*) '     data format: #x #y #z #c11 #c12 .... #c55 #c56 #c66 #density #Q_p #Q_s'
+          ! #c22 #c23 #c24 #c25 #c26 #c33 #c34 #c35 #c36 #c44 #c45 #c46
+        else
+          write(IMAIN,*) '     data format: #x #y #z #c11 #c12 .... #c55 #c56 #c66 #density'
+          ! #c22 #c23 #c24 #c25 #c26 #c33 #c34 #c35 #c36 #c44 #c45 #c46
+        endif
+        call flush_IMAIN()
       endif
-      call flush_IMAIN()
-    endif
 
-    ! reads in first data values
-    if (has_q_values) then
-      ! format: #x #y #z #vp #vs #density #Q_p #Q_s
-      read(string_read,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo,qp_tomo,qs_tomo
-      qp_tomography(imat,1) = qp_tomo
-      qs_tomography(imat,1) = qs_tomo
+      ! reads in first data values
+      if (has_q_values) then
+        ! format: #x #y #z #c11 #c12 #c13 #c14 #c15 #c16 #c22 #c23 #c24 #c25 #c26 #c33 #c34 #c35 #c36 #c44 #c45 #c46 #c55 #c56 #c66
+        !         #density #Q_p #Q_s
+        read(string_read,*) x_tomo,y_tomo,z_tomo,c11_tomo,c12_tomo,c13_tomo,c14_tomo,c15_tomo,c16_tomo,c22_tomo,c23_tomo,c24_tomo, &
+                                                 c25_tomo,c26_tomo,c33_tomo,c34_tomo,c35_tomo,c36_tomo,c44_tomo,c45_tomo,c46_tomo, &
+                                                 c55_tomo,c56_tomo,c66_tomo,rho_tomo,qp_tomo,qs_tomo
+        qp_tomography(imat,1) = qp_tomo
+        qs_tomography(imat,1) = qs_tomo
+      else
+        ! format: #x #y #z #c11 #c12 #c13 #c14 #c15 #c16 #c22 #c23 #c24 #c25 #c26 #c33 #c34 #c35 #c36 #c44 #c45 #c46 #c55 #c56 #c66
+        !         #density
+        read(string_read,*) x_tomo,y_tomo,z_tomo,c11_tomo,c12_tomo,c13_tomo,c14_tomo,c15_tomo,c16_tomo,c22_tomo,c23_tomo,c24_tomo, &
+                                                 c25_tomo,c26_tomo,c33_tomo,c34_tomo,c35_tomo,c36_tomo,c44_tomo,c45_tomo,c46_tomo, &
+                                                 c55_tomo,c56_tomo,c66_tomo,rho_tomo
+      endif
+
+      ! stores record values
+      c_tomography(imat,1,1) = c11_tomo
+      c_tomography(imat,1,2) = c12_tomo
+      c_tomography(imat,1,3) = c13_tomo
+      c_tomography(imat,1,4) = c14_tomo
+      c_tomography(imat,1,5) = c15_tomo
+      c_tomography(imat,1,6) = c16_tomo
+      c_tomography(imat,1,7) = c22_tomo
+      c_tomography(imat,1,8) = c23_tomo
+      c_tomography(imat,1,9) = c24_tomo
+      c_tomography(imat,1,10) = c25_tomo
+      c_tomography(imat,1,11) = c26_tomo
+      c_tomography(imat,1,12) = c33_tomo
+      c_tomography(imat,1,13) = c34_tomo
+      c_tomography(imat,1,14) = c35_tomo
+      c_tomography(imat,1,15) = c36_tomo
+      c_tomography(imat,1,16) = c44_tomo
+      c_tomography(imat,1,17) = c45_tomo
+      c_tomography(imat,1,18) = c46_tomo
+      c_tomography(imat,1,19) = c55_tomo
+      c_tomography(imat,1,20) = c56_tomo
+      c_tomography(imat,1,21) = c66_tomo
+
+      rho_tomography(imat,1) = rho_tomo
+      z_tomography(imat,1) = z_tomo
+
+      ! reads in record sections
+      if (has_q_values) then
+        do irecord = 2,nrecord(imat)
+          !format: #x #y #z #c11 #c12 #c13 #c14 #c15 #c16 #c22 #c23 #c24 #c25 #c26 #c33 #c34 #c35 #c36 #c44 #c45 #c46 #c55 #c56 #c66
+          !        #density #Q_p #Q_s
+          read(IIN,*,iostat=ier) x_tomo,y_tomo,z_tomo,c11_tomo,c12_tomo,c13_tomo,c14_tomo,c15_tomo,c16_tomo,c22_tomo,c23_tomo, &
+                                                      c24_tomo,c25_tomo,c26_tomo,c33_tomo,c34_tomo,c35_tomo,c36_tomo,c44_tomo, &
+                                                      c45_tomo,c46_tomo,c55_tomo,c56_tomo,c66_tomo,rho_tomo,qp_tomo,qs_tomo
+          if (ier /= 0) stop 'Error reading tomo file line format with q values'
+
+          ! stores record values
+          c_tomography(imat,irecord,1) = c11_tomo
+          c_tomography(imat,irecord,2) = c12_tomo
+          c_tomography(imat,irecord,3) = c13_tomo
+          c_tomography(imat,irecord,4) = c14_tomo
+          c_tomography(imat,irecord,5) = c15_tomo
+          c_tomography(imat,irecord,6) = c16_tomo
+          c_tomography(imat,irecord,7) = c22_tomo
+          c_tomography(imat,irecord,8) = c23_tomo
+          c_tomography(imat,irecord,9) = c24_tomo
+          c_tomography(imat,irecord,10) = c25_tomo
+          c_tomography(imat,irecord,11) = c26_tomo
+          c_tomography(imat,irecord,12) = c33_tomo
+          c_tomography(imat,irecord,13) = c34_tomo
+          c_tomography(imat,irecord,14) = c35_tomo
+          c_tomography(imat,irecord,15) = c36_tomo
+          c_tomography(imat,irecord,16) = c44_tomo
+          c_tomography(imat,irecord,17) = c45_tomo
+          c_tomography(imat,irecord,18) = c46_tomo
+          c_tomography(imat,irecord,19) = c55_tomo
+          c_tomography(imat,irecord,20) = c56_tomo
+          c_tomography(imat,irecord,21) = c66_tomo
+
+          rho_tomography(imat,irecord) = rho_tomo
+          z_tomography(imat,irecord) = z_tomo
+          qp_tomography(imat,irecord) = qp_tomo
+          qs_tomography(imat,irecord) = qs_tomo
+        enddo
+      else
+        do irecord = 2,nrecord(imat)
+          !format: #x #y #z #c11 #c12 #c13 #c14 #c15 #c16 #c22 #c23 #c24 #c25 #c26 #c33 #c34 #c35 #c36 #c44 #c45 #c46 #c55 #c56 #c66
+          !        #density
+          read(IIN,*,iostat=ier) x_tomo,y_tomo,z_tomo,c11_tomo,c12_tomo,c13_tomo,c14_tomo,c15_tomo,c16_tomo,c22_tomo,c23_tomo, &
+                                                      c24_tomo,c25_tomo,c26_tomo,c33_tomo,c34_tomo,c35_tomo,c36_tomo,c44_tomo, &
+                                                      c45_tomo,c46_tomo,c55_tomo,c56_tomo,c66_tomo,rho_tomo
+          if (ier /= 0) stop 'Error reading tomo file line format'
+
+          ! stores record values
+          c_tomography(imat,irecord,1) = c11_tomo
+          c_tomography(imat,irecord,2) = c12_tomo
+          c_tomography(imat,irecord,3) = c13_tomo
+          c_tomography(imat,irecord,4) = c14_tomo
+          c_tomography(imat,irecord,5) = c15_tomo
+          c_tomography(imat,irecord,6) = c16_tomo
+          c_tomography(imat,irecord,7) = c22_tomo
+          c_tomography(imat,irecord,8) = c23_tomo
+          c_tomography(imat,irecord,9) = c24_tomo
+          c_tomography(imat,irecord,10) = c25_tomo
+          c_tomography(imat,irecord,11) = c26_tomo
+          c_tomography(imat,irecord,12) = c33_tomo
+          c_tomography(imat,irecord,13) = c34_tomo
+          c_tomography(imat,irecord,14) = c35_tomo
+          c_tomography(imat,irecord,15) = c36_tomo
+          c_tomography(imat,irecord,16) = c44_tomo
+          c_tomography(imat,irecord,17) = c45_tomo
+          c_tomography(imat,irecord,18) = c46_tomo
+          c_tomography(imat,irecord,19) = c55_tomo
+          c_tomography(imat,irecord,20) = c56_tomo
+          c_tomography(imat,irecord,21) = c66_tomo
+
+          rho_tomography(imat,irecord) = rho_tomo
+          z_tomography(imat,irecord) = z_tomo
+        enddo
+      endif
+      close(IIN)
+
+      ! user output
+      if (myrank_tomo == 0) then
+        write(IMAIN,*) '     number of grid points = NX*NY*NZ:',nrecord(imat)
+        write(IMAIN,*)
+        call flush_IMAIN()
+      endif
+
     else
-      ! format: #x #y #z #vp #vs #density
-      read(string_read,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
-    endif
+      ! user output
+      if (myrank_tomo == 0) then
+        if (has_q_values) then
+          write(IMAIN,*) '     data format: #x #y #z #vp #vs #density #Q_p #Q_s'
+        else
+          write(IMAIN,*) '     data format: #x #y #z #vp #vs #density'
+        endif
+        call flush_IMAIN()
+      endif
 
-    ! stores record values
-    vp_tomography(imat,1) = vp_tomo
-    vs_tomography(imat,1) = vs_tomo
-    rho_tomography(imat,1) = rho_tomo
-    z_tomography(imat,1) = z_tomo
-
-    ! reads in record sections
-    if (has_q_values) then
-      do irecord = 2,nrecord(imat)
+      ! reads in first data values
+      if (has_q_values) then
         ! format: #x #y #z #vp #vs #density #Q_p #Q_s
-        read(IIN,*,iostat=ier) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo,qp_tomo,qs_tomo
-        if (ier /= 0) stop 'Error reading tomo file line format with q values'
-
-        ! stores record values
-        vp_tomography(imat,irecord) = vp_tomo
-        vs_tomography(imat,irecord) = vs_tomo
-        rho_tomography(imat,irecord) = rho_tomo
-        z_tomography(imat,irecord) = z_tomo
-        qp_tomography(imat,irecord) = qp_tomo
-        qs_tomography(imat,irecord) = qs_tomo
-      enddo
-    else
-      do irecord = 2,nrecord(imat)
+        read(string_read,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo,qp_tomo,qs_tomo
+        qp_tomography(imat,1) = qp_tomo
+        qs_tomography(imat,1) = qs_tomo
+      else
         ! format: #x #y #z #vp #vs #density
-        read(IIN,*,iostat=ier) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
-        if (ier /= 0) stop 'Error reading tomo file line format'
+        read(string_read,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
+      endif
 
-        ! stores record values
-        vp_tomography(imat,irecord) = vp_tomo
-        vs_tomography(imat,irecord) = vs_tomo
-        rho_tomography(imat,irecord) = rho_tomo
-        z_tomography(imat,irecord) = z_tomo
-      enddo
-    endif
-    close(IIN)
+      ! stores record values
+      vp_tomography(imat,1) = vp_tomo
+      vs_tomography(imat,1) = vs_tomo
+      rho_tomography(imat,1) = rho_tomo
+      z_tomography(imat,1) = z_tomo
 
-    ! user output
-    if (myrank_tomo == 0) then
-      write(IMAIN,*) '     number of grid points = NX*NY*NZ:',nrecord(imat)
-      write(IMAIN,*)
-      call flush_IMAIN()
+      ! reads in record sections
+      if (has_q_values) then
+        do irecord = 2,nrecord(imat)
+          ! format: #x #y #z #vp #vs #density #Q_p #Q_s
+          read(IIN,*,iostat=ier) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo,qp_tomo,qs_tomo
+          if (ier /= 0) stop 'Error reading tomo file line format with q values'
+
+          ! stores record values
+          vp_tomography(imat,irecord) = vp_tomo
+          vs_tomography(imat,irecord) = vs_tomo
+          rho_tomography(imat,irecord) = rho_tomo
+          z_tomography(imat,irecord) = z_tomo
+          qp_tomography(imat,irecord) = qp_tomo
+          qs_tomography(imat,irecord) = qs_tomo
+        enddo
+      else
+        do irecord = 2,nrecord(imat)
+          ! format: #x #y #z #vp #vs #density
+          read(IIN,*,iostat=ier) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
+          if (ier /= 0) stop 'Error reading tomo file line format'
+
+          ! stores record values
+          vp_tomography(imat,irecord) = vp_tomo
+          vs_tomography(imat,irecord) = vs_tomo
+          rho_tomography(imat,irecord) = rho_tomo
+          z_tomography(imat,irecord) = z_tomo
+        enddo
+      endif
+      close(IIN)
+
+      ! user output
+      if (myrank_tomo == 0) then
+        write(IMAIN,*) '     number of grid points = NX*NY*NZ:',nrecord(imat)
+        write(IMAIN,*)
+        call flush_IMAIN()
+      endif
     endif
   enddo
 
@@ -601,11 +763,11 @@ end subroutine init_tomography_files
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine model_tomography(xmesh,ymesh,zmesh,rho_model,vp_model,vs_model, &
-                              qkappa_atten,qmu_atten,imaterial_id, &
-                              has_tomo_value)
+  subroutine model_tomography(xmesh,ymesh,zmesh,rho_model,vp_model,vs_model,qkappa_atten,qmu_atten, &
+                              c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
+                              imaterial_id,has_tomo_value)
 
-  use generate_databases_par, only: undef_mat_prop,nundefMat_ext_mesh,IMODEL,ATTENUATION_COMP_MAXIMUM
+  use generate_databases_par, only: undef_mat_prop,nundefMat_ext_mesh,ATTENUATION_COMP_MAXIMUM
 
   use model_tomography_par
 
@@ -617,10 +779,13 @@ end subroutine init_tomography_files
 
   real(kind=CUSTOM_REAL), intent(out) :: vp_model,vs_model,rho_model
 
+  real(kind=CUSTOM_REAL), intent(inout) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
+
   integer, intent(in) :: imaterial_id
   logical,intent(out) :: has_tomo_value
 
   ! local parameters
+  integer :: ier,i
   integer :: ix,iy,iz,imat
   integer :: p0,p1,p2,p3,p4,p5,p6,p7
 
@@ -639,6 +804,10 @@ end subroutine init_tomography_files
   real(kind=CUSTOM_REAL) :: qs1,qs2,qs3,qs4,qs5,qs6,qs7,qs8
   real(kind=CUSTOM_REAL) :: qp_final,qs_final
   real(kind=CUSTOM_REAL) :: L_val
+
+  ! anisotropy
+  real(kind=CUSTOM_REAL) :: c1,c2,c3,c4,c5,c6,c7,c8
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: c_final
 
   ! initializes flag
   has_tomo_value = .false.
@@ -772,30 +941,6 @@ end subroutine init_tomography_files
      gamma_interp_z4 = 0.d0
   endif
 
-  ! Vp
-  vp1 = vp_tomography(imat,p0+1)
-  vp2 = vp_tomography(imat,p1+1)
-  vp3 = vp_tomography(imat,p2+1)
-  vp4 = vp_tomography(imat,p3+1)
-  vp5 = vp_tomography(imat,p4+1)
-  vp6 = vp_tomography(imat,p5+1)
-  vp7 = vp_tomography(imat,p6+1)
-  vp8 = vp_tomography(imat,p7+1)
-  ! use trilinear interpolation in cell to define Vp
-  vp_final = interpolate_trilinear(vp1,vp2,vp3,vp4,vp5,vp6,vp7,vp8)
-
-  ! Vs
-  vs1 = vs_tomography(imat,p0+1)
-  vs2 = vs_tomography(imat,p1+1)
-  vs3 = vs_tomography(imat,p2+1)
-  vs4 = vs_tomography(imat,p3+1)
-  vs5 = vs_tomography(imat,p4+1)
-  vs6 = vs_tomography(imat,p5+1)
-  vs7 = vs_tomography(imat,p6+1)
-  vs8 = vs_tomography(imat,p7+1)
-  ! use trilinear interpolation in cell to define Vs
-  vs_final = interpolate_trilinear(vs1,vs2,vs3,vs4,vs5,vs6,vs7,vs8)
-
   ! density
   rho1 = rho_tomography(imat,p0+1)
   rho2 = rho_tomography(imat,p1+1)
@@ -808,20 +953,99 @@ end subroutine init_tomography_files
   ! use trilinear interpolation in cell to define rho
   rho_final = interpolate_trilinear(rho1,rho2,rho3,rho4,rho5,rho6,rho7,rho8)
 
-  ! impose minimum and maximum velocity and density if needed
-  if (vp_final < VP_MIN(imat)) vp_final = VP_MIN(imat)
-  if (vp_final > VP_MAX(imat)) vp_final = VP_MAX(imat)
-
-  if (vs_final < VS_MIN(imat)) vs_final = VS_MIN(imat)
-  if (vs_final > VS_MAX(imat)) vs_final = VS_MAX(imat)
-
+  ! impose minimum and maximum density if needed
   if (rho_final > RHO_MAX(imat)) rho_final = RHO_MAX(imat)
   if (rho_final < RHO_MIN(imat)) rho_final = RHO_MIN(imat)
 
   ! model parameters for the associated negative imaterial_id index in materials file
   rho_model = rho_final
-  vp_model = vp_final
-  vs_model = vs_final
+
+  if (ANISOTROPY .and. IMODEL == IMODEL_TOMO) then
+
+    ! anisotropy
+    allocate(c_final(21),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 905X')
+    if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate interpolated anisotropy parameters array')
+
+    do i = 1,21
+      c1 = c_tomography(imat,p0+1,i)
+      c2 = c_tomography(imat,p1+1,i)
+      c3 = c_tomography(imat,p2+1,i)
+      c4 = c_tomography(imat,p3+1,i)
+      c5 = c_tomography(imat,p4+1,i)
+      c6 = c_tomography(imat,p5+1,i)
+      c7 = c_tomography(imat,p6+1,i)
+      c8 = c_tomography(imat,p7+1,i)
+      ! use trilinear interpolation in cell to define Vp
+      c_final(i) = interpolate_trilinear(c1,c2,c3,c4,c5,c6,c7,c8)
+    enddo
+
+    c11 = c_final(1)
+    c12 = c_final(2)
+    c13 = c_final(3)
+    c14 = c_final(4)
+    c15 = c_final(5)
+    c16 = c_final(6)
+    c22 = c_final(7)
+    c23 = c_final(8)
+    c24 = c_final(9)
+    c25 = c_final(10)
+    c26 = c_final(11)
+    c33 = c_final(12)
+    c34 = c_final(13)
+    c35 = c_final(14)
+    c36 = c_final(15)
+    c44 = c_final(16)
+    c45 = c_final(17)
+    c46 = c_final(18)
+    c55 = c_final(19)
+    c56 = c_final(20)
+    c66 = c_final(21)
+
+    vp_model = sqrt(c11)/sqrt(rho_model) ! a better estimate of equivalent vp is needed for anisotropic models
+    vs_model = sqrt(c66)/sqrt(rho_model) ! a better estimate of equivalent vs is needed for anisotropic models
+
+    deallocate(c_final)
+
+  else
+
+    ! Vp
+    vp1 = vp_tomography(imat,p0+1)
+    vp2 = vp_tomography(imat,p1+1)
+    vp3 = vp_tomography(imat,p2+1)
+    vp4 = vp_tomography(imat,p3+1)
+    vp5 = vp_tomography(imat,p4+1)
+    vp6 = vp_tomography(imat,p5+1)
+    vp7 = vp_tomography(imat,p6+1)
+    vp8 = vp_tomography(imat,p7+1)
+    ! use trilinear interpolation in cell to define Vp
+    vp_final = interpolate_trilinear(vp1,vp2,vp3,vp4,vp5,vp6,vp7,vp8)
+
+    ! Vs
+    vs1 = vs_tomography(imat,p0+1)
+    vs2 = vs_tomography(imat,p1+1)
+    vs3 = vs_tomography(imat,p2+1)
+    vs4 = vs_tomography(imat,p3+1)
+    vs5 = vs_tomography(imat,p4+1)
+    vs6 = vs_tomography(imat,p5+1)
+    vs7 = vs_tomography(imat,p6+1)
+    vs8 = vs_tomography(imat,p7+1)
+    ! use trilinear interpolation in cell to define Vs
+    vs_final = interpolate_trilinear(vs1,vs2,vs3,vs4,vs5,vs6,vs7,vs8)
+
+    ! impose minimum and maximum velocity if needed
+
+    if (vp_final < VP_MIN(imat)) vp_final = VP_MIN(imat)
+    if (vp_final > VP_MAX(imat)) vp_final = VP_MAX(imat)
+
+    if (vs_final < VS_MIN(imat)) vs_final = VS_MIN(imat)
+    if (vs_final > VS_MAX(imat)) vs_final = VS_MAX(imat)
+
+    ! model parameters for the associated negative imaterial_id index in materials file
+    vp_model = vp_final
+    vs_model = vs_final
+
+  endif
 
   ! attenuation
   if (tomo_has_q_values(imat)) then
@@ -931,8 +1155,14 @@ end subroutine init_tomography_files
     deallocate(SPACING_X,SPACING_Y,SPACING_Z)
 
     ! deallocates models parameter records
-    deallocate(vp_tomography)
-    deallocate(vs_tomography)
+    if (ANISOTROPY .and. IMODEL == IMODEL_TOMO) then
+      !anisotropy
+      deallocate(c_tomography)
+    else
+      deallocate(vp_tomography)
+      deallocate(vs_tomography)
+    endif
+
     deallocate(rho_tomography)
     deallocate(z_tomography)
 

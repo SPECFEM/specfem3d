@@ -3,57 +3,107 @@
 # runs compilation tests on Linux Ubuntu and Mac platforms
 name: CI
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
-  linuxCheck:
-    name: Test on ${{ matrix.os }}    
-    runs-on: ${{ matrix.os }}
-    
-    strategy:
-      matrix:
-        os: [ubuntu-latest,ubuntu-16.04]
+  changesCheck:
+    name: Check file changes
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
-    - name: Install packages
+    - name: Check for changes
+      id: diff
       run: |
-        sudo apt update
-        sudo apt install -yq --no-install-recommends gfortran g++ openmpi-bin libopenmpi-dev
-        echo "compiler versions:" ${FC} ${MPIFC} ${CC}
-        gcc --version
-        gfortran --version
-        mpif90 --version
-        export TERM=xterm
-        echo "exports:"
-        export
-        echo ""
+        if [ $GITHUB_BASE_REF ]; then
+          # Pull Request
+          echo "Pull request:"
+          git fetch origin $GITHUB_BASE_REF --depth=1
+          export DIFF=$( git diff --name-only origin/$GITHUB_BASE_REF $GITHUB_SHA )
+          echo "  diff between origin/$GITHUB_BASE_REF and $GITHUB_SHA"
+        else
+          # Push
+          echo "Push request:"
+          git fetch origin ${{ github.event.before }} --depth=1
+          export DIFF=$( git diff --name-only ${{ github.event.before }} $GITHUB_SHA )
+          echo "  diff between ${{ github.event.before }} and $GITHUB_SHA"
+        fi
+        echo "$DIFF"
+        # Escape newlines (replace \n with %0A)
+        echo "::set-output name=diff::$( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' )"
 
-    - name: configure
-      run: ./configure
-      
-    - name: make
-      run: make -j2 all
-      
-    - name: make tests
-      run: make tests
+    - name: Output changes
+      run: echo "${{ steps.diff.outputs.diff }}"
+
+    - name: Check files
+      run: |
+        RUN_CHECKS=0
+        DIFF="${{ steps.diff.outputs.diff }}"
+        # Loop by lines
+        while read path; do
+          # Set $directory to substring before /
+          directory="$( echo $path | cut -d'/' -f1 -s )"
+          echo "file: $path  - directory: $directory"
+          if [ -z "$directory" ]; then
+            # root directory
+            RUN_CHECKS=1
+          elif [ "$directory" == src ]; then
+            # src/ directory
+            RUN_CHECKS=1
+          elif [ "$directory" == setup ]; then
+            # setup/ directory
+            RUN_CHECKS=1
+          elif [ "$directory" == EXAMPLES ]; then
+            # EXAMPLES/ directory
+            RUN_CHECKS=1
+          elif [ "$directory" == tests ]; then
+            # tests/ directory
+            RUN_CHECKS=1
+          elif [ "$directory" == .github ]; then
+            # .github/ directory
+            RUN_CHECKS=1
+          fi
+        done <<< "$DIFF"
+        echo
+        echo "run checks: ${RUN_CHECKS}"
+        if [[ ${RUN_CHECKS} -eq 0 ]]; then echo "nothing to check, exiting..."; exit 1; fi
 
   macosCheck:
     name: Test on Mac
     runs-on: macos-latest
+    needs: changesCheck
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
     - name: Install dependencies
       run: |
-        brew install gcc openmpi
-        echo "compiler versions:" ${FC} ${MPIFC} ${CC}
+        brew cleanup
+        brew reinstall gcc  # need gfortran (symlink to gfortran-10)
+        brew install hwloc openmpi
+        echo ""
+        echo "compiler versions:"
+        echo "gcc --version"
         gcc --version
+        echo "gfortran --version"
         gfortran --version
+        echo "mpif90  --version"
         mpif90 --version
-        export TERM=xterm
+        echo ""
+        ## avoids sed -i '' issue on MacOS, using gnu sed to have the same sed command lines as in linux
+        brew install gnu-sed
+        echo "PATH=/usr/local/opt/gnu-sed/libexec/gnubin:$PATH" >> $GITHUB_ENV
+        ## OpenMP
+        echo "OMP_NUM_THREADS=2" >> $GITHUB_ENV
+        ## avoids MPI issue with number of slots
+        echo "OMPI_MCA_rmaps_base_oversubscribe=1" >> $GITHUB_ENV
+        echo "OMPI_MCA_rmaps_base_inherit=1" >> $GITHUB_ENV
+        ## avoids MPI issue when running in MacOS
+        echo "OMPI_MCA_btl=self,tcp" >> $GITHUB_ENV
+        # exports for xterm output (for make tests)
+        echo "TERM=xterm" >> $GITHUB_ENV
+        echo ""
         echo "exports:"
         export
         echo ""
@@ -64,9 +114,561 @@ jobs:
         echo "modifying external_libs/scotch/src/Makefile.inc"
         cp -v external_libs/scotch/src/Make.inc/Makefile.inc.i686_mac_darwin8 external_libs/scotch/src/Makefile.inc
 
-    - name: make
-      run: make -j2 all
+    # skipping - compilation check done as well in make tests
+    #- name: make
+    #  run: make -j2 all
 
     - name: make tests
       run: make tests
+
+  linuxCheck:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: changesCheck
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest,ubuntu-18.04]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: configure
+      run: ./configure
+
+    - name: make
+      run: make -j2 all
+
+
+  linuxCheck-Intel:
+    name: Test Intel on ubuntu-20.04
+    runs-on: ubuntu-20.04
+    needs: changesCheck
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Cache Intel oneapi packages
+      id: cache-intel-oneapi
+      uses: actions/cache@v2
+      with:
+        path: /opt/intel/oneapi
+        key: install-${{ runner.os }}-all
+
+    - name: Install packages
+      if: steps.cache-intel-oneapi.outputs.cache-hit != 'true'
+      run: |
+        wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        echo ""
+        sudo echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        sudo apt-get update
+        echo ""
+        echo "packages intel oneapi:"
+        sudo apt-get install -y intel-oneapi-compiler-fortran intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-mpi intel-oneapi-mpi-devel
+
+    - name: compiler infos
+      run: |
+        echo ""
+        source /opt/intel/oneapi/setvars.sh
+        echo ""
+        echo "compiler versions:"
+        echo "icc --version"
+        icc --version
+        echo "ifort --version"
+        ifort --version
+        echo "mpiifort --version"
+        mpiifort --version
+        echo "mpif90 --version"
+        mpif90 --version
+        echo ""
+        export TERM=xterm
+        echo "exports:"
+        export
+        echo ""
+        which ifort
+        which icc
+        which mpiifort
+        echo ""
+        printenv >> $GITHUB_ENV
+        echo "CXX=icpc" >> $GITHUB_ENV
+        echo "CC=icc" >> $GITHUB_ENV
+        echo "FC=ifort" >> $GITHUB_ENV
+        echo ""
+
+    - name: configure serial debug
+      run: ./configure --enable-debug --without-mpi FC=ifort CC=icc
+
+    - name: make serial debug
+      run: |
+        make -j2 all
+        make -j2 all --always-make
+        make clean
+
+    - name: configure serial
+      run: ./configure --without-mpi FC=ifort CC=icc
+
+    - name: make serial
+      run: |
+        make -j2 all
+        make clean
+
+    - name: configure parallel debug
+      run: ./configure --enable-debug --with-mpi FC=ifort CC=icc MPIFC=mpiifort MPI_INC="${I_MPI_ROOT}/include"
+
+    - name: make parallel debug
+      run: |
+        make -j2 all
+        make -j2 all --always-make
+        make clean
+
+    - name: configure parallel
+      run: ./configure --with-mpi FC=ifort CC=icc MPIFC=mpiifort MPI_INC="${I_MPI_ROOT}/include"
+
+    - name: make parallel
+      run: |
+        make -j2 all
+        make clean
+
+    # check: fails due to intel MPI issue with mpif90 using gfortran as default on virtual nodes
+    #- name: make tests
+    #  run: make tests
+
+  linuxTest_0:
+    name: Test run example 0 - make tests
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: configure
+      run: ./configure
+
+    - name: make tests
+      run: make tests
+
+
+  linuxTest_1:
+    name: Test run example 1 - meshfem3D simple model
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi  # --enable-vectorization
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/meshfem3D_examples/simple_model/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_2:
+    name: Test run example 2 - fault tpv5
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/fault_examples/tpv5/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_3:
+    name: Test run example 3 - layered halfspace
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+        TESTNGLL: 6
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/layered_halfspace/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_4:
+    name: Test run example 4 - small adjoint
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/small_adjoint_multiple_sources/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_5:
+    name: Test run example 5 - socal1D
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/meshfem3D_examples/socal1D/
+        TESTID: 0
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_6:
+    name: Test run example 6 - socal1D 1d_socal
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/meshfem3D_examples/socal1D/
+        TESTID: 1
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_7:
+    name: Test run example 7 - socal1D 1d_prem
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/meshfem3D_examples/socal1D/
+        TESTID: 2
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+
+  linuxTest_8:
+    name: Test run example 8 - socal1D 1d_cascadia
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/meshfem3D_examples/socal1D/
+        TESTID: 3
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_9:
+    name: Test run example 9 - coupling FK
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/small_example_coupling_FK_specfem/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_10:
+    name: Test run example 10 - homogeneous halfspace
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_11:
+    name: Test run example 11 - poroelastic
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/homogeneous_poroelastic/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_12:
+    name: Test run example 12 - PML elastic
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_13:
+    name: Test run example 13 - PML acoustic
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_14:
+    name: Test run example 14 - waterlayered halfspace
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/waterlayered_halfspace/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_15:
+    name: Test run example 15 - tomographic model
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/tomographic_model/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_16:
+    name: Test run example 16 - cavity
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/meshfem3D_examples/cavity/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+  linuxTest_17:
+    name: Test run example 17 - sep bathymetry
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/meshfem3D_examples/sep_bathymetry/
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
 

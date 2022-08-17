@@ -129,7 +129,7 @@ program sum_kernels
 
   ! opens external mesh file
   write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_'//'external_mesh.bin'
-  open(unit=27,file=trim(prname_lp), &
+  open(unit=IIN,file=trim(prname_lp), &
           status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'Error: could not open database '
@@ -138,10 +138,10 @@ program sum_kernels
   endif
 
   ! gets number of elements and global points for this partition
-  read(27) NSPEC
-  read(27) NGLOB
+  read(IIN) NSPEC
+  read(IIN) NGLOB
 
-  close(27)
+  close(IIN)
 
   ! user output
   if (myrank == 0) then
@@ -230,14 +230,14 @@ subroutine sum_kernel(kernel_name,kernel_list,nker)
 
   ! initializes arrays
   allocate(kernel(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1086')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1086')
   allocate(total_kernel(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1087')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1087')
   if (ier /= 0) stop 'Error allocating kernel arrays'
 
   if (USE_SOURCE_MASK) then
     allocate( mask_source(NGLLX,NGLLY,NGLLZ,NSPEC) ,stat=ier)
-    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1088')
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1088')
     mask_source(:,:,:,:) = 1.0_CUSTOM_REAL
   endif
 
@@ -312,24 +312,4 @@ subroutine sum_kernel(kernel_name,kernel_list,nker)
   if (USE_SOURCE_MASK) deallocate(mask_source)
 
 end subroutine sum_kernel
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-! version without rank number printed in the error message
-
-  subroutine my_local_exit_MPI_without_rank(error_msg)
-
-  implicit none
-
-  character(len=*) error_msg
-
-! write error message to screen
-  write(*,*) error_msg(1:len(error_msg))
-  write(*,*) 'Error detected, aborting MPI...'
-
-  stop 'Fatal error'
-
-  end subroutine my_local_exit_MPI_without_rank
 

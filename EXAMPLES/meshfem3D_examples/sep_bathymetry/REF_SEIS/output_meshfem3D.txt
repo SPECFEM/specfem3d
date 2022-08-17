@@ -3,10 +3,40 @@
  *** Specfem3D MPI meshfem3D - f90 version ***
  ******************************************
 
+ Reading parameters from ./DATA/Par_file
+
  Reading mesh parameters from file ./DATA/meshfem3D_files/Mesh_Par_file
+   input parameters...
+   doubling layers...
+   visualization...
+   CPML...
+   domain materials...
+     material            1  acoustic
+     material            2  elastic
+   domain regions...
+     region            1  with material            1
+       nex_xi  begin/end =            1          48
+       nex_eta begin/end =            1           4
+       nz      begin/end =            1           2
+     region            2  with material            2
+       nex_xi  begin/end =            1          48
+       nex_eta begin/end =            1           4
+       nz      begin/end =            3          50
+
+   reading Mesh_Par_file done successfully
+
+   checking mesh setup...
+   all okay
+
 
  Reading interface data from file ./DATA/meshfem3D_files/interfaces.dat
- maximum interface points x/y =          501          21
+   maximum interface points x/y =          501          21
+   interfaces done
+
+ parameter setup:
+   total number of elements =         3200
+   total number of points   =        29997
+
 
  Creating global slice addressing
 
@@ -75,8 +105,8 @@
    origin x/y     (m) =    0.00000000       1600.00000
    spacing x/y    (m) =    20.0000000       40.0000000
 
-   dimension x-direction (m) =    0.00000000     /   10020.0000
-   dimension y-direction (m) =    1600.00000     /   2440.00000
+   dimension x-direction (m) =    0.00000000     /   10000.0000
+   dimension y-direction (m) =    1600.00000     /   2400.00000
 
    total number of file points =        10521  should be        10521
    this point total is okay
@@ -94,8 +124,8 @@
    origin x/y     (m) =    0.00000000       1600.00000
    spacing x/y    (m) =    10000.0000       800.000000
 
-   dimension x-direction (m) =    0.00000000     /   20000.0000
-   dimension y-direction (m) =    1600.00000     /   3200.00000
+   dimension x-direction (m) =    0.00000000     /   10000.0000
+   dimension y-direction (m) =    1600.00000     /   2400.00000
 
    total number of file points =            4  should be            4
    this point total is okay
@@ -111,14 +141,22 @@
  Creating mesh in the model
  **************************
 
+ creating mesh:
+   NGLLX_M/NGLLY_M/NGLLZ_M =            3           3           3
+   NGNOD/NGNOD2D           =            8           4
+   NSPEC_AB                =         3200
+   NGLOB_AB                =        29997
+
  allocating mesh arrays
 
  number of subregions =            2
    defining subregion            1
+     has material            1
    defining subregion            2
+     has material            2
 
  number of mesh regions =            1
-   creating mesh region            1
+   creating mesh region            1  (regular mesh)
 
  mesh dimensions:
    Xmin and Xmax of the model =    0.00000000       10000.0000
@@ -128,10 +166,17 @@
  exact area =    8000000.00     (m^2)
             =    8.00000000     (km^2)
 
+   Max element size =    250.000000     (m)
+   Min element size =    93.7500000     (m)
+   Max/min ratio =    2.66666675
+
+
  creating indirect addressing for unstructured mesh
 
 
  File "./DATA/meshfem3D_files/no_cavity.dat" not found: assume no cavity
+
+ no PML region
 
 
  saving mesh files
@@ -167,7 +212,7 @@
 
  max edge aspect ratio =    2.2222222222222503
 
- max diagonal aspect ratio =    1.0000000000000038
+ max diagonal aspect ratio =    1.0000000000000036
 
  ***
  *** Maximum suggested time step for simulation =    0.00169220
@@ -203,22 +248,28 @@
   0.899999976      -   0.949999988               0     0.00000000      %
   0.949999988      -    1.00000000               0     0.00000000      %
 
+
+ mesh files:
+   saving files: proc***_Database
+   done mesh files
+
+
  Repartition of elements:
  -----------------------
 
  total number of elements in mesh slice 0:         3200
- total number of points in mesh slice 0:         4335
+ total number of points in mesh slice 0:        29997
 
  total number of elements in entire mesh:         9600
- approximate total number of points in entire mesh (with duplicates on MPI edges):    13005.000000000000
- approximate total number of DOFs in entire mesh (with duplicates on MPI edges):    39015.000000000000
+ approximate total number of points in entire mesh (with duplicates on MPI edges):                 89991
+ approximate total number of DOFs in entire mesh (with duplicates on MPI edges):                269973
 
  using single precision for the calculations
 
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    5.5219888687133789E-002
+ Elapsed time for mesh generation and buffer creation in seconds =    9.4598000000000002E-002
  End of mesh generation
 
  done

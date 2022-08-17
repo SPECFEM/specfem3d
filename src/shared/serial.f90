@@ -30,7 +30,7 @@
 !----
 
   subroutine abort_mpi()
-  stop 'error, program ended in exit_MPI'
+  stop 'error, program ended by abort'
   end subroutine abort_mpi
 
 !
@@ -57,6 +57,25 @@
   subroutine synchronize_all()
   end subroutine synchronize_all
 
+
+!
+!----
+!
+
+  subroutine synchronize_all_comm(comm)
+
+  implicit none
+
+  integer,intent(in) :: comm
+
+  ! local parameters
+  integer :: idummy
+
+  ! synchronizes MPI processes
+  idummy = comm
+
+  end subroutine synchronize_all_comm
+
 !
 !----
 !
@@ -65,7 +84,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   integer, dimension(countval) :: buffer
   integer(kind=4) :: unused_i4
 
@@ -83,7 +102,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   real(kind=CUSTOM_REAL), dimension(countval) :: buffer
   real(kind=CUSTOM_REAL) :: unused_cr
 
@@ -116,7 +135,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   double precision, dimension(countval) :: buffer
   double precision :: unused_dp
 
@@ -147,7 +166,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   real, dimension(countval) :: buffer
   real :: unused_r
 
@@ -180,7 +199,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
@@ -201,7 +220,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
@@ -225,7 +244,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
@@ -247,7 +266,7 @@
 
   implicit none
 
-  integer countval
+  integer :: countval
   ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
   ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
   ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
@@ -264,25 +283,26 @@
 !
 !----
 !
-
-  subroutine bcast_all_r_for_database(buffer, countval)
-
-  implicit none
-
-  integer countval
-  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
-  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
-  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
-  real :: buffer
-  integer(kind=4) :: unused_i4
-  real :: unused_r
-
-  unused_i4 = countval
-
-  unused_r = buffer
-
-  end subroutine bcast_all_r_for_database
-
+! unused so far...
+!
+!  subroutine bcast_all_r_for_database(buffer, countval)
+!
+!  implicit none
+!
+!  integer countval
+!  ! by not specifying any dimensions for the buffer here we can use this routine for arrays of any number
+!  ! of indices, provided we call the routine using the first memory cell of that multidimensional array,
+!  ! i.e. for instance buffer(1,1,1) if the array has three dimensions with indices that all start at 1.
+!  real :: buffer
+!  integer(kind=4) :: unused_i4
+!  real :: unused_r
+!
+!  unused_i4 = countval
+!
+!  unused_r = buffer
+!
+!  end subroutine bcast_all_r_for_database
+!
 !
 !-------------------------------------------------------------------------------------------------
 !
@@ -335,7 +355,7 @@
 
   implicit none
 
-  integer sendcnt, recvcount, NPROC
+  integer :: sendcnt, recvcount, NPROC
   integer, dimension(sendcnt) :: sendbuf
   integer, dimension(recvcount,0:NPROC-1) :: recvbuf
 
@@ -351,7 +371,7 @@
 
   implicit none
 
-  integer NPROC
+  integer :: NPROC
   integer :: sendbuf
   integer, dimension(0:NPROC-1) :: recvbuf
 
@@ -365,15 +385,13 @@
 
   subroutine gather_all_all_i(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
+  implicit none
 
+  integer :: sendcnt, recvcount, NPROC
+  integer, dimension(sendcnt) :: sendbuf
+  integer, dimension(recvcount,0:NPROC-1) :: recvbuf
 
-    implicit none
-
-    integer :: sendcnt, recvcount, NPROC
-    integer, dimension(sendcnt) :: sendbuf
-    integer, dimension(recvcount,0:NPROC-1) :: recvbuf
-
-    recvbuf(:,0) = sendbuf(:)
+  recvbuf(:,0) = sendbuf(:)
 
   end subroutine gather_all_all_i
 
@@ -385,7 +403,7 @@
 
   implicit none
 
-  integer sendcnt, recvcount, NPROC
+  integer :: sendcnt, recvcount, NPROC
   double precision, dimension(sendcnt) :: sendbuf
   double precision, dimension(recvcount,0:NPROC-1) :: recvbuf
 
@@ -403,7 +421,7 @@
 
   implicit none
 
-  integer sendcnt, recvcount, NPROC
+  integer :: sendcnt, recvcount, NPROC
   real(kind=CUSTOM_REAL), dimension(sendcnt) :: sendbuf
   real(kind=CUSTOM_REAL), dimension(recvcount,0:NPROC-1) :: recvbuf
 
@@ -421,7 +439,7 @@
 
   implicit none
 
-  integer  NPROC,counts
+  integer :: NPROC,counts
   real(kind=CUSTOM_REAL), dimension(counts) :: sendbuf
   real(kind=CUSTOM_REAL), dimension(counts,0:NPROC-1) :: recvbuf
 
@@ -455,13 +473,13 @@
 !----
 !
 
- subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
+  subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
 
   use constants, only: CUSTOM_REAL
 
   implicit none
 
-  integer sendcnt,recvcounttot,NPROC
+  integer :: sendcnt,recvcounttot,NPROC
   integer, dimension(NPROC) :: recvcount,recvoffset
   real(kind=CUSTOM_REAL), dimension(sendcnt) :: sendbuf
   real(kind=CUSTOM_REAL), dimension(recvcounttot) :: recvbuf
@@ -474,6 +492,71 @@
   unused_i4 = recvoffset(1)
 
   end subroutine gatherv_all_cr
+
+!
+!----
+!
+
+  subroutine all_gather_all_i(sendbuf, recvbuf, NPROC)
+
+  implicit none
+
+  integer :: NPROC
+  integer :: sendbuf
+  integer, dimension(NPROC) :: recvbuf
+
+  recvbuf(1) = sendbuf
+
+  end subroutine all_gather_all_i
+
+!
+!----
+!
+
+  subroutine all_gather_all_r(sendbuf, sendcnt, recvbuf, recvcnt, recvoffset, dim1, NPROC)
+
+  implicit none
+
+  integer :: sendcnt, dim1, NPROC
+
+  real, dimension(sendcnt) :: sendbuf
+  real, dimension(dim1, NPROC) :: recvbuf
+
+  integer, dimension(NPROC) :: recvoffset, recvcnt
+
+  integer(kind=4) :: unused_i4
+
+  recvbuf(1:sendcnt,1) = sendbuf(:)
+
+  unused_i4 = recvcnt(1)
+  unused_i4 = recvoffset(1)
+
+  end subroutine all_gather_all_r
+
+!
+!----
+!
+
+  subroutine all_gather_all_ch(sendbuf, sendcnt, recvbuf, recvcnt, recvoffset, dim1, dim2, NPROC)
+
+  implicit none
+
+  integer :: sendcnt, dim1, dim2, NPROC
+
+  character(len=dim2), dimension(sendcnt) :: sendbuf
+  character(len=dim2), dimension(dim1, NPROC) :: recvbuf
+
+  integer, dimension(NPROC) :: recvoffset, recvcnt
+
+  integer(kind=4) :: unused_i4
+
+  recvbuf(1:sendcnt,1) = sendbuf(:)
+
+  unused_i4 = recvcnt(1)
+  unused_i4 = recvoffset(1)
+
+  end subroutine all_gather_all_ch
+
 
 !
 !----
@@ -512,7 +595,7 @@
 
   implicit none
 
-  integer size
+  integer :: size
 
   size = 1
 
@@ -522,15 +605,54 @@
 !----
 !
 
+  subroutine world_size_comm(sizeval,comm)
+
+  implicit none
+
+  integer,intent(out) :: sizeval
+  integer,intent(in) :: comm
+
+  ! local parameters
+  integer :: idummy
+
+  sizeval = 1
+  idummy = comm
+
+  end subroutine world_size_comm
+
+!
+!----
+!
+
   subroutine world_rank(rank)
 
   implicit none
 
-  integer rank
+  integer :: rank
 
   rank = 0
 
   end subroutine world_rank
+
+
+!
+!----
+!
+
+  subroutine world_rank_comm(rank,comm)
+
+  implicit none
+
+  integer,intent(out) :: rank
+  integer,intent(in) :: comm
+
+  ! local parameters
+  integer :: idummy
+
+  rank = 0
+  idummy = comm
+
+  end subroutine world_rank_comm
 
 !
 !----
@@ -540,7 +662,7 @@
 
   implicit none
 
-  double precision sendbuf, recvbuf
+  double precision :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -554,7 +676,7 @@
 
   implicit none
 
-  double precision sendbuf, recvbuf
+  double precision :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -570,7 +692,7 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  real(kind=CUSTOM_REAL) :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -587,7 +709,7 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  real(kind=CUSTOM_REAL) :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -603,11 +725,26 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  real(kind=CUSTOM_REAL) :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
   end subroutine min_all_all_cr
+
+
+!
+!----
+!
+
+  subroutine min_all_all_dp(sendbuf, recvbuf)
+
+  implicit none
+
+  double precision :: sendbuf, recvbuf
+
+  recvbuf = sendbuf
+
+  end subroutine min_all_all_dp
 
 !
 !----
@@ -643,13 +780,28 @@
 !----
 !
 
+  subroutine max_allreduce_singlei(val,recvval)
+
+  implicit none
+
+  integer,intent(in) :: val
+  integer,intent(out) :: recvval
+
+  recvval = val
+
+  end subroutine max_allreduce_singlei
+
+!
+!----
+!
+
   subroutine max_all_all_cr(sendbuf, recvbuf)
 
   use constants, only: CUSTOM_REAL
 
   implicit none
 
-  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  real(kind=CUSTOM_REAL) :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -677,7 +829,7 @@
   subroutine min_all_i(sendbuf, recvbuf)
 
   implicit none
-  integer:: sendbuf, recvbuf
+  integer :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -706,7 +858,7 @@
 
   implicit none
 
-  double precision sendbuf, recvbuf
+  double precision :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -722,7 +874,7 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  real(kind=CUSTOM_REAL) :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -768,7 +920,7 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  real(kind=CUSTOM_REAL) :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -782,7 +934,7 @@
 
   implicit none
 
-  integer sendbuf, recvbuf
+  integer :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -796,7 +948,7 @@
 
   implicit none
 
-  integer sendbuf, recvbuf
+  integer :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -810,7 +962,7 @@
 
   implicit none
 
-  logical sendbuf, recvbuf
+  logical :: sendbuf, recvbuf
 
   recvbuf = sendbuf
 
@@ -826,7 +978,7 @@
 
   implicit none
 
-  integer sendcount, dest, sendtag, req
+  integer :: sendcount, dest, sendtag, req
   real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
 
   integer(kind=4) :: unused_i4
@@ -850,7 +1002,7 @@
 
   implicit none
 
-  integer recvcount, dest, recvtag, req
+  integer :: recvcount, dest, recvtag, req
   real(kind=CUSTOM_REAL), dimension(recvcount) :: recvbuf
 
   integer(kind=4) :: unused_i4
@@ -872,7 +1024,7 @@
 
   implicit none
 
-  integer sendcount, dest, sendtag, req
+  integer :: sendcount, dest, sendtag, req
   integer, dimension(sendcount) :: sendbuf
 
   integer(kind=4) :: unused_i4
@@ -893,7 +1045,7 @@
 
   implicit none
 
-  integer recvcount, dest, recvtag, req
+  integer :: recvcount, dest, recvtag, req
   integer, dimension(recvcount) :: recvbuf
 
   integer(kind=4) :: unused_i4
@@ -915,8 +1067,8 @@
 
   implicit none
 
-  integer dest,recvtag
-  integer recvcount
+  integer :: dest,recvtag
+  integer :: recvcount
   integer,dimension(recvcount):: recvbuf
 
   integer(kind=4) :: unused_i4
@@ -938,7 +1090,7 @@
 
   implicit none
 
-  integer recvcount,dest,recvtag
+  integer :: recvcount,dest,recvtag
   real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
 
   integer(kind=4) :: unused_i4
@@ -951,6 +1103,28 @@
 
   end subroutine recvv_cr
 
+!
+!----
+!
+
+  subroutine recv_r(recvbuf, recvcount, dest, recvtag )
+
+  implicit none
+
+  integer :: dest,recvtag
+  integer :: recvcount
+  real,dimension(recvcount) :: recvbuf
+
+  integer(kind=4) :: unused_i4
+  real :: unused_r
+
+  stop 'recv_r not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = recvtag
+  unused_r = recvbuf(1)
+
+  end subroutine recv_r
+
 
 !
 !----
@@ -960,8 +1134,8 @@
 
   implicit none
 
-  integer dest,sendtag
-  integer sendcount
+  integer :: dest,sendtag
+  integer :: sendcount
   integer, dimension(sendcount) :: sendbuf
 
   integer(kind=4) :: unused_i4
@@ -1013,6 +1187,27 @@
 
   end subroutine recv_i_t
 
+!
+!----
+!
+
+  subroutine send_r(sendbuf, sendcount, dest, sendtag)
+
+  implicit none
+
+  integer :: dest,sendtag
+  integer :: sendcount
+  real,dimension(sendcount):: sendbuf
+
+  integer(kind=4) :: unused_i4
+  real :: unused_r
+
+  stop 'send_i_t not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = sendtag
+  unused_r = sendbuf(1)
+
+  end subroutine send_r
 
 !
 !----
@@ -1053,8 +1248,8 @@
 
   implicit none
 
-  integer dest,sendtag
-  integer sendcount
+  integer :: dest,sendtag
+  integer :: sendcount
   double precision,dimension(sendcount):: sendbuf
 
   integer(kind=4) :: unused_i4
@@ -1073,9 +1268,9 @@
 
   implicit none
 
-  integer dest,recvtag
-  integer recvcount
-  double precision,dimension(recvcount):: recvbuf
+  integer :: dest,recvtag
+  integer :: recvcount
+  double precision,dimension(recvcount) :: recvbuf
 
   integer(kind=4) :: unused_i4
   double precision :: unused_dp
@@ -1097,7 +1292,7 @@
 
   implicit none
 
-  integer sendcount,dest,sendtag
+  integer :: sendcount,dest,sendtag
   real(kind=CUSTOM_REAL),dimension(sendcount) :: sendbuf
 
   integer(kind=4) :: unused_i4
@@ -1129,6 +1324,21 @@
 !----
 !
 
+  logical function is_valid_comm(comm)
+
+  implicit none
+
+  integer, intent(in) :: comm
+
+  ! tests if communicator is valid
+  is_valid_comm = .false.
+
+  end function is_valid_comm
+
+!
+!----
+!
+
   subroutine world_get_comm(comm)
 
   implicit none
@@ -1138,6 +1348,35 @@
   comm = 0
 
   end subroutine world_get_comm
+
+!
+!----
+!
+
+  subroutine world_get_comm_self(comm)
+
+  implicit none
+
+  integer,intent(out) :: comm
+
+  comm = 0
+
+  end subroutine world_get_comm_self
+
+
+!
+!----
+!
+
+  subroutine world_comm_free(comm)
+
+  implicit none
+
+  integer,intent(inout) :: comm
+
+  comm = 0
+
+  end subroutine world_comm_free
 
 !
 !----
@@ -1181,14 +1420,12 @@
 
   subroutine bcast_all_l_array(buffer, countval)
 
+  implicit none
+  integer  :: countval
+  logical, dimension(countval) :: buffer
+  logical :: unused_l
 
-    implicit none
-    integer    :: countval
-    logical, dimension(countval) :: buffer
-    logical :: unused_l
-
-    unused_l = buffer(1)
-
+  unused_l = buffer(1)
 
   end subroutine bcast_all_l_array
 

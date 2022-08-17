@@ -51,8 +51,8 @@
   endif
 
   ! reads in values
-  do iy=1,NY_TOPO
-    do ix=1,NX_TOPO
+  do iy = 1,NY_TOPO
+    do ix = 1,NX_TOPO
       read(13,*) itopo_bathy(ix,iy)
     enddo
   enddo
@@ -65,7 +65,7 @@
 !
 
   subroutine get_topo_bathy_elevation(x_target,y_target,target_elevation, &
-                                itopo_bathy,NX_TOPO,NY_TOPO)
+                                      itopo_bathy,NX_TOPO,NY_TOPO)
 
 ! finds elevation from topography file
 
@@ -77,8 +77,8 @@
 
   real(kind=CUSTOM_REAL),intent(out) :: target_elevation
 
-  integer :: NX_TOPO,NY_TOPO
-  integer, dimension(NX_TOPO,NY_TOPO) :: itopo_bathy
+  integer,intent(in) :: NX_TOPO,NY_TOPO
+  integer, dimension(NX_TOPO,NY_TOPO),intent(in) :: itopo_bathy
 
   ! local parameters
   double precision :: xval,yval,long,lat
@@ -111,17 +111,17 @@
   ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO
 
   ! avoid edge effects
-  if (ratio_xi < 0.) ratio_xi = 0.
-  if (ratio_xi > 1.) ratio_xi = 1.
-  if (ratio_eta < 0.) ratio_eta = 0.
-  if (ratio_eta > 1.) ratio_eta = 1.
+  if (ratio_xi < 0.d0) ratio_xi = 0.d0
+  if (ratio_xi > 1.d0) ratio_xi = 1.d0
+  if (ratio_eta < 0.d0) ratio_eta = 0.d0
+  if (ratio_eta > 1.d0) ratio_eta = 1.d0
 
   ! interpolate elevation at current point
   target_elevation = &
-        itopo_bathy(icornerlong,icornerlat) * (1.0_CUSTOM_REAL-ratio_xi)*(1.0_CUSTOM_REAL-ratio_eta) + &
-        itopo_bathy(icornerlong+1,icornerlat) * ratio_xi*(1.0_CUSTOM_REAL-ratio_eta) + &
+        itopo_bathy(icornerlong,icornerlat) * (1.d0-ratio_xi)*(1.d0-ratio_eta) + &
+        itopo_bathy(icornerlong+1,icornerlat) * ratio_xi*(1.d0-ratio_eta) + &
         itopo_bathy(icornerlong+1,icornerlat+1) * ratio_xi*ratio_eta + &
-        itopo_bathy(icornerlong,icornerlat+1) * (1.0_CUSTOM_REAL-ratio_xi)*ratio_eta
+        itopo_bathy(icornerlong,icornerlat+1) * (1.d0-ratio_xi)*ratio_eta
 
   end subroutine get_topo_bathy_elevation
 
@@ -144,25 +144,28 @@
   real(kind=CUSTOM_REAL),intent(out) :: target_elevation
   real(kind=CUSTOM_REAL),intent(out) :: target_distmin
 
-  integer :: NSPEC_AB,NGLOB_AB
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB
 
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
   ! arrays containing coordinates of the points
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: xstore,ystore,zstore
 
   ! free surface
-  integer :: num_free_surface_faces
-  integer, dimension(num_free_surface_faces) :: free_surface_ispec
-  integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
+  integer,intent(in) :: num_free_surface_faces
+  integer, dimension(num_free_surface_faces),intent(in) :: free_surface_ispec
+  integer, dimension(3,NGLLSQUARE,num_free_surface_faces),intent(in) :: free_surface_ijk
 
   ! local parameters
   real(kind=CUSTOM_REAL),dimension(4) :: elevation_node,dist_node
+  real(kind=CUSTOM_REAL),dimension(4) :: weight
   real(kind=CUSTOM_REAL) :: distmin,dist
+  real(kind=CUSTOM_REAL) :: dist_node_min,norm
 
-  integer :: iface,i,j,ispec,iglob,igll,jgll,kgll
+  integer :: iface,i,j,k,ispec,iglob,igll,jgll,kgll,ijk
   integer :: iselected,jselected,iface_selected
   integer :: inode,iadjust,jadjust
+  integer :: ilocmin(1)
 
   real(kind=CUSTOM_REAL) :: typical_size
   logical :: located_target
@@ -179,7 +182,7 @@
       typical_size =  (xstore(ibool(1,1,1,ispec)) - xstore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2 &
                     + (ystore(ibool(1,1,1,ispec)) - ystore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2
       ! use 10 times the distance as a criterion for point detection
-      typical_size = 10. * typical_size
+      typical_size = 10.0_CUSTOM_REAL * typical_size
     endif
 
     ! flag to check that we located at least one target element
@@ -242,6 +245,20 @@
     !  weighted mean at current point of topography elevation of the four closest nodes
     !  set distance to huge initial value
     distmin = HUGEVAL
+
+    ! for example: jselected = 2, iselected = 2
+    !     -> j = 2,3 ; i = 2,3
+    !
+    !     .     .       .
+    !     |     |       |
+    !     x --- x ----- x -- ..
+    !     |     |       |
+    !     |     |       |
+    !     x --- o ----- x -- ..
+    !     |     |(2,2)  |
+    !     x --- x ----- x -- ..
+    !
+    ! evaluates distances & elevation in 4 quads around selected point (iselected,jselected)
     do j = jselected,jselected+1
       do i = iselected,iselected+1
         ! distances to target
@@ -249,10 +266,19 @@
         inode = 0
         do jadjust = 0,1
           do iadjust = 0,1
+            ! for example: j = 2, i = 2
+            !   -> ijk_00 = 1 * NGLLY + 2  = 2 + 5
+            !   -> ijk_01 = 1 * NGLLY + 1  = 1 + 5
+            !   -> ijk_10 = 0 * NGLLY + 2  = 2
+            !   -> ijk_11 = 0 * NGLLY + 1  = 1
+            ijk = (j-jadjust-1)*NGLLY + i - iadjust
+
             ispec = free_surface_ispec(iface_selected)
-            igll = free_surface_ijk(1,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-            jgll = free_surface_ijk(2,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-            kgll = free_surface_ijk(3,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+
+            igll = free_surface_ijk(1,ijk,iface_selected)
+            jgll = free_surface_ijk(2,ijk,iface_selected)
+            kgll = free_surface_ijk(3,ijk,iface_selected)
+
             iglob = ibool(igll,jgll,kgll,ispec)
 
             ! stores node infos
@@ -272,12 +298,50 @@
 
           ! interpolates elevation
           if (dist > TINYVAL) then
-            target_elevation =  (dist_node(1)/dist)*elevation_node(1) + &
-                                (dist_node(2)/dist)*elevation_node(2) + &
-                                (dist_node(3)/dist)*elevation_node(3) + &
-                                (dist_node(4)/dist)*elevation_node(4)
+            !original weighting: by distance, which means larger distance -> stronger weight
+            !                    but we would prefer closer points having more influence.
+            !                    therefore, will use an inverse distance weighting instead...
+            !
+            !target_elevation =  (dist_node(1)/dist) * elevation_node(1) + &
+            !                    (dist_node(2)/dist) * elevation_node(2) + &
+            !                    (dist_node(3)/dist) * elevation_node(3) + &
+            !                    (dist_node(4)/dist) * elevation_node(4)
+
+            ! gets minimum distance value & index
+            ilocmin = minloc(dist_node(:))
+            dist_node_min = dist_node(ilocmin(1))
+
+            ! checks if a node is almost exactly at target location
+            if (dist_node_min < TINYVAL) then
+              ! takes elevation of node
+              target_elevation = elevation_node(ilocmin(1))
+            else
+              ! inverse distance weighting
+              ! (closer points have higher weight)
+              do k = 1,4
+                if (dist_node(k) > 0.0_CUSTOM_REAL) then
+                  weight(k) = 1.0_CUSTOM_REAL / dist_node(k)
+                else
+                  weight(k) = 1.e10  ! very large weight for point on target, will dominate interpolation
+                endif
+              enddo
+
+              ! normalize weights: w_i = w_i / sum(w_i)
+              norm = sum(weight(:))
+              if (norm > TINYVAL) then
+                weight(:) = weight(:) / norm
+              else
+                ! all 4 weights almost zero, meaning distances are all very large; uses equal weighting
+                weight(:) = 1.0 / 4.0
+              endif
+              ! interpolation
+              target_elevation = weight(1)*elevation_node(1) &
+                               + weight(2)*elevation_node(2) &
+                               + weight(3)*elevation_node(3) &
+                               + weight(4)*elevation_node(4)
+            endif
           else
-            stop 'error summed distance to node is zero'
+            stop 'Error summed distance to node is zero'
           endif
         endif
 
@@ -293,8 +357,8 @@
 !
 
   subroutine get_topo_elevation_free_closest(x_target,y_target,target_elevation,target_distmin, &
-                                         NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                                         num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+                                             NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                                             num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
 ! get approximate topography elevation at long/lat coordinates from closest point
 
@@ -307,17 +371,17 @@
   real(kind=CUSTOM_REAL),intent(out) :: target_elevation
   real(kind=CUSTOM_REAL),intent(out) :: target_distmin
 
-  integer :: NSPEC_AB,NGLOB_AB
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB
 
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
   ! arrays containing coordinates of the points
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: xstore,ystore,zstore
 
   ! free surface
-  integer :: num_free_surface_faces
-  integer, dimension(num_free_surface_faces) :: free_surface_ispec
-  integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
+  integer,intent(in) :: num_free_surface_faces
+  integer, dimension(num_free_surface_faces),intent(in) :: free_surface_ispec
+  integer, dimension(3,NGLLSQUARE,num_free_surface_faces),intent(in) :: free_surface_ijk
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: distmin,dist
@@ -339,7 +403,7 @@
       typical_size =  (xstore(ibool(1,1,1,ispec)) - xstore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2 &
                     + (ystore(ibool(1,1,1,ispec)) - ystore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2
       ! use 10 times the distance as a criterion for point detection
-      typical_size = 10. * typical_size
+      typical_size = 10.0_CUSTOM_REAL * typical_size
     endif
 
     ! flag to check that we located at least one target element

@@ -37,7 +37,7 @@
                                     rmass,rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
                                     APPROXIMATE_OCEAN_LOAD,rmass_ocean_load,NGLOB_OCEAN, &
                                     ibool, &
-                                    xstore_dummy,ystore_dummy,zstore_dummy, &
+                                    xstore,ystore,zstore, &
                                     abs_boundary_normal,abs_boundary_jacobian2Dw, &
                                     abs_boundary_ijk,abs_boundary_ispec, &
                                     num_abs_boundary_faces, &
@@ -58,8 +58,11 @@
 
   use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
 
-  use specfem_par, only: NSPEC_IRREGULAR,ispec_is_inner,ATTENUATION,xix,xiy,xiz, &
-            etax,etay,etaz,gammax,gammay,gammaz,jacobian,irregular_element_number,xix_regular,jacobian_regular
+  use specfem_par, only: NSPEC_IRREGULAR,ispec_is_inner,ATTENUATION, &
+            xixstore,xiystore,xizstore, &
+            etaxstore,etaystore,etazstore, &
+            gammaxstore,gammaystore,gammazstore,jacobianstore, &
+            irregular_element_number,xix_regular,jacobian_regular
 
   use specfem_par_elastic, only: rmassx,rmassy,rmassz, &
     nspec_inner_elastic,nspec_outer_elastic,num_phase_ispec_elastic,phase_ispec_inner_elastic, &
@@ -94,7 +97,7 @@
 
 ! mesh coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
 
 ! absorbing boundary surface
   integer :: num_abs_boundary_faces
@@ -155,24 +158,24 @@
 
   write(IOUT) ibool
 
-  write(IOUT) xstore_dummy
-  write(IOUT) ystore_dummy
-  write(IOUT) zstore_dummy
+  write(IOUT) xstore
+  write(IOUT) ystore
+  write(IOUT) zstore
 
   write(IOUT) irregular_element_number
   write(IOUT) xix_regular
   write(IOUT) jacobian_regular
 
-  write(IOUT) xix
-  write(IOUT) xiy
-  write(IOUT) xiz
-  write(IOUT) etax
-  write(IOUT) etay
-  write(IOUT) etaz
-  write(IOUT) gammax
-  write(IOUT) gammay
-  write(IOUT) gammaz
-  write(IOUT) jacobian
+  write(IOUT) xixstore
+  write(IOUT) xiystore
+  write(IOUT) xizstore
+  write(IOUT) etaxstore
+  write(IOUT) etaystore
+  write(IOUT) etazstore
+  write(IOUT) gammaxstore
+  write(IOUT) gammaystore
+  write(IOUT) gammazstore
+  write(IOUT) jacobianstore
 
   write(IOUT) kappastore
   write(IOUT) mustore
@@ -329,24 +332,24 @@
 
     ! mesh arrays used for example in combine_vol_data.f90
     !--- x coordinate
-    open(unit=27,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted')
-    write(27) xstore_dummy
-    close(27)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted')
+    write(IOUT) xstore
+    close(IOUT)
 
     !--- y coordinate
-    open(unit=27,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted')
-    write(27) ystore_dummy
-    close(27)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted')
+    write(IOUT) ystore
+    close(IOUT)
 
     !--- z coordinate
-    open(unit=27,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted')
-    write(27) zstore_dummy
-    close(27)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted')
+    write(IOUT) zstore
+    close(IOUT)
 
     ! ibool
-    open(unit=27,file=prname(1:len_trim(prname))//'ibool.bin',status='unknown',form='unformatted')
-    write(27) ibool
-    close(27)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'ibool.bin',status='unknown',form='unformatted')
+    write(IOUT) ibool
+    close(IOUT)
 
     allocate(v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1043')
@@ -361,15 +364,15 @@
     !endif
     v_tmp = 0.0
     where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
-    open(unit=27,file=prname(1:len_trim(prname))//'vp_new.bin',status='unknown',form='unformatted')
-    write(27) v_tmp
-    close(27)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'vp_new.bin',status='unknown',form='unformatted')
+    write(IOUT) v_tmp
+    close(IOUT)
 
     ! VTK file output
     ! vp values
     filename = prname(1:len_trim(prname))//'vp_new'
     call write_VTK_data_gll_cr(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        xstore,ystore,zstore,ibool, &
                         v_tmp,filename)
 
 
@@ -382,29 +385,29 @@
     !endif
     v_tmp = 0.0
     where( rho_vs /= 0._CUSTOM_REAL )  v_tmp = mustore / rho_vs
-    open(unit=27,file=prname(1:len_trim(prname))//'vs_new.bin',status='unknown',form='unformatted')
-    write(27) v_tmp
-    close(27)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'vs_new.bin',status='unknown',form='unformatted')
+    write(IOUT) v_tmp
+    close(IOUT)
 
     ! VTK file output
     ! vs values
     filename = prname(1:len_trim(prname))//'vs_new'
     call write_VTK_data_gll_cr(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        xstore,ystore,zstore,ibool, &
                         v_tmp,filename)
 
     ! outputs density model for check
     v_tmp = 0.0
     where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = rho_vp**2 / (FOUR_THIRDS * mustore + kappastore)
-    open(unit=27,file=prname(1:len_trim(prname))//'rho_new.bin',status='unknown',form='unformatted')
-    write(27) v_tmp
-    close(27)
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'rho_new.bin',status='unknown',form='unformatted')
+    write(IOUT) v_tmp
+    close(IOUT)
 
     ! VTK file output
     ! density model
     filename = prname(1:len_trim(prname))//'rho_new'
     call write_VTK_data_gll_cr(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        xstore,ystore,zstore,ibool, &
                         v_tmp,filename)
 
 
@@ -413,7 +416,7 @@
       ! saves attenuation flag assigned on each GLL point into a vtk file
       filename = prname(1:len_trim(prname))//'attenuation'
       call write_VTK_data_gll_cr(nspec,nglob, &
-                          xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                          xstore,ystore,zstore,ibool, &
                           qmu_attenuation_store,filename)
     endif
 
@@ -436,7 +439,7 @@
       enddo
       filename = prname(1:len_trim(prname))//'coupling_acoustic_elastic'
       call write_VTK_data_points(nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy, &
+                        xstore,ystore,zstore, &
                         iglob_tmp,NGLLSQUARE*num_coupling_ac_el_faces, &
                         filename)
 
@@ -454,7 +457,7 @@
       enddo
       filename = prname(1:len_trim(prname))//'acoustic_elastic_flag'
       call write_VTK_data_elem_i(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        xstore,ystore,zstore,ibool, &
                         v_tmp_i,filename)
     endif
 
@@ -462,7 +465,7 @@
     !    if (num_interfaces_ext_mesh >= 1) then
     !      filename = prname(1:len_trim(prname))//'MPI_1_points'
     !      call write_VTK_data_points(nglob, &
-    !                        xstore_dummy,ystore_dummy,zstore_dummy, &
+    !                        xstore,ystore,zstore, &
     !                        ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
     !                        nibool_interfaces_ext_mesh(1), &
     !                        filename)

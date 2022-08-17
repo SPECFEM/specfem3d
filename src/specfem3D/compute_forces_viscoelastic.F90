@@ -43,10 +43,11 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,ONE_THIRD,FOUR_THIRDS, &
     m1,m2
 
-  use fault_solver_dynamic, only: Kelvin_Voigt_eta
+  use fault_solver_common, only: Kelvin_Voigt_eta,USE_KELVIN_VOIGT_DAMPING
 
   use specfem_par, only: SAVE_MOHO_MESH,USE_LDDRK, &
-                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
+                         xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore,jacobianstore, &
                          NSPEC_AB,NGLOB_AB, &
                          hprime_xx,hprime_xxT, &
                          hprime_yy,hprime_yyT, &
@@ -184,8 +185,10 @@
 !$OMP irregular_element_number,jacobian_regular,xix_regular, &
 !$OMP displ,veloc,accel, &
 !$OMP is_CPML,backward_simulation, &
-!$OMP xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
-!$OMP kappastore,mustore,Kelvin_Voigt_eta,deltat, &
+!$OMP xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore, &
+!$OMP kappastore,mustore, &
+!$OMP Kelvin_Voigt_eta,USE_KELVIN_VOIGT_DAMPING, &
+!$OMP deltat, &
 !$OMP c11store,c12store,c13store,c14store,c15store,c16store, &
 !$OMP c22store,c23store,c24store,c25store,c26store,c33store, &
 !$OMP c34store,c35store,c36store,c44store,c45store,c46store, &
@@ -243,11 +246,8 @@
 
     ! no PML elements from here on
 
-    ! stores displacment values in local array
-
-    !ZN ZN Do we need a stop statement somewhere in case of
-    !ZN ZN SIMULATION_TYPE == 3 and allocated(Kelvin_Voigt_eta) = .true. ??
-    if (allocated(Kelvin_Voigt_eta)) then
+    ! stores displacement values in local array
+    if (USE_KELVIN_VOIGT_DAMPING) then
       ! Kelvin Voigt damping: artificial viscosity around dynamic faults
       eta = Kelvin_Voigt_eta(ispec)
       if (is_CPML(ispec) .and. eta /= 0._CUSTOM_REAL) stop 'you cannot put a fault inside a PML layer'
@@ -390,15 +390,15 @@
     if (ispec_irreg /= 0) then
       ! irregular element
       DO_LOOP_IJK
-        xixl = xix(INDEX_IJK,ispec_irreg)
-        xiyl = xiy(INDEX_IJK,ispec_irreg)
-        xizl = xiz(INDEX_IJK,ispec_irreg)
-        etaxl = etax(INDEX_IJK,ispec_irreg)
-        etayl = etay(INDEX_IJK,ispec_irreg)
-        etazl = etaz(INDEX_IJK,ispec_irreg)
-        gammaxl = gammax(INDEX_IJK,ispec_irreg)
-        gammayl = gammay(INDEX_IJK,ispec_irreg)
-        gammazl = gammaz(INDEX_IJK,ispec_irreg)
+        xixl = xixstore(INDEX_IJK,ispec_irreg)
+        xiyl = xiystore(INDEX_IJK,ispec_irreg)
+        xizl = xizstore(INDEX_IJK,ispec_irreg)
+        etaxl = etaxstore(INDEX_IJK,ispec_irreg)
+        etayl = etaystore(INDEX_IJK,ispec_irreg)
+        etazl = etazstore(INDEX_IJK,ispec_irreg)
+        gammaxl = gammaxstore(INDEX_IJK,ispec_irreg)
+        gammayl = gammaystore(INDEX_IJK,ispec_irreg)
+        gammazl = gammazstore(INDEX_IJK,ispec_irreg)
 
         duxdxl(INDEX_IJK) = xixl*tempx1(INDEX_IJK) + etaxl*tempx2(INDEX_IJK) + gammaxl*tempx3(INDEX_IJK)
         duxdyl(INDEX_IJK) = xiyl*tempx1(INDEX_IJK) + etayl*tempx2(INDEX_IJK) + gammayl*tempx3(INDEX_IJK)
@@ -468,15 +468,15 @@
           DO_LOOP_IJK
             if (ispec_irreg /= 0) then
               ! irregular element
-              xixl = xix(INDEX_IJK,ispec_irreg)
-              xiyl = xiy(INDEX_IJK,ispec_irreg)
-              xizl = xiz(INDEX_IJK,ispec_irreg)
-              etaxl = etax(INDEX_IJK,ispec_irreg)
-              etayl = etay(INDEX_IJK,ispec_irreg)
-              etazl = etaz(INDEX_IJK,ispec_irreg)
-              gammaxl = gammax(INDEX_IJK,ispec_irreg)
-              gammayl = gammay(INDEX_IJK,ispec_irreg)
-              gammazl = gammaz(INDEX_IJK,ispec_irreg)
+              xixl = xixstore(INDEX_IJK,ispec_irreg)
+              xiyl = xiystore(INDEX_IJK,ispec_irreg)
+              xizl = xizstore(INDEX_IJK,ispec_irreg)
+              etaxl = etaxstore(INDEX_IJK,ispec_irreg)
+              etayl = etaystore(INDEX_IJK,ispec_irreg)
+              etazl = etazstore(INDEX_IJK,ispec_irreg)
+              gammaxl = gammaxstore(INDEX_IJK,ispec_irreg)
+              gammayl = gammaystore(INDEX_IJK,ispec_irreg)
+              gammazl = gammazstore(INDEX_IJK,ispec_irreg)
 
               duxdxl_att = xixl * tempx1_att(INDEX_IJK) + etaxl * tempx2_att(INDEX_IJK) + gammaxl * tempx3_att(INDEX_IJK)
               duxdyl_att = xiyl * tempx1_att(INDEX_IJK) + etayl * tempx2_att(INDEX_IJK) + gammayl * tempx3_att(INDEX_IJK)
@@ -510,9 +510,9 @@
             duzdyl_plus_duydzl_att = duzdyl_att + duydzl_att
 
             ! compute deviatoric strain
+            epsilondev_trace_loc(INDEX_IJK) = (duxdxl_att + duydyl_att + duzdzl_att)
             templ = ONE_THIRD * (duxdxl_att + duydyl_att + duzdzl_att)
             if (SIMULATION_TYPE == 3) epsilon_trace_over_3(INDEX_IJK,ispec) = templ
-            epsilondev_trace_loc(INDEX_IJK) = 3._CUSTOM_REAL * templ
             epsilondev_xx_loc(INDEX_IJK) = duxdxl_att - templ
             epsilondev_yy_loc(INDEX_IJK) = duydyl_att - templ
             epsilondev_xy_loc(INDEX_IJK) = 0.5_CUSTOM_REAL * duxdyl_plus_duydxl_att
@@ -524,9 +524,9 @@
         ! non-attenuation case
         DO_LOOP_IJK
           ! computes deviatoric strain attenuation and/or for kernel calculations
+          epsilondev_trace_loc(INDEX_IJK) = (duxdxl(INDEX_IJK) + duydyl(INDEX_IJK) + duzdzl(INDEX_IJK))
           templ = ONE_THIRD * (duxdxl(INDEX_IJK) + duydyl(INDEX_IJK) + duzdzl(INDEX_IJK))
           if (SIMULATION_TYPE == 3) epsilon_trace_over_3(INDEX_IJK,ispec) = templ
-          epsilondev_trace_loc(INDEX_IJK) = 3._CUSTOM_REAL * templ
           epsilondev_xx_loc(INDEX_IJK) = duxdxl(INDEX_IJK) - templ
           epsilondev_yy_loc(INDEX_IJK) = duydyl(INDEX_IJK) - templ
           epsilondev_xy_loc(INDEX_IJK) = 0.5_CUSTOM_REAL * (duxdyl(INDEX_IJK) + duydxl(INDEX_IJK))
@@ -625,16 +625,16 @@
         ! dot product with test vector
         if (ispec_irreg /= 0) then
           ! irregular element
-          xixl = xix(INDEX_IJK,ispec_irreg)
-          xiyl = xiy(INDEX_IJK,ispec_irreg)
-          xizl = xiz(INDEX_IJK,ispec_irreg)
-          etaxl = etax(INDEX_IJK,ispec_irreg)
-          etayl = etay(INDEX_IJK,ispec_irreg)
-          etazl = etaz(INDEX_IJK,ispec_irreg)
-          gammaxl = gammax(INDEX_IJK,ispec_irreg)
-          gammayl = gammay(INDEX_IJK,ispec_irreg)
-          gammazl = gammaz(INDEX_IJK,ispec_irreg)
-          jacobianl = jacobian(INDEX_IJK,ispec_irreg)
+          xixl = xixstore(INDEX_IJK,ispec_irreg)
+          xiyl = xiystore(INDEX_IJK,ispec_irreg)
+          xizl = xizstore(INDEX_IJK,ispec_irreg)
+          etaxl = etaxstore(INDEX_IJK,ispec_irreg)
+          etayl = etaystore(INDEX_IJK,ispec_irreg)
+          etazl = etazstore(INDEX_IJK,ispec_irreg)
+          gammaxl = gammaxstore(INDEX_IJK,ispec_irreg)
+          gammayl = gammaystore(INDEX_IJK,ispec_irreg)
+          gammazl = gammazstore(INDEX_IJK,ispec_irreg)
+          jacobianl = jacobianstore(INDEX_IJK,ispec_irreg)
 
           ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
           tempx1(INDEX_IJK) = jacobianl * (sigma_xx * xixl + sigma_yx * xiyl + sigma_zx * xizl) ! this goes to accel_x
@@ -789,6 +789,7 @@
     ! save deviatoric strain for Runge-Kutta scheme
     if (COMPUTE_AND_STORE_STRAIN) then
       if (ATTENUATION .and. .not. is_CPML(ispec)) epsilondev_trace(:,:,:,ispec) = epsilondev_trace_loc(:,:,:)
+      ! already stored epsilon_trace_over_3(:,:,:,ispec) above for SIMULATION_TYPE == 3
       epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
       epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
       epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
@@ -913,9 +914,9 @@
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ONE_THIRD,m1,m2
 
-  use fault_solver_dynamic, only: Kelvin_Voigt_eta
+  use fault_solver_common, only: Kelvin_Voigt_eta,USE_KELVIN_VOIGT_DAMPING
 
-  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+  use specfem_par, only: xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore, &
                          NGLOB_AB, &
                          hprime_xx,hprime_xxT, &
                          hprime_yy,hprime_zz, &
@@ -954,7 +955,7 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),intent(inout) :: &
     epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
 
-  real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),intent(out) :: epsilon_trace_over_3
+  real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),intent(inout) :: epsilon_trace_over_3
 
   integer,intent(in) :: iphase
 
@@ -1060,8 +1061,8 @@
 !$OMP irregular_element_number,xix_regular, &
 !$OMP displ,veloc,accel, &
 !$OMP is_CPML,backward_simulation, &
-!$OMP xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-!$OMP Kelvin_Voigt_eta, &
+!$OMP xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore, &
+!$OMP Kelvin_Voigt_eta,USE_KELVIN_VOIGT_DAMPING, &
 !$OMP COMPUTE_AND_STORE_STRAIN,SIMULATION_TYPE, &
 !$OMP epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
 !$OMP spec_to_CPML,PML_displ_old,PML_displ_new, &
@@ -1132,7 +1133,7 @@
     ! stores displacement values in local array
 
     ! checks
-    if (allocated(Kelvin_Voigt_eta)) then
+    if (USE_KELVIN_VOIGT_DAMPING) then
       ! Kelvin Voigt damping: artificial viscosity around dynamic faults
       eta = Kelvin_Voigt_eta(ispec)
       if (is_CPML(ispec) .and. eta /= 0._CUSTOM_REAL) stop 'Error: you cannot put a fault inside a PML layer'
@@ -1370,15 +1371,15 @@
     if (ispec_irreg /= 0) then
       ! irregular element
       DO_LOOP_IJK
-        xixl = xix(INDEX_IJK,ispec_irreg)
-        xiyl = xiy(INDEX_IJK,ispec_irreg)
-        xizl = xiz(INDEX_IJK,ispec_irreg)
-        etaxl = etax(INDEX_IJK,ispec_irreg)
-        etayl = etay(INDEX_IJK,ispec_irreg)
-        etazl = etaz(INDEX_IJK,ispec_irreg)
-        gammaxl = gammax(INDEX_IJK,ispec_irreg)
-        gammayl = gammay(INDEX_IJK,ispec_irreg)
-        gammazl = gammaz(INDEX_IJK,ispec_irreg)
+        xixl = xixstore(INDEX_IJK,ispec_irreg)
+        xiyl = xiystore(INDEX_IJK,ispec_irreg)
+        xizl = xizstore(INDEX_IJK,ispec_irreg)
+        etaxl = etaxstore(INDEX_IJK,ispec_irreg)
+        etayl = etaystore(INDEX_IJK,ispec_irreg)
+        etazl = etazstore(INDEX_IJK,ispec_irreg)
+        gammaxl = gammaxstore(INDEX_IJK,ispec_irreg)
+        gammayl = gammaystore(INDEX_IJK,ispec_irreg)
+        gammazl = gammazstore(INDEX_IJK,ispec_irreg)
 
         duxdxl(INDEX_IJK) = xixl*tempx1(INDEX_IJK) + etaxl*tempx2(INDEX_IJK) + gammaxl*tempx3(INDEX_IJK)
         duxdyl(INDEX_IJK) = xiyl*tempx1(INDEX_IJK) + etayl*tempx2(INDEX_IJK) + gammayl*tempx3(INDEX_IJK)
@@ -1449,15 +1450,15 @@
     if (ispec_irreg /= 0) then
       ! irregular element
       DO_LOOP_IJK
-        xixl = xix(INDEX_IJK,ispec_irreg)
-        xiyl = xiy(INDEX_IJK,ispec_irreg)
-        xizl = xiz(INDEX_IJK,ispec_irreg)
-        etaxl = etax(INDEX_IJK,ispec_irreg)
-        etayl = etay(INDEX_IJK,ispec_irreg)
-        etazl = etaz(INDEX_IJK,ispec_irreg)
-        gammaxl = gammax(INDEX_IJK,ispec_irreg)
-        gammayl = gammay(INDEX_IJK,ispec_irreg)
-        gammazl = gammaz(INDEX_IJK,ispec_irreg)
+        xixl = xixstore(INDEX_IJK,ispec_irreg)
+        xiyl = xiystore(INDEX_IJK,ispec_irreg)
+        xizl = xizstore(INDEX_IJK,ispec_irreg)
+        etaxl = etaxstore(INDEX_IJK,ispec_irreg)
+        etayl = etaystore(INDEX_IJK,ispec_irreg)
+        etazl = etazstore(INDEX_IJK,ispec_irreg)
+        gammaxl = gammaxstore(INDEX_IJK,ispec_irreg)
+        gammayl = gammaystore(INDEX_IJK,ispec_irreg)
+        gammazl = gammazstore(INDEX_IJK,ispec_irreg)
 
         ! old
         PML_dux_dxl_old(INDEX_IJK) = &

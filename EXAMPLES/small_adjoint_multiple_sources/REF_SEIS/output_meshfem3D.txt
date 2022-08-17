@@ -230,6 +230,11 @@
   0.949999988      -    1.00000000               0     0.00000000      %
 
 
+ mesh files:
+   saving files: proc***_Database
+   done mesh files
+
+
  Repartition of elements:
  -----------------------
 
@@ -237,15 +242,15 @@
  total number of points in mesh slice 0:        50421
 
  total number of elements in entire mesh:        23040
- approximate total number of points in entire mesh (with duplicates on MPI edges):    201684.00000000000
- approximate total number of DOFs in entire mesh (with duplicates on MPI edges):    605052.00000000000
+ approximate total number of points in entire mesh (with duplicates on MPI edges):                201684
+ approximate total number of DOFs in entire mesh (with duplicates on MPI edges):                605052
 
  using single precision for the calculations
 
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =   0.16743900000000000
+ Elapsed time for mesh generation and buffer creation in seconds =   0.15040100000000001
  End of mesh generation
 
  done

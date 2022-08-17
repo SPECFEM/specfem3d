@@ -34,6 +34,8 @@
 
 ! leave sorting subroutines in same source file to allow for inlining
 
+  use constants, only: SMALLVAL_TOL
+
   implicit none
 
   integer :: npointot
@@ -51,10 +53,20 @@
 ! small value for double precision and to avoid sensitivity to roundoff
   double precision :: SMALLVALTOL
 
-! define geometrical tolerance based upon typical size of the model
-  SMALLVALTOL = 1.d-10 * dabs(UTM_X_MAX - UTM_X_MIN)
+  ! note: the tolerance value is important to adapt according to the mesh dimensions
+  !       having the tolerance too small, e.g., for double precision runs, will lead to numerical artifacts
+  !       when different partitions have slightly different node positions due to numerical round-offs.
+  !       we adapt the tolerance to the dimensions of the mesh (using the x-direction as a typical dimension value),
+  !       to avoid round-off problems for other kind of meshes
+  !       (e.g., UTM meshes have often dimensions in ~ 10 km, local meshes for engineering ~ 1 m, ultrasonic ~ 1mm range).
+  !
+  !       one way to avoid this mesh size dependence would be to normalize the coordinates as done in the global version.
+  !       again, that would need a typical dimension of the mesh geometry used. to check for the future...
 
-! dynamically allocate arrays
+  ! define geometrical tolerance based upon typical size of the model
+  SMALLVALTOL = SMALLVAL_TOL * dabs(UTM_X_MAX - UTM_X_MIN)
+
+  ! dynamically allocate arrays
   allocate(ninseg(npointot), &
            idummy(npointot),stat=ier)
   if (ier /= 0) stop 'Error allocating ninseg arrays'
@@ -62,7 +74,7 @@
   call sort_array_coordinates(npointot,xp,yp,zp,idummy,iglob,locval,ifseg, &
                               nglob,ninseg,SMALLVALTOL)
 
-! deallocate arrays
+  ! deallocate arrays
   deallocate(ninseg)
   deallocate(idummy)
 

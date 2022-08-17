@@ -141,6 +141,10 @@ except:
 
 from utilities import get_cubit_version
 
+try:
+    set
+except NameError:
+    from sets import Set as set
 
 class mtools(object):
 
@@ -179,7 +183,7 @@ class mtools(object):
             cubit.cmd(command)
 
 
-class block_tools():
+class block_tools(object):
 
     def __int__(self):
         pass
@@ -349,7 +353,6 @@ class mesh_tools(block_tools):
             print('error: surface normal, dot=0', axb, normal, dot, p0, p1, p2)
 
     def mesh_analysis(self, frequency):
-        from sets import Set
         cubit.cmd('set info off')
         cubit.cmd('set echo off')
         cubit.cmd('set journal off')
@@ -381,7 +384,7 @@ class mesh_tools(block_tools):
                 for face in faces:
                     es = cubit.get_sub_elements("face", face, 1)
                     edges = edges + list(es)
-                edges = Set(edges)
+                edges = set(edges)
                 dtstore, edgedtstore, ratiostore, edgeratiostore =\
                     self.seismic_resolution(edges, velocity, bins_d,
                                             bins_u, sidelist)
@@ -405,7 +408,7 @@ class mesh_tools(block_tools):
         return self.ddt[0], self.dr[0]
 
 
-class mesh(object, mesh_tools):
+class mesh(mesh_tools):
 
     def __init__(self, hex27=False, cpml=False, cpml_size=False,
                  top_absorbing=False):
@@ -956,12 +959,22 @@ class mesh(object, mesh_tools):
                 dic_quads_all = dict(zip(quads_all, quads_all))
                 freehex.write('%10i\n' % len(quads_all))
                 list_hex = cubit.parse_cubit_list('hex', 'all')
-                for h in list_hex:
+                Nhex = len(list_hex)
+                lastDisplayed = -1
+                # Create a set to speed up "if f in dic_quads_all.keys()" big time
+                s = set(dic_quads_all.keys())
+                for ih, h in enumerate(list_hex):
+                    percentageDone = float(ih)/Nhex*100.0
+                    if int(percentageDone)%10 == 0 and lastDisplayed != int(percentageDone):
+                        print('    ', int(percentageDone), '%')
+                        lastDisplayed = int(percentageDone)
                     faces = cubit.get_sub_elements('hex', h, 2)
                     for f in faces:
-                        if f in dic_quads_all.keys():
-                            txt = self.create_facenode_string(h, f, normal, cknormal=True)
+                        if f in s:
+                            txt = self.create_facenode_string(
+                                h, f, normal, cknormal=True)
                             freehex.write(txt)
+                print('    100 %')
             elif block == self.free:
                 name = cubit.get_exodus_entity_name('block', block)
                 print('free surface block name:', name, 'id:', block)
@@ -970,12 +983,22 @@ class mesh(object, mesh_tools):
                 dic_quads_all = dict(zip(quads_all, quads_all))
                 freehex.write('%10i\n' % len(quads_all))
                 list_hex = cubit.parse_cubit_list('hex', 'all')
-                for h in list_hex:
+                Nhex = len(list_hex)
+                # Create a set to speed up "if f in dic_quads_all.keys()" big time
+                s = set(dic_quads_all.keys())
+                lastDisplayed = -1
+                for ih, h in enumerate(list_hex):
+                    percentageDone = float(ih)/Nhex*100.0
+                    if int(percentageDone)%10 == 0 and lastDisplayed != int(percentageDone):
+                        print('    ', int(percentageDone), '%')
+                        lastDisplayed = int(percentageDone)
                     faces = cubit.get_sub_elements('hex', h, 2)
                     for f in faces:
-                        if f in dic_quads_all.keys():
-                            txt = self.create_facenode_string(h, f, normal, cknormal=False)
+                        if f in s:
+                            txt = self.create_facenode_string(
+                                h, f, normal, cknormal=False)
                             freehex.write(txt)
+                print('    100 %')
         freehex.close()
         print('Ok')
         cubit.cmd('set info on')
@@ -1025,24 +1048,25 @@ class mesh(object, mesh_tools):
             cubit.cmd(txt)
             txt = "group 'hzmax' add hex  with Z_coord > " + str(zmax)
             cubit.cmd(txt)
-            from sets import Set
+
             group1 = cubit.get_id_from_name("hxmin")
-            cpml_xmin = Set(list(cubit.get_group_hexes(group1)))
+            cpml_xmin = set(list(cubit.get_group_hexes(group1)))
             group1 = cubit.get_id_from_name("hymin")
-            cpml_ymin = Set(list(cubit.get_group_hexes(group1)))
+            cpml_ymin = set(list(cubit.get_group_hexes(group1)))
             group1 = cubit.get_id_from_name("hxmax")
-            cpml_xmax = Set(list(cubit.get_group_hexes(group1)))
+            cpml_xmax = set(list(cubit.get_group_hexes(group1)))
             group1 = cubit.get_id_from_name("hymax")
-            cpml_ymax = Set(list(cubit.get_group_hexes(group1)))
+            cpml_ymax = set(list(cubit.get_group_hexes(group1)))
             group1 = cubit.get_id_from_name("hzmin")
-            cpml_zmin = Set(list(cubit.get_group_hexes(group1)))
+            cpml_zmin = set(list(cubit.get_group_hexes(group1)))
             if self.top_absorbing:
                 group1 = cubit.get_id_from_name("hzmax")
-                cpml_zmax = Set(list(cubit.get_group_hexes(group1)))
+                cpml_zmax = set(list(cubit.get_group_hexes(group1)))
             else:
-                cpml_zmax = Set([])
+                cpml_zmax = set([])
             cpml_all = cpml_ymin | cpml_ymax | cpml_xmin | cpml_xmax | \
                 cpml_zmin | cpml_zmax
+
             cpml_x = cpml_all - cpml_zmin - cpml_ymin - cpml_ymax - cpml_zmax
             cpml_y = cpml_all - cpml_zmin - cpml_xmin - cpml_xmax - cpml_zmax
             cpml_xy = cpml_all - cpml_zmin - cpml_y - cpml_x - cpml_zmax
@@ -1166,13 +1190,23 @@ class mesh(object, mesh_tools):
                         dic_quads_all = dict(zip(quads_all, quads_all))
                         print('  number of faces = ', len(quads_all))
                         abshex_local.write('%10i\n' % len(quads_all))
-                        for h in list_hex:
+                        Nhex = len(list_hex)
+                        # Create a set to speed up "if f in dic_quads_all.keys()" big time
+                        s = set(dic_quads_all.keys())
+                        lastDisplayed = -1
+                        for ih, h in enumerate(list_hex):
+                            percentageDone = float(ih)/Nhex*100.0
+                            if int(percentageDone)%10 == 0 and lastDisplayed != int(percentageDone):
+                                print('    ', int(percentageDone), '%')
+                                lastDisplayed = int(percentageDone)
                             faces = cubit.get_sub_elements('hex', h, 2)
                             for f in faces:
-                                if f in dic_quads_all.keys():
-                                    txt = self.create_facenode_string(h, f, normal=normal, cknormal=cknormal)
+                                if f in s:
+                                    txt = self.create_facenode_string(
+                                        h, f, normal=normal, cknormal=cknormal)
                                     abshex_local.write(txt)
                         abshex_local.close()
+                        print('    100 %')
                         print('Ok')
             cubit.cmd('set info on')
             cubit.cmd('set echo on')
@@ -1209,14 +1243,24 @@ class mesh(object, mesh_tools):
                 surfhex_local.write('%10i\n' % len(quads_all))
                 # writes out element node ids
                 list_hex = cubit.parse_cubit_list('hex', 'all')
+                Nhex = len(list_hex)
+                # Create a set to speed up "if f in dic_quads_all.keys()" big time
+                s = set(dic_quads_all.keys())
+                percentageDone = -1
                 for h in list_hex:
+                    percentageDone = float(ih)/Nhex*100.0
+                    if int(percentageDone)%10 == 0 and lastDisplayed != int(percentageDone):
+                        print('    ', int(percentageDone), '%')
+                        lastDisplayed = int(percentageDone)
                     faces = cubit.get_sub_elements('hex', h, 2)
                     for f in faces:
-                        if f in dic_quads_all.keys():
-                            txt = self.create_facenode_string(h, f, cknormal=False)
+                        if f in s:
+                            txt = self.create_facenode_string(
+                                h, f, cknormal=False)
                             surfhex_local.write(txt)
                 # closes file
                 surfhex_local.close()
+                print('    100 %')
                 print('Ok')
 
     def rec_write(self, recname):

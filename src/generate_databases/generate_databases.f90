@@ -29,7 +29,7 @@
 
   program xgenerate_databases
 
-  use adios_manager_mod
+  use manager_adios
   use generate_databases_par
 
   implicit none
@@ -195,21 +195,21 @@
   ! timing
   double precision, external :: wtime
 
-! MPI initialization
+  ! MPI initialization
   call init_mpi()
 
-! sizeprocs returns number of processes started (should be equal to NPROC).
-! myrank is the rank of each process, between 0 and NPROC-1.
-! as usual in MPI, process 0 is in charge of coordinating everything
-! and also takes care of the main output
+  ! sizeprocs returns number of processes started (should be equal to NPROC).
+  ! myrank is the rank of each process, between 0 and NPROC-1.
+  ! as usual in MPI, process 0 is in charge of coordinating everything
+  ! and also takes care of the main output
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-! open main output file, only written to by process 0
+  ! open main output file, only written to by process 0
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
     open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_generate_databases.txt',status='unknown')
 
-! get MPI starting time
+  ! get MPI starting time
   time_start = wtime()
 
   if (myrank == 0) then
@@ -225,10 +225,10 @@
     call flush_IMAIN()
   endif
 
-! read the parameter file
+  ! read the parameter file
   call read_parameters()
 
-! reads topography and bathymetry file
+  ! reads topography and bathymetry file
   call read_topography()
 
   if (myrank == 0) then
@@ -242,10 +242,10 @@
 
   ! Initialize ADIOS I/O
   if (ADIOS_ENABLED) then
-    call adios_setup()
+    call initialize_adios()
   endif
 
-! reads Databases files
+  ! reads Databases files
   if (ADIOS_FOR_DATABASES) then
     call read_partition_files_adios()
   else if (HDF5_ENABLED) then
@@ -254,17 +254,17 @@
     call read_partition_files()
   endif
 
-! external mesh creation
+  ! external mesh creation
   call setup_mesh()
 
-! finalize mesher
+  ! finalize mesher
   call finalize_databases()
 !
   if (ADIOS_ENABLED) then
-    call adios_cleanup()
+    call finalize_adios()
   endif
 
-! MPI finish
+  ! MPI finish
   call finalize_mpi()
 !
   end program xgenerate_databases

@@ -31,7 +31,8 @@
                                        Mxx,Myy,Mzz,Mxy,Mxz,Myz)
 
   use constants
-  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,xix_regular,irregular_element_number
+  use specfem_par, only: xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore,xix_regular,irregular_element_number
 
   implicit none
 
@@ -80,15 +81,15 @@
 
         if (ispec_irreg /= 0) then
           !irregular element
-          xixd    = dble(xix(k,l,m,ispec_irreg))
-          xiyd    = dble(xiy(k,l,m,ispec_irreg))
-          xizd    = dble(xiz(k,l,m,ispec_irreg))
-          etaxd   = dble(etax(k,l,m,ispec_irreg))
-          etayd   = dble(etay(k,l,m,ispec_irreg))
-          etazd   = dble(etaz(k,l,m,ispec_irreg))
-          gammaxd = dble(gammax(k,l,m,ispec_irreg))
-          gammayd = dble(gammay(k,l,m,ispec_irreg))
-          gammazd = dble(gammaz(k,l,m,ispec_irreg))
+          xixd    = dble(xixstore(k,l,m,ispec_irreg))
+          xiyd    = dble(xiystore(k,l,m,ispec_irreg))
+          xizd    = dble(xizstore(k,l,m,ispec_irreg))
+          etaxd   = dble(etaxstore(k,l,m,ispec_irreg))
+          etayd   = dble(etaystore(k,l,m,ispec_irreg))
+          etazd   = dble(etazstore(k,l,m,ispec_irreg))
+          gammaxd = dble(gammaxstore(k,l,m,ispec_irreg))
+          gammayd = dble(gammaystore(k,l,m,ispec_irreg))
+          gammazd = dble(gammazstore(k,l,m,ispec_irreg))
 
           dxis_dx = dxis_dx + hlagrange * xixd
           dxis_dy = dxis_dy + hlagrange * xiyd
@@ -200,12 +201,12 @@
 
   implicit none
 
-! input
-  integer irec_local
-  character(len=*) adj_source_file
+  ! input
+  integer :: irec_local
+  character(len=*) :: adj_source_file
 
-! local
-  integer icomp, itime, ier, it_start, it_end, it_sub_adj
+  ! local
+  integer :: icomp, itime, ier, it_start, it_end, it_sub_adj
   real(kind=CUSTOM_REAL), dimension(NDIM,NTSTEP_BETWEEN_READ_ADJSRC) :: adj_src
   real(kind=CUSTOM_REAL), dimension(NSTEP) :: adj_source_asdf
   double precision :: junk
@@ -214,21 +215,21 @@
   character(len=MAX_STRING_LEN) :: filename
 
   ! gets channel names
-  do icomp=1,NDIM
+  do icomp = 1,NDIM
     call write_channel_name(icomp,comp(icomp))
   enddo
 
   ! range of the block we need to read
   it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) )
-  it_start = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC + 1
-  it_end   = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
+  it_start   = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC + 1
+  it_end     = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
+
   adj_src(:,:) = 0._CUSTOM_REAL
-  itime=0
+  itime = 0
 
   if (READ_ADJSRC_ASDF) then
     ! ASDF format
-    do icomp = 1, NDIM ! 3 components
-
+    do icomp = 1,NDIM ! 3 components
       filename = trim(adj_source_file) // '_' // comp(icomp)
 
       ! would skip read and set source artificially to zero if out of bounds,
@@ -240,16 +241,16 @@
 
       call read_adjoint_sources_ASDF(filename, adj_source_asdf, it_start, it_end)
 
-      adj_src(icomp,:) = real(adj_source_asdf(:))
-
+      ! stores source array
+      adj_src(icomp,:) = adj_source_asdf(:)
     enddo
 
   else
     ! ASCII format
     ! loops over components
     do icomp = 1, NDIM
-
       filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/../SEM/'//trim(adj_source_file)//'.'//comp(icomp)//'.adj'
+
       open(unit=IIN,file=trim(filename),status='old',action='read',iostat = ier)
       ! cycles to next file (this might be more error prone)
       !if (ier /= 0) cycle
@@ -264,6 +265,7 @@
           call exit_MPI(myrank, &
             'file '//trim(filename)//' has wrong length, please check with your simulation duration (1111)')
       enddo
+
       !! read the block we need
       do itime = it_start, it_end
         read(IIN,*,iostat=ier) junk, source_adjoint(icomp,irec_local,itime-it_start+1)
@@ -273,6 +275,7 @@
           call exit_MPI(myrank, &
             'file '//trim(filename)//' has wrong length, please check with your simulation duration (2222)')
       enddo
+
       close(IIN)
 
     enddo
@@ -363,8 +366,9 @@
                                                        factor_source, comp_x,comp_y,comp_z, nu_source)
   use constants
 
-  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          irregular_element_number,xix_regular
+  use specfem_par, only: xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore, &
+                         irregular_element_number,xix_regular
 
   implicit none
 
@@ -415,15 +419,15 @@
 
         if (ispec_irreg /= 0) then
           !irregular element
-          xixd    = dble(xix(k,l,m,ispec_irreg))
-          xiyd    = dble(xiy(k,l,m,ispec_irreg))
-          xizd    = dble(xiz(k,l,m,ispec_irreg))
-          etaxd   = dble(etax(k,l,m,ispec_irreg))
-          etayd   = dble(etay(k,l,m,ispec_irreg))
-          etazd   = dble(etaz(k,l,m,ispec_irreg))
-          gammaxd = dble(gammax(k,l,m,ispec_irreg))
-          gammayd = dble(gammay(k,l,m,ispec_irreg))
-          gammazd = dble(gammaz(k,l,m,ispec_irreg))
+          xixd    = dble(xixstore(k,l,m,ispec_irreg))
+          xiyd    = dble(xiystore(k,l,m,ispec_irreg))
+          xizd    = dble(xizstore(k,l,m,ispec_irreg))
+          etaxd   = dble(etaxstore(k,l,m,ispec_irreg))
+          etayd   = dble(etaystore(k,l,m,ispec_irreg))
+          etazd   = dble(etazstore(k,l,m,ispec_irreg))
+          gammaxd = dble(gammaxstore(k,l,m,ispec_irreg))
+          gammayd = dble(gammaystore(k,l,m,ispec_irreg))
+          gammazd = dble(gammazstore(k,l,m,ispec_irreg))
 
           dxis_dx = dxis_dx + hlagrange * xixd
           dxis_dy = dxis_dy + hlagrange * xiyd

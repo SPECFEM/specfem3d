@@ -53,7 +53,7 @@
 
   subroutine compute_forces_acoustic_forward_calling()
 
-! acoustic domains for forward or adjoint simulations (SIMULATION_TYPE == 1 or 2 )
+! acoustic domains for forward or adjoint wavefields
 
   use specfem_par
   use specfem_par_acoustic
@@ -81,7 +81,9 @@
   ! GPU
   if (GPU_MODE) then
     ! checks if for kernel simulation with both, forward & backward fields
-    if (SIMULATION_TYPE == 3 .and. .not. UNDO_ATTENUATION_AND_OR_PML) then
+    if (SIMULATION_TYPE == 3 &
+        .and. .not. UNDO_ATTENUATION_AND_OR_PML &
+        .and. .not. (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION)) then
       ! runs with the additionally optimized GPU routine
       ! (combines forward/backward fields in main compute_kernel_acoustic)
       call compute_forces_acoustic_GPU_calling()
@@ -143,7 +145,7 @@
         else
           ! on GPU
           call compute_stacey_acoustic_GPU(iphase,num_abs_boundary_faces, &
-                                           SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                           NSTEP,it, &
                                            b_reclen_potential,b_absorb_potential, &
                                            b_num_abs_boundary_faces,Mesh_pointer,1) ! 1 == forward
         endif
@@ -412,7 +414,9 @@
   ! GPU
   if (GPU_MODE) then
     ! checks if for kernel simulation with both, forward & backward fields
-    if (SIMULATION_TYPE == 3 .and. .not. UNDO_ATTENUATION_AND_OR_PML) then
+    if (SIMULATION_TYPE == 3 &
+        .and. .not. UNDO_ATTENUATION_AND_OR_PML &
+        .and. .not. (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION)) then
       ! runs with the additionally optimized GPU routine
       ! (combines forward/backward fields in main compute_kernel_acoustic)
       ! all done in compute_forces_acoustic_GPU_calling()
@@ -470,7 +474,7 @@
         else
           ! on GPU
           call compute_stacey_acoustic_GPU(iphase,num_abs_boundary_faces, &
-                                           SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                           NSTEP,it, &
                                            b_reclen_potential,b_absorb_potential, &
                                            b_num_abs_boundary_faces,Mesh_pointer,3) ! 3 == backward
         endif
@@ -645,7 +649,7 @@
       ! Stacey absorbing boundary conditions
       if (STACEY_ABSORBING_CONDITIONS) then
          call compute_stacey_acoustic_GPU(iphase,num_abs_boundary_faces, &
-                                          SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                          NSTEP,it, &
                                           b_reclen_potential,b_absorb_potential, &
                                           b_num_abs_boundary_faces,Mesh_pointer,0) ! 0 == both
       endif
@@ -783,7 +787,7 @@
 
   ! acoustic potentials
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: &
-        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
+    potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
 
   logical, intent(in) :: backward_simulation
 

@@ -41,7 +41,6 @@ module vti_parameters_mod
 
   use specfem_par_acoustic, only: rho_ac_kl, kappa_ac_kl
 
-
   use inverse_problem_par
 
   implicit none
@@ -237,17 +236,16 @@ module vti_parameters_mod
 
       !! now put new model directly in specfem database
       rhostore(:,:,:,ispec) =  rho(:,:,:)
-      rho_vp(:,:,:,ispec) = rho(:,:,:)* vp(:,:,:)
-      rho_vs(:,:,:,ispec) = rho(:,:,:)* vs(:,:,:)
+      rho_vp(:,:,:,ispec) = rho(:,:,:) * vp(:,:,:)
+      rho_vs(:,:,:,ispec) = rho(:,:,:) * vs(:,:,:)
 
-      kappastore(:,:,:,ispec) =   rho(:,:,:)*( vp(:,:,:)**2  - FOUR_THIRDS* vs(:,:,:)**2 )
-      mustore(:,:,:,ispec) =      rho(:,:,:) * vs(:,:,:)**2
+      kappastore(:,:,:,ispec) = rho(:,:,:) * ( vp(:,:,:)**2  - FOUR_THIRDS* vs(:,:,:)**2 )
+      mustore(:,:,:,ispec) =  rho(:,:,:) * vs(:,:,:)**2
 
       c11store(:,:,:,ispec) = (1._CUSTOM_REAL+2._CUSTOM_REAL*ep(:,:,:))* rho(:,:,:) * vp(:,:,:) * vp(:,:,:)
 
       c12store(:,:,:,ispec) = -2.*(2.*gm(:,:,:)+1.)*vs(:,:,:)*vs(:,:,:)*rho(:,:,:) + &
            (1._CUSTOM_REAL+2._CUSTOM_REAL*ep(:,:,:))* rho(:,:,:) * vp(:,:,:) * vp(:,:,:)
-
 
       c13store(:,:,:,ispec) =  rho(:,:,:) * (sqrt( (vp(:,:,:)**2-vs(:,:,:)**2)*&
            ((1.+2.*de(:,:,:))*vp(:,:,:)**2-vs(:,:,:)**2)) - vs(:,:,:)**2)
@@ -291,12 +289,13 @@ module vti_parameters_mod
       integer,                                                      intent(in)      :: ispec
 
       rho(:,:,:) = rhostore(:,:,:,ispec)
-      vp(:,:,:)=  sqrt(c33store(:,:,:,ispec) / rhostore(:,:,:,ispec))
-      vs(:,:,:)=  sqrt( c44store(:,:,:,ispec) / rhostore(:,:,:,ispec))
-      ep(:,:,:)= (c11store(:,:,:,ispec) - c33store(:,:,:,ispec)) / (2.*c33store(:,:,:,ispec))
-      gm(:,:,:)= (c66store(:,:,:,ispec) - c44store(:,:,:,ispec)) / (2.*c44store(:,:,:,ispec))
-      de(:,:,:)= 0.5 * ( (c13store(:,:,:,ispec) + c44store(:,:,:,ispec) )**2 - (c33store(:,:,:,ispec) - c44store(:,:,:,ispec))**2 )&
-           / (c33store(:,:,:,ispec)*(c33store(:,:,:,ispec) - c44store(:,:,:,ispec)))
+      vp(:,:,:) = sqrt(c33store(:,:,:,ispec) / rhostore(:,:,:,ispec))
+      vs(:,:,:) = sqrt( c44store(:,:,:,ispec) / rhostore(:,:,:,ispec))
+      ep(:,:,:) = (c11store(:,:,:,ispec) - c33store(:,:,:,ispec)) / (2.*c33store(:,:,:,ispec))
+      gm(:,:,:) = (c66store(:,:,:,ispec) - c44store(:,:,:,ispec)) / (2.*c44store(:,:,:,ispec))
+      de(:,:,:) = 0.5 * ( (c13store(:,:,:,ispec) + c44store(:,:,:,ispec))**2 &
+                        - (c33store(:,:,:,ispec) - c44store(:,:,:,ispec))**2 ) &
+                      / ( c33store(:,:,:,ispec) * (c33store(:,:,:,ispec) - c44store(:,:,:,ispec)) )
 
     end subroutine cijkl_2_vti
 !!================================================================================================================================
@@ -317,7 +316,6 @@ module vti_parameters_mod
       rho_kl(:,:,:, ispec) = - rho_kl(:,:,:, ispec)
       cijkl_kl(:,:,:,:,ispec) = - cijkl_kl(:,:,:,:,ispec)
 
-
       !! preconpute temp arrays
       rh_vp(:,:,:) = rho(:,:,:)*vp(:,:,:)
       rh_vs(:,:,:) = rho(:,:,:)*vs(:,:,:)
@@ -330,49 +328,49 @@ module vti_parameters_mod
 
       !! RHO
       Grho(:,:,:) = rho_kl(:,:,:, ispec) + &
-      cijkl_kl(1, :,:,:, ispec) * (w2(:,:,:) * vp(:,:,:)**2) + &
-      cijkl_kl(2, :,:,:, ispec) * (w2(:,:,:) * vp(:,:,:)**2 - 2.*w3(:,:,:)*vs(:,:,:)**2 ) + &
-      cijkl_kl(3, :,:,:, ispec) * (w1(:,:,:) - vs(:,:,:)**2) + &
-      cijkl_kl(7, :,:,:, ispec) * (w2(:,:,:) * vp(:,:,:)**2) + &
-      cijkl_kl(8, :,:,:, ispec) * (w1(:,:,:) - vs(:,:,:)**2) + &
-      cijkl_kl(12, :,:,:, ispec)* vp(:,:,:)**2 + &
-      cijkl_kl(16, :,:,:, ispec)* vs(:,:,:)**2 + &
-      cijkl_kl(19, :,:,:, ispec)* vs(:,:,:)**2 + &
-      cijkl_kl(21, :,:,:, ispec)*(w3(:,:,:)*vs(:,:,:)**2)
+                    cijkl_kl(1, :,:,:, ispec) * (w2(:,:,:) * vp(:,:,:)**2) + &
+                    cijkl_kl(2, :,:,:, ispec) * (w2(:,:,:) * vp(:,:,:)**2 - 2.*w3(:,:,:)*vs(:,:,:)**2 ) + &
+                    cijkl_kl(3, :,:,:, ispec) * (w1(:,:,:) - vs(:,:,:)**2) + &
+                    cijkl_kl(7, :,:,:, ispec) * (w2(:,:,:) * vp(:,:,:)**2) + &
+                    cijkl_kl(8, :,:,:, ispec) * (w1(:,:,:) - vs(:,:,:)**2) + &
+                    cijkl_kl(12, :,:,:, ispec)* vp(:,:,:)**2 + &
+                    cijkl_kl(16, :,:,:, ispec)* vs(:,:,:)**2 + &
+                    cijkl_kl(19, :,:,:, ispec)* vs(:,:,:)**2 + &
+                    cijkl_kl(21, :,:,:, ispec)*(w3(:,:,:)*vs(:,:,:)**2)
 
       !! VP
-      Gvp(:,:,:) =  &
-      cijkl_kl(1, :,:,:, ispec) *(2.*w2(:,:,:)*rh_vp(:,:,:)) + &
-      cijkl_kl(2, :,:,:, ispec) *(2.*w2(:,:,:)*rh_vp(:,:,:)) + &
-      cijkl_kl(3, :,:,:, ispec) *(2. * rh_vp(:,:,:) * w4(:,:,:) / w1(:,:,:) ) + &
-      cijkl_kl(7, :,:,:, ispec) *(2.*w2(:,:,:)*rh_vp(:,:,:)) + &
-      cijkl_kl(8, :,:,:, ispec) *(2. * rh_vp(:,:,:) * w4(:,:,:) / w1(:,:,:) ) + &
-      cijkl_kl(12, :,:,:, ispec)*(2.*rh_vp(:,:,:))
+      Gvp(:,:,:) = &
+                   cijkl_kl(1, :,:,:, ispec) *(2.*w2(:,:,:)*rh_vp(:,:,:)) + &
+                   cijkl_kl(2, :,:,:, ispec) *(2.*w2(:,:,:)*rh_vp(:,:,:)) + &
+                   cijkl_kl(3, :,:,:, ispec) *(2. * rh_vp(:,:,:) * w4(:,:,:) / w1(:,:,:) ) + &
+                   cijkl_kl(7, :,:,:, ispec) *(2.*w2(:,:,:)*rh_vp(:,:,:)) + &
+                   cijkl_kl(8, :,:,:, ispec) *(2. * rh_vp(:,:,:) * w4(:,:,:) / w1(:,:,:) ) + &
+                   cijkl_kl(12, :,:,:, ispec)*(2.*rh_vp(:,:,:))
 
       !! VS
-      Gvs(:,:,:) =  &
-      cijkl_kl(2, :,:,:, ispec) *(-4.*w3(:,:,:)*rh_vs(:,:,:)) + &
-      cijkl_kl(3, :,:,:, ispec) *(-2.*rh_vs(:,:,:) * (1+ w5(:,:,:) / w1(:,:,:))) + &
-      cijkl_kl(8, :,:,:, ispec) *(-2.*rh_vs(:,:,:) * (1+ w5(:,:,:) / w1(:,:,:))) + &
-      cijkl_kl(16, :,:,:, ispec)*(2.*rh_vs(:,:,:)) + &
-      cijkl_kl(19, :,:,:, ispec)*(2.*rh_vs(:,:,:)) + &
-      cijkl_kl(21, :,:,:, ispec)*(2.*rh_vs(:,:,:)*w3(:,:,:))
+      Gvs(:,:,:) = &
+                   cijkl_kl(2, :,:,:, ispec) *(-4.*w3(:,:,:)*rh_vs(:,:,:)) + &
+                   cijkl_kl(3, :,:,:, ispec) *(-2.*rh_vs(:,:,:) * (1+ w5(:,:,:) / w1(:,:,:))) + &
+                   cijkl_kl(8, :,:,:, ispec) *(-2.*rh_vs(:,:,:) * (1+ w5(:,:,:) / w1(:,:,:))) + &
+                   cijkl_kl(16, :,:,:, ispec)*(2.*rh_vs(:,:,:)) + &
+                   cijkl_kl(19, :,:,:, ispec)*(2.*rh_vs(:,:,:)) + &
+                   cijkl_kl(21, :,:,:, ispec)*(2.*rh_vs(:,:,:)*w3(:,:,:))
 
       !! EPSILLON
-      Gep(:,:,:) =  &
-      cijkl_kl(1, :,:,:, ispec) *(2.*rh_vp(:,:,:)*vp(:,:,:)) + &
-      cijkl_kl(2, :,:,:, ispec) *(2.*rh_vp(:,:,:)*vp(:,:,:)) + &
-      cijkl_kl(7, :,:,:, ispec) *(2.*rh_vp(:,:,:)*vp(:,:,:))
+      Gep(:,:,:) = &
+                   cijkl_kl(1, :,:,:, ispec) *(2.*rh_vp(:,:,:)*vp(:,:,:)) + &
+                   cijkl_kl(2, :,:,:, ispec) *(2.*rh_vp(:,:,:)*vp(:,:,:)) + &
+                   cijkl_kl(7, :,:,:, ispec) *(2.*rh_vp(:,:,:)*vp(:,:,:))
 
       !! GAMMA
-      Ggm(:,:,:) =  &
-      cijkl_kl(2, :,:,:, ispec) *(-4.*rh_vs(:,:,:)*vs(:,:,:)) + &
-      cijkl_kl(21, :,:,:, ispec)*( 2.*rh_vs(:,:,:)*vs(:,:,:))
+      Ggm(:,:,:) = &
+                   cijkl_kl(2, :,:,:, ispec) *(-4.*rh_vs(:,:,:)*vs(:,:,:)) + &
+                   cijkl_kl(21, :,:,:, ispec)*( 2.*rh_vs(:,:,:)*vs(:,:,:))
 
       !! DELTA
-      Gde(:,:,:) =  &
-      ( cijkl_kl(3, :,:,:, ispec) +  cijkl_kl(8, :,:,:, ispec) ) &
-      *( 2.* rho(:,:,:) * (vp(:,:,:)**2) * ( vp(:,:,:)**2 - vs(:,:,:)**2 ) / w1(:,:,:) )
+      Gde(:,:,:) = &
+                  ( cijkl_kl(3, :,:,:, ispec) +  cijkl_kl(8, :,:,:, ispec) ) &
+                    *( 2.* rho(:,:,:) * (vp(:,:,:)**2) * ( vp(:,:,:)**2 - vs(:,:,:)**2 ) / w1(:,:,:) )
 
     end subroutine grad_cijkl_2_vti
 
@@ -482,9 +480,15 @@ module vti_parameters_mod
       real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: Grho, Gvp
       integer,                                                      intent(in)      :: ispec
 
-      !! put specfem kernel in **not** log
-      rho_ac_kl(:,:,:,ispec) =  rho_ac_kl(:,:,:,ispec) / rhostore(:,:,:,ispec)
-      kappa_ac_kl(:,:,:,ispec) = kappa_ac_kl(:,:,:,ispec) / kappastore(:,:,:,ispec)
+      !! put specfem kernel in **not** log (absolute kernels, rather than relative ones)
+      !
+      ! note: rho_ac_kl(:,:,:,ispec) contributions are still positive and without material factors up to this point.
+      !       only in save_adjoint_kernels.f90 they would be added.
+      !       thus, no need to divide by rhostore(:,:,:,ispec) or kappastore(:,:,:,ispec), but need to add minus sign
+
+      !! finalize specfem kernel need to multiply by -1
+      rho_ac_kl(:,:,:,ispec) = - rho_ac_kl(:,:,:,ispec)
+      kappa_ac_kl(:,:,:,ispec) = - kappa_ac_kl(:,:,:,ispec)
 
       Grho(:,:,:) = rho_ac_kl(:,:,:,ispec) + kappa_ac_kl(:,:,:,ispec)*vp(:,:,:)**2
       Gvp(:,:,:) = 2._CUSTOM_REAL * kappa_ac_kl(:,:,:,ispec)*rho(:,:,:)*vp(:,:,:)

@@ -4,7 +4,7 @@ Now that you have successfully generated the databases, you are ready
 to compile the solver. In the main directory, type
 {\small
 \begin{verbatim}
-make xspecfem3D
+  make xspecfem3D
 \end{verbatim}
 }
 \noindent
@@ -14,18 +14,20 @@ the main directory, as most of the binaries of the package.\\
 \noindent
 The solver needs three input files in the \texttt{DATA} directory
 to run:
-\begin{description}
-\item [{\texttt{Par\_file}}] the main parameter file which was discussed
+\begin{itemize}
+\item {\bf \texttt{Par\_file}} the main parameter file which was discussed
 in detail in the previous Chapter~\ref{cha:Creating-Distributed-Databases},
-\item [{\texttt{CMTSOLUTION}} or {\texttt{FORCESOLUTION}}] the earthquake
+\item {\bf \texttt{CMTSOLUTION}} or {\bf \texttt{FORCESOLUTION}} the earthquake
 source parameter file or the force source parameter file, and
-\item [{\texttt{STATIONS}}] the stations file.
-\end{description}
+\item {\bf \texttt{STATIONS}} the stations file.
+\end{itemize}
+
+\noindent
 Most parameters in the \texttt{Par\_file} should be set prior to running
 the databases generation. Only the following parameters may be changed
 after running \texttt{xgenerate\_databases}:
 \begin{itemize}
-\item the simulation type control parameters: \texttt{SIMULATION\_TYPE}
+\item the simulation type control parameters \texttt{SIMULATION\_TYPE}
 and \texttt{SAVE\_FORWARD}
 \item the time step parameters \texttt{NSTEP} and \texttt{DT}
 \item the absorbing boundary control parameter \texttt{PML\_CONDITIONS}
@@ -41,7 +43,7 @@ and \texttt{NTSTEPS\_BETWEEN\_FRAMES}
 \end{itemize}
 Any other change to the \texttt{Par\_file} implies rerunning both
 the database generator \texttt{xgenerate\_databases} and the solver
-\texttt{xspecfem3D}.
+\texttt{xspecfem3D}.\\
 
 
 For any particular earthquake, the \texttt{CMTSOLUTION} file that
@@ -97,8 +99,9 @@ to the desired half-duration.
 
 \item The zero time of the simulation corresponds to the center of the triangle/Gaussian,
 or the centroid time of the earthquake. The start time of the simulation
-is $t=-1.5*\texttt{half duration}$ (the 1.5 is to make sure the moment
-rate function is very close to zero when starting the simulation).
+is $t=-2.0*\texttt{half duration}$ (the 2.0 factor is to make sure the moment
+rate function is very close to zero when starting the simulation. This avoids spurious high-frequency oscillations.
+Also, for acoustic simulations using a Gaussian STF this is set to a factor 3.0, while Ricker source time functions use a factor 1.2).
 To convert to absolute time $t_{\mathrm{abs}}$, set
 %
 \begin{lyxcode}
@@ -247,7 +250,7 @@ in the \texttt{constants.h} file).}
 \end{figure}
 
 
-
+\noindent
 Each line represents one station in the following format:
 {\small
 \begin{verbatim}
@@ -259,47 +262,49 @@ The solver \texttt{xspecfem3D} filters the list of stations in file
 the region given in the \texttt{Par\_file} (between \texttt{LATITUDE\_MIN}
 and \texttt{LATITUDE\_MAX} and between \texttt{LONGITUDE\_MIN} and
 \texttt{LONGITUDE\_MAX}). The filtered file is called \texttt{DATA/STATIONS\_FILTERED}.
-
 Elevation and burial are generally applicable to geographical regions.
-Burial is measured down from the top surface. For other problems in other
+Burial is measured down from the top surface.\\
+
+
+\noindent
+For other problems in other
 fields (ultrasonic testing, medical imaging etc...),
-it may be confusing. We generally follow either of the following
+it may be confusing. We generally follow either one of the following
 procedures for those kind of problems:
+\begin{itemize}
+\item {\it Procedure 1:} mostly for geophysics, when the top surface is a free surface (topography) and the five other edges of the mesh are absorbing surfaces
+\begin{enumerate}
+\item [-] Put the origin on the top of the model.\\
+\item [-] Let's say you want to place two receivers at (x1,y1,z1) and
+(x2,y2,z2). Your STATIONS file should look like:
+{\small \begin{verbatim}
+BONE  GR  y1  x1  0.00  -z1
+BONE  GR  y2  x2  0.00  -z2
+\end{verbatim}}
+\end{enumerate}
 
-Procedure 1 (mostly for geophysics, when the top surface is a free surface (topography) and the five other edges of the mesh are absorbing surfaces):\\
-====================================================================================================================================================\\
-
-- Put the origin on the top of the model.\\
-
-- Let's say you want to place two receivers at (x1,y1,z1) and
-(x2,y2,z2). Your STATIONS file should look like:\\
-
-BONE  GR  y1  x1  0.00  -z1\\
-BONE  GR  y2  x2  0.00  -z2\\
-
-Procedure 2 (useful for other application domains, in which using the absolute $Z$ position of the sources and receivers is more standard than using their depth from the surface):\\
-==================================================================================================================================================================================
-
-- In principle in the international CMTSOLUTION format in geophysics
+\item {\it Procedure 2:} useful for other application domains, in which using the absolute $Z$ position of the sources and receivers is more standard than using their depth from the surface
+\begin{enumerate}
+\item [-] In principle in the international CMTSOLUTION format in geophysics
 the depth is given in kilometers; however for users in other fields (non-destructive testing, medical imaging, near-surface studies...) who may prefer to give the position of the source (rather than its depth from the surface), or for people who use FORCESOLUTION to describe the source rather than CMTSOLUTION, we provide an option called USE\_SOURCES\_RECEIVERS\_Z in the Par\_file, and if so that position is read from CMTSOLUTION in meters rather than kilometers (and again, it is then the true position in the mesh, not the depth). When option USE\_SOURCES\_RECEIVERS\_Z in the Par\_file is on, this remark applies to the position of the receivers as well.\\
-
-- Let's say you want to place two receivers at (x1,y1,z1) and
-(x2,y2,z2). Your STATIONS file should then look like:\\
-\\
-BONE  GR  y1  x1  0.00  z1\\
-BONE  GR  y2  x2  0.00  z2\\
-\\
+\item [-] Let's say you want to place two receivers at (x1,y1,z1) and
+(x2,y2,z2). Your STATIONS file should then look like:
+{\small \begin{verbatim}
+BONE  GR  y1  x1  0.00  z1
+BONE  GR  y2  x2  0.00  z2
+\end{verbatim}}
 The option USE\_SOURCES\_RECEIVERS\_Z set to .true. will then discard the elevation and set
-burial as the $z$ coordinate.\\
-\\
+burial as the $z$ coordinate.
 Third column is Y and Fourth is X due to the latitude/longitude convention.\\
-\\
+\end{enumerate}
+
 You can replace the station name "BONE" with any word of length less
 than 32, and the network name "GR" with any word of length less than
-8.\\
-\\
-You can always plot OUTPUT\_FILES/sr.vtk file in ParaView to check the
+8.
+And you can always plot OUTPUT\_FILES/sr.vtk file in ParaView to check the
 source/receiver locations after your simulation.\\
+\end{itemize}
+
 
 Solver output is provided in the \texttt{OUTPUT\_FILES} directory
 in the \texttt{output\_solver.txt} file. Output can be directed to
@@ -364,6 +369,9 @@ file. There is no need to rerun the \texttt{xgenerate\_databases}
 executable. Of course it is best to include as many stations as possible,
 since this does not add to the cost of the simulation.
 
+
+\section{Note on the simultaneous simulation of several earthquakes}
+
 We have also added the ability to run several calculations (several earthquakes)
 in an embarrassingly-parallel fashion from within the same run;
 this can be useful when using a very large supercomputer to compute
@@ -371,17 +379,54 @@ many earthquakes in a catalog, in which case it can be better from
 a batch job submission point of view to start fewer and much larger jobs,
 each of them computing several earthquakes in parallel.
 To turn that option on, set parameter \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS}
-to a value greater than 1 in file setup/constants.h.in before
-configuring and compiling the code.
+to a value greater than 1 in file \texttt{DATA/Par\_file}.
+
+
 When that option is on, of course the number of processor cores used to start
 the code in the batch system must be a multiple of \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS},
 all the individual runs must use the same number of processor cores,
 which as usual is \texttt{NPROC} in the input file \texttt{DATA/Par\_file},
 and thus the total number of processor cores to request from the batch system
 should be \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS $\times$ NPROC}.
-All the runs to perform must be placed in directories called \texttt{run0001}, \texttt{run0002}, \texttt{run0003} and so on (with exactly four digits)
-and you must create a link from the root directory of the code
-to the first copy of the executable programs by typing \texttt{ln -s run0001/bin bin}.
+
+
+\begin{figure}[H]
+\begin{centering}
+\includegraphics[width=2.2in]{figures/simultaneous_dir_struct.pdf}
+\par\end{centering}
+%
+\caption{
+Directory structure when simulating several earthquakes at once.
+To improve readability, only directories have been drawn.}
+\label{fig:simultaneous_dir_struct}
+\end{figure}
+
+Figure~\ref{fig:simultaneous_dir_struct} shows what the directory structure
+should looks like when simulating multiple earthquakes at ones.
+All the runs to perform must be placed in directories called \texttt{run0001}, \texttt{run0002}, \texttt{run0003} and so on (with exactly four digits).
+
+\begin{itemize}
+\item The simulation is launched within the root directory \texttt{EXAMPLE\_ROOT\_DIR}\\
+(usually \texttt{mpirun -np N ./bin/xspecfem3D}).
+\item \texttt{DATA} should contain the \texttt{Par\_file} parameter file with
+\texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS} as explained in Chapter~\ref{cha:Creating-Distributed-Databases}.
+\item \texttt{DATABASES\_MPI} and {OUTPUT\_FILES} directory may contain the mesher output but they
+are not required as they are superseded by the ones in the \texttt{runXXX} directories.
+\item \texttt{runXXXX} directories must be created beforehand. There should be be as many as
+\texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS} and the numbering should be contiguous, starting from \texttt{0001}.
+They all should have \texttt{DATA},
+\texttt{DATABASES\_MPI} and \texttt{OUTPUT\_FILES} directories. Additionally a \texttt{SEM} directory
+containing adjoint sources have to be created to perform adjoint simulations.
+\item \texttt{runXXXX/DATA} directories must all contain a \texttt{CMTSOLUTION} file,
+a \texttt{STATIONS} file along with an eventual \texttt{STATIONS\_ADJOINT} file.
+\item If \texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL} is set to \texttt{.true.} in \texttt{DATA/Par\_file},
+only \texttt{run0001/OUTPUT\_FILES} and \texttt{run0001/DATABASES\_MPI} directories need to contain the files
+outputted by the mesher.
+\item If \texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL} is set to \texttt{.false.} in \texttt{DATA/Par\_file},
+every \texttt{runXXXX/OUTPUT\_FILES} and \texttt{runXXXX/DATABASES\_MPI} directories need to contain the files
+outputted by the mesher. Note that while the meshes might have been created from different models and
+parameter sets, they should have been created using the same number of MPI processes.
+\end{itemize}
 
 
 \section{Note on the viscoelastic model used}

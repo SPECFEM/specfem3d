@@ -26,11 +26,13 @@
 !=====================================================================
 
 
-subroutine pml_set_local_dampingcoeff(xstore,ystore,zstore)
+  subroutine pml_set_local_dampingcoeff(xstore,ystore,zstore)
 
-  ! calculates damping profiles and auxiliary coefficients on C-PML points
+! calculates damping profiles and auxiliary coefficients on C-PML points
 
   use constants, only: myrank,ZERO,ONE,TWO,HUGEVAL
+
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION
 
   use generate_databases_par, only: ibool,NGLOB_AB,d_store_x,d_store_y,d_store_z, &
                                     K_store_x,K_store_y,K_store_z,alpha_store_x,alpha_store_y,alpha_store_z,CPML_to_spec, &
@@ -42,8 +44,7 @@ subroutine pml_set_local_dampingcoeff(xstore,ystore,zstore)
                                     mask_ibool_interior_domain,nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
                                     nglob_interface_PML_elastic,points_interface_PML_elastic
 
-  use create_regions_mesh_ext_par, only: rhostore,rho_vp,ispec_is_acoustic,ispec_is_elastic, &
-                                         ELASTIC_SIMULATION, ACOUSTIC_SIMULATION
+  use create_regions_mesh_ext_par, only: rhostore,rho_vp,ispec_is_acoustic,ispec_is_elastic
 
   implicit none
 
@@ -93,36 +94,43 @@ subroutine pml_set_local_dampingcoeff(xstore,ystore,zstore)
   enddo
 
   ! stores damping profiles
-  allocate(d_store_x(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 841')
-  if (ier /= 0) stop 'error allocating array d_store_x'
-  allocate(d_store_y(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 842')
-  if (ier /= 0) stop 'error allocating array d_store_y'
-  allocate(d_store_z(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 843')
-  if (ier /= 0) stop 'error allocating array d_store_z'
+  if (nspec_cpml > 0) then
+    allocate(d_store_x(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 841')
+    if (ier /= 0) stop 'error allocating array d_store_x'
+    allocate(d_store_y(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 842')
+    if (ier /= 0) stop 'error allocating array d_store_y'
+    allocate(d_store_z(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 843')
+    if (ier /= 0) stop 'error allocating array d_store_z'
 
-  ! stores auxiliary coefficients
-  allocate(K_store_x(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 844')
-  if (ier /= 0) stop 'error allocating array K_store_x'
-  allocate(K_store_y(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 845')
-  if (ier /= 0) stop 'error allocating array K_store_y'
-  allocate(K_store_z(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 846')
-  if (ier /= 0) stop 'error allocating array K_store_z'
-  allocate(alpha_store_x(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 847')
-  if (ier /= 0) stop 'error allocating array alpha_store_x'
-  allocate(alpha_store_y(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 848')
-  if (ier /= 0) stop 'error allocating array alpha_store_y'
-  allocate(alpha_store_z(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 849')
-  if (ier /= 0) stop 'error allocating array alpha_store_z'
-
+    ! stores auxiliary coefficients
+    allocate(K_store_x(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 844')
+    if (ier /= 0) stop 'error allocating array K_store_x'
+    allocate(K_store_y(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 845')
+    if (ier /= 0) stop 'error allocating array K_store_y'
+    allocate(K_store_z(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 846')
+    if (ier /= 0) stop 'error allocating array K_store_z'
+    allocate(alpha_store_x(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 847')
+    if (ier /= 0) stop 'error allocating array alpha_store_x'
+    allocate(alpha_store_y(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 848')
+    if (ier /= 0) stop 'error allocating array alpha_store_y'
+    allocate(alpha_store_z(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 849')
+    if (ier /= 0) stop 'error allocating array alpha_store_z'
+  else
+    ! dummy allocations
+    allocate(d_store_x(1,1,1,1),d_store_y(1,1,1,1),d_store_z(1,1,1,1), &
+             K_store_x(1,1,1,1),K_store_y(1,1,1,1),K_store_z(1,1,1,1), &
+             alpha_store_x(1,1,1,1),alpha_store_y(1,1,1,1),alpha_store_z(1,1,1,1),stat=ier)
+    if (ier /= 0) stop 'Error allocating dummy arrays'
+  endif
   K_store_x(:,:,:,:) = ZERO
   K_store_y(:,:,:,:) = ZERO
   K_store_z(:,:,:,:) = ZERO
@@ -1418,18 +1426,23 @@ subroutine pml_set_local_dampingcoeff(xstore,ystore,zstore)
       enddo
     enddo
   enddo
+
   distance_min = sqrt(distance_min)
   call min_all_all_cr(distance_min,distance_min_glob)
   if (myrank == 0) then
     if (distance_min_glob <= 0.0_CUSTOM_REAL) call exit_mpi(myrank,"error: GLL points minimum distance")
   endif
+
   min_distance_between_CPML_parameter = ALPHA_MAX_PML_x * distance_min_glob / &
                                         max(CPML_width_x,CPML_width_y,CPML_width_z) / 8._CUSTOM_REAL
+
   call min_all_all_cr(min_distance_between_CPML_parameter,min_distance_between_CPML_parameter_glob)
   min_distance_between_CPML_parameter = min_distance_between_CPML_parameter_glob
+
   const_for_separation_two = min_distance_between_CPML_parameter * 2._CUSTOM_REAL
   const_for_separation_four = min_distance_between_CPML_parameter * 4._CUSTOM_REAL
-  min_distance_between_CPML_parameter = min_distance_between_CPML_parameter
+
+  !min_distance_between_CPML_parameter = min_distance_between_CPML_parameter
 
 ! for robust parameter separation of PML damping parameter
 
@@ -1819,7 +1832,6 @@ subroutine pml_set_local_dampingcoeff(xstore,ystore,zstore)
 
   enddo
 
-
 ! --------------------------------------------------------------------------------------------
 ! for adjoint tomography
 ! create the array store the points on interface between PML and interior computational domain
@@ -1920,13 +1932,14 @@ subroutine pml_set_local_dampingcoeff(xstore,ystore,zstore)
     ! end of elastic domains
     !------------------------------------------------------
   endif
-end subroutine pml_set_local_dampingcoeff
+
+  end subroutine pml_set_local_dampingcoeff
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
+  function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
 
   ! defines d, the damping profile at the C-PML element's GLL point for a given:
   !   dist:  distance to C-PML/mesh interface
@@ -1967,14 +1980,16 @@ function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
     call exit_mpi(myrank,'C-PML error: distance to C-PML/mesh interface is bigger than thickness of C-PML layer')
   endif
 
-end function pml_damping_profile_l
+  end function pml_damping_profile_l
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine seperate_two_changeable_value(value_a,value_b,const_for_separation_two)
+  subroutine seperate_two_changeable_value(value_a,value_b,const_for_separation_two)
+
   use generate_databases_par, only: CUSTOM_REAL
+
   implicit none
   real(kind=CUSTOM_REAL), intent(in)  :: const_for_separation_two
   real(kind=CUSTOM_REAL) :: value_a,value_b
@@ -1984,15 +1999,17 @@ subroutine seperate_two_changeable_value(value_a,value_b,const_for_separation_tw
      value_b = value_a + const_for_separation_two
   endif
 
-end subroutine seperate_two_changeable_value
+  end subroutine seperate_two_changeable_value
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine seperate_two_value_with_one_changeable(value_a,value_b,const_for_separation_two, &
-                                                  const_for_separation_four)
+  subroutine seperate_two_value_with_one_changeable(value_a,value_b,const_for_separation_two, &
+                                                    const_for_separation_four)
+
   use generate_databases_par, only: CUSTOM_REAL
+
   implicit none
   real(kind=CUSTOM_REAL), intent(in) :: value_b, const_for_separation_two, const_for_separation_four
   real(kind=CUSTOM_REAL) :: value_a
@@ -2003,4 +2020,67 @@ subroutine seperate_two_value_with_one_changeable(value_a,value_b,const_for_sepa
     value_a = value_b + const_for_separation_four
   endif
 
-end subroutine seperate_two_value_with_one_changeable
+  end subroutine seperate_two_value_with_one_changeable
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine pml_cleanup_arrays()
+
+! frees PML arrays
+
+  use shared_parameters, only: SIMULATION_TYPE,SAVE_FORWARD,PML_CONDITIONS
+
+  use generate_databases_par, only: d_store_x,d_store_y,d_store_z, &
+                                    K_store_x,K_store_y,K_store_z, &
+                                    alpha_store_x,alpha_store_y,alpha_store_z, &
+                                    is_CPML, CPML_to_spec, CPML_regions, nspec_cpml_tot, &
+                                    mask_ibool_interior_domain, &
+                                    nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
+                                    nglob_interface_PML_elastic,points_interface_PML_elastic
+
+
+  implicit none
+
+  ! local parameters
+  integer :: ier
+
+  ! PML
+  deallocate(is_CPML,stat=ier); if (ier /= 0) stop 'error deallocating array is_CPML'
+
+  if (nspec_cpml_tot > 0) then
+    deallocate(CPML_to_spec,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_to_spec'
+    deallocate(CPML_regions,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_regions'
+  endif
+
+  if (PML_CONDITIONS) then
+    deallocate(d_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_x'
+    deallocate(d_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_y'
+    deallocate(d_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_z'
+    deallocate(k_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_x'
+    deallocate(k_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_y'
+    deallocate(k_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_z'
+
+    deallocate(alpha_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_x'
+    deallocate(alpha_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_y'
+    deallocate(alpha_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_z'
+
+    if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
+      deallocate(mask_ibool_interior_domain,stat=ier)
+      if (ier /= 0) stop 'error deallocating array mask_ibool_interior_domain'
+
+      if (nglob_interface_PML_acoustic > 0) then
+        deallocate(points_interface_PML_acoustic,stat=ier)
+        if (ier /= 0) stop 'error deallocating array points_interface_PML_acoustic'
+      endif
+
+      if (nglob_interface_PML_elastic > 0) then
+        deallocate(points_interface_PML_elastic,stat=ier)
+        if (ier /= 0) stop 'error deallocating array points_interface_PML_elastic'
+      endif
+    endif
+  endif
+
+  end subroutine pml_cleanup_arrays

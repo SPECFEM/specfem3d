@@ -20,7 +20,7 @@
 /* Define if err.h */
 #undef HAVE_ERR
 
-/* Define to 1 if you have the < inttypes.h > header file. */
+/* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
 /* Define to 1 if you have the `vtkCommon' library (-lvtkCommon). */
@@ -51,34 +51,34 @@
 /* Define to 1 if you have the `vtkzlib' library (-lvtkzlib). */
 #undef HAVE_LIBVTKZLIB
 
-/* Define to 1 if you have the < memory.h > header file. */
-#undef HAVE_MEMORY_H
-
 /* Define if you have POSIX threads libraries and header files. */
 #undef HAVE_PTHREAD
 
 /* defined if Scotch is installed */
 #undef HAVE_SCOTCH
 
-/* Define to 1 if you have the < stdint.h > header file. */
+/* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 
-/* Define to 1 if you have the < stdlib.h > header file. */
+/* Define to 1 if you have the <stdio.h> header file. */
+#undef HAVE_STDIO_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
 
-/* Define to 1 if you have the < strings.h > header file. */
+/* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
 
-/* Define to 1 if you have the < string.h > header file. */
+/* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
-/* Define to 1 if you have the < sys/stat.h > header file. */
+/* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
 
-/* Define to 1 if you have the < sys/types.h > header file. */
+/* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
-/* Define to 1 if you have the < unistd.h > header file. */
+/* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
 /* define if the VTK library is available */
@@ -109,7 +109,27 @@
    your system. */
 #undef PTHREAD_CREATE_JOINABLE
 
-/* Define to 1 if you have the ANSI C header files. */
+/* Define GIT branch for package source. */
+#undef SPECFEM3D_GIT_BRANCH
+
+/* Define date of GIT commit for package source. */
+#undef SPECFEM3D_GIT_DATE
+
+/* Define GIT hash for package source. */
+#undef SPECFEM3D_GIT_HASH
+
+/* Define git revision commit for package source. */
+#undef SPECFEM3D_GIT_REVISION
+
+/* Set to 0 if source is from GIT, 1 otherwise. */
+#undef SPECFEM3D_RELEASE_VERSION
+
+/* Define SPECFEM3D version */
+#undef SPECFEM3D_VERSION
+
+/* Define to 1 if all of the C90 standard headers exist (not just the ones
+   required in a freestanding environment). This macro is provided for
+   backward compatibility; new code need not use it. */
 #undef STDC_HEADERS
 
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a

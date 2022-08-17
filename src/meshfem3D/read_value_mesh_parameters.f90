@@ -253,7 +253,7 @@
   subroutine read_material_parameters(iunit,material_properties,imat,NMATERIALS,ier)
 
   use constants, only: MAX_STRING_LEN,DONT_IGNORE_JUNK,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC
-  use constants_meshfem3D, only: NUMBER_OF_MATERIAL_PROPERTIES
+  use constants_meshfem, only: NUMBER_OF_MATERIAL_PROPERTIES
   implicit none
 
   integer,intent(in) :: iunit,imat,NMATERIALS

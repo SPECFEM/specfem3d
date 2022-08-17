@@ -27,21 +27,32 @@
 
 ! for external mesh
 
-  subroutine save_arrays_solver_ext_mesh(nspec,nglob,APPROXIMATE_OCEAN_LOAD,ibool, &
-                    num_interfaces_ext_mesh,my_neighbors_ext_mesh,nibool_interfaces_ext_mesh, &
-                    max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
-                    SAVE_MESH_FILES,ANISOTROPY)
+  subroutine save_arrays_solver_ext_mesh()
 
-  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IOUT, &
+  use constants, only: IMAIN,IOUT,myrank
+
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
+    APPROXIMATE_OCEAN_LOAD, SAVE_MESH_FILES, ANISOTROPY
+
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
+
+  ! global indices
+  use generate_databases_par, only: nspec => NSPEC_AB, ibool
+
+  use generate_databases_par, only: &
     nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-    SIMULATION_TYPE,SAVE_FORWARD,mask_ibool_interior_domain, &
+    SIMULATION_TYPE,SAVE_FORWARD, &
     STACEY_ABSORBING_CONDITIONS,USE_MESH_COLORING_GPU
+
+  ! MPI interfaces
+  use generate_databases_par, only: num_interfaces_ext_mesh,my_neighbors_ext_mesh, &
+    nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh
 
   ! PML
   use generate_databases_par, only: PML_CONDITIONS, &
     nspec_cpml,CPML_width_x,CPML_width_y,CPML_width_z,CPML_to_spec, &
-    CPML_regions,is_CPML,min_distance_between_CPML_parameter,nspec_cpml_tot, &
+    CPML_regions,is_CPML,min_distance_between_CPML_parameter, &
     d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z, &
     alpha_store_x,alpha_store_y,alpha_store_z, &
     nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
@@ -49,38 +60,33 @@
 
   ! mesh surface
   use generate_databases_par, only: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh, &
-    nfaces_surface,nspec_irregular
+    nfaces_surface
 
   use create_regions_mesh_ext_par
 
-  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
-
   implicit none
-
-  integer,intent(in) :: nspec,nglob
-  ! ocean load
-  logical,intent(in) :: APPROXIMATE_OCEAN_LOAD
-  ! mesh coordinates
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
-  ! MPI interfaces
-  integer,intent(in) :: num_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh),intent(in) :: my_neighbors_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
-  integer,intent(in) :: max_interface_size_ext_mesh
-  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
-
-  logical,intent(in) :: SAVE_MESH_FILES
-  logical,intent(in) :: ANISOTROPY
 
   ! local parameters
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
   integer :: max_nibool_interfaces_ext_mesh
-
-  integer :: ier,i
+  integer :: nglob
+  integer :: ier,i,itest
   character(len=MAX_STRING_LEN) :: filename
 
-  ! saves mesh file proc***_external_mesh.bin
+  ! number of unique global nodes
+  nglob = nglob_unique
+
+  ! database file name
   filename = prname(1:len_trim(prname))//'external_mesh.bin'
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '     using binary file format'
+    write(IMAIN,*) '     database file (for rank 0): ',trim(filename)
+    call flush_IMAIN()
+  endif
+
+  ! saves mesh file proc***_external_mesh.bin
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',form='unformatted',iostat=ier)
   if (ier /= 0) stop 'error opening database proc######_external_mesh.bin'
 
@@ -90,9 +96,9 @@
 
   write(IOUT) ibool
 
-  write(IOUT) xstore_dummy
-  write(IOUT) ystore_dummy
-  write(IOUT) zstore_dummy
+  write(IOUT) xstore_unique
+  write(IOUT) ystore_unique
+  write(IOUT) zstore_unique
 
   write(IOUT) irregular_element_number
   write(IOUT) xix_regular
@@ -116,27 +122,31 @@
   write(IOUT) ispec_is_elastic
   write(IOUT) ispec_is_poroelastic
 
-! acoustic
+  ! stamp for checking i/o
+  itest = 9999
+  write(IOUT) itest
+
+  ! acoustic
   if (ACOUSTIC_SIMULATION) then
     write(IOUT) rmass_acoustic
   endif
 
-! this array is needed for acoustic simulations but also for elastic simulations with CPML,
-! thus we allocate it and read it in all cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
+  ! this array is needed for acoustic simulations but also for elastic simulations with CPML,
+  ! thus we allocate it and read it in all cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
   write(IOUT) rhostore
 
-! elastic
+  ! elastic
   if (ELASTIC_SIMULATION) then
     write(IOUT) rmass
     if (APPROXIMATE_OCEAN_LOAD) then
       write(IOUT) rmass_ocean_load
     endif
-    !pll Stacey
+    ! Stacey
     write(IOUT) rho_vp
     write(IOUT) rho_vs
   endif
 
-! poroelastic
+  ! poroelastic
   if (POROELASTIC_SIMULATION) then
     write(IOUT) rmass_solid_poroelastic
     write(IOUT) rmass_fluid_poroelastic
@@ -151,7 +161,7 @@
     write(IOUT) rho_vsI
   endif
 
-! C-PML absorbing boundary conditions
+  ! C-PML absorbing boundary conditions
   if (PML_CONDITIONS) then
     write(IOUT) nspec_cpml
     write(IOUT) CPML_width_x
@@ -184,7 +194,7 @@
     endif
   endif
 
-! absorbing boundary surface
+  ! absorbing boundary surface
   write(IOUT) num_abs_boundary_faces
   if (num_abs_boundary_faces > 0) then
     write(IOUT) abs_boundary_ispec
@@ -204,20 +214,26 @@
     endif
   endif
 
+  ! stamp for checking i/o so far
+  itest = 9998
+  write(IOUT) itest
+
+  ! boundaries
   write(IOUT) nspec2D_xmin
   write(IOUT) nspec2D_xmax
   write(IOUT) nspec2D_ymin
   write(IOUT) nspec2D_ymax
   write(IOUT) NSPEC2D_BOTTOM
   write(IOUT) NSPEC2D_TOP
-  write(IOUT) ibelm_xmin
-  write(IOUT) ibelm_xmax
-  write(IOUT) ibelm_ymin
-  write(IOUT) ibelm_ymax
-  write(IOUT) ibelm_bottom
-  write(IOUT) ibelm_top
 
-! free surface
+  if (nspec2D_xmin > 0) write(IOUT) ibelm_xmin
+  if (nspec2D_xmax > 0) write(IOUT) ibelm_xmax
+  if (nspec2D_ymin > 0) write(IOUT) ibelm_ymin
+  if (nspec2D_ymax > 0) write(IOUT) ibelm_ymax
+  if (nspec2D_bottom > 0) write(IOUT) ibelm_bottom
+  if (nspec2D_top > 0) write(IOUT) ibelm_top
+
+  ! free surface
   write(IOUT) num_free_surface_faces
   if (num_free_surface_faces > 0) then
     write(IOUT) free_surface_ispec
@@ -226,7 +242,7 @@
     write(IOUT) free_surface_normal
   endif
 
-! acoustic-elastic coupling surface
+  ! acoustic-elastic coupling surface
   write(IOUT) num_coupling_ac_el_faces
   if (num_coupling_ac_el_faces > 0) then
     write(IOUT) coupling_ac_el_ispec
@@ -235,7 +251,7 @@
     write(IOUT) coupling_ac_el_normal
   endif
 
-! acoustic-poroelastic coupling surface
+  ! acoustic-poroelastic coupling surface
   write(IOUT) num_coupling_ac_po_faces
   if (num_coupling_ac_po_faces > 0) then
     write(IOUT) coupling_ac_po_ispec
@@ -244,7 +260,7 @@
     write(IOUT) coupling_ac_po_normal
   endif
 
-! elastic-poroelastic coupling surface
+  ! elastic-poroelastic coupling surface
   write(IOUT) num_coupling_el_po_faces
   if (num_coupling_el_po_faces > 0) then
     write(IOUT) coupling_el_po_ispec
@@ -255,25 +271,38 @@
     write(IOUT) coupling_el_po_normal
   endif
 
-  !MPI interfaces
-  max_nibool_interfaces_ext_mesh = maxval(nibool_interfaces_ext_mesh(:))
+  ! stamp for checking i/o
+  itest = 9997
+  write(IOUT) itest
 
-  allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 650')
-  if (ier /= 0) stop 'error allocating array'
-  do i = 1, num_interfaces_ext_mesh
-     ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
-  enddo
-
-  write(IOUT) num_interfaces_ext_mesh
+  ! MPI interfaces
   if (num_interfaces_ext_mesh > 0) then
-    write(IOUT) max_nibool_interfaces_ext_mesh
+    max_nibool_interfaces_ext_mesh = maxval(nibool_interfaces_ext_mesh(:))
+  else
+    max_nibool_interfaces_ext_mesh = 0
+  endif
+  write(IOUT) num_interfaces_ext_mesh
+  write(IOUT) max_nibool_interfaces_ext_mesh
+
+  if (num_interfaces_ext_mesh > 0) then
+    allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 650')
+    if (ier /= 0) stop 'error allocating array'
+    ibool_interfaces_ext_mesh_dummy(:,:) = 0
+    do i = 1, num_interfaces_ext_mesh
+       ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
+    enddo
     write(IOUT) my_neighbors_ext_mesh
     write(IOUT) nibool_interfaces_ext_mesh
     write(IOUT) ibool_interfaces_ext_mesh_dummy
   endif
 
-! anisotropy
+  ! stamp for checking i/o
+  itest = 9996
+  write(IOUT) itest
+
+  ! material properties
+  ! anisotropy
   if (ELASTIC_SIMULATION .and. ANISOTROPY) then
     write(IOUT) c11store
     write(IOUT) c12store
@@ -298,7 +327,7 @@
     write(IOUT) c66store
   endif
 
-! inner/outer elements
+  ! inner/outer elements
   write(IOUT) ispec_is_inner
 
   if (ACOUSTIC_SIMULATION) then
@@ -336,51 +365,29 @@
   write(IOUT) ispec_is_surface_external_mesh
   write(IOUT) iglob_is_surface_external_mesh
 
+  ! stamp for checking i/o
+  itest = 9995
+  write(IOUT) itest
+
   close(IOUT)
 
   ! stores arrays in binary files
-  if (SAVE_MESH_FILES) call save_arrays_solver_files(nspec,nglob,ibool)
+  if (SAVE_MESH_FILES) then
+    call save_arrays_solver_files()
+  endif
 
   ! if SAVE_MESH_FILES is true then the files have already been saved, no need to save them again
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
-    call save_arrays_solver_injection_boundary(nspec,ibool)
+    call save_arrays_solver_injection_boundary()
   endif
+
+  ! synchronizes processes
+  call synchronize_all()
 
   ! cleanup
-  deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier)
-  if (ier /= 0) stop 'error deallocating array ibool_interfaces_ext_mesh_dummy'
-
-  ! PML
-  deallocate(is_CPML,stat=ier); if (ier /= 0) stop 'error deallocating array is_CPML'
-  if (nspec_cpml_tot > 0) then
-     deallocate(CPML_to_spec,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_to_spec'
-     deallocate(CPML_regions,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_regions'
-  endif
-
-  if (PML_CONDITIONS) then
-     deallocate(d_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_x'
-     deallocate(d_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_y'
-     deallocate(d_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_z'
-     deallocate(k_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_x'
-     deallocate(k_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_y'
-     deallocate(k_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_z'
-     deallocate(alpha_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_x'
-     deallocate(alpha_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_y'
-     deallocate(alpha_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_z'
-     if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
-       deallocate(mask_ibool_interior_domain,stat=ier)
-       if (ier /= 0) stop 'error deallocating array mask_ibool_interior_domain'
-
-       if (nglob_interface_PML_acoustic > 0) then
-         deallocate(points_interface_PML_acoustic,stat=ier)
-         if (ier /= 0) stop 'error deallocating array points_interface_PML_acoustic'
-       endif
-
-       if (nglob_interface_PML_elastic > 0) then
-         deallocate(points_interface_PML_elastic,stat=ier)
-         if (ier /= 0) stop 'error deallocating array points_interface_PML_elastic'
-       endif
-     endif
+  if (allocated(ibool_interfaces_ext_mesh_dummy)) then
+    deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier)
+    if (ier /= 0) stop 'error deallocating array ibool_interfaces_ext_mesh_dummy'
   endif
 
   end subroutine save_arrays_solver_ext_mesh
@@ -389,26 +396,26 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine save_arrays_solver_files(nspec,nglob,ibool)
+  subroutine save_arrays_solver_files()
 
 ! outputs binary files for single mesh parameters (for example vp, vs, rho, ..)
 
-  use constants, only: IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC
+  use constants, only: IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
+    NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS,CUSTOM_REAL, &
+    myrank
 
-  use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
+    NPROC
+
+  ! global indices
+  use generate_databases_par, only: nspec => NSPEC_AB, ibool
 
   ! MPI interfaces
   use generate_databases_par, only: nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,num_interfaces_ext_mesh
 
   use create_regions_mesh_ext_par
 
-  use shared_parameters, only: NPROC
-
   implicit none
-
-  integer,intent(in) :: nspec,nglob
-  ! mesh coordinates
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: v_tmp
@@ -434,19 +441,19 @@
   !--- x coordinate
   open(unit=IOUT,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted',iostat=ier)
   if (ier /= 0) stop 'error opening file x.bin'
-  write(IOUT) xstore_dummy
+  write(IOUT) xstore_unique
   close(IOUT)
 
   !--- y coordinate
   open(unit=IOUT,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted',iostat=ier)
   if (ier /= 0) stop 'error opening file y.bin'
-  write(IOUT) ystore_dummy
+  write(IOUT) ystore_unique
   close(IOUT)
 
   !--- z coordinate
   open(unit=IOUT,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted',iostat=ier)
   if (ier /= 0) stop 'error opening file z.bin'
-  write(IOUT) zstore_dummy
+  write(IOUT) zstore_unique
   close(IOUT)
 
   ! ibool
@@ -475,8 +482,8 @@
 
   ! vp values - VTK file output
   filename = prname(1:len_trim(prname))//'vp'
-  call write_VTK_data_gll_cr(nspec,nglob, &
-                             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+  call write_VTK_data_gll_cr(nspec,nglob_unique, &
+                             xstore_unique,ystore_unique,zstore_unique,ibool, &
                              v_tmp,filename)
 
 
@@ -496,8 +503,8 @@
 
   ! vs values - VTK file output
   filename = prname(1:len_trim(prname))//'vs'
-  call write_VTK_data_gll_cr(nspec,nglob, &
-                             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+  call write_VTK_data_gll_cr(nspec,nglob_unique, &
+                             xstore_unique,ystore_unique,zstore_unique,ibool, &
                              v_tmp,filename)
 
   ! outputs density model for check
@@ -517,8 +524,8 @@
 
   ! shear attenuation - VTK file output
   filename = prname(1:len_trim(prname))//'qmu'
-  call write_VTK_data_gll_cr(nspec,nglob, &
-                             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+  call write_VTK_data_gll_cr(nspec,nglob_unique, &
+                             xstore_unique,ystore_unique,zstore_unique,ibool, &
                              qmu_attenuation_store,filename)
 
   ! bulk attenuation Qkappa
@@ -529,8 +536,8 @@
 
   ! bulk attenuation - VTK file output
   filename = prname(1:len_trim(prname))//'qkappa'
-  call write_VTK_data_gll_cr(nspec,nglob, &
-                             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+  call write_VTK_data_gll_cr(nspec,nglob_unique, &
+                             xstore_unique,ystore_unique,zstore_unique,ibool, &
                              qkappa_attenuation_store,filename)
 
   ! frees temporary array
@@ -563,8 +570,8 @@
         enddo
       enddo
       filename = prname(1:len_trim(prname))//'free_surface'
-      call write_VTK_data_points(nglob, &
-                                 xstore_dummy,ystore_dummy,zstore_dummy, &
+      call write_VTK_data_points(nglob_unique, &
+                                 xstore_unique,ystore_unique,zstore_unique, &
                                  iglob_tmp,NGLLSQUARE*num_free_surface_faces, &
                                  filename)
 
@@ -590,7 +597,7 @@
         enddo
       enddo
       filename = prname(1:len_trim(prname))//'coupling_acoustic_elastic'
-      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
+      call write_VTK_data_points(nglob_unique,xstore_unique,ystore_unique,zstore_unique, &
                                  iglob_tmp,num_points,filename)
       deallocate(iglob_tmp)
     endif !if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION )
@@ -614,7 +621,7 @@
         enddo
       enddo
       filename = prname(1:len_trim(prname))//'coupling_acoustic_poroelastic'
-      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
+      call write_VTK_data_points(nglob_unique,xstore_unique,ystore_unique,zstore_unique, &
                                  iglob_tmp,num_points,filename)
       deallocate(iglob_tmp)
     endif !if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION )
@@ -638,7 +645,7 @@
         enddo
       enddo
       filename = prname(1:len_trim(prname))//'coupling_elastic_poroelastic'
-      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
+      call write_VTK_data_points(nglob_unique,xstore_unique,ystore_unique,zstore_unique, &
                                  iglob_tmp,num_points,filename)
       deallocate(iglob_tmp)
     endif !if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION
@@ -663,7 +670,7 @@
         endif
       enddo
       filename = prname(1:len_trim(prname))//'acoustic_elastic_poroelastic_flag'
-      call write_VTK_data_elem_i(nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+      call write_VTK_data_elem_i(nspec,nglob_unique,xstore_unique,ystore_unique,zstore_unique,ibool, &
                                  v_tmp_i,filename)
       deallocate(v_tmp_i)
     endif
@@ -685,11 +692,24 @@
       enddo
 
       filename = prname(1:len_trim(prname))//'MPI_points'
-      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
+      call write_VTK_data_points(nglob_unique,xstore_unique,ystore_unique,zstore_unique, &
                                  iglob_tmp,num_points,filename)
       deallocate(iglob_tmp)
     endif ! NPROC > 1
   endif  !if (SAVE_MESH_FILES_ADDITIONAL)
+
+  !debug
+  ! saves ispec number
+  !allocate(v_tmp_i(nspec),stat=ier)
+  !if (ier /= 0) call exit_MPI_without_rank('error allocating array 656')
+  !if (ier /= 0) stop 'error allocating array v_tmp_i'
+  !do i = 1,nspec
+  !  v_tmp_i(i) = i
+  !enddo
+  !filename = prname(1:len_trim(prname))//'ispec_number'
+  !call write_VTK_data_elem_i(nspec,nglob_unique,xstore_unique,ystore_unique,zstore_unique,ibool, &
+  !                           v_tmp_i,filename)
+  !deallocate(v_tmp_i)
 
   end subroutine save_arrays_solver_files
 
@@ -697,19 +717,18 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine save_arrays_solver_injection_boundary(nspec,ibool)
+  subroutine save_arrays_solver_injection_boundary()
 
-  use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT
-
-  use create_regions_mesh_ext_par
+  use constants, only: myrank,NGLLSQUARE,IMAIN,IOUT
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
 
-  implicit none
+  ! global indices
+  use generate_databases_par, only: ibool
 
-  integer,intent(in) :: nspec
-  ! mesh coordinates
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
+  use create_regions_mesh_ext_par
+
+  implicit none
 
   ! local parameters
   integer :: ier,i,j,k
@@ -762,7 +781,7 @@
            ny = abs_boundary_normal(2,igll,iface)
            nz = abs_boundary_normal(3,igll,iface)
 
-           write(IOUT,'(6f25.10)') xstore_dummy(iglob), ystore_dummy(iglob), zstore_dummy(iglob), nx, ny, nz
+           write(IOUT,'(6f25.10)') xstore_unique(iglob), ystore_unique(iglob), zstore_unique(iglob), nx, ny, nz
 
         enddo
      endif

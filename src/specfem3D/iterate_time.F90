@@ -273,7 +273,6 @@
     ! poroelastic solver
     if (POROELASTIC_SIMULATION) call compute_forces_poroelastic_calling()
 
-
     ! restores last time snapshot saved for backward/reconstruction of wavefields
     ! note: this must be read in after the Newmark time scheme
     if (SIMULATION_TYPE == 3 .and. it == 1) then
@@ -302,14 +301,15 @@
 
     ! outputs movie files
     call cpu_time(pts)
-    if (HDF5_ENABLED) then
-      call write_movie_output_h5()
-    else
-      call write_movie_output()
+    if (MOVIE_SIMULATION) then
+      if (HDF5_ENABLED) then
+        call write_movie_output_h5()
+      else
+        call write_movie_output()
+      endif
     endif
     call cpu_time(pte)
     ave_m=ave_m+(pte-pts)
-
 
     ! first step of noise tomography, i.e., save a surface movie at every time step
     ! modified from the subroutine 'write_movie_surface'
@@ -346,7 +346,8 @@
   ! close the huge file that contains a dump of all the time steps to disk
   if (EXACT_UNDOING_TO_DISK) close(IFILE_FOR_EXACT_UNDOING)
 
-  call it_print_elapsed_time()
+  ! user output of runtime
+  call print_elapsed_time()
 
   !! CD CD added this
   if (RECIPROCITY_AND_KH_INTEGRAL) then
@@ -373,8 +374,6 @@
   endif
 #endif
 
-  ! cleanup GPU arrays
-  if (GPU_MODE) call it_cleanup_GPU()
 
   endif ! if compute_task
 
@@ -410,12 +409,13 @@
     if (ELASTIC_SIMULATION) then
       call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel,Mesh_pointer)
 
-      if (ATTENUATION) &
-        call transfer_fields_att_from_device(Mesh_pointer, &
-                                             R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
-                                             epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
-                                             R_trace,epsilondev_trace, &
-                                             size(epsilondev_xx))
+      if (ATTENUATION) then
+        call transfer_rmemory_from_device(Mesh_pointer,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                                          R_trace,size(R_xx))
+        call transfer_strain_from_device(Mesh_pointer,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+                                         epsilondev_trace,size(epsilondev_xx))
+
+      endif
     endif
 
   else if (SIMULATION_TYPE == 3) then
@@ -448,32 +448,12 @@
     ! approximative Hessian for preconditioning kernels
     if (APPROXIMATE_HESS_KL) then
       if (ELASTIC_SIMULATION) &
-           call transfer_kernels_hess_el_tohost(Mesh_pointer,hess_kl,hess_rho_kl,hess_kappa_kl,hess_mu_kl,NSPEC_AB)
+        call transfer_kernels_hess_el_tohost(Mesh_pointer,hess_kl,hess_rho_kl,hess_kappa_kl,hess_mu_kl,NSPEC_AB)
       if (ACOUSTIC_SIMULATION) &
-           call transfer_kernels_hess_ac_tohost(Mesh_pointer,hess_ac_kl, hess_rho_ac_kl,hess_kappa_ac_kl,NSPEC_AB)
+        call transfer_kernels_hess_ac_tohost(Mesh_pointer,hess_ac_kl,hess_rho_ac_kl,hess_kappa_ac_kl,NSPEC_AB)
     endif
 
   endif
 
   end subroutine it_transfer_from_GPU
 
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine it_cleanup_GPU()
-
-  use specfem_par
-  use specfem_par_elastic
-  use specfem_par_acoustic
-
-  implicit none
-
-  ! from here on, no gpu data is needed anymore
-  ! frees allocated memory on GPU
-  call prepare_cleanup_device(Mesh_pointer,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION, &
-                              STACEY_ABSORBING_CONDITIONS,NOISE_TOMOGRAPHY,COMPUTE_AND_STORE_STRAIN, &
-                              ATTENUATION,ANISOTROPY,APPROXIMATE_OCEAN_LOAD, &
-                              APPROXIMATE_HESS_KL)
-
-  end subroutine it_cleanup_GPU

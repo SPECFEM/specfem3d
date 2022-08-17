@@ -28,15 +28,17 @@
 !----
 !---- locate_receivers finds the correct position of the receivers
 !----
-  subroutine locate_receivers(rec_filename,nrec,islice_selected_rec,ispec_selected_rec, &
-                              xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu_rec, &
-                              utm_x_source,utm_y_source)
+  subroutine locate_receivers(rec_filename,utm_x_source,utm_y_source)
 
   use constants
 
-  use specfem_par, only: USE_SOURCES_RECEIVERS_Z,ibool,myrank,NSPEC_AB,NGLOB_AB, &
-                         xstore,ystore,zstore,SUPPRESS_UTM_PROJECTION,INVERSE_FWI_FULL_PROBLEM, &
-                         SU_FORMAT
+  use specfem_par, only: USE_SOURCES_RECEIVERS_Z,SUPPRESS_UTM_PROJECTION,INVERSE_FWI_FULL_PROBLEM,SU_FORMAT, &
+                         ibool,myrank,NSPEC_AB,NGLOB_AB, &
+                         xstore,ystore,zstore, &
+                         nrec,islice_selected_rec,ispec_selected_rec, &
+                         xi_receiver,eta_receiver,gamma_receiver,nu_rec, &
+                         station_name,network_name, &
+                         stlat,stlon,stbur
   ! PML
   use pml_par, only: is_CPML
 
@@ -46,12 +48,6 @@
   character(len=*) :: rec_filename
 
   ! receivers
-  integer :: nrec
-  integer, dimension(nrec),intent(out) :: islice_selected_rec,ispec_selected_rec
-  double precision, dimension(nrec),intent(out) :: xi_receiver,eta_receiver,gamma_receiver
-  character(len=MAX_LENGTH_STATION_NAME), dimension(nrec),intent(out) :: station_name
-  character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec),intent(out) :: network_name
-  double precision, dimension(NDIM,NDIM,nrec),intent(out) :: nu_rec
   double precision,intent(in) :: utm_x_source,utm_y_source
 
   ! local parameters
@@ -70,7 +66,7 @@
 
   ! receiver information
   ! station information for writing the seismograms
-  double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur,stutm_x,stutm_y,elevation
+  double precision, allocatable, dimension(:) :: stutm_x,stutm_y,elevation
 
   ! domains
   integer, dimension(:),allocatable :: idomain
@@ -127,33 +123,14 @@
                             elemsize_min_glob,elemsize_max_glob, &
                             distance_min_glob,distance_max_glob)
 
-  ! allocate memory for arrays using number of stations
-  allocate(stlat(nrec),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1955')
-  allocate(stlon(nrec),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1956')
-  allocate(stele(nrec),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1957')
-  allocate(stbur(nrec),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1958')
-
   ! reads STATIONS file
-  call read_stations(rec_filename,nrec,station_name,network_name,stlat,stlon,stele,stbur)
+  call read_stations(rec_filename)
 
   ! checks if station locations already available
   if (SU_FORMAT .and. (.not. INVERSE_FWI_FULL_PROBLEM) ) then
-    call read_stations_SU_from_previous_run(nrec,station_name,network_name, &
-                                            islice_selected_rec,ispec_selected_rec, &
-                                            xi_receiver,eta_receiver,gamma_receiver, &
-                                            nu_rec,is_done_stations)
+    call read_stations_SU_from_previous_run(is_done_stations)
     ! check if done
     if (is_done_stations) then
-      ! free temporary arrays
-      deallocate(stlat)
-      deallocate(stlon)
-      deallocate(stele)
-      deallocate(stbur)
-
       ! user output
       if (myrank == 0) then
         ! elapsed time since beginning of mesh generation
@@ -165,7 +142,6 @@
         write(IMAIN,*)
         call flush_IMAIN()
       endif
-
       ! all done
       return
     endif
@@ -178,6 +154,9 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1960')
   allocate(elevation(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1961')
+  stutm_x(:) = 0.d0
+  stutm_y(:) = 0.d0
+  elevation(:) = 0.d0
 
   allocate(x_target(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1962')
@@ -185,6 +164,9 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1963')
   allocate(z_target(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1964')
+  x_target(:) = 0.d0
+  y_target(:) = 0.d0
+  z_target(:) = 0.d0
 
   allocate(x_found(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1965')
@@ -192,12 +174,17 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1966')
   allocate(z_found(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1967')
+  x_found(:) = 0.d0
+  y_found(:) = 0.d0
+  z_found(:) = 0.d0
 
   allocate(final_distance(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1968')
   allocate(idomain(nrec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1969')
   if (ier /= 0) stop 'Error allocating arrays for locating receivers'
+  final_distance(:) = HUGEVAL
+  idomain(:) = 0
 
   ! determines target point locations (need to locate z coordinate of all receivers)
   ! note: we first locate all the target positions in the mesh to reduces the need of MPI communication
@@ -433,16 +420,14 @@
     if (ier /= 0) &
       call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
     ! writes station infos
-    do irec=1,nrec
+    do irec = 1,nrec
       write(IOUT_SU,'(a32,a8,3f24.12)') station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
     enddo
     ! closes output file
     close(IOUT_SU)
 
     ! stores station infos for later runs
-    if (SU_FORMAT) call write_stations_SU_for_next_run(nrec,islice_selected_rec,ispec_selected_rec, &
-                                                       xi_receiver,eta_receiver,gamma_receiver, &
-                                                       x_found,y_found,z_found,nu_rec)
+    if (SU_FORMAT) call write_stations_SU_for_next_run(x_found,y_found,z_found)
 
     ! elapsed time since beginning of mesh generation
     tCPU = wtime() - tstart
@@ -454,11 +439,7 @@
     call flush_IMAIN()
   endif    ! end of section executed by main process only
 
-  ! deallocate arrays
-  deallocate(stlat)
-  deallocate(stlon)
-  deallocate(stele)
-  deallocate(stbur)
+  ! deallocate temporary arrays
   deallocate(stutm_x)
   deallocate(stutm_y)
   deallocate(elevation)

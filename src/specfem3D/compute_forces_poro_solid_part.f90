@@ -36,11 +36,12 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ONE_THIRD
 
   use specfem_par, only: NGLOB_AB, &
-                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                         xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore,jacobianstore, &
                          hprime_xx,hprime_yy,hprime_zz, &
                          hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
                          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll, &
-                         SIMULATION_TYPE,NSPEC_ADJOINT,jacobian,ibool,mustore, &
+                         SIMULATION_TYPE,NSPEC_ADJOINT,ibool,mustore, &
                          irregular_element_number,xix_regular,jacobian_regular
 
   use specfem_par_poroelastic, only: kappaarraystore,rhoarraystore,etastore,permstore, &
@@ -220,16 +221,16 @@
           ! get derivatives of ux, uy and uz with respect to x, y and z
           if (ispec_irreg /= 0) then
             !irregular element
-            xixl = xix(i,j,k,ispec_irreg)
-            xiyl = xiy(i,j,k,ispec_irreg)
-            xizl = xiz(i,j,k,ispec_irreg)
-            etaxl = etax(i,j,k,ispec_irreg)
-            etayl = etay(i,j,k,ispec_irreg)
-            etazl = etaz(i,j,k,ispec_irreg)
-            gammaxl = gammax(i,j,k,ispec_irreg)
-            gammayl = gammay(i,j,k,ispec_irreg)
-            gammazl = gammaz(i,j,k,ispec_irreg)
-            jacobianl = jacobian(i,j,k,ispec_irreg)
+            xixl = xixstore(i,j,k,ispec_irreg)
+            xiyl = xiystore(i,j,k,ispec_irreg)
+            xizl = xizstore(i,j,k,ispec_irreg)
+            etaxl = etaxstore(i,j,k,ispec_irreg)
+            etayl = etaystore(i,j,k,ispec_irreg)
+            etazl = etazstore(i,j,k,ispec_irreg)
+            gammaxl = gammaxstore(i,j,k,ispec_irreg)
+            gammayl = gammaystore(i,j,k,ispec_irreg)
+            gammazl = gammazstore(i,j,k,ispec_irreg)
+            jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
             ! derivatives of displacement
             duxdxl = xixl*tempx1ls + etaxl*tempx2ls + gammaxl*tempx3ls
@@ -553,7 +554,7 @@
                        + velocw_poroelastic(3,iglob)*bl_relaxed(6)
             !      endif
 
-            if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
+            if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
             accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) &
                                         + phil/tortl*wxgll(i)*wygll(j)*wzgll(k)*jacobianl*viscodampx

@@ -27,14 +27,46 @@
 
   double precision function comp_source_time_function(t,hdur)
 
+  use specfem_par, only: DT,t0,PI
+
   implicit none
 
   double precision, intent(in) :: t,hdur
 
   double precision, external :: netlib_specfun_erf
 
+  ! taper - experimental test
+  ! idea: to see if tapering the onset of the source time function would diminish numerical noise.
+  !       so far not really, spurious oscillations still occur due to discretization.
+  !       thus, artefacts seem not too much affected by non-zero onset values of source time function.
+  logical, parameter :: USE_TAPERED_BEGINNING = .false.
+  double precision, parameter :: length_window = 200
+  double precision :: taper
+  integer :: l
+
   ! quasi Heaviside, small Gaussian moment-rate tensor with hdur
   comp_source_time_function = 0.5d0*(1.0d0 + netlib_specfun_erf(t/hdur))
+
+  ! taper to suppress noise?
+  if (USE_TAPERED_BEGINNING) then
+    if (t < length_window * DT - t0) then
+      ! check if taper length is reasonable compared to hdur
+      if ( nint(hdur/DT) > length_window) then
+        ! index from length_window to 0
+        l = nint( ((length_window * DT - t0) - t)/DT )
+        ! from 0 to length_window-1
+        l = length_window - l
+        ! cosine taper, otherwise using a constant (1.0) instead
+        taper = (1.d0 - cos(PI*(l+1)/(length_window)))/2.d0
+        ! linear taper
+        !taper = dble(l+1)/dble(length_window)
+        ! tapers stf
+        comp_source_time_function = comp_source_time_function * taper
+        !debug
+        !print *,'debug: taper ',taper,l,t,length_window*DT-t0,hdur,nint(hdur/DT)
+      endif
+    endif
+  endif
 
   end function comp_source_time_function
 

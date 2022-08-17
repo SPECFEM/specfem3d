@@ -32,11 +32,12 @@
 ! returns the updated accelerations array: accel
 
   use constants
-  use specfem_par, only: ibool,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          mustore,kappastore, &
-                          SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT,ANISOTROPY, &
-                          irregular_element_number,xix_regular
+  use specfem_par, only: ibool,xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore, &
+                         hprime_xx,hprime_yy,hprime_zz, &
+                         mustore,kappastore, &
+                         SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT,ANISOTROPY, &
+                         irregular_element_number,xix_regular
 
   use specfem_par_poroelastic, only: displs_poroelastic,displw_poroelastic, &
                                       kappaarraystore,rhoarraystore, &
@@ -219,15 +220,15 @@
       ! get derivatives of ux, uy and uz with respect to x, y and z
       if (ispec_irreg_po /= 0 ) then
         !irregular element
-        xixl = xix(i,j,k,ispec_irreg_po)
-        xiyl = xiy(i,j,k,ispec_irreg_po)
-        xizl = xiz(i,j,k,ispec_irreg_po)
-        etaxl = etax(i,j,k,ispec_irreg_po)
-        etayl = etay(i,j,k,ispec_irreg_po)
-        etazl = etaz(i,j,k,ispec_irreg_po)
-        gammaxl = gammax(i,j,k,ispec_irreg_po)
-        gammayl = gammay(i,j,k,ispec_irreg_po)
-        gammazl = gammaz(i,j,k,ispec_irreg_po)
+        xixl = xixstore(i,j,k,ispec_irreg_po)
+        xiyl = xiystore(i,j,k,ispec_irreg_po)
+        xizl = xizstore(i,j,k,ispec_irreg_po)
+        etaxl = etaxstore(i,j,k,ispec_irreg_po)
+        etayl = etaystore(i,j,k,ispec_irreg_po)
+        etazl = etazstore(i,j,k,ispec_irreg_po)
+        gammaxl = gammaxstore(i,j,k,ispec_irreg_po)
+        gammayl = gammaystore(i,j,k,ispec_irreg_po)
+        gammazl = gammazstore(i,j,k,ispec_irreg_po)
 
         ! derivatives of displacement
         duxdxl = xixl*tempx1ls + etaxl*tempx2ls + gammaxl*tempx3ls
@@ -367,15 +368,15 @@
       ! get derivatives of ux, uy and uz with respect to x, y and z
       if (ispec_irreg_el /= 0 ) then
         !irregular element
-        xixl = xix(i,j,k,ispec_irreg_el)
-        xiyl = xiy(i,j,k,ispec_irreg_el)
-        xizl = xiz(i,j,k,ispec_irreg_el)
-        etaxl = etax(i,j,k,ispec_irreg_el)
-        etayl = etay(i,j,k,ispec_irreg_el)
-        etazl = etaz(i,j,k,ispec_irreg_el)
-        gammaxl = gammax(i,j,k,ispec_irreg_el)
-        gammayl = gammay(i,j,k,ispec_irreg_el)
-        gammazl = gammaz(i,j,k,ispec_irreg_el)
+        xixl = xixstore(i,j,k,ispec_irreg_el)
+        xiyl = xiystore(i,j,k,ispec_irreg_el)
+        xizl = xizstore(i,j,k,ispec_irreg_el)
+        etaxl = etaxstore(i,j,k,ispec_irreg_el)
+        etayl = etaystore(i,j,k,ispec_irreg_el)
+        etazl = etazstore(i,j,k,ispec_irreg_el)
+        gammaxl = gammaxstore(i,j,k,ispec_irreg_el)
+        gammayl = gammaystore(i,j,k,ispec_irreg_el)
+        gammazl = gammazstore(i,j,k,ispec_irreg_el)
 
         duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
         duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l

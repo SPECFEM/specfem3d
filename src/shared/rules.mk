@@ -35,9 +35,9 @@ shared_TARGETS = \
 	$(shared_OBJECTS) \
 	$(EMPTY_MACRO)
 
-
 shared_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/adios_manager.shared_adios_module.o \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
@@ -76,6 +76,7 @@ shared_OBJECTS = \
 
 shared_MODULES = \
 	$(FC_MODDIR)/constants.$(FC_MODEXT) \
+	$(FC_MODDIR)/manager_adios.$(FC_MODEXT) \
 	$(FC_MODDIR)/kdtree_search.$(FC_MODEXT) \
 	$(FC_MODDIR)/safe_alloc_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/shared_input_parameters.$(FC_MODEXT) \
@@ -98,33 +99,39 @@ endif
 ###
 
 adios_shared_OBJECTS = \
-	$O/adios_helpers_definitions.shared_adios_module.o \
-	$O/adios_helpers_writers.shared_adios_module.o \
+	$O/adios_helpers_addons.shared_adios_cc.o \
+	$O/adios_helpers_definitions.shared_adios.o \
+	$O/adios_helpers_readers.shared_adios.o \
+	$O/adios_helpers_writers.shared_adios.o \
 	$O/adios_helpers.shared_adios.o \
-	$O/adios_manager.shared_adios.o \
 	$(EMPTY_MACRO)
 
 adios_shared_MODULES = \
 	$(FC_MODDIR)/adios_helpers_definitions_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/adios_helpers_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/adios_helpers_readers_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/adios_helpers_writers_mod.$(FC_MODEXT) \
-	$(FC_MODDIR)/adios_manager_mod.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
-adios_shared_STUB_OBJECTS = \
-	$O/adios_manager_stubs.shared_noadios.o \
-	$(EMPTY_MACRO)
-
-adios_shared_STUB_MODULES = \
-	$(FC_MODDIR)/adios_manager_mod.$(FC_MODEXT) \
+adios_shared_STUBS = \
+	$O/adios_method_stubs.cc.o \
 	$(EMPTY_MACRO)
 
 ifeq ($(ADIOS),yes)
 shared_OBJECTS += $(adios_shared_OBJECTS)
 shared_MODULES += $(adios_shared_MODULES)
+else ifeq ($(ADIOS2),yes)
+shared_OBJECTS += $(adios_shared_OBJECTS)
+shared_MODULES += $(adios_shared_MODULES)
 else
-shared_OBJECTS += $(adios_shared_STUB_OBJECTS)
-shared_MODULES += $(adios_shared_STUB_MODULES)
+shared_OBJECTS += $(adios_shared_STUBS)
+endif
+
+## dependencies
+ifeq ($(ADIOS),yes)
+$O/adios_helpers.shared_adios.o: $O/adios_helpers_readers.shared_adios.o $O/adios_helpers_writers.shared_adios.o $O/adios_helpers_definitions.shared_adios.o
+else ifeq ($(ADIOS2),yes)
+$O/adios_helpers.shared_adios.o: $O/adios_helpers_readers.shared_adios.o $O/adios_helpers_writers.shared_adios.o $O/adios_helpers_definitions.shared_adios.o
 endif
 
 ###
@@ -205,14 +212,20 @@ $O/%.sharedmpi.o: $S/%.F90 ${SETUP}/constants.h $O/shared_par.shared_module.o
 ## adios
 ##
 
-$O/%.shared_adios_module.o: $S/%.f90
+$O/%.shared_adios_module.o: $S/%.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.shared_adios.o: $S/%.f90 $O/adios_helpers_writers.shared_adios_module.o $O/adios_helpers_definitions.shared_adios_module.o $O/shared_par.shared_module.o
+$O/%.shared_adios_module.o: $S/%.F90 ${SETUP}/constants.h $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.shared_adios.o: $S/%.F90 $O/adios_helpers_writers.shared_adios_module.o $O/adios_helpers_definitions.shared_adios_module.o $O/shared_par.shared_module.o
+$O/%.shared_adios.o: $S/%.f90 $O/adios_manager.shared_adios_module.o $S/adios_helpers_definitions_1d_generic.inc $S/adios_helpers_readers_1d_generic.inc $S/adios_helpers_writers_1d_generic.inc $S/adios_helpers_writers_1d_generic_offset.inc
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.shared_adios.o: $S/%.F90 $O/adios_manager.shared_adios_module.o $S/adios_helpers_definitions_1d_generic.inc $S/adios_helpers_readers_1d_generic.inc $S/adios_helpers_writers_1d_generic.inc $S/adios_helpers_writers_1d_generic_offset.inc
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.shared_adios_cc.o: $S/%.c ${SETUP}/config.h
+	${MPICC} -c $(CPPFLAGS) $(CFLAGS) $(ADIOS2_DEF) $(ADIOS_DEF) -o $@ $<
 
 $O/%.shared_noadios.o: $S/%.f90
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<

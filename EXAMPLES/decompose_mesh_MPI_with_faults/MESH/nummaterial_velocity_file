@@ -1,0 +1,38 @@
+2   1          2705.000000          5770.000000          3330.000000           130.000000            13.000000  0
+2   1          2705.000000          5770.000000          3330.000000           130.000000            13.000000  0
+
+
+
+
+! note: format of nummaterial_velocity_file must be
+
+
+! #(1)domain_id #(2)material_id #(3)rho #(4)vp #(5)vs #(6)Q_k #(7)Q_mu #(8)ani
+!
+! where
+!     domain_id          : 1=acoustic / 2=elastic
+!     material_id        : POSITIVE integer identifier of material block
+!     rho                : density
+!     vp                 : P-velocity
+!     vs                 : S-velocity
+!     Q_k                : 9999 = no Q_kappa attenuation
+!     Q_mu               : 9999 = no Q_mu attenuation
+!     ani                : 0=no anisotropy/ 1,2,.. check with aniso_model.f90
+!
+!example:
+!2   1 2300 2800 1500 9999.0 9999.0 0
+
+!or
+
+! #(1)domain_id #(2)material_id  tomography elastic  #(3)filename #(4)positive
+!
+! where
+!     domain_id : 1=acoustic / 2=elastic
+!     material_id        : NEGATIVE integer identifier of material block
+!     filename           : filename of the tomography file
+!     positive           : a positive unique identifier
+!
+!example:
+!2  -1 tomography elastic tomo.xyz 1
+
+

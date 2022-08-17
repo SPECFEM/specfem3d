@@ -27,55 +27,50 @@
 
 ! for external mesh
 
-  subroutine save_arrays_solver_ext_mesh_h5(nspec,nglob,APPROXIMATE_OCEAN_LOAD,ibool, &
-                    num_interfaces_ext_mesh,my_neighbors_ext_mesh,nibool_interfaces_ext_mesh, &
-                    max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
-                    SAVE_MESH_FILES,ANISOTROPY)
+  subroutine save_arrays_solver_ext_mesh_h5()
 
-  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IOUT, &
-    nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-    SIMULATION_TYPE,SAVE_FORWARD,mask_ibool_interior_domain, &
-    STACEY_ABSORBING_CONDITIONS,USE_MESH_COLORING_GPU, &
-    myrank
+  use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE,IMAIN,USE_MESH_COLORING_GPU,CUSTOM_REAL,&
+                       MAX_STRING_LEN
+
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
+    APPROXIMATE_OCEAN_LOAD, SAVE_MESH_FILES, ANISOTROPY, &
+    COUPLE_WITH_INJECTION_TECHNIQUE, MESH_A_CHUNK_OF_THE_EARTH,NPROC
+
+
+  ! global indices
+  use generate_databases_par, only: NSPEC_AB, ibool, NGLOB_AB
+
+  use generate_databases_par, only: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, &
+    NSPEC2D_BOTTOM, NSPEC2D_TOP, &
+    ibelm_xmin, ibelm_xmax,ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
+    SIMULATION_TYPE, SAVE_FORWARD, &
+    STACEY_ABSORBING_CONDITIONS, &
+    LOCAL_PATH, myrank, sizeprocs,min_distance_between_cpml_parameter
+
+  ! MPI interfaces
+  use generate_databases_par, only: num_interfaces_ext_mesh,my_neighbors_ext_mesh, &
+    nibool_interfaces_ext_mesh,max_interface_size_ext_mesh,ibool_interfaces_ext_mesh
 
   ! PML
-  use generate_databases_par, only: PML_CONDITIONS, &
-    nspec_cpml,CPML_width_x,CPML_width_y,CPML_width_z,CPML_to_spec, &
-    CPML_regions,is_CPML,min_distance_between_CPML_parameter,nspec_cpml_tot, &
+  use generate_databases_par, only: PML_CONDITIONS, nspec_cpml, &
+    CPML_width_x,CPML_width_y,CPML_width_z, &
+    CPML_to_spec,CPML_regions,is_CPML, &
     d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z, &
     alpha_store_x,alpha_store_y,alpha_store_z, &
     nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
-    nglob_interface_PML_elastic,points_interface_PML_elastic
+    nglob_interface_PML_elastic,points_interface_PML_elastic, &
+    nspec_cpml_tot
 
   ! mesh surface
   use generate_databases_par, only: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh, &
-    nfaces_surface,nspec_irregular, NGLOB_AB, NSPEC_AB
+    nfaces_surface
 
   use create_regions_mesh_ext_par
 
-  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH,LOCAL_PATH,NPROC
-
-  use constants, only: CUSTOM_REAL,NDIM,NGLLSQUARE
 
   use phdf5_utils
 
   implicit none
-
-  integer,intent(in) :: nspec,nglob
-  ! ocean load
-  logical,intent(in) :: APPROXIMATE_OCEAN_LOAD
-  ! mesh coordinates
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
-  ! MPI interfaces
-  integer,intent(in) :: num_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh),intent(in) :: my_neighbors_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
-  integer,intent(in) :: max_interface_size_ext_mesh
-  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
-
-  logical,intent(in) :: SAVE_MESH_FILES
-  logical,intent(in) :: ANISOTROPY
 
   ! local parameters
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
@@ -96,7 +91,7 @@
 
   ! element node connectivity for movie output
   ! the node ids are stored after dividing one NGLL*-th order spectral element into NGLLX*NGLLY*NGLLZ elements
-  integer, dimension(9,nspec*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)) :: spec_elm_conn_xdmf
+  integer, dimension(9,nspec_ab*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)) :: spec_elm_conn_xdmf
 
   ! dump dataset size
   integer, dimension(NPROC,4)                :: dsize_dump
@@ -164,10 +159,10 @@
   !
   ! prepare offset arrays
   !
-  call gather_all_all_singlei(nglob,offset_nglob,NPROC) ! n globs in each proc
-  call gather_all_all_singlei(nspec,offset_nspec,NPROC) ! n spec in each proc
+  call gather_all_all_singlei(nglob_ab,offset_nglob,NPROC) ! n globs in each proc
+  call gather_all_all_singlei(nspec_ab,offset_nspec,NPROC) ! n spec in each proc
 
-  call get_connectivity_for_movie(nspec, ibool, spec_elm_conn_xdmf, sum(offset_nglob(0:myrank-1)))
+  call get_connectivity_for_movie(nspec_ab, ibool, spec_elm_conn_xdmf, sum(offset_nglob(0:myrank-1)))
 
   call gather_all_all_singlei(nspec_irregular,offset_nspec_irregular,NPROC) ! n spec in each proc
   if(APPROXIMATE_OCEAN_LOAD) call gather_all_all_singlei(NGLOB_OCEAN,offset_nglob_ocean,NPROC)
@@ -285,11 +280,11 @@
     dset_name = "ibool" ! 4 i (/0,0,0, offset_nglob/)
     call h5_create_dataset_gen(h5, dset_name,(/NGLLX,NGLLY,NGLLZ,sum(offset_nglob(:))/), 4, 1)
 
-    dset_name = "xstore_dummy" ! 1 r (/offset_nglob/)
+    dset_name = "xstore_unique" ! 1 r (/offset_nglob/)
     call h5_create_dataset_gen(h5,dset_name, (/sum(offset_nglob(:))/),1, CUSTOM_REAL)
-    dset_name = "ystore_dummy" ! 1 r (/offset_nglob/)
+    dset_name = "ystore_unique" ! 1 r (/offset_nglob/)
     call h5_create_dataset_gen(h5,dset_name, (/sum(offset_nglob(:))/),1, CUSTOM_REAL)
-    dset_name = "zstore_dummy" ! 1 r (/offset_nglob/)
+    dset_name = "zstore_unique" ! 1 r (/offset_nglob/)
     call h5_create_dataset_gen(h5,dset_name, (/sum(offset_nglob(:))/),1, CUSTOM_REAL)
 
     dset_name = "irregular_element_number" ! 1 i (/offset_nspec/)
@@ -824,19 +819,19 @@
   ! set dwrite flagif_colto pre_define the dataset on file before write.
 
   dset_name = "nspec" ! 1 i (/myrank/)
-  call h5_write_dataset_1d_i_collect_hyperslab(h5, dset_name,(/nspec/), (/myrank/),if_col)
+  call h5_write_dataset_1d_i_collect_hyperslab(h5, dset_name,(/nspec_ab/), (/myrank/),if_col)
   dset_name = "nglob" ! 1 i (/myrank/)
-  call h5_write_dataset_1d_i_collect_hyperslab(h5, dset_name,(/nglob/), (/myrank/),if_col)
+  call h5_write_dataset_1d_i_collect_hyperslab(h5, dset_name,(/nglob_ab/), (/myrank/),if_col)
   dset_name = "nspec_irregular" ! 1 i (/myrank/)
   call h5_write_dataset_1d_i_collect_hyperslab(h5, dset_name,(/nspec_irregular/), (/myrank/),if_col)
   dset_name = "ibool" ! 4 i (/0,0,0, offset_nglobs/)
   call h5_write_dataset_4d_i_collect_hyperslab(h5, dset_name, ibool, (/0,0,0,sum(offset_nglob(0:myrank-1))/), if_col)
-  dset_name = "xstore_dummy" ! 1 r (/offset_nglobs/)
-  call h5_write_dataset_1d_r_collect_hyperslab(h5,dset_name,xstore_dummy,(/sum(offset_nglob(0:myrank-1))/),if_col)
-  dset_name = "ystore_dummy" ! 1 r (/offset_nglobs/)
-  call h5_write_dataset_1d_r_collect_hyperslab(h5,dset_name,ystore_dummy,(/sum(offset_nglob(0:myrank-1))/),if_col)
-  dset_name = "zstore_dummy" ! 1 r (/offset_nglobs/)
-  call h5_write_dataset_1d_r_collect_hyperslab(h5,dset_name,zstore_dummy,(/sum(offset_nglob(0:myrank-1))/),if_col)
+  dset_name = "xstore_unique" ! 1 r (/offset_nglobs/)
+  call h5_write_dataset_1d_r_collect_hyperslab(h5,dset_name,xstore_unique,(/sum(offset_nglob(0:myrank-1))/),if_col)
+  dset_name = "ystore_unique" ! 1 r (/offset_nglobs/)
+  call h5_write_dataset_1d_r_collect_hyperslab(h5,dset_name,ystore_unique,(/sum(offset_nglob(0:myrank-1))/),if_col)
+  dset_name = "zstore_unique" ! 1 r (/offset_nglobs/)
+  call h5_write_dataset_1d_r_collect_hyperslab(h5,dset_name,zstore_unique,(/sum(offset_nglob(0:myrank-1))/),if_col)
   dset_name = "irregular_element_number" ! 1 i (/offset_nspec/)
   call h5_write_dataset_1d_i_collect_hyperslab(h5,dset_name,irregular_element_number,(/sum(offset_nspec(0:myrank-1))/),if_col)
   dset_name = "xix_regular" ! 1 r (/myrank/)
@@ -1367,45 +1362,12 @@
 
   ! if SAVE_MESH_FILES isif_colthen the files have already been saved, no need to save them again
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
-    call save_arrays_solver_injection_boundary(nspec,ibool)
+    call save_arrays_solver_injection_boundary(nspec_ab,ibool)
   endif
 
   ! cleanup
   deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier)
   if (ier /= 0) stop 'error deallocating array ibool_interfaces_ext_mesh_dummy'
-
-  ! PML
-  deallocate(is_CPML,stat=ier); if (ier /= 0) stop 'error deallocating array is_CPML'
-  if (nspec_cpml_tot > 0) then
-     deallocate(CPML_to_spec,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_to_spec'
-     deallocate(CPML_regions,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_regions'
-  endif
-
-  if (PML_CONDITIONS) then
-     deallocate(d_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_x'
-     deallocate(d_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_y'
-     deallocate(d_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_z'
-     deallocate(k_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_x'
-     deallocate(k_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_y'
-     deallocate(k_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_z'
-     deallocate(alpha_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_x'
-     deallocate(alpha_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_y'
-     deallocate(alpha_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_z'
-     if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
-       deallocate(mask_ibool_interior_domain,stat=ier)
-       if (ier /= 0) stop 'error deallocating array mask_ibool_interior_domain'
-
-       if (nglob_interface_PML_acoustic > 0) then
-         deallocate(points_interface_PML_acoustic,stat=ier)
-         if (ier /= 0) stop 'error deallocating array points_interface_PML_acoustic'
-       endif
-
-       if (nglob_interface_PML_elastic > 0) then
-         deallocate(points_interface_PML_elastic,stat=ier)
-         if (ier /= 0) stop 'error deallocating array points_interface_PML_elastic'
-       endif
-     endif
-  endif
 
   if (myrank == 0) print *, "write mesh dataset finished"
 

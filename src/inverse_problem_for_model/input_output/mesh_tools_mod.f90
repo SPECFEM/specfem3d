@@ -527,7 +527,7 @@ contains
     use constants, only: NGLLSQUARE
     use shared_parameters, only: NPROC, DT, STACEY_ABSORBING_CONDITIONS, PML_CONDITIONS, ELASTIC_SIMULATION,ACOUSTIC_SIMULATION
 
-    use specfem_par, only: kappastore, rhostore, ibool, wxgll, wygll, wzgll, jacobian, &
+    use specfem_par, only: kappastore, rhostore, ibool, wxgll, wygll, wzgll, jacobianstore, &
          NGLLX, NGLLY, NGLLZ, NSPEC_AB, NGLOB_AB, num_abs_boundary_faces, abs_boundary_ispec, abs_boundary_ijk, &
          abs_boundary_normal, abs_boundary_jacobian2Dw, num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, my_neighbors_ext_mesh
@@ -565,7 +565,7 @@ contains
                          iglob = ibool(i,j,k,ispec)
 
                          weight = wxgll(i)*wygll(j)*wzgll(k)
-                         jacobianl = jacobian(i,j,k,ispec)
+                         jacobianl = jacobianstore(i,j,k,ispec)
 
                          ! distinguish between single and double precision for reals
                          rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
@@ -598,7 +598,7 @@ contains
                          iglob = ibool(i,j,k,ispec)
 
                          weight = wxgll(i)*wygll(j)*wzgll(k)
-                         jacobianl = jacobian(i,j,k,ispec)
+                         jacobianl = jacobianstore(i,j,k,ispec)
 
                          rmass(iglob) = rmass(iglob) + &
                               real( dble(jacobianl) * weight * dble(rhostore(i,j,k,ispec)),kind=CUSTOM_REAL)
@@ -727,17 +727,17 @@ contains
      if (ELASTIC_SIMULATION) then
         ! assemble mass matrix
         call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassx, &
-             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-             my_neighbors_ext_mesh)
+                                          num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                          my_neighbors_ext_mesh)
         call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassy, &
-             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-             my_neighbors_ext_mesh)
+                                          num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                          my_neighbors_ext_mesh)
         call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassz, &
-             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-             my_neighbors_ext_mesh)
+                                          num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                          my_neighbors_ext_mesh)
 
         ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
         where(rmassx <= 0._CUSTOM_REAL) rmassx = 1._CUSTOM_REAL
@@ -753,9 +753,9 @@ contains
 
      if (ACOUSTIC_SIMULATION) then
         call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic, &
-             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-             my_neighbors_ext_mesh)
+                                          num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                          my_neighbors_ext_mesh)
 
         ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
         where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL

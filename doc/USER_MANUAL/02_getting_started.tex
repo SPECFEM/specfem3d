@@ -5,14 +5,6 @@ To download the SPECFEM3D\_Cartesian software package, type this:
 git clone --recursive --branch devel https://github.com/geodynamics/specfem3d.git
 \end{verbatim}
 %
-\noindent
-\red{Note: for people who would like to run the package on Windows rather than on Unix machines, you can install Docker or VirtualBox (installing a Linux in VirtualBox in that latter case) and run it easily from inside that.}\\
-
-\noindent
-We recommend that you add {\texttt{ulimit -S -s unlimited}} to your
-{\texttt{.bash\_profile}} file and/or {\texttt{limit stacksize
-unlimited }} to your {\texttt{.cshrc}} file to suppress any potential
-limit to the size of the Unix stack.\\
 
 Then, to configure the software for your system, run the
 \texttt{configure} shell script. This script will attempt to guess
@@ -31,22 +23,23 @@ If you want to run in parallel, i.e., using more than one processor core, then y
     ./configure FC=gfortran CC=gcc MPIFC=mpif90 --with-mpi
 \end{verbatim}
 
-You can replace the GNU compilers above (gfortran and gcc) with other compilers if you want to; for instance for Intel ifort and icc use FC=ifort CC=icc instead.
-
-Note that MPI must be installed with MPI-IO enabled because parts of SPECFEM3D perform I/Os through MPI-IO.
+You can replace the GNU compilers above (gfortran and gcc) with other compilers if you want to; for instance for Intel ifort and icc use FC=ifort CC=icc instead. Note that MPI must be installed with MPI-IO enabled because parts of SPECFEM3D perform I/Os through MPI-IO.
 
 Before running the \texttt{configure} script, you should probably
 edit file \texttt{flags.guess} to make sure that it contains the best
 compiler options for your system. Known issues or things to check
 are:
 \begin{description}
-\item [{\texttt{Intel ifort compiler}}] See if you need to add \texttt{-assume byterecl} for your machine. \textbf{In the case of that compiler, we have noticed that initial release versions sometimes have bugs or issues that can lead to wrong results when running the code, thus we \emph{strongly} recommend using a version for which at least one service pack or update has been installed.}
-\red{In particular, for version 17 of that compiler, users have reported problems (making the code crash at run time) with the \texttt{-assume buffered\_io} option; if you notice problems,
-remove that option from file \texttt{flags.guess} or change it to \texttt{-assume nobuffered\_io} and try again.}
+\item [{\texttt{Intel ifort compiler}}] See if you need to add \texttt{-assume byterecl} for your machine. In the case of that compiler, we have noticed that initial release versions sometimes have bugs or issues that can lead to wrong results when running the code, thus we \emph{strongly} recommend using a version for which at least one service pack or update has been installed.
+In particular, for version 17 of that compiler, users have reported problems (making the code crash at run time) with the \texttt{-assume buffered\_io} option; if you notice problems,
+remove that option from file \texttt{flags.guess} or change it to \texttt{-assume nobuffered\_io} and try again.
+
 \item [{\texttt{IBM compiler}}] See if you need to add \texttt{-qsave}
 or \texttt{-qnosave} for your machine.
+
 \item [{\texttt{Mac OS}}] You will probably need to install \texttt{XCODE}.
 \end{description}
+
 When compiling on an IBM machine with the \texttt{xlf} and \texttt{xlc}
 compilers, we suggest running the \texttt{configure} script with the
 following options:
@@ -59,17 +52,19 @@ following options:
 
 If you have problems configuring the code on a Cray machine, i.e. for instance if you get an error message from the \texttt{configure} script, try exporting these two variables:
 \texttt{MPI\_INC=\${CRAY\_MPICH2\_DIR}/include and FCLIBS=" "}, and for more details if needed you can refer to the \texttt{utils/Cray\_compiler\_information} directory.
-You can also have a look at the configure script called \texttt{utils/Cray\_compiler\_information/configure\_SPECFEM\_for\_Piz\_Daint.bash}.
+You can also have a look at the configure script called:\\
+\texttt{utils/Cray\_compiler\_information/configure\_SPECFEM\_for\_Piz\_Daint.bash}.
 
 On SGI systems, \texttt{flags.guess} automatically informs \texttt{configure}
 to insert `\texttt{`TRAP\_FPE=OFF}'' into the generated \texttt{Makefile}
 in order to turn underflow trapping off.\\
 
-You can add \texttt{--enable-vectorization} to the configuration options to speed up the code in the fluid (acoustic) and elastic parts.
+You can add \texttt{-{}-enable-vectorization} to the configuration options to speed up the code in the fluid (acoustic) and elastic parts.
 This works fine if (and only if) your computer always allocates a contiguous memory block for each allocatable array;
-this is the case for most machines and most compilers, but not all. To disable this feature, use option \texttt{--disable-vectorization}.
+this is the case for most machines and most compilers, but not all. To disable this feature, use option \texttt{-{}-disable-vectorization}.
 For more details see \href{https://github.com/geodynamics/specfem3d/issues/81}{github.com/geodynamics/specfem3d/issues/81} .
 To check if that option works fine on your machine, run the code with and without it for an acoustic/elastic model and make sure the seismograms are identical.\\
+
 
 Note that we use CUBIT (now called Trelis) to create meshes of hexahedra, but other packages
 can be used as well, for instance GiD from \url{http://gid.cimne.upc.es}
@@ -81,92 +76,166 @@ picture of the TetGen logo at \url{http://tetgen.berlios.de/figs/Delaunay-Vorono
 while this approach does not generate hexahedra of optimal quality,
 it can ease mesh creation in some situations and it has been shown
 that the spectral-element method can very accurately handle distorted
-mesh elements \citep{OlSe11}.
+mesh elements \citep{OlSe11}.\\
 
 The SPECFEM3D Cartesian software package relies on the SCOTCH library
 to partition meshes created with CUBIT. METIS \citep{KaKu98a,KaKu98c,KaKu98b}
-can also be used instead of SCOTCH if you prefer, by editing file
-src/decompose\_mesh/decompose\_mesh.F90 and uncommenting the flag
-USE\_METIS\_INSTEAD\_OF\_SCOTCH. You will also then need to install
+can also be used instead of SCOTCH if you prefer, by changing the parameter
+\texttt{PARTITIONING\_TYPE} in the \texttt{Par\_file}. You will also then need to install
 and compile Metis version 4.0 (do {*}NOT{*} install Metis version
-5.0, which has incompatible function calls) and edit \texttt{src/decompose\_mesh/Makefile.in}
+5.0, which has incompatible function calls) and edit \texttt{Makefile.in}
 and uncomment the METIS link flag in that file before running \texttt{configure}.\\
 
 
 The SCOTCH library \citep{PeRo96} provides efficient static mapping,
 graph and mesh partitioning routines. SCOTCH is a free software package
 developed by Fran\c{c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux,
-France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}.
+France, downloadable from the web page \url{https://gitlab.inria.fr/scotch/scotch}.
 In case no SCOTCH libraries can be found on the system, the configuration
 will bundle the version provided with the source code for compilation.
 The path to an existing SCOTCH installation can to be set explicitly
 with the option \texttt{-{}-with-scotch-dir}. Just as an example:
 \begin{verbatim}
-./configure FC=ifort MPIFC=mpif90 --with-scotch-dir=/opt/scotch
+  ./configure FC=ifort MPIFC=mpif90 --with-scotch-dir=/opt/scotch
 \end{verbatim}
 \noindent
 If you use the Intel ifort compiler to compile the code, we recommend
 that you use the Intel icc C compiler to compile Scotch, i.e., use:
 \begin{verbatim}
-./configure CC=icc FC=ifort MPIFC=mpif90
+  ./configure CC=icc FC=ifort MPIFC=mpif90
 \end{verbatim}
-
-When compiling for GPU cards i.e. using CUDA, you can use:
-
-\texttt{./configure --with-cuda}
-
-for CUDA version 4, or
-
-\texttt{./configure --with-cuda=cuda5}
-
-for CUDA version 5, or
-
-\texttt{./configure --with-cuda=cuda6}
-
-for CUDA version 6, or
-
-\texttt{./configure --with-cuda=cuda8}
-
-for CUDA version 8.
-
-Before CUDA version 5, one version supported basically one new architecture and needed a different kind of compilation.
-Since version 5, the compilation has stayed the same, but newer versions supported newer architectures.
-However at the moment, we still have one version linked to one specific architecture:
-
-- CUDA 4 for Fermi,
-- CUDA 5 for Tesla K20
-- CUDA 6 for Tesla K80
-- CUDA 8 for Pascal P100.
-
-So even if you have the new CUDA toolkit version 8, but you want to run on say a K20 GPU, then you would still configure with:
-
-\texttt{./configure --with-cuda=cuda5}
-
-The compilation should work and the cuda5 setting chooses the right architecture (-gencode=arch=compute\_35,code=sm\_35 for K20 cards).
-
-So, type
-
-\texttt{./configure --with-cuda=cuda8}
-
-for Pascal P100 boards.
 
 When compiling the SCOTCH source code, if you get a message such as: "ld: cannot find -lz",
 the Zlib compression development library is probably missing on your machine and you will need to install it or ask your system administrator to
-do so. On Linux machines the package is often called "zlib1g-dev" or similar. (thus "sudo apt-get install zlib1g-dev" would install it)
+do so. On Linux machines the package is often called "zlib1g-dev" or similar. (thus "sudo apt-get install zlib1g-dev" would install it)\\
 
 To compile a serial version of the code for small meshes that fits
 on one compute node and can therefore be run serially, run \texttt{configure}
 with the \texttt{-{}-without-mpi} option to suppress all calls to
-MPI.
+MPI.\\
 
+For people who would like to run the package on Windows rather than on Unix machines, you can install Docker or VirtualBox (installing a Linux in VirtualBox in that latter case) and run it easily from inside that.\\
+
+We recommend that you add {\texttt{ulimit -S -s unlimited}} to your
+{\texttt{.bash\_profile}} file and/or {\texttt{limit stacksize
+unlimited }} to your {\texttt{.cshrc}} file to suppress any potential
+limit to the size of the Unix stack.\\
+
+Beware that some cluster systems that run a recent version may not run and\slash compile an older version of the code. \\
+
+When using dynamic fault in parallel with the developer version, we suggest you to set the configuration parameters
+of \texttt{FAULT\_DISPL\_VELOC} and \texttt{FAULT\_SYNCHRONIZE\_ACCEL} as \texttt{.true.}.\\
+
+%-----------------------------------------------------------------------------------------------------------------------------------%
+\section{Using the GPU version of the code}
+%-----------------------------------------------------------------------------------------------------------------------------------%
+
+\noindent
+SPECFEM3D now supports CUDA and HIP GPU acceleration.
+When compiling for GPU cards, you can enable the CUDA version with:
+\begin{verbatim}
+  ./configure --with-cuda ..
+\end{verbatim}
+or
+\begin{verbatim}
+  ./configure --with-cuda=cuda9 ..
+\end{verbatim}
+where for example \texttt{cuda4,cuda5,cuda6,cuda7,..} specifies the target GPU architecture of your card,
+(e.g., with CUDA 9 this refers to Volta V100 cards), rather than the installed version of the CUDA toolkit.
+Before CUDA version 5, one version supported basically one new architecture and needed a different kind of compilation.
+Since version 5, the compilation has stayed the same, but newer versions supported newer architectures.
+However at the moment, we still have one version linked to one specific architecture:
+\begin{verbatim}
+- CUDA 4 for Tesla,   cards like K10, Geforce GTX 650, ..
+- CUDA 5 for Kepler,  like K20
+- CUDA 6 for Kepler,  like K80
+- CUDA 7 for Maxwell, like Quadro K2200
+- CUDA 8 for Pascal,  like P100
+- CUDA 9 for Volta,   like V100
+- CUDA 10 for Turing, like GeForce RTX 2080
+- CUDA 11 for Ampere, like A100
+\end{verbatim}
+So even if you have the new CUDA toolkit version 11, but you want to run on say a K20 GPU, then you would still configure with:
+\begin{verbatim}
+  ./configure --with-cuda=cuda5
+\end{verbatim}
+The compilation with the cuda5 setting chooses then the right architecture (\texttt{-gencode=arch=compute\_35,code=sm\_35} for K20 cards).\\
+
+
+The same applies to compilation for AMD cards with HIP:
+\begin{verbatim}
+  ./configure --with-hip ..
+\end{verbatim}
+or
+\begin{verbatim}
+  ./configure --with-hip=MI8 ..
+\end{verbatim}
+where for example \texttt{MI8,MI25,MI50,MI100,..} specifies the target GPU architecture of your card.\\
+
+%-----------------------------------------------------------------------------------------------------------------------------------%
+\section{Using the ADIOS library for I/O}
+%-----------------------------------------------------------------------------------------------------------------------------------%
+
+Regular POSIX I/O can be problematic when dealing with large simulations on large
+clusters (typically more than $10,000$ MPI processes). SPECFEM3D can use the ADIOS library~\cite{Liu2013}
+to take advantage of advanced parallel file system features. To enable
+ADIOS, the following steps should be done:
+\begin{enumerate}
+\item Install ADIOS (available from \url{https://www.olcf.ornl.gov/center-projects/adios/}).
+Make sure that your environment variables reference it.
+\item You may want to change ADIOS related values in the \texttt{constants.h.in} file.
+The default values probably suit most cases.
+\item Configure using the \texttt{-{}-with-adios} flag.
+\end{enumerate}
+ADIOS is currently only usable for meshfem3D generated mesh (i.e. not for meshes generated
+with CUBIT). Additional control parameters are discussed in section~\ref{cha:Main-Parameter}.
+
+%-----------------------------------------------------------------------------------------------------------------------------------%
+\section{Adding OpenMP support in addition to MPI}
+%-----------------------------------------------------------------------------------------------------------------------------------%
+
+OpenMP support can be enabled in addition to MPI. However, in many
+cases performance will not improve because our pure MPI implementation
+is already heavily optimized and thus the resulting code will in fact
+be slightly slower. A possible exception could be IBM BlueGene-type
+architectures.\\
+
+\noindent
+To enable OpenMP,  add the flag \texttt{-{}-enable-openmp} to the configuration:
+\begin{verbatim}
+./configure --enable-openmp ..
+\end{verbatim}
+This will add the corresponding OpenMP flag for the chosen Fortran compiler.\\
+
+
+The DO-loop using OpenMP threads has a SCHEDULE property. The \texttt{OMP\_SCHEDULE}
+environment variable can set the scheduling policy of that DO-loop.
+Tests performed by Marcin Zielinski at SARA (The Netherlands) showed
+that often the best scheduling policy is DYNAMIC with the size of
+the chunk equal to the number of OpenMP threads, but most preferably
+being twice as the number of OpenMP threads (thus chunk size = 8 for
+4 OpenMP threads etc). If \texttt{OMP\_SCHEDULE} is not set or is empty, the
+DO-loop will assume generic scheduling policy, which will slow down
+the job quite a bit.
+
+
+%-----------------------------------------------------------------------------------------------------------------------------------%
+\section{Configuration summary}
+%-----------------------------------------------------------------------------------------------------------------------------------%
+
+\noindent
 A summary of the most important configuration variables follows.
 \begin{description}
 \item [{\texttt{F90}}] Path to the Fortran compiler.
+
 \item [{\texttt{MPIF90}}] Path to MPI Fortran.
+
 \item [{\texttt{MPI\_FLAGS}}] Some systems require this flag to link to
 MPI libraries.
+
 \item [{\texttt{FLAGS\_CHECK}}] Compiler flags.
 \end{description}
+%
 The configuration script automatically creates for each executable
 a corresponding \texttt{Makefile} in the \texttt{src/} subdirectory.
 The \texttt{Makefile} contains a number of suggested entries for various
@@ -179,7 +248,7 @@ not optimal for your system, so we encourage you to experiment with
 these flags and to solicit advice from your systems administrator.
 Selecting the right compiler and optimization flags can make a tremendous
 difference in terms of performance. We welcome feedback on your experience
-with various compilers and flags.
+with various compilers and flags.\\
 
 Now that you have set the compiler information, you need to select
 a number of flags in the \texttt{constants.h} file depending on your
@@ -195,6 +264,7 @@ should be set to \texttt{.true.}. Note that this flag is not used
 by the database generator or the solver; it is only used for some
 of the post-processing.
 \end{description}
+%
 The package can run either in single or in double precision mode.
 The default is single precision because for almost all calculations
 performed using the spectral-element method using single precision
@@ -206,11 +276,13 @@ setting in the \texttt{constants.h} file:
 \item [{\texttt{CUSTOM\_REAL}}] Set to \texttt{SIZE\_REAL} for single precision
 and \texttt{SIZE\_DOUBLE} for double precision.
 \end{description}
+%
 In the \texttt{precision.h} file:
 \begin{description}
 \item [{\texttt{CUSTOM\_MPI\_TYPE}}] Set to \texttt{MPI\_REAL} for single
 precision and \texttt{MPI\_DOUBLE\_PRECISION} for double precision.
 \end{description}
+%
 On many current processors (e.g., Intel, AMD, IBM Power), single precision
 calculations are significantly faster; the difference can typically
 be 10\% to 25\%. It is therefore better to use single precision. What
@@ -223,37 +295,14 @@ future runs.\\
 If your compiler has problems with the \texttt{use mpi} statements that are used in the code, use the script called
 \texttt{replace\_use\_mpi\_with\_include\_mpif\_dot\_h.pl} in the root directory to replace all of them with \texttt{include 'mpif.h'} automatically.
 
-\section{Adding OpenMP support in addition to MPI}
-
-NOTE FROM JULY 2013: OpenMP support is maybe / probably not maintained any more.
-Thus the section below is maybe obsolete.
-
-OpenMP support can be enabled in addition to MPI. However, in many
-cases performance will not improve because our pure MPI implementation
-is already heavily optimized and thus the resulting code will in fact
-be slightly slower. A possible exception could be IBM BlueGene-type
-architectures.
-
-To enable OpenMP, uncomment the OpenMP compiler option in two lines
-in file \texttt{src/specfem3D/Makefile.in} (before running \texttt{configure})
-and also uncomment the
-\texttt{\#define USE\_OPENMP} statement in file\\
-\texttt{src/specfem3D/specfem3D.F90}.
-
-The DO-loop using OpenMP threads has a SCHEDULE property. The \texttt{OMP\_SCHEDULE}
-environment variable can set the scheduling policy of that DO-loop.
-Tests performed by Marcin Zielinski at SARA (The Netherlands) showed
-that often the best scheduling policy is DYNAMIC with the size of
-the chunk equal to the number of OpenMP threads, but most preferably
-being twice as the number of OpenMP threads (thus chunk size = 8 for
-4 OpenMP threads etc). If \texttt{OMP\_SCHEDULE} is not set or is empty, the
-DO-loop will assume generic scheduling policy, which will slow down
-the job quite a bit.
 
 
+%-----------------------------------------------------------------------------------------------------------------------------------%
 \section{Compiling on an IBM BlueGene}
+%-----------------------------------------------------------------------------------------------------------------------------------%
 
-\underline{More recent installation instruction for IBM BlueGene, from April 2013:}\\
+\noindent
+Installation instructions for IBM BlueGene (from April 2013):\\
 
 
 \noindent Edit file \texttt{flags.guess} and put this for \texttt{FLAGS\_CHECK}:
@@ -336,12 +385,16 @@ bgrun -np 1 -mode VN -exe ./bin/xcreate_header_file
 \end{verbatim}
 
 
+%-----------------------------------------------------------------------------------------------------------------------------------%
 \section{Visualizing the subroutine calling tree of the source code}
+%-----------------------------------------------------------------------------------------------------------------------------------%
 
 \noindent
 Packages such as \texttt{Doxywizard} can be used to visualize the calling tree of the
 subroutines of the  source code. \texttt{Doxywizard} is
 a GUI front-end for configuring and running \texttt{Doxygen}.
+
+To visualize the call tree (calling tree) of the source code, you can see the Doxygen tool available in directory \texttt{doc/call\_trees\_of\_the\_source\_code}.
 
 \bigskip
 
@@ -416,27 +469,11 @@ The important entries in the Doxyfile are:
 
 \medskip
 
-\section{Using the ADIOS library for I/O}
 
-Regular POSIX I/O can be problematic when dealing with large simulations one large
-clusters (typically more than $10,000$ processes). SPECFEM3D use the ADIOS library~\cite{Liu2013}
-to deal transparently take advantage of advanced parallel file system features. To enable
-ADIOS, the following steps should be done:
-\begin{enumerate}
-\item Install ADIOS (available from \url{https://www.olcf.ornl.gov/center-projects/adios/}).
-Make sure that your environment variables reference it.
-\item You may want to change ADIOS related values in the \texttt{constants.h.in} file.
-The default values probably suit most cases.
-\item Configure using the \texttt{--with-adios} flag.
-\end{enumerate}
-ADIOS is currently only usable for meshfem3D generated mesh (i.e. not for meshes generated
-with CUBTI). Additional control parameters are discussed in section~\ref{cha:Main-Parameter}.
-
+%-----------------------------------------------------------------------------------------------------------------------------------%
 \section{Becoming a developer of the code, or making small modifications in the source code}
+%-----------------------------------------------------------------------------------------------------------------------------------%
 
-If you want to develop new features in the code, and/or if you want to make small changes, improvements, or bug fixes, you are very welcome to contribute. To do so, i.e. to access the development branch of the source code with read/write access (in a safe way, no need to worry too much about breaking the package, there is a robot called BuildBot that is in charge of checking and validating all new contributions and changes), please visit this Web page: \url{https://github.com/geodynamics/specfem3d/wiki/Using-Hub}.
-
-To visualize the call tree (calling tree) of the source code, you can see the Doxygen tool available in directory \texttt{doc/call\_trees\_of\_the\_source\_code}.
-
-
+If you want to develop new features in the code, and/or if you want to make small changes, improvements, or bug fixes, you are very welcome to contribute. To do so, i.e. to access the development branch of the source code with read/write access (in a safe way, no need to worry too much about breaking the package, there are CI tests based on BuildBot, Travis-CI and Jenkins in place that are checking and validating all new contributions and changes), please visit this Web page:\\
+\url{https://github.com/geodynamics/specfem3d/wiki}
 

@@ -170,12 +170,17 @@ end module constants
   character(len=MAX_STRING_LEN) :: TOMOGRAPHY_PATH
 
   ! attenuation
+  ! reference frequency of seismic model
+  double precision :: ATTENUATION_f0_REFERENCE
+  ! Olsen attenuation (scaling from Vs)
   logical :: USE_OLSEN_ATTENUATION
-  double precision :: OLSEN_ATTENUATION_RATIO,ATTENUATION_f0_REFERENCE
-
+  double precision :: OLSEN_ATTENUATION_RATIO
+  ! automatic frequency band selection
+  logical :: COMPUTE_FREQ_BAND_AUTOMATIC
   ! attenuation period range over which we try to mimic a constant Q factor
   double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
-  logical :: COMPUTE_FREQ_BAND_AUTOMATIC
+  ! logarithmic center frequency (center of attenuation band)
+  double precision :: ATT_F_C_SOURCE
 
   ! absorbing boundaries
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
@@ -205,7 +210,7 @@ end module constants
   ! seismograms
   integer :: NTSTEP_BETWEEN_OUTPUT_INFO
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NTSTEP_BETWEEN_READ_ADJSRC
-  integer :: subsamp_seismos
+  integer :: NTSTEP_BETWEEN_OUTPUT_SAMPLE ! subsamp_seismos is deprecated and renamed to NTSTEP_BETWEEN_OUTPUT_SAMPLE
   logical :: SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE
   logical :: SAVE_SEISMOGRAMS_IN_ADJOINT_RUN
   logical :: WRITE_SEISMOGRAMS_BY_MAIN,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS,SU_FORMAT
@@ -229,7 +234,7 @@ end module constants
 
   ! adios file output
   logical :: ADIOS_ENABLED
-  logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
+  logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS, ADIOS_FOR_UNDO_ATTENUATION
 
   ! hdf5 file output
   logical :: HDF5_ENABLED
@@ -274,6 +279,9 @@ end module constants
   logical :: ACOUSTIC_SIMULATION = .false.
   logical :: ELASTIC_SIMULATION = .false.
   logical :: POROELASTIC_SIMULATION = .false.
+
+  ! fault rupture simulation
+  logical :: FAULT_SIMULATION = .false.
 
   end module shared_compute_parameters
 

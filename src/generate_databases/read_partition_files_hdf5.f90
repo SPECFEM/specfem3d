@@ -32,6 +32,7 @@
 ! reads in Databases.h5 file from each process
   use phdf5_utils
   use generate_databases_par
+  use constants, only: IIN_database_hdf5
 
   implicit none
   integer :: num_xmin,num_xmax,num_ymin,num_ymax,num_top,num_bottom,num
@@ -103,9 +104,9 @@
 
   ! read data mat_prop
   ! allocate array for nodes coords
-  allocate(mat_prop(17,nmat_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 585')
-  if (ier /= 0) stop 'Error allocating array mat_prop'
+  allocate(mat_prop(17,nmat_ext_mesh),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 585')
+  if (error /= 0) stop 'Error allocating array mat_prop'
   mat_prop(:,:) = 0.d0
   call h5_read_dataset_p_2d_d(h5, dsetname, mat_prop)
 
@@ -124,9 +125,9 @@
   if (nundefMat_ext_mesh /= 0) then ! error when trying to read 0 row Dataset in H5
     ! read undef_mat_prop
     ! allocate udef_mat_prop space
-    allocate(undef_mat_prop(6,nundefMat_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 585')
-    if (ier /= 0) stop 'Error allocating array mat_prop'
+    allocate(undef_mat_prop(6,nundefMat_ext_mesh),stat=error)
+    if (error /= 0) call exit_MPI_without_rank('error allocating array 585')
+    if (error /= 0) stop 'Error allocating array mat_prop'
     call h5_read_dataset_p_2d_c(h5, dsetname, undef_mat_prop)
   endif
 
@@ -168,9 +169,9 @@
   ! open and read dataset nodes_coords
   dsetname = "nodes_coords"
   ! allocate array for nodes coords
-  allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 584')
-  if (ier /= 0) stop 'Error allocating array nodes_coords_ext_mesh'
+  allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 584')
+  if (error /= 0) stop 'Error allocating array nodes_coords_ext_mesh'
   call h5_read_dataset_2d_d_collect_hyperslab(h5, dsetname, nodes_coords_ext_mesh, (/0,sum(offset_nnodes(0:myrank-1))/),.true.)
 
   call sum_all_i(nnodes_ext_mesh,num)
@@ -190,12 +191,12 @@
   !nelmnts_ext_mesh = attr_data(1)
 
   ! memory allocation
-  allocate(elmnts_ext_mesh(NGNOD,nelmnts_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 587')
-  if (ier /= 0) stop 'Error allocating array elmnts_ext_mesh'
-  allocate(mat_ext_mesh(2,nelmnts_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 588')
-  if (ier /= 0) stop 'Error allocating array mat_ext_mesh'
+  allocate(elmnts_ext_mesh(NGNOD,nelmnts_ext_mesh),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 587')
+  if (error /= 0) stop 'Error allocating array elmnts_ext_mesh'
+  allocate(mat_ext_mesh(2,nelmnts_ext_mesh),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 588')
+  if (error /= 0) stop 'Error allocating array mat_ext_mesh'
 
   ! read elmnts_ext_mesh == elm_conn
   dsetname = "elm_conn"
@@ -230,30 +231,30 @@
   NSPEC2D_TOP        = nspec2D_top_ext
 
 ! memory arrocation
-  allocate(ibelm_xmin(nspec2D_xmin),nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 589')
-  if (ier /= 0) stop 'Error allocating array ibelm_xmin etc.'
-  allocate(ibelm_xmax(nspec2D_xmax),nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 590')
-  if (ier /= 0) stop 'Error allocating array ibelm_xmax etc.'
-  allocate(ibelm_ymin(nspec2D_ymin),nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 591')
-  if (ier /= 0) stop 'Error allocating array ibelm_ymin'
-  allocate(ibelm_ymax(nspec2D_ymax),nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 592')
-  if (ier /= 0) stop 'Error allocating array ibelm_ymax etc.'
-  allocate(ibelm_bottom(nspec2D_bottom_ext),nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom_ext),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 593')
-  if (ier /= 0) stop 'Error allocating array ibelm_bottom etc.'
-  allocate(ibelm_top(nspec2D_top_ext),nodes_ibelm_top(NGNOD2D,nspec2D_top_ext),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 594')
-  if (ier /= 0) stop 'Error allocating array ibelm_top etc.'
+  allocate(ibelm_xmin(nspec2D_xmin),nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 589')
+  if (error /= 0) stop 'Error allocating array ibelm_xmin etc.'
+  allocate(ibelm_xmax(nspec2D_xmax),nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 590')
+  if (error /= 0) stop 'Error allocating array ibelm_xmax etc.'
+  allocate(ibelm_ymin(nspec2D_ymin),nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 591')
+  if (error /= 0) stop 'Error allocating array ibelm_ymin'
+  allocate(ibelm_ymax(nspec2D_ymax),nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 592')
+  if (error /= 0) stop 'Error allocating array ibelm_ymax etc.'
+  allocate(ibelm_bottom(nspec2D_bottom_ext),nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom_ext),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 593')
+  if (error /= 0) stop 'Error allocating array ibelm_bottom etc.'
+  allocate(ibelm_top(nspec2D_top_ext),nodes_ibelm_top(NGNOD2D,nspec2D_top_ext),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 594')
+  if (error /= 0) stop 'Error allocating array ibelm_top etc.'
 
 ! open and read database glob2loc_elms
   dsetname = "glob2loc_elms"
-  allocate(dset_alloc(1+NGNOD2D,sum(dset_n_bound(:))),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array glob2loc_elms')
-  if (ier /= 0) stop 'Error allocating array glob2loc_elms'
+  allocate(dset_alloc(1+NGNOD2D,sum(dset_n_bound(:))),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array glob2loc_elms')
+  if (error /= 0) stop 'Error allocating array glob2loc_elms'
   call h5_read_dataset_2d_i_collect_hyperslab(h5, dsetname, dset_alloc, &
             (/0,sum(offset_n_elms_bounds(0:myrank-1))/),.true.)
 
@@ -296,9 +297,9 @@
 
   ! open and read nspec_cpml_tot = nspec_cpml_globloc(1), npsec_cpml = nspec_cpml_globloc(2)
   dsetname = "nspec_cpml_globloc"
-  allocate(dset_alloc_1d(2),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array nspec_cpml_globloc')
-  if (ier /= 0) stop 'Error allocating array nspec_cpml_globloc'
+  allocate(dset_alloc_1d(2),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array nspec_cpml_globloc')
+  if (error /= 0) stop 'Error allocating array nspec_cpml_globloc'
   call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, dset_alloc_1d, (/2*myrank/), .true.)
 
   nspec_cpml_tot = dset_alloc_1d(1)
@@ -307,9 +308,9 @@
   deallocate(dset_alloc_1d)
 
   ! array is_CPML gets always allocated to be usable in "if" checks
-  allocate(is_CPML(NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 597')
-  if (ier /= 0) stop 'Error allocating array is_CPML'
+  allocate(is_CPML(NSPEC_AB),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 597')
+  if (error /= 0) stop 'Error allocating array is_CPML'
   is_CPML(:) = .false.
 
   if (nspec_cpml_tot > 0) then
@@ -329,18 +330,18 @@
     if (myrank == 0 .and. nspec_cpml_tot /= num_cpml) stop 'Error while summing C-PML elements over all partitions'
 
     ! reads C-PML regions and C-PML spectral elements global indexing
-    allocate(CPML_to_spec(nspec_cpml),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 595')
-    if (ier /= 0) stop 'Error allocating array CPML_to_spec'
-    allocate(CPML_regions(nspec_cpml),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 596')
-    if (ier /= 0) stop 'Error allocating array CPML_regions'
+    allocate(CPML_to_spec(nspec_cpml),stat=error)
+    if (error /= 0) call exit_MPI_without_rank('error allocating array 595')
+    if (error /= 0) stop 'Error allocating array CPML_to_spec'
+    allocate(CPML_regions(nspec_cpml),stat=error)
+    if (error /= 0) call exit_MPI_without_rank('error allocating array 596')
+    if (error /= 0) stop 'Error allocating array CPML_regions'
 
     ! read elemnts_cpml and copy array to CPML_to_spec (1) and CPML_region (2)
     dsetname = "elements_cpml"
-    allocate(dset_alloc(2,nspec_cpml),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array glob2loc_elms')
-    if (ier /= 0) stop 'Error allocating array glob2loc_elms'
+    allocate(dset_alloc(2,nspec_cpml),stat=error)
+    if (error /= 0) call exit_MPI_without_rank('error allocating array glob2loc_elms')
+    if (error /= 0) stop 'Error allocating array glob2loc_elms'
     call h5_read_dataset_2d_i_collect_hyperslab(h5, dsetname, dset_alloc, (/0,sum(offset_nelems_cpml(0:myrank-1))/), .true.)
 
     CPML_to_spec = dset_alloc(1,:)
@@ -350,9 +351,9 @@
 
     ! open and read if_cpml
     dsetname = "if_cpml"
-    allocate(dset_alloc_1d(NSPEC_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array if_cpml')
-    if (ier /= 0) stop 'Error allocating array if_cpml'
+    allocate(dset_alloc_1d(NSPEC_AB),stat=error)
+    if (error /= 0) call exit_MPI_without_rank('error allocating array if_cpml')
+    if (error /= 0) stop 'Error allocating array if_cpml'
     call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, dset_alloc_1d, (/sum(offset_nelems(0:myrank-1))/), .true.)
 
     ! convert integer array to logical array
@@ -379,9 +380,9 @@
     ! format: #number_of_MPI_interfaces  #maximum_number_of_elements_on_each_interface
     ! from dsetname my_ninterface_and_max in hdf5
     dsetname = "my_ninterface_and_max"
-    allocate(dset_alloc_1d(2),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array dset_dim_alloc_1d')
-    if (ier /= 0) stop 'Error allocating array dset_dim_alloc_1d'
+    allocate(dset_alloc_1d(2),stat=error)
+    if (error /= 0) call exit_MPI_without_rank('error allocating array dset_dim_alloc_1d')
+    if (error /= 0) stop 'Error allocating array dset_dim_alloc_1d'
     call h5_read_dataset_1d_i_collect_hyperslab(h5, dsetname, dset_alloc_1d, (/myrank*2/), .true.)
 
 
@@ -398,28 +399,28 @@
   endif
 
   ! allocates interfaces
-  allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 598')
-  if (ier /= 0) stop 'Error allocating array my_neighbors_ext_mesh'
-  allocate(my_nelmnts_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 599')
-  if (ier /= 0) stop 'Error allocating array my_nelmnts_neighbors_ext_mesh'
-  allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 600')
-  if (ier /= 0) stop 'Error allocating array my_interfaces_ext_mesh'
-  allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 601')
-  if (ier /= 0) stop 'Error allocating array ibool_interfaces_ext_mesh'
-  allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 602')
-  if (ier /= 0) stop 'Error allocating array nibool_interfaces_ext_mesh'
+  allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 598')
+  if (error /= 0) stop 'Error allocating array my_neighbors_ext_mesh'
+  allocate(my_nelmnts_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 599')
+  if (error /= 0) stop 'Error allocating array my_nelmnts_neighbors_ext_mesh'
+  allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 600')
+  if (error /= 0) stop 'Error allocating array my_interfaces_ext_mesh'
+  allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 601')
+  if (error /= 0) stop 'Error allocating array ibool_interfaces_ext_mesh'
+  allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=error)
+  if (error /= 0) call exit_MPI_without_rank('error allocating array 602')
+  if (error /= 0) stop 'Error allocating array nibool_interfaces_ext_mesh'
 
   ! read my_neighbors_ext_mesh and my_nelmnts_neighbors_ext_mesh
   if (NPROC > 1) then
     dsetname = "my_nb_interfaces"
-    allocate(dset_alloc(2, num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array my_nb_interfaces')
-    if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
+    allocate(dset_alloc(2, num_interfaces_ext_mesh),stat=error)
+    if (error /= 0) call exit_MPI_without_rank('error allocating array my_nb_interfaces')
+    if (error /= 0) stop 'Error allocating array my_nb_interfaces'
 
     call h5_read_dataset_2d_i_collect_hyperslab(h5, dsetname, dset_alloc, &
                                                  (/0,sum(offset_nb_interfaces(0:myrank-1))/), .true.)
@@ -432,9 +433,9 @@
 
     ! read my_interfaces_ext_mesh
     dsetname = "my_interfaces"
-    allocate(dset_alloc(6, sum(my_nelmnts_neighbors_ext_mesh(:))),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array my_nb_interfaces')
-    if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
+    allocate(dset_alloc(6, sum(my_nelmnts_neighbors_ext_mesh(:))),stat=error)
+    if (error /= 0) call exit_MPI_without_rank('error allocating array my_nb_interfaces')
+    if (error /= 0) stop 'Error allocating array my_nb_interfaces'
     call h5_read_dataset_2d_i_collect_hyperslab(h5, dsetname, dset_alloc, &
                                                  (/0, sum(offset_n_elms_interface(0:myrank-1))/), .true.)
   endif
@@ -447,19 +448,19 @@
     !     process_interface_id = rank of (neighbor) process to share MPI interface with
     !     number_of_elements_on_interface = number of interface elements
     ! loops over interface elements
-    do ie = 1, my_nelmnts_neighbors_ext_mesh(num_interface)
+    do i = 1, my_nelmnts_neighbors_ext_mesh(num_interface)
       ! format: #(1)spectral_element_id  #(2)interface_type  #(3)node_id1  #(4)node_id2 #(5)...
       !
       ! interface types:
       !     1  -  corner point only
       !     2  -  element edge
       !     4  -  element face
-      my_interfaces_ext_mesh(1,ie,num_interface) = dset_alloc(1,count)
-      my_interfaces_ext_mesh(2,ie,num_interface) = dset_alloc(2,count)
-      my_interfaces_ext_mesh(3,ie,num_interface) = dset_alloc(3,count)
-      my_interfaces_ext_mesh(4,ie,num_interface) = dset_alloc(4,count)
-      my_interfaces_ext_mesh(5,ie,num_interface) = dset_alloc(5,count)
-      my_interfaces_ext_mesh(6,ie,num_interface) = dset_alloc(6,count)
+      my_interfaces_ext_mesh(1,i,num_interface) = dset_alloc(1,count)
+      my_interfaces_ext_mesh(2,i,num_interface) = dset_alloc(2,count)
+      my_interfaces_ext_mesh(3,i,num_interface) = dset_alloc(3,count)
+      my_interfaces_ext_mesh(4,i,num_interface) = dset_alloc(4,count)
+      my_interfaces_ext_mesh(5,i,num_interface) = dset_alloc(5,count)
+      my_interfaces_ext_mesh(6,i,num_interface) = dset_alloc(6,count)
 
       count = count + 1
     enddo
@@ -490,12 +491,12 @@
 
     ! read moho_elms(1,:) == ibelm_moho and moho_elms(2:,:) == nodes_ibelm_moho()
     dsetname = "moho_elms"
-    allocate(ibelm_moho(nspec2D_moho_ext),nodes_ibelm_moho(NGNOD2D,nspec2D_moho_ext),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 603')
-    if (ier /= 0) stop 'Error allocating array ibelm_moho etc.'
-    allocate(dset_alloc(1+NGNOD2D, nspec2D_moho_ext),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array moho_elms')
-    if (ier /= 0) stop 'Error allocating array moho_elms'
+    allocate(ibelm_moho(nspec2D_moho_ext),nodes_ibelm_moho(NGNOD2D,nspec2D_moho_ext),stat=error)
+    if (error /= 0) call exit_MPI_without_rank('error allocating array 603')
+    if (error /= 0) stop 'Error allocating array ibelm_moho etc.'
+    allocate(dset_alloc(1+NGNOD2D, nspec2D_moho_ext),stat=error)
+    if (error /= 0) call exit_MPI_without_rank('error allocating array moho_elms')
+    if (error /= 0) stop 'Error allocating array moho_elms'
     call h5_read_dataset_p_2d_i(h5, dsetname, dset_alloc)
 
     ibelm_moho       = dset_alloc(1,:)
@@ -511,9 +512,9 @@
   else
     ! allocate dummy array
     nspec2D_moho_ext = 0
-    allocate(ibelm_moho(nspec2D_moho_ext),nodes_ibelm_moho(NGNOD2D,nspec2D_moho_ext),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 604')
-    if (ier /= 0) stop 'Error allocating dumy array ibelm_moho etc.'
+    allocate(ibelm_moho(nspec2D_moho_ext),nodes_ibelm_moho(NGNOD2D,nspec2D_moho_ext),stat=error)
+    if (error /= 0) call exit_MPI_without_rank('error allocating array 604')
+    if (error /= 0) stop 'Error allocating dumy array ibelm_moho etc.'
   endif
 
   ! close hdf5

@@ -33,8 +33,6 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
-  use fault_solver_dynamic, only: BC_DYNFLT_init
-  use fault_solver_kinematic, only: BC_KINFLT_init
 
   implicit none
 
@@ -60,10 +58,8 @@
   ! initializes arrays
   call prepare_wavefields()
 
-  ! Loading kinematic and dynamic fault solvers.
-  call BC_DYNFLT_init(prname,DT,myrank)
-
-  call BC_KINFLT_init(prname,DT,myrank)
+  ! initializes fault rupture arrays
+  call prepare_timerun_faults()
 
   ! prepares attenuation arrays
   call prepare_attenuation()
@@ -155,13 +151,6 @@
   use specfem_par_movie
 
   implicit none
-
-  ! flag for any movie simulation
-  if (MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. MOVIE_VOLUME .or. PNM_IMAGE) then
-    MOVIE_SIMULATION = .true.
-  else
-    MOVIE_SIMULATION = .false.
-  endif
 
   ! user info
   if (myrank == 0) then
@@ -710,6 +699,7 @@
           alpha_y = alpha_store_y(i,j,k,ispec_CPML)
           alpha_z = alpha_store_z(i,j,k,ispec_CPML)
 
+          ! gets recursive convolution coefficients
           ! alpha coefficients
           call compute_convolution_coef(alpha_x, coef0_1, coef1_1, coef2_1)
           call compute_convolution_coef(alpha_y, coef0_2, coef1_2, coef2_2)
@@ -727,6 +717,7 @@
           convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML) = coef1_3
           convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML) = coef2_3
 
+          ! gets recursive convolution coefficients
           ! beta coefficients
           beta_x = alpha_x + d_x / kappa_x
           beta_y = alpha_y + d_y / kappa_y
@@ -764,18 +755,15 @@
 
     use constants, only: CUSTOM_REAL
     use specfem_par, only: deltat
-    use pml_par, only: min_distance_between_CPML_parameter
+    use pml_par, only: FIRST_ORDER_CONVOLUTION,min_distance_between_CPML_parameter
 
     implicit none
 
     real(kind=CUSTOM_REAL),intent(in) :: bb
     real(kind=CUSTOM_REAL),intent(out) :: coef0, coef1, coef2
 
-    ! local parameters
-    logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
-
-    real(kind=CUSTOM_REAL) :: bbpow2,bbpow3,c0,c1
-    real(kind=CUSTOM_REAL) :: prod1,prod1_half
+    real(kind=CUSTOM_REAL) :: bbpow2,bbpow3 !,c0
+    real(kind=CUSTOM_REAL) :: temp
 
     ! permanent factors (avoids divisions which are computationally expensive)
     ! note: compilers precompute these constant factors (thus division in these statemenets are still fine)
@@ -783,9 +771,11 @@
     real(kind=CUSTOM_REAL),parameter :: ONE_OVER_48 = 1._CUSTOM_REAL / 48._CUSTOM_REAL
     !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_128 = 0.0078125_CUSTOM_REAL
     real(kind=CUSTOM_REAL),parameter :: ONE_OVER_384 = 1._CUSTOM_REAL / 384._CUSTOM_REAL
+
     real(kind=CUSTOM_REAL),parameter :: FACTOR_A = 3._CUSTOM_REAL / 8._CUSTOM_REAL
     real(kind=CUSTOM_REAL),parameter :: FACTOR_B = 7._CUSTOM_REAL / 48._CUSTOM_REAL
     real(kind=CUSTOM_REAL),parameter :: FACTOR_C = 5._CUSTOM_REAL / 128._CUSTOM_REAL
+
     ! unused
     !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_12 = 1._CUSTOM_REAL / 12._CUSTOM_REAL
     !real(kind=CUSTOM_REAL),parameter :: ONE_OVER_24 = 1._CUSTOM_REAL / 24._CUSTOM_REAL
@@ -794,21 +784,30 @@
     !real(kind=CUSTOM_REAL),parameter :: SEVEN_OVER_3840 = 7._CUSTOM_REAL / 3840._CUSTOM_REAL
     !real(kind=CUSTOM_REAL),parameter :: FIVE_OVER_11520 = 5._CUSTOM_REAL/11520._CUSTOM_REAL
 
+    ! recursive convolution coefficients
+    !
+    ! see Xie et al. (2014), second-order recursive scheme given by eq. (60)
+    !                        and also appendix D, eq. (D6a) and (D6b) for p = 0
+    !
+    ! coefficients needed for the recursive scheme are:
+    !    coef0 = exp(-b delta_t)
+    !          = exp(- 1/2 b delta_t) * exp(- 1/2 b delta_t)
+    !
+    !    coef1 = 1/b (1 - exp( - 1/2 b delta_t)                             -> see also factor xi_0^(n+1) in eq. D6b
+    !
+    !    coef2 = 1/b (1 - exp( - 1/2 b delta_t) exp(- 1/2 b delta_t)
+    !          = coef1 * exp(- 1/2 b delta_t)                               -> see also factor xi_0^n in eq. D6a
+    !
     ! helper variables
-    ! (writing out powers can help for speed, that is bb * bb is usually faster than bb**2)
-    bbpow2 = bb * bb
-    bbpow3 = bbpow2 * bb
-
-    prod1 = bb * deltat
-    prod1_half = prod1 * 0.5_CUSTOM_REAL
+    temp = exp(- 0.5_CUSTOM_REAL * bb * deltat)
 
     ! calculates coefficients
     !
     ! note: exponentials are expensive functions
-    c0 = exp(-prod1)
+    !c0 = exp(-a)
     !
     ! cheap exponential (up to 5 terms exp(x) = 1 + x *( 1 + x/2 * (1 + x/3 * (1 + x/4 * (1 + x/5 * ..))))
-    !x0 = -prod1
+    !x0 = -a
     !c0 = 1.0 + x0 * (1.0 + 0.5 * x0 * (1.0  + 0.333333333333_CUSTOM_REAL * x0 * (1.0 + 0.25 * x0 * (1.0 + 0.2 * x0))))
 
     !  real function my_exp(n, x) result(f)
@@ -820,28 +819,35 @@
     !  end function
 
     ! determines coefficients
-    coef0 = c0
+    coef0 = temp*temp
 
     if (abs(bb) >= min_distance_between_CPML_parameter) then
       if (FIRST_ORDER_CONVOLUTION) then
-        coef1 = (1._CUSTOM_REAL - c0 ) / bb
+        ! first-order scheme
+        coef1 = (1._CUSTOM_REAL - coef0) / bb
         coef2 = 0._CUSTOM_REAL
       else
+        ! second-order convolution scheme
         ! calculates coefficients
-        c1 = exp(-prod1_half)
         !
         ! cheap exponential (up to 5 terms exp(x) = 1 + x *( 1 + x/2 * (1 + x/3 * (1 + x/4 * (1 + x/5 * ..))))
-        !x1 = -prod1_half
-        !c1 = 1.0 + x1 * (1.0 + 0.5 * x1 * (1.0  + 0.333333333333_CUSTOM_REAL * x1 * (1.0 + 0.25 * x1 * (1.0 + 0.2 * x1))))
+        !x1 = - 0.5 * bb * deltat
+        !temp = 1.0 + x1 * (1.0 + 0.5 * x1 * (1.0  + 0.333333333333_CUSTOM_REAL * x1 * (1.0 + 0.25 * x1 * (1.0 + 0.2 * x1))))
 
-        coef1 = (1._CUSTOM_REAL - c1 ) / bb
-        coef2 = (1._CUSTOM_REAL - c1 ) * c1 / bb
+        coef1 = (1._CUSTOM_REAL - temp) / bb
+        coef2 = coef1 * temp
       endif
     else
+      ! approximation for small beta values
       if (FIRST_ORDER_CONVOLUTION) then
         coef1 = deltat
         coef2 = 0._CUSTOM_REAL
       else
+        ! Taylor expansion to third-order
+        ! (writing out powers can help for speed, that is bb * bb is usually faster than bb**2)
+        bbpow2 = bb * bb
+        bbpow3 = bbpow2 * bb
+
         coef1 = deltat_half + &
                 (- ONE_OVER_8 * deltatpow2 * bb + ONE_OVER_48 * deltatpow3 * bbpow2 - ONE_OVER_384 * deltatpow4 * bbpow3)
         coef2 = deltat_half + &
@@ -905,7 +911,6 @@
     Myz_der = 0._CUSTOM_REAL
     sloc_der = 0._CUSTOM_REAL
   endif
-
 
   ! initializes adjoint kernels and reconstructed/backward wavefields
   if (SIMULATION_TYPE == 3) then
@@ -1023,6 +1028,7 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+  use specfem_par_coupling
 
   implicit none
 
@@ -1031,10 +1037,10 @@
   integer(kind=8) :: filesize
 
   ! initializes
-  SAVE_STACEY = .false.
+  SAVE_STACEY = .false.    ! flag to indicate if we need to read/write boundary contributions from disk
 
-! stacey absorbing fields will be reconstructed for adjoint simulations
-! using snapshot files of wavefields
+  ! stacey absorbing fields will be reconstructed for adjoint simulations
+  ! using snapshot files of wavefields
   if (STACEY_ABSORBING_CONDITIONS) then
 
     if (myrank == 0) then
@@ -1047,7 +1053,7 @@
       ! not needed for undo_attenuation scheme
       SAVE_STACEY = .false.
     else
-      ! used for simulation type 1 and 3
+      ! save in simulation type 1 with save_forward set, read back in simulation type 3
       if (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD)) then
         SAVE_STACEY = .true.
       else
@@ -1065,9 +1071,15 @@
     ! elastic domains
     if (ELASTIC_SIMULATION) then
       ! allocates wavefield
-      allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2143')
-      if (ier /= 0) stop 'error allocating array b_absorb_field'
+      if (b_num_abs_boundary_faces > 0) then
+        allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2143')
+        if (ier /= 0) stop 'error allocating array b_absorb_field'
+      else
+        ! dummy
+        allocate(b_absorb_field(1,1,1))
+      endif
+      b_absorb_field(:,:,:) = 0.0_CUSTOM_REAL
 
       if (num_abs_boundary_faces > 0 .and. SAVE_STACEY) then
         ! size of single record
@@ -1097,14 +1109,36 @@
                               filesize)
         endif
       endif
+
+      if (COUPLE_WITH_INJECTION_TECHNIQUE) then
+        ! boundary contribution to save together with absorbing boundary array b_absorb_field
+        ! for reconstructing backward wavefields in kernel simulations
+        if (b_num_abs_boundary_faces > 0 .and. SIMULATION_TYPE == 1) then
+          ! only needed for forward simulation to store boundary contributions
+          allocate(b_boundary_injection_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 2198')
+          if (ier /= 0) stop 'error allocating array b_boundary_injection_field'
+        else
+          ! dummy
+          allocate(b_boundary_injection_field(1,1,1))
+        endif
+        b_boundary_injection_field(:,:,:) = 0.0_CUSTOM_REAL
+      endif
+
     endif
 
     ! acoustic domains
     if (ACOUSTIC_SIMULATION) then
       ! allocates wavefield
-      allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2144')
-      if (ier /= 0) stop 'error allocating array b_absorb_potential'
+      if (b_num_abs_boundary_faces > 0) then
+        allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces * NB_RUNS_ACOUSTIC_GPU),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2144')
+        if (ier /= 0) stop 'error allocating array b_absorb_potential'
+      else
+        ! dummy
+        allocate(b_absorb_potential(1,1))
+      endif
+      b_absorb_potential(:,:) = 0.0_CUSTOM_REAL
 
       if (num_abs_boundary_faces > 0 .and. SAVE_STACEY) then
         ! size of single record
@@ -1148,11 +1182,19 @@
     ! poroelastic domains
     if (POROELASTIC_SIMULATION) then
       ! allocates wavefields for solid and fluid phases
-      allocate(b_absorb_fields(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2145')
-      allocate(b_absorb_fieldw(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2146')
-      if (ier /= 0) stop 'error allocating array b_absorb_fields and b_absorb_fieldw'
+      if (b_num_abs_boundary_faces > 0) then
+        allocate(b_absorb_fields(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2145')
+        allocate(b_absorb_fieldw(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2146')
+        if (ier /= 0) stop 'error allocating array b_absorb_fields and b_absorb_fieldw'
+      else
+        ! dummy
+        allocate(b_absorb_fields(1,1,1))
+        allocate(b_absorb_fieldw(1,1,1))
+      endif
+      b_absorb_fields(:,:,:) = 0.0_CUSTOM_REAL
+      b_absorb_fieldw(:,:,:) = 0.0_CUSTOM_REAL
 
       if (num_abs_boundary_faces > 0 .and. SAVE_STACEY) then
         ! size of single record
@@ -1193,24 +1235,25 @@
 
   else
     ! no STACEY_ABSORBING_CONDITIONS
-    ! needs dummy array
     b_num_abs_boundary_faces = 0
+
+    ! dummy arrays
     if (ELASTIC_SIMULATION) then
-      allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      allocate(b_absorb_field(1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2151')
       if (ier /= 0) stop 'error allocating array b_absorb_field'
     endif
 
     if (ACOUSTIC_SIMULATION) then
-      allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      allocate(b_absorb_potential(1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2152')
       if (ier /= 0) stop 'error allocating array b_absorb_potential'
     endif
 
     if (POROELASTIC_SIMULATION) then
-      allocate(b_absorb_fields(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      allocate(b_absorb_fields(1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2153')
-      allocate(b_absorb_fieldw(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      allocate(b_absorb_fieldw(1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2154')
       if (ier /= 0) stop 'error allocating array b_absorb_fields and b_absorb_fieldw'
     endif
@@ -1220,3 +1263,110 @@
   call synchronize_all()
 
   end subroutine prepare_timerun_stacey
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_timerun_faults()
+
+  use specfem_par
+
+  use fault_solver_common, only: fault_check_mesh_resolution,USE_KELVIN_VOIGT_DAMPING
+  use fault_solver_dynamic, only: BC_DYNFLT_init,SIMULATION_TYPE_DYN
+  use fault_solver_kinematic, only: BC_KINFLT_init,SIMULATION_TYPE_KIN
+
+  implicit none
+
+  ! local parameters
+  logical :: FAULT_SIMULATION_all,SIMULATION_TYPE_DYN_all,SIMULATION_TYPE_KIN_all,USE_KELVIN_VOIGT_DAMPING_all
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "preparing fault simulation"
+    call flush_IMAIN()
+  endif
+
+  ! initializes kinematic and dynamic fault solvers
+  ! dynamic rupture
+  call BC_DYNFLT_init(prname)
+
+  ! kinematic rupture
+  call BC_KINFLT_init(prname)
+
+  ! checks simulation flag
+  if (SIMULATION_TYPE_DYN .or. SIMULATION_TYPE_KIN) then
+    ! updates flag
+    FAULT_SIMULATION = .true.
+  else
+    FAULT_SIMULATION = .false.
+  endif
+
+  ! all processes will need to have FAULT_SIMULATION flag set if any flag is .true. somewhere
+  ! (needed for proper MPI assembly)
+  !
+  ! note: the flag USE_KELVING_VOIGT_DAMPING
+  !       can change from one process to another if a process has no fault in it.
+  !       thus, it is a local flag and deals only with its single MPI process.
+  !
+  !       the flags SIMULATION_TYPE_DYN, SIMULATION_TYPE_KIN
+  !       will be the same for all processes since all processes read in the Par_file_fault
+  !       and run the corresponding fault initialization routines.
+  !       we will however synchronize them just to be sure they are consistent, in case the initialization changes in future.
+  !
+  !       FAULT_SIMULATION will be an overall flag, which must be consistent for all MPI processes.
+  !       it will determine if we need to call fault routines and assembly stages.
+  call any_all_l( SIMULATION_TYPE_DYN, SIMULATION_TYPE_DYN_all )
+  SIMULATION_TYPE_DYN = SIMULATION_TYPE_DYN_all
+
+  call any_all_l( SIMULATION_TYPE_KIN, SIMULATION_TYPE_KIN_all )
+  SIMULATION_TYPE_KIN = SIMULATION_TYPE_KIN_all
+
+  call any_all_l( FAULT_SIMULATION, FAULT_SIMULATION_all )
+  FAULT_SIMULATION = FAULT_SIMULATION_all
+
+  ! just to check damping and see if any damping will be used, for user output
+  call any_all_l( USE_KELVIN_VOIGT_DAMPING, USE_KELVIN_VOIGT_DAMPING_all )
+
+  ! user output
+  if (FAULT_SIMULATION) then
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) "  Fault simulation turned on:"
+      if (SIMULATION_TYPE_DYN) write(IMAIN,*) "    dynamic   rupture simulation"
+      if (SIMULATION_TYPE_KIN) write(IMAIN,*) "    kinematic rupture simulation"
+      if (USE_KELVIN_VOIGT_DAMPING_all) then
+        write(IMAIN,*) "    using Kelvin Voigt damping"
+      endif
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+  else
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) "  no fault simulation"
+      call flush_IMAIN()
+    endif
+  endif
+
+  ! user output of critical time step estimation
+  if (FAULT_SIMULATION) call fault_check_mesh_resolution()
+
+  ! simulation checks
+  if (SIMULATION_TYPE_DYN .and. SIMULATION_TYPE_KIN) &
+    stop 'Invalid rupture flags, cannot have dynamic and kinematic ruptures combined in a simulation yet'
+
+  if (SIMULATION_TYPE == 3) then
+    ! backward simulation support needs to be checked
+!    if (FAULT_SIMULATION) &
+!      stop 'Fault simulation in SIMULATION_TYPE == 3 not supported yet'
+    ! damping needs to be checked if doable for adjoint/kernel simulations
+!    if (USE_KELVIN_VOIGT_DAMPING_all) &
+!      stop 'Using Kelvin-Voigt damping in SIMULATION_TYPE == 3 not supported yet'
+  endif
+
+  ! synchonizes
+  call synchronize_all()
+
+  end subroutine prepare_timerun_faults

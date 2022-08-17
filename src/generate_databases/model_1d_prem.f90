@@ -83,8 +83,8 @@
   distmin = HUGEVAL
   elevation = 0.0
   call get_topo_elevation_free_closest(xloc,yloc,elevation,distmin, &
-                    nspec,nglob_dummy,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
-                    num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+                                       nspec,nglob_unique,ibool,xstore_unique,ystore_unique,zstore_unique, &
+                                       num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
   ! depth in Z-direction
   if (distmin < HUGEVAL) then

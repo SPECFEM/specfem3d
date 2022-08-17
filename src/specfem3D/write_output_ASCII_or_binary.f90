@@ -38,13 +38,13 @@
   use constants
 
   use specfem_par, only: myrank,USE_BINARY_FOR_SEISMOGRAMS,SAVE_ALL_SEISMOS_IN_ONE_FILE,NTSTEP_BETWEEN_OUTPUT_SEISMOS, &
-    seismo_offset,seismo_current,subsamp_seismos
+    seismo_offset,seismo_current,NTSTEP_BETWEEN_OUTPUT_SAMPLE
 
   implicit none
 
   integer,intent(in) :: NSTEP,it,SIMULATION_TYPE
 
-  real(kind=CUSTOM_REAL), dimension(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS/subsamp_seismos),intent(in) :: one_seismogram
+  real(kind=CUSTOM_REAL), dimension(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS/NTSTEP_BETWEEN_OUTPUT_SAMPLE),intent(in) :: one_seismogram
 
   double precision,intent(in) :: t0,DT
 
@@ -54,6 +54,7 @@
 
   ! local parameter
   integer :: isample,ier,it_current
+  double precision :: time_t_db
   real(kind=CUSTOM_REAL) :: value,time_t
 
   real, dimension(1:seismo_current) :: tr
@@ -112,17 +113,21 @@
     if (SIMULATION_TYPE == 1) then
       ! forward simulation
       ! distinguish between single and double precision for reals
-      time_t = real( dble(it_current-1)*DT*subsamp_seismos - t0 ,kind=CUSTOM_REAL)
+      time_t_db = dble( (it_current-1) * NTSTEP_BETWEEN_OUTPUT_SAMPLE) * DT - t0
     else if (SIMULATION_TYPE == 3) then
       ! adjoint simulation: backward/reconstructed wavefields
       ! distinguish between single and double precision for reals
       ! note: compare time_t with time used for source term
-      time_t = real( dble(NSTEP)*DT - dble(it_current)*DT*subsamp_seismos - t0 ,kind=CUSTOM_REAL)
+      time_t_db = dble(NSTEP - it_current * NTSTEP_BETWEEN_OUTPUT_SAMPLE) * DT - t0
     endif
+
+    ! converts time to CUSTOM_REAL for output
+    time_t = real(time_t_db,kind=CUSTOM_REAL)
 
     if (USE_BINARY_FOR_SEISMOGRAMS) then
       ! binary format case
       if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+        ! outputs CUSTOM_REAL values
         write(IOUT) time_t,value
       else
         tr(isample) = value

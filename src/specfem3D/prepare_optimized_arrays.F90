@@ -243,19 +243,19 @@
       ispec_irreg = irregular_element_number(ispec)
       if (ispec_irreg /= 0) then
         DO_LOOP_IJK
-          deriv_mapping(1,INDEX_IJK,ispec_irreg) = xix(INDEX_IJK,ispec_irreg)
-          deriv_mapping(2,INDEX_IJK,ispec_irreg) = xiy(INDEX_IJK,ispec_irreg)
-          deriv_mapping(3,INDEX_IJK,ispec_irreg) = xiz(INDEX_IJK,ispec_irreg)
+          deriv_mapping(1,INDEX_IJK,ispec_irreg) = xixstore(INDEX_IJK,ispec_irreg)
+          deriv_mapping(2,INDEX_IJK,ispec_irreg) = xiystore(INDEX_IJK,ispec_irreg)
+          deriv_mapping(3,INDEX_IJK,ispec_irreg) = xizstore(INDEX_IJK,ispec_irreg)
 
-          deriv_mapping(4,INDEX_IJK,ispec_irreg) = etax(INDEX_IJK,ispec_irreg)
-          deriv_mapping(5,INDEX_IJK,ispec_irreg) = etay(INDEX_IJK,ispec_irreg)
-          deriv_mapping(6,INDEX_IJK,ispec_irreg) = etaz(INDEX_IJK,ispec_irreg)
+          deriv_mapping(4,INDEX_IJK,ispec_irreg) = etaxstore(INDEX_IJK,ispec_irreg)
+          deriv_mapping(5,INDEX_IJK,ispec_irreg) = etaystore(INDEX_IJK,ispec_irreg)
+          deriv_mapping(6,INDEX_IJK,ispec_irreg) = etazstore(INDEX_IJK,ispec_irreg)
 
-          deriv_mapping(7,INDEX_IJK,ispec_irreg) = gammax(INDEX_IJK,ispec_irreg)
-          deriv_mapping(8,INDEX_IJK,ispec_irreg) = gammay(INDEX_IJK,ispec_irreg)
-          deriv_mapping(9,INDEX_IJK,ispec_irreg) = gammaz(INDEX_IJK,ispec_irreg)
+          deriv_mapping(7,INDEX_IJK,ispec_irreg) = gammaxstore(INDEX_IJK,ispec_irreg)
+          deriv_mapping(8,INDEX_IJK,ispec_irreg) = gammaystore(INDEX_IJK,ispec_irreg)
+          deriv_mapping(9,INDEX_IJK,ispec_irreg) = gammazstore(INDEX_IJK,ispec_irreg)
 
-          deriv_mapping(10,INDEX_IJK,ispec_irreg) = jacobian(INDEX_IJK,ispec_irreg)
+          deriv_mapping(10,INDEX_IJK,ispec_irreg) = jacobianstore(INDEX_IJK,ispec_irreg)
         ENDDO_LOOP_IJK
       endif
     enddo

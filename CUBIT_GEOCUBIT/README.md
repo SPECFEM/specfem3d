@@ -11,9 +11,9 @@ tomography (we need to modify the starting toy model).
 
 This is the list of updates made on Jan 5, 2017:
 
-- compatibility with trelis 15+ and 16+
+- compatibility with Coreform Cubit 15+ and 16+
 
-- new merging chunk function (faster and more stable) for trelis 15+ (before it was only for cubit 12.2)
+- new merging chunk function (faster and more stable) for Coreform Cubit 15+ (before it was only for cubit 12.2)
 
 - pep8 beautification
 
@@ -22,16 +22,6 @@ This is the list of updates made on Jan 5, 2017:
 - alpha version of netcdf mesh for specfem3d
 
 
-I've tested on macosx, linux version of trelis/cubit from 12 to 16 for
-usage in the GUI, inside a python script on local machine and on
-cluster (48 flavors! and I don't have the version for window).
-Nevertheless, it is always possible that I miss something.
-
-I think it is a pain and, in the future, I would like to maintain the
-compatibility only for version 15+.
-
-Moreover, my access to cubit is sadly ended
-and I will drop soon also the support for it (sadly).
 
 =========================================
 
@@ -77,7 +67,7 @@ GeoCubit can be used inside the graphical interface of Trelis (i.e. as a Python 
 
 ## Requirements:
 
-- Trelis 15+ (www.csimsoft.com, see also cubit.sandia.gov)
+- Coreform Cubit 15+ (https://coreform.com/products/coreform-cubit/, see also cubit.sandia.gov)
 - python 2.7
 - numpy 1.0+
 
@@ -85,7 +75,7 @@ It is possible that GEOCUBIT continues to work for CUBIT 15+ but it is not suppo
 
 ## Configuration:
 
-On Linux/Unix system: in order to have the possibility to import the cubit libray included in Trelis in a **python script** you should set up the path for CUBIT/Trelis
+On Linux/Unix system: in order to have the possibility to import the cubit libray included in Cubit in a **python script** you should set up the path for Cubit
 
 ```
 export CUBITDIR=$CUBITHOME
@@ -111,14 +101,14 @@ export PATH=$PATH:[YourGeocubitDir]
 On MacOSX 10.10, Trelis points the system version of python2.7 (/Library/Python/2.7/site-packages)
 so the version of python required is `/usr/bin/python2.7`
 
-You could install GEOCUBIT with administrator privilege (for running script in the python tab of the Trelis GUI)
+You could install GEOCUBIT with administrator privilege (for running script in the python tab of the Cubit GUI)
 
 `/usr/bin/python2.7 setup.py install --install-lib=/Library/Python/2.7/site-packages/`
 
 and in addition if you want to run meshing scripts in python (outside of the GUI)   
 
 ```
-export CUBITDIR=$CUBITHOME #for example /Applications/Trelis-16.0.app
+export CUBITDIR=$CUBITHOME
 export PYTHONPATH=$CUBITDIR/contents/MacOS:$PYTHONPATH
 export CUBITLIB=$CUBITDIR/contents/MacOS
 export DYLD_LIBRARY_PATH=$CUBITDIR/contents/MacOS:${DYLD_LIBRARY_PATH}

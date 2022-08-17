@@ -45,19 +45,19 @@
   print *
 
   allocate(stlat(nrec),stat=ier)
-  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1174')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1174')
   allocate(stlon(nrec),stat=ier)
-  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1175')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1175')
   allocate(stele(nrec),stat=ier)
-  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1176')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1176')
   allocate(stbur(nrec),stat=ier)
-  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1177')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1177')
   allocate(station_name(nrec),stat=ier)
-  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1178')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1178')
   allocate(network_name(nrec),stat=ier)
-  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1179')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1179')
   allocate(is_a_duplicate(nrec),stat=ier)
-  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1180')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1180')
 
   is_a_duplicate(:) = .false.
 
@@ -118,24 +118,4 @@
   close(IOUT)
 
   end program detect_duplicates_stations_file
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-! version without rank number printed in the error message
-
-  subroutine my_local_exit_MPI_without_rank(error_msg)
-
-  implicit none
-
-  character(len=*) error_msg
-
-! write error message to screen
-  write(*,*) error_msg(1:len(error_msg))
-  write(*,*) 'Error detected, aborting MPI...'
-
-  stop 'Fatal error'
-
-  end subroutine my_local_exit_MPI_without_rank
 

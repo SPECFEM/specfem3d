@@ -32,15 +32,11 @@
 
 module fault_solver_kinematic
 
-!  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IMAIN,IOUT
-
   use fault_solver_common
 
   implicit none
 
   private
-
-  type(bc_dynandkinflt_type), allocatable, save :: faults(:)
 
   !Number of time steps defined by the user : NTOUT
   integer, save :: NTOUT,NSNAP
@@ -55,120 +51,189 @@ contains
 ! BC_KINFLT_init initializes kinematic faults
 !
 ! prname        fault database is read from file prname_fault_db.bin
-! Minv          inverse mass matrix
-! dt            global time step
-!
-  subroutine BC_KINFLT_init(prname,DTglobal,myrank)
 
-  use specfem_par, only: nt => NSTEP
+  subroutine BC_KINFLT_init(prname)
+
+  use specfem_par, only: nt => NSTEP, DTglobal => DT
+
+  use constants, only: myrank,IIN_PAR,IIN_BIN
 
   implicit none
 
   character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
-  double precision, intent(in) :: DTglobal
-  integer, intent(in) :: myrank
 
   ! local parameters
-  real(kind=CUSTOM_REAL) :: dt
+  type(bc_dynandkinflt_type),pointer :: bc
+  real(kind=CUSTOM_REAL) :: dt_real
   integer :: iflt,ier,dummy_idfault
-  integer :: nbfaults
-  integer :: SIMULATION_TYPE
+  integer :: nbfaults,nbfaults_bin
+  integer :: size_Kelvin_Voigt
+  integer :: rupture_type
   character(len=MAX_STRING_LEN) :: filename
-
-  integer, parameter :: IIN_PAR = 151
-  integer, parameter :: IIN_BIN = 170
 
   real(kind=CUSTOM_REAL) :: DUMMY
   NAMELIST / BEGIN_FAULT / dummy_idfault
 
+  ! initializes
   dummy_idfault = 0
 
+  ! note: all processes will open this file
   open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',iostat=ier)
+
+  ! checks if file exists
   if (ier /= 0) then
     if (myrank == 0) write(IMAIN,*) '  no kinematic faults'
     close(IIN_PAR)
+    ! all done
     return
   endif
 
+  ! number of faults
   read(IIN_PAR,*) nbfaults
   if (nbfaults == 0) then
     !if (myrank == 0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
+    ! nothing to do
     return
   endif
 
+  ! checks if binary fault file was created
   filename = prname(1:len_trim(prname))//'fault_db.bin'
   open(unit=IIN_BIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
-    stop
+    call exit_MPI(myrank,'Error: fault file fault_db.bin not found')
   endif
-  ! WARNING TO DO: should be an MPI abort
 
-  read(IIN_PAR,*)  ! eta
-  read(IIN_PAR,*) SIMULATION_TYPE
+  ! Reading etas of each fault
+  ! Skip reading viscosity eta of each fault, will be done with binary file
+  do iflt = 1,nbfaults
+    read(IIN_PAR,*) ! eta
+  enddo
+
+  ! fault rupture type: 1 = dyn 2 = kin
+  read(IIN_PAR,*) rupture_type
 
   ! fault simulation type == 2 for kinematic rupture simulation
   ! checks if anything to do
-  if (SIMULATION_TYPE /= 2) then
+  if (rupture_type /= 2) then
     close(IIN_BIN)
     close(IIN_PAR)
+    ! all done
     return
   endif
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) 'incorporating kinematic rupture simulation'
+    write(IMAIN,*) '  incorporating kinematic rupture simulation'
     write(IMAIN,*) '  found ', nbfaults, ' fault(s) in file DATA/Par_file_faults'
   endif
 
+  ! sets kinematic rupture flag
   SIMULATION_TYPE_KIN = .true.
 
+  ! reads parameters:
+  !   NTOUT : Number of time steps
+  !   NTSNAP: time interation of snapshots
+  !   V_HEALING (-1 : Healing off)
+  !   V_RUPT
   read(IIN_PAR,*) NTOUT
   read(IIN_PAR,*) NSNAP
   read(IIN_PAR,*) DUMMY
   read(IIN_PAR,*) DUMMY
 
-  read(IIN_BIN) nbfaults ! should be the same as in IIN_PAR
+  ! from binary fault file
+  read(IIN_BIN) nbfaults_bin ! should be the same as in IIN_PAR
+
+  ! checks
+  if (nbfaults /= nbfaults_bin) then
+    print *,'Error: number of faults ',nbfaults,' in Par_file_faults should match number stored in fault_db.bin: ',nbfaults_bin
+    print *,'Please check setup and rerun simulation...'
+    call exit_MPI(myrank,'Error invalid number of faults in Par_file_faults')
+  endif
+
+  ! saves number of faults
+  Nfaults = nbfaults
   allocate( faults(nbfaults) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1993')
-  dt = real(DTglobal)
-  do iflt=1,nbfaults
+
+  dt_real = real(DTglobal)
+
+  ! reads in fault parameters
+  do iflt = 1,nbfaults
+    ! example lines:
+    ! &BEGIN_FAULT /
+    ! &STRESS_TENSOR Sigma=0e0,0e0,0e0,0e0,0e0,0e0/
+    ! ..
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
-    call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt)
+
+    ! initializes fault
+    bc => faults(iflt)
+    call init_one_fault(bc,IIN_BIN,IIN_PAR,dt_real,nt,iflt)
   enddo
 
+  ! close files
   close(IIN_BIN)
   close(IIN_PAR)
 
+  ! reads Kelvin-Voigt parameters
+  filename = prname(1:len_trim(prname))//'Kelvin_voigt_eta.bin'
+  open(unit=IIN_BIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+  if (ier /= 0) then
+    write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
+    call exit_MPI(myrank,'Error opening file Kelvin_voigt_eta.bin')
+  endif
+
+  ! reads in values
+  read(IIN_BIN) size_Kelvin_Voigt
+  if (size_Kelvin_Voigt > 0) then
+    allocate(Kelvin_Voigt_eta(size_Kelvin_Voigt),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1362')
+    read(IIN_BIN) Kelvin_Voigt_eta
+  endif
+  close(IIN_BIN)
+  ! sets flag if this process has damping on fault elements
+  if (allocated(Kelvin_Voigt_eta)) then
+    USE_KELVIN_VOIGT_DAMPING = .true.
+  else
+    USE_KELVIN_VOIGT_DAMPING = .false.
+  endif
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  number of time steps                 = ',NTOUT
+    write(IMAIN,*) '  time interaction of snapshots NTSNAP = ',NSNAP
+    call flush_IMAIN()
+  endif
+
   return
 
-100 if (myrank == 0) then
-      write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
-      stop
-      ! WARNING TO DO: should be an MPI abort
-    endif
+100 if (myrank == 0)write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
+    call exit_MPI(myrank,'Error: BEGIN_FAULT entry missing')
 
   end subroutine BC_KINFLT_init
 
 
 !---------------------------------------------------------------------
 
-  subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt)
+  subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt_real,NT,iflt)
 
   implicit none
 
   type(bc_dynandkinflt_type), intent(inout) :: bc
-  integer, intent(in)                 :: IIN_BIN,IIN_PAR,NT,iflt
-  real(kind=CUSTOM_REAL), intent(in)  :: dt
+  integer, intent(in)                 :: IIN_BIN,IIN_PAR
+  integer, intent(in)                 :: NT,iflt
+  real(kind=CUSTOM_REAL), intent(in)  :: dt_real
 
+  ! local parameters
   real(kind=CUSTOM_REAL) :: kindt
-
-  integer :: ier
+  integer :: ier,recordlength
 
   NAMELIST / KINPAR / kindt
 
+  ! reads in fault_db binary file and initializes fault arrays
   call initialize_fault(bc,IIN_BIN)
 
+  ! sets up initial fault state
   if (bc%nspec > 0) then
     allocate(bc%T(3,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1994')
@@ -176,23 +241,25 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1995')
     allocate(bc%V(3,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1996')
-    bc%T = 0e0_CUSTOM_REAL
-    bc%D = 0e0_CUSTOM_REAL
-    bc%V = 0e0_CUSTOM_REAL
+
+    bc%T(:,:) = 0.0_CUSTOM_REAL
+    bc%D(:,:) = 0.0_CUSTOM_REAL
+    bc%V(:,:) = 0.0_CUSTOM_REAL
 
     ! time interval between two loaded slip rates
     read(IIN_PAR,nml=KINPAR)
-    bc%kin_dt = kindt
 
-    bc%kin_it=0
+    bc%kin_dt = kindt
+    bc%kin_it = 0
+
     ! Always have in memory the slip-rate model at two times, t1 and t2,
     ! spatially interpolated in the spectral element grid
     allocate(bc%v_kin_t1(2,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1997')
     allocate(bc%v_kin_t2(2,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1998')
-    bc%v_kin_t1 = 0e0_CUSTOM_REAL
-    bc%v_kin_t2 = 0e0_CUSTOM_REAL
+    bc%v_kin_t1(:,:) = 0.0_CUSTOM_REAL
+    bc%v_kin_t2(:,:) = 0.0_CUSTOM_REAL
   else
     ! dummy allocations (for subroutine arguments)
     allocate(bc%T(3,1), &
@@ -200,7 +267,9 @@ contains
              bc%V(3,1))
   endif
 
-  call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,7,iflt)
+  ! output dataT structure
+  recordlength = 7  ! number of quantities to store for each record
+  call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt_real,recordlength,iflt)
 
   call init_dataXZ(bc%dataXZ,bc)
 
@@ -216,11 +285,17 @@ contains
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: Vel,Dis
   real(kind=CUSTOM_REAL), dimension(:,:), intent(inout) :: F
 
+  ! local parameters
   integer :: iflt
 
-  if (.not. allocated(faults)) return
-  do iflt=1,size(faults)
-    if (faults(iflt)%nspec > 0) call BC_KINFLT_set_single(faults(iflt),F,Vel,Dis,iflt)
+  ! checks if anything to do
+  if (Nfaults == 0) return
+
+  ! loops over faults
+  do iflt = 1,Nfaults
+    ! note: this routine should be called by all processes, regardless if they contain no fault elements,
+    !       for managing MPI calls and file outputs
+    call BC_KINFLT_set_single(faults(iflt),F,Vel,Dis,iflt)
   enddo
 
   end subroutine BC_KINFLT_set_all
@@ -312,7 +387,7 @@ contains
     dV_free(3,:) = dV(3,:) + half_dt*dA(3,:)
 
     ! T = Z*( dV_free - V) , V known apriori as input.
-    ! CONVENTION : T(ibulk1)=T=-T(ibulk2)
+    ! CONVENTION : T(ibulk1) = T = -T(ibulk2)
     T(1,:) = bc%Z * ( dV_free(1,:) - bc%V(1,:) )
     T(2,:) = bc%Z * ( dV_free(2,:) - bc%V(2,:) )
     T(3,:) = bc%Z * ( dV_free(3,:) )
@@ -380,29 +455,36 @@ contains
 
   subroutine write_dataXZ(dataXZ,itime,iflt)
 
-  use specfem_par, only: myrank
+  use specfem_par, only: myrank,OUTPUT_FILES
 
   implicit none
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: itime,iflt
 
-  character(len=70) :: filename
+  ! local parameters
+  integer :: ier
+  character(len=MAX_STRING_LEN) :: filename
+  integer, parameter :: IOUT_SN = 171
 
-  write(filename,"('../OUTPUT_FILES/Proc',I0,'Snapshot',I0,'_F',I0,'.bin')") myrank,itime,iflt
+  write(filename,"(a,'/Proc',I0,'Snapshot',I0,'_F',I0,'.bin')") trim(OUTPUT_FILES),myrank,itime,iflt
 
-  open(unit=IOUT, file= trim(filename), status='unknown', form='unformatted',action='write')
+  open(unit=IOUT_SN, file=trim(filename), status='unknown', form='unformatted',action='write',iostat=ier)
+  if (ier /= 0) then
+    print *,'Error opening Snapshot file: ',trim(filename)
+    stop 'Error opening Snapshot file'
+  endif
 
-  write(IOUT) dataXZ%xcoord
-  write(IOUT) dataXZ%ycoord
-  write(IOUT) dataXZ%zcoord
-  write(IOUT) dataXZ%d1
-  write(IOUT) dataXZ%d2
-  write(IOUT) dataXZ%v1
-  write(IOUT) dataXZ%v2
-  write(IOUT) dataXZ%t1
-  write(IOUT) dataXZ%t2
-  write(IOUT) dataXZ%t3
-  close(IOUT)
+  write(IOUT_SN) dataXZ%xcoord
+  write(IOUT_SN) dataXZ%ycoord
+  write(IOUT_SN) dataXZ%zcoord
+  write(IOUT_SN) dataXZ%d1
+  write(IOUT_SN) dataXZ%d2
+  write(IOUT_SN) dataXZ%v1
+  write(IOUT_SN) dataXZ%v2
+  write(IOUT_SN) dataXZ%t1
+  write(IOUT_SN) dataXZ%t2
+  write(IOUT_SN) dataXZ%t3
+  close(IOUT_SN)
 
   end subroutine write_dataXZ
 
@@ -420,35 +502,36 @@ contains
 !   OUTPUT v : slip rate on receivers.
   subroutine load_vslip_snapshots(dataXZ,itime,iflt,myrank)
 
+  use constants, only: IIN_FLT
+
   implicit none
+
   integer, intent(in) :: itime,iflt
   type(dataXZ_type), intent(inout) :: dataXZ
   character(len=70) :: filename
-  integer :: IIN_BIN,ier,myrank
-
-  IIN_BIN = 101
+  integer :: ier,myrank
 
   write(filename,"('../INPUT_FILES/Proc',I0,'Snapshot',I0,'_F',I0,'.bin')") myrank,itime,iflt
   print *, trim(filename)
 
-  !open(unit=IIN_BIN, file= trim(filename), status='old', form='formatted', action='read',iostat=ier)
-  open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted', action='read',iostat=ier)
+  !open(unit=IIN_FLT, file= trim(filename), status='old', form='formatted', action='read',iostat=ier)
+  open(unit=IIN_FLT, file= trim(filename), status='old', form='unformatted', action='read',iostat=ier)
 
 !  COMPILERS WRITE BINARY OUTPUTS IN DIFFERENT FORMATS!
-  !open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted', action='read',iostat=ier)
+  !open(unit=IIN_FLT, file= trim(filename), status='old', form='unformatted', action='read',iostat=ier)
   !if ( ier /= 0 ) stop 'Snapshots have been found'
 
   if (ier == 0) then
-    !read(IIN_BIN,"(5F24.15)") dataXZ%xcoord,dataXZ%ycoord,dataXZ%zcoord,dataXZ%v1,dataXZ%v2
+    !read(IIN_FLT,"(5F24.15)") dataXZ%xcoord,dataXZ%ycoord,dataXZ%zcoord,dataXZ%v1,dataXZ%v2
     write(IMAIN,*) 'Load vslip file for kinematic rupture simulation!'
     !write(IMAIN,*)   max(abs(dataXZ
 
-    read(IIN_BIN)   dataXZ%xcoord
-    read(IIN_BIN)   dataXZ%ycoord
-    read(IIN_BIN)   dataXZ%zcoord
-    read(IIN_BIN)   dataXZ%v1
-    read(IIN_BIN)   dataXZ%v2
-    close(IIN_BIN)
+    read(IIN_FLT)   dataXZ%xcoord
+    read(IIN_FLT)   dataXZ%ycoord
+    read(IIN_FLT)   dataXZ%zcoord
+    read(IIN_FLT)   dataXZ%v1
+    read(IIN_FLT)   dataXZ%v2
+    close(IIN_FLT)
   else
     ! if file not found, set slip velocity to zero
     dataXZ%v1 = 0e0_CUSTOM_REAL

@@ -25,10 +25,6 @@
 #
 #=====================================================================
 
-# I make this Makefile serial for now because I do not know how to write a clean rules.mk here with all the right dependencies
-# If someone knows how to do that then please do it (in this rules.mk file only; all the others in other directories are already OK)
-#.NOTPARALLEL:
-
 ## compilation directories
 S := ${S_TOP}/src/inverse_problem_for_model
 $(inverse_problem_for_model_OBJECTS): S = ${S_TOP}/src/inverse_problem_for_model
@@ -202,8 +198,8 @@ inverse_problem_for_model_OBJECTS += \
 
 
 inverse_problem_for_model_SHARED_OBJECTS = \
-	$O/asdf_method_stubs.cc.o \
 	$O/shared_par.shared_module.o \
+	$O/adios_manager.shared_adios_module.o \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
@@ -275,48 +271,10 @@ inverse_problem_for_model_SHARED_OBJECTS += $(COND_MPI_OBJECTS)
 inverse_problem_for_model_SHARED_OBJECTS += $(COND_OPENMP_OBJECTS)
 
 ###
-### CUDA
+### GPU
 ###
-cuda_inverse_problem_for_model_OBJECTS = \
-	$O/assemble_MPI_scalar_cuda.cuda.o \
-	$O/assemble_MPI_vector_cuda.cuda.o \
-	$O/check_fields_cuda.cuda.o \
-	$O/compute_add_sources_acoustic_cuda.cuda.o \
-	$O/compute_add_sources_viscoelastic_cuda.cuda.o \
-	$O/compute_coupling_cuda.cuda.o \
-	$O/compute_forces_acoustic_cuda.cuda.o \
-	$O/compute_forces_viscoelastic_cuda.cuda.o \
-	$O/compute_kernels_cuda.cuda.o \
-	$O/compute_stacey_acoustic_cuda.cuda.o \
-	$O/compute_stacey_viscoelastic_cuda.cuda.o \
-	$O/helper_functions.cuda.o \
-	$O/initialize_cuda.cuda.o \
-	$O/noise_tomography_cuda.cuda.o \
-	$O/prepare_mesh_constants_cuda.cuda.o \
-	$O/save_and_compare_cpu_vs_gpu.cudacc.o \
-	$O/smooth_cuda.cuda.o \
-	$O/transfer_fields_cuda.cuda.o \
-	$O/update_displacement_cuda.cuda.o \
-	$O/write_seismograms_cuda.cuda.o \
-	$O/fault_solver_dynamics.cuda.o \
-	$(EMPTY_MACRO)
 
-cuda_inverse_problem_for_model_STUBS = \
-	$O/specfem3D_gpu_cuda_method_stubs.cudacc.o \
-	$(EMPTY_MACRO)
-
-cuda_inverse_problem_for_model_DEVICE_OBJ = \
-	$O/cuda_device_obj.o \
-	$(EMPTY_MACRO)
-
-ifeq ($(CUDA),yes)
-inverse_problem_for_model_OBJECTS += $(cuda_inverse_problem_for_model_OBJECTS)
-ifeq ($(CUDA_PLUS),yes)
-inverse_problem_for_model_OBJECTS += $(cuda_inverse_problem_for_model_DEVICE_OBJ)
-endif
-else
-inverse_problem_for_model_OBJECTS += $(cuda_inverse_problem_for_model_STUBS)
-endif
+inverse_problem_for_model_SHARED_OBJECTS += $(gpu_OBJECTS)
 
 ###
 ### ADIOS
@@ -328,19 +286,20 @@ adios_inverse_problem_for_model_OBJECTS= \
 	$O/read_mesh_databases_adios.spec_adios.o \
 	$O/save_forward_arrays_adios.spec_adios.o \
 	$O/read_forward_arrays_adios.spec_adios.o \
-	$O/save_kernels_adios.spec_adios.o
+	$O/save_kernels_adios.spec_adios.o \
+	$(EMPTY_MACRO)
 
 adios_inverse_problem_for_model_PREOBJECTS = \
-	$O/adios_manager.shared_adios.o \
-	$O/adios_helpers_definitions.shared_adios_module.o \
-	$O/adios_helpers_writers.shared_adios_module.o \
-	$O/adios_helpers.shared_adios.o
+	$O/adios_helpers_addons.shared_adios_cc.o \
+	$O/adios_helpers_definitions.shared_adios.o \
+	$O/adios_helpers_readers.shared_adios.o \
+	$O/adios_helpers_writers.shared_adios.o \
+	$O/adios_helpers.shared_adios.o \
+	$(EMPTY_MACRO)
 
 adios_inverse_problem_for_model_STUBS = \
-	$O/specfem3D_adios_stubs.spec_noadios.o
-
-adios_inverse_problem_for_model_PRESTUBS = \
-	$O/adios_manager_stubs.shared_noadios.o
+	$O/adios_method_stubs.cc.o \
+	$(EMPTY_MACRO)
 
 ###
 ### HDF5
@@ -380,25 +339,28 @@ endif
 
 
 # conditional adios linking
-ifeq ($(ADIOS),no)
-adios_inverse_problem_for_model_OBJECTS = $(adios_inverse_problem_for_model_STUBS)
-adios_inverse_problem_for_model_PREOBJECTS = $(adios_inverse_problem_for_model_PRESTUBS)
-endif
+ifeq ($(ADIOS),yes)
 inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_OBJECTS)
 inverse_problem_for_model_SHARED_OBJECTS += $(adios_inverse_problem_for_model_PREOBJECTS)
-
-asdf_inverse_problem_for_model_STUBS = \
-	$O/asdf_method_stubs.cc.o
-
-asdf_inverse_problem_for_model_PRESTUBS = \
-	$O/asdf_manager_stubs.shared_asdf.o
-
-ifeq ($(ASDF),no)
-asdf_inverse_problem_for_model_PREOBJECTS = $(asdf_inverse_problem_for_model_PRESTUBS)
+else ifeq ($(ADIOS2),yes)
+inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_OBJECTS)
+inverse_problem_for_model_SHARED_OBJECTS += $(adios_inverse_problem_for_model_PREOBJECTS)
+else
+inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_STUBS)
 endif
-inverse_problem_for_model_OBJECTS += $(asdf_inverse_problem_for_model_OBJECTS)
-inverse_problem_for_model_SHARED_OBJECTS += $(asdf_inverse_problem_for_model_PREOBJECTS)
 
+
+# conditional asdf linking
+ifeq ($(ASDF),yes)
+INVERSE_LINK_FLAGS += $(ASDF_LIBS)
+inverse_problem_for_model_OBJECTS += $(asdf_specfem3D_OBJECTS)
+inverse_problem_for_model_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_OBJECTS)
+else
+inverse_problem_for_model_OBJECTS += $(asdf_specfem3D_STUBS)
+inverse_problem_for_model_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_STUBS)
+endif
+
+# vtk
 ifeq ($(VTK),yes)
 inverse_problem_for_model_OBJECTS += \
 	$O/vtk_window_stubs.visualcc.o \
@@ -411,21 +373,14 @@ endif
 #### rules for executables
 ####
 
-ifeq ($(CUDA),yes)
-## cuda version
-ifeq ($(CUDA_PLUS),yes)
-## cuda 5x & 6x version
-INFO_CUDA_INVERSE_PROBLEM="building xinverse_problem_for_model with CUDA support"
-else
-## cuda 4 version
-INFO_CUDA_INVERSE_PROBLEM="building xinverse_problem_for_model with CUDA 4 support"
-endif
+ifeq ($(HAS_GPU),yes)
+INFO_GPU_INVERSE_PROBLEM="building xinverse_problem_for_model $(BUILD_VERSION_TXT)"
 
 ${E}/xinverse_problem_for_model: $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS)
 	@echo ""
-	@echo $(INFO_CUDA_INVERSE_PROBLEM)
+	@echo $(INFO_GPU_INVERSE_PROBLEM)
 	@echo ""
-	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK)
+	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS) $(GPU_LINK) $(INVERSE_LINK_FLAGS)
 	@echo ""
 
 else
@@ -435,7 +390,7 @@ ${E}/xinverse_problem_for_model: $(inverse_problem_for_model_OBJECTS) $(inverse_
 	@echo ""
 	@echo "building xinverse_problem_for_model"
 	@echo ""
-	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS)
+	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS) $(INVERSE_LINK_FLAGS)
 	@echo ""
 
 endif
@@ -494,6 +449,8 @@ $O/inverse_problem_main.inv.o: \
 	$O/projection_on_FD_grid_mod.inv_projection.o \
 	$O/specfem_interface_mod.inv_specfem_interface.o \
 	$O/fwi_iteration_mod.inv_inversion.o
+
+$O/parallel_for_inverse_problem.invmpi.o: $(COND_MPI_OBJECTS)
 
 ####
 #### rule to build each .o file

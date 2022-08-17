@@ -29,8 +29,8 @@ except:
 
 # for example: ./convert_SU_to_ASCII.py OUTPUT_FILES/0_dz_SU
 #              then filename = './OUTPUT_FILES/0_dz_SU' and single traces
-#              will be outputted as 0_dz_SU.ascii_0, 0_dz_SU.ascii_1, etc.
-out_file = file_in + '.ascii'
+#              will be outputted as 0_dz_SU.sem.ascii_0, 0_dz_SU.sem.ascii_1, etc.
+out_file = file_in + '.sem.ascii'
 
 # by default: uses Seismic Unix format to read in file.
 #             one could also use SEG-Y files and change this setting.

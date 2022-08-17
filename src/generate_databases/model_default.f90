@@ -37,7 +37,8 @@
                            xmesh,ymesh,zmesh, &
                            rho,vp,vs,iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
                            rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
-                           phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
+                           phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
+                           c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66)
 
 ! takes model values specified by mesh properties
 
@@ -62,6 +63,7 @@
   integer :: idomain_id
 
   real(kind=CUSTOM_REAL) :: kappa_s,kappa_f,kappa_fr,mu_fr,rho_s,rho_f,phi,tort,eta_f,kxx,kxy,kxz,kyy,kyz,kzz
+  real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
   ! local parameters
   integer :: iflag,flag_below,flag_above
@@ -191,7 +193,9 @@
       ! material definition undefined, uses definition from tomography model
 
       ! gets model values from tomography file
-      call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,imaterial_id,has_tomo_value)
+      call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten, &
+                            c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
+                            imaterial_id,has_tomo_value)
 
       ! checks if value was found
       if (.not. has_tomo_value) then

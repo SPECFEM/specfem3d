@@ -5,6 +5,7 @@ reset
 set echo off
 set journal off
 
+## volume
 brick x 60000 y 60000 z 30000
 move volume 1 z -15000
 webcut volume 1 with plane yplane
@@ -15,21 +16,26 @@ merge tolerance 1e-3
 imprint all
 merge all
 
+## meshing
 
+# original element size
+#surface all size 400
 
-surface all size 400
+# coarse element size
+surface all size 4000
+
+# meshing
 mesh volume all
 
-
-
-
+## fault surfaces
+# upper
 group "upp" add node in surface 12
 group "upp" remove node with x_coord = 30000
 group "upp" remove node with x_coord = -30000
 group "upp" remove node with z_coord = -30000
 nodeset 200 group upp
 nodeset 200 move 0.01 0 0
-
+# lower
 group "lowr" add node in surface 7
 group "lowr" remove node with x_coord = 30000
 group "lowr" remove node with x_coord = -30000

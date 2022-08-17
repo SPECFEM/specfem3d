@@ -1,0 +1,20 @@
+This code is used to transfer Specfem3D results to PDF and xyz-format files. These figures are only used for testing Specfem3D running, for more detailed information please analyze the data.
+
+Huihui Weng, Postdoc in Geoazur UCA, contact me by weng@geoazur.unice.fr or qfkq7850@mail.ustc.edu.cn. Dec. 20 2018
+
+Software and package requirements:
+  Python and Python packages
+
+Commands for testing the necessary python packages:
+  > python
+  Python 2.7.13 (default, Jan 03 2017, 17:41:54) [GCC] on linux2
+  Type "help", "copyright", "credits" or "license" for more information.
+  >>> import numpy
+  >>> import scipy
+  >>> import struct
+  >>> import matplotlib
+
+
+Run this script by type: 
+python Present_specfem3D_results.py
+

@@ -37,7 +37,7 @@
 !! to 120 degrees in doubling regions
 !
 !  use constants
-!  use constants_meshfem3D, only: ITYPE_UNUSUAL_1,ITYPE_UNUSUAL_1p,ITYPE_UNUSUAL_4,ITYPE_UNUSUAL_4p
+!  use constants_meshfem, only: ITYPE_UNUSUAL_1,ITYPE_UNUSUAL_1p,ITYPE_UNUSUAL_4,ITYPE_UNUSUAL_4p
 !
 !  implicit none
 !

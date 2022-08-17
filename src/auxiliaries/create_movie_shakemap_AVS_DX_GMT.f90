@@ -547,7 +547,7 @@
       ! sort the list based upon coordinates to get rid of multiples
       print *,'sorting list of points'
       call get_global(npointot,xp,yp,zp,iglob,locval,ifseg,nglob, &
-           dble(minval(store_val_x(:))),dble(maxval(store_val_x(:))))
+                      dble(minval(store_val_x(:))),dble(maxval(store_val_x(:))))
 
       ! print total number of points found
       print *
@@ -685,7 +685,7 @@
 
         ! output list of points
         mask_point = .false.
-        do ispec=1,nspectot_AVS_max
+        do ispec = 1,nspectot_AVS_max
           ieoff = NGNOD2D_FOUR_CORNERS_AVS_DX*(ispec-1)
           ! four points for each element
           do ilocnum = 1,NGNOD2D_FOUR_CORNERS_AVS_DX

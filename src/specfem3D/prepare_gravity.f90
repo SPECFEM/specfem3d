@@ -73,7 +73,6 @@
   ! and that we can neglect the 3D model and use PREM every 100 m in all cases
   ! this is probably a rather reasonable assumption
   if (GRAVITY) then
-
     ! allocates gravity arrays
     allocate(minus_deriv_gravity(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2156')
@@ -120,12 +119,10 @@
     enddo
 
   else
-
     ! allocates dummy gravity arrays
     allocate( minus_deriv_gravity(0), minus_g(0), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2158')
     if (ier /= 0) stop 'error allocating gravity arrays'
-
   endif
 
   ! compute the gravity integrals if needed
@@ -225,15 +222,15 @@
           ! computes the Jacobian
           if (ispec_irreg /= 0) then
             ! irregular element
-            xixl = xix(i,j,k,ispec_irreg)
-            xiyl = xiy(i,j,k,ispec_irreg)
-            xizl = xiz(i,j,k,ispec_irreg)
-            etaxl = etax(i,j,k,ispec_irreg)
-            etayl = etay(i,j,k,ispec_irreg)
-            etazl = etaz(i,j,k,ispec_irreg)
-            gammaxl = gammax(i,j,k,ispec_irreg)
-            gammayl = gammay(i,j,k,ispec_irreg)
-            gammazl = gammaz(i,j,k,ispec_irreg)
+            xixl = xixstore(i,j,k,ispec_irreg)
+            xiyl = xiystore(i,j,k,ispec_irreg)
+            xizl = xizstore(i,j,k,ispec_irreg)
+            etaxl = etaxstore(i,j,k,ispec_irreg)
+            etayl = etaystore(i,j,k,ispec_irreg)
+            etazl = etazstore(i,j,k,ispec_irreg)
+            gammaxl = gammaxstore(i,j,k,ispec_irreg)
+            gammayl = gammaystore(i,j,k,ispec_irreg)
+            gammazl = gammazstore(i,j,k,ispec_irreg)
             ! do this in double precision for accuracy
             jacobianl = 1.d0 / dble(xixl*(etayl*gammazl-etazl*gammayl) &
                           - xiyl*(etaxl*gammazl-etazl*gammaxl) &

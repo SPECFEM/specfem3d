@@ -379,6 +379,7 @@ subroutine wmo_create_shakemap_h5()
 !
 ! option MOVIE_TYPE == 1: uses horizontal peak-ground values, only at top, free surface
 !        MOVIE_TYPE == 2: uses norm of vector as peak-ground, for all external, outer mesh surfaces
+!        MOVIE_TYPE == 3: uses geometric mean of peak-ground values, only at top, free surface
 
   use specfem_par
   use specfem_par_elastic
@@ -388,6 +389,7 @@ subroutine wmo_create_shakemap_h5()
 
   ! temporary array for single elements
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: displ_element,veloc_element,accel_element
+  real(kind=CUSTOM_REAL) :: gmean_PGD,gmean_PGV,gmean_PGA
   integer :: ipoin,ispec,iglob,ispec2D,ia
   integer :: npoin_elem
 
@@ -419,16 +421,8 @@ subroutine wmo_create_shakemap_h5()
       do ipoin = 1, npoin_elem
         ia = npoin_elem * (ispec2D - 1) + ipoin
         iglob = faces_surface_ibool(ipoin,ispec2D)
-
-        if (MOVIE_TYPE == 1) then
-          ! only top surface
-          ! horizontal peak-ground value
-          call wmo_get_max_vector_top(ispec,iglob,ia,displ_element,veloc_element,accel_element)
-        else
-          ! all outer surfaces
-          ! norm of particle displ/veloc/accel vector
-          call wmo_get_max_vector_norm(ispec,iglob,ia,displ_element,veloc_element,accel_element)
-        endif
+        ! determines shakemap values for point
+        call wmo_get_max_vector_shakemap(ispec,iglob,ia,displ_element,veloc_element,accel_element,MOVIE_TYPE)
       enddo
 
     else if (ispec_is_elastic(ispec)) then
@@ -438,7 +432,9 @@ subroutine wmo_create_shakemap_h5()
         ia = npoin_elem * (ispec2D - 1) + ipoin
         iglob = faces_surface_ibool(ipoin,ispec2D)
 
-        if (MOVIE_TYPE == 1) then
+        select case (MOVIE_TYPE)
+        case(1)
+          ! PGD, PGV, PGA
           ! only top surface, using horizontal peak-ground value
           ! horizontal displacement
           shakemap_ux(ia) = max(shakemap_ux(ia),abs(displ(1,iglob)),abs(displ(2,iglob)))
@@ -446,7 +442,7 @@ subroutine wmo_create_shakemap_h5()
           shakemap_uy(ia) = max(shakemap_uy(ia),abs(veloc(1,iglob)),abs(veloc(2,iglob)))
           ! horizontal acceleration
           shakemap_uz(ia) = max(shakemap_uz(ia),abs(accel(1,iglob)),abs(accel(2,iglob)))
-        else
+        case(2)
           ! all outer surfaces, using norm of particle displ/veloc/accel vector
           ! saves norm of displacement,velocity and acceleration vector
           ! norm of displacement
@@ -455,7 +451,19 @@ subroutine wmo_create_shakemap_h5()
           shakemap_uy(ia) = max(shakemap_uy(ia),sqrt(veloc(1,iglob)**2 + veloc(2,iglob)**2 + veloc(3,iglob)**2))
           ! norm of acceleration
           shakemap_uz(ia) = max(shakemap_uz(ia),sqrt(accel(1,iglob)**2 + accel(2,iglob)**2 + accel(3,iglob)**2))
-        endif
+        case(3)
+          ! geometric mean of PGD, PGV, PGA
+          ! only top surface, using horizontal peak-ground value
+          gmean_PGD = sqrt( abs(displ(1,iglob) * displ(2,iglob)) )
+          gmean_PGV = sqrt( abs(veloc(1,iglob) * veloc(2,iglob)) )
+          gmean_PGA = sqrt( abs(accel(1,iglob) * accel(2,iglob)) )
+          ! horizontal displacement
+          shakemap_ux(ia) = max(shakemap_ux(ia),gmean_PGD)
+          ! horizontal velocity
+          shakemap_uy(ia) = max(shakemap_uy(ia),gmean_PGV)
+          ! horizontal acceleration
+          shakemap_uz(ia) = max(shakemap_uz(ia),gmean_PGA)
+        end select
       enddo
     else
       ! other element types not supported yet
@@ -995,7 +1003,8 @@ subroutine wmo_movie_div_curl_h5(veloc, &
   use constants
 
   use specfem_par, only: NSPEC_AB,NGLOB_AB,ibool,hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,irregular_element_number, &
+                          xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                          gammaxstore,gammaystore,gammazstore,irregular_element_number, &
                           xix_regular
 
   implicit none
@@ -1107,15 +1116,15 @@ subroutine wmo_movie_div_curl_h5(veloc, &
 
           if (ispec_irreg /= 0) then ! irregular element
             ! get derivatives of ux, uy and uz with respect to x, y and z
-            xixl = xix(i,j,k,ispec_irreg)
-            xiyl = xiy(i,j,k,ispec_irreg)
-            xizl = xiz(i,j,k,ispec_irreg)
-            etaxl = etax(i,j,k,ispec_irreg)
-            etayl = etay(i,j,k,ispec_irreg)
-            etazl = etaz(i,j,k,ispec_irreg)
-            gammaxl = gammax(i,j,k,ispec_irreg)
-            gammayl = gammay(i,j,k,ispec_irreg)
-            gammazl = gammaz(i,j,k,ispec_irreg)
+            xixl = xixstore(i,j,k,ispec_irreg)
+            xiyl = xiystore(i,j,k,ispec_irreg)
+            xizl = xizstore(i,j,k,ispec_irreg)
+            etaxl = etaxstore(i,j,k,ispec_irreg)
+            etayl = etaystore(i,j,k,ispec_irreg)
+            etazl = etazstore(i,j,k,ispec_irreg)
+            gammaxl = gammaxstore(i,j,k,ispec_irreg)
+            gammayl = gammaystore(i,j,k,ispec_irreg)
+            gammazl = gammazstore(i,j,k,ispec_irreg)
 
             dvxdxl(i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
             dvxdyl(i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l

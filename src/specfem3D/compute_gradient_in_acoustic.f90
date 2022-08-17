@@ -63,8 +63,8 @@
 !             or in gravity case, just gradient vector field
 
   use constants, only: NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
-  use specfem_par, only: NGLOB_AB,xix,xiy,xiz,etax,etay,etaz, &
-                         gammax,gammay,gammaz,xix_regular,irregular_element_number, &
+  use specfem_par, only: NGLOB_AB,xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore,xix_regular,irregular_element_number, &
                          ibool,rhostore,hprime_xx,hprime_yy,hprime_zz ! ,GRAVITY
 
   implicit none
@@ -117,15 +117,15 @@
             rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
           !endif
 
-          xixl = xix(i,j,k,ispec_irreg)
-          xiyl = xiy(i,j,k,ispec_irreg)
-          xizl = xiz(i,j,k,ispec_irreg)
-          etaxl = etax(i,j,k,ispec_irreg)
-          etayl = etay(i,j,k,ispec_irreg)
-          etazl = etaz(i,j,k,ispec_irreg)
-          gammaxl = gammax(i,j,k,ispec_irreg)
-          gammayl = gammay(i,j,k,ispec_irreg)
-          gammazl = gammaz(i,j,k,ispec_irreg)
+          xixl = xixstore(i,j,k,ispec_irreg)
+          xiyl = xiystore(i,j,k,ispec_irreg)
+          xizl = xizstore(i,j,k,ispec_irreg)
+          etaxl = etaxstore(i,j,k,ispec_irreg)
+          etayl = etaystore(i,j,k,ispec_irreg)
+          etazl = etazstore(i,j,k,ispec_irreg)
+          gammaxl = gammaxstore(i,j,k,ispec_irreg)
+          gammayl = gammaystore(i,j,k,ispec_irreg)
+          gammazl = gammazstore(i,j,k,ispec_irreg)
 
           ! derivatives of acoustic scalar potential field on GLL points
           vector_field_element(1,i,j,k) = (temp1l*xixl + temp2l*etaxl + temp3l*gammaxl) * rho_invl
@@ -200,8 +200,8 @@
 !             or in gravity case, just gradient vector field
 
   use constants, only: NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,m1,m2
-  use specfem_par, only: NGLOB_AB,xix,xiy,xiz,etax,etay,etaz, &
-                         gammax,gammay,gammaz,xix_regular,irregular_element_number, &
+  use specfem_par, only: NGLOB_AB,xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore,xix_regular,irregular_element_number, &
                          ibool,rhostore,hprime_xx,hprime_xxT ! ,GRAVITY
 
   implicit none
@@ -275,15 +275,15 @@
             rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
           !endif
 
-          xixl = xix(i,j,k,ispec_irreg)
-          xiyl = xiy(i,j,k,ispec_irreg)
-          xizl = xiz(i,j,k,ispec_irreg)
-          etaxl = etax(i,j,k,ispec_irreg)
-          etayl = etay(i,j,k,ispec_irreg)
-          etazl = etaz(i,j,k,ispec_irreg)
-          gammaxl = gammax(i,j,k,ispec_irreg)
-          gammayl = gammay(i,j,k,ispec_irreg)
-          gammazl = gammaz(i,j,k,ispec_irreg)
+          xixl = xixstore(i,j,k,ispec_irreg)
+          xiyl = xiystore(i,j,k,ispec_irreg)
+          xizl = xizstore(i,j,k,ispec_irreg)
+          etaxl = etaxstore(i,j,k,ispec_irreg)
+          etayl = etaystore(i,j,k,ispec_irreg)
+          etazl = etazstore(i,j,k,ispec_irreg)
+          gammaxl = gammaxstore(i,j,k,ispec_irreg)
+          gammayl = gammaystore(i,j,k,ispec_irreg)
+          gammazl = gammazstore(i,j,k,ispec_irreg)
 
           ! derivatives of acoustic scalar potential field on GLL points
           vector_field_element(1,i,j,k) = (temp1(i,j,k)*xixl + temp2(i,j,k)*etaxl + temp3(i,j,k)*gammaxl) * rho_invl

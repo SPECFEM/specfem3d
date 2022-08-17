@@ -67,8 +67,9 @@ meshfem3D_OBJECTS = \
 	$(EMPTY_MACRO)
 
 meshfem3D_MODULES = \
-	$(FC_MODDIR)/constants_meshfem3d.$(FC_MODEXT) \
-	$(FC_MODDIR)/meshfem3d_par.$(FC_MODEXT) \
+	$(FC_MODDIR)/constants_meshfem.$(FC_MODEXT) \
+	$(FC_MODDIR)/manager_adios.$(FC_MODEXT) \
+	$(FC_MODDIR)/meshfem_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/chunk_earth_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/create_meshfem_par.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
@@ -76,6 +77,7 @@ meshfem3D_MODULES = \
 meshfem3D_SHARED_OBJECTS = \
 	$O/create_name_database.shared.o \
 	$O/shared_par.shared_module.o \
+	$O/adios_manager.shared_adios_module.o \
 	$O/exit_mpi.shared.o \
 	$O/get_global.shared.o \
 	$O/get_shape3D.shared.o \
@@ -93,28 +95,32 @@ meshfem3D_SHARED_OBJECTS = \
 
 
 # using ADIOS files
-adios_meshfem3D_PREOBJECTS= \
-	$O/adios_manager.shared_adios.o \
-	$O/adios_helpers_definitions.shared_adios_module.o \
-	$O/adios_helpers_writers.shared_adios_module.o \
-	$O/adios_helpers.shared_adios.o
+adios_meshfem3D_PREOBJECTS = \
+	$O/adios_helpers_addons.shared_adios_cc.o \
+	$O/adios_helpers_definitions.shared_adios.o \
+	$O/adios_helpers_readers.shared_adios.o \
+	$O/adios_helpers_writers.shared_adios.o \
+	$O/adios_helpers.shared_adios.o \
+	$(EMPTY_MACRO)
 
-adios_meshfem3D_OBJECTS= \
-	$O/save_databases_adios.mesh_adios.o
-
-adios_meshfem3D_PRESTUBS = \
-	$O/adios_manager_stubs.shared_noadios.o
+adios_meshfem3D_OBJECTS = \
+	$O/save_databases_adios.mesh_adios.o \
+	$(EMPTY_MACRO)
 
 adios_meshfem3D_STUBS = \
-	$O/meshfem3D_adios_stubs.mesh_noadios.o
+	$O/adios_method_stubs.cc.o \
+	$(EMPTY_MACRO)
 
 # conditional adios linking
-ifeq ($(ADIOS),no)
-adios_meshfem3D_OBJECTS = $(adios_meshfem3D_STUBS)
-adios_meshfem3D_PREOBJECTS = $(adios_meshfem3D_PRESTUBS)
-endif
+ifeq ($(ADIOS),yes)
 meshfem3D_OBJECTS += $(adios_meshfem3D_OBJECTS)
 meshfem3D_SHARED_OBJECTS += $(adios_meshfem3D_PREOBJECTS)
+else ifeq ($(ADIOS2),yes)
+meshfem3D_OBJECTS += $(adios_meshfem3D_OBJECTS)
+meshfem3D_SHARED_OBJECTS += $(adios_meshfem3D_PREOBJECTS)
+else
+meshfem3D_SHARED_OBJECTS += $(adios_meshfem3D_STUBS)
+endif
 
 # objects for the pure Fortran version
 XMESHFEM_OBJECTS = \
@@ -172,15 +178,8 @@ $O/meshfem3D.mesh.o: $O/chunk_earth_mesh_mod.mesh.o
 $O/determine_cavity.mesh.o: $O/create_meshfem_mesh.mesh.o
 
 ## adios
-$O/meshfem3D_adios_stubs.mesh_noadios.o: $O/shared_par.shared_module.o $O/adios_manager_stubs.shared_noadios.o
-
-$O/save_databases_adios.mesh_adios.o: $O/safe_alloc_mod.shared.o $(adios_meshfem3D_PREOBJECTS)
-$O/create_meshfem_mesh.mesh.o: $(adios_meshfem3D_PREOBJECTS)
-
-$O/adios_helpers.shared_adios.o: \
-	$O/adios_helpers_definitions.shared_adios_module.o \
-	$O/adios_helpers_writers.shared_adios_module.o
-
+$O/save_databases_adios.mesh_adios.o: $O/safe_alloc_mod.shared.o $O/adios_manager.shared_adios_module.o
+$O/create_meshfem_mesh.mesh.o: $O/adios_manager.shared_adios_module.o
 
 ####
 #### rule to build each .o file below
@@ -200,10 +199,10 @@ $O/%.mesh.o: $S/%.F90 $O/shared_par.shared_module.o $O/meshfem3D_par.mesh_module
 ### ADIOS compilation
 ###
 
-$O/%.mesh_adios.o: $S/%.F90 $O/shared_par.shared_module.o $O/meshfem3D_par.mesh_module.o
+$O/%.mesh_adios.o: $S/%.F90 $O/shared_par.shared_module.o $O/meshfem3D_par.mesh_module.o $O/adios_helpers.shared_adios.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.mesh_adios.o: $S/%.f90 $O/shared_par.shared_module.o $O/meshfem3D_par.mesh_module.o
+$O/%.mesh_adios.o: $S/%.f90 $O/shared_par.shared_module.o $O/meshfem3D_par.mesh_module.o $O/adios_helpers.shared_adios.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90}  -c -o $@ $<
 
 $O/%.mesh_noadios.o: $S/%.F90 $O/meshfem3D_par.mesh_module.o

@@ -37,16 +37,17 @@
   use constants
   use specfem_par, only: ibool,myrank,NSPEC_AB,NGLOB_AB,USE_SOURCES_RECEIVERS_Z, &
                          xstore,ystore,zstore,NPROC,num_free_surface_faces,free_surface_ispec,free_surface_ijk
+  implicit none
 
   integer, intent(in) :: npoints
-  double precision, dimension(npoints), intent(inout)  :: plon,plat,pbur
+  double precision, dimension(npoints), intent(in)  :: plon,plat,pbur
 
-  double precision, dimension(npoints), intent(out) :: utm_x,utm_y,elevation
-  double precision, dimension(npoints), intent(out) :: x_target,y_target,z_target
+  double precision, dimension(npoints), intent(inout) :: utm_x,utm_y,elevation
+  double precision, dimension(npoints), intent(inout) :: x_target,y_target,z_target
 
   ! local parameters
   integer :: ipoin
-  double precision :: z,distmin
+  double precision :: z,distmin,lon,lat
   double precision, dimension(:), allocatable :: elevation_distmin
   double precision, dimension(:,:), allocatable :: elevation_all,elevation_distmin_all
   real(kind=CUSTOM_REAL) :: xloc,yloc,loc_ele,loc_distmin
@@ -57,8 +58,12 @@
 
   ! determine x/y from lat/lon
   do ipoin = 1, npoints
+    ! point longitude/latitude
+    lon = plon(ipoin)
+    lat = plat(ipoin)
+
     ! convert station location to UTM
-    call utm_geo(plon(ipoin),plat(ipoin),utm_x(ipoin),utm_y(ipoin),ILONGLAT2UTM)
+    call utm_geo(lon,lat,utm_x(ipoin),utm_y(ipoin),ILONGLAT2UTM)
 
     ! target location of point
     x_target(ipoin) = utm_x(ipoin)
@@ -83,6 +88,7 @@
   allocate(elevation_distmin(npoints),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2184')
   if (ier /= 0) stop 'Error allocating elevation arrays'
+  elevation_distmin(:) = HUGEVAL
 
   if (myrank == 0) then
     ! only main gathers all
@@ -98,9 +104,10 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2188')
     if (ier /= 0) stop 'Error allocating elevation gather arrays'
   endif
+  elevation_all(:,:) = 0.d0
+  elevation_distmin_all(:,:) = HUGEVAL
 
   ! gets elevation
-  elevation_distmin(:) = HUGEVAL
   do ipoin = 1, npoints
     xloc = x_target(ipoin)
     yloc = y_target(ipoin)
@@ -139,6 +146,7 @@
       enddo
     enddo
   endif
+
   ! free temporary arrays
   deallocate(elevation_distmin,elevation_all,elevation_distmin_all)
 
@@ -159,11 +167,13 @@
   use specfem_par, only: USE_SOURCES_RECEIVERS_Z,ibool,myrank,NSPEC_AB,NGLOB_AB, &
                          xstore,ystore,zstore,NPROC,num_free_surface_faces,free_surface_ispec,free_surface_ijk
 
-  double precision,     intent(inout)  :: lon,lat,bury
-  double precision,     intent(out) :: utm_x,utm_y
-  double precision,     intent(out) :: z_target,elevation
+  implicit none
 
-  !local
+  double precision,intent(inout) :: lon,lat,bury
+  double precision,intent(inout) :: utm_x,utm_y
+  double precision,intent(inout) :: z_target,elevation
+
+  ! local parameters
   integer,dimension(1)              :: iproc
   double precision,dimension(1)     :: altitude_rec,distmin_ele
   double precision,dimension(NPROC) :: distmin_ele_all,elevation_all
@@ -199,6 +209,7 @@
     iproc = minloc(distmin_ele_all)
     altitude_rec(1) = elevation_all(iproc(1))
   endif
+
   call bcast_all_dp(altitude_rec,1)
   elevation = altitude_rec(1)
 

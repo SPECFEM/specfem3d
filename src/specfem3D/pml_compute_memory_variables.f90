@@ -55,7 +55,8 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
 
-  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
+  use specfem_par, only: xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore,jacobianstore, &
                          kappastore,mustore,irregular_element_number, &
                          jacobian_regular,xix_regular
 
@@ -379,16 +380,16 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
 
         if (ispec_irreg /= 0) then
           ! irregular element
-          xixl = xix(i,j,k,ispec_irreg)
-          xiyl = xiy(i,j,k,ispec_irreg)
-          xizl = xiz(i,j,k,ispec_irreg)
-          etaxl = etax(i,j,k,ispec_irreg)
-          etayl = etay(i,j,k,ispec_irreg)
-          etazl = etaz(i,j,k,ispec_irreg)
-          gammaxl = gammax(i,j,k,ispec_irreg)
-          gammayl = gammay(i,j,k,ispec_irreg)
-          gammazl = gammaz(i,j,k,ispec_irreg)
-          jacobianl = jacobian(i,j,k,ispec_irreg)
+          xixl = xixstore(i,j,k,ispec_irreg)
+          xiyl = xiystore(i,j,k,ispec_irreg)
+          xizl = xizstore(i,j,k,ispec_irreg)
+          etaxl = etaxstore(i,j,k,ispec_irreg)
+          etayl = etaystore(i,j,k,ispec_irreg)
+          etazl = etazstore(i,j,k,ispec_irreg)
+          gammaxl = gammaxstore(i,j,k,ispec_irreg)
+          gammayl = gammaystore(i,j,k,ispec_irreg)
+          gammazl = gammazstore(i,j,k,ispec_irreg)
+          jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
           ! form dot product with test vector, non-symmetric form (which
           ! is useful in the case of PML)
@@ -444,7 +445,8 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
-  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
+  use specfem_par, only: xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                         gammaxstore,gammaystore,gammazstore,jacobianstore, &
                          rhostore,irregular_element_number, &
                          jacobian_regular,xix_regular
 
@@ -618,16 +620,16 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
     do k=1,NGLLZ
       do j=1,NGLLY
         do i=1,NGLLX
-          xixl = xix(i,j,k,ispec_irreg)
-          xiyl = xiy(i,j,k,ispec_irreg)
-          xizl = xiz(i,j,k,ispec_irreg)
-          etaxl = etax(i,j,k,ispec_irreg)
-          etayl = etay(i,j,k,ispec_irreg)
-          etazl = etaz(i,j,k,ispec_irreg)
-          gammaxl = gammax(i,j,k,ispec_irreg)
-          gammayl = gammay(i,j,k,ispec_irreg)
-          gammazl = gammaz(i,j,k,ispec_irreg)
-          jacobianl = jacobian(i,j,k,ispec_irreg)
+          xixl = xixstore(i,j,k,ispec_irreg)
+          xiyl = xiystore(i,j,k,ispec_irreg)
+          xizl = xizstore(i,j,k,ispec_irreg)
+          etaxl = etaxstore(i,j,k,ispec_irreg)
+          etayl = etaystore(i,j,k,ispec_irreg)
+          etazl = etazstore(i,j,k,ispec_irreg)
+          gammaxl = gammaxstore(i,j,k,ispec_irreg)
+          gammayl = gammaystore(i,j,k,ispec_irreg)
+          gammazl = gammazstore(i,j,k,ispec_irreg)
+          jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
           rho_invl_jacob = jacobianl / rhostore(i,j,k,ispec)
 
@@ -830,10 +832,6 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
   real(kind=CUSTOM_REAL) :: A_0, A_1, A_2, A_3, A_4
   real(kind=CUSTOM_REAL) :: kappa_x,kappa_y,kappa_z,d_x,d_y,d_z,alpha_x,alpha_y,alpha_z
 
-  logical :: FIRST_ORDER_CONVOLUTION
-
-  FIRST_ORDER_CONVOLUTION = .false.
-
   CPML_region_local = CPML_regions(ispec_CPML)
   kappa_x = k_store_x(i,j,k,ispec_CPML)
   kappa_y = k_store_y(i,j,k,ispec_CPML)
@@ -954,8 +952,6 @@ subroutine lijk_parameter_computation(kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,ka
 
   integer :: CPML_X_ONLY_TEMP,CPML_Y_ONLY_TEMP,CPML_Z_ONLY_TEMP, &
              CPML_XY_ONLY_TEMP,CPML_XZ_ONLY_TEMP,CPML_YZ_ONLY_TEMP
-
-  !logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
 
   select case (index_ijk)
   case (123)
@@ -1330,8 +1326,6 @@ subroutine lxy_interface_parameter_computation(kappa_x,d_x,alpha_x,kappa_y,d_y,a
 
   integer :: CPML_X_ONLY_TEMP,CPML_Y_ONLY_TEMP,CPML_Z_ONLY_TEMP, &
              CPML_XY_ONLY_TEMP,CPML_XZ_ONLY_TEMP,CPML_YZ_ONLY_TEMP
-
-  !logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
 
   select case(index_ijk)
   case (12)

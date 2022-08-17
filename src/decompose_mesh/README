@@ -8,7 +8,7 @@ decompose mesh files:
 
 ****
 you will need SCOTCH libraries to be installed on your system
-(http://gforge.inria.fr/projects/scotch/)
+(https://gitlab.inria.fr/scotch/scotch)
 
 to compile this executable xdecompose_mesh for partitioning your mesh files
 ****

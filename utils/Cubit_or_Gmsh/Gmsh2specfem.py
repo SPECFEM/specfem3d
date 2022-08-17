@@ -34,6 +34,7 @@ except:
 # globals
 cell_type = ''
 quad_type = ''
+meshio_major_version = 0
 
 #--------------------------------------------------------------------------------------------------
 
@@ -41,7 +42,7 @@ def read_mesh_file_msh(file):
     """
     reads in Gmsh file
     """
-    global cell_type,quad_type
+    global cell_type,quad_type,meshio_major_version
 
     print("")
     print("reading file: ",file)
@@ -49,10 +50,112 @@ def read_mesh_file_msh(file):
 
     # reads *.msh file (Gmsh Ascii-format)
     mesh = meshio.read(file)
-    points, cells, point_data, cell_data, field_data = (
-        mesh.points, mesh.cells,
-        mesh.point_data, mesh.cell_data, mesh.field_data)
 
+    # version changes:
+    #   meshio 3.3.1: cells and cell_data are returned as dictionary to mesh object
+    #   meshio >= 4.0.0: cells and cell_data are returns as lists to mesh object,
+    #                    instead use cells_dict and cell_data_dict
+    #
+    # we would have something like:
+    #
+    # if meshio_major_version >= 4:
+    #     points, cells, point_data, cell_data, field_data = (mesh.points, mesh.cells_dict,
+    #                                                         mesh.point_data, mesh.cell_data_dict,
+    #                                                         mesh.field_data)
+    # else:
+    #     points, cells, point_data, cell_data, field_data = (mesh.points, mesh.cells,
+    #                                                         mesh.point_data, mesh.cell_data,
+    #                                                         mesh.field_data)
+    #
+    # however, the new dict objects have a different ordering than in older version 3.
+    # we will thus take the list object and convert it to a version 3 dictionary object ourself...
+    #
+    points, cells, point_data, cell_data, field_data = (mesh.points, mesh.cells,
+                                                        mesh.point_data, mesh.cell_data,
+                                                        mesh.field_data)
+
+    # meshio versions >= 4.0.0:
+    if meshio_major_version >= 4:
+        print("current meshio version >= 4")
+        # creates a cells_old object as dictionaries in the same format like older version meshio 3.3.x
+        if not isinstance(cells, dict):
+            print("")
+            print("using older meshio cell format for exporting mesh...")
+
+            # creates new dictionary for cells and cell_data
+            cells_old = {}
+            nblocks = 0
+            for cell_block in cells:
+                # cells dictionary
+                nblocks += 1
+                #print("cell block",nblocks,cell_block,len(cell_block))
+                if len(cell_block) == 2:
+                    # must have 2 items ('name',data)
+                    name = cell_block[0]
+                    data = cell_block[1]
+                    print("  cell block",name,len(data))
+                    #for i in cell_block: print(i)
+                    if name in cells_old:
+                        # append data to existing key ('quad9' can occur multiple times)
+                        cells_old[name] = np.concatenate((cells_old[name],data))
+                    else:
+                        # new entry
+                        cells_old[name] = data
+                else:
+                    # error
+                    print("Invalid cells returned",cells,cell_block)
+                    sys.exit(1)
+            print("")
+
+            # replace cells object with older-format dictionary
+            cells.clear()
+            cells = cells_old.copy()
+
+            #debug
+            #print("cells",cells)
+
+            # creates new dictionary for cell_data
+            # format: quad       -> (gmsh:physical, 600)
+            #         hexahedron -> (gmsh:physical, 1000)
+            cell_data_old = {}
+            for name,data in cell_data.items():
+                # newer format has entries:
+                #     gmsh:geometrical,
+                #     gmsh:physical
+                #debug
+                #print("  name,data",name,data)
+                # only gmsh:physical entries
+                if 'gmsh:physical' in name:
+                    # physical mesh infos
+                    # data list should have same length as cells list entry
+                    nkeys = len(cells.keys())
+                    if len(data) != nkeys:
+                        print("Error: number of cell_data entries and cells type differ ",len(data),nkeys)
+                        sys.exit(1)
+
+                    # create new dictionary
+                    for s,array in enumerate(data):
+                        # gets name from cells entry
+                        data_name = list(cells.keys())[s]
+                        print("  cell data block",s,len(array),"name:",data_name)
+                        # dictionary has key gmsh:physical (ignoring gmsh:geometry)
+                        dic = {'gmsh:physical': array}
+                        # sets as new entry
+                        cell_data_old[data_name] = dic
+                        # debug
+                        #print("  data name,dic",data_name,dic)
+            print("")
+            #debug
+            #print("cell_data",cell_data)
+
+            # replace cells object with older-format dictionary
+            cell_data.clear()
+            cell_data = cell_data_old.copy()
+
+            # debug
+            #print("new cell_data",cell_data)
+
+    # mesh info
     print("mesh data:")
     print("number of points: ",len(points))
     print("cells     : ",len(cells),"items")
@@ -66,10 +169,16 @@ def read_mesh_file_msh(file):
             print("    ",s,len(array))
 
     print("cell_data : ",len(cell_data),"items")
-    for name,dic in cell_data.items():
+    for name,data in cell_data.items():
         print("  ",name)
-        for s,array in dic.items():
-            print("    ",s,len(array))
+        if isinstance(data, dict):
+            # older meshio versions 3.x
+            for s,array in data.items():
+                print("    ",s,len(array))
+        else:
+            # newer meshio versions >= 4.0 (data is a list object)
+            for s,array in enumerate(data):
+                print("          ",s,len(array))
 
     print("field_data: ",len(field_data),"items")
     for name,_ in field_data.items():
@@ -89,17 +198,17 @@ def read_mesh_file_msh(file):
     # checks types
     # linear    hex9  elements == 'hexahedron' (used by default)
     # quadratic hex27 elements == 'hexahedron27'
-    if 'hexahedron' in cells.keys():
-        cell_type = 'hexahedron'
-    elif 'hexahedron27' in cells.keys():
+    if 'hexahedron27' in cells.keys():
         cell_type = 'hexahedron27'
+    elif 'hexahedron' in cells.keys():
+        cell_type = 'hexahedron'
 
     # linear    quad4  faces == 'quad' (used by default)
     # quadratic quad9  faces == 'quad9'
-    if 'quad' in cells.keys():
-        quad_type = 'quad'
-    elif 'quad9' in cells.keys():
+    if 'quad9' in cells.keys():
         quad_type = 'quad9'
+    elif 'quad' in cells.keys():
+        quad_type = 'quad'
 
     print("element types found: ")
     print("  hex type : ",cell_type)
@@ -388,7 +497,7 @@ def export_mesh(points,cells,point_data,cell_data,field_data):
     """
     creates files in MESH/ directory
     """
-    global cell_type,quad_type
+    global cell_type,quad_type,meshio_major_version
 
     print("")
     print("exporting mesh files:")
@@ -428,6 +537,8 @@ def export_mesh(points,cells,point_data,cell_data,field_data):
             #       the module meshio changes the ordering for hexahedron20 (to fit "VTK" format), but not hexahedron27 elements.
             #       thus, the ordering is still original from Gmsh for hex8 and hex27 elements.
             #
+            # note: with meshio versions 4.x, ordering changed again...
+            #
             if cell_type == 'hexahedron27':
                 # 27-node element -> NGNOD == 27
                 if len(h) != 27:
@@ -445,7 +556,18 @@ def export_mesh(points,cells,point_data,cell_data,field_data):
                 #    mid-points (bottom edges),(bottom-to-top edges), (top edges), : (16 17 19 18) (12 10 15 14) (8 9 13 11)
                 #    face centers (bottom),(front),(right),(back),(left),(top): 25,21,22,24,23,20
                 #    cell center: (26)
-                ordering = [5,4,7,6, 1,0,3,2, 16,17,19,18, 12,10,15,14, 8,9,13,11, 25,21,22,24,23,20, 26]
+                #    -> ordering = [5,4,7,6, 1,0,3,2, 16,17,19,18, 12,10,15,14, 8,9,13,11, 25,21,22,24,23,20, 26]
+                #
+                # newer meshio ordering, see:
+                # https://github.com/nschloe/meshio/wiki/Node-ordering-in-cells
+                #
+                # indexing from bottom surface to top
+                if meshio_major_version >= 4:
+                    # orders from meshio to specfem
+                    ordering = [5,4,7,6, 1,0,3,2, 12,15,14,13, 17,16,19,18, 8,11,10,9, 25,22,20,23,21,24, 26]
+                else:
+                    # orders from gmsh to specfem
+                    ordering = [5,4,7,6, 1,0,3,2, 16,17,19,18, 12,10,15,14, 8,9,13,11, 25,21,22,24,23,20, 26]
             else:
                 # 8-node element given by corner points -> NGNOD == 8
                 if len(h) != 8:
@@ -587,6 +709,14 @@ def export2SPECFEM3D(filename):
     """
     converts Gmsh file to SPECFEM mesh files
     """
+    global meshio_major_version
+
+    # version info
+    version = meshio.__version__
+    meshio_major_version = int(version.split(".")[0])
+    print("meshio version: ",version)
+    print("")
+
     # reads in mesh file
     points,cells,point_data,cell_data,field_data = read_mesh_file_msh(filename)
 

@@ -188,7 +188,7 @@ void open_file_abs_r_fbin(int *fid, char *filename,int *length, long long *files
   if (ft == NULL ) { perror("fopen"); exit(-1); }
 
   // sets mode for full buffering
-  work_buffer[*fid] = (char *)malloc(MAX_B);
+  work_buffer[*fid] = (char *) malloc(MAX_B);
   ret = setvbuf( ft, work_buffer[*fid], _IOFBF, (size_t)MAX_B );
   if (ret != 0){
     perror("Error setting working buffer");
@@ -229,7 +229,7 @@ void open_file_abs_w_fbin(int *fid, char *filename, int *length, long long *file
   if (ft == NULL ) { perror("fopen"); exit(-1); }
 
   // sets mode for full buffering
-  work_buffer[*fid] = (char *)malloc(MAX_B);
+  work_buffer[*fid] = (char *) malloc(MAX_B);
   ret = setvbuf( ft, work_buffer[*fid], _IOFBF, (size_t)MAX_B );
   if (ret != 0){
     perror("Error setting working buffer");

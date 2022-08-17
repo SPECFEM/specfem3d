@@ -468,9 +468,9 @@ contains
     ! get mesh properties (mandatory before calling locate_point_in_mesh)
     call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
     call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-         x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
-         elemsize_min_glob,elemsize_max_glob, &
-         distance_min_glob,distance_max_glob)
+                              x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
+                              elemsize_min_glob,elemsize_max_glob, &
+                              distance_min_glob,distance_max_glob)
     if (DEBUG_MODE) then
        write (IIDD, *)
        write (IIDD, *) ' LOCATE TELESEISMIC STATIONS ---------------------'

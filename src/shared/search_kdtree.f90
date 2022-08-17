@@ -131,6 +131,7 @@ contains
   ! returns:
   !   creates internal tree representation
   !
+  use constants, only: myrank
 
   implicit none
 
@@ -179,6 +180,7 @@ contains
     !write(IMAIN,*) '  box boundaries   : x min/max = ',minval(points_data(1,:)),maxval(points_data(1,:))
     !write(IMAIN,*) '                     y min/max = ',minval(points_data(2,:)),maxval(points_data(2,:))
     !write(IMAIN,*) '                     z min/max = ',minval(points_data(3,:)),maxval(points_data(3,:))
+    call flush_IMAIN()
   endif
 
   ! theoretical number of node for totally balanced tree
@@ -193,12 +195,14 @@ contains
   if (be_verbose) then
     write(IMAIN,*) '  theoretical   number of nodes: ',numnodes
     write(IMAIN,*) '               tree memory size: ',( numnodes * 32 )/1024./1024.,'MB'
+    call flush_IMAIN()
   endif
 
   ! local ordering
   allocate(points_index(kdtree_num_nodes),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1226')
   if (ier /= 0) stop 'Error allocating array points_index'
+  points_index(:) = 0
 
   ! initial point ordering
   do i = 1,npoints
@@ -227,8 +231,8 @@ contains
     call cpu_time(ct_end)
     write(IMAIN,*) '  creation timing : ',ct_end - ct_start, '(s)'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
-
 
   ! debugging
   if (DEBUG) then
@@ -239,7 +243,7 @@ contains
     endif
 
     ! test search
-    print *,'search tree:'
+    print *,'search tree: rank ',myrank
     xyz_target(1) = 0.13261298835277557
     xyz_target(2) = -8.4083788096904755E-002
     xyz_target(3) = 0.97641450166702271
@@ -636,7 +640,7 @@ contains
   double precision, dimension(3,npoints), intent(in) :: points_data
   integer,dimension(npoints), intent(inout) :: points_index
 
-  type (kdtree_node), pointer, intent(inout) :: node
+  type (kdtree_node), pointer :: node    ! pointers in standard Fortran90 cannot have intent(..) attribute
 
   integer,intent(in) :: depth
   integer,intent(in) :: ibound_lower,ibound_upper
@@ -649,7 +653,18 @@ contains
   integer :: i,ier,idim
   integer :: iloc,ilower,iupper
   integer :: l,u
-  integer,dimension(:),allocatable :: workindex
+
+  ! note: compiling with intel ifort version 18.0.1/19.1.0 and optimizations like -xHost -O2 or -xHost -O3 flags
+  !       can lead to issues with the deallocate(workindex) statement below:
+  !         *** Error in `./bin/xspecfem3D': double free or corruption (!prev): 0x00000000024f1610 ***
+  !
+  !       this might be due to a more aggressive optimization which leads to a change of the instruction set
+  !       and the memory being free twice.
+  !       a way to avoid this is by removing -xHost from FLAGS_CHECK = .. in Makefile
+  !       or to use a pointer array instead of an allocatable array
+  !
+  ! integer,dimension(:),allocatable :: workindex
+  integer,dimension(:),pointer :: workindex
 
   ! checks if anything to sort
   if (ibound_lower > ibound_upper) then
@@ -725,6 +740,26 @@ contains
       !node%cut_max = max
     endif
   enddo
+  ! default dimension
+  if (idim < 1) then
+    ! in case we have two identical points:
+    !   ibound_lower < ibound_upper but min == max value,
+    ! thus zero range and idim,cut_value not set yet
+
+    ! debug
+    !print *,'create_kdtree: ',ibound_lower,ibound_upper
+    !print *,'create_kdtree: data 1 min/max ', &
+    !minval(points_data(1,points_index(ibound_lower:ibound_upper))),maxval(points_data(1,points_index(ibound_lower:ibound_upper)))
+    !print *,'create_kdtree: data 2 min/max ', &
+    !minval(points_data(2,points_index(ibound_lower:ibound_upper))),maxval(points_data(2,points_index(ibound_lower:ibound_upper)))
+    !print *,'create_kdtree: data 3 min/max ', &
+    !minval(points_data(3,points_index(ibound_lower:ibound_upper))),maxval(points_data(3,points_index(ibound_lower:ibound_upper)))
+
+    ! default
+    idim = 1
+    cut_value = 0.d0
+  endif
+  ! sets node values
   node%idim = idim
   node%cut_value = cut_value
 
@@ -737,6 +772,7 @@ contains
   allocate(workindex(ibound_upper - ibound_lower + 1),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1228')
   if (ier /= 0) stop 'Error allocating workindex array'
+  workindex(:) = 0
 
   ! sorts point indices
   ! to have all points with value < cut_value on left side, all others to the right
@@ -744,6 +780,9 @@ contains
   iupper = 0
   do i = ibound_lower,ibound_upper
     iloc = points_index(i)
+    ! checks index
+    if (iloc < 1) stop 'Error invalid iloc index in create_kdtree() routine'
+    ! sorts tree
     if (points_data(idim,iloc) < cut_value) then
       ilower = ilower + 1
       workindex(ilower) = iloc
@@ -755,12 +794,30 @@ contains
   !debug
   !print *,'  ilower/iupper:',ilower,iupper
 
+  ! identical points: split first left, second right to balance tree
+   if (ilower == 0) then
+     ilower = 1
+     iupper = (ibound_upper - ibound_lower)
+   else if (iupper == 0) then
+     ilower = (ibound_upper - ibound_lower)
+     iupper = 1
+   endif
+
   ! checks if we catched all
   if (ilower + iupper /= ibound_upper - ibound_lower + 1 ) stop 'Error sorting data points invalid'
   if (ilower == 0 .and. iupper == 0 .and. npoints > 1 ) stop 'Error confusing node counts, please check kdtree...'
 
   ! replaces index range with new sorting order
   points_index(ibound_lower:ibound_upper) = workindex(:)
+
+  ! note: compiling with intel ifort version 18.0.1/19.1.0 and optimizations like -xHost -O2 or -xHost -O3 flags
+  !       can lead to issues with the deallocate(workindex) statement below:
+  !         *** Error in `./bin/xspecfem3D': double free or corruption (!prev): 0x00000000024f1610 ***
+  !
+  !       this might be due to a more aggressive optimization which leads to a change of the instruction set
+  !       and the memory being free twice.
+  !       a way to avoid this is by removing -xHost from FLAGS_CHECK = .. in Makefile
+  !       or to use a pointer array instead of an allocatable array
 
   ! frees temporary array
   deallocate(workindex)
@@ -801,7 +858,7 @@ contains
   double precision, dimension(3,npoints),intent(in) :: points_data
   integer,dimension(npoints), intent(in) :: points_index
 
-  type (kdtree_node), pointer,intent(inout) :: node
+  type (kdtree_node), pointer :: node  ! pointers in standard Fortran90 cannot have intent(..) attribute
 
   integer, intent(inout) :: numnodes
 
@@ -900,7 +957,7 @@ contains
   integer, intent(in) :: npoints
   double precision, dimension(3,npoints), intent(in) :: points_data
 
-  type (kdtree_node), pointer, intent(inout) :: node
+  type (kdtree_node), pointer :: node  ! pointers in standard Fortran90 cannot have intent(..) attribute
 
   double precision, dimension(3), intent(in) :: xyz_target
 
@@ -1023,7 +1080,7 @@ contains
   integer, intent(in) :: npoints
   double precision, dimension(3,npoints), intent(in) :: points_data
 
-  type (kdtree_node), pointer, intent(inout) :: node
+  type (kdtree_node), pointer :: node   ! pointers in standard Fortran90 cannot have intent(..) attribute
 
   double precision,dimension(3), intent(in) :: xyz_target
 
@@ -1153,7 +1210,7 @@ contains
   integer, intent(in) :: npoints
   double precision, dimension(3,npoints), intent(in) :: points_data
 
-  type (kdtree_node), pointer, intent(inout) :: node
+  type (kdtree_node), pointer :: node    ! pointers in standard Fortran90 cannot have intent(..) attribute
 
   double precision, dimension(3), intent(in) :: xyz_target
 
@@ -1352,6 +1409,5 @@ contains
   dist_h = (r1 * theta)*(r1 * theta)
 
   end subroutine get_distance_ellip
-
 
 end module

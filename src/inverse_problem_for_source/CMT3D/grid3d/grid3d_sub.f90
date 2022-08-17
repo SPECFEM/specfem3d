@@ -54,7 +54,7 @@ contains
        read(IOPAR,*,iostat=ios) s_mw, e_mw, d_mw
 
        call get_cmt(cmt_file,yr,mo,jda,ho,mi,sec, &
-            t_cmt,hdur,elat,elon,depth,moment_tensor)
+                    t_cmt,hdur,elat,elon,depth,moment_tensor)
        mw=log10(dsqrt((sum(moment_tensor(1:3)**2)+2*sum(moment_tensor(4:6)**2))/2.))/1.5-10.73
 
        ! these are global search control parameters -- can be adjusted

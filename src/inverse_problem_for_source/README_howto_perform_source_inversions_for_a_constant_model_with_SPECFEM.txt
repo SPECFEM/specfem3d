@@ -19,7 +19,7 @@ CMT3D (written by Qinya Liu et al. in Fortran), or pyCMT3D (same package, but tr
 The two packages are included in this directory.
 
 This source inversion technique comes from the following paper by Qinya Liu et al.:
-http://komatitsch.free.fr/preprints/bssa_Qinya_inversion_2004.pdf
+https://specfem.github.io/komatitsch.free.fr/published_papers/bssa_Qinya_inversion_2004.pdf
 and in which the Frechet derivatives are computed using finite-differences.
 Here is the full reference of the paper:
 

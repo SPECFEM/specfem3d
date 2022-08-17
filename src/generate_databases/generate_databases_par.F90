@@ -27,52 +27,68 @@
 
   module generate_databases_par
 
-  use constants
+  use constants, only: myrank, &
+    CUSTOM_REAL,MAX_STRING_LEN, &
+    NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,N_SLS, &
+    ZERO,TWO,FOUR_THIRDS,HUGEVAL,TINYVAL,PI,R_EARTH,SIZE_REAL,SIZE_DOUBLE, &
+    USE_MESH_COLORING_GPU,MAX_NUMBER_OF_COLORS, &
+    OUTPUT_FILES, &
+    IMAIN,IIN,IOUT,ISTANDARD_OUTPUT, &
+    RHO_APPROXIMATE_OCEAN_LOAD,MINIMUM_THICKNESS_3D_OCEANS, &
+    IMODEL_DEFAULT,IMODEL_GLL,IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_COUPLED, &
+    IMODEL_IPATI,IMODEL_IPATI_WATER,IMODEL_SEP, &
+    IMODEL_1D_PREM,IMODEL_1D_PREM_PB,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
+    IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
+    NX_TOPO_FILE,NY_TOPO_FILE, &
+    ATTENUATION_COMP_MAXIMUM, &
+    INJECTION_TECHNIQUE_IS_FK, &
+    CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
+    CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ,NPOWER,CPML_Rcoef
 
   use shared_parameters
 
   implicit none
 
-! number of spectral elements in each block
+  ! number of spectral elements in each block
   integer :: npointot
 
-! local to global indexing array
+  ! local to global indexing array
   integer, dimension(:,:,:,:), allocatable :: ibool
 
-! arrays with the mesh in double precision
+  ! arrays with the mesh in double precision
   double precision, dimension(:,:,:,:), allocatable :: xstore,ystore,zstore
 
-! proc numbers for MPI
-  integer :: sizeprocs,ier
+  ! proc numbers for MPI
+  integer :: sizeprocs
 
   integer :: NX_TOPO,NY_TOPO
   integer, dimension(:,:), allocatable :: itopo_bathy
 
-! timer MPI
+  ! timer MPI
   double precision :: time_start,tCPU
 
-! memory size that will be needed by the solver
+  ! memory size that will be needed by the solver
   double precision :: max_memory_size,max_memory_size_request
 
-! this for all the regions
-  integer NSPEC_AB,NGLOB_AB
+  ! this for all the regions
+  ! number of elements
+  integer :: NSPEC_AB
+  ! number of (unique) global nodes
+  integer :: NGLOB_AB
 
-  integer NSPEC2D_BOTTOM,NSPEC2D_TOP
+  integer :: NSPEC2D_BOTTOM,NSPEC2D_TOP
 
-  double precision min_elevation,max_elevation
-  double precision min_elevation_all,max_elevation_all
+  double precision :: min_elevation,max_elevation
+  double precision :: min_elevation_all,max_elevation_all
 
-! for Databases of external meshes
+  ! for Databases of external meshes
   double precision, dimension(:,:), allocatable :: nodes_coords_ext_mesh
 
-  integer :: dummy_node
-  integer :: dummy_elmnt
-
-  integer :: ispec, inode, num_interface,ie,imat,iface,icorner
+  integer :: num_interface
   integer :: nnodes_ext_mesh, nelmnts_ext_mesh
-  integer  :: num_interfaces_ext_mesh
-  integer  :: max_interface_size_ext_mesh
-  integer  :: nmat_ext_mesh, nundefMat_ext_mesh
+  integer :: num_interfaces_ext_mesh
+  integer :: max_interface_size_ext_mesh
+  integer :: nmat_ext_mesh, nundefMat_ext_mesh
   integer, dimension(:), allocatable  :: my_neighbors_ext_mesh
   integer, dimension(:), allocatable  :: my_nelmnts_neighbors_ext_mesh
 
@@ -86,7 +102,7 @@
 
   character(len=MAX_STRING_LEN) :: prname
 
-! boundaries and materials
+  ! boundaries and materials
   double precision, dimension(:,:), allocatable :: mat_prop
   character(len=MAX_STRING_LEN), dimension(:,:), allocatable :: undef_mat_prop
 
@@ -99,8 +115,7 @@
               nodes_ibelm_ymin, nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
 
 
-! C-PML absorbing boundary conditions
-
+  ! C-PML absorbing boundary conditions
   ! local number of C-PML spectral elements
   integer :: nspec_cpml
 
@@ -134,19 +149,12 @@
   integer :: nglob_interface_PML_acoustic,nglob_interface_PML_elastic
   integer, dimension(:), allocatable :: points_interface_PML_acoustic, points_interface_PML_elastic
 
-! moho (optional)
+  ! moho (optional)
   integer :: nspec2D_moho_ext
   integer, dimension(:), allocatable  :: ibelm_moho
   integer, dimension(:,:), allocatable  :: nodes_ibelm_moho
 
-  integer :: nspec_total
-  integer :: nspec_irregular
-
-! this can overflow if more than 2 Gigapoints in the whole mesh, thus replaced with double precision version
-! integer :: nglob_total
-  double precision :: nglob_total
-
-! mesh surface
+  ! mesh surface
   logical,dimension(:),allocatable :: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
   integer :: nfaces_surface,nfaces_surface_glob_ext_mesh
 
@@ -159,98 +167,101 @@
   module create_regions_mesh_ext_par
 
   use constants, only: CUSTOM_REAL,MAX_STRING_LEN
-  use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
 
   implicit none
 
-! global point coordinates
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_dummy
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: ystore_dummy
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: zstore_dummy
-  integer :: nglob_dummy
+  ! global point coordinates
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_unique
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: ystore_unique
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: zstore_unique
+  ! number of unique global points
+  integer :: nglob_unique
 
-! *********************************************************************************
-! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
-! material properties at global points for the elastic case
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rhostore_dummy
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: kappastore_dummy
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: mustore_dummy
-! *********************************************************************************
+  ! ******
+  ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
+  ! not used so far...
 
-! Gauss-Lobatto-Legendre points and weights of integration
+  ! material properties at global points for the elastic case
+  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: rhostore_unique
+  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: kappastore_unique
+  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: mustore_unique
+  ! ******
+
+  ! Gauss-Lobatto-Legendre points and weights of integration
   double precision, dimension(:), allocatable :: xigll,yigll,zigll,wxgll,wygll,wzgll
 
-! 3D shape functions and their derivatives
+  ! 3D shape functions and their derivatives
   double precision, dimension(:,:,:,:), allocatable :: shape3D
   double precision, dimension(:,:,:,:,:), allocatable :: dershape3D
 
-! regular elements
+  ! regular elements
   real(kind=CUSTOM_REAL) :: xix_regular,jacobian_regular
   integer, dimension(:), allocatable :: irregular_element_number
+  integer :: nspec_irregular
 
-! arrays with mesh parameters
+  ! arrays with mesh parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: xixstore,xiystore,xizstore, &
     etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore
 
-! for model density, kappa, mu
+  ! for model density, kappa, mu
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore,kappastore,mustore
 
-! for poroelastic model
+  ! for poroelastic model
   integer :: NSPEC_PORO
   real(kind=CUSTOM_REAL),dimension(:,:,:,:), allocatable :: etastore,phistore,tortstore
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:), allocatable :: rhoarraystore,kappaarraystore,permstore
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vpI,rho_vpII,rho_vsI
 
-! mass matrix
+  ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass,rmass_acoustic, &
-                            rmass_solid_poroelastic,rmass_fluid_poroelastic
+    rmass_solid_poroelastic,rmass_fluid_poroelastic
 
-! mass matrix contributions
+  ! mass matrix contributions
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassx,rmassy,rmassz
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassz_acoustic
   integer :: nglob_xy
 
-! ocean load
+  ! ocean load
   integer :: NGLOB_OCEAN
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
 
-! attenuation
+  ! attenuation
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: qkappa_attenuation_store,qmu_attenuation_store
 
-! 2D shape functions and their derivatives, weights
+  ! 2D shape functions and their derivatives, weights
   double precision, dimension(:,:,:), allocatable :: shape2D_x,shape2D_y,shape2D_bottom,shape2D_top
   double precision, dimension(:,:,:,:), allocatable :: dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top
   double precision, dimension(:,:), allocatable :: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
 
-! absorbing boundary arrays (for all boundaries) - keeps all infos, allowing for irregular surfaces
+  ! absorbing boundary arrays (for all boundaries) - keeps all infos, allowing for irregular surfaces
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: abs_boundary_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: abs_boundary_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: abs_boundary_ijk
   integer, dimension(:), allocatable :: abs_boundary_ispec
   integer :: num_abs_boundary_faces
 
-! free surface arrays
+  ! free surface arrays
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: free_surface_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: free_surface_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: free_surface_ijk
   integer, dimension(:), allocatable :: free_surface_ispec
   integer :: num_free_surface_faces
 
-! acoustic-elastic coupling surface
+  ! acoustic-elastic coupling surface
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_ac_el_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_ac_el_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: coupling_ac_el_ijk
   integer, dimension(:), allocatable :: coupling_ac_el_ispec
   integer :: num_coupling_ac_el_faces
 
-! acoustic-poroelastic coupling surface
+  ! acoustic-poroelastic coupling surface
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_ac_po_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_ac_po_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: coupling_ac_po_ijk
   integer, dimension(:), allocatable :: coupling_ac_po_ispec
   integer :: num_coupling_ac_po_faces
 
-! elastic-poroelastic coupling surface
+  ! elastic-poroelastic coupling surface
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_el_po_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_el_po_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: coupling_el_po_ijk,coupling_po_el_ijk
@@ -258,17 +269,17 @@
   integer :: num_coupling_el_po_faces
 
   ! Moho mesh
-  real(CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_top
-  real(CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_bot
+  real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_top
+  real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_bot
   integer,dimension(:,:,:),allocatable :: ijk_moho_top, ijk_moho_bot
   integer,dimension(:),allocatable :: ibelm_moho_top, ibelm_moho_bot
   integer :: NSPEC2D_MOHO
   logical, dimension(:),allocatable :: is_moho_top, is_moho_bot
 
-! for stacey
+  ! for stacey
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs
 
-! anisotropy
+  ! anisotropy
   integer :: NSPEC_ANISO
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
             c11store,c12store,c13store,c14store,c15store,c16store, &
@@ -276,13 +287,13 @@
             c34store,c35store,c36store,c44store,c45store,c46store, &
             c55store,c56store,c66store
 
-! material domain flags
+  ! material domain flags
   logical, dimension(:), allocatable :: ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
 
-! name of the database file
+  ! name of the database file
   character(len=MAX_STRING_LEN) :: prname
 
-! inner/outer elements
+  ! inner/outer elements
   logical,dimension(:),allocatable :: ispec_is_inner
   integer :: nspec_inner_acoustic,nspec_outer_acoustic
   integer :: nspec_inner_elastic,nspec_outer_elastic

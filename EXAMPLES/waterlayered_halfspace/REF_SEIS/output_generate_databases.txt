@@ -50,7 +50,9 @@
    xmin,xmax :          900         900
    ymin,ymax :          900         900
    bottom,top:         2025        2025
- total number of C-PML elements in the global mesh:            0
+
+   total number of C-PML elements in the global mesh:            0
+
  number of MPI partition interfaces:           10
 
    minimum memory used so far     :    35.8045731     MB per process
@@ -59,11 +61,35 @@
  create regions:
 
    ...allocating arrays
+     NGLLX   =            5
+     NGLLY   =            5
+     NGLLZ   =            5
+     NGNOD   =            8
+     NGNOD2D =            4
+
+     main process setup:
+     nspec           =        10120
+
+     separating regular/irregular element shapes
+     nspec regular   =            0
+     nspec irregular =        10120
+
+     absorbing boundary faces:
+       num_abs_boundary_faces =         1406
+
+     free surface faces:
+       num_free_surface_faces =          506
+
+
  File DATA/Par_file_faults not found: assuming that there are no faults
+
 
    ...setting up jacobian
 
    ...indexing global points
+      creating ibool indexing     : x min/max =    65511.1094     /   134000.000
+      creating indirect addressing: nglob =       670437
+      creating unique point locations
 
    ...preparing MPI interfaces
       total MPI interface points:        59778
@@ -83,15 +109,15 @@
    ...setting up mesh surface
 
    ...determining velocity model
-               10  % time remaining:   9.8527982483279791E-008 s
-               20  % time remaining:   8.7042208033035959E-008 s
-               30  % time remaining:   7.7189653358521442E-008 s
-               40  % time remaining:   6.7916692952636575E-008 s
-               50  % time remaining:   5.8594303210205562E-008 s
-               60  % time remaining:   4.6628800940535196E-008 s
-               70  % time remaining:   3.4713159408785560E-008 s
-               80  % time remaining:   2.3400729695896073E-008 s
-               90  % time remaining:   1.1633661779606634E-008 s
+               10  % time remaining:   1.5760087360649684E-007 s
+               20  % time remaining:   1.3833992413310627E-007 s
+               30  % time remaining:   1.2221848682293037E-007 s
+               40  % time remaining:   1.0667835604635897E-007 s
+               50  % time remaining:   8.8934761221707845E-008 s
+               60  % time remaining:   7.1656591608189022E-008 s
+               70  % time remaining:   5.3638381033294952E-008 s
+               80  % time remaining:   3.5777684430570382E-008 s
+               90  % time remaining:   1.7798604251879619E-008 s
               100  % time remaining:   0.0000000000000000      s
 
    ...detecting acoustic-elastic-poroelastic surfaces
@@ -99,7 +125,10 @@
       total elastic elements    :       38475
       total poroelastic elements:           0
 
-      acoustic-elastic coupling    : total number of faces =         2025
+      acoustic - elastic     coupling : total number of faces =         2025
+      acoustic - poroelastic coupling : total number of faces =            0
+       elastic - poroelastic coupling : total number of faces =            0
+
 
    ...element inner/outer separation
       for overlapping of communications with calculations:
@@ -143,8 +172,8 @@
 
 
  ********
- Model: P velocity min,max =    1480.00000       7500.00000
- Model: S velocity min,max =    0.00000000       4300.00000
+ Model: P   velocity min,max =    1480.00000       7500.00000
+ Model: S   velocity min,max =    0.00000000       4300.00000
 
  Model: Poisson's ratio min,max =   0.255164206      0.500000000
  ********
@@ -168,11 +197,11 @@
  *** Minimum period resolved =    2.53378391
  *** Maximum suggested time step =    3.42786461E-02
 
- Elapsed time for checking mesh resolution in seconds =    1.6376972198486328E-002
+ Elapsed time for checking mesh resolution in seconds =    1.1782999999999433E-002
  saving VTK files for Courant number and minimum period
 
 
-   done
+ mesh regions done
 
  min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is    0.0000000000000000          0.0000000000000000
 
@@ -181,6 +210,7 @@
  -----------------------
 
  total number of elements in mesh slice 0:        10120
+ total number of   regular elements in mesh slice 0:            0
  total number of irregular elements in mesh slice 0:        10120
  total number of points in mesh slice 0:       670437
 
@@ -195,7 +225,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    14.107143163681030
+ Elapsed time for mesh generation and buffer creation in seconds =    12.433180999999999
  End of mesh generation
 
  done

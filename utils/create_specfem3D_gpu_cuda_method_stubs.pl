@@ -1,14 +1,14 @@
 #!/usr/bin/perl
-
+#
 #
 #  Script to extract the function declarations in cuda files
 #
 #
-# usage: ./ceate_specfem3D_gpu_cuda_method_stubs.pl
-#             run in directory root SPECFEM3D/
+# usage: ./create_specfem3D_gpu_cuda_method_stubs.pl
+# run in directory root SPECFEM3D/
 #
 
-$outfile = "src/cuda/specfem3D_gpu_cuda_method_stubs.c";
+$outfile = "src/gpu/specfem3D_gpu_cuda_method_stubs.c";
 
 
 open(IOUT,"> _____temp_tutu_____");
@@ -21,10 +21,10 @@ $header = <<END;
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-!                        Princeton University, USA
-!                and CNRS / University of Marseille, France
+!                              CNRS, France
+!                       and Princeton University, USA
 !                 (there are currently many more authors!)
-! (c) Princeton University and CNRS / University of Marseille, July 2012
+!                           (c) October 2017
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ END
 
 
 $warning = <<END;
- fprintf(stderr,"ERROR: GPU_MODE enabled without GPU/CUDA Support. To enable GPU support, reconfigure with --with-cuda flag.\\n");
+ fprintf(stderr,"ERROR: GPU_MODE enabled without GPU/CUDA/HIP Support. To enable GPU support, reconfigure with --with-cuda or --with-hip flag.\\n");
  exit(1);
 END
 
@@ -65,7 +65,7 @@ print IOUT "$header\n";
 
 $success = 0;
 
-@objects = `ls src/cuda/*.cu`;
+@objects = `ls src/gpu/*.cu`;
 
 foreach $name (@objects) {
   chop $name;
@@ -86,6 +86,11 @@ foreach $name (@objects) {
 
     # suppress trailing white spaces and carriage return
     $line =~ s/\s*$//;
+
+    if( $line =~ /^\// || $line =~ /^\#/){
+      # skip line which starts with # (ifdef/endif) or // (comment)
+      next;
+    }
 
     # change the version number and copyright information
     #    $line =~ s#\(c\) California Institute of Technology and University of Pau, October 2007#\(c\) California Institute of Technology and University of Pau, November 2007#og;
@@ -111,7 +116,7 @@ foreach $name (@objects) {
       # function declaration
       if($line =~ /{/){
         # function declaration ends
-        if( $line =~ /INITIALIZE_CUDA_DEVICE/ ){
+        if( $line =~ /INITIALIZE_GPU_DEVICE/ ){
           # adds warning
           print IOUT "$line\n$warning\}\n\n";
         }else{

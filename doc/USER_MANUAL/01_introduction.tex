@@ -1,37 +1,5 @@
 \chapter{Introduction}
 
-\red{FIRST ANNOUNCEMENT: SPECFEM3D can now perform full waveform inversion (FWI), i.e. invert for models in an iterative fashion, and it can also perform source inversions in a constant model;
-please refer to the two new directories, \texttt{inverse\_problem\_for\_model} and \texttt{inverse\_problem\_for\_source}, and the README files they contain. For FWI inversions for the model, also refer to the new examples provided in
-directory \texttt{EXAMPLES}.}\\
-
-\red{SECOND ANNOUNCEMENT: SPECFEM3D can now perform coupling with an external code (DSM, AxiSEM or FK) based on a database of displacement vectors and traction vectors
-on the outer edges of the mesh created once and for all (see \cite{MoChKoFu13,MoChKoWa15,WaChMoKoMo16,ToChKoBaLi14,ToKoTsHuChBaLi14}, and if you use that feature of the code please cite at least one of these papers).} \\
-To use coupling with FK, just use the set of parameters that is in the DATA/Par\_file input file of the code: \\
-%
-\begin{verbatim}
-#-----------------------------------------------------------
-#
-# Coupling with an injection technique (DSM, AxiSEM, or FK)
-#
-#-----------------------------------------------------------
-COUPLE_WITH_INJECTION_TECHNIQUE = .false.
-INJECTION_TECHNIQUE_TYPE        = 3       # 1 = DSM, 2 = AxiSEM, 3 = FK
-MESH_A_CHUNK_OF_THE_EARTH       = .false.
-TRACTION_PATH                   = ./DATA/AxiSEM_tractions/3/
-FKMODEL_FILE                    = FKmodel
-RECIPROCITY_AND_KH_INTEGRAL     = .false. # does not work yet
-\end{verbatim}
-That part (coupling with FK) is actively maintained and works fine. See e.g. \url{http://komatitsch.free.fr/preprints/GRL_Ping_Tong_2014.pdf} for some examples.
-There is also an example that is provided with the code: specfem3d/EXAMPLES/small\_example\_coupling\_FK\_specfem. \\
-Regarding coupling with DSM, that part is not actively maintained any more, but it is still included in the code, you may have to test it again and make minor adjustments if needed. The necessary tools are in directory \texttt{specfem3d/EXTERNAL\_PACKAGES\_coupled\_with\_SPECFEM3D/DSM\_for\_SPECFEM3D}, and there is a \texttt{README} file in \texttt{specfem3d/EXTERNAL\_PACKAGES\_coupled\_with\_SPECFEM3D} that should be more or less up-to-date (there are about four steps to follow in total, the first one being creating the database of DSM tractions and displacements on the edges of the coupling box). \\
-See e.g. \url{http://komatitsch.free.fr/preprints/GJI1_Vadim_2013.pdf} and \url{http://komatitsch.free.fr/preprints/GJI2_Vadim_2015.pdf} for some examples.\\
-
-\red{THIRD ANNOUNCEMENT: SPECFEM3D can now perform gravity field calculations in addition (or instead of) seismic wave propagation only.
-See flag \texttt{GRAVITY\_INTEGRALS} in file \texttt{setup/constants.h.in}. Please also refer to \url{http://komatitsch.free.fr/preprints/GJI_Martin_gravimetry_2017.pdf}.
-And yes, that is the reason why I added a falling apple on the cover of the manual :-).
-Note that SPECFEM3D can also model transient gravity perturbations induced by earthquake rupture, as developed and explained in \cite{HaAmBaChMoSoWh2015}.
-These are two different things, and both are implemented and avaible in SPECFEM3D.
-To use the second feature, please refer to \texttt{doc/how\_to/README\_gravity\_perturbation.txt}.}\\
 
 The software package SPECFEM3D Cartesian simulates seismic wave propagation
 at the local or regional scale and performs full waveform imaging (FWI) or adjoint tomography based upon the spectral-element method
@@ -43,14 +11,14 @@ with optimized efficiency because of its tensorized basis functions
 \citep{WiStBuGh10,AcKo11}. In particular, it can accurately handle
 very distorted mesh elements \citep{OlSe11}.\\
 
-\red{In fluids, when gravity is turned off, SPECFEM3D uses the classical
+In fluids, when gravity is turned off, SPECFEM3D uses the classical
 linearized Euler equation; thus if you have sharp local variations of
 density in the fluid (highly heterogeneous fluids
 in terms of density) or if density becomes extremely small in some
 regions of your model (e.g. for upper-atmosphere studies), before using
 the code please make sure the linearized Euler equation is a valid
 approximation in the case you want to study, and/or see if you should turn gravity on.
-For more details on that see e.g. \cite{COA2011}.}\\
+For more details on that see e.g. \cite{COA2011}.\\
 
 It has very good accuracy and convergence properties \citep{MaPa89,SePr94,DeFiMu02,Coh02,DeSe07,SeOl08,AiWa09,AiWa10,MeStTh12}.
 The spectral element approach admits spectral rates of convergence
@@ -102,13 +70,13 @@ In the Legendre version that we use in SPECFEM the mass matrix is purposely slig
 while in the Chebyshev version it is exact but non diagonal.\\
 
 
-\red{Beware that, in a spectral-element method, some spurious modes (that have some similarities with classical so-called "Hourglass modes" in finite-element techniques,
+Beware that, in a spectral-element method, some spurious modes (that have some similarities with classical so-called "Hourglass modes" in finite-element techniques,
 although in the SEM they are not zero-energy modes) can appear in some (but not all) cases in the spectral element in which the source is located.
 Fortunately, they do not propagate away from the source element.
 However, this means that if you put a receiver in the same spectral element as a source, the recorded signals may in some cases be wrong, typically exhibiting some spurious
 oscillations, which are often even non causal.
 If that is the case, an easy option is to slightly change the mesh in the source region in order to get rid of these Hourglass-like spurious modes,
-as explained in \cite{DuLiScGa14}, in which this phenomenon is described in details, and in which practical solutions to avoid it are suggested.}\\
+as explained in \cite{DuLiScGa14}, in which this phenomenon is described in details, and in which practical solutions to avoid it are suggested.\\
 
 
 All SPECFEM3D software is written in Fortran2003 with full portability
@@ -142,9 +110,49 @@ version of SCOTCH for mesh partitioning instead of the serial version.\\
 SPECFEM3D Cartesian includes coupled fluid-solid domains and adjoint
 capabilities, which enables one to address seismological inverse problems,
 but for linear rheologies only so far. To accommodate visco-plastic
-or non-linear rheologies, the reader can refer to the \href{http://geoelse.stru.polimi.it/}{GeoELSE}software
+or non-linear rheologies, the reader can refer to the \href{http://geoelse.stru.polimi.it/}{GeoELSE} software
 package \citep{CaGa97,StPaIg09}.
 
+
+\subsection*{Announcements}
+\begin{itemize}
+\item {\bf FWI}: SPECFEM3D can now perform full waveform inversion (FWI), i.e. invert for models in an iterative fashion, and it can also perform source inversions in a constant model;
+please refer to the two new directories, \texttt{inverse\_problem\_for\_model} and \texttt{inverse\_problem\_for\_source}, and the README files they contain. For FWI inversions for the model, also refer to the new examples provided in
+directory \texttt{EXAMPLES}.\\
+
+\item {\bf External coupling}: SPECFEM3D can now perform coupling with an external code (DSM, AxiSEM or FK) based on a database of displacement vectors and traction vectors
+on the outer edges of the mesh created once and for all (see \cite{MoChKoFu13,MoChKoWa15,WaChMoKoMo16,ToChKoBaLi14,ToKoTsHuChBaLi14}, and if you use that feature of the code please cite at least one of these papers). \\
+
+To use coupling with FK, just use the set of parameters that is in the DATA/Par\_file input file of the code: \\
+%
+\begin{verbatim}
+#-----------------------------------------------------------
+#
+# Coupling with an injection technique (DSM, AxiSEM, or FK)
+#
+#-----------------------------------------------------------
+COUPLE_WITH_INJECTION_TECHNIQUE = .false.
+INJECTION_TECHNIQUE_TYPE        = 3       # 1 = DSM, 2 = AxiSEM, 3 = FK
+MESH_A_CHUNK_OF_THE_EARTH       = .false.
+TRACTION_PATH                   = ./DATA/AxiSEM_tractions/3/
+FKMODEL_FILE                    = FKmodel
+RECIPROCITY_AND_KH_INTEGRAL     = .false. # does not work yet
+\end{verbatim}
+That part (coupling with FK) is actively maintained and works fine. See e.g. \href{https://doi.org/10.1002/2014GL061644}{GRL\_Ping\_Tong\_2014} for some examples.
+There is also an example that is provided with the code:\\
+\texttt{specfem3d/EXAMPLES/small\_example\_coupling\_FK\_specfem}. \\
+
+Regarding coupling with DSM, that part is not actively maintained any more, but it is still included in the code, you may have to test it again and make minor adjustments if needed. The necessary tools are in directory \texttt{specfem3d/EXTERNAL\_PACKAGES\_coupled\_with\_SPECFEM3D/DSM\_for\_SPECFEM3D}, and there is a \texttt{README} file in \texttt{specfem3d/EXTERNAL\_PACKAGES\_coupled\_with\_SPECFEM3D} that should be more or less up-to-date (there are about four steps to follow in total, the first one being creating the database of DSM tractions and displacements on the edges of the coupling box).
+See e.g. \href{https://doi.org/10.1093/gji/ggs006}{GJI\_Vadim\_2013} and \href{https://doi.org/10.1093/gji/ggv189}{GJI\_Vadim\_2015} for some examples.\\
+
+\item {\bf Gravity}: SPECFEM3D can now perform gravity field calculations in addition (or instead of) seismic wave propagation only.
+See flag \texttt{GRAVITY\_INTEGRALS} in file \texttt{setup/constants.h.in}. Please also refer to \href{https://doi.org/10.1093/gji/ggx010}{GJI\_Martin\_gravimetry\_2017}.
+And yes, that is the reason why Dimitri added a falling apple on the cover of the manual :-).
+Note that SPECFEM3D can also model transient gravity perturbations induced by earthquake rupture, as developed and explained in \cite{HaAmBaChMoSoWh2015}.
+These are two different things, and both are implemented and avaible in SPECFEM3D.
+To use the second feature, please refer to \texttt{doc/how\_to/README\_gravity\_perturbation.txt}.\\
+
+\end{itemize}
 
 \section{Citation}
 

@@ -82,7 +82,9 @@
 
   subroutine read_salton_sea_model()
 
+  use constants, only: IIN
   use salton_trough_par
+
   implicit none
 
   ! local parameter
@@ -93,17 +95,17 @@
   reclen=(GOCAD_ST_NU * GOCAD_ST_NV * GOCAD_ST_NW) * 4
 
   ! reads in file values
-  open(11,file=trim(SALTON_SEA_MODEL_FILE), &
+  open(IIN,file=trim(SALTON_SEA_MODEL_FILE), &
         status='old',action='read',form='unformatted',access='direct',recl=reclen,iostat=ier)
   if (ier /= 0) then
     print *,'error opening file: ',trim(SALTON_SEA_MODEL_FILE),' iostat = ', ier
     call exit_mpi(0,'Error opening file salton trough')
   endif
 
-  read(11,rec=1,iostat=ier) vp_array
+  read(IIN,rec=1,iostat=ier) vp_array
   if (ier /= 0) stop 'Error reading vp_array'
 
-  close(11)
+  close(IIN)
 
   end subroutine read_salton_sea_model
 

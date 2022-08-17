@@ -42,7 +42,7 @@
   real(kind=CUSTOM_REAL),parameter :: image_cutsnaps  = 1.e-2
 
   ! use vp as gray background
-  logical, parameter :: VP_BACKGROUND = .false.
+  logical, parameter :: VP_BACKGROUND = .true.
 
   ! create temporary image files in binary PNM P6 format (smaller)
   ! or ASCII PNM P3 format (easier to edit)
@@ -132,13 +132,13 @@
   if (ier /= 0) call exit_mpi(myrank,'error allocating image ispec and iglob')
 
   call detect_surface_PNM_image(NPROC,NGLOB_AB,NSPEC_AB,ibool, &
-                            ispec_is_image_surface, &
-                            iglob_is_image_surface, &
-                            num_iglob_image_surface, &
-                            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                            nibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
-                            ibool_interfaces_ext_mesh, &
-                            xstore,ystore,zstore,myrank)
+                                ispec_is_image_surface, &
+                                iglob_is_image_surface, &
+                                num_iglob_image_surface, &
+                                num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                nibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
+                                ibool_interfaces_ext_mesh, &
+                                xstore,ystore,zstore,myrank)
 
   ! extracts points on surface
   allocate(xcoord(num_iglob_image_surface),stat=ier)
@@ -150,8 +150,10 @@
   allocate(ispec_coord(num_iglob_image_surface),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1770')
   if (ier /= 0) call exit_mpi(myrank,'error allocating xyz image coordinates')
+  xcoord(:) = 0.0_CUSTOM_REAL; zcoord(:) = 0.0_CUSTOM_REAL
+  iglob_coord(:) = 0; ispec_coord(:) = 0
 
-  countval=0
+  countval = 0
   do ispec=1,NSPEC_AB
     if (ispec_is_image_surface(ispec)) then
       do k=1,NGLLZ
@@ -378,6 +380,7 @@
   allocate(nb_pixel_per_proc(0:NPROC-1),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1776')
   if (ier /= 0) stop 'error allocating array nb_pixel_per_proc'
+  nb_pixel_per_proc(:) = 0
 
   call gather_all_singlei(nb_pixel_loc,tmp_pixel_per_proc,NPROC)
   nb_pixel_per_proc(:) = tmp_pixel_per_proc(1,:)
@@ -579,14 +582,15 @@
       endif
     endif
   endif
+  ! synchronizes processes
+  call synchronize_all()
 
   ! main process writes out file
   if (myrank == 0) then
     ! writes output file
     call write_PNM_data(image_color_data,iglob_image_color, &
-                            NX_IMAGE_color,NZ_IMAGE_color,it,image_cutsnaps,image_color_vp_display)
+                        NX_IMAGE_color,NZ_IMAGE_color,it,image_cutsnaps,image_color_vp_display)
   endif
-
 
   end subroutine write_PNM_create_image
 
@@ -595,13 +599,13 @@
 
 
   subroutine write_PNM_data(color_image_2D_data,iglob_image_color_2D, &
-                                NX,NY,it,cutsnaps,image_color_vp_display)
+                            NX,NY,it,cutsnaps,image_color_vp_display)
 
 ! display a given field as a red and blue color image
 ! to display the snapshots : display image*.gif
 ! when compiling with Intel ifort, use " -assume byterecl " option to create binary PNM images
 
-  use constants, only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES,MAX_STRING_LEN
+  use constants, only: HUGEVAL,TINYVAL,VERYSMALLVAL,CUSTOM_REAL,OUTPUT_FILES,MAX_STRING_LEN,IOUT
 
   use image_PNM_par, only: BINARY_FILE,VP_BACKGROUND,POWER_DISPLAY_COLOR
 
@@ -625,15 +629,15 @@
   ! open the image file
   write(file_name,"(a,'/image',i7.7,'.pnm')") OUTPUT_FILES(1:len_trim(OUTPUT_FILES)),it
 
-! first delete the file, just in case it was previously bigger
-  open(unit=27,file=file_name,status='unknown')
-  close(unit=27,status='delete')
+  ! first delete the file, just in case it was previously bigger
+  open(unit=IOUT,file=trim(file_name),status='unknown')
+  close(unit=IOUT,status='delete')
 
   if (BINARY_FILE) then
-    open(unit=27,file=file_name,status='unknown',access='direct',recl=1)
-    write(27,rec=1) 'P'
-    write(27,rec=2) '6' ! write P6 = binary PNM image format
-    write(27,rec=3) char(ascii_code_of_carriage_return)
+    open(unit=IOUT,file=trim(file_name),status='unknown',access='direct',recl=1)
+    write(IOUT,rec=1) 'P'
+    write(IOUT,rec=2) '6' ! write P6 = binary PNM image format
+    write(IOUT,rec=3) char(ascii_code_of_carriage_return)
 
     ! compute and write horizontal size
     remainder = NX
@@ -652,12 +656,12 @@
 
     units = remainder
 
-    write(27,rec=4) char(tenthousands + ascii_code_of_zero)
-    write(27,rec=5) char(thousands + ascii_code_of_zero)
-    write(27,rec=6) char(hundreds + ascii_code_of_zero)
-    write(27,rec=7) char(tens + ascii_code_of_zero)
-    write(27,rec=8) char(units + ascii_code_of_zero)
-    write(27,rec=9) ' '
+    write(IOUT,rec=4) char(tenthousands + ascii_code_of_zero)
+    write(IOUT,rec=5) char(thousands + ascii_code_of_zero)
+    write(IOUT,rec=6) char(hundreds + ascii_code_of_zero)
+    write(IOUT,rec=7) char(tens + ascii_code_of_zero)
+    write(IOUT,rec=8) char(units + ascii_code_of_zero)
+    write(IOUT,rec=9) ' '
 
     ! compute and write vertical size
     remainder = NY
@@ -676,26 +680,26 @@
 
     units = remainder
 
-    write(27,rec=10) char(tenthousands + ascii_code_of_zero)
-    write(27,rec=11) char(thousands + ascii_code_of_zero)
-    write(27,rec=12) char(hundreds + ascii_code_of_zero)
-    write(27,rec=13) char(tens + ascii_code_of_zero)
-    write(27,rec=14) char(units + ascii_code_of_zero)
-    write(27,rec=15) char(ascii_code_of_carriage_return)
+    write(IOUT,rec=10) char(tenthousands + ascii_code_of_zero)
+    write(IOUT,rec=11) char(thousands + ascii_code_of_zero)
+    write(IOUT,rec=12) char(hundreds + ascii_code_of_zero)
+    write(IOUT,rec=13) char(tens + ascii_code_of_zero)
+    write(IOUT,rec=14) char(units + ascii_code_of_zero)
+    write(IOUT,rec=15) char(ascii_code_of_carriage_return)
 
     ! number of shades
-    write(27,rec=16) '2'
-    write(27,rec=17) '5'
-    write(27,rec=18) '5'
-    write(27,rec=19) char(ascii_code_of_carriage_return)
+    write(IOUT,rec=16) '2'
+    write(IOUT,rec=17) '5'
+    write(IOUT,rec=18) '5'
+    write(IOUT,rec=19) char(ascii_code_of_carriage_return)
 
     ! block of image data starts at sixteenth character
     current_rec = 20
   else
-    open(unit=27,file=file_name,status='unknown')
-    write(27,"('P3')") ! write P3 = ASCII PNM image format
-    write(27,*) NX,NY  ! write image size
-    write(27,*) '255'  ! number of shades
+    open(unit=IOUT,file=trim(file_name),status='unknown')
+    write(IOUT,"('P3')") ! write P3 = ASCII PNM image format
+    write(IOUT,*) NX,NY  ! write image size
+    write(IOUT,*) '255'  ! number of shades
   endif
 
   ! compute maximum amplitude
@@ -710,7 +714,11 @@
     enddo
   enddo
   amplitude_max = maxval(abs(color_image_2D_data))
-  if (amplitude_max < TINYVAL) amplitude_max = HUGEVAL
+  if (amplitude_max < VERYSMALLVAL) amplitude_max = HUGEVAL
+
+  ! debug
+  !print *,'PNM image: file ',trim(file_name),' min/max = ',minval(color_image_2D_data),'/',maxval(color_image_2D_data), &
+  !         'amplitude max = ',amplitude_max
 
   ! in the PNM format, the image starts in the upper-left corner
   do iy=NY,1,-1
@@ -779,22 +787,22 @@
       ! write color image
       if (BINARY_FILE) then
         ! first write red
-        write(27,rec=current_rec) char(R)
+        write(IOUT,rec=current_rec) char(R)
         current_rec = current_rec + 1
         ! then write green
-        write(27,rec=current_rec) char(G)
+        write(IOUT,rec=current_rec) char(G)
         current_rec = current_rec + 1
         ! then write blue
-        write(27,rec=current_rec) char(B)
+        write(IOUT,rec=current_rec) char(B)
         current_rec = current_rec + 1
       else
-        write(27,"(i3,' ',i3,' ',i3)") R,G,B
+        write(IOUT,"(i3,' ',i3,' ',i3)") R,G,B
       endif
     enddo
   enddo
 
   ! close the file
-  close(27)
+  close(IOUT)
 
   end subroutine write_PNM_data
 
@@ -844,7 +852,7 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
   use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
   use specfem_par_acoustic, only: potential_acoustic,potential_dot_acoustic, &
-                                ispec_is_acoustic,b_potential_acoustic,b_potential_dot_acoustic
+                                  ispec_is_acoustic,b_potential_acoustic,b_potential_dot_acoustic
   use specfem_par_elastic, only: displ,veloc,ispec_is_elastic
   use specfem_par, only: SIMULATION_TYPE,SAVE_DISPLACEMENT,ibool
 

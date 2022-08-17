@@ -461,7 +461,7 @@
   double precision :: y(n),yprime(n)
 
 ! Local variables
-  integer :: i,j,j1,j2
+  integer :: i,j,j1,j2,index1,index2
   integer :: k,nd,ndp
   double precision :: a0,b0,b1
   double precision :: f(3,1000),h,h2,h2a
@@ -476,13 +476,15 @@
   do 3 nd = 1,ndp
     if (nd == 1) then
       j1 = 1
-      j2 = kdis(1)-2
+      j2 = kdis(1) - 2
     else if (nd == ndp) then
-      j1 = kdis(ndis)+1
-      j2 = n-2
+      j1 = kdis(ndis) + 1
+      j2 = n - 2
     else
-      j1 = kdis(nd-1)+1
-      j2 = kdis(nd)-2
+      index1 = nd-1  ! to avoid compiler warnings
+      index2 = nd
+      j1 = kdis(index1) + 1
+      j2 = kdis(index2) - 2
     endif
 
     if ((j2+1-j1) > 0) goto 11

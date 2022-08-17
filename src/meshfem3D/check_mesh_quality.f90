@@ -39,7 +39,7 @@
                                 CREATE_VTK_FILES,prname)
 
   use constants, only: IMAIN,myrank,MAX_STRING_LEN,CUSTOM_REAL,HUGEVAL,OUTPUT_FILES
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+  use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   implicit none
 
@@ -366,7 +366,7 @@
                                         stability,distmin,distmax)
 
   use constants, only: NGNOD_EIGHT_CORNERS,PI,HUGEVAL
-  use constants_meshfem3D, only: NGLLX_M,NGLLY_M,NGLLZ_M
+  use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   implicit none
 
