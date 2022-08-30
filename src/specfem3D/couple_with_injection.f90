@@ -979,7 +979,7 @@
 
   ! assumes that ht = 0 is the bottom interface
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1251,7 +1251,7 @@
 
 ! inverse Fourier transform -- calls FFT
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1311,7 +1311,7 @@
   subroutine find_size_of_working_arrays(deltat, tmax_fk, NF_FOR_STORING, &
                                          NF_FOR_FFT, NPOW_FOR_INTERP, np_resampling, DF_FK)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
   real(kind=CUSTOM_REAL),intent(inout) :: tmax_fk
