@@ -1,0 +1,37 @@
+----------------------------------------------------------------------
+README - homogeneous halfspace using externally defined source time function
+----------------------------------------------------------------------
+
+This example uses an externally defined source time function with the 
+homogeneous halfspace mesh to run a forward simulation. The externally
+provided source time function here is the same as the one used by
+default in the homogeneous halfspace example when the source time function is 
+not externally provided. Hence, the output seismograms should look the same 
+as those in the default example.
+
+IMPORTANT NOTE:
+The first line of the source time function file is the value of the time step 
+same as the simulation time step and the following lines are the values of the
+moment vs. time function, and NOT the moment rate vs. time function.
+----------------------------------------------------------------------
+Step-by-step tutorial:
+
+1. This example needs to be run as part of the homogeneous_halfspace example -
+   ./EXAMPLES/homogeneous_halfspace/README
+   Or
+   ./EXAMPLES/homogeneous_halfspace/README_internal_mesh
+
+2. Make the following modifications before running the solver -
+   
+   a. Copy the "source_time_funtion.txt" file to the specfem working directory.
+      > cp EXAMPLES/homogeneous_halfspace/source_time_function.txt .   
+
+   b. In the CMTSOLUTION file, add the full name of the source time function file
+      "source_time_funtion.txt" as the ending line.
+
+   c. In the Par_file, set 'USE_EXTERNAL_SOURCE_FILE = .true.'.
+
+3. Compare the seismograms with reference seismograms -
+   > xmgrace EXAMPLES/homogeneous_halfspace/REF_SEIS/*Z.semd
+   > xmgrace OUTPUT_FILES/*Z.semd
+
