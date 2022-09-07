@@ -36,6 +36,8 @@ pip --version
 echo
 echo "numpy version : "
 python -c "import numpy; print(numpy.__version__)"
+# checks exit code
+if [[ $? -ne 0 ]]; then exit 1; fi
 echo
 
 # CPU architecture
@@ -99,29 +101,31 @@ if [ "$CUDA" == "true" ]; then
   #sudo apt-get remove nvidia-cuda-* ;
 
   # package needs key
+  # see: https://developer.nvidia.com/blog/updating-the-cuda-linux-gpg-repository-key/
   # old:
   #sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/7fa2af80.pub
   # new:
+  # manually add new key (not recommended):
+  #sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/3bf863cc.pub
+  #echo
+  # gets packages
+  #INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA_VERSION}_${CUDA_ARCH}.deb
+  #wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/${INSTALLER}
+  #sudo dpkg -i ${INSTALLER}
+  #echo
   # (preferred) w/ new keyring package:
   # see https://forums.developer.nvidia.com/t/notice-cuda-linux-repository-key-rotation/212772
-  # doesn't work yet, produces error:
+  # if it doesn't work yet with error:
   #   E:Conflicting values set for option Signed-By regarding source
   # remove outdated key:
-  #sudo rm -f /etc/apt/sources.list.d/cuda.list
-  #sudo rm -f /etc/apt/sources.list.d/nvidia-ml.list
-  #sudo apt-key del 7fa2af80
+  sudo apt-key del 7fa2af80
+  sudo sed -i '/developer\.download\.nvidia\.com\/compute\/cuda\/repos/d' /etc/apt/sources.list
+  sudo rm -f /etc/apt/sources.d/cuda*.list
+  sudo rm -f /etc/apt/sources.list.d/cuda.list
+  sudo rm -f /etc/apt/sources.list.d/nvidia-ml.list
   # for ubuntu1804/ppc64el ../$distro/$arch/.. becomes ../${UBUNTU_VERSION}/${CUDA_OS}/..
-  #wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/cuda-keyring_1.0-1_all.deb
-  #sudo dpkg -i cuda-keyring_1.0-1_all.deb
-  #
-  # manually add new key:
-  sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/3bf863cc.pub
-  echo
-
-  # gets packages
-  INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA_VERSION}_${CUDA_ARCH}.deb
-  wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/${INSTALLER}
-  sudo dpkg -i ${INSTALLER}
+  wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/cuda-keyring_1.0-1_all.deb
+  sudo dpkg -i cuda-keyring_1.0-1_all.deb
   echo
 
   # update
