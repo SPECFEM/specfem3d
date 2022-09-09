@@ -1,27 +1,31 @@
 ----------------------------------------------------------------------
-README
+README - homogeneous halfspace using external mesher
 ----------------------------------------------------------------------
 
 This example creates a homogeneous halfspace, i.e. a single volume block with a
 constant elastic material property, using CUBIT, and runs a forward simulation.
 
 ----------------------------------------------------------------------
+note: this example needs the user to have run a forward simulation, using the internal mesher, based on the
+      detailed step-by-step tutorial given in the file SPECFEM3D/EXAMPLES/homogeneous_halfspace/README
+
+----------------------------------------------------------------------
 Option A: short version (use pre-saved mesh files):
 
 1. check that all software is available (or that modules are loaded):
-	openmpi: > which mpirun
+   openmpi: > which mpirun
 
-2. from the directory SPECFEM3D/examples/homogeneous_halfspace/
+2. build the decomposer:
+   > make xdecompose_mesh
 
+3. from the directory SPECFEM3D/EXAMPLES/homogeneous_halfspace/
+   > cd EXAMPLES/homogeneous_halfspace
    > ./run_this_example.sh >& run_this_example.sh.log
 
-   This will configure, compile, then run the decomposer, database generation,
-   and solver in the local directory. The simulation takes about 15 minutes.
+   This will run the decomposer, database generation, and the solver in the local directory.
+   The simulation takes about 15 minutes.
 
-  note: by default, the command ./configure in run_this_example.sh will use gfortran;
-         you need to change this if you want something else (see 3 below)
-
-3. see step 7 below to compare seismograms in REF_SEIS/ with those in OUTPUT_FILES/
+4. see step 7 in SPECFEM3D/EXAMPLES/homogeneous_halfspace/README to compare seismograms in REF_SEIS/ with those in OUTPUT_FILES/
 
 ----------------------------------------------------------------------
 Option B: step-by-step tutorial (use pre-saved mesh files):
@@ -34,131 +38,36 @@ Option B: step-by-step tutorial (use pre-saved mesh files):
         gnuplot: > which gnuplot
         xmgrace: > which xmgrace
 
-2. configure package:
+2. configure package (if needed):
 
    - determine the path for your compiled version of SCOTCH
 
-   - From the SPECFEM3D root directory SPECFEM3D/
-     configure the package, e.g. using intel's ifort compiler:
-     > cd SPECFEM3D
-     > ./configure FC=ifort MPIFC=mpif90
+   - note: If SCOTCH is installed separately, then the same compiler
+     used for SCOTCH must be used for SPECFEM3D (ifort, gfortran, pgf90)
 
-     If successful, this will generate the files in setup/:
-     config.h, constants.h, precision.h, among others
+   - if needed, configuration instructions can be found at SPECFEM3D/EXAMPLES/homogeneous_halfspace/README
 
-     note: If SCOTCH is installed separately, then the same compiler
-           used for SCOTCH must be used for SPECFEM3D (ifort, gfortran, pgf90)
-
-   - copy run scripts from utils/Cluster/ into SPECFEM3D/, e.g.,
-     pbs/go_decomposer_pbs.bash
-     pbs/go_generate_databases_pbs.bash
-     pbs/go_solver_pbs.bash
-
-     > cp utils/Cluster/pbs/*.bash .
-
-     note: you may need to adjust the commands for your particular cluster (e.g., -q or -l)
-     note: in this example you do not need go_mesher_pbs.bash and valgrind_go_solver_pbs.bash
-
-3. copy three input files from examples directory into SPECFEM3D/DATA/
-
-     note: this may not be needed if the files are already symbolically linked
-
-     > cd EXAMPLES/homogeneous_halfspace/DATA/
-     > cp * ../../../DATA/
-     > cd ..
-
-4. decompose mesh files:
+3. decompose mesh files:
 
    - compile decomposer in directory SPECFEM3D/:
      > make xdecompose_mesh
 
    - run decomposer:
-     > qsub go_decomposer_pbs.bash
-
+     > sbatch go_decomposer_slurm.bash
+     
      note: this script will need to be tailored to your cluster, e.g.,
      > bsub < go_decomposer_lsf.bash
-     > sbatch go_decomposer_slurm.bash
+     > qsub go_decomposer_pbs.bash
 
-     this creates mesh partitions "proc000***_Database" in directory OUTPUT_FILES/DATABASES_MPI/.
+     this creates mesh partitions "proc000***_Database" in directory OUTPUT_FILES/DATABASES_MPI/
      the output file OUTPUT_FILES/*.o contains information on the partitioning
 
      note 1: the program xdecompose_mesh is a serial program (runs on 1 core)
      note 2: for small jobs (like this one), you can simply launch the job on
              the local node from directory SPECFEM3D:
-     note 3: compile all three with: make xdecompose_mesh ; make xgenerate_databases ; make xspecfem3D
+             > ./bin/xdecompose_mesh 4 EXAMPLES/homogeneous_halfspace/MESH-default/ OUTPUT_FILES/DATABASES_MPI/
 
-     > ./bin/xdecompose_mesh 4 EXAMPLES/homogeneous_halfspace/MESH/ OUTPUT_FILES/DATABASES_MPI/
-
-5. generate databases:
-
-   - compile generate_databases in directory SPECFEM3D/:
-     > make xgenerate_databases
-
-   - submit job script:
-     > qsub go_generate_databases_pbs.bash
-
-     note: this script will need to be tailored to your cluster, e.g.,
-     > bsub < go_generate_databases_lsf.bash
-     > sbatch go_generate_databases_slurm.bash
-
-     this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
-     in directory OUTPUT_FILES/DATABASES_MPI/.
-
-     optional 1: load vtk files (e.g., vs) into paraview and check them out
-     optional 2: if you want to view the mesh as a single file, you can merge using
-
-     > qsub go_combine_vol_database_pbs.bash
-
-6. run simulation:
-
-   - compile specfem3D in directory SPECFEM3D/:
-     > make xspecfem3D
-
-   - submit job script:
-     > qsub go_solver_pbs.bash
-     > sbatch go_solver_slurm.bash
-
-     note: the simulation runs on 4 cores and should take about 15 minutes,
-           and you can track the progress with the timestamp files
-           generated in OUTPUT_FILES/
-
-   - when the job is complete, you should have 12 (ls -1 *semd | wc)
-     displacement seismogram files in the directory OUTPUT_FILES,
-     as well as 11 timestamp****** files
-
-7. check with 6 reference seismograms in
-      SPECFEM3D/EXAMPLES/homogeneous_halfspace/REF_SEIS/
-
-   - option 1: from SPECFEM3D/, quick viewing using xmgrace (if available):
-
-     > xmgrace EXAMPLES/homogeneous_halfspace/REF_SEIS/*Z.semd &
-     > xmgrace OUTPUT_FILES/*Z.semd &
-
-   - option 2: generate ps files using gnuplot:
-
-     > cd SPECFEM3D/EXAMPLES/homogeneous_halfspace/REF_SEIS
-     > gnuplot
-
-         gnuplot> load "plot_these_seismograms_with_gnuplot.gnu"
-
-     You should see a figure in a render window.
-     Writing the figure to a file may depend on your gnuplot settings.
-     One example to generate a postscript is shown below:
-
-         gnuplot> load "plot_these_seismograms_with_gnuplot.gnu"
-         gnuplot> set term postscript color solid
-         Terminal type set to 'postscript'
-         Options are 'landscape noenhanced color colortext \
-            solid dashlength 1.0 linewidth 1.0 defaultplex \
-            palfuncparam 2000,0.003 \
-            butt "Helvetica" 14'
-         gnuplot> set output 'my.ps'
-         gnuplot> replot
-         gnuplot> quit
-
-     - copy gnuplot script plot_these_seismograms_with_gnuplot.gnu to OUTPUT_FILES/
-     - execute same commands as above
-     - you should see the same image as generated from the reference seismograms
+4. the next steps are the same as steps 5, 6, and 7, in SPECFEM3D/EXAMPLES/homogeneous_halfspace/README
 
 ===========================================================
 
