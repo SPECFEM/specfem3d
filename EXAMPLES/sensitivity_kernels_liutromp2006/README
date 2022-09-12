@@ -26,7 +26,8 @@ Note: This example is designed to generate results close to the aforementioned p
 1.4. Compile the utility xcombine_vol_data_vtk.
      > make xcombine_vol_data_vtk
 
-1.5. Use this DATA folder as specfem3d's input DATA folder.
+1.5. Use the provided DATA folder as specfem3d's input DATA folder.
+     > cp -r EXAMPLES/sensitivity_kernels_liutromp2006/DATA .
 
 1.6. Copy the file 'source_time_function.txt' from this data folder to the specfem working directory.
 
