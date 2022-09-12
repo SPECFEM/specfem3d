@@ -3,7 +3,8 @@ SPECFEM3D input data files to reproduce the example presented in figure 2 of the
 Qinya Liu, Jeroen Tromp; Finite-Frequency Kernels Based on Adjoint Methods
 Bulletin of the Seismological Society of America 2006;; 96 (6): 2383-2397. doi: https://doi.org/10.1785/0120060041
 
-
+Note: This example is designed to generate results close to the aforementioned paper, but the steps here
+      might not be exactly the same as that were followed originally.
 
 
 1. Setup -
@@ -12,6 +13,10 @@ Bulletin of the Seismological Society of America 2006;; 96 (6): 2383-2397. doi: 
 
 1.2. Set 'USER_T0' = 10.0d0 in ./setup/constants.h and rebuild the solver.
      > make xspecfem3D
+
+     Note: Setting a large enough USER_T0 value before a simulation is a safety measure to have a consistent simulation start time,
+           especially in simulations where there are multiple events with different half durations. Different simulation start times
+           could cause a problem when making adjoint sources and aligning time steps.
 
 1.3. Compile the utility xcreate_adjsrc_traveltime.
      > cd ./utils/adjoint_sources/traveltime
@@ -106,7 +111,7 @@ Bulletin of the Seismological Society of America 2006;; 96 (6): 2383-2397. doi: 
         K_beta  -  -1.5e-12 to 1.5e-12
 
      c. SS kernel
-        Slice the 3D block with planes having normals as the x-axis, y-axis and z-axis, and origins at (0,0,-40000) each 
+        Slice the 3D block with planes having normals as the x-axis, y-axis and z-axis, and origins at (0,0,0) each 
         Colormap scaling -
         K_alpha -  -0.1e-13 to 0.1e-13 (Figure not in the paper) 
         K_beta  -  -1.5e-12 to 1.5e-12
