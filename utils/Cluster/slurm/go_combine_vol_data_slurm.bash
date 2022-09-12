@@ -2,7 +2,6 @@
 
 #SBATCH -p debug
 #SBATCH --ntasks=1
-#SBATCH --ntasks-per-node=1
 #SBATCH -t 10
 
 #SBATCH --output=OUTPUT_FILES/%j.o
@@ -12,7 +11,7 @@ umask 0022
 
 cd $SLURM_SUBMIT_DIR
 
-# script to run the mesher and the solver
+# script to combine vol data
 # read Par_file to get information about the run
 # compute total number of nodes needed
 NPROC=`grep NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
@@ -22,7 +21,7 @@ LOCALPATH=`grep LOCAL_PATH DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d 
 
 nmax=$(($NPROC-1))
 
-make xcombine_vol_data
+make xcombine_vol_data_vtk
 
 # model variable is vs; output file will be vs.vtk
 #./bin/xcombine_vol_data_vtk 0 $nmax vs $LOCALPATH/ $LOCALPATH 0

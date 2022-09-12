@@ -2,7 +2,6 @@
 
 #SBATCH -p debug
 #SBATCH --ntasks=4
-#SBATCH --ntasks-per-node=4
 #SBATCH -t 60
 
 #SBATCH --output=OUTPUT_FILES/%j.o
@@ -14,15 +13,15 @@ cd $SLURM_SUBMIT_DIR
 
 # script to make mesh internally
 # read Par_file to get information about the run
+# compute total number of nodes needed
 NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
 
 mkdir -p OUTPUT_FILES
 mkdir -p OUTPUT_FILES/DATABASES_MPI
 
-# backup files used for this simulation
+# backup files used for mesh generation
 cp go_mesher_slurm.bash OUTPUT_FILES/
-cp DATA/Par_file OUTPUT_FILES/
-cp DATA/meshfem3D_files/Mesh_Par_file OUTPUT_FILES/
+cp -r DATA/meshfem3D_files OUTPUT_FILES/
 
 # save a complete copy of source files
 #rm -rf OUTPUT_FILES/src

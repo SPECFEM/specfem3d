@@ -2,7 +2,6 @@
 
 #SBATCH -p debug
 #SBATCH --ntasks=1
-#SBATCH --ntasks-per-node=1
 #SBATCH -t 60
 
 #SBATCH --output=OUTPUT_FILES/%j.o
@@ -14,6 +13,7 @@ cd $SLURM_SUBMIT_DIR
 
 # script to decompose mesh
 # read Par_file to get information about the run
+# compute total number of partitions needed
 NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
 
 # path to database files for mesh
