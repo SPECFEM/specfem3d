@@ -170,7 +170,17 @@ or
 \begin{verbatim}
   ./configure --with-hip=MI8 ..
 \end{verbatim}
-where for example \texttt{MI8,MI25,MI50,MI100,..} specifies the target GPU architecture of your card.\\
+where for example \texttt{MI8,MI25,MI50,MI100,MI250,..} specifies the target GPU architecture of your card.
+Additional compilation flags can be added by specifying \texttt{HIP\_FLAGS}, as for example:
+{\small
+\begin{verbatim}
+  ./configure --with-hip=MI250 \
+      HIP_FLAGS="-fPIC -ftemplate-depth-2048 -fno-gpu-rdc -std=c++17 \
+                 -O2 -fdenormal-fp-math=ieee -fcuda-flush-denormals-to-zero -munsafe-fp-atomics" \
+      ..
+\end{verbatim}
+}
+
 
 %-----------------------------------------------------------------------------------------------------------------------------------%
 \section{Using the ADIOS library for I/O}

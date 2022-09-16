@@ -760,6 +760,8 @@ COND_HIP_CUDA6_FALSE
 COND_HIP_CUDA6_TRUE
 COND_HIP_CUDA5_FALSE
 COND_HIP_CUDA5_TRUE
+COND_HIP_MI250_FALSE
+COND_HIP_MI250_TRUE
 COND_HIP_MI100_FALSE
 COND_HIP_MI100_TRUE
 COND_HIP_MI50_FALSE
@@ -3527,6 +3529,15 @@ else
   COND_HIP_MI100_TRUE='#'
   COND_HIP_MI100_FALSE=
 fi
+
+ if test x"$want_hip" = xMI250; then
+  COND_HIP_MI250_TRUE=
+  COND_HIP_MI250_FALSE='#'
+else
+  COND_HIP_MI250_TRUE='#'
+  COND_HIP_MI250_FALSE=
+fi
+
 
  if test x"$want_hip" = xcuda5; then
   COND_HIP_CUDA5_TRUE=
@@ -11961,6 +11972,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_HIP_MI100_TRUE}" && test -z "${COND_HIP_MI100_FALSE}"; then
   as_fn_error $? "conditional \"COND_HIP_MI100\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_HIP_MI250_TRUE}" && test -z "${COND_HIP_MI250_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP_MI250\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_HIP_CUDA5_TRUE}" && test -z "${COND_HIP_CUDA5_FALSE}"; then
