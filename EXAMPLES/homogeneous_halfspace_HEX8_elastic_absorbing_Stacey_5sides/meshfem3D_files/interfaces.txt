@@ -8,7 +8,7 @@
 #
 # interface number 1 (topography, top of the mesh)
  .true. 2 2 0.0 0.0 1000.0 1000.0
- interface1_cookne_1layer.txt
+ interface1.txt
 #
 # for each layer, we give the number of spectral elements in the vertical direction
 #
