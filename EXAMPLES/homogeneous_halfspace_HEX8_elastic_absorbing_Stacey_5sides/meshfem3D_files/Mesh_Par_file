@@ -95,4 +95,4 @@ NMATERIALS                      = 1
 NREGIONS                        = 1
 # define the different regions of the model as :
 #NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
-         1         36          1         36          1         16    1
+       1             36             1              36        1        16              1
