@@ -279,6 +279,8 @@
 
   use constants
   use specfem_par, only: run_number_of_the_source,NSOURCES
+
+  implicit none
   character(len=MAX_STRING_LEN) :: filename,string
   integer :: ier,isource,icounter,id_run
 

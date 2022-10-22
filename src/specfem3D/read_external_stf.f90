@@ -68,8 +68,8 @@
 
       ! skip empty/comment lines
       if (len_trim(line) == 0) cycle
-      if (line(1:1) == '#' .or. line(1:1) == '!') &
-        stop 'error in format of external_source_time_function_filename, no comments are allowed in it'
+      if (line(1:1) == '#' .or. line(1:1) == '!') cycle
+      ! stop 'error in format of external_source_time_function_filename, no comments are allowed in it'
 
       ! increases counter
       i = i + 1
@@ -80,7 +80,11 @@
   ! subtract one because the first line of the file contains the time step used
   i = i - 1
 
-  if (i < 1) stop 'error: the number of time steps in external_source_time_function_filename is < 1'
+  if (i < 1) then
+    print *,'Error: External source time function file ',trim(trim(external_source_time_function_filename)),'has no valid data;'
+    print *,'       the number of time steps is < 1. Please check the file...'
+    stop 'error: the number of time steps in external_source_time_function_filename is < 1'
+  endif
 
   if (i > NSTEP_STF) then
     print *
@@ -102,18 +106,64 @@
   endif
 
   ! read the time step used and check that it is the same as DT used for the code
-  read(IO_STF,*) dt_source
-  if (abs((dt_source - DT) / DT) > 1.d-3) stop 'error: the external source time file does not use the same time step as DT'
+  ier = 0
+  i = 0
+  do while (ier == 0)
+    read(IO_STF,"(a256)",iostat=ier) line
+    if (ier == 0) then
+      ! skip empty/comment lines
+      if (len_trim(line) == 0) cycle
+      if (line(1:1) == '#' .or. line(1:1) == '!') cycle
 
-  ! read the source values
-  do i = 1, NSTEP_STF
-    read(IO_STF,*,iostat=ier) user_source_time_function(i,isource)
-    if (ier /= 0) then
-      print *,'Problem when reading external source time file: ', trim(external_source_time_function_filename)
-      print *,'Please check, file format should be: #time #stf-value'
-      stop 'Error reading external source time file with invalid format'
+      ! gets STF
+      if (i == 0) then
+        ! first valid entry is time step DT
+        read(line,*,iostat=ier) dt_source
+        if (ier /= 0) then
+          print *,'Problem when reading external source time file: ', trim(external_source_time_function_filename)
+          print *,'Please check, file format should be: '
+          print *,'  # DT-time-step-size'
+          print *,'  # stf-value'
+          print *,'  # ..'
+          stop 'Error reading external source time file with invalid format for DT-time-step-size'
+        endif
+
+      else if (i <= NSTEP_STF) then
+        ! read the source values
+        read(line,*,iostat=ier) user_source_time_function(i,isource)
+        if (ier /= 0) then
+          print *,'Problem when reading external source time file: ', trim(external_source_time_function_filename)
+          print *,'Please check, file format should be: '
+          print *,'  # DT-time-step-size'
+          print *,'  # stf-value'
+          print *,'  # ..'
+          stop 'Error reading external source time file with invalid format'
+        endif
+      endif
+
+      ! increases counter
+      i = i + 1
     endif
   enddo
+
+  !read(IO_STF,*) dt_source
+
+  ! checks DT
+  if (abs((dt_source - DT) / DT) > 1.d-3) then
+    print *,'Error: External source time file defines DT = ',dt_source,', but Par_file uses DT = ',DT
+    print *,'       Please check time steps in external source time file.'
+    stop 'error: the external source time file does not use the same time step as DT'
+  endif
+
+  ! read the source values
+  !do i = 1, NSTEP_STF
+  !  read(IO_STF,*,iostat=ier) user_source_time_function(i,isource)
+  !  if (ier /= 0) then
+  !    print *,'Problem when reading external source time file: ', trim(external_source_time_function_filename)
+  !    print *,'Please check, file format should be: #time #stf-value'
+  !    stop 'Error reading external source time file with invalid format'
+  !  endif
+  !enddo
 
   ! closes external STF file
   close(IO_STF)

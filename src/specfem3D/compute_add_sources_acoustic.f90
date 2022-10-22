@@ -33,8 +33,7 @@
   use specfem_par, only: station_name,network_name, &
                          nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage, &
                          hxir_adjstore,hetar_adjstore,hgammar_adjstore,source_adjoint,number_adjsources_global,nadj_rec_local, &
-                         USE_EXTERNAL_SOURCE_FILE, &
-                         user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS, &
+                         USE_BINARY_FOR_SEISMOGRAMS, &
                          ibool,NSOURCES,myrank,it,ispec_selected_source,islice_selected_source, &
                          sourcearrays,kappastore,SIMULATION_TYPE,NSTEP, &
                          ispec_selected_rec, &
@@ -94,12 +93,7 @@
           time_source_dble = time_t - tshift_src(isource)
 
           ! determines source time function value
-          stf = get_stf_acoustic(time_source_dble,isource)
-
-          !! VM VM add external source time function
-          if (USE_EXTERNAL_SOURCE_FILE) then
-            stf = user_source_time_function(it, isource)
-          endif
+          stf = get_stf_acoustic(time_source_dble,isource,it)
 
           ! distinguishes between single and double precision for reals
           stf_used = real(stf,kind=CUSTOM_REAL)
@@ -248,7 +242,7 @@
   subroutine compute_add_sources_acoustic_backward()
 
   use constants
-  use specfem_par, only: nsources_local,tshift_src,DT,t0,USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
+  use specfem_par, only: nsources_local,tshift_src,DT,t0,USE_LDDRK,istage, &
                          ibool,NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
                          sourcearrays,kappastore,SIMULATION_TYPE,NSTEP
 
@@ -363,13 +357,7 @@
         time_source_dble = time_t - tshift_src(isource)
 
         ! determines source time function value
-        stf = get_stf_acoustic(time_source_dble,isource)
-
-        !! VM VM add external source time function
-        if (USE_EXTERNAL_SOURCE_FILE) then
-          ! time-reversed
-          stf = user_source_time_function(NSTEP-it_tmp+1, isource)
-        endif
+        stf = get_stf_acoustic(time_source_dble,isource,NSTEP-it_tmp+1)
 
         ! distinguishes between single and double precision for reals
         stf_used = real(stf,kind=CUSTOM_REAL)
@@ -404,7 +392,7 @@
   use specfem_par, only: station_name,network_name, &
                          nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage, &
                          source_adjoint,nadj_rec_local,number_adjsources_global, &
-                         USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS, &
+                         USE_BINARY_FOR_SEISMOGRAMS, &
                          NSOURCES,it,SIMULATION_TYPE,NSTEP,nrec, &
                          NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer, &
                          INVERSE_FWI_FULL_PROBLEM,run_number_of_the_source, &
@@ -455,12 +443,7 @@
         time_source_dble = time_t - tshift_src(isource)
 
         ! determines source time function value
-        stf = get_stf_acoustic(time_source_dble,isource)
-
-        !! VM VM add external source time function
-        if (USE_EXTERNAL_SOURCE_FILE) then
-           stf = user_source_time_function(it, isource)
-        endif
+        stf = get_stf_acoustic(time_source_dble,isource,it)
 
         ! stores precomputed source time function factor
         stf_pre_compute(isource) = stf
@@ -554,7 +537,7 @@
   subroutine compute_add_sources_acoustic_backward_GPU()
 
   use constants
-  use specfem_par, only: nsources_local,tshift_src,DT,t0,USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
+  use specfem_par, only: nsources_local,tshift_src,DT,t0,USE_LDDRK,istage, &
                          NSOURCES,myrank,it, &
                          SIMULATION_TYPE,NSTEP, &
                          GPU_MODE,Mesh_pointer,run_number_of_the_source
@@ -661,12 +644,7 @@
     time_source_dble = time_t - tshift_src(isource)
 
     ! determines source time function value
-    stf = get_stf_acoustic(time_source_dble,isource)
-
-    !! VM VM add external source time function
-    if (USE_EXTERNAL_SOURCE_FILE) then
-       stf = user_source_time_function(NSTEP-it_tmp+1, isource)
-    endif
+    stf = get_stf_acoustic(time_source_dble,isource,NSTEP-it_tmp+1)
 
     ! stores precomputed source time function factor
     stf_pre_compute(isource) = stf
@@ -681,17 +659,22 @@
 !=====================================================================
 !
 
-  double precision function get_stf_acoustic(time_source_dble,isource)
+  double precision function get_stf_acoustic(time_source_dble,isource,it_tmp_ext)
 
 ! returns source time function value for specified time
 
   use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,USE_TRICK_FOR_BETTER_PRESSURE, &
                          USE_SOURCE_ENCODING,pm1_source_encoding,hdur,hdur_Gaussian,DT
 
+  ! for external STFs
+  use specfem_par, only: USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
+                         myrank,NSTEP
+
   implicit none
 
   double precision,intent(in) :: time_source_dble
   integer,intent(in) :: isource
+  integer,intent(in) :: it_tmp_ext
 
   ! local parameters
   double precision :: stf
@@ -699,6 +682,26 @@
   double precision, external :: comp_source_time_function,comp_source_time_function_rickr, &
    comp_source_time_function_d2rck,comp_source_time_function_gauss,comp_source_time_function_d2gau
 
+  ! external source time function
+  if (USE_EXTERNAL_SOURCE_FILE) then
+    ! checks index
+    if (it_tmp_ext < 1 .or. it_tmp_ext > NSTEP) then
+      print *,'Error: external source time function index ',it_tmp_ext,'should be between 1 and ',NSTEP
+      call exit_MPI(myrank,'Invalid external source time function index in get_stf_acoustic() routine')
+    endif
+
+    ! gets stf value
+    stf = user_source_time_function(it_tmp_ext, isource)
+
+    ! source encoding
+    if (USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
+
+    ! returns value
+    get_stf_acoustic = stf
+    return
+  endif
+
+  ! determines source time function value
   if (USE_FORCE_POINT_SOURCE) then
     if (USE_RICKER_TIME_FUNCTION) then
       ! Ricker
@@ -766,10 +769,10 @@
     ! quasi-Heaviside
     ! stf = comp_source_time_function(time_source_dble,hdur_Gaussian(isource))
 
-    ! source encoding
-    if (USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
-
   endif ! USE_FORCE_POINT_SOURCE
+
+  ! source encoding
+  if (USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
 
   ! return value
   get_stf_acoustic = stf

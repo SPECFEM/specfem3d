@@ -274,7 +274,7 @@
     seismo_current,seismo_offset,NTSTEP_BETWEEN_OUTPUT_SAMPLE, &
     ispec_selected_source, &
     number_receiver_global,nrec_local, &
-    Mxx,Myy,Mzz,Mxy,Mxz,Myz,tshift_src,hdur_Gaussian, &
+    Mxx,Myy,Mzz,Mxy,Mxz,Myz,tshift_src, &
     hprime_xx,hprime_yy,hprime_zz, &
     hxir_store,hetar_store,hgammar_store, &
     hpxir_store,hpetar_store,hpgammar_store, &
@@ -301,14 +301,14 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NDIM):: eps_s
   real(kind=CUSTOM_REAL),dimension(NDIM):: eps_m_s
   real(kind=CUSTOM_REAL):: stf_deltat
-  double precision :: stf
+  double precision :: stf,time_source_dble
   ! receiver Lagrange interpolators
   double precision,dimension(NGLLX) :: hxir
   double precision,dimension(NGLLY) :: hetar
   double precision,dimension(NGLLZ) :: hgammar
   double precision :: hpxir(NGLLX),hpetar(NGLLY),hpgammar(NGLLZ)
 
-  double precision, external :: comp_source_time_function
+  double precision, external :: get_stf_viscoelastic
 
   ! checks if anything to do
   if (SIMULATION_TYPE /= 2) return
@@ -375,7 +375,10 @@
       seismograms_eps(:,:,irec_local,idx) = eps_s(:,:)
 
       ! source time function value
-      stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(irec),hdur_Gaussian(irec))
+      time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(irec)
+
+      ! determines source time function value
+      stf = get_stf_viscoelastic(time_source_dble,irec,NSTEP-it+1)
 
       stf_deltat = real(stf * deltat * NTSTEP_BETWEEN_OUTPUT_SAMPLE,kind=CUSTOM_REAL)
 

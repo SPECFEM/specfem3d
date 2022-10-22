@@ -31,7 +31,7 @@
 
   use constants
   use specfem_par, only: station_name,network_name,USE_FORCE_POINT_SOURCE, &
-                         tshift_src,dt,t0,USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
+                         tshift_src,dt,t0,USE_LDDRK,istage, &
                          USE_BINARY_FOR_SEISMOGRAMS,ibool, &
                          UNDO_ATTENUATION_AND_OR_PML, &
                          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
@@ -96,12 +96,7 @@
           endif
 
           ! determines source time function value
-          stf = get_stf_poroelastic(time_source_dble,isource)
-
-          !! VM VM add external source time function
-          if (USE_EXTERNAL_SOURCE_FILE) then
-            stf = user_source_time_function(it, isource)
-          endif
+          stf = get_stf_poroelastic(time_source_dble,isource,it)
 
           ! distinguishes between single and double precision for reals
           stf_used = real(stf,kind=CUSTOM_REAL)
@@ -306,13 +301,7 @@
           endif
 
           ! determines source time function value
-          stf = get_stf_poroelastic(time_source_dble,isource)
-
-          !! VM VM add external source time function
-          if (USE_EXTERNAL_SOURCE_FILE) then
-            ! time-reversed
-            stf = user_source_time_function(NSTEP-it+1, isource)
-          endif
+          stf = get_stf_poroelastic(time_source_dble,isource,NSTEP-it+1)
 
           ! distinguishes between single and double precision for reals
           stf_used = real(stf,kind=CUSTOM_REAL)
@@ -365,22 +354,43 @@
 !=====================================================================
 !
 
-  double precision function get_stf_poroelastic(time_source_dble,isource)
+  double precision function get_stf_poroelastic(time_source_dble,isource,it_tmp_ext)
 
 ! returns source time function value for specified time
 
   use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,hdur,hdur_Gaussian,DT
 
+  ! for external STFs
+  use specfem_par, only: USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
+                         myrank,NSTEP
+
   implicit none
 
   double precision,intent(in) :: time_source_dble
   integer,intent(in) :: isource
+  integer,intent(in) :: it_tmp_ext
 
   ! local parameters
   double precision :: stf
 
   double precision, external :: comp_source_time_function,comp_source_time_function_rickr, &
     comp_source_time_function_gauss
+
+  ! external source time function
+  if (USE_EXTERNAL_SOURCE_FILE) then
+    ! checks index
+    if (it_tmp_ext < 1 .or. it_tmp_ext > NSTEP) then
+      print *,'Error: external source time function index ',it_tmp_ext,'should be between 1 and ',NSTEP
+      call exit_MPI(myrank,'Invalid external source time function index in get_stf_poroelastic() routine')
+    endif
+
+    ! gets stf value
+    stf = user_source_time_function(it_tmp_ext, isource)
+
+    ! returns value
+    get_stf_poroelastic = stf
+    return
+  endif
 
   ! determines source time function value
   if (USE_FORCE_POINT_SOURCE) then
