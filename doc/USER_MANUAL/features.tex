@@ -19,17 +19,18 @@ CUDA and HIP hardware support, respectively.
 \hline
 & & & & \\
 %%
-{\bf Physics}   & Acoustic                  & X  & X  & X \\
-                & Elastic                   & X  & X  & X \\
-                & Poroelastic               & X  & X  & X \\
-                & Ocean load / Topography   & X  & X  & X \\
-                & Gravity field / integrals & X  & X  & X \\
-                & Anisotropy                & X  & X  & X \\
-                & Attenuation               & X  & X  & X \\
+{\bf Physics}   & Acoustic                        & X  & X  & X \\
+                & Elastic                         & X  & X  & X \\
+                & Poroelastic                     & X  & -  & - \\
+                & Ocean load / Topography         & X  & X  & X \\
+                & Gravity field / integrals       & X  & X  & X \\
+                & Anisotropy                      & X  & X  & X \\
+                & Attenuation                     & X  & X  & X \\
 \hline
 & & & & \\
 %%
 {\bf Simulation Setup}  & Noise simulations                 & X  & X  & X \\
+                        & Fault rupture dynamic/kinematic   & X  & X  & X \\
                         & Wavefield injection/coupling      & X  & X  & X \\
                         & C-PML                             & X  & -  & - \\
                         & Simultaneous runs                 & X  & X  & X \\
@@ -42,6 +43,7 @@ CUDA and HIP hardware support, respectively.
 {\bf Meshing}           & in-house mesher                       & X  & -  & - \\
                         & external (CUBIT/Trelis,Gmsh)          & X  & -  & - \\
                         & UTM projection                        & X  & -  & - \\
+                        & Cavity                                & X  & -  & - \\
                         & SCOTCH/Metis/PaToH/Rows partitioning  & X  & -  & - \\
 \hline
 & & & & \\
@@ -50,7 +52,7 @@ CUDA and HIP hardware support, respectively.
                           & Anisotropic kernels             & X  & X  & X \\
                           & Transversely isotropic kernels  & X  & X  & X \\
                           & Isotropic kernels               & X  & X  & X \\
-                          & Moho boundary kernels           & X  & X  & X \\
+                          & Moho boundary kernels           & X  & -  & - \\
                           & Approximate Hessian             & X  & X  & X \\
 \hline
 & & & & \\
