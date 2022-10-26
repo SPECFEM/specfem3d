@@ -188,7 +188,7 @@
 
   use asdf_data, only: asdf_container
 
-  use iso_c_binding, only: C_NULL_CHAR,c_ptr
+  use iso_c_binding, only: C_NULL_CHAR !,c_ptr
 !  use iso_Fortran_env
 
   use specfem_par, only: seismo_offset,DT,NSTEP,NTSTEP_BETWEEN_OUTPUT_SAMPLE,OUTPUT_FILES,WRITE_SEISMOGRAMS_BY_MAIN
@@ -252,8 +252,10 @@
 
   ! C/Fortran interop for C-allocated strings
   integer :: len_prov, len_constants, len_Parfile
-  type(c_ptr) :: cptr
-  character, pointer :: fptr(:)
+  !type(c_ptr) :: cptr
+  !character, pointer :: fptr(:)
+  character(len=2048) :: fptr
+
   character, dimension(:), allocatable, TARGET :: provenance
   character(len=ASDF_MAX_CONSTANTS_LENGTH) :: sf_constants
   character(len=ASDF_MAX_PARFILE_LENGTH) :: sf_parfile
@@ -291,9 +293,72 @@
 
   if (ASDF_OUTPUT_PROVENANCE) then
     ! Generate specfem provenance string
-    call ASDF_generate_sf_provenance_f(trim(start_time_string)//C_NULL_CHAR, &
-                                       trim(end_time_string)//C_NULL_CHAR, cptr, len_prov)
-    call c_f_pointer(cptr, fptr, [len_prov])
+    ! see: https://seismicdata.github.io/SEIS-PROV/index.html
+
+    ! function interface has been removed in ASDF versions >= 1.0.0
+    !call ASDF_generate_sf_provenance_f(trim(start_time_string)//C_NULL_CHAR, &
+    !                                   trim(end_time_string)//C_NULL_CHAR, cptr, len_prov)
+    !call c_f_pointer(cptr, fptr, [len_prov])
+
+    ! creates simple provenance string
+    ! following asdf-library routine generate_sf_provenance()
+    ! header
+    fptr = &
+      '<?xml version="1.0" encoding="UTF-8"?>'// &
+      '<prov:document xmlns:prov="http://www.w3.org/ns/prov#"'// &
+      'xmlns:seis_prov="http://seisprov.org/seis_prov/0.1/#" xmlns:xsd="http://www.w3.org/2001/XMLSchema"'// &
+      'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
+
+    ! software name ("random" software_id = 0123456)
+    fptr = trim(fptr) // &
+      '<prov:softwareAgent prov:id="seis_prov:sp000_sa_' // '0123456' // '">'// &
+      '  <prov:label>SPECFEM3D_Cartesian</prov:label>'// &
+      '  <seis_prov:software_name>SPECFEM3D_Cartesian</seis_prov:software_name>'// &
+      '  <seis_prov:software_version>3.0.0</seis_prov:software_version>'// &
+      '  <seis_prov:website>https://github.com/geodynamics/specfem3d</seis_prov:website>'// &
+      '</prov:softwareAgent>'
+
+    ! constants (constants_id = abcdefg)
+    fptr = trim(fptr) // &
+      '<prov:entity prov:id="seis_prov:sp000_fi_' // 'abcdefg' // '">'// &
+      '  <prov:label>File</prov:label>'// &
+      '  <prov:type xsi:type="xsd:string">seis_prov:file</prov:type>'// &
+      '  <seis_prov:filename>constants.h</seis_prov:filename>'// &
+      '  <seis_prov:location>/AuxiliaryData/Files/constants_h</seis_prov:location>'// &
+      '  <seis_prov:location_type>HDF5 Data Set</seis_prov:location_type>'// &
+      '</prov:entity>'
+
+    ! Par_file (parfile_id = zyxwvut)
+    fptr = trim(fptr) // &
+      '<prov:entity prov:id="seis_prov:sp000_fi_' // 'zyxwvut' // '">'// &
+      '  <prov:label>File</prov:label>'// &
+      '  <prov:type xsi:type="xsd:string">seis_prov:file</prov:type>'// &
+      '  <seis_prov:filename>Parfile</seis_prov:filename>'// &
+      '  <seis_prov:location>/AuxiliaryData/Files/Parfile</seis_prov:location>'// &
+      '  <seis_prov:location_type>HDF5 Data Set</seis_prov:location_type>'// &
+      '</prov:entity>'
+
+    ! simulation (simulation_id = 9876543)
+    fptr = trim(fptr) // &
+      '<prov:activity prov:id="seis_prov:sp000_ws_' // '9876543' // '">'// &
+      '  <prov:startTime>' // trim(start_time_string) // '</prov:startTime>'// &
+      '  <prov:endTime>' // trim(end_time_string) // '</prov:endTime>'// &
+      '  <prov:label>Waveform Simulation</prov:label>'// &
+      '  <prov:type xsi:type="xsd:string">seis_prov:waveform_simulation</prov:type>'// &
+      '</prov:activity>'
+
+    ! association
+    fptr = trim(fptr) // &
+      '<prov:wasAssociatedWith>'// &
+      '  <prov:agent prov:ref="seis_prov:sp000_sa_' // '0123456' // '"/>'// &
+      '  <prov:activity prov:ref="seis_prov:sp000_ws_' // '9876543' // '"/>'// &
+      '</prov:wasAssociatedWith>'
+
+    ! closing
+    fptr = trim(fptr) // &
+      '</prov:document>'
+
+    len_prov = len_trim(fptr)
 
     allocate(provenance(len_prov+1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2018')
@@ -577,7 +642,7 @@
       call ASDF_initialize_hdf5_f(ier);
       if (ier /= 0) call exit_MPI(myrank,'Error ASDF initialize hdf5 seismogram failed')
 
-      call ASDF_open_serial_f(trim(OUTPUT_FILES)//"synthetic.h5" // C_NULL_CHAR, file_id)
+      call ASDF_open_serial_f(trim(OUTPUT_FILES) // "synthetic.h5" // C_NULL_CHAR, file_id)
       ! checks file identifier
       if (file_id == 0) then
         print *,'Error: ASDF failed to open file',trim(OUTPUT_FILES) // "synthetic.h5"
@@ -646,7 +711,7 @@
                                           station_grp)
 
           ! loop over each component
-          do  i = 1,NDIM
+          do i = 1,NDIM
             ! note: if only pressure is output, there is only a single valid component.
             !       the other component_name entries will be empty (""), which will lead to an error
             !       with the HDF5 output when two waveforms with the same name will be defined.
@@ -678,7 +743,7 @@
           if (ier /= 0) call exit_MPI(myrank,'Error ASDF close stations group waveform failed')
 
         endif
-     enddo
+      enddo
     enddo
 
     ! closes file
@@ -707,7 +772,7 @@
     call ASDF_initialize_hdf5_f(ier);
     if (ier /= 0) call exit_MPI(myrank,'Error ASDF parallel initialize hdf5 failed')
 
-    call ASDF_open_f(trim(OUTPUT_FILES)//"synthetic.h5" // C_NULL_CHAR, comm, file_id)
+    call ASDF_open_f(trim(OUTPUT_FILES) // "synthetic.h5" // C_NULL_CHAR, comm, file_id)
     ! checks file identifier
     if (file_id == 0) then
       print *,'Error rank ',myrank,': ASDF failed to open file',trim(OUTPUT_FILES) // "synthetic.h5"
@@ -1327,20 +1392,35 @@
 !! \param filestring The string that the file is stored
   subroutine read_file(filename, filestring, filesize)
 
+  use constants, only: IIN,myrank
+
   implicit none
   character(len=*) :: filestring
   character(len=*) :: filename
   integer,intent(out) :: filesize
 
+  ! local parameters
+  integer :: ier
+
   ! Get the size of the file using Fortran2003 feature
-  open(10, file=filename, status='old')
-  inquire(unit=10, size=filesize)
-  close(10)
+  open(unit=IIN, file=trim(filename), status='old', iostat=ier)
+  if (ier /= 0) then
+    print *,'Error: rank ',myrank,'failed opening file: ',trim(filename)
+    call exit_MPI(myrank,'Error opening file in ASDF read_file() routine')
+  endif
+  inquire(unit=IIN, size=filesize)
+  close(IIN)
+
+  ! checks size
+  if (len(filestring) < filesize) then
+    print *,'Error: file ',trim(filename),' exceeds filesize ',filesize,'for string length limit ',len(filestring)
+    call exit_MPI(myrank,'Error file size too large in ASDF read_file() routine')
+  endif
 
   ! Read in the size of the file using direct access
-  open(10, file=filename, status='old', &
-         recl=filesize, form='unformatted', access='direct')
-  read (10, rec=1) filestring(1:filesize)
-  close(10)
+  open(IIN, file=trim(filename), status='old', &
+       recl=filesize, form='unformatted', access='direct')
+  read(IIN, rec=1) filestring(1:filesize)
+  close(IIN)
 
   end subroutine read_file
