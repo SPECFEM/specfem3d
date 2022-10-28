@@ -26,11 +26,11 @@
 !=====================================================================
 
 
-module constants_meshfem3D
+module constants_meshfem
 
   include "constants_meshfem3D.h"
 
-end module constants_meshfem3D
+end module constants_meshfem
 
 !
 !----------------------------------------------------------------------------------------------------
@@ -38,11 +38,11 @@ end module constants_meshfem3D
 
 ! main parameter module for xmeshfem3D mesher
 
-module meshfem3D_par
+module meshfem_par
 
   use constants
 
-  use constants_meshfem3D
+  use constants_meshfem
 
   use shared_parameters
 
@@ -136,5 +136,5 @@ module meshfem3D_par
   ! name of the database file
   character(len=MAX_STRING_LEN) :: prname
 
-end module meshfem3D_par
+end module meshfem_par
 

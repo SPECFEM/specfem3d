@@ -1,0 +1,213 @@
+#
+# template to install needed packages
+#
+# software setup on VM nodes
+# ubuntu-18.04:
+# https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu1804-README.md
+# ubuntu-20.04 "ubuntu-latest":
+# https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-README.md
+#
+parameters:
+- name: CUDA
+  type: boolean
+  default: false
+- name: CUDA_V
+  type: string
+  default: ''
+
+steps:
+- script: |
+    # fortran/openMPI compiler
+    echo "CC: ${CC} CXX: ${CXX} FC: ${FC}"
+    # updates repository
+    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B05F25D762E3157
+    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 78BD65473CB3BD13
+    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 762E3157
+    if [ "${FC}" == "gfortran-10" ]; then
+      echo "gfortran: gfortran-10 update"
+      # updating gfortran version
+      sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+      sudo apt-get update
+      sudo apt-get install -y --reinstall gcc-10 g++-10 gfortran-10
+      # updates alternatives
+      echo
+      update-alternatives --query gfortran
+      echo
+      sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
+      sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
+      sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-10 100
+      echo
+      update-alternatives --query gfortran
+      echo
+    else
+      echo "gfortran: default"
+      sudo apt-get update
+      echo
+    fi
+    # installs mpi
+    ##sudo apt-get install -y gfortran libgomp1 openmpi-bin libopenmpi-dev
+    sudo apt-get install -y openmpi-bin libopenmpi-dev
+    echo
+
+    echo
+    # python script needs numpy
+    pip install --user --upgrade pip setuptools wheel
+    pip install --user --only-binary=numpy numpy
+    # version info
+    echo "Python on path: $(which python)"
+    python --version
+    echo
+    echo "pip on path   : $(which pip)"
+    pip --version
+    echo
+    echo "numpy version : "
+    python -c "import numpy; print(numpy.__version__)"
+    echo
+
+    # version infos
+    echo "compiler versions:"
+    echo "gfortran: $(which gfortran)"
+    gfortran --version
+    echo "mpif90  : $(which mpif90)"
+    mpif90 --version
+    echo "gcc     : $(which gcc)"
+    gcc --version
+    echo
+    #ls -al /usr/bin/gfortran*
+    #echo
+    #ls -al /usr/bin/gcc*
+    #echo
+
+    # installs the CUDA toolkit
+    CUDA=${{ parameters.CUDA }}   # True or False
+    CUDA_V=${{ parameters.CUDA_V }}
+    echo "CUDA: $CUDA"
+    if [ "$CUDA" == "True" ]; then
+      # Linux environment
+      # https://docs.travis-ci.com/user/reference/linux
+      ## distribution precise: from ubuntu 12.04
+      #UBUNTU_VERSION=ubuntu1204
+      ## distribution trusty: from ubuntu 14.04
+      #UBUNTU_VERSION=ubuntu1404
+      ## distribution xenial: from ubuntu 16.04
+      #UBUNTU_VERSION=ubuntu1604
+      ## distribution bionic: from ubuntu 18.04
+      UBUNTU_VERSION=ubuntu1804
+      ## distribution focal: from ubuntu 20.04
+      #UBUNTU_VERSION=ubuntu2004
+
+      # CUDA_VERSION - specifies CUDA toolkit version
+      echo "CUDA version: $CUDA_V"
+      # http://developer.download.nvidia.com/compute/cuda/repos/
+      if [ "$CUDA_V" == "6.5" ]; then
+        ## trusty
+        CUDA_VERSION=6.5-14
+      elif [ "$CUDA_V" == "9.2" ]; then
+        ## xenial
+        CUDA_VERSION=9.2.148-1
+      elif [ "$CUDA_V" == "10.2" ]; then
+        ## bionic
+        CUDA_VERSION=10.2.89-1
+      else
+        # note: on azure VM nodes with ubuntu-latest, default gcc version is 9.3;
+        #       needs at least CUDA version 11.x
+        CUDA_VERSION=11.4.0-1
+      fi
+      echo
+
+      # default architecture amd64
+      CUDA_OS=x86_64
+      CUDA_ARCH=amd64
+
+      echo "Installing CUDA library"
+      echo "CUDA version  : ${CUDA_VERSION}"
+      echo "UBUNTU version: ${UBUNTU_VERSION}"
+      echo "CUDA OS       : ${CUDA_OS}"
+      echo "CUDA arch     : ${CUDA_ARCH}"
+
+      # remove old nvidia-cuda packages
+      #sudo apt-get remove nvidia-cuda-* ;
+
+      # package needs key
+      # old:
+      #sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/7fa2af80.pub
+      # new:
+      # (preferred) w/ new keyring package:
+      # see https://forums.developer.nvidia.com/t/notice-cuda-linux-repository-key-rotation/212772
+      # doesn't work yet, produces error:
+      #   E:Conflicting values set for option Signed-By regarding source
+      # remove outdated key:
+      #sudo rm -f /etc/apt/sources.list.d/cuda.list
+      #sudo rm -f /etc/apt/sources.list.d/nvidia-ml.list
+      #sudo apt-key del 7fa2af80
+      # for ubuntu1804/ppc64el ../$distro/$arch/.. becomes ../${UBUNTU_VERSION}/${CUDA_OS}/..
+      #wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/cuda-keyring_1.0-1_all.deb
+      #sudo dpkg -i cuda-keyring_1.0-1_all.deb
+      #
+      # manually add new key:
+      sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/3bf863cc.pub
+      echo
+
+      # gets repo
+      if [ "${CUDA_VERSION}" == "11.4.0-1" ]; then
+        # new CUDA version 11.4 has no cuda-repo-** file, following instructions from website,
+        # see: https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=18.04&target_type=deb_network
+        wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/cuda-${UBUNTU_VERSION}.pin
+        sudo mv cuda-${UBUNTU_VERSION}.pin /etc/apt/preferences.d/cuda-repository-pin-600
+        echo
+        # adds repo
+        sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/ /"
+      else
+        # gets packages
+        INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA_VERSION}_${CUDA_ARCH}.deb
+        wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/${INSTALLER}
+        sudo dpkg -i ${INSTALLER}
+      fi
+      #echo
+
+      # update
+      echo "Updating libraries"
+      sudo apt-get update -qq
+      dpkg -l | grep cuda
+      if [ "${CUDA_VERSION:0:1}" == "1" ]; then
+        export CUDA_APT=${CUDA_VERSION:0:4}  # version 10.2, 11.x, ..
+      else
+        export CUDA_APT=${CUDA_VERSION:0:3}  # version 9.2
+      fi
+      export CUDA_APT=${CUDA_APT/./-}
+      echo "CUDA APT: ${CUDA_APT}"  # apt version 10-2 -> package name: cuda-compiler-10-2
+
+      # installs packages
+      # CUDA_PACKAGES="cuda-drivers cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}";
+      CUDA_PACKAGES="cuda-drivers cuda-compiler-${CUDA_APT} cuda-cudart-dev-${CUDA_APT}"
+      echo "Installing ${CUDA_PACKAGES}"
+      sudo apt-get install -y --no-install-recommends ${CUDA_PACKAGES}
+      sudo apt-get clean
+      echo ""
+      if [ "${CUDA_VERSION:0:1}" == "1" ]; then
+        export CUDA_HOME=/usr/local/cuda-${CUDA_VERSION:0:4}    # version 10.2
+      else
+        export CUDA_HOME=/usr/local/cuda-${CUDA_VERSION:0:3}   # version 9.2
+      fi
+      export LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+      export PATH=${CUDA_HOME}/bin:${PATH}
+      echo ""
+      nvcc --version
+      echo ""
+    fi
+
+    # storing updated environment parameters for following bash-script
+    echo "export PATH=${PATH}" > $HOME/.tmprc
+    echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $HOME/.tmprc
+    echo "export CUDA_HOME=${CUDA_HOME}" >> $HOME/.tmprc
+
+    ## avoids MPI issue with number of slots
+    echo "export OMPI_MCA_rmaps_base_oversubscribe=1" >> $HOME/.tmprc
+    echo "export OMPI_MCA_rmaps_base_inherit=1" >> $HOME/.tmprc
+
+    echo ""
+    echo "exports:"
+    export
+    echo ""
+
+  displayName: 'Install packages'

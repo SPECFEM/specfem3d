@@ -69,37 +69,62 @@ program smooth_sem
     phistore,tortstore,rhoarraystore
   use specfem_par_movie
 
+  use kdtree_search
+
   implicit none
 
+  !-------------------------------------------------------------
+  ! USER PARAMETERS
+
+  ! input arguments
   integer, parameter :: NARGS = 6
 
-  ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dat,dat_smooth
+  ! brute-force search for neighboring elements, if set to .false. a kd-tree search will be used
+  logical,parameter :: DO_BRUTE_FORCE_SEARCH = .false.
+
+  ! kd-tree search uses either a spherical or ellipsoid search
+  logical,parameter :: DO_SEARCH_ELLIP = .true.
+
+  ! debugging
+  logical, parameter :: DEBUG = .false.
+  ! debug (boundary) point
+  integer ,parameter :: tmp_ispec_dbg = 5128
+
+  !-------------------------------------------------------------
+
+  integer, parameter :: NGLL3 = NGLLX * NGLLY * NGLLZ
+
+  ! kernel data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),allocatable :: kernel,kernel_smooth
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dummy ! for jacobian read
   integer :: NSPEC_N, NGLOB_N, NSPEC_IRREGULAR_N
 
-  integer :: i,j,k,iglob,ier,ispec2,ispec,ispec_irreg,inum
+  integer :: i,j,k,iglob,ier
+  integer :: ispec2,ispec,ispec_irreg,inum
 #ifdef FORCE_VECTORIZATION
   integer :: ijk
 #endif
   integer :: icounter,num_slices
   integer :: iproc,ncuda_devices
 
+  ! GPU
   integer(kind=8) :: Container
 
   integer,parameter :: MAX_NODE_LIST = 300
   integer :: node_list(MAX_NODE_LIST)
   logical :: do_include_slice
 
-  character(len=MAX_STRING_LEN) :: arg(6)
-  character(len=MAX_STRING_LEN) :: kernel_name, input_dir, output_dir
-  character(len=MAX_STRING_LEN) :: prname_lp
-  character(len=MAX_STRING_LEN*2) :: local_data_file
-
-
+  ! arguments
+  character(len=MAX_STRING_LEN),dimension(NARGS) :: arg
   character(len=MAX_STRING_LEN),dimension(:),allocatable :: kernel_names
   character(len=MAX_STRING_LEN) :: kernel_names_comma_delimited
-  integer :: nker
+  character(len=MAX_STRING_LEN) :: kernel_name
+  character(len=MAX_STRING_LEN) :: input_dir, output_dir
+  character(len=MAX_STRING_LEN) :: prname_lp
+  character(len=MAX_STRING_LEN*2) :: local_data_file
+  logical :: USE_GPU
+
+  integer :: nker,iker
 
   ! smoothing parameters
   character(len=MAX_STRING_LEN*2) :: ks_file
@@ -112,21 +137,25 @@ program smooth_sem
   real(kind=CUSTOM_REAL) :: center_x0, center_y0, center_z0
   real(kind=CUSTOM_REAL) :: center_x, center_y, center_z
 
-  real(kind=CUSTOM_REAL) :: max_old,max_new,max_old_all,max_new_all
-  real(kind=CUSTOM_REAL) :: min_old,min_new,min_old_all,min_new_all
+  real(kind=CUSTOM_REAL),dimension(:),allocatable :: min_old,max_old
+  real(kind=CUSTOM_REAL) :: max_new,max_old_all,max_new_all
+  real(kind=CUSTOM_REAL) :: min_new,min_old_all,min_new_all
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: exp_val,factor
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: exp_val
   real(kind=CUSTOM_REAL) :: jacobianl
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: tk, bk
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: xl, yl, zl
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),allocatable :: tk
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: bk
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: xx0, yy0, zz0
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: xx, yy, zz
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: integ_factor
 
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: cx0, cy0, cz0
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: cx, cy, cz
 
   real(kind=CUSTOM_REAL) :: dist_h,dist_v
   real(kind=CUSTOM_REAL) :: element_size
+  real(kind=CUSTOM_REAL) :: contrib_weights,contrib_kernel
 
   real(kind=CUSTOM_REAL) :: distance_min_glob,distance_max_glob
   real(kind=CUSTOM_REAL) :: elemsize_min_glob,elemsize_max_glob
@@ -143,21 +172,49 @@ program smooth_sem
   real(kind=CUSTOM_REAL) :: z_min,z_max
   real(kind=CUSTOM_REAL) :: dim_x,dim_y,dim_z
 
-  logical :: BROADCAST_AFTER_READ, USE_GPU
+  logical :: BROADCAST_AFTER_READ
+
+  ! GPU
+  double precision :: memory_size
+
+  ! search elements
+  integer :: ielem,num_elem_local,num_elem_local_max
+  integer, dimension(:), allocatable :: nsearch_elements
+
+  ! tree nodes search
+  double precision,dimension(3) :: xyz_target
+  double precision :: r_search,r_search_dist_v,r_search_dist_h
+  logical :: use_kdtree_search
+
+  ! debugging
+  integer, dimension(:),allocatable :: ispec_flag
+  character(len=MAX_STRING_LEN) :: filename
 
   ! timing
+  integer :: ihours,iminutes,iseconds,int_tCPU
+  double precision :: time_start_all
+  double precision :: tCPU
   double precision, external :: wtime
-  real :: t1,t2
 
+! switches do-loops between: do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX <-> do ijk=1,NGLLCUBE
+#ifdef FORCE_VECTORIZATION
+  integer :: ijk2
+#  define INDEX_IJK2  ijk2,1,1
+#  define DO_LOOP_IJK2  do ijk2=1,NGLLCUBE
+#  define ENDDO_LOOP_IJK2  enddo                  ! NGLLCUBE
+#else
+  integer :: ii,jj,kk
+#  define INDEX_IJK2  ii,jj,kk
+#  define DO_LOOP_IJK2  do kk=1,NGLLZ; do jj=1,NGLLY; do ii=1,NGLLX
+#  define ENDDO_LOOP_IJK2  enddo; enddo; enddo    ! NGLLZ,NGLLY,NGLLX
+#endif
+
+  ! ============ program starts here =====================
+
+  ! initialize the MPI communicator and start the MPI processes
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
-
-  if (myrank == 0) print *,"Running XSMOOTH_SEM"
-  call synchronize_all()
-
-  ! timing
-  t1 = wtime()
 
   ! parse command line arguments
   if (command_argument_count() < NARGS-1) then
@@ -175,10 +232,23 @@ program smooth_sem
   endif
   call synchronize_all()
 
+  if (myrank == 0) then
+    print *,'Running XSMOOTH_SEM'
+    print *
+  endif
+  call synchronize_all()
+
+  ! timing
+  time_start_all = wtime()
+
   ! allocates array
-  allocate(kernel_names(MAX_KERNEL_NAMES),stat=ier)
+  allocate(kernel_names(MAX_KERNEL_NAMES), &
+           min_old(MAX_KERNEL_NAMES), &
+           max_old(MAX_KERNEL_NAMES),stat=ier)
   if (ier /= 0) stop 'Error allocating kernel_names array'
   kernel_names(:) = ''
+  min_old(:) = 0._CUSTOM_REAL
+  max_old(:) = 0._CUSTOM_REAL
 
   ! parse command line arguments
   do i = 1, NARGS
@@ -193,70 +263,33 @@ program smooth_sem
   read(arg(1),*) sigma_h
   read(arg(2),*) sigma_v
   kernel_names_comma_delimited = arg(3)
+
   input_dir= arg(4)
   output_dir = arg(5)
+
   if (command_argument_count() == 6) then
     read(arg(6),*) USE_GPU
   else
     USE_GPU = .false.
   endif
 
+  ! sets flag to use kdtree
+  use_kdtree_search = (.not. DO_BRUTE_FORCE_SEARCH) .and. (.not. USE_GPU)
+
+  call synchronize_all()
+
   call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
-  kernel_name = kernel_names(1)
+  if (nker > MAX_KERNEL_NAMES) stop 'number of kernel_names exceeds MAX_KERNEL_NAMES'
 
-  if (USE_GPU) call initialize_gpu_device(myrank,ncuda_devices)
-
-  if (nker > 1) then
-    if (myrank == 0) then
-      ! The machinery for reading multiple names from the command line is in place,
-      ! but the smoothing routines themselves have not yet been modified to work on multiple arrays.
-      if (myrank == 0) then
-        print *,'Smoothing only first name in list: ',trim(kernel_name)
-        print *
-      endif
-    endif
+  if (myrank == 0) then
+    print *, 'Smoothing list: ', trim(kernel_names_comma_delimited),' - total: ',nker
+    print *
   endif
   call synchronize_all()
 
-  ! check smoothing radii
-  sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for Gaussian distribution with standard variance sigma
-  sigma_v2 = 2.0 * sigma_v ** 2
-
-  if (sigma_h2 < 1.e-18) stop 'Error sigma_h2 zero, must non-zero'
-  if (sigma_v2 < 1.e-18) stop 'Error sigma_v2 zero, must non-zero'
-
-  ! adds margin to search radius
-  element_size = max(sigma_h,sigma_v) * 0.5
-
-  ! search radius
-  sigma_h3 = 3.0  * sigma_h + element_size
-  sigma_v3 = 3.0  * sigma_v + element_size
-
-  ! helper variables
-  sigma_h2_inv = 1.0_CUSTOM_REAL / sigma_h2
-  sigma_v2_inv = 1.0_CUSTOM_REAL / sigma_v2
-
-  sigma_h3_sq = sigma_h3 * sigma_h3
-  sigma_v3_sq = sigma_v3 * sigma_v3
-
-  ! theoretic normal value
-  ! (see integral over -inf to +inf of exp[- x*x/(2*sigma) ] = sigma * sqrt(2*pi) )
-  ! note: smoothing is using a Gaussian (ellipsoid for sigma_h /= sigma_v),
-  norm_h = real(2.0*PI*sigma_h**2,kind=CUSTOM_REAL)
-  norm_v = real(sqrt(2.0*PI) * sigma_v,kind=CUSTOM_REAL)
-  norm   = norm_h * norm_v
-
-  ! user output
-  if (myrank == 0) then
-    print *,'command line arguments:'
-    print *,'  smoothing sigma_h , sigma_v                : ',sigma_h,sigma_v
-    ! scale length: approximately S ~ sigma * sqrt(8.0) for a Gaussian smoothing
-    print *,'  smoothing scalelengths horizontal, vertical: ',sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
-    print *,'  input dir : ',trim(input_dir)
-    print *,'  output dir: ',trim(output_dir)
-    print *,"  GPU_MODE: ", USE_GPU
-    print *
-  endif
+  ! open main output file, only written to by process 0
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
+    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_smooth_sem.txt',status='unknown')
 
   ! reads the parameter file
   BROADCAST_AFTER_READ = .true.
@@ -278,8 +311,49 @@ program smooth_sem
   ! read the value of NSPEC_AB and NGLOB_AB because we need it to define some array sizes below
   call read_mesh_for_init()
 
+  ! user output
+  if (myrank == 0) then
+    print *,'input arguments:'
+    print *,'  smoothing sigma_h , sigma_v                : ',sigma_h,sigma_v
+    ! scale length: approximately S ~ sigma * sqrt(8.0) for a Gaussian smoothing
+    print *,'  smoothing scalelengths horizontal, vertical: ',sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
+    print *
+    print *,'  data name      : ',trim(kernel_names_comma_delimited)
+    print *
+    print *,'  input dir : ',trim(input_dir)
+    print *,'  output dir: ',trim(output_dir)
+    print *
+    if (USE_GPU) then
+      print *,'  using GPU'
+    endif
+    if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
+      print *,'  using quadrature rule for smoothing integration'
+    else
+      print *,'  using distance weighted smoothing'
+    endif
+    print *
+    print *,'mesh defaults:'
+    print *,'  NSPEC_AB              : ',NSPEC_AB
+    print *,'  NSPEC_IRREGULAR       : ',NSPEC_IRREGULAR
+    print *,'  NGLOB_AB              : ',NGLOB_AB
+    print *,'  NGLLX / NGLLY / NGLLZ : ',NGLLX,NGLLY,NGLLZ
+    print *
+  endif
+
+  ! checks
+  if (sigma_h < 1.e-9) stop 'Error sigma_h zero, must non-zero'
+  if (sigma_v < 1.e-9) stop 'Error sigma_v zero, must non-zero'
+
+  ! GPU
+  if (USE_GPU) call initialize_gpu_device(myrank,ncuda_devices)
+
+  ! synchronizes
+  call synchronize_all()
+
+  ! mesh slice
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),irregular_element_number(NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 980')
+  ibool(:,:,:,:) = 0
 
   if (NSPEC_IRREGULAR > 0) then
     ! allocate arrays for storing the databases
@@ -327,6 +401,9 @@ program smooth_sem
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1000')
   endif
   if (ier /= 0) stop 'Error allocating arrays for databases'
+  xixstore(:,:,:,:) = 0.0_CUSTOM_REAL; xiystore(:,:,:,:) = 0.0_CUSTOM_REAL; xizstore(:,:,:,:) = 0.0_CUSTOM_REAL
+  etaxstore(:,:,:,:) = 0.0_CUSTOM_REAL; etaystore(:,:,:,:) = 0.0_CUSTOM_REAL; etazstore(:,:,:,:) = 0.0_CUSTOM_REAL
+  gammaxstore(:,:,:,:) = 0.0_CUSTOM_REAL; gammaystore(:,:,:,:) = 0.0_CUSTOM_REAL; gammazstore(:,:,:,:) = 0.0_CUSTOM_REAL
 
   ! mesh node locations
   allocate(xstore(NGLOB_AB),stat=ier)
@@ -336,6 +413,7 @@ program smooth_sem
   allocate(zstore(NGLOB_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1003')
   if (ier /= 0) stop 'Error allocating arrays for mesh nodes'
+  xstore(:) = 0.0_CUSTOM_REAL; ystore(:) = 0.0_CUSTOM_REAL; zstore(:) = 0.0_CUSTOM_REAL
 
   ! material properties
   allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
@@ -345,6 +423,7 @@ program smooth_sem
   allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating rho array 1005')
   if (ier /= 0) stop 'Error allocating arrays for material properties'
+  kappastore(:,:,:,:) = 0.0_CUSTOM_REAL; mustore(:,:,:,:) = 0.0_CUSTOM_REAL; rhostore(:,:,:,:) = 0.0_CUSTOM_REAL
 
   ! material flags
   allocate(ispec_is_acoustic(NSPEC_AB),stat=ier)
@@ -366,6 +445,9 @@ program smooth_sem
                             x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
                             elemsize_min_glob,elemsize_max_glob, &
                             distance_min_glob,distance_max_glob)
+
+  ! broadcast max element size to all processes
+  call bcast_all_singlecr(elemsize_max_glob)
 
   ! outputs infos
   if (myrank == 0) then
@@ -395,33 +477,30 @@ program smooth_sem
   ! for smoothing, we use cell centers to find and locate nearby elements
   !
   ! sets the location of the center of the elements and local points
-  allocate(xl(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1013')
-  allocate(yl(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1014')
-  allocate(zl(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1015')
-  allocate(cx0(NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1016')
-  allocate(cy0(NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1017')
-  allocate(cz0(NSPEC_AB),stat=ier)
+  allocate(xx0(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           yy0(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           zz0(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           cx0(NSPEC_AB), &
+           cy0(NSPEC_AB), &
+           cz0(NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1018')
-  if (ier /= 0) stop 'Error allocating array xl etc.'
+  if (ier /= 0) stop 'Error allocating array xx0 etc.'
+  xx0(:,:,:,:) = 0.0_CUSTOM_REAL; yy0(:,:,:,:) = 0.0_CUSTOM_REAL; zz0(:,:,:,:) = 0.0_CUSTOM_REAL
+  cx0(:) = 0.0_CUSTOM_REAL; cy0(:) = 0.0_CUSTOM_REAL; cz0(:) = 0.0_CUSTOM_REAL
 
   ! sets element center location
-  do ispec = 1, nspec_AB
+  do ispec = 1, NSPEC_AB
 
     DO_LOOP_IJK
       iglob = ibool(INDEX_IJK,ispec)
-      xl(INDEX_IJK,ispec) = xstore(iglob)
-      yl(INDEX_IJK,ispec) = ystore(iglob)
-      zl(INDEX_IJK,ispec) = zstore(iglob)
+      xx0(INDEX_IJK,ispec) = xstore(iglob)
+      yy0(INDEX_IJK,ispec) = ystore(iglob)
+      zz0(INDEX_IJK,ispec) = zstore(iglob)
     ENDDO_LOOP_IJK
 
-    cx0(ispec) = (xl(1,1,1,ispec) + xl(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
-    cy0(ispec) = (yl(1,1,1,ispec) + yl(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
-    cz0(ispec) = (zl(1,1,1,ispec) + zl(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
+    cx0(ispec) = (xx0(1,1,1,ispec) + xx0(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
+    cy0(ispec) = (yy0(1,1,1,ispec) + yy0(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
+    cz0(ispec) = (zz0(1,1,1,ispec) + zz0(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
   enddo
 
   ! reference slice dimension
@@ -435,6 +514,51 @@ program smooth_sem
   dim_x = abs(x_max_ref - x_min_ref)
   dim_y = abs(y_max_ref - y_min_ref)
   dim_z = abs(z_max_ref - z_min_ref)
+
+  ! check smoothing radii
+  sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for Gaussian distribution with standard variance sigma
+  sigma_v2 = 2.0 * sigma_v ** 2
+
+  if (sigma_h2 < 1.e-18) stop 'Error sigma_h2 zero, must non-zero'
+  if (sigma_v2 < 1.e-18) stop 'Error sigma_v2 zero, must non-zero'
+
+  ! adds margin to search radius
+  element_size = max(sigma_h,sigma_v) * 0.5
+
+  ! determines element size/search radius on all processes
+  ! element size should capture neighboring elements when smoothing with very small sigma values
+  ! to smooth among (several) elements (jumps at discontinuities will get averaged).
+  ! the factor sqrt(3) is just to capture diagonal elements as well.
+  if (element_size < sqrt(3.0)*elemsize_max_glob) then
+    element_size = sqrt(3.0)*elemsize_max_glob
+  endif
+
+  ! search radius
+  sigma_h3 = 3.0  * sigma_h + element_size
+  sigma_v3 = 3.0  * sigma_v + element_size
+
+  if (use_kdtree_search) then
+    ! kd-tree search uses a slightly larger constant search radius
+    r_search = max( 1.1d0 * sigma_h3, 1.1d0 * sigma_v3 )
+    r_search_dist_v = sigma_v3
+    r_search_dist_h = sigma_h3
+  else
+    r_search = 0.d0
+  endif
+
+  ! helper variables
+  sigma_h2_inv = 1.0_CUSTOM_REAL / sigma_h2
+  sigma_v2_inv = 1.0_CUSTOM_REAL / sigma_v2
+
+  sigma_h3_sq = sigma_h3 * sigma_h3
+  sigma_v3_sq = sigma_v3 * sigma_v3
+
+  ! theoretic normal value
+  ! (see integral over -inf to +inf of exp[- x*x/(2*sigma) ] = sigma * sqrt(2*pi) )
+  ! note: smoothing is using a Gaussian (ellipsoid for sigma_h /= sigma_v),
+  norm_h = real(2.0*PI*sigma_h**2,kind=CUSTOM_REAL)
+  norm_v = real(sqrt(2.0*PI) * sigma_v,kind=CUSTOM_REAL)
+  norm   = norm_h * norm_v
 
   ! user output
   if (myrank == 0) then
@@ -505,12 +629,14 @@ program smooth_sem
       read(IIN) NSPEC_IRREGULAR_N
 
       ! allocates mesh arrays
-      allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1019')
-      if (ier /= 0) stop 'Error allocating array ibool'
-      allocate(xstore(NGLOB_N),ystore(NGLOB_N),zstore(NGLOB_N),stat=ier)
+      allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
+               xstore(NGLOB_N), &
+               ystore(NGLOB_N), &
+               zstore(NGLOB_N),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1020')
       if (ier /= 0) stop 'Error allocating array xstore etc.'
+      ibool(:,:,:,:) = 0
+      xstore(:) = 0.0_CUSTOM_REAL; ystore(:) = 0.0_CUSTOM_REAL; zstore(:) = 0.0_CUSTOM_REAL
 
       ! ibool file
       read(IIN) ibool
@@ -598,31 +724,99 @@ program smooth_sem
     enddo
   endif
 
-  ! loops over slices
-  ! each process reads in his own neighbor slices and Gaussian filters the values
-  allocate(tk(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1021')
-  allocate(bk(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1022')
-  if (ier /= 0) stop 'Error allocating array tk and bk'
+  ! element search
+  allocate(nsearch_elements(NSPEC_AB),stat=ier)
+  if (ier /= 0) stop 'Error allocating nsearch_elements array'
+  nsearch_elements(:) = 0
 
-  tk = 0.0_CUSTOM_REAL
-  bk = 0.0_CUSTOM_REAL
+  if (use_kdtree_search) then
+    ! search by kd-tree
+    ! user output
+    if (myrank == 0) then
+      print *
+      print *,'using kd-tree search:'
+      if (DO_SEARCH_ELLIP) then
+        print *,'  search radius horizontal: ',sngl(r_search_dist_h)
+        print *,'  search radius vertical  : ',sngl(r_search_dist_v)
+      else
+        print *,'  search sphere radius: ',sngl(r_search)
+      endif
+      print *
+    endif
+
+    ! pre-allocates arrays
+    allocate(kdtree_nodes_location(NDIM,NSPEC_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating kdtree_nodes_location arrays'
+    allocate(kdtree_nodes_index(NSPEC_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating kdtree_nodes_index arrays'
+    kdtree_nodes_location(:,:) = 0.0; kdtree_nodes_index(:) = 0
+
+    ! tree verbosity
+    if (myrank == 0) call kdtree_set_verbose()
+
+  else
+    ! brute-force search
+    ! user output
+    if (myrank == 0) then
+      print *
+      print *,'using brute-force search:'
+      print *,'  search radius horizontal: ',sigma_h3
+      print *,'  search radius vertical  : ',sigma_v3
+      print *
+    endif
+  endif
 
   ! GPU setup
   if (USE_GPU) then
-    call prepare_GPU_smooth(Container,xl,yl,zl,sigma_h2_inv,sigma_v2_inv,sigma_h3_sq,sigma_v3_sq,NSPEC_AB,nker,wgll_cube)
-
-    ! synchronizes all processes
-    call synchronize_all()
+    if (myrank == 0) then
+      print *
+      print *,'preparing GPU arrays:'
+      ! memory estimate
+      ! note: the other slice would have NSPEC_N elements, but for the estimate here we assume NSPEC_N ~ NSPEC_AB
+      ! data_smooth
+      memory_size = NGLL3 * NSPEC_AB * nker * dble(CUSTOM_REAL)
+      ! x_me/y_me/z_me + x_other/y_other/z_other +
+      memory_size = memory_size + 6.d0 * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
+      ! normalisation + integ_factor
+      memory_size = memory_size + 2.d0 * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
+      ! kernel
+      memory_size = memory_size + NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
+      print *,'  minimum memory requested     : ',sngl(memory_size / 1024.d0 / 1024.d0),'MB per process'
+      print *
+    endif
+    ! copies arrays onto GPU
+    call prepare_smooth_gpu(Container,xx0,yy0,zz0,sigma_h2,sigma_v2,sigma_h3,sigma_v3,NSPEC_AB,nker)
   endif
 
+  ! loops over slices
+  ! each process reads in his own neighbor slices and Gaussian filters the values
+  allocate(tk(NGLLX,NGLLY,NGLLZ,NSPEC_AB,nker), &
+           bk(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1022')
+  if (ier /= 0) stop 'Error allocating array tk and bk'
 
+  tk(:,:,:,:,:) = 0.0_CUSTOM_REAL
+  bk(:,:,:,:) = 0.0_CUSTOM_REAL
+
+  ! synchronizes all processes
+  call synchronize_all()
+
+  if (myrank == 0) print *, 'start looping over elements and points for smoothing ...'
+
+  ! synchronizes
+  call synchronize_all()
+
+  ! loops over slices
   do inum = 1,num_slices
 
     iproc = node_list(inum)
 
-    if (myrank == 0) print *,'  reading slice:',iproc
+    if (myrank == 0) then
+      print *
+      print *,'slice ',inum,'out of ',num_slices
+      print *,'  reading slice:',iproc
+      print *
+    endif
 
     ! neighbor database file
     call create_name_database(prname,iproc,LOCAL_PATH)
@@ -639,26 +833,24 @@ program smooth_sem
     read(IIN) NSPEC_IRREGULAR_N
 
     ! allocates arrays
-    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1023')
-    if (ier /= 0) stop 'Error allocating array ibool'
-    allocate(xstore(NGLOB_N),ystore(NGLOB_N),zstore(NGLOB_N),stat=ier)
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
+             xstore(NGLOB_N), &
+             ystore(NGLOB_N), &
+             zstore(NGLOB_N),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1024')
     if (ier /= 0) stop 'Error allocating array xstore etc.'
+    ibool(:,:,:,:) = 0
+    xstore(:) = 0.0_CUSTOM_REAL; ystore(:) = 0.0_CUSTOM_REAL; zstore(:) = 0.0_CUSTOM_REAL
 
     if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
       if (NSPEC_IRREGULAR_N > 0) then
-        allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR_N),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1025')
-        if (ier /= 0) stop 'Error allocating array jacobian'
-        allocate(dummy(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+        allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR_N), &
+                 dummy(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 1026')
         if (ier /= 0) stop 'Error allocating array dummy'
       else
-        allocate(jacobianstore(1,1,1,1),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1027')
-        if (ier /= 0) stop 'Error allocating array jacobian'
-        allocate(dummy(1,1,1,1),stat=ier)
+        allocate(jacobianstore(1,1,1,1), &
+                 dummy(1,1,1,1),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 1028')
         if (ier /= 0) stop 'Error allocating array dummy'
       endif
@@ -695,69 +887,243 @@ program smooth_sem
     close(IIN)
 
     ! get the location of the center of the elements and local points
-    allocate(xx(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1030')
-    allocate(yy(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1031')
-    allocate(zz(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1032')
-    allocate(cx(NSPEC_N),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1033')
-    allocate(cy(NSPEC_N),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1034')
-    allocate(cz(NSPEC_N),stat=ier)
+    allocate(integ_factor(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
+             xx(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
+             yy(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
+             zz(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
+             cx(NSPEC_N), &
+             cy(NSPEC_N), &
+             cz(NSPEC_N),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1035')
     if (ier /= 0) stop 'Error allocating array xx etc.'
+    integ_factor(:,:,:,:) = 0.0_CUSTOM_REAL
+    xx(:,:,:,:) = 0.0_CUSTOM_REAL; yy(:,:,:,:) = 0.0_CUSTOM_REAL; zz(:,:,:,:) = 0.0_CUSTOM_REAL
+    cx(:) = 0.0_CUSTOM_REAL; cy(:) = 0.0_CUSTOM_REAL; cz(:) = 0.0_CUSTOM_REAL
 
     ! sets element center location
-    do ispec = 1, NSPEC_N
+    do ispec2 = 1, NSPEC_N
 
       DO_LOOP_IJK
-
-        iglob = ibool(INDEX_IJK,ispec)
-        xx(INDEX_IJK,ispec) = xstore(iglob)
-        yy(INDEX_IJK,ispec) = ystore(iglob)
-        zz(INDEX_IJK,ispec) = zstore(iglob)
-
+        iglob = ibool(INDEX_IJK,ispec2)
+        xx(INDEX_IJK,ispec2) = xstore(iglob)
+        yy(INDEX_IJK,ispec2) = ystore(iglob)
+        zz(INDEX_IJK,ispec2) = zstore(iglob)
       ENDDO_LOOP_IJK
 
       ! calculate element center location
-      cx(ispec) = (xx(1,1,1,ispec) + xx(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
-      cy(ispec) = (yy(1,1,1,ispec) + yy(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
-      cz(ispec) = (zz(1,1,1,ispec) + zz(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
+      cx(ispec2) = (xx(1,1,1,ispec2) + xx(NGLLX,NGLLY,NGLLZ,ispec2)) * 0.5_CUSTOM_REAL
+      cy(ispec2) = (yy(1,1,1,ispec2) + yy(NGLLX,NGLLY,NGLLZ,ispec2)) * 0.5_CUSTOM_REAL
+      cz(ispec2) = (zz(1,1,1,ispec2) + zz(NGLLX,NGLLY,NGLLZ,ispec2)) * 0.5_CUSTOM_REAL
+
+      ! integration factors
+      if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
+        ! adds GLL integration weights
+        ! uses volume assigned to GLL points
+        ispec_irreg = irregular_element_number(ispec2)
+        if (ispec_irreg == 0) jacobianl = jacobian_regular
+        do k = 1,NGLLZ
+          do j = 1,NGLLY
+            do i = 1,NGLLX
+              if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+              integ_factor(i,j,k,ispec2) = jacobianl * wgll_cube(i,j,k)
+            enddo
+          enddo
+        enddo
+      else
+        ! no volume, only distance weights
+        integ_factor(:,:,:,ispec2) = 1.0_CUSTOM_REAL
+      endif
     enddo
 
     deallocate(xstore,ystore,zstore)
     deallocate(ibool)
-
-    ! data file
-    write(prname,'(a,i6.6,a)') trim(input_dir)//'/proc',iproc,'_'
-    local_data_file = trim(prname) // trim(kernel_name) // '.bin'
-
-    open(unit = IIN,file = trim(local_data_file),status='old',action='read',form ='unformatted',iostat=ier)
-    if (ier /= 0) then
-      print *,'Error opening data file: ',trim(local_data_file)
-      stop 'Error opening data file'
+    if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
+      deallocate(jacobianstore,dummy)
+      deallocate(irregular_element_number)
     endif
 
-    allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+    allocate(kernel(NGLLX,NGLLY,NGLLZ,NSPEC_N,nker),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1036')
     if (ier /= 0) stop 'Error allocating dat array'
+    kernel(:,:,:,:,:) = 0.0_CUSTOM_REAL
 
-    read(IIN) dat
-    close(IIN)
+    ! loops over input kernels
+    do iker = 1,nker
+      kernel_name = kernel_names(iker)
+      ! user output
+      if (myrank == 0) then
+        print *,'  kernel ',iker,'out of ',nker
+        print *,'  reading data file: proc = ',iproc,' name = ',trim(kernel_name)
+        print *
+      endif
 
-    ! statistics
-    if (iproc == myrank) then
-      min_old = minval(dat(:,:,:,:))
-      max_old = maxval(dat(:,:,:,:))
+      ! data file
+      write(prname,'(a,i6.6,a)') trim(input_dir)//'/proc',iproc,'_'
+      local_data_file = trim(prname) // trim(kernel_name) // '.bin'
+
+      open(unit = IIN,file = trim(local_data_file),status='old',action='read',form ='unformatted',iostat=ier)
+      if (ier /= 0) then
+        print *,'Error opening data file: ',trim(local_data_file)
+        stop 'Error opening data file'
+      endif
+
+
+      read(IIN) kernel(:,:,:,:,iker)
+      close(IIN)
+
+      ! statistics
+      if (iproc == myrank) then
+        min_old(iker) = minval(kernel(:,:,:,:,iker))
+        max_old(iker) = maxval(kernel(:,:,:,:,iker))
+      endif
+    enddo
+    if (myrank == 0) print *
+
+    ! kdtree search setup
+    if (use_kdtree_search) then
+      ! search by kd-tree
+
+      ! set number of tree nodes
+      kdtree_num_nodes = NSPEC_N
+
+      ! checks
+      if (kdtree_num_nodes <= 0) stop 'Error number of kd-tree nodes is zero, please check NSPEC_N'
+
+      ! allocates tree arrays
+      if (allocated(kdtree_nodes_index) .and. NSPEC_N /= size(kdtree_nodes_index)) then
+        ! re-allocate w/ different size
+        deallocate(kdtree_nodes_index,kdtree_nodes_location)
+        ! allocates
+        allocate(kdtree_nodes_location(NDIM,kdtree_num_nodes),stat=ier)
+        if (ier /= 0) stop 'Error allocating kdtree_nodes_location arrays'
+        allocate(kdtree_nodes_index(kdtree_num_nodes),stat=ier)
+        if (ier /= 0) stop 'Error allocating kdtree_nodes_index arrays'
+      endif
+
+      ! prepares search arrays, each element takes its midpoint for tree search
+      kdtree_nodes_index(:) = 0
+      kdtree_nodes_location(:,:) = 0.0
+
+      ! fills kd-tree arrays
+      do ispec2 = 1,NSPEC_N
+        ! adds node index ( index points to same ispec for all internal GLL points)
+        kdtree_nodes_index(ispec2) = ispec2
+
+        ! adds node location
+        kdtree_nodes_location(1,ispec2) = cx(ispec2)
+        kdtree_nodes_location(2,ispec2) = cy(ispec2)
+        kdtree_nodes_location(3,ispec2) = cz(ispec2)
+      enddo
+
+      ! creates kd-tree for searching
+      call kdtree_setup()
+
+      ! pre-determines number of search elements
+      ! gets search range
+      num_elem_local_max = 0
+      do ispec = 1, NSPEC_AB
+        ! element center position
+        center_x0 = cx0(ispec)
+        center_y0 = cy0(ispec)
+        center_z0 = cz0(ispec)
+
+        ! initializes
+        num_elem_local = 0
+        xyz_target(1) = center_x0
+        xyz_target(2) = center_y0
+        xyz_target(3) = center_z0
+
+        ! counts nearest neighbors
+        if (DO_SEARCH_ELLIP) then
+          ! (within ellipsoid)
+          call kdtree_count_nearest_n_neighbors_ellip(xyz_target,r_search_dist_v,r_search_dist_h,num_elem_local)
+        else
+          ! (within search sphere)
+          call kdtree_count_nearest_n_neighbors(xyz_target,r_search,num_elem_local)
+        endif
+
+        ! checks that at least a single element was choosen
+        if (iproc == myrank) then
+          if (num_elem_local < 1) stop 'Error no local search element found'
+        endif
+
+        ! debug output
+        if (DEBUG) then
+          if (myrank == 0) then
+            ! user info
+            if (ispec < 10) then
+              print *,'  total number of search elements: ',num_elem_local,'ispec',ispec
+            endif
+          endif
+        endif
+
+        ! sets n-search number of nodes
+        nsearch_elements(ispec) = num_elem_local
+
+        ! maximum
+        if (num_elem_local_max < num_elem_local) num_elem_local_max = num_elem_local
+      enddo
+
+      ! user output
+      if (myrank == 0) then
+        print *,'  maximum number of local search elements: ',num_elem_local_max
+        print *
+      endif
+
+      ! allocates search array
+      allocate(kdtree_search_index(num_elem_local_max),stat=ier)
+      if (ier /= 0) stop 'Error allocating array kdtree_search_index'
+      kdtree_search_index(:) = 0
+
+      ! debug output
+      if (DEBUG) then
+        if (myrank == 0) then
+          ! file output
+          ! outputs search elements with integer flags
+          allocate(ispec_flag(NSPEC_AB))
+          ispec_flag(:) = 0
+
+          ! debug element (tmp_ispec_dbg)
+          num_elem_local = nsearch_elements(tmp_ispec_dbg)
+          xyz_target(1) = cx0(ispec)
+          xyz_target(2) = cy0(ispec)
+          xyz_target(3) = cz0(ispec)
+
+          ! finds closest point in target chunk
+          kdtree_search_index(:) = 0
+          if (DO_SEARCH_ELLIP) then
+            ! (within ellipsoid)
+            call kdtree_get_nearest_n_neighbors_ellip(xyz_target,r_search_dist_v,r_search_dist_h,num_elem_local)
+          else
+            ! (within search sphere)
+            call kdtree_get_nearest_n_neighbors(xyz_target,r_search,num_elem_local)
+          endif
+
+          ! sets flags
+          do ielem = 1,num_elem_local
+            i = kdtree_search_index(ielem)
+            ispec_flag(i) = ielem
+          enddo
+
+          ! writes out vtk file for debugging
+          write(filename,'(a,i4.4,a,i6.6)') trim(LOCAL_PATH)//'/search_elem',tmp_ispec_dbg,'_proc',iproc
+          call write_VTK_data_elem_i(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore, &
+                                     ibool,ispec_flag,filename)
+
+          print *,'file written: ',trim(filename)//'.vtk'
+          deallocate(ispec_flag)
+        endif
+      endif
+    else
+      ! brute-force search
+      ! always loop over whole mesh slice
+      nsearch_elements(:) = NSPEC_N
     endif
 
-    ! finds closest elements for smoothing
-    !if (myrank==0) print *, '  start looping over elements and points for smoothing ...'
+
+    ! smooth
     if (USE_GPU) then
-      call compute_smooth(Container,jacobianstore,jacobian_regular,irregular_element_number, &
-                          xx,yy,zz,dat,NSPEC_N,NSPEC_IRREGULAR_N)
+      call compute_smooth_gpu(Container,kernel,integ_factor,xx,yy,zz,NSPEC_N)
     else
       ! loop over elements to be smoothed in the current slice
       do ispec = 1, NSPEC_AB
@@ -767,8 +1133,39 @@ program smooth_sem
         center_y0 = cy0(ispec)
         center_z0 = cz0(ispec)
 
+        ! search range
+        num_elem_local = nsearch_elements(ispec)
+
+        ! sets number of elements to loop over
+        if (use_kdtree_search) then
+          ! sets search array
+          if (num_elem_local > 0) then
+            ! sets n-search number of nodes
+            kdtree_search_num_nodes = num_elem_local
+            ! finds closest point in target chunk
+            xyz_target(1) = center_x0
+            xyz_target(2) = center_y0
+            xyz_target(3) = center_z0
+            if (DO_SEARCH_ELLIP) then
+              ! (within ellipsoid)
+              call kdtree_get_nearest_n_neighbors_ellip(xyz_target,r_search_dist_v,r_search_dist_h,num_elem_local)
+            else
+              ! (within search sphere)
+              call kdtree_get_nearest_n_neighbors(xyz_target,r_search,num_elem_local)
+            endif
+          endif
+        endif
+
         ! --- only double loop over the elements in the search radius ---
-        do ispec2 = 1, NSPEC_N
+        do ielem = 1, num_elem_local
+          ! search element
+          if (use_kdtree_search) then
+            ! kd-tree search elements
+            ispec2 = kdtree_search_index(ielem)
+          else
+            ! brute-force search
+            ispec2 = ielem
+          endif
 
           ! search element center position
           center_x = cx(ispec2)
@@ -782,28 +1179,14 @@ program smooth_sem
           ! checks distance between centers of elements
           if (dist_h > sigma_h3_sq .or. dist_v > sigma_v3_sq) cycle
 
-          ! integration factors
-          if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
-            ispec_irreg = irregular_element_number(ispec2)
-            if (ispec_irreg == 0) jacobianl = jacobian_regular
-            do k=1,NGLLZ
-              do j=1,NGLLY
-                do i=1,NGLLX
-                  if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
-                  factor(i,j,k) = jacobianl * wgll_cube(i,j,k)
-                enddo
-              enddo
-            enddo
-          endif
-
           ! loop over GLL points of the elements in current slice (ispec)
           DO_LOOP_IJK
 
             ! reference location
             ! current point (i,j,k,ispec) location, Cartesian coordinates
-            x0 = xl(INDEX_IJK,ispec)
-            y0 = yl(INDEX_IJK,ispec)
-            z0 = zl(INDEX_IJK,ispec)
+            x0 = xx0(INDEX_IJK,ispec)
+            y0 = yy0(INDEX_IJK,ispec)
+            z0 = zz0(INDEX_IJK,ispec)
 
             ! calculate weights based on Gaussian smoothing
             call smoothing_weights_vec(x0,y0,z0,sigma_h2_inv,sigma_v2_inv,exp_val, &
@@ -811,67 +1194,131 @@ program smooth_sem
 
             ! adds GLL integration weights
             if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
-              exp_val(:,:,:) = exp_val(:,:,:) * factor(:,:,:)
+              !exp_val(:,:,:) = exp_val(:,:,:) * integ_factor(:,:,:,ispec2)
+              ! explicit loop
+              DO_LOOP_IJK2
+                exp_val(INDEX_IJK2) = exp_val(INDEX_IJK2) * integ_factor(INDEX_IJK2,ispec2)
+              ENDDO_LOOP_IJK2
             endif
 
-            ! adds contribution of element ispec2 to smoothed kernel values
-            tk(INDEX_IJK,ispec) = tk(INDEX_IJK,ispec) + sum(exp_val(:,:,:) * dat(:,:,:,ispec2))
+            ! intrinsic sum
+            !contrib_weights = sum(exp_val(:,:,:))
+            ! explicit loop
+            contrib_weights = 0.0_CUSTOM_REAL
+            DO_LOOP_IJK2
+              contrib_weights = contrib_weights + exp_val(INDEX_IJK2)
+            ENDDO_LOOP_IJK2
 
             ! normalization, integrated values of Gaussian smoothing function
-            bk(INDEX_IJK,ispec) = bk(INDEX_IJK,ispec) + sum(exp_val(:,:,:))
+            bk(INDEX_IJK,ispec) = bk(INDEX_IJK,ispec) + contrib_weights
+
+            ! adds contribution of element ispec2 to smoothed kernel values
+            do iker = 1,nker
+              ! kernel contributions
+              !contrib_kernel = sum(exp_val(:,:,:) * kernel(:,:,:,ispec2,iker))
+              ! explicit loop (could be faster)
+              contrib_kernel = 0.0_CUSTOM_REAL
+              DO_LOOP_IJK2
+                contrib_kernel = contrib_kernel + exp_val(INDEX_IJK2) * kernel(INDEX_IJK2,ispec2,iker)
+              ENDDO_LOOP_IJK2
+
+              ! new kernel value
+              tk(INDEX_IJK,ispec,iker) = tk(INDEX_IJK,ispec,iker) + contrib_kernel
+            enddo
 
           ENDDO_LOOP_IJK
 
-        enddo ! ispec2
+        enddo ! ielem
       enddo ! ispec
 
     endif ! GPU_MODE
 
     ! frees arrays
-    deallocate(dat)
+    deallocate(kernel)
+    deallocate(integ_factor)
     deallocate(xx,yy,zz)
     deallocate(cx,cy,cz)
 
-    if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
-      deallocate(irregular_element_number)
-      deallocate(jacobianstore)
-      deallocate(dummy)
+    ! deletes search tree nodes
+    if (use_kdtree_search) then
+      ! frees search index array
+      deallocate(kdtree_search_index)
+      call kdtree_delete()
     endif
+
+    if (myrank == 0) print *
 
   enddo ! iproc
 
-  ! normalizes/scaling factor
-  if (myrank == 0) then
-    print *
-    print *,'Scaling values: min/max = ',minval(bk),maxval(bk)
+  ! frees memory
+  if (use_kdtree_search) then
+    deallocate(kdtree_nodes_location)
+    deallocate(kdtree_nodes_index)
   endif
 
-  allocate(dat_smooth(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  ! user output
+  if (myrank == 0) then
+    print *
+    print *,'normalizing smoothed kernel values...'
+    print *
+  endif
+
+  ! synchronizes
+  call synchronize_all()
+
+  ! outputs infos for normalizes/scaling factor
+  if (myrank == 0) then
+    if (.not. USE_GPU) then
+      ! arrays bk,tk only available for CPU-only calculations
+      print *, 'Scaling values:'
+      print *, '  bk min/max = ',minval(bk),maxval(bk)
+      print *, '  theoretical norm = ',norm
+      do iker = 1,nker
+        print *, '  ',trim(kernel_names(iker)),' tk min/max = ',minval(tk(:,:,:,:,iker)),maxval(tk(:,:,:,:,iker))
+      enddo
+      print *
+    endif
+  endif
+
+  allocate(kernel_smooth(NGLLX,NGLLY,NGLLZ,NSPEC_AB,nker),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1037')
   if (ier /= 0) stop 'Error allocating array dat_smooth'
-
-  dat_smooth(:,:,:,:) = 0.0_CUSTOM_REAL
+  kernel_smooth(:,:,:,:,:) = 0.0_CUSTOM_REAL
 
   if (USE_GPU) then
-    call get_smooth(Container,dat_smooth)
+    ! on GPU
+    call get_smooth_gpu(Container,kernel_smooth)
   else
+    ! on CPU
     do ispec = 1, NSPEC_AB
 
+      ! avoids division by zero
       DO_LOOP_IJK
+        if (abs(bk(INDEX_IJK,ispec)) < 1.d-24) bk(INDEX_IJK,ispec) = 1.0_CUSTOM_REAL
 
-        ! checks the normalization criterion
-        !if (abs(bk(i,j,k,ispec) - norm) > 1.e-4) then
+        !if (abs(bk(INDEX_IJK,ispec)) < 1.e-18) then
         !  print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
         !endif
-        if (abs(bk(INDEX_IJK,ispec)) < 1.e-18) then
-          print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
-        endif
-
-        ! normalizes smoothed kernel values by integral value of Gaussian weighting
-        dat_smooth(INDEX_IJK,ispec) = tk(INDEX_IJK,ispec) / bk(INDEX_IJK,ispec)
-
       ENDDO_LOOP_IJK
 
+      ! loops over kernels
+      do iker = 1,nker
+
+        DO_LOOP_IJK
+          ! checks the normalization criterion
+          !if (abs(bk(i,j,k,ispec) - norm) > 1.e-4) then
+          !  print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
+          !endif
+          !if (abs(bk(INDEX_IJK,ispec)) < 1.e-18) then
+          !  print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
+          !endif
+
+          ! normalizes smoothed kernel values by integral value of Gaussian weighting
+          kernel_smooth(INDEX_IJK,ispec,iker) = tk(INDEX_IJK,ispec,iker) / bk(INDEX_IJK,ispec)
+
+        ENDDO_LOOP_IJK
+
+      enddo
     enddo !  ispec
 
   endif ! GPU_MODE
@@ -879,58 +1326,74 @@ program smooth_sem
   ! frees memory
   deallocate(tk,bk)
 
-  ! statistics
-  min_new = minval(dat_smooth(:,:,:,:))
-  max_new = maxval(dat_smooth(:,:,:,:))
-
   ! file output
-  ! smoothed kernel file name
-  write(ks_file,'(a,i6.6,a)') trim(output_dir)//'/proc',myrank,'_'//trim(kernel_name)//'_smooth.bin'
+  ! output
+  do iker = 1,nker
+    ! name
+    kernel_name = kernel_names(iker)
+    if (myrank == 0) then
+      print *,'smoothed: ',trim(kernel_name)
+    endif
 
-  open(IOUT,file=trim(ks_file),status='unknown',form='unformatted',iostat=ier)
-  if (ier /= 0) stop 'Error opening smoothed kernel file'
-  write(IOUT) dat_smooth(:,:,:,:)
-  close(IOUT)
-  if (myrank == 0) print *,'written: ',trim(ks_file)
+    ! smoothed kernel file name
+    write(ks_file,'(a,i6.6,a)') trim(output_dir)//'/proc',myrank,'_'//trim(kernel_name)//'_smooth.bin'
+
+    open(IOUT,file=trim(ks_file),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'Error opening smoothed kernel file'
+    write(IOUT) kernel_smooth(:,:,:,:,iker)
+    close(IOUT)
+    if (myrank == 0) print *,'written: ',trim(ks_file)
+
+    ! statistics
+    min_new = minval(kernel_smooth(:,:,:,:,iker))
+    max_new = maxval(kernel_smooth(:,:,:,:,iker))
+
+    ! the minimum/maximum value for the smoothed kernel
+    call min_all_cr(min_old(iker), min_old_all)
+    call min_all_cr(min_new, min_new_all)
+    call max_all_cr(max_old(iker), max_old_all)
+    call max_all_cr(max_new, max_new_all)
+
+    if (myrank == 0) then
+      print *
+      print *, '  Minimum data value before smoothing = ', min_old_all
+      print *, '  Minimum data value after smoothing  = ', min_new_all
+      print *
+      print *, '  Maximum data value before smoothing = ', max_old_all
+      print *, '  Maximum data value after smoothing  = ', max_new_all
+      print *
+    endif
+    ! synchronizes
+    call synchronize_all()
+  enddo
 
   ! frees memory
-  deallocate(dat_smooth)
-
-  ! synchronizes
-  call synchronize_all()
-
-  ! the min/maximum value for the smoothed kernel
-  call min_all_cr(min_old, min_old_all)
-  call min_all_cr(min_new, min_new_all)
-  call max_all_cr(max_old, max_old_all)
-  call max_all_cr(max_new,max_new_all)
-
-  if (myrank == 0) then
-    print *
-    print *,'Minimum data value before smoothing = ', min_old_all
-    print *,'Minimum data value after smoothing  = ', min_new_all
-    print *
-    print *,'Maximum data value before smoothing = ', max_old_all
-    print *,'Maximum data value after smoothing  = ', max_new_all
-    print *
-    close(IMAIN)
-  endif
+  deallocate(kernel_smooth)
 
   ! timing
-  t2 = wtime()
-
   if (myrank == 0) then
-    if (USE_GPU) then
-      print *,'Computation time with GPU:',t2-t1
-    else
-      print *,'Computation time with CPU:',t2-t1
-    endif
+    tCPU = wtime() - time_start_all
+    ! format time
+    int_tCPU = int(tCPU)
+    ihours = int_tCPU / 3600
+    iminutes = (int_tCPU - 3600*ihours) / 60
+    iseconds = int_tCPU - 3600*ihours - 60*iminutes
+    write(*,*)
+    write(*,*) 'Elapsed time in seconds  = ',tCPU
+    write(*,"(' Elapsed time in hh:mm:ss = ',i6,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
+    write(*,*)
   endif
+
+  ! user output
+  if (myrank == 0) print *, 'all done'
+
+  ! open main output file, only written to by process 0
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
 
   ! stop all the processes and exit
   call finalize_mpi()
 
-  contains
+contains
 !
 ! -----------------------------------------------------------------------------
 !
@@ -947,7 +1410,7 @@ program smooth_sem
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: dist_h_sq,dist_v_sq
-  real(kind=CUSTOM_REAL) :: val
+  real(kind=CUSTOM_REAL) :: val,val_Gaussian
   real(kind=CUSTOM_REAL) :: x1,y1,z1
 #ifdef FORCE_VECTORIZATION
   integer :: ijk
@@ -970,10 +1433,18 @@ program smooth_sem
     dist_h_sq = (x0-x1)*(x0-x1) + (y0-y1)*(y0-y1)
 
     ! Gaussian function
-    val = exp(- dist_h_sq * sigma_h2_inv - dist_v_sq * sigma_v2_inv)
+    val = - dist_h_sq * sigma_h2_inv - dist_v_sq * sigma_v2_inv
+
+    ! limits to single precision
+    if (val < - 86.0_CUSTOM_REAL) then
+      ! smaller than numerical precision: exp(-86) < 1.e-37
+      val_Gaussian = 0.0_CUSTOM_REAL
+    else
+      val_Gaussian = exp(val)
+    endif
 
     ! stores values in element array
-    exp_val(INDEX_IJK) = val
+    exp_val(INDEX_IJK) = val_Gaussian
 
   ENDDO_LOOP_IJK
 

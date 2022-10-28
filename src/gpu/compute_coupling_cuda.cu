@@ -45,15 +45,14 @@ void FC_FUNC_(compute_coupling_ac_el_cuda,
   //double start_time = get_time_val();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
-  int iphase            = *iphasef;
-  int num_coupling_ac_el_faces  = *num_coupling_ac_el_facesf;
-  int backward_simulation;
+  int iphase = *iphasef;
+  int num_coupling_ac_el_faces = *num_coupling_ac_el_facesf;
 
   // only add these contributions in first pass
   if (iphase != 1) return;
 
   // checks if anything to do
-  if (*num_coupling_ac_el_facesf == 0) return;
+  if (num_coupling_ac_el_faces == 0) return;
 
   // way 1: exact blocksize to match NGLLSQUARE
   int blocksize = NGLL2;
@@ -67,6 +66,8 @@ void FC_FUNC_(compute_coupling_ac_el_cuda,
   // sets gpu arrays
   field* potential_dot_dot;
   realw* displ;
+  int backward_simulation;
+
   if (*FORWARD_OR_ADJOINT == 1) {
     // forward fields
     backward_simulation = 0;
@@ -140,11 +141,14 @@ void FC_FUNC_(compute_coupling_el_ac_cuda,
   //double start_time = get_time_val();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
-  int iphase            = *iphasef;
-  int num_coupling_ac_el_faces  = *num_coupling_ac_el_facesf;
+  int iphase = *iphasef;
+  int num_coupling_ac_el_faces = *num_coupling_ac_el_facesf;
 
   // only add these contributions in first pass
   if (iphase != 1) return;
+
+  // checks if anything to do
+  if (num_coupling_ac_el_faces == 0) return;
 
   // way 1: exact blocksize to match NGLLSQUARE
   int blocksize = NGLL2;
@@ -269,7 +273,7 @@ void FC_FUNC_(compute_coupling_ocean_cuda,
   }
 
   // initializes temporary array to zero
-  gpuMemset_int(mp->d_updated_dof_ocean_load,0,mp->NGLOB_AB);
+  gpuMemset_int(mp->d_updated_dof_ocean_load,mp->NGLOB_AB,0);
 
   GPU_ERROR_CHECKING("before kernel compute_coupling_ocean_cuda");
 

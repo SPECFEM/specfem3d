@@ -313,7 +313,11 @@ by the code unless \texttt{ATTENUATION} is set. If you want a model
 with no \texttt{Qmu} attenuation, both set \texttt{ATTENUATION} to
 \texttt{.false.} in the \texttt{Par\_file} and set \texttt{Qmu} to
 9999 here. If you want a model with no \texttt{Qkappa} attenuation, set \texttt{Qkappa} to 9999 here.
-Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.
+
+To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf} and the helper code\\
+\texttt{conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90} in folder
+\texttt{utils/attenuation/}.
 
 \item For tomographic velocity models, please read Chapter \ref{cha:-Changing-the}
 and Section \ref{sec:Using-tomographic} `Using external tomographic
@@ -323,7 +327,7 @@ Earth models' for further details.
 coordinates of the mesh element corners.
 \item [{mesh\_file}] Contains the mesh element connectivity. The hexahedral
 elements can have 8 or 27 nodes.\\
- See picture doc/mesh\_numbering\_convention/numbering\_convention\_27\_nodes.jpg
+ See picture \texttt{doc/mesh\_numbering\_convention/numbering\_convention\_27\_nodes.jpg}
 to see\\
  in which (standard) order the points must be cited. In the case of
 8 nodes, just include the first 8 points.
@@ -410,13 +414,13 @@ source file in directory \texttt{src/check\_mesh\_quality\_CUBIT\_Abaqus/}.
 Then, in the main directory, type
 {\small
 \begin{verbatim}
-make xcheck_mesh_quality
+  make xcheck_mesh_quality
 \end{verbatim}
 }
 and use
 {\small
 \begin{verbatim}
-./bin/xcheck_mesh_quality
+  ./bin/xcheck_mesh_quality
 \end{verbatim}
 }
 to generate an %not supported: AVS output file (\texttt{\small AVS\_meshquality.inp} in AVS UCD format) or
@@ -450,7 +454,7 @@ resulting from the placement of adjacent elements on different processors.
 which provides efficient static mapping, graph and mesh partitioning
 routines. SCOTCH is a free software package developed by Fran\c{c}ois
 Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable
-from the web page \url{https://gforge.inria.fr/projects/scotch/}.\\
+from the web page \url{https://gitlab.inria.fr/scotch/scotch}.\\
 
 
 In most cases, the configuration with \texttt{./configure~FC=ifort}
@@ -486,10 +490,11 @@ scaling up to 150,000 processor cores in shown for instance in
 \end{figure}
 
 
+\noindent
 When you are ready to compile, in the main directory type
 {\small
 \begin{verbatim}
-make xdecompose_mesh
+  make xdecompose_mesh
 \end{verbatim}
 }
 \noindent
@@ -530,8 +535,9 @@ the program.
 
 In case you successfully ran the configuration script, you are also
 ready to compile the internal mesher. This is an alternative to CUBIT
-for the mesh generation of relatively simple models.
-%
+for the mesh generation of relatively simple models.\\
+
+
 \begin{figure}[htbp]
 \begin{centering}
 \includegraphics[scale=0.5]{figures/socal_map_mpi.pdf}
@@ -548,22 +554,24 @@ of elements. In this example we use $5^{2}=25$ processors. }
 In the main directory, type
 {\small
 \begin{verbatim}
-make xmeshfem3D
+  make xmeshfem3D
 \end{verbatim}
 }
 \noindent
 If all paths and flags have been set correctly, the mesher should
 now compile and produce the executable \texttt{bin/xmeshfem3D}. Please
 note that \texttt{xmeshfem3D} must be called directly from the main
-directory, as most of the binaries of the package.
+directory, as most of the binaries of the package.\\
+
 
 Input for the mesh generation program is provided through the parameter
 file \texttt{Mesh\_Par\_file}, which resides in the subdirectory \texttt{DATA/meshfem3D\_files/}.
-(to see how to use it, see the EXAMPLES specific to the internal mesher in directory \texttt{EXAMPLES/meshfem3D\_examples/}.
+(To see how to use it, see the EXAMPLES specific to the internal mesher in directory \texttt{EXAMPLES/meshfem3D\_examples/}.)
 Before running the mesher, a number of parameters need to be set in
 the \texttt{Mesh\_Par\_file}. This requires a basic understanding
 of how the SEM is implemented, and we encourage you to read \citet{KoVi98,KoTr99}
-and \citet{KoLiTrSuStSh04}.
+and \citet{KoLiTrSuStSh04}.\\
+
 
 The mesher and the solver use UTM coordinates internally, therefore
 you need to define the zone number for the UTM projection (e.g., zone
@@ -573,8 +581,12 @@ round them off to define a square mesh in UTM coordinates. When running
 benchmarks on rectangular models, turn the UTM projection off by using
 the flag \texttt{\small SUPPRESS\_UTM\_PROJECTION},
 in which case all `longitude' parameters simply refer to the $x$~axis, and
-all `latitude' parameters simply refer to the $y$~axis. To run the
-mesher for a global simulation, the following parameters need to be
+all `latitude' parameters simply refer to the $y$~axis.\\
+
+
+\noindent
+To run the
+internal mesher for a regional simulation, the following parameters need to be
 set in the \texttt{\small Mesh\_Par\_file}:
 %
 \begin{description}
@@ -690,25 +702,59 @@ further details.
 %
 \item [{\texttt{NMATERIALS}}] The number of different materials in your
 model. In the following lines, each material needs to be defined as:
-
+%
+\begin{itemize}[leftmargin=-8ex,itemindent=8ex]
+\item[] acoustic/elastic material
+{\small
 \begin{verbatim}
-material_ID rho vp vs Q anisotropy_flag domain_ID
+material_ID rho vp vs Qkappa Qmu anisotropy_flag domain_ID
 \end{verbatim}
-
-\noindent
-where
+}
+\item[] poroelastic material
+{\small
+\begin{verbatim}
+material_id rho_s rho_f phi tort kxx kxy kxz kyy kyz kzz kappa_s kappa_f kappa_fr eta mu_fr domain_id
+\end{verbatim}
+}
+\item[] tomographic
+{\small
+\begin{verbatim}
+material_id type-keyword domain-name tomo-filename tomo_id domain_id
+\end{verbatim}
+}
+\end{itemize}
+For acoustic and elastic material, you would specify
 \begin{itemize}
-\item \texttt{Q} : quality factor (0=no attenuation) for shear attenuation $Q_{\mu}$
+\item \texttt{material\_ID} : a material ID number (1,2,..) to identify the material for the following mesh region selection.
+\item \texttt{rho}, \texttt{vp}, \texttt{vs} : density (in $kg/m^3$), $V_p$ and $V_s$ (in $m/s$) wave speeds
+\item \texttt{Qkappa, Qmu} : quality factor (0=no attenuation) for bulk $Q_{\kappa}$ and shear attenuation $Q_{\mu}$
 \item \texttt{anisotropy\_flag} : 0=no anisotropy / 1,2,.. check with implementation
 in \texttt{aniso\_model.f90}
-\item \texttt{domain\_id} : 1=acoustic / 2=elastic
+\item \texttt{domain\_id} : 1=acoustic / 2=elastic / 3=poroelastic
 \end{itemize}
+\noindent
+For poroelastic materials, you would specify the corresponding poroelastic properties.
+Please read the section below for more on poroelastic parameters.\\
+
+\noindent
+For tomographic models, you would need to specify a negative \texttt{material\_id} (-1,-2,..)
+and a corresponding \texttt{domain\_id} for either acoustic (1) or elastic (2) domains. For example a line like:
+{\small
+\begin{verbatim}
+-1 tomography elastic tomography_model.xyz 0 2
+\end{verbatim}
+}
+where the specifications \texttt{tomography}, \texttt{tomography\_model.xyz}, \texttt{0} are always used by default and
+the keyword \texttt{elastic} or \texttt{acoustic} will be defined internally according to your specified \texttt{domain\_id}.
+%
 \item [{\texttt{NREGIONS}}] The number of regions in the mesh. In the following
 lines, because the mesh is regular or 'almost regular', each region
 is defined as:
+{\small
 \begin{verbatim}
 NEX_XI_BEGIN NEX_XI_END NEX_ETA_BEGIN NEX_ETA_END NZ_BEGIN NZ_END material_ID
 \end{verbatim}
+}
 \end{description}
 %
 The \texttt{INTERFACES\_FILE} parameter of \texttt{Mesh\_Par\_File}
@@ -734,44 +780,96 @@ At the end of this file, you simply need to set the number of spectral
 elements in the vertical direction for each layer. We provide a few
 models in the {\texttt{EXAMPLES/}} directory.\\
 
-
-Finally, depending on your system, you might need to provide a file
-that tells MPI what compute nodes to use for the simulations. The
-file must have a number of entries (one entry per line) at least equal
-to the number of processors needed for the run. A sample file is provided
-in the file \texttt{mymachines}. This file is not used by the mesher
-or solver, but is required by the \texttt{go\_mesher} and \texttt{go\_solver}
-default job submission scripts. See Chapter~\ref{cha:Scheduler}
-for information about running the code on a system with a scheduler,
-e.g., LSF.
-
 Now that you have set the appropriate parameters in the \texttt{Mesh\_Par\_file}
-and have compiled the mesher, you are ready to launch it! This is
-most easily accomplished based upon the \texttt{go\_mesher} script.
-When you run on a PC cluster, the script assumes that the nodes are
-named n001, n002, etc. If this is not the case, change the \texttt{tr
--d `n'} line in the script. You may also need to edit the last command
-at the end of the script that invokes the \texttt{mpirun} command.
-See Chapter~\ref{cha:Scheduler} for information about running the
-code on a system with a scheduler, e.g., LSF.
+and have compiled the mesher, you are ready to run it!\\
 
-Mesher output is provided in the \texttt{OUTPUT\_FILES} directory
+Depending on your system, please check how to run executables with MPI.
+To run the mesher on your cluster, we provide some example scripts for you to modify accordingly in \texttt{utils/Cluster/}.
+For some installations, you might need to provide a file
+that tells MPI what compute nodes to use for the simulations. In this case, the
+file must have a number of entries (one entry per line) at least equal
+to the number of processors needed for the run.
+A sample file name is \texttt{mymachines}. This file is not used by the mesher
+or solver, but is required by the \texttt{go\_mesher***} and \texttt{go\_solver**}
+default job submission scripts provided in directory \texttt{utils/Cluster/}.
+To run the mesher, it is most easily accomplished based upon the \texttt{go\_mesher***} script.
+When you run on a PC cluster, the script assumes that the nodes are
+named \texttt{n001}, \texttt{n002}, etc.
+If this is not the case, change the \texttt{tr -d `n'} line in the script.
+You may also need to edit the last command
+at the end of the script that invokes the \texttt{mpirun} command.
+See Chapter~\ref{cha:Scheduler}
+for information about running the code on a system with a scheduler,
+e.g., LSF.\\
+
+
+Mesher output is provided in the \texttt{OUTPUT\_FILES/} directory
 in \texttt{output\_mesher.txt}; this file provides lots of details
-about the mesh that was generated. Please note that the mesher suggests
+about the mesh that was generated.\\
+
+
+Please note that the mesher suggests
 a time step \texttt{DT} to run the solver with. The mesher output
 file also contains a table about the quality of the mesh to indicate
 possible problems with the distortions of elements. Alternatively,
 output can be directed to the screen instead by uncommenting a line
 in \texttt{constants.h}:
+{\small
 \begin{verbatim}
 ! uncomment this to write messages to the screen
 ! integer, parameter :: IMAIN = ISTANDARD_OUTPUT
-\end{verbatim}
+\end{verbatim}}
+
+
 To control the quality of the mesh, check the standard output (either
-on the screen or in the \texttt{OUTPUT\_FILES} directory in \texttt{output\_mesher.txt})
+on the screen or in the \texttt{OUTPUT\_FILES/} directory in \texttt{output\_mesher.txt})
 and analyze the skewness histogram of mesh elements to make sure no
 element has a skewness above approximately 0.75, otherwise the mesh
 is of poor quality (and if even a single element has a skewness value
 above 0.80, then you must definitely improve the mesh). To draw the
-skewness histogram on the screen, type \texttt{gnuplot plot\_mesh\_quality\_histogram.gnu}.
+skewness histogram on the screen, you could type
+{\small \begin{verbatim}
+  gnuplot plot_mesh_quality_histogram.gnu
+\end{verbatim}}
 
+
+\section{Poroelastic materials}\label{cha:Poroelastic-materials}
+
+The present version of SPECFEM can handle fully saturated porous simulations.
+At the moment, the code implements Biot's equation.
+However, the code cannot calculate partially saturated cases in its current state.\\
+
+
+The way we prescribe material property for porous material in SPECFEM3D depends on wheter the internal mesher \texttt{xmeshfem3D}
+or an external mesher like CUBIT is taken.
+For external meshers which provide the resulting meshes in a folder like \texttt{MESH/},
+we use a file \texttt{nummaterial\_poroelastic\_file}, which needs to be added to this directory \texttt{MESH/}.
+The line format for poroelastic materials is as follow:
+{\small \begin{verbatim}
+  rhos rhof phi c kxx kxy kxz kyy kyz kzz Ks Kf Kfr etaf mufr
+\end{verbatim}}
+\begin{description}
+\item where\\
+\texttt{rho\_s} = solid density,\\
+\texttt{rho\_f} = fluid density,\\
+\texttt{phi} = porosity,\\
+\texttt{tort} = tortuosity,\\
+\texttt{kxx} = xx component of permeability tensor,\\
+\texttt{kxy} = xy,yx components of permeability tensor,\\
+\texttt{kyy} = yy component of permeability tensor,\\
+\texttt{kxz} = xz,zx components of permeability tensor,\\
+\texttt{kzz} = zz component of permeability tensor,\\
+\texttt{kappa\_s} = solid bulk modulus,\\
+\texttt{kappa\_f} = fluid bulk modulus,\\
+\texttt{kappa\_fr} = frame bulk modulus,\\
+\texttt{eta\_f} = fluid viscosity,\\
+\texttt{mu\_fr} = frame shear modulus.\\
+\end{description}
+Using an external mesh (for instance coming from CUBIT/TRELIS), poroelastic materials have the ID number 3, while 1 is acoustic and 2 is elastic (see the example in the package: EXAMPLES/homogeneous\_poroelastic).\\
+
+\noindent
+In case the internal mesher \texttt{xmeshfem3D} is used, the same poroelastic material properties will be defined in the \texttt{Mesh\_Par\_file}.
+See the above section~\ref{cha:Running-the-Mesher-Meshfem3D} on how the corresponding line format would look like.\\
+
+\noindent
+Note that attenuation is not implemented yet for poroelastic domains, thus there is no need for specifiying Q values.

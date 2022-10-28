@@ -92,10 +92,11 @@
   ! gets face midpoint by its corners
   midpoint(:) = 0.0_CUSTOM_REAL
   do icorner = 1,NGNOD2D_FOUR_CORNERS
-    midpoint(1) = midpoint(1) + xcoord(icorner) * avg_factor
-    midpoint(2) = midpoint(2) + ycoord(icorner) * avg_factor
-    midpoint(3) = midpoint(3) + zcoord(icorner) * avg_factor
+    midpoint(1) = midpoint(1) + xcoord(icorner)
+    midpoint(2) = midpoint(2) + ycoord(icorner)
+    midpoint(3) = midpoint(3) + zcoord(icorner)
   enddo
+  midpoint(:) = midpoint(:) * avg_factor
 
 ! determines element face by minimum distance of midpoints
   midpoint_faces(:,:) = 0.0_CUSTOM_REAL
@@ -114,10 +115,11 @@
       zcoord_face = zstore_unique(iglob)
 
       ! face midpoint coordinates
-      midpoint_faces(1,ifa) =  midpoint_faces(1,ifa) + xcoord_face * avg_factor
-      midpoint_faces(2,ifa) =  midpoint_faces(2,ifa) + ycoord_face * avg_factor
-      midpoint_faces(3,ifa) =  midpoint_faces(3,ifa) + zcoord_face * avg_factor
+      midpoint_faces(1,ifa) =  midpoint_faces(1,ifa) + xcoord_face
+      midpoint_faces(2,ifa) =  midpoint_faces(2,ifa) + ycoord_face
+      midpoint_faces(3,ifa) =  midpoint_faces(3,ifa) + zcoord_face
     enddo
+    midpoint_faces(:,ifa) = midpoint_faces(:,ifa) * avg_factor
 
     ! distance squared
     midpoint_distances(ifa) = (midpoint(1)-midpoint_faces(1,ifa))**2 &
@@ -149,6 +151,9 @@
     do icorner = 1,NGNOD2D_FOUR_CORNERS
       print *,'reference   :',icorner,'xyz:', xcoord(icorner),ycoord(icorner),zcoord(icorner)
     enddo
+    ! midpoints
+    print *,'midpoint      :',midpoint(1),midpoint(2),midpoint(3)
+    print *,'midpoint face :',midpoint_faces(1,iloc(1)),midpoint_faces(2,iloc(1)),midpoint_faces(3,iloc(1))
     ! stop
     stop 'error element face midpoint'
   else

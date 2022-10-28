@@ -1,0 +1,35 @@
+----------------------------------------------------------------------
+README - homogeneous halfspace using externally defined source time function
+----------------------------------------------------------------------
+
+This example uses an externally defined source time function with the homogeneous halfspace model, to run a
+forward simulation.
+
+----------------------------------------------------------------------
+note: this example needs the user to have run a forward simulation based on the detailed step-by-step tutorial
+      given in the file SPECFEM3D/EXAMPLES/homogeneous_halfspace/README
+
+----------------------------------------------------------------------
+Step-by-step tutorial:
+
+1. Rerun the example given in SPECFEM3D/EXAMPLES/homogeneous_halfspace/README with the following modifications
+   before running the solver -
+   
+   a. Copy the "source_time_function.txt" file to the specfem working directory.
+      > cp EXAMPLES/homogeneous_halfspace/source_time_function.txt .   
+
+   b. In the CMTSOLUTION file, add the full name of the source time function file
+      "source_time_function.txt" as the ending line.
+
+   c. In the Par_file, set 'USE_EXTERNAL_SOURCE_FILE = .true.'.
+
+   IMPORTANT NOTE: The first line of the source time function file is the value of the time step, same as the simulation time step,
+   and the following lines are the values of the moment vs. time function, and NOT the moment rate vs. time function.
+
+2. Compare the generated seismograms with the reference ones, based on step 7 of the example given in
+   SPECFEM3D/EXAMPLES/homogeneous_halfspace/README
+
+   IMPORTANT NOTE: The externally provided source time function here, is the same as the one used by default in the
+   homogeneous halfspace example when the source time function is not externally provided. Hence, the output seismograms should look
+   the same as those in the default example.
+

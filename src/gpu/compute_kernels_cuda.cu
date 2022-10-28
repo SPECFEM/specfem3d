@@ -38,8 +38,7 @@
 extern EXTERN_LANG
 void FC_FUNC_(compute_kernels_elastic_cuda,
               COMPUTE_KERNELS_ELASTIC_CUDA)(long* Mesh_pointer,
-                                            realw* deltat_f,
-                                            int* undo_attenuation) {
+                                            realw* deltat_f) {
 
   TRACE("compute_kernels_elastic_cuda");
 
@@ -54,9 +53,10 @@ void FC_FUNC_(compute_kernels_elastic_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
-  // simulations with UNDO_ATTENUATION save as much memory as possible;
-  // backward/reconstructed wavefield strain will be re-computed locally here
-  if (*undo_attenuation){
+  // current strain field
+  if (mp->undo_attenuation){
+    // simulations with UNDO_ATTENUATION save as much memory as possible;
+    // backward/reconstructed wavefield strain will be re-computed locally here
 #ifdef USE_CUDA
     if (run_cuda){
       compute_element_strain_cudakernel<<<grid,threads>>>(mp->d_ispec_is_elastic,mp->d_ibool,
@@ -66,6 +66,7 @@ void FC_FUNC_(compute_kernels_elastic_cuda,
                                                           mp->d_b_epsilondev_xy,
                                                           mp->d_b_epsilondev_xz,
                                                           mp->d_b_epsilondev_yz,
+                                                          mp->d_b_epsilondev_trace,
                                                           mp->d_b_epsilon_trace_over_3,
                                                           mp->d_xix,mp->d_xiy,mp->d_xiz,
                                                           mp->d_etax,mp->d_etay,mp->d_etaz,
@@ -86,6 +87,7 @@ void FC_FUNC_(compute_kernels_elastic_cuda,
                                                             mp->d_b_epsilondev_xy,
                                                             mp->d_b_epsilondev_xz,
                                                             mp->d_b_epsilondev_yz,
+                                                            mp->d_b_epsilondev_trace,
                                                             mp->d_b_epsilon_trace_over_3,
                                                             mp->d_xix,mp->d_xiy,mp->d_xiz,
                                                             mp->d_etax,mp->d_etay,mp->d_etaz,
@@ -294,7 +296,6 @@ void FC_FUNC_(compute_kernels_acoustic_cuda,
     compute_kernels_acoustic_kernel<<<grid,threads>>>(mp->d_ispec_is_acoustic,
                                                       mp->d_ibool,
                                                       mp->d_rhostore,
-                                                      mp->d_kappastore,
                                                       mp->d_hprime_xx,
                                                       mp->d_irregular_element_number,
                                                       mp->d_xix,mp->d_xiy,mp->d_xiz,
@@ -318,7 +319,6 @@ void FC_FUNC_(compute_kernels_acoustic_cuda,
                                                       mp->d_ispec_is_acoustic,
                                                       mp->d_ibool,
                                                       mp->d_rhostore,
-                                                      mp->d_kappastore,
                                                       mp->d_hprime_xx,
                                                       mp->d_irregular_element_number,
                                                       mp->d_xix,mp->d_xiy,mp->d_xiz,

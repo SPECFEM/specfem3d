@@ -242,6 +242,7 @@
 !
 ! option MOVIE_TYPE == 1: uses horizontal peak-ground values, only at top, free surface
 !        MOVIE_TYPE == 2: uses norm of vector as peak-ground, for all external, outer mesh surfaces
+!        MOVIE_TYPE == 3: uses geometric mean of peak-ground values, only at top, free surface
 
   use specfem_par
   use specfem_par_elastic
@@ -251,6 +252,7 @@
 
   ! temporary array for single elements
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: displ_element,veloc_element,accel_element
+  real(kind=CUSTOM_REAL) :: gmean_PGD,gmean_PGV,gmean_PGA
   integer :: ipoin,ispec,iglob,ispec2D,ia
   integer :: npoin_elem
 
@@ -282,16 +284,8 @@
       do ipoin = 1, npoin_elem
         ia = npoin_elem * (ispec2D - 1) + ipoin
         iglob = faces_surface_ibool(ipoin,ispec2D)
-
-        if (MOVIE_TYPE == 1) then
-          ! only top surface
-          ! horizontal peak-ground value
-          call wmo_get_max_vector_top(ispec,iglob,ia,displ_element,veloc_element,accel_element)
-        else
-          ! all outer surfaces
-          ! norm of particle displ/veloc/accel vector
-          call wmo_get_max_vector_norm(ispec,iglob,ia,displ_element,veloc_element,accel_element)
-        endif
+        ! determines shakemap values for point
+        call wmo_get_max_vector_shakemap(ispec,iglob,ia,displ_element,veloc_element,accel_element,MOVIE_TYPE)
       enddo
 
     else if (ispec_is_elastic(ispec)) then
@@ -301,7 +295,9 @@
         ia = npoin_elem * (ispec2D - 1) + ipoin
         iglob = faces_surface_ibool(ipoin,ispec2D)
 
-        if (MOVIE_TYPE == 1) then
+        select case (MOVIE_TYPE)
+        case (1)
+          ! PGD, PGV, PGA
           ! only top surface, using horizontal peak-ground value
           ! horizontal displacement
           shakemap_ux(ia) = max(shakemap_ux(ia),abs(displ(1,iglob)),abs(displ(2,iglob)))
@@ -309,7 +305,7 @@
           shakemap_uy(ia) = max(shakemap_uy(ia),abs(veloc(1,iglob)),abs(veloc(2,iglob)))
           ! horizontal acceleration
           shakemap_uz(ia) = max(shakemap_uz(ia),abs(accel(1,iglob)),abs(accel(2,iglob)))
-        else
+        case (2)
           ! all outer surfaces, using norm of particle displ/veloc/accel vector
           ! saves norm of displacement,velocity and acceleration vector
           ! norm of displacement
@@ -318,7 +314,19 @@
           shakemap_uy(ia) = max(shakemap_uy(ia),sqrt(veloc(1,iglob)**2 + veloc(2,iglob)**2 + veloc(3,iglob)**2))
           ! norm of acceleration
           shakemap_uz(ia) = max(shakemap_uz(ia),sqrt(accel(1,iglob)**2 + accel(2,iglob)**2 + accel(3,iglob)**2))
-        endif
+        case (3)
+          ! geometric mean of PGD, PGV, PGA
+          ! only top surface, using horizontal peak-ground value
+          gmean_PGD = sqrt( abs(displ(1,iglob) * displ(2,iglob)) )
+          gmean_PGV = sqrt( abs(veloc(1,iglob) * veloc(2,iglob)) )
+          gmean_PGA = sqrt( abs(accel(1,iglob) * accel(2,iglob)) )
+          ! horizontal displacement
+          shakemap_ux(ia) = max(shakemap_ux(ia),gmean_PGD)
+          ! horizontal velocity
+          shakemap_uy(ia) = max(shakemap_uy(ia),gmean_PGV)
+          ! horizontal acceleration
+          shakemap_uz(ia) = max(shakemap_uz(ia),gmean_PGA)
+        end select
       enddo
     else
       ! other element types not supported yet
@@ -334,33 +342,62 @@
 
 !================================================================
 
-  subroutine wmo_get_max_vector_top(ispec,iglob,ia,displ_element,veloc_element,accel_element)
+  subroutine wmo_get_max_vector_shakemap(ispec,iglob,ia,displ_element,veloc_element,accel_element,MOVIE_TYPE)
 
   ! put into this separate routine to make compilation faster
 
-  use specfem_par, only: NDIM,ibool
-  use specfem_par_movie
+  use constants, only: NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
+  use specfem_par, only: ibool
+  use specfem_par_movie, only: shakemap_ux,shakemap_uy,shakemap_uz
+
   implicit none
 
-  integer,intent(in) :: ispec,iglob,ia
+  integer,intent(in) :: ispec,iglob,ia,MOVIE_TYPE
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(in) :: displ_element,veloc_element,accel_element
 
   ! local parameters
   integer :: i,j,k
+  real(kind=CUSTOM_REAL) :: gmean_PGD,gmean_PGV,gmean_PGA
 
   ! loops over all GLL points from this element
-  do k=1,NGLLZ
-    do j=1,NGLLY
-      do i=1,NGLLX
+  do k = 1,NGLLZ
+    do j = 1,NGLLY
+      do i = 1,NGLLX
         ! checks if global point is found
         if (iglob == ibool(i,j,k,ispec)) then
-
-          ! horizontal displacement
-          shakemap_ux(ia) = max(shakemap_ux(ia),abs(displ_element(1,i,j,k)),abs(displ_element(2,i,j,k)))
-          ! horizontal velocity
-          shakemap_uy(ia) = max(shakemap_uy(ia),abs(veloc_element(1,i,j,k)),abs(veloc_element(2,i,j,k)))
-          ! horizontal acceleration
-          shakemap_uz(ia) = max(shakemap_uz(ia),abs(accel_element(1,i,j,k)),abs(accel_element(2,i,j,k)))
+          ! sets shakemap value
+          select case (MOVIE_TYPE)
+          case (1)
+            ! PGD, PGV, PGA
+            ! horizontal displacement
+            shakemap_ux(ia) = max(shakemap_ux(ia),abs(displ_element(1,i,j,k)),abs(displ_element(2,i,j,k)))
+            ! horizontal velocity
+            shakemap_uy(ia) = max(shakemap_uy(ia),abs(veloc_element(1,i,j,k)),abs(veloc_element(2,i,j,k)))
+            ! horizontal acceleration
+            shakemap_uz(ia) = max(shakemap_uz(ia),abs(accel_element(1,i,j,k)),abs(accel_element(2,i,j,k)))
+          case (2)
+            ! norm of particle displ/veloc/accel vector
+            ! norm of displacement
+            shakemap_ux(ia) = max(shakemap_ux(ia), &
+                  sqrt(displ_element(1,i,j,k)**2 + displ_element(2,i,j,k)**2 + displ_element(3,i,j,k)**2))
+            ! norm of velocity
+            shakemap_uy(ia) = max(shakemap_uy(ia), &
+                  sqrt(veloc_element(1,i,j,k)**2 + veloc_element(2,i,j,k)**2 + veloc_element(3,i,j,k)**2))
+            ! norm of acceleration
+            shakemap_uz(ia) = max(shakemap_uz(ia), &
+                  sqrt(accel_element(1,i,j,k)**2 + accel_element(2,i,j,k)**2 + accel_element(3,i,j,k)**2))
+          case (3)
+            ! geometric mean of PGD, PGV, PGA
+            gmean_PGD = sqrt( abs(displ_element(1,i,j,k) * displ_element(2,i,j,k)) )
+            gmean_PGV = sqrt( abs(veloc_element(1,i,j,k) * veloc_element(2,i,j,k)) )
+            gmean_PGA = sqrt( abs(accel_element(1,i,j,k) * accel_element(2,i,j,k)) )
+            ! horizontal displacement
+            shakemap_ux(ia) = max(shakemap_ux(ia),gmean_PGD)
+            ! horizontal velocity
+            shakemap_uy(ia) = max(shakemap_uy(ia),gmean_PGV)
+            ! horizontal acceleration
+            shakemap_uz(ia) = max(shakemap_uz(ia),gmean_PGA)
+          end select
 
           ! point found, we are done
           return
@@ -369,54 +406,56 @@
     enddo
   enddo
 
-  end subroutine wmo_get_max_vector_top
+  end subroutine wmo_get_max_vector_shakemap
 
 !================================================================
 
-  subroutine wmo_get_max_vector_norm(ispec,iglob,ia, &
-                                        displ_element,veloc_element,accel_element)
-
-  ! put into this separate routine to make compilation faster
-
-  use specfem_par, only: NDIM,ibool
-  use specfem_par_movie
-  implicit none
-
-  integer,intent(in) :: ispec,iglob,ia
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(in) :: displ_element,veloc_element,accel_element
-
-  ! local parameters
-  integer :: i,j,k
-
-  ! loops over all GLL points from this element
-  do k=1,NGLLZ
-    do j=1,NGLLY
-      do i=1,NGLLX
-        if (iglob == ibool(i,j,k,ispec)) then
-          ! norm of displacement
-          shakemap_ux(ia) = max(shakemap_ux(ia), &
-                sqrt(displ_element(1,i,j,k)**2 &
-                   + displ_element(2,i,j,k)**2 &
-                   + displ_element(3,i,j,k)**2))
-          ! norm of velocity
-          shakemap_uy(ia) = max(shakemap_uy(ia), &
-                sqrt(veloc_element(1,i,j,k)**2 &
-                   + veloc_element(2,i,j,k)**2 &
-                   + veloc_element(3,i,j,k)**2))
-          ! norm of acceleration
-          shakemap_uz(ia) = max(shakemap_uz(ia), &
-                sqrt(accel_element(1,i,j,k)**2 &
-                   + accel_element(2,i,j,k)**2 &
-                   + accel_element(3,i,j,k)**2))
-
-          ! point found, we are done
-          return
-        endif
-      enddo
-    enddo
-  enddo
-
-  end subroutine wmo_get_max_vector_norm
+! not used, left here for reference...
+!
+!  subroutine wmo_get_max_vector_norm(ispec,iglob,ia, &
+!                                        displ_element,veloc_element,accel_element)
+!
+!  ! put into this separate routine to make compilation faster
+!
+!  use specfem_par, only: NDIM,ibool
+!  use specfem_par_movie
+!  implicit none
+!
+!  integer,intent(in) :: ispec,iglob,ia
+!  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(in) :: displ_element,veloc_element,accel_element
+!
+!  ! local parameters
+!  integer :: i,j,k
+!
+!  ! loops over all GLL points from this element
+!  do k=1,NGLLZ
+!    do j=1,NGLLY
+!      do i=1,NGLLX
+!        if (iglob == ibool(i,j,k,ispec)) then
+!          ! norm of displacement
+!          shakemap_ux(ia) = max(shakemap_ux(ia), &
+!                sqrt(displ_element(1,i,j,k)**2 &
+!                   + displ_element(2,i,j,k)**2 &
+!                   + displ_element(3,i,j,k)**2))
+!          ! norm of velocity
+!          shakemap_uy(ia) = max(shakemap_uy(ia), &
+!                sqrt(veloc_element(1,i,j,k)**2 &
+!                   + veloc_element(2,i,j,k)**2 &
+!                   + veloc_element(3,i,j,k)**2))
+!          ! norm of acceleration
+!          shakemap_uz(ia) = max(shakemap_uz(ia), &
+!                sqrt(accel_element(1,i,j,k)**2 &
+!                   + accel_element(2,i,j,k)**2 &
+!                   + accel_element(3,i,j,k)**2))
+!
+!          ! point found, we are done
+!          return
+!        endif
+!      enddo
+!    enddo
+!  enddo
+!
+!  end subroutine wmo_get_max_vector_norm
 
 
 !================================================================
@@ -489,7 +528,7 @@
 
   ! local parameters
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: pressure_loc
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: veloc_element
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: vec_element
   ! divergence and curl only in the global nodes
   real(kind=CUSTOM_REAL),dimension(:),allocatable:: div_glob
   integer,dimension(:),allocatable :: valence
@@ -511,21 +550,32 @@
   call write_channel_name(3,channel)
   compz(1:1) = channel(3:3) ! Z
 
-  ! saves velocity here to avoid static offset on displacement for movies
-  velocity_x(:,:,:,:) = 0._CUSTOM_REAL
-  velocity_y(:,:,:,:) = 0._CUSTOM_REAL
-  velocity_z(:,:,:,:) = 0._CUSTOM_REAL
+  ! note: we use either displacement or velocity, depending on the Par_file setting of SAVE_DISPLACEMENT,
+  !       and store them into the arrays wavefield_x/y/z - the naming of the arrays could be better...
+  !
+  ! saves wavefield here
+  ! note: displacement will show static offset on displacement field for movies,
+  !       thus better to have velocity visualized for movies
+  wavefield_x(:,:,:,:) = 0._CUSTOM_REAL
+  wavefield_y(:,:,:,:) = 0._CUSTOM_REAL
+  wavefield_z(:,:,:,:) = 0._CUSTOM_REAL
 
   if (ACOUSTIC_SIMULATION) then
-    ! uses velocity_x,.. as temporary arrays to store velocity on all GLL points
+    ! uses wavefield_x,.. as temporary arrays to store velocity/displacement on all GLL points
     do ispec = 1,NSPEC_AB
       ! only acoustic elements
       if (.not. ispec_is_acoustic(ispec)) cycle
-      ! calculates velocity
-      call compute_gradient_in_acoustic(ispec,potential_dot_acoustic,veloc_element)
-      velocity_x(:,:,:,ispec) = veloc_element(1,:,:,:)
-      velocity_y(:,:,:,ispec) = veloc_element(2,:,:,:)
-      velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)
+
+      if (SAVE_DISPLACEMENT) then
+        ! calculates displacement
+        call compute_gradient_in_acoustic(ispec,potential_acoustic,vec_element)
+      else
+        ! calculates velocity
+        call compute_gradient_in_acoustic(ispec,potential_dot_acoustic,vec_element)
+      endif
+      wavefield_x(:,:,:,ispec) = vec_element(1,:,:,:)
+      wavefield_y(:,:,:,ispec) = vec_element(2,:,:,:)
+      wavefield_z(:,:,:,ispec) = vec_element(3,:,:,:)
     enddo
 
     ! outputs pressure field for purely acoustic simulations
@@ -562,13 +612,21 @@
 
     ! saves full snapshot data to local disk
     if (ELASTIC_SIMULATION) then
-      ! calculates divergence and curl of velocity field
-      call wmo_movie_div_curl(veloc, &
-                              div_glob,valence, &
-                              div,curl_x,curl_y,curl_z, &
-                              velocity_x,velocity_y,velocity_z, &
-                              ispec_is_elastic)
-
+      if (SAVE_DISPLACEMENT) then
+        ! calculates divergence and curl of displacement field
+        call wmo_movie_div_curl(displ, &
+                                div_glob,valence, &
+                                div,curl_x,curl_y,curl_z, &
+                                wavefield_x,wavefield_y,wavefield_z, &
+                                ispec_is_elastic)
+      else
+        ! calculates divergence and curl of velocity field
+        call wmo_movie_div_curl(veloc, &
+                                div_glob,valence, &
+                                div,curl_x,curl_y,curl_z, &
+                                wavefield_x,wavefield_y,wavefield_z, &
+                                ispec_is_elastic)
+      endif
       ! writes out div and curl on global points
       write(outputname,"('/proc',i6.6,'_div_glob_it',i6.6,'.bin')") myrank,it
       open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
@@ -579,12 +637,21 @@
 
     ! saves full snapshot data to local disk
     if (POROELASTIC_SIMULATION) then
-      ! calculates divergence and curl of velocity field
-      call wmo_movie_div_curl(velocs_poroelastic, &
-                              div_glob,valence, &
-                              div,curl_x,curl_y,curl_z, &
-                              velocity_x,velocity_y,velocity_z, &
-                              ispec_is_poroelastic)
+      if (SAVE_DISPLACEMENT) then
+        ! calculates divergence and curl of displacement field
+        call wmo_movie_div_curl(displs_poroelastic, &
+                                div_glob,valence, &
+                                div,curl_x,curl_y,curl_z, &
+                                wavefield_x,wavefield_y,wavefield_z, &
+                                ispec_is_poroelastic)
+      else
+        ! calculates divergence and curl of velocity field
+        call wmo_movie_div_curl(velocs_poroelastic, &
+                                div_glob,valence, &
+                                div,curl_x,curl_y,curl_z, &
+                                wavefield_x,wavefield_y,wavefield_z, &
+                                ispec_is_poroelastic)
+      endif
     endif ! poroelastic
 
     deallocate(div_glob,valence)
@@ -617,24 +684,45 @@
     close(IOUT)
   endif
 
-  ! velocity
-  write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
-  open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-  if (ier /= 0) stop 'error opening file movie output velocity x'
-  write(IOUT) velocity_x
-  close(IOUT)
+  if (SAVE_DISPLACEMENT) then
+    ! displacement field
+    write(outputname,"('/proc',i6.6,'_displ_',a1,'_it',i6.6,'.bin')") myrank,compx,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file movie output displ x'
+    write(IOUT) wavefield_x
+    close(IOUT)
 
-  write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compy,it
-  open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-  if (ier /= 0) stop 'error opening file movie output velocity y'
-  write(IOUT) velocity_y
-  close(IOUT)
+    write(outputname,"('/proc',i6.6,'_displ_',a1,'_it',i6.6,'.bin')") myrank,compy,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file movie output displ y'
+    write(IOUT) wavefield_y
+    close(IOUT)
 
-  write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compz,it
-  open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-  if (ier /= 0) stop 'error opening file movie output velocity z'
-  write(IOUT) velocity_z
-  close(IOUT)
+    write(outputname,"('/proc',i6.6,'_displ_',a1,'_it',i6.6,'.bin')") myrank,compz,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file movie output displ z'
+    write(IOUT) wavefield_z
+    close(IOUT)
+  else
+    ! velocity
+    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file movie output velocity x'
+    write(IOUT) wavefield_x
+    close(IOUT)
+
+    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compy,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file movie output velocity y'
+    write(IOUT) wavefield_y
+    close(IOUT)
+
+    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compz,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file movie output velocity z'
+    write(IOUT) wavefield_z
+    close(IOUT)
+  endif
 
   end subroutine wmo_movie_volume_output
 
@@ -643,10 +731,10 @@
   subroutine wmo_movie_div_curl(veloc, &
                                 div_glob,valence, &
                                 div,curl_x,curl_y,curl_z, &
-                                velocity_x,velocity_y,velocity_z, &
+                                wavefield_x,wavefield_y,wavefield_z, &
                                 ispec_is)
 
-! calculates div, curl and velocity
+! calculates div, curl and wavefield
 
   use constants
 
@@ -666,7 +754,7 @@
   integer,dimension(NGLOB_AB),intent(out) :: valence
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(out) :: div, curl_x, curl_y, curl_z
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(inout) :: velocity_x,velocity_y,velocity_z
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(inout) :: wavefield_x,wavefield_y,wavefield_z
   logical,dimension(NSPEC_AB),intent(in) :: ispec_is
 
   ! local parameters
@@ -818,11 +906,11 @@
           curl_y(i,j,k,ispec) = dvxdzl(i,j,k) - dvzdxl(i,j,k)
           curl_z(i,j,k,ispec) = dvydxl(i,j,k) - dvxdyl(i,j,k)
 
-          ! velocity field
+          ! velocity or displacement field
           iglob = ibool(i,j,k,ispec)
-          velocity_x(i,j,k,ispec) = veloc_element(1,i,j,k)
-          velocity_y(i,j,k,ispec) = veloc_element(2,i,j,k)
-          velocity_z(i,j,k,ispec) = veloc_element(3,i,j,k)
+          wavefield_x(i,j,k,ispec) = veloc_element(1,i,j,k)
+          wavefield_y(i,j,k,ispec) = veloc_element(2,i,j,k)
+          wavefield_z(i,j,k,ispec) = veloc_element(3,i,j,k)
 
           valence(iglob) = valence(iglob)+1
           div_glob(iglob) = div_glob(iglob) + div(i,j,k,ispec)

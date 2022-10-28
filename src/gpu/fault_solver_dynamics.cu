@@ -68,7 +68,7 @@ void FC_FUNC_(initialize_fault_data_gpu,
                                          int* iglob,
                                          int* num_of_records,
                                          int* ndat,
-                                         int* nt) {
+                                         int* NT_RECORD_LENGTH) {
   TRACE("initialize_fault_data_gpu");
 
   Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_solver);
@@ -77,8 +77,8 @@ void FC_FUNC_(initialize_fault_data_gpu,
   Fault_data *fault_data_recorder = (Fault_data*) malloc(sizeof(Fault_data));
 
   // initializes faults
-  fault_data_recorder->NRECORD = *num_of_records;
-  fault_data_recorder->NT = *nt;
+  fault_data_recorder->NRECORD = *num_of_records;  // number of points npoin
+  fault_data_recorder->NT = *NT_RECORD_LENGTH;     // NT_RECORD_LENGTH : set in fault_solver_dynamic.f90
 
   int recordlength = *ndat; // data stores for each record/point: default == 7 or when RATE_AND_STATE == 8
   fault_data_recorder->recordlength = recordlength;
@@ -91,7 +91,7 @@ void FC_FUNC_(initialize_fault_data_gpu,
   }
 
   // allocates arrays on GPU
-  gpuCopy_todevice_int((void**)&(fault_data_recorder->iglob),iglob,fault_data_recorder->NRECORD);
+  gpuCreateCopy_todevice_int((void**)&(fault_data_recorder->iglob),iglob,fault_data_recorder->NRECORD);
 
   gpuMalloc_realw((void**)&(fault_data_recorder->dataT),recordlength*fault_data_recorder->NRECORD*fault_data_recorder->NT);
 
@@ -137,21 +137,21 @@ void FC_FUNC_(transfer_fault_data_to_device,
 
   // copies data to GPU
   if (*NGLOB_FLT > 0){
-    gpuCopy_todevice_realw((void **)&(Flt->B),B,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(Flt->R),R,(*NGLOB_FLT)*9);
-    gpuCopy_todevice_realw((void **)&(Flt->Z),Z,(*NGLOB_FLT));
+    gpuCreateCopy_todevice_realw((void **)&(Flt->B),B,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->R),R,(*NGLOB_FLT)*9);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->Z),Z,(*NGLOB_FLT));
 
-    gpuCopy_todevice_realw((void **)&(Flt->D),D,(*NGLOB_FLT)*3);
-    gpuCopy_todevice_realw((void **)&(Flt->V),V0,(*NGLOB_FLT)*3);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->D),D,(*NGLOB_FLT)*3);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->V),V0,(*NGLOB_FLT)*3);
 
-    gpuCopy_todevice_realw((void **)&(Flt->T0),T0,(*NGLOB_FLT)*3);
-    gpuCopy_todevice_realw((void **)&(Flt->T),T,(*NGLOB_FLT)*3);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->T0),T0,(*NGLOB_FLT)*3);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->T),T,(*NGLOB_FLT)*3);
 
-    gpuCopy_todevice_realw((void **)&(Flt->invM1),invM1,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(Flt->invM2),invM2,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->invM1),invM1,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->invM2),invM2,*NGLOB_FLT);
 
-    gpuCopy_todevice_int((void **)&(Flt->ibulk1),ibulk1,(*NGLOB_FLT));
-    gpuCopy_todevice_int((void **)&(Flt->ibulk2),ibulk2,(*NGLOB_FLT));
+    gpuCreateCopy_todevice_int((void **)&(Flt->ibulk1),ibulk1,(*NGLOB_FLT));
+    gpuCreateCopy_todevice_int((void **)&(Flt->ibulk2),ibulk2,(*NGLOB_FLT));
   }
 
   GPU_ERROR_CHECKING("transfer_fault_data_to_device");
@@ -259,18 +259,18 @@ void FC_FUNC_(transfer_rsf_data_todevice,
 
   // copies arrays onto GPU
   if (*NGLOB_FLT > 0){
-    gpuCopy_todevice_realw((void **)&(rsf->V0),V0,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(rsf->f0),f0,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(rsf->V_init),V_init,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(rsf->a),a,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(rsf->b),b,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(rsf->L),L,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(rsf->theta),theta,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(rsf->T),T,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(rsf->Coh),C,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(rsf->fw),fw,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(rsf->Vw),Vw,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(rsf->Fload),Fload,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(rsf->V0),V0,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(rsf->f0),f0,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(rsf->V_init),V_init,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(rsf->a),a,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(rsf->b),b,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(rsf->L),L,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(rsf->theta),theta,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(rsf->T),T,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(rsf->Coh),C,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(rsf->fw),fw,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(rsf->Vw),Vw,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(rsf->Fload),Fload,*NGLOB_FLT);
   }
 
   GPU_ERROR_CHECKING("transfer_rsf_data_todevice");
@@ -299,12 +299,12 @@ void FC_FUNC_(transfer_swf_data_todevice,
   if (Fsolver->RATE_AND_STATE){ exit_on_error("Error with SWF setup, RATE_AND_STATE flag is on; please check fault setup and rerun\n");}
 
   if (*NGLOB_FLT > 0){
-    gpuCopy_todevice_realw((void **)&(swf->Dc),Dc,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(swf->mus),mus,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(swf->mud),mud,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(swf->Coh),C,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(swf->T),T,*NGLOB_FLT);
-    gpuCopy_todevice_realw((void **)&(swf->theta),theta,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(swf->Dc),Dc,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(swf->mus),mus,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(swf->mud),mud,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(swf->Coh),C,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(swf->T),T,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(swf->theta),theta,*NGLOB_FLT);
   }
 
   GPU_ERROR_CHECKING("transfer_swf_data_todevice");

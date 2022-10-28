@@ -252,10 +252,12 @@ GENCODE_80 = -gencode=arch=compute_80,code=\"sm_80,compute_80\"
 # Radeon Instinct MI25:	 --amdgpu-target=gfx900
 # Radeon Instinct MI50:  --amdgpu-target=gfx906
 # Radeon Instinct MI100: --amdgpu-target=gfx908
+# Radeon Instinct MI210/250/250X: --amdgpu-target=gfx90a
 GENCODE_AMD_MI8 = --amdgpu-target=gfx803
 GENCODE_AMD_MI25 = --amdgpu-target=gfx900
 GENCODE_AMD_MI50 = --amdgpu-target=gfx906
 GENCODE_AMD_MI100 = --amdgpu-target=gfx908
+GENCODE_AMD_MI250 = --amdgpu-target=gfx90a
 
 # default targets
 # AMD default MI50 & MI100
@@ -270,6 +272,8 @@ GENCODE_AMD_MI100 = --amdgpu-target=gfx908
 @COND_HIP_TRUE@@COND_HIP_MI25_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI25)    # --with-hip=MI25 ..
 @COND_HIP_TRUE@@COND_HIP_MI50_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI50)    # --with-hip=MI50 ..
 @COND_HIP_TRUE@@COND_HIP_MI100_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI100)  # --with-hip=MI100 ..
+@COND_HIP_TRUE@@COND_HIP_MI250_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI250)  # --with-hip=MI250 ..
+
 @COND_HIP_TRUE@@COND_HIP_CUDA5_TRUE@GENCODE_HIP = $(GENCODE_35)         # --with-hip=cuda5 ..
 @COND_HIP_TRUE@@COND_HIP_CUDA6_TRUE@GENCODE_HIP = $(GENCODE_37)         # --with-hip=cuda6 ..
 @COND_HIP_TRUE@@COND_HIP_CUDA7_TRUE@GENCODE_HIP = $(GENCODE_50)         # --with-hip=cuda7 ..
@@ -362,11 +366,30 @@ endif
 @COND_ADIOS_TRUE@ADIOS_DEF = $(FC_DEFINE)USE_ADIOS
 @COND_ADIOS_FALSE@ADIOS_DEF =
 
-@COND_ADIOS_TRUE@ADIOS_INC = @ADIOS_FCFLAGS@ $(ADIOS_DEF)
-@COND_ADIOS_TRUE@ADIOS_LINK = @ADIOS_LIBS@
+@COND_ADIOS_TRUE@FCFLAGS_f90 += @ADIOS_FCFLAGS@ $(ADIOS_DEF)
+@COND_ADIOS_TRUE@MPILIBS += @ADIOS_LIBS@
 
-@COND_ADIOS_TRUE@FCFLAGS_f90 += $(ADIOS_INC)
-@COND_ADIOS_TRUE@MPILIBS += $(ADIOS_LINK)
+#######################################
+####
+#### ADIOS2
+#### with configure: ./configure --with-adios2 ADIOS2_CONFIG=..
+####
+#######################################
+
+@COND_ADIOS2_TRUE@ADIOS2 = yes
+@COND_ADIOS2_FALSE@ADIOS2 = no
+
+@COND_ADIOS2_TRUE@ADIOS2_DEF = $(FC_DEFINE)USE_ADIOS2
+@COND_ADIOS2_FALSE@ADIOS2_DEF =
+
+@COND_ADIOS2_TRUE@FCFLAGS_f90 += @ADIOS2_FCFLAGS@ $(ADIOS2_DEF)
+@COND_ADIOS2_TRUE@MPILIBS += @ADIOS2_LIBS@
+
+@COND_ADIOS2_TRUE@CPPFLAGS += @ADIOS2_CFLAGS@
+@COND_ADIOS2_TRUE@MPILIBS += @ADIOS2_CLIBS@
+
+@COND_ADIOS2_TRUE@MPICC = @MPICC@
+@COND_ADIOS2_FALSE@MPICC = $(CC)
 
 #######################################
 ####
@@ -432,9 +455,9 @@ DEFAULT = \
 	xspecfem3D \
 	$(EMPTY_MACRO)
 
+# targets requiring MPI
 ifeq ($(MPI),yes)
-DEFAULT += xdecompose_mesh_mpi
-DEFAULT += xinverse_problem_for_model
+DEFAULT += xdecompose_mesh_mpi xinverse_problem_for_model
 SUBDIRS += inverse_problem_for_model
 endif
 
@@ -451,12 +474,16 @@ clean:
 	-rm -f $(foreach dir, $(CLEAN), $($(dir)_OBJECTS) $($(dir)_MODULES) $($(dir)_SHARED_OBJECTS) $($(dir)_TARGETS))
 	-rm -f ${E}/*__genmod.*
 	-rm -f ${O}/*__genmod.*
+	-rm -f ${O}/*.smod
+	-rm -f ${O}/*.lst
 else
 clean:
 	@echo "cleaning all"
 	-rm -f $(foreach dir, $(SUBDIRS), $($(dir)_OBJECTS) $($(dir)_MODULES) $($(dir)_TARGETS))
 	-rm -f ${E}/*__genmod.*
 	-rm -f ${O}/*__genmod.*
+	-rm -f ${O}/*.smod
+	-rm -f ${O}/*.lst
 endif
 
 realclean: clean
@@ -488,18 +515,20 @@ help:
 	@echo "    xmeshfem3D"
 	@echo "    xgenerate_databases"
 	@echo "    xspecfem3D"
-	@echo "    xinverse_problem_for_model"
 	@echo ""
 	@echo "defaults:"
 	@echo "    xdecompose_mesh"
+ifeq ($(MPI),yes)
+	@echo "    xdecompose_mesh_mpi"
+endif
 	@echo "    xmeshfem3D"
 	@echo "    xgenerate_databases"
 	@echo "    xspecfem3D"
-	@echo "    xinverse_problem_for_model"
+ifeq ($(MPI),yes)
 	@echo ""
-	@echo "    xcombine_surf_data"
-	@echo "    xcombine_vol_data"
-	@echo "    xcombine_vol_data_vtk"
+	@echo "    xinverse_problem_for_model"
+endif
+	@echo ""
 	@echo "    xconvolve_source_timefunction"
 	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
 	@echo ""
@@ -511,9 +540,26 @@ help:
 	@echo "    xcombine_surf_data"
 	@echo "    xcombine_vol_data"
 	@echo "    xcombine_vol_data_vtk"
+	@echo "    xcombine_vol_data_vtu"
+ifeq ($(ADIOS), yes)
+	@echo "    xcombine_vol_data_adios"
+	@echo "    xcombine_vol_data_vtk_adios"
+	@echo "    xcombine_vol_data_vtu_adios"
+endif
+ifeq ($(ADIOS2), yes)
+	@echo "    xcombine_vol_data_adios"
+	@echo "    xcombine_vol_data_vtk_adios"
+	@echo "    xcombine_vol_data_vtu_adios"
+endif
+	@echo ""
 	@echo "    xconvolve_source_timefunction"
 	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
 	@echo ""
+ifeq ($(MPI),yes)
+	@echo "    xproject_and_combine_vol_data_on_regular_grid"
+	@echo ""
+endif
+
 	@echo "- check mesh executables: [make check_mesh]"
 	@echo "    xcheck_mesh_quality"
 	@echo "    xconvert_skewness_to_angle"

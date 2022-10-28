@@ -417,13 +417,20 @@ typedef struct mesh_ {
   // mpi process
   int myrank;
 
-  // constants
+  // simulation flags
   int simulation_type;
   int save_forward;
-  int use_mesh_coloring_gpu;
+
   int absorbing_conditions;
   int gravity;
+  int approximate_ocean_load;
+  int attenuation;
 
+  int undo_attenuation;
+  int compute_and_store_strain;
+
+  int approximate_hess_kl;
+  int use_mesh_coloring_gpu;
 
   // ------------------------------------------------------------------ //
   // GLL points & weights
@@ -729,8 +736,8 @@ typedef struct mesh_ {
 /* ----------------------------------------------------------------------------------------------- */
 
 // defined in helper_functions_gpu.c
-void gpuCopy_todevice_int(void** d_array_addr_ptr,int* h_array,int size);
-void gpuCopy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size);
+void gpuCreateCopy_todevice_int(void** d_array_addr_ptr,int* h_array,int size);
+void gpuCreateCopy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size);
 void gpuFree (void *d_ptr);
 
 void gpuReset();

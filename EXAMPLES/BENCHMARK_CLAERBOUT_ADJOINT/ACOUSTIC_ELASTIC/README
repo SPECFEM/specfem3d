@@ -1,0 +1,23 @@
+--------------------------------------------------
+README
+--------------------------------------------------
+
+Acoustic-elastic coupled benchmark
+
+This test can be done on your workstation, as long as you have 4 CPU cores available.
+it should be done within 5 minutes. 
+
+
+To run this test, simply use (after ./configure):
+
+./run_inhomogeneous.bash
+
+
+you will be given information at the very end:
+
+ DATASPACE      =  ?
+ MODELSPACE     =  ?
+ relative error =  ?
+
+Check "relative error", it must be small enough (~0.1 should be OK).
+If the test fails, ACOUSTIC-ELASTIC kernel calculation is problematic.

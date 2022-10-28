@@ -28,7 +28,7 @@
 
   subroutine pml_set_local_dampingcoeff(xstore,ystore,zstore)
 
-  ! calculates damping profiles and auxiliary coefficients on C-PML points
+! calculates damping profiles and auxiliary coefficients on C-PML points
 
   use constants, only: myrank,ZERO,ONE,TWO,HUGEVAL
 
@@ -1426,18 +1426,23 @@
       enddo
     enddo
   enddo
+
   distance_min = sqrt(distance_min)
   call min_all_all_cr(distance_min,distance_min_glob)
   if (myrank == 0) then
     if (distance_min_glob <= 0.0_CUSTOM_REAL) call exit_mpi(myrank,"error: GLL points minimum distance")
   endif
+
   min_distance_between_CPML_parameter = ALPHA_MAX_PML_x * distance_min_glob / &
                                         max(CPML_width_x,CPML_width_y,CPML_width_z) / 8._CUSTOM_REAL
+
   call min_all_all_cr(min_distance_between_CPML_parameter,min_distance_between_CPML_parameter_glob)
   min_distance_between_CPML_parameter = min_distance_between_CPML_parameter_glob
+
   const_for_separation_two = min_distance_between_CPML_parameter * 2._CUSTOM_REAL
   const_for_separation_four = min_distance_between_CPML_parameter * 4._CUSTOM_REAL
-  min_distance_between_CPML_parameter = min_distance_between_CPML_parameter
+
+  !min_distance_between_CPML_parameter = min_distance_between_CPML_parameter
 
 ! for robust parameter separation of PML damping parameter
 
@@ -1827,7 +1832,6 @@
 
   enddo
 
-
 ! --------------------------------------------------------------------------------------------
 ! for adjoint tomography
 ! create the array store the points on interface between PML and interior computational domain
@@ -2017,3 +2021,66 @@
   endif
 
   end subroutine seperate_two_value_with_one_changeable
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine pml_cleanup_arrays()
+
+! frees PML arrays
+
+  use shared_parameters, only: SIMULATION_TYPE,SAVE_FORWARD,PML_CONDITIONS
+
+  use generate_databases_par, only: d_store_x,d_store_y,d_store_z, &
+                                    K_store_x,K_store_y,K_store_z, &
+                                    alpha_store_x,alpha_store_y,alpha_store_z, &
+                                    is_CPML, CPML_to_spec, CPML_regions, nspec_cpml_tot, &
+                                    mask_ibool_interior_domain, &
+                                    nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
+                                    nglob_interface_PML_elastic,points_interface_PML_elastic
+
+
+  implicit none
+
+  ! local parameters
+  integer :: ier
+
+  ! PML
+  deallocate(is_CPML,stat=ier); if (ier /= 0) stop 'error deallocating array is_CPML'
+
+  if (nspec_cpml_tot > 0) then
+    deallocate(CPML_to_spec,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_to_spec'
+    deallocate(CPML_regions,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_regions'
+  endif
+
+  if (PML_CONDITIONS) then
+    deallocate(d_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_x'
+    deallocate(d_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_y'
+    deallocate(d_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_z'
+    deallocate(k_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_x'
+    deallocate(k_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_y'
+    deallocate(k_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_z'
+
+    deallocate(alpha_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_x'
+    deallocate(alpha_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_y'
+    deallocate(alpha_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_z'
+
+    if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
+      deallocate(mask_ibool_interior_domain,stat=ier)
+      if (ier /= 0) stop 'error deallocating array mask_ibool_interior_domain'
+
+      if (nglob_interface_PML_acoustic > 0) then
+        deallocate(points_interface_PML_acoustic,stat=ier)
+        if (ier /= 0) stop 'error deallocating array points_interface_PML_acoustic'
+      endif
+
+      if (nglob_interface_PML_elastic > 0) then
+        deallocate(points_interface_PML_elastic,stat=ier)
+        if (ier /= 0) stop 'error deallocating array points_interface_PML_elastic'
+      endif
+    endif
+  endif
+
+  end subroutine pml_cleanup_arrays

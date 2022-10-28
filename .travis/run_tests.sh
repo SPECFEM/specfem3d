@@ -51,7 +51,7 @@ case "$TESTDIR" in
 esac
 
 # info
-echo $TRAVIS_BUILD_DIR
+#echo $TRAVIS_BUILD_DIR
 echo $WORKDIR
 echo `date`
 echo

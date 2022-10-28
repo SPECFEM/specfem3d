@@ -36,9 +36,14 @@ module module_mesh
   integer,               dimension(:,:),        allocatable  :: elmnts, elmnts_glob
   integer,               dimension(:,:),        allocatable  :: mat
 
+  integer                                                    :: nspec_part_boundaries
+  integer,               dimension(:,:),        allocatable  :: elmnts_part_boundaries
+  integer,               dimension(:),          allocatable  :: iboundary
+
   ! vertices
   integer                                                    :: nnodes, nnodes_glob
   double precision,      dimension(:,:),         allocatable :: nodes_coords, nodes_coords_glob
+  double precision,      dimension(:,:),         allocatable :: nodes_coords_open_loc
 
   ! boundaries
   integer                                                    :: ispec2D
@@ -108,6 +113,10 @@ contains
     double precision                                         :: vp,vs,rho,qkappa,qmu
     ! poroelastic parameters read in a new file
     double precision :: rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
+    ! position
+    double precision :: x_coord,y_coord,z_coord
+    integer, dimension(NGNOD) :: elmnts_ids
+    integer :: mat_flag
 
     localpath_name='./MESH'
 
@@ -121,17 +130,25 @@ contains
     read(IIN_DB,*) nnodes_glob
 
     if (nnodes_glob < 1) stop 'Error: nnodes_glob < 1'
+
     allocate(nodes_coords_glob(NDIM,nnodes_glob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 117')
     if (ier /= 0) stop 'Error allocating array nodes_coords'
-    do inode = 1, nnodes_glob
-       ! format: #id_node #x_coordinate #y_coordinate #z_coordinate
-       read(IIN_DB,*) num_node, nodes_coords_glob(1,num_node), nodes_coords_glob(2,num_node), nodes_coords_glob(3,num_node)
+    nodes_coords_glob(:,:) = 0.d0
 
-       ! for parallel meshing
-       if (mod(inode,100000) == 0) then
-          write(27,'(2i10)') num_node/100000, nnodes_glob/100000
-       endif
+    do inode = 1, nnodes_glob
+      ! format: #id_node #x_coordinate #y_coordinate #z_coordinate
+      read(IIN_DB,*) num_node,x_coord,y_coord,z_coord
+
+      ! stores coordinates
+      nodes_coords_glob(1,num_node) = x_coord
+      nodes_coords_glob(2,num_node) = y_coord
+      nodes_coords_glob(3,num_node) = z_coord
+
+      ! for parallel meshing
+      if (mod(inode,100000) == 0) then
+        write(27,'(2i10)') num_node/100000, nnodes_glob/100000
+      endif
     enddo
     close(IIN_DB)
     write(27,*) 'total number of nodes: '
@@ -156,23 +173,29 @@ contains
     nspec_glob = nspec_long
 
     if (nspec_glob < 1) stop 'Error: nspec_glob < 1'
+
     allocate(elmnts_glob(NGNOD,nspec_glob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 118')
     if (ier /= 0) stop 'Error allocating array elmnts'
+    elmnts_glob(:,:) = 0
+
     do ispec = 1, nspec_glob
-       ! format: # element_id  #id_node1 ... #id_node8
-       !      or # element_id  #id_node1 ... #id_node27
+      ! format: # element_id  #id_node1 ... #id_node8
+      !      or # element_id  #id_node1 ... #id_node27
 
-       ! note: be aware that here we can have different node ordering for a cube element;
-       !          the ordering from Cubit files might not be consistent for multiple volumes, or uneven, unstructured grids
-       !
-       !          here our code assumes that element ordering is:
-       !          at the bottom of the element, anticlock-wise, i.e.
-       !             point 1 = (0,0,0), point 2 = (0,1,0), point 3 = (1,1,0), point 4 = (1,0,0)
-       !          then top (positive z-direction) of element
-       !             point 5 = (0,0,1), point 6 = (0,1,1), point 7 = (1,1,1), point 8 = (1,0,1)
+      ! note: be aware that here we can have different node ordering for a cube element;
+      !          the ordering from Cubit files might not be consistent for multiple volumes, or uneven, unstructured grids
+      !
+      !          here our code assumes that element ordering is:
+      !          at the bottom of the element, anticlock-wise, i.e.
+      !             point 1 = (0,0,0), point 2 = (0,1,0), point 3 = (1,1,0), point 4 = (1,0,0)
+      !          then top (positive z-direction) of element
+      !             point 5 = (0,0,1), point 6 = (0,1,1), point 7 = (1,1,1), point 8 = (1,0,1)
 
-       read(IIN_DB,*,iostat=ier) num_elmnt,(elmnts_glob(inode,num_elmnt), inode=1,NGNOD)
+      read(IIN_DB,*,iostat=ier) num_elmnt,(elmnts_ids(inode), inode=1,NGNOD)
+
+      ! stores node ids
+      elmnts_glob(:,num_elmnt) = elmnts_ids(:)
 
        if (ier /= 0) then
           print *,'Error while attempting to read ',NGNOD,'element data values from the mesh file'
@@ -196,15 +219,21 @@ contains
     open(unit=IIN_DB, file=localpath_name(1:len_trim(localpath_name))//'/materials_file', &
          status='old', form='formatted',iostat=ier)
     if (ier /= 0) stop 'Error opening materials_file'
+
     allocate(mat(2,nspec_glob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 119')
     if (ier /= 0) stop 'Error allocating array mat'
     mat(:,:) = 0
+
     do ispec = 1, nspec_glob
-       ! format: #id_element #flag
-       ! note: be aware that elements may not be sorted in materials_file
-       read(IIN_DB,*) num_mat,mat(1,num_mat)
-       if ((num_mat > nspec_glob) .or. (num_mat < 1)) stop "Error : Invalid materials_file"
+      ! format: #id_element #flag
+      ! note: be aware that elements may not be sorted in materials_file
+      read(IIN_DB,*) num_mat,mat_flag
+
+      ! store material number
+      mat(1,num_mat) = mat_flag
+
+      if ((num_mat > nspec_glob) .or. (num_mat < 1)) stop "Error : Invalid materials_file"
     enddo
     close(IIN_DB)
 
@@ -767,9 +796,10 @@ contains
     if (nspec2D_moho > 0) write(27,*) '  nspec2D_moho = ', nspec2D_moho
 
     call read_fault_files(localpath_name)
+
     if (ANY_FAULT) then
-       call save_nodes_coords(nodes_coords,nnodes)
-       call close_faults(nodes_coords,nnodes)
+       call save_nodes_coords(nodes_coords_glob,nnodes_glob)
+       call close_faults(nodes_coords_glob,nnodes_glob)
     endif
 
   end subroutine read_mesh_files

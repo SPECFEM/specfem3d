@@ -99,6 +99,7 @@ xclip_sem_OBJECTS = \
 
 xclip_sem_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
@@ -123,6 +124,7 @@ xcombine_sem_OBJECTS = \
 
 xcombine_sem_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
@@ -154,9 +156,11 @@ xsmooth_sem_SHARED_OBJECTS = \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/gll_library.shared.o \
+	$O/heap_sort.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
+	$O/search_kdtree.shared.o \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
 

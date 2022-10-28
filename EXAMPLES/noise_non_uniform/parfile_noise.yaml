@@ -1,0 +1,44 @@
+---
+# MESH INFORMATION
+# ================
+# int NPROC: Number of MPI processors.
+# int NSPEC_SURFACE_EXT_MESH: Number of spectral elements on the surface (use value in OUTPUT_FILES/surface_from_mesher.h).
+# str DATABASES_MPI: Path to DATABASES_MPI.
+# int NGLLSQUARE: Number of GLL points per spectral element face. By default, keep this at 25.
+NPROC: 8
+NSPEC_SURFACE_EXT_MESH: 1024 
+DATABASES_MPI: './DATABASES_MPI'
+NGLLSQUARE: 25
+
+# NOISE DIRECTION
+# ===============
+# float <X,Y,Z>DIR: Components of a unit vector indicating the noise direction.
+XDIR: 0.0
+YDIR: 0.0
+ZDIR: 1.0
+
+# NOISE DISTRIBUTIONS
+# ===================
+# list DISTRIBUTIONS: List containing dictionaries that define noise distributions (uniform, ocean, gaussian).
+# Each distribution is added to form one final distribution. Modify at your convenience.
+#
+# Available distributions:
+# uniform: Uniform noise source.
+# ocean:  Noise source only at the ocean.
+# gaussian: 2D gaussian anomaly. If utm_zone: null, set the center in the mesh coordinates, otherwise use lon/lat.
+DISTRIBUTIONS:
+  - type: 'uniform'
+    weight: 0.1
+  - type: 'ocean'
+    weight: 0.3
+  - type: 'gaussian'
+    weight: 0.6
+    center_x: -105.5
+    center_y: 17.8
+    utm_zone: 13
+    sigma_m: 90000.0
+  
+# FLAGS
+# =====
+PLOT_MASK: false
+WRITE_FILES: true

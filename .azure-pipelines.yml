@@ -1,0 +1,182 @@
+# Azure Pipelines configuration
+#
+# specific branch build with batching
+trigger:
+  batch: true
+  branches:
+    include:
+    - devel
+    - master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+jobs:
+- job: checkChanges
+  displayName: 'Check Changes'
+  steps:
+  - script: |
+      # Azure pipelines
+      # https://docs.microsoft.com/en-us/azure/devops/pipelines/migrate/from-travis?view=azure-devops
+      echo "infos"
+      echo "request: Reason (${BUILD_REASON})"
+      echo "request: Branch CI(${BUILD_SOURCEBRANCH}) Branch Pull Request(${SYSTEM_PULLREQUEST_TARGETBRANCH})"
+      echo "commit : Commit(${BUILD_SOURCEVERSION})"
+      if [ "${BUILD_REASON}" = "PullRequest" ]; then
+        echo "commit : Range($(git rev-parse HEAD^2))"
+      fi
+      echo
+    displayName: 'Infos'
+  - script: |
+      echo "check file changes"
+      echo
+      echo "build reason: ${BUILD_REASON}"
+      echo
+      if [ "${BUILD_REASON}" = "PullRequest" ]; then
+        # PR build
+        echo "Pull request:"
+        echo "pull request id: ${SYSTEM_PULLREQUEST_PULLREQUESTID}"
+        echo "pull request branch: ${SYSTEM_PULLREQUEST_TARGETBRANCH}"
+        DIFF=$(git diff --name-only ${SYSTEM_PULLREQUEST_TARGETBRANCH}..HEAD --)
+      else
+        # Push
+        echo "Push request:"
+        echo "push commit: ${BUILD_SOURCEVERSION}"
+        #DIFF=$(git diff --name-only ${BUILD_SOURCEVERSION})
+        DIFF=$(git diff-tree --no-commit-id --name-only -r ${BUILD_SOURCEVERSION})
+      fi
+      echo "$DIFF"
+      # Escape newlines (replace \n with %0A)
+      #NEWDIFF=($( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' ))
+      #echo "$NEWDIFF"
+      #DIFF=$NEWDIFF
+      RUN_CHECKS=0
+      # Loop by lines
+      while read path; do
+        # Set $directory to substring before /
+        directory="$( echo $path | cut -d'/' -f1 -s )"
+        echo "file: $path  - directory: $directory"
+        if [ -z "$directory" ]; then
+          # root directory
+          RUN_CHECKS=1
+        elif [ "$directory" == src ]; then
+          # src/ directory
+          RUN_CHECKS=1
+        elif [ "$directory" == setup ]; then
+          # setup/ directory
+          RUN_CHECKS=1
+        elif [ "$directory" == EXAMPLES ]; then
+          # EXAMPLES/ directory
+          RUN_CHECKS=1
+        elif [ "$directory" == tests ]; then
+          # tests/ directory
+          RUN_CHECKS=1
+        elif [ "$directory" == .azure-pipelines ]; then
+          # azure directory
+          RUN_CHECKS=1
+        fi
+      done <<< "$DIFF"
+      echo
+      echo "run checks: ${RUN_CHECKS}"
+      echo
+      export RUN_CHECKS=${RUN_CHECKS}
+      #abort: if [[ ${RUN_CHECKS} -eq 0 ]]; then echo "nothing to check, exiting..."; exit 1; fi
+    displayName: 'Run checks'
+
+- job: compilation_default
+  displayName: 'Compilation Default GCC 9'
+  steps:
+  - template: .azure-pipelines/install-template.yml
+    parameters:
+      CUDA: false
+  - template: .azure-pipelines/configure-template.yml
+    parameters:
+      TESTFLAGS: '--with-mpi --enable-vectorization'
+      CUDA: false
+      BUILD: true
+
+- job: compilation_default_gcc7
+  displayName: 'Compilation Default GCC 7'
+  pool:
+    vmImage: 'ubuntu-18.04'
+  variables:
+    CC: gcc-7
+    CXX: g++-7
+    FC: gfortran-7
+  steps:
+  - template: .azure-pipelines/install-template.yml
+    parameters:
+      CUDA: false
+  - template: .azure-pipelines/configure-template.yml
+    parameters:
+      TESTFLAGS: '--with-mpi --enable-vectorization'
+      CUDA: false
+      BUILD: true
+
+- job: compilation_default_gcc10
+  displayName: 'Compilation Default GCC 10'
+  pool:
+    vmImage: 'ubuntu-20.04'
+  variables:
+    CC: gcc-10
+    CXX: g++-10
+    FC: gfortran-10
+  steps:
+  - template: .azure-pipelines/install-template.yml
+    parameters:
+      CUDA: false
+  - template: .azure-pipelines/configure-template.yml
+    parameters:
+      TESTFLAGS: '--with-mpi --enable-vectorization'
+      CUDA: false
+      BUILD: true
+
+- job: compilation_CUDA10
+  displayName: 'Compilation CUDA 10'
+  pool:
+    vmImage: 'ubuntu-18.04'
+  variables:
+    CC: gcc-7
+    CXX: g++-7
+    FC: gfortran-7
+  steps:
+  - template: .azure-pipelines/install-template.yml
+    parameters:
+      CUDA: true
+      CUDA_V: '10.2'
+  - template: .azure-pipelines/configure-template.yml
+    parameters:
+      TESTFLAGS: '--with-mpi --enable-vectorization --with-cuda=cuda10'
+      CUDA: true
+      BUILD: true
+
+- job: compilation_CUDA11
+  displayName: 'Compilation CUDA 11'
+  steps:
+  - template: .azure-pipelines/install-template.yml
+    parameters:
+      CUDA: true
+      CUDA_V: '11.4'
+  - template: .azure-pipelines/configure-template.yml
+    parameters:
+      TESTFLAGS: '--with-mpi --enable-vectorization --with-cuda=cuda11'
+      CUDA: true
+      BUILD: true
+
+- job: test_example_1
+  displayName: 'Test example 1 - simple_model'
+  dependsOn: compilation_default
+  steps:
+  - template: .azure-pipelines/install-template.yml
+    parameters:
+      CUDA: false
+  - template: .azure-pipelines/configure-template.yml
+    parameters:
+      TESTFLAGS: '--with-mpi --enable-vectorization'
+      CUDA: false
+      BUILD: true
+  - template: .azure-pipelines/test-template.yml
+    parameters:
+      workingDirectory: EXAMPLES/meshfem3D_examples/simple_model
+
+

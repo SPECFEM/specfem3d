@@ -28,7 +28,7 @@
 
   subroutine initialize_simulation()
 
-  use adios_manager_mod
+  use manager_adios
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
@@ -144,8 +144,9 @@
     simul_run_flag = .false.
   endif
 
+  ! initializes ADIOS
   if (ADIOS_ENABLED) then
-    call adios_setup()
+    call initialize_adios()
   endif
 
   if ((SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) .and. READ_ADJSRC_ASDF) then
@@ -377,8 +378,8 @@
   endif
 
   ! checks the MOVIE_TYPE parameter
-  if (MOVIE_TYPE /= 1 .and. MOVIE_TYPE /= 2) then
-    stop 'error: MOVIE_TYPE must be either 1 or 2! Please modify Par_file and recompile solver'
+  if (MOVIE_TYPE < 1 .or. MOVIE_TYPE > 3) then
+    stop 'error: MOVIE_TYPE must be either 1, 2 or 3! Please modify Par_file and recompile solver'
   endif
 
   ! check that the code has been compiled with the right values
@@ -400,6 +401,7 @@
       call exit_MPI(myrank,'it seems you have changed STACEY_INSTEAD_OF_FREE_SURFACE, you need to rerun xgenerate_databases')
     endif
   endif
+
   call synchronize_all()
 
   ! checks directories
@@ -443,6 +445,22 @@
   ! file output
   if (SU_FORMAT .and. ASDF_FORMAT) &
     stop 'Please choose either SU_FORMAT or ASDF_FORMAT, both outputs together are not implemented yet...'
+
+  ! acoustic kernel simulations
+  if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
+    ! for USE_TRICK_FOR_BETTER_PRESSURE, the potential_acoustic becomes the potential_dot_dot_acoustic:
+    !  "use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+    !   use the second derivative of the source for the source time function instead of the source itself,
+    !   and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+    !   this is mathematically equivalent, but numerically significantly more accurate because in the explicit
+    !   Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
+    !   thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+    !   is accurate at second order and thus contains significantly less numerical noise."
+    ! however, for kernels expressions, we need both b_potential_acoustic and b_potential_dot_dot_acoustic as defined
+    ! from the original acoustic potential definition.
+    if (USE_TRICK_FOR_BETTER_PRESSURE) &
+      stop 'For acoustic kernels, please set USE_TRICK_FOR_BETTER_PRESSURE to .false.'
+  endif
 
   end subroutine initialize_simulation_check
 

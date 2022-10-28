@@ -227,6 +227,95 @@ end module user_noise_distribution
 ! =============================================================================================================
 !
 
+! evcano: read noise distribution and direction from disk
+
+  subroutine read_noise_distribution_direction(nmovie_points,normal_x_noise,normal_y_noise,normal_z_noise,mask_noise)
+
+  use constants, only: myrank,CUSTOM_REAL,MAX_STRING_LEN,IMAIN,IIN_NOISE,OUTPUT_FILES
+
+  use specfem_par, only: prname,LOCAL_PATH
+
+  implicit none
+
+  ! input parameters
+  integer,intent(in) :: nmovie_points
+
+  ! output parameters
+  real(kind=CUSTOM_REAL), dimension(nmovie_points),intent(inout) :: normal_x_noise,normal_y_noise,normal_z_noise,mask_noise
+
+  ! local parameters
+  integer :: ier,use_external_noise_distribution
+  character(len=MAX_STRING_LEN) :: fname
+
+  ! check if external noise distribution should be used
+  fname = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/use_external_noise_distribution'
+  open(unit=IIN_NOISE,file=trim(fname),status='old',action='read',iostat=ier)
+  if (ier /= 0) then
+    if (myrank == 0) then
+      write(IMAIN,*) 'file '//trim(fname)//' not found, using noise distribution defined in noise_tomography.f90'
+    endif
+    ! finish subroutine
+    return
+  else
+    read(IIN_NOISE,*) use_external_noise_distribution
+    close(IIN_NOISE)
+    if (use_external_noise_distribution == 0) then
+      if (myrank == 0) then
+        write(IMAIN,*) 'using noise distribution defined in noise_tomography.f90'
+      endif
+      ! finish subroutine
+      return
+    endif
+  endif
+
+  ! set file name prefix
+  call create_name_database(prname,myrank,LOCAL_PATH)
+
+  ! read noise distribution
+  if (myrank == 0) then
+    write(IMAIN,*) "reading noise distribution"
+    call flush_IMAIN
+  endif
+
+  fname = prname(1:len_trim(prname))//'mask_noise.bin'
+  open(unit=IIN_NOISE,file=trim(fname),status='old',action='read',form='unformatted',iostat=ier)
+  if (ier /= 0) call exit_mpi(myrank,'error reading noise distribution')
+  read(IIN_NOISE) mask_noise
+  close(IIN_NOISE)
+
+  ! read noise directions
+  if (myrank == 0) then
+    write(IMAIN,*) "reading noise directions"
+    call flush_IMAIN
+  endif
+
+  ! x direction
+  fname = prname(1:len_trim(prname))//'normal_x_noise.bin'
+  open(unit=IIN_NOISE,file=trim(fname),status='old',action='read',form='unformatted',iostat=ier)
+  if (ier /= 0) call exit_mpi(myrank,'error reading noise direction x')
+  read(IIN_NOISE) normal_x_noise
+  close(IIN_NOISE)
+
+  ! y direction
+  fname = prname(1:len_trim(prname))//'normal_y_noise.bin'
+  open(unit=IIN_NOISE,file=trim(fname),status='old',action='read',form='unformatted',iostat=ier)
+  if (ier /= 0) call exit_mpi(myrank,'error reading noise direction y')
+  read(IIN_NOISE) normal_y_noise
+  close(IIN_NOISE)
+
+  ! z direction
+  fname = prname(1:len_trim(prname))//'normal_z_noise.bin'
+  open(unit=IIN_NOISE,file=trim(fname),status='old',action='read',form='unformatted',iostat=ier)
+  if (ier /= 0) call exit_mpi(myrank,'error reading noise direction z')
+  read(IIN_NOISE) normal_z_noise
+  close(IIN_NOISE)
+
+  end subroutine read_noise_distribution_direction
+
+!
+!-----------------------------------------------------------------------------------------------
+!
+
 ! read parameters
   subroutine read_parameters_noise(nrec,NSTEP,nmovie_points, &
                                    islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu_rec, &
@@ -314,7 +403,8 @@ end module user_noise_distribution
   endif
 
   ! compute source arrays for "ensemble forward source", which is source of "ensemble forward wavefield"
-  if (myrank == islice_selected_rec(irec_main_noise) .or. myrank == 0) then ! myrank == 0 is used for output only
+  if (myrank == islice_selected_rec(irec_main_noise) .or. myrank == 0) then
+    ! myrank == 0 is used for output only
     call compute_arrays_source_noise(xi_receiver(irec_main_noise), &
                                      eta_receiver(irec_main_noise), &
                                      gamma_receiver(irec_main_noise), &
@@ -504,6 +594,8 @@ end module user_noise_distribution
   double precision :: hpxir(NGLLX), hpetar(NGLLY),hpgammar(NGLLZ)
 
   character(len=MAX_STRING_LEN) :: filename
+
+  ! reads in noise source
 
   ! main receiver component direction, \nu_main
   filename = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/nu_main'
@@ -863,13 +955,17 @@ end module user_noise_distribution
   integer, dimension(num_free_surface_faces),intent(in) :: free_surface_ispec
   integer, dimension(3,NGLLSQUARE,num_free_surface_faces),intent(in) :: free_surface_ijk
 
+  ! note: at the moment, we still use file i/o to read back noise_surface_movie array - consider buffering in future...
+  !       here, the array is passed as an argument to allow for such a buffering method in future,
+  !       but it is not used at the moment, and the array is locally read in from file i/o when needed.
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLSQUARE,num_free_surface_faces) :: noise_surface_movie
+
   ! output parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(inout) :: sigma_kl
 
   ! local parameters
   integer :: i,j,k,ispec,iglob,ipoin,iface,igll
   real(kind=CUSTOM_REAL) :: eta
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLSQUARE,num_free_surface_faces) :: noise_surface_movie
 
   ! GPU_MODE parameters
   integer(kind=8) :: Mesh_pointer

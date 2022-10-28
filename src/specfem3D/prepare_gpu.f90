@@ -92,7 +92,8 @@
                                 SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY, &
                                 SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE, &
                                 NB_RUNS_ACOUSTIC_GPU, &
-                                FAULT_SIMULATION)
+                                FAULT_SIMULATION, &
+                                UNDO_ATTENUATION_AND_OR_PML)
 
 
   ! prepares fields on GPU for acoustic simulations
@@ -104,16 +105,16 @@
     endif
 
     call prepare_fields_acoustic_device(Mesh_pointer, &
-                                rmass_acoustic,rhostore,kappastore, &
-                                num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
-                                NOISE_TOMOGRAPHY,num_free_surface_faces, &
-                                free_surface_ispec,free_surface_ijk, &
-                                b_reclen_potential,b_absorb_potential, &
-                                ELASTIC_SIMULATION, num_coupling_ac_el_faces, &
-                                coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                                coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
-                                num_colors_outer_acoustic,num_colors_inner_acoustic, &
-                                num_elem_colors_acoustic)
+                                        rmass_acoustic,rhostore,kappastore, &
+                                        num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
+                                        NOISE_TOMOGRAPHY,num_free_surface_faces, &
+                                        free_surface_ispec,free_surface_ijk, &
+                                        b_reclen_potential,b_absorb_potential, &
+                                        ELASTIC_SIMULATION, num_coupling_ac_el_faces, &
+                                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                                        coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
+                                        num_colors_outer_acoustic,num_colors_inner_acoustic, &
+                                        num_elem_colors_acoustic)
 
     if (SIMULATION_TYPE == 3) &
       call prepare_fields_acoustic_adj_dev(Mesh_pointer,APPROXIMATE_HESS_KL)
@@ -130,48 +131,47 @@
     endif
 
     call prepare_fields_elastic_device(Mesh_pointer, &
-                                rmassx,rmassy,rmassz, &
-                                rho_vp,rho_vs, &
-                                kappastore, mustore, &
-                                num_phase_ispec_elastic,phase_ispec_inner_elastic, &
-                                b_absorb_field,b_reclen_field, &
-                                COMPUTE_AND_STORE_STRAIN, &
-                                epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-                                epsilondev_xz,epsilondev_yz, &
-                                ATTENUATION, &
-                                size(R_xx), &
-                                R_xx,R_yy,R_xy,R_xz,R_yz, &
-                                factor_common, &
-                                R_trace,epsilondev_trace, &
-                                factor_common_kappa, &
-                                alphaval,betaval,gammaval, &
-                                APPROXIMATE_OCEAN_LOAD,rmass_ocean_load, &
-                                NOISE_TOMOGRAPHY, &
-                                free_surface_normal,free_surface_ispec,free_surface_ijk, &
-                                num_free_surface_faces, &
-                                ACOUSTIC_SIMULATION, &
-                                num_colors_outer_elastic,num_colors_inner_elastic, &
-                                num_elem_colors_elastic, &
-                                ANISOTROPY, &
-                                c11store,c12store,c13store,c14store,c15store,c16store, &
-                                c22store,c23store,c24store,c25store,c26store, &
-                                c33store,c34store,c35store,c36store, &
-                                c44store,c45store,c46store,c55store,c56store,c66store)
+                                       rmassx,rmassy,rmassz, &
+                                       rho_vp,rho_vs, &
+                                       kappastore, mustore, &
+                                       num_phase_ispec_elastic,phase_ispec_inner_elastic, &
+                                       b_absorb_field,b_reclen_field, &
+                                       COMPUTE_AND_STORE_STRAIN, &
+                                       epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+                                       epsilondev_xz,epsilondev_yz, &
+                                       ATTENUATION, &
+                                       size(R_xx), &
+                                       R_xx,R_yy,R_xy,R_xz,R_yz, &
+                                       factor_common, &
+                                       R_trace,epsilondev_trace, &
+                                       factor_common_kappa, &
+                                       alphaval,betaval,gammaval, &
+                                       APPROXIMATE_OCEAN_LOAD,rmass_ocean_load, &
+                                       NOISE_TOMOGRAPHY, &
+                                       free_surface_normal,free_surface_ispec,free_surface_ijk, &
+                                       num_free_surface_faces, &
+                                       ACOUSTIC_SIMULATION, &
+                                       num_colors_outer_elastic,num_colors_inner_elastic, &
+                                       num_elem_colors_elastic, &
+                                       ANISOTROPY, &
+                                       c11store,c12store,c13store,c14store,c15store,c16store, &
+                                       c22store,c23store,c24store,c25store,c26store, &
+                                       c33store,c34store,c35store,c36store, &
+                                       c44store,c45store,c46store,c55store,c56store,c66store)
 
     if (SIMULATION_TYPE == 3) &
       call prepare_fields_elastic_adj_dev(Mesh_pointer, &
-                                NDIM*NGLOB_AB, &
-                                COMPUTE_AND_STORE_STRAIN, &
-                                epsilon_trace_over_3, &
-                                b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
-                                b_epsilondev_xz,b_epsilondev_yz, &
-                                b_epsilon_trace_over_3, &
-                                ATTENUATION,size(R_xx), &
-                                b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                                b_R_trace,b_epsilondev_trace, &
-                                b_alphaval,b_betaval,b_gammaval, &
-                                ANISOTROPIC_KL, &
-                                APPROXIMATE_HESS_KL)
+                                          NDIM*NGLOB_AB, &
+                                          epsilon_trace_over_3, &
+                                          b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                                          b_epsilondev_xz,b_epsilondev_yz, &
+                                          b_epsilon_trace_over_3, &
+                                          size(R_xx), &
+                                          b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                                          b_R_trace,b_epsilondev_trace, &
+                                          b_alphaval,b_betaval,b_gammaval, &
+                                          ANISOTROPIC_KL, &
+                                          APPROXIMATE_HESS_KL)
   endif
 
   ! prepares fields on GPU for poroelastic simulations
@@ -201,14 +201,14 @@
     endif
     ! copies noise  arrays to GPU
     call prepare_fields_noise_device(Mesh_pointer, &
-                                NSPEC_AB, NGLOB_AB, &
-                                free_surface_ispec, &
-                                free_surface_ijk, &
-                                num_free_surface_faces, &
-                                NOISE_TOMOGRAPHY, &
-                                NSTEP,noise_sourcearray, &
-                                normal_x_noise,normal_y_noise,normal_z_noise, &
-                                mask_noise,free_surface_jacobian2Dw)
+                                     NSPEC_AB, NGLOB_AB, &
+                                     free_surface_ispec, &
+                                     free_surface_ijk, &
+                                     num_free_surface_faces, &
+                                     NOISE_TOMOGRAPHY, &
+                                     NSTEP,noise_sourcearray, &
+                                     normal_x_noise,normal_y_noise,normal_z_noise, &
+                                     mask_noise,free_surface_jacobian2Dw)
 
   endif ! NOISE_TOMOGRAPHY
 

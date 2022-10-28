@@ -358,10 +358,7 @@ contains
     real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(in)      :: model, model_ref
     real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(inout)   :: gradient, hess_approxim
 
-
-
     do ispec = 1, NSPEC_AB  !! loop on elements
-
 
        !! get model in loacals arrays memory ---------------------------------------------------------------------------------
        !! and set in physical units
@@ -579,49 +576,44 @@ contains
 
     !! communicate kernels from each simulataneaou run
     if (ACOUSTIC_SIMULATION) then
-
-       wks(:,:,:,:)=rho_ac_kl(:,:,:,:)
+       wks(:,:,:,:) = rho_ac_kl(:,:,:,:)
        call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), rho_ac_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
-       wks(:,:,:,:)=kappa_ac_kl(:,:,:,:)
+       wks(:,:,:,:) = kappa_ac_kl(:,:,:,:)
        call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), kappa_ac_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
 
        if (APPROXIMATE_HESS_KL) then
-          wks(:,:,:,:)=hess_rho_ac_kl(:,:,:,:)
+          wks(:,:,:,:) = hess_rho_ac_kl(:,:,:,:)
           call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), hess_rho_ac_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
-          wks(:,:,:,:)=hess_kappa_ac_kl(:,:,:,:)
+          wks(:,:,:,:) = hess_kappa_ac_kl(:,:,:,:)
           call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), hess_kappa_ac_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
        endif
-
     endif
 
     if (ELASTIC_SIMULATION) then
-
-       wks(:,:,:,:)=rho_kl(:,:,:,:)
+       wks(:,:,:,:) = rho_kl(:,:,:,:)
        call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), rho_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
 
        if (APPROXIMATE_HESS_KL) then
-          wks(:,:,:,:)=hess_rho_kl(:,:,:,:)
+          wks(:,:,:,:) = hess_rho_kl(:,:,:,:)
           call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), hess_rho_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
        endif
 
-
        if (ANISOTROPIC_KL) then
-          wks1(:,:,:,:,:)= cijkl_kl(:,:,:,:,:)
+          wks1(:,:,:,:,:) = cijkl_kl(:,:,:,:,:)
           call sum_all_all_cr_for_simulatenous_runs(wks1(1,1,1,1,1), cijkl_kl(1,1,1,1,1), 21*NGLLX*NGLLY*NGLLZ*NSPEC_AB)
        else
-          wks(:,:,:,:)=mu_kl(:,:,:,:)
+          wks(:,:,:,:) = mu_kl(:,:,:,:)
           call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), mu_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
-          wks(:,:,:,:)=kappa_kl(:,:,:,:)
+          wks(:,:,:,:) = kappa_kl(:,:,:,:)
           call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), kappa_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
 
           if (APPROXIMATE_HESS_KL) then
-             wks(:,:,:,:)=hess_mu_kl(:,:,:,:)
+             wks(:,:,:,:) = hess_mu_kl(:,:,:,:)
              call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), hess_mu_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
-             wks(:,:,:,:)=hess_kappa_kl(:,:,:,:)
+             wks(:,:,:,:) = hess_kappa_kl(:,:,:,:)
              call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), hess_kappa_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
           endif
        endif
-
     endif
 
     !! cost function reduction

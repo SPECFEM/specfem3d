@@ -1,0 +1,32 @@
+###  The example is used to run a dynamic rupture model with prescribed heterogeneous friction parameters.
+###  Huihui Weng, Postdoc in Geoazur UCA, contact me by weng@geoazur.unice.fr or qfkq7850@mail.ustc.edu.cn. Oct. 31 2018
+
+
+#  MESH
+   The mesh file was created by the PYTHON scripts: 3D_CUBIT_mesh
+   The 3D_CUBIT_mesh can also be downloaded on GitHub: 
+       git clone git@github.com:Huihuiweng/3D_CUBIT_mesh.git
+
+#  Initial shear stress
+   The initial shear stres is provided in the file DATA/initial_stress.dat. Nearest interpolation is used.
+   The format of this file is:
+        Number_of_points
+        X  Y  Z  value    
+        ...
+        X  Y  Z  value
+
+#  Par_file_faults
+   As an example here, the initial shear stress is read from file. You can extend it to any frictional parameters
+   Such as: 
+       &INIT_STRESS S1=0, S2=0, S3=-50.0e6, n2=1 /
+       &DIST2D shapeval='read-from-file', filename='initial_stress.dat' /
+
+#  Run the model
+   First, install SPECFEM3D, then run this example:
+       sh run_this_example.sh
+
+
+#  Present the simulations results
+   The output of simulations can be post-processed by the scripts Specfem3D_result_display
+      git clone git@github.com:Huihuiweng/Specfem3D_result_display.git
+      

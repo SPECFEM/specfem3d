@@ -34,7 +34,6 @@
 __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
                                                 int* d_ibool,
                                                 realw* rhostore,
-                                                realw* kappastore,
                                                 realw* d_hprime_xx,
                                                 int* d_irregular_element_number,
                                                 realw* d_xix,realw* d_xiy,realw* d_xiz,
@@ -87,7 +86,7 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
   if (active ){
     field accel_loc[3];
     field b_displ_loc[3];
-    realw rhol,kappal;
+    realw rhol;
 
     // gets material parameter
     rhol = rhostore[ijk_ispec_padded];
@@ -104,17 +103,37 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
                             d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
                             rhol,xix_regular,gravity);
 
+    // note: the gradients grad(..) above will have a 1/rho factor added in routine compute_gradient_kernel()
+    //       (as in compute_gradient_in_acoustic() for CPU)
+    //
+    //       that is, b_displ_elm = 1/rho grad(phi)
+    //       and      accel_elm   = 1/rho grad(phi^adj)
+    //
+    //       however, here we want to compute the contributions for the absolute kernel
+    //         K_rho   = - int_0^T [ grad(phi^adj) * grad(phi) ] dt        (A-28)
+    //       and thus we multiply the b_displ_elm and accel_elm by rho again to have the time step contribution
+    //         b_displ_elem * accel_elm = {rho [1/rho grad(phi)]} * {rho [1/rho grad(phi^adj)]}
+    //                                  = grad(phi) * grad(phi^adj) and times dt
+    //
+    // we could also just set rhol above to 1.0 and call compute_gradient_kernel(), but prefer here to make this more explicit.
+    // in case the gradient routine changes, revisit this...
+    accel_loc[0] = rhol * accel_loc[0];
+    accel_loc[1] = rhol * accel_loc[1];
+    accel_loc[2] = rhol * accel_loc[2];
+
+    b_displ_loc[0] = rhol * b_displ_loc[0];
+    b_displ_loc[1] = rhol * b_displ_loc[1];
+    b_displ_loc[2] = rhol * b_displ_loc[2];
+
     // the sum function is here to enable summing over wavefields when NB_RUNS_ACOUSTIC_GPU > 1
 
     // density kernel
-    rho_ac_kl[ijk_ispec] += deltat * rhol * sum(accel_loc[0]*b_displ_loc[0] +
-                                                accel_loc[1]*b_displ_loc[1] +
-                                                accel_loc[2]*b_displ_loc[2]);
+    // (multiplication with rho(x) factor will be done after the time loop)
+    rho_ac_kl[ijk_ispec] += deltat * sum(accel_loc[0]*b_displ_loc[0] + accel_loc[1]*b_displ_loc[1] + accel_loc[2]*b_displ_loc[2]);
 
     // bulk modulus kernel
-    kappal = kappastore[ijk_ispec];
-    kappa_ac_kl[ijk_ispec] += deltat / kappal * sum(potential_acoustic[iglob]
-                                              * b_potential_dot_dot_acoustic[iglob]);
+    // (multiplication with 1/kappa(x) factor will be done after the time loop)
+    kappa_ac_kl[ijk_ispec] += deltat * sum(potential_acoustic[iglob] * b_potential_dot_dot_acoustic[iglob]);
   } // active
 }
 

@@ -27,19 +27,22 @@
 
 ! for external mesh
 
-  subroutine save_arrays_solver_ext_mesh(nspec,ibool)
+  subroutine save_arrays_solver_ext_mesh()
 
-  use constants, only: NGLLX,NGLLY,NGLLZ,IMAIN,IOUT,myrank
+  use constants, only: IMAIN,IOUT,myrank
 
   use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
     APPROXIMATE_OCEAN_LOAD, SAVE_MESH_FILES, ANISOTROPY
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
 
+  ! global indices
+  use generate_databases_par, only: nspec => NSPEC_AB, ibool
+
   use generate_databases_par, only: &
     nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-    SIMULATION_TYPE,SAVE_FORWARD,mask_ibool_interior_domain, &
+    SIMULATION_TYPE,SAVE_FORWARD, &
     STACEY_ABSORBING_CONDITIONS,USE_MESH_COLORING_GPU
 
   ! MPI interfaces
@@ -49,7 +52,7 @@
   ! PML
   use generate_databases_par, only: PML_CONDITIONS, &
     nspec_cpml,CPML_width_x,CPML_width_y,CPML_width_z,CPML_to_spec, &
-    CPML_regions,is_CPML,min_distance_between_CPML_parameter,nspec_cpml_tot, &
+    CPML_regions,is_CPML,min_distance_between_CPML_parameter, &
     d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z, &
     alpha_store_x,alpha_store_y,alpha_store_z, &
     nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
@@ -63,15 +66,10 @@
 
   implicit none
 
-  integer,intent(in) :: nspec
-  ! mesh coordinates
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
-
   ! local parameters
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
   integer :: max_nibool_interfaces_ext_mesh
   integer :: nglob
-
   integer :: ier,i,itest
   character(len=MAX_STRING_LEN) :: filename
 
@@ -374,50 +372,22 @@
   close(IOUT)
 
   ! stores arrays in binary files
-  if (SAVE_MESH_FILES) call save_arrays_solver_files(nspec,ibool)
+  if (SAVE_MESH_FILES) then
+    call save_arrays_solver_files()
+  endif
 
   ! if SAVE_MESH_FILES is true then the files have already been saved, no need to save them again
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
-    call save_arrays_solver_injection_boundary(nspec,ibool)
+    call save_arrays_solver_injection_boundary()
   endif
+
+  ! synchronizes processes
+  call synchronize_all()
 
   ! cleanup
   if (allocated(ibool_interfaces_ext_mesh_dummy)) then
     deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier)
     if (ier /= 0) stop 'error deallocating array ibool_interfaces_ext_mesh_dummy'
-  endif
-
-  ! PML
-  deallocate(is_CPML,stat=ier); if (ier /= 0) stop 'error deallocating array is_CPML'
-  if (nspec_cpml_tot > 0) then
-     deallocate(CPML_to_spec,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_to_spec'
-     deallocate(CPML_regions,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_regions'
-  endif
-
-  if (PML_CONDITIONS) then
-     deallocate(d_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_x'
-     deallocate(d_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_y'
-     deallocate(d_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_z'
-     deallocate(k_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_x'
-     deallocate(k_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_y'
-     deallocate(k_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array d_store_z'
-     deallocate(alpha_store_x,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_x'
-     deallocate(alpha_store_y,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_y'
-     deallocate(alpha_store_z,stat=ier); if (ier /= 0) stop 'error deallocating array alpha_store_z'
-     if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
-       deallocate(mask_ibool_interior_domain,stat=ier)
-       if (ier /= 0) stop 'error deallocating array mask_ibool_interior_domain'
-
-       if (nglob_interface_PML_acoustic > 0) then
-         deallocate(points_interface_PML_acoustic,stat=ier)
-         if (ier /= 0) stop 'error deallocating array points_interface_PML_acoustic'
-       endif
-
-       if (nglob_interface_PML_elastic > 0) then
-         deallocate(points_interface_PML_elastic,stat=ier)
-         if (ier /= 0) stop 'error deallocating array points_interface_PML_elastic'
-       endif
-     endif
   endif
 
   end subroutine save_arrays_solver_ext_mesh
@@ -426,7 +396,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine save_arrays_solver_files(nspec,ibool)
+  subroutine save_arrays_solver_files()
 
 ! outputs binary files for single mesh parameters (for example vp, vs, rho, ..)
 
@@ -437,16 +407,15 @@
   use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
     NPROC
 
+  ! global indices
+  use generate_databases_par, only: nspec => NSPEC_AB, ibool
+
   ! MPI interfaces
   use generate_databases_par, only: nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,num_interfaces_ext_mesh
 
   use create_regions_mesh_ext_par
 
   implicit none
-
-  integer,intent(in) :: nspec
-  ! mesh coordinates
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: v_tmp
@@ -748,19 +717,18 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine save_arrays_solver_injection_boundary(nspec,ibool)
+  subroutine save_arrays_solver_injection_boundary()
 
-  use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT
-
-  use create_regions_mesh_ext_par
+  use constants, only: myrank,NGLLSQUARE,IMAIN,IOUT
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
 
-  implicit none
+  ! global indices
+  use generate_databases_par, only: ibool
 
-  integer,intent(in) :: nspec
-  ! mesh coordinates
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
+  use create_regions_mesh_ext_par
+
+  implicit none
 
   ! local parameters
   integer :: ier,i,j,k

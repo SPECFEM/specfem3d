@@ -7,6 +7,8 @@
 #SBATCH --output=OUTPUT_FILES/%j.o
 #SBATCH --job-name=go_solver
 
+umask 0022
+
 cd $SLURM_SUBMIT_DIR
 
 # script to run the solver
@@ -31,7 +33,7 @@ cp src/shared/constants.h OUTPUT_FILES/
 cat $SLURM_JOB_NODELIST > OUTPUT_FILES/compute_nodes
 echo "$SLURM_JOBID" > OUTPUT_FILES/jobid
 
-echo starting run in current directory $PWD
+echo starting solver on $NPROC processors
 echo " "
 
 sleep 2
@@ -39,4 +41,4 @@ mpiexec -np $NPROC ./bin/xspecfem3D
 
 cp DATA/STATIONS_FILTERED OUTPUT_FILES/
 
-echo "finished successfully"
+echo "done"

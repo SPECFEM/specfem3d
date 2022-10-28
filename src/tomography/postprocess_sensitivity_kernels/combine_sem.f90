@@ -199,9 +199,9 @@ subroutine combine_sem_array(kernel_name,kernel_paths,output_dir,npath)
   integer :: iker,ier
 
   allocate(array(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 978')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 978')
   allocate(sum_arrays(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 979')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 979')
   if (ier /= 0) stop 'Error allocating array'
 
  ! loop over kernel paths
@@ -251,24 +251,4 @@ subroutine combine_sem_array(kernel_name,kernel_paths,output_dir,npath)
   deallocate(array,sum_arrays)
 
 end subroutine combine_sem_array
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-! version without rank number printed in the error message
-
-  subroutine my_local_exit_MPI_without_rank(error_msg)
-
-  implicit none
-
-  character(len=*) error_msg
-
-! write error message to screen
-  write(*,*) error_msg(1:len(error_msg))
-  write(*,*) 'Error detected, aborting MPI...'
-
-  stop 'Fatal error'
-
-  end subroutine my_local_exit_MPI_without_rank
 

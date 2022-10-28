@@ -62,6 +62,13 @@ module input_output
                          USE_FORCE_POINT_SOURCE,USE_EXTERNAL_SOURCE_FILE, USE_RICKER_TIME_FUNCTION
 
 
+  use specfem_par, only: nrec,islice_selected_rec,ispec_selected_rec, &
+                         xi_receiver,eta_receiver,gamma_receiver,nu_rec, &
+                         station_name,network_name
+
+  use specfem_par, only: hdur,hdur_Gaussian,tshift_src,min_tshift_src_original,t0, &
+                         islice_selected_source,ispec_selected_source
+
   use specfem_par_elastic, only: ispec_is_elastic
   use specfem_par_acoustic, only: ispec_is_acoustic
   !!----------------------------------------------------------------------------------------
@@ -1887,12 +1894,20 @@ contains
        allocate(acqui_simu(ievent)%nu_rec(NDIM,NDIM,nsta),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 448')
 
+       nrec = nsta
+
        ! reads STATIONS_FILTERED file, locates receivers in the mesh and compute Lagrange interpolators
-       call locate_receivers(filtered_rec_filename,nsta,acqui_simu(ievent)%islice_selected_rec, &
-                             acqui_simu(ievent)%ispec_selected_rec, &
-                             acqui_simu(ievent)%xi_rec,acqui_simu(ievent)%eta_rec,acqui_simu(ievent)%gamma_rec, &
-                             acqui_simu(ievent)%station_name,acqui_simu(ievent)%network_name,acqui_simu(ievent)%nu_rec, &
-                             1.0d0,1.0d0)
+       call locate_receivers(filtered_rec_filename,1.0d0,1.0d0)
+
+       acqui_simu(ievent)%islice_selected_rec(:) = islice_selected_rec(:)
+       acqui_simu(ievent)%ispec_selected_rec(:) = ispec_selected_rec(:)
+       acqui_simu(ievent)%xi_rec(:) = xi_receiver(:)
+       acqui_simu(ievent)%eta_rec(:) = eta_receiver(:)
+       acqui_simu(ievent)%gamma_rec(:) = gamma_receiver(:)
+       acqui_simu(ievent)%station_name(:) = station_name(:)
+       acqui_simu(ievent)%network_name(:) = network_name(:)
+       acqui_simu(ievent)%nu_rec(:,:,:) = nu_rec(:,:,:)
+
        nrec_loc = 0
        do irec = 1, nsta
          if (myrank == acqui_simu(ievent)%islice_selected_rec(irec)) then
@@ -1984,6 +1999,7 @@ contains
     real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: interparray
     double precision                                          :: final_distance_source,final_distance_squared
     integer                                                   :: idomain
+
     ! location search
     real(kind=CUSTOM_REAL) :: distance_min_glob,distance_max_glob
     real(kind=CUSTOM_REAL) :: elemsize_min_glob,elemsize_max_glob
@@ -1993,6 +2009,10 @@ contains
 
     real(kind=CUSTOM_REAL) :: dt_dummy
     integer :: it
+
+    ! date
+    integer :: yr,jda,ho,mi,mo,da
+    double precision :: sec
 
     if (myrank == 0) then
       write(INVERSE_LOG_FILE,*)
@@ -2107,8 +2127,6 @@ contains
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 487')
       if (ier /= 0) stop 'error allocating arrays for user sources time function'
 
-
-
       ! 3/ Read the file describing the sources
       select case (acqui_simu(ievent)%source_type)
 
@@ -2134,7 +2152,8 @@ contains
             ! CMT moment tensors
             if (myrank == 0) then
               ! only main process reads in CMTSOLUTION file
-              call get_cmt(filename,acqui_simu(ievent)%tshift,acqui_simu(ievent)%hdur,lat,long,depth,moment_tensor, &
+              call get_cmt(filename,yr,jda,mo,da,ho,mi,sec, &
+                           acqui_simu(ievent)%tshift,acqui_simu(ievent)%hdur,lat,long,depth,moment_tensor, &
                            DT,NSOURCES,min_tshift,acqui_simu(ievent)%user_source_time_function)
             endif
             ! broadcasts specific moment tensor infos
@@ -2236,9 +2255,16 @@ contains
 
       deallocate(x_target_source,y_target_source,z_target_source)
 
-      call setup_stf_constants(acqui_simu(ievent)%hdur,acqui_simu(ievent)%hdur_Gaussian,acqui_simu(ievent)%tshift, &
-                                min_tshift,acqui_simu(ievent)%islice_selected_source,acqui_simu(ievent)%ispec_selected_source, &
-                                acqui_simu(ievent)%t0)
+      islice_selected_source(:) = acqui_simu(ievent)%islice_selected_source(:)
+      ispec_selected_source(:) = acqui_simu(ievent)%ispec_selected_source(:)
+
+      call setup_stf_constants()
+
+      acqui_simu(ievent)%hdur(:) = hdur(:)
+      acqui_simu(ievent)%hdur_Gaussian = hdur_Gaussian(:)
+      acqui_simu(ievent)%tshift(:) = tshift_src(:)
+      min_tshift = min_tshift_src_original
+      acqui_simu(ievent)%t0 = t0
 
       nsrc_loc = 0
       do isrc=1, NSOURCES

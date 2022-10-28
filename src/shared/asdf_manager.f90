@@ -33,7 +33,18 @@ subroutine asdf_setup(file_id, path_to_add, simul_run_flag)
   implicit none
 
   ! asdf file handle
-  integer,intent(inout) :: file_id
+  !
+  ! note: ASDF uses hdf5 file i/o routines. therefore, ASDF c routines define the file_id handle as hid_t.
+  !       the datatype hid_t is defined by the hdf5 library, and for Fortran in file H5f90i_gen.h as:
+  !          #define c_int_8 long long
+  !          typedef c_int_8 hid_t_f
+  !       in Fortran codes, one could use the hdf5 module for this
+  !          use hdf5, only: HID_T
+  !          integer(HID_T) :: file_id
+  !       which will required the hdf5 library paths set for compilation and linking.
+  !       instead here, the c_int_8 corresponds to long long, which in Fortran would be an 8-byte integer
+  integer(kind=8),intent(inout) :: file_id
+
   character(len=*), intent(in) :: path_to_add
   logical, intent(in) :: simul_run_flag
 
@@ -52,6 +63,15 @@ subroutine asdf_setup(file_id, path_to_add, simul_run_flag)
   endif
 
   call ASDF_open_read_only_f(filename, comm, file_id)
+
+  ! checks file id
+  if (file_id < 0) then
+    ! negative file id indicates an opening error
+    print *,'Error opening ASDF file   : ',trim(filename)
+    print *,'       got invalid file id: ',file_id
+    print *,'Please check if the file exists...'
+    stop 'Error opening ASDF file'
+  endif
 
 end subroutine asdf_setup
 

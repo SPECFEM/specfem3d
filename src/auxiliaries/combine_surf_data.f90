@@ -165,17 +165,17 @@ program combine_surf_data
 
     ! allocates arrays
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1107')
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1107')
     allocate(mask_ibool(NGLOB_AB),stat=ier)
-    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1108')
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1108')
     allocate(num_ibool(NGLOB_AB),stat=ier)
-    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1109')
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1109')
     allocate(xstore(NGLOB_AB),stat=ier)
-    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1110')
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1110')
     allocate(ystore(NGLOB_AB),stat=ier)
-    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1111')
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1111')
     allocate(zstore(NGLOB_AB),stat=ier)
-    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1112')
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1112')
     if (ier /= 0) stop 'error allocating array ibool etc.'
 
     ! surface file
@@ -191,7 +191,7 @@ program combine_surf_data
 
     if (it == 1) then
       allocate(ibelm_surf(nspec_surf),stat=ier)
-      if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1113')
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1113')
       if (ier /= 0) stop 'error allocating array ibelm_surf'
     endif
     read(28) ibelm_surf
@@ -201,11 +201,11 @@ program combine_surf_data
     if (it == 1) then
       if (FILE_ARRAY_IS_3D) then
         allocate(data_3D(NGLLX,NGLLY,NGLLZ,NSPEC_AB),dat3D(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-        if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1114')
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1114')
         if (ier /= 0) stop 'error allocating array data_3D'
       else
         allocate(data_2D(NGLLX,NGLLY,nspec_surf),dat2D(NGLLX,NGLLY,nspec_surf),stat=ier)
-        if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1115')
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1115')
         if (ier /= 0) stop 'error allocating array data_2D'
       endif
     endif
@@ -335,11 +335,11 @@ program combine_surf_data
 
     ! allocates arrays
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1116')
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1116')
     allocate(mask_ibool(NGLOB_AB),stat=ier)
-    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1117')
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1117')
     allocate(num_ibool(NGLOB_AB),stat=ier)
-    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1118')
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1118')
     if (ier /= 0) stop 'error allocating array ibool etc.'
 
 
@@ -424,24 +424,4 @@ program combine_surf_data
   print *, 'Done writing '//trim(mesh_file)
 
 end program combine_surf_data
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-! version without rank number printed in the error message
-
-  subroutine my_local_exit_MPI_without_rank(error_msg)
-
-  implicit none
-
-  character(len=*) error_msg
-
-! write error message to screen
-  write(*,*) error_msg(1:len(error_msg))
-  write(*,*) 'Error detected, aborting MPI...'
-
-  stop 'Fatal error'
-
-  end subroutine my_local_exit_MPI_without_rank
 

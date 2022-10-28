@@ -104,9 +104,9 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2108')
     if (ier /= 0) stop 'error allocating arrays for highres shakemap'
     ! initializes shakemap values
-    shakemap_ux(:) = 0._CUSTOM_REAL
-    shakemap_uy(:) = 0._CUSTOM_REAL
-    shakemap_uz(:) = 0._CUSTOM_REAL
+    shakemap_ux(:) = 0.0_CUSTOM_REAL
+    shakemap_uy(:) = 0.0_CUSTOM_REAL
+    shakemap_uz(:) = 0.0_CUSTOM_REAL
   endif
 
   ! number of surface faces for all partitions together
@@ -143,6 +143,9 @@
       allocate(shakemap_uz_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2117')
       if (ier /= 0) stop 'error allocating arrays for highres movie'
+      shakemap_ux_all(:) = 0.0_CUSTOM_REAL
+      shakemap_uy_all(:) = 0.0_CUSTOM_REAL
+      shakemap_uz_all(:) = 0.0_CUSTOM_REAL
     endif
   endif
 
@@ -166,7 +169,7 @@
   ! determines surface elements and indexes for movie/shakemap
   ! stores global indices of GLL points on the surface to array faces_surface_ibool
   select case (MOVIE_TYPE)
-  case (1)
+  case (1,3)
     ! only for top, free surface
     ! check
     if (num_free_surface_faces /= nfaces_surface) then
@@ -237,7 +240,7 @@
 
   case default
     ! not recognized type
-    call exit_MPI(myrank,'Invalid MOVIE_TYPE value for surface movie and/or shakemap, must be 1 or 2')
+    call exit_MPI(myrank,'Invalid MOVIE_TYPE value for surface movie and/or shakemap, must be 1, 2 or 3')
 
   end select
 
@@ -256,11 +259,17 @@
     ! shakemaps
     if (CREATE_SHAKEMAP) then
       write(IMAIN,*) 'shakemap:'
-      if (MOVIE_TYPE == 1) then
+      select case (MOVIE_TYPE)
+      case (1)
         write(IMAIN,*) '  movie type 1: horizontal peak-ground values'
-      else if (MOVIE_TYPE == 2) then
+      case (2)
         write(IMAIN,*) '  movie type 2: maximum length of particle vector'
-      endif
+      case (3)
+        write(IMAIN,*) '  movie type 3: geometric mean of horizontal peak-ground values'
+      case default
+        print *,'Error: invalid MOVIE_TYPE value, must be 1, 2 or 3 for CREATE_SHAKEMAP'
+        stop 'Error invalid MOVIE_TYPE for CREATE_SHAKEMAP'
+      end select
       write(IMAIN,*)
     endif
     ! surface movie

@@ -75,7 +75,8 @@ module fault_solver_dynamic
   integer, parameter :: RSF_SLIP_LAW_TYPE = 1 ! default 1 == SCEC TPV103/104 benchmark slip law, 2 == slip law by Kaneko (2008)
 
   ! GPU output record length
-  integer, parameter :: NT_RECORD_LENGTH = 500
+  integer, save :: NT_RECORD_LENGTH = 500     ! default 500, i.e., every 500 time step synchronizes dataT%dat records.
+                                              ! will adapt in case needed to NSNAP number of time steps for snapshots
 
   public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, &
             SIMULATION_TYPE_DYN, NT_RECORD_LENGTH, &
@@ -318,12 +319,35 @@ contains
   subroutine fault_transfer_data_GPU()
 
   use specfem_par, only: Fault_pointer
+  use constants, only: myrank,IMAIN
 
   implicit none
 
   ! local parameters
   type(bc_dynandkinflt_type),pointer :: bc
   integer :: ifault,nspec,nglob
+
+  ! adapts NT_RECORD_LENGTH to match snapshot outputs
+  !
+  ! note: NT_RECORD_LENGTH determines how often dataT records will be transferred from GPU back to CPU
+  !       this should match also the NSNAP number of time steps NSNAP for wavefield snapshots and/or
+  !       NTOUT for number of time steps between outputting records.
+  ! trying to adapt to whatever is shortest
+  if (NTOUT < NT_RECORD_LENGTH) NT_RECORD_LENGTH = NTOUT
+  if (NSNAP < NT_RECORD_LENGTH) NT_RECORD_LENGTH = NSNAP
+  ! let's match snapshots for outputting them if possible.
+  ! then, the full records will be output at the end of the simulation.
+  if (mod(NSNAP,NT_RECORD_LENGTH) /= 0) NT_RECORD_LENGTH = NSNAP
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "    fault transfers between CPU-GPU:"
+    write(IMAIN,*) "      number of time steps for record outputs NTOUT  = ",NTOUT
+    write(IMAIN,*) "      number of time steps for snapshots      NTSNAP = ",NSNAP
+    write(IMAIN,*) "      using NT_RECORD_LENGTH = ",NT_RECORD_LENGTH," for synchronizing dataT array"
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
 
   ! initialize fault solver on GPU
   call initialize_fault_solver_gpu(Fault_pointer, Nfaults, V_HEALING, V_RUPT, RATE_AND_STATE)
@@ -666,15 +690,16 @@ contains
   integer, intent(in) :: iin,n
 
   real(kind=CUSTOM_REAL) :: b(size(array))
-  character(len=MAX_STRING_LEN) :: shapeval
+  character(len=MAX_STRING_LEN) :: shapeval, filename
   real(kind=CUSTOM_REAL) :: val,valh, xc, yc, zc, r, rc, l, lx,ly,lz
   real(kind=CUSTOM_REAL) :: r1(size(array))
   real(kind=CUSTOM_REAL) :: tmp1(size(array)),tmp2(size(array)),tmp3(size(array))
 
-  integer :: i
-  real(kind=CUSTOM_REAL) :: SMALLVAL
+  integer                :: i, ipar, jpar,  num_lines
+  real(kind=CUSTOM_REAL) :: SMALLVAL, dist, temp
+  real(kind=CUSTOM_REAL), allocatable :: xyzv(:,:) ! data from the input file
 
-  NAMELIST / DIST2D / shapeval, val,valh, xc, yc, zc, r, rc, l, lx,ly,lz
+  NAMELIST / DIST2D / shapeval, val,valh, xc, yc, zc, r, rc, l, lx,ly,lz,filename
 
   SMALLVAL = 1.e-10_CUSTOM_REAL
 
@@ -682,6 +707,7 @@ contains
 
   do i = 1,n
     shapeval = ''
+    filename = ''
     val  = 0.0_CUSTOM_REAL
     valh = 0.0_CUSTOM_REAL
     xc = 0.0_CUSTOM_REAL
@@ -760,6 +786,24 @@ contains
       b(:) = heaviside( tmp1(:) ) * heaviside( tmp2(:) ) * heaviside( tmp3(:) ) &
           * (val + ( coord(3,:) - zc + lz/2.0_CUSTOM_REAL ) * (valh-val)/lz )
 
+     case ('read-from-file')
+        if (filename == "") then
+           stop 'read-from-file option is chosen, but filename is empty.'
+        endif
+        call read_para_file(xyzv,filename)
+        num_lines = size(xyzv(1,:))
+        ! find the nearest point
+        do ipar=1,size(b)
+           temp = huge(temp)
+           do jpar=1,num_lines
+              dist=sqrt((coord(1,ipar)-xyzv(1,jpar))**2+(coord(2,ipar)-xyzv(2,jpar))**2+(coord(3,ipar)-xyzv(3,jpar))**2)
+              if (dist < temp) then
+                 b(ipar) = xyzv(4,jpar)
+                 temp    = dist
+              endif
+           enddo
+        enddo
+
     case default
       stop 'bc_dynflt_3d::init_2d_distribution:: unknown shape'
     end select
@@ -769,6 +813,30 @@ contains
   enddo
 
   end subroutine init_2d_distribution
+
+
+!--------------
+
+  subroutine read_para_file(xyzv,filename)
+  implicit none
+
+  real(kind=CUSTOM_REAL), allocatable, intent(inout) :: xyzv(:,:) ! data read from the input file
+  character(len=MAX_STRING_LEN), intent(in)          :: filename
+  integer   :: num_lines, i, ier
+  integer   :: IIN_2D = 300
+
+
+  open(unit=IIN_2D,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//trim(filename),status='old',iostat=ier)
+
+  read(IIN_2D,*) num_lines
+  allocate(xyzv(4,num_lines))
+  do i=1,num_lines
+     read(IIN_2D,*) xyzv(1,i),xyzv(2,i),xyzv(3,i),xyzv(4,i)
+  enddo
+  close(IIN_2D)
+
+  end subroutine read_para_file
+
 
 !---------------------------------------------------------------------
 
@@ -1144,9 +1212,9 @@ contains
 
   integer :: nglob,ier
   real(kind=CUSTOM_REAL) :: mus,mud,dc,C,T
-  integer :: nmus,nmud,ndc,nC,nForcedRup
+  integer :: nmus,nmud,ndc,nC,nForcedRup,weakening_kind
 
-  NAMELIST / SWF / mus,mud,dc,nmus,nmud,ndc,C,T,nC,nForcedRup
+  NAMELIST / SWF / mus,mud,dc,nmus,nmud,ndc,C,T,nC,nForcedRup,weakening_kind
 
   nglob = size(mu)
 
@@ -1183,6 +1251,7 @@ contains
   ndc  = 0
   nC = 0
   nForcedRup = 0
+  weakening_kind = 1
 
   read(IIN_PAR, nml=SWF)
 
@@ -1191,6 +1260,7 @@ contains
   f%Dc(:)  = dc   ! critical slip distance
   f%C(:)   = C    ! cohesion
   f%T(:)   = T    ! (forced) rupture time
+  f%kind   = weakening_kind
 
   call init_2d_distribution(f%mus,coord,IIN_PAR,nmus)
   call init_2d_distribution(f%mud,coord,IIN_PAR,nmud)
@@ -1277,11 +1347,16 @@ contains
   type(swf_type), intent(in) :: f
   real(kind=CUSTOM_REAL) :: mu(size(f%theta))
 
+  if (f%kind == 1) then
   ! slip weakening law
   !
   ! for example: Galvez, 2014, eq. (8)
   !              also Ida, 1973; Palmer & Rice 1973; Andrews 1976; ..
-  mu(:) = f%mus(:) - (f%mus(:)-f%mud(:)) *  min(f%theta(:)/f%Dc(:), 1.0_CUSTOM_REAL)
+      mu(:) = f%mus(:) - (f%mus(:)-f%mud(:)) * min(f%theta(:)/f%Dc(:), 1.0_CUSTOM_REAL)
+  else
+  !-- exponential slip weakening:
+      mu(:) = f%mud(:) - (f%mud(:)-f%mus(:)) * exp(-f%theta(:)/f%Dc(:))
+  endif
 
   end function swf_mu
 
@@ -2443,7 +2518,7 @@ contains
   subroutine fault_output_synchronize_GPU(it)
 
   use constants, only: PARALLEL_FAULT
-  use specfem_par, only: Fault_pointer,myrank
+  use specfem_par, only: Fault_pointer,myrank,NSTEP
 
   implicit none
 
@@ -2468,8 +2543,21 @@ contains
     endif
 
     ! output data
-    call SCEC_write_dataT(bc%dataT)
-    if (myrank == 0) call write_dataXZ(bc%dataXZ_all,it,ifault)
+    ! write dataT every NTOUT time steps or at the end of simulation
+    if (mod(it,NTOUT) == 0 .or. it == NSTEP) call SCEC_write_dataT(bc%dataT)
+
+    ! write dataXZ every NSNAP time steps
+    if (mod(it,NSNAP) == 0) then
+      if (PARALLEL_FAULT) then
+        ! collects data from all processes
+        call gather_dataXZ(bc)
+        ! main process writes output file
+        if (myrank == 0) call write_dataXZ(bc%dataXZ_all,it,ifault)
+      else
+        ! fault in single slice
+        if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,ifault)
+      endif
+    endif
   enddo
 
   end subroutine fault_output_synchronize_GPU

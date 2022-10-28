@@ -11,9 +11,12 @@ program random_model
   ! Gaussian pertubation: center point
   real(kind=CUSTOM_REAL),parameter :: CENTER_X = 1320.0
   real(kind=CUSTOM_REAL),parameter :: CENTER_Y = 1320.0
-  real(kind=CUSTOM_REAL),parameter :: CENTER_Z = -500.0
+  real(kind=CUSTOM_REAL),parameter :: CENTER_Z = -720.0   ! or slightly closer to top: -500.0
 
-  !real(kind=CUSTOM_REAL),parameter :: PI = 3.1415926535897931
+  ! wavelength of perturbation
+  ! lambda = 0.5 * 2000.0    ! dominant wavelength: 0.5 s from source, 2000 m/s vp
+  ! lambda = 0.1 * 2000.0    ! dominant wavelength: 0.1 s from source, 2000 m/s vp
+  real(kind=CUSTOM_REAL),parameter :: WAVELENGTH = 0.1 * 2000.0 * 4.0      ! adding factor 4 for better adjoint source
 
   ! model perturbation flags
   logical, parameter :: DO_PERTURB_VP = .true.  ! default, only Vp velocities will be perturbed
@@ -180,9 +183,10 @@ program random_model
       pert_param(:,:,:,:) = 0.0
 
       !standard variance
-      lambda = 0.5 * 2000.0    ! dominant wavelength: 0.5 s from source, 2000 m/s vp
-      sigma_h = 0.25*lambda/sqrt(8.0) ! such that scalelength becomes 1/4 of dominant wavelenght
-      sigma_v = 0.25*lambda/sqrt(8.0)
+      lambda = WAVELENGTH
+
+      sigma_h = 0.25 * lambda/sqrt(8.0) ! such that scalelength becomes 1/4 of dominant wavelenght
+      sigma_v = 0.25 * lambda/sqrt(8.0)
       ! factor two for Gaussian distribution with standard variance sigma
       sigma_h2 = 2.0 * sigma_h * sigma_h
       sigma_v2 = 2.0 * sigma_v * sigma_v
@@ -190,15 +194,20 @@ program random_model
       ! scalelength: approximately S ~ sigma * sqrt(8.0) for a Gaussian smoothing
       if (myrank == 0) then
         print *,'Gaussian perturbation:'
-        print *,'  scalelengths horizontal,vertical (m): ',sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
-        print *,'  perturbation size = ',percent
+        print *,'  input wavelength                       (m): ',lambda
+        print *,'  using scalelengths horizontal,vertical (m): ',sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
+        print *
+        print *,'  pertubation center location : x/y/z = ',CENTER_X,'/',CENTER_Y,'/',CENTER_Z
+        print *,'  perturbation size           : ',percent
+        if (DO_PERTURB_RHO) print *,'  perturbing                  : rho values'
+        if (DO_PERTURB_VP)  print *,'  perturbing                  : Vp values'
+        if (DO_PERTURB_VS)  print *,'  perturbing                  : Vs values'
         print *
         print *,'rank ',myrank,':'
         print *,'  model dimension: x min/max = ',minval(xstore),maxval(xstore)
         print *,'                   y min/max = ',minval(ystore),maxval(ystore)
         print *,'                   z min/max = ',minval(zstore),maxval(zstore)
         print *
-        print *,'pertubation center location: x/y/z = ',CENTER_X,'/',CENTER_Y,'/',CENTER_Z
         print *
       endif
       ! theoretic normal value
@@ -234,9 +243,9 @@ program random_model
       enddo
 
       ! adds positive perturbation to model:
-      if (DO_PERTURB_RHO) rho_read = rho_read*(1.0+percent*pert_param)
-      if (DO_PERTURB_VP) vp_read  = vp_read*(1.0+percent*pert_param)
-      if (DO_PERTURB_VS) vs_read  = vs_read*(1.0+percent*pert_param)
+      if (DO_PERTURB_RHO) rho_read = rho_read * (1.0 + percent * pert_param)
+      if (DO_PERTURB_VP) vp_read  = vp_read * (1.0 + percent * pert_param)
+      if (DO_PERTURB_VS) vs_read  = vs_read * (1.0 + percent * pert_param)
     endif
 
     ! store perturbed model
