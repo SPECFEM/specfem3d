@@ -5,8 +5,8 @@ SPECFEM3D_Cartesian simulates acoustic (fluid), elastic (solid), coupled acousti
 It can, for instance, model seismic waves propagating in sedimentary basins or any other regional geological model following earthquakes. It can also be used for non-destructive testing or for ocean acoustics
 
 
-Main "historical" authors: Dimitri Komatitsch and Jeroen Tromp
-  (there are currently many more!)
+SPECFEM3D was founded by Dimitri Komatitsch and Jeroen Tromp, and is now being developed by a large, collaborative, and inclusive community. A complete list of authors can be found at
+https://specfem3d.readthedocs.io/en/latest/authors/
 
 ## Installation
 
@@ -35,11 +35,15 @@ available in the
 Development is hosted on GitHub in the
 [geodynamics/specfem3d repository](https://github.com/geodynamics/specfem3d).
 
-To contribute, please follow the guidelines located on specfem3d github wiki:
+SPECFEM3D is a community project that lives by the participation of its
+members — i.e., including you! It is our goal to build an inclusive and
+participatory community so we are happy that you are interested in
+participating! We have collected a set of guidelines and advice on how to get
+involved in the community and keep them in the specfem3d github wiki:
 [specfem3d wiki](https://github.com/geodynamics/specfem3d/wiki)
 
 
 ## Computational Infrastructure for Geodynamics (CIG)
 
-Seismology software repository: [SPECFEM3D](https://geodynamics.org/cig/software/specfem3d/)
+SPECFEM3D is part of the software that is hosted by the Computational Infrastructure for Geodynamics (CIG). It is available on the CIG website [here (SPECFEM3D)](https://geodynamics.org/resources/specfem3dcartesian).
 
