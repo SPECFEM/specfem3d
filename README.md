@@ -42,3 +42,12 @@ To contribute, please follow the guidelines located on specfem3d github wiki:
 
 Seismology software repository: [SPECFEM3D](https://geodynamics.org/cig/software/specfem3d/)
 
+___
+
+### Do not modify configure script
+
+Never modify the "configure" script directly, it is better to modify the "configure.ac" file and then generate the "configure" script by typing:
+
+```
+autoreconf -i
+```

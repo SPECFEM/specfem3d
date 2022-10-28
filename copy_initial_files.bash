@@ -1,4 +1,5 @@
 #!/bin/bash
+#original file name: script_to_copy_all_the_initial_input_files_correctly_for_the_NUMBER_OF_SIMULTANEOUS_RUNS_option.bash
 #BATCH -N 1
 #SBATCH -t 5:09:00
 #SBATCH --ntasks-per-node=4
