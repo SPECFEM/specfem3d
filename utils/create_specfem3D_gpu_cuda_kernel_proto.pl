@@ -17,8 +17,8 @@ $header = <<END;
 /*
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !    Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                             CNRS, France
