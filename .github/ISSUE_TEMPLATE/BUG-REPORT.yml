@@ -1,0 +1,74 @@
+name: "🐛 Bug Report"
+description: Create a new ticket for a bug.
+title: "🐛 [BUG] - <title>"
+labels: [
+  "bug"
+]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+      description: Please enter an explicit description of your issue
+      placeholder: Short and explicit description of your incident...
+    validations:
+      required: true
+  - type: input
+    id: software-version
+    attributes:
+      label: "Affected SPECFEM3D version"
+      description: Please specify the exact version(s) of SPECFEM3D you use (version number, git commit id, or latest development version)
+      placeholder: 
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: "Your software and hardware environment"
+      description: Please specify the environment you are running SPECFEM3D in. In particular list your compiler (incl. version number), MPI (incl. version), and your hardware (laptop/desktop, cluster, gpu, etc.) 
+      placeholder: 
+    validations:
+      required: true
+  - type: textarea
+    id: reprod
+    attributes:
+      label: "Reproduction steps"
+      description: Please enter all the steps you did, so we can reproduce the issue
+      value: |
+        1. Go to '...'
+        2. Change settings '....'
+        3. Use data files '....'
+        4. See error
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: "Screenshots"
+      description: If applicable, add screenshots to help explain your problem.
+      value: |
+        ![DESCRIPTION](LINK.png)
+      render: bash
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Logs"
+      description: Please copy and paste any relevant log output in particular  the full error message (including your input). This will be automatically formatted into code, so no need for backticks.
+      render: bash
+    validations:
+      required: false
+  - type: dropdown
+    id: os
+    attributes:
+      label: "OS"
+      description: What is the impacted environment ?
+      multiple: true
+      options:
+        - Windows
+        - Linux
+        - Mac
+    validations:
+      required: false
