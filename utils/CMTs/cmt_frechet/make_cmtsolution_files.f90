@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
-!          --------------------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !          Main authors: Dimitri Komatitsch and Jeroen Tromp
 !    Princeton University, USA and University of Pau / CNRS / INRIA
