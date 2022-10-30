@@ -20,10 +20,10 @@ Param=Param_files
 ########################    TRACTION DATABASES GENERATION   ########################################################
 
 # directory containing axisem modified for specfem coupling
-axisem_sources=$rootdir/EXTERNAL_PACKAGES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem
+axisem_sources=$rootdir/external_libs/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem
 
 # directory containing utils for coupling axisem/specfem
-axisem_utils_coupling=$rootdir/EXTERNAL_PACKAGES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/UTILS_COUPLING_SpecFEM
+axisem_utils_coupling=$rootdir/external_libs/AxiSEM_for_SPECFEM3D/UTILS_COUPLING_SpecFEM
 
 
 # ------------- copy inputs files for specfem  ------------
