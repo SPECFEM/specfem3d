@@ -468,8 +468,8 @@
   integer, parameter :: ASDF_MAX_STRING_LENGTH = 1024
   integer, parameter :: ASDF_MAX_QUAKEML_LENGTH = 8096
   integer, parameter :: ASDF_MAX_STATIONXML_LENGTH = 16182
-  integer, parameter :: ASDF_MAX_PARFILE_LENGTH = 20000
-  integer, parameter :: ASDF_MAX_CONSTANTS_LENGTH = 45000
+  integer, parameter :: ASDF_MAX_PARFILE_LENGTH = 25000
+  integer, parameter :: ASDF_MAX_CONSTANTS_LENGTH = 65000
   integer, parameter :: ASDF_MAX_TIME_STRING_LENGTH = 22
 
 !!-----------------------------------------------------------
