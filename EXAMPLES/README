@@ -53,7 +53,6 @@ you can follow the examples in:
 - fault_examples/
 
 please consider submitting your own example to this package! 
-email us: cig-seismo AT geodynamics.org
 
 VERY IMPORTANT: Note from Emanuele Casarotti about how to set up the CUBIT (now called TRELIS) and GEOCUBIT meshing packages:
 

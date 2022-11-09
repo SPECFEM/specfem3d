@@ -20,27 +20,27 @@ available in the
 
 ## Development
 
-[![Actions Status](https://github.com/geodynamics/specfem3d/workflows/CI/badge.svg)](https://github.com/geodynamics/specfem3d/actions)
-[![Travis Status](https://app.travis-ci.com/geodynamics/specfem3d.svg?branch=devel)](https://app.travis-ci.com/geodynamics/specfem3d)
+[![Actions Status](https://github.com/SPECFEM/specfem3d/workflows/CI/badge.svg)](https://github.com/SPECFEM/specfem3d/actions)
+[![Travis Status](https://app.travis-ci.com/SPECFEM/specfem3d.svg?branch=devel)](https://app.travis-ci.com/SPECFEM/specfem3d)
 [![Azure Status](https://dev.azure.com/danielpeter22/SPECFEM3D/_apis/build/status/geodynamics.specfem3d?branchName=devel)](https://dev.azure.com/danielpeter22/SPECFEM3D/_build/latest?definitionId=5&branchName=devel)
-[![codecov](https://codecov.io/gh/geodynamics/specfem3d/branch/devel/graph/badge.svg)](https://codecov.io/gh/geodynamics/specfem3d)
+[![codecov](https://codecov.io/gh/SPECFEM/specfem3d/branch/devel/graph/badge.svg)](https://codecov.io/gh/SPECFEM/specfem3d)
 [![Documentation Status](https://readthedocs.org/projects/specfem3d/badge/?version=latest)](https://specfem3d.readthedocs.io/en/latest/?badge=latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 
-* Actions tests: [github actions specfem3d](https://github.com/geodynamics/specfem3d/actions)
+* Actions tests: [github actions specfem3d](https://github.com/SPECFEM/specfem3d/actions)
 
-* Travis tests: [travis-ci specfem3d](https://travis-ci.com/geodynamics/specfem3d/builds)
+* Travis tests: [travis-ci specfem3d](https://travis-ci.com/SPECFEM/specfem3d/builds)
 
 
 Development is hosted on GitHub in the
-[geodynamics/specfem3d repository](https://github.com/geodynamics/specfem3d).
+[SPECFEM/specfem3d repository](https://github.com/SPECFEM/specfem3d).
 
 SPECFEM3D is a community project that lives by the participation of its
 members — i.e., including you! It is our goal to build an inclusive and
 participatory community so we are happy that you are interested in
 participating! We have collected a set of guidelines and advice on how to get
 involved in the community and keep them in the specfem3d github wiki:
-[specfem3d wiki](https://github.com/geodynamics/specfem3d/wiki)
+[specfem3d wiki](https://github.com/SPECFEM/specfem3d/wiki)
 
 
 ## Computational Infrastructure for Geodynamics (CIG)

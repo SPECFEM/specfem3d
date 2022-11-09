@@ -315,7 +315,7 @@
       '  <prov:label>SPECFEM3D_Cartesian</prov:label>'// &
       '  <seis_prov:software_name>SPECFEM3D_Cartesian</seis_prov:software_name>'// &
       '  <seis_prov:software_version>3.0.0</seis_prov:software_version>'// &
-      '  <seis_prov:website>https://github.com/geodynamics/specfem3d</seis_prov:website>'// &
+      '  <seis_prov:website>https://github.com/SPECFEM/specfem3d</seis_prov:website>'// &
       '</prov:softwareAgent>'
 
     ! constants (constants_id = abcdefg)

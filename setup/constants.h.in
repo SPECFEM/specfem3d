@@ -135,7 +135,6 @@
 !!-----------------------------------------------------------
 
 ! using this is more precise but more costly (but will be replaced with a cheap Bessel smoothing in the near future)
-! see https://github.com/geodynamics/specfem3d/issues/621
   logical, parameter :: USE_QUADRATURE_RULE_FOR_SMOOTHING = .true.
 
 ! kernel debugging

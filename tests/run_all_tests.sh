@@ -9,7 +9,7 @@ echo "This script runs a set of compilation and unit tests in directory tests/"
 echo "It may take a few minutes to execute."
 echo
 echo "Please consider adding more test units to this directory here ..."
-echo "Contributions can be sent to: $(tput bold)http://github.com/geodynamics/specfem3d$(tput sgr0)"
+echo "Contributions can be sent to: $(tput bold)https://github.com/SPECFEM/specfem3d$(tput sgr0)"
 echo
 
 # directories

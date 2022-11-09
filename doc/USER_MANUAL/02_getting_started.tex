@@ -2,7 +2,7 @@
 
 To download the SPECFEM3D\_Cartesian software package, type this:
 \begin{verbatim}
-git clone --recursive --branch devel https://github.com/geodynamics/specfem3d.git
+git clone --recursive --branch devel https://github.com/SPECFEM/specfem3d.git
 \end{verbatim}
 %
 
@@ -62,7 +62,7 @@ in order to turn underflow trapping off.\\
 You can add \texttt{-{}-enable-vectorization} to the configuration options to speed up the code in the fluid (acoustic) and elastic parts.
 This works fine if (and only if) your computer always allocates a contiguous memory block for each allocatable array;
 this is the case for most machines and most compilers, but not all. To disable this feature, use option \texttt{-{}-disable-vectorization}.
-For more details see \href{https://github.com/geodynamics/specfem3d/issues/81}{github.com/geodynamics/specfem3d/issues/81} .
+For more details see \href{https://github.com/SPECFEM/specfem3d/issues/81}{github.com/SPECFEM/specfem3d/issues/81} .
 To check if that option works fine on your machine, run the code with and without it for an acoustic/elastic model and make sure the seismograms are identical.\\
 
 
@@ -485,5 +485,5 @@ The important entries in the Doxyfile are:
 %-----------------------------------------------------------------------------------------------------------------------------------%
 
 If you want to develop new features in the code, and/or if you want to make small changes, improvements, or bug fixes, you are very welcome to contribute. To do so, i.e. to access the development branch of the source code with read/write access (in a safe way, no need to worry too much about breaking the package, there are CI tests based on BuildBot, Travis-CI and Jenkins in place that are checking and validating all new contributions and changes), please visit this Web page:\\
-\url{https://github.com/geodynamics/specfem3d/wiki}
+\url{https://github.com/SPECFEM/specfem3d/wiki}
 
