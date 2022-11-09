@@ -131,10 +131,9 @@ for the purpose of checking the accuracy of the reconstruction. Refer
 to Section \ref{sec:Adjoint-simulation-finite} for further details.
 
 You do have further options to change this default output behavior,
-given in the main constants file \texttt{constants.h} located in \texttt{src/shared/}
-directory:
+given in the \texttt{DATA/Par\_file}:
 \begin{description}
-\item [{\texttt{SEISMOGRAMS\_BINARY}}] set to \texttt{.true.} to have seismograms
+\item [{\texttt{USE\_BINARY\_FOR\_SEISMOGRAMS}}] Set to \texttt{.true.} to have seismograms
 written out in binary format.
 \item [{\texttt{WRITE\_SEISMOGRAMS\_BY\_MAIN}}] Set to \texttt{.true.}
 to have only the main process writing out seismograms. This can

@@ -12,10 +12,10 @@ with material properties that vary within each spectral element.
 To implement your own external tomographic model(s), you must provide
 your own external tomography file(s), and choose between two possible
 options:\\
- \indent (1) set in the \texttt{Par\_file} the model parameter \texttt{MODEL
+ \indent (1) set in the \texttt{DATA/Par\_file} the model parameter \texttt{MODEL
 = tomo}, \\
  or for more user control: \\
- \indent (2) set in the \texttt{Par\_file} the model parameter \texttt{MODEL
+ \indent (2) set in the \texttt{DATA/Par\_file} the model parameter \texttt{MODEL
 = default}, define the negative \texttt{material\_ID} identifier for
 each element in the file \texttt{MESH/materials\_file} and use the
 following format in the file \texttt{MESH/nummaterial\_velocity\_file}
@@ -40,7 +40,7 @@ The external tomographic model is represented by a grid of points
 with assigned material properties and homogeneous resolution along
 each spatial direction x, y and z. The ASCII file \texttt{file\_name}
 that describe the tomography should be located in the \texttt{TOMOGRAPHY\_PATH}
-directory, set in the \texttt{Par\_file}. The format of the file,
+directory, set in the \texttt{DATA/Par\_file}. The format of the file,
 as read from \texttt{model\_tomography.f90} located in the \texttt{src/generate\_databases}
 directory, looks like Figure \ref{fig:tomography_file}, starting with a header information where
 \begin{description}
@@ -100,8 +100,7 @@ $Q_{\kappa}$ and $Q_{\mu}$ respectively \citep{AnHa78}.
 Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
 For simulations with attenuation, please note that the Vp- and Vs-velocities of your model are given for a reference
 frequency. To change this reference frequency, you change the value
-of \texttt{ATTENUATION\_f0\_REFERENCE} in the main constants file
-\texttt{constants.h} found in subdirectory \texttt{src/shared/}.
+of \texttt{ATTENUATION\_f0\_REFERENCE} defined (in Hz) in input file \texttt{DATA/Par\_file}.
 
 The code uses a constant $Q$ quality factor, write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS).
 The approximation is thus performed in a given frequency band determined based on that \texttt{ATTENUATION\_f0\_REFERENCE} reference frequency.
@@ -158,7 +157,7 @@ Other more complicated discretizations can be used following the same procedure.
 
 \section{External (an)elastic Models}\label{sec:Anelastic-Models}
 
-To use your own external model, you can set in the \texttt{Par\_file}
+To use your own external model, you can set in the \texttt{DATA/Par\_file}
 the model parameter \texttt{MODEL = external}. Three-dimensional acoustic
 and/or (an)elastic (attenuation) models may then be superimposed onto
 the mesh based upon your subroutine in \texttt{model\_external\_values.f90}
@@ -188,13 +187,13 @@ Note that the resolution and maximum value of anelastic models are
 truncated. This speeds the construction of the standard linear solids
 during the meshing stage. To change the resolution, currently at one
 significant figure following the decimal, or the maximum value (9000),
-consult \texttt{shared/constants.h}.
+consult \texttt{setup/constants.h}.
 
 
 
 \section{Anisotropic Models}\label{sec:Anisotropic-Models}
 
-To use your anisotropic models, you can either set in the \texttt{Par\_file}
+To use your anisotropic models, you can either set in the \texttt{DATA/Par\_file}
 the model parameter \texttt{ANISOTROPY} to \texttt{.true.} or set
 the model parameter \texttt{MODEL = aniso}. Three-dimensional anisotropic
 models may be superimposed on the mesh based upon the subroutine in

@@ -23,7 +23,7 @@ source parameter file or the force source parameter file, and
 \end{itemize}
 
 \noindent
-Most parameters in the \texttt{Par\_file} should be set prior to running
+Most parameters in the \texttt{DATA/Par\_file} should be set prior to running
 the databases generation. Only the following parameters may be changed
 after running \texttt{xgenerate\_databases}:
 \begin{itemize}
@@ -41,7 +41,7 @@ and \texttt{NTSTEPS\_BETWEEN\_FRAMES}
 \texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS}
 \item the \texttt{PRINT\_SOURCE\_TIME\_FUNCTION} flags
 \end{itemize}
-Any other change to the \texttt{Par\_file} implies rerunning both
+Any other change to the \texttt{DATA/Par\_file} implies rerunning both
 the database generator \texttt{xgenerate\_databases} and the solver
 \texttt{xspecfem3D}.\\
 
@@ -65,7 +65,7 @@ magnitude.}
 The \texttt{CMTSOLUTION} file should be edited in the following way:
 \begin{itemize}
 \item Set the latitude or UTM $x$ coordinate, longitude or UTM $y$ coordinate, depth of the source (in km). Remark: In principle in the international CMTSOLUTION format in geophysics
-the depth is given in kilometers; however for users in other fields (non-destructive testing, medical imaging, near-surface studies...) who may prefer to give the position of the source (rather than its depth from the surface), or for people who use FORCESOLUTION to describe the source rather than CMTSOLUTION, we provide an option called USE\_SOURCES\_RECEIVERS\_Z in the Par\_file, and if so that position is read from CMTSOLUTION in meters rather than kilometers (and again, it is then the true position in the mesh, not the depth). When option USE\_SOURCES\_RECEIVERS\_Z in the Par\_file is on, this remark applies to the position of the receivers as well.
+the depth is given in kilometers; however for users in other fields (non-destructive testing, medical imaging, near-surface studies...) who may prefer to give the position of the source (rather than its depth from the surface), or for people who use FORCESOLUTION to describe the source rather than CMTSOLUTION, we provide an option called USE\_SOURCES\_RECEIVERS\_Z in the \texttt{DATA/Par\_file}, and if so that position is read from CMTSOLUTION in meters rather than kilometers (and again, it is then the true position in the mesh, not the depth). When option USE\_SOURCES\_RECEIVERS\_Z in the \texttt{DATA/Par\_file} is on, this remark applies to the position of the receivers as well.
 \item Set the \texttt{time shift} parameter equal to $0.0$ (the solver
 will not run otherwise.) The time shift parameter would simply apply
 an overall time shift to the synthetics, something that can be done
@@ -179,7 +179,7 @@ an overall time shift to the synthetics, something that can be done
 in the post-processing (see Section \ref{sec:Process-data-and-syn}).
 \item Set the \texttt{f0} parameter (the dominant frequency) of the Ricker source time
 function (i.e., the second derivative of a Gaussian) when {\texttt{USE\_RICKER\_TIME\_FUNCTION}} is turned on
-in the main parameter file {\texttt{Par\_file}}. In case that the
+in the main parameter file \texttt{DATA/Par\_file}. In case that the
 solver uses a (pseudo) Dirac delta source time function to represent
 a force point source, a very short duration of five time steps is automatically set by default.
 Note that we use the standard definition of a Ricker, for a dominant frequency $f_0$:
@@ -199,7 +199,7 @@ entries, one for each subevent (i.e., concatenate $N_{\mathrm{sources}}$
 \texttt{FORCESOLUTION} files to a single \texttt{FORCESOLUTION} file).
 At least one entry (not necessarily the first) must have a zero \texttt{time
 shift}, and all the other entries must have non-negative \texttt{time
-shift}. Each subevent can have its own half latitude, longitude, depth,
+shift}. Each subevent can have its own latitude, longitude, depth,
 \texttt{half duration} and force parameters.
 
 \begin{figure}[H]
@@ -216,16 +216,8 @@ duration} would be hdur1, hdur2, hdur3 for the sources 1, 2, 3 respectively.}
 {\small \label{fig:source_timing} }
 \end{figure}
 
-\vspace{1cm}
-
-In addition to inbuild source time function, the solver can also use an external source time function defined by the user. This option can be
-activated by setting   \texttt{EXTERNAL\_SOURCE\_FILE} to true in \texttt{Par\_File} and by adding the name of the file
-containing the source time function at the end of \texttt{FORCESOLUTION} or \texttt{CMTSOLUTION} files.
-The source time function file must contain the value of the time step on its first line, and then a single column with the amplitude of the source time function for all the time steps.
-The time step must be exactly the same as that used for the simulation.
-Note  when the  \texttt{EXTERNAL\_SOURCE\_FILE} is set to false then the line with the external source time function file must not appear in
-the files  \texttt{FORCESOLUTION} and \texttt{CMTSOLUTION} otherwise the solver will exit with an error.
-When using an external source file, you can still set up the source location and directivity as in the default case.
+In addition to inbuild source time function, the solver can also use an external source time function defined by the user. This option can be activated by setting \texttt{USE\_EXTERNAL\_SOURCE\_FILE} to true in \texttt{DATA/Par\_file} and by adding the name of the file containing the source time function at the end of \texttt{FORCESOLUTION} or \texttt{CMTSOLUTION} files.
+The source time function file must contain the value of the time step on its first line, and then a single column with the amplitude of the source time function for all the time steps. The time step must be exactly the same as that used for the simulation. Note  when the  \texttt{EXTERNAL\_SOURCE\_FILE} is set to false then the line with the external source time function file must not appear in the files  \texttt{FORCESOLUTION} and \texttt{CMTSOLUTION} otherwise the solver will exit with an error. When using an external source file, you can still set up the source location and directivity as in the default case.
 In the FORCESOLUTION file: you set "latorUTM", "longorUTM" and "depth" to define the position of your point source. Then if you want to define a directivity, then change the following lines: "component dir vect source E", "component dir vect source N" and "component dir vect source Z\_UP". What you are doing is simply that you define the source position and directivity the same way as in the default case, but in addition you are specifying the path to read in a non-default source time function from an external file.
 
 \vspace{1cm}
@@ -243,9 +235,9 @@ which looks like this:
 \caption{Sample \texttt{STATIONS} file. Station latitude and longitude should
 be provided in geographical coordinates. The width of the station
 label should be no more than 32 characters (see \texttt{MAX\_LENGTH\_STATION\_NAME}
-in the \texttt{constants.h} file), and the network label should be
+in the \texttt{setup/constants.h} file), and the network label should be
 no more than 8 characters (see \texttt{MAX\_LENGTH\_NETWORK\_NAME}
-in the \texttt{constants.h} file).}
+in the \texttt{setup/constants.h} file).}
 \label{fig:Sample-STATIONS-file.}
 \end{figure}
 
@@ -259,7 +251,7 @@ Station Network Latitude(degrees) Longitude(degrees) Elevation(m) burial(m)
 }
 The solver \texttt{xspecfem3D} filters the list of stations in file
 \texttt{DATA/STATIONS} to exclude stations that are not located within
-the region given in the \texttt{Par\_file} (between \texttt{LATITUDE\_MIN}
+the region given in the \texttt{Mesh\_Par\_file} (between \texttt{LATITUDE\_MIN}
 and \texttt{LATITUDE\_MAX} and between \texttt{LONGITUDE\_MIN} and
 \texttt{LONGITUDE\_MAX}). The filtered file is called \texttt{DATA/STATIONS\_FILTERED}.
 Elevation and burial are generally applicable to geographical regions.
@@ -286,7 +278,7 @@ BONE  GR  y2  x2  0.00  -z2
 \item {\it Procedure 2:} useful for other application domains, in which using the absolute $Z$ position of the sources and receivers is more standard than using their depth from the surface
 \begin{enumerate}
 \item [-] In principle in the international CMTSOLUTION format in geophysics
-the depth is given in kilometers; however for users in other fields (non-destructive testing, medical imaging, near-surface studies...) who may prefer to give the position of the source (rather than its depth from the surface), or for people who use FORCESOLUTION to describe the source rather than CMTSOLUTION, we provide an option called USE\_SOURCES\_RECEIVERS\_Z in the Par\_file, and if so that position is read from CMTSOLUTION in meters rather than kilometers (and again, it is then the true position in the mesh, not the depth). When option USE\_SOURCES\_RECEIVERS\_Z in the Par\_file is on, this remark applies to the position of the receivers as well.\\
+the depth is given in kilometers; however for users in other fields (non-destructive testing, medical imaging, near-surface studies...) who may prefer to give the position of the source (rather than its depth from the surface), or for people who use FORCESOLUTION to describe the source rather than CMTSOLUTION, we provide an option called USE\_SOURCES\_RECEIVERS\_Z in the \texttt{DATA/Par\_file}, and if so that position is read from CMTSOLUTION in meters rather than kilometers (and again, it is then the true position in the mesh, not the depth). When option USE\_SOURCES\_RECEIVERS\_Z in the \texttt{DATA/Par\_file} is on, this remark applies to the position of the receivers as well.\\
 \item [-] Let's say you want to place two receivers at (x1,y1,z1) and
 (x2,y2,z2). Your STATIONS file should then look like:
 {\small \begin{verbatim}
@@ -308,13 +300,13 @@ source/receiver locations after your simulation.\\
 
 Solver output is provided in the \texttt{OUTPUT\_FILES} directory
 in the \texttt{output\_solver.txt} file. Output can be directed to
-the screen instead by uncommenting a line in \texttt{constants.h}:
+the screen instead by uncommenting a line in \texttt{setup/constants.h}:
 \begin{verbatim}
 ! uncomment this to write messages to the screen
 ! integer, parameter :: IMAIN = ISTANDARD_OUTPUT
 \end{verbatim}
 On PC clusters the seismogram files are generally written to the local
-disks (the path \texttt{LOCAL\_PATH} in the \texttt{Par\_file}) and
+disks (the path \texttt{LOCAL\_PATH} in the \texttt{DATA/Par\_file} and
 need to be gathered at the end of the simulation.
 
 While the solver is running, its progress may be tracked by monitoring
@@ -342,9 +334,9 @@ potential with time, and ultimately the run will be terminated by
 the program. You can control the rate at which the timestamp files
 are written based upon the parameter
 \texttt{\small NTSTEP\_BETWEEN\_OUTPUT\_INFO}
-in the \texttt{\small Par\_file}.
+in the \texttt{DATA/Par\_file}.
 
-Having set the \texttt{Par\_file} parameters, and having provided
+Having set the \texttt{DATA/Par\_file} parameters, and having provided
 the \texttt{CMTSOLUTION} (or the \texttt{FORCESOLUTION}) and \texttt{STATIONS}
 files, you are now ready to launch the solver! This is most easily
 accomplished based upon the \texttt{go\_solver} script (See Chapter
@@ -441,7 +433,7 @@ and thus the code outputs the band in which the approximation is very good, outs
 The logarithmic center of that frequency band is the \texttt{ATTENUATION\_f0} parameter defined (in Hz) in input file \texttt{DATA/Par\_file}. \\
 
 \noindent
-Regarding attenuation (viscoelasticity), in the Par\_file you need to select the number of standard linear solids (N\_SLS) to use to mimic a constant $Q$ quality factor.
+Regarding attenuation (viscoelasticity), in the \texttt{setup/constants.h} you need to select the number of standard linear solids (N\_SLS) to use to mimic a constant $Q$ quality factor.
 Using N\_SLS = 3 is always safe. If (and only if) you know what you are doing, you can try to reduce that in order to reduce the cost of the simulations.
 Figure~\ref{fig:selectNSLS} shows values that you can consider using (again, if and only if you know what you are doing). That table has been created by Zhinan Xie using
 a comparison between results obtained with a truly-constant $Q$ and results obtained with its approximation based on N\_SLS standard linear solids.

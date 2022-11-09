@@ -123,7 +123,7 @@ directory \texttt{EXAMPLES}.\\
 \item {\bf External coupling}: SPECFEM3D can now perform coupling with an external code (DSM, AxiSEM or FK) based on a database of displacement vectors and traction vectors
 on the outer edges of the mesh created once and for all (see \cite{MoChKoFu13,MoChKoWa15,WaChMoKoMo16,ToChKoBaLi14,ToKoTsHuChBaLi14}, and if you use that feature of the code please cite at least one of these papers). \\
 
-To use coupling with FK, just use the set of parameters that is in the DATA/Par\_file input file of the code: \\
+To use coupling with FK, just use the set of parameters that is in the \texttt{DATA/Par\_file} input file of the code: \\
 %
 \begin{verbatim}
 #-----------------------------------------------------------
@@ -146,7 +146,7 @@ Regarding coupling with DSM, that part is not actively maintained any more, but 
 See e.g. \href{https://doi.org/10.1093/gji/ggs006}{GJI\_Vadim\_2013} and \href{https://doi.org/10.1093/gji/ggv189}{GJI\_Vadim\_2015} for some examples.\\
 
 \item {\bf Gravity}: SPECFEM3D can now perform gravity field calculations in addition (or instead of) seismic wave propagation only.
-See flag \texttt{GRAVITY\_INTEGRALS} in file \texttt{setup/constants.h.in}. Please also refer to \href{https://doi.org/10.1093/gji/ggx010}{GJI\_Martin\_gravimetry\_2017}.
+See flag \texttt{GRAVITY\_INTEGRALS} in file \texttt{setup/constants.h}. Please also refer to \href{https://doi.org/10.1093/gji/ggx010}{GJI\_Martin\_gravimetry\_2017}.
 And yes, that is the reason why Dimitri added a falling apple on the cover of the manual :-).
 Note that SPECFEM3D can also model transient gravity perturbations induced by earthquake rupture, as developed and explained in \cite{HaAmBaChMoSoWh2015}.
 These are two different things, and both are implemented and avaible in SPECFEM3D.

@@ -149,8 +149,7 @@ accurately and without this approximation.
 \item [{\texttt{TOPOGRAPHY}}] This feature is only effective if \texttt{APPROXIMATE\_OCEAN\_LOAD}
 is set to \texttt{.true.}. Set to \texttt{.true.} if topography and
 bathymetry should be read in based upon the topography file specified
-in the main constants file \texttt{constants.h} found in subdirectory
-\texttt{src/shared/} to evaluate elevations. If not set, elevations
+in the main constants file \texttt{setup/constants.h} to evaluate elevations. If not set, elevations
 will be read from the numerical mesh.
 \item [{\texttt{ATTENUATION}}] Set to \texttt{.true.} if attenuation should
 be incorporated. Turning this feature on increases the memory requirements
@@ -159,8 +158,7 @@ expensive. See \citet{KoTr99,KoTr02a} for a discussion on the implementation
 of attenuation based upon standard linear solids. Please note that
 the Vp- and Vs-velocities of your model are given for a reference
 frequency. To change this reference frequency, you change the value
-of \texttt{ATTENUATION\_f0\_REFERENCE} in the main constants file
-\texttt{constants.h} found in subdirectory \texttt{src/shared/}.
+of \texttt{ATTENUATION\_f0\_REFERENCE} defined (in Hz) in input file \texttt{DATA/Par\_file}.
 The code uses a constant $Q$ quality factor, write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS).
 The approximation is thus performed in a given frequency band determined based on that \texttt{ATTENUATION\_f0\_REFERENCE} reference frequency.
 Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.
@@ -303,7 +301,7 @@ anywhere between mesh points in order to honor its exact location; this
 is more precise than using the closest GLL mesh point, but it is also a bit slower.
 If needed, you can change that default behavior and force the code to use the closest
 GLL mesh point instead by setting flag \texttt{USE\_BEST\_LOCATION} to \texttt{.false.} instead of \texttt{.true.} in file
-\texttt{src/shared/constants.h.in} and running the \texttt{configure} script again and recompiling the code.
+\texttt{setup/constants.h} and recompiling the code.
 \item [{\texttt{USE\_RICKER\_TIME\_FUNCTION}}] Turn this flag on to use
 a Ricker source time function, i.e., the second derivative of a Gaussian, instead of the source time functions
 set by default to represent a (tilted) \texttt{FORCESOLUTION} force
@@ -362,7 +360,7 @@ we need to kill the entire run.
 When that option is on, of course the number of processor cores used to start
 the code in the batch system must be a multiple of \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS},
 all the individual runs must use the same number of processor cores,
-which as usual is NPROC in the Par\_file,
+which as usual is NPROC in the \texttt{DATA/Par\_file},
 and thus the total number of processor cores to request from the batch system
 should be \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS}~*~\texttt{NPROC}.
 All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
@@ -417,7 +415,7 @@ xgenerate\_database input.
 \item [\texttt{ADIOS\_FOR\_FORWARD\_ARRAYS}] Turn this flag on to read and write forward arrays using ADIOS.
 \item [\texttt{ADIOS\_FOR\_KERNELS}] Turn this flag on to produce ADIOS kernels that can later be visualized with the ADIOS version of combine\_vol\_data.
 \end{description}
-There are quite a few more parameters to change the default setup of your runs. Please check the comments in the \texttt{Par\_file} directly for further explanations.\\
+There are quite a few more parameters to change the default setup of your runs. Please check the comments in the \texttt{DATA/Par\_file} directly for further explanations.\\
 
 
 \subsection{PML absorbing boundary layers}
@@ -494,8 +492,7 @@ $\Delta t<C~\mathrm{min}_{\Omega}(~h/v~)$
 where $C$ is the so-called Courant number and $\Omega$ denotes the
 model volume. The distance $h$ depends on the mesh element size and
 the number of GLL points \texttt{NGLL} specified in the main constants
-file \texttt{constants.h} located in the \texttt{src/shared/} subdirectory.
-The wave speed $v$ is determined based on your model's P- (or S-)
+file \texttt{setup/constants.h}. The wave speed $v$ is determined based on your model's P- (or S-)
 wave speed values.
 
 The database generator \texttt{xgenerate\_databases}, as well as the

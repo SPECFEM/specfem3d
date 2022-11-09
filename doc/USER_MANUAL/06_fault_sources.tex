@@ -411,7 +411,7 @@ fault-id
 
 
 The fault-id identifies the fault that contains the station. It is
-the index of appearance in the faults list after line 2 of Par\_file\_faults
+the index of appearance in the faults list after line 2 of \texttt{DATA/Par\_file\_faults}
 
 \end{lyxlist}
 
@@ -424,13 +424,13 @@ parameters are documented in page 10 of
 \item [{$\mathtt{EXAMPLES/tpv16/description/TPV16\_17\_Description\_v03.pdf}$}]~
 \end{lyxlist}
 
-To activate this feature, in Par\_file\_faults name list \&\textbf{RUPTURE\_SWITCHES}, set TPV16=.TRUE..
+To activate this feature, in \texttt{DATA/Par\_file\_faults} name list \&\textbf{RUPTURE\_SWITCHES}, set TPV16=.TRUE..
 
 \end{lyxlist}
 \begin{lyxlist}{00.00.0000}
 \item [{\textbf{DATA/rsf\_hete\_input\_file.txt}}]  Heterogeneous stresses and friction input for
   rate and state friction.
-To activate this feature, in Par\_file\_faults name list \&\textbf{RUPTURE\_SWITCHES}, set RSF\_HETE=.TRUE..
+To activate this feature, in \texttt{DATA/Par\_file\_faults} name list \&\textbf{RUPTURE\_SWITCHES}, set RSF\_HETE=.TRUE..
   The format of  {\textbf{DATA/rsf\_hete\_input\_file.txt}} is as such, in the first line there are four integers
   that are sequentially documenting the number of divisions along strike, number of divisions along
   dip, cell size along strike , cell size along dip. Then the following N (N=NumberOfDivisionsAlongStrike
@@ -485,7 +485,7 @@ compute\\
 \\
 This is the critical time step in an elastic medium for a hypothetical
 element of cubic shape with size equal to $\mathtt{h\_fault}$.
-\item Set $\mathtt{eta}$ in $\mathtt{Par\_file\_faults}$ to (0.1 to 0.3)$\ensuremath{\times}\mathtt{dtc\_fault}$.
+\item Set $\mathtt{eta}$ in $\mathtt{DATA/Par\_file\_faults}$ to (0.1 to 0.3)$\ensuremath{\times}\mathtt{dtc\_fault}$.
 A larger $\mathtt{eta}$ damps high-frequencies more aggressively
 but it might also affect lower frequencies and rupture speed.
 \end{enumerate}

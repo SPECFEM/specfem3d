@@ -30,7 +30,7 @@ mesh was created by \texttt{xmeshfem3D} for 4 processors.}
 You have also the option to visualize the distributed databases produced
 by \texttt{xgenerate\_databases} using Paraview \urlwithparentheses{www.paraview.org}.
 For this, you must set the flag \texttt{SAVE\_MESH\_FILES} to \texttt{.true.}
-in the main parameter file \texttt{Par\_file} (see Chapter~\ref{cha:Main-Parameter}
+in the main parameter file \texttt{DATA/Par\_file} (see Chapter~\ref{cha:Main-Parameter}
 for details). This will create VTK files for each single partition.
 You can then use Paraview \urlwithparentheses{www.paraview.org}
 to visualized these partitions.
@@ -41,7 +41,7 @@ to visualized these partitions.
 
 To make a surface or volume movie of the simulation, set parameters
 \texttt{MOVIE\_SURFACE}, \texttt{MOVIE\_VOLUME}, \texttt{MOVIE\_TYPE},
-and \texttt{NTSTEP\_BETWEEN\_FRAMES} in the \texttt{Par\_file}. Turning
+and \texttt{NTSTEP\_BETWEEN\_FRAMES} in the \texttt{DATA/Par\_file}. Turning
 on the movie flags, in particular \texttt{MOVIE\_VOLUME}, produces
 large output files. \texttt{MOVIE\_VOLUME} files are saved in the
 \texttt{LOCAL\_PATH} directory, whereas \texttt{MOVIE\_SURFACE} output
@@ -65,7 +65,7 @@ of each source in the \texttt{CMTSOLUTION} file is replaced by
 select the appropriate value of 1.1 $\times$ smallest period. As
 usual, for a point source one can set \texttt{half duration} in the
 \texttt{CMTSOLUTION} file to be 0.0 and \texttt{HDUR\_MOVIE} = 0.0
-in the \texttt{Par\_file} to get the highest frequencies resolved
+in the \texttt{DATA/Par\_file} to get the highest frequencies resolved
 by the simulation, but for a finite source one would keep all the
 \texttt{half durations} as prescribed by the finite source model and
 set \texttt{HDUR\_MOVIE} = 0.0.
@@ -75,7 +75,7 @@ set \texttt{HDUR\_MOVIE} = 0.0.
 When running \texttt{xspecfem3D} with the \texttt{MOVIE\_SURFACE}
 flag turned on, the code outputs \texttt{moviedata??????} files in
 the \texttt{OUTPUT\_FILES} directory. There are several flags in the
-main parameter file \texttt{Par\_file} that control the output of
+main parameter file \texttt{DATA/Par\_file} that control the output of
 these movie data files, please see section \ref{cha:Main-Parameter} for
 more details. Especially, the following parameters affect the output:
 \begin{itemize}
@@ -135,7 +135,7 @@ see Southern California ShakeMovie\textregistered{}\urlwithparentheses{www.shake
 When running xspecfem3D with the
 \texttt{\small MOVIE\_VOLUME}
 flag turned on, the code outputs several files in \texttt{\small LOCAL\_PATH}
-specified in the main \texttt{\small Par\_file},
+specified in the main \texttt{DATA/Par\_file},
 e.g. in directory \texttt{\small OUTPUT\_FILES/DATABASES\_MPI}.
 The output is saved by each processor at the time interval specified
 by
