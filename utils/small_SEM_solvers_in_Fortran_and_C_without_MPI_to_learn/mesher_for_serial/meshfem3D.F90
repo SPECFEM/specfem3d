@@ -149,7 +149,7 @@
 !  - Z axis is up
 !
 ! To report bugs or suggest improvements to the code, please use the
-! Issues tracking system at http://www.github.com/SPECFEM/specfem3d/ .
+! Issues tracking system at https://github.com/SPECFEM/specfem3d/ .
 !
 
 ! aniso_mantle_model_variables
