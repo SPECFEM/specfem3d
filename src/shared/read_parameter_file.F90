@@ -1405,6 +1405,7 @@
   call bcast_all_string(MODEL)
 
   call bcast_all_string(TOMOGRAPHY_PATH)
+  call bcast_all_singlei(NFILES_TOMO)
   call bcast_all_string(SEP_MODEL_DIRECTORY)
 
   call bcast_all_singlel(APPROXIMATE_OCEAN_LOAD)
