@@ -45,9 +45,6 @@
   ! for external tomography:
   ! (regular spaced, xyz-block file in ascii)
 
-  ! number of external tomographic models
-  integer :: NFILES_TOMO
-
   ! models dimensions
   double precision  :: END_X,END_Y,END_Z
 
@@ -143,7 +140,7 @@
   character(len=MAX_STRING_LEN*2) :: tomo_filename
   character(len=MAX_STRING_LEN) :: filename
   character(len=MAX_STRING_LEN) :: string_read
-  character(len=5) :: file_number
+  character(len=5) :: filenumber
   integer :: nmaterials
   ! data format
   logical :: has_q_values
@@ -175,8 +172,8 @@
       ! note: since we have no undefined materials, we cannot access undef_mat_prop(:,:) to read in values
       ! uses default name
       ! filenames are e.g.,: 'tomography_model_01.xyz' ... 'tomography_model_{NFILES_TOMO}.xyz'
-      write(file_number, '(I2.2)'), iundef
-      filename = 'tomography_model_' // trim(file_number) // '.xyz'
+      write(filenumber, '(I2.2)'), iundef
+      filename = 'tomography_model_' // trim(filenumber) // '.xyz'
     else
       ! checks if associated material is a tomography model
       if (trim(undef_mat_prop(2,iundef)) /= 'tomography') cycle
@@ -377,6 +374,7 @@ end subroutine init_tomography_files
   integer :: irecord,ier,iundef,imat
   character(len=MAX_STRING_LEN*2) :: tomo_filename
   character(len=MAX_STRING_LEN) :: filename
+  character(len=5) :: filenumber
   character(len=MAX_STRING_LEN) :: string_read
   integer :: nmaterials
   logical :: has_q_values
@@ -397,8 +395,8 @@ end subroutine init_tomography_files
       ! note: since we have no undefined materials, we cannot access undef_mat_prop(:,:) to read in values
       ! uses default name
       ! filenames are e.g.,: 'tomography_model_01.xyz' ... 'tomography_model_{NFILES_TOMO}.xyz'
-      write(file_number, '(I2.2)'), iundef
-      filename = 'tomography_model_' // trim(file_number) // '.xyz'
+      write(filenumber, '(I2.2)'), iundef
+      filename = 'tomography_model_' // trim(filenumber) // '.xyz'
     else
       ! checks if associated material is a tomography model
       if (trim(undef_mat_prop(2,iundef)) /= 'tomography') cycle

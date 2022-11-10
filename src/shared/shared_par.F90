@@ -101,7 +101,9 @@ end module constants
   logical :: APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ATTENUATION,ANISOTROPY
   logical :: GRAVITY
 
+  ! external tomography models
   character(len=MAX_STRING_LEN) :: TOMOGRAPHY_PATH
+  integer :: NFILES_TOMO
 
   ! attenuation
   ! reference frequency of seismic model
