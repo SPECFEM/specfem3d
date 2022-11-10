@@ -131,7 +131,7 @@
 
   use constants, only: MAX_STRING_LEN,IIN,IMAIN
 
-  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh
+  use generate_databases_par, only: TOMOGRAPHY_PATH,NFILES_TOMO,undef_mat_prop,nundefMat_ext_mesh
 
   use model_tomography_par
 
@@ -143,6 +143,7 @@
   character(len=MAX_STRING_LEN*2) :: tomo_filename
   character(len=MAX_STRING_LEN) :: filename
   character(len=MAX_STRING_LEN) :: string_read
+  character(len=5) :: file_number
   integer :: nmaterials
   ! data format
   logical :: has_q_values
@@ -157,7 +158,7 @@
 
   ! checks if we over-impose a tomography model by Par_file setting: MODEL = tomo
   if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
-    nmaterials = 1
+    nmaterials = NFILES_TOMO
   endif
 
   ! data format flag
@@ -173,7 +174,9 @@
     if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
       ! note: since we have no undefined materials, we cannot access undef_mat_prop(:,:) to read in values
       ! uses default name
-      filename = 'tomography_model.xyz'
+      ! filenames are e.g.,: 'tomography_model_01.xyz' ... 'tomography_model_{NFILES_TOMO}.xyz'
+      write(file_number, '(I2.2)'), iundef
+      filename = 'tomography_model_' // trim(file_number) // '.xyz'
     else
       ! checks if associated material is a tomography model
       if (trim(undef_mat_prop(2,iundef)) /= 'tomography') cycle
@@ -270,9 +273,6 @@
 
   enddo
 
-  ! number of external tomographic models
-  NFILES_TOMO = ifiles_tomo
-
   ! user output
   if (myrank_tomo == 0) then
     write(IMAIN,*)
@@ -363,7 +363,7 @@ end subroutine init_tomography_files
 
   use constants, only: MAX_STRING_LEN,IIN,IMAIN
 
-  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh
+  use generate_databases_par, only: TOMOGRAPHY_PATH,NFILES_TOMO,undef_mat_prop,nundefMat_ext_mesh
 
   use model_tomography_par
 
@@ -386,7 +386,7 @@ end subroutine init_tomography_files
 
   ! checks if we over-impose a tomography model by Par_file setting: MODEL = tomo
   if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
-    nmaterials = 1
+    nmaterials = NFILES_TOMO
   endif
 
   imat = 0
@@ -396,7 +396,9 @@ end subroutine init_tomography_files
     if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
       ! note: since we have no undefined materials, we cannot access undef_mat_prop(:,:) to read in values
       ! uses default name
-      filename = 'tomography_model.xyz'
+      ! filenames are e.g.,: 'tomography_model_01.xyz' ... 'tomography_model_{NFILES_TOMO}.xyz'
+      write(file_number, '(I2.2)'), iundef
+      filename = 'tomography_model_' // trim(file_number) // '.xyz'
     else
       ! checks if associated material is a tomography model
       if (trim(undef_mat_prop(2,iundef)) /= 'tomography') cycle
