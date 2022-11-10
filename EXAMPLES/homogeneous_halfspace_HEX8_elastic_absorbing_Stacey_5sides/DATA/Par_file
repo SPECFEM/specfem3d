@@ -65,8 +65,19 @@ NGNOD                           = 8
 #   aniso,external,gll,salton_trough,tomo,SEP,coupled,...
 MODEL                           = default
 
-# path for external tomographic models files
+# path for external tomographic models files if 'MODEL'=='tomo'
 TOMOGRAPHY_PATH                 = DATA/tomo_files/
+
+# Number of Tomography Files (1 < NFILES_TOMO < infinity)
+# - Dictates the number of external tomography files SPECFEM looks for. 
+#   Each file may represent a different subset of your model (e.g., different 
+#   depth levels)
+# - Only required if 'MODEL'=='tomo'. Files should be stored in TOMOGRAPHY_PATH
+# - Files should be named 'tomography_model_1.xyz', 'tomography_model_2.xyz'... 
+#   'tomography_model_{NFILES_TOMO}.xyz'. 
+# - Smaller numbers represent shallower depths (i.e., 1 should include surface)
+NFILES_TOMO                     = 1
+
 # if you are using a SEP model (oil-industry format)
 SEP_MODEL_DIRECTORY             = DATA/my_SEP_model/
 

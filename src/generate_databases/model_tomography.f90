@@ -152,7 +152,6 @@
   ! sets number of materials to loop over
   nmaterials = nundefMat_ext_mesh
 
-  NFILES_TOMO = 0
   nrecord_max = 0
   ifiles_tomo = 0
 
