@@ -169,9 +169,14 @@
 
     ! sets filename
     if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
-      ! note: since we have no undefined materials, we cannot access undef_mat_prop(:,:) to read in values
-      ! uses default name
-      ! filenames are e.g.,: 'tomography_model_01.xyz' ... 'tomography_model_{NFILES_TOMO}.xyz'
+      ! NOTE: since we have no undefined materials, we cannot access 
+      ! undef_mat_prop(:,:) to read in values
+      ! This uses a default naming schema: 'tomography_model_??.xyz'
+      ! filenames are e.g.,: 'tomography_model_01.xyz' ... 
+      !                      'tomography_model_02.xyz' ...
+      !                      'tomography_model_{NFILES_TOMO}.xyz'
+      ! Note the leading '0' before a two digit value. Assuming Users won't 
+      ! have more than 99 separate tomography models
       write(filenumber, '(I2.2)'), iundef
       filename = 'tomography_model_' // trim(filenumber) // '.xyz'
     else
@@ -185,7 +190,7 @@
     ! counter
     ifiles_tomo = ifiles_tomo + 1
 
-    ! sets filename with path (e.g. "DATA/tomo_files/" + "tomo.xyz")
+    ! sets filename with path (e.g. "DATA/tomo_files/" + "tomography_model_01.xyz")
     ! corrects the path and filename of tomography model
     if (TOMOGRAPHY_PATH(len_trim(TOMOGRAPHY_PATH):len_trim(TOMOGRAPHY_PATH)) == "/") then
       tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH)) // trim(filename)
@@ -282,7 +287,7 @@
   endif
 
   ! checks if we found a tomography model
-  if (NFILES_TOMO == 0) call exit_MPI(myrank_tomo,'Error no tomography model was read in')
+  if (ifiles_tomo == 0) call exit_MPI(myrank_tomo,'Error no tomography model was read in')
 
   ! allocates models dimensions
   allocate(ORIG_X(NFILES_TOMO),ORIG_Y(NFILES_TOMO),ORIG_Z(NFILES_TOMO),stat=ier)
@@ -392,9 +397,14 @@ end subroutine init_tomography_files
 
     ! sets filename
     if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
-      ! note: since we have no undefined materials, we cannot access undef_mat_prop(:,:) to read in values
-      ! uses default name
-      ! filenames are e.g.,: 'tomography_model_01.xyz' ... 'tomography_model_{NFILES_TOMO}.xyz'
+      ! NOTE: since we have no undefined materials, we cannot access 
+      ! undef_mat_prop(:,:) to read in values
+      ! This uses a default naming schema: 'tomography_model_??.xyz'
+      ! filenames are e.g.,: 'tomography_model_01.xyz' ... 
+      !                      'tomography_model_02.xyz' ...
+      !                      'tomography_model_{NFILES_TOMO}.xyz'
+      ! Note the leading '0' before a two digit value. Assuming Users won't 
+      ! have more than 99 separate tomography models
       write(filenumber, '(I2.2)'), iundef
       filename = 'tomography_model_' // trim(filenumber) // '.xyz'
     else
