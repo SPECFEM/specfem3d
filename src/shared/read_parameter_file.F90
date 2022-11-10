@@ -180,6 +180,13 @@
       write(*,*)
     endif
 
+    call read_value_integer(NFILES_TOMO, 'NFILES_TOMO', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'NFILES_TOMO                 = 1'
+      write(*,*)
+    endif
+
     call read_value_string(SEP_MODEL_DIRECTORY, 'SEP_MODEL_DIRECTORY', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
