@@ -823,8 +823,8 @@ end subroutine init_tomography_files
 
   ! checks if we over-impose a tomography model by Par_file setting: MODEL = tomo
   if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
-    ! sets material number
-    imat = 1
+    ! sets material number based on material ID
+    imat = imaterial_id
   else
     ! checks if material is a tomographic material (negative id)
     if (imaterial_id >= 0) return
