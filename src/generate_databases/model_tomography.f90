@@ -179,7 +179,7 @@
       ! - NOTE: the leading '0' before a two digit value. Assuming Users won't 
       !   have more than 99 separate tomography models
       ! - NOTE: The first model corresponds to the bottom of the mesh 
-      !   (i.e., element 1). Larger numbers correspond to shallower depths
+      !   (i.e., element 1). Larger numbers correspond to shallower depths 
       write(filenumber, '(I2.2)'), iundef
       filename = 'tomography_model_' // trim(filenumber) // '.xyz'
     else
