@@ -269,7 +269,7 @@
 !  - Z axis is up
 !
 ! To report bugs or suggest improvements to the code, please use our online
-! bug tracking system at http://www.geodynamics.org/roundup .
+! Issues tracking system at https://github.com/SPECFEM/specfem3d/ .
 !
 ! Evolution of the code:
 ! ---------------------

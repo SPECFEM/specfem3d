@@ -25,7 +25,7 @@
 #############################################################################
 #
 # for a complete definition of the format of the mesh in SPECFEM3D check the
-# manual (http://www.geodynamics.org/cig/software/specfem3d):
+# user manual in folder docs/
 #
 # USAGE
 #

@@ -20,5 +20,4 @@ extended examples:
 - 3D_CUBIT_mesh/: scripts for creating 3D mesh with curved free surface and fault. This example needs CUBIT. There are a lot of detailed descriptions in this example.
 
 please consider submitting your own example to this package! 
-email us: cig-seismo AT geodynamics.org
 

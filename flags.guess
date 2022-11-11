@@ -20,7 +20,7 @@
 # You can add -DFORCE_VECTORIZATION to the options below (for all compilers, except for IBM for which the syntax is -WF,-DFORCE_VECTORIZATION)
 # to speed up the code in the fluid (acoustic) parts (only; FORCE_VECTORIZATION support for elastic parts has been discontinued in the source code).
 # This works fine if (and only if) your computer always allocates a contiguous memory block for each allocatable array;
-# this is the case for most machines and most compilers, but not all. For more details see https://github.com/geodynamics/specfem3d/issues/81 .
+# this is the case for most machines and most compilers, but not all. For more details see https://github.com/SPECFEM/specfem3d/issues/81 .
 # To check if that option works fine on your machine, run the code with and without it for a model containing a significant fluid layer
 # (or entirely fluid) and make sure the seismograms are identical.
 
