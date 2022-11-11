@@ -164,8 +164,9 @@
   if (ier /= 0) stop 'Error allocating array materials_with_q'
   materials_with_q(:) = .false.
 
-  ! loops over number of undefined materials
-  do iundef = 1, nmaterials
+  ! loops over number of undefined materials in negative order so that smaller
+  ! numbers correspond to shallower depths
+  do iundef = nmaterials, 1, -1
 
     ! sets filename
     if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
@@ -175,8 +176,10 @@
       ! filenames are e.g.,: 'tomography_model_01.xyz' ... 
       !                      'tomography_model_02.xyz' ...
       !                      'tomography_model_{NFILES_TOMO}.xyz'
-      ! Note the leading '0' before a two digit value. Assuming Users won't 
-      ! have more than 99 separate tomography models
+      ! - NOTE: the leading '0' before a two digit value. Assuming Users won't 
+      !   have more than 99 separate tomography models
+      ! - NOTE: The first model corresponds to the bottom of the mesh 
+      !   (i.e., element 1). Larger numbers correspond to shallower depths
       write(filenumber, '(I2.2)'), iundef
       filename = 'tomography_model_' // trim(filenumber) // '.xyz'
     else
@@ -393,6 +396,7 @@ end subroutine init_tomography_files
   endif
 
   imat = 0
+
   do iundef = 1, nmaterials
 
     ! sets filename
@@ -403,8 +407,10 @@ end subroutine init_tomography_files
       ! filenames are e.g.,: 'tomography_model_01.xyz' ... 
       !                      'tomography_model_02.xyz' ...
       !                      'tomography_model_{NFILES_TOMO}.xyz'
-      ! Note the leading '0' before a two digit value. Assuming Users won't 
-      ! have more than 99 separate tomography models
+      ! - NOTE: the leading '0' before a two digit value. Assuming Users won't 
+      !   have more than 99 separate tomography models
+      ! - NOTE: The first model corresponds to the bottom of the mesh 
+      !   (i.e., element 1). Larger numbers correspond to shallower depths
       write(filenumber, '(I2.2)'), iundef
       filename = 'tomography_model_' // trim(filenumber) // '.xyz'
     else
