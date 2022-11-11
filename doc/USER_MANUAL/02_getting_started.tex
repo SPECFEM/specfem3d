@@ -81,7 +81,7 @@ mesh elements \citep{OlSe11}.\\
 The SPECFEM3D Cartesian software package relies on the SCOTCH library
 to partition meshes created with CUBIT. METIS \citep{KaKu98a,KaKu98c,KaKu98b}
 can also be used instead of SCOTCH if you prefer, by changing the parameter
-\texttt{PARTITIONING\_TYPE} in the \texttt{Par\_file}. You will also then need to install
+\texttt{PARTITIONING\_TYPE} in the \texttt{DATA/Par\_file}. You will also then need to install
 and compile Metis version 4.0 (do {*}NOT{*} install Metis version
 5.0, which has incompatible function calls) and edit \texttt{Makefile.in}
 and uncomment the METIS link flag in that file before running \texttt{configure}.\\
@@ -193,7 +193,7 @@ ADIOS, the following steps should be done:
 \begin{enumerate}
 \item Install ADIOS (available from \url{https://www.olcf.ornl.gov/center-projects/adios/}).
 Make sure that your environment variables reference it.
-\item You may want to change ADIOS related values in the \texttt{constants.h.in} file.
+\item You may want to change ADIOS related values in the \texttt{setup/constants.h} file.
 The default values probably suit most cases.
 \item Configure using the \texttt{-{}-with-adios} flag.
 \end{enumerate}
@@ -261,7 +261,7 @@ difference in terms of performance. We welcome feedback on your experience
 with various compilers and flags.\\
 
 Now that you have set the compiler information, you need to select
-a number of flags in the \texttt{constants.h} file depending on your
+a number of flags in the \texttt{setup/constants.h} file depending on your
 system:
 \begin{description}
 \item [{\texttt{LOCAL\_PATH\_IS\_ALSO\_GLOBAL}}] Set to \texttt{.false.}
@@ -281,7 +281,7 @@ performed using the spectral-element method using single precision
 is sufficient and gives the same results (i.e. the same seismograms);
 and the single precision code is faster and requires exactly half
 as much memory. Select your preference by selecting the appropriate
-setting in the \texttt{constants.h} file:
+setting in the \texttt{setup/constants.h} file:
 \begin{description}
 \item [{\texttt{CUSTOM\_REAL}}] Set to \texttt{SIZE\_REAL} for single precision
 and \texttt{SIZE\_DOUBLE} for double precision.

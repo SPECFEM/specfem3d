@@ -13,7 +13,7 @@ the gradient of the misfit function and further reducing it in successive
 iterations. Applications and procedures pertaining to source studies
 and finite-frequency kernels are discussed in Sections~\ref{sec:Adjoint-simulation-sources}
 and \ref{sec:Adjoint-simulation-finite}, respectively. The two related
-parameters in the \texttt{Par\_file} are \texttt{SIMULATION\_TYPE}
+parameters in the \texttt{DATA/Par\_file} are \texttt{SIMULATION\_TYPE}
 (1, 2 or 3) and the \texttt{SAVE\_FORWARD} (boolean).
 
 
@@ -69,10 +69,10 @@ sources, i.e., the adjoint sources are in the same forward time sense
 as the original recorded seismograms.
 \end{enumerate}
 \item \textbf{Set the related parameters and run the adjoint simulation}\\
- In the \texttt{DATA/Par\_file}, set the two related parameters to
+In the \texttt{DATA/Par\_file}, set the two related parameters to
 be \texttt{SIMULATION\_TYPE = 2} and \texttt{SAVE\_FORWARD = .false.}.
 More conveniently, use the scripts \texttt{utils/change\_simulation\_type.pl}
-to modify the \texttt{Par\_file} automatically (\texttt{change\_simulation\_type.pl
+to modify the \texttt{DATA/Par\_file} automatically (\texttt{change\_simulation\_type.pl
 -a}). Then run the solver to launch the adjoint simulation.
 \item \textbf{Collect the seismograms at the original source location}
 
@@ -110,13 +110,13 @@ the end of the simulation}
 Prepare the \texttt{\small CMTSOLUTION}{\small{} and }\texttt{\small STATIONS}{\small{}
 files, set the parameters }\texttt{\small SIMULATION\_TYPE}{\small {}
 }\texttt{\small =}{\small {} }\texttt{\small 1}{\small{} and }\texttt{\small SAVE\_FORWARD
-=}{\small {} }\texttt{\small .true.}{\small{} in the }\texttt{\small Par\_file}{\small{}
+=}{\small {} }\texttt{\small .true.}{\small{} in the }\texttt{DATA/Par\_file}{\small{}
 (}\texttt{\small change\_simulation\_type -F}{\small ), and run the
 solver.}{\small \par}
 \begin{itemize}
 \item Notice that attenuation is not implemented yet for the computation
 of finite-frequency kernels; therefore set \texttt{ATTENUATION = .false.}
-in the \texttt{Par\_file}.
+in the \texttt{DATA/Par\_file}.
 \item We also suggest you modify the half duration of the \texttt{CMTSOLUTION}
 to be similar to the accuracy of the simulation (see Equation \ref{eq:shortest_period})
 to avoid too much high-frequency noise in the forward wavefield, although
@@ -171,7 +171,7 @@ xcreate_adjsrc_amplitude t1 t2 ifile[0-5] E/N/Z-ascii-files [baz]
 
 With the successful forward simulation and the adjoint source ready
 in the \texttt{SEM/} directory, set \texttt{SIMULATION\_TYPE
-= 3} and \texttt{SAVE\_FORWARD = .false.} in the \texttt{Par\_file}
+= 3} and \texttt{SAVE\_FORWARD = .false.} in the \texttt{DATA/Par\_file}
 (you can use \texttt{change\_simulation\_type.pl -b}), and rerun the
 solver.
 \begin{itemize}
@@ -198,7 +198,7 @@ Instead of the kernels for the isotropic wave speeds, you can also
 compute the kernels for the 21 independent components $C_{IJ},\, I,J=1,...,6$
 (using Voigt's notation) of the elastic tensor in the cartesian coordinate
 system. This is done by setting \texttt{ANISOTROPIC\_KL} \texttt{=}
-\texttt{.true.} in \texttt{constants.h} before compiling the package.
+\texttt{.true.} in \texttt{DATA/Par\_file} before compiling the package.
 The definition of the parameters $C_{IJ}$ in terms of the corresponding
 components $c_{ijkl},ijkl,i,j,k,l=1,2,3$ of the elastic tensor in
 cartesian coordinates follows \citet{ChTr07}. The 21 anisotropic
@@ -216,7 +216,7 @@ Section~\ref{sec:Finite-Frequency-Kernels}).
 
 
 If \texttt{ANISOTROPIC\_KL} \texttt{=} \texttt{.true.} by additionally
-setting \texttt{ANISOTROPIC\_KL} \texttt{=} \texttt{.true.} in \texttt{constants.h}
+setting \texttt{SAVE\_TRANSVERSE\_KL} \texttt{=} \texttt{.true.} in \texttt{DATA/Par\_file}
 the package will save anisotropic kernels parameterized as velocities
 related to transverse isotropy based on the the Chen and Tromp parameters
 \citet{ChTr07}. The kernels are saved as relative perturbations for

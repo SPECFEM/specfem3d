@@ -184,7 +184,7 @@ Should you modify this part, you have to re-compile the source code.
 \subsection{Simulations}
 
 With all of the above done, we can finally launch our simulations.
-Again, please make sure that the \texttt{LOCAL\_PATH} in \texttt{DATA/Par\_file}
+Again, please make sure that the \texttt{LOCAL\_PATH} in \texttt{Par\_file}
 is not globally shared. It is quite problematic to have a globally
 shared \texttt{LOCAL\_PATH}, in terms of both disk storage and speed
 of I/O (we have to save the wavefields at the earth's surface at every
@@ -234,7 +234,7 @@ cluster you are using.\\
 
 After those simulations, you have all stuff you need, either in the
 \texttt{OUTPUT\_FILES/} or in the directory specified by \texttt{LOCAL\_PATH}
-in \texttt{DATA/Par\_file} (which are most probably on local nodes).
+in \texttt{Par\_file} (which are most probably on local nodes).
 Collect whatever you want from the local nodes to your workstation,
 and then visualize them. This process is the same as what you may
 have done for regular earthquake simulations. Refer to other chapters

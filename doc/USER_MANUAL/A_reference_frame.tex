@@ -43,18 +43,17 @@ or burial depth (given in $m$ in \texttt{STATIONS}) is evaluated
 with respect to the surface of the mesh at the specified $x$/$y$
 location to find the corresponding $z$ coordinate. It is possible
 to use this depth value directly as $z$ coordinate by changing the
-flag \texttt{USE\_SOURCES\_RECVS\_Z} to \texttt{.true.} in the file
-\texttt{constants.h} located in the \texttt{src/shared/} subdirectory.
+flag \texttt{USE\_SOURCES\_RECEIVERS\_Z} to \texttt{.true.} in
+\texttt{DATA/Par\_file}.
 
 
 \subsection*{Seismogram outputs}
 
 The seismogram output directions are given in Cartesian $x$/$y$/$z$
-directions and not rotated any further. Changing flags in \texttt{constants.h}
-in the \texttt{src/shared/} subdirectory only rotates the seismogram
-outputs if receivers are forced to be located at the surface (\texttt{RECVS\_CAN\_BE\_BURIED\_EXT\_MESH}
+directions and not rotated any further. Changing flags in \texttt{setup/constants.h} only rotates the seismogram
+outputs if receivers are forced to be located at the surface (\texttt{RECEIVERS\_CAN\_BE\_BURIED}
 set to \texttt{.false.}) and the normal to the surface at the receiver
-location should be used (\texttt{EXT\_MESH\_RECV\_NORMAL} set to \texttt{.true.})
+location should be used (\texttt{EXTERNAL\_MESH\_RECEIVERS\_NORMAL} set to \texttt{.true.})
 as vertical. In this case, the outputs are rotated to have the vertical
 component normal to the surface of the mesh, $x$ and $y$ directions
 are somewhat arbitrary orthogonal directions along the surface.
@@ -87,10 +86,9 @@ and the first time derivative of the acoustic potential in component
 \end{description}
 The seismograms are by default written out in ASCII-format to the
 \texttt{OUTPUT\_FILES/} subdirectory by each parallel process. You
-can change this behavior by changing the following flags in the \texttt{constants.h}
-file located in the \texttt{src/shared/} subdirectory:
+can change this behavior by changing the following flags in the \texttt{DATA/Par\_file}:
 \begin{description}
-\item [{\texttt{SEISMOGRAMS\_BINARY}}] set to \texttt{.true.} to have seismograms
+\item [{\texttt{USE\_BINARY\_FOR\_SEISMOGRAMS}}] set to \texttt{.true.} to have seismograms
 written out in binary format.
 \item [{\texttt{WRITE\_SEISMOGRAMS\_BY\_MAIN}}] Set to \texttt{.true.}
 to have only the main process writing out seismograms. This can
