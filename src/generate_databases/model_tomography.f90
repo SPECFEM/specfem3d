@@ -411,7 +411,7 @@ end subroutine init_tomography_files
       !   have more than 99 separate tomography models
       ! - NOTE: The first model corresponds to the bottom of the mesh 
       !   (i.e., element 1). Larger numbers correspond to shallower depths
-      write(filenumber, '(I2.2)'), iundef
+      write(filenumber, '(I2.2)') iundef
       filename = 'tomography_model_' // trim(filenumber) // '.xyz'
     else
       ! checks if associated material is a tomography model
