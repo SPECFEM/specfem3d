@@ -627,19 +627,26 @@ direction within each layer is also defined in this file.
 \item [{\texttt{NEX\_XI}}] The number of spectral elements along one side of the
 block. This number \textit{must} be 8~$\times$~a multiple of $\nprocxi$
 defined below. Based upon benchmarks against semi-analytical discrete
-wavenumber synthetic seismograms \citep{KoLiTrSuStSh04}, determined
-that a $\nexxi=288$ run is accurate to a shortest period of roughly
+wavenumber synthetic seismograms, \cite{KoLiTrSuStSh04} determined
+that a $\nexxi=288$ run for a 516 km x 507 km mesh
+is accurate to a shortest period of roughly
 2~s. Therefore, since accuracy is determined by the number of grid
 points per shortest wavelength, for any particular value of $\nexxi$
-the simulation will be accurate to a shortest period determined by
+the simulation with a mesh extent $\Delta$ (in km)
+will be accurate approximately to a shortest period determined by
 \begin{equation}
-\mbox{shortest period (s)}=(288/\nexxi)\times2.\label{eq:shortest_period}
+\mbox{shortest period (s)}=2. \times \frac{288}{\nexxi} \times \frac{\Delta}{500km}\label{eq:shortest_period}
 \end{equation}
+This estimate also depends on the velocity model. Therefore, the binary \texttt{xgenerate\_databases}
+calculates a minimum period resolved by the chosen mesh discretization and velocity model,
+output into the file \texttt{OUTPUT\_FILES/output\_generate\_databases.txt}.
+
  The number of grid points in each orthogonal direction of the reference
 element, i.e., the number of Gauss-Lobatto-Legendre points, is determined
 by \texttt{NGLLX} in the \texttt{setup/constants.h} file. We generally use
 $\mbox{\texttt{NGLLX\/}}=5$, for a total of $5^{3}=125$ points per
-elements. We suggest not to change this value.
+elements. We suggest this value as it represents a fair trade-off between element deformations to adapt to
+topographic variations and numerical accuracy.
 %
 \item [{\texttt{NEX\_ETA}}] The number of spectral elements along the other side
 of the block. This number \textit{must} be 8~$\times$~a multiple
