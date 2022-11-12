@@ -11,10 +11,10 @@ with material properties that vary within each spectral element.
 
 To implement your own external tomographic model(s), you must provide
 your own external tomography file(s), and choose between two possible
-options:\\
+options:\newline
  \indent (1) set in the \texttt{DATA/Par\_file} the model parameter \texttt{MODEL
-= tomo}, \\
- or for more user control: \\
+= tomo}, \newline
+ or for more user control: \newline
  \indent (2) set in the \texttt{DATA/Par\_file} the model parameter \texttt{MODEL
 = default}, define the negative \texttt{material\_ID} identifier for
 each element in the file \texttt{MESH/materials\_file} and use the
@@ -23,17 +23,17 @@ when using CUBIT to construct your mesh (see also section \ref{subsec:Exporting-
 \begin{verbatim}
 domain_ID material_ID tomography elastic file_name 1
 \end{verbatim}
-where: \\
+where: \newline
  \indent \texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials,
-\\
+\newline
  \indent \texttt{material\_ID} a negative, unique identifier (i.e.,
--1,-2,...), \\
+-1,-2,...), \newline
  \indent \texttt{tomography} keyword for tomographic material definition,
-\\
+\newline
  \indent \texttt{elastic} keyword for elastic material definition,
-\\
+\newline
  \indent \texttt{file\_name} the name of the tomography file and
-1 a positive unique identifier.\\
+1 a positive unique identifier.\newline
 
 
 The external tomographic model is represented by a grid of points

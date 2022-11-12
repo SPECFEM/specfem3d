@@ -1,7 +1,7 @@
 \chapter{Creating the Distributed Databases}\label{cha:Creating-Distributed-Databases}
 
 After using \texttt{xmeshfem3D} or \texttt{xdecompose\_mesh}, the
-next step in the workflow is to compile \texttt{xgenerate\_}~\\
+next step in the workflow is to compile \texttt{xgenerate\_}~\newline
  \texttt{databases}. This program is going to create all the missing
 information needed by the SEM solver.
 
@@ -34,7 +34,7 @@ from the main directory, as most of the binaries of the package.
 
 Before running \texttt{xgenerate\_databases}, a number of parameters
 need to be set in the main parameter \texttt{Par\_file} located in
-the subdirectory \texttt{DATA}:\\
+the subdirectory \texttt{DATA}:\newline
 
 \noindent {\bf $\bullet$ Simulation setup}
 \begin{description}
@@ -415,7 +415,7 @@ xgenerate\_database input.
 \item [\texttt{ADIOS\_FOR\_FORWARD\_ARRAYS}] Turn this flag on to read and write forward arrays using ADIOS.
 \item [\texttt{ADIOS\_FOR\_KERNELS}] Turn this flag on to produce ADIOS kernels that can later be visualized with the ADIOS version of combine\_vol\_data.
 \end{description}
-There are quite a few more parameters to change the default setup of your runs. Please check the comments in the \texttt{DATA/Par\_file} directly for further explanations.\\
+There are quite a few more parameters to change the default setup of your runs. Please check the comments in the \texttt{DATA/Par\_file} directly for further explanations.\newline
 
 
 \subsection{PML absorbing boundary layers}
@@ -503,7 +503,7 @@ you should set the value suggested in \texttt{OUTPUT\_FILES/output\_mesher.txt}
 file, which is created after the mesher completed. In case you used
 CUBIT to create the mesh, you might use an arbitrary value when running
 \texttt{xgenerate\_databases} and then use the value suggested in
-the ~\\
+the ~\newline
  \texttt{OUTPUT\_FILES/output\_mesher.txt} file after the database
 generation completed. Note that the implemented Newmark time scheme
 uses this time step globally, thus your simulations become more expensive

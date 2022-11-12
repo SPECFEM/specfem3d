@@ -16,7 +16,7 @@ must honor the fault surfaces). Moreover, a fault is made of two surfaces
 in contact. Each of these two surfaces needs a separate set of nodes.
 This approach is known as \textquotedbl{}split nodes\textquotedbl{}.
 Currently faults can only be run with \texttt{xdecompose\_mesh} and
-\texttt{CUBIT}. \texttt{xmeshfem3D} is not yet ready to handle faults.\\
+\texttt{CUBIT}. \texttt{xmeshfem3D} is not yet ready to handle faults.\newline
 
 
 To facilitate the mesh generation with split nodes in CUBIT, we need
@@ -31,7 +31,7 @@ of the mesh also affect numerical roundoffs, and therefore the split nodes
 should also be at least \texttt{10.d-10 * (Xmax-Xmin)} apart). Note that only the interior
 of the fault must be opened, its edges must remain closed (except
 the edge on the free surface). The fault is automatically closed later
-by SPECFEM3D.\\
+by SPECFEM3D.\newline
 
 \noindent
 Here is an example CUBIT script to generate a mesh with split nodes
@@ -58,7 +58,7 @@ for a buried vertical strike-slip fault:
 
 \begin{figure}[htbp]
 \begin{centering}
-\includegraphics[scale=0.3]{figures/faultmesh.jpg} \\
+\includegraphics[scale=0.3]{figures/faultmesh.jpg} \newline
 \includegraphics[scale=0.3]{figures/surf168.jpg}
 \includegraphics[scale=0.3]{figures/splitnodes.jpg}
 \par
@@ -92,7 +92,7 @@ SPECFEM3D (see next section). The Python language allows to define
 and manipulate variables to parameterize the mesh. Alternatively,
 the Python script can call a CUBIT journal file ({*}.jou), which looks
 like the example above. Variables can be defined and manipulated there
-using the $\mathtt{APREPRO}$ language built in CUBIT.\\
+using the $\mathtt{APREPRO}$ language built in CUBIT.\newline
 
 \newpage
 \noindent
@@ -163,7 +163,7 @@ The package includes examples, the SCEC benchmark problems:
 \end{itemize}
 and
 \begin{itemize}
-\item Splay fault models from Wendt et al. (2009)\\
+\item Splay fault models from Wendt et al. (2009)\newline
 
 \end{itemize}
 Read the documents in the directory \texttt{EXAMPLES/*/description}.
@@ -183,14 +183,14 @@ coordinate system defined by (strike, dip, normal), where \textquotedbl{}\emph{n
 is the normal vector outgoing from side 1, \textquotedbl{}\emph{dip}\textquotedbl{}
 is parallel to the along-dip direction pointing downwards, and \textquotedbl{}\emph{strike}\textquotedbl{}
 is the horizontal along-strike vector such that the system is right-handed. In places where the fault plane is horizontal,
-we define the alone strike direction to be (1,0,0).\\
+we define the alone strike direction to be (1,0,0).\newline
 
 
 Slip is defined as displacement on side 2 minus displacement on side
 1. In the local coordinate system on the fault, positive along-strike
 slip is right-lateral and positive along-dip slip is thrust if side
 1 is on the hanging wall (normal faulting if side 1 is on the foot
-wall).\\
+wall).\newline
 
 
 Traction is defined as the stress induced on side 1 by side 2, which
@@ -207,7 +207,7 @@ on the foot wall).
 Three additional input files are required in the \texttt{DATA/} directory
 for dynamic and kinematic faults. They are $\mathtt{Par\_file\_faults}$,
 $\mathtt{FAULT\_STATIONS}$ and $\mathtt{input\_file.txt}$ or $\mathtt{rsf\_hete\_input\_file.txt}$(optional).
-If the former does not exist, the code assumes that there are no faults.\\
+If the former does not exist, the code assumes that there are no faults.\newline
 
 \begin{lyxlist}{00.00.0000}
 \item [{\textbf{DATA/Par\_file\_faults}}] contains parameters of the fault.
@@ -234,24 +234,24 @@ Only used for outputs.
 
 The rest of this file is made of namelist input blocks (see \textquotedbl{}namelist\textquotedbl{}
 in a Fortran 9x manual). The input for each fault has the following
-sequence (arguments in {[}brackets{]} are optional):\\
+sequence (arguments in {[}brackets{]} are optional):\newline
 
 
-\&\textbf{RUPTURE\_SWITCHES}  / RATE\_AND\_STATE ,TPV16 ,HETE\_RSF ,TPV10X ,TWF\\
-\&\textbf{BEGIN\_FAULT} /\\
-\&\textbf{STRESS\_TENSOR} Sigma = $\sigma_{xx}$,$\sigma_{yy}$,$\sigma_{zz}$,$\sigma_{xy}$,$\sigma_{xz}$,$\sigma_{yz}$ /\\
-\&\textbf{INIT\_STRESS} S1, S2, S3 {[},n1, n2, n3{]} /\\
+\&\textbf{RUPTURE\_SWITCHES}  / RATE\_AND\_STATE ,TPV16 ,HETE\_RSF ,TPV10X ,TWF\newline
+\&\textbf{BEGIN\_FAULT} /\newline
+\&\textbf{STRESS\_TENSOR} Sigma = $\sigma_{xx}$,$\sigma_{yy}$,$\sigma_{zz}$,$\sigma_{xy}$,$\sigma_{xz}$,$\sigma_{yz}$ /\newline
+\&\textbf{INIT\_STRESS} S1, S2, S3 {[},n1, n2, n3{]} /\newline
 
 
-followed by (n1+n2+n3) \&\textbf{DIST2D} blocks\\
+followed by (n1+n2+n3) \&\textbf{DIST2D} blocks\newline
 
 
-\&\textbf{SWF} mus, mud, dc {[}, nmus, nmud, ndc{]} (weakening\_kind=1 for linear (default); weakening\_kind=2 for exponential) /\\
-\&\textbf{TWF} nuc\_x, nuc\_y, nuc\_z, nuc\_r, nuc\_t0, nuc\_v /\\
-\&\textbf{RSF} V0,f0,a,b,L,V\_init,theta\_init,C,StateLaw {[} nV0,nf0,na,nb,nL,nV\_init,ntheta\_init,nC {]} /\\
+\&\textbf{SWF} mus, mud, dc {[}, nmus, nmud, ndc{]} (weakening\_kind=1 for linear (default); weakening\_kind=2 for exponential) /\newline
+\&\textbf{TWF} nuc\_x, nuc\_y, nuc\_z, nuc\_r, nuc\_t0, nuc\_v /\newline
+\&\textbf{RSF} V0,f0,a,b,L,V\_init,theta\_init,C,StateLaw {[} nV0,nf0,na,nb,nL,nV\_init,ntheta\_init,nC {]} /\newline
 
 
-followed by (nV0+nf0+na+nb+nL+nV\_init+ntheta\_init+nC) \&\textbf{DIST2D} blocks\\
+followed by (nV0+nf0+na+nb+nL+nV\_init+ntheta\_init+nC) \&\textbf{DIST2D} blocks\newline
 
 
 \begin{lyxlist}{00.00.0000}
@@ -392,7 +392,7 @@ $\;$sets the name of the filename saved in the DATA directory.
 The first line in the file shall be the number of data points and the
 following lines in the file has the format:
 x, y, z, val. Method of interpolation is nearest.
-\\
+\newline
 
 
 
@@ -480,9 +480,9 @@ $\mathtt{h\_fault}$. Usually this value is prescribed by the user
 during mesh generation. Otherwise it can be found by inspection of
 the mesh inside the CUBIT GUI.
 \item Use the Matlab function $\mathtt{utils/critical\_timestep.m}$ to
-compute\\
+compute\newline
  $\mathtt{dtc\_fault}=\mathtt{critical\_timestep\left(c_{p},h\_fault,ngll\right)}$.
-\\
+\newline
 This is the critical time step in an elastic medium for a hypothetical
 element of cubic shape with size equal to $\mathtt{h\_fault}$.
 \item Set $\mathtt{eta}$ in $\mathtt{DATA/Par\_file\_faults}$ to (0.1 to 0.3)$\ensuremath{\times}\mathtt{dtc\_fault}$.
@@ -499,7 +499,7 @@ a few time steps)
 in \texttt{OUTPUT\_FILES/output\_mesher.txt}. This is the critical
 timestep of a purely elastic simulation, $\mathtt{dtc\_bulk}$.
 \item Reset the timestep of the simulation with a Kelvin-Voigt material
-to a value smaller than\\
+to a value smaller than\newline
  $\mathtt{dtc\_kv}=\mathtt{eta}\left(\sqrt{1+\mathtt{dtc\_bulk^{2}}/\mathtt{eta^{2}}}-1\right)$
 \end{enumerate}
 Note that in general $\mathtt{dtc\_bulk}$ is smaller than $\mathtt{dtc\_fault}$,
@@ -509,13 +509,13 @@ than element faces on the fault.
 
 \section{Output Files }
 
-Several output files are saved in \texttt{OUTPUT\_FILES/}:\\
+Several output files are saved in \texttt{OUTPUT\_FILES/}:\newline
 
 \begin{enumerate}
 \item Seismograms for each station on the fault plane given in \texttt{DATA/FAUL\_STATIONS}.
 One output file is generated for each station, named after the station.
 The files are ascii and start with a header (22 lines long) followed
-by a data block with the following format, one line per time sample:\\
+by a data block with the following format, one line per time sample:\newline
 
 
 
@@ -540,7 +540,7 @@ Column 6 = vertical up-dip slip rate (m/s)
 Column 7 = vertical up-dip shear stress (MPa)
 
 
-Column 8 = normal stress (MPa)\\
+Column 8 = normal stress (MPa)\newline
 
 
 
@@ -574,10 +574,10 @@ the function $\mathtt{utils/FSEM3D\_snapshot.m}$
 
 Some Matlab functions for post-processing and visualization are included
 in directory $\mathtt{utils}$. The functions are internally documented
-(see their matlab help).\\
+(see their matlab help).\newline
 
 
-\texttt{FSEM3D\_snapshot} reads a fault data snapshot\\
+\texttt{FSEM3D\_snapshot} reads a fault data snapshot\newline
 
 \noindent
 The directories \texttt{EXAMPLES/*/post} contain additional Matlab

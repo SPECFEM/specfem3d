@@ -1,6 +1,6 @@
 \chapter[Doing tomography based on the sensitivity kernels obtained]{Doing tomography, i.e., updating the model based on the sensitivity kernels obtained}\label{cha:tomo}
 
-\red{\Large ANNOUNCEMENT (June 2017): See also the next chapter (Chapter~\ref{cha:FWI}) about how to perform full waveform inversion (FWI) or source inversions.}\\
+\red{\Large ANNOUNCEMENT (June 2017): See also the next chapter (Chapter~\ref{cha:FWI}) about how to perform full waveform inversion (FWI) or source inversions.}\newline
 
 UNDER CONSTRUCTION (July 2015). New content will be added soon.
 
@@ -195,7 +195,7 @@ Besides the ability to compute adjoint sensitivity kernels, the SPECFEM3D packag
 make tomography
 make postprocess
 \end{verbatim}
-You can modify specific settings affecting, e.g., the (isotropic) parameterization or directory setup structure in file \texttt{setup/constants\_tomography.h}. The compiled binaries can be found in directory \texttt{bin/}.\\
+You can modify specific settings affecting, e.g., the (isotropic) parameterization or directory setup structure in file \texttt{setup/constants\_tomography.h}. The compiled binaries can be found in directory \texttt{bin/}.\newline
 
 \noindent
 The iterative inversion workflow may comprise three main steps for which tools are provided:
@@ -205,7 +205,7 @@ The iterative inversion workflow may comprise three main steps for which tools a
 \item Updating the model $\boldm_{i+1} = \boldm_i + \delta\boldm$.
 \end{enumerate}
 
-Please note that the tomographic routines are very similar for both SPECFEM3D\_Cartesian and SPECFEM3D\_GLOBE versions. Some differences occur, e.g., when reading in mesh files and when the maximum of the gradient is taken for the update step length. Also note that currently only the binary database format is supported, no ADIOS file format support is implemented yet. In future, we plan to extend and merge these into the same set of tools within a common SPECFEM function library.\\
+Please note that the tomographic routines are very similar for both SPECFEM3D\_Cartesian and SPECFEM3D\_GLOBE versions. Some differences occur, e.g., when reading in mesh files and when the maximum of the gradient is taken for the update step length. Also note that currently only the binary database format is supported, no ADIOS file format support is implemented yet. In future, we plan to extend and merge these into the same set of tools within a common SPECFEM function library.\newline
 
 
 \subsection{Summing kernels}
@@ -227,7 +227,7 @@ The summation tools use the following input/output format (see Fig.~\ref{fig:tom
 Input is provided by a list of event directories, given in file \texttt{kernels\_list.txt} (default setting for \texttt{KERNEL\_FILE\_LIST} in \texttt{constants\_tomography.h}). The file lists all event kernel directories which should be summed together. All event directories have to be located in directory \texttt{INPUT\_KERNELS/}, which can be setup as links to all individual event kernel directories.
 
 \item [-]{\bf Output:}
-The summed kernels will be stored in corresponding kernel files in output directory \texttt{OUTPUT\_SUM/}.\\
+The summed kernels will be stored in corresponding kernel files in output directory \texttt{OUTPUT\_SUM/}.\newline
 \end{itemize}
 
 \begin{figure}[htp]
@@ -266,7 +266,7 @@ In this case, the factor $\frac{1}{\Sum_i \tilde{H}^{i}}$ acts as preconditioner
 \noindent
 {\bf Kernel names}: The summation tool will look for kernels with following names:
 \begin{itemize}
-\item [-] for an {\it isotropic} model parameterization, kernel names are:\\
+\item [-] for an {\it isotropic} model parameterization, kernel names are:\newline
 \begin{tabular}{ c c }
 \begin{minipage}{3in}
 \begin{verbatim}
@@ -285,9 +285,9 @@ proc***_reg1_beta_kernel.bin
 proc***_reg1_rho_kernel.bin
 \end{verbatim}
 \end{minipage}
-\end{tabular}\\
+\end{tabular}\newline
 
-\item [-] for an {\it isotropic bulk} model parameterization, kernel names are:\\
+\item [-] for an {\it isotropic bulk} model parameterization, kernel names are:\newline
 \begin{tabular}{ c c }
 \begin{minipage}{3in}
 \begin{verbatim}
@@ -306,9 +306,9 @@ proc***_reg1_bulk_beta_kernel.bin
 proc***_reg1_rho_kernel.bin
 \end{verbatim}
 \end{minipage}
-\end{tabular}\\
+\end{tabular}\newline
 
-\item [-] for a {\it transversely isotropic} model parameterization, kernel names are:\\
+\item [-] for a {\it transversely isotropic} model parameterization, kernel names are:\newline
 \begin{tabular}{ c c }
 \begin{minipage}{3in}
 \begin{verbatim}
@@ -329,11 +329,11 @@ proc***_reg1_bulk_betah_kernel.bin
 proc***_reg1_eta_kernel.bin
 \end{verbatim}
 \end{minipage}
-\end{tabular}\\
+\end{tabular}\newline
 
-Note that these event kernels are stored after a kernel simulation (\texttt{SIMULATION\_TYPE = 3}) in the \texttt{LOCAL\_PATH} directory, which by default points to directory \texttt{DATABASES\_MPI/}. Isotropic kernels will be created by default. To create transversely isotropic kernels, you set \texttt{ANISOTROPIC\_KL} and \texttt{SAVE\_TRANSVERSE\_KL} to \texttt{.true.} in the parameter file \texttt{DATA/Par\_file}. \\
+Note that these event kernels are stored after a kernel simulation (\texttt{SIMULATION\_TYPE = 3}) in the \texttt{LOCAL\_PATH} directory, which by default points to directory \texttt{DATABASES\_MPI/}. Isotropic kernels will be created by default. To create transversely isotropic kernels, you set \texttt{ANISOTROPIC\_KL} and \texttt{SAVE\_TRANSVERSE\_KL} to \texttt{.true.} in the parameter file \texttt{DATA/Par\_file}. \newline
 
-\item [- ] for preconditioning, the approximate Hessian kernels taken for summation are:\\
+\item [- ] for preconditioning, the approximate Hessian kernels taken for summation are:\newline
 \begin{tabular}{ c c }
 \begin{minipage}{3in}
 \begin{verbatim}
@@ -348,15 +348,15 @@ proc***_hess_kernel.bin
 proc***_reg1_hess_kernel.bin
 \end{verbatim}
 \end{minipage}
-\end{tabular}\\
+\end{tabular}\newline
 
 These Hessian kernels approximate the diagonal elements of the Hessian matrix and can be used as preconditioner in a gradient optimization scheme.
-To create these kernels, you have to set \texttt{APPROXIMATE\_HESS\_KL} to \texttt{.true.} in the parameter file \texttt{DATA/Par\_file}.\\
+To create these kernels, you have to set \texttt{APPROXIMATE\_HESS\_KL} to \texttt{.true.} in the parameter file \texttt{DATA/Par\_file}.\newline
 
 \end{itemize}
 
 
-For SPECFEM3D\_GLOBE, by default only kernels in the crust/mantle region ("reg1") will be considered for summation. You can change the default by setting parameter \texttt{REG} in file \texttt{constants\_tomography.h} to the region of interest. \\
+For SPECFEM3D\_GLOBE, by default only kernels in the crust/mantle region ("reg1") will be considered for summation. You can change the default by setting parameter \texttt{REG} in file \texttt{constants\_tomography.h} to the region of interest. \newline
 
 Note that although we provide the preconditioned summation here, we recommend to smooth first both, the summed kernels and summed approximate Hessians, before inverting the summed Hessian and applying it as preconditioner to the gradient. From experience, we prefer doing
 \begin{equation}
@@ -477,7 +477,7 @@ The gradient files are given for isotropic parameters or isotropic bulk paramete
 \end{enumerate}
 
 Note that instead of using the density kernels $K_{\rho}$ for model updates, setting \texttt{USE\_RHO\_SCALING} to \texttt{.true.} will
-ignore the density kernel and use density perturbations scaled from isotropic $V_s$ pertubations.\\
+ignore the density kernel and use density perturbations scaled from isotropic $V_s$ pertubations.\newline
 
 \begin{description}
 \item [Isotropic model update:] The program \texttt{xadd\_model\_iso} can be used to update {\it isotropic} model files with

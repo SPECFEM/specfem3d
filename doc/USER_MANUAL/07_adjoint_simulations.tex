@@ -68,7 +68,7 @@ explicit time-reversing is needed for the preparation of the adjoint
 sources, i.e., the adjoint sources are in the same forward time sense
 as the original recorded seismograms.
 \end{enumerate}
-\item \textbf{Set the related parameters and run the adjoint simulation}\\
+\item \textbf{Set the related parameters and run the adjoint simulation}\newline
 In the \texttt{DATA/Par\_file}, set the two related parameters to
 be \texttt{SIMULATION\_TYPE = 2} and \texttt{SAVE\_FORWARD = .false.}.
 More conveniently, use the scripts \texttt{utils/change\_simulation\_type.pl}
@@ -84,7 +84,7 @@ seismograms from \texttt{LOCAL\_PATH}.
 earthquake sources given by the \texttt{DATA/CMTSOLUTION} file, and
 have names of the form \texttt{NT.S?????.S??.sem} for the six-component
 strain tensor (\texttt{SNN,SEE,SZZ,SNE,SNZ,SEZ}) at these locations,
-and ~\\
+and ~\newline
  \texttt{NT.S?????.BX?.sem} for the three-component displacements
 (\texttt{BXN,BXE,BXZ}) recorded at these locations.
 \item \texttt{S?????} denotes the source number; for example, if the original

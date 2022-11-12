@@ -9,7 +9,7 @@ to compile the solver. In the main directory, type
 }
 \noindent
 Please note that \texttt{xspecfem3D} must be called directly from
-the main directory, as most of the binaries of the package.\\
+the main directory, as most of the binaries of the package.\newline
 
 \noindent
 The solver needs three input files in the \texttt{DATA} directory
@@ -31,19 +31,19 @@ after running \texttt{xgenerate\_databases}:
 and \texttt{SAVE\_FORWARD}
 \item the time step parameters \texttt{NSTEP} and \texttt{DT}
 \item the absorbing boundary control parameter \texttt{PML\_CONDITIONS}
-on condition that the\\
+on condition that the\newline
  \texttt{PML\_INSTEAD\_OF\_FREE\_SURFACE} flag remains unmodified
 after running the databases generation.
 \item the movie control parameters \texttt{MOVIE\_SURFACE}, \texttt{MOVIE\_VOLUME},
 and \texttt{NTSTEPS\_BETWEEN\_FRAMES}
 \item the ShakeMap\textregistered{} option \texttt{CREATE\_SHAKEMAP}
-\item the output information parameters \texttt{MOVIE\_TYPE}, \texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO} and\\
+\item the output information parameters \texttt{MOVIE\_TYPE}, \texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO} and\newline
 \texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS}
 \item the \texttt{PRINT\_SOURCE\_TIME\_FUNCTION} flags
 \end{itemize}
 Any other change to the \texttt{DATA/Par\_file} implies rerunning both
 the database generator \texttt{xgenerate\_databases} and the solver
-\texttt{xspecfem3D}.\\
+\texttt{xspecfem3D}.\newline
 
 
 For any particular earthquake, the \texttt{CMTSOLUTION} file that
@@ -255,7 +255,7 @@ the region given in the \texttt{Mesh\_Par\_file} (between \texttt{LATITUDE\_MIN}
 and \texttt{LATITUDE\_MAX} and between \texttt{LONGITUDE\_MIN} and
 \texttt{LONGITUDE\_MAX}). The filtered file is called \texttt{DATA/STATIONS\_FILTERED}.
 Elevation and burial are generally applicable to geographical regions.
-Burial is measured down from the top surface.\\
+Burial is measured down from the top surface.\newline
 
 
 \noindent
@@ -266,7 +266,7 @@ procedures for those kind of problems:
 \begin{itemize}
 \item {\it Procedure 1:} mostly for geophysics, when the top surface is a free surface (topography) and the five other edges of the mesh are absorbing surfaces
 \begin{enumerate}
-\item [-] Put the origin on the top of the model.\\
+\item [-] Put the origin on the top of the model.\newline
 \item [-] Let's say you want to place two receivers at (x1,y1,z1) and
 (x2,y2,z2). Your STATIONS file should look like:
 {\small \begin{verbatim}
@@ -278,7 +278,7 @@ BONE  GR  y2  x2  0.00  -z2
 \item {\it Procedure 2:} useful for other application domains, in which using the absolute $Z$ position of the sources and receivers is more standard than using their depth from the surface
 \begin{enumerate}
 \item [-] In principle in the international CMTSOLUTION format in geophysics
-the depth is given in kilometers; however for users in other fields (non-destructive testing, medical imaging, near-surface studies...) who may prefer to give the position of the source (rather than its depth from the surface), or for people who use FORCESOLUTION to describe the source rather than CMTSOLUTION, we provide an option called USE\_SOURCES\_RECEIVERS\_Z in the \texttt{DATA/Par\_file}, and if so that position is read from CMTSOLUTION in meters rather than kilometers (and again, it is then the true position in the mesh, not the depth). When option USE\_SOURCES\_RECEIVERS\_Z in the \texttt{DATA/Par\_file} is on, this remark applies to the position of the receivers as well.\\
+the depth is given in kilometers; however for users in other fields (non-destructive testing, medical imaging, near-surface studies...) who may prefer to give the position of the source (rather than its depth from the surface), or for people who use FORCESOLUTION to describe the source rather than CMTSOLUTION, we provide an option called USE\_SOURCES\_RECEIVERS\_Z in the \texttt{DATA/Par\_file}, and if so that position is read from CMTSOLUTION in meters rather than kilometers (and again, it is then the true position in the mesh, not the depth). When option USE\_SOURCES\_RECEIVERS\_Z in the \texttt{DATA/Par\_file} is on, this remark applies to the position of the receivers as well.\newline
 \item [-] Let's say you want to place two receivers at (x1,y1,z1) and
 (x2,y2,z2). Your STATIONS file should then look like:
 {\small \begin{verbatim}
@@ -287,14 +287,14 @@ BONE  GR  y2  x2  0.00  z2
 \end{verbatim}}
 The option USE\_SOURCES\_RECEIVERS\_Z set to .true. will then discard the elevation and set
 burial as the $z$ coordinate.
-Third column is Y and Fourth is X due to the latitude/longitude convention.\\
+Third column is Y and Fourth is X due to the latitude/longitude convention.\newline
 \end{enumerate}
 
 You can replace the station name "BONE" with any word of length less
 than 32, and the network name "GR" with any word of length less than
 8.
 And you can always plot OUTPUT\_FILES/sr.vtk file in ParaView to check the
-source/receiver locations after your simulation.\\
+source/receiver locations after your simulation.\newline
 \end{itemize}
 
 
@@ -398,7 +398,7 @@ should looks like when simulating multiple earthquakes at ones.
 All the runs to perform must be placed in directories called \texttt{run0001}, \texttt{run0002}, \texttt{run0003} and so on (with exactly four digits).
 
 \begin{itemize}
-\item The simulation is launched within the root directory \texttt{EXAMPLE\_ROOT\_DIR}\\
+\item The simulation is launched within the root directory \texttt{EXAMPLE\_ROOT\_DIR}\newline
 (usually \texttt{mpirun -np N ./bin/xspecfem3D}).
 \item \texttt{DATA} should contain the \texttt{Par\_file} parameter file with
 \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS} as explained in Chapter~\ref{cha:Creating-Distributed-Databases}.
@@ -425,12 +425,12 @@ parameter sets, they should have been created using the same number of MPI proce
 
 \noindent
 The model used is a constant $Q$, thus with no dependence on frequency ($Q(f)$ = constant).
-See e.g. \cite{BlKoChLoXi16}. \\
+See e.g. \cite{BlKoChLoXi16}. \newline
 
 \noindent
 However in practice for technical reasons it is approximated based on the sum of different Generalized Zener body mechanisms
 and thus the code outputs the band in which the approximation is very good, outside of that range it can be less accurate.
-The logarithmic center of that frequency band is the \texttt{ATTENUATION\_f0} parameter defined (in Hz) in input file \texttt{DATA/Par\_file}. \\
+The logarithmic center of that frequency band is the \texttt{ATTENUATION\_f0} parameter defined (in Hz) in input file \texttt{DATA/Par\_file}. \newline
 
 \noindent
 Regarding attenuation (viscoelasticity), in the \texttt{setup/constants.h} you need to select the number of standard linear solids (N\_SLS) to use to mimic a constant $Q$ quality factor.

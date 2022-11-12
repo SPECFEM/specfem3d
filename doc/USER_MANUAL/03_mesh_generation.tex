@@ -56,7 +56,7 @@ and assigns elastic material parameters.
 \item [{\texttt{layered\_halfspace}}] Combines two different, elastic material
 volumes and creates a refinement layer between the two. This example
 can be compared for validation against the solutions provided in subdirectory
-~\\
+~\newline
  \texttt{VALIDATION\_3D\_SEM\_SIMPLER\_LAYER\_SOURCE\_DEPTH/}.
 \item [{\texttt{waterlayered\_halfspace}}] Combines an acoustic and elastic
 material volume as in a schematic marine survey example.
@@ -68,7 +68,7 @@ file during the databases creation by \texttt{xgenerate\_databases}.
 \begin{figure}[htbp]
 \begin{centering}
 \includegraphics[width=0.45\textwidth]{figures/example-homogeneous.jpg}
-\includegraphics[width=0.45\textwidth]{figures/example-2layers.jpg} \\
+\includegraphics[width=0.45\textwidth]{figures/example-2layers.jpg} \newline
 \includegraphics[width=0.45\textwidth]{figures/example-water.jpg}
 \includegraphics[width=0.45\textwidth]{figures/example-tomo.jpg}
 \par
@@ -236,8 +236,8 @@ and \texttt{mesh\_file} files but do not know
 how to assign CPML flags to them, we have created a small serial Fortran
 program that will do that automatically for you, i.e., which will
 create the \texttt{absorbing\_cpml\_file} for
-you. That program is: \\
-\texttt{utils/CPML/convert\_external\_layers\_of\_a\_given\_mesh\_to\_CPML\_layers.f90},\\
+you. That program is: \newline
+\texttt{utils/CPML/convert\_external\_layers\_of\_a\_given\_mesh\_to\_CPML\_layers.f90},\newline
 and a small Makefile is provided in that directory (utils/CPML).
 
 
@@ -312,7 +312,7 @@ with no \texttt{Qmu} attenuation, both set \texttt{ATTENUATION} to
 9999 here. If you want a model with no \texttt{Qkappa} attenuation, set \texttt{Qkappa} to 9999 here.
 Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.
 
-To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf} and the helper code\\
+To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf} and the helper code\newline
 \texttt{conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90} in folder
 \texttt{utils/attenuation/}.
 
@@ -323,42 +323,42 @@ Earth models' for further details.
 \item [{nodes\_coords\_file}] Contains the point locations in Cartesian
 coordinates of the mesh element corners.
 \item [{mesh\_file}] Contains the mesh element connectivity. The hexahedral
-elements can have 8 or 27 nodes.\\
+elements can have 8 or 27 nodes.\newline
  See picture \texttt{doc/mesh\_numbering\_convention/numbering\_convention\_27\_nodes.jpg}
-to see\\
+to see\newline
  in which (standard) order the points must be cited. In the case of
 8 nodes, just include the first 8 points.
 \item [{free\_or\_absorbing\_surface\_file\_zmax}] Contains the free surface
-connectivity or \\
+connectivity or \newline
  the surface connectivity of the absorbing boundary surface at the
-top (Zmax), \\
+top (Zmax), \newline
  depending on whether the top surface is defined as free or absorbing
-(\texttt{STACEY\_INSTEAD\_OF\_FREE\_SURFACE} in \texttt{DATA/Par\_file}). \\
+(\texttt{STACEY\_INSTEAD\_OF\_FREE\_SURFACE} in \texttt{DATA/Par\_file}). \newline
  You should put both the surface of acoustic regions and of elastic
 regions in that file; that is, list all the element faces that constitute
 the surface of the model in that file.
 \item [{absorbing\_surface\_file\_xmax}] Contains the surface connectivity
-of the absorbing boundary surface at Xmax \\
+of the absorbing boundary surface at Xmax \newline
 (also needed in the case of C-PML absorbing conditions, in order for
 the code to be able to impose Dirichlet conditions on their outer
 edge).
 \item [{absorbing\_surface\_file\_xmin}] Contains the surface connectivity
-of the absorbing boundary surface at Xmin \\
+of the absorbing boundary surface at Xmin \newline
 (also needed in the case of C-PML absorbing conditions, in order for
 the code to be able to impose Dirichlet conditions on their outer
 edge).
 \item [{absorbing\_surface\_file\_ymax}] Contains the surface connectivity
-of the absorbing boundary surface at Ymax \\
+of the absorbing boundary surface at Ymax \newline
 (also needed in the case of C-PML absorbing conditions, in order for
 the code to be able to impose Dirichlet conditions on their outer
 edge).
 \item [{absorbing\_surface\_file\_ymin}] Contains the surface connectivity
-of the absorbing boundary surface at Ymin \\
+of the absorbing boundary surface at Ymin \newline
 (also needed in the case of C-PML absorbing conditions, in order for
 the code to be able to impose Dirichlet conditions on their outer
 edge).
 \item [{absorbing\_surface\_file\_bottom}] Contains the surface connectivity
-of the absorbing boundary surface at the bottom (Zmin) \\
+of the absorbing boundary surface at the bottom (Zmin) \newline
 (also needed in the case of C-PML absorbing conditions, in order for
 the code to be able to impose Dirichlet conditions on their outer
 edge).
@@ -394,7 +394,7 @@ to for instance
 \subsubsection*{Checking the mesh quality}
 
 The quality of the mesh may be inspected more precisely based upon
-the serial code in the file \texttt{check\_mesh\_quality\_}~\\
+the serial code in the file \texttt{check\_mesh\_quality\_}~\newline
  \texttt{CUBIT\_Abaqus.f90} located in the directory \texttt{src/check\_mesh\_quality\_CUBIT\_Abaqus/}.
 Running this code is optional because no information needed by the
 solver is generated.
@@ -451,7 +451,7 @@ resulting from the placement of adjacent elements on different processors.
 which provides efficient static mapping, graph and mesh partitioning
 routines. SCOTCH is a free software package developed by Fran\c{c}ois
 Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable
-from the web page \url{https://gitlab.inria.fr/scotch/scotch}.\\
+from the web page \url{https://gitlab.inria.fr/scotch/scotch}.\newline
 
 
 In most cases, the configuration with \texttt{./configure~FC=ifort}
@@ -468,7 +468,7 @@ In case you want to use a pre-existing installation, make sure you
 have correctly specified the path of the SCOTCH library when using
 the option \texttt{-{}-with-scotch-dir} with the \texttt{./configure}
 script. In the future you should be able to find more recent versions
-at \url{http://www.labri.fr/perso/pelegrin/scotch/scotch_en.html}.\\
+at \url{http://www.labri.fr/perso/pelegrin/scotch/scotch_en.html}.\newline
 
 
 \begin{figure}[htbp]
@@ -532,7 +532,7 @@ the program.
 
 In case you successfully ran the configuration script, you are also
 ready to compile the internal mesher. This is an alternative to CUBIT
-for the mesh generation of relatively simple models.\\
+for the mesh generation of relatively simple models.\newline
 
 
 \begin{figure}[htbp]
@@ -558,7 +558,7 @@ In the main directory, type
 If all paths and flags have been set correctly, the mesher should
 now compile and produce the executable \texttt{bin/xmeshfem3D}. Please
 note that \texttt{xmeshfem3D} must be called directly from the main
-directory, as most of the binaries of the package.\\
+directory, as most of the binaries of the package.\newline
 
 
 Input for the mesh generation program is provided through the parameter
@@ -567,7 +567,7 @@ file \texttt{Mesh\_Par\_file}, which resides in the subdirectory \texttt{DATA/me
 Before running the mesher, a number of parameters need to be set in
 the \texttt{Mesh\_Par\_file}. This requires a basic understanding
 of how the SEM is implemented, and we encourage you to read \citet{KoVi98,KoTr99}
-and \citet{KoLiTrSuStSh04}.\\
+and \citet{KoLiTrSuStSh04}.\newline
 
 
 The mesher and the solver use UTM coordinates internally, therefore
@@ -578,7 +578,7 @@ round them off to define a square mesh in UTM coordinates. When running
 benchmarks on rectangular models, turn the UTM projection off by using
 the flag \texttt{\small SUPPRESS\_UTM\_PROJECTION},
 in which case all `longitude' parameters simply refer to the $x$~axis, and
-all `latitude' parameters simply refer to the $y$~axis.\\
+all `latitude' parameters simply refer to the $y$~axis.\newline
 
 
 \noindent
@@ -605,7 +605,7 @@ the Southern hemisphere to zones -1 to -60.
 We use the WGS84 (World Geodetic System 1984) reference ellipsoid for the UTM projection. If you prefer to use the Clarke 1866 ellipsoid,
 edit file \texttt{src/shared/utm\_geo.f90}, uncomment that ellipsoid and recompile the code.
 
-From \url{http://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system}:\\
+From \url{http://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system}:\newline
 The Universal Transverse Mercator coordinate system was developed by the United States Army Corps of Engineers in the 1940s.
 The system was based on an ellipsoidal model of Earth. For areas within the contiguous United States
 the Clarke Ellipsoid of 1866 was used. For the remaining areas of Earth, including Hawaii, the International Ellipsoid was used.
@@ -738,7 +738,7 @@ in \texttt{aniso\_model.f90}
 \end{itemize}
 \noindent
 For poroelastic materials, you would specify the corresponding poroelastic properties.
-Please read the section below for more on poroelastic parameters.\\
+Please read the section below for more on poroelastic parameters.\newline
 
 \noindent
 For tomographic models, you would need to specify a negative \texttt{material\_id} (-1,-2,..)
@@ -782,10 +782,10 @@ increasing order).
 %
 At the end of this file, you simply need to set the number of spectral
 elements in the vertical direction for each layer. We provide a few
-models in the {\texttt{EXAMPLES/}} directory.\\
+models in the {\texttt{EXAMPLES/}} directory.\newline
 
 Now that you have set the appropriate parameters in the \texttt{Mesh\_Par\_file}
-and have compiled the mesher, you are ready to run it!\\
+and have compiled the mesher, you are ready to run it!\newline
 
 Depending on your system, please check how to run executables with MPI.
 To run the mesher on your cluster, we provide some example scripts for you to modify accordingly in \texttt{utils/Cluster/}.
@@ -804,12 +804,12 @@ You may also need to edit the last command
 at the end of the script that invokes the \texttt{mpirun} command.
 See Chapter~\ref{cha:Scheduler}
 for information about running the code on a system with a scheduler,
-e.g., LSF.\\
+e.g., LSF.\newline
 
 
 Mesher output is provided in the \texttt{OUTPUT\_FILES/} directory
 in \texttt{output\_mesher.txt}; this file provides lots of details
-about the mesh that was generated.\\
+about the mesh that was generated.\newline
 
 
 Please note that the mesher suggests
@@ -841,7 +841,7 @@ skewness histogram on the screen, you could type
 
 The present version of SPECFEM can handle fully saturated porous simulations.
 At the moment, the code implements Biot's equation.
-However, the code cannot calculate partially saturated cases in its current state.\\
+However, the code cannot calculate partially saturated cases in its current state.\newline
 
 
 The way we prescribe material property for porous material in SPECFEM3D depends on wheter the internal mesher \texttt{xmeshfem3D}
@@ -853,27 +853,27 @@ The line format for poroelastic materials is as follow:
   rhos rhof phi c kxx kxy kxz kyy kyz kzz Ks Kf Kfr etaf mufr
 \end{verbatim}}
 \begin{description}
-\item where\\
-\texttt{rho\_s} = solid density,\\
-\texttt{rho\_f} = fluid density,\\
-\texttt{phi} = porosity,\\
-\texttt{tort} = tortuosity,\\
-\texttt{kxx} = xx component of permeability tensor,\\
-\texttt{kxy} = xy,yx components of permeability tensor,\\
-\texttt{kyy} = yy component of permeability tensor,\\
-\texttt{kxz} = xz,zx components of permeability tensor,\\
-\texttt{kzz} = zz component of permeability tensor,\\
-\texttt{kappa\_s} = solid bulk modulus,\\
-\texttt{kappa\_f} = fluid bulk modulus,\\
-\texttt{kappa\_fr} = frame bulk modulus,\\
-\texttt{eta\_f} = fluid viscosity,\\
-\texttt{mu\_fr} = frame shear modulus.\\
+\item where\newline
+\texttt{rho\_s} = solid density,\newline
+\texttt{rho\_f} = fluid density,\newline
+\texttt{phi} = porosity,\newline
+\texttt{tort} = tortuosity,\newline
+\texttt{kxx} = xx component of permeability tensor,\newline
+\texttt{kxy} = xy,yx components of permeability tensor,\newline
+\texttt{kyy} = yy component of permeability tensor,\newline
+\texttt{kxz} = xz,zx components of permeability tensor,\newline
+\texttt{kzz} = zz component of permeability tensor,\newline
+\texttt{kappa\_s} = solid bulk modulus,\newline
+\texttt{kappa\_f} = fluid bulk modulus,\newline
+\texttt{kappa\_fr} = frame bulk modulus,\newline
+\texttt{eta\_f} = fluid viscosity,\newline
+\texttt{mu\_fr} = frame shear modulus.\newline
 \end{description}
-Using an external mesh (for instance coming from CUBIT/TRELIS), poroelastic materials have the ID number 3, while 1 is acoustic and 2 is elastic (see the example in the package: EXAMPLES/homogeneous\_poroelastic).\\
+Using an external mesh (for instance coming from CUBIT/TRELIS), poroelastic materials have the ID number 3, while 1 is acoustic and 2 is elastic (see the example in the package: EXAMPLES/homogeneous\_poroelastic).\newline
 
 \noindent
 In case the internal mesher \texttt{xmeshfem3D} is used, the same poroelastic material properties will be defined in the \texttt{Mesh\_Par\_file}.
-See the above section~\ref{cha:Running-the-Mesher-Meshfem3D} on how the corresponding line format would look like.\\
+See the above section~\ref{cha:Running-the-Mesher-Meshfem3D} on how the corresponding line format would look like.\newline
 
 \noindent
 Note that attenuation is not implemented yet for poroelastic domains, thus there is no need for specifiying Q values.
