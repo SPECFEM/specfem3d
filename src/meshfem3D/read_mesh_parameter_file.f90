@@ -31,7 +31,8 @@
     UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
     NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
     LOCAL_PATH,SUPPRESS_UTM_PROJECTION, &
-    INTERFACES_FILE,CAVITY_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties, &
+    INTERFACES_FILE,CAVITY_FILE,NSUBREGIONS,subregions, &
+    NMATERIALS,material_properties,material_properties_undef, &
     CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
     USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
     THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML, &
@@ -206,8 +207,13 @@
   if (ier /= 0) stop 'Error allocation of material_properties'
   material_properties(:,:) = 0.d0
 
+  allocate(material_properties_undef(NMATERIALS,3),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1319b')
+  if (ier /= 0) stop 'Error allocation of material_properties_undef'
+  material_properties_undef(:,:) = ""
+
   do imat = 1,NMATERIALS
-    call read_material_parameters(IIN,material_properties,imat,NMATERIALS,ier)
+    call read_material_parameters(IIN,material_properties,material_properties_undef,imat,NMATERIALS,ier)
     if (ier /= 0) then
       print *,'Error reading material ',imat,' out of ',NMATERIALS
       stop 'Error reading materials in Mesh_Par_file'

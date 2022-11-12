@@ -131,7 +131,9 @@
 
   use constants, only: MAX_STRING_LEN,IIN,IMAIN
 
-  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh
+  use generate_databases_par, only: nmat_ext_mesh, &
+                                    undef_mat_prop,nundefMat_ext_mesh, &
+                                    TOMOGRAPHY_PATH
 
   use model_tomography_par
 
@@ -139,11 +141,12 @@
 
   ! local parameters
   double precision :: dummy,temp_x,temp_y,temp_z
-  integer :: ier,iundef,nrecord_max,ifiles_tomo,nrec,nlines
+  integer :: ier,nrecord_max,ifiles_tomo,nrec,nlines
   character(len=MAX_STRING_LEN*2) :: tomo_filename
   character(len=MAX_STRING_LEN) :: filename
   character(len=MAX_STRING_LEN) :: string_read
-  integer :: nmaterials
+  character(len=5) :: filenumber
+  integer :: nmaterials,imat
   ! data format
   logical :: has_q_values
   integer :: ntokens
@@ -152,14 +155,21 @@
   ! sets number of materials to loop over
   nmaterials = nundefMat_ext_mesh
 
+  ! checks if we over-impose a tomography model by Par_file setting: MODEL = tomo
+  if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
+    ! number of materials
+    nmaterials = nmat_ext_mesh
+  endif
+
+  ! checks
+  if (nmaterials == 0) then
+    print *,'Error: invalid model setup for initializing tomography model. Needs at least one material.'
+    stop 'Error invalid material definitions for tomography model'
+  endif
+
   NFILES_TOMO = 0
   nrecord_max = 0
   ifiles_tomo = 0
-
-  ! checks if we over-impose a tomography model by Par_file setting: MODEL = tomo
-  if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
-    nmaterials = 1
-  endif
 
   ! data format flag
   allocate(materials_with_q(nmaterials),stat=ier)
@@ -168,19 +178,34 @@
   materials_with_q(:) = .false.
 
   ! loops over number of undefined materials
-  do iundef = 1, nmaterials
+  do imat = 1, nmaterials
 
     ! sets filename
     if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
       ! note: since we have no undefined materials, we cannot access undef_mat_prop(:,:) to read in values
-      ! uses default name
-      filename = 'tomography_model.xyz'
+      if (nmaterials == 1) then
+        ! single material for whole mesh, uses default name
+        filename = 'tomography_model.xyz'
+      else
+        ! multiple material layers
+        ! This uses a naming schema: 'tomography_model_??.xyz'
+        ! filenames are e.g.,: 'tomography_model_01.xyz' ...
+        !                      'tomography_model_02.xyz' ...
+        ! using the material number as additional file indicator.
+        ! that is, the first material defined becomes *_01.xyz,
+        !             second material defined becomes *_02.xyz etc.
+        !
+        ! - NOTE: the leading '0' before a two digit value. Assuming Users won't
+        !   have more than 99 separate materials/tomography models
+        write(filenumber, '(I2.2)') imat
+        filename = 'tomography_model_' // trim(filenumber) // '.xyz'
+      endif
     else
       ! checks if associated material is a tomography model
-      if (trim(undef_mat_prop(2,iundef)) /= 'tomography') cycle
+      if (trim(undef_mat_prop(2,imat)) /= 'tomography') cycle
 
       ! gets filename from material property
-      read(undef_mat_prop(4,iundef),*) filename
+      read(undef_mat_prop(4,imat),*) filename
     endif
 
     ! counter
@@ -364,7 +389,7 @@ end subroutine init_tomography_files
 
   use constants, only: MAX_STRING_LEN,IIN,IMAIN
 
-  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh
+  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh,nmat_ext_mesh
 
   use model_tomography_par
 
@@ -375,11 +400,12 @@ end subroutine init_tomography_files
   real(kind=CUSTOM_REAL) :: qp_tomo,qs_tomo
   real(kind=CUSTOM_REAL) :: c11_tomo,c12_tomo,c13_tomo,c14_tomo,c15_tomo,c16_tomo,c22_tomo,c23_tomo,c24_tomo,c25_tomo,c26_tomo, &
                             c33_tomo,c34_tomo,c35_tomo,c36_tomo,c44_tomo,c45_tomo,c46_tomo,c55_tomo,c56_tomo,c66_tomo
-  integer :: irecord,ier,iundef,imat
+  integer :: irecord,ier
   character(len=MAX_STRING_LEN*2) :: tomo_filename
   character(len=MAX_STRING_LEN) :: filename
   character(len=MAX_STRING_LEN) :: string_read
-  integer :: nmaterials
+  character(len=5) :: filenumber
+  integer :: nmaterials,imat
   logical :: has_q_values
 
   ! sets number of materials to loop over
@@ -387,23 +413,36 @@ end subroutine init_tomography_files
 
   ! checks if we over-impose a tomography model by Par_file setting: MODEL = tomo
   if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
-    nmaterials = 1
+    nmaterials = nmat_ext_mesh
   endif
 
-  imat = 0
-  do iundef = 1, nmaterials
-
+  do imat = 1, nmaterials
     ! sets filename
     if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
       ! note: since we have no undefined materials, we cannot access undef_mat_prop(:,:) to read in values
-      ! uses default name
-      filename = 'tomography_model.xyz'
+      if (nmaterials == 1) then
+        ! single material for whole mesh, uses default name
+        filename = 'tomography_model.xyz'
+      else
+        ! multiple material layers
+        ! This uses a naming schema: 'tomography_model_??.xyz'
+        ! filenames are e.g.,: 'tomography_model_01.xyz' ...
+        !                      'tomography_model_02.xyz' ...
+        ! using the material number as additional file indicator.
+        ! that is, the first material defined becomes *_01.xyz,
+        !             second material defined becomes *_02.xyz etc.
+        !
+        ! - NOTE: the leading '0' before a two digit value. Assuming Users won't
+        !   have more than 99 separate materials/tomography models
+        write(filenumber, '(I2.2)') imat
+        filename = 'tomography_model_' // trim(filenumber) // '.xyz'
+      endif
     else
       ! checks if associated material is a tomography model
-      if (trim(undef_mat_prop(2,iundef)) /= 'tomography') cycle
+      if (trim(undef_mat_prop(2,imat)) /= 'tomography') cycle
 
       ! gets filename from material property
-      read(undef_mat_prop(4,iundef),*) filename
+      read(undef_mat_prop(4,imat),*) filename
     endif
 
     ! sets filename with path (e.g. "DATA/tomo_files/" + "tomo.xyz")
@@ -414,14 +453,15 @@ end subroutine init_tomography_files
       tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH)) // '/' // trim(filename)
     endif
 
-    ! counter
-    imat = imat + 1
-
     ! user output
     if (myrank_tomo == 0) then
-       write(IMAIN,*) '     material id: ',-imat
-       write(IMAIN,*) '     file       : ',trim(tomo_filename)
-       call flush_IMAIN()
+      if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
+        write(IMAIN,*) '     material id: ',imat
+      else
+        write(IMAIN,*) '     material id: ',-imat
+      endif
+      write(IMAIN,*) '     file       : ',trim(tomo_filename)
+      call flush_IMAIN()
     endif
 
     ! opens file for reading
@@ -767,7 +807,8 @@ end subroutine init_tomography_files
                               c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
                               imaterial_id,has_tomo_value)
 
-  use generate_databases_par, only: undef_mat_prop,nundefMat_ext_mesh,ATTENUATION_COMP_MAXIMUM
+  use generate_databases_par, only: nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh, &
+                                    ATTENUATION_COMP_MAXIMUM
 
   use model_tomography_par
 
@@ -814,8 +855,14 @@ end subroutine init_tomography_files
 
   ! checks if we over-impose a tomography model by Par_file setting: MODEL = tomo
   if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
-    ! sets material number
-    imat = 1
+    ! sets material number based on material ID
+    imat = imaterial_id
+
+    ! checks material id range
+    if (imat < 1 .or. imat > nmat_ext_mesh) then
+      print *,'Error tomography model: unknown material id ',imaterial_id,' for ',nmat_ext_mesh,' defined materials'
+      stop 'Error unknown material id in tomography model'
+    endif
   else
     ! checks if material is a tomographic material (negative id)
     if (imaterial_id >= 0) return
@@ -826,7 +873,7 @@ end subroutine init_tomography_files
     ! checks if associated type is a tomography model
     if (trim(undef_mat_prop(2,imat)) /= 'tomography') return
 
-    ! checks material
+    ! checks material id range
     if (imat < 1 .or. imat > nundefMat_ext_mesh) then
       print *,'Error tomography model: unknown material id ',imaterial_id,' for ',nundefMat_ext_mesh,' undefined materials'
       stop 'Error unknown material id in tomography model'

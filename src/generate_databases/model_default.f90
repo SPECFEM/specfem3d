@@ -31,9 +31,7 @@
 !
 !--------------------------------------------------------------------------------------------------
 
-  subroutine model_default(mat_prop,nmat_ext_mesh, &
-                           undef_mat_prop,nundefMat_ext_mesh, &
-                           imaterial_id,imaterial_def, &
+  subroutine model_default(imaterial_id,imaterial_def, &
                            xmesh,ymesh,zmesh, &
                            rho,vp,vs,iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
                            rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
@@ -43,15 +41,13 @@
 ! takes model values specified by mesh properties
 
   use generate_databases_par, only: IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC
+
+  use generate_databases_par, only: mat_prop,nmat_ext_mesh, &
+                                    undef_mat_prop,nundefMat_ext_mesh
+
   use create_regions_mesh_ext_par, only: CUSTOM_REAL,MAX_STRING_LEN
 
   implicit none
-
-  integer, intent(in) :: nmat_ext_mesh
-  double precision, dimension(17,nmat_ext_mesh), intent(in) :: mat_prop
-
-  integer, intent(in) :: nundefMat_ext_mesh
-  character(len=MAX_STRING_LEN), dimension(6,nundefMat_ext_mesh) :: undef_mat_prop
 
   integer, intent(in) :: imaterial_id,imaterial_def
 
@@ -109,6 +105,9 @@
     case (IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC)
       ! (visco)elastic or acoustic
 
+      ! checks number of material parameters
+      if (imaterial_id > nmat_ext_mesh) stop 'Error invalid material id, exceeds nmat_ext_mesh for acoustic/elastic material'
+
       ! density
       ! mat_prop format:
       ! #index1 = rho #index2 = vp #index3 = vs #index4 = Q_Kappa #index5 = Q_mu #index6 = iflag_aniso
@@ -127,6 +126,10 @@
 
     case (IDOMAIN_POROELASTIC)
       ! poroelastic
+
+      ! checks number of material parameters
+      if (imaterial_id > nmat_ext_mesh) stop 'Error invalid material id, exceeds nmat_ext_mesh for poroelastic material'
+
       ! mat_prop format:
       ! # rho_s,rho_f,phi,tort,eta,0,domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappa_s,kappa_f,kappa_fr,mu_fr,
       !

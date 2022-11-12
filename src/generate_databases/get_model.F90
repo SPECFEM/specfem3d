@@ -35,8 +35,7 @@
     IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL, &
     IMODEL_COUPLED, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
-    nspec => NSPEC_AB,ibool,mat_ext_mesh, &
-    mat_prop,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh, &
+    nspec => NSPEC_AB,ibool,mat_ext_mesh,nundefMat_ext_mesh, &
     ANISOTROPY
 
   use create_regions_mesh_ext_par
@@ -224,9 +223,7 @@
           imaterial_def = mat_ext_mesh(2,ispec)
 
           ! assigns material properties
-          call get_model_values(mat_prop,nmat_ext_mesh, &
-                                undef_mat_prop,nundefMat_ext_mesh, &
-                                imaterial_id,imaterial_def, &
+          call get_model_values(imaterial_id,imaterial_def, &
                                 xmesh,ymesh,zmesh,ispec, &
                                 rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
                                 rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
@@ -481,9 +478,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_model_values(mat_prop,nmat_ext_mesh, &
-                              undef_mat_prop,nundefMat_ext_mesh, &
-                              imaterial_id,imaterial_def, &
+  subroutine get_model_values(imaterial_id,imaterial_def, &
                               xmesh,ymesh,zmesh,ispec, &
                               rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
                               rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
@@ -498,18 +493,15 @@
     IMODEL_1D_PREM_PB,IMODEL_GLL, IMODEL_SEP,IMODEL_COUPLED, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ATTENUATION_COMP_MAXIMUM
 
+  use generate_databases_par, only: undef_mat_prop
+
+
   use create_regions_mesh_ext_par
 
   use constants, only: INJECTION_TECHNIQUE_IS_FK
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,INJECTION_TECHNIQUE_TYPE
 
   implicit none
-
-  integer, intent(in) :: nmat_ext_mesh
-  double precision, dimension(17,nmat_ext_mesh), intent(in) :: mat_prop
-
-  integer, intent(in) :: nundefMat_ext_mesh
-  character(len=MAX_STRING_LEN), dimension(6,nundefMat_ext_mesh) :: undef_mat_prop
 
   integer, intent(in) :: imaterial_id,imaterial_def
 
@@ -564,9 +556,7 @@
 
   case (IMODEL_DEFAULT, IMODEL_GLL, IMODEL_IPATI, IMODEL_IPATI_WATER, IMODEL_SEP)
     ! material values determined by mesh properties
-    call model_default(mat_prop,nmat_ext_mesh, &
-                       undef_mat_prop,nundefMat_ext_mesh, &
-                       imaterial_id,imaterial_def, &
+    call model_default(imaterial_id,imaterial_def, &
                        xmesh,ymesh,zmesh, &
                        rho,vp,vs, &
                        iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
@@ -618,9 +608,7 @@
     !        be able to superimpose a model onto the default one:
 
     ! material values determined by mesh properties
-    call model_default(mat_prop,nmat_ext_mesh, &
-                       undef_mat_prop,nundefMat_ext_mesh, &
-                       imaterial_id,imaterial_def, &
+    call model_default(imaterial_id,imaterial_def, &
                        xmesh,ymesh,zmesh,rho,vp,vs, &
                        iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
                        rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &

@@ -51,7 +51,7 @@
   use meshfem_par, only: ibool, &
     addressing,NPROC_XI,NPROC_ETA,iproc_xi_current,iproc_eta_current, &
     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-    NMATERIALS,material_properties, &
+    NMATERIALS,material_properties,material_properties_undef, &
     nspec_CPML,is_CPML,CPML_to_spec,CPML_regions
 
   use adios_helpers_mod
@@ -214,25 +214,28 @@
       is = (icount-1)*6*MAX_STRING_LEN + 1
       ie = is + MAX_STRING_LEN
       write(undef_matpropl(is:ie),*) mat_id
-      ! name
+      ! keyword/domain/filename
+      ! type-keyword
       is = (icount-1)*6*MAX_STRING_LEN + (1*MAX_STRING_LEN + 1)
       ie = is + MAX_STRING_LEN
-      undef_matpropl(is:ie) = 'tomography'
+      undef_matpropl(is:ie) = material_properties_undef(i,1) ! 'tomography'
       ! name type
       is = (icount-1)*6*MAX_STRING_LEN + (2*MAX_STRING_LEN + 1)
       ie = is + MAX_STRING_LEN
+      undef_matpropl(is:ie) = material_properties_undef(i,2)
+      ! checks consistency between domain-name and domain_id
       select case (domain_id)
       case (IDOMAIN_ACOUSTIC)
-        undef_matpropl(is:ie) = 'acoustic'
+        if (trim(undef_matpropl(is:ie)) /= 'acoustic') stop 'Error in undef_matpropl acoustic domain'
       case (IDOMAIN_ELASTIC)
-        undef_matpropl(is:ie) = 'elastic'
+        if (trim(undef_matpropl(is:ie)) /= 'elastic')  stop 'Error in undef_matpropl elastic domain'
       case (IDOMAIN_POROELASTIC)
-        undef_matpropl(is:ie) = 'poroelastic'
+        if (trim(undef_matpropl(is:ie)) /= 'poroelastic')  stop 'Error in undef_matpropl poroelastic domain'
       end select
       ! default name
       is = (icount-1)*6*MAX_STRING_LEN + (3*MAX_STRING_LEN + 1)
       ie = is + MAX_STRING_LEN
-      undef_matpropl(is:ie) = 'tomography_model.xyz'
+      undef_matpropl(is:ie) = material_properties_undef(i,3) ! 'tomography_model.xyz'
       ! default tomo-id (unused)
       is = (icount-1)*6*MAX_STRING_LEN + (4*MAX_STRING_LEN + 1)
       ie = is + MAX_STRING_LEN
