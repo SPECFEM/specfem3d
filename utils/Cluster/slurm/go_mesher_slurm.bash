@@ -4,7 +4,7 @@
 #SBATCH --ntasks=4
 #SBATCH -t 60
 
-#SBATCH --output=OUTPUT_FILES/%j.o
+#SBATCH --output=%j.o
 #SBATCH --job-name=go_mesher
 
 umask 0022
@@ -17,7 +17,8 @@ cd $SLURM_SUBMIT_DIR
 NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
 
 mkdir -p OUTPUT_FILES
-mkdir -p OUTPUT_FILES/DATABASES_MPI
+LOCALPATH=`grep ^LOCAL_PATH DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
+mkdir -p $LOCALPATH
 
 # backup files used for mesh generation
 cp go_mesher_slurm.bash OUTPUT_FILES/
@@ -28,7 +29,7 @@ cp -r DATA/meshfem3D_files OUTPUT_FILES/
 #cp -rp ./src OUTPUT_FILES/
 
 # obtain slurm job information
-cat $SLURM_JOB_NODELIST > OUTPUT_FILES/compute_nodes
+echo "$SLURM_JOB_NODELIST" > OUTPUT_FILES/compute_nodes
 echo "$SLURM_JOBID" > OUTPUT_FILES/jobid
 
 echo starting MPI internal mesher on $NPROC processors
@@ -36,5 +37,8 @@ echo " "
 
 sleep 2
 mpiexec -np $NPROC ./bin/xmeshfem3D
+
+JOBID=$(<OUTPUT_FILES/jobid)
+mv $JOBID.o OUTPUT_FILES/
 
 echo "done "
