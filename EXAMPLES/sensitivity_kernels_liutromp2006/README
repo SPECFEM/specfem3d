@@ -22,35 +22,41 @@ Note: This example is designed to generate results close to the aforementioned p
      > cd ./utils/adjoint_sources/traveltime
      > make
      > cd ../../..
+     > cp utils/adjoint_sources/traveltime/xcreate_adjsrc_traveltime bin/.
 
 1.4. Compile the utility xcombine_vol_data_vtk.
      > make xcombine_vol_data_vtk
 
 1.5. Use the provided DATA folder as specfem3d's input DATA folder.
+     Note: Remove (and backup if needed) any existing DATA folder before running the following command. 
      > cp -r EXAMPLES/sensitivity_kernels_liutromp2006/DATA .
 
-1.6. Copy the file 'source_time_function.txt' from this data folder to the specfem working directory.
-
+1.6. Copy the file 'source_time_function.txt' provided with this example to the specfem working directory.
+     > cp -r EXAMPLES/sensitivity_kernels_liutromp2006/source_time_function.txt .
 
 
 
 2. To run the forward simulation -
 
 2.1. The example consists of two different simulations and hence the two different 'FORCESOLUTION_*' files in the data folder.
+
+     a. FORCESOLUTION_SH   - will produce the seismogram shown in the top figure of figure 3(a) in the reference paper.
+     b. FORCESOLUTION_P_SV - will produce the seismogram shown in the top figure of figure 3(b) in the reference paper.
+
      Copy the 'FORCESOLUTION_*' file you wish to run and name it as 'FORCESOLUTION'.
 
-2.2. FORCESOLUTION_SH will produce the seismogram in the top figure of figure 3(a).
-     > xmgrace XX.R00-01.HXY.semd
-     FORCESOLUTION_P_SV will produce the seismogram in the top figure of figure 3(b).
-     > xmgrace XX.R00-01.HXX.semd
-
-2.3. Run the simulation with following parameters in the Par_file -
+2.2. Run the simulation with following parameters in the Par_file -
      SIMULATION_TYPE = 1
      SAVE_FORWARD = .true.
+     USE_FORCE_POINT_SOURCE = .true.
+     USE_EXTERNAL_SOURCE_FILE = .true.
 
-2.4. Compare the generated seismograms with the ones provided in the REF_SEIS folder
+     Note: Remove (and backup if needed) any existing OUTPUT_FILES folder before running the example.
+     Note: Modify job submission scripts to request the number of cores given by Par_file parameter 'NPROC'.
+
+2.3. Compare the generated seismograms with the ones provided in the REF_SEIS folder
      > xmgrace OUTPUT_FILES/*.semd
-     > xmgrace EXAMPLES/kernel_liutromp2006/REF_SEIS/****_simulation/*.semd
+     > xmgrace EXAMPLES/sensitivity_kernels_liutromp2006/REF_SEIS/****_simulation/*.semd
      where **** will depend on the simulation type
 
 
@@ -61,16 +67,16 @@ Note: This example is designed to generate results close to the aforementioned p
 3.1. Create adjoint sources for the kernel of interest -
 
      a. P kernel -      
-        > ./utils/adjoint_sources/traveltime/xcreate_adjsrc_traveltime 10 18 1 OUTPUT_FILES/XX.R00-01.HX*.semd
+        > ./bin/xcreate_adjsrc_traveltime 10 18 1 OUTPUT_FILES/XX.R00-01.HX*.semd
    
      b. S kernel -
-        > ./utils/adjoint_sources/traveltime/xcreate_adjsrc_traveltime 24 34 2 OUTPUT_FILES/XX.R00-01.HX*.semd
+        > ./bin/xcreate_adjsrc_traveltime 24 34 2 OUTPUT_FILES/XX.R00-01.HX*.semd
 
      c. SS kernel -
-        > ./utils/adjoint_sources/traveltime/xcreate_adjsrc_traveltime 34 44 2 OUTPUT_FILES/XX.R00-01.HX*.semd
+        > ./bin/xcreate_adjsrc_traveltime 34 44 2 OUTPUT_FILES/XX.R00-01.HX*.semd
 
      d. PS + SP kernel -
-        > ./utils/adjoint_sources/traveltime/xcreate_adjsrc_traveltime 24 30 1 OUTPUT_FILES/XX.R00-01.HX*.semd
+        > ./bin/xcreate_adjsrc_traveltime 24 30 1 OUTPUT_FILES/XX.R00-01.HX*.semd
 
 3.2. Move adjoint sources to the required folder -
      > mkdir SEM
@@ -78,7 +84,7 @@ Note: This example is designed to generate results close to the aforementioned p
 
 3.3. Compare the created adjoint sources with the ones provided in the REF_ADJ_SRC folder
      > xmgrace SEM/*.adj
-     > xmgrace EXAMPLES/kernel_liutromp2006/REF_ADJ_SRC/****/*.adj
+     > xmgrace EXAMPLES/sensitivity_kernels_liutromp2006/REF_ADJ_SRC/****/*.adj
      where **** will depend on the kernel type
 
 3.4. Run the simulation with following parameters in the Par_file -

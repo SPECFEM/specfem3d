@@ -66,9 +66,9 @@ NGNOD                           = 8
 MODEL                           = default
 
 # path for external tomographic models files
-TOMOGRAPHY_PATH                 = ./DATA/tomo_files/
+TOMOGRAPHY_PATH                 = DATA/tomo_files/
 # if you are using a SEP model (oil-industry format)
-SEP_MODEL_DIRECTORY             = ./DATA/my_SEP_model/
+SEP_MODEL_DIRECTORY             = DATA/my_SEP_model/
 
 #-----------------------------------------------------------
 
@@ -162,7 +162,7 @@ HDUR_MOVIE                      = 0.0
 SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = ./DATABASES
+LOCAL_PATH                      = DATABASES
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 1000
@@ -187,7 +187,7 @@ USE_SOURCES_RECEIVERS_Z         = .false.
 # - the components of a (non necessarily unitary) direction vector for the force source in the E/N/Z_UP basis.
 # The direction vector is made unitary internally in the code and thus only its direction matters here;
 # its norm is ignored and the norm of the force used is the factor force source times the source time function.
-USE_FORCE_POINT_SOURCE          = .true.
+USE_FORCE_POINT_SOURCE          = .false.
 
 # set to true to use a Ricker source time function instead of the source time functions set by default
 # to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
@@ -200,10 +200,15 @@ USE_RICKER_TIME_FUNCTION        = .false.
 # This file must have a single column containing the amplitude of the source at that time step,
 # and on its first line it must contain the time step used, which must be equal to DT as defined at the beginning of this Par_file (the code will check that).
 # Be sure when this option is .false. to remove the name of stf file in CMTSOLUTION or FORCESOURCE
-USE_EXTERNAL_SOURCE_FILE        = .true.
+USE_EXTERNAL_SOURCE_FILE        = .false.
 
 # print source time function
-PRINT_SOURCE_TIME_FUNCTION      = .true.
+PRINT_SOURCE_TIME_FUNCTION      = .false.
+
+# source encoding
+# (for acoustic simulations only for now) determines source encoding factor +/-1 depending on sign of moment tensor
+# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
+USE_SOURCE_ENCODING             = .false.
 
 #-----------------------------------------------------------
 #
@@ -213,6 +218,10 @@ PRINT_SOURCE_TIME_FUNCTION      = .true.
 
 # interval in time steps for writing of seismograms
 NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
+
+# set to n to reduce the sampling rate of output seismograms by a factor of n
+# defaults to 1, which means no down-sampling
+NTSTEP_BETWEEN_OUTPUT_SAMPLE    = 1
 
 # decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
 # currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
@@ -224,9 +233,6 @@ SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic 
 # save seismograms also when running the adjoint runs for an inverse problem
 # (usually they are unused and not very meaningful, leave this off in almost all cases)
 SAVE_SEISMOGRAMS_IN_ADJOINT_RUN = .false.
-
-# subsampling of the seismograms to create smaller files (but less accurately sampled in time)
-NTSTEP_BETWEEN_OUTPUT_SAMPLE    = 1
 
 # save seismograms in binary or ASCII format (binary is smaller but may not be portable between machines)
 USE_BINARY_FOR_SEISMOGRAMS      = .false.
@@ -255,16 +261,6 @@ USE_TRICK_FOR_BETTER_PRESSURE   = .false.
 
 #-----------------------------------------------------------
 #
-# Source encoding
-#
-#-----------------------------------------------------------
-
-# (for acoustic simulations only for now) determines source encoding factor +/-1 depending on sign of moment tensor
-# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
-USE_SOURCE_ENCODING             = .false.
-
-#-----------------------------------------------------------
-#
 # Energy calculation
 #
 #-----------------------------------------------------------
@@ -282,7 +278,7 @@ NTSTEP_BETWEEN_OUTPUT_ENERGY    = 10
 #-----------------------------------------------------------
 
 # interval in time steps for reading adjoint traces
-# 0 = read the whole adjoint sources at the same time
+# 0 = read the whole adjoint sources at start time
 NTSTEP_BETWEEN_READ_ADJSRC      = 0
 
 # read adjoint sources using ASDF (requires asdf-library)
@@ -315,7 +311,7 @@ SAVE_MOHO_MESH                  = .false.
 COUPLE_WITH_INJECTION_TECHNIQUE = .false.
 INJECTION_TECHNIQUE_TYPE        = 3   # 1 = DSM, 2 = AxiSEM, 3 = FK
 MESH_A_CHUNK_OF_THE_EARTH       = .false.
-TRACTION_PATH                   = ./DATA/AxiSEM_tractions/3/
+TRACTION_PATH                   = DATA/AxiSEM_tractions/3/
 FKMODEL_FILE                    = FKmodel
 RECIPROCITY_AND_KH_INTEGRAL     = .false.   # does not work yet
 
