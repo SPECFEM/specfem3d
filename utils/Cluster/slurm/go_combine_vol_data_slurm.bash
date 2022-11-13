@@ -4,7 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH -t 10
 
-#SBATCH --output=OUTPUT_FILES/%j.o
+#SBATCH --output=%j.o
 #SBATCH --job-name=go_combine_vol_data
 
 umask 0022
@@ -29,5 +29,11 @@ srun -l /bin/hostname | sort -n | awk '{print $2}' > ./nodes.$SLURM_JOB_ID
 mpirun -np 1 -machinefile ./nodes.$SLURM_JOB_ID ./bin/xcombine_vol_data_vtk 0 $nmax vs $LOCALPATH/ $LOCALPATH 0
 
 cp go_combine_vol_data_slurm.bash OUTPUT_FILES/
+
+# obtain and store job information
+echo "$SLURM_JOBID" > OUTPUT_FILES/jobid
+
+JOBID=$(<OUTPUT_FILES/jobid)
+mv $JOBID.o OUTPUT_FILES/
 
 echo "done "
