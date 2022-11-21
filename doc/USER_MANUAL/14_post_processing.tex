@@ -15,7 +15,7 @@ In many cases, the SEM synthetics are calculated and compared to data
 seismograms recorded at seismic stations. Since the SEM synthetics
 are accurate for a certain frequency range, both the original data
 and the synthetics need to be processed before a comparison can be
-made.
+made.\newline
 
 For such comparisons, the following steps are recommended:
 \begin{enumerate}
@@ -56,7 +56,7 @@ which has resampled the SAC files to a sampling rate of
 1 seconds, cut them between 0 and 4000 seconds, transfered them into
 displacement records and filtered them between 40 and 500 seconds,
 picked the first P and S arrivals, and added suffix `\texttt{bp}'
-to the file names.
+to the file names.\newline
 
 Note that all of the scripts in this section actually use the SAC
 and/or IASP91 to do the core operations; therefore make sure that
@@ -83,13 +83,13 @@ format, add event and station information into the SAC headers, resample
 the SAC files with a sampling rate of 1 seconds, cut them between
 0 and 4000 seconds, filter them between 40 and 500 seconds with the
 same filter used for the observed data, pick the first P and S arrivals,
-and add the suffix `\texttt{bp}' to the file names.
+and add the suffix `\texttt{bp}' to the file names.\newline
 
 More options are available for this script, such as adding time shift
 to the origin time of the synthetics, convolving the synthetics with
 a triangular source time function with a given half duration, etc.
 Type \texttt{process\_syn.pl} without any argument for a detailed
-usage.
+usage.\newline
 
 In order to convert between SAC format and ASCII files, useful scripts
 are provided in the subdirectories ~\newline
@@ -121,14 +121,14 @@ simulation, the files are named like \texttt{NT.STA.BX?.semd} for
 two-column time series, or \texttt{NT.STA.BX?.semd.sac} for ASCII
 SAC format, where NT and STA are the network code and station name,
 and \texttt{BX?} stands for the component name. Please see the Appendix~\ref{cha:Coordinates}
-and \ref{cha:channel-codes} for further details.
+and \ref{cha:channel-codes} for further details.\newline
 
 The adjont simulations generate synthetic seismograms with the name
 \texttt{NT.S?????.S??.sem} (refer to Section \ref{sec:Adjoint-simulation-sources}
 for details). The kernel simulations output the back-reconstructed
 synthetic seismogram in the name \texttt{NT.STA.BX?.semd}, mainly
 for the purpose of checking the accuracy of the reconstruction. Refer
-to Section \ref{sec:Adjoint-simulation-finite} for further details.
+to Section \ref{sec:Adjoint-simulation-finite} for further details.\newline
 
 You do have further options to change this default output behavior,
 given in the \texttt{DATA/Par\_file}:

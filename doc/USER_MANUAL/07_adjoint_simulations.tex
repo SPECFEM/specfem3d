@@ -212,7 +212,7 @@ and their unit is in s / (kg/m$^{3}$) / km$^{3}$. These `primary'
 anisotropic kernels can then be combined to obtain the kernels for
 different parameterizations of anisotropy. This can be done, for example,
 when combining the kernel files from slices into one mesh file (see
-Section~\ref{sec:Finite-Frequency-Kernels}).
+Section~\ref{sec:Finite-Frequency-Kernels}).\newline
 
 
 If \texttt{ANISOTROPIC\_KL} \texttt{=} \texttt{.true.} by additionally
@@ -221,12 +221,11 @@ the package will save anisotropic kernels parameterized as velocities
 related to transverse isotropy based on the the Chen and Tromp parameters
 \citet{ChTr07}. The kernels are saved as relative perturbations for
 horizontal and vertical P and S velocities, $\alpha_{v},\alpha_{h},\beta_{v},\beta_{h}$.
-Explicit relations can be found in appendix B. of \citet{SiLiTrTr07b}
+Explicit relations can be found in appendix B. of \citet{SiLiTrTr07b}\newline
 
-
-The anisotropic kernels are only currently available for CPU mode.
 
 \end{enumerate}
+
 In general, the three steps need to be run sequentially to assure
 proper access to the necessary files. If the simulations are run through
 some cluster scheduling system (e.g., LSF), and the forward simulation
