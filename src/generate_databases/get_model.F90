@@ -495,7 +495,6 @@
 
   use generate_databases_par, only: undef_mat_prop
 
-
   use create_regions_mesh_ext_par
 
   use constants, only: INJECTION_TECHNIQUE_IS_FK
