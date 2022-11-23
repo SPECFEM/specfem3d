@@ -432,7 +432,7 @@
   use specfem_par, only: CUSTOM_REAL,NSPEC_AB,NSPEC_ADJOINT,ibool,mustore,kappastore, &
                          SAVE_TRANSVERSE_KL,FOUR_THIRDS, &
                          ADIOS_FOR_KERNELS,IOUT,prname,SAVE_MOHO_MESH, &
-                         myrank,IMAIN
+                         myrank,IMAIN, ANISOTROPY
   use specfem_par_elastic
 
   implicit none
@@ -478,20 +478,30 @@
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
 
-            ! Store local material values
-            mul = mustore(i,j,k,ispec)
-            kappal = kappastore(i,j,k,ispec)
-
             if (SAVE_TRANSVERSE_KL) then
               cijkl_kl_local(:) = - cijkl_kl(:,i,j,k,ispec)
 
-              ! Computes parameters for an isotropic model
-              A = kappal + FOUR_THIRDS * mul
-              C = A
-              L = mul
-              N = mul
-              F = kappal - 2._CUSTOM_REAL/3._CUSTOM_REAL * mul
-              eta = 1._CUSTOM_REAL
+              if (ANISOTROPY) then
+                ! Computes parameters for an anisotropic model
+                A = c11store(i,j,k,ispec)
+                C = c33store(i,j,k,ispec)
+                L = c44store(i,j,k,ispec)
+                N = c66store(i,j,k,ispec)
+                F = c13store(i,j,k,ispec)
+                eta = N / (A - 2.0_CUSTOM_REAL * L)
+              else
+                ! Store local material values
+                mul = mustore(i,j,k,ispec)
+                kappal = kappastore(i,j,k,ispec)
+
+                ! Computes parameters for an isotropic model
+                A = kappal + FOUR_THIRDS * mul
+                C = A
+                L = mul
+                N = mul
+                F = kappal - 2._CUSTOM_REAL/3._CUSTOM_REAL * mul
+                eta = 1._CUSTOM_REAL
+              endif
 
               ! note: cijkl_kl_local() is fully anisotropic C_ij kernel
               ! components (non-dimensionalized)
