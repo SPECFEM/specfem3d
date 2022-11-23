@@ -89,9 +89,11 @@ void FC_FUNC_(save_forward_arrays_undoatt_adios,SAVE_FORWARD_UNDOATT_ARRAYS_ADIO
 
 void FC_FUNC_(save_kernels_acoustic_adios,SAVE_KERNELS_ACOUSTIC_ADIOS)(void) {}
 
-void FC_FUNC_(save_kernels_elastic_adios,SAVE_KERNELS_ELASTIC_ADIOS)(realw* alphav_kl, realw* alphah_kl,
+void FC_FUNC_(save_kernels_elastic_iso_adios,SAVE_KERNELS_ELASTIC_ISO_ADIOS)(realw* rhop_kl, realw* alpha_kl, realw* beta_kl) {}
+
+void FC_FUNC_(save_kernels_elastic_aniso_adios,SAVE_KERNELS_ELASTIC_ANISO_ADIOS)(realw* alphav_kl, realw* alphah_kl,
                                                                      realw* betav_kl, realw* betah_kl, realw* eta_kl,
-                                                                     realw* rhop_kl, realw* alpha_kl, realw* beta_kl) {}
+                                                                     realw* alpha_kl, realw* beta_kl) {}
 
 void FC_FUNC_(save_kernels_poroelastic_adios,SAVE_KERNELS_POROELASTIC_ADIOS)(void) {}
 

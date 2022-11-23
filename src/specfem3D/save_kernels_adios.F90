@@ -234,9 +234,49 @@
 
 !==============================================================================
 !> Save elastic related kernels
-  subroutine save_kernels_elastic_adios(alphav_kl, alphah_kl, &
-                                        betav_kl, betah_kl, eta_kl, &
-                                        rhop_kl, alpha_kl, beta_kl)
+  subroutine save_kernels_elastic_iso_adios(rhop_kl, alpha_kl, beta_kl)
+
+  use specfem_par
+  use specfem_par_elastic
+
+  use adios_helpers_mod
+  use manager_adios
+
+  implicit none
+
+  ! Parameters
+  ! local parameters
+  integer(kind=8) :: local_dim
+  !--- Variables to allreduce - wmax stands for world_max
+  integer :: nspec_wmax
+
+  ! Transverse isotropic paramters
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhop_kl, alpha_kl, beta_kl
+
+  ! determines maximum values for nspec over all partition slices
+  call max_allreduce_singlei(NSPEC_AB,nspec_wmax)
+
+  local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
+
+  ! save kernels to binary files
+  call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rho_kl))
+  call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(mu_kl))
+  call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(kappa_kl))
+  call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rhop_kl))
+  call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(beta_kl))
+  call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(alpha_kl))
+
+  if (SAVE_MOHO_MESH) then
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(moho_kl))
+  endif
+
+  end subroutine save_kernels_elastic_iso_adios
+
+!==============================================================================
+!> Save elastic related kernels
+  subroutine save_kernels_elastic_ansio_adios(alphav_kl, alphah_kl, &
+                                              betav_kl, betah_kl, eta_kl, &
+                                              alpha_kl, beta_kl)
 
   use specfem_par
   use specfem_par_elastic
@@ -255,47 +295,36 @@
   ! Transverse isotropic paramters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
     alphav_kl,alphah_kl,betav_kl,betah_kl, &
-    eta_kl, rhop_kl, alpha_kl, beta_kl
+    eta_kl, alpha_kl, beta_kl
 
   ! determines maximum values for nspec over all partition slices
   call max_allreduce_singlei(NSPEC_AB,nspec_wmax)
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
 
-  if (ANISOTROPIC_KL) then
-    ! outputs transverse isotropic kernels only
-    if (SAVE_TRANSVERSE_KL) then
-      ! transverse isotropic kernels
-      ! (alpha_v, alpha_h, beta_v, beta_h, eta, rho ) parameterization
-      call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(alphav_kl))
-      call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(alphah_kl))
-      call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(betav_kl))
-      call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(betah_kl))
-      call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(eta_kl))
+  if (SAVE_TRANSVERSE_KL) then
+    ! transverse isotropic kernels
+    ! (alpha_v, alpha_h, beta_v, beta_h, eta, rho ) parameterization
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(alphav_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(alphah_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(betav_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(betah_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(eta_kl))
 
-      ! transverse isotropic test kernels
-      call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(alpha_kl))
-      call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(beta_kl))
-    else
-      ! fully anisotropic kernels
-      call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, "rho_kl", -rho_kl)
-      call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, "cijkl_kl", -cijkl_kl)
-    endif
-  else
-    ! save kernels to binary files
-    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rho_kl))
-    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(mu_kl))
-    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(kappa_kl))
-    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rhop_kl))
-    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(beta_kl))
+    ! transverse isotropic test kernels
     call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(alpha_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(beta_kl))
+  else
+    ! fully anisotropic kernels
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, "rho_kl", -rho_kl)
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, "cijkl_kl", -cijkl_kl)
   endif
-
+  
   if (SAVE_MOHO_MESH) then
     call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(moho_kl))
   endif
 
-  end subroutine save_kernels_elastic_adios
+  end subroutine save_kernels_elastic_aniso_adios
 
 !==============================================================================
 !> Save poroelastic related kernels

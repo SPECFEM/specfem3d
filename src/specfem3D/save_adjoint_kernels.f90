@@ -376,9 +376,7 @@
   endif
 
   if (ADIOS_FOR_KERNELS) then
-    !call save_kernels_elastic_adios(alphav_kl, alphah_kl, &
-    !                                betav_kl, betah_kl, eta_kl, &
-    !                                rhop_kl, alpha_kl, beta_kl)
+    call save_kernels_elastic_iso_adios(rhop_kl, alpha_kl, beta_kl)
   else
     ! save kernels to binary files
     open(unit=IOUT,file=prname(1:len_trim(prname))//'rho_kernel.bin',status='unknown',form='unformatted',iostat=ier)
@@ -601,9 +599,9 @@
   endif
 
   if (ADIOS_FOR_KERNELS) then
-    !call save_kernels_elastic_adios(alphav_kl, alphah_kl, &
-    !                                betav_kl, betah_kl, eta_kl, &
-    !                                rhop_kl, alpha_kl, beta_kl)
+    call save_kernels_elastic_aniso_adios(alphav_kl, alphah_kl, &
+                                          betav_kl, betah_kl, eta_kl, &
+                                          alpha_kl, beta_kl)
   else
     ! outputs transverse isotropic kernels only
     if (SAVE_TRANSVERSE_KL) then
