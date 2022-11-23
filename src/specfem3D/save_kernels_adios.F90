@@ -97,8 +97,6 @@
         call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "betav_kl", dummy_kernel)
         call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "betah_kl", dummy_kernel)
         call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "eta_kl", dummy_kernel)
-        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "alpha_kl", dummy_kernel)
-        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "beta_kl", dummy_kernel)
       else
         call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "rho_kl", dummy_kernel)
         call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "cijkl_kl", dummy_kernel)
@@ -275,8 +273,7 @@
 !==============================================================================
 !> Save elastic related kernels
   subroutine save_kernels_elastic_ansio_adios(alphav_kl, alphah_kl, &
-                                              betav_kl, betah_kl, eta_kl, &
-                                              alpha_kl, beta_kl)
+                                              betav_kl, betah_kl, eta_kl)
 
   use specfem_par
   use specfem_par_elastic
@@ -294,8 +291,7 @@
 
   ! Transverse isotropic paramters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-    alphav_kl,alphah_kl,betav_kl,betah_kl, &
-    eta_kl, alpha_kl, beta_kl
+    alphav_kl,alphah_kl,betav_kl,betah_kl, eta_kl
 
   ! determines maximum values for nspec over all partition slices
   call max_allreduce_singlei(NSPEC_AB,nspec_wmax)
@@ -310,10 +306,6 @@
     call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(betav_kl))
     call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(betah_kl))
     call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(eta_kl))
-
-    ! transverse isotropic test kernels
-    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(alpha_kl))
-    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(beta_kl))
   else
     ! fully anisotropic kernels
     call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, "rho_kl", -rho_kl)

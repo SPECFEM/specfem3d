@@ -438,8 +438,7 @@
   implicit none
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-              alphav_kl,alphah_kl,betav_kl,betah_kl, eta_kl, &
-              alpha_kl, beta_kl
+              alphav_kl,alphah_kl,betav_kl,betah_kl, eta_kl
 
   ! local parameters
   integer:: ispec,i,j,k,iglob,ier
@@ -466,14 +465,6 @@
     alphav_kl(:,:,:,:) = 0.0_CUSTOM_REAL; alphah_kl(:,:,:,:) = 0.0_CUSTOM_REAL
     betav_kl(:,:,:,:) = 0.0_CUSTOM_REAL; betah_kl(:,:,:,:) = 0.0_CUSTOM_REAL
     eta_kl(:,:,:,:) = 0.0_CUSTOM_REAL
-
-    ! derived kernels
-    ! vp,vs kernel
-    allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-             beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2249')
-    if (ier /= 0) stop 'error allocating array alpha_kl,beta_kl'
-    alpha_kl(:,:,:,:) = 0.0_CUSTOM_REAL; beta_kl(:,:,:,:) = 0.0_CUSTOM_REAL
   endif
 
   ! finalizes calculation of rhop, beta, alpha kernels
@@ -542,11 +533,7 @@
               betah_kl(i,j,k,ispec) = 2.0 * N * an_kl(3)
               ! K_eta
               eta_kl(i,j,k,ispec) = F * an_kl(5)
-
-              ! to check: isotropic kernels from transverse isotropic ones
-              alpha_kl(i,j,k,ispec) = alphav_kl(i,j,k,ispec) + alphah_kl(i,j,k,ispec)
-              beta_kl(i,j,k,ispec) = betav_kl(i,j,k,ispec) + betah_kl(i,j,k,ispec)
-
+            
             endif ! SAVE_TRANSVERSE_KL
           enddo
         enddo
@@ -600,8 +587,7 @@
 
   if (ADIOS_FOR_KERNELS) then
     call save_kernels_elastic_aniso_adios(alphav_kl, alphah_kl, &
-                                          betav_kl, betah_kl, eta_kl, &
-                                          alpha_kl, beta_kl)
+                                          betav_kl, betah_kl, eta_kl)
   else
     ! outputs transverse isotropic kernels only
     if (SAVE_TRANSVERSE_KL) then
@@ -622,15 +608,6 @@
       open(unit=IOUT,file=trim(prname)//'eta_kernel.bin',status='unknown',form='unformatted',action='write')
       write(IOUT) eta_kl
       close(IOUT)
-
-      ! transverse isotropic test kernels
-      open(unit=IOUT,file=trim(prname)//'alpha_kernel.bin',status='unknown',form='unformatted',action='write')
-      write(IOUT)  alpha_kl
-      close(IOUT)
-      open(unit=IOUT,file=trim(prname)//'beta_kernel.bin',status='unknown',form='unformatted',action='write')
-      write(IOUT)  beta_kl
-      close(IOUT)
-
     else
       ! fully anisotropic kernels
       ! note: the C_ij and density kernels are not for relative perturbations
@@ -658,7 +635,6 @@
 
   if (SAVE_TRANSVERSE_KL) then
     deallocate(alphav_kl,alphah_kl,betav_kl,betah_kl,eta_kl)
-    deallocate(alpha_kl,beta_kl)
   endif
   
   end subroutine save_kernels_elastic_aniso
