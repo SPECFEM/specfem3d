@@ -557,7 +557,7 @@
   enddo
 
   ! overall min/max value
-  call max_all_cr(maxval(rho_kl),rho_max)
+  call max_all_cr(maxval(-rho_kl),rho_max)
 
   if (SAVE_TRANSVERSE_KL) then
     call max_all_cr(maxval(alphav_kl),alphav_max)
