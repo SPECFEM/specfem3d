@@ -83,14 +83,14 @@
   if (i < 1) then
     print *,'Error: External source time function file ',trim(trim(external_source_time_function_filename)),'has no valid data;'
     print *,'       the number of time steps is < 1. Please check the file...'
-    stop 'error: the number of time steps in external_source_time_function_filename is < 1'
+    stop 'Error: the number of time steps in external_source_time_function_filename is < 1'
   endif
 
   if (i > NSTEP_STF) then
     print *
     print *,'****************************************************************************************'
-    print *,'Warning: external_source_time_function_filename contains more than NSTEP_STF time steps,'
-    print *,'         only the first NSTEP_STF will be read, all the others will be ignored.'
+    print *,'Warning: ',trim(external_source_time_function_filename),' contains more than NSTEP_STF time steps,'
+    print *,'         only the first NSTEP_STF=',NSTEP_STF,' will be read, all the others will be ignored.'
     print *,'****************************************************************************************'
     print *
   endif
@@ -111,6 +111,9 @@
   do while (ier == 0)
     read(IO_STF,"(a256)",iostat=ier) line
     if (ier == 0) then
+      ! suppress leading white spaces, if any
+      line = adjustl(line)
+
       ! skip empty/comment lines
       if (len_trim(line) == 0) cycle
       if (line(1:1) == '#' .or. line(1:1) == '!') cycle
