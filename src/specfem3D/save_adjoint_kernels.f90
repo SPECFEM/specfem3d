@@ -89,7 +89,7 @@
   if (ADIOS_FOR_KERNELS) then
     call perform_write_adios_kernels()
   endif
-  
+
   end subroutine save_adjoint_kernels
 
 !
@@ -335,7 +335,7 @@
             ! vp kernel
             alpha_kl(i,j,k,ispec) = &
             2.0_CUSTOM_REAL * ( 1.0_CUSTOM_REAL + FOUR_THIRDS * mul / kappal ) * kappa_kl(i,j,k,ispec)
-                 
+
           enddo
         enddo
       enddo
@@ -351,7 +351,7 @@
   call max_all_cr(maxval(mu_kl),mu_max)
   call max_all_cr(maxval(alpha_kl),alpha_max)
   call max_all_cr(maxval(beta_kl),beta_max)
-  
+
   if (SAVE_MOHO_MESH) then
     call max_all_cr(maxval(moho_kl),moho_max)
   endif
@@ -366,11 +366,11 @@
     write(IMAIN,*) '  maximum value of rho prime kernel = ',rhop_max
     write(IMAIN,*) '  maximum value of alpha kernel     = ',alpha_max
     write(IMAIN,*) '  maximum value of beta kernel      = ',beta_max
-    
+
     if (SAVE_MOHO_MESH) then
       write(IMAIN,*) '  maximum value of moho kernel      = ',moho_max
     endif
-    
+
     write(IMAIN,*)
     call flush_IMAIN()
   endif
@@ -580,7 +580,7 @@
               an_kl(5) = cijkl_kl_local(3)+cijkl_kl_local(8)                      !F
 
               ! for parameterization: ( alpha_v, alpha_h, beta_v, beta_h, eta, rho )
-                
+
               ! K_alpha_v
               alphav_kl(i,j,k,ispec) = 2.0 * C * an_kl(2)
               ! K_alpha_h
@@ -698,11 +698,11 @@
       write(IMAIN,*) '  maximum value of c56 kernel     = ',c56_kl_max
       write(IMAIN,*) '  maximum value of c66 kernel     = ',c66_kl_max
     endif
-    
+
     if (SAVE_MOHO_MESH) then
       write(IMAIN,*) '  maximum value of moho kernel      = ',moho_max
     endif
-    
+
     write(IMAIN,*)
     call flush_IMAIN()
   endif
@@ -848,7 +848,7 @@
                c55_kl,c56_kl, &
                c66_kl)
   endif
-  
+
   end subroutine save_kernels_elastic_aniso
 
 !
