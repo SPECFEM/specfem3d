@@ -99,7 +99,27 @@
         call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "eta_kl", dummy_kernel)
       else
         call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "rho_kl", dummy_kernel)
-        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "cijkl_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c11_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c12_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c13_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c14_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c15_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c16_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c22_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c23_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c24_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c25_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c26_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c33_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c34_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c35_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c36_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c44_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c45_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c46_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c55_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c56_kl", dummy_kernel)
+        call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "c66_kl", dummy_kernel)
       endif
     else
       call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "rho_kl", dummy_kernel)
@@ -272,8 +292,13 @@
 
 !==============================================================================
 !> Save elastic related kernels
-  subroutine save_kernels_elastic_ansio_adios(alphav_kl, alphah_kl, &
-                                              betav_kl, betah_kl, eta_kl)
+  subroutine save_kernels_elastic_ansio_adios(alphav_kl, alphah_kl, betav_kl, betah_kl, eta_kl, &
+                                              c11_kl,c12_kl,c13_kl,c14_kl,c15_kl,c16_kl, &
+                                              c22_kl,c23_kl,c24_kl,c25_kl,c26_kl, &
+                                              c33_kl,c34_kl,c35_kl,c36_kl, &
+                                              c44_kl,c45_kl,c46_kl, &
+                                              c55_kl,c56_kl, &
+                                              c66_kl)
 
   use specfem_par
   use specfem_par_elastic
@@ -309,7 +334,27 @@
   else
     ! fully anisotropic kernels
     call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, "rho_kl", -rho_kl)
-    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, "cijkl_kl", -cijkl_kl)
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c11_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c12_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c13_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c14_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c15_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c16_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c22_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c23_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c24_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c25_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c26_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c33_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c34_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c35_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c36_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c44_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c45_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c46_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c55_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c56_kl))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c66_kl))  
   endif
   
   if (SAVE_MOHO_MESH) then

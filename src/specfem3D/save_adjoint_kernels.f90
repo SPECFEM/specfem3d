@@ -437,8 +437,13 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-              alphav_kl,alphah_kl,betav_kl,betah_kl, eta_kl
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: alphav_kl,alphah_kl,betav_kl,betah_kl, eta_kl
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: c11_kl,c12_kl,c13_kl,c14_kl,c15_kl,c16_kl, &
+                                                             c22_kl,c23_kl,c24_kl,c25_kl,c26_kl, &
+                                                             c33_kl,c34_kl,c35_kl,c36_kl, &
+                                                             c44_kl,c45_kl,c46_kl, &
+                                                             c55_kl,c56_kl, &
+                                                             c66_kl
 
   ! local parameters
   integer:: ispec,i,j,k,iglob,ier
@@ -452,6 +457,12 @@
   ! stats
   real(kind=CUSTOM_REAL) :: rho_max,moho_max
   real(kind=CUSTOM_REAL) :: alphav_max,alphah_max,betav_max,betah_max,eta_max,cijkl_max
+  real(kind=CUSTOM_REAL) :: c11_kl_max,c12_kl_max,c13_kl_max,c14_kl_max,c15_kl_max,c16_kl_max, &
+                            c22_kl_max,c23_kl_max,c24_kl_max,c25_kl_max,c26_kl_max, &
+                            c33_kl_max,c34_kl_max,c35_kl_max,c36_kl_max, &
+                            c44_kl_max,c45_kl_max,c46_kl_max, &
+                            c55_kl_max,c56_kl_max, &
+                            c66_kl_max
 
   ! allocates temporary transversely isotropic kernels
   if (SAVE_TRANSVERSE_KL) then
@@ -465,6 +476,41 @@
     alphav_kl(:,:,:,:) = 0.0_CUSTOM_REAL; alphah_kl(:,:,:,:) = 0.0_CUSTOM_REAL
     betav_kl(:,:,:,:) = 0.0_CUSTOM_REAL; betah_kl(:,:,:,:) = 0.0_CUSTOM_REAL
     eta_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+  else
+    allocate(c11_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c12_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c13_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c14_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c15_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c16_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c22_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c23_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c24_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c25_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c26_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c33_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c34_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c35_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c36_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c44_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c45_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c46_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c55_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c56_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+             c66_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array XXXX')
+      if (ier /= 0) stop 'error allocating arrays c11_kl,c22_kl,...'
+      c11_kl(:,:,:,:) = 0.0_CUSTOM_REAL; c12_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+      c13_kl(:,:,:,:) = 0.0_CUSTOM_REAL; c14_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+      c15_kl(:,:,:,:) = 0.0_CUSTOM_REAL; c16_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+      c22_kl(:,:,:,:) = 0.0_CUSTOM_REAL; c23_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+      c24_kl(:,:,:,:) = 0.0_CUSTOM_REAL; c25_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+      c26_kl(:,:,:,:) = 0.0_CUSTOM_REAL; c33_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+      c34_kl(:,:,:,:) = 0.0_CUSTOM_REAL; c35_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+      c36_kl(:,:,:,:) = 0.0_CUSTOM_REAL; c44_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+      c45_kl(:,:,:,:) = 0.0_CUSTOM_REAL; c46_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+      c55_kl(:,:,:,:) = 0.0_CUSTOM_REAL; c56_kl(:,:,:,:) = 0.0_CUSTOM_REAL
+      c66_kl(:,:,:,:) = 0.0_CUSTOM_REAL
   endif
 
   ! finalizes calculation of rhop, beta, alpha kernels
@@ -478,8 +524,10 @@
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
 
+            cijkl_kl_local(:) = - cijkl_kl(:,i,j,k,ispec)
+
             if (SAVE_TRANSVERSE_KL) then
-              cijkl_kl_local(:) = - cijkl_kl(:,i,j,k,ispec)
+              ! SAVE_TRANSVERSE_KL
 
               if (ANISOTROPY) then
                 ! Computes parameters for an anisotropic model
@@ -543,8 +591,30 @@
               betah_kl(i,j,k,ispec) = 2.0 * N * an_kl(3)
               ! K_eta
               eta_kl(i,j,k,ispec) = F * an_kl(5)
-            
-            endif ! SAVE_TRANSVERSE_KL
+            else
+              !Cij_kernels
+              c11_kl(i,j,k,ispec) = cijkl_kl_local(1)
+              c12_kl(i,j,k,ispec) = cijkl_kl_local(2)
+              c13_kl(i,j,k,ispec) = cijkl_kl_local(3)
+              c14_kl(i,j,k,ispec) = cijkl_kl_local(4)
+              c15_kl(i,j,k,ispec) = cijkl_kl_local(5)
+              c16_kl(i,j,k,ispec) = cijkl_kl_local(6)
+              c22_kl(i,j,k,ispec) = cijkl_kl_local(7)
+              c23_kl(i,j,k,ispec) = cijkl_kl_local(8)
+              c24_kl(i,j,k,ispec) = cijkl_kl_local(9)
+              c25_kl(i,j,k,ispec) = cijkl_kl_local(10)
+              c26_kl(i,j,k,ispec) = cijkl_kl_local(11)
+              c33_kl(i,j,k,ispec) = cijkl_kl_local(12)
+              c34_kl(i,j,k,ispec) = cijkl_kl_local(13)
+              c35_kl(i,j,k,ispec) = cijkl_kl_local(14)
+              c36_kl(i,j,k,ispec) = cijkl_kl_local(15)
+              c44_kl(i,j,k,ispec) = cijkl_kl_local(16)
+              c45_kl(i,j,k,ispec) = cijkl_kl_local(17)
+              c46_kl(i,j,k,ispec) = cijkl_kl_local(18)
+              c55_kl(i,j,k,ispec) = cijkl_kl_local(19)
+              c56_kl(i,j,k,ispec) = cijkl_kl_local(20)
+              c66_kl(i,j,k,ispec) = cijkl_kl_local(21)
+            endif
           enddo
         enddo
       enddo
@@ -554,7 +624,6 @@
   enddo
 
   ! overall min/max value
-  call max_all_cr(maxval(-rho_kl),rho_max)
 
   if (SAVE_TRANSVERSE_KL) then
     call max_all_cr(maxval(alphav_kl),alphav_max)
@@ -563,7 +632,29 @@
     call max_all_cr(maxval(betah_kl),betah_max)
     call max_all_cr(maxval(eta_kl),eta_max)
   else
+    call max_all_cr(maxval(-rho_kl),rho_max)
     call max_all_cr(maxval(-cijkl_kl),cijkl_max)
+    call max_all_cr(maxval(c11_kl),c11_kl_max)
+    call max_all_cr(maxval(c12_kl),c12_kl_max)
+    call max_all_cr(maxval(c13_kl),c13_kl_max)
+    call max_all_cr(maxval(c14_kl),c14_kl_max)
+    call max_all_cr(maxval(c15_kl),c15_kl_max)
+    call max_all_cr(maxval(c16_kl),c16_kl_max)
+    call max_all_cr(maxval(c22_kl),c22_kl_max)
+    call max_all_cr(maxval(c23_kl),c23_kl_max)
+    call max_all_cr(maxval(c24_kl),c24_kl_max)
+    call max_all_cr(maxval(c25_kl),c25_kl_max)
+    call max_all_cr(maxval(c26_kl),c26_kl_max)
+    call max_all_cr(maxval(c33_kl),c33_kl_max)
+    call max_all_cr(maxval(c34_kl),c34_kl_max)
+    call max_all_cr(maxval(c35_kl),c35_kl_max)
+    call max_all_cr(maxval(c36_kl),c36_kl_max)
+    call max_all_cr(maxval(c44_kl),c44_kl_max)
+    call max_all_cr(maxval(c45_kl),c45_kl_max)
+    call max_all_cr(maxval(c46_kl),c46_kl_max)
+    call max_all_cr(maxval(c55_kl),c55_kl_max)
+    call max_all_cr(maxval(c56_kl),c56_kl_max)
+    call max_all_cr(maxval(c66_kl),c66_kl_max)
   endif
 
   if (SAVE_MOHO_MESH) then
@@ -573,7 +664,6 @@
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) 'Elastic kernels:'
-    write(IMAIN,*) '  maximum value of rho  kernel      = ',rho_max
 
     if (SAVE_TRANSVERSE_KL) then
       ! tranverse isotropic
@@ -584,7 +674,29 @@
       write(IMAIN,*) '  maximum value of eta kernel        = ',eta_max
     else
       ! fully anisotropic
+      write(IMAIN,*) '  maximum value of rho  kernel      = ',rho_max
       write(IMAIN,*) '  maximum value of cijkl kernel     = ',cijkl_max
+      write(IMAIN,*) '  maximum value of c11 kernel     = ',c11_kl_max
+      write(IMAIN,*) '  maximum value of c12 kernel     = ',c12_kl_max
+      write(IMAIN,*) '  maximum value of c13 kernel     = ',c13_kl_max
+      write(IMAIN,*) '  maximum value of c14 kernel     = ',c14_kl_max
+      write(IMAIN,*) '  maximum value of c15 kernel     = ',c15_kl_max
+      write(IMAIN,*) '  maximum value of c16 kernel     = ',c16_kl_max
+      write(IMAIN,*) '  maximum value of c22 kernel     = ',c22_kl_max
+      write(IMAIN,*) '  maximum value of c23 kernel     = ',c23_kl_max
+      write(IMAIN,*) '  maximum value of c24 kernel     = ',c24_kl_max
+      write(IMAIN,*) '  maximum value of c25 kernel     = ',c25_kl_max
+      write(IMAIN,*) '  maximum value of c26 kernel     = ',c26_kl_max
+      write(IMAIN,*) '  maximum value of c33 kernel     = ',c33_kl_max
+      write(IMAIN,*) '  maximum value of c34 kernel     = ',c34_kl_max
+      write(IMAIN,*) '  maximum value of c35 kernel     = ',c35_kl_max
+      write(IMAIN,*) '  maximum value of c36 kernel     = ',c36_kl_max
+      write(IMAIN,*) '  maximum value of c44 kernel     = ',c44_kl_max
+      write(IMAIN,*) '  maximum value of c45 kernel     = ',c45_kl_max
+      write(IMAIN,*) '  maximum value of c46 kernel     = ',c46_kl_max
+      write(IMAIN,*) '  maximum value of c55 kernel     = ',c55_kl_max
+      write(IMAIN,*) '  maximum value of c56 kernel     = ',c56_kl_max
+      write(IMAIN,*) '  maximum value of c66 kernel     = ',c66_kl_max
     endif
     
     if (SAVE_MOHO_MESH) then
@@ -596,8 +708,13 @@
   endif
 
   if (ADIOS_FOR_KERNELS) then
-    call save_kernels_elastic_aniso_adios(alphav_kl, alphah_kl, &
-                                          betav_kl, betah_kl, eta_kl)
+    call save_kernels_elastic_aniso_adios(alphav_kl, alphah_kl, betav_kl, betah_kl, eta_kl, &
+                                          c11_kl,c12_kl,c13_kl,c14_kl,c15_kl,c16_kl, &
+                                          c22_kl,c23_kl,c24_kl,c25_kl,c26_kl, &
+                                          c33_kl,c34_kl,c35_kl,c36_kl, &
+                                          c44_kl,c45_kl,c46_kl, &
+                                          c55_kl,c56_kl, &
+                                          c66_kl)
   else
     ! outputs transverse isotropic kernels only
     if (SAVE_TRANSVERSE_KL) then
@@ -623,15 +740,93 @@
       ! note: the C_ij and density kernels are not for relative perturbations
       ! (delta ln( m_i) = delta m_i / m_i),
       !          but absolute perturbations (delta m_i = m_i - m_0).
-      ! Kappa and mu are for absolute perturbations, can be used to check with
-      ! purely isotropic versions.
       open(unit=IOUT,file=trim(prname)//'rho_kernel.bin',status='unknown',form='unformatted',action='write')
       write(IOUT) - rho_kl
       close(IOUT)
-      open(unit=IOUT,file=trim(prname)//'cijkl_kernel.bin',status='unknown',form='unformatted',action='write')
-      write(IOUT) - cijkl_kl
+      open(unit=IOUT,file=trim(prname)//'c11_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c11_kernel.bin'
+      write(IOUT) c11_kl
       close(IOUT)
-
+      open(unit=IOUT,file=trim(prname)//'c12_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c12_kernel.bin'
+      write(IOUT) c12_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c13_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c13_kernel.bin'
+      write(IOUT) c13_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c14_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c14_kernel.bin'
+      write(IOUT) c14_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c15_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c15_kernel.bin'
+      write(IOUT) c15_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c16_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c16_kernel.bin'
+      write(IOUT) c16_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c22_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c22_kernel.bin'
+      write(IOUT) c22_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c23_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c23_kernel.bin'
+      write(IOUT) c23_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c24_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c24_kernel.bin'
+      write(IOUT) c24_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c25_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c25_kernel.bin'
+      write(IOUT) c25_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c26_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c26_kernel.bin'
+      write(IOUT) c26_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c33_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c33_kernel.bin'
+      write(IOUT) c33_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c34_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c34_kernel.bin'
+      write(IOUT) c34_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c35_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c35_kernel.bin'
+      write(IOUT) c35_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c36_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c36_kernel.bin'
+      write(IOUT) c36_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c44_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c44_kernel.bin'
+      write(IOUT) c44_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c45_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c45_kernel.bin'
+      write(IOUT) c45_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c46_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c46_kernel.bin'
+      write(IOUT) c46_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c55_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c55_kernel.bin'
+      write(IOUT) c55_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c56_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c56_kernel.bin'
+      write(IOUT) c56_kl
+      close(IOUT)
+      open(unit=IOUT,file=trim(prname)//'c66_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file c66_kernel.bin'
+      write(IOUT) c66_kl
+      close(IOUT)
     endif
 
   endif
@@ -645,6 +840,13 @@
 
   if (SAVE_TRANSVERSE_KL) then
     deallocate(alphav_kl,alphah_kl,betav_kl,betah_kl,eta_kl)
+  else
+    deallocate(c11_kl,c12_kl,c13_kl,c14_kl,c15_kl,c16_kl, &
+               c22_kl,c23_kl,c24_kl,c25_kl,c26_kl, &
+               c33_kl,c34_kl,c35_kl,c36_kl, &
+               c44_kl,c45_kl,c46_kl, &
+               c55_kl,c56_kl, &
+               c66_kl)
   endif
   
   end subroutine save_kernels_elastic_aniso
