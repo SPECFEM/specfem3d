@@ -1340,6 +1340,12 @@
       ! read half duration and compute minimum
       read(IIN,"(a)") dummystring
       read(dummystring(15:len_trim(dummystring)),*) hdur
+
+      ! checks half-duration
+      ! null half-duration indicates a Heaviside
+      ! replace with very short error function
+      if (hdur < 5.d0 * DT) hdur = 5.d0 * DT
+
       minval_hdur = min(minval_hdur,hdur)
 
       ! reads till the end of this source
