@@ -129,9 +129,6 @@
       call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "beta_kl", dummy_kernel)
       call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "alpha_kl", dummy_kernel)
     endif
-    if (SAVE_MOHO_MESH) then
-      call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "moho_kl", dummy_kernel)
-    endif
   endif
 
   if (POROELASTIC_SIMULATION) then
@@ -155,6 +152,10 @@
     call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "cpI_kl", dummy_kernel)
     call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "cpII_kl", dummy_kernel)
     call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "ratio_kl", dummy_kernel)
+  endif
+
+  if (SAVE_MOHO_MESH) then
+    call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "moho_kl", dummy_kernel)
   endif
 
   if (APPROXIMATE_HESS_KL) then
@@ -263,13 +264,13 @@
   implicit none
 
   ! Parameters
+  ! isotropic kernels
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), intent(in) :: rhop_kl, alpha_kl, beta_kl
+
   ! local parameters
   integer(kind=8) :: local_dim
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nspec_wmax
-
-  ! Transverse isotropic paramters
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhop_kl, alpha_kl, beta_kl
 
   ! determines maximum values for nspec over all partition slices
   call max_allreduce_singlei(NSPEC_AB,nspec_wmax)
@@ -284,15 +285,11 @@
   call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(beta_kl))
   call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(alpha_kl))
 
-  if (SAVE_MOHO_MESH) then
-    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(moho_kl))
-  endif
-
   end subroutine save_kernels_elastic_iso_adios
 
 !==============================================================================
 !> Save elastic related kernels
-  subroutine save_kernels_elastic_ansio_adios(alphav_kl, alphah_kl, betav_kl, betah_kl, eta_kl, &
+  subroutine save_kernels_elastic_aniso_adios(alphav_kl, alphah_kl, betav_kl, betah_kl, eta_kl, &
                                               c11_kl,c12_kl,c13_kl,c14_kl,c15_kl,c16_kl, &
                                               c22_kl,c23_kl,c24_kl,c25_kl,c26_kl, &
                                               c33_kl,c34_kl,c35_kl,c36_kl, &
@@ -309,14 +306,23 @@
   implicit none
 
   ! Parameters
+  ! Transverse isotropic kernels
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), intent(in) :: &
+    alphav_kl,alphah_kl,betav_kl,betah_kl, eta_kl
+
+  ! full Cijkl kernels
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), intent(in) :: &
+    c11_kl,c12_kl,c13_kl,c14_kl,c15_kl,c16_kl, &
+    c22_kl,c23_kl,c24_kl,c25_kl,c26_kl, &
+    c33_kl,c34_kl,c35_kl,c36_kl, &
+    c44_kl,c45_kl,c46_kl, &
+    c55_kl,c56_kl, &
+    c66_kl
+
   ! local parameters
   integer(kind=8) :: local_dim
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nspec_wmax
-
-  ! Transverse isotropic paramters
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-    alphav_kl,alphah_kl,betav_kl,betah_kl, eta_kl
 
   ! determines maximum values for nspec over all partition slices
   call max_allreduce_singlei(NSPEC_AB,nspec_wmax)
@@ -355,10 +361,6 @@
     call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c55_kl))
     call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c56_kl))
     call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(c66_kl))
-  endif
-
-  if (SAVE_MOHO_MESH) then
-    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(moho_kl))
   endif
 
   end subroutine save_kernels_elastic_aniso_adios
@@ -415,6 +417,37 @@
   call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(ratio_kl))
 
   end subroutine save_kernels_poroelastic_adios
+
+!==============================================================================
+!> Save Moho boundary kernels
+  subroutine save_kernels_moho_adios()
+
+  use specfem_par
+  use specfem_par_elastic
+
+  use adios_helpers_mod
+  use manager_adios
+
+  implicit none
+
+  ! Parameters
+  ! local parameters
+  integer(kind=8) :: local_dim
+  !--- Variables to allreduce - wmax stands for world_max
+  integer :: nspec_wmax
+
+  ! safety check
+  if (.not. SAVE_MOHO_MESH) return
+
+  ! determines maximum values for nspec over all partition slices
+  call max_allreduce_singlei(NSPEC_AB,nspec_wmax)
+
+  ! save moho kernels to binary files
+  local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
+  call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(moho_kl))
+
+  end subroutine save_kernels_moho_adios
+
 
 !==============================================================================
 !> Save Hessians

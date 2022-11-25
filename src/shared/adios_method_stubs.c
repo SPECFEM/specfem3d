@@ -92,10 +92,17 @@ void FC_FUNC_(save_kernels_acoustic_adios,SAVE_KERNELS_ACOUSTIC_ADIOS)(void) {}
 void FC_FUNC_(save_kernels_elastic_iso_adios,SAVE_KERNELS_ELASTIC_ISO_ADIOS)(realw* rhop_kl, realw* alpha_kl, realw* beta_kl) {}
 
 void FC_FUNC_(save_kernels_elastic_aniso_adios,SAVE_KERNELS_ELASTIC_ANISO_ADIOS)(realw* alphav_kl, realw* alphah_kl,
-                                                                     realw* betav_kl, realw* betah_kl, realw* eta_kl,
-                                                                     realw* alpha_kl, realw* beta_kl) {}
+                                                                                 realw* betav_kl, realw* betah_kl, realw* eta_kl,
+                                                                                 realw* c11_kl,realw* c12_kl,realw* c13_kl,realw* c14_kl,realw* c15_kl,realw* c16_kl,
+                                                                                 realw* c22_kl,realw* c23_kl,realw* c24_kl,realw* c25_kl,realw* c26_kl,
+                                                                                 realw* c33_kl,realw* c34_kl,realw* c35_kl,realw* c36_kl,
+                                                                                 realw* c44_kl,realw* c45_kl,realw* c46_kl,
+                                                                                 realw* c55_kl,realw* c56_kl,
+                                                                                 realw* c66_kl) {}
 
 void FC_FUNC_(save_kernels_poroelastic_adios,SAVE_KERNELS_POROELASTIC_ADIOS)(void) {}
+
+void FC_FUNC_(save_kernels_moho_adios,SAVE_KERNELS_MOHO_ADIOS)(void) {}
 
 void FC_FUNC_(save_kernels_hessian_adios,SAVE_KERNELS_HESSIAN_ADIOS)(void) {}
 
