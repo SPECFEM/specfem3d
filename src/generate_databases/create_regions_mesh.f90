@@ -256,14 +256,14 @@
   call synchronize_all()
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '  ...saving databases'
+    write(IMAIN,*) '  ...saving mesh databases'
     call flush_IMAIN()
   endif
   !call create_name_database(prname,myrank,LOCAL_PATH)
   if (ADIOS_FOR_MESH) then
-    call save_arrays_solver_ext_mesh_adios()
+    call save_arrays_solver_mesh_adios()
   else
-    call save_arrays_solver_ext_mesh()
+    call save_arrays_solver_mesh()
   endif
 
   ! saves faults
@@ -876,6 +876,11 @@
 
   any_regular_elem = .false.
 
+  ! initializes
+  xix_regular = 0.0_CUSTOM_REAL
+  jacobian_regular = 0.0_CUSTOM_REAL
+
+  ! determines regular elements
   do ispec = 1, nspec
     do ia = 1,NGNOD
       iglob = elmnts_ext_mesh(ia,ispec)

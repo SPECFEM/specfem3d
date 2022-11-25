@@ -625,6 +625,9 @@
   ! ADIOS write equally sized chunks for each processor.            |
   !-----------------------------------------------------------------'
 
+  ! initializes
+  max_global_values(:) = 0
+
   ! Filling a temporary array to avoid doing allreduces for each var.
   max_global_values(1) = nglob
   max_global_values(2) = nspec
@@ -657,7 +660,6 @@
   !-----------------------------------.
   ! Setup ADIOS for the current group |
   !-----------------------------------'
-  group_size_inc = 0
   output_name = get_adios_filename(trim(LOCAL_PATH) // "/Database")
 
   ! user output
@@ -674,6 +676,7 @@
   endif
 
   ! initializes i/o group
+  group_size_inc = 0
   call init_adios_group(myadios_group,group_name)
 
   !------------------------.

@@ -61,7 +61,7 @@ void FC_FUNC_(model_ipati_water_adios,MODEL_IPATI_WATER_ADIOS)(int* myrank, int*
 void FC_FUNC_(read_partition_files_adios,READ_PARTITION_FILES_ADIOS)(void) {}
 
 // subroutines from save_arrays_solver_adios.F90
-void FC_FUNC_(save_arrays_solver_ext_mesh_adios,SAVE_ARRAYS_SOLVER_EXT_MESH_ADIOS)(int* nspec, int* ibool) {}
+void FC_FUNC_(save_arrays_solver_mesh_adios,SAVE_ARRAYS_SOLVER_MESH_ADIOS)(void) {}
 
 // subroutines from save_moho_adios.F90
 void FC_FUNC_(crm_save_moho_adios,CRM_SAVE_MOHO_ADIOS)(void) {}
