@@ -253,7 +253,7 @@
       ! saves dataframe at selected steps.
       if (mod(idx_step, STEP_INTERVAL_SAVE_FORWARD) /= 0) return
 
-      ! save displ 
+      ! save strain 
       if (SAVE_FORWARD .and. SAVE_FORWARD_BY_STEP) then 
       ! create file name
       
@@ -270,7 +270,7 @@
         
         if (ELASTIC_SIMULATION) then
           if (ATTENUATION) then
-            ! only store strain field
+            ! only the strain field
             write(IOUT) epsilondev_trace
             write(IOUT) epsilondev_xx
             write(IOUT) epsilondev_yy
