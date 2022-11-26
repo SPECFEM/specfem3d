@@ -253,9 +253,9 @@
     if (POROELASTIC_SIMULATION) call compute_forces_poroelastic_calling()
 
     ! save forward (strain & displacement)
-    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. SAVE_FORWARD_BY_STEP) then
-      call save_forward_arrays_strain(it)
-      call save_forward_arrays_displ(it)
+    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. SAVE_FORWARD_BY_STEP .and. mod(it,STEP_INTERVAL_SAVE_FORWARD) == 0) then
+      call save_forward_arrays_strain()
+      call save_forward_arrays_displ()
     endif
 
     ! restores last time snapshot saved for backward/reconstruction of wavefields

@@ -178,111 +178,86 @@
 
   end subroutine save_forward_arrays_undoatt
 
-
 !
 !-------------------------------------------------------------------------------------------------
 !
-  subroutine save_forward_arrays_displ(idx_step)
 
-    ! save files to local disk or tape system if restart file
-    
-      use specfem_par
-      use specfem_par_elastic
-      use specfem_par_acoustic
-      use specfem_par_poroelastic
-    
-      implicit none
-      integer :: idx_step
-      integer :: ier
-      character(len=128) :: str_file_name
-      character(len=20) :: str_idx_step = '1'
-    
-      ! checks if anything to do
-      if (SIMULATION_TYPE /= 1) return
-      if (UNDO_ATTENUATION_AND_OR_PML) return
-    
-      ! saves dataframe at selected steps.
-      if (mod(idx_step, STEP_INTERVAL_SAVE_FORWARD) /= 0) return
+  subroutine save_forward_arrays_displ()
 
-      ! save displ 
-      if (SAVE_FORWARD .and. SAVE_FORWARD_BY_STEP) then 
-      ! create file name
-      
-        Write(str_idx_step, '(I10)') idx_step
-      
-        str_file_name = prname(1:len_trim(prname))//trim('disp_Step_')//trim(adjustl(str_idx_step))//trim('.bin')
-      
-        open(unit=IOUT,file=trim(str_file_name),status='unknown',form='unformatted',iostat=ier)
-        if (ier /= 0) then
-          print *,'error: opening save_forward_arrays.bin'
-          print *,'path: ',prname(1:len_trim(prname))//'save_forward_arrays.bin'
-          call exit_mpi(myrank,'error opening file save_forward_arrays.bin')
-        endif
+  ! save files to local disk or tape system if restart file
+    
+  use specfem_par
+  use specfem_par_elastic
+  use specfem_par_acoustic
+  use specfem_par_poroelastic
 
-        if (ELASTIC_SIMULATION) then
-          write(IOUT) displ
-          FLUSH(IOUT)
-          close(IOUT)
-        endif
-      endif
+  implicit none
+  integer :: ier
+  character(len=MAX_STRING_LEN) :: outputname
 
-      end subroutine save_forward_arrays_displ
+  ! checks if anything to do
+  if (UNDO_ATTENUATION_AND_OR_PML) return
+
+  ! create file name
+  write(outputname, "('/proc',i6.6,'_disp_Step_',I0,'.bin')") myrank,it
+  open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+
+  if (ier /= 0) then
+    print *,'error: opening disp_Step_*.bin'
+    call exit_mpi(myrank,'error opening file disp_Step_*.bin')
+  endif
+
+  if (ELASTIC_SIMULATION) then
+    write(IOUT) displ
+    FLUSH(IOUT)
+    close(IOUT)
+  endif
+
+  end subroutine save_forward_arrays_displ
     
 !
 !-------------------------------------------------------------------------------------------------
 !
-  subroutine save_forward_arrays_strain(idx_step)
+  
+  subroutine save_forward_arrays_strain()
 
-    ! save files to local disk or tape system if restart file
-    
-      use specfem_par
-      use specfem_par_elastic
-      use specfem_par_acoustic
-      use specfem_par_poroelastic
-    
-      implicit none
-      integer :: idx_step
-      integer :: ier
-      character(len=128) :: str_file_name
-      character(len=20) :: str_idx_step = '1'
-    
-      ! checks if anything to do
-      if (SIMULATION_TYPE /= 1) return
-      if (UNDO_ATTENUATION_AND_OR_PML) return
-    
-      ! saves dataframe at selected steps.
-      if (mod(idx_step, STEP_INTERVAL_SAVE_FORWARD) /= 0) return
+  ! save files to local disk or tape system if restart file
 
-      ! save strain 
-      if (SAVE_FORWARD .and. SAVE_FORWARD_BY_STEP) then 
-      ! create file name
-      
-        Write(str_idx_step, '(I10)') idx_step
-      
-        str_file_name = prname(1:len_trim(prname))//trim('strain_field_Step_')//trim(adjustl(str_idx_step))//trim('.bin')
-      
-        open(unit=IOUT,file=trim(str_file_name),status='unknown',form='unformatted',iostat=ier)
-        if (ier /= 0) then
-          print *,'error: opening save_forward_arrays.bin'
-          print *,'path: ',prname(1:len_trim(prname))//'save_forward_arrays.bin'
-          call exit_mpi(myrank,'error opening file save_forward_arrays.bin')
-        endif
+  use specfem_par
+  use specfem_par_elastic
+  use specfem_par_acoustic
+  use specfem_par_poroelastic
+
+  implicit none
+  integer :: ier
+  character(len=MAX_STRING_LEN) :: outputname
+
+  ! checks if anything to do
+  if (UNDO_ATTENUATION_AND_OR_PML) return
         
-        if (ELASTIC_SIMULATION) then
-          if (ATTENUATION) then
-            ! only the strain field
-            write(IOUT) epsilondev_trace
-            write(IOUT) epsilondev_xx
-            write(IOUT) epsilondev_yy
-            write(IOUT) epsilondev_xy
-            write(IOUT) epsilondev_xz
-            write(IOUT) epsilondev_yz
-            FLUSH(IOUT)
-          endif
-        endif
+  ! create file name
+    write(outputname, "('/proc',i6.6,'_strain_field_Step_',I0,'.bin')") myrank,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    
+    if (ier /= 0) then
+      print *,'error: opening strain_field_Step_*.bin'
+      call exit_mpi(myrank,'error opening strain_field_Step_*.bin')
+    endif
+    
+    if (ELASTIC_SIMULATION) then
+      if (ATTENUATION) then
+        ! only the strain field
+        write(IOUT) epsilondev_trace
+        write(IOUT) epsilondev_xx
+        write(IOUT) epsilondev_yy
+        write(IOUT) epsilondev_xy
+        write(IOUT) epsilondev_xz
+        write(IOUT) epsilondev_yz
+        FLUSH(IOUT)
       endif
+    endif
 
-      end subroutine save_forward_arrays_strain
+  end subroutine save_forward_arrays_strain
 
 !
 !-------------------------------------------------------------------------------------------------
