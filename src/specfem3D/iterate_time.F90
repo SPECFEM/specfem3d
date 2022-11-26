@@ -252,6 +252,12 @@
     ! poroelastic solver
     if (POROELASTIC_SIMULATION) call compute_forces_poroelastic_calling()
 
+    ! save forward (strain & displacement)
+    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. SAVE_FORWARD_BY_STEP) then
+      call save_forward_arrays_strain(it)
+      call save_forward_arrays_displ(it)
+    endif
+
     ! restores last time snapshot saved for backward/reconstruction of wavefields
     ! note: this must be read in after the Newmark time scheme
     if (SIMULATION_TYPE == 3 .and. it == 1) then

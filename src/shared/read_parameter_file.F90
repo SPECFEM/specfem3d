@@ -75,6 +75,20 @@
       write(*,*)
     endif
 
+    call read_value_logical(SAVE_FORWARD_BY_STEP, 'SAVE_FORWARD_BY_STEP', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'SAVE_FORWARD_BY_STEP            = .false.'
+      write(*,*)
+    endif
+
+    call read_value_integer(STEP_INTERVAL_SAVE_FORWARD, 'STEP_INTERVAL_SAVE_FORWARD', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'STEP_INTERVAL_SAVE_FORWARD      = 50'
+      write(*,*)
+    endif
+
     call read_value_logical(INVERSE_FWI_FULL_PROBLEM, 'INVERSE_FWI_FULL_PROBLEM', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
