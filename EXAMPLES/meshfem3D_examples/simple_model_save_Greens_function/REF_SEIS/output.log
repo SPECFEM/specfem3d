@@ -1,0 +1,19 @@
+running example: Mon Jul  4 01:52:27 AST 2016
+
+   setting up example...
+
+
+  running mesher on  4 processors...
+
+
+  running database generation on  4 processors...
+
+
+  running solver on  4 processors...
+
+
+see results in directory: OUTPUT_FILES/
+
+done
+Mon Jul 4 01:57:35 AST 2016
+
