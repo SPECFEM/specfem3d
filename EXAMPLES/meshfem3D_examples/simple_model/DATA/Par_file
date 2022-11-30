@@ -377,3 +377,9 @@ ADIOS_FOR_FORWARD_ARRAYS        = .true.
 ADIOS_FOR_KERNELS               = .true.
 ADIOS_FOR_UNDO_ATTENUATION      = .false.
 
+
+# Storing the forward (strain and displacement) by step
+SAVE_FORWARD_BY_STEP            = .false.
+# The step interval of storing the forward
+STEP_INTERVAL_SAVE_FORWARD      = 50
+

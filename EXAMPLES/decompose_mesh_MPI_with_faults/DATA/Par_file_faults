@@ -15,3 +15,9 @@
 &DIST2D shapeval='rectangle', val = 0.63e0, xc =  0e0, yc =0e0, zc=  0.0e0, lx=40000, ly=1.0e0, lz=5.00000e+03 /
 &TWF nuc_x=0.0, nuc_y=0.0, nuc_z=0.0, nuc_r=1.00000e+03, nuc_t0=0.5, nuc_v=1.66500e+03/
 
+
+# Storing the forward (strain and displacement) by step
+SAVE_FORWARD_BY_STEP            = .false.
+# The step interval of storing the forward
+STEP_INTERVAL_SAVE_FORWARD      = 50
+

@@ -16,3 +16,9 @@
 &DIST2D shapeval='square', val = 62.0e6, xc =  7500.0e0, yc =0e0, zc=  -7500.0e0, l=3000.0e0 /
 &SWF mus=10000.0e0, nmus=1, mud=0.525e0,dc=0.4e0/
 &DIST2D shapeval='rectangle', val = 0.677e0, xc =  0e0, yc =0e0, zc=  -7500.0e0, lx=30000.0e0, ly=1.0e0, lz=15000.0e0 /
+
+# Storing the forward (strain and displacement) by step
+SAVE_FORWARD_BY_STEP            = .false.
+# The step interval of storing the forward
+STEP_INTERVAL_SAVE_FORWARD      = 50
+

@@ -38,3 +38,9 @@
 &SWF mus=1000.e0,mud=1000.0e0,dc=0.5e0,nmus=1,nmud=1,ndc=0 /
 &DIST2D shapeval='rectangle',       val =  0.6e0, xc = 60.1915e3, yc =120.0e3, zc=-13.0e3, lx=59616.98e0, ly=80.0e3, lz=26.0e3 /
 &DIST2D shapeval='rectangle',       val =  0.2e0, xc = 60.1915e3, yc =120.0e3, zc=-13.0e3, lx=59616.98e0, ly=80.0e3, lz=26.0e3 /
+
+# Storing the forward (strain and displacement) by step
+SAVE_FORWARD_BY_STEP            = .false.
+# The step interval of storing the forward
+STEP_INTERVAL_SAVE_FORWARD      = 50
+
