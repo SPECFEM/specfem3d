@@ -1391,7 +1391,7 @@
   call bcast_all_singlei(NOISE_TOMOGRAPHY)
   call bcast_all_singlel(SAVE_FORWARD)
   call bcast_all_singlel(SAVE_FORWARD_BY_STEP)
-  call bcast_all_singlel(STEP_INTERVAL_SAVE_FORWARD)
+  call bcast_all_singlei(STEP_INTERVAL_SAVE_FORWARD)
 
   call bcast_all_singlel(INVERSE_FWI_FULL_PROBLEM)
   call bcast_all_singlei(UTM_PROJECTION_ZONE)
