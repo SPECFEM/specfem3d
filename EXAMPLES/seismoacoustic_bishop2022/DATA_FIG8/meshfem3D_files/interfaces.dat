@@ -1,0 +1,20 @@
+# number of interfaces
+2
+#
+# We describe each interface below, structured as a 2D-grid, with several parameters : 
+# number of points along XI and ETA, minimal XI ETA coordinates 
+# and spacing between points which must be constant.
+# Then the records contain the Z coordinates of the NXI x NETA points.
+#
+# interface number 1
+ .true. 200 120 652000d0 3493000d0 50.0d0  50.0d0
+ SAKU_z078_z078.dat
+# interface number 5
+ .true. 2 2 652000d0 3493000d0 50.0d0  50.0d0
+ interface2.dat
+
+# for each layer, we give the number of spectral elements in the vertical direction
+# layer number 1 (bottom layer)
+ 26
+# layer number 2 (top layer)
+ 45

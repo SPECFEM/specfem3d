@@ -129,7 +129,8 @@ than in \texttt{CMTSOLUTION} format, use the C code \texttt{SPECFEM3D\_GLOBE/uti
 to convert it. The conversion formulas are given for instance in \citet{AkRi80}.
 Note that the \citet{AkRi80} convention is slightly different from
 the Harvard \texttt{CMTSOLUTION} convention (the sign of some components
-is different). The C code outputs both.
+is different). The C code outputs both.\newline
+
 
 Centroid latitude and longitude should be provided in geographical
 coordinates. The code converts these coordinates to geocentric coordinates~\citep{DaTr98}.
@@ -143,7 +144,8 @@ solution is based upon P waves and often gives the hypocenter of the
 earthquake, i.e., the rupture initiation point, whereas the CMT solution
 gives the `centroid location', which is the location with dominant
 moment release. The PDE solution is not used by our software package
-but must be present anyway in the first line of the file.
+but must be present anyway in the first line of the file.\newline
+
 
 \label{To-simulate-a}To simulate a kinematic rupture, i.e., a finite-source
 event, represented in terms of $N_{\mathrm{sources}}$ point sources,
@@ -153,11 +155,13 @@ entries, one for each subevent (i.e., concatenate $N_{\mathrm{sources}}$
 At least one entry (not necessarily the first) must have a zero \texttt{time
 shift}, and all the other entries must have non-negative \texttt{time
 shift}. Each subevent can have its own half duration, latitude, longitude,
-depth, and moment tensor (effectively, the local moment-density tensor).
+depth, and moment tensor (effectively, the local moment-density tensor).\newline
+
 
 Note that the zero in the synthetics does NOT represent the hypocentral
 time or centroid time in general, but the timing of the \textit{center}
-of the source triangle with zero \texttt{time shift} (Fig~\ref{fig:source_timing}).
+of the source triangle with zero \texttt{time shift} (Fig~\ref{fig:source_timing}).\newline
+
 
 Although it is convenient to think of each source as a triangle, in
 the simulation they are actually Gaussians (as they have better frequency
@@ -165,7 +169,7 @@ characteristics). The relationship between the triangle and the gaussian
 used is shown in Fig~\ref{fig:gauss.vs.triangle}. For finite fault
 simulations it is usually not advisable to use a zero half duration
 and convolve afterwards, since the half duration is generally fixed
-by the finite fault model.
+by the finite fault model.\newline
 
 \vspace{1cm}
 
@@ -307,7 +311,8 @@ the screen instead by uncommenting a line in \texttt{setup/constants.h}:
 \end{verbatim}
 On PC clusters the seismogram files are generally written to the local
 disks (the path \texttt{LOCAL\_PATH} in the \texttt{DATA/Par\_file} and
-need to be gathered at the end of the simulation.
+need to be gathered at the end of the simulation.\newline
+
 
 While the solver is running, its progress may be tracked by monitoring
 the `\texttt{\small timestamp{*}}' files in the \texttt{\small OUTPUT\_FILES/} directory. These tiny
@@ -334,7 +339,8 @@ potential with time, and ultimately the run will be terminated by
 the program. You can control the rate at which the timestamp files
 are written based upon the parameter
 \texttt{\small NTSTEP\_BETWEEN\_OUTPUT\_INFO}
-in the \texttt{DATA/Par\_file}.
+in the \texttt{DATA/Par\_file}.\newline
+
 
 Having set the \texttt{DATA/Par\_file} parameters, and having provided
 the \texttt{CMTSOLUTION} (or the \texttt{FORCESOLUTION}) and \texttt{STATIONS}
@@ -345,14 +351,16 @@ e.g., LSF). You may need to edit the last command at the end of the
 script that invokes the \texttt{mpirun} command. The \texttt{runall}
 script compiles and runs both \texttt{xgenerate\_databases} and \texttt{xspecfem3D}
 in sequence. This is a safe approach that ensures using the correct
-combination of distributed database output and solver input.
+combination of distributed database output and solver input.\newline
+
 
 It is important to realize that the CPU and memory requirements of
 the solver are closely tied to choices about attenuation (\texttt{ATTENUATION})
 and the nature of the model (i.e., isotropic models are cheaper than
 anisotropic models). We encourage you to run a variety of simulations
 with various flags turned on or off to develop a sense for what is
-involved.
+involved.\newline
+
 
 For the same model, one can rerun the solver for different events
 by simply changing the \texttt{CMTSOLUTION} or \texttt{FORCESOLUTION}
@@ -371,7 +379,7 @@ many earthquakes in a catalog, in which case it can be better from
 a batch job submission point of view to start fewer and much larger jobs,
 each of them computing several earthquakes in parallel.
 To turn that option on, set parameter \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS}
-to a value greater than 1 in file \texttt{DATA/Par\_file}.
+to a value greater than 1 in file \texttt{DATA/Par\_file}.\newline
 
 
 When that option is on, of course the number of processor cores used to start
@@ -379,7 +387,7 @@ the code in the batch system must be a multiple of \texttt{NUMBER\_OF\_SIMULTANE
 all the individual runs must use the same number of processor cores,
 which as usual is \texttt{NPROC} in the input file \texttt{DATA/Par\_file},
 and thus the total number of processor cores to request from the batch system
-should be \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS $\times$ NPROC}.
+should be \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS $\times$ NPROC}.\newline
 
 
 \begin{figure}[H]

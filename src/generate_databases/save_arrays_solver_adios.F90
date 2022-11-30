@@ -35,7 +35,7 @@
 
 ! for external mesh
 
-  subroutine save_arrays_solver_ext_mesh_adios()
+  subroutine save_arrays_solver_mesh_adios()
 
   use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE,IMAIN,USE_MESH_COLORING_GPU
 
@@ -84,7 +84,7 @@
 
   !--- Local parameters for ADIOS ---
   character(len=MAX_STRING_LEN) :: output_name
-  character(len=*), parameter :: group_name = "SPECFEM3D_EXTERNAL_MESH"
+  character(len=*), parameter :: group_name = "SPECFEM3D_MESH"
   integer(kind=8) :: group_size_inc
   integer(kind=8) :: local_dim
 
@@ -154,7 +154,10 @@
   !       but only store local arrays if they have non-zero array lengths.
   !       -> careful when reading local arrays back in, check local_dim to get the overall buffer size of the arrays,
   !          then only read local arrays for non-zero array lengths.
-  !
+
+  ! initializes
+  max_global_values(:) = 0
+
   ! Filling a temporary array to avoid doing allreduces for each var.
   max_global_values(1)  = nglob
   max_global_values(2)  = nspec
@@ -248,13 +251,12 @@
   ! Setup ADIOS for the current group |
   !-----------------------------------'
   ! initializes i/o group
+  group_size_inc = 0
   call init_adios_group(myadios_group,group_name)
 
   !------------------------.
   ! Define ADIOS Variables |
   !------------------------'
-  group_size_inc = 0
-
   call define_adios_scalar(myadios_group, group_size_inc, '', STRINGIFY_VAR(nspec))
   call define_adios_scalar(myadios_group, group_size_inc, '', STRINGIFY_VAR(nglob))
   call define_adios_scalar(myadios_group, group_size_inc, '', STRINGIFY_VAR(nspec_irregular))
@@ -1056,7 +1058,7 @@
   ! synchronizes processes
   call synchronize_all()
 
-  end subroutine save_arrays_solver_ext_mesh_adios
+  end subroutine save_arrays_solver_mesh_adios
 
 
 !------------------------------------------------------------------------------

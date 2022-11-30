@@ -426,7 +426,7 @@
       ! third step of noise tomography, i.e., read the surface movie saved at every timestep
       ! use the movie to reconstruct the ensemble forward wavefield
       ! the ensemble adjoint wavefield is done as usual
-      ! note instead of "NSTEP-it+1", now we us "it", since reconstruction is a reversal of reversal
+      ! note instead of "NSTEP-it+1", now we use "it", since reconstruction is a reversal of reversal
       call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces, &
                                         b_accel, &
                                         normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &

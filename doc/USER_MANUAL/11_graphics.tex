@@ -33,7 +33,7 @@ For this, you must set the flag \texttt{SAVE\_MESH\_FILES} to \texttt{.true.}
 in the main parameter file \texttt{DATA/Par\_file} (see Chapter~\ref{cha:Main-Parameter}
 for details). This will create VTK files for each single partition.
 You can then use Paraview \urlwithparentheses{www.paraview.org}
-to visualized these partitions.
+to visualized these partitions.\newline
 
 {\red To visualize seismograms with Paraview, you should turn off the flag SU\_FORMAT, and turn on the use binary seismograms flag. This will generate .bin files, that you can open with Paraview. You have to select the way you open it ("raw"), and specify the dimensions of the file (NSTEP and NREC).}
 
@@ -234,12 +234,12 @@ Then, you can launch \texttt{xcombine\_vol\_data}, specifying the path where it 
 ./bin/xcombine_vol_data 0 3 velocity_Z_it000400 ./OUTPUT_FILES/DATABASES_MPI ./OUTPUT_FILES 0
 \end{verbatim}
 }
-Here, $0$ is the number of the first processor, $3$ the number of the last one, \texttt{velocity\_Z\_it000400} the name of the files we want to combine without the prefix \texttt{proc000000*\_}, \texttt{./OUTPUT\_FILES/DATABASES\_MPI} the directory where the files are located, \texttt{./OUTPUT\_FILES} the directory where the combined file will be stored, and $0$ is the parameter to create a low-resolution mesh file ($1$ for a high-resolution).
+Here, $0$ is the number of the first processor, $3$ the number of the last one, \texttt{velocity\_Z\_it000400} the name of the files we want to combine without the prefix \texttt{proc000000*\_}, \texttt{./OUTPUT\_FILES/DATABASES\_MPI} the directory where the files are located, \texttt{./OUTPUT\_FILES} the directory where the combined file will be stored, and $0$ is the parameter to create a low-resolution mesh file ($1$ for a high-resolution).\newline
 
 When compiling the code, you will get two executables related to this: xcombine\_vol\_data, and xcombine\_vol\_data\_vtk.
 Use the executable that has the \_vtk extension if you want to directly create VTK files.
 If you use the executable that does not have the \_vtk extension, then the output mesh file will have a name of the form \texttt{velocity\_Z\_it000400.mesh}.
-You will then have to convert the \texttt{.mesh} file into the VTU (Unstructured grid file) format which can be viewed in ParaView.
+You will then have to convert the \texttt{.mesh} file into the VTU (Unstructured grid file) format which can be viewed in ParaView.\newline
 
 \noindent
 For this task, you can use and modify the
@@ -253,7 +253,7 @@ mesh2vtu.pl -i velocity_Z_it000400.mesh -o velocity_Z_it000400.vtu
 
 Notice that this Perl script uses a program \texttt{mesh2vtu} in the \texttt{utils/Visualization/Paraview/mesh2vtu} directory, which further
 uses the VTK \urlwithparentheses{http://www.vtk.org} run-time library for its execution. Therefore, make sure you have them properly set
-in the script according to your system.
+in the script according to your system.\newline
 
 \bigskip
 
@@ -276,7 +276,7 @@ the kernel files from all slices on the front end, it usually takes
 up too much storage space (at least tens of gigabytes). Since the
 sensitivity kernels are the strongest along the source-receiver great
 circle path, it is sufficient to collect only the slices that are
-along or close to the great circle path.
+along or close to the great circle path.\newline
 
 
 A Perl script \texttt{slice\_number.pl} located in directory \texttt{utils/Visualization/Paraview/}

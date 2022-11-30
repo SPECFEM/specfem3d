@@ -364,20 +364,20 @@ which as usual is NPROC in the \texttt{DATA/Par\_file},
 and thus the total number of processor cores to request from the batch system
 should be \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS}~*~\texttt{NPROC}.
 All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
-(with exactly four digits).
+(with exactly four digits).\newline
 
-Imagine you have 10 independent calculations to do, each of them on 100 cores; you have three options:
+Imagine you have 10 independent calculations to do, each of them on 100 cores; you have three options:\newline
 
-1/ submit 10 jobs to the batch system
+1/ submit 10 jobs to the batch system\newline
 
 2/ submit a single job on 1000 cores to the batch, and in that script create a sub-array of jobs to start 10 jobs,
-each running on 100 cores (see e.g. \url{http://www.schedmd.com/slurmdocs/job_array.html})
+each running on 100 cores (see e.g. \url{http://www.schedmd.com/slurmdocs/job_array.html})\newline
 
 3/ submit a single job on 1000 cores to the batch, start SPECFEM3D on 1000 cores, create 10 sub-communicators,
 cd into one of 10 subdirectories (called e.g. run0001, run0002,... run0010) depending on the sub-communicator
-your MPI rank belongs to, and run normally on 100 cores using that sub-communicator.
+your MPI rank belongs to, and run normally on 100 cores using that sub-communicator.\newline
 
-The option \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS} implements 3/.
+The option \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS} implements 3/.\newline
 
 \item [{\texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL}}] if we perform simultaneous runs in parallel,
 if only the source and receivers vary between these runs
@@ -388,7 +388,7 @@ runs for instance when solving inverse problems iteratively this can DRASTICALLY
 Thus, always set this option to .true. if the mesh and the model are the same for all simultaneous runs.
 In that case there is no need to duplicate the mesh and model file database (the content of the DATABASES\_MPI
 directories) in each of the run0001, run0002,... directories, it is sufficient to have one in run0001
-and the code will broadcast it to the others).
+and the code will broadcast it to the others).\newline
 
 %\item [{\texttt{USE\_FAILSAFE\_MECHANISM}}] if one or a few of these simultaneous runs fail,
 %kill all the runs or let the others finish using a fail-safe mechanism
@@ -399,11 +399,11 @@ option assumes to have the (main) mesh files in \texttt{run0001/DATABASES\_MPI} 
 \texttt{run0001/OUTPUT\_FILES/DATABASES\_MPI}.
 However, for adjoint runs you still need a \texttt{DATABASES\_MPI/} folder in each of the sub-runs directories,
 e.g. \texttt{run0002/DATABASES\_MPI}, etc. to store the forward wavefields, kernels etc. of each sub-run.
-This would not be needed for forward simulations.
+This would not be needed for forward simulations.\newline
 
-TODO / future work to do: the sensitivity kernel summing and smoothing tools in directory src/tomography are currently not ported to this new option to do many runs simultaneously, only the solver (src/specfem3d) is. Thus these tools should work, but in their current version will need to be run for each simulation result independently.
+TODO / future work to do: the sensitivity kernel summing and smoothing tools in directory src/tomography are currently not ported to this new option to do many runs simultaneously, only the solver (src/specfem3d) is. Thus these tools should work, but in their current version will need to be run for each simulation result independently.\newline
 
-More precisely, the current kernel summing and smoothing routines work fine, with the exception that you need to move out the mesh files (and also the parameters). This works because these routines consider multiple runs by design. You simply have to provide them the directories where the kernels are.
+More precisely, the current kernel summing and smoothing routines work fine, with the exception that you need to move out the mesh files (and also the parameters). This works because these routines consider multiple runs by design. You simply have to provide them the directories where the kernels are.\newline
 
 \item [{\texttt{GPU\_MODE}}] Turn this flag on to use GPUs.
 
@@ -429,7 +429,8 @@ or poroelastic PML elements to elastic. This means that strictly speaking
 the PML layer will not be perfectly matched any more, since the physical
 model will change from viscoelastic or poroelastic to elastic at the
 entrance of the PML, but in practice this is sufficient and produces
-only tiny / negligible spurious reflections.
+only tiny / negligible spurious reflections.\newline
+
 
 If you use PML and an external mesh (created using an external meshing tool
 such as CUBIT/TRELIS or similar), try to have elements inside the PML as regular as possible,
@@ -439,7 +440,8 @@ in time (PML being weakly unstable from a mathematical point of view, very defor
 inside the PMLs can trigger instabilities much more quickly). \red{We have two utilities in directory utils/CPML that do that automatically
 and that are very fast}. To stabilize PMLs it also helps to add a transition layer of geometrically-regular non-PML elements, in which attenuation is also
 turned off (i.e. $Q_\kappa = Q_\mu = 9999$ in that layer), as in the red layer of Figure~\ref{fig:mesh_extrusion}.
-Our tools in directory utils/CPML implement that transition layer automatically.
+Our tools in directory utils/CPML implement that transition layer automatically.\newline
+
 
 If you use PML and an external tomographic velocity and density model,
 you should be careful because mathematically a PML cannot handle heterogeneities
@@ -449,11 +451,12 @@ velocity and density model along the normal direction.
 Thus, you need to modify your velocity and density model in order
 for it to be 1D inside the PML, as shown in Figure~\ref{fig:modify_external_velocity_model_to_use_PML}.
 This applies to the bottom layer as well; there you should make sure
-that your model is 1D and thus constant along the vertical direction.
+that your model is 1D and thus constant along the vertical direction.\newline
+
 
 To summarize, only use a 3D velocity and density model inside the
 physical region, and in all the PML layers extend it by continuity
-from its values along the inner PML edge.
+from its values along the inner PML edge.\newline
 
 %%
 \begin{figure}[htbp]
@@ -493,7 +496,8 @@ where $C$ is the so-called Courant number and $\Omega$ denotes the
 model volume. The distance $h$ depends on the mesh element size and
 the number of GLL points \texttt{NGLL} specified in the main constants
 file \texttt{setup/constants.h}. The wave speed $v$ is determined based on your model's P- (or S-)
-wave speed values.
+wave speed values.\newline
+
 
 The database generator \texttt{xgenerate\_databases}, as well as the
 internal mesher \texttt{xmeshfem3D}, are trying to evaluate the value

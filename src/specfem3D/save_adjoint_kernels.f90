@@ -42,7 +42,7 @@
   use shared_parameters, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
 
   use specfem_par, only: LOCAL_PATH, NSPEC_AB, ADIOS_FOR_KERNELS, NOISE_TOMOGRAPHY, &
-                         APPROXIMATE_HESS_KL, ANISOTROPIC_KL
+                         APPROXIMATE_HESS_KL, ANISOTROPIC_KL, SAVE_MOHO_MESH
 
   use specfem_par_noise, only: sigma_kl
 
@@ -66,6 +66,7 @@
     endif
   endif
 
+  ! poroelastic domains
   if (POROELASTIC_SIMULATION) then
     call save_kernels_poroelastic()
   endif
@@ -74,6 +75,11 @@
   ! in order to benchmark the kernels with analytical expressions
   if (SAVE_WEIGHTS) then
     call save_weights_kernel()
+  endif
+
+  ! moho boundary kernels
+  if (SAVE_MOHO_MESH) then
+    call save_kernels_moho()
   endif
 
   ! for noise simulations --- noise strength kernel
@@ -271,7 +277,7 @@
 
   use specfem_par, only: CUSTOM_REAL,NSPEC_AB,NSPEC_ADJOINT,ibool,mustore,kappastore, &
                          FOUR_THIRDS,ADIOS_FOR_KERNELS,IOUT,prname, &
-                         SAVE_MOHO_MESH,myrank,IMAIN
+                         myrank,IMAIN
   use specfem_par_elastic
 
   implicit none
@@ -283,7 +289,7 @@
   real(kind=CUSTOM_REAL) :: rhol,mul,kappal
 
   ! stats
-  real(kind=CUSTOM_REAL) :: rho_max,rhop_max,kappa_max,mu_max,alpha_max,beta_max,moho_max
+  real(kind=CUSTOM_REAL) :: rho_max,rhop_max,kappa_max,mu_max,alpha_max,beta_max
 
   ! derived kernels
   ! vp,vs,density prime kernel
@@ -352,10 +358,6 @@
   call max_all_cr(maxval(alpha_kl),alpha_max)
   call max_all_cr(maxval(beta_kl),beta_max)
 
-  if (SAVE_MOHO_MESH) then
-    call max_all_cr(maxval(moho_kl),moho_max)
-  endif
-
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) 'Elastic kernels:'
@@ -366,11 +368,6 @@
     write(IMAIN,*) '  maximum value of rho prime kernel = ',rhop_max
     write(IMAIN,*) '  maximum value of alpha kernel     = ',alpha_max
     write(IMAIN,*) '  maximum value of beta kernel      = ',beta_max
-
-    if (SAVE_MOHO_MESH) then
-      write(IMAIN,*) '  maximum value of moho kernel      = ',moho_max
-    endif
-
     write(IMAIN,*)
     call flush_IMAIN()
   endif
@@ -410,13 +407,6 @@
     close(IOUT)
   endif
 
-  if (SAVE_MOHO_MESH) then
-    open(unit=IOUT,file=prname(1:len_trim(prname))//'moho_kernel.bin',status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file moho_kernel.bin'
-    write(IOUT) moho_kl
-    close(IOUT)
-  endif
-
   deallocate(rhop_kl,alpha_kl,beta_kl)
 
   end subroutine save_kernels_elastic_iso
@@ -431,7 +421,7 @@
 
   use specfem_par, only: CUSTOM_REAL,NSPEC_AB,NSPEC_ADJOINT,ibool,mustore,kappastore, &
                          SAVE_TRANSVERSE_KL,FOUR_THIRDS, &
-                         ADIOS_FOR_KERNELS,IOUT,prname,SAVE_MOHO_MESH, &
+                         ADIOS_FOR_KERNELS,IOUT,prname, &
                          myrank,IMAIN, ANISOTROPY
   use specfem_par_elastic
 
@@ -455,7 +445,7 @@
   real(kind=CUSTOM_REAL), dimension(5) :: an_kl
 
   ! stats
-  real(kind=CUSTOM_REAL) :: rho_max,moho_max
+  real(kind=CUSTOM_REAL) :: rho_max
   real(kind=CUSTOM_REAL) :: alphav_max,alphah_max,betav_max,betah_max,eta_max,cijkl_max
   real(kind=CUSTOM_REAL) :: c11_kl_max,c12_kl_max,c13_kl_max,c14_kl_max,c15_kl_max,c16_kl_max, &
                             c22_kl_max,c23_kl_max,c24_kl_max,c25_kl_max,c26_kl_max, &
@@ -657,10 +647,6 @@
     call max_all_cr(maxval(c66_kl),c66_kl_max)
   endif
 
-  if (SAVE_MOHO_MESH) then
-    call max_all_cr(maxval(moho_kl),moho_max)
-  endif
-
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) 'Elastic kernels:'
@@ -697,10 +683,6 @@
       write(IMAIN,*) '  maximum value of c55 kernel     = ',c55_kl_max
       write(IMAIN,*) '  maximum value of c56 kernel     = ',c56_kl_max
       write(IMAIN,*) '  maximum value of c66 kernel     = ',c66_kl_max
-    endif
-
-    if (SAVE_MOHO_MESH) then
-      write(IMAIN,*) '  maximum value of moho kernel      = ',moho_max
     endif
 
     write(IMAIN,*)
@@ -829,13 +811,6 @@
       close(IOUT)
     endif
 
-  endif
-
-  if (SAVE_MOHO_MESH) then
-    open(unit=IOUT,file=prname(1:len_trim(prname))//'moho_kernel.bin',status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file moho_kernel.bin'
-    write(IOUT) moho_kl
-    close(IOUT)
   endif
 
   if (SAVE_TRANSVERSE_KL) then
@@ -1192,6 +1167,51 @@
   endif
 
   end subroutine save_kernels_poroelastic
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+!> Save moho boundary kernels
+
+  subroutine save_kernels_moho()
+
+  use specfem_par, only: CUSTOM_REAL,ADIOS_FOR_KERNELS, &
+                         IOUT,prname,myrank,IMAIN,SAVE_MOHO_MESH
+  use specfem_par_elastic
+
+  implicit none
+
+  ! local parameters
+  integer :: ier
+  ! stats
+  real(kind=CUSTOM_REAL) :: moho_max
+
+  ! safety check
+  if (.not. SAVE_MOHO_MESH) return
+
+  ! overall min/max value
+  call max_all_cr(maxval(moho_kl),moho_max)
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) 'Moho boundary kernels:'
+    write(IMAIN,*) '  maximum value of moho kernel      = ',moho_max
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
+  if (ADIOS_FOR_KERNELS) then
+    call save_kernels_moho_adios()
+  else
+    ! binary file output
+    open(unit=IOUT,file=prname(1:len_trim(prname))//'moho_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file moho_kernel.bin'
+    write(IOUT) moho_kl
+    close(IOUT)
+  endif
+
+  end subroutine save_kernels_moho
 
 !
 !-------------------------------------------------------------------------------------------------

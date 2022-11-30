@@ -82,7 +82,8 @@ layered halfspace (bottom-left) and tomographic model (bottom-right).}
 
 In each example subdirectory you will find a \texttt{README} file,
 which explains in a step-by-step tutorial the workflow for the example.
-Please feel free to contribute your own example to this package through the github repository!
+Please feel free to contribute your own example to this package through the github repository!\newline
+
 
 In some cases, to re-create the meshes for the examples given, just type
 \begin{verbatim}
@@ -91,7 +92,8 @@ claro ./create_mesh.py
 or similar from the command line (\texttt{claro} is the command to run CUBIT from the command line).
 
 {\it IMPORTANT:} In order to correctly set up GEOCUBIT and run the examples, please read the file called \texttt{EXAMPLES/README};
-in particular, please make sure you correctly set up the Python paths as indicated in that file.
+in particular, please make sure you correctly set up the Python paths as indicated in that file.\newline
+
 
 Concerning the script \texttt{create\_mesh.py}, you may find the option \texttt{use\_explicit} which chooses how to assign the material properties for the volume (or domain):
 \begin{itemize}
@@ -128,7 +130,7 @@ convention:
 by a unique name. The name convention of the material is to start
 with either \textbf{'elastic'} or \textbf{'acoustic'}. It must be then followed by a
 unique identifier, e.g. \textbf{'elastic 1'}, \textbf{'elastic 2'}, etc. The additional
-attributes to the block define the material description.
+attributes to the block define the material description.\newline
 
 
 For an elastic material:
@@ -142,7 +144,10 @@ turned on. It should be between 1 and 9000. In case no attenuation
 information is available, it can be set to zero. You can either specify a single Q value,
 in which case it will be assumed to be pure shear attenuation $Q_{\mu}$, or two
 separate values for bulk and shear attenuation, $Q_{\kappa}$ and $Q_{\mu}$ respectively.
-Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other
+see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf} and\newline
+\texttt{utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90}.\newline
+
 
 Please note that your Vp- and Vs-speeds are given for a reference frequency. To change
 this reference frequency, you change the value of \texttt{ATTENUATION\_f0\_REFERENCE}
@@ -158,7 +163,7 @@ is available, it can be set to zero.
 
 Note that this material block has to be defined using all the volumes
 which belong to this elastic material. For volumes belonging to another,
-different material, you will need to define a new material block.
+different material, you will need to define a new material block.\newline
 
 
 For an acoustic material:
@@ -200,7 +205,8 @@ boundaries, one block for each surface with z=bottom.
 Optionally, instead of specifying for each surface at the boundaries
 a single block like mentioned above, you can also specify a single
 block for all boundary surfaces and name it as one of the absorbing
-blocks above, e.g. 'face\_abs\_xmin'.
+blocks above, e.g. 'face\_abs\_xmin'.\newline
+
 
 After the block definitions are done, you export the mesh using the
 script \texttt{cubit2specfem3d.py} provided in each of the example
@@ -227,7 +233,7 @@ C-PML layer(s) that element belongs, according to the following convention:
 
 Note that it does not matter whether an element belongs to a Xmin
 or to a Xmax CPML, the flag is the same in both cases; the same is
-true for Ymin and Ymax, and also Zmin and Zmax.
+true for Ymin and Ymax, and also Zmin and Zmax.\newline
 
 
 When you have an existing CUBIT (or similar) mesh stored in SPECFEM3D
@@ -238,7 +244,7 @@ program that will do that automatically for you, i.e., which will
 create the \texttt{absorbing\_cpml\_file} for
 you. That program is: \newline
 \texttt{utils/CPML/convert\_external\_layers\_of\_a\_given\_mesh\_to\_CPML\_layers.f90},\newline
-and a small Makefile is provided in that directory (utils/CPML).
+and a small Makefile is provided in that directory (utils/CPML).\newline
 
 
 IMPORTANT: it is your responsibility to make sure that in the input
@@ -256,13 +262,13 @@ Y it must not vary, and for Z it must not vary. If you do not know
 the exact thickness, you can use a slightly LARGER value in this code
 (say 2\% to 5\% more) and this code will fix that and will adjust
 it; never use a SMALLER value otherwise this code will miss some CPML
-elements.
+elements.\newline
 
 
 Note: in a future release we will remove the constraint of having
 CPML layers aligned with the coordinate axes; we will allow for meshes
 that are titled by any constant angle in the horizontal plane. However
-this is not implemented yet.
+this is not implemented yet.\newline
 
 
 Note: in the case of fluid-solid layers in contact, the fluid-solid
@@ -270,7 +276,7 @@ interface currently needs to be flat and horizontal inside the CPML
 layer (i.e., bathymetry should become flat and horizontal when entering
 the CPML); this (small) constraint will probably remain in the code
 for a while because it makes fluid-solid matching inside the CPML
-much easier.
+much easier.\newline
 
 \item [{materials\_file}] Contains the material associations for each element.
 The format is:
@@ -310,7 +316,8 @@ by the code unless \texttt{ATTENUATION} is set. If you want a model
 with no \texttt{Qmu} attenuation, both set \texttt{ATTENUATION} to
 \texttt{.false.} in the \texttt{DATA/Par\_file} and set \texttt{Qmu} to
 9999 here. If you want a model with no \texttt{Qkappa} attenuation, set \texttt{Qkappa} to 9999 here.
-Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.\newline
+
 
 To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf} and the helper code\newline
 \texttt{conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90} in folder
@@ -365,7 +372,8 @@ edge).
 \end{description}
 These mesh files are needed as input files for the partitioner \texttt{xdecompose\_mesh}
 to load-balance the mesh. Please see the next section for further
-details.
+details.\newline
+
 
 In directory "CUBIT\_GEOCUBIT/" we provide a script that can help doing the above tasks of exporting a CUBIT mesh
 to SPECFEM3D format automatically for you: "run\_cubit2specfem3d.py".
@@ -397,7 +405,8 @@ The quality of the mesh may be inspected more precisely based upon
 the serial code in the file \texttt{check\_mesh\_quality\_}~\newline
  \texttt{CUBIT\_Abaqus.f90} located in the directory \texttt{src/check\_mesh\_quality\_CUBIT\_Abaqus/}.
 Running this code is optional because no information needed by the
-solver is generated.
+solver is generated.\newline
+
 
 Prior to running and compiling this code, you have to export your
 mesh in CUBIT to an ABAQUS (.inp) format. For example, export mesh
@@ -405,7 +414,8 @@ block IDs belonging to volumes in order to check the quality of the
 hexahedral elements. You also have to determine a number of parameters
 of your mesh, such as the number of nodes and number of elements and
 modify the header of the \texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90}
-source file in directory \texttt{src/check\_mesh\_quality\_CUBIT\_Abaqus/}.
+source file in directory \texttt{src/check\_mesh\_quality\_CUBIT\_Abaqus/}.\newline
+
 
 \noindent
 Then, in the main directory, type
@@ -441,7 +451,8 @@ The SPECFEM3D Cartesian software package performs large scale simulations
 in a parallel 'Single Process Multiple Data' way. The spectral-element
 mesh created with CUBIT needs to be distributed on the processors.
 This partitioning is executed once and for all prior to the execution
-of the solver so it is referred to as a static mapping.
+of the solver so it is referred to as a static mapping.\newline
+
 
 An efficient partitioning is important because it leverages the overall
 running time of the application. It amounts to balance the number
@@ -496,7 +507,8 @@ When you are ready to compile, in the main directory type
 }
 \noindent
 If all paths and flags have been set correctly, the executable \texttt{bin/xdecompose\_mesh}
-should be produced.
+should be produced.\newline
+
 
 The partitioning is done in serial for now (in the next release we
 will provide a parallel version of that code). It needs to be run in the main directory because it expects the \texttt{DATA/Par\_file}.
@@ -599,7 +611,7 @@ which your model resides, only valid when
 \texttt{SUPPRESS\_UTM\_PROJECTION} is \texttt{.false.}.
 Use a negative zone number for the Southern hemisphere:
 the Northern hemisphere corresponds to zones +1 to +60,
-the Southern hemisphere to zones -1 to -60.
+the Southern hemisphere to zones -1 to -60.\newline
 
 
 We use the WGS84 (World Geodetic System 1984) reference ellipsoid for the UTM projection. If you prefer to use the Clarke 1866 ellipsoid,
@@ -611,7 +623,7 @@ The system was based on an ellipsoidal model of Earth. For areas within the cont
 the Clarke Ellipsoid of 1866 was used. For the remaining areas of Earth, including Hawaii, the International Ellipsoid was used.
 The WGS84 ellipsoid is now generally used to model the Earth in the UTM coordinate system,
 which means that current UTM northing at a given point can be 200+ meters different from the old one.
-For different geographic regions, other datum systems (e.g.: ED50, NAD83) can be used.
+For different geographic regions, other datum systems (e.g.: ED50, NAD83) can be used.\newline
 
 \item [{\texttt{SUPPRESS\_UTM\_PROJECTION}}] set to be \texttt{.false.}
 when your model range is specified in geographical coordinates, and
@@ -639,7 +651,7 @@ will be accurate approximately to a shortest period determined by
 \end{equation}
 This estimate also depends on the velocity model. Therefore, the binary \texttt{xgenerate\_databases}
 calculates a minimum period resolved by the chosen mesh discretization and velocity model,
-output into the file \texttt{OUTPUT\_FILES/output\_generate\_databases.txt}.
+output into the file \texttt{OUTPUT\_FILES/output\_generate\_databases.txt}.\newline
 
  The number of grid points in each orthogonal direction of the reference
 element, i.e., the number of Gauss-Lobatto-Legendre points, is determined
@@ -691,7 +703,7 @@ viewing.
 by the mesher will be written. Generally one uses a directory on the
 local disk of the compute nodes, although on some machines these partitions
 are written on a parallel (global) file system (see also the earlier
-discussion of the \texttt{LOCAL\_PATH\_IS\_ALSO\_GLOBAL} flag in Chapter~\ref{cha:Getting-Started}).
+discussion of the \texttt{LOCAL\_PATH\_IS\_ALSO\_GLOBAL} flag in Chapter~\ref{cha:Getting-Started}).\newline
 
 The mesher generates the necessary partitions in parallel, one set
 for each of the $\nprocxi\times\nproceta$ slices that constitutes
@@ -784,8 +796,10 @@ At the end of this file, you simply need to set the number of spectral
 elements in the vertical direction for each layer. We provide a few
 models in the {\texttt{EXAMPLES/}} directory.\newline
 
+
 Now that you have set the appropriate parameters in the \texttt{Mesh\_Par\_file}
 and have compiled the mesher, you are ready to run it!\newline
+
 
 Depending on your system, please check how to run executables with MPI.
 To run the mesher on your cluster, we provide some example scripts for you to modify accordingly in \texttt{utils/Cluster/}.
@@ -870,6 +884,7 @@ The line format for poroelastic materials is as follow:
 \texttt{mu\_fr} = frame shear modulus.\newline
 \end{description}
 Using an external mesh (for instance coming from CUBIT/TRELIS), poroelastic materials have the ID number 3, while 1 is acoustic and 2 is elastic (see the example in the package: EXAMPLES/homogeneous\_poroelastic).\newline
+
 
 \noindent
 In case the internal mesher \texttt{xmeshfem3D} is used, the same poroelastic material properties will be defined in the \texttt{Mesh\_Par\_file}.

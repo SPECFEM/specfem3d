@@ -28,7 +28,7 @@
 ! for external mesh
 
 ! Federica Magnoni:
-! save_external_bin_m_up (compared to save_arrays_solver_ext_mesh)
+! save_external_bin_m_up (compared to save_arrays_solver_mesh)
 ! reads max_nibool_interfaces_ext_mesh instead of max_interface_size_ext_mesh
 
   subroutine save_external_bin_m_up(nspec,nglob, &

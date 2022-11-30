@@ -30,13 +30,13 @@ converted. Sources and receiver locations are read in from the \texttt{CMTSOLUTI
 (or \texttt{FORCESOLUTION}) and \texttt{STATIONS} files. Note that
 e.g. the \texttt{CMTSOLUTION} and \texttt{FORCESOLUTION} files denotes
 the location by \textquotedbl{}longitude/latitude/depth\textquotedbl{}.
-We read in longitude as $x$ coordinate, latitude as $y$ coordinate.
+We read in longitude as $x$ coordinate, latitude as $y$ coordinate.\newline
 
 In case the flag \texttt{SUPPRESS\_UTM\_PROJECTION} is set to \texttt{.false.}
 in the main parameter file (see Chapter~\ref{cha:Creating-Distributed-Databases}),
 the $x$/$y$ coordinates have to be given in degrees and are converted
 to Cartesian coordinates using a UTM conversion with the specified
-UTM zone.
+UTM zone.\newline
 
 The value for depth (given in $km$ in \texttt{CMTSOLUTION} and \texttt{FORCESOLUTION})
 or burial depth (given in $m$ in \texttt{STATIONS}) is evaluated
@@ -44,7 +44,7 @@ with respect to the surface of the mesh at the specified $x$/$y$
 location to find the corresponding $z$ coordinate. It is possible
 to use this depth value directly as $z$ coordinate by changing the
 flag \texttt{USE\_SOURCES\_RECEIVERS\_Z} to \texttt{.true.} in
-\texttt{DATA/Par\_file}.
+\texttt{DATA/Par\_file}.\newline
 
 
 \subsection*{Seismogram outputs}
@@ -56,7 +56,7 @@ set to \texttt{.false.}) and the normal to the surface at the receiver
 location should be used (\texttt{EXTERNAL\_MESH\_RECEIVERS\_NORMAL} set to \texttt{.true.})
 as vertical. In this case, the outputs are rotated to have the vertical
 component normal to the surface of the mesh, $x$ and $y$ directions
-are somewhat arbitrary orthogonal directions along the surface.
+are somewhat arbitrary orthogonal directions along the surface.\newline
 
 For the labeling of the seismogram channels, see Appendix~\ref{cha:channel-codes}.
 Additionally, we add labels to the synthetics using the following
