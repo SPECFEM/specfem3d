@@ -41,7 +41,7 @@ USE_REGULAR_MESH                = .true.
 NDOUBLINGS                      = 1
 # NZ_DOUBLING_1 is the parameter to set up if there is only one doubling layer
 # (more doubling entries can be added if needed to match NDOUBLINGS value)
-NZ_DOUBLING_1 			= 18
+NZ_DOUBLING_1       = 18
 
 #-----------------------------------------------------------
 #

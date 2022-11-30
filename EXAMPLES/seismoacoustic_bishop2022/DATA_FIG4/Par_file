@@ -378,7 +378,7 @@ ADIOS_FOR_FORWARD_ARRAYS        = .false.
 ADIOS_FOR_KERNELS               = .false.
 
 NTSTEP_BETWEEN_OUTPUT_SAMPLE    = 1
- 
+
 WRITE_SEISMOGRAMS_BY_MAIN     = .false.
- 
+
 ADIOS_FOR_UNDO_ATTENUATION      = .false.

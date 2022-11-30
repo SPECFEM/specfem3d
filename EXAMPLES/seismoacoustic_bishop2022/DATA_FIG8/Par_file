@@ -379,8 +379,8 @@ ADIOS_FOR_KERNELS               = .false.
 
 # Missing parameters
 NTSTEP_BETWEEN_OUTPUT_SAMPLE    = 1
- 
+
 WRITE_SEISMOGRAMS_BY_MAIN     = .false.
- 
+
 ADIOS_FOR_UNDO_ATTENUATION      = .false.
 
