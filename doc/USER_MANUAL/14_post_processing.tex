@@ -139,22 +139,7 @@ written out in binary format.
 to have only the main process writing out seismograms. This can
 be useful on a cluster, where only the main process node has access
 to the output directory.
-\item [{\texttt{USE\_OUTPUT\_FILES\_PATH}}] Set to \texttt{.false.} to
-have the seismograms output to \texttt{LOCAL\_PATH} directory specified
-in the main parameter file \texttt{DATA/Par\_file}. In this case,
-you could collect the synthetics onto the frontend using the \texttt{collect\_seismo\_lsf\_multi.pl}
-script located in the \texttt{utils/Cluster/lsf/} directory. The usage
-of the script would be e.g.:
-
-\begin{verbatim}
-collect_seismo.pl machines DATA/Par_file
-\end{verbatim}
-
 \end{description}
-
-where \texttt{machines} is a file containing the node names and \texttt{DATA/Par\_file}
-the parameter file used to extract the \texttt{LOCAL\_PATH} directory
-used for the simulation.
 
 
 \section{Clean Local Database}
