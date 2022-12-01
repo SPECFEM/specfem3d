@@ -21,7 +21,7 @@ MODEL=`grep ^MODEL DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
 mkdir -p OUTPUT_FILES
 
 # backup tomography files if any for this simulation
-if [[ $MODEL -eq tomo ]]; then
+if [ $MODEL = tomo ]; then
     cp -r DATA/tomo_files OUTPUT_FILES/
 fi
 

@@ -28,13 +28,13 @@ cp DATA/Par_file OUTPUT_FILES/
 cp DATA/STATIONS OUTPUT_FILES/
 cp setup/constants.h OUTPUT_FILES/
 
-if [[ $FORCESOLUTION ]]; then
+if [ $FORCESOLUTION = .true. ]; then
     cp DATA/FORCESOLUTION OUTPUT_FILES/
 else
     cp DATA/CMTSOLUTION OUTPUT_FILES/
 fi
 
-if [[ $EXTERNAL_STF ]]; then
+if [ $EXTERNAL_STF = .true. ]; then
     cp source_time_function.txt OUTPUT_FILES/
 fi
 
