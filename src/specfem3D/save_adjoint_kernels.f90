@@ -276,7 +276,7 @@
   subroutine save_kernels_elastic_iso()
 
   use specfem_par, only: CUSTOM_REAL,NSPEC_AB,NSPEC_ADJOINT,ibool,mustore,kappastore, &
-                         FOUR_THIRDS,ADIOS_FOR_KERNELS,IOUT,prname, &
+                         ADIOS_FOR_KERNELS,IOUT,prname, &
                          myrank,IMAIN
   use specfem_par_elastic
 
@@ -325,7 +325,7 @@
             rho_kl(i,j,k,ispec) = - rhol * rho_kl(i,j,k,ispec)
 
             ! shear modulus kernel
-            mu_kl(i,j,k,ispec) = - 2.0_CUSTOM_REAL * mul * mu_kl(i,j,k,ispec)
+            mu_kl(i,j,k,ispec) = - 2.0 * mul * mu_kl(i,j,k,ispec)
 
             ! bulk modulus kernel
             kappa_kl(i,j,k,ispec) = - kappal * kappa_kl(i,j,k,ispec)
@@ -336,11 +336,11 @@
 
             ! vs kernel
             beta_kl(i,j,k,ispec) = &
-            2.0_CUSTOM_REAL * ( mu_kl(i,j,k,ispec) - FOUR_THIRDS * mul / kappal * kappa_kl(i,j,k,ispec) )
+            2.0 * ( mu_kl(i,j,k,ispec) - 4.0 / 3.0 * mul / kappal * kappa_kl(i,j,k,ispec) )
 
             ! vp kernel
             alpha_kl(i,j,k,ispec) = &
-            2.0_CUSTOM_REAL * ( 1.0_CUSTOM_REAL + FOUR_THIRDS * mul / kappal ) * kappa_kl(i,j,k,ispec)
+            2.0  * ( 1.0 + 4.0 / 3.0 * mul / kappal ) * kappa_kl(i,j,k,ispec)
 
           enddo
         enddo
@@ -420,7 +420,7 @@
   subroutine save_kernels_elastic_aniso()
 
   use specfem_par, only: CUSTOM_REAL,NSPEC_AB,NSPEC_ADJOINT,ibool,mustore,kappastore, &
-                         SAVE_TRANSVERSE_KL,FOUR_THIRDS, &
+                         SAVE_TRANSVERSE_KL, &
                          ADIOS_FOR_KERNELS,IOUT,prname, &
                          myrank,IMAIN, ANISOTROPY
   use specfem_par_elastic
@@ -526,19 +526,19 @@
                 L = c44store(i,j,k,ispec)
                 N = c66store(i,j,k,ispec)
                 F = c13store(i,j,k,ispec)
-                eta = N / (A - 2.0_CUSTOM_REAL * L)
+                eta = N / (A - 2.0 * L)
               else
                 ! Store local material values
                 mul = mustore(i,j,k,ispec)
                 kappal = kappastore(i,j,k,ispec)
 
                 ! Computes parameters for an isotropic model
-                A = kappal + FOUR_THIRDS * mul
+                A = kappal + 4.0 / 3.0 * mul
                 C = A
                 L = mul
                 N = mul
-                F = kappal - 2._CUSTOM_REAL/3._CUSTOM_REAL * mul
-                eta = 1._CUSTOM_REAL
+                F = kappal - 2.0 / 3.0 * mul
+                eta = 1.0
               endif
 
               ! note: cijkl_kl_local() is fully anisotropic C_ij kernel
@@ -563,11 +563,11 @@
               ! From the relations giving Cij in function of An
               ! Checked with Min Chen's results (routine build_cij)
 
-              an_kl(1) = cijkl_kl_local(1)+cijkl_kl_local(2)+cijkl_kl_local(7)    !A
-              an_kl(2) = cijkl_kl_local(12)                                       !C
-              an_kl(3) = -2*cijkl_kl_local(2)+cijkl_kl_local(21)                  !N
-              an_kl(4) = cijkl_kl_local(16)+cijkl_kl_local(19)                    !L
-              an_kl(5) = cijkl_kl_local(3)+cijkl_kl_local(8)                      !F
+              an_kl(1) = cijkl_kl_local(1) + cijkl_kl_local(2) + cijkl_kl_local(7)    !A
+              an_kl(2) = cijkl_kl_local(12)                                           !C
+              an_kl(3) = - 2.0 * cijkl_kl_local(2) + cijkl_kl_local(21)               !N
+              an_kl(4) = cijkl_kl_local(16) + cijkl_kl_local(19)                      !L
+              an_kl(5) = cijkl_kl_local(3) + cijkl_kl_local(8)                        !F
 
               ! for parameterization: ( alpha_v, alpha_h, beta_v, beta_h, eta, rho )
 
