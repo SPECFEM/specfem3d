@@ -526,7 +526,7 @@
                 L = c44store(i,j,k,ispec)
                 N = c66store(i,j,k,ispec)
                 F = c13store(i,j,k,ispec)
-                eta = N / (A - 2.0 * L)
+                eta = F / (A - 2.0 * L)
               else
                 ! Store local material values
                 mul = mustore(i,j,k,ispec)
