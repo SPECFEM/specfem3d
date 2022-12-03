@@ -14,10 +14,10 @@ cd $SLURM_SUBMIT_DIR
 # script to combine vol data
 # read Par_file to get information about the run
 # compute total number of nodes needed
-NPROC=`grep NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
+NPROC=`cat DATA/Par_file | egrep "^NPROC" | awk '{ print $3 }'`
 
 # path to database files for mesh (relative to bin/)
-LOCALPATH=`grep LOCAL_PATH DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
+LOCALPATH=`cat DATA/Par_file | egrep "^LOCAL_PATH" | awk '{ print $3 }'`
 
 nmax=$(($NPROC-1))
 

@@ -14,11 +14,11 @@ cd $SLURM_SUBMIT_DIR
 # script to run the solver
 # read Par_file to get information about the run
 # compute total number of nodes needed
-NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
+NPROC=`cat DATA/Par_file | egrep "^NPROC" | awk '{ print $3 }'`
 
-FORCESOLUTION=`grep ^USE_FORCE_POINT_SOURCE DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
+FORCESOLUTION=`cat DATA/Par_file | egrep "^USE_FORCE_POINT_SOURCE" | awk '{ print $3 }'`
 
-EXTERNAL_STF=`grep ^USE_EXTERNAL_SOURCE_FILE DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
+EXTERNAL_STF=`cat DATA/Par_file | egrep "^USE_EXTERNAL_SOURCE_FILE" | awk '{ print $3 }'`
 
 mkdir -p OUTPUT_FILES
 
@@ -28,13 +28,13 @@ cp DATA/Par_file OUTPUT_FILES/
 cp DATA/STATIONS OUTPUT_FILES/
 cp setup/constants.h OUTPUT_FILES/
 
-if [ $FORCESOLUTION = .true. ]; then
+if [[ "${FORCESOLUTION}" == ".true." ]]; then
     cp DATA/FORCESOLUTION OUTPUT_FILES/
 else
     cp DATA/CMTSOLUTION OUTPUT_FILES/
 fi
 
-if [ $EXTERNAL_STF = .true. ]; then
+if [[ "${EXTERNAL_STF}" == ".true." ]]; then
     cp source_time_function.txt OUTPUT_FILES/
 fi
 

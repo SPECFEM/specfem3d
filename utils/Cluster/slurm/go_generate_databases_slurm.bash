@@ -14,14 +14,14 @@ cd $SLURM_SUBMIT_DIR
 # script to generate databases
 # read Par_file to get information about the run
 # compute total number of nodes needed
-NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
+NPROC=`cat DATA/Par_file | egrep "^NPROC" | awk '{ print $3 }'`
 # check the type of model
-MODEL=`grep ^MODEL DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
+MODEL=`cat DATA/Par_file | egrep "^MODEL" | awk '{ print $3 }'`
 
 mkdir -p OUTPUT_FILES
 
 # backup tomography files if any for this simulation
-if [ $MODEL = tomo ]; then
+if [[ "${MODEL}" == "tomo" ]]; then
     cp -r DATA/tomo_files OUTPUT_FILES/
 fi
 
