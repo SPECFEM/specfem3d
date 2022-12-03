@@ -92,6 +92,28 @@
   kappa_fr = 0._CUSTOM_REAL
   mu_fr = 0._CUSTOM_REAL
 
+  c11 = 0._CUSTOM_REAL
+  c12 = 0._CUSTOM_REAL
+  c13 = 0._CUSTOM_REAL
+  c14 = 0._CUSTOM_REAL
+  c15 = 0._CUSTOM_REAL
+  c16 = 0._CUSTOM_REAL
+  c22 = 0._CUSTOM_REAL
+  c23 = 0._CUSTOM_REAL
+  c24 = 0._CUSTOM_REAL
+  c25 = 0._CUSTOM_REAL
+  c26 = 0._CUSTOM_REAL
+  c33 = 0._CUSTOM_REAL
+  c34 = 0._CUSTOM_REAL
+  c35 = 0._CUSTOM_REAL
+  c36 = 0._CUSTOM_REAL
+  c44 = 0._CUSTOM_REAL
+  c45 = 0._CUSTOM_REAL
+  c46 = 0._CUSTOM_REAL
+  c55 = 0._CUSTOM_REAL
+  c56 = 0._CUSTOM_REAL
+  c66 = 0._CUSTOM_REAL
+
   ! check if the material is known or unknown
   if (imaterial_id > 0) then
     ! gets velocity model as specified by (cubit) mesh files for elastic & acoustic
