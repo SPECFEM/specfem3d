@@ -324,7 +324,7 @@
   ! allocate models parameter records
   ! only allocate anisotropy arrays if needed
   if (ANISOTROPY .and. IMODEL == IMODEL_TOMO) then
-    allocate(c_tomography(NFILES_TOMO,nrecord_max,21),stat=ier)
+    allocate(c_tomography(21,NFILES_TOMO,nrecord_max),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 904X')
     if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo anisotropy arrays')
   else
@@ -537,7 +537,7 @@ end subroutine init_tomography_files
       endif
 
       ! stores record values
-      c_tomography(imat,1,:) = (/ c11_tomo, c12_tomo, c13_tomo, c14_tomo, c15_tomo, c16_tomo, &
+      c_tomography(:,imat,1) = (/ c11_tomo, c12_tomo, c13_tomo, c14_tomo, c15_tomo, c16_tomo, &
                                         c22_tomo, c23_tomo, c24_tomo, c25_tomo, c26_tomo, &
                                         c33_tomo, c34_tomo, c35_tomo, c36_tomo, &
                                         c44_tomo, c45_tomo, c46_tomo, &
@@ -558,7 +558,7 @@ end subroutine init_tomography_files
           if (ier /= 0) stop 'Error reading tomo file line format with q values'
 
           ! stores record values
-          c_tomography(imat,irecord,:) = (/ c11_tomo, c12_tomo, c13_tomo, c14_tomo, c15_tomo, c16_tomo, &
+          c_tomography(:,imat,irecord) = (/ c11_tomo, c12_tomo, c13_tomo, c14_tomo, c15_tomo, c16_tomo, &
                                             c22_tomo, c23_tomo, c24_tomo, c25_tomo, c26_tomo, &
                                             c33_tomo, c34_tomo, c35_tomo, c36_tomo, &
                                             c44_tomo, c45_tomo, c46_tomo, &
@@ -580,7 +580,7 @@ end subroutine init_tomography_files
           if (ier /= 0) stop 'Error reading tomo file line format'
 
           ! stores record values
-          c_tomography(imat,irecord,:) = (/ c11_tomo, c12_tomo, c13_tomo, c14_tomo, c15_tomo, c16_tomo, &
+          c_tomography(:,imat,irecord) = (/ c11_tomo, c12_tomo, c13_tomo, c14_tomo, c15_tomo, c16_tomo, &
                                             c22_tomo, c23_tomo, c24_tomo, c25_tomo, c26_tomo, &
                                             c33_tomo, c34_tomo, c35_tomo, c36_tomo, &
                                             c44_tomo, c45_tomo, c46_tomo, &
@@ -781,7 +781,6 @@ end subroutine init_tomography_files
   logical,intent(out) :: has_tomo_value
 
   ! local parameters
-  integer :: ier
   integer :: ix,iy,iz,imat
   integer :: p0,p1,p2,p3,p4,p5,p6,p7
 
@@ -802,8 +801,8 @@ end subroutine init_tomography_files
   real(kind=CUSTOM_REAL) :: L_val
 
   ! anisotropy
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: c1,c2,c3,c4,c5,c6,c7,c8
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: c_final
+  real(kind=CUSTOM_REAL), dimension(21) :: c1,c2,c3,c4,c5,c6,c7,c8
+  real(kind=CUSTOM_REAL), dimension(21) :: c_final
 
   ! initializes flag
   has_tomo_value = .false.
@@ -965,20 +964,16 @@ end subroutine init_tomography_files
   if (ANISOTROPY .and. IMODEL == IMODEL_TOMO) then
 
     ! anisotropy
-    allocate(c_final(21),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 905X')
-    if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate interpolated anisotropy parameters array')
-
-    c1 = c_tomography(imat,p0+1,:)
-    c2 = c_tomography(imat,p1+1,:)
-    c3 = c_tomography(imat,p2+1,:)
-    c4 = c_tomography(imat,p3+1,:)
-    c5 = c_tomography(imat,p4+1,:)
-    c6 = c_tomography(imat,p5+1,:)
-    c7 = c_tomography(imat,p6+1,:)
-    c8 = c_tomography(imat,p7+1,:)
+    c1(:) = c_tomography(:,imat,p0+1)
+    c2(:) = c_tomography(:,imat,p1+1)
+    c3(:) = c_tomography(:,imat,p2+1)
+    c4(:) = c_tomography(:,imat,p3+1)
+    c5(:) = c_tomography(:,imat,p4+1)
+    c6(:) = c_tomography(:,imat,p5+1)
+    c7(:) = c_tomography(:,imat,p6+1)
+    c8(:) = c_tomography(:,imat,p7+1)
     ! use trilinear interpolation in cell to define C_ij
-    c_final = interpolate_trilinear_array(c1,c2,c3,c4,c5,c6,c7,c8)
+    c_final(:) = interpolate_trilinear_array(c1(:),c2(:),c3(:),c4(:),c5(:),c6(:),c7(:),c8(:))
 
     c11 = c_final(1)
     c12 = c_final(2)
@@ -1004,8 +999,6 @@ end subroutine init_tomography_files
 
     vp_model = sqrt(c11)/sqrt(rho_model) ! a better estimate of equivalent vp is needed for anisotropic models
     vs_model = sqrt(c66)/sqrt(rho_model) ! a better estimate of equivalent vs is needed for anisotropic models
-
-    deallocate(c_final)
 
   else
 
@@ -1145,7 +1138,7 @@ end subroutine init_tomography_files
   implicit none
 
   real(kind=CUSTOM_REAL), dimension(21) :: interpolate_trilinear_array
-  real(kind=CUSTOM_REAL), intent(in), dimension(:), allocatable :: val1,val2,val3,val4,val5,val6,val7,val8
+  real(kind=CUSTOM_REAL), intent(in), dimension(21) :: val1,val2,val3,val4,val5,val6,val7,val8
 
   ! note: we use gamma factors from parent routine (with 'contains' we can still
   ! use the scope of the parent routine).
@@ -1154,14 +1147,14 @@ end subroutine init_tomography_files
   !       just to be aware...
 
   ! interpolation rule
-  interpolate_trilinear_array = val1(:) * (1.d0-gamma_interp_x) * (1.d0-gamma_interp_y) * (1.d0-gamma_interp_z1) + &
-                                val2(:) * gamma_interp_x        * (1.d0-gamma_interp_y) * (1.d0-gamma_interp_z2) + &
-                                val3(:) * gamma_interp_x        * gamma_interp_y        * (1.d0-gamma_interp_z3) + &
-                                val4(:) * (1.d0-gamma_interp_x) * gamma_interp_y        * (1.d0-gamma_interp_z4) + &
-                                val5(:) * (1.d0-gamma_interp_x) * (1.d0-gamma_interp_y) * gamma_interp_z1 + &
-                                val6(:) * gamma_interp_x        * (1.d0-gamma_interp_y) * gamma_interp_z2 + &
-                                val7(:) * gamma_interp_x        * gamma_interp_y        * gamma_interp_z3 + &
-                                val8(:) * (1.d0-gamma_interp_x) * gamma_interp_y        * gamma_interp_z4
+  interpolate_trilinear_array(:) = val1(:) * (1.d0-gamma_interp_x) * (1.d0-gamma_interp_y) * (1.d0-gamma_interp_z1) + &
+                                   val2(:) * gamma_interp_x        * (1.d0-gamma_interp_y) * (1.d0-gamma_interp_z2) + &
+                                   val3(:) * gamma_interp_x        * gamma_interp_y        * (1.d0-gamma_interp_z3) + &
+                                   val4(:) * (1.d0-gamma_interp_x) * gamma_interp_y        * (1.d0-gamma_interp_z4) + &
+                                   val5(:) * (1.d0-gamma_interp_x) * (1.d0-gamma_interp_y) * gamma_interp_z1 + &
+                                   val6(:) * gamma_interp_x        * (1.d0-gamma_interp_y) * gamma_interp_z2 + &
+                                   val7(:) * gamma_interp_x        * gamma_interp_y        * gamma_interp_z3 + &
+                                   val8(:) * (1.d0-gamma_interp_x) * gamma_interp_y        * gamma_interp_z4
 
   end function interpolate_trilinear_array
 
