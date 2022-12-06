@@ -200,7 +200,7 @@ USE_RICKER_TIME_FUNCTION        = .false.
 # This file must have a single column containing the amplitude of the source at that time step,
 # and on its first line it must contain the time step used, which must be equal to DT as defined at the beginning of this Par_file (the code will check that).
 # Be sure when this option is .false. to remove the name of stf file in CMTSOLUTION or FORCESOURCE
-USE_EXTERNAL_SOURCE_FILE        = .false.
+USE_EXTERNAL_SOURCE_FILE        = .true.
 
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .true.

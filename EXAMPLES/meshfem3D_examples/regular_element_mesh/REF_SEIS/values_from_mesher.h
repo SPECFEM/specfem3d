@@ -19,7 +19,7 @@
  ! min vector length =           25
  ! min critical vector length =           75
  !
- ! master process: total points per AB slice =       136161
+ ! main process: total points per AB slice =       136161
  ! total elements per AB slice = (will be read in external file)
  ! total points per AB slice = (will be read in external file)
  !

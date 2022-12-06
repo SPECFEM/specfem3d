@@ -5,7 +5,7 @@ running example: Sun Jul 10 12:56:43 AST 2016
 
   decomposing mesh...
 
- total number of nodes: 
+ total number of nodes:
    nnodes =        23273
  total number of spectral elements:
    nspec =        20736
@@ -24,7 +24,7 @@ running example: Sun Jul 10 12:56:43 AST 2016
    nsize =            8 sup_neighbour =           38
  mesh2dual:
    max_neighbour =           26
- partitions: 
+ partitions:
    num =            4
 
  Databases files in directory: ./OUTPUT_FILES/DATABASES_MPI

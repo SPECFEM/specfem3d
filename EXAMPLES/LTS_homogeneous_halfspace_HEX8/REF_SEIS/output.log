@@ -10,7 +10,7 @@ running example: Tue Jan  8 17:09:46 CET 2019
  Serial mesh decomposer
  **********************
 
- total number of nodes: 
+ total number of nodes:
    nnodes =         2516
  total number of spectral elements:
    nspec =         2212
@@ -41,11 +41,11 @@ running example: Tue Jan  8 17:09:46 CET 2019
    number of nodes   :        2516
    estimated time step min   =    3.82575616E-02  seconds
    estimated time step max   =   0.459091365      seconds
-   estimated time step ratio =    12.0000162    
+   estimated time step ratio =    12.0000162
 
    suggested minimum DT time step =    3.82575616E-02
 
-   suggested global coarsest time step       =   0.30606049299240112     
+   suggested global coarsest time step       =   0.30606049299240112
 
    p refinement of nodes   : min/max =            1           8
    p refinement of elements: min/max =            1           8
@@ -63,11 +63,11 @@ running example: Tue Jan  8 17:09:46 CET 2019
 
  partitioning:
    number of partitions requested =            4
- 
+
    array size xadj  :         2213  memory:    8.44192505E-03 MB
    array size adjncy:       119448  memory:   0.455657959     MB
    sup_neighbor     :           54
- 
+
    mesh2dual: max_neighbor =           54
 
  partitioning type:            1
@@ -136,10 +136,10 @@ running example: Tue Jan  8 17:09:46 CET 2019
    p-level:            3  p =            1  communication load =          200
    total communication load:        49640
                 vs. edgecut:         8322
-                           : ratio =    5.96491241    
+                           : ratio =    5.96491241
                              ( > 1  being p-level refinement driven, 1 being default)
 
- partitions: 
+ partitions:
    num =            4
 
  Databases files in directory: OUTPUT_FILES/DATABASES_MPI

@@ -15,7 +15,7 @@ running example: Wed Mar  3 11:00:57 +03 2021
    using NGNOD =            8
    linear elements
 
- total number of nodes: 
+ total number of nodes:
    nnodes =         2592
  total number of spectral elements:
    nspec =         1920
@@ -85,7 +85,7 @@ running example: Wed Mar  3 11:00:57 +03 2021
    load per partition: imbalance =    29.5774651     %
                        (0% being totally balanced, 100% being unbalanced)
 
- partitions: 
+ partitions:
    num =            4
 
  Databases files in directory: DATABASES_MPI

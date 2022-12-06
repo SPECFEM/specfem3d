@@ -43,7 +43,7 @@
  reading partition files in the model
  ************************************
 
- external mesh points :         2541
+ external mesh points :        18081
  defined materials    :            2
  undefined materials  :            0
  total number of spectral elements:         2000
@@ -57,8 +57,8 @@
 
  number of MPI partition interfaces:            0
 
-   minimum memory used so far     :    6.82932281     MB per process
-   minimum total memory requested :    32.2962723     MB per process
+   minimum memory used so far     :    7.18500519     MB per process
+   minimum total memory requested :    32.6519547     MB per process
 
  create regions:
 
@@ -69,7 +69,7 @@
      NGNOD   =            8
      NGNOD2D =            4
 
-     master process setup:
+     main process setup:
      nspec           =         2000
 
      separating regular/irregular element shapes
@@ -89,35 +89,40 @@
    ...setting up jacobian
 
    ...indexing global points
+      creating ibool indexing     : x min/max =    0.00000000     /   1000.00000
+      creating indirect addressing: nglob =       136161
+      creating unique point locations
 
    ...preparing MPI interfaces
+      number of interfaces        :            0
+
       total MPI interface points:            0
       total assembled MPI interface points:           0
 
    ...setting up absorbing boundaries
-      boundary xmin         200
-      boundary xmax         200
-      boundary ymin         200
-      boundary ymax         200
-      boundary bottom         100
-      boundary top         100
+      boundary xmin   :         200
+      boundary xmax   :         200
+      boundary ymin   :         200
+      boundary ymax   :         200
+      boundary bottom :         100
+      boundary top    :         100
       absorbing boundary:
       total number of free faces =          100
-      total number of faces =         1000
+      total number of faces      =         1000
       absorbing boundary includes free surface (i.e., top surface converted from free to absorbing)
 
    ...setting up mesh surface
 
    ...determining velocity model
-               10  % time remaining:   3.8250001816777357E-007 s
-               20  % time remaining:   3.3389999156497602E-007 s
-               30  % time remaining:   2.8676667432591808E-007 s
-               40  % time remaining:   2.4236248799934390E-007 s
-               50  % time remaining:   2.0057499493304937E-007 s
-               60  % time remaining:   1.5968333510863874E-007 s
-               70  % time remaining:   1.1930356407447098E-007 s
-               80  % time remaining:   7.9318747996239792E-008 s
-               90  % time remaining:   3.9775000442205048E-008 s
+               10  % time remaining:   3.1387501490826106E-007 s
+               20  % time remaining:   2.7839999296702393E-007 s
+               30  % time remaining:   2.4424167319011734E-007 s
+               40  % time remaining:   2.0879998966120144E-007 s
+               50  % time remaining:   1.7357499561512644E-007 s
+               60  % time remaining:   1.3855000154035226E-007 s
+               70  % time remaining:   1.0394999359232304E-007 s
+               80  % time remaining:   6.9324998248703140E-008 s
+               90  % time remaining:   3.4608333718097120E-008 s
               100  % time remaining:   0.0000000000000000      s
 
    ...detecting acoustic-elastic-poroelastic surfaces
@@ -125,7 +130,10 @@
       total elastic elements    :        1000
       total poroelastic elements:           0
 
-      acoustic-elastic coupling    : total number of faces =          100
+      acoustic - elastic     coupling : total number of faces =          100
+      acoustic - poroelastic coupling : total number of faces =            0
+       elastic - poroelastic coupling : total number of faces =            0
+
 
    ...element inner/outer separation
       for overlapping of communications with calculations:
@@ -159,7 +167,9 @@
 
    ...creating mass matrix
 
-   ...saving databases
+   ...saving mesh databases
+      using binary file format
+      database file (for rank 0): ./DATABASES_MPI/proc000000_external_mesh.bin
       saving mesh files for AVS, OpenDX, Paraview
       saving additonal mesh files with surface/coupling points
 
@@ -188,10 +198,10 @@
 
 
  ********
- Model: P velocity min,max =    1520.00000       3499.99976
- Model: S velocity min,max =    0.00000000       2000.00000
+ Model: P   velocity min,max =    1520.00000       3500.00000
+ Model: S   velocity min,max =    0.00000000       2000.00000
 
- Model: Poisson's ratio min,max =   0.257575691      0.500000000
+ Model: Poisson's ratio min,max =   0.257575750      0.500000000
  ********
 
  *********************************************
@@ -211,9 +221,9 @@
  *** Max/min ratio =    1.00000000
 
  *** Minimum period resolved =    8.22368413E-02
- *** Maximum suggested time step =    2.46675778E-03
+ *** Maximum suggested time step =    2.46675755E-03
 
- Elapsed time for checking mesh resolution in seconds =    2.5159999999999627E-003
+ Elapsed time for checking mesh resolution in seconds =    8.3400000000000141E-004
  saving VTK files for Courant number and minimum period
 
 
@@ -245,6 +255,9 @@
  min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is    0.0000000000000000          0.0000000000000000
 
 
+ done mesh setup
+
+
  Repartition of elements:
  -----------------------
 
@@ -254,8 +267,8 @@
  total number of points in mesh slice 0:       136161
 
  total number of elements in entire mesh:         2000
- approximate total number of points in entire mesh (with duplicates on MPI edges):    136161.00000000000
- approximate total number of DOFs in entire mesh (with duplicates on MPI edges):    408483.00000000000
+ approximate total number of points in entire mesh (with duplicates on MPI edges):                136161
+ approximate total number of DOFs in entire mesh (with duplicates on MPI edges):                408483
 
  total number of time steps in the solver will be:         1000
 
@@ -264,7 +277,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    1.7847089999999999
+ Elapsed time for mesh generation and buffer creation in seconds =    1.0354120000000000
  End of mesh generation
 
  done
