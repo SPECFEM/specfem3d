@@ -193,17 +193,22 @@ USE_FORCE_POINT_SOURCE          = .false.
 # to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
 USE_RICKER_TIME_FUNCTION        = .false.
 
-# Use an external source time function.
-# if .true. you must add a file with your source time function and the file name
-# path relative to lauching directory at the end of CMTSOLUTION or FORCESOURCE file
+# use an external source time function
+# you must add a file with your source time function and the file name path
+# relative to lauching directory at the end of CMTSOLUTION or FORCESOURCE file
 # (with multiple sources, one file per source is required).
-# This file must have a single column containing the amplitude of the source at that time step,
-# and on its first line it must contain the time step used, which must be equal to DT as defined at the beginning of this Par_file (the code will check that).
+# This file must have a single column containing the amplitudes of the source at all time steps;
+# time step size used must be equal to DT as defined at the beginning of this Par_file.
 # Be sure when this option is .false. to remove the name of stf file in CMTSOLUTION or FORCESOURCE
 USE_EXTERNAL_SOURCE_FILE        = .true.
 
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .false.
+
+# source encoding
+# (for acoustic simulations only for now) determines source encoding factor +/-1 depending on sign of moment tensor
+# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
+USE_SOURCE_ENCODING             = .false.
 
 #-----------------------------------------------------------
 #
@@ -213,6 +218,10 @@ PRINT_SOURCE_TIME_FUNCTION      = .false.
 
 # interval in time steps for writing of seismograms
 NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
+
+# set to n to reduce the sampling rate of output seismograms by a factor of n
+# defaults to 1, which means no down-sampling
+NTSTEP_BETWEEN_OUTPUT_SAMPLE    = 1
 
 # decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
 # currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
@@ -234,8 +243,8 @@ SU_FORMAT                       = .false.
 # output seismograms in ASDF (requires asdf-library)
 ASDF_FORMAT                     = .false.
 
-# decide if master process writes all the seismograms or if all processes do it in parallel
-WRITE_SEISMOGRAMS_BY_MASTER     = .false.
+# decide if main process writes all the seismograms or if all processes do it in parallel
+WRITE_SEISMOGRAMS_BY_MAIN       = .false.
 
 # save all seismograms in one large combined file instead of one file per seismogram
 # to avoid overloading shared non-local file systems such as LUSTRE or GPFS for instance
@@ -249,16 +258,6 @@ SAVE_ALL_SEISMOS_IN_ONE_FILE    = .false.
 # thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
 # is accurate at second order and thus contains significantly less numerical noise.
 USE_TRICK_FOR_BETTER_PRESSURE   = .false.
-
-#-----------------------------------------------------------
-#
-# Source encoding
-#
-#-----------------------------------------------------------
-
-# (for acoustic simulations only for now) determines source encoding factor +/-1 depending on sign of moment tensor
-# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
-USE_SOURCE_ENCODING             = .false.
 
 #-----------------------------------------------------------
 #
@@ -279,7 +278,7 @@ NTSTEP_BETWEEN_OUTPUT_ENERGY    = 10
 #-----------------------------------------------------------
 
 # interval in time steps for reading adjoint traces
-# 0 = read the whole adjoint sources at the same time
+# 0 = read the whole adjoint sources at start time
 NTSTEP_BETWEEN_READ_ADJSRC      = 0
 
 # read adjoint sources using ASDF (requires asdf-library)
@@ -317,8 +316,12 @@ FKMODEL_FILE                    = FKmodel
 RECIPROCITY_AND_KH_INTEGRAL     = .false.   # does not work yet
 
 #-----------------------------------------------------------
+#
+# Run modes
+#
+#-----------------------------------------------------------
 
-# Dimitri Komatitsch, July 2014, CNRS Marseille, France:
+# Simultaneous runs
 # added the ability to run several calculations (several earthquakes)
 # in an embarrassingly-parallel fashion from within the same run;
 # this can be useful when using a very large supercomputer to compute
@@ -376,9 +379,5 @@ ADIOS_FOR_DATABASES             = .false.
 ADIOS_FOR_MESH                  = .false.
 ADIOS_FOR_FORWARD_ARRAYS        = .false.
 ADIOS_FOR_KERNELS               = .false.
-
-NTSTEP_BETWEEN_OUTPUT_SAMPLE    = 1
-
-WRITE_SEISMOGRAMS_BY_MAIN     = .false.
-
 ADIOS_FOR_UNDO_ATTENUATION      = .false.
+

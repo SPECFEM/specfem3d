@@ -193,12 +193,12 @@ USE_FORCE_POINT_SOURCE          = .true.
 # to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
 USE_RICKER_TIME_FUNCTION        = .true.
 
-# Use an external source time function.
-# if .true. you must add a file with your source time function and the file name
-# path relative to lauching directory at the end of CMTSOLUTION or FORCESOURCE file
+# use an external source time function
+# you must add a file with your source time function and the file name path
+# relative to lauching directory at the end of CMTSOLUTION or FORCESOURCE file
 # (with multiple sources, one file per source is required).
-# This file must have a single column containing the amplitude of the source at that time step,
-# and on its first line it must contain the time step used, which must be equal to DT as defined at the beginning of this Par_file (the code will check that).
+# This file must have a single column containing the amplitudes of the source at all time steps;
+# time step size used must be equal to DT as defined at the beginning of this Par_file.
 # Be sure when this option is .false. to remove the name of stf file in CMTSOLUTION or FORCESOURCE
 USE_EXTERNAL_SOURCE_FILE        = .false.
 
@@ -316,8 +316,12 @@ FKMODEL_FILE                    = FKmodel
 RECIPROCITY_AND_KH_INTEGRAL     = .false.   # does not work yet
 
 #-----------------------------------------------------------
+#
+# Run modes
+#
+#-----------------------------------------------------------
 
-# Dimitri Komatitsch, July 2014, CNRS Marseille, France:
+# Simultaneous runs
 # added the ability to run several calculations (several earthquakes)
 # in an embarrassingly-parallel fashion from within the same run;
 # this can be useful when using a very large supercomputer to compute
