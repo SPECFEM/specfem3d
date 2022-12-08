@@ -497,7 +497,8 @@ contains
     ! dummy allocations (for subroutine arguments)
     allocate(bc%T(3,1), &
              bc%D(3,1), &
-             bc%V(3,1))
+             bc%V(3,1), &
+             bc%T0(3,1))
   endif
 
   ! output dataT structure
