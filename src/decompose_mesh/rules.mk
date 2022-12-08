@@ -58,6 +58,7 @@ decompose_mesh_MODULES = \
 
 decompose_mesh_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/param_reader.cc.o \
 	$O/exit_mpi.shared.o \
 	$O/read_parameter_file.shared.o \

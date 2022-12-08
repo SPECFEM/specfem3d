@@ -358,11 +358,11 @@
 
 ! returns source time function value for specified time
 
-  use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,hdur,hdur_Gaussian,DT
+  use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
+                         hdur,hdur_Gaussian,force_stf
 
   ! for external STFs
-  use specfem_par, only: USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
-                         myrank,NSTEP
+  use specfem_par, only: USE_EXTERNAL_SOURCE_FILE
 
   implicit none
 
@@ -371,21 +371,16 @@
   integer,intent(in) :: it_tmp_ext
 
   ! local parameters
-  double precision :: stf
+  double precision :: stf,f0
 
   double precision, external :: comp_source_time_function,comp_source_time_function_rickr, &
-    comp_source_time_function_gauss
+    comp_source_time_function_gauss,comp_source_time_function_gauss_2, &
+    comp_source_time_function_mono,comp_source_time_function_ext
 
   ! external source time function
   if (USE_EXTERNAL_SOURCE_FILE) then
-    ! checks index
-    if (it_tmp_ext < 1 .or. it_tmp_ext > NSTEP) then
-      print *,'Error: external source time function index ',it_tmp_ext,'should be between 1 and ',NSTEP
-      call exit_MPI(myrank,'Invalid external source time function index in get_stf_poroelastic() routine')
-    endif
-
     ! gets stf value
-    stf = user_source_time_function(it_tmp_ext, isource)
+    stf = comp_source_time_function_ext(it_tmp_ext, isource)
 
     ! returns value
     get_stf_poroelastic = stf
@@ -395,16 +390,27 @@
   ! determines source time function value
   if (USE_FORCE_POINT_SOURCE) then
     ! single point force
-    if (USE_RICKER_TIME_FUNCTION) then
-      ! Ricker
-      ! f0 has been stored in the hdur() array in the case of FORCESOLUTION,
-      ! to use the same array as for CMTSOLUTION
-      stf = comp_source_time_function_rickr(time_source_dble,hdur(isource))
-    else
-      ! Gaussian
-      ! use a very small duration of 5*DT to mimic a Dirac in time
-      stf = comp_source_time_function_gauss(time_source_dble,5.d0*DT)
-    endif
+    select case(force_stf(isource))
+    case (0)
+      ! Gaussian source time function value
+      stf = comp_source_time_function_gauss(time_source_dble,hdur_Gaussian(isource))
+    case (1)
+      ! Ricker source time function
+      f0 = hdur(isource) ! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
+      stf = comp_source_time_function_rickr(time_source_dble,f0)
+    case (2)
+      ! Heaviside (step) source time function
+      stf = comp_source_time_function(time_source_dble,hdur_Gaussian(isource))
+    case (3)
+      ! Monochromatic source time function
+      f0 = 1.d0 / hdur(isource) ! using hdur as a PERIOD just to avoid changing FORCESOLUTION file format
+      stf = comp_source_time_function_mono(time_source_dble,f0)
+    case (4)
+      ! Gaussian source time function by Meschede et al. (2011)
+      stf = comp_source_time_function_gauss_2(time_source_dble,hdur(isource))
+    case default
+      stop 'unsupported force_stf value!'
+    end select
   else
     ! moment-tensor
     if (USE_RICKER_TIME_FUNCTION) then

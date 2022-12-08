@@ -94,6 +94,7 @@ generate_databases_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
 	$O/adios_manager.shared_adios_module.o \
 	$O/check_mesh_resolution.shared.o \
+	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
 	$O/detect_surface.shared.o \

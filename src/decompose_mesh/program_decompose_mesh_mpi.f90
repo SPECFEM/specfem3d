@@ -365,17 +365,26 @@ end program xdecompose_mesh_mpi
   ! splitted dual mesh, not really distribued because of use glob numbering
   allocate(elmnts_by_node(max_elmnts_by_node,nnodes), nelmnts_by_node(nnodes),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('Error allocating array 6')
-  elmnts_by_node(:,:)=-1
+  elmnts_by_node(:,:) = -1
 
   ! global to local numbering
   allocate(loc2glob_nodes(nnodes), glob2loc_nodes(nnodes_glob),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('Error allocating array 7')
+
   allocate(nodes_coords(NDIM,nnodes),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('Error allocating array 8')
+  nodes_coords(:,:) = 0.d0
+
   if (ANY_FAULT) then
      allocate(nodes_coords_open_loc(NDIM,nnodes),stat=ier)
      if (ier /= 0) call exit_MPI_without_rank('Error allocating array 8 bis')
+  else
+    ! dummy
+    allocate(nodes_coords_open_loc(NDIM,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('Error allocating array 8 bis')
   endif
+  nodes_coords_open_loc(:,:) = 0.d0
+
   nnodes_loc = nnodes
   glob2loc_nodes(:) = -1
   loc2glob_nodes(:) = -1

@@ -99,6 +99,7 @@ xclip_sem_OBJECTS = \
 
 xclip_sem_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
@@ -124,6 +125,7 @@ xcombine_sem_OBJECTS = \
 
 xcombine_sem_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
@@ -153,6 +155,7 @@ xsmooth_sem_SHARED_OBJECTS = \
 	$O/read_mesh_databases.spec.o \
 	$O/shared_par.shared_module.o \
 	$O/check_mesh_resolution.shared.o \
+	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/gll_library.shared.o \

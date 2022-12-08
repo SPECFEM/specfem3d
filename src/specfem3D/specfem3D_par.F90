@@ -151,6 +151,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: pm1_source_encoding
 
   ! parameters for a force source located exactly at a grid point
+  integer, dimension(:), allocatable :: force_stf
   double precision, dimension(:), allocatable :: factor_force_source
   double precision, dimension(:), allocatable :: comp_dir_vect_source_E
   double precision, dimension(:), allocatable :: comp_dir_vect_source_N

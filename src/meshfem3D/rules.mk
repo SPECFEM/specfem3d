@@ -78,6 +78,7 @@ meshfem3D_SHARED_OBJECTS = \
 	$O/create_name_database.shared.o \
 	$O/shared_par.shared_module.o \
 	$O/adios_manager.shared_adios_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/get_global.shared.o \
 	$O/get_shape3D.shared.o \

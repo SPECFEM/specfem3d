@@ -49,8 +49,7 @@
 
   ! note: OMP_GET_NESTED is deprecated (OpenMP version 5.1)
   !       instead OMP_GET_MAX_ACTIVE_LEVELS should be used.
-  logical,external :: OMP_GET_MAX_ACTIVE_LEVELS
-
+  integer,external :: OMP_GET_MAX_ACTIVE_LEVELS
 
 !$OMP PARALLEL DEFAULT(NONE) &
 !$OMP SHARED(myrank) &

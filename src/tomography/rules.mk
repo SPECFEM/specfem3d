@@ -120,6 +120,7 @@ xadd_model_SHARED_OBJECTS = \
 	$O/pml_par.spec_module.o \
 	$O/read_mesh_databases.spec.o \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/gll_library.shared.o \
@@ -170,6 +171,7 @@ xmodel_update_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
 	$O/adios_manager.shared_adios_module.o \
 	$O/check_mesh_resolution.shared.o \
+	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/get_attenuation_model.shared.o \
@@ -248,6 +250,7 @@ xsum_kernels_OBJECTS = \
 
 xsum_kernels_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \

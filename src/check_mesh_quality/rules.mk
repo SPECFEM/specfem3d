@@ -67,6 +67,7 @@ xconvert_skewness_to_angle: $E/xconvert_skewness_to_angle
 
 xcheck_mesh_quality_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \

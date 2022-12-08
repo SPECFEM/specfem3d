@@ -40,6 +40,7 @@ shared_OBJECTS = \
 	$O/adios_manager.shared_adios_module.o \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
+	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
 	$O/detect_surface.shared.o \
