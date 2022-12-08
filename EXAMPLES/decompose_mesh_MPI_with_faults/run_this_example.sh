@@ -48,8 +48,8 @@ if [ "$NPROC" -eq 1 ]; then
   ./bin/xdecompose_mesh_mpi 1 1 1
 else
   # This is a MPI simulation
-  #mpirun -np $NPROC ./bin/xdecompose_mesh_mpi 4 1 2
-  srun --mpi=pmi2 --ntasks $NPROC ./bin/xdecompose_mesh_mpi 4 1 2
+  mpirun -np $NPROC ./bin/xdecompose_mesh_mpi 4 1 2
+  #srun --mpi=pmi2 --ntasks $NPROC ./bin/xdecompose_mesh_mpi 4 1 2
 fi
 # checks exit code
 if [[ $? -ne 0 ]]; then exit 1; fi
@@ -66,8 +66,8 @@ else
   echo
   echo "  running database generation on $NPROC processors..."
   echo
-  #mpirun -np $NPROC ./bin/xgenerate_databases
-  srun --mpi=pmi2 --ntasks $NPROC ./bin/xgenerate_databases
+  mpirun -np $NPROC ./bin/xgenerate_databases
+  #srun --mpi=pmi2 --ntasks $NPROC ./bin/xgenerate_databases
 fi
 # checks exit code
 if [[ $? -ne 0 ]]; then exit 1; fi
@@ -84,8 +84,8 @@ else
   echo
   echo "  running solver on $NPROC processors..."
   echo
-  #mpirun -np $NPROC ./bin/xspecfem3D
-  srun --mpi=pmi2 --ntasks $NPROC ./bin/xspecfem3D
+  mpirun -np $NPROC ./bin/xspecfem3D
+  #srun --mpi=pmi2 --ntasks $NPROC ./bin/xspecfem3D
 fi
 # checks exit code
 if [[ $? -ne 0 ]]; then exit 1; fi

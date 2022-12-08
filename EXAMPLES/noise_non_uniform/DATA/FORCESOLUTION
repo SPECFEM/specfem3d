@@ -1,10 +1,11 @@
 FORCE 000031
-time shift: 0.0
-f0: 1.0
-latorUTM: 19.879601
+time shift:  0.0
+hdurorf0:    1.0
+latorUTM:   19.879601
 lonorUTM: -104.634903
-depth: -0.644
-factor force source: 1.0
-component dir vect source E: 0.0
-component dir vect source N: 0.0
+depth:      -0.644
+source time function:            0
+factor force source:            1.0
+component dir vect source E:    0.0
+component dir vect source N:    0.0
 component dir vect source Z_UP: 1.0
