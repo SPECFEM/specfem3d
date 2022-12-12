@@ -1382,22 +1382,14 @@
     ! dummy arrays
     ! VM VM need to allocate Lagrange interpolators for receivers with 0 because it is used
     ! in calling subroutines parmeters. (otherwise it can be crash at runtime).
-    allocate(hxir_store(1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2081')
-    allocate(hetar_store(1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2082')
-    allocate(hgammar_store(1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2083')
-    if (ier /= 0) stop 'error allocating array hxir_store etc.'
+    allocate(hxir_store(1,1), &
+             hetar_store(1,1), &
+             hgammar_store(1,1))
     ! allocates derivatives
     if (SIMULATION_TYPE == 2) then
-      allocate(hpxir_store(1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2084')
-      allocate(hpetar_store(1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2085')
-      allocate(hpgammar_store(1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2086')
-      if (ier /= 0) stop 'error allocating array hpxir_store'
+      allocate(hpxir_store(1,1), &
+               hpetar_store(1,1), &
+               hpgammar_store(1,1))
     endif
   endif ! nrec_local > 0
 
@@ -1451,10 +1443,10 @@
     seismograms_p(:,:,:) = 0._CUSTOM_REAL
   else
     ! dummy allocations
-    allocate(seismograms_d(1,1,1))
-    allocate(seismograms_v(1,1,1))
-    allocate(seismograms_a(1,1,1))
-    allocate(seismograms_p(1,1,1))
+    allocate(seismograms_d(1,1,1), &
+             seismograms_v(1,1,1), &
+             seismograms_a(1,1,1), &
+             seismograms_p(1,1,1))
   endif
 
   ! seismograms
@@ -1534,6 +1526,19 @@
       else
         ! kernel simulations (SIMULATION_TYPE == 3)
         ! adjoint source arrays and receiver arrays are the same, no need to allocate new arrays, just point to the existing ones
+        number_adjsources_global => number_receiver_global
+        hxir_adjstore => hxir_store
+        hetar_adjstore => hetar_store
+        hgammar_adjstore => hgammar_store
+      endif
+    else
+      ! dummy arrays
+      if (SIMULATION_TYPE == 2) then
+        allocate(number_adjsources_global(1), &
+                 hxir_adjstore(1,1), &
+                 hetar_adjstore(1,1), &
+                 hgammar_adjstore(1,1))
+      else
         number_adjsources_global => number_receiver_global
         hxir_adjstore => hxir_store
         hetar_adjstore => hetar_store
