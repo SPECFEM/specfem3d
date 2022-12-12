@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 # Generates noise distribution and direction binary files
 # according to parfile_noise.yaml.
