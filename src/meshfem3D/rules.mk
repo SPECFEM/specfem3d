@@ -158,6 +158,9 @@ $E/xmeshfem3D: $(XMESHFEM_OBJECTS)
 ### Module dependencies
 ###
 
+# Version file
+$O/meshfem3D.mesh.o: ${SETUP}/version.fh
+
 $O/meshfem3D.mesh.o: $O/chunk_earth_mesh_mod.mesh.o
 $O/determine_cavity.mesh.o: $O/create_meshfem_mesh.mesh.o
 

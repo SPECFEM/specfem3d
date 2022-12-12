@@ -231,7 +231,9 @@
 !    parallelized on 128 processors using Connection Machine Fortran
 !
 
-! local parameters
+  include 'version.fh'
+
+  ! local parameters
   integer :: iprocnum
   integer :: iproc_xi,iproc_eta
   integer :: ier
@@ -272,6 +274,10 @@
     write(IMAIN,*) '******************************************'
     write(IMAIN,*) '*** Specfem3D MPI meshfem3D - f90 version ***'
     write(IMAIN,*) '******************************************'
+    write(IMAIN,*)
+    write(IMAIN,*) 'Running Git package version of the code: ', git_package_version
+    write(IMAIN,*) 'which is Git ', git_commit_version
+    write(IMAIN,*) 'dating ', git_date_version
     write(IMAIN,*)
     call flush_IMAIN()
   endif

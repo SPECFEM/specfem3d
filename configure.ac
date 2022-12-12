@@ -491,7 +491,7 @@ AS_IF([test x"$want_asdf" != xno], [
 #mpbl: adding flags to config.h.in through autoheader in order to save them into the adios file.
 #configure_flags_str="FC=$FC FCFLAGS=$FCFLAGS $FLAGS_CHECK"
 #AC_DEFINE_UNQUOTED([CONFIGURE_FLAGS],["${configure_flags_str}"],
- #         [configuration flags to be saved in the adios output file.])
+#         [configuration flags to be saved in the adios output file.])
 CONFIGURE_FLAGS="FC=$FC FCFLAGS=$FCFLAGS"
 AC_SUBST([CONFIGURE_FLAGS])
 
@@ -717,17 +717,24 @@ AS_IF([test x"$want_vtk" != xno], [
 ##
 AS_BOX([git version info])
 CIG_PKG_GIT(SPECFEM3D)
+
 AC_DEFINE_UNQUOTED([SPECFEM3D_VERSION], ["$PACKAGE_VERSION"], [Define SPECFEM3D version])
 #AC_DEFINE_UNQUOTED([SPECFEM3D_DOI], ["10.5281/zenodo.xxxxx"], [Define SPECFEM3D doi])
-AS_IF([test -d $srcdir/.git], [
-    GIT_VERSION_DEPS="$srcdir/.git/logs/HEAD"
-    AC_MSG_NOTICE([building from git repository])
-    AC_SUBST(GIT_VERSION_DEPS)
-], [
-    dnl Only substitute if not in a git repository.
-    AC_MSG_NOTICE([not a git repository])
-    AC_CONFIG_FILES([setup/version.fh])
+
+AS_IF([test x"$SPECFEM3D_RELEASE_VERSION" = x0],[
+  AC_MSG_NOTICE([building from git repository])
+  GIT_PACKAGE_VERSION=$SPECFEM3D_GIT_REVISION
+  GIT_COMMIT_VERSION=$SPECFEM3D_GIT_HASH
+  GIT_DATE_VERSION=$SPECFEM3D_GIT_DATE
+],[
+  AC_MSG_NOTICE([not a git repository])
+  GIT_PACKAGE_VERSION=$PACKAGE_VERSION
+  GIT_COMMIT_VERSION="unknown"
+  GIT_DATE_VERSION="unknown"
 ])
+AC_SUBST([GIT_PACKAGE_VERSION])
+AC_SUBST([GIT_COMMIT_VERSION])
+AC_SUBST([GIT_DATE_VERSION])
 
 ############################################################
 
@@ -740,6 +747,7 @@ AC_CONFIG_FILES([
     setup/constants_tomography.h
     setup/precision.h
     setup/config.fh
+    setup/version.fh
 ])
 
 # Scotch makefile
