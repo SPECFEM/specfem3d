@@ -90,8 +90,8 @@ step-by-step tutorial:
 
 3. run processing script for a default simulation on 4 CPUs (must have access to mpi):
 
-    - run script 'process.sh' in this example directory:
-      > ./process.sh
+    - run script in this example directory:
+      > ./run_this_example.sh
 
       this script handles the following steps:
         - decomposes mesh files (example creates 4 partitions from mesh files given in MESH/)
