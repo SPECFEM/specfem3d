@@ -138,6 +138,9 @@ env:
     # waterlayered_poroelastic example
     - TESTID=35 TESTCOV=0 TESTDIR=28 TESTFLAGS="--enable-vectorization --with-mpi" CUDA=false
 
+    # inversion example
+    - TESTID=36 TESTCOV=0 TESTDIR=29 TESTFLAGS="--enable-vectorization --with-mpi" CUDA=false
+
 
 # additional ARM tests
 jobs:

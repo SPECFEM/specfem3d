@@ -47,6 +47,7 @@ case "$TESTDIR" in
   26) dir=EXAMPLES/small_adjoint_multiple_sources/ ;;
   27) dir=EXAMPLES/Gmsh_simple_box_hex27/ ;;
   28) dir=EXAMPLES/waterlayered_poroelastic/ ;;
+  29) dir=EXAMPLES/inversion_examples/fwi_test_acoustic/ ;;
   *) dir=EXAMPLES/homogeneous_halfspace/ ;;
 esac
 
@@ -211,6 +212,10 @@ else
   if [ "$TESTID" == "35" ]; then
     sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
   fi
+  # inversion example
+  if [ "$TESTID" == "36" ]; then
+    sed -i "s/Niter .*/Niter       : 0/" DATA/inverse_problem/inversion_fwi.dat
+  fi
 
   # coverage run
   if [ "$TESTCOV" == "1" ]; then
@@ -238,7 +243,7 @@ else
   echo
 
   # seismogram comparison
-  if [ "$TESTCOV" == "0" ] && [ ! "$TESTID" == "11" ]; then
+  if [ "$TESTCOV" == "0" ] && [ ! "$TESTID" == "11" ] && [ ! "$TESTID" == "36" ]; then
     my_test
   fi
 fi
@@ -687,6 +692,22 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.waterlayered_poroelastic\\r'
+
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.fwi_test_acoustic\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
+  ##
+  ## fwi_test_acoustic example
+  ##
+  echo "##################################################################"
+  echo "EXAMPLES/inversion_examples/fwi_test_acoustic/"
+  echo
+  cd EXAMPLES/inversion_examples/fwi_test_acoustic/
+  sed -i "s/Niter .*/Niter       : 0/" DATA/inverse_problem/inversion_fwi.dat
+  ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.fwi_test_acoustic\\r'
 
 
 ##
