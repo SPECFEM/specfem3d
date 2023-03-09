@@ -330,6 +330,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "0" ]; then
   cd EXAMPLES/homogeneous_acoustic/
   cp -v DATA/Par_file DATA/Par_file.org
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  sed -i "s:300:5:" run_this_example_kernel.sh
   sed -i "s:^t_start.*:t_start=-6.0:" create_adjoint_sources.sh
   sed -i "s:^t_end.*:t_end=-5.55:" create_adjoint_sources.sh
   ./run_this_example_kernel.sh

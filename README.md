@@ -8,6 +8,7 @@ It can, for instance, model seismic waves propagating in sedimentary basins or a
 SPECFEM3D was founded by Dimitri Komatitsch and Jeroen Tromp, and is now being developed by a large, collaborative, and inclusive community. A complete list of authors can be found at
 https://specfem3d.readthedocs.io/en/latest/authors/
 
+
 ## Installation
 
 Instructions on how to install and use SPECFEM3D are
@@ -16,6 +17,19 @@ available in the
 - PDF manual located in directory: [doc/USER_MANUAL](doc/USER_MANUAL)
 
 - HTML manual (latest version): [specfem3d.readthedocs.io](http://specfem3d.readthedocs.io/)
+
+
+For a quick test, run the default example with these commands:
+```
+./configure FC=gfortran CC=gcc
+make all
+./run_this_example.sh
+```
+and check the output files in `./OUTPUT_FILES/`
+
+>__NOTE__: Do not modify the 'configure' script directly. Please modify the
+    'configure.ac' file instead, and generate a new 'configure' script with
+    the command: `autoreconf -i`
 
 
 ## Development
@@ -47,12 +61,3 @@ involved in the community and keep them in the specfem3d github wiki:
 
 SPECFEM3D is part of the software that is hosted by the Computational Infrastructure for Geodynamics (CIG). It is available on the CIG website [here (SPECFEM3D)](https://geodynamics.org/resources/specfem3dcartesian).
 
-___
-
-### Do not modify configure script
-
-Never modify the "configure" script directly, it is better to modify the "configure.ac" file and then generate the "configure" script by typing:
-
-```
-autoreconf -i
-```
