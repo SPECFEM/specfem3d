@@ -389,7 +389,7 @@ def convert_Binary_to_ASCII(file,show=False):
 
     # figure output
     if show:
-        st.plot(type='default',size=(1800, 900))      
+        st.plot(type='default',size=(1800, 900))
         # Wait for the user input to terminate the program
         input("Press any key to terminate the program")
 
