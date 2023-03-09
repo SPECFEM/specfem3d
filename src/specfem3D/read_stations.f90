@@ -108,6 +108,8 @@
     ! user output
     if (maxval(station_duplet) > 0) then
       print *,'Warning: found ',maxval(station_duplet),' station duplets (having same network & station names)'
+      print *,'  station_duplet: ',station_duplet(:)
+      print *,'  station_name  : ',station_name(:)
       print *,'Please check your STATIONS file entries to avoid confusions...'
       print *
     endif

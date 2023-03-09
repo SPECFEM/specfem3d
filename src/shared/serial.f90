@@ -868,6 +868,20 @@
 !----
 !
 
+  subroutine sum_all_all_dp(sendbuf, recvbuf)
+
+  implicit none
+
+  double precision :: sendbuf, recvbuf
+
+  recvbuf = sendbuf
+
+  end subroutine sum_all_all_dp
+
+!
+!----
+!
+
   subroutine sum_all_cr(sendbuf, recvbuf)
 
   use constants, only: CUSTOM_REAL

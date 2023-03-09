@@ -170,6 +170,9 @@ module specfem_par
   double precision, dimension(:,:), allocatable :: hpxir_store,hpetar_store,hpgammar_store
   double precision, dimension(:,:,:), allocatable :: nu_rec
 
+  ! location storage for inverse problem damping
+  double precision, dimension(:), allocatable :: x_target_station,y_target_station,z_target_station
+
   ! Lagrange interpolators at receivers
   integer, dimension(:), allocatable, target :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable, target :: hxir_store,hetar_store,hgammar_store

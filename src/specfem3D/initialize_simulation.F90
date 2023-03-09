@@ -332,7 +332,8 @@
   endif
 
   ! check that we have at least one source
-  if (NSOURCES < 1 .and. .not. HAS_FINITE_FAULT_SOURCE) call exit_MPI(myrank,'need at least one source')
+  if (NSOURCES < 1 .and. (.not. HAS_FINITE_FAULT_SOURCE .and. .not. INVERSE_FWI_FULL_PROBLEM)) &
+    call exit_MPI(myrank,'need at least one source')
 
   ! check simulation type
   if (SIMULATION_TYPE /= 1 .and. SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &

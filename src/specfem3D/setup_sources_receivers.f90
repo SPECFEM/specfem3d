@@ -66,9 +66,11 @@
   endif
 
   ! frees memory
-  deallocate(xyz_midpoints)
-  deallocate(anchor_iax,anchor_iay,anchor_iaz)
-  if (.not. DO_BRUTE_FORCE_POINT_SEARCH) call setup_free_kdtree()
+  if (.not. INVERSE_FWI_FULL_PROBLEM) then
+    deallocate(xyz_midpoints)
+    deallocate(anchor_iax,anchor_iay,anchor_iaz)
+    if (.not. DO_BRUTE_FORCE_POINT_SEARCH) call setup_free_kdtree()
+  endif
 
   ! synchronizes processes
   call synchronize_all()
@@ -168,6 +170,9 @@
   ! local parameters
   integer :: isource,ier
 
+  ! initializes onset time (depends on hdur and source time function)
+  t0 = 0.d0
+
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
@@ -210,14 +215,14 @@
   nu_source(:,:,:) = 0.d0
 
   if (USE_FORCE_POINT_SOURCE) then
-    allocate(force_stf(NSOURCES),  &
+    allocate(force_stf(NSOURCES), &
              factor_force_source(NSOURCES), &
              comp_dir_vect_source_E(NSOURCES), &
              comp_dir_vect_source_N(NSOURCES), &
              comp_dir_vect_source_Z_UP(NSOURCES),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2053')
   else
-    allocate(force_stf(1),  &
+    allocate(force_stf(1), &
              factor_force_source(1), &
              comp_dir_vect_source_E(1), &
              comp_dir_vect_source_N(1), &
@@ -246,11 +251,24 @@
   if (ier /= 0) stop 'error allocating arrays for user sources time function'
   user_source_time_function(:,:) = 0.0_CUSTOM_REAL
 
+  ! fused wavefield simulations
+  call get_run_number_of_the_source()
+
+  ! checks if anything left to do
+  if (INVERSE_FWI_FULL_PROBLEM) then
+    ! fwi will determine acquisition receivers later
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'running inverse FWI full problem, will determine sources later...'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+    ! all done
+    return
+  endif
+
   ! locate sources in the mesh
   call locate_source()
-
-  ! determines onset time
-  call setup_stf_constants()
 
   ! count number of sources located in this slice
   nsources_local = 0
@@ -261,11 +279,11 @@
   ! checks if source is in an acoustic element and exactly on the free surface because pressure is zero there
   call setup_sources_check_acoustic()
 
+  ! determines onset time
+  call setup_stf_constants()
+
   ! prints source time functions to output files
   if (PRINT_SOURCE_TIME_FUNCTION) call print_stf_file()
-
-  ! fused wavefield simulations
-  call get_run_number_of_the_source()
 
   end subroutine setup_sources
 !
@@ -560,7 +578,7 @@
   integer :: isource,ixmin,ixmax,iymin,iymax,izmin,izmax,iface,ispec
   logical :: is_on,is_on_all
 
-! outputs a warning in case of an acoustic source lying on the free surface
+  ! outputs a warning in case of an acoustic source lying on the free surface
   do isource = 1,NSOURCES
     ! checks if source is close to face
     is_on = .false.
@@ -653,6 +671,11 @@
   character(len=MAX_STRING_LEN) :: filename
   character(len=MAX_STRING_LEN) :: adj_source_file
 
+  ! initializes
+  nrec = 0
+  nrec_filtered = 0
+  nrec_local = 0
+
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
@@ -660,31 +683,39 @@
     call flush_IMAIN()
   endif
 
-  ! reads in station file
-  if (SIMULATION_TYPE == 1) then
-    rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS'
-    filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_FILTERED'
+  ! gets number of stations
+  if (INVERSE_FWI_FULL_PROBLEM) then
+    ! stations will be determined later...
+    nrec = 0
+    nrec_local = 0
   else
-    rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT'
-    filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT_FILTERED'
+    ! reads in station file
+    if (SIMULATION_TYPE == 1) then
+      rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS'
+      filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_FILTERED'
+    else
+      rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT'
+      filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT_FILTERED'
+    endif
+
+    ! see if we are running several independent runs in parallel
+    ! if so, add the right directory for that run
+    ! (group numbers start at zero, but directory names start at run0001, thus we add one)
+    ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+      write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+      rec_filename = path_to_add(1:len_trim(path_to_add))//rec_filename(1:len_trim(rec_filename))
+      filtered_rec_filename = path_to_add(1:len_trim(path_to_add))//filtered_rec_filename(1:len_trim(filtered_rec_filename))
+    endif
+
+    call station_filter(rec_filename,filtered_rec_filename,nrec_filtered)
+
+    ! sets actual number of stations
+    nrec = nrec_filtered
+
+    if (nrec < 1) call exit_MPI(myrank,'need at least one receiver')
   endif
 
-  ! see if we are running several independent runs in parallel
-  ! if so, add the right directory for that run
-  ! (group numbers start at zero, but directory names start at run0001, thus we add one)
-  ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
-    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-    rec_filename = path_to_add(1:len_trim(path_to_add))//rec_filename(1:len_trim(rec_filename))
-    filtered_rec_filename = path_to_add(1:len_trim(path_to_add))//filtered_rec_filename(1:len_trim(filtered_rec_filename))
-  endif
-
-  call station_filter(rec_filename,filtered_rec_filename,nrec_filtered)
-
-  ! sets actual number of stations
-  nrec = nrec_filtered
-
-  if (nrec < 1) call exit_MPI(myrank,'need at least one receiver')
   call synchronize_all()
 
   if (myrank == 0) then
@@ -722,6 +753,19 @@
   if (ier /= 0 ) call exit_MPI(myrank,'Error allocating receiver arrays')
   stlat(:) = 0.d0; stlon(:) = 0.d0; stele(:) = 0.d0; stbur(:) = 0.d0
   station_name(:) = ""; network_name(:) = ""
+
+  ! checks if anything left to do
+  if (INVERSE_FWI_FULL_PROBLEM) then
+    ! fwi will determine acquisition receivers later
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'running inverse FWI full problem, will determine receivers later...'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+    ! all done
+    return
+  endif
 
   ! locate receivers in the mesh
   call locate_receivers(filtered_rec_filename,utm_x_source(1),utm_y_source(1))
@@ -1166,10 +1210,10 @@
   endif
 
   ! frees dynamically allocated memory
-  deallocate(factor_force_source)
-  deallocate(comp_dir_vect_source_E)
-  deallocate(comp_dir_vect_source_N)
-  deallocate(comp_dir_vect_source_Z_UP)
+  if (allocated(factor_force_source)) &
+    deallocate(factor_force_source)
+  if (allocated(comp_dir_vect_source_E)) &
+    deallocate(comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
 
   end subroutine setup_sources_precompute_arrays
 
@@ -1871,6 +1915,7 @@
 
   ! checks if anything to do
   if (DO_BRUTE_FORCE_POINT_SEARCH) return
+  if (INVERSE_FWI_FULL_PROBLEM) return
 
   ! deletes tree arrays
   deallocate(kdtree_nodes_location)

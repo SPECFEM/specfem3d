@@ -494,37 +494,9 @@
 ! plots PNM cross-section image
 ! (EXPERIMENTAL feature)
 ! (additional cross-section parameters can be specified in create_color_image.f90)
-!! DK DK Jan 2013: here for performance and to reduce the size of the files, one day
-!! DK DK Jan 2013: we should switch to using the JPEG library directly, as already implemented in SPECFEM2D
+! todo: here for performance and to reduce the size of the files, one day
+!       we should switch to using the JPEG library directly, as already implemented in SPECFEM2D
   logical, parameter :: PNM_IMAGE = .false.
-
-! image data output:
-!   type = 1 : displ/velocity x-component
-!   type = 2 : displ/velocity y-component
-!   type = 3 : displ/velocity z-component
-!   type = 4 : displ/velocity norm
-  integer,parameter:: PNM_IMAGE_TYPE = 4
-
-! cross-section surface
-! cross-section origin point
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_xorg = 0.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_yorg = 0.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_zorg = -100.0
-
-! cross-section surface normal
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_nx = 0.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_ny = 0.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_nz = 1.0 ! for horizontal cross-section
-
-! cross-section (in-plane) horizontal-direction
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_hdirx = 1.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_hdiry = 0.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_hdirz = 0.0
-
-! cross-section (in-plane) vertical-direction
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_vdirx = 0.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_vdiry = 1.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_vdirz = 0.0
 
 ! geometry tolerance parameter to calculate number of independent grid points
 ! sensitive to actual size of model, assumes reference sphere of radius 1

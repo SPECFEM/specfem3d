@@ -1124,7 +1124,13 @@
   endif
 
   ! determines number of sources depending on number of lines in sources file
-  call count_number_of_sources(NSOURCES,sources_filename)
+  if (INVERSE_FWI_FULL_PROBLEM) then
+    ! sources will be set later in input_output_mod.f90 based on acquisition setting
+    NSOURCES = 0
+  else
+    ! gets number of sources
+    call count_number_of_sources(NSOURCES,sources_filename)
+  endif
 
   ! converts all string characters to lowercase
   irange = iachar('a') - iachar('A')

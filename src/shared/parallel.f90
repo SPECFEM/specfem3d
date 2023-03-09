@@ -1039,6 +1039,23 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine sum_all_all_dp(sendbuf, recvbuf)
+
+  use my_mpi
+
+  implicit none
+
+  double precision :: sendbuf, recvbuf
+  integer :: ier
+
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION,MPI_SUM,my_local_mpi_comm_world,ier)
+
+  end subroutine sum_all_all_dp
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 
   subroutine sum_all_1Darray_dp(sendbuf, recvbuf, nx)
 

@@ -144,25 +144,30 @@
   deallocate(ibelm_bottom)
   deallocate(ibelm_top)
   ! sources
-  deallocate(islice_selected_source,ispec_selected_source)
-  deallocate(Mxx,Myy,Mzz,Mxy,Mxz,Myz)
-  deallocate(xi_source,eta_source,gamma_source)
-  deallocate(tshift_src,hdur,hdur_Gaussian)
-  deallocate(utm_x_source,utm_y_source)
-  deallocate(nu_source)
-  deallocate(user_source_time_function)
+  if (NSOURCES > 0) then
+    deallocate(islice_selected_source,ispec_selected_source)
+    deallocate(Mxx,Myy,Mzz,Mxy,Mxz,Myz)
+    deallocate(xi_source,eta_source,gamma_source)
+    deallocate(tshift_src,hdur,hdur_Gaussian)
+    deallocate(utm_x_source,utm_y_source)
+    deallocate(nu_source)
+    deallocate(user_source_time_function)
+  endif
   ! receivers
-  deallocate(islice_selected_rec,ispec_selected_rec)
-  deallocate(xi_receiver,eta_receiver,gamma_receiver)
-  deallocate(station_name,network_name)
-  deallocate(nu_rec)
-  deallocate(pm1_source_encoding)
-  deallocate(sourcearrays)
-  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) deallocate(source_adjoint)
+  if (nrec > 0) then
+    deallocate(islice_selected_rec,ispec_selected_rec)
+    deallocate(xi_receiver,eta_receiver,gamma_receiver)
+    deallocate(station_name,network_name)
+    deallocate(nu_rec)
+  endif
+  if (allocated(pm1_source_encoding)) deallocate(pm1_source_encoding)
+  if (allocated(sourcearrays)) deallocate(sourcearrays)
+  if (allocated(source_adjoint)) deallocate(source_adjoint)
+
   ! receiver arrays
-  deallocate(number_receiver_global)
-  deallocate(hxir_store,hetar_store,hgammar_store)
-  if (SIMULATION_TYPE == 2) deallocate(hpxir_store,hpetar_store,hpgammar_store)
+  if (allocated(number_receiver_global)) deallocate(number_receiver_global)
+  if (allocated(hxir_store)) deallocate(hxir_store,hetar_store,hgammar_store)
+  if (allocated(hpxir_store)) deallocate(hpxir_store,hpetar_store,hpgammar_store)
   ! adjoint sources
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
     if (nadj_rec_local > 0) then
@@ -176,10 +181,10 @@
     endif
   endif
   ! seismograms
-  deallocate(seismograms_d,seismograms_v,seismograms_a,seismograms_p)
-  if (SIMULATION_TYPE == 2) deallocate(seismograms_eps)
+  if (allocated(seismograms_d)) deallocate(seismograms_d,seismograms_v,seismograms_a,seismograms_p)
+  if (allocated(seismograms_eps)) deallocate(seismograms_eps)
   ! moment tensor derivatives
-  if (nrec_local > 0 .and. SIMULATION_TYPE == 2) deallocate(Mxx_der,Myy_der,Mzz_der,Mxy_der,Mxz_der,Myz_der,sloc_der)
+  if (allocated(Mxx_der)) deallocate(Mxx_der,Myy_der,Mzz_der,Mxy_der,Mxz_der,Myz_der,sloc_der)
   ! mesh
   deallocate(ibool)
   deallocate(irregular_element_number)

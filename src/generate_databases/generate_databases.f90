@@ -27,13 +27,6 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
-  program xgenerate_databases
-
-  use manager_adios
-  use generate_databases_par
-
-  implicit none
-
 !=============================================================================!
 !                                                                             !
 !  generate_databases produces a spectral element grid                        !
@@ -42,152 +35,16 @@
 !                                                                             !
 !=============================================================================!
 !
-! If you use this code for your own research, please cite at least one article
-! written by the developers of the package, for instance:
+! Please find in the header of specfem3D.F90 further code informations.
 !
-! @ARTICLE{TrKoLi08,
-! author = {Jeroen Tromp and Dimitri Komatitsch and Qinya Liu},
-! title = {Spectral-Element and Adjoint Methods in Seismology},
-! journal = {communications in Computational Physics},
-! year = {2008},
-! volume = {3},
-! pages = {1-32},
-! number = {1}}
-!
-! or
-!
-! @ARTICLE{LiPoKoTr04,
-! author = {Qinya Liu and Jascha Polet and Dimitri Komatitsch and Jeroen Tromp},
-! title = {Spectral-element moment tensor inversions for earthquakes in {S}outhern {C}alifornia},
-! journal={Bull. Seismol. Soc. Am.},
-! year = {2004},
-! volume = {94},
-! pages = {1748-1761},
-! number = {5},
-! doi = {10.1785/012004038}}
-!
-! @INCOLLECTION{ChKoViCaVaFe07,
-! author = {Emmanuel Chaljub and Dimitri Komatitsch and Jean-Pierre Vilotte and
-! Yann Capdeville and Bernard Valette and Gaetano Festa},
-! title = {Spectral Element Analysis in Seismology},
-! booktitle = {Advances in Wave Propagation in Heterogeneous Media},
-! publisher = {Elsevier - Academic Press},
-! year = {2007},
-! editor = {Ru-Shan Wu and Val\'erie Maupin},
-! volume = {48},
-! series = {Advances in Geophysics},
-! pages = {365-419}}
-!
-! @ARTICLE{KoVi98,
-! author={D. Komatitsch and J. P. Vilotte},
-! title={The spectral-element method: an efficient tool to simulate the seismic response of 2{D} and 3{D} geological structures},
-! journal={Bull. Seismol. Soc. Am.},
-! year=1998,
-! volume=88,
-! number=2,
-! pages={368-392}}
-!
-! @ARTICLE{KoTr99,
-! author={D. Komatitsch and J. Tromp},
-! year=1999,
-! title={Introduction to the spectral-element method for 3-{D} seismic wave propagation},
-! journal={Geophys. J. Int.},
-! volume=139,
-! number=3,
-! pages={806-822},
-! doi={10.1046/j.1365-246x.1999.00967.x}}
-!
-! @ARTICLE{KoLiTrSuStSh04,
-! author={Dimitri Komatitsch and Qinya Liu and Jeroen Tromp and Peter S\"{u}ss
-!   and Christiane Stidham and John H. Shaw},
-! year=2004,
-! title={Simulations of Ground Motion in the {L}os {A}ngeles {B}asin
-!   based upon the Spectral-Element Method},
-! journal={Bull. Seism. Soc. Am.},
-! volume=94,
-! number=1,
-! pages={187-206}}
-!
-! and/or another article from http://web.univ-pau.fr/~dkomati1/publications.html
-!
-!
-! If you use the kernel capabilities of the code, please cite at least one article
-! written by the developers of the package, for instance:
-!
-! @ARTICLE{TrKoLi08,
-! author = {Jeroen Tromp and Dimitri Komatitsch and Qinya Liu},
-! title = {Spectral-Element and Adjoint Methods in Seismology},
-! journal = {communications in Computational Physics},
-! year = {2008},
-! volume = {3},
-! pages = {1-32},
-! number = {1}}
-!
-! or
-!
-! @ARTICLE{LiTr06,
-! author={Qinya Liu and Jeroen Tromp},
-! title={Finite-frequency kernels based on adjoint methods},
-! journal={Bull. Seismol. Soc. Am.},
-! year=2006,
-! volume=96,
-! number=6,
-! pages={2383-2397},
-! doi={10.1785/0120060041}}
-!
-!
-! Reference frame - convention:
-! ----------------------------
-!
-! The code uses the following convention for the reference frame:
-!
-!  - X axis is East
-!  - Y axis is North
-!  - Z axis is up
-!
-! Note that this convention is different from both the Aki-Richards convention
-! and the Harvard CMT convention.
-!
-! Let us recall that the Aki-Richards convention is:
-!
-!  - X axis is North
-!  - Y axis is East
-!  - Z axis is down
-!
-! and that the Harvard CMT convention is:
-!
-!  - X axis is South
-!  - Y axis is East
-!  - Z axis is up
-!
-! To report bugs or suggest improvements to the code, please use our online
-! Issues tracking system at https://github.com/SPECFEM/specfem3d/ .
-!
-! Evolution of the code:
-! ---------------------
-!
-! MPI v. 2.0, November 2010:
-! Dimitri Komatitsch, Nicolas Le Goff, Roland Martin and Pieyre Le Loher, University of Pau, France,
-! Daniel Peter, Jeroen Tromp and the Princeton group of developers, Princeton University, USA,
-! and Emanuele Casarotti, INGV Roma, Italy:
-!  support for CUBIT meshes decomposed by SCOTCH;
-!  much faster solver using Michel Deville's inlined matrix products.
-!
-! MPI v. 1.4 Dimitri Komatitsch, University of Pau, Qinya Liu and others, Caltech, September 2006:
-!  better adjoint and kernel calculations, faster and better I/Os
-!  on very large systems, many small improvements and bug fixes
-!
-! MPI v. 1.3 Dimitri Komatitsch, University of Pau, and Qinya Liu, Caltech, July 2005:
-!  serial version, regular mesh, adjoint and kernel calculations, ParaView support
-!
-! MPI v. 1.2 Min Chen and Dimitri Komatitsch, Caltech, July 2004:
-!  full anisotropy, volume movie
-!
-! MPI v. 1.1 Dimitri Komatitsch, Caltech, October 2002: Zhu's Moho map, scaling
-!  of Vs with depth, Hauksson's regional model, attenuation, oceans, movies
-!
-! MPI v. 1.0 Dimitri Komatitsch, Caltech, May 2002: first MPI version based on global code
+! ************** PROGRAM STARTS HERE **************
 
+  program xgenerate_databases
+
+  use manager_adios
+  use generate_databases_par
+
+  implicit none
 
   include 'version.fh'
 
