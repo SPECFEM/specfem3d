@@ -181,8 +181,9 @@ USE_SOURCES_RECEIVERS_Z         = .true.
 # in which the source is a vertical force, normal force, tilted force, impact etc.
 # If this flag is turned on, the FORCESOLUTION file must be edited by giving:
 # - the corresponding time-shift parameter,
-# - the half duration parameter of the source,
+# - the half duration (hdur, in s) for Gaussian/Step function, dominant frequency (f0, in Hz) for Ricker,
 # - the coordinates of the source,
+# - the source time function type (0=Gaussian function, 1=Ricker wavelet, 2=Step function),
 # - the magnitude of the force source,
 # - the components of a (non necessarily unitary) direction vector for the force source in the E/N/Z_UP basis.
 # The direction vector is made unitary internally in the code and thus only its direction matters here;
