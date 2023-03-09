@@ -371,7 +371,11 @@ $O/interpolation_mod.inv_input.o: $O/shared_par.shared_module.o
 $O/signal_processing_mod.inv_adjoint_source.o: $O/specfem3D_par.spec_module.o
 
 $O/mesh_tools_mod.inv_input.o: $O/inverse_problem_par.inv_par.o
-$O/IO_model_mod.inv_input.o: $O/mesh_tools_mod.inv_input.o
+$O/IO_model_mod.inv_input.o: \
+	$O/mesh_tools_mod.inv_input.o \
+	$O/shared_par.shared_module.o \
+	$O/specfem3D_par.spec_module.o \
+	$O/create_color_image.spec.o
 
 $O/rotations_mod.inv_adjoint_source.o: $O/interpolation_mod.inv_input.o
 $O/adjoint_source_mod.inv_adjoint_source.o: $O/signal_processing_mod.inv_adjoint_source.o $O/rotations_mod.inv_adjoint_source.o
@@ -390,7 +394,10 @@ $O/input_output_mod.inv_input.o: \
 $O/specfem_interface_mod.inv_specfem_interface.o: \
 	$O/adjoint_source_mod.inv_adjoint_source.o \
 	$O/input_output_mod.inv_input.o \
-	$O/signal_processing_mod.inv_adjoint_source.o
+	$O/signal_processing_mod.inv_adjoint_source.o \
+	$O/shared_par.shared_module.o \
+	$O/specfem3D_par.spec_module.o \
+	$O/create_color_image.spec.o
 
 $O/regularization_interface.inv_regularization.o: $O/regularization_SEM_mod.inv_regularization.o $O/regularization_FD_mod.inv_regularization.o
 
