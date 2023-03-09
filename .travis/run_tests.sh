@@ -214,6 +214,7 @@ else
   fi
   # inversion example
   if [ "$TESTID" == "36" ]; then
+    sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 500:" DATA/Par_file
     sed -i "s/Niter .*/Niter       : 0/" DATA/inverse_problem/inversion_fwi.dat
   fi
 
@@ -269,24 +270,24 @@ cd $WORKDIR
 ##
 ## homogeneous halfspace examples
 ##
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.elastic-noabs\\r'
-if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
-  ##
-  ## testing homogeneous halfspace
-  ##
-  echo "##################################################################"
-  echo "EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/"
-  echo
-  cd EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
-  ./run_this_example.sh
-  if [[ $? -ne 0 ]]; then exit 1; fi
-  cd $WORKDIR
-fi
-echo -en 'travis_fold:end:coverage.elastic-noabs\\r'
+#echo 'Coverage...' && echo -en 'travis_fold:start:coverage.elastic-noabs\\r'
+#if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "0" ]; then
+#  ##
+#  ## testing homogeneous halfspace
+#  ##
+#  echo "##################################################################"
+#  echo "EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/"
+#  echo
+#  cd EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/
+#  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+#  ./run_this_example.sh
+#  if [[ $? -ne 0 ]]; then exit 1; fi
+#  cd $WORKDIR
+#fi
+#echo -en 'travis_fold:end:coverage.elastic-noabs\\r'
 
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.elastic-hex27-noabs\\r'
-if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "0" ]; then
   ##
   ## testing hex27 example
   ##
@@ -302,7 +303,7 @@ fi
 echo -en 'travis_fold:end:coverage.elastic-hex27-noabs\\r'
 
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.poro\\r'
-if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "0" ]; then
   ##
   ## testing poroelastic
   ##
@@ -319,7 +320,7 @@ echo -en 'travis_fold:end:coverage.poro\\r'
 
 ## kernel example
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.kernel\\r'
-if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "0" ]; then
   ##
   ## testing acoustic kernel simulation
   ##
@@ -692,22 +693,6 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.waterlayered_poroelastic\\r'
-
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.fwi_test_acoustic\\r'
-if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
-  ##
-  ## fwi_test_acoustic example
-  ##
-  echo "##################################################################"
-  echo "EXAMPLES/inversion_examples/fwi_test_acoustic/"
-  echo
-  cd EXAMPLES/inversion_examples/fwi_test_acoustic/
-  sed -i "s/Niter .*/Niter       : 0/" DATA/inverse_problem/inversion_fwi.dat
-  ./run_this_example.sh
-  if [[ $? -ne 0 ]]; then exit 1; fi
-  cd $WORKDIR
-fi
-echo -en 'travis_fold:end:coverage.fwi_test_acoustic\\r'
 
 
 ##

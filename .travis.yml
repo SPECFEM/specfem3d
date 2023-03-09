@@ -34,6 +34,9 @@ env:
     #   CUDA         - flag for compilation with CUDA    
 
     # code coverage: mpi, using code coverage flags
+    - TESTID=0 TESTCOV=1 TESTDIR=22 TESTFLAGS="--with-mpi" CUDA=false
+
+    # code coverage: mpi, using code coverage flags
     - TESTID=1 TESTCOV=1 TESTDIR=1 TESTFLAGS="--with-mpi" CUDA=false
 
     # code coverage: mpi, using code coverage flags, additional tests
@@ -139,7 +142,7 @@ env:
     - TESTID=35 TESTCOV=0 TESTDIR=28 TESTFLAGS="--enable-vectorization --with-mpi" CUDA=false
 
     # inversion example
-    - TESTID=36 TESTCOV=0 TESTDIR=29 TESTFLAGS="--enable-vectorization --with-mpi" CUDA=false
+    - TESTID=36 TESTCOV=1 TESTDIR=29 TESTFLAGS="--with-mpi" CUDA=false
 
 
 # additional ARM tests
