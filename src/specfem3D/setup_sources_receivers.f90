@@ -482,8 +482,10 @@
             t0_acoustic = - 3.0d0 * ( tshift_src(isource) - hdur(isource) )
           endif
         else
-          ! Gaussian STF by default
-          t0_acoustic = - 3.0d0 * ( tshift_src(isource) - hdur(isource) )
+          if (.not. USE_RICKER_TIME_FUNCTION) then
+            ! Gaussian STF by default
+            t0_acoustic = - 3.0d0 * ( tshift_src(isource) - hdur(isource) )
+          endif
         endif
         if (t0_acoustic > t0 ) t0 = t0_acoustic
       endif
