@@ -1,0 +1,46 @@
+-------------------------------------------
+Readme
+-------------------------------------------
+
+This is an acoustic test FWI case for the in-house xinverse_problem_for_model program.
+
+The main parameters for the inversion are specified by two files in folder DATA/inverse_problem/:
+- acquisition.dat
+- inversion_fwi.dat
+
+Please see the comment sections in those files for explanations of the parameters. This example uses 2 events only and is meant for testing purposes. 
+The inversion will show a poor recovery performance, but the data fit should point in the right direction.
+
+
+The setup of the example works in 3 steps:
+
+1. create a "true" and an "initial" model: 
+   > ./0.setup_models.sh
+
+   This will create the mesh files for the "true" model in folder MODEL_TRUE/ and for the initial one in folder MODEL_INIT/.
+   For this example, the "true" model has a low-velocity intrusion in the box. The initial model starts with a homogeneous velocity model.
+
+
+2. create the "observed" data (based on the "true" model):
+   > ./1.create_raw_data.sh
+
+   This will create the "observed", "true" data for each event in folder RAW_DATA/. The binary data-files are named event_**.bin.
+   The number of events and data-file names are specified in the acquisition.dat file in folder DATA/inverse_problem/.
+
+
+3. run the inversion, starting from the initial model and trying to recover the "true" model:
+   > ./2.run_inversion.sh
+
+   This will start from the initial model, using the inversion setup as specified in the inversion_fwi.dat file in folder DATA/inverse_problem/.
+   The main output of the program is given in file output_inverse.txt.
+
+   While iterating, the new synthetics are stored in folder RAW_DATA/ and the model outputs in folder DATABASES_MPI/.
+
+
+To execute all these steps one after the other, just run the main example script:
+> ./run_this_example.sh
+
+
+Please consider contributing better examples to this package!
+
+

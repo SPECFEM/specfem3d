@@ -1,0 +1,49 @@
+---
+# //////////////////////////////////////////////////////////////////////////////
+#
+# Inverse problem for Model - Acquisition file
+#
+# //////////////////////////////////////////////////////////////////////////////
+#
+# This acquisition file contains all the event informations.
+# For each event, the corresponding information must be set.
+#
+#
+# Parameters (per event):
+#   event_name : <my_event_1>
+#
+#   source information is given by one of these settings:
+#     moment: <my_moment>        # filename (e.g. DATA/CMTSOLUTION.1)
+#     force : <my_force>         # filename (e.g. DATA/FORCESOLUTION.1)
+#     shot  : 0.0 0.0 0.0 1.e10  # position (x y z) and amplification
+#     plane : <file>             # filename
+#     fk    : <file>             # filename
+#     axisem: <file>             # filename
+#     dsm   : <file>             # filename
+#     traction_dir: <directory>  # directory path (in case of axisem, dsm) 
+#
+#   station_file  : <my_stations> # stations file  
+#   data_file     : <my_data>     # data file
+#   component     : UX UY UZ      # components UX/UY/UZ or PR     
+#   source_wavelet: <my_stf>      # external source wavelet
+#   NSTEP         : 0             # number of time steps  
+#   DT            : 0.0           # time step size
+#
+# The source wavelet must only be specified in case an external one should be used and synthetics convolved with.
+#
+# ==============================================================================
+event_name    : event_01               # event name
+moment        : DATA/CMTSOLUTION.1     # source (moment,force,shot,axisem,..)
+station_file  : DATA/STATIONS          # stations
+data_file     : RAW_DATA/event_01.bin  # data file
+component     : PR                     # components - pressure only
+NSTEP         : 400                    # number of time steps
+DT            : 0.0012                 # time step size
+
+event_name    : event_07               # event name
+moment        : DATA/CMTSOLUTION.7     # source (moment,force,shot,axisem,..)
+station_file  : DATA/STATIONS          # stations
+data_file     : RAW_DATA/event_07.bin  # data file
+component     : PR                     # components - pressure only
+NSTEP         : 400                    # number of time steps
+DT            : 0.0012                 # time step size

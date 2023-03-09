@@ -18,7 +18,7 @@ running example: Mon Dec 12 15:15:52 CET 2022
    using NGNOD =            8
    linear elements
 
- total number of nodes: 
+ total number of nodes:
    nnodes =        35328
  total number of spectral elements:
    nspec =        32085
@@ -84,7 +84,7 @@ running example: Mon Dec 12 15:15:52 CET 2022
    load per partition: imbalance =    4.93693686     %
                        (0% being totally balanced, 100% being unbalanced)
 
- partitions: 
+ partitions:
    num         =            4
    ninterfaces =            6
 

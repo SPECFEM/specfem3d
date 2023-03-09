@@ -1,0 +1,389 @@
+ //////////////////////////////////////////////////////////////////////////////
+
+   cONXXXXXX  x0x:   ckx:   ck0d;  dXNX
+   cKMNkdddo  OWNd  :kWNx;  xNWk;  xWWK
+   cKMX       dNWk  xNMMNd  OMNo   xWWO
+   cKMWNXXXK  lKM0ldNW00WXolKMKc   xWMW
+   cKMNkdddo   kWN0XWOcc0WX0NWk,   xWWK
+   cKMK        dNMMWKc  lKWMMNd    xWWk
+   cKMN        cKMMXo    lXMMKc    xWWk
+   ox00         xNXd      oKNk     oOOo               Inverse Problem for Model
+
+ //////////////////////////////////////////////////////////////////////////////
+
+
+ *********************************************
+ ***       READING INPUT PARAMETERS        ***
+ *********************************************
+
+
+  READING acquisition
+
+  ALLOCATE  acquisition structure for            2  events
+
+  READING acquisition passed
+
+  Nb tot events            2
+
+
+  READ  ./DATA/inverse_problem/inversion_fwi.dat
+
+
+  READING and LOCATING stations
+    event :            1  has stations :          486
+    event :            2  has stations :          486
+  READING and LOCATING stations passed
+
+
+  READING and LOCATING sources
+    event :            1  has sources :            1
+    event :            2  has sources :            1
+  READING and LOCATING sources passed
+
+  READING data
+  READING data passed
+
+  Elapsed time for setup in seconds =    2.2240009999999999
+
+
+ *************************************************************************
+
+  Specfem inverse problem : L-BFGS FWI ...
+  with family parameters  : ISO
+
+  L-BFGS history          :            3
+
+
+  FAMILY PARAMETER USED   : ISO
+
+  Pure Acoustic
+
+  Nb inverse param        :            1
+  Nb param in full family :            3
+
+
+  full family parameters  :
+
+  Param            1  :  density--(rho)
+  Param            2  :  Pwave-velocity--(vp)
+  Param            3  :  Swave-velocity--(vs)
+
+
+  inverse parameter            1  : vp
+
+  allocate arrays for fwi iterations,  Ninvpar          :           1
+                                       L-BFGS history   :           3
+                                       number of events :           2
+
+  minimum memory requested :    43.8690186     MB per process
+
+ *************************************************************************
+
+  optimization :  L-BFGS
+
+
+ *********************************************
+ ***      INITIALIZE FWI ITERATIONS        ***
+ *********************************************
+
+  frequency group  :           1
+  band pass filter :   1.00000000     /   80.0000000
+
+
+
+ *********************************************
+ ***         SET UP REGULARIZATION         ***
+ *********************************************
+
+  Volume of domain :    1.00000000E+09
+
+
+  - > Compute gradient for event :           1  iteration :            0
+  adjoint sources : L2_OIL_INDUSTRY
+    Cost function for this event :    1.79000870E-10
+    weight on data    :    1.00000000
+    number of traces  :    972.000000
+    total weight      :    4.62962948E-02
+  ... Writing adjoint sources gather for event :            1
+  ... Writing synthetic data gather for event  :            1
+  ... Writing filtered data gather for event   :            1
+  gradient done
+
+  - > Compute gradient for event :           2  iteration :            0
+  adjoint sources : L2_OIL_INDUSTRY
+    Cost function for this event :    4.23060559E-10
+    weight on data    :    1.00000000
+    number of traces  :    972.000000
+    total weight      :    4.62962948E-02
+  ... Writing adjoint sources gather for event :            2
+  ... Writing synthetic data gather for event  :            2
+  ... Writing filtered data gather for event   :            2
+  gradient done
+
+  all gradients done for frequency band :  1 iteration :   0
+  Elapsed time in seconds  =    21.611505000000001
+  Elapsed time in hh:mm:ss =      0 h 00 m 21 s
+
+
+  Storing iterations in l-bfgs memory :            0
+  Total iteration to store :           3
+
+
+  Initial Cost function :    6.02061401E-10
+  Initial Gradient Norm :    5.58905590E+10
+  Initial Data std      :    3.88529625E-05
+
+ *********************************************
+ ***   FWI ITERATION     :            0   ***
+ *********************************************
+
+ *** WOLFE SUB-ITERATION :            1
+ ***          TRIAL STEP :    8.28713291E-06
+
+  - > update model :
+  Parameter : 1  -  vp      MIN :  2772.27734   MAX :  2824.08179
+                 max pert,  prior  0.990086 %     previous  :  0.472290  %
+
+  - > Compute gradient for event :           1  iteration :            0
+  adjoint sources : L2_OIL_INDUSTRY
+    Cost function for this event :    1.57114197E-10
+    weight on data    :    1.00000000
+    number of traces  :    972.000000
+    total weight      :    4.62962948E-02
+  ... Writing adjoint sources gather for event :            1
+  ... Writing synthetic data gather for event  :            1
+  gradient done
+
+  - > Compute gradient for event :           2  iteration :            0
+  adjoint sources : L2_OIL_INDUSTRY
+    Cost function for this event :    4.12474471E-10
+    weight on data    :    1.00000000
+    number of traces  :    972.000000
+    total weight      :    4.62962948E-02
+  ... Writing adjoint sources gather for event :            2
+  ... Writing synthetic data gather for event  :            2
+  gradient done
+
+  all gradients done for frequency band :  1 iteration :   0 Wolfe :   1
+  Elapsed time in seconds  =    21.793931999999998
+  Elapsed time in hh:mm:ss =      0 h 00 m 21 s
+
+  current total cost:     5.69588654E-10
+  current step      :  maximum perturbations      :   0.990086257     %
+  --- > Wolfe rules :  condition m1 * Qp0 >=  Qpt :   -5.58905583E-07  -3.91845379E-06 T
+                       condition m2 * Qp0 <= vQpt :   -5.03015014E+10  -1.54482770E+10 T
+  --- > Wolfe rules :  step accepted
+
+  Storing iterations in l-bfgs memory :            1
+  Total iteration to store :           3
+
+
+  Cost function :    5.69588654E-10    relative cost :   94.6064072     %
+  Gradient Norm :    1.69823240E+11    relative grad :   303.849609     %
+  Data std      :    3.85292697E-05
+
+ done frequency band :            1  iteration :            0
+ Elapsed time for computing iteration in seconds  =    21.936313999999999
+ Elapsed time for computing iteration in hh:mm:ss =      0 h 00 m 21 s
+
+
+ *********************************************
+ ***   FWI ITERATION     :            1   ***
+ *********************************************
+
+  Calling l-bfgs, iter  :            1
+          Loops min/max :            0 /           0
+
+ *** WOLFE SUB-ITERATION :            1
+ ***          TRIAL STEP :   0.180216685
+
+  - > update model :
+  Parameter : 1  -  vp      MIN :  2763.39258   MAX :  2807.83984
+                 max pert,  prior  1.307399 %     previous  :  0.211297  %
+
+  - > Compute gradient for event :           1  iteration :            1
+  adjoint sources : L2_OIL_INDUSTRY
+    Cost function for this event :    1.49105173E-10
+    weight on data    :    1.00000000
+    number of traces  :    972.000000
+    total weight      :    4.62962948E-02
+  ... Writing adjoint sources gather for event :            1
+  ... Writing synthetic data gather for event  :            1
+  gradient done
+
+  - > Compute gradient for event :           2  iteration :            1
+  adjoint sources : L2_OIL_INDUSTRY
+    Cost function for this event :    3.53167717E-10
+    weight on data    :    1.00000000
+    number of traces  :    972.000000
+    total weight      :    4.62962948E-02
+  ... Writing adjoint sources gather for event :            2
+  ... Writing synthetic data gather for event  :            2
+  gradient done
+
+  all gradients done for frequency band :  1 iteration :   1 Wolfe :   1
+  Elapsed time in seconds  =    21.837282999999999
+  Elapsed time in hh:mm:ss =      0 h 00 m 21 s
+
+  current total cost:     5.02272890E-10
+  current step      :  maximum perturbations      :   0.990080833     %
+  --- > Wolfe rules :  condition m1 * Qp0 >=  Qpt :   -5.92842875E-12  -3.73526821E-10 T
+                       condition m2 * Qp0 <= vQpt :   -533558.562      -100731.602     T
+  --- > Wolfe rules :  step accepted
+
+  Storing iterations in l-bfgs memory :            2
+  Total iteration to store :           3
+
+
+  Cost function :    5.02272890E-10    relative cost :   83.4255295     %
+  Gradient Norm :    1.29151746E+11    relative grad :   231.079712     %
+  Data std      :    3.68082110E-05
+
+ done frequency band :            1  iteration :            1
+ Elapsed time for computing iteration in seconds  =    21.995272999999997
+ Elapsed time for computing iteration in hh:mm:ss =      0 h 00 m 21 s
+
+
+ *********************************************
+ ***   FWI ITERATION     :            2   ***
+ *********************************************
+
+  Calling l-bfgs, iter  :            2
+          Loops min/max :            0 /           1
+
+ *** WOLFE SUB-ITERATION :            1
+ ***          TRIAL STEP :    5.70930862
+
+  - > update model :
+  Parameter : 1  -  vp      MIN :  2739.33936   MAX :  2835.91797
+                 max pert,  prior  2.166443 %     previous  :  0.404487  %
+
+  - > Compute gradient for event :           1  iteration :            2
+  adjoint sources : L2_OIL_INDUSTRY
+    Cost function for this event :    1.29199706E-10
+    weight on data    :    1.00000000
+    number of traces  :    972.000000
+    total weight      :    4.62962948E-02
+  ... Writing adjoint sources gather for event :            1
+  ... Writing synthetic data gather for event  :            1
+  gradient done
+
+  - > Compute gradient for event :           2  iteration :            2
+  adjoint sources : L2_OIL_INDUSTRY
+    Cost function for this event :    3.54531127E-10
+    weight on data    :    1.00000000
+    number of traces  :    972.000000
+    total weight      :    4.62962948E-02
+  ... Writing adjoint sources gather for event :            2
+  ... Writing synthetic data gather for event  :            2
+  gradient done
+
+  all gradients done for frequency band :  1 iteration :   2 Wolfe :   1
+  Elapsed time in seconds  =    21.846954000000011
+  Elapsed time in hh:mm:ss =      0 h 00 m 21 s
+
+  current total cost:     4.83730833E-10
+  current step      :  maximum perturbations      :   0.999990284     %
+  --- > Wolfe rules :  condition m1 * Qp0 >=  Qpt :   -6.77574370E-13  -3.24768858E-12 T
+                       condition m2 * Qp0 <= vQpt :   -60981.6914      -13359.6631     T
+  --- > Wolfe rules :  step accepted
+
+  Storing iterations in l-bfgs memory :            3
+  Total iteration to store :           3
+
+
+  Cost function :    4.83730833E-10    relative cost :   80.3457642     %
+  Gradient Norm :    4.09099895E+11    relative grad :   731.966064     %
+  Data std      :    3.70717462E-05
+
+ done frequency band :            1  iteration :            2
+ Elapsed time for computing iteration in seconds  =    22.037218000000010
+ Elapsed time for computing iteration in hh:mm:ss =      0 h 00 m 22 s
+
+
+ *********************************************
+ ***   FWI ITERATION     :            3   ***
+ *********************************************
+
+  Calling l-bfgs, iter  :            3
+          Loops min/max :            0 /           2
+
+ *** WOLFE SUB-ITERATION :            1
+ ***          TRIAL STEP :    1.08105576
+
+  - > update model :
+  Parameter : 1  -  vp      MIN :  2740.05005   MAX :  2864.27661
+                 max pert,  prior  2.295602 %     previous  :  0.493831  %
+
+  - > Compute gradient for event :           1  iteration :            3
+  adjoint sources : L2_OIL_INDUSTRY
+    Cost function for this event :    1.15084234E-10
+    weight on data    :    1.00000000
+    number of traces  :    972.000000
+    total weight      :    4.62962948E-02
+  ... Writing adjoint sources gather for event :            1
+  ... Writing synthetic data gather for event  :            1
+  gradient done
+
+  - > Compute gradient for event :           2  iteration :            3
+  adjoint sources : L2_OIL_INDUSTRY
+    Cost function for this event :    3.07856851E-10
+    weight on data    :    1.00000000
+    number of traces  :    972.000000
+    total weight      :    4.62962948E-02
+  ... Writing adjoint sources gather for event :            2
+  ... Writing synthetic data gather for event  :            2
+  gradient done
+
+  all gradients done for frequency band :  1 iteration :   3 Wolfe :   1
+  Elapsed time in seconds  =    21.888036999999997
+  Elapsed time in hh:mm:ss =      0 h 00 m 21 s
+
+  current total cost:     4.22941071E-10
+  current step      :  maximum perturbations      :   0.999981046     %
+  --- > Wolfe rules :  condition m1 * Qp0 >=  Qpt :   -3.49249991E-12  -5.62318456E-11 T
+                       condition m2 * Qp0 <= vQpt :   -314325.000      -168145.719     T
+  --- > Wolfe rules :  step accepted
+
+  Storing iterations in l-bfgs memory :            4
+  Shifting previous arrays and store in            3  index
+  Total iteration to store :           3
+
+
+  Cost function :    4.22941071E-10    relative cost :   70.2488251     %
+  Gradient Norm :    3.06334040E+11    relative grad :   548.096191     %
+  Data std      :    3.45909539E-05
+
+ done frequency band :            1  iteration :            3
+ Elapsed time for computing iteration in seconds  =    22.089632000000009
+ Elapsed time for computing iteration in hh:mm:ss =      0 h 00 m 22 s
+
+
+ *****************************************************************************************
+ *** WRITING OUTPUT MODEL ON DISK : model_vp_output, model_vs_output, model_rho_output ***
+ *****************************************************************************************
+
+  Family Parameter : ISO
+
+  frequency band   :            1  out of            1
+
+  Model: acoustic
+         P velocity min,max =    2740.05005       2864.27661
+         density    min,max =    2300.00000       2300.00000
+
+
+  FWI STOP : maximum allowed iteration reached            3
+
+
+
+  FWI STOPPED at iteration :           3  /            3
+
+ *************************************************************************
+
+
+ Timing info:
+ Total elapsed time in seconds  =    111.94288600000000
+ Total elapsed time in hh:mm:ss =      0 h 01 m 51 s
+
+ End of the inversion
+
