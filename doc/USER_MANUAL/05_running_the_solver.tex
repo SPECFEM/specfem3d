@@ -48,7 +48,7 @@ the database generator \texttt{xgenerate\_databases} and the solver
 
 For any particular earthquake, the \texttt{CMTSOLUTION} file that
 represents the point source may be obtained directly from the Global
-Centroid-Moment Tensor (CMT) web page \urlwithparentheses{www.globalcmt.org}.
+Centroid-Moment Tensor (CMT) \href{www.globalcmt.org}{web page}.
 It looks like the example shown in Fig. \ref{fig:CMTSOLUTION-file}.
 \begin{figure}[htp]
 \begin{centering}
@@ -87,9 +87,9 @@ that the noise generated in the simulation by using a step source
 time function may be safely filtered out afterward based upon a convolution
 with the desired source-time function and/or low-pass filtering. Use
 the serial code \texttt{convolve\_source\_timefunction.f90} and the
-script \texttt{convolve\_source\_timefunction.csh} for this purpose,
-or alternatively use signal-processing software packages such as SAC
-\urlwithparentheses{www.llnl.gov/sac}. Type
+script \texttt{convolve\_source\_timefunction.csh} for this purpose
+(or alternatively use signal-processing software packages such as \href{https://seiscode.iris.washington.edu/projects/sac}{SAC}).
+Type
 {\small
 \begin{verbatim}
 make xconvolve_source_timefunction

@@ -76,7 +76,7 @@ elements. If you use the internal mesher, the only option is 8-node
 bricks (27-node elements are not supported). \texttt{CUBIT} does not
 support HEX27 elements either (it can generate them, but they are
 flat, i.e. identical to HEX8). To generate HEX27 elements with curvature
-properly taken into account, you can use Gmsh \url{http://geuz.org/gmsh/}
+properly taken into account, you can use Gmsh \url{http://gmsh.info}
 \item [{\texttt{MODEL}}] Must be set to one of the following:
 
 \begin{description}
@@ -249,7 +249,7 @@ of the simulation is provided. Otherwise, it adds this half duration
 to the half duration specified in the source file \texttt{CMTSOLUTION},
 thus simulates longer periods to make the movie images look smoother.
 \item [{\texttt{SAVE\_MESH\_FILES}}] Set this flag to \texttt{.true.} to
-save ParaView \urlwithparentheses{www.paraview.org} mesh files for
+save \href{www.paraview.org}{ParaView} mesh files for
 subsequent viewing. Turning the flag on generates large (distributed)
 files in the \texttt{LOCAL\_PATH} directory. See Section~\ref{sec:Mesh-graphics}
 for a discussion of mesh viewing features.

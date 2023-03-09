@@ -8,8 +8,8 @@ and DX (.dx) format to visualize them. For this, you must set either
 the flag \texttt{CREATE\_DX\_FILES} or \texttt{CREATE\_ABAQUS\_FILES}
 to \texttt{.true.} in the mesher's parameter file \texttt{Mesh\_Par\_file}
 prior to running the mesher (see Chapter~\ref{cha:Running-the-Mesher-Meshfem3D}
-for details). You can then use AVS \urlwithparentheses{www.avs.com}
-or OpenDX \urlwithparentheses{www.opendx.org} to visualize the mesh
+for details). You can then use \href{www.avs.com}{AVS}
+or \href{www.opendx.org}{OpenDX} to visualize the mesh
 and MPI partition (slices).
 
 \begin{figure}[htbp]
@@ -28,11 +28,11 @@ mesh was created by \texttt{xmeshfem3D} for 4 processors.}
 
 
 You have also the option to visualize the distributed databases produced
-by \texttt{xgenerate\_databases} using Paraview \urlwithparentheses{www.paraview.org}.
+by \texttt{xgenerate\_databases} using \href{www.paraview.org}{Paraview}.
 For this, you must set the flag \texttt{SAVE\_MESH\_FILES} to \texttt{.true.}
 in the main parameter file \texttt{DATA/Par\_file} (see Chapter~\ref{cha:Main-Parameter}
 for details). This will create VTK files for each single partition.
-You can then use Paraview \urlwithparentheses{www.paraview.org}
+You can then use \href{www.paraview.org}{Paraview}
 to visualized these partitions.\newline
 
 {\red To visualize seismograms with Paraview, you should turn off the flag SU\_FORMAT, and turn on the use binary seismograms flag. This will generate .bin files, that you can open with Paraview. You have to select the way you open it ("raw"), and specify the dimensions of the file (NSTEP and NREC).}
@@ -127,7 +127,7 @@ showing movie snapshots of vertical velocity components at different times.}
 \end{description}
 The \texttt{SPECFEM3D Cartesian} code is running in near real-time
 to produce animations of southern California earthquakes via the web;
-see Southern California ShakeMovie\textregistered{}\urlwithparentheses{www.shakemovie.caltech.edu}.
+see Southern California \href{www.shakemovie.caltech.edu}{ShakeMovie\textregistered{}}.
 
 
 \subsection{Movie Volume}\label{sub:Movie-Volume}
@@ -252,7 +252,7 @@ mesh2vtu.pl -i velocity_Z_it000400.mesh -o velocity_Z_it000400.vtu
 }
 
 Notice that this Perl script uses a program \texttt{mesh2vtu} in the \texttt{utils/Visualization/Paraview/mesh2vtu} directory, which further
-uses the VTK \urlwithparentheses{http://www.vtk.org} run-time library for its execution. Therefore, make sure you have them properly set
+uses the \href{http://www.vtk.org}{VTK} run-time library for its execution. Therefore, make sure you have them properly set
 in the script according to your system.\newline
 
 \bigskip
@@ -361,7 +361,7 @@ mesh2vtu.pl -i file.mesh -o file.vtu
 
 \item Notice that this Perl script uses a program \texttt{mesh2vtu} in the
 \texttt{\small utils/Visualization/Paraview/mesh2vtu} directory, which further
-uses the VTK \urlwithparentheses{http://www.vtk.org/} run-time library
+uses the \href{http://www.vtk.org/}{VTK} run-time library
 for its execution. Therefore, make sure you have them properly set
 in the script according to your system.
 \end{enumerate}
@@ -377,7 +377,7 @@ also be viewed in Paraview in the next step.
 \item \textbf{View the mesh in ParaView}
 
 
-Finally, we can view the mesh in ParaView \urlwithparentheses{www.paraview.org}.
+Finally, we can view the mesh in \href{www.paraview.org}{ParaView}.
 \begin{enumerate}
 \item Open ParaView.
 \item From the top menu, \textsf{File} $\rightarrow$\textsf{Open data},
@@ -403,8 +403,8 @@ lower and upper limits, or change the color scheme.
 $\rightarrow$ \textsf{Open data}, select \texttt{sr.vt}k, and click
 the \textsf{Accept} button. Choose \textsf{Filter} $\rightarrow$
 \textsf{Glyph}, and represent the points by `\textsf{spheres}'.
-\item For more information about ParaView, see the ParaView Users Guide
-\urlwithparentheses{www.paraview.org/files/v1.6/ParaViewUsersGuide.PDF}.
+\item For more information about ParaView, see the
+\href{www.paraview.org/files/v1.6/ParaViewUsersGuide.PDF}{ParaView Users Guide}.
 \end{enumerate}
 \end{enumerate}
 %
