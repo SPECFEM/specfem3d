@@ -401,18 +401,18 @@ contains
 
   subroutine flush_iunit(iunit)
 
-    implicit none
+  implicit none
 
-    integer, intent(in) :: iunit
+  integer, intent(in) :: iunit
 
-    ! note: Fortran2003 includes a FLUSH statement
-    !          which is implemented by most compilers by now
-    !
-    ! otherwise:
-    !   a) comment out the line below
-    !   b) try to use instead: call flush(iunit)
+  ! note: Fortran2003 includes a FLUSH statement
+  !          which is implemented by most compilers by now
+  !
+  ! otherwise:
+  !   a) comment out the line below
+  !   b) try to use instead: call flush(iunit)
 
-    flush(iunit)
+  flush(iunit)
 
   end subroutine flush_iunit
 

@@ -29,11 +29,7 @@
 
 !##################################################################################################################################
 !>
-!!
-!!
 !!   main subroutine to launch the iterative Full Waveform Inversion.
-!!
-!!
 !!
 !!   -- the simulation is directly based on specfem3D git devel version
 !!   -- the MPI use directly the communicators defined in specfem
@@ -75,7 +71,6 @@ subroutine inverse_problem_main()
   double precision                       :: tCPU,tstart,tstart_begin
   integer                                :: ihours,iminutes,iseconds,int_tCPU
   double precision,             external :: wtime
-
 
   !!!##############################################################################################################################
   !!! ---------------------------------------------- INITIALIZE RUNTIME ----------------------------------------------------------
