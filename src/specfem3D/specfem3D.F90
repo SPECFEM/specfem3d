@@ -269,7 +269,7 @@
 ! Evolution of the code:
 ! ---------------------
 !
-! version 4.0, December 2022:
+! version 4.0, March 2023:
 !   Rafael Almada, Jean-Paul Ampuero, Etienne Bachmann, Kangchen Bai, Stephen Beller, Jordan Bishop,
 !   Alexis Bottero, Emanuele Casarotti, Clement Durochat, Rene Gassmoeller, Hom Nath Gharti, Leopold Grinberg,
 !   Aakash Gupta, Foivos Karakostas, Dimitri Komatitsch, Qinya Liu, Geordie McBain, Ryan Modrak, Vadim Monteiller,
