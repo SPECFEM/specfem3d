@@ -62,6 +62,18 @@
   real(kind=CUSTOM_REAL) :: duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl
   real(kind=CUSTOM_REAL) :: duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl
 
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: displ_elem
+
+  ! stores elements displacement field
+  do k = 1,NGLLZ
+    do j = 1,NGLLY
+      do i = 1,NGLLX
+        iglob = ibool(i,j,k,ispec)
+        displ_elem(:,i,j,k) = displ(:,iglob)
+      enddo
+    enddo
+  enddo
+
   ispec_irreg = irregular_element_number(ispec)
 
   do k = 1,NGLLZ
@@ -80,28 +92,21 @@
         tempz2l = 0._CUSTOM_REAL
         tempz3l = 0._CUSTOM_REAL
 
-        do l = 1,NGLLX
+        do l = 1,NGLLX    ! assumes NGLLX == NGLLY == NGLLZ
           hp1 = hprime_xx(i,l)
-          iglob = ibool(l,j,k,ispec)
-          tempx1l = tempx1l + displ(1,iglob)*hp1
-          tempy1l = tempy1l + displ(2,iglob)*hp1
-          tempz1l = tempz1l + displ(3,iglob)*hp1
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+          tempx1l = tempx1l + displ_elem(1,l,j,k)*hp1
+          tempy1l = tempy1l + displ_elem(2,l,j,k)*hp1
+          tempz1l = tempz1l + displ_elem(3,l,j,k)*hp1
 
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l = 1,NGLLY
           hp2 = hprime_yy(j,l)
-          iglob = ibool(i,l,k,ispec)
-          tempx2l = tempx2l + displ(1,iglob)*hp2
-          tempy2l = tempy2l + displ(2,iglob)*hp2
-          tempz2l = tempz2l + displ(3,iglob)*hp2
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+          tempx2l = tempx2l + displ_elem(1,i,l,k)*hp2
+          tempy2l = tempy2l + displ_elem(2,i,l,k)*hp2
+          tempz2l = tempz2l + displ_elem(3,i,l,k)*hp2
 
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l = 1,NGLLZ
           hp3 = hprime_zz(k,l)
-          iglob = ibool(i,j,l,ispec)
-          tempx3l = tempx3l + displ(1,iglob)*hp3
-          tempy3l = tempy3l + displ(2,iglob)*hp3
-          tempz3l = tempz3l + displ(3,iglob)*hp3
+          tempx3l = tempx3l + displ_elem(1,i,j,l)*hp3
+          tempy3l = tempy3l + displ_elem(2,i,j,l)*hp3
+          tempz3l = tempz3l + displ_elem(3,i,j,l)*hp3
         enddo
 
         ! get derivatives of ux, uy and uz with respect to x, y and z

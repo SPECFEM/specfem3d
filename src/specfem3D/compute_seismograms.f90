@@ -269,7 +269,7 @@
 
   use constants, only: myrank,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
 
-  use specfem_par, only: SIMULATION_TYPE,NGLOB_AB,ibool, &
+  use specfem_par, only: SIMULATION_TYPE,NGLOB_AB,NSPEC_AB,ibool, &
     deltat,DT,t0,NSTEP,it, &
     seismo_current,seismo_offset,NTSTEP_BETWEEN_OUTPUT_SAMPLE, &
     ispec_selected_source, &
@@ -292,11 +292,7 @@
   implicit none
 
   ! local parameters
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element
-
-  integer :: irec_local,irec,idx
-  integer :: iglob,ispec,i,j,k
-
+  integer :: irec_local,irec,idx,ispec
   ! adjoint locals
   real(kind=CUSTOM_REAL),dimension(NDIM,NDIM):: eps_s
   real(kind=CUSTOM_REAL),dimension(NDIM):: eps_m_s
@@ -342,16 +338,6 @@
 
     ! elastic wave field
     if (ispec_is_elastic(ispec)) then
-      ! stores elements displacement field
-      do k = 1,NGLLZ
-        do j = 1,NGLLY
-          do i = 1,NGLLX
-            iglob = ibool(i,j,k,ispec)
-            displ_element(:,i,j,k) = displ(:,iglob)
-          enddo
-        enddo
-      enddo
-
       ! gets local receiver interpolators
       ! (1-D Lagrange interpolators)
       hxir(:) = hxir_store(:,irec_local)
@@ -363,12 +349,20 @@
       hpetar(:) = hpetar_store(:,irec_local)
       hpgammar(:) = hpgammar_store(:,irec_local)
 
+      ! strain
+      call compute_interpolated_strain(displ,NGLOB_AB, &
+                                       ispec,NSPEC_AB,ibool, &
+                                       hxir,hetar,hgammar, &
+                                       eps_s)
+
       ! computes the integrated derivatives of source parameters (M_jk and X_s)
-      call compute_adj_source_frechet(ispec,displ_element, &
+      call compute_adj_source_frechet(displ,NGLOB_AB, &
+                                      ispec,NSPEC_AB,ibool, &
                                       Mxx(irec),Myy(irec),Mzz(irec), &
                                       Mxy(irec),Mxz(irec),Myz(irec), &
-                                      eps_s,eps_m_s, &
-                                      hxir,hetar,hgammar,hpxir,hpetar,hpgammar, &
+                                      eps_m_s, &
+                                      hxir,hetar,hgammar, &
+                                      hpxir,hpetar,hpgammar, &
                                       hprime_xx,hprime_yy,hprime_zz)
 
       ! stores strain value
