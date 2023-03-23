@@ -435,9 +435,9 @@
       stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with SIMULATION_TYPE /= 1 yet'
     if (SAVE_SEISMOGRAMS_DISPLACEMENT .or. SAVE_SEISMOGRAMS_VELOCITY .or. SAVE_SEISMOGRAMS_ACCELERATION) &
       stop 'Invalid seismogram output for NB_RUNS_ACOUSTIC_GPU > 1, only pressure output implemented yet'
-    if (.not. SAVE_SEISMOGRAMS_PRESSURE ) &
+    if (.not. SAVE_SEISMOGRAMS_PRESSURE) &
       stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with elastic wavefield seismograms yet'
-    if (.not. GPU_MODE ) &
+    if (.not. GPU_MODE) &
       stop 'NB_RUNS_ACOUSTIC_GPU > 1 only applies with GPU_MODE'
     if (INVERSE_FWI_FULL_PROBLEM) &
       stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with INVERSE_FWI_FULL_PROBLEM yet'

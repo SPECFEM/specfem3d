@@ -481,6 +481,13 @@
       write(*,*)
     endif
 
+    call read_value_logical(SAVE_SEISMOGRAMS_STRAIN, 'SAVE_SEISMOGRAMS_STRAIN', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'SAVE_SEISMOGRAMS_STRAIN         = .false.'
+      write(*,*)
+    endif
+
     call read_value_logical(SAVE_SEISMOGRAMS_IN_ADJOINT_RUN, 'SAVE_SEISMOGRAMS_IN_ADJOINT_RUN', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
@@ -878,9 +885,10 @@
 
   ! seismogram output
   if (.not. SAVE_SEISMOGRAMS_DISPLACEMENT .and. .not. SAVE_SEISMOGRAMS_VELOCITY .and. &
-     .not. SAVE_SEISMOGRAMS_ACCELERATION .and. .not. SAVE_SEISMOGRAMS_PRESSURE) &
-   stop 'Error: at least one of SAVE_SEISMOGRAMS_DISPLACEMENT SAVE_SEISMOGRAMS_VELOCITY SAVE_SEISMOGRAMS_ACCELERATION &
-             &SAVE_SEISMOGRAMS_PRESSURE must be true'
+     .not. SAVE_SEISMOGRAMS_ACCELERATION .and. .not. SAVE_SEISMOGRAMS_PRESSURE .and. &
+     .not. SAVE_SEISMOGRAMS_STRAIN) &
+   stop 'Error: at least one of SAVE_SEISMOGRAMS_DISPLACEMENT, SAVE_SEISMOGRAMS_VELOCITY, SAVE_SEISMOGRAMS_ACCELERATION, &
+             &SAVE_SEISMOGRAMS_PRESSURE, or SAVE_SEISMOGRAMS_STRAIN must be true'
 
   if (NTSTEP_BETWEEN_OUTPUT_SAMPLE < 1) &
     stop 'Error: NTSTEP_BETWEEN_OUTPUT_SAMPLE must be >= 1'
@@ -893,6 +901,11 @@
     stop 'USE_TRICK_FOR_BETTER_PRESSURE is currently incompatible with &
         &SAVE_SEISMOGRAMS_DISPLACEMENT .or. SAVE_SEISMOGRAMS_VELOCITY .or. SAVE_SEISMOGRAMS_ACCELERATION, &
         &only SAVE_SEISMOGRAMS_PRESSURE can be used'
+
+  if (SAVE_SEISMOGRAMS_STRAIN) then
+    if (WRITE_SEISMOGRAMS_BY_MAIN) &
+      stop 'SAVE_SEISMOGRAMS_STRAIN works only correctly when WRITE_SEISMOGRAMS_BY_MAIN = .false.'
+  endif
 
   ! LDDRK
   if (USE_LDDRK) then
@@ -1297,11 +1310,14 @@
 
   ! seismograms
   call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+
   call bcast_all_singlel(SAVE_SEISMOGRAMS_DISPLACEMENT)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_VELOCITY)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_ACCELERATION)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_PRESSURE)
+  call bcast_all_singlel(SAVE_SEISMOGRAMS_STRAIN)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)
+
   call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_SAMPLE)
   call bcast_all_singlel(USE_BINARY_FOR_SEISMOGRAMS)
   call bcast_all_singlel(SU_FORMAT)

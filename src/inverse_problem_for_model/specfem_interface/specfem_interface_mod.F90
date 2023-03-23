@@ -592,25 +592,28 @@ contains
   if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION ) then
     ! coupled acoustic-elastic simulation
     !! todo recuperer inversion_paral%get_synthetics_**
-    SAVE_SEISMOGRAMS_DISPLACEMENT =.true.
-    SAVE_SEISMOGRAMS_VELOCITY     =.false.
-    SAVE_SEISMOGRAMS_ACCELERATION =.false.
-    SAVE_SEISMOGRAMS_PRESSURE     =.true.
+    SAVE_SEISMOGRAMS_DISPLACEMENT = .true.
+    SAVE_SEISMOGRAMS_VELOCITY     = .false.
+    SAVE_SEISMOGRAMS_ACCELERATION = .false.
+    SAVE_SEISMOGRAMS_PRESSURE     = .true.
+    SAVE_SEISMOGRAMS_STRAIN       = .false.
   else
     ! single domain only
     if (ACOUSTIC_SIMULATION) then
       ! acoustic - pressure output
-      SAVE_SEISMOGRAMS_PRESSURE     =.true.
-      SAVE_SEISMOGRAMS_DISPLACEMENT =.false.
-      SAVE_SEISMOGRAMS_VELOCITY     =.false.
-      SAVE_SEISMOGRAMS_ACCELERATION =.false.
+      SAVE_SEISMOGRAMS_PRESSURE     = .true.
+      SAVE_SEISMOGRAMS_DISPLACEMENT = .false.
+      SAVE_SEISMOGRAMS_VELOCITY     = .false.
+      SAVE_SEISMOGRAMS_ACCELERATION = .false.
+      SAVE_SEISMOGRAMS_STRAIN       = .false.
     endif
     if (ELASTIC_SIMULATION) then
       ! elastic - displacement output
-      SAVE_SEISMOGRAMS_PRESSURE      =.false.
-      SAVE_SEISMOGRAMS_DISPLACEMENT  =.true.
-      SAVE_SEISMOGRAMS_VELOCITY      =.false.
-      SAVE_SEISMOGRAMS_ACCELERATION  =.false.
+      SAVE_SEISMOGRAMS_PRESSURE      = .false.
+      SAVE_SEISMOGRAMS_DISPLACEMENT  = .true.
+      SAVE_SEISMOGRAMS_VELOCITY      = .false.
+      SAVE_SEISMOGRAMS_ACCELERATION  = .false.
+      SAVE_SEISMOGRAMS_STRAIN        = .false.
     endif
   endif
 

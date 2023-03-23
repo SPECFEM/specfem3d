@@ -189,11 +189,10 @@ module specfem_par
 
   ! seismograms
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: seismograms_d,seismograms_v,seismograms_a,seismograms_p
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: seismograms_eps
+
   integer :: nlength_seismogram
   integer :: seismo_offset,seismo_current
-
-  ! adjoint seismograms
-  integer :: it_adj_written
 
   ! for ASDF/SAC headers time
   integer :: yr_PDE,jda_PDE,ho_PDE,mi_PDE
@@ -295,7 +294,6 @@ module specfem_par
   ! adjoint source frechet derivatives
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: Mxx_der,Myy_der,Mzz_der,Mxy_der,Mxz_der,Myz_der
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: sloc_der
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: seismograms_eps
 
   ! adjoint elements
   integer :: NSPEC_ADJOINT, NGLOB_ADJOINT

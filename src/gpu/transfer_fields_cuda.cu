@@ -534,6 +534,23 @@ void FC_FUNC_(transfer_b_fields_ac_from_device,
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
+void FC_FUNC_(transfer_potential_ac_from_device,
+              TRANSFER_potentical_AC_FROM_DEVICE)(int* size,
+                                                  field* potential_acoustic,
+                                                  long* Mesh_pointer) {
+  TRACE("transfer_potential_ac_from_device");
+
+  //get mesh pointer out of fortran integer container
+  Mesh* mp = (Mesh*)(*Mesh_pointer);
+
+  gpuMemcpy_tohost_field(potential_acoustic,mp->d_potential_acoustic,(*size));
+
+  GPU_ERROR_CHECKING("after transfer_potential_ac_from_device");
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
 void FC_FUNC_(transfer_b_potential_ac_from_device,
               TRANSFER_B_potentical_AC_FROM_DEVICE)(int* size,
                                                     field* b_potential_acoustic,

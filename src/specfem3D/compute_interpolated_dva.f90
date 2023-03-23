@@ -294,8 +294,10 @@
         ! pressure
         if (USE_TRICK_FOR_BETTER_PRESSURE) then
           ! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+          !
           ! use the second derivative of the source for the source time function instead of the source itself,
           ! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+          !
           ! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
           ! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
           ! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
@@ -329,8 +331,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine compute_interpolated_strain(displ,NGLOB_AB, &
-                                         ispec,NSPEC_AB,ibool, &
+  subroutine compute_interpolated_strain(ispec,displ_element, &
                                          hxir,hetar,hgammar, &
                                          eps_s)
 
@@ -346,11 +347,8 @@
   implicit none
 
   integer,intent(in) :: ispec
-  integer,intent(in) :: NSPEC_AB,NGLOB_AB
 
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_AB),intent(in) :: displ
-
-  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(in) :: displ_element
 
   ! receiver Lagrange interpolators
   double precision,dimension(NGLLX),intent(in) :: hxir
@@ -360,7 +358,6 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NDIM),intent(inout) :: eps_s
 
   ! local parameters
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: displ_elem
   real(kind=CUSTOM_REAL) :: eps(NDIM,NDIM), eps_array(NDIM,NDIM,NGLLX,NGLLY,NGLLZ)
   real(kind=CUSTOM_REAL) :: tempx1l,tempx2l,tempx3l
   real(kind=CUSTOM_REAL) :: tempy1l,tempy2l,tempy3l
@@ -369,17 +366,7 @@
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
   real(kind=CUSTOM_REAL) :: duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
   double precision :: hlagrange
-  integer :: i,j,k,l,iglob,ispec_irreg
-
-  ! stores elements displacement field
-  do k = 1,NGLLZ
-    do j = 1,NGLLY
-      do i = 1,NGLLX
-        iglob = ibool(i,j,k,ispec)
-        displ_elem(:,i,j,k) = displ(:,iglob)
-      enddo
-    enddo
-  enddo
+  integer :: i,j,k,l,ispec_irreg
 
   ispec_irreg = irregular_element_number(ispec)
 
@@ -402,19 +389,19 @@
 
         do l = 1,NGLLX    ! assumes NGLLX == NGLLY == NGLLZ
           hp1 = hprime_xx(i,l)
-          tempx1l = tempx1l + displ_elem(1,l,j,k)*hp1
-          tempy1l = tempy1l + displ_elem(2,l,j,k)*hp1
-          tempz1l = tempz1l + displ_elem(3,l,j,k)*hp1
+          tempx1l = tempx1l + displ_element(1,l,j,k)*hp1
+          tempy1l = tempy1l + displ_element(2,l,j,k)*hp1
+          tempz1l = tempz1l + displ_element(3,l,j,k)*hp1
 
           hp2 = hprime_yy(j,l)
-          tempx2l = tempx2l + displ_elem(1,i,l,k)*hp2
-          tempy2l = tempy2l + displ_elem(2,i,l,k)*hp2
-          tempz2l = tempz2l + displ_elem(3,i,l,k)*hp2
+          tempx2l = tempx2l + displ_element(1,i,l,k)*hp2
+          tempy2l = tempy2l + displ_element(2,i,l,k)*hp2
+          tempz2l = tempz2l + displ_element(3,i,l,k)*hp2
 
           hp3 = hprime_zz(k,l)
-          tempx3l = tempx3l + displ_elem(1,i,j,l)*hp3
-          tempy3l = tempy3l + displ_elem(2,i,j,l)*hp3
-          tempz3l = tempz3l + displ_elem(3,i,j,l)*hp3
+          tempx3l = tempx3l + displ_element(1,i,j,l)*hp3
+          tempy3l = tempy3l + displ_element(2,i,j,l)*hp3
+          tempz3l = tempz3l + displ_element(3,i,j,l)*hp3
         enddo
 
         ! derivatives (dudx,..)

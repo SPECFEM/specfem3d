@@ -1267,6 +1267,7 @@
     write(IMAIN,*) '  Total number of samples for seismograms                        = ',NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE
     write(IMAIN,*)
   endif
+
   ! checks SU_FORMAT output length
   if (SU_FORMAT .and. (NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE > 32768)) then
     print *
@@ -1275,12 +1276,18 @@
     call exit_MPI(myrank,'Error: Two many samples for SU format ! The .su file created will be unusable')
   endif
 
+  ! safety check for strain seismograms
+  if (SAVE_SEISMOGRAMS_STRAIN .and. WRITE_SEISMOGRAMS_BY_MAIN) then
+    call exit_MPI(myrank,'SAVE_SEISMOGRAMS_STRAIN works only correctly when WRITE_SEISMOGRAMS_BY_MAIN = .false.')
+  endif
+
   ! seismogram array length
   nlength_seismogram = NTSTEP_BETWEEN_OUTPUT_SEISMOS / NTSTEP_BETWEEN_OUTPUT_SAMPLE
 
   ! statistics about allocation memory for seismograms & source_adjoint seismograms
   ! gather from secondarys on main
   call gather_all_singlei(nrec_local,tmp_rec_local_all,NPROC)
+
   ! user output
   if (myrank == 0) then
     ! determines maximum number of local receivers and corresponding rank
@@ -1296,11 +1303,8 @@
     if (SAVE_SEISMOGRAMS_VELOCITY) sizeval = sizeval + size_s
     if (SAVE_SEISMOGRAMS_ACCELERATION) sizeval = sizeval + size_s
     if (SAVE_SEISMOGRAMS_PRESSURE) sizeval = sizeval + dble(NB_RUNS_ACOUSTIC_GPU) * size_s
-    ! adjoint strain seismogram needs seismograms_eps(NDIM*NDIM,nrec_local,NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE)
-    if (SIMULATION_TYPE == 2) then
-      sizeval = sizeval + dble(maxrec) * dble(NDIM * NDIM)  &
-                          * dble(NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE * CUSTOM_REAL / 1024. / 1024. )
-    endif
+    ! strain seismogram needs seismograms_eps(NDIM,NDIM,nrec_local,NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE)
+    if (SAVE_SEISMOGRAMS_STRAIN) sizeval = sizeval + dble(NDIM) * size_s
 
     ! outputs info
     write(IMAIN,*) '  maximum number of local receivers is ',maxrec,' in slice ',maxproc(1)
@@ -1317,6 +1321,7 @@
 
     ! gather from secondarys on main
     call gather_all_singlei(nadj_rec_local,tmp_rec_local_all,NPROC)
+
     ! user output
     if (myrank == 0) then
       ! determines maximum number of local receivers and corresponding rank
@@ -1482,38 +1487,29 @@
     endif
     if (ier /= 0) stop 'error allocating array seismograms_p'
 
+    if (SAVE_SEISMOGRAMS_STRAIN) then
+      allocate(seismograms_eps(NDIM,NDIM,nrec_local,nlength_seismogram),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2087')
+    else
+      allocate(seismograms_eps(1,1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2088')
+    endif
+    if (ier /= 0) stop 'error allocating array seismograms_d'
+
     ! initialize seismograms
     seismograms_d(:,:,:) = 0._CUSTOM_REAL
     seismograms_v(:,:,:) = 0._CUSTOM_REAL
     seismograms_a(:,:,:) = 0._CUSTOM_REAL
     seismograms_p(:,:,:) = 0._CUSTOM_REAL
+    seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
   else
     ! dummy allocations
     allocate(seismograms_d(1,1,1), &
              seismograms_v(1,1,1), &
              seismograms_a(1,1,1), &
-             seismograms_p(1,1,1))
+             seismograms_p(1,1,1), &
+             seismograms_eps(1,1,1,1))
   endif
-
-  ! seismograms
-  if (SIMULATION_TYPE == 2) then
-    ! strain
-    ! for adjoint simulations, nrec_local is the number of "receivers" at which we store seismograms and the strain (epsilon)
-    ! field. "receiver" locations for adjoint simulations are determined by the CMTSOLUTIONs locations, i.e., original sources.
-    ! Thus, we flip this assignment for pure adjoint simulations, that is source locations becomes receiver locations,
-    ! and receiver locations become "adjoint source" locations.
-    if (nrec_local > 0) then
-      allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2095')
-      if (ier /= 0) stop 'error allocating array seismograms_eps'
-      seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
-    else
-      ! dummy array
-      allocate(seismograms_eps(1,1,1,1))
-    endif
-  endif
-  ! adjoint seismograms writing
-  it_adj_written = 0
 
   ! adjoint sources
   ! optimizing arrays for adjoint sources
