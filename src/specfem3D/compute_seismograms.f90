@@ -499,7 +499,7 @@
     ! eps_yz -> eps_ez
     !eps_loc_new(:,:) = matmul(matmul(nu_rec(:,:,irec),eps_loc(:,:)), transpose(nu_rec(:,:,irec)))
     !
-    ! --- for cartesian code: ----
+    ! --- for Cartesian code: ----
     ! this would become:
     !if (SIMULATION_TYPE == 2) then
     !  ! adjoint simulations
