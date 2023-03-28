@@ -53,13 +53,13 @@
 
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
-  real(kind=CUSTOM_REAL) :: vp,vs,rho,qkappa_atten,qmu_atten
+  real(kind=CUSTOM_REAL), intent(inout) :: vp,vs,rho,qkappa_atten,qmu_atten
 
-  integer :: iflag_aniso
-  integer :: idomain_id
+  integer, intent(inout) :: iflag_aniso
+  integer, intent(inout) :: idomain_id
 
-  real(kind=CUSTOM_REAL) :: kappa_s,kappa_f,kappa_fr,mu_fr,rho_s,rho_f,phi,tort,eta_f,kxx,kxy,kxz,kyy,kyz,kzz
-  real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
+  real(kind=CUSTOM_REAL), intent(inout) :: kappa_s,kappa_f,kappa_fr,mu_fr,rho_s,rho_f,phi,tort,eta_f,kxx,kxy,kxz,kyy,kyz,kzz
+  real(kind=CUSTOM_REAL), intent(inout) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
   ! local parameters
   integer :: iflag,flag_below,flag_above
@@ -217,10 +217,18 @@
 
       ! material definition undefined, uses definition from tomography model
 
+      ! sets acoustic/elastic domain as given in materials properties
+      iundef = - imaterial_id    ! iundef must be positive
+      if (iundef > nundefMat_ext_mesh) stop 'Error negative material ID exceeds total number undefined materials'
+
+      str_domain = trim(adjustl(undef_mat_prop(6,iundef)))
+      read(str_domain(1:len_trim(str_domain)),'(i1)',iostat=ier) idomain_id
+      if (ier /= 0) stop 'Error reading domain ID from undefined material properties'
+
       ! gets model values from tomography file
       call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten, &
                             c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
-                            imaterial_id,has_tomo_value)
+                            imaterial_id,has_tomo_value,idomain_id)
 
       ! checks if value was found
       if (.not. has_tomo_value) then
@@ -230,18 +238,6 @@
 
       ! no anisotropy
       iflag_aniso = 0
-
-      ! sets acoustic/elastic domain as given in materials properties
-      iundef = - imaterial_id    ! iundef must be positive
-      if (iundef > nundefMat_ext_mesh) stop 'Error negative material ID exceeds total number undefined materials'
-
-      str_domain = trim(adjustl(undef_mat_prop(6,iundef)))
-
-      read(str_domain(1:len_trim(str_domain)),'(i1)',iostat=ier) idomain_id
-      if (ier /= 0) stop 'Error reading domain ID from undefined material properties'
-
-      ! or
-      !idomain_id = IDOMAIN_ELASTIC    ! forces to be elastic domain
 
     case default
       print *,'Error: material id ',imaterial_id,' has material definition ',imaterial_def,' which is not recognized'

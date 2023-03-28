@@ -760,8 +760,9 @@ end subroutine init_tomography_files
 
   subroutine model_tomography(xmesh,ymesh,zmesh,rho_model,vp_model,vs_model,qkappa_atten,qmu_atten, &
                               c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
-                              imaterial_id,has_tomo_value)
+                              imaterial_id,has_tomo_value,idomain_id)
 
+  use constants, only: TINYVAL_SNGL
   use generate_databases_par, only: nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh, &
                                     ATTENUATION_COMP_MAXIMUM
 
@@ -779,6 +780,7 @@ end subroutine init_tomography_files
 
   integer, intent(in) :: imaterial_id
   logical,intent(out) :: has_tomo_value
+  integer, intent(inout) :: idomain_id
 
   ! local parameters
   integer :: ix,iy,iz,imat
@@ -803,6 +805,9 @@ end subroutine init_tomography_files
   ! anisotropy
   real(kind=CUSTOM_REAL), dimension(21) :: c1,c2,c3,c4,c5,c6,c7,c8
   real(kind=CUSTOM_REAL), dimension(21) :: c_final
+
+  ! flag for acoustic element detection
+  logical, parameter :: DETECT_ACOUSTIC_DOMAIN = .true.
 
   ! initializes flag
   has_tomo_value = .false.
@@ -1102,6 +1107,19 @@ end subroutine init_tomography_files
 
   ! value found
   has_tomo_value = .true.
+
+  ! determines domain id
+  if (DETECT_ACOUSTIC_DOMAIN .and. has_tomo_value) then
+    ! note: poroelastic tomography models not supported/implemented yet
+    ! checks if acoustic based on shear velocity
+    if (abs(vs_final) < TINYVAL_SNGL) then
+      ! acoustic - zero shear value
+      idomain_id = 1
+    else
+      ! elastic
+      idomain_id = 2
+    endif
+  endif
 
   contains
 
