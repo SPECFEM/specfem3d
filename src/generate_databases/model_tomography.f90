@@ -72,6 +72,9 @@
   ! data format
   logical,dimension(:),allocatable :: tomo_has_q_values
 
+  ! domain
+  integer,dimension(:),allocatable :: tomo_domain_id
+
   end module model_tomography_par
 
 !
@@ -132,7 +135,7 @@
   use constants, only: MAX_STRING_LEN,IIN,IMAIN
 
   use generate_databases_par, only: nmat_ext_mesh, &
-                                    undef_mat_prop,nundefMat_ext_mesh, &
+                                    mat_prop,undef_mat_prop,nundefMat_ext_mesh, &
                                     TOMOGRAPHY_PATH
 
   use model_tomography_par
@@ -146,11 +149,13 @@
   character(len=MAX_STRING_LEN) :: filename
   character(len=MAX_STRING_LEN) :: string_read
   character(len=5) :: filenumber
-  integer :: nmaterials,imat
+  character(len=MAX_STRING_LEN) :: str_domain
+  integer :: nmaterials,imat,idomain_id
   ! data format
   logical :: has_q_values
   integer :: ntokens
   logical,dimension(:),allocatable :: materials_with_q
+  integer,dimension(:),allocatable :: materials_domain_id
 
   ! sets number of materials to loop over
   nmaterials = nundefMat_ext_mesh
@@ -177,6 +182,12 @@
   if (ier /= 0) stop 'Error allocating array materials_with_q'
   materials_with_q(:) = .false.
 
+  ! domain flag
+  allocate(materials_domain_id(nmaterials),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 853')
+  if (ier /= 0) stop 'Error allocating array materials_with_q'
+  materials_domain_id(:) = 0
+
   ! loops over number of undefined materials
   do imat = 1, nmaterials
 
@@ -200,12 +211,21 @@
         write(filenumber, '(I2.2)') imat
         filename = 'tomography_model_' // trim(filenumber) // '.xyz'
       endif
+
+      ! sets initial domain to be given by the material definition
+      ! material domain_id
+      idomain_id = nint(mat_prop(7,imat))
     else
       ! checks if associated material is a tomography model
       if (trim(undef_mat_prop(2,imat)) /= 'tomography') cycle
 
       ! gets filename from material property
       read(undef_mat_prop(4,imat),*) filename
+
+      ! sets initial acoustic/elastic domain as given in materials properties
+      str_domain = trim(adjustl(undef_mat_prop(6,imat)))
+      read(str_domain(1:len_trim(str_domain)),'(i1)',iostat=ier) idomain_id
+      if (ier /= 0) stop 'Error reading domain ID from undefined material properties'
     endif
 
     ! counter
@@ -278,6 +298,9 @@
     endif
     materials_with_q(ifiles_tomo) = has_q_values
 
+    ! sets material domain
+    materials_domain_id(ifiles_tomo) = idomain_id
+
     ! counts remaining records
     do while (ier == 0)
       read(IIN,*,iostat=ier)
@@ -317,9 +340,12 @@
   allocate(ORIG_X(NFILES_TOMO),ORIG_Y(NFILES_TOMO),ORIG_Z(NFILES_TOMO),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 854')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
+  ORIG_X(:) = 0.0; ORIG_Y(:) = 0.0; ORIG_Z(:) = 0.0
+
   allocate(SPACING_X(NFILES_TOMO),SPACING_Y(NFILES_TOMO),SPACING_Z(NFILES_TOMO),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 855')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
+  SPACING_X(:) = 0.0; SPACING_Y(:) = 0.0; SPACING_Z(:) = 0.0
 
   ! allocate models parameter records
   ! only allocate anisotropy arrays if needed
@@ -327,33 +353,45 @@
     allocate(c_tomography(21,NFILES_TOMO,nrecord_max),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 904X')
     if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo anisotropy arrays')
+    c_tomography(:,:,:) = 0.0
   else
     allocate(vp_tomography(NFILES_TOMO,nrecord_max),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 856')
+    vp_tomography(:,:) = 0.0
     allocate(vs_tomography(NFILES_TOMO,nrecord_max),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 857')
+    vs_tomography(:,:) = 0.0
   endif
 
   allocate(rho_tomography(NFILES_TOMO,nrecord_max),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 858')
+  rho_tomography(:,:) = 0.0
+
   allocate(z_tomography(NFILES_TOMO,nrecord_max),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 859')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
+  z_tomography(:,:) = 0.0
 
   ! allocate models entries
   allocate(NX(NFILES_TOMO),NY(NFILES_TOMO),NZ(NFILES_TOMO),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 860')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
+  NX(:) = 0; NY(:) = 0; NZ(:) = 0
+
   allocate(nrecord(NFILES_TOMO),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 861')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
+  nrecord(:) = 0
 
   ! allocate models min/max statistics
   allocate(VP_MIN(NFILES_TOMO),VS_MIN(NFILES_TOMO),RHO_MIN(NFILES_TOMO),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 862')
+  VP_MIN(:) = 0.0; VS_MIN(:) = 0.0; RHO_MIN(:) = 0.0
+
   allocate(VP_MAX(NFILES_TOMO),VS_MAX(NFILES_TOMO),RHO_MAX(NFILES_TOMO),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 863')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
+  VP_MAX(:) = 0.0; VS_MAX(:) = 0.0; RHO_MAX(:) = 0.0
 
   ! q values
   allocate(tomo_has_q_values(NFILES_TOMO),stat=ier)
@@ -366,13 +404,27 @@
   enddo
   deallocate(materials_with_q)
 
+  ! domain id
+  allocate(tomo_domain_id(NFILES_TOMO),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 865')
+  if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo domain array')
+  tomo_domain_id(:) = 0
+  ! stores domain flag
+  do ifiles_tomo = 1,NFILES_TOMO
+    tomo_domain_id(ifiles_tomo) = materials_domain_id(ifiles_tomo)
+  enddo
+  deallocate(materials_domain_id)
+
   ! only allocate q arrays if needed
   if (any(tomo_has_q_values)) then
     allocate(qp_tomography(NFILES_TOMO,nrecord_max),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 865')
+    qp_tomography(:,:) = 0.0
+
     allocate(qs_tomography(NFILES_TOMO,nrecord_max),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 866')
     if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo q-value arrays')
+    qs_tomography(:,:) = 0.0
   endif
 
 end subroutine init_tomography_files
@@ -387,7 +439,7 @@ end subroutine init_tomography_files
 ! also read Qp Qs if needed
 ! also read c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66 if needed
 
-  use constants, only: MAX_STRING_LEN,IIN,IMAIN
+  use constants, only: MAX_STRING_LEN,IIN,IMAIN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC
 
   use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh,nmat_ext_mesh
 
@@ -461,6 +513,15 @@ end subroutine init_tomography_files
         write(IMAIN,*) '     material id: ',-imat
       endif
       write(IMAIN,*) '     file       : ',trim(tomo_filename)
+      ! associated domain
+      if (tomo_domain_id(imat) == IDOMAIN_ACOUSTIC) then
+        write(IMAIN,*) '     domain     : acoustic'
+      else if (tomo_domain_id(imat) == IDOMAIN_ELASTIC) then
+        write(IMAIN,*) '     domain     : elastic'
+      else
+        write(IMAIN,*) '     domain id  : ',tomo_domain_id(imat)
+        stop 'Tomography files only supported for acoustic & elastic domains. Please check your material definition...'
+      endif
       call flush_IMAIN()
     endif
 
@@ -762,7 +823,7 @@ end subroutine init_tomography_files
                               c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
                               imaterial_id,has_tomo_value,idomain_id)
 
-  use constants, only: TINYVAL_SNGL
+  use constants, only: TINYVAL_SNGL,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC
   use generate_databases_par, only: nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh, &
                                     ATTENUATION_COMP_MAXIMUM
 
@@ -805,9 +866,6 @@ end subroutine init_tomography_files
   ! anisotropy
   real(kind=CUSTOM_REAL), dimension(21) :: c1,c2,c3,c4,c5,c6,c7,c8
   real(kind=CUSTOM_REAL), dimension(21) :: c_final
-
-  ! flag for acoustic element detection
-  logical, parameter :: DETECT_ACOUSTIC_DOMAIN = .true.
 
   ! initializes flag
   has_tomo_value = .false.
@@ -1108,16 +1166,20 @@ end subroutine init_tomography_files
   ! value found
   has_tomo_value = .true.
 
-  ! determines domain id
-  if (DETECT_ACOUSTIC_DOMAIN .and. has_tomo_value) then
-    ! note: poroelastic tomography models not supported/implemented yet
+  ! sets domain
+  idomain_id = tomo_domain_id(imat)
+
+  ! checks initial domain id, if acoustic it will turn on detection (must have zero vs values)
+  ! note: poroelastic tomography models not supported/implemented yet
+  if (idomain_id == IDOMAIN_ACOUSTIC .and. has_tomo_value) then
+    ! acoustic domain desired, will detect based on vs value
     ! checks if acoustic based on shear velocity
     if (abs(vs_final) < TINYVAL_SNGL) then
       ! acoustic - zero shear value
-      idomain_id = 1
+      idomain_id = IDOMAIN_ACOUSTIC
     else
       ! elastic
-      idomain_id = 2
+      idomain_id = IDOMAIN_ELASTIC
     endif
   endif
 

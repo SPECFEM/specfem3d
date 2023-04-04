@@ -217,7 +217,7 @@
 
       ! material definition undefined, uses definition from tomography model
 
-      ! sets acoustic/elastic domain as given in materials properties
+      ! sets initial acoustic/elastic domain as given in materials properties
       iundef = - imaterial_id    ! iundef must be positive
       if (iundef > nundefMat_ext_mesh) stop 'Error negative material ID exceeds total number undefined materials'
 
