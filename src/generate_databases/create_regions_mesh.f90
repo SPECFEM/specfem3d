@@ -717,7 +717,7 @@
     if (ier /= 0) stop 'Error allocating dummy arrays'
   endif
   abs_boundary_ispec(:) = 0; abs_boundary_ijk(:,:,:) = 0
-  abs_boundary_jacobian2Dw(:,:) = 0.0; abs_boundary_normal(:,:,:) = 0.0
+  abs_boundary_jacobian2Dw(:,:) = 0.0_CUSTOM_REAL; abs_boundary_normal(:,:,:) = 0.0_CUSTOM_REAL
 
   ! free surface faces
   num_free_surface_faces = nspec2D_top
