@@ -384,7 +384,7 @@ contains
 
     implicit none
     ! local parameters
-    integer :: load_min,load_max
+    integer :: load_min,load_max,load_per_proc
     real :: load_balance
 
     print *, 'load distribution:'
@@ -399,17 +399,17 @@ contains
     load_max = 0
     do iproc = 0,nparts-1
       ! counts loads
-      inum = 0
+      load_per_proc = 0
       do ispec = 1,nspec
         if (part(ispec) == iproc) then
           ! load per element
-          inum = inum + elmnts_load(ispec)
+          load_per_proc = load_per_proc + elmnts_load(ispec)
         endif
       enddo
-      if (inum < load_min) load_min = inum
-      if (inum > load_max) load_max = inum
+      if (load_per_proc < load_min) load_min = load_per_proc
+      if (load_per_proc > load_max) load_max = load_per_proc
       ! user output
-      print *,'  partition ',iproc, '       has ',inum,' load units'
+      print *,'  partition ',iproc, '       has ',load_per_proc,' load units'
     enddo
     if (load_max > 0) then
       ! imbalance in percent
