@@ -804,6 +804,9 @@ void FC_FUNC_(transfer_b_potential_dot_dot_ac_to_device,
                                                           field* b_potential_dot_dot_acoustic,
                                                           long* Mesh_pointer) {}
 
+void FC_FUNC_(transfer_dot_dot_to_device,
+              TRNASFER_DOT_DOT_TO_DEVICE)(int* size, field* potential_dot_dot_acoustic,long* Mesh_pointer) {}
+
 void FC_FUNC_(transfer_dot_dot_from_device,
               TRNASFER_DOT_DOT_FROM_DEVICE)(int* size, field* potential_dot_dot_acoustic,long* Mesh_pointer) {}
 

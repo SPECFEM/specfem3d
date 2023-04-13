@@ -619,6 +619,21 @@ void FC_FUNC_(transfer_b_potential_dot_dot_ac_to_device,
 /* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
+void FC_FUNC_(transfer_dot_dot_to_device,
+              TRNASFER_DOT_DOT_TO_DEVICE)(int* size, field* potential_dot_dot_acoustic,long* Mesh_pointer) {
+
+  TRACE("transfer_dot_dot_to_device");
+
+  //get mesh pointer out of fortran integer container
+  Mesh* mp = (Mesh*)(*Mesh_pointer);
+
+  gpuMemcpy_todevice_field(mp->d_potential_dot_dot_acoustic,potential_dot_dot_acoustic,(*size));
+
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
 void FC_FUNC_(transfer_dot_dot_from_device,
               TRNASFER_DOT_DOT_FROM_DEVICE)(int* size, field* potential_dot_dot_acoustic,long* Mesh_pointer) {
 

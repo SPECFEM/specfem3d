@@ -88,6 +88,7 @@
   case (IMODEL_COUPLED)
     call model_coupled_broadcast()
   end select
+  call synchronize_all()
 
 ! DP: not sure if this here should check if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) ..
   if (COUPLE_WITH_INJECTION_TECHNIQUE) then
@@ -100,9 +101,7 @@
     !! find the layer in which the middle of the element is located
     if (myrank == 0) then
       write(IMAIN,*)
-      write(IMAIN,*)
-      write(IMAIN,*) '     USING A HYBRID METHOD (THE CODE IS COUPLED WITH AN INJECTION TECHNIQUE)'
-      write(IMAIN,*)
+      write(IMAIN,*) '     USING A HYBRID METHOD (THE CODE IS COUPLED WITH AN INJECTION TECHNIQUE):'
       select case(INJECTION_TECHNIQUE_TYPE)
       case (INJECTION_TECHNIQUE_IS_DSM)
         write(IMAIN,*) '     INJECTION TECHNIQUE TYPE = ', INJECTION_TECHNIQUE_TYPE,' (DSM) '
@@ -113,7 +112,6 @@
       case default
         stop 'Invalid INJECTION_TECHNIQUE_TYPE chosen, must be 1 == DSM, 2 == AXISEM or 3 == FK'
       end select
-      write(IMAIN,*)
       write(IMAIN,*)
     endif
 
@@ -131,6 +129,7 @@
       endif
     endif
   endif
+  call synchronize_all()
 
   ! get MPI starting time
   time_start = wtime()

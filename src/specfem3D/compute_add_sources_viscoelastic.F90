@@ -66,10 +66,6 @@
 
   character(len=MAX_STRING_LEN) :: adj_source_file
 
-  ! no source inside the mesh if we are coupling with DSM
-  ! because the source is precisely the wavefield coming from the DSM traction file
-  if (COUPLE_WITH_INJECTION_TECHNIQUE .and. SIMULATION_TYPE == 1) return
-
   ! sets current initial time
   if (USE_LDDRK) then
     ! LDDRK
@@ -86,6 +82,10 @@
   if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
     ! ignore CMT sources for fault rupture simulations
     if (FAULT_SIMULATION) return
+
+    ! no source inside the mesh if we are coupling with DSM
+    ! because the source is precisely the wavefield coming from the DSM traction file
+    if (COUPLE_WITH_INJECTION_TECHNIQUE) return
 
 ! openmp solver
 !$OMP PARALLEL if (NSOURCES > 100) &
@@ -484,14 +484,14 @@
   ! checks if anything to do
   if (.not. GPU_MODE) return
 
-  ! no source inside the mesh if we are coupling with DSM
-  ! because the source is precisely the wavefield coming from the DSM traction file
-  if (COUPLE_WITH_INJECTION_TECHNIQUE .and. SIMULATION_TYPE == 1) return
-
   ! forward simulations
   if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
     ! ignore CMT sources for fault rupture simulations
     if (FAULT_SIMULATION) return
+
+    ! no source inside the mesh if we are coupling with DSM
+    ! because the source is precisely the wavefield coming from the DSM traction file
+    if (COUPLE_WITH_INJECTION_TECHNIQUE) return
 
     if (NSOURCES > 0) then
       ! sets current initial time

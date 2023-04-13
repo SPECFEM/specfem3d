@@ -31,7 +31,7 @@
 
   use constants
   use specfem_par, only: station_name,network_name,USE_FORCE_POINT_SOURCE, &
-                         tshift_src,dt,t0,USE_LDDRK,istage, &
+                         nsources_local,tshift_src,dt,t0,USE_LDDRK,istage, &
                          USE_BINARY_FOR_SEISMOGRAMS,ibool, &
                          UNDO_ATTENUATION_AND_OR_PML, &
                          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
@@ -42,6 +42,9 @@
 
   use specfem_par_poroelastic, only: b_accels_poroelastic,b_accelw_poroelastic,accels_poroelastic,accelw_poroelastic, &
                                       rhoarraystore,phistore,tortstore,ispec_is_poroelastic
+
+  ! coupling
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
 
   ! faults
   use specfem_par, only: FAULT_SIMULATION
@@ -63,9 +66,13 @@
   character(len=MAX_STRING_LEN) :: adj_source_file
 
   ! forward simulations
-  if (SIMULATION_TYPE == 1) then
+  if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
     ! ignore CMT sources for fault rupture simulations
     if (FAULT_SIMULATION) return
+
+    ! no source inside the mesh if we are coupling with DSM
+    ! because the source is precisely the wavefield coming from the DSM traction file
+    if (COUPLE_WITH_INJECTION_TECHNIQUE) return
 
 ! openmp solver
 !$OMP PARALLEL if (NSOURCES > 100) &
@@ -269,9 +276,13 @@
 !           thus indexing is NSTEP - it , instead of NSTEP - it - 1
 
   ! adjoint/backward simulations
-  if (SIMULATION_TYPE == 3) then
+  if (SIMULATION_TYPE == 3 .and. nsources_local > 0) then
     ! ignore CMT sources for fault rupture simulations
     if (FAULT_SIMULATION) return
+
+    ! no source inside the mesh if we are coupling with DSM
+    ! because the source is precisely the wavefield coming from the DSM traction file
+    if (COUPLE_WITH_INJECTION_TECHNIQUE) return
 
     ! backward source reconstruction
     do isource = 1,NSOURCES

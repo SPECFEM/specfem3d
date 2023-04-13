@@ -41,6 +41,9 @@
 
   use specfem_par_acoustic, only: potential_dot_dot_acoustic,ispec_is_acoustic
 
+  ! coupling
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
+
   ! faults
   use specfem_par, only: FAULT_SIMULATION
 
@@ -73,6 +76,10 @@
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
     ! ignore pressure sources for fault rupture simulations
     if (FAULT_SIMULATION) return
+
+    ! no source inside the mesh if we are coupling with DSM
+    ! because the source is precisely the wavefield coming from the DSM traction file
+    if (COUPLE_WITH_INJECTION_TECHNIQUE) return
 
 ! openmp solver
 !$OMP PARALLEL if (NSOURCES > 100) &
@@ -252,6 +259,9 @@
 
   use specfem_par_acoustic, only: ispec_is_acoustic,b_potential_dot_dot_acoustic
 
+  ! coupling
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
+
   ! faults
   use specfem_par, only: FAULT_SIMULATION
 
@@ -265,14 +275,18 @@
 
   integer :: isource,iglob,ispec,i,j,k,it_tmp
 
-  ! ignore pressure sources for fault rupture simulations
-  if (FAULT_SIMULATION) return
-
   ! checks if anything to do
   if (SIMULATION_TYPE /= 3) return
 
   ! checks if this slice has sources to add
   if (nsources_local == 0) return
+
+  ! ignore pressure sources for fault rupture simulations
+  if (FAULT_SIMULATION) return
+
+  ! no source inside the mesh if we are coupling with DSM
+  ! because the source is precisely the wavefield coming from the DSM traction file
+  if (COUPLE_WITH_INJECTION_TECHNIQUE) return
 
   ! iteration step
   if (UNDO_ATTENUATION_AND_OR_PML) then
@@ -398,6 +412,9 @@
                          INVERSE_FWI_FULL_PROBLEM,run_number_of_the_source, &
                          GPU_MODE
 
+  ! coupling
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
+
   ! faults
   use specfem_par, only: FAULT_SIMULATION
 
@@ -425,35 +442,37 @@
     ! ignore pressure sources for fault rupture simulations
     if (FAULT_SIMULATION) return
 
-    if (NSOURCES > 0) then
-      ! sets current initial time
-      if (USE_LDDRK) then
-        ! LDDRK
-        ! note: the LDDRK scheme updates displacement after the stiffness computations and
-        !       after adding boundary/coupling/source terms.
-        !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
-        !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
-        time_t = dble(it-1-1)*DT + dble(C_LDDRK(istage))*DT - t0
-      else
-        time_t = dble(it-1)*DT - t0
-      endif
+    ! no source inside the mesh if we are coupling with DSM
+    ! because the source is precisely the wavefield coming from the DSM traction file
+    if (COUPLE_WITH_INJECTION_TECHNIQUE) return
 
-      do isource = 1,NSOURCES
-        ! current time
-        time_source_dble = time_t - tshift_src(isource)
-
-        ! determines source time function value
-        stf = get_stf_acoustic(time_source_dble,isource,it)
-
-        ! stores precomputed source time function factor
-        stf_pre_compute(isource) = stf
-      enddo
-
-      ! only implements SIMTYPE=1 and NOISE_TOM=0
-      ! write(*,*) "Fortran dt = ", dt
-      ! change dt -> DT
-      call compute_add_sources_ac_cuda(Mesh_pointer,NSOURCES,stf_pre_compute,run_number_of_the_source)
+    ! sets current initial time
+    if (USE_LDDRK) then
+      ! LDDRK
+      ! note: the LDDRK scheme updates displacement after the stiffness computations and
+      !       after adding boundary/coupling/source terms.
+      !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
+      !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
+      time_t = dble(it-1-1)*DT + dble(C_LDDRK(istage))*DT - t0
+    else
+      time_t = dble(it-1)*DT - t0
     endif
+
+    do isource = 1,NSOURCES
+      ! current time
+      time_source_dble = time_t - tshift_src(isource)
+
+      ! determines source time function value
+      stf = get_stf_acoustic(time_source_dble,isource,it)
+
+      ! stores precomputed source time function factor
+      stf_pre_compute(isource) = stf
+    enddo
+
+    ! only implements SIMTYPE=1 and NOISE_TOM=0
+    ! write(*,*) "Fortran dt = ", dt
+    ! change dt -> DT
+    call compute_add_sources_ac_cuda(Mesh_pointer,NSOURCES,stf_pre_compute,run_number_of_the_source)
   endif
 
 ! NOTE: adjoint sources and backward wavefield timing:
@@ -545,6 +564,9 @@
   use specfem_par, only: UNDO_ATTENUATION_AND_OR_PML,NSUBSET_ITERATIONS,NT_DUMP_ATTENUATION, &
                          iteration_on_subset,it_of_this_subset
 
+  ! coupling
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
+
   ! faults
   use specfem_par, only: FAULT_SIMULATION
 
@@ -558,15 +580,20 @@
 
   integer :: isource,it_tmp
 
-  ! ignore pressure sources for fault rupture simulations
-  if (FAULT_SIMULATION) return
-
   ! checks if anything to do
   if (SIMULATION_TYPE /= 3) return
+
   if (.not. GPU_MODE) return
 
   ! checks if this slice has sources to add
   if (nsources_local == 0) return
+
+  ! ignore pressure sources for fault rupture simulations
+  if (FAULT_SIMULATION) return
+
+  ! no source inside the mesh if we are coupling with DSM
+  ! because the source is precisely the wavefield coming from the DSM traction file
+  if (COUPLE_WITH_INJECTION_TECHNIQUE) return
 
   ! iteration step
   if (UNDO_ATTENUATION_AND_OR_PML) then
