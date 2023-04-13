@@ -337,7 +337,7 @@
 
 ! computes strain (eps_s) interpolated at receiver location (hxir,hetar,hgammar)
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
 
   use specfem_par, only: xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
                          gammaxstore,gammaystore,gammazstore, &

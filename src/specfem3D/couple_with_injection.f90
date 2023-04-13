@@ -1860,6 +1860,10 @@
 
   ! Initialisation causal filter
   n_init = ceiling(log(error)/log(abs(z1)))
+
+  ! check limits: by default is n_init==42, for very short test simulations this might be larger than npts
+  if (n_init > npts) n_init = npts
+
   sumc = tmp_c(1)
   zn = z1
   do i = 1,n_init

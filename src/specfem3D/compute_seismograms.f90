@@ -267,7 +267,7 @@
 
   subroutine compute_seismograms_strain()
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
 
   use specfem_par, only: SIMULATION_TYPE,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION, &
     NGLOB_AB,ibool, &

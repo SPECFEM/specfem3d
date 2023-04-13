@@ -676,7 +676,7 @@
 
   use constants, only: HUGEVAL,TINYVAL,VERYSMALLVAL,CUSTOM_REAL,OUTPUT_FILES,MAX_STRING_LEN,IOUT
 
-  use image_PNM_par, only: BINARY_FILE,POWER_DISPLAY_COLOR,BACKGROUND_TYPE,PNM_IMAGE_TYPE
+  use image_PNM_par, only: BINARY_FILE,BACKGROUND_TYPE,PNM_IMAGE_TYPE
 
   implicit none
 
@@ -982,7 +982,7 @@
 
   subroutine get_iglob_vs(iglob,ispec,vs)
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
   use specfem_par, only: mustore,rhostore,ibool
 
@@ -1013,7 +1013,7 @@
 
   subroutine get_iglob_rho(iglob,ispec,rho)
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
   use specfem_par, only: rhostore,ibool
 

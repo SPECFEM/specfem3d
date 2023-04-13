@@ -136,7 +136,11 @@
       elmnts_load(ispec) = ACOUSTIC_LOAD
     else if (ispec_is_elastic(ispec)) then
       ! elastic
-      elmnts_load(ispec) = ELASTIC_LOAD
+      if (ATTENUATION) then
+        elmnts_load(ispec) = VISCOELASTIC_LOAD
+      else
+        elmnts_load(ispec) = ELASTIC_LOAD
+      endif
     else
       ! poroelastic
       elmnts_load(ispec) = POROELASTIC_LOAD
