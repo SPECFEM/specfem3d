@@ -1,13 +1,13 @@
 #=====================================================================
 #
-#               S p e c f e m 3 D  V e r s i o n  3 . 0
-#               ---------------------------------------
+#                         S p e c f e m 3 D
+#                         -----------------
 #
 #     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-#                        Princeton University, USA
-#                and CNRS / University of Marseille, France
+#                              CNRS, France
+#                       and Princeton University, USA
 #                 (there are currently many more authors!)
-# (c) Princeton University and CNRS / University of Marseille, July 2012
+#                           (c) October 2017
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -58,6 +58,7 @@ decompose_mesh_MODULES = \
 
 decompose_mesh_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/param_reader.cc.o \
 	$O/exit_mpi.shared.o \
 	$O/read_parameter_file.shared.o \

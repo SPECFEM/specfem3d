@@ -1,13 +1,13 @@
 #=====================================================================
 #
-#               S p e c f e m 3 D  V e r s i o n  3 . 0
-#               ---------------------------------------
+#                         S p e c f e m 3 D
+#                         -----------------
 #
 #     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-#                        Princeton University, USA
-#                and CNRS / University of Marseille, France
+#                              CNRS, France
+#                       and Princeton University, USA
 #                 (there are currently many more authors!)
-# (c) Princeton University and CNRS / University of Marseille, July 2012
+#                           (c) October 2017
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -120,6 +120,7 @@ xadd_model_SHARED_OBJECTS = \
 	$O/pml_par.spec_module.o \
 	$O/read_mesh_databases.spec.o \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/gll_library.shared.o \
@@ -170,6 +171,7 @@ xmodel_update_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
 	$O/adios_manager.shared_adios_module.o \
 	$O/check_mesh_resolution.shared.o \
+	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/get_attenuation_model.shared.o \
@@ -226,6 +228,26 @@ else
 xmodel_update_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_STUBS)
 endif
 
+###
+### hdf5
+###
+
+hdf5_shared_OBJECTS = \
+	$O/phdf5_utils.shared_hdf5.o \
+	$O/read_mesh_databases_hdf5.spec_hdf5.o \
+	$(EMPTY_MACRO)
+hdf5_shared_STUBS_OBJECTS = \
+	$O/phdf5_utils_stubs.shared_nohdf5.o \
+	$O/read_mesh_databases_hdf5_stubs.spec_nohdf5.o \
+	$(EMPTY_MACRO)
+
+ifeq ($(HDF5),yes)
+xmodel_update_SHARED_OBJECTS += $(hdf5_shared_OBJECTS)
+else
+xmodel_update_SHARED_OBJECTS += $(hdf5_shared_STUBS_OBJECTS)
+endif
+
+
 # extra dependencies
 $O/model_update.tomo.o: $O/specfem3D_par.spec_module.o $O/tomography_par.tomo_module.o
 $O/save_external_bin_m_up.tomo.o: $O/specfem3D_par.spec_module.o
@@ -248,6 +270,7 @@ xsum_kernels_OBJECTS = \
 
 xsum_kernels_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \

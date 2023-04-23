@@ -9,7 +9,7 @@ dnl You must have recent versions of Autoconf and Automake installed.
 ############################################################
 
 AC_PREREQ(2.61)
-AC_INIT([Specfem3D], [3.0.0], [see the wiki], [Specfem3D])
+AC_INIT([Specfem3D], m4_normalize(m4_include([VERSION])), [see the wiki], [Specfem3D])
 AC_CONFIG_SRCDIR([src/specfem3D/specfem3D.F90])
 
 AC_CONFIG_HEADERS([setup/config.h])
@@ -139,6 +139,8 @@ AM_CONDITIONAL([COND_HIP_MI8], [test x"$want_hip" = xMI8])
 AM_CONDITIONAL([COND_HIP_MI25], [test x"$want_hip" = xMI25])
 AM_CONDITIONAL([COND_HIP_MI50], [test x"$want_hip" = xMI50])
 AM_CONDITIONAL([COND_HIP_MI100], [test x"$want_hip" = xMI100])
+AM_CONDITIONAL([COND_HIP_MI250], [test x"$want_hip" = xMI250])
+
 AM_CONDITIONAL([COND_HIP_CUDA5], [test x"$want_hip" = xcuda5])
 AM_CONDITIONAL([COND_HIP_CUDA6], [test x"$want_hip" = xcuda6])
 AM_CONDITIONAL([COND_HIP_CUDA7], [test x"$want_hip" = xcuda7])
@@ -501,7 +503,7 @@ AS_IF([test x"$want_asdf" != xno], [
 #mpbl: adding flags to config.h.in through autoheader in order to save them into the adios file.
 #configure_flags_str="FC=$FC FCFLAGS=$FCFLAGS $FLAGS_CHECK"
 #AC_DEFINE_UNQUOTED([CONFIGURE_FLAGS],["${configure_flags_str}"],
- #         [configuration flags to be saved in the adios output file.])
+#         [configuration flags to be saved in the adios output file.])
 CONFIGURE_FLAGS="FC=$FC FCFLAGS=$FCFLAGS"
 AC_SUBST([CONFIGURE_FLAGS])
 
@@ -745,17 +747,24 @@ AS_IF([test x"$want_vtk" != xno], [
 
 AS_BOX([git version info])
 CIG_PKG_GIT(SPECFEM3D)
+
 AC_DEFINE_UNQUOTED([SPECFEM3D_VERSION], ["$PACKAGE_VERSION"], [Define SPECFEM3D version])
 #AC_DEFINE_UNQUOTED([SPECFEM3D_DOI], ["10.5281/zenodo.xxxxx"], [Define SPECFEM3D doi])
-AS_IF([test -d $srcdir/.git], [
-    GIT_VERSION_DEPS="$srcdir/.git/logs/HEAD"
-    AC_MSG_NOTICE([building from git repository])
-    AC_SUBST(GIT_VERSION_DEPS)
-], [
-    dnl Only substitute if not in a git repository.
-    AC_MSG_NOTICE([not a git repository])
-    AC_CONFIG_FILES([setup/version.fh])
+
+AS_IF([test x"$SPECFEM3D_RELEASE_VERSION" = x0],[
+  AC_MSG_NOTICE([building from git repository])
+  GIT_PACKAGE_VERSION=$SPECFEM3D_GIT_REVISION
+  GIT_COMMIT_VERSION=$SPECFEM3D_GIT_HASH
+  GIT_DATE_VERSION=$SPECFEM3D_GIT_DATE
+],[
+  AC_MSG_NOTICE([not a git repository])
+  GIT_PACKAGE_VERSION=$PACKAGE_VERSION
+  GIT_COMMIT_VERSION="unknown"
+  GIT_DATE_VERSION="unknown"
 ])
+AC_SUBST([GIT_PACKAGE_VERSION])
+AC_SUBST([GIT_COMMIT_VERSION])
+AC_SUBST([GIT_DATE_VERSION])
 
 ############################################################
 
@@ -768,6 +777,7 @@ AC_CONFIG_FILES([
     setup/constants_tomography.h
     setup/precision.h
     setup/config.fh
+    setup/version.fh
 ])
 
 # Scotch makefile

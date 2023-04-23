@@ -150,7 +150,7 @@ Info    : Writing '/var/folders/0b/8r9lhyv48v58lf006s7hkfmr0000gn/T/tmpct5lrjqk.
 Info    : Done writing '/var/folders/0b/8r9lhyv48v58lf006s7hkfmr0000gn/T/tmpct5lrjqk.msh'
 Info    : Stopped on Wed Mar 25 10:27:14 2020
 
-Mesh results: 
+Mesh results:
   points:  9261
   cells:  2
          quad9 600
@@ -203,7 +203,7 @@ field_data:  7 items
    xmin
    vol1
 
-element types found: 
+element types found:
   hex type :  hexahedron27
   quad type:  quad9
 

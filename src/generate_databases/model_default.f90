@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -31,9 +31,7 @@
 !
 !--------------------------------------------------------------------------------------------------
 
-  subroutine model_default(mat_prop,nmat_ext_mesh, &
-                           undef_mat_prop,nundefMat_ext_mesh, &
-                           imaterial_id,imaterial_def, &
+  subroutine model_default(imaterial_id,imaterial_def, &
                            xmesh,ymesh,zmesh, &
                            rho,vp,vs,iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
                            rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
@@ -43,27 +41,25 @@
 ! takes model values specified by mesh properties
 
   use generate_databases_par, only: IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC
+
+  use generate_databases_par, only: mat_prop,nmat_ext_mesh, &
+                                    undef_mat_prop,nundefMat_ext_mesh
+
   use create_regions_mesh_ext_par, only: CUSTOM_REAL,MAX_STRING_LEN
 
   implicit none
-
-  integer, intent(in) :: nmat_ext_mesh
-  double precision, dimension(17,nmat_ext_mesh), intent(in) :: mat_prop
-
-  integer, intent(in) :: nundefMat_ext_mesh
-  character(len=MAX_STRING_LEN), dimension(6,nundefMat_ext_mesh) :: undef_mat_prop
 
   integer, intent(in) :: imaterial_id,imaterial_def
 
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
-  real(kind=CUSTOM_REAL) :: vp,vs,rho,qkappa_atten,qmu_atten
+  real(kind=CUSTOM_REAL), intent(inout) :: vp,vs,rho,qkappa_atten,qmu_atten
 
-  integer :: iflag_aniso
-  integer :: idomain_id
+  integer, intent(inout) :: iflag_aniso
+  integer, intent(inout) :: idomain_id
 
-  real(kind=CUSTOM_REAL) :: kappa_s,kappa_f,kappa_fr,mu_fr,rho_s,rho_f,phi,tort,eta_f,kxx,kxy,kxz,kyy,kyz,kzz
-  real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
+  real(kind=CUSTOM_REAL), intent(inout) :: kappa_s,kappa_f,kappa_fr,mu_fr,rho_s,rho_f,phi,tort,eta_f,kxx,kxy,kxz,kyy,kyz,kzz
+  real(kind=CUSTOM_REAL), intent(inout) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
   ! local parameters
   integer :: iflag,flag_below,flag_above
@@ -96,6 +92,28 @@
   kappa_fr = 0._CUSTOM_REAL
   mu_fr = 0._CUSTOM_REAL
 
+  c11 = 0._CUSTOM_REAL
+  c12 = 0._CUSTOM_REAL
+  c13 = 0._CUSTOM_REAL
+  c14 = 0._CUSTOM_REAL
+  c15 = 0._CUSTOM_REAL
+  c16 = 0._CUSTOM_REAL
+  c22 = 0._CUSTOM_REAL
+  c23 = 0._CUSTOM_REAL
+  c24 = 0._CUSTOM_REAL
+  c25 = 0._CUSTOM_REAL
+  c26 = 0._CUSTOM_REAL
+  c33 = 0._CUSTOM_REAL
+  c34 = 0._CUSTOM_REAL
+  c35 = 0._CUSTOM_REAL
+  c36 = 0._CUSTOM_REAL
+  c44 = 0._CUSTOM_REAL
+  c45 = 0._CUSTOM_REAL
+  c46 = 0._CUSTOM_REAL
+  c55 = 0._CUSTOM_REAL
+  c56 = 0._CUSTOM_REAL
+  c66 = 0._CUSTOM_REAL
+
   ! check if the material is known or unknown
   if (imaterial_id > 0) then
     ! gets velocity model as specified by (cubit) mesh files for elastic & acoustic
@@ -108,6 +126,9 @@
 
     case (IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC)
       ! (visco)elastic or acoustic
+
+      ! checks number of material parameters
+      if (imaterial_id > nmat_ext_mesh) stop 'Error invalid material id, exceeds nmat_ext_mesh for acoustic/elastic material'
 
       ! density
       ! mat_prop format:
@@ -127,6 +148,10 @@
 
     case (IDOMAIN_POROELASTIC)
       ! poroelastic
+
+      ! checks number of material parameters
+      if (imaterial_id > nmat_ext_mesh) stop 'Error invalid material id, exceeds nmat_ext_mesh for poroelastic material'
+
       ! mat_prop format:
       ! # rho_s,rho_f,phi,tort,eta,0,domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappa_s,kappa_f,kappa_fr,mu_fr,
       !
@@ -192,10 +217,18 @@
 
       ! material definition undefined, uses definition from tomography model
 
+      ! sets initial acoustic/elastic domain as given in materials properties
+      iundef = - imaterial_id    ! iundef must be positive
+      if (iundef > nundefMat_ext_mesh) stop 'Error negative material ID exceeds total number undefined materials'
+
+      str_domain = trim(adjustl(undef_mat_prop(6,iundef)))
+      read(str_domain(1:len_trim(str_domain)),'(i1)',iostat=ier) idomain_id
+      if (ier /= 0) stop 'Error reading domain ID from undefined material properties'
+
       ! gets model values from tomography file
       call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten, &
                             c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
-                            imaterial_id,has_tomo_value)
+                            imaterial_id,has_tomo_value,idomain_id)
 
       ! checks if value was found
       if (.not. has_tomo_value) then
@@ -205,18 +238,6 @@
 
       ! no anisotropy
       iflag_aniso = 0
-
-      ! sets acoustic/elastic domain as given in materials properties
-      iundef = - imaterial_id    ! iundef must be positive
-      if (iundef > nundefMat_ext_mesh) stop 'Error negative material ID exceeds total number undefined materials'
-
-      str_domain = trim(adjustl(undef_mat_prop(6,iundef)))
-
-      read(str_domain(1:len_trim(str_domain)),'(i1)',iostat=ier) idomain_id
-      if (ier /= 0) stop 'Error reading domain ID from undefined material properties'
-
-      ! or
-      !idomain_id = IDOMAIN_ELASTIC    ! forces to be elastic domain
 
     case default
       print *,'Error: material id ',imaterial_id,' has material definition ',imaterial_def,' which is not recognized'

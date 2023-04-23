@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !          Main authors: Dimitri Komatitsch and Jeroen Tromp
 !    Princeton University, USA and University of Pau / CNRS / INRIA
@@ -74,7 +74,7 @@
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
 
 ! processor identification
-  character(len=256) prname
+  character(len=256) :: prname
 
 ! small offset for source and receiver line in AVS_DX
 ! (small compared to normalized radius of the Earth)
@@ -83,38 +83,38 @@
   double precision, parameter :: small_offset = 2000.d0
 
 ! parameters read from parameter file
-  integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
+  integer :: NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
              NER_MOHO_16,NER_BOTTOM_MOHO,NEX_XI,NEX_ETA, &
              NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,SIMULATION_TYPE
-  integer NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
+  integer :: NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
 
-  double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
-  double precision DT,LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,HDUR_MOVIE
-  double precision THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
+  double precision :: UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
+  double precision :: DT,LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,HDUR_MOVIE
+  double precision :: THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
 
-  logical HARVARD_3D_GOCAD_MODEL,ATTENUATION,USE_OLSEN_ATTENUATION, &
+  logical :: HARVARD_3D_GOCAD_MODEL,ATTENUATION,USE_OLSEN_ATTENUATION, &
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
           BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS,SAVE_FORWARD
-  logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
-  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+  logical :: ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
+  logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
           USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
-  integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
+  integer :: NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  double precision zscaling
+  double precision :: zscaling
 
-  character(len=256) OUTPUT_FILES,LOCAL_PATH,MODEL,filtered_rec_filename
+  character(len=256) :: OUTPUT_FILES,LOCAL_PATH,MODEL,filtered_rec_filename
 
 ! parameters deduced from parameters read from file
-  integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
-  integer NER
+  integer :: NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
+  integer :: NER
 
-  integer NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+  integer :: NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
                NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
                NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB
 
-  integer proc_p1,proc_p2
+  integer :: proc_p1,proc_p2
 
 ! ************** PROGRAM STARTS HERE **************
 

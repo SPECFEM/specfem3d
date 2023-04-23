@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -35,16 +35,16 @@
 
   implicit none
 
-  integer NSPEC_AB,NGLOB_AB,NPROC,NSTEP,SIMULATION_TYPE
+  integer :: NSPEC_AB,NGLOB_AB,NPROC,NSTEP,SIMULATION_TYPE
 
-  logical ATTENUATION,ANISOTROPY
-  logical STACEY_INSTEAD_OF_FREE_SURFACE, ABSORB_FREE_SURFACE_VAL
+  logical :: ATTENUATION,ANISOTROPY
+  logical :: STACEY_INSTEAD_OF_FREE_SURFACE, ABSORB_FREE_SURFACE_VAL
 
-  double precision DT, memory_size
+  double precision :: DT, memory_size
 
   character(len=MAX_STRING_LEN) :: HEADER_FILE
 
-  integer nfaces_surface_glob_ext_mesh
+  integer :: nfaces_surface_glob_ext_mesh
 
   NAMELIST/MESHER/ABSORB_FREE_SURFACE_VAL
 

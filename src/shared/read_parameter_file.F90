@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -481,6 +481,13 @@
       write(*,*)
     endif
 
+    call read_value_logical(SAVE_SEISMOGRAMS_STRAIN, 'SAVE_SEISMOGRAMS_STRAIN', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'SAVE_SEISMOGRAMS_STRAIN         = .false.'
+      write(*,*)
+    endif
+
     call read_value_logical(SAVE_SEISMOGRAMS_IN_ADJOINT_RUN, 'SAVE_SEISMOGRAMS_IN_ADJOINT_RUN', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
@@ -894,9 +901,10 @@
 
   ! seismogram output
   if (.not. SAVE_SEISMOGRAMS_DISPLACEMENT .and. .not. SAVE_SEISMOGRAMS_VELOCITY .and. &
-     .not. SAVE_SEISMOGRAMS_ACCELERATION .and. .not. SAVE_SEISMOGRAMS_PRESSURE) &
-   stop 'Error: at least one of SAVE_SEISMOGRAMS_DISPLACEMENT SAVE_SEISMOGRAMS_VELOCITY SAVE_SEISMOGRAMS_ACCELERATION &
-             &SAVE_SEISMOGRAMS_PRESSURE must be true'
+     .not. SAVE_SEISMOGRAMS_ACCELERATION .and. .not. SAVE_SEISMOGRAMS_PRESSURE .and. &
+     .not. SAVE_SEISMOGRAMS_STRAIN) &
+   stop 'Error: at least one of SAVE_SEISMOGRAMS_DISPLACEMENT, SAVE_SEISMOGRAMS_VELOCITY, SAVE_SEISMOGRAMS_ACCELERATION, &
+             &SAVE_SEISMOGRAMS_PRESSURE, or SAVE_SEISMOGRAMS_STRAIN must be true'
 
   if (NTSTEP_BETWEEN_OUTPUT_SAMPLE < 1) &
     stop 'Error: NTSTEP_BETWEEN_OUTPUT_SAMPLE must be >= 1'
@@ -909,6 +917,11 @@
     stop 'USE_TRICK_FOR_BETTER_PRESSURE is currently incompatible with &
         &SAVE_SEISMOGRAMS_DISPLACEMENT .or. SAVE_SEISMOGRAMS_VELOCITY .or. SAVE_SEISMOGRAMS_ACCELERATION, &
         &only SAVE_SEISMOGRAMS_PRESSURE can be used'
+
+  if (SAVE_SEISMOGRAMS_STRAIN) then
+    if (WRITE_SEISMOGRAMS_BY_MAIN) &
+      stop 'SAVE_SEISMOGRAMS_STRAIN works only correctly when WRITE_SEISMOGRAMS_BY_MAIN = .false.'
+  endif
 
   ! LDDRK
   if (USE_LDDRK) then
@@ -1140,7 +1153,13 @@
   endif
 
   ! determines number of sources depending on number of lines in sources file
-  call get_number_of_sources(sources_filename)
+  if (INVERSE_FWI_FULL_PROBLEM) then
+    ! sources will be set later in input_output_mod.f90 based on acquisition setting
+    NSOURCES = 0
+  else
+    ! gets number of sources
+    call count_number_of_sources(NSOURCES,sources_filename)
+  endif
 
   ! converts all string characters to lowercase
   irange = iachar('a') - iachar('A')
@@ -1208,170 +1227,11 @@
   ! check
   if (IMODEL == IMODEL_IPATI .or. IMODEL == IMODEL_IPATI_WATER) then
     if (USE_RICKER_TIME_FUNCTION .eqv. .false.) &
-      stop 'Error for IPATI model, please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
+      stop 'Error for IPATI model, please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and rerun solver'
   endif
 
   end subroutine read_compute_parameters
 
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine get_number_of_sources(sources_filename)
-
-! determines number of sources depending on number of lines in source file
-! (only executed by main process)
-
-  use constants, only: IIN,IIN_PAR,IN_DATA_FILES,HUGEVAL,TINYVAL, &
-    NLINES_PER_CMTSOLUTION_SOURCE,NLINES_PER_FORCESOLUTION_SOURCE,mygroup
-
-  use shared_parameters
-
-  implicit none
-
-  character(len=MAX_STRING_LEN),intent(in) :: sources_filename
-
-  ! local variables
-  integer :: icounter,isource,idummy,ier,nlines_per_source
-  double precision :: hdur, minval_hdur
-  character(len=MAX_STRING_LEN) :: fault_filename,dummystring
-  character(len=MAX_STRING_LEN) :: path_to_add
-
-  ! initializes
-  NSOURCES = 0
-
-  ! checks if finite fault source
-  fault_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults'
-  ! see if we are running several independent runs in parallel
-  ! if so, add the right directory for that run
-  ! (group numbers start at zero, but directory names start at run0001, thus we add one)
-  ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
-    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-    fault_filename = path_to_add(1:len_trim(path_to_add))//fault_filename(1:len_trim(fault_filename))
-  endif
-
-  open(unit=IIN_PAR,file=trim(fault_filename),status='old',iostat=ier)
-  if (ier == 0) then
-    HAS_FINITE_FAULT_SOURCE = .true.
-    !write(IMAIN,*) 'provides finite faults'
-    close(IIN_PAR)
-  else
-    HAS_FINITE_FAULT_SOURCE = .false.
-  endif
-
-  ! gets number of point sources
-  if (USE_FORCE_POINT_SOURCE) then
-    ! compute the total number of sources in the FORCESOLUTION file
-    ! there are NLINES_PER_FORCESOLUTION_SOURCE lines per source in that file
-    open(unit=IIN,file=trim(sources_filename),status='old',action='read',iostat=ier)
-    if (ier /= 0) then
-      if (HAS_FINITE_FAULT_SOURCE) then
-        ! no need for FORCESOLUTION file
-        return
-      else
-        stop 'Error opening FORCESOLUTION file'
-      endif
-    endif
-    !write(IMAIN,*) 'provides force solution'
-
-    icounter = 0
-    do while (ier == 0)
-      read(IIN,"(a)",iostat=ier) dummystring
-      if (ier == 0) icounter = icounter + 1
-    enddo
-    close(IIN)
-
-    ! number of lines for source description
-    if (USE_EXTERNAL_SOURCE_FILE) then
-      !! VM VM in case of USE_EXTERNAL_SOURCE_FILE we have to read one additional line per source (the name of external source file)
-      nlines_per_source = NLINES_PER_FORCESOLUTION_SOURCE + 1
-    else
-      nlines_per_source = NLINES_PER_FORCESOLUTION_SOURCE
-    endif
-
-    ! checks lines are a multiple
-    if (mod(icounter,nlines_per_source) /= 0) then
-      print *,'Error: total number of lines in FORCESOLUTION file should be a multiple of ',nlines_per_source
-      stop 'Error total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
-    endif
-
-    ! number of sources in file
-    NSOURCES = icounter / nlines_per_source
-
-    ! checks if any
-    if (NSOURCES < 1) stop 'Error need at least one source in FORCESOLUTION file'
-
-  else
-    ! compute the total number of sources in the CMTSOLUTION file
-    ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
-    open(unit=IIN,file=trim(sources_filename),status='old',action='read',iostat=ier)
-    if (ier /= 0) then
-      if (HAS_FINITE_FAULT_SOURCE) then
-        ! no need for CMTSOLUTION file
-        return
-      else
-        stop 'Error opening CMTSOLUTION file'
-      endif
-    endif
-    !write(IMAIN,*) 'provides CMT solution'
-
-    icounter = 0
-    do while (ier == 0)
-      read(IIN,"(a)",iostat=ier) dummystring
-      if (ier == 0) icounter = icounter + 1
-    enddo
-    close(IIN)
-
-    ! number of lines for source description
-    if (USE_EXTERNAL_SOURCE_FILE) then
-      !! VM VM in case of USE_EXTERNAL_SOURCE_FILE we have to read one additional line per source (the name of external source file)
-      nlines_per_source = NLINES_PER_CMTSOLUTION_SOURCE + 1
-    else
-      nlines_per_source = NLINES_PER_CMTSOLUTION_SOURCE
-    endif
-
-    ! checks number of lines
-    if (mod(icounter,nlines_per_source) /= 0) then
-      print *,'Error: total number of lines in CMTSOLUTION file should be a multiple of ',nlines_per_source
-      stop 'Error total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
-    endif
-
-    ! number of sources in file
-    NSOURCES = icounter / nlines_per_source
-
-    ! checks if any
-    if (NSOURCES < 1) stop 'Error need at least one source in CMTSOLUTION file'
-
-    ! compute the minimum value of hdur in CMTSOLUTION file
-    open(unit=IIN,file=trim(sources_filename),status='old',action='read')
-    minval_hdur = HUGEVAL
-    do isource = 1,NSOURCES
-
-      ! skip other information
-      do idummy = 1,3
-        read(IIN,"(a)") dummystring
-      enddo
-
-      ! read half duration and compute minimum
-      read(IIN,"(a)") dummystring
-      read(dummystring(15:len_trim(dummystring)),*) hdur
-      minval_hdur = min(minval_hdur,hdur)
-
-      ! reads till the end of this source
-      do idummy = 5,nlines_per_source
-        read(IIN,"(a)") dummystring
-      enddo
-
-    enddo
-    close(IIN)
-
-    ! one cannot use a Heaviside source for the movies
-    if ((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
-      stop 'Error hdur too small for movie creation, movies do not make sense for Heaviside source'
-  endif
-
-  end subroutine get_number_of_sources
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1466,11 +1326,14 @@
 
   ! seismograms
   call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+
   call bcast_all_singlel(SAVE_SEISMOGRAMS_DISPLACEMENT)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_VELOCITY)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_ACCELERATION)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_PRESSURE)
+  call bcast_all_singlel(SAVE_SEISMOGRAMS_STRAIN)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)
+
   call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_SAMPLE)
   call bcast_all_singlel(USE_BINARY_FOR_SEISMOGRAMS)
   call bcast_all_singlel(SU_FORMAT)

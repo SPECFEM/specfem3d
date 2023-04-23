@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !          Main authors: Dimitri Komatitsch and Jeroen Tromp
 !    Princeton University, USA and University of Pau / CNRS / INRIA
@@ -36,11 +36,11 @@
 
   include "constants.h"
 
-  integer myrank
-  integer NER,NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM
-  logical MOHO_MAP_LUPEI
-  double precision Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO
-  double precision rn(0:2*NER)
+  integer :: myrank
+  integer :: NER,NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM
+  logical :: MOHO_MAP_LUPEI
+  double precision :: Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO
+  double precision :: rn(0:2*NER)
 
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here
 !! DK DK UGLY modif Manu removed  double precision z_top

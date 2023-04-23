@@ -13,7 +13,7 @@ data, we are now using the FDSN convention (\url{http://www.fdsn.org/})
 for SEM seismograms. In the following, we give a brief explanation
 of the FDSN convention used by IRIS, and how it is adopted in SEM
 seismograms. Please visit \url{http://www.iris.edu/manuals/SEED_appA.htm}
-for further information.\\
+for further information.\newline
 
 
 \noindent \texttt{\textbf{Band code:}} The first letter in the channel
@@ -34,7 +34,7 @@ will be less than $10$ s). Accordingly, when you run a simulation
 the band code will be chosen depending on the resolution of the synthetics,
 and channel codes of SEM seismograms will start with either \texttt{L},
 \texttt{M}, \texttt{B}, \texttt{H}, \texttt{C} or \texttt{F}, shown
-by red color in the figure.\\
+by red color in the figure.\newline
 
 
 \begin{figure}[ht]
@@ -58,7 +58,7 @@ the channel code corresponds to instrument codes, which specify the
 family to which the sensor belongs. For instance, \texttt{H} and \texttt{L}
 are used for high-gain and low-gain seismometers, respectively. The
 instrument code of SEM seismograms will always be \texttt{X}, as assigned
-by FDSN for synthetic seismograms. \\
+by FDSN for synthetic seismograms. \newline
 
 
 \noindent \texttt{\textbf{Orientation code:}} The third letter in
@@ -68,12 +68,11 @@ Cartesian uses the traditional orientation code \texttt{E/N/Z} (East-West,
 North-South, Vertical) for three components when a UTM projection
 is used. If the UTM conversion is suppressed, i.e. the flag \texttt{SUPPRESS\_UTM\_PROJECTION}
 is set to \texttt{.true.}, then the three components are labelled
-\texttt{X/Y/Z} according to the Cartesian reference frame. \\
+\texttt{X/Y/Z} according to the Cartesian reference frame. \newline
 
 
 \noindent \texttt{\textbf{EXAMPLE:}} The sampling rate is given by
-\texttt{DT} in the main parameter file \texttt{Par\_file} located
-in the \texttt{DATA/} subdirectory. Depending on the resolution of
+\texttt{DT} in the main parameter file \texttt{DATA/Par\_file}. Depending on the resolution of
 your simulations, if you choose a sampling rate greater than $0.01$
 s and less than $1$ s, a seismogram recording displacements on the
 vertical component of a station \texttt{ASBS} (network \texttt{AZ})

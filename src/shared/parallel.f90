@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -1080,6 +1080,23 @@ end module my_mpi
   call MPI_REDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,my_local_mpi_comm_world,ier)
 
   end subroutine sum_all_dp
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine sum_all_all_dp(sendbuf, recvbuf)
+
+  use my_mpi
+
+  implicit none
+
+  double precision :: sendbuf, recvbuf
+  integer :: ier
+
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION,MPI_SUM,my_local_mpi_comm_world,ier)
+
+  end subroutine sum_all_all_dp
 
 !
 !-------------------------------------------------------------------------------------------------

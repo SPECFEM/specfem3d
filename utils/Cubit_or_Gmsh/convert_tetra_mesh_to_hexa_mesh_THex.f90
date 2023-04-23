@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -77,13 +77,13 @@
 
   number_of_points_per_element_type(:) = 0
 
-! for Gmsh element types (from http://geuz.org/gmsh/doc/texinfo/gmsh.html#Low-order-elements )
+! for Gmsh element types (from http://gmsh.info/doc/texinfo/gmsh.html#Low-order-elements )
   number_of_points_per_element_type(1)  = 2  ! 2-node line
   number_of_points_per_element_type(2)  = 3  ! 3-node triangle
   number_of_points_per_element_type(4)  = 4  ! 4-node tetrahedron
   number_of_points_per_element_type(15) = 1  ! 1-node point
 
-! point numbering convention for tetrahedra in Gmsh (from http://geuz.org/gmsh/doc/texinfo/gmsh.html#Low-order-elements )
+! point numbering convention for tetrahedra in Gmsh (from http://gmsh.info/doc/texinfo/gmsh.html#Low-order-elements )
 !
 ! Tetrahedron4:                               Tetrahedron10:
 !                    v

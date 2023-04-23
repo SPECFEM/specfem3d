@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -863,6 +863,20 @@
   recvbuf = sendbuf
 
   end subroutine sum_all_dp
+
+!
+!----
+!
+
+  subroutine sum_all_all_dp(sendbuf, recvbuf)
+
+  implicit none
+
+  double precision :: sendbuf, recvbuf
+
+  recvbuf = sendbuf
+
+  end subroutine sum_all_all_dp
 
 !
 !----

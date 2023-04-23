@@ -1,13 +1,13 @@
 #=====================================================================
 #
-#               S p e c f e m 3 D  V e r s i o n  3 . 0
-#               ---------------------------------------
+#                         S p e c f e m 3 D
+#                         -----------------
 #
 #     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-#                        Princeton University, USA
-#                and CNRS / University of Marseille, France
+#                              CNRS, France
+#                       and Princeton University, USA
 #                 (there are currently many more authors!)
-# (c) Princeton University and CNRS / University of Marseille, July 2012
+#                           (c) October 2017
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -202,6 +202,7 @@ inverse_problem_for_model_SHARED_OBJECTS = \
 	$O/adios_manager.shared_adios_module.o \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
+	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
 	$O/detect_surface.shared.o \
@@ -407,7 +408,11 @@ $O/interpolation_mod.inv_input.o: $O/shared_par.shared_module.o
 $O/signal_processing_mod.inv_adjoint_source.o: $O/specfem3D_par.spec_module.o
 
 $O/mesh_tools_mod.inv_input.o: $O/inverse_problem_par.inv_par.o
-$O/IO_model_mod.inv_input.o: $O/mesh_tools_mod.inv_input.o
+$O/IO_model_mod.inv_input.o: \
+	$O/mesh_tools_mod.inv_input.o \
+	$O/shared_par.shared_module.o \
+	$O/specfem3D_par.spec_module.o \
+	$O/create_color_image.spec.o
 
 $O/rotations_mod.inv_adjoint_source.o: $O/interpolation_mod.inv_input.o
 $O/adjoint_source_mod.inv_adjoint_source.o: $O/signal_processing_mod.inv_adjoint_source.o $O/rotations_mod.inv_adjoint_source.o
@@ -426,7 +431,10 @@ $O/input_output_mod.inv_input.o: \
 $O/specfem_interface_mod.inv_specfem_interface.o: \
 	$O/adjoint_source_mod.inv_adjoint_source.o \
 	$O/input_output_mod.inv_input.o \
-	$O/signal_processing_mod.inv_adjoint_source.o
+	$O/signal_processing_mod.inv_adjoint_source.o \
+	$O/shared_par.shared_module.o \
+	$O/specfem3D_par.spec_module.o \
+	$O/create_color_image.spec.o
 
 $O/regularization_interface.inv_regularization.o: $O/regularization_SEM_mod.inv_regularization.o $O/regularization_FD_mod.inv_regularization.o
 

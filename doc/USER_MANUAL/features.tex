@@ -1,0 +1,84 @@
+\chapter*{Simulation features supported in SPECFEM3D\_Cartesian}
+\addcontentsline{toc}{chapter}{Simulation features supported in SPECFEM3D\_Cartesian}
+
+The following lists all available features for a SPECFEM3D\_Cartesian simulation,
+where {\it CPU}, {\it CUDA} and {\it HIP} denote the code versions for CPU-only simulations,
+CUDA and HIP hardware support, respectively.
+%
+\begin{table}[htp]
+\vspace{-1cm}
+\label{table:features}
+\begin{center}
+\begin{tabular}{ l l c c c}
+\hline
+%{\bf Feature}    &   & \multicolumn{3}{c}{{\bf Code version}} \\
+%\cmidrule(lr){3-5}
+%           &     & {\it CPU} & {\it CUDA} & {\it HIP} \\
+%% to have proper title w/ pandoc
+{\bf Feature}   &   & {\it CPU} & {\it CUDA} & {\it HIP} \\
+\hline
+& & & & \\
+%%
+{\bf Physics}   & Acoustic                        & X  & X  & X \\
+                & Elastic                         & X  & X  & X \\
+                & Poroelastic                     & X  & -  & - \\
+                & Ocean load / Topography         & X  & X  & X \\
+                & Gravity field / integrals       & X  & X  & X \\
+                & Anisotropy                      & X  & X  & X \\
+                & Attenuation                     & X  & X  & X \\
+\hline
+& & & & \\
+%%
+{\bf Simulation Setup}  & Noise simulations                 & X  & X  & X \\
+                        & Fault rupture dynamic/kinematic   & X  & X  & X \\
+                        & Wavefield injection/coupling      & X  & X  & X \\
+                        & C-PML                             & X  & -  & - \\
+                        & Simultaneous runs                 & X  & X  & X \\
+                        & ADIOS file I/O                    & X  & X  & X \\
+                        & FWI framework                     & X  & X  & X \\
+
+\hline
+& & & & \\
+%%
+{\bf Meshing}           & in-house mesher                       & X  & -  & - \\
+                        & external (CUBIT/Trelis,Gmsh)          & X  & -  & - \\
+                        & UTM projection                        & X  & -  & - \\
+                        & Cavity                                & X  & -  & - \\
+                        & SCOTCH/Metis/PaToH/Rows partitioning  & X  & -  & - \\
+\hline
+& & & & \\
+%%
+{\bf Sensitivity kernels} & Undoing of attenuation          & X  & X  & X \\
+                          & Anisotropic kernels             & X  & X  & X \\
+                          & Transversely isotropic kernels  & X  & X  & X \\
+                          & Isotropic kernels               & X  & X  & X \\
+                          & Moho boundary kernels           & X  & -  & - \\
+                          & Approximate Hessian             & X  & X  & X \\
+\hline
+& & & & \\
+%%
+{\bf Time schemes}  & Newmark   & X  & X  & X  \\
+                    & LDDRK     & X  & -  & -  \\
+\hline
+& & & & \\
+%%
+{\bf Visualization} & ShakeMap          & X  & X  & X \\
+                    & Surface movie     & X  & X  & X \\
+                    & Volumetric movie  & X  & X  & X \\
+                    & VTK runtime-vis   & X  & X  & X \\
+\hline
+& & & & \\
+%%
+{\bf Seismogram formats}  & Ascii          & X  & X  & X \\
+                          & SU             & X  & X  & X \\
+                          & ASDF           & X  & X  & X \\
+                          & Binary         & X  & X  & X \\
+                          & down-sampling  & X  & X  & X \\
+%
+\hline
+& & & & \\ % to avoid clashes with pandoc
+\end{tabular}
+\end{center}
+\end{table}
+
+

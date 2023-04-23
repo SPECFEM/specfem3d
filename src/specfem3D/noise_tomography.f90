@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -875,6 +875,7 @@ end module user_noise_distribution
               noise_surface_movie(2,igll,iface) * normal_y_noise(ipoin) + &
               noise_surface_movie(3,igll,iface) * normal_z_noise(ipoin)
 
+        ! adds noise mask
         val = eta * mask_noise(ipoin) * free_surface_jacobian2Dw(igll,iface) ! wgllwgll_xy(i,j) * jacobian2D_top(i,j,iface)
 
         accel(1,iglob) = accel(1,iglob) + val * normal_x_noise(ipoin)   ! x-component

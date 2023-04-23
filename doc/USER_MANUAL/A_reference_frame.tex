@@ -8,14 +8,14 @@ frame:
 \item the $z$ axis points up
 \end{itemize}
 Note that this convention is different from both the \citet{AkRi80}
-convention and the Harvard Centroid-Moment Tensor (CMT) convention.
+convention and the Global/Harvard Centroid-Moment Tensor (CMT) convention.
 The Aki \& Richards convention is
 \begin{itemize}
 \item the $x$ axis points North
 \item the $y$ axis points East
 \item the $z$ axis points down
 \end{itemize}
-and the Harvard CMT convention is
+and the Global/Harvard CMT convention is
 \begin{itemize}
 \item the $x$ axis points South
 \item the $y$ axis points East
@@ -30,34 +30,33 @@ converted. Sources and receiver locations are read in from the \texttt{CMTSOLUTI
 (or \texttt{FORCESOLUTION}) and \texttt{STATIONS} files. Note that
 e.g. the \texttt{CMTSOLUTION} and \texttt{FORCESOLUTION} files denotes
 the location by \textquotedbl{}longitude/latitude/depth\textquotedbl{}.
-We read in longitude as $x$ coordinate, latitude as $y$ coordinate.
+We read in longitude as $x$ coordinate, latitude as $y$ coordinate.\newline
 
 In case the flag \texttt{SUPPRESS\_UTM\_PROJECTION} is set to \texttt{.false.}
 in the main parameter file (see Chapter~\ref{cha:Creating-Distributed-Databases}),
 the $x$/$y$ coordinates have to be given in degrees and are converted
 to Cartesian coordinates using a UTM conversion with the specified
-UTM zone.
+UTM zone.\newline
 
 The value for depth (given in $km$ in \texttt{CMTSOLUTION} and \texttt{FORCESOLUTION})
 or burial depth (given in $m$ in \texttt{STATIONS}) is evaluated
 with respect to the surface of the mesh at the specified $x$/$y$
 location to find the corresponding $z$ coordinate. It is possible
 to use this depth value directly as $z$ coordinate by changing the
-flag \texttt{USE\_SOURCES\_RECVS\_Z} to \texttt{.true.} in the file
-\texttt{constants.h} located in the \texttt{src/shared/} subdirectory.
+flag \texttt{USE\_SOURCES\_RECEIVERS\_Z} to \texttt{.true.} in
+\texttt{DATA/Par\_file}.\newline
 
 
 \subsection*{Seismogram outputs}
 
 The seismogram output directions are given in Cartesian $x$/$y$/$z$
-directions and not rotated any further. Changing flags in \texttt{constants.h}
-in the \texttt{src/shared/} subdirectory only rotates the seismogram
-outputs if receivers are forced to be located at the surface (\texttt{RECVS\_CAN\_BE\_BURIED\_EXT\_MESH}
+directions and not rotated any further. Changing flags in \texttt{setup/constants.h} only rotates the seismogram
+outputs if receivers are forced to be located at the surface (\texttt{RECEIVERS\_CAN\_BE\_BURIED}
 set to \texttt{.false.}) and the normal to the surface at the receiver
-location should be used (\texttt{EXT\_MESH\_RECV\_NORMAL} set to \texttt{.true.})
+location should be used (\texttt{EXTERNAL\_MESH\_RECEIVERS\_NORMAL} set to \texttt{.true.})
 as vertical. In this case, the outputs are rotated to have the vertical
 component normal to the surface of the mesh, $x$ and $y$ directions
-are somewhat arbitrary orthogonal directions along the surface.
+are somewhat arbitrary orthogonal directions along the surface.\newline
 
 For the labeling of the seismogram channels, see Appendix~\ref{cha:channel-codes}.
 Additionally, we add labels to the synthetics using the following
@@ -69,7 +68,7 @@ convention: For a receiver station located in an
 \item \texttt{semv} for the velocity vector
 \item \texttt{sema} for the acceleration vector
 \end{itemize}
-\item [{acoustic domain:}] ~\\
+\item [{acoustic domain:}] ~\newline
  (please note that receiver stations in acoustic domains must be buried.
 This is due to the free surface condition which enforces a zero pressure
 at the surface.)
@@ -87,10 +86,9 @@ and the first time derivative of the acoustic potential in component
 \end{description}
 The seismograms are by default written out in ASCII-format to the
 \texttt{OUTPUT\_FILES/} subdirectory by each parallel process. You
-can change this behavior by changing the following flags in the \texttt{constants.h}
-file located in the \texttt{src/shared/} subdirectory:
+can change this behavior by changing the following flags in the \texttt{DATA/Par\_file}:
 \begin{description}
-\item [{\texttt{SEISMOGRAMS\_BINARY}}] set to \texttt{.true.} to have seismograms
+\item [{\texttt{USE\_BINARY\_FOR\_SEISMOGRAMS}}] set to \texttt{.true.} to have seismograms
 written out in binary format.
 \item [{\texttt{WRITE\_SEISMOGRAMS\_BY\_MAIN}}] Set to \texttt{.true.}
 to have only the main process writing out seismograms. This can

@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -33,8 +33,7 @@
 
   use specfem_par, only: NSTEP,SIMULATION_TYPE,OUTPUT_FILES, &
     NSOURCES,islice_selected_source,ispec_selected_source,tshift_src,t0, &
-    DT,USE_LDDRK,UNDO_ATTENUATION_AND_OR_PML, &
-    USE_EXTERNAL_SOURCE_FILE,user_source_time_function
+    DT,USE_LDDRK,UNDO_ATTENUATION_AND_OR_PML
 
   use specfem_par_acoustic, only: ispec_is_acoustic
   use specfem_par_elastic, only: ispec_is_elastic
@@ -49,7 +48,7 @@
   double precision :: stf,time_source_dble
   double precision,external :: get_stf_acoustic,get_stf_viscoelastic,get_stf_poroelastic
 
-  integer :: isource,ispec,ier,it,istage
+  integer :: isource,ispec,ier,it,istage,it_tmp_ext
   character(len=MAX_STRING_LEN) :: plot_file
 
   ! check
@@ -89,6 +88,8 @@
           else
             time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
           endif
+          ! for external stf
+          it_tmp_ext = it
         else
           ! backward simulation (SIMULATION_TYPE == 3)
           if (USE_LDDRK) then
@@ -107,23 +108,22 @@
           else
             time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
           endif
+          ! for external stf
+          it_tmp_ext = NSTEP - it + 1
         endif
 
         ispec = ispec_selected_source(isource)
 
         ! determines source time function value
         if (ispec_is_acoustic(ispec)) then
-          stf = get_stf_acoustic(time_source_dble,isource)
+          stf = get_stf_acoustic(time_source_dble,isource,it_tmp_ext)
         else if (ispec_is_elastic(ispec)) then
-          stf = get_stf_viscoelastic(time_source_dble,isource)
+          stf = get_stf_viscoelastic(time_source_dble,isource,it_tmp_ext)
         else if (ispec_is_poroelastic(ispec)) then
-          stf = get_stf_poroelastic(time_source_dble,isource)
+          stf = get_stf_poroelastic(time_source_dble,isource,it_tmp_ext)
         else
           call exit_MPI(myrank,'Invalid source element type, please check your mesh...')
         endif
-
-        !! VM VM add external source time function
-        if (USE_EXTERNAL_SOURCE_FILE) stf = user_source_time_function(it, isource)
 
         ! distinguishes between single and double precision for reals
         stf_used = real(stf,kind=CUSTOM_REAL)

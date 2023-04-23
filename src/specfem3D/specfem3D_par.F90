@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -151,6 +151,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: pm1_source_encoding
 
   ! parameters for a force source located exactly at a grid point
+  integer, dimension(:), allocatable :: force_stf
   double precision, dimension(:), allocatable :: factor_force_source
   double precision, dimension(:), allocatable :: comp_dir_vect_source_E
   double precision, dimension(:), allocatable :: comp_dir_vect_source_N
@@ -169,6 +170,9 @@ module specfem_par
   double precision, dimension(:,:), allocatable :: hpxir_store,hpetar_store,hpgammar_store
   double precision, dimension(:,:,:), allocatable :: nu_rec
 
+  ! location storage for inverse problem damping
+  double precision, dimension(:), allocatable :: x_target_station,y_target_station,z_target_station
+
   ! Lagrange interpolators at receivers
   integer, dimension(:), allocatable, target :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable, target :: hxir_store,hetar_store,hgammar_store
@@ -185,11 +189,10 @@ module specfem_par
 
   ! seismograms
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: seismograms_d,seismograms_v,seismograms_a,seismograms_p
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: seismograms_eps
+
   integer :: nlength_seismogram
   integer :: seismo_offset,seismo_current
-
-  ! adjoint seismograms
-  integer :: it_adj_written
 
   ! for ASDF/SAC headers time
   integer :: yr_PDE,jda_PDE,ho_PDE,mi_PDE
@@ -291,7 +294,6 @@ module specfem_par
   ! adjoint source frechet derivatives
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: Mxx_der,Myy_der,Mzz_der,Mxy_der,Mxz_der,Myz_der
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: sloc_der
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: seismograms_eps
 
   ! adjoint elements
   integer :: NSPEC_ADJOINT, NGLOB_ADJOINT
@@ -716,12 +718,13 @@ module specfem_par_coupling
   !-----------------------------------------------------------------
 
   ! for couple with external code : DSM and AxiSEM (added by VM) for the moment
-  integer :: it_dsm, it_fk
+  integer :: it_dsm
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary, Tract_dsm_boundary
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: Veloc_axisem, Tract_axisem
 
   ! boundary injection wavefield parts for saving together with b_absorb_field
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_boundary_injection_field
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_boundary_injection_potential
 
   !! CD CD added this for RECIPROCITY_AND_KH_INTEGRAL
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: Displ_axisem_time, Tract_axisem_time
@@ -732,31 +735,31 @@ module specfem_par_coupling
   ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
 
   ! FK elastic
-  integer :: npt,nlayer,kpsv
+  integer :: npt,nlayer
   integer :: NF_FOR_STORING, NF_FOR_FFT, NPOW_FOR_FFT, NP_RESAMP, NPOW_FOR_INTERP
   integer :: NPTS_STORED, NPTS_INTERP
 
-  integer, parameter :: NTIME_BETWEEN_FFT = 1  !! not used anymore
+  ! boundary point table
+  integer,dimension(:,:),allocatable :: ipt_table
 
-  integer,dimension(:),allocatable :: nbdglb
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: vxbd,vybd,vzbd,txxbd,txybd,txzbd,tyybd,tyzbd,tzzbd
   real(kind=CUSTOM_REAL) :: Z_REF_for_FK
 
   ! source
-  real(kind=CUSTOM_REAL) :: xx0,yy0,zz0,ff0,tt0,tmax_fk
+  integer :: type_kpsv_fk = 0  ! incident wave type: 1 == P-wave, 2 == SV-wave
+  real(kind=CUSTOM_REAL) :: xx0,yy0,zz0,ff0,tt0,tmax_fk,freq_sampling_fk,amplitude_fk
   real(kind=CUSTOM_REAL) :: phi_FK,theta_FK
 
   ! model
-  real(kind=CUSTOM_REAL),dimension(:),allocatable :: alpha_FK,beta_FK,mu_FK,h_FK
+  real(kind=CUSTOM_REAL),dimension(:),allocatable :: alpha_FK,beta_FK,rho_FK,mu_FK,h_FK
   complex(kind=8), dimension(:,:), allocatable :: VX_f, VY_f, VZ_f, TX_f, TY_f, TZ_f
-  real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: VX_t, VY_t, VZ_t, TX_t, TY_t, TZ_t
+  real(kind=CUSTOM_REAL),dimension(:,:,:),allocatable :: Veloc_FK, Tract_FK
 
   complex(kind=8), dimension(:), allocatable :: WKS_CMPLX_FOR_FFT
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: WKS_REAL_FOR_FFT
 
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: vx_FK,vy_FK,vz_FK,tx_FK,ty_FK,tz_FK
-  logical :: stag
   real(kind=CUSTOM_REAL),dimension(:),allocatable  :: xx,yy,zz,xi1,xim,bdlambdamu
+
   ! normal
   real(kind=CUSTOM_REAL),dimension(:),allocatable  :: nmx,nmy,nmz
 

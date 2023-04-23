@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -212,29 +212,34 @@ module signal_processing
     real(kind=CUSTOM_REAL), dimension(:), allocatable,   intent(inout) :: t_w
 
     integer                                                            :: i
-    real(kind=CUSTOM_REAL)                                             :: omega, phi, pi
+    real(kind=CUSTOM_REAL)                                             :: omega, phi
+    real(kind=CUSTOM_REAL),parameter                                   :: pi = 3.1415926d0
 
-    PI = 3.1415926d0
-    t_w(1:nstep)=0.
+    ! initialize taper window
+    t_w(1:nstep) = 0._CUSTOM_REAL
 
     ! take off
-    omega = pi / (i1 - i0)
-    phi = pi / 2 - omega * i1
-    do i = i0, i1
-       t_w(i) = W*(0.5 + 0.5 *sin(omega * i + phi))
-    enddo
+    if ((i1 - i0) > 0) then
+      omega = pi / (i1 - i0)
+      phi = pi / 2 - omega * i1
+      do i = i0, i1
+        t_w(i) = W * (0.5 + 0.5 *sin(omega * i + phi))
+      enddo
+    endif
 
     ! flying
     do i = i1+1,i2-1
-       t_w(i)=W
+      t_w(i) = W
     enddo
 
     ! landing
-    omega = pi / (i3 - i2)
-    phi = pi/2 - omega * i2
-    do i= i2,i3
-       t_w(i) = W*(0.5 + 0.5 * sin(omega * i + phi))
-    enddo
+    if ((i3 - i2) > 0) then
+      omega = pi / (i3 - i2)
+      phi = pi/2 - omega * i2
+      do i = i2,i3
+        t_w(i) = W * (0.5 + 0.5 * sin(omega * i + phi))
+      enddo
+    endif
 
   end subroutine taper_window_W
 
@@ -288,21 +293,32 @@ module signal_processing
     implicit none
     real(kind=CUSTOM_REAL),                            intent(in)     :: dt
     integer,                                           intent(in)     :: nt
-    real(kind=CUSTOM_REAL), dimension(:), allocatable, intent(inout)  :: signal
+    real(kind=CUSTOM_REAL), dimension(:),              intent(inout)  :: signal
+    ! local
     real(kind=CUSTOM_REAL), dimension(:), allocatable                 :: wks_signal
     integer                                                           :: i, ier
 
     allocate(wks_signal(nt),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 296')
-    wks_signal(1:nt)=signal(1:nt)
+    wks_signal(1:nt) = signal(1:nt)
 
     !! laplacian 1D
-    do i=2,nt-1
-       signal(i) = ( wks_signal(i+1) - 2._CUSTOM_REAL* wks_signal(i) + wks_signal(i-1) ) / dt / dt
-    enddo
+    ! finite-difference 2nd-order scheme
+    !do i = 2,nt-1
+    !  signal(i) = ( wks_signal(i+1) - 2._CUSTOM_REAL* wks_signal(i) + wks_signal(i-1) ) / dt / dt
+    !enddo
+    !signal(1)  = 0._CUSTOM_REAL
+    !signal(nt) = 0._CUSTOM_REAL
 
-    signal(1)=0._CUSTOM_REAL
-    signal(nt)=0._CUSTOM_REAL
+    ! finite-difference 4th-order scheme
+    do i = 3,nt-2
+      signal(i) = ( - 1.0/12.0 * wks_signal(i+2) + 4.0/3.0 * wks_signal(i+1) - 5.0/2.0 * wks_signal(i) &
+                    + 4.0/3.0 * wks_signal(i-1) - 1.0/12.0 * wks_signal(i-2) ) / (dt**2)
+    enddo
+    signal(1)  = 0._CUSTOM_REAL
+    signal(2)  = 0._CUSTOM_REAL
+    signal(nt-1) = 0._CUSTOM_REAL
+    signal(nt) = 0._CUSTOM_REAL
 
     deallocate(wks_signal)
 
@@ -322,12 +338,15 @@ module signal_processing
 
     allocate(w_tap(nt),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 297')
+
     i0 = 2
     i1 = int(lwa/100.0) * nt + i0
     i3 = nt-1
     i2 = i3  - int(lwa/100.0) * nt
     wh = 1._CUSTOM_REAL
+
     call taper_window_W(w_tap,i0,i1,i2,i3,nt,wh)
+
     signal(:) = signal(:)*w_tap(:)
 
     deallocate(w_tap)

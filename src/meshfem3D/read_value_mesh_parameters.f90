@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -250,7 +250,7 @@
 
 ! material parameter list
 
-  subroutine read_material_parameters(iunit,material_properties,imat,NMATERIALS,ier)
+  subroutine read_material_parameters(iunit,material_properties,material_properties_undef,imat,NMATERIALS,ier)
 
   use constants, only: MAX_STRING_LEN,DONT_IGNORE_JUNK,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC
   use constants_meshfem, only: NUMBER_OF_MATERIAL_PROPERTIES
@@ -258,6 +258,7 @@
 
   integer,intent(in) :: iunit,imat,NMATERIALS
   double precision, dimension(NMATERIALS,NUMBER_OF_MATERIAL_PROPERTIES),intent(inout):: material_properties
+  character(len=MAX_STRING_LEN), dimension(NMATERIALS,3),intent(inout) :: material_properties_undef
   integer,intent(out) :: ier
 
   ! local parameters
@@ -268,19 +269,53 @@
   integer :: domain_id
   integer :: i,counter,idummy
   character(len=MAX_STRING_LEN) :: string_read
-  character(len=16) :: dummy
+  character(len=128) :: undef_keyword,undef_domain,undef_tomofile
   logical :: new_number
   logical, external :: is_numeric,is_digit_alpha
 
   ! initializes
   material_properties(imat,:) = 0.d0
+  material_properties_undef(imat,:) = ""
   ier = 0
+
+  rho = 0.d0
+  vp = 0.d0
+  vs = 0.d0
+  Q_mu = 0.d0
+  Q_Kappa = 0.d0
+  anisotropy_flag = 0
+
+  rho_s = 0.d0
+  rho_f = 0.d0
+  kappa_s = 0.d0
+  kappa_f = 0.d0
+  kappa_fr = 0.d0
+  mu_fr = 0.d0
+  eta = 0.d0
+  phi = 0.d0
+  tort = 0.d0
+  kxx = 0.d0
+  kxy = 0.d0
+  kxz = 0.d0
+  kyy = 0.d0
+  kyz = 0.d0
+  kzz = 0.d0
+
+  mat_id = 0
 
   call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ier)
   if (ier /= 0) return
 
   ! counts numbers on line
-  ! example:  1 1020.0  1500.0 0.0  9999.0 9999.0  0  1
+  ! example:  acoustic/elastic
+  !   1 1020.0  1500.0 0.0  9999.0 9999.0  0  1
+  !   -> 8 numbers
+  ! example: poroelastic
+  !   1           2500.d0 1020.d0 0.4 2.0  1d-11 0.0  0.0 1d-11 0.0 1d-11 16.0554d9 2.295d9  10.0d9    0.0  9.63342d9  3
+  !   -> 17 numbers
+  ! example: tomographic
+  !   -1 tomography elastic tomography_model.xyz 0 2
+  !   -> 3 numbers (note that tomography_model_1.xyz 0 2 would count 4)
   counter = 0
   new_number = .true.
   do i = 1,len_trim(string_read)
@@ -307,7 +342,9 @@
     ! default line
     ! format: #material_id  #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id
     read(string_read,*,iostat=ier) mat_id,rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,domain_id
-    if (domain_id /= 1 .and. domain_id /= 2) stop 'material parameters for acoustic/elastic must have domain_id == 1 or 2'
+    if (domain_id /= IDOMAIN_ACOUSTIC .and. domain_id /= IDOMAIN_ELASTIC) &
+      stop 'Error material parameters for acoustic/elastic domains must have domain_id == 1 or 2'
+
   case (17)
     ! poroelastic line
     ! format:
@@ -315,17 +352,52 @@
     ! 1           2500.d0 1020.d0 0.4 2.0  1d-11 0.0  0.0 1d-11 0.0 1d-11 16.0554d9 2.295d9  10.0d9    0.0  9.63342d9  3
     read(string_read,*,iostat=ier) mat_id,rho_s,rho_f,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
                                    kappa_s,kappa_f,kappa_fr,eta,mu_fr,domain_id
-  case (3)
+    if (domain_id /= IDOMAIN_POROELASTIC) &
+      stop 'Error material parameters for poroelastic domains must have domain_id == 3'
+
+  case (3,4)
     ! tomography line
     ! format: #material_id #type-keyword #domain-name #tomo-filename #tomo_id #domain_id
     ! example: -1 tomography elastic tomography_model.xyz 0 2
-    read(string_read,*,iostat=ier) mat_id,dummy,dummy,dummy,idummy,domain_id
+    !       or -1 tomography elastic tomography_model_1.xyz 0 2
+    read(string_read,*,iostat=ier) mat_id,undef_keyword,undef_domain,undef_tomofile,idummy,domain_id
+    ! sets dummy values (will be overimposed in xgenerate_databases when tomography values are taken)
+    if (domain_id == IDOMAIN_ACOUSTIC) then
+      ! acoustic (zero vs)
+      rho = 1.d0
+      vp = 1.d0
+      vs = 0.d0
+    else if (domain_id == IDOMAIN_ELASTIC) then
+      ! elastic
+      rho = 1.d0
+      vp = 1.d0
+      vs = 1.d0
+    else
+      ! poroelastic tomography models not supported yet
+      print *,'Error: tomography material only supports acoustic or elastic domains. Please check domain_id value.'
+      print *,'   line: ',trim(string_read)
+      stop 'Error in input tomography material'
+    endif
+    ! checks with consistency between domain-name and domain_id
+    if ( (domain_id == IDOMAIN_ACOUSTIC .and. trim(undef_domain) /= 'acoustic') .or. &
+         (domain_id == IDOMAIN_ELASTIC .and. trim(undef_domain) /= 'elastic') .or. &
+         (domain_id == IDOMAIN_POROELASTIC .and. trim(undef_domain) /= 'poroelastic') ) then
+      print *,'Error: tomography material has inconsistent domain_id and domain-name. Please check domain given:'
+      print *,'  line: ',trim(string_read)
+      print *,'  domain name: ',trim(undef_domain),' and domain id: ',domain_id
+      stop 'Error in tomography material domain definition'
+    endif
+
   case default
     print *,'Error: material parameter line format not recognized:'
-    print *,'  line :',trim(string_read)
+    print *,'  line: ',trim(string_read)
+    print *,'  counted ',counter,' separate numbers on this line.'
     print *
+    ! sets a read error
     ier = 1
   end select
+
+  ! check
   if (ier /= 0) then
     print *,'Error while reading your input Mesh_Par_file in routine read_material_parameters()'
     print *
@@ -390,6 +462,16 @@
     material_properties(imat,17) = kappa_fr
     material_properties(imat,18) = mu_fr      ! anisotropy_flag - not implemented yet
   end select
+
+  ! undefined/tomography materials
+  if (mat_id < 0) then
+    ! undefined material:
+    ! input format: #material_id #type-keyword #domain-name #tomo-filename #tomo_id #domain_id
+    !      example: -1 tomography elastic tomography_model.xyz 0 2
+    material_properties_undef(imat,1) = undef_keyword
+    material_properties_undef(imat,2) = undef_domain
+    material_properties_undef(imat,3) = undef_tomofile
+  endif
 
   end subroutine read_material_parameters
 

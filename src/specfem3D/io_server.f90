@@ -261,11 +261,11 @@ subroutine do_io_start_idle()
     call idle_mpi_io(status)
 
     ! debug output
-!    print *,                 "msg: " , status(MPI_TAG) , " send/recv rank: ", status(MPI_SOURCE), "/",myrank, &
-!              "  counters, seismo: " , rec_count_seismo, "/"      , n_recv_msg_seismo,  &
-!                          ", surf: " , rec_count_surf  , "/"      , n_recv_msg_surf,    &
-!                          ", shake: ", rec_count_shake , "/"      , n_recv_msg_shake,   &
-!                          ", vol: "  , rec_count_vol   , "/"      , n_recv_msg_vol
+    print *,                 "msg: " , status(MPI_TAG) , " send/recv rank: ", status(MPI_SOURCE), "/",myrank, &
+              "  counters, seismo: " , rec_count_seismo, "/"      , n_recv_msg_seismo,  &
+                          ", surf: " , rec_count_surf  , "/"      , n_recv_msg_surf,    &
+                          ", shake: ", rec_count_shake , "/"      , n_recv_msg_shake,   &
+                          ", vol: "  , rec_count_vol   , "/"      , n_recv_msg_vol
 
     !
     ! receive seismograms
@@ -1276,7 +1276,7 @@ subroutine get_receiver_info(islice_num_rec_local)
 
   integer                      :: ier, iproc
   integer, dimension(1)        :: nrec_local_temp
-  integer, dimension(1)        :: nrec_temp
+  integer, dimension(1)        :: nrec_temp, nlength_seismogram_tmp
   integer,dimension(0:NPROC-1) :: islice_num_rec_local
 
 
@@ -1284,6 +1284,9 @@ subroutine get_receiver_info(islice_num_rec_local)
   nrec = nrec_temp(1)
 
   call recv_dp_inter(t0, 1, 0, io_tag_seismo_tzero)
+
+  call recv_i_inter(nlength_seismogram_tmp, 1, 0, io_tag_seismo_length)
+  nlength_seismogram = nlength_seismogram_tmp(1)
 
   do iproc = 0, NPROC-1
     call recv_i_inter(nrec_local_temp, 1, iproc, io_tag_local_rec)
@@ -1302,8 +1305,8 @@ subroutine allocate_seismo_arrays(islice_num_rec_local)
   integer, dimension(0:NPROC-1), intent(in) :: islice_num_rec_local
   integer                                   :: ier, max_num_rec, nstep_temp
 
-  if (NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP) then
-    nstep_temp = NSTEP
+  if (NTSTEP_BETWEEN_OUTPUT_SEISMOS >= nlength_seismogram) then
+    nstep_temp = nlength_seismogram
   else
     nstep_temp = NTSTEP_BETWEEN_OUTPUT_SEISMOS
   endif
@@ -1317,24 +1320,28 @@ subroutine allocate_seismo_arrays(islice_num_rec_local)
   id_rec_globs(:,:) = 0
 
   if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
-    allocate(seismo_disp(NDIM,nrec,nstep_temp),stat=ier)
+    allocate(seismo_disp(NDIM,nstep_temp,nrec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array seimo_disp')
     if (ier /= 0) stop 'error allocating array seismo_disp'
+    seismo_disp(:,:,:) = 0._CUSTOM_REAL
   endif
   if (SAVE_SEISMOGRAMS_VELOCITY) then
-    allocate(seismo_velo(NDIM,nrec,nstep_temp),stat=ier)
+    allocate(seismo_velo(NDIM,nstep_temp,nrec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array seismo_velo')
     if (ier /= 0) stop 'error allocating array seismo_velo'
+    seismo_velo(:,:,:) = 0._CUSTOM_REAL
   endif
   if (SAVE_SEISMOGRAMS_ACCELERATION) then
-    allocate(seismo_acce(NDIM,nrec,nstep_temp),stat=ier)
+    allocate(seismo_acce(NDIM,nstep_temp,nrec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array seismo_acce')
     if (ier /= 0) stop 'error allocating array seismo_acce'
+    seismo_acce(:,:,:) = 0._CUSTOM_REAL
   endif
   if (SAVE_SEISMOGRAMS_PRESSURE) then
-    allocate(seismo_pres(nrec,nstep_temp),stat=ier)
+    allocate(seismo_pres(nstep_temp,nrec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array seismo_pres')
     if (ier /= 0) stop 'error allocating array seismo_pres'
+    seismo_pres(:,:) = 0._CUSTOM_REAL
   endif
 
 end subroutine allocate_seismo_arrays
@@ -1464,16 +1471,17 @@ subroutine recv_seismo_data(status, islice_num_rec_local, rec_count_seismo)
     if (tag /= io_tag_seismo_body_pres) then
       ! allocate temp array size
       time_window = int(msg_size/NDIM/nrec_passed)
-      allocate(seismo_temp(NDIM,nrec_passed,time_window),stat=ier)
+      allocate(seismo_temp(NDIM,time_window,nrec_passed),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array seismo_temp')
       if (ier /= 0) stop 'error allocating array seismo_temp'
+      seismo_temp(:,:,:) = 0.0
 
       call recvv_cr_inter(seismo_temp, msg_size, sender, tag)
 
     ! get scalar value i.e. pres
     else
       time_window = int(msg_size/1/nrec_passed)
-      allocate(seismo_temp(1,nrec_passed,time_window),stat=ier)
+      allocate(seismo_temp(1,time_window,nrec_passed),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array seismo_temp')
       if (ier /= 0) stop 'error allocating array seismo_temp'
       call recvv_cr_inter(seismo_temp, msg_size, sender, tag)
@@ -1484,16 +1492,16 @@ subroutine recv_seismo_data(status, islice_num_rec_local, rec_count_seismo)
       id_rec_glob = id_rec_globs(irec_passed,sender)
       ! disp
       if (tag == io_tag_seismo_body_disp) then
-        seismo_disp(:,id_rec_glob,:) = seismo_temp(:,irec_passed,:)
+        seismo_disp(:,:,id_rec_glob) = seismo_temp(:,:,irec_passed)
       ! velo
       elseif (tag == io_tag_seismo_body_velo) then
-        seismo_velo(:,id_rec_glob,:) = seismo_temp(:,irec_passed,:) ! id_rec
+        seismo_velo(:,:,id_rec_glob) = seismo_temp(:,:,irec_passed) ! id_rec
       ! acce
       elseif (tag == io_tag_seismo_body_acce) then
-        seismo_acce(:,id_rec_glob,:) = seismo_temp(:,irec_passed,:)
+        seismo_acce(:,:,id_rec_glob) = seismo_temp(:,:,irec_passed)
       ! pres
       elseif (tag == io_tag_seismo_body_pres) then
-        seismo_pres(id_rec_glob,:) = seismo_temp(1,irec_passed,:)
+        seismo_pres(:,id_rec_glob) = seismo_temp(1,:,irec_passed)
       endif
     enddo
 
@@ -1541,7 +1549,7 @@ subroutine do_io_seismogram_init()
 
   ! arrays
   integer                                                 :: i, irec
-  real(kind=CUSTOM_REAL), dimension(NSTEP)                :: time_array
+  real(kind=CUSTOM_REAL), dimension(nlength_seismogram)   :: time_array
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable     :: val_array2d
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable   :: val_array3d
   character(len=MAX_LENGTH_STATION_NAME), dimension(nrec) :: stations
@@ -1558,14 +1566,14 @@ subroutine do_io_seismogram_init()
   call h5_create_file(h5)
 
   ! create time dataset it = 1 ~ NSTEP
-  do i = 1, NSTEP
+  do i = 1, nlength_seismogram
     if (SIMULATION_TYPE == 1) then ! forward simulation ! distinguish between single and double precision for reals
       time_array(i) = real( dble(i-1)*DT - t0 ,kind=CUSTOM_REAL)
     else if (SIMULATION_TYPE == 3) then
       ! adjoint simulation: backward/reconstructed wavefields
       ! distinguish between single and double precision for reals
       ! note: compare time_t with time used for source term
-      time_array(i) = real( dble(NSTEP-i)*DT - t0 ,kind=CUSTOM_REAL)
+      time_array(i) = real( dble(nlength_seismogram-i)*DT - t0 ,kind=CUSTOM_REAL)
     endif
   enddo
 
@@ -1599,22 +1607,22 @@ subroutine do_io_seismogram_init()
 
   ! prepare datasets for physical values
   if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
-    allocate(val_array3d(NDIM,nrec,NSTEP),stat=error)
+    allocate(val_array3d(NDIM,nlength_seismogram,nrec),stat=error)
     call h5_create_dataset_gen(h5, "disp", shape(val_array3d), 3, CUSTOM_REAL)
     deallocate(val_array3d)
   endif
   if (SAVE_SEISMOGRAMS_VELOCITY) then
-    allocate(val_array3d(NDIM,nrec,NSTEP),stat=error)
+    allocate(val_array3d(NDIM,nlength_seismogram,nrec),stat=error)
     call h5_create_dataset_gen(h5, "velo", shape(val_array3d), 3, CUSTOM_REAL)
     deallocate(val_array3d)
   endif
   if (SAVE_SEISMOGRAMS_ACCELERATION) then
-    allocate(val_array3d(NDIM,nrec,NSTEP),stat=error)
+    allocate(val_array3d(NDIM,nlength_seismogram,nrec),stat=error)
     call h5_create_dataset_gen(h5, "acce", shape(val_array3d), 3, CUSTOM_REAL)
     deallocate(val_array3d)
   endif
   if (SAVE_SEISMOGRAMS_PRESSURE) then
-    allocate(val_array2d(nrec,NSTEP),stat=error)
+    allocate(val_array2d(nlength_seismogram,nrec),stat=error)
     call h5_create_dataset_gen(h5, "pres", shape(val_array2d), 2, CUSTOM_REAL)
     deallocate(val_array2d)
   endif
@@ -1643,8 +1651,8 @@ subroutine write_seismograms_io(it_offset)
   call h5_open_file(h5)
 
   ! check if the array length to be written > total timestep
-  if (it_offset+NTSTEP_BETWEEN_OUTPUT_SEISMOS > NSTEP) then
-    t_upper = NSTEP - it_offset
+  if (it_offset+NTSTEP_BETWEEN_OUTPUT_SEISMOS > nlength_seismogram) then
+    t_upper = nlength_seismogram - it_offset
   else
     t_upper = NTSTEP_BETWEEN_OUTPUT_SEISMOS
   endif
@@ -1652,19 +1660,19 @@ subroutine write_seismograms_io(it_offset)
   ! writes out this seismogram
   if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
     component = 'disp'
-    call h5_write_dataset_3d_r_collect_hyperslab(h5, component, seismo_disp(:,:,1:t_upper), (/0, 0, it_offset/), .false.)
+    call h5_write_dataset_3d_r_collect_hyperslab(h5, component, seismo_disp(:,1:t_upper,:), (/0, it_offset, 0/), .false.)
   endif
   if (SAVE_SEISMOGRAMS_VELOCITY) then
     component = 'velo'
-    call h5_write_dataset_3d_r_collect_hyperslab(h5, component, seismo_velo(:,:,1:t_upper), (/0, 0, it_offset/), .false.)
+    call h5_write_dataset_3d_r_collect_hyperslab(h5, component, seismo_velo(:,1:t_upper,:), (/0, it_offset, 0/), .false.)
   endif
   if (SAVE_SEISMOGRAMS_ACCELERATION) then
     component = 'acce'
-    call h5_write_dataset_3d_r_collect_hyperslab(h5, component, seismo_acce(:,:,1:t_upper), (/0, 0, it_offset/), .false.)
+    call h5_write_dataset_3d_r_collect_hyperslab(h5, component, seismo_acce(:,1:t_upper,:), (/0, it_offset, 0/), .false.)
   endif
   if (SAVE_SEISMOGRAMS_PRESSURE) then
     component = 'pres'
-    call h5_write_dataset_2d_r_collect_hyperslab(h5, component, seismo_pres(:,1:t_upper), (/0, it_offset/), .false.)
+    call h5_write_dataset_2d_r_collect_hyperslab(h5, component, seismo_pres(1:t_upper,:), (/it_offset, 0/), .false.)
   endif
 
   call h5_close_file(h5)
@@ -2197,6 +2205,8 @@ subroutine pass_info_to_io()
     call send_i_inter((/nrec/), 1, 0, io_tag_num_recv)
     ! send t0
     call send_dp_inter((/t0/), 1, 0, io_tag_seismo_tzero)
+    ! send nlength_seismogram
+    call send_i_inter((/nlength_seismogram/), 1, 0, io_tag_seismo_length)
   endif
   ! send the number of local receiver to the io node
   call send_i_inter((/nrec_local/), 1, 0, io_tag_local_rec)

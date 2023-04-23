@@ -1,9 +1,10 @@
 FORCE  0
-time shift:     0.0000
-f0:            18.0 
+time shift:      0.0000
+hdurorf0:        18.0
 latorUTM:       10.0
 longorUTM:      10.0
 depth:          10.0
+source time function:            0
 factor force source:             1.d0
 component dir vect source E:     0.d0
 component dir vect source N:     0.d0

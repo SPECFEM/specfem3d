@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -56,9 +56,10 @@ module constants
   integer :: io_tag_seismo_body_acce  = 14
   integer :: io_tag_seismo_body_pres  = 15
   integer :: io_tag_seismo_tzero      = 16
+  integer :: io_tag_seismo_length     = 17
 
-  integer :: io_tag_num_recv          = 17
-  integer :: io_tag_local_rec         = 18
+  integer :: io_tag_num_recv          = 18
+  integer :: io_tag_local_rec         = 19
 
   integer :: io_tag_surface_nfaces    = 20
   integer :: io_tag_surface_offset    = 21
@@ -212,6 +213,7 @@ end module constants
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NTSTEP_BETWEEN_READ_ADJSRC
   integer :: NTSTEP_BETWEEN_OUTPUT_SAMPLE ! subsamp_seismos is deprecated and renamed to NTSTEP_BETWEEN_OUTPUT_SAMPLE
   logical :: SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE
+  logical :: SAVE_SEISMOGRAMS_STRAIN
   logical :: SAVE_SEISMOGRAMS_IN_ADJOINT_RUN
   logical :: WRITE_SEISMOGRAMS_BY_MAIN,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS,SU_FORMAT
   logical :: ASDF_FORMAT, READ_ADJSRC_ASDF

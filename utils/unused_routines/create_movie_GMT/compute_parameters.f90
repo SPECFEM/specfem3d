@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
@@ -36,32 +36,32 @@
   include "constants.h"
 
 ! parameters read from parameter file
-  integer NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA
-  integer NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM
+  integer :: NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA
+  integer :: NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM
 
 ! parameters to be computed based upon parameters above read from file
-  integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER
+  integer :: NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER
 
-  integer NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+  integer :: NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
       NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB
 
-  integer NEX_DOUBLING_SEDIM_XI,NEX_DOUBLING_SEDIM_ETA
-  integer NEX_DOUBLING_SEDIM_PER_PROC_XI,NEX_DOUBLING_SEDIM_PER_PROC_ETA
-  integer NSPEC2D_DOUBLING_A_XI,NSPEC2D_DOUBLING_A_ETA
-  integer NSPEC2D_DOUBLING_B_XI,NSPEC2D_DOUBLING_B_ETA
-  integer NSPEC_DOUBLING_AB
-  integer NUM_DOUBLING_BRICKS
-  integer NUM2D_DOUBLING_BRICKS_XI,NUM2D_DOUBLING_BRICKS_ETA
-  integer nglob_no_doubling_volume,nglob_no_doubling_surface
-  integer nblocks_xi,nblocks_eta
-  integer nglob_surface_typeA,nglob_surface_typeB
-  integer NSPEC1D_RADIAL_BEDROCK,NPOIN1D_RADIAL_BEDROCK
+  integer :: NEX_DOUBLING_SEDIM_XI,NEX_DOUBLING_SEDIM_ETA
+  integer :: NEX_DOUBLING_SEDIM_PER_PROC_XI,NEX_DOUBLING_SEDIM_PER_PROC_ETA
+  integer :: NSPEC2D_DOUBLING_A_XI,NSPEC2D_DOUBLING_A_ETA
+  integer :: NSPEC2D_DOUBLING_B_XI,NSPEC2D_DOUBLING_B_ETA
+  integer :: NSPEC_DOUBLING_AB
+  integer :: NUM_DOUBLING_BRICKS
+  integer :: NUM2D_DOUBLING_BRICKS_XI,NUM2D_DOUBLING_BRICKS_ETA
+  integer :: nglob_no_doubling_volume,nglob_no_doubling_surface
+  integer :: nblocks_xi,nblocks_eta
+  integer :: nglob_surface_typeA,nglob_surface_typeB
+  integer :: NSPEC1D_RADIAL_BEDROCK,NPOIN1D_RADIAL_BEDROCK
 
-  integer NSPEC_NO_DOUBLING,NSPEC2D_NO_DOUBLING_XI,NSPEC2D_NO_DOUBLING_ETA
+  integer :: NSPEC_NO_DOUBLING,NSPEC2D_NO_DOUBLING_XI,NSPEC2D_NO_DOUBLING_ETA
 
-  logical USE_REGULAR_MESH
+  logical :: USE_REGULAR_MESH
 
 !
 !--- case of a regular mesh

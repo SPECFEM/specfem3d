@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -482,7 +482,7 @@ contains
           call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor,1.0d0,1.0d0,1.0d0,nu_source)
 
        else
-          write(*,*) ' ABORT INVERSION: POINT SOURCE IS NOT IN ELASTIC OR ACOUSTIC DOMAIN'
+          write(*,*) 'ABORT INVERSION: POINT SOURCE IS NOT IN ELASTIC OR ACOUSTIC DOMAIN'
           stop
        endif
 
@@ -503,14 +503,14 @@ contains
          comp_y = 1.0d0
          comp_z = 1.0d0
        else
-          write(*,*) ' ABORT INVERSION: POINT SOURCE IS NOT IN ELASTIC OR ACOUSTIC DOMAIN'
+          write(*,*) 'ABORT INVERSION: POINT SOURCE IS NOT IN ELASTIC OR ACOUSTIC DOMAIN'
           stop
        endif
        factor = sngl (factor_source)
        call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor,comp_x,comp_y,comp_z,nu_source)
 
     case default
-       write(*,*) " Your source is not implemented in compute_source_coeff subroutine "
+       write(*,*) "Your source is not implemented in compute_source_coeff subroutine "
        stop
 
     end select
@@ -527,14 +527,15 @@ contains
     use constants, only: NGLLSQUARE
     use shared_parameters, only: NPROC, DT, STACEY_ABSORBING_CONDITIONS, PML_CONDITIONS, ELASTIC_SIMULATION,ACOUSTIC_SIMULATION
 
-    use specfem_par, only: kappastore, rhostore, ibool, wxgll, wygll, wzgll, jacobianstore, &
+    use specfem_par, only: kappastore, rhostore, ibool, wxgll, wygll, wzgll, &
+         jacobianstore, jacobian_regular, irregular_element_number, &
          NGLLX, NGLLY, NGLLZ, NSPEC_AB, NGLOB_AB, num_abs_boundary_faces, abs_boundary_ispec, abs_boundary_ijk, &
          abs_boundary_normal, abs_boundary_jacobian2Dw, num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, my_neighbors_ext_mesh
     use specfem_par_elastic, only: rmass, rmassx, rmassy, rmassz, rho_vp, rho_vs, ispec_is_elastic
     use specfem_par_acoustic, only: rmass_acoustic, rmassz_acoustic, ispec_is_acoustic
 
-    integer                           :: i, j, k, ispec, iglob, iface, igll, ier
+    integer                           :: i, j, k, ispec, ispec_irreg, iglob, iface, igll, ier
     double precision                  :: weight
     real(kind=CUSTOM_REAL)            :: jacobianl, jacobianw
     real(kind=CUSTOM_REAL)            :: deltat, deltatover2
@@ -543,71 +544,76 @@ contains
 
     ! acoustic domains
     if (ACOUSTIC_SIMULATION) then
-       ! allocates memory
-       if (.not. allocated(rmass_acoustic)) then
-          allocate(rmass_acoustic(NGLOB_AB),stat=ier)
-          if (ier /= 0) call exit_MPI_without_rank('error allocating array 330')
-          if (ier /= 0) stop 'error allocating array rmass_acoustic'
-       endif
-       rmass_acoustic(:) = 0._CUSTOM_REAL
+      ! allocates memory
+      if (.not. allocated(rmass_acoustic)) then
+        allocate(rmass_acoustic(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 330')
+        if (ier /= 0) stop 'error allocating array rmass_acoustic'
+      endif
+      rmass_acoustic(:) = 0._CUSTOM_REAL
 
-     ! returns acoustic mass matrix
-       if (PML_CONDITIONS) then
-          write(*,*) ' PML  not implemented yet '
-          stop
-          !call create_mass_matrices_pml_acoustic(nspec,ibool)
-       else
-          do ispec=1,nspec_ab
-             if (ispec_is_acoustic(ispec)) then
-                do k=1,NGLLZ
-                   do j=1,NGLLY
-                      do i=1,NGLLX
-                         iglob = ibool(i,j,k,ispec)
+      ! returns acoustic mass matrix
+      if (PML_CONDITIONS) then
+        write(*,*) 'PML  not implemented yet '
+        stop
+        !call create_mass_matrices_pml_acoustic(nspec,ibool)
+      else
+        do ispec=1,nspec_ab
+          if (ispec_is_acoustic(ispec)) then
+            ispec_irreg = irregular_element_number(ispec)
+            if (ispec_irreg == 0) jacobianl = jacobian_regular
+            do k=1,NGLLZ
+              do j=1,NGLLY
+                do i=1,NGLLX
+                  iglob = ibool(i,j,k,ispec)
 
-                         weight = wxgll(i)*wygll(j)*wzgll(k)
-                         jacobianl = jacobianstore(i,j,k,ispec)
+                  weight = wxgll(i)*wygll(j)*wzgll(k)
+                  if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
-                         ! distinguish between single and double precision for reals
-                         rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                              real( dble(jacobianl) * weight / dble(kappastore(i,j,k,ispec)) ,kind=CUSTOM_REAL)
-                      enddo
-                   enddo
+                  ! distinguish between single and double precision for reals
+                  rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                        real( dble(jacobianl) * weight / dble(kappastore(i,j,k,ispec)) ,kind=CUSTOM_REAL)
                 enddo
-             endif
-          enddo
-       endif
+              enddo
+            enddo
+          endif
+        enddo
+      endif
     endif
 
     if (ELASTIC_SIMULATION) then
-       ! returns elastic mass matrix
-       if (.not. allocated(rmass)) then
-         allocate(rmass(NGLOB_AB),stat=ier)
-         if (ier /= 0) call exit_MPI_without_rank('error allocating array 331')
-       endif
-       rmass(:) = 0._CUSTOM_REAL
-       if (PML_CONDITIONS) then
-          write(*,*) ' PML  not implemented yet '
-          stop
-          !call create_mass_matrices_pml_elastic(nspec,ibool)
-       else
-          do ispec=1,nspec_ab
-             if (ispec_is_elastic(ispec)) then
-                do k=1,NGLLZ
-                   do j=1,NGLLY
-                      do i=1,NGLLX
-                         iglob = ibool(i,j,k,ispec)
+      ! returns elastic mass matrix
+      if (.not. allocated(rmass)) then
+        allocate(rmass(NGLOB_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 331')
+      endif
+      rmass(:) = 0._CUSTOM_REAL
 
-                         weight = wxgll(i)*wygll(j)*wzgll(k)
-                         jacobianl = jacobianstore(i,j,k,ispec)
+      if (PML_CONDITIONS) then
+        write(*,*) 'PML  not implemented yet '
+        stop
+        !call create_mass_matrices_pml_elastic(nspec,ibool)
+      else
+        do ispec=1,nspec_ab
+          if (ispec_is_elastic(ispec)) then
+            ispec_irreg = irregular_element_number(ispec)
+            if (ispec_irreg == 0) jacobianl = jacobian_regular
+            do k=1,NGLLZ
+              do j=1,NGLLY
+                do i=1,NGLLX
+                  iglob = ibool(i,j,k,ispec)
 
-                         rmass(iglob) = rmass(iglob) + &
-                              real( dble(jacobianl) * weight * dble(rhostore(i,j,k,ispec)),kind=CUSTOM_REAL)
-                      enddo
-                   enddo
+                  weight = wxgll(i)*wygll(j)*wzgll(k)
+                  if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+
+                  rmass(iglob) = rmass(iglob) + &
+                                 real( dble(jacobianl) * weight * dble(rhostore(i,j,k,ispec)),kind=CUSTOM_REAL)
                 enddo
-             endif
-          enddo
-       endif
+              enddo
+            enddo
+          endif
+        enddo
+      endif
     endif
 
     if (STACEY_ABSORBING_CONDITIONS) then

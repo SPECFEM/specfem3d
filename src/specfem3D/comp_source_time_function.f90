@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -100,6 +100,36 @@
   comp_source_time_function_gauss = exp(-a*t**2) / (sqrt(PI)*hdur_decay)
 
   end function comp_source_time_function_gauss
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  double precision function comp_source_time_function_gauss_2(t,hdur)
+
+  use constants, only: PI
+
+  implicit none
+
+  double precision, intent(in) :: t,hdur
+
+  ! local parameters
+  double precision :: a
+
+  ! source time function as defined in:
+  ! M.A. Meschede, C.L. Myhrvold and J. Tromp, 2011.
+  ! Antipodal focusing of seismic waves due to large meteorite impacts on Earth,
+  ! GJI, 187, p. 529-537
+  !
+  ! equation (2):
+  ! S(t) = sqrt(pi/tau**2) * exp(-pi**2 * t**2 / tau**2)
+
+  ! factor
+  a = sqrt(PI / hdur**2)
+
+  comp_source_time_function_gauss_2 = a * exp(-PI**2 * t**2 / hdur**2)
+
+  end function comp_source_time_function_gauss_2
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -228,3 +258,59 @@
   comp_source_time_function_d2rck = -2.d0*a * (3.d0 - 12.d0*a*t*t + 4.d0*a**2*t*t*t*t) * exp( -a*t*t )
 
   end function comp_source_time_function_d2rck
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
+  double precision function comp_source_time_function_mono(t,f0)
+
+  use constants, only: PI,TAPER_MONOCHROMATIC_SOURCE
+
+  implicit none
+
+  double precision,intent(in) :: t,f0
+  double precision :: tt
+  integer :: taper
+
+  tt = 2 * PI * f0 * t
+  taper = ceiling(TAPER_MONOCHROMATIC_SOURCE * f0)
+
+  if (t < taper / f0) then
+    comp_source_time_function_mono = sin(tt) * (0.5 - 0.5 * cos(tt / taper / 2.0))
+  else
+    comp_source_time_function_mono = sin(tt)
+  endif
+
+  ! monochromatic source time function
+
+  end function comp_source_time_function_mono
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  double precision function comp_source_time_function_ext(it_index,isource)
+
+  use specfem_par, only: myrank, NSTEP, user_source_time_function
+
+  implicit none
+
+  integer,intent(in) :: it_index,isource
+
+  ! safety check
+  if (.not. allocated (user_source_time_function)) then
+    stop 'Error invalid user STF array, not allocated yet'
+  endif
+
+  ! checks index bounds
+  if (it_index < 1 .or. it_index > NSTEP) then
+    print *,'Error: external source time function index ',it_index,'should be between 1 and ',NSTEP
+    call exit_MPI(myrank,'Invalid external source time function index in comp_source_time_function_ext() routine')
+  endif
+
+  ! gets stored STF
+  comp_source_time_function_ext = user_source_time_function(it_index,isource)
+
+  end function comp_source_time_function_ext

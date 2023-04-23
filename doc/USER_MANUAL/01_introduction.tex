@@ -9,7 +9,7 @@ it is then close to a particular case of the discontinuous Galerkin
 technique \citep{ReHi73,LeRa74,Arn82,JoPi86,BoMaHe91,FaRi99,HuHuRa99,CoKaSh00,GiHeWa02,RiWh03,MoRi05,GrScSc06,AiMoMu06,BeLaPi06,DuKa06,DeSeWh08,PuAmKa09,WiStBuGh10,DeSe10,EtChViGl10},
 with optimized efficiency because of its tensorized basis functions
 \citep{WiStBuGh10,AcKo11}. In particular, it can accurately handle
-very distorted mesh elements \citep{OlSe11}.\\
+very distorted mesh elements \citep{OlSe11}.\newline
 
 In fluids, when gravity is turned off, SPECFEM3D uses the classical
 linearized Euler equation; thus if you have sharp local variations of
@@ -18,7 +18,7 @@ in terms of density) or if density becomes extremely small in some
 regions of your model (e.g. for upper-atmosphere studies), before using
 the code please make sure the linearized Euler equation is a valid
 approximation in the case you want to study, and/or see if you should turn gravity on.
-For more details on that see e.g. \cite{COA2011}.\\
+For more details on that see e.g. \cite{COA2011}.\newline
 
 It has very good accuracy and convergence properties \citep{MaPa89,SePr94,DeFiMu02,Coh02,DeSe07,SeOl08,AiWa09,AiWa10,MeStTh12}.
 The spectral element approach admits spectral rates of convergence
@@ -31,7 +31,7 @@ can be optimized to reduce processor cache misses and improve cache
 reuse \citep{KoLaMi08a}. The SEM can also handle triangular (in 2D)
 or tetrahedral (in 3D) elements \citep{WinBoyd96,TaWi00,KoMaTrTaWi01,Coh02,MeViSa06}
 as well as mixed meshes, although with increased cost and reduced
-accuracy in these elements, as in the discontinuous Galerkin method.\\
+accuracy in these elements, as in the discontinuous Galerkin method.\newline
 
 
 Note that in many geological models in the context of seismic wave
@@ -40,14 +40,14 @@ studies, in which very high frequencies or supershear rupture need
 to be modeled near the fault, see e.g. \citet{BeGlCrViPi07,BeGlCrVi09,PuAmKa09,TaCrEtViBeSa10})
 a continuous formulation is sufficient because material property contrasts
 are not drastic and thus conforming mesh doubling bricks can efficiently
-handle mesh size variations \citep{KoTr02a,KoLiTrSuStSh04,LeChLiKoHuTr08,LeChKoHuTr09,LeKoHuTr09}.\\
+handle mesh size variations \citep{KoTr02a,KoLiTrSuStSh04,LeChLiKoHuTr08,LeChKoHuTr09,LeKoHuTr09}.\newline
 
 
 For a detailed introduction to the SEM as applied to regional seismic
 wave propagation, please consult \citet{PeKoLuMaLeCaLeMaLiBlNiBaTr11,TrKoLi08,KoVi98,KoTr99,ChKoViCaVaFe07}
 and in particular \citet{LeKoHuTr09,LeChKoHuTr09,LeChLiKoHuTr08,GoAmTaCaSmSaMaKo09,WiKoScTr04,KoLiTrSuStSh04}.
 A detailed theoretical analysis of the dispersion
-and stability properties of the SEM is available in \citet{Coh02}, \citet{DeSe07}, \citet{SeOl07}, \citet{SeOl08} and \citet{MeStTh12}.\\
+and stability properties of the SEM is available in \citet{Coh02}, \citet{DeSe07}, \citet{SeOl07}, \citet{SeOl08} and \citet{MeStTh12}.\newline
 
 
 Effects due to lateral variations in compressional-wave speed, shear-wave
@@ -55,7 +55,7 @@ speed, density, a 3D crustal model, topography and bathymetry are
 included. The package can accommodate full 21-parameter anisotropy
 (see~\citet{ChTr07}) as well as lateral variations in attenuation
 \citep{SaKoTr10}. Adjoint capabilities and finite-frequency kernel
-simulations are included \citep{TrKoLi08,PeKoLuMaLeCaLeMaLiBlNiBaTr11,LiTr06,FiIgBuKe09,ViOp09}.\\
+simulations are included \citep{TrKoLi08,PeKoLuMaLeCaLeMaLiBlNiBaTr11,LiTr06,FiIgBuKe09,ViOp09}.\newline
 
 
 The SEM was originally developed in computational fluid dynamics \citep{Pat84,MaPa89}
@@ -67,7 +67,7 @@ include \citet{CoJoTo93}, \citet{Kom97}, \citet{FaMaPaQu97}, \citet{CaGa97},
 Chebyshev basis functions and a non-diagonal mass matrix include \citet{SePr94},
 \citet{PrCaSe94} and \citet{SePrPr95}.
 In the Legendre version that we use in SPECFEM the mass matrix is purposely slightly inexact but diagonal (but can be made exact if needed, see \cite{Teu15}),
-while in the Chebyshev version it is exact but non diagonal.\\
+while in the Chebyshev version it is exact but non diagonal.\newline
 
 
 Beware that, in a spectral-element method, some spurious modes (that have some similarities with classical so-called "Hourglass modes" in finite-element techniques,
@@ -76,35 +76,35 @@ Fortunately, they do not propagate away from the source element.
 However, this means that if you put a receiver in the same spectral element as a source, the recorded signals may in some cases be wrong, typically exhibiting some spurious
 oscillations, which are often even non causal.
 If that is the case, an easy option is to slightly change the mesh in the source region in order to get rid of these Hourglass-like spurious modes,
-as explained in \cite{DuLiScGa14}, in which this phenomenon is described in details, and in which practical solutions to avoid it are suggested.\\
+as explained in \cite{DuLiScGa14}, in which this phenomenon is described in details, and in which practical solutions to avoid it are suggested.\newline
 
 
 All SPECFEM3D software is written in Fortran2003 with full portability
 in mind, and conforms strictly to the Fortran2003 standard. It uses
 no obsolete or obsolescent features of Fortran. The package uses parallel
-programming based upon the Message Passing Interface (MPI) \citep{GrLuSk94,Pac97}.\\
+programming based upon the Message Passing Interface (MPI) \citep{GrLuSk94,Pac97}.\newline
 
 
 SPECFEM3D won the Gordon Bell award for best performance at the SuperComputing~2003
 conference in Phoenix, Arizona (USA) (see \citet{KoTsChTr03} and
-\url{www.sc-conference.org/sc2003/nrfinalaward.html}). It was a finalist
+\url{https://dl.acm.org/doi/10.1145/1048935.1050155}). It was a finalist
 again in 2008 for a run at 0.16 petaflops (sustained) on 149,784 processors
 of the `Jaguar' Cray XT5 system at Oak Ridge National Laboratories
 (USA) \citep{CaKoLaTiMiLeSnTr08}. It also won the BULL Joseph Fourier
-supercomputing award in 2010.\\
+supercomputing award in 2010.\newline
 
 It reached the sustained one petaflop performance level for the first time in February 2013
-on the Blue Waters Cray supercomputer at the National Center for Supercomputing Applications (NCSA), located at the University of Illinois at Urbana-Champaign (USA).\\
+on the Blue Waters Cray supercomputer at the National Center for Supercomputing Applications (NCSA), located at the University of Illinois at Urbana-Champaign (USA).\newline
 
 
 This new release of the code includes Convolution or
 Auxiliary Differential Equation Perfectly Matched absorbing Layers
 (C-PML or ADE-PML) \citep{MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10,KoMa07}.
-It also includes support for GPU graphics card acceleration \citep{Kom11,MiKo10,KoMiEr09,KoErGoMi10}.\\
+It also includes support for GPU graphics card acceleration \citep{Kom11,MiKo10,KoMiEr09,KoErGoMi10}.\newline
 
 
 The next release of the code will use the PT-SCOTCH parallel and threaded
-version of SCOTCH for mesh partitioning instead of the serial version.\\
+version of SCOTCH for mesh partitioning instead of the serial version.\newline
 
 
 SPECFEM3D Cartesian includes coupled fluid-solid domains and adjoint
@@ -118,12 +118,12 @@ package \citep{CaGa97,StPaIg09}.
 \begin{itemize}
 \item {\bf FWI}: SPECFEM3D can now perform full waveform inversion (FWI), i.e. invert for models in an iterative fashion, and it can also perform source inversions in a constant model;
 please refer to the two new directories, \texttt{inverse\_problem\_for\_model} and \texttt{inverse\_problem\_for\_source}, and the README files they contain. For FWI inversions for the model, also refer to the new examples provided in
-directory \texttt{EXAMPLES}.\\
+directory \texttt{EXAMPLES}.\newline
 
 \item {\bf External coupling}: SPECFEM3D can now perform coupling with an external code (DSM, AxiSEM or FK) based on a database of displacement vectors and traction vectors
-on the outer edges of the mesh created once and for all (see \cite{MoChKoFu13,MoChKoWa15,WaChMoKoMo16,ToChKoBaLi14,ToKoTsHuChBaLi14}, and if you use that feature of the code please cite at least one of these papers). \\
+on the outer edges of the mesh created once and for all (see \cite{MoChKoFu13,MoChKoWa15,WaChMoKoMo16,ToChKoBaLi14,ToKoTsHuChBaLi14}, and if you use that feature of the code please cite at least one of these papers). \newline
 
-To use coupling with FK, just use the set of parameters that is in the DATA/Par\_file input file of the code: \\
+To use coupling with FK, just use the set of parameters that is in the \texttt{DATA/Par\_file} input file of the code: \newline
 %
 \begin{verbatim}
 #-----------------------------------------------------------
@@ -139,43 +139,44 @@ FKMODEL_FILE                    = FKmodel
 RECIPROCITY_AND_KH_INTEGRAL     = .false. # does not work yet
 \end{verbatim}
 That part (coupling with FK) is actively maintained and works fine. See e.g. \href{https://doi.org/10.1002/2014GL061644}{GRL\_Ping\_Tong\_2014} for some examples.
-There is also an example that is provided with the code:\\
-\texttt{specfem3d/EXAMPLES/small\_example\_coupling\_FK\_specfem}. \\
+There is also an example that is provided with the code:\newline
+\texttt{specfem3d/EXAMPLES/small\_example\_coupling\_FK\_specfem}. \newline
 
 Regarding coupling with DSM, that part is not actively maintained any more, but it is still included in the code, you may have to test it again and make minor adjustments if needed. The necessary tools are in directory \texttt{specfem3d/EXTERNAL\_PACKAGES\_coupled\_with\_SPECFEM3D/DSM\_for\_SPECFEM3D}, and there is a \texttt{README} file in \texttt{specfem3d/EXTERNAL\_PACKAGES\_coupled\_with\_SPECFEM3D} that should be more or less up-to-date (there are about four steps to follow in total, the first one being creating the database of DSM tractions and displacements on the edges of the coupling box).
-See e.g. \href{https://doi.org/10.1093/gji/ggs006}{GJI\_Vadim\_2013} and \href{https://doi.org/10.1093/gji/ggv189}{GJI\_Vadim\_2015} for some examples.\\
+See e.g. \href{https://doi.org/10.1093/gji/ggs006}{GJI\_Vadim\_2013} and \href{https://doi.org/10.1093/gji/ggv189}{GJI\_Vadim\_2015} for some examples.\newline
 
 \item {\bf Gravity}: SPECFEM3D can now perform gravity field calculations in addition (or instead of) seismic wave propagation only.
-See flag \texttt{GRAVITY\_INTEGRALS} in file \texttt{setup/constants.h.in}. Please also refer to \href{https://doi.org/10.1093/gji/ggx010}{GJI\_Martin\_gravimetry\_2017}.
+See flag \texttt{GRAVITY\_INTEGRALS} in file \texttt{setup/constants.h}. Please also refer to \href{https://doi.org/10.1093/gji/ggx010}{GJI\_Martin\_gravimetry\_2017}.
 And yes, that is the reason why Dimitri added a falling apple on the cover of the manual :-).
 Note that SPECFEM3D can also model transient gravity perturbations induced by earthquake rupture, as developed and explained in \cite{HaAmBaChMoSoWh2015}.
 These are two different things, and both are implemented and avaible in SPECFEM3D.
-To use the second feature, please refer to \texttt{doc/how\_to/README\_gravity\_perturbation.txt}.\\
+To use the second feature, please refer to\newline
+\texttt{doc/how\_to/README\_gravity\_perturbation.txt}.\newline
 
 \end{itemize}
 
 \section{Citation}
 
-You can find all the references below in \BibTeX format in file \texttt{doc/USER\_MANUAL/bibliography.bib}.\\
+You can find all the references below in \BibTeX format in file \texttt{doc/USER\_MANUAL/bibliography.bib}.\newline
 
 If you use SPECFEM3D Cartesian for your own research, please cite
 at least one of the following articles:
 \begin{description}
-\item [{Numerical simulations in general}] ~\\
+\item [{Numerical simulations in general}] ~\newline
  Forward and adjoint simulations are described in detail in \citet{TrKoLi08,PeKoLuMaLeCaLeMaLiBlNiBaTr11,VaCaSaKoVi99,KoMiEr09,KoErGoMi10,ChKoViCaVaFe07,MaKoDi09,KoViCh10,CaKoLaTiMiLeSnTr08,TrKoHjLiZhPeBoMcFrTrHu10,KoRiTr02,KoTr02a,KoTr02b,KoTr99}
 or \citet{KoVi98}. Additional aspects of adjoint simulations are
 described in \citet{TrTaLi05,LiTr06,TrKoLi08,LiTr08,TrKoHjLiZhPeBoMcFrTrHu10,PeKoLuMaLeCaLeMaLiBlNiBaTr11}.
 Domain decomposition is explained in detail in \citet{MaKoBlLe08},
 and excellent scaling up to 150,000 processor cores is shown for instance
 in \citet{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,Kom11},
-\item [{GPU computing}] ~\\
+\item [{GPU computing}] ~\newline
  Computing on GPU graphics cards for acoustic or seismic wave propagation
 applications is described in detail in \citet{Kom11,MiKo10,KoMiEr09,KoErGoMi10}.
 \end{description}
 \noindent If you use this new version, which has non blocking
 MPI for much better performance for medium or large runs, please cite
 at least one of these six articles, in which results of non blocking
-MPI runs are presented: \citet{PeKoLuMaLeCaLeMaLiBlNiBaTr11,KoErGoMi10,KoViCh10,Kom11,CaKoLaTiMiLeSnTr08,MaKoBlLe08}.\\
+MPI runs are presented: \citet{PeKoLuMaLeCaLeMaLiBlNiBaTr11,KoErGoMi10,KoViCh10,Kom11,CaKoLaTiMiLeSnTr08,MaKoBlLe08}.\newline
 
 If you use the C-PML absorbing layer capabilities of the code, please cite at least one article
 written by the developers of the package, for instance:
@@ -213,7 +214,7 @@ written by the developers of the package, for instance:
 \noindent If you work on geophysical applications, you may be interested
 in citing some of these application articles as well, among others:
 \begin{description}
-\item [{Southern California simulations}] ~\\
+\item [{Southern California simulations}] ~\newline
  \citet{KoLiTrSuStSh04,KrJiKoTr06a,KrJiKoTr06b}.
 
 
@@ -222,11 +223,11 @@ If you use the 3D southern California model, please cite \citet{SuSh03}
 (southern California). The Moho map was determined by \citet{zhukanamori2000}.
 The 1D SoCal model was developed by \citet{DrHe90}.
 
-\item [{Anisotropy}] ~\\
+\item [{Anisotropy}] ~\newline
  \citet{ChTr07,JiTsKoTr05,ChFaKo04,FaChKo04,RiRiKoTrHe02,TrKo00}.
-\item [{Attenuation}] ~\\
+\item [{Attenuation}] ~\newline
  \citet{SaKoTr10,KoTr02a,KoTr99}.
-\item [{Topography}] ~\\
+\item [{Topography}] ~\newline
  \citet{LeKoHuTr09,LeChKoHuTr09,LeChLiKoHuTr08,GoAmTaCaSmSaMaKo09,WiKoScTr04}.
 \end{description}
 The corresponding Bib\TeX{} entries may be found in file \texttt{doc/USER\_MANUAL/bibliography.bib}.

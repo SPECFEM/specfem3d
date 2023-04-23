@@ -18,7 +18,7 @@ Option 1: type
   > run_this_example.sh 
   from this local directory (must have access to mpi)
 
-Option 2: follow detailed instructions below for submitting separate jobs with qsub (or bsub)
+Option 2: follow detailed instructions below for submitting separate jobs with slurm
 
 
 Note on 1D models:
@@ -50,22 +50,21 @@ The setup here explains how to run simulations on a cluster through a job schedu
 it copies the files to the corresponding main root folder SPECFEM3D/ to avoid changing the working directory for different example runs.
 
 
-0. Run the default homogeneous halfspace example (external mesh).
+0. Run the default homogeneous halfspace example (./SPECFEM3D/EXAMPLES/homogeneous_halfspace/README)
 
 1. set up input files:
 
    > cd SPECFEM3D
    > rsync -av EXAMPLES/meshfem3D_examples/socal1D/DATA/ DATA
 
-   - adapt the submission scripts for the appropriate queues (-q) and number of cores (-l):
-     go_mesher_pbs.bash, go_generate_databases_pbs.bash, go_solver_pbs.bash
+   - adapt the submission scripts for the appropriate queues and number of cores:
+     go_mesher_slurm.bash, go_generate_databases_slurm.bash, go_solver_slurm.bash
 
-   - note: go_decomposer_pbs.bash is not used with the internal mesher
+   - note: go_decomposer_slurm.bash is not used with the internal mesher
 
 2. compile and run internal mesher
 
-    > make xmeshfem3D
-    > qsub go_mesher_pbs.bash
+    > sbatch go_mesher_slurm.bash
 
     - this should generate these files in OUTPUT_FILES/DATABASES_MPI/:
 
@@ -77,8 +76,7 @@ it copies the files to the corresponding main root folder SPECFEM3D/ to avoid ch
 3. generate databases:
 
    - compile and run generate_databases in directory SPECFEM3D/:
-     > make xgenerate_databases
-     > qsub go_generate_databases_pbs.bash
+     > sbatch go_generate_databases_slurm.bash
 
      this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
      in directory OUTPUT_FILES/DATABASES_MPI/.
@@ -88,19 +86,18 @@ it copies the files to the corresponding main root folder SPECFEM3D/ to avoid ch
 4. run simulation:
 
    - compile and run specfem3D:
-     > make xspecfem3D
-     > qsub go_solver_pbs.bash
+     > sbatch go_solver_slurm.bash
 
    - the job should take about 2 minutes
    - when the job is complete, you should have 3 sets (semd,semv,sema)
-     of 84 (ls -1 *semd | wc) seismogram files in the directory OUTPUT_FILES,
-     as well as 9 timestamp****** files
+     of 84 (ls -1 OUTPUT_FILES/*semd | wc) seismogram files in the directory OUTPUT_FILES,
+     as well as 10 timestamp****** files
 
    - view seismograms, for example, using xmgrace:
-     > xmgrace WTT*.semd &
+     > xmgrace OUTPUT_FILES/*WTT*.semd &
 
    - compare with reference seismograms, e.g.:
-     > xmgrace CI.WTT.HXZ.semd ../../examples/meshfem3D_examples/socal1D/REF_SEIS/CI.WTT.HXZ.semd &
+     > xmgrace OUTPUT_FILES/CI.WTT.HXZ.semd EXAMPLES/meshfem3D_examples/socal1D/REF_SEIS/CI.WTT.HXZ.semd &
 
 ----------------------------------------------------------------------
 
@@ -115,11 +112,8 @@ To use the same 1D model but covering a larger region using 168 cores, follow th
 
   - open Par_file and modify NPROC: NPROC = 1 --> NPROC = 168
 
-   > cp Par_file ..
-   > cd ../../
-
-   - adapt the submission scripts for the appropriate queues (-q) and number of cores (-l):
-     go_mesher_pbs.bash, go_generate_databases_pbs.bash, go_solver_pbs.bash
+   - adapt the submission scripts for the appropriate queues and number of cores:
+     go_mesher_slurm.bash, go_generate_databases_slurm.bash, go_solver_slurm.bash
 
 3. Follow steps 2-4 above.
 
@@ -140,11 +134,8 @@ To run the same simulation but using 42 cores, follow these steps.
 
   - open Par_file and modify NPROC: NPROC = 168 --> NPROC = 42
 
-   > cp Par_file ..
-   > cd ../../
-
-   - adapt the submission scripts for the appropriate queues (-q) and number of cores (-l):
-     go_mesher_pbs.bash, go_generate_databases_pbs.bash, go_solver_pbs.bash
+   - adapt the submission scripts for the appropriate queues and number of cores:
+     go_mesher_slurm.bash, go_generate_databases_slurm.bash, go_solver_slurm.bash
 
 3. Follow steps 2-4 above.
 

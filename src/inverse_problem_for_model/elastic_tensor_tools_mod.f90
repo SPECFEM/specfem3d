@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -71,12 +71,15 @@ contains
   rotmat_t    = transpose(rotmat)
 
   end subroutine define_rotation_matrix
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Define bond rotation matrices to rotate a voigt tensor
   !    (see e.g. Auld 1973, for bond matrix definition secion D pages 73-76)
   ! HERE THE STRESS ONE => can be used to rotate the stress vector or stiffness tensor
+
   function define_bond_stress_matrix(rotmat) result(bond)
 
   real(kind=dp), dimension(3,3), intent(in)  :: rotmat
@@ -131,12 +134,15 @@ contains
   bond(6,6) = rotmat(1,1)*rotmat(2,2) + rotmat(1,2)*rotmat(2,1)
 
   end function define_bond_stress_matrix
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Define bond rotation matrices to rotate a voigt tensor
   !    (see e.g. Auld 1973, for bond matrix definition secion D pages 73-76)
   ! HERE THE STRAIN ONE => can be used to rotate the strain vector or compliance tensor
+
   function define_bond_strain_matrix(rotmat) result(bond)
 
   real(kind=dp), dimension(3,3), intent(in)  :: rotmat
@@ -191,10 +197,13 @@ contains
   bond(6,6) = rotmat(1,1)*rotmat(2,2) + rotmat(1,2)*rotmat(2,1)
 
   end function define_bond_strain_matrix
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Rotation of first order tensor (vector actually)
+
   subroutine rotate_vector(rotmat,vi,vi_r)
 
   real(kind=dp), dimension(3),   intent(in)  :: vi
@@ -212,10 +221,13 @@ contains
   enddo
 
   end subroutine rotate_vector
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Rotation of second order tensor (not efficient but corresponds to definition)
+
   function rotate_second_order_tensor(rotmat,cij) result(cij_r)
 
   real(kind=dp), dimension(3,3), intent(in)  :: cij
@@ -237,10 +249,13 @@ contains
   enddo
 
   end function rotate_second_order_tensor
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Rotation of second order tensor (very not efficient but corresponds to definition)
+
   subroutine rotate_fourth_order_tensor(rotmat,cijkl,cijkl_r)
 
   real(kind=dp), dimension(3,3,3,3), intent(in)  :: cijkl
@@ -272,11 +287,14 @@ contains
   enddo
 
   end subroutine rotate_fourth_order_tensor
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Rotation of fourth order tensor in voigt matrix with bond matrix
   !    (see e.g. Auld 1973, for bond matrix definition)
+
   function rotate_tensor_with_bond_matrix(bond,tensor) result(tensor_r)
 
   real(kind=dp), dimension(6,6), intent(in)  :: tensor
@@ -310,11 +328,14 @@ contains
   enddo
 
   end function rotate_tensor_with_bond_matrix
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Get dilatational stiffness tensor according to Browaeys and Chevrot (2004)
   !   (four-rank stiffness tensor has two two-rank tensors contractions)
+
   function get_dilatational_stiffness_tensor(cij) result(dilatational)
 
   real(kind=dp), dimension(6,6), intent(in)  :: cij
@@ -336,10 +357,13 @@ contains
   dilatational(3,3) = cij(1,3) + cij(2,3) + cij(3,3)
 
   end function get_dilatational_stiffness_tensor
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Get voigt stiffness tensor according to Browaeys and Chevrot (2004)
+
   function get_voigt_stiffness_tensor(cij) result(voigt)
 
   real(kind=dp), dimension(6,6), intent(in)  :: cij
@@ -361,10 +385,13 @@ contains
   voigt(3,3) = cij(5,5) + cij(4,4) + cij(3,3)
 
   end function get_voigt_stiffness_tensor
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Pass triclinic elastic vector to isotropic one according to fedorov (1968)
+
   subroutine get_isotropic_part_fedorov(triclinic,isotropic)
 
   real(kind=dp), dimension(21), intent(in)  :: triclinic
@@ -388,10 +415,13 @@ contains
   isotropic(7:9) = mu
 
   end subroutine get_isotropic_part_fedorov
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Define isotropic tensor with analytical formula (not efficient but still usefull)
+
   subroutine define_isotropic_tensor_1(lambda,mu,tensor)
 
   real(kind=dp), intent(in)                 :: lambda, mu
@@ -425,10 +455,13 @@ contains
   enddo
 
   end subroutine define_isotropic_tensor_1
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Define hexagonal tensor with analytical fromula from cij values
+
   subroutine define_hexagonal_tensor_1(c11,c33,c44,c66,c13,s,tensor)
 
   real(kind=dp), intent(in)               :: c11, c33, c44, c66, c13
@@ -489,11 +522,13 @@ contains
   enddo
 
   end subroutine define_hexagonal_tensor_1
-  !--------------------------------------------------------------------------------
 
+!
+!-------------------------------------------------------------------------------------------------------------
+!
 
-  !================================================================================
   ! Define hexagonal tensor with analytical fromula from thomsen parameters
+
   subroutine define_hexagonal_tensor_2(c33,c44,eps,del,gam,s,tensor)
 
   real(kind=dp), intent(in)               :: c33, c44, eps, del, gam
@@ -555,11 +590,14 @@ contains
   enddo
 
   end subroutine define_hexagonal_tensor_2
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Define orthorhombic tensor with analytical fromula from cij values
   !    a, b, and c are normal vector to the three mirror symmetry planes
+
   subroutine define_orthorhombic_tensor1(c11,c22,c33,c23,c13,c12,c44,c55,c66,a,b,c,tensor)
 
   real(kind=dp), intent(in)               :: c11, c22, c33, c44, c55, c66, c13, c23, c12
@@ -619,11 +657,13 @@ contains
   enddo
 
   end subroutine define_orthorhombic_tensor1
-  !--------------------------------------------------------------------------------
 
+!
+!-------------------------------------------------------------------------------------------------------------
+!
 
-  !================================================================================
   ! Routine for initialisation of tensor, voigt matrix and elastic vector indexing
+
   subroutine define_indexing_vec_to_tens()
 
   implicit none
@@ -715,10 +755,13 @@ contains
   endif
 
   end subroutine define_indexing_vec_to_tens
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Get direction cosines (th = dip angle from vertical, ph = azimuth from north (y))
+
   subroutine get_direction_cosines(th,ph,s)
 
   real(kind=dp),               intent(in)  :: th, ph
@@ -734,11 +777,14 @@ contains
   s(3) = cos(thrad)
 
   end subroutine get_direction_cosines
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Get angles of symetry axis from direction cosines
   !     (th = dip angle from vertical, ph = azimuth from north (y))
+
   subroutine get_symmetry_angles(s,th,ph)
 
   real(kind=dp), dimension(3), intent(in)  :: s
@@ -754,10 +800,13 @@ contains
   ph = phrad*rad2deg
 
   end subroutine get_symmetry_angles
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Small function for kronecker delta function
+
   function delta(i,j) result(d)
 
   integer(kind=kindsi), intent(in) :: i, j
@@ -770,10 +819,13 @@ contains
   endif
 
   end function delta
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Compute square norm of vector
+
   function square_norm_vector(vector) result(norm)
 
   real(kind=dp), dimension(3), intent(in) :: vector
@@ -788,10 +840,13 @@ contains
   enddo
 
   end function square_norm_vector
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Compute square norm of a second order tensor
+
   function square_norm_tensor_2(tensor) result(norm)
 
   real(kind=dp), dimension(3,3), intent(in) :: tensor
@@ -808,10 +863,13 @@ contains
   enddo
 
   end function square_norm_tensor_2
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Compute square norm of a second order tensor
+
   function square_norm_tensor_4(tensor) result(norm)
 
   real(kind=dp), dimension(3,3,3,3), intent(in) :: tensor
@@ -832,10 +890,13 @@ contains
   enddo
 
   end function square_norm_tensor_4
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Pass a voigt matrix to elastic vector
+
   function transform_voigt_matrix_to_vector(cij) result(vi)
 
   real(kind=dp), dimension(6,6), intent(in) :: cij
@@ -881,10 +942,13 @@ contains
   vi(21) = cij(4,5) * two_sqrt_two
 
   end function transform_voigt_matrix_to_vector
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Pass a voigt tensor to elastic vector
+
   function transform_kelvin_tensor_to_vector(cij) result(vi)
 
   real(kind=dp), dimension(6,6), intent(in) :: cij
@@ -929,12 +993,14 @@ contains
   vi(21) = cij(4,5) * sqrt_two
 
   end function transform_kelvin_tensor_to_vector
-  !--------------------------------------------------------------------------------
 
+!
+!-------------------------------------------------------------------------------------------------------------
+!
 
-  !================================================================================
   ! Pass an elastic vector to a voigt tensor
   !   (see Browaeys and Chevrot (2004)
+
   function transform_vector_to_voigt_tensor(vi) result(cij)
 
   real(kind=dp), dimension(21),  intent(in)  :: vi
@@ -995,10 +1061,13 @@ contains
   cij(6,6) = vi( 9) * 0.5_dp
 
   end function transform_vector_to_voigt_tensor
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Get Voigt m index from ij
+
   function voigt_index(i,j) result(m)
 
   integer(kind=kindsi), intent(in) :: i, j
@@ -1009,10 +1078,13 @@ contains
   m = dij*i + (1-dij)*(9-i-j)
 
   end function voigt_index
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Transform fourth order tensor to second order voigt matrix
+
   function transform_tensor_fourth_to_voigt_matrix(cijkl) result(cij)
 
   real(kind=dp), dimension(3,3,3,3), intent(in) :: cijkl
@@ -1088,10 +1160,13 @@ contains
               cijkl(1,2,2,1) + cijkl(1,2,2,1)) * 0.25_dp
 
   end function transform_tensor_fourth_to_voigt_matrix
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Transform second order voigt tensor to fourth order tensor
+
   function transform_voigt_matrix_to_fourth_order_tensor(cmn) result(cijkl)
 
   real(kind=dp), dimension(3,3),    intent(in) :: cmn
@@ -1122,10 +1197,13 @@ contains
   enddo
 
   end function transform_voigt_matrix_to_fourth_order_tensor
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Transfrom voigt matrix 6x6 to kelvin tensor 6x6
+
   function voigt_matrix_to_kelvin_tensor(voigt) result(kelvin)
 
   real(kind=dp), dimension(6,6), intent(in) :: voigt
@@ -1143,10 +1221,13 @@ contains
   kelvin(4:6,4:6) = voigt(4:6,4:6) * 2._dp
 
   end function voigt_matrix_to_kelvin_tensor
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Transfrom voigt matrix 6x6 to kelvin tensor 6x6
+
   function kelvin_tensor_to_voigt_matrix(kelvin) result(voigt)
 
   real(kind=dp), dimension(6,6), intent(in) :: kelvin
@@ -1164,11 +1245,14 @@ contains
   voigt(4:6,4:6) = kelvin(4:6,4:6) * 0.5_dp
 
   end function kelvin_tensor_to_voigt_matrix
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Define projections of elastic tensor (Broawaeys and Cehvrot (2004))
   !   (appendix A)
+
   subroutine projection_to_higher_symmetry_class(vi,proj_type,vp,vd,dev)
 
   character(len=*), intent(in)              :: proj_type
@@ -1249,11 +1333,14 @@ contains
   dev = sqrt(sum(vd*vd))
 
   end subroutine projection_to_higher_symmetry_class
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Projection of an anisotropic vector onto the isotropic subspace
   !   use vector + cij contractions to define viso and elastic constant K and G
+
   subroutine projection_to_isotropic_symmetry(vi,di,vo,vp,vd,dev,k,g)
 
   real(kind=dp), dimension(3,3), intent(in)  :: di, vo ! dilatational and voigt
@@ -1292,11 +1379,13 @@ contains
   dev = sqrt(sum(vd*vd))
 
   end subroutine projection_to_isotropic_symmetry
-  !--------------------------------------------------------------------------------
 
+!
+!-------------------------------------------------------------------------------------------------------------
+!
 
-  !================================================================================
   ! Find symmetry axis of tensor
+
   subroutine determine_tensor_symmetry_axis(cij,scc)
 
   real(kind=dp), dimension(6,6), intent(in) :: cij
@@ -1418,10 +1507,13 @@ contains
   call projection_to_higher_symmetry_class(vi,'hexagonal',vp,vd,dvm(p))
 
   end subroutine determine_tensor_symmetry_axis
-  !--------------------------------------------------------------------------------
 
-  !================================================================================
+!
+!-------------------------------------------------------------------------------------------------------------
+!
+
   ! Jacobi eigenvalue decomposition Ax = lx
+
   subroutine jacobi_eigenvalue_decomposition(a,n,tol,lambda,vector)
 
   integer(kind=kindsi), intent(in) :: n
@@ -1582,7 +1674,7 @@ contains
     end function threshold
 
   end subroutine jacobi_eigenvalue_decomposition
-  !--------------------------------------------------------------------------------
+
 
   !================================================================================
   ! Check tensor decomposition

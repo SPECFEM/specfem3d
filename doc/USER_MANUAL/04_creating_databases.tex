@@ -1,7 +1,7 @@
 \chapter{Creating the Distributed Databases}\label{cha:Creating-Distributed-Databases}
 
 After using \texttt{xmeshfem3D} or \texttt{xdecompose\_mesh}, the
-next step in the workflow is to compile \texttt{xgenerate\_}~\\
+next step in the workflow is to compile \texttt{xgenerate\_}~\newline
  \texttt{databases}. This program is going to create all the missing
 information needed by the SEM solver.
 
@@ -34,7 +34,7 @@ from the main directory, as most of the binaries of the package.
 
 Before running \texttt{xgenerate\_databases}, a number of parameters
 need to be set in the main parameter \texttt{Par\_file} located in
-the subdirectory \texttt{DATA}:\\
+the subdirectory \texttt{DATA}:\newline
 
 \noindent {\bf $\bullet$ Simulation setup}
 \begin{description}
@@ -76,7 +76,7 @@ elements. If you use the internal mesher, the only option is 8-node
 bricks (27-node elements are not supported). \texttt{CUBIT} does not
 support HEX27 elements either (it can generate them, but they are
 flat, i.e. identical to HEX8). To generate HEX27 elements with curvature
-properly taken into account, you can use Gmsh \url{http://geuz.org/gmsh/}
+properly taken into account, you can use Gmsh \url{http://gmsh.info}
 \item [{\texttt{MODEL}}] Must be set to one of the following:
 
 \begin{description}
@@ -149,8 +149,7 @@ accurately and without this approximation.
 \item [{\texttt{TOPOGRAPHY}}] This feature is only effective if \texttt{APPROXIMATE\_OCEAN\_LOAD}
 is set to \texttt{.true.}. Set to \texttt{.true.} if topography and
 bathymetry should be read in based upon the topography file specified
-in the main constants file \texttt{constants.h} found in subdirectory
-\texttt{src/shared/} to evaluate elevations. If not set, elevations
+in the main constants file \texttt{setup/constants.h} to evaluate elevations. If not set, elevations
 will be read from the numerical mesh.
 \item [{\texttt{ATTENUATION}}] Set to \texttt{.true.} if attenuation should
 be incorporated. Turning this feature on increases the memory requirements
@@ -159,8 +158,7 @@ expensive. See \citet{KoTr99,KoTr02a} for a discussion on the implementation
 of attenuation based upon standard linear solids. Please note that
 the Vp- and Vs-velocities of your model are given for a reference
 frequency. To change this reference frequency, you change the value
-of \texttt{ATTENUATION\_f0\_REFERENCE} in the main constants file
-\texttt{constants.h} found in subdirectory \texttt{src/shared/}.
+of \texttt{ATTENUATION\_f0\_REFERENCE} defined (in Hz) in input file \texttt{DATA/Par\_file}.
 The code uses a constant $Q$ quality factor, write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS).
 The approximation is thus performed in a given frequency band determined based on that \texttt{ATTENUATION\_f0\_REFERENCE} reference frequency.
 Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.
@@ -251,7 +249,7 @@ of the simulation is provided. Otherwise, it adds this half duration
 to the half duration specified in the source file \texttt{CMTSOLUTION},
 thus simulates longer periods to make the movie images look smoother.
 \item [{\texttt{SAVE\_MESH\_FILES}}] Set this flag to \texttt{.true.} to
-save ParaView \urlwithparentheses{www.paraview.org} mesh files for
+save \href{www.paraview.org}{ParaView} mesh files for
 subsequent viewing. Turning the flag on generates large (distributed)
 files in the \texttt{LOCAL\_PATH} directory. See Section~\ref{sec:Mesh-graphics}
 for a discussion of mesh viewing features.
@@ -296,16 +294,13 @@ thus refer to Appendix~\ref{cha:Coordinates} for the orientation
 of the reference frame. This vector is made unitary internally in
 the solver and thus only its direction matters here; its norm is ignored
 and the norm of the force used is the factor force source times the
-source time function.
+source-time function.
 
 When using this option, by default the code can locate the force source
 anywhere between mesh points in order to honor its exact location; this
 is more precise than using the closest GLL mesh point, but it is also a bit slower.
-If needed, you can change that default behavior and force the code to use the closest
-GLL mesh point instead by setting flag \texttt{USE\_BEST\_LOCATION} to \texttt{.false.} instead of \texttt{.true.} in file
-\texttt{src/shared/constants.h.in} and running the \texttt{configure} script again and recompiling the code.
 \item [{\texttt{USE\_RICKER\_TIME\_FUNCTION}}] Turn this flag on to use
-a Ricker source time function, i.e., the second derivative of a Gaussian, instead of the source time functions
+a Ricker source-time function, i.e., the second derivative of a Gaussian, instead of the source-time functions
 set by default to represent a (tilted) \texttt{FORCESOLUTION} force
 point source or a \texttt{CMTSOLUTION} moment-tensor source.
 Note that we use the standard definition of a Ricker, for a dominant frequency $f_0$:
@@ -324,13 +319,13 @@ This gives the wavelet of Figure~\ref{fig:RickerWavelet}.
 Originally, if a \texttt{CMTSOLUTION} moment-tensor source is used, a (pseudo)
 Heaviside step function with a very short half duration is defined
 for elastic cases to represent the permanent slip on the fault while
-in the acoustic case a Gaussian source time function with a similarly
+in the acoustic case a Gaussian source-time function with a similarly
 short half duration is defined to physically describe actions within
 the fluid. Otherwise, if a \texttt{FORCESOLUTION} force source is
-used, a (pseudo) Dirac delta source time function is defined by default.
+used, a (pseudo) Dirac delta source-time function is defined by default.
 Any other source-time function may then be obtained by convolution.
 \item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
-information about the source time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
+information about the source-time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
 This feature is only relevant for the solver.
 %
 \end{description}
@@ -362,24 +357,24 @@ we need to kill the entire run.
 When that option is on, of course the number of processor cores used to start
 the code in the batch system must be a multiple of \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS},
 all the individual runs must use the same number of processor cores,
-which as usual is NPROC in the Par\_file,
+which as usual is NPROC in the \texttt{DATA/Par\_file},
 and thus the total number of processor cores to request from the batch system
 should be \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS}~*~\texttt{NPROC}.
 All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
-(with exactly four digits).
+(with exactly four digits).\newline
 
-Imagine you have 10 independent calculations to do, each of them on 100 cores; you have three options:
+Imagine you have 10 independent calculations to do, each of them on 100 cores; you have three options:\newline
 
-1/ submit 10 jobs to the batch system
+1/ submit 10 jobs to the batch system\newline
 
 2/ submit a single job on 1000 cores to the batch, and in that script create a sub-array of jobs to start 10 jobs,
-each running on 100 cores (see e.g. \url{http://www.schedmd.com/slurmdocs/job_array.html})
+each running on 100 cores (see e.g. \url{http://www.schedmd.com/slurmdocs/job_array.html})\newline
 
 3/ submit a single job on 1000 cores to the batch, start SPECFEM3D on 1000 cores, create 10 sub-communicators,
 cd into one of 10 subdirectories (called e.g. run0001, run0002,... run0010) depending on the sub-communicator
-your MPI rank belongs to, and run normally on 100 cores using that sub-communicator.
+your MPI rank belongs to, and run normally on 100 cores using that sub-communicator.\newline
 
-The option \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS} implements 3/.
+The option \texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS} implements 3/.\newline
 
 \item [{\texttt{BROADCAST\_SAME\_MESH\_AND\_MODEL}}] if we perform simultaneous runs in parallel,
 if only the source and receivers vary between these runs
@@ -390,7 +385,7 @@ runs for instance when solving inverse problems iteratively this can DRASTICALLY
 Thus, always set this option to .true. if the mesh and the model are the same for all simultaneous runs.
 In that case there is no need to duplicate the mesh and model file database (the content of the DATABASES\_MPI
 directories) in each of the run0001, run0002,... directories, it is sufficient to have one in run0001
-and the code will broadcast it to the others).
+and the code will broadcast it to the others).\newline
 
 %\item [{\texttt{USE\_FAILSAFE\_MECHANISM}}] if one or a few of these simultaneous runs fail,
 %kill all the runs or let the others finish using a fail-safe mechanism
@@ -401,11 +396,11 @@ option assumes to have the (main) mesh files in \texttt{run0001/DATABASES\_MPI} 
 \texttt{run0001/OUTPUT\_FILES/DATABASES\_MPI}.
 However, for adjoint runs you still need a \texttt{DATABASES\_MPI/} folder in each of the sub-runs directories,
 e.g. \texttt{run0002/DATABASES\_MPI}, etc. to store the forward wavefields, kernels etc. of each sub-run.
-This would not be needed for forward simulations.
+This would not be needed for forward simulations.\newline
 
-TODO / future work to do: the sensitivity kernel summing and smoothing tools in directory src/tomography are currently not ported to this new option to do many runs simultaneously, only the solver (src/specfem3d) is. Thus these tools should work, but in their current version will need to be run for each simulation result independently.
+TODO / future work to do: the sensitivity kernel summing and smoothing tools in directory src/tomography are currently not ported to this new option to do many runs simultaneously, only the solver (src/specfem3d) is. Thus these tools should work, but in their current version will need to be run for each simulation result independently.\newline
 
-More precisely, the current kernel summing and smoothing routines work fine, with the exception that you need to move out the mesh files (and also the parameters). This works because these routines consider multiple runs by design. You simply have to provide them the directories where the kernels are.
+More precisely, the current kernel summing and smoothing routines work fine, with the exception that you need to move out the mesh files (and also the parameters). This works because these routines consider multiple runs by design. You simply have to provide them the directories where the kernels are.\newline
 
 \item [{\texttt{GPU\_MODE}}] Turn this flag on to use GPUs.
 
@@ -417,7 +412,7 @@ xgenerate\_database input.
 \item [\texttt{ADIOS\_FOR\_FORWARD\_ARRAYS}] Turn this flag on to read and write forward arrays using ADIOS.
 \item [\texttt{ADIOS\_FOR\_KERNELS}] Turn this flag on to produce ADIOS kernels that can later be visualized with the ADIOS version of combine\_vol\_data.
 \end{description}
-There are quite a few more parameters to change the default setup of your runs. Please check the comments in the \texttt{Par\_file} directly for further explanations.\\
+There are quite a few more parameters to change the default setup of your runs. Please check the comments in the \texttt{DATA/Par\_file} directly for further explanations.\newline
 
 
 \subsection{PML absorbing boundary layers}
@@ -431,7 +426,8 @@ or poroelastic PML elements to elastic. This means that strictly speaking
 the PML layer will not be perfectly matched any more, since the physical
 model will change from viscoelastic or poroelastic to elastic at the
 entrance of the PML, but in practice this is sufficient and produces
-only tiny / negligible spurious reflections.
+only tiny / negligible spurious reflections.\newline
+
 
 If you use PML and an external mesh (created using an external meshing tool
 such as CUBIT/TRELIS or similar), try to have elements inside the PML as regular as possible,
@@ -441,7 +437,8 @@ in time (PML being weakly unstable from a mathematical point of view, very defor
 inside the PMLs can trigger instabilities much more quickly). \red{We have two utilities in directory utils/CPML that do that automatically
 and that are very fast}. To stabilize PMLs it also helps to add a transition layer of geometrically-regular non-PML elements, in which attenuation is also
 turned off (i.e. $Q_\kappa = Q_\mu = 9999$ in that layer), as in the red layer of Figure~\ref{fig:mesh_extrusion}.
-Our tools in directory utils/CPML implement that transition layer automatically.
+Our tools in directory utils/CPML implement that transition layer automatically.\newline
+
 
 If you use PML and an external tomographic velocity and density model,
 you should be careful because mathematically a PML cannot handle heterogeneities
@@ -451,11 +448,12 @@ velocity and density model along the normal direction.
 Thus, you need to modify your velocity and density model in order
 for it to be 1D inside the PML, as shown in Figure~\ref{fig:modify_external_velocity_model_to_use_PML}.
 This applies to the bottom layer as well; there you should make sure
-that your model is 1D and thus constant along the vertical direction.
+that your model is 1D and thus constant along the vertical direction.\newline
+
 
 To summarize, only use a 3D velocity and density model inside the
 physical region, and in all the PML layers extend it by continuity
-from its values along the inner PML edge.
+from its values along the inner PML edge.\newline
 
 %%
 \begin{figure}[htbp]
@@ -494,9 +492,9 @@ $\Delta t<C~\mathrm{min}_{\Omega}(~h/v~)$
 where $C$ is the so-called Courant number and $\Omega$ denotes the
 model volume. The distance $h$ depends on the mesh element size and
 the number of GLL points \texttt{NGLL} specified in the main constants
-file \texttt{constants.h} located in the \texttt{src/shared/} subdirectory.
-The wave speed $v$ is determined based on your model's P- (or S-)
-wave speed values.
+file \texttt{setup/constants.h}. The wave speed $v$ is determined based on your model's P- (or S-)
+wave speed values.\newline
+
 
 The database generator \texttt{xgenerate\_databases}, as well as the
 internal mesher \texttt{xmeshfem3D}, are trying to evaluate the value
@@ -506,7 +504,7 @@ you should set the value suggested in \texttt{OUTPUT\_FILES/output\_mesher.txt}
 file, which is created after the mesher completed. In case you used
 CUBIT to create the mesh, you might use an arbitrary value when running
 \texttt{xgenerate\_databases} and then use the value suggested in
-the ~\\
+the ~\newline
  \texttt{OUTPUT\_FILES/output\_mesher.txt} file after the database
 generation completed. Note that the implemented Newmark time scheme
 uses this time step globally, thus your simulations become more expensive

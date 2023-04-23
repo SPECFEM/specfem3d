@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -28,8 +28,12 @@
 
 ! compute the integrated derivatives of source parameters (M_jk and X_s)
 
-  subroutine compute_adj_source_frechet(ispec,displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_m_s, &
-                                        hxir,hetar,hgammar,hpxir,hpetar,hpgammar, &
+  subroutine compute_adj_source_frechet(displ,NGLOB_AB, &
+                                        ispec,NSPEC_AB,ibool, &
+                                        Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
+                                        eps_m_s, &
+                                        hxir,hetar,hgammar, &
+                                        hpxir,hpetar,hpgammar, &
                                         hprime_xx,hprime_yy,hprime_zz)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
@@ -42,10 +46,16 @@
 
   ! input
   integer,intent(in) :: ispec
-  real(kind=CUSTOM_REAL),intent(in) :: displ_s(NDIM,NGLLX,NGLLY,NGLLZ)
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB
+
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_AB),intent(in) :: displ
+
+  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
+
   double precision,intent(in) :: Mxx, Myy, Mzz, Mxy, Mxz, Myz
+
   ! output
-  real(kind=CUSTOM_REAL),intent(inout) :: eps_s(NDIM,NDIM), eps_m_s(NDIM)
+  real(kind=CUSTOM_REAL),intent(inout) :: eps_m_s(NDIM)
 
   ! receiver Lagrange interpolators
   double precision,dimension(NGLLX),intent(in) :: hxir
@@ -58,6 +68,8 @@
   real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ),intent(in) :: hprime_zz
 
   ! local variables
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: displ_elem
+
   real(kind=CUSTOM_REAL) :: tempx1l,tempx2l,tempx3l, tempy1l,tempy2l,tempy3l, &
              tempz1l,tempz2l,tempz3l, hp1, hp2, hp3, &
              xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl, &
@@ -65,10 +77,19 @@
              xix_s,xiy_s,xiz_s,etax_s,etay_s,etaz_s,gammax_s,gammay_s,gammaz_s, &
              hlagrange_xi, hlagrange_eta, hlagrange_gamma, hlagrange
 
-  real(kind=CUSTOM_REAL) :: eps(NDIM,NDIM), eps_array(NDIM,NDIM,NGLLX,NGLLY,NGLLZ), &
-             eps_m_array(NGLLX,NGLLY,NGLLZ)
+  real(kind=CUSTOM_REAL) :: eps(NDIM,NDIM), eps_m_array(NGLLX,NGLLY,NGLLZ)
 
-  integer :: i,j,k,l,ispec_irreg
+  integer :: i,j,k,l,iglob,ispec_irreg
+
+  ! stores elements displacement field
+  do k = 1,NGLLZ
+    do j = 1,NGLLY
+      do i = 1,NGLLX
+        iglob = ibool(i,j,k,ispec)
+        displ_elem(:,i,j,k) = displ(:,iglob)
+      enddo
+    enddo
+  enddo
 
   ispec_irreg = irregular_element_number(ispec)
 
@@ -91,19 +112,19 @@
 
         do l = 1,NGLLX    ! assumes NGLLX == NGLLY == NGLLZ
           hp1 = hprime_xx(i,l)
-          tempx1l = tempx1l + displ_s(1,l,j,k)*hp1
-          tempy1l = tempy1l + displ_s(2,l,j,k)*hp1
-          tempz1l = tempz1l + displ_s(3,l,j,k)*hp1
+          tempx1l = tempx1l + displ_elem(1,l,j,k)*hp1
+          tempy1l = tempy1l + displ_elem(2,l,j,k)*hp1
+          tempz1l = tempz1l + displ_elem(3,l,j,k)*hp1
 
           hp2 = hprime_yy(j,l)
-          tempx2l = tempx2l + displ_s(1,i,l,k)*hp2
-          tempy2l = tempy2l + displ_s(2,i,l,k)*hp2
-          tempz2l = tempz2l + displ_s(3,i,l,k)*hp2
+          tempx2l = tempx2l + displ_elem(1,i,l,k)*hp2
+          tempy2l = tempy2l + displ_elem(2,i,l,k)*hp2
+          tempz2l = tempz2l + displ_elem(3,i,l,k)*hp2
 
           hp3 = hprime_zz(k,l)
-          tempx3l = tempx3l + displ_s(1,i,j,l)*hp3
-          tempy3l = tempy3l + displ_s(2,i,j,l)*hp3
-          tempz3l = tempz3l + displ_s(3,i,j,l)*hp3
+          tempx3l = tempx3l + displ_elem(1,i,j,l)*hp3
+          tempy3l = tempy3l + displ_elem(2,i,j,l)*hp3
+          tempz3l = tempz3l + displ_elem(3,i,j,l)*hp3
         enddo
 
         ! derivatives (dudx,..)
@@ -158,8 +179,6 @@
         eps(3,1) = eps(1,3)                   ! symmetry: eps_zx = eps_xz
         eps(3,2) = eps(2,3)                   ! symmetry: eps_zy = eps_yz
 
-        eps_array(:,:,i,j,k) = eps(:,:)
-
         ! Mjk eps_jk
         eps_m_array(i,j,k) = Mxx * eps(1,1) + Myy * eps(2,2) + Mzz * eps(3,3) + &
                         2 * (Mxy * eps(1,2) + Mxz * eps(1,3) + Myz * eps(2,3))
@@ -168,9 +187,7 @@
     enddo
   enddo
 
-  ! interpolate the strain eps_s(:,:) from eps_array(:,:,i,j,k)
-  eps_s(:,:) = 0.0_CUSTOM_REAL
-
+  ! interpolate the strain
   xix_s = 0.0_CUSTOM_REAL; xiy_s = 0.0_CUSTOM_REAL; xiz_s = 0.0_CUSTOM_REAL
   etax_s = 0.0_CUSTOM_REAL; etay_s = 0.0_CUSTOM_REAL; etaz_s = 0.0_CUSTOM_REAL
   gammax_s = 0.0_CUSTOM_REAL; gammay_s = 0.0_CUSTOM_REAL; gammaz_s = 0.0_CUSTOM_REAL
@@ -180,13 +197,6 @@
       do i = 1,NGLLX
 
         hlagrange = hxir(i)*hetar(j)*hgammar(k)
-
-        eps_s(1,1) = eps_s(1,1) + eps_array(1,1,i,j,k)*hlagrange
-        eps_s(1,2) = eps_s(1,2) + eps_array(1,2,i,j,k)*hlagrange
-        eps_s(1,3) = eps_s(1,3) + eps_array(1,3,i,j,k)*hlagrange
-        eps_s(2,2) = eps_s(2,2) + eps_array(2,2,i,j,k)*hlagrange
-        eps_s(2,3) = eps_s(2,3) + eps_array(2,3,i,j,k)*hlagrange
-        eps_s(3,3) = eps_s(3,3) + eps_array(3,3,i,j,k)*hlagrange
 
         if (ispec_irreg /= 0) then
           !irregular element
@@ -210,13 +220,9 @@
     enddo
   enddo
 
-  ! for completion purpose, not used in specfem3D.f90
-  eps_s(2,1) = eps_s(1,2)
-  eps_s(3,1) = eps_s(1,3)
-  eps_s(3,2) = eps_s(2,3)
-
   ! compute the gradient of M_jk * eps_jk, and then interpolate it
   eps_m_s(:) = 0._CUSTOM_REAL
+
   do k = 1,NGLLZ
     do j = 1,NGLLY
       do i = 1,NGLLX

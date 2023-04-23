@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -256,16 +256,16 @@
   call synchronize_all()
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '  ...saving databases'
+    write(IMAIN,*) '  ...saving mesh databases'
     call flush_IMAIN()
   endif
   !call create_name_database(prname,myrank,LOCAL_PATH)
   if (ADIOS_FOR_MESH) then
-    call save_arrays_solver_ext_mesh_adios()
+    call save_arrays_solver_mesh_adios()
   else if (HDF5_ENABLED) then
-    call save_arrays_solver_ext_mesh_h5()
+    call save_arrays_solver_mesh_h5()
   else
-    call save_arrays_solver_ext_mesh()
+    call save_arrays_solver_mesh()
   endif
 
   ! saves faults
@@ -719,7 +719,7 @@
     if (ier /= 0) stop 'Error allocating dummy arrays'
   endif
   abs_boundary_ispec(:) = 0; abs_boundary_ijk(:,:,:) = 0
-  abs_boundary_jacobian2Dw(:,:) = 0.0; abs_boundary_normal(:,:,:) = 0.0
+  abs_boundary_jacobian2Dw(:,:) = 0.0_CUSTOM_REAL; abs_boundary_normal(:,:,:) = 0.0_CUSTOM_REAL
 
   ! free surface faces
   num_free_surface_faces = nspec2D_top
@@ -878,6 +878,11 @@
 
   any_regular_elem = .false.
 
+  ! initializes
+  xix_regular = 0.0_CUSTOM_REAL
+  jacobian_regular = 0.0_CUSTOM_REAL
+
+  ! determines regular elements
   do ispec = 1, nspec
     do ia = 1,NGNOD
       iglob = elmnts_ext_mesh(ia,ispec)

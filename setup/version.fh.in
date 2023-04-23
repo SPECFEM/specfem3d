@@ -1,5 +1,4 @@
-! This particular (old) version of the file is used only when building from old tar balls
-! the modern one is created when compiling the code and will get up-to-date information from Git
-character(len=*), parameter :: git_package_version = "@PACKAGE_VERSION@"
-character(len=*), parameter :: git_commit_version = "undefined in the case of old tar ball builds"
-character(len=*), parameter :: git_date_version = "undefined in the case of old tar ball builds"
+! version information
+character(len=*), parameter :: git_package_version = "@GIT_PACKAGE_VERSION@"
+character(len=*), parameter :: git_commit_version = "@GIT_COMMIT_VERSION@"
+character(len=*), parameter :: git_date_version = "@GIT_DATE_VERSION@"

@@ -17,7 +17,7 @@ from a theoretical perspective.
 
 As usual, the three main input files are crucial: \texttt{Par\_file},
 \texttt{CMTSOLUTION} and \texttt{STATIONS}. Unless otherwise specified,
-those input files should be located in directory \texttt{DATA/}.\\
+those input files should be located in directory \texttt{DATA/}.\newline
 
 
 \texttt{CMTSOLUTION} is required for all simulations. At a first glance,
@@ -25,13 +25,13 @@ it may seem unexpected to have it here, since the noise simulations
 should have nothing to do with the earthquake -- \texttt{CMTSOLUTION}.
 However, for noise simulations, it is critical to have no earthquakes.
 In other words, the moment tensor specified in \texttt{CMTSOLUTION}
-must be set to zero manually!\\
+must be set to zero manually!\newline
 
 
 \texttt{STATIONS} remains the same as in previous earthquake simulations,
 except that the order of receivers listed in \texttt{STATIONS} is
 now important. The order will be used to determine the `main' receiver,
-i.e., the one that simultaneously cross correlates with the others.\\
+i.e., the one that simultaneously cross correlates with the others.\newline
 
 
 \texttt{Par\_file} also requires careful attention. A parameter called
@@ -41,7 +41,7 @@ with possible values 0, 1, 2 and 3. For example, when \texttt{NOISE\_TOMOGRAPHY}
 equals 0, a regular earthquake simulation will be run. When it is
 1/2/3, you are about to run step 1/2/3 of the noise simulations respectively.
 Should you be confused by the three steps, refer to \citet{trompetal2010}
-for details.\\
+for details.\newline
 
 
 Another change to \texttt{Par\_file} involves the parameter \texttt{NSTEP}.
@@ -50,7 +50,7 @@ the length of synthetic seismograms generated, for noise simulations
 it specifies the length of the seismograms used to compute cross correlations.
 The actual cross correlations are thus twice this length, i.e., $2~\mathrm{NSTEP}-1$.
 The code automatically makes the modification accordingly, if \texttt{NOISE\_TOMOGRAPHY}
-is not zero.\\
+is not zero.\newline
 
 
 There are other parameters in \texttt{Par\_file} which should be given
@@ -61,7 +61,7 @@ have to reconstruct the ensemble forward wavefields in adjoint simulations,
 therefore we need to set \texttt{SAVE\_FORWARD} to \texttt{.true.}
 for the second step, i.e., when \texttt{NOISE\_TOMOGRAPHY} equals
 2. The third step is for kernel constructions. Hence \texttt{SIMULATION\_TYPE}
-should be 3, whereas \texttt{SAVE\_FORWARD} must be \texttt{.false.}.\\
+should be 3, whereas \texttt{SAVE\_FORWARD} must be \texttt{.false.}.\newline
 
 
 Finally, for most system architectures, please make sure that \texttt{LOCAL\_PATH}
@@ -155,7 +155,7 @@ one integer, which is the ID of the `main' receiver. For example,
 if this file contains 5, it means that the fifth receiver listed in
 \texttt{DATA/STATIONS} becomes the `main'. That's why we mentioned
 previously that the order of receivers in \texttt{DATA/STATIONS} is
-important.
+important.\newline
 
 
 Note that in some simulations, the \texttt{DATA/STATIONS} might
@@ -184,7 +184,7 @@ Should you modify this part, you have to re-compile the source code.
 \subsection{Simulations}
 
 With all of the above done, we can finally launch our simulations.
-Again, please make sure that the \texttt{LOCAL\_PATH} in \texttt{DATA/Par\_file}
+Again, please make sure that the \texttt{LOCAL\_PATH} in \texttt{Par\_file}
 is not globally shared. It is quite problematic to have a globally
 shared \texttt{LOCAL\_PATH}, in terms of both disk storage and speed
 of I/O (we have to save the wavefields at the earth's surface at every
@@ -226,7 +226,7 @@ the same job on a cluster, otherwise you have to collect the saved surface movie
 from the old nodes to the new nodes. This process varies
 from cluster to cluster and thus cannot be discussed here. Please
 ask your cluster administrator for information/configuration of the
-cluster you are using.\\
+cluster you are using.\newline
 
 
 
@@ -234,16 +234,16 @@ cluster you are using.\\
 
 After those simulations, you have all stuff you need, either in the
 \texttt{OUTPUT\_FILES/} or in the directory specified by \texttt{LOCAL\_PATH}
-in \texttt{DATA/Par\_file} (which are most probably on local nodes).
+in \texttt{Par\_file} (which are most probably on local nodes).
 Collect whatever you want from the local nodes to your workstation,
 and then visualize them. This process is the same as what you may
 have done for regular earthquake simulations. Refer to other chapters
-if you have problems.\\
+if you have problems.\newline
 
 
 Simply speaking, two outputs are the most interesting: the simulated
 ensemble cross correlations and one contribution of the ensemble sensitivity
-kernels.\\
+kernels.\newline
 
 
 The simulated ensemble cross correlations are obtained after the second
@@ -254,13 +254,13 @@ a `main' receiver specified by \texttt{irec\_main\_noise}, the
 seismogram at one station corresponds to the cross correlation between
 that station and the `main'. Since the seismograms have three components,
 we may obtain cross correlations for different components as well,
-not necessarily the cross correlations between vertical components.\\
+not necessarily the cross correlations between vertical components.\newline
 
 
 One contribution of the ensemble cross-correlation sensitivity kernels
 are obtained after Step 3, stored in the \texttt{DATA/LOCAL\_PATH}
 on local nodes. The ensemble kernel files are named the same as regular
-earthquake kernels.\\
+earthquake kernels.\newline
 
 
 You need to run another three simulations to get the other contribution
@@ -272,17 +272,17 @@ given in \citet{trompetal2010}.
 
 In order to illustrate noise simulations in an easy way, one example
 is provided in \texttt{EXAMPLES/noise\_tomography/}. See \texttt{EXAMPLES/noise\_tomography/README}
-for explanations. \\
+for explanations. \newline
 
 
 Note, however, that they are created for a specific workstation (CLOVER@PRINCETON),
-which has at least 4 cores with `mpif90' working properly. \\
+which has at least 4 cores with `mpif90' working properly. \newline
 
 
 If your workstation is suitable, you can run the example in \texttt{EXAMPLES/noise\_tomography/}
-using:\\
+using:\newline
 
-\texttt{./pre-processing.sh}\\
+\texttt{./pre-processing.sh}\newline
 
 
 Even if this script does not work on your workstation, the procedure

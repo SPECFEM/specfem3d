@@ -181,8 +181,9 @@ USE_SOURCES_RECEIVERS_Z         = .false.
 # in which the source is a vertical force, normal force, tilted force, impact etc.
 # If this flag is turned on, the FORCESOLUTION file must be edited by giving:
 # - the corresponding time-shift parameter,
-# - the half duration parameter of the source,
+# - the half duration (hdur, in s) for Gaussian/Step function, dominant frequency (f0, in Hz) for Ricker,
 # - the coordinates of the source,
+# - the source time function type (0=Gaussian function, 1=Ricker wavelet, 2=Step function),
 # - the magnitude of the force source,
 # - the components of a (non necessarily unitary) direction vector for the force source in the E/N/Z_UP basis.
 # The direction vector is made unitary internally in the code and thus only its direction matters here;
@@ -193,14 +194,14 @@ USE_FORCE_POINT_SOURCE          = .false.
 # to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
 USE_RICKER_TIME_FUNCTION        = .false.
 
-# Use an external source time function.
-# if .true. you must add a file with your source time function and the file name
-# path relative to lauching directory at the end of CMTSOLUTION or FORCESOURCE file
+# use an external source time function
+# you must add a file with your source time function and the file name path
+# relative to working directory at the end of CMTSOLUTION or FORCESOLUTION file
 # (with multiple sources, one file per source is required).
-# This file must have a single column containing the amplitude of the source at that time step,
-# and on its first line it must contain the time step used, which must be equal to DT as defined at the beginning of this Par_file (the code will check that).
-# Be sure when this option is .false. to remove the name of stf file in CMTSOLUTION or FORCESOURCE
-USE_EXTERNAL_SOURCE_FILE        = .false.
+# This file must have a single column containing the amplitudes of the source at all time steps;
+# time step size used must be equal to DT as defined at the beginning of this Par_file.
+# Be sure when this option is .false. to remove the name of stf file in CMTSOLUTION or FORCESOLUTION
+USE_EXTERNAL_SOURCE_FILE        = .true.
 
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .true.
@@ -229,6 +230,10 @@ SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
 SAVE_SEISMOGRAMS_VELOCITY       = .false.
 SAVE_SEISMOGRAMS_ACCELERATION   = .false.
 SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic (i.e. fluid) elements only
+
+# option to save strain seismograms
+# this option is useful for strain Green's tensor
+SAVE_SEISMOGRAMS_STRAIN         = .false.
 
 # save seismograms also when running the adjoint runs for an inverse problem
 # (usually they are unused and not very meaningful, leave this off in almost all cases)
@@ -316,8 +321,12 @@ FKMODEL_FILE                    = FKmodel
 RECIPROCITY_AND_KH_INTEGRAL     = .false.   # does not work yet
 
 #-----------------------------------------------------------
+#
+# Run modes
+#
+#-----------------------------------------------------------
 
-# Dimitri Komatitsch, July 2014, CNRS Marseille, France:
+# Simultaneous runs
 # added the ability to run several calculations (several earthquakes)
 # in an embarrassingly-parallel fashion from within the same run;
 # this can be useful when using a very large supercomputer to compute

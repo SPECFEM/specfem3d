@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -497,7 +497,8 @@ contains
     ! dummy allocations (for subroutine arguments)
     allocate(bc%T(3,1), &
              bc%D(3,1), &
-             bc%V(3,1))
+             bc%V(3,1), &
+             bc%T0(3,1))
   endif
 
   ! output dataT structure

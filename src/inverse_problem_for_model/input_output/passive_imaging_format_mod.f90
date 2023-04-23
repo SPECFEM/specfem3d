@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -175,49 +175,62 @@ contains
        case('event_name')
           read(keyval,*) mygather%hdr%event_name
           write(*,*)'    event_name ',trim(adjustl(mygather%hdr%event_name))
+
        case('source_type')
           keyval  = lowcase(keyval)
           read(keyval,*) mygather%hdr%source_type
           write(*,*)'    source_type ',trim(adjustl(mygather%hdr%source_type))
+
        case('source_components')
           read(line,*)keyval, mygather%hdr%source_components
           write(*,*)'    receiver_component ',trim(adjustl(mygather%hdr%source_components))
+
        case('modeling_tool')
           read(line,*) keyval, mygather%hdr%modeling_tool, mygather%hdr%modeling_path
           mygather%hdr%modeling_tool  = lowcase(mygather%hdr%modeling_tool)
           write(*,*)'    modeling_tool ',trim(adjustl(mygather%hdr%modeling_tool)),' ', &
-               trim(adjustl(mygather%hdr%modeling_path))
+                                         trim(adjustl(mygather%hdr%modeling_path))
+
        case('data_components')
           read(line,*) keyval, mygather%hdr%data_type, mygather%hdr%data_comp
           mygather%hdr%data_type = lowcase(mygather%hdr%data_type)
           mygather%hdr%data_comp = lowcase(mygather%hdr%data_comp)
           write(*,*)'    data_components ',trim(adjustl(mygather%hdr%data_type)),' ', &
-               trim(adjustl(mygather%hdr%data_comp))
+                                           trim(adjustl(mygather%hdr%data_comp))
+
        case('cartloc_mesh_origin')
           read(line,*) keyword, mygather%hdr%mesh_origin(1:3)
           write(*,*)'    cartloc_mesh_origin :',mygather%hdr%mesh_origin
+
        case('data_origin_time')
           read(keyval,*) mygather%hdr%otime
           write(*,*)'    data_origin_time ',mygather%hdr%otime
+
        case('number_of_station')
           read(keyval,*) mygather%hdr%nsta
           write(*,*)'    number_of_station ',mygather%hdr%nsta
+
        case('data_time_step')
           read(keyval,*) mygather%hdr%dt
           write(*,*)'    data_time_step ',mygather%hdr%dt
+
        case('data_sample_number')
           read(keyval,*) mygather%hdr%nt
           write(*,*)'    data_sample_number ',mygather%hdr%nt
+
        case('is_time_pick')
           read(keyval,*) mygather%hdr%is_pick
           write(*,*)'    is_time_pick ',mygather%hdr%is_pick
+
        case('time_window')
           read(line,*)      keyval, mygather%hdr%is_window, mygather%hdr%tbef, mygather%hdr%taft
           write(*,*)'    time_window ',mygather%hdr%is_window,mygather%hdr%tbef,mygather%hdr%taft
+
        case('station_coord_system')
           keyval = lowcase(keyval)
           read(keyval,*) mygather%hdr%coord_sys
           write(*,*)'    station_coord_system ',trim(adjustl(mygather%hdr%coord_sys))
+
        end select
 
     enddo
@@ -458,7 +471,7 @@ contains
           read(line,*) keyword, cmt%hh
        case('force_mm')
           read(line,*) keyword, cmt%mi
-       case('froce_dsec')
+       case('force_dsec')
           read(line,*) keyword, cmt%ss
        end select
 
@@ -698,6 +711,5 @@ contains
 
   end subroutine get_data_component
   !--------------------------------------------------------------------------------
-
 
 end module passive_imaging_format_mod

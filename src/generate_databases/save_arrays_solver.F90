@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -27,7 +27,7 @@
 
 ! for external mesh
 
-  subroutine save_arrays_solver_ext_mesh()
+  subroutine save_arrays_solver_mesh()
 
   use constants, only: IMAIN,IOUT,myrank
 
@@ -390,7 +390,7 @@
     if (ier /= 0) stop 'error deallocating array ibool_interfaces_ext_mesh_dummy'
   endif
 
-  end subroutine save_arrays_solver_ext_mesh
+  end subroutine save_arrays_solver_mesh
 
 !
 !-------------------------------------------------------------------------------------------------

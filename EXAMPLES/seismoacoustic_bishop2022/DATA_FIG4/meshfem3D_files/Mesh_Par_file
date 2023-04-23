@@ -1,0 +1,98 @@
+#-----------------------------------------------------------
+#
+# Meshing input parameters
+#
+#-----------------------------------------------------------
+
+# coordinates of mesh block in latitude/longitude and depth in km
+LATITUDE_MIN                    = 3493000d0
+LATITUDE_MAX                    = 3499000d0
+LONGITUDE_MIN                   = 652000d0
+LONGITUDE_MAX                   = 662000d0
+DEPTH_BLOCK_KM                  = 4.0d0
+UTM_PROJECTION_ZONE             = 52
+SUPPRESS_UTM_PROJECTION         = .true.
+
+# file that contains the interfaces of the model / mesh
+INTERFACES_FILE                 = interfaces.dat
+
+# file that contains the cavity
+CAVITY_FILE                     = no_cavity.dat
+
+# number of elements at the surface along edges of the mesh at the surface
+# (must be 8 * multiple of NPROC below if mesh is not regular and contains mesh doublings)
+# (must be multiple of NPROC below if mesh is regular)
+NEX_XI                          = 288
+NEX_ETA                         = 192
+
+# number of MPI processors along xi and eta (can be different)
+NPROC_XI                        = 9
+NPROC_ETA                       = 8
+
+#-----------------------------------------------------------
+#
+# Doubling layers
+#
+#-----------------------------------------------------------
+
+# Regular/irregular mesh
+USE_REGULAR_MESH                = .true.
+# Only for irregular meshes, number of doubling layers and their position
+NDOUBLINGS                      = 1
+# NZ_DOUBLING_1 is the parameter to set up if there is only one doubling layer
+# (more doubling entries can be added if needed to match NDOUBLINGS value)
+NZ_DOUBLING_1       = 18
+
+#-----------------------------------------------------------
+#
+# Visualization
+#
+#-----------------------------------------------------------
+
+# create mesh files for visualisation or further checking
+CREATE_ABAQUS_FILES             = .false.
+CREATE_DX_FILES                 = .false.
+CREATE_VTK_FILES                = .true.
+
+# path to store the databases files
+LOCAL_PATH                      = ./DATABASES_default
+
+#-----------------------------------------------------------
+#
+# CPML4
+#
+#-----------------------------------------------------------
+# CPML perfectly matched absorbing layers
+THICKNESS_OF_X_PML              = 12.3d0
+THICKNESS_OF_Y_PML              = 12.3d0
+THICKNESS_OF_Z_PML              = 12.3d0
+
+#-----------------------------------------------------------
+#
+# Domain materials
+#
+#-----------------------------------------------------------
+
+# number of materials
+NMATERIALS                      = 2
+# define the different materials in the model as:
+# #material_id  #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id
+#     Q_Kappa          : Q_Kappa attenuation quality factor
+#     Q_mu             : Q_mu attenuation quality factor
+#     anisotropy_flag  : 0 = no anisotropy / 1,2,... check the implementation in file aniso_model.f90
+#     domain_id        : 1 = acoustic / 2 = elastic
+1  2000  3000  2000  9999.  0    0  2
+2  1.16  340     0  9999.  0    0  1
+
+#-----------------------------------------------------------
+#
+# Domain regions
+#
+#-----------------------------------------------------------
+
+# number of regions
+NREGIONS                        = 2
+# define the different regions of the model as :
+#NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
+1              288            1               192            1        18        1
+1              288            1               192            19       63        2

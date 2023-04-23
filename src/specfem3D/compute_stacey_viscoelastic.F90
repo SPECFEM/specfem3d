@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -91,14 +91,8 @@
   ! injecting boundary wavefield
   if (COUPLE_WITH_INJECTION_TECHNIQUE .and. SIMULATION_TYPE == 1) then
     ! adds boundary contribution from injected wavefield
-    call compute_coupled_injection_contribution(NSPEC_AB,NGLOB_AB,accel, &
-                                                ibool,iphase, &
-                                                abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                                                abs_boundary_ijk,abs_boundary_ispec, &
-                                                num_abs_boundary_faces,rho_vp,rho_vs, &
-                                                ispec_is_elastic, &
-                                                it)
-  endif ! COUPLE_WITH_INJECTION_TECHNIQUE
+    call compute_coupled_injection_contribution_el(NGLOB_AB,accel,iphase,it)
+  endif
 
   ! absorbs absorbing-boundary surface using Stacey condition (Clayton and Engquist)
 ! openmp solver
@@ -410,10 +404,8 @@
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,UNDO_ATTENUATION_AND_OR_PML
 
   ! wavefield injection
-  use specfem_par, only: NSPEC_AB,NGLOB_AB,ibool, &
-                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                         abs_boundary_ijk,abs_boundary_ispec
-  use specfem_par_elastic, only: accel,rho_vp,rho_vs,ispec_is_elastic
+  use specfem_par, only: NGLOB_AB
+  use specfem_par_elastic, only: accel
   ! boundary injection wavefield parts for saving together with b_absorb_field
   use specfem_par_coupling, only: b_boundary_injection_field
 
@@ -452,17 +444,11 @@
     call transfer_accel_from_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
 
     ! adds boundary contribution from injected wavefield
-    call compute_coupled_injection_contribution(NSPEC_AB,NGLOB_AB,accel, &
-                                                ibool,iphase, &
-                                                abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                                                abs_boundary_ijk,abs_boundary_ispec, &
-                                                num_abs_boundary_faces,rho_vp,rho_vs, &
-                                                ispec_is_elastic, &
-                                                it)
+    call compute_coupled_injection_contribution_el(NGLOB_AB,accel,iphase,it)
 
     ! transfers updated acceleration field back to the GPU
     call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
-  endif ! COUPLE_WITH_INJECTION_TECHNIQUE
+  endif
 
   if (UNDO_ATTENUATION_AND_OR_PML) then
     ! no need to store boundaries on disk
@@ -510,51 +496,37 @@
 !
 !=============================================================================
 
-  subroutine compute_coupled_injection_contribution(NSPEC_AB,NGLOB_AB,accel, &
-                                                    ibool,iphase, &
-                                                    abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                                                    abs_boundary_ijk,abs_boundary_ispec, &
-                                                    num_abs_boundary_faces,rho_vp,rho_vs, &
-                                                    ispec_is_elastic, &
-                                                    it)
+  subroutine compute_coupled_injection_contribution_el(NGLOB_AB,accel,iphase,it)
 
   use constants
 
   use specfem_par, only: SAVE_STACEY,SIMULATION_TYPE
 
+  use specfem_par, only: abs_boundary_normal,abs_boundary_jacobian2Dw, &
+    abs_boundary_ijk,abs_boundary_ispec, &
+    num_abs_boundary_faces
+
+  use specfem_par, only: ibool
+  use specfem_par_elastic, only: ispec_is_elastic,rho_vp,rho_vs
+
   ! boundary coupling
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,INJECTION_TECHNIQUE_TYPE,RECIPROCITY_AND_KH_INTEGRAL
-  use specfem_par_coupling, only: it_dsm, it_fk, &
+  use specfem_par_coupling, only: it_dsm, &
     Veloc_dsm_boundary, Tract_dsm_boundary, Veloc_axisem, Tract_axisem, Tract_axisem_time
   ! FK3D calculation
-  use specfem_par_coupling, only: npt, nbdglb, &
-    VX_t, VY_t, VZ_t, TX_t, TY_t, TZ_t, NP_RESAMP, &
-    vx_FK, vy_FK, vz_FK, tx_FK, ty_FK, tz_FK
+  use specfem_par_coupling, only: ipt_table, NP_RESAMP, Veloc_FK, Tract_FK
   ! boundary injection wavefield parts for saving together with b_absorb_field
   use specfem_par_coupling, only: b_boundary_injection_field
 
   implicit none
 
-  integer,intent(in) :: NSPEC_AB,NGLOB_AB
+  integer,intent(in) :: NGLOB_AB
 
   ! acceleration
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: accel
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
   ! communication overlap
   integer,intent(in) :: iphase
-
-  ! Stacey conditions
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: rho_vp,rho_vs
-
-  logical, dimension(NSPEC_AB),intent(in) :: ispec_is_elastic
-
-  ! absorbing boundary surface
-  integer,intent(in) :: num_abs_boundary_faces
-  real(kind=CUSTOM_REAL),intent(in) :: abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces)
-  real(kind=CUSTOM_REAL),intent(in) :: abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces)
-  integer,intent(in) :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
-  integer,intent(in) :: abs_boundary_ispec(num_abs_boundary_faces)
 
   ! adjoint simulations
   integer,intent(in) :: it
@@ -564,13 +536,11 @@
   integer :: ispec,iglob,i,j,k,iface,igll
   ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
   ! FK surface
-  integer :: ipt,ixglob
-  integer :: ii, kk, iim1, iip1, iip2
-  double precision :: cs(4), w
-  real(kind=CUSTOM_REAL) ::  cs_single(4) !vx_FK,vy_FK,vz_FK,tx_FK,ty_FK,tz_FK
+  integer :: ipt, ii, kk, iim1, iip1, iip2
+  real(kind=CUSTOM_REAL) :: cs1,cs2,cs3,cs4,w
+  real(kind=CUSTOM_REAL) :: vx_FK,vy_FK,vz_FK,tx_FK,ty_FK,tz_FK
   !! CD modif. : begin (implemented by VM) !! For coupling with DSM
-  integer :: kaxisem, ip
-  integer,dimension(NGLLSQUARE,num_abs_boundary_faces) :: ipt_table
+  integer :: kaxisem
 
 !! comment from Vadim Monteiller, Feb 2017:
 
@@ -662,55 +632,29 @@
   case (INJECTION_TECHNIQUE_IS_FK)
     ! FK coupling
     !! find indices
-    ! example: np_resamp = 2 and it = 1,2,3,4,5,6, ..
-    !          --> ii = 1,1,2,2,3,3,..
+    ! example:
+    !   np_resamp = 1 and it = 1,2,3,4,5,6, ..
+    !   --> ii = 1,2,3,4,5,6,..,NSTEP
+    !   np_resamp = 2 and it = 1,2,3,4,5,6, ..
+    !   --> ii = 1,1,2,2,3,3,..,NSTEP/2
     ii = floor( real(it + NP_RESAMP - 1) / real( NP_RESAMP))
-    ! example: --> kk = 1,2,1,2,1,2,,..
+    ! example:
+    !       kk = 1,2,1,2,1,2,,..
     kk = it - (ii-1) * NP_RESAMP
-
+    ! example:
+    !       w = 0,1/2,0,1/2,..
     w = dble(kk-1) / dble(NP_RESAMP)
 
     ! Cubic spline values
-    cs(4) = w*w*w/6.d0
-    cs(1) = 1.d0/6.d0+w*(w-1.d0)/2.d0-cs(4)
-    cs(3) = w+cs(1)-2.d0*cs(4)
-    cs(2) = 1.d0-cs(1)-cs(3)-cs(4)
+    cs4 = w*w*w/6.d0
+    cs1 = 1.d0/6.d0 + w*(w-1.d0)/2.d0 - cs4
+    cs3 = w + cs1 - 2.d0*cs4
+    cs2 = 1.d0 - cs1 - cs3 - cs4
 
-    cs_single(:) = sngl(cs(:))
-
-    iim1 = ii-1
-    iip1 = ii+1
-    iip2 = ii+2
-
-    do ip = 1, npt
-       vx_FK(ip) = cs_single(1)* VX_t(ip,iim1) + cs_single(2)* VX_t(ip,ii) + cs_single(3)* VX_t(ip,iip1) + &
-            cs_single(4)* VX_t(ip,iip2)
-       vy_FK(ip) = cs_single(1)* VY_t(ip,iim1) + cs_single(2)* VY_t(ip,ii) + cs_single(3)* VY_t(ip,iip1) + &
-            cs_single(4)* VY_t(ip,iip2)
-       vz_FK(ip) = cs_single(1)* VZ_t(ip,iim1) + cs_single(2)* VZ_t(ip,ii) + cs_single(3)* VZ_t(ip,iip1) + &
-            cs_single(4)* VZ_t(ip,iip2)
-       tx_FK(ip) = cs_single(1)* TX_t(ip,iim1) + cs_single(2)* TX_t(ip,ii) + cs_single(3)* TX_t(ip,iip1) + &
-            cs_single(4)* TX_t(ip,iip2)
-       ty_FK(ip) = cs_single(1)* TY_t(ip,iim1) + cs_single(2)* TY_t(ip,ii) + cs_single(3)* TY_t(ip,iip1) + &
-            cs_single(4)* TY_t(ip,iip2)
-       tz_FK(ip) = cs_single(1)* TZ_t(ip,iim1) + cs_single(2)* TZ_t(ip,ii) + cs_single(3)* TZ_t(ip,iip1) + &
-            cs_single(4)* TZ_t(ip,iip2)
-    enddo
-    it_fk = it_fk+1
-
-    ! prepares ipt table
-    ! (needed also for openmp threads accessing correct ipt index)
-    ipt = 0
-    do iface = 1,num_abs_boundary_faces
-      ispec = abs_boundary_ispec(iface)
-      if (ispec_is_elastic(ispec)) then
-        do igll = 1,NGLLSQUARE
-          ! counter
-          ipt = ipt + 1
-          ipt_table(igll,iface) = ipt
-        enddo
-      endif
-    enddo
+    ! interpolation indices
+    iim1 = ii-1        ! 0,..
+    iip1 = ii+1        ! 2,..
+    iip2 = ii+2        ! 3,..
   end select
 
   ! wavefield injection
@@ -754,24 +698,25 @@
         case (INJECTION_TECHNIQUE_IS_FK)
           ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
           ! point index using table lookup
-          !ipt = ipt + 1
           ipt = ipt_table(igll,iface)
-          !! DEBUGVM pour eviter de stocker pour profiler la vitesse de FK
-          !vx_FK = vxbd(it_fk,ipt)
-          !vy_FK = vybd(it_fk,ipt)
-          !vz_FK = vzbd(it_fk,ipt)
-          ! sanity check, make sure we are at the right point
-          ixglob = nbdglb(ipt)
-          !write(*,'(3(i10,1x),3x,  3i3, 3x, i10)') ipt, ixglob, iglob, i,j,k,ispec
-          if (iglob /= ixglob) stop 'wrong boundary index for FK coupling'
+
+          ! interpolates velocity/stress
+          vx_FK = cs1 * Veloc_FK(1,ipt,iim1) + cs2 * Veloc_FK(1,ipt,ii) + cs3 * Veloc_FK(1,ipt,iip1) + cs4 * Veloc_FK(1,ipt,iip2)
+          vy_FK = cs1 * Veloc_FK(2,ipt,iim1) + cs2 * Veloc_FK(2,ipt,ii) + cs3 * Veloc_FK(2,ipt,iip1) + cs4 * Veloc_FK(2,ipt,iip2)
+          vz_FK = cs1 * Veloc_FK(3,ipt,iim1) + cs2 * Veloc_FK(3,ipt,ii) + cs3 * Veloc_FK(3,ipt,iip1) + cs4 * Veloc_FK(3,ipt,iip2)
+
+          tx_FK = cs1 * Tract_FK(1,ipt,iim1) + cs2 * Tract_FK(1,ipt,ii) + cs3 * Tract_FK(1,ipt,iip1) + cs4 * Tract_FK(1,ipt,iip2)
+          ty_FK = cs1 * Tract_FK(2,ipt,iim1) + cs2 * Tract_FK(2,ipt,ii) + cs3 * Tract_FK(2,ipt,iip1) + cs4 * Tract_FK(2,ipt,iip2)
+          tz_FK = cs1 * Tract_FK(3,ipt,iim1) + cs2 * Tract_FK(3,ipt,ii) + cs3 * Tract_FK(3,ipt,iip1) + cs4 * Tract_FK(3,ipt,iip2)
+
           ! velocity
-          vx = - vx_FK(ipt)
-          vy = - vy_FK(ipt)
-          vz = - vz_FK(ipt)
+          vx = - vx_FK
+          vy = - vy_FK
+          vz = - vz_FK
           ! stress
-          tx = - tx_FK(ipt)
-          ty = - ty_FK(ipt)
-          tz = - tz_FK(ipt)
+          tx = - tx_FK
+          ty = - ty_FK
+          tz = - tz_FK
         end select
 
         ! computes absorbing boundary for injected velocity
@@ -804,10 +749,10 @@
           b_boundary_injection_field(3,igll,iface) = tz*jacobianw
         endif
       enddo
-    endif ! ispec_is_elastic
+    endif ! elastic
   enddo
 
-  end subroutine compute_coupled_injection_contribution
+  end subroutine compute_coupled_injection_contribution_el
 
 !=============================================================================
 

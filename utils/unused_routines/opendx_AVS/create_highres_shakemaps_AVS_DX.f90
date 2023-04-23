@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  G l o b e  V e r s i o n  3 . 3
-!          --------------------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !          Main authors: Dimitri Komatitsch and Jeroen Tromp
 !    Princeton University, USA and University of Pau / CNRS / INRIA
@@ -87,32 +87,32 @@
          store_val_ux,store_val_uy,store_val_uz
 
 ! parameters read from parameter file
-  integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
+  integer :: NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
              NER_MOHO_16,NER_BOTTOM_MOHO,NEX_ETA,NEX_XI, &
              NPROC_ETA,NPROC_XI,NSEIS,NSTEP,UTM_PROJECTION_ZONE
-  integer NSOURCES
+  integer :: NSOURCES
 
-  double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
-  double precision DT,LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX
-  double precision THICKNESS_TAPER_BLOCKS,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
+  double precision :: UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
+  double precision :: DT,LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX
+  double precision :: THICKNESS_TAPER_BLOCKS,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
 
-  logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION, &
+  logical :: HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION, &
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
           BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS
 
-  logical SAVE_AVS_DX_MOVIE,SAVE_DISPLACEMENT
-  integer NMOVIE
-  double precision HDUR_MIN_MOVIES
+  logical :: SAVE_AVS_DX_MOVIE,SAVE_DISPLACEMENT
+  integer :: NMOVIE
+  double precision :: HDUR_MIN_MOVIES
 
-  double precision zscaling
+  double precision :: zscaling
 
-  character(len=256) LOCAL_PATH
+  character(len=256) :: LOCAL_PATH
 
 ! parameters deduced from parameters read from file
-  integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
-  integer NER
+  integer :: NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
+  integer :: NER
 
-  integer NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+  integer :: NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
                NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
                NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                NSPEC2D_BOTTOM,NSPEC2D_TOP, &

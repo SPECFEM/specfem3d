@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -653,118 +653,4 @@
   enddo
 
   end subroutine ds_set_plane_flags
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine detect_surface_PNM_image(NPROC,nglob,nspec,ibool, &
-                                      ispec_is_image_surface, &
-                                      iglob_is_image_surface, &
-                                      num_iglob_image_surface, &
-                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                      nibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
-                                      ibool_interfaces_ext_mesh, &
-                                      xstore,ystore,zstore,myrank)
-
-! this returns points on a cross-section surface through model
-!
-! returns: ispec_is_image_surface, iglob_is_image_surface & num_iglob_image_surface
-
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ, &
-    PNM_section_xorg,PNM_section_yorg,PNM_section_zorg, &
-    PNM_section_nx,PNM_section_ny,PNM_section_nz
-
-  implicit none
-
-  ! global indexing
-  integer,intent(in) :: NPROC,nglob,nspec,myrank
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
-
-  ! surface
-  logical, dimension(nspec),intent(inout) :: ispec_is_image_surface
-  logical, dimension(nglob),intent(inout) :: iglob_is_image_surface
-  integer,intent(inout) :: num_iglob_image_surface
-
-  ! MPI partitions
-  integer,intent(in) :: num_interfaces_ext_mesh
-  integer,intent(in) :: max_nibool_interfaces_ext_mesh
-  integer,dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
-  integer,dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
-  integer,dimension(num_interfaces_ext_mesh),intent(in) :: my_neighbors_ext_mesh
-
-  ! mesh global point coordinates
-  real(kind=CUSTOM_REAL), dimension(nglob),intent(in) :: xstore,ystore,zstore
-
-  ! local parameters
-  real(kind=CUSTOM_REAL) :: min_dist,distance
-  integer, dimension(:), allocatable :: valence
-  integer :: ispec,i,j,k,iglob,ier,countval
-  real(kind=CUSTOM_REAL),parameter :: TOLERANCE_DISTANCE = 0.9
-
-  ! detecting surface points/elements (based on valence check on NGLL points) for external mesh
-  allocate(valence(nglob),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1225')
-  if (ier /= 0) stop 'error allocate valence array'
-
-  ! initialize surface indices
-  ispec_is_image_surface(:) = .false.
-  iglob_is_image_surface(:) = .false.
-  valence(:) = 0
-  num_iglob_image_surface = 0
-
-  ! an estimation of the minimum distance between global points
-  min_dist = minval( (xstore(ibool(1,1,1,:)) - xstore(ibool(2,1,1,:)))**2 &
-                   + (ystore(ibool(1,1,1,:)) - ystore(ibool(2,1,1,:)))**2 &
-                   + (zstore(ibool(1,1,1,:)) - zstore(ibool(2,1,1,:)))**2)
-  min_dist = sqrt(min_dist)
-  distance = TOLERANCE_DISTANCE*min_dist
-
-  ! sets valence value to one corresponding to process rank  for points on cross-sections
-  do ispec = 1, nspec
-    do k = 1, NGLLZ
-      do j = 1, NGLLY
-        do i = 1, NGLLX
-          iglob = ibool(i,j,k,ispec)
-
-          ! chooses points close to cross-section
-          if (abs((xstore(iglob)-PNM_section_xorg)*PNM_section_nx &
-                + (ystore(iglob)-PNM_section_yorg)*PNM_section_ny &
-                + (zstore(iglob)-PNM_section_zorg)*PNM_section_nz ) < distance) then
-            ! sets valence to 1 for points on cross-sections
-            valence(iglob) = myrank+1
-          endif
-        enddo
-      enddo
-    enddo
-  enddo
-
-  ! adds contributions from different partitions to valence
-  call assemble_MPI_scalar_i_blocking(NPROC,nglob,valence, &
-                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                      my_neighbors_ext_mesh)
-
-
-  ! determines spectral elements containing points on surface
-  countval = 0
-  do ispec = 1, nspec
-    ! loops over GLL points not on edges or corners, but inside faces
-    do k = 1, NGLLZ
-      do j = 1, NGLLY
-        do i = 1, NGLLX
-          iglob = ibool(i,j,k,ispec)
-          ! considers only points in same process or, if point is shared between two processes,
-          ! only with higher process ranks than itself
-          if (valence(iglob) == myrank+1 .or. valence(iglob) > 2*(myrank+1)) then
-            if (iglob_is_image_surface(iglob) .eqv. .false. ) countval = countval + 1
-            iglob_is_image_surface(iglob) = .true.
-            ispec_is_image_surface(ispec) = .true.
-          endif
-        enddo
-      enddo
-    enddo
-  enddo ! nspec
-  num_iglob_image_surface = countval
-
-  end subroutine detect_surface_PNM_image
 

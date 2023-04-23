@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -79,11 +79,16 @@ module module_mesh
 
   !! acoustic-elastic-poroelastic as well as CPML load balancing:
   !! we define here the relative cost of all types of spectral elements used in the code.
-  double precision, parameter :: ACOUSTIC_LOAD     = 1.d0
-  double precision, parameter :: ELASTIC_LOAD      = 4.1d0
-  double precision, parameter :: VISCOELASTIC_LOAD = 5.9d0
-  double precision, parameter :: POROELASTIC_LOAD  = 8.1d0
-
+  !!
+  !! note: here, the parallel decomposer (xdecompose_mesh_mpi) uses a double precision array for the loads,
+  !!       whereas the serial decomposer (xdecompose_mesh) requires the load arrays to be in integers.
+  !!       thus, for the serial decompose, we multiply below loads by a factor 10 since only the relative loads are important.
+  !!       (see integer loads in part_decompose_mesh.F90)
+  !!
+  double precision, parameter :: ACOUSTIC_LOAD_DBLE     = 1.d0
+  double precision, parameter :: ELASTIC_LOAD_DBLE      = 4.1d0
+  double precision, parameter :: VISCOELASTIC_LOAD_DBLE = 5.9d0
+  double precision, parameter :: POROELASTIC_LOAD_DBLE  = 8.1d0
 
   ! default mesh file directory
   character(len=MAX_STRING_LEN) :: localpath_name
@@ -819,27 +824,22 @@ contains
 
     allocate(load_elmnts(nspec_glob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 140')
+    load_elmnts(:) = ACOUSTIC_LOAD_DBLE
 
-    call  acoustic_elastic_poro_load (load_elmnts,nspec_glob,count_def_mat,count_undef_mat, &
-                                    num_material,mat_prop,undef_mat_prop,ATTENUATION)
+    call  acoustic_elastic_poro_load_dble(load_elmnts,nspec_glob,count_def_mat,count_undef_mat, &
+                                          num_material,mat_prop,undef_mat_prop,ATTENUATION)
 
   end subroutine compute_load_elemnts
 
-
-end module module_mesh
-
-
-!-----------------------------  other subroutines -------------------------------------------------------
 
   !--------------------------------------------------
   ! loading : sets weights for acoustic/elastic/poroelastic elements to account for different
   !               expensive calculations in specfem simulations
   !--------------------------------------------------
+  subroutine acoustic_elastic_poro_load_dble(load_elmnts,nspec,count_def_mat,count_undef_mat, &
+                                             num_material,mat_prop,undef_mat_prop,ATTENUATION)
 
-subroutine acoustic_elastic_poro_load (elmnts_load,nspec,count_def_mat,count_undef_mat, &
-                                    num_material,mat_prop,undef_mat_prop,ATTENUATION)
-
-  use module_mesh, only: MAX_STRING_LEN, ACOUSTIC_LOAD, ELASTIC_LOAD, VISCOELASTIC_LOAD, POROELASTIC_LOAD
+  !use module_mesh, only: MAX_STRING_LEN, ACOUSTIC_LOAD_DBLE, ELASTIC_LOAD_DBLE, VISCOELASTIC_LOAD_DBLE, POROELASTIC_LOAD_DBLE
   !
   ! note:
   !   acoustic material    = domainID 1  (stored in mat_prop(6,..) )
@@ -858,7 +858,7 @@ subroutine acoustic_elastic_poro_load (elmnts_load,nspec,count_def_mat,count_und
   character(len=MAX_STRING_LEN), dimension(6,count_undef_mat),    intent(in)  :: undef_mat_prop
 
   ! load weights
-  double precision,              dimension(1:nspec),              intent(out) :: elmnts_load
+  double precision,              dimension(1:nspec),              intent(inout) :: load_elmnts
 
   ! local parameters
   logical, dimension(:), allocatable  :: is_acoustic, is_elastic, is_poroelastic
@@ -876,68 +876,66 @@ subroutine acoustic_elastic_poro_load (elmnts_load,nspec,count_def_mat,count_und
   is_elastic(:) = .false.
   is_poroelastic(:) = .false.
 
-
   ! sets acoustic/elastic/poroelastic flags for defined materials
   do i = 1, count_def_mat
-     idomain_id = nint(mat_prop(7,i))
-     ! acoustic material has idomain_id 1
-     if (idomain_id == 1) then
-        is_acoustic(i) = .true.
-     endif
-     ! elastic material has idomain_id 2
-     if (idomain_id == 2) then
-        is_elastic(i) = .true.
-     endif
-     ! poroelastic material has idomain_id 3
-     if (idomain_id == 3) then
-        is_poroelastic(i) = .true.
-     endif
+    idomain_id = nint(mat_prop(7,i))
+    ! acoustic material has idomain_id 1
+    if (idomain_id == 1) then
+      is_acoustic(i) = .true.
+    endif
+    ! elastic material has idomain_id 2
+    if (idomain_id == 2) then
+      is_elastic(i) = .true.
+    endif
+    ! poroelastic material has idomain_id 3
+    if (idomain_id == 3) then
+      is_poroelastic(i) = .true.
+    endif
   enddo
 
   ! sets acoustic/elastic flags for undefined materials
   do i = 1, count_undef_mat
-     read(undef_mat_prop(6,i),*) idomain_id
-     ! acoustic material has idomain_id 1
-     if (idomain_id == 1) then
-        is_acoustic(-i) = .true.
-     endif
-     ! elastic material has idomain_id 2
-     if (idomain_id == 2) then
-        is_elastic(-i) = .true.
-     endif
+    read(undef_mat_prop(6,i),*) idomain_id
+    ! acoustic material has idomain_id 1
+    if (idomain_id == 1) then
+      is_acoustic(-i) = .true.
+    endif
+    ! elastic material has idomain_id 2
+    if (idomain_id == 2) then
+      is_elastic(-i) = .true.
+    endif
   enddo
-
 
   ! sets weights for elements
   do el = 0, nspec-1
-     ! note: num_material index can be negative for tomographic material definitions
-     ! acoustic element (cheap)
-     if (num_material(el+1) > 0) then
-        if (is_acoustic(num_material(el+1))) elmnts_load(el+1) = ACOUSTIC_LOAD
-        ! elastic element (expensive)
-        if (is_elastic(num_material(el+1))) then
-           if (ATTENUATION) then
-              elmnts_load(el+1) = VISCOELASTIC_LOAD
-           else
-              elmnts_load(el+1) = ELASTIC_LOAD
-           endif
-        endif
-        ! poroelastic element (very expensive)
-        if (is_poroelastic(num_material(el+1))) elmnts_load(el+1) = POROELASTIC_LOAD
-     else ! JC JC: beware! To modify to take into account the -200? flags used in C-PML boundary conditions
-        ! tomographic materials count as elastic
+    ! note: num_material index can be negative for tomographic material definitions
+    ! acoustic element (cheap)
+    if (num_material(el+1) > 0) then
+      if (is_acoustic(num_material(el+1))) load_elmnts(el+1) = ACOUSTIC_LOAD_DBLE
+      ! elastic element (expensive)
+      if (is_elastic(num_material(el+1))) then
         if (ATTENUATION) then
-           elmnts_load(el+1) = VISCOELASTIC_LOAD
+          load_elmnts(el+1) = VISCOELASTIC_LOAD_DBLE
         else
-           elmnts_load(el+1) = ELASTIC_LOAD
+          load_elmnts(el+1) = ELASTIC_LOAD_DBLE
         endif
-     endif
+      endif
+      ! poroelastic element (very expensive)
+      if (is_poroelastic(num_material(el+1))) load_elmnts(el+1) = POROELASTIC_LOAD_DBLE
+    else ! JC JC: beware! To modify to take into account the -200? flags used in C-PML boundary conditions
+      ! tomographic materials count as elastic
+      if (ATTENUATION) then
+        load_elmnts(el+1) = VISCOELASTIC_LOAD_DBLE
+      else
+        load_elmnts(el+1) = ELASTIC_LOAD_DBLE
+      endif
+    endif
   enddo
 
-end subroutine acoustic_elastic_poro_load
+  ! frees memory
+  deallocate(is_acoustic,is_elastic,is_poroelastic)
 
+  end subroutine acoustic_elastic_poro_load_dble
 
-
-
-
+end module module_mesh
 

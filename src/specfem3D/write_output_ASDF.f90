@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -29,6 +29,7 @@
 !! \param nrec_local The number of receivers on the local processor
   subroutine init_asdf_data(nrec_local)
 
+  use constants, only: NDIM
   use specfem_par, only: myrank,NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS
 
   use asdf_data, only: asdf_container
@@ -52,7 +53,7 @@
     call exit_MPI(myrank,'error ASDF trace length mismatch')
   endif
 
-  total_seismos_local = nrec_local * 3 ! 3 components
+  total_seismos_local = nrec_local * NDIM ! 3 components
 
   asdf_container%nrec_local = nrec_local
 
@@ -91,7 +92,7 @@
 !! \param iorientation The recorded seismogram's orientation direction
   subroutine store_asdf_data(seismogram_tmp, irec_local, irec, chn, iorientation)
 
-  use constants, only: CUSTOM_REAL,NDIM,myrank,IIN_SU1
+  use constants, only: CUSTOM_REAL,NDIM,myrank
 
   use specfem_par, only: NSTEP,NTSTEP_BETWEEN_OUTPUT_SAMPLE,nlength_seismogram, &
     stlat,stlon,stele,stbur,station_name,network_name
@@ -116,7 +117,7 @@
   index_increment = iorientation
 
   ! trace index
-  i = (irec_local-1)*(3) + (index_increment)
+  i = (irec_local-1)*(NDIM) + (index_increment)
 
   length_station_name = len_trim(station_name(irec))
   length_network_name = len_trim(network_name(irec))
@@ -149,6 +150,7 @@
 !> Closes the ASDF data structure by deallocating all arrays
   subroutine close_asdf_data()
 
+  use constants, only: NDIM
   use asdf_data, only: asdf_container
 
   implicit none
@@ -156,7 +158,7 @@
   ! local Variables
   integer :: i
 
-  do i = 1, asdf_container%nrec_local * 3 ! 3 components
+  do i = 1, asdf_container%nrec_local * NDIM ! 3 components
     ! skips component if records was not allocated for this component
     ! (valid entries must have non-empty component name)
     if (len_trim(asdf_container%component_array(i)) == 0) cycle
@@ -186,7 +188,7 @@
 
   use asdf_data, only: asdf_container
 
-  use iso_c_binding, only: C_NULL_CHAR,c_ptr
+  use iso_c_binding, only: C_NULL_CHAR !,c_ptr
 !  use iso_Fortran_env
 
   use specfem_par, only: seismo_offset,DT,NSTEP,NTSTEP_BETWEEN_OUTPUT_SAMPLE,OUTPUT_FILES,WRITE_SEISMOGRAMS_BY_MAIN
@@ -250,8 +252,10 @@
 
   ! C/Fortran interop for C-allocated strings
   integer :: len_prov, len_constants, len_Parfile
-  type(c_ptr) :: cptr
-  character, pointer :: fptr(:)
+  !type(c_ptr) :: cptr
+  !character, pointer :: fptr(:)
+  character(len=2048) :: fptr
+
   character, dimension(:), allocatable, TARGET :: provenance
   character(len=ASDF_MAX_CONSTANTS_LENGTH) :: sf_constants
   character(len=ASDF_MAX_PARFILE_LENGTH) :: sf_parfile
@@ -289,9 +293,72 @@
 
   if (ASDF_OUTPUT_PROVENANCE) then
     ! Generate specfem provenance string
-    call ASDF_generate_sf_provenance_f(trim(start_time_string)//C_NULL_CHAR, &
-                                       trim(end_time_string)//C_NULL_CHAR, cptr, len_prov)
-    call c_f_pointer(cptr, fptr, [len_prov])
+    ! see: https://seismicdata.github.io/SEIS-PROV/index.html
+
+    ! function interface has been removed in ASDF versions >= 1.0.0
+    !call ASDF_generate_sf_provenance_f(trim(start_time_string)//C_NULL_CHAR, &
+    !                                   trim(end_time_string)//C_NULL_CHAR, cptr, len_prov)
+    !call c_f_pointer(cptr, fptr, [len_prov])
+
+    ! creates simple provenance string
+    ! following asdf-library routine generate_sf_provenance()
+    ! header
+    fptr = &
+      '<?xml version="1.0" encoding="UTF-8"?>'// &
+      '<prov:document xmlns:prov="http://www.w3.org/ns/prov#"'// &
+      'xmlns:seis_prov="http://seisprov.org/seis_prov/0.1/#" xmlns:xsd="http://www.w3.org/2001/XMLSchema"'// &
+      'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
+
+    ! software name ("random" software_id = 0123456)
+    fptr = trim(fptr) // &
+      '<prov:softwareAgent prov:id="seis_prov:sp000_sa_' // '0123456' // '">'// &
+      '  <prov:label>SPECFEM3D_Cartesian</prov:label>'// &
+      '  <seis_prov:software_name>SPECFEM3D_Cartesian</seis_prov:software_name>'// &
+      '  <seis_prov:software_version>3.0.0</seis_prov:software_version>'// &
+      '  <seis_prov:website>https://github.com/SPECFEM/specfem3d</seis_prov:website>'// &
+      '</prov:softwareAgent>'
+
+    ! constants (constants_id = abcdefg)
+    fptr = trim(fptr) // &
+      '<prov:entity prov:id="seis_prov:sp000_fi_' // 'abcdefg' // '">'// &
+      '  <prov:label>File</prov:label>'// &
+      '  <prov:type xsi:type="xsd:string">seis_prov:file</prov:type>'// &
+      '  <seis_prov:filename>constants.h</seis_prov:filename>'// &
+      '  <seis_prov:location>/AuxiliaryData/Files/constants_h</seis_prov:location>'// &
+      '  <seis_prov:location_type>HDF5 Data Set</seis_prov:location_type>'// &
+      '</prov:entity>'
+
+    ! Par_file (parfile_id = zyxwvut)
+    fptr = trim(fptr) // &
+      '<prov:entity prov:id="seis_prov:sp000_fi_' // 'zyxwvut' // '">'// &
+      '  <prov:label>File</prov:label>'// &
+      '  <prov:type xsi:type="xsd:string">seis_prov:file</prov:type>'// &
+      '  <seis_prov:filename>Parfile</seis_prov:filename>'// &
+      '  <seis_prov:location>/AuxiliaryData/Files/Parfile</seis_prov:location>'// &
+      '  <seis_prov:location_type>HDF5 Data Set</seis_prov:location_type>'// &
+      '</prov:entity>'
+
+    ! simulation (simulation_id = 9876543)
+    fptr = trim(fptr) // &
+      '<prov:activity prov:id="seis_prov:sp000_ws_' // '9876543' // '">'// &
+      '  <prov:startTime>' // trim(start_time_string) // '</prov:startTime>'// &
+      '  <prov:endTime>' // trim(end_time_string) // '</prov:endTime>'// &
+      '  <prov:label>Waveform Simulation</prov:label>'// &
+      '  <prov:type xsi:type="xsd:string">seis_prov:waveform_simulation</prov:type>'// &
+      '</prov:activity>'
+
+    ! association
+    fptr = trim(fptr) // &
+      '<prov:wasAssociatedWith>'// &
+      '  <prov:agent prov:ref="seis_prov:sp000_sa_' // '0123456' // '"/>'// &
+      '  <prov:activity prov:ref="seis_prov:sp000_ws_' // '9876543' // '"/>'// &
+      '</prov:wasAssociatedWith>'
+
+    ! closing
+    fptr = trim(fptr) // &
+      '</prov:document>'
+
+    len_prov = len_trim(fptr)
 
     allocate(provenance(len_prov+1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2018')
@@ -301,7 +368,7 @@
 
   allocate(networks_names(num_stations), &
            stations_names(num_stations), &
-           component_names(num_stations*3), stat=ier)
+           component_names(num_stations*NDIM), stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating arrays 2019')
   networks_names(:) = ""; stations_names(:) = ""; component_names(:) = ""
 
@@ -324,13 +391,13 @@
   displs(:) = 0; rcounts(:) = 0
 
   ! Everyone should know about each and every station name and its coordinates
-  allocate(station_names_gather(max_num_stations_gather, mysize), &
-           network_names_gather(max_num_stations_gather, mysize), &
+  allocate(station_names_gather(max_num_stations_gather,mysize), &
+           network_names_gather(max_num_stations_gather,mysize), &
            station_lats_gather(max_num_stations_gather,mysize), &
            station_longs_gather(max_num_stations_gather,mysize), &
            station_elevs_gather(max_num_stations_gather,mysize), &
            station_depths_gather(max_num_stations_gather,mysize), &
-           component_names_gather(max_num_stations_gather*3, mysize),stat=ier)
+           component_names_gather(max_num_stations_gather*NDIM, mysize),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2031')
   station_names_gather(:,:) = ""; network_names_gather(:,:) = ""; component_names_gather(:,:) = ""
 
@@ -340,7 +407,7 @@
     write(stations_names(i), '(a)') asdf_container%receiver_name_array(i)
   enddo
 
-  do i = 1, num_stations*3
+  do i = 1, num_stations * NDIM
     write(component_names(i), '(a)') asdf_container%component_array(i)
   enddo
 
@@ -374,17 +441,17 @@
                          mysize)
 
   do i = 1, mysize
-    displs(i) = (i-1) * max_num_stations_gather * 3
-    rcounts(i) = num_stations_gather(i) * 3
+    displs(i) = (i-1) * max_num_stations_gather * NDIM
+    rcounts(i) = num_stations_gather(i) * NDIM
   enddo
 
   call all_gather_all_ch(component_names, &
-                         num_stations*3*3, &
+                         num_stations*NDIM*NDIM, &
                          component_names_gather, &
-                         rcounts*3, &
-                         displs*3, &
-                         max_num_stations_gather*3, &
-                         3, &
+                         rcounts*NDIM, &
+                         displs*NDIM, &
+                         max_num_stations_gather*NDIM, &
+                         NDIM, &
                          mysize)
 
   ! Now gather all the coordiante information for these stations
@@ -519,13 +586,13 @@
             !       the other component_name entries will be empty (""), which will lead to an error
             !       with the HDF5 output when two waveforms with the same name will be defined.
             !       we therefore skip components with an empty ("") entry.
-            if (len_trim(component_names_gather(i+(3*(j-1)),k)) == 0) cycle
+            if (len_trim(component_names_gather(i+((j-1)*NDIM),k)) == 0) cycle
 
             ! Generate unique waveform name
             ! example: HT.LIT.S3.MXN__2008-01-06T05:14:19__2008-01-06T05:14:53
             write(waveform_name, '(a)') trim(network_names_gather(j,k)) // "." // &
                                         trim(station_names_gather(j,k)) // ".S3." // &
-                                        trim(component_names_gather(i+(3*(j-1)),k)) //"__"// &
+                                        trim(component_names_gather(i+((j-1)*NDIM),k)) //"__"// &
                                         trim(start_time_string(1:19))//"__"//trim(end_time_string(1:19))//"__synthetic"
 
             call ASDF_define_waveform_f(station_grp, &
@@ -575,7 +642,7 @@
       call ASDF_initialize_hdf5_f(ier);
       if (ier /= 0) call exit_MPI(myrank,'Error ASDF initialize hdf5 seismogram failed')
 
-      call ASDF_open_serial_f(trim(OUTPUT_FILES)//"synthetic.h5" // C_NULL_CHAR, file_id)
+      call ASDF_open_serial_f(trim(OUTPUT_FILES) // "synthetic.h5" // C_NULL_CHAR, file_id)
       ! checks file identifier
       if (file_id == 0) then
         print *,'Error: ASDF failed to open file',trim(OUTPUT_FILES) // "synthetic.h5"
@@ -600,7 +667,13 @@
           ! current_proc is main proc
           if (myrank == 0) then
             do i = 1, NDIM
-            !  write(*,*) j, l, l+i, size(asdf_container%records)
+              ! note: if only pressure is output, there is only a single valid component.
+              !       the other component_name entries will be empty (""), which will lead to an error
+              !       with the HDF5 output when two waveforms with the same name will be defined.
+              !       we therefore skip components with an empty ("") entry.
+              if (len_trim(component_names_gather(i+((j-1)*NDIM),k)) == 0) cycle
+
+              !  write(*,*) j, l, l+i, size(asdf_container%records)
               one_seismogram(i,:) = asdf_container%records(l+i)%record(1:seismo_current_used)
             enddo
           endif
@@ -610,6 +683,12 @@
           if (myrank == current_proc) then
             !one_seismogram(:,:) = seismograms(:,j,:)
             do i = 1, NDIM
+              ! note: if only pressure is output, there is only a single valid component.
+              !       the other component_name entries will be empty (""), which will lead to an error
+              !       with the HDF5 output when two waveforms with the same name will be defined.
+              !       we therefore skip components with an empty ("") entry.
+              if (len_trim(component_names_gather(i+((j-1)*NDIM),k)) == 0) cycle
+
               one_seismogram(i,:) = asdf_container%records(l+i)%record(1:seismo_current_used)
             enddo
             ! send (real) data
@@ -632,18 +711,18 @@
                                           station_grp)
 
           ! loop over each component
-          do  i = 1,NDIM
+          do i = 1,NDIM
             ! note: if only pressure is output, there is only a single valid component.
             !       the other component_name entries will be empty (""), which will lead to an error
             !       with the HDF5 output when two waveforms with the same name will be defined.
             !       we therefore skip components with an empty ("") entry.
-            if (len_trim(component_names_gather(i+(3*(j-1)),k)) == 0) cycle
+            if (len_trim(component_names_gather(i+((j-1)*NDIM),k)) == 0) cycle
 
             ! Generate unique waveform name
             ! example: HT.LIT.S3.MXN__2008-01-06T05:14:19__2008-01-06T05:14:53
             write(waveform_name, '(a)') trim(network_names_gather(j,k)) // "." // &
                                         trim(station_names_gather(j,k)) // ".S3." // &
-                                        trim(component_names_gather(i+(3*(j-1)),k)) //"__"// &
+                                        trim(component_names_gather(i+((j-1)*NDIM),k)) //"__"// &
                                         trim(start_time_string(1:19))//"__"//trim(end_time_string(1:19))//"__synthetic"
 
             call ASDF_open_waveform_f(station_grp, &
@@ -664,7 +743,7 @@
           if (ier /= 0) call exit_MPI(myrank,'Error ASDF close stations group waveform failed')
 
         endif
-     enddo
+      enddo
     enddo
 
     ! closes file
@@ -693,7 +772,7 @@
     call ASDF_initialize_hdf5_f(ier);
     if (ier /= 0) call exit_MPI(myrank,'Error ASDF parallel initialize hdf5 failed')
 
-    call ASDF_open_f(trim(OUTPUT_FILES)//"synthetic.h5" // C_NULL_CHAR, comm, file_id)
+    call ASDF_open_f(trim(OUTPUT_FILES) // "synthetic.h5" // C_NULL_CHAR, comm, file_id)
     ! checks file identifier
     if (file_id == 0) then
       print *,'Error rank ',myrank,': ASDF failed to open file',trim(OUTPUT_FILES) // "synthetic.h5"
@@ -703,6 +782,9 @@
     call ASDF_open_waveforms_group_f(file_id, waveforms_grp)
 
     do k = 1, mysize ! Need to open ASDF groups on all processes
+
+      current_proc = k - 1
+
       do j = 1, num_stations_gather(k) ! loop over number of stations on that process
         ! station group
         write(group_name, '(a)') trim(network_names_gather(j, k)) // "." // trim(station_names_gather(j, k))
@@ -720,20 +802,20 @@
           !       the other component_name entries will be empty (""), which will lead to an error
           !       with the HDF5 output when two waveforms with the same name will be defined.
           !       we therefore skip components with an empty ("") entry.
-          if (len_trim(component_names_gather(i+(3*(j-1)),k)) == 0) cycle
+          if (len_trim(component_names_gather(i+((j-1)*NDIM),k)) == 0) cycle
 
           ! Generate unique waveform name
           ! example: HT.LIT.S3.MXN__2008-01-06T05:14:19__2008-01-06T05:14:53
           write(waveform_name, '(a)') trim(network_names_gather(j,k)) // "." // &
                                       trim(station_names_gather(j,k)) // ".S3." // &
-                                      trim(component_names_gather(i+(3*(j-1)),k)) //"__"// &
+                                      trim(component_names_gather(i+((j-1)*NDIM),k)) //"__"// &
                                       trim(start_time_string(1:19))//"__"//trim(end_time_string(1:19))//"__synthetic"
 
           call ASDF_open_waveform_f(station_grp, &
                                     trim(waveform_name) // C_NULL_CHAR, &
                                     data_ids(i))
 
-          if (k == myrank+1) then
+          if (myrank == current_proc) then
             one_seismogram(i,:) = asdf_container%records(l+i)%record(1:seismo_current_used)
 
             ! writes (float) data
@@ -1310,20 +1392,35 @@
 !! \param filestring The string that the file is stored
   subroutine read_file(filename, filestring, filesize)
 
+  use constants, only: IIN,myrank
+
   implicit none
   character(len=*) :: filestring
   character(len=*) :: filename
   integer,intent(out) :: filesize
 
+  ! local parameters
+  integer :: ier
+
   ! Get the size of the file using Fortran2003 feature
-  open(10, file=filename, status='old')
-  inquire(unit=10, size=filesize)
-  close(10)
+  open(unit=IIN, file=trim(filename), status='old', iostat=ier)
+  if (ier /= 0) then
+    print *,'Error: rank ',myrank,'failed opening file: ',trim(filename)
+    call exit_MPI(myrank,'Error opening file in ASDF read_file() routine')
+  endif
+  inquire(unit=IIN, size=filesize)
+  close(IIN)
+
+  ! checks size
+  if (len(filestring) < filesize) then
+    print *,'Error: file ',trim(filename),' exceeds filesize ',filesize,'for string length limit ',len(filestring)
+    call exit_MPI(myrank,'Error file size too large in ASDF read_file() routine')
+  endif
 
   ! Read in the size of the file using direct access
-  open(10, file=filename, status='old', &
-         recl=filesize, form='unformatted', access='direct')
-  read (10, rec=1) filestring(1:filesize)
-  close(10)
+  open(IIN, file=trim(filename), status='old', &
+       recl=filesize, form='unformatted', access='direct')
+  read(IIN, rec=1) filestring(1:filesize)
+  close(IIN)
 
   end subroutine read_file

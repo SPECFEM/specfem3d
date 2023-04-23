@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -315,7 +315,7 @@
 
   implicit none
 
-  integer :: ier
+  integer :: ier,ioutputs
 
   character(len=MAX_STRING_LEN) :: HEADER_FILE
   logical :: ABSORB_FREE_SURFACE_VAL
@@ -340,7 +340,8 @@
   endif
 
   ! check that we have at least one source
-  if (NSOURCES < 1 .and. .not. HAS_FINITE_FAULT_SOURCE) call exit_MPI(myrank,'need at least one source')
+  if (NSOURCES < 1 .and. (.not. HAS_FINITE_FAULT_SOURCE .and. .not. INVERSE_FWI_FULL_PROBLEM)) &
+    call exit_MPI(myrank,'need at least one source')
 
   ! check simulation type
   if (SIMULATION_TYPE /= 1 .and. SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &
@@ -442,9 +443,9 @@
       stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with SIMULATION_TYPE /= 1 yet'
     if (SAVE_SEISMOGRAMS_DISPLACEMENT .or. SAVE_SEISMOGRAMS_VELOCITY .or. SAVE_SEISMOGRAMS_ACCELERATION) &
       stop 'Invalid seismogram output for NB_RUNS_ACOUSTIC_GPU > 1, only pressure output implemented yet'
-    if (.not. SAVE_SEISMOGRAMS_PRESSURE ) &
+    if (.not. SAVE_SEISMOGRAMS_PRESSURE) &
       stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with elastic wavefield seismograms yet'
-    if (.not. GPU_MODE ) &
+    if (.not. GPU_MODE) &
       stop 'NB_RUNS_ACOUSTIC_GPU > 1 only applies with GPU_MODE'
     if (INVERSE_FWI_FULL_PROBLEM) &
       stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with INVERSE_FWI_FULL_PROBLEM yet'
@@ -453,6 +454,19 @@
   ! file output
   if (SU_FORMAT .and. ASDF_FORMAT) &
     stop 'Please choose either SU_FORMAT or ASDF_FORMAT, both outputs together are not implemented yet...'
+
+  ! ASDF for 1 output component-type only
+  if (ASDF_FORMAT) then
+    ! counts output types
+    ioutputs = 0
+    if (SAVE_SEISMOGRAMS_DISPLACEMENT) ioutputs = ioutputs + 1
+    if (SAVE_SEISMOGRAMS_VELOCITY) ioutputs = ioutputs + 1
+    if (SAVE_SEISMOGRAMS_ACCELERATION) ioutputs = ioutputs + 1
+    if (SAVE_SEISMOGRAMS_PRESSURE) ioutputs = ioutputs + 1
+    ! check
+    if (ioutputs > 1 .or. ioutputs == 0) &
+      stop 'Please save only a single type (disp/veloc/accel/pressure) when using ASDF_FORMAT...'
+  endif
 
   ! acoustic kernel simulations
   if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then

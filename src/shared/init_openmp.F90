@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -40,15 +40,20 @@
   ! local parameters
   integer :: thread_id,num_threads
   integer :: num_procs,max_threads
-  logical :: is_dynamic,is_nested
+  logical :: is_dynamic !,is_nested
+  integer :: max_active_levels
   ! OpenMP functions
   integer,external :: OMP_GET_NUM_THREADS,OMP_GET_THREAD_NUM
   integer,external :: OMP_GET_NUM_PROCS,OMP_GET_MAX_THREADS
-  logical,external :: OMP_GET_DYNAMIC,OMP_GET_NESTED
+  logical,external :: OMP_GET_DYNAMIC
+
+  ! note: OMP_GET_NESTED is deprecated (OpenMP version 5.1)
+  !       instead OMP_GET_MAX_ACTIVE_LEVELS should be used.
+  integer,external :: OMP_GET_MAX_ACTIVE_LEVELS
 
 !$OMP PARALLEL DEFAULT(NONE) &
 !$OMP SHARED(myrank) &
-!$OMP PRIVATE(thread_id,num_threads,num_procs,max_threads,is_dynamic,is_nested)
+!$OMP PRIVATE(thread_id,num_threads,num_procs,max_threads,is_dynamic,max_active_levels)
   ! gets thread number
   thread_id = OMP_GET_THREAD_NUM()
 
@@ -61,7 +66,8 @@
     num_procs = OMP_GET_NUM_PROCS()
     max_threads = OMP_GET_MAX_THREADS()
     is_dynamic = OMP_GET_DYNAMIC()
-    is_nested = OMP_GET_NESTED()
+    ! is_nested = OMP_GET_NESTED() -- deprecated
+    max_active_levels = OMP_GET_MAX_ACTIVE_LEVELS()
 
     ! user output
     if (myrank == 0) then
@@ -71,7 +77,8 @@
       write(IMAIN,*) '  number of processors available      = ', num_procs
       write(IMAIN,*) '  maximum number of threads available = ', num_procs
       write(IMAIN,*) '  dynamic thread adjustement          = ', is_dynamic
-      write(IMAIN,*) '  nested parallelism                  = ', is_nested
+      !write(IMAIN,*) '  nested parallelism                  = ', is_nested
+      write(IMAIN,*) '  maximum nested active levels        = ', max_active_levels
       write(IMAIN,*)
       call flush_IMAIN()
     endif

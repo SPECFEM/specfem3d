@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -1870,7 +1870,7 @@ contains
 !      !   enddo
 !      !enddo
 
-!      path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+!      path_file = trim(LOCAL_PATH) // '/proc'
 !      write(name_file,'(i6.6,a8,i2.2,a4)') myrank, '_laplac_',itest,'.bin'
 !      path_file=(trim(path_file))//trim(name_file)
 !      open(888,file=trim(path_file),form='unformatted')
@@ -1889,7 +1889,7 @@ contains
 !      !   enddo
 !      !enddo
 
-!      path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+!      path_file = trim(LOCAL_PATH) // '/proc'
 !      write(name_file,'(i6.6,a11,i2.2,a4)') myrank, '_munlaplac_',itest,'.bin'
 !      path_file=(trim(path_file))//trim(name_file)
 !      open(888,file=trim(path_file),form='unformatted')
@@ -1965,10 +1965,10 @@ contains
 
     implicit none
 
-    type(regul),             dimension(:),   allocatable, intent(in)    :: regularization_fd
-    real(kind=CUSTOM_REAL),  dimension(:,:), allocatable, intent(in)    :: field
-    real(kind=CUSTOM_REAL),  dimension(:),   allocatable, intent(inout) :: numerical_laplacian_of_field
-
+    type(regul),             dimension(:),   intent(in)    :: regularization_fd
+    real(kind=CUSTOM_REAL),  dimension(:,:), intent(in)    :: field
+    real(kind=CUSTOM_REAL),  dimension(:),   intent(inout) :: numerical_laplacian_of_field
+    ! local
     real(kind=CUSTOM_REAL),  dimension(:),   allocatable                :: field_to_derivate
     real(kind=CUSTOM_REAL),  dimension(:,:), allocatable                :: Laplac_boundary, LapF
 
@@ -2006,11 +2006,11 @@ contains
 
     implicit none
 
-!!!!!!!!!!!!!    type(regul),             dimension(:),   allocatable, intent(in)    :: regularization_fd
-    real(kind=CUSTOM_REAL),  dimension(:),   allocatable, intent(in)    :: field
-    real(kind=CUSTOM_REAL),  dimension(:),   allocatable, intent(inout) :: laplacian_of_field
-    real(kind=CUSTOM_REAL),  dimension(:),   allocatable, intent(inout) :: norm_grad_of_field
-
+!!!!!!!!!!!!!    type(regul),             dimension(:),   intent(in)    :: regularization_fd
+    real(kind=CUSTOM_REAL),  dimension(:),                intent(in)    :: field
+    real(kind=CUSTOM_REAL),  dimension(:),                intent(inout) :: laplacian_of_field
+    real(kind=CUSTOM_REAL),  dimension(:),                intent(inout) :: norm_grad_of_field
+    ! local
     real(kind=CUSTOM_REAL),  dimension(:),   allocatable                :: field_to_derivate
     real(kind=CUSTOM_REAL),  dimension(:),   allocatable                :: Laplac_boundary, nGrad_boundary
     real(kind=CUSTOM_REAL),  dimension(:),   allocatable                :: nGrad, LapF
@@ -2054,18 +2054,17 @@ contains
 
     implicit none
 
-!!!!!!!!!    type(regul),            dimension(:),          allocatable, intent(in)    :: regularization_fd
-    real(kind=CUSTOM_REAL), dimension(:,:,:,:),    allocatable, intent(inout) :: nGrad_vp, nGrad_vs, nGrad_rh
-    real(kind=CUSTOM_REAL), dimension(:,:,:,:),    allocatable, intent(inout) :: Lap1_vp, Lap1_vs, Lap1_rh
-
-    real(kind=CUSTOM_REAL),  dimension(:),         allocatable                :: field_to_derivate
-    real(kind=CUSTOM_REAL),  dimension(:,:),       allocatable                :: field
-    real(kind=CUSTOM_REAL),  dimension(:),         allocatable                :: laplacian_of_field, norm_grad_of_field
-    real(kind=CUSTOM_REAL),  dimension(:),         allocatable                :: valence
-    real(kind=CUSTOM_REAL)                                                    :: penalty
-    integer                                                                   :: i,j,k,ispec,iglob
-
-  integer :: ier
+!!!!!!!!!    type(regul),            dimension(:),        intent(in)    :: regularization_fd
+    real(kind=CUSTOM_REAL), dimension(:,:,:,:),           intent(inout) :: nGrad_vp, nGrad_vs, nGrad_rh
+    real(kind=CUSTOM_REAL), dimension(:,:,:,:),           intent(inout) :: Lap1_vp, Lap1_vs, Lap1_rh
+    ! local
+    real(kind=CUSTOM_REAL),  dimension(:),   allocatable                :: field_to_derivate
+    real(kind=CUSTOM_REAL),  dimension(:,:), allocatable                :: field
+    real(kind=CUSTOM_REAL),  dimension(:),   allocatable                :: laplacian_of_field, norm_grad_of_field
+    real(kind=CUSTOM_REAL),  dimension(:),   allocatable                :: valence
+    real(kind=CUSTOM_REAL)                                              :: penalty
+    integer                                                             :: i,j,k,ispec,iglob
+    integer                                                             :: ier
 
     allocate(field(NDIM,NGLOB_AB), field_to_derivate(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 190')
@@ -2074,10 +2073,9 @@ contains
     allocate(valence(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 192')
 
-
-    field(:,:)=0._CUSTOM_REAL
-    valence(:)=0._CUSTOM_REAL
-    penalty=0._CUSTOM_REAL
+    field(:,:) = 0._CUSTOM_REAL
+    valence(:) = 0._CUSTOM_REAL
+    penalty = 0._CUSTOM_REAL
 
     !! mean values of field on element boundary
     do ispec=1,NSPEC_AB
@@ -2153,10 +2151,10 @@ contains
 
     implicit none
 
-!!!!!!    type(regul),            dimension(:),          allocatable, intent(in)    :: regularization_fd
-    real(kind=CUSTOM_REAL), dimension(:,:,:,:),    allocatable, intent(inout) :: Lap1_vp, Lap1_vs, Lap1_rh
-    real(kind=CUSTOM_REAL), dimension(:,:,:,:),    allocatable, intent(inout) :: Lap2_vp, Lap2_vs, Lap2_rh
-
+!!!!!!    type(regul),            dimension(:),          intent(in)    :: regularization_fd
+    real(kind=CUSTOM_REAL), dimension(:,:,:,:),                 intent(inout) :: Lap1_vp, Lap1_vs, Lap1_rh
+    real(kind=CUSTOM_REAL), dimension(:,:,:,:),                 intent(inout) :: Lap2_vp, Lap2_vs, Lap2_rh
+    ! local
     real(kind=CUSTOM_REAL), dimension(:,:,:,:),    allocatable                :: field_to_derivate
     real(kind=CUSTOM_REAL),  dimension(:,:),       allocatable                :: field
     real(kind=CUSTOM_REAL),  dimension(:),         allocatable                :: numerical_laplacian_of_field
@@ -2341,17 +2339,17 @@ contains
 
   subroutine compute_mean_values_on_edge(field)
 
-    real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),    allocatable, intent(inout)      :: field
-    real(kind=CUSTOM_REAL), dimension(:,:),          allocatable                     :: field_wksp, valence
-    integer                                                       :: ispec, iglob, i, j, k
-
-    integer :: ier
+    real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),        intent(inout)      :: field
+    ! local
+    real(kind=CUSTOM_REAL), dimension(:,:), allocatable                     :: field_wksp, valence
+    integer                                                                 :: ispec, iglob, i, j, k
+    integer                                                                 :: ier
 
     allocate(field_wksp(NDIM,NGLOB_AB), valence(NDIM,NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 197')
 
     field_wksp(:,:) = 0.
-    valence(:,:)=0.
+    valence(:,:) = 0.
 
     !! 1/ compute average value on boundary of elements
     do ispec=1, NSPEC_AB
@@ -2707,10 +2705,10 @@ contains
 
   subroutine compute_derivatives_with_interpolation(field_to_derivate, laplacian_of_field, double_laplacian_of_field)
 
-    real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable, intent(in)    ::  field_to_derivate
-    real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable, intent(inout) ::  laplacian_of_field, double_laplacian_of_field
-
-    integer :: ispec, iglob, ier
+    real(kind=CUSTOM_REAL), dimension(:,:,:,:), intent(in)    ::  field_to_derivate
+    real(kind=CUSTOM_REAL), dimension(:,:,:,:), intent(inout) ::  laplacian_of_field, double_laplacian_of_field
+    ! local
+    integer                                                   :: ispec, iglob, ier
 
     ! allocates jacobian array for element (uses dynamic allocation to avoid stack issues with gcc compilers version >= 10)
     if (.not. allocated(Jacobian_shape_function)) then
@@ -3011,21 +3009,21 @@ contains
 !         enddo
 !      enddo
 !   enddo
-!   path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+!   path_file = trim(LOCAL_PATH) // '/proc'
 !   write(name_file,'(i6.6,a21)') myrank, '_model_test_field.bin'
 !   path_file=(trim(path_file))//trim(name_file)
 !   open(888,file=trim(path_file),form='unformatted')
 !   write(888) field_gll
 !   close(888)
 
-!!$    path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+!!$    path_file = trim(LOCAL_PATH) // '/proc'
 !!$    write(name_file,'(i6.6,a16)') myrank, '_valence_gll.bin'
 !!$    path_file=(trim(path_file))//trim(name_file)
 !!$    open(888,file=trim(path_file),form='unformatted')
 !!$    write(888) valence_gll
 !!$    close(888)
 
-!   path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+!   path_file = trim(LOCAL_PATH) // '/proc'
 !   write(name_file,'(i6.6,a14)') myrank, '_check_gll.bin'
 !   path_file=(trim(path_file))//trim(name_file)
 !   open(888,file=trim(path_file),form='unformatted')
@@ -3046,8 +3044,8 @@ contains
 
     implicit none
 
-    real(kind=CUSTOM_REAL), dimension(:), allocatable ::  buffer_to_send, buffer_to_recv
-
+    real(kind=CUSTOM_REAL), dimension(:), intent(inout) ::  buffer_to_send, buffer_to_recv
+    ! local
     integer :: irank, igll, ishift
     integer :: itag=0
 
@@ -3098,24 +3096,23 @@ contains
                            xix_regular
 
     implicit none
-    real(kind=CUSTOM_REAL), dimension(:),         allocatable, intent(in)     :: field_to_derivate
-    real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(inout)  :: Df
-
-    real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ)              :: dummyloc
-    real(kind=CUSTOM_REAL)                                              :: hp1, hp2, hp3
-    real(kind=CUSTOM_REAL)                                              :: tempx1l, tempx2l, tempx3l
-    real(kind=CUSTOM_REAL)                                              :: xixl,xiyl,xizl
-    real(kind=CUSTOM_REAL)                                              :: etaxl,etayl,etazl
-    real(kind=CUSTOM_REAL)                                              :: gammaxl,gammayl,gammazl
-    integer                                                             :: ispec, ispec_irreg, iglob, i, j, k, l
-
+    real(kind=CUSTOM_REAL), dimension(:),         intent(in)     :: field_to_derivate
+    real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), intent(inout)  :: Df
+    ! local
+    real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ)       :: dummyloc
+    real(kind=CUSTOM_REAL)                                       :: hp1, hp2, hp3
+    real(kind=CUSTOM_REAL)                                       :: tempx1l, tempx2l, tempx3l
+    real(kind=CUSTOM_REAL)                                       :: xixl,xiyl,xizl
+    real(kind=CUSTOM_REAL)                                       :: etaxl,etayl,etazl
+    real(kind=CUSTOM_REAL)                                       :: gammaxl,gammayl,gammazl
+    integer                                                      :: ispec, ispec_irreg, iglob, i, j, k, l
 
     do ispec =1, NSPEC_AB
        do k=1,NGLLZ
           do j=1,NGLLY
              do i=1,NGLLX
                 iglob=ibool(i,j,k,ispec)
-                dummyloc(i,j,k)=field_to_derivate(iglob)
+                dummyloc(i,j,k) = field_to_derivate(iglob)
              enddo
           enddo
        enddo
@@ -3190,9 +3187,9 @@ contains
 
 
     implicit none
-    real(kind=CUSTOM_REAL), dimension(:),     allocatable, intent(in)     :: field_to_derivate
-    real(kind=CUSTOM_REAL), dimension(:,:),   allocatable, intent(inout)  :: Lapf
-
+    real(kind=CUSTOM_REAL), dimension(:),          intent(in)     :: field_to_derivate
+    real(kind=CUSTOM_REAL), dimension(:,:),        intent(inout)  :: Lapf
+    ! local
     double precision, dimension(NGLLX, NGLLY, NGLLZ)              :: F
     double precision, dimension(NDIM, NGLLX, NGLLY, NGLLZ)        :: DF
     double precision                                              :: hp1, hp2, hp3
@@ -3202,7 +3199,7 @@ contains
     double precision                                              :: gammaxl,gammayl,gammazl
     double precision                                              :: coef_norm
     integer                                                       :: ispec, ispec_irreg, iglob, i, j, k, l
-    integer :: ispec_to_debug = 100
+    integer                                                       :: ispec_to_debug = 100
 
     if (DEBUG_MODE) write(IIDD,*)
 
@@ -3212,15 +3209,15 @@ contains
        do k=1,NGLLZ
           do j=1,NGLLY
              do i=1,NGLLX
-                iglob=ibool(i,j,k,ispec)
-                F(i,j,k)=field_to_derivate(iglob)
+                iglob = ibool(i,j,k,ispec)
+                F(i,j,k) = field_to_derivate(iglob)
              enddo
           enddo
        enddo
 
        coef_norm = maxval(abs(F(:,:,:)))
        !coef_norm=1.
-       F(:,:,:)=F(:,:,:)/coef_norm
+       F(:,:,:) = F(:,:,:)/coef_norm
        ispec_irreg = irregular_element_number(ispec)
 
        do k=1,NGLLZ
@@ -3671,15 +3668,13 @@ contains
 
     implicit none
 
-    real(kind=CUSTOM_REAL), dimension(:),     allocatable, intent(inout)  :: field_to_derivate
-    real(kind=CUSTOM_REAL), dimension(:),     allocatable, intent(inout)  :: nGrad, Lapf
-
-    integer                                                       :: ispec, iglob, i, j, k
-
+    real(kind=CUSTOM_REAL), dimension(:),                intent(inout)  :: field_to_derivate
+    real(kind=CUSTOM_REAL), dimension(:),                intent(inout)  :: nGrad, Lapf
+    ! local
+    integer                                                             :: ispec, iglob, i, j, k
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),    allocatable        :: Derivatives_of_field
     real(kind=CUSTOM_REAL), dimension(:,:),          allocatable        :: field_to_derivate_wks, Fwks
-
-    integer :: ier
+    integer                                                             :: ier
 
     allocate(Derivatives_of_field(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 198')
@@ -3957,7 +3952,7 @@ contains
 ! subroutine compute_and_store_FD_derivatives_matrix(regularization_fd)
 
 !   implicit none
-!   type(regul), dimension(:), allocatable, intent(inout)  :: regularization_fd
+!   type(regul), dimension(:),               intent(inout)  :: regularization_fd
 
 !   ! locals
 !   real(kind=CUSTOM_REAL), dimension(:),       allocatable :: xstore_recv, ystore_recv, zstore_recv
@@ -4045,19 +4040,18 @@ contains
 
 
     implicit none
-    type(regul),            dimension(:),   allocatable, intent(in)     :: regularization_fd
-    real(kind=CUSTOM_REAL), dimension(:,:), allocatable, intent(in)     :: field_input
-    real(kind=CUSTOM_REAL), dimension(:,:), allocatable, intent(inout)  :: Dfb
+    type(regul),            dimension(:),                intent(in)     :: regularization_fd
+    real(kind=CUSTOM_REAL), dimension(:,:),              intent(in)     :: field_input
+    real(kind=CUSTOM_REAL), dimension(:,:),              intent(inout)  :: Dfb
 
     real(kind=CUSTOM_REAL), dimension(:,:), allocatable                 :: valence, field_to_derivate
     real(kind=CUSTOM_REAL), dimension(:),   allocatable                 :: field_to_send, field_overlap
     real(kind=CUSTOM_REAL), dimension(:),   allocatable                 :: result_df, Values
     integer                                                             :: iglob, iglob_index, igll, idim, ip
     integer                                                             :: nline, ncolu
+    integer                                                             :: ier
 
-    integer :: ier
-
-    nline=10
+    nline = 10
 
     allocate(valence(NDIM,NGLOB_AB),  field_to_derivate(NDIM,NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 200')
@@ -4129,19 +4123,18 @@ contains
   subroutine compute_gradient_laplacian_FD(nGrad, Laplac, field_input, regularization_fd)
 
     implicit none
-    type(regul),            dimension(:),   allocatable, intent(in)     :: regularization_fd
-    real(kind=CUSTOM_REAL), dimension(:),   allocatable, intent(in)     :: field_input
-    real(kind=CUSTOM_REAL), dimension(:),   allocatable, intent(inout)  :: Laplac, nGrad
-
+    type(regul),            dimension(:),                intent(in)     :: regularization_fd
+    real(kind=CUSTOM_REAL), dimension(:),                intent(in)     :: field_input
+    real(kind=CUSTOM_REAL), dimension(:),                intent(inout)  :: Laplac, nGrad
+    ! local
     real(kind=CUSTOM_REAL), dimension(:,:), allocatable                 :: valence, field_to_derivate
     real(kind=CUSTOM_REAL), dimension(:),   allocatable                 :: field_to_send, field_overlap
     real(kind=CUSTOM_REAL), dimension(:),   allocatable                 :: result_df, Values
     integer                                                             :: iglob, iglob_index, igll, ip
     integer                                                             :: nline, ncolu
+    integer                                                             :: ier
 
-    integer :: ier
-
-    nline=10
+    nline = 10
     allocate(valence(NDIM,NGLOB_AB),  field_to_derivate(NDIM,NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 203')
     allocate(field_to_send(NGLOB_AB), field_overlap(indx_recv(NPROC)), result_df(nline),stat=ier)
@@ -4263,9 +4256,9 @@ contains
 ! subroutine  compute_M_transpose_times_M(Mt,V,n,m)
 
 !   implicit none
-!   double precision, dimension(:,:), allocatable, intent(in)    :: V
-!   double precision, dimension(:,:), allocatable, intent(inout) :: Mt
-!   integer,                                       intent(in)    :: n,m
+!   double precision, dimension(:,:), intent(in)    :: V
+!   double precision, dimension(:,:), intent(inout) :: Mt
+!   integer,                          intent(in)    :: n,m
 
 !   integer                                                      :: i, j, k
 
@@ -4292,9 +4285,9 @@ contains
 ! subroutine compute_inv_MtM_times_Mt(FDm, iMtM, V, n, m)
 
 !   implicit none
-!   integer,                                       intent(in)    :: n, m
-!   double precision, dimension(:,:), allocatable, intent(in)    :: iMtM, V
-!   double precision, dimension(:,:), allocatable, intent(inout) :: FDm
+!   integer,                          intent(in)    :: n, m
+!   double precision, dimension(:,:), intent(in)    :: iMtM, V
+!   double precision, dimension(:,:), intent(inout) :: FDm
 
 !   integer                                                      :: i,j,k
 
@@ -4319,12 +4312,12 @@ contains
   subroutine matrix_times_vector(r, A, b, n, m)
 
     implicit none
-    integer,                                              intent(in)    :: n,m
-    real(kind=CUSTOM_REAL), dimension(:,:), allocatable,  intent(in)    :: A
-    real(kind=CUSTOM_REAL), dimension(:),   allocatable,  intent(in)    :: b
-    real(kind=CUSTOM_REAL), dimension(:),   allocatable,  intent(inout) :: r
-
-    integer                                                             :: i,k
+    integer,                                intent(in)    :: n,m
+    real(kind=CUSTOM_REAL), dimension(:,:), intent(in)    :: A
+    real(kind=CUSTOM_REAL), dimension(:),   intent(in)    :: b
+    real(kind=CUSTOM_REAL), dimension(:),   intent(inout) :: r
+    ! local
+    integer                                               :: i,k
 
 
     do i=1,n
@@ -4373,7 +4366,7 @@ contains
 
 !   implicit none
 !   integer,                                       intent(in)     :: n
-!   double precision, dimension(:,:), allocatable, intent(inout)  :: a,c     ! a(n,n), c(n,n)
+!   double precision, dimension(:,:),              intent(inout)  :: a,c     ! a(n,n), c(n,n)
 !   double precision, dimension(:,:), allocatable                 :: L, U
 !   double precision, dimension(:),   allocatable                 :: b, d, x
 !   double precision                                              :: coeff
@@ -4445,14 +4438,15 @@ contains
 !!!!!!!!!!!!!!!! DEBUG subroutine !!!!!!!!!!!!!!!!!!
   subroutine write_in_disk_this(f)
 
-    integer :: ier
-
-    real(kind=CUSTOM_REAL), dimension(:), allocatable :: f
-    integer i,j,k,ispec, iglob
+    real(kind=CUSTOM_REAL), dimension(:),        intent(in) :: f
+    ! local
+    integer                                                 :: i,j,k,ispec, iglob
+    integer                                                 :: ier
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: dd
-    character(len=256)                                                     :: path_file, name_file
-    integer itest
-    itest=1
+    character(len=256)                                      :: path_file, name_file
+    integer                                                 :: itest
+
+    itest = 1
     allocate(dd(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 206')
     do ispec=1,nspec_ab
@@ -4466,7 +4460,7 @@ contains
        enddo
     enddo
 
-    path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+    path_file = trim(LOCAL_PATH) // '/proc'
     write(name_file,'(i6.6,a8,i2.2,a4)') myrank, '_lalala_',itest,'.bin'
     path_file=(trim(path_file))//trim(name_file)
     open(888,file=trim(path_file),form='unformatted')
@@ -4477,14 +4471,12 @@ contains
   end subroutine write_in_disk_this
 
 
-
-
 !!!========================== NEW WAY TO DERIVATE ===================
 
   subroutine compute_lapalacian_of_field(field, laplacian_of_field)
 
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:),      allocatable, intent(in)    :: field
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:),      allocatable, intent(inout) :: laplacian_of_field
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),                   intent(in)    :: field
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),                   intent(inout) :: laplacian_of_field
 
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),    allocatable                :: field_wkstmp
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),    allocatable                :: derivative_of_field
@@ -4522,8 +4514,8 @@ contains
 
   subroutine compute_bi_laplacian_of_field(field, laplacian_of_field, bi_laplacian_of_field)
 
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:),      allocatable, intent(in)    :: field
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:),      allocatable, intent(inout) :: laplacian_of_field, bi_laplacian_of_field
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:), intent(in)    :: field
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:), intent(inout) :: laplacian_of_field, bi_laplacian_of_field
 
   call compute_lapalacian_of_field(field, laplacian_of_field)
   call compute_lapalacian_of_field(laplacian_of_field, bi_laplacian_of_field)
@@ -4543,10 +4535,9 @@ contains
 
   implicit none
   !! size (NDIM,NGLLX, NGLLY, NGLLZ, NSPEC_AB)
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),     allocatable, intent(in)     :: field_to_derivate
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),     allocatable, intent(inout)  :: derivative_of_field
-
-
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),  intent(in)     :: field_to_derivate
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),  intent(inout)  :: derivative_of_field
+  ! local
   double precision, dimension(NGLLX, NGLLY, NGLLZ)              :: F
   double precision, dimension(NDIM, NGLLX, NGLLY, NGLLZ)        :: DF
   double precision                                              :: hp1, hp2, hp3
@@ -4556,8 +4547,7 @@ contains
   double precision                                              :: gammaxl,gammayl,gammazl
   integer                                                       :: ispec, ispec_irreg, i, j, k, l
 
-
-  do ispec =1, NSPEC_AB
+  do ispec = 1, NSPEC_AB
 
 !! store field in local array
     do k=1,NGLLZ
@@ -4643,10 +4633,9 @@ contains
 
    implicit none
    !! size (NDIM, NGLLX, NGLLY, NGLLZ, NSPEC_AB)
-   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),     allocatable, intent(in)     :: field_to_derivate
-   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),     allocatable, intent(inout)  :: derivative_of_field
-
-
+   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),  intent(in)     :: field_to_derivate
+   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),  intent(inout)  :: derivative_of_field
+   ! local
    double precision, dimension(NDIM, NGLLX, NGLLY, NGLLZ)        :: F
    double precision, dimension(NDIM, NGLLX, NGLLY, NGLLZ)        :: DF
    double precision                                              :: hp1, hp2, hp3
@@ -4749,51 +4738,57 @@ contains
        enddo
     enddo
 
- enddo
+  enddo
 
   end subroutine compute_2nd_derivative_with_lagrange_polynomials
 
+!!============
+
 !!
-!! variable damping regularization for trying to kill suprious variations close to the point sources
+!! variable damping regularization for trying to kill spurious variations close to the point sources
 
   subroutine compute_spatial_damping_for_source_singularities(acqui_simu, inversion_param, spatial_damping)
 
   type(inver),                                                    intent(inout) :: inversion_param
-  type(acqui),            dimension(:),       allocatable,        intent(inout) :: acqui_simu
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable,        intent(inout) :: spatial_damping
+  type(acqui),            dimension(:),                           intent(inout) :: acqui_simu
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),                     intent(inout) :: spatial_damping
+  ! local
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                       :: spatial_damping_tmp
-  integer                                                                       :: isrc, ievent, iglob, ispec, i, j, k
-  real(kind=CUSTOM_REAL)                                                        :: xgll, ygll, zgll
-  real(kind=CUSTOM_REAL)                                                        :: distance_from_source, value_of_damping
-
-  integer :: ier
+  integer                                                                       :: isrc, ievent, NEVENTS
+  real(kind=CUSTOM_REAL)                                                        :: xgll, ygll, zgll, x, y, z
+  real(kind=CUSTOM_REAL)                                                        :: distance, value_of_damping
+  integer                                                                       :: iglob, ispec, i, j, k, ier
 
   do ispec = 1, NSPEC_AB
-
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX
-          iglob=ibool(i,j,k,ispec)
-          xgll=xstore(iglob)
-          ygll=ystore(iglob)
-          zgll=zstore(iglob)
+          iglob = ibool(i,j,k,ispec)
+          xgll = xstore(iglob)
+          ygll = ystore(iglob)
+          zgll = zstore(iglob)
 
-          !! compute distance form sources
-          do ievent = 1, acqui_simu(1)%nevent_tot
-            if (trim(acqui_simu(ievent)%source_type) == 'moment' .or. trim(acqui_simu(ievent)%source_type) == 'force' .or. &
-                trim(acqui_simu(ievent)%source_type) == 'shot' ) then
+          !! compute distance from sources
+          NEVENTS = acqui_simu(1)%nevent_tot
+          do ievent = 1, NEVENTS
+            if (trim(acqui_simu(ievent)%source_type) == 'moment' &
+               .or. trim(acqui_simu(ievent)%source_type) == 'force' &
+               .or. trim(acqui_simu(ievent)%source_type) == 'shot' ) then
 
               do isrc = 1, acqui_simu(ievent)%nsources_local
-                distance_from_source = sqrt(  (acqui_simu(ievent)%Xs(isrc) - xgll)**2 + &
-                                              (acqui_simu(ievent)%Ys(isrc) - ygll)**2 + &
-                                              (acqui_simu(ievent)%Zs(isrc) - zgll)**2)
 
-                value_of_damping = inversion_param%min_damp + &
-                                   (inversion_param%max_damp - inversion_param%min_damp )*&
-                      exp(-0.5 * (distance_from_source/(inversion_param%distance_from_source/3.))**2 )
+                ! position
+                x = acqui_simu(ievent)%Xs(isrc)
+                y = acqui_simu(ievent)%Ys(isrc)
+                z = acqui_simu(ievent)%Zs(isrc)
+
+                distance = sqrt( (x - xgll)**2 + (y - ygll)**2 + (z - zgll)**2 )
+
+                value_of_damping = inversion_param%min_damp_src + (inversion_param%max_damp_src - inversion_param%min_damp_src ) &
+                                   * exp( -0.5 * (distance/(inversion_param%distance_from_source/3.))**2 )
 
                 spatial_damping(i,j,k,ispec) = max(spatial_damping(i,j,k,ispec), value_of_damping)
-                !write(*,*) inversion_param%max_damp,  inversion_param%min_damp,
+                !write(*,*) inversion_param%max_damp,  inversion_param%min_damp_src,
                 !inversion_param%distance_from_source, value_of_damping
               enddo
             endif
@@ -4807,7 +4802,7 @@ contains
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
     allocate(spatial_damping_tmp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 210')
-    spatial_damping_tmp(:,:,:,:)=spatial_damping(:,:,:,:)
+    spatial_damping_tmp(:,:,:,:) = spatial_damping(:,:,:,:)
 
     call max_all_all_cr_for_simulatenous_runs(spatial_damping_tmp(1,1,1,1), spatial_damping(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
 
@@ -4815,5 +4810,73 @@ contains
   endif
 
   end subroutine compute_spatial_damping_for_source_singularities
+
+!!============
+
+!!
+!! variable damping regularization for trying to kill spurious variations close to stations
+
+  subroutine compute_spatial_damping_for_station_singularities(acqui_simu, inversion_param, spatial_damping)
+
+  type(inver),                                                    intent(inout) :: inversion_param
+  type(acqui),            dimension(:),                           intent(inout) :: acqui_simu
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),                     intent(inout) :: spatial_damping
+  ! local
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                       :: spatial_damping_tmp
+  integer                                                                       :: irec, irec_glob, ievent, NEVENTS
+  real(kind=CUSTOM_REAL)                                                        :: xgll, ygll, zgll, x, y, z
+  real(kind=CUSTOM_REAL)                                                        :: distance, value_of_damping
+  integer                                                                       :: iglob, ispec, i, j, k, ier
+
+  do ispec = 1, NSPEC_AB
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          iglob = ibool(i,j,k,ispec)
+          xgll = xstore(iglob)
+          ygll = ystore(iglob)
+          zgll = zstore(iglob)
+
+          !! compute distance from station
+          NEVENTS = acqui_simu(1)%nevent_tot
+          do ievent = 1, NEVENTS
+            ! loops over local stations
+            do irec = 1, acqui_simu(ievent)%nsta_slice
+                ! global receiver index
+                irec_glob = acqui_simu(ievent)%number_receiver_global(irec)
+
+                ! position
+                x = acqui_simu(ievent)%position_station(1,irec_glob)
+                y = acqui_simu(ievent)%position_station(2,irec_glob)
+                z = acqui_simu(ievent)%position_station(3,irec_glob)
+
+                distance = sqrt( (x - xgll)**2 + (y - ygll)**2 + (z - zgll)**2 )
+
+                value_of_damping = inversion_param%min_damp_sta + (inversion_param%max_damp_sta - inversion_param%min_damp_sta ) &
+                                   * exp( -0.5 * (distance/(inversion_param%distance_from_station/3.))**2 )
+
+                spatial_damping(i,j,k,ispec) = max(spatial_damping(i,j,k,ispec), value_of_damping)
+                !write(*,*) inversion_param%max_damp,  inversion_param%min_damp_src,
+                !inversion_param%distance_from_source, value_of_damping
+              enddo
+          enddo
+
+        enddo
+      enddo
+    enddo
+  enddo
+
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
+    allocate(spatial_damping_tmp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 210')
+    spatial_damping_tmp(:,:,:,:) = spatial_damping(:,:,:,:)
+
+    call max_all_all_cr_for_simulatenous_runs(spatial_damping_tmp(1,1,1,1), spatial_damping(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+
+    deallocate(spatial_damping_tmp)
+  endif
+
+  end subroutine compute_spatial_damping_for_station_singularities
+
 
 end module regularization

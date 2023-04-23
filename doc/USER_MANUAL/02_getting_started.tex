@@ -2,7 +2,7 @@
 
 To download the SPECFEM3D\_Cartesian software package, type this:
 \begin{verbatim}
-git clone --recursive --branch devel https://github.com/geodynamics/specfem3d.git
+git clone --recursive --branch devel https://github.com/SPECFEM/specfem3d.git
 \end{verbatim}
 %
 
@@ -52,23 +52,23 @@ following options:
 
 If you have problems configuring the code on a Cray machine, i.e. for instance if you get an error message from the \texttt{configure} script, try exporting these two variables:
 \texttt{MPI\_INC=\${CRAY\_MPICH2\_DIR}/include and FCLIBS=" "}, and for more details if needed you can refer to the \texttt{utils/Cray\_compiler\_information} directory.
-You can also have a look at the configure script called:\\
+You can also have a look at the configure script called:\newline
 \texttt{utils/Cray\_compiler\_information/configure\_SPECFEM\_for\_Piz\_Daint.bash}.
 
 On SGI systems, \texttt{flags.guess} automatically informs \texttt{configure}
 to insert `\texttt{`TRAP\_FPE=OFF}'' into the generated \texttt{Makefile}
-in order to turn underflow trapping off.\\
+in order to turn underflow trapping off.\newline
 
 You can add \texttt{-{}-enable-vectorization} to the configuration options to speed up the code in the fluid (acoustic) and elastic parts.
 This works fine if (and only if) your computer always allocates a contiguous memory block for each allocatable array;
 this is the case for most machines and most compilers, but not all. To disable this feature, use option \texttt{-{}-disable-vectorization}.
-For more details see \href{https://github.com/geodynamics/specfem3d/issues/81}{github.com/geodynamics/specfem3d/issues/81} .
-To check if that option works fine on your machine, run the code with and without it for an acoustic/elastic model and make sure the seismograms are identical.\\
+For more details see \href{https://github.com/SPECFEM/specfem3d/issues/81}{github.com/SPECFEM/specfem3d/issues/81} .
+To check if that option works fine on your machine, run the code with and without it for an acoustic/elastic model and make sure the seismograms are identical.\newline
 
 
 Note that we use CUBIT (now called Trelis) to create meshes of hexahedra, but other packages
-can be used as well, for instance GiD from \url{http://gid.cimne.upc.es}
-or Gmsh from \url{http://geuz.org/gmsh} \citep{GeRe09}. Even mesh
+can be used as well, for instance GiD from \url{https://www.gidsimulation.com}
+or Gmsh from \url{http://gmsh.info} \citep{GeRe09}. Even mesh
 creation packages that generate tetrahedra, for instance TetGen from
 \url{http://tetgen.berlios.de}, can be used because each tetrahedron
 can then easily be decomposed into four hexahedra as shown in the
@@ -76,15 +76,15 @@ picture of the TetGen logo at \url{http://tetgen.berlios.de/figs/Delaunay-Vorono
 while this approach does not generate hexahedra of optimal quality,
 it can ease mesh creation in some situations and it has been shown
 that the spectral-element method can very accurately handle distorted
-mesh elements \citep{OlSe11}.\\
+mesh elements \citep{OlSe11}.\newline
 
 The SPECFEM3D Cartesian software package relies on the SCOTCH library
 to partition meshes created with CUBIT. METIS \citep{KaKu98a,KaKu98c,KaKu98b}
 can also be used instead of SCOTCH if you prefer, by changing the parameter
-\texttt{PARTITIONING\_TYPE} in the \texttt{Par\_file}. You will also then need to install
+\texttt{PARTITIONING\_TYPE} in the \texttt{DATA/Par\_file}. You will also then need to install
 and compile Metis version 4.0 (do {*}NOT{*} install Metis version
 5.0, which has incompatible function calls) and edit \texttt{Makefile.in}
-and uncomment the METIS link flag in that file before running \texttt{configure}.\\
+and uncomment the METIS link flag in that file before running \texttt{configure}.\newline
 
 
 The SCOTCH library \citep{PeRo96} provides efficient static mapping,
@@ -107,24 +107,24 @@ that you use the Intel icc C compiler to compile Scotch, i.e., use:
 
 When compiling the SCOTCH source code, if you get a message such as: "ld: cannot find -lz",
 the Zlib compression development library is probably missing on your machine and you will need to install it or ask your system administrator to
-do so. On Linux machines the package is often called "zlib1g-dev" or similar. (thus "sudo apt-get install zlib1g-dev" would install it)\\
+do so. On Linux machines the package is often called "zlib1g-dev" or similar. (thus "sudo apt-get install zlib1g-dev" would install it)\newline
 
 To compile a serial version of the code for small meshes that fits
 on one compute node and can therefore be run serially, run \texttt{configure}
 with the \texttt{-{}-without-mpi} option to suppress all calls to
-MPI.\\
+MPI.\newline
 
-For people who would like to run the package on Windows rather than on Unix machines, you can install Docker or VirtualBox (installing a Linux in VirtualBox in that latter case) and run it easily from inside that.\\
+For people who would like to run the package on Windows rather than on Unix machines, you can install Docker or VirtualBox (installing a Linux in VirtualBox in that latter case) and run it easily from inside that.\newline
 
 We recommend that you add {\texttt{ulimit -S -s unlimited}} to your
 {\texttt{.bash\_profile}} file and/or {\texttt{limit stacksize
 unlimited }} to your {\texttt{.cshrc}} file to suppress any potential
-limit to the size of the Unix stack.\\
+limit to the size of the Unix stack.\newline
 
-Beware that some cluster systems that run a recent version may not run and\slash compile an older version of the code. \\
+Beware that some cluster systems that run a recent version may not run and\slash compile an older version of the code. \newline
 
 When using dynamic fault in parallel with the developer version, we suggest you to set the configuration parameters
-of \texttt{FAULT\_DISPL\_VELOC} and \texttt{FAULT\_SYNCHRONIZE\_ACCEL} as \texttt{.true.}.\\
+of \texttt{FAULT\_DISPL\_VELOC} and \texttt{FAULT\_SYNCHRONIZE\_ACCEL} as \texttt{.true.}.\newline
 
 %-----------------------------------------------------------------------------------------------------------------------------------%
 \section{Using the GPU version of the code}
@@ -159,7 +159,7 @@ So even if you have the new CUDA toolkit version 11, but you want to run on say 
 \begin{verbatim}
   ./configure --with-cuda=cuda5
 \end{verbatim}
-The compilation with the cuda5 setting chooses then the right architecture (\texttt{-gencode=arch=compute\_35,code=sm\_35} for K20 cards).\\
+The compilation with the cuda5 setting chooses then the right architecture (\texttt{-gencode=arch=compute\_35,code=sm\_35} for K20 cards).\newline
 
 
 The same applies to compilation for AMD cards with HIP:
@@ -170,7 +170,17 @@ or
 \begin{verbatim}
   ./configure --with-hip=MI8 ..
 \end{verbatim}
-where for example \texttt{MI8,MI25,MI50,MI100,..} specifies the target GPU architecture of your card.\\
+where for example \texttt{MI8,MI25,MI50,MI100,MI250,..} specifies the target GPU architecture of your card.
+Additional compilation flags can be added by specifying \texttt{HIP\_FLAGS}, as for example:
+{\small
+\begin{verbatim}
+  ./configure --with-hip=MI250 \
+      HIP_FLAGS="-fPIC -ftemplate-depth-2048 -fno-gpu-rdc -std=c++17 \
+                 -O2 -fdenormal-fp-math=ieee -fcuda-flush-denormals-to-zero -munsafe-fp-atomics" \
+      ..
+\end{verbatim}
+}
+
 
 %-----------------------------------------------------------------------------------------------------------------------------------%
 \section{Using the ADIOS library for I/O}
@@ -183,7 +193,7 @@ ADIOS, the following steps should be done:
 \begin{enumerate}
 \item Install ADIOS (available from \url{https://www.olcf.ornl.gov/center-projects/adios/}).
 Make sure that your environment variables reference it.
-\item You may want to change ADIOS related values in the \texttt{constants.h.in} file.
+\item You may want to change ADIOS related values in the \texttt{setup/constants.h} file.
 The default values probably suit most cases.
 \item Configure using the \texttt{-{}-with-adios} flag.
 \end{enumerate}
@@ -198,14 +208,14 @@ OpenMP support can be enabled in addition to MPI. However, in many
 cases performance will not improve because our pure MPI implementation
 is already heavily optimized and thus the resulting code will in fact
 be slightly slower. A possible exception could be IBM BlueGene-type
-architectures.\\
+architectures.\newline
 
 \noindent
 To enable OpenMP,  add the flag \texttt{-{}-enable-openmp} to the configuration:
 \begin{verbatim}
 ./configure --enable-openmp ..
 \end{verbatim}
-This will add the corresponding OpenMP flag for the chosen Fortran compiler.\\
+This will add the corresponding OpenMP flag for the chosen Fortran compiler.\newline
 
 
 The DO-loop using OpenMP threads has a SCHEDULE property. The \texttt{OMP\_SCHEDULE}
@@ -248,10 +258,10 @@ not optimal for your system, so we encourage you to experiment with
 these flags and to solicit advice from your systems administrator.
 Selecting the right compiler and optimization flags can make a tremendous
 difference in terms of performance. We welcome feedback on your experience
-with various compilers and flags.\\
+with various compilers and flags.\newline
 
 Now that you have set the compiler information, you need to select
-a number of flags in the \texttt{constants.h} file depending on your
+a number of flags in the \texttt{setup/constants.h} file depending on your
 system:
 \begin{description}
 \item [{\texttt{LOCAL\_PATH\_IS\_ALSO\_GLOBAL}}] Set to \texttt{.false.}
@@ -271,7 +281,7 @@ performed using the spectral-element method using single precision
 is sufficient and gives the same results (i.e. the same seismograms);
 and the single precision code is faster and requires exactly half
 as much memory. Select your preference by selecting the appropriate
-setting in the \texttt{constants.h} file:
+setting in the \texttt{setup/constants.h} file:
 \begin{description}
 \item [{\texttt{CUSTOM\_REAL}}] Set to \texttt{SIZE\_REAL} for single precision
 and \texttt{SIZE\_DOUBLE} for double precision.
@@ -290,7 +300,7 @@ you can do once for the physical problem you want to study is run
 the same calculation in single precision and in double precision on
 your system and compare the seismograms. If they are identical (and
 in most cases they will), you can select single precision for your
-future runs.\\
+future runs.\newline
 
 If your compiler has problems with the \texttt{use mpi} statements that are used in the code, use the script called
 \texttt{replace\_use\_mpi\_with\_include\_mpif\_dot\_h.pl} in the root directory to replace all of them with \texttt{include 'mpif.h'} automatically.
@@ -302,7 +312,7 @@ If your compiler has problems with the \texttt{use mpi} statements that are used
 %-----------------------------------------------------------------------------------------------------------------------------------%
 
 \noindent
-Installation instructions for IBM BlueGene (from April 2013):\\
+Installation instructions for IBM BlueGene (from April 2013):\newline
 
 
 \noindent Edit file \texttt{flags.guess} and put this for \texttt{FLAGS\_CHECK}:
@@ -321,13 +331,13 @@ to use -O2 in these flags instead of -O3 due to a compiler bug of
 the XLF version installed. We thus suggest to first try -O3, and then
 if the code does not compile or does not run fine then switch back
 to -O2. The debug flags (-g, -qfullpath) do not influence performance
-but are useful to get at least some insights in case of problems.\\
+but are useful to get at least some insights in case of problems.\newline
 
 
 \noindent Before running \texttt{configure}, select the XL Fortran
 compiler by typing \texttt{module load bgq-xl/1.0} or \texttt{module
 load bgq-xl} (another, less efficient option is to load the GNU compilers
-using \texttt{module load bgq-gnu/4.4.6} or similar).\\
+using \texttt{module load bgq-gnu/4.4.6} or similar).\newline
 
 
 \noindent Then, to configure the code, type this:
@@ -339,7 +349,7 @@ In order for the SCOTCH domain decomposer to compile, on some (but
 not all) Blue Gene systems you may need to run \texttt{configure}
 with \texttt{CC=gcc} instead of \texttt{CC=bgxlc\_r}.
 
-\noindent \underline{Older installation instruction for IBM BlueGene, from 2011:}\\
+\noindent \underline{Older installation instruction for IBM BlueGene, from 2011:}\newline
 
 
 \noindent To compile the code on an IBM BlueGene, Laurent L\'eger from
@@ -404,7 +414,7 @@ To visualize the call tree (calling tree) of the source code, you can see the Do
 \setcounter{enumi}{-1}
 \item Install \texttt{Doxygen} \underline{and} \texttt{graphviz} (the two are usually in the package manager of classic Linux distribution).
 \item Run in the terminal : \texttt{doxygen -g}, which creates a \texttt{Doxyfile} that tells doxygen what you want it to do.
-\item Edit the Doxyfile. Two Doxyfile-type files have been already committed in the directory \\
+\item Edit the Doxyfile. Two Doxyfile-type files have been already committed in the directory \newline
 \noindent \texttt{specfem3d/doc/Call\_trees}:
 
 \begin{itemize}
@@ -449,21 +459,21 @@ The important entries in the Doxyfile are:
 \noindent Finally, some useful links:
 
 \begin{itemize}
-\item[\textbullet] a good and short summary for the basic utilisation of Doxygen:
+\item[\textbullet] short summary for the basic utilisation of Doxygen:
 
-\url{http://www.softeng.rl.ac.uk/blog/2010/jan/30/callgraph-fortran-doxygen/},
+\url{https://www.doxygen.nl/manual/starting.html},
 
 \item[\textbullet] to configure the diagrams :
 
-\url{http://www.stack.nl/~dimitri/doxygen/manual/diagrams.html},
+\url{https://www.doxygen.nl/manual/diagrams.html},
 
 \item[\textbullet] the complete alphabetical index of the tags in Doxyfile:
 
-\url{http://www.stack.nl/~dimitri/doxygen/manual/config.html},
+\url{https://www.doxygen.nl/manual/config.html},
 
 \item[\textbullet] more generally, the Doxygen manual:
 
-\url{http://www.stack.nl/~dimitri/doxygen/manual/index.html}.
+\url{https://www.doxygen.nl/manual/index.html}.
 
 \end{itemize}
 
@@ -474,6 +484,6 @@ The important entries in the Doxyfile are:
 \section{Becoming a developer of the code, or making small modifications in the source code}
 %-----------------------------------------------------------------------------------------------------------------------------------%
 
-If you want to develop new features in the code, and/or if you want to make small changes, improvements, or bug fixes, you are very welcome to contribute. To do so, i.e. to access the development branch of the source code with read/write access (in a safe way, no need to worry too much about breaking the package, there are CI tests based on BuildBot, Travis-CI and Jenkins in place that are checking and validating all new contributions and changes), please visit this Web page:\\
-\url{https://github.com/geodynamics/specfem3d/wiki}
+If you want to develop new features in the code, and/or if you want to make small changes, improvements, or bug fixes, you are very welcome to contribute. To do so, i.e. to access the development branch of the source code with read/write access (in a safe way, no need to worry too much about breaking the package, there are CI tests based on BuildBot, Travis-CI and Jenkins in place that are checking and validating all new contributions and changes), please visit this Web page:\newline
+\url{https://github.com/SPECFEM/specfem3d/wiki}
 

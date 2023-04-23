@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -167,14 +167,14 @@
   double precision :: comp_x,comp_y,comp_z
   double precision, dimension(NDIM,NDIM) :: nu_source
 
-! local parameters
+  ! local parameters
   integer :: i,j,k
   double precision :: hlagrange
 
-! initializes
+  ! initializes
   sourcearray(:,:,:,:) = 0._CUSTOM_REAL
 
-! calculates source array for interpolated location
+  ! calculates source array for interpolated location
   do k = 1,NGLLZ
     do j = 1,NGLLY
       do i = 1,NGLLX
@@ -456,7 +456,7 @@
   FY = factor_source *(nu_source(2,1)*comp_x + nu_source(2,2)*comp_y +  nu_source(2,3)*comp_z)
   FZ = factor_source *(nu_source(3,1)*comp_x + nu_source(3,2)*comp_y +  nu_source(3,3)*comp_z)
 
-! calculate source array
+  ! calculate source array
   sourcearrayd(:,:,:,:) = ZERO
   do m = 1,NGLLZ
     do l = 1,NGLLY

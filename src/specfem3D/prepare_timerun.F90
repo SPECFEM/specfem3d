@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -1124,8 +1124,7 @@
         endif
         b_boundary_injection_field(:,:,:) = 0.0_CUSTOM_REAL
       endif
-
-    endif
+    endif  ! elastic
 
     ! acoustic domains
     if (ACOUSTIC_SIMULATION) then
@@ -1143,7 +1142,6 @@
       if (num_abs_boundary_faces > 0 .and. SAVE_STACEY) then
         ! size of single record
         b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces * NB_RUNS_ACOUSTIC_GPU
-
 
         ! check integer size limit: size of b_reclen_potential must fit onto an 4-byte integer
         if (num_abs_boundary_faces > int(2147483646.0 / (CUSTOM_REAL * NGLLSQUARE))) then
@@ -1177,7 +1175,22 @@
                               filesize)
         endif
       endif
-    endif
+
+      if (COUPLE_WITH_INJECTION_TECHNIQUE) then
+        ! boundary contribution to save together with absorbing boundary array b_absorb_field
+        ! for reconstructing backward wavefields in kernel simulations
+        if (b_num_abs_boundary_faces > 0 .and. SIMULATION_TYPE == 1) then
+          ! only needed for forward simulation to store boundary contributions
+          allocate(b_boundary_injection_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 2144b')
+          if (ier /= 0) stop 'error allocating array b_boundary_injection_field'
+        else
+          ! dummy
+          allocate(b_boundary_injection_potential(1,1))
+        endif
+        b_boundary_injection_potential(:,:) = 0.0_CUSTOM_REAL
+      endif
+    endif  ! acoustic
 
     ! poroelastic domains
     if (POROELASTIC_SIMULATION) then
@@ -1231,7 +1244,7 @@
                               filesize)
         endif
       endif
-    endif
+    endif   ! poroelastic
 
   else
     ! no STACEY_ABSORBING_CONDITIONS

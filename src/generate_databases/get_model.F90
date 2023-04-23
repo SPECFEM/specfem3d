@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -35,8 +35,7 @@
     IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL, &
     IMODEL_COUPLED, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
-    nspec => NSPEC_AB,ibool,mat_ext_mesh, &
-    mat_prop,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh, &
+    nspec => NSPEC_AB,ibool,mat_ext_mesh,nundefMat_ext_mesh, &
     ANISOTROPY
 
   use create_regions_mesh_ext_par
@@ -61,8 +60,8 @@
 
   ! material domain
   integer :: idomain_id
-
   integer :: imaterial_id,imaterial_def
+  integer,dimension(NGLLX,NGLLY,NGLLZ) :: ispec_domain  ! domain_id per GLL points
 
   ! GLL point location
   double precision :: xmesh,ymesh,zmesh
@@ -89,6 +88,7 @@
   case (IMODEL_COUPLED)
     call model_coupled_broadcast()
   end select
+  call synchronize_all()
 
 ! DP: not sure if this here should check if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) ..
   if (COUPLE_WITH_INJECTION_TECHNIQUE) then
@@ -101,9 +101,7 @@
     !! find the layer in which the middle of the element is located
     if (myrank == 0) then
       write(IMAIN,*)
-      write(IMAIN,*)
-      write(IMAIN,*) '     USING A HYBRID METHOD (THE CODE IS COUPLED WITH AN INJECTION TECHNIQUE)'
-      write(IMAIN,*)
+      write(IMAIN,*) '     USING A HYBRID METHOD (THE CODE IS COUPLED WITH AN INJECTION TECHNIQUE):'
       select case(INJECTION_TECHNIQUE_TYPE)
       case (INJECTION_TECHNIQUE_IS_DSM)
         write(IMAIN,*) '     INJECTION TECHNIQUE TYPE = ', INJECTION_TECHNIQUE_TYPE,' (DSM) '
@@ -114,7 +112,6 @@
       case default
         stop 'Invalid INJECTION_TECHNIQUE_TYPE chosen, must be 1 == DSM, 2 == AXISEM or 3 == FK'
       end select
-      write(IMAIN,*)
       write(IMAIN,*)
     endif
 
@@ -132,6 +129,7 @@
       endif
     endif
   endif
+  call synchronize_all()
 
   ! get MPI starting time
   time_start = wtime()
@@ -140,6 +138,7 @@
   ! each spectral element in input mesh
   do ispec = 1, nspec
 
+    ! coupling
     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
       if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) then
         iglob = ibool(3,3,3,ispec)
@@ -149,6 +148,9 @@
         call model_coupled_FindLayer(xmesh,ymesh,zmesh)
       endif
     endif
+
+    ! initializes domain ids on element
+    ispec_domain(:,:,:) = 0
 
     ! loops over all GLL points in element
     do k = 1, NGLLZ
@@ -224,9 +226,7 @@
           imaterial_def = mat_ext_mesh(2,ispec)
 
           ! assigns material properties
-          call get_model_values(mat_prop,nmat_ext_mesh, &
-                                undef_mat_prop,nundefMat_ext_mesh, &
-                                imaterial_id,imaterial_def, &
+          call get_model_values(imaterial_id,imaterial_def, &
                                 xmesh,ymesh,zmesh,ispec, &
                                 rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
                                 rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
@@ -407,22 +407,42 @@
             c66store(i,j,k,ispec) = c66
           endif
 
-
           ! stores material domain
-          select case (idomain_id)
-          case (IDOMAIN_ACOUSTIC)
-            ispec_is_acoustic(ispec) = .true.
-          case (IDOMAIN_ELASTIC)
-            ispec_is_elastic(ispec) = .true.
-          case (IDOMAIN_POROELASTIC)
-            ispec_is_poroelastic(ispec) = .true.
-          case default
-            stop 'Error invalid material domain index, must be 1 == acoustic,2 == elastic or 3 == poroelastic'
-          end select
-
+          ispec_domain(i,j,k) = idomain_id
         enddo
       enddo
     enddo
+
+    ! safety check
+    if (any(ispec_domain(:,:,:) <= 0) .or. any(ispec_domain(:,:,:) > 3)) then
+      stop 'Error invalid material domain index, must be 1 == acoustic,2 == elastic or 3 == poroelastic'
+    endif
+
+    ! determines over-all element domain property
+    ! note: for example, in tomography models a single element might have GLL points assigned to both, acoustic and elastic velocities.
+    !       here we assign a single domain to the element. in cases where an element has velocities from both domains, the element
+    !       will be treated as fully elastic - and similar for mixed poroelastic/elastic/acoustic elements.
+    if (any(ispec_domain(:,:,:) == 3)) then
+      ! poroelastic
+      idomain_id = 3
+    else if (any(ispec_domain(:,:,:) == 2)) then
+      ! elastic
+      idomain_id = 2
+    else
+      ! acoustic
+      idomain_id = 1
+    endif
+
+    select case (idomain_id)
+    case (IDOMAIN_ACOUSTIC)
+      ispec_is_acoustic(ispec) = .true.
+    case (IDOMAIN_ELASTIC)
+      ispec_is_elastic(ispec) = .true.
+    case (IDOMAIN_POROELASTIC)
+      ispec_is_poroelastic(ispec) = .true.
+    case default
+      stop 'Error invalid material domain index, must be 1 == acoustic,2 == elastic or 3 == poroelastic'
+    end select
 
     ! user output
     if (myrank == 0) then
@@ -435,9 +455,9 @@
 
         ! flushes file buffer for main output file (IMAIN)
         call flush_IMAIN()
-
       endif
     endif
+
   enddo
 
   ! checks material domains
@@ -481,9 +501,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_model_values(mat_prop,nmat_ext_mesh, &
-                              undef_mat_prop,nundefMat_ext_mesh, &
-                              imaterial_id,imaterial_def, &
+  subroutine get_model_values(imaterial_id,imaterial_def, &
                               xmesh,ymesh,zmesh,ispec, &
                               rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
                               rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
@@ -498,6 +516,8 @@
     IMODEL_1D_PREM_PB,IMODEL_GLL, IMODEL_SEP,IMODEL_COUPLED, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ATTENUATION_COMP_MAXIMUM
 
+  use generate_databases_par, only: undef_mat_prop
+
   use create_regions_mesh_ext_par
 
   use constants, only: INJECTION_TECHNIQUE_IS_FK
@@ -505,45 +525,40 @@
 
   implicit none
 
-  integer, intent(in) :: nmat_ext_mesh
-  double precision, dimension(17,nmat_ext_mesh), intent(in) :: mat_prop
-
-  integer, intent(in) :: nundefMat_ext_mesh
-  character(len=MAX_STRING_LEN), dimension(6,nundefMat_ext_mesh) :: undef_mat_prop
-
   integer, intent(in) :: imaterial_id,imaterial_def
 
   double precision, intent(in) :: xmesh,ymesh,zmesh
   integer, intent(in) :: ispec
 
-  real(kind=CUSTOM_REAL) :: vp,vs,rho,qkappa_atten,qmu_atten
+  real(kind=CUSTOM_REAL), intent(inout) :: vp,vs,rho,qkappa_atten,qmu_atten
 
-  integer :: idomain_id
+  integer, intent(inout) :: idomain_id
 
-  real(kind=CUSTOM_REAL) :: kappa_s,kappa_f,kappa_fr,mu_fr,rho_s,rho_f,phi,tort,eta_f, &
-                           kxx,kxy,kxz,kyy,kyz,kzz
+  real(kind=CUSTOM_REAL), intent(inout) :: kappa_s,kappa_f,kappa_fr,mu_fr,rho_s,rho_f,phi,tort,eta_f, &
+                                           kxx,kxy,kxz,kyy,kyz,kzz
 
-  real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25, &
-                        c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
+  real(kind=CUSTOM_REAL), intent(inout) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25, &
+                                           c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
-  logical :: ANISOTROPY
+  logical, intent(inout) :: ANISOTROPY
 
   ! local parameters
   integer :: iflag_aniso
   integer :: iundef,imaterial_PB
   logical :: has_tomo_value
 
-! *********************************************************************************
-! added by Ping Tong (TP / Tong Ping) for the FK3D calculation, local parameters
-   real(kind=CUSTOM_REAL) :: tem1,tem2,ratio_x,ratio
+  ! *********************************************************************************
+  ! FK coupling
+  ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation, local parameters
+  real(kind=CUSTOM_REAL) :: tem1,tem2,ratio_x,ratio
 
-!  flag indicating whether we smooth the model on the edges to make it 1D on the edges to match the FK calculation
-   logical, parameter :: SMOOTH_THE_MODEL_EDGES_FOR_FK = .false.
+  !  flag indicating whether we smooth the model on the edges to make it 1D on the edges to match the FK calculation
+  logical, parameter :: SMOOTH_THE_MODEL_EDGES_FOR_FK = .false.
 
-! if the flag SMOOTH_THE_MODEL_EDGES_FOR_FK above is true, do we smooth the Moho only, or the rest of the model as well
-! if the flag SMOOTH_THE_MODEL_EDGES_FOR_FK above is false, then this flag is ignored
-   logical, parameter :: SMOOTH_THE_MOHO_ONLY_FOR_FK = .false.
-! *********************************************************************************
+  ! if the flag SMOOTH_THE_MODEL_EDGES_FOR_FK above is true, do we smooth the Moho only, or the rest of the model as well
+  ! if the flag SMOOTH_THE_MODEL_EDGES_FOR_FK above is false, then this flag is ignored
+  logical, parameter :: SMOOTH_THE_MOHO_ONLY_FOR_FK = .false.
+  ! *********************************************************************************
 
   ! use acoustic domains for simulation
   logical,parameter :: USE_PURE_ACOUSTIC_MOD = .false.
@@ -564,9 +579,7 @@
 
   case (IMODEL_DEFAULT, IMODEL_GLL, IMODEL_IPATI, IMODEL_IPATI_WATER, IMODEL_SEP)
     ! material values determined by mesh properties
-    call model_default(mat_prop,nmat_ext_mesh, &
-                       undef_mat_prop,nundefMat_ext_mesh, &
-                       imaterial_id,imaterial_def, &
+    call model_default(imaterial_id,imaterial_def, &
                        xmesh,ymesh,zmesh, &
                        rho,vp,vs, &
                        iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
@@ -603,7 +616,7 @@
     ! gets model values from tomography file
     call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten, &
                           c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
-                          imaterial_id,has_tomo_value)
+                          imaterial_id,has_tomo_value,idomain_id)
 
     ! in case no tomography value defined for this region, fall back to defaults
     if (.not. has_tomo_value) then
@@ -618,9 +631,7 @@
     !        be able to superimpose a model onto the default one:
 
     ! material values determined by mesh properties
-    call model_default(mat_prop,nmat_ext_mesh, &
-                       undef_mat_prop,nundefMat_ext_mesh, &
-                       imaterial_id,imaterial_def, &
+    call model_default(imaterial_id,imaterial_def, &
                        xmesh,ymesh,zmesh,rho,vp,vs, &
                        iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
                        rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
@@ -649,6 +660,7 @@
   endif
 
   ! *********************************************************************************
+  ! FK coupling
   ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
   ! for smoothing the boundary portions of the model
   if (COUPLE_WITH_INJECTION_TECHNIQUE) then

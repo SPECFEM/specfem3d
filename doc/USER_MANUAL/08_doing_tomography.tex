@@ -1,8 +1,8 @@
 \chapter[Doing tomography based on the sensitivity kernels obtained]{Doing tomography, i.e., updating the model based on the sensitivity kernels obtained}\label{cha:tomo}
 
-\red{\Large ANNOUNCEMENT (June 2017): See also the next chapter (Chapter~\ref{cha:FWI}) about how to perform full waveform inversion (FWI) or source inversions.}\\
+\red{See also the next chapter (Chapter~\ref{cha:FWI}) about how to perform full waveform inversion (FWI) or source inversions.}\newline
 
-UNDER CONSTRUCTION (July 2015). New content will be added soon.
+STILL UNDER CONSTRUCTION ... New content will be added soon.
 
 \section{Tomographic full waveform inversion (FWI) / imaging using the sensitivity kernels obtained}
 
@@ -10,13 +10,15 @@ One of the fundamental reasons for computing sensitivity kernels (Section~\ref{s
 is to use them within a tomographic inversion, i.e., perform imaging. In other words, use
 recorded seismograms, make measurements with synthetic seismograms,
 and use the misfit between the two to iteratively improve the model
-described by (at least) $V_{{\rm p}}$, $V_{{\rm s}}$, and $\rho$ as a function of space.
+described by (at least) $V_{{\rm p}}$, $V_{{\rm s}}$, and $\rho$ as a function of space.\newline
+
 
 As explained for instance in \cite{MoChKoWa15},
 full waveform inversion means that one considers the observed seismograms (possibly filtered) as the
 basic observables that one wants to fit. One thus searches for the model that minimizes the mean squared difference between observed
 and synthetic seismograms. In other words, the goal is to find a structural model that can explain a larger portion
-of seismological records, and not simply the phase of a few seismic arrivals.
+of seismological records, and not simply the phase of a few seismic arrivals.\newline
+
 
 Whatever misfit function you use for the tomographic inversion (you can find several
 examples in \citet{TrKoLi08} and \citet{TrTaLi05}), you will weigh
@@ -88,7 +90,8 @@ However, it is possible to obtain this gradient without computing the Jacobian m
 The approach to determine the gradient without computing the Fr\'echet derivatives was introduced in nonlinear optimization
 by \cite{Cha74} working with J. L. Lions, and later applied to seismic exploration problems by
 \cite{BaChLa77}, \cite{BaChHeLa82}, \cite{Lai83} and \cite{Tar84}. The idea is to resort to the adjoint state,
-which corresponds to the wavefield emitted and back-propagated from the receivers \cite[e.g.,][]{TrTaLi05,TrKoLi08,Plessix_2006_RAS,FiBuIg06}.
+which corresponds to the wavefield emitted and back-propagated from the receivers \cite[e.g.,][]{TrTaLi05,TrKoLi08,Plessix_2006_RAS,FiBuIg06}.\newline
+
 
 Let us give an outline of the theory to compute the gradient based on the adjoint method, and refer the reader to e.g. \cite{TrTaLi05}
 and \cite{TrKoLi08} for further details. The perturbation of the misfit function can be expressed as:
@@ -168,7 +171,8 @@ the direct (i.e. forward) field that propagates from the source to the receivers
 receivers backward in time. The same approach can be followed for any type of seismic observable (phase, amplitude,
 envelope, time series...), provided the appropriate adjoint source is used \cite[]{TrTaLi05,TrKoLi08}.
 For example, for the cross-correlated traveltime of a seismic
-phase, the adjoint source is defined as the velocity of that synthetic phase weighted by the travel-time residual.
+phase, the adjoint source is defined as the velocity of that synthetic phase weighted by the travel-time residual.\newline
+
 
 Computing the gradient based on the adjoint-state method requires performing two simulations per source (forward and adjoint
 fields) regardless of the type of observable. However, to define the adjoint field one
@@ -178,7 +182,8 @@ A straightforward solution for time-domain methods would be to store the whole f
 each time step during the forward run and then read it back during the adjoint simulation to calculate the interaction of these two fields.
 In 2-D this is feasible but in the 3-D case for very short seismic periods and without lossy compression, downsampling,
 or a large amount of disk or memory checkpointing \cite[e.g.,][]{FiKeIg09,RuHaPuGu14,CyShWi15}
-the amount of disk storage required would currently be too large.
+the amount of disk storage required would currently be too large.\newline
+
 
 However let us note again that this situation will change in the future.
 In the mean time, a standard possible solution is to perform three simulations per source \cite[]{TrKoLi08,PeKoLuMaLeCaLeMaLiBlNiBaTr11},
@@ -186,7 +191,7 @@ i.e., perform the forward calculation twice, once to compute the adjoint sources
 at the same time as the adjoint simulation to correlate the two fields and sum their interaction on the fly over all the time steps.
 Doing so for an elastic Earth, one only needs a small amount of disk storage to store the last time
 step of the forward run, which is then used as an initial condition to redo the forward run backwards,
-as well as the field on the outer edges of the mesh for each time steps in order to be able to undo the absorbing boundary conditions.
+as well as the field on the outer edges of the mesh for each time steps in order to be able to undo the absorbing boundary conditions.\newline
 
 \section{Tomographic tools}
 
@@ -195,7 +200,8 @@ Besides the ability to compute adjoint sensitivity kernels, the SPECFEM3D packag
 make tomography
 make postprocess
 \end{verbatim}
-You can modify specific settings affecting, e.g., the (isotropic) parameterization or directory setup structure in file \texttt{setup/constants\_tomography.h}. The compiled binaries can be found in directory \texttt{bin/}.\\
+You can modify specific settings affecting, e.g., the (isotropic) parameterization or directory setup structure in file \texttt{setup/constants\_tomography.h}. The compiled binaries can be found in directory \texttt{bin/}.\newline
+
 
 \noindent
 The iterative inversion workflow may comprise three main steps for which tools are provided:
@@ -205,7 +211,8 @@ The iterative inversion workflow may comprise three main steps for which tools a
 \item Updating the model $\boldm_{i+1} = \boldm_i + \delta\boldm$.
 \end{enumerate}
 
-Please note that the tomographic routines are very similar for both SPECFEM3D\_Cartesian and SPECFEM3D\_GLOBE versions. Some differences occur, e.g., when reading in mesh files and when the maximum of the gradient is taken for the update step length. Also note that currently only the binary database format is supported, no ADIOS file format support is implemented yet. In future, we plan to extend and merge these into the same set of tools within a common SPECFEM function library.\\
+
+Please note that the tomographic routines are very similar for both SPECFEM3D\_Cartesian and SPECFEM3D\_GLOBE versions. Some differences occur, e.g., when reading in mesh files and when the maximum of the gradient is taken for the update step length. Also note that currently only the binary database format is supported, no ADIOS file format support is implemented yet. In future, we plan to extend and merge these into the same set of tools within a common SPECFEM function library.\newline
 
 
 \subsection{Summing kernels}
@@ -227,7 +234,7 @@ The summation tools use the following input/output format (see Fig.~\ref{fig:tom
 Input is provided by a list of event directories, given in file \texttt{kernels\_list.txt} (default setting for \texttt{KERNEL\_FILE\_LIST} in \texttt{constants\_tomography.h}). The file lists all event kernel directories which should be summed together. All event directories have to be located in directory \texttt{INPUT\_KERNELS/}, which can be setup as links to all individual event kernel directories.
 
 \item [-]{\bf Output:}
-The summed kernels will be stored in corresponding kernel files in output directory \texttt{OUTPUT\_SUM/}.\\
+The summed kernels will be stored in corresponding kernel files in output directory \texttt{OUTPUT\_SUM/}.\newline
 \end{itemize}
 
 \begin{figure}[htp]
@@ -266,7 +273,7 @@ In this case, the factor $\frac{1}{\Sum_i \tilde{H}^{i}}$ acts as preconditioner
 \noindent
 {\bf Kernel names}: The summation tool will look for kernels with following names:
 \begin{itemize}
-\item [-] for an {\it isotropic} model parameterization, kernel names are:\\
+\item [-] for an {\it isotropic} model parameterization, kernel names are:\newline
 \begin{tabular}{ c c }
 \begin{minipage}{3in}
 \begin{verbatim}
@@ -285,9 +292,9 @@ proc***_reg1_beta_kernel.bin
 proc***_reg1_rho_kernel.bin
 \end{verbatim}
 \end{minipage}
-\end{tabular}\\
+\end{tabular}\newline
 
-\item [-] for an {\it isotropic bulk} model parameterization, kernel names are:\\
+\item [-] for an {\it isotropic bulk} model parameterization, kernel names are:\newline
 \begin{tabular}{ c c }
 \begin{minipage}{3in}
 \begin{verbatim}
@@ -306,9 +313,9 @@ proc***_reg1_bulk_beta_kernel.bin
 proc***_reg1_rho_kernel.bin
 \end{verbatim}
 \end{minipage}
-\end{tabular}\\
+\end{tabular}\newline
 
-\item [-] for a {\it transversely isotropic} model parameterization, kernel names are:\\
+\item [-] for a {\it transversely isotropic} model parameterization, kernel names are:\newline
 \begin{tabular}{ c c }
 \begin{minipage}{3in}
 \begin{verbatim}
@@ -329,11 +336,11 @@ proc***_reg1_bulk_betah_kernel.bin
 proc***_reg1_eta_kernel.bin
 \end{verbatim}
 \end{minipage}
-\end{tabular}\\
+\end{tabular}\newline
 
-Note that these event kernels are stored after a kernel simulation (\texttt{SIMULATION\_TYPE = 3}) in the \texttt{LOCAL\_PATH} directory, which by default points to directory \texttt{DATABASES\_MPI/}. Isotropic kernels will be created by default. To create transversely isotropic kernels, you set \texttt{ANISOTROPIC\_KL} and \texttt{SAVE\_TRANSVERSE\_KL} to \texttt{.true.} in the parameter file \texttt{DATA/Par\_file}. \\
+Note that these event kernels are stored after a kernel simulation (\texttt{SIMULATION\_TYPE = 3}) in the \texttt{LOCAL\_PATH} directory, which by default points to directory \texttt{DATABASES\_MPI/}. Isotropic kernels will be created by default. To create transversely isotropic kernels, you set \texttt{ANISOTROPIC\_KL} and \texttt{SAVE\_TRANSVERSE\_KL} to \texttt{.true.} in the parameter file \texttt{DATA/Par\_file}. \newline
 
-\item [- ] for preconditioning, the approximate Hessian kernels taken for summation are:\\
+\item [- ] for preconditioning, the approximate Hessian kernels taken for summation are:\newline
 \begin{tabular}{ c c }
 \begin{minipage}{3in}
 \begin{verbatim}
@@ -348,15 +355,16 @@ proc***_hess_kernel.bin
 proc***_reg1_hess_kernel.bin
 \end{verbatim}
 \end{minipage}
-\end{tabular}\\
+\end{tabular}\newline
 
 These Hessian kernels approximate the diagonal elements of the Hessian matrix and can be used as preconditioner in a gradient optimization scheme.
-To create these kernels, you have to set \texttt{APPROXIMATE\_HESS\_KL} to \texttt{.true.} in the parameter file \texttt{DATA/Par\_file}.\\
+To create these kernels, you have to set \texttt{APPROXIMATE\_HESS\_KL} to \texttt{.true.} in the parameter file \texttt{DATA/Par\_file}.\newline
 
 \end{itemize}
 
 
-For SPECFEM3D\_GLOBE, by default only kernels in the crust/mantle region ("reg1") will be considered for summation. You can change the default by setting parameter \texttt{REG} in file \texttt{constants\_tomography.h} to the region of interest. \\
+For SPECFEM3D\_GLOBE, by default only kernels in the crust/mantle region ("reg1") will be considered for summation. You can change the default by setting parameter \texttt{REG} in file \texttt{constants\_tomography.h} to the region of interest. \newline
+
 
 Note that although we provide the preconditioned summation here, we recommend to smooth first both, the summed kernels and summed approximate Hessians, before inverting the summed Hessian and applying it as preconditioner to the gradient. From experience, we prefer doing
 \begin{equation}
@@ -400,10 +408,11 @@ with command line arguments:
 \texttt{SIGMA\_V} vertical smoothing radius,
 \texttt{KERNEL\_NAME} kernel name, e.g. \texttt{alpha\_kernel},
 \texttt{INPUT\_DIR} directory from which kernels are read,
-\texttt{OUTPUT\_DIR} directory to which smoothed kernels are written.
+\texttt{OUTPUT\_DIR} directory to which smoothed kernels are written.\newline
 
-Smooths kernels by convolution with a Gaussian. Writes the resulting
-smoothed kernels to \texttt{OUTPUT\_DIR}.
+
+This smooths kernels by convolution with a Gaussian, and writes the resulting
+smoothed kernels to \texttt{OUTPUT\_DIR}.\newline
 
 Files written to \texttt{OUTPUT\_DIR} have the suffix 'smooth' appended,
 e.g. \texttt{proc***alpha\_kernel.bin} becomes \texttt{proc***alpha\_kernel\_smooth.bin}.
@@ -417,10 +426,10 @@ with command line arguments:
 \texttt{MAX\_VAL} threshold above which array values are clipped,
 \texttt{KERNEL\_NAMES} one or more kernel names separated by commas,
 \texttt{INPUT\_DIR} directory from which arrays are read,
-\texttt{OUTPUT\_DIR} directory to which clipped array are written.
+\texttt{OUTPUT\_DIR} directory to which clipped array are written.\newline
 
 For each name in \texttt{KERNEL\_NAMES}, reads kernels from \texttt{INPUT\_DIR}, applies
-thresholds, and writes the resulting clipped kernels to \texttt{OUTPUT\_DIR}.
+thresholds, and writes the resulting clipped kernels to \texttt{OUTPUT\_DIR}.\newline
 
 \texttt{KERNEL\_NAMES} is a comma-delimited list of kernel names,
 e.g. \texttt{alphav\_kernel,alphah\_kernel}.
@@ -444,13 +453,13 @@ mpirun -np NPROC bin/xcombine_sem KERNEL_NAMES INPUT_FILE OUTPUT_DIR
 with command line arguments:
 \texttt{KERNEL\_NAMES} one or more kernel names separated by commas,
 \texttt{INPUT\_FILE} text file containing list of kernel directories,
-\texttt{OUTPUT\_PATH} directory to which summed kernels are written.
+\texttt{OUTPUT\_PATH} directory to which summed kernels are written.\newline
 
 For each name in \texttt{KERNEL\_NAMES}, sums kernels from directories specified in
-\texttt{INPUT\_FILE}. Writes the resulting sums to \texttt{OUTPUT\_DIR}.
+\texttt{INPUT\_FILE}. Writes the resulting sums to \texttt{OUTPUT\_DIR}.\newline
 
 \texttt{INPUT\_FILE} is a text file containing a list of absolute or relative paths to
-kernel directories, one directory per line.
+kernel directories, one directory per line.\newline
 
 \texttt{KERNEL\_NAMES} is a comma-delimited list of kernel names,
 e.g. \texttt{alpha\_kernel,beta\_kernel,rho\_kernel}.
@@ -477,7 +486,7 @@ The gradient files are given for isotropic parameters or isotropic bulk paramete
 \end{enumerate}
 
 Note that instead of using the density kernels $K_{\rho}$ for model updates, setting \texttt{USE\_RHO\_SCALING} to \texttt{.true.} will
-ignore the density kernel and use density perturbations scaled from isotropic $V_s$ pertubations.\\
+ignore the density kernel and use density perturbations scaled from isotropic $V_s$ pertubations.\newline
 
 \begin{description}
 \item [Isotropic model update:] The program \texttt{xadd\_model\_iso} can be used to update {\it isotropic} model files with
@@ -490,12 +499,12 @@ with command line arguments:
 \texttt{INPUT-KERNELS-DIR/} (optional) directory which holds summed kernels (e.g. \texttt{proc***alpha\_kernel.bin},.., by default
 directory \texttt{INPUT\_GRADIENT/} is used),
 \texttt{OUTPUT-MODEL-DIR/} (optional) directory which will hold new model files (e.g. \texttt{proc***vp\_new.bin},.., by default directory
-\texttt{OUTPUT\_MODEL/} is used).
+\texttt{OUTPUT\_MODEL/} is used).\newline
 
-The gradients are given for isotropic parameters \texttt{(alpha,beta,rho)} or \texttt{(bulk\_c,beta,rho)}.
+The gradients are given for isotropic parameters \texttt{(alpha,beta,rho)} or \texttt{(bulk\_c,beta,rho)}.\newline
 
 The algorithm uses a steepest descent method with a step length
-determined by the given maximum update percentage.
+determined by the given maximum update percentage.\newline
 
 By default, the directory and file setup used is:
 \begin{itemize}
@@ -550,7 +559,8 @@ There are many other versions of gradient-based inversion
 algorithms that could alternatively be used (see e.g. \cite{ViOp09,MoChKoWa15} for a list).
 The tomographic inversion of \citet{TaLiMaTr09,TaLiMaTr2010} used SPECFEM3D\_Cartesian as well
 as several additional components which are also stored on the CIG
-svn server, described next.
+svn server, described next.\newline
+
 
 The directory containing external utilities for tomographic inversion using
 SPECFEM3D Cartesian (or other packages that evaluate misfit functions
@@ -568,7 +578,8 @@ a brief \verb+README+ file indicating the role of the three subdirectories,
 The components for making the model update are there; however, there
 are no explicit rules for computing the model update, just as with
 any optimization problem. There are options for computing a conjugate
-gradient step, as well as a source subspace projection step.
+gradient step, as well as a source subspace projection step.\newline
+
 
 The best single file to read is probably: \verb+ADJOINT_TOMO/iterate_adj/cluster/README+.
 

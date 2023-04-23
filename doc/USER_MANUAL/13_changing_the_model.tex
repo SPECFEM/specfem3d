@@ -11,11 +11,11 @@ with material properties that vary within each spectral element.
 
 To implement your own external tomographic model(s), you must provide
 your own external tomography file(s), and choose between two possible
-options:\\
- \indent (1) set in the \texttt{Par\_file} the model parameter \texttt{MODEL
-= tomo}, \\
- or for more user control: \\
- \indent (2) set in the \texttt{Par\_file} the model parameter \texttt{MODEL
+options:\newline
+ \indent (1) set in the \texttt{DATA/Par\_file} the model parameter \texttt{MODEL
+= tomo}, \newline
+ or for more user control: \newline
+ \indent (2) set in the \texttt{DATA/Par\_file} the model parameter \texttt{MODEL
 = default}, define the negative \texttt{material\_ID} identifier for
 each element in the file \texttt{MESH/materials\_file} and use the
 following format in the file \texttt{MESH/nummaterial\_velocity\_file}
@@ -23,24 +23,24 @@ when using CUBIT to construct your mesh (see also section \ref{subsec:Exporting-
 \begin{verbatim}
 domain_ID material_ID tomography elastic file_name 1
 \end{verbatim}
-where: \\
+where: \newline
  \indent \texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials,
-\\
+\newline
  \indent \texttt{material\_ID} a negative, unique identifier (i.e.,
--1,-2,...), \\
+-1,-2,...), \newline
  \indent \texttt{tomography} keyword for tomographic material definition,
-\\
+\newline
  \indent \texttt{elastic} keyword for elastic material definition,
-\\
+\newline
  \indent \texttt{file\_name} the name of the tomography file and
-1 a positive unique identifier.\\
+1 a positive unique identifier.\newline
 
 
 The external tomographic model is represented by a grid of points
 with assigned material properties and homogeneous resolution along
 each spatial direction x, y and z. The ASCII file \texttt{file\_name}
 that describe the tomography should be located in the \texttt{TOMOGRAPHY\_PATH}
-directory, set in the \texttt{Par\_file}. The format of the file,
+directory, set in the \texttt{DATA/Par\_file}. The format of the file,
 as read from \texttt{model\_tomography.f90} located in the \texttt{src/generate\_databases}
 directory, looks like Figure \ref{fig:tomography_file}, starting with a header information where
 \begin{description}
@@ -100,8 +100,7 @@ $Q_{\kappa}$ and $Q_{\mu}$ respectively \citep{AnHa78}.
 Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
 For simulations with attenuation, please note that the Vp- and Vs-velocities of your model are given for a reference
 frequency. To change this reference frequency, you change the value
-of \texttt{ATTENUATION\_f0\_REFERENCE} in the main constants file
-\texttt{constants.h} found in subdirectory \texttt{src/shared/}.
+of \texttt{ATTENUATION\_f0\_REFERENCE} defined (in Hz) in input file \texttt{DATA/Par\_file}.\newline
 
 The code uses a constant $Q$ quality factor, write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS).
 The approximation is thus performed in a given frequency band determined based on that \texttt{ATTENUATION\_f0\_REFERENCE} reference frequency.
@@ -140,7 +139,7 @@ The example in Figure~\ref{fig:tomography_file} is for an external tomography fi
 2  -1 tomography elastic tomography_model.xyz 1
 \end{verbatim}
 %
-and the file \texttt{tomography\_model.xyz} will need to reside in \texttt{DATA/}. All entries in the second column of \texttt{materials\_file} will be \texttt{-1}, which means that each element in the mesh will be interpolated according to the values in \texttt{tomography\_model.xyz}.
+and the file \texttt{tomography\_model.xyz} will need to reside in \texttt{DATA/}. All entries in the second column of \texttt{materials\_file} will be \texttt{-1}, which means that each element in the mesh will be interpolated according to the values in \texttt{tomography\_model.xyz}.\newline
 
 In some cases it may be desirable to have an external tomography model that is described in more than one file. For example, in cases like southern California, the length scale of variation in the structure of the wave speed model is much shorter in the sedimentary basin models within the upper 15~km. Therefore one might want to use an external tomography file that is sampled with, say, $\Delta x = 1000$~m, $\Delta y = 1000$~m, and $\Delta z = 250$~m in the uppermost 15~km, and then use $\Delta x = 2000$~m, $\Delta y = 2000$~m, and $\Delta z = 1000$~m below a depth of 15~km. If these intervals are chosen appropriately, then it will result in a pair of external tomography file that is much smaller than the alternative of having a single file with the fine discretization. In this case  \texttt{nummaterial\_velocity\_file} is
 %
@@ -149,7 +148,7 @@ In some cases it may be desirable to have an external tomography model that is d
 2  -2 tomography elastic file_below_15km.xyz 1
 \end{verbatim}
 %
-and the files \texttt{file\_above\_15km.xyz} and \texttt{file\_below\_15km.xyz} will need to reside in \texttt{DATA/}.  All entries in the second column of \texttt{materials\_file} will need to be either \texttt{-1} or \texttt{-2}, depending on whether the element is above or below 15~km depth. In this sense, the construction of the mesh and the discretization of the external model will generally be done in tandem.
+and the files \texttt{file\_above\_15km.xyz} and \texttt{file\_below\_15km.xyz} will need to reside in \texttt{DATA/}.  All entries in the second column of \texttt{materials\_file} will need to be either \texttt{-1} or \texttt{-2}, depending on whether the element is above or below 15~km depth. In this sense, the construction of the mesh and the discretization of the external model will generally be done in tandem.\newline
 
 Other more complicated discretizations can be used following the same procedure. (In particular, there is no limit on the number of different external files that are used.)
 
@@ -158,7 +157,7 @@ Other more complicated discretizations can be used following the same procedure.
 
 \section{External (an)elastic Models}\label{sec:Anelastic-Models}
 
-To use your own external model, you can set in the \texttt{Par\_file}
+To use your own external model, you can set in the \texttt{DATA/Par\_file}
 the model parameter \texttt{MODEL = external}. Three-dimensional acoustic
 and/or (an)elastic (attenuation) models may then be superimposed onto
 the mesh based upon your subroutine in \texttt{model\_external\_values.f90}
@@ -188,13 +187,13 @@ Note that the resolution and maximum value of anelastic models are
 truncated. This speeds the construction of the standard linear solids
 during the meshing stage. To change the resolution, currently at one
 significant figure following the decimal, or the maximum value (9000),
-consult \texttt{shared/constants.h}.
+consult \texttt{setup/constants.h}.
 
 
 
 \section{Anisotropic Models}\label{sec:Anisotropic-Models}
 
-To use your anisotropic models, you can either set in the \texttt{Par\_file}
+To use your anisotropic models, you can either set in the \texttt{DATA/Par\_file}
 the model parameter \texttt{ANISOTROPY} to \texttt{.true.} or set
 the model parameter \texttt{MODEL = aniso}. Three-dimensional anisotropic
 models may be superimposed on the mesh based upon the subroutine in
@@ -234,15 +233,15 @@ Among other information, the header file indicates, for each dimension,
 the offset (\texttt{o1}, \texttt{o2} and \texttt{o3} fields),
 the spatial step size (\texttt{d1}, \texttt{d2} and \texttt{d3} fields)
 and the number of samples (\texttt{n1}, \texttt{n2} and \texttt{n3}) necessary to read
-the linked binary file (\texttt{in} field).
+the linked binary file (\texttt{in} field).\newline
 
 SEP model reading occurs during database generation. It it the user responsibility
 to ensure that proper interfaces between acoustic and elastic domains are set up
 during the meshing phase. For more information, refer to
-section~\ref{cha:Running-the-Mesher-Meshfem3D}.
+section~\ref{cha:Running-the-Mesher-Meshfem3D}.\newline
 
 In \texttt{DATA/Par\_file}, \texttt{\textbf{MODEL}} should be set to \texttt{\textbf{sep}},
-and \texttt{\textbf{SEP\_MODEL\_DIRECTORY}} should point to wherever your sep model files reside.
+and \texttt{\textbf{SEP\_MODEL\_DIRECTORY}} should point to wherever your sep model files reside.\newline
 
 Note that in order not to overload the parameter file, SEP header files
 should be named \texttt{vp.H}, \texttt{vs.H} and \texttt{rho.H}. The \texttt{in} field
@@ -250,7 +249,7 @@ in these binary files can be any path as long as it is relative to
 the previously set \texttt{SEP\_MODEL\_DIRECTORY}.
 We also assume that any dimensional value inside SEP header files is given in meters and
 that binary files are single precision floating point numbers stored in little endian format.
-There is currently only support for \texttt{vp}, \texttt{vs} and \texttt{rho} variables.
+There is currently only support for \texttt{vp}, \texttt{vs} and \texttt{rho} variables.\newline
 
 An example demonstrating the use SEP models is given in:
 \texttt{EXAMPLES/meshfem3D\_examples/sep\_bathymetry}.

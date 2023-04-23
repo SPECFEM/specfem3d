@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -40,57 +40,56 @@ module iso_parameter_mod
 
   implicit none
 
-
   private
   public :: selector_iso_family, translate_from_iso_2_lame, translate_from_lame_2_iso, translate_lame_gradient_2_iso, &
             translate_from_iso_2_lame_ac, translate_from_lame_2_iso_ac, translate_lame_gradient_2_iso_ac
 
-
 contains
-
 
 !!================================================================================================================================
 
   subroutine selector_iso_family(inversion_param)
+
     type(inver),                                                  intent(inout)      :: inversion_param
+    ! local
     integer :: ipar
     integer :: ipar_inv, ier
     logical, dimension(3) :: is_selected
     character(len=MAX_LEN_STRING), dimension(3) :: vti_family_name
 
-    vti_family_name(1)="rho"
-    vti_family_name(2)="vp"
-    vti_family_name(3)="vs"
+    vti_family_name(1) = "rho"
+    vti_family_name(2) = "vp"
+    vti_family_name(3) = "vs"
 
-    inversion_param%param_ref_name(1)="density--(rho)"
-    inversion_param%param_ref_name(2)="Pwave-velocity--(vp)"
-    inversion_param%param_ref_name(3)="Swave-velocity--(vs)"
+    inversion_param%param_ref_name(1) = "density--(rho)"
+    inversion_param%param_ref_name(2) = "Pwave-velocity--(vp)"
+    inversion_param%param_ref_name(3) = "Swave-velocity--(vs)"
 
-    is_selected(:)=.false.
-    ipar_inv=0
-    inversion_param%NfamilyPar=3
+    is_selected(:) = .false.
+    ipar_inv = 0
+    inversion_param%NfamilyPar = 3
 
     !! look for wanted parameters
-    do ipar=1, inversion_param%NfamilyPar !! loop on all parameters : rho, vp, vs
+    do ipar = 1, inversion_param%NfamilyPar !! loop on all parameters : rho, vp, vs
 
        select case(trim(inversion_param%param_inv_name(ipar)))
 
        case('rho')
           if (.not. is_selected(1)) then
-             ipar_inv=ipar_inv+1
-             is_selected(1)=.true.
+             ipar_inv = ipar_inv+1
+             is_selected(1) = .true.
           endif
 
        case('vp')
           if (.not. is_selected(2)) then
-             ipar_inv=ipar_inv+1
-             is_selected(2)=.true.
+             ipar_inv = ipar_inv+1
+             is_selected(2) = .true.
           endif
 
        case('vs')
           if (.not. is_selected(3)) then
-             ipar_inv=ipar_inv+1
-             is_selected(3)=.true.
+             ipar_inv = ipar_inv+1
+             is_selected(3) = .true.
           endif
 
        end select
@@ -98,15 +97,17 @@ contains
     enddo
 
     !! set wanted parameters in inversion structure
-    inversion_param%NinvPar=ipar_inv
+    inversion_param%NinvPar = ipar_inv
     allocate(inversion_param%Index_Invert(inversion_param%NinvPar),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 569')
-    ipar_inv=0
-    do ipar=1, inversion_param%NfamilyPar !! loop on all parameters : rho, vp, vs
+    inversion_param%Index_Invert(:) = 0
+
+    ipar_inv = 0
+    do ipar = 1, inversion_param%NfamilyPar !! loop on all parameters : rho, vp, vs
        if (is_selected(ipar)) then
-          ipar_inv=ipar_inv+1
-          inversion_param%Index_Invert(ipar_inv)=ipar
-          inversion_param%param_inv_name(ipar_inv)=vti_family_name(ipar)
+          ipar_inv = ipar_inv+1
+          inversion_param%Index_Invert(ipar_inv) = ipar
+          inversion_param%param_inv_name(ipar_inv) = vti_family_name(ipar)
        endif
     enddo
 
@@ -116,9 +117,9 @@ contains
 
   subroutine translate_lame_gradient_2_iso(inversion_param, ispec, gradient)
 
-    type(inver),                                                intent(in)        :: inversion_param
-    integer,                                                    intent(in)        :: ispec
-    real(kind=CUSTOM_REAL),   dimension(:,:,:,:), allocatable,  intent(inout)     :: gradient
+    type(inver),                                  intent(in)        :: inversion_param
+    integer,                                      intent(in)        :: ispec
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:), intent(inout)     :: gradient
 
     integer                                                                       :: ipar, index_in_iso
     !!
@@ -144,13 +145,13 @@ contains
 
   subroutine translate_from_iso_2_lame(inversion_param, ispec, model)
 
-    type(inver),                                                  intent(in)      :: inversion_param
-    integer,                                                      intent(in)      :: ispec
-    real(kind=CUSTOM_REAL),   dimension(:,:,:,:),   allocatable,  intent(in)      :: model
+    type(inver),                                    intent(in)      :: inversion_param
+    integer,                                        intent(in)      :: ispec
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:),   intent(in)      :: model
 
-    integer                                                                       :: ipar, index_in_iso
+    integer                                                         :: ipar, index_in_iso
     !! full inv parametrization
-    real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ, 3)                     :: model_iso
+    real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ, 3)       :: model_iso
 
     !! (modeling -> inv)
     call lame_2_iso(ispec, model_iso(:,:,:,1), model_iso(:,:,:,2), model_iso(:,:,:,3))
@@ -161,8 +162,7 @@ contains
        model_iso(:,:,:, index_in_iso) = model(:,:,:,ipar)
     enddo
 
-    call iso_2_lame(ispec, model_iso(:,:,:,1) ,model_iso(:,:,:,2), model_iso(:,:,:,3))
-
+    call iso_2_lame(ispec, model_iso(:,:,:,1), model_iso(:,:,:,2), model_iso(:,:,:,3))
 
   end subroutine translate_from_iso_2_lame
 
@@ -170,135 +170,133 @@ contains
 
   subroutine translate_from_lame_2_iso(inversion_param, ispec, model)
 
-      type(inver),                                                  intent(in)      :: inversion_param
-      integer,                                                      intent(in)      :: ispec
-      real(kind=CUSTOM_REAL),   dimension(:,:,:,:),   allocatable,  intent(inout)   :: model
+    type(inver),                                    intent(in)      :: inversion_param
+    integer,                                        intent(in)      :: ispec
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:),   intent(inout)   :: model
 
-      integer                                                                       :: ipar, index_in_iso
-      !! now in only one array
-      real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ, 3)                    :: model_iso
+    integer                                                         :: ipar, index_in_iso
+    !! now in only one array
+    real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ, 3)       :: model_iso
 
-      !! modeling -> inv
-      call lame_2_iso(ispec, model_iso(:,:,:,1), model_iso(:,:,:,2), model_iso(:,:,:,3))
+    !! modeling -> inv
+    call lame_2_iso(ispec, model_iso(:,:,:,1), model_iso(:,:,:,2), model_iso(:,:,:,3))
 
-      !! We need to get just the inveter parameter and put them in right place
-      do ipar = 1, inversion_param%NinvPar
-         index_in_iso = inversion_param%Index_Invert(ipar)
-         model(:,:,:,ipar) = model_iso(:,:,:, index_in_iso)
-      enddo
+    !! We need to get just the inverted parameters and put them in right place
+    do ipar = 1, inversion_param%NinvPar
+       index_in_iso = inversion_param%Index_Invert(ipar)
+       model(:,:,:,ipar) = model_iso(:,:,:, index_in_iso)
+    enddo
 
-    end subroutine translate_from_lame_2_iso
-
-!!================================================================================================================================
-
-    subroutine iso_2_lame(ispec, rho, vp, vs)
-
-      real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: rho, vp, vs
-      integer                                                       :: ispec
-
-      !! put new model directly in specfem database
-      rhostore(:,:,:,ispec) =  rho(:,:,:)
-      rho_vp(:,:,:,ispec) = rho(:,:,:)* vp(:,:,:)
-      rho_vs(:,:,:,ispec) = rho(:,:,:)* vs(:,:,:)
-      kappastore(:,:,:,ispec) =   rho(:,:,:)*( vp(:,:,:)**2  - FOUR_THIRDS* vs(:,:,:)**2 )
-      mustore(:,:,:,ispec) =      rho(:,:,:) * vs(:,:,:)**2
-
-
-    end subroutine iso_2_lame
+  end subroutine translate_from_lame_2_iso
 
 !!================================================================================================================================
 
-    subroutine lame_2_iso(ispec, rho, vp, vs)
+  subroutine iso_2_lame(ispec, rho, vp, vs)
 
-      real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: rho, vp, vs
-      integer                                                       :: ispec
+    real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: rho, vp, vs
+    integer                                                       :: ispec
 
-      rho(:,:,:) = rhostore(:,:,:,ispec)
-      vp(:,:,:)  = (kappastore(:,:,:,ispec) + (4./3.) * mustore(:,:,:,ispec) ) / rho_vp(:,:,:,ispec)
-      vs(:,:,:)  = mustore(:,:,:,ispec) /  rho_vs(:,:,:,ispec)
+    !! put new model directly in specfem database
+    rhostore(:,:,:,ispec)   = rho(:,:,:)
+    rho_vp(:,:,:,ispec)     = rho(:,:,:) * vp(:,:,:)
+    rho_vs(:,:,:,ispec)     = rho(:,:,:) * vs(:,:,:)
+    kappastore(:,:,:,ispec) = rho(:,:,:) * ( vp(:,:,:)**2  - FOUR_THIRDS * vs(:,:,:)**2 )
+    mustore(:,:,:,ispec)    = rho(:,:,:) * vs(:,:,:)**2
 
-    end subroutine lame_2_iso
+  end subroutine iso_2_lame
 
 !!================================================================================================================================
 
-    subroutine grad_lame_2_iso(ispec, rho, vp, vs, Grho, Gvp, Gvs)
+  subroutine lame_2_iso(ispec, rho, vp, vs)
 
-      real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: rho, vp, vs
-      real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: Grho, Gvp, Gvs
-      integer                                                       :: ispec
+    real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: rho, vp, vs
+    integer                                                       :: ispec
 
-      !! finalize specfem kernels
-      rho_kl(:,:,:,ispec) = - rho_kl(:,:,:, ispec)
-      mu_kl(:,:,:,ispec) = - 2. *  mu_kl(:,:,:,ispec)
-      kappa_kl(:,:,:,ispec) = - kappa_kl(:,:,:,ispec)
+    rho(:,:,:) = rhostore(:,:,:,ispec)
+    vp(:,:,:)  = (kappastore(:,:,:,ispec) + (4./3.) * mustore(:,:,:,ispec) ) / rho_vp(:,:,:,ispec)
+    vs(:,:,:)  = mustore(:,:,:,ispec) /  rho_vs(:,:,:,ispec)
 
-      Grho(:,:,:) =  rho_kl(:,:,:,ispec) + &
-                     vs(:,:,:)**2 * mu_kl(:,:,:,ispec) + &
-                    (vp(:,:,:)**2 - (4./3.)*vs(:,:,:)**2) * kappa_kl(:,:,:, ispec)
+  end subroutine lame_2_iso
 
-      Gvp(:,:,:) = 2. * rho(:,:,:) * vp(:,:,:) * kappa_kl(:,:,:, ispec)
+!!================================================================================================================================
 
-      Gvs(:,:,:) = (-8./3.) * rho(:,:,:) * vs(:,:,:) * kappa_kl(:,:,:,ispec) + &
-                   2.*rho(:,:,:)*vs(:,:,:)*mu_kl(:,:,:,ispec)
+  subroutine grad_lame_2_iso(ispec, rho, vp, vs, Grho, Gvp, Gvs)
 
+    real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: rho, vp, vs
+    real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: Grho, Gvp, Gvs
+    integer                                                       :: ispec
 
-    end subroutine grad_lame_2_iso
+    !! finalize specfem kernels
+    rho_kl(:,:,:,ispec)   = - rho_kl(:,:,:, ispec)
+    mu_kl(:,:,:,ispec)    = - 2. *  mu_kl(:,:,:,ispec)
+    kappa_kl(:,:,:,ispec) = - kappa_kl(:,:,:,ispec)
+
+    Grho(:,:,:) =  rho_kl(:,:,:,ispec) + &
+                   vs(:,:,:)**2 * mu_kl(:,:,:,ispec) + &
+                  (vp(:,:,:)**2 - (4./3.) * vs(:,:,:)**2) * kappa_kl(:,:,:, ispec)
+
+    Gvp(:,:,:)  = 2. * rho(:,:,:) * vp(:,:,:) * kappa_kl(:,:,:, ispec)
+
+    Gvs(:,:,:)  = (-8./3.) * rho(:,:,:) * vs(:,:,:) * kappa_kl(:,:,:,ispec) + &
+                  2. * rho(:,:,:) * vs(:,:,:) * mu_kl(:,:,:,ispec)
+
+  end subroutine grad_lame_2_iso
 !!================================================================================================================================
 
 !!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !! ===================================== ACOUSTIC CASE ========================================
 
-    subroutine translate_lame_gradient_2_iso_ac(inversion_param, ispec, gradient)
+  subroutine translate_lame_gradient_2_iso_ac(inversion_param, ispec, gradient)
 
-      type(inver),                                                  intent(in)      :: inversion_param
-      integer,                                                      intent(in)      :: ispec
-      real(kind=CUSTOM_REAL),   dimension(:,:,:,:),   allocatable,  intent(inout)   :: gradient
+    type(inver),                                    intent(in)      :: inversion_param
+    integer,                                        intent(in)      :: ispec
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:),   intent(inout)   :: gradient
 
-      integer                                                                       :: ipar, index_in_iso
-      !! now in only one array
-      real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ, 3)                     :: model_iso, gradi_iso
+    integer                                                         :: ipar, index_in_iso
+    !! now in only one array
+    real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ, 3)       :: model_iso, gradi_iso
 
-      !! first we translate from cijkl -> vti
-      call lame_2_iso_ac(ispec, model_iso(:,:,:,1), model_iso(:,:,:,2))
+    !! first we translate from cijkl -> vti
+    call lame_2_iso_ac(ispec, model_iso(:,:,:,1), model_iso(:,:,:,2))
 
-      !! gradient in Thomsen
-      gradi_iso(:,:,:,:) = 0._CUSTOM_REAL
-      call grad_lame_2_iso_ac(ispec, model_iso(:,:,:,1), model_iso(:,:,:,2), &
-                              gradi_iso(:,:,:,1), gradi_iso(:,:,:,2))
+    !! gradient in Thomsen
+    gradi_iso(:,:,:,:) = 0._CUSTOM_REAL
+    ! 1 == Grho, 2 == Gvp
+    call grad_lame_2_iso_ac(ispec, model_iso(:,:,:,1), model_iso(:,:,:,2), &
+                            gradi_iso(:,:,:,1), gradi_iso(:,:,:,2))
 
-      !! We need to get just the inveter parameter and put them in right place
-      gradient(:,:,:, :) = 0._CUSTOM_REAL
-      do ipar = 1, 2
-         index_in_iso = inversion_param%Index_Invert(ipar)
-         gradient(:,:,:, ipar) = gradi_iso(:,:,:, index_in_iso)
-      enddo
+    !! We need to get just the inverted parameters and put them in right place
+    gradient(:,:,:, :) = 0._CUSTOM_REAL
+    do ipar = 1, inversion_param%NinvPar
+       index_in_iso = inversion_param%Index_Invert(ipar)
+       gradient(:,:,:, ipar) = gradi_iso(:,:,:, index_in_iso)
+    enddo
 
-    end subroutine translate_lame_gradient_2_iso_ac
+  end subroutine translate_lame_gradient_2_iso_ac
 
 !!================================================================================================================================
 
   subroutine translate_from_iso_2_lame_ac(inversion_param, ispec, model)
 
-    type(inver),                                                  intent(in)      :: inversion_param
-    integer,                                                      intent(in)      :: ispec
-    real(kind=CUSTOM_REAL),   dimension(:,:,:,:),   allocatable,  intent(in)      :: model
+    type(inver),                                    intent(in)      :: inversion_param
+    integer,                                        intent(in)      :: ispec
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:),   intent(in)      :: model
 
-    integer                                                                       :: ipar, index_in_iso
+    integer                                                         :: ipar, index_in_iso
     !! full inv parametrization
-    real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ, 3)                     :: model_iso
+    real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ, 3)       :: model_iso
 
-    model_iso(:,:,:,:)=0._CUSTOM_REAL
+    model_iso(:,:,:,:) = 0._CUSTOM_REAL
     !! (modeling -> inv)
     call lame_2_iso_ac(ispec, model_iso(:,:,:,1), model_iso(:,:,:,2))
 
-    !! We need to get just the inveter parameter and put them in right place
+    !! We need to get just the inverted parameters and put them in right place
     do ipar = 1, inversion_param%NinvPar
        index_in_iso = inversion_param%Index_Invert(ipar)
        model_iso(:,:,:, index_in_iso) = model(:,:,:,ipar)
     enddo
 
-    call  iso_2_lame_ac(ispec, model_iso(:,:,:,1) ,model_iso(:,:,:,2))
-
+    call iso_2_lame_ac(ispec, model_iso(:,:,:,1) ,model_iso(:,:,:,2))
 
   end subroutine translate_from_iso_2_lame_ac
 
@@ -306,69 +304,71 @@ contains
 
   subroutine translate_from_lame_2_iso_ac(inversion_param, ispec, model)
 
-      type(inver),                                                  intent(in)      :: inversion_param
-      integer,                                                      intent(in)      :: ispec
-      real(kind=CUSTOM_REAL),   dimension(:,:,:,:),   allocatable,  intent(inout)   :: model
+    type(inver),                                    intent(in)      :: inversion_param
+    integer,                                        intent(in)      :: ispec
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:),   intent(inout)   :: model
 
-      integer                                                                       :: ipar, index_in_iso
-      !! now in only one array
-      real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ, 3)                     :: model_iso
+    integer                                                         :: ipar, index_in_iso
+    !! now in only one array
+    real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ, 3)       :: model_iso
 
-      model_iso(:,:,:,:) = 0._CUSTOM_REAL
-      !! modeling -> inv
-      call lame_2_iso_ac(ispec, model_iso(:,:,:,1), model_iso(:,:,:,2))
+    model_iso(:,:,:,:) = 0._CUSTOM_REAL
+    !! modeling -> inv
+    call lame_2_iso_ac(ispec, model_iso(:,:,:,1), model_iso(:,:,:,2))
 
-      !! We need to get just the inveter parameter and put them in right place
-      do ipar = 1, inversion_param%NinvPar
-         index_in_iso = inversion_param%Index_Invert(ipar)
-         model(:,:,:, ipar) = model_iso(:,:,:, index_in_iso)
-      enddo
+    !! We need to get just the inverted parameters and put them in right place
+    do ipar = 1, inversion_param%NinvPar
+       index_in_iso = inversion_param%Index_Invert(ipar)
+       model(:,:,:, ipar) = model_iso(:,:,:, index_in_iso)
+    enddo
 
-    end subroutine translate_from_lame_2_iso_ac
+  end subroutine translate_from_lame_2_iso_ac
 !!================================================================================================================================
 
-    subroutine iso_2_lame_ac(ispec, rho, vp)
+  subroutine iso_2_lame_ac(ispec, rho, vp)
 
-      real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: rho, vp
-      integer                                                       :: ispec
+    real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: rho, vp
+    integer                                                       :: ispec
 
-      rhostore(:,:,:,ispec)  =  rho(:,:,:)
-      kappastore(:,:,:,ispec) =   rho(:,:,:)* vp(:,:,:)**2
-    end subroutine iso_2_lame_ac
+    rhostore(:,:,:,ispec)   = rho(:,:,:)
+    kappastore(:,:,:,ispec) = rho(:,:,:) * vp(:,:,:)**2
 
-!!================================================================================================================================
-
-    subroutine lame_2_iso_ac(ispec, rho, vp)
-
-      real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: rho, vp
-      integer                                                       :: ispec
-
-      rho(:,:,:) = rhostore(:,:,:,ispec)
-      vp(:,:,:)  = sqrt(kappastore(:,:,:,ispec)  / rhostore(:,:,:,ispec))
-    end subroutine lame_2_iso_ac
+  end subroutine iso_2_lame_ac
 
 !!================================================================================================================================
 
-    subroutine grad_lame_2_iso_ac(ispec, rho, vp, Grho, Gvp)
+  subroutine lame_2_iso_ac(ispec, rho, vp)
 
-      real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: rho, vp
-      real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: Grho, Gvp
-      integer                                                       :: ispec
+    real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: rho, vp
+    integer                                                       :: ispec
 
-      !! put specfem kernel in **not** log (absolute kernels, rather than relative ones)
-      !
-      ! note: rho_ac_kl(:,:,:,ispec) contributions are still positive and without material factors up to this point.
-      !       only in save_adjoint_kernels.f90 they would be added.
-      !       thus, no need to divide by rhostore(:,:,:,ispec) or kappastore(:,:,:,ispec), but need to add minus sign
+    rho(:,:,:) = rhostore(:,:,:,ispec)
+    vp(:,:,:)  = sqrt(kappastore(:,:,:,ispec) / rhostore(:,:,:,ispec))
 
-      !! finalize specfem kernel need to multiply by -1
-      rho_ac_kl(:,:,:,ispec) = - rho_ac_kl(:,:,:,ispec)
-      kappa_ac_kl(:,:,:,ispec) = - kappa_ac_kl(:,:,:,ispec)
+  end subroutine lame_2_iso_ac
 
-      ! gradients
-      Grho(:,:,:) = rho_ac_kl(:,:,:,ispec) + kappa_ac_kl(:,:,:,ispec) * vp(:,:,:)**2
-      Gvp(:,:,:) = 2._CUSTOM_REAL * kappa_ac_kl(:,:,:,ispec) * rho(:,:,:) * vp(:,:,:)
+!!================================================================================================================================
 
-    end subroutine grad_lame_2_iso_ac
+  subroutine grad_lame_2_iso_ac(ispec, rho, vp, Grho, Gvp)
 
-  end module iso_parameter_mod
+    real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: rho, vp
+    real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ)          :: Grho, Gvp
+    integer                                                       :: ispec
+
+    !! put specfem kernel in **not** log (absolute kernels, rather than relative ones)
+    !
+    ! note: rho_ac_kl(:,:,:,ispec) contributions are still positive and without material factors up to this point.
+    !       only in save_adjoint_kernels.f90 they would be added.
+    !       thus, no need to divide by rhostore(:,:,:,ispec) or kappastore(:,:,:,ispec), but need to add minus sign
+
+    !! finalize specfem kernel need to multiply by -1
+    rho_ac_kl(:,:,:,ispec)   = - rho_ac_kl(:,:,:,ispec)
+    kappa_ac_kl(:,:,:,ispec) = - kappa_ac_kl(:,:,:,ispec)
+
+    ! gradients
+    Grho(:,:,:) = rho_ac_kl(:,:,:,ispec) + kappa_ac_kl(:,:,:,ispec) * vp(:,:,:)**2
+    Gvp(:,:,:)  = 2._CUSTOM_REAL * kappa_ac_kl(:,:,:,ispec) * rho(:,:,:) * vp(:,:,:)
+
+  end subroutine grad_lame_2_iso_ac
+
+end module iso_parameter_mod

@@ -27,7 +27,7 @@
 
 ! for external mesh
 
-  subroutine save_arrays_solver_ext_mesh_h5()
+  subroutine save_arrays_solver_mesh_h5()
 
   use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE,IMAIN,USE_MESH_COLORING_GPU,CUSTOM_REAL,&
                        MAX_STRING_LEN
@@ -1375,7 +1375,7 @@
   call h5_destructor(h5)
   if (myrank == 0) print *, "all h5 object closed"
 
-  end subroutine save_arrays_solver_ext_mesh_h5
+  end subroutine save_arrays_solver_mesh_h5
 
 
   subroutine get_connectivity_for_movie(nspec,ibool,elm_conn,o)

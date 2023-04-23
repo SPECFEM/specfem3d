@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  G l o b e  V e r s i o n  4 . 0
-!          --------------------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !          Main authors: Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory, California Institute of Technology, USA
@@ -148,9 +148,8 @@
 !  - Y axis is East
 !  - Z axis is up
 !
-! To report bugs or suggest improvements to the code, please send an email
-! to Jeroen Tromp < jtromp AT caltech.edu> and/or use our online
-! bug tracking system at http://www.geodynamics.org/roundup .
+! To report bugs or suggest improvements to the code, please use the
+! Issues tracking system at https://github.com/SPECFEM/specfem3d/ .
 !
 
 ! aniso_mantle_model_variables

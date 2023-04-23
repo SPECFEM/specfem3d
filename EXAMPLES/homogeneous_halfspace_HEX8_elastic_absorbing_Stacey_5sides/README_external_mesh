@@ -1,0 +1,122 @@
+----------------------------------------------------------------------
+README - homogeneous halfspace using external mesher
+----------------------------------------------------------------------
+
+This example creates a homogeneous halfspace, i.e. a single volume block with a
+constant elastic material property, using CUBIT, and runs a forward simulation.
+
+----------------------------------------------------------------------
+note: this example needs the user to have run a forward simulation, using the internal mesher, based on the
+      detailed step-by-step tutorial given in the file SPECFEM3D/EXAMPLES/homogeneous_halfspace/README
+
+----------------------------------------------------------------------
+Option A: short version (use pre-saved mesh files):
+
+1. check that all software is available (or that modules are loaded):
+   openmpi: > which mpirun
+
+2. build the decomposer:
+   > make xdecompose_mesh
+
+3. from the directory SPECFEM3D/EXAMPLES/homogeneous_halfspace/
+   > cd EXAMPLES/homogeneous_halfspace
+   > ./run_this_example.sh >& run_this_example.sh.log
+
+   This will run the decomposer, database generation, and the solver in the local directory.
+   The simulation takes about 15 minutes.
+
+4. see step 7 in SPECFEM3D/EXAMPLES/homogeneous_halfspace/README to compare seismograms in REF_SEIS/ with those in OUTPUT_FILES/
+
+----------------------------------------------------------------------
+Option B: step-by-step tutorial (use pre-saved mesh files):
+(for generating the mesh files, see extra steps at the bottom)
+
+1. check that all software is available (or that modules are loaded):
+	openmpi: > which mpirun
+        python:  > which python
+     optional:
+        gnuplot: > which gnuplot
+        xmgrace: > which xmgrace
+
+2. configure package (if needed):
+
+   - determine the path for your compiled version of SCOTCH
+
+   - note: If SCOTCH is installed separately, then the same compiler
+     used for SCOTCH must be used for SPECFEM3D (ifort, gfortran, pgf90)
+
+   - if needed, configuration instructions can be found at SPECFEM3D/EXAMPLES/homogeneous_halfspace/README
+
+3. decompose mesh files:
+
+   - compile decomposer in directory SPECFEM3D/:
+     > make xdecompose_mesh
+
+   - run decomposer:
+     > sbatch go_decomposer_slurm.bash
+     
+     note: this script will need to be tailored to your cluster, e.g.,
+     > bsub < go_decomposer_lsf.bash
+     > qsub go_decomposer_pbs.bash
+
+     this creates mesh partitions "proc000***_Database" in directory OUTPUT_FILES/DATABASES_MPI/
+     the output file OUTPUT_FILES/*.o contains information on the partitioning
+
+     note 1: the program xdecompose_mesh is a serial program (runs on 1 core)
+     note 2: for small jobs (like this one), you can simply launch the job on
+             the local node from directory SPECFEM3D:
+             > ./bin/xdecompose_mesh 4 EXAMPLES/homogeneous_halfspace/MESH-default/ OUTPUT_FILES/DATABASES_MPI/
+
+4. the next steps are the same as steps 5, 6, and 7, in SPECFEM3D/EXAMPLES/homogeneous_halfspace/README
+
+===========================================================
+
+Option B extended: include meshing steps
+
++ check paths and set paths for meshing with GEOCUBIT
+
+    - From the SPECFEM3D 'base' directory SPECFEM3D/
+      > cd CUBIT_GEOCUBIT
+      > source setpaths.sh
+      > cd ../EXAMPLES/homogeneous_halfspace/DATA/
+
++ create mesh:
+
+   - check path, then make mesh
+     > which GEOCUBIT.py
+     > make_mesh.sh
+   
+     if everything goes fine, this creates the ten mesh files in subdirectory MESH/
+     to be safe, check the number of lines in the files
+     > wc *
+
+   1297    6481   27390 absorbing_surface_file_bottom
+    577    2881   14458 absorbing_surface_file_xmin
+    577    2881   14532 absorbing_surface_file_ymax
+    577    2881   14606 absorbing_surface_file_ymin
+      6      65     285 blocks.dat
+   1297    6481   33707 free_or_absorbing_surface_file_zmax
+  20736   41472  456192 materials_file
+  20737  186625 1045034 mesh_file
+  23274   93093 1722213 nodes_coords_file
+     35     146    1269 nummaterial_velocity_file
+   3526   12330 1622480 TOTALMESH_MERGED.e
+     16      49     862 TOTALMESH_MERGED.xml
+  72655  355385 4953028 total
+
+     the mesh can be viewed using paraview:
+
+     > paraview &
+     then open TOTALMESH_MERGED.e
+     (click "Apply", then select "Surface With Edges" in the toolbar)
+
+     there will also be several files generated locally
+     the mesh can also be viewed using trelis:
+
+     > cd ..
+     > trelis &
+     then open tmp_nomerging.cub
+     (if you don't see anything, you may need to zoom out)
+     optional (if >1 slice): type "draw block all" in the trelis command line window
+
+===========================================================

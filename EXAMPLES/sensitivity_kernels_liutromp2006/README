@@ -1,0 +1,136 @@
+SPECFEM3D input data files to reproduce the example presented in figure 2 of the paper -
+
+Qinya Liu, Jeroen Tromp; Finite-Frequency Kernels Based on Adjoint Methods
+Bulletin of the Seismological Society of America 2006;; 96 (6): 2383-2397. doi: https://doi.org/10.1785/0120060041
+
+Note: This example is designed to generate results close to the aforementioned paper, but the steps here
+      might not be exactly the same as that were followed originally.
+
+
+1. Setup -
+
+1.1. Run the default homogeneous halfspace example at EXAMPLES/homogeneous_halfspace 
+
+1.2. Set 'USER_T0' = 10.0d0 in ./setup/constants.h and rebuild the solver.
+     > make xspecfem3D
+
+     Note: Setting a large enough USER_T0 value before a simulation is a safety measure to have a consistent simulation start time,
+           especially in simulations where there are multiple events with different half durations. Different simulation start times
+           could cause a problem when making adjoint sources and aligning time steps.
+
+1.3. Compile the utility xcreate_adjsrc_traveltime.
+     > cd ./utils/adjoint_sources/traveltime
+     > make
+     > cd ../../..
+     > cp utils/adjoint_sources/traveltime/xcreate_adjsrc_traveltime bin/.
+
+1.4. Compile the utility xcombine_vol_data_vtk.
+     > make xcombine_vol_data_vtk
+
+1.5. Use the provided DATA folder as specfem3d's input DATA folder.
+     Note: Remove (and backup if needed) any existing DATA folder before running the following command. 
+     > cp -r EXAMPLES/sensitivity_kernels_liutromp2006/DATA .
+
+1.6. Copy the file 'source_time_function.txt' provided with this example to the specfem working directory.
+     > cp -r EXAMPLES/sensitivity_kernels_liutromp2006/source_time_function.txt .
+
+
+
+2. To run the forward simulation -
+
+2.1. The example consists of two different simulations and hence the two different 'FORCESOLUTION_*' files in the data folder.
+
+     a. FORCESOLUTION_SH   - will produce the seismogram shown in the top figure of figure 3(a) in the reference paper.
+     b. FORCESOLUTION_P_SV - will produce the seismogram shown in the top figure of figure 3(b) in the reference paper.
+
+     Copy the 'FORCESOLUTION_*' file you wish to run and name it as 'FORCESOLUTION'.
+
+2.2. Run the simulation with following parameters in the Par_file -
+     SIMULATION_TYPE = 1
+     SAVE_FORWARD = .true.
+     USE_FORCE_POINT_SOURCE = .true.
+     USE_EXTERNAL_SOURCE_FILE = .true.
+
+     Note: Remove (and backup if needed) any existing OUTPUT_FILES folder before running the example.
+     Note: Modify job submission scripts to request the number of cores given by Par_file parameter 'NPROC'.
+
+2.3. Compare the generated seismograms with the ones provided in the REF_SEIS folder
+     > xmgrace OUTPUT_FILES/*.semd
+     > xmgrace EXAMPLES/sensitivity_kernels_liutromp2006/REF_SEIS/****_simulation/*.semd
+     where **** will depend on the simulation type
+
+
+
+
+3. To run the adjoint simulation and generate the kernels -
+
+3.1. Create adjoint sources for the kernel of interest -
+
+     a. P kernel -      
+        > ./bin/xcreate_adjsrc_traveltime 10 18 1 OUTPUT_FILES/XX.R00-01.HX*.semd
+   
+     b. S kernel -
+        > ./bin/xcreate_adjsrc_traveltime 24 34 2 OUTPUT_FILES/XX.R00-01.HX*.semd
+
+     c. SS kernel -
+        > ./bin/xcreate_adjsrc_traveltime 34 44 2 OUTPUT_FILES/XX.R00-01.HX*.semd
+
+     d. PS + SP kernel -
+        > ./bin/xcreate_adjsrc_traveltime 24 30 1 OUTPUT_FILES/XX.R00-01.HX*.semd
+
+3.2. Move adjoint sources to the required folder -
+     > mkdir SEM
+     > mv OUTPUT_FILES/*.adj SEM/.  
+
+3.3. Compare the created adjoint sources with the ones provided in the REF_ADJ_SRC folder
+     > xmgrace SEM/*.adj
+     > xmgrace EXAMPLES/sensitivity_kernels_liutromp2006/REF_ADJ_SRC/****/*.adj
+     where **** will depend on the kernel type
+
+3.4. Run the simulation with following parameters in the Par_file -
+     SIMULATION_TYPE = 3
+     SAVE_FORWARD = .false.
+
+
+
+
+4. To view the kernels -
+
+4.1. Combine kernel slices into a vtk file -
+     ./bin/xcombine_vol_data_vtk 0 39 ****_kernel DATABASES/ OUTPUT_FILES/ 0
+     where **** can be replaced with alpha, beta, kappa, mu, rho, and rhop
+     For a higher resolution rendering of the kernels, replace '0' at the end with '1'
+
+4.2. View the kernel of interest -
+     The kernels are stored in the OUTPUT_FILES folder as '****_kernel.vtk' and can be viewed using paraview.
+     Change colormap to 'red to blue rainbow' and follow the steps below -
+
+     a. P kernel
+        Slice the 3D block with planes having normals as the x-axis, y-axis and z-axis, and origins at (0,0,-40000) each
+        Colormap scaling - 
+        K_alpha -  -0.7e-12 to 0.7e-12
+        K_beta  -  -0.9e-13 to 0.9e-13 (Figure not in the paper)   
+   
+     b. S kernel
+        Slice the 3D block with planes having normals as the x-axis, y-axis and z-axis, and origins at (0,0,-40000) each 
+        Colormap scaling -
+        K_alpha -  -0.1e-13 to 0.1e-13 (Figure not in the paper)
+        K_beta  -  -1.5e-12 to 1.5e-12
+
+     c. SS kernel
+        Slice the 3D block with planes having normals as the x-axis, y-axis and z-axis, and origins at (0,0,0) each 
+        Colormap scaling -
+        K_alpha -  -0.1e-13 to 0.1e-13 (Figure not in the paper) 
+        K_beta  -  -1.5e-12 to 1.5e-12
+
+     d. PS + SP kernel
+        Slice the 3D block with planes having normals as the y-axis and z-axis, and origins at (0,0,0) each
+        Colormap scaling -
+        K_alpha -  -0.3e-12 to 0.3e-12
+        K_beta  -  -0.7e-12 to 0.7e-12 
+        K_kappa -  -0.1e-12 to 0.1e-12
+        K_mu    -  -0.5e-12 to 0.5e-12
+        K_rho   -  -0.7e-12 to 0.7e-12
+        K_rhop  -  -0.7e-12 to 0.7e-12
+
+4.3. Compare the kernels with the ones provided in the REF_KERNELS folder

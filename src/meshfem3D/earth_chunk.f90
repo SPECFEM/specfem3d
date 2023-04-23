@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -73,7 +73,7 @@
   integer :: ilayer_current, ilayer
   integer :: nlat_dsm, nlon_dsm, ier
 
-  integer iaddx(NGNOD), iaddy(NGNOD), iaddz(NGNOD)
+  integer :: iaddx(NGNOD), iaddy(NGNOD), iaddz(NGNOD)
 
   integer, allocatable :: inum_loc(:,:,:,:), iglob(:), loc(:), current_layer(:)
 
@@ -789,33 +789,33 @@
 !--- Other
 !
 
-  integer NGNOD
+  integer :: NGNOD
 
-  integer  nel_lat, nel_lon, nel_depth, NX, NY, NZ, Ndepth, nglob, kglob, ilocnum, ieoff, npointot
-  integer ilat, ilon, ispec, iz, i, j, k, nspec, ia, izshift, index_mat
-  integer ispec2Dxmin, ispec2Dxmax, ispec2Dymin, ispec2Dymax, ispec2Dzmin, ispec2Dzmax
-  integer ilayer_current, ilayer
-  integer nlat_dsm, nlon_dsm
+  integer :: nel_lat, nel_lon, nel_depth, NX, NY, NZ, Ndepth, nglob, kglob, ilocnum, ieoff, npointot
+  integer :: ilat, ilon, ispec, iz, i, j, k, nspec, ia, izshift, index_mat
+  integer :: ispec2Dxmin, ispec2Dxmax, ispec2Dymin, ispec2Dymax, ispec2Dzmin, ispec2Dzmax
+  integer :: ilayer_current, ilayer
+  integer :: nlat_dsm, nlon_dsm
 
-  integer iaddx(NGNOD), iaddy(NGNOD), iaddz(NGNOD)
+  integer :: iaddx(NGNOD), iaddy(NGNOD), iaddz(NGNOD)
 
   integer, allocatable :: inum_loc(:,:,:,:), iglob(:), loc(:), current_layer(:)
 
-  double precision ratio_eta, ratio_xi
-  double precision ANGULAR_WIDTH_ETA_RAD, ANGULAR_WIDTH_XI_RAD, Z_DEPTH_BLOCK, UTM_X_MIN, UTM_X_MAX
-  double precision lat_center_chunk, lon_center_chunk, chunk_depth, chunk_azi
-  double precision deg2rad
-  double precision x, y, z, px, py, pz, z_bottom
+  double precision :: ratio_eta, ratio_xi
+  double precision :: ANGULAR_WIDTH_ETA_RAD, ANGULAR_WIDTH_XI_RAD, Z_DEPTH_BLOCK, UTM_X_MIN, UTM_X_MAX
+  double precision :: lat_center_chunk, lon_center_chunk, chunk_depth, chunk_azi
+  double precision :: deg2rad
+  double precision :: x, y, z, px, py, pz, z_bottom
 
-  double precision rotation_matrix(3,3)
-  double precision zlayer(nlayer), vpv(nlayer,4), vsv(nlayer,4), density(nlayer,4)
-  double precision xelm(NGNOD), yelm(NGNOD), zelm(NGNOD)
-  double precision xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ)
+  double precision :: rotation_matrix(3,3)
+  double precision :: zlayer(nlayer), vpv(nlayer,4), vsv(nlayer,4), density(nlayer,4)
+  double precision :: xelm(NGNOD), yelm(NGNOD), zelm(NGNOD)
+  double precision :: xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ)
 
   !! 3D shape functions and their derivatives
-  double precision shape3D(NGNOD,NGLLX,NGLLY,NGLLZ), dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision :: shape3D(NGNOD,NGLLX,NGLLY,NGLLZ), dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
   !! GLL points and weights of integration
-  double precision xigll(NGLLX), yigll(NGLLY), zigll(NGLLZ), wxgll(NGLLX), wygll(NGLLY), wzgll(NGLLZ)
+  double precision :: xigll(NGLLX), yigll(NGLLY), zigll(NGLLZ), wxgll(NGLLX), wygll(NGLLY), wzgll(NGLLZ)
 
   double precision, allocatable :: xp(:), yp(:), zp(:), xgrid(:,:,:,:), ygrid(:,:,:,:), zgrid(:,:,:,:)
   double precision, allocatable :: lon_zmin(:,:), lat_zmin(:,:)
@@ -825,13 +825,13 @@
   integer ::   updown(NGLLZ)
   double precision , dimension(NGLLX,NGLLY,NGLLZ) ::  longitud, latitud, radius
 
-  logical test
+  logical :: test
 
   logical, allocatable :: ifseg(:)
   logical, dimension(:,:), allocatable :: iboun ! boundary locator
 
-  character(len=100) line
-  character(len=250) model1D_file
+  character(len=100) :: line
+  character(len=250) :: model1D_file
 
   character(len=10), parameter :: MESH = "./MESH/"
 

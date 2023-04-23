@@ -1,13 +1,13 @@
 #=====================================================================
 #
-#               S p e c f e m 3 D  V e r s i o n  3 . 0
-#               ---------------------------------------
+#                         S p e c f e m 3 D
+#                         -----------------
 #
 #     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-#                        Princeton University, USA
-#                and CNRS / University of Marseille, France
+#                              CNRS, France
+#                       and Princeton University, USA
 #                 (there are currently many more authors!)
-# (c) Princeton University and CNRS / University of Marseille, July 2012
+#                           (c) October 2017
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -78,6 +78,7 @@ meshfem3D_SHARED_OBJECTS = \
 	$O/create_name_database.shared.o \
 	$O/shared_par.shared_module.o \
 	$O/adios_manager.shared_adios_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/get_global.shared.o \
 	$O/get_shape3D.shared.o \
@@ -173,6 +174,9 @@ $E/xmeshfem3D: $(XMESHFEM_OBJECTS)
 ###
 ### Module dependencies
 ###
+
+# Version file
+$O/meshfem3D.mesh.o: ${SETUP}/version.fh
 
 $O/meshfem3D.mesh.o: $O/chunk_earth_mesh_mod.mesh.o
 $O/determine_cavity.mesh.o: $O/create_meshfem_mesh.mesh.o

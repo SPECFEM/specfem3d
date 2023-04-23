@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
-!          --------------------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
@@ -38,72 +38,72 @@
   include "precision.h"
 #endif
 
-  integer NPROC,UTM_PROJECTION_ZONE,NX_TOPO,NY_TOPO
+  integer :: NPROC,UTM_PROJECTION_ZONE,NX_TOPO,NY_TOPO
 
-  logical TOPOGRAPHY,SUPPRESS_UTM_PROJECTION
+  logical :: TOPOGRAPHY,SUPPRESS_UTM_PROJECTION
 
-  integer nrec,myrank
+  integer :: nrec,myrank
 
-  integer NSPEC_AB,NGLOB_AB
+  integer :: NSPEC_AB,NGLOB_AB
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
-  double precision ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
+  double precision :: ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
 
 ! arrays containing coordinates of the points
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
 
 ! use integer array to store topography values
-  integer itopo_bathy_basin(NX_TOPO,NY_TOPO)
-  double precision long_corner,lat_corner,ratio_xi,ratio_eta
+  integer :: itopo_bathy_basin(NX_TOPO,NY_TOPO)
+  double precision :: long_corner,lat_corner,ratio_xi,ratio_eta
 
   integer, allocatable, dimension(:) :: ix_initial_guess,iy_initial_guess,iz_initial_guess
 
-  integer iprocloop
-  integer nrec_dummy
-  integer ios
+  integer :: iprocloop
+  integer :: nrec_dummy
+  integer :: ios
 
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
   double precision, allocatable, dimension(:) :: horiz_dist,elevation
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
   double precision, allocatable, dimension(:,:) :: x_found_all,y_found_all,z_found_all
 
-  integer irec
-  integer i,j,k,ispec,iglob
+  integer :: irec
+  integer :: i,j,k,ispec,iglob
 #ifdef USE_MPI
-  integer ier
+  integer :: ier
 #endif
 
-  integer icornerlong,icornerlat
-  double precision utm_x_source,utm_y_source
-  double precision dist
-  double precision xi,eta,gamma,dx,dy,dz,dxi,deta,dgamma
+  integer :: icornerlong,icornerlat
+  double precision :: utm_x_source,utm_y_source
+  double precision :: dist
+  double precision :: xi,eta,gamma,dx,dy,dz,dxi,deta,dgamma
 
 ! Gauss-Lobatto-Legendre points of integration
-  double precision xigll(NGLLX)
-  double precision yigll(NGLLY)
-  double precision zigll(NGLLZ)
+  double precision :: xigll(NGLLX)
+  double precision :: yigll(NGLLY)
+  double precision :: zigll(NGLLZ)
 
 ! input receiver file name
-  character(len=*) rec_filename
+  character(len=*) :: rec_filename
 
 ! topology of the control points of the surface element
-  integer iax,iay,iaz
-  integer iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
+  integer :: iax,iay,iaz
+  integer :: iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
 
 ! coordinates of the control points of the surface element
-  double precision xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
+  double precision :: xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
 
-  integer iter_loop,ispec_iterate
+  integer :: iter_loop,ispec_iterate
 
-  integer ia
-  double precision x,y,z
-  double precision xix,xiy,xiz
-  double precision etax,etay,etaz
-  double precision gammax,gammay,gammaz
+  integer :: ia
+  double precision :: x,y,z
+  double precision :: xix,xiy,xiz
+  double precision :: etax,etay,etaz
+  double precision :: gammax,gammay,gammaz
 
 ! timer MPI
-  double precision time_start,tCPU
+  double precision :: time_start,tCPU
 
 ! use dynamic allocation
   double precision, dimension(:), allocatable :: final_distance
@@ -124,7 +124,7 @@
   double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur,stutm_x,stutm_y
   double precision, allocatable, dimension(:,:) :: xi_receiver_all,eta_receiver_all,gamma_receiver_all
 
-  character(len=150) OUTPUT_FILES
+  character(len=150) :: OUTPUT_FILES
 
 ! **************
 

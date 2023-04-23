@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -72,6 +72,9 @@
   ! data format
   logical,dimension(:),allocatable :: tomo_has_q_values
 
+  ! domain
+  integer,dimension(:),allocatable :: tomo_domain_id
+
   end module model_tomography_par
 
 !
@@ -131,7 +134,9 @@
 
   use constants, only: MAX_STRING_LEN,IIN,IMAIN
 
-  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh
+  use generate_databases_par, only: nmat_ext_mesh, &
+                                    mat_prop,undef_mat_prop,nundefMat_ext_mesh, &
+                                    TOMOGRAPHY_PATH
 
   use model_tomography_par
 
@@ -139,27 +144,37 @@
 
   ! local parameters
   double precision :: dummy,temp_x,temp_y,temp_z
-  integer :: ier,iundef,nrecord_max,ifiles_tomo,nrec,nlines
+  integer :: ier,nrecord_max,ifiles_tomo,nrec,nlines
   character(len=MAX_STRING_LEN*2) :: tomo_filename
   character(len=MAX_STRING_LEN) :: filename
   character(len=MAX_STRING_LEN) :: string_read
-  integer :: nmaterials
+  character(len=5) :: filenumber
+  character(len=MAX_STRING_LEN) :: str_domain
+  integer :: nmaterials,imat,idomain_id
   ! data format
   logical :: has_q_values
   integer :: ntokens
   logical,dimension(:),allocatable :: materials_with_q
+  integer,dimension(:),allocatable :: materials_domain_id
 
   ! sets number of materials to loop over
   nmaterials = nundefMat_ext_mesh
 
+  ! checks if we over-impose a tomography model by Par_file setting: MODEL = tomo
+  if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
+    ! number of materials
+    nmaterials = nmat_ext_mesh
+  endif
+
+  ! checks
+  if (nmaterials == 0) then
+    print *,'Error: invalid model setup for initializing tomography model. Needs at least one material.'
+    stop 'Error invalid material definitions for tomography model'
+  endif
+
   NFILES_TOMO = 0
   nrecord_max = 0
   ifiles_tomo = 0
-
-  ! checks if we over-impose a tomography model by Par_file setting: MODEL = tomo
-  if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
-    nmaterials = 1
-  endif
 
   ! data format flag
   allocate(materials_with_q(nmaterials),stat=ier)
@@ -167,20 +182,50 @@
   if (ier /= 0) stop 'Error allocating array materials_with_q'
   materials_with_q(:) = .false.
 
+  ! domain flag
+  allocate(materials_domain_id(nmaterials),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 853')
+  if (ier /= 0) stop 'Error allocating array materials_with_q'
+  materials_domain_id(:) = 0
+
   ! loops over number of undefined materials
-  do iundef = 1, nmaterials
+  do imat = 1, nmaterials
 
     ! sets filename
     if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
       ! note: since we have no undefined materials, we cannot access undef_mat_prop(:,:) to read in values
-      ! uses default name
-      filename = 'tomography_model.xyz'
+      if (nmaterials == 1) then
+        ! single material for whole mesh, uses default name
+        filename = 'tomography_model.xyz'
+      else
+        ! multiple material layers
+        ! This uses a naming schema: 'tomography_model_??.xyz'
+        ! filenames are e.g.,: 'tomography_model_01.xyz' ...
+        !                      'tomography_model_02.xyz' ...
+        ! using the material number as additional file indicator.
+        ! that is, the first material defined becomes *_01.xyz,
+        !             second material defined becomes *_02.xyz etc.
+        !
+        ! - NOTE: the leading '0' before a two digit value. Assuming Users won't
+        !   have more than 99 separate materials/tomography models
+        write(filenumber, '(I2.2)') imat
+        filename = 'tomography_model_' // trim(filenumber) // '.xyz'
+      endif
+
+      ! sets initial domain to be given by the material definition
+      ! material domain_id
+      idomain_id = nint(mat_prop(7,imat))
     else
       ! checks if associated material is a tomography model
-      if (trim(undef_mat_prop(2,iundef)) /= 'tomography') cycle
+      if (trim(undef_mat_prop(2,imat)) /= 'tomography') cycle
 
       ! gets filename from material property
-      read(undef_mat_prop(4,iundef),*) filename
+      read(undef_mat_prop(4,imat),*) filename
+
+      ! sets initial acoustic/elastic domain as given in materials properties
+      str_domain = trim(adjustl(undef_mat_prop(6,imat)))
+      read(str_domain(1:len_trim(str_domain)),'(i1)',iostat=ier) idomain_id
+      if (ier /= 0) stop 'Error reading domain ID from undefined material properties'
     endif
 
     ! counter
@@ -253,6 +298,9 @@
     endif
     materials_with_q(ifiles_tomo) = has_q_values
 
+    ! sets material domain
+    materials_domain_id(ifiles_tomo) = idomain_id
+
     ! counts remaining records
     do while (ier == 0)
       read(IIN,*,iostat=ier)
@@ -292,43 +340,58 @@
   allocate(ORIG_X(NFILES_TOMO),ORIG_Y(NFILES_TOMO),ORIG_Z(NFILES_TOMO),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 854')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
+  ORIG_X(:) = 0.0; ORIG_Y(:) = 0.0; ORIG_Z(:) = 0.0
+
   allocate(SPACING_X(NFILES_TOMO),SPACING_Y(NFILES_TOMO),SPACING_Z(NFILES_TOMO),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 855')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
+  SPACING_X(:) = 0.0; SPACING_Y(:) = 0.0; SPACING_Z(:) = 0.0
 
   ! allocate models parameter records
   ! only allocate anisotropy arrays if needed
   if (ANISOTROPY .and. IMODEL == IMODEL_TOMO) then
-    allocate(c_tomography(NFILES_TOMO,nrecord_max,21),stat=ier)
+    allocate(c_tomography(21,NFILES_TOMO,nrecord_max),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 904X')
     if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo anisotropy arrays')
+    c_tomography(:,:,:) = 0.0
   else
     allocate(vp_tomography(NFILES_TOMO,nrecord_max),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 856')
+    vp_tomography(:,:) = 0.0
     allocate(vs_tomography(NFILES_TOMO,nrecord_max),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 857')
+    vs_tomography(:,:) = 0.0
   endif
 
   allocate(rho_tomography(NFILES_TOMO,nrecord_max),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 858')
+  rho_tomography(:,:) = 0.0
+
   allocate(z_tomography(NFILES_TOMO,nrecord_max),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 859')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
+  z_tomography(:,:) = 0.0
 
   ! allocate models entries
   allocate(NX(NFILES_TOMO),NY(NFILES_TOMO),NZ(NFILES_TOMO),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 860')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
+  NX(:) = 0; NY(:) = 0; NZ(:) = 0
+
   allocate(nrecord(NFILES_TOMO),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 861')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
+  nrecord(:) = 0
 
   ! allocate models min/max statistics
   allocate(VP_MIN(NFILES_TOMO),VS_MIN(NFILES_TOMO),RHO_MIN(NFILES_TOMO),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 862')
+  VP_MIN(:) = 0.0; VS_MIN(:) = 0.0; RHO_MIN(:) = 0.0
+
   allocate(VP_MAX(NFILES_TOMO),VS_MAX(NFILES_TOMO),RHO_MAX(NFILES_TOMO),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 863')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
+  VP_MAX(:) = 0.0; VS_MAX(:) = 0.0; RHO_MAX(:) = 0.0
 
   ! q values
   allocate(tomo_has_q_values(NFILES_TOMO),stat=ier)
@@ -341,13 +404,27 @@
   enddo
   deallocate(materials_with_q)
 
+  ! domain id
+  allocate(tomo_domain_id(NFILES_TOMO),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 865')
+  if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo domain array')
+  tomo_domain_id(:) = 0
+  ! stores domain flag
+  do ifiles_tomo = 1,NFILES_TOMO
+    tomo_domain_id(ifiles_tomo) = materials_domain_id(ifiles_tomo)
+  enddo
+  deallocate(materials_domain_id)
+
   ! only allocate q arrays if needed
   if (any(tomo_has_q_values)) then
     allocate(qp_tomography(NFILES_TOMO,nrecord_max),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 865')
+    qp_tomography(:,:) = 0.0
+
     allocate(qs_tomography(NFILES_TOMO,nrecord_max),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 866')
     if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo q-value arrays')
+    qs_tomography(:,:) = 0.0
   endif
 
 end subroutine init_tomography_files
@@ -362,9 +439,9 @@ end subroutine init_tomography_files
 ! also read Qp Qs if needed
 ! also read c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66 if needed
 
-  use constants, only: MAX_STRING_LEN,IIN,IMAIN
+  use constants, only: MAX_STRING_LEN,IIN,IMAIN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC
 
-  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh
+  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh,nmat_ext_mesh
 
   use model_tomography_par
 
@@ -375,11 +452,12 @@ end subroutine init_tomography_files
   real(kind=CUSTOM_REAL) :: qp_tomo,qs_tomo
   real(kind=CUSTOM_REAL) :: c11_tomo,c12_tomo,c13_tomo,c14_tomo,c15_tomo,c16_tomo,c22_tomo,c23_tomo,c24_tomo,c25_tomo,c26_tomo, &
                             c33_tomo,c34_tomo,c35_tomo,c36_tomo,c44_tomo,c45_tomo,c46_tomo,c55_tomo,c56_tomo,c66_tomo
-  integer :: irecord,ier,iundef,imat
+  integer :: irecord,ier
   character(len=MAX_STRING_LEN*2) :: tomo_filename
   character(len=MAX_STRING_LEN) :: filename
   character(len=MAX_STRING_LEN) :: string_read
-  integer :: nmaterials
+  character(len=5) :: filenumber
+  integer :: nmaterials,imat
   logical :: has_q_values
 
   ! sets number of materials to loop over
@@ -387,23 +465,36 @@ end subroutine init_tomography_files
 
   ! checks if we over-impose a tomography model by Par_file setting: MODEL = tomo
   if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
-    nmaterials = 1
+    nmaterials = nmat_ext_mesh
   endif
 
-  imat = 0
-  do iundef = 1, nmaterials
-
+  do imat = 1, nmaterials
     ! sets filename
     if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
       ! note: since we have no undefined materials, we cannot access undef_mat_prop(:,:) to read in values
-      ! uses default name
-      filename = 'tomography_model.xyz'
+      if (nmaterials == 1) then
+        ! single material for whole mesh, uses default name
+        filename = 'tomography_model.xyz'
+      else
+        ! multiple material layers
+        ! This uses a naming schema: 'tomography_model_??.xyz'
+        ! filenames are e.g.,: 'tomography_model_01.xyz' ...
+        !                      'tomography_model_02.xyz' ...
+        ! using the material number as additional file indicator.
+        ! that is, the first material defined becomes *_01.xyz,
+        !             second material defined becomes *_02.xyz etc.
+        !
+        ! - NOTE: the leading '0' before a two digit value. Assuming Users won't
+        !   have more than 99 separate materials/tomography models
+        write(filenumber, '(I2.2)') imat
+        filename = 'tomography_model_' // trim(filenumber) // '.xyz'
+      endif
     else
       ! checks if associated material is a tomography model
-      if (trim(undef_mat_prop(2,iundef)) /= 'tomography') cycle
+      if (trim(undef_mat_prop(2,imat)) /= 'tomography') cycle
 
       ! gets filename from material property
-      read(undef_mat_prop(4,iundef),*) filename
+      read(undef_mat_prop(4,imat),*) filename
     endif
 
     ! sets filename with path (e.g. "DATA/tomo_files/" + "tomo.xyz")
@@ -414,14 +505,24 @@ end subroutine init_tomography_files
       tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH)) // '/' // trim(filename)
     endif
 
-    ! counter
-    imat = imat + 1
-
     ! user output
     if (myrank_tomo == 0) then
-       write(IMAIN,*) '     material id: ',-imat
-       write(IMAIN,*) '     file       : ',trim(tomo_filename)
-       call flush_IMAIN()
+      if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
+        write(IMAIN,*) '     material id: ',imat
+      else
+        write(IMAIN,*) '     material id: ',-imat
+      endif
+      write(IMAIN,*) '     file       : ',trim(tomo_filename)
+      ! associated domain
+      if (tomo_domain_id(imat) == IDOMAIN_ACOUSTIC) then
+        write(IMAIN,*) '     domain     : acoustic'
+      else if (tomo_domain_id(imat) == IDOMAIN_ELASTIC) then
+        write(IMAIN,*) '     domain     : elastic'
+      else
+        write(IMAIN,*) '     domain id  : ',tomo_domain_id(imat)
+        stop 'Tomography files only supported for acoustic & elastic domains. Please check your material definition...'
+      endif
+      call flush_IMAIN()
     endif
 
     ! opens file for reading
@@ -497,27 +598,12 @@ end subroutine init_tomography_files
       endif
 
       ! stores record values
-      c_tomography(imat,1,1) = c11_tomo
-      c_tomography(imat,1,2) = c12_tomo
-      c_tomography(imat,1,3) = c13_tomo
-      c_tomography(imat,1,4) = c14_tomo
-      c_tomography(imat,1,5) = c15_tomo
-      c_tomography(imat,1,6) = c16_tomo
-      c_tomography(imat,1,7) = c22_tomo
-      c_tomography(imat,1,8) = c23_tomo
-      c_tomography(imat,1,9) = c24_tomo
-      c_tomography(imat,1,10) = c25_tomo
-      c_tomography(imat,1,11) = c26_tomo
-      c_tomography(imat,1,12) = c33_tomo
-      c_tomography(imat,1,13) = c34_tomo
-      c_tomography(imat,1,14) = c35_tomo
-      c_tomography(imat,1,15) = c36_tomo
-      c_tomography(imat,1,16) = c44_tomo
-      c_tomography(imat,1,17) = c45_tomo
-      c_tomography(imat,1,18) = c46_tomo
-      c_tomography(imat,1,19) = c55_tomo
-      c_tomography(imat,1,20) = c56_tomo
-      c_tomography(imat,1,21) = c66_tomo
+      c_tomography(:,imat,1) = (/ c11_tomo, c12_tomo, c13_tomo, c14_tomo, c15_tomo, c16_tomo, &
+                                        c22_tomo, c23_tomo, c24_tomo, c25_tomo, c26_tomo, &
+                                        c33_tomo, c34_tomo, c35_tomo, c36_tomo, &
+                                        c44_tomo, c45_tomo, c46_tomo, &
+                                        c55_tomo, c56_tomo, &
+                                        c66_tomo /)
 
       rho_tomography(imat,1) = rho_tomo
       z_tomography(imat,1) = z_tomo
@@ -533,27 +619,12 @@ end subroutine init_tomography_files
           if (ier /= 0) stop 'Error reading tomo file line format with q values'
 
           ! stores record values
-          c_tomography(imat,irecord,1) = c11_tomo
-          c_tomography(imat,irecord,2) = c12_tomo
-          c_tomography(imat,irecord,3) = c13_tomo
-          c_tomography(imat,irecord,4) = c14_tomo
-          c_tomography(imat,irecord,5) = c15_tomo
-          c_tomography(imat,irecord,6) = c16_tomo
-          c_tomography(imat,irecord,7) = c22_tomo
-          c_tomography(imat,irecord,8) = c23_tomo
-          c_tomography(imat,irecord,9) = c24_tomo
-          c_tomography(imat,irecord,10) = c25_tomo
-          c_tomography(imat,irecord,11) = c26_tomo
-          c_tomography(imat,irecord,12) = c33_tomo
-          c_tomography(imat,irecord,13) = c34_tomo
-          c_tomography(imat,irecord,14) = c35_tomo
-          c_tomography(imat,irecord,15) = c36_tomo
-          c_tomography(imat,irecord,16) = c44_tomo
-          c_tomography(imat,irecord,17) = c45_tomo
-          c_tomography(imat,irecord,18) = c46_tomo
-          c_tomography(imat,irecord,19) = c55_tomo
-          c_tomography(imat,irecord,20) = c56_tomo
-          c_tomography(imat,irecord,21) = c66_tomo
+          c_tomography(:,imat,irecord) = (/ c11_tomo, c12_tomo, c13_tomo, c14_tomo, c15_tomo, c16_tomo, &
+                                            c22_tomo, c23_tomo, c24_tomo, c25_tomo, c26_tomo, &
+                                            c33_tomo, c34_tomo, c35_tomo, c36_tomo, &
+                                            c44_tomo, c45_tomo, c46_tomo, &
+                                            c55_tomo, c56_tomo, &
+                                            c66_tomo /)
 
           rho_tomography(imat,irecord) = rho_tomo
           z_tomography(imat,irecord) = z_tomo
@@ -570,27 +641,12 @@ end subroutine init_tomography_files
           if (ier /= 0) stop 'Error reading tomo file line format'
 
           ! stores record values
-          c_tomography(imat,irecord,1) = c11_tomo
-          c_tomography(imat,irecord,2) = c12_tomo
-          c_tomography(imat,irecord,3) = c13_tomo
-          c_tomography(imat,irecord,4) = c14_tomo
-          c_tomography(imat,irecord,5) = c15_tomo
-          c_tomography(imat,irecord,6) = c16_tomo
-          c_tomography(imat,irecord,7) = c22_tomo
-          c_tomography(imat,irecord,8) = c23_tomo
-          c_tomography(imat,irecord,9) = c24_tomo
-          c_tomography(imat,irecord,10) = c25_tomo
-          c_tomography(imat,irecord,11) = c26_tomo
-          c_tomography(imat,irecord,12) = c33_tomo
-          c_tomography(imat,irecord,13) = c34_tomo
-          c_tomography(imat,irecord,14) = c35_tomo
-          c_tomography(imat,irecord,15) = c36_tomo
-          c_tomography(imat,irecord,16) = c44_tomo
-          c_tomography(imat,irecord,17) = c45_tomo
-          c_tomography(imat,irecord,18) = c46_tomo
-          c_tomography(imat,irecord,19) = c55_tomo
-          c_tomography(imat,irecord,20) = c56_tomo
-          c_tomography(imat,irecord,21) = c66_tomo
+          c_tomography(:,imat,irecord) = (/ c11_tomo, c12_tomo, c13_tomo, c14_tomo, c15_tomo, c16_tomo, &
+                                            c22_tomo, c23_tomo, c24_tomo, c25_tomo, c26_tomo, &
+                                            c33_tomo, c34_tomo, c35_tomo, c36_tomo, &
+                                            c44_tomo, c45_tomo, c46_tomo, &
+                                            c55_tomo, c56_tomo, &
+                                            c66_tomo /)
 
           rho_tomography(imat,irecord) = rho_tomo
           z_tomography(imat,irecord) = z_tomo
@@ -765,9 +821,11 @@ end subroutine init_tomography_files
 
   subroutine model_tomography(xmesh,ymesh,zmesh,rho_model,vp_model,vs_model,qkappa_atten,qmu_atten, &
                               c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
-                              imaterial_id,has_tomo_value)
+                              imaterial_id,has_tomo_value,idomain_id)
 
-  use generate_databases_par, only: undef_mat_prop,nundefMat_ext_mesh,ATTENUATION_COMP_MAXIMUM
+  use constants, only: TINYVAL_SNGL,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC
+  use generate_databases_par, only: nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh, &
+                                    ATTENUATION_COMP_MAXIMUM
 
   use model_tomography_par
 
@@ -783,9 +841,9 @@ end subroutine init_tomography_files
 
   integer, intent(in) :: imaterial_id
   logical,intent(out) :: has_tomo_value
+  integer, intent(inout) :: idomain_id
 
   ! local parameters
-  integer :: ier,i
   integer :: ix,iy,iz,imat
   integer :: p0,p1,p2,p3,p4,p5,p6,p7
 
@@ -806,16 +864,22 @@ end subroutine init_tomography_files
   real(kind=CUSTOM_REAL) :: L_val
 
   ! anisotropy
-  real(kind=CUSTOM_REAL) :: c1,c2,c3,c4,c5,c6,c7,c8
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: c_final
+  real(kind=CUSTOM_REAL), dimension(21) :: c1,c2,c3,c4,c5,c6,c7,c8
+  real(kind=CUSTOM_REAL), dimension(21) :: c_final
 
   ! initializes flag
   has_tomo_value = .false.
 
   ! checks if we over-impose a tomography model by Par_file setting: MODEL = tomo
   if (nundefMat_ext_mesh == 0 .and. IMODEL == IMODEL_TOMO) then
-    ! sets material number
-    imat = 1
+    ! sets material number based on material ID
+    imat = imaterial_id
+
+    ! checks material id range
+    if (imat < 1 .or. imat > nmat_ext_mesh) then
+      print *,'Error tomography model: unknown material id ',imaterial_id,' for ',nmat_ext_mesh,' defined materials'
+      stop 'Error unknown material id in tomography model'
+    endif
   else
     ! checks if material is a tomographic material (negative id)
     if (imaterial_id >= 0) return
@@ -826,7 +890,7 @@ end subroutine init_tomography_files
     ! checks if associated type is a tomography model
     if (trim(undef_mat_prop(2,imat)) /= 'tomography') return
 
-    ! checks material
+    ! checks material id range
     if (imat < 1 .or. imat > nundefMat_ext_mesh) then
       print *,'Error tomography model: unknown material id ',imaterial_id,' for ',nundefMat_ext_mesh,' undefined materials'
       stop 'Error unknown material id in tomography model'
@@ -963,22 +1027,16 @@ end subroutine init_tomography_files
   if (ANISOTROPY .and. IMODEL == IMODEL_TOMO) then
 
     ! anisotropy
-    allocate(c_final(21),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 905X')
-    if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate interpolated anisotropy parameters array')
-
-    do i = 1,21
-      c1 = c_tomography(imat,p0+1,i)
-      c2 = c_tomography(imat,p1+1,i)
-      c3 = c_tomography(imat,p2+1,i)
-      c4 = c_tomography(imat,p3+1,i)
-      c5 = c_tomography(imat,p4+1,i)
-      c6 = c_tomography(imat,p5+1,i)
-      c7 = c_tomography(imat,p6+1,i)
-      c8 = c_tomography(imat,p7+1,i)
-      ! use trilinear interpolation in cell to define Vp
-      c_final(i) = interpolate_trilinear(c1,c2,c3,c4,c5,c6,c7,c8)
-    enddo
+    c1(:) = c_tomography(:,imat,p0+1)
+    c2(:) = c_tomography(:,imat,p1+1)
+    c3(:) = c_tomography(:,imat,p2+1)
+    c4(:) = c_tomography(:,imat,p3+1)
+    c5(:) = c_tomography(:,imat,p4+1)
+    c6(:) = c_tomography(:,imat,p5+1)
+    c7(:) = c_tomography(:,imat,p6+1)
+    c8(:) = c_tomography(:,imat,p7+1)
+    ! use trilinear interpolation in cell to define C_ij
+    c_final(:) = interpolate_trilinear_array(c1(:),c2(:),c3(:),c4(:),c5(:),c6(:),c7(:),c8(:))
 
     c11 = c_final(1)
     c12 = c_final(2)
@@ -1004,8 +1062,6 @@ end subroutine init_tomography_files
 
     vp_model = sqrt(c11)/sqrt(rho_model) ! a better estimate of equivalent vp is needed for anisotropic models
     vs_model = sqrt(c66)/sqrt(rho_model) ! a better estimate of equivalent vs is needed for anisotropic models
-
-    deallocate(c_final)
 
   else
 
@@ -1110,6 +1166,23 @@ end subroutine init_tomography_files
   ! value found
   has_tomo_value = .true.
 
+  ! sets domain
+  idomain_id = tomo_domain_id(imat)
+
+  ! checks initial domain id, if acoustic it will turn on detection (must have zero vs values)
+  ! note: poroelastic tomography models not supported/implemented yet
+  if (idomain_id == IDOMAIN_ACOUSTIC .and. has_tomo_value) then
+    ! acoustic domain desired, will detect based on vs value
+    ! checks if acoustic based on shear velocity
+    if (abs(vs_final) < TINYVAL_SNGL) then
+      ! acoustic - zero shear value
+      idomain_id = IDOMAIN_ACOUSTIC
+    else
+      ! elastic
+      idomain_id = IDOMAIN_ELASTIC
+    endif
+  endif
+
   contains
 
   function interpolate_trilinear(val1,val2,val3,val4,val5,val6,val7,val8)
@@ -1119,7 +1192,7 @@ end subroutine init_tomography_files
   implicit none
 
   real(kind=CUSTOM_REAL) :: interpolate_trilinear
-  real(kind=CUSTOM_REAL),intent(in) :: val1,val2,val3,val4,val5,val6,val7,val8
+  real(kind=CUSTOM_REAL), intent(in) :: val1,val2,val3,val4,val5,val6,val7,val8
 
   ! note: we use gamma factors from parent routine (with 'contains' we can still use the scope of the parent routine).
   !       gamma parameters are global entities here, and used for briefty of the calling routine command,
@@ -1137,6 +1210,33 @@ end subroutine init_tomography_files
          val8 * (1.d0-gamma_interp_x) * gamma_interp_y        * gamma_interp_z4
 
   end function interpolate_trilinear
+
+  function interpolate_trilinear_array(val1,val2,val3,val4,val5,val6,val7,val8)
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  real(kind=CUSTOM_REAL), dimension(21) :: interpolate_trilinear_array
+  real(kind=CUSTOM_REAL), intent(in), dimension(21) :: val1,val2,val3,val4,val5,val6,val7,val8
+
+  ! note: we use gamma factors from parent routine (with 'contains' we can still
+  ! use the scope of the parent routine).
+  !       gamma parameters are global entities here, and used for briefty of the
+  !       calling routine command,
+  !       just to be aware...
+
+  ! interpolation rule
+  interpolate_trilinear_array(:) = val1(:) * (1.d0-gamma_interp_x) * (1.d0-gamma_interp_y) * (1.d0-gamma_interp_z1) + &
+                                   val2(:) * gamma_interp_x        * (1.d0-gamma_interp_y) * (1.d0-gamma_interp_z2) + &
+                                   val3(:) * gamma_interp_x        * gamma_interp_y        * (1.d0-gamma_interp_z3) + &
+                                   val4(:) * (1.d0-gamma_interp_x) * gamma_interp_y        * (1.d0-gamma_interp_z4) + &
+                                   val5(:) * (1.d0-gamma_interp_x) * (1.d0-gamma_interp_y) * gamma_interp_z1 + &
+                                   val6(:) * gamma_interp_x        * (1.d0-gamma_interp_y) * gamma_interp_z2 + &
+                                   val7(:) * gamma_interp_x        * gamma_interp_y        * gamma_interp_z3 + &
+                                   val8(:) * (1.d0-gamma_interp_x) * gamma_interp_y        * gamma_interp_z4
+
+  end function interpolate_trilinear_array
 
   end subroutine model_tomography
 

@@ -15,13 +15,13 @@ In many cases, the SEM synthetics are calculated and compared to data
 seismograms recorded at seismic stations. Since the SEM synthetics
 are accurate for a certain frequency range, both the original data
 and the synthetics need to be processed before a comparison can be
-made.
+made.\newline
 
 For such comparisons, the following steps are recommended:
 \begin{enumerate}
 \item Make sure that both synthetic and observed seismograms have the correct
 station/event and timing information.
-\item Convolve synthetic seismograms with a source time function with the
+\item Convolve synthetic seismograms with a source-time function with the
 half duration specified in the \texttt{CMTSOLUTION} file, provided,
 as recommended, you used a zero half duration in the SEM simulations.
 \item Resample both observed and synthetic seismograms to a common sampling
@@ -56,7 +56,7 @@ which has resampled the SAC files to a sampling rate of
 1 seconds, cut them between 0 and 4000 seconds, transfered them into
 displacement records and filtered them between 40 and 500 seconds,
 picked the first P and S arrivals, and added suffix `\texttt{bp}'
-to the file names.
+to the file names.\newline
 
 Note that all of the scripts in this section actually use the SAC
 and/or IASP91 to do the core operations; therefore make sure that
@@ -83,16 +83,16 @@ format, add event and station information into the SAC headers, resample
 the SAC files with a sampling rate of 1 seconds, cut them between
 0 and 4000 seconds, filter them between 40 and 500 seconds with the
 same filter used for the observed data, pick the first P and S arrivals,
-and add the suffix `\texttt{bp}' to the file names.
+and add the suffix `\texttt{bp}' to the file names.\newline
 
 More options are available for this script, such as adding time shift
 to the origin time of the synthetics, convolving the synthetics with
-a triangular source time function with a given half duration, etc.
+a triangular source-time function with a given half duration, etc.
 Type \texttt{process\_syn.pl} without any argument for a detailed
-usage.
+usage.\newline
 
 In order to convert between SAC format and ASCII files, useful scripts
-are provided in the subdirectories ~\\
+are provided in the subdirectories ~\newline
  \texttt{utils/sac2000\_alpha\_convert/} and \texttt{utils/seis\_process/asc2sac/}.
 
 
@@ -109,7 +109,7 @@ rotate.pl -l 0 -L 180 -d DATA/*.BHE.SAC.bp
 rotate.pl -l 0 -L 180 SEM/*.BXE.semd.sac.bp
 \end{verbatim}
 where the first command performs rotation on the SAC data obtained
-through Seismogram Transfer Program (STP) \urlwithparentheses{http://www.data.scec.org/STP/stp.html},
+through Seismogram Transfer Program (\href{http://www.data.scec.org/STP/stp.html}{STP}),
 while the second command rotates the processed SEM synthetics.
 
 
@@ -121,41 +121,25 @@ simulation, the files are named like \texttt{NT.STA.BX?.semd} for
 two-column time series, or \texttt{NT.STA.BX?.semd.sac} for ASCII
 SAC format, where NT and STA are the network code and station name,
 and \texttt{BX?} stands for the component name. Please see the Appendix~\ref{cha:Coordinates}
-and \ref{cha:channel-codes} for further details.
+and \ref{cha:channel-codes} for further details.\newline
 
 The adjont simulations generate synthetic seismograms with the name
 \texttt{NT.S?????.S??.sem} (refer to Section \ref{sec:Adjoint-simulation-sources}
 for details). The kernel simulations output the back-reconstructed
 synthetic seismogram in the name \texttt{NT.STA.BX?.semd}, mainly
 for the purpose of checking the accuracy of the reconstruction. Refer
-to Section \ref{sec:Adjoint-simulation-finite} for further details.
+to Section \ref{sec:Adjoint-simulation-finite} for further details.\newline
 
 You do have further options to change this default output behavior,
-given in the main constants file \texttt{constants.h} located in \texttt{src/shared/}
-directory:
+given in the \texttt{DATA/Par\_file}:
 \begin{description}
-\item [{\texttt{SEISMOGRAMS\_BINARY}}] set to \texttt{.true.} to have seismograms
+\item [{\texttt{USE\_BINARY\_FOR\_SEISMOGRAMS}}] Set to \texttt{.true.} to have seismograms
 written out in binary format.
 \item [{\texttt{WRITE\_SEISMOGRAMS\_BY\_MAIN}}] Set to \texttt{.true.}
 to have only the main process writing out seismograms. This can
 be useful on a cluster, where only the main process node has access
 to the output directory.
-\item [{\texttt{USE\_OUTPUT\_FILES\_PATH}}] Set to \texttt{.false.} to
-have the seismograms output to \texttt{LOCAL\_PATH} directory specified
-in the main parameter file \texttt{DATA/Par\_file}. In this case,
-you could collect the synthetics onto the frontend using the \texttt{collect\_seismo\_lsf\_multi.pl}
-script located in the \texttt{utils/Cluster/lsf/} directory. The usage
-of the script would be e.g.:
-
-\begin{verbatim}
-collect_seismo.pl machines DATA/Par_file
-\end{verbatim}
-
 \end{description}
-
-where \texttt{machines} is a file containing the node names and \texttt{DATA/Par\_file}
-the parameter file used to extract the \texttt{LOCAL\_PATH} directory
-used for the simulation.
 
 
 \section{Clean Local Database}
@@ -197,7 +181,7 @@ and `\texttt{-p}' are both optional.
 \subsection{Script \texttt{plot\_shakemap.gmt.pl}}
 
 With the shakemap data saved in \texttt{OUTPUT\_FILES/} at the end
-of a shakemap simulation ~\\
+of a shakemap simulation ~\newline
  (\texttt{CREATE\_SHAKEMAP=.true.}), you can also run \texttt{`create\_movie\_shakemap\_AVS\_DX\_GMT}'
 code to convert the binary shakemap data into GMT xyz files. A sample
 script \texttt{plot\_shakemap.gmt.pl} is provided to do this conversion,

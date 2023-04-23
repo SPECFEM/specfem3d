@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -122,6 +122,16 @@
   endif
 #endif
 
+  ! user output
+  print *
+  print *,'Recombining ParaView data for slices'
+  print *
+
+  ! needs local_path for mesh files
+  myrank = 0
+  BROADCAST_AFTER_READ = .false.
+  call read_parameter_file(BROADCAST_AFTER_READ)
+
   ! reads in arguments
   do i = 1, command_argument_count()
     call get_command_argument(i,arg(i))
@@ -138,16 +148,6 @@
   ! default
   call read_args(arg, MAX_NUM_NODES, node_list, num_node, filename, indir, outdir, ires, NPROC)
 #endif
-
-  ! user output
-  print *
-  print *,'Recombining ParaView data for slices'
-  print *
-
-  ! needs local_path for mesh files
-  myrank = 0
-  BROADCAST_AFTER_READ = .false.
-  call read_parameter_file(BROADCAST_AFTER_READ)
 
   ! resolution
   if (ires == 0) then

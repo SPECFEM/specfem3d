@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -60,7 +60,7 @@ module family_parameter
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:),   allocatable  :: model_ref_wks
 
   public   ::  InvertParam2Specfem,  SpecfemParam2Invert, PrepareArraysfamilyParam, StoreGradientInfamilyParam, &
-               mpi_sum_grad_all_to_all_simultaneous_runs, SpecfemPrior2Invert, Modeling2RefInvert
+               mpi_sum_grad_all_to_all_simultaneous_runs, Modeling2RefInvert ! SpecfemPrior2Invert
 
 contains
 
@@ -73,55 +73,57 @@ contains
     type(inver),                                                  intent(inout)    :: inversion_param
     integer                                                                        :: i
 
-    !! temporary array useful for MPI comm
+    ! temporary array useful for MPI comm
     allocate(wks(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 564')
     if (ier /= 0) call exit_MPI(myrank,"error allocation wks in  PrepareArraysfamilyParam subroutine, family_parameter_mod")
+    wks(:,:,:,:) = 0._CUSTOM_REAL
+
     if (ANISOTROPIC_KL) then
-       allocate(wks1(21, NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT),stat=ier)
-       if (ier /= 0) call exit_MPI_without_rank('error allocating array 565')
-       if (ier /= 0) call exit_MPI(myrank,"error allocation wks1 in  PrepareArraysfamilyParam subroutine, family_parameter_mod")
+      allocate(wks1(21, NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 565')
+      if (ier /= 0) call exit_MPI(myrank,"error allocation wks1 in  PrepareArraysfamilyParam subroutine, family_parameter_mod")
+      wks1(:,:,:,:,:) = 0._CUSTOM_REAL
     endif
 
-    !! manage family parameters for inversion
+    ! manage family parameters for inversion
     call choose_inversion_parameters(inversion_param)
 
-    !! temporay arrays used for translation : inversion parmeters <-> modeling parameters
+    ! temporay arrays used for translation : inversion parmeters <-> modeling parameters
     allocate(gradient_wks(NGLLX, NGLLY, NGLLZ, inversion_param%NinvPar),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 566')
+    gradient_wks(:,:,:,:) = 0._CUSTOM_REAL
+
     allocate(model_wks(NGLLX, NGLLY, NGLLZ, inversion_param%NinvPar),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 567')
+    model_wks(:,:,:,:) = 0._CUSTOM_REAL
+
     allocate(model_ref_wks(NGLLX, NGLLY, NGLLZ, inversion_param%NinvPar),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 568')
+    model_ref_wks(:,:,:,:) = 0._CUSTOM_REAL
 
-
+    ! user output
     if (myrank == 0) then
-
-       write(INVERSE_LOG_FILE,*) '*************************************************************************'
-       write(INVERSE_LOG_FILE,*) ' FAMILY PARAMETER USED ', trim(inversion_param%parameter_family_name)
-       write(INVERSE_LOG_FILE,*)
-       write(INVERSE_LOG_FILE,*)
-       write(INVERSE_LOG_FILE,*)
-
-       if (ACOUSTIC_SIMULATION .and. .not. ELASTIC_SIMULATION) then
-          write(INVERSE_LOG_FILE,*)
-          write(INVERSE_LOG_FILE,*)  ' Pure Acoustic : '
-       endif
-       write(INVERSE_LOG_FILE,*)  ' Nb inverse param :', inversion_param%NinvPar
-       write(INVERSE_LOG_FILE,*)  ' Nb param in full family:', inversion_param%NfamilyPar
-       write(INVERSE_LOG_FILE,*)
-       write(INVERSE_LOG_FILE,*)
-       write(INVERSE_LOG_FILE,*) '  full family parameters :'
-       write(INVERSE_LOG_FILE,*)
-       do i=1, inversion_param%NfamilyPar
-          write(INVERSE_LOG_FILE,*) ' Param ', i, ' :  ' , trim(inversion_param%param_ref_name(i))
-       enddo
-       write(INVERSE_LOG_FILE,*)
-       write(INVERSE_LOG_FILE,*)
-       do i=1, inversion_param%NinvPar
-          write(INVERSE_LOG_FILE,*) ' inverse parameter ', i, ' : ',trim(inversion_param%param_inv_name(i))
-       enddo
-
+      write(INVERSE_LOG_FILE,*) ' FAMILY PARAMETER USED   : ', trim(inversion_param%parameter_family_name)
+      write(INVERSE_LOG_FILE,*)
+      if (ACOUSTIC_SIMULATION .and. .not. ELASTIC_SIMULATION) then
+        write(INVERSE_LOG_FILE,*)  ' Pure Acoustic '
+        write(INVERSE_LOG_FILE,*)
+      endif
+      write(INVERSE_LOG_FILE,*) ' Nb inverse param        : ', inversion_param%NinvPar
+      write(INVERSE_LOG_FILE,*) ' Nb param in full family : ', inversion_param%NfamilyPar
+      write(INVERSE_LOG_FILE,*)
+      write(INVERSE_LOG_FILE,*)
+      write(INVERSE_LOG_FILE,*) ' full family parameters  : '
+      write(INVERSE_LOG_FILE,*)
+      do i=1, inversion_param%NfamilyPar
+        write(INVERSE_LOG_FILE,*) ' Param ', i, ' :  ' , trim(inversion_param%param_ref_name(i))
+      enddo
+      write(INVERSE_LOG_FILE,*)
+      write(INVERSE_LOG_FILE,*)
+      do i=1, inversion_param%NinvPar
+        write(INVERSE_LOG_FILE,*) ' inverse parameter ', i, ' : ',trim(inversion_param%param_inv_name(i))
+      enddo
     endif
 
   end subroutine PrepareArraysfamilyParam
@@ -134,17 +136,17 @@ contains
     select case (inversion_param%parameter_family_name)
 
     case('VTI')
-       call selector_vti_family(inversion_param)
+      call selector_vti_family(inversion_param)
 
     case('ISO')
-       call selector_iso_family(inversion_param)
+      call selector_iso_family(inversion_param)
 
     case('IP')
 
     case('LAME')
 
     case default
-      write(*,*)  " inversion parameters not known ", inversion_param%parameter_family_name
+      write(*,*)  "Error: inversion parameter not known ", inversion_param%parameter_family_name
       stop
    end select
 
@@ -160,12 +162,10 @@ contains
   subroutine InvertParam2Specfem(inversion_param, model, model_ref)
     use input_output, only: create_mass_matrices_Stacey_duplication_routine
 
-    type(inver),                                                  intent(in)      :: inversion_param
-    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(in)      :: model, model_ref
+    type(inver),                                    intent(in)      :: inversion_param
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), intent(in)      :: model, model_ref
 
-
-    do ispec = 1, NSPEC_AB  !!
-
+    do ispec = 1, NSPEC_AB
 
        !! get model in locals arrays memory ---------------------------------------------------------------------------------
        !! and set in physical units
@@ -181,6 +181,7 @@ contains
 
        case(3) !! log(P/Pref)
           !!??
+          model_wks(:,:,:,:) = exp( model(:,:,:,ispec,:) * model_ref(:,:,:,ispec,:))
        end select
 
        !! todo : call change_metric_2units(ispec, model, model_wks, model_ref_wks)
@@ -216,7 +217,7 @@ contains
 
              case default
                 write(*,*) 'Error : unknonwn family for elastic case ', &
-                     trim(adjustl(inversion_param%parameter_family_name))
+                           trim(adjustl(inversion_param%parameter_family_name))
                 stop
 
              end select
@@ -241,7 +242,7 @@ contains
 
           case default
              write(*,*) 'Error : unknown family for acoustic case ', &
-                  trim(adjustl(inversion_param%parameter_family_name))
+                        trim(adjustl(inversion_param%parameter_family_name))
              stop
 
           end select
@@ -260,19 +261,19 @@ contains
 ! conversion from specfem parameters to inversion parameters
 !-------------------------------------------------------------------------
 
-  subroutine SpecfemParam2Invert(inversion_param, model, model_ref)
-    type(inver),                                                  intent(in)      :: inversion_param
-    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(in)      :: model_ref
-    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(inout)   :: model
+  subroutine SpecfemParam2Invert(inversion_param, model, ref_model)
+    type(inver),                                    intent(in)      :: inversion_param
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), intent(in)      :: ref_model
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), intent(inout)   :: model
 
-    do ispec = 1, NSPEC_AB  !!
+    do ispec = 1, NSPEC_AB
 
        !! set model ref in local array
-       model_ref_wks(:,:,:,:) = model_ref(:,:,:,ispec,:)
+       model_ref_wks(:,:,:,:) = ref_model(:,:,:,ispec,:)
 
        ! elastic simulations
        if (ispec_is_elastic(ispec)) then  !! we need to process element by element because we need to do this test
-                                          !! because we can use both elastic or acoustic elements (also proelastic)
+                                          !! because we can use both elastic or acoustic elements (also poroelastic)
 
           if (ANISOTROPIC_KL) then
 
@@ -329,20 +330,18 @@ contains
 
        endif
 
-
        !! store local array model in global array and set the metric for inversion  ------------------------------------------
        select case(inversion_param%parameter_metric)
        case(0)  !! directly the parameter P
-          model(:,:,:,ispec,:) = model_wks(:,:,:,:)
+         model(:,:,:,ispec,:) = model_wks(:,:,:,:)
        case(1)  !! P / Pref
          model(:,:,:,ispec,:) = model_wks(:,:,:,:) / model_ref_wks(:,:,:,:)
        case(2)  !! log(P)
-          model(:,:,:,ispec,:) = log(model_wks(:,:,:,:))
+         model(:,:,:,ispec,:) = log(model_wks(:,:,:,:))
        case(3)  !! log(P/Pref)
-          !! ??
-          model(:,:,:,ispec,:) = log(model_wks(:,:,:,:) / model_ref_wks(:,:,:,:))
+         model(:,:,:,ispec,:) = log(model_wks(:,:,:,:) / model_ref_wks(:,:,:,:))
        end select
-       !! todo : call call change_model_units_2metric(ispec, model, model_wks, model_ref_wks)
+       !! todo : call change_model_units_2metric(ispec, model, model_wks, model_ref_wks)
     enddo
 
   end subroutine SpecfemParam2Invert
@@ -352,106 +351,115 @@ contains
 ! store the current gradient in the inversion family parameter
 !-------------------------------------------------------------------------
 
-  subroutine StoreGradientInfamilyParam(inversion_param, gradient, model, model_ref, hess_approxim)
+  subroutine StoreGradientInfamilyParam(inversion_param, gradient, model, ref_model, hess_approxim)
 
-    type(inver),                                                  intent(in)      :: inversion_param
-    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(in)      :: model, model_ref
-    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(inout)   :: gradient, hess_approxim
+    type(inver),                                    intent(in)      :: inversion_param
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), intent(in)      :: model, ref_model
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), intent(inout)   :: gradient, hess_approxim
 
     do ispec = 1, NSPEC_AB  !! loop on elements
 
-       !! get model in loacals arrays memory ---------------------------------------------------------------------------------
-       !! and set in physical units
-       select case(inversion_param%parameter_metric)
-       case(0)  !! directly the parameter P
-          model_wks(:,:,:,:) = model(:,:,:,ispec,:)
-          model_ref_wks(:,:,:,:) = model_ref(:,:,:,ispec,:)
-       case(1)  !! P / Pref
-          model_wks(:,:,:,:) = model(:,:,:,ispec,:) * model_ref(:,:,:,ispec,:)
-          model_ref_wks(:,:,:,:) = model_ref(:,:,:,ispec,:)
-       case(2)  !! log(P)
-          model_wks(:,:,:,:) = exp( model(:,:,:,ispec,:))
-          model_ref_wks(:,:,:,:) = model_ref(:,:,:,ispec,:)
-       case(3) !! log(P/Pref)
-          !!??
-       end select
+      !! get model in local arrays memory ---------------------------------------------------------------------------------
+      !! and set in physical units
+      select case(inversion_param%parameter_metric)
+      case(0)  !! directly the parameter P
+        model_wks(:,:,:,:) = model(:,:,:,ispec,:)
+        model_ref_wks(:,:,:,:) = ref_model(:,:,:,ispec,:)
+      case(1)  !! P / Pref
+        model_wks(:,:,:,:) = model(:,:,:,ispec,:) * ref_model(:,:,:,ispec,:)
+        model_ref_wks(:,:,:,:) = ref_model(:,:,:,ispec,:)
+      case(2)  !! log(P)
+        model_wks(:,:,:,:) = exp( model(:,:,:,ispec,:))
+        model_ref_wks(:,:,:,:) = ref_model(:,:,:,ispec,:)
+      case(3) !! log(P/Pref)
+        !!??
+        model_wks(:,:,:,:) = exp( model(:,:,:,ispec,:) * ref_model(:,:,:,ispec,:) )
+        model_ref_wks(:,:,:,:) = ref_model(:,:,:,ispec,:)
+      end select
 
-       ! elastic element -------------------------------------------------------------------------------------------------------
-       if (ispec_is_elastic(ispec)) then  !! we need to process element by element because we need to do this test
+      ! elastic element -------------------------------------------------------------------------------------------------------
+      if (ispec_is_elastic(ispec)) then  !! we need to process element by element because we need to do this test
 
-          if (ANISOTROPIC_KL) then  !! Anisotropic
-
-             select case (trim(inversion_param%parameter_family_name))
-             case ("VTI")
-
-                call translate_cijkl_gradient_2_vti(inversion_param ,ispec, gradient_wks)
-
-             case default
-                write(*,*) ' IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS &
-                     &FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem &
-                     &you just need to store it in array gradient .... in &
-                     &code  : family_parameter_module.f90 subroutine StoreGradientInfamilyParam'
-                stop
-             end select
-
-          else  !! isotropic
-
-             select case (trim(inversion_param%parameter_family_name))
-             case("ISO")
-                call translate_lame_gradient_2_iso(inversion_param, ispec, gradient_wks)
-
-             case("LAME")
-
-             case("IP")
-
-             case default
-                write(*,*) 'Error : unknonwn family for elastic case ',trim(adjustl(inversion_param%parameter_family_name))
-                stop
-             end select
-
-             !! TODO store preconditionner kernels  ( Hessian ... may be not necessary )
-
-          endif
-
-       endif
-
-       ! acoustic element ---------------------------------------------------------------------------------------------------
-       if (ispec_is_acoustic(ispec)) then
+        if (ANISOTROPIC_KL) then  !! Anisotropic
 
           select case (trim(inversion_param%parameter_family_name))
-          case("VTI")
-             call translate_cijkl_gradient_2_vti_ac(inversion_param ,ispec, gradient_wks)
-
-          case("ISO")
-             call translate_lame_gradient_2_iso_ac(inversion_param, ispec, gradient_wks)
-
-          case("LAME")
-
-          case("IP")
+          case ("VTI")
+            call translate_cijkl_gradient_2_vti(inversion_param ,ispec, gradient_wks)
 
           case default
-             write(*,*) hess_approxim(1,1,1,1,1)
-             write(*,*) 'Error : unknonwn family for elastic case ',trim(adjustl(inversion_param%parameter_family_name))
-             stop
+            write(*,*) ' IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS &
+                       &FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem &
+                       &you just need to store it in array gradient .... in &
+                       &code  : family_parameter_module.f90 subroutine StoreGradientInfamilyParam'
+            stop
+          end select
+
+        else  !! isotropic
+
+          select case (trim(inversion_param%parameter_family_name))
+          case("ISO")
+            call translate_lame_gradient_2_iso(inversion_param, ispec, gradient_wks)
+
+          case("LAME")
+            write(*,*) 'Error : unknonwn family for elastic case ',trim(adjustl(inversion_param%parameter_family_name))
+            stop
+
+          case("IP")
+            write(*,*) 'Error : unknonwn family for elastic case ',trim(adjustl(inversion_param%parameter_family_name))
+            stop
+
+          case default
+            write(*,*) 'Error : unknonwn family for elastic case ',trim(adjustl(inversion_param%parameter_family_name))
+            stop
           end select
 
           !! TODO store preconditionner kernels  ( Hessian ... may be not necessary )
 
-       endif
+        endif
 
+      endif
 
-       !! store local array gradient in global array and set the metric for inversion  ------------------------------------------
-       select case(inversion_param%parameter_metric)
-       case(0)  !! directly the parameter P
-          gradient(:,:,:,ispec,:) = gradient_wks(:,:,:,:)
-       case(1)  !! P / Pref
-          gradient(:,:,:,ispec,:) = gradient_wks(:,:,:,:) * model_ref_wks(:,:,:,:)
-       case(2)  !! log(P)
-          gradient(:,:,:,ispec,:) = gradient_wks(:,:,:,:) * model_wks(:,:,:,:)
-       case(3)  !! log(P/Pref)
-          !! ??
-       end select
-       ! todo  : call change_gradient_unit_2metric(ispec, gradient, gradient_wks, model_wks,  model_ref_wks)
+      ! acoustic element ---------------------------------------------------------------------------------------------------
+      if (ispec_is_acoustic(ispec)) then
+
+        select case (trim(inversion_param%parameter_family_name))
+        case("VTI")
+          call translate_cijkl_gradient_2_vti_ac(inversion_param ,ispec, gradient_wks)
+
+        case("ISO")
+          call translate_lame_gradient_2_iso_ac(inversion_param, ispec, gradient_wks)
+
+        case("LAME")
+          write(*,*) 'Error : unknown family for acoustic case ',trim(adjustl(inversion_param%parameter_family_name))
+          stop
+
+        case("IP")
+          write(*,*) 'Error : unknown family for acoustic case ',trim(adjustl(inversion_param%parameter_family_name))
+          stop
+
+        case default
+          write(*,*) hess_approxim(1,1,1,1,1)
+          write(*,*) 'Error : unknown family for acoustic case ',trim(adjustl(inversion_param%parameter_family_name))
+          stop
+        end select
+
+        !! TODO store preconditionner kernels  ( Hessian ... may be not necessary )
+
+      endif
+
+      !! store local array gradient in global array and set the metric for inversion  ------------------------------------------
+      select case(inversion_param%parameter_metric)
+      case(0)  !! directly the parameter P
+        gradient(:,:,:,ispec,:) = gradient_wks(:,:,:,:)
+      case(1)  !! P / Pref
+        gradient(:,:,:,ispec,:) = gradient_wks(:,:,:,:) * model_ref_wks(:,:,:,:)
+      case(2)  !! log(P)
+        gradient(:,:,:,ispec,:) = gradient_wks(:,:,:,:) * model_wks(:,:,:,:)
+      case(3)  !! log(P/Pref)
+        !! ??
+        gradient(:,:,:,ispec,:) = gradient_wks(:,:,:,:) * model_wks(:,:,:,:)
+      end select
+      ! todo  : call change_gradient_unit_2metric(ispec, gradient, gradient_wks, model_wks,  model_ref_wks)
     enddo   !! loop on elements
 
   end subroutine StoreGradientInfamilyParam
@@ -461,36 +469,37 @@ contains
 ! conversion from specfem parameters to inversion parameters  !! TODO this is currently not working : fix it
 !-------------------------------------------------------------------------
 
-  subroutine SpecfemPrior2Invert(inversion_param, model)
-    type(inver),                                                  intent(inout)   :: inversion_param
-    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(inout)   :: model
-    integer :: ipar
-    write(*,*) " ABORT : OPTION READING DIRECLTY PRIOR MODEL NOT TESTED "
-    stop
-    do ispec = 1, NSPEC_AB  !!
-       do ipar =1 ,  inversion_param%NinvPar
-          model(:,:,:,ispec, ipar) =  inversion_param%prior_model(:,:,:,ispec, inversion_param%Index_Invert(ipar))
-       enddo
-    enddo
-
-    !! clear memory since we do not need it any more
-    deallocate(inversion_param%prior_model)
-
-  end subroutine SpecfemPrior2Invert
+! (not working yet)
+!  subroutine SpecfemPrior2Invert(inversion_param, model)
+!    type(inver),                                    intent(inout)   :: inversion_param
+!    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), intent(inout)   :: model
+!    integer :: ipar
+!
+!    ! safety stop
+!    write(*,*) " ABORT : OPTION READING DIRECLTY PRIOR MODEL NOT TESTED "
+!    stop
+!
+!    do ispec = 1, NSPEC_AB
+!       do ipar = 1 , inversion_param%NinvPar
+!          model(:,:,:,ispec, ipar) = inversion_param%prior_model(:,:,:,ispec, inversion_param%Index_Invert(ipar))
+!       enddo
+!    enddo
+!
+!    !! clear memory since we do not need it any more
+!    deallocate(inversion_param%prior_model)
+!
+!  end subroutine SpecfemPrior2Invert
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-------------------------------------------------------------------------------------
 ! conversion from specfem parameters to inversion parameters in physical unit metric
 !-------------------------------------------------------------------------------------
 
-  subroutine Modeling2RefInvert(inversion_param, model)
-    type(inver),                                                  intent(inout)   :: inversion_param
-    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(inout)   :: model
-    !integer :: ipar
+  subroutine Modeling2RefInvert(inversion_param, ref_model)
+    type(inver),                                    intent(inout)   :: inversion_param
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), intent(inout)   :: ref_model
 
-
-    do ispec = 1, NSPEC_AB  !!
-
+    do ispec = 1, NSPEC_AB
 
        ! elastic simulations
        if (ispec_is_elastic(ispec)) then  !! we need to process element by element because we need to do this test
@@ -543,7 +552,7 @@ contains
           case('IP')
 
           case default
-             write(*,*) 'Error : unknonwn family for elastic case ', &
+             write(*,*) 'Error : unknown family for elastic case ', &
                   trim(adjustl(inversion_param%parameter_family_name))
              stop
           end select
@@ -551,7 +560,7 @@ contains
        endif
 
        !! set model in physical unit
-       model(:,:,:,ispec,:) = model_wks(:,:,:,:)
+       ref_model(:,:,:,ispec,:) = model_wks(:,:,:,:)
 
     enddo
 
@@ -572,9 +581,9 @@ contains
     real(kind=CUSTOM_REAL), intent(inout) :: cost_function
     real(kind=CUSTOM_REAL)                :: cost_function_tmp
 
-    if ( NUMBER_OF_SIMULTANEOUS_RUNS < 2 ) return !! not need of MPI commutication througth simultaneous sources
+    if (NUMBER_OF_SIMULTANEOUS_RUNS < 2) return !! no need of MPI communication through simultaneous sources
 
-    !! communicate kernels from each simulataneaou run
+    !! communicate kernels from each simultaneous run
     if (ACOUSTIC_SIMULATION) then
        wks(:,:,:,:) = rho_ac_kl(:,:,:,:)
        call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), rho_ac_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
@@ -617,8 +626,8 @@ contains
     endif
 
     !! cost function reduction
-    cost_function_tmp=cost_function
-    cost_function=0.
+    cost_function_tmp = cost_function
+    cost_function = 0._CUSTOM_REAL
     call sum_all_all_cr_for_simulatenous_runs(cost_function_tmp, cost_function, 1)
 
   end subroutine mpi_sum_grad_all_to_all_simultaneous_runs

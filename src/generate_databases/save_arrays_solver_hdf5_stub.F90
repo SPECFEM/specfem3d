@@ -27,7 +27,7 @@
 
 ! for external mesh
 
-  subroutine save_arrays_solver_ext_mesh_h5()
+  subroutine save_arrays_solver_mesh_h5()
   use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE,IMAIN,USE_MESH_COLORING_GPU
   use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
     APPROXIMATE_OCEAN_LOAD, SAVE_MESH_FILES, ANISOTROPY
@@ -63,4 +63,4 @@
   integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
   logical,intent(in) :: SAVE_MESH_FILES
   logical,intent(in) :: ANISOTROPY
-  end subroutine save_arrays_solver_ext_mesh_h5
+  end subroutine save_arrays_solver_mesh_h5

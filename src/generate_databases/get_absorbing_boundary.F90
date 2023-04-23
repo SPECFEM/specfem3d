@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -46,6 +46,10 @@
   use constants, only: INJECTION_TECHNIQUE_IS_DSM
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH,INJECTION_TECHNIQUE_TYPE
 
+  ! common normals
+  use constants, only: NGLLSQUARE
+  use generate_databases_par, only: NGLOB_AB
+
   implicit none
 
   ! number of spectral elements in each block
@@ -87,6 +91,7 @@
   ! face corner locations
   real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
   integer :: ispec,ispec2D,icorner,itop,iabsval,iface,igll,i,j,igllfree,ifree
+  integer :: total_num_xmin,total_num_xmax,total_num_ymin,total_num_ymax,total_num_top,total_num_bottom
 
   !! CD CD
   !! additional local parameters For coupling with DSM
@@ -96,6 +101,19 @@
   ! corner locations for faces
   real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: xcoord_iboun,ycoord_iboun,zcoord_iboun
   character(len=27) namefile
+
+  ! flag to use a unique normal for shared boundary points
+  ! (for example at corners, takes the resulting sum of the normal vectors)
+  !
+  ! for boundary points, using a common normal might help to avoid artifacts at corner points.
+  ! simple tests with acoustic and elastic boundaries don't show much of a difference though.
+  !
+  ! by default, this will be turned off and each boundary surface uses its own associated normal.
+  logical,parameter :: USE_COMMON_NORMAL_VECTOR = .false.
+
+  real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: abs_boundary_normal_common
+  real(kind=CUSTOM_REAL) :: vec_norm
+  integer :: iglob,k
 
   ! sets flag in array iboun for elements with an absorbing boundary faces
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
@@ -125,9 +143,32 @@
   ! free surface face counter
   ifree = 0
 
+  ! initializes boundary arrays
+  abs_boundary_ijk(:,:,:) = 0
+  abs_boundary_normal(:,:,:) = 0.0_CUSTOM_REAL
+  abs_boundary_jacobian2Dw(:,:) = 0.0_CUSTOM_REAL
+
+  ! common normal
+  ! allocates temporary common vector array
+  if (USE_COMMON_NORMAL_VECTOR) then
+    if (myrank == 0) then
+      write(IMAIN,*) '     using common normal vector between shared boundary points'
+      call flush_IMAIN()
+    endif
+
+    ! safety check
+    if (nglob_unique /= NGLOB_AB) stop 'Error different nglob_unique and NGLOB_AB values'
+
+    ! allocates temporary array to store common normal vectors
+    allocate(abs_boundary_normal_common(NDIM,NGLOB_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating common normal boundary array'
+    abs_boundary_normal_common(:,:) = 0.0_CUSTOM_REAL
+  endif
+
   ! xmin
+  call sum_all_i(nspec2D_xmin,total_num_xmin)
   if (myrank == 0) then
-    write(IMAIN,*) '     boundary xmin   :',nspec2D_xmin
+    write(IMAIN,*) '     boundary xmin   :',total_num_xmin
     call flush_IMAIN()
   endif
 
@@ -203,7 +244,14 @@
         igll = igll+1
         abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
         abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+        if (USE_COMMON_NORMAL_VECTOR) then
+          ! uses unique normal direction (to avoid having 2 different normal for corners for example)
+          iglob = ibool(ijk_face(1,i,j),ijk_face(2,i,j),ijk_face(3,i,j),ispec)
+          abs_boundary_normal_common(:,iglob) = abs_boundary_normal_common(:,iglob) + normal_face(:,i,j)
+        else
+          ! takes normal to element surface
+          abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+        endif
       enddo
     enddo
   enddo ! nspec2D_xmin
@@ -213,8 +261,9 @@
   endif
 
   ! xmax
+  call sum_all_i(nspec2D_xmax,total_num_xmax)
   if (myrank == 0) then
-    write(IMAIN,*) '     boundary xmax   :',nspec2D_xmax
+    write(IMAIN,*) '     boundary xmax   :',total_num_xmax
     call flush_IMAIN()
   endif
 
@@ -284,14 +333,22 @@
         igll = igll+1
         abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
         abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+        if (USE_COMMON_NORMAL_VECTOR) then
+          ! uses unique normal direction (to avoid having 2 different normal for corners for example)
+          iglob = ibool(ijk_face(1,i,j),ijk_face(2,i,j),ijk_face(3,i,j),ispec)
+          abs_boundary_normal_common(:,iglob) = abs_boundary_normal_common(:,iglob) + normal_face(:,i,j)
+        else
+          ! takes normal to element surface
+          abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+        endif
       enddo
     enddo
   enddo
 
   ! ymin
+  call sum_all_i(nspec2D_ymin,total_num_ymin)
   if (myrank == 0) then
-    write(IMAIN,*) '     boundary ymin   :',nspec2D_ymin
+    write(IMAIN,*) '     boundary ymin   :',total_num_ymin
     call flush_IMAIN()
   endif
 
@@ -361,14 +418,22 @@
         igll = igll+1
         abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
         abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+        if (USE_COMMON_NORMAL_VECTOR) then
+          ! uses unique normal direction (to avoid having 2 different normal for corners for example)
+          iglob = ibool(ijk_face(1,i,j),ijk_face(2,i,j),ijk_face(3,i,j),ispec)
+          abs_boundary_normal_common(:,iglob) = abs_boundary_normal_common(:,iglob) + normal_face(:,i,j)
+        else
+          ! takes normal to element surface
+          abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+        endif
       enddo
     enddo
   enddo
 
   ! ymax
+  call sum_all_i(nspec2D_ymax,total_num_ymax)
   if (myrank == 0) then
-    write(IMAIN,*) '     boundary ymax   :',nspec2D_ymax
+    write(IMAIN,*) '     boundary ymax   :',total_num_ymax
     call flush_IMAIN()
   endif
 
@@ -438,14 +503,22 @@
         igll = igll+1
         abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
         abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+        if (USE_COMMON_NORMAL_VECTOR) then
+          ! uses unique normal direction (to avoid having 2 different normal for corners for example)
+          iglob = ibool(ijk_face(1,i,j),ijk_face(2,i,j),ijk_face(3,i,j),ispec)
+          abs_boundary_normal_common(:,iglob) = abs_boundary_normal_common(:,iglob) + normal_face(:,i,j)
+        else
+          ! takes normal to element surface
+          abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+        endif
       enddo
     enddo
   enddo
 
   ! bottom
+  call sum_all_i(NSPEC2D_BOTTOM,total_num_bottom)
   if (myrank == 0) then
-    write(IMAIN,*) '     boundary bottom :',NSPEC2D_BOTTOM
+    write(IMAIN,*) '     boundary bottom :',total_num_bottom
     call flush_IMAIN()
   endif
 
@@ -537,18 +610,26 @@
        igll = 0
        do j = 1,NGLLY
           do i = 1,NGLLX
-             igll = igll+1
-             abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
-             abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
-             abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+            igll = igll+1
+            abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+            abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+            if (USE_COMMON_NORMAL_VECTOR) then
+              ! uses unique normal direction (to avoid having 2 different normal for corners for example)
+              iglob = ibool(ijk_face(1,i,j),ijk_face(2,i,j),ijk_face(3,i,j),ispec)
+              abs_boundary_normal_common(:,iglob) = abs_boundary_normal_common(:,iglob) + normal_face(:,i,j)
+            else
+              ! takes normal to element surface
+              abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+            endif
           enddo
        enddo
     endif
   enddo   ! NSPEC2D_BOTTOM
 
   ! top
+  call sum_all_i(NSPEC2D_TOP,total_num_top)
   if (myrank == 0) then
-    write(IMAIN,*) '     boundary top    :',NSPEC2D_TOP
+    write(IMAIN,*) '     boundary top    :',total_num_top
     call flush_IMAIN()
   endif
 
@@ -669,7 +750,14 @@
             igll = igll+1
             abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
             abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
-            abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+            if (USE_COMMON_NORMAL_VECTOR) then
+              ! uses unique normal direction (to avoid having 2 different normal for corners for example)
+              iglob = ibool(ijk_face(1,i,j),ijk_face(2,i,j),ijk_face(3,i,j),ispec)
+              abs_boundary_normal_common(:,iglob) = abs_boundary_normal_common(:,iglob) + normal_face(:,i,j)
+            else
+              ! takes normal to element surface
+              abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+            endif
           enddo
         enddo
       endif
@@ -740,7 +828,14 @@
             igll = igll+1
             abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
             abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
-            abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+            if (USE_COMMON_NORMAL_VECTOR) then
+              ! uses unique normal direction (to avoid having 2 different normal for corners for example)
+              iglob = ibool(ijk_face(1,i,j),ijk_face(2,i,j),ijk_face(3,i,j),ispec)
+              abs_boundary_normal_common(:,iglob) = abs_boundary_normal_common(:,iglob) + normal_face(:,i,j)
+            else
+              ! takes normal to element surface
+              abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+            endif
           enddo
         enddo
       endif
@@ -775,6 +870,41 @@
     stop 'error number of absorbing faces'
   endif
 
+  ! assigns common normal to boundary points
+  if (USE_COMMON_NORMAL_VECTOR) then
+    ! note: in principle, we would also need to gather vectors from shared points on different slices/MPI partitions.
+    !       this is not done here and left as a todo for future...
+    !
+    ! normalizes common normal vectors
+    do iglob = 1,NGLOB_AB
+      vec_norm = sqrt(abs_boundary_normal_common(1,iglob)**2 &
+                    + abs_boundary_normal_common(2,iglob)**2 &
+                    + abs_boundary_normal_common(3,iglob)**2)
+      if (vec_norm /= 0.0) abs_boundary_normal_common(:,iglob) = abs_boundary_normal_common(:,iglob) / vec_norm
+    enddo
+
+    ! sets common normal vector
+    do iface = 1,num_abs_boundary_faces
+      ispec = abs_boundary_ispec(iface)
+      do igll = 1,NGLLSQUARE
+        ! gets local indices for GLL point
+        i = abs_boundary_ijk(1,igll,iface)
+        j = abs_boundary_ijk(2,igll,iface)
+        k = abs_boundary_ijk(3,igll,iface)
+
+        ! global index
+        iglob = ibool(i,j,k,ispec)
+
+        ! assignes common normal vector
+        abs_boundary_normal(:,igll,iface) = abs_boundary_normal_common(:,iglob)
+      enddo
+    enddo
+
+    ! free temporary array
+    deallocate(abs_boundary_normal_common)
+  endif
+
+  ! user output
   call sum_all_i(num_free_surface_faces,itop)
   call sum_all_i(num_abs_boundary_faces,iabsval)
   if (myrank == 0) then

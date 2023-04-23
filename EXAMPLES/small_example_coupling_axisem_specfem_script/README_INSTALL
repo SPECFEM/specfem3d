@@ -34,7 +34,7 @@ INSTALLATION of Hybrid Specfem / axisem
 
   4-- compile tools for coupling Axisem/Specfem 
 
-     go to ./EXTERNAL_PACKAGES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/UTILS_COUPLING_SpecFEM 
+     go to ./external_libs/AxiSEM_for_SPECFEM3D/UTILS_COUPLING_SpecFEM
      and type
  
             make all 

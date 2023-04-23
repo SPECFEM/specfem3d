@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -100,8 +100,11 @@
 
       allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2190')
+      Veloc_dsm_boundary(:,:,:,:) = 0._CUSTOM_REAL
+
       allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2191')
+      Tract_dsm_boundary(:,:,:,:) = 0._CUSTOM_REAL
 
       if (old_DSM_coupling_from_Vadim) then
         open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
@@ -116,8 +119,11 @@
 
       allocate(Veloc_axisem(3,NGLLSQUARE*num_abs_boundary_faces),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2192')
+      Veloc_axisem(:,:) = 0._CUSTOM_REAL
+
       allocate(Tract_axisem(3,NGLLSQUARE*num_abs_boundary_faces),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2193')
+      Tract_axisem(:,:) = 0._CUSTOM_REAL
 
       open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'sol_axisem',status='old', &
            action='read',form='unformatted',iostat=ier)
@@ -186,7 +192,6 @@
 
   use specfem_par
   use specfem_par_coupling
-  use specfem_par_elastic, only: ispec_is_elastic
 
   implicit none
 
@@ -218,83 +223,59 @@
       ! get MPI starting time for FK
       tstart = wtime()
 
-      ! counts total number of (local) GLL points on absorbing boundary
-      call nbound(NSPEC_AB,num_abs_boundary_faces,abs_boundary_ispec,ispec_is_elastic,npt)
-
-      !! compute the bottom midle point of the domain
-
-      !! VM VM dealocate in case of severals runs occurs in inverse_problem program
-      if (allocated(nbdglb)) deallocate(nbdglb)
-      if (allocated(vx_FK))  deallocate(vx_FK)
-      if (allocated(vy_FK))  deallocate(vy_FK)
-      if (allocated(vz_FK))  deallocate(vz_FK)
-      if (allocated(tx_FK))  deallocate(tx_FK)
-      if (allocated(ty_FK))  deallocate(ty_FK)
-      if (allocated(tz_FK))  deallocate(tz_FK)
-      if (allocated(VX_t))   deallocate(VX_t)
-      if (allocated(VY_t))   deallocate(VY_t)
-      if (allocated(VZ_t))   deallocate(VZ_t)
-      if (allocated(TX_t))   deallocate(TX_t)
-      if (allocated(TY_t))   deallocate(TY_t)
-      if (allocated(TZ_t))   deallocate(TZ_t)
-
-      !! allocate memory for FK solution
-      if (npt > 0) then
-        allocate(nbdglb(npt),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2202')
-        allocate(vx_FK(npt),vy_FK(npt),vz_FK(npt),tx_FK(npt),ty_FK(npt),tz_FK(npt),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2203')
-      else
-        allocate(nbdglb(1),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2204')
-        allocate(vx_FK(1),vy_FK(1),vz_FK(1),tx_FK(1),ty_FK(1),tz_FK(1),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2205')
-      endif
-
       call FindBoundaryBox(Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box, Zmax_box)
 
-      call ReadFKModelInput(Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box)
+      call ReadFKModelInput(Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box, Zmax_box)
 
       ! send FK parameters to others MPI slices
-      call bcast_all_singlei(kpsv)
+      call bcast_all_singlei(type_kpsv_fk)
       call bcast_all_singlei(nlayer)
 
       if (myrank > 0) then
-        allocate(alpha_FK(nlayer),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2206')
-        allocate(beta_FK(nlayer),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2207')
-        allocate(mu_FK(nlayer),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2208')
-        allocate(h_FK(nlayer),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2209')
+        allocate(alpha_FK(nlayer), &
+                 beta_FK(nlayer), &
+                 rho_FK(nlayer), &
+                 mu_FK(nlayer), &
+                 h_FK(nlayer),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating arrays 2206')
+        alpha_FK(:) = 0._CUSTOM_REAL; beta_FK(:) = 0._CUSTOM_REAL; rho_FK(:) = 0._CUSTOM_REAL
+        mu_FK(:) = 0._CUSTOM_REAL; h_FK(:) = 0._CUSTOM_REAL
       endif
 
       call bcast_all_cr(alpha_FK, nlayer)
       call bcast_all_cr(beta_FK, nlayer)
+      call bcast_all_cr(rho_FK, nlayer)
       call bcast_all_cr(mu_FK, nlayer)
       call bcast_all_cr(h_FK, nlayer)
 
       call bcast_all_singlecr(phi_FK)
       call bcast_all_singlecr(theta_FK)
+
       call bcast_all_singlecr(ff0)
+      call bcast_all_singlecr(freq_sampling_fk)
+      call bcast_all_singlecr(amplitude_fk)
+
       call bcast_all_singlecr(xx0)
       call bcast_all_singlecr(yy0)
       call bcast_all_singlecr(zz0)
-      call bcast_all_singlecr(tt0)
       call bcast_all_singlecr(Z_REF_for_FK)
+
+      call bcast_all_singlecr(tt0)
       call bcast_all_singlecr(tmax_fk)
-      call bcast_all_singlel(stag)
+
+      ! converts origin point Z to reference framework depth for FK,
+      ! where top of lower half-space has to be at z==0
+      zz0 = zz0 - Z_REF_for_FK
 
       ! converts to rad
-      phi_FK   = phi_FK * PI/180.d0
-      theta_FK = theta_FK * PI/180.d0
+      phi_FK   = phi_FK * PI/180.d0    ! azimuth
+      theta_FK = theta_FK * PI/180.d0  ! take-off
 
       ! ray parameter p (according to Snell's law: sin(theta1)/v1 == sin(theta2)/v2)
-      if (kpsv == 1) then
+      if (type_kpsv_fk == 1) then
         ! P-wave
         ray_p = sin(theta_FK)/alpha_FK(nlayer)    ! for vp (i.e., alpha)
-      else if (kpsv == 2) then
+      else if (type_kpsv_fk == 2) then
         ! SV-wave
         ray_p = sin(theta_FK)/beta_FK(nlayer)     ! for vs (i.e., beta)
       endif
@@ -303,75 +284,106 @@
       !       here, it limits ray parameter p to a very small value to handle the calculations
       if (abs(ray_p) < TOL_ZERO_TAKEOFF) ray_p = sign(TOL_ZERO_TAKEOFF,ray_p)
 
+      ! maximum period
       Tg  = 1.d0 / ff0
 
+      ! counts total number of (local) GLL points on absorbing boundary
+      call count_num_boundary_points(num_abs_boundary_faces,abs_boundary_ispec,npt)
+
+      !! compute the bottom midle point of the domain
+
+      !! VM VM dealocate in case of severals runs occurs in inverse_problem program
+      if (allocated(ipt_table)) deallocate(ipt_table)
+      if (allocated(Veloc_FK))  deallocate(Veloc_FK)
+      if (allocated(Tract_FK))  deallocate(Tract_FK)
+
+      !! allocate memory for FK solution
       if (npt > 0) then
+        allocate(ipt_table(NGLLSQUARE,num_abs_boundary_faces), stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2202')
+      else
+        ! dummy
+        allocate(ipt_table(1,1),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2204')
+      endif
+      ipt_table(:,:) = 0
 
-        call find_size_of_working_arrays(deltat, tmax_fk, NF_FOR_STORING, NF_FOR_FFT, NPOW_FOR_INTERP, NP_RESAMP, DF_FK)
+      call find_size_of_working_arrays(deltat, freq_sampling_fk, tmax_fk, NF_FOR_STORING, &
+                                       NF_FOR_FFT, NPOW_FOR_INTERP, NP_RESAMP, DF_FK)
 
+      if (myrank == 0) then
+        write(IMAIN,*) '  computed FK parameters:'
+        write(IMAIN,*) '    frequency sampling rate        = ', freq_sampling_fk,"(Hz)"
+        write(IMAIN,*) '    number of frequencies to store = ', NF_FOR_STORING
+        write(IMAIN,*) '    number of frequencies for FFT  = ', NF_FOR_FFT
+        write(IMAIN,*) '    power of 2 for FFT             = ', NPOW_FOR_INTERP
+        write(IMAIN,*)
+        write(IMAIN,*) '    simulation time step           = ', deltat,"(s)"
+        write(IMAIN,*) '    total simulation length        = ', NSTEP*deltat,"(s)"
+        write(IMAIN,*)
+        write(IMAIN,*) '    FK time resampling rate        = ', NP_RESAMP
+        write(IMAIN,*) '    new time step for F-K          = ', NP_RESAMP * deltat,"(s)"
+        write(IMAIN,*) '    new time window length         = ', tmax_fk,"(s)"
+        write(IMAIN,*)
+        write(IMAIN,*) '    frequency step for F-K         = ', DF_FK,"(Hz)"
+        write(IMAIN,*)
+        write(IMAIN,*) '  total number of points on boundary = ',npt
+        call flush_IMAIN()
+      endif
+
+      ! safety check with number of simulation time steps
+      if (NSTEP/NP_RESAMP > NF_FOR_STORING + NP_RESAMP) then
         if (myrank == 0) then
-          write(IMAIN,*) '  number of frequencies to store = ', NF_FOR_STORING
-          write(IMAIN,*) '  number of frequencies for FFT  = ', NF_FOR_FFT
-          write(IMAIN,*) '  power of 2 for FFT             = ', NPOW_FOR_INTERP
-          write(IMAIN,*) '  resampling rate                = ', NP_RESAMP
-          write(IMAIN,*)
-          write(IMAIN,*) '  new time step for F-K          = ', NP_RESAMP * deltat
-          write(IMAIN,*) '  new time window length         = ', tmax_fk
-          write(IMAIN,*) '  frequency step for F-K         = ', DF_FK
-          write(IMAIN,*)
-          write(IMAIN,*) '  total number of points on boundary = ',npt
-          call flush_IMAIN()
-        endif
-
-        ! safety check with number of simulation time steps
-        if (NSTEP / 2 > NF_FOR_STORING + NP_RESAMP) then
           print *,'Error: FK time window length ',tmax_fk,' and NF_for_storing ',NF_FOR_STORING
           print *,'       are too small for chosen simulation length with NSTEP = ',NSTEP
           print *
-          print *,'       you could use a smaller NSTEP <= ',NF_FOR_STORING*2
+          print *,'       you could use a smaller NSTEP <= ',NF_FOR_STORING*NP_RESAMP
           print *,'       or'
-          print *,'       increase FK window length larger than ',(NSTEP/2 - NP_RESAMP) * NP_RESAMP * deltat
-          print *,'       to have a NF for storing  larger than ',(NSTEP/2 - NP_RESAMP)
-          stop 'Invalid FK setting'
+          print *,'       increase FK window length larger than ',(NSTEP/NP_RESAMP - NP_RESAMP) * NP_RESAMP * deltat
+          print *,'       to have a NF for storing  larger than ',(NSTEP/NP_RESAMP - NP_RESAMP)
         endif
+        stop 'Invalid FK setting'
+      endif
 
+      ! safety check
+      if (NP_RESAMP == 0) then
+        if (myrank == 0) then
+          print *,'Error: FK resampling rate ',NP_RESAMP,' is invalid for frequency sampling rate ',freq_sampling_fk
+          print *,'       and the chosen simulation DT = ',deltat
+          print *
+          print *,'       you could use a higher frequency sampling rate>',1./(deltat)
+          print *,'       (or increase the time stepping size DT if possible)'
+        endif
+        stop 'Invalid FK setting'
+      endif
+
+      ! limits resampling sizes
+      if (NP_RESAMP > 10000) then
+        if (myrank == 0) then
+          print *,'Error: FK resampling rate ',NP_RESAMP,' is too high for frequency sampling rate ',freq_sampling_fk
+          print *,'       and the chosen simulation DT = ',deltat
+          print *
+          print *,'       you could use a higher frequency sampling rate>',1./(10000*deltat)
+          print *,'       (or increase the time stepping size DT if possible)'
+        endif
+        stop 'Invalid FK setting'
+      endif
+
+      if (npt > 0) then
         !! arrays for storing FK solution --------------------------------------------
-
-        allocate(VX_t(npt,  -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
+        allocate(Veloc_FK(NDIM, npt, -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 2210')
-        if (ier /= 0) stop 'error while allocating VX_t'
-        VX_t(:,:) = 0._CUSTOM_REAL
+        if (ier /= 0) stop 'error while allocating Veloc_FK'
+        Veloc_FK(:,:,:) = 0._CUSTOM_REAL
 
-        allocate(VY_t(npt,  -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2211')
-        if (ier /= 0) stop 'error while allocating VY_t'
-        VY_t(:,:) = 0._CUSTOM_REAL
+        allocate(Tract_FK(NDIM, npt, -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2210')
+        if (ier /= 0) stop 'error while allocating Veloc_FK'
+        Tract_FK(:,:,:) = 0._CUSTOM_REAL
 
-        allocate(VZ_t(npt,  -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2212')
-        if (ier /= 0) stop 'error while allocating VZ_t'
-        VZ_t(:,:) = 0._CUSTOM_REAL
-
-        allocate(TX_t(npt,  -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2213')
-        if (ier /= 0) stop 'error while allocating TX_t'
-        TX_t(:,:) = 0._CUSTOM_REAL
-
-        allocate(TY_t(npt,  -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2214')
-        if (ier /= 0) stop 'error while allocating TY_t'
-        TY_t(:,:) = 0._CUSTOM_REAL
-
-        allocate(TZ_t(npt, -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2215')
-        if (ier /= 0) stop 'error while allocating TZ_t'
-        TZ_t(:,:) = 0._CUSTOM_REAL
-
-        call FK3D(NSPEC_AB, ibool, abs_boundary_ijk, abs_boundary_normal, &
-                  abs_boundary_ispec, num_abs_boundary_faces, ispec_is_elastic, &
-                  kpsv, nlayer, nstep, npt, nbdglb, &
+        call FK3D(type_kpsv_fk, nlayer, nstep, npt, &
                   ray_p, phi_FK, xx0, yy0, zz0, Tg, &
-                  tt0, alpha_FK, beta_FK, mu_FK, h_FK, deltat, &
+                  tt0, alpha_FK, beta_FK, mu_FK, h_FK, &
                   NF_FOR_STORING, NPOW_FOR_FFT, NP_RESAMP, DF_FK)
 
       endif
@@ -388,7 +400,7 @@
         call flush_IMAIN()
       endif
 
-      deallocate(alpha_FK, beta_FK, mu_FK, h_FK)
+      deallocate(alpha_FK, beta_FK, rho_FK, mu_FK, h_FK)
    endif
   endif
 
@@ -402,130 +414,292 @@
 
 !! count the number of point in the mesh partition boundary : npt
 
-  subroutine nbound(NSPEC_AB, num_abs_boundary_faces, abs_boundary_ispec, ispec_is_elastic, npt)
+  subroutine count_num_boundary_points(num_abs_boundary_faces, abs_boundary_ispec, npt)
 
-  use constants
+  use constants, only: NGLLSQUARE,myrank
+
+  use specfem_par_elastic, only: ispec_is_elastic
+  use specfem_par_acoustic, only: ispec_is_acoustic
+  use specfem_par_poroelastic, only: ispec_is_poroelastic
 
   implicit none
 
   integer,                                    intent(inout)     :: npt
-  integer,                                    intent(in)        :: NSPEC_AB, num_abs_boundary_faces
-  ! elastic domain flag
-  logical, dimension(NSPEC_AB),               intent(in)        :: ispec_is_elastic
+  integer,                                    intent(in)        :: num_abs_boundary_faces
   ! absorbing boundary surface
   integer, dimension(num_abs_boundary_faces), intent(in)        :: abs_boundary_ispec
-  ! local parameters
-  integer                                                       :: ispec, iface
 
+  ! local parameters
+  integer :: ispec, iface
+
+  ! total number of injection points
   npt = 0
+
   do iface = 1, num_abs_boundary_faces
     ispec = abs_boundary_ispec(iface)
-    if ( ispec_is_elastic(ispec) ) then
+
+    if (ispec_is_elastic(ispec)) then
       ! reference GLL points on boundary face
       npt = npt + NGLLSQUARE
     endif
+
+    if (ispec_is_acoustic(ispec)) then
+      ! reference GLL points on boundary face
+      npt = npt + NGLLSQUARE
+    endif
+
+    if (ispec_is_poroelastic(ispec)) then
+      ! poroelastic domains not supported yet
+      print *,'Error: rank ',myrank,' has injection point in poroelastic domain - not supported yet'
+      stop 'Wavefield injection for poroelastic domains not supported yet'
+    endif
   enddo
 
-  end subroutine nbound
+  end subroutine count_num_boundary_points
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine FK3D(NSPEC_AB, ibool, abs_boundary_ijk, abs_boundary_normal, &
-                  abs_boundary_ispec, num_abs_boundary_faces, ispec_is_elastic, &
-                  kpsv, nlayer, nstep, npt, nbdglb, &
+  subroutine FK3D(kpsv, nlayer, nstep, npt, &
                   ray_p, phi, xx0, yy0, zz0, Tg, &
-                  tt0, alpha_FK, beta_FK, mu_FK, h_FK, deltat, &
+                  tt0, alpha_FK, beta_FK, mu_FK, h_FK, &
                   NF_FOR_STORING, NPOW_FOR_FFT, NP_RESAMP, DF_FK)
 
   use constants
 
   use specfem_par, only: xstore, ystore, zstore, kappastore, mustore, rhostore
+
+  use specfem_par, only: ibool, deltat, &
+                         abs_boundary_ijk, abs_boundary_normal, &
+                         abs_boundary_ispec, num_abs_boundary_faces
+
   use specfem_par_coupling, only: xx, yy, zz, xi1, xim, bdlambdamu, &
-                                   nmx, nmy, nmz,  Z_REF_for_FK
+                                  nmx, nmy, nmz, Z_REF_for_FK, &
+                                  ipt_table
+
+  use specfem_par_elastic, only: ispec_is_elastic
+  use specfem_par_acoustic, only: ispec_is_acoustic
+  use specfem_par_poroelastic, only: ispec_is_poroelastic
+
+  ! for plotting/debugging
+  use specfem_par, only: DT,t0
+  use specfem_par_coupling, only: Veloc_FK,Tract_FK
 
   implicit none
 
-  integer              :: NSPEC_AB,kpsv,nlayer,npt,nstep,ipt
-  integer              :: NF_FOR_STORING, NPOW_FOR_FFT, NP_RESAMP
-  ! global index
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
-  integer, dimension(npt) :: nbdglb
+  integer,intent(in)   :: kpsv,nlayer,nstep,npt
+  integer,intent(in)   :: NF_FOR_STORING, NPOW_FOR_FFT, NP_RESAMP
 
   ! source
-  real(kind=CUSTOM_REAL) :: ray_p,phi,xx0,yy0,zz0,tt0
-  real(kind=CUSTOM_REAL) :: DF_FK
-
+  real(kind=CUSTOM_REAL),intent(in) :: ray_p,phi,xx0,yy0,zz0,Tg,tt0
+  real(kind=CUSTOM_REAL),intent(in) :: DF_FK
   ! model
-  real(kind=CUSTOM_REAL),dimension(nlayer) :: alpha_FK,beta_FK,mu_FK,h_FK
-
-  real(kind=CUSTOM_REAL) :: rhotmp,kappatmp,mutmp,xi,deltat,Tg
-  logical, dimension(NSPEC_AB) :: ispec_is_elastic
-
-  ! absorbing boundary surface
-  integer :: num_abs_boundary_faces
-  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
-  integer :: abs_boundary_ispec(num_abs_boundary_faces)
-  real(kind=CUSTOM_REAL),dimension(3,NGLLSQUARE,num_abs_boundary_faces) :: abs_boundary_normal
+  real(kind=CUSTOM_REAL),dimension(nlayer),intent(in) :: alpha_FK,beta_FK,mu_FK,h_FK
 
   ! local parameters
-  integer :: ispec,iglob,i,j,k,iface,igll,ier
+  real(kind=CUSTOM_REAL) :: rho_tmp,kappa_tmp,mu_tmp,xi
+  integer :: ispec,iglob,i,j,k,iface,igll,ier,ipt
+
+  integer :: ii, kk, iim1, iip1, iip2, it_tmp
+  real(kind=CUSTOM_REAL) :: cs1,cs2,cs3,cs4,w,time_t
+  real(kind=CUSTOM_REAL) :: vx_FK,vy_FK,vz_FK,tx_FK,ty_FK,tz_FK
+  real(kind=CUSTOM_REAL) :: x_loc,y_loc,z_loc
+  character(len=128) :: filename1,filename2
+
+  ! checks if anything to do
+  if (npt == 0) return
+
+  ! allocates temporary arrays
+  allocate(xx(npt),yy(npt),zz(npt),xi1(npt),xim(npt),bdlambdamu(npt),nmx(npt),nmy(npt),nmz(npt),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2216')
+  xx(:) = 0.0; yy(:) = 0.0; zz(:) = 0.0
+  xi1(:) = 0.0; xim(:) = 0.0; bdlambdamu(:) = 0.0
+  nmx(:) = 0.0; nmy(:) = 0.0; nmz(:) = 0.0
 
   ! absorbs absorbing-boundary surface using Stacey condition (Clayton and Engquist)
-  if (npt > 0) then
-     allocate(xx(npt),yy(npt),zz(npt),xi1(npt),xim(npt),bdlambdamu(npt),nmx(npt),nmy(npt),nmz(npt),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2216')
-  else
-     allocate(xx(1),yy(1),zz(1),xi1(1),xim(1),bdlambdamu(1),nmx(1),nmy(1),nmz(1),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2217')
-  endif
-
-  nbdglb(:) = 0
+  ! loops over boundary points
   ipt = 0
-
   do iface = 1,num_abs_boundary_faces
     ispec = abs_boundary_ispec(iface)
     if (ispec_is_elastic(ispec)) then
       ! reference GLL points on boundary face
       do igll = 1,NGLLSQUARE
+        ! gets local indices for GLL point
+        i = abs_boundary_ijk(1,igll,iface)
+        j = abs_boundary_ijk(2,igll,iface)
+        k = abs_boundary_ijk(3,igll,iface)
 
-         ! gets local indices for GLL point
-         i = abs_boundary_ijk(1,igll,iface)
-         j = abs_boundary_ijk(2,igll,iface)
-         k = abs_boundary_ijk(3,igll,iface)
+        iglob = ibool(i,j,k,ispec)
 
-         iglob = ibool(i,j,k,ispec)
-         ipt = ipt + 1
-         nbdglb(ipt) = iglob
+        ipt = ipt + 1
+        ipt_table(igll,iface) = ipt
 
-         xx(ipt) = xstore(iglob)
-         yy(ipt) = ystore(iglob)
-         zz(ipt) = zstore(iglob) -  Z_REF_for_FK  !! VM VM put z in FK system of coordinate
+        xx(ipt) = xstore(iglob)
+        yy(ipt) = ystore(iglob)
+        zz(ipt) = zstore(iglob) - Z_REF_for_FK  !! VM VM put z in FK system of coordinate (z == 0 at top of lower half-space)
 
-         nmx(ipt) = abs_boundary_normal(1,igll,iface)
-         nmy(ipt) = abs_boundary_normal(2,igll,iface)
-         nmz(ipt) = abs_boundary_normal(3,igll,iface)
+        nmx(ipt) = abs_boundary_normal(1,igll,iface)
+        nmy(ipt) = abs_boundary_normal(2,igll,iface)
+        nmz(ipt) = abs_boundary_normal(3,igll,iface)
 
-         rhotmp   = rhostore(i,j,k,ispec)
-         kappatmp = kappastore(i,j,k,ispec)
-         mutmp    = mustore(i,j,k,ispec)
+        rho_tmp   = rhostore(i,j,k,ispec)
+        kappa_tmp = kappastore(i,j,k,ispec)
+        mu_tmp    = mustore(i,j,k,ispec)
 
-         xi       = mutmp/(kappatmp + 4.0/3.0 * mutmp)
-         xi1(ipt) = 1.0 - 2.0 * xi
-         xim(ipt) = (1.0 - xi) * mutmp
-         bdlambdamu(ipt) = (3.0 * kappatmp - 2.0 * mutmp) / (6.0 * kappatmp + 2.0 * mutmp)
-
+        xi       = mu_tmp/(kappa_tmp + 4.0/3.0 * mu_tmp)
+        xi1(ipt) = 1.0 - 2.0 * xi
+        xim(ipt) = (1.0 - xi) * mu_tmp
+        bdlambdamu(ipt) = (3.0 * kappa_tmp - 2.0 * mu_tmp) / (6.0 * kappa_tmp + 2.0 * mu_tmp)  ! Poisson's ratio 3K-2G/[2(3K+G)]
       enddo
+    endif ! elastic
 
-    endif ! ispec_is_elastic
+    if (ispec_is_acoustic(ispec)) then
+      ! reference GLL points on boundary face
+      do igll = 1,NGLLSQUARE
+        ! gets local indices for GLL point
+        i = abs_boundary_ijk(1,igll,iface)
+        j = abs_boundary_ijk(2,igll,iface)
+        k = abs_boundary_ijk(3,igll,iface)
+
+        iglob = ibool(i,j,k,ispec)
+
+        ipt = ipt + 1
+        ipt_table(igll,iface) = ipt
+
+        xx(ipt) = xstore(iglob)
+        yy(ipt) = ystore(iglob)
+        zz(ipt) = zstore(iglob) - Z_REF_for_FK  !! VM VM put z in FK system of coordinate (z == 0 at top of lower half-space)
+
+        nmx(ipt) = abs_boundary_normal(1,igll,iface)
+        nmy(ipt) = abs_boundary_normal(2,igll,iface)
+        nmz(ipt) = abs_boundary_normal(3,igll,iface)
+
+        rho_tmp   = rhostore(i,j,k,ispec)
+        kappa_tmp = kappastore(i,j,k,ispec)
+        mu_tmp    = 0.0
+
+        xi       = 0.0              ! xi = mu_tmp/(kappa_tmp + 4.0/3.0 * mu_tmp)
+        xi1(ipt) = 1.0              ! xi1 = 1.0 - 2.0 * xi
+        xim(ipt) = 0.0              ! xim = (1.0 - xi) * mu_tmp
+        bdlambdamu(ipt) = 0.5       ! bdlambdamu = (3.0 * kappa_tmp - 2.0 * mu_tmp) / (6.0 * kappa_tmp + 2.0 * mu_tmp)
+      enddo
+    endif ! acoustic
+
+    if (ispec_is_poroelastic(ispec)) then
+      ! poroelastic domains not supported yet
+      print *,'Error: rank ',myrank,' has injection point in poroelastic domain - not supported yet'
+      stop 'Wavefield injection for poroelastic domains not supported yet'
+    endif
   enddo
 
+  ! saftey check
+  if (ipt /= npt) then
+    print *,'Error: rank ',myrank,' has invalid number of injection points ',ipt,' should be ',npt
+    stop 'Error invalid number of injection points'
+  endif
+
+  ! FK wavefield
   call FK(alpha_FK, beta_FK, mu_FK, h_FK, nlayer, &
           Tg, ray_p, phi, xx0, yy0, zz0, &
           tt0, deltat, nstep, npt, &
           kpsv, NF_FOR_STORING, NPOW_FOR_FFT,  NP_RESAMP, DF_FK)
 
+  ! file output for plotting
+  if (myrank == 0) then
+    ! output
+    write(IMAIN,*) "  creating sample files:"
+    do i = 1,2
+      ! filename
+      write(filename1,'(a,i1,a)') "plot_FK_Veloc.",i,".dat"
+      write(filename2,'(a,i1,a)') "plot_FK_Tract.",i,".dat"
+      ! user output
+      write(IMAIN,*) "    ",trim(filename1)," and ",trim(filename2)
+
+      ! files
+      open(unit=8888,file="OUTPUT_FILES/"//trim(filename1),status='unknown',iostat=ier)
+      if (ier /= 0) stop 'Error opening FK Veloc plot file'
+      open(unit=8889,file="OUTPUT_FILES/"//trim(filename2),status='unknown',iostat=ier)
+      if (ier /= 0) stop 'Error opening FK Tract plot file'
+
+      ! boundary point index
+      ! first and last boundary point
+      if (i == 1) then
+        ipt = ipt_table(1,1)
+      else
+        ipt = ipt_table(1,num_abs_boundary_faces)
+      endif
+
+      ! point locations
+      x_loc = xx(ipt)
+      y_loc = yy(ipt)
+      z_loc = zz(ipt) + Z_REF_for_FK  ! original location
+
+      ! header
+      write(8888,*) "# FK Velocity - data point"
+      write(8888,*) "# point id      : ",ipt
+      write(8888,*) "# point location: x/y/z = ",x_loc,y_loc,z_loc
+      write(8888,*) "# line format   : #time #Vx #Vy #Vz"
+
+      write(8889,*) "# FK Traction - data point"
+      write(8889,*) "# point id      : ",ipt
+      write(8889,*) "# point location: x/y/z = ",x_loc,y_loc,z_loc
+      write(8889,*) "# line format   : #time #Tx #Ty #Tz"
+
+      ! data
+      do it_tmp = 1,NSTEP
+        ! FK coupling
+        !! find indices
+        ! example:
+        !   np_resamp = 1 and it = 1,2,3,4,5,6, ..
+        !   --> ii = 1,2,3,4,5,6,..
+        !   np_resamp = 2 and it = 1,2,3,4,5,6, ..
+        !   --> ii = 1,1,2,2,3,3,..
+        ii = floor( real(it_tmp + NP_RESAMP - 1) / real( NP_RESAMP))
+        ! example:
+        !       kk = 1,2,1,2,1,2,,..
+        kk = it_tmp - (ii-1) * NP_RESAMP
+        ! example:
+        !       w = 0,1/2,0,1/2,..
+        w = dble(kk-1) / dble(NP_RESAMP)
+
+        ! Cubic spline values
+        cs4 = w*w*w/6.d0
+        cs1 = 1.d0/6.d0 + w*(w-1.d0)/2.d0 - cs4
+        cs3 = w + cs1 - 2.d0*cs4
+        cs2 = 1.d0 - cs1 - cs3 - cs4
+
+        ! interpolation indices
+        iim1 = ii-1        ! 0,..
+        iip1 = ii+1        ! 2,..
+        iip2 = ii+2        ! 3,..
+
+        ! interpolates velocity/stress
+        ! velocity
+        vx_FK = cs1 * Veloc_FK(1,ipt,iim1) + cs2 * Veloc_FK(1,ipt,ii) + cs3 * Veloc_FK(1,ipt,iip1) + cs4 * Veloc_FK(1,ipt,iip2)
+        vy_FK = cs1 * Veloc_FK(2,ipt,iim1) + cs2 * Veloc_FK(2,ipt,ii) + cs3 * Veloc_FK(2,ipt,iip1) + cs4 * Veloc_FK(2,ipt,iip2)
+        vz_FK = cs1 * Veloc_FK(3,ipt,iim1) + cs2 * Veloc_FK(3,ipt,ii) + cs3 * Veloc_FK(3,ipt,iip1) + cs4 * Veloc_FK(3,ipt,iip2)
+
+        ! stress
+        tx_FK = cs1 * Tract_FK(1,ipt,iim1) + cs2 * Tract_FK(1,ipt,ii) + cs3 * Tract_FK(1,ipt,iip1) + cs4 * Tract_FK(1,ipt,iip2)
+        ty_FK = cs1 * Tract_FK(2,ipt,iim1) + cs2 * Tract_FK(2,ipt,ii) + cs3 * Tract_FK(2,ipt,iip1) + cs4 * Tract_FK(2,ipt,iip2)
+        tz_FK = cs1 * Tract_FK(3,ipt,iim1) + cs2 * Tract_FK(3,ipt,ii) + cs3 * Tract_FK(3,ipt,iip1) + cs4 * Tract_FK(3,ipt,iip2)
+
+        ! time
+        time_t = (it_tmp-1) * DT - t0
+
+        ! file output
+        write(8888,*) time_t, vx_FK, vy_FK, vz_FK
+        write(8889,*) time_t, tx_FK, ty_FK, tz_FK
+      enddo
+      ! closes files
+      close(8888)
+      close(8889)
+    enddo
+    write(IMAIN,*)
+  endif
+
+  ! free temporary arrays
   deallocate(xx, yy, zz, xi1, xim, bdlambdamu, nmx, nmy, nmz)
 
   end subroutine FK3D
@@ -534,16 +708,20 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine FK(al, be, mu, h, nlayer, &
+  subroutine FK(al, be, mu, H, nlayer, &
                 Tg, ray_p, phi, x0, y0, z0, &
-                t0, dt, npts, np, &
+                t0, dt, npts, npt, &
                 kpsv, NF_FOR_STORING, NPOW_FOR_FFT, NP_RESAMP, DF_FK)
 
-  use constants, only: myrank,CUSTOM_REAL,IMAIN,PI
+  use constants, only: myrank,CUSTOM_REAL,IMAIN,PI,TINYVAL,NGLLSQUARE
 
-  use specfem_par_coupling, only: VX_t, VY_t, VZ_t, TX_t, TY_t, TZ_t, &
-                                   xx, yy, zz, xi1, xim, bdlambdamu, &
-                                   nmx, nmy, nmz, NPTS_STORED, NPTS_INTERP
+  use specfem_par_coupling, only: Veloc_FK, Tract_FK, &
+                                  xx, yy, zz, xi1, xim, bdlambdamu, &
+                                  nmx, nmy, nmz, NPTS_STORED, NPTS_INTERP, &
+                                  amplitude_fk, ipt_table
+
+  use specfem_par, only: num_abs_boundary_faces,abs_boundary_ispec
+  !use specfem_par_acoustic, only: ispec_is_acoustic ! not used yet
 
   implicit none
 
@@ -551,7 +729,7 @@
   real(kind=CUSTOM_REAL), parameter                         :: zign_neg = -1.0
 
   ! input and output
-  integer,                                     intent(in)   :: nlayer, np, npts, kpsv
+  integer,                                     intent(in)   :: nlayer, npt, npts, kpsv
   integer                                                   :: NF_FOR_STORING, NPOW_FOR_FFT, NP_RESAMP
 
   ! model
@@ -560,38 +738,49 @@
   ! source
   real(kind=CUSTOM_REAL),                      intent(in)    :: dt, ray_p, phi, x0, y0, z0, Tg, t0, DF_FK
 
+  ! local parameters
   real(kind=CUSTOM_REAL),     dimension(:),   allocatable    :: fvec, dtmp
-  complex(kind=CUSTOM_CMPLX), dimension(:,:), allocatable    :: coeff, field_f
   real(kind=CUSTOM_REAL),     dimension(:,:), allocatable    :: field
-  complex(kind=CUSTOM_CMPLX), dimension(:),   allocatable    :: tmp_f1, tmp_f2, tmp_f3
   real(kind=CUSTOM_REAL),     dimension(:),   allocatable    :: tmp_t1, tmp_t2, tmp_t3, tmp_it1
 
-  complex(kind=CUSTOM_CMPLX)                                 :: C_3,stf_coeff,a,b,c,d,delta_mat,N_mat(4,4),dx_f,dz_f,txz_f,tzz_f
-  real(kind=CUSTOM_REAL)                                     :: epsil,dt_fk
+  complex(kind=CUSTOM_CMPLX), dimension(:,:), allocatable    :: coeff, field_f
+  complex(kind=CUSTOM_CMPLX), dimension(:),   allocatable    :: tmp_f1, tmp_f2, tmp_f3
+  complex(kind=CUSTOM_CMPLX)                                 :: C_3,stf_coeff,a,b,c,d,delta_mat
+  complex(kind=CUSTOM_CMPLX)                                 :: dx_f,dz_f,txz_f,tzz_f
+  complex(kind=CUSTOM_CMPLX)                                 :: N_mat(4,4)
+
   real(kind=CUSTOM_REAL)                                     :: sigma_rr,sigma_rt,sigma_rz,sigma_tt,sigma_tz,sigma_zz
   real(kind=CUSTOM_REAL)                                     :: Txx_tmp, Txy_tmp, Txz_tmp, Tyy_tmp, Tyz_tmp, Tzz_tmp
-  real(kind=CUSTOM_REAL)                                     :: df,om,tdelay,eta_p,eta_s,fmax,C_1
-  integer                                                    :: npow,npts2,nf,nf2,nn,ii,ip,i,j,nvar,lpts
+  real(kind=CUSTOM_REAL)                                     :: dt_fk,df,om,Tdelay,eta_p,eta_s,f_Nyquist,C_1
+
+  integer                                                    :: npow,npts2,nf,nf2,nn,ii,ipt,i,j,lpts
   integer                                                    :: npoints2
-  integer                                                    :: ier
-  logical                                                    :: comp_stress, pout
+  integer                                                    :: ier,iface,igll,ispec
+
+  ! spline work array
+  double precision, dimension(:), allocatable                :: tmp_c
 
 !! DK DK here is the hardwired maximum size of the array
 !! DK DK Aug 2016: if this routine is called many times (for different mesh points at which the SEM is coupled with FK)
 !! DK DK Aug 2016: this should be moved to the calling program and precomputed once and for all
   real(kind=CUSTOM_REAL) :: mpow(30)
 
-  epsil = 1.0e-7
-  comp_stress = .true.
-  nvar = 5
-  pout = .false.
+  ! taper
+  ! idea: tapers the onset of the injection traces to diminish numerical noise.
+  !       the inverse FFT can lead to non-zero onsets for coarse frequency sampling.
+  logical, parameter :: USE_TAPERED_BEGINNING = .true.
+  integer, parameter :: taper_nlength = 20    ! tapers first 20 steps
+  real(kind=CUSTOM_REAL) :: taper
 
-  fmax = 1.0_CUSTOM_REAL/(2.0_CUSTOM_REAL * dt)    ! Nyquist frequency of specfem time serie
+  ! fixed parameters
+  integer, parameter     :: nvar = 5
+  logical, parameter     :: comp_stress = .true.
 
+  ! initializations
   !! new way to do time domain resampling
   df    = DF_FK
   nf2   = NF_FOR_STORING+1   ! number of positive frequency sample points
-  nf    = 2*NF_FOR_STORING   ! number of total frequencies after symetrisation
+  nf    = 2*NF_FOR_STORING   ! number of total frequencies after symmetrisation
   npts2 = nf                 ! number of samples in time serie
 
   !! VM VM recompute new values for new way to do
@@ -599,22 +788,26 @@
   npts2 = 2**npow
   NPOW_FOR_FFT = npow
 
-  dt_fk = 1.0_CUSTOM_REAL/(df*(npts2-1))
-
-  !! number of points for resmpled vector
+  !! number of points for resampled vector
   npoints2 = NP_RESAMP*(npts2-1)+1
+
+  dt_fk = 1.0_CUSTOM_REAL/(df*(npts2-1))
+  f_Nyquist = 1.0_CUSTOM_REAL/(2.0_CUSTOM_REAL * dt)    ! Nyquist frequency of specfem time serie
 
   ! user output
   if (myrank == 0) then
-     write(IMAIN,*)
-     write(IMAIN,*) 'Entering the FK synthetics program:'
-     write(IMAIN,*) '  Number of points used for FFT            = ', npts2
-     write(IMAIN,*) '  Number of samples stored for FK solution = ', NF_FOR_STORING
-     write(IMAIN,*) '  Total time length used for FK            = ', t0+(npts2-1)*dt_fk
-     write(IMAIN,*) '  FK time step       = ', dt_fk
-     write(IMAIN,*) '  FK frequency step  = ', df
-     write(IMAIN,*) '  power of 2 for FFT = ', npow
-     call flush_IMAIN()
+    write(IMAIN,*)
+    write(IMAIN,*) '  Entering the FK synthetics program:'
+    write(IMAIN,*) '    Number of samples stored for FK solution = ', NF_FOR_STORING
+    write(IMAIN,*) '    Number of points used for FFT            = ', npts2
+    write(IMAIN,*) '    Total time length used for FK            = ', t0+(npts2-1)*dt_fk,'(s)'
+    write(IMAIN,*)
+    write(IMAIN,*) '    simulation Nyquist frequency             = ', f_Nyquist,'(Hz)'
+    write(IMAIN,*) '    FK time step                             = ', dt_fk
+    write(IMAIN,*) '    FK frequency step                        = ', df
+    write(IMAIN,*) '    power of 2 for FFT                       = ', npow
+    write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   !! check if dt_fk is compatible with dt_specfem
@@ -624,7 +817,8 @@
 
   allocate(fvec(nf2),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2218')
-  fvec = 0.0_CUSTOM_REAL
+  if (ier /= 0) stop 'error while allocating'
+  fvec(:) = 0.0_CUSTOM_REAL
   do ii = 1, nf2
     fvec(ii) = (ii-1)*df
   enddo
@@ -632,37 +826,46 @@
   allocate(coeff(2,nf2),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2219')
   if (ier /= 0) stop 'error while allocating'
+  coeff(:,:) = (0.d0,0.d0)
 
   allocate(field_f(nf,nvar),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2220')
   if (ier /= 0) stop 'error while allocating'
+  field_f(:,:) = (0.d0,0.d0)
 
   allocate(field(npts2,nvar),dtmp(npts),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2221')
   if (ier /= 0) stop 'error while allocating'
+  field(:,:) = 0._CUSTOM_REAL; dtmp(:) = 0._CUSTOM_REAL
 
   !! allocate debug vectors
   allocate(tmp_f1(npts2), tmp_f2(npts2), tmp_f3(npts2),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2222')
+  if (ier /= 0) stop 'error while allocating'
+  tmp_f1(:) = (0.d0,0.d0)
+  tmp_f2(:) = (0.d0,0.d0)
+  tmp_f3(:) = (0.d0,0.d0)
 
   if (ier /= 0) stop 'error while allocating'
   allocate(tmp_t1(npts2), tmp_t2(npts2), tmp_t3(npts2),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2223')
-
   if (ier /= 0) stop 'error while allocating'
-  allocate(tmp_it1(npoints2),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2224')
-
-  NPTS_STORED = npts2
-  NPTS_INTERP = npoints2
-
   tmp_t1(:) = 0.0_CUSTOM_REAL
   tmp_t2(:) = 0.0_CUSTOM_REAL
   tmp_t3(:) = 0.0_CUSTOM_REAL
 
-  tmp_f1(:) = (0.,0.)
-  tmp_f2(:) = (0.,0.)
-  tmp_f3(:) = (0.,0.)
+  allocate(tmp_it1(npoints2),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2224')
+  if (ier /= 0) stop 'error while allocating'
+  tmp_it1(:) = 0.0_CUSTOM_REAL
+
+  ! temporary work array for splines
+  allocate(tmp_c(npts2),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2225')
+  tmp_c(:) = 0.d0
+
+  NPTS_STORED = npts2
+  NPTS_INTERP = npoints2
 
   nn = int(-t0/dt) ! what if this is not an integer number?
 
@@ -673,83 +876,115 @@
   enddo
 
   if (myrank == 0) then
+    write(IMAIN,*) '    starting from ',nn,' points before time 0'
     write(IMAIN,*)
-    write(IMAIN,*) '  starting from ',nn,' points before time 0'
     call flush_IMAIN()
   endif
 
   if (kpsv == 1) then
-     ! P-wave
+    ! P-wave
+    ! for C_3 = i sin(inc) (u=[sin(inc), cos(inc)])
+    C_3 = amplitude_fk * cmplx(0,1.) * ray_p * al(nlayer)      ! amp. of incoming P in the bot. layer
+    eta_p = sqrt(1.0/al(nlayer)**2 - ray_p**2)                 ! vertical slowness for lower layer
 
-     ! for C_3=i sin(inc) (u=[sin(inc), cos(inc)])
-     C_3 = cmplx(0,1.) * ray_p * al(nlayer)      ! amp. of incoming P in the bot. layer
-     eta_p = sqrt(1.0/al(nlayer)**2 - ray_p**2)  ! vertical slowness for lower layer
+    if (myrank == 0) write(IMAIN,*) '  Incoming P : C_3,  ray_p, eta = ', C_3, ray_p, eta_p
 
-     if (myrank == 0) write(IMAIN,*) '  Incoming P : C_3,  ray_p, eta = ', C_3, ray_p, eta_p
+    N_mat(:,:) = (0.d0,0.d0)
 
-     N_mat(:,:) = (0.0,0.0)
+    ! find out the wave coefficients in the bottom layer for all freqs -------------------------------
+    do ii = 1, nf2
+      om = 2.0 * PI * fvec(ii)
+      ! propagation matrix
+      call compute_N_Rayleigh(al,be,mu,H,nlayer,om,ray_p,sum(H(1:nlayer-1)),N_mat) !total-thickness=sum(H)
 
-     ! find out the wave coefficients in the bottom layer for all freqs -------------------------------
-     do ii = 1, nf2
-        om = 2.0 * PI * fvec(ii)
-        ! propagation matrix
-        call compute_N_rayleigh(al,be,mu,H,nlayer,om,ray_p,sum(H(1:nlayer-1)),N_mat) !total-thickness=sum(h)
+      a = N_mat(3,2); b = N_mat(3,4); c = N_mat(4,2); d = N_mat(4,4)
+      delta_mat = a*d - b*c
+      if (abs(delta_mat) > TINYVAL) then
+        coeff(1,ii) = -(d*N_mat(3,3) - b*N_mat(4,3)) / delta_mat * C_3
+        coeff(2,ii) = -(-c*N_mat(3,3) + a*N_mat(4,3)) / delta_mat * C_3
+      else
+        coeff(1,ii) = (0.d0,0.d0)
+        coeff(2,ii) = (0.d0,0.d0)
+      endif
 
-        a = N_mat(3,2); b = N_mat(3,4); c = N_mat(4,2); d = N_mat(4,4)
-        delta_mat = a*d - b*c
-        if (delta_mat /= 0.0) then
-          coeff(1,ii) = -(d*N_mat(3,3) - b*N_mat(4,3)) / delta_mat * C_3
-          coeff(2,ii) = -(-c*N_mat(3,3) + a*N_mat(4,3)) / delta_mat * C_3
-        else
-          coeff(1,ii) = 0.0
-          coeff(2,ii) = 0.0
-        endif
+      !debug
+      !if (ii == 1 .and. myrank == 0) then
+      !  print *,'debug: Rayleigh coeff ',coeff(1,ii),coeff(2,ii),delta_mat
+      !  print *,'N_mat'
+      !  print *,N_mat
+      !endif
+    enddo
 
-        !debug
-        !if (ii == 1 .and. myrank == 0) then
-        !  print *,'debug: rayleigh coeff ',coeff(1,ii),coeff(2,ii),delta_mat
-        !  print *,'Nmat'
-        !  print *,N_mat
-        !endif
-     enddo
+    ! loop over all data points -------------------------------------------------
+    ! instead of looping over points like:
+    !  do ipt = 1, npt  ! maybe this can be run faster by shifting t for diff. x of fixed z
+    ! we loop over the boundary arrays to get ispec & acoustic/elastic domain flag:
+    do iface = 1,num_abs_boundary_faces
+      ispec = abs_boundary_ispec(iface)
 
-     ! loop over all data points -------------------------------------------------
-     do ip = 1, np  ! maybe this can be run faster by shifting t for diff. x of fixed z
+      ! GLL points on boundary face
+      do igll = 1,NGLLSQUARE
+        ! point index using table lookup
+        ipt = ipt_table(igll,iface)
 
-        field_f = 0.0
-        tdelay = ray_p * (xx(ip)-x0) * cos(phi) + ray_p * (yy(ip)-y0) * sin(phi) + eta_p * (0-z0)
+        ! initializes
+        field_f(:,:) = (0.d0,0.d0)
+
+        ! time delay with respect to top of lower half-space (set to be at z==0)
+        Tdelay = ray_p * (xx(ipt)-x0) * cos(phi) + ray_p * (yy(ipt)-y0) * sin(phi) + eta_p * (0.0-z0)
 
         do ii = 1, nf2
-           om = 2.0 * PI * fvec(ii)               !! pulsation
-           stf_coeff = exp(-(om*tg/2)**2)   !! apodization window
-           stf_coeff = stf_coeff * exp(cmplx(0,-1)*om*tdelay)
+          om = 2.0 * PI * fvec(ii)                                 !! pulsation
 
-           !! zz(ip) is the height of point with respect to the lower layer
-           call compute_N_rayleigh(al,be,mu,H,nlayer,om,ray_p,zz(ip),N_mat)
+          stf_coeff = exp(-(om * Tg/2)**2)                         !! apodization window
+          stf_coeff = stf_coeff * exp(cmplx(0,-1)*om*Tdelay)
 
-           dx_f = N_mat(1,2)*coeff(1,ii) + N_mat(1,4)*coeff(2,ii) + N_mat(1,3)*C_3  ! y_1
-           dz_f = N_mat(2,2)*coeff(1,ii) + N_mat(2,4)*coeff(2,ii) + N_mat(2,3)*C_3  ! y_3
+          !! zz(ipt) is the height of point with respect to the lower layer
+          call compute_N_Rayleigh(al,be,mu,H,nlayer,om,ray_p,zz(ipt),N_mat)
 
-           field_f(ii,1) = stf_coeff * dx_f * cmplx(0,-1) * cmplx(0,om)             ! (i om)u_x
-           field_f(ii,2) = stf_coeff * dz_f * cmplx(0,om)                           ! (i om)u_z
+          dx_f = N_mat(1,2)*coeff(1,ii) + N_mat(1,4)*coeff(2,ii) + N_mat(1,3)*C_3  ! y_1
+          dz_f = N_mat(2,2)*coeff(1,ii) + N_mat(2,4)*coeff(2,ii) + N_mat(2,3)*C_3  ! y_3
 
-           if (comp_stress) then
-              txz_f = N_mat(3,2)*coeff(1,ii) + N_mat(3,4)*coeff(2,ii) + N_mat(3,3)*C_3 ! tilde{y}_4
-              tzz_f = N_mat(4,2)*coeff(1,ii) + N_mat(4,4)*coeff(2,ii) + N_mat(4,3)*C_3 ! tilde{y}_6
-              field_f(ii,3) = stf_coeff * om * ray_p * (xi1(ip)*tzz_f - 4.0*xim(ip)*dx_f) ! T_xx
-              field_f(ii,4) = stf_coeff * om * ray_p * txz_f * cmplx(0,-1)                ! T_xz
-              field_f(ii,5) = stf_coeff * om * ray_p * tzz_f                              ! T_zz
-           endif
+          ! for the Stacey boundary contribution, we need velocity = (i om) displacement (in frequency domain)
+          field_f(ii,1) = stf_coeff * dx_f * cmplx(0,-1) * cmplx(0,om)             ! (i om)u_x
+          field_f(ii,2) = stf_coeff * dz_f * cmplx(0,om)                           ! (i om)u_z
 
+          ! acoustic boundary point
+          ! note: instead of velocity as in the elastic case, in acoustic domains we would need potentials.
+          !       the velocity potential would be defined as: v = 1/rho grad(potential_dot)
+          !       thus, we would require to either change the FK formulations or to integrate velocity.
+          !       this will be left as a todo for future...
+          !
+          !       as a reminder, displacement in frequency domains could be obtained by:
+          !if (ispec_is_acoustic(ispec)) then
+          !  ! displacement: u_x = -i y_1
+          !  !               u_z =    y_3   from Tong. (A13)
+          !  field_f(ii,1) = stf_coeff * dx_f * cmplx(0,-1)             ! u_x = - i y_1
+          !  field_f(ii,2) = stf_coeff * dz_f                           ! u_z =     y_3
+          !endif
+
+          ! stress
+          if (comp_stress) then
+            txz_f = N_mat(3,2)*coeff(1,ii) + N_mat(3,4)*coeff(2,ii) + N_mat(3,3)*C_3      ! tilde{y}_4
+            tzz_f = N_mat(4,2)*coeff(1,ii) + N_mat(4,4)*coeff(2,ii) + N_mat(4,3)*C_3      ! tilde{y}_6
+
+            field_f(ii,3) = stf_coeff * om * ray_p * (xi1(ipt)*tzz_f - 4.0*xim(ipt)*dx_f) ! T_xx
+            field_f(ii,4) = stf_coeff * om * ray_p * txz_f * cmplx(0,-1)                  ! T_xz
+            field_f(ii,5) = stf_coeff * om * ray_p * tzz_f                                ! T_zz
+          endif
+
+          !debug
+          !if (ipt==1000 .and. ii == 10 .and. myrank == 0) print *,'debug: coeff',coeff(1,ii),coeff(2,ii), &
+          !                                      'dx_f',dx_f,tzz_f,'xi',xi1(ipt),xim(ipt),'field',field_f(ii,3:5)
         enddo
 
         ! pad negative f, and convert to time series
         do ii = 2, nf2-1
-           field_f(nf+2-ii,:) = conjg(field_f(ii,:))
+          field_f(nf+2-ii,:) = conjg(field_f(ii,:))
         enddo
 
         !! inverse fast fourier transform
-        field = 0.0
+        field(:,:) = 0.0
         do j = 1, nvar
           ! inverse FFT
           call FFTinv(npow,field_f(:,j),zign_neg,dt,field(:,j),mpow)
@@ -769,133 +1004,160 @@
 
         !! store undersampled version of velocity  FK solution
         tmp_t1(:) = field(:,1) * cos(phi)
-        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        vx_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
+        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2, tmp_c)
+        Veloc_FK(1,ipt,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
         tmp_t1(:) = field(:,1) * sin(phi)
-        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        vy_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
+        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2, tmp_c)
+        Veloc_FK(2,ipt,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
         tmp_t1(:) = field(:,2)
-        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        vz_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
+        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2, tmp_c)
+        Veloc_FK(3,ipt,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
         !! compute traction
-        do lpts = 1, NF_FOR_STORING
+        if (comp_stress) then
+          do lpts = 1, NF_FOR_STORING
+            sigma_rr = field(lpts,3)
+            sigma_rt = 0.0
+            sigma_rz = field(lpts,4)
+            sigma_zz = field(lpts,5)
+            sigma_tt = bdlambdamu(ipt)*(sigma_rr+sigma_zz)
+            sigma_tz = 0.0
 
-           sigma_rr = field(lpts,3)
-           sigma_rt = 0.0
-           sigma_rz = field(lpts,4)
-           sigma_zz = field(lpts,5)
-           sigma_tt = bdlambdamu(ip)*(sigma_rr+sigma_zz)
-           sigma_tz = 0.0
+            Txx_tmp = sigma_rr * cos(phi) * cos(phi) + sigma_tt * sin(phi) * sin(phi)
+            Txy_tmp = cos(phi) * sin(phi) * (sigma_rr - sigma_tt)
+            Txz_tmp = sigma_rz * cos(phi)
+            Tyy_tmp = sigma_rr * sin(phi) * sin(phi) + sigma_tt * cos(phi) * cos(phi)
+            Tyz_tmp = sigma_rz * sin(phi)
+            Tzz_tmp = sigma_zz
 
-           Txx_tmp = sigma_rr * cos(phi) * cos(phi) + sigma_tt * sin(phi) * sin(phi)
-           Txy_tmp = cos(phi) * sin(phi) * (sigma_rr - sigma_tt)
-           Txz_tmp = sigma_rz * cos(phi)
-           Tyy_tmp = sigma_rr * sin(phi) * sin(phi) + sigma_tt * cos(phi) * cos(phi)
-           Tyz_tmp = sigma_rz * sin(phi)
-           Tzz_tmp = sigma_zz
+            !! store directly the traction
+            Tract_FK(1,ipt,lpts) = Txx_tmp*nmx(ipt) +  Txy_tmp*nmy(ipt) +  Txz_tmp*nmz(ipt)
+            Tract_FK(2,ipt,lpts) = Txy_tmp*nmx(ipt) +  Tyy_tmp*nmy(ipt) +  Tyz_tmp*nmz(ipt)
+            Tract_FK(3,ipt,lpts) = Txz_tmp*nmx(ipt) +  Tyz_tmp*nmy(ipt) +  Tzz_tmp*nmz(ipt)
+          enddo
 
-           !! store directly the traction
-           Tx_t(ip,lpts) = Txx_tmp*nmx(ip) +  Txy_tmp*nmy(ip) +  Txz_tmp*nmz(ip)
-           Ty_t(ip,lpts) = Txy_tmp*nmx(ip) +  Tyy_tmp*nmy(ip) +  Tyz_tmp*nmz(ip)
-           Tz_t(ip,lpts) = Txz_tmp*nmx(ip) +  Tyz_tmp*nmy(ip) +  Tzz_tmp*nmz(ip)
+          !! store undersamped version of tractions FK solution
+          tmp_t1(1:NF_FOR_STORING) = Tract_FK(1,ipt,1:NF_FOR_STORING)
+          call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2, tmp_c)
+          Tract_FK(1,ipt,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
-        enddo
+          tmp_t1(1:NF_FOR_STORING) = Tract_FK(2,ipt,1:NF_FOR_STORING)
+          call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2, tmp_c)
+          Tract_FK(2,ipt,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
-        !! store undersamped version of tractions FK solution
-        tmp_t1(1:NF_FOR_STORING) = Tx_t(ip,1:NF_FOR_STORING)
-        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        Tx_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
-
-        tmp_t1(1:NF_FOR_STORING) = Ty_t(ip,1:NF_FOR_STORING)
-        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        Ty_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
-
-        tmp_t1(1:NF_FOR_STORING) = Tz_t(ip,1:NF_FOR_STORING)
-        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        Tz_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
+          tmp_t1(1:NF_FOR_STORING) = Tract_FK(3,ipt,1:NF_FOR_STORING)
+          call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2, tmp_c)
+          Tract_FK(3,ipt,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
+        endif
 
         ! user output
-        if (myrank == 0 .and. np > 1000) then
-          if (mod(ip,(np/10)) == 0) then
-            write(IMAIN,*) '  done ',ip/(np/10)*10,'% points out of ',np
+        if (myrank == 0 .and. npt > 1000) then
+          if (mod(ipt,(npt/10)) == 0) then
+            write(IMAIN,*) '  done ',ipt/(npt/10)*10,'% points out of ',npt
             call flush_IMAIN()
           endif
         endif
-     enddo
+      enddo
+    enddo
 
   else if (kpsv == 2) then
-     ! SV-wave
+    ! SV-wave
+    ! for C_2 = sin(inc) (u=[cos(inc), sin(inc)])
+    C_1 = amplitude_fk * ray_p * be(nlayer)                   ! amp. of incoming S in the bot. layer
+    eta_s = sqrt(1.0/be(nlayer)**2 - ray_p**2)                ! vertical slowness for lower layer
 
-     ! for C_2= sin(inc) (u=[cos(inc), sin(inc)])
-     C_1 = ray_p * be(nlayer)                   ! amp. of incoming S in the bot. layer
-     eta_s = sqrt(1.0/be(nlayer)**2 - ray_p**2) ! vertical slowness for lower layer
+    if (myrank == 0) write(IMAIN,*) '  Incoming S :  C_1,  ray_p, eta = ', C_1, ray_p, eta_s
 
-     if (myrank == 0) write(IMAIN,*) '  Incoming S :  C_1,  ray_p, eta = ', C_1, ray_p, eta_s
+    N_mat(:,:) = (0.d0,0.d0)
 
-     N_mat(:,:) = (0.0,0.0)
+    ! find out the wave coefficients in the bottom layer for all freqs
+    do ii = 1, nf2
+      om = 2.0 * PI * fvec(ii)
+      ! propagation matrix
+      call compute_N_Rayleigh(al,be,mu,H,nlayer,om,ray_p,sum(H(1:nlayer-1)),N_mat) !total-thickness=sum(h)
 
-     ! find out the wave coefficients in the bottom layer for all freqs
-     do ii = 1, nf2
-        om = 2.0 * PI * fvec(ii)
-        ! propagation matrix
-        !if (ii == nf2) pout = .true.
-        call compute_N_rayleigh(al,be,mu,H,nlayer,om,ray_p,sum(H(1:nlayer-1)),N_mat) !total-thickness=sum(h)
+      a = N_mat(3,2); b = N_mat(3,4); c = N_mat(4,2); d = N_mat(4,4)
+      delta_mat = a*d - b*c
+      if (abs(delta_mat) > TINYVAL) then
+        coeff(1,ii) = -(d*N_mat(3,1) - b*N_mat(4,1)) / delta_mat * C_1
+        coeff(2,ii) = -(-c*N_mat(3,1) + a*N_mat(4,1)) / delta_mat * C_1
+      else
+        coeff(1,ii) = (0.d0,0.d0)
+        coeff(2,ii) = (0.d0,0.d0)
+      endif
+    enddo
 
-        a = N_mat(3,2); b = N_mat(3,4); c = N_mat(4,2); d = N_mat(4,4)
-        delta_mat = a*d-b*c
-        if (delta_mat /= 0.0) then
-          coeff(1,ii) = -(d*N_mat(3,1) - b*N_mat(4,1)) / delta_mat * C_1
-          coeff(2,ii) = -(-c*N_mat(3,1) + a*N_mat(4,1)) / delta_mat * C_1
-        else
-          coeff(1,ii) = 0.0
-          coeff(2,ii) = 0.0
-        endif
-     enddo
+    ! loop over all data points
+    ! instead of looping over points like:
+    !  do ipt = 1, npt  ! maybe this can be run faster by shifting t for diff. x of fixed z
+    ! we loop over the boundary arrays to get ispec & acoustic/elastic domain flag:
+    do iface = 1,num_abs_boundary_faces
+      ispec = abs_boundary_ispec(iface)
 
-     ! loop over all data points
-     do ip = 1, np  ! maybe this can be run faster by shifting t for diff. x of fixed z
+      ! GLL points on boundary face
+      do igll = 1,NGLLSQUARE
+        ! point index using table lookup
+        ipt = ipt_table(igll,iface)
 
-        field_f = 0.
-        tdelay = ray_p * (xx(ip)-x0) * cos(phi) + ray_p * (yy(ip)-y0) * sin(phi) + eta_s * (0-z0)
+        ! initializes
+        field_f(:,:) = (0.d0,0.d0)
+
+        ! time delay with respect to top of lower half-space (set to be at z==0)
+        Tdelay = ray_p * (xx(ipt)-x0) * cos(phi) + ray_p * (yy(ipt)-y0) * sin(phi) + eta_s * (0.0-z0)
 
         do ii = 1, nf2
-           om = 2.0 * PI * fvec(ii)
-           stf_coeff = exp(-(om*tg/2)**2) * exp(cmplx(0,-1)*om*tdelay)
+          om = 2.0 * PI * fvec(ii)
+          stf_coeff = exp(-(om * Tg/2)**2) * exp(cmplx(0,-1)*om*Tdelay)
 
-           ! z is the height of position with respect to the lowest layer interface.
-           call compute_N_rayleigh(al,be,mu,H,nlayer,om,ray_p,zz(ip),N_mat)
+          ! z is the height of position with respect to the lowest layer interface.
+          call compute_N_Rayleigh(al,be,mu,H,nlayer,om,ray_p,zz(ipt),N_mat)
 
-           dx_f = N_mat(1,2)*coeff(1,ii) + N_mat(1,4)*coeff(2,ii) + N_mat(1,1)*C_1  ! y_1
-           dz_f = N_mat(2,2)*coeff(1,ii) + N_mat(2,4)*coeff(2,ii) + N_mat(2,1)*C_1  ! y_3
-           field_f(ii,1) = stf_coeff * dx_f * cmplx(0,-1) * cmplx(0,om)  ! (i om)u_x(1.20)
-           field_f(ii,2) = stf_coeff * dz_f * cmplx(0,om)                ! (i om)u_z
+          dx_f = N_mat(1,2)*coeff(1,ii) + N_mat(1,4)*coeff(2,ii) + N_mat(1,1)*C_1  ! y_1
+          dz_f = N_mat(2,2)*coeff(1,ii) + N_mat(2,4)*coeff(2,ii) + N_mat(2,1)*C_1  ! y_3
 
-           if (comp_stress) then
-              txz_f = N_mat(3,2)*coeff(1,ii) + N_mat(3,4)*coeff(2,ii) + N_mat(3,1)*C_1 ! tilde{y}_4
-              tzz_f = N_mat(4,2)*coeff(1,ii) + N_mat(4,4)*coeff(2,ii) + N_mat(4,1)*C_1 ! tilde{y}_6
+          ! for the Stacey boundary contribution, we need velocity = (i om) displacement (in frequency domain)
+          field_f(ii,1) = stf_coeff * dx_f * cmplx(0,-1) * cmplx(0,om)  ! (i om)u_x(1.20)
+          field_f(ii,2) = stf_coeff * dz_f * cmplx(0,om)                ! (i om)u_z
 
-              field_f(ii,3) = stf_coeff * om * ray_p * (xi1(ip)*tzz_f - 4.0*xim(ip)*dx_f) ! T_xx
-              field_f(ii,4) = stf_coeff * om * ray_p * txz_f * cmplx(0,-1)                ! T_xz
-              field_f(ii,5) = stf_coeff * om * ray_p * tzz_f                              ! T_zz
-           endif
+          ! acoustic boundary point
+          ! note: instead of velocity as in the elastic case, in acoustic domains we would need potentials.
+          !       the velocity potential would be defined as: v = 1/rho grad(potential_dot)
+          !       thus, we would require to either change the FK formulations or to integrate velocity.
+          !       this will be left as a todo for future...
+          !
+          !       as a reminder, displacement in frequency domains could be obtained by:
+          !if (ispec_is_acoustic(ispec)) then
+          !  ! displacement: u_x = -i y_1
+          !  !               u_z =    y_3   from Tong. (A13)
+          !  field_f(ii,1) = stf_coeff * dx_f * cmplx(0,-1)             ! u_x = - i y_1
+          !  field_f(ii,2) = stf_coeff * dz_f                           ! u_z =     y_3
+          !endif
 
+          if (comp_stress) then
+            txz_f = N_mat(3,2)*coeff(1,ii) + N_mat(3,4)*coeff(2,ii) + N_mat(3,1)*C_1 ! tilde{y}_4
+            tzz_f = N_mat(4,2)*coeff(1,ii) + N_mat(4,4)*coeff(2,ii) + N_mat(4,1)*C_1 ! tilde{y}_6
+
+            field_f(ii,3) = stf_coeff * om * ray_p * (xi1(ipt)*tzz_f - 4.0*xim(ipt)*dx_f) ! T_xx
+            field_f(ii,4) = stf_coeff * om * ray_p * txz_f * cmplx(0,-1)                ! T_xz
+            field_f(ii,5) = stf_coeff * om * ray_p * tzz_f                              ! T_zz
+          endif
         enddo
 
         ! pad negative f, and convert to time series
         do ii = 2, nf2-1
-           field_f(nf+2-ii,:) = conjg(field_f(ii,:))
+          field_f(nf+2-ii,:) = conjg(field_f(ii,:))
         enddo
 
-        field = 0.
+        field(:,:) = 0.0
         do j = 1, nvar
           ! inverse FFT
           call FFTinv(npow,field_f(:,j),zign_neg,dt,field(:,j),mpow)
 
           ! wrap around to start from t0: here one has to be careful if t0/dt is not
           ! exactly an integer, assume nn > 0
+          ! note: for nn == 0, nothing to wrap as field(1:npts2,j) = field(1:npts2,j)
           if (nn > 0) then
             dtmp(1:nn) = field(npts2-nn+1:npts2,j)
             field(nn+1:npts2,j) = field(1:npts2-nn,j)
@@ -909,59 +1171,88 @@
 
         !! store undersampled version of velocity  FK solution
         tmp_t1(:) = field(:,1)*cos(phi)
-        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        vx_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
+        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2, tmp_c)
+        Veloc_FK(1,ipt,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
         tmp_t1(:) = field(:,1)*sin(phi)
-        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        vy_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
+        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2, tmp_c)
+        Veloc_FK(2,ipt,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
         tmp_t1(:) = field(:,2)
-        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        vz_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
+        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2, tmp_c)
+        Veloc_FK(3,ipt,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
         !! compute traction
-        do lpts = 1, NF_FOR_STORING
+        if (comp_stress) then
+          do lpts = 1, NF_FOR_STORING
+            sigma_rr = field(lpts,3)
+            sigma_rt = 0.0
+            sigma_rz = field(lpts,4)
+            sigma_zz = field(lpts,5)
+            sigma_tt = bdlambdamu(ipt)*(sigma_rr+sigma_zz)
+            sigma_tz = 0.0
 
-           sigma_rr = field(lpts,3)
-           sigma_rt = 0.0
-           sigma_rz = field(lpts,4)
-           sigma_zz = field(lpts,5)
-           sigma_tt = bdlambdamu(ip)*(sigma_rr+sigma_zz)
-           sigma_tz = 0.0
+            Txx_tmp = sigma_rr * cos(phi) * cos(phi) + sigma_tt * sin(phi) * sin(phi)
+            Txy_tmp = cos(phi) * sin(phi) * (sigma_rr - sigma_tt)
+            Txz_tmp = sigma_rz * cos(phi)
+            Tyy_tmp = sigma_rr * sin(phi) * sin(phi) + sigma_tt * cos(phi) * cos(phi)
+            Tyz_tmp = sigma_rz * sin(phi)
+            Tzz_tmp = sigma_zz
 
-           Txx_tmp = sigma_rr * cos(phi) * cos(phi) + sigma_tt * sin(phi) * sin(phi)
-           Txy_tmp = cos(phi) * sin(phi) * (sigma_rr - sigma_tt)
-           Txz_tmp = sigma_rz * cos(phi)
-           Tyy_tmp = sigma_rr * sin(phi) * sin(phi) + sigma_tt * cos(phi) * cos(phi)
-           Tyz_tmp = sigma_rz * sin(phi)
-           Tzz_tmp = sigma_zz
+            !! store directly the traction
+            Tract_FK(1,ipt,lpts) = Txx_tmp*nmx(ipt) +  Txy_tmp*nmy(ipt) +  Txz_tmp*nmz(ipt)
+            Tract_FK(2,ipt,lpts) = Txy_tmp*nmx(ipt) +  Tyy_tmp*nmy(ipt) +  Tyz_tmp*nmz(ipt)
+            Tract_FK(3,ipt,lpts) = Txz_tmp*nmx(ipt) +  Tyz_tmp*nmy(ipt) +  Tzz_tmp*nmz(ipt)
+          enddo
 
-           !! store directly the traction
-           Tx_t(ip,lpts) = Txx_tmp*nmx(ip) +  Txy_tmp*nmy(ip) +  Txz_tmp*nmz(ip)
-           Ty_t(ip,lpts) = Txy_tmp*nmx(ip) +  Tyy_tmp*nmy(ip) +  Tyz_tmp*nmz(ip)
-           Tz_t(ip,lpts) = Txz_tmp*nmx(ip) +  Tyz_tmp*nmy(ip) +  Tzz_tmp*nmz(ip)
-        enddo
+          !! store undersamped version of tractions FK solution
+          tmp_t1(1:NF_FOR_STORING) = Tract_FK(1,ipt,1:NF_FOR_STORING)
+          call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2, tmp_c)
+          Tract_FK(1,ipt,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
-        !! store undersamped version of tractions FK solution
-        tmp_t1(1:NF_FOR_STORING) = Tx_t(ip,1:NF_FOR_STORING)
-        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        Tx_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
+          tmp_t1(1:NF_FOR_STORING) = Tract_FK(2,ipt,1:NF_FOR_STORING)
+          call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2, tmp_c)
+          Tract_FK(2,ipt,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
-        tmp_t1(1:NF_FOR_STORING) = Ty_t(ip,1:NF_FOR_STORING)
-        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        Ty_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
+          tmp_t1(1:NF_FOR_STORING) = Tract_FK(3,ipt,1:NF_FOR_STORING)
+          call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2, tmp_c)
+          Tract_FK(3,ipt,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
+        endif
 
-        tmp_t1(1:NF_FOR_STORING) = Tz_t(ip,1:NF_FOR_STORING)
-        call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2)
-        Tz_t(ip,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
-
-     enddo
+        ! user output
+        if (myrank == 0 .and. npt > 1000) then
+          if (mod(ipt,(npt/10)) == 0) then
+            write(IMAIN,*) '  done ',ipt/(npt/10)*10,'% points out of ',npt
+            call flush_IMAIN()
+          endif
+        endif
+      enddo
+    enddo
   endif
 
+  ! taper
+  if (USE_TAPERED_BEGINNING) then
+    ! check if taper length is reasonable compared to wavefield storage traces
+    if (NF_FOR_STORING > 2 * taper_nlength) then
+      do i = 1,taper_nlength
+        ! cosine taper, otherwise using a constant (1.0) instead
+        taper = (1.0 - cos(PI*(i-1)/taper_nlength)) * 0.5        ! between [0,1[
+
+        ! tapers traces
+        Veloc_FK(:,:,i) = taper * Veloc_FK(:,:,i)
+        if (comp_stress) then
+          Tract_FK(:,:,i) = taper * Tract_FK(:,:,i)
+        endif
+      enddo
+    endif
+  endif
+
+  ! free temporary arrays
   deallocate(fvec,coeff, field_f, field, dtmp)
   deallocate(tmp_f1, tmp_f2, tmp_f3, tmp_t1, tmp_t2, tmp_t3)
+  deallocate(tmp_c)
 
+  ! user output
   if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) "  FK computing passed "
@@ -975,11 +1266,11 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine compute_N_rayleigh(alpha, beta, mu, H, nlayer, om, ray_p, ht, Nmat)
+  subroutine compute_N_Rayleigh(alpha, beta, mu, H, nlayer, om, ray_p, height, N_mat)
 
-  ! assumes that ht = 0 is the bottom interface
+  ! assumes that height = 0 is the bottom interface
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL,myrank
 
   implicit none
 
@@ -989,146 +1280,299 @@
   ! input
   integer,                                       intent(in)   :: nlayer
   real(kind=CUSTOM_REAL),     dimension(nlayer), intent(in)   :: alpha, beta, mu, H
-  real(kind=CUSTOM_REAL),                        intent(in)   :: om,ray_p,ht
+  real(kind=CUSTOM_REAL),                        intent(in)   :: om,ray_p,height
 
   ! output
-  complex(kind=CUSTOM_CMPLX), dimension(4,4),    intent(inout) :: Nmat(4,4)
+  complex(kind=CUSTOM_CMPLX), dimension(4,4),    intent(inout) :: N_mat(4,4)
 
   ! local vars
   integer                                         :: i, j, ilayer
   complex(kind=CUSTOM_CMPLX), dimension(nlayer)   :: eta_alpha, eta_beta, nu_al, nu_be
-  complex(kind=CUSTOM_CMPLX), dimension(4,4)      :: Emat, Gmat, Player
-  complex(kind=CUSTOM_CMPLX)                      :: ca, sa, xa, ya, cb, sb, xb, yb, g1, mul, c1, c2
-  real(kind=CUSTOM_REAL),     dimension(nlayer)   :: gamma0, gamma1
-  real(kind=CUSTOM_REAL),     dimension(nlayer)   :: hh
+  complex(kind=CUSTOM_CMPLX), dimension(4,4)      :: E_mat, G_mat, P_layer
+  complex(kind=CUSTOM_CMPLX)                      :: xa, ya, xb, yb
+  complex(kind=CUSTOM_CMPLX)                      :: ca, sa, cb, sb, c1, c2
+  real(kind=CUSTOM_CMPLX),    dimension(nlayer)   :: gamma0, gamma1
+  real(kind=CUSTOM_CMPLX),    dimension(nlayer)   :: hh
+  real(kind=CUSTOM_CMPLX)                         :: g1, mul, two_mul, g1_sq
+  real(kind=CUSTOM_CMPLX)                         :: alphal, betal
 
   if (nlayer < 1) stop 'nlayer has to be larger than or equal to 1'
 
-! see: Tang et al. (2014),
+! see: Tong et al. (2014),
 !      High-resolution seismic array imaging based on an SEM-FK hybrid method,
 !      GJI, 197, 369-395.
 ! details in the appendix
 
-  ! note: vertical incident (p=0) is not handled in Tang et al. explanations.
+  ! note: vertical incident (p=0) is not handled in Tong et al. explanations.
   !       here, it limits p to a very small value to handle the calculations
-  if (abs(ray_p) < 1.e-15) stop 'Invalid ray parameter p (cannot be zero) in compute_N_rayleigh() routine'
+  if (abs(ray_p) < 1.e-15) stop 'Invalid ray parameter p (cannot be zero) in compute_N_Rayleigh() routine'
 
+  ! vertical wavenumbers
+  ! pre-computes factors
   do i = 1,nlayer
-    eta_alpha(i) = -cmplx(0,1) * sqrt(1.0/alpha(i) + ray_p) * sqrt(1.0/alpha(i) - ray_p) ! i*vertical slowness, purely imaginary
-    eta_beta(i) = -cmplx(0,1) * sqrt(1.0/beta(i) + ray_p) * sqrt(1.0/beta(i) - ray_p)
-    nu_al(i) = om * eta_alpha(i)
+    ! vp and vs
+    alphal = alpha(i)  ! vp
+    betal = beta(i)    ! vs
+
+    ! safety check: zero shear velocity case not handled yet
+    if (abs(betal) < 1.e-15) stop 'Invalid shear velocity in compute_N_Rayleigh() routine'
+
+    ! P
+    ! see (A5): E_23 = -i nu_p / k = -i omega sqrt(1/alpha^2 - p^2) / k
+    !           factor eta_alpha = -i sqrt(1/alpha^2 - p^2)
+    !                            = -i sqrt( (1/alpha + p) * (1/alpha - p) )
+    !                            = -i sqrt(1/alpha + p) * sqrt(1/alpha - p)
+    !org: eta_alpha(i) = -cmplx(0,1) * sqrt(1.0/alpha(i) + ray_p) * sqrt(1.0/alpha(i) - ray_p)
+    eta_alpha(i) = -cmplx(0,1) * sqrt( 1.0 / alphal**2 - ray_p**2 )  ! i*vertical slowness, purely imaginary
+    ! note: here factor nu_al = -i nu_p = -i omega sqrt(1/alpha^2 - p^2)
+    !                                   = omega (-i sqrt(1/alpha^2 - p^2)
+    !                                   = omega (eta_alpha)
+    nu_al(i) = om * eta_alpha(i) ! i * vertical wavenumber
+
+    ! SV
+    ! see (A5): E_11 = -i nu_s / k = -i omega sqrt(1/beta^2 - p^2) / k
+    !           factor eta_beta = -i sqrt(1/beta^2 - p^2)
+    !                           = -i sqrt( (1/beta + p) * (1/beta - p) )
+    !                           = -i sqrt(1/beta + p) * sqrt(1/beta - p)
+    !org: eta_beta(i) = -cmplx(0,1) * sqrt(1.0/beta(i) + ray_p) * sqrt(1.0/beta(i) - ray_p)
+    eta_beta(i) = -cmplx(0,1) * sqrt( 1.0 / betal**2 - ray_p**2 )
+
+    ! note: here factor nu_be = -i nu_s = -i omega sqrt(1/beta^2 - p^2)
+    !                                   = omega (-i sqrt(1/beta^2 - p^2)
+    !                                   = omega (eta_beta)
     nu_be(i) = om * eta_beta(i) ! i * vertical wavenumber
-    gamma0(i) = 2.0 * beta(i)**2 * ray_p**2
-    if (gamma0(i) /= 0.0) then
-      gamma1(i) = 1.0 - 1.0/gamma0(i)
-    else
-      gamma1(i) = - huge(1.0_CUSTOM_REAL) ! very large negative gamma
-    endif
+
+    ! auxiliary variables
+    gamma0(i) = 2.0 * betal**2 * ray_p**2
+    gamma1(i) = 1.0 - 1.0/gamma0(i)
   enddo
 
-  ! Tang et al. (2014), appendix (A10) E_0:
-  ! note Emat is not omega dependent
-  Emat(1,1) =  eta_beta(nlayer) / ray_p
-  Emat(1,2) = -Emat(1,1)
-  Emat(1,3) = 1
-  Emat(1,4) = 1
-  Emat(2,1) = 1
-  Emat(2,2) = 1
-  Emat(2,3) =  eta_alpha(nlayer) / ray_p
-  Emat(2,4) = -Emat(2,3)
+  ! initializes matrix
+  E_mat(:,:) = (0.0,0.0)
 
-  Emat(3,1) = 2.0 * mu(nlayer) * gamma1(nlayer)
-  Emat(3,2) = Emat(3,1)
-  Emat(3,3) = 2.0 * mu(nlayer) * eta_alpha(nlayer) / ray_p
-  Emat(3,4) = -Emat(3,3)
-  Emat(4,1) = 2.0 * mu(nlayer) * eta_beta(nlayer) / ray_p
-  Emat(4,2) = -Emat(4,1)
-  Emat(4,3) = Emat(3,1)
-  Emat(4,4) = Emat(3,1)
+  ! Tong et al. (2014), appendix (A10) E_0:
+  ! note: E_mat is not omega dependent
+  !
+  ! (A5): E_11 = -i nu_s / k
+  !            = -i omega * sqrt(1/beta^2 - p^2) / ( p * omega)   ,with p = k/omega -> k = p * omega
+  !            = -i sqrt(1/beta^2 - p^2) / p
+  !            = eta_beta / p
+  E_mat(1,1) =  eta_beta(nlayer) / ray_p
+  E_mat(1,2) = -E_mat(1,1)
+  E_mat(1,3) = (1.0,0.0)
+  E_mat(1,4) = (1.0,0.0)
 
-  if (ht > sum(h(1:nlayer-1))) then
-    write(*,*) ' FK error '
-    write(*,*) ' Z point is located in the air above the surface rather than in the solid!'
-    write(*,*) ' current z :', ht, ' max z allowed : ',  sum(h(1:nlayer-1))
-    stop
+  ! (A5): E_23 = -i nu_p / k
+  !            = -i omega * sqrt(1/alpha^2 - p^2) / (p * omega)     ,with p = k/omega -> k = p * omega
+  !            = -i sqrt(1/alpha^2 - p^2) / p
+  !            = eta_alpha / p
+  E_mat(2,1) = (1.0,0.0)
+  E_mat(2,2) = (1.0,0.0)
+  E_mat(2,3) =  eta_alpha(nlayer) / ray_p
+  E_mat(2,4) = -E_mat(2,3)
+
+  ! pre-computed factor for half-space (layer with index nlayer)
+  mul = mu(nlayer)
+  ! 2 mu
+  two_mul = 2.0 * mul
+
+  ! note: wavenumber k is defined as p = k / omega -> k = p * omega
+  !       for frequency omega==0, wavenumber k becomes zero and thus a factor 1/k becomes undefined.
+  !       to avoid such behavior, the factor k in the expressions for E below will be cancelled out.
+  !       together with the multiplication by propagation matrix P, where elements can have a factor k, this should be ok.
+  !       unfortunately, the original paper by Tong et al. doesn't mention such a case and assumes k is non-zero.
+
+  ! (A5): E_31 = 2 k mu gamma_1
+  !            = 2 p omega mu gamma_1  ,with wavenumber k: from ray p = k / omega -> k = p * omega
+  !org: E_mat(3,1) = 2.0 * mu(nlayer) * gamma1(nlayer)               ! takes out factor k
+  E_mat(3,1) = two_mul * gamma1(nlayer)
+  E_mat(3,2) = E_mat(3,1)
+
+  ! (A5): E_33 = - 2 i mu nu_p
+  !            = 2 mu (-i) omega sqrt(1/alpha^2 - p^2)
+  !            = 2 mu omega (-i sqrt(1/alpha^2 - p^2))
+  !            = 2 mu omega (eta_alpha)
+  !            or
+  !            = 2 mu (eta_alpha) k / p     ,with p = k/omega -> omega = k / p
+  !org: E_mat(3,3) = 2.0 * mu(nlayer) * eta_alpha(nlayer) / ray_p    ! takes out factor k
+  E_mat(3,3) = two_mul * eta_alpha(nlayer) / ray_p
+  E_mat(3,4) = -E_mat(3,3)
+
+  ! (A5): E_41 = - 2 i mu nu_s
+  !            = 2 mu (-i) omega sqrt(1/beta^2 - p^2)
+  !            = 2 mu omega (-i sqrt(1/beta^2 - p^2))
+  !            = 2 mu omega (eta_beta)
+  !            or
+  !            = 2 mu (eta_beta) k / p      ,with p = k/omega -> omega = k / p
+  !org: E_mat(4,1) = 2.0 * mu(nlayer) * eta_beta(nlayer) / ray_p     ! takes out factor k
+  E_mat(4,1) = two_mul * eta_beta(nlayer) / ray_p
+  E_mat(4,2) = -E_mat(4,1)
+
+  ! (A5): E_43 = 2 k mu gamma_1
+  !            = E_31 = E_32
+  E_mat(4,3) = E_mat(3,1)
+  E_mat(4,4) = E_mat(3,1)
+
+  if (height > sum(H(1:nlayer-1))) then
+    print *,'FK error: rank ',myrank
+    print *,'  Z point is located in the air above the surface rather than in the solid!'
+    print *,'  current z :', height, ' max z allowed : ',  sum(H(1:nlayer-1))
+    stop 'FK invalid height'
   endif
 
   ! figure out the location z with respect to layer stack
-  if (ht <= 0) then ! in lower half space
-    Gmat = 0.0
-    Gmat(1,1) = exp(nu_be(nlayer) * ht)
-    Gmat(2,2) = exp(-nu_be(nlayer) * ht)
-    Gmat(3,3) = exp(nu_al(nlayer) * ht)
-    Gmat(4,4) = exp(-nu_al(nlayer) * ht)
-    Nmat = matmul(Emat,Gmat)
-  else ! in layers
-    hh = H
+  if (height <= 0.0) then
+    ! in lower half space
+    G_mat(:,:) = (0.0,0.0)
+    ! incident, up-going S-wave
+    ! (A5): Gamma_11 = e^(-i nu_s z) = e^( (-i nu_s) * z ) = e^(nu_be * z)
+    G_mat(1,1) = exp(nu_be(nlayer) * height)
+    ! reflected, down-going S-wave
+    ! (A5): Gamma_22 = e^(i nu_s z)  = e^( -(-i nu_s) * z ) = e^(-nu_be * z)
+    G_mat(2,2) = exp(-nu_be(nlayer) * height)
+    ! incident, up-going P-wave
+    ! (A5): Gamma_33 = e^(-i nu_p z) = e^( (-i nu_p) * z ) = e^(nu_al * z)
+    G_mat(3,3) = exp(nu_al(nlayer) * height)
+    ! reflected, down-going P-wave
+    ! (A5): Gamma_44 = e^(i nu_p z) = e^( -(-i nu_p) * z ) = e^(-nu_al * z)
+    G_mat(4,4) = exp(-nu_al(nlayer) * height)
+
+    ! resulting matrix
+    N_mat = matmul(E_mat,G_mat)
+
+  else
+    ! in layers
+    ! determines layer in which the point (given by height) lies
+    ! note: indexing assumes that last layer (nlayer) being the bottom, lower halfspace,
+    !       and the first layer (1) being at the top surface
+    hh(:) = H(:)
     ilayer = nlayer
     do j = nlayer-1 , 1 , -1
-      if (ht <= sum(H(j:nlayer-1))) then
+      if (height <= sum(H(j:nlayer-1))) then
         ilayer = j; exit
       endif
     enddo
+
+    ! updates point's layer thicknesses
     hh(ilayer+1:nlayer-1) = H(ilayer+1:nlayer-1)
-    hh(ilayer) = ht - sum(H(ilayer+1:nlayer-1))
-    if (hh(ilayer) < 0) stop 'Error setting layer thickness'
+    hh(ilayer) = height - sum(H(ilayer+1:nlayer-1))
+
+    if (hh(ilayer) < 0.0) then
+      print *,'Error: rank ',myrank,' has invalid point height ',hh(ilayer),' at layer ',ilayer
+      stop 'Error setting layer thickness'
+    endif
+
+    !debug
+    !print *,'debug: height ',height,'layer ',ilayer,nlayer,'H',H(:),'sum',sum(H(ilayer:nlayer-1)),'h',hh(:)
 
     ! compute propagation matrices
-    Nmat(:,:) = Emat(:,:)
+    N_mat(:,:) = E_mat(:,:)
 
     do j = nlayer-1, ilayer, -1
+      ! matrix variables
+      ! C_alpha = cos(nu_p h) = cos( omega sqrt(1/alpha^2 - p^2) h )
+      ! S_alpha = -sin(nu_p h) = -sin( omega sqrt(1/alpha^2 - p^2) h )
+      ! with nu_p h = omega sqrt(1/alpha^2 - p^2) h
+      !
+      ! note: there might be some sign conflict and confusion between sin and sinh in the definition after (A9) of Tong et al.
+      !       instead of S_alpha = -sin(nu_p h) as stated in the paper, here sa becomes [i sin(nu_p h)] as imaginary number.
+      !
       c1 = nu_al(j) * hh(j)
-      ca = (exp(c1) + exp(-c1))/2.0  ! cos(vp h)
-      sa = (exp(c1) - exp(-c1))/2.0  ! sin(vp h)
+      ! cos(nu_p h) = [ e^(i nu_p h) + e^(-i nu_p h) ] / 2
+      !           = [ e^(-nu_al * h) + e^(nu_al * h) ] / 2
+      ca = (exp(c1) + exp(-c1))/2.0
+      ! sin(nu_p h) = [ e^(i nu_p h) - e^(-i nu_p h) ] / 2i
+      !             = [ e^(-nu_al * h) - e^(nu_al * h) ] / 2i
+      !             = i [ e^(nu_al * h) - e^(-nu_al * h) ] / 2
+      sa = (exp(c1) - exp(-c1))/2.0     ! imaginary part
 
+      ! X_alpha = - i nu_p S_alpha / ( omega p)
+      !         = -i omega sqrt(1/alpha^2 - p^2) S_alpha / (omega p )
+      !         = [ -i sqrt(1/alpha^2 - p^2) ] S_alpha / p
+      !         = eta_alpha S_alpha / p
       xa = eta_alpha(j) * sa / ray_p
+
+      ! Y_alpha = i omega  p S_alpha / nu_p
+      !         = p S_alpha i omega / ( omega sqrt(1/alpha^2 - p^2) )
+      !         = p S_alpha i / ( sqrt(1/alpha^2 - p^2) )
+      !         = p S_alpha 1 / (-i sqrt(1/alpha^2 - p^2) )
+      !         = p S_alpha / eta_alpha
       ya = ray_p * sa / eta_alpha(j)
 
+      ! C_beta = cos(nu_s h) = cos( omega sqrt(1/beta^2 - p^2) h )
+      ! S_beta = -sin(nu_s h) = -sin( omega sqrt(1/beta^2 - p^2) h )
+      ! with nu_s h = omega sqrt(1/beta^2 - p^2) h
+      !
+      ! note: for sb, see same remark as above for sa
       c2 = nu_be(j) * hh(j)
-      cb = (exp(c2) + exp(-c2))/2.0  ! cos(vs h)
-      sb = (exp(c2) - exp(-c2))/2.0  ! sin(vs h)
+      cb = (exp(c2) + exp(-c2))/2.0  ! cos(nu_s h)
+      sb = (exp(c2) - exp(-c2))/2.0  ! sin(nu_s h) imaginary part
 
+      ! X_beta = - i nu_s S_beta / ( omega p)
+      ! Y_beta = i omega  p S_beta / nu_s
       xb = eta_beta(j) * sb / ray_p
       yb = ray_p * sb / eta_beta(j)
+
+      ! layer factors
       g1 = gamma1(j)
       mul = mu(j)
+      ! pre-computed factors
+      ! gamma1^2
+      g1_sq = g1 * g1
+      ! 2 mu
+      two_mul = 2.0 * mul ! note: leaving out factor k, only 2 mu
 
-      ! Tang et al. (2014), appendix (A8)
-      Player(1,1) = ca - g1*cb
-      Player(1,2) = xb - g1*ya
-      Player(1,3) = (ya - xb)/(2*mul)
-      Player(1,4) = (cb - ca)/(2*mul)
+      ! Tong et al. (2014), appendix (A8)
+      ! propagation matrix P_n
+      P_layer(1,1) = ca - g1*cb
+      P_layer(1,2) = xb - g1*ya
+      !org: P_layer(1,3) = (ya - xb)/(2*mul)          ! misses factor 1/k
+      !     P_layer(1,4) = (cb - ca)/(2*mul)          ! misses factor 1/k
+      P_layer(1,3) = (ya - xb) / two_mul
+      P_layer(1,4) = (cb - ca) / two_mul
 
-      Player(2,1) = xa - g1*yb
-      Player(2,2) = cb - g1*ca
-      Player(2,3) = (ca - cb)/(2*mul)
-      Player(2,4) = (yb - xa)/(2*mul)
+      P_layer(2,1) = xa - g1*yb
+      P_layer(2,2) = cb - g1*ca
+      !org: P_layer(2,3) = (ca - cb)/(2*mul)          ! misses factor 1/k
+      !     P_layer(2,4) = (yb - xa)/(2*mul)          ! misses factor 1/k
+      P_layer(2,3) = (ca - cb) / two_mul
+      P_layer(2,4) = (yb - xa) / two_mul
 
-      Player(3,1) = 2*mul * (xa - g1**2 * yb)
-      Player(3,2) = 2*mul * g1 * (cb - ca)
-      Player(3,3) = ca - g1*cb
-      Player(3,4) = g1*yb - xa
+      !org: P_layer(3,1) = 2*mul * (xa - g1**2 * yb)  ! misses factor k
+      !     P_layer(3,2) = 2*mul * g1 * (cb - ca)     ! misses factor k
+      P_layer(3,1) = two_mul * (xa - g1_sq * yb)
+      P_layer(3,2) = two_mul * g1 * (cb - ca)
 
-      Player(4,1) = 2*mul * g1 * (ca - cb)
-      Player(4,2) = 2*mul * (xb - g1**2 * ya)
-      Player(4,3) = g1*ya - xb
-      Player(4,4) = cb - g1*ca
+      P_layer(3,3) = ca - g1*cb
+      P_layer(3,4) = g1*yb - xa
+
+      !org: P_layer(4,1) = 2*mul * g1 * (ca - cb)     ! misses factor k
+      !     P_layer(4,2) = 2*mul * (xb - g1**2 * ya)  ! misses factor k
+      P_layer(4,1) = two_mul * g1 * (ca - cb)
+      P_layer(4,2) = two_mul * (xb - g1_sq * ya)
+      P_layer(4,3) = g1*ya - xb
+      P_layer(4,4) = cb - g1*ca
 
       !debug
-      !print *,'debug: j,g1,xa,xb,ya,yb,ca,cb',j,g1,xa,xb,ya,yb,ca,cb
-      !print *,'debug: j,player',j,Player
+      !if (myrank == 0) print *,'debug: j,g1,g1_sq,mul,two_mul,xa,xb,ya,yb,ca,cb,ray_p,om', &
+      !                                 j,g1,g1_sq,mul,two_mul,xa,xb,ya,yb,ca,cb,ray_p,om
+      !if (myrank == 0) print *,'debug: j,P_layer',j,P_layer(:,:)
 
-      Nmat = gamma0(j) * matmul(Player,Nmat)
+      ! resulting matrix
+      N_mat = gamma0(j) * matmul(P_layer,N_mat)
     enddo
   endif
 
   ! debug
-  !print *,'debug: Nmat '
-  !do j = 1,4
-  !  print *,Nmat(:,j)
-  !enddo
+  !if (myrank == 0) then
+  !  print *,'debug: N_mat '
+  !  do j = 1,4
+  !    print *,N_mat(:,j)
+  !  enddo
+  !endif
+  !stop
 
-  end subroutine compute_N_rayleigh
+  end subroutine compute_N_Rayleigh
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1147,21 +1591,24 @@
 
   integer, parameter :: CUSTOM_CMPLX = 8
 
-  integer :: npow
-  integer :: lblock,k,FK,jh,ii,istart
-  integer :: l,iblock,nblock,i,lbhalf,j,lx
+  integer,intent(in) :: npow
 
-  complex(kind=CUSTOM_CMPLX),dimension(*) :: xi
-  complex(kind=CUSTOM_CMPLX) :: wk, hold, q
+  real(kind=CUSTOM_REAL),intent(in) :: zign,dtt
 
-  real(kind=CUSTOM_REAL) :: zign,flx,inv_of_flx,v,dtt
+  complex(kind=CUSTOM_CMPLX),dimension(*),intent(inout) :: xi
 
 !! DK DK here is the hardwired maximum size of the array
 !! DK DK Aug 2016: if this routine is called many times (for different mesh points at which the SEM is coupled with FK)
 !! DK DK Aug 2016: this should be moved to the calling program and precomputed once and for all
-  real(kind=CUSTOM_REAL) :: mpow(30)
+  real(kind=CUSTOM_REAL),intent(in) :: mpow(30)
 
-  real(kind=CUSTOM_REAL), parameter :: PI = acos(-1.d0)
+  ! local parameters
+  integer :: lblock,k,FK,jh,ii,istart
+  integer :: l,iblock,nblock,i,lbhalf,j,lx
+  complex(kind=CUSTOM_CMPLX) :: wk, hold, q
+  real(kind=CUSTOM_REAL) :: flx,inv_of_flx,v
+  ! PI = acos(-1.d0)
+  real(kind=CUSTOM_REAL), parameter :: TWO_PI = 2.0_CUSTOM_REAL * acos(-1.d0)
 
 !! DK DK added this sanity check
   if (npow > 30) stop 'error: the FK FTT routine has an hardwired maximum of 30 levels'
@@ -1182,7 +1629,8 @@
       FK = k
       flx = lx
 
-      v = zign * 2.0_CUSTOM_REAL * PI * FK/flx         ! Fourier convention
+      v = zign * TWO_PI * FK / flx         ! Fourier convention
+
       ! - sign: MATLAB convention: forward e^{-i om t}
       ! + sign: engineering convention: forward e^{i om t}
       wk = cmplx(cos(v),-sin(v))   ! sign change to -sin(v) or sin(v)
@@ -1226,12 +1674,12 @@
   enddo
 
   ! final steps deal with dt factors
-  if (zign > 0.) then      ! FORWARD FFT
-
+  if (zign > 0.) then
+    ! FORWARD FFT
     xi(1:lx) = xi(1:lx) * dtt    ! multiplication by dt
 
-  else                     ! REVERSE FFT
-
+  else
+    ! REVERSE FFT
     flx = flx*dtt
     inv_of_flx = 1._CUSTOM_REAL / flx
 
@@ -1251,22 +1699,25 @@
 
 ! inverse Fourier transform -- calls FFT
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
   integer, parameter :: CUSTOM_CMPLX = 8
 
-  integer :: npow, nsmp, nhalf
-  real(kind=CUSTOM_REAL)  :: dtt,zign
+  integer,intent(in) :: npow
+  real(kind=CUSTOM_REAL),intent(in)  :: dtt,zign
 
-  complex(kind=CUSTOM_CMPLX), intent(in) :: s(*)
+  complex(kind=CUSTOM_CMPLX), intent(inout) :: s(*)
   real(kind=CUSTOM_REAL), intent(out) :: r(*)   ! note that this is real, not double precision
 
 !! DK DK here is the hardwired maximum size of the array
 !! DK DK Aug 2016: if this routine is called many times (for different mesh points at which the SEM is coupled with FK)
 !! DK DK Aug 2016: this should be moved to the calling program and precomputed once and for all
-  real(kind=CUSTOM_REAL) :: mpow(30)
+  real(kind=CUSTOM_REAL),intent(in) :: mpow(30)
+
+  ! local parameters
+  integer :: nsmp, nhalf
 
   nsmp = 2**npow
   nhalf = nsmp/2
@@ -1288,9 +1739,11 @@
 
   integer, parameter :: CUSTOM_CMPLX = 8
 
-  integer :: np2,n,n1,i
+  complex(kind=CUSTOM_CMPLX),intent(inout) :: s(*)
+  integer, intent(in) :: np2
 
-  complex(kind=CUSTOM_CMPLX) :: s(*)
+  ! local parameters
+  integer :: n,n1,i
 
   n = 2*np2
   n1 = np2+1
@@ -1308,49 +1761,71 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine find_size_of_working_arrays(deltat, tmax_fk, NF_FOR_STORING, &
-                                         NF_FOR_FFT, NPOW_FOR_INTERP, np_resampling, DF_FK)
+  subroutine find_size_of_working_arrays(deltat, freq_sampling_fk, tmax_fk, NF_FOR_STORING, &
+                                         NF_FOR_FFT, NPOW_FOR_INTERP, NP_RESAMP, DF_FK)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
+  use specfem_par, only: NSTEP
 
   implicit none
+  real(kind=CUSTOM_REAL),intent(in)    :: deltat,freq_sampling_fk
   real(kind=CUSTOM_REAL),intent(inout) :: tmax_fk
-  real(kind=CUSTOM_REAL),intent(inout) :: DF_FK, deltat
-  integer,               intent(inout) :: NF_FOR_STORING, NF_FOR_FFT, NPOW_FOR_INTERP, np_resampling
-
+  real(kind=CUSTOM_REAL),intent(inout) :: DF_FK
+  integer,               intent(inout) :: NF_FOR_STORING, NF_FOR_FFT, NPOW_FOR_INTERP, NP_RESAMP
+  ! local parameter
   real(kind=CUSTOM_REAL)               :: df, dt_min_fk, Frq_ech_Fk
+  real(kind=CUSTOM_REAL)               :: tmax_samp, tmax_use
 
-  !! sampling frequency to store fk solution
-  Frq_ech_Fk = 10._CUSTOM_REAL  !! WM WM TO DO PUT THIS IN PARAMETER
+  ! sampling frequency to store fk solution
+  Frq_ech_Fk = freq_sampling_fk
 
-  !! sampling time step to store fk solution
-  dt_min_fk = 1. /  Frq_ech_Fk
+  ! sampling time step to store fk solution
+  dt_min_fk = 1.0 /  Frq_ech_Fk
 
-  !!  compute resampling rate
-  np_resampling  = floor(dt_min_fk / deltat)
+  ! compute resampling rate
+  NP_RESAMP  = floor(dt_min_fk / deltat)
 
-  !! update dt for fk with respect to integer np_resampling
-  dt_min_fk = np_resampling * deltat  !! this is the time step sampling for FK storage
+  ! checks sampling rate
+  if (NP_RESAMP == 0) NP_RESAMP = 1
 
-  !! compute number of time steps to store
-  NF_FOR_STORING  = ceiling( tmax_fk / dt_min_fk)
+  ! update dt for fk with respect to integer np_resampling
+  dt_min_fk = NP_RESAMP * deltat  !! this is the time step sampling for FK storage
 
-  !! in power of two
+  !! time window lengths
+  ! maximum simulation time length would be:
+  !   tmax_simulation = NSTEP * deltat
+  ! FK signal trace is symmetric after inverse FFT, thus NF_FOR_STORING must match at least match NSTEP * 2 with resampling rate.
+  ! maximum time length with respect to simulation NSTEP and resampling rate:
+  tmax_samp = (2*NSTEP/NP_RESAMP + 1) * dt_min_fk
+
+  ! take user defined window length as initial default
+  tmax_use = tmax_fk
+
+  ! limits window length to actual simulation length
+  if (tmax_use > tmax_samp) tmax_use = tmax_samp
+
+  ! compute number of time steps to store
+  NF_FOR_STORING  = ceiling( tmax_use / dt_min_fk)
+
+  ! in power of two
   NF_FOR_STORING  =   ceiling(log(real(NF_FOR_STORING))/log(2.))
 
-  !! multiply by 2 in order to do an inverse FFT
-  NF_FOR_FFT      =   2** (NF_FOR_STORING+1)
+  ! multiply by 2 in order to do an inverse FFT
+  NF_FOR_FFT      =   2**(NF_FOR_STORING+1)
 
   NPOW_FOR_INTERP =   NF_FOR_STORING+1
-  NF_FOR_STORING  =   2** NF_FOR_STORING
+  NF_FOR_STORING  =   2**NF_FOR_STORING
 
-  !! now we have this new time window
+  ! now we have this new time window
   tmax_fk = dt_min_fk * (NF_FOR_FFT - 1)
 
-  !! step in frequency for fk
-  df = 1. / tmax_fk
-
+  ! step in frequency for fk
+  df = 1.0 / tmax_fk
   DF_FK = df
+
+  !debug
+  !print *,'debug: tmax ',tmax_fk,tmax_samp,tmax_use,'np_resamp',NP_RESAMP,'NSTEP',NSTEP,2*NSTEP/NP_RESAMP, &
+  !                      'NF',NF_FOR_STORING,ceiling( tmax_use / dt_min_fk)
 
   end subroutine find_size_of_working_arrays
 
@@ -1363,7 +1838,7 @@
 
 !! compute and store spline coefficients
 
-  subroutine compute_spline_coef_to_store(Sig, npts, spline_coeff)
+  subroutine compute_spline_coef_to_store(Sig, npts, spline_coeff, tmp_c)
 
   use constants, only: CUSTOM_REAL
 
@@ -1372,46 +1847,44 @@
   integer,                                             intent(in)     :: npts
   real(kind=CUSTOM_REAL), dimension(npts),             intent(in)     :: Sig
   real(kind=CUSTOM_REAL), dimension(npts),             intent(inout)  :: spline_coeff
-
+  double precision, dimension(npts),intent(out)                       :: tmp_c  ! temporary work array
 
   !! computation in double precision
-  double precision                                                    :: error=1.d-24
-  double precision                                                    :: z1, zn, sumc
-  double precision, dimension(:), allocatable                         :: c
-  integer                                                             :: i, n_init, ier
-
-  allocate(c(npts),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2225')
+  double precision,parameter                                          :: error = 1.d-24
+  double precision,parameter                                          :: z1 = dsqrt(3.d0) - 2.d0
+  double precision                                                    :: zn, sumc
+  integer                                                             :: i, n_init
 
   ! Compute pole value
-  z1 = dsqrt(3.d0)-2.d0
-  c(:) = dble(Sig(:)) * (1.d0-z1) *( 1.d0 - 1.d0/ z1)
+  tmp_c(:) = dble(Sig(:)) * (1.d0 - z1) * ( 1.d0 - 1.d0/z1)
 
   ! Initialisation causal filter
   n_init = ceiling(log(error)/log(abs(z1)))
-  sumc = c(1)
+
+  ! check limits: by default is n_init==42, for very short test simulations this might be larger than npts
+  if (n_init > npts) n_init = npts
+
+  sumc = tmp_c(1)
   zn = z1
   do i = 1,n_init
-     sumc = sumc + zn*c(i)
-     zn = zn*z1
+     sumc = sumc + zn * tmp_c(i)
+     zn = zn * z1
   enddo
-  c(1) = sumc
+  tmp_c(1) = sumc
 
   ! Causal filter
   do i = 2,npts
-     c(i) = c(i) + z1* c(i-1)
+     tmp_c(i) = tmp_c(i) + z1 * tmp_c(i-1)
   enddo
 
   ! Initialisation anti-causal filter
-  c(npts) = ( z1 / (z1-1.d0) ) *c(npts)
+  tmp_c(npts) = ( z1 / (z1 - 1.d0) ) * tmp_c(npts)
   do i = npts-1,1,-1
-     c(i) = z1*(c(i+1)-c(i))
+     tmp_c(i) = z1 * (tmp_c(i+1) - tmp_c(i))
   enddo
 
   !! store spline coeff in CUSTOM_REAL precision
-  spline_coeff(:)=c(:)
-
-  deallocate(c)
+  spline_coeff(:) = tmp_c(:)
 
   end subroutine compute_spline_coef_to_store
 
@@ -1422,14 +1895,14 @@
 
 !! VM VM READING INPUT FILE FOR FK MODEL
 
-  subroutine ReadFKModelInput(Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box)
+  subroutine ReadFKModelInput(Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box, Zmax_box)
 
   use specfem_par
   use specfem_par_coupling
 
   implicit none
 
-  real(kind=CUSTOM_REAL), intent(in) :: Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box
+  real(kind=CUSTOM_REAL), intent(in) :: Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box, Zmax_box
   integer                :: ioerr
   character(len=100)     :: keyword, keyvalue, line
   character(len=100)     :: keyword_tmp, incident_wave
@@ -1456,19 +1929,25 @@
   ! ORIGIN_WAVEFRONT xx0, yy0, zz0
   ! ORIGIN_TIME      tt0
   ! FREQUENCY_MAX    ff0
+  ! FREQUENCY_SAMPLING freq_sampling_fk
   ! TIME_WINDOW      tmax_fk
+  ! AMPLITUDE        amplitude_fk
   !!----------------------------------------------------------------
 
   ! only main process reads
   if (myrank /= 0) return
 
   !! set default values
-  tt0 = 0.
-  tmax_fk = 128.
-  ff0 = 0.1
-  kpsv = 1  ! 1 == P-wave / 2 == SV-wave
+  tt0 = 0.0                 ! origin time
+  tmax_fk = 128.0           ! time window length
+
+  ff0 = 0.1                 ! frequency maximum in Hz
+  freq_sampling_fk = 10.0   ! frequency sampling rate in Hz
+  amplitude_fk = 1.0        ! amplitude factor
+
+  type_kpsv_fk = 1  ! 1 == P-wave / 2 == SV-wave
+
   position_of_wavefront_not_read = .true.
-  stag = .false.
 
   !! READING input file
   open(85,file=trim(FKMODEL_FILE))
@@ -1483,18 +1962,21 @@
      case('NLAYER')
         read(line, *) keyword_tmp, nlayer
 
-        allocate(alpha_FK(nlayer), beta_FK(nlayer), mu_FK(nlayer), h_FK(nlayer),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2226')
-        allocate(rho_fk_input(nlayer),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2227')
-        allocate(vp_fk_input(nlayer),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2228')
-        allocate(vs_fk_input(nlayer),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2229')
-        allocate(ztop_fk_input(nlayer+1),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2230')
-        allocate(ilayer_fk_input(nlayer+1),stat=ier)
-        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2231')
+        allocate(alpha_FK(nlayer), beta_FK(nlayer), rho_FK(nlayer), mu_FK(nlayer), h_FK(nlayer),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating arrays 2226')
+        alpha_FK(:) = 0._CUSTOM_REAL; beta_FK(:) = 0._CUSTOM_REAL; rho_FK(:) = 0._CUSTOM_REAL
+        mu_FK(:) = 0._CUSTOM_REAL; h_FK(:) = 0._CUSTOM_REAL
+
+        allocate(rho_fk_input(nlayer), &
+                 vp_fk_input(nlayer), &
+                 vs_fk_input(nlayer), &
+                 ztop_fk_input(nlayer+1), &
+                 ilayer_fk_input(nlayer+1),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating arrays 2227')
+        rho_fk_input(:) = 0._CUSTOM_REAL
+        vp_fk_input(:) = 0._CUSTOM_REAL
+        vs_fk_input(:) = 0._CUSTOM_REAL
+        ztop_fk_input(:) = 0._CUSTOM_REAL
         ilayer_fk_input(:) = -1
 
      case('LAYER')
@@ -1506,24 +1988,19 @@
         vs_fk_input(ilayer) = vs_layer
         ztop_fk_input(ilayer) = ztop_layer
 
-        ! checks vp,vs,rho are strictly positive
-        if (vp_layer <= 0.0_CUSTOM_REAL .or. vs_layer <= 0.0_CUSTOM_REAL .or. rho_layer <= 0.0_CUSTOM_REAL) then
-          print *,'Error: invalid elastic material for FK coupling in layer ',ilayer
-          print *,'  vp = ',vp_layer,' vs = ',vs_layer,' rho = ',rho_layer
-          print *,'must be strictly positive (in particular, vs must be > 0)'
-          stop 'Invalid elastic material for FK coupling found in ReadFKModelInput() routine'
-        endif
+        ! acoustic case: FK for zero-shear velocity not handled, here we set it to a (very) small value
+        if (abs(vs_fk_input(ilayer)) < TINYVAL) vs_fk_input(ilayer) = 1.e-5
 
      case('INCIDENT_WAVE')
          read(line,*)  keyword_tmp, incident_wave
 
          select case(trim(incident_wave))
             case ('p', 'P')
-               kpsv = 1
+              type_kpsv_fk = 1
             case('sv','SV')
-               kpsv = 2
+              type_kpsv_fk = 2
             case default
-               kpsv = 1
+              type_kpsv_fk = 1
             end select
 
      case('BACK_AZIMUTH')
@@ -1547,8 +2024,14 @@
      case('FREQUENCY_MAX')
         read(line,*)  keyword_tmp, ff0
 
+     case('FREQUENCY_SAMPLING')
+        read(line,*)  keyword_tmp, freq_sampling_fk
+
      case('TIME_WINDOW')
         read(line,*)  keyword_tmp, tmax_fk
+
+      case('AMPLITUDE')
+        read(line,*)  keyword_tmp, amplitude_fk
 
      end select
   !!------------------------------------------------------------------------------------------------------
@@ -1558,20 +2041,43 @@
 
      ilayer_fk_input(nlayer+1) = ilayer_fk_input(nlayer)
      ztop_fk_input(nlayer+1) = ztop_fk_input(nlayer)
-     Z_ref_for_FK = ztop_fk_input(nlayer)
+
+     ! Z coordinate reference for top of lower-halfspace (last layer input)
+     Z_REF_for_FK = ztop_fk_input(nlayer)
 
      do ilayer = 1, nlayer
         alpha_FK(ilayer) = vp_fk_input(ilayer)
         beta_FK(ilayer) = vs_fk_input(ilayer)
+        rho_FK(ilayer) = rho_fk_input(ilayer)
 
         mu_FK(ilayer) = rho_fk_input(ilayer) * vs_fk_input(ilayer)**2
         h_FK(ilayer) =  ztop_fk_input(ilayer) - ztop_fk_input(ilayer+1)
 
+        ! checks if layer has values
         if (ilayer_fk_input(ilayer) == -1) then
            write(*,*) " ERROR READING FK INPUT FILE "
            write(*,*) " MISSING LAYER ", ilayer
            stop 'Missing layer in FK model'
         endif
+
+        ! checks vp,rho are strictly positive
+        if (alpha_FK(ilayer) <= 0.0_CUSTOM_REAL .or. rho_FK(ilayer) <= 0.0_CUSTOM_REAL) then
+          print *,'Error: invalid elastic material for FK coupling in layer ',ilayer
+          print *,'  vp = ',alpha_FK(ilayer),' vs = ',beta_FK(ilayer),' rho = ',rho_FK(ilayer)
+          print *,'vp & rho must be strictly positive'
+          stop 'Invalid material for FK coupling found in ReadFKModelInput() routine'
+        endif
+
+        ! checks if vs is strictly positive for SV coupling
+        if (type_kpsv_fk == 2) then
+          if (beta_FK(ilayer) <= 0.0_CUSTOM_REAL) then
+            print *,'Error: invalid elastic material for FK coupling in layer ',ilayer
+            print *,'  vp = ',alpha_FK(ilayer),' vs = ',beta_FK(ilayer),' rho = ',rho_FK(ilayer)
+            print *,'vp, vs & rho must be strictly positive (in particular vs must be > 0) for SV incident wave'
+            stop 'Invalid elastic material for FK coupling found in ReadFKModelInput() routine'
+          endif
+        endif
+
      enddo
 
      deallocate(ilayer_fk_input, rho_fk_input, vp_fk_input, vs_fk_input, ztop_fk_input)
@@ -1586,55 +2092,60 @@
 
   !! compute position of wave front
   if (position_of_wavefront_not_read) then
+    ! sets center point of box
     xx0 = 0.5*(Xmin_box + Xmax_box)
     yy0 = 0.5*(Ymin_box + Ymax_box)
+
     Radius_box = sqrt( (Xmin_box - xx0)**2 + (Ymin_box - yy0)**2)
 
-    if (kpsv == 1) then
+    if (type_kpsv_fk == 1) then
       ! P-wave
       wave_length_at_bottom = alpha_FK(nlayer) / ff0    ! vp
-    else if (kpsv == 2) then
+    else if (type_kpsv_fk == 2) then
       ! SV-wave
       wave_length_at_bottom = beta_FK(nlayer) / ff0     ! vs
     endif
 
-    zz0 = Zmin_box - Radius_box * sin ( abs (theta_FK) * (PI / 180.d0)  ) -  &
-           3.0 * wave_length_at_bottom * cos ( abs (theta_FK) * (PI / 180.d0)  ) -  &
-           Z_ref_for_FK
-
+    ! depth position below bottom
+    zz0 = Zmin_box - Radius_box * sin ( abs(theta_FK) * (PI / 180.d0) )  &
+           - 3.0 * wave_length_at_bottom * cos ( abs(theta_FK) * (PI / 180.d0) )
   endif
 
-  write(IMAIN,*) " ********************************************** "
-  write(IMAIN,*) "         USING FK INJECTION TECHNIQUE           "
-  write(IMAIN,*) " ********************************************** "
-
+  ! user output
   write(IMAIN,*)
-  write(IMAIN,*) "         Model : " , nlayer , " layers "
+  write(IMAIN,*) "**********************************************"
+  write(IMAIN,*) "         USING FK INJECTION TECHNIQUE         "
+  write(IMAIN,*) "**********************************************"
   write(IMAIN,*)
-
+  write(IMAIN,*) "  Model : " , nlayer , " layers "
+  write(IMAIN,*)
   do ilayer = 1, nlayer
-     write(IMAIN,'(a7, i3, 3(a6,2x,f8.3), 3x, a9, f18.5 )') &
-          'layer ' , ilayer, &
-          " rho  =",   mu_FK(ilayer) /  beta_FK(ilayer)**2, &
-          " vp   =",   alpha_FK(ilayer), &
-          " vs   =",   beta_FK(ilayer), &
+     write(IMAIN,'(a9, i3, 3(a6,2x,f8.3), 3x, a9, f18.5 )') &
+          "   layer ", ilayer, &
+          " rho =",   rho_FK(ilayer), &
+          " vp  =",   alpha_FK(ilayer), &
+          " vs  =",   beta_FK(ilayer), &
           " Height =", h_FK(ilayer)
   enddo
-
   write(IMAIN,*)
+  write(IMAIN,*) "  FK (azimuth) angle phi   = ",   phi_FK,'(deg)'
+  write(IMAIN,*) "  FK  take-off angle theta = ", theta_FK,'(deg)'
   write(IMAIN,*)
-  write(IMAIN,*) " FK phi   = ",   phi_FK,'(deg)'
-  write(IMAIN,*) " FK theta = ", theta_FK,'(deg)'
+  write(IMAIN,*) "  Origin wavefront point FK           : ", xx0, yy0, zz0
+  write(IMAIN,*) "  Time shift  FK                      : ", tt0
+  write(IMAIN,*) "  Z reference for FK routine          : ", Z_REF_for_FK
   write(IMAIN,*)
-  write(IMAIN,*) " Origin wavefront point FK  : ", xx0, yy0, zz0
-  write(IMAIN,*) " time shift  FK             : ", tt0
-  write(IMAIN,*) " Z reference for FK routine : ", Z_ref_for_FK
-  write(IMAIN,*) " Window for FK computing    : ", tmax_fk
-  write(IMAIN,*) " frequency max              : ", ff0
-  write(IMAIN,*) " type of incoming wave (1=p), (2=sv) :",kpsv
+  write(IMAIN,*) "  Time window for FK computing        : ", tmax_fk
+  write(IMAIN,*) "  Frequency max                       : ", ff0
+  write(IMAIN,*) "  Frequency sampling rate             : ", freq_sampling_fk
+  write(IMAIN,*) "  Amplitude factor                    : ", amplitude_fk
   write(IMAIN,*)
+  write(IMAIN,*) "  Model boundary box                  : Xmin/Xmax = ",Xmin_box,Xmax_box
+  write(IMAIN,*) "                                      : Ymin/Ymax = ",Ymin_box,Ymax_box
+  write(IMAIN,*) "                                      : Zmin/Zmax = ",Zmin_box,Zmax_box
   write(IMAIN,*)
-
+  write(IMAIN,*) "  Type of incoming wave (1=P), (2=SV) : ",type_kpsv_fk
+  write(IMAIN,*)
   call flush_IMAIN()
 
   end subroutine ReadFKModelInput

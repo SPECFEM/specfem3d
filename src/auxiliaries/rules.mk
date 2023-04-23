@@ -1,13 +1,13 @@
 #=====================================================================
 #
-#               S p e c f e m 3 D  V e r s i o n  3 . 0
-#               ---------------------------------------
+#                         S p e c f e m 3 D
+#                         -----------------
 #
 #     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-#                        Princeton University, USA
-#                and CNRS / University of Marseille, France
+#                              CNRS, France
+#                       and Princeton University, USA
 #                 (there are currently many more authors!)
-# (c) Princeton University and CNRS / University of Marseille, July 2012
+#                           (c) October 2017
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -106,6 +106,28 @@ auxiliaries_OBJECTS += $(adios_auxiliaries_OBJECTS)
 auxiliaries_MODULES += $(adios_auxiliaries_MODULES)
 endif
 
+hdf5_shared_OBJECTS = \
+	$O/phdf5_utils.shared_hdf5.o \
+	$(EMPTY_MACRO)
+hdf5_shared_MODULES = \
+	$O/phdf5_utils.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
+hdf5_shared_STUBS_OBJECTS = \
+	$O/phdf5_utils_stubs.shared_nohdf5.o \
+	$(EMPTY_MACRO)
+hdf5_shared_STUBS_MODULES = \
+	$O/phdf5_utils_stubs.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+
+ifeq ($(HDF5),yes)
+hdf5_OBJECTS += $(hdf5_shared_OBJECTS)
+hdf5_MODULES += $(hdf5_shared_MODULES)
+else
+hdf5_OBJECTS += $(hdf5_shared_STUBS_OBJECTS)
+hdf5_MODULES += $(hdf5_shared_STUBS_MODULES)
+endif
+
 
 ####
 #### rules for executables
@@ -166,6 +188,7 @@ xcombine_surf_data_OBJECTS = \
 
 xcombine_surf_data_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
@@ -192,6 +215,7 @@ xcombine_vol_data_OBJECTS = \
 
 xcombine_vol_data_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
@@ -202,6 +226,9 @@ xcombine_vol_data_SHARED_OBJECTS = \
 
 ## MPI
 xcombine_vol_data_SHARED_OBJECTS += $(COND_MPI_OBJECTS)
+
+## HDF5
+xcombine_vol_data_SHARED_OBJECTS += $(hdf5_OBJECTS)
 
 $E/xcombine_vol_data: $(xcombine_vol_data_OBJECTS) $(xcombine_vol_data_SHARED_OBJECTS)
 	@echo ""
@@ -419,6 +446,7 @@ xcreate_movie_shakemap_AVS_DX_GMT_OBJECTS = \
 
 xcreate_movie_shakemap_AVS_DX_GMT_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/get_global.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
@@ -445,6 +473,7 @@ xconvolve_source_timefunction_OBJECTS = \
 
 xconvolve_source_timefunction_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
@@ -470,6 +499,7 @@ xdetect_duplicates_stations_file_OBJECTS = \
 
 xdetect_duplicates_stations_file_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
@@ -526,4 +556,3 @@ $O/%.auxadios_vtu.o: $S/%.F90 $O/shared_par.shared_module.o
 
 $O/%.aux_noadios.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
-

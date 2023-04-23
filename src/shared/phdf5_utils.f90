@@ -32,6 +32,7 @@ module phdf5_utils ! class-like module
         h5_open_group_prop_list, h5_create_group_prop_list, h5_close_group_prop_list,&
         h5_create_dataset_prop_list, &
         h5_create_dataset_gen, h5_create_dataset_gen_in_group, &
+        h5_check_dataset_exists, &
         h5_create_group_p, h5_open_group_p, &
         h5_read_dataset_p_scalar_i, h5_read_dataset_p_scalar_r,&
         h5_read_dataset_p_1d_i, h5_read_dataset_p_1d_r, h5_read_dataset_p_1d_l,&
@@ -319,6 +320,15 @@ contains
         call h5dclose_f(dataset_id, error) ! group open
         if (error /= 0) write(*,*) 'hdf5 close dataset failed'
     end subroutine h5_close_dataset
+
+
+    subroutine h5_check_dataset_exists(this, dataset_name, exists)
+        type(h5io), intent(in) :: this
+        character(len=*), intent(in) :: dataset_name
+        logical, intent(out) :: exists
+
+        call h5lexists_f(file_id, dataset_name, exists, error)
+    end subroutine h5_check_dataset_exists
 
 
     ! dataset writer for 1d integer array
@@ -3483,6 +3493,9 @@ contains
         character(len=64) :: tempstr
         type(h5io)        :: h5
 
+        ! flag if dataset exists
+        logical           :: exists = .false.
+
         ! saves mesh file external_mesh.h5
         tempstr = "/external_mesh.h5"
         filename = LOCAL_PATH(1:len_trim(LOCAL_PATH))//trim(tempstr)
@@ -3502,7 +3515,11 @@ contains
         ! make dataset
         if(myrank==0) then
             call h5_open_file(h5)
-            call h5_create_dataset_gen(h5, dset_name, (/sum(offset(:))/), 1, CUSTOM_REAL)
+            ! check if dataset exists
+            call h5_check_dataset_exists(h5, dset_name, exists)
+            if (.not. exists) then
+                call h5_create_dataset_gen(h5, dset_name, (/sum(offset(:))/), 1, CUSTOM_REAL)
+            endif
             call h5_close_file(h5)
         endif
         call synchronize_all()

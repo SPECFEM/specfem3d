@@ -21,6 +21,7 @@ OBJECTS = \
 	$O/wrap_patoh.o \
 	$O/wrap_metis.o \
 	$O/param_reader.cc.o \
+  $O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/shared_par.shared_module.o \
 	$O/read_parameter_file.shared.o \

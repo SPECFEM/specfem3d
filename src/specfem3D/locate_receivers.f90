@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -38,7 +38,8 @@
                          nrec,islice_selected_rec,ispec_selected_rec, &
                          xi_receiver,eta_receiver,gamma_receiver,nu_rec, &
                          station_name,network_name, &
-                         stlat,stlon,stbur
+                         stlat,stlon,stbur, &
+                         x_target_station,y_target_station,z_target_station
   ! PML
   use pml_par, only: is_CPML
 
@@ -438,6 +439,18 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif    ! end of section executed by main process only
+
+  ! inverse problem might need station locations for damping
+  if (INVERSE_FWI_FULL_PROBLEM) then
+    ! (re-)allocate location arrays
+    if (allocated(x_target_station)) deallocate(x_target_station,y_target_station,z_target_station)
+    allocate(x_target_station(nrec),y_target_station(nrec),z_target_station(nrec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating x/y/z_target_station arrays')
+    ! store target locations
+    x_target_station(:) = x_target(:)
+    y_target_station(:) = y_target(:)
+    z_target_station(:) = z_target(:)
+  endif
 
   ! deallocate temporary arrays
   deallocate(stutm_x)
