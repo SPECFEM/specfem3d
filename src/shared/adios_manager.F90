@@ -104,9 +104,11 @@ module manager_adios
   type(adios2_engine), public, save :: myadios_fwd_file
   logical, public :: is_initialized_fwd_group
 
+#ifdef ADIOS2_VERSION_OLD
   ! debugging mode
   ! note: adios2 still in development stage, let's keep debug mode on
   logical,parameter :: USE_ADIOS2_DEBUG_MODE = .true.
+#endif
 
 #endif
 
@@ -237,13 +239,34 @@ contains
   ! ADIOS 2
   is_adios_version2 = .true.
 
+  ! note: for below adios2_init() routine, we need a pre-processor flag to determine which adios2_init() routine to take.
+  !       unfortunately, for Fortran we are missing a proper include file path for the ADIOS2Config.h file in the ADIOS2 package.
+  !
+  !       the run-time routine get_adios2_version can not be used to determine at compile time which format to take.
+  !       so, we added a #ifdef ADIOS2_VERSION_OLD flag for backward compatibility.
+  !       you would need to add this to the compile flags:
+  !         FLAGS_CHECK=".. -DADIOS2_VERSION_OLD .."
+  !       this is similar to the ADIOS version and older compatibility with:
+  !         FLAGS_CHECK=".. -DADIOS_VERSION_OLD .."
+
+  ! gets ADIOS2 version (e.g., for version 2.9)
+  !call get_adios2_version_numbers(major,minor)
+  ! debug
+  !print *,'debug: ADIOS2 version major / minor = ',major,minor
+
   ! Create adios handler passing the communicator, debug mode and error flag
   ! adios2 duplicates the communicator for its internal use
+#ifdef ADIOS2_VERSION_OLD
+  ! ADIOS2 versions <= 2.8.3
   if (USE_ADIOS2_DEBUG_MODE) then
     call adios2_init(myadios2_obj, comm_adios, adios2_debug_mode_on, ier)
   else
     call adios2_init(myadios2_obj, comm_adios, adios2_debug_mode_off, ier)
   endif
+#else
+  ! since ADIOS2 versions 2.9.0, init call is without debug flag
+  call adios2_init(myadios2_obj, comm_adios, ier)
+#endif
   if (ier /= 0) stop 'Error setting up ADIOS2: calling adios2_init() routine failed'
 
 #endif
