@@ -237,8 +237,8 @@ hdf5_shared_OBJECTS = \
 	$O/read_mesh_databases_hdf5.spec_hdf5.o \
 	$(EMPTY_MACRO)
 hdf5_shared_STUBS_OBJECTS = \
-	$O/phdf5_utils_stubs.shared_nohdf5.o \
-	$O/read_mesh_databases_hdf5_stubs.spec_nohdf5.o \
+	$O/phdf5_utils_stub.shared_hdf5.o \
+	$O/read_mesh_databases_hdf5_stub.spec_hdf5.o \
 	$(EMPTY_MACRO)
 
 ifeq ($(HDF5),yes)

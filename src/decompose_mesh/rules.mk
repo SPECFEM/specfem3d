@@ -149,7 +149,7 @@ decompose_mesh_MODULES += \
 	$(EMPTY_MACRO)
 else
 hdf5_mesh_SHARED_OBJECTS = \
-	$O/phdf5_utils_stub.shared_nohdf5.o \
+	$O/phdf5_utils_stub.shared_hdf5.o \
 	$(EMPTY_MACRO)
 hdf5_mesh_part = \
 	$O/part_decompose_mesh_hdf5_stub.dec_module.o \

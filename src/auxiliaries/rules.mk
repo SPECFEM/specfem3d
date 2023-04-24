@@ -114,10 +114,10 @@ hdf5_shared_MODULES = \
 	$(EMPTY_MACRO)
 
 hdf5_shared_STUBS_OBJECTS = \
-	$O/phdf5_utils_stubs.shared_nohdf5.o \
+	$O/phdf5_utils_stub.shared_hdf5.o \
 	$(EMPTY_MACRO)
 hdf5_shared_STUBS_MODULES = \
-	$O/phdf5_utils_stubs.$(FC_MODEXT) \
+	$O/phdf5_utils_stub.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 ifeq ($(HDF5),yes)

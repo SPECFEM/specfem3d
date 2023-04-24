@@ -183,7 +183,7 @@ generate_databases_OBJECTS += $(hdf5_generate_databases_OBJECTS)
 generate_databases_SHARED_OBJECTS += $(hdf5_generate_databases_SHARED_OBJECTS)
 else
 hdf5_generate_databases_SHARED_OBJECTS = \
-	$O/phdf5_utils_stub.shared_nohdf5.o \
+	$O/phdf5_utils_stub.shared_hdf5.o \
 	$(EMPTY_MACRO)
 generate_databases_OBJECTS += $(hdf5_generate_databases_STUBS)
 generate_databases_SHARED_OBJECTS += $(hdf5_generate_databases_SHARED_OBJECTS)
