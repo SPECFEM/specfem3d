@@ -4,3 +4,6 @@
 [submodule "src/inverse_problem_for_source/pyCMT3D"]
 	path = src/inverse_problem_for_source/pyCMT3D
 	url = https://github.com/wjlei1990/pycmt3d
+[submodule "m4"]
+	path = m4
+	url = https://github.com/geodynamics/autoconf_cig.git
