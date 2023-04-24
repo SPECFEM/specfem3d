@@ -55,34 +55,34 @@
   implicit none
 
   ! number of spectral elements in each block
-  integer nspec
+  integer, intent(in) :: nspec
 
   ! number of vertices in each block
-  integer nglob
+  integer, intent(in) :: nglob
 
   ! MPI Cartesian topology
   ! E for East (= XI_MIN), W for West (= XI_MAX), S for South (= ETA_MIN), N for North (= ETA_MAX)
   integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
   integer iproc
   !integer NPROC_XI,NPROC_ETA
-  logical iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec)
+  logical, intent(in) :: iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec)
   !integer addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
 
   ! arrays with the mesh
-  integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
-  double precision :: nodes_coords(nglob,NDIM)
+  integer, intent(in) :: ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
+  double precision, intent(in) :: nodes_coords(nglob,NDIM)
 
   !! VM VM add all GLL points for Axisem coupling
   double precision, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: xstore, ystore, zstore
 
-  integer ispec_material_id(nspec)
+  integer, intent(in) :: ispec_material_id(nspec)
 
   ! boundary parameters locator
-  integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
-  integer ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),ibelm_xmax(NSPEC2DMAX_XMIN_XMAX)
-  integer ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),ibelm_ymax(NSPEC2DMAX_YMIN_YMAX)
-  integer ibelm_bottom(NSPEC2D_BOTTOM)
-  integer ibelm_top(NSPEC2D_TOP)
+  integer, intent(in) :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
+  integer, intent(in) :: ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),ibelm_xmax(NSPEC2DMAX_XMIN_XMAX)
+  integer, intent(in) :: ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),ibelm_ymax(NSPEC2DMAX_YMIN_YMAX)
+  integer, intent(in) :: ibelm_bottom(NSPEC2D_BOTTOM)
+  integer, intent(in) :: ibelm_top(NSPEC2D_TOP)
 
   ! material properties
   ! first dimension  : material_id
@@ -96,7 +96,7 @@
   integer :: i,ispec,iglob,ier
 
   ! name of the database files
-  character(len=MAX_STRING_LEN) :: prname
+  character(len=MAX_STRING_LEN), intent(in) :: prname
 
   ! for MPI interfaces
   integer ::  nb_interfaces,nspec_interfaces_max
