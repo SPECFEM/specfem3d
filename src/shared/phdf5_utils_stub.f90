@@ -392,8 +392,9 @@ contains
 
 
     subroutine write_checkmesh_data_h5(dset_name,dump_array)
-        use constants, only: CUSTOM_REAL, MAX_STRING_LEN
+        !use constants, only: CUSTOM_REAL, MAX_STRING_LEN
         implicit none
+        include "constants.h"
         real(kind=CUSTOM_REAL),dimension(:), intent(in) :: dump_array
         character(len=MAX_STRING_LEN), intent(in)       :: dset_name
     end subroutine write_checkmesh_data_h5
