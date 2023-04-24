@@ -261,11 +261,11 @@ subroutine do_io_start_idle()
     call idle_mpi_io(status)
 
     ! debug output
-    print *,                 "msg: " , status(MPI_TAG) , " send/recv rank: ", status(MPI_SOURCE), "/",myrank, &
-              "  counters, seismo: " , rec_count_seismo, "/"      , n_recv_msg_seismo,  &
-                          ", surf: " , rec_count_surf  , "/"      , n_recv_msg_surf,    &
-                          ", shake: ", rec_count_shake , "/"      , n_recv_msg_shake,   &
-                          ", vol: "  , rec_count_vol   , "/"      , n_recv_msg_vol
+    !print *,                 "msg: " , status(MPI_TAG) , " send/recv rank: ", status(MPI_SOURCE), "/",myrank, &
+    !          "  counters, seismo: " , rec_count_seismo, "/"      , n_recv_msg_seismo,  &
+    !                      ", surf: " , rec_count_surf  , "/"      , n_recv_msg_surf,    &
+    !                      ", shake: ", rec_count_shake , "/"      , n_recv_msg_shake,   &
+    !                      ", vol: "  , rec_count_vol   , "/"      , n_recv_msg_vol
 
     !
     ! receive seismograms
