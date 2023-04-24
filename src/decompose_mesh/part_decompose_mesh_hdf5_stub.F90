@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  3 . 0
-!               ---------------------------------------
+!                          S p e c f e m 3 D
+!                          -----------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 !                              CNRS, France
@@ -101,7 +101,7 @@ module part_decompose_mesh_hdf5
 !    ! group names
 !    gdsetname = "glob2loc_nodes"
 !    ndsetname = "nodes_coords"
-! 
+!
 !    ! open the target group
 !    call h5_open_group(h5, gname_proc)
 !
@@ -138,7 +138,7 @@ module part_decompose_mesh_hdf5
 !  ! for attribute count_def_mat and count_undef_mat
 !  character(len=13)              :: m_aname = "count_def_mat"
 !  character(len=15)              :: u_aname = "count_undef_mat"
-! 
+!
 !  ! for dataset mat_prop, undef_mat_prop
 !  character(len=40)              :: mdsetname = "mat_prop"
 !  character(len=40)              :: udsetname = "undef_mat_prop"
@@ -544,7 +544,7 @@ module part_decompose_mesh_hdf5
 !         count2 = count2 + 1
 !       endif
 !    enddo
-!    
+!
 !    ! create a dataset for elements_cpml
 !    call h5_write_dataset_2d_i(h5, edsetname, elements_cpml)
 !    call h5_close_dataset(h5)
@@ -561,13 +561,13 @@ module part_decompose_mesh_hdf5
 !  else ! dummy dataset for no cpml case
 !    ncpmls(1) = 0
 !    ncpmls(2) = 0
-!   
+!
 !  endif
 !
 !  ! create a dataset for nspec_cpml and nspec_cpml_local
 !  call h5_write_dataset_1d_i(h5, ndsetname, ncpmls)
 !  call h5_close_dataset(h5)
-! 
+!
 !  ! close hdf5
 !  call h5_close_group(h5)
 !
@@ -637,7 +637,7 @@ module part_decompose_mesh_hdf5
 !    allocate(elm_conn(NGNOD, nspec_local))
 !    allocate(mat_mesh(2, nspec_local))
 !    allocate(ispec_local(nspec_local))
-!  
+!
 !    ! prepare a temporal array to be recorded in hdf5
 !    ! element corner indices
 !    count = 1
@@ -673,7 +673,7 @@ module part_decompose_mesh_hdf5
 !
 !    ! prepare hdf5 write
 !    call h5_open_group(h5, gname_proc)
-! 
+!
 !    ! create a dataset for elm_conn
 !    call h5_write_dataset_2d_i(h5, dsetname, elm_conn)
 !    ! create an attribute for npgeo
@@ -735,16 +735,16 @@ module part_decompose_mesh_hdf5
 !
 !  ! variables for my_ninterfaces_and_maxval
 !  integer, dimension(2)          :: num_interface_and_max
-!  character(len=40)              :: ndsetname 
-! 
+!  character(len=40)              :: ndsetname
+!
 !	! my_nb_interfaces in subgroup num_interface (2,my_ninterfaces)
 !  integer, dimension(:,:), allocatable :: num_neighbors_elmnts
 !  character(len=40)                  :: mdsetname
-! 
+!
 !  ! my_interfaces
 !  integer, dimension(:,:), allocatable :: neighbors_elmnts
-!  character(len=40)                    :: idsetname 
-! 
+!  character(len=40)                    :: idsetname
+!
 !  num_interface = 0
 !
 !  if (num_phase == 1) then
@@ -814,7 +814,7 @@ module part_decompose_mesh_hdf5
 !                !                   local_nodes(1), -1, -1, -1
 !                neighbors_elmnts(1,count_elm) = local_elmnt
 !                neighbors_elmnts(2,count_elm) = tab_interfaces(k*7+2)
-!                neighbors_elmnts(3,count_elm) = local_nodes(1) 
+!                neighbors_elmnts(3,count_elm) = local_nodes(1)
 !                neighbors_elmnts(4,count_elm) = -1
 !                neighbors_elmnts(5,count_elm) = -1
 !                neighbors_elmnts(6,count_elm) = -1
@@ -837,8 +837,8 @@ module part_decompose_mesh_hdf5
 !                !                   local_nodes(1), local_nodes(2), -1, -1
 !                neighbors_elmnts(1,count_elm) = local_elmnt
 !                neighbors_elmnts(2,count_elm) = tab_interfaces(k*7+2)
-!                neighbors_elmnts(3,count_elm) = local_nodes(1) 
-!                neighbors_elmnts(4,count_elm) = local_nodes(2) 
+!                neighbors_elmnts(3,count_elm) = local_nodes(1)
+!                neighbors_elmnts(4,count_elm) = local_nodes(2)
 !                neighbors_elmnts(5,count_elm) = -1
 !                neighbors_elmnts(6,count_elm) = -1
 !
@@ -873,16 +873,16 @@ module part_decompose_mesh_hdf5
 !                !     local_nodes(1), local_nodes(2),local_nodes(3), local_nodes(4)
 !                neighbors_elmnts(1,count_elm) = local_elmnt
 !                neighbors_elmnts(2,count_elm) = tab_interfaces(k*7+2)
-!                neighbors_elmnts(3,count_elm) = local_nodes(1) 
-!                neighbors_elmnts(4,count_elm) = local_nodes(2) 
-!                neighbors_elmnts(5,count_elm) = local_nodes(3) 
-!                neighbors_elmnts(6,count_elm) = local_nodes(4) 
+!                neighbors_elmnts(3,count_elm) = local_nodes(1)
+!                neighbors_elmnts(4,count_elm) = local_nodes(2)
+!                neighbors_elmnts(5,count_elm) = local_nodes(3)
+!                neighbors_elmnts(6,count_elm) = local_nodes(4)
 !
 !             case default
 !                print *, "fatal error in write_interfaces_database:", tab_interfaces(k*7+2), iproc
 !                stop "fatal error in write_interfaces_database"
 !             end select
-!          
+!
 !          count_elm = count_elm + 1
 !          enddo
 !
@@ -894,7 +894,7 @@ module part_decompose_mesh_hdf5
 !
 !    ! hdf5 write
 !    call h5_open_group(h5, gname_proc)
-! 
+!
 !    ! group names
 !    ndsetname = "my_ninterface_and_max"
 !    mdsetname = "my_nb_interfaces"
@@ -916,14 +916,14 @@ module part_decompose_mesh_hdf5
 !    ! write my_interfaces
 !    call h5_write_dataset_2d_i(h5, idsetname, neighbors_elmnts)
 !    call h5_close_dataset(h5)
-! 
+!
 !    ! close hdf5
 !    call h5_close_group(h5)
 !
 !    ! allocate temporal array size
 !    deallocate(num_neighbors_elmnts,stat=ier); if (ier /= 0) stop 'Error deallocating array num_neighbors_elmnts'
 !    deallocate(neighbors_elmnts,stat=ier);     if (ier /= 0) stop 'Error deallocating array neighbors_elmnts'
-! 
+!
 !  endif
 !
 !  end subroutine write_interfaces_database_h5
@@ -1028,7 +1028,7 @@ module part_decompose_mesh_hdf5
 !  call h5_close_group(h5)
 !
 !  deallocate(loc_moho_temp,stat=ier); if (ier /= 0) stop 'Error deallocating array loc_moho_temp'
-! 
+!
 !  end subroutine write_moho_surface_database_h5
 
 

@@ -172,6 +172,7 @@ contains
 
     subroutine h5_create_dataset_prop_list(this,if_collect)
         type(h5io), intent(in) :: this
+        logical :: if_collect
     end subroutine h5_create_dataset_prop_list
 
 
