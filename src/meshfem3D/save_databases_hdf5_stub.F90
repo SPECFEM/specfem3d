@@ -46,10 +46,6 @@
     iproc_xi_current,iproc_eta_current, &
     NPROC_XI,NPROC_ETA
 
-  use phdf5_utils
-  use my_mpi
-
-
   implicit none
 
   ! number of spectral elements in each block
