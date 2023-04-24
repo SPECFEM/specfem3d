@@ -195,7 +195,8 @@
   endif
 
   if (compute_task) then
-  call cpu_time(ts) !!!!!!!!!!!!!!!!!!!
+  !call cpu_time(ts)
+
   do it = it_begin,it_end
     ! debug
 !    if(mod(it,10)==0) then
@@ -337,11 +338,11 @@
   !
   enddo   ! end of main time loop
 
-  call cpu_time(te)
-  print *, "time for it loop is ", te-ts
-  print *, "summed time for only seismo out ", ave_s
-  print *, "summed time for only movie out ", ave_m
-  print *, "summed time for compute force ", ave_f
+  !call cpu_time(te)
+  !print *, "time for it loop is ", te-ts
+  !print *, "summed time for only seismo out ", ave_s
+  !print *, "summed time for only movie out ", ave_m
+  !print *, "summed time for compute force ", ave_f
 
   ! close the huge file that contains a dump of all the time steps to disk
   if (EXACT_UNDOING_TO_DISK) close(IFILE_FOR_EXACT_UNDOING)
