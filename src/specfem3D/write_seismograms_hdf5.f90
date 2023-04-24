@@ -573,10 +573,12 @@
 
     call h5_close_file(h5)
 
+    deallocate(all_seismograms)
+    deallocate(tmp_seis_pre)
+
   endif ! myrank == 0
+
   deallocate(one_seismogram)
-  deallocate(all_seismograms)
-  deallocate(tmp_seis_pre)
 
   end subroutine write_seismo_no_ioserv
 

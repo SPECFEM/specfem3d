@@ -1,7 +1,8 @@
 module phdf5_utils
-    use constants, only: CUSTOM_REAL
+    !use constants, only: CUSTOM_REAL
     implicit none
 
+    include "constants.h"
     private
     public :: h5io, h5_init, h5_destructor, &
          h5_create_file, h5_open_file, h5_close_file, &

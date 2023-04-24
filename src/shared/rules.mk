@@ -171,15 +171,6 @@ hdf5_shared_STUBS_MODULES = \
 	$O/phdf5_utils_stub.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
-
-ifeq ($(HDF5),yes)
-shared_OBJECTS += $(hdf5_shared_OBJECTS)
-shared_MODULES += $(hdf5_shared_MODULES)
-else
-shared_OBJECTS += $(hdf5_shared_STUBS_OBJECTS)
-shared_MODULES += $(hdf5_shared_STUBS_MODULES)
-endif
-
 #######################################
 
 ####
@@ -244,5 +235,5 @@ $O/%.cc.o: $S/%.c ${SETUP}/config.h
 	${CC} -c $(CPPFLAGS) $(CFLAGS) -o $@ $<
 
 ## hdf5
-$O/%.shared_hdf5.o: $S/%.f90
+$O/%.shared_hdf5.o: $S/%.f90 ${SETUP}/constants.h
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<

@@ -8,8 +8,6 @@ end subroutine do_io_start_idle
 
 subroutine pass_info_to_io()
 end subroutine pass_info_to_io
- 
-
 
 
 
