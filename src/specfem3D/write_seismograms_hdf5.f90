@@ -219,7 +219,7 @@
   use specfem_par, only: myrank,number_receiver_global,NPROC, &
           nrec,nrec_local,islice_selected_rec, &
           seismo_offset,seismo_current, &
-          nlength_seismogram, NTSTEP_BETWEEN_OUTPUT_SEISMOS
+          nlength_seismogram, NTSTEP_BETWEEN_OUTPUT_SEISMOS, NSTEP
 
   ! seismograms
   use specfem_par, only: seismograms_d,seismograms_v,seismograms_a,seismograms_p
@@ -234,8 +234,7 @@
   integer :: nrec_local_received,total_seismos,req
   integer :: io_tag_seismo, time_window
 
-  real(kind=CUSTOM_REAL), dimension(NDIM,nlength_seismogram,nrec_local) :: seismograms
-  seismograms(:,:,:) = 0.0
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: seismograms
 
   ! saves displacement, velocity, acceleration, or pressure
   select case (istore)
@@ -255,34 +254,41 @@
 
   if (nrec_local > 0) then
     ! send seismograms (instead of one seismo)
-    if (NTSTEP_BETWEEN_OUTPUT_SEISMOS > nlength_seismogram) then
-      time_window = nlength_seismogram
+    if (nlength_seismogram > NSTEP) then
+      time_window = NSTEP
     else
-      time_window = NTSTEP_BETWEEN_OUTPUT_SEISMOS
+      time_window = nlength_seismogram
     endif
+
+    allocate(seismograms(NDIM,nrec_local,time_window))
+    seismograms(:,:,:) = 0.0
 
     select case (istore)
     case (1)
       do i = 1, time_window !
-        seismograms(:,i,:) = seismograms_d(:,:,i)
+        seismograms(:,:,i) = seismograms_d(:,:,i)
       end do
-      call isend_cr_inter(seismograms,NDIM*nrec_local*time_window,0,io_tag_seismo,req)
     case (2)
       do i = 1, time_window !
-        seismograms(:,i,:) = seismograms_v(:,:,i)
+        seismograms(:,:,i) = seismograms_v(:,:,i)
       end do
-      call isend_cr_inter(seismograms,NDIM*nrec_local*time_window,0,io_tag_seismo,req)
     case (3)
       do i = 1, time_window !
-        seismograms(:,i,:) = seismograms_a(:,:,i)
+        seismograms(:,:,i) = seismograms_a(:,:,i)
       end do
-      call isend_cr_inter(seismograms,NDIM*nrec_local*time_window,0,io_tag_seismo,req)
     case (4)
        do i = 1, time_window !
-        seismograms(1,i,:) = seismograms_p(1,:,i)
+        seismograms(1,:,i) = seismograms_p(1,:,i)
       end do
-      call isend_cr_inter(seismograms(1,:,:),1*nrec_local*time_window,0,io_tag_seismo,req)
     end select
+
+    if (istore /= 4) then
+      call isend_cr_inter(seismograms(:,:,1:time_window),NDIM*nrec_local*time_window,0,io_tag_seismo,req)
+    else
+      call isend_cr_inter(seismograms(1,:,1:time_window),1*nrec_local*time_window,0,io_tag_seismo,req)
+    endif
+
+    deallocate(seismograms)
 
   endif
 
@@ -320,7 +326,7 @@
   integer :: nrec_local_received,total_seismos,receiver,sender
   integer :: iproc,ier
   integer,dimension(1) :: tmp_nrec_local_received,tmp_irec,tmp_nrec_local
-  integer,dimension(:),allocatable:: islice_num_rec_local
+  integer,dimension(0:NPROC-1) :: islice_num_rec_local
 
   ! hdf5 vals
   character(len=64) :: fname_h5_base = "seismograms.h5"
@@ -351,37 +357,36 @@
   if (ier /= 0) stop 'error while allocating one temporary seismogram'
   one_seismogram(:,:) = 0._CUSTOM_REAL
 
+  ! main process collects all traces
+  if (myrank == 0) then
+    ! explicit for pressure/acoustic runs and NB_RUNS_ACOUSTIC_GPU > 1
+    nrec_store = nrec * NB_RUNS_ACOUSTIC_GPU
+  else
+    ! dummy for secondary processes
+    nrec_store = 0
+  endif
+
+  allocate(all_seismograms(NDIM,nlength_seismogram,nrec_store),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating all_seismograms array')
+  if (ier /= 0) stop 'error while allocating all_seismograms array'
+  all_seismograms(:,:,:) = 0._CUSTOM_REAL
+
+  allocate(tmp_seis_pre(nlength_seismogram,nrec_store),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating tmp_seis_pre array')
+  if (ier /= 0) stop 'error while allocating tp_seis_pre array'
+  tmp_seis_pre(:,:) = 0._CUSTOM_REAL
+
+
   if (myrank == 0) then
     ! on the master, gather all the seismograms
 
     ! counts number of local receivers for each slice
-    allocate(islice_num_rec_local(0:NPROC-1),stat=ier)
-    if (ier /= 0) call exit_mpi(myrank,'error allocating islice_num_rec_local')
     islice_num_rec_local(:) = 0
     do irec = 1,nrec
       iproc = islice_selected_rec(irec)
       islice_num_rec_local(iproc) = islice_num_rec_local(iproc) + 1
     enddo
-
     total_seismos = 0
-    ! main process collects all traces
-    if (myrank == 0) then
-      ! explicit for pressure/acoustic runs and NB_RUNS_ACOUSTIC_GPU > 1
-      nrec_store = nrec * NB_RUNS_ACOUSTIC_GPU
-    else
-      ! dummy for secondary processes
-      nrec_store = 0
-    endif
-
-    allocate(all_seismograms(NDIM,nlength_seismogram,nrec_store),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating all_seismograms array')
-    if (ier /= 0) stop 'error while allocating all_seismograms array'
-    all_seismograms(:,:,:) = 0._CUSTOM_REAL
-
-    allocate(tmp_seis_pre(nlength_seismogram,nrec_store),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating tmp_seis_pre array')
-    if (ier /= 0) stop 'error while allocating tp_seis_pre array'
-    tmp_seis_pre(:,:) = 0._CUSTOM_REAL
 
     ! loop on all the slices
     do iproc = 0,NPROC-1
@@ -523,7 +528,7 @@
         end select
 
         ! sends seismogram of that receiver
-        call sendv_cr(one_seismogram,NDIM*NSTEP,receiver,itag)
+        call sendv_cr(one_seismogram,NDIM*seismo_current,receiver,itag)
       enddo
     endif
   endif ! myrank
@@ -539,10 +544,10 @@
   if (myrank == 0) then
     ! check if the array length to be written > total timestep
     if (seismo_offset < 0) seismo_offset = 0
-    if (seismo_offset+NTSTEP_BETWEEN_OUTPUT_SEISMOS > nlength_seismogram) then
-      t_upper = nlength_seismogram - seismo_offset
+    if (seismo_offset+nlength_seismogram > NSTEP) then
+      t_upper = nlength_seismogram - (seismo_offset+nlength_seismogram - NSTEP)
     else
-      t_upper = NTSTEP_BETWEEN_OUTPUT_SEISMOS
+      t_upper = nlength_seismogram
     endif
 
     ! writes out this seismogram
@@ -573,11 +578,10 @@
 
     call h5_close_file(h5)
 
-    deallocate(all_seismograms)
-    deallocate(tmp_seis_pre)
-
   endif ! myrank == 0
 
+  deallocate(all_seismograms)
+  deallocate(tmp_seis_pre)
   deallocate(one_seismogram)
 
   end subroutine write_seismo_no_ioserv

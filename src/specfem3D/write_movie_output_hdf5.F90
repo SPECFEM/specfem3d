@@ -720,11 +720,15 @@ subroutine wmo_movie_volume_output_h5()
     do ispec = 1,NSPEC_AB
       ! only acoustic elements
       if (.not. ispec_is_acoustic(ispec)) cycle
-      ! calculates velocity
-      call compute_gradient_in_acoustic(ispec,potential_dot_acoustic,veloc_element)
-      !velocity_x(:,:,:,ispec) = veloc_element(1,:,:,:)
-      !velocity_y(:,:,:,ispec) = veloc_element(2,:,:,:)
-      !velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)
+
+      if (SAVE_DISPLACEMENT) then
+        ! calculate displacement
+        call compute_gradient_in_acoustic(ispec,potential_acoustic,veloc_element)
+      else
+        ! calculates velocity
+        call compute_gradient_in_acoustic(ispec,potential_dot_acoustic,veloc_element)
+      endif
+      ! copy values on 1d array
       call elm2node_base(ispec,veloc_element, velocity_x_on_node, velocity_y_on_node, velocity_z_on_node)
     enddo
 
@@ -758,12 +762,20 @@ subroutine wmo_movie_volume_output_h5()
 
     ! saves full snapshot data to local disk
     if (ELASTIC_SIMULATION) then
-      ! calculates divergence and curl of velocity field
-      call wmo_movie_div_curl_h5(veloc, &
-                              div_glob,valence, &
-                              div_on_node,curl_x_on_node,curl_y_on_node,curl_z_on_node, &
-                              velocity_x_on_node,velocity_y_on_node,velocity_z_on_node, &
-                              ispec_is_elastic)
+      if (SAVE_DISPLACEMENT) then
+        ! calculates divergence and curl of velocity field
+        call wmo_movie_div_curl_h5(displ, &
+                                div_glob,valence, &
+                                div_on_node,curl_x_on_node,curl_y_on_node,curl_z_on_node, &
+                                velocity_x_on_node,velocity_y_on_node,velocity_z_on_node, &
+                                ispec_is_elastic)
+      else
+        call wmo_movie_div_curl_h5(veloc, &
+                                div_glob,valence, &
+                                div_on_node,curl_x_on_node,curl_y_on_node,curl_z_on_node, &
+                                velocity_x_on_node,velocity_y_on_node,velocity_z_on_node, &
+                                ispec_is_elastic)
+      endif
 
       if (NIONOD > 0) then
         ! send div_glob
@@ -778,12 +790,21 @@ subroutine wmo_movie_volume_output_h5()
 
     ! saves full snapshot data to local disk
     if (POROELASTIC_SIMULATION) then
-      ! calculates divergence and curl of velocity field
-      call wmo_movie_div_curl_h5(velocs_poroelastic, &
-                              div_glob,valence, &
-                              div_on_node,curl_x_on_node,curl_y_on_node,curl_z_on_node, &
-                              velocity_x_on_node,velocity_y_on_node,velocity_z_on_node, &
-                              ispec_is_poroelastic)
+      if (SAVE_DISPLACEMENT) then
+        ! calculates divergence and curl of velocity field
+        call wmo_movie_div_curl_h5(displs_poroelastic, &
+                                div_glob,valence, &
+                                div_on_node,curl_x_on_node,curl_y_on_node,curl_z_on_node, &
+                                velocity_x_on_node,velocity_y_on_node,velocity_z_on_node, &
+                                ispec_is_poroelastic)
+      else
+        ! calculates divergence and curl of velocity field
+        call wmo_movie_div_curl_h5(velocs_poroelastic, &
+                                div_glob,valence, &
+                                div_on_node,curl_x_on_node,curl_y_on_node,curl_z_on_node, &
+                                velocity_x_on_node,velocity_y_on_node,velocity_z_on_node, &
+                                ispec_is_poroelastic)
+      endif
     endif ! poroelastic
 
     deallocate(valence)

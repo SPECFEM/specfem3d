@@ -142,9 +142,40 @@ subroutine do_io_start_idle()
   integer, dimension(0:NIONOD-1)  :: nglob_par_io_offset, nelm_par_io_offset
   logical, dimension(5)           :: val_type_mov ! true if movie file will be created, (pressure, div_glob, div, curlxyz, velocity_xyz)
 
+  integer, dimension(1)                     :: tmp_1d_iarr
+  double precision, dimension(1)            :: tmp_1d_darr
+
+  ! initialize counters
+  rec_count_seismo  =0
+  n_recv_msg_seismo =0
+  max_seismo_out    =0
+  it_offset         =0
+  seismo_out_count  =0
+  rec_count_surf    =0
+  n_recv_msg_surf   =0
+  surf_out_count    =0
+  max_surf_out      =0
+  rec_count_shake   =0
+  n_recv_msg_shake  =0
+  shake_out_count   =0
+  max_shake_out     =0
+  rec_count_vol     =0
+  n_recv_msg_vol    =0
+  vol_out_count     =0
+  max_vol_out       =0
+  n_msg_vol_each_proc = 0
+
 
   ! prepare for receiving message from write_seismograms
   print *, "io node rank:", myrank," is waiting for the first message"
+
+  ! obtain DT and NSTEP for each event
+  call recv_i_inter(tmp_1d_iarr, 1, 0, io_tag_nstep)
+  NSTEP = tmp_1d_iarr(1)
+  call recv_dp_inter(tmp_1d_darr, 1, 0, io_tag_dt)
+  DT = tmp_1d_darr(1)
+  call recv_i_inter(tmp_1d_iarr, 1, 0, io_tag_seismo_length)
+  nlength_seismogram = tmp_1d_iarr(1)
 
   !
   ! initialization seismo
@@ -347,9 +378,9 @@ subroutine do_io_start_idle()
       surf_out_count = surf_out_count+1
 
       ! write out xdmf at each timestep
-      call write_xdmf_surface_body(it_io, num_nodes, dummy_int)
+      if (myrank == 0) call write_xdmf_surface_body(it_io, num_nodes, dummy_int)
 
-      print *, "surface write done at it = ", it_io
+      !print *, "surface write done at it = ", it_io
     endif
 
     ! write volume movie
@@ -373,7 +404,7 @@ subroutine do_io_start_idle()
         endif
       endif
 
-      print *, "volume write done at it = ", it_io
+      !print *, "volume write done at it = ", it_io
 
     endif
 
@@ -385,7 +416,7 @@ subroutine do_io_start_idle()
       ! write out xdmf at each timestep
       call write_xdmf_shakemap(num_nodes)
 
-      print *, "shakemap write done"
+      !print *, "shakemap write done"
     endif
 
   enddo
@@ -394,7 +425,7 @@ subroutine do_io_start_idle()
   !
 
   ! deallocate arrays
-!  call deallocate_arrays()
+  call deallocate_arrays()
 
 end subroutine do_io_start_idle
 
@@ -1275,22 +1306,20 @@ subroutine get_receiver_info(islice_num_rec_local)
   implicit none
 
   integer                      :: ier, iproc
-  integer, dimension(1)        :: nrec_local_temp
-  integer, dimension(1)        :: nrec_temp, nlength_seismogram_tmp
+  integer, dimension(1)        :: tmp_1d_iarr
   integer,dimension(0:NPROC-1) :: islice_num_rec_local
+  double precision, dimension(1) :: tmp_1d_darr
 
 
-  call recv_i_inter(nrec_temp, 1, 0, io_tag_num_recv)
-  nrec = nrec_temp(1)
+  call recv_i_inter(tmp_1d_iarr, 1, 0, io_tag_num_recv)
+  nrec = tmp_1d_iarr(1)
 
-  call recv_dp_inter(t0, 1, 0, io_tag_seismo_tzero)
-
-  call recv_i_inter(nlength_seismogram_tmp, 1, 0, io_tag_seismo_length)
-  nlength_seismogram = nlength_seismogram_tmp(1)
+  call recv_dp_inter(tmp_1d_darr, 1, 0, io_tag_seismo_tzero)
+  t0 = tmp_1d_darr(1)
 
   do iproc = 0, NPROC-1
-    call recv_i_inter(nrec_local_temp, 1, iproc, io_tag_local_rec)
-    islice_num_rec_local(iproc) = nrec_local_temp(1)
+    call recv_i_inter(tmp_1d_iarr, 1, iproc, io_tag_local_rec)
+    islice_num_rec_local(iproc) = tmp_1d_iarr(1)
   enddo
 
 end subroutine get_receiver_info
@@ -1305,10 +1334,10 @@ subroutine allocate_seismo_arrays(islice_num_rec_local)
   integer, dimension(0:NPROC-1), intent(in) :: islice_num_rec_local
   integer                                   :: ier, max_num_rec, nstep_temp
 
-  if (NTSTEP_BETWEEN_OUTPUT_SEISMOS >= nlength_seismogram) then
-    nstep_temp = nlength_seismogram
+  if (nlength_seismogram >= NSTEP) then
+    nstep_temp = NSTEP
   else
-    nstep_temp = NTSTEP_BETWEEN_OUTPUT_SEISMOS
+    nstep_temp = nlength_seismogram
   endif
 
   ! allocate id_rec_globs for storing global id of receivers
@@ -1356,9 +1385,11 @@ subroutine deallocate_arrays()
   integer :: ier
 
   ! seismo
-  deallocate(id_rec_globs,stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error deallocating array id_rec_globs')
-  if (ier /= 0) stop 'error deallocating array id_rec_globs'
+  if (allocated(id_rec_globs)) then
+    deallocate(id_rec_globs,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error deallocating array id_rec_globs')
+    if (ier /= 0) stop 'error deallocating array id_rec_globs'
+  endif
 
   if (allocated(seismo_disp)) then
     deallocate(seismo_disp,stat=ier)
@@ -1409,6 +1440,23 @@ subroutine deallocate_arrays()
     deallocate(shake_ux_aug,stat=ier)
     deallocate(shake_uy_aug,stat=ier)
     deallocate(shake_uz_aug,stat=ier)
+  endif
+
+  if (MOVIE_VOLUME) then
+    deallocate(vd_pres%req ,vd_divglob%req,   vd_div%req, &
+               vd_curlx%req,  vd_curly%req, vd_curlz%req, &
+               vd_velox%req,  vd_veloy%req, vd_veloz%req)
+    deallocate(   vd_pres%d1darr,&
+               vd_divglob%d1darr,&
+                   vd_div%d1darr,&
+                 vd_curlx%d1darr,&
+                 vd_curly%d1darr,&
+                 vd_curlz%d1darr,&
+                 vd_velox%d1darr,&
+                 vd_veloy%d1darr,&
+                 vd_veloz%d1darr)
+
+    deallocate(id_proc_loc2glob, id_proc_glob2loc, dest_ioids)
   endif
 
 end subroutine deallocate_arrays
@@ -1471,7 +1519,7 @@ subroutine recv_seismo_data(status, islice_num_rec_local, rec_count_seismo)
     if (tag /= io_tag_seismo_body_pres) then
       ! allocate temp array size
       time_window = int(msg_size/NDIM/nrec_passed)
-      allocate(seismo_temp(NDIM,time_window,nrec_passed),stat=ier)
+      allocate(seismo_temp(NDIM,nrec_passed,time_window),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array seismo_temp')
       if (ier /= 0) stop 'error allocating array seismo_temp'
       seismo_temp(:,:,:) = 0.0
@@ -1481,9 +1529,10 @@ subroutine recv_seismo_data(status, islice_num_rec_local, rec_count_seismo)
     ! get scalar value i.e. pres
     else
       time_window = int(msg_size/1/nrec_passed)
-      allocate(seismo_temp(1,time_window,nrec_passed),stat=ier)
+      allocate(seismo_temp(1,nrec_passed,time_window),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array seismo_temp')
       if (ier /= 0) stop 'error allocating array seismo_temp'
+      seismo_temp(:,:,:) = 0.0
       call recvv_cr_inter(seismo_temp, msg_size, sender, tag)
     endif
 
@@ -1492,16 +1541,16 @@ subroutine recv_seismo_data(status, islice_num_rec_local, rec_count_seismo)
       id_rec_glob = id_rec_globs(irec_passed,sender)
       ! disp
       if (tag == io_tag_seismo_body_disp) then
-        seismo_disp(:,:,id_rec_glob) = seismo_temp(:,:,irec_passed)
+        seismo_disp(:,:,id_rec_glob) = seismo_temp(:,irec_passed,:)
       ! velo
       elseif (tag == io_tag_seismo_body_velo) then
-        seismo_velo(:,:,id_rec_glob) = seismo_temp(:,:,irec_passed) ! id_rec
+        seismo_velo(:,:,id_rec_glob) = seismo_temp(:,irec_passed,:) ! id_rec
       ! acce
       elseif (tag == io_tag_seismo_body_acce) then
-        seismo_acce(:,:,id_rec_glob) = seismo_temp(:,:,irec_passed)
+        seismo_acce(:,:,id_rec_glob) = seismo_temp(:,irec_passed,:)
       ! pres
       elseif (tag == io_tag_seismo_body_pres) then
-        seismo_pres(:,id_rec_glob) = seismo_temp(1,:,irec_passed)
+        seismo_pres(:,id_rec_glob) = seismo_temp(1,irec_passed,:)
       endif
     enddo
 
@@ -1549,7 +1598,7 @@ subroutine do_io_seismogram_init()
 
   ! arrays
   integer                                                 :: i, irec
-  real(kind=CUSTOM_REAL), dimension(nlength_seismogram)   :: time_array
+  real(kind=CUSTOM_REAL), dimension(NSTEP)   :: time_array
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable     :: val_array2d
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable   :: val_array3d
   character(len=MAX_LENGTH_STATION_NAME), dimension(nrec) :: stations
@@ -1566,14 +1615,14 @@ subroutine do_io_seismogram_init()
   call h5_create_file(h5)
 
   ! create time dataset it = 1 ~ NSTEP
-  do i = 1, nlength_seismogram
+  do i = 1, NSTEP
     if (SIMULATION_TYPE == 1) then ! forward simulation ! distinguish between single and double precision for reals
       time_array(i) = real( dble(i-1)*DT - t0 ,kind=CUSTOM_REAL)
     else if (SIMULATION_TYPE == 3) then
       ! adjoint simulation: backward/reconstructed wavefields
       ! distinguish between single and double precision for reals
       ! note: compare time_t with time used for source term
-      time_array(i) = real( dble(nlength_seismogram-i)*DT - t0 ,kind=CUSTOM_REAL)
+      time_array(i) = real( dble(NSTEP-i)*DT - t0 ,kind=CUSTOM_REAL)
     endif
   enddo
 
@@ -1607,22 +1656,22 @@ subroutine do_io_seismogram_init()
 
   ! prepare datasets for physical values
   if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
-    allocate(val_array3d(NDIM,nlength_seismogram,nrec),stat=error)
+    allocate(val_array3d(NDIM,NSTEP,nrec),stat=error)
     call h5_create_dataset_gen(h5, "disp", shape(val_array3d), 3, CUSTOM_REAL)
     deallocate(val_array3d)
   endif
   if (SAVE_SEISMOGRAMS_VELOCITY) then
-    allocate(val_array3d(NDIM,nlength_seismogram,nrec),stat=error)
+    allocate(val_array3d(NDIM,NSTEP,nrec),stat=error)
     call h5_create_dataset_gen(h5, "velo", shape(val_array3d), 3, CUSTOM_REAL)
     deallocate(val_array3d)
   endif
   if (SAVE_SEISMOGRAMS_ACCELERATION) then
-    allocate(val_array3d(NDIM,nlength_seismogram,nrec),stat=error)
+    allocate(val_array3d(NDIM,NSTEP,nrec),stat=error)
     call h5_create_dataset_gen(h5, "acce", shape(val_array3d), 3, CUSTOM_REAL)
     deallocate(val_array3d)
   endif
   if (SAVE_SEISMOGRAMS_PRESSURE) then
-    allocate(val_array2d(nlength_seismogram,nrec),stat=error)
+    allocate(val_array2d(NSTEP,nrec),stat=error)
     call h5_create_dataset_gen(h5, "pres", shape(val_array2d), 2, CUSTOM_REAL)
     deallocate(val_array2d)
   endif
@@ -1651,10 +1700,10 @@ subroutine write_seismograms_io(it_offset)
   call h5_open_file(h5)
 
   ! check if the array length to be written > total timestep
-  if (it_offset+NTSTEP_BETWEEN_OUTPUT_SEISMOS > nlength_seismogram) then
-    t_upper = nlength_seismogram - it_offset
+  if (it_offset+nlength_seismogram > NSTEP) then
+    t_upper = nlength_seismogram - (it_offset+nlength_seismogram - NSTEP)
   else
-    t_upper = NTSTEP_BETWEEN_OUTPUT_SEISMOS
+    t_upper = nlength_seismogram
   endif
 
   ! writes out this seismogram
@@ -1688,11 +1737,15 @@ subroutine write_xdmf_surface_header(num_nodes, pos_line)
   implicit none
   integer :: num_elm, num_nodes
   integer, intent(out) :: pos_line ! useful for no ioserver mode
+  character(len=64)    :: fname_h5_data_surf_xdmf  = ""
 
-  num_elm = num_nodes/4
 
   ! writeout xdmf file for surface movie
   fname_xdmf_surf = trim(OUTPUT_FILES)//"/movie_surface.xmf"
+  fname_h5_data_surf_xdmf = "./DATABASES_MPI/movie_surface.h5"
+
+  num_elm = num_nodes/4
+
 
   open(unit=xdmf_surf, file=fname_xdmf_surf, recl=256)
   write(xdmf_surf,'(a)') '<?xml version="1.0" ?>'
@@ -1703,15 +1756,15 @@ subroutine write_xdmf_surface_header(num_nodes, pos_line)
   write(xdmf_surf,*) '    <Geometry GeometryType="X_Y_Z">'
   write(xdmf_surf,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="' &
                                                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
-  write(xdmf_surf,*) '        ./DATABASES_MPI/movie_surface.h5:/surf_coord/x'
+  write(xdmf_surf,*) '        '//trim(fname_h5_data_surf_xdmf)//':/surf_coord/x'
   write(xdmf_surf,*) '      </DataItem>'
   write(xdmf_surf,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
-  write(xdmf_surf,*) '        ./DATABASES_MPI/movie_surface.h5:/surf_coord/y'
+  write(xdmf_surf,*) '        '//trim(fname_h5_data_surf_xdmf)//':/surf_coord/y'
   write(xdmf_surf,*) '      </DataItem>'
   write(xdmf_surf,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                        //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
-  write(xdmf_surf,*) '        ./DATABASES_MPI/movie_surface.h5:/surf_coord/z'
+  write(xdmf_surf,*) '        '//trim(fname_h5_data_surf_xdmf)//':/surf_coord/z'
   write(xdmf_surf,*) '      </DataItem>'
   write(xdmf_surf,*) '    </Geometry>'
 
@@ -1741,8 +1794,11 @@ subroutine write_xdmf_surface_body(it_io, num_nodes, pos_line_store)
   integer, intent(in)    :: num_nodes
   integer, intent(inout) :: pos_line_store ! useful for no ioserver mode
 
-  character(len=20)  :: it_str
-  character(len=20)  :: temp_str
+  character(len=20) :: it_str
+  character(len=20) :: temp_str
+  character(len=64) :: fname_h5_data_surf_xdmf  = ""
+
+  fname_h5_data_surf_xdmf = "./DATABASES_MPI/movie_surface.h5"
 
   ! for no ioserver mode
   if (surf_xdmf_pos == 0) surf_xdmf_pos = pos_line_store
@@ -1766,19 +1822,19 @@ subroutine write_xdmf_surface_body(it_io, num_nodes, pos_line_store)
   write(xdmf_surf,*) '  <Attribute Name="ux" AttributeType="Scalar" Center="Node">'
   write(xdmf_surf,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
-  write(xdmf_surf,*) '      ./DATABASES_MPI/movie_surface.h5:/it_'//trim(it_str)//'/ux'
+  write(xdmf_surf,*) '      '//trim(fname_h5_data_surf_xdmf)//':/it_'//trim(it_str)//'/ux'
   write(xdmf_surf,*) '    </DataItem>'
   write(xdmf_surf,*) '  </Attribute>'
   write(xdmf_surf,*) '  <Attribute Name="uy" AttributeType="Scalar" Center="Node">'
   write(xdmf_surf,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
-  write(xdmf_surf,*) '      ./DATABASES_MPI/movie_surface.h5:/it_'//trim(it_str)//'/uy'
+  write(xdmf_surf,*) '      '//trim(fname_h5_data_surf_xdmf)//':/it_'//trim(it_str)//'/uy'
   write(xdmf_surf,*) '    </DataItem>'
   write(xdmf_surf,*) '  </Attribute>'
   write(xdmf_surf,*) '  <Attribute Name="uz" AttributeType="Scalar" Center="Node">'
   write(xdmf_surf,*) '     <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
-  write(xdmf_surf,*) '      ./DATABASES_MPI/movie_surface.h5:/it_'//trim(it_str)//'/uz'
+  write(xdmf_surf,*) '      '//trim(fname_h5_data_surf_xdmf)//':/it_'//trim(it_str)//'/uz'
   write(xdmf_surf,*) '     </DataItem>'
   write(xdmf_surf,*) '  </Attribute>'
   write(xdmf_surf,*) '</Grid>'
@@ -1800,11 +1856,13 @@ subroutine write_xdmf_shakemap(num_nodes)
   use io_server
   implicit none
   integer :: num_elm, num_nodes
+  character(len=64) :: fname_h5_data_shake_xdmf  = ""
 
   num_elm = num_nodes/4
 
   ! writeout xdmf file for surface movie
   fname_xdmf_shake = trim(OUTPUT_FILES)//"/shakemap.xmf"
+  fname_h5_data_shake_xdmf = "./DATABASES_MPI/shakemap.h5"
 
   open(unit=xdmf_shake, file=fname_xdmf_shake, recl=256)
 
@@ -1817,21 +1875,22 @@ subroutine write_xdmf_shakemap(num_nodes)
   write(xdmf_shake,*) '    <Geometry GeometryType="X_Y_Z">'
   write(xdmf_shake,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="' &
                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
-  write(xdmf_shake,*) '        ./DATABASES_MPI/shakemap.h5:/surf_coord/x'
+  write(xdmf_shake,*) '        '//trim(fname_h5_data_shake_xdmf)//':/surf_coord/x'
+
   write(xdmf_shake,*) '      </DataItem>'
   write(xdmf_shake,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
-  write(xdmf_shake,*) '        ./DATABASES_MPI/shakemap.h5:/surf_coord/y'
+  write(xdmf_shake,*) '        '//trim(fname_h5_data_shake_xdmf)//':/surf_coord/y'
   write(xdmf_shake,*) '      </DataItem>'
   write(xdmf_shake,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                    //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
-  write(xdmf_shake,*) '        ./DATABASES_MPI/shakemap.h5:/surf_coord/z'
+  write(xdmf_shake,*) '        '//trim(fname_h5_data_shake_xdmf)//':/surf_coord/z'
   write(xdmf_shake,*) '      </DataItem>'
   write(xdmf_shake,*) '    </Geometry>'
   write(xdmf_shake,*) '    <Attribute Name="shake_ux" AttributeType="Scalar" Center="Node">'
   write(xdmf_shake,*) '      <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                   //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(i2c(num_nodes))//'">'
-  write(xdmf_shake,*) '        ./DATABASES_MPI/shakemap.h5:/shakemap/shakemap_ux'
+  write(xdmf_shake,*) '        '//trim(fname_h5_data_shake_xdmf)//':/shakemap/shakemap_ux'
   write(xdmf_shake,*) '      </DataItem>'
   write(xdmf_shake,*) '    </Attribute>'
   write(xdmf_shake,*) '    <Attribute Name="shake_uy" AttributeType="Scalar" Center="Node">'
@@ -1862,8 +1921,9 @@ subroutine write_xdmf_vol(val_type_mov)
   implicit none
   logical, dimension(5), intent(inout) :: val_type_mov
   logical :: pressure_io, divglob_io, div_io, veloc_io, curl_io
-  character(len=20)                         :: proc_str, it_str,nelm, nglo
-  integer                                   :: iiout, nout, i, ii
+  character(len=20)                    :: proc_str, it_str,nelm, nglo
+  integer                              :: iiout, nout, i, ii
+  character(len=64)                    :: fname_h5_data_vol_xdmf = ""
 
   pressure_io = val_type_mov(1)
   divglob_io  = val_type_mov(2)
@@ -1873,6 +1933,7 @@ subroutine write_xdmf_vol(val_type_mov)
 
   ! writeout xdmf file for volume movie
   fname_xdmf_vol = trim(OUTPUT_FILES)//"/movie_volume.xmf"
+  fname_h5_data_vol_xdmf = "./DATABASES_MPI/movie_volume.h5"
 
   open(unit=xdmf_vol, file=fname_xdmf_vol, recl=256)
 
@@ -1890,21 +1951,21 @@ subroutine write_xdmf_vol(val_type_mov)
   write(xdmf_vol,*) '<Topology TopologyType="Mixed" NumberOfElements="'//trim(nelm)//'">'
   write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Int" Precision="4" Dimensions="'&
                          //trim(nelm)//' 9">'
-  write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume.h5:/mesh/elm_conn'
+  write(xdmf_vol,*) '       '//trim(fname_h5_data_vol_xdmf)//':/mesh/elm_conn'
   write(xdmf_vol,*) '    </DataItem>'
   write(xdmf_vol,*) '</Topology>'
   write(xdmf_vol,*) '<Geometry GeometryType="X_Y_Z">'
   write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                       //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-  write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume.h5:/mesh/x'
+  write(xdmf_vol,*) '       '//trim(fname_h5_data_vol_xdmf)//':/mesh/x'
   write(xdmf_vol,*) '    </DataItem>'
   write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                       //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-  write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume.h5:/mesh/y'
+  write(xdmf_vol,*) '       '//trim(fname_h5_data_vol_xdmf)//':/mesh/y'
   write(xdmf_vol,*) '    </DataItem>'
   write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                       //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-  write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume.h5:/mesh/z'
+  write(xdmf_vol,*) '       '//trim(fname_h5_data_vol_xdmf)//':/mesh/z'
   write(xdmf_vol,*) '    </DataItem>'
   write(xdmf_vol,*) '</Geometry>'
   write(xdmf_vol,*) '<Grid Name="time_col" GridType="Collection" CollectionType="Temporal">'
@@ -1924,7 +1985,7 @@ subroutine write_xdmf_vol(val_type_mov)
       write(xdmf_vol,*) '  <Attribute Name="pressure" AttributeType="Scalar" Center="Node">'
       write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                          //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/pressure'
+      write(xdmf_vol,*) '     '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/pressure'
       write(xdmf_vol,*) '    </DataItem>'
       write(xdmf_vol,*) '  </Attribute>'
     endif
@@ -1933,7 +1994,7 @@ subroutine write_xdmf_vol(val_type_mov)
       write(xdmf_vol,*) '  <Attribute Name="div_glob" AttributeType="Scalar" Center="Node">'
       write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                          //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/div_glob'
+      write(xdmf_vol,*) '     '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/div_glob'
       write(xdmf_vol,*) '    </DataItem>'
       write(xdmf_vol,*) '  </Attribute>'
     endif
@@ -1942,7 +2003,7 @@ subroutine write_xdmf_vol(val_type_mov)
       write(xdmf_vol,*) '  <Attribute Name="div" AttributeType="Scalar" Center="Node">'
       write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                          //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/div'
+      write(xdmf_vol,*) '     '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/div'
       write(xdmf_vol,*) '    </DataItem>'
       write(xdmf_vol,*) '  </Attribute>'
     endif
@@ -1951,19 +2012,19 @@ subroutine write_xdmf_vol(val_type_mov)
       write(xdmf_vol,*) '  <Attribute Name="velo_x" AttributeType="Scalar" Center="Node">'
       write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                          //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/velo_x'
+      write(xdmf_vol,*) '     '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/velo_x'
       write(xdmf_vol,*) '    </DataItem>'
       write(xdmf_vol,*) '  </Attribute>'
       write(xdmf_vol,*) '  <Attribute Name="velo_y" AttributeType="Scalar" Center="Node">'
       write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                          //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/velo_y'
+      write(xdmf_vol,*) '     '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/velo_y'
       write(xdmf_vol,*) '    </DataItem>'
       write(xdmf_vol,*) '  </Attribute>'
       write(xdmf_vol,*) '  <Attribute Name="velo_z" AttributeType="Scalar" Center="Node">'
       write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                          //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/velo_z'
+      write(xdmf_vol,*) '     '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/velo_z'
       write(xdmf_vol,*) '    </DataItem>'
       write(xdmf_vol,*) '  </Attribute>'
     endif
@@ -1972,19 +2033,19 @@ subroutine write_xdmf_vol(val_type_mov)
       write(xdmf_vol,*) '  <Attribute Name="curl_x" AttributeType="Scalar" Center="Node">'
       write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/curl_x'
+      write(xdmf_vol,*) '     '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/curl_x'
       write(xdmf_vol,*) '    </DataItem>'
       write(xdmf_vol,*) '  </Attribute>'
       write(xdmf_vol,*) '  <Attribute Name="curl_y" AttributeType="Scalar" Center="Node">'
       write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/curl_y'
+      write(xdmf_vol,*) '     '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/curl_y'
       write(xdmf_vol,*) '    </DataItem>'
       write(xdmf_vol,*) '  </Attribute>'
       write(xdmf_vol,*) '  <Attribute Name="curl_z" AttributeType="Scalar" Center="Node">'
       write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-      write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume.h5:/it_'//trim(it_str)//'/curl_z'
+      write(xdmf_vol,*) '     '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/curl_z'
       write(xdmf_vol,*) '    </DataItem>'
       write(xdmf_vol,*) '  </Attribute>'
     endif
@@ -2012,6 +2073,8 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
   character(len=20)                           :: proc_str, it_str,nelm, nglo
   integer                                     :: iiout, nout, i, ii, iproc
 
+  character(len=64)                    :: fname_h5_data_vol_xdmf = ""
+
   pressure_io = val_type_mov(1)
   divglob_io  = val_type_mov(2)
   div_io      = val_type_mov(3)
@@ -2035,31 +2098,38 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
 
   ! loop for writing information of mesh partitions
   do iproc=0,NIONOD-1
+    write(proc_str, "(i6.6)") iproc
+    if (NtoM) then
+      ! write out one h5 par 1 IO server process
+      fname_h5_data_vol_xdmf = "./DATABASES_MPI/movie_volume_"//trim(proc_str)//".h5"
+    else
+      ! write one single h5 from all IO server
+      fname_h5_data_vol_xdmf = "./DATABASES_MPI/movie_volume.h5"
+    endif
 
     ! loop for writing information of mesh partitions
     nelm=i2c(nelm_par_io_offset(iproc)*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1))
     nglo=i2c(nglob_par_io_offset(iproc))
-    write(proc_str, "(i6.6)") iproc
 
     write(xdmf_vol,*) '<Grid Name="mesh_'//trim(proc_str)//'">'
     write(xdmf_vol,*) '<Topology TopologyType="Mixed" NumberOfElements="'//trim(nelm)//'">'
     write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Int" Precision="4" Dimensions="'&
                            //trim(nelm)//' 9">'
-    write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume_'//trim(proc_str)//'.h5:/mesh/elm_conn'
+    write(xdmf_vol,*) '       '//trim(fname_h5_data_vol_xdmf)//':/mesh/elm_conn'
     write(xdmf_vol,*) '    </DataItem>'
     write(xdmf_vol,*) '</Topology>'
     write(xdmf_vol,*) '<Geometry GeometryType="X_Y_Z">'
     write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-    write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume_'//trim(proc_str)//'.h5:/mesh/x'
+    write(xdmf_vol,*) '       '//trim(fname_h5_data_vol_xdmf)//':/mesh/x'
     write(xdmf_vol,*) '    </DataItem>'
     write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-    write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume_'//trim(proc_str)//'.h5:/mesh/y'
+    write(xdmf_vol,*) '       '//trim(fname_h5_data_vol_xdmf)//':/mesh/y'
     write(xdmf_vol,*) '    </DataItem>'
     write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                         //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-    write(xdmf_vol,*) '       ./DATABASES_MPI/movie_volume_'//trim(proc_str)//'.h5:/mesh/z'
+    write(xdmf_vol,*) '       '//trim(fname_h5_data_vol_xdmf)//':/mesh/z'
     write(xdmf_vol,*) '    </DataItem>'
     write(xdmf_vol,*) '</Geometry>'
     write(xdmf_vol,*) '</Grid>'
@@ -2085,6 +2155,14 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
 
     do iproc=0, NIONOD-1
       write(proc_str, "(i6.6)") iproc
+      if (NtoM) then
+        ! write out one h5 par 1 IO server process
+        fname_h5_data_vol_xdmf = "./DATABASES_MPI/movie_volume_"//trim(proc_str)//".h5"
+      else
+        ! write one single h5 from all IO server
+        fname_h5_data_vol_xdmf = "./DATABASES_MPI/movie_volume.h5"
+      endif
+
       nglo=i2c(nglob_par_io_offset(iproc))
 
       write(xdmf_vol, *)  '<Grid Name="data_'//trim(proc_str)//'" Type="Uniform">'
@@ -2097,7 +2175,7 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
         write(xdmf_vol,*) '  <Attribute Name="pressure" AttributeType="Scalar" Center="Node">'
         write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                            //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-        write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume_'//trim(proc_str)//'.h5:/it_'//trim(it_str)//'/pressure'
+        write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/pressure'
         write(xdmf_vol,*) '    </DataItem>'
         write(xdmf_vol,*) '  </Attribute>'
       endif
@@ -2106,7 +2184,7 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
         write(xdmf_vol,*) '  <Attribute Name="div_glob" AttributeType="Scalar" Center="Node">'
         write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                            //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-        write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume_'//trim(proc_str)//'.h5:/it_'//trim(it_str)//'/div_glob'
+        write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/div_glob'
         write(xdmf_vol,*) '    </DataItem>'
         write(xdmf_vol,*) '  </Attribute>'
       endif
@@ -2115,7 +2193,7 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
         write(xdmf_vol,*) '  <Attribute Name="div" AttributeType="Scalar" Center="Node">'
         write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                            //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-        write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume_'//trim(proc_str)//'.h5:/it_'//trim(it_str)//'/div'
+        write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/div'
         write(xdmf_vol,*) '    </DataItem>'
         write(xdmf_vol,*) '  </Attribute>'
       endif
@@ -2124,19 +2202,19 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
         write(xdmf_vol,*) '  <Attribute Name="velo_x" AttributeType="Scalar" Center="Node">'
         write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                            //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-        write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume_'//trim(proc_str)//'.h5:/it_'//trim(it_str)//'/velo_x'
+        write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/velo_x'
         write(xdmf_vol,*) '    </DataItem>'
         write(xdmf_vol,*) '  </Attribute>'
         write(xdmf_vol,*) '  <Attribute Name="velo_y" AttributeType="Scalar" Center="Node">'
         write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                            //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-        write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume_'//trim(proc_str)//'.h5:/it_'//trim(it_str)//'/velo_y'
+        write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/velo_y'
         write(xdmf_vol,*) '    </DataItem>'
         write(xdmf_vol,*) '  </Attribute>'
         write(xdmf_vol,*) '  <Attribute Name="velo_z" AttributeType="Scalar" Center="Node">'
         write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                            //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-        write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume_'//trim(proc_str)//'.h5:/it_'//trim(it_str)//'/velo_z'
+        write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/velo_z'
         write(xdmf_vol,*) '    </DataItem>'
         write(xdmf_vol,*) '  </Attribute>'
       endif
@@ -2145,19 +2223,19 @@ subroutine write_xdmf_vol_mton(val_type_mov,nglob_par_io_offset,nelm_par_io_offs
         write(xdmf_vol,*) '  <Attribute Name="curl_x" AttributeType="Scalar" Center="Node">'
         write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                        //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-        write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume_'//trim(proc_str)//'.h5:/it_'//trim(it_str)//'/curl_x'
+        write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/curl_x'
         write(xdmf_vol,*) '    </DataItem>'
         write(xdmf_vol,*) '  </Attribute>'
         write(xdmf_vol,*) '  <Attribute Name="curl_y" AttributeType="Scalar" Center="Node">'
         write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                        //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-        write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume_'//trim(proc_str)//'.h5:/it_'//trim(it_str)//'/curl_y'
+        write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/curl_y'
         write(xdmf_vol,*) '    </DataItem>'
         write(xdmf_vol,*) '  </Attribute>'
         write(xdmf_vol,*) '  <Attribute Name="curl_z" AttributeType="Scalar" Center="Node">'
         write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                        //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo)//'">'
-        write(xdmf_vol,*) '      ./DATABASES_MPI/movie_volume_'//trim(proc_str)//'.h5:/it_'//trim(it_str)//'/curl_z'
+        write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/curl_z'
         write(xdmf_vol,*) '    </DataItem>'
         write(xdmf_vol,*) '  </Attribute>'
       endif
@@ -2196,7 +2274,16 @@ subroutine pass_info_to_io()
   integer, dimension(9,NSPEC_AB*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)) :: elm_conn_loc
 
   ! initialization of io node from compute node side
+  n_msg_vol_each_proc = 0
 
+ ! pass DT NSTEP of each event which may differ from DATA/Par_file
+  if (myrank == 0) then
+    do i_ionod=0,NIONOD-1
+      call send_i_inter((/NSTEP/), 1, i_ionod, io_tag_nstep)
+      call send_dp_inter((/DT/), 1, i_ionod, io_tag_dt)
+      call send_i_inter((/nlength_seismogram/), 1, i_ionod, io_tag_seismo_length)
+    enddo
+  endif
 
   ! send the receiver information to io node for the outputs of seismo signals
   ! seismo data is out only from rank=0 of io nodes
@@ -2205,8 +2292,6 @@ subroutine pass_info_to_io()
     call send_i_inter((/nrec/), 1, 0, io_tag_num_recv)
     ! send t0
     call send_dp_inter((/t0/), 1, 0, io_tag_seismo_tzero)
-    ! send nlength_seismogram
-    call send_i_inter((/nlength_seismogram/), 1, 0, io_tag_seismo_length)
   endif
   ! send the number of local receiver to the io node
   call send_i_inter((/nrec_local/), 1, 0, io_tag_local_rec)
@@ -2281,7 +2366,7 @@ subroutine pass_info_to_io()
     ! create connectivity dataset (it's node base but element base)
     call get_conn_for_movie(NSPEC_AB, elm_conn_loc, 0)!nglob_offset(myrank))
     ! send elm_conn_loc
-    call send_i_inter(elm_conn_loc,size(elm_conn_loc),dest_ionod, io_tag_vol_elmconn)
+    call send_i_inter(elm_conn_loc(1,1),size(elm_conn_loc),dest_ionod, io_tag_vol_elmconn)
     ! send xstore, ystore, zstore
     call sendv_cr_inter(xstore, size(xstore), dest_ionod, io_tag_vol_nodex)
     call sendv_cr_inter(ystore, size(ystore), dest_ionod, io_tag_vol_nodey)

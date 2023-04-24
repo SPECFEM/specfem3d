@@ -56,10 +56,9 @@ module constants
   integer :: io_tag_seismo_body_acce  = 14
   integer :: io_tag_seismo_body_pres  = 15
   integer :: io_tag_seismo_tzero      = 16
-  integer :: io_tag_seismo_length     = 17
-
-  integer :: io_tag_num_recv          = 18
-  integer :: io_tag_local_rec         = 19
+  integer :: io_tag_dt                = 17
+  integer :: io_tag_nstep             = 18
+  integer :: io_tag_seismo_length     = 19
 
   integer :: io_tag_surface_nfaces    = 20
   integer :: io_tag_surface_offset    = 21
@@ -94,6 +93,9 @@ module constants
   integer :: io_tag_vol_nodey         = 56
   integer :: io_tag_vol_nodez         = 57
   integer :: io_tag_end               = 60
+
+  integer :: io_tag_num_recv          = 61
+  integer :: io_tag_local_rec         = 62
 
   integer :: xdmf_surf                = 114
   integer :: xdmf_vol                 = 514

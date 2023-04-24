@@ -83,7 +83,7 @@ else
   echo "  running solver on $NPROC and $NIONOD io servers processors..."
   echo
   mpirun --use-hwthread-cpus -np $(($NPROC+$NIONOD)) ./bin/xspecfem3D
-
+  #mpirun --use-hwthread-cpus -np $(($NPROC+$NIONOD)) xterm -e gdb  -ex run ./bin/xspecfem3D
 fi
 # checks exit code
 if [[ $? -ne 0 ]]; then exit 1; fi
