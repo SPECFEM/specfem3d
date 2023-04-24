@@ -377,9 +377,9 @@ $O/write_output_ASDF.spec.o: $O/asdf_data.spec_module.o
 
 ## hdf5
 $O/initialize_simulation.spec.o: $(hdf5_specfem3D_OBJECTS)
+$O/get_attenuation_model.spec.o: $(hdf5_specfem3D_OBJECTS)
 $O/write_seismograms_hdf5.spec_hdf5.o: $(hdf5_specfem3D_OBJECTS_part)
 $O/write_movie_output_hdf5.spec_hdf5.o: $(hdf5_specfem3D_OBJECTS_part)
-
 ## kdtree
 $O/locate_point.spec.o: $O/search_kdtree.shared.o
 $O/setup_sources_receivers.spec.o: $O/search_kdtree.shared.o
