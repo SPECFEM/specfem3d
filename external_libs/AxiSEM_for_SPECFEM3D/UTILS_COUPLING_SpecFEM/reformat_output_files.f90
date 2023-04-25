@@ -134,7 +134,7 @@ program re_format_outputs_files
      write(*,*) 'expand_2D_3D parameter inputs:'
      write(*,*) '  directory               : ',trim(meshdirectory)
      write(*,*) '  point file (geographic) : ',trim(input_point_file)
-     write(*,*) '  point file (cartesian)  : ',trim(input_point_file_cart)
+     write(*,*) '  point file (Cartesian)  : ',trim(input_point_file_cart)
      write(*,*)
 
      !! count number of global elements

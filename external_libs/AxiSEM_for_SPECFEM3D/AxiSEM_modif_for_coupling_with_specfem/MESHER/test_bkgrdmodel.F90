@@ -315,6 +315,12 @@ subroutine bkgrdmodel_testing
   !$OMP ENDDO
   !$omp end parallel
 
+
+!! SPECFEM modification - daniel
+!! limits dt value to significant digits (for comparing output on different systems)
+  call get_timestep_limit_significant_digit(dt)
+
+
   if (dump_mesh_vtk) then
     write(*,*) 'minmax vp:', minval(vp1), maxval(vp1)
 
@@ -658,6 +664,61 @@ subroutine write_VTK_bin_scal(x,y,z,u1,elems,filename)
   write(*,*)'...saved ',trim(filename)//'.vtk'
 end subroutine write_VTK_bin_scal
 !-----------------------------------------------------------------------------------------
+
+!-----------------------------------------------------------------------------------------
+
+!! SPECFEM modification - daniel
+!!
+!! the time step dt for the mesh is determined by the CFL condition in this file by routine bkgrdmodel_testing().
+!! it gets computed as double precision (variable dt defined in module data_bkgrdmodel, see data_bkgrdmodel.f90).
+!!
+!! due to numerical round-off errors, this dt value will differ on different OS systems and/or compiler versions.
+!! to make the AxiSEM output comparable on various systems, i'll cut-off the dt value at a significant number of digits
+!! in this routine. it is taken from SPECFEM3D_GLOBE, where we use the same routine.
+
+subroutine get_timestep_limit_significant_digit(time_step)
+
+  ! cut at a significant number of digits (e.g., 2 digits) using 1/2 rounding
+  ! example: 0.0734815 -> 0.0730
+  !      and 0.0737777 -> 0.0735
+  !
+  ! also works with different magnitudes of time step sizes (0.118, 0.00523, ..). always cut of after 2 significant digits:
+  ! example: 0.118749999 -> 0.115
+
+  implicit none
+
+  real(kind=dp),intent(inout) :: time_step
+
+  ! rounding
+  integer :: lpow,ival
+  real(kind=dp) :: fac_pow,dt_cut
+
+  ! initializes
+  dt_cut = time_step
+
+  ! cut at a significant number of digits (2 digits)
+  ! example: 0.0734815 -> lpow = (2 - (-1) = 3
+  lpow = int(2.d0 - log10(dt_cut))
+
+  ! example: -> factor 10**3
+  fac_pow = 10.d0**(lpow)
+
+  ! example: -> 73
+  ival = int(fac_pow * dt_cut)
+
+  ! adds .5-digit (in case): 73.0 -> 0.073
+  if ( (fac_pow * dt_cut - ival) >= 0.5 ) then
+    dt_cut = (dble(ival) + 0.5d0) / fac_pow
+  else
+    dt_cut = dble(ival) / fac_pow
+  endif
+
+  time_step = dt_cut
+
+end subroutine get_timestep_limit_significant_digit
+!-----------------------------------------------------------------------------------------
+
+
 
 end module test_bkgrdmodel
 !=========================================================================================

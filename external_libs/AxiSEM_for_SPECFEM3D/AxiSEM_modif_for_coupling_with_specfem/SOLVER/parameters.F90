@@ -846,7 +846,7 @@ subroutine compute_numerical_parameters
         deltat = deltat * 3.0
      end select
      if (lpr .and. verbose > 1) then
-        write(*,'(/,a)')'    Using time step precalculated by the mesher:',deltat
+        write(*,*)'    Using time step precalculated by the mesher:',deltat
      endif
   endif
 20 format('     Chosen/maximal time step [s]:',2(f7.3))
