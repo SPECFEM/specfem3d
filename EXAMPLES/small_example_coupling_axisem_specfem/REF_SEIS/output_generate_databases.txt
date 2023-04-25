@@ -46,7 +46,7 @@
  defined materials    :            2
  undefined materials  :            0
  total number of spectral elements:         2400
- absorbing boundaries: 
+ absorbing boundaries:
    xmin,xmax :          240         240
    ymin,ymax :          120         120
    bottom,top:          200         200
@@ -60,14 +60,14 @@
 
  create regions:
 
-   ...allocating arrays 
+   ...allocating arrays
      NGLLX   =            5
      NGLLY   =            5
      NGLLZ   =            5
      NGNOD   =            8
      NGNOD2D =            4
 
-     main process setup: 
+     main process setup:
      nspec           =          600
 
      separating regular/irregular element shapes
@@ -84,16 +84,16 @@
  File DATA/Par_file_faults not found: assuming that there are no faults
 
 
-   ...setting up jacobian 
+   ...setting up jacobian
 
    ...indexing global points
-      creating ibool indexing     : x min/max =   -277987.250     /   277987.250    
+      creating ibool indexing     : x min/max =   -277987.250     /   277987.250
       creating indirect addressing: nglob =        42025
       creating unique point locations
 
-   ...preparing MPI interfaces 
+   ...preparing MPI interfaces
       number of interfaces        :            3
-      creating MPI indexing       : x min/max =   -277987.250     /   277987.250    
+      creating MPI indexing       : x min/max =   -277987.250     /   277987.250
                                     tolerance =    5.5597450000000001E-005
 
       total MPI interface points:        10988
@@ -118,20 +118,20 @@
 
 
       USING A HYBRID METHOD (THE CODE IS COUPLED WITH AN INJECTION TECHNIQUE):
-      INJECTION TECHNIQUE TYPE =            2  (AXISEM) 
+      INJECTION TECHNIQUE TYPE =            2  (AXISEM)
 
-               10  % time remaining:   1.8275001293513986E-006 s
-               20  % time remaining:   1.6133333723992130E-006 s
-               30  % time remaining:   1.3954630385269426E-006 s
-               40  % time remaining:   1.1912500288453886E-006 s
-               50  % time remaining:   9.9055557954125109E-007 s
-               60  % time remaining:   7.8907407251244896E-007 s
-               70  % time remaining:   5.9178570794756562E-007 s
-               80  % time remaining:   3.9381945398054153E-007 s
-               90  % time remaining:   1.9660493788251189E-007 s
+               10  % time remaining:   1.6875001194421252E-006 s
+               20  % time remaining:   1.5077778142876890E-006 s
+               30  % time remaining:   1.3157408119877781E-006 s
+               40  % time remaining:   1.1229166938574065E-006 s
+               50  % time remaining:   9.3555557820946055E-007 s
+               60  % time remaining:   7.4759259111306150E-007 s
+               70  % time remaining:   5.6119047018000887E-007 s
+               80  % time remaining:   3.7451389795751324E-007 s
+               90  % time remaining:   1.8728395024663760E-007 s
               100  % time remaining:   0.0000000000000000      s
 
-   ...detecting acoustic-elastic-poroelastic surfaces 
+   ...detecting acoustic-elastic-poroelastic surfaces
       total acoustic elements   :           0
       total elastic elements    :        2400
       total poroelastic elements:           0
@@ -141,18 +141,18 @@
        elastic - poroelastic coupling : total number of faces =            0
 
 
-   ...element inner/outer separation 
+   ...element inner/outer separation
       for overlapping of communications with calculations:
       percentage of   edge elements    25.0000000     %
       percentage of volume elements    75.0000000     %
 
-   ...element mesh coloring 
+   ...element mesh coloring
       use coloring =  F
 
-   ...external binary models 
-      no external binary model used 
+   ...external binary models
+      no external binary model used
 
-   ...creating mass matrix 
+   ...creating mass matrix
 
    ...saving mesh databases
       using binary file format
@@ -186,38 +186,38 @@
 
 
  ********
- Model: P   velocity min,max =    5800.00000       8520.44922    
- Model: S   velocity min,max =    3460.00000       4627.40967    
+ Model: P   velocity min,max =    5800.00000       8520.44922
+ Model: S   velocity min,max =    3460.00000       4627.40967
 
- Model: Poisson's ratio min,max =   0.223754406      0.290828705    
+ Model: Poisson's ratio min,max =   0.223754406      0.290828705
  ********
 
  *********************************************
  *** Verification of simulation parameters ***
  *********************************************
 
- *** Xmin and Xmax of the model =   -277987.250       277987.250    
- *** Ymin and Ymax of the model =   -555974.500       555974.500    
- *** Zmin and Zmax of the model =   -270396.188      -10.1036997    
+ *** Xmin and Xmax of the model =   -277987.250       277987.250
+ *** Ymin and Ymax of the model =   -555974.500       555974.500
+ *** Zmin and Zmax of the model =   -270396.188      -10.1036997
 
- *** Max GLL point distance =    18261.2734    
- *** Min GLL point distance =    2590.09375    
- *** Max/min ratio =    7.05042934    
+ *** Max GLL point distance =    18261.2734
+ *** Min GLL point distance =    2590.09375
+ *** Max/min ratio =    7.05042934
 
- *** Max element size =    55789.0234    
- *** Min element size =    14999.9844    
- *** Max/min ratio =    3.71927214    
+ *** Max element size =    55789.0234
+ *** Min element size =    14999.9844
+ *** Max/min ratio =    3.71927214
 
- *** Minimum period resolved =    20.1549931    
- *** Maximum suggested time step =   0.153606594    
+ *** Minimum period resolved =    20.1549931
+ *** Maximum suggested time step =   0.153606594
 
- Elapsed time for checking mesh resolution in seconds =    4.9499999999991218E-004
+ Elapsed time for checking mesh resolution in seconds =    4.8900000000001720E-004
  saving VTK files for Courant number and minimum period
 
 
  mesh regions done
 
- min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is   -30396.208230000000         -10.103700000000000     
+ min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is   -30396.208230000000         -10.103700000000000
 
 
  done mesh setup
@@ -254,7 +254,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =   0.46218800000000004     
+ Elapsed time for mesh generation and buffer creation in seconds =   0.41638300000000000
  End of mesh generation
 
  done

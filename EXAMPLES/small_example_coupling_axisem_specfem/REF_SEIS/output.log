@@ -1,4 +1,4 @@
-running example: Tue Apr 25 16:57:44 CEST 2023
+running example: Tue Apr 25 23:41:46 CEST 2023
 
 setting up example...
 
@@ -10,10 +10,10 @@ setting up example...
 'Param_files/inputs_files_for_axisem/inparam_advanced' -> 'Param_files/inputs_files_for_axisem/inparam_advanced.org'
 'Param_files/inputs_files_for_axisem/inparam_basic' -> 'Param_files/inputs_files_for_axisem/inparam_basic.org'
 
-checking AxiSEM MESHER compilation in directory: ../..//external_libs/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem 
+checking AxiSEM MESHER compilation in directory: ../..//external_libs/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem
 make: Nothing to be done for `all'.
 
-checking AxiSEM SOLVER compilation in directory: ../..//external_libs/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem 
+checking AxiSEM SOLVER compilation in directory: ../..//external_libs/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem
 make: Nothing to be done for `all'.
 make: Nothing to be done for `all'.
 
@@ -37,7 +37,7 @@ make: Nothing to be done for `all'.
 #######################################################
  1. step: inputs for coupling w/ SPECFEM
 #######################################################
-Tue Apr 25 16:57:44 CEST 2023
+Tue Apr 25 23:41:47 CEST 2023
 
 running xmeshfem3D (in serial mode)...
 'DATA/Par_file_one_proc' -> 'DATA/Par_file'
@@ -49,21 +49,21 @@ running xgenerate_databases...
 
 'Numglob2loc_elmn.txt' -> 'MESH/./Numglob2loc_elmn.txt'
 
- *** Minimum period resolved =    20.1549931    
- *** Maximum suggested time step =   0.153606594    
+ *** Minimum period resolved =    20.1549931
+ *** Maximum suggested time step =   0.153606594
 
 
 #######################################################
  2. step: normals
 #######################################################
-Tue Apr 25 16:57:46 CEST 2023
+Tue Apr 25 23:41:48 CEST 2023
 
 READING : DATABASES_MPI/proc000000_normal.txt
 READING : DATABASES_MPI/proc000001_normal.txt
 READING : DATABASES_MPI/proc000002_normal.txt
 READING : DATABASES_MPI/proc000003_normal.txt
 
- Wrote   normals.txt  file 
+ Wrote   normals.txt  file
 
  X, Y, Z, NX, NY, NZ, iproc
 
@@ -72,7 +72,7 @@ READING : DATABASES_MPI/proc000003_normal.txt
 #######################################################
  3. step: AxiSEM
 #######################################################
-Tue Apr 25 16:57:46 CEST 2023
+Tue Apr 25 23:41:49 CEST 2023
 
 running AxiSEM mesher...
 
@@ -88,7 +88,7 @@ running AxiSEM solver...
 #######################################################
  4. step: reconstruct 3D wavefield
 #######################################################
-Tue Apr 25 16:58:25 CEST 2023
+Tue Apr 25 23:42:35 CEST 2023
 
 running 3D wavefield reconstruction xexpand_2D_3D...
 
@@ -98,7 +98,7 @@ running interpolation xreformat...
 #######################################################
  5. step: coupled SPECFEM simulation
 #######################################################
-Tue Apr 25 16:59:09 CEST 2023
+Tue Apr 25 23:43:13 CEST 2023
 
 running solver...
 
@@ -106,7 +106,7 @@ running solver...
 #######################################################
  6. step: VTK snapshots
 #######################################################
-Tue Apr 25 16:59:25 CEST 2023
+Tue Apr 25 23:43:29 CEST 2023
 
 creating snapshot files...
 
@@ -114,5 +114,5 @@ creating snapshot files...
 see results in directory: OUTPUT_FILES/
 
 done
-Tue Apr 25 16:59:27 CEST 2023
+Tue Apr 25 23:43:31 CEST 2023
 

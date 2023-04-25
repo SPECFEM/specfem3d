@@ -8,7 +8,7 @@
    using NGNOD =            8
    linear elements
 
- total number of nodes: 
+ total number of nodes:
    nnodes =         3003
  total number of spectral elements:
    nspec =         2400
@@ -77,7 +77,7 @@
    load per partition: imbalance =    0.00000000     %
                        (0% being totally balanced, 100% being unbalanced)
 
- partitions: 
+ partitions:
    num         =            4
    ninterfaces =            6
 
