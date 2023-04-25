@@ -217,7 +217,7 @@ subroutine readin_parameters
    12x,'Add heterogeneous region?           ',l2,/                          &
    12x,'Perform extensive mesh tests?       ',l2,/                          &
    12x,'Output format (seism., wavefields): ',a6,/                          &
-   08x,' ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == =')
+   08x,' ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == =')
 
      if (verbose > 1) write(*,'(a/a)') &
            'Processor-specific output is written to: output_proc < PROC ID > .dat', &

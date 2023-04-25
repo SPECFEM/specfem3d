@@ -1,6 +1,6 @@
 program re_format_outputs_files
 
-  !! use the same numerber of MPI process than specfem !!!
+  !! use the same number of MPI processes as specfem !!!
   implicit none
 
   include 'mpif.h'
@@ -98,6 +98,8 @@ program re_format_outputs_files
   if (myrank == 0) then
 
      !-----------------------------------  GENERAL INPUT ----------------------------------
+     write(*,*) 'reformat output files'
+     write(*,*)
 
 !!     open(unit=500, file='inparam_basic', status='old', action='read', iostat=ioerr)
 !!
@@ -128,6 +130,12 @@ program re_format_outputs_files
      read(10,'(a)') LOCAL_PATH            !! specfem DATABASE PATH
      read(10,'(a)') TRACT_PATH
      close(10)
+
+     write(*,*) 'expand_2D_3D parameter inputs:'
+     write(*,*) '  directory               : ',trim(meshdirectory)
+     write(*,*) '  point file (geographic) : ',trim(input_point_file)
+     write(*,*) '  point file (cartesian)  : ',trim(input_point_file_cart)
+     write(*,*)
 
      !! count number of global elements
      open(90,file=trim(meshdirectory)//'/Numglob2loc_elmn.txt')
@@ -163,6 +171,12 @@ program re_format_outputs_files
      read(10,*) tmin,tmax
      close(10)
      dtt=1./frq_min
+
+     write(*,*) 'reformat parameter inputs:'
+     write(*,*) '  frequency min  : ',frq_min
+     write(*,*) '  time min/max   : ',tmin,'/',tmax
+     write(*,*)
+
 
      !---------------------- lecture des tables de correspondances Specfem glob and loc ---------
 
@@ -233,11 +247,13 @@ program re_format_outputs_files
      enddo
 103  close(90)
 
+     ! determines maximum number of faces
      allocate(num_boundary_by_proc(nSpecfem_proc))
      max_mun_abs_boundary_faces=0
      do iproc = 1, nSpecfem_proc
         call create_name_database(prname,iproc-1,LOCAL_PATH)
-        write(*,*) prname(1:len_trim(prname))//'absorb_dsm'
+        ! debug
+        !write(*,*) prname(1:len_trim(prname))//'absorb_dsm'
         open(27,file=prname(1:len_trim(prname))//'absorb_dsm',status='old', &
              action='read',form='unformatted',iostat=ier)
         if (ier /= 0)  write(*,*) 'error opening',prname(1:len_trim(prname))//'absorb_dsm'
@@ -251,15 +267,19 @@ program re_format_outputs_files
      allocate(ind_rec2face(2,nb_point, nSpecfem_proc))
      allocate(ind_face2rec(max_mun_abs_boundary_faces,25,nSpecfem_proc))
      allocate( nrec_by_proc( nSpecfem_proc))
+
+     ! reads in boundary infos
      ind_face2rec=0
      ind_rec2face=0
      do iproc = 1, nSpecfem_proc
         call create_name_database(prname,iproc-1,LOCAL_PATH)
-        write(*,*) prname(1:len_trim(prname))//'absorb_dsm'
+        ! debug
+        !write(*,*) prname(1:len_trim(prname))//'absorb_dsm'
         open(27,file=prname(1:len_trim(prname))//'absorb_dsm',status='old', &
              action='read',form='unformatted',iostat=ier)
         read(27) num_abs_boundary_faces
-        write(*,*) num_abs_boundary_faces
+        ! debug
+        !write(*,*) num_abs_boundary_faces
         allocate(abs_boundary_ispec(num_abs_boundary_faces))
         allocate(abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces))
         allocate(abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces))
@@ -404,7 +424,7 @@ program re_format_outputs_files
          write(fichier,'(a6,a15)') '/Data/',output_stress_name(6)
          open(isyz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
 
-         write(*,*) 'openning ', trim(working_axisem_dir(isim))//trim(fichier)
+         write(*,*) 'opening ', trim(working_axisem_dir(isim))//trim(fichier)
 
        enddo
 
@@ -422,6 +442,7 @@ program re_format_outputs_files
 
        write(*,*) ' time step ', dtt
        write(*,*) 'READING OK',ntime,nbrec
+       write(*,*)
 
      else !! CD CD for KH
 
@@ -504,7 +525,7 @@ program re_format_outputs_files
          write(fichier,'(a15)') output_deriv_name(9)
          open(idu3d3(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
 
-         write(*,*) 'openning ', trim(working_axisem_dir(isim))//trim(fichier)
+         write(*,*) 'opening ', trim(working_axisem_dir(isim))//trim(fichier)
 
        enddo
 
@@ -528,7 +549,7 @@ program re_format_outputs_files
 
        write(*,*) ' time step ', dtt
        write(*,*) 'READING OK',ntime,nbrec
-
+       write(*,*)
      endif
 
   endif  !! if (myrank == 0)
@@ -587,11 +608,14 @@ program re_format_outputs_files
   if (MOD(itmax - itmin + 1,2) > 0) ITMIN=ITMIN+1
   ntime_interp = itmax - itmin + 1
 
-  write(*,*) ' dt ', dt
-  write(*,*) ' itmin ',itmin
-  write(*,*) ' itmax ', itmax
-  write(*,*) ' nb ',itmax - itmin + 1
-  write(*,*) ' ntime_interp ',ntime_interp
+  if (myrank == 0) then
+    write(*,*) ' dt           = ', dt
+    write(*,*) ' itmin        = ', itmin
+    write(*,*) ' itmax        = ', itmax
+    write(*,*) ' nb           = ', itmax - itmin + 1
+    write(*,*) ' ntime_interp = ', ntime_interp
+    write(*,*)
+  endif
 
   if (.not. recip_KH_integral) then
 
@@ -608,11 +632,14 @@ program re_format_outputs_files
   endif
 
   call create_name_database(prname,myrank,LOCAL_PATH)
-  write(*,*) prname(1:len_trim(prname))//'absorb_dsm'
+
+  if (myrank == 0) write(*,*) 'opening ', prname(1:len_trim(prname))//'absorb_dsm'
+
   open(27,file=prname(1:len_trim(prname))//'absorb_dsm',status='old', &
        action='read',form='unformatted',iostat=ier)
   read(27) num_abs_boundary_faces
-  write(*,*) num_abs_boundary_faces
+  ! debug
+  !write(*,*) num_abs_boundary_faces
   allocate(abs_boundary_ispec(num_abs_boundary_faces))
   allocate(abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces))
   allocate(abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces))
@@ -735,13 +762,18 @@ program re_format_outputs_files
      irecmax=nrec_to_store
      ntime_to_store = (itmax - itmin + 1) / 2
 
-
      call create_name_database(prname,myrank,TRACT_PATH)
-     write(*,*) TRACT_PATH,prname,myrank
+
+     if (myrank == 0) then
+        write(*,*) 'writing ',prname(1:len_trim(prname))//'sol_axisem'
+     endif
 
      open(28,file=prname(1:len_trim(prname))//'sol_axisem',status='unknown', &
           action='write',form='unformatted',iostat=ier)
-     if (ier /= 0) write(*,*) 'error opening', prname(1:len_trim(prname))//'sol_axisem'
+     if (ier /= 0) then
+      write(*,*) 'error opening', prname(1:len_trim(prname))//'sol_axisem'
+      stop 'Error opening sol_axisem file for writing'
+     endif
 
      if (nrec_to_store >= 100) then
         do i=1,ntime
@@ -753,7 +785,10 @@ program re_format_outputs_files
 
      ntnew=ntime_interp
 
-     if (myrank == 0) write(*,*) 'time step ', dtt,ntnew
+     if (myrank == 0) then
+       write(*,*) 'time step ', dtt,ntnew
+       write(*,*)
+     endif
 
      tt=-dtt
      do itnew=1,ntnew
@@ -769,7 +804,7 @@ program re_format_outputs_files
         call compute_sinc(sinc_tab_veloc,current_time_step,ntime,dt)
         !call compute_sinc(sinc_tab_stress,current_time_step,ntime,dt)
 
-        if (myrank == 0 .and. mod(itnew,100) == 0) write(*,*) myrank, tt,itnew,ntnew
+        if (myrank == 0 .and. mod(itnew,500) == 0) write(*,*) '  writing time step ', tt,itnew,ntnew
 
         do irec0=irecmin, irecmax
 
@@ -806,7 +841,7 @@ program re_format_outputs_files
 
            if (irec == 0 ) then
               write(*,*) myrank , irec0, irec
-              stop
+              stop 'Invalid irec'
            endif
 
            iface=ind_rec2face(1,irec,myrank+1)
@@ -817,9 +852,8 @@ program re_format_outputs_files
            nvz=abs_boundary_normal(3,igll,iface)
 
            !!
-           if (myrank == 0) then
-
-           endif
+           !if (myrank == 0) then
+           !endif
            !!
 
            vr(1,irec0) = buffer_to_store_v(1,irec0)
@@ -839,12 +873,6 @@ program re_format_outputs_files
      close(28)
      close(499)
 
-     write(*,*) 'nbrec ', myrank, irecmax-irecmin+1, ntime_interp
-     call MPI_Barrier(MPI_COMM_WORLD,ierr)
-     write(*,*) myrank,ierr
-     call MPI_FINALIZE(ierr)
-     write(*,*) myrank,ierr
-     stop
 
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Case of recip & KH !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -902,7 +930,7 @@ program re_format_outputs_files
 
               if ( irec == 0) then
                 write(*,*) ' irec ', irec,iface,igll,irank+1
-                stop
+                stop 'Invalid irec'
               endif
 
               data_rec(icomp,itime,kk)=data_rec0(1,irec,icomp)
@@ -997,7 +1025,10 @@ program re_format_outputs_files
 
     ntnew = ntime_interp
 
-    if (myrank == 0) write(*,*) 'time step ', dtt,ntnew
+    if (myrank == 0) then
+      write(*,*) 'time step ', dtt,ntnew
+      write(*,*)
+    endif
 
     tt = -dtt
     do itnew=1,ntnew
@@ -1010,7 +1041,7 @@ program re_format_outputs_files
 
       call compute_sinc(sinc_tab_displ_and_deriv,current_time_step,ntime,dt)
 
-      if (myrank == 0 .and. mod(itnew,100) == 0) write(*,*) myrank, tt,itnew,ntnew
+      if (myrank == 0 .and. mod(itnew,500) == 0) write(*,*) '  writing time step ', tt,itnew,ntnew
 
       do irec0=irecmin, irecmax
 
@@ -1038,7 +1069,7 @@ program re_format_outputs_files
 
         if (irec == 0 ) then
           write(*,*) myrank , irec0, irec
-          stop
+          stop 'Invalid irec'
         endif
 
         ur(1,irec0) = buffer_to_store_dd(1,irec0)
@@ -1071,14 +1102,23 @@ program re_format_outputs_files
 
     close(499)
 
-    write(*,*) 'nbrec ', myrank, irecmax-irecmin+1, ntime_interp
-    call MPI_Barrier(MPI_COMM_WORLD,ierr)
-    write(*,*) myrank,ierr
-    call MPI_FINALIZE(ierr)
-    write(*,*) myrank,ierr
-    stop
-
   endif !! if (.not. recip_KH_integral)
+
+  if (myrank == 0) write(*,*)
+  call MPI_Barrier(MPI_COMM_WORLD,ierr)
+
+  write(*,*) 'done rank', myrank,' nbrec', irecmax-irecmin+1, ntime_interp
+
+  call MPI_Barrier(MPI_COMM_WORLD,ierr)
+
+  ! all done
+  if (myrank == 0) write(*,*) 'all done'
+
+  ! MPI finish
+  call MPI_FINALIZE(ierr)
+
+  !write(*,*) myrank,ierr
+  !stop
 
 end program re_format_outputs_files
 

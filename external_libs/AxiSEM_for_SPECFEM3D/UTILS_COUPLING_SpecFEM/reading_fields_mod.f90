@@ -24,8 +24,8 @@
            read(10,*) nb_stored(iproc),ibeg,iend
            close(10)
            nel = nel + nb_stored(iproc)
-           write(*,*) iproc,nb_stored(iproc),ibeg,iend
-           write(*,*) nel
+           write(*,*) 'iproc: iproc = ',iproc,nb_stored(iproc),ibeg,iend
+           write(*,*) '       nel   = ',nel
            write(*,*)
 
         enddo
@@ -106,8 +106,11 @@
 
 
         !write(*,*)  iunit
-        write(*,*) ' src_type(:,1) ', myrank, src_type(:,1)
-        write(*,*) ' src_type(:,2) ', myrank, src_type(:,2)
+        if (myrank == 0) then
+          write(*,*) ' src_type(:,1) ', myrank, src_type(:,1)
+          write(*,*) ' src_type(:,2) ', myrank, src_type(:,2)
+        endif
+
         call compute_prefactor(src_type(isim,1),src_type(isim,2),isim)
 
         if (myrank == 0) then
@@ -118,9 +121,9 @@
           write(fichier,'(a6,a15)') '/Data/',output_veloc_name(3)
           open(ivz,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
 
-          write(*,*) 'nbrec to write', nbrec
-          write(*,*) 'nbrec to read ',sum(nb_stored(:))
-          write(*,*) 'nt to write ', ntime
+          write(*,*) 'nbrec to write ', nbrec
+          write(*,*) 'nbrec to read  ',sum(nb_stored(:))
+          write(*,*) 'nt to write    ', ntime
 
 
           write(ivx) nbrec,ntime
@@ -131,9 +134,9 @@
          data_rec=0.
 
          do ifield=1,3
-           write(*,*) ifield
+           if (myrank == 0) write(*,*) 'field: ',ifield
            if (trim(src_type(isim,1)) == 'monopole' .and. ifield == 2) then
-              write(*,*) 'monopole => not up'
+              if (myrank == 0) write(*,*) '  monopole => not up'
               cycle
            endif
 
@@ -365,9 +368,9 @@
 
           data_rec=0.
           do ifield=1,6
-             write(*,*) ifield
+             if (myrank == 0) write(*,*) 'field: ',ifield
              if (trim(src_type(isim,1)) == 'monopole' .and. (ifield == 4 .or. ifield == 6)) then
-                write(*,*) 'monopole => not up'
+                if (myrank == 0) write(*,*) '  monopole => not up'
                 cycle
              endif
              ! open files
@@ -592,8 +595,10 @@
   iuy = j+2
   iuz = j+3
 
-  write(*,*) ' src_type(:,1) ', myrank, src_type(:,1)
-  write(*,*) ' src_type(:,2) ', myrank, src_type(:,2)
+  if (myrank == 0) then
+    write(*,*) ' src_type(:,1) ', myrank, src_type(:,1)
+    write(*,*) ' src_type(:,2) ', myrank, src_type(:,2)
+  endif
 
   i = 150
   do isim=1,nsim
@@ -608,16 +613,16 @@
 
     if (myrank == 0) then
 
-      write(*,*) 'nbrec to write', nbrec
-      write(*,*) 'nbrec to read ', sum(nb_stored(:))
-      write(*,*) 'nt to write ', ntime
+      write(*,*) 'nbrec to write ', nbrec
+      write(*,*) 'nbrec to read  ', sum(nb_stored(:))
+      write(*,*) 'nt to write    ', ntime
 
       data_rec = 0.
 
       do ifield=1,3
-        write(*,*) ifield
+        if (myrank == 0) write(*,*) 'field: ',ifield
         if (trim(src_type(isim,1)) == 'monopole' .and. ifield == 2) then
-          write(*,*) 'monopole => not up'
+          if (myrank == 0) write(*,*) '  monopole => not up'
           cycle
         endif
 
@@ -847,8 +852,10 @@
   idu3d2 = j+8
   idu3d3 = j+9
 
-  write(*,*) ' src_type(:,1) ', myrank, src_type(:,1)
-  write(*,*) ' src_type(:,2) ', myrank, src_type(:,2)
+  if (myrank == 0) then
+    write(*,*) ' src_type(:,1) ', myrank, src_type(:,1)
+    write(*,*) ' src_type(:,2) ', myrank, src_type(:,2)
+  endif
 
   ! unit file
   i = 150
@@ -863,19 +870,19 @@
 
     if (myrank == 0) then
 
-      write(*,*) 'nbrec to write', nbrec
-      write(*,*) 'nbrec to read ', sum(nb_stored(:))
-      write(*,*) 'nt to write ', ntime
+      write(*,*) 'nbrec to write ', nbrec
+      write(*,*) 'nbrec to read  ', sum(nb_stored(:))
+      write(*,*) 'nt to write    ', ntime
 
       ! We use here data_rec as a temporary variable, to calculate deriv_rec
       data_rec  = 0.
       deriv_rec = 0.
 
       do ifield=1,9
-        write(*,*) ifield
+        if (myrank == 0) write(*,*) 'field: ',ifield
         if (trim(src_type(isim,1)) == 'monopole' .and. &
             ((ifield == 2) .or. (ifield == 4) .or. (ifield == 6) .or. (ifield == 8)) ) then
-            write(*,*) 'monopole => not up'
+            if (myrank == 0) write(*,*) '  monopole => not up'
           cycle
         endif
 
@@ -1326,11 +1333,11 @@
 
     deriv_rec(:,:) = cos(lat_mesh)*cos(lon_mesh)*deriv_tmpKH_rec(:,:,2) + &
                      cos(lat_mesh)*sin(lon_mesh)*deriv_tmpKH_rec(:,:,1) + &
-                    -sin(lat_mesh)*deriv_tmpKH_rec(:,:,3)
+                     (-sin(lat_mesh))*deriv_tmpKH_rec(:,:,3)
 
   else if (Xk_force == 2) then !! We recombine to obtain displ resulting from an Y force source
 
-    deriv_rec(:,:) = -sin(lon_mesh)*deriv_tmpKH_rec(:,:,2) + &
+    deriv_rec(:,:) = (-sin(lon_mesh))*deriv_tmpKH_rec(:,:,2) + &
                       cos(lon_mesh)*deriv_tmpKH_rec(:,:,1)
 
   else if (Xk_force == 3) then !! We recombine to obtain displ resulting from an Z force source

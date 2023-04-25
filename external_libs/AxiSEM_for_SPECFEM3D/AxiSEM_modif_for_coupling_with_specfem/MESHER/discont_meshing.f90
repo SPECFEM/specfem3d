@@ -476,7 +476,7 @@ subroutine spacing_info(npol)
   maxh = max(maxval(spacing_eta), maxval(spacing_xi))
   aveh = 1.d0 / dble(npol)
 
-  write(*,*) ' ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == '
+  write(*,*) ' ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == '
   write(*,*) 'GLL SPACING for polynomial order', npol
   write(*,*) '  AVERAGE SPACING:       ', aveh
   write(*,*) '  MINIMAL SPACING:       ', minh
@@ -493,7 +493,7 @@ subroutine spacing_info(npol)
   do i=0, npol
      write(*,*) i, eta(i), xi_k(i)
   enddo
-  write(*,*)' ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == '
+  write(*,*)' ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == '
 
 end subroutine spacing_info
 !-----------------------------------------------------------------------------------------

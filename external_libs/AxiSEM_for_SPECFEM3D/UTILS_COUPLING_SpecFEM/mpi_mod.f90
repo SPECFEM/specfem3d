@@ -1,9 +1,9 @@
 module mpi_mod
 
-
   use global_parameters
   use rotation_matrix
   !use reading_field
+
   include 'mpif.h'
   INTEGER myrank,nbrank,ierr
 
@@ -13,25 +13,28 @@ contains
     call MPI_INIT(ierr)
     call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ierr)
     call MPI_COMM_SIZE(MPI_COMM_WORLD,nbrank,ierr)
-
   end subroutine init_mpi
+
 
   subroutine finalize_mpi
    call MPI_FINALIZE(ierr)
   end subroutine finalize_mpi
 
+
   subroutine barrier_mpi()
     call MPI_BARRIER(MPI_COMM_WORLD,ierr)
   end subroutine barrier_mpi
+
 
   subroutine alloc_all_mpi()
 
    integer :: ier
 
-   if (myrank == 0 ) then
-      write(*,*) 'INISDE ALLOC MPI '
-      write(*,*) nsim, ntime, nbrec, nbproc, ibeg, iend, nel, rot_mat, trans_rot_mat, rot_mat_mesh, trans_rot_mat_mesh
-   endif
+   ! debug
+   !if (myrank == 0 ) then
+   !   write(*,*) 'INISDE ALLOC MPI '
+   !   write(*,*) nsim, ntime, nbrec, nbproc, ibeg, iend, nel, rot_mat, trans_rot_mat, rot_mat_mesh, trans_rot_mat_mesh
+   !endif
 
    call mpi_bcast(nsim,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
    call mpi_bcast(ntime,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
@@ -46,7 +49,6 @@ contains
    call mpi_bcast(trans_rot_mat_mesh,9,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
    call mpi_bcast(rot_azi_chunk,9,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
    call mpi_bcast(trans_rot_azi_chunk,9,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
-
 
    if (myrank > 0) then
       allocate(reciever_geogr(3,nbrec),reciever_sph(3,nbrec),reciever_cyl(3,nbrec),reciever_interp_value(nbrec))
@@ -65,12 +67,10 @@ contains
    endif
    allocate(stress_reduce(nbrec,6),deriv_reduce(nbrec,9),data_reduce(nbrec,3))
 
-
   end subroutine alloc_all_mpi
 
 
   subroutine bcast_all_mpi
-
 
     ! single
     call mpi_bcast(data_rec,3*nbrec,MPI_REAL,0,MPI_COMM_WORLD,ierr)
@@ -83,8 +83,8 @@ contains
     call mpi_bcast(Mij,6,MPI_REAL,0,MPI_COMM_WORLD,ierr)
     call mpi_bcast(magnitude,nsim,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
-    call mpi_bcast(lat_mesh,1,MPI_REAL,0,MPI_COMM_WORLD,ierr)
-    call mpi_bcast(lon_mesh,1,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+    !call mpi_bcast(lat_mesh,1,MPI_REAL,0,MPI_COMM_WORLD,ierr)               ! CUSTOM_REAL == SINGLE_REAL
+    !call mpi_bcast(lon_mesh,1,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
     ! double
     call mpi_bcast(scoor,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
@@ -95,6 +95,9 @@ contains
     call mpi_bcast(reciever_cyl,3*nbrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
     call mpi_bcast(xi_rec,nbrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
     call mpi_bcast(eta_rec,nbrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+
+    call mpi_bcast(lat_mesh,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)     ! CUSTOM_REAL == DOUBLE_REAL
+    call mpi_bcast(lon_mesh,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
 
     ! integer
     call mpi_bcast(rec2elm,nbrec,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
@@ -125,27 +128,25 @@ contains
 
   end subroutine distrib_mpi
 
+
   subroutine reduce_mpi_veloc()
     !write(*,*) myrank, irecmin,irecmax
     !if (myrank > 12) data_rec(irecmin:irecmax,:)=1.
     !data_rec(irecmin:irecmax,:)=myrank
     call mpi_reduce(data_rec,data_reduce,nbrec*3,MPI_REAL,MPI_SUM,0,MPI_COMM_WORLD,ierr)
     data_rec(:,:)=data_reduce(:,:)
-
   end subroutine reduce_mpi_veloc
 
-  subroutine reduce_mpi_deriv()
 
+  subroutine reduce_mpi_deriv()
     call mpi_reduce(deriv_rec,deriv_reduce,nbrec*9,MPI_REAL,MPI_SUM,0,MPI_COMM_WORLD,ierr)
     deriv_rec(:,:)=deriv_reduce(:,:)
-
   end subroutine reduce_mpi_deriv
 
-  subroutine reduce_mpi_stress()
 
+  subroutine reduce_mpi_stress()
     call mpi_reduce(stress_rec,stress_reduce,nbrec*6,MPI_REAL,MPI_SUM,0,MPI_COMM_WORLD,ierr)
     stress_rec(:,:)=stress_reduce(:,:)
-
   end subroutine reduce_mpi_stress
 
 end module mpi_mod
