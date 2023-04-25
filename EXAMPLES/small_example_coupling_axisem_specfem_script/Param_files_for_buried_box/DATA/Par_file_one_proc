@@ -314,7 +314,7 @@ SAVE_MOHO_MESH                  = .false.
 #
 #-----------------------------------------------------------
 COUPLE_WITH_INJECTION_TECHNIQUE = .true
-INJECTION_TECHNIQUE_TYPE        = 2   # 1 = DSM, 2 = AxiSEM, 3 = FK
+INJECTION_TECHNIQUE_TYPE        = 2         # 1 = DSM, 2 = AxiSEM, 3 = FK
 MESH_A_CHUNK_OF_THE_EARTH       = .false.
 TRACTION_PATH                   = ./DATA/AxiSEM_tractions/1/
 FKMODEL_FILE                    = FKmodel

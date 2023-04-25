@@ -1,0 +1,26 @@
+--------------------------------------------------------------------------
+Couple with injection
+--------------------------------------------------------------------------
+
+Example of hybrid method run AxiSEM/Specfem
+
+This is a very small example to test the coupling between AxiSEM and SPECFEM3D.
+The default setup uses 4 MPI processes and should run in 2 minutes.
+
+To launch the simulation, type:
+> run_this_example.sh bash
+
+In this script, you can choose the setup folder Param_files/ (default) or or Param_files_for_buried_box/,
+and the minimum period for the AxiSEM simulation. All the parameters needed for the AxiSEM/SPECFEM simulations are found in this directory.
+
+Additional scripts are:
+- clean_all.sh           - to remove all computations (need to do befeore each run)
+- get_normal.sh          - to output information about the normals on the boundary points (could be used by instaseis or get_rotation_matrix.py)
+- create_one_snapshot.sh - to visualize wavefield snapshots velocity_Z_it*.vtu with paraview
+
+This example run script will automatically compile all AxiSEM and coupling tools in ./external_libs/AxiSEM_for_SPECFEM3D/
+using by default the GNU gfortran/gcc compilers. If you want to change the compilers, please modify accordingly:
+- external_libs/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem/make_axisem.macros
+- external_libs/AxiSEM_for_SPECFEM3D/UTILS_COUPLING_SpecFEM/config.h
+
+Reference output is found in folder REF_SEIS/ for comparison.

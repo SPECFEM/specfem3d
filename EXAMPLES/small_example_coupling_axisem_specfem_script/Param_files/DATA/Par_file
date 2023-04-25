@@ -13,7 +13,7 @@ SAVE_FORWARD                    = .false.
 
 # solve a full FWI inverse problem from a single calling program with no I/Os, storing everything in memory,
 # or run a classical forward or adjoint problem only and save the seismograms and/or sensitivity kernels to disk (with costlier I/Os)
-INVERSE_FWI_FULL_PROBLEM        = .true.
+INVERSE_FWI_FULL_PROBLEM        = .false.
 
 # UTM projection parameters
 # Use a negative zone number for the Southern hemisphere:
@@ -23,7 +23,7 @@ UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
-NPROC                           = 16
+NPROC                           = 4 
 
 # time step parameters
 NSTEP                           = 3000
@@ -314,7 +314,7 @@ SAVE_MOHO_MESH                  = .false.
 #
 #-----------------------------------------------------------
 COUPLE_WITH_INJECTION_TECHNIQUE = true
-INJECTION_TECHNIQUE_TYPE        = 2   # 1 = DSM, 2 = AxiSEM, 3 = FK
+INJECTION_TECHNIQUE_TYPE        = 2       # 1 = DSM, 2 = AxiSEM, 3 = FK
 MESH_A_CHUNK_OF_THE_EARTH       = false
 TRACTION_PATH                   = ./DATA/AxiSEM_tractions/1/
 FKMODEL_FILE                    = FKmodel

@@ -33,7 +33,7 @@ DOMINANT_PERIOD     10
 # To ensure good scaling, use at least approximately 500 elements per core, see nelem in
 # mesh_params.h
 # (will be overwritten if ONLY_SUGGEST_NPROC is set true)
-NTHETA_SLICES       16
+NTHETA_SLICES       4 
 NRADIAL_SLICES      1
  
 # will not generate a mesh, but only suggested numbers for NTHETA_SLICES for optimal mesh

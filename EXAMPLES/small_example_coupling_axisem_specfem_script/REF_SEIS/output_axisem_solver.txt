@@ -1,0 +1,844 @@
+fatal: not a git repository (or any of the parent directories): .git
+Using mesh  MESHES/ak135_25
+copying mesh_params.h from  MESHES/ak135_25
+make: Nothing to be done for `all'.
+Receiver file type: stations
+Source file: inparam_source, Receiver file: STATIONS
+source names: ./
+source components: explosion
+Create the run directory  1
+copying make_axisem.macros from ../
+
+Setting up simulation ./
+creating ./Info
+copying crucial files for the simulation...
+cp: '/Users/Shared/SPECFEM3D/EXAMPLES/small_example_coupling_axisem_specfem_script/run_axisem/SOLVER/input_box.txt' and '.././input_box.txt' are the same file
+preparing job on 4 nodes...
+    Initialized run for nproc =    4
+
+ MAIN: Welcome to AxiSEM!
+
+     Simulation started on 04/25/2023 at 16h 57min
+
+ MAIN: Reading parameters..................................
+     CLOCKS module Clocks.F90,v 3.0 2014/10/19
+     Realtime clock resolution=   1.0000000474974513E-003 (        1000  ticks/sec)
+    Reading inparam_basic... done
+    Reading inparam_advanced... done
+    Reading runinfo...  done
+
+        ///////////////////////////////////////////////////////////////
+        //                                                           //
+        //                  A   x   i   S   E   M                    //
+        //                                                           //
+        //                                                           //
+        //         Parallel spectral-element solution to             //
+        //                                                           //
+        //           3-D seismic wave propagation for                //
+        //                                                           //
+        //          axially symmetric background models              //
+        //                                                           //
+        //               in a spherical 2-D domain                   //
+        //                                                           //
+        //                                                           //
+        //  Authors : Tarje Nissen-Meyer (Oxford University)         //
+        //              Martin van Driel (ETH Zurich)                //
+        //                 Simon Stahler (LMU Munich)                //
+        //                Kasra Hosseini (LMU Munich)                //
+        //               Stefanie Hempel (University of Muenster)    //
+        //            Alexandre Fournier (IPG Paris)                 //
+        //                   Tony Dahlen (Princeton University)      //
+        //                                                           //
+        //   Contact:     info@axisem.info                           //
+        //   Information: www.axisem.info                            //
+        //                                                           //
+
+        //                                                           //
+        //     If you are publishing results obtained with this      //
+        //          code, please cite this paper:                    //
+        //                                                           //
+        // (1) T. Nissen-Meyer, M. van Driel, S. C. Staehler,        //
+        //     K. Hosseini, S. Hempel, L. Auer, A. Colombi           //
+        //     and A. Fournier:                                      //
+        //     "AxiSEM: broadband 3-D seismic wavefields in          //
+        //              axisymmetric media"                          //
+        //     Solid Earth, 5, 425-445, 2014                         //
+        //     doi:10.5194/se-5-425-2014                             //
+        //                                                           //
+        //       Comprehensive description of the underlying         //
+        //           numerical analysis can be found in:             //
+        //                                                           //
+        // (2) Tarje Nissen-Meyer, F. A. Dahlen, A Fournier (2007)   //
+        //     "Spherical-earth Frechet sensitivity kernels"         //
+        //     Geophysical Journal International 168(3),1051-1066.   //
+        //     doi:10.1111/j.1365-246X.2006.03123.x                  //
+        //                                                           //
+        // (3) Tarje Nissen-Meyer, A Fournier, F. A. Dahlen (2007)   //
+        //     "A two-dimensional spectral-element method for        //
+        //        computing spherical-earth seismograms -            //
+        //        I. Moment-tensor source"                           //
+        //     Geophysical Journal International 168(3), 1067-1092.  //
+        //     doi:10.1111/j.1365-246X.2006.03121.x                  //
+        //                                                           //
+        // (4) Tarje Nissen-Meyer, A Fournier, F. A. Dahlen (2007)   //
+        //     "A two-dimensional spectral-element method for        //
+        //        computing spherical-earth seismograms -            //
+        //        II.  Waves in solid-fluid media"                   //
+        //     Geophysical Journal International 174(3), 873-888.    //
+        //     doi:10.1111/j.1365-246X.2008.03813.x                  //
+        //                                                           //
+        // (5) Martin van Driel and Tarje Nissen-Meyer (2014)        //
+        //     "Seismic wave propagation in fully anisotropic        //
+        //        axisymmetric media"                                //
+        //      Geophysical Journal International 199 (2): 880-893.  //
+        //      doi: 10.1093/gji/ggu269                              //
+        //                                                           //
+        // (6) Martin van Driel and Tarje Nissen-Meyer (2014)        //
+        //     "Optimized visco-elastic wave propagation for         //
+        //        weakly dissipative media"                          //
+        //      Geophysical Journal International 199 (2): 1078-1093.//
+        //      doi: 10.1093/gji/ggu314                              //
+        //                                                           //
+        //                                                           //
+        //  January 2015: version 1.2                                //
+        //                                                           //
+        ///////////////////////////////////////////////////////////////
+
+         ==  ==  ==  ==  ==  == =  I N P U T    P A R A M E T E R S ==  ==  ==  ==  ==  ==  == =
+            Data I/O path:                      ./Data              
+            Info I/O path:                      ./Info              
+            Simulation length [s]:               1600.000
+            Enforced time step [s]:               0.000
+            Enforced source period [s]:          25.000
+            Simulation type:                    single
+            Receiver file type:                 stations
+            Sum seismograms?                     F
+            Sum wavefields?                      F
+            Time extrapolation scheme:          newmark2
+            Seismogram sampling rate [s]:         0.000
+            Dump kin./pot. energy?               F
+            Dump global snaps?                   F
+            Dump strain?                         T
+            Wavefield dumping type:             coupling_box
+            First GLL to save in strains:        0
+            Last GLL to save in strains:         4
+            First GLL to save in strains:        0
+            Last GLL to save in strains:         4
+            Samples per period for strains:       8.000
+            Source dumping type:                mask
+            Add heterogeneous region?            F
+            Perform extensive mesh tests?        F
+            Output format (seism., wavefields): binary
+         ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == =
+Processor-specific output is written to: output_proc < PROC ID > .dat
+All potential error messages will appear here...
+
+  WARNING: Overriding min. source period with:  25.000 seconds
+
+    44444444444444444444444444444444444444444444444444444444444444
+    444   Running the solver time loop with SINGLE PRECISION   444
+    44444444444444444444444444444444444444444444444444444444444444
+
+      small value is:   9.99999997E-07
+ MAIN: Reading mesh database...............................
+   Proc 00 opening database Mesh/meshdb.dat0000
+   Proc 01 opening database Mesh/meshdb.dat0001
+   Proc 02 opening database Mesh/meshdb.dat0002
+   Proc 03 opening database Mesh/meshdb.dat0003
+   Reading databases: see processor output for details.
+
+   General numerical input/output parameters ==  ==  ==  ==  ==  ==  ==  == 
+     grid pts/wavelngth =   1.5000000000000000     
+     source period [s]  =   25.000000000000000     
+     courant number     =  0.60000002384185791     
+     time step [s]      =  0.19658617721440680     
+   Background model: ak135
+Model has radius   6371000.00
+ m
+
+   Background model ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == =
+     bkgrdmodel = ak135
+     radius [m] =    6371000.0000000000     
+     have_fluid =  T
+
+   Min/max grid spacing ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == =
+     hmin (global) [m]   :    2590.0974696848812     
+     hmax (global) [m]   :    32937.503488992457     
+     min_distance_dim [m]:    259.00974696848812     
+
+   Axialogy ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == =
+     Proc 00 has    94 axial elements (    70 solid,  24 fluid)
+     Proc 01 has     2 axial elements (     2 solid,   0 fluid)
+     Proc 02 has     2 axial elements (     2 solid,   0 fluid)
+     Proc 03 has    94 axial elements (    70 solid,  24 fluid)
+
+     Global total axial elements:         192
+     Global solid axial elements:         144
+     Global fluid axial elements:          48
+
+   setting s coordinate identical to zero along axis...
+   Proc 00 closing database Mesh/meshdb.dat0000
+   Proc 01 closing database Mesh/meshdb.dat0001
+   Proc 02 closing database Mesh/meshdb.dat0002
+   Proc 03 closing database Mesh/meshdb.dat0003
+
+ MAIN: Initializing grid...................................
+   Proc 00 counted sent/received GLL points,   469
+   Proc 01 counted sent/received GLL points,   830
+   Proc 02 counted sent/received GLL points,   830
+
+   Proc 03 counted sent/received GLL points,   469
+   Proc 01 counted sent/received GLL points,   240
+   Proc 00 counted sent/received GLL points,   120
+   Proc 02 counted sent/received GLL points,   240
+   Proc 03 counted sent/received GLL points,   120
+
+ MAIN: Starting wave preparation...........................
+
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ ++++++++    SEISMIC WAVE PROPAGATION: SOLID-FLUID CASE  ++++++++
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    Reading inparam_source...
+Proc 01   Source not along the axis!
+Proc 01   ...therefore applying rotations to source and receivers.
+
+   *****************GIVEN SOURCE PARAMETERS*****************
+      Magnitude [Nm]:             1.000E+20
+      Excitation type:        monopole    explosion 
+      Depth [km]:                 1.000E+01
+      Colat. [deg]:               1.710E+01
+      Long. [deg]:                5.600E+00
+      Source time function:       gauss_0
+      Dom. period mesh [s]:         25.0000
+   *********************************************************
+
+
+   Need to rotate the source to the north pole!
+   .... therefore computing rotation matrix and its transpose
+
+  Computing numerical parameters...
+
+    Using time step precalculated by the mesher:
+
+£ý`¼)É?
+
+     WARNING: Using larger period than necessary by mesh!
+     Chosen/minimal period   [s]: 25.000 25.000
+
+     desired simulation length  :  1600.00   seconds
+     offered simulation length  :  1600.01   seconds
+     number time loop iterations:    8139
+
+     desired seismogram sampling:     0.00   seconds
+     offered seismogram sampling:     0.20   seconds
+     ...that is, every          :       1 timesteps
+     number of samples          :    8140
+
+     Number of snapshots        :      81
+     ...approximately every     :   20.00   seconds
+     ...that is, every          :     101 timesteps
+
+   *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+   SOURCE TIME function: gauss_0
+    dumping wavefields at sampling rate and deltat:   8.4780460675468348        2.7522064810016951     
+    coarsest dump every          14 th time step, dt:   2.7522064810016951     
+
+   SHIFT FACTOR of source time function [s]:   38.5308914    
+    # SEM, seis, coarse points per shift factor:   196.000000       196.000000       14.0000000    
+    # simul. half widths per shift factor:   1.54123569    
+   *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+
+     Number of wavefield dumps  :     582
+     ...approximately every     :    2.95   seconds
+     ...that is, every          :      14  timestep
+     Define limitation of GLL points in the dumped fields:
+       ibeg=           0 iend=           4
+       jbeg=           0 jend=           4
+       # points saved within an element:          25
+
+  ::::::::: BACKGROUND MODEL & PRECOMPUTED MATRICES:::::::
+    allocate elastic fields....
+    define background model....
+    model is anisotropic....
+    filling mesh with elastic properties...
+ done with big mesh loop to define model
+    define mass matrix....
+    solid mass matrix...
+    assemble solid mass matrix...
+    compute inverse solid mass matrix...
+    fluid mass matrix...
+    assemble fluid mass matrix...
+    compute inverse fluid mass matrix...
+    define precomputed matrices for pointwise derivatives...
+    define solid stiffness terms....
+    define fluid stiffness terms....
+    define solid-fluid boundary terms....
+    ...defined all precomputed arrays
+    ...deallocated unnecessary elastic arrays
+  :::::::DONE BACKGROUND MODEL & PRECOMPUTED MATRICES:::::
+  *****************************************
+     Welcome to the source term calculator 
+  *****************************************
+  locating the source....
+   Proc 00  found it:
+     depth asked for [km]:   10.000000000000000     
+     depth offered   [km]:   10.000000000000000     
+   computing MONOPOLE Source with...
+   ...moment tensor elements for explosion 
+     difference      [km]:   0.0000000000000000     
+     source element      :          289        1033
+   ...masked the source
+   dumping strain mesh and associated fields...
+   Coupling : FORCE GLL boundaries to:
+     ipol=           0           4
+     jpol=           0           4
+  number of elements with non-zero source term: 3
+  *********************************
+     End of source term calculator
+  *********************************
+   dumping solid submesh for kernel wavefields...
+   dumping fluid submesh for kernel wavefields...
+   strain dump: Global strain tensor and velocity fields
+   ....no need to dump anything else.
+   dumping mesh for xdmf snapshots...
+    construction of mapping for xdmf plotting...
+    ...fluid part...
+    ...solid part...
+    ...collecting coordinates...
+    .... finished construction of mapping for xdmf plotting
+    .... constructing grid for xdmf plotting
+    .... writing grid + header of xdmf to file
+   locating surface elements and generic receivers...
+   ensuring uniqueness in generic receiver locations...
+   Proc 00 has the  epicenter at    0.000 degrees.
+   Proc 01 has the    equator at   90.000 degrees.
+   Proc 03 has the   antipode at  180.000 degrees.
+   Communicating local element numbers
+   communicating local numbers of surface elements...
+   Proc:    0, first elem:         1, last elem:       192
+   Proc:    1, first elem:       193, last elem:       384
+   Proc:    2, first elem:       385, last elem:       576
+   Proc:    3, first elem:       577, last elem:       768
+   global number of surface elements:         768
+   reading receiver colatitudes and longitudes from STATIONS...
+   ...counted number of stations:           6
+   Rotating receivers and source to pole-centered system...
+
+
+   Proc 00 has   3 out of     6 receivers
+
+   Proc 01 has   2 out of     6 receivers
+
+   Proc 02 has   1 out of     6 receivers
+
+   Proc 03 has   0 out of     6 receivers
+   WARNING:Proc 00  rec. location file/mesh:   17.100   17.116
+   Proc 00 opening receiver file:           1 0001
+   WARNING:Proc 02  rec. location file/mesh:  102.284  102.265
+   Proc 02 opening receiver file:           1 0003
+   WARNING:Proc 00  rec. location file/mesh:   17.100   17.116
+   WARNING:Proc 01  rec. location file/mesh:   73.453   73.448
+   Proc 00 opening receiver file:           2 0002
+   Proc 01 opening receiver file:           1 0005
+   WARNING:Proc 00  rec. location file/mesh:   44.266   44.282
+   WARNING:Proc 01  rec. location file/mesh:   72.200   72.192
+   Proc 00 opening receiver file:           3 0004
+   Proc 01 opening receiver file:           2 0006
+
+   maximal receiver location error [m]:   2074.1676640995793     
+
+   Calculating prefactors for cylindrical components...
+ Proc 00 Checking solid message-passing...
+
+   checking input parameters for consistency...
+ Proc 01 Checking solid message-passing...
+ Proc 02 Checking solid message-passing...
+ Proc 02 Checking fluid message-passing...
+ Proc 03 Checking solid message-passing...
+ Proc 03 Checking fluid message-passing...
+ Proc 00 Checking fluid message-passing...
+ Proc 01 Checking fluid message-passing...
+
+ :::::::::::::::: SIMULATION PARAMETERS::::::::::::::::::::::::
+   Code information_____________________________________
+      svn revision      :   GIT_VERSION       
+      username          :   peterdb           
+      hostname          :   novamaris         
+      compiler          :                     
+      compilerversion   :                     
+      FFLAGS            :   FFLAGS = -O3 #-march=native -fopenmp               
+      CFLAGS            :   CFLAGS = -O3 #-march=native                        
+      LDFLAGS           :   LDFLAGS = -O3 #-march=native -fopenmp              
+      OpenMP            :                  no 
+   Global mesh information______________________________
+      Background model  :   ak135             
+      # discontinuities :             9
+      Have fluid region ?             T
+      Outer rad.     [m]:   6.37100E+06
+      Inner rad.     [m]:   1.11509E+06
+      Polynomial order  :             4
+      # control nodes   :         14593
+      Total elements    :          4728
+      Total # points    :        118200
+      # global numbers  :         76465
+      # axial elements  :             2
+      # curved elements :          4248
+      # linear elements :           288
+      # mixed elements  :           192
+      Min. distance  [m]:   2.59010E+02
+      Min. distance/r0  :   4.06545E-05
+   Grid spacing, velocities etc.________________________
+      Min. (pre,comp)[m]:    2.590E+03    2.590E+03
+      Max. (pre,comp)[m]:    3.294E+04    3.294E+04
+      Min. vp[m/s], r[m]:    5.800E+03    6.351E+06
+      Min. vs[m/s], r[m]:    0.000E+00    3.389E+06
+      Max. vp[m/s], r[m]:    1.366E+04    3.480E+06
+      Max. vs[m/s], r[m]:    7.281E+03    3.480E+06
+      Max. lead time [s]:   5.12161E+00
+      r [m], theta [deg]:    1.052E+06    4.309E+01
+      Min. lead time [s]:   1.70777E+00
+      r [m], theta [deg]:    2.777E+06    6.453E+01
+   Solid-Fluid configuration____________________________
+      S/F elements      :          3984      744
+      S/F # points      :         99600    18600
+      S/F global numbers:         64610    12145
+      S/F # axial elems :             2        0
+      # S/F boundary els:            72
+      S/F curved elems  :          3528      720
+      S/F linear elems  :           288        0
+      S/F mixed elements:           168       24
+   Solid message passing_________________________________
+      # processors      :             4
+      max. sent messages:             2
+      max. sent size    :           378
+      nax. recv messages:             2
+      max. recv size    :           378
+   Fluid message passing_________________________________
+      max. sent messages:             2
+      max. sent size    :            97
+      nax. recv messages:             2
+      max. recv size    :            97
+   Source information___________________________________
+      Source type       :   monopole  explosion 
+      Source depth   [m]:   6.36100E+06
+      Source colat [deg]:   1.71000E+01
+      Source long  [deg]:   5.60000E+00
+      Magnitude    [N/m]:   1.00000E+20
+      Source time fct   :              gauss_0
+      Dom. period    [s]:   2.50000E+01
+   Receiver information___________________________________
+       Receiver file type             stations
+       Sum seismograms  :             F
+   General numerical parameters_________________________
+      # elems/wavelength:   1.50000E+00
+      Courant number    :   6.00000E-01
+      Time step [s]     :   1.96586E-01
+      # iterations      :          8139
+      seismo length [s] :   1.60001E+03
+      time extrapolation:             newmark2
+   Input/Output information_____________________________
+      Output data path  :               ./Data
+      Output info path  :               ./Info
+          Sum wavefields:             F
+      Dump energy       :             F
+      XDMF VTK          :             T
+      snap interval [s] :   2.00000E+01
+      # snaps           :           101
+      Dump wavefields   :             T
+      Dumping type      :         coupling_box
+      dump interval [s] :   2.75221E+00
+      # wavefield dumps :            14
+      Need fluid displ. :             T
+
+ :::::::::::::::: END SIMULATION PARAMETERS::::::::::::::::::::
+
+
+   wrote general simulation info into "simulation.info"
+   Writing post processing input file: param_post_processing
+   ... mainly based on guessing from the current simulation, make sure to edit!
+     ... wrote file param_post_processing
+ done preparing waves.
+           0 r min/max:   6100.6037999999999        6371.0000000331002     
+           0 th min/max:   42.292771324099995        52.752075332099992     
+           0 rotate since source is not beneath north pole
+           0 r min/max after rotation:   6100.6037999999999        6371.0000000331002     
+           0 th min/max after rotation:   25.228042798654645        35.841453343766197     
+           1 r min/max:   6100.6037999999999        6371.0000000331002     
+           1 th min/max:   42.292771324099995        52.752075332099992     
+           1 rotate since source is not beneath north pole
+           2 r min/max:   6100.6037999999999        6371.0000000331002     
+           2 th min/max:   42.292771324099995        52.752075332099992     
+           2 rotate since source is not beneath north pole
+           3 r min/max:   6100.6037999999999        6371.0000000331002     
+           3 th min/max:   42.292771324099995        52.752075332099992     
+           3 rotate since source is not beneath north pole
+           1 r min/max after rotation:   6100.6037999999999        6371.0000000331002     
+           1 th min/max after rotation:   25.228042798654645        35.841453343766197     
+           2 r min/max after rotation:   6100.6037999999999        6371.0000000331002     
+           2 th min/max after rotation:   25.228042798654645        35.841453343766197     
+           3 r min/max after rotation:   6100.6037999999999        6371.0000000331002     
+           3 th min/max after rotation:   25.228042798654645        35.841453343766197     
+           0 locate GLL points within heterogeneous regions & 
+           1 locate GLL points within heterogeneous regions & 
+           2 locate GLL points within heterogeneous regions & 
+           3 locate GLL points within heterogeneous regions & 
+           0 DONE loading box points
+           1 DONE loading box points
+           2 DONE loading box points
+           3 DONE loading box points
+ MAIN: Deallocating arrays not needed in the time loop.....
+   deallocating large mesh arrays...
+   Done deallocating mesh arrays.
+ MAIN: Starting wave propagation...........................
+
+ TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+ TTTT  2nd-order, acceleration-driven Newmark time scheme TTTTT
+ TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+
+ ************ S T A R T I N G   T I M E   L O O P *************
+
+ Writing global xdmf snap to file:           1
+
+  time step:   100; t=   19.66 s (  1.2%)
+
+ Writing global xdmf snap to file:           2
+
+  time step:   200; t=   39.32 s (  2.5%)
+
+ Writing global xdmf snap to file:           3
+
+  time step:   300; t=   58.98 s (  3.7%)
+
+ Writing global xdmf snap to file:           4
+
+  time step:   400; t=   78.63 s (  4.9%)
+
+ Writing global xdmf snap to file:           5
+
+  time step:   500; t=   98.29 s (  6.1%)
+
+ Writing global xdmf snap to file:           6
+
+  time step:   600; t=  117.95 s (  7.4%)
+
+ Writing global xdmf snap to file:           7
+
+  time step:   700; t=  137.61 s (  8.6%)
+
+ Writing global xdmf snap to file:           8
+
+  time step:   800; t=  157.27 s (  9.8%)
+
+ Writing global xdmf snap to file:           9
+
+  time step:   900; t=  176.93 s ( 11.1%)
+
+ Writing global xdmf snap to file:          10
+
+  time step:  1000; t=  196.59 s ( 12.3%)
+
+ Writing global xdmf snap to file:          11
+
+  time step:  1100; t=  216.24 s ( 13.5%)
+
+ Writing global xdmf snap to file:          12
+
+  time step:  1200; t=  235.90 s ( 14.7%)
+
+ Writing global xdmf snap to file:          13
+
+  time step:  1300; t=  255.56 s ( 16.0%)
+
+ Writing global xdmf snap to file:          14
+
+  time step:  1400; t=  275.22 s ( 17.2%)
+
+ Writing global xdmf snap to file:          15
+
+  time step:  1500; t=  294.88 s ( 18.4%)
+
+ Writing global xdmf snap to file:          16
+
+  time step:  1600; t=  314.54 s ( 19.7%)
+
+ Writing global xdmf snap to file:          17
+
+  time step:  1700; t=  334.20 s ( 20.9%)
+
+ Writing global xdmf snap to file:          18
+
+  time step:  1800; t=  353.86 s ( 22.1%)
+
+ Writing global xdmf snap to file:          19
+
+  time step:  1900; t=  373.51 s ( 23.3%)
+
+ Writing global xdmf snap to file:          20
+
+  time step:  2000; t=  393.17 s ( 24.6%)
+
+ Writing global xdmf snap to file:          21
+
+  time step:  2100; t=  412.83 s ( 25.8%)
+
+ Writing global xdmf snap to file:          22
+
+  time step:  2200; t=  432.49 s ( 27.0%)
+
+ Writing global xdmf snap to file:          23
+
+  time step:  2300; t=  452.15 s ( 28.3%)
+
+ Writing global xdmf snap to file:          24
+
+  time step:  2400; t=  471.81 s ( 29.5%)
+
+ Writing global xdmf snap to file:          25
+
+  time step:  2500; t=  491.47 s ( 30.7%)
+
+ Writing global xdmf snap to file:          26
+
+  time step:  2600; t=  511.12 s ( 31.9%)
+
+ Writing global xdmf snap to file:          27
+
+  time step:  2700; t=  530.78 s ( 33.2%)
+
+ Writing global xdmf snap to file:          28
+
+  time step:  2800; t=  550.44 s ( 34.4%)
+
+ Writing global xdmf snap to file:          29
+
+  time step:  2900; t=  570.10 s ( 35.6%)
+
+ Writing global xdmf snap to file:          30
+
+  time step:  3000; t=  589.76 s ( 36.9%)
+
+ Writing global xdmf snap to file:          31
+
+  time step:  3100; t=  609.42 s ( 38.1%)
+
+ Writing global xdmf snap to file:          32
+
+  time step:  3200; t=  629.08 s ( 39.3%)
+
+ Writing global xdmf snap to file:          33
+
+  time step:  3300; t=  648.73 s ( 40.5%)
+
+ Writing global xdmf snap to file:          34
+
+  time step:  3400; t=  668.39 s ( 41.8%)
+
+ Writing global xdmf snap to file:          35
+
+  time step:  3500; t=  688.05 s ( 43.0%)
+
+ Writing global xdmf snap to file:          36
+
+  time step:  3600; t=  707.71 s ( 44.2%)
+
+ Writing global xdmf snap to file:          37
+
+  time step:  3700; t=  727.37 s ( 45.5%)
+
+ Writing global xdmf snap to file:          38
+
+  time step:  3800; t=  747.03 s ( 46.7%)
+
+ Writing global xdmf snap to file:          39
+
+  time step:  3900; t=  766.69 s ( 47.9%)
+
+ Writing global xdmf snap to file:          40
+
+  time step:  4000; t=  786.34 s ( 49.1%)
+
+ Writing global xdmf snap to file:          41
+
+  time step:  4100; t=  806.00 s ( 50.4%)
+
+ Writing global xdmf snap to file:          42
+
+  time step:  4200; t=  825.66 s ( 51.6%)
+
+ Writing global xdmf snap to file:          43
+
+  time step:  4300; t=  845.32 s ( 52.8%)
+
+ Writing global xdmf snap to file:          44
+
+  time step:  4400; t=  864.98 s ( 54.1%)
+
+ Writing global xdmf snap to file:          45
+
+  time step:  4500; t=  884.64 s ( 55.3%)
+
+ Writing global xdmf snap to file:          46
+
+  time step:  4600; t=  904.30 s ( 56.5%)
+
+ Writing global xdmf snap to file:          47
+
+  time step:  4700; t=  923.96 s ( 57.7%)
+
+ Writing global xdmf snap to file:          48
+
+  time step:  4800; t=  943.61 s ( 59.0%)
+
+ Writing global xdmf snap to file:          49
+
+  time step:  4900; t=  963.27 s ( 60.2%)
+
+ Writing global xdmf snap to file:          50
+
+  time step:  5000; t=  982.93 s ( 61.4%)
+
+ Writing global xdmf snap to file:          51
+
+  time step:  5100; t= 1002.59 s ( 62.7%)
+
+ Writing global xdmf snap to file:          52
+
+  time step:  5200; t= 1022.25 s ( 63.9%)
+
+ Writing global xdmf snap to file:          53
+
+  time step:  5300; t= 1041.91 s ( 65.1%)
+
+ Writing global xdmf snap to file:          54
+
+  time step:  5400; t= 1061.57 s ( 66.3%)
+
+ Writing global xdmf snap to file:          55
+
+  time step:  5500; t= 1081.22 s ( 67.6%)
+
+ Writing global xdmf snap to file:          56
+
+  time step:  5600; t= 1100.88 s ( 68.8%)
+
+ Writing global xdmf snap to file:          57
+
+  time step:  5700; t= 1120.54 s ( 70.0%)
+
+ Writing global xdmf snap to file:          58
+
+  time step:  5800; t= 1140.20 s ( 71.3%)
+
+ Writing global xdmf snap to file:          59
+
+  time step:  5900; t= 1159.86 s ( 72.5%)
+
+ Writing global xdmf snap to file:          60
+
+  time step:  6000; t= 1179.52 s ( 73.7%)
+
+ Writing global xdmf snap to file:          61
+
+  time step:  6100; t= 1199.18 s ( 74.9%)
+
+ Writing global xdmf snap to file:          62
+
+  time step:  6200; t= 1218.83 s ( 76.2%)
+
+ Writing global xdmf snap to file:          63
+
+  time step:  6300; t= 1238.49 s ( 77.4%)
+
+ Writing global xdmf snap to file:          64
+
+  time step:  6400; t= 1258.15 s ( 78.6%)
+
+ Writing global xdmf snap to file:          65
+
+  time step:  6500; t= 1277.81 s ( 79.9%)
+
+ Writing global xdmf snap to file:          66
+
+  time step:  6600; t= 1297.47 s ( 81.1%)
+
+ Writing global xdmf snap to file:          67
+
+  time step:  6700; t= 1317.13 s ( 82.3%)
+
+ Writing global xdmf snap to file:          68
+
+  time step:  6800; t= 1336.79 s ( 83.5%)
+
+ Writing global xdmf snap to file:          69
+
+  time step:  6900; t= 1356.44 s ( 84.8%)
+
+ Writing global xdmf snap to file:          70
+
+  time step:  7000; t= 1376.10 s ( 86.0%)
+
+ Writing global xdmf snap to file:          71
+
+  time step:  7100; t= 1395.76 s ( 87.2%)
+
+ Writing global xdmf snap to file:          72
+
+  time step:  7200; t= 1415.42 s ( 88.5%)
+
+ Writing global xdmf snap to file:          73
+
+  time step:  7300; t= 1435.08 s ( 89.7%)
+
+ Writing global xdmf snap to file:          74
+
+  time step:  7400; t= 1454.74 s ( 90.9%)
+
+ Writing global xdmf snap to file:          75
+
+  time step:  7500; t= 1474.40 s ( 92.1%)
+
+ Writing global xdmf snap to file:          76
+
+  time step:  7600; t= 1494.05 s ( 93.4%)
+
+ Writing global xdmf snap to file:          77
+
+  time step:  7700; t= 1513.71 s ( 94.6%)
+
+ Writing global xdmf snap to file:          78
+
+  time step:  7800; t= 1533.37 s ( 95.8%)
+
+ Writing global xdmf snap to file:          79
+
+  time step:  7900; t= 1553.03 s ( 97.1%)
+
+ Writing global xdmf snap to file:          80
+
+  time step:  8000; t= 1572.69 s ( 98.3%)
+
+ Writing global xdmf snap to file:          81
+
+  time step:  8100; t= 1592.35 s ( 99.5%)
+ MAIN: Finishing xdmf xml file...
+
+          Summary of timing measurements:
+
+                                           calls        t_call       t_total t_frac
+CLOCKS: Time loop routine                      1     34.571002     34.571002  0.978
+CLOCKS: Assembly/MPI routines              32556      0.000161      5.227000  0.148
+CLOCKS:  > Only MPI routine                32562      0.000073      2.385000  0.067
+CLOCKS:  > Only solid MPI_WAIT             16282      0.000054      0.874000  0.025
+CLOCKS:  > Only fluid MPI_WAIT             16280      0.000078      1.273000  0.036
+CLOCKS: Stiffness routine                  16278      0.000436      7.102000  0.201
+CLOCKS: Dump routine                        8140      0.002187     17.799001  0.504
+CLOCKS: Total measured time:      35.334002
+
+  ==  ==  ==  == =PROGRAM axisem FINISHED ==  ==  ==  ==  ==  == =
+Job running in directory ./
+To convolve and sum seismograms, run ./post_processing.csh after the simulations in:
+/Users/Shared/SPECFEM3D/EXAMPLES/small_example_coupling_axisem_specfem_script/run_axisem/SOLVER/1
+.... the post-processing input file param_post_processing is generated in the solver
+.... based on guesses. Edit please.
+ ~ ~ ~ ~ ~ ~ ~ h a n g   o n   &   l o o s e ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~

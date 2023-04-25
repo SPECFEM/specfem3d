@@ -1,0 +1,932 @@
+snapshots:
+
+
+ Recombining ParaView data for slices
+
+ combine volumetric data
+   mesh topology dir : DATABASES_MPI/
+   input file    dir : velocity_Z_it000200
+
+   output directory  : OUTPUT_FILES/
+   using VTU format for file output
+
+ Slice list: 
+           0           1           2           3
+
+
+ VTK initial total points:       168100
+ VTK initial total elements:       153600
+
+  
+ Reading slice            0
+   file: DATABASES_MPI//proc000000_velocity_Z_it000200.bin
+   min/max value:   -5.90112958E-11   7.93905913E-11
+
+   points:           0       42025
+  
+ Reading slice            1
+   file: DATABASES_MPI//proc000001_velocity_Z_it000200.bin
+   min/max value:   -6.77349982E-11   6.16155127E-09
+
+   points:       42025       42025
+  
+ Reading slice            2
+   file: DATABASES_MPI//proc000002_velocity_Z_it000200.bin
+   min/max value:   -4.29826209E-11   5.00666834E-11
+
+   points:       84050       42025
+  
+ Reading slice            3
+   file: DATABASES_MPI//proc000003_velocity_Z_it000200.bin
+   min/max value:   -8.14695464E-11   5.07160286E-11
+
+   points:      126075       42025
+
+ Total number of points:       168100
+  
+ Reading slice            0
+   elements:        38400       38400
+   points  :        42025       42025
+ Reading slice            1
+   elements:        76800       38400
+   points  :        84050       42025
+ Reading slice            2
+   elements:       115200       38400
+   points  :       126075       42025
+ Reading slice            3
+   elements:       153600       38400
+   points  :       168100       42025
+
+ Total number of elements:       153600
+
+
+ Done writing OUTPUT_FILES//velocity_Z_it000200.vtu
+
+
+ Recombining ParaView data for slices
+
+ combine volumetric data
+   mesh topology dir : DATABASES_MPI/
+   input file    dir : velocity_Z_it000400
+
+   output directory  : OUTPUT_FILES/
+   using VTU format for file output
+
+ Slice list: 
+           0           1           2           3
+
+
+ VTK initial total points:       168100
+ VTK initial total elements:       153600
+
+  
+ Reading slice            0
+   file: DATABASES_MPI//proc000000_velocity_Z_it000400.bin
+   min/max value:   -8.18554599E-11   6.20653793E-07
+
+   points:           0       42025
+  
+ Reading slice            1
+   file: DATABASES_MPI//proc000001_velocity_Z_it000400.bin
+   min/max value:   -2.50215066E-06   1.07851565E-06
+
+   points:       42025       42025
+  
+ Reading slice            2
+   file: DATABASES_MPI//proc000002_velocity_Z_it000400.bin
+   min/max value:   -6.55097296E-11   5.81071198E-11
+
+   points:       84050       42025
+  
+ Reading slice            3
+   file: DATABASES_MPI//proc000003_velocity_Z_it000400.bin
+   min/max value:   -7.76391659E-11   1.38213496E-10
+
+   points:      126075       42025
+
+ Total number of points:       168100
+  
+ Reading slice            0
+   elements:        38400       38400
+   points  :        42025       42025
+ Reading slice            1
+   elements:        76800       38400
+   points  :        84050       42025
+ Reading slice            2
+   elements:       115200       38400
+   points  :       126075       42025
+ Reading slice            3
+   elements:       153600       38400
+   points  :       168100       42025
+
+ Total number of elements:       153600
+
+
+ Done writing OUTPUT_FILES//velocity_Z_it000400.vtu
+
+
+ Recombining ParaView data for slices
+
+ combine volumetric data
+   mesh topology dir : DATABASES_MPI/
+   input file    dir : velocity_Z_it000600
+
+   output directory  : OUTPUT_FILES/
+   using VTU format for file output
+
+ Slice list: 
+           0           1           2           3
+
+
+ VTK initial total points:       168100
+ VTK initial total elements:       153600
+
+  
+ Reading slice            0
+   file: DATABASES_MPI//proc000000_velocity_Z_it000600.bin
+   min/max value:   -3.27565385E-06   3.07403457E-06
+
+   points:           0       42025
+  
+ Reading slice            1
+   file: DATABASES_MPI//proc000001_velocity_Z_it000600.bin
+   min/max value:   -2.60696311E-06   2.22902918E-06
+
+   points:       42025       42025
+  
+ Reading slice            2
+   file: DATABASES_MPI//proc000002_velocity_Z_it000600.bin
+   min/max value:   -6.20531890E-11   1.56956892E-10
+
+   points:       84050       42025
+  
+ Reading slice            3
+   file: DATABASES_MPI//proc000003_velocity_Z_it000600.bin
+   min/max value:   -9.94906241E-11   1.00744697E-10
+
+   points:      126075       42025
+
+ Total number of points:       168100
+  
+ Reading slice            0
+   elements:        38400       38400
+   points  :        42025       42025
+ Reading slice            1
+   elements:        76800       38400
+   points  :        84050       42025
+ Reading slice            2
+   elements:       115200       38400
+   points  :       126075       42025
+ Reading slice            3
+   elements:       153600       38400
+   points  :       168100       42025
+
+ Total number of elements:       153600
+
+
+ Done writing OUTPUT_FILES//velocity_Z_it000600.vtu
+
+
+ Recombining ParaView data for slices
+
+ combine volumetric data
+   mesh topology dir : DATABASES_MPI/
+   input file    dir : velocity_Z_it000800
+
+   output directory  : OUTPUT_FILES/
+   using VTU format for file output
+
+ Slice list: 
+           0           1           2           3
+
+
+ VTK initial total points:       168100
+ VTK initial total elements:       153600
+
+  
+ Reading slice            0
+   file: DATABASES_MPI//proc000000_velocity_Z_it000800.bin
+   min/max value:   -7.26971393E-06   6.49737103E-06
+
+   points:           0       42025
+  
+ Reading slice            1
+   file: DATABASES_MPI//proc000001_velocity_Z_it000800.bin
+   min/max value:   -1.75353591E-06   1.65258416E-06
+
+   points:       42025       42025
+  
+ Reading slice            2
+   file: DATABASES_MPI//proc000002_velocity_Z_it000800.bin
+   min/max value:   -4.16148282E-07   5.78383833E-07
+
+   points:       84050       42025
+  
+ Reading slice            3
+   file: DATABASES_MPI//proc000003_velocity_Z_it000800.bin
+   min/max value:   -9.13667891E-11   3.31277654E-08
+
+   points:      126075       42025
+
+ Total number of points:       168100
+  
+ Reading slice            0
+   elements:        38400       38400
+   points  :        42025       42025
+ Reading slice            1
+   elements:        76800       38400
+   points  :        84050       42025
+ Reading slice            2
+   elements:       115200       38400
+   points  :       126075       42025
+ Reading slice            3
+   elements:       153600       38400
+   points  :       168100       42025
+
+ Total number of elements:       153600
+
+
+ Done writing OUTPUT_FILES//velocity_Z_it000800.vtu
+
+
+ Recombining ParaView data for slices
+
+ combine volumetric data
+   mesh topology dir : DATABASES_MPI/
+   input file    dir : velocity_Z_it001000
+
+   output directory  : OUTPUT_FILES/
+   using VTU format for file output
+
+ Slice list: 
+           0           1           2           3
+
+
+ VTK initial total points:       168100
+ VTK initial total elements:       153600
+
+  
+ Reading slice            0
+   file: DATABASES_MPI//proc000000_velocity_Z_it001000.bin
+   min/max value:   -4.88162959E-06   4.98138616E-06
+
+   points:           0       42025
+  
+ Reading slice            1
+   file: DATABASES_MPI//proc000001_velocity_Z_it001000.bin
+   min/max value:   -3.07085543E-06   2.23036113E-06
+
+   points:       42025       42025
+  
+ Reading slice            2
+   file: DATABASES_MPI//proc000002_velocity_Z_it001000.bin
+   min/max value:   -1.36129154E-06   6.42402483E-07
+
+   points:       84050       42025
+  
+ Reading slice            3
+   file: DATABASES_MPI//proc000003_velocity_Z_it001000.bin
+   min/max value:   -1.36420226E-06   1.33067397E-06
+
+   points:      126075       42025
+
+ Total number of points:       168100
+  
+ Reading slice            0
+   elements:        38400       38400
+   points  :        42025       42025
+ Reading slice            1
+   elements:        76800       38400
+   points  :        84050       42025
+ Reading slice            2
+   elements:       115200       38400
+   points  :       126075       42025
+ Reading slice            3
+   elements:       153600       38400
+   points  :       168100       42025
+
+ Total number of elements:       153600
+
+
+ Done writing OUTPUT_FILES//velocity_Z_it001000.vtu
+
+
+ Recombining ParaView data for slices
+
+ combine volumetric data
+   mesh topology dir : DATABASES_MPI/
+   input file    dir : velocity_Z_it001200
+
+   output directory  : OUTPUT_FILES/
+   using VTU format for file output
+
+ Slice list: 
+           0           1           2           3
+
+
+ VTK initial total points:       168100
+ VTK initial total elements:       153600
+
+  
+ Reading slice            0
+   file: DATABASES_MPI//proc000000_velocity_Z_it001200.bin
+   min/max value:   -1.79650692E-06   3.05663730E-06
+
+   points:           0       42025
+  
+ Reading slice            1
+   file: DATABASES_MPI//proc000001_velocity_Z_it001200.bin
+   min/max value:   -2.22415838E-06   1.68494864E-06
+
+   points:       42025       42025
+  
+ Reading slice            2
+   file: DATABASES_MPI//proc000002_velocity_Z_it001200.bin
+   min/max value:   -1.27257692E-06   7.34628941E-07
+
+   points:       84050       42025
+  
+ Reading slice            3
+   file: DATABASES_MPI//proc000003_velocity_Z_it001200.bin
+   min/max value:   -3.74074011E-06   3.04472678E-06
+
+   points:      126075       42025
+
+ Total number of points:       168100
+  
+ Reading slice            0
+   elements:        38400       38400
+   points  :        42025       42025
+ Reading slice            1
+   elements:        76800       38400
+   points  :        84050       42025
+ Reading slice            2
+   elements:       115200       38400
+   points  :       126075       42025
+ Reading slice            3
+   elements:       153600       38400
+   points  :       168100       42025
+
+ Total number of elements:       153600
+
+
+ Done writing OUTPUT_FILES//velocity_Z_it001200.vtu
+
+
+ Recombining ParaView data for slices
+
+ combine volumetric data
+   mesh topology dir : DATABASES_MPI/
+   input file    dir : velocity_Z_it001400
+
+   output directory  : OUTPUT_FILES/
+   using VTU format for file output
+
+ Slice list: 
+           0           1           2           3
+
+
+ VTK initial total points:       168100
+ VTK initial total elements:       153600
+
+  
+ Reading slice            0
+   file: DATABASES_MPI//proc000000_velocity_Z_it001400.bin
+   min/max value:   -1.25427198E-06   1.20279492E-06
+
+   points:           0       42025
+  
+ Reading slice            1
+   file: DATABASES_MPI//proc000001_velocity_Z_it001400.bin
+   min/max value:   -1.72442140E-06   1.45790477E-06
+
+   points:       42025       42025
+  
+ Reading slice            2
+   file: DATABASES_MPI//proc000002_velocity_Z_it001400.bin
+   min/max value:   -1.24862538E-06   1.11747249E-06
+
+   points:       84050       42025
+  
+ Reading slice            3
+   file: DATABASES_MPI//proc000003_velocity_Z_it001400.bin
+   min/max value:   -3.48631374E-06   2.12400005E-06
+
+   points:      126075       42025
+
+ Total number of points:       168100
+  
+ Reading slice            0
+   elements:        38400       38400
+   points  :        42025       42025
+ Reading slice            1
+   elements:        76800       38400
+   points  :        84050       42025
+ Reading slice            2
+   elements:       115200       38400
+   points  :       126075       42025
+ Reading slice            3
+   elements:       153600       38400
+   points  :       168100       42025
+
+ Total number of elements:       153600
+
+
+ Done writing OUTPUT_FILES//velocity_Z_it001400.vtu
+
+
+ Recombining ParaView data for slices
+
+ combine volumetric data
+   mesh topology dir : DATABASES_MPI/
+   input file    dir : velocity_Z_it001600
+
+   output directory  : OUTPUT_FILES/
+   using VTU format for file output
+
+ Slice list: 
+           0           1           2           3
+
+
+ VTK initial total points:       168100
+ VTK initial total elements:       153600
+
+  
+ Reading slice            0
+   file: DATABASES_MPI//proc000000_velocity_Z_it001600.bin
+   min/max value:   -1.57188413E-06   1.14680608E-06
+
+   points:           0       42025
+  
+ Reading slice            1
+   file: DATABASES_MPI//proc000001_velocity_Z_it001600.bin
+   min/max value:   -1.10306144E-06   1.05954598E-06
+
+   points:       42025       42025
+  
+ Reading slice            2
+   file: DATABASES_MPI//proc000002_velocity_Z_it001600.bin
+   min/max value:   -9.86386794E-07   1.00647810E-06
+
+   points:       84050       42025
+  
+ Reading slice            3
+   file: DATABASES_MPI//proc000003_velocity_Z_it001600.bin
+   min/max value:   -7.89528315E-07   2.45498563E-06
+
+   points:      126075       42025
+
+ Total number of points:       168100
+  
+ Reading slice            0
+   elements:        38400       38400
+   points  :        42025       42025
+ Reading slice            1
+   elements:        76800       38400
+   points  :        84050       42025
+ Reading slice            2
+   elements:       115200       38400
+   points  :       126075       42025
+ Reading slice            3
+   elements:       153600       38400
+   points  :       168100       42025
+
+ Total number of elements:       153600
+
+
+ Done writing OUTPUT_FILES//velocity_Z_it001600.vtu
+
+
+ Recombining ParaView data for slices
+
+ combine volumetric data
+   mesh topology dir : DATABASES_MPI/
+   input file    dir : velocity_Z_it001800
+
+   output directory  : OUTPUT_FILES/
+   using VTU format for file output
+
+ Slice list: 
+           0           1           2           3
+
+
+ VTK initial total points:       168100
+ VTK initial total elements:       153600
+
+  
+ Reading slice            0
+   file: DATABASES_MPI//proc000000_velocity_Z_it001800.bin
+   min/max value:   -7.55021063E-07   1.42582383E-06
+
+   points:           0       42025
+  
+ Reading slice            1
+   file: DATABASES_MPI//proc000001_velocity_Z_it001800.bin
+   min/max value:   -5.46332501E-07   5.53995676E-07
+
+   points:       42025       42025
+  
+ Reading slice            2
+   file: DATABASES_MPI//proc000002_velocity_Z_it001800.bin
+   min/max value:   -1.37508289E-06   9.88581746E-07
+
+   points:       84050       42025
+  
+ Reading slice            3
+   file: DATABASES_MPI//proc000003_velocity_Z_it001800.bin
+   min/max value:   -1.62785489E-06   1.56575788E-06
+
+   points:      126075       42025
+
+ Total number of points:       168100
+  
+ Reading slice            0
+   elements:        38400       38400
+   points  :        42025       42025
+ Reading slice            1
+   elements:        76800       38400
+   points  :        84050       42025
+ Reading slice            2
+   elements:       115200       38400
+   points  :       126075       42025
+ Reading slice            3
+   elements:       153600       38400
+   points  :       168100       42025
+
+ Total number of elements:       153600
+
+
+ Done writing OUTPUT_FILES//velocity_Z_it001800.vtu
+
+
+ Recombining ParaView data for slices
+
+ combine volumetric data
+   mesh topology dir : DATABASES_MPI/
+   input file    dir : velocity_Z_it002000
+
+   output directory  : OUTPUT_FILES/
+   using VTU format for file output
+
+ Slice list: 
+           0           1           2           3
+
+
+ VTK initial total points:       168100
+ VTK initial total elements:       153600
+
+  
+ Reading slice            0
+   file: DATABASES_MPI//proc000000_velocity_Z_it002000.bin
+   min/max value:   -6.04865079E-07   6.60053445E-07
+
+   points:           0       42025
+  
+ Reading slice            1
+   file: DATABASES_MPI//proc000001_velocity_Z_it002000.bin
+   min/max value:   -5.40061137E-07   5.32786657E-07
+
+   points:       42025       42025
+  
+ Reading slice            2
+   file: DATABASES_MPI//proc000002_velocity_Z_it002000.bin
+   min/max value:   -1.12429530E-06   1.08645986E-06
+
+   points:       84050       42025
+  
+ Reading slice            3
+   file: DATABASES_MPI//proc000003_velocity_Z_it002000.bin
+   min/max value:   -1.49548998E-06   1.57932152E-06
+
+   points:      126075       42025
+
+ Total number of points:       168100
+  
+ Reading slice            0
+   elements:        38400       38400
+   points  :        42025       42025
+ Reading slice            1
+   elements:        76800       38400
+   points  :        84050       42025
+ Reading slice            2
+   elements:       115200       38400
+   points  :       126075       42025
+ Reading slice            3
+   elements:       153600       38400
+   points  :       168100       42025
+
+ Total number of elements:       153600
+
+
+ Done writing OUTPUT_FILES//velocity_Z_it002000.vtu
+
+
+ Recombining ParaView data for slices
+
+ combine volumetric data
+   mesh topology dir : DATABASES_MPI/
+   input file    dir : velocity_Z_it002200
+
+   output directory  : OUTPUT_FILES/
+   using VTU format for file output
+
+ Slice list: 
+           0           1           2           3
+
+
+ VTK initial total points:       168100
+ VTK initial total elements:       153600
+
+  
+ Reading slice            0
+   file: DATABASES_MPI//proc000000_velocity_Z_it002200.bin
+   min/max value:   -7.96077529E-07   5.03499166E-07
+
+   points:           0       42025
+  
+ Reading slice            1
+   file: DATABASES_MPI//proc000001_velocity_Z_it002200.bin
+   min/max value:   -5.10041673E-07   4.47650280E-07
+
+   points:       42025       42025
+  
+ Reading slice            2
+   file: DATABASES_MPI//proc000002_velocity_Z_it002200.bin
+   min/max value:   -1.07527080E-06   9.88100624E-07
+
+   points:       84050       42025
+  
+ Reading slice            3
+   file: DATABASES_MPI//proc000003_velocity_Z_it002200.bin
+   min/max value:   -2.06111145E-06   1.32681475E-06
+
+   points:      126075       42025
+
+ Total number of points:       168100
+  
+ Reading slice            0
+   elements:        38400       38400
+   points  :        42025       42025
+ Reading slice            1
+   elements:        76800       38400
+   points  :        84050       42025
+ Reading slice            2
+   elements:       115200       38400
+   points  :       126075       42025
+ Reading slice            3
+   elements:       153600       38400
+   points  :       168100       42025
+
+ Total number of elements:       153600
+
+
+ Done writing OUTPUT_FILES//velocity_Z_it002200.vtu
+
+
+ Recombining ParaView data for slices
+
+ combine volumetric data
+   mesh topology dir : DATABASES_MPI/
+   input file    dir : velocity_Z_it002400
+
+   output directory  : OUTPUT_FILES/
+   using VTU format for file output
+
+ Slice list: 
+           0           1           2           3
+
+
+ VTK initial total points:       168100
+ VTK initial total elements:       153600
+
+  
+ Reading slice            0
+   file: DATABASES_MPI//proc000000_velocity_Z_it002400.bin
+   min/max value:   -4.39897690E-07   4.48237699E-07
+
+   points:           0       42025
+  
+ Reading slice            1
+   file: DATABASES_MPI//proc000001_velocity_Z_it002400.bin
+   min/max value:   -2.51163527E-07   3.92043148E-07
+
+   points:       42025       42025
+  
+ Reading slice            2
+   file: DATABASES_MPI//proc000002_velocity_Z_it002400.bin
+   min/max value:   -5.86672570E-07   6.16456418E-07
+
+   points:       84050       42025
+  
+ Reading slice            3
+   file: DATABASES_MPI//proc000003_velocity_Z_it002400.bin
+   min/max value:   -9.43060911E-07   3.50193886E-06
+
+   points:      126075       42025
+
+ Total number of points:       168100
+  
+ Reading slice            0
+   elements:        38400       38400
+   points  :        42025       42025
+ Reading slice            1
+   elements:        76800       38400
+   points  :        84050       42025
+ Reading slice            2
+   elements:       115200       38400
+   points  :       126075       42025
+ Reading slice            3
+   elements:       153600       38400
+   points  :       168100       42025
+
+ Total number of elements:       153600
+
+
+ Done writing OUTPUT_FILES//velocity_Z_it002400.vtu
+
+
+ Recombining ParaView data for slices
+
+ combine volumetric data
+   mesh topology dir : DATABASES_MPI/
+   input file    dir : velocity_Z_it002600
+
+   output directory  : OUTPUT_FILES/
+   using VTU format for file output
+
+ Slice list: 
+           0           1           2           3
+
+
+ VTK initial total points:       168100
+ VTK initial total elements:       153600
+
+  
+ Reading slice            0
+   file: DATABASES_MPI//proc000000_velocity_Z_it002600.bin
+   min/max value:   -3.73643587E-07   4.49469894E-07
+
+   points:           0       42025
+  
+ Reading slice            1
+   file: DATABASES_MPI//proc000001_velocity_Z_it002600.bin
+   min/max value:   -5.47326408E-07   5.55863892E-07
+
+   points:       42025       42025
+  
+ Reading slice            2
+   file: DATABASES_MPI//proc000002_velocity_Z_it002600.bin
+   min/max value:   -7.89816397E-07   6.90496449E-07
+
+   points:       84050       42025
+  
+ Reading slice            3
+   file: DATABASES_MPI//proc000003_velocity_Z_it002600.bin
+   min/max value:   -9.24253698E-07   8.61606964E-07
+
+   points:      126075       42025
+
+ Total number of points:       168100
+  
+ Reading slice            0
+   elements:        38400       38400
+   points  :        42025       42025
+ Reading slice            1
+   elements:        76800       38400
+   points  :        84050       42025
+ Reading slice            2
+   elements:       115200       38400
+   points  :       126075       42025
+ Reading slice            3
+   elements:       153600       38400
+   points  :       168100       42025
+
+ Total number of elements:       153600
+
+
+ Done writing OUTPUT_FILES//velocity_Z_it002600.vtu
+
+
+ Recombining ParaView data for slices
+
+ combine volumetric data
+   mesh topology dir : DATABASES_MPI/
+   input file    dir : velocity_Z_it002800
+
+   output directory  : OUTPUT_FILES/
+   using VTU format for file output
+
+ Slice list: 
+           0           1           2           3
+
+
+ VTK initial total points:       168100
+ VTK initial total elements:       153600
+
+  
+ Reading slice            0
+   file: DATABASES_MPI//proc000000_velocity_Z_it002800.bin
+   min/max value:   -1.04162950E-06   5.17962405E-07
+
+   points:           0       42025
+  
+ Reading slice            1
+   file: DATABASES_MPI//proc000001_velocity_Z_it002800.bin
+   min/max value:   -8.42202155E-07   3.12142083E-06
+
+   points:       42025       42025
+  
+ Reading slice            2
+   file: DATABASES_MPI//proc000002_velocity_Z_it002800.bin
+   min/max value:   -7.79651373E-07   9.77099944E-07
+
+   points:       84050       42025
+  
+ Reading slice            3
+   file: DATABASES_MPI//proc000003_velocity_Z_it002800.bin
+   min/max value:   -4.24645123E-07   6.00441638E-07
+
+   points:      126075       42025
+
+ Total number of points:       168100
+  
+ Reading slice            0
+   elements:        38400       38400
+   points  :        42025       42025
+ Reading slice            1
+   elements:        76800       38400
+   points  :        84050       42025
+ Reading slice            2
+   elements:       115200       38400
+   points  :       126075       42025
+ Reading slice            3
+   elements:       153600       38400
+   points  :       168100       42025
+
+ Total number of elements:       153600
+
+
+ Done writing OUTPUT_FILES//velocity_Z_it002800.vtu
+
+
+ Recombining ParaView data for slices
+
+ combine volumetric data
+   mesh topology dir : DATABASES_MPI/
+   input file    dir : velocity_Z_it003000
+
+   output directory  : OUTPUT_FILES/
+   using VTU format for file output
+
+ Slice list: 
+           0           1           2           3
+
+
+ VTK initial total points:       168100
+ VTK initial total elements:       153600
+
+  
+ Reading slice            0
+   file: DATABASES_MPI//proc000000_velocity_Z_it003000.bin
+   min/max value:   -1.20680897E-06   9.21240485E-07
+
+   points:           0       42025
+  
+ Reading slice            1
+   file: DATABASES_MPI//proc000001_velocity_Z_it003000.bin
+   min/max value:   -8.85732516E-06   8.72441524E-06
+
+   points:       42025       42025
+  
+ Reading slice            2
+   file: DATABASES_MPI//proc000002_velocity_Z_it003000.bin
+   min/max value:   -3.13405025E-07   2.69068266E-07
+
+   points:       84050       42025
+  
+ Reading slice            3
+   file: DATABASES_MPI//proc000003_velocity_Z_it003000.bin
+   min/max value:   -8.77615435E-07   1.30232741E-06
+
+   points:      126075       42025
+
+ Total number of points:       168100
+  
+ Reading slice            0
+   elements:        38400       38400
+   points  :        42025       42025
+ Reading slice            1
+   elements:        76800       38400
+   points  :        84050       42025
+ Reading slice            2
+   elements:       115200       38400
+   points  :       126075       42025
+ Reading slice            3
+   elements:       153600       38400
+   points  :       168100       42025
+
+ Total number of elements:       153600
+
+
+ Done writing OUTPUT_FILES//velocity_Z_it003000.vtu
+

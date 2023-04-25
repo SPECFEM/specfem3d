@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # number of processors
 declare -i NPROC
 NPROC=$1
@@ -7,7 +9,7 @@ NPROC="$NPROC-1"
 DATABASES_MPI=DATABASES_MPI
 
 # create output file
-outfile=" normals.txt"
+outfile="normals.txt"
 rm $outfile
 touch $outfile
 
