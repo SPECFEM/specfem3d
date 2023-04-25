@@ -223,11 +223,11 @@ contains
        dy_max = (2.d0**nb_doubling) * dy_elem
        dz_max = (2.d0**nb_doubling) * dz_elem
 
-       !! comupute the used size to fit the domain dimension
+       !! compute the used size to fit the domain dimension
        ntmp = floor((  xmax_chunk - xmin_chunk ) / dx_max) +1
        dx_max  = ( xmax_chunk - xmin_chunk ) / real(ntmp,8)
 
-       !! comupute the used size to fit the domain dimension
+       !! compute the used size to fit the domain dimension
        ntmp = floor((  ymax_chunk - ymin_chunk ) / dy_max) +1
        dy_max  = ( ymax_chunk - ymin_chunk ) / real(ntmp,8)
 
@@ -338,7 +338,7 @@ contains
          bottom_surface(:,:) = zlayer(ilayer)
 
          call mesh_regular_domain_Hex8(xmin_chunk, ymin_chunk, z, dx, dy, dz, nx, ny, nz-1, &
-              top_surface, bottom_surface, ispec, ipoint, ilayer, nb_doubling+1)
+                                       top_surface, bottom_surface, ispec, ipoint, ilayer, nb_doubling+1)
 
 
          deallocate(top_surface)
@@ -347,7 +347,7 @@ contains
          top_surface(:,:) =  zlayer(ilayer+1)
          bottom_surface(:,:) = zlayer(ilayer+1) - dz
          call mesh_doubling_domain_Hex8(xmin_chunk, ymin_chunk, z, dx, dy, dz, nx, ny, &
-              top_surface, bottom_surface, ispec, ipoint)
+                                        top_surface, bottom_surface, ispec, ipoint)
          deallocate(top_surface, bottom_surface)
 
       enddo
@@ -366,7 +366,7 @@ contains
       top_surface(:,:) =  zlayer(ilayer+1) - dz
       bottom_surface(:,:) = zlayer(ilayer)
       call mesh_regular_domain_Hex8(xmin_chunk, ymin_chunk, z, dx, dy, dz, nx, ny, nz, &
-           top_surface, bottom_surface, ispec, ipoint, ilayer, nb_doubling + 1)
+                                    top_surface, bottom_surface, ispec, ipoint, ilayer, nb_doubling + 1)
       deallocate(top_surface, bottom_surface)
 
 

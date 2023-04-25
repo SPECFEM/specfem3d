@@ -87,6 +87,7 @@
       write(IMAIN,*)
       write(IMAIN,*) '**********************************************'
       write(IMAIN,*)
+      call flush_IMAIN()
     endif
 
     call create_name_database(dsmname,myrank,TRACTION_PATH)
@@ -95,9 +96,9 @@
   ! allocates arrays for coupling
   ! note: num_abs_boundary_faces needs to be set
   if (COUPLE_WITH_INJECTION_TECHNIQUE) then
-
+    ! coupling
     if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then
-
+      ! DSM coupling
       allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2190')
       Veloc_dsm_boundary(:,:,:,:) = 0._CUSTOM_REAL
@@ -116,7 +117,7 @@
       endif
 
     else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then
-
+      ! AxiSEM coupling
       allocate(Veloc_axisem(3,NGLLSQUARE*num_abs_boundary_faces),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2192')
       Veloc_axisem(:,:) = 0._CUSTOM_REAL
@@ -125,13 +126,25 @@
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2193')
       Tract_axisem(:,:) = 0._CUSTOM_REAL
 
+      ! user output
+      if (myrank == 0) then
+        write(IMAIN,*) '  tractions: opening files ', dsmname(1:len_trim(dsmname))//'sol_axisem'
+        write(IMAIN,*)
+        call flush_IMAIN()
+      endif
+      ! debug
+      !write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'sol_axisem'
+
       open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'sol_axisem',status='old', &
            action='read',form='unformatted',iostat=ier)
-      write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'sol_axisem'
+      if (ier /= 0) then
+        print *,'Error: could not open file ',dsmname(1:len_trim(dsmname))//'sol_axisem'
+        print *,'Please check if traction file exists for coupling with AxiSEM...'
+        stop 'Error opening tractions file proc****_sol_axisem'
+      endif
 
       !! CD CD added this
       if (RECIPROCITY_AND_KH_INTEGRAL) then
-
         allocate(Displ_axisem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP),stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 2194')
         allocate(Tract_axisem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP),stat=ier)
@@ -142,9 +155,18 @@
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 2197')
 
         if (.not. SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
-        !! We only read Specfem Tract and Displ, and Axisem Displ (Axisem Tract is read in compute_stacey_visco...)
-        !! This is only for KH integral
-        !! The unit numbers are here temporary
+          !! We only read Specfem Tract and Displ, and Axisem Displ (Axisem Tract is read in compute_stacey_visco...)
+          !! This is only for KH integral
+          !! The unit numbers are here temporary
+          ! user output
+          if (myrank == 0) then
+            write(IMAIN,*) '  KH integral: opening files ', dsmname(1:len_trim(dsmname))//'axisem_displ_for_int_KH'
+            write(IMAIN,*)
+            call flush_IMAIN()
+          endif
+          ! debug
+          !write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'axisem_displ_for_int_KH, and the specfem disp and tract'
+
           open(unit=IIN_displ_axisem,file=dsmname(1:len_trim(dsmname))//'axisem_displ_for_int_KH', &
             status='old',action='read',form='unformatted',iostat=ier)
 
@@ -153,15 +175,12 @@
 
           open(unit=238,file=dsmname(1:len_trim(dsmname))//'specfem_tract_for_int_KH', &
             status='old',action='read',form='unformatted',iostat=ier)
-
-          write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'axisem_displ_for_int_KH, and the specfem disp and tract'
         endif
-
       endif
-
     endif
 
   else
+    ! no coupling
     ! dummy arrays
     allocate(Veloc_dsm_boundary(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2198')
@@ -177,9 +196,17 @@
   !! We perform a first run of Specfem to save displacement and tractions of Specfem for the computation of KH integral
   !! The displ, tract, and veloc of Axisem have also to be stored
   if (SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) '  KH integral: opening files ', dsmname(1:len_trim(dsmname))//'specfem_displ_for_int_KH'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+    ! debug
+    !write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'specfem_displ_for_int_KH, and the specfem tract to SAVE IT'
+
     open(unit=237,file=dsmname(1:len_trim(dsmname))//'specfem_displ_for_int_KH',form='unformatted')
     open(unit=238,file=dsmname(1:len_trim(dsmname))//'specfem_tract_for_int_KH',form='unformatted')
-    write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'specfem_displ_for_int_KH, and the specfem tract to SAVE IT'
   endif
 
   end subroutine couple_with_injection_setup
@@ -208,7 +235,7 @@
 
   real(kind=CUSTOM_REAL), parameter :: TOL_ZERO_TAKEOFF = 1.e-14
 
-!  initial setup for future FK3D calculations
+  !  initial setup for future FK3D calculations
 
   if (COUPLE_WITH_INJECTION_TECHNIQUE .and. SIMULATION_TYPE == 1) then
 
@@ -311,6 +338,7 @@
       call find_size_of_working_arrays(deltat, freq_sampling_fk, tmax_fk, NF_FOR_STORING, &
                                        NF_FOR_FFT, NPOW_FOR_INTERP, NP_RESAMP, DF_FK)
 
+      ! user output
       if (myrank == 0) then
         write(IMAIN,*) '  computed FK parameters:'
         write(IMAIN,*) '    frequency sampling rate        = ', freq_sampling_fk,"(Hz)"
@@ -404,7 +432,7 @@
    endif
   endif
 
-! * end of initial setup for future FK3D calculations *
+  ! * end of initial setup for future FK3D calculations *
 
   end subroutine couple_with_injection_prepare_boundary
 

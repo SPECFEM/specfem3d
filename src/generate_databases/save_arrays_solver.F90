@@ -736,13 +736,13 @@
   real(kind=CUSTOM_REAL) :: nx,ny,nz
   character(len=MAX_STRING_LEN) :: filename
 
+  ! checks if anything to do
+  if (.not. (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH)) return
+
   if (myrank == 0) then
     write(IMAIN,*) '     saving mesh files for coupled injection boundary'
     call flush_IMAIN()
   endif
-
-  ! checks if anything to do
-  if (.not. (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH)) return
 
   filename = prname(1:len_trim(prname))//'absorb_dsm'
   open(IOUT,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)

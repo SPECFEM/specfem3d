@@ -291,10 +291,6 @@
   integer, parameter :: IIN_veloc_dsm = 51, IIN_tract_dsm = 52
   integer, parameter :: IIN_displ_axisem = 54
 
-! stores mesh files as cubit-exported files into directory MESH/ (for single process run)
-! todo: we could put this parameter into the Mesh_Par_file
-  logical, parameter :: SAVE_MESH_AS_CUBIT = .false.
-
 !!-----------------------------------------------------------
 !!
 !! mesh optimization

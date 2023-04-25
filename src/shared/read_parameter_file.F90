@@ -1025,7 +1025,7 @@
   ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
 
-!! DK DK remove leading ./ if any, Paul Cristini said it could lead to problems when NUMBER_OF_SIMULTANEOUS_RUNS > 1
+    ! removes leading ./ if any, Paul Cristini said it could lead to problems when NUMBER_OF_SIMULTANEOUS_RUNS > 1
     tmp_LOCAL_PATH = adjustl(LOCAL_PATH)
     if (index (tmp_LOCAL_PATH, './') == 1) then
       LOCAL_PATH = tmp_LOCAL_PATH(3:)
