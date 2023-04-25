@@ -55,6 +55,9 @@ CREATE_ABAQUS_FILES             = .false.
 CREATE_DX_FILES                 = .false.
 CREATE_VTK_FILES                = .false.
 
+# stores mesh files as cubit-exported files into directory MESH/ (for single process run)
+SAVE_MESH_AS_CUBIT              = .false.
+
 # path to store the databases files
 LOCAL_PATH                      = ./DATABASES_MPI
 
@@ -94,31 +97,7 @@ NMATERIALS                      = 5
 # Domain regions
 #
 #-----------------------------------------------------------
-##
-## mesh with fluid inclusions
-##
-## number of regions
-#NREGIONS                        = 15
-## define the different regions of the model as :
-##NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
-#1             80      1               80       1         80    1
-#13            30          10               30             20         30        2
-#13              17           13              17             13         17       3
-#17             22          13               20             15         23       4
-#10             14            10               15            22         27       4
-#12           17          10              17            10         15       3
-#13           18          10               15            16        23       2
-#22            27         10               15            22        30       3
-#20            30           17               22             17        23       2
-#13              17            16               21             20         24       3
-#10              27          17               23            22         23       5
-#26              30          19               24             24         24       3
-#28              29          27               26            17         26       4
-#21              30            25               28             10         25       5
-#13              18           15               17             10         14      3
-##
-## mesh with single elastic domain
-##
+
 # number of regions
 NREGIONS                        = 1
 # elastic case

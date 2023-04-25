@@ -147,6 +147,9 @@ def read_Par_file_sections(parameters,file,verbose=False):
                     if is_Mesh_Par_file:
                         dataitems = par_string.split()
                         # check number of items
+                        # for example 6-entries:
+                        # #material_id  #name #domain #tomo-file #aniso_flag #domain_id
+                        # -1 tomography elastic tomography_model.xyz 0 2
                         # for example 7-entries:
                         # #NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
                         # 1              128          1               128           1         5        14
@@ -158,7 +161,7 @@ def read_Par_file_sections(parameters,file,verbose=False):
                         # 2            2500   1020   0.4  2.0   1d-11 0.0 0.0  1d-11 0.0 1d-11 16.0554d9 2.295d9 10.0d9   0.0  9.63342d9 3
                         #debug
                         #print("debug: dataitems ",dataitems,"length: ",len(dataitems))
-                        if len(dataitems) == 7 or len(dataitems) == 8 or len(dataitems) == 17:
+                        if len(dataitems) == 6 or len(dataitems) == 7 or len(dataitems) == 8 or len(dataitems) == 17:
                             # this is a data format line
                             wrong_format = False
                 if wrong_format:
