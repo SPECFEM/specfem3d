@@ -1,0 +1,12 @@
+input_box.txt
+input_box_sem_cart.txt
+16                           # number of AxiSEM mpi processes used in solver
+72.9 5.6                     # source position (lat lon)
+42.5 1.5 0                   # chunk center (lat lon azi_rot)
+.false.                      # If the expand_2D_3D and reformat are used for KH integral and reciprocity
+1                            # number of axisem simus depends on moment tensor used 
+1                            # dummy value (just for KH)
+16                           # number of Specfem3D MPI processes 
+../../../MESH
+../../../DATABASES_MPI
+../../../DATA/AxiSEM_tractions/1/

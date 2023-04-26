@@ -46,7 +46,7 @@
         rec2elm=-1
         ! CONNECTION POINT <-> MESH-----------------------------------------------------------
         do irec=1,nbrec  !! loop over points
-           if (mod(irec,100) == 0 ) write(*,*) irec,nbrec,NEL, 'connect'
+           if (mod(irec,10000) == 0 ) write(*,*) irec,nbrec,NEL, 'connect'
            scur=reciever_cyl(1,irec)
            zcur=reciever_cyl(3,irec)
            do iel = 1, NEL  !! loop over all selected elements
@@ -90,7 +90,6 @@
            nmax=ele_seen(irec)
            if (nmax == 0) then
               write(*,*) 'pb with ', irec,reciever_cyl(1,irec),reciever_cyl(3,irec)
-
            endif
            do iel=1,ele_seen(irec)
               z_axi(iel) = depth_ele(ele_candidate(iel,irec))
@@ -209,7 +208,6 @@
            !call compute_prefactor(f1,f2,phi,src_type(isim,1),src_type(isim,2))
 
            ! expand 2D wave field in 3D axisymetric field
-
 
         enddo
         !data_reduce(:)=0.

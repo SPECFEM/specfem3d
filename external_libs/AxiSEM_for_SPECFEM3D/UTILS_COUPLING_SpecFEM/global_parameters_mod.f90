@@ -7,8 +7,13 @@
     character(len=256) input_displ_name(3), output_displ_name(3), input_deriv_name(9), output_deriv_name(9)
 
     character(len=256) output_field_name,input_point_file,input_point_file_cart
-    integer, parameter :: CUSTOM_REAL=8,SINGLE_REAL=4
+
+    integer, parameter :: SINGLE_REAL = 4
+    integer, parameter :: DOUBLE_REAL = 8
+    integer, parameter :: CUSTOM_REAL = DOUBLE_REAL
+
     real(kind=CUSTOM_REAL) lat_src,lon_src,lat_mesh,lon_mesh,azi_rot,dtt
+
     integer nbproc,nel,ntime
     integer ibeg,iend
     integer, allocatable :: nb_stored(:)

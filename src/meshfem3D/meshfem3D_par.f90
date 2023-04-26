@@ -83,6 +83,9 @@ module meshfem_par
   ! Mesh files for visualization
   logical :: CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES
 
+  ! for Cubit postprocessing
+  logical :: SAVE_MESH_AS_CUBIT = .false.
+
   ! CPML
   double precision :: THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML
   logical, dimension(:), allocatable :: is_CPML

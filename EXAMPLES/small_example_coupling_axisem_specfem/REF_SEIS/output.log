@@ -1,0 +1,118 @@
+running example: Tue Apr 25 23:41:46 CEST 2023
+
+setting up example...
+
+
+  running setup for    : Param_files
+  using minimum period : 25 (s)
+
+'Param_files/inputs_files_for_axisem/inparam_mesh' -> 'Param_files/inputs_files_for_axisem/inparam_mesh.org'
+'Param_files/inputs_files_for_axisem/inparam_advanced' -> 'Param_files/inputs_files_for_axisem/inparam_advanced.org'
+'Param_files/inputs_files_for_axisem/inparam_basic' -> 'Param_files/inputs_files_for_axisem/inparam_basic.org'
+
+checking AxiSEM MESHER compilation in directory: ../..//external_libs/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem
+make: Nothing to be done for `all'.
+
+checking AxiSEM SOLVER compilation in directory: ../..//external_libs/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem
+make: Nothing to be done for `all'.
+make: Nothing to be done for `all'.
+
+checking AxiSEM UTILS compilation in directory: ../..//external_libs/AxiSEM_for_SPECFEM3D/UTILS_COUPLING_SpecFEM ...
+make: Nothing to be done for `all'.
+
+
+'Param_files/inputs_files_for_axisem/inparam_mesh' -> 'run_axisem/MESHER/./inparam_mesh'
+'Param_files/inputs_files_for_axisem/inparam_advanced' -> 'run_axisem/SOLVER/./inparam_advanced'
+'Param_files/inputs_files_for_axisem/inparam_advanced.org' -> 'run_axisem/SOLVER/./inparam_advanced.org'
+'Param_files/inputs_files_for_axisem/inparam_basic' -> 'run_axisem/SOLVER/./inparam_basic'
+'Param_files/inputs_files_for_axisem/inparam_basic.org' -> 'run_axisem/SOLVER/./inparam_basic.org'
+'Param_files/inputs_files_for_axisem/inparam_hetero' -> 'run_axisem/SOLVER/./inparam_hetero'
+'Param_files/inputs_files_for_axisem/inparam_mesh' -> 'run_axisem/SOLVER/./inparam_mesh'
+'Param_files/inputs_files_for_axisem/inparam_mesh.org' -> 'run_axisem/SOLVER/./inparam_mesh.org'
+'Param_files/inputs_files_for_axisem/inparam_source' -> 'run_axisem/SOLVER/./inparam_source'
+'Param_files/inputs_files_for_axisem/expand_2D_3D.par' -> 'run_axisem/SOLVER/./expand_2D_3D.par'
+'Param_files/inputs_files_for_axisem/reformat.par' -> 'run_axisem/SOLVER/./reformat.par'
+
+
+#######################################################
+ 1. step: inputs for coupling w/ SPECFEM
+#######################################################
+Tue Apr 25 23:41:47 CEST 2023
+
+running xmeshfem3D (in serial mode)...
+'DATA/Par_file_one_proc' -> 'DATA/Par_file'
+
+running xdecompose_mesh for partitioning into  4  slices...
+'DATA/Par_file_several_proc' -> 'DATA/Par_file'
+
+running xgenerate_databases...
+
+'Numglob2loc_elmn.txt' -> 'MESH/./Numglob2loc_elmn.txt'
+
+ *** Minimum period resolved =    20.1549931
+ *** Maximum suggested time step =   0.153606594
+
+
+#######################################################
+ 2. step: normals
+#######################################################
+Tue Apr 25 23:41:48 CEST 2023
+
+READING : DATABASES_MPI/proc000000_normal.txt
+READING : DATABASES_MPI/proc000001_normal.txt
+READING : DATABASES_MPI/proc000002_normal.txt
+READING : DATABASES_MPI/proc000003_normal.txt
+
+ Wrote   normals.txt  file
+
+ X, Y, Z, NX, NY, NZ, iproc
+
+
+
+#######################################################
+ 3. step: AxiSEM
+#######################################################
+Tue Apr 25 23:41:49 CEST 2023
+
+running AxiSEM mesher...
+
+
+
+running AxiSEM solver...
+
+'../../MESH/list_ggl_boundary_Cartesian.txt' -> './list_ggl_boundary_Cartesian.txt'
+'../../MESH/list_ggl_boundary_spherical.txt' -> './list_ggl_boundary_spherical.txt'
+
+
+
+#######################################################
+ 4. step: reconstruct 3D wavefield
+#######################################################
+Tue Apr 25 23:42:35 CEST 2023
+
+running 3D wavefield reconstruction xexpand_2D_3D...
+
+running interpolation xreformat...
+
+
+#######################################################
+ 5. step: coupled SPECFEM simulation
+#######################################################
+Tue Apr 25 23:43:13 CEST 2023
+
+running solver...
+
+
+#######################################################
+ 6. step: VTK snapshots
+#######################################################
+Tue Apr 25 23:43:29 CEST 2023
+
+creating snapshot files...
+
+
+see results in directory: OUTPUT_FILES/
+
+done
+Tue Apr 25 23:43:31 CEST 2023
+

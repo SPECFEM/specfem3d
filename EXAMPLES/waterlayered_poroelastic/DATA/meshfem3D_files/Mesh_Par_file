@@ -55,6 +55,9 @@ CREATE_ABAQUS_FILES             = .false.
 CREATE_DX_FILES                 = .false.
 CREATE_VTK_FILES                = .true.
 
+# stores mesh files as cubit-exported files into directory MESH/ (for single process run)
+SAVE_MESH_AS_CUBIT              = .false.
+
 # path to store the databases files
 LOCAL_PATH                      = ./DATABASES_MPI
 
@@ -83,10 +86,10 @@ NMATERIALS                      = 4
 #     Q_mu             : Q_mu attenuation quality factor
 #     anisotropy_flag  : 0 = no anisotropy / 1,2,... check the implementation in file aniso_model.f90
 #     domain_id        : 1 = acoustic / 2 = elastic / 3 = poroelastic
-1   1020.0     1500.0     0.0       9999.0    9999.0  0  1    # acoustic
-2   2500.d0 1020.d0  0.4 2.0   1d-11  0.0  0.0 1d-11 0.0 1d-11  16.0554d9  2.295d9   10.0d9  0.0  9.63342d9 3  # poro 1
-3   2500.d0 1020.d0  0.1 2.0   1d-11  0.0  0.0 1d-11 0.0 1d-11  16.0554d9  2.295d9   10.0d9  0.0  9.63342d9 3  # poro 2
-4   3200.0     3399.0     1963.0    9999.0    9999.0  0  2    # elastic
+1   1020.0     1500.0     0.0       9999.0    9999.0  0  1   # acoustic
+2   2500.d0 1020.d0  0.4 2.0   1d-11  0.0  0.0 1d-11 0.0 1d-11  16.0554d9  2.295d9   10.0d9  0.0  9.63342d9 3   # poro 1
+3   2500.d0 1020.d0  0.1 2.0   1d-11  0.0  0.0 1d-11 0.0 1d-11  16.0554d9  2.295d9   10.0d9  0.0  9.63342d9 3   # poro 2
+4   3200.0     3399.0     1963.0    9999.0    9999.0  0  2   # elastic
 
 #-----------------------------------------------------------
 #

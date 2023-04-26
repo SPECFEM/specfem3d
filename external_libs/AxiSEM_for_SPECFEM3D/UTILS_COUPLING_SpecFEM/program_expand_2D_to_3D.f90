@@ -22,11 +22,22 @@
   ! read point where we need to compute solution
   if (myrank == 0) then
 
+    write(*,*) 'Expand 2D to 3D'
+    write(*,*)
+    write(*,*) 'reading inputs...'
+    write(*,*)
+
     call read_info_simu(nsim)
     call read_inputs(isim)
 
+    write(*,*) 'reading mesh points...'
+    write(*,*)
+
     ! read GLL point coordinate
     call read_mesh(isim)
+
+    write(*,*) 'connecting points...'
+    write(*,*)
 
     ! find elements and coordinate for each input point
     call connect_points()
@@ -34,20 +45,31 @@
   endif
 
   call barrier_mpi()
-  write(*,*) 'Before mpi', myrank
+
+  !debug
+  !write(*,*) 'Before mpi', myrank
 
   call alloc_all_mpi()
   call bcast_all_mpi()
-  write(*,*) 'After alloc and bcast ', myrank
+
+  !debug
+  !write(*,*) 'After alloc and bcast ', myrank
 
   call distrib_mpi()  !! to do : faire directement la distrib sur les memes procs que Specfem
-  write(*,*) 'After mpi', myrank
+
+  !debug
+  !write(*,*) 'After mpi', myrank
 
 !
 !---
 !
 
   if (.not. recip_KH_integral) then
+
+    if (myrank == 0) then
+      write(*,*) 'interpolating velocity and stress fields...'
+      write(*,*)
+    endif
 
     do isim=1,nsim  !! do to : mettre en memoire la solution sous echantillonnee et la resampler avant de l'ecrire
 
@@ -59,6 +81,11 @@
     enddo
 
   else
+
+    if (myrank == 0) then
+      write(*,*) 'interpolating displ and Pderiv fields...'
+      write(*,*)
+    endif
 
     call displ_read_recombine_interpol_rotate()
     call pderiv_read_recombine_interpol_rotate()

@@ -41,7 +41,8 @@ USE_REGULAR_MESH                = .true.
 NDOUBLINGS                      = 1
 # NZ_DOUBLING_1 is the parameter to set up if there is only one doubling layer
 # (more doubling entries can be added if needed to match NDOUBLINGS value)
-NZ_DOUBLING_1       = 18
+NZ_DOUBLING_1                   = 18
+NZ_DOUBLING_2                   = 0
 
 #-----------------------------------------------------------
 #
@@ -54,14 +55,18 @@ CREATE_ABAQUS_FILES             = .false.
 CREATE_DX_FILES                 = .false.
 CREATE_VTK_FILES                = .true.
 
+# stores mesh files as cubit-exported files into directory MESH/ (for single process run)
+SAVE_MESH_AS_CUBIT              = .false.
+
 # path to store the databases files
 LOCAL_PATH                      = ./DATABASES_default
 
 #-----------------------------------------------------------
 #
-# CPML4
+# CPML
 #
 #-----------------------------------------------------------
+
 # CPML perfectly matched absorbing layers
 THICKNESS_OF_X_PML              = 12.3d0
 THICKNESS_OF_Y_PML              = 12.3d0
@@ -96,3 +101,4 @@ NREGIONS                        = 2
 #NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
 1              288            1               192            1        18        1
 1              288            1               192            19       63        2
+

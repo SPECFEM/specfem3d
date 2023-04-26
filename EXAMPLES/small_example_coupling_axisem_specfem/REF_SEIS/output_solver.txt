@@ -1,0 +1,3176 @@
+ **********************************************
+ **** Specfem 3-D Solver - MPI version f90 ****
+ **********************************************
+
+ Running Git package version of the code: 4.0.0
+ which is Git unknown
+ dating unknown
+
+
+
+
+ There are            4  MPI processes
+ Processes are numbered from 0 to            3
+
+ There is a total of            4  slices
+
+  NDIM =            3
+
+  NGLLX =            5
+  NGLLY =            5
+  NGLLZ =            5
+
+ using single precision for the calculations
+
+ smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
+
+ velocity model:   model coupled with injection method
+
+ Reading mesh databases...
+   reads binary mesh files: proc***_external_mesh.bin
+   from directory         : ./DATABASES_MPI
+
+   simulation w/ acoustic    domain:  F
+   simulation w/ elastic     domain:  T
+   simulation w/ poroelastic domain:  F
+
+   slice 0 has:
+   number of elements acoustic   :           0
+   number of elements elastic    :         600
+   number of elements poroelastic:           0
+   done
+
+
+ **********************************************
+       **** USING HYBRID METHOD  ****
+ **********************************************
+
+  using coupling with injection technique:
+  type of injection technique is AXISEM
+
+ **********************************************
+
+   tractions: opening files ./DATA/AxiSEM_tractions/1//proc000000_sol_axisem
+
+ total acoustic elements    :           0
+ total elastic elements     :        2400
+ total poroelastic elements :           0
+
+ Mesh resolution:
+
+ ********
+ minimum and maximum number of elements
+ and points in the CUBIT + SCOTCH mesh:
+
+ NSPEC_global_min =          600
+ NSPEC_global_max =          600
+ NSPEC_global_max / NSPEC_global_min imbalance =    1.00000000      =    0.00000000      %
+ NSPEC_global_sum =         2400
+
+ NGLOB_global_min =        42025
+ NGLOB_global_max =        42025
+ NGLOB_global_max / NGLOB_global_min imbalance =    1.00000000      =    0.00000000      %
+ NGLOB_global_sum =       168100
+
+ If you have elements of a single type (all acoustic, all elastic, all poroelastic, and without CPML)
+ in the whole mesh, then there should be no significant imbalance in the above numbers.
+ Otherwise, it is normal to have imbalance in elements and points because the domain decomposer
+ compensates for the different cost of different elements by partitioning them unevenly among processes.
+ ********
+
+
+ ********
+ Model: P   velocity min,max =    5800.00000       8520.44922
+ Model: S   velocity min,max =    3460.00000       4627.40967
+
+ Model: Poisson's ratio min,max =   0.223754406      0.290828705
+ ********
+
+ *********************************************
+ *** Verification of simulation parameters ***
+ *********************************************
+
+ *** Xmin and Xmax of the model =   -277987.250       277987.250
+ *** Ymin and Ymax of the model =   -555974.500       555974.500
+ *** Zmin and Zmax of the model =   -270396.188      -10.1036997
+
+ *** Max GLL point distance =    18261.2734
+ *** Min GLL point distance =    2590.09375
+ *** Max/min ratio =    7.05042934
+
+ *** Max element size =    55789.0234
+ *** Min element size =    14999.9844
+ *** Max/min ratio =    3.71927214
+
+ *** Minimum period resolved =    20.1549931
+ *** Maximum suggested time step =   0.153606594
+
+ *** for DT :   0.10000000000000001
+ *** Max stability for wave velocities =   0.325506866
+
+ Elapsed time for checking mesh resolution in seconds =    5.1699999999999999E-004
+ saving VTK files for Courant number and minimum period
+
+
+ ******************************************
+ There is a total of            4  slices
+ ******************************************
+
+ movie simulation:
+   volume movie
+
+ volume movies:
+   saving: particle velocities
+   number of steps between frames =          200
+
+
+ kd-tree:
+   total data points:          600
+   theoretical   number of nodes:         1196
+                tree memory size:    3.64990234E-02 MB
+   actual        number of nodes:         1199
+                tree memory size:    3.65905762E-02 MB
+   maximum depth   :           11
+   creation timing :    1.42998993E-04 (s)
+
+
+ sources:            1
+
+ ********************
+  locating sources
+ ********************
+
+ reading source information from ./DATA/CMTSOLUTION file
+
+ no UTM projection
+
+
+ note on using injection technique:
+   source (inside the mesh) will be ignored if we are coupling with DSM/AxiSEM/FK,
+   because the source is precisely the wavefield coming from the injection boundary
+
+
+ Elapsed time for detection of sources in seconds =    2.5700000000000028E-004
+
+ End of source detection - done
+
+
+ Each source is being convolved with HDUR_MOVIE =    0.0000000000000000
+
+
+ receivers:
+
+ there are          100  stations in file ./DATA/STATIONS
+ saving          100  stations inside the model in file ./DATA/STATIONS_FILTERED
+ excluding            0  stations located outside the model
+
+
+ Total number of receivers =          100
+
+
+ ********************
+  locating receivers
+ ********************
+
+ reading receiver information from ./DATA/STATIONS_FILTERED file
+
+
+ station #            1     SX    S2.21
+      original latitude:   -250188.531
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -250188.531
+      original depth:    0.00000000      m
+      horizontal distance:    250.194138
+      target x, y, z:    0.00000000      -250188.531      -4983.17383
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            3
+                       in element          555
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -5.6207609422770781E-008
+      gamma =   0.99999996951708181
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -250188.52499999999
+      depth:    0.0000000000000000       m
+      z:   -4983.1738281250000
+
+
+
+ station #            2     SX    S2.22
+      original latitude:   -245234.297
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -245234.297
+      original depth:    0.00000000      m
+      horizontal distance:    245.239914
+      target x, y, z:    0.00000000      -245234.297      -4772.12451
+      closest estimate found:    2.72848411E-12  m away
+
+      receiver located in slice            3
+                       in element          556
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =   0.17821775491626873
+      gamma =    1.0016425524107333
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -245234.29680000001
+      depth:    2.7284841053187847E-012  m
+      z:   -4772.1245117187527
+
+
+
+ station #            3     SX    S2.23
+      original latitude:   -240280.062
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -240280.062
+      original depth:    0.00000000      m
+      horizontal distance:    240.285675
+      target x, y, z:    0.00000000      -240280.062      -4618.45508
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            3
+                       in element          556
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =   0.35643556604014870
+      gamma =   0.99754714708365277
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -240280.06860000000
+      depth:    0.0000000000000000       m
+      z:   -4618.4550781250000
+
+
+
+ station #            4     SX    S2.24
+      original latitude:   -235325.844
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -235325.844
+      original depth:    0.00000000      m
+      horizontal distance:    235.331451
+      target x, y, z:    0.00000000      -235325.844      -4183.50342
+      closest estimate found:    115.799637      m away
+
+      receiver located in slice            3
+                       in element          555
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.53465338076131430
+      gamma =    1.0100000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -235325.84030000001
+      depth:    115.79963942430004       m
+      z:   -4299.3030573930500
+
+
+
+ station #            5     SX    S2.25
+      original latitude:   -230371.609
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -230371.609
+      original depth:    0.00000000      m
+      horizontal distance:    230.377228
+      target x, y, z:    0.00000000      -230371.609      -4193.22949
+      closest estimate found:    9.09494702E-13  m away
+
+      receiver located in slice            3
+                       in element          555
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.71287119188519532
+      gamma =    1.0011450078186108
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -230371.61210000000
+      depth:    9.0949470177292824E-013  m
+      z:   -4193.2294921875009
+
+
+
+ station #            6     SX    S2.26
+      original latitude:   -225417.391
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -225417.391
+      original depth:    0.00000000      m
+      horizontal distance:    225.422989
+      target x, y, z:    0.00000000      -225417.391      -4037.71338
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            3
+                       in element          556
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =   0.89108900300907501
+      gamma =   0.99723427039239265
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -225417.38389999999
+      depth:    0.0000000000000000       m
+      z:   -4037.7133789062500
+
+
+
+ station #            7     SX    S2.27
+      original latitude:   -220463.156
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -220463.156
+      original depth:    0.00000000      m
+      horizontal distance:    220.468765
+      target x, y, z:    0.00000000      -220463.156      -3826.02930
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            3
+                       in element          565
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.93069318586704608
+      gamma =    1.0006100251330095
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -220463.15570000000
+      depth:    0.0000000000000000       m
+      z:   -3826.0292968750000
+
+
+
+ station #            8     SX    S2.28
+      original latitude:   -215508.922
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -215508.922
+      original depth:    0.00000000      m
+      horizontal distance:    215.514542
+      target x, y, z:    0.00000000      -215508.922      -3705.60645
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            3
+                       in element          566
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =  -0.75247537474316717
+      gamma =   0.99748347050793296
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -215508.92749999999
+      depth:    4.5474735088646412E-013  m
+      z:   -3705.6064453124995
+
+
+
+ station #            9     SX    S2.29
+      original latitude:   -210554.703
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -210554.703
+      original depth:    0.00000000      m
+      horizontal distance:    210.560318
+      target x, y, z:    0.00000000      -210554.703      -3670.74023
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            3
+                       in element          566
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =  -0.57425756361928704
+      gamma =   0.98580125168688304
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -210554.69930000001
+      depth:    4.5474735088646412E-013  m
+      z:   -3670.7402343750005
+
+
+
+ station #           10     SX    S2.210
+      original latitude:   -205600.469
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -205600.469
+      original depth:    0.00000000      m
+      horizontal distance:    205.606079
+      target x, y, z:    0.00000000      -205600.469      -3382.05420
+      closest estimate found:    2.91038305E-11  m away
+
+      receiver located in slice            3
+                       in element          566
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =  -0.39603974889811872
+      gamma =   0.99950101535951741
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -205600.47099999996
+      depth:    0.0000000000000000       m
+      z:   -3382.0541992187500
+
+
+
+ station #           11     SX    S2.211
+      original latitude:   -200646.250
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -200646.250
+      original depth:    0.00000000      m
+      horizontal distance:    200.651855
+      target x, y, z:    0.00000000      -200646.250      -3261.23560
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            3
+                       in element          565
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.21782193777424172
+      gamma =   0.99641403591901645
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -200646.24280000001
+      depth:    0.0000000000000000       m
+      z:   -3261.2355957031250
+
+
+
+ station #           12     SX    S2.212
+      original latitude:   -195692.016
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -195692.016
+      original depth:    0.00000000      m
+      horizontal distance:    195.697632
+      target x, y, z:    0.00000000      -195692.016      -3100.40063
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            3
+                       in element          565
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -3.9604126650360658E-002
+      gamma =   0.99732869228629173
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -195692.01459999999
+      depth:    4.5474735088646412E-013  m
+      z:   -3100.4006347656255
+
+
+
+ station #           13     SX    S2.213
+      original latitude:   -190737.781
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -190737.781
+      original depth:    0.00000000      m
+      horizontal distance:    190.743393
+      target x, y, z:    0.00000000      -190737.781      -2906.92798
+      closest estimate found:    9.09494702E-13  m away
+
+      receiver located in slice            3
+                       in element          565
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.13861368447351941
+      gamma =    1.0015071182493296
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -190737.78640000001
+      depth:    9.0949470177292824E-013  m
+      z:   -2906.9279785156259
+
+
+
+ station #           14     SX    S2.214
+      original latitude:   -185783.562
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -185783.562
+      original depth:    0.00000000      m
+      horizontal distance:    185.789169
+      target x, y, z:    0.00000000      -185783.562      -2786.17505
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            3
+                       in element          566
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =   0.31683149559739809
+      gamma =   0.99841357141799159
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -185783.55820000000
+      depth:    4.5474735088646412E-013  m
+      z:   -2786.1750488281255
+
+
+
+ station #           15     SX    S2.215
+      original latitude:   -180829.328
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -180829.328
+      original depth:    0.00000000      m
+      horizontal distance:    180.834946
+      target x, y, z:    0.00000000      -180829.328      -2660.62939
+      closest estimate found:    2.91038305E-11  m away
+
+      receiver located in slice            3
+                       in element          565
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.49504930672127900
+      gamma =   0.99579929705108472
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -180829.32999999996
+      depth:    0.0000000000000000       m
+      z:   -2660.6293945312500
+
+
+
+ station #           16     SX    S2.216
+      original latitude:   -175875.109
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -175875.109
+      original depth:    0.00000000      m
+      horizontal distance:    175.880722
+      target x, y, z:    0.00000000      -175875.109      -2461.73657
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            3
+                       in element          565
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.67326712144244427
+      gamma =    1.0005197393336291
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -175875.10170000000
+      depth:    4.5474735088646412E-013  m
+      z:   -2461.7365722656255
+
+
+
+ station #           17     SX    S2.217
+      original latitude:   -170920.875
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -170920.875
+      original depth:    0.00000000      m
+      horizontal distance:    170.926483
+      target x, y, z:    0.00000000      -170920.875      -2333.55908
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            3
+                       in element          565
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.85148493256632474
+      gamma =   0.99816864856326282
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -170920.87349999999
+      depth:    0.0000000000000000       m
+      z:   -2333.5590820312500
+
+
+
+ station #           18     SX    S2.218
+      original latitude:   -165966.641
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -165966.641
+      original depth:    0.00000000      m
+      horizontal distance:    165.972260
+      target x, y, z:    0.00000000      -165966.641      -2167.62134
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            3
+                       in element          576
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =  -0.97029725213599449
+      gamma =    1.0003266155327344
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -165966.64530000000
+      depth:    4.5474735088646412E-013  m
+      z:   -2167.6213378906255
+
+
+
+ station #           19     SX    S2.219
+      original latitude:   -161012.422
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -161012.422
+      original depth:    0.00000000      m
+      horizontal distance:    161.018036
+      target x, y, z:    0.00000000      -161012.422      -2081.37598
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            3
+                       in element          575
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.79207941596911735
+      gamma =   0.99818053863595713
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -161012.41709999999
+      depth:    4.5474735088646412E-013  m
+      z:   -2081.3759765625005
+
+
+
+ station #           20     SX    S2.220
+      original latitude:   -156058.188
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -156058.188
+      original depth:    0.00000000      m
+      horizontal distance:    156.063812
+      target x, y, z:    0.00000000      -156058.188      -2016.26575
+      closest estimate found:    2.91073832E-11  m away
+
+      receiver located in slice            3
+                       in element          575
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.61386157980224254
+      gamma =   0.99392094853776169
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -156058.18890000004
+      depth:    4.5474735088646412E-013  m
+      z:   -2016.2657470703120
+
+
+
+ station #           21     SX    S2.221
+      original latitude:   -151103.953
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -151103.953
+      original depth:    0.00000000      m
+      horizontal distance:    151.109573
+      target x, y, z:    0.00000000      -151103.953      -1850.94910
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            3
+                       in element          576
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =  -0.43564374003807721
+      gamma =   0.99968200046827715
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -151103.96059999999
+      depth:    4.5474735088646412E-013  m
+      z:   -1850.9490966796880
+
+
+
+ station #           22     SX    S2.222
+      original latitude:   -146149.734
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -146149.734
+      original depth:    0.00000000      m
+      horizontal distance:    146.155350
+      target x, y, z:    0.00000000      -146149.734      -1766.33997
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            3
+                       in element          575
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.25742590387120162
+      gamma =   0.99737230055019133
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -146149.73240000001
+      depth:    0.0000000000000000       m
+      z:   -1766.3399658203125
+
+
+
+ station #           23     SX    S2.223
+      original latitude:   -141195.500
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -141195.500
+      original depth:    0.00000000      m
+      horizontal distance:    141.201126
+      target x, y, z:    0.00000000      -141195.500      -1662.94873
+      closest estimate found:    2.27373675E-13  m away
+
+      receiver located in slice            3
+                       in element          576
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =   -7.9208067704324536E-002
+      gamma =   0.99694081110782073
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -141195.50420000000
+      depth:    2.2737367544323206E-013  m
+      z:   -1662.9487304687498
+
+
+
+ station #           24     SX    S2.224
+      original latitude:   -136241.281
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -136241.281
+      original depth:    0.00000000      m
+      horizontal distance:    136.246902
+      target x, y, z:    0.00000000      -136241.281      -1514.87183
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            3
+                       in element          575
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =    9.9009768462551148E-002
+      gamma =    1.0009778885674525
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -136241.27600000001
+      depth:    0.0000000000000000       m
+      z:   -1514.8718261718750
+
+
+
+ station #           25     SX    S2.225
+      original latitude:   -131287.047
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -131287.047
+      original depth:    0.00000000      m
+      horizontal distance:    131.292664
+      target x, y, z:    0.00000000      -131287.047      -1428.05518
+      closest estimate found:    2.27373675E-13  m away
+
+      receiver located in slice            3
+                       in element          575
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.27722760462942703
+      gamma =   0.99888894062330436
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -131287.04780000000
+      depth:    2.2737367544323206E-013  m
+      z:   -1428.0551757812502
+
+
+
+ station #           26     SX    S2.226
+      original latitude:   -126332.820
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -126332.820
+      original depth:    0.00000000      m
+      horizontal distance:    126.338440
+      target x, y, z:    0.00000000      -126332.820      -1341.08777
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            3
+                       in element          575
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.45544544079630411
+      gamma =   0.99681506837855516
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -126332.81960000000
+      depth:    4.5474735088646412E-013  m
+      z:   -1341.0877685546870
+
+
+
+ station #           27     SX    S2.227
+      original latitude:   -121378.594
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -121378.594
+      original depth:    0.00000000      m
+      horizontal distance:    121.384216
+      target x, y, z:    0.00000000      -121378.594      -1174.88293
+      closest estimate found:    9.09494702E-13  m away
+
+      receiver located in slice            3
+                       in element          576
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =   0.63366328056046839
+      gamma =    1.0026649385248974
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -121378.59130000000
+      depth:    9.0949470177292824E-013  m
+      z:   -1174.8829345703116
+
+
+
+ station #           28     SX    S2.228
+      original latitude:   -116424.359
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -116424.359
+      original depth:    0.00000000      m
+      horizontal distance:    116.429985
+      target x, y, z:    0.00000000      -116424.359      -1104.93958
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            3
+                       in element          575
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.81188111672734531
+      gamma =   0.99888866152073763
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -116424.36310000000
+      depth:    0.0000000000000000       m
+      z:   -1104.9395751953125
+
+
+
+ station #           29     SX    S2.229
+      original latitude:   -111470.133
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -111470.133
+      original depth:    0.00000000      m
+      horizontal distance:    111.475761
+      target x, y, z:    0.00000000      -111470.133      -991.817322
+      closest estimate found:    5.68434189E-13  m away
+
+      receiver located in slice            3
+                       in element          575
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.99009895289422190
+      gamma =   0.99943027387147898
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -111470.13490000000
+      depth:    5.6843418860808015E-013  m
+      z:   -991.81732177734318
+
+
+
+ station #           30     SX    S2.230
+      original latitude:   -106515.906
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -106515.906
+      original depth:    0.00000000      m
+      horizontal distance:    106.521530
+      target x, y, z:    0.00000000      -106515.906      -931.311340
+      closest estimate found:    3.41060513E-13  m away
+
+      receiver located in slice            3
+                       in element          585
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.83168322276475859
+      gamma =   0.99869162263573685
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -106515.90670000001
+      depth:    3.4106051316484809E-013  m
+      z:   -931.31134033203159
+
+
+
+ station #           31     SX    S2.231
+      original latitude:   -101561.680
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -101561.680
+      original depth:    0.00000000      m
+      horizontal distance:    101.567307
+      target x, y, z:    0.00000000      -101561.680      -854.105164
+      closest estimate found:    1.45590189E-11  m away
+
+      receiver located in slice            3
+                       in element          585
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.65346539911938095
+      gamma =   0.99985719017003072
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -101561.67850000001
+      depth:    4.5474735088646412E-013  m
+      z:   -854.10516357421830
+
+
+
+ station #           32     SX    S2.232
+      original latitude:   -96607.4531
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -96607.4531
+      original depth:    0.00000000      m
+      horizontal distance:    96.6130753
+      target x, y, z:    0.00000000      -96607.4531      -792.016663
+      closest estimate found:    3.41060513E-13  m away
+
+      receiver located in slice            3
+                       in element          586
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =  -0.47524757187671751
+      gamma =   0.99951099001436161
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -96607.450200000007
+      depth:    3.4106051316484809E-013  m
+      z:   -792.01666259765591
+
+
+
+ station #           33     SX    S2.233
+      original latitude:   -91653.2188
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -91653.2188
+      original depth:    0.00000000      m
+      horizontal distance:    91.6588516
+      target x, y, z:    0.00000000      -91653.2188      -741.665955
+      closest estimate found:    2.91073832E-11  m away
+
+      receiver located in slice            3
+                       in element          585
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.29702974823133932
+      gamma =   0.99799101069753038
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -91653.221999999965
+      depth:    4.5474735088646412E-013  m
+      z:   -741.66595458984420
+
+
+
+ station #           34     SX    S2.234
+      original latitude:   -86698.9922
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -86698.9922
+      original depth:    0.00000000      m
+      horizontal distance:    86.7046280
+      target x, y, z:    0.00000000      -86698.9922      -681.896851
+      closest estimate found:    1.13686838E-13  m away
+
+      receiver located in slice            3
+                       in element          585
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.11881192458596228
+      gamma =   0.99741287096855935
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -86698.993799999997
+      depth:    1.1368683772161603E-013  m
+      z:   -681.89685058593739
+
+
+
+ station #           35     SX    S2.235
+      original latitude:   -81744.7656
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -81744.7656
+      original depth:    0.00000000      m
+      horizontal distance:    81.7503967
+      target x, y, z:    0.00000000      -81744.7656      -587.502075
+      closest estimate found:    1.45962565E-11  m away
+
+      receiver located in slice            3
+                       in element          585
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =    5.9405899059415304E-002
+      gamma =    1.0002972983808949
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -81744.765599999984
+      depth:    1.1368683772161603E-012  m
+      z:   -587.50207519531136
+
+
+
+ station #           36     SX    S2.236
+      original latitude:   -76790.5391
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -76790.5391
+      original depth:    0.00000000      m
+      horizontal distance:    76.7961731
+      target x, y, z:    0.00000000      -76790.5391      -535.064331
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            3
+                       in element          585
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.23762372270479185
+      gamma =   0.99898602266562264
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -76790.537400000001
+      depth:    4.5474735088646412E-013  m
+      z:   -535.06433105468705
+
+
+
+ station #           37     SX    S2.237
+      original latitude:   -71836.3125
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -71836.3125
+      original depth:    0.00000000      m
+      horizontal distance:    71.8419495
+      target x, y, z:    0.00000000      -71836.3125      -483.249268
+      closest estimate found:    3.41060513E-13  m away
+
+      receiver located in slice            3
+                       in element          585
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.41584154635016929
+      gamma =   0.99761247887448812
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -71836.309200000003
+      depth:    3.4106051316484809E-013  m
+      z:   -483.24926757812466
+
+
+
+ station #           38     SX    S2.238
+      original latitude:   -66882.0781
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -66882.0781
+      original depth:    0.00000000      m
+      horizontal distance:    66.8877182
+      target x, y, z:    0.00000000      -66882.0781      -356.980225
+      closest estimate found:    8.52651283E-13  m away
+
+      receiver located in slice            3
+                       in element          585
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.59405937359283345
+      gamma =    1.0036843329809646
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -66882.080900000001
+      depth:    8.5265128291212022E-013  m
+      z:   -356.98022460937585
+
+
+
+ station #           39     SX    S2.239
+      original latitude:   -61927.8516
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -61927.8516
+      original depth:    0.00000000      m
+      horizontal distance:    61.9334946
+      target x, y, z:    0.00000000      -61927.8516      -336.095459
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            3
+                       in element          585
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.77227719723821064
+      gamma =   0.99921775936338642
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -61927.852700000003
+      depth:    0.0000000000000000       m
+      z:   -336.09545898437500
+
+
+
+ station #           40     SX    S2.240
+      original latitude:   -56973.6250
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -56973.6250
+      original depth:    0.00000000      m
+      horizontal distance:    56.9792709
+      target x, y, z:    0.00000000      -56973.6250      -276.970367
+      closest estimate found:    3.97903932E-13  m away
+
+      receiver located in slice            3
+                       in element          585
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.95049502088358795
+      gamma =   0.99857521838046004
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -56973.624499999998
+      depth:    3.9790393202565610E-013  m
+      z:   -276.97036743164102
+
+
+
+ station #           41     SX    S2.241
+      original latitude:   -52019.3945
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -52019.3945
+      original depth:    0.00000000      m
+      horizontal distance:    52.0250473
+      target x, y, z:    0.00000000      -52019.3945      -241.056213
+      closest estimate found:    1.98951966E-13  m away
+
+      receiver located in slice            3
+                       in element          595
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.87128715547103508
+      gamma =   0.99883720423165612
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -52019.396300000000
+      depth:    1.9895196601282805E-013  m
+      z:   -241.05621337890645
+
+
+
+ station #           42     SX    S2.242
+      original latitude:   -47065.1680
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -47065.1680
+      original depth:    0.00000000      m
+      horizontal distance:    47.0708237
+      target x, y, z:    0.00000000      -47065.1680      -216.839615
+      closest estimate found:    2.55795385E-13  m away
+
+      receiver located in slice            3
+                       in element          595
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.69306933182565800
+      gamma =   0.99917005880045562
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -47065.168100000003
+      depth:    2.5579538487363607E-013  m
+      z:   -216.83961486816381
+
+
+
+ station #           43     SX    S2.243
+      original latitude:   -42110.9414
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -42110.9414
+      original depth:    0.00000000      m
+      horizontal distance:    42.1166039
+      target x, y, z:    0.00000000      -42110.9414      -229.211655
+      closest estimate found:    1.98951966E-13  m away
+
+      receiver located in slice            3
+                       in element          595
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.51485150818028047
+      gamma =   0.99584404947491678
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -42110.939899999998
+      depth:    1.9895196601282805E-013  m
+      z:   -229.21165466308574
+
+
+
+ station #           44     SX    S2.244
+      original latitude:   -37156.7109
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -37156.7109
+      original depth:    0.00000000      m
+      horizontal distance:    37.1623840
+      target x, y, z:    0.00000000      -37156.7109      -184.306412
+      closest estimate found:    4.83169060E-13  m away
+
+      receiver located in slice            3
+                       in element          596
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =  -0.33663368093761625
+      gamma =   0.99824576847841962
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -37156.711600000002
+      depth:    4.8316906031686813E-013  m
+      z:   -184.30641174316358
+
+
+
+ station #           45     SX    S2.245
+      original latitude:   -32202.4844
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -32202.4844
+      original depth:    0.00000000      m
+      horizontal distance:    32.2081642
+      target x, y, z:    0.00000000      -32202.4844      -164.455780
+      closest estimate found:    3.64906412E-12  m away
+
+      receiver located in slice            3
+                       in element          595
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.15841585729223878
+      gamma =   0.99814202636043881
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -32202.483399999997
+      depth:    2.8421709430404007E-013  m
+      z:   -164.45578002929659
+
+
+
+ station #           46     SX    S2.246
+      original latitude:   -27248.2559
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -27248.2559
+      original depth:    0.00000000      m
+      horizontal distance:    27.2539520
+      target x, y, z:    0.00000000      -27248.2559      -126.590073
+      closest estimate found:    5.40012479E-13  m away
+
+      receiver located in slice            3
+                       in element          595
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =    1.9801966353138262E-002
+      gamma =   0.99983979183698157
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -27248.255200000000
+      depth:    5.4001247917767614E-013  m
+      z:   -126.59007263183648
+
+
+
+ station #           47     SX    S2.247
+      original latitude:   -22294.0273
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -22294.0273
+      original depth:    0.00000000      m
+      horizontal distance:    22.2997456
+      target x, y, z:    0.00000000      -22294.0273      -117.201454
+      closest estimate found:    3.64133550E-12  m away
+
+      receiver located in slice            3
+                       in element          595
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.19801978999851561
+      gamma =   0.99868984837913510
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -22294.026999999995
+      depth:    1.5631940186722204E-013  m
+      z:   -117.20145416259750
+
+
+
+ station #           48     SX    S2.248
+      original latitude:   -17339.7988
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -17339.7988
+      original depth:    0.00000000      m
+      horizontal distance:    17.3455524
+      target x, y, z:    0.00000000      -17339.7988      -102.003067
+      closest estimate found:    4.68958206E-13  m away
+
+      receiver located in slice            3
+                       in element          596
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =   0.37623761364389263
+      gamma =   0.99812088179841696
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -17339.798800000000
+      depth:    4.6895820560166612E-013  m
+      z:   -102.00306701660203
+
+
+
+ station #           49     SX    S2.249
+      original latitude:   -12385.5703
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -12385.5703
+      original depth:    0.00000000      m
+      horizontal distance:    12.3913851
+      target x, y, z:    0.00000000      -12385.5703      -52.7317886
+      closest estimate found:    4.12114787E-13  m away
+
+      receiver located in slice            3
+                       in element          595
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.55445544088655718
+      gamma =    1.0009592043395787
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -12385.570500000000
+      depth:    4.1211478674085811E-013  m
+      z:   -52.731788635253494
+
+
+
+ station #           50     SX    S2.250
+      original latitude:   -7431.34229
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -7431.34229
+      original depth:    0.00000000      m
+      horizontal distance:    7.43729973
+      target x, y, z:    0.00000000      -7431.34229      -49.6142349
+      closest estimate found:    5.25801624E-13  m away
+
+      receiver located in slice            3
+                       in element          595
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.73267326453193427
+      gamma =   0.99918215440144775
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -7431.3423000000003
+      depth:    5.2580162446247414E-013  m
+      z:   -49.614234924315880
+
+
+
+ station #           51     SX    S2.251
+      original latitude:   -2477.11401
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:   -2477.11401
+      original depth:    0.00000000      m
+      horizontal distance:    2.48378420
+      target x, y, z:    0.00000000      -2477.11401      -33.6004868
+      closest estimate found:    9.37485658E-13  m away
+
+      receiver located in slice            3
+                       in element          595
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.91089108817731146
+      gamma =   0.99869472392496439
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:   -2477.1140999999989
+      depth:    2.2737367544323206E-013  m
+      z:   -33.600486755371321
+
+
+
+ station #           52     SX    S2.252
+      original latitude:    2477.11401
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    2477.11401
+      original depth:    0.00000000      m
+      horizontal distance:    2.47258902
+      target x, y, z:    0.00000000       2477.11401      -33.6004906
+      closest estimate found:    1.05054648E-12  m away
+
+      receiver located in slice            0
+                       in element          505
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.91089108817731146
+      gamma =   0.99869472361143496
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    2477.1140999999989
+      depth:    5.2580162446247414E-013  m
+      z:   -33.600490570068885
+
+
+
+ station #           53     SX    S2.253
+      original latitude:    7431.34229
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    7431.34229
+      original depth:    0.00000000      m
+      horizontal distance:    7.42610025
+      target x, y, z:    0.00000000       7431.34229      -49.6142387
+      closest estimate found:    9.39234259E-13  m away
+
+      receiver located in slice            0
+                       in element          505
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.73267326453193427
+      gamma =   0.99918215422384871
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    7431.3422999999993
+      depth:    2.3447910280083306E-013  m
+      z:   -49.614238739013437
+
+
+
+ station #           54     SX    S2.254
+      original latitude:    12385.5703
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    12385.5703
+      original depth:    0.00000000      m
+      horizontal distance:    12.3801851
+      target x, y, z:    0.00000000       12385.5703      -52.7317924
+      closest estimate found:    9.94759830E-13  m away
+
+      receiver located in slice            0
+                       in element          505
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.55445544088655707
+      gamma =    1.0009592042981956
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    12385.570500000000
+      depth:    9.9475983006414026E-013  m
+      z:   -52.731792449950177
+
+
+
+ station #           55     SX    S2.255
+      original latitude:    17339.7988
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    17339.7988
+      original depth:    0.00000000      m
+      horizontal distance:    17.3343525
+      target x, y, z:    0.00000000       17339.7988      -102.003075
+      closest estimate found:    1.98951966E-13  m away
+
+      receiver located in slice            0
+                       in element          505
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.37623761364389258
+      gamma =   0.99812088151092337
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    17339.798800000000
+      depth:    1.9895196601282805E-013  m
+      z:   -102.00307464599589
+
+
+
+ station #           56     SX    S2.256
+      original latitude:    22294.0273
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    22294.0273
+      original depth:    0.00000000      m
+      horizontal distance:    22.2885456
+      target x, y, z:    0.00000000       22294.0273      -117.201454
+      closest estimate found:    2.84217094E-13  m away
+
+      receiver located in slice            0
+                       in element          505
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.19801978999851538
+      gamma =   0.99868984899059665
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    22294.026999999998
+      depth:    2.8421709430404007E-013  m
+      z:   -117.20145416259737
+
+
+
+ station #           57     SX    S2.257
+      original latitude:    27248.2559
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    27248.2559
+      original depth:    0.00000000      m
+      horizontal distance:    27.2427521
+      target x, y, z:    0.00000000       27248.2559      -126.590080
+      closest estimate found:    1.70530257E-13  m away
+
+      receiver located in slice            0
+                       in element          505
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -1.9801966353138394E-002
+      gamma =   0.99983979182181404
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    27248.255200000000
+      depth:    1.7053025658242404E-013  m
+      z:   -126.59008026123030
+
+
+
+ station #           58     SX    S2.258
+      original latitude:    32202.4844
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    32202.4844
+      original depth:    0.00000000      m
+      horizontal distance:    32.1969643
+      target x, y, z:    0.00000000       32202.4844      -164.455780
+      closest estimate found:    3.65138779E-12  m away
+
+      receiver located in slice            0
+                       in element          505
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.15841585729223884
+      gamma =   0.99814202724341894
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    32202.483399999997
+      depth:    3.1263880373444408E-013  m
+      z:   -164.45578002929656
+
+
+
+ station #           59     SX    S2.259
+      original latitude:    37156.7109
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    37156.7109
+      original depth:    0.00000000      m
+      horizontal distance:    37.1511841
+      target x, y, z:    0.00000000       37156.7109      -184.306442
+      closest estimate found:    3.12638804E-13  m away
+
+      receiver located in slice            0
+                       in element          505
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.33663368093761631
+      gamma =   0.99824576644553786
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    37156.711600000002
+      depth:    3.1263880373444408E-013  m
+      z:   -184.30644226074187
+
+
+
+ station #           60     SX    S2.260
+      original latitude:    42110.9414
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    42110.9414
+      original depth:    0.00000000      m
+      horizontal distance:    42.1054039
+      target x, y, z:    0.00000000       42110.9414      -229.211655
+      closest estimate found:    3.97903932E-13  m away
+
+      receiver located in slice            0
+                       in element          506
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =   0.51485150818028047
+      gamma =   0.99584405062825521
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    42110.939899999998
+      depth:    3.9790393202565610E-013  m
+      z:   -229.21165466308554
+
+
+
+ station #           61     SX    S2.261
+      original latitude:    47065.1680
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    47065.1680
+      original depth:    0.00000000      m
+      horizontal distance:    47.0596237
+      target x, y, z:    0.00000000       47065.1680      -216.839645
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            0
+                       in element          505
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.69306933182565789
+      gamma =   0.99917005703987116
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    47065.168100000003
+      depth:    4.5474735088646412E-013  m
+      z:   -216.83964538574173
+
+
+
+ station #           62     SX    S2.262
+      original latitude:    52019.3945
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    52019.3945
+      original depth:    0.00000000      m
+      horizontal distance:    52.0138474
+      target x, y, z:    0.00000000       52019.3945      -241.056229
+      closest estimate found:    2.27373675E-13  m away
+
+      receiver located in slice            0
+                       in element          505
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.87128715547103508
+      gamma =   0.99883720413262600
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    52019.396300000000
+      depth:    2.2737367544323206E-013  m
+      z:   -241.05622863769509
+
+
+
+ station #           63     SX    S2.263
+      original latitude:    56973.6250
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    56973.6250
+      original depth:    0.00000000      m
+      horizontal distance:    56.9680710
+      target x, y, z:    0.00000000       56973.6250      -276.970428
+      closest estimate found:    2.27373675E-13  m away
+
+      receiver located in slice            0
+                       in element          515
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.95049502088358795
+      gamma =   0.99857521376399383
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    56973.624499999998
+      depth:    2.2737367544323206E-013  m
+      z:   -276.97042846679710
+
+
+
+ station #           64     SX    S2.264
+      original latitude:    61927.8516
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    61927.8516
+      original depth:    0.00000000      m
+      horizontal distance:    61.9222946
+      target x, y, z:    0.00000000       61927.8516      -336.095490
+      closest estimate found:    7.28682999E-12  m away
+
+      receiver located in slice            0
+                       in element          515
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.77227719723821109
+      gamma =   0.99921775766323995
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    61927.852699999996
+      depth:    3.9790393202565610E-013  m
+      z:   -336.09548950195273
+
+
+
+ station #           65     SX    S2.265
+      original latitude:    66882.0781
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    66882.0781
+      original depth:    0.00000000      m
+      horizontal distance:    66.8765182
+      target x, y, z:    0.00000000       66882.0781      -356.980225
+      closest estimate found:    9.09494702E-13  m away
+
+      receiver located in slice            0
+                       in element          515
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.59405937359283345
+      gamma =    1.0036843341993760
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    66882.080900000001
+      depth:    9.0949470177292824E-013  m
+      z:   -356.98022460937409
+
+
+
+ station #           66     SX    S2.266
+      original latitude:    71836.3125
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    71836.3125
+      original depth:    0.00000000      m
+      horizontal distance:    71.8307495
+      target x, y, z:    0.00000000       71836.3125      -483.249268
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          516
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =  -0.41584154635016912
+      gamma =   0.99761247995339997
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    71836.309200000003
+      depth:    0.0000000000000000       m
+      z:   -483.24926757812500
+
+
+
+ station #           67     SX    S2.267
+      original latitude:    76790.5391
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    76790.5391
+      original depth:    0.00000000      m
+      horizontal distance:    76.7849731
+      target x, y, z:    0.00000000       76790.5391      -535.064331
+      closest estimate found:    1.13686838E-13  m away
+
+      receiver located in slice            0
+                       in element          515
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.23762372270479190
+      gamma =   0.99898602360937583
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    76790.537400000001
+      depth:    1.1368683772161603E-013  m
+      z:   -535.06433105468761
+
+
+
+ station #           68     SX    S2.268
+      original latitude:    81744.7656
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    81744.7656
+      original depth:    0.00000000      m
+      horizontal distance:    81.7391968
+      target x, y, z:    0.00000000       81744.7656      -587.502014
+      closest estimate found:    9.09494702E-13  m away
+
+      receiver located in slice            0
+                       in element          515
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -5.9405899059414798E-002
+      gamma =    1.0002973052927930
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    81744.765599999999
+      depth:    9.0949470177292824E-013  m
+      z:   -587.50201416015716
+
+
+
+ station #           69     SX    S2.269
+      original latitude:    86698.9922
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    86698.9922
+      original depth:    0.00000000      m
+      horizontal distance:    86.6934280
+      target x, y, z:    0.00000000       86698.9922      -681.896912
+      closest estimate found:    1.13686838E-13  m away
+
+      receiver located in slice            0
+                       in element          515
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.11881192458596231
+      gamma =   0.99741286553646724
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    86698.993799999997
+      depth:    1.1368683772161603E-013  m
+      z:   -681.89691162109364
+
+
+
+ station #           70     SX    S2.270
+      original latitude:    91653.2188
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    91653.2188
+      original depth:    0.00000000      m
+      horizontal distance:    91.6476517
+      target x, y, z:    0.00000000       91653.2188      -741.666016
+      closest estimate found:    3.41060513E-13  m away
+
+      receiver located in slice            0
+                       in element          516
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =   0.29702974823133982
+      gamma =   0.99799100512979988
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    91653.221999999994
+      depth:    3.4106051316484809E-013  m
+      z:   -741.66601562499966
+
+
+
+ station #           71     SX    S2.271
+      original latitude:    96607.4531
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    96607.4531
+      original depth:    0.00000000      m
+      horizontal distance:    96.6018753
+      target x, y, z:    0.00000000       96607.4531      -792.016602
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          515
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.47524757187671679
+      gamma =   0.99951099651813358
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    96607.450200000007
+      depth:    0.0000000000000000       m
+      z:   -792.01660156250000
+
+
+
+ station #           72     SX    S2.272
+      original latitude:    101561.680
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    101561.680
+      original depth:    0.00000000      m
+      horizontal distance:    101.556107
+      target x, y, z:    0.00000000       101561.680      -854.105103
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          515
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.65346539911938140
+      gamma =   0.99985719653791227
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    101561.67849999999
+      depth:    0.0000000000000000       m
+      z:   -854.10510253906250
+
+
+
+ station #           73     SX    S2.273
+      original latitude:    106515.906
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    106515.906
+      original depth:    0.00000000      m
+      horizontal distance:    106.510330
+      target x, y, z:    0.00000000       106515.906      -931.311401
+      closest estimate found:    1.13686838E-13  m away
+
+      receiver located in slice            0
+                       in element          515
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.83168322276475859
+      gamma =   0.99869161666055284
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    106515.90670000001
+      depth:    1.1368683772161603E-013  m
+      z:   -931.31140136718761
+
+
+
+ station #           74     SX    S2.274
+      original latitude:    111470.133
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    111470.133
+      original depth:    0.00000000      m
+      horizontal distance:    111.464561
+      target x, y, z:    0.00000000       111470.133      -991.817261
+      closest estimate found:    2.27373675E-13  m away
+
+      receiver located in slice            0
+                       in element          525
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.99009895289422145
+      gamma =   0.99943027997499445
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    111470.13490000000
+      depth:    2.2737367544323206E-013  m
+      z:   -991.81726074218773
+
+
+
+ station #           75     SX    S2.275
+      original latitude:    116424.359
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    116424.359
+      original depth:    0.00000000      m
+      horizontal distance:    116.418785
+      target x, y, z:    0.00000000       116424.359      -1104.93970
+      closest estimate found:    1.45536916E-11  m away
+
+      receiver located in slice            0
+                       in element          525
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.81188111672734542
+      gamma =   0.99888864931370658
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    116424.36309999999
+      depth:    2.2737367544323206E-013  m
+      z:   -1104.9396972656248
+
+
+
+ station #           76     SX    S2.276
+      original latitude:    121378.594
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    121378.594
+      original depth:    0.00000000      m
+      horizontal distance:    121.373016
+      target x, y, z:    0.00000000       121378.594      -1174.88306
+      closest estimate found:    6.82121026E-13  m away
+
+      receiver located in slice            0
+                       in element          525
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.63366328056046894
+      gamma =    1.0026649263178662
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    121378.59130000000
+      depth:    6.8212102632969618E-013  m
+      z:   -1174.8830566406243
+
+
+
+ station #           77     SX    S2.277
+      original latitude:    126332.820
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    126332.820
+      original depth:    0.00000000      m
+      horizontal distance:    126.327240
+      target x, y, z:    0.00000000       126332.820      -1341.08813
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          526
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =  -0.45544544079630472
+      gamma =   0.99681503175746156
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    126332.81960000000
+      depth:    0.0000000000000000       m
+      z:   -1341.0881347656250
+
+
+
+ station #           78     SX    S2.278
+      original latitude:    131287.047
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    131287.047
+      original depth:    0.00000000      m
+      horizontal distance:    131.281464
+      target x, y, z:    0.00000000       131287.047      -1428.05518
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            0
+                       in element          525
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.27722760462942808
+      gamma =   0.99888894062330436
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    131287.04780000000
+      depth:    4.5474735088646412E-013  m
+      z:   -1428.0551757812495
+
+
+
+ station #           79     SX    S2.279
+      original latitude:    136241.281
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    136241.281
+      original depth:    0.00000000      m
+      horizontal distance:    136.235703
+      target x, y, z:    0.00000000       136241.281      -1514.87183
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          525
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   -9.9009768462551148E-002
+      gamma =    1.0009778885674525
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    136241.27600000001
+      depth:    0.0000000000000000       m
+      z:   -1514.8718261718750
+
+
+
+ station #           80     SX    S2.280
+      original latitude:    141195.500
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    141195.500
+      original depth:    0.00000000      m
+      horizontal distance:    141.189926
+      target x, y, z:    0.00000000       141195.500      -1662.94873
+      closest estimate found:    2.27373675E-13  m away
+
+      receiver located in slice            0
+                       in element          526
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =    7.9208067704324522E-002
+      gamma =   0.99694081110782073
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    141195.50420000000
+      depth:    2.2737367544323206E-013  m
+      z:   -1662.9487304687498
+
+
+
+ station #           81     SX    S2.281
+      original latitude:    146149.734
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    146149.734
+      original depth:    0.00000000      m
+      horizontal distance:    146.144150
+      target x, y, z:    0.00000000       146149.734      -1766.33972
+      closest estimate found:    2.27373675E-13  m away
+
+      receiver located in slice            0
+                       in element          526
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =   0.25742590387120107
+      gamma =   0.99737232496425399
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    146149.73240000001
+      depth:    2.2737367544323206E-013  m
+      z:   -1766.3397216796877
+
+
+
+ station #           82     SX    S2.282
+      original latitude:    151103.953
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    151103.953
+      original depth:    0.00000000      m
+      horizontal distance:    151.098373
+      target x, y, z:    0.00000000       151103.953      -1850.94922
+      closest estimate found:    2.27373675E-13  m away
+
+      receiver located in slice            0
+                       in element          525
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.43564374003807771
+      gamma =   0.99968198826124588
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    151103.96059999999
+      depth:    2.2737367544323206E-013  m
+      z:   -1850.9492187499998
+
+
+
+ station #           83     SX    S2.283
+      original latitude:    156058.188
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    156058.188
+      original depth:    0.00000000      m
+      horizontal distance:    156.052612
+      target x, y, z:    0.00000000       156058.188      -2016.26575
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          526
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =   0.61386157980224165
+      gamma =   0.99392094853776158
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    156058.18890000001
+      depth:    0.0000000000000000       m
+      z:   -2016.2657470703125
+
+
+
+ station #           84     SX    S2.284
+      original latitude:    161012.422
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    161012.422
+      original depth:    0.00000000      m
+      horizontal distance:    161.006836
+      target x, y, z:    0.00000000       161012.422      -2081.37573
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            0
+                       in element          525
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.79207941596911824
+      gamma =   0.99818056305002023
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    161012.41709999999
+      depth:    4.5474735088646412E-013  m
+      z:   -2081.3757324218745
+
+
+
+ station #           85     SX    S2.285
+      original latitude:    165966.641
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    165966.641
+      original depth:    0.00000000      m
+      horizontal distance:    165.961060
+      target x, y, z:    0.00000000       165966.641      -2167.62109
+      closest estimate found:    2.91180378E-11  m away
+
+      receiver located in slice            0
+                       in element          526
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =   0.97029725213599427
+      gamma =    1.0003266399467974
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    165966.64529999997
+      depth:    9.0949470177292824E-013  m
+      z:   -2167.6210937500009
+
+
+
+ station #           86     SX    S2.286
+      original latitude:    170920.875
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    170920.875
+      original depth:    0.00000000      m
+      horizontal distance:    170.915283
+      target x, y, z:    0.00000000       170920.875      -2333.55908
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          535
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.85148493256632474
+      gamma =   0.99816864856326282
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    170920.87349999999
+      depth:    0.0000000000000000       m
+      z:   -2333.5590820312500
+
+
+
+ station #           87     SX    S2.287
+      original latitude:    175875.109
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    175875.109
+      original depth:    0.00000000      m
+      horizontal distance:    175.869522
+      target x, y, z:    0.00000000       175875.109      -2461.73657
+      closest estimate found:    5.82094373E-11  m away
+
+      receiver located in slice            0
+                       in element          535
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.67326712144244327
+      gamma =    1.0005197393336294
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    175875.10170000006
+      depth:    4.5474735088646412E-013  m
+      z:   -2461.7365722656245
+
+
+
+ station #           88     SX    S2.288
+      original latitude:    180829.328
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    180829.328
+      original depth:    0.00000000      m
+      horizontal distance:    180.823746
+      target x, y, z:    0.00000000       180829.328      -2660.62964
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            0
+                       in element          536
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =  -0.49504930672127750
+      gamma =   0.99579927263702184
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    180829.32999999999
+      depth:    4.5474735088646412E-013  m
+      z:   -2660.6296386718745
+
+
+
+ station #           89     SX    S2.289
+      original latitude:    185783.562
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    185783.562
+      original depth:    0.00000000      m
+      horizontal distance:    185.777969
+      target x, y, z:    0.00000000       185783.562      -2786.17529
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          535
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.31683149559739837
+      gamma =   0.99841354700392859
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    185783.55820000000
+      depth:    0.0000000000000000       m
+      z:   -2786.1752929687500
+
+
+
+ station #           90     SX    S2.290
+      original latitude:    190737.781
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    190737.781
+      original depth:    0.00000000      m
+      horizontal distance:    190.732193
+      target x, y, z:    0.00000000       190737.781      -2906.92798
+      closest estimate found:    9.09494702E-13  m away
+
+      receiver located in slice            0
+                       in element          535
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.13861368447351941
+      gamma =    1.0015071182493296
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    190737.78640000001
+      depth:    9.0949470177292824E-013  m
+      z:   -2906.9279785156259
+
+
+
+ station #           91     SX    S2.291
+      original latitude:    195692.016
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    195692.016
+      original depth:    0.00000000      m
+      horizontal distance:    195.686432
+      target x, y, z:    0.00000000       195692.016      -3100.40088
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          535
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =    3.9604126650360658E-002
+      gamma =   0.99732866787222885
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    195692.01459999999
+      depth:    0.0000000000000000       m
+      z:   -3100.4008789062500
+
+
+
+ station #           92     SX    S2.292
+      original latitude:    200646.250
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    200646.250
+      original depth:    0.00000000      m
+      horizontal distance:    200.640656
+      target x, y, z:    0.00000000       200646.250      -3261.23608
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          535
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.21782193777424069
+      gamma =   0.99641398709089057
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    200646.24280000001
+      depth:    0.0000000000000000       m
+      z:   -3261.2360839843750
+
+
+
+ station #           93     SX    S2.293
+      original latitude:    205600.469
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    205600.469
+      original depth:    0.00000000      m
+      horizontal distance:    205.594879
+      target x, y, z:    0.00000000       205600.469      -3382.05396
+      closest estimate found:    2.91073832E-11  m away
+
+      receiver located in slice            0
+                       in element          535
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.39603974889812016
+      gamma =   0.99950103977358040
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    205600.47100000002
+      depth:    4.5474735088646412E-013  m
+      z:   -3382.0539550781255
+
+
+
+ station #           94     SX    S2.294
+      original latitude:    210554.703
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    210554.703
+      original depth:    0.00000000      m
+      horizontal distance:    210.549118
+      target x, y, z:    0.00000000       210554.703      -3670.74072
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          536
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =   0.57425756361928770
+      gamma =   0.98580120285875739
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    210554.69930000001
+      depth:    0.0000000000000000       m
+      z:   -3670.7407226562500
+
+
+
+ station #           95     SX    S2.295
+      original latitude:    215508.922
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    215508.922
+      original depth:    0.00000000      m
+      horizontal distance:    215.503342
+      target x, y, z:    0.00000000       215508.922      -3705.60669
+      closest estimate found:    2.91038305E-11  m away
+
+      receiver located in slice            0
+                       in element          535
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.75247537474316550
+      gamma =   0.99748344609386996
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    215508.92749999996
+      depth:    0.0000000000000000       m
+      z:   -3705.6066894531250
+
+
+
+ station #           96     SX    S2.296
+      original latitude:    220463.156
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    220463.156
+      original depth:    0.00000000      m
+      horizontal distance:    220.457565
+      target x, y, z:    0.00000000       220463.156      -3826.02930
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          535
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =   0.93069318586704608
+      gamma =    1.0006100251330095
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    220463.15570000000
+      depth:    0.0000000000000000       m
+      z:   -3826.0292968750000
+
+
+
+ station #           97     SX    S2.297
+      original latitude:    225417.391
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    225417.391
+      original depth:    0.00000000      m
+      horizontal distance:    225.411789
+      target x, y, z:    0.00000000       225417.391      -4037.71362
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          545
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.89108900300907490
+      gamma =   0.99723424863361287
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    225417.38389999999
+      depth:    0.0000000000000000       m
+      z:   -4037.7136230468750
+
+
+
+ station #           98     SX    S2.298
+      original latitude:    230371.609
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    230371.609
+      original depth:    0.00000000      m
+      horizontal distance:    230.366028
+      target x, y, z:    0.00000000       230371.609      -4193.22949
+      closest estimate found:    9.09494702E-13  m away
+
+      receiver located in slice            0
+                       in element          545
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.71287119188519443
+      gamma =    1.0011450148326051
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    230371.61210000000
+      depth:    9.0949470177292824E-013  m
+      z:   -4193.2294921874991
+
+
+
+ station #           99     SX    S2.299
+      original latitude:    235325.844
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    235325.844
+      original depth:    0.00000000      m
+      horizontal distance:    235.320251
+      target x, y, z:    0.00000000       235325.844      -4183.50342
+      closest estimate found:    115.799751      m away
+
+      receiver located in slice            0
+                       in element          546
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =  -0.53465338076131408
+      gamma =    1.0100000000000000
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    235325.84030000001
+      depth:    115.79975360236494       m
+      z:   -4299.3031715711149
+
+
+
+ station #          100     SX    S2.2100
+      original latitude:    240280.062
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    240280.062
+      original depth:    0.00000000      m
+      horizontal distance:    240.274475
+      target x, y, z:    0.00000000       240280.062      -4618.45508
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          545
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =  -0.35643556604014814
+      gamma =   0.99754716277640543
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    0.0000000000000000
+      y:    240280.06860000000
+      depth:    0.0000000000000000       m
+      z:   -4618.4550781250000
+
+
+ maximum error in location of all the receivers:    115.799751      m
+
+ Elapsed time for receiver detection in seconds =    9.0869999999999996E-003
+
+ End of receiver detection - done
+
+ found a total of          100  receivers in all the slices
+
+ source arrays:
+   number of sources is            1
+   size of source array                 =    1.43051147E-03 MB
+                                        =    1.39698386E-06 GB
+
+ seismograms:
+   seismograms written by all processes
+
+   Total number of simulation steps (NSTEP)                       =         3000
+   writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS =         3000
+   number of subsampling steps for seismograms                    =            1
+   Total number of samples for seismograms                        =         3000
+
+   maximum number of local receivers is           51  in slice            3
+   size of maximum seismogram array       =    1.75094604     MB
+                                          =    1.70990825E-03 GB
+
+
+ Total number of samples for seismograms =         3000
+
+
+ Simulation setup:
+
+   no acoustic simulation
+ incorporating elastic simulation
+   no poroelastic simulation
+
+   no attenuation
+   no anisotropy
+   no oceans
+   no gravity
+ incorporating movie simulation
+
+
+ preparing mass matrices
+ preparing constants
+ preparing wavefields
+ preparing fault simulation
+   no dynamic faults
+   no kinematic faults
+   no fault simulation
+ preparing gravity
+   no gravity simulation
+ preparing Stacey absorbing boundaries
+ preparing injection boundary
+ preparing optimized arrays
+   number of regular shaped elements  :            0
+   number of irregular shaped elements:          600
+   fused array done
+   bandwidth test (STREAM TRIAD):
+      memory accesses =    1.44281387     MB
+      timing  min/max =    6.90000015E-05 s /    7.00000019E-05 s
+      timing      avg =    6.95999988E-05 s
+      bandwidth       =    20.2442226     GB/s
+
+
+ Elapsed time for preparing timerun in seconds =    2.0799999999999985E-003
+
+ ************
+  time loop
+ ************
+               scheme:         Newmark
+
+            time step:   0.100000001      s
+ number of time steps:         3000
+ total simulated time:    300.000000      seconds
+ start time:  -2.00000000      seconds
+
+ All processes are synchronized before the time loop
+
+ Starting time iteration loop...
+
+ Time step #            5
+ Time:   -1.60000002      seconds
+ Elapsed time in seconds =    2.0545999999999998E-002
+ Elapsed time in hh:mm:ss =      0 h 00 m 00 s
+ Mean elapsed time per time step in seconds =    4.10920009E-03
+ Max norm displacement vector U in all slices (m) =    2.05709668E-11
+ Time steps done =            5  out of         3000
+ Time steps remaining =         2995
+ Estimated remaining time in seconds =    12.3070536
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 12 s
+ Estimated total run time in seconds =    12.3275995
+ Estimated total run time in hh:mm:ss =      0 h 00 m 12 s
+ We have done   0.166666672     % of that
+ The run will finish approximately on (in local time): Tue Apr 25, 2023 23:43
+ ************************************************************
+ **** BEWARE: the above time estimates are not very reliable
+ **** because fewer than 100 iterations have been performed
+ ************************************************************
+
+ Time step #          500
+ Time:    47.9000015      seconds
+ Elapsed time in seconds =    2.5359840000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 02 s
+ Mean elapsed time per time step in seconds =    5.07196784E-03
+ Max norm displacement vector U in all slices (m) =    1.08330978E-05
+ Time steps done =          500  out of         3000
+ Time steps remaining =         2500
+ Estimated remaining time in seconds =    12.6799202
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 12 s
+ Estimated total run time in seconds =    15.2159042
+ Estimated total run time in hh:mm:ss =      0 h 00 m 15 s
+ We have done    16.6666660     % of that
+ The run will finish approximately on (in local time): Tue Apr 25, 2023 23:43
+
+ Time step #         1000
+ Time:    97.9000015      seconds
+ Elapsed time in seconds =    5.0734280000000007
+ Elapsed time in hh:mm:ss =      0 h 00 m 05 s
+ Mean elapsed time per time step in seconds =    5.07342815E-03
+ Max norm displacement vector U in all slices (m) =    2.32515285E-05
+ Time steps done =         1000  out of         3000
+ Time steps remaining =         2000
+ Estimated remaining time in seconds =    10.1468563
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 10 s
+ Estimated total run time in seconds =    15.2202845
+ Estimated total run time in hh:mm:ss =      0 h 00 m 15 s
+ We have done    33.3333321     % of that
+ The run will finish approximately on (in local time): Tue Apr 25, 2023 23:43
+
+ Time step #         1500
+ Time:    147.899994      seconds
+ Elapsed time in seconds =    7.6154790000000006
+ Elapsed time in hh:mm:ss =      0 h 00 m 07 s
+ Mean elapsed time per time step in seconds =    5.07698581E-03
+ Max norm displacement vector U in all slices (m) =    1.83697030E-05
+ Time steps done =         1500  out of         3000
+ Time steps remaining =         1500
+ Estimated remaining time in seconds =    7.61547899
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 07 s
+ Estimated total run time in seconds =    15.2309580
+ Estimated total run time in hh:mm:ss =      0 h 00 m 15 s
+ We have done    50.0000000     % of that
+ The run will finish approximately on (in local time): Tue Apr 25, 2023 23:43
+
+ Time step #         2000
+ Time:    197.899994      seconds
+ Elapsed time in seconds =    10.149974000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 10 s
+ Mean elapsed time per time step in seconds =    5.07498719E-03
+ Max norm displacement vector U in all slices (m) =    1.62803481E-05
+ Time steps done =         2000  out of         3000
+ Time steps remaining =         1000
+ Estimated remaining time in seconds =    5.07498693
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 05 s
+ Estimated total run time in seconds =    15.2249613
+ Estimated total run time in hh:mm:ss =      0 h 00 m 15 s
+ We have done    66.6666641     % of that
+ The run will finish approximately on (in local time): Tue Apr 25, 2023 23:43
+
+ Time step #         2500
+ Time:    247.899994      seconds
+ Elapsed time in seconds =    12.694398000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 12 s
+ Mean elapsed time per time step in seconds =    5.07775927E-03
+ Max norm displacement vector U in all slices (m) =    9.09272694E-06
+ Time steps done =         2500  out of         3000
+ Time steps remaining =          500
+ Estimated remaining time in seconds =    2.53887963
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 02 s
+ Estimated total run time in seconds =    15.2332773
+ Estimated total run time in hh:mm:ss =      0 h 00 m 15 s
+ We have done    83.3333359     % of that
+ The run will finish approximately on (in local time): Tue Apr 25, 2023 23:43
+
+ Time step #         3000
+ Time:    297.899994      seconds
+ Elapsed time in seconds =    15.221482000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 15 s
+ Mean elapsed time per time step in seconds =    5.07382723E-03
+ Max norm displacement vector U in all slices (m) =    6.25251341E-05
+ Time steps done =         3000  out of         3000
+ Time steps remaining =            0
+ Estimated remaining time in seconds =    0.00000000
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
+ Estimated total run time in seconds =    15.2214823
+ Estimated total run time in hh:mm:ss =      0 h 00 m 15 s
+ We have done    100.000000     % of that
+
+
+ Total number of time steps done:         3000
+ Writing the seismograms in parallel took   0.385259986      seconds
+
+ Time loop finished. Timing info:
+ Total elapsed time in seconds =    15.618373000000000
+ Total elapsed time in hh:mm:ss =      0 h 00 m 15 s
+
+ finalizing simulation
+
+ End of the simulation
+

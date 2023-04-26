@@ -1,0 +1,51 @@
+ Expand 2D to 3D
+
+ reading inputs...
+
+ ROTATION MATRIX
+     0.95123139703853787       -9.7582899759149688E-002  0.29263698837075847
+      9.3269053953560915E-002  0.99522739998183118        2.8693307582291744E-002
+    -0.29404032523230450        0.0000000000000000       0.95579301479833001
+
+ ROTATION MATRIX DG
+     -2.6176948307873208E-002 -0.67535869972475093       0.73702469028071282
+     0.99965732497555726       -1.7684889942060432E-002   1.9299670734245076E-002
+      0.0000000000000000       0.73727733681012531       0.67559020761565891
+
+ reading mesh points...
+
+ iproc: iproc =            0         277           0           4
+        nel   =          277
+
+ iproc: iproc =            1           0           0           4
+        nel   =          277
+
+ iproc: iproc =            2           0           0           4
+        nel   =          277
+
+ iproc: iproc =            3           0           0           4
+        nel   =          277
+
+ connecting points...
+
+       10000       23000         277 connect
+       20000       23000         277 connect
+ interpolating velocity and stress fields...
+
+  src_type(:,1)            0 monopole
+  src_type(:,2)            0 explosion
+ nbrec to write        23000
+ nbrec to read           277
+ nt to write             513
+ field:            1
+ field:            2
+   monopole => not up
+ field:            3
+ field:            1
+ field:            2
+ field:            3
+ field:            4
+   monopole => not up
+ field:            5
+ field:            6
+   monopole => not up

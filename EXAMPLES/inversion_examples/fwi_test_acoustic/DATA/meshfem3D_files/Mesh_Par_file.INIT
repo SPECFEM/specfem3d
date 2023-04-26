@@ -55,6 +55,9 @@ CREATE_ABAQUS_FILES             = .false.
 CREATE_DX_FILES                 = .false.
 CREATE_VTK_FILES                = .true.
 
+# stores mesh files as cubit-exported files into directory MESH/ (for single process run)
+SAVE_MESH_AS_CUBIT              = .false.
+
 # path to store the databases files
 LOCAL_PATH                      = ./DATABASES_MPI
 
@@ -96,6 +99,4 @@ NREGIONS                        = 1
 # define the different regions of the model as :
 #NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
 1              20            1              20             1        20       1
-
-
 
