@@ -49,6 +49,7 @@ decompose_mesh_MODULES = \
 	$(FC_MODDIR)/decompose_mesh_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_scotch.$(FC_MODEXT) \
 	$(FC_MODDIR)/part_decompose_mesh.$(FC_MODEXT) \
+	$(FC_MODDIR)/part_decompose_mesh_hdf5.$(FC_MODEXT) \
 	$(FC_MODDIR)/module_qsort.$(FC_MODEXT) \
 	$(FC_MODDIR)/module_database.$(FC_MODEXT) \
 	$(FC_MODDIR)/module_mesh.$(FC_MODEXT) \
@@ -119,6 +120,7 @@ xdecompose_mesh_OBJECTS = \
 	$O/lts_helper.dec.o \
 	$O/lts_setup_elements.dec.o \
 	$O/part_decompose_mesh.dec_module.o \
+	$O/part_decompose_mesh_hdf5.dec_module_hdf5.o \
 	$O/partition_scotch.dec.o \
 	$O/partition_metis.dec.o \
 	$O/partition_patoh.dec.o \
@@ -130,16 +132,6 @@ xdecompose_mesh_OBJECTS = \
 	$O/write_mesh_databases.dec.o \
 	$O/write_mesh_databases_hdf5.dec_hdf5.o \
 	$(EMPTY_MACRO)
-
-ifeq ($(HDF5),yes)
-xdecompose_mesh_OBJECTS += \
-	$O/part_decompose_mesh_hdf5.dec_module_hdf5.o \
-	$(EMPTY_MACRO)
-
-decompose_mesh_MODULES += \
-	$(FC_MODDIR)/part_decompose_mesh_hdf5.$(FC_MODEXT) \
-	$(EMPTY_MACRO)
-endif
 
 # rules for the pure Fortran version
 $E/xdecompose_mesh: ${SCOTCH_DIR}/include/scotchf.h $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_OBJECTS) $(COND_MPI_OBJECTS)

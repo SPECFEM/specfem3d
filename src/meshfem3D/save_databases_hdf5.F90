@@ -36,7 +36,7 @@
   use meshfem_par, only: NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP
 
 #ifdef USE_HDF5
-  use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
+  use constants, only: IMAIN,MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
     myrank
 
   use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M
@@ -63,12 +63,10 @@
   ! number of vertices in each block
   integer, intent(in) :: nglob
 
-  !integer NPROC_XI,NPROC_ETA
   logical, intent(in) :: iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec)
 
   ! arrays with the mesh
   double precision, intent(in) :: nodes_coords(nglob,NDIM)
-
   integer, intent(in) :: ispec_material_id(nspec)
 
   ! boundary parameters locator
@@ -78,19 +76,19 @@
   integer, intent(in) :: ibelm_bottom(NSPEC2D_BOTTOM)
   integer, intent(in) :: ibelm_top(NSPEC2D_TOP)
 
-  ! local parameters
 #ifdef USE_HDF5
+  ! local parameters
   ! MPI Cartesian topology
   ! E for East (= XI_MIN), W for West (= XI_MAX), S for South (= ETA_MIN), N for North (= ETA_MAX)
   integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
+
+  ! CPML
+  integer :: nspec_CPML_total,ispec_CPML
 
   ! material properties
   ! first dimension  : material_id
   ! second dimension : #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
   double precision , dimension(17,NMATERIALS) :: mat_prop
-
-  ! CPML
-  integer :: nspec_CPML_total,ispec_CPML
 
   ! for MPI interfaces
   integer ::  nb_interfaces,nspec_interfaces_max
@@ -203,17 +201,30 @@
   ndef = 0
   nundef = 0
   do i = 1,NMATERIALS
+    ! material_properties(:,:) array:
+    !   first dimension  : material_id
+    !   second dimension : #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
+    !
     ! material properties format: #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
     mat_id = int(material_properties(i,8))
     if (mat_id > 0) ndef = ndef + 1
     if (mat_id < 0) nundef = nundef + 1
   enddo
 
-  ! writes out undefined materials
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) 'mesh files:'
+    write(IMAIN,*) '  saving file : ',trim(name_database_hdf5)
+    write(IMAIN,*) '  using HDF5 file format'
+    call flush_IMAIN()
+  endif
+
+  ! writes out defined materials
   do i = 1,NMATERIALS
     ! material properties format: #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
-    domain_id = material_properties(i,7)
-    mat_id = material_properties(i,8)
+    domain_id = int(material_properties(i,7))
+    mat_id = int(material_properties(i,8))
     if (mat_id > 0) then
       ! pad dummy zeros to fill up 17 entries
       mat_prop(:,i) = 0.d0
@@ -276,7 +287,6 @@
     endif
   enddo
 
-  !
   ! share the offset info
   !
   ! offset_nnodes
@@ -293,7 +303,6 @@
                               +nspec2D_ymax   &
                               +NSPEC2D_BOTTOM &
                               +NSPEC2D_TOP, offset_n_elms_bounds, NPROC)
-
 
   if (myrank == 0) then
     ! create a hdf5 file
@@ -388,7 +397,7 @@
   call hex_nodes_anchor_ijk_NGLL(NGNOD,anchor_iax,anchor_iay,anchor_iaz,NGLLX_M,NGLLY_M,NGLLZ_M)
 
   ! spectral elements
-  do ispec=1,nspec
+  do ispec = 1,nspec
     ispec_local(ispec) = ispec ! <- ispec_local is dummy
 
     ! gets anchor nodes
@@ -435,7 +444,7 @@
 
   count1 = 1
 
-  do i=1,nspec2D_xmin
+  do i = 1,nspec2D_xmin
     ispec = ibelm_xmin(i)
     glob2loc_elms_this_proc(1,count1) = ispec
     ! gets anchor nodes on xmin
@@ -456,7 +465,7 @@
     count1 = count1 + 1
   enddo
 
-  do i=1,nspec2D_xmax
+  do i = 1,nspec2D_xmax
     ispec = ibelm_xmax(i)
     glob2loc_elms_this_proc(1,count1) = ispec
     ! gets anchor nodes on xmax
@@ -477,7 +486,7 @@
     count1 = count1 + 1
   enddo
 
-  do i=1,nspec2D_ymin
+  do i = 1,nspec2D_ymin
     ispec = ibelm_ymin(i)
     glob2loc_elms_this_proc(1,count1) = ispec
     ! gets anchor nodes on ymin
@@ -497,7 +506,7 @@
     count1 = count1 + 1
   enddo
 
-  do i=1,nspec2D_ymax
+  do i = 1,nspec2D_ymax
     ispec = ibelm_ymax(i)
     glob2loc_elms_this_proc(1,count1) = ispec
     ! gets anchor nodes on ymax
@@ -517,7 +526,7 @@
     count1 = count1 + 1
   enddo
 
-  do i=1,NSPEC2D_BOTTOM
+  do i = 1,NSPEC2D_BOTTOM
     ispec = ibelm_bottom(i)
     glob2loc_elms_this_proc(1,count1) = ispec
     ! gets anchor nodes on bottom
@@ -537,7 +546,7 @@
     count1 = count1 + 1
   enddo
 
-  do i=1,NSPEC2D_TOP
+  do i = 1,NSPEC2D_TOP
     ispec = ibelm_top(i)
     glob2loc_elms_this_proc(1,count1) = ispec
     ! gets anchor nodes on top
@@ -567,6 +576,8 @@
             (/0,sum(offset_n_elms_bounds(0:myrank-1))/),.true.)
 
   ! CPML
+  !
+  ! note: check with routine write_cpml_database() to produce identical output
   call sum_all_i(nspec_CPML,nspec_CPML_total)
   call synchronize_all()
   call bcast_all_singlei(nspec_CPML_total)
@@ -597,12 +608,15 @@
     call h5_write_dataset_1d_i_collect_hyperslab(dset_name, if_cpml, (/sum(offset_nelems(0:myrank-1))/), .true.)
 
   endif
+
   ! create a dataset for nspec_cpml and nspec_cpml_local
   dset_name = "nspec_cpml_globloc"
   call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ncpmls, (/2*myrank/), .true.)
 
   ! MPI Interfaces
-  if (NPROC_XI >= 2 .or. NPROC_ETA >= 2) then
+  !
+  ! note: check with routine write_interfaces_database() to produce identical output
+  if (NPROC_XI > 1 .or. NPROC_ETA > 1) then
     ! determines number of MPI interfaces for each slice
     nb_interfaces = 4
     interfaces(W:N) = .true.
@@ -698,6 +712,7 @@
     count1 = 1
     count2 = 1
 
+    ! face elements
     if (interfaces(W)) then
       num_neighbors_elmnts(1,count1) = addressing(iproc_xi_current-1,iproc_eta_current)
       num_neighbors_elmnts(2,count1) = nspec_interface(W)
@@ -846,7 +861,7 @@
     deallocate(num_neighbors_elmnts, neighbors_elmnts)
 
   else
-    ! only one slice, no MPI interfaces
+    ! single process execution, no MPI boundaries
     num_interface_and_max = (/0, 0/)
 
     ! prepare dummy offset arrays for
@@ -881,24 +896,37 @@
   ! CUBIT output
   if (SAVE_MESH_AS_CUBIT) then
     ! only for single process at the moment
-    if (NPROC_XI == 1 .and. NPROC_ETA == 1) then
-      !! VM VM add outputs as CUBIT
-      call save_output_mesh_files_as_cubit(nspec,nglob, ibool,nodes_coords, ispec_material_id, &
-                                           nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                                           NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NMATERIALS,material_properties, &
-                                           ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
-      ! output for AxiSEM coupling
-      if (COUPLE_WITH_INJECTION_TECHNIQUE) then
-        call save_output_mesh_files_for_coupled_model(nspec, &
-                                           nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                                           NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-                                           ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-                                           xstore,ystore,zstore)
-      endif
+    if (NPROC_XI /= 1 .and. NPROC_ETA /= 1) then
+      print *,'Error: SAVE_MESH_AS_CUBIT output requires NPROC_XI == NPROC_ETA == 1'
+      print *,'       using NPROC_XI = ',NPROC_XI,' and NPROC_ETA = ',NPROC_ETA
+      print *,'Please update your Mesh_Par_file and re-run the mesher...'
+      stop 'Invalid NPROC_XI and/or NPROC_ETA for SAVE_MESH_AS_CUBIT output'
+    endif
+
+    !! VM VM add outputs as CUBIT
+    call save_output_mesh_files_as_cubit(nspec,nglob, &
+                                         nodes_coords, ispec_material_id, &
+                                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                                         ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+                                         nspec_CPML_total)
+
+    ! output for AxiSEM coupling
+    if (COUPLE_WITH_INJECTION_TECHNIQUE) then
+      call save_output_mesh_files_for_coupled_model(nspec, &
+                                                    nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                                                    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+                                                    xstore,ystore,zstore)
     endif
   endif
 
   deallocate(material_index)
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  done mesh files'
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
 
 #else
   ! no HDF5 compilation support

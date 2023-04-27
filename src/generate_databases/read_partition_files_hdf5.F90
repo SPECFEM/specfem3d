@@ -121,6 +121,7 @@
   if (myrank == 0) then
     write(IMAIN,*) 'defined materials    : ',nmat_ext_mesh
   endif
+  call synchronize_all()
 
   ! open dataset undef_mat_prop
   ! read attribute  nundefMat_ext_mesh
@@ -145,6 +146,7 @@
   if (myrank == 0) then
     write(IMAIN,*) 'undefined materials  : ',nundefMat_ext_mesh
   endif
+  call synchronize_all()
 
   ! read offset information
   dsetname = "offset_nnodes"
@@ -218,9 +220,10 @@
   if (myrank == 0) then
     write(IMAIN,*) 'total number of spectral elements: ',num
   endif
+  call synchronize_all()
 
+  ! Boundaries
   ! reads absorbing/free-surface boundaries
-
   ! open and read n_elms_on_bouund (nspec2D_xmin, xmax, ymin, ymax, button_ext, top_ext)
   dsetname = "n_elms_on_bound"
   call h5_read_dataset_1d_i_collect_hyperslab(dsetname, dset_n_bound, (/6*myrank/), .true.)
@@ -235,29 +238,64 @@
   NSPEC2D_TOP        = nspec2D_top_ext
 
   ! memory arrocation
-  allocate(ibelm_xmin(nspec2D_xmin),nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 589')
-  if (ier /= 0) stop 'Error allocating array ibelm_xmin etc.'
+  if (nspec2D_xmin > 0) then
+    allocate(ibelm_xmin(nspec2D_xmin),nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 589')
+    if (ier /= 0) stop 'Error allocating array ibelm_xmin etc.'
+  else
+    allocate(ibelm_xmin(1),nodes_ibelm_xmin(1,1),stat=ier)
+    if (ier /= 0) stop 'Error allocating dummy array'
+  endif
   ibelm_xmin(:) = 0; nodes_ibelm_xmin(:,:) = 0
-  allocate(ibelm_xmax(nspec2D_xmax),nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 590')
-  if (ier /= 0) stop 'Error allocating array ibelm_xmax etc.'
+
+  if (nspec2D_xmax > 0) then
+    allocate(ibelm_xmax(nspec2D_xmax),nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 590')
+    if (ier /= 0) stop 'Error allocating array ibelm_xmax etc.'
+  else
+    allocate(ibelm_xmax(1),nodes_ibelm_xmax(1,1),stat=ier)
+    if (ier /= 0) stop 'Error allocating dummy array'
+  endif
   ibelm_xmax(:) = 0; nodes_ibelm_xmax(:,:) = 0
-  allocate(ibelm_ymin(nspec2D_ymin),nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 591')
-  if (ier /= 0) stop 'Error allocating array ibelm_ymin'
+
+  if (nspec2D_ymin > 0) then
+    allocate(ibelm_ymin(nspec2D_ymin),nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 591')
+    if (ier /= 0) stop 'Error allocating array ibelm_ymin'
+  else
+    allocate(ibelm_ymin(1),nodes_ibelm_ymin(1,1),stat=ier)
+    if (ier /= 0) stop 'Error allocating dummy array'
+  endif
   ibelm_ymin(:) = 0; nodes_ibelm_ymin(:,:) = 0
-  allocate(ibelm_ymax(nspec2D_ymax),nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 592')
-  if (ier /= 0) stop 'Error allocating array ibelm_ymax etc.'
+
+  if (nspec2D_ymax > 0) then
+    allocate(ibelm_ymax(nspec2D_ymax),nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 592')
+    if (ier /= 0) stop 'Error allocating array ibelm_ymax etc.'
+  else
+    allocate(ibelm_ymax(1),nodes_ibelm_ymax(1,1),stat=ier)
+    if (ier /= 0) stop 'Error allocating dummy array'
+  endif
   ibelm_ymax(:) = 0; nodes_ibelm_ymax(:,:) = 0
-  allocate(ibelm_bottom(nspec2D_bottom_ext),nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom_ext),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 593')
-  if (ier /= 0) stop 'Error allocating array ibelm_bottom etc.'
+
+  if (nspec2D_bottom_ext > 0) then
+    allocate(ibelm_bottom(nspec2D_bottom_ext),nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom_ext),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 593')
+    if (ier /= 0) stop 'Error allocating array ibelm_bottom etc.'
+  else
+    allocate(ibelm_bottom(1),nodes_ibelm_bottom(1,1),stat=ier)
+    if (ier /= 0) stop 'Error allocating dummy array'
+  endif
   ibelm_bottom(:) = 0; nodes_ibelm_bottom(:,:) = 0
-  allocate(ibelm_top(nspec2D_top_ext),nodes_ibelm_top(NGNOD2D,nspec2D_top_ext),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 594')
-  if (ier /= 0) stop 'Error allocating array ibelm_top etc.'
+
+  if (nspec2D_top_ext > 0) then
+    allocate(ibelm_top(nspec2D_top_ext),nodes_ibelm_top(NGNOD2D,nspec2D_top_ext),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 594')
+    if (ier /= 0) stop 'Error allocating array ibelm_top etc.'
+  else
+    allocate(ibelm_top(1),nodes_ibelm_top(1,1),stat=ier)
+    if (ier /= 0) stop 'Error allocating dummy array'
+  endif
   ibelm_top(:) = 0; nodes_ibelm_top(:,:) = 0
 
   ! open and read database glob2loc_elms
@@ -265,6 +303,7 @@
   allocate(dset_alloc(1+NGNOD2D,sum(dset_n_bound(:))),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array glob2loc_elms')
   if (ier /= 0) stop 'Error allocating array glob2loc_elms'
+
   call h5_read_dataset_2d_i_collect_hyperslab(dsetname, dset_alloc, &
             (/0,sum(offset_n_elms_bounds(0:myrank-1))/),.true.)
 
@@ -281,6 +320,7 @@
   nodes_ibelm_bottom = dset_alloc(2:NGNOD2D+1,sum(dset_n_bound(1:4))+1:sum(dset_n_bound(1:5)))
   nodes_ibelm_top    = dset_alloc(2:NGNOD2D+1,sum(dset_n_bound(1:5))+1:sum(dset_n_bound(1:6)))
   deallocate(dset_alloc)
+
   call sum_all_i(nspec2D_xmin,num_xmin)
   call sum_all_i(nspec2D_xmax,num_xmax)
   call sum_all_i(nspec2D_ymin,num_ymin)
@@ -296,6 +336,7 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
+  call synchronize_all()
 
 !
 ! read cpml conditions
@@ -317,6 +358,12 @@
 
   deallocate(dset_alloc_1d)
 
+  if (myrank == 0) then
+    write(IMAIN,*) '  total number of C-PML elements in the global mesh: ',nspec_cpml_tot
+    call flush_IMAIN()
+  endif
+  call synchronize_all()
+
   ! array is_CPML gets always allocated to be usable in "if" checks
   allocate(is_CPML(NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 597')
@@ -336,6 +383,7 @@
     endif
 
     call sum_all_i(nspec_cpml,num_cpml)
+
     ! checks that the sum of C-PML elements over all partitions is correct
     if (myrank == 0 .and. nspec_cpml_tot /= num_cpml) stop 'Error while summing C-PML elements over all partitions'
 
@@ -343,9 +391,11 @@
     allocate(CPML_to_spec(nspec_cpml),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 595')
     if (ier /= 0) stop 'Error allocating array CPML_to_spec'
+    CPML_to_spec(:) = 0
     allocate(CPML_regions(nspec_cpml),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 596')
     if (ier /= 0) stop 'Error allocating array CPML_regions'
+    CPML_regions(:) = 0
 
     ! read elemnts_cpml and copy array to CPML_to_spec (1) and CPML_region (2)
     dsetname = "elements_cpml"
@@ -367,7 +417,7 @@
     call h5_read_dataset_1d_i_collect_hyperslab(dsetname, dset_alloc_1d, (/sum(offset_nelems(0:myrank-1))/), .true.)
 
     ! convert integer array to logical array
-    do i = 1, NSPEC_AB
+    do i = 1,NSPEC_AB
       if (dset_alloc_1d(i) /= 0) then
         is_CPML(i) = .true.
       endif
@@ -382,7 +432,9 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
+  call synchronize_all()
 
+  ! MPI interfaces (between different partitions)
   ! read interfaces
   if (NPROC > 1) then
     ! format: #number_of_MPI_interfaces  #maximum_number_of_elements_on_each_interface
@@ -489,7 +541,11 @@
   if (myrank == 0) then
     write(IMAIN,*) 'number of MPI partition interfaces: ',num
   endif
+  call synchronize_all()
 
+  ! from CUBIT/trelis decompose database
+  ! decomposer adds additional mesh infos for Moho surface in case choosen
+  !
   ! optional moho
   if (SAVE_MOHO_MESH) then
     ! checks if additional line exists
@@ -534,7 +590,7 @@
     if (myrank == 0) then
       write(IMAIN,*) 'moho surfaces: ',num_moho
     endif
-
+    call synchronize_all()
   else
     ! allocate dummy array
     nspec2D_moho_ext = 0

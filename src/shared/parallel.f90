@@ -564,7 +564,7 @@ end module my_mpi
   implicit none
 
   integer :: countval
-  integer, dimension(:) :: buffer
+  integer, dimension(countval) :: buffer
 
   integer :: ier
 

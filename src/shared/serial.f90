@@ -222,7 +222,7 @@
   implicit none
 
   integer :: countval
-  integer, dimension(:) :: buffer
+  integer, dimension(countval) :: buffer
   integer(kind=4) :: unused_i4
 
   if (countval > 0) unused_i4 = buffer(1)

@@ -52,14 +52,13 @@
     nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh
 
   ! PML
-  use generate_databases_par, only: PML_CONDITIONS, nspec_cpml, &
-    CPML_width_x,CPML_width_y,CPML_width_z, &
-    CPML_to_spec,CPML_regions,is_CPML, &
+  use generate_databases_par, only: PML_CONDITIONS, &
+    nspec_cpml,CPML_width_x,CPML_width_y,CPML_width_z,CPML_to_spec, &
+    CPML_regions,is_CPML,min_distance_between_CPML_parameter, &
     d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z, &
     alpha_store_x,alpha_store_y,alpha_store_z, &
     nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
-    nglob_interface_PML_elastic,points_interface_PML_elastic, &
-    min_distance_between_cpml_parameter
+    nglob_interface_PML_elastic,points_interface_PML_elastic
 
   ! mesh surface
   use generate_databases_par, only: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh, &
@@ -1372,16 +1371,23 @@
           (/0,sum(offset_nspec(0:myrank-1))*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)/), if_col)
 
   ! stores arrays in binary files
-  !if (SAVE_MESH_FILES) call save_arrays_solver_files(nspec,nglob,ibool)
+  !if (SAVE_MESH_FILES) then
+  !  call save_arrays_solver_files()
+  !endif
 
-  ! if SAVE_MESH_FILES isif_colthen the files have already been saved, no need to save them again
+  ! if SAVE_MESH_FILES is true then the files have already been saved, no need to save them again
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
-    call save_arrays_solver_injection_boundary(nspec_ab,ibool)
+    call save_arrays_solver_injection_boundary()
   endif
 
+  ! synchronizes processes
+  call synchronize_all()
+
   ! cleanup
-  deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier)
-  if (ier /= 0) stop 'error deallocating array ibool_interfaces_ext_mesh_dummy'
+  if (allocated(ibool_interfaces_ext_mesh_dummy)) then
+    deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier)
+    if (ier /= 0) stop 'error deallocating array ibool_interfaces_ext_mesh_dummy'
+  endif
 
   ! user output
   if (myrank == 0) then
