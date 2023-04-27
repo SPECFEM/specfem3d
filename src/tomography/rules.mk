@@ -119,15 +119,32 @@ xadd_model_SHARED_OBJECTS = \
 	$O/specfem3D_par.spec_module.o \
 	$O/pml_par.spec_module.o \
 	$O/read_mesh_databases.spec.o \
+	$O/read_mesh_databases_hdf5.spec_hdf5.o \
 	$O/shared_par.shared_module.o \
 	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/gll_library.shared.o \
+	$O/hdf5_manager.shared_hdf5_module.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
 	$(EMPTY_MACRO)
+
+###
+### ADIOS
+###
+
+# conditional adios linking
+ifeq ($(ADIOS),yes)
+xadd_model_OBJECTS += $(adios_specfem3D_OBJECTS)
+xadd_model_SHARED_OBJECTS += $(adios_specfem3D_SHARED_OBJECTS)
+else ifeq ($(ADIOS2),yes)
+xadd_model_OBJECTS += $(adios_specfem3D_OBJECTS)
+xadd_model_SHARED_OBJECTS += $(adios_specfem3D_SHARED_OBJECTS)
+else
+xadd_model_OBJECTS += $(adios_specfem3D_STUBS)
+endif
 
 ##
 ## xadd_model_iso
@@ -168,6 +185,7 @@ xmodel_update_SHARED_OBJECTS = \
 	$O/pml_par.spec_module.o \
 	$O/initialize_simulation.spec.o \
 	$O/read_mesh_databases.spec.o \
+	$O/read_mesh_databases_hdf5.spec_hdf5.o \
 	$O/shared_par.shared_module.o \
 	$O/adios_manager.shared_adios_module.o \
 	$O/check_mesh_resolution.shared.o \
@@ -176,6 +194,7 @@ xmodel_update_SHARED_OBJECTS = \
 	$O/exit_mpi.shared.o \
 	$O/get_attenuation_model.shared.o \
 	$O/gll_library.shared.o \
+	$O/hdf5_manager.shared_hdf5_module.o \
 	$O/init_openmp.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
@@ -186,34 +205,19 @@ xmodel_update_SHARED_OBJECTS = \
 # cuda stubs
 xmodel_update_OBJECTS += $(gpu_specfem3D_STUBS)
 
-
-# using ADIOS files
-adios_model_update_OBJECTS= \
-	$O/read_mesh_databases_adios.spec_adios.o \
-	$O/read_forward_arrays_adios.spec_adios.o \
-	$(EMPTY_MACRO)
-
-adios_model_update_SHARED_OBJECTS = \
-	$O/adios_helpers_addons.shared_adios_cc.o \
-	$O/adios_helpers_definitions.shared_adios.o \
-	$O/adios_helpers_readers.shared_adios.o \
-	$O/adios_helpers_writers.shared_adios.o \
-	$O/adios_helpers.shared_adios.o \
-	$(EMPTY_MACRO)
-
-adios_model_update_STUBS = \
-	$O/adios_method_stubs.cc.o \
-	$(EMPTY_MACRO)
+###
+### ADIOS
+###
 
 # conditional adios linking
 ifeq ($(ADIOS),yes)
-xmodel_update_OBJECTS += $(adios_model_update_OBJECTS)
-xmodel_update_SHARED_OBJECTS += $(adios_model_update_SHARED_OBJECTS)
+xmodel_update_OBJECTS += $(adios_specfem3D_OBJECTS)
+xmodel_update_SHARED_OBJECTS += $(adios_specfem3D_SHARED_OBJECTS)
 else ifeq ($(ADIOS2),yes)
-xmodel_update_OBJECTS += $(adios_model_update_OBJECTS)
-xmodel_update_SHARED_OBJECTS += $(adios_model_update_SHARED_OBJECTS)
+xmodel_update_OBJECTS += $(adios_specfem3D_OBJECTS)
+xmodel_update_SHARED_OBJECTS += $(adios_specfem3D_SHARED_OBJECTS)
 else
-xmodel_update_OBJECTS += $(adios_model_update_STUBS)
+xmodel_update_OBJECTS += $(adios_specfem3D_STUBS)
 endif
 
 ###

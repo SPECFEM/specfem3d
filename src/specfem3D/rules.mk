@@ -115,6 +115,7 @@ specfem3D_OBJECTS = \
 	$O/read_external_stf.spec.o \
 	$O/read_forward_arrays.spec.o \
 	$O/read_mesh_databases.spec.o \
+	$O/read_mesh_databases_hdf5.spec_hdf5.o \
 	$O/read_stations.spec.o \
 	$O/save_adjoint_kernels.spec.o \
 	$O/save_forward_arrays.spec.o \
@@ -148,6 +149,7 @@ specfem3D_SHARED_OBJECTS = \
 	$O/get_jacobian_boundaries.shared.o \
 	$O/get_shape3D.shared.o \
 	$O/gll_library.shared.o \
+	$O/hdf5_manager.shared_hdf5_module.o \
 	$O/heap_sort.shared.o \
 	$O/hex_nodes.shared.o \
 	$O/init_openmp.shared.o \
@@ -370,6 +372,14 @@ $O/%.spec_noadios.o: $S/%.F90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_mod
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.spec_noadios.o: $S/%.f90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+
+## HDF5 file i/o
+$O/%.spec_hdf5.o: $S/%.f90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o $O/hdf5_manager.shared_hdf5_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.spec_hdf5.o: $S/%.F90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o $O/hdf5_manager.shared_hdf5_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 

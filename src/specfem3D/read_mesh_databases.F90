@@ -35,10 +35,33 @@
   use specfem_par, only: prname,LOCAL_PATH, &
     NSPEC_AB,NGLOB_AB,NSPEC_IRREGULAR
 
+  ! ADIOS
+  use shared_parameters, only: ADIOS_FOR_MESH
+
+  ! HDF5
+  use shared_parameters, only: HDF5_ENABLED
+
   implicit none
   ! Local variables
   integer :: ier
   character(len=MAX_STRING_LEN) :: database_name
+
+  ! selects routine for file i/o format
+  if (ADIOS_FOR_MESH) then
+    ! ADIOS
+    call read_mesh_for_init_ADIOS()
+    ! all done
+    return
+  else if (HDF5_ENABLED) then
+    ! HDF5
+    call read_mesh_for_init_hdf5()
+    ! all done
+    return
+  else
+    ! binary default
+    ! implemented here below, continue
+    continue
+  endif
 
   ! sets file name
   call create_name_database(prname,myrank,LOCAL_PATH)
@@ -50,18 +73,15 @@
       print *,'Error could not open database file: ',trim(database_name)
       call exit_mpi(myrank,'Error opening database file')
     endif
-  endif
-
-  if (I_should_read_the_database) then
     read(IIN) NSPEC_AB
     read(IIN) NGLOB_AB
     read(IIN) NSPEC_IRREGULAR
+    close(IIN)
   endif
+
   call bcast_all_i_for_database(NSPEC_AB, 1)
   call bcast_all_i_for_database(NGLOB_AB, 1)
   call bcast_all_i_for_database(NSPEC_IRREGULAR, 1)
-
-  if (I_should_read_the_database) close(IIN)
 
   end subroutine read_mesh_for_init
 
@@ -89,6 +109,23 @@
   integer :: i
   logical, parameter :: DEBUG_MPI_ARRAYS = .false.
 
+  ! selects routine for file i/o format
+  if (ADIOS_FOR_MESH) then
+    ! ADIOS file format
+    call read_mesh_databases_adios()
+    ! all done
+    return
+  else if (HDF5_ENABLED) then
+    ! HDF5 file i/o
+    call read_mesh_databases_hdf5()
+    ! all done
+    return
+  else
+    ! binary file
+    ! implemented here below, continue
+    continue
+  endif
+
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) "Reading mesh databases..."
@@ -102,18 +139,16 @@
   call create_name_database(prname,myrank,LOCAL_PATH)
   database_name = prname(1:len_trim(prname))//'external_mesh.bin'
 
-! start reading the databases
+  ! start reading the databases
 
-! info about external mesh simulation
+  ! info about external mesh simulation
   if (I_should_read_the_database) then
     open(unit=IIN,file=trim(database_name),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
       print *,'Error could not open database file: ',trim(database_name)
       call exit_mpi(myrank,'Error opening database file')
     endif
-  endif
 
-  if (I_should_read_the_database) then
     read(IIN) NSPEC_AB
     read(IIN) NGLOB_AB
     read(IIN) NSPEC_IRREGULAR
@@ -145,10 +180,8 @@
     read(IIN) ispec_is_acoustic
     read(IIN) ispec_is_elastic
     read(IIN) ispec_is_poroelastic
-  endif
 
-  ! checks i/o so far
-  if (I_should_read_the_database) then
+    ! checks i/o so far
     read(IIN) itest
     if (itest /= 9999) stop 'Error database read at position 1'
   endif
@@ -1311,6 +1344,8 @@
 
   subroutine read_mesh_databases_moho()
 
+! reads in moho mesh
+
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
@@ -1319,6 +1354,24 @@
   implicit none
 
   integer :: ier
+
+  ! selects routine for file i/o format
+  if (ADIOS_FOR_MESH) then
+    ! ADIOS file format
+    call read_mesh_databases_moho_adios()
+    ! all done
+    return
+  else if (HDF5_ENABLED) then
+    ! HDF5
+    !#TODO: HDF5 not implemented yet
+    !call read_mesh_databases_moho_hdf5()
+    ! fall back to binary reads
+    continue
+  else
+    ! binary file
+    ! implemented here below, continue
+    continue
+  endif
 
   ! always needed to be allocated for routine arguments
   allocate( is_moho_top(NSPEC_BOUN),is_moho_bot(NSPEC_BOUN),stat=ier)
@@ -1435,7 +1488,7 @@
 
   subroutine read_mesh_databases_adjoint()
 
-! reads in Moho meshes
+! allocates adjoint arrays for SIMULATION_TYPE == 3 simulations
 
   use specfem_par
   use specfem_par_elastic
@@ -1446,6 +1499,8 @@
   implicit none
 
   integer :: ier
+
+  ! note: this routines has no file I/O, it (only) allocates necessary arrays for adjoint/kernel simulations
 
   ! allocates adjoint arrays for elastic simulations
   if (ELASTIC_SIMULATION .and. SIMULATION_TYPE == 3) then

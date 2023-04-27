@@ -203,6 +203,7 @@ GENCODE_30 = -gencode=arch=compute_30,code=\"sm_30,compute_30\"
 GENCODE_35 = -gencode=arch=compute_35,code=\"sm_35,compute_35\"
 GENCODE_37 = -gencode=arch=compute_37,code=\"sm_37\"
 GENCODE_50 = -gencode=arch=compute_50,code=\"sm_50,compute_50\"
+GENCODE_52 = -gencode=arch=compute_52,code=\"sm_52,compute_52\"
 GENCODE_60 = -gencode=arch=compute_60,code=\"sm_60,compute_60\"
 GENCODE_70 = -gencode=arch=compute_70,code=\"sm_70,compute_70\"
 GENCODE_75 = -gencode=arch=compute_75,code=\"sm_75,compute_75\"
@@ -218,7 +219,7 @@ GENCODE_80 = -gencode=arch=compute_80,code=\"sm_80,compute_80\"
 # CUDA version 8.0
 @COND_CUDA_TRUE@@COND_CUDA8_TRUE@GENCODE = $(GENCODE_60) $(FC_DEFINE)GPU_DEVICE_Pascal
 # CUDA version 7.x
-@COND_CUDA_TRUE@@COND_CUDA7_TRUE@GENCODE = $(GENCODE_50) $(FC_DEFINE)GPU_DEVICE_Maxwell
+@COND_CUDA_TRUE@@COND_CUDA7_TRUE@GENCODE = $(GENCODE_52) $(FC_DEFINE)GPU_DEVICE_Maxwell
 # CUDA version 6.5
 @COND_CUDA_TRUE@@COND_CUDA6_TRUE@GENCODE = $(GENCODE_37) $(FC_DEFINE)GPU_DEVICE_K80
 # CUDA version 5.x
@@ -276,7 +277,7 @@ GENCODE_AMD_MI250 = --amdgpu-target=gfx90a
 
 @COND_HIP_TRUE@@COND_HIP_CUDA5_TRUE@GENCODE_HIP = $(GENCODE_35)         # --with-hip=cuda5 ..
 @COND_HIP_TRUE@@COND_HIP_CUDA6_TRUE@GENCODE_HIP = $(GENCODE_37)         # --with-hip=cuda6 ..
-@COND_HIP_TRUE@@COND_HIP_CUDA7_TRUE@GENCODE_HIP = $(GENCODE_50)         # --with-hip=cuda7 ..
+@COND_HIP_TRUE@@COND_HIP_CUDA7_TRUE@GENCODE_HIP = $(GENCODE_52)         # --with-hip=cuda7 ..
 @COND_HIP_TRUE@@COND_HIP_CUDA8_TRUE@GENCODE_HIP = $(GENCODE_60)         # --with-hip=cuda8 ..
 @COND_HIP_TRUE@@COND_HIP_CUDA9_TRUE@GENCODE_HIP = $(GENCODE_70)         # --with-hip=cuda9 ..
 @COND_HIP_TRUE@@COND_HIP_CUDA10_TRUE@GENCODE_HIP = $(GENCODE_75)         # --with-hip=cuda10 ..
@@ -403,6 +404,20 @@ endif
 
 #FCFLAGS += @ASDF_FCFLAGS@
 @COND_ASDF_TRUE@MPILIBS += @ASDF_LIBS@ -lasdf -lhdf5hl_fortran -lhdf5_hl -lhdf5 -lstdc++
+
+#######################################
+####
+#### HDF5 (parallel)
+#### with configure: ./configure --with-hdf5 HDF5_LIBS=.. HDF5_FCFLAGS=.. HDF5_INC=..
+####
+#######################################
+
+@COND_HDF5_TRUE@HDF5 = yes
+@COND_HDF5_FALSE@HDF5 = no
+
+# adds compiler flag
+@COND_HDF5_TRUE@FCFLAGS += @HDF5_FCFLAGS@ @HDF5_INCLUDES@ $(FC_DEFINE)USE_HDF5
+@COND_HDF5_TRUE@LDFLAGS += @HDF5_LIBS@ -lhdf5_fortran -lhdf5hl_fortran    # -lhdf5_hl -lhdf5 -lstdc++
 
 #######################################
 ####

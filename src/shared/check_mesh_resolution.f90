@@ -39,6 +39,10 @@
   use shared_parameters, only: SAVE_MESH_FILES,LOCAL_PATH, &
    ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
 
+  ! HDF5 file i/o
+  use shared_parameters, only: HDF5_ENABLED
+  use manager_hdf5, only: write_checkmesh_data_hdf5,write_checkmesh_xdmf_hdf5
+
   implicit none
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
@@ -501,27 +505,49 @@
 
   ! debug: for vtk output
   if (SAVE_MESH_FILES) then
-    call create_name_database(prname,myrank,LOCAL_PATH)
+    if (HDF5_ENABLED) then
+      ! HDF5 file i/o
+      ! user output
+      if (myrank == 0) then
+        write(IMAIN,*) 'saving h5 files for Courant number and minimum period'
+        write(IMAIN,*)
+        call flush_IMAIN()
+      endif
 
-    ! user output
-    if (myrank == 0 .and. IMAIN_opened) then
-      write(IMAIN,*) 'saving VTK files for Courant number and minimum period'
-      write(IMAIN,*)
-      call flush_IMAIN()
-    endif
+      ! Courant number
+      if (DT_PRESENT) then
+        filename = 'res_Courant_number'
+        call write_checkmesh_data_hdf5(filename,tmp1)
+      else
+        ! minimum period estimate
+        filename = 'res_minimum_period'
+        call write_checkmesh_data_hdf5(filename,tmp2)
+        call write_checkmesh_xdmf_hdf5(NSPEC_AB)
+      endif
+    else
+      ! default output
+      call create_name_database(prname,myrank,LOCAL_PATH)
 
-    ! Courant number
-    if (DT_PRESENT) then
-      filename = trim(prname)//'res_Courant_number'
+      ! user output
+      if (myrank == 0 .and. IMAIN_opened) then
+        write(IMAIN,*) 'saving VTK files for Courant number and minimum period'
+        write(IMAIN,*)
+        call flush_IMAIN()
+      endif
+
+      ! Courant number
+      if (DT_PRESENT) then
+        filename = trim(prname)//'res_Courant_number'
+        call write_VTU_data_elem_cr_binary(NSPEC_AB,NGLOB_AB, &
+                                           xstore,ystore,zstore,ibool, &
+                                           tmp1,filename)
+      endif
+      ! minimum period estimate
+      filename = trim(prname)//'res_minimum_period'
       call write_VTU_data_elem_cr_binary(NSPEC_AB,NGLOB_AB, &
                                          xstore,ystore,zstore,ibool, &
-                                         tmp1,filename)
+                                         tmp2,filename)
     endif
-    ! minimum period estimate
-    filename = trim(prname)//'res_minimum_period'
-    call write_VTU_data_elem_cr_binary(NSPEC_AB,NGLOB_AB, &
-                                       xstore,ystore,zstore,ibool, &
-                                       tmp2,filename)
 
     deallocate(tmp1,tmp2)
   endif

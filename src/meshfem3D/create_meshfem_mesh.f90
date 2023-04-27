@@ -72,12 +72,16 @@ end module create_meshfem_par
     NMATERIALS,material_properties, &
     sizeprocs,prname,LOCAL_PATH, &
     CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
-    ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
     is_CPML,CPML_to_spec,CPML_regions
 
   use create_meshfem_par
 
+  ! ADIOS
+  use shared_parameters, only: ADIOS_ENABLED, ADIOS_FOR_DATABASES
   use manager_adios, only: initialize_adios,finalize_adios
+
+  ! HDF5 file i/o
+  use shared_parameters, only: HDF5_ENABLED
 
   implicit none
 
@@ -167,6 +171,12 @@ end module create_meshfem_par
                               nodes_coords,ispec_material_id, &
                               nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                               ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
+  else if (HDF5_ENABLED) then
+    call save_databases_hdf5(nspec,nglob, &
+                             iMPIcut_xi,iMPIcut_eta, &
+                             nodes_coords,ispec_material_id, &
+                             nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                             ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top)
   else
     ! saves mesh as databases file  !! VM VM added xstore, ystore, zstore used for Axisem Coupling
     call save_databases(nspec,nglob, &

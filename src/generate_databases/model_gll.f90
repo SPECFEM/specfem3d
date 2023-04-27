@@ -43,6 +43,8 @@
 
   use create_regions_mesh_ext_par, only: rhostore,kappastore,mustore,rho_vp,rho_vs,qkappa_attenuation_store,qmu_attenuation_store
 
+  use shared_parameters, only: ADIOS_FOR_MESH,HDF5_ENABLED
+
   implicit none
 
   integer, intent(in) :: myrank,nspec
@@ -52,6 +54,21 @@
   real, dimension(:,:,:,:),allocatable :: vp_read,vs_read,rho_read
   integer :: ier
   character(len=MAX_STRING_LEN) :: prname_lp,filename
+
+  ! select routine for file i/o format
+  if (ADIOS_FOR_MESH) then
+    ! ADIOS
+    call model_gll_adios(myrank,nspec,LOCAL_PATH)
+    ! all done
+    return
+  else if (HDF5_ENABLED) then
+    ! not implemented yet
+    stop 'HDF5_ENABLED not supported yet for model_gll() routine, please return without flag...'
+  else
+    ! default binary
+    ! implemented here below, continue
+    continue
+  endif
 
   ! user output
   if (myrank == 0) then

@@ -62,6 +62,7 @@ meshfem3D_OBJECTS = \
 	$O/read_mesh_parameter_file.mesh.o \
 	$O/read_value_mesh_parameters.mesh.o \
 	$O/save_databases.mesh.o \
+	$O/save_databases_hdf5.mesh_hdf5.o \
 	$O/store_boundaries.mesh.o \
 	$O/store_coords.mesh.o \
 	$(EMPTY_MACRO)
@@ -83,6 +84,7 @@ meshfem3D_SHARED_OBJECTS = \
 	$O/get_global.shared.o \
 	$O/get_shape3D.shared.o \
 	$O/gll_library.shared.o \
+	$O/hdf5_manager.shared_hdf5_module.o \
 	$O/hex_nodes.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
@@ -197,4 +199,13 @@ $O/%.mesh_noadios.o: $S/%.F90 $O/meshfem3D_par.mesh_module.o
 
 $O/%.mesh_noadios.o: $S/%.f90 $O/meshfem3D_par.mesh_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+
+## HDF5 file i/o
+
+$O/%.mesh_hdf5.o: $S/%.F90 $O/shared_par.shared_module.o $O/meshfem3D_par.mesh_module.o $O/hdf5_manager.shared_hdf5_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.mesh_hdf5.o: $S/%.f90 $O/shared_par.shared_module.o $O/meshfem3D_par.mesh_module.o $O/hdf5_manager.shared_hdf5_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90}  -c -o $@ $<
 

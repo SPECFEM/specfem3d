@@ -211,6 +211,17 @@ AC_ARG_WITH([asdf],
     [want_asdf=no])
 AM_CONDITIONAL([COND_ASDF], [test x$"$want_asdf" != xno])
 
+###
+### HDF5
+###
+
+AC_ARG_WITH([hdf5],
+    [AS_HELP_STRING([--with-hdf5],
+        [build HDF5 enabled version @<:@default=no@:>@])],
+    [want_hdf5="$withval"],
+    [want_hdf5=no])
+AM_CONDITIONAL([COND_HDF5], [test x$"$want_hdf5" != xno])
+
 ############################################################
 
 # Checks for programs.
@@ -335,14 +346,25 @@ if test "x${scotch_usable}" = "xyes"; then
 else
  AC_DEFINE([HAVE_SCOTCH],[1],[defined if Scotch is installed])
  AC_MSG_RESULT([no, using bundled scotch instead])
- AC_PROG_LEX
+
+ dnl autoconf 2.69 AC_PROG_LEX has no parameters
+ dnl autoconf 2.70 AC_PROG_LEX prints a deprecation warning without params
+ m4_if(m4_version_compare(m4_defn([AC_AUTOCONF_VERSION]), [2.70]), [-1], [dnl
+   dnl autoconf < 2.70
+   AC_PROG_LEX
+ ], [
+   dnl autoconf >= 2.70
+   AC_PROG_LEX([noyywrap])
+ ])
  if test -z "$LEX" || test "X$LEX" = "Xno"; then
    AC_MSG_ERROR([No suitable lex found])
  fi
+
  AC_PROG_YACC
  if test -z "$YACC" || test "X$YACC" = "Xno"; then
    AC_MSG_ERROR([No suitable yacc or bison found])
  fi
+
  ACX_PTHREAD(AC_MSG_RESULT([pthread found]), AC_MSG_ERROR([pthread not found]))
 
  # scotch only needed with mpi support
@@ -710,6 +732,41 @@ AS_IF([test x"$want_vtk" != xno], [
     AS_BOX([VTK])
     CIT_OPTIONS_VTK
     CIT_PATH_VTK
+])
+
+###
+### HDF5
+###
+AS_IF([test x"$want_hdf5" != xno], [
+    AS_BOX([HDF5])
+    AC_MSG_NOTICE([HDF5 is enabled])
+
+    AC_ARG_VAR(HDF5_INC, [HDF5 include directory])
+    AC_ARG_VAR(HDF5_FCFLAGS, [Fortran compiler flags])
+    AC_ARG_VAR(HDF5_LIBS, [extra libraries for linking programs])
+
+    # HDF5 checking for Fortran
+    AC_LANG_PUSH(Fortran)
+    AC_MSG_CHECKING([for HDF5 modules])
+    FCFLAGS="$HDF5_FCFLAGS $FCFLAGS"
+    # adds include directory
+    if test "x$HDF5_INC" != "x"; then
+      HDF5_INCLUDES="-I$HDF5_INC"
+      FCFLAGS+=" $HDF5_INCLUDES"
+    fi
+    # compilation test
+    AC_COMPILE_IFELSE([
+      AC_LANG_PROGRAM([], [[
+      use hdf5
+      ]])
+    ], [
+      AC_MSG_RESULT(yes)
+    ], [
+      AC_MSG_RESULT(no)
+      AC_MSG_ERROR([HDF5 module not found; is HDF5 built with Fortran support for this compiler?])
+    ])
+    AC_LANG_POP([Fortran])
+    AC_SUBST([HDF5_INCLUDES])
 ])
 
 ##

@@ -99,6 +99,7 @@ end module my_mpi
 
   ! broadcast parameters read from main to all processes
   my_local_mpi_comm_world = MPI_COMM_WORLD
+
   call bcast_all_singlei(NUMBER_OF_SIMULTANEOUS_RUNS)
   call bcast_all_singlel(BROADCAST_SAME_MESH_AND_MODEL)
 
@@ -550,6 +551,30 @@ end module my_mpi
   call MPI_BCAST(buffer,countval,MPI_INTEGER,0,my_local_mpi_comm_for_bcast,ier)
 
   end subroutine bcast_all_i_for_database
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine bcast_all_i_array_for_database(buffer, countval)
+
+  use my_mpi
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+
+  implicit none
+
+  integer :: countval
+  integer, dimension(countval) :: buffer
+
+  integer :: ier
+
+  ! checks if anything to do
+  if (countval == 0) return
+  if (.not. (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. BROADCAST_SAME_MESH_AND_MODEL)) return
+
+  call MPI_BCAST(buffer,countval,MPI_INTEGER,0,my_local_mpi_comm_for_bcast,ier)
+
+  end subroutine bcast_all_i_array_for_database
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1518,6 +1543,29 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine gather_all_all_singlei(sendbuf, recvbuf, NPROC)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: NPROC
+  integer :: sendbuf
+  integer, dimension(0:NPROC-1) :: recvbuf
+
+  integer :: ier
+
+  call MPI_ALLGATHER(sendbuf,1,MPI_INTEGER, &
+                     recvbuf,1,MPI_INTEGER, &
+                     my_local_mpi_comm_world,ier)
+
+  end subroutine gather_all_all_singlei
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine gather_all_cr(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
   use my_mpi
@@ -1580,8 +1628,8 @@ end module my_mpi
 !  integer :: ier
 !
 !  call MPI_ALLGATHER(sendbuf,sendcnt,MPI_DOUBLE_PRECISION, &
-!                  recvbuf,recvcount,MPI_DOUBLE_PRECISION, &
-!                  my_local_mpi_comm_world,ier)
+!                     recvbuf,recvcount,MPI_DOUBLE_PRECISION, &
+!                     my_local_mpi_comm_world,ier)
 !
 !  end subroutine gather_all_all_dp
 !
@@ -1935,8 +1983,17 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
-!  subroutine world_get_info_null(info)
-!  end subroutine world_get_info_null
+  subroutine world_get_info_null(info)
+
+  use my_mpi
+
+  implicit none
+
+  integer, intent(out) :: info
+
+  info = MPI_INFO_NULL
+
+  end subroutine world_get_info_null
 
 !
 !-------------------------------------------------------------------------------------------------

@@ -778,7 +778,7 @@
 
   use constants, only: myrank,IMAIN,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER,IMODEL_SEP
 
-  use generate_databases_par, only: IMODEL,ADIOS_FOR_MESH
+  use generate_databases_par, only: IMODEL
 
   use create_regions_mesh_ext_par
 
@@ -802,27 +802,15 @@
     ! note:
     ! import the model from files in SPECFEM format
     ! note that those files should be saved in LOCAL_PATH
-    if (ADIOS_FOR_MESH) then
-      call model_gll_adios(myrank,nspec,LOCAL_PATH)
-    else
-      call model_gll(myrank,nspec,LOCAL_PATH)
-    endif
+    call model_gll(myrank,nspec,LOCAL_PATH)
 
   case (IMODEL_IPATI)
     ! import the model from modified files in SPECFEM format
-    if (ADIOS_FOR_MESH) then
-      call model_ipati_adios(myrank,nspec,LOCAL_PATH)
-    else
-      call model_ipati(myrank,nspec,LOCAL_PATH)
-    endif
+    call model_ipati(myrank,nspec,LOCAL_PATH)
 
   case (IMODEL_IPATI_WATER)
     ! import the model from modified files in SPECFEM format
-    if (ADIOS_FOR_MESH) then
-      call model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
-    else
-      call model_ipati_water(myrank,nspec,LOCAL_PATH)
-    endif
+    call model_ipati_water(myrank,nspec,LOCAL_PATH)
 
   case (IMODEL_SEP)
     ! use values from SEP files

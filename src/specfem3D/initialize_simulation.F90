@@ -158,11 +158,7 @@
 
   ! read the value of NSPEC_AB, NGLOB_AB and NSPEC_IRREGULAR
   ! (we need it to define some array sizes below)
-  if (ADIOS_FOR_MESH) then
-    call read_mesh_for_init_ADIOS()
-  else
-    call read_mesh_for_init()
-  endif
+  call read_mesh_for_init()
 
   ! attenuation arrays size
   if (ATTENUATION) then

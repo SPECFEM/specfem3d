@@ -38,6 +38,8 @@
   use constants, only: IMAIN,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IIN
   use create_regions_mesh_ext_par
 
+  use shared_parameters, only: ADIOS_FOR_MESH,HDF5_ENABLED
+
   implicit none
 
   integer, intent(in) :: myrank,nspec
@@ -55,6 +57,21 @@
   real, parameter :: SCALING_FACTOR = 1.0/1.8
 
   ! -----------------------------------------------------------------------------
+
+  ! select routine for file i/o format
+  if (ADIOS_FOR_MESH) then
+    ! ADIOS
+    call model_ipati_adios(myrank,nspec,LOCAL_PATH)
+    ! all done
+    return
+  else if (HDF5_ENABLED) then
+    ! not implemented yet
+    stop 'HDF5_ENABLED not supported yet for model_ipati() routine, please return without flag...'
+  else
+    ! default binary
+    ! implemented here below, continue
+    continue
+  endif
 
   ! user output
   if (myrank == 0) then
@@ -124,6 +141,8 @@
   use constants, only: IMAIN,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IIN
   use create_regions_mesh_ext_par
 
+  use shared_parameters, only: ADIOS_FOR_MESH,HDF5_ENABLED
+
   implicit none
 
   integer, intent(in) :: myrank,nspec
@@ -141,6 +160,21 @@
   real, parameter :: SCALING_FACTOR = 1.0/1.8
 
   ! -----------------------------------------------------------------------------
+
+  ! select routine for file i/o format
+  if (ADIOS_FOR_MESH) then
+    ! ADIOS
+    call model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
+    ! all done
+    return
+  else if (HDF5_ENABLED) then
+    ! not implemented yet
+    stop 'HDF5_ENABLED not supported yet for model_ipati_water() routine, please return without flag...'
+  else
+    ! default binary
+    ! implemented here below, continue
+    continue
+  endif
 
   ! user output
   if (myrank == 0) then

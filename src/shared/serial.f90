@@ -212,6 +212,23 @@
 
   end subroutine bcast_all_i_for_database
 
+
+!
+!------
+!
+
+  subroutine bcast_all_i_array_for_database(buffer, countval)
+
+  implicit none
+
+  integer :: countval
+  integer, dimension(countval) :: buffer
+  integer(kind=4) :: unused_i4
+
+  if (countval > 0) unused_i4 = buffer(1)
+
+  end subroutine bcast_all_i_array_for_database
+
 !
 !----
 !
@@ -378,6 +395,23 @@
   recvbuf(0) = sendbuf
 
   end subroutine gather_all_singlei
+
+!
+!-----
+!
+
+  subroutine gather_all_all_singlei(sendbuf, recvbuf, NPROC)
+
+  implicit none
+
+  integer :: NPROC
+  integer :: sendbuf
+  integer, dimension(0:NPROC-1) :: recvbuf
+
+  recvbuf(0) = sendbuf
+
+  end subroutine gather_all_all_singlei
+
 
 !
 !----
@@ -1391,6 +1425,20 @@
   comm = 0
 
   end subroutine world_comm_free
+
+!
+!-----
+!
+
+  subroutine world_get_info_null(info)
+
+  implicit none
+
+  integer, intent(out) :: info
+
+  info = 0
+
+  end subroutine world_get_info_null
 
 !
 !----

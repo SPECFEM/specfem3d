@@ -69,7 +69,9 @@ generate_databases_OBJECTS = \
 	$O/pml_set_local_dampingcoeff.gen.o \
 	$O/read_parameters.gen.o \
 	$O/read_partition_files.gen.o \
+	$O/read_partition_files_hdf5.gen_hdf5.o \
 	$O/save_arrays_solver.gen.o \
+	$O/save_arrays_solver_hdf5.gen_hdf5.o \
 	$O/setup_color_perm.gen.o \
 	$O/setup_mesh.gen.o \
 	$O/memory_eval.gen.o \
@@ -106,6 +108,7 @@ generate_databases_SHARED_OBJECTS = \
 	$O/get_shape2D.shared.o \
 	$O/get_shape3D.shared.o \
 	$O/gll_library.shared.o \
+	$O/hdf5_manager.shared_hdf5_module.o \
 	$O/hex_nodes.shared.o \
 	$O/lagrange_poly.shared.o \
 	$O/netlib_specfun_erf.shared.o \
@@ -254,3 +257,11 @@ $O/%.gen_noadios.o: $S/%.F90
 $O/%.gen_noadios.o: $S/%.f90
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
+
+## HDF5 file I/O
+
+$O/%.gen_hdf5.o: $S/%.F90 $O/shared_par.shared_module.o $O/generate_databases_par.gen_mod.o $O/hdf5_manager.shared_hdf5_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.gen_hdf5.o: $S/%.f90 $O/shared_par.shared_module.o $O/generate_databases_par.gen_mod.o $O/hdf5_manager.shared_hdf5_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<

@@ -180,6 +180,7 @@ inverse_problem_for_model_OBJECTS += \
 	$O/read_external_stf.spec.o \
 	$O/read_forward_arrays.spec.o \
 	$O/read_mesh_databases.spec.o \
+	$O/read_mesh_databases_hdf5.spec_hdf5.o \
 	$O/read_stations.spec.o \
 	$O/save_adjoint_kernels.spec.o \
 	$O/save_forward_arrays.spec.o \
@@ -213,6 +214,7 @@ inverse_problem_for_model_SHARED_OBJECTS = \
 	$O/get_jacobian_boundaries.shared.o \
 	$O/get_shape3D.shared.o \
 	$O/gll_library.shared.o \
+	$O/hdf5_manager.shared_hdf5_module.o \
 	$O/heap_sort.shared.o \
 	$O/hex_nodes.shared.o \
 	$O/init_openmp.shared.o \
@@ -281,36 +283,15 @@ inverse_problem_for_model_SHARED_OBJECTS += $(gpu_OBJECTS)
 ### ADIOS
 ###
 
-# using ADIOS files
-
-adios_inverse_problem_for_model_OBJECTS= \
-	$O/read_mesh_databases_adios.spec_adios.o \
-	$O/save_forward_arrays_adios.spec_adios.o \
-	$O/read_forward_arrays_adios.spec_adios.o \
-	$O/save_kernels_adios.spec_adios.o \
-	$(EMPTY_MACRO)
-
-adios_inverse_problem_for_model_PREOBJECTS = \
-	$O/adios_helpers_addons.shared_adios_cc.o \
-	$O/adios_helpers_definitions.shared_adios.o \
-	$O/adios_helpers_readers.shared_adios.o \
-	$O/adios_helpers_writers.shared_adios.o \
-	$O/adios_helpers.shared_adios.o \
-	$(EMPTY_MACRO)
-
-adios_inverse_problem_for_model_STUBS = \
-	$O/adios_method_stubs.cc.o \
-	$(EMPTY_MACRO)
-
 # conditional adios linking
 ifeq ($(ADIOS),yes)
-inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_OBJECTS)
-inverse_problem_for_model_SHARED_OBJECTS += $(adios_inverse_problem_for_model_PREOBJECTS)
+inverse_problem_for_model_OBJECTS += $(adios_specfem3D_OBJECTS)
+inverse_problem_for_model_SHARED_OBJECTS += $(adios_specfem3D_PREOBJECTS)
 else ifeq ($(ADIOS2),yes)
-inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_OBJECTS)
-inverse_problem_for_model_SHARED_OBJECTS += $(adios_inverse_problem_for_model_PREOBJECTS)
+inverse_problem_for_model_OBJECTS += $(adios_specfem3D_OBJECTS)
+inverse_problem_for_model_SHARED_OBJECTS += $(adios_specfem3D_PREOBJECTS)
 else
-inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_STUBS)
+inverse_problem_for_model_OBJECTS += $(adios_specfem3D_STUBS)
 endif
 
 
@@ -422,6 +403,9 @@ $O/inverse_problem_main.inv.o: \
 	$O/fwi_iteration_mod.inv_inversion.o
 
 $O/parallel_for_inverse_problem.invmpi.o: $(COND_MPI_OBJECTS)
+
+## HDF5 file i/o
+$O/prepare_attenuation.spec.o: $O/hdf5_manager.shared_hdf5_module.o
 
 ####
 #### rule to build each .o file

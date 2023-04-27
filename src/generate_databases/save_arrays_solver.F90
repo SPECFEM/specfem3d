@@ -64,6 +64,8 @@
 
   use create_regions_mesh_ext_par
 
+  use shared_parameters, only: ADIOS_FOR_MESH,HDF5_ENABLED
+
   implicit none
 
   ! local parameters
@@ -72,6 +74,23 @@
   integer :: nglob
   integer :: ier,i,itest
   character(len=MAX_STRING_LEN) :: filename
+
+  ! selects routine for file i/o format
+  if (ADIOS_FOR_MESH) then
+    ! ADIOS
+    call save_arrays_solver_mesh_adios()
+    ! all done
+    return
+  else if (HDF5_ENABLED) then
+    ! HDF5
+    call save_arrays_solver_mesh_hdf5()
+    ! all done
+    return
+  else
+    ! default binary
+    ! implemented here below, continue
+    continue
+  endif
 
   ! number of unique global nodes
   nglob = nglob_unique

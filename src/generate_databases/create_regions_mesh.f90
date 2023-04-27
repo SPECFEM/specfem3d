@@ -36,7 +36,7 @@
     STACEY_ABSORBING_CONDITIONS,SAVE_MESH_FILES,PML_CONDITIONS, &
     ANISOTROPY,APPROXIMATE_OCEAN_LOAD,OLSEN_ATTENUATION_RATIO, &
     ATTENUATION,USE_OLSEN_ATTENUATION, &
-    ADIOS_FOR_MESH,SAVE_MOHO_MESH,ATTENUATION_f0_REFERENCE, &
+    SAVE_MOHO_MESH,ATTENUATION_f0_REFERENCE, &
     LOCAL_PATH
 
   use generate_databases_par, only: &
@@ -259,12 +259,7 @@
     write(IMAIN,*) '  ...saving mesh databases'
     call flush_IMAIN()
   endif
-  !call create_name_database(prname,myrank,LOCAL_PATH)
-  if (ADIOS_FOR_MESH) then
-    call save_arrays_solver_mesh_adios()
-  else
-    call save_arrays_solver_mesh()
-  endif
+  call save_arrays_solver_mesh()
 
   ! saves faults
   if (ANY_FAULT) then
@@ -1427,7 +1422,8 @@
 
   subroutine crm_save_moho()
 
-  use generate_databases_par, only: ADIOS_FOR_MESH,IOUT
+  use constants, only: IOUT
+  use shared_parameters, only: ADIOS_FOR_MESH,HDF5_ENABLED
   use create_regions_mesh_ext_par
 
   implicit none
@@ -1435,32 +1431,46 @@
   ! local parameters
   integer :: ier
 
+  ! selects routine for file i/o format
   if (ADIOS_FOR_MESH) then
+    ! ADIOS
     call crm_save_moho_adios()
+    ! all done
+    return
+  else if (HDF5_ENABLED) then
+    ! HDF5
+    !#TODO: HDF5 not implemented yet
+    !call crm_save_moho_hdf5()
+    ! fall back to binary save/read
+    continue
   else
-    ! saves moho files: total number of elements, corner points, all points
-    open(unit=IOUT,file=prname(1:len_trim(prname))//'ibelm_moho.bin', &
-          status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening ibelm_moho.bin file'
-    write(IOUT) NSPEC2D_MOHO
-    write(IOUT) ibelm_moho_top
-    write(IOUT) ibelm_moho_bot
-    write(IOUT) ijk_moho_top
-    write(IOUT) ijk_moho_bot
-    close(IOUT)
-    open(unit=IOUT,file=prname(1:len_trim(prname))//'normal_moho.bin', &
-          status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening normal_moho.bin file'
-    write(IOUT) normal_moho_top
-    write(IOUT) normal_moho_bot
-    close(IOUT)
-    open(unit=IOUT,file=prname(1:len_trim(prname))//'is_moho.bin', &
-      status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening is_moho.bin file'
-    write(IOUT) is_moho_top
-    write(IOUT) is_moho_bot
-    close(IOUT)
+    ! default binary
+    ! implemented here below, continue
+    continue
   endif
+
+  ! saves moho files: total number of elements, corner points, all points
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'ibelm_moho.bin', &
+        status='unknown',form='unformatted',iostat=ier)
+  if (ier /= 0) stop 'error opening ibelm_moho.bin file'
+  write(IOUT) NSPEC2D_MOHO
+  write(IOUT) ibelm_moho_top
+  write(IOUT) ibelm_moho_bot
+  write(IOUT) ijk_moho_top
+  write(IOUT) ijk_moho_bot
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'normal_moho.bin', &
+        status='unknown',form='unformatted',iostat=ier)
+  if (ier /= 0) stop 'error opening normal_moho.bin file'
+  write(IOUT) normal_moho_top
+  write(IOUT) normal_moho_bot
+  close(IOUT)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'is_moho.bin', &
+    status='unknown',form='unformatted',iostat=ier)
+  if (ier /= 0) stop 'error opening is_moho.bin file'
+  write(IOUT) is_moho_top
+  write(IOUT) is_moho_bot
+  close(IOUT)
 
   end subroutine crm_save_moho
 
