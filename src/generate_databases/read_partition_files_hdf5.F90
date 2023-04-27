@@ -612,6 +612,6 @@
   print *
   stop 'Error HDF5 read_partition_files_hdf5(): called without compilation support'
 
-#endif    ! USE_HDF5
+#endif
 
 end subroutine read_partition_files_hdf5

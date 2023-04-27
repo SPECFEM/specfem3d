@@ -4485,7 +4485,7 @@ contains
     call synchronize_all()
   end subroutine create_dataset_collect
 
-#endif    ! USE_HDF5
+#endif
 
 end module manager_hdf5
 

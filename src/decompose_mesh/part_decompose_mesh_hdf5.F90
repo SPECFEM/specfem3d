@@ -1064,7 +1064,7 @@ contains
 
   end subroutine write_moho_surface_database_h5
 
-#endif   ! USE_HDF5
+#endif
 
 end module part_decompose_mesh_hdf5
 

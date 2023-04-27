@@ -298,7 +298,7 @@
   print *
   stop 'Error HDF5 write_mesh_databases_hdf5(): called without compilation support'
 
-#endif    ! USE_HDF5
+#endif
 
   end subroutine write_mesh_databases_hdf5
 

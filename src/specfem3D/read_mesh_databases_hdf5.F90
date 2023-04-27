@@ -91,7 +91,7 @@
   print *
   stop 'Error HDF5 read_mesh_for_init_hdf5(): called without compilation support'
 
-#endif    ! USE_HDF5
+#endif
 
   end subroutine read_mesh_for_init_hdf5
 
@@ -1727,7 +1727,7 @@
   print *
   stop 'Error HDF5 read_mesh_databases_hdf5(): called without compilation support'
 
-#endif    ! USE_HDF5
+#endif
 
   end subroutine read_mesh_databases_hdf5
 
