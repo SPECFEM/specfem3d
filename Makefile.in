@@ -416,8 +416,8 @@ endif
 @COND_HDF5_FALSE@HDF5 = no
 
 # adds compiler flag
-@COND_HDF5_TRUE@FCFLAGS += @HDF5_FCFLAGS@ @HDF5_INCLUDES@
-@COND_HDF5_TRUE@MPILIBS += @HDF5_LIBS@ -lhdf5hl_fortran -lhdf5_hl -lhdf5 -lstdc++
+@COND_HDF5_TRUE@FCFLAGS += @HDF5_FCFLAGS@ @HDF5_INCLUDES@ $(FC_DEFINE)USE_HDF5
+@COND_HDF5_TRUE@LDFLAGS += @HDF5_LIBS@ -lhdf5hl_fortran -lhdf5_hl -lhdf5 -lstdc++
 
 #######################################
 ####

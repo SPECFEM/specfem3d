@@ -729,6 +729,10 @@
       write(*,*)
     endif
 
+    !-------------------------------------------------------
+    ! file I/O
+    !-------------------------------------------------------
+
     !> Read ADIOS related flags from the Par_file
     !! \param ADIOS_ENABLED Main flag to decide if ADIOS is used.
     !!                      If set to .false., no other parameter is taken into account.
@@ -780,6 +784,23 @@
       write(*,'(a)') 'ADIOS_FOR_UNDO_ATTENUATION      = .false.'
       write(*,*)
     endif
+
+    ! HDF5 file I/O
+    ! (optional) hdf5 database io flag
+    call read_value_logical(HDF5_ENABLED, 'HDF5_ENABLED', ier); ier = 0
+    ! or enforces flag to be present in Par_file
+    !if (ier /= 0) then
+    !  some_parameters_missing_from_Par_file = .true.
+    !  write(*,'(a)') 'HDF5_ENABLED                   = .false.'
+    !  write(*,*)
+    !endif
+    !#TODO: IO server
+    ! read number of io dedicated nodes
+    !call read_value_integer(HDF5_IO_NNODE, 'HDF5_IO_NNODE', ier)
+    !if (ier /= 0) then
+    !  some_parameters_missing_from_Par_file = .true.
+    !  write(*,'(a)') 'HDF5_IO_NNODE                    = 1'
+    !endif
 
     ! closes parameter file
     call close_parameter_file()
@@ -936,6 +957,24 @@
     stop 'an error occurred while reading the parameter file: ADIOS is enabled but code not built with ADIOS'
   endif
 #endif
+
+  ! HDF5 file I/O
+#if !defined(USE_HDF5)
+  if (HDF5_ENABLED) then
+    print *
+    print *,'**************'
+    print *,'**************'
+    print *,'HDF5 is enabled in parameter file but the code was not compiled with HDF5 support.'
+    print *,'See --with-hdf5 configure options.'
+    print *,'**************'
+    print *,'**************'
+    print *
+    stop 'an error occurred while reading the parameter file: HDF5 is enabled but code not built with HDF5'
+  endif
+#endif
+  ! mutually exclusive ADIOS and HDF5
+  if (ADIOS_ENABLED .and. HDF5_ENABLED) &
+    stop 'ADIOS_ENABLED and HDF5_ENABLED together are not supported, please use only one of them'
 
   ! PML
   if (PML_CONDITIONS) then
@@ -1364,6 +1403,11 @@
   call bcast_all_singlel(ADIOS_FOR_FORWARD_ARRAYS)
   call bcast_all_singlel(ADIOS_FOR_KERNELS)
   call bcast_all_singlel(ADIOS_FOR_UNDO_ATTENUATION)
+
+  ! HDF5 file I/O
+  call bcast_all_singlel(HDF5_ENABLED)
+  !#TODO: IO server
+  !call bcast_all_singlei(HDF5_IO_NNODE)
 
   ! broadcast all parameters computed from others
   call bcast_all_singlei(IMODEL)

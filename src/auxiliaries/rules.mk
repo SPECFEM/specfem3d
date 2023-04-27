@@ -383,6 +383,7 @@ xproject_and_combine_vol_data_on_regular_grid_SHARED_OBJECTS = \
 	$O/get_jacobian_boundaries.shared.o \
 	$O/get_shape3D.shared.o \
 	$O/gll_library.shared.o \
+	$O/hdf5_manager.shared_hdf5_module.o \
 	$O/hex_nodes.shared.o \
 	$O/lagrange_poly.shared.o \
 	$O/netlib_specfun_erf.shared.o \

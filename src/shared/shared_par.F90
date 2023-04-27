@@ -171,6 +171,13 @@ end module constants
   logical :: ADIOS_ENABLED
   logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS, ADIOS_FOR_UNDO_ATTENUATION
 
+  ! HDF5 file output
+  logical :: HDF5_ENABLED = .false.
+  !#TODO: IO server
+  !! number of io dedicated nodes
+  !integer :: HDF5_IO_NNODE
+  !integer :: n_control_node
+
   ! external code coupling (DSM, AxiSEM)
   logical :: COUPLE_WITH_INJECTION_TECHNIQUE
   integer :: INJECTION_TECHNIQUE_TYPE

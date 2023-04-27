@@ -367,22 +367,10 @@
   call initialize_simulation()
 
   ! reads in external mesh
-  if (ADIOS_FOR_MESH) then
-    ! ADIOS file format
-    call read_mesh_databases_adios()
-  else
-    ! binary file
-    call read_mesh_databases()
-  endif
+  call read_mesh_databases()
 
   ! reads in moho mesh
-  if (ADIOS_FOR_MESH) then
-    ! ADIOS file format
-    call read_mesh_databases_moho_adios()
-  else
-    ! binary file
-    call read_mesh_databases_moho()
-  endif
+  call read_mesh_databases_moho()
 
   ! reads adjoint parameters
   call read_mesh_databases_adjoint()

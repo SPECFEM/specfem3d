@@ -571,6 +571,9 @@ subroutine initialize()
 
   use specfem_par, only: NSPEC_AB,NGLOB_AB,NPROC,myrank,ADIOS_ENABLED,ATTENUATION
 
+  ! HDF5 file i/o
+  use shared_parameters, only: HDF5_ENABLED
+
   implicit none
 
   logical :: BROADCAST_AFTER_READ
@@ -584,9 +587,10 @@ subroutine initialize()
   BROADCAST_AFTER_READ = .true.
   call read_parameter_file(BROADCAST_AFTER_READ)
 
+  ! safety checks
   if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED set to .true. not supported yet for xmodel_update, please rerun program...'
+  if (HDF5_ENABLED) stop 'Flag HDF5_ENABLED not supported yet, please rerun program...'
 
-  ! security check
   if (ATTENUATION) then
     print *,'Sorry using ATTENUATION, this routine has qkappa not implemented yet...'
     stop 'Error ATTENUATION flag invalid'

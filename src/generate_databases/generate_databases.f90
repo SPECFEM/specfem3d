@@ -105,6 +105,8 @@
   ! reads Databases files
   if (ADIOS_FOR_DATABASES) then
     call read_partition_files_adios()
+  else if (HDF5_ENABLED) then
+    call read_partition_files_hdf5()
   else
     call read_partition_files()
   endif

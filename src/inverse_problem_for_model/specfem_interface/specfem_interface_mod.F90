@@ -1083,6 +1083,10 @@ contains
   real(kind=CUSTOM_REAL) :: y_min,y_max,y_min_glob,y_max_glob
   real(kind=CUSTOM_REAL) :: z_min,z_max,z_min_glob,z_max_glob
 
+  ! safety checks
+  if (ADIOS_ENABLED) stop 'ADIOS_ENABLED not supported yet, please rerun without flag...'
+  if (HDF5_ENABLED) stop 'HDF5_ENABLED not supported yet, please rerun without flag...'
+
   ! sets inversion flag
   INVERSE_FWI_FULL_PROBLEM = .true.
 

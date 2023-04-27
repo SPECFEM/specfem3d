@@ -59,6 +59,7 @@ decompose_mesh_MODULES = \
 decompose_mesh_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
 	$O/count_number_of_sources.shared.o \
+	$O/hdf5_manager.shared_hdf5_module.o \
 	$O/param_reader.cc.o \
 	$O/exit_mpi.shared.o \
 	$O/read_parameter_file.shared.o \
@@ -127,7 +128,18 @@ xdecompose_mesh_OBJECTS = \
 	$O/wrap_patoh.o \
 	$O/wrap_metis.o \
 	$O/write_mesh_databases.dec.o \
+	$O/write_mesh_databases_hdf5.dec_hdf5.o \
 	$(EMPTY_MACRO)
+
+ifeq ($(HDF5),yes)
+xdecompose_mesh_OBJECTS += \
+	$O/part_decompose_mesh_hdf5.dec_module_hdf5.o \
+	$(EMPTY_MACRO)
+
+decompose_mesh_MODULES += \
+	$(FC_MODDIR)/part_decompose_mesh_hdf5.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+endif
 
 # rules for the pure Fortran version
 $E/xdecompose_mesh: ${SCOTCH_DIR}/include/scotchf.h $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_OBJECTS) $(COND_MPI_OBJECTS)
@@ -216,3 +228,16 @@ $O/wrap_patoh.o: $S/wrap_patoh.cpp
 $O/wrap_metis.o: $S/wrap_metis.c
 	${CC} -c $(CFLAGS) -o $@ $< $(PART_FLAGS)
 
+## HDF5
+
+$O/%.dec_module_hdf5.o: $S/%.F90 $O/hdf5_manager.shared_hdf5_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
+
+$O/%.dec_module_hdf5.o: $S/%.f90 $O/hdf5_manager.shared_hdf5_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
+
+$O/%.dec_hdf5.o: $S/%.f90 $O/hdf5_manager.shared_hdf5_module.o $O/part_decompose_mesh_hdf5.dec_module_hdf5.o $O/part_decompose_mesh.dec_module.o $O/decompose_mesh_par.dec_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
+
+$O/%.dec_hdf5.o: $S/%.F90 $O/hdf5_manager.shared_hdf5_module.o $O/part_decompose_mesh_hdf5.dec_module_hdf5.o $O/part_decompose_mesh.dec_module.o  $O/decompose_mesh_par.dec_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<

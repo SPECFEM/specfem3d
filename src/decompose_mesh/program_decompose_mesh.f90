@@ -31,6 +31,9 @@ program xdecompose_mesh
 
   use decompose_mesh_par, only: nparts,localpath_name,outputpath_name,ADIOS_FOR_DATABASES
 
+  ! HDF5 file I/O
+  use shared_parameters, only: HDF5_ENABLED
+
   implicit none
 
   integer :: i,myrank
@@ -63,7 +66,7 @@ program xdecompose_mesh
   localpath_name = arg(2)
   outputpath_name = arg(3)
 
- ! needs local_path for mesh files
+  ! needs local_path for mesh files
   myrank = 0
   BROADCAST_AFTER_READ = .false.
   call read_parameter_file(BROADCAST_AFTER_READ)
@@ -90,7 +93,11 @@ program xdecompose_mesh
   call decompose_mesh()
 
   ! writes out database files
-  call write_mesh_databases()
+  if (HDF5_ENABLED) then
+    call write_mesh_databases_hdf5()
+  else
+    call write_mesh_databases()
+  endif
 
   ! user output
   print *
