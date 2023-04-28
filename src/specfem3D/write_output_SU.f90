@@ -56,20 +56,37 @@
 
   character(len=1),parameter :: comp(4) = (/ 'd', 'v', 'a', 'p' /)
 
-  ! user output
-  if (myrank == 0) then
-    ! we only want to do these steps one time
-    if (seismo_offset == 0) then
+  logical, save :: is_initialized = .false.
+
+  ! SU format, with 240-byte-header for each trace
+
+  ! note:  by default, all processes write their local seismograms themselves,
+  !        i.e. they write ONE binary file for all local receivers (nrec_local) within each proc.
+  !
+  !        in case WRITE_SEISMOGRAMS_BY_MAIN is turned on, only the main process writes out all,
+  !        i.e., we write ONE binary file for all receivers (nrec) and all seismograms.
+
+  ! we only want to do this once
+  if (.not. is_initialized) then
+    ! user output
+    if (myrank == 0) then
       ! user output
-      write(IMAIN,*) 'creating seismograms in SU file format'
+      write(IMAIN,*) 'Creating seismograms in SU file format'
       if (WRITE_SEISMOGRAMS_BY_MAIN) then
-        write(IMAIN,*) 'writing waveforms by main...'
+        write(IMAIN,*) '  writing waveforms by main...'
       else
-        write(IMAIN,*) 'writing waveforms in parallel...'
+        write(IMAIN,*) '  writing waveforms in parallel...'
       endif
-      write(IMAIN,*)
       call flush_IMAIN()
     endif
+    ! sets flag
+    is_initialized = .true.
+  endif
+
+  ! checks if anything to do
+  if (WRITE_SEISMOGRAMS_BY_MAIN) then
+    ! only main process writes out
+    if (myrank /= 0) return
   endif
 
   ! checks if anything to do
@@ -104,6 +121,7 @@
   case (1,2,3)
     ! open seismograms displacement, velocity, acceleration
     if (seismo_offset == 0) then
+      ! creates new file
       open(unit=IIN_SU1, file=trim(final_LOCAL_PATH)//trim(procname)//'_'//comp(istore)//'x_SU', &
            status='replace', access='stream', form='unformatted', action='write', iostat=ier)
       if (ier /= 0) stop 'error opening ***x_SU file'
@@ -114,6 +132,7 @@
            status='replace', access='stream', form='unformatted', action='write', iostat=ier)
       if (ier /= 0) stop 'error opening ***z_SU file'
     else
+      ! appends
       open(unit=IIN_SU1, file=trim(final_LOCAL_PATH)//trim(procname)//'_'//comp(istore)//'x_SU', &
            status='old', access='stream', form='unformatted', action='readwrite', iostat=ier)
       if (ier /= 0) stop 'error opening ***x_SU file'
@@ -127,10 +146,12 @@
   case (4)
     ! open seismogram pressure
     if (seismo_offset == 0) then
+      ! creates new file
       open(unit=IIN_SU1, file=trim(final_LOCAL_PATH)//trim(procname)//'_p_SU', &
            status='replace', access='stream', form='unformatted', action='write', iostat=ier)
       if (ier /= 0) stop 'error opening ***_p_SU file'
     else
+      ! appends
       open(unit=IIN_SU1, file=trim(final_LOCAL_PATH)//trim(procname)//'_p_SU', &
            status='old', access='stream', form='unformatted', action='readwrite', iostat=ier)
       if (ier /= 0) stop 'error opening ***_p_SU file'
@@ -186,6 +207,7 @@
       stop 'Invalid irec in write_output_SU() routine found'
     endif
 
+    ! SU format, with 240-byte-header for each trace
     if (seismo_offset == 0) then
       ! determines header
       call determine_SU_header(irec,dx,header1,header2,header3,header4, &

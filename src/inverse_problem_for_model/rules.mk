@@ -193,6 +193,7 @@ inverse_problem_for_model_OBJECTS += \
 	$O/update_displacement_LDDRK.spec.o \
 	$O/write_movie_output.spec.o \
 	$O/write_output_ASCII_or_binary.spec.o \
+	$O/write_output_HDF5.spec_hdf5.o \
 	$O/write_output_SU.spec.o \
 	$O/write_seismograms.spec.o \
 	$(EMPTY_MACRO)

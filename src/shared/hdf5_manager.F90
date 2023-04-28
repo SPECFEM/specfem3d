@@ -37,7 +37,7 @@
 
 ! note: HDF5 library calls use a format like "h5**do_something***_f()"
 !       our own wrapper functions in this module will rather use something like "h5_***do_something_***()",
-!       and higher-level routines called in other fortran routines like "***do_something_h5***()",
+!       and higher-level routines called in other Fortran routines like "***do_something_h5***()",
 !       to better distinguish between library functions and wrappers.
 !
 ! version info:
@@ -81,8 +81,8 @@ module manager_hdf5
       h5_create_group, h5_open_group, h5_close_group, &
       h5_create_subgroup, h5_open_subgroup, h5_open_or_create_group, h5_close_subgroup, &
       h5_open_dataset, h5_open_dataset2, h5_close_dataset, &
-      h5_write_dataset_1d_i, h5_write_dataset_1d_d, h5_write_dataset_1d_c,&
-      h5_write_dataset_1d_i_no_group, h5_write_dataset_1d_d_no_group, h5_write_dataset_1d_c_no_group,&
+      h5_write_dataset_1d_i, h5_write_dataset_1d_d, h5_write_dataset_1d_c, &
+      h5_write_dataset_1d_i_no_group, h5_write_dataset_1d_d_no_group, h5_write_dataset_1d_c_no_group, &
       h5_write_dataset_2d_d, h5_write_dataset_2d_r, h5_write_dataset_2d_i, h5_write_dataset_2d_c, &
       h5_write_dataset_2d_r_no_group, &
       h5_write_dataset_4d_r, &
@@ -94,14 +94,14 @@ module manager_hdf5
       h5_open_file_p, h5_open_file_p_collect, &
       h5_close_file_p, &
       h5_create_file_prop_list, h5_close_prop_list,h5_close_prop_list_nocheck, &
-      h5_open_group_prop_list, h5_create_group_prop_list, h5_close_group_prop_list,&
+      h5_open_group_prop_list, h5_create_group_prop_list, h5_close_group_prop_list, &
       h5_create_dataset_prop_list, &
       h5_create_dataset_gen, h5_create_dataset_gen_in_group, &
       h5_check_dataset_exists, &
       h5_create_group_p, h5_open_group_p, &
-      h5_read_dataset_p_scalar_i, h5_read_dataset_p_scalar_r,&
-      h5_read_dataset_p_1d_i, h5_read_dataset_p_1d_r, h5_read_dataset_p_1d_l,&
-      h5_read_dataset_p_2d_i, h5_read_dataset_p_2d_r, h5_read_dataset_p_2d_c, h5_read_dataset_p_2d_d,&
+      h5_read_dataset_p_scalar_i, h5_read_dataset_p_scalar_r, &
+      h5_read_dataset_p_1d_i, h5_read_dataset_p_1d_r, h5_read_dataset_p_1d_l, &
+      h5_read_dataset_p_2d_i, h5_read_dataset_p_2d_r, h5_read_dataset_p_2d_c, h5_read_dataset_p_2d_d, &
       h5_read_dataset_p_3d_i, h5_read_dataset_p_3d_r, &
       h5_read_dataset_p_4d_i, h5_read_dataset_p_4d_r, &
       h5_read_dataset_p_5d_r, &
@@ -123,7 +123,7 @@ module manager_hdf5
       h5_read_dataset_5d_r_collect_hyperslab, &
       h5_set_group_name, &
       h5_write_dataset_p_1d_i, h5_write_dataset_p_1d_ia, h5_write_dataset_p_1d_r, h5_write_dataset_p_1d_l, &
-      h5_write_dataset_p_2d_i, h5_write_dataset_p_2d_ia, h5_write_dataset_p_2d_r, h5_write_dataset_p_2d_d,&
+      h5_write_dataset_p_2d_i, h5_write_dataset_p_2d_ia, h5_write_dataset_p_2d_r, h5_write_dataset_p_2d_d, &
       h5_write_dataset_p_3d_i, h5_write_dataset_p_3d_r, &
       h5_write_dataset_p_4d_i, h5_write_dataset_p_4d_r, &
       h5_write_dataset_p_5d_r, &
@@ -204,7 +204,7 @@ contains
       str_len = MAX_LENGTH_NETWORK_NAME
     endif
 
-    call h5tcopy_f(H5T_FORTRAN_S1, str_type, error)
+    call h5tcopy_f(H5T_Fortran_S1, str_type, error)
     call check_error()
 
     call h5tset_size_f(str_type, str_len, error)
@@ -268,7 +268,7 @@ contains
     call h5_init()
 
     ! prepare dataset
-    if(myrank == 0) then
+    if (myrank == 0) then
       call h5_open_file(filename)
       dset_name = "scale_factor"
       call h5_create_dataset_gen(dset_name, (/NGLLX,NGLLY,NGLLZ,sum(offset_nspec)/), 4, CUSTOM_REAL)
@@ -286,16 +286,16 @@ contains
     ! write
     call h5_open_file_p_collect(filename)
     dset_name = "scale_factor"
-    call h5_write_dataset_4d_r_collect_hyperslab(dset_name,&
+    call h5_write_dataset_4d_r_collect_hyperslab(dset_name, &
                                                  scale_factor,(/0,0,0,sum(offset_nspec(0:myrank-1))/),.true.)
     dset_name = "scale_factor_kappa"
-    call h5_write_dataset_4d_r_collect_hyperslab(dset_name,&
+    call h5_write_dataset_4d_r_collect_hyperslab(dset_name, &
                                                  scale_factor_kappa,(/0,0,0,sum(offset_nspec(0:myrank-1))/),.true.)
     dset_name = "factor_common"
-    call h5_write_dataset_5d_r_collect_hyperslab(dset_name,&
+    call h5_write_dataset_5d_r_collect_hyperslab(dset_name, &
                                                  factor_common,(/0,0,0,0,sum(offset_nspec(0:myrank-1))/),.true.)
     dset_name = "factor_common_kappa"
-    call h5_write_dataset_5d_r_collect_hyperslab(dset_name,&
+    call h5_write_dataset_5d_r_collect_hyperslab(dset_name, &
                                                  factor_common_kappa,(/0,0,0,0,sum(offset_nspec(0:myrank-1))/),.true.)
 
     call h5_close_file_p()
@@ -354,7 +354,7 @@ contains
 
     call h5_read_dataset_4d_r_collect_hyperslab("scale_factor", scale_factor, &
                                                 (/0,0,0,sum(offset_nspec(0:myrank-1))/), .true.)
-    call h5_read_dataset_4d_r_collect_hyperslab("scale_factor_kappa", scale_factor_kappa,&
+    call h5_read_dataset_4d_r_collect_hyperslab("scale_factor_kappa", scale_factor_kappa, &
                                                 (/0,0,0,sum(offset_nspec(0:myrank-1))/), .true.)
     call h5_read_dataset_5d_r_collect_hyperslab("factor_common", factor_common, &
                                                 (/0,0,0,0,sum(offset_nspec(0:myrank-1))/), .true.)
@@ -399,7 +399,7 @@ contains
     character(len=MAX_STRING_LEN)                   :: filename
     integer, dimension(0:NPROC-1)                   :: offset
 
-    ! mpi variables
+    ! MPI variables
     integer :: info, comm
 
     ! hdf5 valiables
@@ -412,7 +412,7 @@ contains
     tempstr = "/external_mesh.h5"
     filename = LOCAL_PATH(1:len_trim(LOCAL_PATH))//trim(tempstr)
 
-    ! get mpi parameters
+    ! get MPI parameters
     call world_get_comm(comm)
     call world_get_info_null(info)
 
@@ -425,7 +425,7 @@ contains
     call gather_all_all_singlei(size(dump_array), offset, NPROC)
 
     ! make dataset
-    if(myrank==0) then
+    if (myrank == 0) then
       call h5_open_file(filename)
       ! check if dataset exists
       call h5_check_dataset_exists(dset_name, exists)
@@ -485,7 +485,7 @@ contains
     !for now all processes belong to nnodes
     call gather_all_singlei(1, nnodes, NPROC) ! assumes each process is a control node
 
-    if (myrank==0) then
+    if (myrank == 0) then
       ! writeout xdmf file for surface movie
       fname_xdmf_checkmesh = trim(OUTPUT_FILES)//"/checkmesh.xmf"
 
@@ -493,45 +493,45 @@ contains
 
       ! definition of topology and geometry
       ! refer only control nodes (8 or 27) as a coarse output
-      ! data array need to be extracted from full data array on gll points
+      ! data array need to be extracted from full data array on GLL points
       write(xdmf_vol,'(a)') '<?xml version="1.0" ?>'
       write(xdmf_vol,*) '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
       write(xdmf_vol,*) '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="3.0">'
       write(xdmf_vol,*) '<Domain>'
-      write(xdmf_vol,*) '    <!-- mesh info -->'
-      !write(xdmf_vol,*) '    <Grid Name="mesh" GridType="Collection"  CollectionType="Spatial">'
+      write(xdmf_vol,*) '<!-- mesh info -->'
+      !write(xdmf_vol,*) '<Grid Name="mesh" GridType="Collection"  CollectionType="Spatial">'
       nelm  = i2c(sum(nelms(:)))
       nnode = i2c(sum(nnodes(:)))
 
       write(xdmf_vol,*) '<Grid Name="mesh">'
       write(xdmf_vol,*) '<Topology TopologyType="Mixed" NumberOfElements="'//trim(nelm)//'">'
-      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Int" Precision="4" Dimensions="'&
+      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Int" Precision="4" Dimensions="'&
                              //trim(nelm)//' '//trim(i2c(8+1))//'">'
       write(xdmf_vol,*) '       ./DATABASES_MPI/Database.h5:/elm_conn_xdmf'
-      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '</DataItem>'
       write(xdmf_vol,*) '</Topology>'
       write(xdmf_vol,*) '<Geometry GeometryType="XYZ">'
-      write(xdmf_vol,*) '    <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                           //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nnode)//' 3">'
       write(xdmf_vol,*) '       ./DATABASES_MPI/Database.h5:/nodes_coords'
-      write(xdmf_vol,*) '    </DataItem>'
+      write(xdmf_vol,*) '</DataItem>'
       write(xdmf_vol,*) '</Geometry>'
 
       type_str = "res_Courant_number"
-      write(xdmf_vol, *)  '    <Attribute Name="'//trim(type_str)//'" AttributeType="Scalar" Center="Cell">'
-      write(xdmf_vol, *)  '        <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+      write(xdmf_vol, *)  '<Attribute Name="'//trim(type_str)//'" AttributeType="Scalar" Center="Cell">'
+      write(xdmf_vol, *)  '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nelm)//'">'
       write(xdmf_vol, *)  '            ./DATABASES_MPI/external_mesh.h5:/'//trim(type_str)
-      write(xdmf_vol, *)  '        </DataItem>'
-      write(xdmf_vol, *)  '    </Attribute>'
+      write(xdmf_vol, *)  '</DataItem>'
+      write(xdmf_vol, *)  '</Attribute>'
 
       type_str = "res_minimum_period"
-      write(xdmf_vol, *)  '    <Attribute Name="'//trim(type_str)//'" AttributeType="Scalar" Center="Cell">'
-      write(xdmf_vol, *)  '        <DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+      write(xdmf_vol, *)  '<Attribute Name="'//trim(type_str)//'" AttributeType="Scalar" Center="Cell">'
+      write(xdmf_vol, *)  '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nelm)//'">'
       write(xdmf_vol, *)  '            ./DATABASES_MPI/external_mesh.h5:/'//trim(type_str)
-      write(xdmf_vol, *)  '        </DataItem>'
-      write(xdmf_vol, *)  '    </Attribute>'
+      write(xdmf_vol, *)  '</DataItem>'
+      write(xdmf_vol, *)  '</Attribute>'
 
       write(xdmf_vol,*) '</Grid>'
 
@@ -595,7 +595,7 @@ contains
     integer :: io_mode
     call h5pget_mpio_actual_io_mode_f(plist_id,io_mode,error)
     if (error /= 0) write(*,*) 'hdf5 get_mpio_actual_io_mode failed for ',trim(dataset_name)
-    !if (io_mode == H5D_MPIO_NO_COLLECTIVE_F) print*, &
+    !if (io_mode == H5D_MPIO_NO_COLLECTIVE_F) print *, &
     !    "collective read/write not possible for dataset: ", dataset_name
     call check_error()
   end subroutine h5_check_collective
@@ -722,7 +722,7 @@ contains
     character(len=*), intent(in) :: group_name
     ! open group
     call h5gopen_f(file_id, trim(group_name), group_id, error) ! group open
-    if (error /= 0) write(*,*) 'hdf5 open group failed for, ', trim(group_name)
+    if (error /= 0) write(*,*) 'hdf5 open group failed for ', trim(group_name)
     call check_error()
     ! stores name
     store_group_name = group_name
@@ -738,7 +738,7 @@ contains
     integer(HID_T) :: temp_group_id
     ! open subgroup
     call h5gopen_f(group_id, trim(group_name), temp_group_id, error) ! group open
-    if (error /= 0) write(*,*) 'hdf5 open subgroup failed for, ', trim(group_name)
+    if (error /= 0) write(*,*) 'hdf5 open subgroup failed for ', trim(group_name)
     call check_error()
     ! put the group id of the first level becomes parent group
     ! only while the group at second level exists
@@ -764,7 +764,7 @@ contains
       call h5gopen_f(file_id, group_name, group_id, error)
     else
       call h5gcreate_f(file_id, group_name, group_id, error)
-    end if
+    endif
     call check_error()
   end subroutine h5_open_or_create_group
 
@@ -812,7 +812,7 @@ contains
     character(len=*), intent(in) :: dataset_name
 
     call h5dopen_f(group_id, trim(dataset_name), dataset_id, error)
-    if (error /= 0) write(*,*) 'hdf5 open dataset failed for, ', dataset_name
+    if (error /= 0) write(*,*) 'hdf5 open dataset failed for ', dataset_name
     call check_error()
   end subroutine h5_open_dataset
 
@@ -826,7 +826,7 @@ contains
     character(len=*), intent(in) :: dataset_name
 
     call h5dopen_f(file_id, trim(dataset_name), dataset_id, error)
-    if (error /= 0) write(*,*) 'hdf5 open dataset failed for, ', dataset_name
+    if (error /= 0) write(*,*) 'hdf5 open dataset2 failed for ', dataset_name
     call check_error()
   end subroutine h5_open_dataset2
 
@@ -882,7 +882,7 @@ contains
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
     call check_error()
     call h5sclose_f(dspace_id, error)
-    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
+    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
   end subroutine h5_write_dataset_1d_i
 
@@ -910,7 +910,7 @@ contains
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
     call check_error()
     call h5sclose_f(dspace_id, error)
-    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
+    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
     call h5_close_dataset()
   end subroutine h5_write_dataset_1d_i_no_group
@@ -949,7 +949,7 @@ contains
       call check_error()
     endif
     call h5sclose_f(dspace_id, error)
-    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
+    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
   end subroutine h5_write_dataset_1d_d
 
@@ -987,7 +987,7 @@ contains
       call check_error()
     endif
     call h5sclose_f(dspace_id, error)
-    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
+    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
   end subroutine h5_write_dataset_1d_d_no_group
 
@@ -1023,7 +1023,7 @@ contains
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
     call check_error()
     call h5sclose_f(dspace_id, error)
-    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
+    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
     deallocate(data, stat=error)
 
@@ -1061,7 +1061,7 @@ contains
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
     call check_error()
     call h5sclose_f(dspace_id, error)
-    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
+    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
     deallocate(data, stat=error)
 
@@ -1092,7 +1092,7 @@ contains
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
     call check_error()
     call h5sclose_f(dspace_id, error)
-    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
+    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
   end subroutine h5_write_dataset_2d_i
 
@@ -1121,7 +1121,7 @@ contains
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
     call check_error()
     call h5sclose_f(dspace_id, error)
-    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
+    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
   end subroutine h5_write_dataset_2d_d
 
@@ -1143,7 +1143,7 @@ contains
     call h5screate_simple_f(rank, dim, dspace_id, error)
     if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ', dataset_name
     call check_error()
-    if(CUSTOM_REAL == 4) then
+    if (CUSTOM_REAL == 4) then
       call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_REAL, dspace_id, dataset_id, error)
       if (error /= 0) write(*,*) 'hdf5 dataset create failed for ', dataset_name
       call check_error()
@@ -1159,7 +1159,7 @@ contains
       call check_error()
     endif
     call h5sclose_f(dspace_id, error)
-    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
+    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
   end subroutine h5_write_dataset_2d_r
 
@@ -1181,7 +1181,7 @@ contains
     call h5screate_simple_f(rank, dim, dspace_id, error)
     if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ', dataset_name
     call check_error()
-    if(CUSTOM_REAL == 4) then
+    if (CUSTOM_REAL == 4) then
       call h5dcreate_f(file_id, trim(dataset_name), H5T_NATIVE_REAL, dspace_id, dataset_id, error)
       if (error /= 0) write(*,*) 'hdf5 dataset create failed for ', dataset_name
       call check_error()
@@ -1197,7 +1197,7 @@ contains
       call check_error()
     endif
     call h5sclose_f(dspace_id, error)
-    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
+    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
   end subroutine h5_write_dataset_2d_r_no_group
 
@@ -1218,7 +1218,7 @@ contains
     call h5screate_simple_f(rank, dim, dspace_id, error)
     if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ', dataset_name
     call check_error()
-    if(CUSTOM_REAL == 4) then
+    if (CUSTOM_REAL == 4) then
       call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_REAL, dspace_id, dataset_id, error)
       if (error /= 0) write(*,*) 'hdf5 dataset create failed for ', dataset_name
       call check_error()
@@ -1234,7 +1234,7 @@ contains
       call check_error()
     endif
     call h5sclose_f(dspace_id, error)
-    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
+    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
   end subroutine h5_write_dataset_4d_r
 
@@ -1263,7 +1263,7 @@ contains
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
     call check_error()
     call h5sclose_f(dspace_id, error)
-    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', dataset_name
+    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
   end subroutine h5_write_dataset_2d_c
 
@@ -1301,13 +1301,13 @@ contains
     if (error /= 0) write(*,*) 'hdf5 awrite failed for attribute, ', attribute_name
     call check_error()
     call h5sclose_f(aspace_id, error)
-    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for, ', attribute_name
+    if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', attribute_name
     call check_error()
     call h5aclose_f(attr_id,    error)
-    if (error /= 0) write(*,*) 'hdf5 aclose failed for, ', attribute_name
+    if (error /= 0) write(*,*) 'hdf5 aclose failed for ', attribute_name
     call check_error()
     call h5tclose_f(atype_id,   error)
-    if (error /= 0) write(*,*) 'hdf5 tclose failed for, ', attribute_name
+    if (error /= 0) write(*,*) 'hdf5 tclose failed for ', attribute_name
     call check_error()
   end subroutine h5_add_attribute_i
 
@@ -1692,7 +1692,7 @@ contains
     character(len=*), intent(in) :: group_name
     call h5_open_group_prop_list()
     call h5gopen_f(file_id, trim(group_name), group_id, error, gapl_id=gplist_id)
-    if (error /= 0) write(*,*) 'hdf5 open group failed for, ', group_name
+    if (error /= 0) write(*,*) 'hdf5 open group failed for ', group_name
     call check_error()
     call h5_close_group_prop_list()
     store_group_name = group_name
@@ -2149,7 +2149,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
                     file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
@@ -2196,8 +2196,8 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
-    if(CUSTOM_REAL==4) then
+    ! write array using Fortran pointer
+    if (CUSTOM_REAL == 4) then
       call h5dread_f(dataset_id, H5T_NATIVE_REAL, data, dim, error, &
                      file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
     else
@@ -2249,7 +2249,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     f_ptr = c_loc(data(1))
     call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, f_ptr, error, &
                    file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
@@ -2301,7 +2301,7 @@ contains
 
     call h5_check_arr_dim(dim)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     !call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
     !                file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
     ! use F2003 API
@@ -2354,7 +2354,7 @@ contains
 
     f_ptr = c_loc(data(1))
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
       call h5dread_f(dataset_id, H5T_NATIVE_REAL, f_ptr, error, &
                      file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
@@ -2408,7 +2408,7 @@ contains
 
     f_ptr = c_loc(data(1))
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
       call h5dread_f(dataset_id, H5T_NATIVE_REAL, f_ptr, error, &
                      file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
@@ -2462,7 +2462,7 @@ contains
 
     f_ptr = c_loc(data(1,1))
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, f_ptr, error, &
                     file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
@@ -2511,7 +2511,7 @@ contains
 
     f_ptr = c_loc(data(1,1))
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, f_ptr, error, &
                     file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
@@ -2561,7 +2561,7 @@ contains
 
     f_ptr = c_loc(data(1,1))
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
       call h5dread_f(dataset_id, H5T_NATIVE_REAL, f_ptr, error, &
                      file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
@@ -2615,7 +2615,7 @@ contains
 
     f_ptr = c_loc(data(1,1))
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     call h5dread_f(dataset_id, H5T_NATIVE_DOUBLE, f_ptr, error, &
                     file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
@@ -2665,7 +2665,7 @@ contains
 
     f_ptr = c_loc(data(1,1,1))
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, f_ptr, error, &
                     file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
@@ -2715,7 +2715,7 @@ contains
 
     f_ptr = c_loc(data(1,1,1))
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
       call h5dread_f(dataset_id, H5T_NATIVE_REAL, f_ptr, error, &
                      file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
@@ -2771,7 +2771,7 @@ contains
 
     f_ptr = c_loc(data(1,1,1,1))
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, f_ptr, error, &
                    file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
@@ -2822,7 +2822,7 @@ contains
 
     f_ptr = c_loc(data(1,1,1,1))
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
       call h5dread_f(dataset_id, H5T_NATIVE_REAL, f_ptr, error, &
                      file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
@@ -2879,7 +2879,7 @@ contains
 
     f_ptr = c_loc(data(1,1,1,1,1))
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
       call h5dread_f(dataset_id, H5T_NATIVE_REAL, f_ptr, error, &
                      file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
@@ -2943,7 +2943,7 @@ contains
     call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     !call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     call check_error()
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (size(data) == 0) then
       call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, dummy_1d_array, dim, error,xfer_prp=plist_id)
     else
@@ -3001,7 +3001,7 @@ contains
     call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     !call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     call check_error()
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (size(data) == 0) then
       call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, dummy_1d_array, dim, error,xfer_prp=plist_id)
     else
@@ -3052,7 +3052,7 @@ contains
     call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     !call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     call check_error()
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     f_ptr = c_loc(data(1))
     if (CUSTOM_REAL == 4) then
       call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, f_ptr, error, &
@@ -3101,7 +3101,7 @@ contains
     !call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     call check_error()
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     f_ptr = c_loc(data(1,1))
     call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, f_ptr, error, &
                     xfer_prp=plist_id)
@@ -3147,7 +3147,7 @@ contains
     !call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     call check_error()
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     f_ptr = c_loc(data(1,1))
     call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, f_ptr, error, &
                     xfer_prp=plist_id)
@@ -3193,7 +3193,7 @@ contains
     call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     !call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     call check_error()
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     f_ptr = c_loc(data(1,1))
     if (CUSTOM_REAL == 4) then
       call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, f_ptr, error, &
@@ -3241,7 +3241,7 @@ contains
     call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     !call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     call check_error()
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     f_ptr = c_loc(data(1,1))
     call h5dwrite_f(dataset_id, H5T_NATIVE_DOUBLE, f_ptr, error, &
                    xfer_prp=plist_id)
@@ -3284,7 +3284,7 @@ contains
     call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     !call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     call check_error()
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     f_ptr = c_loc(data(1,1,1))
     call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, f_ptr, error, &
                     xfer_prp=plist_id)
@@ -3328,7 +3328,7 @@ contains
     !call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     call check_error()
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     f_ptr = c_loc(data(1,1,1))
     if (CUSTOM_REAL == 4) then
       call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, f_ptr, error, &
@@ -3376,7 +3376,7 @@ contains
     call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     !call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     call check_error()
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     f_ptr = c_loc(data(1,1,1,1))
     call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, f_ptr, error, &
                     xfer_prp=plist_id)
@@ -3419,7 +3419,7 @@ contains
     call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     !call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     call check_error()
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     f_ptr = c_loc(data(1,1,1,1))
     if (CUSTOM_REAL == 4) then
       call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, f_ptr, error, &
@@ -3468,7 +3468,7 @@ contains
     !call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     call check_error()
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     f_ptr = c_loc(data(1,1,1,1,1))
     if (CUSTOM_REAL == 4) then
       call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, f_ptr, error, &
@@ -3523,7 +3523,7 @@ contains
     call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     !call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     call check_error()
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     f_ptr = c_loc(data(1))
     call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, f_ptr, error, &
                     xfer_prp=plist_id)
@@ -3570,7 +3570,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
       call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, data, dim, error, &
                       file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
@@ -3624,7 +3624,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
       call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, data, dim, error, &
                       file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
@@ -3682,7 +3682,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     !call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
     !                file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
     ! F2003 API
@@ -3735,7 +3735,7 @@ contains
     call h5_create_dataset_prop_list(if_collect)
 
     call h5_check_arr_dim(dim)
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     !call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
     !                file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
     ! use F2003 API
@@ -3784,7 +3784,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
       !call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, data, dim, error, &
       !                file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
@@ -3840,7 +3840,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
       !call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, data, dim, error, &
       !                file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
@@ -3897,7 +3897,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     !call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
     !                file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
     call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, c_loc(data(1,1)), error, &
@@ -3946,7 +3946,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     !call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
     !                file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
     call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, c_loc(data(1,1)), error, &
@@ -3996,7 +3996,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
       !call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, data, dim, error, &
       !                file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
@@ -4052,7 +4052,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     call h5dwrite_f(dataset_id, H5T_NATIVE_DOUBLE, c_loc(data(1,1)), error, &
                     file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
@@ -4100,7 +4100,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     !call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
     !                file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
     ! F2003 API
@@ -4152,7 +4152,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
       call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, c_loc(data(1,1,1)), error, &
                       file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
@@ -4206,7 +4206,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, c_loc(data(1,1,1,1)), error, &
                     file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
@@ -4255,7 +4255,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
       call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, c_loc(data(1,1,1,1)), error, &
                       file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
@@ -4310,7 +4310,7 @@ contains
     call check_error()
     call h5_create_dataset_prop_list(if_collect)
 
-    ! write array using fortran pointer
+    ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
       call h5dwrite_f(dataset_id, H5T_NATIVE_REAL, c_loc(data(1,1,1,1,1)), error, &
                       file_space_id=file_dspace_id, mem_space_id=mem_dspace_id, xfer_prp=plist_id)
@@ -4375,7 +4375,7 @@ contains
     boolarray(:) = .false.
 
     do i = 1, array_size
-      if (intarray(i) /=0) then
+      if (intarray(i) /= 0) then
         boolarray(i) = .true.
       endif
     enddo
@@ -4395,7 +4395,7 @@ contains
 
     dim = dimin ! convert integer 8(HSIZE_T) to 4
 
-    if (data_rank==1) then
+    if (data_rank == 1) then
       call gather_all_all_singlei(dim(1),all_dim,total_proc)
       !debug
       !if (this_rank == 0) then

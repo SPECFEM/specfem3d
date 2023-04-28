@@ -772,7 +772,7 @@ contains
   ! variables for my_ninterfaces_and_maxval
   integer, dimension(2)          :: num_interface_and_max
 
-	! my_nb_interfaces in subgroup num_interface (2,my_ninterfaces)
+  ! my_nb_interfaces in subgroup num_interface (2,my_ninterfaces)
   integer, dimension(:,:), allocatable :: num_neighbors_elmnts
 
   ! my_interfaces
