@@ -426,7 +426,7 @@
   endif
 
   ! stores attenuation arrays into files
-  if(HDF5_ENABLED) then
+  if (HDF5_ENABLED) then
     ! HDF5 file i/o
     call write_attenuation_file_hdf5(factor_common,scale_factor,factor_common_kappa,scale_factor_kappa)
   else

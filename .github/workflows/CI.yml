@@ -31,7 +31,10 @@ jobs:
         fi
         echo "$DIFF"
         # Escape newlines (replace \n with %0A)
-        echo "::set-output name=diff::$( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' )"
+        # deprecated:
+        #echo "::set-output name=diff::$( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' )"
+        # new:
+        echo "diff=$( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' )" >> $GITHUB_OUTPUT
 
     - name: Output changes
       run: echo "${{ steps.diff.outputs.diff }}"
@@ -154,7 +157,7 @@ jobs:
 
     - name: Cache Intel oneapi packages
       id: cache-intel-oneapi
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: /opt/intel/oneapi
         key: install-${{ runner.os }}-all

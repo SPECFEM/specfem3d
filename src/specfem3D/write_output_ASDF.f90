@@ -25,9 +25,136 @@
 !
 !=====================================================================
 
+
+  subroutine write_output_ASDF(all_seismograms,nrec_store,istore)
+
+! writes out seismogram in ASDF format
+
+  use constants, only: IMAIN,CUSTOM_REAL,NDIM,NB_RUNS_ACOUSTIC_GPU,myrank
+
+  use specfem_par, only: nlength_seismogram,nrec,nrec_local,number_receiver_global, &
+    WRITE_SEISMOGRAMS_BY_MAIN
+
+  implicit none
+
+  integer, intent(in) :: istore,nrec_store
+  real(kind=CUSTOM_REAL), dimension(NDIM,nlength_seismogram,nrec_store), intent(in) :: all_seismograms
+
+  ! local parameters
+  integer :: irec,irec_local
+  integer :: iorientation,number_of_components
+  character(len=3) :: channel
+  logical, save :: is_initialized = .false.
+
+  ! note: all processes need to run through this routine as there are all-to-all MPI gathers in write_asdf().
+  !       in case only the main process stores/writes seismograms, all other processes will just have nrec_store == 0.
+
+  ! The writing of seismograms by the main proc is handled within write_asdf()
+
+  ! we only want to do this once
+  if (.not. is_initialized) then
+    ! user output
+    if (myrank == 0) then
+      ! user output
+      write(IMAIN,*) 'Creating seismograms in ASDF file format'
+      if (WRITE_SEISMOGRAMS_BY_MAIN) then
+        write(IMAIN,*) '  writing waveforms by main...'
+      else
+        write(IMAIN,*) '  writing waveforms in parallel...'
+      endif
+      call flush_IMAIN()
+    endif
+
+    ! initializes the ASDF data structure by allocating arrays
+    ! note: each process stores its local receiver's seismograms
+    !       the write_asdf() routine will handle file output (also in case choosen by main process only)
+    call init_asdf_data(nrec_store)
+
+    ! sets flag
+    is_initialized = .true.
+  endif
+
+  ! stores local seismograms
+  do irec_local = 1,nrec_store
+
+    ! get global number of that receiver
+    if (.not. WRITE_SEISMOGRAMS_BY_MAIN) then
+      ! each process writes out its local receivers
+      if (NB_RUNS_ACOUSTIC_GPU == 1) then
+        irec = number_receiver_global(irec_local)
+      else
+        ! NB_RUNS_ACOUSTIC_GPU > 1
+        ! if irec_local is a multiple of nrec then mod(irec_local,nrec) == 0 and
+        ! the array access at number_receiver_global would be invalid;
+        ! for those cases we want irec associated to irec_local == nrec_store
+        if (mod(irec_local,nrec_local) == 0) then
+          irec = number_receiver_global(nrec_local)
+        else
+          irec = number_receiver_global(mod(irec_local,nrec_local))
+        endif
+      endif
+    else
+      ! only main process writes out all
+      if (NB_RUNS_ACOUSTIC_GPU == 1) then
+        irec = irec_local
+      else
+        ! NB_RUNS_ACOUSTIC_GPU > 1
+        if (mod(irec_local,nrec) == 0) then
+          irec = nrec
+        else
+          irec = mod(irec_local,nrec)
+        endif
+      endif
+    endif
+
+    ! safety check
+    if (irec < 1 .or. irec > nrec) then
+      print *,'Error: invalid irec',irec,' out of a total of nrec ',nrec,'receivers for rank',myrank
+      print *,'       local irec_local',irec_local,'from nrec_store',nrec_store
+      stop 'Invalid irec in write_output_SU() routine found'
+    endif
+
+    ! stores this seismogram
+    ! note: ASDF data structure is given in module
+    !       stores all traces into ASDF container in case
+
+    ! see how many components we need to store: 1 for pressure, NDIM for a vector
+    if (istore == 4) then ! this is for pressure
+      number_of_components = 1
+    else
+      number_of_components = NDIM
+    endif
+
+    ! loop over each seismogram component
+    do iorientation = 1,number_of_components
+
+      ! gets channel name
+      if (istore == 4) then ! this is for pressure
+        call write_channel_name(istore,channel)
+      else
+        call write_channel_name(iorientation,channel)
+      endif
+
+      ! store seismogram into ASDF storage
+      call store_asdf_data(all_seismograms(:,:,irec_local),irec_local,irec,channel,iorientation)
+    enddo
+  enddo
+
+  ! writes ASDF file output
+  call write_asdf()
+
+  ! deallocate the container
+  call close_asdf_data()
+
+  end subroutine write_output_ASDF
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 !> Initializes the data structure for ASDF
-!! \param nrec_local The number of receivers on the local processor
-  subroutine init_asdf_data(nrec_local)
+!! \param nrec_store The number of receivers on the local processor
+  subroutine init_asdf_data(nrec_store)
 
   use constants, only: NDIM
   use specfem_par, only: myrank,NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS
@@ -36,7 +163,7 @@
 
   implicit none
   ! Parameters
-  integer,intent(in) :: nrec_local
+  integer,intent(in) :: nrec_store
 
   ! Variables
   integer :: total_seismos_local, ier
@@ -53,17 +180,17 @@
     call exit_MPI(myrank,'error ASDF trace length mismatch')
   endif
 
-  total_seismos_local = nrec_local * NDIM ! 3 components
+  total_seismos_local = nrec_store * NDIM ! 3 components
 
-  asdf_container%nrec_local = nrec_local
+  asdf_container%nrec_local = nrec_store
 
-  allocate(asdf_container%receiver_name_array(nrec_local), &
-           asdf_container%network_array(nrec_local), &
+  allocate(asdf_container%receiver_name_array(nrec_store), &
+           asdf_container%network_array(nrec_store), &
+           asdf_container%receiver_lat(nrec_store), &
+           asdf_container%receiver_lo(nrec_store), &
+           asdf_container%receiver_el(nrec_store), &
+           asdf_container%receiver_dpt(nrec_store), &
            asdf_container%component_array(total_seismos_local), &
-           asdf_container%receiver_lat(nrec_local), &
-           asdf_container%receiver_lo(nrec_local), &
-           asdf_container%receiver_el(nrec_local), &
-           asdf_container%receiver_dpt(nrec_local), &
            asdf_container%records(total_seismos_local),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2015')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
@@ -134,8 +261,6 @@
   allocate(asdf_container%records(i)%record(seismo_current_used),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2017')
   if (ier /= 0) call exit_MPI (myrank, 'Allocating ASDF container failed.')
-
-  ! initializes
   asdf_container%records(i)%record(:) = 0.0
 
   ! seismogram as real data
@@ -508,7 +633,7 @@
   if (seismo_offset == 0) then
     if (myrank == 0) then
       ! user output
-      write(IMAIN,*) 'creating ASDF file: ',trim(OUTPUT_FILES) // "synthetic.h5"
+      write(IMAIN,*) '  seismogram file: ',trim(OUTPUT_FILES) // "synthetic.h5"
       call flush_IMAIN()
 
       ! initialize HDF5
@@ -634,11 +759,7 @@
 
     ! only main writes
     if (myrank == 0) then
-      ! user output
-      write(IMAIN,*) 'writing waveforms by main...'
-      write(IMAIN,*)
-      call flush_IMAIN()
-
+      ! initialize
       call ASDF_initialize_hdf5_f(ier);
       if (ier /= 0) call exit_MPI(myrank,'Error ASDF initialize hdf5 seismogram failed')
 
@@ -760,14 +881,6 @@
 
   else
     ! write seismograms in parallel
-    ! user output
-    if (myrank == 0) then
-      ! user output
-      write(IMAIN,*) 'writing waveforms in parallel...'
-      write(IMAIN,*)
-      call flush_IMAIN()
-    endif
-
     ! initialize
     call ASDF_initialize_hdf5_f(ier);
     if (ier /= 0) call exit_MPI(myrank,'Error ASDF parallel initialize hdf5 failed')
@@ -815,6 +928,15 @@
                                     trim(waveform_name) // C_NULL_CHAR, &
                                     data_ids(i))
 
+          ! note: this call to write partial waveforms can stall on some systems & parallel hdf5 version installations!
+          !       it might be that some installation require the underlying H5Dwrite() call to be collective,
+          !       i.e., it must be called by all MPI processes - not sure though how to fix this for all installations...
+          !
+          !       to be safe, we could enforce the write procedure by main only WRITE_SEISMOGRAMS_BY_MAIN.
+          !       this seems to work so far on all tested systems.
+          !
+          ! see asdf implementation of ASDF_write_partial_waveform_f():
+          ! https://github.com/SeismicData/asdf-library/blob/f28233894ef0a065eb725b9d22e55d0d02a7aac1/src/ASDF_write.c#L354
           if (myrank == current_proc) then
             one_seismogram(i,:) = asdf_container%records(l+i)%record(1:seismo_current_used)
 

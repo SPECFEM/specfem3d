@@ -41,7 +41,7 @@
   character(len=30) :: dsetname
   character(len=64) :: tempstr
 
-  ! mpi variables
+  ! MPI variables
   integer :: info, comm
 
   ! if collective read
@@ -123,7 +123,7 @@
   character(len=40) :: dsetname
   character(len=64) :: tempstr
 
-  ! mpi variables
+  ! MPI variables
   integer :: info, comm
 
   ! if collective read
@@ -681,7 +681,7 @@
       dsetname = "rhoarraystore"
       call h5_read_dataset_5d_r_collect_hyperslab(dsetname, rhoarraystore, (/0,0,0,0,sum(offset_nspecporo(0:myrank-1))/),if_col)
       dsetname = "kappaarraystore"
-      call h5_read_dataset_5d_r_collect_hyperslab(dsetname, kappaarraystore,&
+      call h5_read_dataset_5d_r_collect_hyperslab(dsetname, kappaarraystore, &
                                                   (/0,0,0,0,sum(offset_nspecporo(0:myrank-1))/),if_col)
       dsetname = "etastore"
       call h5_read_dataset_4d_r_collect_hyperslab(dsetname, etastore, (/0,0,0,sum(offset_nspecporo(0:myrank-1))/),if_col)
@@ -1030,32 +1030,32 @@
   ibelm_bottom(:) = 0; ibelm_top(:) = 0
 
   if (I_should_read_the_database) then
-    if(sum(offset_nspec2D_xmin) > 0) then
+    if (sum(offset_nspec2D_xmin) > 0) then
       dsetname = "ibelm_xmin"
       call h5_read_dataset_1d_i_collect_hyperslab(dsetname, ibelm_xmin, (/sum(offset_nspec2D_xmin(0:myrank-1))/),if_col)
     endif
 
-    if(sum(offset_nspec2D_xmax) > 0) then
+    if (sum(offset_nspec2D_xmax) > 0) then
       dsetname = "ibelm_xmax"
       call h5_read_dataset_1d_i_collect_hyperslab(dsetname, ibelm_xmax, (/sum(offset_nspec2D_xmax(0:myrank-1))/),if_col)
     endif
 
-    if(sum(offset_nspec2D_ymin) > 0) then
+    if (sum(offset_nspec2D_ymin) > 0) then
       dsetname = "ibelm_ymin"
       call h5_read_dataset_1d_i_collect_hyperslab(dsetname, ibelm_ymin, (/sum(offset_nspec2D_ymin(0:myrank-1))/),if_col)
     endif
 
-    if(sum(offset_nspec2D_ymax) > 0) then
+    if (sum(offset_nspec2D_ymax) > 0) then
       dsetname = "ibelm_ymax"
       call h5_read_dataset_1d_i_collect_hyperslab(dsetname, ibelm_ymax, (/sum(offset_nspec2D_ymax(0:myrank-1))/),if_col)
     endif
 
-    if(sum(offset_nspec2D_bottom_ext) > 0) then
+    if (sum(offset_nspec2D_bottom_ext) > 0) then
       dsetname = "ibelm_bottom"
       call h5_read_dataset_1d_i_collect_hyperslab(dsetname, ibelm_bottom, (/sum(offset_nspec2D_bottom_ext(0:myrank-1))/),if_col)
     endif
 
-    if(sum(offset_nspec2D_top_ext) > 0) then
+    if (sum(offset_nspec2D_top_ext) > 0) then
       dsetname = "ibelm_top"
       call h5_read_dataset_1d_i_collect_hyperslab(dsetname, ibelm_top, (/sum(offset_nspec2D_top_ext(0:myrank-1))/),if_col)
     endif
@@ -1439,12 +1439,12 @@
     if (ier /= 0) stop 'Error allocating array phase_ispec_inner_acoustic'
     phase_ispec_inner_acoustic(:,:) = 0
 
-    call h5_read_dataset_1d_i_collect_hyperslab("offset_num_phase_ispec_acoustic",&
+    call h5_read_dataset_1d_i_collect_hyperslab("offset_num_phase_ispec_acoustic", &
             offset_num_phase_ispec_acoustic, (/0/), if_col)
     if (sum(offset_num_phase_ispec_acoustic) > 0) then
      if (I_should_read_the_database) then
         dsetname = "phase_ispec_inner_acoustic"
-        call h5_read_dataset_2d_i_collect_hyperslab(dsetname, phase_ispec_inner_acoustic,&
+        call h5_read_dataset_2d_i_collect_hyperslab(dsetname, phase_ispec_inner_acoustic, &
                 (/sum(offset_num_phase_ispec_acoustic(0:myrank-1)),0/),if_col)
       endif
       if (size(phase_ispec_inner_acoustic) > 0) &
@@ -1479,7 +1479,7 @@
     if (sum(offset_num_phase_ispec_elastic) > 0) then
       if (I_should_read_the_database) then
          dsetname = "phase_ispec_inner_elastic"
-        call h5_read_dataset_2d_i_collect_hyperslab(dsetname, phase_ispec_inner_elastic,&
+        call h5_read_dataset_2d_i_collect_hyperslab(dsetname, phase_ispec_inner_elastic, &
                 (/sum(offset_num_phase_ispec_elastic(0:myrank-1)),0/),if_col)
       endif
       if (size(phase_ispec_inner_elastic) > 0) &
@@ -1494,7 +1494,7 @@
       dsetname = "nspec_outer_poroelastic"
       call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, nspec_outer_poroelastic,(/myrank/),if_col)
       dsetname = "num_phase_ispec_poroelastic"
-      call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, num_phase_ispec_poroelastic,&
+      call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, num_phase_ispec_poroelastic, &
               (/myrank/),if_col)
     endif
     call bcast_all_i_for_database(nspec_inner_poroelastic, 1)
@@ -1508,14 +1508,14 @@
     phase_ispec_inner_poroelastic(:,:) = 0
 
     if (I_should_read_the_database) then
-      call h5_read_dataset_1d_i_collect_hyperslab("offset_num_phase_ispec_poroelastic",&
+      call h5_read_dataset_1d_i_collect_hyperslab("offset_num_phase_ispec_poroelastic", &
             offset_num_phase_ispec_poroelastic, (/0/), if_col)
     endif
     call bcast_all_i_array_for_database(offset_num_phase_ispec_poroelastic,size(offset_num_phase_ispec_poroelastic))
     if (sum(offset_num_phase_ispec_poroelastic) > 0) then
       if (I_should_read_the_database) then
         dsetname = "phase_ispec_inner_poroelastic"
-        call h5_read_dataset_2d_i_collect_hyperslab(dsetname, phase_ispec_inner_poroelastic,&
+        call h5_read_dataset_2d_i_collect_hyperslab(dsetname, phase_ispec_inner_poroelastic, &
               (/sum(offset_num_phase_ispec_poroelastic(0:myrank-1)),0/),if_col)
       endif
       if (size(phase_ispec_inner_poroelastic) > 0) &

@@ -129,6 +129,7 @@ specfem3D_OBJECTS = \
 	$O/update_displacement_LDDRK.spec.o \
 	$O/write_movie_output.spec.o \
 	$O/write_output_ASCII_or_binary.spec.o \
+	$O/write_output_HDF5.spec_hdf5.o \
 	$O/write_output_SU.spec.o \
 	$O/write_seismograms.spec.o \
 	$(EMPTY_MACRO)
@@ -340,6 +341,9 @@ $O/write_output_ASDF.spec.o: $O/asdf_data.spec_module.o
 $O/locate_point.spec.o: $O/search_kdtree.shared.o
 $O/setup_sources_receivers.spec.o: $O/search_kdtree.shared.o
 
+## HDF5 file i/o
+$O/prepare_attenuation.spec.o: $O/hdf5_manager.shared_hdf5_module.o
+
 ####
 #### rule to build each .o file below
 ####
@@ -376,10 +380,10 @@ $O/%.spec_noadios.o: $S/%.f90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_mod
 
 
 ## HDF5 file i/o
-$O/%.spec_hdf5.o: $S/%.f90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o $O/hdf5_manager.shared_hdf5_module.o
+$O/%.spec_hdf5.o: $S/%.f90 $O/specfem3D_par.spec_module.o $O/hdf5_manager.shared_hdf5_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec_hdf5.o: $S/%.F90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_module.o $O/hdf5_manager.shared_hdf5_module.o
+$O/%.spec_hdf5.o: $S/%.F90 $O/specfem3D_par.spec_module.o $O/hdf5_manager.shared_hdf5_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 

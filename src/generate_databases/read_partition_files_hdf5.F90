@@ -66,7 +66,7 @@
   integer, dimension(0:NPROC-1) :: offset_n_elms_interface
   integer, dimension(0:NPROC-1) :: offset_nb_interfaces
 
-  ! mpi variables
+  ! MPI variables
   integer :: info, comm
 
   ! read databases about external mesh simulation
@@ -82,7 +82,7 @@
     call flush_IMAIN()
   endif
 
-  ! get mpi parameters
+  ! get MPI parameters
   call world_get_comm(comm)
   call world_get_info_null(info)
 

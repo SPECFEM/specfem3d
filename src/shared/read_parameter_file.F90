@@ -794,6 +794,8 @@
     !  write(*,'(a)') 'HDF5_ENABLED                   = .false.'
     !  write(*,*)
     !endif
+    ! (optional) hdf5 seismograms
+    call read_value_logical(HDF5_FORMAT, 'HDF5_FORMAT', ier); ier = 0
     !#TODO: IO server
     ! read number of io dedicated nodes
     !call read_value_integer(HDF5_IO_NNODE, 'HDF5_IO_NNODE', ier)
@@ -960,7 +962,7 @@
 
   ! HDF5 file I/O
 #if !defined(USE_HDF5)
-  if (HDF5_ENABLED) then
+  if (HDF5_ENABLED .or. HDF5_FORMAT) then
     print *
     print *,'**************'
     print *,'**************'
@@ -973,13 +975,26 @@
   endif
 #endif
   ! mutually exclusive ADIOS and HDF5
-  if (ADIOS_ENABLED .and. HDF5_ENABLED) &
+  if (HDF5_ENABLED .and. ADIOS_ENABLED) &
     stop 'ADIOS_ENABLED and HDF5_ENABLED together are not supported, please use only one of them'
+
+  ! seismogram formats
+  if (ASDF_FORMAT .and. SU_FORMAT) &
+    stop 'ASDF_FORMAT and SU_FORMAT together are not supported, please use only one of them'
+  ! note: on some systems, ASDF stalls when writing out seismos in parallel.
+  !       here, we could enforce to write only by main - not done so far, let's give it a try first...
+  !if (ASDF_FORMAT .and. .not. WRITE_SEISMOGRAMS_BY_MAIN) &
+  !  stop 'ASDF_FORMAT must have WRITE_SEISMOGRAMS_BY_MAIN set to .true.'
+  if (HDF5_FORMAT .and. ASDF_FORMAT) &
+    stop 'HDF5_FORMAT and ASDF_FORMAT together are not supported, please use only one of them'
+  if (HDF5_FORMAT .and. SU_FORMAT) &
+    stop 'HDF5_FORMAT and SU_FORMAT together are not supported, please use only one of them'
+  if (HDF5_FORMAT .and. .not. WRITE_SEISMOGRAMS_BY_MAIN) &
+    stop 'HDF5_FORMAT must have WRITE_SEISMOGRAMS_BY_MAIN set to .true.'
 
   ! PML
   if (PML_CONDITIONS) then
-!! DK DK added this for now (March 2013)
-!! DK DK we will soon add it
+    !#TODO: check if PML works for adjoint/kernel simulations
     if (SAVE_FORWARD .or. SIMULATION_TYPE == 3) &
       stop 'PML_CONDITIONS is still under test for adjoint simulation'
 
@@ -1406,6 +1421,7 @@
 
   ! HDF5 file I/O
   call bcast_all_singlel(HDF5_ENABLED)
+  call bcast_all_singlel(HDF5_FORMAT)
   !#TODO: IO server
   !call bcast_all_singlei(HDF5_IO_NNODE)
 

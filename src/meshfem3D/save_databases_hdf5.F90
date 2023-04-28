@@ -45,7 +45,7 @@
 
   use meshfem_par, only: ibool,xstore,ystore,zstore, &
     NPROC, &
-    NMATERIALS,material_properties,material_properties_undef,&
+    NMATERIALS,material_properties,material_properties_undef, &
     nspec_CPML,is_CPML,CPML_to_spec,CPML_regions, &
     addressing, &
     iproc_xi_current,iproc_eta_current, &
@@ -101,7 +101,7 @@
   integer,dimension(:,:),allocatable            :: material_index
   character(len=MAX_STRING_LEN), dimension(6,1) :: undef_mat_prop
 
-  ! mpi variables
+  ! MPI variables
   integer :: info, comm
 
   ! name for material data group
@@ -166,13 +166,13 @@
   ! opens output file
   name_database_hdf5 = LOCAL_PATH(1:len_trim(LOCAL_PATH))//'/'//'Database.h5'
 
-  ! get mpi parameters
+  ! get MPI parameters
   call world_get_comm(comm)
   call world_get_info_null(info)
 
   ! initialize hdf5 io
   call h5_init()
-  ! set mpi info
+  ! set MPI info
   call h5_set_mpi_info(comm, info, myrank, NPROC)
 
   ! assignes material index
@@ -374,7 +374,7 @@
   call synchronize_all()
 
   ! open file
-  call h5_open_file_p_collect(name_database_hdf5) ! collective writing is faster but mpi error occurs
+  call h5_open_file_p_collect(name_database_hdf5) ! collective writing is faster but MPI error occurs
   ! when using more than 128 cpus
   !call h5_open_file_p(name_database_hdf5)
 
@@ -398,7 +398,7 @@
 
   ! spectral elements
   do ispec = 1,nspec
-    ispec_local(ispec) = ispec ! <- ispec_local is dummy
+    ispec_local(ispec) = ispec ! < - ispec_local is dummy
 
     ! gets anchor nodes
     do ia = 1,NGNOD
@@ -407,7 +407,7 @@
     enddo
 
     mat_mesh(1,ispec) = material_index(1,ispec)
-    mat_mesh(2,ispec) = material_index(2,ispec) ! <- mat_mesh
+    mat_mesh(2,ispec) = material_index(2,ispec) ! < - mat_mesh
 
     elm_conn_xdmf(1,ispec) = 9
     do ia = 1, NGNOD
@@ -440,7 +440,7 @@
   n_elms_on_bound(3) = nspec2D_ymin
   n_elms_on_bound(4) = nspec2D_ymax
   n_elms_on_bound(5) = NSPEC2D_BOTTOM
-  n_elms_on_bound(6) = NSPEC2D_TOP    ! <- n_elms_on_bound
+  n_elms_on_bound(6) = NSPEC2D_TOP    ! < - n_elms_on_bound
 
   count1 = 1
 
@@ -591,7 +591,7 @@
         elements_cpml(2,ispec_CPML) = CPML_regions(ispec_CPML)
      enddo
      do ispec=1,nspec
-        if(is_CPML(ispec)) then
+        if (is_CPML(ispec)) then
           if_cpml(ispec) = 1
         else
           if_cpml(ispec) = 0

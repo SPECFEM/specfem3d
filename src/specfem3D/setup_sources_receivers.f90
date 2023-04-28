@@ -124,7 +124,8 @@
 
   use specfem_par, only: myrank,NSTEP,SIMULATION_TYPE, &
     NTSTEP_BETWEEN_OUTPUT_SEISMOS,NTSTEP_BETWEEN_READ_ADJSRC, &
-    SAVE_ALL_SEISMOS_IN_ONE_FILE,ASDF_FORMAT
+    SAVE_ALL_SEISMOS_IN_ONE_FILE, &
+    ASDF_FORMAT,HDF5_FORMAT
 
   implicit none
 
@@ -152,6 +153,13 @@
     if (NTSTEP_BETWEEN_OUTPUT_SEISMOS < NSTEP) then
       print *, 'Error: Setting ASDF_FORMAT to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP'
       call exit_MPI(myrank,'Error: Setting ASDF_FORMAT to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP')
+    endif
+  endif
+  if (HDF5_FORMAT) then
+    ! HDF5 storage requires to have full length of seismograms
+    if (NTSTEP_BETWEEN_OUTPUT_SEISMOS < NSTEP) then
+      print *, 'Error: Setting HDF5_FORMAT to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP'
+      call exit_MPI(myrank,'Error: Setting HDF5_FORMAT to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP')
     endif
   endif
 
@@ -1231,7 +1239,7 @@
   implicit none
 
   ! local parameters
-  integer :: irec,irec_local,isource,ier,nrec_store
+  integer :: irec,irec_local,isource,ier
   integer,dimension(0:NPROC-1) :: tmp_rec_local_all
   integer :: maxrec,maxproc(1)
   double precision :: sizeval,size_s
@@ -1281,7 +1289,7 @@
     call exit_MPI(myrank,'SAVE_SEISMOGRAMS_STRAIN works only correctly when WRITE_SEISMOGRAMS_BY_MAIN = .false.')
   endif
 
-  ! seismogram array length
+  ! seismogram array length (to write out time portions of the full seismograms)
   nlength_seismogram = NTSTEP_BETWEEN_OUTPUT_SEISMOS / NTSTEP_BETWEEN_OUTPUT_SAMPLE
 
   ! statistics about allocation memory for seismograms & source_adjoint seismograms
@@ -1618,18 +1626,6 @@
           enddo
         enddo
       enddo
-    endif
-  endif
-
-  ! ASDF format seismograms
-  if (ASDF_FORMAT) then
-    if (.not. (SIMULATION_TYPE == 3 .and. (.not. SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)) ) then
-      ! initializes the ASDF data structure by allocating arrays
-      ! note: each process stores its local receiver's seismograms
-      !       the write_asdf() routine will handle file output (also in case choosen by main process only)
-      nrec_store = nrec_local * NB_RUNS_ACOUSTIC_GPU
-      call init_asdf_data(nrec_store)
-      call synchronize_all()
     endif
   endif
 

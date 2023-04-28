@@ -171,8 +171,12 @@ end module constants
   logical :: ADIOS_ENABLED
   logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS, ADIOS_FOR_UNDO_ATTENUATION
 
-  ! HDF5 file output
-  logical :: HDF5_ENABLED = .false.
+  ! HDF5 file i/o
+  logical :: HDF5_ENABLED = .false.           ! for all databases i/o in hdf5
+
+  ! HDF5 seismogram output
+  logical :: HDF5_FORMAT  = .false.           ! for seismograms output in hdf5
+
   !#TODO: IO server
   !! number of io dedicated nodes
   !integer :: HDF5_IO_NNODE

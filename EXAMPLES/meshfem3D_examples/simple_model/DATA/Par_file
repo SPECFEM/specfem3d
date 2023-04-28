@@ -248,6 +248,9 @@ SU_FORMAT                       = .false.
 # output seismograms in ASDF (requires asdf-library)
 ASDF_FORMAT                     = .false.
 
+# output seismograms in HDF5 (requires hdf5-library and WRITE_SEISMOGRAMS_BY_MAIN)
+HDF5_FORMAT                     = .false.
+
 # decide if main process writes all the seismograms or if all processes do it in parallel
 WRITE_SEISMOGRAMS_BY_MAIN       = .false.
 
@@ -385,4 +388,8 @@ ADIOS_FOR_MESH                  = .true.
 ADIOS_FOR_FORWARD_ARRAYS        = .true.
 ADIOS_FOR_KERNELS               = .true.
 ADIOS_FOR_UNDO_ATTENUATION      = .false.
+
+# HDF5 Database I/O
+# (note the flags for HDF5 and ADIOS are mutually exclusive, only one can be used)
+HDF5_ENABLED                    = .false.
 

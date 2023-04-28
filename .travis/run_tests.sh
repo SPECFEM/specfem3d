@@ -215,7 +215,12 @@ else
   # inversion example
   if [ "$TESTID" == "36" ]; then
     sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 500:" DATA/Par_file
-    sed -i "s/Niter .*/Niter       : 0/" DATA/inverse_problem/inversion_fwi.dat
+    # reduce mesh resolution to get an output within the 10-min limit of travis
+    # (otherwise example will fail due to a stall output error)
+    sed -i "s:20:16:g" DATA/meshfem3D_files/Mesh_Par_file.INIT
+    sed -i "s:20:16:g" DATA/meshfem3D_files/Mesh_Par_file.TRUE
+    sed -i "s:20:16:g" DATA/meshfem3D_files/interfaces.dat
+    sed -i "s/Niter .*/Niter       : 1/" DATA/inverse_problem/inversion_fwi.dat
   fi
 
   # coverage run

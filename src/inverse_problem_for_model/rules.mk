@@ -193,6 +193,7 @@ inverse_problem_for_model_OBJECTS += \
 	$O/update_displacement_LDDRK.spec.o \
 	$O/write_movie_output.spec.o \
 	$O/write_output_ASCII_or_binary.spec.o \
+	$O/write_output_HDF5.spec_hdf5.o \
 	$O/write_output_SU.spec.o \
 	$O/write_seismograms.spec.o \
 	$(EMPTY_MACRO)
@@ -403,9 +404,6 @@ $O/inverse_problem_main.inv.o: \
 	$O/fwi_iteration_mod.inv_inversion.o
 
 $O/parallel_for_inverse_problem.invmpi.o: $(COND_MPI_OBJECTS)
-
-## HDF5 file i/o
-$O/prepare_attenuation.spec.o: $O/hdf5_manager.shared_hdf5_module.o
 
 ####
 #### rule to build each .o file
