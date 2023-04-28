@@ -39,7 +39,7 @@ tomography_TARGETS = \
 	$(EMPTY_MACRO)
 
 tomography_OBJECTS = \
-	$(xadd_model_iso_OBJECTS) \
+	$(xadd_model_OBJECTS) \
 	$(xmodel_update_OBJECTS) \
 	$(xsum_kernels_OBJECTS) \
 	$(xsum_preconditioned_kernels_OBJECTS) \
@@ -99,10 +99,11 @@ xsum_preconditioned_kernels: $E/xsum_preconditioned_kernels
 #######################################
 
 ##
-## add_model
+## xadd_model_iso
 ##
 xadd_model_OBJECTS = \
 	$O/tomography_par.tomo_module.o \
+	$O/add_model_iso.tomo.o \
 	$O/compute_kernel_integral.tomo.o \
 	$O/get_cg_direction.tomo.o \
 	$O/get_sd_direction.tomo.o \
@@ -121,6 +122,7 @@ xadd_model_SHARED_OBJECTS = \
 	$O/read_mesh_databases.spec.o \
 	$O/read_mesh_databases_hdf5.spec_hdf5.o \
 	$O/shared_par.shared_module.o \
+	$O/adios_manager.shared_adios_module.o \
 	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/exit_mpi.shared.o \
@@ -138,26 +140,19 @@ xadd_model_SHARED_OBJECTS = \
 # conditional adios linking
 ifeq ($(ADIOS),yes)
 xadd_model_OBJECTS += $(adios_specfem3D_OBJECTS)
-xadd_model_SHARED_OBJECTS += $(adios_specfem3D_SHARED_OBJECTS)
+xadd_model_SHARED_OBJECTS += $(adios_specfem3D_PREOBJECTS)
 else ifeq ($(ADIOS2),yes)
 xadd_model_OBJECTS += $(adios_specfem3D_OBJECTS)
-xadd_model_SHARED_OBJECTS += $(adios_specfem3D_SHARED_OBJECTS)
+xadd_model_SHARED_OBJECTS += $(adios_specfem3D_PREOBJECTS)
 else
 xadd_model_OBJECTS += $(adios_specfem3D_STUBS)
 endif
 
-##
-## xadd_model_iso
-##
-xadd_model_iso_OBJECTS = \
-	$O/add_model_iso.tomo.o \
-	$(xadd_model_OBJECTS) \
-	$(EMPTY_MACRO)
 
 # extra dependencies
 $O/add_model_iso.tomo.o: $O/specfem3D_par.spec_module.o $O/tomography_par.tomo_module.o
 
-${E}/xadd_model_iso: $(xadd_model_iso_OBJECTS) $(xadd_model_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+${E}/xadd_model_iso: $(xadd_model_OBJECTS) $(xadd_model_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
 	@echo "building xadd_model_iso"
 	@echo ""
@@ -212,10 +207,10 @@ xmodel_update_OBJECTS += $(gpu_specfem3D_STUBS)
 # conditional adios linking
 ifeq ($(ADIOS),yes)
 xmodel_update_OBJECTS += $(adios_specfem3D_OBJECTS)
-xmodel_update_SHARED_OBJECTS += $(adios_specfem3D_SHARED_OBJECTS)
+xmodel_update_SHARED_OBJECTS += $(adios_specfem3D_PREOBJECTS)
 else ifeq ($(ADIOS2),yes)
 xmodel_update_OBJECTS += $(adios_specfem3D_OBJECTS)
-xmodel_update_SHARED_OBJECTS += $(adios_specfem3D_SHARED_OBJECTS)
+xmodel_update_SHARED_OBJECTS += $(adios_specfem3D_PREOBJECTS)
 else
 xmodel_update_OBJECTS += $(adios_specfem3D_STUBS)
 endif

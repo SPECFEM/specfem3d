@@ -155,6 +155,7 @@ xsmooth_sem_SHARED_OBJECTS = \
 	$O/read_mesh_databases.spec.o \
 	$O/read_mesh_databases_hdf5.spec_hdf5.o \
 	$O/shared_par.shared_module.o \
+	$O/adios_manager.shared_adios_module.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
