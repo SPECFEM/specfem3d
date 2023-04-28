@@ -248,6 +248,9 @@ SU_FORMAT                       = .false.
 # output seismograms in ASDF (requires asdf-library)
 ASDF_FORMAT                     = .false.
 
+# output seismograms in HDF5 (requires hdf5-library and WRITE_SEISMOGRAMS_BY_MAIN)
+HDF5_FORMAT                     = .false.
+
 # decide if main process writes all the seismograms or if all processes do it in parallel
 WRITE_SEISMOGRAMS_BY_MAIN       = .false.
 
@@ -314,7 +317,7 @@ SAVE_MOHO_MESH                  = .false.
 #
 #-----------------------------------------------------------
 COUPLE_WITH_INJECTION_TECHNIQUE = .false.
-INJECTION_TECHNIQUE_TYPE        = 3         # 1 = DSM, 2 = AxiSEM, 3 = FK
+INJECTION_TECHNIQUE_TYPE        = 3   # 1 = DSM, 2 = AxiSEM, 3 = FK
 MESH_A_CHUNK_OF_THE_EARTH       = .false.
 TRACTION_PATH                   = ./DATA/AxiSEM_tractions/3/
 FKMODEL_FILE                    = FKmodel
@@ -385,4 +388,8 @@ ADIOS_FOR_MESH                  = .false.
 ADIOS_FOR_FORWARD_ARRAYS        = .false.
 ADIOS_FOR_KERNELS               = .false.
 ADIOS_FOR_UNDO_ATTENUATION      = .false.
+
+# HDF5 Database I/O
+# (note the flags for HDF5 and ADIOS are mutually exclusive, only one can be used)
+HDF5_ENABLED                    = .false.
 
