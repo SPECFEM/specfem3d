@@ -405,9 +405,6 @@ $O/inverse_problem_main.inv.o: \
 
 $O/parallel_for_inverse_problem.invmpi.o: $(COND_MPI_OBJECTS)
 
-## HDF5 file i/o
-$O/prepare_attenuation.spec.o: $O/hdf5_manager.shared_hdf5_module.o
-
 ####
 #### rule to build each .o file
 ####

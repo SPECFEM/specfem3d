@@ -341,6 +341,9 @@ $O/write_output_ASDF.spec.o: $O/asdf_data.spec_module.o
 $O/locate_point.spec.o: $O/search_kdtree.shared.o
 $O/setup_sources_receivers.spec.o: $O/search_kdtree.shared.o
 
+## HDF5 file i/o
+$O/prepare_attenuation.spec.o: $O/hdf5_manager.shared_hdf5_module.o
+
 ####
 #### rule to build each .o file below
 ####
