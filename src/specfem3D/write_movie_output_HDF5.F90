@@ -227,7 +227,7 @@ contains
   fname_h5_data_shake = trim(OUTPUT_FILES) // "/shakemap.h5"
 
   ! get the offset info from main rank
-  call bcast_all_cr(faces_surface_offset,size(faces_surface_offset))
+  call bcast_all_i(faces_surface_offset,size(faces_surface_offset))
 
   if (myrank == 0) then
     size_surf_array = size(store_val_x_all)
@@ -498,7 +498,7 @@ contains
 
   ! get the offset info from main rank
   if (it == NTSTEP_BETWEEN_FRAMES) then
-    call bcast_all_cr(faces_surface_offset,size(faces_surface_offset))
+    call bcast_all_i(faces_surface_offset,size(faces_surface_offset))
   endif
 
   if (myrank == 0) then
@@ -1042,8 +1042,8 @@ contains
   ! group for storing node coordinates and mesh element connectivity
   group_name = "mesh"
 
-  call gather_all_all_singlei((/NSPEC_AB/),nelm_par_proc_nio,NPROC)
-  call gather_all_all_singlei((/NGLOB_AB/),nglob_par_proc_nio,NPROC)
+  call gather_all_all_singlei(NSPEC_AB,nelm_par_proc_nio,NPROC)
+  call gather_all_all_singlei(NGLOB_AB,nglob_par_proc_nio,NPROC)
 
   nglob_all = sum(nglob_par_proc_nio(0:NPROC-1))
   nspec_all = sum(nelm_par_proc_nio(0:NPROC-1))
