@@ -647,6 +647,11 @@ module specfem_par_movie
   ! to save full 3D snapshot of velocity (movie volume)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: div, curl_x, curl_y, curl_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: wavefield_x,wavefield_y,wavefield_z
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: wavefield_pressure
+
+  ! divergence and curl only in the global nodes
+  real(kind=CUSTOM_REAL),dimension(:),allocatable:: div_glob
+  integer,dimension(:),allocatable :: valence_glob
 
   ! surface point locations
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x

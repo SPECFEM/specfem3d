@@ -37,6 +37,9 @@
 
   integer :: ier
 
+  ! checks if anything to do
+  if (.not. IO_compute_task) return
+
   ! flag for any movie simulation
   if (MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. MOVIE_VOLUME .or. PNM_IMAGE) then
     MOVIE_SIMULATION = .true.
@@ -130,6 +133,23 @@
       curl_x(:,:,:,:) = 0._CUSTOM_REAL
       curl_y(:,:,:,:) = 0._CUSTOM_REAL
       curl_z(:,:,:,:) = 0._CUSTOM_REAL
+
+      ! allocate array for global points
+      allocate(div_glob(NGLOB_AB),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2004')
+      div_glob(:) = 0._CUSTOM_REAL
+
+      allocate(valence_glob(NGLOB_AB), stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2005')
+      if (ier /= 0) stop 'error allocating arrays for movie div and curl'
+      valence_glob(:) = 0
+    endif
+
+    ! acoustic only
+    if (.not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then
+      allocate(wavefield_pressure(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1731')
+      wavefield_pressure(:,:,:,:) = 0._CUSTOM_REAL
     endif
   endif
 

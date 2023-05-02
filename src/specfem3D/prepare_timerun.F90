@@ -40,6 +40,9 @@
   double precision :: tCPU,tstart
   double precision, external :: wtime
 
+  ! checks if anything to do
+  if (.not. IO_compute_task) return
+
   ! synchonizes
   call synchronize_all()
 

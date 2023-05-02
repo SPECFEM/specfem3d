@@ -38,6 +38,17 @@
 
   implicit none
 
+  !#TODO: hdf5 i/o server
+  ! checks if anything to do
+  !if (.not. IO_compute_task) then
+  !  ! finalizes MPI subgroup for intercommunication
+  !  if (HDF5_IO_NNODES > 0) then
+  !    call world_unsplit_inter()
+  !  endif
+  !  ! all done
+  !  return
+  !endif
+
   ! synchronize all processes, waits until all processes have written their seismograms
   call synchronize_all()
 
@@ -103,6 +114,12 @@
 
   ! synchronize all the processes to make sure everybody has finished
   call synchronize_all()
+
+  !#TODO: hdf5 i/o server
+  ! finalizes MPI subgroup for intercommunication
+  !if (HDF5_IO_NNODES > 0) then
+  !  call world_unsplit_inter()
+  !endif
 
   end subroutine finalize_simulation
 

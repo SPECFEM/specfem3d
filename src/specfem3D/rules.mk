@@ -128,6 +128,7 @@ specfem3D_OBJECTS = \
 	$O/update_displacement_scheme.spec.o \
 	$O/update_displacement_LDDRK.spec.o \
 	$O/write_movie_output.spec.o \
+	$O/write_movie_output_HDF5.spec_hdf5.o \
 	$O/write_output_ASCII_or_binary.spec.o \
 	$O/write_output_HDF5.spec_hdf5.o \
 	$O/write_output_SU.spec.o \
@@ -237,6 +238,16 @@ specfem3D_OBJECTS += $(adios_specfem3D_OBJECTS)
 specfem3D_SHARED_OBJECTS += $(adios_specfem3D_PREOBJECTS)
 else
 specfem3D_SHARED_OBJECTS += $(adios_specfem3D_STUBS)
+endif
+
+##
+## HDF5
+##
+
+ifeq ($(HDF5),yes)
+specfem3D_MODULES += \
+	$(FC_MODDIR)/specfem_par_movie_hdf5.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
 endif
 
 ###

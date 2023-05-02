@@ -172,15 +172,19 @@ end module constants
   logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS, ADIOS_FOR_UNDO_ATTENUATION
 
   ! HDF5 file i/o
-  logical :: HDF5_ENABLED = .false.           ! for all databases i/o in hdf5
+  logical :: HDF5_ENABLED = .false.              ! for all databases i/o in hdf5
+  logical :: HDF5_FOR_MOVIES = .false.           ! for movies (shakemap, surface movies, volume movies)
 
   ! HDF5 seismogram output
   logical :: HDF5_FORMAT  = .false.           ! for seismograms output in hdf5
 
-  !#TODO: IO server
-  !! number of io dedicated nodes
-  !integer :: HDF5_IO_NNODE
-  !integer :: n_control_node
+  ! HDF5 IO server
+  ! number of io dedicated nodes
+  integer :: HDF5_IO_NNODES = 0
+
+  ! flag for io-dedicated/compute node.
+  logical :: IO_storage_task = .false.
+  logical :: IO_compute_task = .true.
 
   ! external code coupling (DSM, AxiSEM)
   logical :: COUPLE_WITH_INJECTION_TECHNIQUE

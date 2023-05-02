@@ -1034,34 +1034,27 @@
       dsetname = "ibelm_xmin"
       call h5_read_dataset_1d_i_collect_hyperslab(dsetname, ibelm_xmin, (/sum(offset_nspec2D_xmin(0:myrank-1))/),if_col)
     endif
-
     if (sum(offset_nspec2D_xmax) > 0) then
       dsetname = "ibelm_xmax"
       call h5_read_dataset_1d_i_collect_hyperslab(dsetname, ibelm_xmax, (/sum(offset_nspec2D_xmax(0:myrank-1))/),if_col)
     endif
-
     if (sum(offset_nspec2D_ymin) > 0) then
       dsetname = "ibelm_ymin"
       call h5_read_dataset_1d_i_collect_hyperslab(dsetname, ibelm_ymin, (/sum(offset_nspec2D_ymin(0:myrank-1))/),if_col)
     endif
-
     if (sum(offset_nspec2D_ymax) > 0) then
       dsetname = "ibelm_ymax"
       call h5_read_dataset_1d_i_collect_hyperslab(dsetname, ibelm_ymax, (/sum(offset_nspec2D_ymax(0:myrank-1))/),if_col)
     endif
-
     if (sum(offset_nspec2D_bottom_ext) > 0) then
       dsetname = "ibelm_bottom"
       call h5_read_dataset_1d_i_collect_hyperslab(dsetname, ibelm_bottom, (/sum(offset_nspec2D_bottom_ext(0:myrank-1))/),if_col)
     endif
-
     if (sum(offset_nspec2D_top_ext) > 0) then
       dsetname = "ibelm_top"
       call h5_read_dataset_1d_i_collect_hyperslab(dsetname, ibelm_top, (/sum(offset_nspec2D_top_ext(0:myrank-1))/),if_col)
     endif
-
   endif
-
   if (size(ibelm_xmin) > 0) call bcast_all_i_for_database(ibelm_xmin(1), size(ibelm_xmin))
   if (size(ibelm_xmax) > 0) call bcast_all_i_for_database(ibelm_xmax(1), size(ibelm_xmax))
   if (size(ibelm_ymin) > 0) call bcast_all_i_for_database(ibelm_ymin(1), size(ibelm_ymin))
@@ -1121,8 +1114,7 @@
   ! acoustic-elastic coupling surface
   if (I_should_read_the_database) then
     dsetname = "num_coupling_ac_el_faces"
-    call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, num_coupling_ac_el_faces, &
-                (/myrank/),if_col)
+    call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, num_coupling_ac_el_faces, (/myrank/),if_col)
   endif
   call bcast_all_i_for_database(num_coupling_ac_el_faces, 1)
 
@@ -1171,8 +1163,7 @@
   ! acoustic-poroelastic coupling surface
   if (I_should_read_the_database) then
     dsetname = "num_coupling_ac_po_faces"
-    call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, num_coupling_ac_po_faces, &
-            (/myrank/),if_col)
+    call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, num_coupling_ac_po_faces, (/myrank/),if_col)
   endif
   call bcast_all_i_for_database(num_coupling_ac_po_faces, 1)
 
@@ -1221,8 +1212,7 @@
   ! elastic-poroelastic coupling surface
   if (I_should_read_the_database) then
     dsetname = "num_coupling_el_po_faces"
-    call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, num_coupling_el_po_faces, &
-              (/myrank/),if_col)
+    call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, num_coupling_el_po_faces, (/myrank/),if_col)
   endif
   call bcast_all_i_for_database(num_coupling_el_po_faces, 1)
 
@@ -1494,8 +1484,7 @@
       dsetname = "nspec_outer_poroelastic"
       call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, nspec_outer_poroelastic,(/myrank/),if_col)
       dsetname = "num_phase_ispec_poroelastic"
-      call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, num_phase_ispec_poroelastic, &
-              (/myrank/),if_col)
+      call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, num_phase_ispec_poroelastic, (/myrank/),if_col)
     endif
     call bcast_all_i_for_database(nspec_inner_poroelastic, 1)
     call bcast_all_i_for_database(nspec_outer_poroelastic, 1)
@@ -1529,11 +1518,9 @@
     if (ACOUSTIC_SIMULATION) then
       if (I_should_read_the_database) then
         dsetname = "num_colors_outer_acoustic"
-        call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, &
-                num_colors_outer_acoustic,(/myrank/),if_col)
+        call h5_read_dataset_scalar_i_collect_hyperslab(dsetname,num_colors_outer_acoustic,(/myrank/),if_col)
         dsetname = "num_colors_inner_acoustic"
-        call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, &
-                num_colors_inner_acoustic,(/myrank/),if_col)
+        call h5_read_dataset_scalar_i_collect_hyperslab(dsetname,num_colors_inner_acoustic,(/myrank/),if_col)
       endif
       call bcast_all_i_for_database(num_colors_outer_acoustic, 1)
       call bcast_all_i_for_database(num_colors_inner_acoustic, 1)
@@ -1557,11 +1544,9 @@
     if (ELASTIC_SIMULATION) then
       if (I_should_read_the_database) then
         dsetname = "num_colors_outer_elastic"
-        call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, &
-                num_colors_outer_elastic,(/myrank/),if_col)
+        call h5_read_dataset_scalar_i_collect_hyperslab(dsetname,num_colors_outer_elastic,(/myrank/),if_col)
         dsetname = "num_colors_inner_elastic"
-        call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, &
-                num_colors_inner_elastic,(/myrank/),if_col)
+        call h5_read_dataset_scalar_i_collect_hyperslab(dsetname,num_colors_inner_elastic,(/myrank/),if_col)
       endif
       call bcast_all_i_for_database(num_colors_outer_elastic, 1)
       call bcast_all_i_for_database(num_colors_inner_elastic, 1)

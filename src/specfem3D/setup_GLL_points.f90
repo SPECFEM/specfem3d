@@ -36,6 +36,9 @@
   implicit none
   integer :: i,j,k,inum
 
+  ! checks if anything to do
+  if (.not. IO_compute_task) return
+
   ! outputs total element numbers
   call sum_all_i(count(ispec_is_acoustic(:)),inum)
   if (myrank == 0) then

@@ -65,7 +65,10 @@
   integer :: ier
   character(len=MAX_STRING_LEN) :: dsmname
 
-! for coupling with EXTERNAL CODE !! CD CD modify here
+  ! checks if anything to do
+  if (.not. IO_compute_task) return
+
+  ! for coupling with EXTERNAL CODE !! CD CD modify here
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
     if (myrank == 0) then
       write(IMAIN,*)

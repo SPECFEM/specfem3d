@@ -120,12 +120,12 @@ end module my_mpi
 
   integer :: ier
 
-! close sub-communicators if needed, if running more than one earthquake from the same job
+  ! close sub-communicators if needed, if running more than one earthquake from the same job
   call world_unsplit()
 
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
 
-! stop all the MPI processes, and exit
+  ! stop all the MPI processes, and exit
   call MPI_FINALIZE(ier)
   if (ier /= 0) stop 'Error finalizing MPI'
 

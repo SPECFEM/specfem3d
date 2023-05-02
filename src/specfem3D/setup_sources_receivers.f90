@@ -32,6 +32,9 @@
 
   implicit none
 
+  ! checks if anything to do
+  if (.not. IO_compute_task) return
+
   ! setup for point search
   call setup_point_search_arrays()
 

@@ -532,6 +532,9 @@
       write(*,*)
     endif
 
+    ! (optional) hdf5 seismograms
+    call read_value_logical(HDF5_FORMAT, 'HDF5_FORMAT', ier); ier = 0
+
     call read_value_logical(WRITE_SEISMOGRAMS_BY_MAIN, 'WRITE_SEISMOGRAMS_BY_MAIN', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
@@ -791,18 +794,16 @@
     ! or enforces flag to be present in Par_file
     !if (ier /= 0) then
     !  some_parameters_missing_from_Par_file = .true.
-    !  write(*,'(a)') 'HDF5_ENABLED                   = .false.'
+    !  write(*,'(a)') 'HDF5_ENABLED                    = .false.'
     !  write(*,*)
     !endif
-    ! (optional) hdf5 seismograms
-    call read_value_logical(HDF5_FORMAT, 'HDF5_FORMAT', ier); ier = 0
-    !#TODO: IO server
-    ! read number of io dedicated nodes
-    !call read_value_integer(HDF5_IO_NNODE, 'HDF5_IO_NNODE', ier)
-    !if (ier /= 0) then
-    !  some_parameters_missing_from_Par_file = .true.
-    !  write(*,'(a)') 'HDF5_IO_NNODE                    = 1'
-    !endif
+    ! HDF file I/O server
+    if (HDF5_ENABLED) then
+      ! (optional) movie outputs
+      call read_value_logical(HDF5_FOR_MOVIES, 'HDF5_FOR_MOVIES', ier); ier = 0
+      ! (optional) number of io dedicated nodes
+      call read_value_integer(HDF5_IO_NNODES, 'HDF5_IO_NNODES', ier); ier = 0
+    endif
 
     ! closes parameter file
     call close_parameter_file()
@@ -991,6 +992,10 @@
     stop 'HDF5_FORMAT and SU_FORMAT together are not supported, please use only one of them'
   if (HDF5_FORMAT .and. .not. WRITE_SEISMOGRAMS_BY_MAIN) &
     stop 'HDF5_FORMAT must have WRITE_SEISMOGRAMS_BY_MAIN set to .true.'
+
+  !#TODO: hdf5 i/o server
+  if (HDF5_IO_NNODES > 0) &
+    stop 'HDF5_IO_NNODES must be zero, i/o server not implemented yet'
 
   ! PML
   if (PML_CONDITIONS) then
@@ -1420,10 +1425,10 @@
   call bcast_all_singlel(ADIOS_FOR_UNDO_ATTENUATION)
 
   ! HDF5 file I/O
-  call bcast_all_singlel(HDF5_ENABLED)
   call bcast_all_singlel(HDF5_FORMAT)
-  !#TODO: IO server
-  !call bcast_all_singlei(HDF5_IO_NNODE)
+  call bcast_all_singlel(HDF5_ENABLED)
+  call bcast_all_singlel(HDF5_FOR_MOVIES)
+  call bcast_all_singlei(HDF5_IO_NNODES)
 
   ! broadcast all parameters computed from others
   call bcast_all_singlei(IMODEL)
