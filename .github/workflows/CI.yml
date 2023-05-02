@@ -29,14 +29,14 @@ jobs:
           export DIFF=$( git diff --name-only ${{ github.event.before }} $GITHUB_SHA )
           echo "  diff between ${{ github.event.before }} and $GITHUB_SHA"
         fi
-        echo "$DIFF"
+        echo "***"; echo "$DIFF"; echo "***"
         # Escape newlines (replace \n with %0A)
         # deprecated:
         #echo "::set-output name=diff::$( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' )"
         # new:
         #echo "diff=$( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' )" >> $GITHUB_OUTPUT
         # no replacements needed
-        echo "diff=\"$DIFF\"" >> $GITHUB_OUTPUT
+        echo "diff=\"$DIFF\"" >> "$GITHUB_OUTPUT"
 
     - name: Output changes
       run: echo "${{ steps.diff.outputs.diff }}"

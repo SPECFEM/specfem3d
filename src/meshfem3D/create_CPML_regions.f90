@@ -53,7 +53,7 @@
 
   logical, dimension(:), allocatable :: is_X_CPML,is_Y_CPML,is_Z_CPML
 
-  integer :: nspec_CPML_total
+  integer :: nspec_CPML_total,nspec_total
   integer :: i1,i2,i3,i4,i5,i6,i7,i8
   integer :: ispec,ispec_CPML
   integer :: ier
@@ -229,13 +229,18 @@
   enddo
 
   ! outputs total number of CPML elements
+  nspec_total = 0
+  call sum_all_i(nspec,nspec_total)
+
   nspec_CPML_total = 0
   call sum_all_i(nspec_CPML,nspec_CPML_total)
+
+  call bcast_all_singlei(nspec_total)
   call bcast_all_singlei(nspec_CPML_total)
 
   if (myrank == 0) then
     write(IMAIN,*) '  Created a total of ',nspec_CPML_total,' unique CPML elements'
-    write(IMAIN,*)'   (i.e., ',100.*nspec_CPML/real(nspec),'% of the mesh)'
+    write(IMAIN,*)'   (i.e., ',100. * nspec_CPML_total / real(nspec_total),'% of the mesh)'
     write(IMAIN,*)
   endif
 
