@@ -36,7 +36,7 @@ jobs:
         # new:
         #echo "diff=$( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' )" >> $GITHUB_OUTPUT
         # no replacements needed
-        echo "diff=$( echo "$DIFF" )" >> $GITHUB_OUTPUT
+        echo "diff=\"$DIFF\"" >> $GITHUB_OUTPUT
 
     - name: Output changes
       run: echo "${{ steps.diff.outputs.diff }}"
