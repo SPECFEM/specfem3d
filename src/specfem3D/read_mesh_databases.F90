@@ -32,8 +32,7 @@
 
   use constants, only: MAX_STRING_LEN,IIN,myrank,I_should_read_the_database
 
-  use specfem_par, only: prname,LOCAL_PATH, &
-    NSPEC_AB,NGLOB_AB,NSPEC_IRREGULAR
+  use specfem_par, only: prname, LOCAL_PATH, NSPEC_AB, NGLOB_AB, NSPEC_IRREGULAR
 
   ! ADIOS
   use shared_parameters, only: ADIOS_FOR_MESH
@@ -108,6 +107,9 @@
   ! debugging
   integer :: i
   logical, parameter :: DEBUG_MPI_ARRAYS = .false.
+
+  ! checks if anything to do
+  if (.not. IO_compute_task) return
 
   ! selects routine for file i/o format
   if (ADIOS_FOR_MESH) then
@@ -1355,6 +1357,9 @@
 
   integer :: ier
 
+  ! checks if anything to do
+  if (.not. IO_compute_task) return
+
   ! selects routine for file i/o format
   if (ADIOS_FOR_MESH) then
     ! ADIOS file format
@@ -1501,6 +1506,9 @@
   integer :: ier
 
   ! note: this routines has no file I/O, it (only) allocates necessary arrays for adjoint/kernel simulations
+
+  ! checks if anything to do
+  if (.not. IO_compute_task) return
 
   ! allocates adjoint arrays for elastic simulations
   if (ELASTIC_SIMULATION .and. SIMULATION_TYPE == 3) then

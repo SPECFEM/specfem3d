@@ -66,19 +66,26 @@
     call wmo_create_shakemap()
   endif
 
-  ! saves MOVIE on the SURFACE
-  if (MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
-    call wmo_movie_surface_output()
-  endif
+  ! file output
+  if (mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
+    !#TODO: hdf5 i/o server
+    ! i/o server wait
+    !if (HDF5_IO_NNODES > 0) call wait_all_send()
 
-  ! saves MOVIE in full 3D MESH
-  if (MOVIE_VOLUME .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
-    call wmo_movie_volume_output()
-  endif
+    ! saves MOVIE on the SURFACE
+    if (MOVIE_SURFACE) then
+      call wmo_movie_surface_output()
+    endif
 
-  ! creates cross-section PNM image
-  if (PNM_IMAGE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
-    call write_PNM_create_image()
+    ! saves MOVIE in full 3D MESH
+    if (MOVIE_VOLUME) then
+      call wmo_movie_volume_output()
+    endif
+
+    ! creates cross-section PNM image
+    if (PNM_IMAGE) then
+      call write_PNM_create_image()
+    endif
   endif
 
   end subroutine write_movie_output
@@ -102,9 +109,7 @@
 
   ! temporary array for single elements
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: val_element
-  real(kind=CUSTOM_REAL),dimension(1):: dummy
-  integer :: ispec2D,ispec,ipoin,iglob,ier,ia
-  character(len=MAX_STRING_LEN) :: outputname
+  integer :: ispec2D,ispec,ipoin,iglob,ia
   integer :: npoin_elem
 
   ! surface points for single face
@@ -158,6 +163,36 @@
     endif
   enddo
 
+  ! saves surface movie snapshot
+  call wmo_movie_save_surface_snapshot()
+
+  end subroutine wmo_movie_surface_output
+
+!================================================================
+
+  subroutine wmo_movie_save_surface_snapshot()
+
+  use specfem_par
+  use specfem_par_movie
+
+  implicit none
+
+  ! temporary array for single elements
+  real(kind=CUSTOM_REAL),dimension(1):: dummy
+  integer :: ier
+  character(len=MAX_STRING_LEN) :: outputname
+
+  ! selects routine for file i/o format
+  if (HDF5_FOR_MOVIES) then
+    call wmo_movie_save_surface_snapshot_hdf5()
+    ! all done
+    return
+  else
+    ! binary file
+    ! implemented here below, continue
+    continue
+  endif
+
   ! updates/gathers velocity field
   if (myrank == 0) then
     call gatherv_all_cr(store_val_ux,nfaces_surface_points, &
@@ -196,7 +231,7 @@
     close(IOUT)
   endif
 
-  end subroutine wmo_movie_surface_output
+  end subroutine wmo_movie_save_surface_snapshot
 
 !================================================================
 
@@ -471,6 +506,17 @@
   integer :: ier
   real(kind=CUSTOM_REAL),dimension(1):: dummy
 
+  ! selects routine for file i/o format
+  if (HDF5_FOR_MOVIES) then
+    call wmo_save_shakemap_hdf5()
+    ! all done
+    return
+  else
+    ! binary file
+    ! implemented here below, continue
+    continue
+  endif
+
   ! main collects
   if (myrank == 0) then
     ! shakemaps
@@ -527,28 +573,13 @@
   implicit none
 
   ! local parameters
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: pressure_loc
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: vec_element
-  ! divergence and curl only in the global nodes
-  real(kind=CUSTOM_REAL),dimension(:),allocatable:: div_glob
-  integer,dimension(:),allocatable :: valence
-  integer :: ispec,ier,iglob
-  character(len=3) :: channel
-  character(len=1) :: compx,compy,compz
-  character(len=MAX_STRING_LEN) :: outputname
+  integer :: ispec,iglob
 #ifdef FORCE_VECTORIZATION
   integer :: ijk
 #else
   integer :: i,j,k
 #endif
-
-  ! gets component characters: X/Y/Z or E/N/Z
-  call write_channel_name(1,channel)
-  compx(1:1) = channel(3:3) ! either X or E
-  call write_channel_name(2,channel)
-  compy(1:1) = channel(3:3) ! either Y or N
-  call write_channel_name(3,channel)
-  compz(1:1) = channel(3:3) ! Z
 
   ! note: we use either displacement or velocity, depending on the Par_file setting of SAVE_DISPLACEMENT,
   !       and store them into the arrays wavefield_x/y/z - the naming of the arrays could be better...
@@ -580,59 +611,32 @@
 
     ! outputs pressure field for purely acoustic simulations
     if (.not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then
-      allocate(pressure_loc(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2003')
-      pressure_loc(:,:,:,:) = 0._CUSTOM_REAL
+      wavefield_pressure(:,:,:,:) = 0._CUSTOM_REAL
       do ispec = 1,NSPEC_AB
         DO_LOOP_IJK
           iglob = ibool(INDEX_IJK,ispec)
-          pressure_loc(INDEX_IJK,ispec) = - potential_dot_dot_acoustic(iglob)
+          wavefield_pressure(INDEX_IJK,ispec) = - potential_dot_dot_acoustic(iglob)
         ENDDO_LOOP_IJK
       enddo
-
-      write(outputname,"('/proc',i6.6,'_pressure_it',i6.6,'.bin')")myrank,it
-      open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-      if (ier /= 0) stop 'error opening file movie output pressure'
-      write(IOUT) pressure_loc
-      close(IOUT)
-      deallocate(pressure_loc)
     endif
   endif ! acoustic
 
   if (ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
-    ! allocate array for global points
-    allocate(div_glob(NGLOB_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2004')
-    div_glob(:) = 0._CUSTOM_REAL
-
-    allocate(valence(NGLOB_AB), stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2005')
-    if (ier /= 0) stop 'error allocating arrays for movie div and curl'
-    valence(:) = 0
-
-    ! saves full snapshot data to local disk
+    ! computes div and curl
     if (ELASTIC_SIMULATION) then
       if (SAVE_DISPLACEMENT) then
         ! calculates divergence and curl of displacement field
         call wmo_movie_div_curl(displ, &
-                                div_glob,valence, &
                                 div,curl_x,curl_y,curl_z, &
                                 wavefield_x,wavefield_y,wavefield_z, &
                                 ispec_is_elastic)
       else
         ! calculates divergence and curl of velocity field
         call wmo_movie_div_curl(veloc, &
-                                div_glob,valence, &
                                 div,curl_x,curl_y,curl_z, &
                                 wavefield_x,wavefield_y,wavefield_z, &
                                 ispec_is_elastic)
       endif
-      ! writes out div and curl on global points
-      write(outputname,"('/proc',i6.6,'_div_glob_it',i6.6,'.bin')") myrank,it
-      open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-      if (ier /= 0) stop 'error opening file div_glob'
-      write(IOUT) div_glob
-      close(IOUT)
     endif ! elastic
 
     ! saves full snapshot data to local disk
@@ -640,50 +644,59 @@
       if (SAVE_DISPLACEMENT) then
         ! calculates divergence and curl of displacement field
         call wmo_movie_div_curl(displs_poroelastic, &
-                                div_glob,valence, &
                                 div,curl_x,curl_y,curl_z, &
                                 wavefield_x,wavefield_y,wavefield_z, &
                                 ispec_is_poroelastic)
       else
         ! calculates divergence and curl of velocity field
         call wmo_movie_div_curl(velocs_poroelastic, &
-                                div_glob,valence, &
                                 div,curl_x,curl_y,curl_z, &
                                 wavefield_x,wavefield_y,wavefield_z, &
                                 ispec_is_poroelastic)
       endif
     endif ! poroelastic
-
-    deallocate(div_glob,valence)
-
-    ! div and curl on elemental level
-    ! writes our divergence
-    write(outputname,"('/proc',i6.6,'_div_it',i6.6,'.bin')") myrank,it
-    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file div_it'
-    write(IOUT) div
-    close(IOUT)
-
-    ! writes out curl
-    write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compx,it
-    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file curl_x_it '
-    write(IOUT) curl_x
-    close(IOUT)
-
-    write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compy,it
-    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file curl_y_it'
-    write(IOUT) curl_y
-    close(IOUT)
-
-    write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compz,it
-    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file curl_z_it'
-    write(IOUT) curl_z
-    close(IOUT)
   endif
 
+  ! saves movie snapshot
+  call wmo_movie_save_volume_snapshot()
+
+  end subroutine wmo_movie_volume_output
+
+!=====================================================================
+
+  subroutine wmo_movie_save_volume_snapshot()
+
+  use specfem_par
+  use specfem_par_movie
+
+  implicit none
+
+  ! local parameters
+  integer :: ier
+  character(len=3) :: channel
+  character(len=1) :: compx,compy,compz
+  character(len=MAX_STRING_LEN) :: outputname
+
+  ! selects routine for file i/o format
+  if (HDF5_FOR_MOVIES) then
+    call wmo_movie_save_volume_snapshot_hdf5()
+    ! all done
+    return
+  else
+    ! binary file
+    ! implemented here below, continue
+    continue
+  endif
+
+  ! gets component characters: X/Y/Z or E/N/Z
+  call write_channel_name(1,channel)
+  compx(1:1) = channel(3:3) ! either X or E
+  call write_channel_name(2,channel)
+  compy(1:1) = channel(3:3) ! either Y or N
+  call write_channel_name(3,channel)
+  compz(1:1) = channel(3:3) ! Z
+
+  ! saves wavefields to file
   if (SAVE_DISPLACEMENT) then
     ! displacement field
     write(outputname,"('/proc',i6.6,'_displ_',a1,'_it',i6.6,'.bin')") myrank,compx,it
@@ -724,12 +737,60 @@
     close(IOUT)
   endif
 
-  end subroutine wmo_movie_volume_output
+  ! saves div/curl to file
+  if (ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
+    ! div and curl on elemental level
+    ! writes our divergence
+    write(outputname,"('/proc',i6.6,'_div_it',i6.6,'.bin')") myrank,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file div_it'
+    write(IOUT) div
+    close(IOUT)
+
+    ! writes out curl
+    write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compx,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file curl_x_it '
+    write(IOUT) curl_x
+    close(IOUT)
+
+    write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compy,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file curl_y_it'
+    write(IOUT) curl_y
+    close(IOUT)
+
+    write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compz,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file curl_z_it'
+    write(IOUT) curl_z
+    close(IOUT)
+
+    ! writes out div and curl on global points
+    write(outputname,"('/proc',i6.6,'_div_glob_it',i6.6,'.bin')") myrank,it
+    open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file div_glob'
+    write(IOUT) div_glob
+    close(IOUT)
+  endif
+
+  ! saves pressure to file
+  if (ACOUSTIC_SIMULATION) then
+    ! outputs pressure
+    if (.not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then
+      write(outputname,"('/proc',i6.6,'_pressure_it',i6.6,'.bin')")myrank,it
+      open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file movie output pressure'
+      write(IOUT) wavefield_pressure
+      close(IOUT)
+    endif
+  endif
+
+  end subroutine wmo_movie_save_volume_snapshot
 
 !=====================================================================
 
   subroutine wmo_movie_div_curl(veloc, &
-                                div_glob,valence, &
                                 div,curl_x,curl_y,curl_z, &
                                 wavefield_x,wavefield_y,wavefield_z, &
                                 ispec_is)
@@ -743,15 +804,13 @@
     gammaxstore,gammaystore,gammazstore,irregular_element_number, &
     xix_regular
 
+  use specfem_par_movie, only: div_glob,valence_glob
+
   implicit none
 
 
   ! velocity field
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_AB),intent(in) :: veloc
-
-  ! divergence and curl only in the global nodes
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB),intent(out) :: div_glob
-  integer,dimension(NGLOB_AB),intent(out) :: valence
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(out) :: div, curl_x, curl_y, curl_z
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(inout) :: wavefield_x,wavefield_y,wavefield_z
@@ -770,7 +829,7 @@
 
   ! initializes
   div_glob(:) = 0.0_CUSTOM_REAL
-  valence(:) = 0
+  valence_glob(:) = 0
 
   ! loops over elements
   do ispec = 1,NSPEC_AB
@@ -912,7 +971,7 @@
           wavefield_y(i,j,k,ispec) = veloc_element(2,i,j,k)
           wavefield_z(i,j,k,ispec) = veloc_element(3,i,j,k)
 
-          valence(iglob) = valence(iglob)+1
+          valence_glob(iglob) = valence_glob(iglob)+1
           div_glob(iglob) = div_glob(iglob) + div(i,j,k,ispec)
         enddo
       enddo
@@ -922,9 +981,9 @@
   do i = 1,NGLOB_AB
     ! checks if point has a contribution
     ! note: might not be the case for points in acoustic elements
-    if (valence(i) /= 0) then
+    if (valence_glob(i) /= 0) then
       ! averages by number of contributions
-      div_glob(i) = div_glob(i)/valence(i)
+      div_glob(i) = div_glob(i)/valence_glob(i)
     endif
   enddo
 

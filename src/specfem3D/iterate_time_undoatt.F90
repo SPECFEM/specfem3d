@@ -264,6 +264,24 @@
   ! get MPI starting
   time_start = wtime()
 
+  !#TODO: hdf5 i/o server
+  ! start io server
+  !if (HDF5_IO_NNODES > 0) then
+  !  if (IO_storage_task) then
+  !    call do_io_start_idle()
+  !  else
+  !    ! compute node passes necessary info to io node
+  !    call pass_info_to_io()
+  !  endif
+  !  ! checks if anything to do
+  !  if (.not. IO_compute_task) then
+  !    ! i/o server synchronization
+  !    call synchronize_inter()
+  !    ! all done
+  !    return
+  !  endif
+  !endif
+
   ! *********************************************************
   ! ************* MAIN LOOP OVER THE TIME STEPS *************
   ! *********************************************************
@@ -600,5 +618,9 @@
     print *,'Error time increments: it_end = ',it_end,' and last it = ',it,' do not match!'
     call exit_MPI(myrank,'Error invalid time increment ending')
   endif
+
+  !#TODO: hdf5 i/o server
+  ! i/o server synchronization
+  !if (HDF5_IO_NNODES > 0) call synchronize_inter()
 
   end subroutine iterate_time_undoatt

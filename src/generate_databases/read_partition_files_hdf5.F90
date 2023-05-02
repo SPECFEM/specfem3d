@@ -170,8 +170,8 @@
   dsetname = "nnodes_loc"
   call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, nnodes_ext_mesh,(/myrank/),.true.)
 
-  !#TODO: io server
-  !n_control_node = nnodes_ext_mesh
+  ! stores number of mesh points in this slice for output in checkmesh.xmf
+  xdmf_mesh_nnodes = nnodes_ext_mesh
 
   ! open and read dataset nodes_coords
   dsetname = "nodes_coords"

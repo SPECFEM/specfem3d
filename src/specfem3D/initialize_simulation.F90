@@ -71,6 +71,17 @@
   BROADCAST_AFTER_READ = .true.
   call read_parameter_file(BROADCAST_AFTER_READ)
 
+  !#TODO: hdf5 i/o server
+  ! HDF5 separate nodes for i/o server
+  !if (HDF5_IO_NNODES > 0) call separate_compute_and_io_nodes()
+  ! checks if anything to do
+  !if (.not. IO_compute_task) then
+  !  ! i/o server synchronization
+  !  if (HDF5_IO_NNODES > 0) call synchronize_inter()
+  !  ! all done
+  !  return
+  !endif
+
   ! checks flags
   call initialize_simulation_check()
 
@@ -286,6 +297,10 @@
 
   ! synchronizes processes
   call synchronize_all()
+
+  !#TODO: hdf5 i/o server
+  ! i/o server synchronization
+  !if (HDF5_IO_NNODES > 0) call synchronize_inter()
 
   end subroutine initialize_simulation
 

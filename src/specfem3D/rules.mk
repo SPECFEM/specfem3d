@@ -128,6 +128,7 @@ specfem3D_OBJECTS = \
 	$O/update_displacement_scheme.spec.o \
 	$O/update_displacement_LDDRK.spec.o \
 	$O/write_movie_output.spec.o \
+	$O/write_movie_output_HDF5.spec_hdf5.o \
 	$O/write_output_ASCII_or_binary.spec.o \
 	$O/write_output_HDF5.spec_hdf5.o \
 	$O/write_output_SU.spec.o \

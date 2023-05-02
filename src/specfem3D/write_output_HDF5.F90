@@ -53,14 +53,16 @@
 
 ! HDF5 writes into a single file (by main process only)
 
-  !#TODO: io server
-  !if (HDF5_IO_NNODES > 0) then
-  !  ! only io nodes do the file output
-  !  ! collect seismograms on io nodes
-  !else
-  !  ! no io server
-  !  ! main process writes out all
-  !endif
+  ! io server
+  if (HDF5_IO_NNODES > 0) then
+    ! only io nodes do the file output
+    ! collect seismograms on io nodes
+    stop 'HDF5 IO server not implemented yet for HDF5 file output'
+  else
+    ! no io server
+    ! main process writes out all
+    continue
+  endif
 
   ! safety check
   if (.not. WRITE_SEISMOGRAMS_BY_MAIN) &

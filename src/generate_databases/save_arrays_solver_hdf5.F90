@@ -174,9 +174,16 @@
   call get_connectivity_for_movie(nspec_ab, ibool, spec_elm_conn_xdmf, sum(offset_nglob(0:myrank-1)))
 
   call gather_all_all_singlei(nspec_irregular,offset_nspec_irregular,NPROC) ! n spec in each proc
-  if (APPROXIMATE_OCEAN_LOAD) call gather_all_all_singlei(NGLOB_OCEAN,offset_nglob_ocean,NPROC)
-  if (POROELASTIC_SIMULATION) call gather_all_all_singlei(NSPEC_PORO,offset_nspecporo,NPROC)
-  if (PML_CONDITIONS) call gather_all_all_singlei(nspec_cpml,offset_nspeccpml,NPROC)
+
+  if (APPROXIMATE_OCEAN_LOAD) &
+    call gather_all_all_singlei(NGLOB_OCEAN,offset_nglob_ocean,NPROC)
+
+  if (POROELASTIC_SIMULATION) &
+    call gather_all_all_singlei(NSPEC_PORO,offset_nspecporo,NPROC)
+
+  if (PML_CONDITIONS) &
+    call gather_all_all_singlei(nspec_cpml,offset_nspeccpml,NPROC)
+
   if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
     call gather_all_all_singlei(nglob_interface_PML_acoustic, &
                                 offset_nglob_interface_PML_acoustic,NPROC)
@@ -200,19 +207,17 @@
   call gather_all_all_singlei(num_interfaces_ext_mesh,offset_num_interfaces_ext_mesh,NPROC)
   call gather_all_all_singlei(max_nibool_interfaces_ext_mesh,offset_max_ni_bool_interfaces_ext_mesh,NPROC)
 
-  if (ELASTIC_SIMULATION .and. ANISOTROPY) call gather_all_all_singlei(nspec_aniso,offset_nspec_aniso,NPROC)
-  if (ACOUSTIC_SIMULATION) then
+  if (ELASTIC_SIMULATION .and. ANISOTROPY) &
+    call gather_all_all_singlei(nspec_aniso,offset_nspec_aniso,NPROC)
+
+  if (ACOUSTIC_SIMULATION) &
     call gather_all_all_singlei(num_phase_ispec_acoustic,offset_num_phase_ispec_acoustic,NPROC)
-  endif
 
-  if (ELASTIC_SIMULATION) then
+  if (ELASTIC_SIMULATION) &
     call gather_all_all_singlei(num_phase_ispec_elastic,offset_num_phase_ispec_elastic,NPROC)
-  endif
 
-  if (POROELASTIC_SIMULATION) then
-    call gather_all_all_singlei(num_phase_ispec_poroelastic, &
-                                offset_num_phase_ispec_poroelastic,NPROC)
-  endif
+  if (POROELASTIC_SIMULATION) &
+    call gather_all_all_singlei(num_phase_ispec_poroelastic,offset_num_phase_ispec_poroelastic,NPROC)
 
   if (USE_MESH_COLORING_GPU) then
     if (ACOUSTIC_SIMULATION) &
@@ -233,12 +238,18 @@
   ! offset arrays
   if (myrank == 0) then
     call h5_create_file(filename)
+
     call h5_write_dataset_1d_i_no_group("offset_nglob",offset_nglob)
     call h5_write_dataset_1d_i_no_group("offset_nspec",offset_nspec)
     call h5_write_dataset_1d_i_no_group("offset_nspec_irregular",offset_nspec_irregular)
-    if (APPROXIMATE_OCEAN_LOAD) call h5_write_dataset_1d_i_no_group("offset_nglob_ocean",offset_nglob_ocean)
-    if (POROELASTIC_SIMULATION) call h5_write_dataset_1d_i_no_group("offset_nspecporo",offset_nspecporo)
-    if (PML_CONDITIONS)         call h5_write_dataset_1d_i_no_group("offset_nspeccpml",offset_nspeccpml)
+
+    if (APPROXIMATE_OCEAN_LOAD) &
+      call h5_write_dataset_1d_i_no_group("offset_nglob_ocean",offset_nglob_ocean)
+    if (POROELASTIC_SIMULATION) &
+      call h5_write_dataset_1d_i_no_group("offset_nspecporo",offset_nspecporo)
+    if (PML_CONDITIONS) &
+      call h5_write_dataset_1d_i_no_group("offset_nspeccpml",offset_nspeccpml)
+
     if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
       call h5_write_dataset_1d_i_no_group("offset_nglob_interface_PML_acoustic",offset_nglob_interface_PML_acoustic)
       call h5_write_dataset_1d_i_no_group("offset_nglob_interface_PML_elastic",offset_nglob_interface_PML_elastic)
@@ -258,23 +269,29 @@
     call h5_write_dataset_1d_i_no_group("offset_num_coupling_el_po_faces",offset_num_coupling_el_po_faces)
     call h5_write_dataset_1d_i_no_group("offset_num_interfaces_ext_mesh",offset_num_interfaces_ext_mesh)
 
-    if (ELASTIC_SIMULATION .and. ANISOTROPY) call h5_write_dataset_1d_i_no_group("offset_nspec_aniso",offset_nspec_aniso)
+    if (ELASTIC_SIMULATION .and. ANISOTROPY) &
+      call h5_write_dataset_1d_i_no_group("offset_nspec_aniso",offset_nspec_aniso)
+
     if (ACOUSTIC_SIMULATION) then
       if (sum(offset_num_phase_ispec_acoustic) > 0) &
         call h5_write_dataset_1d_i_no_group("offset_num_phase_ispec_acoustic",offset_num_phase_ispec_acoustic)
     endif
+
     if (ELASTIC_SIMULATION) then
       if (sum(offset_num_phase_ispec_elastic) > 0) &
         call h5_write_dataset_1d_i_no_group("offset_num_phase_ispec_elastic",offset_num_phase_ispec_elastic)
     endif
+
     if (POROELASTIC_SIMULATION) then
       if (sum(offset_num_phase_ispec_poroelastic) > 0) &
         call h5_write_dataset_1d_i_no_group("offset_num_phase_ispec_poroelastic",offset_num_phase_ispec_poroelastic)
     endif
+
     if (USE_MESH_COLORING_GPU) then
       if (ACOUSTIC_SIMULATION) call h5_write_dataset_1d_i_no_group("offset_num_colors_acoustic",offset_num_colors_acoustic)
       if (ELASTIC_SIMULATION)  call h5_write_dataset_1d_i_no_group("offset_num_colors_elastic",offset_num_colors_elastic)
     endif
+
     call h5_write_dataset_1d_i_no_group("offset_nspec_ab",offset_nspec_ab)
     call h5_write_dataset_1d_i_no_group("offset_nglob_ab",offset_nglob_ab)
 
@@ -326,6 +343,7 @@
       dset_name = "jacobianstore" ! 4 r (/0,0,0,offset_nspec_irregular=offset_nspec/)
       call h5_create_dataset_gen(dset_name,(/NGLLX,NGLLY,NGLLZ,sum(offset_nspec_irregular(:))/), 4, CUSTOM_REAL)
     else
+      ! dummy
       dset_name = "xixstore" ! 4 r  (/0,0,0,offset_nspec_irregular=offset_nspec/)
       call h5_create_dataset_gen(dset_name,(/1,1,1,1/), 4, CUSTOM_REAL)
       dset_name = "xiystore" ! 4 r  (/0,0,0,offset_nspec_irregular=offset_nspec/)
@@ -379,12 +397,13 @@
         dset_name = "rmass_ocean_load" ! 1 r (/offset_nglob_ocean/)
         call h5_create_dataset_gen(dset_name,(/sum(offset_nglob_ocean(:))/), 1, CUSTOM_REAL)
       endif
+
       !pll Stacey
       dset_name = "rho_vp" ! 4 r (/0,0,0,offset_nspec/)
       call h5_create_dataset_gen(dset_name,(/NGLLX,NGLLY,NGLLZ,sum(offset_nspec(:))/), 4, CUSTOM_REAL)
       dset_name = "rho_vs" ! 4 r (/0,0,0,offset_nspec/)
       call h5_create_dataset_gen(dset_name,(/NGLLX,NGLLY,NGLLZ,sum(offset_nspec(:))/), 4, CUSTOM_REAL)
-   endif
+    endif
 
     ! poroelastic
     if (POROELASTIC_SIMULATION) then
@@ -410,7 +429,7 @@
       call h5_create_dataset_gen(dset_name,(/NGLLX,NGLLY,NGLLZ,sum(offset_nspecporo(:))/), 4, CUSTOM_REAL)
       dset_name = "rho_vsI" ! 4 r (/0,0,0,offset_nspecporo/)
       call h5_create_dataset_gen(dset_name,(/NGLLX,NGLLY,NGLLZ,sum(offset_nspecporo(:))/), 4, CUSTOM_REAL)
-   endif
+    endif
 
     ! C-PML absorbing boundary conditions
     if (PML_CONDITIONS) then
@@ -472,7 +491,7 @@
           endif
         endif
       endif
-    endif
+    endif   ! PML
 
     ! absorbing boundary surface
     dset_name = "num_abs_boundary_faces" ! 1 i (/myrank/)
@@ -497,13 +516,14 @@
           call h5_create_dataset_gen(dset_name, (/sum(offset_nglob_xy(:))/),1,CUSTOM_REAL)
           dset_name = "rmassz" ! 1 r (/offset_nglob_xy/)
           call h5_create_dataset_gen(dset_name, (/sum(offset_nglob_xy(:))/),1,CUSTOM_REAL)
-       endif
+        endif
         if (ACOUSTIC_SIMULATION) then
           dset_name = "rmassz_acoustic" ! 1 r (/offset_nglob_xy/)
           call h5_create_dataset_gen(dset_name, (/sum(offset_nglob_xy(:))/),1,CUSTOM_REAL)
         endif
       endif
     else
+      ! dummy
       dset_name = "abs_boundary_ispec" ! 1 i (/myrank/)
       call h5_create_dataset_gen(dset_name,(/NPROC/), 1, 1)
       dset_name = "abs_boundary_ijk" ! 3 i (/0,0,myrank/)
@@ -542,18 +562,31 @@
     call h5_create_dataset_gen(dset_name,(/NPROC/), 1, 1)
     dset_name = "NSPEC2D_TOP" ! 1 i (/myrank/)
     call h5_create_dataset_gen(dset_name,(/NPROC/), 1, 1)
-    dset_name = "ibelm_xmin" ! 1 i (/offset_nspec2D_xmin/)
-    call h5_create_dataset_gen(dset_name,(/sum(offset_nspec2D_xmin(:))/), 1, 1)
-    dset_name = "ibelm_xmax" ! 1 i (/offset_nspec2D_xmax/)
-    call h5_create_dataset_gen(dset_name,(/sum(offset_nspec2D_xmax(:))/), 1, 1)
-    dset_name = "ibelm_ymin" ! 1 i (/offset_nspec2D_ymin/)
-    call h5_create_dataset_gen(dset_name,(/sum(offset_nspec2D_ymin(:))/), 1, 1)
-    dset_name = "ibelm_ymax" ! 1 i (/offset_nspec2D_ymax/)
-    call h5_create_dataset_gen(dset_name,(/sum(offset_nspec2D_ymax(:))/), 1, 1)
-    dset_name = "ibelm_bottom" ! 1 i (/offset_nspec2D_bottom_ext/)
-    call h5_create_dataset_gen(dset_name,(/sum(offset_nspec2D_bottom_ext(:))/), 1, 1)
-    dset_name = "ibelm_top" ! 1 i (/offset_nspec2D_top_ext/)
-    call h5_create_dataset_gen(dset_name,(/sum(offset_nspec2D_top_ext(:))/), 1, 1)
+
+    if (sum(offset_nspec2D_xmin) > 0) then
+      dset_name = "ibelm_xmin" ! 1 i (/offset_nspec2D_xmin/)
+      call h5_create_dataset_gen(dset_name,(/sum(offset_nspec2D_xmin(:))/), 1, 1)
+    endif
+    if (sum(offset_nspec2D_xmax) > 0) then
+      dset_name = "ibelm_xmax" ! 1 i (/offset_nspec2D_xmax/)
+      call h5_create_dataset_gen(dset_name,(/sum(offset_nspec2D_xmax(:))/), 1, 1)
+    endif
+    if (sum(offset_nspec2D_ymin) > 0) then
+      dset_name = "ibelm_ymin" ! 1 i (/offset_nspec2D_ymin/)
+      call h5_create_dataset_gen(dset_name,(/sum(offset_nspec2D_ymin(:))/), 1, 1)
+    endif
+    if (sum(offset_nspec2D_ymax) > 0) then
+      dset_name = "ibelm_ymax" ! 1 i (/offset_nspec2D_ymax/)
+      call h5_create_dataset_gen(dset_name,(/sum(offset_nspec2D_ymax(:))/), 1, 1)
+    endif
+    if (sum(offset_nspec2D_bottom_ext) > 0) then
+      dset_name = "ibelm_bottom" ! 1 i (/offset_nspec2D_bottom_ext/)
+      call h5_create_dataset_gen(dset_name,(/sum(offset_nspec2D_bottom_ext(:))/), 1, 1)
+    endif
+    if (sum(offset_nspec2D_top_ext) > 0) then
+      dset_name = "ibelm_top" ! 1 i (/offset_nspec2D_top_ext/)
+      call h5_create_dataset_gen(dset_name,(/sum(offset_nspec2D_top_ext(:))/), 1, 1)
+    endif
 
     ! free surface
     dset_name = "num_free_surface_faces" ! 1 i (/myrank/)
@@ -1070,22 +1103,36 @@
   call h5_write_dataset_1d_i_collect_hyperslab(dset_name, (/nspec2D_bottom/), (/myrank/),if_col)
   dset_name = "NSPEC2D_TOP" ! 1 i (/myrank/)
   call h5_write_dataset_1d_i_collect_hyperslab(dset_name, (/nspec2D_top/), (/myrank/),if_col)
-  dset_name = "ibelm_xmin" ! 1 i (/offset_nspec2D_xmin/)
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ibelm_xmin, (/sum(offset_nspec2D_xmin(0:myrank-1))/),if_col)
-  dset_name = "ibelm_xmax" ! 1 i (/offset_nspec2D_xmax/)
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ibelm_xmax, (/sum(offset_nspec2D_xmax(0:myrank-1))/),if_col)
-  dset_name = "ibelm_ymin" ! 1 i (/offset_nspec2D_ymin/)
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ibelm_ymin, (/sum(offset_nspec2D_ymin(0:myrank-1))/),if_col)
-  dset_name = "ibelm_ymax" ! 1 i (/offset_nspec2D_ymax/)
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ibelm_ymax, (/sum(offset_nspec2D_ymax(0:myrank-1))/),if_col)
-  dset_name = "ibelm_bottom" ! 1 i (/offset_nspec2D_bottom_ext/)
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ibelm_bottom, (/sum(offset_nspec2D_bottom_ext(0:myrank-1))/),if_col)
-  dset_name = "ibelm_top" ! 1 i (/offset_nspec2D_top_ext/)
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ibelm_top, (/sum(offset_nspec2D_top_ext(0:myrank-1))/),if_col)
+
+  if (sum(offset_nspec2D_xmin) > 0) then
+    dset_name = "ibelm_xmin" ! 1 i (/offset_nspec2D_xmin/)
+    call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ibelm_xmin, (/sum(offset_nspec2D_xmin(0:myrank-1))/),if_col)
+  endif
+  if (sum(offset_nspec2D_xmax) > 0) then
+    dset_name = "ibelm_xmax" ! 1 i (/offset_nspec2D_xmax/)
+    call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ibelm_xmax, (/sum(offset_nspec2D_xmax(0:myrank-1))/),if_col)
+  endif
+  if (sum(offset_nspec2D_ymin) > 0) then
+    dset_name = "ibelm_ymin" ! 1 i (/offset_nspec2D_ymin/)
+    call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ibelm_ymin, (/sum(offset_nspec2D_ymin(0:myrank-1))/),if_col)
+  endif
+  if (sum(offset_nspec2D_ymax) > 0) then
+    dset_name = "ibelm_ymax" ! 1 i (/offset_nspec2D_ymax/)
+    call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ibelm_ymax, (/sum(offset_nspec2D_ymax(0:myrank-1))/),if_col)
+  endif
+  if (sum(offset_nspec2D_bottom_ext) > 0) then
+    dset_name = "ibelm_bottom" ! 1 i (/offset_nspec2D_bottom_ext/)
+    call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ibelm_bottom, (/sum(offset_nspec2D_bottom_ext(0:myrank-1))/),if_col)
+  endif
+  if (sum(offset_nspec2D_top_ext) > 0) then
+    dset_name = "ibelm_top" ! 1 i (/offset_nspec2D_top_ext/)
+    call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ibelm_top, (/sum(offset_nspec2D_top_ext(0:myrank-1))/),if_col)
+  endif
 
   ! free surface
   dset_name = "num_free_surface_faces" ! 1 i (/myrank/)
   call h5_write_dataset_1d_i_collect_hyperslab(dset_name, (/num_free_surface_faces/), (/myrank/),if_col)
+
   if (sum(offset_num_free_surface_faces) > 0) then
     dset_name = "free_surface_ispec" ! 1 i (/offset_num_free_surface_faces/)
     call h5_write_dataset_1d_i_collect_hyperslab(dset_name, free_surface_ispec, &
@@ -1112,8 +1159,8 @@
 
   ! acoustic-elastic coupling surface
   dset_name = "num_coupling_ac_el_faces" ! 1 i (/myrank/)
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, (/num_coupling_ac_el_faces/), &
-              (/myrank/),if_col)
+  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, (/num_coupling_ac_el_faces/), (/myrank/),if_col)
+
   if (sum(offset_num_coupling_ac_el_faces) > 0) then
     dset_name = "coupling_ac_el_ispec" ! 1 i (/offset_num_coupling_ac_el_faces/)
     call h5_write_dataset_1d_i_collect_hyperslab(dset_name, coupling_ac_el_ispec, &
@@ -1140,8 +1187,8 @@
 
   ! acoustic-poroelastic coupling surface
   dset_name = "num_coupling_ac_po_faces" ! 1 i (/myrank/)
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, (/num_coupling_ac_po_faces/), &
-          (/myrank/),if_col)
+  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, (/num_coupling_ac_po_faces/), (/myrank/),if_col)
+
   if (sum(offset_num_coupling_ac_po_faces) > 0) then
     dset_name = "coupling_ac_po_ispec" ! 1 i (/offset_num_coupling_ac_po_faces/)
     call h5_write_dataset_1d_i_collect_hyperslab(dset_name, coupling_ac_po_ispec, &
@@ -1167,8 +1214,8 @@
 
   ! elastic-poroelastic coupling surface
   dset_name = "num_coupling_el_po_faces" ! 1 i (/myrank/)
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, (/num_coupling_el_po_faces/), &
-            (/myrank/),if_col)
+  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, (/num_coupling_el_po_faces/), (/myrank/),if_col)
+
   if (sum(offset_num_coupling_el_po_faces) > 0) then
     dset_name = "coupling_el_po_ispec" ! 1 i (/offset_num_coupling_el_po_faces/)
     call h5_write_dataset_1d_i_collect_hyperslab(dset_name, coupling_el_po_ispec, &
@@ -1205,6 +1252,7 @@
 
   dset_name = "num_interfaces_ext_mesh" ! 1 i (/myrank/)
   call h5_write_dataset_1d_i_collect_hyperslab(dset_name, (/num_interfaces_ext_mesh/), (/myrank/),if_col)
+
   if (sum(offset_num_interfaces_ext_mesh) > 0) then
     dset_name = "max_nibool_interfaces_ext_mesh" ! 1 i (/myrank/)
     call h5_write_dataset_1d_i_collect_hyperslab(dset_name, (/max_nibool_interfaces_ext_mesh/), (/myrank/),if_col)

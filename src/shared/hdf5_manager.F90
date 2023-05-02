@@ -142,7 +142,8 @@ module manager_hdf5
       h5_write_dataset_3d_r_collect_hyperslab, &
       h5_write_dataset_4d_i_collect_hyperslab, &
       h5_write_dataset_4d_r_collect_hyperslab, &
-      h5_write_dataset_5d_r_collect_hyperslab
+      h5_write_dataset_5d_r_collect_hyperslab, &
+      i2c
 
   integer(HID_T) :: file_id, group_id, parent_group_id, dataset_id
   integer(HID_T) :: mem_dspace_id, file_dspace_id                     ! for collective IO
@@ -160,7 +161,11 @@ module manager_hdf5
   integer :: this_rank, this_info, this_comm, total_proc
 
   ! io unit
-  integer,parameter :: xdmf_vol                 = 514
+  integer, parameter :: xdmf_mesh = 190
+
+  ! mesh nodes
+  public :: xdmf_mesh_nnodes
+  integer :: xdmf_mesh_nnodes
 
   ! function call errors
   integer :: error
@@ -173,6 +178,7 @@ module manager_hdf5
 
   ! store HDF5 output file name
   character(len=MAX_STRING_LEN) :: name_database_hdf5
+
 #endif
 
 contains
@@ -182,7 +188,6 @@ contains
 ! public HDF5 wrapper routines (also available without hdf5 compilation support)
 !
 !-------------------------------------------------------------------------------
-
 
   subroutine h5_init()
 
@@ -464,7 +469,7 @@ contains
   subroutine write_checkmesh_xdmf_hdf5(NSPEC_AB)
 
 #if defined(USE_HDF5)
-    use constants, only: myrank,OUTPUT_FILES
+    use constants, only: myrank
     use shared_parameters
 #endif
     implicit none
@@ -472,86 +477,74 @@ contains
     integer, intent(in)                             :: NSPEC_AB
 
 #if defined(USE_HDF5)
-    character(len=64)                               :: fname_xdmf_checkmesh    = ""
+    character(len=MAX_STRING_LEN)                   :: fname_xdmf_checkmesh,fname_h5_database_xdmf,fname_h5_extmesh_xdmf
     integer, dimension(0:NPROC-1)                   :: nelms, nnodes
-    character(len=20)                               :: type_str,nelm,nnode
+    character(len=20)                               :: type_str,nelm_str,nnode_str
 
     ! gather number of elements in each proc
     call gather_all_singlei(NSPEC_AB, nelms, NPROC)
 
-    !#TODO: IO server
     ! count and gather the number of control nodes in each proc
-    !call gather_all_singlei(n_control_node, nnodes, NPROC)
-    !for now all processes belong to nnodes
-    call gather_all_singlei(1, nnodes, NPROC) ! assumes each process is a control node
+    call gather_all_singlei(xdmf_mesh_nnodes, nnodes, NPROC)
 
     if (myrank == 0) then
       ! writeout xdmf file for surface movie
-      fname_xdmf_checkmesh = trim(OUTPUT_FILES)//"/checkmesh.xmf"
+      fname_xdmf_checkmesh = trim(LOCAL_PATH)//"/checkmesh.xmf"
+      fname_h5_database_xdmf = "./Database.h5"      ! relative to checkmesh.xmf file
+      fname_h5_extmesh_xdmf = "./external_mesh.h5"
 
-      open(unit=xdmf_vol, file=fname_xdmf_checkmesh, recl=512)
+      open(unit=xdmf_mesh, file=trim(fname_xdmf_checkmesh), recl=512)
 
       ! definition of topology and geometry
       ! refer only control nodes (8 or 27) as a coarse output
       ! data array need to be extracted from full data array on GLL points
-      write(xdmf_vol,'(a)') '<?xml version="1.0" ?>'
-      write(xdmf_vol,*) '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
-      write(xdmf_vol,*) '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="3.0">'
-      write(xdmf_vol,*) '<Domain>'
-      write(xdmf_vol,*) '<!-- mesh info -->'
-      !write(xdmf_vol,*) '<Grid Name="mesh" GridType="Collection"  CollectionType="Spatial">'
-      nelm  = i2c(sum(nelms(:)))
-      nnode = i2c(sum(nnodes(:)))
+      write(xdmf_mesh,'(a)') '<?xml version="1.0" ?>'
+      write(xdmf_mesh,*) '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
+      write(xdmf_mesh,*) '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="3.0">'
+      write(xdmf_mesh,*) '<Domain>'
+      write(xdmf_mesh,*) '<!-- mesh info -->'
+      !write(xdmf_mesh,*) '<Grid Name="mesh" GridType="Collection"  CollectionType="Spatial">'
 
-      write(xdmf_vol,*) '<Grid Name="mesh">'
-      write(xdmf_vol,*) '<Topology TopologyType="Mixed" NumberOfElements="'//trim(nelm)//'">'
-      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Int" Precision="4" Dimensions="'&
-                             //trim(nelm)//' '//trim(i2c(8+1))//'">'
-      write(xdmf_vol,*) '       ./DATABASES_MPI/Database.h5:/elm_conn_xdmf'
-      write(xdmf_vol,*) '</DataItem>'
-      write(xdmf_vol,*) '</Topology>'
-      write(xdmf_vol,*) '<Geometry GeometryType="XYZ">'
-      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                          //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nnode)//' 3">'
-      write(xdmf_vol,*) '       ./DATABASES_MPI/Database.h5:/nodes_coords'
-      write(xdmf_vol,*) '</DataItem>'
-      write(xdmf_vol,*) '</Geometry>'
+      nelm_str  = i2c(sum(nelms(:)))
+      nnode_str = i2c(sum(nnodes(:)))
+
+      write(xdmf_mesh,*) '<Grid Name="mesh">'
+      write(xdmf_mesh,*) '<Topology TopologyType="Mixed" NumberOfElements="'//trim(nelm_str)//'">'
+      write(xdmf_mesh,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Int" Precision="4" Dimensions="'&
+                             //trim(nelm_str)//' '//trim(i2c(8+1))//'">'
+      write(xdmf_mesh,*) '       '//trim(fname_h5_database_xdmf)//':/elm_conn_xdmf'
+      write(xdmf_mesh,*) '</DataItem>'
+      write(xdmf_mesh,*) '</Topology>'
+      write(xdmf_mesh,*) '<Geometry GeometryType="XYZ">'
+      write(xdmf_mesh,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                          //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nnode_str)//' 3">'
+      write(xdmf_mesh,*) '       '//trim(fname_h5_database_xdmf)//':/nodes_coords'
+      write(xdmf_mesh,*) '</DataItem>'
+      write(xdmf_mesh,*) '</Geometry>'
 
       type_str = "res_Courant_number"
-      write(xdmf_vol, *)  '<Attribute Name="'//trim(type_str)//'" AttributeType="Scalar" Center="Cell">'
-      write(xdmf_vol, *)  '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nelm)//'">'
-      write(xdmf_vol, *)  '            ./DATABASES_MPI/external_mesh.h5:/'//trim(type_str)
-      write(xdmf_vol, *)  '</DataItem>'
-      write(xdmf_vol, *)  '</Attribute>'
+      write(xdmf_mesh,*) '<Attribute Name="'//trim(type_str)//'" AttributeType="Scalar" Center="Cell">'
+      write(xdmf_mesh,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nelm_str)//'">'
+      write(xdmf_mesh,*) '       '//trim(fname_h5_extmesh_xdmf)//':/'//trim(type_str)
+      write(xdmf_mesh,*) '</DataItem>'
+      write(xdmf_mesh,*) '</Attribute>'
 
       type_str = "res_minimum_period"
-      write(xdmf_vol, *)  '<Attribute Name="'//trim(type_str)//'" AttributeType="Scalar" Center="Cell">'
-      write(xdmf_vol, *)  '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
-                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nelm)//'">'
-      write(xdmf_vol, *)  '            ./DATABASES_MPI/external_mesh.h5:/'//trim(type_str)
-      write(xdmf_vol, *)  '</DataItem>'
-      write(xdmf_vol, *)  '</Attribute>'
+      write(xdmf_mesh,*) '<Attribute Name="'//trim(type_str)//'" AttributeType="Scalar" Center="Cell">'
+      write(xdmf_mesh,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nelm_str)//'">'
+      write(xdmf_mesh,*) '       '//trim(fname_h5_extmesh_xdmf)//':/'//trim(type_str)
+      write(xdmf_mesh,*) '</DataItem>'
+      write(xdmf_mesh,*) '</Attribute>'
 
-      write(xdmf_vol,*) '</Grid>'
+      !write(xdmf_mesh,*) '</Grid>'
+      write(xdmf_mesh,*) '</Grid>'
+      write(xdmf_mesh,*) '</Domain>'
+      write(xdmf_mesh,*) '</Xdmf>'
 
-      !write(xdmf_vol,*) '</Grid>'
-      write(xdmf_vol,*) '</Domain>'
-      write(xdmf_vol,*) '</Xdmf>'
-
-      close(xdmf_vol)
+      close(xdmf_mesh)
     endif
-
-  contains
-
-    function i2c(k) result(str)
-      !   "Convert an integer to string."
-      implicit none
-      integer, intent(in) :: k
-      character(len=20) str
-      write (str, "(i20)") k
-      str = adjustl(str)
-    end function i2c
 
 #else
   ! no compilation support
@@ -567,7 +560,6 @@ contains
   end subroutine write_checkmesh_xdmf_hdf5
 
 
-
 !-------------------------------------------------------------------------------
 !
 ! HDF5 wrapper routines (only available with HDF5 compilation support)
@@ -577,6 +569,19 @@ contains
 #if defined(USE_HDF5)
 ! only available with HDF5 compilation support
 
+
+  function i2c(k) result(str)
+  ! "Convert an integer to string."
+    implicit none
+    integer, intent(in) :: k
+    character(len=20) str
+    write (str, "(i20)") k
+    str = adjustl(str)
+  end function i2c
+
+!
+!-------------------------------------------------------------------------------
+!
 
   subroutine h5_destructor()
     implicit none
@@ -1408,16 +1413,16 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_create_dataset_prop_list(if_collect)
+  subroutine h5_create_dataset_prop_list(if_collective)
     implicit none
-    logical, intent(in)    :: if_collect
+    logical, intent(in) :: if_collective
     ! Setup file access property list with parallel I/O access.
     call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
     if (error /= 0) write(*,*) 'hdf5 create dataset plist failed.'
     call check_error()
     ! use larger buffer size from the default
     call h5_set_buffer_size()
-    if (if_collect) then
+    if (if_collective) then
       call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     else
       call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
@@ -2119,16 +2124,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_read_dataset_scalar_i_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_read_dataset_scalar_i_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     integer, intent(inout), target                              :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 1
     integer(HSIZE_T), dimension(1)                              :: dim
     integer(HSIZE_T), dimension(1)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(1)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     !dim = shape(data)
     dim = (/1/)
@@ -2147,7 +2153,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     call h5dread_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
@@ -2166,16 +2172,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_read_dataset_scalar_r_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_read_dataset_scalar_r_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     real(kind=CUSTOM_REAL), intent(inout), target               :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 1
     integer(HSIZE_T), dimension(1)                              :: dim
     integer(HSIZE_T), dimension(1)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(1)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     !dim = shape(data)
     dim = (/1/)
@@ -2194,7 +2201,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
@@ -2218,17 +2225,18 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_read_dataset_1d_l_collect_hyperslab(dataset_name, data_out, offset_in, if_collect)
+  subroutine h5_read_dataset_1d_l_collect_hyperslab(dataset_name, data_out, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
-    integer, dimension(:), allocatable, target                  :: data
     logical, dimension(:), intent(inout), target                :: data_out
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
+    integer, dimension(:), allocatable, target                  :: data
     integer                                                     :: rank = 1
     integer(HSIZE_T), dimension(1)                              :: dim
     integer(HSIZE_T), dimension(1)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(1)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data_out)
     offset = offset_in ! convert data type
@@ -2247,7 +2255,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     f_ptr = c_loc(data(1))
@@ -2270,16 +2278,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_read_dataset_1d_i_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_read_dataset_1d_i_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     integer, dimension(:), intent(inout), target                :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 1
     integer(HSIZE_T), dimension(1)                              :: dim
     integer(HSIZE_T), dimension(1)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(1)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -2297,7 +2306,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     call h5_check_arr_dim(dim)
 
@@ -2323,16 +2332,17 @@ contains
 !
 
   ! store local 1d array to global 1d array
-  subroutine h5_read_dataset_1d_r_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_read_dataset_1d_r_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     real(kind=CUSTOM_REAL), dimension(:), intent(inout), target :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 1
     integer(HSIZE_T), dimension(1)                              :: dim
     integer(HSIZE_T), dimension(1)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(1)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -2350,7 +2360,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     f_ptr = c_loc(data(1))
 
@@ -2377,16 +2387,17 @@ contains
 !
 
   ! store local 1d array to global 1d array
-  subroutine h5_read_dataset_1d_r_collect_hyperslab_in_group(dataset_name, data, offset_in, if_collect)
+  subroutine h5_read_dataset_1d_r_collect_hyperslab_in_group(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     real(kind=CUSTOM_REAL), dimension(:), intent(inout), target :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 1
     integer(HSIZE_T), dimension(1)                              :: dim
     integer(HSIZE_T), dimension(1)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(1)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -2404,7 +2415,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     f_ptr = c_loc(data(1))
 
@@ -2430,16 +2441,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_read_dataset_2d_i_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_read_dataset_2d_i_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     integer, dimension(:,:), intent(inout), target              :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 2
     integer(HSIZE_T), dimension(2)                              :: dim
     integer(HSIZE_T), dimension(2)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(2)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -2458,7 +2470,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     f_ptr = c_loc(data(1,1))
 
@@ -2479,16 +2491,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_read_dataset_2d_i_collect_hyperslab_in_group(dataset_name, data, offset_in, if_collect)
+  subroutine h5_read_dataset_2d_i_collect_hyperslab_in_group(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     integer, dimension(:,:), intent(inout), target              :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 2
     integer(HSIZE_T), dimension(2)                              :: dim
     integer(HSIZE_T), dimension(2)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(2)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -2507,7 +2520,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     f_ptr = c_loc(data(1,1))
 
@@ -2529,16 +2542,17 @@ contains
 !
 
   ! store local 2d array to global 2d array
-  subroutine h5_read_dataset_2d_r_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_read_dataset_2d_r_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     real(kind=CUSTOM_REAL), dimension(:,:), intent(inout), target  :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 2
     integer(HSIZE_T), dimension(2)                              :: dim
     integer(HSIZE_T), dimension(2)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(2)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -2557,7 +2571,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     f_ptr = c_loc(data(1,1))
 
@@ -2583,16 +2597,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_read_dataset_2d_d_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_read_dataset_2d_d_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     double precision, dimension(:,:), intent(inout), target        :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 2
     integer(HSIZE_T), dimension(2)                              :: dim
     integer(HSIZE_T), dimension(2)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(2)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -2611,7 +2626,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     f_ptr = c_loc(data(1,1))
 
@@ -2632,16 +2647,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_read_dataset_3d_i_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_read_dataset_3d_i_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     integer, dimension(:,:,:), intent(inout), target            :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 3
     integer(HSIZE_T), dimension(3)                              :: dim
     integer(HSIZE_T), dimension(3)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(3)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -2661,7 +2677,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     f_ptr = c_loc(data(1,1,1))
 
@@ -2682,16 +2698,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_read_dataset_3d_r_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_read_dataset_3d_r_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     real(kind=CUSTOM_REAL), dimension(:,:,:), intent(inout), target  :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 3
     integer(HSIZE_T), dimension(3)                              :: dim
     integer(HSIZE_T), dimension(3)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(3)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -2711,7 +2728,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     f_ptr = c_loc(data(1,1,1))
 
@@ -2737,16 +2754,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_read_dataset_4d_i_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_read_dataset_4d_i_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     integer, dimension(:,:,:,:), intent(inout), target          :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 4
     integer(HSIZE_T), dimension(4)                              :: dim
     integer(HSIZE_T), dimension(4)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(4)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -2767,7 +2785,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     f_ptr = c_loc(data(1,1,1,1))
 
@@ -2788,16 +2806,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_read_dataset_4d_r_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_read_dataset_4d_r_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), intent(inout), target  :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 4
     integer(HSIZE_T), dimension(4)                              :: dim
     integer(HSIZE_T), dimension(4)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(4)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -2818,7 +2837,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     f_ptr = c_loc(data(1,1,1,1))
 
@@ -2844,16 +2863,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_read_dataset_5d_r_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_read_dataset_5d_r_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), intent(inout), target  :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 5
     integer(HSIZE_T), dimension(5)                              :: dim
     integer(HSIZE_T), dimension(5)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(5)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -2875,7 +2895,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     f_ptr = c_loc(data(1,1,1,1,1))
 
@@ -3540,16 +3560,17 @@ contains
 !
 
   ! from 1d local array to 2d global array
-  subroutine h5_write_dataset_1d_to_2d_r_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_write_dataset_1d_to_2d_r_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     real(kind=CUSTOM_REAL), dimension(:), intent(in), target    :: data
+    integer, dimension(2), intent(in)                           :: offset_in ! the position where the datablock is inserted
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 1
     integer(HSIZE_T), dimension(1)                              :: dim
     integer(HSIZE_T), dimension(2)                              :: count ! size of hyperslab
-    integer, dimension(2), intent(in)                           :: offset_in ! the position where the datablock is inserted
     integer(HSSIZE_T), dimension(2)                             :: offset
-    logical                                                     :: if_collect
 
     dim = size(data)
     offset = offset_in ! convert data type
@@ -3568,7 +3589,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
@@ -3593,16 +3614,17 @@ contains
 !
 
   ! store local 2d array to global 3d array
-  subroutine h5_write_dataset_2d_to_3d_r_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_write_dataset_2d_to_3d_r_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     real(kind=CUSTOM_REAL), dimension(:,:), intent(in), target  :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 2
     integer(HSIZE_T), dimension(2)                              :: dim
     integer(HSIZE_T), dimension(3)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(3)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -3622,7 +3644,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
@@ -3646,17 +3668,18 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_write_dataset_1d_l_collect_hyperslab(dataset_name, data_in, offset_in, if_collect)
+  subroutine h5_write_dataset_1d_l_collect_hyperslab(dataset_name, data_in, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     logical, dimension(:), intent(in), target                   :: data_in
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer, dimension(:), allocatable, target                  :: data
     integer                                                     :: rank = 1
     integer(HSIZE_T), dimension(1)                              :: dim
     integer(HSIZE_T), dimension(1)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(1)                             :: offset ! the position where the datablock is inserted
-    logical, intent(in)                                         :: if_collect
 
     dim = shape(data_in)
     offset = offset_in ! convert data type
@@ -3664,7 +3687,7 @@ contains
     ! open dataset
     call h5_open_dataset2(trim(dataset_name))
 
-    ! if_collect == .false., this function gather all data from procs then write in a file at once
+    ! if_collective == .false., this function gather all data from procs then write in a file at once
 
     ! select a place where data is inserted.
     count(1) = dim(1)
@@ -3680,7 +3703,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     !call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
@@ -3705,16 +3728,17 @@ contains
 !
 
   ! store local 1d array to global 1d array
-  subroutine h5_write_dataset_1d_i_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_write_dataset_1d_i_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     integer, dimension(:), intent(in), target                   :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 1
     integer(HSIZE_T), dimension(1)                              :: dim
     integer(HSIZE_T), dimension(1)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(1)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -3732,7 +3756,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     call h5_check_arr_dim(dim)
     ! write array using Fortran pointer
@@ -3755,16 +3779,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_write_dataset_1d_r_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_write_dataset_1d_r_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     real(kind=CUSTOM_REAL), dimension(:), intent(in), target    :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 1
     integer(HSIZE_T), dimension(1)                              :: dim
     integer(HSIZE_T), dimension(1)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(1)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -3782,7 +3807,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
@@ -3811,16 +3836,17 @@ contains
 !
 
   ! store local 1d array to global 1d array
-  subroutine h5_write_dataset_1d_r_collect_hyperslab_in_group(dataset_name, data, offset_in, if_collect)
+  subroutine h5_write_dataset_1d_r_collect_hyperslab_in_group(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     real(kind=CUSTOM_REAL), dimension(:), intent(in), target    :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 1
     integer(HSIZE_T), dimension(1)                              :: dim
     integer(HSIZE_T), dimension(1)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(1)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -3838,7 +3864,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
@@ -3867,16 +3893,17 @@ contains
 !
 
   ! store local 2d array to global 2d array
-  subroutine h5_write_dataset_2d_i_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_write_dataset_2d_i_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
-    integer, dimension(:,:), intent(in), target  :: data
+    integer, dimension(:,:), intent(in), target                 :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 2
     integer(HSIZE_T), dimension(2)                              :: dim
     integer(HSIZE_T), dimension(2)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(2)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -3895,7 +3922,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     !call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
@@ -3916,16 +3943,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_write_dataset_2d_i_collect_hyperslab_in_group(dataset_name, data, offset_in, if_collect)
+  subroutine h5_write_dataset_2d_i_collect_hyperslab_in_group(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
-    integer, dimension(:,:), intent(in), target  :: data
+    integer, dimension(:,:), intent(in), target                 :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 2
     integer(HSIZE_T), dimension(2)                              :: dim
     integer(HSIZE_T), dimension(2)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(2)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -3944,7 +3972,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     !call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
@@ -3966,16 +3994,17 @@ contains
 !
 
   ! store local 2d array to global 2d array
-  subroutine h5_write_dataset_2d_r_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_write_dataset_2d_r_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     real(kind=CUSTOM_REAL), dimension(:,:), intent(in), target  :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 2
     integer(HSIZE_T), dimension(2)                              :: dim
     integer(HSIZE_T), dimension(2)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(2)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -3994,7 +4023,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
@@ -4022,16 +4051,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_write_dataset_2d_d_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_write_dataset_2d_d_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     double precision, dimension(:,:), intent(in), target        :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 2
     integer(HSIZE_T), dimension(2)                              :: dim
     integer(HSIZE_T), dimension(2)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(2)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -4050,7 +4080,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     call h5dwrite_f(dataset_id, H5T_NATIVE_DOUBLE, c_loc(data(1,1)), error, &
@@ -4069,16 +4099,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_write_dataset_3d_i_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_write_dataset_3d_i_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                  :: dataset_name
     integer, dimension(:,:,:), intent(in), target :: data
+    integer, dimension(:), intent(in)             :: offset_in
+    logical, intent(in)                           :: if_collective
+    ! local parameters
     integer                                       :: rank = 3
     integer(HSIZE_T), dimension(3)                :: dim
     integer(HSIZE_T), dimension(3)                :: count ! size of hyperslab
-    integer, dimension(:), intent(in)             :: offset_in
     integer(HSSIZE_T), dimension(3)               :: offset ! the position where the datablock is inserted
-    logical                                       :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -4098,7 +4129,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     !call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, data, dim, error, &
@@ -4121,16 +4152,17 @@ contains
 !
 
   ! store local 3d array to global 3d array
-  subroutine h5_write_dataset_3d_r_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_write_dataset_3d_r_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     real(kind=CUSTOM_REAL), dimension(:,:,:), intent(in), target  :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 3
     integer(HSIZE_T), dimension(3)                              :: dim
     integer(HSIZE_T), dimension(3)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(3)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -4150,7 +4182,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
@@ -4174,16 +4206,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_write_dataset_4d_i_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_write_dataset_4d_i_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                :: dataset_name
     integer, dimension(:,:,:,:), intent(in), target             :: data
+    integer, dimension(:), intent(in)                           :: offset_in
+    logical, intent(in)                                         :: if_collective
+    ! local parameters
     integer                                                     :: rank = 4
     integer(HSIZE_T), dimension(4)                              :: dim
     integer(HSIZE_T), dimension(4)                              :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                           :: offset_in
     integer(HSSIZE_T), dimension(4)                             :: offset ! the position where the datablock is inserted
-    logical                                                     :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -4204,7 +4237,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     call h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, c_loc(data(1,1,1,1)), error, &
@@ -4223,16 +4256,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_write_dataset_4d_r_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_write_dataset_4d_r_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                   :: dataset_name
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), intent(in), target :: data
+    integer, dimension(:), intent(in)                              :: offset_in
+    logical, intent(in)                                            :: if_collective
+    ! local parameters
     integer                                                        :: rank = 4
     integer(HSIZE_T), dimension(4)                                 :: dim
     integer(HSIZE_T), dimension(4)                                 :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                              :: offset_in
     integer(HSSIZE_T), dimension(4)                                :: offset ! the position where the datablock is inserted
-    logical                                                        :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -4253,7 +4287,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
@@ -4277,16 +4311,17 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_write_dataset_5d_r_collect_hyperslab(dataset_name, data, offset_in, if_collect)
+  subroutine h5_write_dataset_5d_r_collect_hyperslab(dataset_name, data, offset_in, if_collective)
     implicit none
     character(len=*), intent(in)                                     :: dataset_name
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), intent(in), target :: data
+    integer, dimension(:), intent(in)                                :: offset_in
+    logical, intent(in)                                              :: if_collective
+    ! local parameters
     integer                                                          :: rank = 5
     integer(HSIZE_T), dimension(5)                                   :: dim
     integer(HSIZE_T), dimension(5)                                   :: count ! size of hyperslab
-    integer, dimension(:), intent(in)                                :: offset_in
     integer(HSSIZE_T), dimension(5)                                  :: offset ! the position where the datablock is inserted
-    logical                                                          :: if_collect
 
     dim = shape(data)
     offset = offset_in ! convert data type
@@ -4308,7 +4343,7 @@ contains
     call check_error()
     call h5sselect_hyperslab_f(file_dspace_id, H5S_SELECT_SET_F, offset, count, error)
     call check_error()
-    call h5_create_dataset_prop_list(if_collect)
+    call h5_create_dataset_prop_list(if_collective)
 
     ! write array using Fortran pointer
     if (CUSTOM_REAL == 4) then
