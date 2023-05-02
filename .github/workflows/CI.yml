@@ -34,9 +34,15 @@ jobs:
         # deprecated:
         #echo "::set-output name=diff::$( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' )"
         # new:
+        # replace new line with %0A - will result finding only one file with a very long name...
         #echo "diff=$( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' )" >> $GITHUB_OUTPUT
-        # no replacements needed
-        echo "diff=\"$DIFF\"" >> "$GITHUB_OUTPUT"
+        # doesn't work...
+        #echo "diff=\"$DIFF\"" >> "$GITHUB_OUTPUT"
+        # new multi-line format:
+        # (https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#multiline-strings)
+        echo "diff<<EOF" >> $GITHUB_OUTPUT
+        echo "$DIFF" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
 
     - name: Output changes
       run: echo "${{ steps.diff.outputs.diff }}"
