@@ -240,6 +240,16 @@ else
 specfem3D_SHARED_OBJECTS += $(adios_specfem3D_STUBS)
 endif
 
+##
+## HDF5
+##
+
+ifeq ($(HDF5),yes)
+specfem3D_MODULES += \
+	$(FC_MODDIR)/specfem_par_movie_hdf5.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+endif
+
 ###
 ### ASDF
 ###
