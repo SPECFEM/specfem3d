@@ -133,16 +133,16 @@
   select case (istore)
   case (1)
     ! displ
-    call h5_write_dataset_3d_r_collect_hyperslab(component, &
+    call h5_write_dataset_collect_hyperslab(component, &
                                                  all_seismograms(:,1:seismo_current,:), (/0, seismo_offset, 0/), .false.)
 
   case (2)
     ! veloc
-    call h5_write_dataset_3d_r_collect_hyperslab(component, &
+    call h5_write_dataset_collect_hyperslab(component, &
                                                  all_seismograms(:,1:seismo_current,:), (/0, seismo_offset, 0/), .false.)
   case (3)
     ! accel
-    call h5_write_dataset_3d_r_collect_hyperslab(component, &
+    call h5_write_dataset_collect_hyperslab(component, &
                                                  all_seismograms(:,1:seismo_current,:), (/0, seismo_offset, 0/), .false.)
   case (4)
     ! pressure
@@ -150,7 +150,7 @@
     allocate(tmp_seis_pre(seismo_current,nrec_store),stat=ier)
     if (ier /= 0) stop 'error allocating tmp_seis_pre array'
     tmp_seis_pre(:,:) = all_seismograms(1,1:seismo_current,:)
-    call h5_write_dataset_2d_r_collect_hyperslab(component, &
+    call h5_write_dataset_collect_hyperslab(component, &
                                                  tmp_seis_pre, (/seismo_offset, 0/), .false.)
     deallocate(tmp_seis_pre)
 
@@ -239,7 +239,7 @@
   enddo
 
   ! time array
-  call h5_write_dataset_1d_d_no_group("time", time_array)
+  call h5_write_dataset_no_group("time", time_array)
   call h5_close_dataset()
 
   ! free array
@@ -264,15 +264,15 @@
   close(IOUT_SU)
 
   ! coordination
-  call h5_write_dataset_2d_r_no_group("coords", rec_coords)
+  call h5_write_dataset_no_group("coords", rec_coords)
   call h5_close_dataset()
 
   ! station name
-  call h5_write_dataset_1d_c_no_group("station", stations)
+  call h5_write_dataset_no_group("station", stations)
   call h5_close_dataset()
 
   ! network name
-  call h5_write_dataset_1d_c_no_group("network", networks)
+  call h5_write_dataset_no_group("network", networks)
   call h5_close_dataset()
 
   ! free arrays

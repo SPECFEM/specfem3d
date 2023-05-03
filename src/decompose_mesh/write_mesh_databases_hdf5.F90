@@ -140,17 +140,17 @@
 
   ! offset arrays
   dset_name = "offset_nnodes"
-  call h5_write_dataset_1d_i_no_group(dset_name, offset_nnodes)
+  call h5_write_dataset_no_group(dset_name, offset_nnodes)
   dset_name = "offset_nelems"
-  call h5_write_dataset_1d_i_no_group(dset_name, offset_nelems)
+  call h5_write_dataset_no_group(dset_name, offset_nelems)
   dset_name = "offset_nelems_cpml"
-  call h5_write_dataset_1d_i_no_group(dset_name, offset_nelems_cpml)
+  call h5_write_dataset_no_group(dset_name, offset_nelems_cpml)
   dset_name = "offset_n_elms_bounds"
-  call h5_write_dataset_1d_i_no_group(dset_name, offset_n_elms_bounds)
+  call h5_write_dataset_no_group(dset_name, offset_n_elms_bounds)
   dset_name = "offset_n_elms_interface"
-  call h5_write_dataset_1d_i_no_group(dset_name, offset_n_elms_interface)
+  call h5_write_dataset_no_group(dset_name, offset_n_elms_interface)
   dset_name = "offset_nb_interfaces"
-  call h5_write_dataset_1d_i_no_group(dset_name, offset_nb_interfaces)
+  call h5_write_dataset_no_group(dset_name, offset_nb_interfaces)
 
   ! database arrays
   dset_name = "nodes_coords"
@@ -239,7 +239,7 @@
 
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) close(124)
 
-  ! #TODO: add hdf5 support for fault simulation
+  ! #TODO: hdf5 support for fault simulation not implemented yet
   ! writes fault database
   if (ANY_FAULT) then
     do ipart = 0, nparts-1

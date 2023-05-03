@@ -313,13 +313,13 @@
 
     call h5_open_group(gname_material)
 
-    call h5_write_dataset_2d_d(mdsetname, mat_prop)
+    call h5_write_dataset(mdsetname, mat_prop)
     ! create an attribute for count_def_mat
     call h5_add_attribute_i(m_aname, (/ndef/))
     call h5_close_dataset()
 
     ! create a dataset for undef_mat_prop
-    call h5_write_dataset_2d_c(udsetname, undef_mat_prop)
+    call h5_write_dataset(udsetname, undef_mat_prop)
     call h5_add_attribute_i(u_aname, (/nundef/))
     call h5_close_dataset()
 
@@ -329,13 +329,13 @@
 
     ! offset arrays
     dset_name = "offset_nnodes"
-    call h5_write_dataset_1d_i_no_group(dset_name, offset_nnodes)
+    call h5_write_dataset_no_group(dset_name, offset_nnodes)
     dset_name = "offset_nelems"
-    call h5_write_dataset_1d_i_no_group(dset_name, offset_nelems)
+    call h5_write_dataset_no_group(dset_name, offset_nelems)
     dset_name = "offset_nelems_cpml"
-    call h5_write_dataset_1d_i_no_group(dset_name, offset_nelems_cpml)
+    call h5_write_dataset_no_group(dset_name, offset_nelems_cpml)
     dset_name = "offset_n_elms_bounds"
-    call h5_write_dataset_1d_i_no_group(dset_name, offset_n_elms_bounds)
+    call h5_write_dataset_no_group(dset_name, offset_n_elms_bounds)
 
     ! database arrays
     dset_name = "nodes_coords"
@@ -387,11 +387,11 @@
   enddo
 
   dset_name = "nodes_coords"
-  call h5_write_dataset_2d_d_collect_hyperslab(dset_name, nodes_coords_this_proc, (/0,sum(offset_nnodes(0:myrank-1))/), .true.)
+  call h5_write_dataset_collect_hyperslab(dset_name, nodes_coords_this_proc, (/0,sum(offset_nnodes(0:myrank-1))/), .true.)
   dset_name = "glob2loc_nodes"
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, glob2loc_nodes_this_proc, (/sum(offset_nnodes(0:myrank-1))/), .true.)
+  call h5_write_dataset_collect_hyperslab(dset_name, glob2loc_nodes_this_proc, (/sum(offset_nnodes(0:myrank-1))/), .true.)
   dset_name = "nnodes_loc"
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, (/nglob/), (/myrank/), .true.)
+  call h5_write_dataset_collect_hyperslab(dset_name, (/nglob/), (/myrank/), .true.)
 
   ! sets up node addressing
   call hex_nodes_anchor_ijk_NGLL(NGNOD,anchor_iax,anchor_iay,anchor_iaz,NGLLX_M,NGLLY_M,NGLLZ_M)
@@ -419,20 +419,20 @@
 
   ! create a dataset for elm_conn
   dset_name = "elm_conn"
-  call h5_write_dataset_2d_i_collect_hyperslab(dset_name, elm_conn, (/0,sum(offset_nelems(0:myrank-1))/),.true.)
+  call h5_write_dataset_collect_hyperslab(dset_name, elm_conn, (/0,sum(offset_nelems(0:myrank-1))/),.true.)
   dset_name = "nspec_local"
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, (/nspec/), (/myrank/), .true.)
+  call h5_write_dataset_collect_hyperslab(dset_name, (/nspec/), (/myrank/), .true.)
   ! create a dataset for elm_conn_xdmf
   dset_name = "elm_conn_xdmf"
-  call h5_write_dataset_2d_i_collect_hyperslab(dset_name, elm_conn_xdmf,(/0,sum(offset_nelems(0:myrank-1))/),.true.)
+  call h5_write_dataset_collect_hyperslab(dset_name, elm_conn_xdmf,(/0,sum(offset_nelems(0:myrank-1))/),.true.)
 
   ! write mat_mesh
   dset_name = "mat_mesh"
-  call h5_write_dataset_2d_i_collect_hyperslab(dset_name, mat_mesh, (/0,sum(offset_nelems(0:myrank-1))/),.true.)
+  call h5_write_dataset_collect_hyperslab(dset_name, mat_mesh, (/0,sum(offset_nelems(0:myrank-1))/),.true.)
 
   ! write ispec_local
   dset_name = "ispec_local"
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ispec_local, (/sum(offset_nelems(0:myrank-1))/),.true.)
+  call h5_write_dataset_collect_hyperslab(dset_name, ispec_local, (/sum(offset_nelems(0:myrank-1))/),.true.)
 
   ! Boundaries
   n_elms_on_bound(1) = nspec2D_xmin
@@ -569,10 +569,10 @@
 
   ! write n_elms_on_bound
   dset_name = "n_elms_on_bound"
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, n_elms_on_bound, (/6*myrank/), .true.)
+  call h5_write_dataset_collect_hyperslab(dset_name, n_elms_on_bound, (/6*myrank/), .true.)
   ! write glob2loc_elms_this_proc
   dset_name = "glob2loc_elms"
-  call h5_write_dataset_2d_i_collect_hyperslab(dset_name, glob2loc_elms_this_proc, &
+  call h5_write_dataset_collect_hyperslab(dset_name, glob2loc_elms_this_proc, &
             (/0,sum(offset_n_elms_bounds(0:myrank-1))/),.true.)
 
   ! CPML
@@ -600,18 +600,18 @@
 
     ! create a dataset for elements_cpml
     dset_name = "elements_cpml"
-    call h5_write_dataset_2d_i_collect_hyperslab(dset_name, elements_cpml, (/0,sum(offset_nelems_cpml(0:myrank-1))/), .true.)
+    call h5_write_dataset_collect_hyperslab(dset_name, elements_cpml, (/0,sum(offset_nelems_cpml(0:myrank-1))/), .true.)
 
     ! create a dataset for if_cpml
       ! strangely here H5T_NATIVE_HBOOL may not be used.
     dset_name = "if_cpml"
-    call h5_write_dataset_1d_i_collect_hyperslab(dset_name, if_cpml, (/sum(offset_nelems(0:myrank-1))/), .true.)
+    call h5_write_dataset_collect_hyperslab(dset_name, if_cpml, (/sum(offset_nelems(0:myrank-1))/), .true.)
 
   endif
 
   ! create a dataset for nspec_cpml and nspec_cpml_local
   dset_name = "nspec_cpml_globloc"
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ncpmls, (/2*myrank/), .true.)
+  call h5_write_dataset_collect_hyperslab(dset_name, ncpmls, (/2*myrank/), .true.)
 
   ! MPI Interfaces
   !
@@ -688,9 +688,9 @@
     call gather_all_all_singlei(sum(nspec_interface(:)),offset_n_elms_interface,NPROC)
 
     dset_name = "offset_n_elms_interface"
-    call h5_write_dataset_1d_i_no_group(dset_name, offset_n_elms_interface)
+    call h5_write_dataset_no_group(dset_name, offset_n_elms_interface)
     dset_name = "offset_nb_interfaces"
-    call h5_write_dataset_1d_i_no_group(dset_name, offset_nb_interfaces)
+    call h5_write_dataset_no_group(dset_name, offset_nb_interfaces)
 
 
     ! create dataset by main process
@@ -851,12 +851,12 @@
 
     ! write my_nb_interfaces
     dset_name = "my_nb_interfaces"
-    call h5_write_dataset_2d_i_collect_hyperslab(dset_name, num_neighbors_elmnts, &
+    call h5_write_dataset_collect_hyperslab(dset_name, num_neighbors_elmnts, &
                                                  (/0,sum(offset_nb_interfaces(0:myrank-1))/), .true.)
 
     ! write my_interfaces
     dset_name = "my_interfaces"
-    call h5_write_dataset_2d_i_collect_hyperslab(dset_name, neighbors_elmnts, &
+    call h5_write_dataset_collect_hyperslab(dset_name, neighbors_elmnts, &
                                                  (/0, sum(offset_n_elms_interface(0:myrank-1))/), .true.)
     deallocate(num_neighbors_elmnts, neighbors_elmnts)
 
@@ -875,9 +875,9 @@
     if (myrank == 0) then
       call h5_open_file(name_database_hdf5)
       dset_name = "offset_n_elms_interface"
-      call h5_write_dataset_1d_i_no_group(dset_name, offset_n_elms_interface)
+      call h5_write_dataset_no_group(dset_name, offset_n_elms_interface)
       dset_name = "offset_nb_interfaces"
-      call h5_write_dataset_1d_i_no_group(dset_name, offset_nb_interfaces)
+      call h5_write_dataset_no_group(dset_name, offset_nb_interfaces)
       call h5_close_file()
     endif
 
@@ -886,7 +886,7 @@
   endif
 
   dset_name = "my_ninterface_and_max"
-  call h5_write_dataset_1d_i_collect_hyperslab(dset_name, num_interface_and_max, (/myrank*2/), .true.)
+  call h5_write_dataset_collect_hyperslab(dset_name, num_interface_and_max, (/myrank*2/), .true.)
 
   call h5_close_file_p()
   call h5_destructor()

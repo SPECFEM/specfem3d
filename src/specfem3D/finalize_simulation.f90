@@ -42,9 +42,7 @@
   ! checks if anything to do
   !if (.not. IO_compute_task) then
   !  ! finalizes MPI subgroup for intercommunication
-  !  if (HDF5_IO_NNODES > 0) then
-  !    call world_unsplit_inter()
-  !  endif
+  !  if (HDF5_IO_NNODES > 0) call finalize_io_server()
   !  ! all done
   !  return
   !endif
@@ -117,9 +115,7 @@
 
   !#TODO: hdf5 i/o server
   ! finalizes MPI subgroup for intercommunication
-  !if (HDF5_IO_NNODES > 0) then
-  !  call world_unsplit_inter()
-  !endif
+  !if (HDF5_IO_NNODES > 0) call finalize_io_server()
 
   end subroutine finalize_simulation
 

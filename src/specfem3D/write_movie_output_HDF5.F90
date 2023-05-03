@@ -254,13 +254,13 @@ contains
     ! low resolution output
     if (.not. USE_HIGHRES_FOR_MOVIES) then
       dset_name = "x"
-      call h5_write_dataset_1d_d(dset_name, store_val_x_all)
+      call h5_write_dataset(dset_name, store_val_x_all)
       call h5_close_dataset()
       dset_name = "y"
-      call h5_write_dataset_1d_d(dset_name, store_val_y_all)
+      call h5_write_dataset(dset_name, store_val_y_all)
       call h5_close_dataset()
       dset_name = "z"
-      call h5_write_dataset_1d_d(dset_name, store_val_z_all)
+      call h5_write_dataset(dset_name, store_val_z_all)
       call h5_close_dataset()
 
       ! write xdmf header
@@ -276,15 +276,15 @@ contains
       ! nfaces*25nodes => n*16faces*4
       dset_name = "x"
       call recompose_for_hires(store_val_x_all,surf_x_aug)
-      call h5_write_dataset_1d_d(dset_name, surf_x_aug)
+      call h5_write_dataset(dset_name, surf_x_aug)
       call h5_close_dataset()
       dset_name = "y"
       call recompose_for_hires(store_val_y_all,surf_y_aug)
-      call h5_write_dataset_1d_d(dset_name, surf_y_aug)
+      call h5_write_dataset(dset_name, surf_y_aug)
       call h5_close_dataset()
       dset_name = "z"
       call recompose_for_hires(store_val_z_all,surf_z_aug)
-      call h5_write_dataset_1d_d(dset_name, surf_z_aug)
+      call h5_write_dataset(dset_name, surf_z_aug)
       call h5_close_dataset()
 
       ! write xdmf header
@@ -327,13 +327,13 @@ contains
 
   if (.not. USE_HIGHRES_FOR_MOVIES) then
     dset_name = "shakemap_ux"
-    call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name, shakemap_ux, &
+    call h5_write_dataset_collect_hyperslab_in_group(dset_name, shakemap_ux, &
                       (/faces_surface_offset(myrank+1)/), if_corrective)
     dset_name = "shakemap_uy"
-    call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name, shakemap_uy, &
+    call h5_write_dataset_collect_hyperslab_in_group(dset_name, shakemap_uy, &
                       (/faces_surface_offset(myrank+1)/), if_corrective)
     dset_name = "shakemap_uz"
-    call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name, shakemap_uz, &
+    call h5_write_dataset_collect_hyperslab_in_group(dset_name, shakemap_uz, &
                       (/faces_surface_offset(myrank+1)/), if_corrective)
 
   else
@@ -347,15 +347,15 @@ contains
 
     dset_name = "shakemap_ux"
     call recompose_for_hires(shakemap_ux, surf_ux_aug)
-    call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name, surf_ux_aug, &
+    call h5_write_dataset_collect_hyperslab_in_group(dset_name, surf_ux_aug, &
                       (/int(faces_surface_offset(myrank+1)*aug_factor)/), if_corrective)
     dset_name = "shakemap_uy"
     call recompose_for_hires(shakemap_uy, surf_uy_aug)
-    call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name, surf_uy_aug, &
+    call h5_write_dataset_collect_hyperslab_in_group(dset_name, surf_uy_aug, &
                       (/int(faces_surface_offset(myrank+1)*aug_factor)/), if_corrective)
     dset_name = "shakemap_uz"
     call recompose_for_hires(shakemap_uz, surf_uz_aug)
-    call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name, surf_uz_aug, &
+    call h5_write_dataset_collect_hyperslab_in_group(dset_name, surf_uz_aug, &
                       (/int(faces_surface_offset(myrank+1)*aug_factor)/), if_corrective)
 
     deallocate(surf_ux_aug, surf_uy_aug, surf_uz_aug)
@@ -528,13 +528,13 @@ contains
     if (.not. USE_HIGHRES_FOR_MOVIES) then
       ! low resolution output
       dset_name = "x"
-      call h5_write_dataset_1d_d(dset_name, store_val_x_all)
+      call h5_write_dataset(dset_name, store_val_x_all)
       call h5_close_dataset()
       dset_name = "y"
-      call h5_write_dataset_1d_d(dset_name, store_val_y_all)
+      call h5_write_dataset(dset_name, store_val_y_all)
       call h5_close_dataset()
       dset_name = "z"
-      call h5_write_dataset_1d_d(dset_name, store_val_z_all)
+      call h5_write_dataset(dset_name, store_val_z_all)
       call h5_close_dataset()
 
       ! write xdmf header
@@ -548,15 +548,15 @@ contains
       ! nfaces*25nodes => n*16faces*4
       dset_name = "x"
       call recompose_for_hires(store_val_x_all,surf_x_aug)
-      call h5_write_dataset_1d_d(dset_name, surf_x_aug)
+      call h5_write_dataset(dset_name, surf_x_aug)
       call h5_close_dataset()
       dset_name = "y"
       call recompose_for_hires(store_val_y_all,surf_y_aug)
-      call h5_write_dataset_1d_d(dset_name, surf_y_aug)
+      call h5_write_dataset(dset_name, surf_y_aug)
       call h5_close_dataset()
       dset_name = "z"
       call recompose_for_hires(store_val_z_all,surf_z_aug)
-      call h5_write_dataset_1d_d(dset_name, surf_z_aug)
+      call h5_write_dataset(dset_name, surf_z_aug)
       call h5_close_dataset()
 
       ! write xdmf header
@@ -601,13 +601,13 @@ contains
 
   if (.not. USE_HIGHRES_FOR_MOVIES) then
     dset_name = "ux"
-    call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name, store_val_ux, &
+    call h5_write_dataset_collect_hyperslab_in_group(dset_name, store_val_ux, &
                       (/faces_surface_offset(myrank+1)/), if_corrective)
     dset_name = "uy"
-    call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name, store_val_uy, &
+    call h5_write_dataset_collect_hyperslab_in_group(dset_name, store_val_uy, &
                       (/faces_surface_offset(myrank+1)/), if_corrective)
     dset_name = "uz"
-    call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name, store_val_uz, &
+    call h5_write_dataset_collect_hyperslab_in_group(dset_name, store_val_uz, &
                       (/faces_surface_offset(myrank+1)/), if_corrective)
 
     ! write xdmf body
@@ -624,15 +624,15 @@ contains
 
     dset_name = "ux"
     call recompose_for_hires(store_val_ux, surf_ux_aug)
-    call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name, surf_ux_aug, &
+    call h5_write_dataset_collect_hyperslab_in_group(dset_name, surf_ux_aug, &
                       (/int(faces_surface_offset(myrank+1)*aug_factor)/), if_corrective)
     dset_name = "uy"
     call recompose_for_hires(store_val_uy, surf_uy_aug)
-    call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name, surf_uy_aug, &
+    call h5_write_dataset_collect_hyperslab_in_group(dset_name, surf_uy_aug, &
                       (/int(faces_surface_offset(myrank+1)*aug_factor)/), if_corrective)
     dset_name = "uz"
     call recompose_for_hires(store_val_uz, surf_uz_aug)
-    call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name, surf_uz_aug, &
+    call h5_write_dataset_collect_hyperslab_in_group(dset_name, surf_uz_aug, &
                       (/int(faces_surface_offset(myrank+1)*aug_factor)/), if_corrective)
 
     ! write xdmf body
@@ -1086,13 +1086,13 @@ contains
   call h5_open_group(group_name)
 
   dset_name = "elm_conn"
-  call h5_write_dataset_2d_i_collect_hyperslab_in_group(dset_name,elm_conn_loc,(/0,nelm_offset(myrank)/),if_collective)
+  call h5_write_dataset_collect_hyperslab_in_group(dset_name,elm_conn_loc,(/0,nelm_offset(myrank)/),if_collective)
   dset_name = "x"
-  call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name,xstore,(/nglob_offset(myrank)/),if_collective)
+  call h5_write_dataset_collect_hyperslab_in_group(dset_name,xstore,(/nglob_offset(myrank)/),if_collective)
   dset_name = "y"
-  call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name,ystore,(/nglob_offset(myrank)/),if_collective)
+  call h5_write_dataset_collect_hyperslab_in_group(dset_name,ystore,(/nglob_offset(myrank)/),if_collective)
   dset_name = "z"
-  call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name,zstore,(/nglob_offset(myrank)/),if_collective)
+  call h5_write_dataset_collect_hyperslab_in_group(dset_name,zstore,(/nglob_offset(myrank)/),if_collective)
 
   call h5_close_group()
   call h5_close_file()
@@ -1152,7 +1152,7 @@ contains
   ! collective write
   call h5_open_file_p(fname_h5_data_vol)
   call h5_open_group(group_name)
-  call h5_write_dataset_1d_r_collect_hyperslab_in_group(dset_name, &
+  call h5_write_dataset_collect_hyperslab_in_group(dset_name, &
                                 darr, (/nglob_offset(myrank)/), if_collective)
 
   call h5_close_group()

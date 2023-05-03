@@ -73,7 +73,7 @@
 
   !#TODO: hdf5 i/o server
   ! HDF5 separate nodes for i/o server
-  !if (HDF5_IO_NNODES > 0) call separate_compute_and_io_nodes()
+  !if (HDF5_IO_NNODES > 0) call initialize_io_server()
   ! checks if anything to do
   !if (.not. IO_compute_task) then
   !  ! i/o server synchronization

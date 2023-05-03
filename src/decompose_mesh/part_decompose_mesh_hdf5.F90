@@ -105,13 +105,13 @@ contains
     enddo
 
     dset_name = "nodes_coords"
-    call h5_write_dataset_2d_d_collect_hyperslab(dset_name, nodes_coords_this_proc, &
+    call h5_write_dataset_collect_hyperslab(dset_name, nodes_coords_this_proc, &
                                                  (/0,sum(offset_nnodes(0:iproc-1))/), .false.)
     dset_name = "glob2loc_nodes"
-    call h5_write_dataset_1d_i_collect_hyperslab(dset_name, glob2loc_nodes_this_proc, &
+    call h5_write_dataset_collect_hyperslab(dset_name, glob2loc_nodes_this_proc, &
                                                 (/sum(offset_nnodes(0:iproc-1))/), .false.)
     dset_name = "nnodes_loc"
-    call h5_write_dataset_1d_i_collect_hyperslab(dset_name, (/offset_nnodes(iproc)/), (/iproc/), .false.)
+    call h5_write_dataset_collect_hyperslab(dset_name, (/offset_nnodes(iproc)/), (/iproc/), .false.)
 
     deallocate(nodes_coords_this_proc, glob2loc_nodes_this_proc)
   endif
@@ -158,16 +158,16 @@ contains
   !
   ! (note that this order of the properties is different than the input in nummaterial_velocity_file)
   !
-  call h5_write_dataset_2d_d(mdsetname, mat_prop)
+  call h5_write_dataset(mdsetname, mat_prop)
   ! create an attribute for count_def_mat
   call h5_add_attribute_i(m_aname, (/count_def_mat/))
   call h5_close_dataset()
 
   ! create a dataset for undef_mat_prop
   if (count_undef_mat > 0) then
-     call h5_write_dataset_2d_c(udsetname, undef_mat_prop)
+     call h5_write_dataset(udsetname, undef_mat_prop)
   else
-     call h5_write_dataset_2d_c(udsetname, undef_mat_prop_dummy)
+     call h5_write_dataset(udsetname, undef_mat_prop_dummy)
   endif
   call h5_add_attribute_i(u_aname, (/count_undef_mat/))
 
@@ -422,10 +422,10 @@ contains
     enddo
 
     dset_name = "n_elms_on_bound"
-    call h5_write_dataset_1d_i_collect_hyperslab(dset_name, n_elms_on_bound, (/6*iproc/), .false.)
+    call h5_write_dataset_collect_hyperslab(dset_name, n_elms_on_bound, (/6*iproc/), .false.)
     ! write glob2loc_elms_this_proc
     dset_name = "glob2loc_elms"
-    call h5_write_dataset_2d_i_collect_hyperslab(dset_name, glob2loc_elms_this_proc, &
+    call h5_write_dataset_collect_hyperslab(dset_name, glob2loc_elms_this_proc, &
                                                 (/0,sum(offset_n_elms_bounds(0:iproc-1))/),.false.)
 
     ! deallocate arrays
@@ -545,11 +545,11 @@ contains
       enddo
 
       dset_name = "elements_cpml"
-      call h5_write_dataset_2d_i_collect_hyperslab(dset_name, elements_cpml, (/0,sum(offset_nelems_cpml(0:iproc-1))/), .false.)
+      call h5_write_dataset_collect_hyperslab(dset_name, elements_cpml, (/0,sum(offset_nelems_cpml(0:iproc-1))/), .false.)
       ! create a dataset for if_cpml
         ! strangely here H5T_NATIVE_HBOOL may not be used.
       dset_name = "if_cpml"
-      call h5_write_dataset_1d_i_collect_hyperslab(dset_name, if_cpml, (/sum(offset_nelems(0:iproc-1))/), .false.)
+      call h5_write_dataset_collect_hyperslab(dset_name, if_cpml, (/sum(offset_nelems(0:iproc-1))/), .false.)
 
       ! deallocate local arrays
       deallocate(elements_cpml,stat=ier); if (ier /= 0) stop 'Error deallocating array elements_cpml'
@@ -563,7 +563,7 @@ contains
 
     ! create a dataset for nspec_cpml and nspec_cpml_local
     dset_name = "nspec_cpml_globloc"
-    call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ncpmls, (/2*iproc/), .false.)
+    call h5_write_dataset_collect_hyperslab(dset_name, ncpmls, (/2*iproc/), .false.)
 
    endif ! phase == 2
 
@@ -713,15 +713,15 @@ contains
     enddo
 
     dset_name = "elm_conn"
-    call h5_write_dataset_2d_i_collect_hyperslab(dset_name, elm_conn, (/0,sum(offset_nelems(0:iproc-1))/),.false.)
+    call h5_write_dataset_collect_hyperslab(dset_name, elm_conn, (/0,sum(offset_nelems(0:iproc-1))/),.false.)
     dset_name = "nspec_local"
-    call h5_write_dataset_1d_i_collect_hyperslab(dset_name, (/offset_nelems(iproc)/), (/iproc/), .false.)
+    call h5_write_dataset_collect_hyperslab(dset_name, (/offset_nelems(iproc)/), (/iproc/), .false.)
     dset_name = "elm_conn_xdmf"
-    call h5_write_dataset_2d_i_collect_hyperslab(dset_name, elm_conn_xdmf,(/0,sum(offset_nelems(0:iproc-1))/),.false.)
+    call h5_write_dataset_collect_hyperslab(dset_name, elm_conn_xdmf,(/0,sum(offset_nelems(0:iproc-1))/),.false.)
     dset_name = "mat_mesh"
-    call h5_write_dataset_2d_i_collect_hyperslab(dset_name, mat_mesh, (/0,sum(offset_nelems(0:iproc-1))/),.false.)
+    call h5_write_dataset_collect_hyperslab(dset_name, mat_mesh, (/0,sum(offset_nelems(0:iproc-1))/),.false.)
     dset_name = "ispec_local"
-    call h5_write_dataset_1d_i_collect_hyperslab(dset_name, ispec_local, (/sum(offset_nelems(0:iproc-1))/),.false.)
+    call h5_write_dataset_collect_hyperslab(dset_name, ispec_local, (/sum(offset_nelems(0:iproc-1))/),.false.)
 
     deallocate(elm_conn,elm_conn_xdmf,mat_mesh,ispec_local)
 
@@ -936,16 +936,16 @@ contains
     endif
     ! write my_nb_interfaces
     dset_name = "my_nb_interfaces"
-    call h5_write_dataset_2d_i_collect_hyperslab(dset_name, num_neighbors_elmnts, &
+    call h5_write_dataset_collect_hyperslab(dset_name, num_neighbors_elmnts, &
                                                  (/0,sum(offset_nb_interfaces(0:iproc-1))/), .false.)
 
     ! write my_interfaces
     dset_name = "my_interfaces"
-    call h5_write_dataset_2d_i_collect_hyperslab(dset_name, neighbors_elmnts, &
+    call h5_write_dataset_collect_hyperslab(dset_name, neighbors_elmnts, &
                                                  (/0, sum(offset_n_elms_interface(0:iproc-1))/), .false.)
 
     dset_name = "my_ninterface_and_max"
-    call h5_write_dataset_1d_i_collect_hyperslab(dset_name, num_interface_and_max, (/iproc*2/), .false.)
+    call h5_write_dataset_collect_hyperslab(dset_name, num_interface_and_max, (/iproc*2/), .false.)
 
     ! allocate temporal array size
     deallocate(num_neighbors_elmnts,stat=ier); if (ier /= 0) stop 'Error deallocating array num_neighbors_elmnts'
@@ -1052,7 +1052,7 @@ contains
   call h5_open_or_create_group(group_name)
 
   ! create datasets and write
-  call h5_write_dataset_2d_i(dsetname, loc_moho_temp)
+  call h5_write_dataset(dsetname, loc_moho_temp)
   ! attribute
   call h5_add_attribute_i(aname, moho_attr)
   call h5_close_dataset()

@@ -116,7 +116,7 @@
   if (ier /= 0) stop 'Error allocating array mat_prop'
   mat_prop(:,:) = 0.d0
 
-  call h5_read_dataset_p_2d_d(dsetname, mat_prop)
+  call h5_read_dataset_p(dsetname, mat_prop)
 
   if (myrank == 0) then
     write(IMAIN,*) 'defined materials    : ',nmat_ext_mesh
@@ -138,7 +138,7 @@
     allocate(undef_mat_prop(6,nundefMat_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 585')
     if (ier /= 0) stop 'Error allocating array mat_prop'
-    call h5_read_dataset_p_2d_c(dsetname, undef_mat_prop)
+    call h5_read_dataset_p(dsetname, undef_mat_prop)
   endif
 
   call h5_close_group()
@@ -150,17 +150,17 @@
 
   ! read offset information
   dsetname = "offset_nnodes"
-  call h5_read_dataset_1d_i_collect_hyperslab(dsetname, offset_nnodes, (/0/), .true.)
+  call h5_read_dataset_collect_hyperslab(dsetname, offset_nnodes, (/0/), .true.)
   dsetname = "offset_nelems"
-  call h5_read_dataset_1d_i_collect_hyperslab(dsetname, offset_nelems, (/0/), .true.)
+  call h5_read_dataset_collect_hyperslab(dsetname, offset_nelems, (/0/), .true.)
   dsetname = "offset_nelems_cpml"
-  call h5_read_dataset_1d_i_collect_hyperslab(dsetname, offset_nelems_cpml, (/0/), .true.)
+  call h5_read_dataset_collect_hyperslab(dsetname, offset_nelems_cpml, (/0/), .true.)
   dsetname = "offset_n_elms_bounds"
-  call h5_read_dataset_1d_i_collect_hyperslab(dsetname, offset_n_elms_bounds, (/0/), .true.)
+  call h5_read_dataset_collect_hyperslab(dsetname, offset_n_elms_bounds, (/0/), .true.)
   dsetname = "offset_n_elms_interface"
-  call h5_read_dataset_1d_i_collect_hyperslab(dsetname, offset_n_elms_interface, (/0/), .true.)
+  call h5_read_dataset_collect_hyperslab(dsetname, offset_n_elms_interface, (/0/), .true.)
   dsetname = "offset_nb_interfaces"
-  call h5_read_dataset_1d_i_collect_hyperslab(dsetname, offset_nb_interfaces, (/0/), .true.)
+  call h5_read_dataset_collect_hyperslab(dsetname, offset_nb_interfaces, (/0/), .true.)
 
   !
   ! start reading processor dependent data
@@ -168,7 +168,7 @@
 
   ! read nnodes_ext_mesh and nodes_coords_ext_mesh
   dsetname = "nnodes_loc"
-  call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, nnodes_ext_mesh,(/myrank/),.true.)
+  call h5_read_dataset_scalar_collect_hyperslab(dsetname, nnodes_ext_mesh,(/myrank/),.true.)
 
   ! stores number of mesh points in this slice for output in checkmesh.xmf
   xdmf_mesh_nnodes = nnodes_ext_mesh
@@ -181,7 +181,7 @@
   if (ier /= 0) stop 'Error allocating array nodes_coords_ext_mesh'
   nodes_coords_ext_mesh(:,:) = 0.0
 
-  call h5_read_dataset_2d_d_collect_hyperslab(dsetname, nodes_coords_ext_mesh, (/0,sum(offset_nnodes(0:myrank-1))/),.true.)
+  call h5_read_dataset_collect_hyperslab(dsetname, nodes_coords_ext_mesh, (/0,sum(offset_nnodes(0:myrank-1))/),.true.)
 
   call sum_all_i(nnodes_ext_mesh,num)
   if (myrank == 0) then
@@ -193,7 +193,7 @@
   ! open dataset elm_conn
   ! read attribute nspec_local == nelmnts_ext_mesh
   dsetname = "nspec_local"
-  call h5_read_dataset_scalar_i_collect_hyperslab(dsetname, nelmnts_ext_mesh, (/myrank/), .true.)
+  call h5_read_dataset_scalar_collect_hyperslab(dsetname, nelmnts_ext_mesh, (/myrank/), .true.)
 
   !nelmnts_ext_mesh = attr_data(1)
 
@@ -208,11 +208,11 @@
 
   ! read elmnts_ext_mesh == elm_conn
   dsetname = "elm_conn"
-  call h5_read_dataset_2d_i_collect_hyperslab(dsetname, elmnts_ext_mesh, (/0,sum(offset_nelems(0:myrank-1))/),.true.)
+  call h5_read_dataset_collect_hyperslab(dsetname, elmnts_ext_mesh, (/0,sum(offset_nelems(0:myrank-1))/),.true.)
 
   ! open and read dataset mat_mesh == mat_ext_mesh
   dsetname = "mat_mesh"
-  call h5_read_dataset_2d_i_collect_hyperslab(dsetname, mat_ext_mesh, (/0,sum(offset_nelems(0:myrank-1))/),.true.)
+  call h5_read_dataset_collect_hyperslab(dsetname, mat_ext_mesh, (/0,sum(offset_nelems(0:myrank-1))/),.true.)
 
   NSPEC_AB = nelmnts_ext_mesh
 
@@ -226,7 +226,7 @@
   ! reads absorbing/free-surface boundaries
   ! open and read n_elms_on_bouund (nspec2D_xmin, xmax, ymin, ymax, button_ext, top_ext)
   dsetname = "n_elms_on_bound"
-  call h5_read_dataset_1d_i_collect_hyperslab(dsetname, dset_n_bound, (/6*myrank/), .true.)
+  call h5_read_dataset_collect_hyperslab(dsetname, dset_n_bound, (/6*myrank/), .true.)
 
   nspec2D_xmin       = dset_n_bound(1)
   nspec2D_xmax       = dset_n_bound(2)
@@ -304,7 +304,7 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array glob2loc_elms')
   if (ier /= 0) stop 'Error allocating array glob2loc_elms'
 
-  call h5_read_dataset_2d_i_collect_hyperslab(dsetname, dset_alloc, &
+  call h5_read_dataset_collect_hyperslab(dsetname, dset_alloc, &
             (/0,sum(offset_n_elms_bounds(0:myrank-1))/),.true.)
 
   ibelm_xmin         = dset_alloc(1          ,                           1:dset_n_bound(1))
@@ -351,7 +351,7 @@
   allocate(dset_alloc_1d(2),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array nspec_cpml_globloc')
   if (ier /= 0) stop 'Error allocating array nspec_cpml_globloc'
-  call h5_read_dataset_1d_i_collect_hyperslab(dsetname, dset_alloc_1d, (/2*myrank/), .true.)
+  call h5_read_dataset_collect_hyperslab(dsetname, dset_alloc_1d, (/2*myrank/), .true.)
 
   nspec_cpml_tot = dset_alloc_1d(1)
   nspec_cpml     = dset_alloc_1d(2)
@@ -402,7 +402,7 @@
     allocate(dset_alloc(2,nspec_cpml),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array glob2loc_elms')
     if (ier /= 0) stop 'Error allocating array glob2loc_elms'
-    call h5_read_dataset_2d_i_collect_hyperslab(dsetname, dset_alloc, (/0,sum(offset_nelems_cpml(0:myrank-1))/), .true.)
+    call h5_read_dataset_collect_hyperslab(dsetname, dset_alloc, (/0,sum(offset_nelems_cpml(0:myrank-1))/), .true.)
 
     CPML_to_spec = dset_alloc(1,:)
     CPML_regions = dset_alloc(2,:)
@@ -414,7 +414,7 @@
     allocate(dset_alloc_1d(NSPEC_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array if_cpml')
     if (ier /= 0) stop 'Error allocating array if_cpml'
-    call h5_read_dataset_1d_i_collect_hyperslab(dsetname, dset_alloc_1d, (/sum(offset_nelems(0:myrank-1))/), .true.)
+    call h5_read_dataset_collect_hyperslab(dsetname, dset_alloc_1d, (/sum(offset_nelems(0:myrank-1))/), .true.)
 
     ! convert integer array to logical array
     do i = 1,NSPEC_AB
@@ -443,7 +443,7 @@
     allocate(dset_alloc_1d(2),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array dset_dim_alloc_1d')
     if (ier /= 0) stop 'Error allocating array dset_dim_alloc_1d'
-    call h5_read_dataset_1d_i_collect_hyperslab(dsetname, dset_alloc_1d, (/myrank*2/), .true.)
+    call h5_read_dataset_collect_hyperslab(dsetname, dset_alloc_1d, (/myrank*2/), .true.)
 
     ! read num_interfaces_ext_mesh
     num_interfaces_ext_mesh     = dset_alloc_1d(1)
@@ -492,7 +492,7 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array my_nb_interfaces')
     if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
 
-    call h5_read_dataset_2d_i_collect_hyperslab(dsetname, dset_alloc, &
+    call h5_read_dataset_collect_hyperslab(dsetname, dset_alloc, &
                                                  (/0,sum(offset_nb_interfaces(0:myrank-1))/), .true.)
 
     my_neighbors_ext_mesh         = dset_alloc(1,:)
@@ -505,7 +505,7 @@
     allocate(dset_alloc(6, sum(my_nelmnts_neighbors_ext_mesh(:))),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array my_nb_interfaces')
     if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
-    call h5_read_dataset_2d_i_collect_hyperslab(dsetname, dset_alloc, &
+    call h5_read_dataset_collect_hyperslab(dsetname, dset_alloc, &
                                                  (/0, sum(offset_n_elms_interface(0:myrank-1))/), .true.)
   endif
 
@@ -577,7 +577,7 @@
     allocate(dset_alloc(1+NGNOD2D, nspec2D_moho_ext),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array moho_elms')
     if (ier /= 0) stop 'Error allocating array moho_elms'
-    call h5_read_dataset_p_2d_i(dsetname, dset_alloc)
+    call h5_read_dataset_p(dsetname, dset_alloc)
 
     ibelm_moho       = dset_alloc(1,:)
     nodes_ibelm_moho = dset_alloc(2:,:)
