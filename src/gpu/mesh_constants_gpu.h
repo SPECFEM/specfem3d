@@ -296,7 +296,7 @@ typedef realw* __restrict__ realw_p;
 
 // wrapper for global memory load function
 // usage:  val = get_global_cr( &A[index] );
-#if __CUDA_ARCH__ >= 350
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 350)
 // Device has ldg
 __device__ __forceinline__ realw get_global_cr(realw_const_p ptr) { return __ldg(ptr); }
 #else
