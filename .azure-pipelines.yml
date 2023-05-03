@@ -198,7 +198,7 @@ jobs:
       CUDA_V: '12.1'
   - template: .azure-pipelines/configure-template.yml
     parameters:
-      TESTFLAGS: '--with-mpi --enable-vectorization --with-cuda=cuda11'
+      TESTFLAGS: '--with-mpi --enable-vectorization --with-cuda=cuda12'
       CUDA: true
       BUILD: true
 

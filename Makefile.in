@@ -168,6 +168,9 @@ PART_LIBS  += $(PATOH_LIBS)
 @COND_CUDA11_TRUE@CUDA11 = yes
 @COND_CUDA11_FALSE@CUDA11 = no
 
+@COND_CUDA12_TRUE@CUDA12 = yes
+@COND_CUDA12_FALSE@CUDA12 = no
+
 # CUDA compilation with linking
 @COND_CUDA_PLUS_TRUE@CUDA_PLUS = yes
 @COND_CUDA_PLUS_FALSE@CUDA_PLUS = no
@@ -197,7 +200,7 @@ CUDA_DEBUG = --cudart=shared
 # Volta   (cuda9, V100): -gencode=arch=compute_70,code=sm_70
 # Turing  (cuda10, T4, GeForce RTX 2080): -gencode=arch=compute_75,code=sm_75
 # Ampere  (cuda11, A100, GeForce RTX 3080): -gencode=arch=compute_80,code=sm_80
-
+# Hopper  (cuda12, H100): -gencode=arch=compute_80,code=sm_80
 GENCODE_20 = -gencode=arch=compute_20,code=\"sm_20,compute_20\"
 GENCODE_30 = -gencode=arch=compute_30,code=\"sm_30,compute_30\"
 GENCODE_35 = -gencode=arch=compute_35,code=\"sm_35,compute_35\"
@@ -208,8 +211,11 @@ GENCODE_60 = -gencode=arch=compute_60,code=\"sm_60,compute_60\"
 GENCODE_70 = -gencode=arch=compute_70,code=\"sm_70,compute_70\"
 GENCODE_75 = -gencode=arch=compute_75,code=\"sm_75,compute_75\"
 GENCODE_80 = -gencode=arch=compute_80,code=\"sm_80,compute_80\"
+GENCODE_90 = -gencode=arch=compute_90,code=\"sm_90,compute_90\"
 
 # cuda preprocessor flag
+# CUDA version 12.0
+@COND_CUDA_TRUE@@COND_CUDA12_TRUE@GENCODE = $(GENCODE_90) $(FC_DEFINE)GPU_DEVICE_Hopper
 # CUDA version 11.0
 @COND_CUDA_TRUE@@COND_CUDA11_TRUE@GENCODE = $(GENCODE_80) $(FC_DEFINE)GPU_DEVICE_Ampere
 # CUDA version 10.0
@@ -282,6 +288,7 @@ GENCODE_AMD_MI250 = --amdgpu-target=gfx90a
 @COND_HIP_TRUE@@COND_HIP_CUDA9_TRUE@GENCODE_HIP = $(GENCODE_70)         # --with-hip=cuda9 ..
 @COND_HIP_TRUE@@COND_HIP_CUDA10_TRUE@GENCODE_HIP = $(GENCODE_75)         # --with-hip=cuda10 ..
 @COND_HIP_TRUE@@COND_HIP_CUDA11_TRUE@GENCODE_HIP = $(GENCODE_80)         # --with-hip=cuda11 ..
+@COND_HIP_TRUE@@COND_HIP_CUDA12_TRUE@GENCODE_HIP = $(GENCODE_90)         # --with-hip=cuda12 ..
 
 HIP_FLAGS = @HIP_FLAGS@
 HIP_INC = @HIP_CPPFLAGS@ $(MPI_INCLUDES)

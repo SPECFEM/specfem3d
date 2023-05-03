@@ -267,11 +267,16 @@ typedef double realw;
 typedef float realw;
 
 // textures
+// note: texture templates are supported only for CUDA versions <= 11.x
+//       since CUDA 12.x, these are deprecated and texture objects should be used instead
+//       see: https://developer.nvidia.com/blog/cuda-pro-tip-kepler-texture-objects-improve-performance-and-flexibility/
+#if defined(USE_TEXTURES_FIELDS) || defined(USE_TEXTURES_CONSTANTS)
 #ifdef USE_CUDA
 typedef texture<float, cudaTextureType1D, cudaReadModeElementType> realw_texture;
 #endif
 #ifdef USE_HIP
 typedef texture<float, hipTextureType1D, hipReadModeElementType> realw_texture;
+#endif
 #endif
 
 // pointer declarations
