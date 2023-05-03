@@ -132,7 +132,7 @@ jobs:
       CUDA: false
       BUILD: true
 
-- job: compilation_CUDA10
+- job: compilation_CUDA11_gcc9
   displayName: 'Compilation CUDA 11 GCC 9'
   pool:
     vmImage: 'ubuntu-20.04'
@@ -151,7 +151,7 @@ jobs:
       CUDA: true
       BUILD: true
 
-- job: compilation_CUDA11
+- job: compilation_CUDA11_gcc10
   displayName: 'Compilation CUDA 11 GCC 10'
   pool:
     vmImage: 'ubuntu-20.04'
