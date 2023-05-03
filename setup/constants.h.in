@@ -43,24 +43,14 @@
 ! set to SIZE_DOUBLE to run in double precision (increases memory size by 2)
   integer, parameter :: CUSTOM_REAL = @CUSTOM_REAL@
 
-!----------- parameters that can be changed by the user -----------
-
-! for validation of undoing of attenuation versus an exact solution saved to disk
-! should never be needed any more, it was developed and used for Figure 3 of
-! D. Komatitsch, Z. Xie, E. Bozdag, E. Sales de Andrade, D. Peter, Q. Liu and J. Tromp,
-! Anelastic sensitivity kernels with parsimonious storage for adjoint tomography and full waveform inversion,
-! Geophysical Journal International, vol. 206(3), p. 1467-1478, doi: 10.1093/gji/ggw224 (2016).
-  logical, parameter :: EXACT_UNDOING_TO_DISK = .false.
-! ID of the huge file in which we dump all the time steps of the simulation
-  integer, parameter :: IFILE_FOR_EXACT_UNDOING = 244
-
 ! set to .false.  if running on a Beowulf-type machine with local disks
 ! set to .true. if running on a shared-memory machine with common file system
 ! if running on a Beowulf, also modify name of nodes in filter_machine_file.f90
   logical, parameter :: LOCAL_PATH_IS_ALSO_GLOBAL = .@LOCAL_PATH_IS_ALSO_GLOBAL@.
 
-! maximum length of strings used for paths, reading from files, etc.
-  integer, parameter :: MAX_STRING_LEN = 512
+
+!----------- parameters that can be changed by the user -----------
+
 
 !!-----------------------------------------------------------
 !!
@@ -116,6 +106,9 @@
 
 ! ignore variable name field (junk) at the beginning of each input line
   logical, parameter :: IGNORE_JUNK = .true.,DONT_IGNORE_JUNK = .false.
+
+! maximum length of strings used for paths, reading from files, etc.
+  integer, parameter :: MAX_STRING_LEN = 512
 
 !!-----------------------------------------------------------
 !!
@@ -582,6 +575,20 @@
 ! debugging: without MPI assembly
   logical,parameter :: ASSEMBLE_MPI_OFF = .false.
 
+!!-----------------------------------------------------------
+!!
+!! undo attenuation validation
+!!
+!!-----------------------------------------------------------
+
+! for validation of undoing of attenuation versus an exact solution saved to disk
+! should never be needed any more, it was developed and used for Figure 3 of
+! D. Komatitsch, Z. Xie, E. Bozdag, E. Sales de Andrade, D. Peter, Q. Liu and J. Tromp,
+! Anelastic sensitivity kernels with parsimonious storage for adjoint tomography and full waveform inversion,
+! Geophysical Journal International, vol. 206(3), p. 1467-1478, doi: 10.1093/gji/ggw224 (2016).
+  logical, parameter :: EXACT_UNDOING_TO_DISK = .false.
+! ID of the huge file in which we dump all the time steps of the simulation
+  integer, parameter :: IFILE_FOR_EXACT_UNDOING = 244
 
 !------------------------------------------------------
 !----------- do not modify anything below -------------
