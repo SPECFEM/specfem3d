@@ -63,88 +63,201 @@ module manager_hdf5
 
   implicit none
 
+  private
+
   ! public routines
   ! also to act as empty stubs (for missing HDF5 compilation support)
-  public :: h5_init
   public :: write_attenuation_file_hdf5, read_attenuation_file_hdf5
   public :: write_checkmesh_data_hdf5, write_checkmesh_xdmf_hdf5
+  public :: h5_init
 
 #if defined(USE_HDF5)
   ! only w/ HDF5 compilation
-  private
 
   public :: &
       h5_destructor, &
       h5_check_collective, &
-      h5_check_arr_dim, &
-      h5_create_file, h5_open_file, h5_close_file, &
-      h5_create_group, h5_open_group, h5_close_group, &
-      h5_create_subgroup, h5_open_subgroup, h5_open_or_create_group, h5_close_subgroup, &
-      h5_open_dataset, h5_open_dataset2, h5_close_dataset, &
-      h5_write_dataset_1d_i, h5_write_dataset_1d_d, h5_write_dataset_1d_c, &
-      h5_write_dataset_1d_i_no_group, h5_write_dataset_1d_d_no_group, h5_write_dataset_1d_c_no_group, &
-      h5_write_dataset_2d_d, h5_write_dataset_2d_r, h5_write_dataset_2d_i, h5_write_dataset_2d_c, &
-      h5_write_dataset_2d_r_no_group, &
-      h5_write_dataset_4d_r, &
+      h5_check_arr_dim
+
+  public :: &
+      h5_create_file, &
+      h5_open_file, &
+      h5_close_file, &
+      h5_create_group, &
+      h5_open_group, &
+      h5_close_group, &
+      h5_create_subgroup, &
+      h5_open_subgroup, &
+      h5_open_or_create_group, &
+      h5_close_subgroup
+
+  public :: &
+      h5_open_dataset, &
+      h5_open_dataset2, &
+      h5_close_dataset
+
+  public :: &
       h5_add_attribute_i, &
       h5_set_mpi_info, &
       h5_set_buffer_size, &
       h5_set_sieve_buffer_size, &
-      h5_create_file_p, h5_create_file_p_collect, &
-      h5_open_file_p, h5_open_file_p_collect, &
-      h5_close_file_p, &
-      h5_create_file_prop_list, h5_close_prop_list,h5_close_prop_list_nocheck, &
-      h5_open_group_prop_list, h5_create_group_prop_list, h5_close_group_prop_list, &
-      h5_create_dataset_prop_list, &
-      h5_create_dataset_gen, h5_create_dataset_gen_in_group, &
-      h5_check_dataset_exists, &
-      h5_create_group_p, h5_open_group_p, &
-      h5_read_dataset_p_scalar_i, h5_read_dataset_p_scalar_r, &
-      h5_read_dataset_p_1d_i, h5_read_dataset_p_1d_r, h5_read_dataset_p_1d_l, &
-      h5_read_dataset_p_2d_i, h5_read_dataset_p_2d_r, h5_read_dataset_p_2d_c, h5_read_dataset_p_2d_d, &
-      h5_read_dataset_p_3d_i, h5_read_dataset_p_3d_r, &
-      h5_read_dataset_p_4d_i, h5_read_dataset_p_4d_r, &
-      h5_read_dataset_p_5d_r, &
-      h5_read_attribute_p, &
-      h5_read_dataset_scalar_i_collect_hyperslab, &
-      h5_read_dataset_scalar_r_collect_hyperslab, &
-      h5_read_dataset_1d_l_collect_hyperslab, &
-      h5_read_dataset_1d_i_collect_hyperslab, &
-      h5_read_dataset_1d_r_collect_hyperslab, &
-      h5_read_dataset_1d_r_collect_hyperslab_in_group, &
-      h5_read_dataset_2d_i_collect_hyperslab, &
-      h5_read_dataset_2d_i_collect_hyperslab_in_group, &
-      h5_read_dataset_2d_r_collect_hyperslab, &
-      h5_read_dataset_2d_d_collect_hyperslab, &
-      h5_read_dataset_3d_i_collect_hyperslab, &
-      h5_read_dataset_3d_r_collect_hyperslab, &
-      h5_read_dataset_4d_i_collect_hyperslab, &
-      h5_read_dataset_4d_r_collect_hyperslab, &
-      h5_read_dataset_5d_r_collect_hyperslab, &
       h5_set_group_name, &
-      h5_write_dataset_p_1d_i, h5_write_dataset_p_1d_ia, h5_write_dataset_p_1d_r, h5_write_dataset_p_1d_l, &
-      h5_write_dataset_p_2d_i, h5_write_dataset_p_2d_ia, h5_write_dataset_p_2d_r, h5_write_dataset_p_2d_d, &
-      h5_write_dataset_p_3d_i, h5_write_dataset_p_3d_r, &
-      h5_write_dataset_p_4d_i, h5_write_dataset_p_4d_r, &
-      h5_write_dataset_p_5d_r, &
-      bool_array2integer, int_array2bool, &
-      h5_gather_dsetsize, create_dataset_collect, &
-      h5_write_dataset_1d_to_2d_r_collect_hyperslab, h5_write_dataset_2d_to_3d_r_collect_hyperslab, &
-      h5_write_dataset_1d_l_collect_hyperslab, &
-      h5_write_dataset_1d_i_collect_hyperslab, &
-      h5_write_dataset_1d_r_collect_hyperslab, &
-      h5_write_dataset_1d_r_collect_hyperslab_in_group, &
-      h5_write_dataset_2d_i_collect_hyperslab, &
-      h5_write_dataset_2d_i_collect_hyperslab_in_group, &
-      h5_write_dataset_2d_r_collect_hyperslab, &
-      h5_write_dataset_2d_d_collect_hyperslab, &
-      h5_write_dataset_3d_i_collect_hyperslab, &
-      h5_write_dataset_3d_r_collect_hyperslab, &
-      h5_write_dataset_4d_i_collect_hyperslab, &
-      h5_write_dataset_4d_r_collect_hyperslab, &
-      h5_write_dataset_5d_r_collect_hyperslab, &
+      h5_gather_dsetsize
+
+  public :: &
+      h5_create_file_p, &
+      h5_create_file_p_collect, &
+      h5_open_file_p, &
+      h5_open_file_p_collect, &
+      h5_close_file_p, &
+      h5_create_file_prop_list, &
+      h5_close_prop_list, &
+      h5_close_prop_list_nocheck, &
+      h5_open_group_prop_list, &
+      h5_create_group_prop_list, &
+      h5_close_group_prop_list, &
+      h5_create_dataset_prop_list, &
+      h5_create_dataset_gen, &
+      h5_create_dataset_gen_in_group, &
+      h5_check_dataset_exists, &
+      h5_create_group_p, &
+      h5_open_group_p
+
+  public :: &
+      h5_read_attribute_p, &
+      h5_read_dataset_p, &
+      h5_read_dataset_p_scalar, &
+      h5_read_dataset_scalar_collect_hyperslab, &
+      h5_read_dataset_collect_hyperslab_in_group, &
+      h5_read_dataset_collect_hyperslab
+
+  public :: &
+      bool_array2integer, &
+      int_array2bool, &
+      create_dataset_collect, &
       i2c
 
+  public :: &
+      h5_write_dataset, &
+      h5_write_dataset_no_group, &
+      h5_write_dataset_p, &
+      h5_write_dataset_p_a, &
+      h5_write_dataset_1d_to_2d_r_collect_hyperslab, &
+      h5_write_dataset_2d_to_3d_r_collect_hyperslab, &
+      h5_write_dataset_collect_hyperslab_in_group, &
+      h5_write_dataset_collect_hyperslab
+
+
+  ! generic interface to read dataset
+  interface h5_read_dataset_p
+    module procedure h5_read_dataset_p_1d_l ! logical
+    module procedure h5_read_dataset_p_1d_i ! integer
+    module procedure h5_read_dataset_p_2d_i
+    module procedure h5_read_dataset_p_3d_i
+    module procedure h5_read_dataset_p_4d_i
+    module procedure h5_read_dataset_p_1d_r ! real
+    module procedure h5_read_dataset_p_2d_r
+    module procedure h5_read_dataset_p_3d_r
+    module procedure h5_read_dataset_p_4d_r
+    module procedure h5_read_dataset_p_5d_r
+    module procedure h5_read_dataset_p_2d_d ! double
+    module procedure h5_read_dataset_p_2d_c ! char
+  end interface h5_read_dataset_p
+
+  ! generic interface to read scalar dataset
+  interface h5_read_dataset_p_scalar
+    module procedure h5_read_dataset_p_scalar_i
+    module procedure h5_read_dataset_p_scalar_r
+  end interface h5_read_dataset_p_scalar
+
+  ! generic interface to read dataset in collective mode
+  interface h5_read_dataset_scalar_collect_hyperslab
+    module procedure h5_read_dataset_scalar_i_collect_hyperslab
+    module procedure h5_read_dataset_scalar_r_collect_hyperslab
+  end interface h5_read_dataset_scalar_collect_hyperslab
+
+  ! generic interface to read dataset in collective mode
+  interface h5_read_dataset_collect_hyperslab_in_group
+    module procedure h5_read_dataset_1d_r_collect_hyperslab_in_group
+    module procedure h5_read_dataset_2d_i_collect_hyperslab_in_group
+  end interface h5_read_dataset_collect_hyperslab_in_group
+
+  ! generic interface to read dataset in collective mode
+  interface h5_read_dataset_collect_hyperslab
+    module procedure h5_read_dataset_1d_l_collect_hyperslab ! logical
+    module procedure h5_read_dataset_1d_i_collect_hyperslab ! integer
+    module procedure h5_read_dataset_2d_i_collect_hyperslab
+    module procedure h5_read_dataset_3d_i_collect_hyperslab
+    module procedure h5_read_dataset_4d_i_collect_hyperslab
+    module procedure h5_read_dataset_1d_r_collect_hyperslab ! real
+    module procedure h5_read_dataset_2d_r_collect_hyperslab
+    module procedure h5_read_dataset_3d_r_collect_hyperslab
+    module procedure h5_read_dataset_4d_r_collect_hyperslab
+    module procedure h5_read_dataset_5d_r_collect_hyperslab
+    module procedure h5_read_dataset_2d_d_collect_hyperslab ! double
+  end interface h5_read_dataset_collect_hyperslab
+
+  ! generic interface to write dataset
+  interface h5_write_dataset
+    module procedure h5_write_dataset_1d_i ! integer
+    module procedure h5_write_dataset_2d_i
+    module procedure h5_write_dataset_1d_d ! double
+    module procedure h5_write_dataset_2d_d
+    module procedure h5_write_dataset_1d_c ! char
+    module procedure h5_write_dataset_2d_c
+    module procedure h5_write_dataset_2d_r ! real
+    module procedure h5_write_dataset_4d_r
+  end interface h5_write_dataset
+
+  interface h5_write_dataset_no_group
+    module procedure h5_write_dataset_1d_i_no_group
+    module procedure h5_write_dataset_1d_d_no_group
+    module procedure h5_write_dataset_1d_c_no_group
+    module procedure h5_write_dataset_2d_r_no_group
+  end interface h5_write_dataset_no_group
+
+  ! generic interface to write dataset
+  interface h5_write_dataset_p
+    module procedure h5_write_dataset_p_1d_l  ! logical
+    module procedure h5_write_dataset_p_1d_i  ! integer
+    module procedure h5_write_dataset_p_2d_i
+    module procedure h5_write_dataset_p_3d_i
+    module procedure h5_write_dataset_p_4d_i
+    module procedure h5_write_dataset_p_1d_r  ! real
+    module procedure h5_write_dataset_p_2d_r
+    module procedure h5_write_dataset_p_3d_r
+    module procedure h5_write_dataset_p_4d_r
+    module procedure h5_write_dataset_p_5d_r
+    module procedure h5_write_dataset_p_2d_d  ! double
+  end interface h5_write_dataset_p
+
+  interface h5_write_dataset_p_a
+    module procedure h5_write_dataset_p_1d_ia
+    module procedure h5_write_dataset_p_2d_ia
+  end interface h5_write_dataset_p_a
+
+  ! generic interface to write dataset in collective mode
+  interface h5_write_dataset_collect_hyperslab_in_group
+    module procedure h5_write_dataset_2d_i_collect_hyperslab_in_group
+    module procedure h5_write_dataset_1d_r_collect_hyperslab_in_group
+  end interface h5_write_dataset_collect_hyperslab_in_group
+
+  ! generic interface to write dataset in collective mode
+  interface h5_write_dataset_collect_hyperslab
+    module procedure h5_write_dataset_1d_l_collect_hyperslab ! logical
+    module procedure h5_write_dataset_1d_i_collect_hyperslab ! integer
+    module procedure h5_write_dataset_2d_i_collect_hyperslab
+    module procedure h5_write_dataset_3d_i_collect_hyperslab
+    module procedure h5_write_dataset_4d_i_collect_hyperslab
+    module procedure h5_write_dataset_1d_r_collect_hyperslab ! real
+    module procedure h5_write_dataset_2d_r_collect_hyperslab
+    module procedure h5_write_dataset_3d_r_collect_hyperslab
+    module procedure h5_write_dataset_4d_r_collect_hyperslab
+    module procedure h5_write_dataset_5d_r_collect_hyperslab
+    module procedure h5_write_dataset_2d_d_collect_hyperslab ! double
+  end interface h5_write_dataset_collect_hyperslab
+
+  ! ids
   integer(HID_T) :: file_id, group_id, parent_group_id, dataset_id
   integer(HID_T) :: mem_dspace_id, file_dspace_id                     ! for collective IO
 

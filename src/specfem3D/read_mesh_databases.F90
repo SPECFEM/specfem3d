@@ -1368,7 +1368,7 @@
     return
   else if (HDF5_ENABLED) then
     ! HDF5
-    !#TODO: HDF5 not implemented yet
+    !#TODO: HDF5 support for moho database not implemented yet
     !call read_mesh_databases_moho_hdf5()
     ! fall back to binary reads
     continue

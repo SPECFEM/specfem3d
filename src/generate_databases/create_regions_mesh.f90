@@ -1439,7 +1439,7 @@
     return
   else if (HDF5_ENABLED) then
     ! HDF5
-    !#TODO: HDF5 not implemented yet
+    !#TODO: HDF5 save moho not implemented yet
     !call crm_save_moho_hdf5()
     ! fall back to binary save/read
     continue

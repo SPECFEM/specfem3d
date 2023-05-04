@@ -84,7 +84,8 @@ jobs:
     displayName: 'Run checks'
 
 - job: compilation_default
-  displayName: 'Compilation Default GCC 9'
+  # ubuntu-latest: ubuntu-22.04 w/ GCC 11
+  displayName: 'Compilation Default GCC'
   steps:
   - template: .azure-pipelines/install-template.yml
     parameters:
@@ -95,14 +96,14 @@ jobs:
       CUDA: false
       BUILD: true
 
-- job: compilation_default_gcc7
-  displayName: 'Compilation Default GCC 7'
+- job: compilation_default_gcc9
+  displayName: 'Compilation Default GCC 9'
   pool:
-    vmImage: 'ubuntu-18.04'
+    vmImage: 'ubuntu-20.04'
   variables:
-    CC: gcc-7
-    CXX: g++-7
-    FC: gfortran-7
+    CC: gcc-9
+    CXX: g++-9
+    FC: gfortran-9
   steps:
   - template: .azure-pipelines/install-template.yml
     parameters:
@@ -131,27 +132,33 @@ jobs:
       CUDA: false
       BUILD: true
 
-- job: compilation_CUDA10
-  displayName: 'Compilation CUDA 10'
+- job: compilation_CUDA11_gcc9
+  displayName: 'Compilation CUDA 11 GCC 9'
   pool:
-    vmImage: 'ubuntu-18.04'
+    vmImage: 'ubuntu-20.04'
   variables:
-    CC: gcc-7
-    CXX: g++-7
-    FC: gfortran-7
+    CC: gcc-9
+    CXX: g++-9
+    FC: gfortran-9
   steps:
   - template: .azure-pipelines/install-template.yml
     parameters:
       CUDA: true
-      CUDA_V: '10.2'
+      CUDA_V: '11.4'
   - template: .azure-pipelines/configure-template.yml
     parameters:
       TESTFLAGS: '--with-mpi --enable-vectorization --with-cuda=cuda10'
       CUDA: true
       BUILD: true
 
-- job: compilation_CUDA11
-  displayName: 'Compilation CUDA 11'
+- job: compilation_CUDA11_gcc10
+  displayName: 'Compilation CUDA 11 GCC 10'
+  pool:
+    vmImage: 'ubuntu-20.04'
+  variables:
+    CC: gcc-10
+    CXX: g++-10
+    FC: gfortran-10
   steps:
   - template: .azure-pipelines/install-template.yml
     parameters:
@@ -160,6 +167,38 @@ jobs:
   - template: .azure-pipelines/configure-template.yml
     parameters:
       TESTFLAGS: '--with-mpi --enable-vectorization --with-cuda=cuda11'
+      CUDA: true
+      BUILD: true
+
+- job: compilation_CUDA12
+  displayName: 'Compilation CUDA 12 GCC 10'
+  pool:
+    vmImage: 'ubuntu-20.04'
+  variables:
+    CC: gcc-10
+    CXX: g++-10
+    FC: gfortran-10
+  steps:
+  - template: .azure-pipelines/install-template.yml
+    parameters:
+      CUDA: true
+      CUDA_V: '12.1'
+  - template: .azure-pipelines/configure-template.yml
+    parameters:
+      TESTFLAGS: '--with-mpi --enable-vectorization --with-cuda=cuda11'
+      CUDA: true
+      BUILD: true
+
+- job: compilation_CUDA12_latest
+  displayName: 'Compilation CUDA 12 latest'
+  steps:
+  - template: .azure-pipelines/install-template.yml
+    parameters:
+      CUDA: true
+      CUDA_V: '12.1'
+  - template: .azure-pipelines/configure-template.yml
+    parameters:
+      TESTFLAGS: '--with-mpi --enable-vectorization --with-cuda=cuda12'
       CUDA: true
       BUILD: true
 
