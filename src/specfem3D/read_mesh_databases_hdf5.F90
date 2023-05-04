@@ -56,7 +56,7 @@
     call world_get_comm(comm)
     call world_get_info_null(info)
 
-    call h5_init()
+    call h5_initialize()
     call h5_set_mpi_info(comm, info, myrank, NPROC)
 
     ! opens file
@@ -75,7 +75,7 @@
 
     ! close hdf5
     call h5_close_file()
-    call h5_destructor()
+    call h5_finalize()
   endif
 
   call bcast_all_i_for_database(NSPEC_AB, 1)
@@ -181,7 +181,7 @@
     call world_get_comm(comm)
     call world_get_info_null(info)
 
-    call h5_init()
+    call h5_initialize()
     call h5_set_mpi_info(comm, info, myrank, NPROC)
 
     ! open file
@@ -1614,7 +1614,7 @@
   if (I_should_read_the_database) then
     ! close hdf5
     call h5_close_file()
-    call h5_destructor()
+    call h5_finalize()
   endif
 
   ! checks MPI interface arrays

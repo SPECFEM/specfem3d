@@ -112,7 +112,7 @@
   end select
 
   ! initialze hdf5
-  call h5_init()
+  call h5_initialize()
 
   ! note:
   ! - the total array length for a seismogram is NSTEP / NTSTEP_BETWEEN_OUTPUT_SAMPLE
@@ -160,7 +160,7 @@
 
   ! finish writing
   call h5_close_file()
-  call h5_destructor()
+  call h5_finalize()
 
 #else
   ! no HDF5 compilation support
@@ -212,7 +212,7 @@
   if (myrank /= 0) return
 
   ! initialze hdf5
-  call h5_init()
+  call h5_initialize()
 
   ! create file
   call h5_create_file(filename)
@@ -240,7 +240,6 @@
 
   ! time array
   call h5_write_dataset_no_group("time", time_array)
-  call h5_close_dataset()
 
   ! free array
   deallocate(time_array)
@@ -265,15 +264,10 @@
 
   ! coordination
   call h5_write_dataset_no_group("coords", rec_coords)
-  call h5_close_dataset()
-
   ! station name
   call h5_write_dataset_no_group("station", stations)
-  call h5_close_dataset()
-
   ! network name
   call h5_write_dataset_no_group("network", networks)
-  call h5_close_dataset()
 
   ! free arrays
   deallocate(stations,networks,rec_coords)
@@ -308,7 +302,7 @@
   endif
 
   call h5_close_file()
-  call h5_destructor()
+  call h5_finalize()
 
   end subroutine write_output_hdf5_seismogram_init
 

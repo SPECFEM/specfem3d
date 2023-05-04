@@ -240,7 +240,7 @@ contains
   len_array_aug = nfaces_actual * nfaces_aug * nnodes_per_face_aug
 
   ! initialization of h5 file
-  call h5_init()
+  call h5_initialize()
 
   if (myrank == 0) then
     ! create a hdf5 file
@@ -363,7 +363,7 @@ contains
 
   call h5_close_group()
   call h5_close_file()
-  call h5_destructor()
+  call h5_finalize()
 
 #else
   ! no HDF5 compilation support
@@ -512,7 +512,7 @@ contains
   len_array_aug = nfaces_actual * nfaces_aug * nnodes_per_face_aug
 
   ! initialization of h5 file
-  call h5_init()
+  call h5_initialize()
 
   ! main process creates file on first occurrence
   if (it == NTSTEP_BETWEEN_FRAMES .and. myrank == 0) then
@@ -643,7 +643,7 @@ contains
 
   call h5_close_group()
   call h5_close_file()
-  call h5_destructor()
+  call h5_finalize()
 #else
   ! no HDF5 compilation support
 
@@ -1037,7 +1037,7 @@ contains
   fname_h5_data_vol = trim(OUTPUT_FILES) // "/movie_volume.h5"
 
   ! initializes
-  call h5_init()
+  call h5_initialize()
 
   ! group for storing node coordinates and mesh element connectivity
   group_name = "mesh"
@@ -1096,7 +1096,7 @@ contains
 
   call h5_close_group()
   call h5_close_file()
-  call h5_destructor()
+  call h5_finalize()
 
   end subroutine prepare_vol_movie_hdf5
 
@@ -1126,7 +1126,7 @@ contains
   fname_h5_data_vol = trim(OUTPUT_FILES) // "/movie_volume.h5"
 
   ! initializes
-  call h5_init()
+  call h5_initialize()
 
   ! create a group for each io step
   write(tempstr, "(i6.6)") it
@@ -1157,7 +1157,7 @@ contains
 
   call h5_close_group()
   call h5_close_file()
-  call h5_destructor()
+  call h5_finalize()
 
   end subroutine write_vol_data_hdf5
 

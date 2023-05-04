@@ -171,7 +171,7 @@
   call world_get_info_null(info)
 
   ! initialize hdf5 io
-  call h5_init()
+  call h5_initialize()
   ! set MPI info
   call h5_set_mpi_info(comm, info, myrank, NPROC)
 
@@ -692,7 +692,6 @@
     dset_name = "offset_nb_interfaces"
     call h5_write_dataset_no_group(dset_name, offset_nb_interfaces)
 
-
     ! create dataset by main process
     call h5_close_file_p()
 
@@ -889,7 +888,7 @@
   call h5_write_dataset_collect_hyperslab(dset_name, num_interface_and_max, (/myrank*2/), .true.)
 
   call h5_close_file_p()
-  call h5_destructor()
+  call h5_finalize()
 
   call synchronize_all()
 

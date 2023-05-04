@@ -69,15 +69,15 @@ module manager_hdf5
   ! also to act as empty stubs (for missing HDF5 compilation support)
   public :: write_attenuation_file_hdf5, read_attenuation_file_hdf5
   public :: write_checkmesh_data_hdf5, write_checkmesh_xdmf_hdf5
-  public :: h5_init
+
+  ! functional interface
+  public :: h5_initialize
 
 #if defined(USE_HDF5)
   ! only w/ HDF5 compilation
 
   public :: &
-      h5_destructor, &
-      h5_check_collective, &
-      h5_check_arr_dim
+      h5_finalize
 
   public :: &
       h5_create_file, &
@@ -132,9 +132,6 @@ module manager_hdf5
       h5_read_dataset_collect_hyperslab
 
   public :: &
-      bool_array2integer, &
-      int_array2bool, &
-      create_dataset_collect, &
       i2c
 
   public :: &
@@ -147,6 +144,17 @@ module manager_hdf5
       h5_write_dataset_collect_hyperslab_in_group, &
       h5_write_dataset_collect_hyperslab
 
+  ! private routines
+
+  private :: &
+    h5_check_arr_dim, &
+    h5_check_collective, &
+    h5_check_group
+
+  private :: &
+    create_dataset_collect, &
+    bool_array2integer, &
+    int_array2bool
 
   ! generic interface to read dataset
   interface h5_read_dataset_p
@@ -257,6 +265,45 @@ module manager_hdf5
     module procedure h5_write_dataset_2d_d_collect_hyperslab ! double
   end interface h5_write_dataset_collect_hyperslab
 
+  ! object-oriented interface
+  ! (Fortran 2003 standard style)
+  !
+  ! usage example:
+  !   subroutine **
+  !     ..
+  !     use manager_hdf5, only: h5io
+  !     type(h5io) :: h5
+  !     ..
+  !     h5 = h5io()               ! calls the object constructor, i.e. h5io_constructor()
+  !     call h5%open(fname)       ! object function call
+  !     ! or in a single call:
+  !     !   h5 = h5io(fname)
+  !     call h5%write("x",store_val_x_all)
+  !     call h5%close()
+  !     ..
+  !   end subroutine              ! h5 goes out of scope, will call the object destructor, i.e., h5io_destructor()
+  !
+  type, public :: h5io
+    private
+    logical :: is_initialized = .false.
+    integer(HID_T) :: f_id = -1, g_id = -1, d_id = -1
+    character(len=MAX_STRING_LEN) :: filename = ""
+  contains
+    procedure :: open => h5io_open_file
+    procedure :: close => h5io_close_file
+    generic   :: write => h5io_write_dataset_i, h5io_write_dataset_r
+    procedure, private :: h5io_write_dataset_i
+    procedure, private :: h5io_write_dataset_r
+    final :: h5io_destructor
+  end type h5io
+  ! object constructor
+  ! called by: h5 = h5io()
+  interface h5io
+    module procedure :: h5io_constructor
+    module procedure :: h5io_constructor_from_file
+  end interface h5io
+
+  ! module parameters
   ! ids
   integer(HID_T) :: file_id, group_id, parent_group_id, dataset_id
   integer(HID_T) :: mem_dspace_id, file_dspace_id                     ! for collective IO
@@ -302,7 +349,7 @@ contains
 !
 !-------------------------------------------------------------------------------
 
-  subroutine h5_init()
+  subroutine h5_initialize()
 
 #if defined(USE_HDF5)
     use constants, only: MAX_LENGTH_NETWORK_NAME, MAX_LENGTH_STATION_NAME
@@ -332,16 +379,16 @@ contains
 
   ! compilation without HDF5 support
   print *
-  print *, "Error: HDF5 routine h5_init() called without HDF5 Support."
+  print *, "Error: HDF5 routine h5_initialize() called without HDF5 Support."
   print *, "To enable HDF5 support, reconfigure with --with-hdf5 flag."
   print *
 
   ! safety stop
-  stop 'Error HDF5 manager: h5_init() intitialization called without compilation support'
+  stop 'Error HDF5 manager: h5_initialize() intitialization called without compilation support'
 
 #endif
 
-  end subroutine h5_init
+  end subroutine h5_initialize
 
 !-------------------------------------------------------------------------------
 !
@@ -383,7 +430,7 @@ contains
     filename = LOCAL_PATH(1:len_trim(LOCAL_PATH))//trim(tempstr)
 
     ! initialize h5 object
-    call h5_init()
+    call h5_initialize()
 
     ! prepare dataset
     if (myrank == 0) then
@@ -417,7 +464,7 @@ contains
                                                  factor_common_kappa,(/0,0,0,0,sum(offset_nspec(0:myrank-1))/),.true.)
 
     call h5_close_file_p()
-    call h5_destructor()
+    call h5_finalize()
 #else
   ! no compilation support
   ! to avoid compiler warnings
@@ -463,7 +510,7 @@ contains
     fname = LOCAL_PATH(1:len_trim(LOCAL_PATH))//trim(tempstr)
 
     ! initialize h5 object
-    call h5_init()
+    call h5_initialize()
 
     ! open file
     call h5_open_file_p_collect(fname)
@@ -480,7 +527,7 @@ contains
                                                 (/0,0,0,0,sum(offset_nspec(0:myrank-1))/), .true.)
 
     call h5_close_file_p()
-    call h5_destructor()
+    call h5_finalize()
 #else
   ! no compilation support
   ! to avoid compiler warnings
@@ -535,7 +582,7 @@ contains
     call world_get_info_null(info)
 
     ! initialize h5 object
-    call h5_init()
+    call h5_initialize()
 
     call h5_set_mpi_info(comm, info, myrank, NPROC)
 
@@ -559,7 +606,7 @@ contains
     call h5_write_dataset_1d_r_collect_hyperslab(dset_name, dump_array, (/sum(offset(0:myrank-1))/),.true.)
     call h5_close_file_p()
 
-    call h5_destructor()
+    call h5_finalize()
 #else
   ! no compilation support
   ! to avoid compiler warnings
@@ -696,12 +743,12 @@ contains
 !-------------------------------------------------------------------------------
 !
 
-  subroutine h5_destructor()
+  subroutine h5_finalize()
     implicit none
     ! close Fortran interface
     call h5close_f(error)
     call check_error()
-  end subroutine h5_destructor
+  end subroutine h5_finalize
 
 !
 !-------------------------------------------------------------------------------
@@ -875,9 +922,9 @@ contains
     character(len=*), intent(in) :: group_name
     ! Variable for checking if a group exists or not
     logical :: group_exists
-    ! check
-    call h5lexists_f(file_id, group_name, group_exists, error)
-    call check_error()
+    ! check group
+    call h5_check_group(group_name, group_exists)
+    ! open or create
     if (group_exists) then
       call h5gopen_f(file_id, group_name, group_id, error)
     else
@@ -885,6 +932,23 @@ contains
     endif
     call check_error()
   end subroutine h5_open_or_create_group
+
+!
+!-------------------------------------------------------------------------------
+!
+
+  subroutine h5_check_group(group_name,group_exists)
+    ! Check if group with the given name exists. Create it if it doesn't,
+    ! open it if it does.
+    implicit none
+    character(len=*), intent(in) :: group_name
+    logical, intent(out) :: group_exists
+    ! Variable for checking if a group exists or not
+    group_exists = .false.
+    ! check
+    call h5lexists_f(file_id, group_name, group_exists, error)
+    call check_error()
+  end subroutine h5_check_group
 
 !
 !-------------------------------------------------------------------------------
@@ -1030,6 +1094,7 @@ contains
     call h5sclose_f(dspace_id, error)
     if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
+    ! closes dataset
     call h5_close_dataset()
   end subroutine h5_write_dataset_1d_i_no_group
 
@@ -1107,6 +1172,8 @@ contains
     call h5sclose_f(dspace_id, error)
     if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
+    ! closes dataset
+    call h5_close_dataset()
   end subroutine h5_write_dataset_1d_d_no_group
 
 !
@@ -1181,8 +1248,9 @@ contains
     call h5sclose_f(dspace_id, error)
     if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
+    ! closes dataset
+    call h5_close_dataset()
     deallocate(data, stat=error)
-
   end subroutine h5_write_dataset_1d_c_no_group
 
 !
@@ -1317,6 +1385,8 @@ contains
     call h5sclose_f(dspace_id, error)
     if (error /= 0) write(*,*) 'hdf5 dataspace closing failed for ', dataset_name
     call check_error()
+    ! closes dataset
+    call h5_close_dataset()
   end subroutine h5_write_dataset_2d_r_no_group
 
 !
@@ -4633,7 +4703,150 @@ contains
     call synchronize_all()
   end subroutine create_dataset_collect
 
+!-------------------------------------------------------------------------------
+!
+! object-oriented interface
+!
+!-------------------------------------------------------------------------------
+! Fortran 2003 standard
+!
+! this interface is mainly for testing purposes, and for checking if compilers by now support these features :(
+!
+! in the past, we had issues with compilers due to keywords like class().
+! here, we use strictly Fortran 2003 features, like polymorphism with 'class()', object destructor procedure by 'final ::',
+! and type binding by a pass statement like 'procedure :: . => ..'
+!
+! for a status report on compiler support, see Fortran+2003+status on:
+!   https://Fortranwiki.org/
+! Cray, GNU, IBM and Intel compilers should well support these features.
+
+  ! constructors
+
+  function h5io_constructor() result(this)
+    implicit none
+    type(h5io) :: this
+    call h5_initialize()
+    this%is_initialized = .true.
+  end function h5io_constructor
+
+  function h5io_constructor_from_file(filename) result(this)
+    implicit none
+    type(h5io) :: this
+    character(*), intent(in) :: filename
+    call h5_initialize()
+    this%is_initialized = .true.
+    call this%open(filename)
+    this%filename = trim(filename)
+  end function h5io_constructor_from_file
+
+  ! destructor
+
+  subroutine h5io_destructor(this)
+    implicit none
+    type(h5io) :: this
+    call h5_finalize()
+    this%is_initialized = .false.
+  end subroutine h5io_destructor
+
+  ! object procedures
+
+  ! note: with the pass statement "procedure :: open => h5io_open_file", the routine must have at least one argument and
+  !       the argument 'this' must be defined as polymorphic, i.e., by class() and not type() as above
+
+  subroutine h5io_open_file(this,filename,status)
+    implicit none
+    class(h5io) :: this
+    character(*), intent(in) :: filename
+    character(*), intent(in), optional :: status
+    ! checks if initialized
+    if (.not. this%is_initialized) then
+      call h5_initialize()
+      this%is_initialized = .true.
+    endif
+    ! only main process creates file if needed
+    if (present(status)) then
+      if (status == 'new') call h5_create_file(filename)
+    endif
+    ! opens file
+    call h5_open_file(filename)
+    this%f_id = file_id
+    this%filename = trim(filename)
+  end subroutine h5io_open_file
+
+  subroutine h5io_close_file(this)
+    implicit none
+    class(h5io) :: this
+    call h5_close_file()
+    this%f_id = file_id
+  end subroutine h5io_close_file
+
+  subroutine h5io_write_dataset_i(this,dname,data_i,group)
+    implicit none
+    class(h5io) :: this
+    character(len=*), intent(in) :: dname
+    integer, dimension(:), intent(in) :: data_i
+    character(len=*), intent(in), optional :: group
+    ! writes either with or without group
+    if (present(group)) then
+      call h5_open_or_create_group(group)
+      call h5_write_dataset(dname,data_i)
+    else
+      call h5_write_dataset_no_group(dname,data_i)
+    endif
+    this%d_id = dataset_id
+  end subroutine h5io_write_dataset_i
+
+  subroutine h5io_write_dataset_r(this,dname,data_r,group)
+    implicit none
+    class(h5io) :: this
+    character(len=*), intent(in) :: dname
+    real(kind=CUSTOM_REAL), dimension(:), intent(in) :: data_r
+    character(len=*), intent(in), optional :: group
+    ! writes either with or without group
+    if (present(group)) then
+      call h5_open_or_create_group(group)
+      call h5_write_dataset(dname,data_r)
+    else
+      call h5_write_dataset_no_group(dname,data_r)
+    endif
+    this%d_id = dataset_id
+  end subroutine h5io_write_dataset_r
+
 #endif
 
 end module manager_hdf5
+
+!-----------------------------------------------------
+
+! test function for object-oriented interface
+
+  subroutine test_io_hdf5()
+    use constants, only: myrank
+    use manager_hdf5, only: h5io
+    implicit none
+    type(h5io) :: h5
+    integer :: store_x(10)
+    integer :: i
+
+    ! serial test by main process only
+    if (myrank /= 0) return
+
+    ! initialize
+    store_x(:) = (/(i,i=1,10)/)
+
+    ! hdf5
+    ! calls the object constructor, i.e. h5io_constructor()
+    h5 = h5io()
+
+    ! open file
+    call h5%open("tmp_test.h5",status='new')  ! object function call
+
+    ! write out data
+    call h5%write("x",store_x)
+
+    ! close file
+    call h5%close()
+
+    ! h5 goes out of scope, will call the object destructor, i.e., h5io_destructor()
+  end subroutine test_io_hdf5
 
