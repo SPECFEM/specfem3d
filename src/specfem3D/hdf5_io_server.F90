@@ -37,26 +37,18 @@ module io_server_hdf5
   use shared_parameters, only: HDF5_IO_NODES, &
     IO_storage_task, IO_compute_task
 
+  implicit none
+
 #ifdef USE_HDF5
 ! only with HDF5 support
-
-#ifdef WITH_MPI
-  use my_mpi
-#endif
-
-  implicit none
 
   ! public routines
   public :: initialize_io_server
   public :: finalize_io_server
+
   public :: do_io_start_idle
   public :: pass_info_to_io
-
   public :: wait_all_send
-  public :: synchronize_inter
-  public :: isend_cr_inter
-  public :: recvv_cr_inter
-  public :: recv_i_inter
 
   ! public parameters
   public :: NtoM
@@ -85,7 +77,7 @@ module io_server_hdf5
   public :: id_proc_loc2glob, id_proc_glob2loc
   public :: dest_ioids, dest_ionod
 
-  ! mpi message tags
+  ! MPI message tags
   public :: io_tag_seismo_body_disp
   public :: io_tag_seismo_body_velo
   public :: io_tag_seismo_body_acce
@@ -113,14 +105,12 @@ module io_server_hdf5
   public :: io_tag_vol_nspec
   public :: io_tag_vol_sendlist
 
-  ! mpi requests
+  ! MPI requests
   public :: n_req_surf, n_req_vol
   public :: req_dump_surf, req_dump_vol
 
   public :: nproc_io
   public :: n_msg_vol_each_proc
-
-  public :: my_local_mpi_comm_inter
 
   ! verbosity
   public :: VERBOSE
@@ -203,9 +193,6 @@ module io_server_hdf5
 
   logical :: if_collect_server = .false. ! need to be set .false. for NtoM = .true.
 
-  ! MPI subgroup i/o server
-  integer :: my_local_mpi_comm_inter
-
   ! number of computer nodes sending info to each io node
   integer :: nproc_io
 
@@ -217,9 +204,6 @@ module io_server_hdf5
 
   ! io node id <-> proc id in compute nodes relation
   integer, dimension(:), allocatable :: dest_ioids
-
-  ! string length for node name array
-  integer :: n_str_nodename = 64
 
   integer :: nglob_all_server, nspec_all_server ! total number of elements and nodes for all procs
   integer :: nglob_this_io, nelm_this_io        ! number of nodes and elements in this IO group
@@ -266,18 +250,17 @@ contains
 ! initialization of IO server splits compute and io nodes
 #ifdef USE_HDF5
 
-  use constants, only: IMAIN,myrank
+  use constants, only: IMAIN,myrank,MAX_STRING_LEN
   use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,NPROC
 
   implicit none
 
   integer :: sizeval
-  integer :: split_comm,inter_comm
+  integer :: mpi_comm,split_comm,inter_comm
   integer :: key,io_start,comp_start
-  integer :: ier
   ! test node name
-  character(len=n_str_nodename), dimension(:), allocatable :: node_names
-  character(len=n_str_nodename) :: this_node_name
+  character(len=MAX_STRING_LEN), dimension(:), allocatable :: node_names
+  character(len=MAX_STRING_LEN) :: this_node_name
   integer :: node_len
 
   ! split comm into computation nodes and io node
@@ -290,7 +273,10 @@ contains
   if (HDF5_IO_NODES < 0) stop 'Invalid HDF5_IO_NODES, must be zero or positive'
 
   ! initializes
-  my_local_mpi_comm_inter = my_local_mpi_comm_world   ! no i/o server
+  call world_get_comm(mpi_comm)         ! mpi_comm == my_local_mpi_comm_world
+
+  ! default MPI group, no i/o server
+  call world_set_comm_inter(mpi_comm)   ! my_local_mpi_comm_inter = mpi_comm
 
   ! checks if anything to do
   if (HDF5_IO_NODES == 0) return
@@ -313,7 +299,7 @@ contains
     call flush_IMAIN()
   endif
 
-  ! checks if solver run with a number of mpi processes equal to (NPROC + HDF5_IO_NODES)
+  ! checks if solver run with a number of MPI processes equal to (NPROC + HDF5_IO_NODES)
   if (sizeval /= NPROC + HDF5_IO_NODES) then
     if (myrank == 0) then
       print *,"Error: HDF5 IO server needs ",HDF5_IO_NODES," additional process together with NPROC",NPROC,"processes"
@@ -330,14 +316,10 @@ contains
   ! to select io node and compute nodes on the same cluster node.
   allocate(node_names(0:sizeval-1))
 
-#ifdef WITH_MPI
-  call MPI_GET_PROCESSOR_NAME(this_node_name,node_len,ier)
-#else
-  stop 'initialize_io_server not implemented for serial code'
-#endif
+  call world_get_processor_name(this_node_name,node_len)
 
   ! share the node name between procs
-  call gather_all_all_single_ch(this_node_name,node_names,sizeval,n_str_nodename)
+  call gather_all_all_single_ch(this_node_name,node_names,sizeval,MAX_STRING_LEN)
 
   call synchronize_all()
 
@@ -347,26 +329,22 @@ contains
   deallocate(node_names)
 
   ! split communicator into compute_comm and io_comm
-#ifdef WITH_MPI
-  call MPI_COMM_SPLIT(my_local_mpi_comm_world, key, myrank, split_comm, ier)
-#else
-  stop 'initialize_io_server not implemented for serial code'
-#endif
+  call world_comm_split(mpi_comm, key, myrank, split_comm)
 
   ! create inter communicator and set as my_local_mpi_comm_inter
   if (IO_storage_task) then
     comp_start = 0
-    call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, comp_start, 1111, inter_comm, ier)
+    call world_create_intercomm(split_comm, 0, mpi_comm, comp_start, 1111, inter_comm)
   else
     !io_start = sizeval - HDF5_IO_NODES !+dest_ionod
-    call mpi_intercomm_create(split_comm, 0, my_local_mpi_comm_world, io_start,   1111, inter_comm, ier)
+    call world_create_intercomm(split_comm, 0, mpi_comm, io_start, 1111, inter_comm)
   endif
 
   ! sets new comm_world subgroup
-  my_local_mpi_comm_world = split_comm
+  call world_set_comm(split_comm)            ! such that: my_local_mpi_comm_world == split_comm
 
   ! use inter_comm as my_local_mpi_comm_world for all send/recv
-  my_local_mpi_comm_inter = inter_comm
+  call world_set_comm_inter(inter_comm)      ! such that: my_local_mpi_comm_inter == inter_comm
 
   ! exclude io nodes from the other compute nodes
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) NPROC = NPROC - HDF5_IO_NODES
@@ -428,8 +406,12 @@ contains
   if (HDF5_IO_NODES == 0) return
 
   ! finish MPI subgroup
-  call world_unsplit_inter()
-
+  if (HDF5_IO_NODES > 0) then
+    ! wait for all to finish
+    call synchronize_inter()
+    ! free subgroup
+    call world_comm_free_inter()
+  endif
 #else
   ! no HDF5 compilation support
 
@@ -454,17 +436,19 @@ contains
 
   subroutine select_io_node(node_names, myrank, sizeval, key, io_start)
 
+  use constants, only: MAX_STRING_LEN
+
   implicit none
 
   integer, intent(in)                         :: myrank, sizeval
   integer, intent(out)                        :: key, io_start
-  character(len=n_str_nodename), dimension(0:sizeval-1), intent(in) :: node_names
+  character(len=MAX_STRING_LEN), dimension(0:sizeval-1), intent(in) :: node_names
   ! local parameters
-  character(len=n_str_nodename), dimension(sizeval) :: dump_node_names ! names of cluster nodes
-  integer, dimension(sizeval)           :: n_procs_on_node ! number of procs on each cluster node
-  integer, dimension(:), allocatable    :: n_ionode_on_cluster ! number of ionode on the cluster nodes
+  integer, dimension(sizeval) :: n_procs_on_node ! number of procs on each cluster node
+  integer, dimension(:), allocatable :: n_ionode_on_cluster ! number of ionode on the cluster nodes
   integer :: i,j,c,n_cluster_node,my_cluster_id,n_rest_io,n_ionode,n_comp_node
   real(kind=CUSTOM_REAL) :: io_ratio ! dum
+  character(len=MAX_STRING_LEN), dimension(sizeval) :: dump_node_names ! names of cluster nodes
 
   ! initialize
   my_cluster_id = -1
@@ -637,7 +621,7 @@ contains
 
 #ifdef USE_HDF5
 
-  use constants, only: myrank
+  use constants, only: myrank,my_status_size,my_status_source,my_status_tag
 
   use shared_parameters, only: NPROC,DT,NSTEP,NTSTEP_BETWEEN_FRAMES, &
     MOVIE_SURFACE,MOVIE_VOLUME,USE_HIGHRES_FOR_MOVIES,CREATE_SHAKEMAP, &
@@ -651,11 +635,7 @@ contains
 
   ! vars seismo
   integer,dimension(0:NPROC-1) :: islice_num_rec_local
-#ifdef WITH_MPI
-  integer                      :: status(MPI_STATUS_SIZE)
-#else
-  integer                      :: status(1)
-#endif
+  integer                      :: status(my_status_size)
   integer                      :: rec_count_seismo, n_recv_msg_seismo, max_seismo_out
   integer                      :: it_offset, seismo_out_count
   !integer, dimension(1)        :: nrec_temp
@@ -852,13 +832,8 @@ contains
     ! waiting for a MPI message
     call idle_mpi_io(status)
 
-#ifdef WITH_MPI
-    tag = status(MPI_TAG)
-    tag_src = status(MPI_SOURCE)
-#else
-    tag = status(1)
-    tag_src = status(1)
-#endif
+    tag = status(my_status_tag)
+    tag_src = status(my_status_source)
 
     ! debug output
     if (VERBOSE) then
@@ -1253,33 +1228,25 @@ contains
 
   subroutine recv_volume_data(status, val_type_mov, nglob_par_proc_offset)
 
+  use constants, only: my_status_size,my_status_source,my_status_tag
   implicit none
 
-#ifdef WITH_MPI
-  integer, intent(in)                  :: status(MPI_STATUS_SIZE)
-#else
-  integer                              :: status(1)
-#endif
+  integer, intent(in)                  :: status(my_status_size)
   logical, dimension(5), intent(inout) :: val_type_mov
   integer, dimension(0:nproc_io-1), intent(in) :: nglob_par_proc_offset ! offset intra io node info
 
-  integer :: sender_glob, sender_loc, tag, msgsize, iglo_sta, iglo_end
+  integer :: sender_glob, sender_loc, tag, msg_size, iglo_sta, iglo_end
 
-#ifdef WITH_MPI
-  sender_glob = status(MPI_SOURCE)
+  sender_glob = status(my_status_source)
   sender_loc  = id_proc_glob2loc(sender_glob)
-  tag         = status(MPI_TAG)
-#else
-  sender_glob = status(1)
-  sender_loc  = id_proc_glob2loc(sender_glob)
-  tag         = status(1)
-#endif
+
+  tag         = status(my_status_tag)
 
   ! get message size
-  call world_get_size_msg(status,msgsize)
+  call world_get_size_msg(status,msg_size)
 
   iglo_sta = nglob_par_proc_offset(sender_loc)+1
-  iglo_end = iglo_sta + msgsize -1
+  iglo_end = iglo_sta + msg_size -1
 
   ! receive data and store to dump arrays
   !
@@ -1287,27 +1254,27 @@ contains
   !
   if (tag == io_tag_vol_pres) then
     val_type_mov(1) = .true.
-    call irecvv_cr_inter(vd_pres%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_pres%req(sender_loc))
+    call irecvv_cr_inter(vd_pres%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_pres%req(sender_loc))
   else if (tag == io_tag_vol_divglob) then
     val_type_mov(2) = .true.
-    call irecvv_cr_inter(vd_divglob%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_divglob%req(sender_loc))
+    call irecvv_cr_inter(vd_divglob%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_divglob%req(sender_loc))
   else if (tag == io_tag_vol_div) then
     val_type_mov(3) = .true.
-    call irecvv_cr_inter(vd_div%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_div%req(sender_loc))
+    call irecvv_cr_inter(vd_div%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_div%req(sender_loc))
   else if (tag == io_tag_vol_curlx) then
     val_type_mov(4) = .true.
-    call irecvv_cr_inter(vd_curlx%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_curlx%req(sender_loc))
+    call irecvv_cr_inter(vd_curlx%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_curlx%req(sender_loc))
   else if (tag == io_tag_vol_curly) then
-    call irecvv_cr_inter(vd_curly%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_curly%req(sender_loc))
+    call irecvv_cr_inter(vd_curly%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_curly%req(sender_loc))
   else if (tag == io_tag_vol_curlz) then
-    call irecvv_cr_inter(vd_curlz%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_curlz%req(sender_loc))
+    call irecvv_cr_inter(vd_curlz%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_curlz%req(sender_loc))
   else if (tag == io_tag_vol_velox) then
     val_type_mov(5) = .true.
-    call irecvv_cr_inter(vd_velox%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_velox%req(sender_loc))
+    call irecvv_cr_inter(vd_velox%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_velox%req(sender_loc))
   else if (tag == io_tag_vol_veloy) then
-    call irecvv_cr_inter(vd_veloy%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_veloy%req(sender_loc))
+    call irecvv_cr_inter(vd_veloy%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_veloy%req(sender_loc))
   else if (tag == io_tag_vol_veloz) then
-    call irecvv_cr_inter(vd_veloz%d1darr(iglo_sta:iglo_end),msgsize,sender_glob,tag,vd_veloz%req(sender_loc))
+    call irecvv_cr_inter(vd_veloz%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_veloz%req(sender_loc))
   endif
 
   end subroutine recv_volume_data
@@ -1320,39 +1287,6 @@ contains
 !
 !-------------------------------------------------------------------------------------------------
 
-  subroutine synchronize_inter()
-
-#ifdef USE_HDF5
-
-  implicit none
-
-#ifdef WITH_MPI
-  integer :: ier
-
-  ! synchronizes MPI processes
-  call MPI_BARRIER(my_local_mpi_comm_inter,ier)
-  if (ier /= 0 ) stop 'Error synchronize MPI processes'
-#endif
-
-#else
-  ! no HDF5 compilation support
-
-  ! compilation without HDF5 support
-  print *
-  print *, "Error: HDF5 I/O server routine synchronize_inter() called without HDF5 Support."
-  print *, "To enable HDF5 support, reconfigure with --with-hdf5 flag."
-  print *
-
-  ! safety stop
-  stop 'synchronize_inter() called without HDF5 compilation support'
-
-#endif
-
-  end subroutine synchronize_inter
-
-!
-!-------------------------------------------------------------------------------------------------
-!
 
   subroutine wait_all_send()
 
@@ -1414,434 +1348,15 @@ contains
 
 ! wait for an arrival of any MPI message
 
-!  use io_server_hdf5
+  use constants, only: my_status_size
 
   implicit none
-#ifdef WITH_MPI
-  integer, intent(inout) :: status(MPI_STATUS_SIZE)
-  integer :: ier
 
-  call mpi_probe(MPI_ANY_SOURCE, MPI_ANY_TAG, my_local_mpi_comm_inter, status, ier)
-#else
-  ! no MPI
-  integer :: status(1)
-  integer :: unused_i4
+  integer, intent(inout) :: status(my_status_size)
 
-  stop 'idle_mpi_io not implemented for serial code'
-  unused_i4 = status(1)
-#endif
+  call world_probe_any_inter(status)
 
   end subroutine idle_mpi_io
-
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-! unused so far...
-
-!  subroutine isend_i_inter(sendbuf, sendcount, dest, sendtag, req)
-!
-!!#ifdef WITH_MPI
-!!  use io_server_hdf5
-!!#endif
-!
-!  implicit none
-!
-!  integer :: sendcount, dest, sendtag, req
-!  integer, dimension(sendcount) :: sendbuf
-!
-!#ifdef WITH_MPI
-!  integer :: ier
-!
-!  call MPI_ISEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,my_local_mpi_comm_inter,req,ier)
-!#else
-!  ! no MPI
-!  integer(kind=4) :: unused_i4
-!
-!  stop 'isend_i_inter not implemented for serial code'
-!  unused_i4 = dest
-!  unused_i4 = sendtag
-!  unused_i4 = req
-!  unused_i4 = sendbuf(1)
-!#endif
-!
-!  end subroutine isend_i_inter
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine recv_i_inter(recvbuf, recvcount, dest, recvtag )
-
-  implicit none
-
-  integer :: dest,recvtag
-  integer :: recvcount
-  integer,dimension(recvcount):: recvbuf
-
-#ifdef WITH_MPI
-  integer :: ier
-
-  call MPI_RECV(recvbuf,recvcount,MPI_INTEGER,dest,recvtag, &
-                my_local_mpi_comm_inter,MPI_STATUS_IGNORE,ier)
-#else
-  ! no MPI
-  integer(kind=4) :: unused_i4
-
-  stop 'recv_i_inter not implemented for serial code'
-  unused_i4 = dest
-  unused_i4 = recvtag
-  unused_i4 = recvbuf(1)
-#endif
-
-  end subroutine recv_i_inter
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine recv_dp_inter(recvbuf, recvcount, dest, recvtag)
-
-  implicit none
-
-  integer :: dest,recvtag
-  integer :: recvcount
-  double precision,dimension(recvcount):: recvbuf
-
-#ifdef WITH_MPI
-  integer :: ier
-
-  call MPI_RECV(recvbuf,recvcount,MPI_DOUBLE_PRECISION,dest,recvtag, &
-                my_local_mpi_comm_inter,MPI_STATUS_IGNORE,ier)
-#else
-  ! no MPI
-  integer(kind=4) :: unused_i4
-  double precision :: unused_dp
-
-  stop 'recv_dp_inter not implemented for serial code'
-  unused_i4 = dest
-  unused_i4 = recvtag
-  unused_dp = recvbuf(1)
-#endif
-
-  end subroutine recv_dp_inter
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine recvv_cr_inter(recvbuf, recvcount, dest, recvtag)
-
-  implicit none
-
-#ifdef WITH_MPI
-  include "precision.h"
-#endif
-
-  integer :: recvcount,dest,recvtag
-  real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
-
-#ifdef WITH_MPI
-  integer :: ier
-
-  call MPI_RECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag, &
-                my_local_mpi_comm_inter,MPI_STATUS_IGNORE,ier)
-#else
-  ! no MPI
-  integer(kind=4) :: unused_i4
-  real(kind=CUSTOM_REAL) :: unused_cr
-
-  stop 'recvv_cr_inter not implemented for serial code'
-  unused_i4 = dest
-  unused_i4 = recvtag
-  unused_cr = recvbuf(1)
-#endif
-
-  end subroutine recvv_cr_inter
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine irecvv_cr_inter(recvbuf, recvcount, dest, recvtag, req)
-
-  implicit none
-
-#ifdef WITH_MPI
-  include "precision.h"
-#endif
-
-  integer :: recvcount,dest,recvtag,req
-  real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
-
-#ifdef WITH_MPI
-  integer :: ier
-
-  call MPI_IRECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag, &
-                my_local_mpi_comm_inter,req,ier)
-#else
-  ! no MPI
-  integer(kind=4) :: unused_i4
-  real(kind=CUSTOM_REAL) :: unused_cr
-
-  stop 'irecvv_cr_inter not implemented for serial code'
-  unused_i4 = dest
-  unused_i4 = req
-  unused_i4 = recvtag
-  unused_cr = recvbuf(1)
-#endif
-
-  end subroutine irecvv_cr_inter
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine isend_cr_inter(sendbuf, sendcount, dest, sendtag, req)
-
-  implicit none
-
-#ifdef WITH_MPI
-  include "precision.h"
-#endif
-
-  integer :: sendcount, dest, sendtag, req
-  real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
-
-#ifdef WITH_MPI
-  integer :: ier
-
-  call MPI_ISEND(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag,my_local_mpi_comm_inter,req,ier)
-#else
-  ! no MPI
-  integer(kind=4) :: unused_i4
-  real(kind=CUSTOM_REAL) :: unused_cr
-
-  stop 'isend_cr_inter not implemented for serial code'
-  unused_i4 = dest
-  unused_i4 = sendtag
-  unused_i4 = req
-  unused_cr = sendbuf(1)
-#endif
-
-  end subroutine isend_cr_inter
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine send_i_inter(sendbuf, sendcount, dest, sendtag)
-
-  implicit none
-
-  integer :: dest,sendtag
-  integer :: sendcount
-  integer,dimension(sendcount):: sendbuf
-
-#ifdef WITH_MPI
-  integer :: ier
-
-  call MPI_SEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,my_local_mpi_comm_inter,ier)
-#else
-  ! no MPI
-  integer(kind=4) :: unused_i4
-
-  stop 'send_i_inter not implemented for serial code'
-  unused_i4 = dest
-  unused_i4 = sendtag
-  unused_i4 = sendbuf(1)
-#endif
-
-  end subroutine send_i_inter
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine send_dp_inter(sendbuf, sendcount, dest, sendtag)
-
-  implicit none
-
-  integer :: dest,sendtag
-  integer :: sendcount
-  double precision,dimension(sendcount):: sendbuf
-
-#ifdef WITH_MPI
-  integer :: ier
-
-  call MPI_SEND(sendbuf,sendcount,MPI_DOUBLE_PRECISION,dest,sendtag,my_local_mpi_comm_inter,ier)
-#else
-  ! no MPI
-  integer(kind=4) :: unused_i4
-  double precision :: unused_dp
-
-  stop 'send_dp_inter not implemented for serial code'
-  unused_i4 = dest
-  unused_i4 = sendtag
-  unused_dp = sendbuf(1)
-#endif
-
-  end subroutine send_dp_inter
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-
-  subroutine sendv_cr_inter(sendbuf, sendcount, dest, sendtag)
-
-  implicit none
-
-#ifdef WITH_MPI
-  include "precision.h"
-#endif
-
-  integer :: sendcount,dest,sendtag
-  real(kind=CUSTOM_REAL),dimension(sendcount) :: sendbuf
-
-#ifdef WITH_MPI
-  integer :: ier
-
-  call MPI_SEND(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag,my_local_mpi_comm_inter,ier)
-#else
-  ! no MPI
-  integer(kind=4) :: unused_i4
-  real(kind=CUSTOM_REAL) :: unused_cr
-
-  stop 'send_cr_inter not implemented for serial code'
-  unused_i4 = dest
-  unused_i4 = sendtag
-  unused_cr = sendbuf(1)
-#endif
-
-  end subroutine sendv_cr_inter
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine gather_all_all_single_ch(sendbuf, recvbuf, NPROC, dim1)
-
-#ifdef WITH_MPI
-  use my_mpi
-#endif
-
-  implicit none
-
-  integer                                   :: dim1 ! character length
-  integer                                   :: NPROC
-  character(len=dim1)                       :: sendbuf
-  character(len=dim1), dimension(0:NPROC-1) :: recvbuf
-
-#ifdef WITH_MPI
-  integer :: ier
-
-  call MPI_ALLGATHER(sendbuf,dim1,MPI_CHARACTER, &
-                     recvbuf,dim1,MPI_CHARACTER, &
-                     my_local_mpi_comm_world,ier)
-#else
-  ! no MPI
-  character(len=1) :: unused_ch
-
-  stop 'send_cr_inter not implemented for serial code'
-  unused_ch = sendbuf(1)
-  unused_ch = recvbuf(1)
-#endif
-
-  end subroutine gather_all_all_single_ch
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-! unused so far...
-
-!  subroutine gatherv_all_cr_inter(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
-!
-!!  use io_server_hdf5
-!
-!  implicit none
-!
-!#ifdef WITH_MPI
-!  include "precision.h"
-!#endif
-!
-!  integer :: sendcnt,recvcounttot,NPROC
-!  integer, dimension(NPROC) :: recvcount,recvoffset
-!  real(kind=CUSTOM_REAL), dimension(sendcnt) :: sendbuf
-!  real(kind=CUSTOM_REAL), dimension(recvcounttot) :: recvbuf
-!
-!#ifdef WITH_MPI
-!  integer :: ier
-!
-!  call MPI_GATHERV(sendbuf,sendcnt,CUSTOM_MPI_TYPE, &
-!                   recvbuf,recvcount,recvoffset,CUSTOM_MPI_TYPE, &
-!                   0,my_local_mpi_comm_inter,ier)
-!#else
-!  ! no MPI
-!  integer(kind=4) :: unused_i4
-!  real(kind=CUSTOM_REAL) :: unused_cr
-!
-!  stop 'gatherv_all_cr_inter not implemented for serial code'
-!  unused_i4 = recvcount(1)
-!  unused_i4 = recvoffset(1)
-!  unused_cr = sendbuf(1)
-!  unused_cr = recvbuf(1)
-!#endif
-!
-!  end subroutine gatherv_all_cr_inter
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine world_get_size_msg(status,size)
-
-#ifdef WITH_MPI
-  use my_mpi
-
-  implicit none
-
-  integer, intent(in)  :: status(MPI_STATUS_SIZE)
-  integer, intent(out) :: size
-  integer              :: ier
-
-  call MPI_GET_COUNT(status, MPI_INT, size, ier);
-#else
-  ! no MPI
-  integer, intent(in)  :: status(1)
-  integer, intent(out) :: size
-  integer(kind=4) :: unused_i4
-
-  stop 'world_get_size_msg not implemented for serial code'
-  size = 0
-  unused_i4 = status(1)
-#endif
-
-  end subroutine world_get_size_msg
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine world_unsplit_inter()
-
-  implicit none
-  integer :: ier
-
-  if (HDF5_IO_NODES > 0) then
-    call synchronize_inter()
-
-#ifdef WITH_MPI
-    call MPI_COMM_FREE(my_local_mpi_comm_inter,ier)
-#else
-  stop 'world_unsplit_inter not implemented for serial code'
-#endif
-
-  endif
-
-  end subroutine world_unsplit_inter
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1896,26 +1411,18 @@ contains
 
   subroutine recv_shake_data(status, nfaces_perproc, surface_offset)
 
+  use constants, only: my_status_size,my_status_source,my_status_tag
   use shared_parameters, only: NPROC
 
   implicit none
 
   integer, dimension(0:NPROC-1), intent(in)         :: nfaces_perproc, surface_offset
   integer                                           :: ier, sender, tag, i
-#ifdef WITH_MPI
-  integer, intent(in)                               :: status(MPI_STATUS_SIZE)
-#else
-  integer                                           :: status(1)
-#endif
+  integer, intent(in)                               :: status(my_status_size)
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: temp_array
 
-#ifdef WITH_MPI
-  sender = status(MPI_SOURCE)
-  tag    = status(MPI_TAG)
-#else
-  sender = status(1)
-  tag    = status(1)
-#endif
+  sender = status(my_status_source)
+  tag    = status(my_status_tag)
 
   allocate(temp_array(nfaces_perproc(sender)), stat=ier)
 
@@ -1945,32 +1452,25 @@ contains
 
   subroutine recv_surf_data(status, nfaces_perproc, surface_offset)
 
+  use constants, only: my_status_size,my_status_source,my_status_tag
   use shared_parameters, only: NPROC
 
   implicit none
 
+  integer, intent(in)                               :: status(my_status_size)
   integer, dimension(0:NPROC-1), intent(in)         :: nfaces_perproc, surface_offset
+  ! local parameters
   integer                                           :: ier, sender, tag, i
-  integer                                           :: msgsize
-#ifdef WITH_MPI
-  integer, intent(in)                               :: status(MPI_STATUS_SIZE)
-#else
-  integer                                           :: status(1)
-#endif
+  integer                                           :: msg_size
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: temp_array
 
-#ifdef WITH_MPI
-  sender = status(MPI_SOURCE)
-  tag    = status(MPI_TAG)
-#else
-  sender = status(1)
-  tag    = status(1)
-#endif
+  sender = status(my_status_source)
+  tag    = status(my_status_tag)
 
   allocate(temp_array(nfaces_perproc(sender)), stat=ier)
   temp_array(:) = 0._CUSTOM_REAL
 
-  call world_get_size_msg(status, msgsize)
+  call world_get_size_msg(status, msg_size)
 
   call recvv_cr_inter(temp_array,nfaces_perproc(sender),sender,tag)
 
@@ -2181,29 +1681,20 @@ contains
 
   subroutine recv_seismo_data(status, islice_num_rec_local)
 
-  use constants, only: NDIM
+  use constants, only: NDIM,my_status_size,my_status_source,my_status_tag
   use shared_parameters, only: NPROC
 
   implicit none
 
   integer, dimension(0:NPROC-1), intent(in) :: islice_num_rec_local
-#ifdef WITH_MPI
-  integer, intent(in)                       :: status(MPI_STATUS_SIZE)
-#else
-  integer                                   :: status(1)
-#endif
-
+  integer, intent(in)                       :: status(my_status_size)
+  ! local parameters
   integer :: sender, nrec_passed, irec_passed, tag, id_rec_glob, ier
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: seismo_temp
   integer                                               :: msg_size,time_window
 
-#ifdef WITH_MPI
-  sender = status(MPI_SOURCE)
-  tag    = status(MPI_TAG)
-#else
-  sender = status(1)
-  tag    = status(1)
-#endif
+  sender = status(my_status_source)
+  tag    = status(my_status_tag)
 
   nrec_passed  = islice_num_rec_local(sender)
 

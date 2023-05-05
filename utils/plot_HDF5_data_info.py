@@ -249,7 +249,13 @@ def plot_HDF5_data_info(file_in,show_plot,convert_waveforms):
                     ncomp = 3
                 for icomp in range(ncomp):
                     # trace data
-                    trace = data[irec, :, icomp]
+                    if "press" in label:
+                        # pressure single-component w/ shape (nrec,nstep)
+                        trace = data[irec, :]
+                    else:
+                        # displ/veloc/accel w/ shape (nrec,nstep,ndim)
+                        trace = data[irec, :, icomp]
+
                     length = len(trace)
 
                     # check if time and trace have same length

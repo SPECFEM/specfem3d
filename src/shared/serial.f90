@@ -1377,9 +1377,11 @@
   implicit none
 
   integer, intent(in) :: comm
+  integer :: unused_i
 
   ! tests if communicator is valid
   is_valid_comm = .false.
+  unused_i = comm
 
   end function is_valid_comm
 
@@ -1396,6 +1398,23 @@
   comm = 0
 
   end subroutine world_get_comm
+
+!
+!-----
+!
+
+  subroutine world_set_comm(comm)
+
+  implicit none
+
+  integer,intent(in) :: comm
+
+  integer :: unused_i
+
+  stop 'world_set_comm not implemented for serial code'
+  unused_i = comm
+
+  end subroutine world_set_comm
 
 !
 !----
@@ -1439,6 +1458,22 @@
   info = 0
 
   end subroutine world_get_info_null
+
+!
+!-----
+!
+
+  subroutine world_get_size_msg(status,size)
+
+  integer, intent(in) :: status(1)
+  integer, intent(out) :: size
+  integer(kind=4) :: unused_i4
+
+  stop 'world_get_size_msg not implemented for serial code'
+  unused_i4 = status(1)
+  size = 0
+
+  end subroutine world_get_size_msg
 
 !
 !----
@@ -1491,3 +1526,385 @@
 
   end subroutine bcast_all_l_array
 
+!
+!-----
+!
+
+  subroutine world_get_processor_name(name,size)
+
+  use constants, only: MAX_STRING_LEN
+
+  implicit none
+
+  character(len=MAX_STRING_LEN),intent(out) :: name
+  integer,intent(out) :: size
+
+  stop 'world_get_processor_name not implemented for serial code'
+  name = ""
+  size = 0
+
+  end subroutine world_get_processor_name
+
+
+!-----
+!
+! inter-communication group
+!
+!-----
+
+!-------------------------------------------------------------------------------------------------
+
+  subroutine world_set_comm_inter(comm)
+
+  implicit none
+
+  integer,intent(in) :: comm
+  integer :: unused_i
+
+  stop 'world_set_comm_inter not implemented for serial code'
+  unused_i = comm
+
+  end subroutine world_set_comm_inter
+
+!
+!-----
+!
+
+  subroutine world_probe_any_inter(status)
+
+  ! wait for an arrival of any MPI message
+
+  implicit none
+  integer,dimension(1),intent(inout) :: status
+  integer :: unused_i
+
+  stop 'world_probe_any_inter not implemented for serial code'
+  unused_i = status(1)
+
+  end subroutine world_probe_any_inter
+
+!
+!-----
+!
+
+  subroutine world_probe_tag_inter(tag,status)
+
+  ! wait for an arrival of a specific tag MPI message
+
+  implicit none
+  integer, intent(in) :: tag
+  integer, dimension(1), intent(inout) :: status
+  integer :: unused_i
+
+  stop 'world_probe_tag_inter not implemented for serial code'
+  unused_i = tag
+  status(1) = 0
+
+  end subroutine world_probe_tag_inter
+
+!
+!-----
+!
+
+  subroutine synchronize_inter()
+
+  implicit none
+
+  end subroutine synchronize_inter
+
+!
+!------
+!
+
+  subroutine world_comm_free_inter()
+
+  implicit none
+
+  end subroutine world_comm_free_inter
+
+!
+!------
+!
+
+  subroutine world_comm_split(comm, key, rank, split_comm)
+
+  implicit none
+  integer, intent(in) :: comm, key, rank
+  integer, intent(inout) :: split_comm
+  integer :: unused_i
+
+  stop 'world_comm_split not implemented for serial code'
+  unused_i = comm
+  unused_i = key
+  unused_i = rank
+  split_comm = 0
+
+  end subroutine world_comm_split
+
+!
+!------
+!
+
+  subroutine world_create_intercomm(local_comm, local_leader, group_comm, remote_leader, tag, inter_comm)
+
+  implicit none
+  integer, intent(in) :: local_comm, local_leader, group_comm, remote_leader, tag
+  integer, intent(inout) :: inter_comm
+  integer :: unused_i
+
+  stop 'world_create_intercomm not implemented for serial code'
+  unused_i = local_comm
+  unused_i = local_leader
+  unused_i = group_comm
+  unused_i = remote_leader
+  unused_i = tag
+  inter_comm = 0
+
+  end subroutine world_create_intercomm
+
+!
+!-------
+!
+
+  subroutine recv_i_inter(recvbuf, recvcount, dest, recvtag )
+
+  implicit none
+
+  integer :: dest,recvtag
+  integer :: recvcount
+  integer,dimension(recvcount):: recvbuf
+
+  integer(kind=4) :: unused_i4
+
+  stop 'recv_i_inter not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = recvtag
+  unused_i4 = recvbuf(1)
+
+  end subroutine recv_i_inter
+
+!
+!------
+!
+
+  subroutine recv_dp_inter(recvbuf, recvcount, dest, recvtag)
+
+  implicit none
+
+  integer :: dest,recvtag
+  integer :: recvcount
+  double precision,dimension(recvcount):: recvbuf
+
+  integer(kind=4) :: unused_i4
+  double precision :: unused_dp
+
+  stop 'recv_dp_inter not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = recvtag
+  unused_dp = recvbuf(1)
+
+  end subroutine recv_dp_inter
+
+!
+!------
+!
+
+  subroutine recvv_cr_inter(recvbuf, recvcount, dest, recvtag)
+
+  use constants, only: CUSTOM_REAL
+  implicit none
+
+  integer :: recvcount,dest,recvtag
+  real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
+
+  integer(kind=4) :: unused_i4
+  real(kind=CUSTOM_REAL) :: unused_cr
+
+  stop 'recvv_cr_inter not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = recvtag
+  unused_cr = recvbuf(1)
+
+  end subroutine recvv_cr_inter
+
+!
+!------
+!
+
+  subroutine irecvv_cr_inter(recvbuf, recvcount, dest, recvtag, req)
+
+  use constants, only: CUSTOM_REAL
+  implicit none
+
+  integer :: recvcount,dest,recvtag,req
+  real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
+
+  integer(kind=4) :: unused_i4
+  real(kind=CUSTOM_REAL) :: unused_cr
+
+  stop 'irecvv_cr_inter not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = req
+  unused_i4 = recvtag
+  unused_cr = recvbuf(1)
+
+  end subroutine irecvv_cr_inter
+
+!
+!-------
+!
+
+  subroutine isend_cr_inter(sendbuf, sendcount, dest, sendtag, req)
+
+  use constants, only: CUSTOM_REAL
+  implicit none
+
+  integer :: sendcount, dest, sendtag, req
+  real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
+
+  integer(kind=4) :: unused_i4
+  real(kind=CUSTOM_REAL) :: unused_cr
+
+  stop 'isend_cr_inter not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = sendtag
+  unused_i4 = req
+  unused_cr = sendbuf(1)
+
+  end subroutine isend_cr_inter
+
+!
+!-------
+!
+
+  subroutine send_i_inter(sendbuf, sendcount, dest, sendtag)
+
+  implicit none
+
+  integer :: dest,sendtag
+  integer :: sendcount
+  integer,dimension(sendcount):: sendbuf
+
+  integer(kind=4) :: unused_i4
+
+  stop 'send_i_inter not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = sendtag
+  unused_i4 = sendbuf(1)
+
+  end subroutine send_i_inter
+
+!
+!--------
+!
+
+  subroutine send_dp_inter(sendbuf, sendcount, dest, sendtag)
+
+  implicit none
+
+  integer :: dest,sendtag
+  integer :: sendcount
+  double precision,dimension(sendcount):: sendbuf
+
+  integer(kind=4) :: unused_i4
+  double precision :: unused_dp
+
+  stop 'send_dp_inter not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = sendtag
+  unused_dp = sendbuf(1)
+
+  end subroutine send_dp_inter
+
+!
+!-------
+!
+
+  subroutine sendv_cr_inter(sendbuf, sendcount, dest, sendtag)
+
+  use constants, only: CUSTOM_REAL
+  implicit none
+
+  integer :: sendcount,dest,sendtag
+  real(kind=CUSTOM_REAL),dimension(sendcount) :: sendbuf
+
+  integer(kind=4) :: unused_i4
+  real(kind=CUSTOM_REAL) :: unused_cr
+
+  stop 'send_cr_inter not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = sendtag
+  unused_cr = sendbuf(1)
+
+  end subroutine sendv_cr_inter
+
+!
+!-------
+!
+
+  subroutine gather_all_all_single_ch(sendbuf, recvbuf, NPROC, dim1)
+
+  implicit none
+
+  integer, intent(in) :: dim1 ! character length
+  integer, intent(in) :: NPROC
+  character(len=dim1), intent(in) :: sendbuf
+  character(len=dim1), dimension(0:NPROC-1), intent(inout) :: recvbuf
+
+  character(len=1) :: unused_ch
+
+  stop 'send_cr_inter not implemented for serial code'
+  unused_ch = sendbuf(1:1)
+  recvbuf(:) = ""
+
+  end subroutine gather_all_all_single_ch
+
+!
+!--------
+!
+
+! unused so far...
+
+!  subroutine gatherv_all_cr_inter(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
+!
+!  use constants, only: CUSTOM_REAL
+!  implicit none
+!
+!  integer :: sendcnt,recvcounttot,NPROC
+!  integer, dimension(NPROC) :: recvcount,recvoffset
+!  real(kind=CUSTOM_REAL), dimension(sendcnt) :: sendbuf
+!  real(kind=CUSTOM_REAL), dimension(recvcounttot) :: recvbuf
+!
+!  integer(kind=4) :: unused_i4
+!  real(kind=CUSTOM_REAL) :: unused_cr
+!
+!  stop 'gatherv_all_cr_inter not implemented for serial code'
+!  unused_i4 = recvcount(1)
+!  unused_i4 = recvoffset(1)
+!  unused_cr = sendbuf(1)
+!  unused_cr = recvbuf(1)
+!
+!  end subroutine gatherv_all_cr_inter
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+! unused so far...
+
+!  subroutine isend_i_inter(sendbuf, sendcount, dest, sendtag, req)
+!
+!  implicit none
+!
+!  integer :: sendcount, dest, sendtag, req
+!  integer, dimension(sendcount) :: sendbuf
+!
+!  integer(kind=4) :: unused_i4
+!
+!  stop 'isend_i_inter not implemented for serial code'
+!  unused_i4 = dest
+!  unused_i4 = sendtag
+!  unused_i4 = req
+!  unused_i4 = sendbuf(1)
+!
+!  end subroutine isend_i_inter

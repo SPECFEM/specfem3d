@@ -1697,15 +1697,12 @@ contains
 
 ! creates initial movie_volume***.h5 file
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,MAX_STRING_LEN,OUTPUT_FILES,myrank
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,MAX_STRING_LEN,OUTPUT_FILES, &
+    myrank,my_status_size,my_status_source
   use shared_parameters, only: NPROC
 
   use specfem_par_movie_hdf5
   use io_server_hdf5
-
-#ifdef WITH_MPI
-  use my_mpi
-#endif
 
   implicit none
 
@@ -1719,14 +1716,10 @@ contains
   integer, dimension(0:HDF5_IO_NODES-1), intent(out) :: nelm_par_io_offset
 
   ! local parameters
-  integer :: iproc, iproc2, comm, info, sender, ier
+  integer :: iproc, iproc2, comm, info, sender
   ! offset intra io node
   integer, dimension(0:nproc_io-1)                    :: nelm_par_proc_offset
-#ifdef WITH_MPI
-  integer :: status(MPI_STATUS_SIZE)
-#else
-  integer :: status(1)
-#endif
+  integer :: status(my_status_size)
   ! arrays for storing elm_conn and xyzstore
   !integer                                           :: nglob_this_io=0, nelm_this_io=0
   integer, dimension(:,:), allocatable              :: elm_conn_tmp
@@ -1781,14 +1774,13 @@ contains
 
   ! make a sender list which communicate with this io node
   do iproc = 0, nproc_io-1
-#ifdef WITH_MPI
-    call mpi_probe(MPI_ANY_SOURCE, io_tag_vol_sendlist, my_local_mpi_comm_inter, status, ier)
-    sender = status(MPI_SOURCE)
-#else
-    sender = status(1)
-#endif
+    call world_probe_tag_inter(io_tag_vol_sendlist,status)
+
+    sender = status(my_status_source)
     dump(1) = 1  ! dummy value, just to get sender
+
     call recv_i_inter(dump,1,sender,io_tag_vol_sendlist)
+
     id_proc_loc2glob(iproc) = sender
     id_proc_glob2loc(sender) = iproc
   enddo

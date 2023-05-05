@@ -37,7 +37,7 @@
   use gravity_perturbation, only: gravity_timeseries, GRAVITY_SIMULATION
 
   ! hdf5 i/o server
-  use io_server_hdf5, only: do_io_start_idle,pass_info_to_io,synchronize_inter
+  use io_server_hdf5, only: do_io_start_idle,pass_info_to_io
 
   implicit none
 

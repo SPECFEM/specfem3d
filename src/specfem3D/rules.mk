@@ -361,9 +361,9 @@ $O/finalize_simulation.spec.o: $O/hdf5_io_server.spec_hdf5.o
 $O/initialize_simulation.spec.o: $O/hdf5_io_server.spec_hdf5.o
 $O/iterate_time.spec.o: $O/hdf5_io_server.spec_hdf5.o
 $O/iterate_time_undoatt.spec.o: $O/hdf5_io_server.spec_hdf5.o
-$O/write_movie_output.o: $O/hdf5_io_server.spec_hdf5.o
-$O/write_movie_output_HDF5.o: $O/hdf5_io_server.spec_hdf5.o
-$O/write_output_HDF5.o: $O/hdf5_io_server.spec_hdf5.o
+$O/write_movie_output.spec.o: $O/hdf5_io_server.spec_hdf5.o
+$O/write_movie_output_HDF5.spec_hdf5.o: $O/hdf5_io_server.spec_hdf5.o
+$O/write_output_HDF5.spec_hdf5.o: $O/hdf5_io_server.spec_hdf5.o
 
 ####
 #### rule to build each .o file below
@@ -402,10 +402,10 @@ $O/%.spec_noadios.o: $S/%.f90 $O/specfem3D_par.spec_module.o $O/pml_par.spec_mod
 
 ## HDF5 file i/o
 $O/%.spec_hdf5.o: $S/%.f90 $O/specfem3D_par.spec_module.o $O/hdf5_manager.shared_hdf5_module.o
-	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} $(COND_MPI_CPPFLAGS) -c -o $@ $<
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.spec_hdf5.o: $S/%.F90 $O/specfem3D_par.spec_module.o $O/hdf5_manager.shared_hdf5_module.o
-	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} $(COND_MPI_CPPFLAGS) -c -o $@ $<
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
 ###

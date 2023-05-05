@@ -36,6 +36,11 @@ module constants
   ! a negative initial value is a convention that indicates that groups (i.e. sub-communicators, one per run) are off by default
   integer :: mygroup = -1
 
+  ! MPI status size (will be set in init_mpi()
+  integer :: my_status_size   = 1
+  integer :: my_status_source = 1
+  integer :: my_status_tag    = 1
+
   ! create a copy of the original output file path, to which we may add a "run0001/", "run0002/", "run0003/" prefix later
   ! if NUMBER_OF_SIMULTANEOUS_RUNS > 1
   character(len=MAX_STRING_LEN) :: OUTPUT_FILES = OUTPUT_FILES_BASE
