@@ -33,7 +33,11 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
+
   use gravity_perturbation, only: gravity_timeseries, GRAVITY_SIMULATION
+
+  ! hdf5 i/o server
+  use io_server_hdf5, only: do_io_start_idle,pass_info_to_io,synchronize_inter
 
   implicit none
 
@@ -47,6 +51,24 @@
 #ifdef VTK_VIS
   logical :: do_restart = .false.
 #endif
+
+  ! hdf5 i/o server
+  if (HDF5_IO_NODES > 0) then
+    ! start io server
+    if (IO_storage_task) then
+      call do_io_start_idle()
+    else
+      ! compute node passes necessary info to io node
+      call pass_info_to_io()
+    endif
+    ! checks if anything to do
+    if (.not. IO_compute_task) then
+      ! i/o server synchronization
+      call synchronize_inter()
+      ! all done
+      return
+    endif
+  endif
 
   !----  create a Gnuplot script to display the energy curve in log scale
   if (OUTPUT_ENERGY .and. myrank == 0) then
@@ -94,7 +116,7 @@
 !
 !   s t a r t   t i m e   i t e r a t i o n s
 !
-
+  ! user output
   if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'Starting time iteration loop...'
@@ -113,6 +135,7 @@
   ! ************* MAIN LOOP OVER THE TIME STEPS *************
   ! *********************************************************
 
+  ! exact undoing of attenuation
   if (EXACT_UNDOING_TO_DISK) then
 
     if (GPU_MODE) call exit_MPI(myrank,'EXACT_UNDOING_TO_DISK not supported for GPUs')
@@ -171,7 +194,6 @@
     else
       call exit_MPI(myrank,'EXACT_UNDOING_TO_DISK can only be used with SIMULATION_TYPE == 1 or SIMULATION_TYPE == 3')
     endif
-
   endif ! of if (EXACT_UNDOING_TO_DISK)
 
   ! time loop increments begin/end
@@ -185,24 +207,7 @@
   ! get MPI starting
   time_start = wtime()
 
-  !#TODO: hdf5 i/o server
-  ! start io server
-  !if (HDF5_IO_NNODES > 0) then
-  !  if (IO_storage_task) then
-  !    call do_io_start_idle()
-  !  else
-  !    ! compute node passes necessary info to io node
-  !    call pass_info_to_io()
-  !  endif
-  !  ! checks if anything to do
-  !  if (.not. IO_compute_task) then
-  !    ! i/o server synchronization
-  !    call synchronize_inter()
-  !    ! all done
-  !    return
-  !  endif
-  !endif
-
+  ! time loop
   do it = it_begin,it_end
 
     ! simulation status output and stability check
@@ -347,9 +352,9 @@
   endif
 #endif
 
-  !#TODO: hdf5 i/o server
+  ! hdf5 i/o server
   ! i/o server synchronization
-  !if (HDF5_IO_NNODES > 0) call synchronize_inter()
+  if (HDF5_IO_NODES > 0) call synchronize_inter()
 
   end subroutine iterate_time
 

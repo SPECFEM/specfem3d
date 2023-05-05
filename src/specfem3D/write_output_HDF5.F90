@@ -33,6 +33,7 @@
 
 #ifdef USE_HDF5
   use manager_hdf5
+  use io_server_hdf5
 #endif
 
   implicit none
@@ -45,19 +46,42 @@
   ! local parameters
   integer :: ier
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: tmp_seis_pre   ! for pressure output
-  character(len=MAX_STRING_LEN) :: filename
-  character(len=5) :: component
+  character(len=MAX_STRING_LEN) :: fname_h5_seismo
+  character(len=5) :: comp
 
   ! flag for file initialization
   logical, save :: is_initialized = .false.
 
+  ! hdf5 i/o server
+  integer :: req
+  integer :: io_tag_seismo
+
 ! HDF5 writes into a single file (by main process only)
 
   ! io server
-  if (HDF5_IO_NNODES > 0) then
+  if (HDF5_IO_NODES > 0) then
     ! only io nodes do the file output
     ! collect seismograms on io nodes
-    stop 'HDF5 IO server not implemented yet for HDF5 file output'
+    ! saves displacement, velocity, acceleration, or pressure
+    select case (istore)
+    case (1)
+      io_tag_seismo = io_tag_seismo_body_disp
+    case (2)
+      io_tag_seismo = io_tag_seismo_body_velo
+    case (3)
+      io_tag_seismo = io_tag_seismo_body_acce
+    case (4)
+      io_tag_seismo = io_tag_seismo_body_pres
+    end select
+
+    ! send seismograms
+    if (nrec_store > 0) then
+      ! sends full array, all-components
+      call isend_cr_inter(all_seismograms(:,:,:),NDIM*nrec_store*nlength_seismogram,0,io_tag_seismo,req)
+    endif
+
+    ! all done
+    return
   else
     ! no io server
     ! main process writes out all
@@ -69,27 +93,12 @@
     stop 'HDF5_FORMAT must have WRITE_SEISMOGRAMS_BY_MAIN set to .true.'
 
   ! initializes
-  filename = trim(OUTPUT_FILES) // 'seismograms.h5'
-
   ! we only want to do this once
   if (.not. is_initialized) then
-    ! user output
-    if (myrank == 0) then
-      write(IMAIN,*) 'Creating seismograms in HDF5 file format'
-      if (WRITE_SEISMOGRAMS_BY_MAIN) then
-        write(IMAIN,*) '  writing waveforms by main...'
-      else
-        write(IMAIN,*) '  writing waveforms in parallel...'
-      endif
-      write(IMAIN,*) '  seismogram file: ',trim(filename)
-      call flush_IMAIN()
-    endif
-
     ! creates and initializes seismogram file
     ! initialization needs to be done only once
     ! (first time & first component when this function gets called)
-    call write_output_hdf5_seismogram_init(filename)
-
+    call write_output_hdf5_seismogram_init()
     ! sets flag is done
     is_initialized = .true.
   endif
@@ -100,16 +109,18 @@
   ! saves displacement, velocity, acceleration, or pressure
   select case (istore)
   case (1)
-    component = 'displ'
+    comp = 'displ'
   case (2)
-    component = 'veloc'
+    comp = 'veloc'
   case (3)
-    component = 'accel'
+    comp = 'accel'
   case (4)
-    component = 'press'
+    comp = 'press'
   case default
     stop 'Invalid seismogram component to save for seismograms, not implemented yet'
   end select
+
+  fname_h5_seismo = trim(OUTPUT_FILES) // 'seismograms.h5'
 
   ! initialze hdf5
   call h5_initialize()
@@ -128,30 +139,26 @@
   !                        (e.g. for a last portion in case NTSTEP_BETWEEN_OUTPUT_SEISMOS is not a multiple of NSTEP)
 
   ! writes out this seismogram
-  call h5_open_file(filename)
+  call h5_open_file(fname_h5_seismo)
 
   select case (istore)
   case (1)
     ! displ
-    call h5_write_dataset_collect_hyperslab(component, &
-                                                 all_seismograms(:,1:seismo_current,:), (/0, seismo_offset, 0/), .false.)
-
+    call h5_write_dataset_collect_hyperslab(comp, all_seismograms(:,1:seismo_current,:), (/0, seismo_offset, 0/), .false.)
   case (2)
     ! veloc
-    call h5_write_dataset_collect_hyperslab(component, &
-                                                 all_seismograms(:,1:seismo_current,:), (/0, seismo_offset, 0/), .false.)
+    call h5_write_dataset_collect_hyperslab(comp, all_seismograms(:,1:seismo_current,:), (/0, seismo_offset, 0/), .false.)
   case (3)
     ! accel
-    call h5_write_dataset_collect_hyperslab(component, &
-                                                 all_seismograms(:,1:seismo_current,:), (/0, seismo_offset, 0/), .false.)
+    call h5_write_dataset_collect_hyperslab(comp, all_seismograms(:,1:seismo_current,:), (/0, seismo_offset, 0/), .false.)
   case (4)
     ! pressure
-    component = 'pres'
     allocate(tmp_seis_pre(seismo_current,nrec_store),stat=ier)
     if (ier /= 0) stop 'error allocating tmp_seis_pre array'
     tmp_seis_pre(:,:) = all_seismograms(1,1:seismo_current,:)
-    call h5_write_dataset_collect_hyperslab(component, &
-                                                 tmp_seis_pre, (/seismo_offset, 0/), .false.)
+
+    call h5_write_dataset_collect_hyperslab(comp, tmp_seis_pre, (/seismo_offset, 0/), .false.)
+
     deallocate(tmp_seis_pre)
 
   case default
@@ -189,14 +196,12 @@
 #ifdef USE_HDF5
 ! only with HDF5 compilation support
 
-  subroutine write_output_hdf5_seismogram_init(filename)
+  subroutine write_output_hdf5_seismogram_init()
 
   use specfem_par
   use manager_hdf5
 
   implicit none
-
-  character(len=MAX_STRING_LEN),intent(in) :: filename
 
   ! local parameters
   integer :: i,irec,ier
@@ -207,15 +212,33 @@
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: rec_coords
   character(len=MAX_LENGTH_STATION_NAME), dimension(:), allocatable :: stations
   character(len=MAX_LENGTH_NETWORK_NAME), dimension(:), allocatable :: networks
+  character(len=3) :: channel
+  character(len=3),dimension(NDIM) :: channels
+  character(len=3),dimension(1) :: channels_press
+  character(len=MAX_STRING_LEN) :: fname_h5_seismo
 
   ! only main process creates file
   if (myrank /= 0) return
+
+  fname_h5_seismo = trim(OUTPUT_FILES) // 'seismograms.h5'
+
+  ! user output
+  if (myrank == 0 .and. IO_compute_task) then
+    write(IMAIN,*) 'Creating seismograms in HDF5 file format'
+    if (WRITE_SEISMOGRAMS_BY_MAIN) then
+      write(IMAIN,*) '  writing waveforms by main...'
+    else
+      write(IMAIN,*) '  writing waveforms in parallel...'
+    endif
+    write(IMAIN,*) '  seismogram file: ',trim(fname_h5_seismo)
+    call flush_IMAIN()
+  endif
 
   ! initialze hdf5
   call h5_initialize()
 
   ! create file
-  call h5_create_file(filename)
+  call h5_create_file(fname_h5_seismo)
 
   ! total length of seismograms (considering subsampling)
   nlength_total_seismogram = NSTEP / NTSTEP_BETWEEN_OUTPUT_SAMPLE
@@ -250,6 +273,7 @@
            rec_coords(nrec,3),stat=ier)
   if (ier /= 0) stop 'Error allocating station arrays'
   rec_coords(:,:) = 0.0_CUSTOM_REAL
+
   open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'output_list_stations.txt', &
        status='unknown',action='read',iostat=ier)
   if (ier /= 0) then
@@ -268,6 +292,21 @@
   call h5_write_dataset_no_group("station", stations)
   ! network name
   call h5_write_dataset_no_group("network", networks)
+
+  ! channels info
+  if (SAVE_SEISMOGRAMS_DISPLACEMENT .or. SAVE_SEISMOGRAMS_VELOCITY .or. SAVE_SEISMOGRAMS_ACCELERATION) then
+    do i = 1,NDIM
+      call write_channel_name(i,channel)
+      channels(i) = channel
+    enddo
+    call h5_write_dataset_no_group("channel", channels)
+  endif
+  if (SAVE_SEISMOGRAMS_PRESSURE) then
+    ! this is for pressure
+    call write_channel_name(4,channel)
+    channels_press(1) = channel
+    call h5_write_dataset_no_group("channel_press", channels_press)
+  endif
 
   ! free arrays
   deallocate(stations,networks,rec_coords)
@@ -305,5 +344,74 @@
   call h5_finalize()
 
   end subroutine write_output_hdf5_seismogram_init
+
+#endif
+
+
+!-------------------------------------------------------------------------------------------------
+!
+! HDF5 i/o server routines
+!
+!-------------------------------------------------------------------------------------------------
+
+#ifdef USE_HDF5
+
+  subroutine write_seismograms_io_hdf5(it_offset)
+
+  use constants, only: MAX_STRING_LEN,OUTPUT_FILES
+
+  use shared_parameters, only: NSTEP, SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY, &
+    SAVE_SEISMOGRAMS_ACCELERATION, SAVE_SEISMOGRAMS_PRESSURE
+
+  use specfem_par, only: nlength_seismogram
+
+  use io_server_hdf5
+  use manager_hdf5
+
+  implicit none
+
+  integer, intent(in) :: it_offset
+  integer :: t_upper
+  character(len=MAX_STRING_LEN) :: fname_h5_seismo
+  character(len=5) comp
+
+  ! initializes
+  fname_h5_seismo = trim(OUTPUT_FILES) // 'seismograms.h5'
+
+  ! initialze hdf5
+  call h5_initialize()
+
+  ! writes out to file
+  call h5_open_file(fname_h5_seismo)
+
+  ! check if the array length to be written > total timestep
+  if (it_offset+nlength_seismogram > NSTEP) then
+    t_upper = nlength_seismogram - (it_offset+nlength_seismogram - NSTEP)
+  else
+    t_upper = nlength_seismogram
+  endif
+
+  ! writes out this seismogram
+  if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
+    comp = 'displ'
+    call h5_write_dataset_collect_hyperslab(comp, seismo_displ(:,1:t_upper,:), (/0, it_offset, 0/), .false.)
+  endif
+  if (SAVE_SEISMOGRAMS_VELOCITY) then
+    comp = 'veloc'
+    call h5_write_dataset_collect_hyperslab(comp, seismo_veloc(:,1:t_upper,:), (/0, it_offset, 0/), .false.)
+  endif
+  if (SAVE_SEISMOGRAMS_ACCELERATION) then
+    comp = 'accel'
+    call h5_write_dataset_collect_hyperslab(comp, seismo_accel(:,1:t_upper,:), (/0, it_offset, 0/), .false.)
+  endif
+  if (SAVE_SEISMOGRAMS_PRESSURE) then
+    comp = 'press'
+    call h5_write_dataset_collect_hyperslab(comp, seismo_press(1:t_upper,:), (/it_offset, 0/), .false.)
+  endif
+
+  call h5_close_file()
+  call h5_finalize()
+
+  end subroutine write_seismograms_io_hdf5
 
 #endif

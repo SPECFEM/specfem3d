@@ -35,6 +35,9 @@
   use specfem_par_elastic
   use specfem_par_acoustic
 
+  ! hdf5 i/o server
+  use io_server_hdf5, only: wait_all_send
+
   implicit none
 
   if (.not. MOVIE_SIMULATION) return
@@ -68,9 +71,9 @@
 
   ! file output
   if (mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
-    !#TODO: hdf5 i/o server
+    ! hdf5 i/o server
     ! i/o server wait
-    !if (HDF5_IO_NNODES > 0) call wait_all_send()
+    if (HDF5_IO_NODES > 0) call wait_all_send()
 
     ! saves MOVIE on the SURFACE
     if (MOVIE_SURFACE) then

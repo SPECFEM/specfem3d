@@ -4818,6 +4818,8 @@ end module manager_hdf5
 
 !-----------------------------------------------------
 
+#if defined(USE_HDF5)
+
 ! test function for object-oriented interface
 
   subroutine test_io_hdf5()
@@ -4850,3 +4852,4 @@ end module manager_hdf5
     ! h5 goes out of scope, will call the object destructor, i.e., h5io_destructor()
   end subroutine test_io_hdf5
 
+#endif

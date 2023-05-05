@@ -36,16 +36,19 @@
   use pml_par
   use gravity_perturbation, only: gravity_output, GRAVITY_SIMULATION
 
+  ! hdf5 i/o server
+  use io_server_hdf5, only: finalize_io_server
+
   implicit none
 
-  !#TODO: hdf5 i/o server
+  ! hdf5 i/o server
   ! checks if anything to do
-  !if (.not. IO_compute_task) then
-  !  ! finalizes MPI subgroup for intercommunication
-  !  if (HDF5_IO_NNODES > 0) call finalize_io_server()
-  !  ! all done
-  !  return
-  !endif
+  if (.not. IO_compute_task) then
+    ! finalizes MPI subgroup for intercommunication
+    if (HDF5_IO_NODES > 0) call finalize_io_server()
+    ! all done
+    return
+  endif
 
   ! synchronize all processes, waits until all processes have written their seismograms
   call synchronize_all()
@@ -113,9 +116,9 @@
   ! synchronize all the processes to make sure everybody has finished
   call synchronize_all()
 
-  !#TODO: hdf5 i/o server
+  ! hdf5 i/o server
   ! finalizes MPI subgroup for intercommunication
-  !if (HDF5_IO_NNODES > 0) call finalize_io_server()
+  if (HDF5_IO_NODES > 0) call finalize_io_server()
 
   end subroutine finalize_simulation
 

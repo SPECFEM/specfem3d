@@ -180,7 +180,7 @@ end module constants
 
   ! HDF5 IO server
   ! number of io dedicated nodes
-  integer :: HDF5_IO_NNODES = 0
+  integer :: HDF5_IO_NODES = 0
 
   ! flag for io-dedicated/compute node.
   logical :: IO_storage_task = .false.
