@@ -393,4 +393,5 @@ ADIOS_FOR_UNDO_ATTENUATION      = .false.
 # (note the flags for HDF5 and ADIOS are mutually exclusive, only one can be used)
 HDF5_ENABLED                    = .false.
 HDF5_FOR_MOVIES                 = .false.
+HDF5_IO_NODES                   = 0   # HDF5 IO server with number of IO dedicated procs
 
