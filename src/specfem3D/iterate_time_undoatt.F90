@@ -36,6 +36,9 @@
 
   use gravity_perturbation, only: gravity_timeseries, GRAVITY_SIMULATION
 
+  ! hdf5 i/o server
+  use io_server_hdf5, only: do_io_start_idle,pass_info_to_io
+
   implicit none
 
   ! local parameters
@@ -66,6 +69,24 @@
     call exit_MPI(myrank,'for undo_attenuation, POROELASTIC kernel simulation is not supported yet') ! not working yet...
   if (SIMULATION_TYPE == 3 .and. NOISE_TOMOGRAPHY /= 0) &
     call exit_MPI(myrank,'for undo_attenuation, noise kernel simulation is not supported yet') ! not working yet...
+
+  ! hdf5 i/o server
+  if (HDF5_IO_NODES > 0) then
+    ! start io server
+    if (IO_storage_task) then
+      call do_io_start_idle()
+    else
+      ! compute node passes necessary info to io node
+      call pass_info_to_io()
+    endif
+    ! checks if anything to do
+    if (.not. IO_compute_task) then
+      ! i/o server synchronization
+      call synchronize_inter()
+      ! all done
+      return
+    endif
+  endif
 
   ! note: NSTEP must not be a multiple of NT_DUMP_ATTENUATION, but should be equal or larger
   !
@@ -235,6 +256,7 @@
 !   s t a r t   t i m e   i t e r a t i o n s
 !
 
+  ! user output
   if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'Starting time iteration loop in undoing attenuation...'
@@ -263,24 +285,6 @@
 
   ! get MPI starting
   time_start = wtime()
-
-  !#TODO: hdf5 i/o server
-  ! start io server
-  !if (HDF5_IO_NNODES > 0) then
-  !  if (IO_storage_task) then
-  !    call do_io_start_idle()
-  !  else
-  !    ! compute node passes necessary info to io node
-  !    call pass_info_to_io()
-  !  endif
-  !  ! checks if anything to do
-  !  if (.not. IO_compute_task) then
-  !    ! i/o server synchronization
-  !    call synchronize_inter()
-  !    ! all done
-  !    return
-  !  endif
-  !endif
 
   ! *********************************************************
   ! ************* MAIN LOOP OVER THE TIME STEPS *************
@@ -619,8 +623,8 @@
     call exit_MPI(myrank,'Error invalid time increment ending')
   endif
 
-  !#TODO: hdf5 i/o server
+  ! hdf5 i/o server
   ! i/o server synchronization
-  !if (HDF5_IO_NNODES > 0) call synchronize_inter()
+  if (HDF5_IO_NODES > 0) call synchronize_inter()
 
   end subroutine iterate_time_undoatt

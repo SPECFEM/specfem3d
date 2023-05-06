@@ -87,7 +87,7 @@
   call world_get_info_null(info)
 
   ! initializes HDF5
-  call h5_init()
+  call h5_initialize()
   call h5_set_mpi_info(comm, info, myrank, NPROC)
 
   ! opens file
@@ -601,7 +601,7 @@
 
   ! close hdf5
   call h5_close_file_p()
-  call h5_destructor()
+  call h5_finalize()
 
 #else
   ! no HDF5 compilation support

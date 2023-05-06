@@ -156,6 +156,7 @@ inverse_problem_for_model_OBJECTS += \
 	$O/get_elevation.spec.o \
 	$O/get_force.spec.o \
 	$O/gravity_perturbation.spec.o \
+	$O/hdf5_io_server.spec_hdf5.o \
 	$O/initialize_simulation.spec.o \
 	$O/iterate_time.spec.o \
 	$O/locate_MPI_slice.spec.o \

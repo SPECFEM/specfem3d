@@ -90,6 +90,7 @@ specfem3D_OBJECTS = \
 	$O/get_elevation.spec.o \
 	$O/get_force.spec.o \
 	$O/gravity_perturbation.spec.o \
+	$O/hdf5_io_server.spec_hdf5.o \
 	$O/initialize_simulation.spec.o \
 	$O/iterate_time.spec.o \
 	$O/iterate_time_undoatt.spec.o \
@@ -179,6 +180,7 @@ specfem3D_MODULES = \
 	$(FC_MODDIR)/fault_solver_dynamic.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_solver_kinematic.$(FC_MODEXT) \
 	$(FC_MODDIR)/gravity_perturbation.$(FC_MODEXT) \
+	$(FC_MODDIR)/io_server_hdf5.$(FC_MODEXT) \
 	$(FC_MODDIR)/image_pnm_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/manager_adios.$(FC_MODEXT) \
 	$(FC_MODDIR)/pml_par.$(FC_MODEXT) \
@@ -354,6 +356,14 @@ $O/setup_sources_receivers.spec.o: $O/search_kdtree.shared.o
 
 ## HDF5 file i/o
 $O/prepare_attenuation.spec.o: $O/hdf5_manager.shared_hdf5_module.o
+
+$O/finalize_simulation.spec.o: $O/hdf5_io_server.spec_hdf5.o
+$O/initialize_simulation.spec.o: $O/hdf5_io_server.spec_hdf5.o
+$O/iterate_time.spec.o: $O/hdf5_io_server.spec_hdf5.o
+$O/iterate_time_undoatt.spec.o: $O/hdf5_io_server.spec_hdf5.o
+$O/write_movie_output.spec.o: $O/hdf5_io_server.spec_hdf5.o
+$O/write_movie_output_HDF5.spec_hdf5.o: $O/hdf5_io_server.spec_hdf5.o
+$O/write_output_HDF5.spec_hdf5.o: $O/hdf5_io_server.spec_hdf5.o
 
 ####
 #### rule to build each .o file below

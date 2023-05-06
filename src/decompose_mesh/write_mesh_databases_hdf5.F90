@@ -94,7 +94,7 @@
   name_database_hdf5 = outputpath_name(1:len_trim(outputpath_name))//'/'//prname
 
   ! initialize hdf5 io
-  call h5_init()
+  call h5_initialize()
 
   ! create a hdf5 file
   call h5_create_file(name_database_hdf5)
@@ -235,7 +235,7 @@
                                         mat_prop, undef_mat_prop)
 
   call h5_close_file()
-  call h5_destructor()
+  call h5_finalize()
 
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) close(124)
 

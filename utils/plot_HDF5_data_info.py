@@ -5,7 +5,7 @@
 #
 from __future__ import print_function
 
-import sys
+import sys,os
 
 try:
     import h5py
@@ -52,13 +52,13 @@ do_compare_ref = False
 ######################################################################
 
 # read and plot the seismograms in hdf5 format
-def plot_HDF5_data_info(file,show_plot):
+def plot_HDF5_data_info(file_in,show_plot,convert_waveforms):
     print("")
-    print("reading file: ",filename)
+    print("reading file: ",file_in)
     print("")
 
     # open
-    with h5py.File(file, "r") as f:
+    with h5py.File(file_in, "r") as f:
         # contents
         # coords                   Dataset {3, 4}
         # displ                    Dataset {4, 5000, 3}
@@ -94,6 +94,12 @@ def plot_HDF5_data_info(file,show_plot):
         if "time" in keys:
             time = f["time"][:]
             print("  time   : shape = ",time.shape)
+        if "channel_press" in keys:
+            channel_press = f["channel_press"][:]
+            print("  channel_press: shape = ",channel_press.shape)
+        if "channel" in keys:
+            channel = f["channel"][:]
+            print("  channel: shape = ",channel.shape)
         print("")
 
         # info
@@ -178,11 +184,23 @@ def plot_HDF5_data_info(file,show_plot):
                     net = network[ista]
                     # avoid bytes string issues with strings like b'Hello', converts to text string
                     if isinstance(net, (bytes, bytearray)): net = net.decode("utf-8")
+                    # channel
+                    if "press" in label:
+                        cha = channel_press[0]
+                    else:
+                        cha = channel[2]
+                    # avoid bytes string issues with strings like b'Hello', converts to text string
+                    if isinstance(cha, (bytes, bytearray)): cha = cha.decode("utf-8")
 
-                    name = "{}.{}".format(net,sta)
+                    name = "{}.{}.{}".format(net,sta,cha)
                     print("  station: ",name)
-                    # plot z component
-                    ax[i // 2, i % 2].plot(time, data[ista, :, 1], "b")
+
+                    if "press" in label:
+                        # pressure single component
+                        ax[i // 2, i % 2].plot(time, data[ista, :, 2], "b")
+                    else:
+                        # plot z component
+                        ax[i // 2, i % 2].plot(time, data[ista, :, 2], "b")
 
                     # trace comparisons
                     if do_compare_ref:
@@ -199,32 +217,141 @@ def plot_HDF5_data_info(file,show_plot):
         # Wait for the user input to terminate the program
         input("Press any key to terminate the program")
 
+    if convert_waveforms:
+        print("converting to ASCII:")
+
+        # takes same output directory as input file
+        # for example: ./plot_HDF5_data_info.py OUTPUT_FILES/seismograms.h5
+        #              -> output in OUTPUT_FILES/ directory
+        out_dir = os.path.dirname(file_in)
+        if out_dir == '':
+            out_dir = "./"  # -> ./ + DB.STA.XXX.semd
+        else:
+            out_dir = out_dir + "/"  # OUTPUT_FILES -> OUTPUT_FILES/ + DB.STA.XXX.semd
+
+        for id,data in enumerate(data):
+            # label
+            label = data_label[id]
+            for irec in range(nrec):
+                # station name
+                sta = station[irec]
+                # avoid bytes string issues with strings like b'Hello', converts to text string
+                if isinstance(sta, (bytes, bytearray)): sta = sta.decode("utf-8")
+                # network name
+                net = network[irec]
+                # avoid bytes string issues with strings like b'Hello', converts to text string
+                if isinstance(net, (bytes, bytearray)): net = net.decode("utf-8")
+
+                # components
+                if "press" in label:
+                    ncomp = 1
+                else:
+                    ncomp = 3
+                for icomp in range(ncomp):
+                    # trace data
+                    if "press" in label:
+                        # pressure single-component w/ shape (nrec,nstep)
+                        trace = data[irec, :]
+                    else:
+                        # displ/veloc/accel w/ shape (nrec,nstep,ndim)
+                        trace = data[irec, :, icomp]
+
+                    length = len(trace)
+
+                    # check if time and trace have same length
+                    if length != len(time):
+                        print("Error: different trace / time lengths: {} / {}".format(length,len(time)))
+                        sys.exit(1)
+
+                    # channel
+                    if "press" in label:
+                        cha = channel_press[icomp]
+                    else:
+                        cha = channel[icomp]
+                    # avoid bytes string issues with strings like b'Hello', converts to text string
+                    if isinstance(cha, (bytes, bytearray)): cha = cha.decode("utf-8")
+
+                    # file ending
+                    if "displ" in label:
+                        ending = ".semd"
+                    elif "veloc" in label:
+                        ending = ".semv"
+                    elif "accel" in label:
+                        ending = ".sema"
+                    elif "press" in label:
+                        ending = ".semp"
+                    else:
+                        print("unknown data type")
+                        sys.exit(1)
+
+                    name = "{}.{}.{}".format(net,sta,cha)
+                    print("  station: ",name)
+
+                    filename = out_dir + name + ending
+
+                    # single file per station and component
+                    # file output
+                    f = open(filename, "w")
+
+                    t0 = time[0]
+                    # file header
+                    f.write("# STATION %s\n" % (sta))
+                    f.write("# CHANNEL %s\n" % (cha))
+                    f.write("# START_TIME %s\n" % (str(t0)))
+                    #f.write("# SAMP_FREQ %f\n" % (tr.stats.sampling_rate))
+                    f.write("# NDAT %d\n" % (length))
+
+                    # data section
+                    # fills numpy array
+                    xy = np.empty(shape=(0,2))
+                    for ii in range(length):
+                        t = time[ii]
+                        val = trace[ii]
+                        xy = np.append(xy,[[t,val]],axis=0)
+
+                    # data column
+                    #print(xy[:,1])
+                    #print(xy[0,1],xy[1,1],xy[2,1],xy[3,1])
+
+                    # saves as ascii
+                    np.savetxt(f, xy, fmt="%f\t%e")
+                    f.close()
+
+                    # user output
+                    print("  written file: ",filename)
+
     print("")
     print("all done")
     print("")
 
 
 def usage():
-    print("usage: ./plot_HDF5_data_info.py filename[e.g. seismograms.h5] [show]")
+    print("usage: ./plot_HDF5_data_info.py filename[e.g. seismograms.h5] [show] [convert]")
     print(" with")
-    print("   filename - e.g. OUTPUT_FILES/seismograms.h5")
-    print("   show   - (optional) plot waveforms")
+    print("   filename  - e.g. OUTPUT_FILES/seismograms.h5")
+    print("   show      - (optional) plot waveforms")
+    print("   convert   - (optional) convert seismograms to ASCII traces")
     sys.exit(1)
 
 
 if __name__ == "__main__":
     # gets arguments
     do_plot_waveforms = False
+    do_convert_waveforms = False
 
     if len(sys.argv) == 2:
         filename = sys.argv[1]
     elif len(sys.argv) == 3:
         filename = sys.argv[1]
         if sys.argv[2] == "show": do_plot_waveforms = True
+    elif len(sys.argv) == 4:
+        filename = sys.argv[1]
+        if sys.argv[2] == "show": do_plot_waveforms = True
+        if sys.argv[3] == "convert": do_convert_waveforms = True
     else:
         usage()
         sys.exit(1)
 
-    plot_HDF5_data_info(filename,do_plot_waveforms)
+    plot_HDF5_data_info(filename,do_plot_waveforms,do_convert_waveforms)
 
 
