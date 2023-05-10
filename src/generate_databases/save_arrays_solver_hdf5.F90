@@ -156,6 +156,7 @@
   do i = 1, num_interfaces_ext_mesh
     ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
   enddo
+  call synchronize_all()
 
   ! get MPI parameters
   call world_get_comm(comm)
@@ -850,6 +851,7 @@
 
     call h5_close_file()
   endif
+  call synchronize_all()
 
   !
   ! write arrays into datasets collectively

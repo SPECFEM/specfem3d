@@ -1432,6 +1432,7 @@ contains
 
   call h5_close_group()
   call h5_close_file()
+  call h5_finalize()
 
   end subroutine shakemap_io_init_hdf5
 
@@ -1492,6 +1493,7 @@ contains
 
   call h5_close_group()
   call h5_close_file()
+  call h5_finalize()
 
   end subroutine write_shakemap_io_hdf5
 
@@ -1607,6 +1609,7 @@ contains
 
   call h5_close_group()
   call h5_close_file()
+  call h5_finalize()
 
   end subroutine surf_mov_io_init_hdf5
 
@@ -1682,6 +1685,7 @@ contains
 
   call h5_close_group()
   call h5_close_file()
+  call h5_finalize()
 
   end subroutine write_surf_io_hdf5
 
@@ -1962,6 +1966,8 @@ contains
 
   call synchronize_all()
 
+  call h5_finalize()
+
   deallocate(elm_conn_tmp)
   deallocate(xstore_tmp, ystore_tmp, zstore_tmp)
 
@@ -2145,6 +2151,7 @@ contains
 
   call h5_close_group()
   call h5_close_file()
+  call h5_finalize()
 
   end subroutine write_vol_data_io_hdf5
 
