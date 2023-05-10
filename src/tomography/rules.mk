@@ -177,7 +177,9 @@ xmodel_update_OBJECTS = \
 
 xmodel_update_SHARED_OBJECTS = \
 	$O/specfem3D_par.spec_module.o \
+	$O/asdf_data.spec_module.o \
 	$O/pml_par.spec_module.o \
+	$O/calendar.spec.o \
 	$O/comp_source_time_function.spec.o \
 	$O/compute_add_sources_viscoelastic.spec.o \
 	$O/compute_adj_source_frechet.spec.o \
@@ -186,9 +188,11 @@ xmodel_update_SHARED_OBJECTS = \
 	$O/compute_gradient_in_acoustic.spec.o \
 	$O/compute_interpolated_dva.spec.o \
 	$O/compute_seismograms.spec.o \
+	$O/get_cmt.spec.o \
 	$O/hdf5_io_server.spec_hdf5.o \
 	$O/initialize_simulation.spec.o \
 	$O/noise_tomography.spec.o \
+	$O/read_external_stf.spec.o \
 	$O/read_mesh_databases.spec.o \
 	$O/read_mesh_databases_hdf5.spec_hdf5.o \
 	$O/write_movie_output_HDF5.spec_hdf5.o \
@@ -243,8 +247,10 @@ endif
 # conditional asdf linking
 ifeq ($(ASDF),yes)
 INVERSE_LINK_FLAGS += $(ASDF_LIBS)
+xmodel_update_OBJECTS += $(asdf_specfem3D_OBJECTS)
 xmodel_update_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_OBJECTS)
 else
+xmodel_update_OBJECTS += $(asdf_specfem3D_STUBS)
 xmodel_update_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_STUBS)
 endif
 
