@@ -221,6 +221,7 @@ else
     sed -i "s:20:16:g" DATA/meshfem3D_files/Mesh_Par_file.TRUE
     sed -i "s:20:16:g" DATA/meshfem3D_files/interfaces.dat
     sed -i "s/Niter .*/Niter       : 1/" DATA/inverse_problem/inversion_fwi.dat
+    sed -i "s/NSTEP .*/NSTEP         : 100/" DATA/inverse_problem/acquisition.dat
   fi
 
   # coverage run

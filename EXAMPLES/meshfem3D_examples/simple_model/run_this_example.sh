@@ -36,6 +36,17 @@ cp DATA/STATIONS OUTPUT_FILES/
 # get the number of processors, ignoring comments in the Par_file
 NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
 
+# HDF5 i/o server
+# get the number of io server propcessors, ignoring comments in the Par_file
+IO_NODES=`grep ^HDF5_IO_NODES DATA/Par_file | sed 's/#.*//' | cut -d = -f 2`
+if [ "$IO_NODES" -gt 0 ]; then
+  echo
+  echo "Par_file setup:"
+  echo "  NPROC         = $NPROC"
+  echo "  HDF5_IO_NODES = $IO_NODES"
+  echo
+fi
+
 BASEMPIDIR=`grep ^LOCAL_PATH DATA/Par_file | cut -d = -f 2 `
 mkdir -p $BASEMPIDIR
 
@@ -72,6 +83,13 @@ else
 fi
 # checks exit code
 if [[ $? -ne 0 ]]; then exit 1; fi
+
+# HDF5 i/o server
+# setting new total number of MPI processes
+# solver runs with (NPROC + IO_NODES) mpi processes
+if [ "$IO_NODES" -gt 0 ]; then
+  NPROC=$(($NPROC+$IO_NODES))
+fi
 
 # runs simulation
 if [ "$NPROC" -eq 1 ]; then

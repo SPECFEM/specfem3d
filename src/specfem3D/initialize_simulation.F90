@@ -55,7 +55,7 @@
   if (myrank == 0) then
     if (IMAIN /= ISTANDARD_OUTPUT) then
       open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_solver.txt',status='unknown',action='write',iostat=ier)
-      if (ier /= 0 ) call exit_MPI(myrank,'Error opening file output_solver.txt for writing output info')
+      if (ier /= 0) call exit_MPI(myrank,'Error opening file output_solver.txt for writing output info')
     endif
 
     write(IMAIN,*) '**********************************************'

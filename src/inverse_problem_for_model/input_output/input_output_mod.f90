@@ -291,6 +291,7 @@ contains
     character(len=MAX_LEN_STRING)                         :: acqui_file_ref
     character(len=MAX_LEN_STRING)                         :: name_file
     integer                                               :: sizeprocs
+    integer                                               :: ier
 
     ! MPI process output
     call world_size(sizeprocs)
@@ -318,7 +319,11 @@ contains
     ! user output
     if (myrank == 0) then
       ! Log output file
-      open(INVERSE_LOG_FILE,file=trim(prefix_to_path)//'output_inverse.txt')
+      if (INVERSE_LOG_FILE /= ISTANDARD_OUTPUT) then
+        open(INVERSE_LOG_FILE,file=trim(prefix_to_path)//'output_inverse.txt',status='unknown',action='write',iostat=ier)
+        if (ier /= 0) call exit_MPI(myrank,'Error opening file output_inverse.txt for writing output info')
+      endif
+
       ! header
       call header_output(INVERSE_LOG_FILE)
 
