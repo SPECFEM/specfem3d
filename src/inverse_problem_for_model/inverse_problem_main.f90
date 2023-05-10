@@ -307,7 +307,9 @@ subroutine inverse_problem_main()
     write(INVERSE_LOG_FILE,*)
     write(INVERSE_LOG_FILE,*) 'End of the inversion'
     write(INVERSE_LOG_FILE,*)
-    close(INVERSE_LOG_FILE)
+    if (INVERSE_LOG_FILE /= ISTANDARD_OUTPUT) then
+      close(INVERSE_LOG_FILE)
+    endif
 
     ! iteration logs
     if (.not. inversion_param%only_forward) then

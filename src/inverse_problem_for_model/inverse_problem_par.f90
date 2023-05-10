@@ -29,7 +29,8 @@
 module inverse_problem_par
 
   !! IMPORT VARIABLES
-  use specfem_par, only: CUSTOM_REAL, MAX_STRING_LEN, MAX_LENGTH_STATION_NAME, MAX_LENGTH_NETWORK_NAME
+  use specfem_par, only: CUSTOM_REAL, MAX_STRING_LEN, MAX_LENGTH_STATION_NAME, MAX_LENGTH_NETWORK_NAME, &
+                         ISTANDARD_OUTPUT
 
   implicit none
 
@@ -38,7 +39,11 @@ module inverse_problem_par
   !! maximum line length allowed in input files
   integer,                       public, parameter  :: MAX_LEN_STRING = 256
   !! log file for inversion
-  integer,                       public, parameter  :: INVERSE_LOG_FILE = 6666, OUTPUT_ITERATION_FILE = 6667
+  integer,                       public, parameter  :: INVERSE_LOG_FILE = 6666
+  ! uncomment this to write messages to the screen
+  !integer,                       public, parameter  :: INVERSE_LOG_FILE = ISTANDARD_OUTPUT
+  !! iteration output files
+  integer,                       public, parameter  :: OUTPUT_ITERATION_FILE = 6667
   integer,                       public, parameter  :: OUTPUT_FWI_LOG = 6668
   !! useful files id
   integer,                       public, parameter  :: IINN = 667, IIDD = 668
