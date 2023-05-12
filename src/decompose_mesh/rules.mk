@@ -60,12 +60,14 @@ decompose_mesh_MODULES = \
 decompose_mesh_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
 	$O/count_number_of_sources.shared.o \
+	$O/heap_sort.shared.o \
 	$O/hdf5_manager.shared_hdf5_module.o \
 	$O/param_reader.cc.o \
 	$O/exit_mpi.shared.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
 	$O/sort_array_coordinates.shared.o \
+	$O/search_kdtree.shared.o \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
 
@@ -146,6 +148,7 @@ $E/xdecompose_mesh: ${SCOTCH_DIR}/include/scotchf.h $(decompose_mesh_SHARED_OBJE
 ## xdecompose_mesh_mpi
 ##
 xdecompose_mesh_mpi_OBJECTS = \
+	$O/decompose_mesh_par.dec_module.o \
 	$O/fault_scotch.dec_module.o \
 	$O/module_qsort.dec.o \
 	$O/module_database.dec.o \
@@ -183,8 +186,9 @@ $E/xdecompose_mesh_mpi: $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_mpi_O
 # serial version
 $O/program_decompose_mesh.dec.o: $(COND_MPI_OBJECTS)
 
-$O/decompose_mesh.dec.o: $O/shared_par.shared_module.o $(COND_MPI_OBJECTS)
-$O/decompose_mesh_par.dec_module.o: $O/part_decompose_mesh.dec_module.o $O/fault_scotch.dec_module.o
+$O/decompose_mesh.dec.o: $O/shared_par.shared_module.o $O/fault_scotch.dec_module.o $(COND_MPI_OBJECTS)
+$O/decompose_mesh_par.dec_module.o: $O/part_decompose_mesh.dec_module.o
+$O/fault_scotch.dec_module.o: $O/decompose_mesh_par.dec_module.o $O/search_kdtree.shared.o
 
 # mpi version
 $O/program_decompose_mesh_mpi.mpidec.o: $O/shared_par.shared_module.o $O/module_mesh.dec.o $O/module_database.dec.o $O/module_partition.dec.o $(COND_MPI_OBJECTS)
@@ -205,10 +209,10 @@ $O/%.dec_module.o: $S/%.F90 $O/shared_par.shared_module.o
 $O/%.dec_module.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
 
-$O/%.dec.o: $S/%.f90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o $O/decompose_mesh_par.dec_module.o
+$O/%.dec.o: $S/%.f90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o $O/decompose_mesh_par.dec_module.o $O/fault_scotch.dec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
 
-$O/%.dec.o: $S/%.F90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o  $O/decompose_mesh_par.dec_module.o
+$O/%.dec.o: $S/%.F90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o  $O/decompose_mesh_par.dec_module.o $O/fault_scotch.dec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
 
 $O/%.mpidec.o: $S/%.f90 $O/shared_par.shared_module.o

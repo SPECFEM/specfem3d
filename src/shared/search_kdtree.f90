@@ -879,18 +879,18 @@ contains
   if (.not. associated(node%left) .and. .not. associated(node%right)) then
     ! checks info
     if (node%idim /= 0) then
-      print *,'problem kd-tree node:',node%idim,node%ipoint,numnodes
-      print *,'point x/y/z: ',points_data(:,node%ipoint)
+      print *,'Problem: kd-tree node:',node%idim,node%ipoint,numnodes
+      print *,'         point x/y/z : ',points_data(:,node%ipoint)
       stop 'Error kd-tree node not correct'
     endif
 
     ! outputs infos
     if (numnodes < OUTPUT_LENGTH) &
-      print *,'node:',numnodes,'index:',node%ipoint,' x/y/z = ',points_data(:,node%ipoint)
+      print *,'kd-tree node:',numnodes,'index:',node%ipoint,' x/y/z = ',points_data(:,node%ipoint)
   else
     ! outputs infos
     if (numnodes < OUTPUT_LENGTH) &
-      print *,'node:',numnodes,'dim:',node%idim,'cut = ',node%cut_value
+      print *,'kd-tree node:',numnodes,'dim:',node%idim,'cut = ',node%cut_value
   endif
 
   ! checks child nodes
