@@ -106,6 +106,7 @@
   print *,'  setting up elements for local time stepping'
   print *,'  number of elements:',nspec
   print *,'  number of nodes   :',nglob
+  print *
 
   ! define percentage of smallest distance between GLL points for NGLL points
   ! percentages were computed by calling the GLL points routine for each degree
@@ -124,6 +125,7 @@
   percent_GLL(13) = 2.3345076678918053d0
   percent_GLL(14) = 2.0032477366369594d0
   percent_GLL(15) = 1.7377036748080721d0
+
   ! convert to real percentage
   percent_GLL(:) = percent_GLL(:) / 100.d0
   if (NGLLX < 2 .or. NGLLX > 15) stop 'error value of NGLLX not supported yet'
@@ -175,15 +177,13 @@
   ! users sets DT = .. in Par_file, we use this as a threshold limit for the minimum time step size
   ! (useful in case CFL is underestimating size)
   if (dtmin > DT) then
-    print *,'  DT time step size set by Par_file: DT = ',sngl(DT),' limits coarsest time step size!'
+    print *,'  DT time step size set by Par_file: DT = ',sngl(DT),' limits coarsest time step size'
     if (dtmin / DT >= 2.0) then
-      print *,'  please set DT to higher value: ',sngl(dtmin),' otherwise LTS will not be optimal!!!'
-      print *
+      print *,'  Please set DT to higher value    :      ',sngl(dtmin),' otherwise LTS will not be optimal'
     endif
+    print *
   endif
-
   print *,'  suggested minimum DT time step = ',sngl(dtmin)
-  print *
 
   ! we will use now the smallest time step estimate and put elements
   ! into bins with increasing time step size (power of 2 of smallest time step)
@@ -386,12 +386,14 @@
     p_level_relative(i) = p
     print *,'  level',i,':  fine/coarse p refinement = ',p_fine,p_coarse,'relative = ',p
   enddo
+
   ! finest level must increase time steps by factor 2 with current p_level_grid stepping scheme
   if (num_p_level > 1) then
     p_level_relative(1) = 2 * p_level_relative(1)
   endif
 
   ! user output
+  print *
   print *,'  number of p-levels        : ',num_p_level
   print *,'  p-level array             : ',p_level(:)
   print *,'  p-level relative array    : ',p_level_relative(:)

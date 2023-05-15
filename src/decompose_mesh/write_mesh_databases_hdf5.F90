@@ -30,9 +30,10 @@
 
 ! writes out new Databases files for each partition in HDF5-format
 
-  use decompose_mesh_par
-
 #ifdef USE_HDF5
+  use decompose_mesh_par
+  use fault_scotch, only: ANY_FAULT,nodes_coords_open,write_fault_database
+
   ! HDF5 file i/o
   use manager_hdf5
   use part_decompose_mesh_hdf5

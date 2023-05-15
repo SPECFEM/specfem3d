@@ -722,6 +722,23 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine min_all_all_i(sendbuf, recvbuf)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: sendbuf, recvbuf
+  integer :: ier
+
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_INTEGER,MPI_MIN,my_local_mpi_comm_world,ier)
+
+  end subroutine min_all_all_i
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine max_all_i(sendbuf, recvbuf)
 
   use my_mpi
@@ -734,6 +751,23 @@ end module my_mpi
   call MPI_REDUCE(sendbuf,recvbuf,1,MPI_INTEGER,MPI_MAX,0,my_local_mpi_comm_world,ier)
 
   end subroutine max_all_i
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine max_all_all_i(sendbuf, recvbuf)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: sendbuf, recvbuf
+  integer :: ier
+
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_INTEGER,MPI_MAX,my_local_mpi_comm_world,ier)
+
+  end subroutine max_all_all_i
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1265,6 +1299,25 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine recv_singlei(recvbuf, dest, recvtag )
+
+  use my_mpi
+
+  implicit none
+
+  integer :: dest,recvtag
+  integer :: recvbuf
+
+  integer :: ier
+
+  call MPI_RECV(recvbuf,1,MPI_INTEGER,dest,recvtag,my_local_mpi_comm_world,MPI_STATUS_IGNORE,ier)
+
+  end subroutine recv_singlei
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine recv_r(recvbuf, recvcount, dest, recvtag )
 
   use my_mpi
@@ -1365,6 +1418,25 @@ end module my_mpi
   call MPI_SEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,my_local_mpi_comm_world,ier)
 
   end subroutine send_i
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine send_singlei(sendbuf, dest, sendtag)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: dest,sendtag
+  integer :: sendbuf
+
+  integer :: ier
+
+  call MPI_SEND(sendbuf,1,MPI_INTEGER,dest,sendtag,my_local_mpi_comm_world,ier)
+
+  end subroutine send_singlei
 
 !
 !-------------------------------------------------------------------------------------------------

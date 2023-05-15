@@ -54,6 +54,7 @@ generate_databases_OBJECTS = \
 	$O/get_model.gen.o \
 	$O/get_MPI.gen.o \
 	$O/get_perm_color.gen.o \
+	$O/lts_generate_databases.gen.o \
 	$O/model_1d_cascadia.gen.o \
 	$O/model_1d_prem.gen.o \
 	$O/model_1d_socal.gen.o \
@@ -83,6 +84,7 @@ generate_databases_MODULES = \
 	$(FC_MODDIR)/external_model.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_generate_databases.$(FC_MODEXT) \
 	$(FC_MODDIR)/generate_databases_par.$(FC_MODEXT) \
+	$(FC_MODDIR)/lts_generate_databases_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/manager_adios.$(FC_MODEXT) \
 	$(FC_MODDIR)/model_coupled_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/model_sep_mod.$(FC_MODEXT) \
@@ -216,6 +218,9 @@ $O/create_regions_mesh.gen.o: $O/fault_generate_databases.gen.o
 
 ## adios
 $O/generate_databases.gen.o: $O/adios_manager.shared_adios_module.o
+
+## LTS
+$O/lts_generate_databases.gen.o: $O/fault_generate_databases.gen.o
 
 #######################################
 

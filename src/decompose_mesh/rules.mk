@@ -232,8 +232,8 @@ $O/%.dec_module_hdf5.o: $S/%.F90 $O/hdf5_manager.shared_hdf5_module.o
 $O/%.dec_module_hdf5.o: $S/%.f90 $O/hdf5_manager.shared_hdf5_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
 
-$O/%.dec_hdf5.o: $S/%.f90 $O/hdf5_manager.shared_hdf5_module.o $O/part_decompose_mesh_hdf5.dec_module_hdf5.o $O/part_decompose_mesh.dec_module.o $O/decompose_mesh_par.dec_module.o
+$O/%.dec_hdf5.o: $S/%.f90 $O/hdf5_manager.shared_hdf5_module.o $O/part_decompose_mesh_hdf5.dec_module_hdf5.o $O/part_decompose_mesh.dec_module.o $O/fault_scotch.dec_module.o $O/decompose_mesh_par.dec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
 
-$O/%.dec_hdf5.o: $S/%.F90 $O/hdf5_manager.shared_hdf5_module.o $O/part_decompose_mesh_hdf5.dec_module_hdf5.o $O/part_decompose_mesh.dec_module.o  $O/decompose_mesh_par.dec_module.o
+$O/%.dec_hdf5.o: $S/%.F90 $O/hdf5_manager.shared_hdf5_module.o $O/part_decompose_mesh_hdf5.dec_module_hdf5.o $O/part_decompose_mesh.dec_module.o  $O/decompose_mesh_par.dec_module.o $O/fault_scotch.dec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<

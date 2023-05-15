@@ -37,7 +37,7 @@
     ANISOTROPY,APPROXIMATE_OCEAN_LOAD,OLSEN_ATTENUATION_RATIO, &
     ATTENUATION,USE_OLSEN_ATTENUATION, &
     SAVE_MOHO_MESH,ATTENUATION_f0_REFERENCE, &
-    LOCAL_PATH
+    LOCAL_PATH,LTS_MODE
 
   use generate_databases_par, only: &
       nnodes_ext_mesh,nelmnts_ext_mesh, &
@@ -68,6 +68,13 @@
   ! memory size needed by the solver
   double precision :: memory_size
   real(kind=CUSTOM_REAL) :: model_speed_max,min_resolved_period
+  ! timing
+  double precision, external :: wtime
+  double precision :: time_start
+  logical, parameter :: DEBUG_TIMING = .false.
+
+  ! get MPI starting time
+  if (DEBUG_TIMING) time_start = wtime()
 
   ! initializes arrays
   call synchronize_all()
@@ -82,6 +89,9 @@
 
   ! if faults exist this reads nodes_coords_open
   call fault_read_input(prname)
+
+  ! user output
+  call print_timing()
 
   ! fills location and weights for Gauss-Lobatto-Legendre points, shape and derivations,
   ! returns jacobianstore,xixstore,...gammazstore
@@ -99,6 +109,8 @@
     call crm_ext_setup_jacobian(nodes_coords_ext_mesh, nnodes_ext_mesh, elmnts_ext_mesh, nelmnts_ext_mesh)
   endif
 
+  ! user output
+  call print_timing()
 
   ! creates ibool index array for projection from local to global points
   call synchronize_all()
@@ -112,6 +124,9 @@
   else ! with no fault
     call crm_ext_setup_indexing(nnodes_ext_mesh, nodes_coords_ext_mesh)
   endif
+
+  ! user output
+  call print_timing()
 
   if (ANY_FAULT) then
     ! recalculate *store with faults closed
@@ -130,6 +145,9 @@
                        xstore,ystore,zstore,nspec,nglob)
     endif
     ! this closes (xyz)store_unique
+
+    ! user output
+    call print_timing()
   endif
 
 
@@ -151,6 +169,9 @@
    ! this closes (xyz)store_unique
   endif
 
+  ! user output
+  call print_timing()
+
   ! sets up absorbing/free surface boundaries
   call synchronize_all()
   if (myrank == 0) then
@@ -166,6 +187,9 @@
                               nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                               nspec2D_bottom,nspec2D_top)
 
+  ! user output
+  call print_timing()
+
   ! sets up mesh surface
   call synchronize_all()
   if (myrank == 0) then
@@ -174,6 +198,9 @@
     call flush_IMAIN()
   endif
   call crm_setup_mesh_surface()
+
+  ! user output
+  call print_timing()
 
   ! sets up up Moho surface
   if (SAVE_MOHO_MESH) then
@@ -185,6 +212,9 @@
     endif
     call crm_setup_moho(nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh)
+
+    ! user output
+    call print_timing()
   endif
 
   ! sets material velocities
@@ -196,6 +226,9 @@
   endif
   call get_model()
 
+  ! user output
+  call print_timing()
+
   ! sets up acoustic-elastic-poroelastic coupling surfaces
   call synchronize_all()
   if (myrank == 0) then
@@ -204,6 +237,9 @@
     call flush_IMAIN()
   endif
   call get_coupling_surfaces(nspec,ibool)
+
+  ! user output
+  call print_timing()
 
   ! locates inner and outer elements
   call synchronize_all()
@@ -214,6 +250,24 @@
   endif
   call crm_setup_inner_outer_elemnts()
 
+  ! user output
+  call print_timing()
+
+  ! LTS mode
+  if (LTS_MODE) then
+    call synchronize_all()
+    if ( myrank == 0) then
+      write(IMAIN,*) '  ...determining LTS arrays'
+      call flush_IMAIN()
+    endif
+    ! sets up elements based on current element size and velocity model
+    call lts_generate_databases()
+
+    ! user output
+    call print_timing()
+  endif
+
+
   ! colors mesh if requested
   call synchronize_all()
   if (myrank == 0) then
@@ -222,6 +276,9 @@
     call flush_IMAIN()
   endif
   call setup_color_perm(nspec,nglob,ibool,ANISOTROPY,SAVE_MESH_FILES)
+
+  ! user output
+  call print_timing()
 
   ! overwrites material parameters from external binary files
   call synchronize_all()
@@ -232,6 +289,9 @@
   endif
   call get_model_binaries(nspec,LOCAL_PATH)
 
+  ! user output
+  call print_timing()
+
   ! calculates damping profiles and auxiliary coefficients on all C-PML points
   if (PML_CONDITIONS) then
     call synchronize_all()
@@ -241,6 +301,9 @@
       call flush_IMAIN()
     endif
     call pml_set_local_dampingcoeff(xstore_unique,ystore_unique,zstore_unique)
+
+    ! user output
+    call print_timing()
   endif
 
   ! creates mass matrix
@@ -252,6 +315,9 @@
   endif
   call create_mass_matrices(nglob_unique)
 
+  ! user output
+  call print_timing()
+
   ! saves the binary mesh files
   call synchronize_all()
   if (myrank == 0) then
@@ -260,6 +326,9 @@
     call flush_IMAIN()
   endif
   call save_arrays_solver_mesh()
+
+  ! user output
+  call print_timing()
 
   ! saves faults
   if (ANY_FAULT) then
@@ -274,6 +343,9 @@
 
     ! saves fault arrays
     call fault_save_arrays(prname)
+
+    ! user output
+    call print_timing()
   endif
 
   ! saves moho surface
@@ -285,6 +357,9 @@
       call flush_IMAIN()
     endif
     call crm_save_moho()
+
+    ! user output
+    call print_timing()
   endif
   call synchronize_all()
 
@@ -308,6 +383,9 @@
                              phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
                              -1.0d0,model_speed_max,min_resolved_period)
 
+  ! user output
+  call print_timing()
+
   ! saves binary mesh files for attenuation
   if (ATTENUATION) then
     call synchronize_all()
@@ -320,6 +398,9 @@
                                mustore,rho_vs,kappastore,rho_vp, &
                                qkappa_attenuation_store,qmu_attenuation_store, &
                                ispec_is_elastic,min_resolved_period,prname,ATTENUATION_f0_REFERENCE)
+
+    ! user output
+    call print_timing()
   endif
 
   ! synchronizes processes, making sure everybody has finished
@@ -355,6 +436,23 @@
     write(IMAIN,*) 'mesh regions done'
     call flush_IMAIN()
   endif
+
+contains
+
+  ! helper routine to output timing info
+  subroutine print_timing()
+    implicit none
+    double precision :: tCPU
+    ! user output
+    if (DEBUG_TIMING) then
+      if (myrank == 0) then
+        tCPU = wtime() - time_start
+        write(IMAIN,*) "     time in seconds = ", tCPU
+        call flush_IMAIN()
+      endif
+      time_start = wtime()
+    endif
+  end subroutine print_timing
 
   end subroutine create_regions_mesh
 
@@ -1691,6 +1789,7 @@
     write(IMAIN,*) '     for overlapping of communications with calculations:'
     write(IMAIN,*) '     percentage of   edge elements ',100. -percentage_edge,'%'
     write(IMAIN,*) '     percentage of volume elements ',percentage_edge,'%'
+    write(IMAIN,*)
     call flush_IMAIN()
   endif
 
