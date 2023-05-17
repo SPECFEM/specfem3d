@@ -771,3 +771,89 @@ module specfem_par_noise
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sigma_kl
 
 end module specfem_par_noise
+
+!=====================================================================
+
+module specfem_par_lts
+
+! parameter module for Local Time Stepping
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  ! suggested coarsest time step for LTS (largest multiple p of smallest time step)
+  double precision :: deltat_lts_suggested
+
+  ! LTS intermediate arrays, one NGLOB_AB*3 per level
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: displ_p,veloc_p,accel_p
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_ref,veloc_ref,accel_ref
+
+  ! p-refinement level arrays
+  integer :: num_p_level
+  integer, dimension(:), allocatable :: p_level
+  integer, dimension(:), allocatable :: p_level_loops
+  ! map from p -> level
+  integer, dimension(:), allocatable :: p_lookup
+
+  integer :: num_p_level_steps
+  integer, dimension(:), allocatable :: p_level_steps
+
+  ! dt/p "p" for each DOF
+  integer, dimension(:), allocatable :: iglob_p_refine
+  ! dt/p "p" for each element
+  integer, dimension(:), allocatable :: ispec_p_refine
+  integer, dimension(:,:), allocatable :: interface_p_refine_all
+
+  ! p_elem(ispec,p_level) = (p == ispec_p_refine(ispec,p))
+  logical, dimension(:,:), allocatable :: p_elem
+
+  ! boundary_elem = (p_elem(ispec,p_level) == .true.) .and. (some element nodes are in different level)
+  ! Note: p-levels are fine-greedy. Finer levels take an element
+  ! for themselves when sharing element-boundary-nodes.
+  logical, dimension(:,:), allocatable :: boundary_elem
+
+  ! dofs are grouped by p-level for efficiency of time-stepping vector additions.
+  integer, dimension(:), allocatable :: p_level_iglob_start
+  integer, dimension(:), allocatable :: p_level_iglob_end
+  ! Q-R; Coarse region minus halo from fine region
+  integer, dimension(:), allocatable :: p_level_iglob_inner_end
+
+  ! boundary counters/maps for GPU_MODE
+  integer, dimension(:,:,:), allocatable :: boundary_ispec
+  integer, dimension(:,:,:), allocatable :: ibool_from
+  integer, dimension(:,:,:), allocatable :: ilevel_from
+  integer, dimension(:,:), allocatable :: ibool_counter
+  integer, dimension(:,:), allocatable :: ispec_counter
+
+  integer :: it_local,NSTEP_LOCAL
+
+  ! boundary element nodes -- used to update the degrees of freedom on a p-level boundary
+  ! equivalent to R and R*
+  integer, dimension(:), allocatable :: num_p_level_boundary_nodes
+  integer, dimension(:,:), allocatable :: p_level_boundary_node
+  integer, dimension(:), allocatable :: p_level_ilevel_map
+
+  integer, dimension(:), allocatable :: p_level_m_loops
+  integer, dimension(:), allocatable :: lts_current_m
+
+  integer, dimension(:,:), allocatable :: p_level_coarser_to_update
+  integer, dimension(:), allocatable :: num_p_level_coarser_to_update
+
+  integer, dimension(:,:), allocatable :: num_interface_p_refine_ibool
+  integer, dimension(:,:,:), allocatable :: interface_p_refine_ibool
+
+  ! list of nodes on mpi-boundary
+  integer, dimension(:), allocatable :: num_interface_p_refine_boundary
+  integer, dimension(:,:), allocatable :: interface_p_refine_boundary
+  integer :: max_nibool_interfaces_boundary
+
+  ! adaptive error
+  real(kind=CUSTOM_REAL), dimension(:,:),allocatable :: accel_adap_old
+  real(kind=CUSTOM_REAL) :: relative_error,error_norm
+
+  ! for stacey absorbing boundary conditions
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: cmassxyz, rmassxyz
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: rmassxyz_mod
+
+end module specfem_par_lts

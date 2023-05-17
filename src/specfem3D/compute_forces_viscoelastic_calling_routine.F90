@@ -107,8 +107,8 @@
   do iphase = 1,2
 
     ! debug timing
-    if (DO_TIMING .and. myrank == 0 .and. iphase == 2) then
-      t_start = wtime()
+    if (DO_TIMING) then
+      if (myrank == 0 .and. iphase == 2) t_start = wtime()
     endif
 
     ! elastic term
@@ -132,9 +132,11 @@
     endif
 
     ! debug timing
-    if (DO_TIMING .and. myrank == 0 .and. iphase == 2) then
-      tCPU = wtime() - t_start
-      print *,'timing: compute_forces_viscoelastic elapsed time ',tCPU,'s'
+    if (DO_TIMING) then
+      if (myrank == 0 .and. iphase == 2) then
+        tCPU = wtime() - t_start
+        print *,'timing: compute_forces_viscoelastic elapsed time ',tCPU,'s'
+      endif
     endif
 
     ! while inner elements compute "Kernel_2", we wait for MPI to
@@ -406,7 +408,6 @@
           displ(:,iglob) = 0._CUSTOM_REAL
           PML_displ_old(:,i,j,k,ispec_CPML) = 0._CUSTOM_REAL
           PML_displ_new(:,i,j,k,ispec_CPML) = 0._CUSTOM_REAL
-
         enddo
       endif ! ispec_is_elastic
 !!!        endif

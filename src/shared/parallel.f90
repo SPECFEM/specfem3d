@@ -1553,6 +1553,28 @@ end module my_mpi
 !                         recvbuf, recvcount, source, recvtag)
 !  end subroutine sendrecv_dp
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine sendrecv_all_i(sendbuf, sendcount, dest, sendtag, &
+                            recvbuf, recvcount, source, recvtag)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: sendcount, recvcount, dest, sendtag, source, recvtag
+  integer, dimension(sendcount) :: sendbuf
+  integer, dimension(recvcount) :: recvbuf
+
+  integer :: ier
+
+  call MPI_SENDRECV(sendbuf,sendcount,MPI_INTEGER,dest,sendtag, &
+                    recvbuf,recvcount,MPI_INTEGER,source,recvtag, &
+                    my_local_mpi_comm_world,MPI_STATUS_IGNORE,ier)
+
+  end subroutine sendrecv_all_i
 
 !-------------------------------------------------------------------------------------------------
 !
@@ -1904,6 +1926,33 @@ end module my_mpi
 
 !  subroutine scatter_all_singlei(sendbuf, recvbuf, NPROC)
 !  end subroutine scatter_all_singlei
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine get_count_i(source,itag,recv_count)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: source,itag
+  integer,intent(out) :: recv_count
+
+  integer, dimension(MPI_STATUS_SIZE) :: msg_status
+
+  integer :: ier
+
+  ! probe for incoming message from process source
+  call MPI_Probe(source,itag,my_local_mpi_comm_world,msg_status,ier)
+  if ( ier /= 0 ) stop 'error mpi_probe for message status'
+
+  ! gets the size of the message
+  call MPI_Get_count(msg_status,MPI_INTEGER,recv_count,ier)
+  if ( ier /= 0 ) stop 'error mpi_get_count did not receive count'
+
+  end subroutine get_count_i
 
 
 !-------------------------------------------------------------------------------------------------

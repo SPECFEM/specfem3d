@@ -1375,14 +1375,16 @@
 
   write(IOUT) NGLOB_AB
   write(IOUT) iglob_p_refine
-  write(IOUT) ispec_p_refine
 
   write(IOUT) NSPEC_AB
-  write(IOUT) p_elem
+  write(IOUT) ispec_p_refine
 
+  write(IOUT) p_elem
   write(IOUT) boundary_elem
+
   write(IOUT) p_level_iglob_start
   write(IOUT) p_level_iglob_end
+
   close(IOUT)
 
   ! debug: for vtk output
@@ -1390,9 +1392,7 @@
     if (DEBUG_VTK_OUTPUT) then
       ! p-refinements
       filename = trim(prname) // 'ispec_p_refine'
-      call write_VTK_data_elem_i(NSPEC_AB,NGLOB_AB, &
-                                 xstore,ystore,zstore,ibool, &
-                                 ispec_p_refine,filename)
+      call write_VTK_data_elem_i(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool,ispec_p_refine,filename)
       if (myrank == 0 ) then
         write(IMAIN,*) '     written file: ',trim(filename)//'.vtk'
         write(IMAIN,*)

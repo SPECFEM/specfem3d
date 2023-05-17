@@ -109,8 +109,8 @@
   do iphase = 1,2
 
     !debug timing
-    if (DO_TIMING .and. myrank == 0 .and. iphase == 2) then
-      t_start = wtime()
+    if (DO_TIMING) then
+      if (myrank == 0 .and. iphase == 2) t_start = wtime()
     endif
 
     ! acoustic pressure term
@@ -124,9 +124,11 @@
     endif
 
     ! debug timing
-    if (DO_TIMING .and. myrank == 0 .and. iphase == 2) then
-      tCPU = wtime() - t_start
-      print *,'timing: compute_forces_acoustic elapsed time ',tCPU,'s'
+    if (DO_TIMING) then
+      if (myrank == 0 .and. iphase == 2) then
+        tCPU = wtime() - t_start
+        print *,'timing: compute_forces_acoustic elapsed time ',tCPU,'s'
+      endif
     endif
 
     ! computes additional contributions

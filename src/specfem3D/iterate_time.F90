@@ -148,8 +148,8 @@
 
     if (ANISOTROPIC_KL) call exit_MPI(myrank,'EXACT_UNDOING_TO_DISK requires ANISOTROPIC_KL to be turned off')
 
-!! DK DK determine the largest value of iglob that we need to save to disk,
-!! DK DK since we save the upper part of the mesh only in the case of surface-wave kernels
+    ! determine the largest value of iglob that we need to save to disk,
+    ! since we save the upper part of the mesh only in the case of surface-wave kernels
     ! crust_mantle
     allocate(integer_mask_ibool_exact_undo(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1359')
@@ -161,9 +161,9 @@
         do j = 1, NGLLY
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
-!           height = xstore(iglob)
             ! save that element only if it is in the upper part of the mesh
-!           if (height >= 3000.d0) then
+            !height = xstore(iglob)
+            !if (height >= 3000.d0) then
             if (.true.) then
               ! if this point has not yet been found before
               if (integer_mask_ibool_exact_undo(iglob) == -1) then

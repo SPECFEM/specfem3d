@@ -163,6 +163,7 @@ inverse_problem_for_model_OBJECTS += \
 	$O/locate_point.spec.o \
 	$O/locate_receivers.spec.o \
 	$O/locate_source.spec.o \
+	$O/lts_setup.spec.o \
 	$O/make_gravity.spec.o \
 	$O/noise_tomography.spec.o \
 	$O/pml_allocate_arrays.spec.o \
@@ -209,6 +210,7 @@ inverse_problem_for_model_SHARED_OBJECTS = \
 	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
+	$O/define_mass_matrices.shared.o \
 	$O/detect_surface.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/force_ftz.cc.o \

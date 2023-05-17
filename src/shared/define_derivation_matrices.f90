@@ -26,20 +26,20 @@
 !=====================================================================
 
   subroutine define_derivation_matrices(xigll,yigll,zigll,wxgll,wygll,wzgll, &
-         hprime_xx,hprime_yy,hprime_zz, &
-         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
-         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz)
+                                        hprime_xx,hprime_yy,hprime_zz, &
+                                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz)
 
-  use constants
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,GAUSSALPHA,GAUSSBETA
 
   implicit none
 
-! Gauss-Lobatto-Legendre points of integration and weights
+  ! Gauss-Lobatto-Legendre points of integration and weights
   double precision, dimension(NGLLX) :: xigll,wxgll
   double precision, dimension(NGLLY) :: yigll,wygll
   double precision, dimension(NGLLZ) :: zigll,wzgll
 
-! array with derivatives of Lagrange polynomials and precalculated products
+  ! array with derivatives of Lagrange polynomials and precalculated products
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprimewgll_xx
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy,hprimewgll_yy
   real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz,hprimewgll_zz
@@ -47,21 +47,19 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
 
-! function for calculating derivatives of Lagrange polynomials
+  ! function for calculating derivatives of Lagrange polynomials
   double precision, external :: lagrange_deriv_GLL
 
   integer i,j,k,i1,i2,j1,j2,k1,k2
 
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-! set up coordinates of the Gauss-Lobatto-Legendre points
+  ! set up coordinates of the Gauss-Lobatto-Legendre points
   call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
   call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
   call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
 
-! calculate derivatives of the Lagrange polynomials
-! and precalculate some products in double precision
-! hprime(i,j) = h'_j(xigll_i) by definition of the derivation matrix
+  ! calculate derivatives of the Lagrange polynomials
+  ! and precalculate some products in double precision
+  ! hprime(i,j) = h'_j(xigll_i) by definition of the derivation matrix
   do i1=1,NGLLX
     do i2=1,NGLLX
       hprime_xx(i2,i1) = real(lagrange_deriv_GLL(i1-1,i2-1,xigll,NGLLX),kind=CUSTOM_REAL)

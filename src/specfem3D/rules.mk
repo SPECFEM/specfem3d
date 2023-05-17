@@ -98,6 +98,7 @@ specfem3D_OBJECTS = \
 	$O/locate_point.spec.o \
 	$O/locate_receivers.spec.o \
 	$O/locate_source.spec.o \
+	$O/lts_setup.spec.o \
 	$O/make_gravity.spec.o \
 	$O/noise_tomography.spec.o \
 	$O/pml_allocate_arrays.spec.o \
@@ -144,6 +145,7 @@ specfem3D_SHARED_OBJECTS = \
 	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
+	$O/define_mass_matrices.shared.o \
 	$O/detect_surface.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/force_ftz.cc.o \
@@ -191,6 +193,7 @@ specfem3D_MODULES = \
 	$(FC_MODDIR)/specfem_par_movie.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par_coupling.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par_noise.$(FC_MODEXT) \
+	$(FC_MODDIR)/specfem_par_lts.$(FC_MODEXT) \
 	$(FC_MODDIR)/user_noise_distribution.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 

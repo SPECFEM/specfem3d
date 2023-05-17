@@ -132,6 +132,7 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+  use specfem_par_lts
 
   implicit none
 
@@ -209,5 +210,12 @@
   deallocate(xstore,ystore,zstore)
   deallocate(kappastore,mustore,rhostore)
   deallocate(ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
+
+  ! LTS
+  if (LTS_MODE) then
+    deallocate(p_level,p_level_loops,p_level_steps)
+    deallocate(iglob_p_refine,ispec_p_refine)
+    deallocate(p_elem,boundary_elem)
+  endif
 
   end subroutine finalize_simulation_cleanup

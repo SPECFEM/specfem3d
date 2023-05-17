@@ -113,7 +113,12 @@ void FC_FUNC_(prepare_constants_device,
   // allocates mesh parameter structure
   Mesh* mp = (Mesh*) malloc( sizeof(Mesh) );
   if (mp == NULL) exit_on_error("error allocating mesh pointer");
+
+  // sets mesh pointer (for Fortran<->CUDA calls)
   *Mesh_pointer = (long)mp;
+
+  // from here: routines will get mesh from pointer
+  //            Mesh* mp = (Mesh*)(*Mesh_pointer);
 
   // sets processes mpi rank
   mp->myrank = *h_myrank;
@@ -233,7 +238,6 @@ void FC_FUNC_(prepare_constants_device,
   // global indexing (padded)
   gpuMalloc_int((void**) &mp->d_ibool, size_padded);
   gpuMemcpy2D_todevice_int(mp->d_ibool, NGLL3_PADDED, h_ibool, NGLL3, NGLL3, mp->NSPEC_AB);
-
 
   // prepare interprocess-edge exchange information
   mp->num_interfaces_ext_mesh = *num_interfaces_ext_mesh;

@@ -101,6 +101,7 @@ generate_databases_SHARED_OBJECTS = \
 	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
+	$O/define_mass_matrices.shared.o \
 	$O/detect_surface.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/get_attenuation_model.shared.o \

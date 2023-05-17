@@ -592,6 +592,29 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine get_count_i(source,itag,recv_count)
+
+  implicit none
+
+  integer :: source,itag
+  integer,intent(out) :: recv_count
+
+  integer :: unused_i
+
+  recv_count = 0
+
+  unused_i = source
+  unused_i = itag
+
+  end subroutine get_count_i
+
+!-------------------------------------------------------------------------------------------------
+!
+! MPI world helper
+!
+!-------------------------------------------------------------------------------------------------
+
+
   subroutine init_mpi()
 
   use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS
@@ -1408,6 +1431,30 @@
   unused_cr = sendbuf(1)
 
   end subroutine sendv_cr
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine sendrecv_all_i(sendbuf, sendcount, dest, sendtag, &
+                            recvbuf, recvcount, source, recvtag)
+
+  implicit none
+
+  integer :: sendcount, recvcount, dest, sendtag, source, recvtag
+  integer, dimension(sendcount) :: sendbuf
+  integer, dimension(recvcount) :: recvbuf
+
+  integer(kind=4) :: unused_i4
+
+  stop 'sendrecv_all_i not implemented for serial code'
+  recvbuf(:) = sendbuf(:)
+  unused_i4 = dest
+  unused_i4 = source
+  unused_i4 = sendtag
+  unused_i4 = recvtag
+
+  end subroutine sendrecv_all_i
 
 !
 !-------------------------------------------------------------------------------------------------

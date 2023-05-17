@@ -43,6 +43,7 @@ shared_OBJECTS = \
 	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
+	$O/define_mass_matrices.shared.o \
 	$O/detect_surface.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/force_ftz.cc.o \
