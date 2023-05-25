@@ -200,6 +200,8 @@ INFO_SMOOTH="building xsmooth_sem $(BUILD_VERSION_TXT)"
 
 # extra dependencies
 $O/smooth_sem.postprocess.o: $O/specfem3D_par.spec_module.o $O/postprocess_par.postprocess_module.o
+$O/smooth_sem.postprocess.o: $O/search_kdtree.shared.o
+
 
 ${E}/xsmooth_sem: $(xsmooth_sem_OBJECTS) $(xsmooth_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
