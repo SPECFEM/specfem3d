@@ -372,8 +372,10 @@
       write(IMAIN,*)
       ! warning
       if (NSOURCES /= NB_RUNS_ACOUSTIC_GPU) then
+        write(IMAIN,*) '  ***'
         write(IMAIN,*) '  *** WARNING: number of sources ',NSOURCES, &
                        ' does not match number of runs ',NB_RUNS_ACOUSTIC_GPU,' ***'
+        write(IMAIN,*) '  ***'
         write(IMAIN,*)
       endif
       call flush_IMAIN()
@@ -1655,7 +1657,11 @@
     enddo
     ! warning
     if (has_receiver_in_elastic_domain) then
-      print *, "Warning: Pressure seismogram output for receivers in elastic domains is valid only for non-attenuation case"
+      write(IMAIN,*) '  ***'
+      write(IMAIN,*) '  *** Warning: Pressure seismogram output for receivers in elastic domains&
+                                     &is valid only for non-attenuation case ***'
+      write(IMAIN,*) '  ***'
+      call flush_IMAIN()
     endif
   endif
 

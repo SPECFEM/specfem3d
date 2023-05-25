@@ -782,12 +782,14 @@ module specfem_par_lts
 
   implicit none
 
+  ! current lts time
+  double precision :: current_lts_time
+
   ! suggested coarsest time step for LTS (largest multiple p of smallest time step)
   double precision :: deltat_lts_suggested
 
   ! LTS intermediate arrays, one NGLOB_AB*3 per level
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: displ_p,veloc_p,accel_p
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_ref,veloc_ref,accel_ref
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: displ_p,veloc_p
 
   ! p-refinement level arrays
   integer :: num_p_level
@@ -805,33 +807,43 @@ module specfem_par_lts
   integer, dimension(:), allocatable :: ispec_p_refine
   integer, dimension(:,:), allocatable :: interface_p_refine_all
 
+  ! lts call type indicator for compute forces: true == p-element call, false == boundary-element call
+  logical :: lts_type_compute_pelem
+
   ! p_elem(ispec,p_level) = (p == ispec_p_refine(ispec,p))
-  logical, dimension(:,:), allocatable :: p_elem
+  logical, dimension(:,:), allocatable, target :: p_elem
+
+  ! element in current p-level (points to p_elem(:,ilevel)
+  logical, dimension(:), pointer :: current_lts_elem => null()
 
   ! boundary_elem = (p_elem(ispec,p_level) == .true.) .and. (some element nodes are in different level)
   ! Note: p-levels are fine-greedy. Finer levels take an element
-  ! for themselves when sharing element-boundary-nodes.
-  logical, dimension(:,:), allocatable :: boundary_elem
+  !       for themselves when sharing element-boundary-nodes.
+  logical, dimension(:,:), allocatable, target :: boundary_elem
+
+  ! element in current boundary_elem (points to boundary_elem(:,ilevel)
+  logical, dimension(:), pointer :: current_lts_boundary_elem => null()
 
   ! dofs are grouped by p-level for efficiency of time-stepping vector additions.
   integer, dimension(:), allocatable :: p_level_iglob_start
   integer, dimension(:), allocatable :: p_level_iglob_end
+
   ! Q-R; Coarse region minus halo from fine region
-  integer, dimension(:), allocatable :: p_level_iglob_inner_end
+  !integer, dimension(:), allocatable :: p_level_iglob_inner_end
 
-  ! boundary counters/maps for GPU_MODE
-  integer, dimension(:,:,:), allocatable :: boundary_ispec
-  integer, dimension(:,:,:), allocatable :: ibool_from
-  integer, dimension(:,:,:), allocatable :: ilevel_from
-  integer, dimension(:,:), allocatable :: ibool_counter
-  integer, dimension(:,:), allocatable :: ispec_counter
-
-  integer :: it_local,NSTEP_LOCAL
+  integer :: lts_it_local
+  integer :: NSTEP_LOCAL
 
   ! boundary element nodes -- used to update the degrees of freedom on a p-level boundary
   ! equivalent to R and R*
-  integer, dimension(:), allocatable :: num_p_level_boundary_nodes
-  integer, dimension(:,:), allocatable :: p_level_boundary_node
+  ! boundary counters/maps
+  integer, dimension(:,:), allocatable :: num_p_level_boundary_nodes
+  integer, dimension(:,:), allocatable :: num_p_level_boundary_ispec
+
+  integer, dimension(:,:,:), allocatable :: p_level_boundary_ispec
+  integer, dimension(:,:,:), allocatable :: p_level_boundary_node
+  integer, dimension(:,:,:), allocatable :: p_level_boundary_ilevel_from
+
   integer, dimension(:), allocatable :: p_level_ilevel_map
 
   integer, dimension(:), allocatable :: p_level_m_loops
@@ -848,9 +860,13 @@ module specfem_par_lts
   integer, dimension(:,:), allocatable :: interface_p_refine_boundary
   integer :: max_nibool_interfaces_boundary
 
-  ! adaptive error
-  real(kind=CUSTOM_REAL), dimension(:,:),allocatable :: accel_adap_old
-  real(kind=CUSTOM_REAL) :: relative_error,error_norm
+  ! reference solution wavefields for debugging
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_ref,veloc_ref,accel_ref
+  ! global step reference element flags
+  logical,dimension(:), allocatable, target :: p_elem_ref,boundary_elem_ref
+
+  ! collected acceleration wavefield
+  real(kind=CUSTOM_REAL), dimension(:,:),allocatable :: accel_collected
 
   ! for stacey absorbing boundary conditions
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: cmassxyz, rmassxyz

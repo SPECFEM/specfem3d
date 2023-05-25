@@ -6,6 +6,7 @@ program test_partitioning
 
   use constants, only: NDIM
   use decompose_mesh_par
+  use fault_scotch, only: ANY_FAULT
 
   implicit none
   integer :: i,ispec,inode,ier

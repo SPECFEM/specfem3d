@@ -43,7 +43,8 @@ module fault_solver_kinematic
 
   logical, save :: SIMULATION_TYPE_KIN = .false.
 
-  public :: BC_KINFLT_init, BC_KINFLT_set_all, SIMULATION_TYPE_KIN
+  public :: BC_KINFLT_init, BC_KINFLT_free, BC_KINFLT_set_all, &
+            SIMULATION_TYPE_KIN
 
 contains
 
@@ -56,7 +57,7 @@ contains
 
   use specfem_par, only: nt => NSTEP, DTglobal => DT
 
-  use constants, only: myrank,IIN_PAR,IIN_BIN
+  use constants, only: myrank,IIN_PAR,IIN_BIN,PARALLEL_FAULT
 
   implicit none
 
@@ -126,6 +127,12 @@ contains
   if (myrank == 0) then
     write(IMAIN,*) '  incorporating kinematic rupture simulation'
     write(IMAIN,*) '  found ', nbfaults, ' fault(s) in file DATA/Par_file_faults'
+    if (PARALLEL_FAULT) then
+      write(IMAIN,*) "    using parallel partitions"
+    else
+      write(IMAIN,*) "    using single   partition"
+    endif
+    call flush_IMAIN()
   endif
 
   ! sets kinematic rupture flag
@@ -217,6 +224,7 @@ contains
 
   subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt_real,NT,iflt)
 
+  use constants, only: myrank
   implicit none
 
   type(bc_dynandkinflt_type), intent(inout) :: bc
@@ -229,6 +237,12 @@ contains
   integer :: ier,recordlength
 
   NAMELIST / KINPAR / kindt
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "    initializing fault",iflt
+    call flush_IMAIN()
+  endif
 
   ! reads in fault_db binary file and initializes fault arrays
   call initialize_fault(bc,IIN_BIN)
@@ -273,17 +287,28 @@ contains
 
   call init_dataXZ(bc%dataXZ,bc)
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "    fault initialized successfully"
+    call flush_IMAIN()
+  endif
+
   end subroutine init_one_fault
 
 
 !=====================================================================
 ! adds boundary term Bt to Force array for each fault.
 !
-  subroutine BC_KINFLT_set_all(F,Vel,Dis)
+  subroutine BC_KINFLT_set_all(F,Vel,Dis,p_value,ilevel)
+
+  ! LTS
+  use specfem_par, only: LTS_MODE
 
   implicit none
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: Vel,Dis
   real(kind=CUSTOM_REAL), dimension(:,:), intent(inout) :: F
+  ! LTS
+  integer,intent(in),optional :: p_value,ilevel
 
   ! local parameters
   integer :: iflt
@@ -295,7 +320,11 @@ contains
   do iflt = 1,Nfaults
     ! note: this routine should be called by all processes, regardless if they contain no fault elements,
     !       for managing MPI calls and file outputs
-    call BC_KINFLT_set_single(faults(iflt),F,Vel,Dis,iflt)
+    if (LTS_MODE) then
+      call BC_KINFLT_set_single_lts(faults(iflt),F,Vel,Dis,iflt,p_value,ilevel)
+    else
+      call BC_KINFLT_set_single(faults(iflt),F,Vel,Dis,iflt)
+    endif
   enddo
 
   end subroutine BC_KINFLT_set_all
@@ -316,31 +345,38 @@ contains
   type(bc_dynandkinflt_type), intent(inout) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: V(:,:),D(:,:)
   integer,intent(in) :: iflt
+
+  ! local parameters
   integer :: it_kin,itime
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: T
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: dD,dV,dA,dV_free
   real(kind=CUSTOM_REAL) :: t1,t2
-  real(kind=CUSTOM_REAL) :: half_dt,timeval
+  real(kind=CUSTOM_REAL) :: deltat,half_dt,timeval
+
+  ! global time step
+  deltat = bc%dt
+
+  ! half time step
+  half_dt = 0.5_CUSTOM_REAL * deltat
+
+  ! time will never be zero. it starts from 1
+  timeval = it * deltat
 
   if (bc%nspec > 0) then !Surendra : for parallel faults
 
-    half_dt = 0.5e0_CUSTOM_REAL*bc%dt
-
     ! get predicted values
-    dD = get_jump(bc,D) ! dD_predictor
-    dV = get_jump(bc,V) ! dV_predictor
-    dA = get_weighted_jump(bc,MxA) ! dA_free
+    dD(:,:) = get_jump(bc,D) ! dD_predictor
+    dV(:,:) = get_jump(bc,V) ! dV_predictor
+    dA(:,:) = get_weighted_jump(bc,MxA) ! dA_free
 
     ! rotate to fault frame (tangent,normal)
     ! component 3 is normal to the fault
-    dD = rotate(bc,dD,1)
-    dV = rotate(bc,dV,1)
-    dA = rotate(bc,dA,1)
+    dD(:,:) = rotate(bc,dD,1)
+    dV(:,:) = rotate(bc,dV,1)
+    dA(:,:) = rotate(bc,dA,1)
 
-    ! Time marching
-    timeval = it*bc%dt
     ! Slip_rate step "it_kin"
-    it_kin = bc%kin_it*nint(bc%kin_dt/bc%dt)
+    it_kin = bc%kin_it * nint(bc%kin_dt/bc%dt)
     ! (nint : Fortran round (nearest whole number) ,
     !  if nint(a)=0.5 then "a" get upper bound )
 
@@ -348,27 +384,24 @@ contains
     ! This is done in case bc%kin_dt
     ! if (it_kin == it) it_kin=it_kin+1 !
 
-
     !NOTE : it and it_kin is being used due to integers are exact numbers.
     if (it > it_kin) then
-
       print *, 'it :', it
       print *, 'it_kin :', it_kin
 
       bc%kin_it = bc%kin_it +1
       bc%v_kin_t1 = bc%v_kin_t2
       print *, 'loading v_kin_t2'
-      !Temporal : just for snapshots file names kin_dt=0.1 , dt=0.0001
-      !snapshot(100=itime).. : itime=kin_it*(kin_dt/dt)
-      itime = bc%kin_it*nint(bc%kin_dt/bc%dt)
+      ! Temporal : just for snapshots file names kin_dt=0.1 , dt=0.0001
+      ! snapshot(100=itime).. : itime=kin_it*(kin_dt/dt)
+      itime = bc%kin_it * nint(bc%kin_dt/bc%dt)
       call load_vslip_snapshots(bc%dataXZ,itime,iflt,myrank)
-!     loading slip rates
-      bc%v_kin_t2(1,:)=bc%dataXZ%v1
-      bc%v_kin_t2(2,:)=bc%dataXZ%v2
+      ! loading slip rates
+      bc%v_kin_t2(1,:) = bc%dataXZ%v1
+      bc%v_kin_t2(2,:) = bc%dataXZ%v2
 
       !linear interpolation in time between t1 and t2
       !REMARK , bc%kin_dt is the delta "t" between two snapshots.
-
     endif
 
     t1 = (bc%kin_it-1) * bc%kin_dt
@@ -382,9 +415,9 @@ contains
     bc%V(2,:) = ( (t2 - timeval)*bc%v_kin_t1(2,:) + (timeval - t1)*bc%v_kin_t2(2,:) )/ bc%kin_dt
 
     !dV_free = dV_predictor + (dt/2)*dA_free
-    dV_free(1,:) = dV(1,:) + half_dt*dA(1,:)
-    dV_free(2,:) = dV(2,:) + half_dt*dA(2,:)
-    dV_free(3,:) = dV(3,:) + half_dt*dA(3,:)
+    dV_free(1,:) = dV(1,:) + half_dt * dA(1,:)
+    dV_free(2,:) = dV(2,:) + half_dt * dA(2,:)
+    dV_free(3,:) = dV(3,:) + half_dt * dA(3,:)
 
     ! T = Z*( dV_free - V) , V known apriori as input.
     ! CONVENTION : T(ibulk1) = T = -T(ibulk2)
@@ -393,13 +426,13 @@ contains
     T(3,:) = bc%Z * ( dV_free(3,:) )
 
     ! Save tractions
-    bc%T = T
+    bc%T(:,:) = T(:,:)
 
     ! Update slip in fault frame
-    bc%D = dD
+    bc%D(:,:) = dD(:,:)
 
     ! Rotate tractions back to (x,y,z) frame
-    T = rotate(bc,T,-1)
+    T(:,:) = rotate(bc,T,-1)
 
     ! Add boundary term B*T to M*a
     call add_BT(bc,MxA,T)
@@ -416,6 +449,194 @@ contains
   endif
 
   end subroutine BC_KINFLT_set_single
+
+!---------------------------------------------------------------------
+
+  subroutine BC_KINFLT_set_single_lts(bc,MxA,V,D,iflt,p_value,ilevel)
+
+! LTS version of BC_KINFLT_set_single to calculate only for fault nodes on a given p-level
+
+  use specfem_par, only: it,NSTEP,myrank
+
+  ! LTS
+  use specfem_par, only: LTS_MODE
+  use specfem_par_lts, only: num_p_level,p_level,lts_current_m
+
+  implicit none
+  real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
+  type(bc_dynandkinflt_type), intent(inout) :: bc
+  real(kind=CUSTOM_REAL), intent(in) :: V(:,:),D(:,:)
+  integer,intent(in) :: iflt
+  ! LTS
+  integer,intent(in),optional :: p_value,ilevel
+
+  ! local parameters
+  integer :: it_kin,itime
+  real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: T
+  real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: dD,dV,dA,dV_free
+  real(kind=CUSTOM_REAL) :: t1,t2
+  real(kind=CUSTOM_REAL) :: deltat,half_dt,timeval
+  ! LTS
+  integer :: i,iglob1,iglob2,iilevel,inum,num_p_local
+  ! only update p-level nodes (when called for each ilevel separately) set this to .true., otherwise
+  ! update all nodes (when called once on for last ilevel)
+  logical, parameter :: UPDATE_LTS_ONLY_P = .false.
+
+  ! safety check
+  if (.not. LTS_MODE) return
+
+  ! LTS checks if fault has any p-nodes to compute
+  ! fault flag: only compute fault elements if fault elements in this p-level
+  if (UPDATE_LTS_ONLY_P) then
+    if (.not. bc%fault_use_p_level(ilevel)) return
+  endif
+
+  ! local time step
+  deltat = bc%dt / p_value
+
+  ! half time step
+  half_dt = 0.5_CUSTOM_REAL * deltat
+
+  ! time will never be zero. it starts from 1
+  ! calculate time for this level
+  timeval = it * bc%dt     ! coarse level
+  ! adds fine level increments
+  do iilevel = ilevel,(num_p_level-1)
+    timeval = timeval + dble(lts_current_m(iilevel)-1) * bc%dt/dble(p_level(iilevel))
+  enddo
+
+  if (bc%nspec > 0) then !Surendra : for parallel faults
+
+    ! sets up local p-nodes on fault surface
+    num_p_local = bc%fault_num_p_local(ilevel)
+
+    ! get predicted values
+    dD(:,:) = get_jump(bc,D) ! dD_predictor
+    dV(:,:) = get_jump(bc,V) ! dV_predictor
+    dA(:,:) = get_weighted_jump(bc,MxA) ! dA_free
+
+    ! rotate to fault frame (tangent,normal)
+    ! component 3 is normal to the fault
+    dD(:,:) = rotate(bc,dD,1)
+    dV(:,:) = rotate(bc,dV,1)
+    dA(:,:) = rotate(bc,dA,1)
+
+    ! Slip_rate step "it_kin"
+    it_kin = bc%kin_it * nint(bc%kin_dt/bc%dt)
+    ! (nint : Fortran round (nearest whole number) ,
+    !  if nint(a)=0.5 then "a" get upper bound )
+
+    ! Loading the next slip_rate one ahead it.
+    ! This is done in case bc%kin_dt
+    ! if (it_kin == it) it_kin=it_kin+1 !
+
+    !NOTE : it and it_kin is being used due to integers are exact numbers.
+    if (it > it_kin) then
+      print *, 'it :', it
+      print *, 'it_kin :', it_kin
+
+      bc%kin_it = bc%kin_it +1
+      bc%v_kin_t1 = bc%v_kin_t2
+      print *, 'loading v_kin_t2'
+      ! Temporal : just for snapshots file names kin_dt=0.1 , dt=0.0001
+      ! snapshot(100=itime).. : itime=kin_it*(kin_dt/dt)
+      itime = bc%kin_it*nint(bc%kin_dt/bc%dt)
+      call load_vslip_snapshots(bc%dataXZ,itime,iflt,myrank)
+      ! loading slip rates
+      bc%v_kin_t2(1,:) = bc%dataXZ%v1
+      bc%v_kin_t2(2,:) = bc%dataXZ%v2
+
+      !linear interpolation in time between t1 and t2
+      !REMARK , bc%kin_dt is the delta "t" between two snapshots.
+    endif
+
+    t1 = (bc%kin_it-1) * bc%kin_dt
+    t2 = bc%kin_it * bc%kin_dt
+
+    ! Kinematic velocity_rate
+    ! bc%V : Imposed a priori and read from slip rate snapshots (from time reversal)
+    !        Linear interpolation between consecutive kinematic time steps.
+    !        V will be given at each time step.
+    if (UPDATE_LTS_ONLY_P) then
+      ! LTS on p-nodes only
+      do inum = 1,num_p_local
+        i = bc%fault_ibool_local_p(inum,ilevel)
+        bc%V(1,i) = ( (t2 - timeval)*bc%v_kin_t1(1,i) + (timeval - t1)*bc%v_kin_t2(1,i) )/ bc%kin_dt
+        bc%V(2,i) = ( (t2 - timeval)*bc%v_kin_t1(2,i) + (timeval - t1)*bc%v_kin_t2(2,i) )/ bc%kin_dt
+      enddo
+    else
+      bc%V(1,:) = ( (t2 - timeval)*bc%v_kin_t1(1,:) + (timeval - t1)*bc%v_kin_t2(1,:) )/ bc%kin_dt
+      bc%V(2,:) = ( (t2 - timeval)*bc%v_kin_t1(2,:) + (timeval - t1)*bc%v_kin_t2(2,:) )/ bc%kin_dt
+    endif
+
+    !dV_free = dV_predictor + (dt/2)*dA_free
+    dV_free(1,:) = dV(1,:) + half_dt * dA(1,:)
+    dV_free(2,:) = dV(2,:) + half_dt * dA(2,:)
+    dV_free(3,:) = dV(3,:) + half_dt * dA(3,:)
+
+    ! T = Z*( dV_free - V) , V known apriori as input.
+    ! CONVENTION : T(ibulk1) = T = -T(ibulk2)
+    T(1,:) = bc%Z * ( dV_free(1,:) - bc%V(1,:) )
+    T(2,:) = bc%Z * ( dV_free(2,:) - bc%V(2,:) )
+    T(3,:) = bc%Z * ( dV_free(3,:) )
+
+    if (UPDATE_LTS_ONLY_P) then
+      ! Save tractions
+      ! LTS on p-nodes only
+      do inum = 1,num_p_local
+        i = bc%fault_ibool_local_p(inum,ilevel)
+        bc%T(:,i) = T(:,i)
+      enddo
+
+      ! Update slip in fault frame
+      ! LTS on p-nodes only
+      do inum = 1,num_p_local
+        i = bc%fault_ibool_local_p(inum,ilevel)
+        bc%D(:,i) = dD(:,i)
+      enddo
+    else
+      ! Save tractions
+      bc%T(:,:) = T(:,:)
+
+      ! Update slip in fault frame
+      bc%D(:,:) = dD(:,:)
+    endif
+
+    ! Rotate tractions back to (x,y,z) frame
+    T(:,:) = rotate(bc,T,-1)
+
+    ! Add boundary term B*T to M*a
+    if (UPDATE_LTS_ONLY_P) then
+      ! LTS on p-nodes only
+      do inum = 1,num_p_local
+        i = bc%fault_ibool_local_p(inum,ilevel)
+        iglob1 = bc%ibulk1(i)
+        MxA(1,iglob1) = MxA(1,iglob1) + bc%B(i) * T(1,i)
+        MxA(2,iglob1) = MxA(2,iglob1) + bc%B(i) * T(2,i)
+        MxA(3,iglob1) = MxA(3,iglob1) + bc%B(i) * T(3,i)
+
+        iglob2 = bc%ibulk2(i)
+        MxA(1,iglob2) = MxA(1,iglob2) - bc%B(i) * T(1,i)
+        MxA(2,iglob2) = MxA(2,iglob2) - bc%B(i) * T(2,i)
+        MxA(3,iglob2) = MxA(3,iglob2) - bc%B(i) * T(3,i)
+      enddo
+    else
+      call add_BT(bc,MxA,T)
+    endif
+
+    !-- intermediate storage of outputs --
+    call store_dataT(bc%dataT,bc%D,bc%V,bc%T,it)
+
+    !-- OUTPUTS --
+    ! write dataT every NTOUT time steps or at the end of simulation
+    if (mod(it,NTOUT) == 0 .or. it == NSTEP) call SCEC_write_dataT(bc%dataT)
+    ! write dataXZ every NSNAP time steps
+    if (mod(it,NSNAP) == 0) call write_dataXZ(bc%dataXZ,it,iflt)
+
+  endif
+
+  end subroutine BC_KINFLT_set_single_lts
+
 
 !===============================================================
 
@@ -540,5 +761,19 @@ contains
 
   end subroutine load_vslip_snapshots
 
+!---------------------------------------------------------------
+
+  subroutine BC_KINFLT_free()
+
+  implicit none
+  integer :: iflt
+
+  do iflt = 1,size(faults)
+    call free_fault_memory(faults(iflt))
+  enddo
+
+  deallocate(faults)
+
+  end subroutine BC_KINFLT_free
 
 end module fault_solver_kinematic

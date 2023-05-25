@@ -163,6 +163,10 @@ inverse_problem_for_model_OBJECTS += \
 	$O/locate_point.spec.o \
 	$O/locate_receivers.spec.o \
 	$O/locate_source.spec.o \
+	$O/lts_assemble_MPI_vector.spec.o \
+	$O/lts_global_step.spec.o \
+	$O/lts_iterate_time.spec.o \
+	$O/lts_newmark_update.spec.o \
 	$O/lts_setup.spec.o \
 	$O/make_gravity.spec.o \
 	$O/noise_tomography.spec.o \

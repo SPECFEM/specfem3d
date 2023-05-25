@@ -294,7 +294,13 @@
 
     ! suggested timestep
     dt_suggested = COURANT_SUGGESTED * distance_min / vel_max
-    dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
+
+    ! cut at a significant number of digits (2 digits)
+    ! example: 0.0734815 -> lpow = (2 - (-1) = 3 -> 0.0730
+    call get_timestep_limit_significant_digit(dt_suggested)
+
+    ! global suggested timestep
+    dt_suggested_glob = min(dt_suggested_glob, dt_suggested)
 
     ! debug: for vtk output
     if (SAVE_MESH_FILES) tmp2(ispec) = pmax
@@ -736,7 +742,7 @@
 !
 !    ! suggested timestep
 !    dt_suggested = COURANT_SUGGESTED * distance_min / max( vpmax,vp2max,vsmax )
-!    dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
+!    dt_suggested_glob = min(dt_suggested_glob, dt_suggested)
 !
 !    ! debug: for vtk output
 !    if (SAVE_MESH_FILES) tmp2(ispec) = pmax

@@ -98,7 +98,7 @@
   ! time steps
   double precision :: dtmin,dtmax
   double precision :: dtmin_glob,dtmax_glob
-  double precision :: time_step
+  double precision :: dt_suggested
 
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: ispec_time_step
 
@@ -215,16 +215,20 @@
     !                            NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
 
     ! estimated time step based on CFL condition
-    time_step = COURANT_SUGGESTED * distance_min / max( vpmax,vsmax )
+    dt_suggested = COURANT_SUGGESTED * distance_min / max( vpmax,vsmax )
+
+    ! cut at a significant number of digits (2 digits)
+    ! example: 0.0734815 -> lpow = (2 - (-1) = 3 -> 0.0730
+    call get_timestep_limit_significant_digit_dp(dt_suggested)
 
     ! stores value
-    ispec_time_step(ispec) = time_step
+    ispec_time_step(ispec) = dt_suggested
 
     ! determines coarsest time step
-    if (dtmax < time_step) dtmax = time_step
+    if (dtmax < dt_suggested) dtmax = dt_suggested
 
     ! determines finest time step
-    if (dtmin > time_step) dtmin = time_step
+    if (dtmin > dt_suggested) dtmin = dt_suggested
   enddo
 
   ! gets min/max values over all processes
@@ -258,7 +262,7 @@
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '     used minimum DT time step = ',dtmin
+    write(IMAIN,*) '     suggested minimum DT time step = ',dtmin
     call flush_IMAIN()
   endif
 
@@ -270,22 +274,22 @@
   do ispec = 1,NSPEC_AB
 
     ! gets estimated time step based on CFL condition
-    time_step = ispec_time_step(ispec)
+    dt_suggested = ispec_time_step(ispec)
 
     ! uses a user-defined safety margin for binning
-    time_step = ( 1.d0 - LTS_SAFETY_MARGIN ) * time_step
+    dt_suggested = ( 1.d0 - LTS_SAFETY_MARGIN ) * dt_suggested
 
     ! absorbing conditions need slightly smaller time steps
     ! if (ABSORBING_CONDITIONS) then
     !   ! uses a 60% safety margin for binning
-    !   time_step = ( 1.d0 - 0.3d0 ) * time_step
+    !   dt_suggested = ( 1.d0 - 0.3d0 ) * dt_suggested
     ! endif
 
     ! local time step level compared to global time step size
-    p = floor( time_step / dtmin )
+    p = floor( dt_suggested / dtmin )
     if (p < 1) p = 1
     ! debug
-    !print *,'ispec',ispec,'time step=',time_step,dtmin,'     p refinement = ',p
+    !print *,'ispec',ispec,'time step=',dt_suggested,dtmin,'     p refinement = ',p
 
     ! debug
     ! uniform distribution for testing
@@ -352,14 +356,14 @@
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '     final lts time step       = ',deltat_lts
+    write(IMAIN,*) '     suggested global coarsest time step       = ',deltat_lts
     write(IMAIN,*)
     call flush_IMAIN()
   endif
   call synchronize_all()
 
   ! re-orders p' -> p = 1 / p'
-  ! note: 1 == coarsest, p_max == smallest such that local time step == dt / p
+  ! note: 1 == coarsest, p_max == finest level such that local time step == dt / p
   do iglob = 1,NGLOB_AB
     p = iglob_p_refine(iglob)
     iglob_p_refine(iglob) = p_max / p
@@ -1251,47 +1255,21 @@
   integer,dimension(NSPEC_AB),intent(inout) :: ispec_p_refine
 
   ! local parameters
-  integer :: ispec,iglob,i,j,k,p
+  integer :: ispec,iglob,i,j,k,p,icycle
+  ! number of cycles to add overlap by one element layer
+  integer, parameter :: NUMBER_OF_OVERLAP_CYCLES = 1
 
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) '     adding overlap region'
+    write(IMAIN,*) '       number of overlap cycles = ', NUMBER_OF_OVERLAP_CYCLES
     write(IMAIN,*)
     call flush_IMAIN()
   endif
 
   ! adds overlap by one element
-  ! 1. overlap
-  do ispec = 1,NSPEC_AB
-    ! sets refinement on all points
-    ! this enlarges the finer region by one element
-    p = ispec_p_refine(ispec)
-    do k = 1,NGLLZ
-      do j = 1,NGLLY
-        do i = 1,NGLLX
-          iglob = ibool(i,j,k,ispec)
-          if (p > iglob_p_refine(iglob)) iglob_p_refine(iglob) = p
-        enddo
-      enddo
-    enddo
-  enddo
-  ! re-sets p refinement for element due to overlap addition above
-  ! (adds also elements touching global points with higher refinement)
-  ispec_p_refine(:) = 0
-  do ispec = 1,NSPEC_AB
-    do k = 1,NGLLZ
-      do j = 1,NGLLY
-        do i = 1,NGLLX
-          iglob = ibool(i,j,k,ispec)
-          p = iglob_p_refine(iglob)
-          if (p > ispec_p_refine(ispec)) ispec_p_refine(ispec) = p
-        enddo
-      enddo
-    enddo
-  enddo
-
-  ! 2. overlap
-  if (.false.) then
+  do icycle = 1,NUMBER_OF_OVERLAP_CYCLES
+    ! flags all shared nodes according to the highest element p-level
     do ispec = 1,NSPEC_AB
       ! sets refinement on all points
       ! this enlarges the finer region by one element
@@ -1319,7 +1297,7 @@
         enddo
       enddo
     enddo
-  endif
+  enddo
 
   end subroutine lts_add_overlap_elements_databases
 

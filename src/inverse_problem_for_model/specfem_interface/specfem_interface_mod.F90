@@ -1570,7 +1570,12 @@ contains
      ! suggested timestep
      vel_max = max( vpmax,vsmax )
      dt_suggested = COURANT_SUGGESTED * distance_min / vel_max
-     dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
+
+     ! cut at a significant number of digits (2 digits)
+     ! example: 0.0734815 -> lpow = (2 - (-1) = 3 -> 0.0730
+     call get_timestep_limit_significant_digit(dt_suggested)
+
+     dt_suggested_glob = min(dt_suggested_glob, dt_suggested)
 
   enddo
 

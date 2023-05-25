@@ -134,6 +134,9 @@
   use specfem_par_poroelastic
   use specfem_par_lts
 
+  use fault_solver_dynamic, only: SIMULATION_TYPE_DYN,BC_DYNFLT_free
+  use fault_solver_kinematic, only: SIMULATION_TYPE_KIN,BC_KINFLT_free
+
   implicit none
 
   ! from here on, no gpu data is needed anymore
@@ -153,6 +156,7 @@
   if (ACOUSTIC_SIMULATION) then
     deallocate(rmass_acoustic)
   endif
+
   ! boundary surfaces
   deallocate(ibelm_xmin)
   deallocate(ibelm_xmax)
@@ -160,6 +164,7 @@
   deallocate(ibelm_ymax)
   deallocate(ibelm_bottom)
   deallocate(ibelm_top)
+
   ! sources
   if (NSOURCES > 0) then
     deallocate(islice_selected_source,ispec_selected_source)
@@ -170,6 +175,7 @@
     deallocate(nu_source)
     deallocate(user_source_time_function)
   endif
+
   ! receivers
   if (nrec > 0) then
     deallocate(islice_selected_rec,ispec_selected_rec)
@@ -177,6 +183,7 @@
     deallocate(station_name,network_name)
     deallocate(nu_rec)
   endif
+
   if (allocated(pm1_source_encoding)) deallocate(pm1_source_encoding)
   if (allocated(sourcearrays)) deallocate(sourcearrays)
   if (allocated(source_adjoint)) deallocate(source_adjoint)
@@ -185,6 +192,7 @@
   if (allocated(number_receiver_global)) deallocate(number_receiver_global)
   if (allocated(hxir_store)) deallocate(hxir_store,hetar_store,hgammar_store)
   if (allocated(hpxir_store)) deallocate(hpxir_store,hpetar_store,hpgammar_store)
+
   ! adjoint sources
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
     if (nadj_rec_local > 0) then
@@ -197,11 +205,14 @@
       endif
     endif
   endif
+
   ! seismograms
   if (allocated(seismograms_d)) deallocate(seismograms_d,seismograms_v,seismograms_a,seismograms_p)
   if (allocated(seismograms_eps)) deallocate(seismograms_eps)
+
   ! moment tensor derivatives
   if (allocated(Mxx_der)) deallocate(Mxx_der,Myy_der,Mzz_der,Mxy_der,Mxz_der,Myz_der,sloc_der)
+
   ! mesh
   deallocate(ibool)
   deallocate(irregular_element_number)
@@ -210,6 +221,10 @@
   deallocate(xstore,ystore,zstore)
   deallocate(kappastore,mustore,rhostore)
   deallocate(ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
+
+  ! faults
+  if (SIMULATION_TYPE_DYN) call BC_DYNFLT_free()
+  if (SIMULATION_TYPE_KIN) call BC_KINFLT_free()
 
   ! LTS
   if (LTS_MODE) then

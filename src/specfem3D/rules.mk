@@ -98,6 +98,10 @@ specfem3D_OBJECTS = \
 	$O/locate_point.spec.o \
 	$O/locate_receivers.spec.o \
 	$O/locate_source.spec.o \
+	$O/lts_assemble_MPI_vector.spec.o \
+	$O/lts_global_step.spec.o \
+	$O/lts_iterate_time.spec.o \
+	$O/lts_newmark_update.spec.o \
 	$O/lts_setup.spec.o \
 	$O/make_gravity.spec.o \
 	$O/noise_tomography.spec.o \
@@ -336,6 +340,7 @@ $O/fault_solver_dynamic.spec.o: $O/fault_solver_common.spec.o
 $O/fault_solver_kinematic.spec.o: $O/fault_solver_common.spec.o
 $O/compute_forces_viscoelastic.spec.o: $O/fault_solver_dynamic.spec.o
 $O/compute_forces_viscoelastic_calling_routine.spec.o: $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
+$O/finalize_simulation.spec.o: $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
 
 $O/prepare_timerun.spec.o: $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
 $O/prepare_gpu.spec.o: $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
@@ -367,6 +372,10 @@ $O/iterate_time_undoatt.spec.o: $O/hdf5_io_server.spec_hdf5.o
 $O/write_movie_output.spec.o: $O/hdf5_io_server.spec_hdf5.o
 $O/write_movie_output_HDF5.spec_hdf5.o: $O/hdf5_io_server.spec_hdf5.o
 $O/write_output_HDF5.spec_hdf5.o: $O/hdf5_io_server.spec_hdf5.o
+
+## LTS
+$O/lts_iterate_time.spec.o: $O/gravity_perturbation.spec.o $O/hdf5_io_server.spec_hdf5.o
+$O/lts_global_step.spec.o: $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
 
 ####
 #### rule to build each .o file below

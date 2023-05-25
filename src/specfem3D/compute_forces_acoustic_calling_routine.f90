@@ -213,7 +213,7 @@
       !
       if (.not. GPU_MODE) then
         ! on CPU
-        call compute_add_sources_acoustic()
+        call compute_add_sources_acoustic(potential_dot_dot_acoustic)
       else
         ! on GPU
         call compute_add_sources_acoustic_GPU()
@@ -331,9 +331,11 @@
 !   updates the chi_dot term which requires chi_dot_dot(t+delta)
     ! corrector
     if (USE_LDDRK) then
+      ! LDDRK
       call update_potential_dot_acoustic_lddrk()
     else
-      potential_dot_acoustic(:) = potential_dot_acoustic(:) + deltatover2*potential_dot_dot_acoustic(:)
+      ! Newmark time scheme
+      call update_potential_dot_acoustic()
     endif
   else
     ! on GPU
@@ -514,7 +516,7 @@
       !
       if (.not. GPU_MODE) then
         ! on CPU
-        call compute_add_sources_acoustic_backward()
+        call compute_add_sources_acoustic_backward(b_potential_dot_dot_acoustic)
       else
         ! on GPU
         call compute_add_sources_acoustic_backward_GPU()
@@ -597,7 +599,7 @@
       stop 'LDDRK scheme for backward propagation not implemented yet'
     else
       ! adjoint simulations
-      b_potential_dot_acoustic(:) = b_potential_dot_acoustic(:) + b_deltatover2*b_potential_dot_dot_acoustic(:)
+      call update_potential_dot_acoustic_backward()
     endif
   else
     ! on GPU

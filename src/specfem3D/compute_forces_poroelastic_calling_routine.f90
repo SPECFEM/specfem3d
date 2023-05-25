@@ -204,24 +204,24 @@ subroutine compute_forces_poroelastic_calling()
 
   ! multiplies with inverse of mass matrix (note: rmass has been inverted already)
   ! solid phase
-  accels_poroelastic(1,:) = accels_poroelastic(1,:)*rmass_solid_poroelastic(:)
-  accels_poroelastic(2,:) = accels_poroelastic(2,:)*rmass_solid_poroelastic(:)
-  accels_poroelastic(3,:) = accels_poroelastic(3,:)*rmass_solid_poroelastic(:)
+  accels_poroelastic(1,:) = accels_poroelastic(1,:) * rmass_solid_poroelastic(:)
+  accels_poroelastic(2,:) = accels_poroelastic(2,:) * rmass_solid_poroelastic(:)
+  accels_poroelastic(3,:) = accels_poroelastic(3,:) * rmass_solid_poroelastic(:)
   ! fluid phase
-  accelw_poroelastic(1,:) = accelw_poroelastic(1,:)*rmass_fluid_poroelastic(:)
-  accelw_poroelastic(2,:) = accelw_poroelastic(2,:)*rmass_fluid_poroelastic(:)
-  accelw_poroelastic(3,:) = accelw_poroelastic(3,:)*rmass_fluid_poroelastic(:)
+  accelw_poroelastic(1,:) = accelw_poroelastic(1,:) * rmass_fluid_poroelastic(:)
+  accelw_poroelastic(2,:) = accelw_poroelastic(2,:) * rmass_fluid_poroelastic(:)
+  accelw_poroelastic(3,:) = accelw_poroelastic(3,:) * rmass_fluid_poroelastic(:)
 
   ! adjoint simulations
   if (SIMULATION_TYPE == 3) then
     ! solid
-    b_accels_poroelastic(1,:) = b_accels_poroelastic(1,:)*rmass_solid_poroelastic(:)
-    b_accels_poroelastic(2,:) = b_accels_poroelastic(2,:)*rmass_solid_poroelastic(:)
-    b_accels_poroelastic(3,:) = b_accels_poroelastic(3,:)*rmass_solid_poroelastic(:)
+    b_accels_poroelastic(1,:) = b_accels_poroelastic(1,:) * rmass_solid_poroelastic(:)
+    b_accels_poroelastic(2,:) = b_accels_poroelastic(2,:) * rmass_solid_poroelastic(:)
+    b_accels_poroelastic(3,:) = b_accels_poroelastic(3,:) * rmass_solid_poroelastic(:)
     ! fluid
-    b_accelw_poroelastic(1,:) = b_accelw_poroelastic(1,:)*rmass_fluid_poroelastic(:)
-    b_accelw_poroelastic(2,:) = b_accelw_poroelastic(2,:)*rmass_fluid_poroelastic(:)
-    b_accelw_poroelastic(3,:) = b_accelw_poroelastic(3,:)*rmass_fluid_poroelastic(:)
+    b_accelw_poroelastic(1,:) = b_accelw_poroelastic(1,:) * rmass_fluid_poroelastic(:)
+    b_accelw_poroelastic(2,:) = b_accelw_poroelastic(2,:) * rmass_fluid_poroelastic(:)
+    b_accelw_poroelastic(3,:) = b_accelw_poroelastic(3,:) * rmass_fluid_poroelastic(:)
   endif
 
 ! updates velocities
@@ -240,19 +240,7 @@ subroutine compute_forces_poroelastic_calling()
 !
 ! corrector:
 !   updates the velocity term which requires a(t+delta)
-
-  ! solid phase
-  velocs_poroelastic(:,:) = velocs_poroelastic(:,:) + deltatover2*accels_poroelastic(:,:)
-  ! fluid phase
-  velocw_poroelastic(:,:) = velocw_poroelastic(:,:) + deltatover2*accelw_poroelastic(:,:)
-
-  ! adjoint simulations
-  if (SIMULATION_TYPE == 3) then
-    ! solid phase
-    b_velocs_poroelastic(:,:) = b_velocs_poroelastic(:,:) + b_deltatover2*b_accels_poroelastic(:,:)
-    ! fluid phase
-    b_velocw_poroelastic(:,:) = b_velocw_poroelastic(:,:) + b_deltatover2*b_accelw_poroelastic(:,:)
-  endif
+  call update_veloc_poroelastic_forward_and_backward()
 
   ! elastic coupling
   if (ELASTIC_SIMULATION) &
@@ -347,6 +335,7 @@ subroutine compute_forces_poroelastic_calling()
         velocs_poroelastic(1,iglob) = velocs_poroelastic(1,iglob) - deltatover2*accels_poroelastic(1,iglob)
         velocs_poroelastic(2,iglob) = velocs_poroelastic(2,iglob) - deltatover2*accels_poroelastic(2,iglob)
         velocs_poroelastic(3,iglob) = velocs_poroelastic(3,iglob) - deltatover2*accels_poroelastic(3,iglob)
+
         accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) / rmass_solid_poroelastic(iglob)
         accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) / rmass_solid_poroelastic(iglob)
         accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) / rmass_solid_poroelastic(iglob)
@@ -379,6 +368,7 @@ subroutine compute_forces_poroelastic_calling()
         accelw_poroelastic(1,iglob) = 0.d0
         accelw_poroelastic(2,iglob) = 0.d0
         accelw_poroelastic(3,iglob) = 0.d0
+
         velocw_poroelastic(1,iglob) = 0.d0
         velocw_poroelastic(2,iglob) = 0.d0
         velocw_poroelastic(3,iglob) = 0.d0

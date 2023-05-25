@@ -240,7 +240,7 @@
 
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) close(124)
 
-  ! #TODO: hdf5 support for fault simulation not implemented yet
+  ! #TODO: HDF5 support for fault simulation not implemented yet
   ! writes fault database
   if (ANY_FAULT) then
     do ipart = 0, nparts-1

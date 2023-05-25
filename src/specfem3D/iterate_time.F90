@@ -207,6 +207,14 @@
   ! get MPI starting
   time_start = wtime()
 
+  ! LTS
+  if (LTS_MODE) then
+    ! LTS steps through its own time iterations - for now
+    call lts_iterate_time()
+    ! all done, continue after time loop
+    goto 777
+  endif
+
   ! time loop
   do it = it_begin,it_end
 
@@ -320,6 +328,9 @@
   !---- end of time iteration loop
   !
   enddo   ! end of main time loop
+
+! goto point for LTS to finish time loop
+777 continue
 
   ! close the huge file that contains a dump of all the time steps to disk
   if (EXACT_UNDOING_TO_DISK) close(IFILE_FOR_EXACT_UNDOING)

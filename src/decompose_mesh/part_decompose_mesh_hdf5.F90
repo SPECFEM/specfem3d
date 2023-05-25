@@ -1042,7 +1042,7 @@ contains
     endif
   enddo
 
-  !#TODO: check if this works... creates a single group per process
+  !#TODO: HDF5 moho check if this works... creates a single group per process
 
   ! create group name for the database of the current proc
   write(gname_proc,"('proc',i6.6,'_')") iproc
