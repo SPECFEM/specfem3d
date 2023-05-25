@@ -32,6 +32,8 @@
 
   use decompose_mesh_par
 
+  use fault_scotch, only: ANY_FAULT,write_fault_database,nodes_coords_open
+
   implicit none
 
   ! local parameters

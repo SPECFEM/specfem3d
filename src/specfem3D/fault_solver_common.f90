@@ -105,6 +105,11 @@ module fault_solver_common
     real(kind=CUSTOM_REAL) :: kin_dt
     integer :: kin_it
     real(kind=CUSTOM_REAL), dimension(:,:), pointer :: v_kin_t1,v_kin_t2
+
+    ! LTS
+    logical,dimension(:),pointer :: fault_use_p_level => null()
+    integer,dimension(:,:),pointer :: fault_ibool_local_p => null()
+    integer,dimension(:),pointer :: fault_num_p_local => null()
   end type bc_dynandkinflt_type
 
   ! fault array
@@ -126,16 +131,22 @@ contains
 
 !---------------------------------------------------------------------
 
-  subroutine initialize_fault (bc,IIN_BIN)
+  subroutine initialize_fault(bc,IIN_BIN)
 
-  use constants, only: PARALLEL_FAULT,NDIM,NGLLSQUARE
+  use constants, only: PARALLEL_FAULT,NDIM,NGLLSQUARE,myrank
 
-  use specfem_par, only: NPROC,DT,NGLOB_AB, &
+  use shared_parameters, only: NPROC,DT,LTS_MODE
+
+  use specfem_par, only: NGLOB_AB, &
     num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
     nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
     my_neighbors_ext_mesh
 
   use specfem_par_elastic, only: rmassx
+
+  ! LTS
+  use specfem_par_lts, only: iglob_p_refine,num_p_level,p_level,p_lookup
+  use specfem_par, only: xstore,ystore,zstore
 
   implicit none
 !! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
@@ -146,11 +157,33 @@ contains
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: jacobian2Dw
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: nxyz
+  real(kind=CUSTOM_REAL) :: deltat
   integer, dimension(:,:), allocatable :: ibool1
   integer :: ij,k,e,ier
+  ! LTS
+  integer :: i,p,ilevel
+  integer :: p_min,p_max
+  integer :: p_min_glob,p_max_glob
+
+  ! explicit initialization
+  bc%nspec = 0
+  bc%nglob = 0
 
   ! number of elements and global points on fault
   read(IIN_BIN) bc%nspec,bc%nglob
+
+  ! makes sure nglob value is also zero in case no fault elements are in this partition
+  if (bc%nspec <= 0) then
+    ! checks
+    if (bc%nglob > 0) print *,'Warning: rank',myrank,'has no fault elements but a non-zero nglob:',bc%nspec,bc%nglob
+    ! re-sets nspec/nglob
+    bc%nspec = 0
+    bc%nglob = 0
+  endif
+
+  ! time step on fault
+  ! sets simulation time step size
+  bc%dt = real(DT,kind=CUSTOM_REAL)
 
   if (bc%nspec > 0) then
     ! checks nglob
@@ -221,9 +254,6 @@ contains
 
     ! done reading faults_db.bin file, no more records in read(IIN_BIN).. from here on
 
-    ! sets simulation time step size
-    bc%dt = real(DT,kind=CUSTOM_REAL)
-
     ! normal vector
     allocate(nxyz(NDIM,bc%nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2170')
@@ -234,6 +264,7 @@ contains
     do e = 1,bc%nspec
       do ij = 1,NGLLSQUARE
         k = ibool1(ij,e)
+        if (k < 1 .or. k > bc%nglob) call exit_MPI(myrank,'Error: fault ibool1 value out of bounds')
         nxyz(:,k) = nxyz(:,k) + normal(:,ij,e)
         bc%B(k) = bc%B(k) + jacobian2Dw(ij,e)
       enddo
@@ -249,6 +280,12 @@ contains
              bc%ibulk2(1), &
              bc%R(NDIM,NDIM,1))
   endif
+
+  ! checks fault iglob values
+  do i = 1,bc%nglob
+    if (bc%ibulk1(i) < 1 .or. bc%ibulk1(i) > NGLOB_AB) call exit_MPI(myrank,'Error ibulk1 has invalid iglob value')
+    if (bc%ibulk2(i) < 1 .or. bc%ibulk2(i) > NGLOB_AB) call exit_MPI(myrank,'Error ibulk2 has invalid iglob value')
+  enddo
 
   ! fault parallelization across multiple MPI processes
   if (PARALLEL_FAULT) then
@@ -277,6 +314,74 @@ contains
     if (bc%nspec > 0) nxyz(:,:) = tmp_vec(:,bc%ibulk1(:))
   endif
 
+  ! LTS
+  if (LTS_MODE) then
+    ! checks
+    if (size(p_level(:)) /= num_p_level) call exit_MPI(myrank,'Error num_p_level in initialize_fault')
+
+    ! uses flags to determine whether there are p-level nodes on fault surfaces
+    allocate(bc%fault_use_p_level(num_p_level), &
+             bc%fault_num_p_local(num_p_level), &
+             bc%fault_ibool_local_p(bc%nglob,num_p_level),stat=ier)
+    if (ier /= 0) stop 'Error allocating arrays fault_ibool_local_p,..'
+
+    bc%fault_use_p_level(:) = .false.
+    bc%fault_num_p_local(:) = 0
+    bc%fault_ibool_local_p(:,:) = 0
+
+    p_min = 1000000000
+    p_max = 0
+    do i = 1,bc%nglob
+      ! p-value on 1. split node
+      p = iglob_p_refine(bc%ibulk1(i))
+
+      ! opposite split nodes must lie in same p-level region
+      ! LTS check
+      if (p /= iglob_p_refine(bc%ibulk2(i))) then
+        print *,'Error fault p-values: rank ',myrank
+        print *,'  fault ibulk1: iglob = ',bc%ibulk1(i),'p = ',iglob_p_refine(bc%ibulk1(i))
+        print *,'                x/y/z: ',xstore(bc%ibulk1(i)),ystore(bc%ibulk1(i)),zstore(bc%ibulk1(i))
+        print *,'  fault ibulk2: iglob = ',bc%ibulk2(i),'p = ',iglob_p_refine(bc%ibulk2(i))
+        print *,'                x/y/z: ',xstore(bc%ibulk2(i)),ystore(bc%ibulk2(i)),zstore(bc%ibulk2(i))
+        print *,'fault split nodes MUST belong to the same p-level, please check your mesh...'
+        call exit_MPI(myrank,'error fault p-values on split nodes')
+      endif
+      ! statistics
+      if (p < p_min) p_min = p
+      if (p > p_max) p_max = p
+
+      ilevel = p_lookup(p)
+
+      ! sets flag if fault has p-nodes
+      bc%fault_use_p_level(ilevel) = .true.
+
+      ! counts number of p-nodes
+      bc%fault_num_p_local(ilevel) = bc%fault_num_p_local(ilevel) + 1
+
+      ! sets up local array with p-nodes
+      bc%fault_ibool_local_p(bc%fault_num_p_local(ilevel),ilevel) = i
+    enddo
+
+    ! gather info
+    call min_all_all_i(p_min,p_min_glob)
+    call max_all_all_i(p_max,p_max_glob)
+    p_min = p_min_glob
+    p_max = p_max_glob
+
+    ! LTS sets fault time step to minimum LTS time step for fault nodes
+    if (p_max_glob <= 0) then
+      call exit_MPI(myrank,'Error p_max_glob invalid')
+    endif
+
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) "    LTS fault p-values min/max          :",p_min_glob,p_max_glob
+      write(IMAIN,*) "    LTS minimum local time step on fault:",bc%dt / p_max_glob
+      call flush_IMAIN()
+    endif
+    call synchronize_all()
+  endif ! LTS_MODE
+
   if (bc%nspec > 0) then
     ! normalizes fault normal vector
     call normalize_3d_vector(nxyz)
@@ -284,7 +389,7 @@ contains
     call compute_R(bc%R,bc%nglob,nxyz)
 
     ! inverse mass matrix
-    !SURENDRA : WARNING! Assuming rmassx=rmassy=rmassz
+    ! WARNING: Assuming rmassx=rmassy=rmassz
     ! Needed in dA_Free = -K2*d2/M2 + K1*d1/M1
     bc%invM1(:) = rmassx(bc%ibulk1(:))
     bc%invM2(:) = rmassx(bc%ibulk2(:))
@@ -294,8 +399,19 @@ contains
     !   Z = 1/( B1/M1 + B2/M2 ) / (0.5*dt)
     ! T_stick = Z*Vfree traction as if the fault was stuck (no displ discontinuity)
     ! NOTE: same Bi on both sides, see note above
-
-    bc%Z(:) = 1.0_CUSTOM_REAL/(0.5_CUSTOM_REAL * bc%dt * bc%B(:) *( bc%invM1(:) + bc%invM2(:) ))
+    if (LTS_MODE) then
+      do i = 1,bc%nglob
+        ! p-value on 1. split node (should be the same as on opposite node)
+        p = iglob_p_refine(bc%ibulk1(i))
+        if (p <= 0) call exit_MPI(myrank,'Error p-value invalid in fault impedance setup')
+        ! local time step
+        deltat = bc%dt / p
+        bc%Z(i) = 1.0_CUSTOM_REAL/(0.5_CUSTOM_REAL * deltat * bc%B(i) *( bc%invM1(i) + bc%invM2(i) ))
+      enddo
+    else
+      deltat = bc%dt
+      bc%Z(:) = 1.0_CUSTOM_REAL/(0.5_CUSTOM_REAL * deltat * bc%B(:) *( bc%invM1(:) + bc%invM2(:) ))
+    endif
 
     ! WARNING: In non-split nodes at fault edges M is assembled across the fault.
     ! hence invM1+invM2=2/(M1+M2) instead of 1/M1+1/M2
@@ -408,9 +524,9 @@ contains
   real(kind=CUSTOM_REAL) :: da(3,bc%nglob)
 
   ! difference between side 2 and side 1 of fault nodes. M-1 * F
-  da(1,:) = bc%invM2(:)*f(1,bc%ibulk2(:)) - bc%invM1(:)*f(1,bc%ibulk1(:))
-  da(2,:) = bc%invM2(:)*f(2,bc%ibulk2(:)) - bc%invM1(:)*f(2,bc%ibulk1(:))
-  da(3,:) = bc%invM2(:)*f(3,bc%ibulk2(:)) - bc%invM1(:)*f(3,bc%ibulk1(:))
+  da(1,:) = bc%invM2(:) * f(1,bc%ibulk2(:)) - bc%invM1(:) * f(1,bc%ibulk1(:))
+  da(2,:) = bc%invM2(:) * f(2,bc%ibulk2(:)) - bc%invM1(:) * f(2,bc%ibulk1(:))
+  da(3,:) = bc%invM2(:) * f(3,bc%ibulk2(:)) - bc%invM1(:) * f(3,bc%ibulk1(:))
 
   ! NOTE: In non-split nodes at fault edges M and f are assembled across the fault.
   ! Hence, f1=f2, invM1=invM2=1/(M1+M2) instead of invMi=1/Mi, and da=0.
@@ -455,16 +571,42 @@ contains
   real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob), intent(in) :: T
 
-  MxA(1,bc%ibulk1(:)) = MxA(1,bc%ibulk1(:)) + bc%B(:)*T(1,:)
-  MxA(2,bc%ibulk1(:)) = MxA(2,bc%ibulk1(:)) + bc%B(:)*T(2,:)
-  MxA(3,bc%ibulk1(:)) = MxA(3,bc%ibulk1(:)) + bc%B(:)*T(3,:)
+  MxA(1,bc%ibulk1(:)) = MxA(1,bc%ibulk1(:)) + bc%B(:) * T(1,:)
+  MxA(2,bc%ibulk1(:)) = MxA(2,bc%ibulk1(:)) + bc%B(:) * T(2,:)
+  MxA(3,bc%ibulk1(:)) = MxA(3,bc%ibulk1(:)) + bc%B(:) * T(3,:)
 
-  MxA(1,bc%ibulk2(:)) = MxA(1,bc%ibulk2(:)) - bc%B(:)*T(1,:)
-  MxA(2,bc%ibulk2(:)) = MxA(2,bc%ibulk2(:)) - bc%B(:)*T(2,:)
-  MxA(3,bc%ibulk2(:)) = MxA(3,bc%ibulk2(:)) - bc%B(:)*T(3,:)
+  MxA(1,bc%ibulk2(:)) = MxA(1,bc%ibulk2(:)) - bc%B(:) * T(1,:)
+  MxA(2,bc%ibulk2(:)) = MxA(2,bc%ibulk2(:)) - bc%B(:) * T(2,:)
+  MxA(3,bc%ibulk2(:)) = MxA(3,bc%ibulk2(:)) - bc%B(:) * T(3,:)
 
   end subroutine add_BT
 
+!----------------------------------------------------------------------
+
+  subroutine add_BT_single(bc,MxA,T,i)
+
+! LTS version for a single fault point
+
+  implicit none
+  type(bc_dynandkinflt_type), intent(in) :: bc
+  real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
+  real(kind=CUSTOM_REAL), dimension(3,bc%nglob), intent(in) :: T
+  integer, intent(in) :: i
+
+  ! local parameters
+  integer :: iglob1,iglob2
+
+  iglob1 = bc%ibulk1(i)
+  MxA(1,iglob1) = MxA(1,iglob1) + bc%B(i) * T(1,i)
+  MxA(2,iglob1) = MxA(2,iglob1) + bc%B(i) * T(2,i)
+  MxA(3,iglob1) = MxA(3,iglob1) + bc%B(i) * T(3,i)
+
+  iglob2 = bc%ibulk2(i)
+  MxA(1,iglob2) = MxA(1,iglob2) - bc%B(i) * T(1,i)
+  MxA(2,iglob2) = MxA(2,iglob2) - bc%B(i) * T(2,i)
+  MxA(3,iglob2) = MxA(3,iglob2) - bc%B(i) * T(3,i)
+
+end subroutine add_BT_single
 
 !===============================================================
 ! dataT outputs
@@ -487,16 +629,17 @@ contains
   integer, dimension(:,:), allocatable :: iglob_all
   integer, dimension(:), allocatable :: iproc,iglob_tmp,glob_indx
   real(kind=CUSTOM_REAL) :: xtarget,ytarget,ztarget,dist,distkeep
-  integer :: i, iglob , IIN, ier, jflt, np, k
+  integer :: i, iglob, ier, jflt, np, k
   character(len=MAX_STRING_LEN) :: tmpname
   character(len=MAX_STRING_LEN), dimension(:), allocatable :: name_tmp
   integer :: ipoin, ipoin_local, npoin_local
 
+  ! WARNING: not safe, should check that unit is not aleady opened
+  integer, parameter :: IIN_FAULT_STATIONS = 251
+
   !  1. read fault output coordinates from user file,
   !  2. define iglob: the fault global index of the node nearest to user
   !     requested coordinate
-
-  IIN = 251 ! WARNING: not safe, should check that unit is not aleady opened
 
   ! initializes dataT
   dataT%ndat = ndat
@@ -505,7 +648,8 @@ contains
   dataT%element_size = 0.0
 
   ! count the number of output points on the current fault (#iflt)
-  open(IIN,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS',status='old',action='read',iostat=ier)
+  open(IIN_FAULT_STATIONS,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS', &
+       status='old',action='read',iostat=ier)
   if (ier /= 0) then
     print *,'Error opening file ',IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS'
     if (myrank == 0) write(IMAIN,*) 'Fatal error opening FAULT_STATIONS file. Abort.'
@@ -513,18 +657,18 @@ contains
   endif
 
   ! number of points
-  read(IIN,*) np
+  read(IIN_FAULT_STATIONS,*) np
 
   ! counts fault points on specified fault
   dataT%npoin = 0
   do i = 1,np
     ! format : #x  #y  #z  #name  #fault_id
     ! example: -4500.0  0.0  0.0  faultst-045dp000 1
-    read(IIN,*) xtarget,ytarget,ztarget,tmpname,jflt
+    read(IIN_FAULT_STATIONS,*) xtarget,ytarget,ztarget,tmpname,jflt
     ! only points on this fault
     if (jflt == iflt) dataT%npoin = dataT%npoin + 1
   enddo
-  close(IIN)
+  close(IIN_FAULT_STATIONS)
 
   ! allocates fault point arrays
   if (dataT%npoin > 0) then
@@ -552,26 +696,29 @@ contains
   if (dataT%npoin == 0) return
 
   ! opens in fault stations
-  open(IIN,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS',status='old',action='read',iostat=ier)
+  open(IIN_FAULT_STATIONS,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS', &
+       status='old',action='read',iostat=ier)
   if (ier /= 0) then
     print *,'Error opening file ',IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS'
     stop 'Error opening file FAULT_STATIONS'
   endif
 
   ! number of points
-  read(IIN,*) np
+  read(IIN_FAULT_STATIONS,*) np
 
   ! reads in fault point positions
   k = 0
   do i = 1,np
     ! format : #x  #y  #z  #name  #fault_id
     ! example: -4500.0  0.0  0.0  faultst-045dp000 1
-    read(IIN,*) xtarget,ytarget,ztarget,tmpname,jflt
+    read(IIN_FAULT_STATIONS,*) xtarget,ytarget,ztarget,tmpname,jflt
 
     ! only points on this fault
     if (jflt /= iflt) cycle
 
     k = k+1
+    if (k < 1 .or. k > dataT%npoin) stop 'Error bounds in init_dataT'
+
     dataT%name(k) = tmpname
 
     ! search nearest node
@@ -588,7 +735,7 @@ contains
     enddo
     dist_loc(k) = distkeep
   enddo
-  close(IIN)
+  close(IIN_FAULT_STATIONS)
 
   if (PARALLEL_FAULT) then
     ! For each output point, find the processor that contains the nearest node
@@ -614,7 +761,7 @@ contains
     call bcast_all_i(dataT%iglob,dataT%npoin)
 
     ! Number of output points contained in the current processor
-    npoin_local = count( iproc == myrank )
+    npoin_local = count( iproc(:) == myrank )
 
     if (npoin_local > 0) then
       ! Make a list of output points contained in the current processor
@@ -736,6 +883,9 @@ contains
   integer, dimension(8) :: time_values
   integer, parameter :: IOUT_SC = 121 !WARNING: not very robust. Could instead look for an available ID
 
+  ! checks if anything to do
+  if (dataT%npoin == 0) return
+
   call date_and_time(VALUES=time_values)
 
   ! element size in m
@@ -781,6 +931,33 @@ contains
 1100 format ( '# Column #', i1, ' = ',a )
 
   end subroutine SCEC_write_dataT
+
+!------------------------------------------------------------------------
+
+  subroutine free_fault_memory(bc)
+
+  ! LTS
+  use specfem_par, only: LTS_MODE
+
+  implicit none
+  type(bc_dynandkinflt_type), intent(inout) :: bc
+
+  if (bc%nspec > 0) then
+    deallocate(bc%ibulk1, &
+               bc%ibulk2, &
+               bc%R, &
+               bc%invM1, &
+               bc%invM2, &
+               bc%B, &
+               bc%Z)
+  endif
+  deallocate(bc%coord)
+
+  if (LTS_MODE) then
+    deallocate(bc%fault_use_p_level,bc%fault_num_p_local,bc%fault_ibool_local_p)
+  endif
+
+  end subroutine free_fault_memory
 
 !---------------------------------------------------------------------
 
@@ -908,8 +1085,13 @@ contains
   if (myrank == 0) then
     ! average distance between GLL points within this element
     avg_distance = elemsize_max_glob / ( NGLLX - 1)  ! since NGLLX = NGLLY = NGLLZ
+
     ! rough estimate of time step
     dt_suggested = COURANT_SUGGESTED * avg_distance / vpmax_glob
+
+    ! cut at a significant number of digits (2 digits)
+    ! example: 0.0734815 -> lpow = (2 - (-1) = 3 -> 0.0730
+    call get_timestep_limit_significant_digit(dt_suggested)
 
     ! critical time step estimation
     ! see: utils/critical_timestep.m

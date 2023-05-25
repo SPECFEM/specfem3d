@@ -1438,3 +1438,94 @@
 
   end subroutine broadcast_computed_parameters
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine get_timestep_limit_significant_digit(time_step)
+
+  ! cut at a significant number of digits (e.g., 2 digits) using 1/2 rounding
+  ! example: 0.0734815 -> 0.0730
+  !      and 0.0737777 -> 0.0735
+  !
+  ! also works with different magnitudes of time step sizes (0.118, 0.00523, ..). always cut of after 2 significant digits:
+  ! example: 0.118749999 -> 0.115
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  real(kind=CUSTOM_REAL),intent(inout) :: time_step  ! CUSTOM_REAL
+
+  ! rounding
+  integer :: lpow,ival
+  double precision :: fac_pow,dt_cut
+
+  ! initializes
+  dt_cut = time_step
+
+  ! cut at a significant number of digits (2 digits)
+  ! example: 0.0734815 -> lpow = (2 - (-1) = 3
+  lpow = int(2.d0 - log10(dt_cut))
+
+  ! example: -> factor 10**3
+  fac_pow = 10.d0**(lpow)
+
+  ! example: -> 73
+  ival = int(fac_pow * dt_cut)
+
+  ! adds .5-digit (in case): 73.0 -> 0.073
+  if ( (fac_pow * dt_cut - ival) >= 0.5 ) then
+    dt_cut = (dble(ival) + 0.5d0) / fac_pow
+  else
+    dt_cut = dble(ival) / fac_pow
+  endif
+
+  time_step = real(dt_cut,kind=CUSTOM_REAL)
+
+  end subroutine get_timestep_limit_significant_digit
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine get_timestep_limit_significant_digit_dp(time_step)
+
+  ! cut at a significant number of digits (e.g., 2 digits) using 1/2 rounding
+  ! example: 0.0734815 -> 0.0730
+  !      and 0.0737777 -> 0.0735
+  !
+  ! also works with different magnitudes of time step sizes (0.118, 0.00523, ..). always cut of after 2 significant digits:
+  ! example: 0.118749999 -> 0.115
+
+  implicit none
+
+  double precision,intent(inout) :: time_step      ! double precision
+
+  ! rounding
+  integer :: lpow,ival
+  double precision :: fac_pow,dt_cut
+
+  ! initializes
+  dt_cut = time_step
+
+  ! cut at a significant number of digits (2 digits)
+  ! example: 0.0734815 -> lpow = (2 - (-1) = 3
+  lpow = int(2.d0 - log10(dt_cut))
+
+  ! example: -> factor 10**3
+  fac_pow = 10.d0**(lpow)
+
+  ! example: -> 73
+  ival = int(fac_pow * dt_cut)
+
+  ! adds .5-digit (in case): 73.0 -> 0.073
+  if ( (fac_pow * dt_cut - ival) >= 0.5 ) then
+    dt_cut = (dble(ival) + 0.5d0) / fac_pow
+  else
+    dt_cut = dble(ival) / fac_pow
+  endif
+
+  time_step = dt_cut
+
+  end subroutine get_timestep_limit_significant_digit_dp

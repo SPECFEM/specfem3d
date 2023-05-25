@@ -37,7 +37,7 @@
       USE_EXTERNAL_SOURCE_FILE, &
       USE_TRICK_FOR_BETTER_PRESSURE,COUPLE_WITH_INJECTION_TECHNIQUE, &
       myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,DT, &
-      NSOURCES,HAS_FINITE_FAULT_SOURCE
+      NSOURCES,HAS_FINITE_FAULT_SOURCE,LTS_MODE
 
   ! sources arrays
   use specfem_par, only: Mxx,Myy,Mzz,Mxy,Mxz,Myz,hdur, &
@@ -48,6 +48,9 @@
 
   ! PML
   use pml_par, only: is_CPML
+
+  ! LTS
+  use specfem_par_lts, only: p_elem,ispec_p_refine,p_lookup,num_p_level
 
   implicit none
 
@@ -92,6 +95,12 @@
 
   integer :: ispec,ier
   logical :: is_done_sources
+
+  ! LTS
+  integer :: p_spec,ilevel
+  integer, dimension(:), allocatable :: source_p_value,source_p_ilevel
+  integer, dimension(:,:), allocatable :: source_p_elem
+  integer, dimension(:), allocatable :: sendbufv,recvbufv
 
   ! timer MPI
   double precision :: tstart,tCPU
@@ -308,6 +317,56 @@
   enddo
   call any_all_1Darray_l(is_CPML_source,is_CPML_source_all,NSOURCES)
 
+  ! LTS
+  if (LTS_MODE) then
+    allocate(source_p_value(NSOURCES),source_p_ilevel(NSOURCES), &
+             source_p_elem(num_p_level,NSOURCES), &
+             sendbufv(num_p_level),recvbufv(num_p_level), stat=ier)
+    if (ier /= 0) call exit_MPI(myrank,'Error allocating source_p arrays')
+    source_p_value(:) = 0
+    source_p_ilevel(:) = 0
+    source_p_elem(:,:) = 0
+    ! collects p-level info of source element
+    do isource = 1,NSOURCES
+      if (myrank == islice_selected_source(isource)) then
+        ispec = ispec_selected_source(isource)
+        ! p_value
+        p_spec = ispec_p_refine(ispec)
+        ilevel = p_lookup(p_spec)
+        source_p_value(isource) = p_spec
+        source_p_ilevel(isource) = ilevel
+        ! here use integer values for P-elem since the send routine sendrecv_all_i() is only implemented for integers
+        ! explicit if-case to avoid a ternary operator like: s = (p_elem == .true.)? 1:0
+        do ilevel = 1,num_p_level
+          if (p_elem(ispec,ilevel) .eqv. .true.) then
+            source_p_elem(ilevel,isource) = 1
+          else
+            source_p_elem(ilevel,isource) = 0
+          endif
+        enddo
+      endif
+      ! send to main process if needed
+      if (islice_selected_source(isource) /= 0) then
+        if (myrank == 0) then
+          ! main process gets p-value
+          call recv_singlei(source_p_value(isource),islice_selected_source(isource),itag)
+          ! ilevel-value
+          call recv_singlei(source_p_ilevel(isource),islice_selected_source(isource),itag)
+          ! p_elem as integer-value
+          call recv_i(recvbufv,num_p_level,islice_selected_source(isource),itag)
+          source_p_elem(:,isource) = recvbufv(:)
+        else if (myrank == islice_selected_source(isource)) then
+          ! slice with sources sents its values
+          call send_singlei(source_p_value(isource),0,itag)
+          ! ilevel-value
+          call send_singlei(source_p_ilevel(isource),0,itag)
+          ! p_elem as integer-value
+          sendbufv(:) = source_p_elem(:,isource)
+          call send_i(sendbufv,num_p_level,0,itag)
+        endif
+      endif
+    enddo
+  endif
 
   ! sets new utm coordinates for best locations
   utm_x_source(:) = x_found(:)
@@ -362,6 +421,13 @@
           write(IMAIN,*) '                 in unknown domain'
         endif
         write(IMAIN,*)
+        ! LTS info
+        if (LTS_MODE) then
+          write(IMAIN,*) '                 in LTS ilevel  : ',source_p_ilevel(isource)
+          write(IMAIN,*) '                        p-value : ',source_p_value(isource)
+          write(IMAIN,*) '                        p-elem  : ',source_p_elem(:,isource)
+          write(IMAIN,*)
+        endif
 
         ! source location (reference element)
         if (USE_FORCE_POINT_SOURCE) then
@@ -630,6 +696,7 @@
   deallocate(x_found,y_found,z_found,elevation,final_distance)
   deallocate(x_target,y_target,z_target,idomain)
   deallocate(is_CPML_source,is_CPML_source_all)
+  if (LTS_MODE) deallocate(source_p_value,source_p_ilevel,source_p_elem,sendbufv,recvbufv)
 
   end subroutine locate_source
 

@@ -1729,7 +1729,7 @@
 
   implicit none
 
-  !#TODO: hdf5 moho version not implemented yet
+  !#TODO: HDF5 moho version not implemented yet
   stop 'HDF5_ENABLED version of routine read_mesh_databases_moho_hdf5() not implemented yet'
 
   end subroutine read_mesh_databases_moho_hdf5

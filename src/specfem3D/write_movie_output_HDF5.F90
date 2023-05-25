@@ -725,10 +725,7 @@ contains
   ! checks if anything do, only main process writes out xdmf file
   if (myrank /= 0) return
 
-  !#TODO: hdf5 i/o server
-  ! redefinition for no ioserver case
-  !if (fname_xdmf_surf == '' ) fname_xdmf_surf = trim(OUTPUT_FILES)//"/movie_surface.xmf"
-
+  ! append data section to xdmf file for surface movie
   fname_xdmf_surf = trim(OUTPUT_FILES)//"/movie_surface.xmf"
   fname_h5_data_surf_xdmf = "./movie_surface.h5"    ! relative to movie_surface.xmf file
   ! this seems to point to a wrong directory:
@@ -1432,6 +1429,7 @@ contains
 
   call h5_close_group()
   call h5_close_file()
+  call h5_finalize()
 
   end subroutine shakemap_io_init_hdf5
 
@@ -1492,6 +1490,7 @@ contains
 
   call h5_close_group()
   call h5_close_file()
+  call h5_finalize()
 
   end subroutine write_shakemap_io_hdf5
 
@@ -1607,6 +1606,7 @@ contains
 
   call h5_close_group()
   call h5_close_file()
+  call h5_finalize()
 
   end subroutine surf_mov_io_init_hdf5
 
@@ -1682,6 +1682,7 @@ contains
 
   call h5_close_group()
   call h5_close_file()
+  call h5_finalize()
 
   end subroutine write_surf_io_hdf5
 
@@ -1962,6 +1963,8 @@ contains
 
   call synchronize_all()
 
+  call h5_finalize()
+
   deallocate(elm_conn_tmp)
   deallocate(xstore_tmp, ystore_tmp, zstore_tmp)
 
@@ -2145,6 +2148,7 @@ contains
 
   call h5_close_group()
   call h5_close_file()
+  call h5_finalize()
 
   end subroutine write_vol_data_io_hdf5
 

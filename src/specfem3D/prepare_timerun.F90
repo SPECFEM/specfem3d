@@ -262,7 +262,7 @@
   ! to make sure all the nodes have finished to read their databases
   call synchronize_all()
 
-  ! the mass matrix needs to be assembled with MPI here once and for all
+  ! sets up mass matrices
   if (ACOUSTIC_SIMULATION) then
     ! adds contributions
     if (STACEY_ABSORBING_CONDITIONS) then
@@ -275,16 +275,6 @@
       ! not needed anymore
       deallocate(rmassz_acoustic)
     endif
-
-    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic, &
-                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                      my_neighbors_ext_mesh)
-
-    ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
-    where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
-    rmass_acoustic(:) = 1._CUSTOM_REAL / rmass_acoustic(:)
-
   endif
 
   if (ELASTIC_SIMULATION) then
@@ -305,9 +295,26 @@
       rmassy(:) = rmass(:)
       rmassz(:) = rmass(:)
     endif
-    ! not needed anymore
-    deallocate(rmass)
+  endif
 
+  ! LTS mass matrices
+  if (LTS_MODE) call lts_prepare_mass_matrices()
+
+  ! the mass matrices need to be assembled with MPI here once and for all
+  ! acoustic domains
+  if (ACOUSTIC_SIMULATION) then
+    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic, &
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
+
+    ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
+    where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
+    rmass_acoustic(:) = 1._CUSTOM_REAL / rmass_acoustic(:)
+  endif
+
+  ! elastic domains
+  if (ELASTIC_SIMULATION) then
     ! assemble mass matrix
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassx, &
                                       num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -341,6 +348,7 @@
     endif
   endif
 
+  ! poroelastic domains
   if (POROELASTIC_SIMULATION) then
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
                                       num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -359,8 +367,17 @@
     rmass_fluid_poroelastic(:) = 1._CUSTOM_REAL / rmass_fluid_poroelastic(:)
   endif
 
+  ! LTS mass matrices
+  if (LTS_MODE) call lts_prepare_mass_matrices_invert()
+
   ! synchonizes
   call synchronize_all()
+
+  ! frees arrays
+  if (ELASTIC_SIMULATION) then
+    ! not needed anymore
+    deallocate(rmass)
+  endif
 
   end subroutine prepare_timerun_mass_matrices
 
@@ -1156,7 +1173,7 @@
 
         ! total file size (two lines to implicitly convert to 8-byte integers)
         filesize = b_reclen_potential
-        filesize = filesize*NSTEP
+        filesize = filesize * NSTEP
 
         ! debug check size limit
         !if (NSTEP > 2147483646 / b_reclen_potential) then
@@ -1227,7 +1244,7 @@
 
         ! total file size
         filesize = b_reclen_field_poro
-        filesize = filesize*NSTEP
+        filesize = filesize * NSTEP
 
         if (SIMULATION_TYPE == 3) then
           ! opens existing files

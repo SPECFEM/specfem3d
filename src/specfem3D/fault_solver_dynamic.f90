@@ -78,11 +78,10 @@ module fault_solver_dynamic
   integer, save :: NT_RECORD_LENGTH = 500     ! default 500, i.e., every 500 time step synchronizes dataT%dat records.
                                               ! will adapt in case needed to NSNAP number of time steps for snapshots
 
-  public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, &
+  public :: BC_DYNFLT_init, BC_DYNFLT_free, BC_DYNFLT_set3d_all, &
             SIMULATION_TYPE_DYN, NT_RECORD_LENGTH, &
             fault_transfer_data_GPU, fault_rsf_swf_init_GPU, fault_output_synchronize_GPU, &
             fault_check_mesh_resolution
-
 
 contains
 
@@ -94,7 +93,7 @@ contains
   subroutine BC_DYNFLT_init(prname)
 
   use specfem_par, only: nt => NSTEP,DTglobal => DT
-  use constants, only: IMAIN,myrank,IIN_PAR,IIN_BIN
+  use constants, only: IMAIN,myrank,IIN_PAR,IIN_BIN,PARALLEL_FAULT
 
   implicit none
 
@@ -168,6 +167,12 @@ contains
   if (myrank == 0) then
     write(IMAIN,*) '  incorporating dynamic rupture simulation'
     write(IMAIN,*) '  found ', nbfaults, ' fault(s) in file DATA/Par_file_faults'
+    if (PARALLEL_FAULT) then
+      write(IMAIN,*) "  using parallel partitions"
+    else
+      write(IMAIN,*) "  using single   partition"
+    endif
+    call flush_IMAIN()
   endif
 
   ! sets dynamic rupture flag
@@ -182,6 +187,13 @@ contains
   read(IIN_PAR,*) NSNAP
   read(IIN_PAR,*) V_HEALING
   read(IIN_PAR,*) V_RUPT
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "  number of iterations per output  : ",NTOUT
+    write(IMAIN,*) "  number of iterations per snapshot: ",NSNAP
+    call flush_IMAIN()
+  endif
 
   ! from binary fault file
   read(IIN_BIN) nbfaults_bin ! should be the same as in IIN_PAR
@@ -221,6 +233,12 @@ contains
   ! close files
   close(IIN_BIN)
   close(IIN_PAR)
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "  reading in Kelvin_voigt_eta arrays"
+    call flush_IMAIN()
+  endif
 
   ! reads Kelvin-Voigt parameters
   filename = prname(1:len_trim(prname))//'Kelvin_voigt_eta.bin'
@@ -399,13 +417,28 @@ contains
 
   real(kind=CUSTOM_REAL) :: S1,S2,S3,Sigma(6)
   integer :: n1,n2,n3,ier,recordlength
+  integer :: nspec_all,nglob_all
   logical :: LOAD_STRESSDROP = .false.
 
   NAMELIST / INIT_STRESS / S1,S2,S3,n1,n2,n3
   NAMELIST /STRESS_TENSOR / Sigma
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "  initializing fault",iflt,":"
+    call flush_IMAIN()
+  endif
+
   ! reads in fault_db binary file and initializes fault arrays
   call initialize_fault(bc,IIN_BIN)
+
+  ! user output
+  call sum_all_i(bc%nspec,nspec_all)
+  call sum_all_i(bc%nglob,nglob_all)
+  if (myrank == 0) then
+    write(IMAIN,*) "    total number of elements = ",nspec_all," global points = ",nglob_all
+    call flush_IMAIN()
+  endif
 
   ! sets up initial fault state
   if (bc%nspec > 0) then
@@ -527,6 +560,12 @@ contains
   endif
 
   call init_dataXZ(bc%dataXZ,bc)
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "    writing out fault snapshot: at t=0"
+    call flush_IMAIN()
+  endif
 
   ! output a fault snapshot at t=0
   if (PARALLEL_FAULT) then
@@ -894,7 +933,10 @@ contains
 ! NOTE: On non-split nodes at fault edges, dD=dV=dA=0
 ! and the net contribution of B*T is =0
 !
-  subroutine bc_dynflt_set3d_all(F,V,D)
+  subroutine bc_dynflt_set3d_all(F,V,D,p_value,ilevel)
+
+  ! LTS
+  use specfem_par, only: LTS_MODE
 
   implicit none
 
@@ -905,6 +947,8 @@ contains
 
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: V,D
   real(kind=CUSTOM_REAL), dimension(:,:), intent(inout) :: F
+  ! LTS
+  integer,intent(in),optional :: p_value,ilevel
 
   ! local parameters
   integer :: iflt
@@ -916,7 +960,11 @@ contains
   do iflt = 1,Nfaults
     ! note: this routine should be called by all processes, regardless if they contain no fault elements,
     !       for managing MPI calls and file outputs
-    call BC_DYNFLT_set3d(faults(iflt),F,V,D,iflt)
+    if (LTS_MODE) then
+      call BC_DYNFLT_set3d_lts(faults(iflt),F,V,D,iflt,p_value,ilevel)
+    else
+      call BC_DYNFLT_set3d(faults(iflt),F,V,D,iflt)
+    endif
   enddo
 
   end subroutine bc_dynflt_set3d_all
@@ -944,8 +992,9 @@ contains
   real(kind=CUSTOM_REAL), dimension(bc%nglob) :: Tstick,Tnew
   real(kind=CUSTOM_REAL), dimension(bc%nglob) :: strength, theta_old, theta_new, dc
   real(kind=CUSTOM_REAL), dimension(bc%nglob) :: Vf_old, Vf_new, TxExt, tmp_Vf
-  real(kind=CUSTOM_REAL) :: half_dt,TLoad,DTau0,GLoad,timeval
-  integer :: i,ipoin,iglob
+  real(kind=CUSTOM_REAL) :: TLoad,DTau0,GLoad
+  real(kind=CUSTOM_REAL) :: deltat,half_dt,timeval
+  integer :: i,ipoin,iglob,ipass
   real(kind=CUSTOM_REAL) :: nuc_x, nuc_y, nuc_z, nuc_r, nuc_t0, nuc_v, dist, tw_r, coh_size
 
 ! note: this implementation follows the description in:
@@ -965,10 +1014,18 @@ contains
 !          fault opening, fault healing, time-weakening, smooth loading,
 !          and TPV16 benchmark specific friction handling
 
+  ! global time step
+  deltat = bc%dt
+
+  ! half time step
+  half_dt = 0.5_CUSTOM_REAL * deltat
+
+  ! time will never be zero. it starts from 1
+  timeval = it * deltat
+
   ! for parallel faults
   if (bc%nspec > 0) then
 
-    half_dt = 0.5_CUSTOM_REAL * bc%dt
     Vf_old(:) = sqrt(bc%V(1,:)*bc%V(1,:) + bc%V(2,:)*bc%V(2,:))
 
     ! get predicted values
@@ -998,7 +1055,9 @@ contains
 
     ! Solve for normal stress (negative is compressive)
     ! Opening implies free stress
-    if (bc%allow_opening) T(3,:) = min(T(3,:),0.0_CUSTOM_REAL)
+    if (bc%allow_opening) then
+      T(3,:) = min(T(3,:),0.0_CUSTOM_REAL)
+    endif
 
     ! smooth loading within nucleation patch
     !WARNING : ad hoc for SCEC benchmark TPV10x
@@ -1007,9 +1066,6 @@ contains
       TxExt(:) = 0.0_CUSTOM_REAL
       TLoad = 1.0_CUSTOM_REAL   ! T_ini
       DTau0 = 1.0_CUSTOM_REAL   ! \Delta \tau_0
-
-      ! time will never be zero. it starts from 1
-      timeval = it*bc%dt
 
       ! function G(t)
       ! see Kaneko (2008), equation (B3):
@@ -1046,7 +1102,6 @@ contains
 
       ! combined with time-weakening for nucleation
       if (TWF) then
-        timeval = it*bc%dt
         nuc_x   = bc%twf%nuc_x
         nuc_y   = bc%twf%nuc_y
         nuc_z   = bc%twf%nuc_z
@@ -1070,12 +1125,11 @@ contains
       ! TPV16 benchmark
       if (TPV16) then
         ! fixes friction coefficient to be dynamic friction coefficient when rupture time is over
-        where (bc%swf%T(:) <= it*bc%dt) bc%mu(:) = bc%swf%mud(:)
+        where (bc%swf%T(:) <= timeval) bc%mu(:) = bc%swf%mud(:)
       endif
 
       ! updates fault strength
       strength(:) = -bc%mu(:) * min(T(3,:),0.0_CUSTOM_REAL) + bc%swf%C(:)
-
       ! solves for shear stress
       Tnew(:) = min(Tstick(:),strength(:))
 
@@ -1087,25 +1141,31 @@ contains
       ! see: Kaneko (2008), explanation of steps 4 and 6 in section 2.3,
       !      and compare against the alternative first-order expansion given by equation (24)
 
-      ! first pass
-      theta_old(:) = bc%rsf%theta(:)
-      call rsf_update_state(Vf_old,bc%dt,bc%rsf)
+      do ipass = 1,2
+        ! updates state
+        select case(ipass)
+        case (1)
+          ! first pass
+          theta_old(:) = bc%rsf%theta(:)
+          call rsf_update_state(Vf_old,deltat,bc%rsf)
+        case (2)
+          ! second pass
+          bc%rsf%theta(:) = theta_old(:)
+          tmp_Vf(:) = 0.5_CUSTOM_REAL*(Vf_old(:) + Vf_new(:))
+          call rsf_update_state(tmp_Vf,deltat,bc%rsf)
+        case default
+          stop 'Error invalid pass in rate and state friction update'
+        end select
 
-      do i = 1,bc%nglob
-        Vf_new(i) = rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,Tstick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
-                           bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
-      enddo
+        ! updates Vf_new
+        do i = 1,bc%nglob
+          Vf_new(i) = rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL, &
+                             Tstick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+                             bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
+        enddo
+      enddo ! two passes
 
-      ! second pass
-      bc%rsf%theta(:) = theta_old(:)
-      tmp_Vf(:) = 0.5_CUSTOM_REAL*(Vf_old(:) + Vf_new(:))
-      call rsf_update_state(tmp_Vf,bc%dt,bc%rsf)
-
-      do i = 1,bc%nglob
-        Vf_new(i) = rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,Tstick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
-                           bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
-      enddo
-
+      ! updates new traction
       Tnew(:) = Tstick(:) - bc%Z(:) * Vf_new(:)
     endif
 
@@ -1120,7 +1180,9 @@ contains
     ! Subtract initial stress (to have relative stress on the fault)
     T(:,:) = T(:,:) - bc%T0(:,:)
 
-    if (RATE_AND_STATE) T(1,:) = T(1,:) - TxExt(:)
+    if (RATE_AND_STATE) then
+      T(1,:) = T(1,:) - TxExt(:)
+    endif
     !JPA: this eliminates the effect of TxExt on the equations of motion. Why is it needed?
 
     ! Update slip acceleration da=da_free-T/(0.5*dt*Z)
@@ -1130,7 +1192,7 @@ contains
 
     ! Update slip and slip rate, in fault frame
     bc%D(:,:) = dD(:,:)
-    bc%V(:,:) = dV(:,:) + half_dt*dA(:,:)
+    bc%V(:,:) = dV(:,:) + half_dt * dA(:,:)
 
     ! Rotate tractions back to (x,y,z) frame
     T(:,:) = rotate(bc,T,-1)
@@ -1149,22 +1211,25 @@ contains
     endif
 
     call store_dataXZ(bc%dataXZ, strength, theta_old, theta_new, dc, &
-                      Vf_old, Vf_new, it*bc%dt,bc%dt)
+                      Vf_old, Vf_new, timeval, deltat)
 
     call store_dataT(bc%dataT,bc%D,bc%V,bc%T,it)
 
     if (RATE_AND_STATE) then
       ! adds storage of state
-      do ipoin = 1,bc%dataT%npoin
-        iglob = bc%dataT%iglob(ipoin)
-        if (bc%rsf%StateLaw == 1) then
-          ! ageing law
+      if (bc%rsf%StateLaw == 1) then
+        ! ageing law
+        do ipoin = 1,bc%dataT%npoin
+          iglob = bc%dataT%iglob(ipoin)
           bc%dataT%dat(8,ipoin,it) = log10(theta_new(iglob))
-        else
-          ! slip law
+        enddo
+      else
+        ! slip law
+        do ipoin = 1,bc%dataT%npoin
+          iglob = bc%dataT%iglob(ipoin)
           bc%dataT%dat(8,ipoin,it) = theta_new(iglob)
-        endif
-      enddo
+        enddo
+      endif
     endif
 
     !-- outputs --
@@ -1198,6 +1263,553 @@ contains
   endif
 
   end subroutine BC_DYNFLT_set3d
+
+!---------------------------------------------------------------------
+
+  subroutine BC_DYNFLT_set3d_lts(bc,MxA,V,D,iflt,p_value,ilevel)
+
+! LTS version of BC_DYNFLT_set3d to calculate only for fault nodes on a given p-level
+
+  use constants, only: PARALLEL_FAULT
+  use specfem_par, only: it,NSTEP,myrank
+
+  ! LTS
+  use specfem_par, only: LTS_MODE
+  use specfem_par_lts, only: num_p_level,p_level,lts_current_m
+
+  implicit none
+
+  ! fault
+  type(bc_dynandkinflt_type), intent(inout) :: bc
+  ! force/accel
+  real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
+  ! velocity,displacement
+  real(kind=CUSTOM_REAL), intent(in) :: V(:,:),D(:,:)
+  ! fault id
+  integer, intent(in) :: iflt
+  ! LTS
+  integer,intent(in),optional :: p_value,ilevel
+
+  ! local parameters
+  real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: T,dD,dV,dA
+  real(kind=CUSTOM_REAL), dimension(bc%nglob) :: Tstick,Tnew
+  real(kind=CUSTOM_REAL), dimension(bc%nglob) :: strength, theta_old, theta_new, dc
+  real(kind=CUSTOM_REAL), dimension(bc%nglob) :: Vf_old, Vf_new, TxExt, tmp_Vf
+  real(kind=CUSTOM_REAL) :: TLoad,DTau0,GLoad
+  real(kind=CUSTOM_REAL) :: deltat,half_dt,timeval
+  integer :: i,ipoin,iglob,ipass
+  real(kind=CUSTOM_REAL) :: nuc_x, nuc_y, nuc_z, nuc_r, nuc_t0, nuc_v, dist, tw_r, coh_size
+  ! LTS
+  integer :: inum,num_p_local,iilevel
+  ! only update p-level nodes (when called for each ilevel separately) set this to .true., otherwise
+  ! update all nodes (when called once on for last ilevel)
+  logical, parameter :: UPDATE_LTS_ONLY_P = .false.
+
+! note: this implementation follows the description in:
+!       - rate and state friction:
+!          Kaneko, Y., N. Lapusta, J.-P. Ampuero (2008)
+!          Spectral element modeling of spontaneous earthquake rupture on rate and state faults: Effect of
+!          velocity-strengthening friction at shallow depths,
+!          JGR, 113, B09317, doi:10.1029/2007JB005553
+!
+!       - slip weakening friction:
+!          Galvez, P., J.-P. Ampuero, L.A. Dalguer, S.N. Somala, T. Nissen-Meyer (2014)
+!          Dynamic earthquake rupture modelled with an unstructured 3-D spectral element method applied to
+!          the 2011 M9 Tohoku earthquake,
+!          Geophys. J. Int., 198, 1222-1240.
+!
+!       More features have been added, including:
+!          fault opening, fault healing, time-weakening, smooth loading,
+!          and TPV16 benchmark specific friction handling
+
+  ! safety check
+  if (.not. LTS_MODE) return
+
+  ! LTS checks if fault has any p-nodes to compute
+  ! fault flag: only compute fault elements if fault elements in this p-level
+  if (UPDATE_LTS_ONLY_P) then
+    if (.not. bc%fault_use_p_level(ilevel)) return
+  endif
+
+  ! local time step
+  deltat = bc%dt / p_value
+
+  ! half time step
+  half_dt = 0.5_CUSTOM_REAL * deltat
+
+  ! time will never be zero. it starts from 1
+  ! calculate time for this level
+  timeval = it * bc%dt     ! coarse level
+  ! adds fine level increments
+  do iilevel = ilevel,(num_p_level-1)
+    timeval = timeval + dble(lts_current_m(iilevel)-1) * bc%dt/dble(p_level(iilevel))
+  enddo
+
+  ! for parallel faults
+  if (bc%nspec > 0) then
+
+    ! sets up local p-nodes on fault surface
+    num_p_local = bc%fault_num_p_local(ilevel)
+
+    ! LTS: note that T,dD,.. are all temporary arrays which we don't have to split into p-values necessarily
+    !      however, computing them on p-nodes only would make it faster probably
+    !      for now, we only take care to update arrays stored by fault arrays bc%.. on p-nodes only
+    ! LTS - todo optimization
+    !if (USE_OPTIMIZATION) then
+    !  ! LTS on global p-nodes only
+    !  do inum = 1,num_p_local
+    !    i = bc%fault_ibool_local_p(inum,ilevel)
+    !    Vf_old(i) = sqrt( bc%V(1,i)*bc%V(1,i) + bc%V(2,i)*bc%V(2,i) )
+    !  enddo
+    !else
+    Vf_old(:) = sqrt(bc%V(1,:)*bc%V(1,:) + bc%V(2,:)*bc%V(2,:))
+
+    ! get predicted values
+    dD(:,:) = get_jump(bc,D) ! dD_predictor
+    dV(:,:) = get_jump(bc,V) ! dV_predictor
+    dA(:,:) = get_weighted_jump(bc,MxA) ! dA_free
+
+    ! rotate to fault frame (tangent,normal)
+    ! component 3 is normal to the fault
+    dD(:,:) = rotate(bc,dD,1)
+    dV(:,:) = rotate(bc,dV,1)
+    dA(:,:) = rotate(bc,dA,1)
+
+    ! T_stick "stick traction"
+    ! LTS - todo optimization
+    !if (USE_OPTIMIZATION) then
+    !  ! LTS on global p-nodes only
+    !  do inum = 1,num_p_local
+    !    i = bc%fault_ibool_local_p(inum,ilevel)
+    !    T(:,i) = bc%Z(i) * ( dV(:,i) + half_dt*dA(:,i) )
+    !  enddo
+    !else
+    T(1,:) = bc%Z(:) * ( dV(1,:) + half_dt*dA(1,:) )
+    T(2,:) = bc%Z(:) * ( dV(2,:) + half_dt*dA(2,:) )
+    T(3,:) = bc%Z(:) * ( dV(3,:) + half_dt*dA(3,:) )
+
+    !Warning : dirty particular free surface condition z = 0.
+    !  where (bc%zcoord(:) > - SMALLVAL) T(2,:) = 0
+    ! do k = 1,bc%nglob
+    !   if (abs(bc%zcoord(k)-0.e0_CUSTOM_REAL) < SMALLVAL) T(2,k) = 0.e0_CUSTOM_REAL
+    ! enddo
+
+    ! add initial stress
+    ! LTS - todo optimization
+    !if (USE_OPTIMIZATION) then
+    !  ! LTS on global p-nodes only
+    !  do inum = 1,num_p_local
+    !    i = bc%fault_ibool_local_p(inum,ilevel)
+    !    T(:,i) = T(:,i) + bc%T0(:,i)
+    !  enddo
+    !else
+    T(:,:) = T(:,:) + bc%T0(:,:)
+
+    ! Solve for normal stress (negative is compressive)
+    ! Opening implies free stress
+    if (bc%allow_opening) then
+      ! LTS - todo optimization
+      !if (USE_OPTIMIZATION) then
+      !  ! LTS on global p-nodes only
+      !  do inum = 1,num_p_local
+      !    i = bc%fault_ibool_local_p(inum,ilevel)
+      !    T(3,i) = min(T(3,i),0.e0_CUSTOM_REAL)
+      !  enddo
+      !else
+      T(3,:) = min(T(3,:),0.0_CUSTOM_REAL)
+    endif
+
+    ! smooth loading within nucleation patch
+    !WARNING : ad hoc for SCEC benchmark TPV10x
+    if (RATE_AND_STATE) then
+      ! see: Kaneko (2008), appendix B "Rupture Initiation Procedure"
+
+      ! LTS - todo optimization
+      !if (USE_OPTIMIZATION) then
+      !  TLoad = 1.0_CUSTOM_REAL
+      !  DTau0 = 1.0_CUSTOM_REAL
+      !  if (timeval <= TLoad) then
+      !    GLoad = exp( (timeval-TLoad)*(timeval-Tload) / (timeval*(timeval-2.0_CUSTOM_REAL*TLoad)) )
+      !  else
+      !    GLoad = 1.0_CUSTOM_REAL
+      !  endif
+      !  ! LTS on p-nodes only
+      !  do inum = 1,num_p_local
+      !    i = bc%fault_ibool_local_p(inum,ilevel)
+      !    TxExt(i) = DTau0 * bc%Fload(i) * GLoad
+      !    T(1,i) = T(1,i) + TxExt(i)
+      !  enddo
+      !else
+      TxExt(:) = 0.0_CUSTOM_REAL
+      TLoad = 1.0_CUSTOM_REAL   ! T_ini
+      DTau0 = 1.0_CUSTOM_REAL   ! \Delta \tau_0
+
+      ! function G(t)
+      ! see Kaneko (2008), equation (B3):
+      !   if 0 < t < T_ini
+      !     G(t) = exp( (t - T_ini)^2 / (t^2 - 2 t T_ini)
+      !   else
+      !     G(t) = 1
+      if (timeval <= TLoad) then
+        GLoad = exp( (timeval-TLoad)*(timeval-Tload) / (timeval*(timeval-2.0_CUSTOM_REAL*TLoad)) )
+      else
+        GLoad = 1.0_CUSTOM_REAL
+      endif
+      ! Kaneko (2008), equation (B1): \Delta \tau = \Delta \tau_0 * F(x,z) * G(t)
+      ! the geometry and values of function F(x,z) have been pre-computed for a case specific nucleation patch
+      TxExt(:) = DTau0 * bc%Fload(:) * GLoad
+
+      ! adds horizontal shear traction perturbation
+      T(1,:) = T(1,:) + TxExt(:)
+    endif
+
+    ! norm of shear fault traction
+    ! LTS - todo optimization
+    !if (USE_OPTIMIZATION) then
+    !  ! LTS on p-nodes only
+    !  do inum = 1,num_p_local
+    !    i = bc%fault_ibool_local_p(inum,ilevel)
+    !    tStick(i) = sqrt( T(1,i)*T(1,i) + T(2,i)*T(2,i) )
+    !  enddo
+    !else
+    Tstick(:) = sqrt( T(1,:)*T(1,:) + T(2,:)*T(2,:))
+
+    if (.not. RATE_AND_STATE) then
+      ! slip weakening friction
+      if (UPDATE_LTS_ONLY_P) then
+        ! update slip state variable
+        ! WARNING: during opening the friction state variable should not evolve
+        ! LTS on p-nodes only
+        do inum = 1,num_p_local
+          i = bc%fault_ibool_local_p(inum,ilevel)
+          theta_old(i) = bc%swf%theta(i)
+        enddo
+        call swf_update_state_lts(bc%D,dD,bc%V,bc%swf,p_value,bc)  ! LTS version
+
+        ! update friction coefficient (using slip weakening friction law)
+        ! LTS on p-nodes only
+        do inum = 1,num_p_local
+          i = bc%fault_ibool_local_p(inum,ilevel)
+          bc%MU(i) = swf_mu_lts(bc%swf,i)  ! LTS version
+        enddo
+      else
+        ! update slip state variable
+        ! WARNING: during opening the friction state variable should not evolve
+        theta_old(:) = bc%swf%theta(:)
+        call swf_update_state(bc%D,dD,bc%V,bc%swf)
+
+        ! update friction coefficient (using slip weakening friction law)
+        bc%mu(:) = swf_mu(bc%swf)
+      endif
+
+      ! combined with time-weakening for nucleation
+      if (TWF) then
+        nuc_x   = bc%twf%nuc_x
+        nuc_y   = bc%twf%nuc_y
+        nuc_z   = bc%twf%nuc_z
+        nuc_r   = bc%twf%nuc_r
+        nuc_t0  = bc%twf%nuc_t0
+        nuc_v   = bc%twf%nuc_v
+        do i = 1,bc%nglob
+            dist = ((bc%coord(1,i)-nuc_x)**2 + (bc%coord(2,i)-nuc_y)**2 + (bc%coord(3,i)-nuc_z)**2)**0.5
+            if (dist <= nuc_r) then
+                tw_r     = timeval * nuc_v
+                coh_size = nuc_t0  * nuc_v
+                if (dist <= tw_r - coh_size) then
+                    bc%mu(i) = min(bc%mu(i), bc%swf%mud(i))
+                else if (dist > tw_r - coh_size .and. dist <= tw_r ) then
+                    bc%mu(i) = min(bc%mu(i), bc%swf%mud(i) + (dist-(tw_r-coh_size))/coh_size*(bc%swf%mus(i)-bc%swf%mud(i)))
+                endif
+            endif
+        enddo
+      endif
+
+      ! TPV16 benchmark
+      if (TPV16) then
+        ! fixes friction coefficient to be dynamic friction coefficient when rupture time is over
+        if (UPDATE_LTS_ONLY_P) then
+          ! LTS on p-nodes only
+          do inum = 1,num_p_local
+            i = bc%fault_ibool_local_p(inum,ilevel)
+            if (bc%swf%T(i) <= timeval) bc%mu(i) = bc%swf%mud(i)
+          enddo
+        else
+          where (bc%swf%T(:) <= timeval) bc%mu(:) = bc%swf%mud(:)
+        endif
+      endif
+
+      ! Update strength & shear stress
+      if (UPDATE_LTS_ONLY_P) then
+        ! LTS on p-nodes only
+        do inum = 1,num_p_local
+          i = bc%fault_ibool_local_p(inum,ilevel)
+          ! Update strength
+          strength(i) = -bc%MU(i) * min(T(3,i),0.0_CUSTOM_REAL) + bc%swf%C(i)
+          ! solves for shear stress
+          Tnew(i) = min(Tstick(i),strength(i))
+        enddo
+      else
+        ! updates fault strength
+        strength(:) = -bc%mu(:) * min(T(3,:),0.0_CUSTOM_REAL) + bc%swf%C(:)
+        ! solves for shear stress
+        Tnew(:) = min(Tstick(:),strength(:))
+      endif
+    else
+      ! rate and state friction
+
+      !JPA the solver below can be refactored into a loop with two passes
+      !
+      ! see: Kaneko (2008), explanation of steps 4 and 6 in section 2.3,
+      !      and compare against the alternative first-order expansion given by equation (24)
+
+      do ipass = 1,2
+        ! updates state
+        select case(ipass)
+        case (1)
+          ! first pass
+          if (UPDATE_LTS_ONLY_P) then
+            ! LTS on p-nodes only
+            do inum = 1,num_p_local
+              i = bc%fault_ibool_local_p(inum,ilevel)
+              theta_old(i) = bc%rsf%theta(i)
+              call rsf_update_state_lts(Vf_old,deltat,bc%rsf,i)
+            enddo
+          else
+            theta_old(:) = bc%rsf%theta(:)
+            call rsf_update_state(Vf_old,deltat,bc%rsf)
+          endif
+        case (2)
+          ! second pass
+          if (UPDATE_LTS_ONLY_P) then
+            ! LTS on p-nodes only
+            do inum = 1,num_p_local
+              i = bc%fault_ibool_local_p(inum,ilevel)
+              bc%rsf%theta(i) = theta_old(i)
+              tmp_Vf(:) = 0.5_CUSTOM_REAL*(Vf_old(:) + Vf_new(:))
+              call rsf_update_state_lts(tmp_Vf,deltat,bc%rsf,i)
+            enddo
+          else
+            bc%rsf%theta(:) = theta_old(:)
+            tmp_Vf(:) = 0.5_CUSTOM_REAL*(Vf_old(:) + Vf_new(:))
+            call rsf_update_state(tmp_Vf,deltat,bc%rsf)
+          endif
+        case default
+          stop 'Error invalid pass in rate and state friction update'
+        end select
+
+        ! updates Vf_new
+        if (UPDATE_LTS_ONLY_P) then
+          ! LTS on p-nodes only
+          do inum = 1,num_p_local
+            i = bc%fault_ibool_local_p(inum,ilevel)
+            Vf_new(i) = rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL, &
+                               Tstick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+                               bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
+          enddo
+        else
+          do i = 1,bc%nglob
+            Vf_new(i) = rtsafe(0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL, &
+                               Tstick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+                               bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
+          enddo
+        endif
+      enddo ! two passes
+
+      ! updates new stress
+      if (UPDATE_LTS_ONLY_P) then
+        ! LTS on p-nodes only
+        do inum = 1,num_p_local
+          i = bc%fault_ibool_local_p(inum,ilevel)
+          Tnew(i) = Tstick(i) - bc%Z(i) * Vf_new(i)
+        enddo
+      else
+        ! updates new traction
+        Tnew(:) = Tstick(:) - bc%Z(:) * Vf_new(:)
+      endif
+
+    endif
+
+    if (UPDATE_LTS_ONLY_P) then
+      ! LTS on p-nodes only
+      do inum = 1,num_p_local
+        i = bc%fault_ibool_local_p(inum,ilevel)
+        Tstick(i) = max(Tstick(i),1.0_CUSTOM_REAL) ! to avoid division by zero
+        T(1,i) = Tnew(i) * T(1,i)/Tstick(i)
+        T(2,i) = Tnew(i) * T(2,i)/Tstick(i)
+      enddo
+
+      ! Save total tractions
+      ! LTS on p-nodes only
+      do inum = 1,num_p_local
+        i = bc%fault_ibool_local_p(inum,ilevel)
+        bc%T(:,i) = T(:,i)
+      enddo
+    else
+      Tstick(:) = max(Tstick(:),1.0_CUSTOM_REAL) ! to avoid division by zero
+
+      T(1,:) = Tnew(:) * T(1,:)/Tstick(:)
+      T(2,:) = Tnew(:) * T(2,:)/Tstick(:)
+
+      ! Save total tractions
+      bc%T(:,:) = T(:,:)
+    endif
+
+    ! Subtract initial stress (to have relative stress on the fault)
+    ! LTS - todo optimization
+    !if (USE_OPTIMIZATION) then
+    !  do inum = 1,num_p_local
+    !    i = bc%fault_ibool_local_p(inum,ilevel)
+    !    T(:,i) = T(:,i) - bc%T0(:,i)
+    !  enddo
+    !else
+    T(:,:) = T(:,:) - bc%T0(:,:)
+
+    if (RATE_AND_STATE) then
+      ! LTS - todo optimization
+      !if (USE_OPTIMIZATION) then
+      !  do inum = 1,num_p_local
+      !    i = bc%fault_ibool_local_p(inum,ilevel)
+      !    T(1,i) = T(1,i) - TxExt(i)
+      !  enddo
+      !else
+      T(1,:) = T(1,:) - TxExt(:)
+    endif
+    !JPA: this eliminates the effect of TxExt on the equations of motion. Why is it needed?
+
+    ! Update slip acceleration da=da_free-T/(0.5*dt*Z)
+    ! LTS - todo optimization
+    !if (USE_OPTIMIZATION) then
+    !  do inum = 1,num_p_local
+    !    i = bc%fault_ibool_local_p(inum,ilevel)
+    !    dA(:,i) = dA(:,i) - T(:,i)/(bc%Z(i) * half_dt)
+    !  enddo
+    !else
+    dA(1,:) = dA(1,:) - T(1,:)/(bc%Z(:) * half_dt)
+    dA(2,:) = dA(2,:) - T(2,:)/(bc%Z(:) * half_dt)
+    dA(3,:) = dA(3,:) - T(3,:)/(bc%Z(:) * half_dt)
+
+    ! Update slip and slip rate, in fault frame
+    if (UPDATE_LTS_ONLY_P) then
+      ! LTS on p-nodes only
+      do inum = 1,num_p_local
+        i = bc%fault_ibool_local_p(inum,ilevel)
+        bc%D(:,i) = dD(:,i)
+        bc%V(:,i) = dV(:,i) + half_dt*dA(:,i)
+      enddo
+    else
+      bc%D(:,:) = dD(:,:)
+      bc%V(:,:) = dV(:,:) + half_dt * dA(:,:)
+    endif
+
+    ! Rotate tractions back to (x,y,z) frame
+    T(:,:) = rotate(bc,T,-1)
+
+    ! Add boundary term B*T to M*a
+    if (UPDATE_LTS_ONLY_P) then
+      ! LTS on p-nodes only
+      do inum = 1,num_p_local
+        i = bc%fault_ibool_local_p(inum,ilevel)
+        call add_BT_single(bc,MxA,T,i)  ! LTS version
+      enddo
+    else
+      call add_BT(bc,MxA,T)
+    endif
+
+    !-- intermediate storage of outputs --
+    ! LTS - todo optimization
+    !if (USE_OPTIMIZATION) then
+    !  do inum = 1,num_p_local
+    !    i = bc%fault_ibool_local_p(inum,ilevel)
+    !    Vf_new(i) = sqrt(bc%V(1,i)*bc%V(1,i) + bc%V(2,i)*bc%V(2,i))
+    !    if (.not. RATE_AND_STATE) then
+    !      theta_new(i) = bc%swf%theta(i)
+    !      dc(i) = bc%swf%dc(i)
+    !    else
+    !      theta_new(i) = bc%rsf%theta(i)
+    !      dc(i) = bc%rsf%L(i)
+    !    endif
+    !  enddo
+    !else
+    Vf_new = sqrt(bc%V(1,:)*bc%V(1,:) + bc%V(2,:)*bc%V(2,:))
+    if (.not. RATE_AND_STATE) then
+      theta_new(:) = bc%swf%theta(:)
+      dc(:) = bc%swf%Dc(:)
+    else
+      theta_new(:) = bc%rsf%theta(:)
+      dc(:) = bc%rsf%L(:)
+    endif
+
+    call store_dataXZ(bc%dataXZ, strength, theta_old, theta_new, dc, &
+                      Vf_old, Vf_new, timeval, deltat)
+
+    call store_dataT(bc%dataT,bc%D,bc%V,bc%T,it)
+
+    if (RATE_AND_STATE) then
+      ! adds storage of state
+      if (bc%rsf%StateLaw == 1) then
+        ! ageing law
+        if (UPDATE_LTS_ONLY_P) then
+          ! LTS on p-nodes only
+          do inum = 1,num_p_local
+            ipoin = bc%fault_ibool_local_p(inum,ilevel)
+            iglob = bc%dataT%iglob(ipoin)
+            bc%dataT%dat(8,ipoin,it) = log10(theta_new(iglob))
+          enddo
+        else
+          do ipoin = 1,bc%dataT%npoin
+            iglob = bc%dataT%iglob(ipoin)
+            bc%dataT%dat(8,ipoin,it) = log10(theta_new(iglob))
+          enddo
+        endif
+      else
+        ! slip law
+        if (UPDATE_LTS_ONLY_P) then
+          ! LTS on p-nodes only
+          do inum = 1,num_p_local
+            ipoin = bc%fault_ibool_local_p(inum,ilevel)
+            iglob = bc%dataT%iglob(ipoin)
+            bc%dataT%dat(8,ipoin,it) = theta_new(iglob)
+          enddo
+        else
+          do ipoin = 1,bc%dataT%npoin
+            iglob = bc%dataT%iglob(ipoin)
+            bc%dataT%dat(8,ipoin,it) = theta_new(iglob)
+          enddo
+        endif
+      endif
+    endif
+
+    !-- outputs --
+    ! write dataT every NTOUT time step or at the end of simulation
+    if (mod(it,NTOUT) == 0 .or. it == NSTEP) call SCEC_write_dataT(bc%dataT)
+  endif
+
+  ! note: this stage of the routine must be reached by all processes,
+  !       otherwise the MPI gather calls won't succeed and the run gets stuck.
+
+  ! write dataXZ every NSNAP time step
+  if (mod(it,NSNAP) == 0) then
+    if (PARALLEL_FAULT) then
+      ! collects data from all processes
+      call gather_dataXZ(bc)
+      ! main process writes output file
+      if (myrank == 0) call write_dataXZ(bc%dataXZ_all,it,iflt)
+    else
+      ! fault in single slice
+      if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
+    endif
+  endif
+
+  ! final output
+  if (it == NSTEP) then
+    if (.not. PARALLEL_FAULT) then
+      call SCEC_Write_RuptureTime(bc%dataXZ,iflt)
+    else
+      if (myrank == 0) call SCEC_Write_RuptureTime(bc%dataXZ_all,iflt)
+    endif
+  endif
+
+  end subroutine BC_DYNFLT_set3d_lts
 
 !===============================================================
 
@@ -1341,6 +1953,45 @@ contains
 
 !---------------------------------------------------------------------
 
+  subroutine swf_update_state_lts(dold,dnew,vold,f,p_value,bc)
+
+  use specfem_par_lts, only: iglob_p_refine
+  implicit none
+
+  real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: vold,dold,dnew
+  type(swf_type), intent(inout) :: f
+
+  integer,intent(in) :: p_value
+  type(bc_dynandkinflt_type), intent(in) :: bc
+
+  ! local parameters
+  real(kind=CUSTOM_REAL) :: vnorm
+  integer :: i,iglob
+
+  ! fault state variable theta (magnitude of accumulated slip on fault)
+  ! accumulates fault slip
+  do i = 1,bc%nglob
+    iglob = bc%ibulk1(i)
+    if ( iglob_p_refine(iglob) == p_value ) then
+      f%theta(i) = f%theta(i) + sqrt( (dold(1,i)-dnew(1,i))**2 + (dold(2,i)-dnew(2,i))**2 )
+    endif
+  enddo
+
+  ! fault healing
+  if (f%healing) then
+    do i = 1,bc%nglob
+      iglob = bc%ibulk1(i)
+      if (iglob_p_refine(iglob) == p_value) then
+        vnorm = sqrt(vold(1,i)**2 + vold(2,i)**2)
+        if (vnorm < V_HEALING) f%theta(i) = 0.0_CUSTOM_REAL
+      endif
+    enddo
+  endif
+
+  end subroutine swf_update_state_lts
+
+!---------------------------------------------------------------------
+
   function swf_mu(f) result(mu)
 
   implicit none
@@ -1349,18 +2000,41 @@ contains
   real(kind=CUSTOM_REAL) :: mu(size(f%theta))
 
   if (f%kind == 1) then
-  ! slip weakening law
-  !
-  ! for example: Galvez, 2014, eq. (8)
-  !              also Ida, 1973; Palmer & Rice 1973; Andrews 1976; ..
-      mu(:) = f%mus(:) - (f%mus(:)-f%mud(:)) * min(f%theta(:)/f%Dc(:), 1.0_CUSTOM_REAL)
+    ! slip weakening law
+    !
+    ! for example: Galvez, 2014, eq. (8)
+    !              also Ida, 1973; Palmer & Rice 1973; Andrews 1976; ..
+    mu(:) = f%mus(:) - (f%mus(:)-f%mud(:)) * min(f%theta(:)/f%Dc(:), 1.0_CUSTOM_REAL)
   else
-  !-- exponential slip weakening:
-      mu(:) = f%mud(:) - (f%mud(:)-f%mus(:)) * exp(-f%theta(:)/f%Dc(:))
+    !-- exponential slip weakening:
+    mu(:) = f%mud(:) - (f%mud(:)-f%mus(:)) * exp(-f%theta(:)/f%Dc(:))
   endif
 
   end function swf_mu
 
+
+!---------------------------------------------------------------------
+
+  function swf_mu_lts(f,i) result(mu)
+
+  implicit none
+
+  type(swf_type), intent(in) :: f
+  integer, intent(in) :: i
+  real(kind=CUSTOM_REAL) :: mu
+
+  if (f%kind == 1) then
+    ! slip weakening law
+    !
+    ! for example: Galvez, 2014, eq. (8)
+    !              also Ida, 1973; Palmer & Rice 1973; Andrews 1976; ..
+    mu = f%mus(i) - (f%mus(i)-f%mud(i)) * min(f%theta(i)/f%Dc(i), 1.0_CUSTOM_REAL)
+  else
+    !-- exponential slip weakening:
+    mu = f%mud(i) - (f%mud(i)-f%mus(i)) * exp(-f%theta(i)/f%Dc(i))
+  endif
+
+  end function swf_mu_lts
 
 !=====================================================================
 
@@ -1888,6 +2562,56 @@ contains
 
   end subroutine rsf_update_state
 
+!---------------------------------------------------------------------
+
+  subroutine rsf_update_state_lts(V,dt_real,f,i)
+
+  use constants, only: ONE,HALF,TWO
+  implicit none
+  real(kind=CUSTOM_REAL), dimension(:), intent(in) :: V
+  type(rsf_type), intent(inout) :: f
+  real(kind=CUSTOM_REAL), intent(in) :: dt_real
+
+  ! LTS
+  integer,intent(in) :: i
+
+  ! local parameters
+  real(kind=CUSTOM_REAL) :: vDtL
+  real(kind=CUSTOM_REAL) :: f_ss,theta_ss,f_LV
+
+  ! LTS on p-nodes only
+  vDtL = V(i) * dt_real / f%L(i)
+
+  ! note: assumes that vDTL is strictly positive ( >= 0), since V >= 0, dt > 0 and L > 0
+  if (vDtL < 0.0_CUSTOM_REAL) stop 'Invalid negative factor found in rate and state friction law'
+
+  ! state update
+  if (f%StateLaw == 1) then
+    ! ageing law
+    if (vDtL > 1.e-5_CUSTOM_REAL) then
+      f%theta(i) = f%theta(i) * exp(-vDtL) + f%L(i)/V(i) * (ONE - exp(-vDtL))
+    else
+      f%theta(i) = f%theta(i) * exp(-vDtL) + dt_real * ( ONE - HALF*vDtL )
+    endif
+  else
+    ! slip law
+    if (RSF_SLIP_LAW_TYPE == 1) then
+      ! default, strong rate-weakening:
+      if (V(i) /= 0.0_CUSTOM_REAL) then
+        f_LV = f%f0(i) - (f%b(i) - f%a(i))*log(V(i)/f%V0(i))
+        f_ss = f%fw(i) + (f_LV - f%fw(i))/(ONE + (V(i)/f%Vw(i))**8)**0.125
+        theta_ss = f%a(i) * log( TWO*f%V0(i)/V(i) * sinh(f_ss/f%a(i)) )
+        f%theta(i) = theta_ss + (f%theta(i) - theta_ss) * exp(-vDtL)
+      else
+        f%theta(i) = f%theta(i)
+      endif
+    else
+      ! Kaneko (2008) slip law:
+      f%theta(i) = f%L(i)/V(i) * (f%theta(i)*V(i)/f%L(i))**(exp(-vDtL))
+    endif
+  endif
+
+  end subroutine rsf_update_state_lts
 
 !===============================================================
 ! OUTPUTS
@@ -1905,7 +2629,8 @@ contains
   integer :: i
   character(len=MAX_STRING_LEN) :: filename
   integer, dimension(8) :: time_values
-  integer, parameter :: IOUT_RUP = 121 !WARNING: not very robust. Could instead look for an available ID
+  ! WARNING: not very robust. Could instead look for an available ID
+  integer, parameter :: IOUT_RUP = 121
 
   call date_and_time(VALUES=time_values)
 
@@ -2562,6 +3287,22 @@ contains
   enddo
 
   end subroutine fault_output_synchronize_GPU
+
+!---------------------------------------------------------------
+
+  subroutine BC_DYNFLT_free()
+
+  implicit none
+  integer :: iflt
+
+  do iflt = 1,size(faults)
+    call free_fault_memory(faults(iflt))
+  enddo
+
+  deallocate(faults)
+  if (allocated(Kelvin_Voigt_eta)) deallocate(Kelvin_Voigt_eta)
+
+  end subroutine BC_DYNFLT_free
 
 end module fault_solver_dynamic
 

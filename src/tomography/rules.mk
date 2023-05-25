@@ -208,6 +208,7 @@ xmodel_update_SHARED_OBJECTS += \
 	$O/check_mesh_resolution.shared.o \
 	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
+	$O/define_mass_matrices.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/get_attenuation_model.shared.o \
 	$O/gll_library.shared.o \
@@ -217,7 +218,9 @@ xmodel_update_SHARED_OBJECTS += \
 	$O/netlib_specfun_erf.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
+	$O/read_topo_bathy_file.shared.o \
 	$O/read_value_parameters.shared.o \
+	$O/utm_geo.shared.o \
 	$O/write_c_binary.cc.o \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)

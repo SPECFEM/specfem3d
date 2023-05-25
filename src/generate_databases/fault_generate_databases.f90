@@ -39,24 +39,28 @@ module fault_generate_databases
   use generate_databases_par, only: NGNOD2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,CUSTOM_REAL,IMAIN
 
   implicit none
-  private
 
   type fault_db_type
-    private
     real(kind=CUSTOM_REAL), dimension(:), pointer :: xcoordbulk1,ycoordbulk1,zcoordbulk1, &
                                                      xcoordbulk2,ycoordbulk2,zcoordbulk2
     real(kind=CUSTOM_REAL), dimension(:,:), pointer:: jacobian2Dw
     real(kind=CUSTOM_REAL), dimension(:,:,:), pointer:: normal
     real(kind=CUSTOM_REAL) :: eta
-    integer, dimension(:), pointer:: ispec1, ispec2, ibulk1, ibulk2, iface1, iface2
+
+    integer, dimension(:), pointer:: ispec1, ispec2
+    integer, dimension(:), pointer:: ibulk1, ibulk2
+    integer, dimension(:), pointer:: iface1, iface2
+
     integer, dimension(:,:), allocatable :: ibool1, ibool2
     integer, dimension(:,:), pointer :: inodes1, inodes2
     integer, dimension(:,:,:), pointer :: ijk1, ijk2
     integer :: nspec = 0, nglob = 0
   end type fault_db_type
 
-  type(fault_db_type), allocatable, save :: fault_db(:)
   ! fault_db(i) is the database of the i-th fault in the mesh
+  type(fault_db_type), allocatable, save :: fault_db(:)
+
+  private
 
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
 
@@ -87,6 +91,8 @@ module fault_generate_databases
   public :: fault_read_input, fault_setup, fault_save_arrays_test, fault_save_arrays, &
             nodes_coords_open, nnodes_coords_open, ANY_FAULT_IN_THIS_PROC, ANY_FAULT
 
+  public :: fault_db_type,fault_db
+
 contains
 
 !=================================================================================================================
@@ -106,7 +112,6 @@ contains
   if (ier == 0) then
     read(IIN_PAR,*) nb
     if (myrank == 0) then
-      write(IMAIN,*)
       write(IMAIN,*) '  ... reading ', nb,' faults from file DATA/Par_file_faults'
       write(IMAIN,*)
     endif

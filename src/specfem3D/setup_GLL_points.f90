@@ -34,26 +34,10 @@
   use specfem_par_poroelastic
 
   implicit none
-  integer :: i,j,k,inum
+  integer :: i,j,k
 
   ! checks if anything to do
   if (.not. IO_compute_task) return
-
-  ! outputs total element numbers
-  call sum_all_i(count(ispec_is_acoustic(:)),inum)
-  if (myrank == 0) then
-    write(IMAIN,*) 'total acoustic elements    :',inum
-  endif
-  call sum_all_i(count(ispec_is_elastic(:)),inum)
-  if (myrank == 0) then
-    write(IMAIN,*) 'total elastic elements     :',inum
-  endif
-  call sum_all_i(count(ispec_is_poroelastic(:)),inum)
-  if (myrank == 0) then
-    write(IMAIN,*) 'total poroelastic elements :',inum
-    write(IMAIN,*)
-    call flush_IMAIN()
-  endif
 
   ! checks Courant criteria on mesh
   call check_mesh_resolution(NSPEC_AB,NGLOB_AB, &

@@ -376,6 +376,7 @@ xproject_and_combine_vol_data_on_regular_grid_SHARED_OBJECTS = \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
+	$O/define_mass_matrices.shared.o \
 	$O/detect_surface.shared.o \
 	$O/force_ftz.cc.o \
 	$O/get_attenuation_model.shared.o \

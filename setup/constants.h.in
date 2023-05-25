@@ -525,12 +525,17 @@
 ! adds overlap elements
   logical,parameter :: LTS_OVERLAP_REGION   = .false.
 
-! uses only 1 single p-level (for debugging)
+! uses only 1 single p-level
   logical,parameter :: LTS_SINGLE_P_LEVEL = .false.
-! uses only 2 p-levels (for debugging)
+! uses only 2 p-levels
   logical,parameter :: LTS_TWO_P_LEVEL = .false.
 
 ! decreases final coarsest time step for stability
+! note: LTS must decrease time step for stability depending on p depth;
+!       to avoid this decrease, one can try to overlap the fine region by one/two elements.
+!       by default, we add an LTS_SAFETY_MARGIN to the suggested LTS time steps and LTS element binning;
+!       where the coarsest time step is calculated as a multiple of the user DT input in Par_file.
+!       here, we can further decrease this coarsest step for LTS simulations to add additional stability.
   logical,parameter :: LTS_DECREASE_DT = .false.
 ! time step margin to use for decrease
   double precision,parameter :: LTS_STABILITY_MARGIN_DT = 0.6d0

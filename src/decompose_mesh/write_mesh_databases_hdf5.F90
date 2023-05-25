@@ -30,9 +30,10 @@
 
 ! writes out new Databases files for each partition in HDF5-format
 
-  use decompose_mesh_par
-
 #ifdef USE_HDF5
+  use decompose_mesh_par
+  use fault_scotch, only: ANY_FAULT,nodes_coords_open,write_fault_database
+
   ! HDF5 file i/o
   use manager_hdf5
   use part_decompose_mesh_hdf5
@@ -239,7 +240,7 @@
 
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) close(124)
 
-  ! #TODO: hdf5 support for fault simulation not implemented yet
+  ! #TODO: HDF5 support for fault simulation not implemented yet
   ! writes fault database
   if (ANY_FAULT) then
     do ipart = 0, nparts-1

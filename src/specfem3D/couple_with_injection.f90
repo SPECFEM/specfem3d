@@ -412,7 +412,7 @@
         if (ier /= 0) stop 'error while allocating Veloc_FK'
         Tract_FK(:,:,:) = 0._CUSTOM_REAL
 
-        call FK3D(type_kpsv_fk, nlayer, nstep, npt, &
+        call FK3D(type_kpsv_fk, nlayer, NSTEP, npt, &
                   ray_p, phi_FK, xx0, yy0, zz0, Tg, &
                   tt0, alpha_FK, beta_FK, mu_FK, h_FK, &
                   NF_FOR_STORING, NPOW_FOR_FFT, NP_RESAMP, DF_FK)
@@ -492,7 +492,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine FK3D(kpsv, nlayer, nstep, npt, &
+  subroutine FK3D(kpsv, nlayer, NSTEP, npt, &
                   ray_p, phi, xx0, yy0, zz0, Tg, &
                   tt0, alpha_FK, beta_FK, mu_FK, h_FK, &
                   NF_FOR_STORING, NPOW_FOR_FFT, NP_RESAMP, DF_FK)
@@ -519,7 +519,7 @@
 
   implicit none
 
-  integer,intent(in)   :: kpsv,nlayer,nstep,npt
+  integer,intent(in)   :: kpsv,nlayer,NSTEP,npt
   integer,intent(in)   :: NF_FOR_STORING, NPOW_FOR_FFT, NP_RESAMP
 
   ! source
@@ -633,7 +633,7 @@
   ! FK wavefield
   call FK(alpha_FK, beta_FK, mu_FK, h_FK, nlayer, &
           Tg, ray_p, phi, xx0, yy0, zz0, &
-          tt0, deltat, nstep, npt, &
+          tt0, deltat, NSTEP, npt, &
           kpsv, NF_FOR_STORING, NPOW_FOR_FFT,  NP_RESAMP, DF_FK)
 
   ! file output for plotting

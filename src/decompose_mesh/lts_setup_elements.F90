@@ -50,8 +50,8 @@
 
   ! time steps
   double precision :: dtmin,dtmax
-  double precision :: time_step
   double precision :: deltat_lts
+  double precision :: dt_suggested
 
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: ispec_time_step
 
@@ -106,6 +106,7 @@
   print *,'  setting up elements for local time stepping'
   print *,'  number of elements:',nspec
   print *,'  number of nodes   :',nglob
+  print *
 
   ! define percentage of smallest distance between GLL points for NGLL points
   ! percentages were computed by calling the GLL points routine for each degree
@@ -124,6 +125,7 @@
   percent_GLL(13) = 2.3345076678918053d0
   percent_GLL(14) = 2.0032477366369594d0
   percent_GLL(15) = 1.7377036748080721d0
+
   ! convert to real percentage
   percent_GLL(:) = percent_GLL(:) / 100.d0
   if (NGLLX < 2 .or. NGLLX > 15) stop 'error value of NGLLX not supported yet'
@@ -153,37 +155,39 @@
     distance_min = elemsize * percent_GLL(NGLLX)
 
     ! estimated time step based on CFL condition
-    time_step = COURANT_SUGGESTED * distance_min / max( vp,vs )
+    dt_suggested = COURANT_SUGGESTED * distance_min / max( vp,vs )
+
+    ! cut at a significant number of digits (2 digits)
+    ! example: 0.0734815 -> lpow = (2 - (-1) = 3 -> 0.0730
+    call get_timestep_limit_significant_digit_dp(dt_suggested)
 
     ! stores value
-    ispec_time_step(ispec) = time_step
+    ispec_time_step(ispec) = dt_suggested
 
     ! determines coarsest time step
-    if (dtmax < time_step) then
-      dtmax = time_step
+    if (dtmax < dt_suggested) then
+      dtmax = dt_suggested
     endif
     ! determines finest time step
-    if (dtmin > time_step) then
-      dtmin = time_step
+    if (dtmin > dt_suggested) then
+      dtmin = dt_suggested
     endif
   enddo
-  print *,'  estimated time step min   = ',sngl(dtmin),' seconds'
-  print *,'  estimated time step max   = ',sngl(dtmax),' seconds'
-  print *,'  estimated time step ratio = ',sngl(dtmax/dtmin)
+  print *,'  estimated time step min   = ',dtmin,' seconds'
+  print *,'  estimated time step max   = ',dtmax,' seconds'
+  print *,'  estimated time step ratio = ',dtmax/dtmin
   print *
 
   ! users sets DT = .. in Par_file, we use this as a threshold limit for the minimum time step size
   ! (useful in case CFL is underestimating size)
   if (dtmin > DT) then
-    print *,'  DT time step size set by Par_file: DT = ',sngl(DT),' limits coarsest time step size!'
+    print *,'  DT time step size set by Par_file: DT = ',DT,' limits coarsest time step size'
     if (dtmin / DT >= 2.0) then
-      print *,'  please set DT to higher value: ',sngl(dtmin),' otherwise LTS will not be optimal!!!'
-      print *
+      print *,'  Please set DT to higher value    :      ',dtmin,' otherwise LTS will not be optimal'
     endif
+    print *
   endif
-
-  print *,'  suggested minimum DT time step = ',sngl(dtmin)
-  print *
+  print *,'  suggested minimum DT time step = ',dtmin
 
   ! we will use now the smallest time step estimate and put elements
   ! into bins with increasing time step size (power of 2 of smallest time step)
@@ -193,17 +197,17 @@
   do ispec = 1,nspec
 
     ! gets estimated time step based on CFL condition
-    time_step = ispec_time_step(ispec)
+    dt_suggested = ispec_time_step(ispec)
 
     ! uses a 5% safety margin for binning
-    time_step = ( 1.d0 - LTS_SAFETY_MARGIN ) * time_step
+    dt_suggested = ( 1.d0 - LTS_SAFETY_MARGIN ) * dt_suggested
 
     ! local time step level compared to global time step size
-    p = floor( time_step / dtmin )
+    p = floor( dt_suggested / dtmin )
     if (p < 1) p = 1
 
     ! debug
-    !print *,'ispec',ispec,'time step=',time_step,dtmin,'     p refinement = ',p
+    !print *,'ispec',ispec,'time step=',dt_suggested,dtmin,'     p refinement = ',p
 
     ! debug
     ! uniform distribution for testing
@@ -386,12 +390,14 @@
     p_level_relative(i) = p
     print *,'  level',i,':  fine/coarse p refinement = ',p_fine,p_coarse,'relative = ',p
   enddo
+
   ! finest level must increase time steps by factor 2 with current p_level_grid stepping scheme
   if (num_p_level > 1) then
     p_level_relative(1) = 2 * p_level_relative(1)
   endif
 
   ! user output
+  print *
   print *,'  number of p-levels        : ',num_p_level
   print *,'  p-level array             : ',p_level(:)
   print *,'  p-level relative array    : ',p_level_relative(:)

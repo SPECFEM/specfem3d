@@ -27,21 +27,25 @@
 
 ! for elastic solver
 
-  subroutine compute_add_sources_viscoelastic()
+  subroutine compute_add_sources_viscoelastic(accel)
 
   use constants
-  use specfem_par, only: station_name,network_name,num_free_surface_faces,free_surface_ispec, &
-                        free_surface_ijk,free_surface_jacobian2Dw, &
-                        nsources_local,tshift_src,dt,t0,SU_FORMAT, &
-                        USE_LDDRK,istage, &
-                        USE_BINARY_FOR_SEISMOGRAMS,NSPEC_AB,NGLOB_AB,ibool,NSOURCES,myrank,it,islice_selected_source, &
-                        ispec_selected_source,sourcearrays,SIMULATION_TYPE,NSTEP,READ_ADJSRC_ASDF, &
-                        nrec,islice_selected_rec,ispec_selected_rec, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                        hxir_adjstore,hetar_adjstore,hgammar_adjstore,source_adjoint,number_adjsources_global,nadj_rec_local, &
-                        INVERSE_FWI_FULL_PROBLEM
 
-  use specfem_par_elastic, only: accel,ispec_is_elastic
+  use shared_parameters, only: DT, &
+    SIMULATION_TYPE,NOISE_TOMOGRAPHY,INVERSE_FWI_FULL_PROBLEM, &
+    USE_LDDRK,LTS_MODE, &
+    SU_FORMAT,USE_BINARY_FOR_SEISMOGRAMS, &
+    NSTEP,READ_ADJSRC_ASDF,NTSTEP_BETWEEN_READ_ADJSRC
+
+  use specfem_par, only: station_name,network_name, &
+    NSPEC_AB,NGLOB_AB,ibool, &
+    tshift_src,t0,istage,it, &
+    num_free_surface_faces,free_surface_ispec,free_surface_ijk,free_surface_jacobian2Dw, &
+    nsources_local,NSOURCES,islice_selected_source,ispec_selected_source,sourcearrays, &
+    nrec,islice_selected_rec,ispec_selected_rec, &
+    nadj_rec_local,hxir_adjstore,hetar_adjstore,hgammar_adjstore,source_adjoint,number_adjsources_global
+
+  use specfem_par_elastic, only: ispec_is_elastic
 
   ! noise
   use specfem_par_noise, only: noise_sourcearray,irec_main_noise, &
@@ -53,9 +57,14 @@
   ! faults
   use specfem_par, only: FAULT_SIMULATION
 
+  ! LTS
+  use specfem_par_lts, only: current_lts_time, current_lts_elem
+
   implicit none
 
-! local parameters
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB), intent(inout) :: accel
+
+  ! local parameters
   real(kind=CUSTOM_REAL) :: stf_used,hlagrange
   logical :: ibool_read_adj_arrays
   double precision :: stf,time_source_dble,time_t
@@ -74,6 +83,9 @@
     !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
     !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
     time_t = dble(it-1-1)*DT + dble(C_LDDRK(istage))*DT - t0
+  else if (LTS_MODE) then
+    ! current local time
+    time_t = current_lts_time
   else
     time_t = dble(it-1)*DT - t0
   endif
@@ -102,6 +114,14 @@
         ispec = ispec_selected_source(isource)
 
         if (ispec_is_elastic(ispec)) then
+          ! LTS
+          if (LTS_MODE) then
+            ! checks if source lies in this p-level LTS element
+            if (.not. current_lts_elem(ispec)) cycle
+            ! debug
+            !if (it==1) print *,'debug: lts add source time',time_t,it,isource
+          endif
+
           ! current time
           time_source_dble = time_t - tshift_src(isource)
 
@@ -271,7 +291,7 @@
 !=====================================================================
 ! for elastic solver
 
-  subroutine compute_add_sources_viscoelastic_backward()
+  subroutine compute_add_sources_viscoelastic_backward(b_accel)
 
   use constants
   use specfem_par, only: num_free_surface_faces,free_surface_ispec, &
@@ -282,7 +302,7 @@
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
                         sourcearrays,SIMULATION_TYPE,NSTEP,NOISE_TOMOGRAPHY
 
-  use specfem_par_elastic, only: b_accel,ispec_is_elastic
+  use specfem_par_elastic, only: ispec_is_elastic
 
   ! noise
   use specfem_par_noise, only: normal_x_noise,normal_y_noise,normal_z_noise, &
@@ -299,6 +319,8 @@
   use specfem_par, only: FAULT_SIMULATION
 
   implicit none
+
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB), intent(inout) :: b_accel
 
   ! local parameters
   real(kind=CUSTOM_REAL) stf_used
@@ -447,17 +469,21 @@
   subroutine compute_add_sources_viscoelastic_GPU()
 
   use constants
+
+  use shared_parameters, only: DT, &
+    SIMULATION_TYPE,NOISE_TOMOGRAPHY,INVERSE_FWI_FULL_PROBLEM, &
+    USE_LDDRK,LTS_MODE,GPU_MODE,UNDO_ATTENUATION_AND_OR_PML, &
+    SU_FORMAT,USE_BINARY_FOR_SEISMOGRAMS, &
+    NSTEP,NTSTEP_BETWEEN_READ_ADJSRC
+
   use specfem_par, only: station_name,network_name, &
-                        num_free_surface_faces, &
-                        nsources_local,tshift_src,dt,t0,SU_FORMAT, &
-                        USE_LDDRK,istage,USE_BINARY_FOR_SEISMOGRAMS, &
-                        UNDO_ATTENUATION_AND_OR_PML, &
-                        NSOURCES,it,SIMULATION_TYPE,NSTEP, &
-                        nrec,islice_selected_rec, &
-                        nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                        Mesh_pointer, &
-                        source_adjoint,nadj_rec_local,number_adjsources_global, &
-                        INVERSE_FWI_FULL_PROBLEM,GPU_MODE
+    num_free_surface_faces, &
+    tshift_src,t0, &
+    istage,it, &
+    NSOURCES,nsources_local,ispec_selected_source, &
+    nrec,islice_selected_rec, &
+    nadj_rec_local,source_adjoint,nadj_rec_local,number_adjsources_global, &
+    Mesh_pointer
 
   use specfem_par_noise, only: irec_main_noise,noise_surface_movie
 
@@ -466,6 +492,9 @@
 
   ! faults
   use specfem_par, only: FAULT_SIMULATION
+
+  ! LTS
+  use specfem_par_lts, only: current_lts_time,current_lts_elem
 
   implicit none
 
@@ -502,8 +531,17 @@
         !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
         !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
         time_t = dble(it-1-1)*DT + dble(C_LDDRK(istage))*DT - t0
+      else if (LTS_MODE) then
+        ! current LTS time
+        time_t = current_lts_time
       else
         time_t = dble(it-1)*DT - t0
+      endif
+
+      ! LTS
+      if (LTS_MODE) then
+        ! checks if anything to do
+        if (NSOURCES == 1 .and. (.not. current_lts_elem(ispec_selected_source(1)))) return
       endif
 
       do isource = 1,NSOURCES
@@ -513,9 +551,21 @@
         ! determines source time function value
         stf = get_stf_viscoelastic(time_source_dble,isource,it)
 
+        ! LTS
+        if (LTS_MODE) then
+          ! only sources in elements contribute which are in current p-level
+          if (.not. current_lts_elem(ispec_selected_source(isource))) stf = 0.d0
+        endif
+
         ! stores precomputed source time function factor
         stf_pre_compute(isource) = stf
       enddo
+
+      ! LTS
+      if (LTS_MODE) then
+        ! checks if anything to do
+        if (maxval(stf_pre_compute(:)) == 0.d0) return
+      endif
 
       ! only implements SIMTYPE=1 and NOISE_TOM=0
       ! write(*,*) "Fortran dt = ", dt

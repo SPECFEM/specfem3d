@@ -69,6 +69,8 @@
     call exit_MPI(myrank,'for undo_attenuation, POROELASTIC kernel simulation is not supported yet') ! not working yet...
   if (SIMULATION_TYPE == 3 .and. NOISE_TOMOGRAPHY /= 0) &
     call exit_MPI(myrank,'for undo_attenuation, noise kernel simulation is not supported yet') ! not working yet...
+  if (LTS_MODE) &
+    call exit_MPI(myrank,'LTS mode for undo_attenuation is not supported yet')
 
   ! hdf5 i/o server
   if (HDF5_IO_NODES > 0) then

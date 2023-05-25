@@ -34,7 +34,7 @@
   end subroutine abort_mpi
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   double precision function wtime()
@@ -51,15 +51,14 @@
   end function wtime
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine synchronize_all()
   end subroutine synchronize_all
 
-
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine synchronize_all_comm(comm)
@@ -77,7 +76,7 @@
   end subroutine synchronize_all_comm
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine bcast_all_i(buffer, countval)
@@ -93,7 +92,7 @@
   end subroutine bcast_all_i
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine bcast_all_cr(buffer, countval)
@@ -111,7 +110,7 @@
   end subroutine bcast_all_cr
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine bcast_all_singlecr(buffer)
@@ -128,7 +127,7 @@
   end subroutine bcast_all_singlecr
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine bcast_all_dp(buffer, countval)
@@ -144,7 +143,7 @@
   end subroutine bcast_all_dp
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine bcast_all_singledp(buffer)
@@ -159,7 +158,7 @@
   end subroutine bcast_all_singledp
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine bcast_all_r(buffer, countval)
@@ -175,7 +174,7 @@
   end subroutine bcast_all_r
 
 !
-!---
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine bcast_all_ch_array(buffer,countval,STRING_LEN)
@@ -192,7 +191,7 @@
   end subroutine bcast_all_ch_array
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine bcast_all_i_for_database(buffer, countval)
@@ -212,9 +211,8 @@
 
   end subroutine bcast_all_i_for_database
 
-
 !
-!------
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine bcast_all_i_array_for_database(buffer, countval)
@@ -230,7 +228,7 @@
   end subroutine bcast_all_i_array_for_database
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine bcast_all_l_for_database(buffer, countval)
@@ -252,7 +250,7 @@
   end subroutine bcast_all_l_for_database
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine bcast_all_cr_for_database(buffer, countval)
@@ -276,7 +274,7 @@
   end subroutine bcast_all_cr_for_database
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine bcast_all_dp_for_database(buffer, countval)
@@ -298,7 +296,7 @@
   end subroutine bcast_all_dp_for_database
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 ! unused so far...
 !
@@ -335,7 +333,7 @@
   end subroutine bcast_all_singlei
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine bcast_all_singlel(buffer)
@@ -349,7 +347,7 @@
   end subroutine bcast_all_singlel
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine bcast_all_string(buffer)
@@ -365,7 +363,7 @@
   end subroutine bcast_all_string
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine gather_all_i(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
@@ -381,7 +379,7 @@
   end subroutine gather_all_i
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine gather_all_singlei(sendbuf, recvbuf, NPROC)
@@ -397,7 +395,7 @@
   end subroutine gather_all_singlei
 
 !
-!-----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine gather_all_all_singlei(sendbuf, recvbuf, NPROC)
@@ -412,9 +410,8 @@
 
   end subroutine gather_all_all_singlei
 
-
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine gather_all_all_i(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
@@ -430,7 +427,7 @@
   end subroutine gather_all_all_i
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine gather_all_dp(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
@@ -446,7 +443,7 @@
   end subroutine gather_all_dp
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine gather_all_cr(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
@@ -464,7 +461,7 @@
   end subroutine gather_all_cr
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine gather_all_all_cr(sendbuf, recvbuf, counts,NPROC)
@@ -482,7 +479,7 @@
   end subroutine gather_all_all_cr
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine gatherv_all_i(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
@@ -504,7 +501,7 @@
   end subroutine gatherv_all_i
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
@@ -528,7 +525,7 @@
   end subroutine gatherv_all_cr
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine all_gather_all_i(sendbuf, recvbuf, NPROC)
@@ -544,7 +541,7 @@
   end subroutine all_gather_all_i
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine all_gather_all_r(sendbuf, sendcnt, recvbuf, recvcnt, recvoffset, dim1, NPROC)
@@ -568,7 +565,7 @@
   end subroutine all_gather_all_r
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine all_gather_all_ch(sendbuf, sendcnt, recvbuf, recvcnt, recvoffset, dim1, dim2, NPROC)
@@ -591,10 +588,32 @@
 
   end subroutine all_gather_all_ch
 
+!
+!-------------------------------------------------------------------------------------------------
+!
 
+  subroutine get_count_i(source,itag,recv_count)
+
+  implicit none
+
+  integer :: source,itag
+  integer,intent(out) :: recv_count
+
+  integer :: unused_i
+
+  recv_count = 0
+
+  unused_i = source
+  unused_i = itag
+
+  end subroutine get_count_i
+
+!-------------------------------------------------------------------------------------------------
 !
-!----
+! MPI world helper
 !
+!-------------------------------------------------------------------------------------------------
+
 
   subroutine init_mpi()
 
@@ -615,14 +634,14 @@
   end subroutine init_mpi
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine finalize_mpi()
   end subroutine finalize_mpi
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_size(size)
@@ -636,7 +655,7 @@
   end subroutine world_size
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_size_comm(sizeval,comm)
@@ -655,7 +674,7 @@
   end subroutine world_size_comm
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_rank(rank)
@@ -668,9 +687,8 @@
 
   end subroutine world_rank
 
-
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_rank_comm(rank,comm)
@@ -689,7 +707,7 @@
   end subroutine world_rank_comm
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine min_all_dp(sendbuf, recvbuf)
@@ -703,7 +721,7 @@
   end subroutine min_all_dp
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine max_all_dp(sendbuf, recvbuf)
@@ -717,7 +735,7 @@
   end subroutine max_all_dp
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine max_all_cr(sendbuf, recvbuf)
@@ -732,9 +750,8 @@
 
   end subroutine max_all_cr
 
-
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine min_all_cr(sendbuf, recvbuf)
@@ -750,7 +767,7 @@
   end subroutine min_all_cr
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine min_all_all_cr(sendbuf, recvbuf)
@@ -765,9 +782,8 @@
 
   end subroutine min_all_all_cr
 
-
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine min_all_all_dp(sendbuf, recvbuf)
@@ -781,7 +797,7 @@
   end subroutine min_all_all_dp
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine max_all_i(sendbuf, recvbuf)
@@ -794,7 +810,20 @@
   end subroutine max_all_i
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine max_all_all_i(sendbuf, recvbuf)
+
+  implicit none
+  integer :: sendbuf, recvbuf
+
+  recvbuf = sendbuf
+
+  end subroutine max_all_all_i
+
+!
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine max_allreduce_i(buffer,countval)
@@ -811,7 +840,7 @@
   end subroutine max_allreduce_i
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine max_allreduce_singlei(val,recvval)
@@ -826,7 +855,7 @@
   end subroutine max_allreduce_singlei
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine max_all_all_cr(sendbuf, recvbuf)
@@ -842,7 +871,7 @@
   end subroutine max_all_all_cr
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine max_all_all_dp(sendbuf, recvbuf)
@@ -855,9 +884,8 @@
 
   end subroutine max_all_all_dp
 
-
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine min_all_i(sendbuf, recvbuf)
@@ -870,7 +898,20 @@
   end subroutine min_all_i
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine min_all_all_i(sendbuf, recvbuf)
+
+  implicit none
+  integer :: sendbuf, recvbuf
+
+  recvbuf = sendbuf
+
+  end subroutine min_all_all_i
+
+!
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine maxloc_all_dp(sendbuf, recvbuf)
@@ -884,9 +925,8 @@
   end subroutine maxloc_all_dp
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
-
 
   subroutine sum_all_dp(sendbuf, recvbuf)
 
@@ -899,7 +939,7 @@
   end subroutine sum_all_dp
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine sum_all_all_dp(sendbuf, recvbuf)
@@ -913,7 +953,7 @@
   end subroutine sum_all_all_dp
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine sum_all_cr(sendbuf, recvbuf)
@@ -929,7 +969,7 @@
   end subroutine sum_all_cr
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine sum_all_1Darray_dp(sendbuf, recvbuf, nx)
@@ -944,7 +984,7 @@
   end subroutine sum_all_1Darray_dp
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine any_all_1Darray_l(sendbuf, recvbuf, nx)
@@ -959,7 +999,7 @@
   end subroutine any_all_1Darray_l
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine sum_all_all_cr(sendbuf, recvbuf)
@@ -975,7 +1015,7 @@
   end subroutine sum_all_all_cr
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine sum_all_i(sendbuf, recvbuf)
@@ -988,10 +1028,10 @@
 
   end subroutine sum_all_i
 
+!
+!-------------------------------------------------------------------------------------------------
+!
 
-!
-!----
-!
   subroutine sum_all_all_i(sendbuf, recvbuf)
 
   implicit none
@@ -1003,7 +1043,7 @@
   end subroutine sum_all_all_i
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine any_all_l(sendbuf, recvbuf)
@@ -1017,7 +1057,7 @@
   end subroutine any_all_l
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine isend_cr(sendbuf, sendcount, dest, sendtag, req)
@@ -1041,7 +1081,7 @@
   end subroutine isend_cr
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine irecv_cr(recvbuf, recvcount, dest, recvtag, req)
@@ -1065,7 +1105,7 @@
   end subroutine irecv_cr
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine isend_i(sendbuf, sendcount, dest, sendtag, req)
@@ -1086,7 +1126,7 @@
   end subroutine isend_i
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine irecv_i(recvbuf, recvcount, dest, recvtag, req)
@@ -1106,9 +1146,8 @@
 
   end subroutine irecv_i
 
-
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine recv_i(recvbuf, recvcount, dest, recvtag )
@@ -1129,7 +1168,27 @@
   end subroutine recv_i
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine recv_singlei(recvbuf, dest, recvtag )
+
+  implicit none
+
+  integer :: dest,recvtag
+  integer :: recvbuf
+
+  integer(kind=4) :: unused_i4
+
+  stop 'recv_singlei not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = recvtag
+  unused_i4 = recvbuf
+
+  end subroutine recv_singlei
+
+!
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine recvv_cr(recvbuf, recvcount, dest, recvtag )
@@ -1152,7 +1211,7 @@
   end subroutine recvv_cr
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine recv_r(recvbuf, recvcount, dest, recvtag )
@@ -1173,9 +1232,8 @@
 
   end subroutine recv_r
 
-
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine send_i(sendbuf, sendcount, dest, sendtag)
@@ -1195,9 +1253,28 @@
 
   end subroutine send_i
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine send_singlei(sendbuf, dest, sendtag)
+
+  implicit none
+
+  integer :: dest,sendtag
+  integer :: sendbuf
+
+  integer(kind=4) :: unused_i4
+
+  stop 'send_singlei not implemented for serial code'
+  unused_i4 = dest
+  unused_i4 = sendtag
+  unused_i4 = sendbuf
+
+  end subroutine send_singlei
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine send_i_t(sendbuf,sendcount,dest)
@@ -1216,9 +1293,8 @@
   end subroutine send_i_t
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
-
 
   subroutine recv_i_t(recvbuf,recvcount,source)
 
@@ -1236,7 +1312,7 @@
   end subroutine recv_i_t
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine send_r(sendbuf, sendcount, dest, sendtag)
@@ -1258,10 +1334,9 @@
   end subroutine send_r
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
-!
-!
+
 !  subroutine send_dp_t(sendbuf,sendcount,dest)
 !
 !  implicit none
@@ -1272,9 +1347,9 @@
 !  stop 'send_dp_t not implemented for serial code'
 !
 !  end subroutine send_dp_t
+
 !
-!
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
 !  subroutine recv_dp_t(recvbuf,recvcount,source)
@@ -1287,10 +1362,12 @@
 !  stop 'recv_dp_t not implemented for serial code'
 !
 !  end subroutine recv_dp_t
+
+
 !
+!-------------------------------------------------------------------------------------------------
 !
-!
-!----
+
 !  the following two subroutines are needed by locate_receivers.f90
   subroutine send_dp(sendbuf, sendcount, dest, sendtag)
 
@@ -1309,9 +1386,11 @@
   unused_dp = sendbuf(1)
 
   end subroutine send_dp
+
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
+
   subroutine recv_dp(recvbuf, recvcount, dest, recvtag)
 
   implicit none
@@ -1331,7 +1410,7 @@
   end subroutine recv_dp
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
@@ -1352,8 +1431,33 @@
   unused_cr = sendbuf(1)
 
   end subroutine sendv_cr
+
 !
-!----
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine sendrecv_all_i(sendbuf, sendcount, dest, sendtag, &
+                            recvbuf, recvcount, source, recvtag)
+
+  implicit none
+
+  integer :: sendcount, recvcount, dest, sendtag, source, recvtag
+  integer, dimension(sendcount) :: sendbuf
+  integer, dimension(recvcount) :: recvbuf
+
+  integer(kind=4) :: unused_i4
+
+  stop 'sendrecv_all_i not implemented for serial code'
+  recvbuf(:) = sendbuf(:)
+  unused_i4 = dest
+  unused_i4 = source
+  unused_i4 = sendtag
+  unused_i4 = recvtag
+
+  end subroutine sendrecv_all_i
+
+!
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine wait_req(req)
@@ -1369,7 +1473,7 @@
   end subroutine wait_req
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   logical function is_valid_comm(comm)
@@ -1386,7 +1490,7 @@
   end function is_valid_comm
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_get_comm(comm)
@@ -1400,7 +1504,7 @@
   end subroutine world_get_comm
 
 !
-!-----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_set_comm(comm)
@@ -1417,7 +1521,7 @@
   end subroutine world_set_comm
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_get_comm_self(comm)
@@ -1430,9 +1534,8 @@
 
   end subroutine world_get_comm_self
 
-
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_comm_free(comm)
@@ -1446,7 +1549,7 @@
   end subroutine world_comm_free
 
 !
-!-----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_get_info_null(info)
@@ -1460,7 +1563,7 @@
   end subroutine world_get_info_null
 
 !
-!-----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_get_size_msg(status,size)
@@ -1476,7 +1579,7 @@
   end subroutine world_get_size_msg
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_duplicate(comm)
@@ -1490,7 +1593,7 @@
   end subroutine world_duplicate
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_split()
@@ -1504,15 +1607,14 @@
   end subroutine world_split
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_unsplit()
-
   end subroutine world_unsplit
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine bcast_all_l_array(buffer, countval)
@@ -1527,7 +1629,7 @@
   end subroutine bcast_all_l_array
 
 !
-!-----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_get_processor_name(name,size)
@@ -1546,12 +1648,10 @@
   end subroutine world_get_processor_name
 
 
-!-----
+!-------------------------------------------------------------------------------------------------
 !
 ! inter-communication group
 !
-!-----
-
 !-------------------------------------------------------------------------------------------------
 
   subroutine world_set_comm_inter(comm)
@@ -1567,7 +1667,7 @@
   end subroutine world_set_comm_inter
 
 !
-!-----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_probe_any_inter(status)
@@ -1584,7 +1684,7 @@
   end subroutine world_probe_any_inter
 
 !
-!-----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_probe_tag_inter(tag,status)
@@ -1603,7 +1703,7 @@
   end subroutine world_probe_tag_inter
 
 !
-!-----
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine synchronize_inter()
@@ -1613,7 +1713,7 @@
   end subroutine synchronize_inter
 
 !
-!------
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_comm_free_inter()
@@ -1623,7 +1723,7 @@
   end subroutine world_comm_free_inter
 
 !
-!------
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_comm_split(comm, key, rank, split_comm)
@@ -1642,7 +1742,7 @@
   end subroutine world_comm_split
 
 !
-!------
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine world_create_intercomm(local_comm, local_leader, group_comm, remote_leader, tag, inter_comm)
@@ -1663,7 +1763,7 @@
   end subroutine world_create_intercomm
 
 !
-!-------
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine recv_i_inter(recvbuf, recvcount, dest, recvtag )
@@ -1684,7 +1784,7 @@
   end subroutine recv_i_inter
 
 !
-!------
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine recv_dp_inter(recvbuf, recvcount, dest, recvtag)
@@ -1706,7 +1806,7 @@
   end subroutine recv_dp_inter
 
 !
-!------
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine recvv_cr_inter(recvbuf, recvcount, dest, recvtag)
@@ -1728,7 +1828,7 @@
   end subroutine recvv_cr_inter
 
 !
-!------
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine irecvv_cr_inter(recvbuf, recvcount, dest, recvtag, req)
@@ -1751,7 +1851,7 @@
   end subroutine irecvv_cr_inter
 
 !
-!-------
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine isend_cr_inter(sendbuf, sendcount, dest, sendtag, req)
@@ -1774,7 +1874,7 @@
   end subroutine isend_cr_inter
 
 !
-!-------
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine send_i_inter(sendbuf, sendcount, dest, sendtag)
@@ -1795,7 +1895,7 @@
   end subroutine send_i_inter
 
 !
-!--------
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine send_dp_inter(sendbuf, sendcount, dest, sendtag)
@@ -1817,7 +1917,7 @@
   end subroutine send_dp_inter
 
 !
-!-------
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine sendv_cr_inter(sendbuf, sendcount, dest, sendtag)
@@ -1839,7 +1939,7 @@
   end subroutine sendv_cr_inter
 
 !
-!-------
+!-------------------------------------------------------------------------------------------------
 !
 
   subroutine gather_all_all_single_ch(sendbuf, recvbuf, NPROC, dim1)
@@ -1860,7 +1960,7 @@
   end subroutine gather_all_all_single_ch
 
 !
-!--------
+!-------------------------------------------------------------------------------------------------
 !
 
 ! unused so far...

@@ -220,7 +220,7 @@
     write(IMAIN,*)
     write(IMAIN,*) 'total number of elements in entire mesh: ',nspec_total
     write(IMAIN,*) 'approximate total number of points in entire mesh (with duplicates on MPI edges): ',nglob_total
-    write(IMAIN,*) 'approximate total number of DOFs in entire mesh (with duplicates on MPI edges): ',nglob_total*NDIM
+    write(IMAIN,*) 'approximate total number of DOFs   in entire mesh (with duplicates on MPI edges): ',nglob_total*NDIM
     write(IMAIN,*)
     call flush_IMAIN()
   endif

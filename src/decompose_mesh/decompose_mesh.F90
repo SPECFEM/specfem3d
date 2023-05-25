@@ -34,6 +34,8 @@
 
   use decompose_mesh_par
 
+  use fault_scotch, only: ANY_FAULT,fault_repartition
+
   implicit none
   ! local parameters
   integer, dimension(:), allocatable  :: num_material
@@ -177,7 +179,7 @@
   ! debug: vtk output
   if (DEBUG_VTK_OUTPUT) then
     ! element partitioning
-    filename = trim(LOCAL_PATH)//'/part_array_before'
+    filename = trim(LOCAL_PATH) // '/part_array_before'
     allocate(tmp_elmnts(NGNOD,nspec))
     tmp_elmnts(:,:) = elmnts(:,:)+1
     allocate(xstore_dummy(nnodes),ystore_dummy(nnodes),zstore_dummy(nnodes))
@@ -225,7 +227,7 @@
 
   ! re-partitioning transfers two coupled elements on fault side 1 and side 2 to the same partition
   if (ANY_FAULT) &
-    call fault_repartition(nspec, nnodes, elmnts, nsize, nparts, part, NGNOD, nodes_coords)
+    call fault_repartition(nspec, nnodes, elmnts, nsize, nparts, part, NGNOD, nodes_coords, elmnts_load)
 
   ! re-partitioning puts moho-surface coupled elements into same partition
   if (SAVE_MOHO_MESH) &
@@ -236,7 +238,7 @@
   ! final partitioning: vtk output
   if (SAVE_MESH_FILES) then
     ! element partitioning
-    filename = trim(LOCAL_PATH)//'/part_array'
+    filename = trim(LOCAL_PATH) // '/part_array'
     allocate(tmp_elmnts(NGNOD,nspec))
     tmp_elmnts(:,:) = elmnts(:,:)+1
     allocate(xstore_dummy(nnodes),ystore_dummy(nnodes),zstore_dummy(nnodes))

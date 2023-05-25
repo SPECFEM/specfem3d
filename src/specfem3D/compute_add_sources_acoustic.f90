@@ -27,7 +27,7 @@
 
 ! for acoustic solver
 
-  subroutine compute_add_sources_acoustic()
+  subroutine compute_add_sources_acoustic(potential_dot_dot_acoustic)
 
   use constants
   use specfem_par, only: station_name,network_name, &
@@ -35,11 +35,11 @@
                          hxir_adjstore,hetar_adjstore,hgammar_adjstore,source_adjoint,number_adjsources_global,nadj_rec_local, &
                          USE_BINARY_FOR_SEISMOGRAMS, &
                          ibool,NSOURCES,myrank,it,ispec_selected_source,islice_selected_source, &
-                         sourcearrays,kappastore,SIMULATION_TYPE,NSTEP, &
+                         sourcearrays,kappastore,SIMULATION_TYPE,NSTEP,NGLOB_AB, &
                          ispec_selected_rec, &
                          nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC, INVERSE_FWI_FULL_PROBLEM
 
-  use specfem_par_acoustic, only: potential_dot_dot_acoustic,ispec_is_acoustic
+  use specfem_par_acoustic, only: ispec_is_acoustic
 
   ! coupling
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
@@ -49,7 +49,9 @@
 
   implicit none
 
-! local parameters
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(inout) :: potential_dot_dot_acoustic
+
+  ! local parameters
   real(kind=CUSTOM_REAL) :: stf_used,hlagrange
   logical :: ibool_read_adj_arrays
   double precision :: stf,time_source_dble,time_t
@@ -246,18 +248,18 @@
 
 ! for acoustic solver for back propagation wave field
 
-  subroutine compute_add_sources_acoustic_backward()
+  subroutine compute_add_sources_acoustic_backward(b_potential_dot_dot_acoustic)
 
   use constants
   use specfem_par, only: nsources_local,tshift_src,DT,t0,USE_LDDRK,istage, &
                          ibool,NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
-                         sourcearrays,kappastore,SIMULATION_TYPE,NSTEP
+                         sourcearrays,kappastore,SIMULATION_TYPE,NSTEP,NGLOB_AB
 
   ! undo_att
   use specfem_par, only: UNDO_ATTENUATION_AND_OR_PML,NSUBSET_ITERATIONS,NT_DUMP_ATTENUATION, &
                          iteration_on_subset,it_of_this_subset
 
-  use specfem_par_acoustic, only: ispec_is_acoustic,b_potential_dot_dot_acoustic
+  use specfem_par_acoustic, only: ispec_is_acoustic
 
   ! coupling
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
@@ -267,7 +269,9 @@
 
   implicit none
 
-! local parameters
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(inout) :: b_potential_dot_dot_acoustic
+
+  ! local parameters
   real(kind=CUSTOM_REAL) :: stf_used
 
   double precision :: stf,time_source_dble,time_t

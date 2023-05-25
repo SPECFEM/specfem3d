@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-subroutine compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval,NSPEC_AB,kappastore,mustore, &
+  subroutine compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval,NSPEC_AB,kappastore,mustore, &
                           NSPEC_ATTENUATION_AB, &
                           factor_common_kappa, &
                           R_trace,epsilondev_trace,epsilondev_trace_loc, &
@@ -34,6 +34,10 @@ subroutine compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gam
                           epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc)
 
   use constants, only: CUSTOM_REAL,N_SLS,NGLLX,NGLLY,NGLLZ
+
+  ! LTS
+  use shared_parameters, only: LTS_MODE
+  use specfem_par_lts, only: lts_type_compute_pelem
 
   implicit none
 
@@ -53,65 +57,109 @@ subroutine compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gam
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: epsilondev_trace_loc, epsilondev_xx_loc, &
             epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
 
-! local parameters
+  ! local parameters
   integer :: i,j,k
   real(kind=CUSTOM_REAL) :: Sn,Snp1
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: factor_loc
 
-  do k = 1,NGLLZ
-    do j = 1,NGLLY
-      do i = 1,NGLLX
+  ! LTS
+  if (LTS_MODE .and. .not. lts_type_compute_pelem) then
+    ! note: we first call the compute_forces routine for p-elements only, then in a second call for boundary-elements.
+    !       to update the memory variables, we will in the first compute them as by default, but in the second call
+    !       only add to the existing values.
 
-        ! bulk attenuation
-        ! term in trace
-        factor_loc(:) = kappastore(i,j,k,ispec)* factor_common_kappa(:,i,j,k,ispec)
+    ! boundary-element call
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
+          ! bulk attenuation
+          ! term in trace
+          factor_loc(:) = kappastore(i,j,k,ispec) * factor_common_kappa(:,i,j,k,ispec)
+          ! adds only gamma term
+          Snp1   = epsilondev_trace_loc(i,j,k)
+          R_trace(:,i,j,k,ispec) = R_trace(:,i,j,k,ispec) + factor_loc(:) * gammaval(:) * Snp1
 
-        Sn   = epsilondev_trace(i,j,k,ispec)
-        Snp1   = epsilondev_trace_loc(i,j,k)
-        R_trace(:,i,j,k,ispec) = alphaval(:) * R_trace(:,i,j,k,ispec) + factor_loc(:) * (betaval(:) * Sn + gammaval(:) * Snp1)
-
-        ! shear attenuation
-        ! term in xx yy zz xy xz yz
-        factor_loc(:) = mustore(i,j,k,ispec) * factor_common(:,i,j,k,ispec)
-
-        ! term in xx
-        Sn   = epsilondev_xx(i,j,k,ispec)
-        Snp1   = epsilondev_xx_loc(i,j,k)
-        R_xx(:,i,j,k,ispec) = alphaval(:) * R_xx(:,i,j,k,ispec) + factor_loc(:) * (betaval(:) * Sn + gammaval(:) * Snp1)
-
-        ! term in yy
-        Sn   = epsilondev_yy(i,j,k,ispec)
-        Snp1   = epsilondev_yy_loc(i,j,k)
-        R_yy(:,i,j,k,ispec) = alphaval(:) * R_yy(:,i,j,k,ispec) + factor_loc(:) * (betaval(:) * Sn + gammaval(:) * Snp1)
-
-        ! term in zz not computed since zero trace
-
-        ! term in xy
-        Sn   = epsilondev_xy(i,j,k,ispec)
-        Snp1   = epsilondev_xy_loc(i,j,k)
-        R_xy(:,i,j,k,ispec) = alphaval(:) * R_xy(:,i,j,k,ispec) + factor_loc(:) * (betaval(:) * Sn + gammaval(:) * Snp1)
-
-        ! term in xz
-        Sn   = epsilondev_xz(i,j,k,ispec)
-        Snp1   = epsilondev_xz_loc(i,j,k)
-        R_xz(:,i,j,k,ispec) = alphaval(:) * R_xz(:,i,j,k,ispec) + factor_loc(:) * (betaval(:) * Sn + gammaval(:) * Snp1)
-
-        ! term in yz
-        Sn   = epsilondev_yz(i,j,k,ispec)
-        Snp1   = epsilondev_yz_loc(i,j,k)
-        R_yz(:,i,j,k,ispec) = alphaval(:) * R_yz(:,i,j,k,ispec) + factor_loc(:) * (betaval(:) * Sn + gammaval(:) * Snp1)
-
+          ! shear attenuation
+          ! term in xx yy zz xy xz yz
+          factor_loc(:) = mustore(i,j,k,ispec) * factor_common(:,i,j,k,ispec)
+          ! adds only gamma term
+          ! term in xx
+          Snp1   = epsilondev_xx_loc(i,j,k)
+          R_xx(:,i,j,k,ispec) = R_xx(:,i,j,k,ispec) + factor_loc(:) * gammaval(:) * Snp1
+          ! term in yy
+          Snp1   = epsilondev_yy_loc(i,j,k)
+          R_yy(:,i,j,k,ispec) = R_yy(:,i,j,k,ispec) + factor_loc(:) * gammaval(:) * Snp1
+          ! term in zz not computed since zero trace
+          ! term in xy
+          Snp1   = epsilondev_xy_loc(i,j,k)
+          R_xy(:,i,j,k,ispec) = R_xy(:,i,j,k,ispec) + factor_loc(:) * gammaval(:) * Snp1
+          ! term in xz
+          Snp1   = epsilondev_xz_loc(i,j,k)
+          R_xz(:,i,j,k,ispec) = R_xz(:,i,j,k,ispec) + factor_loc(:) * gammaval(:) * Snp1
+          ! term in yz
+          Snp1   = epsilondev_yz_loc(i,j,k)
+          R_yz(:,i,j,k,ispec) = R_yz(:,i,j,k,ispec) + factor_loc(:) * gammaval(:) * Snp1
+        enddo
       enddo
     enddo
-  enddo
 
-end subroutine compute_element_att_memory_second_order_rk
+  else
+    ! default
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
+
+          ! bulk attenuation
+          ! term in trace
+          factor_loc(:) = kappastore(i,j,k,ispec)* factor_common_kappa(:,i,j,k,ispec)
+
+          Sn   = epsilondev_trace(i,j,k,ispec)
+          Snp1   = epsilondev_trace_loc(i,j,k)
+          R_trace(:,i,j,k,ispec) = alphaval(:) * R_trace(:,i,j,k,ispec) + factor_loc(:) * (betaval(:) * Sn + gammaval(:) * Snp1)
+
+          ! shear attenuation
+          ! term in xx yy zz xy xz yz
+          factor_loc(:) = mustore(i,j,k,ispec) * factor_common(:,i,j,k,ispec)
+
+          ! term in xx
+          Sn   = epsilondev_xx(i,j,k,ispec)
+          Snp1   = epsilondev_xx_loc(i,j,k)
+          R_xx(:,i,j,k,ispec) = alphaval(:) * R_xx(:,i,j,k,ispec) + factor_loc(:) * (betaval(:) * Sn + gammaval(:) * Snp1)
+
+          ! term in yy
+          Sn   = epsilondev_yy(i,j,k,ispec)
+          Snp1   = epsilondev_yy_loc(i,j,k)
+          R_yy(:,i,j,k,ispec) = alphaval(:) * R_yy(:,i,j,k,ispec) + factor_loc(:) * (betaval(:) * Sn + gammaval(:) * Snp1)
+
+          ! term in zz not computed since zero trace
+
+          ! term in xy
+          Sn   = epsilondev_xy(i,j,k,ispec)
+          Snp1   = epsilondev_xy_loc(i,j,k)
+          R_xy(:,i,j,k,ispec) = alphaval(:) * R_xy(:,i,j,k,ispec) + factor_loc(:) * (betaval(:) * Sn + gammaval(:) * Snp1)
+
+          ! term in xz
+          Sn   = epsilondev_xz(i,j,k,ispec)
+          Snp1   = epsilondev_xz_loc(i,j,k)
+          R_xz(:,i,j,k,ispec) = alphaval(:) * R_xz(:,i,j,k,ispec) + factor_loc(:) * (betaval(:) * Sn + gammaval(:) * Snp1)
+
+          ! term in yz
+          Sn   = epsilondev_yz(i,j,k,ispec)
+          Snp1   = epsilondev_yz_loc(i,j,k)
+          R_yz(:,i,j,k,ispec) = alphaval(:) * R_yz(:,i,j,k,ispec) + factor_loc(:) * (betaval(:) * Sn + gammaval(:) * Snp1)
+
+        enddo
+      enddo
+    enddo
+  endif
+
+  end subroutine compute_element_att_memory_second_order_rk
 
 !
 !--------------------------------------------------------------------------------------------
 !
 
-subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mustore, &
+  subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mustore, &
                           NSPEC_ATTENUATION_AB, &
                           factor_common_kappa, &
                           R_trace,epsilondev_trace_loc, &
@@ -143,7 +191,7 @@ subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mus
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: epsilondev_trace_loc, epsilondev_xx_loc, &
             epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
 
-! local parameters
+  ! local parameters
   integer :: i,j,k
   real(kind=CUSTOM_REAL) :: Snp1
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: factor_loc
@@ -199,4 +247,4 @@ subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mus
     enddo
   enddo
 
-end subroutine compute_element_att_memory_lddrk
+  end subroutine compute_element_att_memory_lddrk

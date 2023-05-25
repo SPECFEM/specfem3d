@@ -148,8 +148,8 @@
 
     if (ANISOTROPIC_KL) call exit_MPI(myrank,'EXACT_UNDOING_TO_DISK requires ANISOTROPIC_KL to be turned off')
 
-!! DK DK determine the largest value of iglob that we need to save to disk,
-!! DK DK since we save the upper part of the mesh only in the case of surface-wave kernels
+    ! determine the largest value of iglob that we need to save to disk,
+    ! since we save the upper part of the mesh only in the case of surface-wave kernels
     ! crust_mantle
     allocate(integer_mask_ibool_exact_undo(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1359')
@@ -161,9 +161,9 @@
         do j = 1, NGLLY
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
-!           height = xstore(iglob)
             ! save that element only if it is in the upper part of the mesh
-!           if (height >= 3000.d0) then
+            !height = xstore(iglob)
+            !if (height >= 3000.d0) then
             if (.true.) then
               ! if this point has not yet been found before
               if (integer_mask_ibool_exact_undo(iglob) == -1) then
@@ -206,6 +206,14 @@
 
   ! get MPI starting
   time_start = wtime()
+
+  ! LTS
+  if (LTS_MODE) then
+    ! LTS steps through its own time iterations - for now
+    call lts_iterate_time()
+    ! all done, continue after time loop
+    goto 777
+  endif
 
   ! time loop
   do it = it_begin,it_end
@@ -320,6 +328,9 @@
   !---- end of time iteration loop
   !
   enddo   ! end of main time loop
+
+! goto point for LTS to finish time loop
+777 continue
 
   ! close the huge file that contains a dump of all the time steps to disk
   if (EXACT_UNDOING_TO_DISK) close(IFILE_FOR_EXACT_UNDOING)

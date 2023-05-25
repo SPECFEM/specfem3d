@@ -375,6 +375,9 @@
   ! reads adjoint parameters
   call read_mesh_databases_adjoint()
 
+  ! sets up local time stepping (LTS)
+  if (LTS_MODE) call lts_setup()
+
   ! for coupling with external codes
   call couple_with_injection_setup()
 

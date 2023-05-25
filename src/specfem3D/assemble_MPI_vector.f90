@@ -249,7 +249,7 @@
 
 ! sends data
 
-  use constants, only: NDIM,CUSTOM_REAL,itag
+  use constants, only: NDIM,CUSTOM_REAL,itag,ASSEMBLE_MPI_OFF
 
   implicit none
 
@@ -269,9 +269,12 @@
   integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
 
   ! local parameters
-  integer ipoin,iinterface
+  integer :: ipoin,iinterface
 
   ! here we have to assemble all the contributions between partitions using MPI
+
+  ! debug: no mpi
+  if (ASSEMBLE_MPI_OFF) return
 
   ! assemble only if more than one partition
   if (NPROC > 1) then
@@ -315,7 +318,7 @@
 
 ! waits for send/receiver to be completed and assembles contributions
 
-  use constants, only: NDIM,CUSTOM_REAL
+  use constants, only: NDIM,CUSTOM_REAL,ASSEMBLE_MPI_OFF
   use specfem_par, only: FAULT_SIMULATION
 
   implicit none
@@ -340,6 +343,9 @@
   integer :: ipoin,iinterface,iglob
 
   ! here we have to assemble all the contributions between partitions using MPI
+
+  ! debug: no mpi
+  if (ASSEMBLE_MPI_OFF) return
 
   ! assemble only if more than one partition
   if (NPROC == 1) return
