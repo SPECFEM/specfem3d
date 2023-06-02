@@ -191,7 +191,7 @@
 !$OMP iphase,phase_ispec_inner_elastic, &
 !$OMP irregular_element_number,jacobian_regular,xix_regular, &
 !$OMP displ,veloc,accel, &
-!$OMP MOVIE_STRESS_VOLUME,stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz, &
+!$OMP MOVIE_VOLUME_STRESS,stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz, &
 !$OMP is_CPML,backward_simulation, &
 !$OMP xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore, &
 !$OMP kappastore,mustore, &
