@@ -369,6 +369,13 @@
       write(*,'(a)') 'MOVIE_VOLUME_STRESS              = .false.'
       write(*,*)
     endif
+    if(MOVIE_VOLUME_STRESS.and. .not. MOVIE_VOLUME)then
+      write(*,'(a)')'WARNING: MOVIE_VOLUME must be .true. for &
+      &MOVIE_VOLUME_STRESS = .true.!'
+      write(*,'(a)')'Resetting MOVIE_VOLUME_STRESS = .false.'
+      write(*,*)
+      MOVIE_VOLUME_STRESS = .false.
+    endif
 
     call read_value_logical(USE_HIGHRES_FOR_MOVIES, 'USE_HIGHRES_FOR_MOVIES', ier)
     if (ier /= 0) then
