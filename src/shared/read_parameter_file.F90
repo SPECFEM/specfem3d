@@ -363,6 +363,13 @@
       write(*,*)
     endif
 
+    call read_value_logical(MOVIE_VOLUME_STRESS, 'MOVIE_VOLUME_STRESS', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'MOVIE_VOLUME_STRESS              = .false.'
+      write(*,*)
+    endif
+
     call read_value_logical(USE_HIGHRES_FOR_MOVIES, 'USE_HIGHRES_FOR_MOVIES', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
@@ -1439,6 +1446,7 @@
   call bcast_all_singlei(MOVIE_TYPE)
   call bcast_all_singlel(MOVIE_VOLUME)
   call bcast_all_singlel(SAVE_DISPLACEMENT)
+  call bcast_all_singlel(MOVIE_VOLUME_STRESS)
   call bcast_all_singlel(USE_HIGHRES_FOR_MOVIES)
   call bcast_all_singlei(NTSTEP_BETWEEN_FRAMES)
   call bcast_all_singledp(HDUR_MOVIE)

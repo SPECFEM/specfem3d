@@ -130,6 +130,27 @@
       curl_x(:,:,:,:) = 0._CUSTOM_REAL
       curl_y(:,:,:,:) = 0._CUSTOM_REAL
       curl_z(:,:,:,:) = 0._CUSTOM_REAL
+      if(MOVIE_VOLUME_STRESS)then
+        allocate(stress_xx(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1738')
+        allocate(stress_yy(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1739')
+        allocate(stress_zz(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1740')
+        allocate(stress_xy(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1741')
+        allocate(stress_xz(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1742')
+        allocate(stress_yz(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1743')
+        if (ier /= 0) stop 'error allocating array stress'
+        stress_xx(:,:,:,:) = 0._CUSTOM_REAL
+        stress_yy(:,:,:,:) = 0._CUSTOM_REAL
+        stress_zz(:,:,:,:) = 0._CUSTOM_REAL
+        stress_xy(:,:,:,:) = 0._CUSTOM_REAL
+        stress_xz(:,:,:,:) = 0._CUSTOM_REAL
+        stress_yz(:,:,:,:) = 0._CUSTOM_REAL
+      endif
     endif
   endif
 

@@ -682,6 +682,46 @@
     if (ier /= 0) stop 'error opening file curl_z_it'
     write(IOUT) curl_z
     close(IOUT)
+
+    if (MOVIE_VOLUME_STRESS) then
+      ! stress tensor on elemental level
+      ! writes out stress tensor
+      write(outputname,"('/proc',i6.6,'_stress_xx_it',i6.6,'.bin')") myrank,it
+      open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file stress_xx_it'
+      write(IOUT) stress_xx
+      close(IOUT)
+
+      write(outputname,"('/proc',i6.6,'_stress_yy_it',i6.6,'.bin')") myrank,it
+      open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file stress_yy_it'
+      write(IOUT) stress_yy
+      close(IOUT)
+
+      write(outputname,"('/proc',i6.6,'_stress_zz_it',i6.6,'.bin')") myrank,it
+      open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file stress_zz_it'
+      write(IOUT) stress_zz
+      close(IOUT)
+
+      write(outputname,"('/proc',i6.6,'_stress_xy_it',i6.6,'.bin')") myrank,it
+      open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file stress_xy_it'
+      write(IOUT) stress_xy
+      close(IOUT)
+
+      write(outputname,"('/proc',i6.6,'_stress_xz_it',i6.6,'.bin')") myrank,it
+      open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file stress_xz_it'
+      write(IOUT) stress_xz
+      close(IOUT)
+
+      write(outputname,"('/proc',i6.6,'_stress_yz_it',i6.6,'.bin')") myrank,it
+      open(unit=IOUT,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+      if (ier /= 0) stop 'error opening file stress_yz_it'
+      write(IOUT) stress_yz
+      close(IOUT)
+      endif
   endif
 
   if (SAVE_DISPLACEMENT) then

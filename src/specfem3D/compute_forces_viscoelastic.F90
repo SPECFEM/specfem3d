@@ -59,10 +59,12 @@
                          NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_LDDRK, &
                          ANISOTROPY,SIMULATION_TYPE, &
                          NSPEC_ADJOINT,is_moho_top,is_moho_bot, &
-                         irregular_element_number,xix_regular,jacobian_regular
+                         irregular_element_number,xix_regular,jacobian_regular,&
+                         MOVIE_VOLUME_STRESS
 
   use specfem_par, only: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
   !or: use specfem_par, only: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
+  use specfem_par_movie, only: stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz
 
   use specfem_par_elastic, only: c11store,c12store,c13store,c14store,c15store,c16store, &
                                  c22store,c23store,c24store,c25store,c26store,c33store, &
@@ -581,6 +583,15 @@
         sigma_yz = c14 * duxdxl(INDEX_IJK) + c46 * duxdyl_plus_duydxl + c24 * duydyl(INDEX_IJK) + &
                    c45 * duzdxl_plus_duxdzl + c44 * duzdyl_plus_duydzl + c34 * duzdzl(INDEX_IJK)
 
+        if (MOVIE_VOLUME_STRESS) then
+          ! store stress tensor
+          stress_xx(INDEX_IJK,ispec)=sigma_xx
+          stress_yy(INDEX_IJK,ispec)=sigma_yy
+          stress_zz(INDEX_IJK,ispec)=sigma_zz
+          stress_xy(INDEX_IJK,ispec)=sigma_xy
+          stress_xz(INDEX_IJK,ispec)=sigma_xz
+          stress_yz(INDEX_IJK,ispec)=sigma_yz
+        endif
       else
         ! isotropic case
         kappal = kappastore(INDEX_IJK,ispec)
@@ -597,6 +608,15 @@
         sigma_xy = mul * duxdyl_plus_duydxl
         sigma_xz = mul * duzdxl_plus_duxdzl
         sigma_yz = mul * duzdyl_plus_duydzl
+        if (MOVIE_VOLUME_STRESS) then
+          ! store stress tensor
+          stress_xx(INDEX_IJK,ispec)=sigma_xx
+          stress_yy(INDEX_IJK,ispec)=sigma_yy
+          stress_zz(INDEX_IJK,ispec)=sigma_zz
+          stress_xy(INDEX_IJK,ispec)=sigma_xy
+          stress_xz(INDEX_IJK,ispec)=sigma_xz
+          stress_yz(INDEX_IJK,ispec)=sigma_yz
+        endif
       endif ! ANISOTROPY
 
       ! subtract memory variables if attenuation
