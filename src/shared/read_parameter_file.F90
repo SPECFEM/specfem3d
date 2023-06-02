@@ -370,7 +370,7 @@
       write(*,*)
     endif
     if(MOVIE_VOLUME_STRESS.and. .not. MOVIE_VOLUME)then
-      write(*,'(a)')'WARNING: MOVIE_VOLUME must be .true. for &
+      write(*,'(a)')'MOVIE_VOLUME must be .true. for &
       &MOVIE_VOLUME_STRESS = .true.!'
       write(*,'(a)')'Resetting MOVIE_VOLUME_STRESS = .false.'
       write(*,*)
